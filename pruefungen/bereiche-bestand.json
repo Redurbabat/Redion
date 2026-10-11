@@ -3,8 +3,8 @@
  "_regel": "Dieses Verzeichnis darf nur SCHRUMPFEN. Es ist keine Erlaubnis, sondern eine Schuld — aber eine geschrumpfte Zahl ist nur dann ein Fortschritt, wenn die Kopplung wirklich weg ist und nicht bloss unsichtbar wurde.",
  "_woher": "E626, L150 — gemessen am 19. September 2026: zuerst 523 Treffer in 127 Paaren. Am selben Abend auf 517 in 125 gefallen, und NICHT weil eine Kopplung verschwunden wäre: der Namenskatalog erkannte `const X: Typ = …` nicht als Anmeldung (E629). Mit der Berichtigung gehören zehn Namen plötzlich mehreren Bereichen — und ein Name, der mehreren gehört, gehört keinem und wird nicht mehr gemeldet. Die zwei weggefallenen Einträge sind `ki → AUSLOESER → datenbanken` (2) und `wissen → ANSICHTEN → chronik` (4). Sie stehen weiter im Code; nur kann der Lauf sie niemandem mehr zuordnen. Siehe L193.",
  "_gesetzt": {
-  "paare": 124,
-  "treffer": 516
+  "paare": 123,
+  "treffer": 511
  },
  "eintraege": [
   {
@@ -299,7 +299,7 @@
    "von": "bereiche/einstellungen",
    "name": "Kontext",
    "zu": "bereiche/ki",
-   "zahl": 9
+   "zahl": 8
   },
   {
    "von": "bereiche/einstellungen",
@@ -648,12 +648,6 @@
    "name": "Kalender",
    "zu": "bereiche/verbinden",
    "zahl": 2
-  },
-  {
-   "von": "bereiche/wissen",
-   "name": "KI",
-   "zu": "bereiche/ki",
-   "zahl": 4
   },
   {
    "von": "bereiche/wissen",

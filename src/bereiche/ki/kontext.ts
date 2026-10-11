@@ -112,7 +112,10 @@ const Kontext = (() => {
    * die Wahrheit. Ein fehlender, alter oder unlesbarer Eintrag wird aus ihnen
    * neu gebaut. Kein Reparaturweg schreibt jemals Nutzerdaten.
    * ----------------------------------------------------------------------*/
-  const INDEX_FASSUNG = 1;
+  /* 2 seit E724: Zeilen gespiegelter Datenbanken tragen `verbunden`. Ein
+     Index der Fassung 1 kennt das Feld nicht und wird beim ersten Abgleich
+     aus den Nutzerdaten neu gebaut — die Daten selbst bleiben, wie sie sind. */
+  const INDEX_FASSUNG = 2;
   const KOPF_ID = '@suchindex';
   let index: any = null;
   let letzterDatenStand = -1;
@@ -205,7 +208,8 @@ const Kontext = (() => {
         if (!c) return;
         raus.push({ art: 'zeile', b, c, innen,
           stand: signatur([b.id, b.text, b.edited, JSON.stringify(b.props || {}),
-            c.id, c.name, c.edited, JSON.stringify(c.schema || {}), innen.stand]) });
+            c.id, c.name, c.edited, JSON.stringify(c.schema || {}), innen.stand,
+            String(c.spiegelQuelle || '')]) });
         return;
       }
       const pfad = Store.pfadText(b.id);
@@ -238,6 +242,10 @@ const Kontext = (() => {
     const roh = (b.text || '') + ' ' + felder + ' ' + q.innen.text;
     return {
       id: b.id, seiteId: b.id, art: 'zeile', datenbank: c.name, stand: q.stand,
+      /* „Verbundenes" (E724): Zeilen, die ein Dienst hereinspiegelt (Mails,
+         Termine, GitHub …), erkennt man an `spiegelQuelle` der Sammlung
+         (`datenbanken/spiegel/dienst.ts`). Vorher las niemand den Schalter. */
+      verbunden: !!c.spiegelQuelle,
       titel: b.text || 'Ohne Titel', pfad: c.name,
       text: roh.slice(0, 4000),
       geaendert: spaeter(b.edited || b.created || '', q.innen.geaendert),
@@ -433,6 +441,7 @@ const Kontext = (() => {
       if (!Konten.darf('lesen', e.seiteId)) return null;
       if (opt.nurSeite && e.seiteId !== opt.nurSeite && !istUnter(e.seiteId, opt.nurSeite)) return null;
       if (e.art === 'zeile' && !q.datenbanken) return null;
+      if (e.verbunden && !q.verbindungen) return null;
       if (e.art === 'seite' && !q.arbeitsbereich) return null;
 
       const basis = bm25(e, woerter, ix);
@@ -560,6 +569,31 @@ const Kontext = (() => {
     const q = quellen();
     q[k] = an;
     Store.setMeta('ki:quellen', q);
+    /* Ein Schreiber, viele Leser (E724): das KI-Fenster und die
+       Einstellungen hören hier zu und setzen Klasse UND aria-pressed. */
+    if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined')
+      Ereignisse.melde(ARTEN.kiQuellenGeaendert, { quelle: k, an: !!an });
+  };
+
+  /**
+   * Eine Quelle umschalten — der EINE Weg für das KI-Fenster und die
+   * Einstellungen (E724). Beim Einschalten des Webs fragt er zuerst, und
+   * zwar in einem Redion-Fenster (E710) statt mit `confirm()`, das vorher an
+   * zwei Stellen in zwei Fassungen stand. Gibt den neuen Zustand zurück —
+   * oder `null`, wenn der Mensch Nein gesagt hat.
+   */
+  const quelleUmschalten = async (k: string): Promise<boolean | null> => {
+    const jetzt = !!quellen()[k];
+    if (k === 'web' && !jetzt && Store.getMeta('ki:webFragen', true)) {
+      const ja = await Dialog.bestaetigen({
+        titel: 'Websuche einschalten?',
+        text: 'Für die Websuche wird Wikipedia angefragt. Dabei verlässt dein ' +
+              'Suchbegriff den Rechner.',
+        ja: 'Einschalten' });
+      if (!ja) return null;
+    }
+    quelleSetzen(k, !jetzt);
+    return !jetzt;
   };
 
   /* ------------------------------------------------------------------------
@@ -579,6 +613,17 @@ const Kontext = (() => {
         quellenListe.push({ id: p.id, titel: p.text || 'Ohne Titel',
                             art: 'Offene Seite', geaendert: p.edited });
       }
+    }
+
+    /* 1b. Ausdrücklich erwähnte Seiten (E724, „@Seite" im KI-Fenster). Sie
+       kommen unabhängig von den Schaltern hinein — wer eine Seite nennt,
+       meint sie. Gelesen wird trotzdem nur, was gelesen werden darf. */
+    for (const id of (Array.isArray(opt.extraSeiten) ? opt.extraSeiten : [])) {
+      if (q.aktuelleSeite && id === App.aktuelleSeite()) continue;
+      const p = Store.getBlock(id);
+      if (!p || p.alive === false || !Konten.darf('lesen', p.id)) continue;
+      teile.push('## Erwähnt: ' + (p.text || 'Ohne Titel') + '\n' + textVonSeite(p.id).slice(0, 2500));
+      quellenListe.push({ id: p.id, titel: p.text || 'Ohne Titel', art: 'Erwähnt', geaendert: p.edited });
     }
 
     /* 2. Der Rest des Arbeitsbereichs — gesucht, nicht komplett */
@@ -760,6 +805,7 @@ const Kontext = (() => {
     catch { return wieBisher(); }
     if (!fv || !fv.length) return wieBisher();
     const ix = holen();
+    const q = quellen();
     const raus = ix.eintraege.map((e: any) => {
       const g = gemerkt[e.id];
       if (!g) return null;
@@ -771,6 +817,9 @@ const Kontext = (() => {
          ohne diese Zeile hätte das Modell den ganzen Bestand gesehen. */
       if (opt.nurSeite && e.seiteId !== opt.nurSeite && !istUnter(e.seiteId, opt.nurSeite))
         return null;
+      /* Und „Verbundenes" gilt hier wie in `finden` (E724) — sonst wäre der
+         Vektorweg das Leck, das E333 für `nurSeite` schon einmal schloss. */
+      if (e.verbunden && !q.verbindungen) return null;
       return { ...e, punkte: cosinus(fv, g.v) * 10 };
     }).filter(Boolean);
     raus.sort((a: any, b: any) => b.punkte - a.punkte);
@@ -779,7 +828,7 @@ const Kontext = (() => {
 
   return { bauen, abgleichen, reparieren, holen, warten, status, kandidaten,
            finden, findenMitVektoren, ausschnitt, bauenFuerFrage,
-           quellen, quelleSetzen, QUELLEN_STANDARD, zerlegen, stamm, erweitern,
+           quellen, quelleSetzen, quelleUmschalten, QUELLEN_STANDARD, zerlegen, stamm, erweitern,
            nurQuellen, nurQuellenSetzen, darfFragen, nurQuellenAnweisung,
            embeddingsAn, embeddingsBauen, embeddingHolen, cosinus, textVonSeite };
 })();

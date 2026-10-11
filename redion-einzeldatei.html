@@ -9311,45 +9311,62 @@ body.nh-zieht .nh-regal{ touch-action:none }
 }
 #ai #ai-senden:hover { background: var(--haupt-flaeche-hover); transform: translateY(-1px); }
 #ai #ai-senden:active { transform: scale(.92); }
-#ai :is(.ai-leiste button, .ai-tools summary, .ai-head button):focus-visible {
+#ai :is(.ai-leiste button, .ai-start button, .ai-head button):focus-visible {
   outline: 2px solid var(--accent-text); outline-offset: 2px;
 }
-#ai .ai-tools { margin: 0 0 8px; border-radius: 16px; }
-#ai .ai-tools > summary {
-  display: flex; align-items: center; justify-content: space-between;
-  min-height:var(--touch-min); padding: 0 10px; border-radius: 12px;
-  list-style: none; cursor: pointer; color: var(--text-dim); font-size: 12px;
-}
-#ai .ai-tools > summary::-webkit-details-marker { display: none; }
-#ai .ai-tools > summary:hover { color: var(--text); background: var(--bg-hover); }
-#ai .ai-tools > summary > span { transition: transform .22s; transform: rotate(180deg); }
-#ai .ai-tools[open] > summary > span { transform: none; }
-#ai .ai-tools-body {
-  max-height: min(36dvh, 330px); overflow: auto; overscroll-behavior: contain;
-  padding: 4px 8px 12px; scrollbar-width: thin;
-}
-#ai .ai-tools[open] .ai-tools-body { animation: rmo-reveal .24s var(--rmo-ease); }
-#ai .ai-tools h3 {
-  width: 100%; margin: 0 0 10px; color: var(--text-faint);
+/* DIE SCHUBLADE „WERKZEUGE & KONTEXT" IST AUFGELÖST (E724). Ihre Einträge
+   wohnen dort, worauf sie wirken: die Quellen am Prompt (#ai-quellen), die
+   Seitenaktionen im leeren Chat (.ai-start), Nachschlagen und die Befehle im
+   „+", Agent, Besprechung und Protokoll im ⋯ des Kopfs. */
+
+/* Das Schild der Quellen: die Regler (der Effekt „sliders" aus E528) und
+   die Zahl — der Zustand steht ohne Aufklappen
+   da, und nicht nur als Farbe (§38): null aktive Quellen heisst „0". */
+#ai #ai-quellen { flex: 0 0 auto; gap: 3px; padding-inline: 6px; }
+#ai #ai-quellen .ai-quellen-zahl { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* Ohne aktive Quelle sagt es die Zahl „0" und der Name des Knopfs — nicht
+   die Farbe (§38). `--text-faint` kam in acht der zehn Schemata nur auf
+   3,3 bis 4,2 : 1 (Durchsicht 10. Oktober, messungen.md §93); der Knopf
+   steht jetzt in Ruhe da, nicht mehr hinter einer Klappe, also gilt die
+   Lesbarkeit der übrigen Leiste. */
+#ai #ai-quellen.ohne { color: var(--text-dim); }
+
+/* Die Schalter im Quellenmenü. 32 px, und das ist ein NEBENWEG (§37, E627):
+   man stellt die Quellen einmal ein und fasst sie danach selten wieder an;
+   der tägliche Weg ist das Eingabefeld. Am Telefon steht das Menü als Blatt
+   da, und dort werden sie Zeilen von 44 px (`.menu.blatt`, unten). Der
+   geschriebene Grund stand vorher bei der Schublade; er gilt hier weiter. */
+.menu .ki-quellschalter { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 8px 8px; padding: 0; max-width: 300px; }
+.menu .ki-quellschalter button { width: auto; min-height: 32px; border-radius: 10px; padding: 6px 9px; }
+.menu.blatt .ki-quellschalter { max-width: none; margin-inline: 0; }
+.menu.blatt .ki-quellschalter button { min-height: var(--touch-min); }
+
+/* FÜR DIESE SEITE — der leere Chat (E724). Die acht Seitenaktionen stehen
+   da, wo man anfängt, und gehen, sobald gefragt wurde (die erste `.msg.u`);
+   „Neuer Chat" leert #chat, und sie sind wieder da. Nur die Umgebung neu
+   ordnen: Originalmasse, Schatten und Glimmen der Bau-Knöpfe bleiben (E528). */
+#ai .ai-start { padding: 2px 18px 10px; }
+/* Die Überschrift in `--text-dim`: mit `--text-faint` kam sie in acht der
+   zehn Schemata nur auf 3,5 bis 4,3 : 1 (Durchsicht 10. Oktober,
+   messungen.md §93) — in der Schublade stand sie hinter einer Klappe,
+   jetzt steht sie in Ruhe da. */
+#ai .ai-start h3 {
+  margin: 0 0 9px; color: var(--text-dim);
   font-size: 11px; font-weight: 600; letter-spacing: .04em;
 }
-#ai .ai-context-group { margin-bottom: 18px; }
-#ai .ki-quellschalter { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; }
-/* 32 px, und das ist ein NEBENWEG (§37, E627). Die Quellschalter sagen, worin
-   die KI suchen darf — man stellt sie einmal ein und fasst sie danach selten
-   wieder an; der tägliche Weg ist das Eingabefeld darunter. Sie stehen in
-   einer umbrechenden Reihe, und 44 px machten daraus am Telefon drei Zeilen
-   statt zwei: die Schalter schöben genau das Feld aus dem Bild, das sie
-   begleiten. Der geschriebene Grund steht damit hier, wie §37 ihn verlangt —
-   nicht stillschweigend. */
-#ai .ki-quellschalter button { min-height: 32px; border-radius: 10px; padding: 6px 9px; }
-#ai .ai-quick { display: grid; gap: 18px; overflow: visible; margin: 0; }
-#ai .ai-action-group { display: flex; flex-wrap: wrap; align-items: center; gap: 9px 7px; padding: 4px; }
-#ai .ai-action-group h3 { margin-bottom: 0; }
-/* Nur die Umgebung neu ordnen: Originalmaße, Schatten und Glimmen der
- * beiden Bau-Knöpfe nicht überschreiben. 32 px Nebenweg, weil aufklappbar. */
-#ai .ai-tools-settings { display: flex; flex-wrap: wrap; gap: 10px; padding: 18px 4px 2px; }
-#ai .ai-tools-settings button { min-height: 32px; padding: 5px 10px; font-size: 12px; }
+#ai .ai-start .ai-quick { display: flex; flex-wrap: wrap; align-items: center; gap: 9px 7px; overflow: visible; margin: 0; }
+/* 44 px AM FINGER (§37). Die acht Seitenaktionen sind der Hauptweg des
+   leeren Chats; in der Schublade galten sie als Nebenweg mit 32 px „weil
+   aufklappbar", und der Grund ging mit ihr (Durchsicht 10. Oktober: 28 bis
+   30 px gemessen, test599 §3). Am Telefon und unter einem groben Zeiger
+   also 44 px. Am Rechner mit Maus bleiben die Originalmasse aus E528 —
+   Redur, 9. September: die beiden Bau-Knöpfe „waren ausdrücklich schon
+   richtig", und ihr Look (Funkel, Schatten, Glimmen) hängt an der Höhe.
+   Nur die Höhe wächst: Schrift, Rand und Effekt bleiben. */
+@media (max-width: 760px), (pointer: coarse) {
+  #ai .ai-start .ai-quick button { min-height: var(--touch-min); }
+}
+#ai:has(#chat .msg.u) .ai-start { display: none; }
 
 /* Kleine, abgeschlossene Bewegungen an vorhandenen Oberflächen. */
 @keyframes rmo-panel-in { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
@@ -9770,13 +9787,11 @@ body .rmo-ticket .ru-drucker-status { padding: 11px 12px 15px; }
   #ai .ai-foot { padding: 0 10px max(10px, env(safe-area-inset-bottom)); }
   #ai .ai-head { padding-inline: 14px; }
   #ai .ai-compose textarea { font-size: 16px; min-height: 86px; }
-  #ai .ai-tools-body { max-height: min(32dvh, 260px); }
   #ai .ai-leiste .model-btn { flex-basis: 130px; }
   #ai #ai-modus { font-size: 11px; padding-inline: 3px; }
 }
 @media (max-height: 600px) {
   #ai .ai-compose textarea { min-height: 54px; max-height: 100px; }
-  #ai .ai-tools-body { max-height: 22dvh; }
   #ai #chat { min-height: 32px; padding-block: 10px; }
 }
 @media (hover: none) {
@@ -9784,11 +9799,11 @@ body .rmo-ticket .ru-drucker-status { padding: 11px 12px 15px; }
   body .bib-deckel[data-art="ordner"]:hover:not(:focus-visible) .bib-deckel-blatt::before { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  #ai.open, #ai .ai-tools-body, #ai .ai-compose::before,
+  #ai.open, #ai .ai-compose::before,
   .rmo-orb::after, .rmo-liquid::before, .rmo-liquid::after, .ru-drucker-blatt,
   .rmo-digit::before,
   .els-kachel::after, .stat-karte.lw-metrik::after, .stat-karte.lw-metrik strong { animation: none !important; }
-  #ai .ai-compose, #ai .ai-leiste button, #ai .ai-tools > summary > span,
+  #ai .ai-compose, #ai .ai-leiste button,
   #ai .ai-compose::before, .rmo-folder-sheet, .rmo-carousel i, .rmo-sliders i::after,
   .els-kachel, .stat-karte.lw-metrik, .schalter > i, .sp-start,
   .fbtns button.prim { transition: none !important; }
@@ -13503,6 +13518,24 @@ body > .ru-loesch{ z-index: 580; }
   }
   #ai.open{ transform:translateY(0) }
 
+  /* WAS DAS BLATT ÖFFNET, LIEGT ÜBER IHM (E724). Das Blatt wurde auf 920
+     gehoben, um den Hinweisstreifen (900) zu schlagen — die Ebenen, die es
+     SELBST öffnet, behielten ihre Werte vom Rechner: Menü 600, Grund 590,
+     Overlay 700, Hinweis 900, der Tropfen (E712) 605, der Stapel (E711)
+     899. Alle lagen unter ihrem Öffner, und `Fokus` machte das Blatt
+     darüber `inert`: gemalt oben, durchlässig für den Finger. Ein Tipp ins
+     sichtbare Eingabefeld wählte unsichtbar „Gemma 2 · 2B ~1,6 GB" (gemessen,
+     messungen §93). Jetzt liegen sie darüber — und alle UNTER dem R-Blatt
+     (950), den Einstellungen (940, `.overlay:has(.einst-fenster)` wiegt
+     mehr als die Overlay-Zeile hier, `:where` hält sie leicht) und den
+     Fenstern des Kits (1100, ausgenommen). Nur gehoben, nie gesenkt;
+     am Rechner gilt nichts davon, dort ist #ai eine Spalte. Wächter test599 §6. */
+  body:has(#ai.open) .menu-grund{ z-index:921 }
+  body:has(#ai.open) .menu{ z-index:924 }
+  body:has(#ai.open) .ru-tropfen-buehne{ z-index:925 }
+  body:where(:has(#ai.open)) .overlay:where(:not([data-insel-traeger])){ z-index:926 }
+  body:has(#ai.open) :is(#toast, #ru-toast-stapel){ z-index:927 }
+
   /* Der Griff oben — er sagt ohne Wort, dass man das Blatt wegwischen
      kann. `::before` statt eines Elements: die Zeile im Markup gäbe es
      am Rechner auch, und dort wäre sie sinnlos. */
@@ -13512,7 +13545,9 @@ body > .ru-loesch{ z-index: 580; }
     width:40px; height:5px; border-radius:3px; background:var(--line-stark);
   }
   .ai-head{ padding-top:22px }
-  .ai-quick{ overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; }
+  /* Die Seitenaktionen im leeren Chat brechen am Telefon um (E724). Eine
+     seitlich rollende Reihe versteckte die Hälfte hinter dem Rand — genau
+     das „erst nach dem Rollen sichtbar", das die Schublade auflöste. */
   .ai-quick button{ flex:0 0 auto; }
 
   /* Tabellen laufen seitlich weiter, statt zu zerbrechen */
@@ -14597,6 +14632,13 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
 .we-liste button:hover{background:var(--bg-hover)}
 .we-liste button .ms{margin-left:auto; color:var(--text-faint); font-size:12px}
 .we-liste button.rot{color:var(--gefahr)}
+/* Eine Zeile mit zwei Knöpfen (E724): der Name bearbeitet, der eigene
+   Löschknopf löscht — erst nach dem roten Paar (E709). Vorher war „löschen"
+   ein Wort im Zeilenknopf, mit der Tastatur nicht zu erreichen. */
+.we-liste .we-zeile{display:flex; align-items:center; gap:2px}
+.we-liste .we-zeile .we-zeile-name{flex:1; min-width:0}
+.we-liste .we-zeile .we-zeile-weg{width:auto; flex:0 0 var(--touch-min); min-height:var(--touch-min);
+  justify-content:center; color:var(--text-faint)}
 .we-liste .grp{padding:12px 10px 4px; font-size:11px; color:var(--text-faint);
   text-transform:uppercase; letter-spacing:.05em}
 
@@ -26144,42 +26186,40 @@ body[data-dokument="an"] .document-studio .blatt-werk{
          und liegt auf z-index 920 über der unteren Leiste — offen war es
          dort eine Sackgasse. Der Knopf steht hier für BEIDE Bildschirme:
          ein Weg, nicht zwei (§8). -->
+    <!-- Agent, Besprechung, Protokoll und die KI-Einstellungen (E724) —
+         vorher in der Schublade „Werkzeuge & Kontext". -->
+    <button class="icon-btn" id="ai-mehr" title="Mehr KI-Funktionen" aria-label="Mehr KI-Funktionen" aria-haspopup="menu" aria-expanded="false"><span data-sym="dots" data-sym-groesse="16"></span></button>
     <button class="icon-btn" id="ai-zu" title="KI schliessen" aria-label="KI schliessen"><span data-sym="close" data-sym-groesse="16"></span></button>
   </div>
 
   <div id="chat"></div>
 
-  <div class="ai-foot">
-    <details class="ai-tools" id="ai-tools">
-    <summary>Werkzeuge &amp; Kontext <span aria-hidden="true">⌃</span></summary>
-    <div class="ai-tools-body">
-    <section class="ai-context-group" aria-labelledby="ai-context-title">
-      <h3 id="ai-context-title">Quellen für deine Antwort</h3>
-    </section>
+  <!-- FÜR DIESE SEITE (E724). Was auf die offene Seite wirkt, steht im
+       leeren Chat — dort fängt man an. Nicht IN #chat: „Neuer Chat" leert
+       dessen Inhalt. Sichtbar, solange niemand gefragt hat. -->
+  <section class="ai-start" aria-labelledby="ai-start-titel">
+    <h3 id="ai-start-titel">Für diese Seite</h3>
     <div class="ai-quick">
-      <button data-p="Fasse diese Seite in fünf Stichpunkten zusammen.">Zusammenfassen</button>
-      <button data-p="Leite aus dieser Seite konkrete Aufgaben ab. Jede Aufgabe als eigene Zeile, beginnend mit einem Verb.">Aufgaben</button>
-      <button data-p="Formuliere den Text dieser Seite klarer, ohne den Sinn zu ändern.">Umschreiben</button>
-      <button data-p="Übersetze diese Seite ins Englische.">Übersetzen</button>
-      <button data-p="Mache aus dieser Seite Karteikarten. Je Zeile: Frage :: Antwort.">Karteikarten</button>
-      <button id="ai-schreiben" title="Schreiben und bearbeiten — 16 Befehle"><span data-sym="pencil" data-sym-groesse="15"></span> Schreiben</button>
-      <button id="ai-agent" title="Mehrstufige Aufgaben"><span data-sym="robot" data-sym-groesse="15"></span> Agent</button>
-      <button id="ai-meeting" title="Aufnehmen, mitschreiben, auswerten"><span data-sym="mic" data-sym-groesse="15"></span> Besprechung</button>
-      <button id="ai-wiki" title="Kostenlos, ohne Schlüssel"><span data-sym="book" data-sym-groesse="15"></span> Nachschlagen</button>
       <button id="ai-db" title="Die KI legt eine echte Datenbank an"><span data-sym="database" data-sym-groesse="15"></span> Datenbank bauen</button>
       <button id="ai-seite" title="Die KI baut den Seitenaufbau"><span data-sym="page" data-sym-groesse="15"></span> Seite aufbauen</button>
-      <button id="ai-log" title="Was die KI gebaut hat"><span data-sym="history" data-sym-groesse="15"></span> Protokoll</button>
+      <button data-ki="zusammenfassen">Zusammenfassen</button>
+      <button data-ki="aufgaben">Aufgaben</button>
+      <button data-ki="besser">Umschreiben</button>
+      <button data-ki="uebersetzen">Übersetzen</button>
+      <button data-ki="karteikarten">Karteikarten</button>
+      <button id="ai-schreiben" title="Alle Befehle und Fähigkeiten" aria-haspopup="menu" aria-expanded="false"><span data-sym="pencil" data-sym-groesse="15"></span> Schreiben</button>
     </div>
-    <div class="ai-tools-settings" aria-label="Weitere KI-Einstellungen"></div>
-    </div>
-    </details>
+  </section>
+
+  <div class="ai-foot">
     <div class="ai-compose">
     <textarea id="ai-input" rows="2" placeholder="Frag etwas oder beschreibe deine Idee …" aria-label="Nachricht an die KI"></textarea>
     <!-- Eingabeaktionen unten, nach Redurs Bildvorlage. -->
     <div class="ai-leiste">
       <button id="ai-plus" title="Anhängen und erwähnen" aria-label="Anhängen und erwähnen">＋</button>
-      <button id="ai-quellen" title="Quellen, Modus und Personalisierung"><span data-sym="settings" data-sym-groesse="16"></span></button>
-      <button id="ai-faehig" title="Fähigkeiten"><span data-sym="puzzle" data-sym-groesse="16"></span></button>
+      <!-- Die Quellen am Prompt (E724): das Schild zählt, was die nächste
+           Frage sieht; der Name nennt es (bindePanel setzt ihn). -->
+      <button id="ai-quellen" title="Quellen — was die KI für die nächste Frage sieht" aria-label="Quellen" aria-haspopup="menu" aria-expanded="false"><span data-sym="settings" data-sym-groesse="16"></span><span class="ai-quellen-zahl" aria-hidden="true"></span></button>
       <button id="ai-modus" title="Standard darf ändern, Fragen nur antworten (Shift + Tab)">Standard</button>
       <span class="ai-luecke"></span>
       <button class="model-btn" title="Modell wechseln" aria-label="KI-Modell wechseln">
@@ -27258,6 +27298,7 @@ const ARTEN = Object.freeze({
     rechteGeaendert: 'konto.rechte-geaendert',
     sucheGestellt: 'suche.gestellt',
     indexAufgebaut: 'suche.index-aufgebaut',
+    kiQuellenGeaendert: 'ki.quellen-geaendert',
     themaGewechselt: 'oberflaeche.thema',
     seitenleisteAuf: 'oberflaeche.seitenleiste',
     hinweisGezeigt: 'oberflaeche.hinweis',
@@ -27283,7 +27324,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1443, inhalt: '6364cdaaed88056f', gebaut: '2026-10-11T01:55:49.687Z' };
+const Stand = { fassung: 1444, inhalt: 'cb40220b93a8e75d', gebaut: '2026-10-11T01:58:32.655Z' };
 window.Stand = Stand;
 
 </script>
@@ -36704,6 +36745,112 @@ Register.werkzeuge = (() => {
         return raus;
     };
     return { melde, holen, alle, ids, auswahl };
+})();
+
+</script>
+<script>
+/* ===== quell/register/ki.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/ki.ts (npm run bauen:ts). */
+window.Register = window.Register || {};
+Register.ki = (() => {
+    const S = 'Schreiben und bearbeiten';
+    const B = 'Bauen und nachschlagen';
+    const BEFEHLE = [
+        { id: 'zusammenfassen', name: 'Zusammenfassen', icon: '📋', art: 'auftrag', gruppe: S,
+            ziel: 'seite', ausgabe: 'darunter', haeufig: true,
+            auftrag: 'Fasse den Text in höchstens fünf kurzen Stichpunkten zusammen. ' +
+                'Hebe Entscheidungen, offene Fragen und nächste Schritte hervor.',
+            alt: { sb: 'fassen', block: ['ai-summary'] } },
+        { id: 'aufgaben', name: 'Aufgaben ableiten', icon: '☑', art: 'auftrag', gruppe: S,
+            ziel: 'seite', ausgabe: 'darunter', haeufig: true,
+            auftrag: 'Leite aus dem Text konkrete Aufgaben ab. Jede Aufgabe als eigene Zeile, ' +
+                'beginnend mit einem Verb.',
+            alt: { block: ['ai-todo'] } },
+        { id: 'besser', name: 'Text verbessern', icon: '✨', art: 'auftrag', gruppe: S,
+            ziel: 'markierung', ausgabe: 'ersetzen',
+            auftrag: 'Formuliere den Text klarer und flüssiger, ohne den Sinn zu ändern.',
+            alt: { faehig: 'stil', block: ['ai-edit', 'ai-improve'] } },
+        { id: 'uebersetzen', name: 'Übersetzen', icon: '🌍', art: 'auftrag', gruppe: S,
+            ziel: 'markierung', ausgabe: 'ersetzen', haeufig: true,
+            auftrag: 'Übersetze den Text in diese Sprache: {sprache}. Gib nur die Übersetzung zurück.',
+            frage: 'In welche Sprache?', vorgabe: 'Englisch',
+            alt: { block: ['ai-translate'] } },
+        { id: 'karteikarten', name: 'Karteikarten', icon: '🗂', art: 'auftrag', gruppe: S,
+            ziel: 'seite', ausgabe: 'karteikarten',
+            auftrag: 'Mache aus dem Text Karteikarten. Je Zeile genau eine Karte: Frage :: Antwort. ' +
+                'Keine Nummerierung, keine Einleitung.' },
+        { id: 'schreiben', name: 'Text schreiben', icon: '✒️', art: 'auftrag', gruppe: S,
+            ziel: 'block', ausgabe: 'darunter',
+            auftrag: 'Schreibe einen zusammenhängenden Absatz zu diesem Stichwort.',
+            alt: { block: ['ai-write'] } },
+        { id: 'weiter', name: 'Weiterschreiben', icon: '✒️', art: 'auftrag', gruppe: S,
+            ziel: 'markierung', ausgabe: 'darunter',
+            auftrag: 'Schreib den Text sinnvoll weiter. Gleiche Stimme, gleicher Ton, keine Wiederholung.' },
+        { id: 'kuerzer', name: 'Kürzer machen', icon: '✂️', art: 'auftrag', gruppe: S,
+            ziel: 'markierung', ausgabe: 'ersetzen',
+            auftrag: 'Kürze den Text auf das Wesentliche. Höchstens die Hälfte.' },
+        { id: 'laenger', name: 'Länger machen', icon: '📏', art: 'auftrag', gruppe: S,
+            ziel: 'markierung', ausgabe: 'ersetzen',
+            auftrag: 'Führe den Text weiter aus, mit Beispielen. Nichts erfinden, was widerspricht.' },
+        { id: 'einfach', name: 'Einfacher erklären', icon: '💡', art: 'auftrag', gruppe: S,
+            ziel: 'markierung', ausgabe: 'darunter',
+            auftrag: 'Erkläre denselben Inhalt einfach und verständlich, ohne Fachjargon — so, ' +
+                'dass ihn jemand ohne Vorwissen versteht.',
+            alt: { faehig: 'erklaer' } },
+        { id: 'ton-formell', name: 'Ton: förmlich', icon: '🎩', art: 'auftrag', gruppe: S,
+            ziel: 'markierung', ausgabe: 'ersetzen',
+            auftrag: 'Schreib den Text förmlich und sachlich um, in der Sie-Form.' },
+        { id: 'ton-locker', name: 'Ton: locker', icon: '😊', art: 'auftrag', gruppe: S,
+            ziel: 'markierung', ausgabe: 'ersetzen',
+            auftrag: 'Schreib den Text locker und freundlich um, in der Du-Form.' },
+        { id: 'ton-direkt', name: 'Ton: direkt', icon: '🎯', art: 'auftrag', gruppe: S,
+            ziel: 'markierung', ausgabe: 'ersetzen',
+            auftrag: 'Schreib den Text kurz und direkt um. Keine Höflichkeitsfloskeln.' },
+        { id: 'recht', name: 'Rechtschreibung', icon: '📝', art: 'auftrag', gruppe: S,
+            ziel: 'markierung', ausgabe: 'ersetzen',
+            auftrag: 'Korrigiere Rechtschreibung, Grammatik und Zeichensetzung. Ändere sonst nichts.',
+            alt: { faehig: 'korrek' } },
+        { id: 'ideen', name: 'Ideen sammeln', icon: '💡', art: 'auftrag', gruppe: S,
+            ziel: 'markierung', ausgabe: 'darunter',
+            auftrag: 'Sammle zehn Ideen zum Thema. Je Zeile eine, ohne Nummerierung.' },
+        { id: 'gliedern', name: 'Gliederung bauen', icon: '🗂', art: 'auftrag', gruppe: S,
+            ziel: 'markierung', ausgabe: 'ersetzen',
+            auftrag: 'Gliedere den Text sauber mit Überschriften und Stichpunkten. Der Inhalt bleibt.',
+            alt: { faehig: 'format' } },
+        { id: 'tabelle', name: 'Tabelle daraus machen', icon: '▦', art: 'auftrag', gruppe: S,
+            ziel: 'markierung', ausgabe: 'darunter',
+            auftrag: 'Mach aus dem Text eine Tabelle. Antworte als Markdown-Tabelle mit Kopfzeile.' },
+        { id: 'fragen', name: 'Rückfragen finden', icon: '❓', art: 'auftrag', gruppe: S,
+            ziel: 'markierung', ausgabe: 'darunter',
+            auftrag: 'Nenne fünf Fragen, die dieser Text offen lässt.' },
+        { id: 'datenbank', name: 'Datenbank bauen', icon: '▦', art: 'werkzeug', gruppe: B,
+            ziel: 'datenbank', ausgabe: 'chat', haeufig: true, palette: 'Datenbank von der KI bauen lassen',
+            auftrag: '', frage: 'Was soll die Datenbank können?',
+            vorgabe: 'Aufgaben mit Status, Priorität, Fälligkeit und Aufwand' },
+        { id: 'seite', name: 'Seite aufbauen', icon: '📄', art: 'werkzeug', gruppe: B,
+            ziel: 'seite', ausgabe: 'chat', haeufig: true, palette: 'Seitenaufbau von der KI',
+            auftrag: '', frage: 'Worum geht es auf der Seite?', vorgabe: '' },
+        { id: 'nachschlagen', name: 'Bei Wikipedia nachschlagen', icon: '📖', art: 'werkzeug', gruppe: B,
+            ziel: 'chat', ausgabe: 'chat', haeufig: true, palette: 'Nachschlagen bei Wikipedia',
+            auftrag: '', frage: 'Was soll ich nachschlagen?' },
+        { id: 'protokoll', name: 'Protokoll: was die KI gebaut hat', icon: '🕘', art: 'werkzeug', gruppe: B,
+            ziel: 'chat', ausgabe: 'chat', haeufig: true, palette: 'Protokoll: was die KI gebaut hat',
+            auftrag: '' }
+    ];
+    const finde = (id) => BEFEHLE.find(b => b.id === id);
+    const alle = () => BEFEHLE.slice();
+    const ausAlt = (art, wert) => BEFEHLE.find(b => {
+        const a = b.alt?.[art];
+        return Array.isArray(a) ? a.includes(String(wert)) : a === wert;
+    });
+    const auftrag = (id, werte = {}) => {
+        const b = finde(id);
+        if (!b)
+            return '';
+        return b.auftrag.replace('{sprache}', werte.sprache || b.vorgabe || 'Englisch');
+    };
+    return { alle, finde, ausAlt, auftrag };
 })();
 
 </script>
@@ -48648,7 +48795,7 @@ const RedionMotion = (() => {
         { id: 'sliders', place: 'Einstellungen, KI-Quellen, Datenbankfilter', selector: '#btn-settings, [data-k="einstellungen"], #ai-quellen, button[data-a="filter"]' },
         { id: 'light', place: 'Elektro, Lernen, Bestandsübersicht', selector: '.els-kachel, .stat-karte.lw-metrik, .pf-karte' },
         { id: 'gradient', place: 'PDF öffnen, Neue Seite, KI senden', selector: '[data-studio-import], #btn-neu-handy, #ai-senden, [data-rmo-new]' },
-        { id: 'letters', place: 'KI-Werkzeuge und Befehle', selector: '.ru-funkel, .ai-action-group button' },
+        { id: 'letters', place: 'KI-Werkzeuge und Befehle', selector: '.ru-funkel' },
         { id: 'liquid', place: 'KI-, Agenten-, Import- und Exportaufträge', selector: '.ki-aktivitaet, .ru-zustand, .ru-zk, .ru-lader, .ru-drucker, [data-studio-import], .ag-motion-status' },
         { id: 'toggle', place: 'Einstellungen und Automationen', selector: '.schalter, .mschalter' },
         { id: 'carousel', place: 'Zuletzt geöffnete Dokumente, leeres Regal', selector: '.rmo-recent, .bib-leer' },
@@ -86619,7 +86766,7 @@ const Blocks = (() => {
                     fl.aufFlaeche(b);
             }
             if (a === 'ai')
-                KI.blockAktion('ai-edit', b);
+                KI.befehlsMenue(document.querySelector('.blk[data-bid="' + b.id + '"]'), { block: b });
             if (a === 'del') {
                 App.inPapierkorb(b);
             }
@@ -97617,22 +97764,6 @@ const Werkzeuge = (() => {
         c('Ansicht', 'Hell / Dunkel', 'Strg Shift L', () => App.theme());
         c('Ansicht', 'Seitenleiste ein- oder ausblenden', 'Strg \\', () => document.getElementById('sidebar')?.classList.toggle('collapsed'));
         c('Ansicht', 'KI-Panel', 'Strg J', () => App.kiPanel());
-        c('KI', 'Datenbank von der KI bauen lassen', '', async () => {
-            const a = await UI.frage('Was soll die Datenbank können?', '');
-            if (a)
-                KI.datenbankBauen(a);
-        });
-        c('KI', 'Seitenaufbau von der KI', '', async () => {
-            const a = await UI.frage('Worum geht es auf der Seite?', '');
-            if (a)
-                KI.seiteBauen(a);
-        });
-        c('KI', 'Nachschlagen bei Wikipedia', '', async () => {
-            const a = await UI.frage('Was soll ich nachschlagen?', '');
-            if (a)
-                KI.nachschlagen(a);
-        });
-        c('KI', 'Protokoll: was die KI gebaut hat', '', () => KI.protokollZeigen());
         c('Ansicht', 'Alle Toggles öffnen oder schliessen', 'Strg Alt T', () => alleToggles());
         c('Ansicht', 'Tastenkürzel anzeigen', 'Strg /', () => tastenkuerzel());
         c('Daten', 'Einstellungen', 'Strg ,', () => App.einstellungen());
@@ -101572,9 +101703,9 @@ const Auswahl = (() => {
                 return;
             }
             if (a === 'ki') {
+                const rr = b.getBoundingClientRect();
                 weg();
-                App.kiPanel(true);
-                KI.frageMitAuswahl(text);
+                KI.befehlsMenue({ left: rr.left, top: rr.top, bottom: rr.bottom }, { text });
                 return;
             }
             if (a === 'komm') {
@@ -103597,8 +103728,8 @@ const Einstellungen = (() => {
                 'eingeschaltet sind. Jede Antwort nennt danach ihre Quellen.') +
             zeile('Die offene Seite', 'Was gerade auf dem Bildschirm steht', schalter('q:aktuelleSeite', Kontext.quellen().aktuelleSeite)) +
             zeile('Arbeitsbereich', 'Alle Seiten, die du lesen darfst', schalter('q:arbeitsbereich', Kontext.quellen().arbeitsbereich)) +
-            zeile('Datenbanken', 'Auch Mails, Termine und gespiegelte Einträge', schalter('q:datenbanken', Kontext.quellen().datenbanken)) +
-            zeile('Verbundene Dienste', 'Was über Verbindungen hereingeholt wurde', schalter('q:verbindungen', Kontext.quellen().verbindungen)) +
+            zeile('Datenbanken', 'Deine eigenen Datenbanken', schalter('q:datenbanken', Kontext.quellen().datenbanken)) +
+            zeile('Verbundene Dienste', 'Mails, Termine und alles, was gespiegelt wird', schalter('q:verbindungen', Kontext.quellen().verbindungen)) +
             zeile('Websuche', 'Wikipedia nachschlagen — dabei verlässt der Suchbegriff den Rechner', schalter('q:web', Kontext.quellen().web)) +
             zeile('Vor jeder Webanfrage nachfragen', 'Sicherheitshalber einmal bestätigen', schalter('ki:webFragen', V('ki:webFragen', true))) +
             zeile('Nur aus meinen Quellen antworten', 'Findet sich nichts, wird das Modell gar nicht erst gefragt — statt ' +
@@ -103864,6 +103995,7 @@ const Einstellungen = (() => {
             zeile('Speicherort der Daten', '', '<span class="ez-grau">IndexedDB „notizen"</span>') +
             zeile('Stand', 'Fassung des Programms und der Weg, über den es gerade läuft', `<span class="ez-grau ez-stand" data-fassung="${esc(standFassung())}">${esc(standText())}</span>`)
     }[b] || (() => kopf('Unbekannt')))();
+    let quellenZuhoerer = null;
     const binde = (o) => {
         o.querySelectorAll('[data-set]').forEach((el) => {
             el.addEventListener('change', () => {
@@ -103881,29 +104013,42 @@ const Einstellungen = (() => {
                 });
         });
         o.querySelectorAll('[data-toggle]').forEach((b) => {
-            b.addEventListener('click', () => {
+            b.addEventListener('click', async () => {
                 const k = b.dataset.toggle;
                 if (k.startsWith('q:')) {
-                    const name = k.slice(2);
-                    const jetzt = Kontext.quellen()[name];
-                    if (name === 'web' && !jetzt && V('ki:webFragen', true) &&
-                        !confirm('Für die Websuche wird Wikipedia angefragt. Dabei verlässt dein ' +
-                            'Suchbegriff den Rechner. Einschalten?'))
+                    const an = await Kontext.quelleUmschalten(k.slice(2));
+                    if (an === null)
                         return;
-                    Kontext.quelleSetzen(name, !jetzt);
-                    b.classList.toggle('an', !jetzt);
-                    document.querySelectorAll('.ki-quellschalter [data-qs="' + name + '"]')
-                        .forEach(x => x.classList.toggle('an', !jetzt));
+                    b.classList.toggle('an', an);
+                    b.setAttribute('aria-checked', an ? 'true' : 'false');
                     return;
                 }
                 const neu = !V(k, k === 'erinnernInApp' ||
                     k === 'kiKontext' || k === 'autoVersionen' || k === 'ki:webFragen');
                 S(k, neu);
                 b.classList.toggle('an', neu);
+                b.setAttribute('aria-checked', neu ? 'true' : 'false');
                 if (k === 'rechtschreib')
                     App.zeichneSeite();
             });
         });
+        quellenZuhoerer?.();
+        quellenZuhoerer = null;
+        if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined' &&
+            o.querySelector('[data-toggle^="q:"]')) {
+            quellenZuhoerer = Ereignisse.horche(ARTEN.kiQuellenGeaendert, (d) => {
+                if (!o.isConnected) {
+                    quellenZuhoerer?.();
+                    quellenZuhoerer = null;
+                    return;
+                }
+                const b = o.querySelector(`[data-toggle="q:${String(d?.quelle || '')}"]`);
+                if (!(b instanceof HTMLElement))
+                    return;
+                b.classList.toggle('an', !!d.an);
+                b.setAttribute('aria-checked', d.an ? 'true' : 'false');
+            });
+        }
         o.querySelectorAll('[data-grenze]').forEach((el) => {
             const uebernehmen = () => {
                 const wert = Number(el.value);
@@ -109948,7 +110093,7 @@ const Kontext = (() => {
             raus.push(s.slice(i, i + 3));
         return raus;
     };
-    const INDEX_FASSUNG = 1;
+    const INDEX_FASSUNG = 2;
     const KOPF_ID = '@suchindex';
     let index = null;
     let letzterDatenStand = -1;
@@ -110019,7 +110164,8 @@ const Kontext = (() => {
                     return;
                 raus.push({ art: 'zeile', b, c, innen,
                     stand: signatur([b.id, b.text, b.edited, JSON.stringify(b.props || {}),
-                        c.id, c.name, c.edited, JSON.stringify(c.schema || {}), innen.stand]) });
+                        c.id, c.name, c.edited, JSON.stringify(c.schema || {}), innen.stand,
+                        String(c.spiegelQuelle || '')]) });
                 return;
             }
             const pfad = Store.pfadText(b.id);
@@ -110051,6 +110197,7 @@ const Kontext = (() => {
         const roh = (b.text || '') + ' ' + felder + ' ' + q.innen.text;
         return {
             id: b.id, seiteId: b.id, art: 'zeile', datenbank: c.name, stand: q.stand,
+            verbunden: !!c.spiegelQuelle,
             titel: b.text || 'Ohne Titel', pfad: c.name,
             text: roh.slice(0, 4000),
             geaendert: spaeter(b.edited || b.created || '', q.innen.geaendert),
@@ -110231,6 +110378,8 @@ const Kontext = (() => {
                 return null;
             if (e.art === 'zeile' && !q.datenbanken)
                 return null;
+            if (e.verbunden && !q.verbindungen)
+                return null;
             if (e.art === 'seite' && !q.arbeitsbereich)
                 return null;
             const basis = bm25(e, woerter, ix);
@@ -110311,6 +110460,23 @@ const Kontext = (() => {
         const q = quellen();
         q[k] = an;
         Store.setMeta('ki:quellen', q);
+        if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined')
+            Ereignisse.melde(ARTEN.kiQuellenGeaendert, { quelle: k, an: !!an });
+    };
+    const quelleUmschalten = async (k) => {
+        const jetzt = !!quellen()[k];
+        if (k === 'web' && !jetzt && Store.getMeta('ki:webFragen', true)) {
+            const ja = await Dialog.bestaetigen({
+                titel: 'Websuche einschalten?',
+                text: 'Für die Websuche wird Wikipedia angefragt. Dabei verlässt dein ' +
+                    'Suchbegriff den Rechner.',
+                ja: 'Einschalten'
+            });
+            if (!ja)
+                return null;
+        }
+        quelleSetzen(k, !jetzt);
+        return !jetzt;
     };
     const bauenFuerFrage = async (frage, opt = {}) => {
         const q = quellen();
@@ -110324,6 +110490,15 @@ const Kontext = (() => {
                 quellenListe.push({ id: p.id, titel: p.text || 'Ohne Titel',
                     art: 'Offene Seite', geaendert: p.edited });
             }
+        }
+        for (const id of (Array.isArray(opt.extraSeiten) ? opt.extraSeiten : [])) {
+            if (q.aktuelleSeite && id === App.aktuelleSeite())
+                continue;
+            const p = Store.getBlock(id);
+            if (!p || p.alive === false || !Konten.darf('lesen', p.id))
+                continue;
+            teile.push('## Erwähnt: ' + (p.text || 'Ohne Titel') + '\n' + textVonSeite(p.id).slice(0, 2500));
+            quellenListe.push({ id: p.id, titel: p.text || 'Ohne Titel', art: 'Erwähnt', geaendert: p.edited });
         }
         if (q.arbeitsbereich || q.datenbanken) {
             const treffer = await findenMitVektoren(frage, opt.anzahl || 6, { nurSeite: opt.nurSeite });
@@ -110457,6 +110632,7 @@ const Kontext = (() => {
         if (!fv || !fv.length)
             return wieBisher();
         const ix = holen();
+        const q = quellen();
         const raus = ix.eintraege.map((e) => {
             const g = gemerkt[e.id];
             if (!g)
@@ -110465,6 +110641,8 @@ const Kontext = (() => {
                 return null;
             if (opt.nurSeite && e.seiteId !== opt.nurSeite && !istUnter(e.seiteId, opt.nurSeite))
                 return null;
+            if (e.verbunden && !q.verbindungen)
+                return null;
             return { ...e, punkte: cosinus(fv, g.v) * 10 };
         }).filter(Boolean);
         raus.sort((a, b) => b.punkte - a.punkte);
@@ -110472,7 +110650,7 @@ const Kontext = (() => {
     };
     return { bauen, abgleichen, reparieren, holen, warten, status, kandidaten,
         finden, findenMitVektoren, ausschnitt, bauenFuerFrage,
-        quellen, quelleSetzen, QUELLEN_STANDARD, zerlegen, stamm, erweitern,
+        quellen, quelleSetzen, quelleUmschalten, QUELLEN_STANDARD, zerlegen, stamm, erweitern,
         nurQuellen, nurQuellenSetzen, darfFragen, nurQuellenAnweisung,
         embeddingsAn, embeddingsBauen, embeddingHolen, cosinus, textVonSeite };
 })();
@@ -143123,37 +143301,69 @@ const KI = (() => {
         });
         return d;
     };
-    const quellenLeiste = () => {
+    const QUELLEN_NAMEN = [
+        ['aktuelleSeite', '📄', 'Diese Seite'],
+        ['arbeitsbereich', '🗂', 'Arbeitsbereich'],
+        ['datenbanken', '▦', 'Datenbanken'],
+        ['verbindungen', '🔌', 'Verbundenes'],
+        ['web', '🌐', 'Web']
+    ];
+    const aktiveQuellen = () => {
         const q = Kontext.quellen();
-        const NAMEN = [
-            ['aktuelleSeite', '📄 Diese Seite'],
-            ['arbeitsbereich', '🗂 Arbeitsbereich'],
-            ['datenbanken', '▦ Datenbanken'],
-            ['verbindungen', '🔌 Verbundenes'],
-            ['web', '🌐 Web']
-        ];
-        const d = document.createElement('div');
-        d.className = 'ki-quellschalter';
-        d.innerHTML = NAMEN.map(([k, n]) => `<button data-qs="${k}" aria-pressed="${!!(k && q[k])}" class="${k && q[k] ? 'an' : ''}">${n}</button>`).join('');
-        d.addEventListener('click', e => {
+        return QUELLEN_NAMEN.filter(([k]) => q[k]).map(([, , n]) => n);
+    };
+    const quellenKnoepfe = () => {
+        const q = Kontext.quellen();
+        return QUELLEN_NAMEN.map(([k, z, n]) => `<button data-qs="${k}" aria-pressed="${!!q[k]}" class="${q[k] ? 'an' : ''}">${z} ${n}</button>`).join('');
+    };
+    const quellenBinden = (d) => {
+        d.addEventListener('click', async (e) => {
             const b = elVon(e)?.closest('[data-qs]');
             if (!b)
                 return;
             const qs = b.dataset.qs;
             if (!qs)
                 return;
-            const jetzt = Kontext.quellen()[qs];
-            if (qs === 'web' && !jetzt && Store.getMeta('ki:webFragen', true)) {
-                if (!confirm('Für Websuche wird Wikipedia angefragt. Dabei verlässt dein Suchbegriff ' +
-                    'den Rechner. Einschalten?'))
-                    return;
-            }
-            Kontext.quelleSetzen(qs, !jetzt);
-            b.classList.toggle('an', !jetzt);
-            b.setAttribute('aria-pressed', String(!jetzt));
-            UI.toast((!jetzt ? 'An: ' : 'Aus: ') + b.textContent);
+            const an = await Kontext.quelleUmschalten(qs);
+            if (an === null)
+                return;
+            UI.toast((an ? 'An: ' : 'Aus: ') + (b.textContent || '').trim());
         });
         return d;
+    };
+    const quellenLeiste = () => {
+        const d = document.createElement('div');
+        d.className = 'ki-quellschalter';
+        d.innerHTML = quellenKnoepfe();
+        return quellenBinden(d);
+    };
+    const quellenSchild = () => {
+        const k = document.getElementById('ai-quellen');
+        if (!k)
+            return;
+        const an = aktiveQuellen();
+        k.setAttribute('aria-label', 'Quellen: ' + (an.length ? an.join(', ') : 'keine') + ' — ändern');
+        const zahl = k.querySelector('.ai-quellen-zahl');
+        if (zahl)
+            zahl.textContent = String(an.length);
+        k.classList.toggle('ohne', !an.length);
+    };
+    const quellenAbgleichen = () => {
+        const q = Kontext.quellen();
+        document.querySelectorAll('[data-qs]').forEach(b => {
+            const an = !!q[b.dataset.qs || ''];
+            b.classList.toggle('an', an);
+            b.setAttribute('aria-pressed', String(an));
+        });
+        quellenSchild();
+    };
+    const kontextSatz = () => {
+        if (!Store.getMeta('kiKontext', true))
+            return 'Neuer Chat. Die KI sieht nichts aus deinem Arbeitsbereich — ' +
+                '„Seiteninhalt mitgeben" ist in den KI-Einstellungen aus.';
+        const an = aktiveQuellen();
+        return an.length ? 'Neuer Chat. Die KI sieht: ' + an.join(' · ') + '.'
+            : 'Neuer Chat. Die KI sieht nichts — alle Quellen sind aus.';
     };
     const sendenKnopf = (imLauf) => {
         const k = document.getElementById('ai-senden');
@@ -143173,9 +143383,19 @@ const KI = (() => {
         zustand.abbruch.abort();
         return true;
     };
+    const erwaehnt = new Map();
     const senden = async (text, mitKontext = true) => {
         if (!text.trim())
             return;
+        const at = mitKontext ? atBefehl(text.trim()) : null;
+        if (at) {
+            const lauf = at.rest ? { text: at.rest, wo: 'Eingabe' } : {};
+            if (at.f)
+                await faehigkeitAusfuehren(at.f, lauf);
+            else if (at.b)
+                await ausfuehren(at.b.id, lauf);
+            return;
+        }
         if (!zustand.bereit) {
             melde(zustand.quelle === 'ollama'
                 ? 'Ollama ist nicht erreichbar. Unten im Eingabefeld ein Modell wählen oder auf „Erneut nach Ollama suchen" klicken.'
@@ -143189,7 +143409,9 @@ const KI = (() => {
         let quellen = [];
         if (mitKontext && Store.getMeta('kiKontext', true)) {
             ziel.textContent = 'Sucht im Arbeitsbereich …';
-            const k = await Kontext.bauenFuerFrage(text, { anzahl: 6 });
+            const extraSeiten = [...erwaehnt].filter(([, titel]) => text.includes('@' + titel)).map(([id]) => id);
+            erwaehnt.clear();
+            const k = await Kontext.bauenFuerFrage(text, { anzahl: 6, extraSeiten });
             quellen = k.quellen;
             const tor = Kontext.darfFragen(k);
             if (!tor.ok) {
@@ -143339,23 +143561,12 @@ const KI = (() => {
         }
     };
     const blockAktion = async (art, block) => {
-        App.kiPanel(true);
-        const auftraege = {
-            'ai-write': 'Schreibe einen zusammenhängenden Absatz zu diesem Stichwort: ' + (block.text || '(leer)'),
-            'ai-summary': 'Fasse den Inhalt dieser Seite in fünf kurzen Stichpunkten zusammen. ' +
-                'Hebe Entscheidungen, offene Fragen und nächste Schritte hervor.',
-            'ai-todo': 'Leite aus dem Inhalt dieser Seite konkrete Aufgaben ab. ' +
-                'Jede Aufgabe als eigene Zeile, beginnend mit einem Verb.',
-            'ai-edit': 'Formuliere diesen Text klarer, ohne den Sinn zu ändern:\n\n' + (block.text || ''),
-            'ai-improve': 'Verbessere diesen Text: klarer, kürzer, ohne Füllwörter. ' +
-                'Gib nur den überarbeiteten Text zurück.\n\n' + (block.text || ''),
-            'ai-translate': 'Übersetze diesen Text ins Englische. Gib nur die Übersetzung zurück.\n\n' +
-                (block.text || '')
-        };
-        const auftrag = auftraege[art];
-        if (!auftrag)
+        const b = kiKatalog()?.ausAlt('block', art);
+        if (!b)
             return;
-        await senden(auftrag, !['ai-edit', 'ai-improve', 'ai-translate'].includes(art));
+        App.kiPanel(true);
+        await ausfuehren(b.id, { block,
+            ...(b.ziel !== 'seite' && block?.text ? { text: String(block.text), wo: 'Block' } : {}) });
     };
     const protokoll = [];
     const merkeSchritt = (was, ids) => {
@@ -143651,70 +143862,155 @@ const KI = (() => {
             `Nenne drei Muster, die dir auffallen, und einen konkreten Verbesserungsvorschlag.\n\n` +
             tabelle.slice(0, 6000), false);
     };
-    const SCHREIB_BEFEHLE = [
-        { id: 'weiter', icon: '✒️', name: 'Weiterschreiben',
-            auftrag: 'Schreib den Text sinnvoll weiter. Gleiche Stimme, gleicher Ton, keine Wiederholung.' },
-        { id: 'besser', icon: '✨', name: 'Text verbessern',
-            auftrag: 'Mach den Text klarer und flüssiger, ohne den Sinn zu verändern.' },
-        { id: 'kuerzer', icon: '✂️', name: 'Kürzer machen',
-            auftrag: 'Kürze den Text auf das Wesentliche. Höchstens die Hälfte.' },
-        { id: 'laenger', icon: '📏', name: 'Länger machen',
-            auftrag: 'Führe den Text weiter aus, mit Beispielen. Nichts erfinden, was widerspricht.' },
-        { id: 'einfach', icon: '🧒', name: 'Einfacher erklären',
-            auftrag: 'Erklär denselben Inhalt so, dass ihn jemand ohne Vorwissen versteht.' },
-        { id: 'ton-formell', icon: '🎩', name: 'Ton: förmlich',
-            auftrag: 'Schreib den Text förmlich und sachlich um, in der Sie-Form.' },
-        { id: 'ton-locker', icon: '😊', name: 'Ton: locker',
-            auftrag: 'Schreib den Text locker und freundlich um, in der Du-Form.' },
-        { id: 'ton-direkt', icon: '🎯', name: 'Ton: direkt',
-            auftrag: 'Schreib den Text kurz und direkt um. Keine Höflichkeitsfloskeln.' },
-        { id: 'recht', icon: '📝', name: 'Rechtschreibung',
-            auftrag: 'Korrigiere Rechtschreibung, Zeichensetzung und Grammatik. Sonst nichts ändern.' },
-        { id: 'fassen', icon: '📋', name: 'Zusammenfassen',
-            auftrag: 'Fasse den Text in höchstens fünf Stichpunkten zusammen.' },
-        { id: 'uebersetzen', icon: '🌍', name: 'Übersetzen',
-            auftrag: 'Übersetze den Text ins Englische.', frage: 'In welche Sprache?' },
-        { id: 'ideen', icon: '💡', name: 'Ideen sammeln',
-            auftrag: 'Sammle zehn Ideen zum Thema. Je Zeile eine, ohne Nummerierung.' },
-        { id: 'gliedern', icon: '🗂', name: 'Gliederung bauen',
-            auftrag: 'Mach aus dem Text eine Gliederung mit Überschriften und Stichpunkten.' },
-        { id: 'tabelle', icon: '▦', name: 'Tabelle daraus machen',
-            auftrag: 'Mach aus dem Text eine Tabelle. Antworte als Markdown-Tabelle mit Kopfzeile.' },
-        { id: 'aufgaben', icon: '☑', name: 'Aufgaben ableiten',
-            auftrag: 'Leite konkrete Aufgaben ab. Je Zeile eine, beginnend mit einem Verb.' },
-        { id: 'fragen', icon: '❓', name: 'Rückfragen finden',
-            auftrag: 'Nenne fünf Fragen, die dieser Text offen lässt.' }
-    ];
-    const arbeitsText = () => {
-        const sel = String(getSelection() || '').trim();
-        if (sel.length > 3)
-            return { text: sel, teil: true };
-        return { text: seitenKontext(), teil: false };
+    const kiKatalog = () => (typeof Register !== 'undefined' && Register.ki) ? Register.ki : null;
+    const SCHREIB_BEFEHLE = (kiKatalog()?.alle() || [])
+        .filter((b) => b.art === 'auftrag' && b.gruppe === 'Schreiben und bearbeiten');
+    const markierung = () => {
+        const sel = getSelection();
+        const text = String(sel || '').trim();
+        if (!sel || text.length <= 3 || !sel.rangeCount)
+            return null;
+        const knoten = sel.anchorNode instanceof Element ? sel.anchorNode : sel.anchorNode?.parentElement;
+        if (knoten?.closest('#ai'))
+            return null;
+        const blk = knoten?.closest('.blk');
+        return { text, bereich: sel.getRangeAt(0).cloneRange(), bid: blk?.dataset.bid || '' };
     };
-    const schreibMenue = (anker2) => {
-        const r = anker2
-            ? anker2.getBoundingClientRect()
-            : { left: innerWidth / 2 - 130, bottom: 120 };
-        const m = UI.menu('<div class="grp">Schreiben und bearbeiten</div>' +
-            SCHREIB_BEFEHLE.map(b => `<button data-sb="${b.id}"><span class="mi">${b.icon}</span>${b.name}</button>`).join(''), r.left - 40, (r.bottom || 100) + 6);
+    const eingabe = (befehl, opt) => {
+        if (opt.text && opt.text.trim())
+            return { text: opt.text.trim(), wo: opt.wo || 'Markierung', mark: opt.mark || null };
+        const mark = opt.mark || markierung();
+        if (mark)
+            return { text: mark.text, wo: 'Markierung', mark };
+        if (opt.block && befehl.ziel !== 'seite' && String(opt.block.text || '').trim())
+            return { text: String(opt.block.text), wo: 'Block', mark: null };
+        return { text: seitenKontext(), wo: 'ganze Seite', mark: null };
+    };
+    const ausfuehren = async (id, opt = {}) => {
+        const b = kiKatalog()?.finde(id);
+        if (!b)
+            return;
+        if (b.art === 'werkzeug') {
+            await werkzeugAus(b.id);
+            return;
+        }
+        let auftrag = opt.auftrag || kiKatalog().auftrag(b.id);
+        if (b.frage && !opt.auftrag) {
+            const antwort = await UI.frage(b.frage, b.vorgabe || '');
+            if (!antwort)
+                return;
+            auftrag = kiKatalog().auftrag(b.id, { sprache: antwort });
+        }
+        await schreibLauf({ ...b, ...(opt.name ? { name: opt.name } : {}), ...(opt.icon ? { icon: opt.icon } : {}) }, auftrag, opt);
+    };
+    const werkzeugAus = async (id) => {
+        const b = kiKatalog()?.finde(id);
+        if (!b)
+            return;
+        if (id === 'protokoll') {
+            protokollZeigen();
+            return;
+        }
+        let vorschlag = b.vorgabe || '';
+        if (id === 'nachschlagen')
+            vorschlag = (markierung()?.text || '') || (Store.getBlock(App.aktuelleSeite())?.text || '');
+        const antwort = await UI.frage(b.frage || b.name, vorschlag);
+        if (!antwort)
+            return;
+        if (id === 'datenbank')
+            datenbankBauen(antwort);
+        if (id === 'seite')
+            seiteBauen(antwort);
+        if (id === 'nachschlagen')
+            nachschlagen(antwort);
+    };
+    const faehigkeitAusfuehren = async (f, opt = {}) => {
+        const b = kiKatalog()?.ausAlt('faehig', f.id);
+        const start = FAEHIG_START.find(x => x.id === f.id);
+        const eigeneZeile = !!f.auftrag && !!start && f.auftrag !== start.auftrag;
+        if (b) {
+            await ausfuehren(b.id, { ...opt, name: f.name, icon: f.icon || b.icon,
+                ...(eigeneZeile ? { auftrag: f.auftrag } : {}) });
+            return;
+        }
+        await schreibLauf({ id: f.id, name: f.name, icon: f.icon || '🧩', ziel: 'markierung', ausgabe: 'ersetzen' }, f.auftrag, opt);
+    };
+    const rechteckVon = (anker) => {
+        if (anker && typeof anker.getBoundingClientRect === 'function')
+            return anker.getBoundingClientRect();
+        if (anker && typeof anker.left === 'number')
+            return { left: anker.left, top: anker.top, bottom: anker.bottom ?? anker.top };
+        return { left: innerWidth / 2 - 130, top: 160, bottom: 120 };
+    };
+    const amKnopf = (anker, m) => {
+        if (!(anker instanceof HTMLElement))
+            return;
+        anker.setAttribute('aria-expanded', 'true');
+        const w = new MutationObserver(() => {
+            if (m.isConnected)
+                return;
+            w.disconnect();
+            anker.setAttribute('aria-expanded', 'false');
+            const a = document.activeElement;
+            if (anker.isConnected && (!a || a === document.body || !a.isConnected))
+                anker.focus({ preventScroll: true });
+        });
+        w.observe(document.body, { childList: true });
+    };
+    const befehlsMenue = (anker, opt = {}) => {
+        const r = rechteckVon(anker);
+        const mark = markierung();
+        const liste = faehigkeiten();
+        const katalogVon = (f) => kiKatalog()?.ausAlt('faehig', f.id);
+        const verdeckt = new Set(liste.map((f) => katalogVon(f)?.id).filter(Boolean));
+        const befehle = (kiKatalog()?.alle() || []).filter((b) => !verdeckt.has(b.id));
+        const zeile = (b) => `<button data-sb="${esc(b.id)}"><span class="mi">${b.icon}</span>${esc(b.name)}</button>`;
+        const fHtml = '<div class="grp">Fähigkeiten</div>' + liste.map((f) => `<button data-f="${esc(f.id)}"${katalogVon(f) ? ` data-sb="${esc(katalogVon(f).id)}"` : ''}>` +
+            `<span class="mi">${esc(f.icon || '🧩')}</span>${esc(f.name)}</button>`).join('');
+        const sHtml = '<div class="grp">Schreiben und bearbeiten</div>' +
+            befehle.filter((b) => b.art === 'auftrag').map(zeile).join('');
+        const bHtml = (opt.text || opt.block) ? '' : '<div class="grp">Bauen und nachschlagen</div>' +
+            befehle.filter((b) => b.art === 'werkzeug').map(zeile).join('');
+        const vorn = opt.text
+            ? '<button data-k="fragen"><span class="mi">💬</span>Zu dieser Stelle fragen</button>' : '';
+        const m = UI.menuMitSuche(vorn + (opt.zuerst === 'faehig' ? fHtml + sHtml : sHtml + fHtml) + bHtml +
+            '<hr><button data-f="__neu"><span class="mi">＋</span>Fähigkeit hinzufügen</button>' +
+            '<button data-f="__verw"><span class="mi">⚙</span>Fähigkeiten verwalten</button>', r.left - 40, Math.max(12, r.top - 300), { platzhalter: 'Befehl oder Fähigkeit suchen …', titel: 'KI-Befehle',
+            kopf: UI.amTelefon() ? '' : '<div class="grp">KI-Befehle</div>',
+            fuss: 'Schreibbefehle und Fähigkeiten auch im Chat mit <b>@</b> vor dem Namen.',
+            ...(anker instanceof HTMLElement ? { anker } : {}) });
+        amKnopf(anker, m);
         m.addEventListener('click', async (e) => {
-            const b = elVon(e)?.closest('[data-sb]');
-            if (!b)
+            const k = elVon(e)?.closest('[data-k], [data-sb], [data-f]');
+            if (!k)
                 return;
             m.remove();
-            const befehl = SCHREIB_BEFEHLE.find(x => x.id === b.dataset.sb);
-            if (!befehl)
+            if (k.dataset.k === 'fragen') {
+                App.kiPanel(true);
+                frageMitAuswahl(opt.text);
                 return;
-            let auftrag = befehl.auftrag;
-            if (befehl.frage) {
-                const antwort = await UI.frage(befehl.frage, 'Englisch');
-                if (!antwort)
-                    return;
-                auftrag = 'Übersetze den Text ins ' + antwort + '.';
             }
-            await schreibLauf(befehl, auftrag);
+            if (k.dataset.f === '__neu') {
+                faehigkeitBearbeiten();
+                return;
+            }
+            if (k.dataset.f === '__verw') {
+                faehigkeitenVerwalten();
+                return;
+            }
+            const lauf = { ...(opt.text ? { text: opt.text, wo: 'Markierung' } : {}),
+                ...(opt.block ? { block: opt.block } : {}), mark };
+            const f = k.dataset.f ? liste.find((x) => x.id === k.dataset.f) : null;
+            if (f) {
+                await faehigkeitAusfuehren(f, lauf);
+                return;
+            }
+            if (k.dataset.sb)
+                await ausfuehren(k.dataset.sb, lauf);
         });
+        return m;
     };
+    const schreibMenue = (anker2) => befehlsMenue(anker2, { zuerst: 'schreiben' });
     const zeigeAktivitaet = (ziel) => {
         const status = document.createElement('div');
         status.className = 'ki-aktivitaet';
@@ -143723,14 +144019,27 @@ const KI = (() => {
         ziel.before(status);
         return status;
     };
-    const schreibLauf = async (befehl, auftrag) => {
-        const quelle = arbeitsText();
+    const alsKarteikarten = (text) => {
+        const seite = App.aktuelleSeite();
+        const karten = String(text || '').split('\n').map(z => z.replace(/^[-*•\d.\s]+/, '').trim())
+            .filter(z => /\S\s*::\s*\S/.test(z));
+        karten.forEach(z => Store.addBlock(seite, 'flashcard', { text: z, herkunft: 'ki' }));
+        if (karten.length) {
+            App.zeichneSeite();
+            UI.toast(karten.length + ' Karteikarten eingefügt');
+        }
+        else
+            UI.toast('In der Antwort steht keine Zeile „Frage :: Antwort"');
+        return karten.length;
+    };
+    const schreibLauf = async (befehl, auftrag, opt = {}) => {
+        const quelle = eingabe(befehl, opt);
         if (!quelle.text.trim()) {
             UI.toast('Es gibt noch keinen Text.');
             return;
         }
         App.kiPanel(true);
-        schreibe('user', befehl.icon + ' ' + befehl.name + (quelle.teil ? ' (Markierung)' : ' (ganze Seite)'));
+        schreibe('user', (befehl.icon ? befehl.icon + ' ' : '') + befehl.name + ' (' + quelle.wo + ')');
         const ziel = schreibe('assistant', '');
         ziel.textContent = '…';
         const system = SYSTEM + '\n\n' + auftrag +
@@ -143758,11 +144067,16 @@ const KI = (() => {
             ziel.classList.remove('ki-schreibt');
             aktivitaet.remove();
         }
+        const ausgabe = befehl.ausgabe || 'ersetzen';
+        const ersetzbar = ausgabe === 'ersetzen' && zustand.modus !== 'fragen' &&
+            (quelle.wo === 'Markierung' || quelle.wo === 'Block') && (quelle.wo !== 'Block' || !!opt.block);
         const leiste = document.createElement('div');
         leiste.className = 'ki-antwortknoepfe';
         leiste.innerHTML =
-            '<button data-a="ersetzen">Markierung ersetzen</button>' +
-                '<button data-a="darunter">Darunter einfügen</button>' +
+            (ersetzbar ? `<button data-a="ersetzen">${quelle.wo === 'Block' ? 'Block ersetzen' : 'Markierung ersetzen'}</button>` : '') +
+                (ausgabe === 'karteikarten'
+                    ? '<button data-a="karteikarten">Als Karteikarten einfügen</button>'
+                    : '<button data-a="darunter">Darunter einfügen</button>') +
                 '<button data-a="kopieren">Kopieren</button>' +
                 '<button data-a="nochmal">Noch einmal</button>';
         leiste.addEventListener('click', async (e) => {
@@ -143773,29 +144087,97 @@ const KI = (() => {
                 Ablage.kopiereJetzt(antwort, 'Kopiert');
             }
             if (b.dataset.a === 'nochmal') {
-                schreibLauf(befehl, auftrag);
+                schreibLauf(befehl, auftrag, opt);
             }
             if (b.dataset.a === 'darunter') {
                 alsBloeckeEinfuegen(antwort);
             }
-            if (b.dataset.a === 'ersetzen') {
-                const sel = getSelection();
-                if (sel && sel.rangeCount && String(sel).trim()) {
-                    const bereich = sel.getRangeAt(0);
-                    bereich.deleteContents();
-                    bereich.insertNode(document.createTextNode(antwort));
-                    const blk = sel.anchorNode?.parentElement?.closest?.('.blk');
-                    const ct = blk?.querySelector('.ct');
-                    if (blk instanceof HTMLElement && ct && blk.dataset.bid)
-                        Store.updateBlock(blk.dataset.bid, { text: ct.textContent });
-                    UI.toast('Ersetzt');
-                }
-                else {
-                    alsBloeckeEinfuegen(antwort);
-                }
+            if (b.dataset.a === 'karteikarten') {
+                alsKarteikarten(antwort);
             }
+            if (b.dataset.a === 'ersetzen')
+                await ersetzen(antwort, quelle, opt);
         });
         ziel.appendChild(leiste);
+    };
+    const seiteDesBlocks = (id) => {
+        let b = id ? Store.getBlock(id) : null;
+        for (let n = 0; b && n < 40; n++) {
+            if (b.type === 'page')
+                return b.id;
+            b = b.parentId ? Store.getBlock(b.parentId) : null;
+        }
+        return App.aktuelleSeite();
+    };
+    const fassungVorKi = async (blockId) => {
+        try {
+            await Store.versionSpeichern(seiteDesBlocks(blockId), 'vor KI-Änderung');
+            return true;
+        }
+        catch (e) {
+            UI.toast('Die Sicherungsfassung liess sich nicht schreiben, deshalb wurde nichts ersetzt: ' +
+                (e instanceof Error ? e.message : String(e)));
+            return false;
+        }
+    };
+    const ersetzen = async (antwort, quelle, opt) => {
+        if (quelle.wo === 'Block' && opt.block?.id) {
+            if (!await fassungVorKi(opt.block.id))
+                return;
+            Store.updateBlock(opt.block.id, { text: antwort, herkunft: 'ki' });
+            App.zeichneSeite();
+            UI.toast('Ersetzt');
+            return;
+        }
+        const mark = quelle.mark;
+        const bl = mark?.bid ? Store.getBlock(mark.bid) : null;
+        const alt = String(bl?.text || '');
+        const i = mark ? alt.indexOf(mark.text) : -1;
+        if (bl && mark && i >= 0 && alt.indexOf(mark.text, i + 1) < 0) {
+            if (!await fassungVorKi(bl.id))
+                return;
+            Store.updateBlock(bl.id, { text: alt.slice(0, i) + antwort + alt.slice(i + mark.text.length), herkunft: 'ki' });
+            App.zeichneSeite();
+            UI.toast('Ersetzt');
+            return;
+        }
+        const sel = getSelection();
+        const bereich = sel && sel.rangeCount && String(sel).trim() ? sel.getRangeAt(0)
+            : (mark?.bereich && mark.bereich.startContainer.isConnected ? mark.bereich : null);
+        if (!bereich) {
+            alsBloeckeEinfuegen(antwort);
+            return;
+        }
+        const blk = (bereich.startContainer instanceof Element ? bereich.startContainer : bereich.startContainer.parentElement)?.closest?.('.blk');
+        const bid = blk instanceof HTMLElement ? blk.dataset.bid || '' : '';
+        if (bid && !await fassungVorKi(bid))
+            return;
+        bereich.deleteContents();
+        bereich.insertNode(document.createTextNode(antwort));
+        const ct = blk?.querySelector('.ct');
+        if (bid && ct)
+            Store.updateBlock(bid, { text: ct.textContent, herkunft: 'ki' });
+        UI.toast('Ersetzt');
+    };
+    const atBefehl = (text) => {
+        if (!text.startsWith('@'))
+            return null;
+        const roh = text.slice(1);
+        const klein = roh.toLowerCase();
+        const kandidaten = [
+            ...faehigkeiten().map((f) => ({ name: String(f.name || ''), f })),
+            ...(kiKatalog()?.alle() || []).filter((b) => b.art === 'auftrag').map((b) => ({ name: b.name, b }))
+        ].filter(k => k.name && klein.startsWith(k.name.toLowerCase()) &&
+            (roh.length === k.name.length || /\s/.test(roh.charAt(k.name.length))));
+        if (!kandidaten.length)
+            return null;
+        kandidaten.sort((a, b) => b.name.length - a.name.length);
+        const k = kandidaten[0];
+        const seite = [...erwaehnt.values()].some(t => t.length >= k.name.length && klein.startsWith(t.toLowerCase()) &&
+            (roh.length === t.length || /\s/.test(roh.charAt(t.length))));
+        if (seite)
+            return null;
+        return { ...(k.f ? { f: k.f } : {}), ...(k.b ? { b: k.b } : {}), rest: roh.slice(k.name.length).trim() };
     };
     const alsBloeckeEinfuegen = (text) => {
         const zeilen = String(text || '').split('\n');
@@ -143916,31 +144298,7 @@ const KI = (() => {
             }
         });
     };
-    const faehigkeitenMenue = (anker) => {
-        const r = anker.getBoundingClientRect();
-        const liste = faehigkeiten();
-        const m = UI.menuMitSuche(liste.map((f) => `<button data-f="${f.id}"><span class="mi">${f.icon}</span>${esc(f.name)}</button>`).join('') +
-            '<hr><button data-f="__neu"><span class="mi">＋</span>Fähigkeit hinzufügen</button>' +
-            '<button data-f="__verw"><span class="mi">⚙</span>Fähigkeiten verwalten</button>', r.left, r.top - 260, { platzhalter: 'Fähigkeit suchen …', kopf: '<div class="grp">Fähigkeiten</div>',
-            fuss: 'Im Chat auch mit <b>@</b> vor dem Namen aufrufbar.' });
-        m.addEventListener('click', async (e) => {
-            const b = elVon(e)?.closest('[data-f]');
-            if (!b)
-                return;
-            m.remove();
-            if (b.dataset.f === '__neu') {
-                faehigkeitBearbeiten();
-                return;
-            }
-            if (b.dataset.f === '__verw') {
-                faehigkeitenVerwalten();
-                return;
-            }
-            const f = liste.find((x) => x.id === b.dataset.f);
-            if (f)
-                senden(f.auftrag);
-        });
-    };
+    const faehigkeitenMenue = (anker) => befehlsMenue(anker, { zuerst: 'faehig' });
     const faehigkeitBearbeiten = async (vorhanden) => {
         const name = await UI.frage('Wie heisst die Fähigkeit?', vorhanden ? vorhanden.name : '');
         if (!name)
@@ -143961,12 +144319,14 @@ const KI = (() => {
             o.innerHTML =
                 '<div class="finder we-panel">' +
                     `<div class="fh">Fähigkeiten <em>${liste.length}</em>` +
-                    '<button class="icon-btn" data-a="zu">✕</button></div>' +
+                    '<button class="icon-btn" data-a="zu" aria-label="Schliessen">✕</button></div>' +
                     '<div class="we-text">Fähigkeiten sind Aufgaben, die die KI kann. Du rufst ' +
-                    'sie im Chat mit <b>@</b> auf oder über das Menü bei markiertem Text.</div>' +
+                    'sie im Chat mit <b>@</b> vor dem Namen auf oder über das Befehlsmenü.</div>' +
                     '<div class="we-liste">' +
-                    liste.map((f) => `<button data-b="${f.id}"><span>${f.icon}</span>${esc(f.name)}` +
-                        `<span class="ms" data-w="${f.id}">löschen</span></button>`).join('') +
+                    liste.map((f) => '<div class="we-zeile">' +
+                        `<button class="we-zeile-name" data-b="${esc(f.id)}"><span>${esc(f.icon || '🧩')}</span>${esc(f.name)}</button>` +
+                        `<button class="we-zeile-weg" data-w="${esc(f.id)}" data-loeschknopf="Löschen" ` +
+                        `aria-label="Fähigkeit „${esc(f.name)}“ löschen" title="Fähigkeit „${esc(f.name)}“ löschen">🗑</button></div>`).join('') +
                     '</div>' +
                     '<div class="we-fuss"><button class="we-knopf" data-a="neu">Fähigkeit hinzufügen</button></div>' +
                     '</div>';
@@ -144182,58 +144542,129 @@ const KI = (() => {
             baum.appendChild(leer);
         }
     };
+    const erwaehnenMenue = (ta, anker, mitFaehig, atStelle = -1) => {
+        const r = rechteckVon(anker);
+        const neu = (a, b) => String(b.edited || '').localeCompare(String(a.edited || ''));
+        const alle = Object.values(Store.cache.blocks).filter(x => x.type === 'page' && x.alive !== false);
+        const seiten = alle.filter(x => x.parentTable !== 'collection').sort(neu).slice(0, 60);
+        const zeilen = alle.filter(x => x.parentTable === 'collection').sort(neu).slice(0, 40);
+        const fRows = mitFaehig
+            ? '<div class="grp">Fähigkeiten</div>' + faehigkeiten().map((f) => `<button data-f="${esc(f.id)}"><span class="mi">${esc(f.icon || '🧩')}</span>${esc(f.name)}</button>`).join('')
+            : '';
+        const m = UI.menuMitSuche(fRows + '<div class="grp">Seiten</div>' +
+            seiten.map(p => `<button data-s="${esc(p.id)}">${esc(p.icon || '📄')} ${esc(p.text || 'Ohne Titel')}</button>`).join('') +
+            (zeilen.length ? '<div class="grp">Datenbankzeilen</div>' +
+                zeilen.map(p => `<button data-s="${esc(p.id)}">${esc(p.icon || '▦')} ${esc(p.text || 'Ohne Titel')}</button>`).join('') : ''), r.left, Math.max(12, r.top - 300), { platzhalter: mitFaehig ? 'Fähigkeit oder Seite suchen …' : 'Seite suchen …',
+            titel: mitFaehig ? 'Erwähnen' : 'Seite erwähnen',
+            kopf: UI.amTelefon() ? '' : '<div class="grp">' + (mitFaehig ? 'Erwähnen' : 'Seite erwähnen') + '</div>' });
+        const ohneAt = () => atStelle >= 0 && ta.value.charAt(atStelle) === '@'
+            ? ta.value.slice(0, atStelle) + ta.value.slice(atStelle + 1) : ta.value;
+        m.addEventListener('click', ev2 => {
+            const s = elVon(ev2)?.closest('[data-s], [data-f]');
+            if (!s)
+                return;
+            m.remove();
+            if (s.dataset.f) {
+                const f = faehigkeiten().find((x) => x.id === s.dataset.f);
+                if (f)
+                    ta.value = '@' + f.name + ' ' + ohneAt().trimStart();
+            }
+            else {
+                const p = Store.getBlock(s.dataset.s);
+                const titel = (p?.text || 'Seite');
+                if (p)
+                    erwaehnt.set(p.id, titel);
+                const rest = ohneAt();
+                const vor = atStelle >= 0 ? rest.slice(0, atStelle) : rest;
+                const nach = atStelle >= 0 ? rest.slice(atStelle) : '';
+                ta.value = vor + (vor && !/\s$/.test(vor) ? ' ' : '') + '@' + titel + (nach.startsWith(' ') ? '' : ' ') + nach;
+            }
+            ta.dispatchEvent(new Event('input'));
+            ta.focus();
+            ta.setSelectionRange(ta.value.length, ta.value.length);
+        });
+        return m;
+    };
+    const quellenMenue = (anker) => {
+        const r = anker.getBoundingClientRect();
+        const nur = Kontext.nurQuellen();
+        const m = UI.menu('<div class="grp">Quellen für die nächste Frage</div>' +
+            `<div class="ki-quellschalter">${quellenKnoepfe()}</div>` +
+            `<button data-y="nur" aria-pressed="${nur}" title="Findet sich in deinen Quellen nichts, wird das Modell nicht gefragt">` +
+            '<span class="mi">◎</span>Nur aus meinen Quellen' +
+            (nur ? '<span class="ms">✓</span>' : '') + '</button>' +
+            '<hr><button data-y="einst"><span class="mi">⚙</span>Alle KI-Einstellungen</button>', r.left, Math.max(12, r.top - 300), { anker, titel: 'Quellen' });
+        const leiste = m.querySelector('.ki-quellschalter');
+        if (leiste)
+            quellenBinden(leiste);
+        amKnopf(anker, m);
+        m.addEventListener('click', ev => {
+            const b = elVon(ev)?.closest('[data-y]');
+            if (!b)
+                return;
+            if (b.dataset.y === 'nur') {
+                const an = !Kontext.nurQuellen();
+                Kontext.nurQuellenSetzen(an);
+                b.setAttribute('aria-pressed', String(an));
+                b.querySelector('.ms')?.remove();
+                if (an)
+                    b.insertAdjacentHTML('beforeend', '<span class="ms">✓</span>');
+                UI.toast(an ? 'Nur aus meinen Quellen: an' : 'Nur aus meinen Quellen: aus');
+            }
+            if (b.dataset.y === 'einst') {
+                m.remove();
+                App.einstellungen('ki');
+            }
+        });
+        return m;
+    };
+    const mehrMenue = (anker) => {
+        const r = anker.getBoundingClientRect();
+        const mcp = (Store.getMeta('mcp:server', []) || []).length;
+        const m = UI.menu('<button id="ai-agent" data-y="agent"><span class="mi">🤖</span>Agent<span class="sub">Mehrstufige Aufgaben</span></button>' +
+            '<button id="ai-meeting" data-y="meeting"><span class="mi">🎙</span>Besprechung<span class="sub">Aufnehmen, mitschreiben, auswerten</span></button>' +
+            '<button id="ai-log" data-y="log"><span class="mi">🕘</span>Protokoll<span class="sub">Was die KI gebaut hat</span></button>' +
+            '<hr>' +
+            '<button data-y="verw"><span class="mi">🧩</span>Fähigkeiten verwalten</button>' +
+            '<button data-y="pers"><span class="mi">🎨</span>Personalisieren</button>' +
+            `<button data-y="mcp"><span class="mi">⇄</span>MCP-Server<span class="ms">${mcp}</span></button>` +
+            '<button data-y="einst"><span class="mi">⚙</span>KI-Einstellungen</button>', Math.max(12, r.right - 260), r.bottom + 6, { anker, titel: 'Mehr KI-Funktionen', tropfen: [
+                { id: 'agent', name: 'Agent', zeichen: 'robot', ziel: '[data-y="agent"]' },
+                { id: 'meeting', name: 'Besprechung', zeichen: 'mic', ziel: '[data-y="meeting"]' },
+                { id: 'log', name: 'Protokoll', zeichen: 'history', ziel: '[data-y="log"]' }
+            ] });
+        amKnopf(anker, m);
+        m.addEventListener('click', ev => {
+            const b = elVon(ev)?.closest('button[data-y]');
+            if (!b)
+                return;
+            m.remove();
+            const y = b.dataset.y;
+            if (y === 'agent')
+                Agent.panel();
+            if (y === 'meeting')
+                Meeting.panel();
+            if (y === 'log')
+                protokollZeigen();
+            if (y === 'verw')
+                faehigkeitenVerwalten();
+            if (y === 'pers')
+                personalisieren();
+            if (y === 'mcp')
+                App.einstellungen('mcp');
+            if (y === 'einst')
+                App.einstellungen('ki');
+        });
+        return m;
+    };
     const bindePanel = () => {
         const ta = document.getElementById('ai-input');
         const chat = document.getElementById('chat');
-        const actions = document.querySelector('.ai-quick');
-        if (actions && !actions.querySelector('.ai-action-group')) {
-            const prompts = Array.from(actions.querySelectorAll('button[data-p]'));
-            const groups = [
-                { name: 'Erstellen', ids: ['ai-db', 'ai-seite'], prompts: [] },
-                { name: 'Text bearbeiten', ids: ['ai-schreiben'], prompts: [0, 2, 3] },
-                { name: 'Lernen & planen', ids: ['ai-wiki'], prompts: [1, 4] },
-                { name: 'Assistenten & Verlauf', ids: ['ai-agent', 'ai-meeting', 'ai-log'], prompts: [] }
-            ];
-            for (const group of groups) {
-                const section = document.createElement('section');
-                section.className = 'ai-action-group';
-                const heading = document.createElement('h3');
-                heading.textContent = group.name;
-                section.append(heading);
-                for (const id of group.ids) {
-                    const button = document.getElementById(id);
-                    if (button)
-                        section.append(button);
-                }
-                for (const index of group.prompts) {
-                    const button = prompts[index];
-                    if (button)
-                        section.append(button);
-                }
-                actions.append(section);
-            }
-            const settings = document.querySelector('.ai-tools-settings');
-            const settingsActions = [['ai-quellen', 'Quellen & Modus'], ['ai-faehig', 'Fähigkeiten']];
-            for (const [id, label] of settingsActions) {
-                const button = document.getElementById(id);
-                if (button && settings) {
-                    button.append(' ' + label);
-                    settings.append(button);
-                }
-            }
-        }
-        const tools = document.querySelector('#ai-tools');
-        tools?.addEventListener('keydown', event => {
-            if (event.key === 'Escape' && tools.open && !document.querySelector('.menu')) {
-                event.stopPropagation();
-                tools.open = false;
-                tools.querySelector('summary')?.focus();
-            }
-        });
-        const fuss = document.querySelector('.ai-context-group');
-        if (fuss && !fuss.querySelector('.ki-quellschalter')) {
-            fuss.append(quellenLeiste());
-        }
+        if (typeof Register !== 'undefined' && Register.befehle && kiKatalog())
+            Register.befehle.meldeLieferant(kiPalette);
+        if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined')
+            Ereignisse.horche(ARTEN.kiQuellenGeaendert, () => quellenAbgleichen());
+        quellenSchild();
         if (!ta)
             return;
         ta.addEventListener('keydown', e => {
@@ -144249,12 +144680,23 @@ const KI = (() => {
                 senden(t);
             }
         });
-        ta.addEventListener('input', () => {
+        ta.addEventListener('input', (e) => {
             ta.style.height = 'auto';
             ta.style.height = Math.min(160, ta.scrollHeight) + 'px';
+            if (!(e instanceof InputEvent) || e.data !== '@')
+                return;
+            const pos = ta.selectionStart ?? ta.value.length;
+            if (ta.value.charAt(pos - 1) === '@' && (pos === 1 || /\s/.test(ta.value.charAt(pos - 2))))
+                erwaehnenMenue(ta, ta, true, pos - 1);
         });
-        document.querySelectorAll('.ai-quick button[data-p]').forEach(b => {
-            b.addEventListener('click', () => senden(b.dataset.p ?? ''));
+        document.querySelectorAll('.ai-start [data-ki]').forEach(b => {
+            let gemerkt = null;
+            b.addEventListener('pointerdown', () => { gemerkt = markierung(); });
+            b.addEventListener('click', () => {
+                const mark = gemerkt || markierung();
+                gemerkt = null;
+                void ausfuehren(b.dataset.ki || '', { mark });
+            });
         });
         const modusKnopf = document.getElementById('ai-modus');
         const modusZeigen = () => {
@@ -144280,7 +144722,8 @@ const KI = (() => {
                 `<button data-m="fragen"><span class="mi">💬</span>Fragen` +
                 '<span class="sub">Nur Antworten, keine Änderungen</span>' +
                 (zustand.modus === 'fragen' ? '<span class="ms">✓</span>' : '') + '</button>' +
-                '<div class="menu-fuss">Tipp: Mit Shift + Tab durch die Modi wechseln</div>', r.left - 120, r.top - 130);
+                '<div class="menu-fuss">Tipp: Mit Shift + Tab durch die Modi wechseln</div>', r.left - 120, r.top - 130, { titel: 'Modus' });
+            amKnopf(knopf, m);
             m.addEventListener('click', ev => {
                 const b = elVon(ev)?.closest('[data-m]');
                 if (!b)
@@ -144310,8 +144753,11 @@ const KI = (() => {
                 return;
             const r = knopf.getBoundingClientRect();
             const m = UI.menu('<button data-x="datei"><span class="mi">📎</span>Fotos und Dateien hinzufügen</button>' +
-                '<button data-x="erwaehnen"><span class="mi">@</span>Seiten oder Personen erwähnen</button>' +
-                '<button data-x="bild"><span class="mi">🖼</span>Bild erstellen<span class="ms">neu</span></button>', r.left, r.top - 120);
+                '<button data-x="erwaehnen"><span class="mi">@</span>Seite erwähnen</button>' +
+                '<button data-x="bild"><span class="mi">🖼</span>Bild erstellen<span class="ms">neu</span></button>' +
+                '<button id="ai-wiki" data-x="wiki"><span class="mi">📖</span>Bei Wikipedia nachschlagen</button>' +
+                '<button id="ai-faehig" data-x="befehle"><span class="mi">🧩</span>Befehle und Fähigkeiten …</button>', r.left, r.top - 220, { titel: 'Hinzufügen', anker: knopf });
+            amKnopf(knopf, m);
             m.addEventListener('click', async (ev) => {
                 const b = elVon(ev)?.closest('[data-x]');
                 if (!b)
@@ -144335,92 +144781,47 @@ const KI = (() => {
                     });
                     inp.click();
                 }
-                if (b.dataset.x === 'erwaehnen') {
-                    const seiten = Object.values(Store.cache.blocks)
-                        .filter(x => x.type === 'page' && x.alive !== false).slice(0, 60);
-                    const m2 = UI.menuMitSuche(seiten.map(p => `<button data-s="${p.id}">${p.icon || '📄'} ${esc(p.text || 'Ohne Titel')}</button>`).join(''), r.left, r.top - 300, { platzhalter: 'Seite suchen …', kopf: '<div class="grp">Erwähnen</div>' });
-                    m2.addEventListener('click', ev2 => {
-                        const s = elVon(ev2)?.closest('[data-s]');
-                        if (!s)
-                            return;
-                        const p = Store.getBlock(s.dataset.s);
-                        ta.value += (ta.value ? ' ' : '') + '@' + (p.text || 'Seite');
-                        m2.remove();
-                        ta.focus();
-                    });
-                }
+                if (b.dataset.x === 'erwaehnen')
+                    erwaehnenMenue(ta, knopf, false);
                 if (b.dataset.x === 'bild') {
                     const was = await UI.frage('Was soll auf dem Bild sein?', '');
                     if (was)
                         senden('Beschreibe ein Bild zu: ' + was +
                             '. Gib dann eine SVG-Zeichnung dazu aus, die ich einfügen kann.');
                 }
+                if (b.dataset.x === 'wiki')
+                    await werkzeugAus('nachschlagen');
+                if (b.dataset.x === 'befehle')
+                    befehlsMenue(knopf, { zuerst: 'faehig' });
             });
         });
         document.getElementById('ai-quellen')?.addEventListener('click', (e) => {
             const knopf = e.currentTarget;
-            if (!(knopf instanceof HTMLElement))
-                return;
-            const r = knopf.getBoundingClientRect();
-            const q = Kontext.quellen();
-            const anzahl = Object.values(q).filter(Boolean).length;
-            const m = UI.menu(`<button data-y="quellen"><span class="mi">⌥</span>Meine Quellen<span class="ms">${anzahl} ▸</span></button>` +
-                `<button data-y="mcp"><span class="mi">⇄</span>MCP-Server<span class="ms">` +
-                `${(Store.getMeta('mcp:server', []) || []).length} ▸</span></button>` +
-                `<button data-y="modus"><span class="mi">✎</span>Modus` +
-                `<span class="ms">${zustand.modus === 'fragen' ? 'Fragen' : 'Standard'} ▸</span></button>` +
-                '<button data-y="pers"><span class="mi">🎨</span>Personalisieren</button>', r.left, r.top - 160);
-            m.addEventListener('click', ev => {
-                const b = elVon(ev)?.closest('[data-y]');
-                if (!b)
-                    return;
-                m.remove();
-                if (b.dataset.y === 'quellen') {
-                    const q2 = UI.menu('<div class="grp">Meine Quellen</div>', r.left, r.top - 160);
-                    q2.appendChild(quellenLeiste());
-                }
-                if (b.dataset.y === 'mcp')
-                    App.einstellungen('mcp');
-                if (b.dataset.y === 'modus')
-                    modusWechseln();
-                if (b.dataset.y === 'pers')
-                    personalisieren();
-            });
+            if (knopf instanceof HTMLElement)
+                quellenMenue(knopf);
         });
-        document.getElementById('ai-faehig')?.addEventListener('click', (e) => faehigkeitenMenue(e.currentTarget));
+        document.getElementById('ai-mehr')?.addEventListener('click', (e) => {
+            const knopf = e.currentTarget;
+            if (knopf instanceof HTMLElement)
+                mehrMenue(knopf);
+        });
         document.getElementById('ai-diktat')?.addEventListener('click', () => diktat(ta));
         if (typeof Funkel !== 'undefined')
-            Funkel.alle(document, '.ai-quick button, .ai-tools-settings button');
-        document.getElementById('ai-db')?.addEventListener('click', async () => {
-            const auftrag = await UI.frage('Was soll die Datenbank können?', 'Aufgaben mit Status, Priorität, Fälligkeit und Aufwand');
-            if (auftrag)
-                datenbankBauen(auftrag);
-        });
-        document.getElementById('ai-seite')?.addEventListener('click', async () => {
-            const auftrag = await UI.frage('Worum geht es auf der Seite?', '');
-            if (auftrag)
-                seiteBauen(auftrag);
-        });
-        document.getElementById('ai-log')?.addEventListener('click', () => protokollZeigen());
-        document.getElementById('ai-agent')?.addEventListener('click', () => Agent.panel());
-        document.getElementById('ai-meeting')?.addEventListener('click', () => Meeting.panel());
+            Funkel.alle(document, '.ai-start .ai-quick button');
+        document.getElementById('ai-db')?.addEventListener('click', () => { void werkzeugAus('datenbank'); });
+        document.getElementById('ai-seite')?.addEventListener('click', () => { void werkzeugAus('seite'); });
         document.getElementById('ai-schreiben')?.addEventListener('click', (e) => schreibMenue(e.currentTarget));
-        document.getElementById('ai-wiki')?.addEventListener('click', async () => {
-            const vorschlag = (getSelection()?.toString() || '').trim() ||
-                (Store.getBlock(App.aktuelleSeite())?.text || '');
-            const begriff = await UI.frage('Was soll ich nachschlagen?', vorschlag);
-            if (begriff)
-                nachschlagen(begriff);
-        });
         document.getElementById('ai-verlauf')?.addEventListener('click', () => verlauf());
         document.getElementById('ai-clear')?.addEventListener('click', () => {
             zustand.verlauf = [];
             if (chat)
                 chat.innerHTML = '';
-            melde('Neuer Chat. Der Inhalt der offenen Seite wird als Kontext mitgegeben.');
+            melde(kontextSatz());
         });
         melde('Alles läuft lokal. Kein Text verlässt deinen Rechner.');
     };
+    const kiPalette = () => (kiKatalog()?.alle() || []).filter((b) => b.haeufig)
+        .map((b) => ({ gruppe: 'KI', titel: b.palette || b.name, tun: () => { void ausfuehren(b.id); } }));
     const sucheOllamaJetzt = async () => {
         if (zustand.bereit || zustand.quelle === 'ollama')
             return;
@@ -144434,6 +144835,7 @@ const KI = (() => {
         zeichneModellKnopf();
     };
     return { start, bindePanel, sucheOllamaJetzt, senden, abbrechen, sendenKnopf, blockAktion, frageMitAuswahl, wikipedia, nachschlagen,
+        ausfuehren, befehlsMenue, kontextSatz,
         datenbankBauen, datenbankBauenAus, seiteBauen, protokollZeigen, protokoll,
         quellenKarte, quellenLeiste, seitenKontext, SYSTEM,
         SCHREIB_BEFEHLE, schreibMenue, schreibLauf, alsBloeckeEinfuegen,
@@ -149087,9 +149489,11 @@ const App = (() => {
             }
             UI.toast('Übersetze nach ' + ziel + ' …');
             try {
-                const antwort = await KI.frageKurz(`Übersetze den folgenden Text nach ${ziel}. Behalte die Markdown-Struktur ` +
-                    '(Überschriften, Listen, Zitate) genau bei. Gib nur die Übersetzung aus, ' +
-                    'ohne Vorrede.\n\n' + text);
+                const auftrag = (typeof Register !== 'undefined' && Register.ki)
+                    ? Register.ki.auftrag('uebersetzen', { sprache: ziel })
+                    : `Übersetze den Text in diese Sprache: ${ziel}. Gib nur die Übersetzung zurück.`;
+                const antwort = await KI.frageKurz(auftrag + ' Behalte die Markdown-Struktur ' +
+                    '(Überschriften, Listen, Zitate) genau bei, ohne Vorrede.\n\n' + text);
                 if (!antwort) {
                     UI.toast('Keine Antwort erhalten');
                     return;

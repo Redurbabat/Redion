@@ -7440,3 +7440,146 @@ Bilder (nicht eingecheckt, §55.4): vorher und nachher, dunkel und hell —
 die breite Tabelle nach zwei Wischern quer (1440 × 900), ein Zug mit der
 mittleren Taste im Whiteboard (1440 × 900), das Schild im Streifen am
 Telefon (390 × 844).
+
+## §93 · KI am Ort: Chat, Ebenen am Telefon, ein Auftrag je Befehl, „Verbundenes" (E724, 6. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/ki-am-ort` gegen `3d180c591`
+(`claude/morgen-besser-2` mit `ordner-bearbeiten` und `kein-toter-knopf`).
+Chromium über Playwright; Rechner 1440 × 900 und 800 × 900 (Redurs
+schmales Fenster), Telefon 390 × 844 und 360 × 800 (Touch), dunkel und
+hell. Das Modell ist abgehängt: `/api/chat` antwortet aus dem Lauf, und
+jeder Körper wird mitgeschrieben. Alles in `test599`, das auf beiden
+Ständen lief; Bilder in der Ablage der Sitzung (§55.4).
+
+**1 · Der Platz im Fenster.**
+
+```txt
+                                   vorher                 nachher
+800 × 900, Chat ohne Frage         617 px (Schublade zu)  526 px — darunter „Für diese
+                                   293 px (Schublade auf)  Seite" mit allen acht Knöpfen
+Knöpfe ohne Rollen sichtbar        11 von 19 (offen)       19 von 19 erreichbar, ≤ 2 Griffe;
+                                   0 von 19 (zu)           8 + Schild + ⋯ ohne Griff
+nach der ersten Frage              617 px                  der Block geht, der Chat hat
+                                                           den ganzen Raum
+```
+
+**2 · Die Ebenen am Telefon** (`test599` §6; Ebene des Vorfahren direkt
+unter `body`, Treffer mit `#ai.inert = false` — `inert` lässt die
+Trefferprüfung sonst durch das gemalte Blatt hindurchsehen):
+
+```txt
+                       vorher                              nachher
+#ai (Blatt)            920                                 920
+„+", Modus, Modell     600, Treffer: ai-foot / ai-input /   924, Treffer: das Menü
+                       ai-head — unsichtbar, aber klickbar
+Quellen                600 (in der Schublade)              924
+Frage (Insel, E710)    1100 ✓                              1100 ✓
+Frage (Rückweg)        700, unter dem Blatt                926
+Hinweis                900, unter dem Blatt                927
+```
+
+Der teuerste Befund: am Telefon lag unter dem sichtbaren Eingabefeld die
+unsichtbare Zeile „○ Gemma 2 · 2B ~1,6 GB" des Modellmenüs.
+
+**3 · Ein Auftrag je Befehl** (`test599` §7a; dieselbe Seite, keine
+Markierung; Länge der Systemnachricht, die ans Modell ging):
+
+```txt
+„Zusammenfassen"   vorher: Knopf (Chat, „Fasse diese Seite …"),
+                   Schreibmenü („höchstens fünf Stichpunkte"),
+                   Schrägstrich (5980 Zeichen, mit Arbeitsbereich) —
+                   drei Anweisungen; Palette: kein Eintrag
+                   nachher: Knopf = Befehlsmenü = Schrägstrich = Palette
+                   = 546 Zeichen, Zeichen für Zeichen gleich
+„Text verbessern"  vorher: 483 / 342 / 342 / 5983 Zeichen auf vier Wegen
+                   nachher: Knopf = Befehlsmenü = Blockmenü = Schrägstrich
+                   = Fähigkeit „Schreibstil verbessern" = 486 Zeichen
+„Korrekturlesen" mit Markierung
+                   vorher: user = „Korrigiere Rechtschreibung, Grammatik und
+                   Zeichensetzung. Ändere sonst nichts." (die Anweisung!)
+                   nachher: user = „Die Spanung ist proportinal zum Strom."
+                   (genau die Markierung), dazu „Markierung ersetzen"
+„Zusammenfassen" mit „Diese Seite" aus
+                   vorher: die Seite fehlte ganz   nachher: sie ist die Eingabe
+```
+
+**4 · „Verbundenes"** (`test599` §8): eine gespiegelte Zeile
+(`spiegelQuelle: github:…`, Wort „Zwiebelfisch") und eine eigene
+(„Quarkbrot"), `Kontext.bauenFuerFrage('Zwiebelfisch Quarkbrot')`:
+
+```txt
+                    vorher                          nachher
+Verbundenes an      beide drin                      beide drin (wie vorher)
+Verbundenes aus     beide drin — Text gleich        nur „Quarkbrot"
+```
+
+**5 · Ein Schreiber für die Quellen** (`test599` §2, §9d): ein Schalter in
+den Einstellungen, und dann das Fenster — und umgekehrt.
+
+```txt
+                              vorher                       nachher
+Einstellungen → Fenster       Schalter im Fenster "true"   alle Schalter, Schild und
+                              bei Quelle aus; Schild alt   Zahl ziehen mit
+Fenster → offene Einstellungen  (keine Richtung)           Klasse und aria-checked ziehen mit
+                              Zwischenstand c1c6eecc2:     (rot war: wert false,
+                              checked "true", an true      checked "true")
+Webfrage                      confirm(), zwei Fassungen    ein Redion-Fenster (E710)
+```
+
+**6 · Startlast** (`test388` §5, gzip über die Leitung): vorher 1858 KB
+über 252 Dateien (`3d180c591`; `claude/morgen-besser-2` allein 1850),
+nachher 1863 KB über 253 Dateien — +5 KB für `register/ki.js` und die neuen
+Wege im Fenster. Decke 1950. Nach der Durchsicht vom 10. Oktober 1864 KB
+über 253 Dateien (+1 KB: Fassung vor dem Tausch, Zeilen-Gruppe, die Regel
+für 44 px).
+
+**7 · Durchsicht am 10. Oktober** — gegen d59c5bd35 (vorher) und den
+Stand danach, gemessen mit `test599` und zwei Sonden über `file://`
+(`/api/chat` abgefangen; die Sonden liegen nicht im Verzeichnis).
+
+„✨ KI" an „die Lötstelle ist kallt" im Block „Eins **fett** und die
+Lötstelle ist kallt." → „Korrekturlesen" → „Markierung ersetzen":
+
+```txt
+                      vorher                                nachher
+Block                 unverändert („… ist kallt.")          „Eins **fett** und die Lötstelle ist kalt."
+Blöcke auf der Seite  5 → 6 (Antwort als neuer Block        5 → 5
+                      am Ende, Meldung „In die Seite
+                      eingefügt")
+Fassungen „vor KI-    0 → 0                                 0 → 1 (und am Block noch einmal 1 → 2)
+Änderung"
+herkunft am Block     —                                     „ki" (Streifen am Rand)
+```
+
+Die acht Seitenaktionen im leeren Chat, Höhe in px (`test599` §3):
+
+```txt
+                      Datenbank  Seite  Zusammen-  Aufgaben  Um-        Über-   Karte-   Schreiben
+                      bauen      aufb.  fassen               schreiben  setzen  karten
+390 × 844 vorher      30         30     28         28        28         28      28       30
+390 × 844 nachher     44         44     44         44        44         44      44       44
+1440 × 900            unverändert (Maus, E528) — Grund an der Stelle in motion.css
+```
+
+Kontrast über dem wirksamen Hintergrund des KI-Fensters (Sonde
+`kontrast2`, Ebenen von innen nach aussen gemischt), alle zehn Schemata:
+
+```txt
+Schema           „Für diese Seite" (11 px)    Schild ohne Quelle („0", 12 px)
+                 vorher   nachher             vorher   nachher
+standard         3,63     7,31                3,39     6,84
+hell             3,76     5,65                3,63     5,45
+nacht            3,63     6,79                3,36     6,30
+wald             3,86     6,62                3,52     6,04
+sand             3,51     5,60                3,33     5,31
+papier           4,26     7,55                4,08     7,23
+kontrast         9,66     15,00               8,98     13,96
+rose             3,54     6,68                3,28     6,19
+touchkit-hell    3,50     5,28                4,24     6,38
+touchkit-dunkel  5,21     7,63                4,59     6,72
+```
+
+**Befehl.** `node pruefungen/lauf/test599.mts` (vorher 10/92 — hier stand
+zuerst 9, nachgemessen am roten Commit b82c4af8e; nach dem Bau 133/133;
+die Durchsicht: 136/144 gegen d59c5bd35, danach 144/144);
+`node pruefungen/lauf/test388.mts` für die Startlast.

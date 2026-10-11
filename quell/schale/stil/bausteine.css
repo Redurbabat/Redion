@@ -353,6 +353,24 @@
   }
   #ai.open{ transform:translateY(0) }
 
+  /* WAS DAS BLATT ÖFFNET, LIEGT ÜBER IHM (E724). Das Blatt wurde auf 920
+     gehoben, um den Hinweisstreifen (900) zu schlagen — die Ebenen, die es
+     SELBST öffnet, behielten ihre Werte vom Rechner: Menü 600, Grund 590,
+     Overlay 700, Hinweis 900, der Tropfen (E712) 605, der Stapel (E711)
+     899. Alle lagen unter ihrem Öffner, und `Fokus` machte das Blatt
+     darüber `inert`: gemalt oben, durchlässig für den Finger. Ein Tipp ins
+     sichtbare Eingabefeld wählte unsichtbar „Gemma 2 · 2B ~1,6 GB" (gemessen,
+     messungen §93). Jetzt liegen sie darüber — und alle UNTER dem R-Blatt
+     (950), den Einstellungen (940, `.overlay:has(.einst-fenster)` wiegt
+     mehr als die Overlay-Zeile hier, `:where` hält sie leicht) und den
+     Fenstern des Kits (1100, ausgenommen). Nur gehoben, nie gesenkt;
+     am Rechner gilt nichts davon, dort ist #ai eine Spalte. Wächter test599 §6. */
+  body:has(#ai.open) .menu-grund{ z-index:921 }
+  body:has(#ai.open) .menu{ z-index:924 }
+  body:has(#ai.open) .ru-tropfen-buehne{ z-index:925 }
+  body:where(:has(#ai.open)) .overlay:where(:not([data-insel-traeger])){ z-index:926 }
+  body:has(#ai.open) :is(#toast, #ru-toast-stapel){ z-index:927 }
+
   /* Der Griff oben — er sagt ohne Wort, dass man das Blatt wegwischen
      kann. `::before` statt eines Elements: die Zeile im Markup gäbe es
      am Rechner auch, und dort wäre sie sinnlos. */
@@ -362,7 +380,9 @@
     width:40px; height:5px; border-radius:3px; background:var(--line-stark);
   }
   .ai-head{ padding-top:22px }
-  .ai-quick{ overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; }
+  /* Die Seitenaktionen im leeren Chat brechen am Telefon um (E724). Eine
+     seitlich rollende Reihe versteckte die Hälfte hinter dem Rand — genau
+     das „erst nach dem Rollen sichtbar", das die Schublade auflöste. */
   .ai-quick button{ flex:0 0 auto; }
 
   /* Tabellen laufen seitlich weiter, statt zu zerbrechen */
@@ -1447,6 +1467,13 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
 .we-liste button:hover{background:var(--bg-hover)}
 .we-liste button .ms{margin-left:auto; color:var(--text-faint); font-size:12px}
 .we-liste button.rot{color:var(--gefahr)}
+/* Eine Zeile mit zwei Knöpfen (E724): der Name bearbeitet, der eigene
+   Löschknopf löscht — erst nach dem roten Paar (E709). Vorher war „löschen"
+   ein Wort im Zeilenknopf, mit der Tastatur nicht zu erreichen. */
+.we-liste .we-zeile{display:flex; align-items:center; gap:2px}
+.we-liste .we-zeile .we-zeile-name{flex:1; min-width:0}
+.we-liste .we-zeile .we-zeile-weg{width:auto; flex:0 0 var(--touch-min); min-height:var(--touch-min);
+  justify-content:center; color:var(--text-faint)}
 .we-liste .grp{padding:12px 10px 4px; font-size:11px; color:var(--text-faint);
   text-transform:uppercase; letter-spacing:.05em}
 

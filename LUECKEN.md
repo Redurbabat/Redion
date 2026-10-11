@@ -8348,6 +8348,55 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L244 · KI am Ort: was E724 nicht gebaut hat — 6. Oktober 2026
+
+**Gefunden beim Bau von E724** (Redur: „hier beim ki sollte alles komplet
+was beim werkzeuge undkontext seteh dort integriert sein also im passenden
+ortern"). Die Schublade ist aufgelöst, jeder der 19 Einträge hat seinen Ort,
+und alle Wege laufen durch EINEN Katalog (`Register.ki`). Offen bleibt:
+
+1. **KI-Befehle für Tabellen- und Datenbankzellen.** Der Katalog kennt das
+   Ziel `datenbank` nur für „Datenbank bauen"; eine markierte Zelle oder
+   Spalte ist noch kein Ziel, und das Befehlsmenü öffnet sich dort nicht.
+2. **Eine erwähnte Seite zählt nur mit „Seiteninhalt mitgeben".** Ist
+   `kiKontext` in den Einstellungen aus, fragt `senden` gar keinen Kontext
+   — auch die ausdrücklich erwähnte Seite nicht. Ob eine Erwähnung diesen
+   Schalter übersteuern soll, ist eine Frage an Redur (der Schalter sagt
+   „nichts mitgeben", die Erwähnung „diese mitgeben").
+3. **„Ersetzen" über Auszeichnung hinweg.** Steht die Markierung genau
+   einmal im gespeicherten Text, ersetzt E724 dort (das Markdown bleibt).
+   Läuft sie über eine Auszeichnung (`**fett**` mitten in der Markierung)
+   oder steht zweimal da, fällt es auf den alten Weg zurück und schreibt
+   `ct.textContent` — derselbe Verlust wie in E668. Ein Wächter dafür fehlt.
+4. **Acht Funkel im leeren Chat gegen „eine Haupthandlung je Bild"
+   (E701).** Nach der Vorgabe D1 stehen sie nur im LEEREN Chat, wo es keine
+   andere Haupthandlung gibt; ob sie dort still ruhen sollen wie die vier
+   Funkel der Lernwelt (E720), entscheidet Redur.
+5. **Die Höhe der acht Seitenaktionen am Rechner mit Maus.** Am Telefon und
+   unter einem groben Zeiger messen sie seit der Durchsicht 44 px (§37); am
+   Rechner mit Maus bleiben die Originalmasse aus E528 (28–30 px), weil
+   Redur die beiden Bau-Knöpfe am 9. September „ausdrücklich schon richtig"
+   fand. Ob die Höhe zu diesem Look gehört oder auch am Rechner wachsen
+   soll, entscheidet Redur.
+6. **„@" für die Bau-Werkzeuge.** „@Name" kennt die Schreibbefehle und die
+   Fähigkeiten; „@Datenbank bauen Kundenliste" geht als gewöhnlicher Text an
+   das Modell. Der Fuss des Befehlsmenüs sagt seit der Durchsicht nur noch,
+   was stimmt („Schreibbefehle und Fähigkeiten auch im Chat mit @ …"). Ein
+   Weg wäre, den Rest als Antwort auf die Frage des Werkzeugs zu nehmen.
+
+**Was fehlt:** zu 1 ein Ziel `zelle` im Katalog und ein Einstieg am
+Datenbankmenü; zu 2 Redurs Wort; zu 3 ein Wächter, der eine Markierung über
+`**…**` ersetzt und das Gespeicherte vergleicht; zu 4 und 5 Redurs Wahl; zu
+6 ein Zweig in `atBefehl` für die Werkzeuge.
+(Die Einstellungen hören seit dem 10. Oktober zu: schaltet das Fenster eine
+Quelle, während sie offen sind, zieht ihr Schalter mit — `test599` §9d.
+Seit der Durchsicht am selben Tag ersetzt „✨ KI" die Markierung im
+gespeicherten Text statt einen neuen Block anzuhängen, und jedes Ersetzen
+legt vorher eine Fassung „vor KI-Änderung" an — `test599` §7h. Punkt 3
+bleibt offen: er gilt der Markierung, die ÜBER die Auszeichnung läuft.)
+
+---
+
 ## L243 · Gedankenkarte und Planfläche im Kasten der Fläche behalten ihre eigenen Leisten, und „Alles löschen" fragt noch mit `confirm()` — 6. Oktober 2026
 
 **Gefunden beim Bau von E722** (Redur, PDF vom 29. September, Seite 18
@@ -9826,7 +9875,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 28. September 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 138 Lücken, 82 offene und 56 geschlossene. Der Befehl dazu ist
+Datei führt 139 Lücken, 83 offene und 56 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

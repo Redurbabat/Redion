@@ -229,19 +229,12 @@ const Werkzeuge = (() => {
     c('Ansicht', 'Seitenleiste ein- oder ausblenden', 'Strg \\', () =>
       document.getElementById('sidebar')?.classList.toggle('collapsed'));
     c('Ansicht', 'KI-Panel', 'Strg J', () => App.kiPanel());
-    c('KI', 'Datenbank von der KI bauen lassen', '', async () => {
-      const a = await UI.frage('Was soll die Datenbank können?', '');
-      if (a) KI.datenbankBauen(a);
-    });
-    c('KI', 'Seitenaufbau von der KI', '', async () => {
-      const a = await UI.frage('Worum geht es auf der Seite?', '');
-      if (a) KI.seiteBauen(a);
-    });
-    c('KI', 'Nachschlagen bei Wikipedia', '', async () => {
-      const a = await UI.frage('Was soll ich nachschlagen?', '');
-      if (a) KI.nachschlagen(a);
-    });
-    c('KI', 'Protokoll: was die KI gebaut hat', '', () => KI.protokollZeigen());
+    /* Die KI-Befehle stehen nicht mehr hier (E724). Hier lagen vier
+       Abschriften der KI-Knöpfe mit eigenen Vorgaben — die Palette fragte
+       „Was soll die Datenbank können?" leer, der Knopf mit einem Vorschlag.
+       Die KI meldet ihre häufigen Befehle jetzt selbst bei `Register.befehle`
+       an (aus `Register.ki`), und `palette()` unten liest sie dort — dieselben
+       Titel, eine Quelle, und wissen fasst die KI nicht mehr an (§5). */
     c('Ansicht', 'Alle Toggles öffnen oder schliessen', 'Strg Alt T', () => alleToggles());
     c('Ansicht', 'Tastenkürzel anzeigen', 'Strg /', () => tastenkuerzel());
 

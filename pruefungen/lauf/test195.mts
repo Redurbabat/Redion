@@ -67,7 +67,12 @@ try {
     };
   });
   pruef('Quick Find findet den Inhalt über den echten Produktweg', aufgebaut.gefunden);
-  pruef('Index-Fassung 1 liegt persistent vor', aufgebaut.status.persistierteFassung === 1,
+  /* Fassung 2 seit E724: Zeilen gespiegelter Datenbanken tragen
+     `verbunden` (der Schalter „Verbundenes" hat einen Leser). Ein Index der
+     Fassung 1 wird beim ersten Abgleich neu gebaut. Gehalten wird weiter
+     genau EINE Zahl — und dass die gespeicherte die laufende ist. */
+  pruef('Index-Fassung 2 liegt persistent vor (seit E724)',
+    aufgebaut.status.persistierteFassung === 2 && aufgebaut.status.fassung === 2,
     JSON.stringify(aufgebaut.status));
   pruef('Alle 700 neuen Seiten sind im Index', aufgebaut.anzahl >= 700,
     'Indexeinträge: ' + aufgebaut.anzahl);

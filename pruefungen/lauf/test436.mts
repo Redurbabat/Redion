@@ -292,7 +292,9 @@ console.log('\n§5 Der Funkel-Knopf');
   const s = await oeffne();
   const w = JSON.parse(await s.evaluate(`(async () => {
     App.kiPanel(true);
-    document.getElementById('ai-tools').open = true;
+    /* Seit E724 keine Schublade mehr: die Bau-Knöpfe stehen im leeren
+       Chat, im Block „Für diese Seite" (.ai-start). */
+    const kasten = !!document.getElementById('ai-tools');
     /* Länger als die Blende des Knopfes (.4 s): einmal stand hier
        rgba(16, 16, 16, 0.96) — mitten im Übergang gemessen. (Keine
        Backticks in diesem Block: er ist selbst eine Vorlagenzeichenkette.) */
@@ -311,7 +313,9 @@ console.log('\n§5 Der Funkel-Knopf');
       zeichen: !!b.querySelector('svg'),
       dunkel: st.backgroundColor, rund: st.borderRadius,
       seite: document.getElementById('ai-seite').classList.contains('ru-funkel'),
-      actionCount: document.querySelectorAll('.ai-quick button.ru-funkel').length,
+      actionCount: document.querySelectorAll('.ai-start button.ru-funkel').length,
+      imStart: !!document.querySelector('.ai-start #ai-db') && !!document.querySelector('.ai-start #ai-seite'),
+      kasten,
       getroffen, dialog
     });
   })()`) as string);
@@ -320,7 +324,11 @@ console.log('\n§5 Der Funkel-Knopf');
   p('… der Text ist noch derselbe', w.text === 'Datenbank bauen', w.text);
   p('… das Zeichen davor auch', w.zeichen);
   p('… und der Knopf ist dunkel', /^rgba?\(16, 16, 16(, 0\.9\d*)?\)$/.test(String(w.dunkel)), w.dunkel);
-  p('„Seite aufbauen" auch — jetzt alle zwölf KI-Aktionen', w.seite && w.actionCount === 12, String(w.actionCount));
+  /* Zwölf waren es in der Schublade; seit E724 stehen die ACHT, die auf
+     die offene Seite wirken, im leeren Chat — Agent, Besprechung und
+     Protokoll wohnen im ⋯ des Kopfs, Nachschlagen im „+". */
+  p('„Seite aufbauen" auch — alle acht Seitenaktionen im leeren Chat, keine Schublade',
+    w.seite && w.imStart && !w.kasten && w.actionCount === 8, String(w.actionCount) + (w.kasten ? ' · #ai-tools steht noch' : ''));
   p('Ein Klick auf einen Buchstaben trifft den Knopf und öffnet die Frage', w.getroffen && w.dialog);
   await s.keyboard.press('Escape');
   await s.evaluate(`document.querySelectorAll('.overlay').forEach(o => o.remove())`);

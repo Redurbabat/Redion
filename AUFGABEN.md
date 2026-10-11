@@ -1770,6 +1770,29 @@ Gefunden beim Bau von E718, nicht dort entschieden — je mit dem Grund:
    der zweite Rückweg. Redurs Wort, ob Strg+Z in der Bibliothek das letzte
    Weglegen zurücknehmen soll.*
 
+## Nach E724 (6. Oktober 2026) — KI am Ort
+
+Gefunden beim Bau von E724, nicht dort entschieden — je mit dem Grund:
+
+1. **KI-Befehle an Tabellen- und Datenbankzellen.** Der Katalog
+   (`Register.ki`) kennt noch kein Ziel `zelle`; das Befehlsmenü öffnet sich
+   an einer markierten Zelle nicht (L244 Punkt 1).
+2. **Erwähnte Seite trotz „Seiteninhalt mitgeben: aus"?** Heute zählt eine
+   Erwähnung nur, wenn `kiKontext` an ist. Redurs Frage (L244 Punkt 2).
+3. **Ersetzen über Auszeichnung hinweg** ohne `ct.textContent` — zuerst ein
+   Wächter, der eine Markierung über `**…**` ersetzt (L244 Punkt 3).
+4. **Die acht Funkel im leeren Chat**: laut (wie heute, Vorgabe D1) oder
+   still in Ruhe wie die Lernwelt nach E720 — Redurs Wahl (L244 Punkt 4).
+5. **Ihre Höhe am Rechner mit Maus**: 44 px am Finger seit der Durchsicht
+   vom 10. Oktober, am Rechner die Originalmasse aus E528 — Redurs Wahl
+   (L244 Punkt 5).
+6. **„@" für die Bau-Werkzeuge** („@Datenbank bauen Kundenliste"): ein
+   Zweig in `atBefehl`, der den Rest als Antwort auf die Frage des
+   Werkzeugs nimmt (L244 Punkt 6).
+7. **`test422` auf den Zweigen mit `claude/kein-toter-knopf`**: rot seit
+   E720 (`lernwelt.ts` schreibt Ansichtsnamen als Zeichenkette), auf
+   `claude/morgen-besser-2` grün — gehört dem Zweig von E720.
+
 ## Nach E721 (6. Oktober 2026) — Ein Menü je Ding
 
 Gefunden beim Bau von E721, nicht dort entschieden — je mit dem Grund:

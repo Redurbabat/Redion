@@ -2750,6 +2750,11 @@
           "pfad": "/home/user/Redion/doku/AUTOMATIONEN-UND-KNOEPFE.md",
           "rolle": "Referenz Stand 2. August 2026 — VERALTET: sagt Z.22 „Every {frequency} ⚠ fehlt bei uns“ und Z.78-84 „Add page to / Send notification / Send mail / Define variables fehlt“, alle fünf stehen seit L16/E-Folge im Code (steuerung.ts:7578, 7802-7805).",
           "zeilen": 221
+        },
+        {
+          "pfad": "/home/user/Redion/src/register/ki.ts",
+          "rolle": "Register.ki (E724, 6. Oktober) — der EINE Katalog der KI-Befehle: 22 Einträge {id, name, icon, art:'auftrag'|'werkzeug', gruppe, ziel:'markierung'|'block'|'seite'|'datenbank'|'chat', auftrag (EINE Fassung je Kennung), ausgabe:'ersetzen'|'darunter'|'karteikarten'|'neueSeite'|'chat', frage?, vorgabe?, haeufig?, palette?, alt:{sb,faehig,block}}; finde/alle/ausAlt/auftrag. Ersetzt fünf Kataloge (data-p-Knöpfe, SCHREIB_BEFEHLE, FAEHIG_START-Aufträge, blockAktion, die vier Palettenabschriften in wissen). Gelesen von ki/dienst.ts (ausfuehren, schreibLauf, befehlsMenue, Palettenlieferant) und schale.ts (uebersetzenMenue). Wächter test599 §7.",
+          "zeilen": 194
         }
       ],
       "datenmodell": "Vier verschiedene Ablagen, keine gemeinsam. (a) REGISTER liegen nur im RAM: jedes hält `const LISTE = EINGEBAUT.slice()` (bloecke.ts:266, eigenschaften.ts:68, module.ts:133, navigation.ts:412, einstellungen.ts:116, verbindungen.ts:105, tasten.ts:171, formeln.ts:631) bzw. leere Listen (befehle.ts:52-53 lieferanten/feste, menueband.ts:987-988 fremde/lieferanten, context.ts:81-85 LISTE/LIEFERANTEN/stapelQuellen, vorlagen.ts:27). Nichts davon geht in IndexedDB, nichts in eine Sicherung; nach dem Neuladen ist alles weg, was nicht Code ist. Herkunft je Eintrag: bloecke.ts:267 und eigenschaften.ts:72 führen ein `vonAussen: Set<string>` (nur Kennung, kein Name), navigation.ts:427 setzt `vonAussen: true`; alle anderen unterscheiden Eingebautes und Gemeldetes nicht. (b) ERWEITERUNGEN: Fach `meta`, Schlüssel `erweiterungen` (erweiterungen.ts:44-45), eine Liste von `{ name, kurz, code, an }` (Z.395-397 lesen(), Z.432 Einbauen, Z.341 an-Schalter). Kein Manifest, keine Fassung, keine Rechte, keine Signatur, kein Zeitstempel. Was eine Erweiterung angemeldet hat, steht nur im RAM `angemeldet` (Z.49-55) mit `von: name`. (c) AUTOMATIONEN: Daten IM Datenbankobjekt, Fach `collections`, Feld `coll.automationen[]` (steuerung.ts:7989 `Store.updateCollection(coll.id, { automationen })`, 8765); ein Eintrag hat `an`, `wenn {art, key, wert}`, `weitereWenn[]`, `wennModus ('alle')`, `bedingungen[]`, `sonst[]` (Z.8049-8170, 7741); Aktionsarten und Auslöserarten sind Code-Listen (Z.7567, 7792), keine Registerobjekte. Der Laufverlauf steht im Protokoll: Fach `meta`, Schlüssel `protokoll`, höchstens 2000 Einträge (protokoll.ts:42-43), Art 'automation' (Z.55, steuerung.ts:8181). Knopf-Block: Fach `blocks`, Felder `aktionen[]` bzw. `aktion`, `bestaetigen` (editor.ts:2326-2332). (d) AUFTRÄGE: Fach `auftraege` über `Store.auftragPut` (maschine.ts:288), Form aus `JobModell.anlegen(id, art, eingabe, jetzt, zeitText, {schritte, maxVersuche, text, bedingung})` (Z.286-287); die Läufer selbst nur im RAM `werkzeuge: Map<string, Werkzeug>` (Z.97). (e) BUS: Zuhörer `Map<string, Set>` und letzte Meldung je Name `gemeldet` (bus.ts:60, 67) — RAM je Tab. (f) MCP: Fach `meta`, `mcp:server` und `mcp:freigabe` (werkzeuge.ts:51-54). (g) EINSTELLUNGEN: Fach `meta`, Schlüssel = `id` des Registereintrags (einstellungen.ts:136 `Store.getMeta(id, e.vorgabe)`, 157 `Store.setMeta(id, wert)`).",
@@ -2849,6 +2854,12 @@
           "datei": "src/bereiche/verbinden/schnittstelle.ts:900",
           "art": "http",
           "beschreibung": "Notion-Form mit Token und Notion-Version; im Browser beantwortet, vom Servicearbeiter durchgereicht (Z.19-27)."
+        },
+        {
+          "name": "Register.ki.finde / alle / ausAlt / auftrag",
+          "datei": "src/register/ki.ts",
+          "art": "register",
+          "beschreibung": "E724: worauf ein KI-Befehl wirkt, was er verlangt, wohin das Ergebnis geht. Der Läufer ist KI.ausfuehren(id, opt) in ki/dienst.ts; die Palette bekommt die häufigen über Register.befehle.meldeLieferant (kein Abschreiben)."
         }
       ],
       "geometrie": {

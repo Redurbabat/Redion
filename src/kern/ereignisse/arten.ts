@@ -80,6 +80,11 @@ const ARTEN = Object.freeze({
   /* --- Suche ------------------------------------------------------------- */
   sucheGestellt:     'suche.gestellt',
   indexAufgebaut:    'suche.index-aufgebaut',
+  /* Die Quellen der KI wurden umgeschaltet (E724). EIN Schreiber
+     (`Kontext.quelleUmschalten`), viele Leser: die Schalter im KI-Fenster,
+     das Schild am Prompt, die Einstellungen. Vorher schrieben zwei, und der
+     zweite vergass `aria-pressed`. */
+  kiQuellenGeaendert: 'ki.quellen-geaendert',
 
   /* --- Oberfläche -------------------------------------------------------- */
   themaGewechselt:   'oberflaeche.thema',

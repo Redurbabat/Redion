@@ -157,7 +157,7 @@ p('Die Meldung sagt „Abgebrochen", nicht „AbortError"',
   stopp.text || '(leer)');
 
 /* ---------------------------------------------------------------------- */
-console.log('\n2 · „Meine Quellen" tut etwas — und zwar dasselbe wie die Leiste');
+console.log('\n2 · „Meine Quellen" tut etwas — und zwar dasselbe wie die Leiste (seit E724 direkt am Prompt)');
 
 const quellen = await seite.evaluate(
   '(async () => {\n'
@@ -166,13 +166,13 @@ const quellen = await seite.evaluate(
 + '  document.querySelectorAll(".menu").forEach(m => m.remove());\n'
 + '  const auf = document.getElementById("ai-quellen");\n'
 + '  if (!auf) return { fehler: "KEIN KNOPF ai-quellen" };\n'
-+ '  auf.click();\n'
-+ '  await new Promise(f => setTimeout(f, 200));\n'
-+ '  const punkt = document.querySelector(\'[data-y="quellen"]\');\n'
-+ '  if (!punkt) return { fehler: "KEIN MENUEPUNKT quellen" };\n'
++ '  /* SEIT E724 OHNE ZWISCHENSTUFE: „Quellen & Modus ▸ Meine Quellen ▸"\n'
++ '     ist aufgeloest. Der Knopf am Prompt IST die Quellenwahl und oeffnet\n'
++ '     die Schalter direkt — gemessen wird weiter nur, was ER neu oeffnet. */\n'
 + '  const vorherDa = new Set(document.querySelectorAll("[data-qs]"));\n'
-+ '  punkt.click();\n'
++ '  auf.click();\n'
 + '  await new Promise(f => setTimeout(f, 250));\n'
++ '  if (document.querySelector(\'[data-y="quellen"]\')) return { fehler: "NOCH EINE ZWISCHENSTUFE quellen" };\n'
 + '\n'
 + '  /* NUR was der Menuepunkt NEU geoeffnet hat. Die Schalterleiste steht\n'
 + '     ohnehin im Fuss — wer sie mitzaehlt, misst nicht den Menuepunkt,\n'

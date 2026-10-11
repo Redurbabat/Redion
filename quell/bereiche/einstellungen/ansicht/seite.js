@@ -445,8 +445,8 @@ const Einstellungen = (() => {
                 'eingeschaltet sind. Jede Antwort nennt danach ihre Quellen.') +
             zeile('Die offene Seite', 'Was gerade auf dem Bildschirm steht', schalter('q:aktuelleSeite', Kontext.quellen().aktuelleSeite)) +
             zeile('Arbeitsbereich', 'Alle Seiten, die du lesen darfst', schalter('q:arbeitsbereich', Kontext.quellen().arbeitsbereich)) +
-            zeile('Datenbanken', 'Auch Mails, Termine und gespiegelte Einträge', schalter('q:datenbanken', Kontext.quellen().datenbanken)) +
-            zeile('Verbundene Dienste', 'Was über Verbindungen hereingeholt wurde', schalter('q:verbindungen', Kontext.quellen().verbindungen)) +
+            zeile('Datenbanken', 'Deine eigenen Datenbanken', schalter('q:datenbanken', Kontext.quellen().datenbanken)) +
+            zeile('Verbundene Dienste', 'Mails, Termine und alles, was gespiegelt wird', schalter('q:verbindungen', Kontext.quellen().verbindungen)) +
             zeile('Websuche', 'Wikipedia nachschlagen — dabei verlässt der Suchbegriff den Rechner', schalter('q:web', Kontext.quellen().web)) +
             zeile('Vor jeder Webanfrage nachfragen', 'Sicherheitshalber einmal bestätigen', schalter('ki:webFragen', V('ki:webFragen', true))) +
             zeile('Nur aus meinen Quellen antworten', 'Findet sich nichts, wird das Modell gar nicht erst gefragt — statt ' +
@@ -712,6 +712,7 @@ const Einstellungen = (() => {
             zeile('Speicherort der Daten', '', '<span class="ez-grau">IndexedDB „notizen"</span>') +
             zeile('Stand', 'Fassung des Programms und der Weg, über den es gerade läuft', `<span class="ez-grau ez-stand" data-fassung="${esc(standFassung())}">${esc(standText())}</span>`)
     }[b] || (() => kopf('Unbekannt')))();
+    let quellenZuhoerer = null;
     const binde = (o) => {
         o.querySelectorAll('[data-set]').forEach((el) => {
             el.addEventListener('change', () => {
@@ -729,29 +730,42 @@ const Einstellungen = (() => {
                 });
         });
         o.querySelectorAll('[data-toggle]').forEach((b) => {
-            b.addEventListener('click', () => {
+            b.addEventListener('click', async () => {
                 const k = b.dataset.toggle;
                 if (k.startsWith('q:')) {
-                    const name = k.slice(2);
-                    const jetzt = Kontext.quellen()[name];
-                    if (name === 'web' && !jetzt && V('ki:webFragen', true) &&
-                        !confirm('Für die Websuche wird Wikipedia angefragt. Dabei verlässt dein ' +
-                            'Suchbegriff den Rechner. Einschalten?'))
+                    const an = await Kontext.quelleUmschalten(k.slice(2));
+                    if (an === null)
                         return;
-                    Kontext.quelleSetzen(name, !jetzt);
-                    b.classList.toggle('an', !jetzt);
-                    document.querySelectorAll('.ki-quellschalter [data-qs="' + name + '"]')
-                        .forEach(x => x.classList.toggle('an', !jetzt));
+                    b.classList.toggle('an', an);
+                    b.setAttribute('aria-checked', an ? 'true' : 'false');
                     return;
                 }
                 const neu = !V(k, k === 'erinnernInApp' ||
                     k === 'kiKontext' || k === 'autoVersionen' || k === 'ki:webFragen');
                 S(k, neu);
                 b.classList.toggle('an', neu);
+                b.setAttribute('aria-checked', neu ? 'true' : 'false');
                 if (k === 'rechtschreib')
                     App.zeichneSeite();
             });
         });
+        quellenZuhoerer?.();
+        quellenZuhoerer = null;
+        if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined' &&
+            o.querySelector('[data-toggle^="q:"]')) {
+            quellenZuhoerer = Ereignisse.horche(ARTEN.kiQuellenGeaendert, (d) => {
+                if (!o.isConnected) {
+                    quellenZuhoerer?.();
+                    quellenZuhoerer = null;
+                    return;
+                }
+                const b = o.querySelector(`[data-toggle="q:${String(d?.quelle || '')}"]`);
+                if (!(b instanceof HTMLElement))
+                    return;
+                b.classList.toggle('an', !!d.an);
+                b.setAttribute('aria-checked', d.an ? 'true' : 'false');
+            });
+        }
         o.querySelectorAll('[data-grenze]').forEach((el) => {
             const uebernehmen = () => {
                 const wert = Number(el.value);

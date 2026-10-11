@@ -250,9 +250,15 @@ import { chromium } from 'playwright';
      (weiter unten geprüft). Eine blosse Zahl hätte das nicht gesagt — sie
      wäre auch dann grün, wenn zwei ganz andere Knöpfe dastünden. Deshalb
      stehen die Kennungen jetzt da. */
-  ok('Unter dem Feld stehen fünf Knöpfe, und zwar diese',
+  /* ══ SECHS, UND DIE QUELLEN SIND ZURÜCK AM PROMPT (E724) ════════════════
+     Die Schublade „Werkzeuge & Kontext" ist aufgelöst. `#ai-quellen` steht
+     wieder dort, wo `index.html` ihn immer hingesetzt hatte: gleich nach
+     „+", als Schild mit der Zahl der aktiven Quellen — denn die Quellen
+     entscheiden, was die NÄCHSTE Frage sieht, und gehören deshalb an den
+     Prompt. `ai-faehig` wohnt jetzt im „+" (weiter unten geprüft). */
+  ok('Unter dem Feld stehen sechs Knöpfe, und zwar diese',
      JSON.stringify(leiste.knoepfe) ===
-     JSON.stringify(['ai-plus', 'ai-modus', '', 'ai-diktat', 'ai-senden']));
+     JSON.stringify(['ai-plus', 'ai-quellen', 'ai-modus', '', 'ai-diktat', 'ai-senden']));
   ok('Modus steht auf Standard', leiste.modus === 'Standard');
   /* ══ DER PLATZHALTER IST DEUTSCH, NICHT „Mach alles mit KI" (E590) ═════
      Die alte Zusicherung suchte den Satz aus der ersten Fassung. Der Satz
@@ -366,9 +372,14 @@ import { chromium } from 'playwright';
     return r;
   });
   console.log('   Plus-Menü:', JSON.stringify(plusMenu));
-  ok('Dateien, Erwähnen, Bild',
-     plusMenu.length === 3 && /Fotos und Dateien/.test(plusMenu[0] ?? '') &&
-     /erwähnen/.test(plusMenu[1] ?? '') && /Bild erstellen/.test(plusMenu[2] ?? ''));
+  /* MINDESTENS DREI, UND DIESE DREI ZUERST (E724). Dazu kamen
+     „Bei Wikipedia nachschlagen" (es holt fremden Text herein wie ein
+     Anhang) und „Befehle und Fähigkeiten …" — beide aus der Schublade. */
+  ok('Dateien, Erwähnen, Bild — und danach Nachschlagen und Befehle',
+     plusMenu.length >= 3 && /Fotos und Dateien/.test(plusMenu[0] ?? '') &&
+     /erwähnen/.test(plusMenu[1] ?? '') && /Bild erstellen/.test(plusMenu[2] ?? '') &&
+     plusMenu.some(x => /Wikipedia nachschlagen/.test(x)) &&
+     plusMenu.some(x => /Befehle und Fähigkeiten/.test(x)));
 
   /* ══ FÄHIGKEITEN — ERST DIE SCHUBLADE (E590) ═══════════════════════════
      Hier stand `await p.click('#ai-faehig')` ohne Weiteres, und der Lauf
@@ -389,15 +400,20 @@ import { chromium } from 'playwright';
      Der Knopf ist also erreichbar, nur einen Griff tiefer. Die Zusicherung
      darunter hält fest, WO er liegt: zöge ihn jemand wieder heraus oder
      woandershin, wäre das eine Änderung, die man sehen soll. */
-  ok('„Fähigkeiten" liegt in der Schublade „Werkzeuge & Kontext"',
-     await p.evaluate(() => !!document.querySelector('#ai-tools #ai-faehig')));
-  await p.evaluate(() => {
-    const d = document.querySelector<HTMLDetailsElement>('#ai-tools');
-    if (d) d.open = true;
-    document.getElementById('ai-faehig')?.scrollIntoView({ block: 'center' });
-  });
-  await p.waitForTimeout(400);
-  await p.click('#ai-faehig');
+  /* SEIT E724 IM „+". Die Schublade gibt es nicht mehr; „Fähigkeiten"
+     ist mit den Schreibbefehlen EIN durchsuchbares Befehlsmenü geworden,
+     und dessen Tür im Chat ist die Zeile `#ai-faehig` im „+" (dazu „@" im
+     Feld, „Schreiben" im leeren Chat und „✨ KI" an der Markierung). Die
+     Zusicherung hält weiter fest, WO er liegt. */
+  ok('„Befehle und Fähigkeiten" (#ai-faehig) liegt im „+"', !(await p.evaluate(() =>
+     !!document.getElementById('ai-tools'))) && await p.evaluate(async () => {
+       document.querySelectorAll('.menu').forEach(m => m.remove());
+       document.getElementById('ai-plus')?.click();
+       await new Promise(f => setTimeout(f, 300));
+       return !!document.querySelector('.menu #ai-faehig');
+     }));
+  await p.waitForTimeout(200);
+  await p.click('.menu #ai-faehig');
   await p.waitForTimeout(500);
   const faehig = await p.evaluate(() => {
     const m = document.querySelector('.menu');

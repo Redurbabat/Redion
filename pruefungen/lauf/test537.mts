@@ -272,6 +272,16 @@ const tot = bestand.filter(e => !lebend.has(schluessel(e)));
 p('Jeder Eintrag beschreibt einen Querverweis, den es gibt', tot.length === 0,
   tot.map(e => `${e.von} → ${e.name}`).join(' · ') + ' → aus bereiche-bestand.json streichen');
 
+/* ═══ §3b Die Palette liest den Katalog (E724) ═════════════════════════════
+   `wissen/werkzeuge.ts` trug vier Abschriften der KI-Knöpfe (Datenbank
+   bauen, Seitenaufbau, Nachschlagen, Protokoll) — mit eigenen Vorgaben.
+   Seit E724 meldet die KI ihre Befehle selbst bei `Register.befehle` an,
+   und die Palette liest nur noch das Register. Das Paar wissen → KI ist
+   damit das erste, das dieser Lauf ganz verschwinden sieht. */
+console.log('\n§3b wissen fasst die KI nicht mehr an (E724)');
+p('Kein Querverweis wissen → KI', !jetzt.some(f => f.von === 'bereiche/wissen' && f.name === 'KI'),
+  jetzt.filter(f => f.von === 'bereiche/wissen' && f.name === 'KI').map(f => f.zahl + ' Stellen').join(''));
+
 /* ═══ §4 Das Verzeichnis wächst nicht ══════════════════════════════════════ */
 console.log('\n§4 Es wird weniger, nicht mehr');
 const warenTreffer = Number(roh._gesetzt?.treffer ?? summe);

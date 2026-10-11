@@ -713,9 +713,11 @@ const Einstellungen = (() => {
             schalter('q:aktuelleSeite', Kontext.quellen().aktuelleSeite)) +
       zeile('Arbeitsbereich', 'Alle Seiten, die du lesen darfst',
             schalter('q:arbeitsbereich', Kontext.quellen().arbeitsbereich)) +
-      zeile('Datenbanken', 'Auch Mails, Termine und gespiegelte Einträge',
+      /* Gespiegeltes gehört zu „Verbundene Dienste" (E724, D9) — vorher
+         stand es hier, und der Schalter darunter hatte keinen Leser. */
+      zeile('Datenbanken', 'Deine eigenen Datenbanken',
             schalter('q:datenbanken', Kontext.quellen().datenbanken)) +
-      zeile('Verbundene Dienste', 'Was über Verbindungen hereingeholt wurde',
+      zeile('Verbundene Dienste', 'Mails, Termine und alles, was gespiegelt wird',
             schalter('q:verbindungen', Kontext.quellen().verbindungen)) +
       zeile('Websuche', 'Wikipedia nachschlagen — dabei verlässt der Suchbegriff den Rechner',
             schalter('q:web', Kontext.quellen().web)) +
@@ -1175,6 +1177,9 @@ const Einstellungen = (() => {
   /* ========================================================================
    * BEDIENUNG
    * ======================================================================*/
+  /** Der eine Zuhörer für die Quellen der KI (E724) — siehe in `binde`. */
+  let quellenZuhoerer: (() => void) | null = null;
+
   const binde = (o: any) => {
     /* Auswahlfelder und Textfelder */
     o.querySelectorAll('[data-set]').forEach((el: any) => {
@@ -1193,20 +1198,20 @@ const Einstellungen = (() => {
 
     /* Schalter */
     o.querySelectorAll('[data-toggle]').forEach((b: any) => {
-      b.addEventListener('click', () => {
+      b.addEventListener('click', async () => {
         const k = b.dataset.toggle;
 
-        /* Die Quellen der KI liegen zusammen in einem Eintrag, nicht einzeln */
+        /* Die Quellen der KI liegen zusammen in einem Eintrag, nicht einzeln.
+           Umgeschaltet wird über DENSELBEN Weg wie im KI-Fenster (E724): er
+           fragt beim Web in einem Redion-Fenster statt mit `confirm()` und
+           meldet es am Bus — die Schalter im Fenster und das Schild am Prompt
+           ziehen mit, Klasse UND aria-pressed. Vorher setzte diese Stelle nur
+           die Klasse, und das Fenster las weiter „an". */
         if (k.startsWith('q:')) {
-          const name = k.slice(2);
-          const jetzt = Kontext.quellen()[name];
-          if (name === 'web' && !jetzt && V('ki:webFragen', true) &&
-              !confirm('Für die Websuche wird Wikipedia angefragt. Dabei verlässt dein ' +
-                       'Suchbegriff den Rechner. Einschalten?')) return;
-          Kontext.quelleSetzen(name, !jetzt);
-          b.classList.toggle('an', !jetzt);
-          document.querySelectorAll('.ki-quellschalter [data-qs="' + name + '"]')
-            .forEach(x => x.classList.toggle('an', !jetzt));
+          const an = await Kontext.quelleUmschalten(k.slice(2));
+          if (an === null) return;
+          b.classList.toggle('an', an);
+          b.setAttribute('aria-checked', an ? 'true' : 'false');
           return;
         }
 
@@ -1218,9 +1223,33 @@ const Einstellungen = (() => {
                           k === 'kiKontext' || k === 'autoVersionen' || k === 'ki:webFragen');
         S(k, neu);
         b.classList.toggle('an', neu);
+        /* Ein `role="switch"` sagt seinen Zustand mit `aria-checked` — die
+           Klasse allein sieht nur das Auge (§38; gefunden auf dem Weg zu
+           E724, derselbe Fehler wie beim Quellschalter). */
+        b.setAttribute('aria-checked', neu ? 'true' : 'false');
         if (k === 'rechtschreib') App.zeichneSeite();
       });
     });
+
+    /* Und umgekehrt (E724): schaltet das KI-Fenster eine Quelle um, während
+       diese Seite offen ist, ziehen ihre Schalter mit — sonst stünde hier
+       „an", während die Quelle aus ist. Der Wert kommt aus der Meldung
+       selbst (EIN Schreiber, `Kontext.quelleUmschalten`). Ein Zuhörer
+       höchstens: `binde` läuft bei jedem Bereichswechsel, und der vorige
+       meldet sich ab; ist das Fenster zu, meldet er sich beim nächsten Mal
+       selbst ab. */
+    quellenZuhoerer?.();
+    quellenZuhoerer = null;
+    if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined' &&
+        o.querySelector('[data-toggle^="q:"]')) {
+      quellenZuhoerer = Ereignisse.horche(ARTEN.kiQuellenGeaendert, (d: any) => {
+        if (!o.isConnected) { quellenZuhoerer?.(); quellenZuhoerer = null; return; }
+        const b = o.querySelector(`[data-toggle="q:${String(d?.quelle || '')}"]`);
+        if (!(b instanceof HTMLElement)) return;
+        b.classList.toggle('an', !!d.an);
+        b.setAttribute('aria-checked', d.an ? 'true' : 'false');
+      });
+    }
 
     /* KI-Grenzen (L104 Punkt 1, E321).
        Eigene Verdrahtung und kein `data-set`: die vier Grenzen liegen

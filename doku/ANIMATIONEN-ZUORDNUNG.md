@@ -8,14 +8,23 @@ der blaue, runde Senden-Knopf. Es werden weiterhin die tatsächlich verfügbaren
 Modelle und die vorhandenen Modi Standard/Fragen angeboten. Keine erfundene
 Modellbezeichnung oder Freigabefunktion aus der Bildvorlage wurde eingebaut.
 
-„Werkzeuge & Kontext“ ist zunächst zugeklappt. Darin stehen die echten
-Quellen-Schalter und vier Gruppen: Erstellen, Text bearbeiten, Lernen &
-planen, Assistenten & Verlauf. Die zwölf bisherigen Aktionen behalten ihre
-Kennungen und Funktionen. Auch die Rückfrage vor der Websuche bleibt erhalten.
+**Seit E724 gibt es „Werkzeuge & Kontext“ nicht mehr.** Redur: „hier beim
+ki sollte alles komplet was beim werkzeuge undkontext seteh dort integriert
+sein also im passenden ortern". Die acht Aktionen an der offenen Seite
+stehen im leeren Chat unter „Für diese Seite“ (`.ai-start`); die Quellen
+sind das Schild mit Reglern und Zahl gleich nach „+“ (`#ai-quellen`);
+Nachschlagen und „Befehle und Fähigkeiten“ wohnen im „+“; Agent,
+Besprechung und Protokoll im „⋯“ des Kopfs (`#ai-mehr`, ein Tropfenmenü aus
+E712). Alle behalten ihre Kennungen und Funktionen; die Rückfrage vor der
+Websuche bleibt — als Redion-Fenster (E710) statt `confirm()`.
+(Bis E724 stand hier: zugeklappt, mit vier Gruppen Erstellen, Text
+bearbeiten, Lernen & planen, Assistenten & Verlauf.)
 
 **Die Originalgestaltung von „Datenbank bauen“ und „Seite aufbauen“ bleibt
 unverändert.** Die bestehende `Funkel`-Funktion wurde auf die übrigen zehn
-Aktionen und die zwei Einstellungsaktionen erweitert. Ihre Buchstaben,
+Aktionen und die zwei Einstellungsaktionen erweitert (seit E724: die acht
+Knöpfe im leeren Chat tragen sie; Agent, Besprechung und Protokoll sind
+Menüzeilen und Tropfen geworden). Ihre Buchstaben,
 Symbole, Rückfragen und Klickhandlungen bleiben erhalten.
 
 ## Wo die CSS-Vorlagen verwendet werden

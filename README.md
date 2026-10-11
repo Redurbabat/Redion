@@ -1301,7 +1301,31 @@ Zusammenfassen
 Aufgaben ableiten
 Übersetzen
 Verbessern
+Karteikarten aus einer Seite (als echte Lernkarten)
 KI-Felder in Datenbanken
+
+Wo was im KI-Fenster steht
+
+Im leeren Chat stehen unter „Für diese Seite" die Aktionen, die auf die
+offene Seite wirken: Datenbank bauen, Seite aufbauen, Zusammenfassen,
+Aufgaben, Umschreiben, Übersetzen, Karteikarten und „Schreiben" — das
+Befehlsmenü mit allen Schreibbefehlen und Fähigkeiten. Nach der ersten
+Frage gehen sie aus dem Weg; „Neuer Chat" holt sie zurück. Unter dem Feld
+zeigen die Regler mit der Zahl, welche Quellen die nächste Frage sieht (Diese
+Seite, Arbeitsbereich, Datenbanken, Verbundenes, Web); ein Druck öffnet
+die Schalter. Das „+" hängt an, erwähnt eine Seite (sie wird Kontext der nächsten
+Frage), schlägt bei Wikipedia nach und öffnet die Befehle. Ein „@" vor
+dem Namen einer Fähigkeit führt sie aus — „@Korrekturlesen" und der Text
+dahinter. Agent, Besprechung, Protokoll und die KI-Einstellungen liegen im
+„⋯" oben. Derselbe Befehl tut auf jedem Weg dasselbe: im Fenster, mit
+„✨ KI" an einer Markierung, mit „/" im Text und in der Palette.
+„Markierung ersetzen" und „Block ersetzen" tauschen die Stelle im Text;
+vorher legt Redion eine Fassung „vor KI-Änderung" in den Verlauf der
+Seite, und der Block trägt den Streifen der KI. Steht die Markierung genau
+einmal im Block, bleibt die Auszeichnung drumherum (fett, kursiv); läuft
+sie über eine Auszeichnung hinweg, verliert der Block seine Auszeichnung
+— die Fassung holt sie zurück (LUECKEN.md, L244). Erwähnen lassen
+sich Seiten und Datenbankzeilen.
 
 
 

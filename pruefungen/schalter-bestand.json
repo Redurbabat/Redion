@@ -1,12 +1,6 @@
 {
   "_was": "Schalter, die die Oberflaeche anbietet und deren Wert die statische Messung in test411 §7 nirgends liest.",
   "_regel": "Das Verzeichnis darf nur SCHRUMPFEN. Ein neuer Eintrag heisst: ein Knopf ohne Draht. Entweder verdrahten oder hier mit Grund erklaeren — und der Grund muss sagen, WIE der Wert gelesen wird, nicht dass es schon stimmt.",
-  "_woher": "E417. Zwoelf Schalter meldete die Messung, sechs davon zu Unrecht — die sechs stehen hier.",
-  "ausnahmen": {
-    "q:aktuelleSeite": "Gelesen ueber einen berechneten Namen: der Klick-Handler schneidet 'q:' ab und ruft Kontext.quellen()[name]. Der Name steht nirgends als Zeichenkette.",
-    "q:arbeitsbereich": "Gelesen ueber einen berechneten Namen: Kontext.quellen()[k.slice(2)] im Klick-Handler der Einstellungsseite.",
-    "q:datenbanken": "Gelesen ueber einen berechneten Namen: Kontext.quellen()[k.slice(2)] im Klick-Handler der Einstellungsseite.",
-    "q:verbindungen": "Gelesen ueber einen berechneten Namen: Kontext.quellen()[k.slice(2)] im Klick-Handler der Einstellungsseite.",
-    "q:web": "Gelesen ueber einen berechneten Namen: Kontext.quellen()[k.slice(2)]. Zusaetzlich haelt ki:webFragen die zweite Sperre vor jeder Webanfrage (§21)."
-  }
+  "_woher": "E417. Zwoelf Schalter meldete die Messung, sechs davon zu Unrecht — die sechs stehen hier. E724: die fuenf q:-Schalter sind gestrichen — test411 kennt jetzt die Leseform der KI-Quellen (q.name, Kontext.quellen().name), und q:verbindungen hat seit E724 einen Leser.",
+  "ausnahmen": {}
 }

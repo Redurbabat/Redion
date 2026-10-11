@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-702 Entscheidungen, E1 bis E723 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+703 Entscheidungen, E1 bis E724 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; **E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -765,6 +765,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E721** — Ein Menü je Ding (Redur, Masterprompt S. 19: „Hier füge ... und oder beim rechts klicke sollte es mir zeigen löschen“): `Register.aktionen` (neu, `register/aktionen.ts`) ist die EINE Quelle für das, was man mit einer Seite tun kann — jeder Bereich meldet seine Aktionen; `Menue.aktionen` zeichnet daraus das Menü des „…“ und des Rechtsklicks, `Menue.aktionenBinden` bindet Rechtsklick, Kontextmenü-Taste, Umschalt+F10, Entf und langes Drücken (500 ms, E83, ein Schlucker statt zwei); das „…“ ist ein Knopf NEBEN dem Deckel oben rechts (44 × 44); Ablagebaum, Regal, Tabelle, Seitenleiste und Notizhefte haben dasselbe Menü; Menüs mit Rolle, Pfeiltasten und Fokus zurück; Gefahr rot am Rechner wie am Telefon; `Menue.wahl` als die eine Auswahlliste (`test597`)
 * **E722** — Fläche: eine Leiste je Arbeitskontext (Redur, PDF Seite 18 unten: „es sollte nur die ganez unter bleiben"): die Leiste eines Whiteboards im Kasten wird herausgenommen und hängt im EINEN Schacht unten, sobald man hineintippt; `defaultPrevented` in Taste und Rad der Fläche, die Hand stiehlt keinen Strich, „Schritt vorwärts" auf der Fläche, der Tabstopp der `GfxToolbar` entsteht auch losgelöst; zweite Durchsicht: die mittlere Taste schiebt das Whiteboard statt zu zeichnen, die Leiste nennt den Titel des Whiteboards, Tab bleibt nicht stecken, das Schild am Telefon in zwei Zeilen
 * **E723** — Die Tabelle auf der Fläche (Redur, PDF Seite 18 oben: „es ist hinterden und kann nicht gut lesen"): im Kasten kein Ausbruch aus E409 (`--db-aus:0px`), die Griffe im Kasten, „Neu" beim Überfahren mit den Marken aus E705, `--db-grund` für die angeheftete Spalte, die Auswahlleiste über der Flächenleiste; zweite Durchsicht: das Rad quer und Umschalt+Rad rollen die breite Tabelle im Kasten, nicht die Fläche
+* **E724** — KI am Ort (Redur, PDF S. 16: „hier beim ki sollte alles komplet was beim werkzeuge undkontext seteh dort integriert sein also im passenden ortern du muss entscheiden was wo kommt und warum ."): die Schublade „Werkzeuge & Kontext" löst sich auf, jeder der 19 Einträge wohnt, wo er wirkt — Quellen als Schild am Prompt, Seitenaktionen im leeren Chat, Nachschlagen und Befehle im „+", Agent/Besprechung/Protokoll im ⋯; EIN Katalog `Register.ki` und EIN Läufer für Knopf, Befehlsmenü, „@", „/", „✨ KI" und Palette; was das Blatt am Telefon öffnet, liegt über ihm; „Verbundenes" hat einen Leser; ehrliche Versprechen (@Fähigkeit, Seite erwähnen als Kontext, Webfrage als Fenster, Löschen in zwei Schritten, Fenster und Einstellungen ziehen mit); Durchsicht 10. Oktober: „✨ KI" ersetzt an der Stelle, eine Fassung vor jedem Tausch, 44 px am Finger. Wächter `test599`.
 
 ---
 
@@ -34325,6 +34326,13 @@ Dateien: `pruefungen/lauf/test351.mts`.
 E417 — Sechs Schalter ohne Draht, zwei davon ohne Anzeige
 ---------------------------------------------------------
 
+> **Ergänzt durch E724 (6. Oktober 2026) — der siebte.** Die Quelle
+> „Verbundenes" (`q:verbindungen`) hatte keinen Leser und stand trotzdem
+> als erklärte Ausnahme in `schalter-bestand.json` — mit dem Grund
+> „gelesen im Klick-Handler"; der kippt den Wert nur. Jetzt lassen
+> `finden` und der Vektorweg gespiegelte Zeilen weg, wenn er aus ist, und
+> `test411` §7 kennt die Leseform der KI-Quellen. Das Verzeichnis ist leer.
+
 ENTSCHEIDUNG: Sechs Schalter, die die Oberfläche anbietet und die niemand
 las, werden verdrahtet. Zwei davon brauchten dafür erst die Anzeige, die sie
 ein- und ausschalten sollten — es gab sie nicht.
@@ -43068,6 +43076,16 @@ Zusagen rot. 25/25 grün.
 
 E528 — KI-Eingabe und Animationen, ohne die guten Knöpfe neu zu gestalten
 --------------------------------------------------------------------------
+
+> **Ergänzt durch E724 (6. Oktober 2026) — der Look bleibt, der Ort
+> ändert sich.** Die Schublade „Werkzeuge & Kontext" ist aufgelöst (Redur:
+> „alles komplet … dort integriert … im passenden ortern"). Die acht
+> Seitenaktionen stehen mit demselben Funkel und denselben Bau-Knöpfen im
+> leeren Chat („Für diese Seite"), die Quellen als Schild am Prompt,
+> Nachschlagen und die Befehle im „+", Agent, Besprechung und Protokoll im
+> „⋯" des Kopfs. Die vier Gruppen nach Thema und das Verschieben der Knoten
+> in `bindePanel` gibt es nicht mehr; die Web-Rückfrage bleibt, als
+> Redion-Fenster (E710).
 
 Redur möchte eine KI-Eingabe nach seiner ChatGPT-Bildvorlage. Die beiden
 Bau-Knöpfe waren ausdrücklich schon richtig; alle übrigen KI-Aktionen sollen
@@ -53872,6 +53890,16 @@ grüner erst recht nicht.**
 
 ## E653 — Ein Griff, der nichts hält, und ein Blatt ohne Weg zurück
 
+> **Ergänzt durch E724 (6. Oktober 2026) — was das Blatt öffnet, liegt
+> über ihm.** Das Blatt liegt auf 920, um den Hinweisstreifen (900) zu
+> schlagen; die Ebenen, die es SELBST öffnet, behielten ihre Werte vom
+> Rechner (Menü 600, Grund 590, Overlay 700, Hinweis 900, Tropfen 605,
+> Stapel 899) — gemalt unter dem Blatt, und `inert` machte das Blatt für
+> den Finger durchlässig: ein Tipp ins sichtbare Eingabefeld wählte
+> unsichtbar ein Modell. Bei offenem Blatt liegen sie jetzt auf 921–927,
+> unter dem R-Blatt (950), den Einstellungen (940) und den Fenstern des
+> Kits (1100). Das „⋯" im Kopf (`#ai-mehr`) steht vor dem Kreuz.
+
 **Was wurde entschieden?** Das KI-Feld bekommt einen Schliess-Knopf im Kopf
 (`#ai-zu`, 44 px, `aria-label="KI schliessen"`), und der Wischgriff am
 oberen Rand des Blattes zieht wirklich: ein Zug von mehr als 90 px nach
@@ -63574,3 +63602,357 @@ fremder Code, kein Eintrag in `FREMDCODE.md`.
 **Nicht in diesem Bogen:** E409 in der Seiten- und Redion-Ansicht; die
 Auswahlleiste am Telefon ausserhalb der Fläche (sie liegt dort weiter über
 der unteren Leiste — wie bisher).
+
+## E724 — KI am Ort: „Werkzeuge & Kontext" löst sich auf, jeder Eintrag wohnt, wo er wirkt
+
+**Datum:** 6. Oktober 2026 (fertig gebaut am 10. Oktober) · **Entschieden von** Redur (PDF vom
+29. September, OneNote S. 16, und Masterprompt S. 7/9; die Entscheidungen
+D1–D11 nach den Vorgaben aus „Entscheidungen, die Redur gehören", weil die
+Frage aus Schritt 0 offen blieb) · **ergänzt** E528 (der Look der
+KI-Knöpfe bleibt, ihr Ort ändert sich), E417 (der sechste Schalter ohne
+Draht, `q:verbindungen`, hat jetzt einen Leser — und die Ausnahmeliste
+einen falschen Grund weniger) und E653 (was das Blatt am Telefon öffnet,
+liegt über ihm) · **baut auf** E712 (Menü am Anker, Tropfen), E711
+(Suchmenü), E710 (`Dialog.bestaetigen`), E709 (Löschknopf), E713
+(`body:has(#ai.open)`) und E720 (der Funkel klebt am Finger nicht mehr) ·
+**Wächter:** `test599` (neu, 144 Zusagen), dazu erweitert `test34`,
+`test436` §5, `test492`, `test494`, `test544`, `test411` §7, `test537`
+§3b, `test545` 2b, `test596` §8 · **Zweig** `claude/ki-am-ort` ·
+**Messung:** `messungen.md` §93.
+
+**Redurs Satz, wörtlich** (Notiz im PDF, am Foto des KI-Fensters mit dem
+roten Kreis um „Werkzeuge & Kontext"; die Uhrzeit ist nicht überliefert):
+
+```txt
+Seite 16   „hier beim ki sollte alles komplet was beim werkzeuge undkontext
+            seteh dort integriert sein also im passenden ortern du muss
+            entscheiden was wo kommt und warum ."
+Masterprompt S. 7  „Keine Funktion verlieren. Wenn ein Eintrag mehrfach
+            sinnvoll ist, eine gemeinsame Datenquelle/Command-Registry
+            verwenden statt Kopien"
+Masterprompt S. 9  „Keine Attrappen" · „Eine Quelle pro Funktion"
+```
+
+**Gemessen, bevor gebaut wurde** (`test599` gegen 3d180c591, 10 von 92 —
+hier stand zuerst 9; die Durchsicht vom 10. Oktober hat den roten Commit
+b82c4af8e nachgemessen, und die Zahl lag um eins daneben;
+`messungen.md` §93). Die Schublade hielt 19 Bedienelemente in einem 324 px
+hohen Kasten mit eigener Rolle; offen schrumpfte der Chat von 617 auf
+293 px (Telefon 471 → 211), und 8 der 19 standen erst nach dem Rollen da.
+Dahinter:
+
+```txt
+fünf Kataloge   5 data-p-Knöpfe · 16 SCHREIB_BEFEHLE · 4 FAEHIG_START ·
+                6 Aufträge in blockAktion · 4 Abschriften in der Palette
+zwei Läufer     senden (Chat + Arbeitsbereich) · schreibLauf (Text + Ersetzen)
+„Zusammenfassen"  Knopf, Schreibmenü, Schrägstrich: drei Anweisungen
+„Korrekturlesen"  mit Markierung: user = NUR die Anweisung, kein Ersetzen
+Knopf mit „Diese Seite" aus   die Seite fehlte ganz
+Telefon         Menü 600, Grund 590, Overlay 700, Hinweis 900, Tropfen 605,
+                Stapel 899 — alle UNTER dem Blatt (920); ein Tipp ins
+                sichtbare Feld wählte unsichtbar „Gemma 2 · 2B ~1,6 GB"
+„Verbundenes"   bauenFuerFrage mit und ohne: Zeichen für Zeichen gleich
+„@Fähigkeit"    ging als Text ans Modell; „Seiten oder Personen erwähnen"
+                bot nur Seiten und hängte Text an; der Satz zum neuen Chat
+                behauptete die Seite auch bei „Diese Seite" aus; „löschen"
+                war ein Wort im Zeilenknopf; die Webfrage zweimal confirm()
+```
+
+**Was entschieden wurde — jeder der 19 an seinem Ort, mit dem Grund.**
+
+```txt
+ #  vorher (Schublade)          jetzt                          warum
+ 1  📄 Diese Seite        ┐
+ 2  🗂 Arbeitsbereich     │     #ai-quellen am Prompt, gleich   Quellen entscheiden, was die
+ 3  ▦ Datenbanken         ├──→  nach „+": Regler + Zahl; ein      NÄCHSTE Frage sieht — sie
+ 4  🔌 Verbundenes        │     Druck öffnet die fünf (dazu     gehören an den Prompt, und der
+ 5  🌐 Web                ┘     Nur-Quellen, Einstellungen)     Zustand steht ohne Aufklappen da
+ 6  Datenbank bauen  ┐
+ 7  Seite aufbauen   │          „Für diese Seite" im leeren     Ziel ist die offene Seite, und
+ 8  Schreiben        ├────────→ Chat (.ai-start), dieselben     im leeren Chat fängt man an —
+ 9  Zusammenfassen   │          Knoten, Kennungen, Funkel       Redurs Foto zeigt dort 400 px
+10  Umschreiben      │                                          Leere; nach der ersten Frage
+11  Übersetzen       │                                          weg, mit „Neuer Chat" zurück
+13  Aufgaben         │
+14  Karteikarten     ┘
+12  Nachschlagen         ────→  „+" → „Bei Wikipedia           holt fremden Text herein wie
+                                nachschlagen" (+ Palette)       ein Anhang
+15  Agent        ┐
+16  Besprechung  ├────────────→ ⋯ im Kopf (#ai-mehr), als      eigene Flächen, im Chat selten;
+17  Protokoll    ┘              Tropfen + Zeilen (+ Band,       Protokoll ist Verlauf, neben
+                                Seitenleiste, Palette)          dem Verlauf-Knopf
+18  Quellen & Modus:
+    · Meine Quellen ▸    ────→  der Knopf am Prompt selbst
+    · MCP-Server ▸       ────→  ⋯ im Kopf
+    · Personalisieren    ────→  ⋯ im Kopf
+    · Modus ▸            ────→  ENTFÄLLT als Doppel: der Modus wohnt an #ai-modus
+                                und Shift+Tab; sein „▸" versprach ein Untermenü
+                                und schaltete sofort um
+19  Fähigkeiten          ────→  das EINE Befehlsmenü („+" → „Befehle und
+                                Fähigkeiten …", „@", „Schreiben", „✨ KI");
+                                „verwalten" auch im ⋯
+```
+
+Dazu:
+
+1. **Ein Katalog** (`src/register/ki.ts`, `Register.ki`, 22 Einträge):
+   jeder sagt, worauf er wirkt (`ziel`), was er verlangt (`auftrag`, EINE
+   Fassung je Kennung) und wohin das Ergebnis geht (`ausgabe`). Wo es
+   mehrere Fassungen gab, gilt die genaueste: „Zusammenfassen" nimmt die
+   aus `blockAktion` („Hebe Entscheidungen, offene Fragen und nächste
+   Schritte hervor"); „Umschreiben", „Text verbessern", „Schreibstil
+   verbessern", ai-edit und ai-improve werden EIN Befehl `besser`;
+   „Korrekturlesen" ist `recht`, „Erklären" `einfach`, „Neu formatieren"
+   `gliedern` (`alt.faehig`). Die eigenen Fähigkeiten bleiben in `meta`
+   unter `kiFaehigkeiten` — keine Datenänderung.
+2. **Ein Läufer**: `schreibLauf(befehl, auftrag, opt)` — die Signatur
+   bleibt (test429). Die Eingabe folgt dem Ziel (ausdrücklich Gegebenes →
+   Markierung → Block → Seite), die Knöpfe folgen der Ausgabe. „Ersetzen"
+   gibt es nur, wo es etwas zu ersetzen gibt, und im Modus „Fragen" nie;
+   ersetzt wird im GESPEICHERTEN Text, wenn die Markierung dort genau
+   einmal steht (das Markdown drumherum bleibt — vorher wurde
+   `ct.textContent` zurückgeschrieben, der Fehler aus E668).
+   „Karteikarten" legt echte `flashcard`-Blöcke an (D7). Übersetzen fragt
+   immer nach der Sprache, Vorgabe Englisch (D6). Jeder Weg ruft ihn: die
+   Knöpfe (`data-ki`), das Befehlsmenü, „@Name", der Schrägstrich und
+   `blockAktion` (über `alt.block`), „Mit KI bearbeiten" am Block, „✨ KI"
+   an der Markierung (D5: oben „Zu dieser Stelle fragen", das bisherige
+   Verhalten) und die Palette.
+3. **Die Palette** liest die KI-Befehle aus `Register.befehle` — die KI
+   meldet einen Lieferanten an (`haeufig`); die vier Abschriften in
+   `wissen/werkzeuge.ts` sind weg, dieselben vier Titel kommen aus dem
+   Katalog, dazu „Zusammenfassen", „Aufgaben ableiten", „Übersetzen". Das
+   Paar wissen → KI verschwindet aus `bereiche-bestand.json` (4 → 0).
+4. **Die Ebenen am Telefon**: bei offenem Blatt liegen Menü (924), Grund
+   (921), Tropfen (925), Overlay ohne Kit-Träger (926), Hinweis und Stapel
+   (927) über ihm (920) und unter R-Blatt (950), Einstellungen (940) und
+   den Fenstern des Kits (1100).
+5. **„Verbundenes" hat einen Draht** (D9): Zeilen gespiegelter Sammlungen
+   (`spiegelQuelle`) tragen im Index `verbunden`; `finden` und der
+   Vektorweg lassen sie weg, wenn der Schalter aus ist. Die Fassung des
+   Index steigt auf 2 — er wird einmal aus den Nutzerdaten neu gebaut.
+   Vorgabe bleibt „an": wer nie hinsah, bekommt dasselbe wie vorher.
+6. **Ehrliche Versprechen**: „@Name" am Anfang führt die Fähigkeit oder den
+   Befehl auf dem Rest aus, ein getipptes „@" öffnet die Wahl mit
+   Fähigkeiten und Seiten (D10); „+" → „Seite erwähnen" (Personen gibt es
+   nicht), und eine erwähnte Seite ist Kontext der nächsten Frage (D11,
+   `Kontext.bauenFuerFrage(…, { extraSeiten })`); EIN Schreiber für die
+   Quellen (`Kontext.quelleUmschalten` meldet `ARTEN.kiQuellenGeaendert`,
+   Fenster, Schild und die offenen Einstellungen hören zu — Klasse UND
+   `aria-pressed` bzw. `aria-checked`); die Webfrage
+   ist `Dialog.bestaetigen` statt zweimal `confirm()`; der Satz zum neuen
+   Chat nennt die aktiven Quellen; „Fähigkeit löschen" ist ein eigener
+   Knopf mit dem Paar aus E709.
+
+**Warum.** Redur hat den Ort zur Frage gemacht: „du muss entscheiden was
+wo kommt und warum". Die Schublade ordnete nach THEMA (Erstellen, Text,
+Lernen, Assistenten) und mischte vier Arten Dinge — Schalter für die
+nächste Frage, Aktionen an der Seite, Türen zu eigenen Flächen,
+Einstellungen. Wer nach dem fragt, WORAUF ein Eintrag wirkt, findet für
+jeden genau einen Ort. Und weil kein Eintrag sein Ziel kannte, gab es
+keinen anderen Ort als den Kasten — deshalb fängt der Bogen beim Katalog
+an.
+
+**Die Alternativen.** (a) Die Schublade behalten und nur aufräumen — der
+Kasten bliebe, und Redurs Satz sagt „dort integriert", nicht „ordentlicher
+verpackt". (b) Die Quellen als Reihe über dem Feld (D3) — vier Zeilen am
+Telefon, die das Feld verdrängen, das sie begleiten; oder als Tropfen im
+„+" — dann stünde der Zustand wieder hinter einer Falte. (c) Der Katalog in
+`ki/dienst.ts` statt in `register/` (D8) — dann müssten Editor und Wissen
+weiter die KI beim Namen rufen, um zu erfahren, welche Befehle es gibt
+(§5 Regel 1). Ein drittes Register neben `Register.befehle` und
+`Register.aktionen` (E721) ist es, weil ein KI-Befehl keine Aktion an
+einem Objekt ist, sondern ein Auftrag mit Ziel und Ausgabe; die Palette
+bekommt die häufigen über einen Lieferanten und kopiert nichts. (d) Die
+Seitenaktionen als stille Zeilen statt als Funkel (D1) — der Look aus E528
+war „ausdrücklich schon richtig"; sie stehen nur im LEEREN Chat, wo es
+keine andere Haupthandlung gibt.
+
+**Was es kostet.** Eine neue Skriptdatei (`register/ki.js`, im GRUNDSTOCK
+und in `index.html`); der Start holt 1863 statt 1858 KB gzip über 253 statt 252 Dateien (`test388` §5, Decke 1950; `claude/morgen-besser-2` allein 1850), nach der Durchsicht 1864. Ein Index-Neubau beim
+ersten Öffnen (Fassung 2). Zwei Klicks statt einem für Agent, Besprechung
+und Protokoll im Fenster (Band, Seitenleiste und Palette bleiben einer).
+Die eingebauten Fähigkeiten schicken jetzt die Anweisung ihres
+Katalogeintrags statt ihrer alten Zeile (eine Fassung je Kennung) — es
+sei denn, jemand hat sie umgeschrieben: dann gilt seine Zeile aus `meta`,
+nur Ziel und Ausgabe kommen aus dem Katalog. Eigene Fähigkeiten sind
+unberührt.
+
+**Was wegfällt (§43) — und wo es weiter wohnt.** Der Kasten
+`<details id="ai-tools">` mit „Werkzeuge & Kontext" (keine Funktion;
+Redurs „alles komplet … dort integriert"), sein Escape-Griff (Escape
+schliesst jetzt jedes Menü über `Menue`, und der Fokus kehrt an den Knopf
+zurück) und seine Stilregeln; das doppelte „Modus ▸" (der Modus: #ai-modus
+und Shift+Tab); die vier Palettenabschriften in `wissen` (dieselben Titel
+aus dem Katalog); die doppelten Anweisungstexte (eine Fassung je
+Kennung); `#ai-faehig`, `#ai-wiki`, `#ai-agent`, `#ai-meeting`, `#ai-log`
+als Knoten in der Schublade (dieselben Kennungen als Zeilen im „+" und im
+⋯). Jeder der 19 hat seinen Ort in der Tabelle oben; `test599` §1 prüft
+alle 19 an ihrer Wirkung.
+
+**Gefunden auf dem Weg.**
+
+- Das Suchfeld des Befehlsmenüs nimmt den Fokus, und mit ihm geht die
+  Markierung im Dokument (`getSelection()` ist danach leer). Das Menü merkt
+  sie beim Öffnen; die Knöpfe im leeren Chat beim Drücken. Ohne das wäre
+  „Korrekturlesen" mit Markierung wieder auf der ganzen Seite gelaufen
+  (test599 §7b, rot im ersten gebauten Stand).
+- Der Effekt „letters" aus `motion.ts` teilte die Wörter der Knöpfe, BEVOR
+  `Funkel` sie in Buchstaben zerlegte — mit dem Block im Markup statt aus
+  `bindePanel` stand „Datenbank bauen" mit 0 statt 14 Buchstaben da
+  (test599 §3). Der Wähler hiess `.ru-funkel, .ai-action-group button`;
+  die Gruppen gibt es nicht mehr, der Wähler ist jetzt `.ru-funkel`.
+- `test411` §7 kannte die Leseform der KI-Quellen nicht (`q.name`,
+  `Kontext.quellen().name`). Deshalb standen alle fünf `q:`-Schalter als
+  Ausnahme da, mit dem Grund „gelesen im Klick-Handler" — der Klick-Handler
+  KIPPT den Wert, ein Leser ist er nicht. So kam `q:verbindungen` durch.
+  Die Form steht jetzt im Wächter, das Verzeichnis ist leer.
+- Die Schalter der Einstellungen (`role="switch"`) setzten beim Umschalten
+  nur die Klasse, nie `aria-checked` — für alle Schalter, nicht nur die
+  Quellen. Eine Zeile im gemeinsamen Griff (§38).
+- **Im Bild:** das Quellenmenü wuchs über den unteren Bildrand, weil die
+  Schalter NACH dem Setzen eingehängt wurden — das Menü rechnete mit seiner
+  Höhe ohne sie. Sie stehen jetzt im Markup. Dabei ging die Unterzeile
+  „Findet sich nichts, wird nicht gefragt" in den `title`: neben den
+  Schaltern brach „Nur aus meinen Quellen" in drei Zeilen. Die Erklärung
+  bleibt sichtbar, wo der Schalter auch steht — Einstellungen → KI („Findet
+  sich nichts, wird das Modell gar nicht erst gefragt …"), eine Zeile tiefer
+  im selben Menü erreichbar.
+- Die Einstellungen schalteten über denselben Schreiber, hörten aber nicht
+  zu: schaltete das Fenster, während sie offen waren, stand dort „an" bei
+  einer Quelle, die aus war. Jetzt ein Zuhörer je offenem Fenster, der
+  vorige meldet sich ab (`test599` §9d, zuerst rot).
+- **Im Bild, am Telefon:** über dem Befehlsmenü stand „KI-Befehle" als Titel
+  des Blattes und gleich darunter noch einmal als Kopf, über der Wahl hinter
+  „@" ebenso „Erwähnen". Der Titel gilt nur am Telefon, der Kopf überall;
+  am Telefon fällt jetzt der Kopf weg (`UI.amTelefon()`), am Rechner bleibt
+  er die einzige Überschrift. `test599` §6 prüft es für jedes Blatt, das das
+  KI-Blatt öffnet — zuerst rot.
+- Der Satz zum neuen Chat auf Redurs Foto („Der Inhalt der offenen Seite
+  wird als Kontext mitgegeben") stand dort unabhängig von jedem Schalter.
+
+**Gegenproben** (jede rot gesehen und zurückgenommen):
+
+1. Der Zuhörer am Bus stumm (`quellenAbgleichen` nie gerufen) → „§2: …
+   und das Schild des Knopfs (Name und Zahl)" ✗ (dunkel und hell) und
+   „§9d: nach einem Schalter in den Einstellungen sagen alle Quellknöpfe
+   dasselbe — {"wert":false,"chips":["true"]}".
+2. `#ai:has(#chat .msg.u) .ai-start { display: none; }` heraus → „§3: nach
+   der ersten Frage ist der Block weg" ✗ (dunkel und hell).
+3. Die beim Öffnen gemerkte Markierung heraus (`markierung()` allein) →
+   „§7b: „Korrekturlesen" mit Markierung schickt NUR die Markierung —
+   "Titel der Seite: Elektrotechnik Notizen …"" und „… bietet „Markierung
+   ersetzen"" ✗.
+4. Der Filter `verbunden` in `finden` und im Vektorweg heraus → „§8: mit
+   „Verbundenes" aus fehlt sie — {"gleich":true}".
+5. Der „@"-Zweig in `senden` heraus → „§9b: „@Korrekturlesen …" führt die
+   Fähigkeit auf dem Rest aus — {"user":"@Korrekturlesen Die Spanung ist
+   proportinal."}".
+6. Ohne den Zuhörer in den Einstellungen (der Stand c1c6eecc2) → „§9d: …
+   und umgekehrt — {"hin":{"wert":false,"checked":"true","an":true}}" —
+   die Quelle aus, der Schalter „an".
+7. Die fünf Ebenen am Telefon heraus (der Stand 3d180c591) → „390 §6: „+"
+   liegt über dem Blatt — {z:600, ai:920, getroffen:false, oben:ai-foot}"
+   und dieselbe Zeile für Modus, Modell, Rückweg (700) und Hinweis (900).
+
+8. Der Kopf des Befehlsmenüs und der Wahl hinter „@" auch am Telefon (der
+   Stand 1fd6be919) → „390 §6: Befehlsmenü nennt seinen Titel einmal —
+   {"titel":"KI-Befehle","koepfe":["KI-Befehle","Schreiben und
+   bearbeiten","Fähigkeiten"]}" und dasselbe für „Erwähnen", bei 390 und 360.
+
+Zusammen 1–5: 106 von 116; zurück 116 von 116, und der Inhaltsstempel des
+Dienstes war danach wieder derselbe (`223a728ea9279eaf`) — zurückgenommen
+heisst Byte für Byte.
+
+**Durchsicht am 10. Oktober — was nachgebessert ist.** Eine unabhängige
+Durchsicht hat den Stand d59c5bd35 gegen den Plan gemessen und drei
+Zusagen gefunden, die nicht hielten, dazu fünf Kleinigkeiten. Zuerst
+wurde `test599` erweitert und rot gesehen (136 von 144, Commit „test599
+(rot): Durchsicht"), dann gebaut:
+
+```txt
+gefunden                                  nachgebessert
+„✨ KI" → Befehl → „Markierung ersetzen"   befehlsMenue merkt die Markierung beim
+  liess den Block unverändert und hängte    Öffnen IMMER — auch wenn die Leiste den
+  die Antwort als NEUEN Block ans Ende      Text mitgibt (vorher `opt.text ? null`)
+  (das Suchfeld nahm die Auswahl mit)
+die acht Seitenaktionen 28–30 px hoch,    am Telefon und unter (pointer: coarse)
+  der Grund „Nebenweg, weil aufklappbar"    44 px (§37); am Rechner mit Maus die
+  ging mit der Schublade                    Originalmasse aus E528, Grund an der
+                                            Stelle in motion.css
+test586 rot: der Löschknopf der            `title` nennt die Fähigkeit wie der Name
+  Fähigkeiten hiess im title nur „Löschen"
+„Block ersetzen" / „Markierung ersetzen"  vorher eine Fassung „vor KI-Änderung",
+  ohne Fassung und ohne herkunft            der Block trägt herkunft „ki" (E656);
+                                            misslingt die Fassung, wird nichts ersetzt
+„@Zusammenfassen Woche …" (eine erwähnte  eine erwähnte Seite geht vor, wenn ihr
+  Seite) startete den Befehl                Titel mindestens so lang passt
+„Seite erwähnen" liess Datenbankzeilen    eigene Gruppe „Datenbankzeilen" nach den
+  weg — vor E724 standen sie da (§17, §43)  Seiten
+Fuss „Im Chat auch mit @ …" auch über     „Schreibbefehle und Fähigkeiten auch im
+  den Bau-Werkzeugen, die „@" nicht kennt   Chat mit @ vor dem Namen."
+„Für diese Seite" und das Schild ohne     `--text-dim`: 5,3 bis 15,0 : 1 in allen
+  Quelle in `--text-faint`: unter 4,5 : 1   zehn Schemata (messungen.md §93, 7)
+  in acht von zehn Schemata (3,3–4,3)
+§7a „Blockmenü" rief die alte Kennung     fährt das echte Blockmenü; `ai-edit`
+                                            läuft daneben unter seinem Namen
+```
+
+Die Alternative zur Markierung, die das Menü selbst merkt — eine Marke in
+`auswahlleiste.ts` bauen und mitgeben —, hätte den Editor mit dem Typ der
+KI-Marke gekoppelt (§5); die Auswahl steht beim Klick noch (die Leiste
+verhindert `mousedown`). 44 px auch am Rechner mit Maus hätte die beiden
+Bau-Knöpfe verändert, die Redur am 9. September „ausdrücklich schon
+richtig" fand; §37 ist die Regel des Fingers, und der Grund steht an der
+Stelle. „@" auch für die Bau-Werkzeuge ist nicht gebaut — sie fragen zuerst,
+was gebaut werden soll; der Fuss sagt jetzt die Wahrheit (L244 Punkt 6).
+
+**Gegenproben der Durchsicht** (je herausgenommen, rot gesehen, zurück):
+
+9. `title="Löschen"` zurück → `test586 --dateien` 15/16: „Jeder runde
+   Löschen-Knopf nennt, WAS er löscht … data-loeschknopf="Löschen" …" ✗.
+10. `opt.text ? null : markierung()` zurück → „§7h: … tauscht im
+    gespeicherten Text, **fett** bleibt — text: Eins **fett** und die
+    Lötstelle ist kallt." und „§7h: … legt keinen neuen Block an — 5 → 6".
+11. Die Prüfung der erwähnten Seite in `atBefehl` abgeschaltet → „§9c:
+    „@Zusammenfassen Woche …" bleibt eine Erwähnung — {"user":"Woche  Wann
+    wird gepflügt?","befehl":true}".
+12. Die Gruppe „Datenbankzeilen" abgeschaltet → „§9c: eine Datenbankzeile
+    steht in „Seite erwähnen"" ✗.
+13. Die Regel `min-height: var(--touch-min)` geleert → „390 §3 / 360 §3:
+    … zu klein: Datenbank bauen 30, Seite aufbauen 30, Zusammenfassen 28 …".
+    (10–13 in einem Lauf: 137 von 144, jede an ihrer Zusage.)
+14. Die Fassung in `fassungVorKi` herausgenommen → 142 von 144: „§7h: …
+    vorher eine Fassung „vor KI-Änderung" — {"fassVor":0,"fassNach":0,
+    "herkunft":"ki"}" und „… mit einer Fassung davor — {"fassVor2":0,
+    "fassNach2":0}".
+
+Gefahren am erzeugten JavaScript und an `motion.css`, nicht über
+`bauen:ts` — sonst zählte der Dienststand mit jeder Gegenprobe hoch;
+danach aus der Sicherung zurück, `bauen.sh` sagt „unverändert" (v1433).
+
+Nachbarn der Durchsicht grün: `test599` 144/144, `test586` 60/60,
+`test34` 85/85, `test436` 71/71, `test492` 59/0, `test494` 157, `test544`
+11/11, `test545` 15/15, `test557` 13/13, `test542` 10/10, `test548` 17/17,
+`test546` 13/13, `test411` 26/26, `test429` 17/17, `test596` 42/42,
+`test127`, `test245` 51/0, `test412` 27/27, `test435` 46/46, `test495`
+26/26, `test500` 45, `test581` 93/0, `test584` 37/37, `test362` 18/18,
+`test576`, `test114`, `test388` 22/0 (Start 1864 KB, Decke 1950). Rot und
+fremd: `test422` 13/14 — geerbt aus `claude/kein-toter-knopf`, siehe unten.
+
+**Wie Redion es baut — Touch Kit ohne fremden Code.** Das Quellenmenü und
+das ⋯ sind Menüs am Anker mit Tropfen aus E712, die Webfrage das Fenster
+aus E710, der Löschknopf das Paar aus E709, das Befehlsmenü das Suchmenü
+aus E711 — alles Redion-Code, der Muster aus Redurs Touch Kit nachbaut;
+kein Stück fremder Code ist kopiert, `FREMDCODE.md` braucht keinen
+Eintrag. Keine Insel auf dem Startweg.
+
+**Nicht in diesem Bogen:** die Funkel-Regeln selbst (gehören
+`claude/kein-toter-knopf`, E720); ein Umbau von Einstellungen → KI (nur
+gleichgezogen); die Flächen von Agent und Besprechung; KI-Befehle für
+Tabellen- und Datenbankzellen; Modelle und Anbieter; die Höhe der acht
+Seitenaktionen am Rechner mit Maus (Redurs Wahl); „@" für die
+Bau-Werkzeuge (L244). `test422` ist auf diesem Zweig rot und war es schon
+auf 3d180c591 — geerbt aus `claude/kein-toter-knopf` (E720,
+`lernwelt.ts`), auf `claude/morgen-besser-2` grün; er gehört dort hin und
+ist hier weder repariert noch gelockert.

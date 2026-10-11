@@ -186,6 +186,38 @@ p('Er hat einen Namen (§38)', !!zu && String(zu.name).length > 0,
   zu ? '"' + zu.name + '"' : 'kein Knopf gefunden');
 
 /* ---------------------------------------------------------------------- */
+console.log('\n2b · Das ⋯ im Kopf (E724) öffnet ein Menü und lässt das Blatt stehen');
+
+/* Seit E724 trägt der Kopf einen vierten Knopf, `#ai-mehr`: Agent,
+   Besprechung und Protokoll wohnen dort. Er darf weder das Schliessen
+   verdrängen noch selbst schliessen — und sein Menü muss über dem Blatt
+   liegen (vorher lag JEDES Menü des Blattes darunter, 600 gegen 920). */
+const mehr = await t.evaluate(
+  '(async () => {\n'
++ '  App.kiPanel(true); await new Promise(f => setTimeout(f, 400));\n'
++ '  document.querySelectorAll(".menu,.overlay").forEach(m => m.remove());\n'
++ '  const k = document.getElementById("ai-mehr");\n'
++ '  if (!k) return { fehler: "KEIN KNOPF ai-mehr" };\n'
++ '  k.click(); await new Promise(f => setTimeout(f, 450));\n'
++ '  const m = document.querySelector(".menu");\n'
++ '  const ai = document.getElementById("ai");\n'
++ '  const z = e => parseInt(getComputedStyle(e).zIndex, 10) || 0;\n'
++ '  const r = { menue: !!m, offen: ai.classList.contains("open"),\n'
++ '             ueber: !!m && z(m) > z(ai) };\n'
++ '  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));\n'
++ '  await new Promise(f => setTimeout(f, 350));\n'
++ '  r.nachEscOffen = ai.classList.contains("open");\n'
++ '  document.querySelectorAll(".menu,.menu-grund").forEach(x => x.remove());\n'
++ '  document.getElementById("ai-zu").click(); await new Promise(f => setTimeout(f, 350));\n'
++ '  r.zuWirkt = !ai.classList.contains("open");\n'
++ '  return r;\n'
++ '})()') as any;
+p('Das ⋯ öffnet ein Menü über dem Blatt, und das Blatt bleibt offen',
+  !mehr.fehler && mehr.menue && mehr.offen && mehr.ueber, JSON.stringify(mehr));
+p('Escape schliesst nur das Menü, das Blatt steht noch', !mehr.fehler && mehr.nachEscOffen, JSON.stringify(mehr));
+p('Und das Kreuz schliesst das Blatt weiterhin', !mehr.fehler && mehr.zuWirkt, JSON.stringify(mehr));
+
+/* ---------------------------------------------------------------------- */
 console.log('\n3 · Der Griff hält, was er zeigt');
 
 /* DER KOPF WIRD ERST GEMESSEN, WENN DAS BLATT OBEN IST. Es gleitet in

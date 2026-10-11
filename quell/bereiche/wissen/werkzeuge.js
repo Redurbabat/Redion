@@ -191,22 +191,6 @@ const Werkzeuge = (() => {
         c('Ansicht', 'Hell / Dunkel', 'Strg Shift L', () => App.theme());
         c('Ansicht', 'Seitenleiste ein- oder ausblenden', 'Strg \\', () => document.getElementById('sidebar')?.classList.toggle('collapsed'));
         c('Ansicht', 'KI-Panel', 'Strg J', () => App.kiPanel());
-        c('KI', 'Datenbank von der KI bauen lassen', '', async () => {
-            const a = await UI.frage('Was soll die Datenbank können?', '');
-            if (a)
-                KI.datenbankBauen(a);
-        });
-        c('KI', 'Seitenaufbau von der KI', '', async () => {
-            const a = await UI.frage('Worum geht es auf der Seite?', '');
-            if (a)
-                KI.seiteBauen(a);
-        });
-        c('KI', 'Nachschlagen bei Wikipedia', '', async () => {
-            const a = await UI.frage('Was soll ich nachschlagen?', '');
-            if (a)
-                KI.nachschlagen(a);
-        });
-        c('KI', 'Protokoll: was die KI gebaut hat', '', () => KI.protokollZeigen());
         c('Ansicht', 'Alle Toggles öffnen oder schliessen', 'Strg Alt T', () => alleToggles());
         c('Ansicht', 'Tastenkürzel anzeigen', 'Strg /', () => tastenkuerzel());
         c('Daten', 'Einstellungen', 'Strg ,', () => App.einstellungen());

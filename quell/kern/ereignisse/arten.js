@@ -37,6 +37,7 @@ const ARTEN = Object.freeze({
     rechteGeaendert: 'konto.rechte-geaendert',
     sucheGestellt: 'suche.gestellt',
     indexAufgebaut: 'suche.index-aufgebaut',
+    kiQuellenGeaendert: 'ki.quellen-geaendert',
     themaGewechselt: 'oberflaeche.thema',
     seitenleisteAuf: 'oberflaeche.seitenleiste',
     hinweisGezeigt: 'oberflaeche.hinweis',

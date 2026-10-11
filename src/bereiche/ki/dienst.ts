@@ -1156,36 +1156,84 @@ const KI = (() => {
     return d;
   };
 
-  /** Die Quellen-Schalter über dem Eingabefeld. */
-  const quellenLeiste = () => {
+  /** Die fünf Quellen, mit dem Wort, das ein Mensch liest. EINE Liste für
+      die Schalter, das Schild am Prompt und den Satz zum neuen Chat (E724). */
+  const QUELLEN_NAMEN: [string, string, string][] = [
+    ['aktuelleSeite',  '📄', 'Diese Seite'],
+    ['arbeitsbereich', '🗂', 'Arbeitsbereich'],
+    ['datenbanken',    '▦', 'Datenbanken'],
+    ['verbindungen',   '🔌', 'Verbundenes'],
+    ['web',            '🌐', 'Web']
+  ];
+  const aktiveQuellen = (): string[] => {
     const q = Kontext.quellen();
-    const NAMEN = [
-      ['aktuelleSeite',  '📄 Diese Seite'],
-      ['arbeitsbereich', '🗂 Arbeitsbereich'],
-      ['datenbanken',    '▦ Datenbanken'],
-      ['verbindungen',   '🔌 Verbundenes'],
-      ['web',            '🌐 Web']
-    ];
-    const d = document.createElement('div');
-    d.className = 'ki-quellschalter';
-    d.innerHTML = NAMEN.map(([k, n]) =>
-      `<button data-qs="${k}" aria-pressed="${!!(k && q[k])}" class="${k && q[k] ? 'an' : ''}">${n}</button>`).join('');
-    d.addEventListener('click', e => {
+    return QUELLEN_NAMEN.filter(([k]) => q[k]).map(([, , n]) => n);
+  };
+
+  /** Die Schalter der Quellen. Umgeschaltet wird über EINEN Weg
+      (`Kontext.quelleUmschalten`, E724): er fragt beim Web zuerst — in
+      einem Redion-Fenster statt `confirm()` — und meldet die Änderung am
+      Bus. Jeder Schalter, das Schild am Prompt und die Einstellungen ziehen
+      dann mit, Klasse UND `aria-pressed` (vorher vergass der zweite
+      Schreiber, die Einstellungen, das `aria-pressed`). */
+  const quellenKnoepfe = (): string => {
+    const q = Kontext.quellen();
+    return QUELLEN_NAMEN.map(([k, z, n]) =>
+      `<button data-qs="${k}" aria-pressed="${!!q[k]}" class="${q[k] ? 'an' : ''}">${z} ${n}</button>`).join('');
+  };
+  const quellenBinden = (d: HTMLElement): HTMLElement => {
+    d.addEventListener('click', async e => {
       const b = elVon(e)?.closest<HTMLElement>('[data-qs]');
       if (!b) return;
       const qs = b.dataset.qs;
       if (!qs) return;
-      const jetzt = Kontext.quellen()[qs];
-      if (qs === 'web' && !jetzt && Store.getMeta('ki:webFragen', true)) {
-        if (!confirm('Für Websuche wird Wikipedia angefragt. Dabei verlässt dein Suchbegriff ' +
-                     'den Rechner. Einschalten?')) return;
-      }
-      Kontext.quelleSetzen(qs, !jetzt);
-      b.classList.toggle('an', !jetzt);
-      b.setAttribute('aria-pressed', String(!jetzt));
-      UI.toast((!jetzt ? 'An: ' : 'Aus: ') + b.textContent);
+      const an = await Kontext.quelleUmschalten(qs);
+      if (an === null) return;
+      UI.toast((an ? 'An: ' : 'Aus: ') + (b.textContent || '').trim());
     });
     return d;
+  };
+  const quellenLeiste = (): HTMLElement => {
+    const d = document.createElement('div');
+    d.className = 'ki-quellschalter';
+    d.innerHTML = quellenKnoepfe();
+    return quellenBinden(d);
+  };
+
+  /** Das Schild am Prompt: Zahl und Namen der aktiven Quellen (E724). Der
+      Zustand steht ohne Aufklappen da — vorher lag er hinter einer Falte. */
+  const quellenSchild = (): void => {
+    const k = document.getElementById('ai-quellen');
+    if (!k) return;
+    const an = aktiveQuellen();
+    k.setAttribute('aria-label', 'Quellen: ' + (an.length ? an.join(', ') : 'keine') + ' — ändern');
+    const zahl = k.querySelector('.ai-quellen-zahl');
+    if (zahl) zahl.textContent = String(an.length);
+    k.classList.toggle('ohne', !an.length);
+  };
+
+  /** Jeder Schalter im Dokument sagt, was gilt — nach jeder Änderung. */
+  const quellenAbgleichen = (): void => {
+    const q = Kontext.quellen();
+    document.querySelectorAll<HTMLElement>('[data-qs]').forEach(b => {
+      const an = !!q[b.dataset.qs || ''];
+      b.classList.toggle('an', an);
+      b.setAttribute('aria-pressed', String(an));
+    });
+    quellenSchild();
+  };
+
+  /** Der Satz zum neuen Chat — abgeleitet, nicht behauptet (E724). Vorher
+      stand hier immer „Der Inhalt der offenen Seite wird als Kontext
+      mitgegeben", auch wenn „Diese Seite" aus war — der Satz auf Redurs
+      Foto. */
+  const kontextSatz = (): string => {
+    if (!Store.getMeta('kiKontext', true))
+      return 'Neuer Chat. Die KI sieht nichts aus deinem Arbeitsbereich — ' +
+             '„Seiteninhalt mitgeben" ist in den KI-Einstellungen aus.';
+    const an = aktiveQuellen();
+    return an.length ? 'Neuer Chat. Die KI sieht: ' + an.join(' · ') + '.'
+                     : 'Neuer Chat. Die KI sieht nichts — alle Quellen sind aus.';
   };
 
   /* ══ DER STOPP-KNOPF (E652) ═════════════════════════════════════════════
@@ -1222,8 +1270,23 @@ const KI = (() => {
     return true;
   };
 
+  /** Seiten, die über „@" erwähnt wurden — Kontext der NÄCHSTEN Frage
+      (E724, D11). Vorher hängte „Erwähnen" nur „@Titel" an den Text. */
+  const erwaehnt = new Map<string, string>();
+
   const senden = async (text: string, mitKontext = true) => {
     if (!text.trim()) return;
+
+    /* „@Fähigkeit …" (E724): steht am Anfang ein Name aus den Fähigkeiten
+       oder dem Katalog, läuft er auf dem Rest — statt dass der Satz samt
+       „@" an das Modell geht. */
+    const at = mitKontext ? atBefehl(text.trim()) : null;
+    if (at) {
+      const lauf: KiLauf = at.rest ? { text: at.rest, wo: 'Eingabe' } : {};
+      if (at.f) await faehigkeitAusfuehren(at.f, lauf);
+      else if (at.b) await ausfuehren(at.b.id, lauf);
+      return;
+    }
 
     if (!zustand.bereit) {
       melde(zustand.quelle === 'ollama'
@@ -1246,7 +1309,9 @@ const KI = (() => {
     let quellen = [];
     if (mitKontext && Store.getMeta('kiKontext', true)) {
       ziel.textContent = 'Sucht im Arbeitsbereich …';
-      const k = await Kontext.bauenFuerFrage(text, { anzahl: 6 });
+      const extraSeiten = [...erwaehnt].filter(([, titel]) => text.includes('@' + titel)).map(([id]) => id);
+      erwaehnt.clear();
+      const k = await Kontext.bauenFuerFrage(text, { anzahl: 6, extraSeiten });
       quellen = k.quellen;
 
       /* NUR-QUELLEN-MODUS (E305, Redurs Punkt 11). Findet sich nichts, wird
@@ -1402,25 +1467,17 @@ const KI = (() => {
   /* ========================================================================
    * KI-AKTIONEN AUF BLÖCKEN
    * ======================================================================*/
+  /* Sechs eigene Aufträge standen hier, jeder in einer anderen Fassung als
+     derselbe Befehl im Schreibmenü oder im Knopf (E724: „Zusammenfassen"
+     schickte auf drei Wegen drei Anweisungen). Jetzt sagt der Block nur
+     noch, WELCHER Katalogeintrag gemeint ist — `ai-summary` ist
+     `zusammenfassen` —, und der eine Läufer tut den Rest. */
   const blockAktion = async (art: string, block: any) => {
+    const b = kiKatalog()?.ausAlt('block', art);
+    if (!b) return;
     App.kiPanel(true);
-
-    const auftraege: Record<string, string> = {
-      'ai-write':   'Schreibe einen zusammenhängenden Absatz zu diesem Stichwort: ' + (block.text || '(leer)'),
-      'ai-summary': 'Fasse den Inhalt dieser Seite in fünf kurzen Stichpunkten zusammen. ' +
-                    'Hebe Entscheidungen, offene Fragen und nächste Schritte hervor.',
-      'ai-todo':    'Leite aus dem Inhalt dieser Seite konkrete Aufgaben ab. ' +
-                    'Jede Aufgabe als eigene Zeile, beginnend mit einem Verb.',
-      'ai-edit':    'Formuliere diesen Text klarer, ohne den Sinn zu ändern:\n\n' + (block.text || ''),
-      'ai-improve': 'Verbessere diesen Text: klarer, kürzer, ohne Füllwörter. ' +
-                    'Gib nur den überarbeiteten Text zurück.\n\n' + (block.text || ''),
-      'ai-translate': 'Übersetze diesen Text ins Englische. Gib nur die Übersetzung zurück.\n\n' +
-                    (block.text || '')
-    };
-
-    const auftrag = auftraege[art];
-    if (!auftrag) return;
-    await senden(auftrag, !['ai-edit', 'ai-improve', 'ai-translate'].includes(art));
+    await ausfuehren(b.id, { block,
+      ...(b.ziel !== 'seite' && block?.text ? { text: String(block.text), wo: 'Block' as const } : {}) });
   };
 
   /* ========================================================================
@@ -1749,78 +1806,185 @@ const KI = (() => {
    * PANEL AUFBAUEN
    * ======================================================================*/
   /* ========================================================================
-   * SCHREIBASSISTENT
+   * EIN KATALOG, EIN LÄUFER (E724)
    * ------------------------------------------------------------------------
-   * Die Befehle, die in Notion direkt im Editor sitzen. Sie arbeiten mit dem
-   * markierten Text, sonst mit der ganzen Seite.
+   * Die Befehle stehen in `Register.ki` (src/register/ki.ts): worauf sie
+   * wirken, was sie verlangen, wohin das Ergebnis geht. Jeder Weg — der
+   * Knopf im leeren Chat, das Befehlsmenü, „@Name" im Feld, der Schrägstrich,
+   * das Blockmenü, „✨ KI" an der Markierung, die Palette — ruft `ausfuehren`
+   * mit einer Kennung. Vorher gab es fünf Kataloge und zwei Läufer, und
+   * derselbe Name tat je nach Weg etwas anderes (messungen §93).
    * ======================================================================*/
-  const SCHREIB_BEFEHLE = [
-    { id:'weiter',    icon:'✒️', name:'Weiterschreiben',
-      auftrag:'Schreib den Text sinnvoll weiter. Gleiche Stimme, gleicher Ton, keine Wiederholung.' },
-    { id:'besser',    icon:'✨', name:'Text verbessern',
-      auftrag:'Mach den Text klarer und flüssiger, ohne den Sinn zu verändern.' },
-    { id:'kuerzer',   icon:'✂️', name:'Kürzer machen',
-      auftrag:'Kürze den Text auf das Wesentliche. Höchstens die Hälfte.' },
-    { id:'laenger',   icon:'📏', name:'Länger machen',
-      auftrag:'Führe den Text weiter aus, mit Beispielen. Nichts erfinden, was widerspricht.' },
-    { id:'einfach',   icon:'🧒', name:'Einfacher erklären',
-      auftrag:'Erklär denselben Inhalt so, dass ihn jemand ohne Vorwissen versteht.' },
-    { id:'ton-formell', icon:'🎩', name:'Ton: förmlich',
-      auftrag:'Schreib den Text förmlich und sachlich um, in der Sie-Form.' },
-    { id:'ton-locker',  icon:'😊', name:'Ton: locker',
-      auftrag:'Schreib den Text locker und freundlich um, in der Du-Form.' },
-    { id:'ton-direkt',  icon:'🎯', name:'Ton: direkt',
-      auftrag:'Schreib den Text kurz und direkt um. Keine Höflichkeitsfloskeln.' },
-    { id:'recht',     icon:'📝', name:'Rechtschreibung',
-      auftrag:'Korrigiere Rechtschreibung, Zeichensetzung und Grammatik. Sonst nichts ändern.' },
-    { id:'fassen',    icon:'📋', name:'Zusammenfassen',
-      auftrag:'Fasse den Text in höchstens fünf Stichpunkten zusammen.' },
-    { id:'uebersetzen', icon:'🌍', name:'Übersetzen',
-      auftrag:'Übersetze den Text ins Englische.', frage:'In welche Sprache?' },
-    { id:'ideen',     icon:'💡', name:'Ideen sammeln',
-      auftrag:'Sammle zehn Ideen zum Thema. Je Zeile eine, ohne Nummerierung.' },
-    { id:'gliedern',  icon:'🗂', name:'Gliederung bauen',
-      auftrag:'Mach aus dem Text eine Gliederung mit Überschriften und Stichpunkten.' },
-    { id:'tabelle',   icon:'▦', name:'Tabelle daraus machen',
-      auftrag:'Mach aus dem Text eine Tabelle. Antworte als Markdown-Tabelle mit Kopfzeile.' },
-    { id:'aufgaben',  icon:'☑', name:'Aufgaben ableiten',
-      auftrag:'Leite konkrete Aufgaben ab. Je Zeile eine, beginnend mit einem Verb.' },
-    { id:'fragen',    icon:'❓', name:'Rückfragen finden',
-      auftrag:'Nenne fünf Fragen, die dieser Text offen lässt.' }
-  ];
+  type KiMarke = { text: string; bereich: Range | null; bid: string };
+  type KiLauf = { text?: string; wo?: 'Markierung' | 'Block' | 'Eingabe'; block?: any;
+                  name?: string; icon?: string; auftrag?: string; mark?: KiMarke | null };
 
-  /** Der markierte Text — oder, wenn nichts markiert ist, die ganze Seite. */
-  const arbeitsText = () => {
-    const sel = String(getSelection() || '').trim();
-    if (sel.length > 3) return { text: sel, teil: true };
-    return { text: seitenKontext(), teil: false };
+  const kiKatalog = (): any => (typeof Register !== 'undefined' && Register.ki) ? Register.ki : null;
+
+  /** Die Schreibbefehle — eine SICHT auf den Katalog, kein eigener (§8). */
+  const SCHREIB_BEFEHLE: any[] = (kiKatalog()?.alle() || [])
+    .filter((b: any) => b.art === 'auftrag' && b.gruppe === 'Schreiben und bearbeiten');
+
+  /** Liegt die Markierung im Dokument (nicht im Eingabefeld der KI)? */
+  const markierung = (): KiMarke | null => {
+    const sel = getSelection();
+    const text = String(sel || '').trim();
+    if (!sel || text.length <= 3 || !sel.rangeCount) return null;
+    const knoten = sel.anchorNode instanceof Element ? sel.anchorNode : sel.anchorNode?.parentElement;
+    if (knoten?.closest('#ai')) return null;
+    const blk = knoten?.closest<HTMLElement>('.blk');
+    return { text, bereich: sel.getRangeAt(0).cloneRange(), bid: blk?.dataset.bid || '' };
   };
 
-  const schreibMenue = (anker2: any) => {
-    const r = anker2
-      ? anker2.getBoundingClientRect()
-      : { left: innerWidth / 2 - 130, bottom: 120 };
-    const m = UI.menu(
-      '<div class="grp">Schreiben und bearbeiten</div>' +
-      SCHREIB_BEFEHLE.map(b =>
-        `<button data-sb="${b.id}"><span class="mi">${b.icon}</span>${b.name}</button>`).join(''),
-      r.left - 40, (r.bottom || 100) + 6);
+  /** Was ein Befehl bearbeitet — die Eingabe folgt dem Ziel: ausdrücklich
+      Gegebenes, sonst die Markierung, sonst der Block, sonst die Seite. */
+  const eingabe = (befehl: any, opt: KiLauf): { text: string; wo: string; mark: ReturnType<typeof markierung> } => {
+    if (opt.text && opt.text.trim()) return { text: opt.text.trim(), wo: opt.wo || 'Markierung', mark: opt.mark || null };
+    /* Die beim Öffnen des Menüs gemerkte Markierung zuerst: das Suchfeld
+       des Befehlsmenüs nimmt den Fokus, und mit ihm geht die Auswahl im
+       Dokument — gemessen, test599 §7b. */
+    const mark = opt.mark || markierung();
+    if (mark) return { text: mark.text, wo: 'Markierung', mark };
+    if (opt.block && befehl.ziel !== 'seite' && String(opt.block.text || '').trim())
+      return { text: String(opt.block.text), wo: 'Block', mark: null };
+    return { text: seitenKontext(), wo: 'ganze Seite', mark: null };
+  };
 
-    m.addEventListener('click', async e => {
-      const b = elVon(e)?.closest<HTMLElement>('[data-sb]');
-      if (!b) return;
-      m.remove();
-      const befehl = SCHREIB_BEFEHLE.find(x => x.id === b.dataset.sb);
-      if (!befehl) return;
-      let auftrag = befehl.auftrag;
-      if (befehl.frage) {
-        const antwort = await UI.frage(befehl.frage, 'Englisch');
-        if (!antwort) return;
-        auftrag = 'Übersetze den Text ins ' + antwort + '.';
-      }
-      await schreibLauf(befehl, auftrag);
+  /** Einen Katalogbefehl ausführen — der EINE Einstieg. */
+  const ausfuehren = async (id: string, opt: KiLauf = {}): Promise<void> => {
+    const b = kiKatalog()?.finde(id);
+    if (!b) return;
+    if (b.art === 'werkzeug') { await werkzeugAus(b.id); return; }
+    let auftrag = opt.auftrag || kiKatalog().auftrag(b.id);
+    if (b.frage && !opt.auftrag) {
+      const antwort = await UI.frage(b.frage, b.vorgabe || '');
+      if (!antwort) return;
+      auftrag = kiKatalog().auftrag(b.id, { sprache: antwort });
+    }
+    await schreibLauf({ ...b, ...(opt.name ? { name: opt.name } : {}), ...(opt.icon ? { icon: opt.icon } : {}) },
+                      auftrag, opt);
+  };
+
+  /** Die vier Werkzeuge, die die KI selbst ausführt. Die Vorgaben stehen im
+      Katalog — die Palette hatte eine andere als der Knopf (E724). */
+  const werkzeugAus = async (id: string): Promise<void> => {
+    const b = kiKatalog()?.finde(id);
+    if (!b) return;
+    if (id === 'protokoll') { protokollZeigen(); return; }
+    let vorschlag = b.vorgabe || '';
+    if (id === 'nachschlagen')
+      vorschlag = (markierung()?.text || '') || (Store.getBlock(App.aktuelleSeite())?.text || '');
+    const antwort = await UI.frage(b.frage || b.name, vorschlag);
+    if (!antwort) return;
+    if (id === 'datenbank') datenbankBauen(antwort);
+    if (id === 'seite') seiteBauen(antwort);
+    if (id === 'nachschlagen') nachschlagen(antwort);
+  };
+
+  /** Eine Fähigkeit ausführen. Die eingebauten zeigen auf ihren
+      Katalogeintrag (`alt.faehig`) und schicken DESSEN Anweisung; eigene
+      bringen ihre mit. Beide laufen durch denselben Läufer: der Text
+      (Markierung oder Seite) ist die Eingabe, nicht die Anweisung — vorher
+      schickte „Korrekturlesen" mit Markierung NUR die Anweisung. */
+  const faehigkeitAusfuehren = async (f: any, opt: KiLauf = {}): Promise<void> => {
+    const b = kiKatalog()?.ausAlt('faehig', f.id);
+    /* Hat jemand die Anweisung einer eingebauten Fähigkeit umgeschrieben,
+       gilt SEINE (sie steht in `meta`, sie gehört ihm) — Ziel und Ausgabe
+       kommen trotzdem aus dem Katalog. Sonst die eine Katalogfassung. */
+    const start = FAEHIG_START.find(x => x.id === f.id);
+    const eigeneZeile = !!f.auftrag && !!start && f.auftrag !== start.auftrag;
+    if (b) { await ausfuehren(b.id, { ...opt, name: f.name, icon: f.icon || b.icon,
+                                      ...(eigeneZeile ? { auftrag: f.auftrag } : {}) }); return; }
+    await schreibLauf({ id: f.id, name: f.name, icon: f.icon || '🧩', ziel: 'markierung', ausgabe: 'ersetzen' },
+                      f.auftrag, opt);
+  };
+
+  /** Ein Rechteck aus einem Knopf, einem Rechteck oder nichts. */
+  const rechteckVon = (anker: any): { left: number; top: number; bottom: number } => {
+    if (anker && typeof anker.getBoundingClientRect === 'function') return anker.getBoundingClientRect();
+    if (anker && typeof anker.left === 'number') return { left: anker.left, top: anker.top, bottom: anker.bottom ?? anker.top };
+    return { left: innerWidth / 2 - 130, top: 160, bottom: 120 };
+  };
+
+  /** Ein Menü an seinem Knopf: `aria-expanded` an und aus, und wenn das Menü
+      geht und der Fokus mit ihm, bekommt der Knopf ihn zurück (E302). */
+  const amKnopf = (anker: any, m: HTMLElement): void => {
+    if (!(anker instanceof HTMLElement)) return;
+    anker.setAttribute('aria-expanded', 'true');
+    const w = new MutationObserver(() => {
+      if (m.isConnected) return;
+      w.disconnect();
+      anker.setAttribute('aria-expanded', 'false');
+      const a = document.activeElement;
+      if (anker.isConnected && (!a || a === document.body || !a.isConnected))
+        anker.focus({ preventScroll: true });
     });
+    w.observe(document.body, { childList: true });
   };
+
+  /**
+   * DAS EINE BEFEHLSMENÜ (E724) — Schreibbefehle, Fähigkeiten und die
+   * Bau-Werkzeuge in einer durchsuchbaren Liste. Geöffnet von „Schreiben"
+   * im leeren Chat, „+ → Befehle und Fähigkeiten", „✨ KI" an der Markierung,
+   * „Mit KI bearbeiten" am Block und „Mit KI verwenden → Schreiben" an der
+   * Seite. `schreibMenue` und `faehigkeitenMenue` sind seine zwei Türen.
+   */
+  const befehlsMenue = (anker: any, opt: { text?: string; block?: any; zuerst?: 'faehig' | 'schreiben' } = {}) => {
+    const r = rechteckVon(anker);
+    /* Die Markierung wird beim ÖFFNEN gemerkt — auch wenn die Auswahlleiste
+       den Text mitgibt. Gleich nimmt das Suchfeld den Fokus und mit ihm die
+       Auswahl im Dokument; ohne Marke fiel „Markierung ersetzen" auf „als
+       neuen Block anhängen" zurück (Durchsicht 10. Oktober, test599 §7h). */
+    const mark = markierung();
+    const liste = faehigkeiten();
+    /* Eine eingebaute Fähigkeit IST ihr Katalogeintrag — beide zu zeigen
+       wäre derselbe Befehl zweimal unter zwei Namen. Sie steht EINMAL da,
+       als Fähigkeit, und trägt die Kennung des Befehls mit (`data-sb`). */
+    const katalogVon = (f: any): any => kiKatalog()?.ausAlt('faehig', f.id);
+    const verdeckt = new Set(liste.map((f: any) => katalogVon(f)?.id).filter(Boolean));
+    const befehle = (kiKatalog()?.alle() || []).filter((b: any) => !verdeckt.has(b.id));
+    const zeile = (b: any) => `<button data-sb="${esc(b.id)}"><span class="mi">${b.icon}</span>${esc(b.name)}</button>`;
+    const fHtml = '<div class="grp">Fähigkeiten</div>' + liste.map((f: any) =>
+      `<button data-f="${esc(f.id)}"${katalogVon(f) ? ` data-sb="${esc(katalogVon(f).id)}"` : ''}>` +
+      `<span class="mi">${esc(f.icon || '🧩')}</span>${esc(f.name)}</button>`).join('');
+    const sHtml = '<div class="grp">Schreiben und bearbeiten</div>' +
+      befehle.filter((b: any) => b.art === 'auftrag').map(zeile).join('');
+    const bHtml = (opt.text || opt.block) ? '' : '<div class="grp">Bauen und nachschlagen</div>' +
+      befehle.filter((b: any) => b.art === 'werkzeug').map(zeile).join('');
+    const vorn = opt.text
+      ? '<button data-k="fragen"><span class="mi">💬</span>Zu dieser Stelle fragen</button>' : '';
+    const m = UI.menuMitSuche(
+      vorn + (opt.zuerst === 'faehig' ? fHtml + sHtml : sHtml + fHtml) + bHtml +
+      '<hr><button data-f="__neu"><span class="mi">＋</span>Fähigkeit hinzufügen</button>' +
+      '<button data-f="__verw"><span class="mi">⚙</span>Fähigkeiten verwalten</button>',
+      r.left - 40, Math.max(12, r.top - 300),
+      { platzhalter: 'Befehl oder Fähigkeit suchen …', titel: 'KI-Befehle',
+        /* Am Telefon trägt das Blatt den Titel; der Kopf stünde gleich
+           darunter noch einmal (gesehen im Bild, test599 §6). */
+        kopf: UI.amTelefon() ? '' : '<div class="grp">KI-Befehle</div>',
+        /* „@" kennt die Schreibbefehle und die Fähigkeiten (`atBefehl`), die
+           Bau-Werkzeuge nicht — sie fragen zuerst, was gebaut werden soll. */
+        fuss: 'Schreibbefehle und Fähigkeiten auch im Chat mit <b>@</b> vor dem Namen.',
+        ...(anker instanceof HTMLElement ? { anker } : {}) });
+    amKnopf(anker, m);
+    m.addEventListener('click', async e => {
+      const k = elVon(e)?.closest<HTMLElement>('[data-k], [data-sb], [data-f]');
+      if (!k) return;
+      m.remove();
+      if (k.dataset.k === 'fragen') { App.kiPanel(true); frageMitAuswahl(opt.text); return; }
+      if (k.dataset.f === '__neu')  { faehigkeitBearbeiten(); return; }
+      if (k.dataset.f === '__verw') { faehigkeitenVerwalten(); return; }
+      const lauf: KiLauf = { ...(opt.text ? { text: opt.text, wo: 'Markierung' as const } : {}),
+                             ...(opt.block ? { block: opt.block } : {}), mark };
+      const f = k.dataset.f ? liste.find((x: any) => x.id === k.dataset.f) : null;
+      if (f) { await faehigkeitAusfuehren(f, lauf); return; }
+      if (k.dataset.sb) await ausfuehren(k.dataset.sb, lauf);
+    });
+    return m;
+  };
+
+  /** Tür zum Befehlsmenü, die Schreibbefehle zuerst (schale.ts, „Schreiben"). */
+  const schreibMenue = (anker2: any) => befehlsMenue(anker2, { zuerst: 'schreiben' });
 
   /** Eigene Statuszeile: Streaming ersetzt den Antworttext, nicht den Status.
       Entfernen in finally gilt auch bei Fehlern und abgebrochenen Anfragen. */
@@ -1833,12 +1997,30 @@ const KI = (() => {
     return status;
   };
 
-  const schreibLauf = async (befehl: any, auftrag: any) => {
-    const quelle = arbeitsText();
+  /** Karteikarten aus „Frage :: Antwort"-Zeilen — echte Blöcke (E724, D7).
+      Vorher landeten sie als Textzeilen auf der Seite, und die Lernwelt
+      zählte keine einzige. */
+  const alsKarteikarten = (text: string): number => {
+    const seite = App.aktuelleSeite();
+    const karten = String(text || '').split('\n').map(z => z.replace(/^[-*•\d.\s]+/, '').trim())
+      .filter(z => /\S\s*::\s*\S/.test(z));
+    karten.forEach(z => Store.addBlock(seite, 'flashcard', { text: z, herkunft: 'ki' }));
+    if (karten.length) { App.zeichneSeite(); UI.toast(karten.length + ' Karteikarten eingefügt'); }
+    else UI.toast('In der Antwort steht keine Zeile „Frage :: Antwort"');
+    return karten.length;
+  };
+
+  /**
+   * DER LÄUFER. Die Signatur `schreibLauf(befehl, auftrag)` bleibt (test429);
+   * dazu kommt, worauf er wirkt (`opt`). Die Eingabe folgt dem Ziel des
+   * Befehls, die Knöpfe unter der Antwort seiner Ausgabe.
+   */
+  const schreibLauf = async (befehl: any, auftrag: any, opt: KiLauf = {}) => {
+    const quelle = eingabe(befehl, opt);
     if (!quelle.text.trim()) { UI.toast('Es gibt noch keinen Text.'); return; }
 
     App.kiPanel(true);
-    schreibe('user', befehl.icon + ' ' + befehl.name + (quelle.teil ? ' (Markierung)' : ' (ganze Seite)'));
+    schreibe('user', (befehl.icon ? befehl.icon + ' ' : '') + befehl.name + ' (' + quelle.wo + ')');
     const ziel = schreibe('assistant', '');
     ziel.textContent = '…';
 
@@ -1861,34 +2043,115 @@ const KI = (() => {
     } catch (e: unknown) { ziel.textContent = '⚠ ' + (e instanceof Error ? e.message : String(e)); return; }
     finally { ziel.classList.remove('ki-schreibt'); aktivitaet.remove(); }
 
+    /* Die Knöpfe folgen der Ausgabe. „Ersetzen" gibt es nur, wo es etwas
+       zu ersetzen gibt (Markierung oder Block) — und im Modus „Fragen" gar
+       nicht: dort darf die KI nichts ändern. */
+    const ausgabe = befehl.ausgabe || 'ersetzen';
+    const ersetzbar = ausgabe === 'ersetzen' && zustand.modus !== 'fragen' &&
+      (quelle.wo === 'Markierung' || quelle.wo === 'Block') && (quelle.wo !== 'Block' || !!opt.block);
     const leiste = document.createElement('div');
     leiste.className = 'ki-antwortknoepfe';
     leiste.innerHTML =
-      '<button data-a="ersetzen">Markierung ersetzen</button>' +
-      '<button data-a="darunter">Darunter einfügen</button>' +
+      (ersetzbar ? `<button data-a="ersetzen">${quelle.wo === 'Block' ? 'Block ersetzen' : 'Markierung ersetzen'}</button>` : '') +
+      (ausgabe === 'karteikarten'
+        ? '<button data-a="karteikarten">Als Karteikarten einfügen</button>'
+        : '<button data-a="darunter">Darunter einfügen</button>') +
       '<button data-a="kopieren">Kopieren</button>' +
       '<button data-a="nochmal">Noch einmal</button>';
     leiste.addEventListener('click', async e => {
       const b = elVon(e)?.closest<HTMLElement>('button[data-a]');
       if (!b) return;
       if (b.dataset.a === 'kopieren') { Ablage.kopiereJetzt(antwort, 'Kopiert'); }
-      if (b.dataset.a === 'nochmal')  { schreibLauf(befehl, auftrag); }
+      if (b.dataset.a === 'nochmal')  { schreibLauf(befehl, auftrag, opt); }
       if (b.dataset.a === 'darunter') { alsBloeckeEinfuegen(antwort); }
-      if (b.dataset.a === 'ersetzen') {
-        const sel = getSelection();
-        if (sel && sel.rangeCount && String(sel).trim()) {
-          const bereich = sel.getRangeAt(0);
-          bereich.deleteContents();
-          bereich.insertNode(document.createTextNode(antwort));
-          const blk = sel.anchorNode?.parentElement?.closest?.('.blk');
-          const ct = blk?.querySelector('.ct');
-          if (blk instanceof HTMLElement && ct && blk.dataset.bid)
-            Store.updateBlock(blk.dataset.bid, { text: ct.textContent });
-          UI.toast('Ersetzt');
-        } else { alsBloeckeEinfuegen(antwort); }
-      }
+      if (b.dataset.a === 'karteikarten') { alsKarteikarten(antwort); }
+      if (b.dataset.a === 'ersetzen') await ersetzen(antwort, quelle, opt);
     });
     ziel.appendChild(leiste);
+  };
+
+  /** Die Seite, zu der ein Block gehört — für die Fassung vor dem Tausch. */
+  const seiteDesBlocks = (id: string): string => {
+    let b = id ? Store.getBlock(id) : null;
+    for (let n = 0; b && n < 40; n++) {
+      if (b.type === 'page') return b.id;
+      b = b.parentId ? Store.getBlock(b.parentId) : null;
+    }
+    return App.aktuelleSeite();
+  };
+
+  /** Eine Fassung „vor KI-Änderung" — VOR dem Schreiben, wie bei den
+      Werkzeugen des Agenten (E656, §21: KI-Ausgaben versioniert). Misslingt
+      sie, wird nichts geändert: der Tausch ohne Rückweg wäre der Schaden. */
+  const fassungVorKi = async (blockId: string): Promise<boolean> => {
+    try { await Store.versionSpeichern(seiteDesBlocks(blockId), 'vor KI-Änderung'); return true; }
+    catch (e: unknown) {
+      UI.toast('Die Sicherungsfassung liess sich nicht schreiben, deshalb wurde nichts ersetzt: ' +
+               (e instanceof Error ? e.message : String(e)));
+      return false;
+    }
+  };
+
+  /** Ersetzen — im gespeicherten Text, nicht im gezeichneten. Steht die
+      Markierung genau einmal im Block, wird sie dort getauscht; das Markdown
+      drumherum bleibt (vorher wurde `ct.textContent` zurückgeschrieben, und
+      jede Auszeichnung im Block ging verloren — der Fehler aus E668).
+      Vor jedem Tausch eine Fassung, und der Block trägt `herkunft: 'ki'`
+      (E307/E656): der Streifen sagt „hier war die KI". */
+  const ersetzen = async (antwort: string, quelle: ReturnType<typeof eingabe>, opt: KiLauf): Promise<void> => {
+    if (quelle.wo === 'Block' && opt.block?.id) {
+      if (!await fassungVorKi(opt.block.id)) return;
+      Store.updateBlock(opt.block.id, { text: antwort, herkunft: 'ki' });
+      App.zeichneSeite(); UI.toast('Ersetzt'); return;
+    }
+    const mark = quelle.mark;
+    const bl = mark?.bid ? Store.getBlock(mark.bid) : null;
+    const alt = String(bl?.text || '');
+    const i = mark ? alt.indexOf(mark.text) : -1;
+    if (bl && mark && i >= 0 && alt.indexOf(mark.text, i + 1) < 0) {
+      if (!await fassungVorKi(bl.id)) return;
+      Store.updateBlock(bl.id, { text: alt.slice(0, i) + antwort + alt.slice(i + mark.text.length), herkunft: 'ki' });
+      App.zeichneSeite(); UI.toast('Ersetzt'); return;
+    }
+    /* Nicht eindeutig zu finden (die Markierung läuft über Auszeichnung
+       hinweg oder steht zweimal da): wie bisher an der Markierung selbst. */
+    const sel = getSelection();
+    const bereich = sel && sel.rangeCount && String(sel).trim() ? sel.getRangeAt(0)
+      : (mark?.bereich && mark.bereich.startContainer.isConnected ? mark.bereich : null);
+    if (!bereich) { alsBloeckeEinfuegen(antwort); return; }
+    const blk = (bereich.startContainer instanceof Element ? bereich.startContainer : bereich.startContainer.parentElement)?.closest?.('.blk');
+    const bid = blk instanceof HTMLElement ? blk.dataset.bid || '' : '';
+    if (bid && !await fassungVorKi(bid)) return;
+    bereich.deleteContents();
+    bereich.insertNode(document.createTextNode(antwort));
+    const ct = blk?.querySelector('.ct');
+    if (bid && ct) Store.updateBlock(bid, { text: ct.textContent, herkunft: 'ki' });
+    UI.toast('Ersetzt');
+  };
+
+  /** „@Name …" am Anfang des Feldes: eine Fähigkeit oder ein Befehl, der
+      Rest ist sein Text (E724, D10). Das stand seit Langem im Menü („Im Chat
+      auch mit @ vor dem Namen aufrufbar") und war nirgends gebaut. Der
+      längste passende Name gewinnt — „Ton: locker" vor „Ton". */
+  const atBefehl = (text: string): { f?: any; b?: any; rest: string } | null => {
+    if (!text.startsWith('@')) return null;
+    const roh = text.slice(1);
+    const klein = roh.toLowerCase();
+    const kandidaten: { name: string; f?: any; b?: any }[] = [
+      ...faehigkeiten().map((f: any) => ({ name: String(f.name || ''), f })),
+      ...(kiKatalog()?.alle() || []).filter((b: any) => b.art === 'auftrag').map((b: any) => ({ name: b.name, b }))
+    ].filter(k => k.name && klein.startsWith(k.name.toLowerCase()) &&
+                  (roh.length === k.name.length || /\s/.test(roh.charAt(k.name.length))));
+    if (!kandidaten.length) return null;
+    kandidaten.sort((a, b) => b.name.length - a.name.length);
+    const k = kandidaten[0]!;
+    /* Eine ERWÄHNTE Seite geht vor, wenn ihr Titel mindestens so lang passt:
+       „@Zusammenfassen Woche …" ist die Seite „Zusammenfassen Woche", kein
+       Befehl „Zusammenfassen" auf „Woche …" (Durchsicht 10. Oktober). */
+    const seite = [...erwaehnt.values()].some(t => t.length >= k.name.length && klein.startsWith(t.toLowerCase()) &&
+      (roh.length === t.length || /\s/.test(roh.charAt(t.length))));
+    if (seite) return null;
+    return { ...(k.f ? { f: k.f } : {}), ...(k.b ? { b: k.b } : {}), rest: roh.slice(k.name.length).trim() };
   };
 
   /** Antworttext als richtige Blöcke ablegen — inklusive Markdown-Tabellen. */
@@ -1985,26 +2248,9 @@ const KI = (() => {
     });
   };
 
-  const faehigkeitenMenue = (anker: any) => {
-    const r = anker.getBoundingClientRect();
-    const liste = faehigkeiten();
-    const m = UI.menuMitSuche(
-      liste.map((f: any) => `<button data-f="${f.id}"><span class="mi">${f.icon}</span>${esc(f.name)}</button>`).join('') +
-      '<hr><button data-f="__neu"><span class="mi">＋</span>Fähigkeit hinzufügen</button>' +
-      '<button data-f="__verw"><span class="mi">⚙</span>Fähigkeiten verwalten</button>',
-      r.left, r.top - 260,
-      { platzhalter: 'Fähigkeit suchen …', kopf: '<div class="grp">Fähigkeiten</div>',
-        fuss: 'Im Chat auch mit <b>@</b> vor dem Namen aufrufbar.' });
-    m.addEventListener('click', async e => {
-      const b = elVon(e)?.closest<HTMLElement>('[data-f]');
-      if (!b) return;
-      m.remove();
-      if (b.dataset.f === '__neu')  { faehigkeitBearbeiten(); return; }
-      if (b.dataset.f === '__verw') { faehigkeitenVerwalten(); return; }
-      const f = liste.find((x: any) => x.id === b.dataset.f);
-      if (f) senden(f.auftrag);
-    });
-  };
+  /** Tür zum Befehlsmenü, die Fähigkeiten zuerst (E724: ein Menü, nicht
+      zwei — die Fähigkeiten und die Schreibbefehle sind EINE Liste). */
+  const faehigkeitenMenue = (anker: any) => befehlsMenue(anker, { zuerst: 'faehig' });
 
   const faehigkeitBearbeiten = async (vorhanden?: any) => {
     const name = await UI.frage('Wie heisst die Fähigkeit?', vorhanden ? vorhanden.name : '');
@@ -2018,6 +2264,12 @@ const KI = (() => {
     UI.toast('Fähigkeit gemerkt: ' + name);
   };
 
+  /** Die Fähigkeiten verwalten. Jede Zeile hat ZWEI Knöpfe (E724): den
+      Namen zum Bearbeiten und einen eigenen Löschknopf mit dem Paar aus
+      E709 (`data-loeschknopf`) — erst „Löschen" in Rot, dann wirkt es;
+      Escape bricht ab. Vorher war „löschen" ein Wort IM Zeilenknopf: mit
+      der Tastatur unerreichbar (Enter hiess Bearbeiten), und ein Klick
+      löschte sofort. */
   const faehigkeitenVerwalten = () => {
     const o = document.createElement('div');
     o.className = 'overlay';
@@ -2026,12 +2278,16 @@ const KI = (() => {
       o.innerHTML =
         '<div class="finder we-panel">' +
           `<div class="fh">Fähigkeiten <em>${liste.length}</em>` +
-            '<button class="icon-btn" data-a="zu">✕</button></div>' +
+            '<button class="icon-btn" data-a="zu" aria-label="Schliessen">✕</button></div>' +
           '<div class="we-text">Fähigkeiten sind Aufgaben, die die KI kann. Du rufst ' +
-          'sie im Chat mit <b>@</b> auf oder über das Menü bei markiertem Text.</div>' +
+          'sie im Chat mit <b>@</b> vor dem Namen auf oder über das Befehlsmenü.</div>' +
           '<div class="we-liste">' +
-            liste.map((f: any) => `<button data-b="${f.id}"><span>${f.icon}</span>${esc(f.name)}` +
-              `<span class="ms" data-w="${f.id}">löschen</span></button>`).join('') +
+            liste.map((f: any) => '<div class="we-zeile">' +
+              `<button class="we-zeile-name" data-b="${esc(f.id)}"><span>${esc(f.icon || '🧩')}</span>${esc(f.name)}</button>` +
+              `<button class="we-zeile-weg" data-w="${esc(f.id)}" data-loeschknopf="Löschen" ` +
+                /* Der Hinweis nennt, WAS gelöscht wird — ein nacktes „Löschen"
+                   hörte der Vorleser als „Löschen: Löschen" (test586, E709). */
+                `aria-label="Fähigkeit „${esc(f.name)}“ löschen" title="Fähigkeit „${esc(f.name)}“ löschen">🗑</button></div>`).join('') +
           '</div>' +
           '<div class="we-fuss"><button class="we-knopf" data-a="neu">Fähigkeit hinzufügen</button></div>' +
         '</div>';
@@ -2257,55 +2513,161 @@ const KI = (() => {
     }
   };
 
+  /**
+   * Die Wahl hinter „@" und „+ → Seite erwähnen" (E724). Getippt, zeigt sie
+   * Fähigkeiten UND Seiten; aus dem „+" nur Seiten — der Eintrag heisst
+   * „Seite erwähnen", und Personen gibt es in Redion nicht. Eine gewählte
+   * Seite wird Kontext der nächsten Frage (`erwaehnt`).
+   */
+  const erwaehnenMenue = (ta: HTMLTextAreaElement, anker: any, mitFaehig: boolean, atStelle = -1) => {
+    const r = rechteckVon(anker);
+    const neu = (a: any, b: any) => String(b.edited || '').localeCompare(String(a.edited || ''));
+    const alle = Object.values<any>(Store.cache.blocks).filter(x => x.type === 'page' && x.alive !== false);
+    const seiten = alle.filter(x => x.parentTable !== 'collection').sort(neu).slice(0, 60);
+    /* Datenbankzeilen sind Seiten (§17) und waren vor E724 erwähnbar — sie
+       stehen nach den Seiten in einer eigenen Gruppe, statt zu fehlen (§43). */
+    const zeilen = alle.filter(x => x.parentTable === 'collection').sort(neu).slice(0, 40);
+    const fRows = mitFaehig
+      ? '<div class="grp">Fähigkeiten</div>' + faehigkeiten().map((f: any) =>
+          `<button data-f="${esc(f.id)}"><span class="mi">${esc(f.icon || '🧩')}</span>${esc(f.name)}</button>`).join('')
+      : '';
+    const m = UI.menuMitSuche(
+      fRows + '<div class="grp">Seiten</div>' +
+      seiten.map(p => `<button data-s="${esc(p.id)}">${esc(p.icon || '📄')} ${esc(p.text || 'Ohne Titel')}</button>`).join('') +
+      (zeilen.length ? '<div class="grp">Datenbankzeilen</div>' +
+        zeilen.map(p => `<button data-s="${esc(p.id)}">${esc(p.icon || '▦')} ${esc(p.text || 'Ohne Titel')}</button>`).join('') : ''),
+      r.left, Math.max(12, r.top - 300),
+      { platzhalter: mitFaehig ? 'Fähigkeit oder Seite suchen …' : 'Seite suchen …',
+        titel: mitFaehig ? 'Erwähnen' : 'Seite erwähnen',
+        kopf: UI.amTelefon() ? '' : '<div class="grp">' + (mitFaehig ? 'Erwähnen' : 'Seite erwähnen') + '</div>' });
+    /* Das getippte „@" fällt weg, wenn gewählt wird — es wird ersetzt. */
+    const ohneAt = (): string => atStelle >= 0 && ta.value.charAt(atStelle) === '@'
+      ? ta.value.slice(0, atStelle) + ta.value.slice(atStelle + 1) : ta.value;
+    m.addEventListener('click', ev2 => {
+      const s = elVon(ev2)?.closest<HTMLElement>('[data-s], [data-f]');
+      if (!s) return;
+      m.remove();
+      if (s.dataset.f) {
+        const f = faehigkeiten().find((x: any) => x.id === s.dataset.f);
+        if (f) ta.value = '@' + f.name + ' ' + ohneAt().trimStart();
+      } else {
+        const p = Store.getBlock(s.dataset.s);
+        const titel = (p?.text || 'Seite');
+        if (p) erwaehnt.set(p.id, titel);
+        const rest = ohneAt();
+        const vor = atStelle >= 0 ? rest.slice(0, atStelle) : rest;
+        const nach = atStelle >= 0 ? rest.slice(atStelle) : '';
+        ta.value = vor + (vor && !/\s$/.test(vor) ? ' ' : '') + '@' + titel + (nach.startsWith(' ') ? '' : ' ') + nach;
+      }
+      ta.dispatchEvent(new Event('input'));
+      ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
+    });
+    return m;
+  };
+
+  /** Das Quellenmenü am Prompt (E724) — die fünf Schalter, „Nur aus meinen
+      Quellen" und der Weg zu allen KI-Einstellungen. */
+  const quellenMenue = (anker: HTMLElement) => {
+    const r = anker.getBoundingClientRect();
+    const nur = Kontext.nurQuellen();
+    /* DIESELBEN Schalter wie überall (§8) — gleich im Markup, damit das Menü
+       mit seiner wahren Höhe gesetzt wird (nachträglich eingehängt wuchs es
+       über den Bildrand hinaus, gesehen im Bild). */
+    const m = UI.menu(
+      '<div class="grp">Quellen für die nächste Frage</div>' +
+      `<div class="ki-quellschalter">${quellenKnoepfe()}</div>` +
+      `<button data-y="nur" aria-pressed="${nur}" title="Findet sich in deinen Quellen nichts, wird das Modell nicht gefragt">` +
+        '<span class="mi">◎</span>Nur aus meinen Quellen' +
+        (nur ? '<span class="ms">✓</span>' : '') + '</button>' +
+      '<hr><button data-y="einst"><span class="mi">⚙</span>Alle KI-Einstellungen</button>',
+      r.left, Math.max(12, r.top - 300), { anker, titel: 'Quellen' });
+    const leiste = m.querySelector<HTMLElement>('.ki-quellschalter');
+    if (leiste) quellenBinden(leiste);
+    amKnopf(anker, m);
+    m.addEventListener('click', ev => {
+      const b = elVon(ev)?.closest<HTMLElement>('[data-y]');
+      if (!b) return;
+      if (b.dataset.y === 'nur') {
+        const an = !Kontext.nurQuellen();
+        Kontext.nurQuellenSetzen(an);
+        b.setAttribute('aria-pressed', String(an));
+        b.querySelector('.ms')?.remove();
+        if (an) b.insertAdjacentHTML('beforeend', '<span class="ms">✓</span>');
+        UI.toast(an ? 'Nur aus meinen Quellen: an' : 'Nur aus meinen Quellen: aus');
+      }
+      if (b.dataset.y === 'einst') { m.remove(); App.einstellungen('ki'); }
+    });
+    return m;
+  };
+
+  /** Das ⋯ im Kopf (E724): Agent, Besprechung und Protokoll öffnen eigene
+      Flächen und sind im Chat selten — dazu die Einstellungen der KI. */
+  const mehrMenue = (anker: HTMLElement) => {
+    const r = anker.getBoundingClientRect();
+    const mcp = (Store.getMeta('mcp:server', []) || []).length;
+    const m = UI.menu(
+      '<button id="ai-agent" data-y="agent"><span class="mi">🤖</span>Agent<span class="sub">Mehrstufige Aufgaben</span></button>' +
+      '<button id="ai-meeting" data-y="meeting"><span class="mi">🎙</span>Besprechung<span class="sub">Aufnehmen, mitschreiben, auswerten</span></button>' +
+      '<button id="ai-log" data-y="log"><span class="mi">🕘</span>Protokoll<span class="sub">Was die KI gebaut hat</span></button>' +
+      '<hr>' +
+      '<button data-y="verw"><span class="mi">🧩</span>Fähigkeiten verwalten</button>' +
+      '<button data-y="pers"><span class="mi">🎨</span>Personalisieren</button>' +
+      `<button data-y="mcp"><span class="mi">⇄</span>MCP-Server<span class="ms">${mcp}</span></button>` +
+      '<button data-y="einst"><span class="mi">⚙</span>KI-Einstellungen</button>',
+      Math.max(12, r.right - 260), r.bottom + 6,
+      { anker, titel: 'Mehr KI-Funktionen', tropfen: [
+        { id: 'agent',   name: 'Agent',       zeichen: 'robot',   ziel: '[data-y="agent"]' },
+        { id: 'meeting', name: 'Besprechung', zeichen: 'mic',     ziel: '[data-y="meeting"]' },
+        { id: 'log',     name: 'Protokoll',   zeichen: 'history', ziel: '[data-y="log"]' }] });
+    amKnopf(anker, m);
+    m.addEventListener('click', ev => {
+      const b = elVon(ev)?.closest<HTMLElement>('button[data-y]');
+      if (!b) return;
+      m.remove();
+      const y = b.dataset.y;
+      if (y === 'agent')   Agent.panel();
+      if (y === 'meeting') Meeting.panel();
+      if (y === 'log')     protokollZeigen();
+      if (y === 'verw')    faehigkeitenVerwalten();
+      if (y === 'pers')    personalisieren();
+      if (y === 'mcp')     App.einstellungen('mcp');
+      if (y === 'einst')   App.einstellungen('ki');
+    });
+    return m;
+  };
+
+  /*
+   * DAS FENSTER (E724). Bis hier stand eine Schublade „Werkzeuge & Kontext"
+   * über der Eingabe — 19 Bedienelemente in einem 324 px hohen Kasten mit
+   * eigener Rolle, nach THEMA geordnet (E528). Redur: „du muss entscheiden
+   * was wo kommt und warum". Jetzt wohnt jeder Eintrag dort, wo das ist,
+   * worauf er wirkt:
+   *   · die Quellen am Prompt (`#ai-quellen`) — sie entscheiden, was die
+   *     NÄCHSTE Frage sieht;
+   *   · die Seitenaktionen im leeren Chat („Für diese Seite", `.ai-start`)
+   *     — ihr Ziel ist die offene Seite, und dort fängt man an;
+   *   · Nachschlagen und „Befehle und Fähigkeiten" im „+" — sie holen etwas
+   *     herein wie ein Anhang;
+   *   · Agent, Besprechung, Protokoll und die Einstellungen im ⋯ des Kopfs
+   *     — eigene Flächen, im Chat selten.
+   * Die Tabelle mit jedem der 19 und seinem Grund steht in E724.
+   */
   const bindePanel = () => {
     const ta = document.getElementById('ai-input') as HTMLTextAreaElement | null;
     const chat = document.getElementById('chat');
 
-    /* Werkzeuge bleiben erreichbar, ohne die Eingabe zu verdrängen.
-       Nur bestehende Knoten verschieben: Kennungen und Klicks bleiben. */
-    const actions = document.querySelector('.ai-quick');
-    if (actions && !actions.querySelector('.ai-action-group')) {
-      const prompts = Array.from(actions.querySelectorAll<HTMLButtonElement>('button[data-p]'));
-      const groups = [
-        { name: 'Erstellen', ids: ['ai-db', 'ai-seite'], prompts: [] },
-        { name: 'Text bearbeiten', ids: ['ai-schreiben'], prompts: [0, 2, 3] },
-        { name: 'Lernen & planen', ids: ['ai-wiki'], prompts: [1, 4] },
-        { name: 'Assistenten & Verlauf', ids: ['ai-agent', 'ai-meeting', 'ai-log'], prompts: [] }
-      ];
-      for (const group of groups) {
-        const section = document.createElement('section');
-        section.className = 'ai-action-group';
-        const heading = document.createElement('h3');
-        heading.textContent = group.name;
-        section.append(heading);
-        for (const id of group.ids) {
-          const button = document.getElementById(id);
-          if (button) section.append(button);
-        }
-        for (const index of group.prompts) {
-          const button = prompts[index];
-          if (button) section.append(button);
-        }
-        actions.append(section);
-      }
-      const settings = document.querySelector('.ai-tools-settings');
-      const settingsActions: Array<[string, string]> = [['ai-quellen', 'Quellen & Modus'], ['ai-faehig', 'Fähigkeiten']];
-      for (const [id, label] of settingsActions) {
-        const button = document.getElementById(id);
-        if (button && settings) { button.append(' ' + label); settings.append(button); }
-      }
-    }
-    const tools = document.querySelector<HTMLDetailsElement>('#ai-tools');
-    tools?.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && tools.open && !document.querySelector('.menu')) {
-        event.stopPropagation(); tools.open = false;
-        tools.querySelector('summary')?.focus();
-      }
-    });
-    const fuss = document.querySelector('.ai-context-group');
-    if (fuss && !fuss.querySelector('.ki-quellschalter')) {
-      fuss.append(quellenLeiste());
-    }
+    /* Die Palette liest die häufigen KI-Befehle aus dem Katalog (E724) —
+       vorher hielt `wissen/werkzeuge.ts` vier Abschriften mit eigenen
+       Vorgaben. Einmal anmelden; `meldeLieferant` weist Doppelte ab. */
+    if (typeof Register !== 'undefined' && Register.befehle && kiKatalog())
+      Register.befehle.meldeLieferant(kiPalette);
+
+    /* Ein Schreiber, viele Leser: wer immer eine Quelle umschaltet (das
+       Fenster, die Einstellungen), hier ziehen Schalter und Schild mit. */
+    if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined')
+      Ereignisse.horche(ARTEN.kiQuellenGeaendert, () => quellenAbgleichen());
+    quellenSchild();
 
     if (!ta) return;
     ta.addEventListener('keydown', e => {
@@ -2323,13 +2685,26 @@ const KI = (() => {
         senden(t);
       }
     });
-    ta.addEventListener('input', () => {
+    ta.addEventListener('input', (e) => {
       ta.style.height = 'auto';
       ta.style.height = Math.min(160, ta.scrollHeight) + 'px';
+      /* Ein getipptes „@" am Wortanfang öffnet die Wahl (E724). */
+      if (!(e instanceof InputEvent) || e.data !== '@') return;
+      const pos = ta.selectionStart ?? ta.value.length;
+      if (ta.value.charAt(pos - 1) === '@' && (pos === 1 || /\s/.test(ta.value.charAt(pos - 2))))
+        erwaehnenMenue(ta, ta, true, pos - 1);
     });
 
-    document.querySelectorAll<HTMLElement>('.ai-quick button[data-p]').forEach(b => {
-      b.addEventListener('click', () => senden(b.dataset.p ?? ''));
+    /* Die Knöpfe im leeren Chat tragen eine Katalogkennung (`data-ki`). */
+    document.querySelectorAll<HTMLElement>('.ai-start [data-ki]').forEach(b => {
+      /* Die Markierung beim Drücken merken — bis zum Klick kann sie weg sein. */
+      let gemerkt: KiMarke | null = null;
+      b.addEventListener('pointerdown', () => { gemerkt = markierung(); });
+      b.addEventListener('click', () => {
+        const mark = gemerkt || markierung();
+        gemerkt = null;
+        void ausfuehren(b.dataset.ki || '', { mark });
+      });
     });
 
     /* --- Die Leiste unter dem Eingabefeld ------------------------------- */
@@ -2339,6 +2714,9 @@ const KI = (() => {
     };
     modusZeigen();
 
+    /* Der Modus wohnt an EINEM Ort: an diesem Knopf, dazu Shift+Tab im
+       Feld (E724). Das doppelte „Modus ▸" im Quellenmenü ist weg — sein „▸"
+       versprach ein Untermenü und schaltete sofort um. */
     const modusWechseln = () => {
       zustand.modus = zustand.modus === 'fragen' ? 'standard' : 'fragen';
       modusZeigen();
@@ -2358,7 +2736,8 @@ const KI = (() => {
           '<span class="sub">Nur Antworten, keine Änderungen</span>' +
           (zustand.modus === 'fragen' ? '<span class="ms">✓</span>' : '') + '</button>' +
         '<div class="menu-fuss">Tipp: Mit Shift + Tab durch die Modi wechseln</div>',
-        r.left - 120, r.top - 130);
+        r.left - 120, r.top - 130, { titel: 'Modus' });
+      amKnopf(knopf, m);
       m.addEventListener('click', ev => {
         const b = elVon(ev)?.closest<HTMLElement>('[data-m]');
         if (!b) return;
@@ -2384,9 +2763,14 @@ const KI = (() => {
       const r = knopf.getBoundingClientRect();
       const m = UI.menu(
         '<button data-x="datei"><span class="mi">📎</span>Fotos und Dateien hinzufügen</button>' +
-        '<button data-x="erwaehnen"><span class="mi">@</span>Seiten oder Personen erwähnen</button>' +
-        '<button data-x="bild"><span class="mi">🖼</span>Bild erstellen<span class="ms">neu</span></button>',
-        r.left, r.top - 120);
+        '<button data-x="erwaehnen"><span class="mi">@</span>Seite erwähnen</button>' +
+        '<button data-x="bild"><span class="mi">🖼</span>Bild erstellen<span class="ms">neu</span></button>' +
+        /* Aus der Schublade (E724): Nachschlagen holt fremden Text herein
+           wie ein Anhang — und die Befehle sind eine Tür in die KI. */
+        '<button id="ai-wiki" data-x="wiki"><span class="mi">📖</span>Bei Wikipedia nachschlagen</button>' +
+        '<button id="ai-faehig" data-x="befehle"><span class="mi">🧩</span>Befehle und Fähigkeiten …</button>',
+        r.left, r.top - 220, { titel: 'Hinzufügen', anker: knopf });
+      amKnopf(knopf, m);
       m.addEventListener('click', async ev => {
         const b = elVon(ev)?.closest<HTMLElement>('[data-x]');
         if (!b) return;
@@ -2402,91 +2786,39 @@ const KI = (() => {
           });
           inp.click();
         }
-        if (b.dataset.x === 'erwaehnen') {
-          const seiten = Object.values<any>(Store.cache.blocks)
-            .filter(x => x.type === 'page' && x.alive !== false).slice(0, 60);
-          const m2 = UI.menuMitSuche(
-            seiten.map(p => `<button data-s="${p.id}">${p.icon || '📄'} ${esc(p.text || 'Ohne Titel')}</button>`).join(''),
-            r.left, r.top - 300, { platzhalter: 'Seite suchen …', kopf: '<div class="grp">Erwähnen</div>' });
-          m2.addEventListener('click', ev2 => {
-            const s = elVon(ev2)?.closest<HTMLElement>('[data-s]');
-            if (!s) return;
-            const p = Store.getBlock(s.dataset.s);
-            ta.value += (ta.value ? ' ' : '') + '@' + (p.text || 'Seite');
-            m2.remove(); ta.focus();
-          });
-        }
+        if (b.dataset.x === 'erwaehnen') erwaehnenMenue(ta, knopf, false);
         if (b.dataset.x === 'bild') {
           const was = await UI.frage('Was soll auf dem Bild sein?', '');
           if (was) senden('Beschreibe ein Bild zu: ' + was +
             '. Gib dann eine SVG-Zeichnung dazu aus, die ich einfügen kann.');
         }
+        if (b.dataset.x === 'wiki') await werkzeugAus('nachschlagen');
+        if (b.dataset.x === 'befehle') befehlsMenue(knopf, { zuerst: 'faehig' });
       });
     });
 
+    /* Die Quellen am Prompt (E724) — das Schild sagt ohne Aufklappen, was
+       die KI sieht; ein Druck öffnet die Schalter. */
     document.getElementById('ai-quellen')?.addEventListener('click', (e) => {
       const knopf = e.currentTarget;
-      if (!(knopf instanceof HTMLElement)) return;
-      const r = knopf.getBoundingClientRect();
-      const q = Kontext.quellen();
-      const anzahl = Object.values<any>(q).filter(Boolean).length;
-      const m = UI.menu(
-        `<button data-y="quellen"><span class="mi">⌥</span>Meine Quellen<span class="ms">${anzahl} ▸</span></button>` +
-        `<button data-y="mcp"><span class="mi">⇄</span>MCP-Server<span class="ms">` +
-          `${(Store.getMeta('mcp:server', []) || []).length} ▸</span></button>` +
-        `<button data-y="modus"><span class="mi">✎</span>Modus` +
-          `<span class="ms">${zustand.modus === 'fragen' ? 'Fragen' : 'Standard'} ▸</span></button>` +
-        '<button data-y="pers"><span class="mi">🎨</span>Personalisieren</button>',
-        r.left, r.top - 160);
-      m.addEventListener('click', ev => {
-        const b = elVon(ev)?.closest<HTMLElement>('[data-y]');
-        if (!b) return;
-        m.remove();
-        /* HIER STAND `quellenKarte(e.currentTarget)` (E652): ein
-           HTML-Element an eine Funktion, die eine LISTE erwartet.
-           `!element.length` ist wahr, also kam lautlos `null` zurück — und
-           selbst das wurde nirgends eingehängt. Der Punkt zeigte eine Zahl
-           und ein „▸", versprach also ein Untermenü, und tat nichts.
-           Jetzt öffnet er DIESELBE Schalterleiste, die im Fuss steht:
-           ein Katalog, nicht zwei (§8). */
-        if (b.dataset.y === 'quellen') {
-          const q2 = UI.menu('<div class="grp">Meine Quellen</div>', r.left, r.top - 160);
-          q2.appendChild(quellenLeiste());
-        }
-        if (b.dataset.y === 'mcp')     App.einstellungen('mcp');
-        if (b.dataset.y === 'modus')   modusWechseln();
-        if (b.dataset.y === 'pers')    personalisieren();
-      });
+      if (knopf instanceof HTMLElement) quellenMenue(knopf);
     });
 
-    document.getElementById('ai-faehig')?.addEventListener('click', (e) =>
-      faehigkeitenMenue(e.currentTarget));
+    /* Das ⋯ im Kopf (E724). */
+    document.getElementById('ai-mehr')?.addEventListener('click', (e) => {
+      const knopf = e.currentTarget;
+      if (knopf instanceof HTMLElement) mehrMenue(knopf);
+    });
 
     document.getElementById('ai-diktat')?.addEventListener('click', () => diktat(ta));
 
     /* Redur, 9. September: die beiden Bau-Knöpfe unverändert behalten;
-       alle übrigen Aktionen erhalten genau denselben bestehenden Effekt. */
-    if (typeof Funkel !== 'undefined') Funkel.alle(document, '.ai-quick button, .ai-tools-settings button');
-    document.getElementById('ai-db')?.addEventListener('click', async () => {
-      const auftrag = await UI.frage('Was soll die Datenbank können?',
-        'Aufgaben mit Status, Priorität, Fälligkeit und Aufwand');
-      if (auftrag) datenbankBauen(auftrag);
-    });
-    document.getElementById('ai-seite')?.addEventListener('click', async () => {
-      const auftrag = await UI.frage('Worum geht es auf der Seite?', '');
-      if (auftrag) seiteBauen(auftrag);
-    });
-    document.getElementById('ai-log')?.addEventListener('click', () => protokollZeigen());
-    document.getElementById('ai-agent')?.addEventListener('click', () => Agent.panel());
-    document.getElementById('ai-meeting')?.addEventListener('click', () => Meeting.panel());
+       alle übrigen Aktionen erhalten genau denselben bestehenden Effekt.
+       Seit E724 stehen die acht im leeren Chat, nicht in einer Schublade. */
+    if (typeof Funkel !== 'undefined') Funkel.alle(document, '.ai-start .ai-quick button');
+    document.getElementById('ai-db')?.addEventListener('click', () => { void werkzeugAus('datenbank'); });
+    document.getElementById('ai-seite')?.addEventListener('click', () => { void werkzeugAus('seite'); });
     document.getElementById('ai-schreiben')?.addEventListener('click', (e) => schreibMenue(e.currentTarget));
-
-    document.getElementById('ai-wiki')?.addEventListener('click', async () => {
-      const vorschlag = (getSelection()?.toString() || '').trim() ||
-                        (Store.getBlock(App.aktuelleSeite())?.text || '');
-      const begriff = await UI.frage('Was soll ich nachschlagen?', vorschlag);
-      if (begriff) nachschlagen(begriff);
-    });
 
     /* DER VERLAUF, DEN ES SEIT PHASE F NICHT MEHR ZU SEHEN GAB (L93).
        Er stand nur in der Seitenleiste, und die ist am Rechner weg. */
@@ -2495,11 +2827,15 @@ const KI = (() => {
     document.getElementById('ai-clear')?.addEventListener('click', () => {
       zustand.verlauf = [];
       if (chat) chat.innerHTML = '';
-      melde('Neuer Chat. Der Inhalt der offenen Seite wird als Kontext mitgegeben.');
+      melde(kontextSatz());
     });
 
     melde('Alles läuft lokal. Kein Text verlässt deinen Rechner.');
   };
+
+  /** Die häufigen KI-Befehle für die Palette (Strg K) — aus dem Katalog. */
+  const kiPalette = () => (kiKatalog()?.alle() || []).filter((b: any) => b.haeufig)
+    .map((b: any) => ({ gruppe: 'KI', titel: b.palette || b.name, tun: () => { void ausfuehren(b.id); } }));
 
   /* Der Weg für die Schale (E233): beim ÖFFNEN des KI-Fensters einmal nach
      Ollama sehen — aber nur, wenn noch keine Quelle steht. Zweimal fragen
@@ -2515,6 +2851,7 @@ const KI = (() => {
   };
 
   return { start, bindePanel, sucheOllamaJetzt, senden, abbrechen, sendenKnopf, blockAktion, frageMitAuswahl, wikipedia, nachschlagen,
+           ausfuehren, befehlsMenue, kontextSatz,
            datenbankBauen, datenbankBauenAus, seiteBauen, protokollZeigen, protokoll,
            quellenKarte, quellenLeiste, seitenKontext, SYSTEM,
            SCHREIB_BEFEHLE, schreibMenue, schreibLauf, alsBloeckeEinfuegen,
