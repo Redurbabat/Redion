@@ -1,4 +1,4 @@
-/* Suite 598 — Fläche: eine Leiste je Arbeitskontext (E722, E723)
+/* Suite 598 — Fläche: eine Leiste je Arbeitskontext (E722, E723, E741)
  * ============================================================================
  * WAS HIER GEHALTEN WIRD. Redur, PDF vom 29. September, Seite 18 unten, mit
  * einer roten Markierung um die untere Leiste:
@@ -57,8 +57,13 @@
  *   §13 Die breite Tabelle rollt im Kasten auch mit dem Rad: quer und mit
  *       Umschalt rollt sie, die Fläche bleibt stehen; längs und am Rand
  *       schiebt das Rad die Fläche.
+ *   §14 Umschalt+Rad auf dem Grund schiebt die Fläche QUER (E741), und am
+ *       rechten Rand der Tabelle kommt Umschalt+Rad quer bei der Fläche an;
+ *       ein vom System schon gedrehter Wisch (macOS) wirkt genau einmal,
+ *       Rad allein schiebt längs, Strg+Rad zoomt.
  *
  * GEGEN DEN STAND 1bfaca53 ROT — die Zeilen stehen im Bericht zu E722/E723.
+ * §14 GEGEN 1575a1835 ROT mit „quer 0, längs -120" (E741).
  *
  *   node pruefungen/lauf/test598.mts
  * ==========================================================================*/
@@ -666,6 +671,63 @@ const v13d = await lage13();
 const n13d = await rad13(120, 0);
 p('Ganz rechts angekommen gibt sie das Rad an die Fläche weiter, statt es zu schlucken',
   n13d.flaeche !== v13d.flaeche, `${v13d.flaeche} → ${n13d.flaeche}, links ${v13d.links} → ${n13d.links}`);
+
+/* §14 · UMSCHALT+RAD AUF DEM GRUND SCHIEBT QUER (Redur, 11. Oktober 2026:
+   „Ja" zu AUFGABEN, Fläche Punkt 4). Über der breiten Tabelle rollt
+   Umschalt+Rad seit §13 quer — auf dem Grund daneben schob es die Fläche
+   LÄNGS, weil der Browser ein gewöhnliches Rad mit Umschalt als `deltaY`
+   meldet. Jetzt heisst Umschalt auf dem Grund dasselbe wie in der Tabelle,
+   in AFFiNE und in Figma: quer. Liefert das System den Wisch schon quer
+   (macOS: `deltaX`, `deltaY` 0), darf er nicht doppelt wirken. Rad allein
+   und Strg+Rad bleiben, wie sie waren. */
+console.log('\n14 · Umschalt+Rad auf dem Grund schiebt quer');
+const sicht14 = () => tp.evaluate(() => {
+  const t = document.querySelector<HTMLElement>('.pg-fl-sicht')?.style.transform ?? '';
+  const m = /translate\(([-\d.]+)px,\s*([-\d.]+)px\)\s*scale\(([-\d.]+)\)/.exec(t);
+  return m ? { x: +m[1]!, y: +m[2]!, z: +m[3]! } : null;
+});
+const grund14 = async (art: 'umschalt' | 'mac' | 'rad' | 'strg') => {
+  const fl = await leer(tp);
+  if (!fl) return null;
+  await tp.mouse.move(fl.x, fl.y);
+  const vor = await sicht14();
+  if (art === 'mac') {
+    /* So meldet macOS ein Mausrad mit Umschalt: schon quer. */
+    await tp.evaluate(([x, y]) => {
+      document.elementFromPoint(x as number, y as number)?.dispatchEvent(new WheelEvent('wheel',
+        { deltaX: 120, deltaY: 0, shiftKey: true, clientX: x as number, clientY: y as number, bubbles: true, cancelable: true }));
+    }, [fl.x, fl.y]);
+  } else {
+    const taste = art === 'umschalt' ? 'Shift' : art === 'strg' ? 'Control' : '';
+    if (taste) await tp.keyboard.down(taste);
+    await tp.mouse.wheel(0, art === 'strg' ? -120 : 120);
+    if (taste) await tp.keyboard.up(taste);
+  }
+  await tp.waitForTimeout(250);
+  const nach = await sicht14();
+  return vor && nach ? { dx: Math.round(nach.x - vor.x), dy: Math.round(nach.y - vor.y), z0: vor.z, z1: nach.z } : null;
+};
+/* Am Rand der Tabelle reicht §13 das Rad weiter — mit Umschalt muss es
+   dann ebenfalls QUER ankommen, sonst kippt dieselbe Geste an der Kante
+   die Richtung. */
+const vRand = await sicht14();
+await rad13(0, 120, true);
+const nRand = await sicht14();
+p('Ganz rechts reicht die Tabelle Umschalt+Rad quer an die Fläche weiter, nicht längs',
+  !!vRand && !!nRand && Math.round(nRand.x - vRand.x) === -120 && Math.round(nRand.y - vRand.y) === 0,
+  vRand && nRand ? `quer ${Math.round(nRand.x - vRand.x)}, längs ${Math.round(nRand.y - vRand.y)}` : '—');
+const u14 = await grund14('umschalt');
+p('Es gibt eine leere Stelle neben der Tabelle (Vorbedingung)', !!u14);
+p('Umschalt+Rad auf dem Grund schiebt die Fläche quer — um das ganze Rad, nicht längs',
+  !!u14 && u14.dx === -120 && u14.dy === 0, u14 ? `quer ${u14.dx}, längs ${u14.dy}` : '—');
+const m14 = await grund14('mac');
+p('Kommt es vom System schon quer (macOS), wirkt es genau EINMAL',
+  !!m14 && m14.dx === -120 && m14.dy === 0, m14 ? `quer ${m14.dx}, längs ${m14.dy}` : '—');
+const r14 = await grund14('rad');
+p('Das Rad allein schiebt weiter längs', !!r14 && r14.dx === 0 && r14.dy === -120,
+  r14 ? `quer ${r14.dx}, längs ${r14.dy}` : '—');
+const z14 = await grund14('strg');
+p('Strg+Rad zoomt weiter die Fläche', !!z14 && z14.z1 > z14.z0, z14 ? `${z14.z0} → ${z14.z1}` : '—');
 await dunkel.close();
 
 /* ==========================================================================
