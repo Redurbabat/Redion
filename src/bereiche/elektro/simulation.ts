@@ -72,7 +72,24 @@ const Stromfluss = (() => {
    * ----------------------------------------------------------------------*/
 
   /** Eine Schalterstellung: welche Klemmenpaare sie schliesst. */
-  type Stellung = { name: string; zu: Array<[string, string]> };
+  type Stellung = {
+    name: string;
+    zu: Array<[string, string]>;
+    /**
+     * Nur bei Brücken eines mehrteiligen Bauteils: die Klemmen, die in
+     * dieser Stellung zusammen einen STERNPUNKT bilden. An ihren Knoten
+     * gehört keine Leitung — er ist fertig, sobald die Brücken liegen.
+     *
+     * Jeder andere Knoten, den nur die eigenen Brücken zusammenhalten, hängt
+     * an nichts: im Dreieck ohne Zuleitung an U1 halten U1 und W2 einander,
+     * und an beiden fehlt die Leitung (E747). Die Meldung offener Klemmen
+     * kann die beiden Fälle nicht an den Klemmen unterscheiden — {U2, V2, W2}
+     * im Stern und {U1, W2} im Dreieck sehen gleich aus: Klemmen desselben
+     * Bauteils, verbunden durch Brücken, keine Leitung. Deshalb sagt es die
+     * Stellung selbst (§5 Regel 3, §8), und kein Name im Code.
+     */
+    sternpunkt?: string[];
+  };
 
   /**
    * Ein Glied eines mehrteiligen Bauteils. Eine Drehstromquelle ist drei
@@ -108,7 +125,8 @@ const Stromfluss = (() => {
     /** Vorgabewert: Ohm bei Widerstand, Volt bei Quelle. */
     wert?: number;
     einheit?: string;
-    /** Nur bei `schalter`: die möglichen Stellungen, erste ist die Ruhelage. */
+    /** Bei `schalter` und bei den Brücken eines mehrteiligen Bauteils (dem
+        Klemmenbrett): die möglichen Stellungen, erste ist die Ruhelage. */
     stellungen?: Stellung[];
     /** Bei Kontakten: welcher Spulen-BMK sie schaltet (Punkt 29). */
     folgtSpule?: 'schliesser' | 'oeffner';
@@ -322,7 +340,7 @@ const Stromfluss = (() => {
       ],
       stellungen: [
         { name: 'ohne Brücken', zu: [] },
-        { name: 'Stern', zu: [['U2', 'V2'], ['V2', 'W2']] },
+        { name: 'Stern', zu: [['U2', 'V2'], ['V2', 'W2']], sternpunkt: ['U2', 'V2', 'W2'] },
         { name: 'Dreieck', zu: [['U1', 'W2'], ['V1', 'U2'], ['W1', 'V2']] }
       ],
       annahme: 'Die drei Wicklungen gelten als rein ohmsch. Das Verhältnis von Stern zu Dreieck stimmt trotzdem, weil es allein an der Spannung hängt und nicht an der Art der Last.' },
@@ -458,9 +476,18 @@ const Stromfluss = (() => {
    * Ruhelage (die erste), eine Zahl ausserhalb der Liste auf die nächste
    * gültige geklemmt.
    *
-   * EINE Stelle für die Rechnung und für die Meldung offener Klemmen
-   * (E747). Läsen die beiden die Stellung verschieden, meldete die
-   * Fusszeile eine andere Schaltung als die, die gerechnet wurde.
+   * Innerhalb von `Stromfluss` die EINE Stelle für die Rechnung und für die
+   * Meldung offener Klemmen (E747). Läsen die beiden die Stellung
+   * verschieden, meldete die Fusszeile eine andere Schaltung als die, die
+   * gerechnet wurde.
+   *
+   * Ausserhalb liest sie noch EIN Leser selbst: die Planfläche
+   * (`bloecke/arten/planflaeche.ts`, der Titel „M1 Stern — tippen zum
+   * Schalten") klemmt mit `|| 0` statt `?? 0`. Verschieden ist das nur bei
+   * `NaN` — dort zeigt der Titel die Ruhelage, und hier gilt keine Stellung
+   * (`liste[NaN]`). Aus JSON kommt kein `NaN` (es wird `null`, und `null`
+   * klemmen beide auf 0). Die Planfläche ruft diese Hilfe bewusst nicht
+   * auf: sie gehört einem anderen Bereich (§5 Regel 1, `test537`).
    */
   const stellungIn = (v: Verhalten, stellung: Record<string, number>,
                       teilId: string): Stellung | undefined => {
@@ -1600,31 +1627,68 @@ const Stromfluss = (() => {
        nur die Stellung, in der das Bauteil gerade steht — ohne Brücken
        hängen W2, U2 und V2 wirklich an nichts. Die Netzliste selbst
        bleibt, wie sie ist: sie ist die Zeichnung, die Brücken sind eine
-       Stellung, und die Rechnung bekommt sie schon oben als Kontakte. */
+       Stellung, und die Rechnung bekommt sie schon oben als Kontakte.
+
+       Eine Brücke verbindet aber nur, was schon da ist. Hält ein Knoten
+       NUR Klemmen des eigenen Bauteils und kommt er erst durch dessen
+       Brücken zustande, erreicht er keine Leitung: im Dreieck ohne
+       Zuleitung an U1 halten U1 und W2 einander, der Motor läuft auf zwei
+       Aussenleitern weiter, und genau das ist zu melden — einmal je
+       Knoten, mit der ersten Klemme des Bretts (U1, nicht W2). Ausgenommen
+       ist allein der Knoten, den die Stellung selbst als `sternpunkt`
+       ausweist: der Stern braucht dort keine Leitung (test612 §4, §8).
+       Ein Knoten, den LEITUNGEN zusammenhalten (der Stern mit zwei
+       Leitungen gezeichnet), ist davon nicht betroffen — er erreicht ja
+       Leitungen. */
     const knoten = verband();
+    /* Die Klemmen, die die eingestellte Stellung als Sternpunkt ausweist,
+       und die Netze, an denen eine Brücke liegt. */
+    const sternpunkt = new Set<string>();
+    const brueckenNetze: number[] = [];
     teile.forEach(t => {
       const v = verhalten(t.zeichen);
       if (!v || v.art !== 'mehrteilig') return;
       const st = stellungIn(v, stand, t.id);
-      if (st) st.zu.forEach(([a, b]) => {
+      if (!st) return;
+      (st.sternpunkt || []).forEach(nr => sternpunkt.add(`k:${t.id}:${nr}`));
+      st.zu.forEach(([a, b]) => {
         const na = netzInfo.netzVon.get(`k:${t.id}:${a}`);
         const nb = netzInfo.netzVon.get(`k:${t.id}:${b}`);
-        if (typeof na === 'number' && typeof nb === 'number') knoten.eins(`n:${na}`, `n:${nb}`);
+        if (typeof na === 'number' && typeof nb === 'number') {
+          knoten.eins(`n:${na}`, `n:${nb}`);
+          brueckenNetze.push(na, nb);
+        }
       });
     });
     const knotenVon = (netz: number): string => knoten.finde(`n:${netz}`);
-    const belegt = new Set<number>();
+    const anBruecke = new Set<string>(brueckenNetze.map(knotenVon));
+    /* Welche Klemmen in welchem Knoten liegen — einmal gezählt statt je
+       Klemme alle Klemmen durchzugehen. */
+    const imKnoten = new Map<string, Klemme[]>();
+    netzInfo.klemmen.forEach(o => {
+      const n = netzInfo.netzVon.get(o.schluessel);
+      if (typeof n !== 'number') return;
+      const w = knotenVon(n);
+      const liste = imKnoten.get(w);
+      if (liste) liste.push(o); else imKnoten.set(w, [o]);
+    });
+    const belegt = new Set<string>();
     netzInfo.klemmen.forEach(k => {
       if (k.intern) return;   /* ein Sternpunkt gehört an keine Leitung */
       const netz = netzInfo.netzVon.get(k.schluessel);
       if (typeof netz !== 'number') return;
       const hier = knotenVon(netz);
-      const wieViele = netzInfo.klemmen.filter(o => {
-        const n = netzInfo.netzVon.get(o.schluessel);
-        return typeof n === 'number' && knotenVon(n) === hier;
-      }).length;
-      if (wieViele <= 1 && !belegt.has(netz)) {
-        belegt.add(netz);
+      if (belegt.has(hier)) return;
+      const darin = imKnoten.get(hier) || [];
+      const allein = darin.length <= 1;
+      /* Nur die eigenen Brücken halten diesen Knoten: keine Klemme eines
+         anderen Bauteils darin, und er ist nicht als Sternpunkt markiert
+         (ein innerer Knoten zählt wie markiert — er liegt im Gerät). */
+      const nurBruecke = anBruecke.has(hier)
+        && darin.every(o => o.teil === k.teil)
+        && !darin.every(o => o.intern || sternpunkt.has(o.schluessel));
+      if (allein || nurBruecke) {
+        belegt.add(hier);
         const t = teile.find(x => x.id === k.teil);
         erg.warnungen.push(`${(t && t.bmk) || (t && t.zeichen) || 'Ein Bauteil'}: Anschluss ${k.nr} hängt an keiner Leitung.`);
       }
