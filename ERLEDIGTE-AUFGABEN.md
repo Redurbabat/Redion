@@ -1,5 +1,54 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 12. Oktober 2026 · E746, dritte Durchsicht · Echte Maus, echte Tasten
+
+**Die dritte Durchsicht** fuhr die Wege der zweiten mit echter Maus und
+echter Tastatur und fand, dass §13 seine Tasten nur an die Fläche
+GESCHICKT hatte: mit der Maus steht der Fokus im Zug auf der Seite (das
+Anfassen zeichnet die Fläche neu, und der Browser setzt den Fokus beim
+`mousedown` auf `body`). Escape brach darum weder einen Zug mit Teilen noch
+einen Rahmen ab, und Strg+Z, Umschalt+Strg+Z und Strg+Y nahm im Zug der
+Seitenverlauf — er baute die Seite neu und verwarf den Zug still (F1 bei
+400,60; die Daten blieben heil). „Als Vorlage speichern" und „Als Bild
+speichern" nahmen im Zug das Zwischenbild, und E746 Punkt 7 behauptete,
+eine Änderung im Zug komme nur aus einem Dialog. Das Nachmessen fand dazu:
+nach einem echten Klick auf ein Teil drehte „r" nichts, Umschalt+Strg+Z
+(„Z") und Strg+Y nahm auch mit dem Fokus auf der Fläche der Seitenverlauf
+(gemessen mit dem zurückgeholten Fokus, Gegenproben 25 und 26), und der
+Hinweis eines Beispiels erschien, ohne dass es eingesetzt war.
+
+**Gebaut** (E746 Punkt 7, dritte Durchsicht): ein Zug horcht am Dokument
+auf seine Tasten, wie auf das Loslassen — Escape bricht ab (ist ein Menü
+offen, schliesst erst das), Rückgängig und Wiederholen tun nichts, weder
+an der Fläche noch am Seitenverlauf. Beim Loslassen über der Fläche holt
+sie den Fokus zurück, wenn er auf der Seite gelandet ist — ohne Ring
+(`data-zeigerfokus`; mit der Tabulatortaste ist er da). Die Wurzel nimmt
+Umschalt+Strg+Z mit „Z" und Strg+Y. Vorlage und Bild verweigern im Zug und
+sagen es; der Hinweis eines Beispiels kommt nur, wenn es steht. Die Liste,
+was im Zug über Knöpfe und Menüs ankommt und still verloren geht, steht
+gemessen in E746 und L253 Punkt 9.
+
+**Prüfung:** `test611` §14 (alles mit echter Eingabe), zuerst rot
+eingecheckt (7c0fa0ff1): gegen a8533763b 189 von 207; im Endstand 209/209,
+gegen a8533763b 191 von 209 (alle 18 in §14). Zwölf Gegenproben, jede rot
+und byte-genau zurückgenommen: kein Tastenhorcher am Dokument 191/207 ·
+Rückgängig nicht geschluckt 203/207 · Escape ohne Fenster-Prüfung 206/207
+· ohne Fokus zurück 203/207 · Wurzel nur „z" 205/207 · ohne Strg+Y 205/207
+· Vorlage ohne Sperre 205/207 · Bild ohne Sperre 205/207 · Hinweis immer
+206/207 · Ring für jeden `:focus-visible` 208/209 · ohne das Merkmal
+208/209 · Merkmal bleibt beim Gehen 208/209. Die Sonde der Durchsicht
+nachher: echtes Escape bricht ab, echtes Strg+Z lässt den Zug laufen; ihre
+fünf übrigen roten Zusagen sind vorher dieselben (Annahmen der Sonde,
+`messungen.md` §103). Nachbarn grün: `test611` (209/209), `test604`–`test608`, `test568` (26/26), `test238`–`test242`, `test254`, `test388`, `test74`; Datei-Wächter
+`test550`, `test549`, `test225`, `test105`, `test109`, `test87`,
+`test537`, `test400` grün. Start 1924 KB (`test388` §5, Decke 1950).
+Bilder (Rechner und Telefon): T1 angeklickt ohne Ring, „r" gedreht, F1 im
+Zug, „Erst loslassen — während eines Zugs wird keine Vorlage gespeichert.",
+F1 nach Escape wieder am Platz.
+
+**Offen:** L253 Punkt 9 — ob die Fläche sagen soll, dass Knöpfe und Menüs
+im Zug nichts getan haben (Redur); Punkt 8 — Strg+Z nach dem Loslassen.
+
 ## 12. Oktober 2026 · E746, zweite Durchsicht · Während eines Zugs wird nichts gespeichert
 
 **Die zweite Durchsicht** von E746 fand, dass die billigen Zwischenbilder

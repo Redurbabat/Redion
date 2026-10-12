@@ -8408,3 +8408,85 @@ drei Horcher am Dokument, die nur während eines Zugs hängen.
 Fehlschläge in §13. Gegenproben 10–20 in E746 (152/169 bis 171/172).
 **Start:** 1924 KB gzip über 255 Dateien (`test388` §5, Decke 1950; vor
 der zweiten Durchsicht 1923). `redion-einzeldatei.html` 9462 KB.
+
+### Nach der dritten Durchsicht (12. Oktober 2026)
+
+**Echte Maus, echte Tasten.** Die Sonde der Durchsicht (`wege.mts`, im
+Arbeitsordner der Sitzung, nicht im Verzeichnis) fährt die Wege aus
+`test611` §13 auch mit `mouse.down`/`mouse.move` und `keyboard.press` —
+keine Taste an die Wurzel geschickt. Dazu eine eigene (`fokus.mts`): T1
+angeklickt, dann ein echtes „r". Plan W, Chromium 141 ohne Kopf,
+1400 × 1000, F1 angeklickt und in 24 Bewegungen an die Lage aus §10
+gezogen. Je ein Lauf:
+
+```txt
+Weg                                  a8533763b                              nachher
+Fokus im Zug (echte Maus)            BODY — auch wenn er vorher auf         BODY (der Zug horcht am
+                                     .sp-wrap stand                         Dokument)
+echtes Escape im Zug                 F1 bleibt im Bild bei 430,100, beim    F1 sofort zurück bei 400,60,
+                                     Loslassen gespeichert                  nichts gespeichert
+echtes Strg+Z im Zug                 der Seitenverlauf baut die Seite neu,  nichts; beim Loslassen
+                                     F1 danach bei 400,60 (Zug verworfen)   gespeichert bei 430,100,
+                                                                            volle Suche
+echte Tasten im Zug: h h r → Entf    F1 danach bei 400,60 (Strg+Z verwarf   F1 bei 430,100, volle Suche
+Strg+Z Umschalt+Strg+Z Strg+D        den Zug)
+Klick auf T1, dann echtes „r"        Fokus BODY, T1 bleibt 0°               Fokus .sp-wrap, T1 90°
+```
+
+Nachher hält die ganze Sonde 64 von 69 Zusagen. Die fünf roten sind
+Annahmen der Sonde, keine Fehler, und vorher genau dieselben (die drei
+Wege nachgefahren gegen einen Abzug von a8533763b, Zusage für Zusage
+gleich): nach einem abgebrochenen Zeiger, einem zweiten Finger oder Escape
+ist der Zug vorbei, und das „h" oder „r" danach spiegelt oder dreht als
+gewöhnliche Handlung; die Sonde vergleicht die Ablage aber nur mit der
+vollen Suche ohne diese Handlung („cancel-maus" 2, „finger-zur-maus" 2,
+„esc-dann-h" 1).
+
+**Der Ring nach dem Klick.** Holt die Fläche den Fokus selbst zurück,
+zählt Chromium 141 das als `:focus-visible` — auch mit `focus({
+focusVisible: false })`, das es nicht kennt (gemessen an einer leeren
+Seite: mit und ohne die Option `true`). Ohne Gegenmittel stand nach jedem
+Klick ein Ring von 2 px um die Fläche (`box-shadow rgb(109, 74, 255) 0px
+0px 0px 2px`, Bild angesehen); mit dem Merkmal `data-zeigerfokus` steht
+dort `none`, und mit Umschalt+Tab ist der Ring da (`test611` §14).
+
+**Was während eines Zugs über Knöpfe und Menüs ankommt** (Sonde
+`knoepfe.mts`; je Weg ein frischer Plan W, F1 im Zug wie oben, der Knopf
+mit dem Fokus und die echte Eingabetaste; „Ablage im Zug" heisst Byte für
+Byte wie vor dem Zug, „danach" heisst Byte für Byte die volle Suche für F1
+bei 430,100, ungedreht — der Zug und nichts sonst):
+
+```txt
+Weg                                         Ablage im Zug  danach        Meldung
+Fuss: Drehen · Spiegeln · Duplizieren ·     wie vorher     nur der Zug   —
+Löschen · Ebene „Plan" aus
+Strg+A (Fokus auf der Fläche, 20 gewählt),  wie vorher     nur der Zug   —
+dann Fuss: Gruppieren
+Kopf: Rückgängig · Wiederholen              wie vorher     nur der Zug   —
+(freigeschaltet)
+„…": Stromschienen · Alle neu               wie vorher     nur der Zug   —
+durchnummerieren · Plan leeren
+Kopf: Planart (`selectOption`)              wie vorher     nur der Zug   — (das Feld zeigt im Zug
+                                                                            „stromlauf-zusammenhaengend",
+                                                                            der Plan „…-aufgeloest";
+                                                                            danach wieder „…-aufgeloest")
+„…": Raster zeigen                          wie vorher     nur der Zug   — (das Bild im Zug 12732 →
+                                                                            12494 Zeichen)
+Kopf: Strom ein · Werkzeug „Leitung" ·      wie vorher     nur der Zug   — (Strom danach an; Werkzeug
+Formelheft · Palette: ein Symbol                                            im Zug „leitung")
+„⚡ Schaltung": Netz (W hat eines)           wie vorher     nur der Zug   „Das Netz steht schon …"
+„⚡ Schaltung": eigene Vorlage              wie vorher     nur der Zug   —
+```
+
+Und in Plan P (zwei Lampen, kein Netz; E1 im Zug um 60 px): „⚡ Schaltung" →
+Netz und → das erste Beispiel — die Ablage im Zug wie vorher, danach zwei
+Teile und eine Leitung, E1 bei 160,100, keine Meldung (vor der Reparatur
+erschien beim Beispiel „Strom drücken, dann auf S1 tippen: E1 leuchtet.",
+`test611` §14). Keiner der Wege brachte einen Fehler auf der Seite.
+
+**`test611`**: 209 von 209 in vierzehn Abschnitten; zuerst eingecheckt mit
+207 Zusagen (7c0fa0ff1), gegen a8533763b 189 von 207; im Endstand gegen
+einen Abzug von a8533763b mit dem heutigen Lauf 191 von 209, alle 18
+Fehlschläge in §14. Gegenproben 21–32 in E746 (191/207 bis 208/209).
+**Start:** 1924 KB gzip über 255 Dateien (`test388` §5, Decke 1950; vor
+der dritten Durchsicht 1924). `redion-einzeldatei.html` 9464 KB.

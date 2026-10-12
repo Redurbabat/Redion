@@ -785,7 +785,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E741** — Umschalt+Rad schiebt die Fläche quer (Redur, 11. Oktober: „Ja" zu AUFGABEN.md, Fläche Punkt 4): auf dem Grund schob Umschalt+Rad die Fläche LÄNGS, weil Chromium ein Rad mit Umschalt als `deltaY` meldet, und an der rechten Kante einer breiten Tabelle kippte dieselbe Geste die Richtung; jetzt liest EINE Regel `radWeg` das Rad für `rolltSelbst` und für das Schieben — Umschalt mit einem Rad ohne `deltaX` heisst quer, ein vom System schon gedrehter Wisch (macOS) bleibt, wie er ist; Rad allein und Strg+Rad gemessen unverändert, das Kneifen mit zwei Fingern geht nicht über das Rad. Ergänzt E722 und E723. `test598` §14 neu
 * **E742** — Der Info-Streifen ist im Dunkeln nicht mehr die blasseste Meldung (Redur, 11. Oktober 2026: „Ja" — `test319` bleibt streng): E705 gab allen dunklen Tönungen OKLCH L 0,30, und bei gleicher OKLCH-Helligkeit hat Blau eine höhere WCAG-Leuchtdichte als Gelb — info 12.09 gegen warn 12.15 und fehler 12.41. `--b-blue` steht jetzt eine Stufe dunkler, `#133144` → `#123043` (L 0,296, Ton und Buntheit gleich, ΔE_OK 0,004): Standard 12.26 / 12.15 / 12.41, in allen sechs dunklen Schemata `info` vor `warn`; kein Textkontrast sinkt, hell unverändert. Verworfen: color-mix, eine andere Schrift, warn/fehler blasser, die Prüfung lockern (`test319` 26/26)
 * **E743** — main auf den Stand von Redurs sechs Ja, mit dreizehn benannten roten Läufen (Redur, 11. Oktober, 19:43 UTC: „3.ja" auf „main: auf diesen Stand ja oder nein?"): `main` wird ohne force auf claude/auf-main-sechs-ja vorgespult — claude/sechs-ja (E730–E742), das Ergebnis des vollen Laufs und diese Entscheidung. Der volle Lauf: 550 Läufe, 537 grün, 13 rot; die dreizehn waren auf main schon rot (201 270 274 332 348 351 365 425 448 470 493 524 533), neu rot ist keiner. Zweite Ausnahme von §46 nach E729, wieder einmal: das nächste Vorspulen braucht einen grünen vollen Lauf oder ein neues Wort von Redur.
-* **E746** — Drehen, Spiegeln, Ziehen und Schieben führen nur die eigenen Leitungen nach, und keine zapft dabei etwas an (L253 Punkt 4; Redur, 11. Oktober abends: „4. wie du willst“ zur Reihenfolge): EINE Stelle im Modell, `Schaltplan.vorherMerken`/`nachziehen`, führt nur neu, was an einem bewegten Teil hängt, und nimmt nur einen Weg, der genau dasselbe berührt wie vorher (alter Weg · nachgerückte Endstücke · Winkel · anderer Winkel · Z-Wege · Hakenwege), am liebsten durch kein Zeichen; sonst meldet die Fläche es. Fremde Leitungen bleiben Byte für Byte, ausser ihr Ende liegt neben seiner Klemme (E738, `test608` §5). Nach der Durchsicht: beim Ziehen rechnet jede Bewegung nur die billigen Wege und erst das Loslassen einmal voll; und landet die EIGENE Klemme eines bewegten Teils auf einer fremden Leitung (oder verlässt sie eine), sagt die Fläche, welche (`Schaltplan.veraendert`). Nach der zweiten Durchsicht: während eines Zugs ändert nur der Zug den Plan — `aendere`, Rückgängig und Wiederholen tun nichts, Tasten ausser Escape zählen nicht, Escape bricht ab; ein Zug gehört einem Zeiger und endet immer richtig, auch losgelassen ausserhalb oder von einem zweiten Finger unterbrochen; die Ablage bekommt eine Kopie des Plans, nicht ihn selbst. `test611`
+* **E746** — Drehen, Spiegeln, Ziehen und Schieben führen nur die eigenen Leitungen nach, und keine zapft dabei etwas an (L253 Punkt 4; Redur, 11. Oktober abends: „4. wie du willst“ zur Reihenfolge): EINE Stelle im Modell, `Schaltplan.vorherMerken`/`nachziehen`, führt nur neu, was an einem bewegten Teil hängt, und nimmt nur einen Weg, der genau dasselbe berührt wie vorher (alter Weg · nachgerückte Endstücke · Winkel · anderer Winkel · Z-Wege · Hakenwege), am liebsten durch kein Zeichen; sonst meldet die Fläche es. Fremde Leitungen bleiben Byte für Byte, ausser ihr Ende liegt neben seiner Klemme (E738, `test608` §5). Nach der Durchsicht: beim Ziehen rechnet jede Bewegung nur die billigen Wege und erst das Loslassen einmal voll; und landet die EIGENE Klemme eines bewegten Teils auf einer fremden Leitung (oder verlässt sie eine), sagt die Fläche, welche (`Schaltplan.veraendert`). Nach der zweiten Durchsicht: während eines Zugs ändert nur der Zug den Plan — `aendere`, Rückgängig und Wiederholen tun nichts, Tasten ausser Escape zählen nicht, Escape bricht ab; ein Zug gehört einem Zeiger und endet immer richtig, auch losgelassen ausserhalb oder von einem zweiten Finger unterbrochen; die Ablage bekommt eine Kopie des Plans, nicht ihn selbst. Nach der dritten Durchsicht: mit echter Maus stand der Fokus im Zug auf der Seite, und Escape und Strg+Z kamen nie an — jetzt horcht ein Zug am Dokument auf seine Tasten: Escape bricht ab (ein offenes Menü zuerst), Rückgängig und Wiederholen tun nichts, auch nicht am Seitenverlauf; nach einem Klick holt die Fläche den Fokus zurück (ohne Ring), Umschalt+Strg+Z und Strg+Y nimmt sie selbst; Vorlage und Bild verweigern im Zug, der Hinweis eines Beispiels kommt nur, wenn es steht. `test611`
 
 ---
 
@@ -66836,9 +66836,11 @@ Schaltplan.kontakte(plan, leitung)     die Berührungsregel, für test611 §7
    Tasten im Zug                 nur Escape zählt — es bricht ab (Lagen aus
                                  `ausgang`, Punkte aus `vorher`; nichts
                                  gespeichert, kein Rückgängig-Schritt); die
-                                 übrigen nimmt die Fläche weiter
-                                 (`preventDefault`, Strg+Z landet nicht beim
-                                 Seitenverlauf), aber sie tun nichts
+                                 übrigen tun nichts. MIT DER MAUS STIMMTE
+                                 DAS NICHT: der Fokus stand im Zug auf der
+                                 Seite, Escape kam nie an und Strg+Z beim
+                                 Seitenverlauf — gebaut erst in der dritten
+                                 Durchsicht (unten)
    ein Zug gehört einem Zeiger   seine Bewegungen und sein Loslassen zählen,
                                  die eines zweiten Fingers nicht
    er endet immer                losgelassen oder abgebrochen wo auch immer
@@ -66872,16 +66874,111 @@ Schaltplan.kontakte(plan, leitung)     die Berührungsregel, für test611 §7
    Rückgängig-Schritt). Ein Zug, der über den
    Rand der Fläche hinausläuft, endet jetzt an seiner letzten Lage über der
    Fläche und wird dort gesichert (vorher blieb er liegen). Eine Änderung,
-   die während eines Zugs ankäme, ginge verloren — erreichbar wäre das nur
-   aus einem Dialog, und der Dialog am Teil liegt als `.overlay`
-   (`position:fixed; inset:0`) über der ganzen Seite. Und jede
+   die während eines Zugs über einen Knopf oder ein Menü ankommt, geht
+   verloren, ohne Meldung — die gemessene Liste steht unten bei der dritten
+   Durchsicht. (Hier stand bis dahin, das gehe nur aus einem Dialog; das
+   stimmte nicht: mit der Tastatur erreicht man im Zug jeden Knopf der
+   Fläche.) Und jede
    Handlung kopiert den Plan einmal mehr: im Plan W (12 Leitungen) im
    Median 0,026 bis 0,038 ms, bei 120 Leitungen 0,22 bis 0,31 ms
-   (`messungen.md` §103, zwei Läufe). Nicht abgedeckt: „Als Bild speichern"
-   und „Als Vorlage speichern" lesen den Plan, ohne über `aendere` zu gehen
-   — mitten in einem Zug erreichbar nur mit der Tastatur über einen Knopf
-   mit dem Fokus, und dann nehmen sie das Bild, wie es dasteht (L253
-   Punkt 9).
+   (`messungen.md` §103, zwei Läufe). „Als Bild speichern" und „Als Vorlage
+   speichern" lesen den Plan, ohne über `aendere` zu gehen, und nahmen im
+   Zug das Zwischenbild; seit der dritten Durchsicht verweigern sie im Zug
+   (unten).
+
+   **Dritte Durchsicht: echte Maus, echte Tasten** (12. Oktober). Die zweite
+   Durchsicht hatte ihre Tasten an die Fläche GESCHICKT (Fokus auf
+   `.sp-wrap`, dann `dispatchEvent`). Mit echter Maus und echter Tastatur
+   steht der Fokus im Zug aber auf der Seite: das Anfassen zeichnet die
+   Fläche neu (`male`), der Knoten unter dem Zeiger ist danach ein anderer,
+   und der Browser setzt den Fokus beim `mousedown` auf `body`, weil er an
+   einem Knoten ausserhalb des Dokuments keinen fokussierbaren Vorfahren
+   findet — auch wenn er vorher auf der Fläche stand. Gemessen auf
+   a8533763b mit der Sonde der Durchsicht (`messungen.md` §103) und mit
+   `test611` §14, eingecheckt vor der Reparatur: echtes
+   Escape brach weder einen Zug mit Teilen noch einen Rahmen ab, der Zug
+   ging weiter und wurde beim Loslassen gespeichert; echtes Strg+Z im Zug
+   nahm der Seitenverlauf (E682), der die Seite neu baute und den Zug still
+   verwarf (F1 danach bei 400,60 — die Daten blieben heil, gespeichert war
+   der Stand vor dem Zug). Das Nachmessen fand dazu: nach einem echten Klick
+   auf ein Teil drehte ein echtes „r" nichts, weil der Fokus auf der Seite
+   blieb; mit dem Fokus auf der Fläche nahm der Seitenverlauf Umschalt+Strg+Z
+   (der Browser meldet „Z", die Fläche fragte nach „z") und Strg+Y (das die
+   Fläche nicht kannte) — gemessen mit dem Fokus, den erst diese Durchsicht
+   zurückholt (Gegenproben 25 und 26 unten: „Nichts zu wiederholen" vom
+   Seitenverlauf, T1 bleibt 0°); und der Hinweis eines Beispiels („Strom drücken,
+   dann auf S1 tippen …") erschien, auch wenn das Beispiel im Zug gar nicht
+   eingesetzt worden war. Gebaut:
+
+   ```txt
+   Tasten im Zug        am Dokument gehorcht, in der Aufnahmephase, nur
+                        solange der Zug läuft (`zugTaste`) — wie das Loslassen
+     Escape             bricht ab; ist ein Menü oder Fenster offen (dieselbe
+                        Liste wie im Escape-Griff der Schale), schliesst erst
+                        das, der nächste Druck bricht ab (E711: ein Druck,
+                        ein Fenster)
+     Strg+Z, Umschalt+  tun nichts, weder an der Fläche noch am Seitenverlauf
+     Strg+Z, Strg+Y     (`preventDefault`, `stopPropagation`); der Zug läuft
+                        weiter und wird beim Loslassen gespeichert — auch in
+                        einem Textfeld: wer die Maus hält, hat den Zug in
+                        der Hand
+     die übrigen        gehen dorthin, wo der Fokus steht — mit der Maus auf
+                        die Seite, wo „r", „h" und Entf nichts tun und die
+                        Pfeile sie rollen
+   der Fokus            kehrt beim Loslassen über der Fläche zu ihr zurück,
+                        wenn er auf `body` gelandet ist — nie aus einem Feld,
+                        Knopf oder Dialog, ohne zu rollen, und OHNE RING:
+                        einen Fokus aus dem Skript zeigt Chromium als
+                        `:focus-visible`, `focusVisible: false` kennt es
+                        nicht (Chromium 141, gemessen); das Merkmal
+                        `data-zeigerfokus` nimmt den Ring weg, bis der Fokus
+                        geht — mit der Tabulatortaste ist er da (§38)
+   an der Wurzel        Umschalt+Strg+Z mit „Z" wie mit „z"; Strg+Y ist
+                        Wiederholen (Strg+Umschalt+Y bleibt den Favoriten)
+   Vorlage, Bild        verweigern im Zug und sagen es („Erst loslassen —
+                        während eines Zugs wird keine Vorlage gespeichert.");
+                        nach dem Loslassen gehen sie und nehmen den
+                        gespeicherten Plan
+   Hinweis eines        nur, wenn das Beispiel eingesetzt wurde
+   Beispiels
+   ```
+
+   **Was während eines Zugs über Knöpfe und Menüs ankommt** — mit der
+   Tastatur, über einen Knopf mit dem Fokus und die Eingabetaste; ein
+   zweiter Zeiger beendet den Zug vorher. Gemessen mit einer Sonde
+   (`messungen.md` §103), je Weg ein frischer Plan W, F1 im Zug:
+
+   ```txt
+   geht verloren, ohne Meldung   Fuss: Drehen, Spiegeln, Duplizieren,
+   (`aendere` verweigert; die    Gruppieren, Löschen, eine Ebene ein oder
+   Ablage hält im Zug den Stand  aus · Kopf: Rückgängig, Wiederholen, die
+   von vorher, danach genau den  Planart — das Feld zeigt im Zug die neue
+   Zug mit der vollen Suche)     Art, der Plan behält die alte, und beim
+                                 Loslassen springt das Feld zurück · „…":
+                                 Stromschienen einzeichnen, Alle neu
+                                 durchnummerieren, Plan leeren · „⚡
+                                 Schaltung": eine eigene Vorlage einsetzen,
+                                 ein Beispiel (Plan ohne Netz), das Netz
+   verweigert, mit Meldung       „…": Als Vorlage speichern, Als Bild
+                                 speichern · „⚡ Schaltung" in einem Plan mit
+                                 Netz: „Das Netz steht schon …" (wie sonst)
+   wirkt, ändert den Plan nicht  Werkzeug wechseln, Strom ein (der Zug läuft
+                                 weiter und wird gespeichert), Formelheft,
+                                 Raster zeigen, ein Symbol wählen, Strg+A
+                                 mit dem Fokus auf der Fläche
+   erreicht man im Zug nicht     den Dialog am Teil (er öffnet auf einen
+                                 Doppeltipp, und das Aufsetzen beendet den
+                                 Zug) und die Beschriftung (Werkzeug T,
+                                 ebenso ein Aufsetzen)
+   ```
+
+   Ob die Fläche bei den verlorenen sagen soll, dass sie nichts getan hat,
+   bleibt die Frage aus L253 Punkt 9 — sie gehört Redur. Nicht eigens
+   geprüft ist eine Zeile: kommt Escape im Zug doch bis zur Wurzel, weil
+   `zugTaste` es für ein offenes Fenster durchliess, nimmt die Wurzel es
+   nicht mehr; erreichbar wäre das nur mit einem Blatt, das den Fokus auf
+   der Fläche lässt und Escape selbst nicht anhält (ein `.overlay` legt die
+   Seite still, ein Menü hält die Taste an).
 
 **Warum?** Gemessen, bevor gebaut wurde (`messungen.md` §103), im Plan
 „Drehstrom, FI und Übertrager" aus den Bildern der Übernahme, auf `main`
@@ -66974,8 +67071,9 @@ neue Leitungen dürfen sich kreuzen (eine reine Kreuzung verbindet nicht).
 Und sie meiden keine Beschriftung: auf dem Bild nach dem Drehen laufen f3
 und f4 über das „G2" neben der Lampe.
 
-**Wächter:** `test611`, seit der zweiten Durchsicht 172 Zusagen in
-dreizehn Abschnitten (nach der ersten 110 in zwölf, vorher 79 in neun) —
+**Wächter:** `test611`, seit der dritten Durchsicht 209 Zusagen in
+vierzehn Abschnitten (nach der zweiten 172 in dreizehn, nach der ersten 110
+in zwölf, vorher 79 in neun) —
 je Handlung (F1
 drehen, spiegeln, zurückdrehen, mit der Maus ziehen, mit der Pfeiltaste
 schieben fein und mit Umschalt, T1 drehen, M1 ziehen, der alte FI mit
@@ -67064,6 +67162,50 @@ alte Zusage wäre damit grün geblieben); (19) die Leitung auch ausserhalb
 der Fläche angelegt — 171/172, „12 → 13 Leitungen"; (20) die Fläche
 speichert auch, wenn sie nicht mehr im Dokument steht — 171/172,
 „{"x":430,"y":100,…}". Wieder eingesetzt 172/172.
+
+**Nach der dritten Durchsicht** kam §14 dazu — alles mit echter Maus und
+echter Tastatur, keine Taste an die Wurzel geschickt: Escape bricht einen
+Zug mit Teilen, einen Rahmen (zuerst ohne Escape: derselbe Rahmen wählt
+H1) und eine Leitung (zuerst ohne Escape: sie entsteht) ab, das Bild sofort
+wie vorher, nichts gespeichert, kein Rückgängig-Schritt; Strg+Z,
+Umschalt+Strg+Z und Strg+Y im Zug (mit einem Schritt davor und nach dem
+Zaun des Seitenverlaufs) lassen Fläche, Ablage und Bild, wie sie sind, und
+nach dem Loslassen ist der Zug mit der vollen Suche gespeichert, der
+Schritt davor steht, die Seite wurde nicht neu gebaut, der Seitenverlauf
+hat nichts gemeldet; ein Menü, im Zug mit der Eingabetaste geöffnet,
+schliesst das erste Escape, das zweite bricht ab; „Als Vorlage speichern"
+und „Als Bild speichern" verweigern im Zug mit einer Meldung und gehen
+danach (die Vorlage hält die gespeicherten Leitungen, das Bild ist Zeichen
+für Zeichen der gespeicherte Plan); ein Beispiel im Zug (Plan P) bleibt
+draussen und sein Hinweis auch; und nach einem echten Klick auf T1 steht
+der Fokus auf der Fläche, ohne Ring, „r" dreht, Strg+Z, Umschalt+Strg+Z,
+Strg+Z, Strg+Y geben 0°, 90°, 0°, 90° auf derselben Fläche, und mit
+Umschalt+Tab ist der Ring da. 209 Zusagen in vierzehn Abschnitten. **Rot
+zuerst:** eingecheckt vor der Reparatur (7c0fa0ff1), gegen a8533763b 189
+von 207 — alle 18 Fehlschläge in §14; im Endstand gegen a8533763b
+rot mit 191 von 209 — wieder alle 18 Fehlschläge in §14. Grün sind dort die Leitung (ihr Anfassen zeichnet die
+Fläche nicht neu, der Fokus bleibt auf ihr), das offene Menü und der Ring
+(ohne Fokus kein Ring; mit Tab der Ring) — sie halten das Neue, keine
+Lücke von damals. **Gegenproben**, jede gefahren und byte-genau
+zurückgenommen (die Quelle danach per Prüfsumme gleich; 21–29 gegen den
+Stand mit 207 Zusagen, 30–32 mit 209): (21) kein Tastenhorcher am Dokument
+— 191/207, Escape bricht nirgends ab (auch §13s geschicktes nicht mehr,
+die Wurzel überlässt es dem Dokument), Strg+Z baut die Seite neu; (22)
+Rückgängig und Wiederholen nicht geschluckt — 203/207, „Control+z: die
+Fläche ist neu gezeichnet … F1 {"x":400,"y":60}"; (23) Escape ohne die
+Fenster-Prüfung — 206/207, „Menü noch offen: false, F1 im Bild translate(400
+60)"; (24) ohne Fokus zurück — 203/207, „r: T1 0° statt 90°"; (25) an der
+Wurzel wieder nur „z" — 205/207, „Control+Shift+Z: T1 0° statt 90°" und
+der Seitenverlauf meldet „Nichts zu wiederholen"; (26) ohne Strg+Y an der
+Wurzel — 205/207, ebenso mit „Control+y"; (27) die Vorlage ohne Sperre —
+205/207, „0 → 1 Vorlagen (der Name wurde mitten im Zug erfragt)"; (28) das
+Bild ohne Sperre — 205/207, „1 Downloads"; (29) der Hinweis des Beispiels
+immer — 206/207, „Strom drücken, dann auf S1 tippen: E1 leuchtet."; (30)
+der Ring wieder für jeden `:focus-visible` — 208/209, „box-shadow rgb(109,
+74, 255) 0px 0px 0px 2px"; (31) ohne das Merkmal `data-zeigerfokus` —
+208/209, ebenso; (32) das Merkmal bleibt, wenn der Fokus geht — 208/209,
+„Mit Umschalt+Tab … der Ring ist da — box-shadow none". Wieder eingesetzt
+209/209.
 
 **Am Wächter geändert, bevor er grün wurde:** §8 verglich zuerst den rohen
 Block mit dem Stand nach Strg+Z und war auch auf `main` rot — die Fläche

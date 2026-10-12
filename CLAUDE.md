@@ -1945,15 +1945,22 @@ herumgeprüft hatte. Sein §7 hält die Berührungsregel der Planfläche gegen
 die der Netzliste, weil sie zweimal stehen muss (§5). Er lädt über
 `listen(0)`, damit `test400` keinen neuen Port zählt. Gezählt am
 11. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
-551 — auf seinem Zweig; beim Zusammenführen neu zu zählen. Die Durchsicht
-hat ihn am selben Abend auf 110 Zusagen gebracht, und zwei seiner neuen
-Abschnitte halten etwas, das eine Netzliste allein nicht sieht: §10, dass
-das Ziehen nur billig rechnet und trotzdem das Ergebnis der VOLLEN Suche
-speichert — an einer Lage, an der die billigen Wege anzapfen würden,
-sonst bewiese die Zusage nichts —, und §11, dass die Fläche SAGT, wenn
-die eigene Klemme eines Teils auf einer fremden Leitung landet (R1:1 auf
-q), statt es zu verhindern. Gegen den ersten Stand von E746 war er rot
-mit 101 von 110.*
+551 — auf seinem Zweig; beim Zusammenführen neu zu zählen. Drei
+Durchsichten haben ihn auf 209 Zusagen in vierzehn Abschnitten gebracht
+(gezählt am 12. Oktober, auf seinem Zweig; beim Zusammenführen neu zu
+zählen). Die erste, am selben Abend, auf 110, und zwei ihrer Abschnitte
+halten etwas, das eine Netzliste allein nicht sieht: §10, dass das Ziehen
+nur billig rechnet und trotzdem das Ergebnis der VOLLEN Suche speichert —
+an einer Lage, an der die billigen Wege anzapfen würden, sonst bewiese die
+Zusage nichts —, und §11, dass die Fläche SAGT, wenn die eigene Klemme
+eines Teils auf einer fremden Leitung landet (R1:1 auf q), statt es zu
+verhindern; gegen den ersten Stand von E746 war er rot mit 101 von 110.
+Die zweite brachte §13: während eines Zugs wird nichts gespeichert. Die
+dritte brachte §14, und sie hat die zweite belehrt: §13 hatte seine Tasten
+an die Fläche GESCHICKT, und mit echter Maus und echter Tastatur stand der
+Fokus im Zug gar nicht dort — Escape brach nichts ab, Strg+Z baute die
+Seite neu und verwarf den Zug. Gegen den Stand davor war er rot mit 191
+von 209.*
 
 ### Die Befehle
 

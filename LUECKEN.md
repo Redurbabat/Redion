@@ -8561,7 +8561,11 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
    lässt sich genau dieser Zug aber nicht; es bleibt, das Teil
    zurückzuziehen. Seit der zweiten Durchsicht gibt es einen Weg zurück
    VOR dem Loslassen: Escape bricht den Zug ab, ohne etwas zu speichern
-   (E746 Punkt 7, `test611` §13). Nach dem Loslassen gilt der Punkt
+   (E746 Punkt 7, `test611` §13) — mit echter Maus und echter Tastatur
+   allerdings erst seit der dritten: vorher stand der Fokus im Zug auf der
+   Seite, und das echte Escape kam nie an (`test611` §14). Und Strg+Z, im
+   Zug gedrückt, nahm bis dahin der Seitenverlauf und verwarf den Zug; jetzt
+   tut es im Zug nichts. Nach dem Loslassen gilt der Punkt
    unverändert; die Sonde der zweiten Durchsicht zeigt es auch dort: ein
    Zug über den Rand der Fläche legte F1:3 auf die Leitung G1:L1–M1:U1, die
    Fläche meldete es, und nach einer Pfeiltaste hin und zurück liessen
@@ -8594,17 +8598,31 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
      wie lange es dauert (eine Zeitgrenze im Lauf wäre auf jedem Rechner
      anders). Dass ein Zwischenbild nie gespeichert wird, auch nicht
      WÄHREND des Zugs, hält seit der zweiten Durchsicht §13.
-   * **Tasten zählen während eines Zugs nicht** (zweite Durchsicht, E746
-     Punkt 7): „r", „h", Entf, die Pfeile und Strg+D/G/Z tun nichts, bis
-     die Hand loslässt, und sagen es nicht; nur Escape bricht ab. Wer
-     gewohnt ist, ein Teil im Ziehen zu drehen (wie in manchen
-     Zeichenprogrammen), muss erst loslassen. Ob die Fläche es sagen soll
-     oder ob „r" im Zug das Teil drehen und den Zug weiterführen soll
-     (ohne zu speichern), entscheidet Redur.
-   * **„Als Bild speichern" und „Als Vorlage speichern"** lesen den Plan,
-     ohne über `aendere` zu gehen. Mitten in einem Zug erreicht man sie nur
-     mit der Tastatur (Tab auf „…", Eingabe), und dann nehmen sie das Bild,
-     wie es dasteht — ein Zwischenbild. Nicht gesperrt, nicht geprüft.
+   * **Tasten, Knöpfe und Menüs zählen während eines Zugs nicht** (zweite
+     und dritte Durchsicht, E746 Punkt 7): „r", „h", Entf, die Pfeile und
+     Strg+D/G/Z tun nichts, bis die Hand loslässt, und sagen es nicht; nur
+     Escape bricht ab (ist ein Menü offen, schliesst es erst das). Mit der
+     Maus steht der Fokus im Zug auf der Seite; Escape und Rückgängig/
+     Wiederholen horcht der Zug deshalb am Dokument, die übrigen Tasten
+     landen auf der Seite, wo „r" und Entf nichts tun und die Pfeile sie
+     rollen. Was über einen Knopf oder ein Menü ankommt — mit der Tastatur
+     erreicht man im Zug jeden —, geht ebenso still verloren: Drehen,
+     Spiegeln, Duplizieren, Gruppieren, Löschen, eine Ebene ein oder aus,
+     Rückgängig und Wiederholen im Kopf, die Planart (das Feld zeigt im Zug
+     die neue Art und springt beim Loslassen zurück), Stromschienen, Alle
+     neu durchnummerieren, Plan leeren, eine eigene Vorlage, ein Beispiel,
+     das Netz (gemessen, `messungen.md` §103). Wer gewohnt ist, ein Teil im
+     Ziehen zu drehen (wie in manchen Zeichenprogrammen), muss erst
+     loslassen. Ob die Fläche es sagen soll oder ob „r" im Zug das Teil
+     drehen und den Zug weiterführen soll (ohne zu speichern), entscheidet
+     Redur.
+   * **GESCHLOSSEN** (dritte Durchsicht, 12. Oktober): **„Als Bild
+     speichern" und „Als Vorlage speichern"** lasen den Plan, ohne über
+     `aendere` zu gehen, und nahmen mitten in einem Zug (Tab auf „…",
+     Eingabe) das Zwischenbild — gemessen auf a8533763b: die Vorlage
+     gespeichert, das Bild heruntergeladen. Jetzt verweigern beide im Zug
+     und sagen es („Erst loslassen — …"); nach dem Loslassen nehmen sie den
+     gespeicherten Plan (`test611` §14, Gegenproben 27 und 28 in E746).
 
 ### Fachlich offen (vom Zweig)
 
@@ -8626,7 +8644,7 @@ entscheidet Rundungsrauschen. Für die Anzeige ist das seit E737 behoben (dort
 entscheidet die Leistung); jeder andere Aufrufer von `werte` bekommt
 weiterhin den vom Rauschen bestimmten Eintrag.
 
-**Wächter:** für Punkt 4 `test611` (E746; seit der Durchsicht auch für das billige Ziehen, die Meldung und das Heilen, seit der zweiten Durchsicht für alles, was während eines Zugs geschieht — §13); für die übrigen Punkte oben keiner — auch nicht für Punkt 8 und die Zeit in Punkt 9.
+**Wächter:** für Punkt 4 `test611` (E746; seit der Durchsicht auch für das billige Ziehen, die Meldung und das Heilen, seit der zweiten Durchsicht für alles, was während eines Zugs geschieht — §13, seit der dritten mit echter Maus und echter Tastatur — §14); für die übrigen Punkte oben keiner — auch nicht für Punkt 8, die Zeit in Punkt 9 und die stillen Knöpfe im Zug (gemessen, nicht bewacht).
 
 ---
 

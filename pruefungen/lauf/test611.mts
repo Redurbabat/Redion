@@ -1225,13 +1225,14 @@ await cdp.detach();
  * unter dem Zeiger ist danach ein anderer, und der Browser setzt den Fokus
  * beim `mousedown` auf die Seite, weil er an einem Knoten ausserhalb des
  * Dokuments keinen fokussierbaren Vorfahren findet. Gemessen auf a8533763b
- * mit der Sonde der Durchsicht: Escape brach weder einen Zug mit Teilen noch
- * einen Rahmen ab — der Zug lief weiter und wurde beim Loslassen
+ * mit der Sonde der Durchsicht und mit diesem Abschnitt, eingecheckt vor der
+ * Reparatur: Escape brach weder einen Zug mit Teilen noch einen Rahmen ab — der Zug lief weiter und wurde beim Loslassen
  * gespeichert; Strg+Z im Zug nahm der Seitenverlauf (E682), der die Seite neu
  * baute und den Zug still verwarf (F1 danach bei 400,60). Das Nachmessen fand
  * dazu: nach einem echten Klick auf ein Teil drehte ein echtes „r" nichts —
  * der Fokus blieb auf der Seite —, und Umschalt+Strg+Z (der Browser meldet
- * „Z") und Strg+Y nahm auch mit dem Fokus auf der Fläche der Seitenverlauf.
+ * „Z") und Strg+Y nahm auch mit dem Fokus auf der Fläche der Seitenverlauf
+ * (gemessen mit dem zurückgeholten Fokus, Gegenproben 25 und 26 in E746).
  * „Als Vorlage speichern" und „Als Bild speichern" lasen mitten im Zug das
  * Zwischenbild (L253 Punkt 9), und der Hinweis eines Beispiels erschien, auch
  * wenn das Beispiel im Zug gar nicht eingesetzt worden war.
@@ -1248,7 +1249,8 @@ await cdp.detach();
  * Loslassen gehen sie und nehmen den gespeicherten Plan; der Hinweis eines
  * Beispiels erscheint nur, wenn es eingesetzt wurde; und nach einem echten
  * Klick nehmen echte Tasten die Fläche — „r", Strg+Z, Umschalt+Strg+Z,
- * Strg+Y, ohne dass der Seitenverlauf etwas tut.
+ * Strg+Y, ohne dass der Seitenverlauf etwas tut —, ohne Ring um die Fläche
+ * (wie bei einem Fokus mit der Maus); mit Umschalt+Tab ist der Ring da.
  * ========================================================================*/
 console.log('\n14 · Echte Maus, echte Tasten');
 const fokusJetzt = (): Promise<string> => seite.evaluate(() => {
