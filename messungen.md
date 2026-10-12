@@ -8307,6 +8307,71 @@ nachdem die Linse da ist das Fenster auf 1000 px; die neue Linse steht
 44px). Ohne `geht.currentTime = versatz`: Deckkraft 1 bei 1791 ms und 1 bei
 1847 ms.
 
+**Zweite Durchsicht** (12. Oktober 2026, `test589` gegen den Bau, Zweig
+`claude/linse-verblasst`). Drei kleine Funde; was sie ändern, steht in
+E744.
+
+*Das Verblassen Bild für Bild, noch zweimal.* Die Tabelle oben ist EIN
+Lauf. Zwei weitere:
+
+```txt
+Fall                letztes sichtbares Bild    grösster Abfall (je 17 ms)
+                    Lauf 1     Lauf 2          Lauf 1     Lauf 2
+1440 × 900 dunkel   0,093      0,073           0,083      0,080
+1440 × 900 hell     0,090      0,080           0,081      0,080
+ 390 × 844 dunkel   0,047      0,021           0,081      0,082
+ 390 × 844 hell     0,025      0,058           0,082      0,081
+```
+
+Mit dem Lauf oben: letztes Bild 0,021–0,097, grösster Abfall 0,080–0,083.
+Das letzte Bild liegt über 0,02 (sonst wäre es schon „weg") und höchstens
+einen Abfall darüber; wo dazwischen, hängt davon ab, wo die Bilder auf der
+Kurve landen. Also etwa 0,02–0,10 und 0,08 — die Grenzen der Zusage (0,2
+und 0,25) halten mit Abstand.
+
+*Das Fenster von §8.* Gemessen wird im ersten Bild nach dem Fenster, und
+dort muss die Deckkraft zwischen 0,95 und 0,05 stehen — gerechnet aus
+`--ease-exit` (320 ms ab 1650 ms) von etwa 1705 bis 1960 ms nach dem
+Ankommen. Eine Sonde im Kratzordner (eine Seite, 1440 × 900, je
+Zeitpunkt sechs neue Ankommen; Verzug = vom Entschluss im Bild bis zum
+ersten Bild nach `setViewportSize`):
+
+```txt
+Fenster bei   Deckkraft im ersten Bild danach   Verzug
+1740 ms       0,713–0,802                       35–64 ms
+1700 ms       0,853–0,902                       39–51 ms
+1690 ms       0,847–0,920                       40–54 ms
+1680 ms       0,906–0,942                       37–55 ms
+```
+
+`setViewportSize` allein, in Node gemessen: 16–35 ms über alle 24. Bei
+1740 ms bleiben bis 1960 ms gut 200 ms, bei 1690 ms rund 270 ms; nach
+unten genügen dort etwa 15 ms. Gewählt: 1690. In sieben Läufen von
+`test589` mit der neuen Zusage (zwei gegen den Bau, fünf gegen
+Gegenproben) lag der Verzug bei 34–68 ms. Gegen den Bau: 1000 px bei
+1706 ms, erstes Bild nach 44 ms, Deckkraft 0,866, vier Bilder später
+(1805 ms) 0,724; und bei 1699 ms, nach 68 ms 0,846, bei 1816 ms 0,698 —
+je ein neues Element, 6 px rechts vom Punkt, Abschrift 31px.
+
+*Neu oder an Ort und Stelle.* Der Träger der Linse (der Elternteil der
+Überschrift) liegt bei 1440 px an x 429 / y 353, bei 1000 px an x 217 /
+y 367 — eine Linse, die beim Fenster nicht neu gezeichnet wird, wandert
+mit. Darum zählt dieselbe Linse nur mit neuer Schrift in der Abschrift.
+Gegenproben am Quelltext `linse.ts` (sha256 danach gleich):
+
+```txt
+Stand von linse.ts                              alter §8   neuer §8
+dieselbe Linse, an Ort und Stelle neu angelegt  150 / 2    152 / 0
+… mit der Schrift des ersten Ankommens          —          150 / 2
+beim Fenster gar nicht neu gezeichnet           —          150 / 2
+neue Linse, Schrift des ersten Ankommens        151 / 1¹   151 / 1
+ohne geht.currentTime = versatz                 151 / 1¹   151 / 1
+¹ Durchsicht vom 11. Oktober, siehe oben
+```
+
+Ohne `geht.currentTime = versatz` jetzt: Deckkraft 1 bei 1740 ms (Verzug
+42 ms) und 1 bei 1798 ms.
+
 **Woraus die 191 B bestehen.** Nicht aus Kommentaren:
 `tsconfig.bauen.json` entfernt sie (`removeComments`, E715), im gebauten
 `linse.js` steht nur der Kopfvermerk. Die Zeilen des gebauten Unterschieds

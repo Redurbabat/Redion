@@ -56,6 +56,22 @@ Kurve aus den Marken liest. `test589` 152 von 152. Ein neues Bild der Fahrt,
 angehalten bei 1000, 1025 und 1050 ms, zeigt die Linse quer über „en." von
 „Weiterdenken." (das alte bei 1150 ms stand fast schon am Halt).
 
+**Zweite Durchsicht** (12. Oktober): drei kleine Funde, alle in
+`test589`, keiner im Produkt. (1) §8 ändert das Fenster jetzt 1690 statt
+1740 ms nach dem Ankommen — gemessen wird im ersten Bild danach, und das
+muss zwischen etwa 1705 und 1960 ms liegen; der Verzug steht in der
+Zusage (gemessen 34–68 ms), damit ein verpasstes Fenster nicht wie ein
+Fehler aussieht. Ohne `geht.currentTime = versatz` weiter rot (151/1).
+(2) §8 lässt auch dieselbe Linse gelten, an Ort und Stelle neu angelegt —
+erkennbar an der neuen Schrift in der Abschrift; vorher war das rot
+(150/2), jetzt 152 von 152; die alte Schrift, kein Neuzeichnen und die
+Schrift des ersten Ankommens bleiben rot (150/2, 150/2, 151/1). (3) Die
+Bereiche „0,061–0,097 und 0,080–0,082" waren ein Lauf; in zwei weiteren
+0,021–0,093 und 0,080–0,083, also etwa 0,02–0,10 und 0,08 (messungen.md
+§101). `test589` 152 von 152, zweimal. Nachbarn grün: 539 (51/51), 541
+(25/25), 388 (22/22, Start 1919 KB, Decke 1950), 74 (12/12); Datei-Wächter
+550, 549, 225, 105, 109, 87, 537, 400.
+
 **Offen:** nichts aus dieser Frage. Die Bilder liegen im Kratzordner, nicht
 im Verzeichnis (§55.4).
 
