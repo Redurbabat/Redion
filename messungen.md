@@ -8346,3 +8346,65 @@ R8:1 und a6 X6:N und X6:PE.
 **`test611`**: 110 von 110; gegen fcb6d35fa 101 von 110, gegen `main`
 61 von 110. **Start:** 1923 KB gzip über 255 Dateien (`test388` §5,
 Decke 1950; vor der Durchsicht 1922). `redion-einzeldatei.html` 9460 KB.
+
+### Nach der zweiten Durchsicht (12. Oktober 2026)
+
+**Was während eines Zugs gespeichert wurde.** Zwei Sonden im Arbeitsordner
+der Sitzung (nicht im Verzeichnis): die der Durchsicht (`mitte.mts`) und
+`pfade.mts`. Plan W, Chromium ohne Kopf, 1400 × 1000 (für die Finger
+1400 × 1600), F1 angeklickt, angefasst bei (430,92) und in 24 Bewegungen an
+(460,132) gezogen — die Lage aus `test611` §10, an der die billigen Wege
+anzapfen. Finger über CDP (`Input.dispatchTouchEvent`). Verglichen wird
+die Netzliste der Ablage (`Stromfluss.netze`, nur Klemmen) mit der von vor
+dem Zug; „neu" ist die Gruppe, die dazukam. Je ein Lauf:
+
+```txt
+Weg                                  478791f5f                                  nachher
+„h h" im Zug, los, 3 × Strg+Z        Strg+Z 2 und 3: neu {E1:X2 F1:N F1:N2 G2:N}  alle drei wie vorher
+„r r" im Zug, los, 3 × Strg+Z        dasselbe                                   alle drei wie vorher
+Entf im Zug, los                     F1 gelöscht; jedes Strg+Z zapft an          F1 bleibt; alles wie vorher
+Strg+Z im Zug (T1 vorher gedreht)    T1 zurückgedreht; 1. bis 4. Umschalt+Strg+Z  T1 bleibt; alles wie vorher
+                                     zapfen an
+T1 gedreht, sofort F1 gezogen        in der Ablage mitten im Zug: neu            Ablage und IndexedDB wie
+(eine Bewegung), 900 ms gehalten     {E1:X2 F1:N F1:N2 G2:N}; in der IndexedDB    vor dem Zug
+                                     ebenso
+losgelassen über der Palette         nichts gesichert, der Zug liegt; Pfeil ab   beim Loslassen gesichert,
+                                     und auf speichert ein Zwischenbild, jedes    volle Suche
+                                     Strg+Z und Umschalt+Strg+Z zapft an
+zweiter Finger auf T1                der Zug liegt; Pfeil ab und auf speichert   beim Aufsetzen gesichert;
+                                     neu {E1:X2 F1:N F1:N2 G2:N}                  alles wie vorher
+Escape im Zug                        der Zug läuft weiter und wird beim          nichts gespeichert,
+                                     Loslassen gespeichert, Rückgängig-Knopf an  Rückgängig-Knopf aus
+zweiter Finger auf „Spiegeln"        kein `click` (pointerdown und pointerup am  —
+                                     Knopf, kein click) — in Chromium kein Weg
+```
+
+Losgelassen über der Palette mit vier Zwischenschritten (Sonde, nachher)
+zieht der Zeiger F1 über die Fläche mit, bis er sie verlässt: F1 steht bei
+20,210, gespeichert ist Byte für Byte die volle Suche an dieser Lage, und
+weil dort F1:3 auf der Leitung G1:L1–M1:U1 liegt, meldet die Fläche „Nach
+dem Ziehen: F1:3 berührt jetzt die Leitung G1:L1–M1:U1 — die Verbindungen
+haben sich geändert, bitte prüfen." (E746 Punkt 6; zurück geht es nach dem
+Loslassen nicht mit Strg+Z, L253 Punkt 8).
+
+**Die Kopie in `aendere`** (`JSON.parse(JSON.stringify(plan))`, Sonde
+`kopie.mts`; Median aus 9 × 500 Kopien, Chromium ohne Kopf, ungedrosselt,
+zwei Läufe):
+
+```txt
+Plan                         Leitungen  Teile  Bytes   Median je Kopie   kleinste … grösste
+W                            12         8      3272    0,038 · 0,026 ms  0,023 … 0,072 ms
+W dreimal nebeneinander      36         24     9872    0,080 · 0,071 ms  0,067 … 0,102 ms
+W zehnmal nebeneinander      120        80     32699   0,315 · 0,221 ms  0,207 … 0,461 ms
+```
+
+Die Zugzeiten oben sind nicht neu gemessen: der Weg je Bewegung und beim
+Loslassen ist im Code derselbe; dazu kommen beim Loslassen diese Kopie und
+drei Horcher am Dokument, die nur während eines Zugs hängen.
+
+**`test611`**: 172 von 172 in dreizehn Abschnitten; zuerst eingecheckt mit
+159 Zusagen, gegen 478791f5f 129 von 159; im Endstand gegen 478791f5f
+(Abzug von 046d4a8c0 mit dem heutigen Lauf) 137 von 171, alle 34
+Fehlschläge in §13. Gegenproben 10–20 in E746 (152/169 bis 171/172).
+**Start:** 1924 KB gzip über 255 Dateien (`test388` §5, Decke 1950; vor
+der zweiten Durchsicht 1923). `redion-einzeldatei.html` 9462 KB.

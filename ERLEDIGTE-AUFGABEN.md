@@ -1,5 +1,56 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 12. Oktober 2026 · E746, zweite Durchsicht · Während eines Zugs wird nichts gespeichert
+
+**Die zweite Durchsicht** von E746 fand, dass die billigen Zwischenbilder
+eines Zugs doch gespeichert werden konnten: alles, was WÄHREND des Zugs über
+`aendere` ging, nahm das Zwischenbild als Stand von vorher. Ihre Sonde (F1
+an die Lage aus `test611` §10, die Maus unten, zweimal „h", loslassen,
+dreimal Strg+Z): nach dem Loslassen stimmt die Netzliste, das zweite und
+dritte Strg+Z bringen {E1:X2 F1:N F1:N2 G2:N} zurück. Das Nachmessen auf
+478791f5f fand vier Wege mehr: die Ablage hielt den Plan der Fläche als
+dasselbe Objekt (die Schreibpause legte ein Zwischenbild in die
+IndexedDB); ein Zug, losgelassen über der Palette, blieb liegen, und die
+nächste Handlung speicherte ihn; ein zweiter Finger liess den ersten Zug
+liegen; Strg+Z und Umschalt+Strg+Z im Zug legten das Zwischenbild auf den
+anderen Stapel. Und `test611` §10 „genau EINE volle Suche" prüfte mit
+`slice(-(n+1))` nichts.
+
+**Gebaut** (E746 Punkt 7): `aendere`, `zurueck` und `vorwaerts` tun während
+eines Zugs nichts; von den Tasten zählt im Zug nur Escape, und es bricht
+den Zug ab (Lagen und Punkte von vorher, nichts gespeichert). Ein Zug
+gehört einem Zeiger; er endet, wo auch immer dieser loslässt oder
+abbricht (am Dokument gehorcht, nur solange er läuft), und setzt ein
+anderer Zeiger auf, endet er dort — mit Teilen immer mit der vollen Suche.
+Die Ablage bekommt eine Kopie des Plans. Gewählt ist „Tasten nicht
+annehmen" statt „zuerst den Zug beenden": eine Taste beendet keine Geste.
+
+**Prüfung:** `test611` §13 (zwölf Wege, Escape, eine Leitung über der
+Palette, eine Seite, die sich im Zug neu zeichnet) und §10 „genau eine
+Rechnung nach dem Loslassen, und sie ist voll", zuerst rot eingecheckt
+(046d4a8c0): gegen 478791f5f 129 von 159; im Endstand 172/172, gegen
+478791f5f 137 von 171 (alle 34 in §13). Elf Gegenproben, jede rot und
+byte-genau zurückgenommen (die ersten neun gegen den Stand mit 170
+Zusagen): `aendere` wieder im
+Zug 152/169 · `zurueck` 168/170 · `vorwaerts` 168/170 · Ablage ohne Kopie
+166/170 (die IndexedDB hält das Zwischenbild) · Loslassen nur an der Bühne
+168/170 · ohne Aufsetzen am Dokument 168/170 · Escape ohne Abbruch 167/170
+· ohne `pointercancel` am Dokument 169/170 · zweimal volle Suche beim
+Loslassen 169/170 („[false,false]") · Leitung auch ausserhalb angelegt
+171/172 · Fläche ausserhalb des Dokuments speichert 171/172. Die Sonde der
+Durchsicht nachher: mit
+„h" wie mit „r" alle drei Strg+Z wie vorher.
+Nachbarn grün: `test611` (172/172), `test604`–`test608`,
+`test238`–`test242`, `test254`, `test388` (Start 1924 KB), `test74`;
+Datei-Wächter `test550`, `test549`, `test225`, `test105`, `test109`,
+`test87`, `test537`, `test400` grün. Bilder (Rechner und Telefon): F1 im
+Zug mit „r" gedrückt (ungedreht) und nach Escape wieder am Platz.
+
+**Offen:** L253 Punkt 9 (neu: Tasten zählen im Zug nicht und sagen es
+nicht; „Als Bild speichern" und „Als Vorlage speichern" lesen im Zug das
+Bild, wie es dasteht) und Punkt 8 (Strg+Z nach dem Loslassen — vorher geht
+es jetzt mit Escape).
+
 ## 11. Oktober 2026 · E746, Durchsicht · Ziehen billig, eigene Klemme gemeldet, Heilen gehalten
 
 **Die Durchsicht** von E746 fand drei Dinge. (1) Das Ziehen mit der Maus

@@ -8474,6 +8474,21 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
    „Nach dem Drehen: R1:1 berührt jetzt die Leitung E1:X2–E2:X1"
    (`Schaltplan.veraendert`, `test611` §11). Was davon offen bleibt, steht
    in Punkt 9. Die Lücke L253 bleibt offen für die übrigen Punkte.
+
+   **Nach der zweiten Durchsicht** (12. Oktober). Gespeichert wurde nicht nur
+   beim Loslassen: was WÄHREND eines Zugs über `aendere` ging („r", „h",
+   Entf, eine Pfeiltaste, ein Knopf), speicherte das billige Zwischenbild
+   und merkte es als Rückgängig-Schritt — zweimal „h" mit der Maus unten,
+   und das zweite Strg+Z brachte {E1:X2 F1:N F1:N2 G2:N} zurück. Dazu vier
+   Wege, gemessen auf 478791f5f: die Ablage hielt den Plan der Fläche als
+   dasselbe Objekt, und die Schreibpause legte ein Zwischenbild in die
+   IndexedDB; ein Zug, losgelassen ausserhalb der Fläche, blieb liegen, und
+   die nächste Handlung speicherte ihn; ein zweiter Finger liess den ersten
+   Zug liegen; Strg+Z und Umschalt+Strg+Z im Zug legten das Zwischenbild auf
+   den anderen Stapel. Seither ändert während eines Zugs nur der Zug den
+   Plan: Tasten ausser Escape zählen nicht, Escape bricht ab, ein Zug endet
+   immer richtig, und die Ablage bekommt eine Kopie (E746 Punkt 7,
+   `test611` §13: 172/172, gegen 478791f5f rot mit 137 von 171).
 5. **Die Leitersymbole melden ihre zweite Klemme an der Stelle der ersten.**
    `leiter-l1` (und l2, l3, n, pe) haben zweimal denselben Namen;
    `anschluesseVon` sucht die Lage über den Namen und findet beide Male die
@@ -8544,13 +8559,20 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
    wiegt der Punkt schwerer: die Fläche MELDET jetzt, wenn ein Zug eine
    Klemme auf eine fremde Leitung gelegt hat (Punkt 4) — rückgängig machen
    lässt sich genau dieser Zug aber nicht; es bleibt, das Teil
-   zurückzuziehen.
+   zurückzuziehen. Seit der zweiten Durchsicht gibt es einen Weg zurück
+   VOR dem Loslassen: Escape bricht den Zug ab, ohne etwas zu speichern
+   (E746 Punkt 7, `test611` §13). Nach dem Loslassen gilt der Punkt
+   unverändert; die Sonde der zweiten Durchsicht zeigt es auch dort: ein
+   Zug über den Rand der Fläche legte F1:3 auf die Leitung G1:L1–M1:U1, die
+   Fläche meldete es, und nach einer Pfeiltaste hin und zurück liessen
+   dreimal Strg+Z es stehen (der Stand vor dem Zug ist nicht im Verlauf).
 9. **Was nach der Durchsicht von Punkt 4 bleibt** (gemessen am 11. Oktober,
    `messungen.md` §103):
    * **Die Meldung verhindert nichts.** Liegt eine Klemme nach einer
      Lageänderung auf einer fremden Leitung, ist die Netzliste geändert, und
      die Fläche sagt es; zurück geht es mit Strg+Z (Pfeiltaste, Drehen,
-     Spiegeln) oder — nach einem Zug mit der Maus — nur von Hand (Punkt 8).
+     Spiegeln) oder — nach einem Zug mit der Maus — nur von Hand (Punkt 8);
+     vor dem Loslassen bricht Escape den Zug ab.
      Eine Sperre ist mit Absicht nicht gebaut (E746 Punkt 6); ob es eine
      geben soll, entscheidet Redur.
    * **Die Zwischenbilder beim Ziehen sind die billigen Wege.** Liegt an
@@ -8570,7 +8592,19 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
    * Ein Wächter für die Zwischenbilder und für die Zeit fehlt: `test611`
      §10 hält, DASS billig gerechnet wird und WAS gespeichert ist, nicht,
      wie lange es dauert (eine Zeitgrenze im Lauf wäre auf jedem Rechner
-     anders).
+     anders). Dass ein Zwischenbild nie gespeichert wird, auch nicht
+     WÄHREND des Zugs, hält seit der zweiten Durchsicht §13.
+   * **Tasten zählen während eines Zugs nicht** (zweite Durchsicht, E746
+     Punkt 7): „r", „h", Entf, die Pfeile und Strg+D/G/Z tun nichts, bis
+     die Hand loslässt, und sagen es nicht; nur Escape bricht ab. Wer
+     gewohnt ist, ein Teil im Ziehen zu drehen (wie in manchen
+     Zeichenprogrammen), muss erst loslassen. Ob die Fläche es sagen soll
+     oder ob „r" im Zug das Teil drehen und den Zug weiterführen soll
+     (ohne zu speichern), entscheidet Redur.
+   * **„Als Bild speichern" und „Als Vorlage speichern"** lesen den Plan,
+     ohne über `aendere` zu gehen. Mitten in einem Zug erreicht man sie nur
+     mit der Tastatur (Tab auf „…", Eingabe), und dann nehmen sie das Bild,
+     wie es dasteht — ein Zwischenbild. Nicht gesperrt, nicht geprüft.
 
 ### Fachlich offen (vom Zweig)
 
@@ -8592,7 +8626,7 @@ entscheidet Rundungsrauschen. Für die Anzeige ist das seit E737 behoben (dort
 entscheidet die Leistung); jeder andere Aufrufer von `werte` bekommt
 weiterhin den vom Rauschen bestimmten Eintrag.
 
-**Wächter:** für Punkt 4 `test611` (E746; seit der Durchsicht auch für das billige Ziehen, die Meldung und das Heilen); für die übrigen Punkte oben keiner — auch nicht für Punkt 8 und die Zeit in Punkt 9.
+**Wächter:** für Punkt 4 `test611` (E746; seit der Durchsicht auch für das billige Ziehen, die Meldung und das Heilen, seit der zweiten Durchsicht für alles, was während eines Zugs geschieht — §13); für die übrigen Punkte oben keiner — auch nicht für Punkt 8 und die Zeit in Punkt 9.
 
 ---
 
