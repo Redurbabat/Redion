@@ -42,6 +42,11 @@
  *       Leitung (oder verlässt sie eine), sagt die Fläche es (Fund 2)
  *   §12 Der alte Plan A aus `test608`: ein unbeteiligtes Teil drehen heilt
  *       die Enden neben ihrer Klemme — und keine geheilte zapft an (Fund 3)
+ *   §13 Während eines Zugs wird nichts gespeichert: keine Taste, kein Knopf,
+ *       Strg+Z nicht, die Schreibpause nicht, losgelassen ausserhalb und ein
+ *       zweiter Finger beenden den Zug richtig, Escape bricht ab; eine
+ *       Leitung über der Palette verfällt, eine Fläche, die nicht mehr im
+ *       Dokument steht, speichert nichts (zweite Durchsicht, Fund 1)
  *
  * KANN DIESE SUITE ROT WERDEN? (§55.2) Ja — gegen 97d156b03 ist sie rot in
  * §1, §2, §3, §4, §5, §6, §7 und §9; die Zahl steht in E746. Die zwei Gegenproben
@@ -52,6 +57,12 @@
  * blieb still. §12 ist eine Abdeckung, kein Fund — rot wird sie, wenn das
  * Heilen fehlt oder eine geheilte Leitung ihren ersten Weg nimmt, ohne zu
  * prüfen (beide Gegenproben in E746).
+ * §13 kam mit der zweiten Durchsicht und ist gegen 478791f5f rot mit 137
+ * von 171 — alle 34 Fehlschläge in §13; der abgebrochene Finger, die Leitung
+ * über der Palette und die neu gezeichnete Seite sind dort grün: sie decken
+ * das neue Horchen am Dokument ab, keine Lücke von damals. Mit ihr kam auch §10s „genau EINE": bis dahin `slice(-(n+1))`, das
+ * immer n + 1 Einträge hat; rot wird die Zusage jetzt, wenn das Loslassen
+ * zweimal voll sucht. Die Gegenproben 10–20 stehen in E746.
  *
  *   node pruefungen/lauf/test611.mts
  * ==========================================================================*/
@@ -1030,6 +1041,13 @@ await zugMit('Strg+Z im Zug', {
   vorher: async () => { await waehle('T1'); await taste('r'); },
   waehrend: async () => { await strg('z'); }
 });
+/* Und Umschalt+Strg+Z mitten im Zug, mit einem Schritt zum Wiederholen
+   (T1 gedreht und zurückgenommen): das Zwischenbild käme sonst auf den
+   Stapel des Rückgängig. */
+await zugMit('Umschalt+Strg+Z im Zug', {
+  vorher: async () => { await waehle('T1'); await taste('r'); await strg('z'); },
+  waehrend: async () => { await strg('z', true); }
+});
 /* Die Ablage im Zug: eine gewöhnliche Handlung (T1 drehen) und gleich danach
    der Zug, in EINER Bewegung an die Stelle — die Schreibpause (400 ms) läuft
    ab, während die Maus unten ist. */
@@ -1089,6 +1107,25 @@ await zugMit('Zweiter Finger im Zug', {
   },
   danach: async () => { await waehle('T1'); await taste('r'); }
 });
+/* Der Browser bricht den Finger ab (`pointercancel`, etwa wenn eine Geste des
+   Systems übernimmt): der Zug endet wie beim Loslassen, mit der vollen Suche.
+   Das ist keine Lücke von 478791f5f — dort horchte die Bühne auf
+   `pointercancel` —, sondern hält, dass das Horchen am Dokument es auch tut. */
+await zugMit('Abgebrochener Finger', {
+  ziehen: async (bid) => {
+    const bild = await bildpunkt(bid);
+    const [x0, y0] = bild(430, 92);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x0, y: y0, id: 1 }] });
+    for (let i = 1; i <= SCHRITTE; i++) {
+      fingerBei = bild(430 + 30 * i / SCHRITTE, 92 + 40 * i / SCHRITTE);
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: fingerBei[0], y: fingerBei[1], id: 1 }] });
+    }
+    await seite.waitForTimeout(150);
+  },
+  waehrend: async () => {},
+  loslassen: async () => { await cdp.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] }); },
+  danach: async () => { await waehle('T1'); await taste('r'); }
+});
 await cdp.detach();
 
 /* Escape bricht den Zug ab: nichts gespeichert, kein Rückgängig-Schritt, und
@@ -1114,6 +1151,53 @@ await cdp.detach();
   p('Escape im Zug: auch nach dem Loslassen ist nichts gespeichert — die Ablage Byte für Byte wie vorher',
     nach.json === start.json, JSON.stringify(nach.teile.F1));
   p('Escape im Zug: kein Rückgängig-Schritt (der Knopf bleibt aus)', zurueckAus);
+}
+
+/* Seit das Loslassen am Dokument gehorcht wird, kommt es auch ausserhalb der
+   Fläche an — eine LEITUNG, die dort losgelassen wird, verfällt, statt bis
+   neben den Plan zu reichen. (478791f5f bekam dieses Loslassen gar nicht;
+   das ist eine Abdeckung des neuen Horchens, keine Lücke von damals.) */
+{
+  const bid = await oeffne('W');
+  await seite.waitForTimeout(300);
+  await seite.locator('.sp-wrap button[data-wz="leitung"]').click();
+  await seite.waitForTimeout(250);
+  const start = await zustand(bid);
+  const bild = await bildpunkt(bid);
+  const [x0, y0] = bild(700, 300);
+  await seite.mouse.move(x0, y0);
+  await seite.mouse.down();
+  for (let i = 1; i <= 6; i++) { const [x, y] = bild(700 + 10 * i, 300); await seite.mouse.move(x, y); }
+  const pal = await seite.locator('.sp-wrap .sp-palette').boundingBox();
+  if (!pal) throw new Error('keine Palette');
+  await seite.mouse.move(pal.x + pal.width / 2, pal.y + Math.min(200, pal.height / 2));
+  await seite.mouse.up();
+  await seite.waitForTimeout(450);
+  const nach = await zustand(bid);
+  p('Eine Leitung, losgelassen über der Palette, verfällt — keine neue Leitung, die Ablage Byte für Byte wie vorher',
+    nach.json === start.json, `${Object.keys(start.punkte).length} → ${Object.keys(nach.punkte).length} Leitungen`);
+  await seite.locator('.sp-wrap button[data-wz="zeigen"]').click();
+  await seite.waitForTimeout(250);
+}
+
+/* Zeichnet die Seite sich mitten im Zug neu (etwa weil ein anderes Fenster
+   den Block geändert hat), ist die alte Fläche nicht mehr im Dokument: ihr
+   Loslassen speichert nichts mehr — sonst schriebe sie über die Ablage, die
+   die neue Fläche schon zeigt. Auch das ist eine Abdeckung des neuen
+   Horchens (478791f5f hörte das Loslassen der alten Fläche nicht). */
+{
+  const bid = await oeffne('W');
+  await seite.waitForTimeout(300);
+  await waehle('F1');
+  const start = await zustand(bid);
+  await mausZug(bid);
+  await seite.evaluate(() => { App.zeichneSeite(); });
+  await seite.waitForTimeout(300);
+  await seite.mouse.up();
+  await seite.waitForTimeout(450);
+  const nach = await zustand(bid);
+  p('Neu gezeichnet im Zug: das Loslassen der alten Fläche speichert nichts — die Ablage Byte für Byte wie vorher',
+    nach.json === start.json, JSON.stringify(nach.teile.F1));
 }
 
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.slice(0, 3).join(' | '));

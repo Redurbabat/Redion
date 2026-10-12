@@ -78,17 +78,22 @@ const Planflaeche = (() => {
         };
         const abzug = () => JSON.stringify(z.plan);
         const aendere = (was, merken = true) => {
+            if (z.zieht)
+                return;
             const vorher = merken ? abzug() : '';
             was();
+            const kopie = JSON.parse(abzug());
             if (typeof Store !== 'undefined' && block && block.id)
-                Store.updateBlock(block.id, { plan: z.plan });
+                Store.updateBlock(block.id, { plan: kopie });
             else if (block)
-                block.plan = z.plan;
+                block.plan = kopie;
             if (merken)
                 z.verlauf.merken(vorher);
             male();
         };
         const zurueck = () => {
+            if (z.zieht)
+                return;
             const vorher = z.verlauf.zurueck(abzug());
             if (vorher === null)
                 return;
@@ -96,6 +101,8 @@ const Planflaeche = (() => {
             aendere(() => { }, false);
         };
         const vorwaerts = () => {
+            if (z.zieht)
+                return;
             const naechster = z.verlauf.vor(abzug());
             if (naechster === null)
                 return;
@@ -505,6 +512,68 @@ const Planflaeche = (() => {
         };
         const teilAm = (ziel) => ziel.closest('svg [data-id]');
         let letzterTipp = { id: '', zeit: 0 };
+        const zugBeginnen = (zug) => {
+            z.zieht = zug;
+            document.addEventListener('pointerdown', zugUnterbrechen, true);
+            document.addEventListener('pointerup', zugEnde, true);
+            document.addEventListener('pointercancel', zugEnde, true);
+        };
+        const zugLoesen = () => {
+            z.zieht = null;
+            document.removeEventListener('pointerdown', zugUnterbrechen, true);
+            document.removeEventListener('pointerup', zugEnde, true);
+            document.removeEventListener('pointercancel', zugEnde, true);
+        };
+        const teilzugSichern = (zug) => {
+            const bewegt = zug.ausgang.size &&
+                [...zug.ausgang].some(([id, a]) => {
+                    const t = teilVon(id);
+                    return t && (t.x !== a.x || t.y !== a.y);
+                });
+            if (!bewegt) {
+                male();
+                return;
+            }
+            const vorher = zug.vorher ?? Schaltplan.vorherMerken(z.plan);
+            const bericht = Schaltplan.nachziehen(z.plan, vorher, [...zug.ausgang.keys()], { heilen: true, vonVorn: true });
+            aendere(() => { });
+            melde('Ziehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
+        };
+        const zugUnterbrechen = () => {
+            const zug = z.zieht;
+            if (!zug)
+                return;
+            zugLoesen();
+            if (!wurzel.isConnected)
+                return;
+            if (zug.art === 'teil')
+                teilzugSichern(zug);
+            else
+                male();
+        };
+        const zugAbbrechen = () => {
+            const zug = z.zieht;
+            if (!zug)
+                return;
+            zugLoesen();
+            if (zug.art === 'teil') {
+                zug.ausgang.forEach((a, id) => {
+                    const t = teilVon(id);
+                    if (t) {
+                        t.x = a.x;
+                        t.y = a.y;
+                    }
+                });
+                const punkte = zug.vorher ? zug.vorher.punkte : null;
+                if (punkte)
+                    z.plan.leitungen.forEach(l => {
+                        const alt = punkte.get(l.id);
+                        if (alt)
+                            l.punkte = alt.map(q => ({ x: q.x, y: q.y }));
+                    });
+            }
+            male();
+        };
         buehne.addEventListener('pointerdown', e => {
             const svg = buehne.querySelector('svg');
             if (!svg)
@@ -538,9 +607,9 @@ const Planflaeche = (() => {
             }
             if (z.werkzeug === 'leitung') {
                 const fang = Schaltplan.fangeAnschluss(z.plan, roh);
-                z.zieht = { art: 'leitung', startX: p.x, startY: p.y, ausgang: new Map(),
+                zugBeginnen({ art: 'leitung', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang: new Map(),
                     von: fang ? { x: fang.x, y: fang.y, teil: fang.teil, nr: fang.nr }
-                        : { x: p.x, y: p.y } };
+                        : { x: p.x, y: p.y } });
                 svg.setPointerCapture(e.pointerId);
                 return;
             }
@@ -552,7 +621,7 @@ const Planflaeche = (() => {
                 }
                 if (!e.shiftKey)
                     z.auswahl.clear();
-                z.zieht = { art: 'rahmen', startX: p.x, startY: p.y, ausgang: new Map() };
+                zugBeginnen({ art: 'rahmen', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang: new Map() });
                 svg.setPointerCapture(e.pointerId);
                 male();
                 return;
@@ -579,13 +648,14 @@ const Planflaeche = (() => {
                 if (t)
                     ausgang.set(x, { x: t.x, y: t.y });
             });
-            z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang, vorher: Schaltplan.vorherMerken(z.plan),
-                lage: [...ausgang.values()].map(a => a.x + ',' + a.y).join(';') };
+            zugBeginnen({ art: 'teil', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang,
+                vorher: Schaltplan.vorherMerken(z.plan),
+                lage: [...ausgang.values()].map(a => a.x + ',' + a.y).join(';') });
             svg.setPointerCapture(e.pointerId);
             male();
         });
         buehne.addEventListener('pointermove', e => {
-            if (!z.zieht)
+            if (!z.zieht || e.pointerId !== z.zieht.zeiger)
                 return;
             const svg = buehne.querySelector('svg');
             if (!svg)
@@ -638,26 +708,20 @@ const Planflaeche = (() => {
             }
         });
         const zugEnde = (e) => {
-            if (!z.zieht)
+            if (!z.zieht || e.pointerId !== z.zieht.zeiger)
+                return;
+            const zug = z.zieht;
+            zugLoesen();
+            if (!wurzel.isConnected)
                 return;
             const svg = buehne.querySelector('svg');
             const p = svg ? ortAus(svg, e, z.plan) : { x: 0, y: 0 };
-            const zug = z.zieht;
-            z.zieht = null;
             if (zug.art === 'teil') {
-                const bewegt = zug.ausgang.size &&
-                    [...zug.ausgang].some(([id, a]) => {
-                        const t = teilVon(id);
-                        return t && (t.x !== a.x || t.y !== a.y);
-                    });
-                if (bewegt) {
-                    const vorher = zug.vorher ?? Schaltplan.vorherMerken(z.plan);
-                    const bericht = Schaltplan.nachziehen(z.plan, vorher, [...zug.ausgang.keys()], { heilen: true, vonVorn: true });
-                    aendere(() => { });
-                    melde('Ziehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
-                }
-                else
-                    male();
+                teilzugSichern(zug);
+                return;
+            }
+            if (!buehne.contains(e.target)) {
+                male();
                 return;
             }
             if (zug.art === 'rahmen') {
@@ -681,8 +745,6 @@ const Planflaeche = (() => {
                 }));
             }
         };
-        buehne.addEventListener('pointerup', zugEnde);
-        buehne.addEventListener('pointercancel', zugEnde);
         const teilDialog = (t) => {
             const zeichen = Register.fachzeichen.holen(t.zeichen);
             if (!zeichen)
@@ -852,6 +914,10 @@ const Planflaeche = (() => {
             const inFeld = e.target.tagName === 'INPUT';
             if (inFeld)
                 return;
+            if (e.key === 'Escape' && z.zieht) {
+                zugAbbrechen();
+                return;
+            }
             const schritt = e.shiftKey ? Register.fachzeichen.RASTER * 5 : Register.fachzeichen.RASTER;
             const pfeile = {
                 ArrowLeft: [-schritt, 0], ArrowRight: [schritt, 0],

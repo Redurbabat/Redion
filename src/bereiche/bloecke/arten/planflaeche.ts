@@ -34,9 +34,12 @@ const Planflaeche = (() => {
     auswahl: Set<string>;
     /** Das Symbol, das als Nächstes gesetzt wird (aus der Palette gewählt). */
     gewaehltesZeichen: string;
-    /** Läuft gerade ein Zug? */
+    /** Läuft gerade ein Zug? Solange ja, ändert nur er den Plan (`aendere`). */
     zieht: null | {
       art: 'teil' | 'leitung' | 'rahmen';
+      /** Der Zeiger, der zieht — Maus, Finger oder Stift. Nur seine
+          Bewegungen und sein Loslassen zählen (ein zweiter Finger nicht). */
+      zeiger: number;
       startX: number; startY: number;
       /** Ausgangslagen aller mitgezogenen Teile. */
       ausgang: Map<string, { x: number; y: number }>;
@@ -181,22 +184,48 @@ const Planflaeche = (() => {
     const abzug = (): string => JSON.stringify(z.plan);
 
     const aendere = (was: () => void, merken = true): void => {
+      /* WÄHREND EINES ZUGS ÄNDERT NUR DER ZUG DEN PLAN (E746, zweite
+         Durchsicht). Die Bilder eines Zugs rechnen nur die billigen Wege,
+         und die zapfen an manchen Lagen an. Was hier während eines Zugs
+         durchging — „r", „h", Entf, eine Pfeiltaste, ein Knopf —, nahm
+         dieses Zwischenbild als Stand von vorher, speicherte es und merkte
+         es als Rückgängig-Schritt: zweimal „h" mit der Maus unten, und das
+         zweite Strg+Z brachte {E1:X2 F1:N F1:N2 G2:N} zurück, ohne ein Wort
+         (test611 §13). Deshalb tut `aendere` während eines Zugs nichts; der
+         Zug selbst speichert beim Loslassen, nachdem `zugEnde` ihn beendet
+         hat — mit der vollen Suche. Escape bricht ihn ab. */
+      if (z.zieht) return;
       const vorher = merken ? abzug() : '';
       was();
+      /* EINE KOPIE IN DIE ABLAGE, NICHT DEN PLAN DER FLÄCHE. `updateBlock`
+         übernimmt, was es bekommt, als Verweis: bis zur zweiten Durchsicht
+         war der Plan in der Ablage danach DASSELBE Objekt wie `z.plan`, und
+         jede Bewegung eines Zugs schrieb ihr Zwischenbild mitten in die
+         Ablage — gemessen: T1 gedreht, gleich danach F1 gezogen, und die
+         nächste Schreibpause legte das angezapfte Zwischenbild in die
+         IndexedDB, ohne dass jemand eine Taste drückte. Dasselbe sah jeder,
+         der die Ablage las: Sicherung, Duplizieren, ein anderes Fenster. */
+      const kopie = JSON.parse(abzug());
       if (typeof Store !== 'undefined' && block && block.id)
-        Store.updateBlock(block.id, { plan: z.plan });
-      else if (block) block.plan = z.plan;
+        Store.updateBlock(block.id, { plan: kopie });
+      else if (block) block.plan = kopie;
       if (merken) z.verlauf.merken(vorher);
       male();
     };
 
+    /* Rückgängig und Wiederholen legen den jetzigen Stand auf den anderen
+       Stapel, BEVOR `aendere` gefragt wird — mitten in einem Zug wäre das
+       das Zwischenbild (Strg+Z im Zug, und Umschalt+Strg+Z holte es
+       zurück). Also auch hier: nicht während eines Zugs. */
     const zurueck = (): void => {
+      if (z.zieht) return;
       const vorher = z.verlauf.zurueck(abzug());
       if (vorher === null) return;
       z.plan = JSON.parse(vorher);
       aendere(() => {}, false);
     };
     const vorwaerts = (): void => {
+      if (z.zieht) return;
       const naechster = z.verlauf.vor(abzug());
       if (naechster === null) return;
       z.plan = JSON.parse(naechster);
@@ -714,6 +743,91 @@ const Planflaeche = (() => {
     /* Für die Doppeltipp-Erkennung unten: welcher Teil, wie eben. */
     let letzterTipp = { id: '', zeit: 0 };
 
+    /* --- Ein Zug endet immer, und nur einer läuft (E746, zweite Durchsicht) -
+       Ein Zug gehört EINEM Zeiger und endet, wenn dieser loslässt oder
+       abbricht — wo auch immer auf der Seite. Bis zur zweiten Durchsicht
+       horchte nur die Bühne: der Zeigerfang am SVG geht mit dem ersten
+       neuen Bild verloren (`buehneMalen` ersetzt das SVG), und losgelassen
+       über der Palette kam das `pointerup` nie an. Der Zug blieb liegen, sein
+       Zwischenbild in `z.plan`, und die nächste Handlung speicherte es
+       (test611 §13). Und er endet, sobald irgendein Zeiger irgendwo
+       aufsetzt: ein zweiter Finger fing bisher einen NEUEN Zug an, nahm das
+       Zwischenbild des ersten als „vorher" und liess den ersten liegen.
+       Beendet wird ein Zug mit Teilen immer richtig — mit der vollen Suche
+       (`teilzugSichern`), nie mit einem Zwischenbild. Die Horcher am
+       Dokument hängen nur, solange ein Zug läuft. */
+    type Zug = NonNullable<Zustand['zieht']>;
+    const zugBeginnen = (zug: Zug): void => {
+      z.zieht = zug;
+      document.addEventListener('pointerdown', zugUnterbrechen, true);
+      document.addEventListener('pointerup', zugEnde, true);
+      document.addEventListener('pointercancel', zugEnde, true);
+    };
+    const zugLoesen = (): void => {
+      z.zieht = null;
+      document.removeEventListener('pointerdown', zugUnterbrechen, true);
+      document.removeEventListener('pointerup', zugEnde, true);
+      document.removeEventListener('pointercancel', zugEnde, true);
+    };
+
+    /** Einen Zug mit Teilen sichern — der einzige Weg, auf dem ein Zug in die
+     *  Ablage kommt. `z.zieht` ist dabei schon leer, sonst verweigerte
+     *  `aendere`. */
+    const teilzugSichern = (zug: Zug): void => {
+      const bewegt = zug.ausgang.size &&
+        [...zug.ausgang].some(([id, a]) => {
+          const t = teilVon(id);
+          return t && (t.x !== a.x || t.y !== a.y);
+        });
+      if (!bewegt) { male(); return; }
+      /* Erst jetzt die volle Suche, einmal, vom Anfassen aus — die
+         Zwischenbilder rechneten nur die billigen Wege, und eines davon
+         darf nie gespeichert werden. Sie läuft VOR `aendere`: der
+         Rückgängig-Schritt, den `aendere` merkt, ist der Stand vor
+         SEINEM Schritt, und ein Zwischenbild darf auch dort nicht
+         hinein (zum Rückgängig nach einem Zug: L253 Punkt 8). */
+      const vorher = zug.vorher ?? Schaltplan.vorherMerken(z.plan);
+      const bericht = Schaltplan.nachziehen(z.plan, vorher, [...zug.ausgang.keys()],
+        { heilen: true, vonVorn: true });
+      aendere(() => { /* geschoben und nachgezogen — nur sichern */ });
+      melde('Ziehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
+    };
+
+    /** Ein Zeiger setzt auf, während ein Zug läuft — ein zweiter Finger, oder
+     *  derselbe, dessen Loslassen nie ankam. Der Zug endet hier: mit Teilen
+     *  gesichert wie beim Loslassen; ein Rahmen oder eine Leitung, deren Ende
+     *  niemand gezeigt hat, verfällt. Ist die Fläche nicht mehr im Dokument
+     *  (die Seite wurde neu gezeichnet), wird nichts mehr gespeichert — sie
+     *  zeigt dann, was die Ablage hält. */
+    const zugUnterbrechen = (): void => {
+      const zug = z.zieht;
+      if (!zug) return;
+      zugLoesen();
+      if (!wurzel.isConnected) return;
+      if (zug.art === 'teil') teilzugSichern(zug); else male();
+    };
+
+    /** Escape im Zug: zurück auf den Stand beim Anfassen — die Lagen aus
+     *  `ausgang`, die Punkte aus `vorher`. Nichts gespeichert, kein
+     *  Rückgängig-Schritt; der Zug hat nie stattgefunden. */
+    const zugAbbrechen = (): void => {
+      const zug = z.zieht;
+      if (!zug) return;
+      zugLoesen();
+      if (zug.art === 'teil') {
+        zug.ausgang.forEach((a, id) => {
+          const t = teilVon(id);
+          if (t) { t.x = a.x; t.y = a.y; }
+        });
+        const punkte = zug.vorher ? zug.vorher.punkte : null;
+        if (punkte) (z.plan.leitungen as any[]).forEach(l => {
+          const alt = punkte.get(l.id);
+          if (alt) l.punkte = alt.map(q => ({ x: q.x, y: q.y }));
+        });
+      }
+      male();
+    };
+
     /* --- Zeigerereignisse ------------------------------------------------ */
     buehne.addEventListener('pointerdown', e => {
       const svg = buehne.querySelector('svg') as SVGSVGElement;
@@ -748,9 +862,9 @@ const Planflaeche = (() => {
 
       if (z.werkzeug === 'leitung') {
         const fang = Schaltplan.fangeAnschluss(z.plan, roh);
-        z.zieht = { art: 'leitung', startX: p.x, startY: p.y, ausgang: new Map(),
-                    von: fang ? { x: fang.x, y: fang.y, teil: fang.teil, nr: fang.nr }
-                              : { x: p.x, y: p.y } };
+        zugBeginnen({ art: 'leitung', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang: new Map(),
+                      von: fang ? { x: fang.x, y: fang.y, teil: fang.teil, nr: fang.nr }
+                                : { x: p.x, y: p.y } });
         svg.setPointerCapture(e.pointerId);
         return;
       }
@@ -761,7 +875,7 @@ const Planflaeche = (() => {
         /* Auf leere Fläche: Symbol setzen, oder Rahmen aufziehen. */
         if (z.gewaehltesZeichen) { setzeSymbol(z.gewaehltesZeichen, p.x, p.y); return; }
         if (!e.shiftKey) z.auswahl.clear();
-        z.zieht = { art: 'rahmen', startX: p.x, startY: p.y, ausgang: new Map() };
+        zugBeginnen({ art: 'rahmen', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang: new Map() });
         svg.setPointerCapture(e.pointerId);
         male();
         return;
@@ -792,14 +906,15 @@ const Planflaeche = (() => {
         const t = teilVon(x);
         if (t) ausgang.set(x, { x: t.x, y: t.y });
       });
-      z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang, vorher: Schaltplan.vorherMerken(z.plan),
-                  lage: [...ausgang.values()].map(a => a.x + ',' + a.y).join(';') };
+      zugBeginnen({ art: 'teil', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang,
+                    vorher: Schaltplan.vorherMerken(z.plan),
+                    lage: [...ausgang.values()].map(a => a.x + ',' + a.y).join(';') });
       svg.setPointerCapture(e.pointerId);
       male();
     });
 
     buehne.addEventListener('pointermove', e => {
-      if (!z.zieht) return;
+      if (!z.zieht || e.pointerId !== z.zieht.zeiger) return;
       const svg = buehne.querySelector('svg') as SVGSVGElement;
       if (!svg) return;
       const p = ortAus(svg, e, z.plan);
@@ -865,35 +980,22 @@ const Planflaeche = (() => {
       }
     });
 
+    /** Der ziehende Zeiger lässt los oder bricht ab (am Dokument gehorcht,
+     *  solange der Zug läuft — siehe `zugBeginnen`). */
     const zugEnde = (e: PointerEvent): void => {
-      if (!z.zieht) return;
+      if (!z.zieht || e.pointerId !== z.zieht.zeiger) return;
+      const zug = z.zieht;
+      zugLoesen();
+      if (!wurzel.isConnected) return;
       const svg = buehne.querySelector('svg') as SVGSVGElement;
       const p = svg ? ortAus(svg, e, z.plan) : { x: 0, y: 0 };
-      const zug = z.zieht;
-      z.zieht = null;
 
-      if (zug.art === 'teil') {
-        const bewegt = zug.ausgang.size &&
-          [...zug.ausgang].some(([id, a]) => {
-            const t = teilVon(id);
-            return t && (t.x !== a.x || t.y !== a.y);
-          });
-        if (bewegt) {
-          /* Erst jetzt die volle Suche, einmal, vom Anfassen aus — die
-             Zwischenbilder rechneten nur die billigen Wege, und eines davon
-             darf nie gespeichert werden. Sie läuft VOR `aendere`: der
-             Rückgängig-Schritt, den `aendere` merkt, ist der Stand vor
-             SEINEM Schritt, und ein Zwischenbild darf auch dort nicht
-             hinein (zum Rückgängig nach einem Zug: L253 Punkt 8). */
-          const vorher = zug.vorher ?? Schaltplan.vorherMerken(z.plan);
-          const bericht = Schaltplan.nachziehen(z.plan, vorher, [...zug.ausgang.keys()],
-            { heilen: true, vonVorn: true });
-          aendere(() => { /* geschoben und nachgezogen — nur sichern */ });
-          melde('Ziehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
-        }
-        else male();
-        return;
-      }
+      if (zug.art === 'teil') { teilzugSichern(zug); return; }
+
+      /* Ein Rahmen oder eine Leitung, losgelassen AUSSERHALB der Fläche,
+         verfällt: ihr Ende läge irgendwo neben dem Plan. Bis zur zweiten
+         Durchsicht kam so ein Loslassen gar nicht an (siehe oben). */
+      if (!buehne.contains(e.target as Node)) { male(); return; }
 
       if (zug.art === 'rahmen') {
         inRahmen({ x: zug.startX, y: zug.startY }, p).forEach(id => z.auswahl.add(id));
@@ -914,8 +1016,6 @@ const Planflaeche = (() => {
         }));
       }
     };
-    buehne.addEventListener('pointerup', zugEnde);
-    buehne.addEventListener('pointercancel', zugEnde);
 
     /* KEIN dblclick-Horcher mehr: das Doppeltippen erkennt der
        pointerdown selbst (Begründung dort). Ein zweiter Horcher öffnete
@@ -1105,6 +1205,13 @@ const Planflaeche = (() => {
     wurzel.addEventListener('keydown', e => {
       const inFeld = (e.target as HTMLElement).tagName === 'INPUT';
       if (inFeld) return;
+      /* Während eines Zugs zählt von den Tasten nur Escape: es bricht den
+         Zug ab. „r", „h", Entf, die Pfeile, Strg+D/G/Z gehen weiter durch
+         die Zweige unten und nehmen die Taste (`preventDefault`, damit Strg+Z
+         nicht beim Seitenverlauf landet), aber `aendere`, `zurueck` und
+         `vorwaerts` tun während eines Zugs nichts (E746, zweite Durchsicht —
+         die Wahl und ihr Preis stehen dort). */
+      if (e.key === 'Escape' && z.zieht) { zugAbbrechen(); return; }
       const schritt = e.shiftKey ? Register.fachzeichen.RASTER * 5 : Register.fachzeichen.RASTER;
       const pfeile: Record<string, [number, number]> = {
         ArrowLeft: [-schritt, 0], ArrowRight: [schritt, 0],
