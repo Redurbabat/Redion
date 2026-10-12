@@ -130,7 +130,6 @@ await seite.evaluate(() => {
                      T('E1', 'lampe', 300, 140)],
              leitungen };
   };
-  /** Welche Klemmen eines Teils als „hängt an keiner Leitung" gemeldet werden. */
   /** Der Stern als zwei gezeichnete LEITUNGEN statt Brücken: W2–U2, U2–V2. */
   (window as any).sternGezeichnet = (): any[] => [
     { id: 'b1', ebene: 'plan', punkte: [[90, 330], [90, 350], [130, 350], [130, 330]].map(([x, y]) => ({ x, y })),
@@ -138,6 +137,7 @@ await seite.evaluate(() => {
     { id: 'b2', ebene: 'plan', punkte: [[130, 330], [130, 345], [170, 345], [170, 330]].map(([x, y]) => ({ x, y })),
       vonTeil: 'M1', vonNr: 'U2', nachTeil: 'M1', nachNr: 'V2' }
   ];
+  /** Welche Klemmen eines Teils als „hängt an keiner Leitung" gemeldet werden. */
   (window as any).offen = (e: any, teil: string): string[] =>
     ((e && e.warnungen) || [])
       .map((w: string) => new RegExp('^' + teil + ': Anschluss (\\S+) hängt an keiner Leitung\\.$').exec(w))

@@ -785,7 +785,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E741** — Umschalt+Rad schiebt die Fläche quer (Redur, 11. Oktober: „Ja" zu AUFGABEN.md, Fläche Punkt 4): auf dem Grund schob Umschalt+Rad die Fläche LÄNGS, weil Chromium ein Rad mit Umschalt als `deltaY` meldet, und an der rechten Kante einer breiten Tabelle kippte dieselbe Geste die Richtung; jetzt liest EINE Regel `radWeg` das Rad für `rolltSelbst` und für das Schieben — Umschalt mit einem Rad ohne `deltaX` heisst quer, ein vom System schon gedrehter Wisch (macOS) bleibt, wie er ist; Rad allein und Strg+Rad gemessen unverändert, das Kneifen mit zwei Fingern geht nicht über das Rad. Ergänzt E722 und E723. `test598` §14 neu
 * **E742** — Der Info-Streifen ist im Dunkeln nicht mehr die blasseste Meldung (Redur, 11. Oktober 2026: „Ja" — `test319` bleibt streng): E705 gab allen dunklen Tönungen OKLCH L 0,30, und bei gleicher OKLCH-Helligkeit hat Blau eine höhere WCAG-Leuchtdichte als Gelb — info 12.09 gegen warn 12.15 und fehler 12.41. `--b-blue` steht jetzt eine Stufe dunkler, `#133144` → `#123043` (L 0,296, Ton und Buntheit gleich, ΔE_OK 0,004): Standard 12.26 / 12.15 / 12.41, in allen sechs dunklen Schemata `info` vor `warn`; kein Textkontrast sinkt, hell unverändert. Verworfen: color-mix, eine andere Schrift, warn/fehler blasser, die Prüfung lockern (`test319` 26/26)
 * **E743** — main auf den Stand von Redurs sechs Ja, mit dreizehn benannten roten Läufen (Redur, 11. Oktober, 19:43 UTC: „3.ja" auf „main: auf diesen Stand ja oder nein?"): `main` wird ohne force auf claude/auf-main-sechs-ja vorgespult — claude/sechs-ja (E730–E742), das Ergebnis des vollen Laufs und diese Entscheidung. Der volle Lauf: 550 Läufe, 537 grün, 13 rot; die dreizehn waren auf main schon rot (201 270 274 332 348 351 365 425 448 470 493 524 533), neu rot ist keiner. Zweite Ausnahme von §46 nach E729, wieder einmal: das nächste Vorspulen braucht einen grünen vollen Lauf oder ein neues Wort von Redur.
-* **E747** — Eine Brücke des Klemmenbretts belegt ihre Klemmen (L253 Punkt 2; Redur, 11. Oktober abends: „4. wie du willst" zur Reihenfolge der Elektro-Punkte): die Meldung „Anschluss … hängt an keiner Leitung" kannte nur die Netzliste der Leitungen und meldete im Stern UND im Dreieck W2, U2 und V2 — gerade die Klemmen, auf denen die Brücken der Stellung liegen. Jetzt zählen für diese Meldung die Brücken der EINGESTELLTEN Stellung eines mehrteiligen Bauteils wie gezeichnete Leitungen; Schaltkontakte nicht (ein geschlossener Schalter mit offenem Ausgang hat eine vergessene Leitung), der feste Verbund N–PE der Drehstromquelle auch nicht. Ein Knoten, den NUR die eigenen Brücken halten, hängt trotzdem an nichts (im Dreieck ohne Zuleitung an U1 die Ecke U1–W2) — ausser die Stellung weist ihn selbst als `sternpunkt` aus, wie „Stern" für U2, V2, W2 (§5 Regel 3, §8). Die Netzliste bleibt, wie sie ist; EINE Hilfe `stellungIn` liest die Stellung innerhalb von `Stromfluss` für Rechnung und Meldung (die Planfläche liest sie für ihren Titel selbst). `test612` (38 Zusagen; gegen 97d156b03 rot mit 20, gegen den ersten Stand 7560b2f22 mit 33 von 38; sechs Gegenproben).
+* **E747** — Eine Brücke des Klemmenbretts belegt ihre Klemmen (L253 Punkt 2; Redur, 11. Oktober abends: „4. wie du willst" zur Reihenfolge der Elektro-Punkte): die Meldung „Anschluss … hängt an keiner Leitung" kannte nur die Netzliste der Leitungen und meldete im Stern UND im Dreieck W2, U2 und V2 — gerade die Klemmen, auf denen die Brücken der Stellung liegen. Jetzt zählen für diese Meldung die Brücken der EINGESTELLTEN Stellung eines mehrteiligen Bauteils wie gezeichnete Leitungen; Schaltkontakte nicht (ein geschlossener Schalter mit offenem Ausgang hat eine vergessene Leitung), der feste Verbund N–PE der Drehstromquelle auch nicht. Ein Knoten, den NUR die eigenen Brücken halten, hängt trotzdem an nichts (im Dreieck ohne Zuleitung an U1 die Ecke U1–W2) — ausser die Stellung weist ihn selbst als `sternpunkt` aus, wie „Stern" für U2, V2, W2 (§5 Regel 3, §8). Die Netzliste bleibt, wie sie ist; EINE Hilfe `stellungIn` liest die Stellung innerhalb von `Stromfluss` für Rechnung und Meldung (ausserhalb lesen die Planfläche und die Aufgaben eine Stellungsnummer an fünf Stellen selbst, Punkt 5). `test612` (38 Zusagen; gegen 97d156b03 rot mit 20, gegen den ersten Stand 7560b2f22 mit 33 von 38; sechs Gegenproben).
 
 ---
 
@@ -66750,11 +66750,15 @@ zählte Klemmen je Netz der LEITUNGEN.
    {W2, U2, V2} ein Knoten (der Sternpunkt, an den keine Leitung gehört),
    im Dreieck hängt W2 an U1, U2 an V1, V2 an W1 — keine Meldung. Ohne
    Brücken hängen W2, U2 und V2 an nichts und werden weiter gemeldet.
-   Ausgenommen ist ein Knoten, den NUR die eigenen Brücken halten
-   (Punkt 6).
+   Ein Knoten, den NUR die eigenen Brücken des Bauteils halten (keine
+   Klemme eines anderen Bauteils darin), wird dagegen gemeldet — ausser
+   die Stellung weist ihn selbst als `sternpunkt` aus (Punkt 6).
 2. **Nur die Brücken mehrteiliger Bauteile mit Stellungen** — heute genau
-   eines, `motor-klemmenbrett`; ein künftiges zweites gilt ohne Änderung
-   mit. Die Kontakte eines SCHALTERS zählen nicht: eine Brücke ist ein
+   eines, `motor-klemmenbrett`. Ein künftiges zweites zählt mit seinen
+   Brücken ohne Änderung im Code mit; bildet eine seiner Stellungen einen
+   Sternpunkt, braucht diese Stellung ihre eigene Marke `sternpunkt`
+   (Punkt 6), sonst meldet die Fusszeile den Sternpunkt als offen („Was es
+   kostet"). Die Kontakte eines SCHALTERS zählen nicht: eine Brücke ist ein
    Stück Metall auf den Klemmen und ersetzt die Leitung; ein geschlossener
    Ausschalter, an dessen Ausgang nichts hängt, hat eine vergessene Leitung
    (`test612` §6). Der feste Verbund N–PE der Drehstromquelle (ein Glied
@@ -66774,18 +66778,43 @@ zählte Klemmen je Netz der LEITUNGEN.
    vorher zweimal dieselbe Klemmung) und für die Meldung — läsen beide die
    Stellung verschieden, meldete die Fusszeile eine andere Schaltung als
    die gerechnete. Die tote Zeile `(plan.leitungen || []).forEach(() => {})`
-   ist mit weg. Ausserhalb von `Stromfluss` liest die Stellung noch EIN
-   Leser selbst: die Planfläche (`bloecke/arten/planflaeche.ts`) für ihren
-   Titel „M1 Stern — tippen zum Schalten", mit `|| 0` statt `?? 0`.
-   Verschieden ist das nur bei `NaN` (nachgerechnet für `NaN`, `null`,
-   `undefined`, 0, 1, 2, 5, −1 und 1,5): dort zeigt der Titel die
-   Ruhelage, und `stellungIn` liefert keine Stellung (`liste[NaN]`). Aus
-   JSON kommt kein `NaN` — es wird `null`, und `null` klemmen beide auf 0.
+   ist mit weg. Ausserhalb von `Stromfluss` lesen im Produkt noch FÜNF
+   Stellen in zwei Dateien eine Stellungsnummer selbst (gesucht in `src/`
+   nach `stellungen`, `stellungenVon` und den Aufrufern von `rechne`):
+   * Die Planfläche (`bloecke/arten/planflaeche.ts`), `buehneMalen`, für
+     ihren Titel „M1 Stern — tippen zum Schalten": geklemmt wie in
+     `stellungIn`, aber mit `|| 0` statt `?? 0`. Verschieden ist das nur
+     bei `NaN` (nachgerechnet für `NaN`, `null`, `undefined`, 0, 1, 2, 5,
+     −1 und 1,5): dort zeigt der Titel die Ruhelage, und `stellungIn`
+     liefert keine Stellung (`liste[NaN]`). Aus JSON kommt kein `NaN` — es
+     wird `null`, und `null` klemmen beide auf 0.
+   * Die Planfläche, `schalte`: `z.stellungen[teilId] || 0`, dann
+     `(jetzt + 1) % st.length` — ungeklemmt. Daraus wird keine Stellung,
+     nur die nächste Zahl. In der Liste ist das dasselbe Weiterschalten;
+     ausserhalb nicht: bei den drei Stellungen des Klemmenbretts zeigt der
+     Titel für 7 „Dreieck", und der nächste Tipp setzt 2, wieder „Dreieck"
+     (nachgerechnet, nicht im Prüflauf). Die Zahlen in `z.stellungen`
+     schreibt aber nur `schalte` selbst, von `{}` an — beim Aufbau der
+     Fläche, beim Ausschalten der Simulation und bei „Ruhelage" steht dort
+     wieder `{}`.
+   * Die Aufgaben (`elektro/aufgaben.ts`), `besteStellung`:
+     `stand[t.id] ?? 0` als Startwert der Suche, über Zahlen, die die Suche
+     selbst gesetzt hat (Schleifenindex 0 bis Länge − 1). Eine Stellung
+     macht daraus erst `rechne`, also `stellungIn`.
+   * Die Aufgaben, `planLeuchtet` und `planStromweg`: `st[nr]` ungeklemmt
+     für den Fragetext („S1: geschlossen") und die Angabe am Bauteil. `nr`
+     kommt aus `w.bis(st.length)`, liegt also in der Liste, und dieselbe
+     Zahl geht an `rechne`.
+
    Die Planfläche ruft `stellungIn` bewusst nicht auf: ein neuer Griff von
    `bloecke` nach `Stromfluss` wäre ein neuer Querverweis zwischen zwei
-   Bereichen (§5 Regel 1, `test537`). In der ersten Fassung hiess es hier
-   und im Kommentar, `stellungIn` sei die EINE Stelle überhaupt — das
-   stimmte nicht, die Durchsicht hat den dritten Leser gefunden.
+   Bereichen (§5 Regel 1, `test537`). Die Aufgaben gehören zum selben
+   Bereich wie `Stromfluss`, aber `stellungIn` steht nicht in seiner
+   Rückgabe. In der ersten Fassung hiess es hier und im Kommentar,
+   `stellungIn` sei die EINE Stelle überhaupt; in der zweiten, ausserhalb
+   lese die Stellung noch EIN Leser selbst (der Titel der Planfläche).
+   Beides stimmte nicht: die erste Durchsicht hat den Titel gefunden, die
+   zweite die übrigen vier Stellen.
 6. **Der Sternpunkt steht in der Stellung** (Nachtrag nach der Durchsicht,
    im selben Zweig). Punkt 1 allein hatte eine richtige Meldung
    verschluckt: im Dreieck ohne Zuleitung an U1 halten U1 und W2 einander

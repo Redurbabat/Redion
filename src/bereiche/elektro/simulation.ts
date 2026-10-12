@@ -481,13 +481,33 @@ const Stromfluss = (() => {
    * verschieden, meldete die Fusszeile eine andere Schaltung als die, die
    * gerechnet wurde.
    *
-   * Ausserhalb liest sie noch EIN Leser selbst: die Planfläche
-   * (`bloecke/arten/planflaeche.ts`, der Titel „M1 Stern — tippen zum
-   * Schalten") klemmt mit `|| 0` statt `?? 0`. Verschieden ist das nur bei
-   * `NaN` — dort zeigt der Titel die Ruhelage, und hier gilt keine Stellung
-   * (`liste[NaN]`). Aus JSON kommt kein `NaN` (es wird `null`, und `null`
-   * klemmen beide auf 0). Die Planfläche ruft diese Hilfe bewusst nicht
-   * auf: sie gehört einem anderen Bereich (§5 Regel 1, `test537`).
+   * Ausserhalb von `Stromfluss` lesen im Produkt noch FÜNF Stellen in zwei
+   * Dateien eine Stellungsnummer selbst (E747 Punkt 5):
+   *
+   *   - Planfläche (`bloecke/arten/planflaeche.ts`), `buehneMalen`: der
+   *     Titel „M1 Stern — tippen zum Schalten". Geklemmt wie hier, aber mit
+   *     `|| 0` statt `?? 0`. Verschieden ist das nur bei `NaN` — dort zeigt
+   *     der Titel die Ruhelage, und hier gilt keine Stellung (`liste[NaN]`).
+   *     Aus JSON kommt kein `NaN` (es wird `null`, und `null` klemmen beide
+   *     auf 0).
+   *   - Planfläche, `schalte`: `z.stellungen[teilId] || 0`, dann
+   *     `(jetzt + 1) % st.length` — UNGEKLEMMT. Daraus wird keine Stellung,
+   *     nur die nächste Zahl. Die Zahlen in `z.stellungen` schreibt nur
+   *     `schalte` selbst, von `{}` an (beim Aufbau der Fläche, beim
+   *     Ausschalten der Simulation und bei „Ruhelage" wieder `{}`).
+   *   - Aufgaben (`elektro/aufgaben.ts`), `besteStellung`: `stand[t.id] ?? 0`
+   *     als Startwert der Suche, über Zahlen, die die Suche selbst gesetzt
+   *     hat (Schleifenindex 0 bis Länge − 1). Eine Stellung macht daraus
+   *     erst `rechne`, also diese Hilfe.
+   *   - Aufgaben, `planLeuchtet` und `planStromweg`: `st[nr]` ungeklemmt für
+   *     den Fragetext und die Angabe am Bauteil. `nr` kommt aus
+   *     `w.bis(st.length)`, liegt also in der Liste, und dieselbe Zahl geht
+   *     an `rechne`.
+   *
+   * Die Planfläche ruft diese Hilfe bewusst nicht auf: sie gehört einem
+   * anderen Bereich (§5 Regel 1, `test537`). Die Aufgaben gehören zum
+   * selben Bereich, aber die Hilfe steht nicht in der Rückgabe von
+   * `Stromfluss`.
    */
   const stellungIn = (v: Verhalten, stellung: Record<string, number>,
                       teilId: string): Stellung | undefined => {

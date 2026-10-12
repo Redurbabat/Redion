@@ -41,9 +41,14 @@ der Ecke {U1, W2} unterscheiden. Jetzt sagt es die Stellung: „Stern"
 trägt `sternpunkt: ['U2', 'V2', 'W2']`, und ein Knoten, den nur die
 eigenen Brücken halten, wird gemeldet (einmal, mit U1), ausser er ist so
 markiert. Dazu ist der Kommentar an `stellungIn` berichtigt: die EINE
-Stelle innerhalb von `Stromfluss` — die Planfläche liest die Stellung für
-ihren Titel selbst (`|| 0` statt `?? 0`, verschieden nur bei NaN) und
-ruft die Hilfe bewusst nicht auf (§5 Regel 1). `test612` zuerst
+Stelle innerhalb von `Stromfluss` — ausserhalb lesen fünf Stellen eine
+Stellungsnummer selbst: die Planfläche für ihren Titel (`|| 0` statt
+`?? 0`, verschieden nur bei NaN) und in `schalte` (ungeklemmt, nur die
+nächste Zahl), die Aufgaben in `besteStellung`, `planLeuchtet` und
+`planStromweg` (ihre Zahlen liegen von vornherein in der Liste). Die
+Planfläche ruft die Hilfe bewusst nicht auf (§5 Regel 1). Die erste
+Berichtigung nannte nur den Titel; die vollständige Liste fand die zweite
+Durchsicht (E747 Punkt 5). `test612` zuerst
 erweitert und rot eingecheckt (6b1de9eb6, gegen 7560b2f22 33/38), mit dem
 Sternpunkt 38/38 (d9b91d74d); gegen 97d156b03 20/38. Drei neue
 Gegenproben, jede wieder heraus: die Marke heraus 29/38, die Regel auch
