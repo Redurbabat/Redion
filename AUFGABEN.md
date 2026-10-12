@@ -1754,10 +1754,12 @@ Grund:
    15 von 15 grün; `test453`, `test459` und `test466` (die im vollen Lauf
    mit dieser Meldung rot waren) öffnen seither so. **Derselbe Aufbau —
    `Store.flush()` und `App.oeffne` im selben `evaluate`, auf einer oder
-   zwei Zeilen — steht noch in 116 weiteren Läufen**: 172 204 209 210 212 214 220 221 222 223 247 260 285 292 295 296 299 301 324 341 343 344 345 346 347 348 349 350 351 352 385 386 395 396 404 405 406 407 408 411 412 415 436 438 439 440 441 442 443 444 445 446 447 448 449 451 452 454 455 456 457 458 461 462 463 464 465 467 468 469 470 471 472 473 475 477 478 479 480 492 522 523 524 527 529 533 534 535 536 538 539 561 562 563 564 568 569 570 572 573 574 575 576 577 580 582 583 585 588 589 590 593 594 596 598 603. Sieben davon
+   zwei Zeilen — steht noch in 115 weiteren Läufen**: 172 204 209 210 212 214 220 221 222 223 247 260 285 292 295 296 299 301 324 341 343 344 345 346 347 348 349 350 351 352 385 386 395 396 404 405 406 407 408 411 412 415 436 438 439 440 441 442 443 444 445 446 447 448 449 451 452 454 455 456 457 458 461 462 463 464 465 468 469 470 471 472 473 475 477 478 479 480 492 522 523 524 527 529 533 534 535 536 538 539 561 562 563 564 568 569 570 572 573 574 575 576 577 580 582 583 585 588 589 590 593 594 596 598 603. Sieben davon
    waren im vollen Lauf rot, aber aus anderen Gründen (348, 351, 448, 470,
    524, 533 bleiben fremd rot; 588 war danach dreimal grün); keiner brach
-   mit „Execution context was destroyed" ab. Umstellen, sobald einer es
+   mit „Execution context was destroyed" ab — bis `test467` im vollen
+   Lauf vom 12. Oktober (553 Läufe) genau so abbrach; einzeln dreimal
+   grün, seither öffnet er in einem eigenen Schritt (P131). Umstellen, sobald einer es
    tut — oder in einem eigenen Zweig alle auf einmal, mit einem gemeinsamen
    Helfer statt hundert Kopien.
 

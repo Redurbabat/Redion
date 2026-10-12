@@ -3357,13 +3357,14 @@ Ein Werkzeug, das Doku zusammenführt, hatte selbst einen Fehler, und er sah aus
 |---|---|---|---|---|
 | Zweite bis vierte Durchsicht der vier Abend-Zweige und ihre Nachzüge | `046d4a8` → `9bb7471` | 00:53–04:47 UTC | ca. 3 h 55 min | je Runde ein frischer Skeptiker mit eigener Gegenprobe; Endstände: test589 152/152, test610 30/30, test611 209/209, test612 38/38; test611 §13/§14 zuerst rot (129/159, 189/207), Gegenproben 10–32 je rot und zurückgenommen |
 | Zusammenführen auf claude/abend-antworten, Messung der CI auf GitHub, Doku und Chronik | `31b27ad` → `claude/abend-antworten` | 04:47 UTC – Ende des Blocks | ca. 1 h und die Läufe | Datei-Wächter 550 549 225 105 109 87 537 400 610 353 grün; 27 Browser-Läufe auf dem zusammengeführten Stand grün, keiner rot (611 209/209, 612 38/38, 604–608, 589, 539, 541, 576, 388, 74, 600 214/214, 601, 568, 238–242, 254, 319, 584, 598, 609, 444); auf GitHub der Job „Schneller Lauf“ 4 min 7 s (Lauf 38205835767), rot nur wegen test274 |
+| Voller Lauf auf claude/abend-antworten und zwei neue Rote gerichtet (claude/abend-antworten-2) | `fdbf6ee` → `claude/abend-antworten-2` | 05:14–07:58 UTC (der Lauf), danach die zwei Nachzüge | 162 min Lauf, einmal nach der Zeitgrenze fortgesetzt; ca. 30 min Nachzug | volllauf.mts --neu: 553 Läufe, 538 grün, 15 rot — die dreizehn alten (201 270 274 332 348 351 365 425 448 470 493 524 533) und zwei neue: test467 („Execution context was destroyed“ im Aufbau, einzeln 3 von 3 grün — P131) und test581 §9 (eine ausgeschriebene Kurve in linse.ts aus E744 — P137). Nach den Nachzügen: test581 93/93, test467 dreimal 20/20, test589, 539, 541, 576, 388, 74 und die Datei-Wächter grün |
 
 #### Zahlen des Tages
 
 - **commits:** 19
 - **entscheidungen:** 0
 - **neuePrüfläufe:** 0
-- **gezählt:** Commits mit Commit-Datum 12. Oktober (UTC) über alle vier Zweige und claude/abend-antworten bis zu dieser Chronik: 19. Entscheidungen: keine neue Nummer — E744 bis E747 sind vom Vorabend und wurden hier nur nachgezogen; der Kopf sagt 726, E1 bis E747. Prüfläufe: 553.
+- **gezählt:** Commits mit Commit-Datum 12. Oktober (UTC) über alle vier Zweige und claude/abend-antworten bis zu dieser Chronik: 19. Entscheidungen: keine neue Nummer — E744 bis E747 sind vom Vorabend und wurden hier nur nachgezogen; der Kopf sagt 726, E1 bis E747. Prüfläufe: 553. Danach der volle Lauf (553 Läufe, 538 grün, 15 rot) und die Nachzüge auf claude/abend-antworten-2.
 
 #### Das grösste Problem
 
@@ -3380,10 +3381,11 @@ Keine neue an diesem Tag; gearbeitet wurde an Redurs vier Antworten vom Vorabend
 | 02:10 UTC | E746: während eines Zugs ändert nur der Zug den Plan — aendere, zurueck und vorwaerts tun im Zug nichts, die Ablage bekommt eine Kopie. | P134: eine Taste im Zug speicherte das billige Zwischenbild, und der Verweis liess die Schreibpause Zwischenstände schreiben (§9, §51). | Tasten im Zug werden still verworfen (L253 Punkt 9); eine Kopie je Speichern kostet bei grossen Plänen Zeit (gemessen in §103). |
 | 04:15 UTC | E746: ein Zug horcht am Dokument auf seine Tasten — Escape bricht ab, Strg+Z/Strg+Y werden geschluckt. | P135: mit echter Eingabe lag der Fokus im Zug auf der Seite; der Wächter hatte die Tasten direkt an die Fläche geschickt. | Kommt das Loslassen nie an, hält der Horcher Strg+Z bis zum nächsten Klick (L253 Punkt 9, gelesen, nicht gemessen). |
 | 22:22 UTC am 11., wiederholt 00:34 | test274 NICHT gerichtet; Redur gefragt. | Er ist einer der dreizehn alten roten Läufe, und für sie gilt: Wächter nur mit Redurs Wort (E729). Er ist ein Fehlalarm, aber das macht die Ausnahme nicht kleiner. | Der Job „Schneller Lauf“ bleibt rot, bis Redur antwortet. |
+| ca. 08:55 UTC | test581 §9: der Rückfall in linse.ts heisst 'ease-in' statt einer ausgeschriebenen Kurve; test467 öffnet in einem eigenen Schritt. | Beide waren im vollen Lauf rot. test581 hält eine Regel über alles TypeScript (eine Federsprache), test467 brach mit dem Muster aus P131 ab — AUFGABEN sagte „umstellen, sobald einer es tut“. | Keins sichtbar: mit der Marke --ease-exit (jeder gewöhnliche Start) ändert sich an der Linse nichts; test467s Zusagen sind dieselben. |
 
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 136 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 137 Einträge.
 

@@ -150,6 +150,7 @@ sind der teuerste Teil und der lehrreichste.
 | P134 | 2026-10-12 | Ein Speicher, der einen Verweis hält | hoch | — |
 | P135 | 2026-10-12 | Escape, das nie ankam | 🟠 mittel | — |
 | P136 | 2026-10-11 | „--schnell“ war nicht schnell | niedrig | — |
+| P137 | 2026-10-12 | Ein Wächter, der nicht auf der Nachbarliste stand | niedrig | — |
 
 ---
 
@@ -2947,4 +2948,25 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** test610 zuerst rot gegen 97d156b, danach 30/30; der Job auf GitHub 4 min 7 s statt Abbruch nach 40 min.
 
 **Die Lehre.** Vor dem Bauen auf einem Namen nachmessen, was er tut — auch in den eigenen Vorschlägen (L254 war von mir).
+
+
+---
+
+## P137 · Ein Wächter, der nicht auf der Nachbarliste stand
+
+*2026-10-12 · niedrig*
+
+**Das Bild.** Nach vier Runden Durchsicht und 27 grünen Browser-Läufen war im vollen Lauf test581 rot: „Keine eigene Kurve: jede Bewegung im TypeScript fährt eine Feder“ — mit zwei Zeilen aus linse.ts, geschrieben in E744.
+
+**Die falsche Vermutung.** Die Nachbarn einer Änderung sind die Läufe, die dieselbe Ansicht prüfen — für die Linse also 589, 539, 541, 576.
+
+**Wie es gefunden wurde.** Im vollen Lauf auf fdbf6ee, nicht in der Durchsicht: keiner der vier Skeptiker hatte test581 auf der Liste, weil er nicht von der Linse handelt.
+
+**Die Ursache.** verblassen() las die Kurve aus der Marke --ease-exit und schrieb als Rückfall die Bézier-Kurve 0.4, 0, 1, 1 selbst als Zeichenkette aus — eine zweite Federsprache neben den Marken, die test581 §9 für alles TypeScript verbietet.
+
+**Die Lösung.** Rückfall 'ease-in' (claude/abend-antworten-2), wie menue.ts ein Schlüsselwort nimmt.
+
+**Der Beweis.** test581 gegen fdbf6ee 92/93 mit linse.ts:259/261, danach 93/93.
+
+**Die Lehre.** Zu den Nachbarn einer Änderung gehören auch die Wächter, die eine Regel über eine ganze Sprache oder Schicht halten (Kurven, Escape, esc, Ports). Der volle Lauf ist der einzige, der sie sicher alle fragt — deshalb ist er die Schwelle für main. Und beim Aufschreiben fing derselbe Wächter die Chronik selbst: der erste Text zu P137 zitierte die Kurve wörtlich in Anführungszeichen, und daten.ts trug sie ins TypeScript — wie P130.
 

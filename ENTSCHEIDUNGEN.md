@@ -66953,6 +66953,20 @@ anderes Element — nicht angefasst), `test576`, `test388` 22/22, `test74`
 12/12, `test600` 214/214, `test601`; Datei-Wächter `test550`, `test549`,
 `test225`, `test105`, `test109`, `test87`, `test537`, `test400`.
 
+**Nachtrag nach dem vollen Lauf (12. Oktober, `claude/abend-antworten-2`).**
+Der volle Lauf auf `claude/abend-antworten` (fdbf6ee, 553 Läufe) fand
+`test581` §9 rot, 92 von 93: „Keine eigene Kurve: jede Bewegung im
+TypeScript fährt eine Feder" — mit `src/schale/bedienung/linse.ts:259`
+und `:261`. `verblassen()` las die Kurve richtig aus der Marke
+`--ease-exit`, schrieb aber als Rückfall die Kurve selbst aus
+(`'cubic-bezier(0.4, 0, 1, 1)'`), wo `menue.ts` ein Schlüsselwort nimmt.
+Jetzt ist der Rückfall `'ease-in'` (fast dieselbe Kurve, CSS rechnet sie
+als 0.42, 0, 1, 1); mit der Marke, also in jedem gewöhnlichen Start, ändert
+sich nichts. `test581` 93/93, `test589` und seine Nachbarn grün. Dass es
+erst der volle Lauf fand, liegt an der Nachbarliste des Zweigs: sie nannte
+die Läufe der Linse, nicht die, die eine Regel über ALLES TypeScript halten
+(P137).
+
 ## E745 — Die CI fährt den schnellen Lauf, der volle bleibt auf dem Rechner: `--schnell` heisst, was es verspricht
 
 **Datum:** 11. Oktober 2026 · **Entschieden von** Redur (11. Oktober,

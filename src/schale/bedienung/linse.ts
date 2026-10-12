@@ -255,10 +255,13 @@ const Linse = (() => {
       const marken = getComputedStyle(document.documentElement);
       const roh = marken.getPropertyValue('--motion-slow').trim();
       const n = parseFloat(roh);
+      /* Ohne Marke das Schlüsselwort, keine ausgeschriebene Kurve: eine
+         Kurve im TypeScript wäre eine zweite Federsprache neben den Marken
+         (test581 §9 — gefunden im vollen Lauf vom 12. Oktober). */
       return { duration: Number.isFinite(n) ? (/ms$/.test(roh) ? n : n * 1000) : 320,
-               easing: marken.getPropertyValue('--ease-exit').trim() || 'cubic-bezier(0.4, 0, 1, 1)' };
+               easing: marken.getPropertyValue('--ease-exit').trim() || 'ease-in' };
     } catch {
-      return { duration: 320, easing: 'cubic-bezier(0.4, 0, 1, 1)' };
+      return { duration: 320, easing: 'ease-in' };
     }
   };
 

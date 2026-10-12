@@ -27617,7 +27617,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1492, inhalt: '23f9b673da2c3cf0', gebaut: '2026-10-12T05:12:30.196Z' };
+const Stand = { fassung: 1496, inhalt: 'b495bf0d90351dea', gebaut: '2026-10-12T08:16:00.056Z' };
 window.Stand = Stand;
 
 </script>
@@ -47320,10 +47320,10 @@ const Linse = (() => {
             const roh = marken.getPropertyValue('--motion-slow').trim();
             const n = parseFloat(roh);
             return { duration: Number.isFinite(n) ? (/ms$/.test(roh) ? n : n * 1000) : 320,
-                easing: marken.getPropertyValue('--ease-exit').trim() || 'cubic-bezier(0.4, 0, 1, 1)' };
+                easing: marken.getPropertyValue('--ease-exit').trim() || 'ease-in' };
         }
         catch {
-            return { duration: 320, easing: 'cubic-bezier(0.4, 0, 1, 1)' };
+            return { duration: 320, easing: 'ease-in' };
         }
     };
     let satzBeobachter = null;
@@ -77557,13 +77557,22 @@ const ChronikDaten = {
                     "zeitraum": "04:47 UTC – Ende des Blocks",
                     "dauer": "ca. 1 h und die Läufe",
                     "pruefungen": "Datei-Wächter 550 549 225 105 109 87 537 400 610 353 grün; 27 Browser-Läufe auf dem zusammengeführten Stand grün, keiner rot (611 209/209, 612 38/38, 604–608, 589, 539, 541, 576, 388, 74, 600 214/214, 601, 568, 238–242, 254, 319, 584, 598, 609, 444); auf GitHub der Job „Schneller Lauf“ 4 min 7 s (Lauf 38205835767), rot nur wegen test274"
+                },
+                {
+                    "was": "Voller Lauf auf claude/abend-antworten und zwei neue Rote gerichtet (claude/abend-antworten-2)",
+                    "vonBis": "fdbf6ee → claude/abend-antworten-2",
+                    "vonCommit": "fdbf6ee",
+                    "bisCommit": "claude/abend-antworten-2",
+                    "zeitraum": "05:14–07:58 UTC (der Lauf), danach die zwei Nachzüge",
+                    "dauer": "162 min Lauf, einmal nach der Zeitgrenze fortgesetzt; ca. 30 min Nachzug",
+                    "pruefungen": "volllauf.mts --neu: 553 Läufe, 538 grün, 15 rot — die dreizehn alten (201 270 274 332 348 351 365 425 448 470 493 524 533) und zwei neue: test467 („Execution context was destroyed“ im Aufbau, einzeln 3 von 3 grün — P131) und test581 §9 (eine ausgeschriebene Kurve in linse.ts aus E744 — P137). Nach den Nachzügen: test581 93/93, test467 dreimal 20/20, test589, 539, 541, 576, 388, 74 und die Datei-Wächter grün"
                 }
             ],
             "zahlen": {
                 "commits": 19,
                 "entscheidungen": 0,
                 "neuePrüfläufe": 0,
-                "gezählt": "Commits mit Commit-Datum 12. Oktober (UTC) über alle vier Zweige und claude/abend-antworten bis zu dieser Chronik: 19. Entscheidungen: keine neue Nummer — E744 bis E747 sind vom Vorabend und wurden hier nur nachgezogen; der Kopf sagt 726, E1 bis E747. Prüfläufe: 553."
+                "gezählt": "Commits mit Commit-Datum 12. Oktober (UTC) über alle vier Zweige und claude/abend-antworten bis zu dieser Chronik: 19. Entscheidungen: keine neue Nummer — E744 bis E747 sind vom Vorabend und wurden hier nur nachgezogen; der Kopf sagt 726, E1 bis E747. Prüfläufe: 553. Danach der volle Lauf (553 Läufe, 538 grün, 15 rot) und die Nachzüge auf claude/abend-antworten-2."
             },
             "groesstesProblem": "Ein Speicher, der einen Verweis hält, speichert, was aus dem Objekt später wird: die Planfläche gab `z.plan` an Store.updateBlock, die Schreibpause schrieb mitten in einem Zug ein angezapftes Netz in die IndexedDB, und eine Taste im Zug machte daraus sogar einen Rückgängig-Schritt (P134). Gefunden hat es der zweite Skeptiker, nicht der Wächter des ersten Baus.",
             "interessantesteAnfrage": "Keine neue an diesem Tag; gearbeitet wurde an Redurs vier Antworten vom Vorabend (19:43 UTC).",
@@ -77585,6 +77594,12 @@ const ChronikDaten = {
                     "was": "test274 NICHT gerichtet; Redur gefragt.",
                     "warum": "Er ist einer der dreizehn alten roten Läufe, und für sie gilt: Wächter nur mit Redurs Wort (E729). Er ist ein Fehlalarm, aber das macht die Ausnahme nicht kleiner.",
                     "risiko": "Der Job „Schneller Lauf“ bleibt rot, bis Redur antwortet."
+                },
+                {
+                    "zeit": "ca. 08:55 UTC",
+                    "was": "test581 §9: der Rückfall in linse.ts heisst 'ease-in' statt einer ausgeschriebenen Kurve; test467 öffnet in einem eigenen Schritt.",
+                    "warum": "Beide waren im vollen Lauf rot. test581 hält eine Regel über alles TypeScript (eine Federsprache), test467 brach mit dem Muster aus P131 ab — AUFGABEN sagte „umstellen, sobald einer es tut“.",
+                    "risiko": "Keins sichtbar: mit der Marke --ease-exit (jeder gewöhnliche Start) ändert sich an der Linse nichts; test467s Zusagen sind dieselben."
                 }
             ]
         }
@@ -79392,6 +79407,19 @@ const ChronikDaten = {
             "loesung": "E745: --schnell heisst jetzt die gemessene Auswahl ohne Browser plus die Sicherungsläufe aus §31; die Doku-Stellen, die den vollen Lauf meinten, sagen npm run pruefen oder volllauf.mts.",
             "beweis": "test610 zuerst rot gegen 97d156b, danach 30/30; der Job auf GitHub 4 min 7 s statt Abbruch nach 40 min.",
             "lehre": "Vor dem Bauen auf einem Namen nachmessen, was er tut — auch in den eigenen Vorschlägen (L254 war von mir)."
+        },
+        {
+            "nr": "P137",
+            "datum": "2026-10-12",
+            "titel": "Ein Wächter, der nicht auf der Nachbarliste stand",
+            "schwere": "niedrig",
+            "symptom": "Nach vier Runden Durchsicht und 27 grünen Browser-Läufen war im vollen Lauf test581 rot: „Keine eigene Kurve: jede Bewegung im TypeScript fährt eine Feder“ — mit zwei Zeilen aus linse.ts, geschrieben in E744.",
+            "falscheVermutung": "Die Nachbarn einer Änderung sind die Läufe, die dieselbe Ansicht prüfen — für die Linse also 589, 539, 541, 576.",
+            "wieGefunden": "Im vollen Lauf auf fdbf6ee, nicht in der Durchsicht: keiner der vier Skeptiker hatte test581 auf der Liste, weil er nicht von der Linse handelt.",
+            "ursache": "verblassen() las die Kurve aus der Marke --ease-exit und schrieb als Rückfall die Bézier-Kurve 0.4, 0, 1, 1 selbst als Zeichenkette aus — eine zweite Federsprache neben den Marken, die test581 §9 für alles TypeScript verbietet.",
+            "loesung": "Rückfall 'ease-in' (claude/abend-antworten-2), wie menue.ts ein Schlüsselwort nimmt.",
+            "beweis": "test581 gegen fdbf6ee 92/93 mit linse.ts:259/261, danach 93/93.",
+            "lehre": "Zu den Nachbarn einer Änderung gehören auch die Wächter, die eine Regel über eine ganze Sprache oder Schicht halten (Kurven, Escape, esc, Ports). Der volle Lauf ist der einzige, der sie sicher alle fragt — deshalb ist er die Schwelle für main. Und beim Aufschreiben fing derselbe Wächter die Chronik selbst: der erste Text zu P137 zitierte die Kurve wörtlich in Anführungszeichen, und daten.ts trug sie ins TypeScript — wie P130."
         }
     ]
 };

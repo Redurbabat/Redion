@@ -86,10 +86,10 @@ const Linse = (() => {
             const roh = marken.getPropertyValue('--motion-slow').trim();
             const n = parseFloat(roh);
             return { duration: Number.isFinite(n) ? (/ms$/.test(roh) ? n : n * 1000) : 320,
-                easing: marken.getPropertyValue('--ease-exit').trim() || 'cubic-bezier(0.4, 0, 1, 1)' };
+                easing: marken.getPropertyValue('--ease-exit').trim() || 'ease-in' };
         }
         catch {
-            return { duration: 320, easing: 'cubic-bezier(0.4, 0, 1, 1)' };
+            return { duration: 320, easing: 'ease-in' };
         }
     };
     let satzBeobachter = null;

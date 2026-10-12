@@ -71,7 +71,12 @@ const einfach = async (): Promise<Page> => {
   s.on('pageerror', e => fehler.push(e.message.slice(0, 140)));
   await s.goto(`http://localhost:${PORT}/index.html`);
   await s.waitForFunction("typeof App !== 'undefined' && typeof DocumentMode !== 'undefined'");
-  await s.evaluate(async () => {
+  /* Die Seite öffnet ein EIGENER Schritt (P131): steht das lange, synchrone
+     `App.oeffne` im selben abgewarteten `evaluate` wie `Store.flush()`, meldet
+     der Browser unter Last „Promise was collected", und Playwright nennt das
+     „Execution context was destroyed" — ohne dass die Seite neu lädt. So im
+     vollen Lauf vom 12. Oktober (553 Läufe); einzeln war er dreimal grün. */
+  const zuOeffnen = await s.evaluate(async () => {
     Store.setMeta('rundgangGesehen', true);
     document.querySelectorAll('.overlay').forEach(o => o.remove());
     document.querySelector('.produkt-onboarding-lage')?.remove();
@@ -85,8 +90,9 @@ const einfach = async (): Promise<Page> => {
     }
     Store.updateBlock(seite.id, { dokumentModus: true });
     await Store.flush();
-    App.oeffne(seite.id);
+    return seite.id as string;
   });
+  await s.evaluate((id: string) => { App.oeffne(id); }, zuOeffnen);
   await s.waitForSelector('.document-workspace', { timeout: 15000 });
   await s.waitForTimeout(1100);
   await s.evaluate(() => document.querySelector<HTMLButtonElement>('[data-document-action="inspector"]')?.click());
