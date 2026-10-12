@@ -8358,6 +8358,53 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
+## L255 · Am Telefon heisst der Öffner „Offner" — der Umlaut wird abgeschnitten — 12. Oktober 2026
+
+**Gesehen, nicht gemessen:** auf dem Bild der Planfläche bei 390 × 844
+(`nachher-plan-handy-hell.png`, 11. Oktober, und im Zweig von E747 noch
+einmal) steht in der Symbolleiste unter dem Zeichen „Offner" statt
+„Öffner". `.sp-sym-name` (`bausteine.css`) hat `overflow:hidden`, 9,5 px
+Schrift und eine Zeilenhöhe von 1,15 — knapp 11 px —, und die Punkte über
+dem Ö liegen darüber. Am Rechner (1440 × 900, Bild der Durchsicht von
+E746, `nachher-durchsicht-1-r1-auf-q-rechner-hell.png`) steht „Öffner"
+ganz da — es trifft also das Telefon, wo die Kachel kleiner ist.
+
+**Warum es zählt:** „Offner" ist kein Wort, und wer Elektro lernt, liest in
+der Palette den Fachbegriff. Dieselbe Klammer trifft jedes Zeichen mit
+Umlaut oder Akzent in Grossbuchstaben am Anfang (Ä, Ö, Ü).
+
+**Was fehlt:** eine Zeilenhöhe, die Oberlängen mit Akzent fasst (oder kein
+`overflow:hidden` in der Höhe), mit einem Wächter, der die gerenderte Box
+des Namens gegen die Glyphe misst (wie `test551`), und ein Bild davor und
+danach.
+
+---
+
+## L256 · `Store.updateBlock` bekommt an mehreren Stellen einen lebenden Verweis — 12. Oktober 2026
+
+**Gefunden in der zweiten Durchsicht von E746, an der Planfläche gemessen:**
+`Store.updateBlock` übernahm dort den Verweis auf `z.plan`, und die
+Schreibpause schrieb ein Zwischenbild mitten aus einem Zug in die IndexedDB
+(gemessen auf a8533763b: `{E1:X2 F1:N F1:N2 G2:N}`). Seit E746 bekommt die
+Ablage dort eine Kopie (P134).
+
+**Dasselbe Muster, aus dem Code gelesen, NICHT gemessen:** das Whiteboard
+gibt `daten` als Verweis (`zeichenflaeche.ts`, `sichern = () =>
+Store.updateBlock(block.id, { shapes: daten, … })`), die Tabelle `rows`
+(`Store.updateBlock(block.id, { rows })`). Ob die Schreibpause dort einen
+Zwischenstand schreiben kann — zwischen zwei Änderungen, die zusammen erst
+einen gültigen Stand ergeben —, hängt davon ab, ob die Fläche ihr Objekt
+nach dem Aufruf weiter verändert. Das ist nicht nachgesehen.
+
+**Was fehlt:** eine Zählung aller Aufrufe von `Store.updateBlock` mit einem
+Objekt, das danach weiterlebt, je Stelle eine Messung (die IndexedDB mitten
+in der Handlung lesen, wie die Sonde der Planfläche), und — wo es trifft —
+dieselbe Abhilfe: eine Kopie in die Ablage, oder `updateBlock` kopiert
+selbst. Das zweite wäre die Lösung an EINER Stelle (§8), kostet aber bei
+grossen Blöcken eine Kopie je Speichern; gemessen ist das nicht.
+
+---
+
 ## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — GESCHLOSSEN (E745) — 11. Oktober 2026
 
 **Gemessen** über die Schnittstelle von GitHub, nicht vermutet: die zwei
@@ -8444,8 +8491,19 @@ ein zweites Skript in package.json, das den Orchestrator ruft, und eine
 eigene Action ausserhalb von `.github/` (`uses: ./ci/v`): 30/30, gegen
 97d156b rot mit 10 von 29 — das ist der heutige Stand; die Zahlen davor
 gehören zu den Fassungen davor. Gegenproben G31 bis G63 in E745.
-Wie lange der ganze schnelle Lauf auf GitHub braucht, zeigt erst der erste
-Push dieses Zweigs: auf GitHub gemessen ist nur die Einrichtung.
+Wie lange der ganze schnelle Lauf auf GitHub braucht, zeigte der erste Push
+des Zweigs (12. Oktober, Lauf 38205835767 auf 05f07bc59, Zeiten aus der
+Schnittstelle von GitHub, ganze Sekunden): der Job „Schneller Lauf" 4 min
+7 s (04:56:48–05:00:55 UTC), davon der Schritt „Der schnelle Lauf" 3 min
+27 s und „Chromium holen" 23 s — weit unter dem Fenster von 20 Minuten und
+zum ersten Mal seit dem 5. Oktober ein Job, der zu Ende läuft. Er war rot,
+wie unten erwartet. Das Protokoll selbst ist von hier aus nicht lesbar (die
+Schnittstelle leitet zum Speicher von GitHub um); auf demselben Stand war
+lokal nur `test274` rot (44 von 45, `npm run pruefen -- --schnell`, 231 s).
+Zwei Hinweise von GitHub aus demselben Lauf, beide noch ohne Folgen:
+`actions/checkout@v4` und `actions/setup-node@v4` sind für Node 20 gebaut
+und werden auf Node 24 gezwungen, und `ubuntu-latest` wandert ab dem
+19. Oktober 2026 auf Ubuntu 26.
 
 **Was offen bleibt, und es ist keine neue Lücke, sondern eine alte:** der
 Job „Schneller Lauf" wird auf GitHub rot sein. Der schnelle Lauf enthält
@@ -10706,7 +10764,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 11. Oktober 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 149 Lücken, 91 offene und 58 geschlossene. Der Befehl dazu ist
+Datei führt 151 Lücken, 93 offene und 58 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

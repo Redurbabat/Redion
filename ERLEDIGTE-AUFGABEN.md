@@ -1,5 +1,44 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 12. Oktober 2026 · Redurs vier Antworten — zusammengeführt auf `claude/abend-antworten`
+
+**Der Auftrag.** Redur am 11. Oktober um 19:43 UTC: „1. verblassen / 2 .
+Scnell lauf / 3.ja / 4. wie du willst". Die dritte Antwort ist E743 (`main`
+vorgespult, schon auf `main`); die anderen drei wurden vier Zweige:
+
+```txt
+1  die leere Linse verblasst nach der Fahrt          E744   claude/linse-verblasst
+2  die CI fährt nur den schnellen Lauf               E745   claude/ci-schnell        test610
+4  Elektro L253 Punkt 4: Drehen zapft nichts an      E746   claude/elektro-drehen-ohne-anzapfen   test611
+4  Elektro L253 Punkt 2: Brücken sind Verbindungen   E747   claude/elektro-klemmenbrett-bruecken  test612
+```
+
+Die Reihenfolge der Elektro-Punkte hatte Redur freigegeben; gewählt nach
+§46: zuerst, was die Bedeutung eines Plans still ändert (Punkt 4), dann
+eine falsche Meldung (Punkt 2). Punkt 3 (Messwerte am Telefon) und Punkt 1
+(der Pfeil im Symbol) bleiben in L253.
+
+**Wie geprüft.** Jeder Zweig mit dem Wächter zuerst rot, dann vier Runden
+Durchsicht mit je einem frischen Skeptiker und eigener Gegenprobe, bis keine
+Runde mehr einen schweren Fund brachte. Die schwersten Funde: eine Taste
+mitten in einem Maus-Zug speicherte ein angezapftes Zwischenbild, und die
+Ablage hielt einen Verweis auf den Plan (P134); der Wächter dafür schickte
+seine Tasten selbst an die Fläche und sah nicht, dass mit echter Eingabe
+Escape nie ankam (P135); und `--schnell` war fast so lang wie der volle
+Lauf (P136).
+
+**Zusammengeführt** von `main` 97d156b aus, vier Schritte, Konflikte nur in
+Doku, Zählern und Erzeugtem (726 Entscheidungen, E1 bis E747; 553 Läufe;
+151 Lücken, 93 offen). Danach 27 Browser-Läufe und die Datei-Wächter grün.
+Auf GitHub lief der Job „Schneller Lauf" zum ersten Mal zu Ende (4 min 7 s)
+— rot nur wegen `test274`, für den Redurs Wort aussteht.
+
+**Neu eingetragen:** L255 (am Telefon „Offner" statt „Öffner"), L256
+(lebende Verweise an `Store.updateBlock` an weiteren Stellen, nicht
+gemessen).
+
+**Nicht getan:** `main` ist nicht bewegt — E743 galt einmal.
+
 ## 11. Oktober 2026 · E747 · Eine Brücke des Klemmenbretts belegt ihre Klemmen (L253 Punkt 2)
 
 **Redur:** „4. wie du willst", am 11. Oktober 2026 um 19:43 UTC, zur

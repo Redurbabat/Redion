@@ -3316,13 +3316,14 @@ Danach, auf `claude/auf-main` (der leere Zusammenführungs-Commit von origin/mai
 | Redurs sechs Ja: fünf Zweige, je mit Wächter zuerst rot, Durchsicht und Gegenproben | `cf953cb` → `f00e56d` | 11:59–14:56 UTC, die Nummern der Messungen 15:21 | ca. 3 h 20 min | test604–test609 neu (608: 69/69, vier Gegenproben; 609: 24/24, drei Gegenproben); test589 §16, test598 §14, test319 je zuerst rot; Startlast je Zweig 1904 KB (Decke 1950); Nachbarn je Zweig grün |
 | Zusammenführen auf claude/sechs-ja, Nachtrag E725, L254, Vereinigungslauf | `d24bc25` → `462abbc` | 15:23 UTC – Ende des Tages | ca. 1 h, dazu der volle Lauf (158 min) | 63 Läufe grün, keiner rot — 16 Datei-Wächter (550 549 225 105 109 87 400 537 401 402 290 298 410 362 92 94) und 47 im Browser, darunter die neuen test604–test609 sowie 589, 598, 319, 584, 600, 469, 74 und test388 (Start 1919 KB gzip, Decke 1950). Danach der volle Lauf über alle 550 in Stücken (`volllauf.mts --neu`, 16:04 UTC, nach der Zeitgrenze der Sitzung einmal fortgesetzt): 537 grün, 13 rot in 158 Minuten — die dreizehn sind genau die fremden roten Läufe, die auf main schon rot waren (201 270 274 332 348 351 365 425 448 470 493 524 533); neu rot ist keiner, und test319 ist nicht mehr darunter. |
 | E743: main auf den Stand von Redurs sechs Ja | `22ea361` → `claude/auf-main-sechs-ja` | ab 19:43 UTC | ca. 30 min | Datei-Wächter 550 549 225 105 109 87 537, dazu test388, test422, test74 auf dem Endstand; der volle Lauf (537/550, 13 fremde rot) lief auf cd3d165, danach nur Doku und Chronik |
+| Redurs vier Antworten: vier Zweige (E744 Linse verblasst, E745 CI schnell, E746 Elektro Punkt 4, E747 Elektro Punkt 2), je mit Wächter zuerst rot, dann die erste Durchsicht und ihre Nachzüge | `1b0c027` → `a9e9ce1` | 20:11–23:59 UTC | ca. 3 h 50 min (vier Agenten nebeneinander, je in eigenem Arbeitsbaum, Browserläufe unter einem Schloss) | test610, test611, test612 neu, test589 §8/§16 mit Redurs Wort geändert — je zuerst rot; erste Durchsicht: vier Skeptiker, einer mit „issues“ (CI: Doku mit der alten Bedeutung von --schnell), drei „ok“ mit Funden; Nachzüge mit eigenen Gegenproben |
 
 #### Zahlen des Tages
 
-- **commits:** 60
-- **entscheidungen:** 28
-- **neuePrüfläufe:** 6
-- **gezählt:** Commits mit Datum 11. Oktober (UTC) bis b2367bc: 22 (10 Zusammenführungen, 5 Nachzüge, 7 der Durchsichten von E725/E726); danach der Abschluss mit dieser Chronik. Entscheidungen: 14 — E716 bis E728 stehen ab heute auf morgen-besser-3 — der Kopf von ENTSCHEIDUNGEN.md sagt 708, E1 bis E729 (E716–E728 über ihre Zweige, E729 an diesem Tag), die Klausel im Kopf („**E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen“) ist gestrichen. Prüfläufe: 544. Nach b2367bc bis zum Push auf claude/auf-main: der Zusammenführungs-Commit mit origin/main (009e2fc) und die Nachzüge aus vollem Lauf und Durchsicht. — Nachgezählt am Abend (git, Commit-Datum 11. Oktober UTC, auf claude/sechs-ja bis 462abbc): 60 Commits, danach der Abschluss mit dieser Chronik. Entscheidungen: 27 — dazu E730 bis E742 aus Redurs sechs Ja; der Kopf von ENTSCHEIDUNGEN.md sagt 721, E1 bis E742. Neue Prüfläufe: 6 (test604–test609); `ls pruefungen/lauf/test*.mts | wc -l` sagt 550. Am späten Abend kam E743 dazu (main vorgespult): 28 Entscheidungen; der Kopf sagt 722, E1 bis E743.
+- **commits:** 84
+- **entscheidungen:** 32
+- **neuePrüfläufe:** 9
+- **gezählt:** Commits mit Datum 11. Oktober (UTC) bis b2367bc: 22 (10 Zusammenführungen, 5 Nachzüge, 7 der Durchsichten von E725/E726); danach der Abschluss mit dieser Chronik. Entscheidungen: 14 — E716 bis E728 stehen ab heute auf morgen-besser-3 — der Kopf von ENTSCHEIDUNGEN.md sagt 708, E1 bis E729 (E716–E728 über ihre Zweige, E729 an diesem Tag), die Klausel im Kopf („**E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen“) ist gestrichen. Prüfläufe: 544. Nach b2367bc bis zum Push auf claude/auf-main: der Zusammenführungs-Commit mit origin/main (009e2fc) und die Nachzüge aus vollem Lauf und Durchsicht. — Nachgezählt am Abend (git, Commit-Datum 11. Oktober UTC, auf claude/sechs-ja bis 462abbc): 60 Commits, danach der Abschluss mit dieser Chronik. Entscheidungen: 27 — dazu E730 bis E742 aus Redurs sechs Ja; der Kopf von ENTSCHEIDUNGEN.md sagt 721, E1 bis E742. Neue Prüfläufe: 6 (test604–test609); `ls pruefungen/lauf/test*.mts | wc -l` sagt 550. Am späten Abend kam E743 dazu (main vorgespult): 28 Entscheidungen; der Kopf sagt 722, E1 bis E743. Am späten Abend (20:11–23:59 UTC) kamen auf den vier Zweigen zu Redurs Antworten E744 bis E747 und test610 bis test612 dazu; nachgezählt am 12. Oktober über alle Zweige (Commit-Datum 11. Oktober UTC): 84 Commits, 32 Entscheidungen, 9 neue Prüfläufe.
 
 #### Das grösste Problem
 
@@ -3345,9 +3346,44 @@ Ein Werkzeug, das Doku zusammenführt, hatte selbst einen Fehler, und er sah aus
 | Abend | main NICHT vorgespult. | §46: main bewegt sich erst nach einem vollen grünen Lauf. E729 war Redurs Ausnahme für den Stand der dritten Welle, nicht für jeden späteren. | Die fünf Zweige und claude/sechs-ja liegen gepusht neben main, bis Redur „Einmal“ sagt oder ein voller Lauf grün ist. |
 | ca. 20:15 UTC | main vorgespult — 1575a18 auf claude/auf-main-sechs-ja, ohne force (E743). | Redur, 19:43 UTC: „3.ja“ auf „main: auf diesen Stand ja oder nein?“. §46 ist hart; die Ausnahme steht als E743 in ENTSCHEIDUNGEN.md, §46 bekommt einen Hinweis, keinen neuen Wortlaut. | Wer main holt, bekommt dreizehn benannte rote Läufe mit — dieselben wie vorher, einer weniger als bei E729. Keiner davon ist aus der Arbeit dieses Tages. |
 
+### 2026-10-12 · Montag — Drei Durchsichten bis „ok“, die vier Abend-Zweige zusammengeführt, und die CI läuft zum ersten Mal zu Ende
+
+> Nach Mitternacht liefen die zweite, dritte und vierte Durchsicht der vier Zweige zu Redurs Antworten vom Vorabend. Die zweite fand an der Planfläche den schwersten Fehler des Tages: eine Taste mitten in einem Maus-Zug speicherte das billige Zwischenbild, und die Ablage hielt ohnehin nur einen Verweis auf den Plan — die Schreibpause schrieb ein angezapftes Netz in die IndexedDB (P134). Die dritte zeigte, dass der Wächter dafür seine Tasten an die Fläche GESCHICKT hatte: mit echter Maus und Tastatur lag der Fokus im Zug auf der Seite, Escape brach nichts ab und Strg+Z baute die Seite neu (P135). Die vierte brachte nur noch Kleinigkeiten. Die CI fuhr auf claude/ci-schnell zum ersten Mal einen Job bis zum Ende: 4 min 7 s, rot nur wegen test274, dem Fehlalarm unter den dreizehn alten roten Läufen — ihn zu richten braucht Redurs Wort, die Frage ist gestellt. Danach die vier Zweige zusammengeführt auf claude/abend-antworten (Kopf 726, E1 bis E747; 553 Läufe), neu zwei Lücken (L255 Öffner am Telefon, L256 lebende Verweise an Store.updateBlock). main ist nicht bewegt: E743 galt einmal.
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| Zweite bis vierte Durchsicht der vier Abend-Zweige und ihre Nachzüge | `046d4a8` → `9bb7471` | 00:53–04:47 UTC | ca. 3 h 55 min | je Runde ein frischer Skeptiker mit eigener Gegenprobe; Endstände: test589 152/152, test610 30/30, test611 209/209, test612 38/38; test611 §13/§14 zuerst rot (129/159, 189/207), Gegenproben 10–32 je rot und zurückgenommen |
+| Zusammenführen auf claude/abend-antworten, Messung der CI auf GitHub, Doku und Chronik | `31b27ad` → `claude/abend-antworten` | 04:47 UTC – Ende des Blocks | ca. 1 h und die Läufe | Datei-Wächter 550 549 225 105 109 87 537 400 610 353 grün; 27 Browser-Läufe auf dem zusammengeführten Stand grün, keiner rot (611 209/209, 612 38/38, 604–608, 589, 539, 541, 576, 388, 74, 600 214/214, 601, 568, 238–242, 254, 319, 584, 598, 609, 444); auf GitHub der Job „Schneller Lauf“ 4 min 7 s (Lauf 38205835767), rot nur wegen test274 |
+
+#### Zahlen des Tages
+
+- **commits:** 19
+- **entscheidungen:** 0
+- **neuePrüfläufe:** 0
+- **gezählt:** Commits mit Commit-Datum 12. Oktober (UTC) über alle vier Zweige und claude/abend-antworten bis zu dieser Chronik: 19. Entscheidungen: keine neue Nummer — E744 bis E747 sind vom Vorabend und wurden hier nur nachgezogen; der Kopf sagt 726, E1 bis E747. Prüfläufe: 553.
+
+#### Das grösste Problem
+
+Ein Speicher, der einen Verweis hält, speichert, was aus dem Objekt später wird: die Planfläche gab `z.plan` an Store.updateBlock, die Schreibpause schrieb mitten in einem Zug ein angezapftes Netz in die IndexedDB, und eine Taste im Zug machte daraus sogar einen Rückgängig-Schritt (P134). Gefunden hat es der zweite Skeptiker, nicht der Wächter des ersten Baus.
+
+#### Das Interessanteste, das Redur wollte
+
+Keine neue an diesem Tag; gearbeitet wurde an Redurs vier Antworten vom Vorabend (19:43 UTC).
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| 02:10 UTC | E746: während eines Zugs ändert nur der Zug den Plan — aendere, zurueck und vorwaerts tun im Zug nichts, die Ablage bekommt eine Kopie. | P134: eine Taste im Zug speicherte das billige Zwischenbild, und der Verweis liess die Schreibpause Zwischenstände schreiben (§9, §51). | Tasten im Zug werden still verworfen (L253 Punkt 9); eine Kopie je Speichern kostet bei grossen Plänen Zeit (gemessen in §103). |
+| 04:15 UTC | E746: ein Zug horcht am Dokument auf seine Tasten — Escape bricht ab, Strg+Z/Strg+Y werden geschluckt. | P135: mit echter Eingabe lag der Fokus im Zug auf der Seite; der Wächter hatte die Tasten direkt an die Fläche geschickt. | Kommt das Loslassen nie an, hält der Horcher Strg+Z bis zum nächsten Klick (L253 Punkt 9, gelesen, nicht gemessen). |
+| 22:22 UTC am 11., wiederholt 00:34 | test274 NICHT gerichtet; Redur gefragt. | Er ist einer der dreizehn alten roten Läufe, und für sie gilt: Wächter nur mit Redurs Wort (E729). Er ist ein Fehlalarm, aber das macht die Ausnahme nicht kleiner. | Der Job „Schneller Lauf“ bleibt rot, bis Redur antwortet. |
+
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 133 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 136 Einträge.
 
