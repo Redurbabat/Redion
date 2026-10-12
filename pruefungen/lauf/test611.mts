@@ -63,7 +63,7 @@ import path from 'node:path';
 
 declare const Store: any; declare const App: any;
 declare const Schaltplan: any; declare const Stromfluss: any; declare const Register: any;
-declare const UI: any;
+declare const UI: any; declare const KONSTANTEN: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
 
@@ -697,6 +697,7 @@ const vorW2 = await zustand(blockW2);
 const meldVor10 = await meldungenJetzt();
 const SCHRITTE = 24;
 let aufrufeImZug: boolean[] = [];
+let aufrufeAbAnfassen: boolean[] = [];
 const zug10 = await handlung('F1 gezogen, 30 × 40 in 24 Bewegungen', blockW2, ['F1'], async () => {
   const a0 = (await aufrufeJetzt()).length;
   /* Angefasst bei (430,92): mitten im Kasten des FI (400…460 × 60…130), und
@@ -704,8 +705,14 @@ const zug10 = await handlung('F1 gezogen, 30 × 40 in 24 Bewegungen', blockW2, [
   await zieheGenau(blockW2, [430, 92], [30, 40], SCHRITTE, async () => {
     aufrufeImZug = (await aufrufeJetzt()).slice(a0);
   });
+  aufrufeAbAnfassen = (await aufrufeJetzt()).slice(a0);
 });
-const aufrufe10 = (await aufrufeJetzt()).slice(-(aufrufeImZug.length + 1));
+/* Was NACH dem Loslassen gerechnet wurde: alle Rechnungen seit dem Anfassen,
+   weniger die, die schon vor dem Loslassen standen. Hier stand bis zur
+   zweiten Durchsicht `slice(-(n + 1))` — das hat immer n + 1 Einträge, und
+   „genau eine" prüfte damit nichts: zwei volle Suchen beim Loslassen wären
+   durchgegangen. */
+const aufrufeLos = aufrufeAbAnfassen.slice(aufrufeImZug.length);
 const lage10 = zug10.nach.teile.F1;
 p('Der FI steht danach 30 × 40 weiter (genau drei und vier Raster)',
   lage10.x === 430 && lage10.y === 100, JSON.stringify(lage10));
@@ -713,9 +720,9 @@ p(`Während des Ziehens rechnet jede Bewegung billig (${aufrufeImZug.length} Rec
   aufrufeImZug.length > 0 && aufrufeImZug.every(b => b), JSON.stringify(aufrufeImZug));
 p(`… und nur, wenn ein Teil über ein Raster wandert: ${aufrufeImZug.length} Rechnungen auf ${SCHRITTE} Bewegungen`,
   aufrufeImZug.length > 0 && aufrufeImZug.length <= 8, `${aufrufeImZug.length} Rechnungen`);
-p('Beim Loslassen genau EINE volle Suche, als letzte',
-  aufrufe10.length === aufrufeImZug.length + 1 && aufrufe10[aufrufe10.length - 1] === false,
-  JSON.stringify(aufrufe10));
+p('Beim Loslassen genau EINE Rechnung, und sie ist die volle Suche',
+  aufrufeLos.length === 1 && aufrufeLos[0] === false,
+  `nach dem Loslassen ${JSON.stringify(aufrufeLos)} (true = billig, false = voll)`);
 const pruef10 = await seite.evaluate(([bid, vorJson]: [string, string]) => {
   const w = window as any;
   const nach = Store.getBlock(bid).plan;
@@ -863,6 +870,251 @@ const r8 = await seite.evaluate((b: string) => {
 p('a5 läuft nicht über die freie Klemme R8:1, die auf ihrem nächsten Weg liegt', !r8);
 const meldA = (await meldungenJetzt()).slice(m12);
 p('Und das Heilen meldet nichts — es hat nichts an der Schaltung geändert', meldA.length === 0, meldA.join(' | '));
+
+/* ==========================================================================
+ * §13 · Während eines Zugs wird nichts gespeichert (zweite Durchsicht, Fund 1)
+ * --------------------------------------------------------------------------
+ * Die Zwischenbilder eines Zugs sind die billigen Wege, und an der Stelle aus
+ * §10 zapfen sie an. §10 hält, dass beim LOSLASSEN die volle Suche
+ * gespeichert wird. Die zweite Durchsicht fand, dass das nicht reicht: alles,
+ * was WÄHREND des Zugs über `aendere` geht, speicherte das Zwischenbild und
+ * merkte es als Rückgängig-Schritt. Gemessen gegen 478791f5f (Sonde der
+ * Durchsicht, F1 an die Stelle aus §10, Maus noch unten, zweimal „h"): nach
+ * dem Loslassen stimmt die Netzliste, aber das zweite Strg+Z bringt
+ * {E1:X2 F1:N F1:N2 G2:N} zurück — ohne ein Wort. Dazu fand das Nachmessen
+ * vier Wege mehr: die Ablage hält den Plan der Fläche als DASSELBE Objekt
+ * (`updateBlock` übernimmt den Verweis), und die nächste Schreibpause schrieb
+ * das Zwischenbild in die IndexedDB, ohne dass jemand eine Taste drückte;
+ * losgelassen ausserhalb der Fläche, endete der Zug nie, und die nächste
+ * Pfeiltaste speicherte ihn; ein zweiter Finger fing einen neuen Zug an und
+ * liess den ersten liegen; Strg+Z mitten im Zug legte das Zwischenbild auf
+ * den Stapel des Wiederholens.
+ *
+ * Verlangt wird, je Weg: während des Zugs hält die Ablage den Stand von vor
+ * dem Zug Byte für Byte; nach dem Loslassen ist das Ergebnis der vollen
+ * Suche gespeichert (unabhängig nachgerechnet wie in §10) mit der Netzliste
+ * von vorher; und jeder Schritt in drei Mal Strg+Z und drei Mal Umschalt+
+ * Strg+Z ist frei von Anzapfungen — Netzliste und Klemmen jeder Leitung wie
+ * vorher. Die Tasten zählen während des Zugs nicht (die Wahl steht in E746);
+ * Escape bricht den Zug ab.
+ * ========================================================================*/
+console.log('\n13 · Während eines Zugs wird nichts gespeichert');
+await seite.evaluate(() => {
+  const w = window as any;
+  /** Die volle Suche, unabhängig von der Fläche: der Plan von vorher, so
+      gelesen, wie die Fläche ihn liest, F1 an die Lage, einmal nachziehen. */
+  w.vollNach = (vorJson: string, x: number, y: number): string => {
+    const plan = Schaltplan.lesen({ plan: JSON.parse(vorJson) });
+    const v = Schaltplan.vorherMerken(plan);
+    const t = (plan.teile as any[]).find(q => q.id === 'F1');
+    t.x = x; t.y = y;
+    w.nachziehenEcht(plan, v, ['F1'], { heilen: true });
+    return JSON.stringify((plan.leitungen as any[]).map(l => [l.id, l.punkte]));
+  };
+  /** Was die IndexedDB für einen Block hält — an `Store` vorbei (wie test104). */
+  w.ausDerIdb = (bid: string): Promise<any> => new Promise(fertig => {
+    const a = indexedDB.open(KONSTANTEN.ABLAGE_NAME);
+    a.onsuccess = () => {
+      const db = a.result;
+      const r = db.transaction(['blocks'], 'readonly').objectStore('blocks').get(bid);
+      r.onsuccess = () => { fertig(r.result ? r.result.plan : null); db.close(); };
+      r.onerror = () => { fertig(null); db.close(); };
+    };
+    a.onerror = () => fertig(null);
+  });
+  /** Die Netzliste eines beliebigen Plans, gruppiert wie in `zustand`. */
+  w.teilungVon = (plan: any): string[] => {
+    const ni = Stromfluss.netze(plan);
+    const g = new Map<number, Set<string>>();
+    const dazu = (n: number, name: string) => { if (!g.has(n)) g.set(n, new Set()); g.get(n)!.add(name); };
+    (ni.klemmen as any[]).forEach(k => { if (!k.intern) dazu(ni.netzVon.get(k.schluessel), k.teil + ':' + k.nr); });
+    Object.keys(ni.leitungNetz).forEach(id => dazu(ni.leitungNetz[id], 'l:' + id));
+    return [...g.values()].map(s => [...s].sort().join(' ')).sort();
+  };
+});
+const strg = async (key: string, shiftKey = false): Promise<void> => {
+  await seite.evaluate(([k, s]: [string, boolean]) => {
+    const el = document.querySelector<HTMLElement>('.sp-wrap');
+    if (!el) throw new Error('keine Planfläche');
+    el.focus();
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: k, ctrlKey: true, shiftKey: s, bubbles: true, cancelable: true }));
+  }, [key, shiftKey] as [string, boolean]);
+  await seite.waitForTimeout(250);
+};
+const leitungenVon = (z: any): string =>
+  JSON.stringify((JSON.parse(z.json).leitungen as any[]).map(l => [l.id, l.punkte]));
+/** Weicht ein Zustand von der Netzliste und den Klemmen je Leitung ab? */
+const abweichungen = (z: any, start: any): string[] => {
+  const raus: string[] = [];
+  const neu = z.teilung.filter((g: string) => !start.teilung.includes(g));
+  if (neu.length) raus.push('Netz neu: ' + neu.join(' | '));
+  Object.keys(start.klemmen).forEach(id => {
+    if (JSON.stringify(z.klemmen[id]) !== JSON.stringify(start.klemmen[id]))
+      raus.push(`${id}: ${(start.klemmen[id] || []).join(',')} → ${(z.klemmen[id] || ['(weg)']).join(',')}`);
+  });
+  return raus;
+};
+const mausZug = async (bid: string, schritte = SCHRITTE): Promise<void> => {
+  const bild = await bildpunkt(bid);
+  const [x0, y0] = bild(430, 92);
+  await seite.mouse.move(x0, y0);
+  await seite.mouse.down();
+  for (let i = 1; i <= schritte; i++) {
+    const [x, y] = bild(430 + 30 * i / schritte, 92 + 40 * i / schritte);
+    await seite.mouse.move(x, y);
+  }
+};
+
+type Zug13 = {
+  vorher?: (bid: string) => Promise<void>;     // vor dem Zug (ohne F1 zu wählen, wenn `direkt`)
+  direkt?: boolean;                            // F1 nicht vorher anklicken — der Zug wählt es selbst
+  ziehen?: (bid: string) => Promise<void>;     // statt des Mauszugs
+  waehrend: (bid: string, start: any) => Promise<void>;
+  loslassen?: (bid: string) => Promise<void>;  // statt `mouse.up`
+  danach?: (bid: string) => Promise<void>;     // nach dem Loslassen, vor dem Verlauf
+  f1?: (t: any) => boolean;                    // wie F1 danach dastehen muss
+};
+const zugMit = async (name: string, o: Zug13): Promise<void> => {
+  const bid = await oeffne('W');
+  await seite.waitForTimeout(300);
+  if (o.vorher) await o.vorher(bid);
+  if (!o.direkt) await waehle('F1');
+  const start = await zustand(bid);
+  if (o.ziehen) await o.ziehen(bid); else await mausZug(bid);
+  await o.waehrend(bid, start);
+  const mitte = await zustand(bid);
+  p(`${name}: während des Zugs hält die Ablage den Stand von vor dem Zug Byte für Byte`,
+    mitte.json === start.json, abweichungen(mitte, start).join(' | ') || 'anders, ohne neue Anzapfung');
+  if (o.loslassen) await o.loslassen(bid); else await seite.mouse.up();
+  await seite.waitForTimeout(450);
+  const nach = await zustand(bid);
+  const f = nach.teile.F1;
+  p(`${name}: F1 steht danach, wie der Zug es will (430,100, nicht gedreht, nicht gespiegelt)`,
+    !!f && f.x === 430 && f.y === 100 && (o.f1 ? o.f1(f) : f.drehung === 0 && !f.gespiegelt), JSON.stringify(f));
+  if (f) {
+    const voll: string = await seite.evaluate(([j, x, y]: [string, number, number]) =>
+      (window as any).vollNach(j, x, y), [start.json, f.x, f.y] as [string, number, number]);
+    p(`${name}: gespeichert ist das Ergebnis der vollen Suche, Byte für Byte`, leitungenVon(nach) === voll,
+      `gespeichert ${leitungenVon(nach).slice(0, 200)} · voll ${voll.slice(0, 200)}`);
+  }
+  const abwNach = abweichungen(nach, start);
+  p(`${name}: die Netzliste ist die von vorher, jede Leitung fasst ihre Klemmen`, abwNach.length === 0, abwNach.join(' | '));
+  if (o.danach) await o.danach(bid);
+  const verlauf: string[] = [];
+  for (let i = 1; i <= 3; i++) {
+    await strg('z');
+    abweichungen(await zustand(bid), start).forEach(a => verlauf.push(`Strg+Z ${i}: ${a}`));
+  }
+  for (let i = 1; i <= 3; i++) {
+    await strg('z', true);
+    abweichungen(await zustand(bid), start).forEach(a => verlauf.push(`Umschalt+Strg+Z ${i}: ${a}`));
+  }
+  p(`${name}: jeder Schritt in Rückgängig und Wiederholen ist frei von Anzapfungen (3 + 3 Schritte)`,
+    verlauf.length === 0, verlauf.slice(0, 4).join(' | '));
+};
+
+/* Die Probe der Durchsicht, wörtlich: zweimal „h", die Maus noch unten. */
+await zugMit('„h h" im Zug', { waehrend: async () => { await taste('h'); await taste('h'); } });
+await zugMit('„r r" im Zug', { waehrend: async () => { await taste('r'); await taste('r'); } });
+await zugMit('Entf im Zug', { waehrend: async () => { await taste('Delete'); } });
+await zugMit('Pfeil rechts im Zug', { waehrend: async () => { await taste('ArrowRight'); } });
+/* Ein Knopf der Leiste mitten im Zug — so klickt ein zweiter Finger oder die
+   Eingabetaste auf einem Knopf, der den Fokus hat. */
+await zugMit('Knopf „Spiegeln" im Zug', { waehrend: async () => {
+  await seite.evaluate(() => (document.querySelector('.sp-wrap .sp-fuss button[data-a="spiegeln"]') as HTMLButtonElement | null)?.click());
+  await seite.waitForTimeout(250);
+} });
+/* Strg+Z mitten im Zug, mit einem Schritt davor (T1 gedreht): der Schritt
+   bleibt, und das Wiederholen bringt kein Zwischenbild zurück. */
+await zugMit('Strg+Z im Zug', {
+  vorher: async () => { await waehle('T1'); await taste('r'); },
+  waehrend: async () => { await strg('z'); }
+});
+/* Die Ablage im Zug: eine gewöhnliche Handlung (T1 drehen) und gleich danach
+   der Zug, in EINER Bewegung an die Stelle — die Schreibpause (400 ms) läuft
+   ab, während die Maus unten ist. */
+await zugMit('Schreibpause im Zug', {
+  vorher: async () => { await waehle('T1'); await taste('r'); },
+  direkt: true,
+  ziehen: async (bid) => mausZug(bid, 1),
+  waehrend: async (bid, start) => {
+    await seite.waitForTimeout(900);
+    const t: string[] = await seite.evaluate(async (b: string) => {
+      const w = window as any;
+      return w.teilungVon(await w.ausDerIdb(b));
+    }, bid);
+    p('Schreibpause im Zug: auch die IndexedDB hält keine Anzapfung, nur den Stand von vor dem Zug',
+      JSON.stringify(t) === JSON.stringify(start.teilung), t.filter(g => !start.teilung.includes(g)).join(' | ') || 'anders');
+  }
+});
+/* Losgelassen über der Palette, ausserhalb der Fläche: der Zug endet trotzdem,
+   mit der vollen Suche — und danach speichert eine gewöhnliche Handlung
+   (T1 drehen) kein liegengebliebenes Zwischenbild. */
+await zugMit('Losgelassen ausserhalb', {
+  waehrend: async () => {},
+  loslassen: async () => {
+    const pal = await seite.locator('.sp-wrap .sp-palette').boundingBox();
+    if (!pal) throw new Error('keine Palette');
+    await seite.mouse.move(pal.x + pal.width / 2, pal.y + Math.min(200, pal.height / 2));
+    await seite.mouse.up();
+  },
+  danach: async () => { await waehle('T1'); await taste('r'); }
+});
+/* Ein zweiter Finger: der erste zieht F1 an die Stelle, der zweite tippt T1.
+   Der Zug des ersten endet richtig (volle Suche), bevor der zweite zählt. */
+const cdp = await ktx.newCDPSession(seite);
+let fingerBei: [number, number] = [0, 0];
+await zugMit('Zweiter Finger im Zug', {
+  ziehen: async (bid) => {
+    const bild = await bildpunkt(bid);
+    const [x0, y0] = bild(430, 92);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x0, y: y0, id: 1 }] });
+    for (let i = 1; i <= SCHRITTE; i++) {
+      fingerBei = bild(430 + 30 * i / SCHRITTE, 92 + 40 * i / SCHRITTE);
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: fingerBei[0], y: fingerBei[1], id: 1 }] });
+    }
+    await seite.waitForTimeout(150);
+  },
+  waehrend: async () => {},
+  loslassen: async () => {
+    const box = await seite.locator('.sp-wrap svg .sp-teil[data-id="T1"]').boundingBox();
+    if (!box) throw new Error('T1 nicht gefunden');
+    const t1: [number, number] = [box.x + box.width / 2, box.y + box.height / 2];
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart',
+      touchPoints: [{ x: fingerBei[0], y: fingerBei[1], id: 1 }, { x: t1[0], y: t1[1], id: 2 }] });
+    await seite.waitForTimeout(60);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [{ x: t1[0], y: t1[1], id: 2 }] });
+    await seite.waitForTimeout(150);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [{ x: fingerBei[0], y: fingerBei[1], id: 1 }] });
+  },
+  danach: async () => { await waehle('T1'); await taste('r'); }
+});
+await cdp.detach();
+
+/* Escape bricht den Zug ab: nichts gespeichert, kein Rückgängig-Schritt, und
+   das Bild ist wieder das von vor dem Zug. */
+{
+  const bid = await oeffne('W');
+  await seite.waitForTimeout(300);
+  await waehle('F1');
+  const start = await zustand(bid);
+  const bildVor: string = await seite.evaluate(() => document.querySelector('.sp-wrap svg.sp-flaeche')?.outerHTML ?? '');
+  await mausZug(bid);
+  const bildMitte: string = await seite.evaluate(() => document.querySelector('.sp-wrap svg.sp-flaeche')?.outerHTML ?? '');
+  await taste('Escape');
+  const bildEsc: string = await seite.evaluate(() => document.querySelector('.sp-wrap svg.sp-flaeche')?.outerHTML ?? '');
+  await seite.mouse.up();
+  await seite.waitForTimeout(450);
+  const nach = await zustand(bid);
+  const zurueckAus: boolean = await seite.evaluate(() =>
+    !!(document.querySelector('.sp-wrap button[data-a="zurueck"]') as HTMLButtonElement | null)?.disabled);
+  p('Escape im Zug: das Bild war unterwegs ein anderes (sonst prüfte das hier nichts)', bildMitte !== bildVor);
+  p('Escape im Zug: das Bild ist sofort wieder das von vor dem Zug, Zeichen für Zeichen', bildEsc === bildVor,
+    `${bildEsc.length} gegen ${bildVor.length} Zeichen`);
+  p('Escape im Zug: auch nach dem Loslassen ist nichts gespeichert — die Ablage Byte für Byte wie vorher',
+    nach.json === start.json, JSON.stringify(nach.teile.F1));
+  p('Escape im Zug: kein Rückgängig-Schritt (der Knopf bleibt aus)', zurueckAus);
+}
 
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.slice(0, 3).join(' | '));
 
