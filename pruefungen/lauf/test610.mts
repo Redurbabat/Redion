@@ -23,16 +23,28 @@
  * WAS DIESER LAUF HÄLT
  *
  *   1  Kein Job der CI fährt den vollen Lauf — und keiner heisst „alle",
- *      der nicht alle fährt.
+ *      der nicht alle fährt. Gelesen wird JEDE Ablaufdatei unter
+ *      `.github/workflows/` (`*.yml` und `*.yaml`), nicht nur pruefen.yml,
+ *      und jede muss für den Leser unten mindestens einen Job ergeben — eine
+ *      Datei, aus der er nichts liest, wäre sonst still geprüft. Dazu, ohne
+ *      den Leser, Zeile für Zeile jede YAML-Datei unter `.github/` (auch eine
+ *      eigene Action unter `.github/actions/`): in keiner steht ein voller
+ *      Lauf.
  *   2  Genau ein Job fährt `npm run pruefen -- --schnell`, und jeder Aufruf
  *      des Orchestrators in der CI ist genau dieser (oder seine `--liste`).
- *      Als Aufruf des Orchestrators zählt jede Form, die einen Lauf startet:
- *      `npm run pruefen`, `npm run-script pruefen`, `npm test`, jeder Befehl,
- *      der `alle.mts` oder `volllauf.mts` nennt (auch über `npx`), Leerraum
- *      zusammengezogen und ein Kommentar hinter `#` abgeschnitten. Der
- *      schnelle Lauf steht allein in seiner Zeile — kein `|| true`, keine
- *      Röhre, kein `continue-on-error`, die ein Rot verschlucken würden. In
- *      package.json ist `pruefen` genau `node pruefungen/alle.mts`, ohne
+ *      Als Aufruf zählen DIESE Schreibweisen — eine Liste, kein Beweis (siehe
+ *      „Was er nicht hält"): `npm`, `pnpm` oder `yarn` mit `run`,
+ *      `run-script` oder `test`, auch mit Schaltern davor, die einen Wert als
+ *      eigenes Wort nehmen (`npm --prefix . run pruefen`, `npm -C . run
+ *      pruefen`); `node --run pruefen` (Nodes eigener Skriptstarter); jeder
+ *      Befehl, der `alle.mts` oder `volllauf.mts` nennt (auch über `npx`).
+ *      Leerraum wird zusammengezogen, ein Kommentar hinter `#` abgeschnitten.
+ *      Ein `echo` oder `printf` gilt als Prosa und startet nichts — aber nur,
+ *      wenn in seiner Zeile kein `$(` und kein Backtick steht (dort wird
+ *      etwas AUSGEFÜHRT und das Ergebnis ausgegeben) und seine Ausgabe in
+ *      keine Röhre geht (`echo … | sh`). Der schnelle Lauf steht allein in
+ *      seiner Zeile — kein `|| true`, keine Röhre, kein `continue-on-error`.
+ *      In package.json ist `pruefen` genau `node pruefungen/alle.mts`, ohne
  *      `prepruefen` und `postpruefen` (npm führt beide von selbst aus).
  *      Jeder Job hat eine Zeitgrenze. Der schnelle Job baut die Einzeldatei
  *      und prüft, ob sie nachgezogen ist, holt Chromium genau dann, wenn die
@@ -44,6 +56,19 @@
  *      dabei; und was die Liste über einen Lauf sagt (Browser oder nicht),
  *      stimmt mit dem überein, was dieser Lauf selbst in der Datei liest.
  *   4  CLAUDE.md §30 sagt, was `--schnell` heisst.
+ *
+ * WAS ER NICHT HÄLT. Er liest Text; er führt die CI nicht aus. Ein Lauf
+ * hinter einem eigenen Skript oder einer Variablen (`bash ci.sh`, `$LAUF`)
+ * kommt an ihm vorbei. Und dass ein Rot des schnellen Laufs den Job rot
+ * macht, sichert er nur gegen die drei Formen in §2 (`|| true`, Röhre,
+ * `continue-on-error`): ein `set +e` vor dem Lauf mit einem Befehl dahinter,
+ * eine `shell:` ohne `-e` mit einem Befehl dahinter und ein `if:` am Schritt
+ * oder am Job, das ihn gar nicht starten lässt, prüft er nicht. Die Lesung
+ * Zeile für Zeile kennt keinen gefalteten Block (`run: >`, ein Befehl über
+ * mehrere Zeilen ohne `\`): in einer Ablaufdatei fängt ihn der Leser, in
+ * einer eigenen Action nicht. Hier stand bis zur zweiten Durchsicht von
+ * E745 „jede Form, die einen Lauf startet" und „ein Rot bricht den Job ab"
+ * — beides mehr, als er hält.
  *
  * WIE „STARTET EINEN BROWSER" HIER GELESEN WIRD — auf zwei Wegen, die
  * einander VERGLEICHEN. Weg 1 ist der von alle.mts: die Datei lädt
@@ -90,12 +115,16 @@ console.log('─'.repeat(60));
 /* ==========================================================================
  * Die Aufgaben der CI lesen
  * ------------------------------------------------------------------------
- * Kein YAML-Paket im Projekt (und keines nötig): die Datei ist von Hand
+ * Kein YAML-Paket im Projekt (und keines nötig): die Dateien sind von Hand
  * geschrieben und regelmässig eingerückt — Jobs mit zwei Leerzeichen, ihre
  * Schlüssel mit vier, die Schritte darunter. `run: |` sammelt die folgenden
- * Zeilen, die tiefer stehen als der Schlüssel.
+ * Zeilen, die tiefer stehen als der Schlüssel. Eine Datei, die anders
+ * eingerückt ist, ergibt hier keinen Job — und genau das prüft §1, statt
+ * sie still für leer zu halten.
  * ========================================================================*/
 type Aufgabe = {
+  /** Die Ablaufdatei unter `.github/workflows/`, aus der der Job stammt. */
+  datei: string;
   id: string;
   name: string;
   zeit: number | null;
@@ -103,7 +132,8 @@ type Aufgabe = {
   /** Jede Befehlszeile ganz — eine Fortsetzung mit `\` angehängt, so gelesen
    *  wie die Shell sie liest (siehe `glatt`). */
   zeilen: string[];
-  /** Dieselben Zeilen, zerlegt in ihre einzelnen Befehle. */
+  /** Dieselben Zeilen, zerlegt in ihre einzelnen Befehle — ohne die, die
+   *  nur etwas ausgeben (siehe `nurAusgabe`). */
   befehle: string[];
   /** Steht irgendwo im Job `continue-on-error` (ausser `false`)? */
   weiterBeiFehler: boolean;
@@ -126,7 +156,20 @@ const glatt = (zeile: string): string =>
 const befehleIn = (zeile: string): string[] =>
   glatt(zeile).split(/&&|\|\||;/).map(t => t.trim()).filter(Boolean);
 
-const aufgabenAus = (yml: string): Aufgabe[] => {
+/** Ein Befehl, der nur etwas AUSGIBT, startet nichts: ein
+ *  `echo "  npm run pruefen -- --schnell …"` in einer Hilfe ist Prosa.
+ *  Aber nur, solange die Ausgabe wirklich ins Protokoll geht. Steht in der
+ *  ZEILE ein `$(` oder ein Backtick, wird dort etwas ausgeführt und erst das
+ *  Ergebnis ausgegeben — `echo "$(npm run pruefen)"` fährt den vollen Lauf.
+ *  Gefragt wird die Zeile, nicht der Befehl: `$(true; npm run pruefen)`
+ *  zerfällt an `;` in zwei Stücke, und das zweite trägt kein `$(` mehr. Und
+ *  eine Röhre gibt die „Prosa" einem Programm: `echo npm run pruefen | sh`.
+ *  Die erste Fassung nahm jedes `echo` aus (zweite Durchsicht von E745). */
+const PROSA = /^(?:echo|printf)\b/;
+const nurAusgabe = (befehl: string, zeile: string): boolean =>
+  PROSA.test(befehl) && !/\$\(|`/.test(zeile) && !befehl.includes('|');
+
+const aufgabenAus = (yml: string, datei: string): Aufgabe[] => {
   const zeilen = yml.split('\n');
   const start = zeilen.findIndex(z => /^jobs:\s*$/.test(z));
   if (start < 0) return [];
@@ -139,7 +182,7 @@ const aufgabenAus = (yml: string): Aufgabe[] => {
     const g = glatt(zeile);
     if (!g) return;
     a.zeilen.push(g);
-    a.befehle.push(...befehleIn(g));
+    a.befehle.push(...befehleIn(g).filter(b => !nurAusgabe(b, g)));
   };
   for (let i = start + 1; i < zeilen.length; i++) {
     const z = zeilen[i] ?? '';
@@ -147,7 +190,7 @@ const aufgabenAus = (yml: string): Aufgabe[] => {
     if (/^ {2}#/.test(z) || (vorspann && z.trim() === '')) { vorspann += z + '\n'; continue; }
     const kopf = /^ {2}([A-Za-z0-9_-]+):\s*$/.exec(z);
     if (kopf) {
-      jetzt = { id: kopf[1] ?? '', name: '', zeit: null, schrittNamen: [], zeilen: [], befehle: [],
+      jetzt = { datei, id: kopf[1] ?? '', name: '', zeit: null, schrittNamen: [], zeilen: [], befehle: [],
         weiterBeiFehler: false, text: vorspann };
       vorspann = '';
       liste.push(jetzt);
@@ -190,28 +233,43 @@ const aufgabenAus = (yml: string): Aufgabe[] => {
   return liste;
 };
 
-const ablauf = lies('.github/workflows/pruefen.yml');
-const aufgaben = aufgabenAus(ablauf);
-console.log('\n    Jobs in pruefen.yml: ' +
-  aufgaben.map(a => a.id + ' („' + a.name + '", ' + (a.zeit ?? '—') + ' min)').join(' · '));
+/* JEDE Ablaufdatei, nicht nur pruefen.yml: ein voller Lauf in einer zweiten
+   Datei fährt genauso bei jedem Push (zweite Durchsicht von E745). */
+const ABLAEUFE = '.github/workflows';
+const ablaufDateien = fs.readdirSync(path.join(WURZEL, ABLAEUFE)).filter(f => /\.ya?ml$/.test(f)).sort();
+const jobsJeDatei = new Map<string, Aufgabe[]>(
+  ablaufDateien.map(f => [f, aufgabenAus(lies(ABLAEUFE + '/' + f), f)]));
+const aufgaben = [...jobsJeDatei.values()].flat();
+/** Wo ein Job steht, für die Meldungen: Datei und Kennung. */
+const wo = (a: Aufgabe): string => a.datei + '/' + a.id;
+for (const [f, jobs] of jobsJeDatei) {
+  console.log('\n    Jobs in ' + f + ': ' +
+    (jobs.map(a => a.id + ' („' + a.name + '", ' + (a.zeit ?? '—') + ' min)').join(' · ') || 'KEINER'));
+}
 
-/** Ein Befehl, der nur etwas AUSGIBT, startet nichts: ein
- *  `echo "  npm run pruefen -- --schnell …"` in einer Hilfe ist Prosa. */
-const PROSA = /^(?:echo|printf)\b/;
-
-/** Jede Form, die den Orchestrator oder den Lauf in Stücken startet —
- *  gesucht ÜBERALL im Befehl, nicht nur am Anfang: `timeout 3600 npm run
- *  pruefen`, `npx tsx pruefungen/alle.mts` und `env X=1 npm test` sind
- *  Aufrufe. `npm test` gehört dazu, auch wenn package.json heute kein
+/** Die Schreibweisen, die den Orchestrator oder den Lauf in Stücken
+ *  starten — gesucht ÜBERALL im Befehl, nicht nur am Anfang: `timeout 3600
+ *  npm run pruefen`, `npx tsx pruefungen/alle.mts` und `env X=1 npm test`
+ *  sind Aufrufe. `npm test` gehört dazu, auch wenn package.json heute kein
  *  `test` kennt: wer es einträgt, soll es nicht an diesem Lauf vorbei in die
- *  CI bringen. */
+ *  CI bringen. Eine Liste, kein Beweis (Kopf, „Was er nicht hält").
+ *
+ *  `SCHALTER` ist ein Schalter vor dem Unterbefehl, mit oder ohne Wert:
+ *  `--silent`, `--prefix=.`, aber auch `--prefix .` und `-C .` — npm nimmt
+ *  den Wert dann aus dem nächsten Wort. Die erste Fassung kannte nur
+ *  Schalter ohne eigenes Wort, und `npm --prefix . run pruefen` kam vorbei.
+ *  `node --run` ist Nodes eigener Skriptstarter (seit Node 22): er liest
+ *  package.json wie npm und kam ebenso vorbei (zweite Durchsicht von E745). */
+const SCHALTER = String.raw`(?:\s+-\S+(?:\s+[^\s-]\S*)?)*`;
 const AUFRUFE: readonly RegExp[] = [
-  /\b(?:npm|pnpm|yarn)\b(?:\s+-\S+)*\s+(?:run|run-script)\b(?:\s+-\S+)*\s+(?:pruefen|test)\b/,
-  /\b(?:npm|pnpm|yarn)\b(?:\s+-\S+)*\s+(?:test|tst|t|it|install-test)\b/,
+  new RegExp(String.raw`\b(?:npm|pnpm|yarn)\b${SCHALTER}\s+(?:run|run-script)\b${SCHALTER}\s+(?:pruefen|test)\b`),
+  new RegExp(String.raw`\b(?:npm|pnpm|yarn)\b${SCHALTER}\s+(?:test|tst|t|it|install-test)\b`),
+  /\bnode\b.*?\s--run(?:=|\s+)(?:pruefen|test)\b/,
   /(?:^|[\s/=])alle\.mts\b/,
   /(?:^|[\s/=])volllauf\.mts\b/,
 ];
-const istOrchestrator = (b: string): boolean => !PROSA.test(b) && AUFRUFE.some(m => m.test(b));
+/** Prosa (`nurAusgabe`) ist schon beim Lesen aus den Befehlen gefallen. */
+const istOrchestrator = (b: string): boolean => AUFRUFE.some(m => m.test(b));
 
 /** Fährt dieser Befehl den VOLLEN Lauf? Der Lauf in Stücken immer; sonst
  *  ein Aufruf ohne Auswahl (keine Nummer, kein `--schnell`, kein `server`,
@@ -229,18 +287,44 @@ const istVoll = (b: string): boolean => {
  * ========================================================================*/
 console.log('\n1 · Der volle Lauf bleibt auf dem Rechner');
 
+const leereDateien = ablaufDateien.filter(f => (jobsJeDatei.get(f) ?? []).length === 0);
+p('Jede Ablaufdatei unter .github/workflows/ ergibt mindestens einen Job (sonst wäre sie still ungeprüft)',
+  ablaufDateien.length > 0 && leereDateien.length === 0,
+  ablaufDateien.length === 0 ? 'keine Ablaufdatei' : leereDateien.join(', '));
+
 const vollJobs = aufgaben.filter(a => a.befehle.some(istVoll));
 p('Kein Job der CI fährt den vollen Lauf — er bleibt bei volllauf.mts (§30, L254)',
   aufgaben.length > 0 && vollJobs.length === 0,
   aufgaben.length === 0 ? 'keine Jobs gelesen'
-    : vollJobs.map(a => a.id + ': ' + a.befehle.filter(istVoll).join(' | ')).join(' · '));
+    : vollJobs.map(a => wo(a) + ': ' + a.befehle.filter(istVoll).join(' | ')).join(' · '));
+
+/* Ohne den Leser, Zeile für Zeile: jede YAML-Datei unter `.github/` — auch
+   eine eigene Action (`.github/actions/…/action.yml`), deren `run:` ein Job
+   über `uses:` ausführt, und eine Ablaufdatei, die anders eingerückt ist,
+   als der Leser oben erwartet. Eine Fortsetzung mit `\` wird angehängt, ein
+   Schlüssel `run:` vorne abgenommen; was danach einen vollen Lauf fährt, ist
+   einer. Gröber als der Leser — es kennt keine Jobs und keine gefalteten
+   Blöcke (`run: >`) —, aber an keine Einrückung gebunden. */
+const yamlUnter = (rel: string): string[] =>
+  fs.readdirSync(path.join(WURZEL, rel), { withFileTypes: true }).flatMap(e =>
+    e.isDirectory() ? yamlUnter(rel + '/' + e.name)
+      : /\.ya?ml$/.test(e.name) ? [rel + '/' + e.name] : []);
+const yamlDateien = yamlUnter('.github').sort();
+const vollInZeilen = yamlDateien.flatMap(rel =>
+  lies(rel).replace(/\\\r?\n\s*/g, ' ').split('\n').flatMap(roh => {
+    const zeile = glatt(roh).replace(/^(?:-\s+)?run:\s*/, '').replace(/^(['"])(.*)\1$/, '$2');
+    return befehleIn(zeile).filter(b => !nurAusgabe(b, zeile) && istVoll(b)).map(b => rel + ': ' + b);
+  }));
+console.log('    YAML unter .github/: ' + yamlDateien.join(' · '));
+p('Auch Zeile für Zeile steht in keiner YAML-Datei unter .github/ ein voller Lauf (auch nicht in einer eigenen Action)',
+  yamlDateien.length > 0 && vollInZeilen.length === 0, vollInZeilen.join(' · '));
 
 const behauptetAlle = (a: Aufgabe): boolean =>
   [a.name, ...a.schrittNamen].some(n => /(^|[^\p{L}])alle([^\p{L}]|$)/iu.test(n));
 const falscheBehauptung = aufgaben.filter(a => behauptetAlle(a) && !a.befehle.some(istVoll));
 p('Kein Job heisst „alle", der nicht alle fährt',
   falscheBehauptung.length === 0,
-  falscheBehauptung.map(a => a.id + ' („' + a.name + '")').join(', '));
+  falscheBehauptung.map(a => wo(a) + ' („' + a.name + '")').join(', '));
 
 /* ==========================================================================
  * 2 · DER SCHNELLE JOB
@@ -256,7 +340,7 @@ p('Genau ein Job fährt `' + SCHNELL + '`', schnelle.length === 1,
    Orchestrators muss genau der schnelle sein. */
 const andereAufrufe = aufgaben.flatMap(a =>
   a.befehle.filter(b => istOrchestrator(b) && b !== SCHNELL && b !== SCHNELL + ' --liste')
-    .map(b => a.id + ': ' + b));
+    .map(b => wo(a) + ': ' + b));
 p('… und jeder Aufruf des Orchestrators in der CI ist genau dieser (oder seine Liste)',
   andereAufrufe.length === 0, andereAufrufe.join(' · '));
 
@@ -271,18 +355,21 @@ p('package.json: `pruefen` ist genau `node pruefungen/alle.mts`, ohne prepruefen
 
 const ohneZeit = aufgaben.filter(a => !(a.zeit !== null && a.zeit > 0));
 p('Jeder Job hat eine Zeitgrenze (timeout-minutes)', aufgaben.length > 0 && ohneZeit.length === 0,
-  ohneZeit.map(a => a.id).join(', '));
+  ohneZeit.map(wo).join(', '));
 
 const schnell = schnelle[0];
 
-/* Ein Rot muss den Job rot machen. `npm run pruefen -- --schnell || true`
+/* Ein Rot soll den Job rot machen. `npm run pruefen -- --schnell || true`
    zerlegt sich in den schnellen Lauf und ein `true` — beide Befehle für sich
    unverdächtig, zusammen ein Job, der immer grün ist. Dasselbe tun eine
-   Röhre (`| tee …` ohne pipefail) und `continue-on-error`. */
+   Röhre (`| tee …` ohne pipefail) und `continue-on-error`. Diese drei Formen
+   fängt die Zusage unten; `set +e`, eine `shell:` ohne `-e` und ein `if:`
+   fängt sie nicht (Kopf, „Was er nicht hält"). Hier stand bis zur zweiten
+   Durchsicht „und ein Rot bricht den Job ab" — mehr, als sie prüft. */
 const zeilenMitSchnell = schnell
-  ? schnell.zeilen.filter(z => befehleIn(z).some(b => !PROSA.test(b) && b.includes(SCHNELL)))
+  ? schnell.zeilen.filter(z => befehleIn(z).some(b => !nurAusgabe(b, z) && b.includes(SCHNELL)))
   : [];
-p('Der schnelle Lauf steht allein in seiner Zeile, und ein Rot bricht den Job ab (kein `|| true`, keine Röhre, kein continue-on-error)',
+p('Der schnelle Lauf steht allein in seiner Zeile — kein `|| true`, keine Röhre, kein continue-on-error',
   !!schnell && zeilenMitSchnell.includes(SCHNELL) && !schnell.weiterBeiFehler &&
     zeilenMitSchnell.every(z => z === SCHNELL || z === SCHNELL + ' --liste'),
   schnell ? zeilenMitSchnell.join(' · ') + (schnell.weiterBeiFehler ? ' · continue-on-error' : '') : 'kein Job');

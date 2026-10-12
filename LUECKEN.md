@@ -8433,6 +8433,9 @@ bestanden — der Job fuhr den vollen Lauf, keiner fuhr `--schnell`, alle.mts
 kannte `--liste` nicht, und CLAUDE.md sagte „Dauer ungemessen"; nach E745
 26/26. (Hier stand zuerst „grün mit 4 von 21" — es war die erste Fassung
 von test610, und sie war ROT mit 4 von 21 bestanden.) Gegenproben in E745.
+Nach der zweiten Durchsicht (12. Oktober) liest test610 jede Ablaufdatei
+unter `.github/workflows/` und fängt weitere Umwege (`node --run`,
+`npm --prefix . run`, `echo "$(…)"`): 28/28, gegen 97d156b rot mit 8 von 27.
 Wie lange der ganze schnelle Lauf auf GitHub braucht, zeigt erst der erste
 Push dieses Zweigs: auf GitHub gemessen ist nur die Einrichtung.
 

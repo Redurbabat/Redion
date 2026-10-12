@@ -139,9 +139,12 @@ jobs:
   # denselben Schritten wie hier) brauchten Quelltext, Node, Pakete,
   # Chromium mit Systembibliotheken (23 s) und die Einzeldatei zusammen
   # 32 s — Zeitstempel der Schritte aus der Schnittstelle von GitHub. Im
-  # selben Lauf brauchte test105 im Job darüber 53 s, auf dem Rechner der
-  # Sitzung 58 s: der Runner ist nicht langsamer. Wie lange der ganze
-  # schnelle Lauf auf dem Runner braucht, zeigt erst der erste Push.
+  # selben Lauf, im Job darüber, war der Runner bei drei Läufen mal
+  # schneller, mal langsamer als der Rechner der Sitzung: test105 53 s
+  # gegen 58,1 s, test103 4 s gegen 8,9 s, test578 aber 11 s gegen 8,4 s —
+  # je ein Lauf, und GitHub zählt ganze Sekunden. Schneller oder langsamer
+  # ist er damit nicht belegt; wie lange der ganze schnelle Lauf auf dem
+  # Runner braucht, zeigt erst der erste Push.
   #
   # Die Zeitgrenze von 20 Minuten ist gut das Vierfache von Lauf und
   # Einrichtung zusammen (4 min 14 s + 32 s): das Holen von Chromium hängt

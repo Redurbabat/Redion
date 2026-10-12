@@ -1942,10 +1942,14 @@ die erste Fassung vereinigte sie, und so fiel nicht auf, dass ihr zweiter
 Weg über `nurCode` test587 verlor (`'image/*'` öffnet dort einen
 Kommentar): 508 statt 509. Seit der Durchsicht liest er ihn über
 `ohneKommentareGenau`, und beide Wege finden dieselben 509. Und er kennt
-jetzt die Umwege, auf denen ein voller Lauf oder ein verschlucktes Rot in
-die CI käme (`npm run-script pruefen`, `npm test`, `npx … alle.mts`,
+jetzt Umwege, auf denen ein voller Lauf oder ein verschlucktes Rot in die
+CI käme (`npm run-script pruefen`, `npm test`, `npx … alle.mts`,
 `|| true`, ein `postpruefen` in package.json) — acht davon hatte die erste
-Fassung grün durchgelassen. Gegen
+Fassung grün durchgelassen; seit der zweiten Durchsicht auch
+`node --run pruefen`, `npm --prefix . run pruefen`, `echo "$(…)"` und
+einen vollen Lauf in einer zweiten Ablaufdatei. Eine Liste, kein Beweis:
+was er nicht prüft (`set +e`, `if:`, ein eigenes Skript), steht in seinem
+Kopf. Gegen
 `97d156b` war er rot mit 7 von 25 (die erste Fassung mit 4 von 21) — und
 er hätte dort beinahe selbst 549 Läufe gestartet:
 der alte Orchestrator kannte `--liste` nicht und hätte die Auswahl

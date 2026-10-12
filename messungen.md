@@ -8314,8 +8314,15 @@ Prüfläufe (der alte volle Lauf)    abgebrochen nach      2379 s
 
 Im selben Lauf, Job „Quelltext und Logik" (114559416585): test105 53 s
 (auf dem Rechner der Sitzung 58,1 s), test578 11 s (8,4 s), test103 4 s
-(8,9 s). Der Runner ist also nicht langsamer als dieser Rechner; wie lange
-der ganze schnelle Lauf dort braucht, zeigt erst der erste Push.
+(8,9 s). Das Bild ist gemischt: bei test105 und test103 war der Runner
+schneller, bei test578 langsamer — je ein Lauf auf beiden Seiten, der
+Runner in ganzen Sekunden. Ob er insgesamt schneller oder langsamer ist als
+dieser Rechner, sagen drei Einzelwerte nicht; wie lange der ganze schnelle
+Lauf dort braucht, zeigt erst der erste Push. (Hier stand zuerst „Der
+Runner ist also nicht langsamer als dieser Rechner" — test578 im selben
+Satz widersprach; zweite Durchsicht von E745. Die drei Zeiten des Runners
+am 12. Oktober aus der gespeicherten Antwort der Schnittstelle noch
+einmal nachgerechnet: 53, 11 und 4 s.)
 
 *Wer startet einen Browser — die drei Filter im Vergleich.* Jede Datei
 unter `pruefungen/lauf/`, Weg 1 „lädt Playwright", Weg 2 „ruft
@@ -8337,5 +8344,11 @@ Schablonen und reguläre Ausdrücke. Gegen den Parser von TypeScript
 geprüft (Kommentarbereiche vor und hinter jedem Token,
 `getLeadingCommentRanges`/`getTrailingCommentRanges`, Leerraum nicht
 verglichen): in allen 552 Dateien entfernt er dieselben Kommentare; der
-Filter `ohneKommentare` tut das in 378. Zeilentreu in 552 von 552, für alle
-552 Dateien zusammen 220 bis 245 ms.
+Filter `ohneKommentare` tut das in 377. Nachgezählt am 12. Oktober mit
+zwei Verfahren, die beide 552 und 377 ergaben, auf dem Stand vor der
+zweiten Durchsicht (9442464) wie danach: die Kommentarbereiche vor und
+hinter jedem BLATT des Syntaxbaums, beide an dessen Anfang gefragt (das
+Verfahren dieser Messung), und dieselben Bereiche an jedem KNOTEN, die
+hinteren an dessen Ende (das der Durchsicht). Hier stand zuerst 378; die
+Zahl liess sich mit keinem der beiden nachstellen. Zeilentreu in 552 von
+552, für alle 552 Dateien zusammen 220 bis 245 ms.

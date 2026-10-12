@@ -296,6 +296,7 @@ die Startmessung test73. Seit E745 heisst `--schnell` der schnelle Lauf ohne Bro
 der volle Lauf ist `node pruefungen/volllauf.mts` (CLAUDE.md §30). Die
 Dauer im Satz darüber ist vom 3. September; am 11. Oktober brauchte der
 volle Lauf 158 Minuten (E743).*
+
 **Bekannt rot, unabhängig von diesem Auftrag:** `test178` (zwei Punkte, PDF-
 Zeichenfläche fällt auf 0 × 0,83 px zusammen). Das ist nicht durch diesen
 Auftrag verursacht und muss nicht hier behoben werden — aber es darf auch

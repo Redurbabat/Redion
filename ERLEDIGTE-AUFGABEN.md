@@ -61,6 +61,28 @@ dem Schloss 353 105/105, 388 22/22 (Start 1919 KB, Decke 1950);
 nur `test274`, 231 s von aussen gemessen (Warten auf das Schloss
 eingeschlossen).
 
+**Nach der zweiten Durchsicht** (12. Oktober, derselbe Zweig): `test610`
+fängt jetzt auch `node --run pruefen`, `npm --prefix . run pruefen`,
+`npm -C . run pruefen`, `echo "$(npm run pruefen)"`, dasselbe mit
+Backticks und `echo … | sh` (ein `echo` ist nur noch Prosa ohne `$(`,
+Backtick und Röhre); er liest JEDE Ablaufdatei unter `.github/workflows/`
+(jede muss einen Job ergeben) und Zeile für Zeile jede YAML-Datei unter
+`.github/`. Zwölf neue Gegenproben (G19 bis G30), alle von der Fassung
+davor grün durchgelassen, jetzt rot; test610 28/28, gegen 97d156b rot mit 8 von
+27. Sein Kopf und E745 sagen nicht mehr „jede Form, die einen Lauf
+startet" und „ein Rot bricht den Job ab": `set +e`, `shell:` ohne `-e`,
+`if:` und ein Lauf hinter einem eigenen Skript stehen jetzt als „hält er
+nicht" da, dazu ein gefalteter Block in einer eigenen Action (N1 bis N5,
+grün mit Absicht). `messungen.md` §102 und
+pruefen.yml: „der Runner ist nicht langsamer" ist durch das gemischte Bild
+ersetzt (test105 und test103 dort schneller, test578 langsamer, je ein
+Lauf); „`ohneKommentare` … in 378" war mit zwei Verfahren nachgezählt 377.
+In `doku/AUFTRAG-01-ruhiges-band.md` fehlte nach dem Nachtrag die
+Leerzeile. Nachbarn: 550 8/8, 549 6/6, 225 11/11, 105 342/342, 109 25/25,
+87 181/181, 537 18/18, 400 4/4, 553 6/6; unter dem Schloss 353 105/105,
+444 13/13, 388 22/22 (Start 1919 KB, Decke 1950). Ausgelieferte Dateien
+unverändert (Dienststand v1469, Einzeldatei ohne Unterschied).
+
 **Offen:** wie lange der ganze schnelle Lauf auf einem Runner braucht,
 zeigt erst der erste Push (die Einrichtung ist gemessen: 32 s); und der Job
 wird rot sein, solange `test274` rot ist — ein Fehlalarm über
