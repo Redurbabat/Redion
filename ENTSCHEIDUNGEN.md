@@ -67163,8 +67163,10 @@ der Fläche angelegt — 171/172, „12 → 13 Leitungen"; (20) die Fläche
 speichert auch, wenn sie nicht mehr im Dokument steht — 171/172,
 „{"x":430,"y":100,…}". Wieder eingesetzt 172/172.
 
-**Nach der dritten Durchsicht** kam §14 dazu — alles mit echter Maus und
-echter Tastatur, keine Taste an die Wurzel geschickt: Escape bricht einen
+**Nach der dritten Durchsicht** kam §14 dazu — der Zug und jede Taste darin
+mit echter Maus und echter Tastatur, keine Taste an die Wurzel geschickt
+(nur die Vorbereitung in §14 d dreht T1 vor dem Zug noch über den
+Hilfsgriff): Escape bricht einen
 Zug mit Teilen, einen Rahmen (zuerst ohne Escape: derselbe Rahmen wählt
 H1) und eine Leitung (zuerst ohne Escape: sie entsteht) ab, das Bild sofort
 wie vorher, nichts gespeichert, kein Rückgängig-Schritt; Strg+Z,

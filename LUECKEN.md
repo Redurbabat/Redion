@@ -8623,6 +8623,17 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
      gespeichert, das Bild heruntergeladen. Jetzt verweigern beide im Zug
      und sagen es („Erst loslassen — …"); nach dem Loslassen nehmen sie den
      gespeicherten Plan (`test611` §14, Gegenproben 27 und 28 in E746).
+   * **Ein Zug, der nie losgelassen wird** (vierte Durchsicht, aus dem Code
+     gelesen, nicht gemessen): der Tastenhorcher des Zugs hängt am Dokument
+     und geht erst mit dem Loslassen, mit dem nächsten Aufsetzen oder mit
+     Escape. Kommt das Loslassen nie an — das Fenster verliert den Fokus,
+     während die Taste gedrückt ist —, schluckt er Strg+Z, Umschalt+Strg+Z
+     und Strg+Y auf der ganzen Seite, auch in einem Textfeld, bis zum
+     nächsten Klick (der den Zug richtig beendet) oder Escape. Einen
+     liegengebliebenen Zug gab es schon vorher; neu ist nur, dass er auch
+     diese drei Tasten hält. Kein Datenrisiko — gespeichert wird nur mit
+     der vollen Suche. Abhilfe wäre ein `blur` am Fenster, das den Zug
+     beendet; nicht gebaut, weil ohne Messung und ohne Wächter (§50).
 
 ### Fachlich offen (vom Zweig)
 

@@ -1239,7 +1239,9 @@ await cdp.detach();
  *
  * Verlangt wird, alles mit echter Eingabe — keine Taste an die Wurzel
  * geschickt; nur den Fokus auf einen Knopf setzt der Lauf selbst, wie ihn
- * die Tabulatortaste dorthin brächte: Escape bricht einen Zug mit Teilen,
+ * die Tabulatortaste dorthin brächte, und die VORBEREITUNG in §14 d (T1 vor
+ * dem Zug drehen) nimmt noch den Hilfsgriff `taste('r')` — der Zug selbst
+ * und jede Taste darin sind echt: Escape bricht einen Zug mit Teilen,
  * einen Rahmen und eine Leitung ab (das Bild sofort wie vorher, nichts
  * gespeichert, kein Rückgängig-Schritt); Strg+Z, Umschalt+Strg+Z und Strg+Y
  * tun im Zug nichts, weder an der Fläche noch am Seitenverlauf, und der Zug
