@@ -455,7 +455,11 @@ const Planflaeche = (() => {
       }
       const beispiel = (Schaltplan.BEISPIELE as any[]).find(x => x.id === id);
       aendere(() => { Schaltplan.beispielBauen(z.plan, id, aktiveEbene()); });
-      if (beispiel) UI.toast(beispiel.hinweis);
+      /* Der Hinweis nur, wenn das Beispiel wirklich steht: während eines Zugs
+         verweigert `aendere`, und „Strom drücken, dann auf S1 tippen" über
+         einem Plan ohne S1 wäre eine Zusage ohne Inhalt (E746, dritte
+         Durchsicht; test611 §14). */
+      if (beispiel && !z.zieht) UI.toast(beispiel.hinweis);
     };
 
     /** Eine selbst gespeicherte Vorlage einsetzen — mit FRISCHEN Kennungen.
@@ -762,12 +766,56 @@ const Planflaeche = (() => {
       document.addEventListener('pointerdown', zugUnterbrechen, true);
       document.addEventListener('pointerup', zugEnde, true);
       document.addEventListener('pointercancel', zugEnde, true);
+      document.addEventListener('keydown', zugTaste, true);
     };
     const zugLoesen = (): void => {
       z.zieht = null;
       document.removeEventListener('pointerdown', zugUnterbrechen, true);
       document.removeEventListener('pointerup', zugEnde, true);
       document.removeEventListener('pointercancel', zugEnde, true);
+      document.removeEventListener('keydown', zugTaste, true);
+    };
+
+    /* --- Tasten im Zug, am Dokument gehorcht (E746, dritte Durchsicht) -----
+       Mit der Maus steht der Fokus während eines Zugs NICHT auf der Fläche:
+       das Anfassen zeichnet sie neu (`male`), der Knoten unter dem Zeiger
+       ist danach ein anderer, und der Browser setzt den Fokus beim
+       `mousedown` auf die Seite (`body`), weil er an einem Knoten ausserhalb
+       des Dokuments keinen fokussierbaren Vorfahren findet. Der Horcher an
+       der Wurzel hörte darum mit echter Maus und echter Tastatur nichts:
+       Escape brach weder einen Zug mit Teilen noch einen Rahmen ab, und
+       Strg+Z nahm der Seitenverlauf (E682) — er baute die Seite neu, und
+       der Zug war still verworfen (test611 §14). Deshalb horcht ein Zug auf
+       die Tasten so, wie er auf das Loslassen horcht: am Dokument, in der
+       Aufnahmephase, nur solange er läuft.
+         · Escape bricht den Zug ab. Ist aber ein Menü oder Fenster offen
+           (dieselbe Liste wie im gemeinsamen Escape-Griff der Schale),
+           schliesst dieser Druck zuerst das — ein Druck, ein Fenster (E711);
+           der nächste bricht ab.
+         · Rückgängig und Wiederholen (Strg+Z, Umschalt+Strg+Z, Strg+Y, mit
+           Cmd ebenso) tun nichts — weder an der Fläche (`zurueck` und
+           `vorwaerts` verweigern im Zug ohnehin) noch am Seitenverlauf, der
+           die Fläche abhängen und den Zug verwerfen würde. Der Zug läuft
+           weiter und wird beim Loslassen gespeichert wie sonst. Auch in
+           einem Textfeld: wer die Maus hält, hat den Zug in der Hand.
+       Die übrigen Tasten gehen während eines Mauszugs dorthin, wo der Fokus
+       steht — auf die Seite, wo „r", „h" und Entf nichts tun und die Pfeile
+       sie rollen (L253 Punkt 9). */
+    const OFFENES_FENSTER = '.menu, .overlay, dialog[open], .iblatt, #r-blatt.auf';
+    const zugTaste = (e: KeyboardEvent): void => {
+      if (!z.zieht) return;
+      if (e.key === 'Escape') {
+        if (document.querySelector(OFFENES_FENSTER)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        zugAbbrechen();
+        return;
+      }
+      const k = e.key.toLowerCase();
+      if ((e.ctrlKey || e.metaKey) && (k === 'z' || (k === 'y' && !e.shiftKey))) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     };
 
     /** Einen Zug mit Teilen sichern — der einzige Weg, auf dem ein Zug in die
@@ -1202,16 +1250,44 @@ const Planflaeche = (() => {
 
     /* --- Tastatur --------------------------------------------------------- */
     wurzel.tabIndex = 0;
+    /* DER FOKUS BLEIBT BEI DER FLÄCHE (E746, dritte Durchsicht). Ein Klick
+       auf die Bühne zeichnet sie neu (Auswahl, Zug, Teil gesetzt), der
+       Knoten unter dem Zeiger ist danach ein anderer, und der Browser setzt
+       den Fokus beim `mousedown` auf die Seite statt auf die Fläche — stünde
+       der Knoten noch, nähme die Fläche ihn (`tabIndex` 0). Danach kam keine
+       echte Taste mehr hier an: „r" nach einem Klick auf ein Teil drehte
+       nichts, und Strg+Z nahm der Seitenverlauf statt der Fläche (test611
+       §14). Beim Loslassen über der Fläche holt sie den Fokus deshalb
+       zurück — nur, wenn er auf der Seite gelandet ist (`body`), nie aus
+       einem Feld, einem Knopf oder einem Dialog, und ohne zu rollen.
+       OHNE RING, wie ein Fokus mit der Maus: einen Fokus aus dem Skript
+       zeigt Chromium als `:focus-visible`, und `focus({ focusVisible:
+       false })` kennt es nicht (Chromium 141, gemessen). Das Merkmal
+       `data-zeigerfokus` nimmt den Ring weg (bausteine.css), bis der Fokus
+       die Fläche verlässt; wer mit der Tabulatortaste kommt, sieht ihn
+       (§38). */
+    wurzel.addEventListener('pointerup', () => {
+      const a = document.activeElement;
+      if ((!a || a === document.body) && wurzel.isConnected) {
+        wurzel.dataset.zeigerfokus = '';
+        wurzel.focus({ preventScroll: true });
+      }
+    });
+    wurzel.addEventListener('focusout', e => {
+      if (e.target === wurzel) delete wurzel.dataset.zeigerfokus;
+    });
     wurzel.addEventListener('keydown', e => {
       const inFeld = (e.target as HTMLElement).tagName === 'INPUT';
       if (inFeld) return;
       /* Während eines Zugs zählt von den Tasten nur Escape: es bricht den
-         Zug ab. „r", „h", Entf, die Pfeile, Strg+D/G/Z gehen weiter durch
-         die Zweige unten und nehmen die Taste (`preventDefault`, damit Strg+Z
-         nicht beim Seitenverlauf landet), aber `aendere`, `zurueck` und
-         `vorwaerts` tun während eines Zugs nichts (E746, zweite Durchsicht —
-         die Wahl und ihr Preis stehen dort). */
-      if (e.key === 'Escape' && z.zieht) { zugAbbrechen(); return; }
+         Zug ab — das tut `zugTaste` am Dokument (dritte Durchsicht), denn mit
+         der Maus steht der Fokus im Zug gar nicht hier. Kommt Escape im Zug
+         doch bis hierher, hat `zugTaste` es für ein offenes Menü
+         durchgelassen; dann gehört es dem Menü. „r", „h", Entf, die Pfeile,
+         Strg+D/G gehen weiter durch die Zweige unten und nehmen die Taste
+         (`preventDefault`), aber `aendere` tut während eines Zugs nichts
+         (E746, zweite Durchsicht — die Wahl und ihr Preis stehen dort). */
+      if (e.key === 'Escape' && z.zieht) return;
       const schritt = e.shiftKey ? Register.fachzeichen.RASTER * 5 : Register.fachzeichen.RASTER;
       const pfeile: Record<string, [number, number]> = {
         ArrowLeft: [-schritt, 0], ArrowRight: [schritt, 0],
@@ -1237,7 +1313,13 @@ const Planflaeche = (() => {
                              ...(z.plan.leitungen as any[]).map(l => l.id)]);
         male(); return;
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); return e.shiftKey ? vorwaerts() : zurueck(); }
+      /* Rückgängig und Wiederholen. Mit Umschalt meldet der Browser „Z",
+         nicht „z" — bis zur dritten Durchsicht ging Umschalt+Strg+Z darum an
+         der Fläche vorbei zum Seitenverlauf, ebenso Strg+Y, das hier gar
+         nicht stand (test611 §14). Strg+Umschalt+Y gehört den Favoriten. */
+      const k = e.key.toLowerCase();
+      if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); return e.shiftKey ? vorwaerts() : zurueck(); }
+      if ((e.ctrlKey || e.metaKey) && k === 'y' && !e.shiftKey) { e.preventDefault(); return vorwaerts(); }
     });
 
     /* --- Das Mehr-Menü ---------------------------------------------------- */
@@ -1280,6 +1362,11 @@ const Planflaeche = (() => {
     /* --- Vorlagen (Punkt 30) --------------------------------------------- */
     const VORLAGEN = 'elektro:planvorlagen';
     const vorlageSpeichern = (): void => {
+      /* Nicht während eines Zugs (E746, dritte Durchsicht): `z.plan` ist dann
+         ein Zwischenbild, die billigen Wege, und die Vorlage nähme es mit.
+         Erreichbar ist das mit der Tastatur — „…" hat den Fokus, Eingabe,
+         während die Maus noch zieht (test611 §14). */
+      if (z.zieht) { UI.toast('Erst loslassen — während eines Zugs wird keine Vorlage gespeichert.'); return; }
       void (async () => {
         const name = await UI.frage('Name der Vorlage', '');
         if (!name) return;
@@ -1304,6 +1391,8 @@ const Planflaeche = (() => {
     };
 
     const alsBildSpeichern = (): void => {
+      /* Ebenso: im Zug wäre das Bild ein Zwischenbild (siehe oben). */
+      if (z.zieht) { UI.toast('Erst loslassen — während eines Zugs wird kein Bild gespeichert.'); return; }
       const svg = Schaltplan.alsSvg(z.plan, { raster: false, anschluesse: false });
       const blob = new Blob(
         ['<?xml version="1.0" encoding="UTF-8"?>' +

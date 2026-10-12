@@ -69,11 +69,14 @@
  * das neue Horchen am Dokument ab, keine Lücke von damals. Mit ihr kam auch §10s „genau EINE": bis dahin `slice(-(n+1))`, das
  * immer n + 1 Einträge hat; rot wird die Zusage jetzt, wenn das Loslassen
  * zweimal voll sucht. Die Gegenproben 10–20 stehen in E746.
- * §14 kam mit der dritten Durchsicht und ist gegen a8533763b rot mit 189 von
- * 207 — alle 18 Fehlschläge in §14. Grün sind dort die Leitung (ihr Anfassen
- * zeichnet die Fläche nicht neu, der Fokus bleibt auf ihr — eine Abdeckung),
- * das offene Menü (rot wird es, wenn Escape im Zug ein Menü übergeht) und
- * was nach dem Loslassen gilt.
+ * §14 kam mit der dritten Durchsicht; eingecheckt vor der Reparatur
+ * (7c0fa0ff1) war er gegen a8533763b rot mit 189 von 207, im Endstand mit 191
+ * von 209 — alle 18 Fehlschläge in §14. Grün sind dort die Leitung (ihr
+ * Anfassen zeichnet die Fläche nicht neu, der Fokus bleibt auf ihr — eine
+ * Abdeckung), das offene Menü (rot wird es, wenn Escape im Zug ein Menü
+ * übergeht), der Ring (ohne Fokus kein Ring, mit Tab der Ring — rot wird
+ * er, wenn ein Klick ihn zeigt oder die Tabulatortaste nicht) und was nach
+ * dem Loslassen gilt. Die Gegenproben 21–32 stehen in E746.
  *
  *   node pruefungen/lauf/test611.mts
  * ==========================================================================*/
@@ -1618,9 +1621,14 @@ seite.on('download', d => { downloads.push(d); });
     if (d !== soll) folge.push(`${k}: T1 ${d}° statt ${soll}°`);
     if (fl.flaechen !== 1 || fl.marke !== 'alt') folge.push(`${k}: die Fläche ist neu gezeichnet (Marke ${fl.marke})`);
   };
+  const ring = (): Promise<string> => seite.evaluate(() =>
+    getComputedStyle(document.querySelector('.sp-wrap') as HTMLElement).boxShadow);
+  const ringKlick = await ring();
   await schritt('r', 90);
   p(`Nach einem echten Klick auf T1 steht der Fokus auf der Fläche (${fokus}), und ein echtes „r" dreht T1`,
     fokus === 'DIV.sp-wrap' && folge.length === 0, folge.join(' | '));
+  p('… ohne Ring um die Fläche, wie bei einem Fokus mit der Maus (der Ring gehört der Tastatur)', ringKlick === 'none',
+    `box-shadow ${ringKlick}`);
   await schritt('Control+z', 0);
   await schritt('Control+Shift+Z', 90);
   await schritt('Control+z', 0);
@@ -1629,6 +1637,15 @@ seite.on('download', d => { downloads.push(d); });
     folge.length === 0, folge.join(' | '));
   const seitenMeld = (await meldungenJetzt()).slice(m0).filter(t => /rückgängig|wiederhol/i.test(t));
   p('… und der Seitenverlauf hat nichts gemeldet', seitenMeld.length === 0, seitenMeld.join(' | '));
+  /* Und wer mit der Tastatur kommt, sieht den Ring (§38): vom Auswahlfeld der
+     Planart mit Umschalt+Tab zurück auf die Fläche. */
+  await seite.evaluate(() => (document.querySelector('.sp-wrap .sp-art') as HTMLElement).focus());
+  await seite.keyboard.press('Shift+Tab');
+  await seite.waitForTimeout(200);
+  const fokusTab = await fokusJetzt();
+  const ringTab = await ring();
+  p(`Mit Umschalt+Tab auf die Fläche (${fokusTab}): der Ring ist da`, fokusTab === 'DIV.sp-wrap' && ringTab !== 'none',
+    `box-shadow ${ringTab}`);
 }
 
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.slice(0, 3).join(' | '));

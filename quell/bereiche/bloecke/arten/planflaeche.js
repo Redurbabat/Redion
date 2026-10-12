@@ -289,7 +289,7 @@ const Planflaeche = (() => {
             }
             const beispiel = Schaltplan.BEISPIELE.find(x => x.id === id);
             aendere(() => { Schaltplan.beispielBauen(z.plan, id, aktiveEbene()); });
-            if (beispiel)
+            if (beispiel && !z.zieht)
                 UI.toast(beispiel.hinweis);
         };
         const vorlageEinsetzen = (v) => {
@@ -517,12 +517,32 @@ const Planflaeche = (() => {
             document.addEventListener('pointerdown', zugUnterbrechen, true);
             document.addEventListener('pointerup', zugEnde, true);
             document.addEventListener('pointercancel', zugEnde, true);
+            document.addEventListener('keydown', zugTaste, true);
         };
         const zugLoesen = () => {
             z.zieht = null;
             document.removeEventListener('pointerdown', zugUnterbrechen, true);
             document.removeEventListener('pointerup', zugEnde, true);
             document.removeEventListener('pointercancel', zugEnde, true);
+            document.removeEventListener('keydown', zugTaste, true);
+        };
+        const OFFENES_FENSTER = '.menu, .overlay, dialog[open], .iblatt, #r-blatt.auf';
+        const zugTaste = (e) => {
+            if (!z.zieht)
+                return;
+            if (e.key === 'Escape') {
+                if (document.querySelector(OFFENES_FENSTER))
+                    return;
+                e.preventDefault();
+                e.stopPropagation();
+                zugAbbrechen();
+                return;
+            }
+            const k = e.key.toLowerCase();
+            if ((e.ctrlKey || e.metaKey) && (k === 'z' || (k === 'y' && !e.shiftKey))) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
         };
         const teilzugSichern = (zug) => {
             const bewegt = zug.ausgang.size &&
@@ -910,14 +930,23 @@ const Planflaeche = (() => {
                 liste.innerHTML = paletteHtml(z.plan.art, f.value);
         });
         wurzel.tabIndex = 0;
+        wurzel.addEventListener('pointerup', () => {
+            const a = document.activeElement;
+            if ((!a || a === document.body) && wurzel.isConnected) {
+                wurzel.dataset.zeigerfokus = '';
+                wurzel.focus({ preventScroll: true });
+            }
+        });
+        wurzel.addEventListener('focusout', e => {
+            if (e.target === wurzel)
+                delete wurzel.dataset.zeigerfokus;
+        });
         wurzel.addEventListener('keydown', e => {
             const inFeld = e.target.tagName === 'INPUT';
             if (inFeld)
                 return;
-            if (e.key === 'Escape' && z.zieht) {
-                zugAbbrechen();
+            if (e.key === 'Escape' && z.zieht)
                 return;
-            }
             const schritt = e.shiftKey ? Register.fachzeichen.RASTER * 5 : Register.fachzeichen.RASTER;
             const pfeile = {
                 ArrowLeft: [-schritt, 0], ArrowRight: [schritt, 0],
@@ -966,9 +995,14 @@ const Planflaeche = (() => {
                 male();
                 return;
             }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+            const k = e.key.toLowerCase();
+            if ((e.ctrlKey || e.metaKey) && k === 'z') {
                 e.preventDefault();
                 return e.shiftKey ? vorwaerts() : zurueck();
+            }
+            if ((e.ctrlKey || e.metaKey) && k === 'y' && !e.shiftKey) {
+                e.preventDefault();
+                return vorwaerts();
             }
         });
         const mehrMenue = (anker) => {
@@ -1023,6 +1057,10 @@ const Planflaeche = (() => {
         };
         const VORLAGEN = 'elektro:planvorlagen';
         const vorlageSpeichern = () => {
+            if (z.zieht) {
+                UI.toast('Erst loslassen — während eines Zugs wird keine Vorlage gespeichert.');
+                return;
+            }
             void (async () => {
                 const name = await UI.frage('Name der Vorlage', '');
                 if (!name)
@@ -1049,6 +1087,10 @@ const Planflaeche = (() => {
             })();
         };
         const alsBildSpeichern = () => {
+            if (z.zieht) {
+                UI.toast('Erst loslassen — während eines Zugs wird kein Bild gespeichert.');
+                return;
+            }
             const svg = Schaltplan.alsSvg(z.plan, { raster: false, anschluesse: false });
             const blob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>' +
                     svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')], { type: 'image/svg+xml' });
