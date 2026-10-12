@@ -48,7 +48,8 @@
  *      (auch über `npx`). Gesucht wird in dem, was die Shell ausführt:
  *      Anführungszeichen und ein `\` vor einem Zeichen fallen weg
  *      (`npm run 'pruefen'`, `npm run prue""fen`, `npm run pr\uefen`),
- *      Leerraum wird zusammengezogen, ein Kommentar hinter `#` abgeschnitten,
+ *      Leerraum wird zusammengezogen, ein Kommentar hinter `#` abgeschnitten
+ *      (auch ein `#` IN Anführungszeichen — siehe „Was er nicht hält"),
  *      und eine Zeile zerfällt an `&&`, `||`, `;` und an einem einzelnen `&`
  *      in ihre Befehle. Ein `run:` liest er so, wie YAML es liest: `|` und
  *      `>` auch mit Kommentar oder Einrückungszahl, ein gefalteter Block
@@ -91,8 +92,17 @@
  * am Schritt oder am Job, das ihn gar nicht starten lässt, prüft er nicht.
  * Die Lesung Zeile für Zeile kennt keinen gefalteten Block und keinen Wert
  * über mehrere Zeilen; den fängt der Leser — in jeder Ablaufdatei und in
- * jeder Action, die ein Schritt ruft. Eine YAML-Datei, die kein Schritt
- * ruft, liest nur sie, und die fährt auch nicht. Hier stand bis zur zweiten
+ * jeder Action, die ein Schritt ruft, solange beide in Blockschreibweise
+ * mit Schlüsseln ohne Anführungszeichen stehen. Eine YAML-Datei, die kein
+ * Schritt ruft, liest nur sie, und die fährt auch nicht.
+ * Gemessen in der vierten Durchsicht von E745 (je eine Probe, jede grün
+ * durchgelassen), also NICHT gehalten: ein `#` in Anführungszeichen schneidet
+ * den Rest der Zeile ab (`echo "Lauf #1"; npm run pruefen`); ein Schritt in
+ * Klammerschreibweise oder mit Schlüssel in Anführungszeichen
+ * (`- { name: Z, uses: ./ci/v }`, `"uses": ./ci/v`, `"run": >`) und ein
+ * Leerzeichen vor dem Doppelpunkt (`run : >`); ein Kommentar hinter dem
+ * Schlüssel des ERSTEN Jobs (`voll: # …`) — der Leser verwirft dann den
+ * ganzen Job, auch für „Jeder Job hat eine Zeitgrenze". Hier stand bis zur zweiten
  * Durchsicht von E745 „jede Form, die einen Lauf startet" und „ein Rot
  * bricht den Job ab" — beides mehr, als er hält. Und bis zur dritten fehlten
  * in seiner Liste `yarn pruefen` und `pnpm pruefen`, Anführungszeichen um

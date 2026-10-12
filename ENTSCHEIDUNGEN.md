@@ -67114,6 +67114,20 @@ eigene Action aus JavaScript, deren Code er nicht liest. N5 ist kein Loch
 mehr: eine Action, die kein Schritt ruft, fährt nicht; ruft einer sie, fängt
 der Leser auch ihren gefalteten Block (G57).
 
+**Vierte Durchsicht (12. Oktober).** Sie hat weitere Schreibweisen gefunden,
+die test610 grün durchlässt, jede mit einer eigenen Probe gemessen: ein `#`
+in Anführungszeichen schneidet den Rest der Zeile ab (`echo "Lauf #1"; npm
+run pruefen`); ein Schritt in Klammerschreibweise oder mit einem Schlüssel
+in Anführungszeichen (`- { name: Z, uses: ./ci/v }`, `"uses": ./ci/v`,
+`"run": >`), ein Leerzeichen vor dem Doppelpunkt (`run : >`), und ein
+Kommentar hinter dem Schlüssel des ersten Jobs (`voll: # …`), mit dem der
+Leser den ganzen Job verwirft. Sie stehen jetzt im Kopf von test610 unter
+„Was er nicht hält", statt den Leser weiter auszubauen: der Wächter liest
+YAML von Hand und ohne Paket, und jede weitere Form wäre ein weiterer
+Sonderfall in einem Leser, der nie vollständig wird. Wer ein YAML-Paket für
+die Prüfungen will, entscheidet das für sich (§57: fremder Code nur mit
+Redurs Ja).
+
 **Rot zuerst und Gegenproben, dritte Runde.** test610 jetzt 30/30 (zwei
 Zusagen mehr: jede gerufene Action gibt es und ergibt ihre Schritte; kein
 anderes Skript in package.json ruft den Orchestrator). Gegen 97d156b
