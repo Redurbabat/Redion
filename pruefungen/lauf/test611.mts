@@ -47,6 +47,12 @@
  *       zweiter Finger beenden den Zug richtig, Escape bricht ab; eine
  *       Leitung über der Palette verfällt, eine Fläche, die nicht mehr im
  *       Dokument steht, speichert nichts (zweite Durchsicht, Fund 1)
+ *   §14 Echte Maus, echte Tasten: Escape bricht einen Zug mit Teilen, einen
+ *       Rahmen und eine Leitung ab; Rückgängig und Wiederholen tun im Zug
+ *       nichts, weder an der Fläche noch am Seitenverlauf; ein offenes Menü
+ *       schliesst zuerst; Vorlage und Bild verweigern im Zug; der Hinweis
+ *       eines Beispiels nur, wenn es eingesetzt wurde; und nach einem echten
+ *       Klick nehmen echte Tasten die Fläche (dritte Durchsicht)
  *
  * KANN DIESE SUITE ROT WERDEN? (§55.2) Ja — gegen 97d156b03 ist sie rot in
  * §1, §2, §3, §4, §5, §6, §7 und §9; die Zahl steht in E746. Die zwei Gegenproben
@@ -63,6 +69,11 @@
  * das neue Horchen am Dokument ab, keine Lücke von damals. Mit ihr kam auch §10s „genau EINE": bis dahin `slice(-(n+1))`, das
  * immer n + 1 Einträge hat; rot wird die Zusage jetzt, wenn das Loslassen
  * zweimal voll sucht. Die Gegenproben 10–20 stehen in E746.
+ * §14 kam mit der dritten Durchsicht und ist gegen a8533763b rot mit 189 von
+ * 207 — alle 18 Fehlschläge in §14. Grün sind dort die Leitung (ihr Anfassen
+ * zeichnet die Fläche nicht neu, der Fokus bleibt auf ihr — eine Abdeckung),
+ * das offene Menü (rot wird es, wenn Escape im Zug ein Menü übergeht) und
+ * was nach dem Loslassen gilt.
  *
  *   node pruefungen/lauf/test611.mts
  * ==========================================================================*/
@@ -1198,6 +1209,426 @@ await cdp.detach();
   const nach = await zustand(bid);
   p('Neu gezeichnet im Zug: das Loslassen der alten Fläche speichert nichts — die Ablage Byte für Byte wie vorher',
     nach.json === start.json, JSON.stringify(nach.teile.F1));
+}
+
+/* ==========================================================================
+ * §14 · Echte Maus, echte Tasten (dritte Durchsicht)
+ * --------------------------------------------------------------------------
+ * §13 schickt seine Tasten an die Fläche (`taste`, `strg`: Fokus auf
+ * `.sp-wrap`, dann `dispatchEvent`). Die dritte Durchsicht fuhr dieselben
+ * Wege mit ECHTER Maus und ECHTER Tastatur (`mouse.down`, `keyboard.press`)
+ * und fand: im Zug steht der Fokus gar nicht auf der Fläche, sondern auf der
+ * Seite (`body`). Das Anfassen zeichnet die Fläche neu (`male`), der Knoten
+ * unter dem Zeiger ist danach ein anderer, und der Browser setzt den Fokus
+ * beim `mousedown` auf die Seite, weil er an einem Knoten ausserhalb des
+ * Dokuments keinen fokussierbaren Vorfahren findet. Gemessen auf a8533763b
+ * mit der Sonde der Durchsicht: Escape brach weder einen Zug mit Teilen noch
+ * einen Rahmen ab — der Zug lief weiter und wurde beim Loslassen
+ * gespeichert; Strg+Z im Zug nahm der Seitenverlauf (E682), der die Seite neu
+ * baute und den Zug still verwarf (F1 danach bei 400,60). Das Nachmessen fand
+ * dazu: nach einem echten Klick auf ein Teil drehte ein echtes „r" nichts —
+ * der Fokus blieb auf der Seite —, und Umschalt+Strg+Z (der Browser meldet
+ * „Z") und Strg+Y nahm auch mit dem Fokus auf der Fläche der Seitenverlauf.
+ * „Als Vorlage speichern" und „Als Bild speichern" lasen mitten im Zug das
+ * Zwischenbild (L253 Punkt 9), und der Hinweis eines Beispiels erschien, auch
+ * wenn das Beispiel im Zug gar nicht eingesetzt worden war.
+ *
+ * Verlangt wird, alles mit echter Eingabe — keine Taste an die Wurzel
+ * geschickt; nur den Fokus auf einen Knopf setzt der Lauf selbst, wie ihn
+ * die Tabulatortaste dorthin brächte: Escape bricht einen Zug mit Teilen,
+ * einen Rahmen und eine Leitung ab (das Bild sofort wie vorher, nichts
+ * gespeichert, kein Rückgängig-Schritt); Strg+Z, Umschalt+Strg+Z und Strg+Y
+ * tun im Zug nichts, weder an der Fläche noch am Seitenverlauf, und der Zug
+ * wird beim Loslassen gespeichert wie sonst; ist im Zug ein Menü offen,
+ * schliesst Escape erst das Menü (ein Druck, ein Fenster), der nächste Druck
+ * bricht ab; Vorlage und Bild verweigern im Zug und sagen es, nach dem
+ * Loslassen gehen sie und nehmen den gespeicherten Plan; der Hinweis eines
+ * Beispiels erscheint nur, wenn es eingesetzt wurde; und nach einem echten
+ * Klick nehmen echte Tasten die Fläche — „r", Strg+Z, Umschalt+Strg+Z,
+ * Strg+Y, ohne dass der Seitenverlauf etwas tut.
+ * ========================================================================*/
+console.log('\n14 · Echte Maus, echte Tasten');
+const fokusJetzt = (): Promise<string> => seite.evaluate(() => {
+  const a = document.activeElement as HTMLElement | null;
+  return a ? a.tagName + (typeof a.className === 'string' && a.className ? '.' + a.className.split(' ')[0] : '') : 'null';
+});
+const bildDerFlaeche = (): Promise<string> =>
+  seite.evaluate(() => document.querySelector('.sp-wrap svg.sp-flaeche')?.outerHTML ?? '');
+const f1ImBild = (): Promise<string | null> => seite.evaluate(() =>
+  document.querySelector('.sp-wrap svg .sp-teil[data-id="F1"]')?.getAttribute('transform') ?? null);
+const zurueckKnopfAus = (): Promise<boolean> => seite.evaluate(() =>
+  !!(document.querySelector('.sp-wrap button[data-a="zurueck"]') as HTMLButtonElement | null)?.disabled);
+const gewaehlt = (): Promise<number> => seite.evaluate(() => {
+  const m = /(\d+) gewählt/.exec(document.querySelector('.sp-wrap .sp-auswahl')?.textContent ?? '');
+  return m ? Number(m[1]) : 0;
+});
+/** Die Fläche zeichnen lassen und merken, ob sie danach noch DIESELBE ist. */
+const markiere = (): Promise<void> => seite.evaluate(() => {
+  const el = document.querySelector<HTMLElement>('.sp-wrap');
+  if (el) el.dataset.probe = 'alt';
+});
+const dieselbeFlaeche = (): Promise<{ flaechen: number; marke: string | null }> => seite.evaluate(() => ({
+  flaechen: document.querySelectorAll('.sp-wrap').length,
+  marke: document.querySelector<HTMLElement>('.sp-wrap')?.dataset.probe ?? null
+}));
+/** Einem Knopf den Fokus geben (wie die Tabulatortaste) und ihn mit der
+    ECHTEN Eingabetaste drücken. */
+const mitEingabe = async (wahl: string): Promise<void> => {
+  const da = await seite.evaluate((w: string) => {
+    const b = document.querySelector<HTMLElement>(w);
+    if (b) b.focus();
+    return !!b && document.activeElement === b;
+  }, wahl);
+  if (!da) throw new Error('Knopf nicht fokussierbar: ' + wahl);
+  await seite.keyboard.press('Enter');
+  await seite.waitForTimeout(300);
+};
+/** Steht eine Frage offen (der Fokus in einem Feld ausserhalb der Fläche),
+    wird sie mit echter Tastatur beantwortet. Gibt zurück, ob eine offen war. */
+const frageBeantworten = async (antwort: string): Promise<boolean> => {
+  const offen = await seite.waitForFunction(() => {
+    const a = document.activeElement;
+    return a instanceof HTMLInputElement && !a.closest('.sp-wrap');
+  }, null, { timeout: 3000 }).then(() => true, () => false);
+  if (!offen) return false;
+  await seite.keyboard.type(antwort);
+  await seite.keyboard.press('Enter');
+  await seite.waitForTimeout(400);
+  return true;
+};
+const VORLAGEN = 'elektro:planvorlagen';
+const vorlagenZahl = (): Promise<number> => seite.evaluate((k: string) => (Store.getMeta(k, []) || []).length, VORLAGEN);
+const downloads: any[] = [];
+seite.on('download', d => { downloads.push(d); });
+
+/* a · Escape bricht einen Zug mit Teilen ab. */
+{
+  const bid = await oeffne('W');
+  await seite.waitForTimeout(300);
+  await waehle('F1');
+  const start = await zustand(bid);
+  const bildVor = await bildDerFlaeche();
+  await mausZug(bid);
+  console.log('    Fokus im Zug (echte Maus): ' + await fokusJetzt());
+  const bildMitte = await bildDerFlaeche();
+  await seite.keyboard.press('Escape');
+  await seite.waitForTimeout(200);
+  const bildEsc = await bildDerFlaeche();
+  const f1Esc = await f1ImBild();
+  await seite.mouse.up();
+  await seite.waitForTimeout(450);
+  const nach = await zustand(bid);
+  p('Echte Maus, echtes Escape — Zug mit Teilen: das Bild war unterwegs ein anderes (sonst prüfte das hier nichts)',
+    bildMitte !== bildVor);
+  p('Echte Maus, echtes Escape — Zug mit Teilen: das Bild ist sofort wieder das von vor dem Zug, Zeichen für Zeichen',
+    bildEsc === bildVor, `F1 im Bild nach Escape: ${f1Esc}`);
+  p('Echte Maus, echtes Escape — Zug mit Teilen: nach dem Loslassen nichts gespeichert, die Ablage Byte für Byte wie vorher',
+    nach.json === start.json, JSON.stringify(nach.teile.F1));
+  p('Echte Maus, echtes Escape — Zug mit Teilen: kein Rückgängig-Schritt (der Knopf bleibt aus)', await zurueckKnopfAus());
+}
+
+/* b · Escape bricht einen Rahmen ab. Zuerst ohne Escape: derselbe Rahmen
+   wählt H1 — sonst bewiese „nichts gewählt" nichts. */
+{
+  const rahmen = async (bid: string, vorLoslassen?: () => Promise<void>): Promise<void> => {
+    const bild = await bildpunkt(bid);
+    const m = await seite.evaluate(() => Register.fachzeichen.masse('klingel', 0) as { w: number; h: number });
+    /* H1 steht bei (760,50). Angefasst rechts unterhalb, auf leerer Fläche,
+       aufgezogen bis (745,15): darin liegt H1 ganz, keine Leitung ganz. */
+    const von: [number, number] = [Math.min(855, 760 + m.w + 10), Math.min(395, 50 + m.h + 10)];
+    const [x0, y0] = bild(von[0], von[1]);
+    await seite.mouse.move(x0, y0);
+    await seite.mouse.down();
+    for (let i = 1; i <= 8; i++) {
+      const [x, y] = bild(von[0] + (745 - von[0]) * i / 8, von[1] + (15 - von[1]) * i / 8);
+      await seite.mouse.move(x, y);
+    }
+    if (vorLoslassen) await vorLoslassen();
+    await seite.mouse.up();
+    await seite.waitForTimeout(450);
+  };
+  const bidA = await oeffne('W');
+  await seite.waitForTimeout(300);
+  await rahmen(bidA);
+  const ohne = await gewaehlt();
+  p('Ein Rahmen um H1, ohne Escape, wählt H1 (die Gegenprobe zur nächsten Zusage)', ohne === 1, `${ohne} gewählt`);
+
+  const bid = await oeffne('W');
+  await seite.waitForTimeout(300);
+  const bildVor = await bildDerFlaeche();
+  let bildMitte = '', bildEsc = '';
+  await rahmen(bid, async () => {
+    bildMitte = await bildDerFlaeche();
+    await seite.keyboard.press('Escape');
+    await seite.waitForTimeout(200);
+    bildEsc = await bildDerFlaeche();
+  });
+  const mit = await gewaehlt();
+  p('Echte Maus, echtes Escape — Rahmen: unterwegs stand der Rahmen im Bild', bildMitte !== bildVor);
+  p('Echte Maus, echtes Escape — Rahmen: der Rahmen ist sofort weg, das Bild wie vor dem Zug', bildEsc === bildVor,
+    `${bildEsc.length} gegen ${bildVor.length} Zeichen`);
+  p('Echte Maus, echtes Escape — Rahmen: nach dem Loslassen ist nichts gewählt', mit === 0, `${mit} gewählt`);
+}
+
+/* c · Escape bricht eine Leitung ab. Zuerst ohne Escape: dieselbe Leitung
+   entsteht. */
+{
+  const leitung = async (bid: string, vorLoslassen?: () => Promise<void>): Promise<void> => {
+    const bild = await bildpunkt(bid);
+    const [x0, y0] = bild(700, 300);
+    await seite.mouse.move(x0, y0);
+    await seite.mouse.down();
+    for (let i = 1; i <= 6; i++) { const [x, y] = bild(700 + 10 * i, 300); await seite.mouse.move(x, y); }
+    if (vorLoslassen) await vorLoslassen();
+    await seite.mouse.up();
+    await seite.waitForTimeout(450);
+  };
+  const werkzeug = async (wz: string): Promise<void> => {
+    await seite.locator(`.sp-wrap button[data-wz="${wz}"]`).click();
+    await seite.waitForTimeout(250);
+  };
+  const bidA = await oeffne('W');
+  await seite.waitForTimeout(300);
+  await werkzeug('leitung');
+  await leitung(bidA);
+  const ohne = Object.keys((await zustand(bidA)).punkte).length;
+  p('Eine Leitung von (700,300) nach (760,300), ohne Escape, entsteht (die Gegenprobe zur nächsten Zusage)', ohne === 13,
+    `${ohne} Leitungen`);
+  await werkzeug('zeigen');
+
+  const bid = await oeffne('W');
+  await seite.waitForTimeout(300);
+  await werkzeug('leitung');
+  const start = await zustand(bid);
+  const bildVor = await bildDerFlaeche();
+  let bildMitte = '', bildEsc = '';
+  await leitung(bid, async () => {
+    bildMitte = await bildDerFlaeche();
+    await seite.keyboard.press('Escape');
+    await seite.waitForTimeout(200);
+    bildEsc = await bildDerFlaeche();
+  });
+  const nach = await zustand(bid);
+  p('Echte Maus, echtes Escape — Leitung: unterwegs stand die gestrichelte Vorschau im Bild', bildMitte !== bildVor);
+  p('Echte Maus, echtes Escape — Leitung: die Vorschau ist sofort weg, das Bild wie vor dem Zug', bildEsc === bildVor,
+    `${bildEsc.length} gegen ${bildVor.length} Zeichen`);
+  p('Echte Maus, echtes Escape — Leitung: keine neue Leitung, die Ablage Byte für Byte wie vorher', nach.json === start.json,
+    `${Object.keys(start.punkte).length} → ${Object.keys(nach.punkte).length} Leitungen`);
+  await werkzeug('zeigen');
+}
+
+/* d · Rückgängig und Wiederholen im Zug tun nichts — mit einem Schritt
+   davor (T1 gedreht), damit die Fläche etwas zurückzunehmen HÄTTE, und nach
+   dem Zaun des Seitenverlaufs (700 ms, wie test568), damit auch er etwas
+   hätte. */
+{
+  const bid = await oeffne('W');
+  await seite.waitForTimeout(300);
+  await waehle('T1');
+  await taste('r');
+  await seite.waitForTimeout(800);
+  await waehle('F1');
+  await markiere();
+  const start = await zustand(bid);
+  const m0 = (await meldungenJetzt()).length;
+  await mausZug(bid);
+  const f1Zug = await f1ImBild();
+  const imZug: string[] = [];
+  for (const k of ['Control+z', 'Control+Shift+Z', 'Control+y']) {
+    await seite.keyboard.press(k);
+    await seite.waitForTimeout(300);
+    const fl = await dieselbeFlaeche();
+    const mitte = await zustand(bid);
+    const f1 = await f1ImBild();
+    if (fl.flaechen !== 1 || fl.marke !== 'alt') imZug.push(`${k}: die Fläche ist neu gezeichnet (${fl.flaechen} Flächen, Marke ${fl.marke})`);
+    if (mitte.json !== start.json) imZug.push(`${k}: die Ablage hat sich geändert (T1 ${JSON.stringify(mitte.teile.T1)}, F1 ${JSON.stringify(mitte.teile.F1)})`);
+    if (f1 !== f1Zug) imZug.push(`${k}: F1 im Bild ${f1} statt ${f1Zug}`);
+  }
+  p(`Echte Maus, echtes Strg+Z, Umschalt+Strg+Z, Strg+Y im Zug: nichts geschieht — dieselbe Fläche, die Ablage wie vorher, F1 weiter bei ${f1Zug}`,
+    imZug.length === 0, imZug.join(' | '));
+  await seite.mouse.up();
+  await seite.waitForTimeout(450);
+  const nach = await zustand(bid);
+  const f = nach.teile.F1;
+  p('… und nach dem Loslassen ist der Zug gespeichert: F1 bei 430,100', !!f && f.x === 430 && f.y === 100, JSON.stringify(f));
+  if (f) {
+    const voll: string = await seite.evaluate(([j, x, y]: [string, number, number]) =>
+      (window as any).vollNach(j, x, y), [start.json, f.x, f.y] as [string, number, number]);
+    p('… mit dem Ergebnis der vollen Suche, Byte für Byte', leitungenVon(nach) === voll,
+      `gespeichert ${leitungenVon(nach).slice(0, 160)} · voll ${voll.slice(0, 160)}`);
+  }
+  p('… und der Schritt davor steht noch: T1 gedreht', nach.teile.T1?.drehung === 90, JSON.stringify(nach.teile.T1));
+  const fl = await dieselbeFlaeche();
+  p('… und die Fläche ist dieselbe wie vor dem Zug (die Seite wurde nicht neu gebaut)', fl.flaechen === 1 && fl.marke === 'alt',
+    `${fl.flaechen} Flächen, Marke ${fl.marke}`);
+  const seitenMeld = (await meldungenJetzt()).slice(m0).filter(t => /rückgängig|wiederhol/i.test(t));
+  p('… und der Seitenverlauf hat nichts gemeldet', seitenMeld.length === 0, seitenMeld.join(' | '));
+}
+
+/* e · Ist im Zug ein Menü offen, schliesst Escape erst das Menü; der
+   nächste Druck bricht den Zug ab. */
+{
+  const bid = await oeffne('W');
+  await seite.waitForTimeout(300);
+  await waehle('F1');
+  const start = await zustand(bid);
+  const bildVor = await bildDerFlaeche();
+  await mausZug(bid);
+  const f1Zug = await f1ImBild();
+  await mitEingabe('.sp-wrap button[data-a="mehr"]');
+  const menueAuf = await seite.evaluate(() => !!document.querySelector('.menu [data-m="vorlage"]'));
+  await seite.keyboard.press('Escape');
+  await seite.waitForTimeout(200);
+  const menueNach1 = await seite.evaluate(() => !!document.querySelector('.menu'));
+  const f1Nach1 = await f1ImBild();
+  await seite.keyboard.press('Escape');
+  await seite.waitForTimeout(200);
+  const bildNach2 = await bildDerFlaeche();
+  await seite.mouse.up();
+  await seite.waitForTimeout(450);
+  const nach = await zustand(bid);
+  p('Menü im Zug: „…" öffnet mit der Eingabetaste sein Menü (sonst prüfte das hier nichts)', menueAuf);
+  p('Menü im Zug: das erste Escape schliesst das Menü — und nur das, der Zug läuft weiter',
+    !menueNach1 && f1Nach1 === f1Zug, `Menü noch offen: ${menueNach1}, F1 im Bild ${f1Nach1} (im Zug ${f1Zug})`);
+  p('Menü im Zug: das zweite Escape bricht den Zug ab — das Bild wie vor dem Zug', bildNach2 === bildVor,
+    `${bildNach2.length} gegen ${bildVor.length} Zeichen`);
+  p('Menü im Zug: nach dem Loslassen nichts gespeichert', nach.json === start.json, JSON.stringify(nach.teile.F1));
+}
+
+/* f · „Als Vorlage speichern" im Zug verweigert und sagt es; nach dem
+   Loslassen geht es und nimmt den gespeicherten Plan. */
+{
+  const bid = await oeffne('W');
+  await seite.waitForTimeout(300);
+  await waehle('F1');
+  const v0 = await vorlagenZahl();
+  const m0 = (await meldungenJetzt()).length;
+  await mausZug(bid);
+  await mitEingabe('.sp-wrap button[data-a="mehr"]');
+  await mitEingabe('.menu [data-m="vorlage"]');
+  const abgelehnt = (await meldungenJetzt()).slice(m0).filter(t => /loslassen/i.test(t) && /Vorlage/.test(t));
+  const fragte = abgelehnt.length ? false : await frageBeantworten('Im Zug');
+  const vZug = await vorlagenZahl();
+  await seite.mouse.up();
+  await seite.waitForTimeout(450);
+  p('Vorlage im Zug: keine Vorlage gespeichert', vZug === v0, `${v0} → ${vZug} Vorlagen${fragte ? ' (der Name wurde mitten im Zug erfragt)' : ''}`);
+  p('Vorlage im Zug: die Fläche sagt, warum', abgelehnt.length === 1, abgelehnt.join(' | ') || '(keine Meldung)');
+
+  /* Nach dem Loslassen: die Auswahl leeren (echtes Escape — der Fokus steht
+     jetzt auf der Fläche), dann derselbe Weg. */
+  await seite.keyboard.press('Escape');
+  await seite.waitForTimeout(250);
+  await mitEingabe('.sp-wrap button[data-a="mehr"]');
+  await mitEingabe('.menu [data-m="vorlage"]');
+  const fragteNach = await frageBeantworten('Nach dem Zug');
+  const vNach = await vorlagenZahl();
+  const gleich = await seite.evaluate(([b, k]: [string, string]) => {
+    const plan = Store.getBlock(b).plan;
+    const liste = Store.getMeta(k, []) || [];
+    const v = liste[liste.length - 1];
+    if (!v) return 'keine Vorlage';
+    const x0 = Math.min(...(plan.teile as any[]).map(t => t.x));
+    const y0 = Math.min(...(plan.teile as any[]).map(t => t.y));
+    const soll = JSON.stringify((plan.leitungen as any[]).map(l => (l.punkte as any[]).map(q => ({ x: q.x - x0, y: q.y - y0 }))));
+    const ist = JSON.stringify((v.leitungen as any[]).map(l => l.punkte));
+    return soll === ist ? '' : `Vorlage ${ist.slice(0, 160)} · Plan ${soll.slice(0, 160)}`;
+  }, [bid, VORLAGEN] as [string, string]);
+  p('Vorlage nach dem Loslassen: der Name wird erfragt, und eine Vorlage mehr steht da', fragteNach && vNach === vZug + 1,
+    `gefragt: ${fragteNach}, ${vZug} → ${vNach} Vorlagen`);
+  p('… und ihre Leitungen sind die gespeicherten (die volle Suche), Punkt für Punkt', gleich === '', gleich);
+}
+
+/* g · „Als Bild speichern" im Zug verweigert und sagt es; nach dem
+   Loslassen geht es und zeigt den gespeicherten Plan. */
+{
+  const bid = await oeffne('W');
+  await seite.waitForTimeout(300);
+  await waehle('F1');
+  const d0 = downloads.length;
+  const m0 = (await meldungenJetzt()).length;
+  await mausZug(bid);
+  await mitEingabe('.sp-wrap button[data-a="mehr"]');
+  await mitEingabe('.menu [data-m="svg"]');
+  await seite.waitForTimeout(500);
+  const dZug = downloads.length;
+  const abgelehnt = (await meldungenJetzt()).slice(m0).filter(t => /loslassen/i.test(t) && /Bild/.test(t));
+  await seite.mouse.up();
+  await seite.waitForTimeout(450);
+  p('Bild im Zug: nichts heruntergeladen', dZug === d0, `${dZug - d0} Downloads`);
+  p('Bild im Zug: die Fläche sagt, warum', abgelehnt.length === 1, abgelehnt.join(' | ') || '(keine Meldung)');
+
+  await mitEingabe('.sp-wrap button[data-a="mehr"]');
+  const kommt = seite.waitForEvent('download', { timeout: 5000 }).then(d => d, () => null);
+  await mitEingabe('.menu [data-m="svg"]');
+  const dl = await kommt;
+  let inhalt = '';
+  if (dl) { const pfad = await dl.path(); if (pfad) inhalt = fs.readFileSync(pfad, 'utf8'); }
+  const soll: string = await seite.evaluate((b: string) => '<?xml version="1.0" encoding="UTF-8"?>' +
+    Schaltplan.alsSvg(Store.getBlock(b).plan, { raster: false, anschluesse: false })
+      .replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" '), bid);
+  p('Bild nach dem Loslassen: ein Download, und er zeigt den gespeicherten Plan, Zeichen für Zeichen',
+    !!dl && inhalt === soll, dl ? `${inhalt.length} gegen ${soll.length} Zeichen` : 'kein Download');
+}
+
+/* h · Der Hinweis eines Beispiels erscheint nur, wenn es eingesetzt wurde.
+   Plan P hat kein Netz (sonst sagte die Fläche „Das Netz steht schon"). */
+{
+  const bid = await oeffne('P');
+  await seite.waitForTimeout(300);
+  const start = await zustand(bid);
+  const beispiel = await seite.evaluate(() => (Schaltplan.BEISPIELE as any[])[0] as { id: string; hinweis: string });
+  const m0 = (await meldungenJetzt()).length;
+  const box = await seite.locator('.sp-wrap svg .sp-teil[data-id="E1"]').boundingBox();
+  if (!box) throw new Error('E1 nicht gefunden');
+  const x = box.x + box.width / 2, y = box.y + box.height / 2;
+  await seite.mouse.move(x, y);
+  await seite.mouse.down();
+  for (let i = 1; i <= 8; i++) await seite.mouse.move(x + 60 * i / 8, y);
+  await mitEingabe('.sp-wrap button[data-a="netz"]');
+  await mitEingabe(`.menu [data-s="${beispiel.id}"]`);
+  const mitte = await zustand(bid);
+  const hinweis = (await meldungenJetzt()).slice(m0).filter(t => t === beispiel.hinweis);
+  await seite.mouse.up();
+  await seite.waitForTimeout(450);
+  const nach = await zustand(bid);
+  p('Beispiel im Zug: nicht eingesetzt — die Ablage im Zug wie vorher', mitte.json === start.json,
+    `${Object.keys(start.teile).length} → ${Object.keys(mitte.teile).length} Teile`);
+  p('Beispiel im Zug: und sein Hinweis erscheint nicht (er versprach ein Beispiel, das nicht da ist)', hinweis.length === 0,
+    hinweis.join(' | '));
+  p('Beispiel im Zug: nach dem Loslassen ist E1 gezogen, und kein Teil kam dazu',
+    Object.keys(nach.teile).length === 2 && nach.teile.E1.x !== start.teile.E1.x, JSON.stringify(nach.teile));
+}
+
+/* i · Nach einem echten Klick nehmen echte Tasten die Fläche. */
+{
+  const bid = await oeffne('W');
+  await seite.waitForTimeout(300);
+  await seite.waitForTimeout(800);           // der Zaun des Seitenverlaufs
+  await waehle('T1');
+  const fokus = await fokusJetzt();
+  await markiere();
+  const m0 = (await meldungenJetzt()).length;
+  const dreh = async (): Promise<number> => (await zustand(bid)).teile.T1?.drehung ?? -1;
+  const folge: string[] = [];
+  const schritt = async (k: string, soll: number): Promise<void> => {
+    await seite.keyboard.press(k);
+    await seite.waitForTimeout(300);
+    const d = await dreh();
+    const fl = await dieselbeFlaeche();
+    if (d !== soll) folge.push(`${k}: T1 ${d}° statt ${soll}°`);
+    if (fl.flaechen !== 1 || fl.marke !== 'alt') folge.push(`${k}: die Fläche ist neu gezeichnet (Marke ${fl.marke})`);
+  };
+  await schritt('r', 90);
+  p(`Nach einem echten Klick auf T1 steht der Fokus auf der Fläche (${fokus}), und ein echtes „r" dreht T1`,
+    fokus === 'DIV.sp-wrap' && folge.length === 0, folge.join(' | '));
+  await schritt('Control+z', 0);
+  await schritt('Control+Shift+Z', 90);
+  await schritt('Control+z', 0);
+  await schritt('Control+y', 90);
+  p('… echtes Strg+Z, Umschalt+Strg+Z, Strg+Z, Strg+Y nimmt die Fläche: 0°, 90°, 0°, 90° — dieselbe Fläche',
+    folge.length === 0, folge.join(' | '));
+  const seitenMeld = (await meldungenJetzt()).slice(m0).filter(t => /rückgängig|wiederhol/i.test(t));
+  p('… und der Seitenverlauf hat nichts gemeldet', seitenMeld.length === 0, seitenMeld.join(' | '));
 }
 
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.slice(0, 3).join(' | '));
