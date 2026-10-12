@@ -738,8 +738,10 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
      dem Ankommen. Mit 1740 blieben dem Ändern des Fensters und dem
      Neuzeichnen gut 200 ms. Die Kurve beginnt aber langsam (40 ms nach dem
      Ende der Fahrt gerechnet noch 0,97), darum geht es jetzt bei 1690 ms
-     los: der Verzug darf bis etwa 270 ms gross werden und muss nur über
-     etwa 15 ms liegen; gemessen waren es 34–68 ms (messungen.md §101).
+     los. Gezählt wird der Verzug aber erst ab dem Entschluss — dem ersten
+     Bild ab 1690 ms, gemessen bei 1696–1706 ms —, also darf er etwa 5 bis
+     260 ms gross sein (dritte Durchsicht nachgerechnet); gemessen waren es
+     34–68 ms (messungen.md §101).
      Der Verzug steht in der Zusage: ein verpasstes Fenster zeigt einen
      grossen Verzug und eine Deckkraft unter 0,05, der Fehler aus der
      Gegenprobe Deckkraft 1 bei gewöhnlichem Verzug.
