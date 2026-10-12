@@ -25007,7 +25007,8 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
   background:var(--bg-schwebend-dicht);box-shadow:var(--glas-kante),var(--studio-elevation)}
 
 /* 8c · Die Linse über „Heute"; die Zeilen kommen verwischt herein. Unterwegs
-   trägt sie Schrift, also dichtes Glas (E695); sie ruht neben dem Wort (E740). */
+   trägt sie Schrift, also dichtes Glas (E695); sie hält neben dem Wort (E740)
+   und verblasst dort (E744, linse.ts). */
 .lernwelt .lw-desk-copy{position:relative}
 .ru-held-zeile{display:inline-block;position:relative}
 /* Der Dunst ist Bild: leerer Ersatztext für Vorleser (Durchsicht E712). */
@@ -27612,7 +27613,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1469, inhalt: '808751a01b260d63', gebaut: '2026-10-11T19:48:00.168Z' };
+const Stand = { fassung: 1471, inhalt: 'b6660eab1d43cd93', gebaut: '2026-10-11T20:32:46.348Z' };
 window.Stand = Stand;
 
 </script>
@@ -47309,6 +47310,18 @@ const Linse = (() => {
     };
     const SATZ_GESAMT = 1650;
     let satzBeginn = 0;
+    const verblassen = () => {
+        try {
+            const marken = getComputedStyle(document.documentElement);
+            const roh = marken.getPropertyValue('--motion-slow').trim();
+            const n = parseFloat(roh);
+            return { duration: Number.isFinite(n) ? (/ms$/.test(roh) ? n : n * 1000) : 320,
+                easing: marken.getPropertyValue('--ease-exit').trim() || 'cubic-bezier(0.4, 0, 1, 1)' };
+        }
+        catch {
+            return { duration: 320, easing: 'cubic-bezier(0.4, 0, 1, 1)' };
+        }
+    };
     let satzBeobachter = null;
     let beobachtet = null;
     const beobachten = (satz) => {
@@ -47348,8 +47361,16 @@ const Linse = (() => {
         beobachten(satz);
         const still = typeof AppEinstellung !== 'undefined' && AppEinstellung.wenigBewegung();
         const jetzt = performance.now();
-        const versatz = still ? SATZ_GESAMT
-            : gleiten ? 0 : (satzBeginn && jetzt - satzBeginn < SATZ_GESAMT ? jetzt - satzBeginn : SATZ_GESAMT);
+        const feder = RedionSpring.sample(RedionSpring.preset('snappy'), 0, 1, 0, 16);
+        const T1 = 260, T2 = 900;
+        const ende1 = T1 + feder.duration;
+        const ab2 = Math.max(T2, ende1 + 20);
+        const ende2 = ab2 + feder.duration;
+        const T = Math.max(SATZ_GESAMT, ende2);
+        const aus = verblassen();
+        const ENDE = T + aus.duration;
+        const versatz = still ? ENDE
+            : gleiten ? 0 : (satzBeginn && jetzt - satzBeginn < ENDE ? jetzt - satzBeginn : ENDE);
         if (gleiten && !still)
             satzBeginn = jetzt;
         const kasten = traeger.getBoundingClientRect();
@@ -47379,7 +47400,7 @@ const Linse = (() => {
                 fertig(); }, { once: true });
             setTimeout(fertig, 2400);
         };
-        if (D < 40) {
+        if (D < 40 || still || versatz >= ENDE) {
             zeilenKommen();
             return;
         }
@@ -47411,15 +47432,6 @@ const Linse = (() => {
             `translate(${(c.x - D / 2).toFixed(2)}px,${(c.y - D / 2).toFixed(2)}px) scale(${sx.toFixed(3)},${sy.toFixed(3)})`,
             `translate(${(D / 2 - S * (c.x - H.x)).toFixed(2)}px,${(D / 2 - S * (c.y - H.y)).toFixed(2)}px) scale(${S})`
         ];
-        if (still || versatz >= SATZ_GESAMT) {
-            const [l, b] = lagenText(P2);
-            linse.style.transform = l;
-            glasTeil.bild.style.transform = frostTeil.bild.style.transform = b;
-            frostTeil.huelle.style.opacity = '0';
-            return;
-        }
-        const feder = RedionSpring.sample(RedionSpring.preset('snappy'), 0, 1, 0, 16);
-        const T1 = 260, T2 = 900;
         const bilder = [{ t: 0, c: P0, sx: 1, sy: 1 }, { t: T1, c: P0, sx: 1, sy: 1 }];
         const strecke = (von, nach, ab) => {
             let vorher = von, tv = ab;
@@ -47435,10 +47447,9 @@ const Linse = (() => {
             });
             return ab + feder.duration;
         };
-        const ende1 = strecke(P0, P1, T1);
+        strecke(P0, P1, T1);
         bilder.push({ t: Math.max(ende1, T2 - 1), c: P1, sx: 1, sy: 1 });
-        const ende2 = strecke(P1, P2, Math.max(T2, ende1 + 20));
-        const T = Math.max(SATZ_GESAMT, ende2);
+        strecke(P1, P2, ab2);
         bilder.push({ t: T, c: P2, sx: 1, sy: 1 });
         const lauf = [];
         const los = (el, kf) => {
@@ -47454,7 +47465,7 @@ const Linse = (() => {
         const scharf = [
             { offset: 0, opacity: 1 }, { offset: blende(T1), opacity: 1 }, { offset: blende(T1 + 70), opacity: 0 },
             { offset: blende(ende1 - 140), opacity: 0 }, { offset: blende(ende1 - 60), opacity: 1 },
-            { offset: blende(Math.max(T2, ende1 + 20)), opacity: 1 }, { offset: blende(Math.max(T2, ende1 + 20) + 70), opacity: 0 },
+            { offset: blende(ab2), opacity: 1 }, { offset: blende(ab2 + 70), opacity: 0 },
             { offset: blende(ende2 - 140), opacity: 0 }, { offset: blende(ende2 - 60), opacity: 1 }, { offset: 1, opacity: 1 }
         ].sort((x, y) => x.offset - y.offset);
         los(glasTeil.huelle, scharf);
@@ -47463,12 +47474,12 @@ const Linse = (() => {
         const auf = linse.animate([{ scale: '0.4', opacity: 0 }, { scale: '1', opacity: 1 }], { duration: pop.duration, easing: pop.easing, fill: 'both' });
         auf.currentTime = Math.min(versatz, pop.duration);
         lauf.push(auf);
+        const geht = linse.animate([{ opacity: 1 }, { opacity: 0 }], { duration: aus.duration, delay: T, easing: aus.easing, fill: 'forwards' });
+        geht.currentTime = versatz;
+        lauf.push(geht);
         zeilenKommen();
         Promise.all(lauf.map(x => x.finished)).then(() => {
-            const [l, b] = lagenText(P2);
-            linse.style.transform = l;
-            glasTeil.bild.style.transform = frostTeil.bild.style.transform = b;
-            frostTeil.huelle.style.opacity = '0';
+            linse.remove();
             lauf.forEach(x => x.cancel());
         }).catch(() => { });
     };

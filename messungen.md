@@ -8218,3 +8218,165 @@ denselben fünf toten Regeln wie vorher.
 selben Arbeitsbaum — der Zuwachs sind die neuen Kommentare).
 `redion-einzeldatei.html` 9 545 743 → 9 546 796 Bytes. Dienststand v1455
 → v1456.
+
+## §101 · Die Linse auf „Heute" verblasst nach der Fahrt (E744, 11. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/linse-verblasst` gegen `97d156b03`
+(origin/main). Chromium über einen eigenen Dateiserver (freier Port des
+Systems, `listen(0)`), Lernzentrum → „Heute". Die Deckkraft der Linse ist
+das Produkt von `opacity` über die ganze Kette bis zur Wurzel (−1: kein
+Element), gelesen in jedem Bild mit `requestAnimationFrame` ab dem Aufruf
+von `Produktwelten.lernen('heute')`, 3,2 s lang (`test589` §16, VERLAUF).
+Die Zeitachse beginnt beim Aufruf, nicht beim Anlegen der Linse — sie
+kommt ein Zeichnen später (gut 150 ms). Rechner ohne Telefon-Schalter,
+Telefon mit `isMobile`, `hasTouch`, Pixeldichte 2. Bilder und Halte mit
+`bilder-abend/linse-bilder.mts` im Kratzordner, nicht eingecheckt.
+
+**Vorher** (97d156b03): in allen vier Fällen ist die Linse bis zum Ende
+der Messung voll da — letztes Bild 3200–3209 ms, Deckkraft 1; kein Bild
+dazwischen. In Ruhe (2,6 s) steht sie an 716/420, 75 px (1440 × 900) bzw.
+261/541, 58 px (390 × 844), Deckkraft 1, auch bei „weniger Bewegung".
+
+**Nachher** — das Verblassen, Bild für Bild:
+
+```txt
+Fall                letztes volles   erstes leeres   Dauer    Bilder dazwischen   erstes / letztes
+                    Bild (≥ 0,98)    Bild (≤ 0,02)            (0,05 … 0,95)       Bild dazwischen
+1440 × 900 dunkel   1813 ms          2092 ms         279 ms   14                  0,929 / 0,100
+1440 × 900 hell     1781 ms          2083 ms         302 ms   15                  0,939 / 0,126
+ 390 × 844 dunkel   1819 ms          2102 ms         283 ms   15                  0,930 / 0,102
+ 390 × 844 hell     1838 ms          2138 ms         300 ms   15                  0,922 / 0,084
+```
+
+Das erste leere Bild ist in allen vier Fällen „kein Element" (−1): die
+Linse wird nach dem Verblassen entfernt. Nie wieder heller; die Werte
+fallen erst langsam, dann schneller — die Kurve `--ease-exit`
+(`cubic-bezier(0.4, 0, 1, 1)`). Ein Beispiel ganz (1440 × 900 dunkel, ms
+ab Aufruf : Deckkraft): 1842 : 0,929 · 1861 : 0,894 · 1876 : 0,854 ·
+1892 : 0,809 · 1909 : 0,761 · 1930 : 0,708 · 1943 : 0,652 · 1959 : 0,593 ·
+1976 : 0,531 · 2011 : 0,398 · 2026 : 0,327 · 2043 : 0,254 · 2059 : 0,178 ·
+2076 : 0,100.
+
+**Auf der Uhr der Fahrt** (die Animationen der Linse angehalten): Ende der
+Fahrt T = 1650 ms (die Feder „knapp" dauert 263 ms: Halt über
+„Aufmachen." 523–900 ms, Ankunft rechts vom Punkt bei 1163 ms, dort
+still bis `SATZ_GESAMT`; in Node aus `spring.js` gerechnet), Dauer des
+Verblassens 320 ms (`--motion-slow`). Bei
+1150 ms steht die Linse an 713/420 mit 76 px (gestreckt), Deckkraft 1; bei
+1649 ms am Halt 716/420, 75 px, Deckkraft 1 — derselbe Ort wie vor E744
+in Ruhe; bei 1810 ms (T + 160) Deckkraft 0,675; Telefon dieselben Zeiten,
+259/540 → 261/541, 58 px, 0,675.
+
+**In Ruhe** (2,6 s nach dem Ankommen; „weniger Bewegung" 0,5 s): keine
+Linse im Dokument, auf beiden Grössen, hell und dunkel, mit und ohne
+„weniger Bewegung"; bei 1000 px nach einer Grössenänderung ebenso, nichts
+läuft.
+
+**Bytes.** `quell/schale/bedienung/linse.js` 12 561 → 12 963 B, gzip
+(Stufe 6, wie `test388`) 3686 → 3877 B (+191); `studio.css` ein
+Kommentar. `test388` §5: der Start holt 1919 KB (gzip) über 255 Dateien,
+Decke 1950 — dieselbe Zahl wie auf dem zusammengeführten Stand der sechs
+Ja (ERLEDIGTE-AUFGABEN.md, 11. Oktober); die 191 B verschwinden im Runden.
+
+**Durchsicht** (11. Oktober 2026 abends, `test589` gegen den Bau, Zweig
+`claude/linse-verblasst`, ein Lauf). Das Verblassen Bild für Bild, jetzt
+mit der Bilduhr (`document.timeline.currentTime`) neben jeder Deckkraft:
+
+```txt
+Fall                letztes sichtbares Bild   grösster Abfall von Bild zu Bild
+                    vor „weg" (≤ 0,02)        (Abstand auf der Bilduhr)
+1440 × 900 dunkel   0,069                     0,080 (17 ms)
+1440 × 900 hell     0,061                     0,080 (17 ms)
+ 390 × 844 dunkel   0,097                     0,082 (17 ms)
+ 390 × 844 hell     0,072                     0,080 (17 ms)
+```
+
+Gerechnet aus `--ease-exit` (`cubic-bezier(0.4, 0, 1, 1)`, Steigung am Ende
+1/0,6) bei 320 ms: über ein Bild (16,7 ms) höchstens 0,083, über zwei
+(33,3 ms) 0,162, über drei (50 ms) 0,239 — für den Abfall wie für das letzte
+Bild vor dem Ende. Die Grenzen der Zusage (0,2 und 0,25) halten also auch
+mit einem ausgefallenen Bild; stockt der Browser länger (über 40 ms) genau
+dort, misst der Lauf nach. Mit der Gegenprobe der Durchsicht (Keyframes
+`[{opacity:1},{opacity:0.5}]`, danach `remove()`): letztes Bild 0,502–0,529,
+Abfall ebenso gross, je 17 ms — im alten Lauf 146 von 146 grün.
+
+Mitten im Verblassen neu gezeichnet (§8): Ankommen bei 1440 px, 1748 ms
+nachdem die Linse da ist das Fenster auf 1000 px; die neue Linse steht
+1789 ms nach dem Ankommen mit Deckkraft 0,756 da, vier Bilder später
+(1848 ms) 0,525, 6 px rechts vom Punkt, die Abschrift in 31px (vorher
+44px). Ohne `geht.currentTime = versatz`: Deckkraft 1 bei 1791 ms und 1 bei
+1847 ms.
+
+**Zweite Durchsicht** (12. Oktober 2026, `test589` gegen den Bau, Zweig
+`claude/linse-verblasst`). Drei kleine Funde; was sie ändern, steht in
+E744.
+
+*Das Verblassen Bild für Bild, noch zweimal.* Die Tabelle oben ist EIN
+Lauf. Zwei weitere:
+
+```txt
+Fall                letztes sichtbares Bild    grösster Abfall (je 17 ms)
+                    Lauf 1     Lauf 2          Lauf 1     Lauf 2
+1440 × 900 dunkel   0,093      0,073           0,083      0,080
+1440 × 900 hell     0,090      0,080           0,081      0,080
+ 390 × 844 dunkel   0,047      0,021           0,081      0,082
+ 390 × 844 hell     0,025      0,058           0,082      0,081
+```
+
+Mit dem Lauf oben: letztes Bild 0,021–0,097, grösster Abfall 0,080–0,083.
+Das letzte Bild liegt über 0,02 (sonst wäre es schon „weg") und höchstens
+einen Abfall darüber; wo dazwischen, hängt davon ab, wo die Bilder auf der
+Kurve landen. Also etwa 0,02–0,10 und 0,08 — die Grenzen der Zusage (0,2
+und 0,25) halten mit Abstand.
+
+*Das Fenster von §8.* Gemessen wird im ersten Bild nach dem Fenster, und
+dort muss die Deckkraft zwischen 0,95 und 0,05 stehen — gerechnet aus
+`--ease-exit` (320 ms ab 1650 ms) von etwa 1705 bis 1960 ms nach dem
+Ankommen. Eine Sonde im Kratzordner (eine Seite, 1440 × 900, je
+Zeitpunkt sechs neue Ankommen; Verzug = vom Entschluss im Bild bis zum
+ersten Bild nach `setViewportSize`):
+
+```txt
+Fenster bei   Deckkraft im ersten Bild danach   Verzug
+1740 ms       0,713–0,802                       35–64 ms
+1700 ms       0,853–0,902                       39–51 ms
+1690 ms       0,847–0,920                       40–54 ms
+1680 ms       0,906–0,942                       37–55 ms
+```
+
+`setViewportSize` allein, in Node gemessen: 16–35 ms über alle 24. Bei
+1740 ms bleiben bis 1960 ms gut 200 ms, bei 1690 ms rund 270 ms; nach
+unten genügen dort etwa 15 ms. Gewählt: 1690. In sieben Läufen von
+`test589` mit der neuen Zusage (zwei gegen den Bau, fünf gegen
+Gegenproben) lag der Verzug bei 34–68 ms. Gegen den Bau: 1000 px bei
+1706 ms, erstes Bild nach 44 ms, Deckkraft 0,866, vier Bilder später
+(1805 ms) 0,724; und bei 1699 ms, nach 68 ms 0,846, bei 1816 ms 0,698 —
+je ein neues Element, 6 px rechts vom Punkt, Abschrift 31px.
+
+*Neu oder an Ort und Stelle.* Der Träger der Linse (der Elternteil der
+Überschrift) liegt bei 1440 px an x 429 / y 353, bei 1000 px an x 217 /
+y 367 — eine Linse, die beim Fenster nicht neu gezeichnet wird, wandert
+mit. Darum zählt dieselbe Linse nur mit neuer Schrift in der Abschrift.
+Gegenproben am Quelltext `linse.ts` (sha256 danach gleich):
+
+```txt
+Stand von linse.ts                              alter §8   neuer §8
+dieselbe Linse, an Ort und Stelle neu angelegt  150 / 2    152 / 0
+… mit der Schrift des ersten Ankommens          —          150 / 2
+beim Fenster gar nicht neu gezeichnet           —          150 / 2
+neue Linse, Schrift des ersten Ankommens        151 / 1¹   151 / 1
+ohne geht.currentTime = versatz                 151 / 1¹   151 / 1
+¹ Durchsicht vom 11. Oktober, siehe oben
+```
+
+Ohne `geht.currentTime = versatz` jetzt: Deckkraft 1 bei 1740 ms (Verzug
+42 ms) und 1 bei 1798 ms.
+
+**Woraus die 191 B bestehen.** Nicht aus Kommentaren:
+`tsconfig.bauen.json` entfernt sie (`removeComments`, E715), im gebauten
+`linse.js` steht nur der Kopfvermerk. Die Zeilen des gebauten Unterschieds
+gegen 97d156b03: 1 490 B dazu, 1 088 B weg (+402 roh). Einzeln
+herausgenommen und neu gepackt (gzip 6): ohne `verblassen()` (Dauer und
+Kurve aus den Marken) 3709 B, also 168 B; ohne die Animation des
+Verblassens 3830 B, also 47 B. gzip zählt nicht einzeln zusammen; die zwei
+Zahlen sagen, wo das Gewicht liegt, nicht eine Summe.
