@@ -66841,22 +66841,37 @@ erste Push.
 **Wächter.** `test610` (neu, ohne Browser, kein Port): kein Job fährt den
 vollen Lauf, keiner heisst „alle", der nicht alle fährt — gelesen in jeder
 Ablaufdatei unter `.github/workflows/`, und jede muss für seinen Leser
-mindestens einen Job ergeben; dazu Zeile für Zeile jede YAML-Datei unter
-`.github/`, auch eine eigene Action, ohne vollen Lauf. Genau ein Job fährt
+mindestens einen Job ergeben; ruft ein Schritt eine eigene Action
+(`uses: ./ci/v`, auch ausserhalb von `.github/`, auch über eine zweite),
+liest er deren `action.yml` mit, zählt ihre Befehle für den rufenden Job,
+und jede gerufene muss es geben (eine composite muss ihre Schritte
+ergeben); dazu Zeile für Zeile jede YAML-Datei unter `.github/` und jede
+gerufene Action, ohne vollen Lauf. Genau ein Job fährt
 `npm run pruefen -- --schnell`, jeder Orchestrator-Aufruf ist dieser (oder
 seine `--liste`) — als Aufruf zählen DIESE Schreibweisen, eine Liste und
-kein Beweis: `npm`, `pnpm` oder `yarn` mit `run`, `run-script` oder `test`,
-auch mit Schaltern samt Wert davor (`npm --prefix . run pruefen`,
-`npm -C . run pruefen`), `node --run pruefen`, alles, was `alle.mts` oder
-`volllauf.mts` nennt (auch über `npx`); Leerraum zusammengezogen und ein
-Kommentar hinter `#` abgeschnitten; ein `echo` ist nur Prosa, wenn in
-seiner Zeile kein `$(` und kein Backtick steht und es in keine Röhre
-schreibt. Der schnelle Lauf steht allein in seiner Zeile, ohne `|| true`,
-Röhre oder `continue-on-error` — ein `set +e`, eine `shell:` ohne `-e` und
-ein `if:` am Schritt oder Job prüft er nicht, ebenso wenig einen Lauf
-hinter einem eigenen Skript (`bash ci.sh`) oder einen gefalteten Block
-(`run: >`) in einer eigenen Action. In package.json ist `pruefen`
-genau `node pruefungen/alle.mts`, ohne `prepruefen` und `postpruefen`; jeder Job
+kein Beweis: jedes Wort `pruefen` hinter `npm`, `pnpm`, `yarn`, `bun` oder
+`deno` im selben Befehl, auch mit Fassung (`yarn pruefen`, `pnpm pruefen`,
+`npx npm@10 run pruefen`); `test` hinter `run`, `run-script`, `rum`, `urn`
+oder `task`; `npm test` mit seinen anderen Namen (`t`, `tst`, `it`, `cit` …),
+auch mit Schaltern samt Wert davor (`npm -C . test`); `node --run pruefen`;
+alles, was `alle.mts` oder `volllauf.mts` nennt (auch über `npx`).
+Gesucht wird in dem, was die Shell ausführt: Anführungszeichen und ein `\`
+vor einem Zeichen fallen weg, Leerraum wird zusammengezogen, ein Kommentar
+hinter `#` abgeschnitten, eine Zeile zerfällt an `&&`, `||`, `;` und einem
+einzelnen `&`; ein `run:` wird gelesen, wie YAML es liest (`|` und `>` mit
+Kommentar oder Einrückungszahl, ein gefalteter Block faltet über eine
+Leerzeile nicht, ein Wert über mehrere Zeilen, `\n` in doppelten
+Anführungszeichen). Ein `echo` ist nur Prosa, wenn in seiner Zeile kein
+`$(`, kein Backtick und kein `<(`/`>(` steht und es in keine Röhre und
+keine Datei schreibt. Der schnelle Lauf steht allein in seiner Zeile, ohne
+`|| true`, Röhre oder `continue-on-error` — ein `set +e`, eine `shell:` ohne
+`-e` und ein `if:` am Schritt oder Job prüft er nicht, ebenso wenig einen
+Lauf hinter einem eigenen Skript (`bash ci.sh`, eine Action aus JavaScript
+oder Docker, eine fremde Action) oder hinter einem Namen, den erst die
+Shell oder GitHub zusammensetzt (`$LAUF`, `eval`, `${{ matrix.… }}`,
+`xargs`, `\x75` in `$'…'`). In package.json ist `pruefen`
+genau `node pruefungen/alle.mts`, ohne `prepruefen` und `postpruefen`, und
+kein anderes Skript ruft den Orchestrator; jeder Job
 hat eine Zeitgrenze, der schnelle Job baut und prüft die Einzeldatei, holt
 Chromium genau dann, wenn die Auswahl einen Browser braucht, und sein
 Kommentar nennt Messung und `volllauf.mts`; die Auswahl enthält jeden Lauf
@@ -66871,7 +66886,9 @@ finden beide dieselben 509 Läufe. CLAUDE.md §30 nennt „ohne Browser" und
 eine Dauer.
 
 **Rot zuerst.** Gegen 97d156b (Abbild über `git archive`, test610 und
-`pruefungen/hilfe/quelltext.mts` in der endgültigen Fassung hineinkopiert):
+`pruefungen/hilfe/quelltext.mts` in der Fassung nach der ersten Durchsicht
+hineinkopiert — hier stand „in der endgültigen Fassung"; die zweite und
+die dritte Runde unten haben je eine neue gemessen):
 rot mit 7 von 25 bestanden — unter den roten §1 „pruefen: npm run pruefen",
 §2 „0 gefunden", §3 „alle.mts kennt `--liste`" (und deshalb startet er dort
 nichts: der alte Orchestrator hätte die Auswahl GEFAHREN, 549 Läufe), §4
@@ -67043,3 +67060,130 @@ keine Ablaufdatei), G28 bis G30 nur das Lesen ALLER Ablaufdateien (die
 Zeile-für-Zeile-Lesung sucht nur den vollen Lauf und kennt keinen
 gefalteten Block — deshalb bleibt N5 grün). G1 bis G18 sind mit der neuen Fassung noch einmal
 gefahren, alle rot (18 bis 27 von 28), P1 und P2 grün (28/28).
+
+**Nach der dritten Durchsicht berichtigt** (12. Oktober 2026, auf
+demselben Zweig, bevor er landet). Drei Funde, alle Fehler dieses Bogens:
+
+1. *Ein einzelnes `&` versteckte einen Befehl hinter einem `echo`.*
+   test610 zerlegte eine Zeile nur an `&&`, `||` und `;`; aus
+   `echo start & npm run pruefen` wurde EIN Befehl, der mit `echo`
+   beginnt, und `nurAusgabe` warf ihn als Prosa weg — samt dem vollen Lauf
+   dahinter, der in der Shell sofort startet. Ebenso mit `printf`. Jetzt
+   zerfällt eine Zeile auch an einem einzelnen `&` (nicht an `2>&1`, `&>`
+   und `|&`, dort ist es eine Umleitung) und an jedem Umbruch, auch einem,
+   der erst beim Lesen von YAML entsteht.
+2. *Weitere Schreibweisen kamen durch:* `yarn pruefen` und `pnpm pruefen`
+   (beide starten ein Skript ohne `run`), der Name in Anführungszeichen
+   (`npm run 'pruefen'`, `npm run "pruefen"`, `node --run "pruefen"`) und
+   eine eigene Action ausserhalb von `.github/` (`uses: ./ci/v` — gelesen
+   wurde nur, was unter `.github/` liegt, und das nur Zeile für Zeile).
+   Jetzt ist das Skript `pruefen` jedes Wort `pruefen` hinter einem
+   Paketmanager im selben Befehl; gesucht wird in dem, was die Shell
+   ausführt (Anführungszeichen und `\` fallen weg); und jede Action, die
+   ein Schritt über `uses: ./…` ruft, liest der Leser mit — auch eine, die
+   eine weitere ruft —, ihre Befehle zählen für den Job, der sie ruft, und
+   eine gerufene, die es nicht gibt, ist rot. Aus den Proben der
+   Durchsicht kamen dazu: `echo <(npm run pruefen)`,
+   `echo npm run pruefen > s.sh && bash s.sh`, `npm run pr\uefen` und
+   `npm run prue""fen` — auch sie liess die Fassung davor grün durch.
+   Beim Schreiben der Regel dazugefunden, ebenfalls grün durchgelassen:
+   ein `run:`-Wert über mehrere Zeilen (`run: npm run`, darunter
+   `pruefen`), ein gefalteter Block mit Leerzeile oder tiefer eingerückter
+   Zeile (YAML faltet dort NICHT, die Shell sieht zwei Befehle), `\n` und
+   `\u0075` in doppelten Anführungszeichen, ein `\` am Zeilenende in
+   doppelten Anführungszeichen, `run: |2` und `run: | # Kommentar` (der
+   Leser hielt beides nicht für einen Block), ein `\` mitten im Wort
+   (`npm run pru\` und `efen`), npms Kurzformen `rum`, `urn`, `cit`, dazu
+   `bun pruefen`, `deno task pruefen`, `yarn workspace redion pruefen`,
+   `npx npm@10 run pruefen`, `npm run $'pruefen'` — und ein ZWEITES Skript
+   in package.json, das den Orchestrator ruft (`"ci": "node
+   pruefungen/alle.mts"`, in der CI `npm run ci`).
+3. *CLAUDE.md §30 nannte eine alte Zahl:* „Gegen 97d156b war er rot mit 7
+   von 25" — das war der Stand nach der ERSTEN Durchsicht; L254, die
+   zweite Runde hier und ERLEDIGTE-AUFGABEN.md sagten schon 8 von 27. Jetzt
+   steht an allen vier Stellen dieselbe neu gemessene Zahl (unten). Dazu
+   hiess es oben unter „Rot zuerst." „in der endgültigen Fassung" — es war
+   die nach der ersten Durchsicht.
+
+Die Liste bleibt eine Liste. Was test610 jetzt ausdrücklich NICHT hält,
+steht in seinem Kopf und im Absatz „Wächter." oben, und jede dieser
+Behauptungen ist gefahren (N6 bis N10 unten, grün mit Absicht): ein Name,
+den erst die Shell oder GitHub zusammensetzt (`npm run ${{ matrix.skript }}`,
+`echo pruefen | xargs npm run`, `eval "$LAUF"`, `\x75` in `$'…'`) und eine
+eigene Action aus JavaScript, deren Code er nicht liest. N5 ist kein Loch
+mehr: eine Action, die kein Schritt ruft, fährt nicht; ruft einer sie, fängt
+der Leser auch ihren gefalteten Block (G57).
+
+**Rot zuerst und Gegenproben, dritte Runde.** test610 jetzt 30/30 (zwei
+Zusagen mehr: jede gerufene Action gibt es und ergibt ihre Schritte; kein
+anderes Skript in package.json ruft den Orchestrator). Gegen 97d156b
+(Abbild über `git archive` des ganzen Standes, test610 und `quelltext.mts`
+in der neuen Fassung hineinkopiert): rot mit 10 von 29 bestanden — die zwei
+neuen Zusagen sind dort grün, es gab weder eine eigene Action noch ein
+zweites Skript. Jede Gegenprobe in einer frischen Kopie von
+`pruefungen/`, `.github/`, CLAUDE.md und package.json im Notizordner der
+Sitzung, der Arbeitsbaum blieb unberührt. Links test610 aus b6aaf4d (vor
+dieser Änderung), rechts die neue Fassung:
+
+```txt
+                                                              b6aaf4d     jetzt
+G31 Zusatzschritt `echo start & npm run pruefen`              28/28 grün  27/30
+G32 Zusatzschritt `printf start & npm run pruefen`            28/28 grün  27/30
+G33 `run: >` mit Leerzeile: echo start / leer / npm run / pruefen
+                                                              28/28 grün  28/30
+G34 "echo start\nnpm run pruefen" (doppelte Anführungszeichen) 28/28 grün 27/30
+G35 Wert über zwei Zeilen: `run: npm run`, darunter `pruefen` 28/28 grün  28/30
+G36 `run: | # Kommentar`, darin `npm run pruefen -- 87`       28/28 grün  29/30
+G37 `run: |2`, darin `npm run pruefen -- 87`                  28/28 grün  29/30
+G38 `\` mitten im Wort: `npm run pru\` / `efen`               28/28 grün  28/30
+G39 Zusatzschritt `yarn pruefen`                              28/28 grün  27/30
+G40 Zusatzschritt `pnpm pruefen`                              28/28 grün  27/30
+G41 Zusatzschritt `npm run 'pruefen'`                         28/28 grün  27/30
+G42 Zusatzschritt `npm run "pruefen"`                         28/28 grün  27/30
+G43 Zusatzschritt `node --run "pruefen"`                      28/28 grün  27/30
+G44 Zusatzschritt `npm rum pruefen`                           28/28 grün  27/30
+G45 Zusatzschritt `npm cit`                                   28/28 grün  27/30
+G46 Zusatzschritt `bun pruefen`                               28/28 grün  27/30
+G47 Zusatzschritt `deno task pruefen`                         28/28 grün  27/30
+G48 Zusatzschritt `yarn workspace redion pruefen`             28/28 grün  27/30
+G49 Zusatzschritt `npx npm@10 run pruefen`                    28/28 grün  27/30
+G50 Zusatzschritt `npm run prue""fen`                         28/28 grün  27/30
+G51 Zusatzschritt `npm run pr\uefen`                          28/28 grün  27/30
+G52 Zusatzschritt `npm run $'pruefen'`                        28/28 grün  27/30
+G53 Zusatzschritt `echo <(npm run pruefen)`                   28/28 grün  27/30
+G54 Zusatzschritt `echo npm run pruefen > s.sh && bash s.sh`  28/28 grün  27/30
+G55 package.json `"ci": "node pruefungen/alle.mts"`, `npm run ci`
+                                                              28/28 grün  29/30
+G56 eigene Action ./ci/v (ausserhalb von .github), `npm run pruefen`
+                                                              28/28 grün  27/30
+G57 gerufene Action unter .github/actions, `npm run`/`pruefen` gefaltet
+                                                              28/28 grün  28/30
+G58 ein Schritt ruft `uses: ./ci/fehlt`, die es nicht gibt    28/28 grün  29/30
+G59 gerufene Action ausserhalb, vier Leerzeichen eingerückt   28/28 grün  29/30
+G60 Action ./ci/a ruft ./ci/b, darin `npm run pruefen`        28/28 grün  27/30
+G61 `run: >`, tiefer eingerückt: echo start / `  npm run pruefen -- 87`
+                                                              28/28 grün  29/30
+G62 "npm run pru\ (Zeilenende) efen" in doppelten Anführungszeichen
+                                                              28/28 grün  28/30
+G63 "npm run pr\u0075efen" in doppelten Anführungszeichen 28/28 grün  27/30
+P4  soll grün sein: gerufene Action ausserhalb, harmlos       28/28       30/30
+P5  soll grün sein: `node bauen.mts 2>&1 | tee bau.log`       28/28       30/30
+P6  soll grün sein: `run: >` mit `echo "a & b"`, leer, harmlos 28/28      30/30
+N5  bleibt grün: Action, die KEIN Schritt ruft, gefaltet      28/28       30/30
+N6  hält er nicht: `npm run ${{ matrix.skript }}`             28/28       30/30
+N7  hält er nicht: `echo pruefen | xargs npm run`             28/28       30/30
+N8  hält er nicht: `eval "$LAUF"`                             28/28       30/30
+N9  hält er nicht: `npm run $'pr\x75efen'`                    28/28       30/30
+N10 hält er nicht: gerufene Action aus JavaScript (node20)    28/28       30/30
+```
+
+Dazu Gegenproben am Werkzeug selbst: in der neuen Fassung je EINEN Teil
+zurückgedreht, und die Gegenprobe, die er fängt, kommt wieder grün durch
+(30/30) — ohne die Teilung am einzelnen `&` G31 und G32; ohne `<(`/`>(`
+G53; ohne `>` in `nurAusgabe` G54; ohne `wieDieShell` G41 bis G43 und G50
+bis G52; ohne das Einmischen der Actions G56 bis G60; mit der alten Regel
+für `run pruefen` G39, G40, G44, G46 bis G49; mit der alten Faltung über
+alle Zeilen G33 und G61; ohne die Zeilen unter einem Wert G35 und G62; ohne
+die Prüfung der anderen Skripte G55. Jeder Teil trägt also eine Zusage.
+G1 bis G30 sind mit der neuen Fassung noch einmal gefahren, alle rot (20
+bis 29 von 30), P1 bis P3 und N1 bis N4 grün (30/30).

@@ -1947,10 +1947,15 @@ CI käme (`npm run-script pruefen`, `npm test`, `npx … alle.mts`,
 `|| true`, ein `postpruefen` in package.json) — acht davon hatte die erste
 Fassung grün durchgelassen; seit der zweiten Durchsicht auch
 `node --run pruefen`, `npm --prefix . run pruefen`, `echo "$(…)"` und
-einen vollen Lauf in einer zweiten Ablaufdatei. Eine Liste, kein Beweis:
-was er nicht prüft (`set +e`, `if:`, ein eigenes Skript), steht in seinem
+einen vollen Lauf in einer zweiten Ablaufdatei; seit der dritten
+`yarn pruefen` und `pnpm pruefen`, den Namen in Anführungszeichen
+(`npm run 'pruefen'`), ein einzelnes `&` (`echo start & npm run pruefen`),
+einen `run:`-Wert über mehrere Zeilen, ein zweites Skript in package.json,
+das den Orchestrator ruft, und eine eigene Action ausserhalb von
+`.github/` (`uses: ./ci/v`). Eine Liste, kein Beweis: was er nicht prüft
+(`set +e`, `if:`, ein eigenes Skript, eine Variable), steht in seinem
 Kopf. Gegen
-`97d156b` war er rot mit 7 von 25 (die erste Fassung mit 4 von 21) — und
+`97d156b` war er rot mit 10 von 29 (die erste Fassung mit 4 von 21) — und
 er hätte dort beinahe selbst 549 Läufe gestartet:
 der alte Orchestrator kannte `--liste` nicht und hätte die Auswahl
 GEFAHREN. Deshalb fragt er zuerst die Quelle, ob es den Schalter gibt.

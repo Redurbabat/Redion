@@ -8428,7 +8428,8 @@ Schritte von Lauf 38169660632 auf 97d156b). Sein Kommentar nennt die
 Messungen mit Datum und sagt, dass der volle Lauf auf dem Rechner bleibt (`node pruefungen/volllauf.mts`, CLAUDE.md §30). Der Job
 „Quelltext und Logik (ohne Browser)" ist unverändert.
 
-**Beleg.** `test610` (neu, ohne Browser): gegen 97d156b rot mit 7 von 25
+**Beleg.** `test610` (neu, ohne Browser), in der Fassung nach der ersten
+Durchsicht: gegen 97d156b rot mit 7 von 25
 bestanden — der Job fuhr den vollen Lauf, keiner fuhr `--schnell`, alle.mts
 kannte `--liste` nicht, und CLAUDE.md sagte „Dauer ungemessen"; nach E745
 26/26. (Hier stand zuerst „grün mit 4 von 21" — es war die erste Fassung
@@ -8436,6 +8437,13 @@ von test610, und sie war ROT mit 4 von 21 bestanden.) Gegenproben in E745.
 Nach der zweiten Durchsicht (12. Oktober) liest test610 jede Ablaufdatei
 unter `.github/workflows/` und fängt weitere Umwege (`node --run`,
 `npm --prefix . run`, `echo "$(…)"`): 28/28, gegen 97d156b rot mit 8 von 27.
+Nach der dritten Durchsicht (12. Oktober) fängt er auch `yarn pruefen`,
+`pnpm pruefen`, den Namen in Anführungszeichen, ein einzelnes `&`
+(`echo start & npm run pruefen`), einen `run:`-Wert über mehrere Zeilen,
+ein zweites Skript in package.json, das den Orchestrator ruft, und eine
+eigene Action ausserhalb von `.github/` (`uses: ./ci/v`): 30/30, gegen
+97d156b rot mit 10 von 29 — das ist der heutige Stand; die Zahlen davor
+gehören zu den Fassungen davor. Gegenproben G31 bis G63 in E745.
 Wie lange der ganze schnelle Lauf auf GitHub braucht, zeigt erst der erste
 Push dieses Zweigs: auf GitHub gemessen ist nur die Einrichtung.
 

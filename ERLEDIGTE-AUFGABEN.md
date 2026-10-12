@@ -83,6 +83,35 @@ Leerzeile. Nachbarn: 550 8/8, 549 6/6, 225 11/11, 105 342/342, 109 25/25,
 444 13/13, 388 22/22 (Start 1919 KB, Decke 1950). Ausgelieferte Dateien
 unverändert (Dienststand v1469, Einzeldatei ohne Unterschied).
 
+**Nach der dritten Durchsicht** (12. Oktober, derselbe Zweig): `test610`
+zerlegt eine Zeile jetzt auch an einem einzelnen `&` — vorher war
+`echo start & npm run pruefen` (ebenso mit `printf`) EIN `echo` und fiel
+als Prosa weg. Er fängt `yarn pruefen` und `pnpm pruefen` (jedes Wort
+`pruefen` hinter einem Paketmanager), den Namen in Anführungszeichen
+(`npm run 'pruefen'`, `npm run "pruefen"`, `node --run "pruefen"`; gesucht
+wird in dem, was die Shell ausführt) und liest jede eigene Action, die ein
+Schritt über `uses: ./…` ruft, auch ausserhalb von `.github/` und über eine
+zweite; ihre Befehle zählen für den rufenden Job, und eine gerufene, die es
+nicht gibt, ist rot. Beim Schreiben dazugefunden und ebenso gefangen: ein
+`run:`-Wert über mehrere Zeilen, ein gefalteter Block mit Leerzeile oder
+tiefer eingerückter Zeile, `\n`/`\u0075`/`\` am Zeilenende in doppelten
+Anführungszeichen, `run: |2` und `run: | # …`, ein `\` mitten im Wort,
+`echo <(…)`, `echo … > s.sh`, `rum`/`urn`/`cit`, `bun`, `deno task`,
+`yarn workspace`, `npm@10`, `$'…'` und ein zweites Skript in package.json,
+das den Orchestrator ruft. 33 neue Gegenproben (G31 bis G63), alle von der
+Fassung davor grün durchgelassen, jetzt rot; dazu neun Gegenproben am
+Werkzeug (je ein Teil zurückgedreht, die Probe kommt wieder grün durch).
+test610 30/30, gegen 97d156b rot mit 10 von 29 — CLAUDE.md §30 nannte noch
+7 von 25 (den Stand nach der ersten Durchsicht), jetzt steht dort wie hier,
+in L254 und in E745 dieselbe Zahl. Sein Kopf sagt weiter „eine Liste, kein
+Beweis" und nennt, was er nicht hält; jede dieser Behauptungen ist als
+Probe gefahren und bleibt grün (N6 bis N10: `${{ matrix.… }}`, `xargs`,
+`eval "$LAUF"`, `\x75` in `$'…'`, eine Action aus JavaScript). Nachbarn:
+550 8/8, 549 6/6, 225 11/11, 105 342/342, 109 25/25, 87 181/181,
+537 18/18, 400 4/4, 553 6/6; unter dem Schloss 353 105/105, 444 13/13,
+388 22/22 (Start 1919 KB, Decke 1950). Ausgelieferte Dateien unverändert
+(Dienststand v1469, Einzeldatei ohne Unterschied).
+
 **Offen:** wie lange der ganze schnelle Lauf auf einem Runner braucht,
 zeigt erst der erste Push (die Einrichtung ist gemessen: 32 s); und der Job
 wird rot sein, solange `test274` rot ist — ein Fehlalarm über

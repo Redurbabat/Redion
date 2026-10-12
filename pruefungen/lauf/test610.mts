@@ -26,26 +26,44 @@
  *      der nicht alle fährt. Gelesen wird JEDE Ablaufdatei unter
  *      `.github/workflows/` (`*.yml` und `*.yaml`), nicht nur pruefen.yml,
  *      und jede muss für den Leser unten mindestens einen Job ergeben — eine
- *      Datei, aus der er nichts liest, wäre sonst still geprüft. Dazu, ohne
- *      den Leser, Zeile für Zeile jede YAML-Datei unter `.github/` (auch eine
- *      eigene Action unter `.github/actions/`): in keiner steht ein voller
- *      Lauf.
+ *      Datei, aus der er nichts liest, wäre sonst still geprüft. Ruft ein
+ *      Schritt eine eigene Action (`uses: ./ci/v` — auch ausserhalb von
+ *      `.github/`, auch eine, die ihrerseits eine ruft), liest er deren
+ *      `action.yml` mit und zählt ihre Befehle für den Job, der sie ruft;
+ *      jede gerufene muss es geben, und eine composite muss für den Leser
+ *      ihre Schritte ergeben. Dazu, ohne den Leser, Zeile für Zeile jede
+ *      YAML-Datei unter `.github/` und jede gerufene Action: in keiner steht
+ *      ein voller Lauf.
  *   2  Genau ein Job fährt `npm run pruefen -- --schnell`, und jeder Aufruf
  *      des Orchestrators in der CI ist genau dieser (oder seine `--liste`).
  *      Als Aufruf zählen DIESE Schreibweisen — eine Liste, kein Beweis (siehe
- *      „Was er nicht hält"): `npm`, `pnpm` oder `yarn` mit `run`,
- *      `run-script` oder `test`, auch mit Schaltern davor, die einen Wert als
- *      eigenes Wort nehmen (`npm --prefix . run pruefen`, `npm -C . run
- *      pruefen`); `node --run pruefen` (Nodes eigener Skriptstarter); jeder
- *      Befehl, der `alle.mts` oder `volllauf.mts` nennt (auch über `npx`).
- *      Leerraum wird zusammengezogen, ein Kommentar hinter `#` abgeschnitten.
+ *      „Was er nicht hält"): jedes Wort `pruefen` hinter `npm`, `pnpm`,
+ *      `yarn`, `bun` oder `deno` im selben Befehl, auch mit Fassung
+ *      (`yarn pruefen`, `pnpm pruefen`, `yarn workspace redion pruefen`,
+ *      `npx npm@10 run pruefen`); `test` hinter `run`, `run-script`, `rum`,
+ *      `urn` oder `task`; `npm test` mit seinen anderen Namen (`t`, `tst`,
+ *      `it`, `cit` …), auch mit Schaltern davor, die einen Wert als eigenes
+ *      Wort nehmen (`npm -C . test`); `node --run pruefen` (Nodes eigener
+ *      Skriptstarter); jeder Befehl, der `alle.mts` oder `volllauf.mts` nennt
+ *      (auch über `npx`). Gesucht wird in dem, was die Shell ausführt:
+ *      Anführungszeichen und ein `\` vor einem Zeichen fallen weg
+ *      (`npm run 'pruefen'`, `npm run prue""fen`, `npm run pr\uefen`),
+ *      Leerraum wird zusammengezogen, ein Kommentar hinter `#` abgeschnitten,
+ *      und eine Zeile zerfällt an `&&`, `||`, `;` und an einem einzelnen `&`
+ *      in ihre Befehle. Ein `run:` liest er so, wie YAML es liest: `|` und
+ *      `>` auch mit Kommentar oder Einrückungszahl, ein gefalteter Block
+ *      faltet über eine Leerzeile NICHT, ein Wert darf über mehrere Zeilen
+ *      gehen, und in doppelten Anführungszeichen ist `\n` ein Umbruch.
  *      Ein `echo` oder `printf` gilt als Prosa und startet nichts — aber nur,
- *      wenn in seiner Zeile kein `$(` und kein Backtick steht (dort wird
- *      etwas AUSGEFÜHRT und das Ergebnis ausgegeben) und seine Ausgabe in
- *      keine Röhre geht (`echo … | sh`). Der schnelle Lauf steht allein in
- *      seiner Zeile — kein `|| true`, keine Röhre, kein `continue-on-error`.
+ *      wenn in seiner Zeile kein `$(`, kein Backtick und kein `<(` oder `>(`
+ *      steht (dort wird etwas AUSGEFÜHRT und das Ergebnis ausgegeben) und
+ *      seine Ausgabe in keine Röhre und keine Datei geht (`echo … | sh`,
+ *      `echo … > s.sh`). Der schnelle Lauf steht allein in seiner Zeile —
+ *      kein `|| true`, keine Röhre, kein `continue-on-error`.
  *      In package.json ist `pruefen` genau `node pruefungen/alle.mts`, ohne
- *      `prepruefen` und `postpruefen` (npm führt beide von selbst aus).
+ *      `prepruefen` und `postpruefen` (npm führt beide von selbst aus), und
+ *      kein anderes Skript ruft den Orchestrator (sonst hiesse der volle
+ *      Lauf in der CI nur anders: `npm run ci`).
  *      Jeder Job hat eine Zeitgrenze. Der schnelle Job baut die Einzeldatei
  *      und prüft, ob sie nachgezogen ist, holt Chromium genau dann, wenn die
  *      Auswahl einen Browser braucht, und sein Kommentar nennt die Messung
@@ -57,18 +75,29 @@
  *      stimmt mit dem überein, was dieser Lauf selbst in der Datei liest.
  *   4  CLAUDE.md §30 sagt, was `--schnell` heisst.
  *
- * WAS ER NICHT HÄLT. Er liest Text; er führt die CI nicht aus. Ein Lauf
- * hinter einem eigenen Skript oder einer Variablen (`bash ci.sh`, `$LAUF`)
- * kommt an ihm vorbei. Und dass ein Rot des schnellen Laufs den Job rot
- * macht, sichert er nur gegen die drei Formen in §2 (`|| true`, Röhre,
- * `continue-on-error`): ein `set +e` vor dem Lauf mit einem Befehl dahinter,
- * eine `shell:` ohne `-e` mit einem Befehl dahinter und ein `if:` am Schritt
- * oder am Job, das ihn gar nicht starten lässt, prüft er nicht. Die Lesung
- * Zeile für Zeile kennt keinen gefalteten Block (`run: >`, ein Befehl über
- * mehrere Zeilen ohne `\`): in einer Ablaufdatei fängt ihn der Leser, in
- * einer eigenen Action nicht. Hier stand bis zur zweiten Durchsicht von
- * E745 „jede Form, die einen Lauf startet" und „ein Rot bricht den Job ab"
- * — beides mehr, als er hält.
+ * WAS ER NICHT HÄLT. Er liest Text; er führt die CI nicht aus, und YAML
+ * liest er von Hand, ohne Paket — einem Verweis (`*a`) folgt er nicht. Ein
+ * Lauf hinter einem eigenen Skript kommt an ihm vorbei: `bash ci.sh`, eine
+ * eigene Action aus JavaScript oder Docker (er findet sie, liest aber ihren
+ * Code nicht), eine fremde Action (`uses: jemand/etwas@v1`). Ebenso ein
+ * Name, den erst die Shell oder GitHub zusammensetzt: eine Variable (`$LAUF`,
+ * `eval "$LAUF"`), ein Ausdruck (`npm run ${{ matrix.skript }}`), eine
+ * Röhre (`echo pruefen | xargs npm run`), ein `\x75` in `$'…'`. Und jede
+ * Schreibweise, die nicht in der Liste in §2 steht — die Liste ist nicht
+ * vollständig und kann es nicht sein. Dass ein Rot des schnellen Laufs den
+ * Job rot macht, sichert er nur gegen die drei Formen in §2 (`|| true`,
+ * Röhre, `continue-on-error`): ein `set +e` vor dem Lauf mit einem Befehl
+ * dahinter, eine `shell:` ohne `-e` mit einem Befehl dahinter und ein `if:`
+ * am Schritt oder am Job, das ihn gar nicht starten lässt, prüft er nicht.
+ * Die Lesung Zeile für Zeile kennt keinen gefalteten Block und keinen Wert
+ * über mehrere Zeilen; den fängt der Leser — in jeder Ablaufdatei und in
+ * jeder Action, die ein Schritt ruft. Eine YAML-Datei, die kein Schritt
+ * ruft, liest nur sie, und die fährt auch nicht. Hier stand bis zur zweiten
+ * Durchsicht von E745 „jede Form, die einen Lauf startet" und „ein Rot
+ * bricht den Job ab" — beides mehr, als er hält. Und bis zur dritten fehlten
+ * in seiner Liste `yarn pruefen` und `pnpm pruefen`, Anführungszeichen um
+ * den Namen, ein einzelnes `&`, ein Wert über mehrere Zeilen und eine
+ * Action ausserhalb von `.github/` — alle grün durchgelassen.
  *
  * WIE „STARTET EINEN BROWSER" HIER GELESEN WIRD — auf zwei Wegen, die
  * einander VERGLEICHEN. Weg 1 ist der von alle.mts: die Datei lädt
@@ -137,8 +166,14 @@ type Aufgabe = {
   befehle: string[];
   /** Steht irgendwo im Job `continue-on-error` (ausser `false`)? */
   weiterBeiFehler: boolean;
+  /** Die eigenen Actions, die ein Schritt dieses Jobs über `uses: ./…`
+   *  ruft, so wie sie dastehen (`./ci/v`). Ihre Befehle mischt `einmischen`
+   *  unten in die dieses Jobs. */
+  eigene: string[];
   text: string;           // der ganze Block, Kommentare eingeschlossen
 };
+
+const einzug = (z: string): number => z.match(/^ */)?.[0].length ?? 0;
 
 /** So liest die Shell eine Zeile: ein Kommentar beginnt mit `#` am
  *  Wortanfang und reicht bis zum Ende, und wie viel Leerraum zwischen zwei
@@ -148,30 +183,130 @@ type Aufgabe = {
 const glatt = (zeile: string): string =>
   zeile.replace(/(^|\s)#.*$/, '$1').replace(/\s+/g, ' ').trim();
 
-/** Eine Zeile kann mehrere Befehle tragen — `a && b`, `a; b`, `a || b`.
+/** Eine Zeile kann mehrere Befehle tragen — `a && b`, `a; b`, `a || b` und
+ *  `a & b` (das `&` schickt `a` in den Hintergrund, und `b` läuft sofort).
  *  Jeder zählt für sich: ein `npm run pruefen -- --liste && npm run pruefen`
- *  ist ein voller Lauf, auch wenn die Zeile mit der Liste beginnt. Eine
+ *  ist ein voller Lauf, auch wenn die Zeile mit der Liste beginnt — und
+ *  `echo start & npm run pruefen` ist kein `echo`, sondern zwei Befehle.
+ *  Die Fassung vor der dritten Durchsicht von E745 teilte nicht am
+ *  einzelnen `&`, und `nurAusgabe` warf die ganze Zeile als Prosa weg. Ein
+ *  `&` in einer Umleitung (`2>&1`, `&>`, `|&`) teilt nicht. Was zwei
+ *  Zeilen sind, bleibt zwei Befehle, auch wenn es in EINEM Text ankommt (ein
+ *  gefalteter Block mit Leerzeile, ein `\n` in Anführungszeichen). Eine
  *  Röhre (`a | b`) bleibt EIN Befehl: hinter `| tee` endet der Schritt mit
  *  dem Ergebnis von `tee`, und das ist nicht der schnelle Lauf. */
-const befehleIn = (zeile: string): string[] =>
-  glatt(zeile).split(/&&|\|\||;/).map(t => t.trim()).filter(Boolean);
+const TRENNER = /&&|\|\||;|(?<![&<>|])&(?![&>])/;
+const befehleIn = (text: string): string[] =>
+  text.split(/\r?\n/).flatMap(zeile => glatt(zeile).split(TRENNER)).map(t => t.trim()).filter(Boolean);
 
 /** Ein Befehl, der nur etwas AUSGIBT, startet nichts: ein
  *  `echo "  npm run pruefen -- --schnell …"` in einer Hilfe ist Prosa.
  *  Aber nur, solange die Ausgabe wirklich ins Protokoll geht. Steht in der
- *  ZEILE ein `$(` oder ein Backtick, wird dort etwas ausgeführt und erst das
- *  Ergebnis ausgegeben — `echo "$(npm run pruefen)"` fährt den vollen Lauf.
- *  Gefragt wird die Zeile, nicht der Befehl: `$(true; npm run pruefen)`
- *  zerfällt an `;` in zwei Stücke, und das zweite trägt kein `$(` mehr. Und
- *  eine Röhre gibt die „Prosa" einem Programm: `echo npm run pruefen | sh`.
- *  Die erste Fassung nahm jedes `echo` aus (zweite Durchsicht von E745). */
+ *  ZEILE ein `$(`, ein Backtick, ein `<(` oder ein `>(`, wird dort etwas
+ *  ausgeführt und erst das Ergebnis ausgegeben — `echo "$(npm run pruefen)"`
+ *  und `echo <(npm run pruefen)` fahren den vollen Lauf. Gefragt wird die
+ *  Zeile, nicht der Befehl: `$(true; npm run pruefen)` zerfällt an `;` in
+ *  zwei Stücke, und das zweite trägt kein `$(` mehr. Und eine Röhre oder
+ *  eine Umleitung gibt die „Prosa" einem Programm: `echo npm run pruefen |
+ *  sh`, `echo npm run pruefen > s.sh && bash s.sh`. Gefragt wird nach jedem
+ *  `|` und `>` im Befehl, auch in Anführungszeichen — lieber einmal zu
+ *  streng: `echo "… test<nr>.mts …"` in der Hilfe von pruefen.yml ist damit
+ *  ein Befehl, aber keiner, der etwas startet. Die erste Fassung nahm jedes
+ *  `echo` aus (zweite Durchsicht von E745), die zweite kannte `<(` und `>`
+ *  nicht (dritte). */
 const PROSA = /^(?:echo|printf)\b/;
 const nurAusgabe = (befehl: string, zeile: string): boolean =>
-  PROSA.test(befehl) && !/\$\(|`/.test(zeile) && !befehl.includes('|');
+  PROSA.test(befehl) && !/\$\(|`|[<>]\(/.test(zeile) && !/[|>]/.test(befehl);
 
-const aufgabenAus = (yml: string, datei: string): Aufgabe[] => {
+/** Ein `\` am Zeilenende setzt die Zeile fort — ohne Leerzeichen, so wie
+ *  die Shell: `npm run pru\` und `efen` sind `npm run pruefen`. In einem
+ *  Kommentar setzt er nichts fort. */
+const mitFortsetzung = (zeilen: string[]): string[] => {
+  const raus: string[] = [];
+  let offen = '';
+  for (const z of zeilen) {
+    if (z.endsWith('\\') && !/(^|\s)#/.test(z)) { offen += z.slice(0, -1); continue; }
+    raus.push(offen + z);
+    offen = '';
+  }
+  if (offen) raus.push(offen);
+  return raus;
+};
+
+/** Die Fluchtfolgen in doppelten Anführungszeichen von YAML: `\n` ist ein
+ *  Umbruch, `\u0075` ein `u`, `\"` ein `"`. */
+const FLUCHT: Record<string, string> = { n: '\n', r: '\n', N: '\n', L: '\n', P: '\n', t: ' ', _: ' ', ' ': ' ',
+  '"': '"', '\\': '\\', '/': '/', '0': '', a: '', b: '', e: '', f: '', v: '' };
+const ausDoppelt = (s: string): string =>
+  s.replace(/\\(x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}|[\s\S])/g, (_g, f: string) =>
+    f.length > 1 ? String.fromCodePoint(parseInt(f.slice(1), 16)) : (FLUCHT[f] ?? f));
+
+/** Was die Shell aus einem `run:` bekommt, Zeile für Zeile — so, wie YAML
+ *  den Wert liest. `wert` steht hinter `run:`, `tiefer` sind die Zeilen
+ *  darunter, die tiefer stehen als `run` (Leerzeilen eingeschlossen).
+ *
+ *    `|`  (auch `|-`, `|2`, ein Kommentar dahinter): jede Zeile, wie sie
+ *         steht, ein `\` am Ende setzt fort.
+ *    `>`  YAML faltet zwei Zeilen zu einer — aber NICHT über eine Leerzeile
+ *         und nicht neben einer tiefer eingerückten Zeile: dort bleibt der
+ *         Umbruch, und die Shell sieht zwei Befehle.
+ *    sonst  ein einfacher Wert oder einer in Anführungszeichen, auch über
+ *         mehrere Zeilen (YAML faltet sie wie bei `>`); in doppelten
+ *         Anführungszeichen gelten die Fluchtfolgen.
+ *
+ *  Die Fassung vor der dritten Durchsicht von E745 kannte nur `|`, `|-`,
+ *  `|+`, `>` mit derselben Faltung über jede Zeile und einen Wert in EINER
+ *  Zeile: `run: npm run` mit `pruefen` darunter fuhr unbemerkt den vollen
+ *  Lauf, und ein `>`-Block mit Leerzeile vor `npm run pruefen` galt als
+ *  ein einziges `echo`. */
+const shellZeilen = (wert: string, tiefer: string[]): string[] => {
+  const voll = tiefer.filter(b => b.trim() !== '');
+  const basis = voll.length ? Math.min(...voll.map(einzug)) : 0;
+  const block = /^([|>])(?:[1-9][-+]?|[-+][1-9]?)?$/.exec(wert.replace(/(^|\s+)#.*$/, ''))?.[1];
+  if (block === '|') return mitFortsetzung(tiefer.map(b => b.slice(basis).replace(/\s+$/, '')));
+  if (block === '>') {
+    let s = '', vorigeTief: boolean | null = null, leer = 0;
+    for (const b of tiefer) {
+      if (b.trim() === '') { if (vorigeTief !== null) leer++; continue; }
+      const tief = einzug(b) > basis;
+      if (vorigeTief !== null) s += leer === 0 && !tief && !vorigeTief ? ' ' : '\n';
+      s += b.slice(basis).replace(/\s+$/, '');
+      vorigeTief = tief;
+      leer = 0;
+    }
+    return mitFortsetzung(s.split('\n'));
+  }
+  const zeichen = ([wert, ...tiefer.map(b => b.trim())].find(t => t !== '') ?? '').charAt(0);
+  const einfach = zeichen !== '"' && zeichen !== "'";
+  let s = '', angefangen = false, leer = 0;
+  for (const t of [wert, ...tiefer.map(b => b.trim())]) {
+    if (t === '') { if (angefangen) leer++; continue; }
+    if (einfach && t.startsWith('#')) continue;
+    if (angefangen) {
+      if (zeichen === '"' && /(^|[^\\])(\\\\)*\\$/.test(s)) s = s.slice(0, -1);   // `\` am Ende: ohne Umbruch weiter
+      else s += leer ? '\n' : ' ';
+    }
+    s += t;
+    angefangen = true;
+    leer = 0;
+  }
+  const inhalt = zeichen === '"' && /^"[\s\S]*"$/.test(s) ? ausDoppelt(s.slice(1, -1))
+    : zeichen === "'" && /^'[\s\S]*'$/.test(s) ? s.slice(1, -1).replace(/''/g, "'")
+    : s;
+  return mitFortsetzung(inhalt.split('\n'));
+};
+
+/** Ein Schritt, der eine eigene Action ruft: `uses: ./ci/v` (auch in
+ *  Anführungszeichen). Eine fremde (`uses: jemand/etwas@v1`) liest er nicht. */
+const EIGENE = /^\s+(?:-\s+)?uses:\s*(['"]?)(\.\/[^'"\s#]*)\1\s*(?:#.*)?$/;
+
+/** Die Jobs einer Ablaufdatei — oder, mit `wurzel = 'runs'`, die Schritte
+ *  einer eigenen Action: dort steht `steps:` mit zwei Leerzeichen unter
+ *  `runs:`, genau wie ein Job unter `jobs:`, und wird ein Abschnitt mit der
+ *  Kennung `steps`. */
+const aufgabenAus = (yml: string, datei: string, wurzel = 'jobs'): Aufgabe[] => {
   const zeilen = yml.split('\n');
-  const start = zeilen.findIndex(z => /^jobs:\s*$/.test(z));
+  const start = zeilen.findIndex(z => new RegExp('^' + wurzel + ':\\s*$').test(z));
   if (start < 0) return [];
   const liste: Aufgabe[] = [];
   let jetzt: Aufgabe | null = null;
@@ -191,7 +326,7 @@ const aufgabenAus = (yml: string, datei: string): Aufgabe[] => {
     const kopf = /^ {2}([A-Za-z0-9_-]+):\s*$/.exec(z);
     if (kopf) {
       jetzt = { datei, id: kopf[1] ?? '', name: '', zeit: null, schrittNamen: [], zeilen: [], befehle: [],
-        weiterBeiFehler: false, text: vorspann };
+        weiterBeiFehler: false, eigene: [], text: vorspann };
       vorspann = '';
       liste.push(jetzt);
       continue;
@@ -206,29 +341,24 @@ const aufgabenAus = (yml: string, datei: string): Aufgabe[] => {
     if (/^\s+(?:-\s+)?continue-on-error:\s*(?!false\s*$)\S/.test(z)) jetzt.weiterBeiFehler = true;
     const schritt = /^\s+-\s+name:\s*(.+?)\s*$/.exec(z);
     if (schritt) jetzt.schrittNamen.push((schritt[1] ?? '').replace(/^['"]|['"]$/g, ''));
+    const eigen = EIGENE.exec(z);
+    if (eigen) jetzt.eigene.push(eigen[2] ?? '');
     const lauf = /^(\s+(?:-\s+)?)run:\s*(.*?)\s*$/.exec(z);
     if (!lauf) continue;
-    const wert = lauf[2] ?? '';
-    if (/^[|>][-+]?$/.test(wert)) {
-      const gefaltet = wert.startsWith('>');          // `>`: YAML faltet die Zeilen zu einer
-      const spalte = (lauf[1] ?? '').length;          // Spalte von `run`
-      let offen = '';                                 // eine Zeile, die mit `\` weitergeht
-      for (let k = i + 1; k < zeilen.length; k++) {
-        const b = zeilen[k] ?? '';
-        if (b.trim() === '') continue;
-        if ((b.match(/^ */)?.[0].length ?? 0) <= spalte) break;
-        jetzt.text += b + '\n';
-        const t = b.trim();
-        i = k;
-        if (t.startsWith('#') && !offen) continue;
-        if (gefaltet || t.endsWith('\\')) { offen += t.replace(/\\$/, '') + ' '; continue; }
-        zeileDazu(jetzt, offen + t);
-        offen = '';
-      }
-      if (offen) zeileDazu(jetzt, offen);
-    } else if (wert) {
-      zeileDazu(jetzt, wert.replace(/^(['"])(.*)\1$/, '$2'));
+    /* Alles, was danach tiefer steht als `run`, gehört zu seinem Wert —
+       als Block, als Fortsetzung eines einfachen Werts oder einer
+       Zeichenkette in Anführungszeichen. Leerzeilen am Ende nicht. */
+    const spalte = (lauf[1] ?? '').length;
+    const tiefer: string[] = [];
+    for (let k = i + 1; k < zeilen.length; k++) {
+      const b = zeilen[k] ?? '';
+      if (b.trim() !== '' && einzug(b) <= spalte) break;
+      tiefer.push(b);
     }
+    while (tiefer.length > 0 && (tiefer[tiefer.length - 1] ?? '').trim() === '') tiefer.pop();
+    i += tiefer.length;
+    jetzt.text += tiefer.map(b => b + '\n').join('');
+    for (const zeile of shellZeilen(lauf[2] ?? '', tiefer)) zeileDazu(jetzt, zeile);
   }
   return liste;
 };
@@ -247,6 +377,47 @@ for (const [f, jobs] of jobsJeDatei) {
     (jobs.map(a => a.id + ' („' + a.name + '", ' + (a.zeit ?? '—') + ' min)').join(' · ') || 'KEINER'));
 }
 
+/* Eigene Actions. Ein Schritt mit `uses: ./ci/v` führt die `run:` aus
+   `ci/v/action.yml` aus, als stünden sie im Job — und der Pfad muss nicht
+   unter `.github/` liegen. Die Fassung vor der dritten Durchsicht von E745
+   las nur `.github/` und nur Zeile für Zeile: `uses: ./ci/v` mit einem
+   vollen Lauf darin kam an jeder Zusage vorbei. Jetzt liest der Leser jede
+   gerufene Action (`runs:` statt `jobs:`, siehe `aufgabenAus`), auch eine,
+   die eine Action ruft, und ihre Befehle zählen für den Job, der sie ruft.
+   Ein Pfad mit `.yml` am Ende ist ein wiederverwendbarer Ablauf: er muss
+   unter `.github/workflows/` stehen und ist dort schon gelesen. */
+const aktionen = new Map<string, Aufgabe[]>();    // Datei → Abschnitte des Lesers
+const fehlendeAktionen = new Set<string>();
+const aktionsDatei = (ref: string): string | null => {
+  const ort = path.posix.normalize(ref.replace(/^\.\//, '') || '.').replace(/\/$/, '');
+  if (ort === '..' || ort.startsWith('../')) return null;
+  if (/\.ya?ml$/.test(ort)) return ort.startsWith(ABLAEUFE + '/') && fs.existsSync(path.join(WURZEL, ort)) ? ort : null;
+  for (const n of ['action.yml', 'action.yaml']) {
+    const rel = (ort === '.' ? '' : ort + '/') + n;
+    if (fs.existsSync(path.join(WURZEL, rel))) return rel;
+  }
+  return null;
+};
+const einmischen = (job: Aufgabe, refs: string[], von: string, gesehen: Set<string>): void => {
+  for (const ref of refs) {
+    const rel = aktionsDatei(ref);
+    if (!rel) { fehlendeAktionen.add(von + ' → ' + ref); continue; }
+    if (rel.startsWith(ABLAEUFE + '/') || gesehen.has(rel)) continue;
+    gesehen.add(rel);
+    if (!aktionen.has(rel)) aktionen.set(rel, aufgabenAus(lies(rel), rel, 'runs'));
+    for (const s of aktionen.get(rel) ?? []) {
+      job.zeilen.push(...s.zeilen);
+      job.befehle.push(...s.befehle);
+      job.schrittNamen.push(...s.schrittNamen);
+      if (s.weiterBeiFehler) job.weiterBeiFehler = true;
+      einmischen(job, s.eigene, rel, gesehen);
+    }
+  }
+};
+for (const job of aufgaben) einmischen(job, job.eigene, wo(job), new Set());
+const aktionsDateien = [...aktionen.keys()].sort();
+console.log('    Eigene Actions, die ein Schritt ruft: ' + (aktionsDateien.join(' · ') || 'keine'));
+
 /** Die Schreibweisen, die den Orchestrator oder den Lauf in Stücken
  *  starten — gesucht ÜBERALL im Befehl, nicht nur am Anfang: `timeout 3600
  *  npm run pruefen`, `npx tsx pruefungen/alle.mts` und `env X=1 npm test`
@@ -259,26 +430,49 @@ for (const [f, jobs] of jobsJeDatei) {
  *  den Wert dann aus dem nächsten Wort. Die erste Fassung kannte nur
  *  Schalter ohne eigenes Wort, und `npm --prefix . run pruefen` kam vorbei.
  *  `node --run` ist Nodes eigener Skriptstarter (seit Node 22): er liest
- *  package.json wie npm und kam ebenso vorbei (zweite Durchsicht von E745). */
+ *  package.json wie npm und kam ebenso vorbei (zweite Durchsicht von E745).
+ *
+ *  Das Skript `pruefen` ist seit der dritten Durchsicht JEDES Wort `pruefen`
+ *  hinter einem Paketmanager im selben Befehl, nicht nur das hinter `run`:
+ *  `yarn pruefen`, `pnpm pruefen` und `bun pruefen` starten ein Skript auch
+ *  ohne `run`, `yarn workspace redion pruefen` mit einem Unterbefehl davor,
+ *  `deno task pruefen` liest package.json ebenso, und `npx npm@10 run
+ *  pruefen` trägt eine Fassung am Namen. `rum` und `urn` sind npms
+ *  Kurzformen für `run-script`, `cit` und `sit` fahren `npm test` nach
+ *  `npm ci`. `bun test` und `deno test` fehlen mit Absicht: sie starten den
+ *  eigenen Testläufer, nicht das Skript. */
 const SCHALTER = String.raw`(?:\s+-\S+(?:\s+[^\s-]\S*)?)*`;
+const PAKET = String.raw`\b(?:npm|pnpm|yarn|bun|deno)\b(?:@\S*)?`;
 const AUFRUFE: readonly RegExp[] = [
-  new RegExp(String.raw`\b(?:npm|pnpm|yarn)\b${SCHALTER}\s+(?:run|run-script)\b${SCHALTER}\s+(?:pruefen|test)\b`),
-  new RegExp(String.raw`\b(?:npm|pnpm|yarn)\b${SCHALTER}\s+(?:test|tst|t|it|install-test)\b`),
+  new RegExp(String.raw`${PAKET}.*?\spruefen\b`),
+  new RegExp(String.raw`${PAKET}${SCHALTER}\s+(?:run|run-script|rum|urn|task)\b${SCHALTER}\s+test\b`),
+  new RegExp(String.raw`\b(?:npm|pnpm|yarn)\b(?:@\S*)?${SCHALTER}\s+(?:test|tst|t|it|install-test|cit|sit|install-ci-test|clean-install-test)\b`),
   /\bnode\b.*?\s--run(?:=|\s+)(?:pruefen|test)\b/,
   /(?:^|[\s/=])alle\.mts\b/,
   /(?:^|[\s/=])volllauf\.mts\b/,
 ];
+
+/** So sieht die Shell die Wörter, bevor sie den Befehl ausführt:
+ *  Anführungszeichen fallen weg, ein `\` vor einem Zeichen auch, und `$'…'`
+ *  gilt wie `'…'`. `npm run 'pruefen'`, `npm run prue""fen` und
+ *  `npm run pr\uefen` rufen alle `pruefen` — für die Fassung vor der dritten
+ *  Durchsicht von E745 waren sie kein Aufruf. Was in `$'…'` mit `\x` steht,
+ *  löst er nicht auf (Kopf, „Was er nicht hält"). */
+const wieDieShell = (b: string): string =>
+  b.replace(/\$(?=['"])/g, '').replace(/\\([\s\S])/g, '$1').replace(/['"]/g, '');
+
 /** Prosa (`nurAusgabe`) ist schon beim Lesen aus den Befehlen gefallen. */
-const istOrchestrator = (b: string): boolean => AUFRUFE.some(m => m.test(b));
+const istOrchestrator = (b: string): boolean => AUFRUFE.some(m => m.test(wieDieShell(b)));
 
 /** Fährt dieser Befehl den VOLLEN Lauf? Der Lauf in Stücken immer; sonst
  *  ein Aufruf ohne Auswahl (keine Nummer, kein `--schnell`, kein `server`,
  *  kein `--liste`). */
-const istVoll = (b: string): boolean => {
-  if (!istOrchestrator(b)) return false;
-  if (/volllauf\.mts\b/.test(b)) return true;
+const istVoll = (befehl: string): boolean => {
+  const b = wieDieShell(befehl);
   const treffer = AUFRUFE.map(m => m.exec(b)).find(t => t !== null) ?? null;
-  const rest = treffer ? b.slice(treffer.index + treffer[0].length) : b;
+  if (!treffer) return false;
+  if (/volllauf\.mts\b/.test(b)) return true;
+  const rest = b.slice(treffer.index + treffer[0].length);
   return !/--schnell\b|--liste\b|\bserver\b|(^|\s)\d+(\s|$)/.test(rest);
 };
 
@@ -292,6 +486,16 @@ p('Jede Ablaufdatei unter .github/workflows/ ergibt mindestens einen Job (sonst 
   ablaufDateien.length > 0 && leereDateien.length === 0,
   ablaufDateien.length === 0 ? 'keine Ablaufdatei' : leereDateien.join(', '));
 
+/* Eine composite Action, aus der der Leser keine Schritte liest (weil sie
+   anders eingerückt ist), wäre still geprüft — dieselbe Frage wie eben für
+   die Ablaufdateien. Eine aus JavaScript oder Docker hat keine Schritte;
+   ihren Code liest er nicht (Kopf, „Was er nicht hält"). */
+const ohneSchritte = aktionsDateien.filter(rel =>
+  /^\s*using:\s*['"]?composite['"]?\s*(?:#.*)?$/m.test(lies(rel)) && !(aktionen.get(rel) ?? []).some(a => a.id === 'steps'));
+p('Jede eigene Action, die ein Schritt über `uses: ./…` ruft, gibt es — auch ausserhalb von .github/ —, und eine composite ergibt für den Leser ihre Schritte',
+  fehlendeAktionen.size === 0 && ohneSchritte.length === 0,
+  [...[...fehlendeAktionen].map(f => 'nicht gefunden: ' + f), ...ohneSchritte.map(r => 'keine Schritte gelesen: ' + r)].join(' · '));
+
 const vollJobs = aufgaben.filter(a => a.befehle.some(istVoll));
 p('Kein Job der CI fährt den vollen Lauf — er bleibt bei volllauf.mts (§30, L254)',
   aufgaben.length > 0 && vollJobs.length === 0,
@@ -299,24 +503,28 @@ p('Kein Job der CI fährt den vollen Lauf — er bleibt bei volllauf.mts (§30, 
     : vollJobs.map(a => wo(a) + ': ' + a.befehle.filter(istVoll).join(' | ')).join(' · '));
 
 /* Ohne den Leser, Zeile für Zeile: jede YAML-Datei unter `.github/` — auch
-   eine eigene Action (`.github/actions/…/action.yml`), deren `run:` ein Job
-   über `uses:` ausführt, und eine Ablaufdatei, die anders eingerückt ist,
-   als der Leser oben erwartet. Eine Fortsetzung mit `\` wird angehängt, ein
-   Schlüssel `run:` vorne abgenommen; was danach einen vollen Lauf fährt, ist
-   einer. Gröber als der Leser — es kennt keine Jobs und keine gefalteten
-   Blöcke (`run: >`) —, aber an keine Einrückung gebunden. */
+   eine eigene Action (`.github/actions/…/action.yml`), und eine Ablaufdatei,
+   die anders eingerückt ist, als der Leser oben erwartet — und dazu jede
+   Action, die ein Schritt ruft, wo immer sie liegt. Eine Fortsetzung mit `\`
+   wird angehängt, ein Schlüssel `run:` vorne abgenommen, ein `\n` in
+   doppelten Anführungszeichen ist ein Umbruch; was danach einen vollen Lauf
+   fährt, ist einer. Gröber als der Leser — es kennt keine Jobs, keine
+   gefalteten Blöcke (`run: >`) und keinen Wert über mehrere Zeilen —, aber
+   an keine Einrückung gebunden. */
 const yamlUnter = (rel: string): string[] =>
   fs.readdirSync(path.join(WURZEL, rel), { withFileTypes: true }).flatMap(e =>
     e.isDirectory() ? yamlUnter(rel + '/' + e.name)
       : /\.ya?ml$/.test(e.name) ? [rel + '/' + e.name] : []);
-const yamlDateien = yamlUnter('.github').sort();
+const yamlDateien = [...new Set([...yamlUnter('.github'), ...aktionsDateien])].sort();
 const vollInZeilen = yamlDateien.flatMap(rel =>
   lies(rel).replace(/\\\r?\n\s*/g, ' ').split('\n').flatMap(roh => {
-    const zeile = glatt(roh).replace(/^(?:-\s+)?run:\s*/, '').replace(/^(['"])(.*)\1$/, '$2');
+    const ohneSchluessel = glatt(roh).replace(/^(?:-\s+)?run:\s*/, '');
+    const doppelt = /^"(.*)"$/.exec(ohneSchluessel);
+    const zeile = doppelt ? ausDoppelt(doppelt[1] ?? '') : ohneSchluessel.replace(/^'(.*)'$/, '$1');
     return befehleIn(zeile).filter(b => !nurAusgabe(b, zeile) && istVoll(b)).map(b => rel + ': ' + b);
   }));
-console.log('    YAML unter .github/: ' + yamlDateien.join(' · '));
-p('Auch Zeile für Zeile steht in keiner YAML-Datei unter .github/ ein voller Lauf (auch nicht in einer eigenen Action)',
+console.log('    YAML unter .github/ und gerufene Actions: ' + yamlDateien.join(' · '));
+p('Auch Zeile für Zeile steht in keiner YAML-Datei unter .github/ und in keiner gerufenen Action ein voller Lauf',
   yamlDateien.length > 0 && vollInZeilen.length === 0, vollInZeilen.join(' · '));
 
 const behauptetAlle = (a: Aufgabe): boolean =>
@@ -352,6 +560,17 @@ const skripte = paket.scripts ?? {};
 p('package.json: `pruefen` ist genau `node pruefungen/alle.mts`, ohne prepruefen und postpruefen',
   skripte['pruefen'] === 'node pruefungen/alle.mts' && !('prepruefen' in skripte) && !('postpruefen' in skripte),
   JSON.stringify({ pruefen: skripte['pruefen'], prepruefen: skripte['prepruefen'], postpruefen: skripte['postpruefen'] }));
+
+/* Ein ANDERES Skript, das den Orchestrator ruft, wäre der volle Lauf unter
+   anderem Namen: `npm run ci` steht in keiner Schreibweise oben, und mit
+   `"ci": "node pruefungen/alle.mts"` fuhr er an der Fassung vor der dritten
+   Durchsicht von E745 vorbei. Ein `postinstall` fiele ebenso darunter —
+   npm führt es bei jedem `npm install` aus. */
+const fremdeSkripte = Object.entries(skripte)
+  .filter(([n, s]) => n !== 'pruefen' && befehleIn(s).some(istOrchestrator))
+  .map(([n, s]) => n + ': ' + s);
+p('package.json: kein anderes Skript ruft den Orchestrator (sonst hiesse der volle Lauf in der CI nur anders)',
+  fremdeSkripte.length === 0, fremdeSkripte.join(' · '));
 
 const ohneZeit = aufgaben.filter(a => !(a.zeit !== null && a.zeit > 0));
 p('Jeder Job hat eine Zeitgrenze (timeout-minutes)', aufgaben.length > 0 && ohneZeit.length === 0,
