@@ -1,5 +1,122 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 11. Oktober 2026 · E745 · Die CI fährt den schnellen Lauf, der volle bleibt auf dem Rechner
+
+**Redur:** „2 . Scnell lauf", am 11. Oktober 2026 um 19:43 UTC, auf L254
+(„Alle Prüfläufe" in der CI kann nicht fertig werden) — Weg (c): in der CI
+nur der schnelle Lauf, der volle bleibt beim Menschen.
+
+**Gefunden**, bevor etwas geändert war: `--schnell` liess genau einen Lauf
+weg (test73) — 549 von 550, also kein schneller Lauf. Gemessen auf 97d156b:
+551 Läufe, 509 starten einen Browser, 42 nicht; die 42 brauchen zusammen
+95 s, test96 und test100 (§31, Sicherung mit echten Bytes) 8 und 4 s.
+
+**Gebaut:** `pruefungen/alle.mts` — `--schnell` ist jetzt jeder Lauf ohne
+Browser (aus der Datei gelesen) plus `SCHNELL_MIT_BROWSER` (test96,
+test100, je mit Grund); neu `--liste`, das die Auswahl druckt, ohne zu
+fahren, und erst nach dem Schreiben endet. `.github/workflows/pruefen.yml` —
+„Alle Prüfläufe" (40 min, brach jeden vollen Lauf ab) heisst jetzt
+„Schneller Lauf (ohne Browser, dazu die Sicherung)", fährt
+`npm run pruefen -- --schnell`, druckt vorher die Liste, baut und prüft die
+Einzeldatei weiter, holt Chromium nur für die zwei, 20 Minuten Zeit, und
+der Kommentar nennt die Messung und `volllauf.mts`. Der schnelle Job
+„Quelltext und Logik" ist unverändert. Doku: CLAUDE.md §30, LIESMICH,
+README, MIGRATION-REZEPT, die Karte (`mcp.md`).
+
+**Geprüft:** `test610` neu — gegen 97d156b rot mit 4 von 21 bestanden,
+nachher 22/22; sechs Gegenproben rot (14, 20, 21, 21, 19, 21 von 22), jede
+Byte für Byte zurückgesetzt. `npm run pruefen -- --schnell` auf dem Endstand: 45 Läufe
+in 3 min 57 s, 44 grün, rot nur `test274` (auf main seit E729 rot; die
+erste Messung, 4 min 14 s, lief noch vor der Doku). Datei-Wächter 550 8/8,
+549 6/6, 225 11/11, 105 342/342, 109 25/25, 87 181/181, 537 18/18, 400 4/4,
+553 6/6, 578 115/115; im Browser 353 105/105, 388 22/22 (Start 1919 KB,
+Decke 1950). Unterwegs gefunden und gerichtet: die erste
+`--liste` war in einer Röhre in 3 von 40 Fällen abgeschnitten (danach 0 von
+190). L254 GESCHLOSSEN. Messung in `messungen.md` §102.
+
+**Nach der Durchsicht** (am selben Abend, derselbe Zweig): stehende
+Anweisungen, die `--schnell` in der alten Bedeutung nannten, sagen jetzt,
+was sie meinten — AUFGABEN.md „Dauerhafte Regeln", `doku/TYPESCRIPT-MIGRATION.md`,
+`doku/MIGRATION-REZEPT.md` (der volle Lauf wieder als eigene Zeile),
+`doku/AMDION-UEBERNAHME.md`, `doku/AUFTRAG-01-ruhiges-band.md`, README,
+ein Hinweis in `doku/REDION-STUDY-SUITE-AUDIT.md`; E745s zwei falsche Sätze
+dazu berichtigt. L254s Beleg hiess „grün mit 4 von 21" — es war rot. Die
+geschätzte Einrichtung („rund 7 Minuten", „etwa 3 Minuten") ist durch die
+Zeiten von GitHub ersetzt: 32 s (Lauf 38169660632). test610 liest seinen
+zweiten Weg jetzt über `ohneKommentareGenau` (neu in
+`pruefungen/hilfe/quelltext.mts`, Zeichen für Zeichen; in allen 552
+Dateien dieselben Kommentare wie der Parser von TypeScript) und
+VERGLEICHT beide Wege — vorher verlor er über `nurCode` test587 (508 statt
+509), und die Vereinigung verdeckte es. Dazu fängt er `npm run-script`,
+`npm test`, `npx … alle.mts`, doppelten Leerraum, `|| true`,
+`continue-on-error` und `pruefen`/`postpruefen` in package.json; acht dieser
+zwölf neuen Gegenproben hatte die erste Fassung grün durchgelassen.
+`test610` gegen 97d156b rot mit 7 von 25, jetzt 26/26; achtzehn
+Gegenproben und zwei Positivproben in E745, jede in einer frischen Kopie
+im Notizordner. Nachbarn: 550 8/8, 549 6/6, 225 11/11, 105 342/342,
+109 25/25, 87 181/181, 537 18/18, 400 4/4, 553 6/6, 444 13/13 (nutzt
+`quelltext.mts`; versehentlich ohne das Schloss gefahren), im Browser unter
+dem Schloss 353 105/105, 388 22/22 (Start 1919 KB, Decke 1950);
+`npm run pruefen -- --schnell` unter dem Schloss: 45 Läufe, 44 grün, rot
+nur `test274`, 231 s von aussen gemessen (Warten auf das Schloss
+eingeschlossen).
+
+**Nach der zweiten Durchsicht** (12. Oktober, derselbe Zweig): `test610`
+fängt jetzt auch `node --run pruefen`, `npm --prefix . run pruefen`,
+`npm -C . run pruefen`, `echo "$(npm run pruefen)"`, dasselbe mit
+Backticks und `echo … | sh` (ein `echo` ist nur noch Prosa ohne `$(`,
+Backtick und Röhre); er liest JEDE Ablaufdatei unter `.github/workflows/`
+(jede muss einen Job ergeben) und Zeile für Zeile jede YAML-Datei unter
+`.github/`. Zwölf neue Gegenproben (G19 bis G30), alle von der Fassung
+davor grün durchgelassen, jetzt rot; test610 28/28, gegen 97d156b rot mit 8 von
+27. Sein Kopf und E745 sagen nicht mehr „jede Form, die einen Lauf
+startet" und „ein Rot bricht den Job ab": `set +e`, `shell:` ohne `-e`,
+`if:` und ein Lauf hinter einem eigenen Skript stehen jetzt als „hält er
+nicht" da, dazu ein gefalteter Block in einer eigenen Action (N1 bis N5,
+grün mit Absicht). `messungen.md` §102 und
+pruefen.yml: „der Runner ist nicht langsamer" ist durch das gemischte Bild
+ersetzt (test105 und test103 dort schneller, test578 langsamer, je ein
+Lauf); „`ohneKommentare` … in 378" war mit zwei Verfahren nachgezählt 377.
+In `doku/AUFTRAG-01-ruhiges-band.md` fehlte nach dem Nachtrag die
+Leerzeile. Nachbarn: 550 8/8, 549 6/6, 225 11/11, 105 342/342, 109 25/25,
+87 181/181, 537 18/18, 400 4/4, 553 6/6; unter dem Schloss 353 105/105,
+444 13/13, 388 22/22 (Start 1919 KB, Decke 1950). Ausgelieferte Dateien
+unverändert (Dienststand v1469, Einzeldatei ohne Unterschied).
+
+**Nach der dritten Durchsicht** (12. Oktober, derselbe Zweig): `test610`
+zerlegt eine Zeile jetzt auch an einem einzelnen `&` — vorher war
+`echo start & npm run pruefen` (ebenso mit `printf`) EIN `echo` und fiel
+als Prosa weg. Er fängt `yarn pruefen` und `pnpm pruefen` (jedes Wort
+`pruefen` hinter einem Paketmanager), den Namen in Anführungszeichen
+(`npm run 'pruefen'`, `npm run "pruefen"`, `node --run "pruefen"`; gesucht
+wird in dem, was die Shell ausführt) und liest jede eigene Action, die ein
+Schritt über `uses: ./…` ruft, auch ausserhalb von `.github/` und über eine
+zweite; ihre Befehle zählen für den rufenden Job, und eine gerufene, die es
+nicht gibt, ist rot. Beim Schreiben dazugefunden und ebenso gefangen: ein
+`run:`-Wert über mehrere Zeilen, ein gefalteter Block mit Leerzeile oder
+tiefer eingerückter Zeile, `\n`/`\u0075`/`\` am Zeilenende in doppelten
+Anführungszeichen, `run: |2` und `run: | # …`, ein `\` mitten im Wort,
+`echo <(…)`, `echo … > s.sh`, `rum`/`urn`/`cit`, `bun`, `deno task`,
+`yarn workspace`, `npm@10`, `$'…'` und ein zweites Skript in package.json,
+das den Orchestrator ruft. 33 neue Gegenproben (G31 bis G63), alle von der
+Fassung davor grün durchgelassen, jetzt rot; dazu neun Gegenproben am
+Werkzeug (je ein Teil zurückgedreht, die Probe kommt wieder grün durch).
+test610 30/30, gegen 97d156b rot mit 10 von 29 — CLAUDE.md §30 nannte noch
+7 von 25 (den Stand nach der ersten Durchsicht), jetzt steht dort wie hier,
+in L254 und in E745 dieselbe Zahl. Sein Kopf sagt weiter „eine Liste, kein
+Beweis" und nennt, was er nicht hält; jede dieser Behauptungen ist als
+Probe gefahren und bleibt grün (N6 bis N10: `${{ matrix.… }}`, `xargs`,
+`eval "$LAUF"`, `\x75` in `$'…'`, eine Action aus JavaScript). Nachbarn:
+550 8/8, 549 6/6, 225 11/11, 105 342/342, 109 25/25, 87 181/181,
+537 18/18, 400 4/4, 553 6/6; unter dem Schloss 353 105/105, 444 13/13,
+388 22/22 (Start 1919 KB, Decke 1950). Ausgelieferte Dateien unverändert
+(Dienststand v1469, Einzeldatei ohne Unterschied).
+
+**Offen:** wie lange der ganze schnelle Lauf auf einem Runner braucht,
+zeigt erst der erste Push (die Einrichtung ist gemessen: 32 s); und der Job
+wird rot sein, solange `test274` rot ist — ein Fehlalarm über
+`redion-graphit` in `marken.ts`, den nur Redur freigeben kann.
+
 ## 11. Oktober 2026 · E744 · Die Linse auf „Heute" verblasst nach der Fahrt
 
 **Redur:** „1. verblassen", am 11. Oktober 2026 um 19:43 UTC — auf die

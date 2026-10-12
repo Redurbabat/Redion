@@ -1,17 +1,23 @@
 # Die Prüfläufe
 
-**67 Läufe, 2766 einzelne Prüfungen.** Sie laufen über echtes Chromium
-gegen die echte App — keine Attrappen, keine Mocks, keine nachgebauten
-Speicher.
+*Hier stand „67 Läufe, 2766 einzelne Prüfungen" — die Zahl aus dem August.
+Wie viele es heute sind, wird gezählt, nicht hier gepflegt: CLAUDE.md §30,
+`ls pruefungen/lauf/test*.mts | wc -l`.* Die meisten laufen über echtes
+Chromium gegen die echte App — keine Attrappen, keine Mocks, keine
+nachgebauten Speicher.
 
 ```
-node pruefungen/alle.mts              alles                    (~12 min)
-node pruefungen/alle.mts --schnell    ohne die Messläufe       (~11 min)
+node pruefungen/volllauf.mts          alles, in Stücken        (158 min, E743)
+node pruefungen/alle.mts              alles am Stück — derselbe Lauf ohne Merkdatei
+node pruefungen/alle.mts --schnell    jeder Lauf ohne Browser,
+                                      dazu test96 und test100  (rund 4 min, E745)
+node pruefungen/alle.mts --schnell --liste
+                                      nur zeigen, was er fährt
 node pruefungen/alle.mts 33 85 86     nur diese drei
 node pruefungen/alle.mts server       nur die Serverläufe
 node pruefungen/alle.mts --alt        auch die alten aus alt/
 
-node pruefungen/lauf/test85.mjs      ein einzelner Lauf
+node pruefungen/lauf/test85.mts       ein einzelner Lauf
 ```
 
 Vorher einmal:
@@ -24,9 +30,11 @@ npx playwright install chromium
 Über `npm` gehen die Schalter mit zwei Strichen davor:
 `npm run pruefen -- --schnell`, `npm run pruefen -- 33 85 86`.
 
-Die Läufe starten ausserdem bei jedem Push von selbst
-(`.github/workflows/pruefen.yml`), in zwei Aufträgen: `test87` allein für die
-schnelle Antwort, und daneben die ganze Reihe.
+Bei jedem Push starten von selbst (`.github/workflows/pruefen.yml`) zwei
+Aufträge: ein paar Datei-Wächter einzeln für die Antwort nach zwei Minuten,
+und daneben der schnelle Lauf (`--schnell`). Der volle Lauf läuft NICHT in
+der CI — er passt in keine Zeitgrenze, die für jeden Push taugt, und bleibt
+auf dem Rechner (`volllauf.mts`; Redur, 11. Oktober 2026, E745, L254).
 
 ---
 

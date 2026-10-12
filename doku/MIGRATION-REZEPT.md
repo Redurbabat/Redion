@@ -159,8 +159,16 @@ node pruefungen/lauf/test87.mjs     # Quelltextregeln
 node pruefungen/lauf/test105.mjs    # erzeugtes JavaScript passt zur Quelle
 node pruefungen/lauf/test109.mts    # das Verzeichnis stimmt
 npm run typecheck                   # src/ und alle .mts, streng
-npm run pruefen -- --schnell        # und am Ende alles
+npm run pruefen -- --schnell        # der schnelle Lauf (ohne Browser, E745)
+node pruefungen/volllauf.mts        # und am Ende alles, in Stücken (§30)
 ```
+
+*Bis zum 11. Oktober 2026 hiess die letzte Zeile
+`npm run pruefen -- --schnell  # und am Ende alles` — und das stimmte, denn
+`--schnell` fuhr zuletzt alles ausser test73. E745 hatte zuerst nur den
+Kommentar umgeschrieben; damit endete das Rezept ohne den vollen Lauf, und
+das war nie gemeint. Jetzt stehen beide da: der schnelle Lauf als erste
+Antwort nach vier Minuten, der volle als Aussage über alles.*
 
 > **Nicht bauen, während ein voller Lauf läuft.** Der Lauf lädt `index.html`
 > und mit ihr sechzig Dateien aus `quell/`. Wer mittendrin `npm run bauen:ts`

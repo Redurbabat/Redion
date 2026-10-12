@@ -444,7 +444,10 @@ npm install
 npx playwright install chromium
 npm run pruefen
 
-Schneller Lauf:
+Schneller Lauf — jeder Lauf ohne Browser, dazu die zwei Sicherungsläufe
+test96 und test100, rund 4 Minuten. Genau diesen fährt auch GitHub bei
+jedem Push; der volle Lauf (über zwei Stunden) bleibt auf dem eigenen
+Rechner, am besten in Stücken mit `node pruefungen/volllauf.mts`:
 
 npm run pruefen -- --schnell
 
@@ -1873,7 +1876,8 @@ npx playwright install chromium
 npm run typecheck
 npm run pruefen
 
-Schnell:
+Schnell — jeder Lauf ohne Browser, dazu test96 und test100; ersetzt den
+vollen Lauf nicht:
 
 npm run pruefen -- --schnell
 
@@ -1950,7 +1954,14 @@ npm run typecheck
 npm run bauen:ts
 npm run stand
 npm run pruefen -- --schnell
+node pruefungen/volllauf.mts
 node bauen.mts
+
+Bis zum 11. Oktober 2026 stand hier nur `npm run pruefen -- --schnell`, und
+das war bis dahin der volle Lauf ohne die Startmessung test73. Seit E745
+fährt `--schnell` nur die Läufe ohne Browser (rund 4 Minuten); der volle Lauf
+— über zwei Stunden, in Stücken und wiederaufnehmbar — steht deshalb jetzt
+eigens da.
 
 Die Folge zählt: `bauen:ts` baut die Inseln vor dem Dienststand, weil der
 die Bytes des Grundstocks rechnet; die Einzeldatei setzt die Bündel ein und

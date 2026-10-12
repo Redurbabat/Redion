@@ -764,9 +764,17 @@ Phase 7 und Phase 8.
 **Nach jeder Codeänderung**
 
 ```
-npm run pruefen -- --schnell
+npm run pruefen -- --schnell      jeder Lauf ohne Browser, dazu test96 und test100
+node pruefungen/alle.mts NNN …    dazu die Browserläufe des geänderten Bereichs
 node bauen.mts
 ```
+
+*Bis zum 11. Oktober 2026 stand hier `npm run pruefen -- --schnell` allein —
+das fuhr zuletzt alles ausser test73, also praktisch den vollen Lauf. Seit
+E745 fährt es nur noch die Läufe ohne Browser und die zwei Sicherungsläufe;
+eine Änderung an der Oberfläche prüft es fast nicht. Deshalb die zweite
+Zeile: die Läufe, die den geänderten Bereich im Browser prüfen (CLAUDE.md
+§30, „Wann welche Prüfung Pflicht ist").*
 
 **Bei Backup, Import oder Export**
 
@@ -788,7 +796,9 @@ npm run bauen:ts          wenn eine Datei unter src/ liegt, die der Browser läd
 node pruefungen/alle.mts 105 109
 ```
 
-**Vor jedem Push** die volle Runde: `npm run pruefen`.
+**Vor jedem Push** die volle Runde: `npm run pruefen` — oder in Stücken
+und wiederaufnehmbar `node pruefungen/volllauf.mts` (CLAUDE.md §30). Die CI
+fährt sie nicht (E745).
 
 ---
 
@@ -1692,6 +1702,14 @@ Grund:
    vierzehn Werkzeuge, die Wortzeile bei 1360 und 1600 px rechnet mit
    dreizehn) und `test533` („Sie stehen alle auf EINER Höhe — ist 2, soll
    1" und „kein Wort ist sichtbar — ist 1, soll 0", die Tafel aus E614).
+   **Seit E745 macht einer davon die CI rot:** der schnelle Lauf fährt
+   jeden Lauf ohne Browser, und `test274` ist der einzige der dreizehn
+   darunter. Er meldet `redion-graphit` in `marken.ts` als verwaiste
+   Nachschlagestelle; `marken.ts` legt diesen Halter aber selbst an, als
+   `svg('svg', { id: 'redion-graphit', … })` (Zeile 888) — eine Schreibweise,
+   die test274 nicht als „entsteht" erkennt. Ein Fehlalarm des Wächters,
+   nicht der App. test274 zu ändern braucht Redurs Wort; bis dahin ist der
+   Job „Schneller Lauf" auf GitHub rot.
    ~~Dazu `test319` („Und `info` ist nicht die blasseste der drei — info
    12.09, warn 12.15, fehler 12.41"; auf morgen-besser-2 Ziffer für Ziffer
    gleich — alle drei Streifen liegen weit über 4,5 : 1, `info` nur um

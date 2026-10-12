@@ -8380,3 +8380,137 @@ herausgenommen und neu gepackt (gzip 6): ohne `verblassen()` (Dauer und
 Kurve aus den Marken) 3709 B, also 168 B; ohne die Animation des
 Verblassens 3830 B, also 47 B. gzip zählt nicht einzeln zusammen; die zwei
 Zahlen sagen, wo das Gewicht liegt, nicht eine Summe.
+
+## §102 · Der schnelle Lauf: was ohne Browser läuft und wie lange (E745, L254, 11. Oktober 2026)
+
+**Frage.** Redur hat für die CI Weg (c) aus L254 gewählt („2 . Scnell
+lauf"): nur der schnelle Lauf. Was ist schnell — gemessen, nicht
+geschätzt? Bis E745 liess `--schnell` nur test73 weg (549 von 550).
+
+**Rechner.** Der Rechner der Sitzung: 4 Kerne, Intel Xeon 2,8 GHz,
+15 GB, Linux 6.18, Node 22.22.2, Chromium aus `/opt/pw-browsers`. Gemessen
+im Arbeitsbaum `claude/ci-schnell`, alles unter dem gemeinsamen Schloss
+(`flock …/redion-browser.lock`), damit kein Browserlauf eines anderen
+Zweigs gleichzeitig lief; Last zu Beginn 0,3, am Ende 1,2.
+
+**Wer startet einen Browser?** Gezählt auf 97d156b, jede Datei unter
+`pruefungen/lauf/` gelesen: ein Lauf zählt als Browserlauf, wenn er
+Playwright lädt — und unabhängig davon, wenn er `chromium.launch(` ruft.
+Beide Wege geben dieselben 509, wenn der Aufruf im Code gesucht wird, aus
+dem NUR die Kommentare entfernt sind; hier stand zuerst ohne diese
+Einschränkung „beide Wege gaben dieselben 509", und test610 las den
+zweiten Weg damals über `nurCode` — das ergab 508 (siehe unten, „Nach der
+Durchsicht").
+
+```txt
+Läufe (550 test*.mts + servercheck)    551
+  starten einen Browser                509
+  ohne Browser                          42
+    davon in alle.mts als „server"      6   test75 79 92 93 101, servercheck
+```
+
+**Wie lange laufen sie einzeln?** Jeder Lauf für sich (`zeiten.sh`, Zeit
+von Prozessstart bis Ende, ohne Pausen), auf 97d156b:
+
+```txt
+die 42 ohne Browser zusammen     95,0 s
+  test105   58,1 s   baut mit tsc nach /tmp und vergleicht
+  test103    8,9 s   der ZIP-Packer an seinen Grenzen
+  test578    8,4 s   baut die Inseln mit Vite nach /tmp
+  test537    3,4 s
+  test205    3,2 s
+  test216    2,7 s
+  test274    1,1 s   rot (11/12) — auf main seit E729
+  die übrigen 35   je 0,1 bis 0,6 s
+test96  (Browser, §31)    8,0 s   18 ok
+test100 (Browser, §31)    3,7 s   32 ok
+```
+
+**Der ganze schnelle Lauf**, so wie die CI ihn fährt
+(`npm run pruefen -- --schnell`, mit test610, unter dem Schloss, nach dem
+Umbau von alle.mts):
+
+```txt
+Läufe                     45   43 ohne Browser + test96 + test100
+Dauer                     4 min 14 s (253,9 s)
+  davon feste Pausen      2 min 12 s (44 × 3 s zwischen den Läufen)
+rot                       test274 (alt), test610 (Zwischenstand: CLAUDE.md
+                          noch nicht nachgezogen; nachher 22/22)
+zweite Messung, Endstand  3 min 57 s (237,3 s), 44 von 45 grün,
+                          rot nur test274 (11/12, auf main seit E729)
+zum Vergleich: voll       158 min für 550 Läufe (E743)
+```
+
+**Die Zeitgrenze in der CI.** Hier stand zuerst eine Schätzung der
+Einrichtung („rund 7 Minuten", ausdrücklich als geschätzt markiert). Die
+Durchsicht hat die echten Zeiten von GitHub dazugelegt; sie stehen unten.
+Gesetzt sind 20 Minuten, gut das Vierfache von Lauf und Einrichtung
+zusammen (4 min 14 s + 32 s).
+
+**Nebenbei gemessen: `--liste` in eine Röhre.** Die erste Fassung schrieb
+Zeile für Zeile und rief gleich danach `process.exit(0)`: von 40 Aufrufen
+`alle.mts --liste` über `spawnSync` kamen 3 abgeschnitten an (240, 273,
+298 statt 552 Zeilen). Mit EINEM Schreiben und dem Ende im Rückruf: 0 von
+40, dann 0 von 150.
+
+**Nach der Durchsicht (11. Oktober 2026, abends) nachgemessen.**
+
+*Die Einrichtung des Jobs auf GitHub.* Abgelesen aus den Zeitstempeln der
+Schritte, über die Schnittstelle von GitHub
+(`repos/Redurbabat/Redion/actions/jobs/114559416814`, nur gelesen): Lauf
+38169660632, Push auf `main`, 97d156b, 11. Oktober 2026, Job „Alle
+Prüfläufe" — dieselben Einrichtungsschritte wie im neuen Job, nur hiess
+„Pakete holen" dort „Playwright holen". Die Zeitstempel haben ganze
+Sekunden.
+
+```txt
+Quelltext holen                    19:49:57 → 19:50:01     4 s
+Node einrichten                    19:50:01 → 19:50:02     1 s
+Pakete holen (npm install)         19:50:02 → 19:50:04     2 s
+Chromium holen (--with-deps)       19:50:04 → 19:50:27    23 s
+Einzeldatei bauen                  19:50:27 → 19:50:28     1 s
+Ist die Einzeldatei nachgezogen?   19:50:28 → 19:50:29     1 s
+zusammen                           19:49:57 → 19:50:29    32 s
+Prüfläufe (der alte volle Lauf)    abgebrochen nach      2379 s
+```
+
+Im selben Lauf, Job „Quelltext und Logik" (114559416585): test105 53 s
+(auf dem Rechner der Sitzung 58,1 s), test578 11 s (8,4 s), test103 4 s
+(8,9 s). Das Bild ist gemischt: bei test105 und test103 war der Runner
+schneller, bei test578 langsamer — je ein Lauf auf beiden Seiten, der
+Runner in ganzen Sekunden. Ob er insgesamt schneller oder langsamer ist als
+dieser Rechner, sagen drei Einzelwerte nicht; wie lange der ganze schnelle
+Lauf dort braucht, zeigt erst der erste Push. (Hier stand zuerst „Der
+Runner ist also nicht langsamer als dieser Rechner" — test578 im selben
+Satz widersprach; zweite Durchsicht von E745. Die drei Zeiten des Runners
+am 12. Oktober aus der gespeicherten Antwort der Schnittstelle noch
+einmal nachgerechnet: 53, 11 und 4 s.)
+
+*Wer startet einen Browser — die drei Filter im Vergleich.* Jede Datei
+unter `pruefungen/lauf/`, Weg 1 „lädt Playwright", Weg 2 „ruft
+`chromium.launch(`" nach drei verschiedenen Filtern:
+
+```txt
+                                   97d156b (551)   Endstand (552)
+Weg 1: lädt Playwright                  509             509
+Weg 2 über nurCode                      508             508   test587 fehlt
+Weg 2 über ohneKommentare               508             508   test587 fehlt
+Weg 2 über ohneKommentareGenau          509             509   dieselben Läufe wie Weg 1
+```
+
+In test587 steht `'image/*'` in einer Zeichenkette; für die beiden Filter
+mit regulären Ausdrücken beginnt dort ein Kommentar, der erst beim nächsten
+echten Kommentarende schliesst und den Aufruf des Browsers verschluckt.
+`ohneKommentareGenau` liest Zeichen für Zeichen und kennt Zeichenketten,
+Schablonen und reguläre Ausdrücke. Gegen den Parser von TypeScript
+geprüft (Kommentarbereiche vor und hinter jedem Token,
+`getLeadingCommentRanges`/`getTrailingCommentRanges`, Leerraum nicht
+verglichen): in allen 552 Dateien entfernt er dieselben Kommentare; der
+Filter `ohneKommentare` tut das in 377. Nachgezählt am 12. Oktober mit
+zwei Verfahren, die beide 552 und 377 ergaben, auf dem Stand vor der
+zweiten Durchsicht (9442464) wie danach: die Kommentarbereiche vor und
+hinter jedem BLATT des Syntaxbaums, beide an dessen Anfang gefragt (das
+Verfahren dieser Messung), und dieselben Bereiche an jedem KNOTEN, die
+hinteren an dessen Ende (das der Durchsicht). Hier stand zuerst 378; die
+Zahl liess sich mit keinem der beiden nachstellen. Zeilentreu in 552 von
+552, für alle 552 Dateien zusammen 220 bis 245 ms.

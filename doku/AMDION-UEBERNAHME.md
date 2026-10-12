@@ -51,7 +51,7 @@ Amdion (`/home/user/amdion`) ist Redurs eigener Premium-Prototyp: reines TypeScr
 
 **Konflikte und Auflösung:** Keine Knopf-Budgets betroffen, solange Phase 1 knopffrei bleibt (das ist die Vorgabe). Hell-Inversion = dokumentierte Entscheidung + test127-Neumessung. Nicht übernehmen (dokumentieren warum): Inter + 14 px Grundgrösse (erste Laufzeit-Fremdressource bzw. Lesbarkeitsrückschritt — Redions Systemstapel/16 px bleiben, `marken.css:13`, `grund.css:126`), Einheitsschatten `--shadow` (Redions Schattenleiter E204 bleibt, Amdions Ad-hoc-Schatten auf die Sprossen legen), neue Radien-Zwischenwerte (E198: 9→`--radius-md`, 22→`--radius-2xl`).
 
-**Prüfplan:** `node bilder.mjs` (alle Ansichten, Rechner und Handy) und Bilder im Gespräch zeigen (§55.3); test127/Kontrastmessung in Hell und Dunkel; `npm run pruefen -- --schnell`; `node bauen.mts` und Grösse der Einzeldatei vorher/nachher notieren (§29); Reduced-Motion-Probe.
+**Prüfplan:** `node bilder.mjs` (alle Ansichten, Rechner und Handy) und Bilder im Gespräch zeigen (§55.3); test127/Kontrastmessung in Hell und Dunkel; der volle Lauf `node pruefungen/volllauf.mts` (CLAUDE.md §30 — hier stand bis zum 11. Oktober 2026 `npm run pruefen -- --schnell`, das zuletzt alles ausser test73 fuhr; seit E745 ist das der schnelle Lauf ohne Browser und deckt eine Gestaltungsphase nicht ab); `node bauen.mts` und Grösse der Einzeldatei vorher/nachher notieren (§29); Reduced-Motion-Probe.
 
 ---
 

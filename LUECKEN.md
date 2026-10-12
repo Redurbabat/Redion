@@ -8358,7 +8358,7 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
-## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — 11. Oktober 2026
+## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — GESCHLOSSEN (E745) — 11. Oktober 2026
 
 **Gemessen** über die Schnittstelle von GitHub, nicht vermutet: die zwei
 letzten Läufe auf `main` sind beide **abgebrochen**, nicht rot und nicht
@@ -8397,6 +8397,65 @@ Lauf je Push von zwei Stunden; (c) in der CI nur `--schnell` und die
 Datei-Wächter, und der volle Lauf bleibt beim Menschen — dann muss die
 Datei das sagen, statt „Alle Prüfläufe" zu heissen. Die Workflow-Datei ist
 geteilte Infrastruktur; welcher Weg, entscheidet Redur.
+
+### GESCHLOSSEN am 11. Oktober 2026 durch E745 — Weg (c)
+
+Redur, 11. Oktober, 19:43 UTC, wörtlich: „2 . Scnell lauf". Beim Nachsehen
+stellte sich heraus, dass Weg (c) mit dem alten Schalter gar nicht ging:
+`--schnell` liess genau EINEN Lauf weg (test73, die Startmessung) — 549 von
+550, also praktisch der volle Lauf unter anderem Namen. Der Schalter hat
+deshalb seine Bedeutung bekommen, und die ist gemessen, nicht geschätzt
+(`messungen.md` §102):
+
+```txt
+Läufe gesamt (test*.mts + servercheck, auf 97d156b)   551
+  davon starten einen Browser                          509
+  davon ohne Browser                                    42   zusammen 95 s
+--schnell seit E745 (mit test610)                       45   = 43 ohne Browser
+                                                              + test96, test100 (§31)
+npm run pruefen -- --schnell, mit den 3-s-Pausen     4 min 14 s
+der volle Lauf (E743)                               158 min
+```
+
+**Was jetzt gilt.** `.github/workflows/pruefen.yml` hat keinen Job „Alle
+Prüfläufe" mehr. Der lange Job heisst „Schneller Lauf (ohne Browser, dazu
+die Sicherung)", fährt genau `npm run pruefen -- --schnell` (davor die
+Auswahl mit `--liste`), baut weiterhin die Einzeldatei und prüft, ob sie
+nachgezogen ist, holt Chromium nur für test96 und test100, und hat
+20 Minuten Zeit — gut das Vierfache von Lauf (4 min 14 s, auf dem Rechner
+der Sitzung) und Einrichtung (32 s, auf GitHub gemessen: Zeitstempel der
+Schritte von Lauf 38169660632 auf 97d156b). Sein Kommentar nennt die
+Messungen mit Datum und sagt, dass der volle Lauf auf dem Rechner bleibt (`node pruefungen/volllauf.mts`, CLAUDE.md §30). Der Job
+„Quelltext und Logik (ohne Browser)" ist unverändert.
+
+**Beleg.** `test610` (neu, ohne Browser), in der Fassung nach der ersten
+Durchsicht: gegen 97d156b rot mit 7 von 25
+bestanden — der Job fuhr den vollen Lauf, keiner fuhr `--schnell`, alle.mts
+kannte `--liste` nicht, und CLAUDE.md sagte „Dauer ungemessen"; nach E745
+26/26. (Hier stand zuerst „grün mit 4 von 21" — es war die erste Fassung
+von test610, und sie war ROT mit 4 von 21 bestanden.) Gegenproben in E745.
+Nach der zweiten Durchsicht (12. Oktober) liest test610 jede Ablaufdatei
+unter `.github/workflows/` und fängt weitere Umwege (`node --run`,
+`npm --prefix . run`, `echo "$(…)"`): 28/28, gegen 97d156b rot mit 8 von 27.
+Nach der dritten Durchsicht (12. Oktober) fängt er auch `yarn pruefen`,
+`pnpm pruefen`, den Namen in Anführungszeichen, ein einzelnes `&`
+(`echo start & npm run pruefen`), einen `run:`-Wert über mehrere Zeilen,
+ein zweites Skript in package.json, das den Orchestrator ruft, und eine
+eigene Action ausserhalb von `.github/` (`uses: ./ci/v`): 30/30, gegen
+97d156b rot mit 10 von 29 — das ist der heutige Stand; die Zahlen davor
+gehören zu den Fassungen davor. Gegenproben G31 bis G63 in E745.
+Wie lange der ganze schnelle Lauf auf GitHub braucht, zeigt erst der erste
+Push dieses Zweigs: auf GitHub gemessen ist nur die Einrichtung.
+
+**Was offen bleibt, und es ist keine neue Lücke, sondern eine alte:** der
+Job „Schneller Lauf" wird auf GitHub rot sein. Der schnelle Lauf enthält
+`test274`, und der ist auf `main` seit E729 rot — ein Fehlalarm des
+Wächters, nicht der App: er meldet `redion-graphit` in `marken.ts` als
+verwaiste Nachschlagestelle, aber `marken.ts` legt den Halter selbst an
+(`svg('svg', { id: 'redion-graphit', … })`), in einer Schreibweise, die
+test274 nicht kennt. test274 zu ändern braucht Redurs Wort. Er steht in der
+Liste der dreizehn (AUFGABEN.md, „Nach dem Zusammenführen der dritten
+Welle", Punkt 1).
 
 ---
 
@@ -10438,7 +10497,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 11. Oktober 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 149 Lücken, 92 offene und 57 geschlossene. Der Befehl dazu ist
+Datei führt 149 Lücken, 91 offene und 58 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt
