@@ -168,20 +168,46 @@
  *       „kein Element". Neu, je Fall mit Fahrt: das letzte sichtbare Bild vor
  *       „weg oder leer" zeigt höchstens 0,2, von Bild zu Bild fällt die
  *       Deckkraft um höchstens 0,25 (gerechnet aus `--ease-exit`: über ein
- *       Bild höchstens 0,083, zwei 0,162, drei 0,239; gemessen am Bau
- *       0,061–0,097 und 0,080–0,082). Stockt der Browser genau dort (über
- *       40 ms auf der Bilduhr), wird nachgemessen, höchstens dreimal. Mit
- *       der Gegenprobe: 148 ok, 4 offen — „zeigt 0.513 … fällt höchstens
- *       0.513".
+ *       Bild höchstens 0,083, zwei 0,162, drei 0,239; gemessen am Bau in
+ *       einem Lauf 0,061–0,097 und 0,080–0,082 — siehe die zweite
+ *       Durchsicht). Stockt der Browser genau dort (über 40 ms auf der
+ *       Bilduhr), wird nachgemessen, höchstens dreimal. Mit der Gegenprobe:
+ *       148 ok, 4 offen — „zeigt 0.513 … fällt höchstens 0.513".
  *   §8  MITTEN IM VERBLASSEN NEU GEZEICHNET. Ein neues Ankommen, 1740 ms
- *       nachdem die Linse da ist das Fenster auf 1000 px: eine neue Linse
- *       ist da, halb verblasst (zwischen 0,05 und 0,95) und fällt weiter,
- *       rechts vom Punkt in der neuen Lage, die Abschrift in der neuen
- *       Grösse der Überschrift. Rot gesehen: ohne `geht.currentTime =
- *       versatz` 151 ok, 1 offen („halb verblasst (1 …)"); der Halt von vor
- *       E740 (über „ken") 139 ok, 13 offen („-51.3 px daneben", dazu §16 am
- *       Halt); die Schrift des ersten Ankommens in der Abschrift 151 ok,
- *       1 offen („44px" statt „31px").
+ *       (seit der zweiten Durchsicht 1690 ms) nachdem die Linse da ist das
+ *       Fenster auf 1000 px: eine neue Linse ist da, halb verblasst
+ *       (zwischen 0,05 und 0,95) und fällt weiter, rechts vom Punkt in der
+ *       neuen Lage, die Abschrift in der neuen Grösse der Überschrift. Rot
+ *       gesehen: ohne `geht.currentTime = versatz` 151 ok, 1 offen („halb
+ *       verblasst (1 …)"); der Halt von vor E740 (über „ken") 139 ok,
+ *       13 offen („-51.3 px daneben", dazu §16 am Halt); die Schrift des
+ *       ersten Ankommens in der Abschrift 151 ok, 1 offen („44px" statt
+ *       „31px").
+ *
+ * ZWEITE DURCHSICHT DES VERBLASSENS (§8, §16; 12. Oktober 2026, E744). Drei
+ * kleine Funde, die Gegenproben wie oben am Quelltext linse.ts, danach Byte
+ * für Byte zurück:
+ *   §8  DAS FENSTER DER MESSUNG. Bei 1740 ms blieben dem Ändern des Fensters
+ *       und dem Neuzeichnen gut 200 ms, bevor die Deckkraft unter 0,05
+ *       fällt. Jetzt geht es bei 1690 ms los — `--ease-exit` beginnt
+ *       langsam, die Deckkraft liegt beim ersten Bild danach noch unter 0,95
+ *       (gemessen 0,846 und 0,866 in zwei Läufen) — und der Verzug steht in
+ *       der Zusage, damit ein verpasstes Fenster nicht wie ein Fehler
+ *       aussieht. Die Gegenprobe ohne `geht.currentTime = versatz` bleibt
+ *       rot: 151 ok, 1 offen („halb verblasst (1 …)" bei 42 ms Verzug).
+ *   §8  NEU ODER AN ORT UND STELLE. Die Messung wartete auf ein NEUES
+ *       Element; dieselbe Linse, an Ort und Stelle neu angelegt, war rot
+ *       (150 ok, 2 offen), obwohl sie richtig verblasste. Jetzt zählt auch
+ *       sie, wenn ihre Abschrift die neue Schriftgrösse trägt (152 von 152);
+ *       mit der alten Schrift bleibt sie rot (150 ok, 2 offen, „nur die alte
+ *       Linse, Abschrift 44px"), ebenso eine Linse, die beim Fenster gar
+ *       nicht neu gezeichnet wird (150 ok, 2 offen), und eine neue mit der
+ *       Schrift des ersten Ankommens (151 ok, 1 offen, „44px").
+ *   §16 DIE GEMESSENEN BEREICHE. „0,061–0,097 und 0,080–0,082" stammten aus
+ *       einem Lauf. In zwei weiteren: das letzte sichtbare Bild 0,021–0,093
+ *       — es liegt über 0,02 und höchstens einen Abfall darüber, je nachdem,
+ *       wo die Bilder auf der Kurve landen —, der grösste Abfall
+ *       0,080–0,083; also etwa 0,02–0,10 und 0,08 (messungen.md §101).
  *
  * KANN ER ROT WERDEN? Gegen den Stand b3cf1933 (vor E712) ist er rot, in
  * jedem Abschnitt ausser den „bleibt"-Zusagen — siehe Commit „test589 (rot)".
@@ -695,17 +721,39 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
      vom Verblassen: „Dieselbe Uhr wie die Fahrt: beim Neuzeichnen geht es
      an derselben Stelle weiter" — und keine Zusage hielt das; die 1000 px
      oben kommen erst, wenn alles vorbei ist. Hier: ein neues Ankommen bei
-     1440 px, und 1740 ms nachdem die Linse da ist (die Fahrt endet bei
+     1440 px, und 1690 ms nachdem die Linse da ist (die Fahrt endet bei
      1650 ms, das Verblassen bei 1970 ms) wird das Fenster 1000 px breit —
-     die Überschrift wird kleiner, der Beobachter legt eine neue Linse an,
-     gut 1800 ms nach dem Ankommen. Sie muss da sein, halb verblasst
+     die Überschrift wird kleiner, der Beobachter zeichnet die Linse neu,
+     gut 1700 ms nach dem Ankommen. Sie muss da sein, halb verblasst
      (Deckkraft der Kette zwischen 0,05 und 0,95) und vier Bilder später
      weiter gefallen; sie steht rechts vom Punkt der zweiten Zeile, in der
      NEUEN Lage (höchstens eine halbe Schriftgrösse daneben, auf der Höhe
      der Zeile); ihre Abschrift hat die neue Grösse der Überschrift. Fängt
      das Verblassen beim Neuzeichnen vorne an, steht die Linse mit Deckkraft
-     1 da und bleibt so (Gegenprobe). */
-  const MITTE = 1740;
+     1 da und bleibt so (Gegenprobe).
+     DAS FENSTER DER MESSUNG (zweite Durchsicht E744). Hier stand 1740 ms.
+     Die erste Messung muss dort liegen, wo die Deckkraft zwischen 0,95 und
+     0,05 steht — gerechnet aus `--ease-exit` (320 ms) von etwa 55 bis etwa
+     310 ms nach dem Ende der Fahrt, also von etwa 1705 bis 1960 ms nach
+     dem Ankommen. Mit 1740 blieben dem Ändern des Fensters und dem
+     Neuzeichnen gut 200 ms. Die Kurve beginnt aber langsam (40 ms nach dem
+     Ende der Fahrt gerechnet noch 0,97), darum geht es jetzt bei 1690 ms
+     los: der Verzug darf bis etwa 270 ms gross werden und muss nur über
+     etwa 15 ms liegen; gemessen waren es 34–68 ms (messungen.md §101).
+     Der Verzug steht in der Zusage: ein verpasstes Fenster zeigt einen
+     grossen Verzug und eine Deckkraft unter 0,05, der Fehler aus der
+     Gegenprobe Deckkraft 1 bei gewöhnlichem Verzug.
+     NEU ODER AN ORT UND STELLE (zweite Durchsicht E744). linse.ts entfernt
+     beim Neuzeichnen die alte Linse und legt eine neue an; dieselbe Linse,
+     an Ort und Stelle neu angelegt, wäre genauso richtig. Darum zählt auch
+     das alte Element — aber erst, wenn seine Abschrift eine andere
+     Schriftgrösse trägt als vor dem Fenster: nur das zeigt, dass es neu
+     angelegt ist. Die Lage allein zeigt es nicht, denn mit dem Fenster
+     verschiebt sich der Träger, und eine Linse, die niemand neu zeichnet,
+     wandert mit. Trägt sie die alte Schrift, wartet die Messung weiter und
+     ist nach 800 ms rot wie zuvor; Lage, Höhe und Schrift misst die zweite
+     Zusage für beide Wege gleich. */
+  const MITTE = 1690;
   const vorMitte = await s.evaluate((mitte: number) => new Promise<{ da: boolean; t: number; schrift: string }>(fertig => {
     const t0 = performance.now();
     let da = 0;
@@ -715,6 +763,8 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
       if (l && !da) da = jetzt;
       if (da && jetzt - da >= mitte) {
         (window as any).__alt589 = l;
+        const altBild = l?.querySelector<HTMLElement>('.ru-held-linse-bild');
+        (window as any).__altSchrift589 = altBild ? getComputedStyle(altBild).fontSize : null;
         (window as any).__da589 = da;
         fertig({ da: !!l, t: Math.round(jetzt - da),
                  schrift: getComputedStyle(document.querySelector('.lw-desk h2')!).fontSize });
@@ -726,9 +776,10 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
   }), MITTE);
   await s.setViewportSize({ width: 1000, height: 900 });
   const mitten = await s.evaluate(() => new Promise<{
-    neu: boolean; t1: number; d1: number; t2: number; d2: number; daneben: number; fs: number;
+    gefunden: boolean; art: string; erst: number; t1: number; d1: number; t2: number; d2: number; daneben: number; fs: number;
     aufHoehe: boolean; abschrift: string | null; ueberschrift: string }>(fertig => {
     const alt = (window as any).__alt589 as HTMLElement | null, da = Number((window as any).__da589);
+    const altSchrift = (window as any).__altSchrift589 as string | null;
     const t0 = performance.now();
     const deck = (l: HTMLElement): number => {
       if (!l.isConnected) return 0;
@@ -737,12 +788,26 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
       return Math.round(o * 1000) / 1000;
     };
     const h2 = document.querySelector<HTMLElement>('.lw-desk h2');
+    const schriftIn = (l: HTMLElement): string | null => {
+      const b = l.querySelector<HTMLElement>('.ru-held-linse-bild');
+      return b ? getComputedStyle(b).fontSize : null;
+    };
+    /* `erst`: das erste Bild nach dem Fenster — daran hängt der Verzug, auch
+       wenn die Messung danach noch wartet. */
+    let erst = 0, gesehen = '';
     const tick = (): void => {
+      if (!erst) erst = Math.round(performance.now() - da);
       const l = document.querySelector<HTMLElement>('.lw-desk .ru-held-linse');
-      if (!l || l === alt || !h2) {
+      /* Eine neue Linse — oder die alte, neu angelegt (andere Schrift in der
+         Abschrift als vor dem Fenster); nur mitgewandert zählt nicht. */
+      const art = !l || !h2 ? '' : l !== alt ? 'neues Element'
+        : (schriftIn(l) !== null && schriftIn(l) !== altSchrift ? 'dasselbe Element, neu angelegt' : '');
+      if (!l || !h2 || !art) {
+        if (l && l === alt) gesehen = `nur die alte Linse, Abschrift ${schriftIn(l)}`;
         if (performance.now() - t0 < 800) { requestAnimationFrame(tick); return; }
-        fertig({ neu: false, t1: Math.round(performance.now() - da), d1: l ? deck(l) : -1, t2: NaN, d2: NaN,
-                 daneben: NaN, fs: 0, aufHoehe: false, abschrift: null, ueberschrift: h2 ? getComputedStyle(h2).fontSize : '' });
+        fertig({ gefunden: false, art: (gesehen || 'keine neue Linse') + (l ? '' : ', zuletzt keine Linse'), erst,
+                 t1: Math.round(performance.now() - da), d1: l ? deck(l) : -1, t2: NaN, d2: NaN,
+                 daneben: NaN, fs: 0, aufHoehe: false, abschrift: l ? schriftIn(l) : null, ueberschrift: h2 ? getComputedStyle(h2).fontSize : '' });
         return;
       }
       /* Der rechte Rand des letzten Zeichens der zweiten Zeile — des Punkts. */
@@ -768,19 +833,21 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
       let n = 0;
       const nach = (): void => {
         if (++n < 4) { requestAnimationFrame(nach); return; }
-        fertig({ neu: true, t1, d1, t2: Math.round(performance.now() - da), d2: deck(l), daneben, fs, aufHoehe,
+        fertig({ gefunden: true, art, erst, t1, d1, t2: Math.round(performance.now() - da), d2: deck(l), daneben, fs, aufHoehe,
                  abschrift, ueberschrift: getComputedStyle(h2).fontSize });
       };
       requestAnimationFrame(nach);
     };
     requestAnimationFrame(tick);
   }));
-  console.log(`    · Mitten im Verblassen: ${JSON.stringify({ vorMitte, mitten })}`);
-  p(`Mitten im Verblassen neu gezeichnet (1000 px, ${mitten.t1} ms nach dem Ankommen): eine Linse ist da, halb verblasst (${mitten.d1}, zwischen 0,05 und 0,95), und sie fällt weiter (${mitten.t2} ms: ${mitten.d2})`,
-    vorMitte.da && mitten.neu && mitten.d1 > 0.05 && mitten.d1 < 0.95 && mitten.d2 < mitten.d1,
-    JSON.stringify({ vorMitte, mitten }));
+  /* Der Verzug: vom Entschluss zum Fenster bis zum ersten Bild danach. */
+  const verzug = mitten.erst - vorMitte.t;
+  console.log(`    · Mitten im Verblassen: ${JSON.stringify({ vorMitte, verzug, mitten })}`);
+  p(`Mitten im Verblassen neu gezeichnet (1000 px bei ${vorMitte.t} ms, erstes Bild danach nach ${verzug} ms, gemessen bei ${mitten.t1} ms; das Fenster der Messung liegt bei etwa 1705–1960 ms): eine Linse ist da (${mitten.art}), halb verblasst (${mitten.d1}, zwischen 0,05 und 0,95), und sie fällt weiter (${mitten.t2} ms: ${mitten.d2})`,
+    vorMitte.da && mitten.gefunden && mitten.d1 > 0.05 && mitten.d1 < 0.95 && mitten.d2 < mitten.d1,
+    JSON.stringify({ vorMitte, verzug, mitten }));
   p(`… sie steht rechts vom Punkt in der neuen Lage (${mitten.daneben} px daneben, höchstens eine halbe Schriftgrösse, auf der Höhe der Zeile), ihre Abschrift in der neuen Grösse der Überschrift (${mitten.abschrift}, vorher ${vorMitte.schrift})`,
-    mitten.neu && mitten.daneben >= 0 && mitten.daneben <= mitten.fs / 2 && mitten.aufHoehe &&
+    mitten.gefunden && mitten.daneben >= 0 && mitten.daneben <= mitten.fs / 2 && mitten.aufHoehe &&
     mitten.abschrift === mitten.ueberschrift && mitten.ueberschrift !== vorMitte.schrift,
     JSON.stringify({ vorMitte, mitten }));
   await s.setViewportSize({ width: 1440, height: 900 });
