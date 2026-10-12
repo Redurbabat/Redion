@@ -78,17 +78,22 @@ const Planflaeche = (() => {
         };
         const abzug = () => JSON.stringify(z.plan);
         const aendere = (was, merken = true) => {
+            if (z.zieht)
+                return;
             const vorher = merken ? abzug() : '';
             was();
+            const kopie = JSON.parse(abzug());
             if (typeof Store !== 'undefined' && block && block.id)
-                Store.updateBlock(block.id, { plan: z.plan });
+                Store.updateBlock(block.id, { plan: kopie });
             else if (block)
-                block.plan = z.plan;
+                block.plan = kopie;
             if (merken)
                 z.verlauf.merken(vorher);
             male();
         };
         const zurueck = () => {
+            if (z.zieht)
+                return;
             const vorher = z.verlauf.zurueck(abzug());
             if (vorher === null)
                 return;
@@ -96,6 +101,8 @@ const Planflaeche = (() => {
             aendere(() => { }, false);
         };
         const vorwaerts = () => {
+            if (z.zieht)
+                return;
             const naechster = z.verlauf.vor(abzug());
             if (naechster === null)
                 return;
@@ -282,7 +289,7 @@ const Planflaeche = (() => {
             }
             const beispiel = Schaltplan.BEISPIELE.find(x => x.id === id);
             aendere(() => { Schaltplan.beispielBauen(z.plan, id, aktiveEbene()); });
-            if (beispiel)
+            if (beispiel && !z.zieht)
                 UI.toast(beispiel.hinweis);
         };
         const vorlageEinsetzen = (v) => {
@@ -348,79 +355,106 @@ const Planflaeche = (() => {
             return raus;
         };
         const teilVon = (id) => z.plan.teile.find(t => t.id === id);
-        const endKlemmen = () => {
-            const m = new Map();
-            z.plan.leitungen.forEach(l => {
-                const n = l.punkte.length;
-                m.set(l.id, {
-                    von: l.vonTeil ? Schaltplan.klemmeFuer(teilVon(l.vonTeil), l.vonNr, l.punkte[0]) : undefined,
-                    nach: l.nachTeil ? Schaltplan.klemmeFuer(teilVon(l.nachTeil), l.nachNr, l.punkte[n - 1]) : undefined
-                });
-            });
-            return m;
+        const bmk = (tid) => {
+            const t = teilVon(tid);
+            return String((t && t.bmk) || tid);
         };
+        const klemmeName = (k) => {
+            const i = k.lastIndexOf(':');
+            return i < 0 ? k : bmk(k.slice(0, i)) + k.slice(i);
+        };
+        const leitungName = (lid, vorher) => {
+            const l = z.plan.leitungen.find(x => x.id === lid);
+            if (!l)
+                return 'eine Leitung';
+            const k = vorher.klemmen.get(lid);
+            const a = l.vonTeil ? bmk(l.vonTeil) + ':' + (k?.von ?? l.vonNr) : '';
+            const b = l.nachTeil ? bmk(l.nachTeil) + ':' + (k?.nach ?? l.nachNr) : '';
+            return a && b ? `die Leitung ${a}–${b}` : (a || b) ? `die Leitung an ${a || b}` : 'eine freie Leitung';
+        };
+        const melde = (was, bericht, aenderungen, vorher) => {
+            if (typeof UI === 'undefined')
+                return;
+            const stufe = !!bericht && bericht.some(b => b.stufe >= 2);
+            const liste = aenderungen || [];
+            if (!stufe && !liste.length)
+                return;
+            const saetze = vorher ? liste.map(a => {
+                if (a.art === 'klemme')
+                    return a.jetzt
+                        ? `${klemmeName(a.klemme)} berührt jetzt ${leitungName(a.leitung, vorher)}`
+                        : `${klemmeName(a.klemme)} berührt ${leitungName(a.leitung, vorher)} nicht mehr`;
+                if (a.art === 'leitung')
+                    return a.jetzt
+                        ? `${leitungName(a.leitung, vorher)} berührt jetzt ${leitungName(a.andere, vorher)}`
+                        : `${leitungName(a.leitung, vorher)} berührt ${leitungName(a.andere, vorher)} nicht mehr`;
+                return a.jetzt
+                    ? `${klemmeName(a.klemme)} liegt jetzt auf ${klemmeName(a.andere)} (ohne Leitung nicht verbunden)`
+                    : `${klemmeName(a.klemme)} liegt nicht mehr auf ${klemmeName(a.andere)}`;
+            }) : [];
+            const was3 = saetze.slice(0, 3).join('; ') + (saetze.length > 3 ? ` und ${saetze.length - 3} weitere` : '');
+            const verbunden = liste.some(a => a.art !== 'aufeinander');
+            UI.toast(stufe
+                ? 'Eine Leitung liess sich nicht so nachziehen, dass sie genau dasselbe berührt wie vorher — bitte die Verbindungen prüfen' + (was3 ? ': ' + was3 + '.' : '.')
+                : `Nach dem ${was}: ${was3} — ` + (verbunden ? 'die Verbindungen haben sich geändert, bitte prüfen.' : 'bitte prüfen.'), 6000);
+        };
+        const auswahlTeile = () => [...z.auswahl].map(teilVon).filter(Boolean);
         const verschiebe = (dx, dy) => {
-            const ziel = endKlemmen();
+            const vorher = Schaltplan.vorherMerken(z.plan);
+            const teile = [];
+            const eigene = new Set();
             z.auswahl.forEach(id => {
                 const t = teilVon(id);
                 if (t) {
                     t.x = Schaltplan.rasten(t.x + dx);
                     t.y = Schaltplan.rasten(t.y + dy);
+                    teile.push(id);
                     return;
                 }
                 const l = z.plan.leitungen.find(x => x.id === id);
-                if (l)
+                if (l) {
                     l.punkte = l.punkte.map((p) => ({ x: Schaltplan.rasten(p.x + dx), y: Schaltplan.rasten(p.y + dy) }));
+                    eigene.add(id);
+                }
             });
             z.plan.leitungen.forEach(l => {
+                if (!eigene.has(l.id))
+                    return;
+                const ziel = vorher.klemmen.get(l.id);
                 if (l.vonTeil && z.auswahl.has(l.vonTeil)) {
                     const t = teilVon(l.vonTeil);
-                    const o = t && Schaltplan.anschlussOrt(t, ziel.get(l.id)?.von ?? l.vonNr);
+                    const o = t && Schaltplan.anschlussOrt(t, ziel?.von ?? l.vonNr);
                     if (o && l.punkte[0])
                         l.punkte[0] = o;
                 }
                 if (l.nachTeil && z.auswahl.has(l.nachTeil)) {
                     const t = teilVon(l.nachTeil);
-                    const o = t && Schaltplan.anschlussOrt(t, ziel.get(l.id)?.nach ?? l.nachNr);
+                    const o = t && Schaltplan.anschlussOrt(t, ziel?.nach ?? l.nachNr);
                     if (o && l.punkte.length)
                         l.punkte[l.punkte.length - 1] = o;
                 }
             });
+            const bericht = Schaltplan.nachziehen(z.plan, vorher, teile, { ohne: eigene });
+            return { bericht, aenderungen: Schaltplan.veraendert(z.plan, vorher), vorher };
         };
         const drehen = () => aendere(() => {
-            const ziel = endKlemmen();
-            z.auswahl.forEach(id => {
-                const t = teilVon(id);
-                if (t)
-                    t.drehung = ((t.drehung || 0) + 90) % 360;
-            });
-            leitungenNachziehen(ziel);
+            const vorher = Schaltplan.vorherMerken(z.plan);
+            const teile = auswahlTeile();
+            teile.forEach(t => { t.drehung = ((t.drehung || 0) + 90) % 360; });
+            if (teile.length) {
+                const bericht = Schaltplan.nachziehen(z.plan, vorher, teile.map(t => t.id), { heilen: true });
+                melde('Drehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
+            }
         });
         const spiegeln = () => aendere(() => {
-            const ziel = endKlemmen();
-            z.auswahl.forEach(id => {
-                const t = teilVon(id);
-                if (t)
-                    t.gespiegelt = !t.gespiegelt;
-            });
-            leitungenNachziehen(ziel);
+            const vorher = Schaltplan.vorherMerken(z.plan);
+            const teile = auswahlTeile();
+            teile.forEach(t => { t.gespiegelt = !t.gespiegelt; });
+            if (teile.length) {
+                const bericht = Schaltplan.nachziehen(z.plan, vorher, teile.map(t => t.id), { heilen: true });
+                melde('Spiegeln', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
+            }
         });
-        const leitungenNachziehen = (ziel) => {
-            z.plan.leitungen.forEach(l => {
-                if (l.vonTeil) {
-                    const o = Schaltplan.anschlussOrt(teilVon(l.vonTeil), ziel.get(l.id)?.von ?? l.vonNr);
-                    if (o && l.punkte[0])
-                        l.punkte[0] = o;
-                }
-                if (l.nachTeil) {
-                    const o = Schaltplan.anschlussOrt(teilVon(l.nachTeil), ziel.get(l.id)?.nach ?? l.nachNr);
-                    if (o && l.punkte.length)
-                        l.punkte[l.punkte.length - 1] = o;
-                }
-                if (l.punkte.length >= 2)
-                    l.punkte = Schaltplan.rechtwinklig(l.punkte[0], l.punkte[l.punkte.length - 1]);
-            });
-        };
         const doppeln = () => aendere(() => {
             const neu = [];
             const versatz = Register.fachzeichen.RASTER * 2;
@@ -478,6 +512,88 @@ const Planflaeche = (() => {
         };
         const teilAm = (ziel) => ziel.closest('svg [data-id]');
         let letzterTipp = { id: '', zeit: 0 };
+        const zugBeginnen = (zug) => {
+            z.zieht = zug;
+            document.addEventListener('pointerdown', zugUnterbrechen, true);
+            document.addEventListener('pointerup', zugEnde, true);
+            document.addEventListener('pointercancel', zugEnde, true);
+            document.addEventListener('keydown', zugTaste, true);
+        };
+        const zugLoesen = () => {
+            z.zieht = null;
+            document.removeEventListener('pointerdown', zugUnterbrechen, true);
+            document.removeEventListener('pointerup', zugEnde, true);
+            document.removeEventListener('pointercancel', zugEnde, true);
+            document.removeEventListener('keydown', zugTaste, true);
+        };
+        const OFFENES_FENSTER = '.menu, .overlay, dialog[open], .iblatt, #r-blatt.auf';
+        const zugTaste = (e) => {
+            if (!z.zieht)
+                return;
+            if (e.key === 'Escape') {
+                if (document.querySelector(OFFENES_FENSTER))
+                    return;
+                e.preventDefault();
+                e.stopPropagation();
+                zugAbbrechen();
+                return;
+            }
+            const k = e.key.toLowerCase();
+            if ((e.ctrlKey || e.metaKey) && (k === 'z' || (k === 'y' && !e.shiftKey))) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        };
+        const teilzugSichern = (zug) => {
+            const bewegt = zug.ausgang.size &&
+                [...zug.ausgang].some(([id, a]) => {
+                    const t = teilVon(id);
+                    return t && (t.x !== a.x || t.y !== a.y);
+                });
+            if (!bewegt) {
+                male();
+                return;
+            }
+            const vorher = zug.vorher ?? Schaltplan.vorherMerken(z.plan);
+            const bericht = Schaltplan.nachziehen(z.plan, vorher, [...zug.ausgang.keys()], { heilen: true, vonVorn: true });
+            aendere(() => { });
+            melde('Ziehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
+        };
+        const zugUnterbrechen = () => {
+            const zug = z.zieht;
+            if (!zug)
+                return;
+            zugLoesen();
+            if (!wurzel.isConnected)
+                return;
+            if (zug.art === 'teil')
+                teilzugSichern(zug);
+            else
+                male();
+        };
+        const zugAbbrechen = () => {
+            const zug = z.zieht;
+            if (!zug)
+                return;
+            zugLoesen();
+            if (zug.art === 'teil') {
+                zug.ausgang.forEach((a, id) => {
+                    const t = teilVon(id);
+                    if (t) {
+                        t.x = a.x;
+                        t.y = a.y;
+                    }
+                });
+                const punkte = zug.vorher ? zug.vorher.punkte : null;
+                if (punkte)
+                    z.plan.leitungen.forEach(l => {
+                        const alt = punkte.get(l.id);
+                        if (alt)
+                            l.punkte = alt.map(q => ({ x: q.x, y: q.y }));
+                    });
+            }
+            male();
+        };
         buehne.addEventListener('pointerdown', e => {
             const svg = buehne.querySelector('svg');
             if (!svg)
@@ -511,9 +627,9 @@ const Planflaeche = (() => {
             }
             if (z.werkzeug === 'leitung') {
                 const fang = Schaltplan.fangeAnschluss(z.plan, roh);
-                z.zieht = { art: 'leitung', startX: p.x, startY: p.y, ausgang: new Map(),
+                zugBeginnen({ art: 'leitung', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang: new Map(),
                     von: fang ? { x: fang.x, y: fang.y, teil: fang.teil, nr: fang.nr }
-                        : { x: p.x, y: p.y } };
+                        : { x: p.x, y: p.y } });
                 svg.setPointerCapture(e.pointerId);
                 return;
             }
@@ -525,7 +641,7 @@ const Planflaeche = (() => {
                 }
                 if (!e.shiftKey)
                     z.auswahl.clear();
-                z.zieht = { art: 'rahmen', startX: p.x, startY: p.y, ausgang: new Map() };
+                zugBeginnen({ art: 'rahmen', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang: new Map() });
                 svg.setPointerCapture(e.pointerId);
                 male();
                 return;
@@ -552,12 +668,14 @@ const Planflaeche = (() => {
                 if (t)
                     ausgang.set(x, { x: t.x, y: t.y });
             });
-            z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang, klemmen: endKlemmen() };
+            zugBeginnen({ art: 'teil', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang,
+                vorher: Schaltplan.vorherMerken(z.plan),
+                lage: [...ausgang.values()].map(a => a.x + ',' + a.y).join(';') });
             svg.setPointerCapture(e.pointerId);
             male();
         });
         buehne.addEventListener('pointermove', e => {
-            if (!z.zieht)
+            if (!z.zieht || e.pointerId !== z.zieht.zeiger)
                 return;
             const svg = buehne.querySelector('svg');
             if (!svg)
@@ -572,7 +690,19 @@ const Planflaeche = (() => {
                         t.y = Schaltplan.rasten(a.y + dy);
                     }
                 });
-                leitungenNachziehen(z.zieht.klemmen ?? endKlemmen());
+                const lage = [...z.zieht.ausgang.keys()].map(id => {
+                    const t = teilVon(id);
+                    return t ? t.x + ',' + t.y : '';
+                }).join(';');
+                if (lage === z.zieht.lage)
+                    return;
+                z.zieht.lage = lage;
+                const gewandert = [...z.zieht.ausgang].some(([id, a]) => {
+                    const t = teilVon(id);
+                    return t && (t.x !== a.x || t.y !== a.y);
+                });
+                const vorher = z.zieht.vorher ?? (z.zieht.vorher = Schaltplan.vorherMerken(z.plan));
+                Schaltplan.nachziehen(z.plan, vorher, gewandert ? [...z.zieht.ausgang.keys()] : [], { heilen: gewandert, vonVorn: true, schnell: true });
                 buehneMalen();
                 return;
             }
@@ -598,22 +728,20 @@ const Planflaeche = (() => {
             }
         });
         const zugEnde = (e) => {
-            if (!z.zieht)
+            if (!z.zieht || e.pointerId !== z.zieht.zeiger)
+                return;
+            const zug = z.zieht;
+            zugLoesen();
+            if (!wurzel.isConnected)
                 return;
             const svg = buehne.querySelector('svg');
             const p = svg ? ortAus(svg, e, z.plan) : { x: 0, y: 0 };
-            const zug = z.zieht;
-            z.zieht = null;
             if (zug.art === 'teil') {
-                const bewegt = zug.ausgang.size &&
-                    [...zug.ausgang].some(([id, a]) => {
-                        const t = teilVon(id);
-                        return t && (t.x !== a.x || t.y !== a.y);
-                    });
-                if (bewegt)
-                    aendere(() => { });
-                else
-                    male();
+                teilzugSichern(zug);
+                return;
+            }
+            if (!buehne.contains(e.target)) {
+                male();
                 return;
             }
             if (zug.art === 'rahmen') {
@@ -637,8 +765,6 @@ const Planflaeche = (() => {
                 }));
             }
         };
-        buehne.addEventListener('pointerup', zugEnde);
-        buehne.addEventListener('pointercancel', zugEnde);
         const teilDialog = (t) => {
             const zeichen = Register.fachzeichen.holen(t.zeichen);
             if (!zeichen)
@@ -804,9 +930,22 @@ const Planflaeche = (() => {
                 liste.innerHTML = paletteHtml(z.plan.art, f.value);
         });
         wurzel.tabIndex = 0;
+        wurzel.addEventListener('pointerup', () => {
+            const a = document.activeElement;
+            if ((!a || a === document.body) && wurzel.isConnected) {
+                wurzel.dataset.zeigerfokus = '';
+                wurzel.focus({ preventScroll: true });
+            }
+        });
+        wurzel.addEventListener('focusout', e => {
+            if (e.target === wurzel)
+                delete wurzel.dataset.zeigerfokus;
+        });
         wurzel.addEventListener('keydown', e => {
             const inFeld = e.target.tagName === 'INPUT';
             if (inFeld)
+                return;
+            if (e.key === 'Escape' && z.zieht)
                 return;
             const schritt = e.shiftKey ? Register.fachzeichen.RASTER * 5 : Register.fachzeichen.RASTER;
             const pfeile = {
@@ -816,7 +955,10 @@ const Planflaeche = (() => {
             if (pfeile[e.key] && z.auswahl.size) {
                 e.preventDefault();
                 const [dx, dy] = pfeile[e.key];
-                aendere(() => verschiebe(dx, dy));
+                let folge;
+                aendere(() => { folge = verschiebe(dx, dy); });
+                if (folge)
+                    melde('Schieben', folge.bericht, folge.aenderungen, folge.vorher);
                 return;
             }
             if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -853,9 +995,14 @@ const Planflaeche = (() => {
                 male();
                 return;
             }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+            const k = e.key.toLowerCase();
+            if ((e.ctrlKey || e.metaKey) && k === 'z') {
                 e.preventDefault();
                 return e.shiftKey ? vorwaerts() : zurueck();
+            }
+            if ((e.ctrlKey || e.metaKey) && k === 'y' && !e.shiftKey) {
+                e.preventDefault();
+                return vorwaerts();
             }
         });
         const mehrMenue = (anker) => {
@@ -910,6 +1057,10 @@ const Planflaeche = (() => {
         };
         const VORLAGEN = 'elektro:planvorlagen';
         const vorlageSpeichern = () => {
+            if (z.zieht) {
+                UI.toast('Erst loslassen — während eines Zugs wird keine Vorlage gespeichert.');
+                return;
+            }
             void (async () => {
                 const name = await UI.frage('Name der Vorlage', '');
                 if (!name)
@@ -936,6 +1087,10 @@ const Planflaeche = (() => {
             })();
         };
         const alsBildSpeichern = () => {
+            if (z.zieht) {
+                UI.toast('Erst loslassen — während eines Zugs wird kein Bild gespeichert.');
+                return;
+            }
             const svg = Schaltplan.alsSvg(z.plan, { raster: false, anschluesse: false });
             const blob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>' +
                     svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')], { type: 'image/svg+xml' });

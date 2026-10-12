@@ -7468,7 +7468,11 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
  * ==========================================================================*/
 .sp-wrap{border:1px solid var(--line); border-radius:10px; overflow:hidden;
   background:var(--bg); display:flex; flex-direction:column; outline:none}
-.sp-wrap:focus-visible{box-shadow:0 0 0 2px var(--accent)}
+/* Der Ring nur für den Fokus von der Tastatur: holt die Fläche ihn nach
+   einem Klick selbst zurück (`data-zeigerfokus`, planflaeche.ts), zählt
+   Chromium das als `:focus-visible` — dort bleibt er weg, wie bei einem
+   Fokus mit der Maus (E746, dritte Durchsicht). */
+.sp-wrap:focus-visible:not([data-zeigerfokus]){box-shadow:0 0 0 2px var(--accent)}
 
 .sp-kopf{display:flex; align-items:center; gap:10px; padding:8px 10px;
   border-bottom:1px solid var(--line); background:var(--bg-card); flex-wrap:wrap}

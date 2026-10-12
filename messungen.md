@@ -8516,6 +8516,278 @@ hinteren an dessen Ende (das der Durchsicht). Hier stand zuerst 378; die
 Zahl liess sich mit keinem der beiden nachstellen. Zeilentreu in 552 von
 552, für alle 552 Dateien zusammen 220 bis 245 ms.
 
+## §103 · Drehen und Ziehen zapfen nichts an: Netze, Wege, Zeit (E746, 11. Oktober 2026)
+
+**Die Netze um den FI**, Plan „Drehstrom, FI und Übertrager" (zwölf
+Leitungen, acht Teile, die Bilder der Übernahme), in der echten App
+(1440 × 900 und 390 × 844), F1 angeklickt, „r"; gruppiert aus
+`Stromfluss.netze`, nur die Gruppen mit F1:
+
+```txt
+vor dem Drehen          {E1:X1 F1:2} {E1:X2 F1:N2} {F1:1 G2:L} {F1:3} {F1:4} {F1:N G2:N}
+gedreht, main 97d156b   {E1:X1 E1:X2 F1:1 F1:2 F1:4 F1:N F1:N2 G2:L G2:N} {F1:3}   Meldung „l-n"
+gedreht, E746           wie vor dem Drehen                                          Lampe leuchtet
+```
+
+Auf `main` dabei neu geführt, ohne mit dem FI etwas zu tun zu haben: w2, w3,
+w4 (Motor), t1–t4 (Übertrager). w4 `[[170,120],[170,160],[220,160],[220,370],
+[50,370],[50,330]]` → `[[170,120],[170,330],[50,330]]`, und der neue Weg
+fasst M1:U2, V2, W2. Mit E746 bleiben alle acht Byte für Byte.
+
+**Der alte FI aus `test608`** (Pfeiltaste, dann „r"): kleinster Abstand von
+b2 zu N2 auf `main` 5 px (NAH ist 6 — angezapft, N und N2 ein Netz,
+„fi-loest-aus"); mit E746 über 6 px, N und N2 zwei Netze, die Lampe
+leuchtet, keine fi-Meldung.
+
+**`test611`**: gegen `main` 97d156b03 47 von 79, mit E746 79 von 79. Drei
+Gegenproben: alle Leitungen wieder neu (Winkel zuerst, Prüfung bleibt)
+78/79 · ohne Anzapf-Prüfung 59/79 · ohne Vorzug ausserhalb der Zeichen
+77/79 („f2 durch G2 | f3 durch F1 | f4 durch E1"). Die strenge Variante
+(`heilen` aus, fremde Leitungen nie angefasst): `test611` grün, `test608`
+67/69 („a1.nach liegt bei 320,100, X1:L bei 310,100", a3, a6).
+
+**Rechenzeit** im Browser (Chromium headless, Median aus 30 Läufen, je
+frisch gelesener Plan; `vorherMerken` und `nachziehen` getrennt):
+
+```txt
+Plan                      Handlung              vorherMerken  nachziehen  (grösster)
+W, 12 Leitungen           F1 drehen             0,3 ms        1,4 ms      15 ms
+W                         F1 drehen, spiegeln   0,2 ms        8,2 ms      28 ms
+W dreifach, 36 Leitungen  F1 drehen             0,8 ms        1,8 ms      3,5 ms
+W dreifach                F1 drehen, spiegeln   0,7 ms        19,6 ms     28,6 ms
+```
+
+Jede neu geführte Leitung fand in allen vier Fällen einen Weg der Stufe 1.
+Teuer ist der gespiegelte FI: dort liegt N oben in der rechten Spalte, und
+erst die Hakenwege (vier Strecken) erreichen es, ohne 3, 1 oder N2 zu
+streifen; der Vorzug für Wege ausserhalb der Zeichen lässt dabei mehr
+Kandidaten prüfen (vorher, ohne ihn: 3,6 ms im Plan W). Beim Ziehen mit der
+Maus fällt die Rechnung je Bewegung an.
+
+**Start:** 1919 → 1922 KB gzip über 255 Dateien (`test388` §5, Decke 1950;
+„vorher" gemessen in einem Abzug von 97d156b03). `redion-einzeldatei.html`
+9454 KB.
+
+**Beobachtet, nicht Teil von E746** (Sonde, zwei Widerstände, R1 mit der
+Maus um 40 × 30 px gezogen): Strg+Z macht den Zug nicht rückgängig — vorher
+100,100, nachher 150,140, nach einmal und nach zweimal Strg+Z weiter
+150,140; auf `main` genauso. `zugEnde` ruft `aendere` erst nach dem Zug,
+und `aendere` merkt den Stand, den es VOR seinem eigenen Schritt sieht —
+den schon gezogenen. Eingetragen in L253 als Punkt 8.
+
+### Nach der Durchsicht (11. Oktober 2026, abends)
+
+**Das Ziehen mit der Maus.** Sonde `zug.mts` (im Arbeitsordner der
+Sitzung, nicht im Verzeichnis): Plan W wie in `test611`, Chromium ohne
+Kopf, 1400 × 1000, F1 angeklickt, dann von seiner Mitte mit
+`mouse.down` und 60 `mouse.move` um 120 × 60 px (und um 30 × 30 px)
+gezogen. Gemessen wird jeder Aufruf von `Schaltplan.nachziehen` mit
+`performance.now()` um den Aufruf (ein Wrapper in der Seite), getrennt
+nach den Rechnungen je Bewegung und der einen beim Loslassen, dazu die
+ganze Zugzeit von `mouse.down` bis nach `mouse.up` und einem Bild (in
+Node gemessen, mit den Wegen zu Playwright). „×4" ist
+`Emulation.setCPUThrottlingRate` mit 4 über CDP. „Vorher" ist ein Abzug
+von fcb6d35fa (dem ersten Stand von E746), „main" ein Abzug von
+97d156b03 (rechnet beim Ziehen gar nicht nach, zeichnet aber jede
+Bewegung neu).
+
+```txt
+120 × 60 px, 60 Bewegungen
+                  Rechn.  Median     p90         grösste       >50 ms  Loslassen     ganzer Zug
+vorher  ×1 (3)    60      6,0 6,2 8,2  16,7 18,0 15,8  38,8 43,4 40,7  0  —             2375 2478 2470 ms
+vorher  ×4 (3)    60      25,6 29,4 23,9  61,9 80,1 75,6  144,8 217,3 126,8  8 12 7  —   7465 9061 7383 ms
+nachher ×1 (2)    30      0,6 0,7    1,2 1,2     3,1 4,4       0       16,5 35,0 ms  1600 1705 ms
+nachher ×4 (2)    30      2,8 2,5    6,4 7,0     13,2 9,2      0       98,4 131,5 ms 4628 4373 ms
+main    ×1 (2)    —                                                                  2036 1984 ms
+main    ×4 (2)    —                                                                  6115 6581 ms
+
+30 × 30 px, 60 Bewegungen
+vorher  ×1 (2)    60      3,8 4,0    8,4 8,3     36,1 19,3     0       —             2358 2111 ms
+vorher  ×4 (2)    60      8,3 11,4   39,6 44,3   89,3 125,2    5 4     —             6436 7454 ms
+nachher ×1 (2)    10      0,5 0,9    7,2 3,1     7,2 3,1       0       16,2 23,4 ms  1262 1268 ms
+nachher ×4 (2)    10      4,6 4,8    17,4 10,2   17,4 10,2     0       66,4 120,1 ms 2417 2567 ms
+main    ×1 (2)    —                                                                  2102 1888 ms
+main    ×4 (2)    —                                                                  6645 6318 ms
+```
+
+Die erste „vorher"-Zeile bei 120 × 60 stammt aus einem früheren Lauf
+derselben Sonde (vor der Trennung nach Bewegung und Loslassen — vorher
+ist jeder Aufruf eine Bewegung, die Zahl ist also dieselbe Grösse). Eine
+Rechnung je Bewegung gibt es nachher nur, wenn ein Teil über ein Raster
+wandert (30 von 60, 10 von 60). Der ganze Zug ist nachher schneller als
+auf `main`, weil eine Bewegung innerhalb desselben Rasters auch nicht neu
+zeichnet. Was bleibt: das Loslassen rechnet einmal voll, gedrosselt 66
+bis 132 ms in einem Stück.
+
+**Wo die billigen Wege nicht reichen** (Sonde `erkunde.mts`, ohne
+Bildschirm, im Modell): F1 im Plan W an jede Rasterlage von −100 … 200 ×
+−60 … 200 verschoben (ungespiegelt und gespiegelt), je einmal `schnell`
+und einmal voll nachgezogen. An 1143 Lagen ist das billige Ergebnis ein
+anderes als das volle, während das volle sauber ist; an einem Teil davon
+zapft das billige an — so bei 30 × 40 (f2 und f4 in Stufe 3, zwei
+geänderte Berührungen). Dort zieht `test611` §10.
+
+**Die eigene Klemme** (Plan Q aus `test611` §11): R1 bei (200,200), q
+senkrecht bei x = 250 von E1:X2 (250,110) nach E2:X1 (250,300). Gedreht
+liegt R1:1 bei (250,230); die Netzliste wird aus `E1:X2 E2:X1 l:q` zu
+`E1:X2 E2:X1 R1:1 l:q` — auf fcb6d35fa und auf `main` ohne Meldung,
+nachher mit „Nach dem Drehen: R1:1 berührt jetzt die Leitung E1:X2–E2:X1
+— die Verbindungen haben sich geändert, bitte prüfen."
+
+**Plan A** (`test611` §12, R9 gedreht): nachher ändern sich genau a1–a6,
+die Netzliste bleibt. Gegen `main` verbindet a3 danach G1:L mit G1:N
+(„a3: G1:L,X3:L → G1:L,G1:N,X3:L") und a5 fasst R8:1. Mit
+ungeprüften geheilten Wegen (Gegenprobe 9 in E746) fassen a4 X4:N, a5
+R8:1 und a6 X6:N und X6:PE.
+
+**`test611`**: 110 von 110; gegen fcb6d35fa 101 von 110, gegen `main`
+61 von 110. **Start:** 1923 KB gzip über 255 Dateien (`test388` §5,
+Decke 1950; vor der Durchsicht 1922). `redion-einzeldatei.html` 9460 KB.
+
+### Nach der zweiten Durchsicht (12. Oktober 2026)
+
+**Was während eines Zugs gespeichert wurde.** Zwei Sonden im Arbeitsordner
+der Sitzung (nicht im Verzeichnis): die der Durchsicht (`mitte.mts`) und
+`pfade.mts`. Plan W, Chromium ohne Kopf, 1400 × 1000 (für die Finger
+1400 × 1600), F1 angeklickt, angefasst bei (430,92) und in 24 Bewegungen an
+(460,132) gezogen — die Lage aus `test611` §10, an der die billigen Wege
+anzapfen. Finger über CDP (`Input.dispatchTouchEvent`). Verglichen wird
+die Netzliste der Ablage (`Stromfluss.netze`, nur Klemmen) mit der von vor
+dem Zug; „neu" ist die Gruppe, die dazukam. Je ein Lauf:
+
+```txt
+Weg                                  478791f5f                                  nachher
+„h h" im Zug, los, 3 × Strg+Z        Strg+Z 2 und 3: neu {E1:X2 F1:N F1:N2 G2:N}  alle drei wie vorher
+„r r" im Zug, los, 3 × Strg+Z        dasselbe                                   alle drei wie vorher
+Entf im Zug, los                     F1 gelöscht; jedes Strg+Z zapft an          F1 bleibt; alles wie vorher
+Strg+Z im Zug (T1 vorher gedreht)    T1 zurückgedreht; 1. bis 4. Umschalt+Strg+Z  T1 bleibt; alles wie vorher
+                                     zapfen an
+T1 gedreht, sofort F1 gezogen        in der Ablage mitten im Zug: neu            Ablage und IndexedDB wie
+(eine Bewegung), 900 ms gehalten     {E1:X2 F1:N F1:N2 G2:N}; in der IndexedDB    vor dem Zug
+                                     ebenso
+losgelassen über der Palette         nichts gesichert, der Zug liegt; Pfeil ab   beim Loslassen gesichert,
+                                     und auf speichert ein Zwischenbild, jedes    volle Suche
+                                     Strg+Z und Umschalt+Strg+Z zapft an
+zweiter Finger auf T1                der Zug liegt; Pfeil ab und auf speichert   beim Aufsetzen gesichert;
+                                     neu {E1:X2 F1:N F1:N2 G2:N}                  alles wie vorher
+Escape im Zug                        der Zug läuft weiter und wird beim          nichts gespeichert,
+                                     Loslassen gespeichert, Rückgängig-Knopf an  Rückgängig-Knopf aus
+zweiter Finger auf „Spiegeln"        kein `click` (pointerdown und pointerup am  —
+                                     Knopf, kein click) — in Chromium kein Weg
+```
+
+Losgelassen über der Palette mit vier Zwischenschritten (Sonde, nachher)
+zieht der Zeiger F1 über die Fläche mit, bis er sie verlässt: F1 steht bei
+20,210, gespeichert ist Byte für Byte die volle Suche an dieser Lage, und
+weil dort F1:3 auf der Leitung G1:L1–M1:U1 liegt, meldet die Fläche „Nach
+dem Ziehen: F1:3 berührt jetzt die Leitung G1:L1–M1:U1 — die Verbindungen
+haben sich geändert, bitte prüfen." (E746 Punkt 6; zurück geht es nach dem
+Loslassen nicht mit Strg+Z, L253 Punkt 8).
+
+**Die Kopie in `aendere`** (`JSON.parse(JSON.stringify(plan))`, Sonde
+`kopie.mts`; Median aus 9 × 500 Kopien, Chromium ohne Kopf, ungedrosselt,
+zwei Läufe):
+
+```txt
+Plan                         Leitungen  Teile  Bytes   Median je Kopie   kleinste … grösste
+W                            12         8      3272    0,038 · 0,026 ms  0,023 … 0,072 ms
+W dreimal nebeneinander      36         24     9872    0,080 · 0,071 ms  0,067 … 0,102 ms
+W zehnmal nebeneinander      120        80     32699   0,315 · 0,221 ms  0,207 … 0,461 ms
+```
+
+Die Zugzeiten oben sind nicht neu gemessen: der Weg je Bewegung und beim
+Loslassen ist im Code derselbe; dazu kommen beim Loslassen diese Kopie und
+drei Horcher am Dokument, die nur während eines Zugs hängen.
+
+**`test611`**: 172 von 172 in dreizehn Abschnitten; zuerst eingecheckt mit
+159 Zusagen, gegen 478791f5f 129 von 159; im Endstand gegen 478791f5f
+(Abzug von 046d4a8c0 mit dem heutigen Lauf) 137 von 171, alle 34
+Fehlschläge in §13. Gegenproben 10–20 in E746 (152/169 bis 171/172).
+**Start:** 1924 KB gzip über 255 Dateien (`test388` §5, Decke 1950; vor
+der zweiten Durchsicht 1923). `redion-einzeldatei.html` 9462 KB.
+
+### Nach der dritten Durchsicht (12. Oktober 2026)
+
+**Echte Maus, echte Tasten.** Die Sonde der Durchsicht (`wege.mts`, im
+Arbeitsordner der Sitzung, nicht im Verzeichnis) fährt die Wege aus
+`test611` §13 auch mit `mouse.down`/`mouse.move` und `keyboard.press` —
+keine Taste an die Wurzel geschickt. Dazu eine eigene (`fokus.mts`): T1
+angeklickt, dann ein echtes „r". Plan W, Chromium 141 ohne Kopf,
+1400 × 1000, F1 angeklickt und in 24 Bewegungen an die Lage aus §10
+gezogen. Je ein Lauf:
+
+```txt
+Weg                                  a8533763b                              nachher
+Fokus im Zug (echte Maus)            BODY — auch wenn er vorher auf         BODY (der Zug horcht am
+                                     .sp-wrap stand                         Dokument)
+echtes Escape im Zug                 F1 bleibt im Bild bei 430,100, beim    F1 sofort zurück bei 400,60,
+                                     Loslassen gespeichert                  nichts gespeichert
+echtes Strg+Z im Zug                 der Seitenverlauf baut die Seite neu,  nichts; beim Loslassen
+                                     F1 danach bei 400,60 (Zug verworfen)   gespeichert bei 430,100,
+                                                                            volle Suche
+echte Tasten im Zug: h h r → Entf    F1 danach bei 400,60 (Strg+Z verwarf   F1 bei 430,100, volle Suche
+Strg+Z Umschalt+Strg+Z Strg+D        den Zug)
+Klick auf T1, dann echtes „r"        Fokus BODY, T1 bleibt 0°               Fokus .sp-wrap, T1 90°
+```
+
+Nachher hält die ganze Sonde 64 von 69 Zusagen. Die fünf roten sind
+Annahmen der Sonde, keine Fehler, und vorher genau dieselben (die drei
+Wege nachgefahren gegen einen Abzug von a8533763b, Zusage für Zusage
+gleich): nach einem abgebrochenen Zeiger, einem zweiten Finger oder Escape
+ist der Zug vorbei, und das „h" oder „r" danach spiegelt oder dreht als
+gewöhnliche Handlung; die Sonde vergleicht die Ablage aber nur mit der
+vollen Suche ohne diese Handlung („cancel-maus" 2, „finger-zur-maus" 2,
+„esc-dann-h" 1).
+
+**Der Ring nach dem Klick.** Holt die Fläche den Fokus selbst zurück,
+zählt Chromium 141 das als `:focus-visible` — auch mit `focus({
+focusVisible: false })`, das es nicht kennt (gemessen an einer leeren
+Seite: mit und ohne die Option `true`). Ohne Gegenmittel stand nach jedem
+Klick ein Ring von 2 px um die Fläche (`box-shadow rgb(109, 74, 255) 0px
+0px 0px 2px`, Bild angesehen); mit dem Merkmal `data-zeigerfokus` steht
+dort `none`, und mit Umschalt+Tab ist der Ring da (`test611` §14).
+
+**Was während eines Zugs über Knöpfe und Menüs ankommt** (Sonde
+`knoepfe.mts`; je Weg ein frischer Plan W, F1 im Zug wie oben, der Knopf
+mit dem Fokus und die echte Eingabetaste; „Ablage im Zug" heisst Byte für
+Byte wie vor dem Zug, „danach" heisst Byte für Byte die volle Suche für F1
+bei 430,100, ungedreht — der Zug und nichts sonst):
+
+```txt
+Weg                                         Ablage im Zug  danach        Meldung
+Fuss: Drehen · Spiegeln · Duplizieren ·     wie vorher     nur der Zug   —
+Löschen · Ebene „Plan" aus
+Strg+A (Fokus auf der Fläche, 20 gewählt),  wie vorher     nur der Zug   —
+dann Fuss: Gruppieren
+Kopf: Rückgängig · Wiederholen              wie vorher     nur der Zug   —
+(freigeschaltet)
+„…": Stromschienen · Alle neu               wie vorher     nur der Zug   —
+durchnummerieren · Plan leeren
+Kopf: Planart (`selectOption`)              wie vorher     nur der Zug   — (das Feld zeigt im Zug
+                                                                            „stromlauf-zusammenhaengend",
+                                                                            der Plan „…-aufgeloest";
+                                                                            danach wieder „…-aufgeloest")
+„…": Raster zeigen                          wie vorher     nur der Zug   — (das Bild im Zug 12732 →
+                                                                            12494 Zeichen)
+Kopf: Strom ein · Werkzeug „Leitung" ·      wie vorher     nur der Zug   — (Strom danach an; Werkzeug
+Formelheft · Palette: ein Symbol                                            im Zug „leitung")
+„⚡ Schaltung": Netz (W hat eines)           wie vorher     nur der Zug   „Das Netz steht schon …"
+„⚡ Schaltung": eigene Vorlage              wie vorher     nur der Zug   —
+```
+
+Und in Plan P (zwei Lampen, kein Netz; E1 im Zug um 60 px): „⚡ Schaltung" →
+Netz und → das erste Beispiel — die Ablage im Zug wie vorher, danach zwei
+Teile und eine Leitung, E1 bei 160,100, keine Meldung (vor der Reparatur
+erschien beim Beispiel „Strom drücken, dann auf S1 tippen: E1 leuchtet.",
+`test611` §14). Keiner der Wege brachte einen Fehler auf der Seite.
+
+**`test611`**: 209 von 209 in vierzehn Abschnitten; zuerst eingecheckt mit
+207 Zusagen (7c0fa0ff1), gegen a8533763b 189 von 207; im Endstand gegen
+einen Abzug von a8533763b mit dem heutigen Lauf 191 von 209, alle 18
+Fehlschläge in §14. Gegenproben 21–32 in E746 (191/207 bis 208/209).
+**Start:** 1924 KB gzip über 255 Dateien (`test388` §5, Decke 1950; vor
+der dritten Durchsicht 1924). `redion-einzeldatei.html` 9464 KB.
+
 ## §104 · Das Klemmenbrett und die Meldung „hängt an keiner Leitung" (E747, 11. Oktober 2026)
 
 **Wo und wie.** Zweig `claude/elektro-klemmenbrett-bruecken`, drei Stände

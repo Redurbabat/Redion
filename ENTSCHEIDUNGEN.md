@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-725 Entscheidungen, E1 bis E747 (**E746** ist dem Zweig zu Redurs Antworten vom 11. Oktober abends vergeben und folgt, sobald er landet; **E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+726 Entscheidungen, E1 bis E747 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -787,6 +787,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E743** — main auf den Stand von Redurs sechs Ja, mit dreizehn benannten roten Läufen (Redur, 11. Oktober, 19:43 UTC: „3.ja" auf „main: auf diesen Stand ja oder nein?"): `main` wird ohne force auf claude/auf-main-sechs-ja vorgespult — claude/sechs-ja (E730–E742), das Ergebnis des vollen Laufs und diese Entscheidung. Der volle Lauf: 550 Läufe, 537 grün, 13 rot; die dreizehn waren auf main schon rot (201 270 274 332 348 351 365 425 448 470 493 524 533), neu rot ist keiner. Zweite Ausnahme von §46 nach E729, wieder einmal: das nächste Vorspulen braucht einen grünen vollen Lauf oder ein neues Wort von Redur.
 * **E744** — Die Linse auf „Heute“ verblasst nach der Fahrt (Redur, 11. Oktober, 19:43 UTC: „verblassen“ auf die Frage „Die leere Linse neben dem Wort“ aus AUFGABEN.md): die Fahrt aus E712/E740 bleibt, am Halt rechts vom Punkt geht die Deckkraft in 320 ms auf 0 (`--motion-slow`, `--ease-exit`, keine eigene Dauer), danach wird die Linse entfernt; in Ruhe, beim Neuzeichnen danach, bei „Ruhig“ und „weniger Bewegung“ entsteht keine. `test589` §16 misst die vier Zusagen von E740 jetzt am Halt (eine Millisekunde vor dem Ende der Fahrt), in Ruhe keine sichtbare Linse und das Verblassen Bild für Bild; §8 mit seinem Wort geändert. Gegen 97d156b03: 132 ok, 14 offen; mit E744 146 von 146, nach der Durchsicht 152 von 152 (§16: kein Sprung beim Verblassen; §8: mitten im Verblassen neu gezeichnet geht es an derselben Stelle weiter); die zweite Durchsicht (12. Oktober) misst das Neuzeichnen bei 1690 statt 1740 ms mit dem Verzug in der Zusage, lässt auch dieselbe Linse gelten, an Ort und Stelle neu angelegt, und nennt die Bereiche aus einem Lauf als solche. Ergänzt E740; +191 B gzip (Code, kein Kommentar).
 * **E745** — Die CI fährt den schnellen Lauf, der volle bleibt auf dem Rechner (Redur, 11. Oktober, 19:43 UTC: „2 . Scnell lauf", Weg (c) aus L254): `--schnell` heisst jetzt jeder Lauf ohne Browser und dazu test96 und test100 aus §31 (45 Läufe, gemessen 4 min 14 s) statt „alles ausser test73" (549 von 550); neu `--liste`; der Job „Alle Prüfläufe" (40 min, brach jeden vollen Lauf ab) wird „Schneller Lauf (ohne Browser, dazu die Sicherung)" mit `npm run pruefen -- --schnell`, Einzeldatei-Prüfung und 20 Minuten. `test610` neu; L254 GESCHLOSSEN
+* **E746** — Drehen, Spiegeln, Ziehen und Schieben führen nur die eigenen Leitungen nach, und keine zapft dabei etwas an (L253 Punkt 4; Redur, 11. Oktober abends: „4. wie du willst“ zur Reihenfolge): EINE Stelle im Modell, `Schaltplan.vorherMerken`/`nachziehen`, führt nur neu, was an einem bewegten Teil hängt, und nimmt nur einen Weg, der genau dasselbe berührt wie vorher (alter Weg · nachgerückte Endstücke · Winkel · anderer Winkel · Z-Wege · Hakenwege), am liebsten durch kein Zeichen; sonst meldet die Fläche es. Fremde Leitungen bleiben Byte für Byte, ausser ihr Ende liegt neben seiner Klemme (E738, `test608` §5). Nach der Durchsicht: beim Ziehen rechnet jede Bewegung nur die billigen Wege und erst das Loslassen einmal voll; und landet die EIGENE Klemme eines bewegten Teils auf einer fremden Leitung (oder verlässt sie eine), sagt die Fläche, welche (`Schaltplan.veraendert`). Nach der zweiten Durchsicht: während eines Zugs ändert nur der Zug den Plan — `aendere`, Rückgängig und Wiederholen tun nichts, Tasten ausser Escape zählen nicht, Escape bricht ab; ein Zug gehört einem Zeiger und endet immer richtig, auch losgelassen ausserhalb oder von einem zweiten Finger unterbrochen; die Ablage bekommt eine Kopie des Plans, nicht ihn selbst. Nach der dritten Durchsicht: mit echter Maus stand der Fokus im Zug auf der Seite, und Escape und Strg+Z kamen nie an — jetzt horcht ein Zug am Dokument auf seine Tasten: Escape bricht ab (ein offenes Menü zuerst), Rückgängig und Wiederholen tun nichts, auch nicht am Seitenverlauf; nach einem Klick holt die Fläche den Fokus zurück (ohne Ring), Umschalt+Strg+Z und Strg+Y nimmt sie selbst; Vorlage und Bild verweigern im Zug, der Hinweis eines Beispiels kommt nur, wenn es steht. `test611`
 * **E747** — Eine Brücke des Klemmenbretts belegt ihre Klemmen (L253 Punkt 2; Redur, 11. Oktober abends: „4. wie du willst" zur Reihenfolge der Elektro-Punkte): die Meldung „Anschluss … hängt an keiner Leitung" kannte nur die Netzliste der Leitungen und meldete im Stern UND im Dreieck W2, U2 und V2 — gerade die Klemmen, auf denen die Brücken der Stellung liegen. Jetzt zählen für diese Meldung die Brücken der EINGESTELLTEN Stellung eines mehrteiligen Bauteils wie gezeichnete Leitungen; Schaltkontakte nicht (ein geschlossener Schalter mit offenem Ausgang hat eine vergessene Leitung), der feste Verbund N–PE der Drehstromquelle auch nicht. Ein Knoten, den NUR die eigenen Brücken halten, hängt trotzdem an nichts (im Dreieck ohne Zuleitung an U1 die Ecke U1–W2) — ausser die Stellung weist ihn selbst als `sternpunkt` aus, wie „Stern" für U2, V2, W2 (§5 Regel 3, §8). Die Netzliste bleibt, wie sie ist; EINE Hilfe `stellungIn` liest die Stellung innerhalb von `Stromfluss` für Rechnung und Meldung (ausserhalb lesen die Planfläche und die Aufgaben eine Stellungsnummer an fünf Stellen selbst, Punkt 5). `test612` (38 Zusagen; gegen 97d156b03 rot mit 20, gegen den ersten Stand 7560b2f22 mit 33 von 38; sechs Gegenproben).
 
 ---
@@ -67437,6 +67438,509 @@ alle Zeilen G33 und G61; ohne die Zeilen unter einem Wert G35 und G62; ohne
 die Prüfung der anderen Skripte G55. Jeder Teil trägt also eine Zusage.
 G1 bis G30 sind mit der neuen Fassung noch einmal gefahren, alle rot (20
 bis 29 von 30), P1 bis P3 und N1 bis N4 grün (30/30).
+
+## E746 — Drehen, Spiegeln, Ziehen und Schieben führen nur die eigenen Leitungen nach — und keine zapft dabei etwas an
+
+**Datum:** 11. Oktober 2026 · **Entschieden von** Redur, was die Reihenfolge
+angeht (11. Oktober abends, „4. wie du willst" auf die Frage, welcher
+Elektro-Punkt aus L253 zuerst); gewählt ist Punkt 4, weil er still die
+Bedeutung eines Plans ändert (§46: Daten zuerst, §51). Der Weg ist ein
+Vorschlag; wer die strengere Variante unten will, sagt es · **berührt** §9,
+§17, §46, §51 [hart] · **Wächter:** `test611` (neu), `test608` · **Zweig**
+`claude/elektro-drehen-ohne-anzapfen`.
+
+**Was wurde entschieden?** Das Nachziehen der Leitungen steht an EINER
+Stelle im Modell, und die Planfläche ruft für alle vier Lageänderungen nur
+noch sie:
+
+```txt
+Schaltplan.vorherMerken(plan)          vor der Änderung: welche Klemme jedes
+                                       Ende meint (E738 — vorher endKlemmen
+                                       in der Planfläche), die Punkte, und was
+                                       jede Leitung berührt
+Schaltplan.nachziehen(plan, vorher,    danach: führt nur neu, was an einem
+  teile, { heilen, ohne, vonVorn,      bewegten Teil hängt; `schnell` nur
+           schnell })                  die billigen Wege (beim Ziehen)
+Schaltplan.veraendert(plan, vorher)    was sich an den Berührungen geändert
+                                       hat — für die Meldung (Durchsicht)
+Schaltplan.kontakte(plan, leitung)     die Berührungsregel, für test611 §7
+```
+
+1. **Neu geführt wird nur, was an einem bewegten Teil hängt.** Jede andere
+   Leitung behält ihre Punkte Byte für Byte — mit einer Ausnahme: liegt das
+   gezeichnete Ende einer fremden Leitung NEBEN der Klemme, die es meint
+   (ein Plan von vor E735, L253 Punkt 7), rückt es beim Drehen, Spiegeln
+   und Ziehen weiterhin an die Klemme, wie E738 es beschreibt und `test608`
+   §5 es misst (`heilen`). Die Pfeiltaste tat das nie und tut es nicht.
+2. **Ein neuer Weg muss genau das berühren, was die Leitung vorher
+   berührte** — dieselben Klemmen, dieselben Leitungen, nach der Regel der
+   Netzliste (Bindung über den Auflöser, dann jeder Punkt und jede Strecke
+   gegen jede Klemme mit `NAH`, die Ort-Sperre für alte Namen, Ende oder
+   Knick auf einer anderen Leitung). Probiert wird in fester Reihenfolge:
+   der alte Weg, wenn beide Enden geblieben sind · der alte Weg mit
+   nachgerückten Endstücken (`gleitend` — so bleibt eine gezeichnete
+   Führung erhalten) · der Winkel wie bisher (`rechtwinklig`) · der andere
+   Winkel · Z-Wege über das Raster (kürzeste zuerst, dann die nächsten zur
+   Mitte) · Hakenwege mit vier Strecken in einem Fenster von zehn Rastern.
+3. **Der erste passende Weg, der durch kein Zeichen läuft, gilt;** läuft
+   jeder passende durch ein Zeichen, der erste passende. Der alte Weg gilt
+   immer, wenn er passt — was der Mensch so gezeichnet hat, bleibt.
+4. **Passt keiner,** gilt der erste, der nichts NEUES berührt (Stufe 2),
+   sonst der mit den wenigsten neuen Berührungen (Stufe 3) — und die Fläche
+   **meldet es**: „Eine Leitung liess sich nicht so nachziehen, dass sie
+   genau dasselbe berührt wie vorher — bitte die Verbindungen prüfen." Das
+   geschieht, wenn jemand ein Teil so hinstellt, dass die Klemme, an der
+   eine Leitung hängt, auf einer fremden Klemme liegt: kein Weg kann das
+   ändern, denn das Ende selbst liegt dort.
+5. **Beim Ziehen mit der Maus** rechnet jede Bewegung vom Anfassen aus
+   (`vonVorn`), nicht vom letzten Zwischenstand — sonst hinge der Weg davon
+   ab, wie schnell die Maus war. **Die Pfeiltaste** schob bisher nur das
+   Ende (das letzte Stück lief danach schräg); jetzt nimmt sie dieselbe
+   Stelle, und das nachgerückte Endstück hält den Weg rechtwinklig. Eine
+   Leitung, die der Mensch selbst mitgeschoben hat, fasst das Nachziehen
+   nicht an (`ohne`), wie bisher.
+
+   **Seit der Durchsicht rechnet eine Mausbewegung billig.** Die volle
+   Suche je Bewegung war auf vierfach gedrosselter CPU im Median 24 bis
+   29 ms teuer, höchstens 217 ms (messungen §103). Jetzt rechnet eine
+   Bewegung `schnell` — nur der alte Weg, die nachgerückten Endstücke und
+   die zwei Winkel, keine Z- und Hakenwege —, eine Bewegung innerhalb
+   desselben Rasters rechnet und zeichnet gar nicht, und erst das
+   Loslassen sucht einmal voll, vom Anfassen aus. Gespeichert wird nur
+   dieses Ergebnis, und es läuft VOR `aendere`, damit auch der
+   Rückgängig-Schritt kein Zwischenbild hält. Die Zwischenbilder sind
+   deshalb nicht immer die endgültigen Wege (unten, „Was kostet es?").
+6. **Landet die EIGENE Klemme eines bewegten Teils auf einer fremden
+   Leitung, sagt die Fläche es** (Durchsicht, Fund 2). Das Nachziehen führt
+   nur Leitungen, die am Teil hängen; die Klemme selbst kann es nicht
+   verschieben. Gemessen in der Durchsicht, auf `main` wie im ersten Stand
+   von E746: R1 neben der Leitung E1:X2–E2:X1 gedreht, und die Netzliste
+   wird aus {E1:X2 E2:X1} zu {E1:X2 E2:X1 R1:1} — ohne ein Wort.
+   Verhindert wird die Lage nicht (vielleicht ist sie gewollt, und sie
+   lässt sich drehen, schieben oder mit Strg+Z zurücknehmen), aber nach
+   jeder Pfeiltaste, jedem Drehen, Spiegeln und Loslassen vergleicht
+   `Schaltplan.veraendert` für JEDE Leitung, was sie berührt (Klemmen und
+   Leitungen, nach der Regel der Netzliste), mit dem Stand von vorher, und
+   dazu, welche Klemmen zweier Teile aufeinanderliegen. Was sich geändert
+   hat, steht in der Meldung, beim Namen: „Nach dem Drehen: R1:1 berührt
+   jetzt die Leitung E1:X2–E2:X1 — die Verbindungen haben sich geändert,
+   bitte prüfen." Ebenso „… berührt … nicht mehr", „die Leitung … berührt
+   jetzt die Leitung …" und „R1:1 liegt jetzt auf E2:X1 (ohne Leitung
+   nicht verbunden)" — Klemmen hängen in der Netzliste nur über Leitungen
+   zusammen, gezeichnet sehen zwei aufeinanderliegende aber verbunden aus.
+   Liess sich eine Leitung nicht sauber nachziehen (Punkt 4), steht der
+   alte Satz vorn und dieselbe Aufzählung dahinter. Die Meldung steht
+   sechs Sekunden (eine gewöhnliche 2,6), höchstens drei Dinge, dann
+   „und N weitere".
+7. **Während eines Zugs ändert nur der Zug den Plan** (zweite Durchsicht,
+   12. Oktober). Die Zwischenbilder eines Zugs sind die billigen Wege
+   (Punkt 5), und an manchen Lagen zapfen sie an. Bis hierher konnte alles,
+   was während eines Zugs über `aendere` ging, so ein Zwischenbild
+   speichern und als Rückgängig-Schritt merken. Gemessen auf 478791f5f mit
+   der Sonde der Durchsicht (F1 an die Lage aus `test611` §10, die Maus
+   noch unten, zweimal „h", loslassen, dreimal Strg+Z): nach dem Loslassen
+   stimmt die Netzliste, aber das zweite und das dritte Strg+Z bringen
+   {E1:X2 F1:N F1:N2 G2:N} zurück — ohne ein Wort; mit „r" genauso. Das
+   Nachmessen fand vier Wege mehr, alle auf 478791f5f gemessen: (a) die
+   Ablage hielt den Plan der Fläche als DASSELBE Objekt (`updateBlock`
+   übernimmt den Verweis) — T1 gedreht, gleich danach F1 gezogen, und die
+   Schreibpause legte das angezapfte Zwischenbild in die IndexedDB, ohne
+   dass jemand eine Taste drückte; (b) losgelassen über der Palette kam das
+   `pointerup` nie an der Bühne an (der Zeigerfang am SVG geht mit dem
+   ersten neuen Bild verloren), der Zug blieb liegen, und die nächste
+   Handlung speicherte sein Zwischenbild; (c) ein zweiter Finger fing einen
+   neuen Zug an, nahm das Zwischenbild als „vorher" und liess den ersten
+   liegen; (d) Strg+Z oder Umschalt+Strg+Z mitten im Zug legten das
+   Zwischenbild auf den anderen Stapel. Gebaut:
+
+   ```txt
+   aendere, zurueck, vorwaerts   tun während eines Zugs nichts; der Zug
+                                 speichert selbst, nachdem er beendet ist
+   Tasten im Zug                 nur Escape zählt — es bricht ab (Lagen aus
+                                 `ausgang`, Punkte aus `vorher`; nichts
+                                 gespeichert, kein Rückgängig-Schritt); die
+                                 übrigen tun nichts. MIT DER MAUS STIMMTE
+                                 DAS NICHT: der Fokus stand im Zug auf der
+                                 Seite, Escape kam nie an und Strg+Z beim
+                                 Seitenverlauf — gebaut erst in der dritten
+                                 Durchsicht (unten)
+   ein Zug gehört einem Zeiger   seine Bewegungen und sein Loslassen zählen,
+                                 die eines zweiten Fingers nicht
+   er endet immer                losgelassen oder abgebrochen wo auch immer
+                                 (am Dokument gehorcht, nur solange er
+                                 läuft); setzt irgendein Zeiger irgendwo auf,
+                                 endet er dort — ein Zug mit Teilen richtig,
+                                 mit der vollen Suche, ein Rahmen oder eine
+                                 Leitung verfällt; ebenso eine Leitung oder
+                                 ein Rahmen, losgelassen ausserhalb der Fläche
+   die Ablage                    bekommt eine Kopie des Plans, nicht `z.plan`
+   eine Fläche ausser Dokument   speichert am Ende eines Zugs nichts mehr
+   ```
+
+   **Gewählt aus zwei Wegen.** Die Durchsicht nannte beide: entweder den
+   Zug zuerst richtig beenden (volle Suche, sichern) und dann die Taste
+   ausführen, oder die Tasten bis zum Loslassen nicht annehmen. Gewählt ist
+   das zweite, für die Tasten: eine Taste beendet keine Geste — die Hand
+   ist noch an der Maus. Den Zug beim Tastendruck zu beenden hiesse, das
+   Teil an einer Stelle abzulegen, die niemand gewählt hat, es als eigenen
+   Schritt zu speichern und eine gedrückte Maus zurückzulassen, die nichts
+   mehr zieht; aus einer Geste würden zwei gespeicherte Schritte und eine
+   Meldung mittendrin. Nicht annehmen ist eine Regel, die man sagen kann
+   („während eines Zugs zählt nur der Zug"), und es hält „ein Zug, eine
+   Änderung". Ein zweiter ZEIGER ist etwas anderes: er heisst, dass die
+   erste Geste vorbei oder verloren ist — dort wird der Zug richtig beendet,
+   sonst bliebe ein Zug, dessen Loslassen nie ankam, für immer liegen, und
+   die Fläche nähme keine Taste mehr an. **Was es kostet:** „r", „h", Entf,
+   die Pfeile und Strg+D/G/Z tun während eines Zugs nichts, ohne Meldung
+   (auf 478791f5f drehte zweimal „r" im Zug das gezogene Teil auf 180°,
+   der Zug ging weiter, und gespeichert war es — mit einem Zwischenbild als
+   Rückgängig-Schritt). Ein Zug, der über den
+   Rand der Fläche hinausläuft, endet jetzt an seiner letzten Lage über der
+   Fläche und wird dort gesichert (vorher blieb er liegen). Eine Änderung,
+   die während eines Zugs über einen Knopf oder ein Menü ankommt, geht
+   verloren, ohne Meldung — die gemessene Liste steht unten bei der dritten
+   Durchsicht. (Hier stand bis dahin, das gehe nur aus einem Dialog; das
+   stimmte nicht: mit der Tastatur erreicht man im Zug jeden Knopf der
+   Fläche.) Und jede
+   Handlung kopiert den Plan einmal mehr: im Plan W (12 Leitungen) im
+   Median 0,026 bis 0,038 ms, bei 120 Leitungen 0,22 bis 0,31 ms
+   (`messungen.md` §103, zwei Läufe). „Als Bild speichern" und „Als Vorlage
+   speichern" lesen den Plan, ohne über `aendere` zu gehen, und nahmen im
+   Zug das Zwischenbild; seit der dritten Durchsicht verweigern sie im Zug
+   (unten).
+
+   **Dritte Durchsicht: echte Maus, echte Tasten** (12. Oktober). Die zweite
+   Durchsicht hatte ihre Tasten an die Fläche GESCHICKT (Fokus auf
+   `.sp-wrap`, dann `dispatchEvent`). Mit echter Maus und echter Tastatur
+   steht der Fokus im Zug aber auf der Seite: das Anfassen zeichnet die
+   Fläche neu (`male`), der Knoten unter dem Zeiger ist danach ein anderer,
+   und der Browser setzt den Fokus beim `mousedown` auf `body`, weil er an
+   einem Knoten ausserhalb des Dokuments keinen fokussierbaren Vorfahren
+   findet — auch wenn er vorher auf der Fläche stand. Gemessen auf
+   a8533763b mit der Sonde der Durchsicht (`messungen.md` §103) und mit
+   `test611` §14, eingecheckt vor der Reparatur: echtes
+   Escape brach weder einen Zug mit Teilen noch einen Rahmen ab, der Zug
+   ging weiter und wurde beim Loslassen gespeichert; echtes Strg+Z im Zug
+   nahm der Seitenverlauf (E682), der die Seite neu baute und den Zug still
+   verwarf (F1 danach bei 400,60 — die Daten blieben heil, gespeichert war
+   der Stand vor dem Zug). Das Nachmessen fand dazu: nach einem echten Klick
+   auf ein Teil drehte ein echtes „r" nichts, weil der Fokus auf der Seite
+   blieb; mit dem Fokus auf der Fläche nahm der Seitenverlauf Umschalt+Strg+Z
+   (der Browser meldet „Z", die Fläche fragte nach „z") und Strg+Y (das die
+   Fläche nicht kannte) — gemessen mit dem Fokus, den erst diese Durchsicht
+   zurückholt (Gegenproben 25 und 26 unten: „Nichts zu wiederholen" vom
+   Seitenverlauf, T1 bleibt 0°); und der Hinweis eines Beispiels („Strom drücken,
+   dann auf S1 tippen …") erschien, auch wenn das Beispiel im Zug gar nicht
+   eingesetzt worden war. Gebaut:
+
+   ```txt
+   Tasten im Zug        am Dokument gehorcht, in der Aufnahmephase, nur
+                        solange der Zug läuft (`zugTaste`) — wie das Loslassen
+     Escape             bricht ab; ist ein Menü oder Fenster offen (dieselbe
+                        Liste wie im Escape-Griff der Schale), schliesst erst
+                        das, der nächste Druck bricht ab (E711: ein Druck,
+                        ein Fenster)
+     Strg+Z, Umschalt+  tun nichts, weder an der Fläche noch am Seitenverlauf
+     Strg+Z, Strg+Y     (`preventDefault`, `stopPropagation`); der Zug läuft
+                        weiter und wird beim Loslassen gespeichert — auch in
+                        einem Textfeld: wer die Maus hält, hat den Zug in
+                        der Hand
+     die übrigen        gehen dorthin, wo der Fokus steht — mit der Maus auf
+                        die Seite, wo „r", „h" und Entf nichts tun und die
+                        Pfeile sie rollen
+   der Fokus            kehrt beim Loslassen über der Fläche zu ihr zurück,
+                        wenn er auf `body` gelandet ist — nie aus einem Feld,
+                        Knopf oder Dialog, ohne zu rollen, und OHNE RING:
+                        einen Fokus aus dem Skript zeigt Chromium als
+                        `:focus-visible`, `focusVisible: false` kennt es
+                        nicht (Chromium 141, gemessen); das Merkmal
+                        `data-zeigerfokus` nimmt den Ring weg, bis der Fokus
+                        geht — mit der Tabulatortaste ist er da (§38)
+   an der Wurzel        Umschalt+Strg+Z mit „Z" wie mit „z"; Strg+Y ist
+                        Wiederholen (Strg+Umschalt+Y bleibt den Favoriten)
+   Vorlage, Bild        verweigern im Zug und sagen es („Erst loslassen —
+                        während eines Zugs wird keine Vorlage gespeichert.");
+                        nach dem Loslassen gehen sie und nehmen den
+                        gespeicherten Plan
+   Hinweis eines        nur, wenn das Beispiel eingesetzt wurde
+   Beispiels
+   ```
+
+   **Was während eines Zugs über Knöpfe und Menüs ankommt** — mit der
+   Tastatur, über einen Knopf mit dem Fokus und die Eingabetaste; ein
+   zweiter Zeiger beendet den Zug vorher. Gemessen mit einer Sonde
+   (`messungen.md` §103), je Weg ein frischer Plan W, F1 im Zug:
+
+   ```txt
+   geht verloren, ohne Meldung   Fuss: Drehen, Spiegeln, Duplizieren,
+   (`aendere` verweigert; die    Gruppieren, Löschen, eine Ebene ein oder
+   Ablage hält im Zug den Stand  aus · Kopf: Rückgängig, Wiederholen, die
+   von vorher, danach genau den  Planart — das Feld zeigt im Zug die neue
+   Zug mit der vollen Suche)     Art, der Plan behält die alte, und beim
+                                 Loslassen springt das Feld zurück · „…":
+                                 Stromschienen einzeichnen, Alle neu
+                                 durchnummerieren, Plan leeren · „⚡
+                                 Schaltung": eine eigene Vorlage einsetzen,
+                                 ein Beispiel (Plan ohne Netz), das Netz
+   verweigert, mit Meldung       „…": Als Vorlage speichern, Als Bild
+                                 speichern · „⚡ Schaltung" in einem Plan mit
+                                 Netz: „Das Netz steht schon …" (wie sonst)
+   wirkt, ändert den Plan nicht  Werkzeug wechseln, Strom ein (der Zug läuft
+                                 weiter und wird gespeichert), Formelheft,
+                                 Raster zeigen, ein Symbol wählen, Strg+A
+                                 mit dem Fokus auf der Fläche
+   erreicht man im Zug nicht     den Dialog am Teil (er öffnet auf einen
+                                 Doppeltipp, und das Aufsetzen beendet den
+                                 Zug) und die Beschriftung (Werkzeug T,
+                                 ebenso ein Aufsetzen)
+   ```
+
+   Ob die Fläche bei den verlorenen sagen soll, dass sie nichts getan hat,
+   bleibt die Frage aus L253 Punkt 9 — sie gehört Redur. Nicht eigens
+   geprüft ist eine Zeile: kommt Escape im Zug doch bis zur Wurzel, weil
+   `zugTaste` es für ein offenes Fenster durchliess, nimmt die Wurzel es
+   nicht mehr; erreichbar wäre das nur mit einem Blatt, das den Fokus auf
+   der Fläche lässt und Escape selbst nicht anhält (ein `.overlay` legt die
+   Seite still, ein Menü hält die Taste an).
+
+**Warum?** Gemessen, bevor gebaut wurde (`messungen.md` §103), im Plan
+„Drehstrom, FI und Übertrager" aus den Bildern der Übernahme, auf `main`
+97d156b03, F1 angeklickt, „r":
+
+```txt
+                 Netze um den FI                                 Rechnung
+vorher (main)    {F1:1 G2:L} {F1:N G2:N} {F1:2 E1:X1} {F1:N2 E1:X2} {F1:3} {F1:4}   Lampe leuchtet
+gedreht (main)   {E1:X1 E1:X2 F1:1 F1:2 F1:4 F1:N F1:N2 G2:L G2:N} {F1:3}          „l-n", nichts gerechnet
+gedreht (E746)   wie vorher                                                         Lampe leuchtet, 435 mA
+```
+
+Dazu verlor die Motorleitung w4, die mit dem FI nichts zu tun hat, ihren
+Weg unter dem Klemmenbrett (aus sechs Punkten wurden drei, und der neue
+Winkel lief über U2, V2, W2 — „w4: G1:PE,M1:PE → G1:PE,M1:PE,M1:U2,M1:V2,
+M1:W2"), und im alten FI aus `test608` lief b2 nach dem Drehen 5 px neben
+N2. Eine Handlung, die nur die Lage ändern sollte, änderte die Schaltung —
+und ohne Meldung. Das ist der Fall, gegen den §51 steht; `test608` hatte
+ihn beim Bau gefunden und musste um ihn herum prüfen.
+
+**Was war die Alternative?**
+
+* **Streng nach dem Auftrag: fremde Leitungen NIE anfassen**, auch nicht
+  die mit einem Ende neben der Klemme. Gemessen als Variante (`heilen` aus):
+  `test611` bleibt grün, aber `test608` wird rot mit 67 von 69 — „a1.nach
+  liegt bei 320,100, X1:L bei 310,100", dasselbe für a3 und a6. Damit wäre
+  zurückgenommen, was E738 zusagt („es gibt sich, sobald … irgendein Teil
+  des Plans gedreht, gespiegelt oder gezogen wird"), und ein alter Plan
+  zeigte seine L-Leitung länger auf dem N-Stummel. Die Heilung bleibt
+  deshalb — mit derselben Prüfung, also ohne anzuzapfen. Wer die strenge
+  Fassung will: es ist ein Schalter (`heilen`) an drei Stellen, und
+  `test608` §5 müsste dann umgeschrieben werden; beides entscheidet Redur.
+* **Ein Wegsucher über das Raster** (Lee, A*): fände auch Wege mit fünf und
+  mehr Strecken. Mehr Code, mehr Kosten beim Ziehen; die feste Liste reicht
+  für jeden gemessenen Fall, und wo sie nicht reicht, meldet die Fläche es.
+* **Die Netzliste selbst fragen** (`Stromfluss.netze`): genauer, aber die
+  Planfläche liegt in `bereiche/bloecke`, die Netzliste in
+  `bereiche/elektro` — §5 Regel 1, und `test537` zählt jeden Griff nach
+  `Stromfluss` (heute 9 aus `bereiche/bloecke`). Die Berührungsregel steht
+  deshalb ein zweites Mal im Modell (`nahAnStrecke`, `beruehrung`), und
+  `test611` §7 hält sie für jede Leitung zweier Pläne gegen die Netzliste.
+
+**Was kostet es?** Rechenzeit, gemessen im Browser (`messungen.md` §103):
+im Plan „Drehstrom, FI und
+Übertrager" (12 Leitungen) braucht `vorherMerken` 0,3 ms und `nachziehen`
+nach dem Drehen des FI 1,4 ms (Median), nach Drehen und Spiegeln 8,2 ms;
+im dreifachen Plan (36 Leitungen) 1,8 und 19,6 ms. Teuer sind die
+Hakenwege. Beim Ziehen mit der Maus fiel das bis zur Durchsicht JE
+BEWEGUNG an; gemessen (F1 um 120 × 60 px in 60 Bewegungen, CPU vierfach
+gedrosselt, Chromium ohne Kopf):
+
+```txt
+                        je Bewegung: Median  p90           grösste         > 50 ms  Loslassen    ganzer Zug
+erster Stand (3 Läufe)  23,9 … 29,4 ms       61,9 … 80,1   126,8 … 217,3   7 … 12   —            7383 … 9061 ms
+nach der Durchsicht (2) 2,5 … 2,8 ms         6,4 … 7,0     9,2 … 13,2      0        98 … 132 ms  4373 … 4628 ms
+main 97d156b03 (2)      (rechnet nicht)                                                          6115 … 6581 ms
+```
+
+Ungedrosselt: Median 6,0 bis 8,2 ms vorher, 0,6 bis 0,7 ms nachher, das
+Loslassen 16,5 bis 35,0 ms. Auf 60 Bewegungen kommen nach der Durchsicht
+30 Rechnungen (eine je Raster), vorher 60. Was es jetzt kostet: einmal
+die volle Suche beim Loslassen — auf der gedrosselten CPU 66 bis 132 ms
+in einem Stück (alle vier Läufe beider Züge), also ein spürbarer Ruck in
+dem Augenblick, in dem die Hand loslässt. Und die Zwischenbilder sind nur
+die billigen Wege: liegt an einer Zwischenlage der billige Weg über einer
+fremden Klemme (Gegenprobe 4 unten zeigt, wo — f2 am FI, w4 über U2, V2,
+W2 beim Klemmenbrett), ist das so ZU SEHEN, bis die Hand loslässt; dann
+springt die Leitung auf den sauberen Weg. Gespeichert wird so ein
+Zwischenbild nie (`test611` §10). Die Meldung aus Punkt 6 kostet einen
+Vergleich je Handlung (dieselbe Rechnung wie `vorherMerken`, nicht
+eigens gemessen). Die Regel steht zweimal (simulation.ts `aufStrecke`/`nahBei` und
+schaltplan.ts `nahAnStrecke`/`beruehrung`) — wer eine ändert, ändert beide;
+`test611` §7 merkt es. Und die Wege sehen nach dem Drehen anders aus als
+vorher: nicht mehr jeder ein Winkel von Ende zu Ende, sondern der alte Weg
+mit nachgerückten Enden oder ein Umweg um die Zeichen.
+
+**Was es NICHT verhindert.** Wer ein Teil so hinstellt, dass SEINE Klemme
+auf einer fremden Leitung liegt, verbindet es — so fängt die Netzliste über
+den Ort, und das ist die Lage, nicht das Nachziehen. Seit der Durchsicht
+geschieht das nicht mehr still: die Fläche sagt, welche Klemme jetzt was
+berührt (Punkt 6). Verhindert wird es mit Absicht nicht — eine Sperre
+nähme dem Menschen den Weg, ein Teil bewusst auf eine Leitung zu setzen.
+Nach einem Zug mit der Maus nimmt Strg+Z die Lage allerdings nicht zurück
+(L253 Punkt 8); dann bleibt nur, das Teil zurückzuziehen — oder, solange die
+Hand noch unten ist, Escape (Punkt 7). Eine ungebundene
+Leitung über der neuen Lage einer Klemme bleibt L253 Punkt 6; was ein alter
+Plan vor der ersten Handlung zeichnet, bleibt Punkt 7 — beides nicht
+angefasst. Die Wege meiden Klemmen und Zeichen, aber nicht einander: zwei
+neue Leitungen dürfen sich kreuzen (eine reine Kreuzung verbindet nicht).
+Und sie meiden keine Beschriftung: auf dem Bild nach dem Drehen laufen f3
+und f4 über das „G2" neben der Lampe.
+
+**Wächter:** `test611`, seit der dritten Durchsicht 209 Zusagen in
+vierzehn Abschnitten (nach der zweiten 172 in dreizehn, nach der ersten 110
+in zwölf, vorher 79 in neun) —
+je Handlung (F1
+drehen, spiegeln, zurückdrehen, mit der Maus ziehen, mit der Pfeiltaste
+schieben fein und mit Umschalt, T1 drehen, M1 ziehen, der alte FI mit
+Pfeiltaste, Drehen, Spiegeln, Ziehen) dieselbe Netzliste aus
+`Stromfluss.netze` (Klemmen UND Leitungen), die fremden Leitungen Byte für
+Byte, jede Leitung genau die Klemmen von vorher (die Netzliste mit der
+Leitung allein im Plan), jedes Ende auf der Klemme, die es meint; dazu kein
+neuer Weg durch ein Zeichen, Strg+Z gibt den Plan zurück, die Regel des
+Modells gleich der der Netzliste, und die Meldung genau dann, wenn es
+keinen sauberen Weg gibt. **Rot zuerst:** eingecheckt vor der Reparatur
+(a4bdd8c2c, damals 73 Zusagen, gegen `main` 44/73; §9 und die zwei
+Zusagen „kein Weg durch ein Zeichen" kamen danach und sind gegen `main`
+ebenfalls rot); im Endstand gegen 97d156b03 rot mit 47 von 79 (32 gescheitert: Netzliste, fremde Leitungen, Klemmen je Leitung, Wege durch Zeichen, „b2 … Abstand 5 px", „l-n", „fi-loest-aus", keine Meldung, kein `Schaltplan.kontakte`). **Gegenproben**, jede gefahren
+und wörtlich zurückgenommen: (1) wieder alle Leitungen neu, der Winkel
+zuerst (die Prüfung bleibt) — 78/79, „F1 gedreht: die 8 fremden Leitungen
+behalten ihre Punkte Byte für Byte — w2 … → …"; (2) die Prüfung gegen das
+Anzapfen heraus (der erste Weg gilt) — 59/79, „F1 gedreht: die Netzliste
+ist dieselbe — neu: E1:X1 E1:X2 F1:2 F1:4 F1:N2 …", „kurz: 1"; (3) der
+Vorzug für Wege ausserhalb der Zeichen heraus — 77/79, „f2 durch G2 | f3
+durch F1 | f4 durch E1". Wieder eingesetzt 79/79, `test608` 69/69.
+
+**Nach der Durchsicht** kamen drei Abschnitte dazu. §10 zieht F1 in einem
+frischen Plan W um 30 × 40 Planeinheiten in 24 Bewegungen und verlangt:
+jede Bewegung rechnet `schnell`, nur beim Wechsel des Rasters (7 Rechnungen
+auf 24 Bewegungen), beim Loslassen genau eine volle Suche, und gespeichert
+ist Byte für Byte das Ergebnis der vollen Suche — unabhängig nachgerechnet,
+die Anzapfungen gezählt von der Netzliste selbst; die Endlage ist so
+gewählt, dass die billigen Wege dort anzapfen. §11 dreht, schiebt und
+zieht R1 an der Leitung q (Plan Q) und verlangt jedes Mal genau eine
+Meldung mit der Klemme beim Namen, beim Ziehen erst beim Loslassen. §12
+ist test608s Plan A mit vier Teilen dazu (R9 ohne Leitung, das gedreht
+wird; R8 mit einer freien Klemme auf dem nächsten geheilten Weg von a5;
+E8/E9 mit z1, richtig liegend): dieselbe Netzliste, genau a1–a6 ändern
+sich, keine zapft an, keine Meldung. **Rot zuerst:** eingecheckt vor der
+Reparatur (745fba801); gegen fcb6d35fa (den ersten Stand von E746) rot mit
+101 von 110 — alle 24 Bewegungen rechnen voll, und R1:1/R1:2 auf q bleibt
+still; gegen `main` 97d156b03 61 von 110 (dort zapft auch §12 an: R9
+gedreht, und a3 verbindet G1:L mit G1:N). **Gegenproben**, jede gefahren
+und byte-genau zurückgenommen: (4) beim Loslassen keine volle Suche — 102/110,
+„M1 gezogen: … w4: G1:PE,M1:PE → G1:PE,M1:PE,M1:U2,M1:V2,M1:W2", „f2:
+F1:N,G2:N → F1:N,F1:N2,G2:N", und die Meldung aus Punkt 6 sagt es selbst;
+(5) jede Bewegung wieder voll — 109/110; (6) ohne den Raster-Merker —
+109/110, „24 Rechnungen auf 24 Bewegungen"; (7) die Meldung ohne die Liste
+aus `veraendert` — 105/110; (8) `heilen` aus — 108/110, „ist [], soll
+[a1 … a6]"; (9) geheilte Leitungen nehmen ungeprüft ihren ersten Weg —
+106/110, „a4: … → G1:N,X4:L,X4:N | a5: X5:L → R8:1,X5:L | a6: … X6:N,X6:PE".
+Wieder eingesetzt 110/110.
+
+**Nach der zweiten Durchsicht** kam §13 dazu: zwölf Wege, je in einem
+frischen Plan W, F1 an die Lage aus §10 — „h h", „r r", Entf, Pfeil rechts,
+der Knopf „Spiegeln" (ein `click` ohne Aufsetzen), Strg+Z und
+Umschalt+Strg+Z im Zug (mit einem Schritt davor), die Schreibpause (T1
+gedreht, gleich danach der Zug, 900 ms gehalten, die IndexedDB an `Store`
+vorbei gelesen), losgelassen über der Palette, ein zweiter Finger auf T1
+und ein abgebrochener Finger (beide über CDP), dazu Escape, eine Leitung,
+die über der Palette losgelassen wird, und eine Seite, die sich mitten im
+Zug neu zeichnet (`App.zeichneSeite`). Je Weg: die
+Ablage hält während des Zugs den Stand von vorher Byte für Byte, F1 steht
+danach bei 430,100 ungedreht und ungespiegelt, gespeichert ist Byte für
+Byte die volle Suche (unabhängig nachgerechnet), die Netzliste ist die von
+vorher, und jeder Schritt in dreimal Strg+Z und dreimal Umschalt+Strg+Z
+ist frei von Anzapfungen; bei Escape das Bild Zeichen für Zeichen wie vor
+dem Zug, nichts gespeichert, kein Rückgängig-Schritt. Und §10 zählt die
+Rechnungen nach dem Loslassen: genau eine, und sie ist voll (vorher
+`slice(-(n+1))`, das immer n + 1 Einträge hat). 172 Zusagen in dreizehn
+Abschnitten. **Rot zuerst:** eingecheckt vor der Reparatur (046d4a8c0),
+gegen 478791f5f 129 von 159; im Endstand gegen 478791f5f 137 von 171 —
+alle 34 Fehlschläge in §13 (der abgebrochene Finger, die Leitung über der
+Palette und die neu gezeichnete Seite sind dort grün: sie halten das neue
+Horchen am Dokument, keine Lücke von damals). **Gegenproben**,
+jede gefahren und byte-genau zurückgenommen (die Quelle danach per
+Prüfsumme gleich; 10–18 gegen den Stand mit 170 Zusagen, 19 und 20 mit
+172): (10) `aendere` wieder auch im Zug — 152/169, „„h h" im
+Zug: … Netz neu: E1:X2 F1:N F1:N2 G2:N", „r r", Entf, Pfeil, Knopf; (11)
+`zurueck` wieder im Zug — 168/170, „Umschalt+Strg+Z 1: Netz neu: E1:X2 F1:N
+F1:N2 G2:N"; (12) `vorwaerts` wieder im Zug — 168/170; (13) die Ablage
+wieder mit `z.plan` statt einer Kopie — 166/170, „Schreibpause im Zug: auch
+die IndexedDB … E1:X2 F1:N F1:N2 G2:N"; (14) das Loslassen wieder nur an
+der Bühne gehorcht — 168/170, „Losgelassen ausserhalb: F1 steht danach …
+{"x":400,"y":60}"; (15) ohne das Aufsetzen am Dokument — 168/170, „Zweiter
+Finger im Zug: … {"x":400,"y":60}"; (16) Escape ohne Abbruch — 167/170,
+„12797 gegen 12664 Zeichen"; (17) ohne `pointercancel` am Dokument —
+169/170, „Abgebrochener Finger: … {"x":400,"y":60}"; (18) beim Loslassen
+zweimal voll gesucht — 169/170, „nach dem Loslassen [false,false]" (die
+alte Zusage wäre damit grün geblieben); (19) die Leitung auch ausserhalb
+der Fläche angelegt — 171/172, „12 → 13 Leitungen"; (20) die Fläche
+speichert auch, wenn sie nicht mehr im Dokument steht — 171/172,
+„{"x":430,"y":100,…}". Wieder eingesetzt 172/172.
+
+**Nach der dritten Durchsicht** kam §14 dazu — der Zug und jede Taste darin
+mit echter Maus und echter Tastatur, keine Taste an die Wurzel geschickt
+(nur die Vorbereitung in §14 d dreht T1 vor dem Zug noch über den
+Hilfsgriff): Escape bricht einen
+Zug mit Teilen, einen Rahmen (zuerst ohne Escape: derselbe Rahmen wählt
+H1) und eine Leitung (zuerst ohne Escape: sie entsteht) ab, das Bild sofort
+wie vorher, nichts gespeichert, kein Rückgängig-Schritt; Strg+Z,
+Umschalt+Strg+Z und Strg+Y im Zug (mit einem Schritt davor und nach dem
+Zaun des Seitenverlaufs) lassen Fläche, Ablage und Bild, wie sie sind, und
+nach dem Loslassen ist der Zug mit der vollen Suche gespeichert, der
+Schritt davor steht, die Seite wurde nicht neu gebaut, der Seitenverlauf
+hat nichts gemeldet; ein Menü, im Zug mit der Eingabetaste geöffnet,
+schliesst das erste Escape, das zweite bricht ab; „Als Vorlage speichern"
+und „Als Bild speichern" verweigern im Zug mit einer Meldung und gehen
+danach (die Vorlage hält die gespeicherten Leitungen, das Bild ist Zeichen
+für Zeichen der gespeicherte Plan); ein Beispiel im Zug (Plan P) bleibt
+draussen und sein Hinweis auch; und nach einem echten Klick auf T1 steht
+der Fokus auf der Fläche, ohne Ring, „r" dreht, Strg+Z, Umschalt+Strg+Z,
+Strg+Z, Strg+Y geben 0°, 90°, 0°, 90° auf derselben Fläche, und mit
+Umschalt+Tab ist der Ring da. 209 Zusagen in vierzehn Abschnitten. **Rot
+zuerst:** eingecheckt vor der Reparatur (7c0fa0ff1), gegen a8533763b 189
+von 207 — alle 18 Fehlschläge in §14; im Endstand gegen a8533763b
+rot mit 191 von 209 — wieder alle 18 Fehlschläge in §14. Grün sind dort die Leitung (ihr Anfassen zeichnet die
+Fläche nicht neu, der Fokus bleibt auf ihr), das offene Menü und der Ring
+(ohne Fokus kein Ring; mit Tab der Ring) — sie halten das Neue, keine
+Lücke von damals. **Gegenproben**, jede gefahren und byte-genau
+zurückgenommen (die Quelle danach per Prüfsumme gleich; 21–29 gegen den
+Stand mit 207 Zusagen, 30–32 mit 209): (21) kein Tastenhorcher am Dokument
+— 191/207, Escape bricht nirgends ab (auch §13s geschicktes nicht mehr,
+die Wurzel überlässt es dem Dokument), Strg+Z baut die Seite neu; (22)
+Rückgängig und Wiederholen nicht geschluckt — 203/207, „Control+z: die
+Fläche ist neu gezeichnet … F1 {"x":400,"y":60}"; (23) Escape ohne die
+Fenster-Prüfung — 206/207, „Menü noch offen: false, F1 im Bild translate(400
+60)"; (24) ohne Fokus zurück — 203/207, „r: T1 0° statt 90°"; (25) an der
+Wurzel wieder nur „z" — 205/207, „Control+Shift+Z: T1 0° statt 90°" und
+der Seitenverlauf meldet „Nichts zu wiederholen"; (26) ohne Strg+Y an der
+Wurzel — 205/207, ebenso mit „Control+y"; (27) die Vorlage ohne Sperre —
+205/207, „0 → 1 Vorlagen (der Name wurde mitten im Zug erfragt)"; (28) das
+Bild ohne Sperre — 205/207, „1 Downloads"; (29) der Hinweis des Beispiels
+immer — 206/207, „Strom drücken, dann auf S1 tippen: E1 leuchtet."; (30)
+der Ring wieder für jeden `:focus-visible` — 208/209, „box-shadow rgb(109,
+74, 255) 0px 0px 0px 2px"; (31) ohne das Merkmal `data-zeigerfokus` —
+208/209, ebenso; (32) das Merkmal bleibt, wenn der Fokus geht — 208/209,
+„Mit Umschalt+Tab … der Ring ist da — box-shadow none". Wieder eingesetzt
+209/209.
+
+**Am Wächter geändert, bevor er grün wurde:** §8 verglich zuerst den rohen
+Block mit dem Stand nach Strg+Z und war auch auf `main` rot — die Fläche
+liest den Plan beim Öffnen mit `Schaltplan.lesen`, und der Verlauf hält
+diese Form; verglichen werden jetzt Punkte, Lagen und Bindungen. §7 meldete
+einmal „b2–b4: Modell false · Netzliste true": die Paarprobe nahm die Teile
+weg, aber nicht die Bindungen, und die Netzliste band beide Leitungen an
+denselben (nicht mehr vorhandenen) Namen „F1:N" — die Probe läuft jetzt
+ohne Bindungen. Und §1's „kein Weg durch ein Zeichen" kam erst nach dem
+Bild dazu: der Lauf war grün, und f2 lief quer durch Quelle und Lampe.
 
 ## E747 — Eine Brücke des Klemmenbretts belegt ihre Klemmen: keine falsche „hängt an keiner Leitung" (L253 Punkt 2)
 

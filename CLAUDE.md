@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 552 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 553 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -1597,8 +1597,8 @@ nicht sah: mit dem Finger nahm der Streifen jedem Navigationsknopf die
 rechten 3 px (er prüfte nur die Mitte der Knöpfe), und die Palette bot das
 Zurücksetzen im Fokus-Modus an, in dem der Trenner ausgeblendet ist — beides steht
 jetzt in ihm, zuerst rot mit 59 von 61. Gezählt am 6. Oktober, im selben Bogen:
-`ls pruefungen/lauf/test*.mts | wc -l` sagt 533 — auf seinem Zweig; beim
-Zusammenführen neu zu zählen.*
+`ls pruefungen/lauf/test*.mts | wc -l` sagt 533 auf seinem Zweig. Beim Zusammenführen nachgezählt
+(12. Oktober, `claude/abend-antworten`): 533.*
 
 *Und 534: `test593` — der Seiteneditor ohne Stau (E717). Redurs Satz vom
 29. September, „Bei pdf wenn ich seiteneditor klicke bleibt es für ca
@@ -1877,7 +1877,8 @@ Lauf, wie bei `test577`. Seine Zusage, auf die es ankommt: bei drei gleichen
 Lampen an L1, L2, L3 fliesst im Neutralleiter NICHTS; mit allen drei Quellen
 in Phase (Gegenprobe des Zweigs) stehen dort 1,3 A. 91 Zusagen. Gezählt am
 11. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
-545 — auf seinem Zweig; beim Zusammenführen neu zu zählen.*
+545 auf seinem Zweig. Beim Zusammenführen nachgezählt
+(12. Oktober, `claude/abend-antworten`): 545.*
 
 *Und 546: `test605` — falsch angeschlossen, und was in Wirklichkeit passieren
 würde (E732), dazu der FI, der misst (E735). Auf dem Zweig `test499`. Er hält
@@ -1897,7 +1898,8 @@ geglaubt (E734). Auf dem Zweig `test501`. Jede Zahl auf einer Karte des
 Pakets „Drehstrom und die fünf Leiter" rechnet er mit `Stromfluss` neu;
 eine Karte, die der Simulation widerspricht, macht ihn rot. 37 Zusagen.
 Gezählt am 11. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts |
-wc -l` sagt 548 — auf seinem Zweig; beim Zusammenführen neu zu zählen.*
+wc -l` sagt 548 auf seinem Zweig. Beim Zusammenführen nachgezählt
+(12. Oktober, `claude/abend-antworten`): 548.*
 
 *Und 549: `test608` — alte Klemmennamen bleiben gültig (E738, L252). Vier
 Zeichen, die es auf `main` schon gab, haben mit dem Elektro-Bogen andere
@@ -1912,8 +1914,8 @@ Lampenkreis meldete „löst aus" mit 435 mA. Seit der Durchsicht hält sein
 §7 auch den FI, der schon gedreht oder gespiegelt gespeichert ist — eine
 Netzliste, die dem Auflöser die Lage des Teils verschweigt, kam vorher mit
 51 von 51 durch. Gezählt am 11. Oktober, im
-selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 549 — auf seinem
-Zweig; beim Zusammenführen neu zu zählen.*
+selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 549 auf seinem Zweig. Beim Zusammenführen nachgezählt
+(12. Oktober, `claude/abend-antworten`): 549.*
 
 *Und 550: `test609` — Redurs Serienfach „Dark (2017–2020)" ist eingebaut und
 heil (E739). Redur hatte es am 30. September auf einem eigenen Zweig
@@ -1963,9 +1965,43 @@ Seinen ersten Fund machte er an meiner eigenen `--liste`: „Kopf 551,
 Zeilen 463" — `process.exit` gleich nach dem Schreiben in eine Röhre
 schnitt die Liste ab (3 von 40 nachgestellt); jetzt wird erst gewartet.
 Gezählt am 11. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts |
-wc -l` sagt 551 — auf seinem Zweig; beim Zusammenführen neu zu zählen.*
+wc -l` sagt 551 auf seinem Zweig. Beim Zusammenführen nachgezählt
+(12. Oktober, `claude/abend-antworten`): 551.*
 
-*Und 552: `test612` — eine Brücke des Klemmenbretts ist eine Verbindung
+*Und 552: `test611` — Drehen, Spiegeln, Ziehen und Schieben zapfen nichts an
+(E746, L253 Punkt 4). Eine Handlung, die nur die Lage eines Teils ändert,
+darf die Netzliste nicht ändern: er dreht, spiegelt, zieht und schiebt den
+FI im Plan „Drehstrom, FI und Übertrager", dreht den Übertrager, zieht das
+Klemmenbrett und fährt die Folge aus `test608` §5 am alten FI — und
+verlangt nach jeder Handlung dieselbe Netzliste, die fremden Leitungen Byte
+für Byte, und dass jede Leitung genau die Klemmen fasst, die sie vorher
+fasste (gefragt bei der Netzliste selbst, mit der Leitung allein im Plan).
+Gegen `main` war er rot mit 47 von 79: nach dem Drehen des FI wurden sechs
+Netze zu einem, L und N der Quelle verbunden, und im alten FI lief b2 5 px
+neben N2 vorbei — der Befund, den `test608` beim Bau gemacht und um den er
+herumgeprüft hatte. Sein §7 hält die Berührungsregel der Planfläche gegen
+die der Netzliste, weil sie zweimal stehen muss (§5). Er lädt über
+`listen(0)`, damit `test400` keinen neuen Port zählt. Gezählt am
+11. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+551 — auf seinem Zweig; beim Zusammenführen neu zu zählen. Drei
+Durchsichten haben ihn auf 209 Zusagen in vierzehn Abschnitten gebracht
+(gezählt am 12. Oktober, auf seinem Zweig; beim Zusammenführen neu zu
+zählen). Die erste, am selben Abend, auf 110, und zwei ihrer Abschnitte
+halten etwas, das eine Netzliste allein nicht sieht: §10, dass das Ziehen
+nur billig rechnet und trotzdem das Ergebnis der VOLLEN Suche speichert —
+an einer Lage, an der die billigen Wege anzapfen würden, sonst bewiese die
+Zusage nichts —, und §11, dass die Fläche SAGT, wenn die eigene Klemme
+eines Teils auf einer fremden Leitung landet (R1:1 auf q), statt es zu
+verhindern; gegen den ersten Stand von E746 war er rot mit 101 von 110.
+Die zweite brachte §13: während eines Zugs wird nichts gespeichert. Die
+dritte brachte §14, und sie hat die zweite belehrt: §13 hatte seine Tasten
+an die Fläche GESCHICKT, und mit echter Maus und echter Tastatur stand der
+Fokus im Zug gar nicht dort — Escape brach nichts ab, Strg+Z baute die
+Seite neu und verwarf den Zug. Gegen den Stand davor war er rot mit 191
+von 209. Beim Zusammenführen nachgezählt
+(12. Oktober, `claude/abend-antworten`): 552.*
+
+*Und 553: `test612` — eine Brücke des Klemmenbretts ist eine Verbindung
 (E747, L253 Punkt 2). Im Stern und im Dreieck meldete die Fusszeile der
 Planfläche „M1: Anschluss W2 hängt an keiner Leitung", dazu U2 und V2 —
 gerade die Klemmen, auf denen die Brücken der Stellung liegen. Er verlangt,
@@ -1984,9 +2020,8 @@ auf 38 Zusagen: eine Ecke des Dreiecks, die nur ihre eigene Brücke hält
 Stellung selbst (`sternpunkt`) — gegen den ersten Stand von E747 war er
 rot mit 33 von 38. Er lädt über file://, `test400` zählt keinen
 neuen Port. Gezählt am 11. Oktober, im selben Bogen: `ls
-pruefungen/lauf/test*.mts | wc -l` sagt 551 — auf seinem Zweig; beim
-Zusammenführen neu zu zählen. Beim Zusammenführen nachgezählt
-(12. Oktober, `claude/abend-antworten`): 552.*
+pruefungen/lauf/test*.mts | wc -l` sagt 551 auf seinem Zweig. Beim Zusammenführen nachgezählt
+(12. Oktober, `claude/abend-antworten`): 553.*
 
 ### Die Befehle
 
@@ -2009,7 +2044,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 552 Läufe
+npm run pruefen                      alle 553 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2106,7 +2141,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 552 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 553 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

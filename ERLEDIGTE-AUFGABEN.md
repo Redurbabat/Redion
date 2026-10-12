@@ -68,6 +68,196 @@ für drei Stände neu gemessen.
 Brücken „0 A" neben „317 nW"; und erreicht eine Ecke des Dreiecks eine
 fremde Klemme, schweigt die Meldung, auch wenn es die falsche ist.
 
+## 12. Oktober 2026 · E746, dritte Durchsicht · Echte Maus, echte Tasten
+
+**Die dritte Durchsicht** fuhr die Wege der zweiten mit echter Maus und
+echter Tastatur und fand, dass §13 seine Tasten nur an die Fläche
+GESCHICKT hatte: mit der Maus steht der Fokus im Zug auf der Seite (das
+Anfassen zeichnet die Fläche neu, und der Browser setzt den Fokus beim
+`mousedown` auf `body`). Escape brach darum weder einen Zug mit Teilen noch
+einen Rahmen ab, und Strg+Z, Umschalt+Strg+Z und Strg+Y nahm im Zug der
+Seitenverlauf — er baute die Seite neu und verwarf den Zug still (F1 bei
+400,60; die Daten blieben heil). „Als Vorlage speichern" und „Als Bild
+speichern" nahmen im Zug das Zwischenbild, und E746 Punkt 7 behauptete,
+eine Änderung im Zug komme nur aus einem Dialog. Das Nachmessen fand dazu:
+nach einem echten Klick auf ein Teil drehte „r" nichts, Umschalt+Strg+Z
+(„Z") und Strg+Y nahm auch mit dem Fokus auf der Fläche der Seitenverlauf
+(gemessen mit dem zurückgeholten Fokus, Gegenproben 25 und 26), und der
+Hinweis eines Beispiels erschien, ohne dass es eingesetzt war.
+
+**Gebaut** (E746 Punkt 7, dritte Durchsicht): ein Zug horcht am Dokument
+auf seine Tasten, wie auf das Loslassen — Escape bricht ab (ist ein Menü
+offen, schliesst erst das), Rückgängig und Wiederholen tun nichts, weder
+an der Fläche noch am Seitenverlauf. Beim Loslassen über der Fläche holt
+sie den Fokus zurück, wenn er auf der Seite gelandet ist — ohne Ring
+(`data-zeigerfokus`; mit der Tabulatortaste ist er da). Die Wurzel nimmt
+Umschalt+Strg+Z mit „Z" und Strg+Y. Vorlage und Bild verweigern im Zug und
+sagen es; der Hinweis eines Beispiels kommt nur, wenn es steht. Die Liste,
+was im Zug über Knöpfe und Menüs ankommt und still verloren geht, steht
+gemessen in E746 und L253 Punkt 9.
+
+**Prüfung:** `test611` §14 (alles mit echter Eingabe), zuerst rot
+eingecheckt (7c0fa0ff1): gegen a8533763b 189 von 207; im Endstand 209/209,
+gegen a8533763b 191 von 209 (alle 18 in §14). Zwölf Gegenproben, jede rot
+und byte-genau zurückgenommen: kein Tastenhorcher am Dokument 191/207 ·
+Rückgängig nicht geschluckt 203/207 · Escape ohne Fenster-Prüfung 206/207
+· ohne Fokus zurück 203/207 · Wurzel nur „z" 205/207 · ohne Strg+Y 205/207
+· Vorlage ohne Sperre 205/207 · Bild ohne Sperre 205/207 · Hinweis immer
+206/207 · Ring für jeden `:focus-visible` 208/209 · ohne das Merkmal
+208/209 · Merkmal bleibt beim Gehen 208/209. Die Sonde der Durchsicht
+nachher: echtes Escape bricht ab, echtes Strg+Z lässt den Zug laufen; ihre
+fünf übrigen roten Zusagen sind vorher dieselben (Annahmen der Sonde,
+`messungen.md` §103). Nachbarn grün: `test611` (209/209), `test604`–`test608`, `test568` (26/26), `test238`–`test242`, `test254`, `test388`, `test74`; Datei-Wächter
+`test550`, `test549`, `test225`, `test105`, `test109`, `test87`,
+`test537`, `test400` grün. Start 1924 KB (`test388` §5, Decke 1950).
+Bilder (Rechner und Telefon): T1 angeklickt ohne Ring, „r" gedreht, F1 im
+Zug, „Erst loslassen — während eines Zugs wird keine Vorlage gespeichert.",
+F1 nach Escape wieder am Platz.
+
+**Offen:** L253 Punkt 9 — ob die Fläche sagen soll, dass Knöpfe und Menüs
+im Zug nichts getan haben (Redur); Punkt 8 — Strg+Z nach dem Loslassen.
+
+## 12. Oktober 2026 · E746, zweite Durchsicht · Während eines Zugs wird nichts gespeichert
+
+**Die zweite Durchsicht** von E746 fand, dass die billigen Zwischenbilder
+eines Zugs doch gespeichert werden konnten: alles, was WÄHREND des Zugs über
+`aendere` ging, nahm das Zwischenbild als Stand von vorher. Ihre Sonde (F1
+an die Lage aus `test611` §10, die Maus unten, zweimal „h", loslassen,
+dreimal Strg+Z): nach dem Loslassen stimmt die Netzliste, das zweite und
+dritte Strg+Z bringen {E1:X2 F1:N F1:N2 G2:N} zurück. Das Nachmessen auf
+478791f5f fand vier Wege mehr: die Ablage hielt den Plan der Fläche als
+dasselbe Objekt (die Schreibpause legte ein Zwischenbild in die
+IndexedDB); ein Zug, losgelassen über der Palette, blieb liegen, und die
+nächste Handlung speicherte ihn; ein zweiter Finger liess den ersten Zug
+liegen; Strg+Z und Umschalt+Strg+Z im Zug legten das Zwischenbild auf den
+anderen Stapel. Und `test611` §10 „genau EINE volle Suche" prüfte mit
+`slice(-(n+1))` nichts.
+
+**Gebaut** (E746 Punkt 7): `aendere`, `zurueck` und `vorwaerts` tun während
+eines Zugs nichts; von den Tasten zählt im Zug nur Escape, und es bricht
+den Zug ab (Lagen und Punkte von vorher, nichts gespeichert). Ein Zug
+gehört einem Zeiger; er endet, wo auch immer dieser loslässt oder
+abbricht (am Dokument gehorcht, nur solange er läuft), und setzt ein
+anderer Zeiger auf, endet er dort — mit Teilen immer mit der vollen Suche.
+Die Ablage bekommt eine Kopie des Plans. Gewählt ist „Tasten nicht
+annehmen" statt „zuerst den Zug beenden": eine Taste beendet keine Geste.
+
+**Prüfung:** `test611` §13 (zwölf Wege, Escape, eine Leitung über der
+Palette, eine Seite, die sich im Zug neu zeichnet) und §10 „genau eine
+Rechnung nach dem Loslassen, und sie ist voll", zuerst rot eingecheckt
+(046d4a8c0): gegen 478791f5f 129 von 159; im Endstand 172/172, gegen
+478791f5f 137 von 171 (alle 34 in §13). Elf Gegenproben, jede rot und
+byte-genau zurückgenommen (die ersten neun gegen den Stand mit 170
+Zusagen): `aendere` wieder im
+Zug 152/169 · `zurueck` 168/170 · `vorwaerts` 168/170 · Ablage ohne Kopie
+166/170 (die IndexedDB hält das Zwischenbild) · Loslassen nur an der Bühne
+168/170 · ohne Aufsetzen am Dokument 168/170 · Escape ohne Abbruch 167/170
+· ohne `pointercancel` am Dokument 169/170 · zweimal volle Suche beim
+Loslassen 169/170 („[false,false]") · Leitung auch ausserhalb angelegt
+171/172 · Fläche ausserhalb des Dokuments speichert 171/172. Die Sonde der
+Durchsicht nachher: mit
+„h" wie mit „r" alle drei Strg+Z wie vorher.
+Nachbarn grün: `test611` (172/172), `test604`–`test608`,
+`test238`–`test242`, `test254`, `test388` (Start 1924 KB), `test74`;
+Datei-Wächter `test550`, `test549`, `test225`, `test105`, `test109`,
+`test87`, `test537`, `test400` grün. Bilder (Rechner und Telefon): F1 im
+Zug mit „r" gedrückt (ungedreht) und nach Escape wieder am Platz.
+
+**Offen:** L253 Punkt 9 (neu: Tasten zählen im Zug nicht und sagen es
+nicht; „Als Bild speichern" und „Als Vorlage speichern" lesen im Zug das
+Bild, wie es dasteht) und Punkt 8 (Strg+Z nach dem Loslassen — vorher geht
+es jetzt mit Escape).
+
+## 11. Oktober 2026 · E746, Durchsicht · Ziehen billig, eigene Klemme gemeldet, Heilen gehalten
+
+**Die Durchsicht** von E746 fand drei Dinge. (1) Das Ziehen mit der Maus
+rechnete bei JEDER Bewegung die volle Wegsuche; nachgemessen (F1 um
+120 × 60 px in 60 Bewegungen, CPU vierfach gedrosselt, drei Läufe): je
+Bewegung im Median 23,9 bis 29,4 ms, höchstens 126,8 bis 217,3 ms, 7 bis
+12 Bewegungen über 50 ms. (2) Eine Lageänderung konnte die Netzliste
+weiterhin still ändern — über die EIGENE Klemme des bewegten Teils: R1
+neben der Leitung E1:X2–E2:X1 gedreht, und R1:1 hing an ihr (auf `main`
+genauso). (3) Die Ausnahme „heilen" (alte Pläne, L253 Punkt 7) hielt nur
+`test608`, nicht `test611`.
+
+**Gebaut:** `Schaltplan.nachziehen` kennt `schnell` (nur alter Weg,
+nachgerückte Endstücke, die zwei Winkel). Die Planfläche rechnet beim
+Ziehen je Bewegung `schnell`, innerhalb desselben Rasters gar nicht, und
+beim Loslassen einmal voll, vom Anfassen aus, VOR `aendere` — gespeichert
+wird nur das. `Schaltplan.veraendert(plan, vorher)` vergleicht nach jeder
+Lageänderung, was jede Leitung berührt und welche Klemmen
+aufeinanderliegen, mit dem Stand von vorher; die Fläche sagt es beim
+Namen („Nach dem Drehen: R1:1 berührt jetzt die Leitung E1:X2–E2:X1 — die
+Verbindungen haben sich geändert, bitte prüfen."), verhindert die Lage
+aber nicht.
+
+**Prüfung:** `test611` um §10–§12 erweitert, zuerst rot eingecheckt
+(745fba801): gegen fcb6d35fa 101/110, gegen `main` 61/110; jetzt 110/110.
+Sechs Gegenproben, jede rot und byte-genau zurückgenommen (keine volle
+Suche beim Loslassen 102/110 · jede Bewegung voll 109/110 · ohne
+Raster-Merker 109/110 · Meldung ohne `veraendert` 105/110 · `heilen` aus
+108/110 · geheilte Wege ungeprüft 106/110). Nachgemessen: je Bewegung
+gedrosselt im Median 2,5 bis 2,8 ms, höchstens 13,2 ms, keine über 50 ms;
+das Loslassen 66 bis 132 ms in einem Stück; der ganze Zug 4373 bis
+4628 ms (vorher 7383 bis 9061, `main` 6115 bis 6581). Nachbarn grün:
+`test604`–`test608`, `test238`–`test242`, `test254`, `test388` (Start
+1923 KB), `test74`; Datei-Wächter grün. Bilder (Rechner und Telefon,
+hell und dunkel): die Meldung nach dem Drehen von R1, und der Zug am FI —
+das Zwischenbild zeigt die billigen Wege (f2 läuft senkrecht bei x = 480
+mitten durch den FI und über N2, im Modell nachgerechnet: Stufe 3),
+losgelassen ist der Plan derselbe wie vor der Durchsicht.
+
+**Offen:** L253 Punkt 9 (die Meldung verhindert nichts; Zwischenbilder
+können über eine fremde Klemme laufen; das Loslassen kostet einmal die
+volle Suche; kein Wächter für die Zeit) und Punkt 8 (Strg+Z nach einem
+Zug), der mit der Meldung schwerer wiegt.
+
+## 11. Oktober 2026 · E746 · Drehen und Ziehen zapfen nichts mehr an
+
+**Redur:** „4. wie du willst", am 11. Oktober abends, zur Frage, in welcher
+Reihenfolge die Elektro-Punkte aus L253 drankommen. Zuerst Punkt 4, weil
+er still die Bedeutung eines Plans ändert (§46, §51).
+
+**Gefunden** (`test611` gegen `main` 97d156b03, 47/79): Drehen, Spiegeln und
+Ziehen führten ALLE Leitungen des Plans neu, jede als Winkel von Ende zu
+Ende. Im Plan „Drehstrom, FI und Übertrager" wurde nach dem Drehen des FI
+aus sechs Netzen um den FI eines — L und N der Quelle verbunden, „l-n",
+nichts mehr gerechnet —, die Motorleitung w4 verlor ihren Weg und lief über
+U2, V2, W2, und im alten FI aus `test608` lief b2 5 px neben N2.
+
+**Gebaut:** `Schaltplan.vorherMerken` (was vor der Änderung feststeht: die
+Klemme jedes Endes nach E738, die Punkte, was jede Leitung berührt) und
+`Schaltplan.nachziehen` (führt nur neu, was an einem bewegten Teil hängt;
+nimmt nur einen Weg, der genau dasselbe berührt wie vorher — alter Weg,
+nachgerückte Endstücke, Winkel, anderer Winkel, Z-Wege, Hakenwege —, am
+liebsten durch kein Zeichen; sonst Stufe 2/3 und eine Meldung).
+`Schaltplan.kontakte` legt die Berührungsregel offen. Die Planfläche ruft
+für Pfeiltaste, Drehen, Spiegeln und Ziehen nur noch diese Stelle;
+`endKlemmen` und `leitungenNachziehen` sind weg. Eine fremde Leitung, deren
+Ende neben seiner Klemme liegt (alter Plan), rückt beim Drehen, Spiegeln,
+Ziehen weiter an die Klemme, wie E738 es zusagt — mit derselben Prüfung.
+
+**Prüfung:** `test611` zuerst rot eingecheckt (a4bdd8c2c), dann 79/79;
+gegen `main` 47/79. Drei Gegenproben, jede rot und wörtlich zurückgenommen:
+alle Leitungen wieder neu 78/79, ohne Anzapf-Prüfung 59/79, ohne Vorzug
+ausserhalb der Zeichen 77/79. Die strenge Variante (fremde Leitungen nie
+anfassen) als Messung: `test608` 67/69 — darum bleibt die Heilung.
+Nachbarn grün: `test604`–`test608`, `test238`–`test242`, `test254`,
+`test388`, `test74`, `test568`, `test571`, `test572`; Datei-Wächter grün.
+Bilder vorher/nachher (Rechner und Telefon, hell und dunkel, dazu dreifach
+vergrösserte Ausschnitte): vorher hängen nach dem Drehen beide Leitungen
+der Quelle mit Verbindungspunkten an den linken FI-Klemmen, nachher laufen
+sie um die Zeichen herum an die richtigen, und die Lampe leuchtet (435 mA,
+100 W). Was die Bilder noch zeigen: f3 und f4 laufen über die Beschriftung
+„G2" (Beschriftungen meiden die Wege nicht), und am Telefon ist der Plan so
+klein wie vorher (L253 Punkt 3). Zahlen in `messungen.md` §103.
+
+**Offen:** L253 bleibt für die übrigen Punkte offen. Im selben Plan meldet
+die Simulation schon VOR jeder Handlung „fi-loest-aus" (auf `main` genauso,
+nicht untersucht). Und Strg+Z macht einen Zug mit der Maus nicht rückgängig
+(Sonde: nach zweimal Strg+Z steht R1 weiter am neuen Ort; auf `main`
+genauso) — eingetragen als L253 Punkt 8, nicht hier angefasst.
+
 ## 11. Oktober 2026 · E745 · Die CI fährt den schnellen Lauf, der volle bleibt auf dem Rechner
 
 **Redur:** „2 . Scnell lauf", am 11. Oktober 2026 um 19:43 UTC, auf L254
