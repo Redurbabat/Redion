@@ -1,5 +1,73 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 11. Oktober 2026 · E747 · Eine Brücke des Klemmenbretts belegt ihre Klemmen (L253 Punkt 2)
+
+**Redur:** „4. wie du willst", am 11. Oktober 2026 um 19:43 UTC, zur
+Reihenfolge der Elektro-Punkte aus L253. Punkt 2 kam als zweiter, weil
+eine falsche Warnung etwas Falsches lehrt.
+
+**Gefunden** (auf `97d156b03`, Plan des Bildes aus L253): in Stern UND
+Dreieck meldete die Fusszeile der Planfläche „M1: Anschluss W2 / U2 / V2
+hängt an keiner Leitung" — gerade die Klemmen, auf denen die Brücken der
+Stellung liegen. Die Rechnung kannte die Brücken seit E730; die Meldung
+offener Klemmen zählte nur Klemmen je Netz der Leitungen. Sieben
+Warnungen in jeder Stellung; von drei sichtbaren Plätzen belegten die
+falschen zwei.
+
+**Gebaut** (`src/bereiche/elektro/simulation.ts`): für die Meldung zählen
+die Brücken der eingestellten Stellung eines mehrteiligen Bauteils wie
+gezeichnete Leitungen — die Netze, die sie verbinden, sind ein Knoten.
+Schaltkontakte zählen nicht, der Verbund N–PE der Quelle nicht; die
+Netzliste bleibt, wie sie ist. EINE Hilfe `stellungIn` liest die Stellung
+für Rechnung und Meldung (vorher zweimal dieselbe Klemmung). Im Plan des
+Bildes: Stern und Dreieck 7 → 4 Warnungen, ohne Brücken 7 → 7.
+
+**Prüfung:** `test612` zuerst rot eingecheckt (gegen 97d156b03 15/26),
+mit E747 26/26; drei Gegenproben, jede wieder heraus: Brücken übergangen
+15/26, Kontakte als Brücken 25/26 (§6), Brücken jeder Stellung 22/26.
+Nachbarn grün: `test604` 91, `test605` 51, `test606` 17, `test607` 37,
+`test608` 69, `test238` 77, `test239` 68, `test240` 100, `test241` 105,
+`test242` 42, `test388` 22 (Start 1919 KB, unverändert), `test74` 12/12;
+die Datei-Wächter. Bilder vorher/nachher (Rechner und Telefon, dunkel und
+hell, Stern, Dreieck, ohne Brücken) angesehen; Zahlen in `messungen.md`
+§104.
+
+**Nachtrag nach der Durchsicht, im selben Zweig (E747 Punkt 6):** die
+erste Fassung hatte eine richtige Meldung verschluckt. Im Dreieck ohne
+Zuleitung an U1 halten U1 und W2 einander über die Brücke, der Motor
+läuft auf zwei Aussenleitern (9,96 A), und M1 meldete nichts; ohne jede
+Leitung nur PE. Die Regel konnte den Sternpunkt {U2, V2, W2} nicht von
+der Ecke {U1, W2} unterscheiden. Jetzt sagt es die Stellung: „Stern"
+trägt `sternpunkt: ['U2', 'V2', 'W2']`, und ein Knoten, den nur die
+eigenen Brücken halten, wird gemeldet (einmal, mit U1), ausser er ist so
+markiert. Dazu ist der Kommentar an `stellungIn` berichtigt: die EINE
+Stelle innerhalb von `Stromfluss` — ausserhalb lesen fünf Stellen eine
+Stellungsnummer selbst: die Planfläche für ihren Titel (`|| 0` statt
+`?? 0`, verschieden nur bei NaN) und in `schalte` (ungeklemmt, nur die
+nächste Zahl), die Aufgaben in `besteStellung`, `planLeuchtet` und
+`planStromweg` (ihre Zahlen liegen von vornherein in der Liste). Die
+Planfläche ruft die Hilfe bewusst nicht auf (§5 Regel 1). Die erste
+Berichtigung nannte nur den Titel; die vollständige Liste fand die zweite
+Durchsicht (E747 Punkt 5). `test612` zuerst
+erweitert und rot eingecheckt (6b1de9eb6, gegen 7560b2f22 33/38), mit dem
+Sternpunkt 38/38 (d9b91d74d); gegen 97d156b03 20/38. Drei neue
+Gegenproben, jede wieder heraus: die Marke heraus 29/38, die Regel auch
+für Knoten ohne Brücke 37/38, jede Klemme der Ecke 34/38; die drei alten
+auf dem neuen Stand nachgemessen: 21/38, 37/38, 28/38. Nachbarn grün:
+`test604` 91, `test605` 51, `test606` 17, `test607` 37, `test608` 69,
+`test238` 77, `test239` 68, `test240` 100, `test241` 105, `test242` 42,
+`test388` 22 (Start 1919 KB), `test74` 12/12; die Datei-Wächter. Bilder
+nachher (Stern, Dreieck, ohne Brücken, Stern und Dreieck ohne U1;
+Rechner und Telefon, dunkel und hell) angesehen. `messungen.md` §104 ist
+für drei Stände neu gemessen.
+
+**Offen geblieben** (in L253 bei Punkt 2): gezeichnete Brücken heissen
+„überbrückt"; die Quelle meldet ihr freies N auch beim Drehstrommotor
+(eine Frage an Redur); im Plan des Bildes meldet der FI „es fehlen
+37.52 mA", obwohl die Lampe richtig angeschlossen ist; an G1 steht ohne
+Brücken „0 A" neben „317 nW"; und erreicht eine Ecke des Dreiecks eine
+fremde Klemme, schweigt die Meldung, auch wenn es die falsche ist.
+
 ## 11. Oktober 2026 · E745 · Die CI fährt den schnellen Lauf, der volle bleibt auf dem Rechner
 
 **Redur:** „2 . Scnell lauf", am 11. Oktober 2026 um 19:43 UTC, auf L254

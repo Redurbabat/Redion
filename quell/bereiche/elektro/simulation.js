@@ -120,7 +120,7 @@ const Stromfluss = (() => {
             ],
             stellungen: [
                 { name: 'ohne Brücken', zu: [] },
-                { name: 'Stern', zu: [['U2', 'V2'], ['V2', 'W2']] },
+                { name: 'Stern', zu: [['U2', 'V2'], ['V2', 'W2']], sternpunkt: ['U2', 'V2', 'W2'] },
                 { name: 'Dreieck', zu: [['U1', 'W2'], ['V1', 'U2'], ['W1', 'V2']] }
             ],
             annahme: 'Die drei Wicklungen gelten als rein ohmsch. Das Verhältnis von Stern zu Dreieck stimmt trotzdem, weil es allein an der Spannung hängt und nicht an der Art der Last.' },
@@ -200,6 +200,10 @@ const Stromfluss = (() => {
     const stellungenVon = (zeichenId) => {
         const v = VERHALTEN[zeichenId];
         return (v && v.stellungen) ? v.stellungen : [];
+    };
+    const stellungIn = (v, stellung, teilId) => {
+        const liste = v.stellungen || [];
+        return liste[Math.max(0, Math.min(liste.length - 1, stellung[teilId] ?? 0))];
     };
     const verband = () => {
         const vater = new Map();
@@ -535,13 +539,9 @@ const Stromfluss = (() => {
                         else
                             paar(g.von, g.nach, 'R', KONTAKT);
                     });
-                    const liste = v.stellungen || [];
-                    if (liste.length) {
-                        const idx = Math.max(0, Math.min(liste.length - 1, stellung[t.id] ?? 0));
-                        const st = liste[idx];
-                        if (st)
-                            st.zu.forEach(([von, nach]) => paar(von, nach, 'R', KONTAKT));
-                    }
+                    const st = stellungIn(v, stellung, t.id);
+                    if (st)
+                        st.zu.forEach(([von, nach]) => paar(von, nach, 'R', KONTAKT));
                     break;
                 }
                 case 'widerstand':
@@ -571,9 +571,7 @@ const Stromfluss = (() => {
                     break;
                 }
                 case 'schalter': {
-                    const liste = v.stellungen || [];
-                    const idx = Math.max(0, Math.min(liste.length - 1, stellung[t.id] ?? 0));
-                    const s = liste[idx];
+                    const s = stellungIn(v, stellung, t.id);
                     if (s)
                         s.zu.forEach(([von, nach]) => paar(von, nach, 'R', KONTAKT));
                     break;
@@ -902,17 +900,57 @@ const Stromfluss = (() => {
                 }
             }
         });
+        const knoten = verband();
+        const sternpunkt = new Set();
+        const brueckenNetze = [];
+        teile.forEach(t => {
+            const v = verhalten(t.zeichen);
+            if (!v || v.art !== 'mehrteilig')
+                return;
+            const st = stellungIn(v, stand, t.id);
+            if (!st)
+                return;
+            (st.sternpunkt || []).forEach(nr => sternpunkt.add(`k:${t.id}:${nr}`));
+            st.zu.forEach(([a, b]) => {
+                const na = netzInfo.netzVon.get(`k:${t.id}:${a}`);
+                const nb = netzInfo.netzVon.get(`k:${t.id}:${b}`);
+                if (typeof na === 'number' && typeof nb === 'number') {
+                    knoten.eins(`n:${na}`, `n:${nb}`);
+                    brueckenNetze.push(na, nb);
+                }
+            });
+        });
+        const knotenVon = (netz) => knoten.finde(`n:${netz}`);
+        const anBruecke = new Set(brueckenNetze.map(knotenVon));
+        const imKnoten = new Map();
+        netzInfo.klemmen.forEach(o => {
+            const n = netzInfo.netzVon.get(o.schluessel);
+            if (typeof n !== 'number')
+                return;
+            const w = knotenVon(n);
+            const liste = imKnoten.get(w);
+            if (liste)
+                liste.push(o);
+            else
+                imKnoten.set(w, [o]);
+        });
         const belegt = new Set();
-        (plan.leitungen || []).forEach(() => { });
         netzInfo.klemmen.forEach(k => {
             if (k.intern)
                 return;
             const netz = netzInfo.netzVon.get(k.schluessel);
             if (typeof netz !== 'number')
                 return;
-            const wieViele = netzInfo.klemmen.filter(o => netzInfo.netzVon.get(o.schluessel) === netz).length;
-            if (wieViele <= 1 && !belegt.has(netz)) {
-                belegt.add(netz);
+            const hier = knotenVon(netz);
+            if (belegt.has(hier))
+                return;
+            const darin = imKnoten.get(hier) || [];
+            const allein = darin.length <= 1;
+            const nurBruecke = anBruecke.has(hier)
+                && darin.every(o => o.teil === k.teil)
+                && !darin.every(o => o.intern || sternpunkt.has(o.schluessel));
+            if (allein || nurBruecke) {
+                belegt.add(hier);
                 const t = teile.find(x => x.id === k.teil);
                 erg.warnungen.push(`${(t && t.bmk) || (t && t.zeichen) || 'Ein Bauteil'}: Anschluss ${k.nr} hängt an keiner Leitung.`);
             }
