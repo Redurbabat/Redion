@@ -59,7 +59,10 @@
  *       Rechner (§7g/§7h) leuchtet die Kante nach einem Wechsel drinnen so
  *       wie nach dem direkten Öffnen derselben Ansicht, und wer danach
  *       weggeht und mit „Zurück" wiederkommt (§7i/§7j), findet dieselbe
- *       Ansicht unter demselben Titel und derselben Adresse.
+ *       Ansicht unter demselben Titel und derselben Adresse. Und wer aus
+ *       dem Lernzentrum eine Seite öffnet (§7k–§7m), behält unten den
+ *       Reiter der Ansicht, in der er stand — direkt geöffnet und nach
+ *       einem Wechsel drinnen über die Klappe.
  *   §8  Ein kaputter Lieferant nimmt nur sich selbst mit — ein werfender
  *       Lieferant, ein werfendes `zeigen()`, ein Ziel ohne `tun`, eine
  *       doppelte Kennung; sortiert nach Rang, höchstens fünf, jedes Mal neu
@@ -83,7 +86,10 @@
  * E748: einen Lieferanten weglassen, die L147-Korrektur zurückdrehen, die
  * Sortierung brechen — und nach der Durchsicht die Wege der Handlungen
  * vertauschen (§6, §10c, §10f; die Fassung davor blieb dabei 98 von 98
- * grün) und das `zeigen` der Termine-Karten herausnehmen (§8g).
+ * grün) und das `zeigen` der Termine-Karten herausnehmen (§8g). Aus der
+ * zweiten Durchsicht: §7l und §7m sind gegen `7e41a4b4a` rot, und die alte
+ * Regel „heute oder nicht" für den Reiter in `produktwelten.ts` macht §7k
+ * rot — vorher blieb der Lauf damit grün.
  *
  *   node pruefungen/lauf/test613.mts
  * ==========================================================================*/
@@ -575,6 +581,56 @@ console.log('\n§7g L147 am Rechner: die Kante sagt drinnen dasselbe wie beim Ö
       `weg ${JSON.stringify(weg)} · zurück ${JSON.stringify(zurueck)} · direkt ${JSON.stringify(direkt[wahl])}`);
   }
   await ctxR.close();
+}
+
+/* ═══ §7k–§7m L147 eine Stufe weiter: eine Seite aus dem Lernzentrum ═══════
+   Gefunden in der zweiten Durchsicht, mit einer Sonde: auf dem Lernzentrum
+   entscheidet der Schauplatz, welcher Reiter leuchtet (E274) — und §7b bis
+   §7e waren deshalb grün. Wer danach eine SEITE öffnet, steht am Schauplatz
+   `seite`, und dort leuchtet der Reiter, von dem man kam (`seitenleiste.ts`,
+   `karte[reiter]`). Setzte nur das Öffnen den Reiter und nicht der Wechsel
+   drinnen, sprang die Pille eine Stufe später zurück: „Lernen → Heute ^ →
+   Noten → Seite" leuchtete unter „Lernen", „Heute → Übersicht ^ → Trainer →
+   Seite" unter „Heute". Auf `ba51915dc` sprang sie in keinem der drei Fälle
+   — dort leuchtete aber schon im Lernzentrum in allen drei der falsche
+   Reiter: das war L147. §7k hält die Zeile in `produktwelten.ts`: mit der
+   alten Regel „heute oder nicht" leuchtet nach direkt geöffneten Noten und
+   einer Seite „Lernen". */
+console.log('\n§7k–§7m L147 eine Stufe weiter: wer aus dem Lernzentrum eine Seite öffnet, behält seinen Reiter');
+{
+  await allesZu(s);
+  const seite = await s.evaluate(() => String((Store.rootPages()[0] || {}).id || ''));
+  const seiteOeffnen = async () => {
+    await s.evaluate((id: string) => App.oeffne(id), seite);
+    await warte(s, 700);
+    return lage(s);
+  };
+  const faelle: Array<[string, string, () => Promise<void>, string, string]> = [
+    ['k', 'Noten direkt geöffnet', async () => {
+      await s.click('#hl-mehr'); await warte(s, 500);
+      await s.evaluate(() => (globalThis as any).Produktwelten.lernen('noten'));
+      await warte(s, 600);
+    }, 'noten', 'hl-start'],
+    ['l', 'Lernen → „Heute ^" → Noten', async () => {
+      await s.click('#hl-lernen'); await warte(s, 700);
+      await s.click('[data-lw-klappe="heute"]'); await warte(s, 450);
+      await s.click('.menu [data-wahl="noten"]'); await warte(s, 600);
+    }, 'noten', 'hl-start'],
+    ['m', 'Heute → „Übersicht ^" → Trainer', async () => {
+      await s.click('#hl-start'); await warte(s, 700);
+      await s.click('[data-lw-klappe="uebersicht"]'); await warte(s, 450);
+      await s.click('.menu [data-wahl="trainer"]'); await warte(s, 600);
+    }, 'trainer', 'hl-lernen']
+  ];
+  for (const [n, wie, hin, view, soll] of faelle) {
+    await hin();
+    const drin = await lage(s);
+    const danach = await seiteOeffnen();
+    p(`§7${n} ${wie}, dann eine Seite: unten bleibt ${soll === 'hl-start' ? 'Heute' : 'Lernen'}`,
+      seite !== '' && drin.view === view && JSON.stringify(drin.an) === JSON.stringify([soll]) &&
+        danach.wo === 'seite' && JSON.stringify(danach.an) === JSON.stringify([soll]),
+      `im Lernzentrum ${drin.an} (view ${drin.view}) · mit der Seite ${danach.an} (wo ${danach.wo}, Seite „${seite}")`);
+  }
 }
 
 /* ═══ §8 Ein kaputter Lieferant nimmt nur sich selbst mit ══════════════════ */
