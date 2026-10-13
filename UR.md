@@ -3351,6 +3351,31 @@ Ein Werkzeug, das Doku zusammenführt, hatte selbst einen Fehler, und er sah aus
 > Nach Mitternacht liefen die zweite, dritte und vierte Durchsicht der vier Zweige zu Redurs Antworten vom Vorabend. Die zweite fand an der Planfläche den schwersten Fehler des Tages: eine Taste mitten in einem Maus-Zug speicherte das billige Zwischenbild, und die Ablage hielt ohnehin nur einen Verweis auf den Plan — die Schreibpause schrieb ein angezapftes Netz in die IndexedDB (P134). Die dritte zeigte, dass der Wächter dafür seine Tasten an die Fläche GESCHICKT hatte: mit echter Maus und Tastatur lag der Fokus im Zug auf der Seite, Escape brach nichts ab und Strg+Z baute die Seite neu (P135). Die vierte brachte nur noch Kleinigkeiten. Die CI fuhr auf claude/ci-schnell zum ersten Mal einen Job bis zum Ende: 4 min 7 s, rot nur wegen test274, dem Fehlalarm unter den dreizehn alten roten Läufen — ihn zu richten braucht Redurs Wort, die Frage ist gestellt. Danach die vier Zweige zusammengeführt auf claude/abend-antworten (Kopf 726, E1 bis E747; 553 Läufe), neu zwei Lücken (L255 Öffner am Telefon, L256 lebende Verweise an Store.updateBlock). main ist nicht bewegt: E743 galt einmal.
 
 
+#### Was Redur geschrieben hat
+
+
+**1 · 23:03 UTC**
+
+> hier will ich etwas neues haben , wenn ich bei dokemnt bin und sowohl bei laptop mit maus drauber gehen als auch b eim hand mit finderr das ich so das es mir so oben wo rot gezeichnet ist eine neu dock dort kommen und dort nur sachen die mit unteren zutun haben dann für alle so ich sollte direk mit hand ohne klick direk wächseln können es sollte flüssig sein mit appel efeck usw aber zuers nur bei handy ansich machen wir das
+
+**Gemeint:** Über der unteren Leiste soll beim Drücken auf einen Reiter eine zweite Leiste erscheinen, nur mit den Zielen dieses Reiters; mit dem Finger ohne Klick hinübergleiten und wechseln; flüssig wie bei Apple; für alle Reiter; zuerst am Telefon, die Maus am Laptop später.
+
+**Besser geschrieben:** „Über der unteren Leiste eine zweite Leiste mit den Unterzielen des gedrückten Reiters — hochziehen, gleiten, loslassen. Erst am Telefon.“
+
+**Besserer Prompt:** Mit dem Bild war es eindeutig. Was ein Satz noch hätte sagen können: welche Ziele je Reiter — das wurde dann als Frage gestellt (23:43).
+
+
+**2 · 23:43 UTC**
+
+> (Fragebogen, vier Antworten:) Hochziehen oder halten (Empfohlen) · Mein Vorschlag (Empfohlen) · Ja, sie gehören zu Heute (Empfohlen) · Glaskapsel über der Leiste (Empfohlen)
+
+**Gemeint:** Öffnen durch Hochziehen oder 0,5 s Halten; die vorgeschlagenen fünf Ziele je Reiter; Prüfungen, Noten, Stundenplan und Schule schalten künftig „Heute“ an (L147); eine Glaskapsel in voller Breite über der Leiste.
+
+**Besser geschrieben:** Derselbe Satz.
+
+**Besserer Prompt:** —
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
@@ -3382,6 +3407,52 @@ Keine neue an diesem Tag; gearbeitet wurde an Redurs vier Antworten vom Vorabend
 | 04:15 UTC | E746: ein Zug horcht am Dokument auf seine Tasten — Escape bricht ab, Strg+Z/Strg+Y werden geschluckt. | P135: mit echter Eingabe lag der Fokus im Zug auf der Seite; der Wächter hatte die Tasten direkt an die Fläche geschickt. | Kommt das Loslassen nie an, hält der Horcher Strg+Z bis zum nächsten Klick (L253 Punkt 9, gelesen, nicht gemessen). |
 | 22:22 UTC am 11., wiederholt 00:34 | test274 NICHT gerichtet; Redur gefragt. | Er ist einer der dreizehn alten roten Läufe, und für sie gilt: Wächter nur mit Redurs Wort (E729). Er ist ein Fehlalarm, aber das macht die Ausnahme nicht kleiner. | Der Job „Schneller Lauf“ bleibt rot, bis Redur antwortet. |
 | ca. 08:55 UTC | test581 §9: der Rückfall in linse.ts heisst 'ease-in' statt einer ausgeschriebenen Kurve; test467 öffnet in einem eigenen Schritt. | Beide waren im vollen Lauf rot. test581 hält eine Regel über alles TypeScript (eine Federsprache), test467 brach mit dem Muster aus P131 ab — AUFGABEN sagte „umstellen, sobald einer es tut“. | Keins sichtbar: mit der Marke --ease-exit (jeder gewöhnliche Start) ändert sich an der Linse nichts; test467s Zusagen sind dieselben. |
+
+### 2026-10-13 · Dienstag — Ein „ja“ für zwei Fragen: test274 mit Grund in seiner Ausnahmeliste, main auf den Stand der vier Antworten — und die Zielleiste im Bau
+
+> Um 00:55 UTC antwortete Redur „ja“ auf die zwei offenen Fragen (test274 richten, main vorspulen). Daraus E750 (test274 nimmt `redion-graphit` mit Grund in die Tabelle ERLAUBT; vorher 11/12, danach 12/12) und E751 (main von 97d156b auf claude/auf-main-abend, die dritte Ausnahme von §46, mit zwölf alten roten Läufen). Daneben lief im Hintergrund der Bau der Zielleiste auf zwei Zweigen (E748 Quelle, E749 Kapsel).
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · 00:55 UTC**
+
+> ja
+
+**Gemeint:** Ja zu beiden Fragen am Ende des Berichts: test274 über seine Ausnahmeliste richten, und main auf claude/abend-antworten-2 vorspulen.
+
+**Besser geschrieben:** „ja, beides“ — die Antwort stand nach einer Nachricht mit zwei Fragen und hätte auch nur eine meinen können; sie wurde als Ja zu beiden gelesen und so ausdrücklich zurückgemeldet.
+
+**Besserer Prompt:** „1 ja, 2 ja“ — so nummeriert wie die Fragen, dann bleibt nichts zu deuten.
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| E750 test274 mit Grund in der Ausnahmeliste; E751 main vorgespult | `ba51915` → `claude/auf-main-abend` | ab 00:55 UTC | ca. 30 min | test274 vorher 11/12, danach 12/12; Datei-Wächter 550 549 225 105 109 87 537, test388, test422, test74 auf dem Endstand |
+
+#### Zahlen des Tages
+
+- **commits:** 1
+- **entscheidungen:** 2
+- **neuePrüfläufe:** 0
+- **gezählt:** Am 13. Oktober bis zum Vorspulen: ein Commit auf claude/auf-main-abend (E750, E751). Der Kopf von ENTSCHEIDUNGEN.md sagt 728, E1 bis E751 (E748 und E749 den Zweigen der Zielleiste vergeben). Die Zweige der Zielleiste zählen hier noch nicht mit.
+
+#### Das grösste Problem
+
+Keines; ein einziges Wort für zwei Fragen musste gedeutet werden, und die Deutung wurde Redur zurückgemeldet.
+
+#### Das Interessanteste, das Redur wollte
+
+„ja“ (00:55 UTC) — das kürzeste Ja dieser Woche, und es reichte für zwei Entscheidungen.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| ca. 01:20 UTC | main vorgespult — 97d156b auf claude/auf-main-abend, ohne force (E751). | Redur: „ja“. §46 ist hart; die Ausnahme steht als E751, §46 bekommt einen Hinweis. | Wer main holt, bekommt zwölf benannte rote Läufe mit, alle älter als diese Arbeit; nach fdbf6ee lief kein voller Lauf mehr (nur zwei kleine Nachzüge, test274 und Doku). |
 
 ---
 

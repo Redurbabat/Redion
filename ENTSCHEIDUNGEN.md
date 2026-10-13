@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-726 Entscheidungen, E1 bis E747 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+728 Entscheidungen, E1 bis E751 (**E748, E749** sind den Zweigen der Zielleiste (Redur, 12. Oktober) vergeben und folgen, sobald sie landen; **E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -789,6 +789,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E745** — Die CI fährt den schnellen Lauf, der volle bleibt auf dem Rechner (Redur, 11. Oktober, 19:43 UTC: „2 . Scnell lauf", Weg (c) aus L254): `--schnell` heisst jetzt jeder Lauf ohne Browser und dazu test96 und test100 aus §31 (45 Läufe, gemessen 4 min 14 s) statt „alles ausser test73" (549 von 550); neu `--liste`; der Job „Alle Prüfläufe" (40 min, brach jeden vollen Lauf ab) wird „Schneller Lauf (ohne Browser, dazu die Sicherung)" mit `npm run pruefen -- --schnell`, Einzeldatei-Prüfung und 20 Minuten. `test610` neu; L254 GESCHLOSSEN
 * **E746** — Drehen, Spiegeln, Ziehen und Schieben führen nur die eigenen Leitungen nach, und keine zapft dabei etwas an (L253 Punkt 4; Redur, 11. Oktober abends: „4. wie du willst“ zur Reihenfolge): EINE Stelle im Modell, `Schaltplan.vorherMerken`/`nachziehen`, führt nur neu, was an einem bewegten Teil hängt, und nimmt nur einen Weg, der genau dasselbe berührt wie vorher (alter Weg · nachgerückte Endstücke · Winkel · anderer Winkel · Z-Wege · Hakenwege), am liebsten durch kein Zeichen; sonst meldet die Fläche es. Fremde Leitungen bleiben Byte für Byte, ausser ihr Ende liegt neben seiner Klemme (E738, `test608` §5). Nach der Durchsicht: beim Ziehen rechnet jede Bewegung nur die billigen Wege und erst das Loslassen einmal voll; und landet die EIGENE Klemme eines bewegten Teils auf einer fremden Leitung (oder verlässt sie eine), sagt die Fläche, welche (`Schaltplan.veraendert`). Nach der zweiten Durchsicht: während eines Zugs ändert nur der Zug den Plan — `aendere`, Rückgängig und Wiederholen tun nichts, Tasten ausser Escape zählen nicht, Escape bricht ab; ein Zug gehört einem Zeiger und endet immer richtig, auch losgelassen ausserhalb oder von einem zweiten Finger unterbrochen; die Ablage bekommt eine Kopie des Plans, nicht ihn selbst. Nach der dritten Durchsicht: mit echter Maus stand der Fokus im Zug auf der Seite, und Escape und Strg+Z kamen nie an — jetzt horcht ein Zug am Dokument auf seine Tasten: Escape bricht ab (ein offenes Menü zuerst), Rückgängig und Wiederholen tun nichts, auch nicht am Seitenverlauf; nach einem Klick holt die Fläche den Fokus zurück (ohne Ring), Umschalt+Strg+Z und Strg+Y nimmt sie selbst; Vorlage und Bild verweigern im Zug, der Hinweis eines Beispiels kommt nur, wenn es steht. `test611`
 * **E747** — Eine Brücke des Klemmenbretts belegt ihre Klemmen (L253 Punkt 2; Redur, 11. Oktober abends: „4. wie du willst" zur Reihenfolge der Elektro-Punkte): die Meldung „Anschluss … hängt an keiner Leitung" kannte nur die Netzliste der Leitungen und meldete im Stern UND im Dreieck W2, U2 und V2 — gerade die Klemmen, auf denen die Brücken der Stellung liegen. Jetzt zählen für diese Meldung die Brücken der EINGESTELLTEN Stellung eines mehrteiligen Bauteils wie gezeichnete Leitungen; Schaltkontakte nicht (ein geschlossener Schalter mit offenem Ausgang hat eine vergessene Leitung), der feste Verbund N–PE der Drehstromquelle auch nicht. Ein Knoten, den NUR die eigenen Brücken halten, hängt trotzdem an nichts (im Dreieck ohne Zuleitung an U1 die Ecke U1–W2) — ausser die Stellung weist ihn selbst als `sternpunkt` aus, wie „Stern" für U2, V2, W2 (§5 Regel 3, §8). Die Netzliste bleibt, wie sie ist; EINE Hilfe `stellungIn` liest die Stellung innerhalb von `Stromfluss` für Rechnung und Meldung (ausserhalb lesen die Planfläche und die Aufgaben eine Stellungsnummer an fünf Stellen selbst, Punkt 5). `test612` (38 Zusagen; gegen 97d156b03 rot mit 20, gegen den ersten Stand 7560b2f22 mit 33 von 38; sechs Gegenproben).
+* **E750** — test274 nimmt `redion-graphit` in seine Ausnahmeliste (Redur, 13. Oktober, 00:55 UTC: „ja“ auf „Darf ich den Fehlalarm über seine Ausnahmeliste richten?“): `marken.ts` legt den Halter der Graphit-Muster selbst an, als Eigenschaft eines Objekts (`svg('svg', { id: 'redion-graphit', … })`), und test274 erkennt nur `id="…"` und `.id = …`. Seit E729 einer der dreizehn alten roten Läufe, seit E745 der einzige davon im schnellen Lauf der CI. Die Ausnahme steht mit Grund in der Tabelle `ERLAUBT`, wie die Tabelle es verlangt; der Wächter selbst ist unverändert.
+* **E751** — main auf den Stand von Redurs vier Antworten, mit zwölf benannten roten Läufen (Redur, 13. Oktober, 00:55 UTC: „ja“ auf „Soll main auf claude/abend-antworten-2 gehen?“): Fast-Forward ohne force von 97d156b auf claude/auf-main-abend (claude/abend-antworten-2 mit E744–E747, dazu E750 und dieser Eintrag). Rot bleiben zwölf, jeder schon auf main rot. Die dritte Ausnahme von §46 nach E729 und E743, wieder einmal.
 
 ---
 
@@ -68181,3 +68183,89 @@ steht ohne Brücken „230 V · 0 A · 317 nW" — der Strom liegt unter der
 Schwelle von 1 nA und heisst 0, die Summe der drei Leistungen nicht. In der ersten Fassung von `messungen.md`
 §104 stand „317 mW": im Bild ist das n nicht vom m zu unterscheiden, der
 Text im DOM sagt nW.
+
+## E750 — test274 nimmt `redion-graphit` in seine Ausnahmeliste: ein Fehlalarm, mit Grund
+
+**Datum:** 13. Oktober 2026 · **Entschieden von** Redur (13. Oktober,
+00:55 UTC, Zeitstempel der Sitzung: „ja" — auf die Frage „Darf ich den
+Fehlalarm über seine Ausnahmeliste richten? Dann ist die schnelle CI grün")
+· **berührt** §31/§47 (Wächter werden nicht gelockert) und E729 (die
+alten roten Läufe nur mit Redurs Wort) · **Zweig** `claude/auf-main-abend`.
+
+**Was entschieden wurde.** In `pruefungen/lauf/test274.mts` steht
+`redion-graphit` jetzt in der Tabelle `ERLAUBT`, mit dem Grund daneben:
+`src/bereiche/pdf/marken.ts:888` legt den Halter der Graphit-Muster selbst
+an, als `svg('svg', { id: 'redion-graphit', … })`. test274 kennt als
+„entsteht" nur `id="…"` im Markup und `.id = '…'` im Code; eine Kennung als
+Eigenschaft eines Objekts sieht er nicht. Die App war nie kaputt — der
+Wächter meldete eine Nachschlagestelle als verwaist, deren Ziel es gibt.
+
+**Warum.** Seit E729 stand test274 unter den dreizehn alten roten Läufen,
+und seit E745 ist er der einzige davon im schnellen Lauf der CI: der Job
+„Schneller Lauf" auf GitHub war nur seinetwegen rot (Lauf 38205835767,
+lokal 44 von 45). Eine CI, die immer rot ist, sagt nichts mehr.
+
+**Was die Alternative war.** (a) Den Wächter klüger machen: `{ id: '…' }`
+als „entsteht" erkennen. Das ist allgemeiner, aber es lockert die Erkennung
+für JEDE Kennung — auch für eine, die nur in einem Datenobjekt steht und nie
+im Dokument ankommt. (b) So lassen, bis jemand den Wächter umbaut. Die
+Ausnahmeliste ist genau für diesen Fall gebaut („Manche werden aus einer
+Tabelle gesetzt. Solche gehören hierher, MIT Begründung"), sie nimmt eine
+Kennung und nicht eine Schreibweise, und der letzte Punkt des Laufs besteht
+darauf, dass jede Ausnahme einen Grund hat.
+
+**Was es kostet.** Wird `redion-graphit` einmal wirklich verwaist (der
+Halter entfernt, die Nachschlagestelle bleibt), meldet test274 das nicht
+mehr. Dagegen steht, dass Halter und Nachschlagestelle in derselben
+Funktion stehen (`graphitFuellung`), zwei Zeilen auseinander.
+
+**Wächter.** test274 selbst: vorher 11 von 12 („Keine verwaiste
+Nachschlagestelle — src/bereiche/pdf/marken.ts: redion-graphit"), mit der
+Ausnahme 12 von 12; ohne sie wieder 11 von 12.
+
+## E751 — main auf den Stand von Redurs vier Antworten: die dritte Ausnahme von §46, mit zwölf benannten roten Läufen
+
+**Datum:** 13. Oktober 2026 · **Entschieden von** Redur (13. Oktober,
+00:55 UTC: „ja" — auf „Auf dem neuesten Stand sind nur noch die 13 alten
+Läufe rot, nichts Neues. Soll `main` auf `claude/abend-antworten-2`
+gehen?") · **berührt** §46 [hart] · **Zweig** `claude/auf-main-abend`.
+
+**Was entschieden wurde.**
+
+1. `main` wird von 97d156b (E743) auf `claude/auf-main-abend` vorgespult:
+   `claude/abend-antworten` (E744 Linse verblasst, E745 CI schnell, E746
+   Elektro Drehen, E747 Elektro Klemmenbrett), `claude/abend-antworten-2`
+   (die zwei Nachzüge nach dem vollen Lauf: test581 §9 und test467) und
+   `claude/auf-main-abend` (E750 und dieser Eintrag).
+2. **Die Grenze.** Rot sind auf diesem Stand zwölf Läufe, jeder schon auf
+   `main` 97d156b rot: `test201`, `test270`, `test332`, `test348`,
+   `test351`, `test365`, `test425`, `test448`, `test470`, `test493`,
+   `test524`, `test533`. `test274` ist seit E750 grün, mit Redurs Wort.
+3. **Der volle Lauf** lief auf `claude/abend-antworten` (fdbf6ee, 553
+   Läufe, 162 Minuten, unter dem Schloss, einmal nach der Zeitgrenze der
+   Sitzung fortgesetzt): 538 grün, 15 rot — die dreizehn alten, `test467`
+   (der Aufbau aus P131, einzeln dreimal grün) und `test581` §9 (eine
+   ausgeschriebene Kurve aus E744, P137). Beide sind auf
+   `claude/abend-antworten-2` gerichtet und einzeln nachgefahren (test581
+   93/93, test467 dreimal 20/20, dazu die Nachbarn der Linse und die
+   Datei-Wächter). Nach fdbf6ee kam kein voller Lauf mehr; was sich
+   änderte, sind diese zwei Nachzüge, test274 und Doku.
+4. **Ohne force.** `origin/main` (97d156b) ist Vorfahr dieses Zweigs.
+5. **Einmal.** §46 gilt weiter. Die Zweige der Zielleiste (E748, E749),
+   die gerade entstehen, landen nicht mit diesem Vorspulen.
+
+**Warum.** Redur holt Redion über `main`. Ohne Vorspulen fehlten ihm die
+Linse, die schnelle CI und die zwei Elektro-Punkte, alle geprüft. Mit E750
+sollte der Job „Schneller Lauf" auf `main` zum ersten Mal grün sein —
+gemessen wird es nach dem Vorspulen auf GitHub.
+
+**Was die Alternative war.** Ein zweiter voller Lauf auf
+`claude/abend-antworten-2` vor dem Vorspulen (rund 2¾ Stunden). Die zwei
+Nachzüge sind klein und je mit ihrem Wächter und den Nachbarn geprüft;
+Redur hat „ja" gesagt.
+
+**Was es kostet.** Wie E729 und E743: `main` ist der letzte geprüfte
+Stand MIT einer benannten Liste roter Läufe. Die Liste ist wieder kürzer
+geworden (zwölf statt dreizehn). Dass es die dritte Ausnahme in drei Tagen
+ist, sagt dasselbe wie in E743: solange die zwölf rot sind, ist jedes
+Vorspulen eine Ausnahme.

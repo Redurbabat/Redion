@@ -2533,6 +2533,10 @@ vollen Lauf oder sein Wort.*
 dem Stand von Redurs sechs Ja; rot sind dreizehn Läufe, jeder schon vorher
 auf `main` rot, keiner neu. Auch sie gilt einmal.*
 
+*Und eine dritte (E751, 13. Oktober, Redur: „ja"): `main` steht auf dem
+Stand von Redurs vier Antworten; rot sind zwölf Läufe, jeder schon vorher
+auf `main` rot. Auch sie gilt einmal.*
+
 ---
 
 ## 47. Nicht tun  **[hart]**

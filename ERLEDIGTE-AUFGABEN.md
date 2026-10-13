@@ -1,5 +1,17 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 13. Oktober 2026 · E750, E751 · test274 mit Grund in seiner Ausnahmeliste, main vorgespult
+
+Redur um 00:55 UTC: „ja" — auf die zwei offenen Fragen. **E750:** test274
+nimmt `redion-graphit` mit Grund in die Tabelle `ERLAUBT` (marken.ts legt
+den Halter als Objekteigenschaft an, eine Schreibweise, die test274 nicht
+erkennt); vorher 11 von 12, danach 12 von 12. Damit ist der einzige alte
+rote Lauf aus dem schnellen Lauf der CI grün. **E751:** `main` von 97d156b
+auf `claude/auf-main-abend` (Redurs vier Antworten E744–E747, die zwei
+Nachzüge nach dem vollen Lauf, E750), ohne force; rot bleiben zwölf, jeder
+schon vorher auf `main` rot. Die Zweige der Zielleiste (E748, E749) landen
+nicht mit.
+
 ## 12. Oktober 2026 · Redurs vier Antworten — zusammengeführt auf `claude/abend-antworten`
 
 **Der Auftrag.** Redur am 11. Oktober um 19:43 UTC: „1. verblassen / 2 .

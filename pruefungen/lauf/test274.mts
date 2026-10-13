@@ -84,7 +84,12 @@ const alleQuellen = (unter: string): string[] => {
  * ========================================================================= */
 const ERLAUBT: Record<string, string> = {
   'mb-konto': 'menueband.ts setzt `b.id = id` aus der RECHTS-Tabelle — die ' +
-              'Kennung steht dort als Tabellenwert, nicht als id="…" im Markup.'
+              'Kennung steht dort als Tabellenwert, nicht als id="…" im Markup.',
+  /* Mit Redurs Wort (13. Oktober 2026, „ja", E750). Seit E729 war test274
+     deswegen rot, und seit E745 machte er die CI rot — ein Fehlalarm. */
+  'redion-graphit': 'marken.ts legt den Halter der Graphit-Muster selbst an, ' +
+              'als svg(\'svg\', { id: \'redion-graphit\', … }) — die Kennung steht ' +
+              'als Eigenschaft eines Objekts, nicht als id="…" oder .id = \'…\'.'
 };
 
 console.log('\nSuite 274 — Kein Griff bindet ins Leere (L86/E280)');

@@ -1708,8 +1708,10 @@ Grund:
    Nachschlagestelle; `marken.ts` legt diesen Halter aber selbst an, als
    `svg('svg', { id: 'redion-graphit', … })` (Zeile 888) — eine Schreibweise,
    die test274 nicht als „entsteht" erkennt. Ein Fehlalarm des Wächters,
-   nicht der App. test274 zu ändern braucht Redurs Wort; bis dahin ist der
-   Job „Schneller Lauf" auf GitHub rot.
+   nicht der App. ~~test274 zu ändern braucht Redurs Wort; bis dahin ist der
+   Job „Schneller Lauf" auf GitHub rot.~~ **Erledigt am 13. Oktober 2026:**
+   Redur „ja" — `redion-graphit` steht mit Grund in der Ausnahmeliste von
+   test274 (E750), test274 12/12; rot bleiben zwölf.
    ~~Dazu `test319` („Und `info` ist nicht die blasseste der drei — info
    12.09, warn 12.15, fehler 12.41"; auf morgen-besser-2 Ziffer für Ziffer
    gleich — alle drei Streifen liegen weit über 4,5 : 1, `info` nur um
