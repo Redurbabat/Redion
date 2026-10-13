@@ -49,9 +49,25 @@ Titelzeile wörtlich suchte. 90 Nachbarn unter dem gemeinsamen Schloss, 88 grün
 (hell, dunkel) und am Rechner (direkt geöffnet, drinnen gewechselt, weg und
 zurück).
 
+**Nach der Durchsicht** (13. Oktober): `test613` erkennt jeden Dialog an
+seinem Kopf statt an der Zahl offener Dialoge — die Gegenprobe der
+Durchsicht („Wolke" öffnet die Einstellungen, dazu Besprechung/Verbinden
+über Kreuz und der Tagesplan als Wochenrückblick) war gegen die alte
+Fassung 98 von 98 grün, gegen die neue 90 von 99 rot. Die drei
+Termine-Karten tragen jetzt ihr `zeigen` (`termineWeg`: fehlt `Meeting`,
+fehlt die Besprechung) — zuerst rot (`test613` §8g, 98 von 99), dann
+gebaut, Gegenprobe ohne die Zeile wieder rot. „Aus dem DOM" in E748 und
+CLAUDE.md berichtigt (Notizhefte, Übersicht und Tagesplan kommen aus
+`Register.kontext`), die Kopfzeile von ENTSCHEIDUNGEN.md nennt nur noch
+E749 als vergeben, und die Frage zu „Mehr Orte" am Rechner steht jetzt auch
+in `AUFGABEN.md`. `test613` 99 von 99, `test537` unverändert,
+`ansichten/dienst.js` +78 B gzip, Start 1926 KB von 1950; 24 Nachbarn
+unter dem Schloss grün, die Datei-Wächter grün.
+
 **Offen:** ob am Rechner für die sechs Ansichten unter „Heute ^" „Mehr
-Orte" leuchten soll (so wie bei „Heute" selbst) — Redurs Frage, L123 F02.
-Die Zielleiste selbst ist Bogen 2.
+Orte" leuchten soll (so wie bei „Heute" selbst) — Redurs Frage, L123 F02,
+jetzt auch in `AUFGABEN.md` beim Rest von F02. Die Zielleiste selbst ist
+Bogen 2.
 
 ## 12. Oktober 2026 · Redurs vier Antworten — zusammengeführt auf `claude/abend-antworten`
 

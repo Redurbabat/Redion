@@ -99,6 +99,16 @@ Telefonleiste an `haupt: true` zu hängen — steht damit noch deutlicher:
 oben drei aus dem Register, unten fünf aus dem Markup (L117 Punkt 1).
 Redur entscheidet, welche vier es unten sein sollen.
 
+**Seit E748 (13. Oktober) gehört eine zweite Frage dazu — Redurs.** L147
+richtet Titel und Reiter nach der Klappe „Heute ^", und das wirkt auch am
+RECHNER: bei Prüfungen, Noten, Stundenplan, Schule, Uni und Arbeit heisst
+die Krume jetzt „Heute" statt „Lernzentrum", und in der Kante leuchtet
+„Mehr Orte" (dahinter liegt im ruhigen Modus „Heute", E388) statt
+„Lernzentrum" — während man sichtbar im Lernzentrum steht. Gemessen in
+`messungen.md` §105, Bilder `nachher-rechner-noten-hell.png`/`-dunkel.png`
+im Kratzordner `bilder-ziel/quelle/`. Die Frage: ist „Mehr Orte" dort das
+richtige Licht, oder braucht „Heute" in der Kante einen eigenen Platz?
+
 ### 1 · Cloudflare wirklich aufsetzen — **braucht Redur**
 
 **Ziel** — Server, Konto und Sync einmal gegen echtes D1/R2 laufen lassen.

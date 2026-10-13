@@ -394,14 +394,22 @@ const Ansichten = (() => {
             zielRang: 5, kurz: 'Verbinden' },
         { a: 'mtg', z: 'mic', t: 'Besprechung', s: 'Mitreden statt mitschreiben', zielRang: 4 }
     ];
-    const termineTun = (a) => {
-        if (a === 'kal-auf')
-            window.Produktwelten?.kalender?.();
-        else if (a === 'kal')
-            window.Kalender?.dialog?.();
-        else if (a === 'mtg')
-            window.Meeting?.panel?.();
+    const termineWeg = (a) => {
+        if (a === 'kal-auf') {
+            const m = window.Produktwelten;
+            return typeof m?.kalender === 'function' ? () => m.kalender() : null;
+        }
+        if (a === 'kal') {
+            const m = window.Kalender;
+            return typeof m?.dialog === 'function' ? () => m.dialog() : null;
+        }
+        if (a === 'mtg') {
+            const m = window.Meeting;
+            return typeof m?.panel === 'function' ? () => m.panel() : null;
+        }
+        return null;
     };
+    const termineTun = (a) => { termineWeg(a)?.(); };
     const termine = () => bildschirm('Termine', (wrap) => {
         const kommend = (() => {
             try {
@@ -650,6 +658,7 @@ const Ansichten = (() => {
                 ...TERMINE_KARTEN.map(k => ({
                     id: k.a, name: k.t, ...(k.kurz ? { kurz: k.kurz } : {}), zeichen: k.z, rang: k.zielRang,
                     ...(k.ort ? { ort: true, an: () => adresse() === k.adresse } : {}),
+                    zeigen: () => termineWeg(k.a) !== null,
                     tun: () => termineTun(k.a)
                 })),
                 ausKante('tagesplan', 3, {})

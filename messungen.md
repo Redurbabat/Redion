@@ -9019,7 +9019,8 @@ mehr       Posteingang · Sicherung · Wolke · Papierkorb · Einstellungen 5 Ha
 Jeder Ort, über sein `tun()` von „Mehr" (bei Mehr-Zielen: von
 „Dokumente") aus geöffnet, schaltet seinen eigenen Reiter an: 17 von 17.
 Jede Handlung öffnet ihren Dialog (Tagesplan, Besprechung, Verbinden,
-Wolke, Papierkorb, Einstellungen: eine `.overlay` mehr), den Posteingang
+Wolke, Papierkorb, Einstellungen: eine `.overlay` mehr — seit der
+Durchsicht auch mit IHREM Kopf, Tabelle unten), den Posteingang
 (Schauplatz `posteingang`, kein Reiter) oder speichert eine Sicherung
 (`redion-sicherung-2026-10-13.json`): 8 von 8.
 
@@ -9069,3 +9070,66 @@ in Krume und Kante, nachher „Heute" in der Krume und „Mehr Orte" in der
 Kante; zurück vorher die Übersicht, nachher die Noten). Angesehen: alle vier
 am Telefon, am Rechner die hellen, das dunkle nachher und das dunkle
 drinnen und zurück nachher.
+
+### Nach der Durchsicht (13. Oktober 2026)
+
+**Woran ein Dialog zu erkennen ist** — der Kopf des neuen `.overlay`
+(`.fh`, sonst `h2`, sonst der Platzhalter des Suchfelds), am Telefon über
+das `tun()` des Ziels geöffnet (Sonde `fix/dialoge.mts` im Kratzordner,
+danach `test613` §6):
+
+```txt
+Ziel           Kopf des Dialogs
+Tagesplan      ☀ TagesplanDi., 13. Okt.✕
+Besprechung    🎙 Besprechungsnotizen✕
+Verbinden      📅 Kalender verbinden✕
+Wolke          ☁ Wolke✕
+Papierkorb     Seiten im Papierkorb suchen        (kein Kopf, der Platzhalter)
+Einstellungen  Einstellungen                      (h2)
+```
+
+(So, ohne Leerzeichen zwischen Titel, Datum und ✕, wie `textContent` sie
+aneinanderreiht.) Derselbe Kopf nach einem echten Tipp auf „Wolke" in der Mehr-Liste und auf
+die Karte „Besprechung" (`test613` §10c, §10f).
+
+**Gegenprobe der Durchsicht, nachgefahren:** „Wolke" → Einstellungen,
+„Einstellungen" → Papierkorb, „Papierkorb" → Wolke, Besprechung und
+Verbinden über Kreuz, Tagesplan → Wochenrückblick (gebaut mit
+`tsc -p tsconfig.bauen.json`):
+
+```txt
+test613 vor der Durchsicht (67fbfb3b2, 98 Zusagen)    98 von 98   grün
+test613 nach der Durchsicht (99 Zusagen)              90 von 99   rot: §6 ×6, §10c, §10f, §8g
+```
+
+Die roten Zeilen nennen den falschen Kopf, z. B. „§6 mehr › Wolke … Köpfe
+["Einstellungen"]", „§6 termine › Tagesplan … Köpfe ["📅 Wochenrückblick
+Mo., 12. Okt. – So., 18. Okt.✕"]" (im Lauf ohne Umbruch). Danach `dienst.ts` aus der Sicherung
+zurück und voll gebaut: alle sieben berührten Dateien wieder Byte für
+Byte (`sha256sum -c`), Dienststand v1515 unverändert.
+
+**Fehlt das Modul, fehlt das Ziel** (`ziele('termine')`, je ein Modul kurz
+vom Fenster genommen; `test613` §8g):
+
+```txt
+                 67fbfb3b2                                  nach der Durchsicht
+alle             uebersicht kal-auf tagesplan mtg kal       dieselben fünf
+ohne Meeting     alle fünf                                  ohne mtg
+ohne Kalender    alle fünf                                  ohne kal
+ohne Produktw.   alle fünf                                  ohne kal-auf
+ohne Plan        ohne tagesplan                             ohne tagesplan
+```
+
+`test613 (rot)` nach der Durchsicht: 98 von 99 (nur §8g). Mit `termineWeg`:
+99 von 99. Gegenprobe ohne die `zeigen`-Zeile: 98 von 99, nur §8g.
+
+**test537:** 123 Paare, 511 Treffer, 6 Zugriffe über `(window as any)` —
+dieselben Zahlen wie vorher; `termineWeg` nennt jedes Modul einmal, wie
+die `if`-Kette.
+
+**Bytes:** `quell/bereiche/datenbanken/ansichten/dienst.js` 9882 → 9960 B
+gzip -6 (+78; roh 43 705 → 44 095). `redion-einzeldatei.html` 9 715 112 →
+9 715 502 Bytes. Dienststand v1514 → v1515 (`15abde3db24e459b`). Start
+1926 KB gzip über 255 Dateien (`test388` §5, Decke 1950) — unverändert.
+
+**Nachbarn** (unter dem Schloss, 24 Läufe, gegen v1515): alle grün.

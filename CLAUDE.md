@@ -2026,9 +2026,11 @@ pruefungen/lauf/test*.mts | wc -l` sagt 551 auf seinem Zweig. Beim Zusammenführ
 *Und 554: `test613` — was unter einem Reiter der unteren Leiste liegt, steht
 an EINER Stelle (E748, Zielleiste Bogen 1, L147). Er hält Redurs Antwort
 auf Frage 2 — fünf Ziele je Reiter, in seiner Folge — gegen
-`Register.navigation.ziele`, und jeden Namen gegen den Bildschirm, auf dem
-er steht: Ortsmenü, „Heute ^", „Übersicht ^", Termine-Karten, Mehr-Liste,
-aus dem DOM gelesen und nicht aus dem Code. Seine Hauptzusage ist eine
+`Register.navigation.ziele`, und jeden Namen gegen seine Quelle: die vier
+Listen Ortsmenü, „Heute ^" und „Übersicht ^", Termine-Karten, Mehr-Liste
+aus dem DOM gelesen und nicht aus dem Code; nur Notizhefte, Übersicht und
+Tagesplan aus `Register.kontext` (der Kante am Rechner), weil das Telefon
+sie in keiner dieser Listen zeigt. Seine Hauptzusage ist eine
 Invariante: alle 17 Orte, jeder über sein eigenes `tun()` von einem anderen
 Bildschirm aus geöffnet, schalten den Reiter an, unter dem sie stehen —
 und genau dort fing er L147: Prüfungen, Noten, Stundenplan und Schule
@@ -2041,7 +2043,10 @@ Rechner leuchtete danach die falsche Kante, weil der Titel VOR der
 Adresse gemeldet wurde; und „Zurück" brachte die Übersicht unter dem
 neuen Titel, weil sich der Verlauf den Zeichner vom Öffnen gemerkt hatte.
 Die letzten beiden fanden Sonden, nicht der Lauf — §7g war rot mit 95 von
-96, §7i/§7j mit 96 von 98, bevor die Reparatur kam. Gezählt am
+96, §7i/§7j mit 96 von 98, bevor die Reparatur kam. Und die Durchsicht fand
+an ihm selbst, was er zu viel behauptete: seine Handlungen zählten Dialoge,
+statt sie zu erkennen — ein „Wolke", das die Einstellungen öffnete, blieb
+98 von 98. Seither liest er den Kopf jedes Dialogs (99 Zusagen). Gezählt am
 13. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
 554.*
 

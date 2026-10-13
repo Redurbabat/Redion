@@ -637,12 +637,30 @@ const Ansichten = (() => {
       zielRang: 5, kurz: 'Verbinden' },
     { a: 'mtg', z: 'mic', t: 'Besprechung', s: 'Mitreden statt mitschreiben', zielRang: 4 }
   ];
-  /** Was eine Karte tut — für den Bildschirm und die Ziele. */
-  const termineTun = (a: string): void => {
-    if (a === 'kal-auf')  (window as any).Produktwelten?.kalender?.();
-    else if (a === 'kal') (window as any).Kalender?.dialog?.();
-    else if (a === 'mtg') (window as any).Meeting?.panel?.();
+  /** Der Weg einer Karte, oder `null`, wenn ihr Modul fehlt — EINE Stelle
+   *  für das Tun und für das `zeigen` der Ziele. Fehlt `Meeting`, fehlt die
+   *  Besprechung unter den Zielen, statt still nichts zu tun (der Entwurf:
+   *  „Jedes Ziel trägt `zeigen()` wie im Kontext-Register"). Jeder Name
+   *  steht einmal da, wie vorher in der `if`-Kette; gerufen wird am Modul,
+   *  wie vorher (`m.kalender()`, nicht ein losgelöstes `kalender()`). */
+  const termineWeg = (a: string): (() => void) | null => {
+    if (a === 'kal-auf') {
+      const m = (window as any).Produktwelten;
+      return typeof m?.kalender === 'function' ? () => m.kalender() : null;
+    }
+    if (a === 'kal') {
+      const m = (window as any).Kalender;
+      return typeof m?.dialog === 'function' ? () => m.dialog() : null;
+    }
+    if (a === 'mtg') {
+      const m = (window as any).Meeting;
+      return typeof m?.panel === 'function' ? () => m.panel() : null;
+    }
+    return null;
   };
+  /** Was eine Karte tut — für den Bildschirm und die Ziele. Ohne Modul
+   *  nichts, wie vorher. */
+  const termineTun = (a: string): void => { termineWeg(a)?.(); };
 
   const termine = (): void => bildschirm('Termine', (wrap: HTMLElement) => {
 
@@ -964,6 +982,11 @@ const Ansichten = (() => {
      (`calendarDays`): sonst stünden „Übersicht" und „Kalender" mit
      demselben Kalenderblatt nebeneinander.
 
+     Die drei Karten tragen ihr `zeigen` aus `termineWeg`: fehlt das Modul
+     (`Produktwelten`, `Kalender`, `Meeting`), fehlt das Ziel — wie in der
+     Kante. Gefunden in der Durchsicht; bis dahin stand „Besprechung" ohne
+     `Meeting` weiter da und tat still nichts (`test613` §8g).
+
      ORT ist, was einen Bildschirm unter „Termine" öffnet (Übersicht,
      Kalender); `an` erkennt ihn an seiner Adresse wie die Kante (E393).
      Tagesplan, Besprechung und Verbinden sind Dialoge — Handlungen. Unter
@@ -985,6 +1008,7 @@ const Ansichten = (() => {
         ...TERMINE_KARTEN.map(k => ({
           id: k.a, name: k.t, ...(k.kurz ? { kurz: k.kurz } : {}), zeichen: k.z, rang: k.zielRang,
           ...(k.ort ? { ort: true, an: () => adresse() === k.adresse } : {}),
+          zeigen: () => termineWeg(k.a) !== null,
           tun: () => termineTun(k.a)
         })),
         ausKante('tagesplan', 3, {})

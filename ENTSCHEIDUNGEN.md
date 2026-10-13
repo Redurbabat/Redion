@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-727 Entscheidungen, E1 bis E748 (**E748, E749** sind den Zweigen der Zielleiste (Redur, 12. Oktober) vergeben und folgen, sobald sie landen; **E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+727 Entscheidungen, E1 bis E748 (**E749** ist dem zweiten Zweig der Zielleiste (Redur, 12. Oktober) vergeben und folgt, sobald er landet; **E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -789,7 +789,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E745** — Die CI fährt den schnellen Lauf, der volle bleibt auf dem Rechner (Redur, 11. Oktober, 19:43 UTC: „2 . Scnell lauf", Weg (c) aus L254): `--schnell` heisst jetzt jeder Lauf ohne Browser und dazu test96 und test100 aus §31 (45 Läufe, gemessen 4 min 14 s) statt „alles ausser test73" (549 von 550); neu `--liste`; der Job „Alle Prüfläufe" (40 min, brach jeden vollen Lauf ab) wird „Schneller Lauf (ohne Browser, dazu die Sicherung)" mit `npm run pruefen -- --schnell`, Einzeldatei-Prüfung und 20 Minuten. `test610` neu; L254 GESCHLOSSEN
 * **E746** — Drehen, Spiegeln, Ziehen und Schieben führen nur die eigenen Leitungen nach, und keine zapft dabei etwas an (L253 Punkt 4; Redur, 11. Oktober abends: „4. wie du willst“ zur Reihenfolge): EINE Stelle im Modell, `Schaltplan.vorherMerken`/`nachziehen`, führt nur neu, was an einem bewegten Teil hängt, und nimmt nur einen Weg, der genau dasselbe berührt wie vorher (alter Weg · nachgerückte Endstücke · Winkel · anderer Winkel · Z-Wege · Hakenwege), am liebsten durch kein Zeichen; sonst meldet die Fläche es. Fremde Leitungen bleiben Byte für Byte, ausser ihr Ende liegt neben seiner Klemme (E738, `test608` §5). Nach der Durchsicht: beim Ziehen rechnet jede Bewegung nur die billigen Wege und erst das Loslassen einmal voll; und landet die EIGENE Klemme eines bewegten Teils auf einer fremden Leitung (oder verlässt sie eine), sagt die Fläche, welche (`Schaltplan.veraendert`). Nach der zweiten Durchsicht: während eines Zugs ändert nur der Zug den Plan — `aendere`, Rückgängig und Wiederholen tun nichts, Tasten ausser Escape zählen nicht, Escape bricht ab; ein Zug gehört einem Zeiger und endet immer richtig, auch losgelassen ausserhalb oder von einem zweiten Finger unterbrochen; die Ablage bekommt eine Kopie des Plans, nicht ihn selbst. Nach der dritten Durchsicht: mit echter Maus stand der Fokus im Zug auf der Seite, und Escape und Strg+Z kamen nie an — jetzt horcht ein Zug am Dokument auf seine Tasten: Escape bricht ab (ein offenes Menü zuerst), Rückgängig und Wiederholen tun nichts, auch nicht am Seitenverlauf; nach einem Klick holt die Fläche den Fokus zurück (ohne Ring), Umschalt+Strg+Z und Strg+Y nimmt sie selbst; Vorlage und Bild verweigern im Zug, der Hinweis eines Beispiels kommt nur, wenn es steht. `test611`
 * **E747** — Eine Brücke des Klemmenbretts belegt ihre Klemmen (L253 Punkt 2; Redur, 11. Oktober abends: „4. wie du willst" zur Reihenfolge der Elektro-Punkte): die Meldung „Anschluss … hängt an keiner Leitung" kannte nur die Netzliste der Leitungen und meldete im Stern UND im Dreieck W2, U2 und V2 — gerade die Klemmen, auf denen die Brücken der Stellung liegen. Jetzt zählen für diese Meldung die Brücken der EINGESTELLTEN Stellung eines mehrteiligen Bauteils wie gezeichnete Leitungen; Schaltkontakte nicht (ein geschlossener Schalter mit offenem Ausgang hat eine vergessene Leitung), der feste Verbund N–PE der Drehstromquelle auch nicht. Ein Knoten, den NUR die eigenen Brücken halten, hängt trotzdem an nichts (im Dreieck ohne Zuleitung an U1 die Ecke U1–W2) — ausser die Stellung weist ihn selbst als `sternpunkt` aus, wie „Stern" für U2, V2, W2 (§5 Regel 3, §8). Die Netzliste bleibt, wie sie ist; EINE Hilfe `stellungIn` liest die Stellung innerhalb von `Stromfluss` für Rechnung und Meldung (ausserhalb lesen die Planfläche und die Aufgaben eine Stellungsnummer an fünf Stellen selbst, Punkt 5). `test612` (38 Zusagen; gegen 97d156b03 rot mit 20, gegen den ersten Stand 7560b2f22 mit 33 von 38; sechs Gegenproben).
-* **E748** — Was unter einem Reiter der unteren Leiste liegt, steht an EINER Stelle — und was oben unter „Heute ^" steht, leuchtet unten unter „Heute" (Redur, 12. Oktober 2026, zum Bild mit dem roten Feld über der Leiste: „dort nur sachen die mit unteren zutun haben dann für alle so"; Antworten 2 und 3 auf den Entwurf der Zielleiste: die Empfehlung): `Register.navigation.meldeZiele(reiter, fn)`/`ziele(reiter)` nach dem Muster von `Register.kontext` — jeder Lieferant jedes Mal neu gefragt und einzeln abgefangen, nach Rang, höchstens fünf; Schlüssel ist das Merkmal `data-ziele` an den fünf Reitern. Drei Lieferanten, jeder innerhalb seines Moduls und aus seiner bestehenden Liste (Bibliothek: `ORTE` und die Notizhefte; Lernwelt: `KLAPPEN`/`ANSICHTEN`; Ansichten: die Termine-Karten als Liste, die Kante „kalender", `mehrGruppen`), die `if`-Ketten von Mehr und Termine werden `mehrTun`/`termineTun` für Bildschirm und Ziel. L147 GESCHLOSSEN: die Klappe entscheidet Titel und Reiter (`titelVon`/`reiterVon`, auch für Uni und Arbeit), drinnen schreibt `wechseln()` zuerst die Adresse und meldet dann den Titel über den neuen schmalen Weg `App.sonderTitel`, der auch den Zeichner für „Zurück" nachführt (beides beim Fertigstellen gefunden: in der umgekehrten Folge leuchtete am Rechner nach einem Wechsel drinnen die falsche Kante, `test613` §7g, und „Zurück" zeigte die Ansicht vom Öffnen unter dem neuen Titel, §7i/§7j); geändert eine Zusage, `test484` §5 (die alte Titelzeile wörtlich). Der Kommentar an `haupt` (navigation.ts) ist berichtigt: nur die Kante liest es. `test613` (98 Zusagen; gegen ba51915dc rot mit 12 von 68, die Endfassung mit 13 von 73; fünf Gegenproben).
+* **E748** — Was unter einem Reiter der unteren Leiste liegt, steht an EINER Stelle — und was oben unter „Heute ^" steht, leuchtet unten unter „Heute" (Redur, 12. Oktober 2026, zum Bild mit dem roten Feld über der Leiste: „dort nur sachen die mit unteren zutun haben dann für alle so"; Antworten 2 und 3 auf den Entwurf der Zielleiste: die Empfehlung): `Register.navigation.meldeZiele(reiter, fn)`/`ziele(reiter)` nach dem Muster von `Register.kontext` — jeder Lieferant jedes Mal neu gefragt und einzeln abgefangen, nach Rang, höchstens fünf; Schlüssel ist das Merkmal `data-ziele` an den fünf Reitern. Drei Lieferanten, jeder innerhalb seines Moduls und aus seiner bestehenden Liste (Bibliothek: `ORTE` und die Notizhefte; Lernwelt: `KLAPPEN`/`ANSICHTEN`; Ansichten: die Termine-Karten als Liste, die Kante „kalender", `mehrGruppen`), die `if`-Ketten von Mehr und Termine werden `mehrTun`/`termineTun` für Bildschirm und Ziel. L147 GESCHLOSSEN: die Klappe entscheidet Titel und Reiter (`titelVon`/`reiterVon`, auch für Uni und Arbeit), drinnen schreibt `wechseln()` zuerst die Adresse und meldet dann den Titel über den neuen schmalen Weg `App.sonderTitel`, der auch den Zeichner für „Zurück" nachführt (beides beim Fertigstellen gefunden: in der umgekehrten Folge leuchtete am Rechner nach einem Wechsel drinnen die falsche Kante, `test613` §7g, und „Zurück" zeigte die Ansicht vom Öffnen unter dem neuen Titel, §7i/§7j); geändert eine Zusage, `test484` §5 (die alte Titelzeile wörtlich). Der Kommentar an `haupt` (navigation.ts) ist berichtigt: nur die Kante liest es. Nach der Durchsicht tragen die drei Termine-Karten ihr `zeigen` (`termineWeg`: fehlt das Modul, fehlt das Ziel), und `test613` erkennt jeden Dialog an seinem Kopf statt an der Zahl offener Dialoge. `test613` (99 Zusagen; gegen ba51915dc rot mit 12 von 68, die Endfassung mit 13 von 73; sieben Gegenproben).
 
 ---
 
@@ -68278,7 +68278,13 @@ Leiste steht fest in `index.html` und ist eine andere Fünf. Berichtigt.
    - **Ansichten** (`termine`, `mehr`): die drei Termine-Karten werden eine
      Liste (`TERMINE_KARTEN`), aus der der Bildschirm zeichnet — Wörter,
      Sätze, Zeichen und Folge wie vorher; `termineTun` ersetzt die
-     `if`-Kette im `onclick`. Übersicht und Tagesplan kommen aus der Kante
+     `if`-Kette im `onclick`. Den Weg jeder Karte hält seit der Durchsicht
+     `termineWeg` (`null`, wenn ihr Modul fehlt): `termineTun` ruft ihn, und
+     das `zeigen` ihrer drei Ziele fragt ihn — fehlt `Meeting`, fehlt die
+     Besprechung, so wie in der Kante ohne `Plan` der Tagesplan (der
+     Entwurf: „Jedes Ziel trägt `zeigen()` wie im Kontext-Register"). Jedes
+     Modul steht dabei einmal da, wie vorher in der Kette (`test537`
+     unverändert). Übersicht und Tagesplan kommen aus der Kante
      „kalender" (`Register.kontext.fuer`, in derselben Datei angemeldet),
      mit ihrem Namen, ihrem Weg und ihrem `zeigen` (ohne `Plan` kein
      Tagesplan); nur die Übersicht trägt das Zeichen des Reiters
@@ -68393,7 +68399,8 @@ für eine Ansicht unter „Heute ^".
 - **Bytes:** +1824 B gzip über sieben gebaute Dateien (`navigation.js`
   +344, `bibliothek.js` +357, `lernwelt.js` +414, `produktwelten.js` +33,
   `ansichten/dienst.js` +527, `schale.js` +72, `index.html` +77; gzip -6
-  gegen `ba51915dc`). Der Start 1925 → 1926 KB von 1950 (`test388` §5,
+  gegen `ba51915dc`); nach der Durchsicht `ansichten/dienst.js` +78 dazu
+  (`termineWeg`), zusammen +1902. Der Start 1925 → 1926 KB von 1950 (`test388` §5,
   beide Stände gemessen, 255 Dateien). Die Kommentare gehen nicht mit
   (E715).
 - **Neue Schnittstellen:** `Register.navigation.meldeZiele`/`ziele`,
@@ -68409,24 +68416,32 @@ für eine Ansicht unter „Heute ^".
   `vorher-rechner-drinnen-noten-*.png`, `nachher-rechner-drinnen-noten-*.png`.
 - **Ein Satz bleibt Redurs:** ob „Mehr Orte" am Rechner das richtige Licht
   für diese sechs Ansichten ist, oder ob „Heute" dort einen eigenen Platz
-  braucht — die Fünf der Kante sind seine Frage (L123 F02).
+  braucht — die Fünf der Kante sind seine Frage (L123 F02; seit der
+  Durchsicht auch in `AUFGABEN.md` beim Rest von F02, mit den Bildern).
 
-**Wächter: `test613`** — 98 Zusagen in elf Abschnitten, am Telefon
+**Wächter: `test613`** — 99 Zusagen in elf Abschnitten, am Telefon
 (390 × 844, Berührung) und für §7g–§7j am Rechner (1440 × 900): der Vertrag (§1), Redurs fünf je Reiter in seiner
 Folge mit Zeichen, Rang und Ort/Handlung (§2), `data-ziele` (§3), jeder
-Name auf dem Bildschirm seiner Quelle — aus dem DOM gelesen: Ortsmenü,
-„Heute ^", „Übersicht ^", Termine-Karten, Mehr-Liste, und die Kanten
-„bibliothek" und „kalender" (§4), alle 17 Orte über ihr eigenes `tun()`
+Name an seiner Quelle (§4): die vier Listen aus dem DOM gelesen —
+Ortsmenü, „Heute ^" und „Übersicht ^", Termine-Karten, Mehr-Liste —,
+Notizhefte, Übersicht und Tagesplan dagegen aus `Register.kontext`, den
+Kanten „bibliothek" und „kalender" (am Rechner die Kante; das Telefon zeigt
+diese drei Namen in keiner der vier Listen), alle 17 Orte über ihr eigenes `tun()`
 von einem anderen Bildschirm aus geöffnet: der eigene Reiter leuchtet,
 der Bildschirm zeigt das Ziel, `an()` sagt ja und kein Nachbar (§5), alle
-8 Handlungen öffnen ihren Dialog, ihren Bildschirm oder ihre Sicherung,
-und der Reiter bleibt (§6), L147 geöffnet und drinnen mit echten Tipps,
+8 Handlungen öffnen ihren Dialog, ihren Bildschirm oder ihre Sicherung —
+jeder Dialog an seinem Kopf erkannt: Tagesplan, Besprechungsnotizen,
+Kalender verbinden, Wolke, Papierkorb, Einstellungen —, und der Reiter
+bleibt (§6), L147 geöffnet und drinnen mit echten Tipps,
 samt Adresse und Neuladen, und am Rechner leuchtet die Kante nach einem
 Wechsel drinnen wie nach dem direkten Öffnen, und „Zurück" bringt dieselbe
-Ansicht unter demselben Titel und derselben Adresse (§7), die kaputten Lieferanten (§8), privat
+Ansicht unter demselben Titel und derselben Adresse (§7), die kaputten
+Lieferanten, und unter „Termine" fehlt ohne sein Modul jedes Ziel und nur
+dieses (§8, §8g), privat
 bleibt privat, die Lieferanten innerhalb ihres Moduls, die Schale ohne
 Ziele und `test537` grün (§9), Mehr und Termine wie vorher mit echten
-Tipps (§10), keine Seitenfehler (§11).
+Tipps, Wolke und Besprechung am Kopf ihres Dialogs erkannt (§10), keine
+Seitenfehler (§11).
 
 Gegen `ba51915dc` rot: die erste Fassung mit 12 von 68 (Commit
 `test613 (rot)`), die endgültige mit 13 von 73 (§7f, die Adresse, kam beim
@@ -68462,6 +68477,62 @@ gegen die Endfassung mit 98 Zusagen):
 
 Gegen die erste Fassung (94 Zusagen, vor §7g–§7j) waren die ersten drei
 78 von 89, 86 von 94 und 85 von 94.
+
+Nach der Durchsicht, gegen die Fassung mit 99 Zusagen:
+
+6. **Die Wege vertauscht** — unter „Mehr" öffnet „Wolke" die
+   Einstellungen, „Einstellungen" den Papierkorb, „Papierkorb" die Wolke;
+   unter „Termine" Besprechung und Verbinden über Kreuz; der Tagesplan der
+   Kante öffnet den Wochenrückblick (kein Modulname mehr oder weniger,
+   also `test537` unberührt): 90 von 99 — §6 sechsmal, jede Zeile mit dem
+   Kopf, der stattdessen dastand („Köpfe ["Einstellungen"]" bei Wolke),
+   §10c, §10f und §8g (die Karten fragen dann das falsche Modul). DIESELBE
+   Verdrahtung gegen `test613` vor der Durchsicht (`67fbfb3b2`, 98
+   Zusagen): 98 von 98 — das war der Fund.
+7. **Ohne `zeigen` an den Karten** (die eine Zeile heraus; `termineWeg`
+   bleibt von `termineTun` gerufen, baut also): 98 von 99 — nur §8g.
+
+**Nach der Durchsicht (13. Oktober).** Fünf Funde, keiner davon ein Fehler
+im Verhalten des Bildschirms:
+
+- **§6 und §10c/§10f zählten Dialoge, statt sie zu erkennen.** Ein „Wolke",
+  das die Einstellungen öffnet, blieb grün (Gegenprobe 6). Jetzt liest der
+  Lauf den Kopf jedes offenen Dialogs (`.fh`, sonst `h2`, sonst den
+  Platzhalter des Suchfelds — die Folge, nach der `fokus.ts` dem Dialog
+  seinen Namen gibt) und verlangt einen Dialog MEHR mit IHREM Kopf.
+  Gegen den Stand grün, weil die Wege richtig waren — rot zu sehen nur
+  über die Gegenprobe.
+- **Besprechung und Verbinden hatten kein `zeigen`.** Ohne `Meeting` stand
+  „Besprechung" weiter unter den Zielen, und ihr `tun` tat still nichts;
+  derselbe Satz für Verbinden ohne `Kalender` und Kalender ohne
+  `Produktwelten`. Zuerst die Zusage (`test613` §8g, Commit
+  `test613 (rot)` nach der Durchsicht, rot mit 98 von 99:
+  „ohne Meeting: [uebersicht, kal-auf, tagesplan, mtg, kal]"), dann
+  `termineWeg` (oben unter 3.). Ohne `Plan` fiel der Tagesplan schon vorher
+  weg — er erbt sein `zeigen` aus der Kante.
+- **„Aus dem DOM" stimmte für drei Namen nicht.** Dieser Text und der
+  Absatz in CLAUDE.md §30 sagten, jeder Name in §4 werde aus dem DOM
+  gelesen, „und die Kanten" dazu. Notizhefte, Übersicht und Tagesplan liest
+  §4 aber aus `Register.kontext` — Code, kein DOM; am Telefon stehen sie in
+  keiner der vier Listen. Der Kopf von `test613` sagte es richtig; der Text
+  ist berichtigt (oben unter „Wächter").
+- **Die Kopfzeile des Verzeichnisses** zählte E748 mit und nannte sie im
+  selben Satz „vergeben, folgt, sobald sie landet". Jetzt steht dort nur
+  noch E749.
+- **Am Rechner ändert L147 mehr als „unten".** Krume „Heute" und das Licht
+  auf „Mehr Orte" bei Prüfungen, Noten, Stundenplan, Schule, Uni und Arbeit
+  standen schon unter „Was es kostet"; die Durchsicht verlangt, dass die
+  Frage wirklich bei Redur ankommt. Sie steht jetzt auch in `AUFGABEN.md`
+  beim Rest von F02, mit den Bildern. Kein Code.
+
+Gemessen danach: `test613` 99 von 99; `test537` unverändert (123 Paare,
+511 Treffer, 6 Zugriffe über `(window as any)`); `ansichten/dienst.js`
+9882 → 9960 B gzip (+78); der Start bleibt bei 1926 KB von 1950
+(`test388` §5). Nachbarn unter dem Schloss, gegen den gebauten Stand
+(Dienststand v1515): die Läufe, die den Termine-Bildschirm, seine Karten,
+`Meeting.panel` oder `Kalender.dialog` anfassen, und die Nachbarn aus dem
+Auftrag — `test37`, `test40`, `test54`, `test67`, `test74`, `test114`, `test117`, `test128`, `test222`, `test247`, `test272`, `test388`, `test390`, `test392`, `test423`, `test484`, `test541`, `test580`, `test581`, `test585`, `test596`, `test599`, `test600`, `test601`: alle 24 grün. Dazu die Datei-Wächter `test550`, `test549`,
+`test225`, `test105`, `test109`, `test87`, `test537`, `test400`: grün.
 
 **Nachbarn** (unter dem gemeinsamen Schloss): 90 Läufe gegen den gebauten Endstand (Dienststand v1514, `a5d005ec4c799cca`): `test31`, `test33`, `test34`, `test37`, `test40`, `test54`, `test67`, `test74`, `test86`, `test89`, `test114`, `test117`, `test126`, `test128`, `test141`, `test156`, `test202`, `test206`, `test208`, `test209`, `test215`, `test217`, `test222`, `test224`, `test245`, `test247`, `test248`, `test249`, `test250`, `test258`, `test259`, `test262`, `test264`, `test265`, `test272`, `test274`, `test296`, `test302`, `test305`, `test306`, `test326`, `test331`, `test359`, `test362`, `test369`, `test385`, `test386`, `test387`, `test388`, `test390`, `test392`, `test396`, `test412`, `test423`, `test424`, `test428`, `test430`, `test431`, `test436`, `test484`, `test493`, `test494`, `test495`, `test537`, `test539`, `test541`, `test545`, `test565`, `test566`, `test567`, `test576`, `test580`, `test581`, `test582`, `test585`, `test587`, `test588`, `test589`, `test590`, `test592`, `test595`, `test596`, `test597`, `test598`, `test600`, `test601`, `test603`, `test606`, `test609`, `test613`. 88 grün, `test613` zweimal mit 98 von 98. Rot zwei, beide genau so auf `ba51915dc` (in derselben Kopie seiner Dateien nachgemessen) und ohne eine Datei dieses Bogens: `test274` mit 11 von 12 („Keine verwaiste Nachschlagestelle — src/bereiche/pdf/marken.ts: redion-graphit", wartet auf Redurs Wort) und `test493` mit 42 grün, 2 rot (`-webkit-backdrop-filter: blur(8px)` versteht der Prüfbrowser nicht). Gefahren in zwei Teilen: 27 Läufe bis zum Neustart des Containers (13. Oktober, ca. 04:53 UTC), danach die übrigen 63 und `test613` noch einmal — der Quelltext war dazwischen derselbe (`cmp` gegen die gesicherten Dateien, der Bau danach ohne Änderung an einer erzeugten Datei). Dazu die Datei-Wächter `test550`, `test549`, `test225`, `test105`, `test109`, `test87`, `test537`, `test400` und `test290`: grün. Der Start: 1926 KB von 1950 (`test388` §5).
 

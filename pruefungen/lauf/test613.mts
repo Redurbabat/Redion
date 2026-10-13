@@ -81,7 +81,9 @@
  * KANN DIESER LAUF ROT WERDEN? (§55.2) Gegen ba51915dc rot — die Zeilen
  * stehen im Commit „test613 (rot)" und in E748. Die Gegenproben stehen in
  * E748: einen Lieferanten weglassen, die L147-Korrektur zurückdrehen, die
- * Sortierung brechen.
+ * Sortierung brechen — und nach der Durchsicht die Wege der Handlungen
+ * vertauschen (§6, §10c, §10f; die Fassung davor blieb dabei 98 von 98
+ * grün) und das `zeigen` der Termine-Karten herausnehmen (§8g).
  *
  *   node pruefungen/lauf/test613.mts
  * ==========================================================================*/
