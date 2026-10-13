@@ -48,7 +48,9 @@
  *       Bildschirm zeigt das Ziel, und `an()` sagt ja (die Nachbarn nein).
  *   §6  Jedes Handlungs-Ziel tut, was es nennt: alle 8 öffnen ihren Dialog,
  *       ihren Bildschirm oder ihre Sicherung; der Reiter bleibt, wo er war
- *       (der Posteingang hat keinen).
+ *       (der Posteingang hat keinen). Ein Dialog wird an seinem Kopf erkannt,
+ *       nicht an der Zahl offener Dialoge — „Wolke", das die Einstellungen
+ *       öffnet, ist rot.
  *   §7  L147: die Ansichten unter „Heute ^" (Prüfungen, Noten, Stundenplan,
  *       Schule, Uni, Arbeit) schalten „Heute" an und melden sich als „heute",
  *       die unter „Übersicht ^" schalten „Lernen" an. Auch DRINNEN, mit dem
@@ -62,7 +64,8 @@
  *       Lieferant, ein werfendes `zeigen()`, ein Ziel ohne `tun`, eine
  *       doppelte Kennung; sortiert nach Rang, höchstens fünf, jedes Mal neu
  *       gefragt. Und an einem echten Reiter ändert ein werfender Lieferant
- *       nichts an Redurs fünf.
+ *       nichts an Redurs fünf. Unter „Termine" trägt jedes Ziel sein
+ *       `zeigen()`: fehlt das Modul, fehlt das Ziel (§8g).
  *   §9  §5 und §8: die Listen bleiben privat (`ORTE`, `KLAPPEN`,
  *       `mehrGruppen` sind nicht ausgeführt), jeder Lieferant meldet sich
  *       INNERHALB seines Moduls an, die Schale meldet keinen — und `test537`
@@ -70,7 +73,7 @@
  *   §10 Der Bildschirm bleibt, wie er war: Mehr-Liste und Termine-Karten
  *       tragen dieselben Einträge in derselben Folge, und ein echter Tipp
  *       auf „Kalender", „Besprechung", „Sicherung" und „Wolke" tut dasselbe
- *       wie vorher.
+ *       wie vorher — Besprechung und Wolke am Kopf ihres Dialogs erkannt.
  *   §11 Keine Seitenfehler.
  *
  * Kein fester Port (`listen(0)`, wie test601) — test400 bleibt unberührt.
@@ -179,17 +182,37 @@ const zieleLesen = (s: Page, key: string): Promise<ZielDaten[] | null> => s.eval
 }, key);
 const etikett = (z: ZielDaten): string => z.kurz ?? z.name;
 
-/** Welcher Reiter leuchtet, und wo man ist. */
-const lage = (s: Page) => s.evaluate(() => ({
-  an: [...document.querySelectorAll('#handy-oben [role="tab"]')]
-    .filter(b => b.getAttribute('aria-selected') === 'true').map(b => b.id),
-  wo: String(App.schauplatz()),
-  hash: location.hash,
-  view: document.querySelector<HTMLElement>('[data-lw-view]')?.dataset['lwView'] ?? null,
-  ort: (document.querySelector('.bib-ort .bib-pille-wort')?.textContent || '').trim(),
-  dialoge: [...document.querySelectorAll('.overlay')].filter(o => (o as HTMLElement).offsetParent !== null
-    || getComputedStyle(o).position === 'fixed').length
-}));
+/** Welcher Reiter leuchtet, und wo man ist. `koepfe` sagt, WELCHE Dialoge
+ *  offen sind, nicht nur wie viele: der Kopf `.fh` (Redions Dialogkopf),
+ *  sonst die erste `h2`, sonst der Platzhalter des Suchfelds — dieselbe
+ *  Folge, nach der `fokus.ts` dem Dialog seinen Namen gibt. Gefunden in der
+ *  Durchsicht: mit der Zahl allein blieb §6 grün, wenn „Wolke" die
+ *  Einstellungen öffnete. */
+const lage = (s: Page) => s.evaluate(() => {
+  const offen = [...document.querySelectorAll('.overlay')].filter(o => (o as HTMLElement).offsetParent !== null
+    || getComputedStyle(o).position === 'fixed');
+  return {
+    an: [...document.querySelectorAll('#handy-oben [role="tab"]')]
+      .filter(b => b.getAttribute('aria-selected') === 'true').map(b => b.id),
+    wo: String(App.schauplatz()),
+    hash: location.hash,
+    view: document.querySelector<HTMLElement>('[data-lw-view]')?.dataset['lwView'] ?? null,
+    ort: (document.querySelector('.bib-ort .bib-pille-wort')?.textContent || '').trim(),
+    dialoge: offen.length,
+    koepfe: offen.map(o => (o.querySelector('.fh, h2')?.textContent || '').replace(/\s+/g, ' ').trim() ||
+      (o.querySelector<HTMLInputElement>('input[placeholder]')?.placeholder || '').trim())
+  };
+});
+/** Woran ein Dialog zu erkennen ist: sein Kopf (gemessen, E748). */
+const KOPF: Record<string, RegExp> = {
+  Tagesplan: /Tagesplan/, Besprechung: /Besprechungsnotizen/, Verbinden: /Kalender verbinden/,
+  Wolke: /Wolke/, Papierkorb: /Papierkorb/, Einstellungen: /^Einstellungen$/
+};
+/** Ein Dialog mehr, und der neue heisst wie verlangt — sein Kopf, sonst ''. */
+const neuerDialog = (vorher: { dialoge: number; koepfe: string[] }, nachher: { dialoge: number; koepfe: string[] },
+                     kopf: RegExp | undefined): string =>
+  !kopf || nachher.dialoge <= vorher.dialoge || vorher.koepfe.some(k => kopf.test(k)) ? ''
+    : nachher.koepfe.find(k => kopf.test(k)) ?? '';
 
 /** Ein Ziel über sein eigenes `tun()` öffnen — der Weg, den die Zielleiste
  *  in Bogen 2 nimmt. */
@@ -283,7 +306,7 @@ console.log('\n§3 data-ziele an den fünf Reitern');
 }
 
 /* ═══ §4 Eine Quelle ═══════════════════════════════════════════════════════ */
-console.log('\n§4 Jeder Name steht auf dem Bildschirm seiner Quelle (aus dem DOM)');
+console.log('\n§4 Jeder Name steht auf dem Bildschirm seiner Quelle (aus dem DOM; drei aus der Kante)');
 const kante = (bereich: string): Promise<string[]> => s.evaluate((b: string) =>
   ((globalThis as any).Register?.kontext?.fuer?.(b) || []).map((k: any) => String(k.name)), bereich);
 const namenIn = (key: string, quelle: string[], nur?: string[]) => {
@@ -392,12 +415,12 @@ console.log('\n§6 Jedes Handlungs-Ziel öffnet, was es nennt');
         ? (nachher.wo === 'posteingang' ? 'Posteingang offen' : '')
         : etikett(z) === 'Sicherung'
           ? (downloads.some(d => /^redion-sicherung-/.test(d)) ? 'Sicherung ' + downloads.join(',') : '')
-          : (nachher.dialoge > vorher.dialoge ? 'Dialog offen' : '');
+          : (neuerDialog(vorher, nachher, KOPF[etikett(z)]) ? `Dialog „${neuerDialog(vorher, nachher, KOPF[etikett(z)])}" offen` : '');
       const reiterBleibt = etikett(z) === 'Posteingang'
         ? nachher.an.length === 0
         : JSON.stringify(nachher.an) === JSON.stringify(vorher.an) && vorher.an[0] === REITER[key];
       p(`§6 ${key} › ${etikett(z)}: ${wie || 'NICHTS'}`, r === 'ok' && !!wie && reiterBleibt,
-        `tun ${r} · Reiter ${vorher.an} → ${nachher.an} · wo ${nachher.wo} · Dialoge ${vorher.dialoge} → ${nachher.dialoge}`);
+        `tun ${r} · Reiter ${vorher.an} → ${nachher.an} · wo ${nachher.wo} · Dialoge ${vorher.dialoge} → ${nachher.dialoge} · Köpfe ${JSON.stringify(nachher.koepfe)}`);
       geprueft++;
     }
   }
@@ -599,6 +622,35 @@ console.log('\n§8 Ein kaputter Lieferant nimmt nur sich selbst mit');
   p('§8e ein Ziel mit werfendem zeigen() an „heute" nimmt nur sich selbst mit',
     JSON.stringify(m?.heute) === JSON.stringify(REDUR['heute']), JSON.stringify(m?.heute));
   p('§8f ein Reiter ohne Lieferant liefert eine leere Liste', m?.unbekannt === 0, String(m?.unbekannt));
+
+  /* §8g FEHLT DAS MODUL, FEHLT DAS ZIEL. Der Entwurf, unter „Termine":
+     „Jedes Ziel trägt `zeigen()` wie im Kontext-Register." Gefunden in der
+     Durchsicht: Besprechung und Verbinden kamen aus den Karten ohne
+     `zeigen` — ohne `Meeting` stand „Besprechung" weiter in der Liste, und
+     ihr `tun` tat still nichts. Hier wird je ein Modul kurz vom Fenster
+     genommen (dieselbe Stelle, an der die Ziele es suchen) und sofort
+     zurückgelegt. */
+  const ohne = await s.evaluate(() => {
+    const w = globalThis as any;
+    const ids = (): string[] => (w.Register?.navigation?.ziele?.('termine') || []).map((z: any) => String(z.id));
+    const raus: Record<string, string[]> = { alle: ids() };
+    for (const name of ['Meeting', 'Kalender', 'Produktwelten', 'Plan']) {
+      const alt = w[name];
+      w[name] = undefined;
+      try { raus[name] = ids(); } finally { w[name] = alt; }
+    }
+    raus['wieder'] = ids();
+    return raus;
+  });
+  const ALLE = ['uebersicht', 'kal-auf', 'tagesplan', 'mtg', 'kal'];
+  const ohneZiel: Record<string, string> = { Meeting: 'mtg', Kalender: 'kal', Produktwelten: 'kal-auf', Plan: 'tagesplan' };
+  const falschOhne = Object.entries(ohneZiel)
+    .filter(([modul, id]) => JSON.stringify(ohne[modul]) !== JSON.stringify(ALLE.filter(x => x !== id)))
+    .map(([modul]) => `ohne ${modul}: ${JSON.stringify(ohne[modul])}`);
+  p('§8g Termine: ohne Meeting fehlt Besprechung, ohne Kalender Verbinden, ohne Produktwelten Kalender, ohne Plan Tagesplan — und nur das',
+    JSON.stringify(ohne['alle']) === JSON.stringify(ALLE) && JSON.stringify(ohne['wieder']) === JSON.stringify(ALLE) &&
+      falschOhne.length === 0,
+    `alle ${JSON.stringify(ohne['alle'])} · ${falschOhne.join(' · ')} · wieder ${JSON.stringify(ohne['wieder'])}`);
 }
 
 /* ═══ §9 Privat bleibt privat, kein Bereich fasst einen anderen an ════════ */
@@ -649,8 +701,8 @@ console.log('\n§10 Mehr und Termine tun, was sie vorher taten');
   const vorWolke = await lage(s);
   await s.click('.home-liste button[data-a="wolke"]'); await warte(s, 700);
   const nachWolke = await lage(s);
-  p('§10c ein Tipp auf „Wolke" öffnet den Wolken-Dialog', nachWolke.dialoge > vorWolke.dialoge,
-    `${vorWolke.dialoge} → ${nachWolke.dialoge}`);
+  p('§10c ein Tipp auf „Wolke" öffnet den Wolken-Dialog', !!neuerDialog(vorWolke, nachWolke, KOPF['Wolke']),
+    `${vorWolke.dialoge} → ${nachWolke.dialoge} · Köpfe ${JSON.stringify(nachWolke.koepfe)}`);
   await allesZu(s);
   await s.click('.home-liste button[data-a="kompass"]'); await warte(s, 600);
   p('§10d ein Tipp auf „Kompass" führt in den Kompass', (await lage(s)).wo === 'kompass', (await lage(s)).wo);
@@ -664,8 +716,8 @@ console.log('\n§10 Mehr und Termine tun, was sie vorher taten');
   const vorMtg = await lage(s);
   await s.click('.home-karten .hk[data-a="mtg"]'); await warte(s, 700);
   const nachMtg = await lage(s);
-  p('§10f ein Tipp auf „Besprechung" öffnet die Besprechung', nachMtg.dialoge > vorMtg.dialoge,
-    `${vorMtg.dialoge} → ${nachMtg.dialoge}`);
+  p('§10f ein Tipp auf „Besprechung" öffnet die Besprechung', !!neuerDialog(vorMtg, nachMtg, KOPF['Besprechung']),
+    `${vorMtg.dialoge} → ${nachMtg.dialoge} · Köpfe ${JSON.stringify(nachMtg.koepfe)}`);
   await allesZu(s);
   await s.click('#hl-bespr'); await warte(s, 600);
   await s.click('.home-karten .hk[data-a="kal-auf"]'); await warte(s, 700);
