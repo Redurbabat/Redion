@@ -109,6 +109,18 @@ die Krume jetzt „Heute" statt „Lernzentrum", und in der Kante leuchtet
 im Kratzordner `bilder-ziel/quelle/`. Die Frage: ist „Mehr Orte" dort das
 richtige Licht, oder braucht „Heute" in der Kante einen eigenen Platz?
 
+**Und ein Nachbarfall am Telefon — gemessen in der zweiten Durchsicht von
+E748, nicht Teil von L147, nicht behoben.** Wer Noten öffnet, über
+„Dokumente" weggeht und mit „Zurück" (`App.zurueck()`) wiederkommt, sieht
+im Lernzentrum „Heute"; öffnet er danach eine Seite, leuchtet unten
+„Dokumente" (390 × 844; die Seite auf `ba51915dc`, `7e41a4b4a` und nach
+der Durchsicht gleich, `messungen.md` §105). Am Schauplatz `seite` leuchtet
+der zuletzt gesetzte Reiter (`karte[reiter]` in `seitenleiste.ts`), und
+„Zurück" setzt keinen. Die Reparatur gehörte in die Schale — der Verlauf
+müsste den Reiter mit dem Ort merken — und träfe jede Sonderansicht, die
+man mit „Zurück" erreicht (aus dem Code gelesen, nicht gemessen). Ob die
+Pille dort zum Ort des Schritts zurück soll, ist eine Frage an Redur.
+
 ### 1 · Cloudflare wirklich aufsetzen — **braucht Redur**
 
 **Ziel** — Server, Konto und Sync einmal gegen echtes D1/R2 laufen lassen.

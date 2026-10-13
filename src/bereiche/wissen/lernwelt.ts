@@ -3331,8 +3331,22 @@ const Lernwelt = (() => {
        (`test613` §7i/§7j, ebenfalls beim Fertigstellen gefunden). */
     const titel = titelVon(ansicht);
     if (zustand.root?.isConnected) {
-      try { App.sonderTitel?.(titel, vorher, (ziel: HTMLElement) => render(ziel, ansicht)); }
+      let gemeldet = false;
+      try { gemeldet = App.sonderTitel?.(titel, vorher, (ziel: HTMLElement) => render(ziel, ansicht)) === true; }
       catch { /* ohne Schale bleibt der Inhalt */ }
+      /* Zuletzt der REITER, wenn die Klappe gewechselt hat (zweite
+         Durchsicht von E748). Auf dem Lernzentrum leuchtet unten, was der
+         Schauplatz sagt (E274) — der Titel oben reicht dafür. Aber wer
+         danach eine Seite öffnet, steht am Schauplatz `seite`, und dort
+         leuchtet der Reiter, von dem man kam. Blieb er der vom Öffnen,
+         sprang die Pille eine Stufe später zurück: „Lernen → Heute ^ →
+         Noten → Seite" unter „Lernen" (`test613` §7l/§7m). Dieselbe Regel
+         wie beim Öffnen (`Produktwelten.lernReiter`), und nur, wenn der
+         Titel wirklich gemeldet wurde: ein Lernzentrum, das nicht die
+         offene Ansicht ist, stellt keinen Reiter um. */
+      if (gemeldet && titel !== vorher) {
+        try { Produktwelten.lernReiter(ansicht); } catch { /* ohne Schale bleibt der Inhalt */ }
+      }
     }
     zustand.root?.querySelector<HTMLElement>('#lernwelt-inhalt')?.focus();
   };
@@ -3909,7 +3923,9 @@ const Lernwelt = (() => {
    * UND DRINNEN AUCH (L147, GESCHLOSSEN mit E748). `wechseln()` schaltet
    * die Ansicht INNERHALB der Welt um, ohne `zeigeSonder` noch einmal zu
    * rufen; der Titel blieb dann der vom Öffnen. Jetzt meldet `wechseln()`
-   * den neuen Titel über `App.sonderTitel`, sobald die Klappe wechselt.
+   * den neuen Titel über `App.sonderTitel`, sobald die Klappe wechselt —
+   * und stellt den Reiter um (`Produktwelten.lernReiter`), damit auch eine
+   * Seite, die man danach öffnet, unter dem richtigen Reiter steht.
    */
   const oeffnen = (ansicht: LernweltAnsicht = 'heute'): void => {
     const start = ansichtGueltig(ansicht) ? ansicht : 'heute';
@@ -3957,7 +3973,7 @@ const Lernwelt = (() => {
        `Lernwelt.ansichten` bleibt, was es war — Kennung, Zeichen, Name. */
     ansichten: ANSICHTEN.map(({ id, icon, name }) => ({ id, icon, name })),
     oeffnen,
-    /* Unter welchem Reiter eine Ansicht steht (L147): `Produktwelten.lernen`
+    /* Unter welchem Reiter eine Ansicht steht (L147): `Produktwelten.lernReiter`
        fragt hier, statt „heute oder nicht" ein zweites Mal zu entscheiden. */
     reiterVon,
     render,

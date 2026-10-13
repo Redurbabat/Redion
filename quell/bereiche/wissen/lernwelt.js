@@ -2386,10 +2386,17 @@ const Lernwelt = (() => {
         catch { }
         const titel = titelVon(ansicht);
         if (zustand.root?.isConnected) {
+            let gemeldet = false;
             try {
-                App.sonderTitel?.(titel, vorher, (ziel) => render(ziel, ansicht));
+                gemeldet = App.sonderTitel?.(titel, vorher, (ziel) => render(ziel, ansicht)) === true;
             }
             catch { }
+            if (gemeldet && titel !== vorher) {
+                try {
+                    Produktwelten.lernReiter(ansicht);
+                }
+                catch { }
+            }
         }
         zustand.root?.querySelector('#lernwelt-inhalt')?.focus();
     };

@@ -64,9 +64,30 @@ in `AUFGABEN.md`. `test613` 99 von 99, `test537` unverändert,
 `ansichten/dienst.js` +78 B gzip, Start 1926 KB von 1950; 24 Nachbarn
 unter dem Schloss grün, die Datei-Wächter grün.
 
+**Nach der zweiten Durchsicht** (13. Oktober): L147 war nur zur Hälfte
+zu. `wechseln()` stellte den Reiter nicht um — auf dem Lernzentrum fiel
+das nicht auf (dort entscheidet der Schauplatz), aber wer danach eine
+Seite öffnete, sah die Pille zurückspringen: „Lernen → Heute ^ → Noten →
+Seite" unter „Lernen", „Heute → Übersicht ^ → Trainer → Seite" unter
+„Heute". Zuerst die Zusagen (`test613` §7k–§7m, gegen `7e41a4b4a` rot mit
+100 von 102), dann `Produktwelten.lernReiter` — die Regel „Reiter nach der
+Klappe" an einer Stelle, gerufen beim Öffnen und, wenn die Klappe
+wechselt, aus `wechseln()`. `test613` 102 von 102; drei Gegenproben rot
+(100/102, 100/102, 90/102 — die letzte ist Gegenprobe 2, nachgefahren, und
+ihre Zeilen stehen jetzt in LUECKEN.md und E748 gleich). Die Karte
+nachgezogen (alle Verweise auf `navigation.ts` hinter der eingefügten
+Stelle, `register.md` neu erzeugt). Bilder vorher/nachher am Telefon, hell
+und dunkel. 47 Nachbarn unter dem Schloss, 45 grün; rot `test493` wie
+auf `ba51915dc` und `test567` einmal (eine Zählung über zufällig gezogene
+Karten, dreimal wiederholt grün). Datei-Wächter grün, Start 1927 KB von
+1950.
+
 **Offen:** ob am Rechner für die sechs Ansichten unter „Heute ^" „Mehr
 Orte" leuchten soll (so wie bei „Heute" selbst) — Redurs Frage, L123 F02,
-jetzt auch in `AUFGABEN.md` beim Rest von F02. Die Zielleiste selbst ist
+jetzt auch in `AUFGABEN.md` beim Rest von F02. Und ein Nachbarfall am
+Telefon, gemessen, nicht L147: nach „Zurück" ins Lernzentrum leuchtet auf
+einer danach geöffneten Seite „Dokumente", wenn man über „Dokumente"
+weggegangen war (`AUFGABEN.md`, gleiche Stelle). Die Zielleiste selbst ist
 Bogen 2.
 
 ## 12. Oktober 2026 · Redurs vier Antworten — zusammengeführt auf `claude/abend-antworten`

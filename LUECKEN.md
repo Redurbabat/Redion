@@ -6515,9 +6515,24 @@ die alte Adresse und liess „Lernzentrum" leuchten (beim Fertigstellen
 gefunden, E748). Und `App.sonderTitel` führt bei jedem Wechsel auch den
 Zeichner nach, den sich der Verlauf beim Weggehen merkt — sonst brachte
 „Zurück" die Übersicht unter „Heute" und `#welt-lernen-noten` wieder
-(ebenfalls beim Fertigstellen gefunden).
+(ebenfalls beim Fertigstellen gefunden). Und wechselt drinnen die Klappe,
+stellt `wechseln()` zuletzt auch den REITER um — über
+`Produktwelten.lernReiter`, dieselbe Regel wie beim Öffnen.
 
-**Beleg:** `test613` §7 (zehn Zusagen, gegen `ba51915dc` acht davon rot):
+**Das fehlte bis zur zweiten Durchsicht, und die Lücke kam damit eine
+Stufe später zurück, während dieser Eintrag schon GESCHLOSSEN hiess.** Auf
+dem Lernzentrum entscheidet der Schauplatz, welcher Reiter leuchtet
+(E274), und dort stimmte es. Wer danach eine Seite öffnet, steht am
+Schauplatz `seite`, und dort leuchtet der Reiter, von dem man kam
+(`karte[reiter]` in `seitenleiste.ts`) — den hatte nur das Öffnen gesetzt.
+Gemessen auf `7e41a4b4a` (Telefon 390 × 844): „Lernen → Heute ^ → Noten",
+dann eine Seite → unten „Lernen"; „Heute → Übersicht ^ → Trainer", dann
+eine Seite → unten „Heute". Auf `ba51915dc` sprang die Pille dabei nicht,
+leuchtete aber schon im Lernzentrum falsch (das war L147 selbst).
+
+**Beleg:** `test613` §7 (dreizehn Zusagen; die ersten zehn waren gegen
+`ba51915dc` acht davon rot, die drei aus der zweiten Durchsicht gegen
+`7e41a4b4a` zwei davon):
 geöffnet leuchten die sieben Ansichten unter „Heute ^" unter „Heute", die
 fünf unter „Übersicht ^" unter „Lernen"; drinnen mit echten Tipps
 Übersicht → „Heute ^" → Noten → „Heute", „Übersicht ^" → Trainer →
@@ -6527,14 +6542,33 @@ Neuladen zeigt Noten unter „Heute" (vorher: die Übersicht); am Rechner
 leuchtet die Kante nach „Übersicht → Noten" so wie nach direkt geöffneten
 Noten, und nach „→ Trainer" wieder wie beim Trainer (§7g/§7h); weg und mit
 dem Knopf „Zurück" wieder da, steht dieselbe Ansicht unter demselben Titel
-und derselben Adresse (§7i/§7j). §5 öffnet
-zusätzlich alle 17 Orte der Zielleisten-Quelle. Gegenproben: `titelVon`
-wieder „heute oder nicht" → §5 viermal und §7a/b/e/f/g rot; die alte Folge
+und derselben Adresse (§7i/§7j); wer aus Noten — direkt geöffnet oder
+drinnen über „Heute ^" erreicht — eine Seite öffnet, sieht unten weiter
+„Heute", aus dem Trainer über „Übersicht ^" weiter „Lernen" (§7k–§7m). §5
+öffnet zusätzlich alle 17 Orte der Zielleisten-Quelle. Gegenproben, gegen
+die Fassung mit 102 Zusagen gefahren: `titelVon` wieder „heute oder nicht"
+→ 90 von 102, rot §5 viermal und §7a, §7b, §7e, §7f, §7g, §7i, §7k, §7l
+(gegen die Fassung mit 98 Zusagen waren es 88 von 98 und dieselben Zeilen
+ohne §7k und §7l — hier stand bis zur zweiten Durchsicht die Liste ohne
+§7i, E748 nannte sie mit); die alte Regel „heute oder nicht" für den
+Reiter in `Produktwelten.lernReiter` → 100 von 102, rot §7k und §7l; ohne
+den Reiter in `wechseln()` → 100 von 102, rot §7l und §7m; die alte Folge
 in `wechseln()` (Titel vor Adresse) → §7g rot; ohne den Zeichner →
 §7i/§7j rot. Bilder nachher:
 `nachher-noten-hell.png`/`-dunkel.png` (Telefon), `nachher-rechner-noten-*`
 und `nachher-rechner-drinnen-noten-*` (am Rechner heisst die Krume „Heute",
-die Kante zeigt „Mehr Orte" wie bei „Heute" selbst).
+die Kante zeigt „Mehr Orte" wie bei „Heute" selbst); aus der zweiten
+Durchsicht `vorher-`/`nachher-drinnen-noten-seite-*` und
+`-drinnen-trainer-seite-*` (Telefon, hell und dunkel: die Seite
+„Willkommen", unten vorher „Lernen" bzw. „Heute", nachher „Heute" bzw.
+„Lernen").
+
+**Nicht Teil dieser Lücke, gemessen und offen** (steht in `AUFGABEN.md`
+beim Rest von F02): wer Noten öffnet, über „Dokumente" weggeht und mit
+„Zurück" wiederkommt, sieht im Lernzentrum „Heute" — öffnet er danach
+eine Seite, leuchtet „Dokumente". Die Seite leuchtet so auf `ba51915dc`,
+`7e41a4b4a` und nach der zweiten Durchsicht: „Zurück" setzt keinen
+Reiter.
 
 ### Was hier stand — zum Nachlesen
 

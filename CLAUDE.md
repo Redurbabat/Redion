@@ -2046,7 +2046,11 @@ Die letzten beiden fanden Sonden, nicht der Lauf — §7g war rot mit 95 von
 96, §7i/§7j mit 96 von 98, bevor die Reparatur kam. Und die Durchsicht fand
 an ihm selbst, was er zu viel behauptete: seine Handlungen zählten Dialoge,
 statt sie zu erkennen — ein „Wolke", das die Einstellungen öffnete, blieb
-98 von 98. Seither liest er den Kopf jedes Dialogs (99 Zusagen). Gezählt am
+98 von 98. Seither liest er den Kopf jedes Dialogs (99 Zusagen). Und die
+zweite Durchsicht fand, dass L147 eine Stufe später zurückkam: drinnen
+gewechselt, leuchtete im Lernzentrum der richtige Reiter — öffnete man
+danach eine Seite, sprang die Pille auf den vom Öffnen. Drei Zusagen dazu
+(§7k–§7m, 102), gegen den Stand davor rot mit 100 von 102. Gezählt am
 13. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
 554.*
 

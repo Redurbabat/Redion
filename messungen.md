@@ -9133,3 +9133,78 @@ gzip -6 (+78; roh 43 705 → 44 095). `redion-einzeldatei.html` 9 715 112 →
 1926 KB gzip über 255 Dateien (`test388` §5, Decke 1950) — unverändert.
 
 **Nachbarn** (unter dem Schloss, 24 Läufe, gegen v1515): alle grün.
+
+### Nach der zweiten Durchsicht (13. Oktober 2026)
+
+**Welcher Reiter leuchtet, wenn man aus dem Lernzentrum eine Seite öffnet**
+— Telefon 390 × 844, erst im Lernzentrum, dann nach `App.oeffne` auf die
+erste Seite (`Store.rootPages()[0]`, „Willkommen"); die Sonde der
+Durchsicht (`ziel-quelle-pruef/sonde-reiter.mts` im Kratzordner), gefahren
+gegen eine Kopie von `ba51915dc`, eine von `7e41a4b4a` (`git archive`) und
+den Zweig nach der Reparatur:
+
+```txt
+Weg                               ba51915dc               7e41a4b4a                jetzt
+Noten direkt geöffnet             hl-lernen → hl-lernen   hl-start → hl-start      hl-start → hl-start
+Lernen → „Heute ^" → Noten        hl-lernen → hl-lernen   hl-start → hl-lernen  ←  hl-start → hl-start
+Heute → „Übersicht ^" → Trainer   hl-start → hl-start     hl-lernen → hl-start  ←  hl-lernen → hl-lernen
+```
+
+Schauplatz mit der Seite jedes Mal `seite`; Seitenfehler 0. Für die zwei
+Wege drinnen dieselben Zahlen in der Bild-Sonde
+(`ziel-quelle-d2/bild-seite.mts`), hell und dunkel.
+
+**Ein Nachbarfall, nur gemessen:** Noten direkt → `#hl-dok` →
+`App.zurueck()` → eine Seite:
+
+```txt
+                       ba51915dc    7e41a4b4a    jetzt
+im Lernzentrum zurück  hl-lernen    hl-start     hl-start
+mit der Seite          hl-dok       hl-dok       hl-dok
+```
+
+„Zurück" setzt keinen Reiter; offen, steht in `AUFGABEN.md`.
+
+**test613:** gegen `7e41a4b4a` mit den drei neuen Zusagen 100 von 102 (rot
+§7l, §7m); mit der Reparatur 102 von 102. Gegenproben, je gebaut mit
+`npm run bauen:ts` und unter dem Schloss gefahren:
+
+```txt
+lernReiter wieder „heute → Start, sonst Lernen"   100 von 102   §7k, §7l
+ohne den Reiter in wechseln()                      100 von 102   §7l, §7m
+titelVon wieder „heute oder nicht"                  90 von 102   §5 ×4, §7a, §7b, §7e, §7f, §7g, §7i, §7k, §7l
+```
+
+Danach die zwei Quellen aus der Sicherung zurück und voll gebaut:
+`lernwelt.ts`, `produktwelten.ts`, `lernwelt.js` und `produktwelten.js`
+wieder Byte für Byte (`sha256sum -c`); der Dienststand zählte über die
+Gegenproben von v1516 auf v1520, der Inhalt ist derselbe
+(`1e404b13aa24e171`).
+
+**test537:** 123 Paare, 511 Treffer, 6 Zugriffe über `(window as any)` —
+unverändert.
+
+**Bytes** (gzip -6, gegen `7e41a4b4a`):
+
+```txt
+quell/bereiche/wissen/lernwelt.js        38113 → 38164    +51
+quell/bereiche/wissen/produktwelten.js    3258 →  3274    +16
+```
+
+**Bilder** (Kratzordner `bilder-ziel/quelle/`):
+`vorher-drinnen-noten-seite-hell.png`/`-dunkel.png`,
+`vorher-drinnen-trainer-seite-*`, `nachher-drinnen-noten-seite-*`,
+`nachher-drinnen-trainer-seite-*` — die Seite „Willkommen", unten vorher
+„Lernen" (nach Noten) und „Heute" (nach dem Trainer), nachher „Heute" und
+„Lernen". Angesehen: Noten hell vorher und nachher, Trainer dunkel vorher
+und nachher.
+
+**Start:** 1926 KB (`7e41a4b4a`, Kopie) → 1927 KB gzip über 255 Dateien
+(`test388` §5, Decke 1950). `redion-einzeldatei.html` 9 715 502 → 9 715 871
+Bytes.
+
+**Nachbarn** (unter dem Schloss, 47 Läufe, gegen v1520): 45 grün; rot
+`test493` (42 grün, 2 rot — `-webkit-backdrop-filter`, wie auf
+`ba51915dc`) und `test567` einmal mit 38 von 39 (die Zählung über
+zufällig gezogene Ankreuzkarten; drei Wiederholungen 39 von 39, auf
+`7e41a4b4a` zweimal 39 von 39). Datei-Wächter grün.
