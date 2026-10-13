@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 553 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 554 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2023,6 +2023,28 @@ neuen Port. Gezählt am 11. Oktober, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 551 auf seinem Zweig. Beim Zusammenführen nachgezählt
 (12. Oktober, `claude/abend-antworten`): 553.*
 
+*Und 554: `test613` — was unter einem Reiter der unteren Leiste liegt, steht
+an EINER Stelle (E748, Zielleiste Bogen 1, L147). Er hält Redurs Antwort
+auf Frage 2 — fünf Ziele je Reiter, in seiner Folge — gegen
+`Register.navigation.ziele`, und jeden Namen gegen den Bildschirm, auf dem
+er steht: Ortsmenü, „Heute ^", „Übersicht ^", Termine-Karten, Mehr-Liste,
+aus dem DOM gelesen und nicht aus dem Code. Seine Hauptzusage ist eine
+Invariante: alle 17 Orte, jeder über sein eigenes `tun()` von einem anderen
+Bildschirm aus geöffnet, schalten den Reiter an, unter dem sie stehen —
+und genau dort fing er L147: Prüfungen, Noten, Stundenplan und Schule
+liessen „Lernen" leuchten, während oben „Noten ^" in der Klappe „Heute"
+stand. Gegen ba51915dc war er rot mit 12 von 68 (die Endfassung mit 13
+von 73); seine fünf Gegenproben treffen je andere Abschnitte (E748). Fünf
+Zusagen kamen erst beim Bau: nach einem Wechsel drinnen stand die Adresse
+noch auf der Übersicht, und ein Neuladen führte dorthin zurück; am
+Rechner leuchtete danach die falsche Kante, weil der Titel VOR der
+Adresse gemeldet wurde; und „Zurück" brachte die Übersicht unter dem
+neuen Titel, weil sich der Verlauf den Zeichner vom Öffnen gemerkt hatte.
+Die letzten beiden fanden Sonden, nicht der Lauf — §7g war rot mit 95 von
+96, §7i/§7j mit 96 von 98, bevor die Reparatur kam. Gezählt am
+13. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+554.*
+
 ### Die Befehle
 
 ```txt
@@ -2044,7 +2066,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 553 Läufe
+npm run pruefen                      alle 554 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2141,7 +2163,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 553 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 554 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

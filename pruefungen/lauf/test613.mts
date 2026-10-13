@@ -52,7 +52,12 @@
  *   §7  L147: die Ansichten unter „Heute ^" (Prüfungen, Noten, Stundenplan,
  *       Schule, Uni, Arbeit) schalten „Heute" an und melden sich als „heute",
  *       die unter „Übersicht ^" schalten „Lernen" an. Auch DRINNEN, mit dem
- *       Finger: im Lernzentrum über die Klappen gewechselt, folgt der Reiter.
+ *       Finger: im Lernzentrum über die Klappen gewechselt, folgt der Reiter
+ *       — und die Adresse, so dass ein Neuladen dorthin zurückführt. Am
+ *       Rechner (§7g/§7h) leuchtet die Kante nach einem Wechsel drinnen so
+ *       wie nach dem direkten Öffnen derselben Ansicht, und wer danach
+ *       weggeht und mit „Zurück" wiederkommt (§7i/§7j), findet dieselbe
+ *       Ansicht unter demselben Titel und derselben Adresse.
  *   §8  Ein kaputter Lieferant nimmt nur sich selbst mit — ein werfender
  *       Lieferant, ein werfendes `zeigen()`, ein Ziel ohne `tun`, eine
  *       doppelte Kennung; sortiert nach Rang, höchstens fünf, jedes Mal neu
@@ -147,6 +152,11 @@ const oeffnen = async (): Promise<{ ctx: BrowserContext; s: Page; downloads: str
     (document.getElementById('tree')?.children.length || 0) > 0, null, { timeout: 30000 });
   await s.evaluate(() => {
     Store.setMeta('rundgangGesehen', true);
+    /* Und die Neuerungen als gesehen: sonst legt sich 1,8 s nach jedem Start
+       der Kasten „Neu in Redion" (#rg-neu, rundgang.ts) über die Seite und
+       fängt einen späteren Tipp ab — gegen ba51915dc geschah genau das nach
+       dem Neuladen in §7f. */
+    Store.setMeta('neuerungenGesehen', 1e9);
     document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung,#rg-neu')
       .forEach(el => el.remove());
   });
@@ -202,7 +212,8 @@ const anWerte = (s: Page, key: string): Promise<Record<string, boolean | null>> 
 const allesZu = async (s: Page): Promise<void> => {
   await s.keyboard.press('Escape'); await warte(s, 150);
   await s.keyboard.press('Escape'); await warte(s, 150);
-  await s.evaluate(() => document.querySelectorAll('.overlay,.menu').forEach(el => el.remove()));
+  await s.evaluate(() => document.querySelectorAll('.overlay,.menu,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung,#rg-neu')
+    .forEach(el => el.remove()));
 };
 
 const menueLesen = (s: Page): Promise<string[]> => s.evaluate(() =>
@@ -436,6 +447,109 @@ console.log('\n§7 L147: was unter „Heute ^" steht, schaltet „Heute" an');
   p('§7e und innerhalb von „Heute ^" bleibt es Heute (Stundenplan)',
     plan.view === 'stundenplan' && plan.an[0] === 'hl-start' && plan.wo === 'heute',
     `nachher ${plan.an} · wo ${plan.wo} · view ${plan.view}`);
+
+  /* Die Adresse zieht mit: die Kante am Rechner liest sie zuerst (E393),
+     und ein Neuladen führt dorthin, wo man war — nicht dorthin, wo man das
+     Lernzentrum betreten hat. */
+  await s.click('#hl-lernen'); await warte(s, 700);
+  await s.click('[data-lw-klappe="heute"]'); await warte(s, 450);
+  await s.click('.menu [data-wahl="noten"]'); await warte(s, 600);
+  const adr = await lage(s);
+  await s.reload();
+  await s.waitForFunction(() => typeof App !== 'undefined' && !!document.querySelector('[data-lw-view]'),
+    null, { timeout: 30000 });
+  await s.evaluate(() => document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung,#rg-neu')
+    .forEach(el => el.remove()));
+  await warte(s, 800);
+  const neu = await lage(s);
+  p('§7f drinnen gewechselt, steht man an der Adresse der Ansicht — und ein Neuladen kommt dorthin zurück',
+    adr.hash === '#welt-lernen-noten' && neu.view === 'noten' && neu.an[0] === 'hl-start' && neu.wo === 'heute',
+    `vorher ${adr.hash} · nach dem Neuladen view ${neu.view}, ${neu.an}, wo ${neu.wo}, ${neu.hash}`);
+}
+
+/* ═══ §7g L147 am Rechner: die Kante sagt drinnen dasselbe wie beim Öffnen ═
+   Gefunden beim Fertigstellen dieses Bogens, mit einer Sonde: wer am Rechner
+   in der Übersicht über „Heute ^" auf Noten wechselte, sah in der Kante
+   weiter „Lernzentrum" leuchten — wer Noten direkt öffnete, „Mehr Orte"
+   (dahinter liegt „Heute", E388). Der Grund war eine Reihenfolge: der Titel
+   meldete den neuen Schauplatz, BEVOR die Adresse umgeschrieben war, die
+   Kante liest zuerst die Adresse (E393), und `replaceState` meldet sich
+   danach nicht mehr. Gemessen wird nicht ein bestimmter Knopf, sondern die
+   Gleichheit mit dem direkten Öffnen — welcher Knopf dort der richtige ist,
+   bleibt Redurs Frage (L123 F02). */
+console.log('\n§7g L147 am Rechner: die Kante sagt drinnen dasselbe wie beim Öffnen');
+{
+  const ctxR = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const r = await ctxR.newPage();
+  r.on('pageerror', e => fehler.push(e.message));
+  await r.goto(`http://127.0.0.1:${PORT}/index.html`);
+  await r.waitForFunction(() => typeof App !== 'undefined' && typeof Store !== 'undefined' &&
+    (document.getElementById('tree')?.children.length || 0) > 0, null, { timeout: 30000 });
+  await r.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    /* Und die Neuerungen als gesehen: sonst legt sich 1,8 s nach jedem Start
+       der Kasten „Neu in Redion" (#rg-neu, rundgang.ts) über die Seite und
+       fängt einen späteren Tipp ab — gegen ba51915dc geschah genau das nach
+       dem Neuladen in §7f. */
+    Store.setMeta('neuerungenGesehen', 1e9);
+    document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung,#rg-neu')
+      .forEach(el => el.remove());
+  });
+  const kanteLage = () => r.evaluate(() => ({
+    mark: [...document.querySelectorAll<HTMLElement>('#kante .k-orte .k-knopf.ist-hier')].map(b => b.dataset['k'] ?? '?'),
+    wo: String(App.schauplatz()), hash: location.hash,
+    view: document.querySelector<HTMLElement>('[data-lw-view]')?.dataset['lwView'] ?? null
+  }));
+  const direkt: Record<string, { mark: string[]; wo: string }> = {};
+  for (const v of ['noten', 'trainer']) {
+    await r.evaluate((x: string) => (globalThis as any).Produktwelten.lernen(x), v);
+    await r.waitForTimeout(600);
+    direkt[v] = await kanteLage();
+  }
+  await r.evaluate(() => (globalThis as any).Produktwelten.lernen('lernen'));
+  await r.waitForTimeout(600);
+  await r.click('[data-lw-klappe="heute"]'); await r.waitForTimeout(450);
+  await r.click('.menu [data-wahl="noten"]'); await r.waitForTimeout(600);
+  const drinNoten = await kanteLage();
+  p('§7g Übersicht → „Heute ^" → Noten: die Kante leuchtet wie bei direkt geöffneten Noten',
+    drinNoten.view === 'noten' && drinNoten.wo === 'heute' && drinNoten.mark.length === 1 &&
+      JSON.stringify(drinNoten.mark) === JSON.stringify(direkt['noten']?.mark),
+    `drinnen ${JSON.stringify(drinNoten)} · direkt ${JSON.stringify(direkt['noten'])}`);
+  await r.click('[data-lw-klappe="uebersicht"]'); await r.waitForTimeout(450);
+  await r.click('.menu [data-wahl="trainer"]'); await r.waitForTimeout(600);
+  const drinTrainer = await kanteLage();
+  p('§7h und zurück über „Übersicht ^" → Trainer: wieder wie beim direkten Öffnen',
+    drinTrainer.view === 'trainer' && drinTrainer.wo === 'lernen' && drinTrainer.mark.length === 1 &&
+      JSON.stringify(drinTrainer.mark) === JSON.stringify(direkt['trainer']?.mark),
+    `drinnen ${JSON.stringify(drinTrainer)} · direkt ${JSON.stringify(direkt['trainer'])}`);
+
+  /* §7i/§7j DER SCHRITT ZURÜCK. Gefunden beim Fertigstellen, mit einer
+     Sonde: der Verlauf merkt sich beim Weggehen Titel, Adresse UND den
+     Zeichner der offenen Ansicht. Drinnen gewechselt, änderten sich Titel
+     und Adresse — der Zeichner blieb der vom Öffnen. Zurück stand dann
+     „Heute" im Kopf, `#welt-lernen-noten` in der Adresse und darunter die
+     Übersicht. Hier wird mit dem echten Knopf zurückgegangen. */
+  const sichtbar = () => r.evaluate(() => ({
+    view: [...document.querySelectorAll<HTMLElement>('[data-lw-view]')]
+      .filter(e => e.offsetParent !== null).map(e => e.dataset['lwView'] ?? '?'),
+    wo: String(App.schauplatz()), hash: location.hash,
+    mark: [...document.querySelectorAll<HTMLElement>('#kante .k-orte .k-knopf.ist-hier')].map(b => b.dataset['k'] ?? '?')
+  }));
+  for (const [klappe, wahl, wo, n] of [['heute', 'noten', 'heute', 'i'], ['uebersicht', 'trainer', 'lernen', 'j']] as const) {
+    await r.evaluate(() => (globalThis as any).Produktwelten.lernen('lernen'));
+    await r.waitForTimeout(600);
+    await r.click(`[data-lw-klappe="${klappe}"]`); await r.waitForTimeout(450);
+    await r.click(`.menu [data-wahl="${wahl}"]`); await r.waitForTimeout(600);
+    await r.click('#kante .k-knopf[data-k="bibliothekOben"]'); await r.waitForTimeout(600);
+    const weg = await sichtbar();
+    await r.click('#btn-back'); await r.waitForTimeout(800);
+    const zurueck = await sichtbar();
+    p(`§7${n} Übersicht → „${klappe === 'heute' ? 'Heute' : 'Übersicht'} ^" → ${wahl}, weg und mit „Zurück" wieder da: dieselbe Ansicht unter demselben Titel und derselben Adresse`,
+      weg.wo === 'bibliothek' && JSON.stringify(zurueck.view) === JSON.stringify([wahl]) && zurueck.wo === wo &&
+        zurueck.hash === '#welt-lernen-' + wahl && JSON.stringify(zurueck.mark) === JSON.stringify(direkt[wahl]?.mark),
+      `weg ${JSON.stringify(weg)} · zurück ${JSON.stringify(zurueck)} · direkt ${JSON.stringify(direkt[wahl])}`);
+  }
+  await ctxR.close();
 }
 
 /* ═══ §8 Ein kaputter Lieferant nimmt nur sich selbst mit ══════════════════ */

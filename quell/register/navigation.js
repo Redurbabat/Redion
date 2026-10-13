@@ -134,5 +134,50 @@ Register.navigation = (() => {
     } })())
         .sort((a, b) => (a.rang || 100) - (b.rang || 100));
     const eines = (id) => LISTE.find(x => x.id === id) || null;
-    return { alle, anPlatz, eines, melde, nimmZurueck, anzahl: () => LISTE.length };
+    const HOECHSTENS = 5;
+    const ZIEL_LIEFERANTEN = [];
+    const meldeZiele = (reiter, fn) => {
+        if (typeof reiter !== 'string' || !reiter || typeof fn !== 'function')
+            return false;
+        if (ZIEL_LIEFERANTEN.some(l => l.reiter === reiter && l.fn === fn))
+            return false;
+        ZIEL_LIEFERANTEN.push({ reiter, fn: fn });
+        return true;
+    };
+    const ziele = (reiter) => {
+        if (typeof reiter !== 'string' || !reiter)
+            return [];
+        const roh = [];
+        for (const l of ZIEL_LIEFERANTEN) {
+            if (l.reiter !== reiter)
+                continue;
+            try {
+                const teil = l.fn();
+                if (!Array.isArray(teil))
+                    continue;
+                for (const z of teil) {
+                    if (!z || !z.id || !z.name || !z.zeichen || typeof z.tun !== 'function')
+                        continue;
+                    if (roh.some(x => x.id === z.id))
+                        continue;
+                    roh.push(z);
+                }
+            }
+            catch { }
+        }
+        return roh
+            .filter(z => {
+            if (typeof z.zeigen !== 'function')
+                return true;
+            try {
+                return !!z.zeigen();
+            }
+            catch {
+                return false;
+            }
+        })
+            .sort((a, b) => (a.rang ?? 500) - (b.rang ?? 500))
+            .slice(0, HOECHSTENS);
+    };
+    return { alle, anPlatz, eines, melde, nimmZurueck, anzahl: () => LISTE.length, meldeZiele, ziele };
 })();

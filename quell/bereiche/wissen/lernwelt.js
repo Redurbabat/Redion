@@ -2,18 +2,18 @@
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/lernwelt.ts (npm run bauen:ts). */
 const Lernwelt = (() => {
     const ANSICHTEN = [
-        { id: 'heute', icon: 'today', name: 'Heute' },
-        { id: 'lernen', icon: 'cards', name: 'Lernen' },
-        { id: 'lernweg', icon: 'compass', name: 'Lernpfad' },
-        { id: 'fehler', icon: 'puzzle', name: 'Meine Fehler' },
-        { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen' },
-        { id: 'noten', icon: 'medal', name: 'Noten' },
-        { id: 'stundenplan', icon: 'calendar', name: 'Stundenplan' },
-        { id: 'schule', icon: 'learn', name: 'Schule / Ausbildung' },
+        { id: 'heute', icon: 'today', name: 'Heute', zielRang: 1 },
+        { id: 'lernen', icon: 'cards', name: 'Lernen', zielRang: 1 },
+        { id: 'lernweg', icon: 'compass', name: 'Lernpfad', zielRang: 3 },
+        { id: 'fehler', icon: 'puzzle', name: 'Meine Fehler', kurz: 'Fehler', zielRang: 4 },
+        { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen', zielRang: 2 },
+        { id: 'noten', icon: 'medal', name: 'Noten', zielRang: 3 },
+        { id: 'stundenplan', icon: 'calendar', name: 'Stundenplan', zielRang: 4 },
+        { id: 'schule', icon: 'learn', name: 'Schule / Ausbildung', kurz: 'Schule', zielRang: 5 },
         { id: 'uni', icon: 'building', name: 'Uni' },
         { id: 'arbeit', icon: 'briefcase', name: 'Arbeit' },
-        { id: 'fortschritt', icon: 'chart', name: 'Fortschritt' },
-        { id: 'trainer', icon: 'checkCircle', name: 'Trainer' }
+        { id: 'fortschritt', icon: 'chart', name: 'Fortschritt', zielRang: 5 },
+        { id: 'trainer', icon: 'checkCircle', name: 'Trainer', zielRang: 2 }
     ];
     const KLAPPEN = [
         { id: 'heute', titel: 'Heute', name: 'Heute', icon: 'today', gruppen: [
@@ -37,6 +37,8 @@ const Lernwelt = (() => {
     const ansichtName = (id) => KURZ[id] || ANSICHTEN.find(x => x.id === id)?.name || id;
     const ansichtZeichen = (id) => ANSICHTEN.find(x => x.id === id)?.icon || 'cards';
     const klappeVon = (ansicht) => klappen().find(k => k.gruppen.some(g => g.unter.includes(ansicht))) || null;
+    const titelVon = (ansicht) => klappeVon(ansicht)?.id === 'heute' ? 'Heute' : 'Lernzentrum';
+    const reiterVon = (ansicht) => titelVon(ansicht) === 'Heute' ? 'start' : 'lernen';
     const zustand = {
         root: null,
         ansicht: 'heute',
@@ -2368,6 +2370,7 @@ const Lernwelt = (() => {
     };
     const ansichtGueltig = (wert) => ANSICHTEN.some(item => item.id === wert);
     const wechseln = (ansicht) => {
+        const vorher = titelVon(zustand.ansicht);
         zustand.ansicht = ansicht;
         zustand.training = null;
         zustand.simulation = null;
@@ -2376,6 +2379,18 @@ const Lernwelt = (() => {
         zustand.ladeSchluessel = '';
         Store.setMeta(metaSchluessel('ansicht'), ansicht);
         zeichnen();
+        try {
+            if (zustand.root?.isConnected && /^#welt-lernen-/.test(location.hash))
+                Produktwelten.routeSchreiben('lernen', ansicht);
+        }
+        catch { }
+        const titel = titelVon(ansicht);
+        if (zustand.root?.isConnected) {
+            try {
+                App.sonderTitel?.(titel, vorher, (ziel) => render(ziel, ansicht));
+            }
+            catch { }
+        }
         zustand.root?.querySelector('#lernwelt-inhalt')?.focus();
     };
     const mischen = (karten, limit) => {
@@ -2914,17 +2929,35 @@ const Lernwelt = (() => {
     };
     const oeffnen = (ansicht = 'heute') => {
         const start = ansichtGueltig(ansicht) ? ansicht : 'heute';
-        const titel = start === 'heute' ? 'Heute' : 'Lernzentrum';
-        App.zeigeSonder(titel, (ziel) => render(ziel, start));
+        App.zeigeSonder(titelVon(start), (ziel) => render(ziel, start));
     };
+    const zieleDerKlappe = (klappeId) => () => {
+        const klappe = klappen().find(k => k.id === klappeId);
+        if (!klappe)
+            return [];
+        return klappe.gruppen.flatMap(g => g.unter)
+            .map(id => ANSICHTEN.find(a => a.id === id))
+            .filter((a) => !!a && typeof a.zielRang === 'number')
+            .map(a => ({
+            id: a.id, name: ansichtName(a.id), ...(a.kurz ? { kurz: a.kurz } : {}), zeichen: a.icon,
+            rang: a.zielRang, ort: true,
+            an: () => !!zustand.root?.isConnected && zustand.ansicht === a.id,
+            tun: () => Produktwelten.lernen(a.id)
+        }));
+    };
+    if (typeof Register !== 'undefined' && Register.navigation?.meldeZiele) {
+        Register.navigation.meldeZiele('heute', zieleDerKlappe('heute'));
+        Register.navigation.meldeZiele('lernen', zieleDerKlappe('uebersicht'));
+    }
     const aktualisieren = () => {
         zustand.extern = null;
         zustand.ladeSchluessel = '';
         zeichnen();
     };
     return {
-        ansichten: ANSICHTEN.map(item => ({ ...item })),
+        ansichten: ANSICHTEN.map(({ id, icon, name }) => ({ id, icon, name })),
         oeffnen,
+        reiterVon,
         render,
         wechseln,
         aktualisieren,

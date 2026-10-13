@@ -82,10 +82,10 @@ const Bibliothek = (() => {
         return new Date(ms).toLocaleDateString('de-CH', { day: '2-digit', month: 'short', year: 'numeric' });
     };
     const ORTE = [
-        { id: 'ablage', name: 'Meine Ablage', zeichen: 'archive' },
-        { id: 'kuerzlich', name: 'Zuletzt geöffnet', zeichen: 'clock' },
-        { id: 'favoriten', name: 'Favoriten', zeichen: 'star' },
-        { id: 'pdf', name: 'Alle PDFs', zeichen: 'page' },
+        { id: 'ablage', name: 'Meine Ablage', zeichen: 'archive', zielRang: 1 },
+        { id: 'kuerzlich', name: 'Zuletzt geöffnet', zeichen: 'clock', zielRang: 2, kurz: 'Zuletzt' },
+        { id: 'favoriten', name: 'Favoriten', zeichen: 'star', zielRang: 3 },
+        { id: 'pdf', name: 'Alle PDFs', zeichen: 'page', zielRang: 4, kurz: 'PDFs' },
         { id: 'geteilt', name: 'Geteilt', zeichen: 'users' },
         { id: 'privat', name: 'Privat', zeichen: 'lock' },
         { id: 'schule', name: 'Ausbildung', zeichen: 'book' },
@@ -1110,7 +1110,7 @@ const Bibliothek = (() => {
         gruppe.addEventListener('focusin', e => auf(e.target instanceof Element ? e.target : null));
         gruppe.addEventListener('pointerover', e => auf(e.target instanceof Element ? e.target : null));
     };
-    const ortSetzen = (id) => {
+    const ortZustand = (id) => {
         if (id === 'pdf') {
             zustand.reiter = 'alle';
             zustand.art = 'pdf';
@@ -1124,7 +1124,14 @@ const Bibliothek = (() => {
             if (typeof Store !== 'undefined' && Store.setMeta)
                 Store.setMeta(ORDNER_SCHLUESSEL, '');
         }
+    };
+    const ortSetzen = (id) => {
+        ortZustand(id);
         App.zeichneSeite();
+    };
+    const ortOeffnen = (id) => {
+        ortZustand(id);
+        oeffne();
     };
     const SAMMLUNG_ZEICHEN = {
         uebersicht: 'pages', bibliothek: 'library', datenbanken: 'database',
@@ -1641,6 +1648,38 @@ const Bibliothek = (() => {
                 else
                     blickHinein(p, r);
             } });
+    }
+    if (typeof Register !== 'undefined' && Register.navigation?.meldeZiele) {
+        const imRegal = () => {
+            try {
+                return App.schauplatz() === 'bibliothek' && !!document.querySelector('#scroll .bib-ort');
+            }
+            catch {
+                return false;
+            }
+        };
+        Register.navigation.meldeZiele('dokumente', () => {
+            const liste = ORTE.filter(o => typeof o.zielRang === 'number').map(o => ({
+                id: o.id, name: o.name, ...(o.kurz ? { kurz: o.kurz } : {}), zeichen: o.zeichen,
+                rang: o.zielRang, ort: true,
+                an: () => imRegal() && ortAktiv() === o.id,
+                tun: () => ortOeffnen(o.id)
+            }));
+            const heft = Register.navigation.eines?.('app-notizhefte');
+            if (heft && typeof heft.tun === 'function')
+                liste.push({
+                    id: 'notizhefte', name: heft.name, zeichen: heft.zeichen, rang: 5, ort: true,
+                    zeigen: () => typeof Notebook !== 'undefined' && typeof Notebook.oeffnen === 'function',
+                    an: () => { try {
+                        return App.schauplatz() === 'notizhefte';
+                    }
+                    catch {
+                        return false;
+                    } },
+                    tun: () => heft.tun()
+                });
+            return liste;
+        });
     }
     return { oeffne, alleZeigen, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon, suchBereich,
         pdfImportieren, wannText, umfangSatz, DECKE_KUERZLICH,

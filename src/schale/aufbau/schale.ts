@@ -1126,6 +1126,38 @@ const App = (() => {
     if (scr) scr.scrollTop = 0;
   };
 
+  /**
+   * NUR DEN TITEL der offenen Sonderansicht ändern — ohne neu zu zeichnen
+   * (L147, E748).
+   *
+   * Der Schauplatz kommt aus dem Titel. Eine Ansicht, die drinnen umschaltet
+   * (das Lernzentrum zwischen „Heute ^" und „Übersicht ^"), wechselt damit
+   * den Ort, ohne dass jemand `zeigeSonder` ruft — und `zeigeSonder` wäre
+   * der falsche Weg: es zeichnet die ganze Ansicht neu, legt einen Schritt
+   * in den Verlauf und schreibt die Adresse um. Hier ändert sich nur, was
+   * der Titel sagt: die Krume und der gemeldete Schauplatz.
+   *
+   * `vorher` ist ein Vergleich, kein Schmuck: geändert wird nur, wenn GERADE
+   * dieser Titel offen ist. Wer inzwischen woanders steht, benennt nichts um.
+   *
+   * UND WER SIE BEIM ZURÜCKKOMMEN ZEICHNET (`zeichner`, freiwillig). Der
+   * Verlauf merkt sich beim Weggehen Titel, Adresse und Zeichner der offenen
+   * Ansicht (`navOrt`). Wechselt sie drinnen, ändern sich Titel und Adresse —
+   * blieb der Zeichner der vom Öffnen, kam „Zurück" mit „Heute" im Kopf,
+   * `#welt-lernen-noten` in der Adresse und der Übersicht darunter wieder
+   * (gemessen beim Fertigstellen von E748, `test613` §7i). Gezeichnet wird
+   * hier nichts; der neue Zeichner gilt erst beim nächsten Mal.
+   */
+  const sonderTitel = (titel: string, vorher: string, zeichner?: unknown): boolean => {
+    if (seiteId || !sonder || !titel || sonder.titel !== vorher) return false;
+    if (typeof zeichner === 'function') sonder = { ...sonder, zeichner };
+    if (titel === vorher) return true;
+    sonder = { ...sonder, titel };
+    zeichneCrumbs();
+    schauplatzMelden();
+    return true;
+  };
+
   const oeffne = (id?: string | null) => {
     if (sonder || seiteId !== id) navMerken();
     sonder = null;
@@ -5236,7 +5268,7 @@ const App = (() => {
   aktionenMelden();
 
   return {
-    start, oeffne, zeigeSonder, zeichneSeite, zeichneBaum, zeichneCrumbs, aktuelleSeite, setzeSeite,
+    start, oeffne, zeigeSonder, sonderTitel, zeichneSeite, zeichneBaum, zeichneCrumbs, aktuelleSeite, setzeSeite,
     zeigeBlock, blockAusHash,
     kiPanel, suche, seitenSuche, theme, einstellungen, papierkorb, neueSeite,
     /* E283 / L85: die zwei Griffe, die der Entwurf verlangte und die es

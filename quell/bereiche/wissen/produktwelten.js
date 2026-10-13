@@ -68,8 +68,9 @@ const Produktwelten = (() => {
             : ansicht === 'ausbildung' ? 'schule' : ansicht;
         weltSetzen('lernen');
         Store.setMeta(LERN_META, ziel);
-        reiterSetzen(ziel === 'heute' ? 'start' : 'lernen');
         const modul = lernmodul();
+        reiterSetzen(typeof modul?.reiterVon === 'function' ? modul.reiterVon(ziel)
+            : ziel === 'heute' ? 'start' : 'lernen');
         if (modul?.oeffnen) {
             modul.oeffnen(ziel);
             routeSchreiben('lernen', ziel);
@@ -273,7 +274,8 @@ const Produktwelten = (() => {
     return {
         start, aktiv, markieren, wechseln: weltSetzen, zurAktivenWelt,
         lernen, workspace, bibliothek, aufgaben, kalender, whiteboards, planung, bereicheDialog,
-        routeAusHash, routeOeffnen
+        routeAusHash, routeOeffnen,
+        routeSchreiben
     };
 })();
 window.Produktwelten = Produktwelten;

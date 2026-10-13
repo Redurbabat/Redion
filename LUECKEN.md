@@ -6490,8 +6490,53 @@ Symbole holt das Betriebssystem beim Installieren, nicht der Browser beim
 
 ---
 
-L147 · Innerhalb der Lernwelt umschalten meldet den Ort nicht neu — offen
+L147 · Innerhalb der Lernwelt umschalten meldet den Ort nicht neu — GESCHLOSSEN mit E748
 --------------------------------------------------------------------------
+
+**Geschlossen am 13. Oktober 2026 (E748), nach Redurs Antwort auf
+Frage 3 des Zielleisten-Entwurfs:** „Prüfungen, Noten, Stundenplan und
+Schule schalten unten künftig ‚Heute' an (wie oben unter ‚Heute ^', E726)."
+
+Seit E726 war die Lücke grösser als hier beschrieben: nicht nur drinnen,
+schon beim ÖFFNEN meldeten sich Prüfungen, Noten, Stundenplan, Schule, Uni
+und Arbeit als „Lernzentrum" und liessen unten „Lernen" leuchten, während
+oben „Noten ^" in der Klappe „Heute" stand (gemessen auf `ba51915dc`,
+Bilder `vorher-noten-hell.png`/`-dunkel.png`).
+
+**Was jetzt gilt:** die Klappe entscheidet (`titelVon`/`reiterVon` in
+`lernwelt.ts`, `Produktwelten.lernen` fragt `Lernwelt.reiterVon`). Drinnen
+meldet `wechseln()` den neuen Titel über den schmalen Weg, den dieser
+Eintrag verlangt hat — `App.sonderTitel(titel, vorher)`: nur der Titel, die
+Krume und der Schauplatz, kein Neuzeichnen, kein Schritt im Verlauf — und
+schreibt VORHER die Adresse der neuen Ansicht (`Produktwelten.routeSchreiben`),
+damit die Kante am Rechner (E393) und ein Neuladen dasselbe sagen. Die
+Folge zählt: in der umgekehrten las die Kante beim Melden des Titels noch
+die alte Adresse und liess „Lernzentrum" leuchten (beim Fertigstellen
+gefunden, E748). Und `App.sonderTitel` führt bei jedem Wechsel auch den
+Zeichner nach, den sich der Verlauf beim Weggehen merkt — sonst brachte
+„Zurück" die Übersicht unter „Heute" und `#welt-lernen-noten` wieder
+(ebenfalls beim Fertigstellen gefunden).
+
+**Beleg:** `test613` §7 (zehn Zusagen, gegen `ba51915dc` acht davon rot):
+geöffnet leuchten die sieben Ansichten unter „Heute ^" unter „Heute", die
+fünf unter „Übersicht ^" unter „Lernen"; drinnen mit echten Tipps
+Übersicht → „Heute ^" → Noten → „Heute", „Übersicht ^" → Trainer →
+„Lernen", der Hauptteil „Heute" → „Heute", Stundenplan bleibt „Heute"; und
+nach „Übersicht → Noten" steht die Adresse `#welt-lernen-noten`, und ein
+Neuladen zeigt Noten unter „Heute" (vorher: die Übersicht); am Rechner
+leuchtet die Kante nach „Übersicht → Noten" so wie nach direkt geöffneten
+Noten, und nach „→ Trainer" wieder wie beim Trainer (§7g/§7h); weg und mit
+dem Knopf „Zurück" wieder da, steht dieselbe Ansicht unter demselben Titel
+und derselben Adresse (§7i/§7j). §5 öffnet
+zusätzlich alle 17 Orte der Zielleisten-Quelle. Gegenproben: `titelVon`
+wieder „heute oder nicht" → §5 viermal und §7a/b/e/f/g rot; die alte Folge
+in `wechseln()` (Titel vor Adresse) → §7g rot; ohne den Zeichner →
+§7i/§7j rot. Bilder nachher:
+`nachher-noten-hell.png`/`-dunkel.png` (Telefon), `nachher-rechner-noten-*`
+und `nachher-rechner-drinnen-noten-*` (am Rechner heisst die Krume „Heute",
+die Kante zeigt „Mehr Orte" wie bei „Heute" selbst).
+
+### Was hier stand — zum Nachlesen
 
 Gefunden beim Bau des Wischens (E526), als Rest des dort behobenen Fehlers.
 

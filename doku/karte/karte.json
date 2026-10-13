@@ -2643,8 +2643,8 @@
         },
         {
           "pfad": "/home/user/Redion/src/register/navigation.ts",
-          "rolle": "Register.navigation — Eintrag {id,name,icon,platz,rang,tun?,zeigen?,vonAussen?,knopfId?,kuerzel?,hinweis?,gruppe?,marke?,haupt?,schauplatz?,adresse?,hauptRang?,ruhig?} Z.315-410; melde setzt vonAussen:true Z.423-429, nimmZurueck Z.431-436, anPlatz Z.441-444. Platz 'unten' ist der Anhängepunkt für fremde Bereiche (Z.38-40). Eintrag app-erweitern → Erweiterung.dialog() Z.239-240.",
-          "zeilen": 449
+          "rolle": "Register.navigation — Eintrag {id,name,icon,platz,rang,tun?,zeigen?,vonAussen?,knopfId?,kuerzel?,hinweis?,gruppe?,marke?,haupt?,schauplatz?,adresse?,hauptRang?,ruhig?} Z.316-425; melde setzt vonAussen:true Z.436-442, nimmZurueck Z.444-449, anPlatz Z.454-457. Platz 'unten' ist der Anhängepunkt für fremde Bereiche (Z.38-40). Eintrag app-erweitern → Erweiterung.dialog() Z.239-240. haupt liest nur die Kante (context-rail.ts alleHauptOrte), NICHT die Telefonleiste (Kommentar berichtigt mit E748). E748: Ziel {id,name,kurz?,zeichen,rang?,ort?,an?,zeigen?,tun} Z.490-510; meldeZiele(reiter, fn) Z.516-521, ziele(reiter) Z.524-547 — Lieferanten je Reiter (Schlüssel = data-ziele am Reiterknopf: dokumente/heute/lernen/termine/mehr), bei jedem Fragen neu gefragt und einzeln abgefangen, nach rang, höchstens fünf; angemeldet von Bibliothek (dokumente), Lernwelt (heute, lernen) und Ansichten (termine, mehr), jeweils innerhalb des eigenen Moduls. Wächter test613.",
+          "zeilen": 550
         },
         {
           "pfad": "/home/user/Redion/src/register/module.ts",
@@ -2794,6 +2794,12 @@
           "datei": "src/register/navigation.ts:423, module.ts:135, ansichten.ts:54, einstellungen.ts:118, formeln.ts:633, tasten.ts:174, vorlagen.ts:29, verbindungen.ts:107, fachzeichen.ts:1084, elektroformeln.ts:5012",
           "art": "register",
           "beschreibung": "Je ein melde(); nimmZurueck nur bei navigation (Z.431), module (Z.156), fachzeichen (vergiss Z.1091). Aufrufer in src nur vorlagen.melde (wissen/nin-quiz.ts:461, staatskunde-inhalt.ts:367, dark-dossier.ts:330)."
+        },
+        {
+          "name": "Register.navigation.meldeZiele(reiter, fn) / ziele(reiter)",
+          "datei": "src/register/navigation.ts:516, 524",
+          "art": "register",
+          "beschreibung": "E748: was unter einem Reiter der unteren Leiste liegt, nach dem Muster von Register.kontext.meldeLieferant/fuer. Schlüssel = data-ziele am Reiterknopf (index.html). Lieferanten: wissen/bibliothek.ts (dokumente: ORTE mit zielRang + Notizhefte aus app-notizhefte), wissen/lernwelt.ts (heute, lernen: KLAPPEN + ANSICHTEN.zielRang), datenbanken/ansichten/dienst.ts (termine: TERMINE_KARTEN + Kante kalender; mehr: mehrGruppen.zielRang). Gelesen noch von niemandem in src — die Zielleiste kommt in Bogen 2. Wächter test613."
         },
         {
           "name": "Redion (Schnittstelle einer Erweiterung)",

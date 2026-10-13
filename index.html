@@ -275,11 +275,13 @@
        genommen: Vorleseprogramme sollen die fünf Reiter finden, nicht
        sechs Dinge. -->
   <i id="ho-pille" class="stumm" aria-hidden="true"></i>
-  <button id="hl-dok" role="tab" title="Dokumente"><span class="ho-z" data-sym="library" data-sym-groesse="19"></span><b>Dokumente</b></button>
-  <button id="hl-start" role="tab" title="Heute"><span class="ho-z" data-sym="home" data-sym-groesse="19"></span><b>Heute</b></button>
-  <button id="hl-lernen" role="tab" title="Lernen"><span class="ho-z" data-sym="learn" data-sym-groesse="19"></span><b>Lernen</b></button>
-  <button id="hl-bespr" role="tab" title="Termine"><span class="ho-z" data-sym="calendarDays" data-sym-groesse="19"></span><b>Termine</b></button>
-  <button id="hl-mehr" role="tab" title="Mehr"><span class="ho-z" data-sym="dots" data-sym-groesse="19"></span><b>Mehr</b><i class="hl-punkt" hidden></i></button>
+  <!-- `data-ziele` ist der Schlüssel für Register.navigation.ziele (E748):
+       was unter diesem Reiter liegt, melden die Bereiche selbst an. -->
+  <button id="hl-dok" role="tab" data-ziele="dokumente" title="Dokumente"><span class="ho-z" data-sym="library" data-sym-groesse="19"></span><b>Dokumente</b></button>
+  <button id="hl-start" role="tab" data-ziele="heute" title="Heute"><span class="ho-z" data-sym="home" data-sym-groesse="19"></span><b>Heute</b></button>
+  <button id="hl-lernen" role="tab" data-ziele="lernen" title="Lernen"><span class="ho-z" data-sym="learn" data-sym-groesse="19"></span><b>Lernen</b></button>
+  <button id="hl-bespr" role="tab" data-ziele="termine" title="Termine"><span class="ho-z" data-sym="calendarDays" data-sym-groesse="19"></span><b>Termine</b></button>
+  <button id="hl-mehr" role="tab" data-ziele="mehr" title="Mehr"><span class="ho-z" data-sym="dots" data-sym-groesse="19"></span><b>Mehr</b><i class="hl-punkt" hidden></i></button>
 </nav>
 
 <!-- =========================================================================

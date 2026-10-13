@@ -8929,3 +8929,143 @@ Decke 1950); die erste Fassung hatte für 97d156b03 und 7560b2f22 dieselbe
 Zahl. `simulation.js` 58 566 → 59 173 → 60 004 Bytes (gzip -9 13 513 →
 13 614 → 13 790). `redion-einzeldatei.html` 9 665 704 → 9 666 311 →
 9 667 142 Bytes. Dienststand v1469 → v1470 → v1471.
+
+
+## §105 · Die Ziele der unteren Reiter und L147 (E748, 13. Oktober 2026)
+
+**Was gemessen wurde:** welcher Reiter unten leuchtet, wenn man eine
+Ansicht des Lernzentrums öffnet oder drinnen wechselt, und was die Quelle
+der Zielleiste (`Register.navigation.ziele`) liefert. Telefon 390 × 844
+(Berührung, Pixeldichte 2), Rechner 1440 × 900; `ba51915dc` aus einer Kopie
+seiner Dateien (`git archive` in den Kratzordner), E748 aus dem Zweig
+`claude/zielleiste-quelle`.
+
+**Welcher Reiter leuchtet** (`#handy-oben [aria-selected="true"]`,
+`App.schauplatz()`, geöffnet über `Produktwelten.lernen(v)`):
+
+```txt
+Ansicht        ba51915dc                    E748
+heute          hl-start  heute              hl-start  heute
+pruefungen     hl-lernen lernen             hl-start  heute
+noten          hl-lernen lernen             hl-start  heute
+stundenplan    hl-lernen lernen             hl-start  heute
+schule         hl-lernen lernen             hl-start  heute
+uni            hl-lernen lernen             hl-start  heute
+arbeit         hl-lernen lernen             hl-start  heute
+lernen, trainer, lernweg, fehler, fortschritt
+               hl-lernen lernen             hl-lernen lernen
+```
+
+**Drinnen** (echte Tipps: `#hl-lernen`, dann „Heute ^" → Noten):
+
+```txt
+                         ba51915dc                   E748
+Reiter / Schauplatz      hl-lernen / lernen          hl-start / heute
+Adresse                  #welt-lernen-lernen         #welt-lernen-noten
+nach dem Neuladen        Übersicht, hl-lernen        Noten, hl-start
+```
+
+**Am Rechner** (die Kante, `#kante .k-orte .k-knopf.ist-hier`; im ruhigen
+Modus stehen dort Bibliothek, Notizhefte, Lernzentrum, Mehr Orte):
+
+```txt
+Ansicht                  ba51915dc        E748, erste Folge   E748
+heute                    mehr-orte        mehr-orte           mehr-orte
+noten, pruefungen,
+stundenplan              lernzentrum      mehr-orte           mehr-orte
+lernen, trainer          lernzentrum      lernzentrum         lernzentrum
+drinnen: Übersicht →
+„Heute ^" → Noten        lernzentrum      lernzentrum  ←      mehr-orte
+                         (wo lernen)      (wo heute)          (wo heute)
+```
+
+„Erste Folge" ist der Stand, in dem `wechseln()` erst den Titel und dann
+die Adresse schrieb: Schauplatz `heute`, Krume „Heute", Adresse
+`#welt-lernen-noten` — und die Kante bei „Lernzentrum", weil sie beim
+Melden des Titels noch `#welt-lernen-lernen` las. Gemessen mit einer Sonde
+(`kante.mts` im Kratzordner) und danach mit `test613` §7g (95 von 96);
+nach dem Tausch der zwei Zeilen 96 von 96. Die Krume heisst bei Noten
+„Lernzentrum" (vorher) und „Heute" (nachher).
+
+**Weg und „Zurück"** (am Rechner, drinnen gewechselt, dann über die Kante
+in die Bibliothek und mit dem Knopf `#btn-back` zurück; Sonde
+`zurueck.mts`, danach `test613` §7i/§7j):
+
+```txt
+                         ba51915dc               E748 ohne Zeichner      E748
+nach „Heute ^" → Noten   Übersicht               Übersicht  ←            Noten
+                         Lernzentrum             Heute                   Heute
+                         #welt-lernen-lernen     #welt-lernen-noten      #welt-lernen-noten
+nach „Übersicht ^" →     Übersicht               Übersicht  ←            Trainer
+Trainer                  #welt-lernen-lernen     #welt-lernen-trainer    #welt-lernen-trainer
+```
+
+Auf `ba51915dc` kam man stimmig in die Übersicht zurück (dorthin, wo man
+das Lernzentrum betreten hatte); mit Titel und Adresse, aber ohne den
+Zeichner nachzuführen, passte der Inhalt nicht mehr zu Kopf und Adresse
+(`test613` 96 von 98); mit dem Zeichner kommt man dorthin zurück, wo man
+war (98 von 98).
+
+**Was die Quelle liefert** (`ziele(key)`, `kurz ?? name`):
+
+```txt
+dokumente  Meine Ablage · Zuletzt · Favoriten · PDFs · Notizhefte       5 Orte
+heute      Heute · Prüfungen · Noten · Stundenplan · Schule             5 Orte
+lernen     Übersicht · Trainer · Lernpfad · Fehler · Fortschritt        5 Orte
+termine    Übersicht · Kalender · Tagesplan · Besprechung · Verbinden   2 Orte, 3 Handlungen
+mehr       Posteingang · Sicherung · Wolke · Papierkorb · Einstellungen 5 Handlungen
+```
+
+Jeder Ort, über sein `tun()` von „Mehr" (bei Mehr-Zielen: von
+„Dokumente") aus geöffnet, schaltet seinen eigenen Reiter an: 17 von 17.
+Jede Handlung öffnet ihren Dialog (Tagesplan, Besprechung, Verbinden,
+Wolke, Papierkorb, Einstellungen: eine `.overlay` mehr), den Posteingang
+(Schauplatz `posteingang`, kein Reiter) oder speichert eine Sicherung
+(`redion-sicherung-2026-10-13.json`): 8 von 8.
+
+**test613:** 98 von 98. Gegen `ba51915dc`: die erste Fassung 12 von 68,
+die endgültige 13 von 73 (in einer Kopie der Dateien von `ba51915dc`).
+Gegenproben gegen die Endfassung: ohne den Lieferanten „heute" 82 von 93,
+`titelVon` wieder „heute oder nicht" 88 von 98, ohne `sort` 89 von 98, die
+alte Folge in `wechseln()` 97 von 98, ohne Zeichner 96 von 98. Gegen die
+erste Fassung (94 Zusagen) waren die ersten drei 78 von 89, 86 von 94 und
+85 von 94.
+
+**test537:** 123 Paare, 511 Treffer, 6 Zugriffe über `(window as any)` —
+vorher und nachher dieselben Zahlen. Die drei Termine-Wege stehen jetzt
+in `termineTun` statt im `onclick`, die Mehr-Wege in `mehrTun`; Übersicht
+und Tagesplan liest der Lieferant aus der Kante, statt `Plan` ein zweites
+Mal zu rufen.
+
+**Bytes** (gzip -6, gebaut, gegen `ba51915dc`):
+
+```txt
+Datei                                    ba51915dc   E748    Zuwachs
+quell/register/navigation.js                  2652    2996     +344
+quell/bereiche/wissen/bibliothek.js          19603   19960     +357
+quell/bereiche/wissen/lernwelt.js            37699   38113     +414
+quell/bereiche/wissen/produktwelten.js        3225    3258      +33
+quell/bereiche/datenbanken/ansichten/dienst.js 9355    9882     +527
+quell/schale/aufbau/schale.js                39913   39985      +72
+index.html                                   13591   13668      +77
+zusammen                                                      +1824
+```
+
+**Start:** 1925 → 1926 KB gzip über 255 Dateien (`test388` §5, Decke 1950;
+der alte Stand in einer vollständigen Kopie von `ba51915dc` gemessen). `redion-einzeldatei.html` 9 707 778 → 9 715 112
+Bytes. Dienststand v1496 → v1514 (jeder Bau zählt weiter, auch die der
+Gegenproben; der Inhalt von v1514, `a5d005ec4c799cca`, ist der von v1508,
+dem Bau mit dem Zeichner). Der Tausch der zwei Zeilen kostete kein Byte;
+der Zeichner 3 B in `lernwelt.js` weniger und 9 B in `schale.js` mehr.
+
+**Bilder** (Kratzordner `bilder-ziel/quelle/`, nicht im Verzeichnis):
+`vorher-noten-hell.png`, `vorher-noten-dunkel.png`, `nachher-noten-hell.png`,
+`nachher-noten-dunkel.png` (Telefon: oben „Noten ^", unten vorher „Lernen",
+nachher „Heute"); `vorher-rechner-noten-*.png`, `nachher-rechner-noten-*.png`,
+`vorher-rechner-drinnen-noten-*.png`, `nachher-rechner-drinnen-noten-*.png`
+und `vorher-rechner-zurueck-noten-*.png`, `nachher-rechner-zurueck-noten-*.png`
+(Rechner: Krume und Kante wie in den Tabellen oben — vorher „Lernzentrum"
+in Krume und Kante, nachher „Heute" in der Krume und „Mehr Orte" in der
+Kante; zurück vorher die Übersicht, nachher die Noten). Angesehen: alle vier
+am Telefon, am Rechner die hellen, das dunkle nachher und das dunkle
+drinnen und zurück nachher.

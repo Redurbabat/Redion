@@ -1,5 +1,58 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 13. Oktober 2026 · E748 · Die Ziele der unteren Reiter aus einer Quelle (Zielleiste, Bogen 1) — und L147
+
+**Redur**, 12. Oktober 2026, zum Bild mit dem roten Feld über der unteren
+Leiste: „… eine neu dock dort kommen und dort nur sachen die mit unteren
+zutun haben dann für alle so …". Auf die vier Fragen des Entwurfs hat er
+jedes Mal die Empfehlung gewählt; Frage 2 legt die fünf Ziele je Reiter
+fest, Frage 3 richtet L147 („Prüfungen, Noten, Stundenplan und Schule
+schalten unten künftig ‚Heute' an").
+
+**Gefunden** (auf `ba51915dc`, Telefon 390 × 844): sechs Ansichten unter
+„Heute ^" liessen unten „Lernen" leuchten — oben „Noten ^", unten „Lernen"
+auf demselben Bildschirm; drinnen gewechselt blieben Reiter und Adresse
+stehen, ein Neuladen führte in die Übersicht zurück. Und die Listen der 25
+Ziele gab es alle schon, privat und mit keinem Reiter verbunden.
+
+**Gebaut**, ohne neue Oberfläche:
+
+- `Register.navigation.meldeZiele`/`ziele` mit dem Typ `Ziel`, nach dem
+  Muster von `Register.kontext` (jedes Mal neu gefragt, einzeln
+  abgefangen, nach Rang, höchstens fünf); Schlüssel `data-ziele` an den
+  fünf Reitern in `index.html`.
+- Drei Lieferanten, jeder in seinem Modul und aus seiner Liste: Bibliothek
+  (`ORTE` mit `zielRang`/`kurz`, `ortOeffnen`; die Notizhefte aus
+  `app-notizhefte`), Lernwelt (`KLAPPEN` + `ANSICHTEN.zielRang`/`kurz`),
+  Ansichten (`TERMINE_KARTEN`, aus denen der Bildschirm jetzt zeichnet, die
+  Kante „kalender", `mehrGruppen.zielRang`; `termineTun`/`mehrTun` für
+  Bildschirm und Ziel).
+- L147: `titelVon`/`reiterVon` nach der Klappe, `Produktwelten.lernen`
+  fragt `Lernwelt.reiterVon`; drinnen zuerst die Adresse über
+  `Produktwelten.routeSchreiben`, dann der Titel über `App.sonderTitel`
+  (neu: nur der Titel, und der Zeichner, den sich der Verlauf merkt).
+- Der Kommentar an `haupt` in `navigation.ts` berichtigt; die Karte
+  (`doku/karte/register.md`) nachgezogen.
+
+**Beim Fertigstellen gefunden**, beide mit einer Sonde und nicht vom Lauf:
+am Rechner leuchtete nach „Übersicht → ‚Heute ^' → Noten" in der Kante
+weiter „Lernzentrum", nach direkt geöffneten Noten „Mehr Orte" — der Titel
+wurde vor der Adresse gemeldet; und wer danach weg- und mit „Zurück"
+wiederkam, sah die Übersicht unter „Heute" und `#welt-lernen-noten` — der
+Verlauf hatte sich den Zeichner vom Öffnen gemerkt. Jeweils erst die
+Zusage (`test613` §7g rot mit 95 von 96, §7i/§7j rot mit 96 von 98), dann
+die Reparatur.
+
+**Geprüft:** `test613` neu, 98 von 98 (gegen `ba51915dc` rot mit 12 von 68,
+die Endfassung 13 von 73); fünf Gegenproben rot (82/93, 88/98, 89/98, 97/98, 96/98). Geändert genau eine bestehende Zusage: `test484` §5, die die alte
+Titelzeile wörtlich suchte. 90 Nachbarn unter dem gemeinsamen Schloss, 88 grün; rot nur `test274` und `test493`, beide genau so auf `ba51915dc`; die Datei-Wächter grün; der Start 1926 KB von 1950. Bilder vorher/nachher am Telefon
+(hell, dunkel) und am Rechner (direkt geöffnet, drinnen gewechselt, weg und
+zurück).
+
+**Offen:** ob am Rechner für die sechs Ansichten unter „Heute ^" „Mehr
+Orte" leuchten soll (so wie bei „Heute" selbst) — Redurs Frage, L123 F02.
+Die Zielleiste selbst ist Bogen 2.
+
 ## 12. Oktober 2026 · Redurs vier Antworten — zusammengeführt auf `claude/abend-antworten`
 
 **Der Auftrag.** Redur am 11. Oktober um 19:43 UTC: „1. verblassen / 2 .

@@ -102,8 +102,14 @@ const Produktwelten = (() => {
       : ansicht === 'ausbildung' ? 'schule' : ansicht;
     weltSetzen('lernen');
     Store.setMeta(LERN_META, ziel);
-    reiterSetzen(ziel === 'heute' ? 'start' : 'lernen');
     const modul = lernmodul();
+    /* DER REITER NACH DER KLAPPE (L147, E748). Hier stand „heute → Start,
+       alles andere → Lernen" — und Noten, Prüfungen, Stundenplan und Schule
+       stehen seit E726 oben unter „Heute ^". Die Lernwelt weiss, in welcher
+       Klappe eine Ansicht steht; gefragt wird sie, nicht nachgebaut. Der
+       Rückfall gilt nur für alte Einzeldateien ohne `reiterVon`. */
+    reiterSetzen(typeof modul?.reiterVon === 'function' ? modul.reiterVon(ziel)
+      : ziel === 'heute' ? 'start' : 'lernen');
     if (modul?.oeffnen) { modul.oeffnen(ziel); routeSchreiben('lernen', ziel); return; }
     if (modul?.open) { modul.open(ziel); routeSchreiben('lernen', ziel); return; }
     /* Rückfall für alte Einzeldateien, in denen das neue Modul noch fehlt. */
@@ -334,7 +340,12 @@ const Produktwelten = (() => {
   return {
     start, aktiv, markieren, wechseln: weltSetzen, zurAktivenWelt,
     lernen, workspace, bibliothek, aufgaben, kalender, whiteboards, planung, bereicheDialog,
-    routeAusHash, routeOeffnen
+    routeAusHash, routeOeffnen,
+    /* Die Adresse schreiben, ohne zu öffnen (L147, E748): wer im
+       Lernzentrum drinnen umschaltet, steht danach an der Adresse der neuen
+       Ansicht — die Kante am Rechner liest sie (E393), und ein Neuladen
+       kommt dorthin zurück. Derselbe Schreiber wie beim Öffnen. */
+    routeSchreiben
   };
 })();
 

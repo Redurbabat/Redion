@@ -149,11 +149,16 @@ const Bibliothek = (() => {
      Ebene tiefer. Die übrigen Orte bleiben absichtlich flach: „Zuletzt
      geöffnet" und „Favoriten" sind Fragen über alles, nicht über eine
      Ebene — genau wie in GoodNotes, wo sie unten als eigene Wege stehen. */
-  const ORTE: Array<{ id: string; name: string; zeichen: string }> = [
-    { id: 'ablage',    name: 'Meine Ablage',     zeichen: 'archive' },
-    { id: 'kuerzlich', name: 'Zuletzt geöffnet', zeichen: 'clock' },
-    { id: 'favoriten', name: 'Favoriten',        zeichen: 'star' },
-    { id: 'pdf',       name: 'Alle PDFs',        zeichen: 'page' },
+  /* `zielRang` UND `kurz` (E748): die vier Orte, die unter dem Reiter
+     „Dokumente" als Ziele stehen, in Redurs Folge („Meine Ablage · Zuletzt ·
+     Favoriten · PDFs · Notizhefte"), und das kurze Wort dafür. Es ist ein
+     Feld an DIESER Liste, keine zweite (§8); die übrigen Orte bleiben im
+     Ortsmenü. Der Lieferant steht unten bei `ortOeffnen`. */
+  const ORTE: Array<{ id: string; name: string; zeichen: string; kurz?: string; zielRang?: number }> = [
+    { id: 'ablage',    name: 'Meine Ablage',     zeichen: 'archive', zielRang: 1 },
+    { id: 'kuerzlich', name: 'Zuletzt geöffnet', zeichen: 'clock',   zielRang: 2, kurz: 'Zuletzt' },
+    { id: 'favoriten', name: 'Favoriten',        zeichen: 'star',    zielRang: 3 },
+    { id: 'pdf',       name: 'Alle PDFs',        zeichen: 'page',    zielRang: 4, kurz: 'PDFs' },
     { id: 'geteilt',   name: 'Geteilt',          zeichen: 'users' },
     { id: 'privat',    name: 'Privat',           zeichen: 'lock' },
     { id: 'schule',    name: 'Ausbildung',       zeichen: 'book' },
@@ -1733,15 +1738,27 @@ const Bibliothek = (() => {
     gruppe.addEventListener('focusin', e => auf(e.target instanceof Element ? e.target : null));
     gruppe.addEventListener('pointerover', e => auf(e.target instanceof Element ? e.target : null));
   };
-  /** Einen Ort setzen. „Meine Ablage" führt an die Wurzel (so tat es der Weg). */
-  const ortSetzen = (id: string): void => {
+  /** Den Zustand eines Ortes setzen, ohne zu zeichnen. „Meine Ablage"
+   *  führt an die Wurzel (so tat es der Weg). */
+  const ortZustand = (id: string): void => {
     if (id === 'pdf') { zustand.reiter = 'alle'; zustand.art = 'pdf'; }
     else { zustand.reiter = ORTE.some(o => o.id === id) ? id : zustand.reiter; zustand.art = 'alle'; }
     if (id === 'ablage') {
       zustand.ordner = null;
       if (typeof Store !== 'undefined' && Store.setMeta) Store.setMeta(ORDNER_SCHLUESSEL, '');
     }
+  };
+  /** Einen Ort setzen, wenn man schon im Regal steht (das Ortsmenü). */
+  const ortSetzen = (id: string): void => {
+    ortZustand(id);
     App.zeichneSeite();
+  };
+  /** Einen Ort von ÜBERALL her öffnen (E748): erst der Zustand, dann das
+   *  Regal — es wird also einmal gezeichnet, nicht zweimal, und nicht ein
+   *  Bildschirm, auf dem man gerade gar nicht steht. */
+  const ortOeffnen = (id: string): void => {
+    ortZustand(id);
+    oeffne();
   };
   /** Die Zeichen der sechs Sammlungen (Kennungen aus `Arbeitswelt.sammlungen`). */
   const SAMMLUNG_ZEICHEN: Record<string, string> = {
@@ -2396,6 +2413,44 @@ const Bibliothek = (() => {
           : new DOMRect(innerWidth / 2, innerHeight / 3, 0, 0);
         if (o.hinein) blickHinein(p, r, false, o.hinein); else blickHinein(p, r);
       } });
+  }
+
+  /* ══ DIE ZIELE UNTER „DOKUMENTE" (E748) ═════════════════════════════════
+     Redur, Antwort auf Frage 2: „Meine Ablage · Zuletzt · Favoriten · PDFs ·
+     Notizhefte". Die vier Orte kommen aus `ORTE` (das Feld `zielRang`
+     wählt sie aus und ordnet sie), und weil der Lieferant HIER steht,
+     innerhalb des Moduls, bleiben `ORTE`, `ortAktiv` und `ortOeffnen`
+     privat — ausgeführt wird nichts davon.
+
+     Die Notizhefte sind kein Ort des Regals, gehören aber unter denselben
+     Reiter (Schauplatz `notizhefte` → „Dokumente", `seitenleiste.ts`).
+     Name, Zeichen und Weg stehen schon im Navigationsregister
+     (`app-notizhefte`) — dort gelesen, nicht hier abgeschrieben (§8).
+
+     `an` fragt den Bildschirm, nicht nur den Zustand: der Zustand bleibt
+     stehen, wenn man das Regal verlässt, und „Meine Ablage" wäre sonst
+     auch im Lernzentrum „an". */
+  if (typeof Register !== 'undefined' && Register.navigation?.meldeZiele) {
+    const imRegal = (): boolean => {
+      try { return App.schauplatz() === 'bibliothek' && !!document.querySelector('#scroll .bib-ort'); }
+      catch { return false; }
+    };
+    Register.navigation.meldeZiele('dokumente', (): unknown[] => {
+      const liste: unknown[] = ORTE.filter(o => typeof o.zielRang === 'number').map(o => ({
+        id: o.id, name: o.name, ...(o.kurz ? { kurz: o.kurz } : {}), zeichen: o.zeichen,
+        rang: o.zielRang, ort: true,
+        an: () => imRegal() && ortAktiv() === o.id,
+        tun: () => ortOeffnen(o.id)
+      }));
+      const heft = Register.navigation.eines?.('app-notizhefte');
+      if (heft && typeof heft.tun === 'function') liste.push({
+        id: 'notizhefte', name: heft.name, zeichen: heft.zeichen, rang: 5, ort: true,
+        zeigen: () => typeof Notebook !== 'undefined' && typeof Notebook.oeffnen === 'function',
+        an: () => { try { return App.schauplatz() === 'notizhefte'; } catch { return false; } },
+        tun: () => heft.tun()
+      });
+      return liste;
+    });
   }
 
   return { oeffne, alleZeigen, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon, suchBereich,
