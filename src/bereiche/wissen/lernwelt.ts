@@ -3927,9 +3927,14 @@ const Lernwelt = (() => {
    * und stellt den Reiter um (`Produktwelten.lernReiter`), damit auch eine
    * Seite, die man danach öffnet, unter dem richtigen Reiter steht.
    */
-  const oeffnen = (ansicht: LernweltAnsicht = 'heute'): void => {
+  /* `adresse` (freiwillig, dritte Durchsicht von E748): die Adresse, an
+     die `Produktwelten.lernen` die Ansicht danach schreibt. Die Schale legt
+     damit einen Schritt in den Verlauf, sobald eine ANDERE Ansicht aufgeht,
+     auch unter demselben Titel — sonst führte „Heute → Noten → Zurück"
+     seit L147 an Heute vorbei (`test613` §7n). */
+  const oeffnen = (ansicht: LernweltAnsicht = 'heute', adresse?: string): void => {
     const start = ansichtGueltig(ansicht) ? ansicht : 'heute';
-    App.zeigeSonder(titelVon(start), (ziel: HTMLElement) => render(ziel, start));
+    App.zeigeSonder(titelVon(start), (ziel: HTMLElement) => render(ziel, start), adresse);
   };
 
   /* ══ DIE ZIELE UNTER „HEUTE" UND „LERNEN" (E748) ═════════════════════════

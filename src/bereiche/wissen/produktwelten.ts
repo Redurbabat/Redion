@@ -87,15 +87,30 @@ const Produktwelten = (() => {
      leuchtet der Reiter, von dem man kam (`karte[reiter]` in
      `seitenleiste.ts`). Setzte nur das Öffnen ihn, sprang die Pille nach
      „Lernen → Heute ^ → Noten" beim Öffnen einer Seite zurück auf „Lernen"
-     (zweite Durchsicht von E748, `test613` §7k–§7m). */
+     (zweite Durchsicht von E748, `test613` §7k–§7m).
+
+     AM RECHNER (dritte Durchsicht): derselbe Wert schaltet dort, was `#tree`
+     zeigt — Seiten, Chats (`chat`) oder Besprechungen (`bespr`). Gemessen
+     bei 1440 × 900 ist `#sidebar` mit seinem Umschalter nicht gezeichnet
+     (`premium.css` ab 761 px), `#tree` erscheint nur in der Lade „Seiten"
+     der Kante, und die schliesst, sobald eine Klappe aufgeht. Sichtbar wird
+     der Wechsel also nur, wenn man die Lade danach öffnet: sie zeigt dann
+     Seiten, wie nach jedem anderen Weg über `reiterSetzen` — auch wer über
+     „Termine" (`bespr`) und „Zurück" kam (`test613` §7t/§7u). */
   const lernReiter = (ansicht: string): void => {
     const modul = lernmodul();
     reiterSetzen(typeof modul?.reiterVon === 'function' ? modul.reiterVon(ansicht)
       : ansicht === 'heute' ? 'start' : 'lernen');
   };
 
+  /* Die Adresse einer Ansicht — EINE Stelle für das Schreiben und für die
+     Frage der Schale, ob ein Öffnen den Ort wechselt (dritte Durchsicht von
+     E748: `lernen` nennt sie der Lernwelt, die sie an `zeigeSonder` gibt). */
+  const routeVon = (welt: Welt, ansicht: string): string =>
+    '#welt-' + welt + '-' + ansicht.replace(/[^a-z0-9-]/g, '');
+
   const routeSchreiben = (welt: Welt, ansicht: string): void => {
-    const route = '#welt-' + welt + '-' + ansicht.replace(/[^a-z0-9-]/g, '');
+    const route = routeVon(welt, ansicht);
     try { history.replaceState(history.state, '', location.pathname + location.search + route); }
     catch { location.hash = route; }
   };
@@ -125,7 +140,7 @@ const Produktwelten = (() => {
     Store.setMeta(LERN_META, ziel);
     lernReiter(ziel);
     const modul = lernmodul();
-    if (modul?.oeffnen) { modul.oeffnen(ziel); routeSchreiben('lernen', ziel); return; }
+    if (modul?.oeffnen) { modul.oeffnen(ziel, routeVon('lernen', ziel)); routeSchreiben('lernen', ziel); return; }
     if (modul?.open) { modul.open(ziel); routeSchreiben('lernen', ziel); return; }
     /* Rückfall für alte Einzeldateien, in denen das neue Modul noch fehlt. */
     if (ansicht === 'heute' && typeof Ansichten !== 'undefined') Ansichten.start();

@@ -47,8 +47,9 @@ const Produktwelten = (() => {
         reiterSetzen(typeof modul?.reiterVon === 'function' ? modul.reiterVon(ansicht)
             : ansicht === 'heute' ? 'start' : 'lernen');
     };
+    const routeVon = (welt, ansicht) => '#welt-' + welt + '-' + ansicht.replace(/[^a-z0-9-]/g, '');
     const routeSchreiben = (welt, ansicht) => {
-        const route = '#welt-' + welt + '-' + ansicht.replace(/[^a-z0-9-]/g, '');
+        const route = routeVon(welt, ansicht);
         try {
             history.replaceState(history.state, '', location.pathname + location.search + route);
         }
@@ -76,7 +77,7 @@ const Produktwelten = (() => {
         lernReiter(ziel);
         const modul = lernmodul();
         if (modul?.oeffnen) {
-            modul.oeffnen(ziel);
+            modul.oeffnen(ziel, routeVon('lernen', ziel));
             routeSchreiben('lernen', ziel);
             return;
         }

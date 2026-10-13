@@ -1107,8 +1107,23 @@ const App = (() => {
     } catch { /* ohne CustomEvent bleibt der Rest */ }
   };
 
-  const zeigeSonder = (titel: string, zeichner: any) => {
-    if (seiteId || !sonder || sonder.titel !== titel) navMerken();
+  /* DER SCHRITT IM VERLAUF FOLGT DEM ORT, NICHT NUR DEM TITEL (dritte
+     Durchsicht von E748). Bis hier legte `zeigeSonder` nur dann einen Schritt
+     an, wenn sich der Titel änderte — für die meisten Sonderansichten ist
+     der Titel der Ort („Dokumente", „Kalender"). Das Lernzentrum hat aber
+     zwölf Ansichten unter zwei Titeln, und seit L147 heissen sechs davon
+     „Heute": „Heute → Noten → Zurück" sprang über Heute hinweg
+     (`test613` §7n). `adresse` (freiwillig) ist die Adresse, an der die
+     Ansicht danach steht; wer sie nennt, bekommt einen Schritt, sobald sie
+     sich von der jetzigen unterscheidet — und keinen, wenn dieselbe Ansicht
+     noch einmal aufgeht (§7q). Verglichen wird mit `location.hash`, weil
+     der Verlauf genau sie mit dem Ort merkt (`navOrt`): zwei Orte mit
+     demselben Titel und derselben Adresse kann er ohnehin nicht trennen.
+     Wer keine Adresse nennt, behält die alte Regel. */
+  const zeigeSonder = (titel: string, zeichner: any, adresse?: string) => {
+    let jetzt = ''; try { jetzt = String(location.hash || ''); } catch { jetzt = ''; }
+    const woanders = typeof adresse === 'string' && adresse !== '' && adresse !== jetzt;
+    if (seiteId || !sonder || sonder.titel !== titel || woanders) navMerken();
     sonder = { titel, zeichner };
     seiteId = null;
     navKnoepfeStellen();

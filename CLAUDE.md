@@ -2036,7 +2036,9 @@ Bildschirm aus geöffnet, schalten den Reiter an, unter dem sie stehen —
 und genau dort fing er L147: Prüfungen, Noten, Stundenplan und Schule
 liessen „Lernen" leuchten, während oben „Noten ^" in der Klappe „Heute"
 stand. Gegen ba51915dc war er rot mit 12 von 68 (die Endfassung mit 13
-von 73); seine fünf Gegenproben treffen je andere Abschnitte (E748). Fünf
+von 73). Seine Gegenproben stehen einzeln in E748 — fünfzehn, davon
+dreizehn verschiedene (zwei sind gegen eine spätere Fassung nachgefahren),
+und jede war rot. Fünf
 Zusagen kamen erst beim Bau: nach einem Wechsel drinnen stand die Adresse
 noch auf der Übersicht, und ein Neuladen führte dorthin zurück; am
 Rechner leuchtete danach die falsche Kante, weil der Titel VOR der
@@ -2050,7 +2052,12 @@ statt sie zu erkennen — ein „Wolke", das die Einstellungen öffnete, blieb
 zweite Durchsicht fand, dass L147 eine Stufe später zurückkam: drinnen
 gewechselt, leuchtete im Lernzentrum der richtige Reiter — öffnete man
 danach eine Seite, sprang die Pille auf den vom Öffnen. Drei Zusagen dazu
-(§7k–§7m, 102), gegen den Stand davor rot mit 100 von 102. Gezählt am
+(§7k–§7m, 102), gegen den Stand davor rot mit 100 von 102. Die dritte
+Durchsicht fand, was L147 am Verlauf verschoben hatte: seit sechs
+Ansichten „Heute" heissen, legte `zeigeSonder`, das nur auf den Titel sah,
+zwischen Heute und Noten keinen Schritt mehr an, und „Zurück" sprang an
+Heute vorbei. Sechs Zusagen zum Verlauf und zwei zum Reiter am Rechner
+(§7n–§7u, 110), gegen den Stand davor rot mit 106 von 110. Gezählt am
 13. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
 554.*
 

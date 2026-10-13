@@ -2934,9 +2934,9 @@ const Lernwelt = (() => {
         document.addEventListener('keydown', taste);
         zeichnen();
     };
-    const oeffnen = (ansicht = 'heute') => {
+    const oeffnen = (ansicht = 'heute', adresse) => {
         const start = ansichtGueltig(ansicht) ? ansicht : 'heute';
-        App.zeigeSonder(titelVon(start), (ziel) => render(ziel, start));
+        App.zeigeSonder(titelVon(start), (ziel) => render(ziel, start), adresse);
     };
     const zieleDerKlappe = (klappeId) => () => {
         const klappe = klappen().find(k => k.id === klappeId);

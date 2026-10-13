@@ -82,6 +82,25 @@ auf `ba51915dc` und `test567` einmal (eine Zählung über zufällig gezogene
 Karten, dreimal wiederholt grün). Datei-Wächter grün, Start 1927 KB von
 1950.
 
+**Nach der dritten Durchsicht** (13. Oktober): der Verlauf sah nur den
+Titel, und seit L147 heissen sechs Ansichten „Heute" — „Heute → Noten →
+Zurück" führte in die Dokumente statt nach Heute (am Rechner gemessen, auf
+`ba51915dc` noch richtig). Jetzt nennt `Produktwelten.lernen` die Adresse
+der Ansicht (`routeVon`), `Lernwelt.oeffnen` gibt sie an `App.zeigeSonder`
+weiter, und die Schale legt einen Schritt an, sobald sie sich ändert —
+keinen für dieselbe Ansicht noch einmal, keinen für den Wechsel drinnen.
+Neu gegenüber `ba51915dc`: Übersicht → Trainer und Noten → Prüfungen sind
+Schritte. Die zweite Frage der Durchsicht — springt am Rechner der
+Umschalter der Seitenleiste mit dem Reiter? — ist gemessen und harmlos:
+`#sidebar` ist ab 761 px nicht gezeichnet, `#tree` steht nur in der Lade
+„Seiten", und die schliesst mit der Klappe; sie zeigt danach Seiten, wie
+nach jedem Weg über `reiterSetzen`. Zuerst die Zusagen (`test613`
+§7n–§7u, gegen `352eed65c` rot mit 106 von 110), dann die Reparatur;
+`test613` 110 von 110, fünf Gegenproben rot. CLAUDE.md §30 nennt die
+Gegenproben jetzt so, wie E748 sie zählt. Gemessen am Rande und in
+`AUFGABEN.md` eingetragen: nach Termine und „Zurück" zeigt die Lade
+„Seiten" die Besprechungen — älter als E748.
+
 **Offen:** ob am Rechner für die sechs Ansichten unter „Heute ^" „Mehr
 Orte" leuchten soll (so wie bei „Heute" selbst) — Redurs Frage, L123 F02,
 jetzt auch in `AUFGABEN.md` beim Rest von F02. Und ein Nachbarfall am

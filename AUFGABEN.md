@@ -121,6 +121,18 @@ müsste den Reiter mit dem Ort merken — und träfe jede Sonderansicht, die
 man mit „Zurück" erreicht (aus dem Code gelesen, nicht gemessen). Ob die
 Pille dort zum Ort des Schritts zurück soll, ist eine Frage an Redur.
 
+**Derselbe Grund, am Rechner — gemessen in der dritten Durchsicht von
+E748, nicht behoben.** Der Reiter ist am Rechner auch der Schalter, was
+`#tree` zeigt (Seiten, Chats, Besprechungen), und `#tree` erscheint dort
+nur in der Lade „Seiten" der Kante. Wer über „Termine"
+(`Produktwelten.planung`, Reiter `bespr`) und „Zurück" ins Lernzentrum
+kommt und die Lade „Seiten" öffnet, sieht die Besprechungen
+(„Bevorstehend") unter dem Titel „Seiten" — auf `ba51915dc`, `7e41a4b4a`,
+`352eed65c` und jetzt gleich (1440 × 900, `messungen.md` §105). Erst ein
+Weg, der den Reiter setzt (`Produktwelten.lernen`, seit E748 auch der
+Wechsel der Klappe), bringt die Seiten zurück. Ob die Lade „Seiten" den
+Reiter überhaupt lesen soll, gehört zur selben Frage.
+
 ### 1 · Cloudflare wirklich aufsetzen — **braucht Redur**
 
 **Ziel** — Server, Konto und Sync einmal gegen echtes D1/R2 laufen lassen.

@@ -6563,6 +6563,25 @@ Durchsicht `vorher-`/`nachher-drinnen-noten-seite-*` und
 „Willkommen", unten vorher „Lernen" bzw. „Heute", nachher „Heute" bzw.
 „Lernen").
 
+**Was L147 am Verlauf verschoben hatte — dritte Durchsicht.** Seit
+sechs Ansichten „Heute" heissen, legte `zeigeSonder`, das nur auf den
+Titel sah, zwischen Heute und Noten keinen Schritt mehr an: „Heute →
+Noten → Zurück" führte am Rechner (1440 × 900, echter Knopf) in die
+Dokumente statt nach Heute — auf `ba51915dc` nach Heute. Jetzt folgt der
+Schritt der Ansicht: `Produktwelten.lernen` nennt die Adresse
+(`routeVon`), `Lernwelt.oeffnen` gibt sie an `App.zeigeSonder` weiter,
+und die Schale legt einen Schritt an, sobald sie sich von `location.hash`
+unterscheidet — keinen für dieselbe Ansicht noch einmal und, wie bisher,
+keinen für den Wechsel drinnen über die Klappen. Neu gegenüber
+`ba51915dc` sind damit die Schritte Übersicht → Trainer und Noten →
+Prüfungen (E748, „Nach der dritten Durchsicht"). Und am Rechner ist der
+Umschalter der Seitenleiste, an dem derselbe Reiter hängt, gar nicht
+gezeichnet (`premium.css` ab 761 px); sichtbar wird der Reiter nur in der
+Lade „Seiten" der Kante, und die zeigt nach einem Wechsel drinnen, was sie
+nach dem direkten Öffnen zeigt. **Beleg:** `test613` §7n–§7u (gegen
+`352eed65c` 106 von 110, rot §7n, §7o, §7p, §7s; §7q, §7r, §7t, §7u dort
+mit Absicht grün), Gegenproben 11 bis 15 in E748.
+
 **Nicht Teil dieser Lücke, gemessen und offen** (steht in `AUFGABEN.md`
 beim Rest von F02): wer Noten öffnet, über „Dokumente" weggeht und mit
 „Zurück" wiederkommt, sieht im Lernzentrum „Heute" — öffnet er danach

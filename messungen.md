@@ -9208,3 +9208,107 @@ Bytes.
 `ba51915dc`) und `test567` einmal mit 38 von 39 (die Zählung über
 zufällig gezogene Ankreuzkarten; drei Wiederholungen 39 von 39, auf
 `7e41a4b4a` zweimal 39 von 39). Datei-Wächter grün.
+
+### Nach der dritten Durchsicht (13. Oktober 2026)
+
+**Wohin „Zurück" führt** — Rechner 1440 × 900, jeder Weg aus den
+Dokumenten (`Bibliothek.oeffne()`), geöffnet über `Produktwelten.lernen`
+(die Ziele unter „Heute" nehmen denselben Weg, eine Zeile der Sonde über
+`ziele('heute')` gab dieselben Werte), zurück mit dem echten Knopf
+`#btn-back`; Sonde `ziel-r4/sonde-verlauf.mts` im Kratzordner, gefahren
+gegen Kopien von `ba51915dc`, `7e41a4b4a` und `352eed65c` (`git archive`)
+und den Zweig nach der Reparatur. Eingetragen ist, wo das erste und, wenn
+es einen gibt, das zweite „Zurück" landet; „Dok." heisst die Dokumente:
+
+```txt
+Weg                                  ba51915dc      7e41a4b4a,     jetzt
+                                                    352eed65c
+Heute → Noten                        Heute, Dok.    Dok.  ←        Heute, Dok.
+Heute → Noten → Heute                Noten, Heute   Dok.  ←        Noten, Heute
+Übersicht → Noten                    Dok.           Übersicht      Übersicht
+Übersicht → Trainer                  Dok.           Dok.           Übersicht
+Noten → Prüfungen                    Dok.           Dok.           Noten
+Heute → Heute                        Dok.           Dok.           Dok.
+Noten → Noten                        Dok.           Dok.           Dok.
+Heute → „Heute ^" → Noten (drinnen)  Dok.           Dok.           Dok.
+Übersicht → „Heute ^" → Noten        Übersicht      Dok.           Noten
+  (drinnen) → Heute
+```
+
+Auf `ba51915dc` hing der Schritt am Titel „Heute"/„Lernzentrum"; seit
+L147 heissen sechs Ansichten „Heute", und der Schritt zwischen Heute und
+Noten fiel weg. Jetzt hängt er an der Adresse der Ansicht. Neu gegenüber
+`ba51915dc` sind die Schritte Übersicht → Trainer und Noten → Prüfungen
+(Übersicht → Noten seit L147). Seitenfehler 0.
+
+**Am Rechner ist die Seitenleiste nicht gezeichnet** — 1440 × 900,
+`getComputedStyle(#sidebar).display` = `none` (`premium.css`, ab 761 px),
+`#side-reiter` ohne Rechteck, im ruhigen Modus und nach
+`Ruhig.setzen(false)` gleich (Sonden `ziel-r4/sonde-rechner.mts`,
+`sonde-blick.mts`). `#tree` erscheint nur in der Lade „Seiten" der Kante
+(`#kanten-lade`); sie schliesst, sobald eine Klappe aufgeht
+(`ziel-r4/sonde-kante.mts`, Teil B: Lade offen → Klappe offen → Lade zu).
+
+**Was die Lade „Seiten" zeigt** (die erste Zeile von `#tree` in der Lade;
+„Bevorstehend" ist die Liste der Besprechungen, „Privat" der Seitenbaum),
+nach `Produktwelten.planung()` (Reiter `bespr`) und `#btn-back` ins
+Lernzentrum (`ziel-r4/sonde-kante3.mts`):
+
+```txt
+danach                       ba51915dc      7e41a4b4a      352eed65c      jetzt
+gleich die Lade              Bevorstehend   Bevorstehend   Bevorstehend   Bevorstehend
+„Heute ^" → Noten, Lade      Bevorstehend   Bevorstehend   Privat         Privat
+direkt Noten, Lade           Privat         Privat         Privat         Privat
+```
+
+**Das Neuzeichnen des Baums**, das `reiterSetzen` bei jedem Klappenwechsel
+auslöst (`Seitenleiste.zeichne()`, neun Läufe, 1440 × 900,
+`ziel-r4/sonde-baumzeit.mts`): mit den Seiten der Willkommensbibliothek
+Median 4,5 ms (3,3–5,7), mit 300 Seiten mehr 7,6 ms (5,4–15,7). Mit
+`#tree .side-item, #tree [data-id]` gezählt standen beide Male 23 Zeilen
+da — ob die 300 Seiten einzeln gezeichnet wurden, sagt diese Zählung
+nicht sicher. Am Rechner nie sichtbar (siehe oben); am Telefon liegt
+`#tree` in der Schublade, die beim Wechsel einer Klappe zu ist (aus dem
+Code gelesen, nicht gemessen).
+
+**test613:** gegen `352eed65c` mit den acht neuen Zusagen 106 von 110 (rot
+§7n, §7o, §7p, §7s); mit der Reparatur 110 von 110. Gegenproben, gefahren
+in einer Kopie des Arbeitsbaums (`ziel-r4/gp/`, vor der ersten Gegenprobe
+gebaut und Byte für Byte gleich dem Arbeitsbaum: `lernwelt.js`,
+`produktwelten.js`, `schale.js`, `stand.js`, `sw.js`,
+`redion-einzeldatei.html`):
+
+```txt
+ohne die Adresse (lernen ruft modul.oeffnen(ziel))      106 von 110   §7n, §7o, §7p, §7s
+immer ein Schritt, wenn eine Adresse genannt ist        109 von 110   §7q
+ein Schritt auch drinnen (navMerken in sonderTitel)     108 von 110   §7r, §7s
+die Seitenleiste am Rechner gezeichnet (premium.css)    109 von 110   §7t
+ohne den Reiter in wechseln() (Gegenprobe 9)            107 von 110   §7l, §7m, §7u
+```
+
+Die neue Fassung gegen eine vollständige Kopie von `7e41a4b4a`: 103 von
+110, rot §7l, §7m, §7n, §7o, §7p, §7s, §7u.
+
+**test537:** 123 Paare, 511 Treffer, 6 Zugriffe über `(window as any)` —
+unverändert; `Lernwelt` ruft `Produktwelten` wie vorher (derselbe Bereich).
+
+**Bytes** (gzip -6, gegen `352eed65c`):
+
+```txt
+quell/schale/aufbau/schale.js              39985 → 40045    +60
+quell/bereiche/wissen/produktwelten.js      3274 →  3294    +20
+quell/bereiche/wissen/lernwelt.js          38164 → 38172     +8
+```
+
+`redion-einzeldatei.html` 9 715 871 → 9 716 241 Bytes. Dienststand v1520
+→ v1521 (`9f3d9270763e5286`; die Gegenproben bauten in der Kopie und
+zählten dort). **Start:** 1927 KB gzip über 255 Dateien (`test388` §5, Decke
+1950) — wie vorher.
+
+**Bilder** (Kratzordner `bilder-ziel/quelle/`, Sonde
+`ziel-r4/bild-verlauf.mts`, Thema über `App.theme`):
+`vorher3-rechner-heute-noten-zurueck-hell.png`/`-dunkel.png` (352eed65c:
+nach „Zurück" die Dokumente, der Knopf „Zurück" gesperrt) und
+`nachher3-…` (Heute, „Zurück" offen). Angesehen: alle vier.
+
+**Nachbarn** (unter dem Schloss, gegen v1521): `test613` (110 von 110) und 21 Läufe, alle grün: die Nachbarn aus dem Auftrag (`test537`, `test222`, `test390`, `test601`, `test600`, `test596`, `test565`, `test567`, `test217`, `test306`, `test388`, `test74`) und die Läufe, die den Verlauf (`App.zurueck`, `#btn-back`, `navMerken`) oder `zeigeSonder` anfassen: `test114`, `test581`, `test592`, `test40`, `test386`, `test67`, `test484`, `test423`, `test272`. Datei-Wächter `test550`, `test549`, `test225`, `test105`, `test109`, `test87`, `test537`, `test400`: grün.

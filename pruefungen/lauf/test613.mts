@@ -807,18 +807,27 @@ console.log('\n§7t–§7u Der Reiter drinnen, am Rechner');
     await r.keyboard.press('Escape'); await r.waitForTimeout(300);
     return raus;
   };
+  /* Ein Tipp, der nicht ankommt, wird eine rote ZEILE, kein Abbruch: mit
+     gezeichneter Seitenleiste (Gegenprobe 14) liegt die Lade über der
+     Klappe, und ein `click` ohne Frist wartete 30 s und brach den Lauf ab. */
+  const tippe = async (wo: string): Promise<boolean> => {
+    try { await r.click(wo, { timeout: 4000 }); return true; } catch { return false; }
+  };
   await r.evaluate(() => (globalThis as any).Produktwelten.lernen('lernen'));
   await r.waitForTimeout(700);
   const vor = await gezeichnet();
   await r.click('#kante .k-knopf[data-k="seiten"]'); await r.waitForTimeout(600);
   const ladeAuf = await r.evaluate(() => !(document.getElementById('kanten-lade') as HTMLElement | null)?.hidden);
-  await r.click('[data-lw-klappe="heute"]'); await r.waitForTimeout(450);
+  const klappeGetippt = await tippe('[data-lw-klappe="heute"]'); await r.waitForTimeout(450);
   const ladeNachKlappe = await r.evaluate(() => !(document.getElementById('kanten-lade') as HTMLElement | null)?.hidden);
-  await r.click('.menu [data-wahl="noten"]'); await r.waitForTimeout(600);
+  const wahlGetippt = klappeGetippt && await tippe('.menu [data-wahl="noten"]'); await r.waitForTimeout(600);
   const nach = await gezeichnet();
   p('§7t am Rechner ist kein Umschalter der Seitenleiste gezeichnet (vor und nach dem Wechsel drinnen), und die Lade „Seiten" schliesst, sobald die Klappe aufgeht',
-    !vor.sidebar && !vor.umschalter && !nach.sidebar && !nach.umschalter && ladeAuf && !ladeNachKlappe,
-    `vorher ${JSON.stringify(vor)} · nachher ${JSON.stringify(nach)} · Lade offen ${ladeAuf} → nach der Klappe ${ladeNachKlappe}`);
+    !vor.sidebar && !vor.umschalter && !nach.sidebar && !nach.umschalter && ladeAuf && klappeGetippt && wahlGetippt &&
+      !ladeNachKlappe,
+    `vorher ${JSON.stringify(vor)} · nachher ${JSON.stringify(nach)} · Lade offen ${ladeAuf} → nach der Klappe ${ladeNachKlappe}` +
+      ` · Klappe getippt ${klappeGetippt}, Noten getippt ${wahlGetippt}`);
+  await allesZu(r);
 
   /* §7u: erst über Termine und Zurück ins Lernzentrum, dann direkt Noten —
      und dasselbe noch einmal über die Klappe. */
@@ -832,13 +841,15 @@ console.log('\n§7t–§7u Der Reiter drinnen, am Rechner');
   await r.evaluate(() => (globalThis as any).Produktwelten.lernen('noten')); await r.waitForTimeout(600);
   const direkt = await ladeKopf();
   await ueberTermine();
-  await r.click('[data-lw-klappe="heute"]'); await r.waitForTimeout(450);
-  await r.click('.menu [data-wahl="noten"]'); await r.waitForTimeout(600);
+  let getippt = await tippe('[data-lw-klappe="heute"]');
+  await r.waitForTimeout(450);
+  if (getippt) getippt = await tippe('.menu [data-wahl="noten"]');
+  await r.waitForTimeout(600);
   const drinnen = await ladeKopf();
   p('§7u über Termine und Zurück ins Lernzentrum, dann „Heute ^" → Noten: Reiter und Lade „Seiten" wie bei direkt geöffneten Noten',
-    zuvor === 'bespr' && drinnen.reiter === direkt.reiter && drinnen.baum === direkt.baum && direkt.baum !== '' &&
+    getippt && zuvor === 'bespr' && drinnen.reiter === direkt.reiter && drinnen.baum === direkt.baum && direkt.baum !== '' &&
       direkt.reiter === 'start',
-    `vor dem Wechsel ${zuvor} · drinnen ${JSON.stringify(drinnen)} · direkt ${JSON.stringify(direkt)}`);
+    `vor dem Wechsel ${zuvor} · drinnen ${JSON.stringify(drinnen)} · direkt ${JSON.stringify(direkt)} · getippt ${getippt}`);
   await ctxV.close();
 }
 
