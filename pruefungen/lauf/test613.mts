@@ -62,7 +62,14 @@
  *       Ansicht unter demselben Titel und derselben Adresse. Und wer aus
  *       dem Lernzentrum eine Seite öffnet (§7k–§7m), behält unten den
  *       Reiter der Ansicht, in der er stand — direkt geöffnet und nach
- *       einem Wechsel drinnen über die Klappe.
+ *       einem Wechsel drinnen über die Klappe. Der Verlauf (§7n–§7s) legt
+ *       einen Schritt an, sobald über ein Ziel eine ANDERE Ansicht
+ *       aufgeht, auch unter demselben Titel („Heute → Noten → Zurück" ist
+ *       wieder Heute) — keinen für dieselbe Ansicht noch einmal und keinen
+ *       für den Wechsel drinnen über die Klappe. Und am Rechner (§7t/§7u)
+ *       ist kein Umschalter der Seitenleiste gezeichnet, an dem der Reiter
+ *       sichtbar würde; die Lade „Seiten" zeigt nach einem Wechsel drinnen,
+ *       was sie nach dem direkten Öffnen zeigt.
  *   §8  Ein kaputter Lieferant nimmt nur sich selbst mit — ein werfender
  *       Lieferant, ein werfendes `zeigen()`, ein Ziel ohne `tun`, eine
  *       doppelte Kennung; sortiert nach Rang, höchstens fünf, jedes Mal neu
@@ -89,7 +96,10 @@
  * grün) und das `zeigen` der Termine-Karten herausnehmen (§8g). Aus der
  * zweiten Durchsicht: §7l und §7m sind gegen `7e41a4b4a` rot, und die alte
  * Regel „heute oder nicht" für den Reiter in `produktwelten.ts` macht §7k
- * rot — vorher blieb der Lauf damit grün.
+ * rot — vorher blieb der Lauf damit grün. Aus der dritten Durchsicht:
+ * §7n, §7o, §7p und §7s sind gegen `352eed65c` rot (der Verlauf sah nur den
+ * Titel); §7q, §7r, §7t und §7u sind dort mit Absicht grün — sie halten,
+ * was schon stimmte, und ihre Gegenproben stehen in E748.
  *
  *   node pruefungen/lauf/test613.mts
  * ==========================================================================*/
@@ -631,6 +641,205 @@ console.log('\n§7k–§7m L147 eine Stufe weiter: wer aus dem Lernzentrum eine 
         danach.wo === 'seite' && JSON.stringify(danach.an) === JSON.stringify([soll]),
       `im Lernzentrum ${drin.an} (view ${drin.view}) · mit der Seite ${danach.an} (wo ${danach.wo}, Seite „${seite}")`);
   }
+}
+
+/* ═══ §7n–§7s DER VERLAUF FOLGT DER ANSICHT, NICHT NUR DEM TITEL ═══════════
+   Gefunden in der dritten Durchsicht: seit L147 heissen Prüfungen, Noten,
+   Stundenplan, Schule, Uni und Arbeit „Heute" — und `zeigeSonder` legte nur
+   dann einen Schritt in den Verlauf, wenn sich der TITEL änderte. „Heute →
+   Noten → Zurück" sprang deshalb über Heute hinweg in die Dokumente; auf
+   `ba51915dc` kam man nach Heute zurück. Seither entscheidet die Adresse der
+   Ansicht mit (`#welt-lernen-…`, die das Öffnen über `Produktwelten.lernen`
+   schreibt): ein Schritt, sobald sie wechselt — und keiner, wenn dieselbe
+   Ansicht noch einmal geöffnet wird. Der Wechsel DRINNEN über die Klappen
+   bleibt ohne Schritt, so wie er es auf `ba51915dc` war und wie E748 unter 6.
+   es für `App.sonderTitel` festhält. Geöffnet wird über die Ziele selbst
+   (`Register.navigation.ziele(…).tun()`), den Weg der Zielleiste, und
+   zurück mit dem echten Knopf, am Rechner wie §7i. */
+console.log('\n§7n–§7s Der Verlauf folgt der Ansicht, nicht nur dem Titel');
+const rechnerOeffnen = async (): Promise<{ ctxV: BrowserContext; r: Page }> => {
+  const ctxV = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const r = await ctxV.newPage();
+  r.on('pageerror', e => fehler.push(e.message));
+  await r.goto(`http://127.0.0.1:${PORT}/index.html`);
+  await r.waitForFunction(() => typeof App !== 'undefined' && typeof Store !== 'undefined' &&
+    (document.getElementById('tree')?.children.length || 0) > 0, null, { timeout: 30000 });
+  await r.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    Store.setMeta('neuerungenGesehen', 1e9);
+    document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung,#rg-neu')
+      .forEach(el => el.remove());
+  });
+  return { ctxV, r };
+};
+{
+  const { ctxV, r } = await rechnerOeffnen();
+  const ort = () => r.evaluate(() => ({
+    wo: String(App.schauplatz()), hash: location.hash,
+    view: [...document.querySelectorAll<HTMLElement>('[data-lw-view]')]
+      .filter(e => e.offsetParent !== null).map(e => e.dataset['lwView'] ?? '?').join(',')
+  }));
+  const zielTun = async (key: string, id: string): Promise<string> => {
+    const raus = await tun(r, key, id);
+    await r.waitForTimeout(600);
+    return raus;
+  };
+  const dokumente = async (): Promise<void> => {
+    await r.click('#kante .k-knopf[data-k="bibliothekOben"]'); await r.waitForTimeout(600);
+  };
+  /** Zurück mit dem Knopf; `gesperrt`, wenn er keinen Schritt hat. */
+  const zurueck = async (): Promise<{ wo: string; hash: string; view: string } | 'gesperrt'> => {
+    if (await r.evaluate(() => (document.getElementById('btn-back') as HTMLButtonElement | null)?.disabled !== false))
+      return 'gesperrt';
+    await r.click('#btn-back'); await r.waitForTimeout(800);
+    return ort();
+  };
+  const istLern = (o: unknown, ansicht: string, wo: string): boolean =>
+    typeof o === 'object' && o !== null && (o as any).wo === wo &&
+    (o as any).hash === '#welt-lernen-' + ansicht && (o as any).view === ansicht;
+  const istDok = (o: unknown): boolean =>
+    typeof o === 'object' && o !== null && (o as any).wo === 'bibliothek' && (o as any).hash === '#dokumente';
+  const t = (o: unknown): string => typeof o === 'string' ? o : `${(o as any).wo} ${(o as any).hash} [${(o as any).view}]`;
+
+  /* §7n — der Fall der Durchsicht, über das Ziel unter „Heute". */
+  await dokumente();
+  const n1 = await zielTun('heute', 'heute');
+  const n2 = await zielTun('heute', 'noten');
+  const nJetzt = await ort();
+  const nZ1 = await zurueck();
+  const nZ2 = await zurueck();
+  p('§7n Dokumente → Heute → Noten (Ziele unter „Heute"), Zurück: wieder Heute — und noch einmal Zurück: die Dokumente',
+    n1 === 'ok' && n2 === 'ok' && istLern(nJetzt, 'noten', 'heute') && istLern(nZ1, 'heute', 'heute') && istDok(nZ2),
+    `jetzt ${t(nJetzt)} · Zurück ${t(nZ1)} · Zurück ${t(nZ2)}`);
+
+  /* §7o — hin und wieder zurück, zwei Schritte. */
+  await dokumente();
+  await zielTun('heute', 'heute');
+  await zielTun('heute', 'noten');
+  await zielTun('heute', 'heute');
+  const oZ1 = await zurueck();
+  const oZ2 = await zurueck();
+  const oZ3 = await zurueck();
+  p('§7o Heute → Noten → Heute, dreimal Zurück: Noten, Heute, die Dokumente',
+    istLern(oZ1, 'noten', 'heute') && istLern(oZ2, 'heute', 'heute') && istDok(oZ3),
+    `${t(oZ1)} · ${t(oZ2)} · ${t(oZ3)}`);
+
+  /* §7p — dieselbe Regel unter „Lernen", wo der Titel schon immer derselbe
+     war („Lernzentrum"): auch hier ist eine andere Ansicht ein Schritt. */
+  await dokumente();
+  await zielTun('lernen', 'lernen');
+  await zielTun('lernen', 'trainer');
+  const pZ1 = await zurueck();
+  const pZ2 = await zurueck();
+  p('§7p Übersicht → Trainer (Ziele unter „Lernen"), Zurück: die Übersicht — und noch einmal Zurück: die Dokumente',
+    istLern(pZ1, 'lernen', 'lernen') && istDok(pZ2), `${t(pZ1)} · ${t(pZ2)}`);
+
+  /* §7q — DIESELBE Ansicht noch einmal ist kein Schritt (wie vorher): sonst
+     stünde im Verlauf ein Zurück, das nichts ändert. */
+  const leer: string[] = [];
+  for (const [key, id] of [['heute', 'heute'], ['heute', 'noten'], ['lernen', 'trainer']] as const) {
+    await dokumente();
+    await zielTun(key, id);
+    await zielTun(key, id);
+    const z = await zurueck();
+    if (!istDok(z)) leer.push(`${id}: ${t(z)}`);
+  }
+  p('§7q dieselbe Ansicht zweimal geöffnet legt keinen Schritt an — Zurück führt gleich in die Dokumente (Heute, Noten, Trainer)',
+    leer.length === 0, leer.join(' · '));
+
+  /* §7r — DRINNEN über die Klappe gewechselt bleibt ohne Schritt (wie auf
+     `ba51915dc`, E748 unter 6.) … */
+  await dokumente();
+  await zielTun('heute', 'heute');
+  await r.click('[data-lw-klappe="heute"]'); await r.waitForTimeout(450);
+  await r.click('.menu [data-wahl="noten"]'); await r.waitForTimeout(600);
+  const rDrin = await ort();
+  const rZ1 = await zurueck();
+  p('§7r Heute → „Heute ^" → Noten (drinnen): kein Schritt dazwischen — Zurück führt in die Dokumente',
+    istLern(rDrin, 'noten', 'heute') && istDok(rZ1), `drinnen ${t(rDrin)} · Zurück ${t(rZ1)}`);
+
+  /* §7s — … aber wer danach woandershin geht, kommt in die Ansicht zurück,
+     in der er drinnen stand: Übersicht → „Heute ^" → Noten → Ziel „Heute"
+     → Zurück steht in den Noten, nicht in der Übersicht. */
+  await dokumente();
+  await zielTun('lernen', 'lernen');
+  await r.click('[data-lw-klappe="heute"]'); await r.waitForTimeout(450);
+  await r.click('.menu [data-wahl="noten"]'); await r.waitForTimeout(600);
+  await zielTun('heute', 'heute');
+  const sZ1 = await zurueck();
+  const sZ2 = await zurueck();
+  p('§7s Übersicht → „Heute ^" → Noten (drinnen) → Heute (Ziel), Zurück: die Noten — und noch einmal Zurück: die Dokumente',
+    istLern(sZ1, 'noten', 'heute') && istDok(sZ2), `${t(sZ1)} · ${t(sZ2)}`);
+  await ctxV.close();
+}
+
+/* ═══ §7t–§7u DER REITER DRINNEN, AM RECHNER ═══════════════════════════════
+   Die dritte Durchsicht fragte: `wechseln()` stellt über
+   `Produktwelten.lernReiter` → `Seitenleiste.reiter` denselben Wert um, an
+   dem am Rechner der Umschalter der Seitenleiste hängt (`#side-reiter`:
+   Start · Chat · Besprechungen) — springt dort jetzt „Chat" auf „Start"?
+   Gemessen am Rechner (1440 × 900): `#sidebar` ist dort nicht gezeichnet
+   (`premium.css`, `body[data-schale="premium"] #sidebar{display:none}` ab
+   761 px), also auch der Umschalter nicht; `#tree` erscheint nur in der
+   Lade „Seiten" der Kante, und die schliesst, sobald man eine Klappe
+   aufmacht. §7t hält diese Bedingung fest — wer die Seitenleiste am Rechner
+   zurückbringt, macht §7t rot und muss die Frage neu beantworten.
+
+   Sichtbar wird der Wert nur an einer Stelle: wer über „Termine" (Reiter
+   `bespr`) und „Zurück" ins Lernzentrum kommt, hat noch `bespr`, und die
+   Lade „Seiten" zeigt dann die Besprechungen („Bevorstehend"). §7u
+   verlangt, was L147 überall verlangt: drinnen gewechselt ist wie direkt
+   geöffnet — `Produktwelten.lernen` setzt den Reiter, also auch die Klappe. */
+console.log('\n§7t–§7u Der Reiter drinnen, am Rechner');
+{
+  const { ctxV, r } = await rechnerOeffnen();
+  const gezeichnet = () => r.evaluate(() => ({
+    sidebar: (document.getElementById('sidebar')?.getClientRects().length ?? 0) > 0,
+    umschalter: (document.getElementById('side-reiter')?.getClientRects().length ?? 0) > 0
+  }));
+  const ladeKopf = async (): Promise<{ reiter: string; baum: string }> => {
+    await r.click('#kante .k-knopf[data-k="seiten"]'); await r.waitForTimeout(600);
+    const raus = await r.evaluate(() => ({
+      reiter: String(Seitenleiste.reiter()),
+      baum: (document.querySelector('#kanten-lade #tree')?.firstElementChild?.textContent || '')
+        .replace(/\s+/g, ' ').trim().slice(0, 24)
+    }));
+    await r.keyboard.press('Escape'); await r.waitForTimeout(300);
+    return raus;
+  };
+  await r.evaluate(() => (globalThis as any).Produktwelten.lernen('lernen'));
+  await r.waitForTimeout(700);
+  const vor = await gezeichnet();
+  await r.click('#kante .k-knopf[data-k="seiten"]'); await r.waitForTimeout(600);
+  const ladeAuf = await r.evaluate(() => !(document.getElementById('kanten-lade') as HTMLElement | null)?.hidden);
+  await r.click('[data-lw-klappe="heute"]'); await r.waitForTimeout(450);
+  const ladeNachKlappe = await r.evaluate(() => !(document.getElementById('kanten-lade') as HTMLElement | null)?.hidden);
+  await r.click('.menu [data-wahl="noten"]'); await r.waitForTimeout(600);
+  const nach = await gezeichnet();
+  p('§7t am Rechner ist kein Umschalter der Seitenleiste gezeichnet (vor und nach dem Wechsel drinnen), und die Lade „Seiten" schliesst, sobald die Klappe aufgeht',
+    !vor.sidebar && !vor.umschalter && !nach.sidebar && !nach.umschalter && ladeAuf && !ladeNachKlappe,
+    `vorher ${JSON.stringify(vor)} · nachher ${JSON.stringify(nach)} · Lade offen ${ladeAuf} → nach der Klappe ${ladeNachKlappe}`);
+
+  /* §7u: erst über Termine und Zurück ins Lernzentrum, dann direkt Noten —
+     und dasselbe noch einmal über die Klappe. */
+  const ueberTermine = async (): Promise<void> => {
+    await r.evaluate(() => (globalThis as any).Produktwelten.lernen('lernen')); await r.waitForTimeout(700);
+    await r.evaluate(() => (globalThis as any).Produktwelten.planung()); await r.waitForTimeout(600);
+    await r.click('#btn-back'); await r.waitForTimeout(800);
+  };
+  await ueberTermine();
+  const zuvor = await r.evaluate(() => String(Seitenleiste.reiter()));
+  await r.evaluate(() => (globalThis as any).Produktwelten.lernen('noten')); await r.waitForTimeout(600);
+  const direkt = await ladeKopf();
+  await ueberTermine();
+  await r.click('[data-lw-klappe="heute"]'); await r.waitForTimeout(450);
+  await r.click('.menu [data-wahl="noten"]'); await r.waitForTimeout(600);
+  const drinnen = await ladeKopf();
+  p('§7u über Termine und Zurück ins Lernzentrum, dann „Heute ^" → Noten: Reiter und Lade „Seiten" wie bei direkt geöffneten Noten',
+    zuvor === 'bespr' && drinnen.reiter === direkt.reiter && drinnen.baum === direkt.baum && direkt.baum !== '' &&
+      direkt.reiter === 'start',
+    `vor dem Wechsel ${zuvor} · drinnen ${JSON.stringify(drinnen)} · direkt ${JSON.stringify(direkt)}`);
+  await ctxV.close();
 }
 
 /* ═══ §8 Ein kaputter Lieferant nimmt nur sich selbst mit ══════════════════ */
