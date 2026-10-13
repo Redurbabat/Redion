@@ -3213,7 +3213,8 @@ const Lernwelt = (() => {
     if (zustand.simulation && !zustand.simulation.fertig) timerStarten();
     else timerStoppen();
     reiterRollstand();
-    /* Die Linse (E712, linse.ts) gleitet nur beim Ankommen, sonst liegt sie still. */
+    /* Die Linse (E712, linse.ts) gleitet nur beim Ankommen und verblasst danach;
+       sonst gibt es keine (E744). */
     const satz = root.querySelector<HTMLElement>('.lw-desk h2');
     const gleiten = neuAngekommen;
     neuAngekommen = false;

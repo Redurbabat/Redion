@@ -1,5 +1,494 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 12. Oktober 2026 · Redurs vier Antworten — zusammengeführt auf `claude/abend-antworten`
+
+**Der Auftrag.** Redur am 11. Oktober um 19:43 UTC: „1. verblassen / 2 .
+Scnell lauf / 3.ja / 4. wie du willst". Die dritte Antwort ist E743 (`main`
+vorgespult, schon auf `main`); die anderen drei wurden vier Zweige:
+
+```txt
+1  die leere Linse verblasst nach der Fahrt          E744   claude/linse-verblasst
+2  die CI fährt nur den schnellen Lauf               E745   claude/ci-schnell        test610
+4  Elektro L253 Punkt 4: Drehen zapft nichts an      E746   claude/elektro-drehen-ohne-anzapfen   test611
+4  Elektro L253 Punkt 2: Brücken sind Verbindungen   E747   claude/elektro-klemmenbrett-bruecken  test612
+```
+
+Die Reihenfolge der Elektro-Punkte hatte Redur freigegeben; gewählt nach
+§46: zuerst, was die Bedeutung eines Plans still ändert (Punkt 4), dann
+eine falsche Meldung (Punkt 2). Punkt 3 (Messwerte am Telefon) und Punkt 1
+(der Pfeil im Symbol) bleiben in L253.
+
+**Wie geprüft.** Jeder Zweig mit dem Wächter zuerst rot, dann vier Runden
+Durchsicht mit je einem frischen Skeptiker und eigener Gegenprobe, bis keine
+Runde mehr einen schweren Fund brachte. Die schwersten Funde: eine Taste
+mitten in einem Maus-Zug speicherte ein angezapftes Zwischenbild, und die
+Ablage hielt einen Verweis auf den Plan (P134); der Wächter dafür schickte
+seine Tasten selbst an die Fläche und sah nicht, dass mit echter Eingabe
+Escape nie ankam (P135); und `--schnell` war fast so lang wie der volle
+Lauf (P136).
+
+**Zusammengeführt** von `main` 97d156b aus, vier Schritte, Konflikte nur in
+Doku, Zählern und Erzeugtem (726 Entscheidungen, E1 bis E747; 553 Läufe;
+151 Lücken, 93 offen). Danach 27 Browser-Läufe und die Datei-Wächter grün.
+Auf GitHub lief der Job „Schneller Lauf" zum ersten Mal zu Ende (4 min 7 s)
+— rot nur wegen `test274`, für den Redurs Wort aussteht.
+
+**Neu eingetragen:** L255 (am Telefon „Offner" statt „Öffner"), L256
+(lebende Verweise an `Store.updateBlock` an weiteren Stellen, nicht
+gemessen).
+
+**Nicht getan:** `main` ist nicht bewegt — E743 galt einmal.
+
+## 11. Oktober 2026 · E747 · Eine Brücke des Klemmenbretts belegt ihre Klemmen (L253 Punkt 2)
+
+**Redur:** „4. wie du willst", am 11. Oktober 2026 um 19:43 UTC, zur
+Reihenfolge der Elektro-Punkte aus L253. Punkt 2 kam als zweiter, weil
+eine falsche Warnung etwas Falsches lehrt.
+
+**Gefunden** (auf `97d156b03`, Plan des Bildes aus L253): in Stern UND
+Dreieck meldete die Fusszeile der Planfläche „M1: Anschluss W2 / U2 / V2
+hängt an keiner Leitung" — gerade die Klemmen, auf denen die Brücken der
+Stellung liegen. Die Rechnung kannte die Brücken seit E730; die Meldung
+offener Klemmen zählte nur Klemmen je Netz der Leitungen. Sieben
+Warnungen in jeder Stellung; von drei sichtbaren Plätzen belegten die
+falschen zwei.
+
+**Gebaut** (`src/bereiche/elektro/simulation.ts`): für die Meldung zählen
+die Brücken der eingestellten Stellung eines mehrteiligen Bauteils wie
+gezeichnete Leitungen — die Netze, die sie verbinden, sind ein Knoten.
+Schaltkontakte zählen nicht, der Verbund N–PE der Quelle nicht; die
+Netzliste bleibt, wie sie ist. EINE Hilfe `stellungIn` liest die Stellung
+für Rechnung und Meldung (vorher zweimal dieselbe Klemmung). Im Plan des
+Bildes: Stern und Dreieck 7 → 4 Warnungen, ohne Brücken 7 → 7.
+
+**Prüfung:** `test612` zuerst rot eingecheckt (gegen 97d156b03 15/26),
+mit E747 26/26; drei Gegenproben, jede wieder heraus: Brücken übergangen
+15/26, Kontakte als Brücken 25/26 (§6), Brücken jeder Stellung 22/26.
+Nachbarn grün: `test604` 91, `test605` 51, `test606` 17, `test607` 37,
+`test608` 69, `test238` 77, `test239` 68, `test240` 100, `test241` 105,
+`test242` 42, `test388` 22 (Start 1919 KB, unverändert), `test74` 12/12;
+die Datei-Wächter. Bilder vorher/nachher (Rechner und Telefon, dunkel und
+hell, Stern, Dreieck, ohne Brücken) angesehen; Zahlen in `messungen.md`
+§104.
+
+**Nachtrag nach der Durchsicht, im selben Zweig (E747 Punkt 6):** die
+erste Fassung hatte eine richtige Meldung verschluckt. Im Dreieck ohne
+Zuleitung an U1 halten U1 und W2 einander über die Brücke, der Motor
+läuft auf zwei Aussenleitern (9,96 A), und M1 meldete nichts; ohne jede
+Leitung nur PE. Die Regel konnte den Sternpunkt {U2, V2, W2} nicht von
+der Ecke {U1, W2} unterscheiden. Jetzt sagt es die Stellung: „Stern"
+trägt `sternpunkt: ['U2', 'V2', 'W2']`, und ein Knoten, den nur die
+eigenen Brücken halten, wird gemeldet (einmal, mit U1), ausser er ist so
+markiert. Dazu ist der Kommentar an `stellungIn` berichtigt: die EINE
+Stelle innerhalb von `Stromfluss` — ausserhalb lesen fünf Stellen eine
+Stellungsnummer selbst: die Planfläche für ihren Titel (`|| 0` statt
+`?? 0`, verschieden nur bei NaN) und in `schalte` (ungeklemmt, nur die
+nächste Zahl), die Aufgaben in `besteStellung`, `planLeuchtet` und
+`planStromweg` (ihre Zahlen liegen von vornherein in der Liste). Die
+Planfläche ruft die Hilfe bewusst nicht auf (§5 Regel 1). Die erste
+Berichtigung nannte nur den Titel; die vollständige Liste fand die zweite
+Durchsicht (E747 Punkt 5). `test612` zuerst
+erweitert und rot eingecheckt (6b1de9eb6, gegen 7560b2f22 33/38), mit dem
+Sternpunkt 38/38 (d9b91d74d); gegen 97d156b03 20/38. Drei neue
+Gegenproben, jede wieder heraus: die Marke heraus 29/38, die Regel auch
+für Knoten ohne Brücke 37/38, jede Klemme der Ecke 34/38; die drei alten
+auf dem neuen Stand nachgemessen: 21/38, 37/38, 28/38. Nachbarn grün:
+`test604` 91, `test605` 51, `test606` 17, `test607` 37, `test608` 69,
+`test238` 77, `test239` 68, `test240` 100, `test241` 105, `test242` 42,
+`test388` 22 (Start 1919 KB), `test74` 12/12; die Datei-Wächter. Bilder
+nachher (Stern, Dreieck, ohne Brücken, Stern und Dreieck ohne U1;
+Rechner und Telefon, dunkel und hell) angesehen. `messungen.md` §104 ist
+für drei Stände neu gemessen.
+
+**Offen geblieben** (in L253 bei Punkt 2): gezeichnete Brücken heissen
+„überbrückt"; die Quelle meldet ihr freies N auch beim Drehstrommotor
+(eine Frage an Redur); im Plan des Bildes meldet der FI „es fehlen
+37.52 mA", obwohl die Lampe richtig angeschlossen ist; an G1 steht ohne
+Brücken „0 A" neben „317 nW"; und erreicht eine Ecke des Dreiecks eine
+fremde Klemme, schweigt die Meldung, auch wenn es die falsche ist.
+
+## 12. Oktober 2026 · E746, dritte Durchsicht · Echte Maus, echte Tasten
+
+**Die dritte Durchsicht** fuhr die Wege der zweiten mit echter Maus und
+echter Tastatur und fand, dass §13 seine Tasten nur an die Fläche
+GESCHICKT hatte: mit der Maus steht der Fokus im Zug auf der Seite (das
+Anfassen zeichnet die Fläche neu, und der Browser setzt den Fokus beim
+`mousedown` auf `body`). Escape brach darum weder einen Zug mit Teilen noch
+einen Rahmen ab, und Strg+Z, Umschalt+Strg+Z und Strg+Y nahm im Zug der
+Seitenverlauf — er baute die Seite neu und verwarf den Zug still (F1 bei
+400,60; die Daten blieben heil). „Als Vorlage speichern" und „Als Bild
+speichern" nahmen im Zug das Zwischenbild, und E746 Punkt 7 behauptete,
+eine Änderung im Zug komme nur aus einem Dialog. Das Nachmessen fand dazu:
+nach einem echten Klick auf ein Teil drehte „r" nichts, Umschalt+Strg+Z
+(„Z") und Strg+Y nahm auch mit dem Fokus auf der Fläche der Seitenverlauf
+(gemessen mit dem zurückgeholten Fokus, Gegenproben 25 und 26), und der
+Hinweis eines Beispiels erschien, ohne dass es eingesetzt war.
+
+**Gebaut** (E746 Punkt 7, dritte Durchsicht): ein Zug horcht am Dokument
+auf seine Tasten, wie auf das Loslassen — Escape bricht ab (ist ein Menü
+offen, schliesst erst das), Rückgängig und Wiederholen tun nichts, weder
+an der Fläche noch am Seitenverlauf. Beim Loslassen über der Fläche holt
+sie den Fokus zurück, wenn er auf der Seite gelandet ist — ohne Ring
+(`data-zeigerfokus`; mit der Tabulatortaste ist er da). Die Wurzel nimmt
+Umschalt+Strg+Z mit „Z" und Strg+Y. Vorlage und Bild verweigern im Zug und
+sagen es; der Hinweis eines Beispiels kommt nur, wenn es steht. Die Liste,
+was im Zug über Knöpfe und Menüs ankommt und still verloren geht, steht
+gemessen in E746 und L253 Punkt 9.
+
+**Prüfung:** `test611` §14 (alles mit echter Eingabe), zuerst rot
+eingecheckt (7c0fa0ff1): gegen a8533763b 189 von 207; im Endstand 209/209,
+gegen a8533763b 191 von 209 (alle 18 in §14). Zwölf Gegenproben, jede rot
+und byte-genau zurückgenommen: kein Tastenhorcher am Dokument 191/207 ·
+Rückgängig nicht geschluckt 203/207 · Escape ohne Fenster-Prüfung 206/207
+· ohne Fokus zurück 203/207 · Wurzel nur „z" 205/207 · ohne Strg+Y 205/207
+· Vorlage ohne Sperre 205/207 · Bild ohne Sperre 205/207 · Hinweis immer
+206/207 · Ring für jeden `:focus-visible` 208/209 · ohne das Merkmal
+208/209 · Merkmal bleibt beim Gehen 208/209. Die Sonde der Durchsicht
+nachher: echtes Escape bricht ab, echtes Strg+Z lässt den Zug laufen; ihre
+fünf übrigen roten Zusagen sind vorher dieselben (Annahmen der Sonde,
+`messungen.md` §103). Nachbarn grün: `test611` (209/209), `test604`–`test608`, `test568` (26/26), `test238`–`test242`, `test254`, `test388`, `test74`; Datei-Wächter
+`test550`, `test549`, `test225`, `test105`, `test109`, `test87`,
+`test537`, `test400` grün. Start 1924 KB (`test388` §5, Decke 1950).
+Bilder (Rechner und Telefon): T1 angeklickt ohne Ring, „r" gedreht, F1 im
+Zug, „Erst loslassen — während eines Zugs wird keine Vorlage gespeichert.",
+F1 nach Escape wieder am Platz.
+
+**Offen:** L253 Punkt 9 — ob die Fläche sagen soll, dass Knöpfe und Menüs
+im Zug nichts getan haben (Redur); Punkt 8 — Strg+Z nach dem Loslassen.
+
+## 12. Oktober 2026 · E746, zweite Durchsicht · Während eines Zugs wird nichts gespeichert
+
+**Die zweite Durchsicht** von E746 fand, dass die billigen Zwischenbilder
+eines Zugs doch gespeichert werden konnten: alles, was WÄHREND des Zugs über
+`aendere` ging, nahm das Zwischenbild als Stand von vorher. Ihre Sonde (F1
+an die Lage aus `test611` §10, die Maus unten, zweimal „h", loslassen,
+dreimal Strg+Z): nach dem Loslassen stimmt die Netzliste, das zweite und
+dritte Strg+Z bringen {E1:X2 F1:N F1:N2 G2:N} zurück. Das Nachmessen auf
+478791f5f fand vier Wege mehr: die Ablage hielt den Plan der Fläche als
+dasselbe Objekt (die Schreibpause legte ein Zwischenbild in die
+IndexedDB); ein Zug, losgelassen über der Palette, blieb liegen, und die
+nächste Handlung speicherte ihn; ein zweiter Finger liess den ersten Zug
+liegen; Strg+Z und Umschalt+Strg+Z im Zug legten das Zwischenbild auf den
+anderen Stapel. Und `test611` §10 „genau EINE volle Suche" prüfte mit
+`slice(-(n+1))` nichts.
+
+**Gebaut** (E746 Punkt 7): `aendere`, `zurueck` und `vorwaerts` tun während
+eines Zugs nichts; von den Tasten zählt im Zug nur Escape, und es bricht
+den Zug ab (Lagen und Punkte von vorher, nichts gespeichert). Ein Zug
+gehört einem Zeiger; er endet, wo auch immer dieser loslässt oder
+abbricht (am Dokument gehorcht, nur solange er läuft), und setzt ein
+anderer Zeiger auf, endet er dort — mit Teilen immer mit der vollen Suche.
+Die Ablage bekommt eine Kopie des Plans. Gewählt ist „Tasten nicht
+annehmen" statt „zuerst den Zug beenden": eine Taste beendet keine Geste.
+
+**Prüfung:** `test611` §13 (zwölf Wege, Escape, eine Leitung über der
+Palette, eine Seite, die sich im Zug neu zeichnet) und §10 „genau eine
+Rechnung nach dem Loslassen, und sie ist voll", zuerst rot eingecheckt
+(046d4a8c0): gegen 478791f5f 129 von 159; im Endstand 172/172, gegen
+478791f5f 137 von 171 (alle 34 in §13). Elf Gegenproben, jede rot und
+byte-genau zurückgenommen (die ersten neun gegen den Stand mit 170
+Zusagen): `aendere` wieder im
+Zug 152/169 · `zurueck` 168/170 · `vorwaerts` 168/170 · Ablage ohne Kopie
+166/170 (die IndexedDB hält das Zwischenbild) · Loslassen nur an der Bühne
+168/170 · ohne Aufsetzen am Dokument 168/170 · Escape ohne Abbruch 167/170
+· ohne `pointercancel` am Dokument 169/170 · zweimal volle Suche beim
+Loslassen 169/170 („[false,false]") · Leitung auch ausserhalb angelegt
+171/172 · Fläche ausserhalb des Dokuments speichert 171/172. Die Sonde der
+Durchsicht nachher: mit
+„h" wie mit „r" alle drei Strg+Z wie vorher.
+Nachbarn grün: `test611` (172/172), `test604`–`test608`,
+`test238`–`test242`, `test254`, `test388` (Start 1924 KB), `test74`;
+Datei-Wächter `test550`, `test549`, `test225`, `test105`, `test109`,
+`test87`, `test537`, `test400` grün. Bilder (Rechner und Telefon): F1 im
+Zug mit „r" gedrückt (ungedreht) und nach Escape wieder am Platz.
+
+**Offen:** L253 Punkt 9 (neu: Tasten zählen im Zug nicht und sagen es
+nicht; „Als Bild speichern" und „Als Vorlage speichern" lesen im Zug das
+Bild, wie es dasteht) und Punkt 8 (Strg+Z nach dem Loslassen — vorher geht
+es jetzt mit Escape).
+
+## 11. Oktober 2026 · E746, Durchsicht · Ziehen billig, eigene Klemme gemeldet, Heilen gehalten
+
+**Die Durchsicht** von E746 fand drei Dinge. (1) Das Ziehen mit der Maus
+rechnete bei JEDER Bewegung die volle Wegsuche; nachgemessen (F1 um
+120 × 60 px in 60 Bewegungen, CPU vierfach gedrosselt, drei Läufe): je
+Bewegung im Median 23,9 bis 29,4 ms, höchstens 126,8 bis 217,3 ms, 7 bis
+12 Bewegungen über 50 ms. (2) Eine Lageänderung konnte die Netzliste
+weiterhin still ändern — über die EIGENE Klemme des bewegten Teils: R1
+neben der Leitung E1:X2–E2:X1 gedreht, und R1:1 hing an ihr (auf `main`
+genauso). (3) Die Ausnahme „heilen" (alte Pläne, L253 Punkt 7) hielt nur
+`test608`, nicht `test611`.
+
+**Gebaut:** `Schaltplan.nachziehen` kennt `schnell` (nur alter Weg,
+nachgerückte Endstücke, die zwei Winkel). Die Planfläche rechnet beim
+Ziehen je Bewegung `schnell`, innerhalb desselben Rasters gar nicht, und
+beim Loslassen einmal voll, vom Anfassen aus, VOR `aendere` — gespeichert
+wird nur das. `Schaltplan.veraendert(plan, vorher)` vergleicht nach jeder
+Lageänderung, was jede Leitung berührt und welche Klemmen
+aufeinanderliegen, mit dem Stand von vorher; die Fläche sagt es beim
+Namen („Nach dem Drehen: R1:1 berührt jetzt die Leitung E1:X2–E2:X1 — die
+Verbindungen haben sich geändert, bitte prüfen."), verhindert die Lage
+aber nicht.
+
+**Prüfung:** `test611` um §10–§12 erweitert, zuerst rot eingecheckt
+(745fba801): gegen fcb6d35fa 101/110, gegen `main` 61/110; jetzt 110/110.
+Sechs Gegenproben, jede rot und byte-genau zurückgenommen (keine volle
+Suche beim Loslassen 102/110 · jede Bewegung voll 109/110 · ohne
+Raster-Merker 109/110 · Meldung ohne `veraendert` 105/110 · `heilen` aus
+108/110 · geheilte Wege ungeprüft 106/110). Nachgemessen: je Bewegung
+gedrosselt im Median 2,5 bis 2,8 ms, höchstens 13,2 ms, keine über 50 ms;
+das Loslassen 66 bis 132 ms in einem Stück; der ganze Zug 4373 bis
+4628 ms (vorher 7383 bis 9061, `main` 6115 bis 6581). Nachbarn grün:
+`test604`–`test608`, `test238`–`test242`, `test254`, `test388` (Start
+1923 KB), `test74`; Datei-Wächter grün. Bilder (Rechner und Telefon,
+hell und dunkel): die Meldung nach dem Drehen von R1, und der Zug am FI —
+das Zwischenbild zeigt die billigen Wege (f2 läuft senkrecht bei x = 480
+mitten durch den FI und über N2, im Modell nachgerechnet: Stufe 3),
+losgelassen ist der Plan derselbe wie vor der Durchsicht.
+
+**Offen:** L253 Punkt 9 (die Meldung verhindert nichts; Zwischenbilder
+können über eine fremde Klemme laufen; das Loslassen kostet einmal die
+volle Suche; kein Wächter für die Zeit) und Punkt 8 (Strg+Z nach einem
+Zug), der mit der Meldung schwerer wiegt.
+
+## 11. Oktober 2026 · E746 · Drehen und Ziehen zapfen nichts mehr an
+
+**Redur:** „4. wie du willst", am 11. Oktober abends, zur Frage, in welcher
+Reihenfolge die Elektro-Punkte aus L253 drankommen. Zuerst Punkt 4, weil
+er still die Bedeutung eines Plans ändert (§46, §51).
+
+**Gefunden** (`test611` gegen `main` 97d156b03, 47/79): Drehen, Spiegeln und
+Ziehen führten ALLE Leitungen des Plans neu, jede als Winkel von Ende zu
+Ende. Im Plan „Drehstrom, FI und Übertrager" wurde nach dem Drehen des FI
+aus sechs Netzen um den FI eines — L und N der Quelle verbunden, „l-n",
+nichts mehr gerechnet —, die Motorleitung w4 verlor ihren Weg und lief über
+U2, V2, W2, und im alten FI aus `test608` lief b2 5 px neben N2.
+
+**Gebaut:** `Schaltplan.vorherMerken` (was vor der Änderung feststeht: die
+Klemme jedes Endes nach E738, die Punkte, was jede Leitung berührt) und
+`Schaltplan.nachziehen` (führt nur neu, was an einem bewegten Teil hängt;
+nimmt nur einen Weg, der genau dasselbe berührt wie vorher — alter Weg,
+nachgerückte Endstücke, Winkel, anderer Winkel, Z-Wege, Hakenwege —, am
+liebsten durch kein Zeichen; sonst Stufe 2/3 und eine Meldung).
+`Schaltplan.kontakte` legt die Berührungsregel offen. Die Planfläche ruft
+für Pfeiltaste, Drehen, Spiegeln und Ziehen nur noch diese Stelle;
+`endKlemmen` und `leitungenNachziehen` sind weg. Eine fremde Leitung, deren
+Ende neben seiner Klemme liegt (alter Plan), rückt beim Drehen, Spiegeln,
+Ziehen weiter an die Klemme, wie E738 es zusagt — mit derselben Prüfung.
+
+**Prüfung:** `test611` zuerst rot eingecheckt (a4bdd8c2c), dann 79/79;
+gegen `main` 47/79. Drei Gegenproben, jede rot und wörtlich zurückgenommen:
+alle Leitungen wieder neu 78/79, ohne Anzapf-Prüfung 59/79, ohne Vorzug
+ausserhalb der Zeichen 77/79. Die strenge Variante (fremde Leitungen nie
+anfassen) als Messung: `test608` 67/69 — darum bleibt die Heilung.
+Nachbarn grün: `test604`–`test608`, `test238`–`test242`, `test254`,
+`test388`, `test74`, `test568`, `test571`, `test572`; Datei-Wächter grün.
+Bilder vorher/nachher (Rechner und Telefon, hell und dunkel, dazu dreifach
+vergrösserte Ausschnitte): vorher hängen nach dem Drehen beide Leitungen
+der Quelle mit Verbindungspunkten an den linken FI-Klemmen, nachher laufen
+sie um die Zeichen herum an die richtigen, und die Lampe leuchtet (435 mA,
+100 W). Was die Bilder noch zeigen: f3 und f4 laufen über die Beschriftung
+„G2" (Beschriftungen meiden die Wege nicht), und am Telefon ist der Plan so
+klein wie vorher (L253 Punkt 3). Zahlen in `messungen.md` §103.
+
+**Offen:** L253 bleibt für die übrigen Punkte offen. Im selben Plan meldet
+die Simulation schon VOR jeder Handlung „fi-loest-aus" (auf `main` genauso,
+nicht untersucht). Und Strg+Z macht einen Zug mit der Maus nicht rückgängig
+(Sonde: nach zweimal Strg+Z steht R1 weiter am neuen Ort; auf `main`
+genauso) — eingetragen als L253 Punkt 8, nicht hier angefasst.
+
+## 11. Oktober 2026 · E745 · Die CI fährt den schnellen Lauf, der volle bleibt auf dem Rechner
+
+**Redur:** „2 . Scnell lauf", am 11. Oktober 2026 um 19:43 UTC, auf L254
+(„Alle Prüfläufe" in der CI kann nicht fertig werden) — Weg (c): in der CI
+nur der schnelle Lauf, der volle bleibt beim Menschen.
+
+**Gefunden**, bevor etwas geändert war: `--schnell` liess genau einen Lauf
+weg (test73) — 549 von 550, also kein schneller Lauf. Gemessen auf 97d156b:
+551 Läufe, 509 starten einen Browser, 42 nicht; die 42 brauchen zusammen
+95 s, test96 und test100 (§31, Sicherung mit echten Bytes) 8 und 4 s.
+
+**Gebaut:** `pruefungen/alle.mts` — `--schnell` ist jetzt jeder Lauf ohne
+Browser (aus der Datei gelesen) plus `SCHNELL_MIT_BROWSER` (test96,
+test100, je mit Grund); neu `--liste`, das die Auswahl druckt, ohne zu
+fahren, und erst nach dem Schreiben endet. `.github/workflows/pruefen.yml` —
+„Alle Prüfläufe" (40 min, brach jeden vollen Lauf ab) heisst jetzt
+„Schneller Lauf (ohne Browser, dazu die Sicherung)", fährt
+`npm run pruefen -- --schnell`, druckt vorher die Liste, baut und prüft die
+Einzeldatei weiter, holt Chromium nur für die zwei, 20 Minuten Zeit, und
+der Kommentar nennt die Messung und `volllauf.mts`. Der schnelle Job
+„Quelltext und Logik" ist unverändert. Doku: CLAUDE.md §30, LIESMICH,
+README, MIGRATION-REZEPT, die Karte (`mcp.md`).
+
+**Geprüft:** `test610` neu — gegen 97d156b rot mit 4 von 21 bestanden,
+nachher 22/22; sechs Gegenproben rot (14, 20, 21, 21, 19, 21 von 22), jede
+Byte für Byte zurückgesetzt. `npm run pruefen -- --schnell` auf dem Endstand: 45 Läufe
+in 3 min 57 s, 44 grün, rot nur `test274` (auf main seit E729 rot; die
+erste Messung, 4 min 14 s, lief noch vor der Doku). Datei-Wächter 550 8/8,
+549 6/6, 225 11/11, 105 342/342, 109 25/25, 87 181/181, 537 18/18, 400 4/4,
+553 6/6, 578 115/115; im Browser 353 105/105, 388 22/22 (Start 1919 KB,
+Decke 1950). Unterwegs gefunden und gerichtet: die erste
+`--liste` war in einer Röhre in 3 von 40 Fällen abgeschnitten (danach 0 von
+190). L254 GESCHLOSSEN. Messung in `messungen.md` §102.
+
+**Nach der Durchsicht** (am selben Abend, derselbe Zweig): stehende
+Anweisungen, die `--schnell` in der alten Bedeutung nannten, sagen jetzt,
+was sie meinten — AUFGABEN.md „Dauerhafte Regeln", `doku/TYPESCRIPT-MIGRATION.md`,
+`doku/MIGRATION-REZEPT.md` (der volle Lauf wieder als eigene Zeile),
+`doku/AMDION-UEBERNAHME.md`, `doku/AUFTRAG-01-ruhiges-band.md`, README,
+ein Hinweis in `doku/REDION-STUDY-SUITE-AUDIT.md`; E745s zwei falsche Sätze
+dazu berichtigt. L254s Beleg hiess „grün mit 4 von 21" — es war rot. Die
+geschätzte Einrichtung („rund 7 Minuten", „etwa 3 Minuten") ist durch die
+Zeiten von GitHub ersetzt: 32 s (Lauf 38169660632). test610 liest seinen
+zweiten Weg jetzt über `ohneKommentareGenau` (neu in
+`pruefungen/hilfe/quelltext.mts`, Zeichen für Zeichen; in allen 552
+Dateien dieselben Kommentare wie der Parser von TypeScript) und
+VERGLEICHT beide Wege — vorher verlor er über `nurCode` test587 (508 statt
+509), und die Vereinigung verdeckte es. Dazu fängt er `npm run-script`,
+`npm test`, `npx … alle.mts`, doppelten Leerraum, `|| true`,
+`continue-on-error` und `pruefen`/`postpruefen` in package.json; acht dieser
+zwölf neuen Gegenproben hatte die erste Fassung grün durchgelassen.
+`test610` gegen 97d156b rot mit 7 von 25, jetzt 26/26; achtzehn
+Gegenproben und zwei Positivproben in E745, jede in einer frischen Kopie
+im Notizordner. Nachbarn: 550 8/8, 549 6/6, 225 11/11, 105 342/342,
+109 25/25, 87 181/181, 537 18/18, 400 4/4, 553 6/6, 444 13/13 (nutzt
+`quelltext.mts`; versehentlich ohne das Schloss gefahren), im Browser unter
+dem Schloss 353 105/105, 388 22/22 (Start 1919 KB, Decke 1950);
+`npm run pruefen -- --schnell` unter dem Schloss: 45 Läufe, 44 grün, rot
+nur `test274`, 231 s von aussen gemessen (Warten auf das Schloss
+eingeschlossen).
+
+**Nach der zweiten Durchsicht** (12. Oktober, derselbe Zweig): `test610`
+fängt jetzt auch `node --run pruefen`, `npm --prefix . run pruefen`,
+`npm -C . run pruefen`, `echo "$(npm run pruefen)"`, dasselbe mit
+Backticks und `echo … | sh` (ein `echo` ist nur noch Prosa ohne `$(`,
+Backtick und Röhre); er liest JEDE Ablaufdatei unter `.github/workflows/`
+(jede muss einen Job ergeben) und Zeile für Zeile jede YAML-Datei unter
+`.github/`. Zwölf neue Gegenproben (G19 bis G30), alle von der Fassung
+davor grün durchgelassen, jetzt rot; test610 28/28, gegen 97d156b rot mit 8 von
+27. Sein Kopf und E745 sagen nicht mehr „jede Form, die einen Lauf
+startet" und „ein Rot bricht den Job ab": `set +e`, `shell:` ohne `-e`,
+`if:` und ein Lauf hinter einem eigenen Skript stehen jetzt als „hält er
+nicht" da, dazu ein gefalteter Block in einer eigenen Action (N1 bis N5,
+grün mit Absicht). `messungen.md` §102 und
+pruefen.yml: „der Runner ist nicht langsamer" ist durch das gemischte Bild
+ersetzt (test105 und test103 dort schneller, test578 langsamer, je ein
+Lauf); „`ohneKommentare` … in 378" war mit zwei Verfahren nachgezählt 377.
+In `doku/AUFTRAG-01-ruhiges-band.md` fehlte nach dem Nachtrag die
+Leerzeile. Nachbarn: 550 8/8, 549 6/6, 225 11/11, 105 342/342, 109 25/25,
+87 181/181, 537 18/18, 400 4/4, 553 6/6; unter dem Schloss 353 105/105,
+444 13/13, 388 22/22 (Start 1919 KB, Decke 1950). Ausgelieferte Dateien
+unverändert (Dienststand v1469, Einzeldatei ohne Unterschied).
+
+**Nach der dritten Durchsicht** (12. Oktober, derselbe Zweig): `test610`
+zerlegt eine Zeile jetzt auch an einem einzelnen `&` — vorher war
+`echo start & npm run pruefen` (ebenso mit `printf`) EIN `echo` und fiel
+als Prosa weg. Er fängt `yarn pruefen` und `pnpm pruefen` (jedes Wort
+`pruefen` hinter einem Paketmanager), den Namen in Anführungszeichen
+(`npm run 'pruefen'`, `npm run "pruefen"`, `node --run "pruefen"`; gesucht
+wird in dem, was die Shell ausführt) und liest jede eigene Action, die ein
+Schritt über `uses: ./…` ruft, auch ausserhalb von `.github/` und über eine
+zweite; ihre Befehle zählen für den rufenden Job, und eine gerufene, die es
+nicht gibt, ist rot. Beim Schreiben dazugefunden und ebenso gefangen: ein
+`run:`-Wert über mehrere Zeilen, ein gefalteter Block mit Leerzeile oder
+tiefer eingerückter Zeile, `\n`/`\u0075`/`\` am Zeilenende in doppelten
+Anführungszeichen, `run: |2` und `run: | # …`, ein `\` mitten im Wort,
+`echo <(…)`, `echo … > s.sh`, `rum`/`urn`/`cit`, `bun`, `deno task`,
+`yarn workspace`, `npm@10`, `$'…'` und ein zweites Skript in package.json,
+das den Orchestrator ruft. 33 neue Gegenproben (G31 bis G63), alle von der
+Fassung davor grün durchgelassen, jetzt rot; dazu neun Gegenproben am
+Werkzeug (je ein Teil zurückgedreht, die Probe kommt wieder grün durch).
+test610 30/30, gegen 97d156b rot mit 10 von 29 — CLAUDE.md §30 nannte noch
+7 von 25 (den Stand nach der ersten Durchsicht), jetzt steht dort wie hier,
+in L254 und in E745 dieselbe Zahl. Sein Kopf sagt weiter „eine Liste, kein
+Beweis" und nennt, was er nicht hält; jede dieser Behauptungen ist als
+Probe gefahren und bleibt grün (N6 bis N10: `${{ matrix.… }}`, `xargs`,
+`eval "$LAUF"`, `\x75` in `$'…'`, eine Action aus JavaScript). Nachbarn:
+550 8/8, 549 6/6, 225 11/11, 105 342/342, 109 25/25, 87 181/181,
+537 18/18, 400 4/4, 553 6/6; unter dem Schloss 353 105/105, 444 13/13,
+388 22/22 (Start 1919 KB, Decke 1950). Ausgelieferte Dateien unverändert
+(Dienststand v1469, Einzeldatei ohne Unterschied).
+
+**Offen:** wie lange der ganze schnelle Lauf auf einem Runner braucht,
+zeigt erst der erste Push (die Einrichtung ist gemessen: 32 s); und der Job
+wird rot sein, solange `test274` rot ist — ein Fehlalarm über
+`redion-graphit` in `marken.ts`, den nur Redur freigeben kann.
+
+## 11. Oktober 2026 · E744 · Die Linse auf „Heute" verblasst nach der Fahrt
+
+**Redur:** „1. verblassen", am 11. Oktober 2026 um 19:43 UTC — auf die
+Frage aus AUFGABEN.md, „Die leere Linse neben dem Wort (E740)": seit E740
+hält die Linse rechts von „Weiterdenken.", über leerem Grund, und war in
+Ruhe eine Glasscheibe, die nichts trägt. Stehen lassen oder verblassen?
+
+**Gefunden** (Bilder vorher, 1440 × 900 und 390 × 844, hell und dunkel,
+dazu „weniger Bewegung"): in jedem Bild eine leere Scheibe neben dem Punkt
+— dunkel ein kaum hellerer Kreis mit Lichtkante, hell ein fast weisser Stein
+mit weichem Schatten; bei „weniger Bewegung" dieselbe Scheibe ohne Fahrt.
+
+**Gebaut** (`src/schale/bedienung/linse.ts`): die Fahrt bleibt Zahl für
+Zahl; am Halt eine Animation der Deckkraft 1 → 0, `delay` = Ende der Fahrt
+(1650 ms), Dauer und Kurve aus den Marken (`--motion-slow` 320 ms,
+`--ease-exit`), auf derselben Uhr wie die Fahrt; danach wird die Linse
+entfernt. In Ruhe, beim Neuzeichnen danach und ohne Bewegung entsteht
+keine. Zwei Kommentare nachgezogen (`studio.css` 8c, `lernwelt.ts`), die
+noch „ruht" bzw. „liegt still" sagten.
+
+**Geprüft:** `test589` mit Redurs Wort geändert — §16 misst die vier
+Zusagen von E740 jetzt am Halt (eine Millisekunde vor dem Ende der Fahrt
+angehalten), in Ruhe keine sichtbare Linse, und das Verblassen Bild für
+Bild (mindestens drei Bilder dazwischen, nie heller, höchstens 700 ms);
+§8: an ihrem ersten Halt bricht sie, nach der Fahrt verblasst, 1000 px
+holen keine zurück, „Ruhig" und „weniger Bewegung" ohne Linse. Rot gegen
+97d156b03 mit 132 ok, 14 offen; mit E744 146 von 146. Drei Gegenproben am
+gebauten JavaScript, je zurückgesetzt (sha256 gleich): ohne Verblassen
+142/4, ohne Verblassen und Entfernen 137/9, alter Ruhezweig 141/5.
+Gemessen: 14–15 Bilder zwischen voll und leer, 279–302 ms (messungen.md
+§101). Nachbarn grün: 539 (51/51), 541 (25/25), 576, 388 (22/22, Start
+1919 KB, Decke 1950), 74 (12/12), 600 (214/214), 601; Datei-Wächter 550,
+549, 225, 105, 109, 87, 537, 400.
+
+**Bilder nachher:** in Ruhe auf keiner Grösse und in keinem Thema eine
+Linse, die Überschrift frei; während der Fahrt (angehalten über
+„Weiterdenken.", am Halt, mitten im Verblassen bei 0,675) dieselbe Linse
+wie vorher, am Halt rechts vom Punkt.
+
+**Durchsicht** (11. Oktober abends): zwei Lücken im Wächter, eine falsche
+Zahl in der Entscheidung. (1) `test589` §16 liess ein „Verblassen" auf 0,5
+mit `remove()` in einem Schritt durch — 146 von 146 grün. Neu: das letzte
+sichtbare Bild vor „weg" zeigt höchstens 0,2, von Bild zu Bild fällt die
+Deckkraft höchstens um 0,25 (gerechnet aus `--ease-exit`: ein Bild 0,083,
+zwei 0,162, drei 0,239); stockt der Browser dort, wird nachgemessen. Mit
+der Gegenprobe 148 ok, 4 offen. (2) §8 misst jetzt das Neuzeichnen mitten
+im Verblassen: 1000 px bei gut 1800 ms — die Linse ist da, halb verblasst
+und weiter fallend, rechts vom Punkt in der neuen Lage, die Abschrift in
+der neuen Schriftgrösse; rot ohne `geht.currentTime = versatz` (151/1), mit
+dem Halt von vor E740 (139/13) und mit der Schrift des ersten Ankommens
+(151/1). (3) E744 „Was es kostet": die +191 B gzip sind Code, kein
+Kommentar (`removeComments`, E715) — vor allem `verblassen()`, das Dauer und
+Kurve aus den Marken liest. `test589` 152 von 152. Ein neues Bild der Fahrt,
+angehalten bei 1000, 1025 und 1050 ms, zeigt die Linse quer über „en." von
+„Weiterdenken." (das alte bei 1150 ms stand fast schon am Halt).
+
+**Zweite Durchsicht** (12. Oktober): drei kleine Funde, alle in
+`test589`, keiner im Produkt. (1) §8 ändert das Fenster jetzt 1690 statt
+1740 ms nach dem Ankommen — gemessen wird im ersten Bild danach, und das
+muss zwischen etwa 1705 und 1960 ms liegen; der Verzug steht in der
+Zusage (gemessen 34–68 ms), damit ein verpasstes Fenster nicht wie ein
+Fehler aussieht. Ohne `geht.currentTime = versatz` weiter rot (151/1).
+(2) §8 lässt auch dieselbe Linse gelten, an Ort und Stelle neu angelegt —
+erkennbar an der neuen Schrift in der Abschrift; vorher war das rot
+(150/2), jetzt 152 von 152; die alte Schrift, kein Neuzeichnen und die
+Schrift des ersten Ankommens bleiben rot (150/2, 150/2, 151/1). (3) Die
+Bereiche „0,061–0,097 und 0,080–0,082" waren ein Lauf; in zwei weiteren
+0,021–0,093 und 0,080–0,083, also etwa 0,02–0,10 und 0,08 (messungen.md
+§101). `test589` 152 von 152, zweimal. Nachbarn grün: 539 (51/51), 541
+(25/25), 388 (22/22, Start 1919 KB, Decke 1950), 74 (12/12); Datei-Wächter
+550, 549, 225, 105, 109, 87, 537, 400.
+
+**Offen:** nichts aus dieser Frage. Die Bilder liegen im Kratzordner, nicht
+im Verzeichnis (§55.4).
+
 ## 11. Oktober 2026 · Redurs sechs Ja — zusammengeführt auf `claude/sechs-ja`
 
 **Der Auftrag.** Redur um 11:00 UTC: „Ja für die 6 entscheideungen" — die

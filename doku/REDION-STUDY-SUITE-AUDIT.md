@@ -141,7 +141,10 @@ und `redion-einzeldatei.html` sind Build-Ergebnisse. Der abschließende Lauf nac
   Ablage wurde geplant.
 - **Tests:** Befehle nach §46: `git status`, `npm run typecheck`,
   `npm run bauen:ts`, `node bauen.mts`, `npm run pruefen -- --schnell` und
-  `npm run pruefen`. **ROOT-PLATZHALTER: Datum, Befehl, Zahl ok/offen und
+  `npm run pruefen`. (Seit E745, 11. Oktober 2026, fährt `--schnell` nur die
+  Läufe ohne Browser und dazu test96 und test100 — bis dahin war es alles
+  ausser test73. Die Aussage nach §46 trägt deshalb allein der volle Lauf,
+  `npm run pruefen` oder `node pruefungen/volllauf.mts`.) **ROOT-PLATZHALTER: Datum, Befehl, Zahl ok/offen und
   Logpfad des finalen Baseline-/Volllaufs eintragen.**
 - **Gegenprobe:** Für einen reinen Leseaudit ist eine absichtliche
   Produktbeschädigung nicht sinnvoll. Gegenbeleg sind Pfadprüfung und
@@ -507,7 +510,7 @@ darf dieser Audit als Abschlussbeleg dienen:
 | `npm run typecheck` | **ROOT-PLATZHALTER** |
 | `npm run bauen:ts` | **ROOT-PLATZHALTER** |
 | `node bauen.mts` / PWA / `index.html` / Einzeldatei | **ROOT-PLATZHALTER** |
-| `npm run pruefen -- --schnell` | **ROOT-PLATZHALTER** |
+| `npm run pruefen -- --schnell` (seit E745 nur ohne Browser, dazu test96 und test100 — kein Ersatz für die Zeile darunter) | **ROOT-PLATZHALTER** |
 | `npm run pruefen` | **ROOT-PLATZHALTER** |
 | Windows/Chromium und Viewports 390×844, 1366×768, 1440×900 | **ROOT-PLATZHALTER** |
 | echter PDF-, Audio-, Lernkarten- und `.redion`-Rundlauf | **ROOT-PLATZHALTER** |

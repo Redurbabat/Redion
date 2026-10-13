@@ -8358,7 +8358,54 @@ ausblenden, solange ein Werkzeug gewählt ist. Mit Wächter, egal welche.
 
 ---
 
-## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — 11. Oktober 2026
+## L255 · Am Telefon heisst der Öffner „Offner" — der Umlaut wird abgeschnitten — 12. Oktober 2026
+
+**Gesehen, nicht gemessen:** auf dem Bild der Planfläche bei 390 × 844
+(`nachher-plan-handy-hell.png`, 11. Oktober, und im Zweig von E747 noch
+einmal) steht in der Symbolleiste unter dem Zeichen „Offner" statt
+„Öffner". `.sp-sym-name` (`bausteine.css`) hat `overflow:hidden`, 9,5 px
+Schrift und eine Zeilenhöhe von 1,15 — knapp 11 px —, und die Punkte über
+dem Ö liegen darüber. Am Rechner (1440 × 900, Bild der Durchsicht von
+E746, `nachher-durchsicht-1-r1-auf-q-rechner-hell.png`) steht „Öffner"
+ganz da — es trifft also das Telefon, wo die Kachel kleiner ist.
+
+**Warum es zählt:** „Offner" ist kein Wort, und wer Elektro lernt, liest in
+der Palette den Fachbegriff. Dieselbe Klammer trifft jedes Zeichen mit
+Umlaut oder Akzent in Grossbuchstaben am Anfang (Ä, Ö, Ü).
+
+**Was fehlt:** eine Zeilenhöhe, die Oberlängen mit Akzent fasst (oder kein
+`overflow:hidden` in der Höhe), mit einem Wächter, der die gerenderte Box
+des Namens gegen die Glyphe misst (wie `test551`), und ein Bild davor und
+danach.
+
+---
+
+## L256 · `Store.updateBlock` bekommt an mehreren Stellen einen lebenden Verweis — 12. Oktober 2026
+
+**Gefunden in der zweiten Durchsicht von E746, an der Planfläche gemessen:**
+`Store.updateBlock` übernahm dort den Verweis auf `z.plan`, und die
+Schreibpause schrieb ein Zwischenbild mitten aus einem Zug in die IndexedDB
+(gemessen auf a8533763b: `{E1:X2 F1:N F1:N2 G2:N}`). Seit E746 bekommt die
+Ablage dort eine Kopie (P134).
+
+**Dasselbe Muster, aus dem Code gelesen, NICHT gemessen:** das Whiteboard
+gibt `daten` als Verweis (`zeichenflaeche.ts`, `sichern = () =>
+Store.updateBlock(block.id, { shapes: daten, … })`), die Tabelle `rows`
+(`Store.updateBlock(block.id, { rows })`). Ob die Schreibpause dort einen
+Zwischenstand schreiben kann — zwischen zwei Änderungen, die zusammen erst
+einen gültigen Stand ergeben —, hängt davon ab, ob die Fläche ihr Objekt
+nach dem Aufruf weiter verändert. Das ist nicht nachgesehen.
+
+**Was fehlt:** eine Zählung aller Aufrufe von `Store.updateBlock` mit einem
+Objekt, das danach weiterlebt, je Stelle eine Messung (die IndexedDB mitten
+in der Handlung lesen, wie die Sonde der Planfläche), und — wo es trifft —
+dieselbe Abhilfe: eine Kopie in die Ablage, oder `updateBlock` kopiert
+selbst. Das zweite wäre die Lösung an EINER Stelle (§8), kostet aber bei
+grossen Blöcken eine Kopie je Speichern; gemessen ist das nicht.
+
+---
+
+## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — GESCHLOSSEN (E745) — 11. Oktober 2026
 
 **Gemessen** über die Schnittstelle von GitHub, nicht vermutet: die zwei
 letzten Läufe auf `main` sind beide **abgebrochen**, nicht rot und nicht
@@ -8398,6 +8445,76 @@ Datei-Wächter, und der volle Lauf bleibt beim Menschen — dann muss die
 Datei das sagen, statt „Alle Prüfläufe" zu heissen. Die Workflow-Datei ist
 geteilte Infrastruktur; welcher Weg, entscheidet Redur.
 
+### GESCHLOSSEN am 11. Oktober 2026 durch E745 — Weg (c)
+
+Redur, 11. Oktober, 19:43 UTC, wörtlich: „2 . Scnell lauf". Beim Nachsehen
+stellte sich heraus, dass Weg (c) mit dem alten Schalter gar nicht ging:
+`--schnell` liess genau EINEN Lauf weg (test73, die Startmessung) — 549 von
+550, also praktisch der volle Lauf unter anderem Namen. Der Schalter hat
+deshalb seine Bedeutung bekommen, und die ist gemessen, nicht geschätzt
+(`messungen.md` §102):
+
+```txt
+Läufe gesamt (test*.mts + servercheck, auf 97d156b)   551
+  davon starten einen Browser                          509
+  davon ohne Browser                                    42   zusammen 95 s
+--schnell seit E745 (mit test610)                       45   = 43 ohne Browser
+                                                              + test96, test100 (§31)
+npm run pruefen -- --schnell, mit den 3-s-Pausen     4 min 14 s
+der volle Lauf (E743)                               158 min
+```
+
+**Was jetzt gilt.** `.github/workflows/pruefen.yml` hat keinen Job „Alle
+Prüfläufe" mehr. Der lange Job heisst „Schneller Lauf (ohne Browser, dazu
+die Sicherung)", fährt genau `npm run pruefen -- --schnell` (davor die
+Auswahl mit `--liste`), baut weiterhin die Einzeldatei und prüft, ob sie
+nachgezogen ist, holt Chromium nur für test96 und test100, und hat
+20 Minuten Zeit — gut das Vierfache von Lauf (4 min 14 s, auf dem Rechner
+der Sitzung) und Einrichtung (32 s, auf GitHub gemessen: Zeitstempel der
+Schritte von Lauf 38169660632 auf 97d156b). Sein Kommentar nennt die
+Messungen mit Datum und sagt, dass der volle Lauf auf dem Rechner bleibt (`node pruefungen/volllauf.mts`, CLAUDE.md §30). Der Job
+„Quelltext und Logik (ohne Browser)" ist unverändert.
+
+**Beleg.** `test610` (neu, ohne Browser), in der Fassung nach der ersten
+Durchsicht: gegen 97d156b rot mit 7 von 25
+bestanden — der Job fuhr den vollen Lauf, keiner fuhr `--schnell`, alle.mts
+kannte `--liste` nicht, und CLAUDE.md sagte „Dauer ungemessen"; nach E745
+26/26. (Hier stand zuerst „grün mit 4 von 21" — es war die erste Fassung
+von test610, und sie war ROT mit 4 von 21 bestanden.) Gegenproben in E745.
+Nach der zweiten Durchsicht (12. Oktober) liest test610 jede Ablaufdatei
+unter `.github/workflows/` und fängt weitere Umwege (`node --run`,
+`npm --prefix . run`, `echo "$(…)"`): 28/28, gegen 97d156b rot mit 8 von 27.
+Nach der dritten Durchsicht (12. Oktober) fängt er auch `yarn pruefen`,
+`pnpm pruefen`, den Namen in Anführungszeichen, ein einzelnes `&`
+(`echo start & npm run pruefen`), einen `run:`-Wert über mehrere Zeilen,
+ein zweites Skript in package.json, das den Orchestrator ruft, und eine
+eigene Action ausserhalb von `.github/` (`uses: ./ci/v`): 30/30, gegen
+97d156b rot mit 10 von 29 — das ist der heutige Stand; die Zahlen davor
+gehören zu den Fassungen davor. Gegenproben G31 bis G63 in E745.
+Wie lange der ganze schnelle Lauf auf GitHub braucht, zeigte der erste Push
+des Zweigs (12. Oktober, Lauf 38205835767 auf 05f07bc59, Zeiten aus der
+Schnittstelle von GitHub, ganze Sekunden): der Job „Schneller Lauf" 4 min
+7 s (04:56:48–05:00:55 UTC), davon der Schritt „Der schnelle Lauf" 3 min
+27 s und „Chromium holen" 23 s — weit unter dem Fenster von 20 Minuten und
+zum ersten Mal seit dem 5. Oktober ein Job, der zu Ende läuft. Er war rot,
+wie unten erwartet. Das Protokoll selbst ist von hier aus nicht lesbar (die
+Schnittstelle leitet zum Speicher von GitHub um); auf demselben Stand war
+lokal nur `test274` rot (44 von 45, `npm run pruefen -- --schnell`, 231 s).
+Zwei Hinweise von GitHub aus demselben Lauf, beide noch ohne Folgen:
+`actions/checkout@v4` und `actions/setup-node@v4` sind für Node 20 gebaut
+und werden auf Node 24 gezwungen, und `ubuntu-latest` wandert ab dem
+19. Oktober 2026 auf Ubuntu 26.
+
+**Was offen bleibt, und es ist keine neue Lücke, sondern eine alte:** der
+Job „Schneller Lauf" wird auf GitHub rot sein. Der schnelle Lauf enthält
+`test274`, und der ist auf `main` seit E729 rot — ein Fehlalarm des
+Wächters, nicht der App: er meldet `redion-graphit` in `marken.ts` als
+verwaiste Nachschlagestelle, aber `marken.ts` legt den Halter selbst an
+(`svg('svg', { id: 'redion-graphit', … })`), in einer Schreibweise, die
+test274 nicht kennt. test274 zu ändern braucht Redurs Wort. Er steht in der
+Liste der dreizehn (AUFGABEN.md, „Nach dem Zusammenführen der dritten
+Welle", Punkt 1).
+
 ---
 
 ## L253 · Was der Elektro-Bogen nach der Übernahme offen lässt — 11. Oktober 2026
@@ -8430,6 +8547,58 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
    auch in der Stellung Stern, in der die Brücken genau diese drei verbinden
    (Bild, Fusszeile der Planfläche). Die Meldung kennt nur Leitungen, nicht
    die Brücken einer Stellung.
+   **Erledigt (E747), 11. Oktober abends:** für diese Meldung zählen die
+   Brücken der eingestellten Stellung eines mehrteiligen Bauteils wie
+   gezeichnete Leitungen. Stern und Dreieck melden W2, U2, V2 nicht mehr,
+   ohne Brücken weiter; eine wirklich offene Klemme (W1 ohne Zuleitung, PE
+   ohne Schutzleiter) bleibt gemeldet; Schaltkontakte zählen nicht. Ein
+   Knoten, den NUR die eigenen Brücken halten, hängt trotzdem an nichts —
+   ausser die Stellung weist ihn als `sternpunkt` aus („Stern": U2, V2,
+   W2). Darum meldet das Dreieck ohne Zuleitung an U1 wieder U1 (die erste
+   Fassung von E747 schwieg dort; die Durchsicht hat es gefunden, behoben
+   im selben Zweig). Im Plan des Bildes: in Stern und Dreieck 7 → 4
+   Warnungen, ohne Brücken 7 → 7, im Dreieck ohne Zuleitung an U1 9 → 6
+   (die erste Fassung: 5, ohne U1). Wächter `test612` (38 Zusagen; gegen
+   97d156b03 rot mit 20, gegen die erste Fassung 7560b2f22 mit 33 von 38),
+   Messung `messungen.md` §104. Daneben gemessen, nicht repariert:
+   * **Gezeichnete Brücken heissen „überbrückt".** Wer in der Stellung
+     „ohne Brücken" den Stern als zwei Leitungen zeichnet (W2–U2, U2–V2),
+     bekommt drei Meldungen „M1: die Anschlüsse W2 und U2 hängen am selben
+     Netz — das Bauteil ist überbrückt" (und W2/V2, U2/V2). Die Prüfung
+     nimmt jedes Klemmenpaar eines Bauteils, nicht die zwei Enden eines
+     Glieds; bei einem mehrteiligen Bauteil ist nur U1/U2, V1/V2, W1/W2
+     wirklich überbrückt. Gemessen auf 97d156b03 und mit E747 gleich.
+   * **Die Quelle meldet ihr freies N** („G1: Anschluss N hängt an keiner
+     Leitung"), auch wenn sie nur einen Drehstrommotor speist, der keinen
+     Neutralleiter braucht — so im Plan des Bildes, in allen drei
+     Stellungen, auf 97d156b03 wie mit E747. **Frage an Redur:** soll ein
+     unbenutzter Ausgang einer Quelle überhaupt gemeldet werden, und wenn
+     ja, auch das N einer Drehstromquelle, die nur Drehstromverbraucher
+     speist? E747 zählt den Verbund N–PE bewusst nicht als Brücke — das
+     beantwortet die Frage nicht, es lässt sie offen.
+   * **Der FI im Plan des Bildes löst aus, obwohl richtig angeschlossen.**
+     In jeder Stellung (auch ohne Brücken) steht „F1 löst aus: es fehlen
+     37.52 mA — so viel fliesst am Neutralleiter vorbei", auf 97d156b03 wie
+     mit E747. Die Lampe hängt über F1 (L durch 1–2, N durch N–N2);
+     gemessen ohne Brücken fliessen durch 1–2 457,76 mA, durch N–N2
+     420,24 mA, durch die Lampe und die Quelle G2 je 434,78 mA. Die
+     Differenz ist genau die gemeldete; woher die ungleichen Ströme in F1
+     kommen, ist nicht untersucht.
+   * **„0 A" neben „317 nW" an G1, ohne Brücken.** An der Drehstromquelle
+     steht „230 V · 0 A · 317 nW" (Text im DOM, Rechner und Telefon, hell
+     und dunkel): je Strang fliessen 0,46 nA — unter der Schwelle von 1 nA,
+     also „0 A" —, aber die Summe der drei Leistungen (je 0,106 µW) liegt
+     über derselben Zahl 10⁻⁹ (`Stromfluss.zeige` nimmt für jede Einheit
+     dieselbe Schwelle) und wird als 317 nW gezeigt. Eine Zahl, die etwas
+     behauptet, was die Zeile daneben verneint. Die erste Fassung von `messungen.md`
+     §104 hatte „317 mW" — im Bild ist das n vom m nicht zu unterscheiden.
+   * **Im Dreieck ohne Zuleitung an U1 schwieg die erste Fassung** von E747
+     (die Brücke U1–W2 belegte U1). **Behoben im selben Zweig** (E747
+     Punkt 6): die Stellung „Stern" trägt `sternpunkt`, jeder andere
+     Knoten, den nur die eigenen Brücken halten, wird gemeldet. Was bleibt:
+     erreicht die Ecke irgendeine fremde Klemme (W2 an N statt U1 an L1),
+     schweigt die Meldung — sie fragt „hängt an einer Leitung", nicht „an
+     der richtigen".
 3. **Am Telefon sind die Messwerte nicht zu lesen.** Der Plan wird als Ganzes
    auf die Breite verkleinert; bei 390 px stehen 230 V und 3,83 A in wenigen
    Pixeln Schrift (Bild `nachher-plan-handy-*`). §37 gilt für die Fläche,
@@ -8440,6 +8609,55 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
    `test608` beim Bau: nach dem Drehen des FI läuft b2 5 px neben N2 vorbei,
    und N und N2 waren ein Netz — mit Auflöser genauso wie ohne. Das ändert die
    Netzliste eines Plans durch eine Handlung, die nur die Lage ändern sollte.
+
+   **Erledigt am 11. Oktober 2026 durch E746** (Wächter `test611`, 79/79;
+   gegen `main` 97d156b03 rot mit 47 von 79; nach der Durchsicht 110/110,
+   gegen den ersten Stand von E746 rot mit 101 von 110, gegen `main` mit
+   61 von 110). Das Nachziehen steht jetzt an
+   EINER Stelle im Modell, `Schaltplan.nachziehen`, und Pfeiltaste, Drehen,
+   Spiegeln und Ziehen rufen nur noch sie: neu geführt wird nur, was an
+   einem bewegten Teil hängt, und nur über einen Weg, der genau das berührt,
+   was die Leitung vorher berührte — Klemmen wie Leitungen, nach der Regel
+   der Netzliste (alter Weg · nachgerückte Endstücke · Winkel · anderer
+   Winkel · Z-Wege · Hakenwege). Gemessen im Plan „Drehstrom, FI und
+   Übertrager": F1 gedreht, und die sechs Netze um den FI bleiben sechs
+   (auf `main`: eines, L–N-Kurzschluss an G2); im alten FI läuft b2 nicht
+   mehr 5 px neben N2. Was bleibt: findet sich kein solcher Weg (das Ende
+   selbst liegt schon neben einer fremden Klemme, weil jemand das Teil so
+   hingestellt hat), nimmt das Nachziehen den Weg mit den wenigsten neuen
+   Berührungen und **meldet es** („bitte die Verbindungen prüfen"); und eine
+   fremde Leitung, deren Ende NEBEN ihrer Klemme gezeichnet ist (Punkt 7),
+   rückt beim Drehen, Spiegeln und Ziehen weiterhin an die Klemme — mit
+   derselben Prüfung (seit der Durchsicht auch in `test611` §12 gehalten,
+   nicht nur in `test608`).
+
+   **Nach der Durchsicht** (11. Oktober abends) zwei Nachträge. Das Ziehen
+   mit der Maus rechnete die volle Wegsuche bei JEDER Bewegung — auf
+   vierfach gedrosselter CPU im Median 24 bis 29 ms, höchstens 217 ms je
+   Bewegung (messungen §103); jetzt rechnet eine Bewegung nur die billigen
+   Wege, und erst das Loslassen sucht einmal voll (gespeichert wird nur
+   das, `test611` §10). Und eine Lageänderung konnte die Netzliste
+   weiterhin still ändern, nämlich über die EIGENE Klemme des bewegten
+   Teils: R1 neben einer Leitung gedreht, und R1:1 hing an ihr, ohne
+   Meldung (auf `main` genauso). Das wird nicht verhindert, aber gesagt —
+   „Nach dem Drehen: R1:1 berührt jetzt die Leitung E1:X2–E2:X1"
+   (`Schaltplan.veraendert`, `test611` §11). Was davon offen bleibt, steht
+   in Punkt 9. Die Lücke L253 bleibt offen für die übrigen Punkte.
+
+   **Nach der zweiten Durchsicht** (12. Oktober). Gespeichert wurde nicht nur
+   beim Loslassen: was WÄHREND eines Zugs über `aendere` ging („r", „h",
+   Entf, eine Pfeiltaste, ein Knopf), speicherte das billige Zwischenbild
+   und merkte es als Rückgängig-Schritt — zweimal „h" mit der Maus unten,
+   und das zweite Strg+Z brachte {E1:X2 F1:N F1:N2 G2:N} zurück. Dazu vier
+   Wege, gemessen auf 478791f5f: die Ablage hielt den Plan der Fläche als
+   dasselbe Objekt, und die Schreibpause legte ein Zwischenbild in die
+   IndexedDB; ein Zug, losgelassen ausserhalb der Fläche, blieb liegen, und
+   die nächste Handlung speicherte ihn; ein zweiter Finger liess den ersten
+   Zug liegen; Strg+Z und Umschalt+Strg+Z im Zug legten das Zwischenbild auf
+   den anderen Stapel. Seither ändert während eines Zugs nur der Zug den
+   Plan: Tasten ausser Escape zählen nicht, Escape bricht ab, ein Zug endet
+   immer richtig, und die Ablage bekommt eine Kopie (E746 Punkt 7,
+   `test611` §13: 172/172, gegen 478791f5f rot mit 137 von 171).
 5. **Die Leitersymbole melden ihre zweite Klemme an der Stelle der ersten.**
    `leiter-l1` (und l2, l3, n, pe) haben zweimal denselben Namen;
    `anschluesseVon` sucht die Lage über den Namen und findet beide Male die
@@ -8484,7 +8702,9 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
    730,400 = N); X5 selbst geschoben legt a5 auf 720,400, das L des
    geschobenen X5. Danach sind die neuen Punkte gespeichert — durch die
    Handlung des Menschen —, der Name bleibt der alte. Drehen und Ziehen
-   führen dabei alle Leitungen neu (Punkt 4).
+   führten dabei alle Leitungen neu (Punkt 4; seit E746 nur noch die am
+   bewegten Teil — und eine fremde nur in genau diesem Fall, wenn ihr Ende
+   neben der Klemme liegt; die Messung oben gilt deshalb weiter).
 
    Warum nicht beim Laden umgeschrieben: das wäre eine stille Schreibung in
    Nutzerdaten ohne Handlung (§9 [hart]) — genau Weg 3, den E738 verworfen
@@ -8495,6 +8715,94 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
    speichern; oder ein sichtbarer Knopf „Leitungen an die Klemmen rücken".
    Ein Wächter für das Gezeichnete fehlt; die Messung ist die Sonde
    (`messungen.md` §97).
+8. **Strg+Z macht einen Zug mit der Maus nicht rückgängig** (gefunden beim
+   Bau von E746, gemessen am 11. Oktober mit einer Sonde: zwei Widerstände,
+   R1 um 40 × 30 px gezogen — vorher 100,100, nachher 150,140, nach einmal
+   und nach zweimal Strg+Z weiter 150,140; auf `main` 97d156b03 genauso).
+   `zugEnde` ruft `aendere` erst, wenn das Teil schon geschoben ist, und
+   `aendere` merkt als Rückgängig-Schritt den Stand, den es vor SEINEM
+   Schritt sieht — den gezogenen. Drehen, Spiegeln und die Pfeiltaste sind
+   nicht betroffen (`test611` §8). Der Weg wäre klein (das Abbild beim
+   Anfassen merken und beim Loslassen übergeben); nicht gebaut, weil E746
+   nur das Nachziehen betrifft. Ein Wächter fehlt. Seit der Durchsicht
+   wiegt der Punkt schwerer: die Fläche MELDET jetzt, wenn ein Zug eine
+   Klemme auf eine fremde Leitung gelegt hat (Punkt 4) — rückgängig machen
+   lässt sich genau dieser Zug aber nicht; es bleibt, das Teil
+   zurückzuziehen. Seit der zweiten Durchsicht gibt es einen Weg zurück
+   VOR dem Loslassen: Escape bricht den Zug ab, ohne etwas zu speichern
+   (E746 Punkt 7, `test611` §13) — mit echter Maus und echter Tastatur
+   allerdings erst seit der dritten: vorher stand der Fokus im Zug auf der
+   Seite, und das echte Escape kam nie an (`test611` §14). Und Strg+Z, im
+   Zug gedrückt, nahm bis dahin der Seitenverlauf und verwarf den Zug; jetzt
+   tut es im Zug nichts. Nach dem Loslassen gilt der Punkt
+   unverändert; die Sonde der zweiten Durchsicht zeigt es auch dort: ein
+   Zug über den Rand der Fläche legte F1:3 auf die Leitung G1:L1–M1:U1, die
+   Fläche meldete es, und nach einer Pfeiltaste hin und zurück liessen
+   dreimal Strg+Z es stehen (der Stand vor dem Zug ist nicht im Verlauf).
+9. **Was nach der Durchsicht von Punkt 4 bleibt** (gemessen am 11. Oktober,
+   `messungen.md` §103):
+   * **Die Meldung verhindert nichts.** Liegt eine Klemme nach einer
+     Lageänderung auf einer fremden Leitung, ist die Netzliste geändert, und
+     die Fläche sagt es; zurück geht es mit Strg+Z (Pfeiltaste, Drehen,
+     Spiegeln) oder — nach einem Zug mit der Maus — nur von Hand (Punkt 8);
+     vor dem Loslassen bricht Escape den Zug ab.
+     Eine Sperre ist mit Absicht nicht gebaut (E746 Punkt 6); ob es eine
+     geben soll, entscheidet Redur.
+   * **Die Zwischenbilder beim Ziehen sind die billigen Wege.** Liegt an
+     einer Zwischenlage der billige Weg über einer fremden Klemme, ist das
+     bis zum Loslassen so zu sehen, und dann springt die Leitung auf den
+     sauberen Weg (Gegenprobe 4 in E746: f2 am FI, w4 über U2, V2, W2).
+     Gespeichert wird so ein Bild nie.
+   * **Das Loslassen kostet einmal die volle Suche**: 66 bis 132 ms in
+     einem Stück auf vierfach gedrosselter CPU (16 bis 35 ms ungedrosselt) —
+     ein Ruck im Augenblick des Loslassens, auf einem schwachen Telefon
+     spürbar. Ein Wegsucher über das Raster (die Alternative in E746) wäre
+     der Weg, das zu senken; nicht gebaut.
+   * **Zwei Klemmen aufeinander, ohne Leitung**, meldet die Fläche als
+     „liegt jetzt auf … (ohne Leitung nicht verbunden)" — die Netzliste
+     verbindet sie nicht, gezeichnet sehen sie verbunden aus. Ob sie es
+     sollte, ist eine fachliche Frage, keine des Nachziehens.
+   * Ein Wächter für die Zwischenbilder und für die Zeit fehlt: `test611`
+     §10 hält, DASS billig gerechnet wird und WAS gespeichert ist, nicht,
+     wie lange es dauert (eine Zeitgrenze im Lauf wäre auf jedem Rechner
+     anders). Dass ein Zwischenbild nie gespeichert wird, auch nicht
+     WÄHREND des Zugs, hält seit der zweiten Durchsicht §13.
+   * **Tasten, Knöpfe und Menüs zählen während eines Zugs nicht** (zweite
+     und dritte Durchsicht, E746 Punkt 7): „r", „h", Entf, die Pfeile und
+     Strg+D/G/Z tun nichts, bis die Hand loslässt, und sagen es nicht; nur
+     Escape bricht ab (ist ein Menü offen, schliesst es erst das). Mit der
+     Maus steht der Fokus im Zug auf der Seite; Escape und Rückgängig/
+     Wiederholen horcht der Zug deshalb am Dokument, die übrigen Tasten
+     landen auf der Seite, wo „r" und Entf nichts tun und die Pfeile sie
+     rollen. Was über einen Knopf oder ein Menü ankommt — mit der Tastatur
+     erreicht man im Zug jeden —, geht ebenso still verloren: Drehen,
+     Spiegeln, Duplizieren, Gruppieren, Löschen, eine Ebene ein oder aus,
+     Rückgängig und Wiederholen im Kopf, die Planart (das Feld zeigt im Zug
+     die neue Art und springt beim Loslassen zurück), Stromschienen, Alle
+     neu durchnummerieren, Plan leeren, eine eigene Vorlage, ein Beispiel,
+     das Netz (gemessen, `messungen.md` §103). Wer gewohnt ist, ein Teil im
+     Ziehen zu drehen (wie in manchen Zeichenprogrammen), muss erst
+     loslassen. Ob die Fläche es sagen soll oder ob „r" im Zug das Teil
+     drehen und den Zug weiterführen soll (ohne zu speichern), entscheidet
+     Redur.
+   * **GESCHLOSSEN** (dritte Durchsicht, 12. Oktober): **„Als Bild
+     speichern" und „Als Vorlage speichern"** lasen den Plan, ohne über
+     `aendere` zu gehen, und nahmen mitten in einem Zug (Tab auf „…",
+     Eingabe) das Zwischenbild — gemessen auf a8533763b: die Vorlage
+     gespeichert, das Bild heruntergeladen. Jetzt verweigern beide im Zug
+     und sagen es („Erst loslassen — …"); nach dem Loslassen nehmen sie den
+     gespeicherten Plan (`test611` §14, Gegenproben 27 und 28 in E746).
+   * **Ein Zug, der nie losgelassen wird** (vierte Durchsicht, aus dem Code
+     gelesen, nicht gemessen): der Tastenhorcher des Zugs hängt am Dokument
+     und geht erst mit dem Loslassen, mit dem nächsten Aufsetzen oder mit
+     Escape. Kommt das Loslassen nie an — das Fenster verliert den Fokus,
+     während die Taste gedrückt ist —, schluckt er Strg+Z, Umschalt+Strg+Z
+     und Strg+Y auf der ganzen Seite, auch in einem Textfeld, bis zum
+     nächsten Klick (der den Zug richtig beendet) oder Escape. Einen
+     liegengebliebenen Zug gab es schon vorher; neu ist nur, dass er auch
+     diese drei Tasten hält. Kein Datenrisiko — gespeichert wird nur mit
+     der vollen Suche. Abhilfe wäre ein `blur` am Fenster, das den Zug
+     beendet; nicht gebaut, weil ohne Messung und ohne Wächter (§50).
 
 ### Fachlich offen (vom Zweig)
 
@@ -8505,6 +8813,9 @@ geschrieben: was dort „nicht geprüft" hiess, ist zum Teil geprüft, und das
   Drehstrommotor ohne).
 * **L250** Die NIN-Ausgabe ist nicht belegt.
 * **L251** Fünf Halbleiter ohne Modell.
+
+---
+
 * **Kein Stromwandler als eigenes Zeichen** — mit dem Übertrager (E736) wäre
   er nur eine andere Übersetzung.
 
@@ -8516,7 +8827,22 @@ entscheidet Rundungsrauschen. Für die Anzeige ist das seit E737 behoben (dort
 entscheidet die Leistung); jeder andere Aufrufer von `werte` bekommt
 weiterhin den vom Rauschen bestimmten Eintrag.
 
-**Wächter:** für die Punkte oben keiner.
+**Wächter:** für Punkt 4 `test611` (E746; seit der Durchsicht auch für das billige Ziehen, die Meldung und das Heilen, seit der zweiten Durchsicht für alles, was während eines Zugs geschieht — §13, seit der dritten mit echter Maus und echter Tastatur — §14); für die übrigen Punkte oben keiner — auch nicht für Punkt 8, die Zeit in Punkt 9 und die stillen Knöpfe im Zug (gemessen, nicht bewacht).
+
+---
+
+* **Kein Stromwandler als eigenes Zeichen** — mit dem Übertrager (E736) wäre
+  er nur eine andere Übersetzung.
+
+### Eine Schwäche, die geblieben ist (vom Zweig)
+
+`werte[teil]` hält je Bauteil das Glied mit dem grössten STROM. An einem
+Klemmenbrett führen alle Glieder denselben Strom, und welches gewinnt,
+entscheidet Rundungsrauschen. Für die Anzeige ist das seit E737 behoben (dort
+entscheidet die Leistung); jeder andere Aufrufer von `werte` bekommt
+weiterhin den vom Rauschen bestimmten Eintrag.
+
+**Wächter:** für Punkt 2 `test612` (E747); für die übrigen Punkte oben keiner.
 
 ---
 
@@ -10438,7 +10764,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 11. Oktober 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 149 Lücken, 92 offene und 57 geschlossene. Der Befehl dazu ist
+Datei führt 151 Lücken, 93 offene und 58 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

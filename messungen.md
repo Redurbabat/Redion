@@ -8218,3 +8218,714 @@ denselben fünf toten Regeln wie vorher.
 selben Arbeitsbaum — der Zuwachs sind die neuen Kommentare).
 `redion-einzeldatei.html` 9 545 743 → 9 546 796 Bytes. Dienststand v1455
 → v1456.
+
+
+## §101 · Die Linse auf „Heute" verblasst nach der Fahrt (E744, 11. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/linse-verblasst` gegen `97d156b03`
+(origin/main). Chromium über einen eigenen Dateiserver (freier Port des
+Systems, `listen(0)`), Lernzentrum → „Heute". Die Deckkraft der Linse ist
+das Produkt von `opacity` über die ganze Kette bis zur Wurzel (−1: kein
+Element), gelesen in jedem Bild mit `requestAnimationFrame` ab dem Aufruf
+von `Produktwelten.lernen('heute')`, 3,2 s lang (`test589` §16, VERLAUF).
+Die Zeitachse beginnt beim Aufruf, nicht beim Anlegen der Linse — sie
+kommt ein Zeichnen später (gut 150 ms). Rechner ohne Telefon-Schalter,
+Telefon mit `isMobile`, `hasTouch`, Pixeldichte 2. Bilder und Halte mit
+`bilder-abend/linse-bilder.mts` im Kratzordner, nicht eingecheckt.
+
+**Vorher** (97d156b03): in allen vier Fällen ist die Linse bis zum Ende
+der Messung voll da — letztes Bild 3200–3209 ms, Deckkraft 1; kein Bild
+dazwischen. In Ruhe (2,6 s) steht sie an 716/420, 75 px (1440 × 900) bzw.
+261/541, 58 px (390 × 844), Deckkraft 1, auch bei „weniger Bewegung".
+
+**Nachher** — das Verblassen, Bild für Bild:
+
+```txt
+Fall                letztes volles   erstes leeres   Dauer    Bilder dazwischen   erstes / letztes
+                    Bild (≥ 0,98)    Bild (≤ 0,02)            (0,05 … 0,95)       Bild dazwischen
+1440 × 900 dunkel   1813 ms          2092 ms         279 ms   14                  0,929 / 0,100
+1440 × 900 hell     1781 ms          2083 ms         302 ms   15                  0,939 / 0,126
+ 390 × 844 dunkel   1819 ms          2102 ms         283 ms   15                  0,930 / 0,102
+ 390 × 844 hell     1838 ms          2138 ms         300 ms   15                  0,922 / 0,084
+```
+
+Das erste leere Bild ist in allen vier Fällen „kein Element" (−1): die
+Linse wird nach dem Verblassen entfernt. Nie wieder heller; die Werte
+fallen erst langsam, dann schneller — die Kurve `--ease-exit`
+(`cubic-bezier(0.4, 0, 1, 1)`). Ein Beispiel ganz (1440 × 900 dunkel, ms
+ab Aufruf : Deckkraft): 1842 : 0,929 · 1861 : 0,894 · 1876 : 0,854 ·
+1892 : 0,809 · 1909 : 0,761 · 1930 : 0,708 · 1943 : 0,652 · 1959 : 0,593 ·
+1976 : 0,531 · 2011 : 0,398 · 2026 : 0,327 · 2043 : 0,254 · 2059 : 0,178 ·
+2076 : 0,100.
+
+**Auf der Uhr der Fahrt** (die Animationen der Linse angehalten): Ende der
+Fahrt T = 1650 ms (die Feder „knapp" dauert 263 ms: Halt über
+„Aufmachen." 523–900 ms, Ankunft rechts vom Punkt bei 1163 ms, dort
+still bis `SATZ_GESAMT`; in Node aus `spring.js` gerechnet), Dauer des
+Verblassens 320 ms (`--motion-slow`). Bei
+1150 ms steht die Linse an 713/420 mit 76 px (gestreckt), Deckkraft 1; bei
+1649 ms am Halt 716/420, 75 px, Deckkraft 1 — derselbe Ort wie vor E744
+in Ruhe; bei 1810 ms (T + 160) Deckkraft 0,675; Telefon dieselben Zeiten,
+259/540 → 261/541, 58 px, 0,675.
+
+**In Ruhe** (2,6 s nach dem Ankommen; „weniger Bewegung" 0,5 s): keine
+Linse im Dokument, auf beiden Grössen, hell und dunkel, mit und ohne
+„weniger Bewegung"; bei 1000 px nach einer Grössenänderung ebenso, nichts
+läuft.
+
+**Bytes.** `quell/schale/bedienung/linse.js` 12 561 → 12 963 B, gzip
+(Stufe 6, wie `test388`) 3686 → 3877 B (+191); `studio.css` ein
+Kommentar. `test388` §5: der Start holt 1919 KB (gzip) über 255 Dateien,
+Decke 1950 — dieselbe Zahl wie auf dem zusammengeführten Stand der sechs
+Ja (ERLEDIGTE-AUFGABEN.md, 11. Oktober); die 191 B verschwinden im Runden.
+
+**Durchsicht** (11. Oktober 2026 abends, `test589` gegen den Bau, Zweig
+`claude/linse-verblasst`, ein Lauf). Das Verblassen Bild für Bild, jetzt
+mit der Bilduhr (`document.timeline.currentTime`) neben jeder Deckkraft:
+
+```txt
+Fall                letztes sichtbares Bild   grösster Abfall von Bild zu Bild
+                    vor „weg" (≤ 0,02)        (Abstand auf der Bilduhr)
+1440 × 900 dunkel   0,069                     0,080 (17 ms)
+1440 × 900 hell     0,061                     0,080 (17 ms)
+ 390 × 844 dunkel   0,097                     0,082 (17 ms)
+ 390 × 844 hell     0,072                     0,080 (17 ms)
+```
+
+Gerechnet aus `--ease-exit` (`cubic-bezier(0.4, 0, 1, 1)`, Steigung am Ende
+1/0,6) bei 320 ms: über ein Bild (16,7 ms) höchstens 0,083, über zwei
+(33,3 ms) 0,162, über drei (50 ms) 0,239 — für den Abfall wie für das letzte
+Bild vor dem Ende. Die Grenzen der Zusage (0,2 und 0,25) halten also auch
+mit einem ausgefallenen Bild; stockt der Browser länger (über 40 ms) genau
+dort, misst der Lauf nach. Mit der Gegenprobe der Durchsicht (Keyframes
+`[{opacity:1},{opacity:0.5}]`, danach `remove()`): letztes Bild 0,502–0,529,
+Abfall ebenso gross, je 17 ms — im alten Lauf 146 von 146 grün.
+
+Mitten im Verblassen neu gezeichnet (§8): Ankommen bei 1440 px, 1748 ms
+nachdem die Linse da ist das Fenster auf 1000 px; die neue Linse steht
+1789 ms nach dem Ankommen mit Deckkraft 0,756 da, vier Bilder später
+(1848 ms) 0,525, 6 px rechts vom Punkt, die Abschrift in 31px (vorher
+44px). Ohne `geht.currentTime = versatz`: Deckkraft 1 bei 1791 ms und 1 bei
+1847 ms.
+
+**Zweite Durchsicht** (12. Oktober 2026, `test589` gegen den Bau, Zweig
+`claude/linse-verblasst`). Drei kleine Funde; was sie ändern, steht in
+E744.
+
+*Das Verblassen Bild für Bild, noch zweimal.* Die Tabelle oben ist EIN
+Lauf. Zwei weitere:
+
+```txt
+Fall                letztes sichtbares Bild    grösster Abfall (je 17 ms)
+                    Lauf 1     Lauf 2          Lauf 1     Lauf 2
+1440 × 900 dunkel   0,093      0,073           0,083      0,080
+1440 × 900 hell     0,090      0,080           0,081      0,080
+ 390 × 844 dunkel   0,047      0,021           0,081      0,082
+ 390 × 844 hell     0,025      0,058           0,082      0,081
+```
+
+Mit dem Lauf oben: letztes Bild 0,021–0,097, grösster Abfall 0,080–0,083.
+Das letzte Bild liegt über 0,02 (sonst wäre es schon „weg") und höchstens
+einen Abfall darüber; wo dazwischen, hängt davon ab, wo die Bilder auf der
+Kurve landen. Also etwa 0,02–0,10 und 0,08 — die Grenzen der Zusage (0,2
+und 0,25) halten mit Abstand.
+
+*Das Fenster von §8.* Gemessen wird im ersten Bild nach dem Fenster, und
+dort muss die Deckkraft zwischen 0,95 und 0,05 stehen — gerechnet aus
+`--ease-exit` (320 ms ab 1650 ms) von etwa 1705 bis 1960 ms nach dem
+Ankommen. Eine Sonde im Kratzordner (eine Seite, 1440 × 900, je
+Zeitpunkt sechs neue Ankommen; Verzug = vom Entschluss im Bild bis zum
+ersten Bild nach `setViewportSize`):
+
+```txt
+Fenster bei   Deckkraft im ersten Bild danach   Verzug
+1740 ms       0,713–0,802                       35–64 ms
+1700 ms       0,853–0,902                       39–51 ms
+1690 ms       0,847–0,920                       40–54 ms
+1680 ms       0,906–0,942                       37–55 ms
+```
+
+`setViewportSize` allein, in Node gemessen: 16–35 ms über alle 24. Bei
+1740 ms bleiben bis 1960 ms gut 200 ms, bei 1690 ms rund 270 ms; nach
+unten genügen dort etwa 15 ms. Gewählt: 1690. In sieben Läufen von
+`test589` mit der neuen Zusage (zwei gegen den Bau, fünf gegen
+Gegenproben) lag der Verzug bei 34–68 ms. Gegen den Bau: 1000 px bei
+1706 ms, erstes Bild nach 44 ms, Deckkraft 0,866, vier Bilder später
+(1805 ms) 0,724; und bei 1699 ms, nach 68 ms 0,846, bei 1816 ms 0,698 —
+je ein neues Element, 6 px rechts vom Punkt, Abschrift 31px.
+
+*Neu oder an Ort und Stelle.* Der Träger der Linse (der Elternteil der
+Überschrift) liegt bei 1440 px an x 429 / y 353, bei 1000 px an x 217 /
+y 367 — eine Linse, die beim Fenster nicht neu gezeichnet wird, wandert
+mit. Darum zählt dieselbe Linse nur mit neuer Schrift in der Abschrift.
+Gegenproben am Quelltext `linse.ts` (sha256 danach gleich):
+
+```txt
+Stand von linse.ts                              alter §8   neuer §8
+dieselbe Linse, an Ort und Stelle neu angelegt  150 / 2    152 / 0
+… mit der Schrift des ersten Ankommens          —          150 / 2
+beim Fenster gar nicht neu gezeichnet           —          150 / 2
+neue Linse, Schrift des ersten Ankommens        151 / 1¹   151 / 1
+ohne geht.currentTime = versatz                 151 / 1¹   151 / 1
+¹ Durchsicht vom 11. Oktober, siehe oben
+```
+
+Ohne `geht.currentTime = versatz` jetzt: Deckkraft 1 bei 1740 ms (Verzug
+42 ms) und 1 bei 1798 ms.
+
+**Woraus die 191 B bestehen.** Nicht aus Kommentaren:
+`tsconfig.bauen.json` entfernt sie (`removeComments`, E715), im gebauten
+`linse.js` steht nur der Kopfvermerk. Die Zeilen des gebauten Unterschieds
+gegen 97d156b03: 1 490 B dazu, 1 088 B weg (+402 roh). Einzeln
+herausgenommen und neu gepackt (gzip 6): ohne `verblassen()` (Dauer und
+Kurve aus den Marken) 3709 B, also 168 B; ohne die Animation des
+Verblassens 3830 B, also 47 B. gzip zählt nicht einzeln zusammen; die zwei
+Zahlen sagen, wo das Gewicht liegt, nicht eine Summe.
+
+## §102 · Der schnelle Lauf: was ohne Browser läuft und wie lange (E745, L254, 11. Oktober 2026)
+
+**Frage.** Redur hat für die CI Weg (c) aus L254 gewählt („2 . Scnell
+lauf"): nur der schnelle Lauf. Was ist schnell — gemessen, nicht
+geschätzt? Bis E745 liess `--schnell` nur test73 weg (549 von 550).
+
+**Rechner.** Der Rechner der Sitzung: 4 Kerne, Intel Xeon 2,8 GHz,
+15 GB, Linux 6.18, Node 22.22.2, Chromium aus `/opt/pw-browsers`. Gemessen
+im Arbeitsbaum `claude/ci-schnell`, alles unter dem gemeinsamen Schloss
+(`flock …/redion-browser.lock`), damit kein Browserlauf eines anderen
+Zweigs gleichzeitig lief; Last zu Beginn 0,3, am Ende 1,2.
+
+**Wer startet einen Browser?** Gezählt auf 97d156b, jede Datei unter
+`pruefungen/lauf/` gelesen: ein Lauf zählt als Browserlauf, wenn er
+Playwright lädt — und unabhängig davon, wenn er `chromium.launch(` ruft.
+Beide Wege geben dieselben 509, wenn der Aufruf im Code gesucht wird, aus
+dem NUR die Kommentare entfernt sind; hier stand zuerst ohne diese
+Einschränkung „beide Wege gaben dieselben 509", und test610 las den
+zweiten Weg damals über `nurCode` — das ergab 508 (siehe unten, „Nach der
+Durchsicht").
+
+```txt
+Läufe (550 test*.mts + servercheck)    551
+  starten einen Browser                509
+  ohne Browser                          42
+    davon in alle.mts als „server"      6   test75 79 92 93 101, servercheck
+```
+
+**Wie lange laufen sie einzeln?** Jeder Lauf für sich (`zeiten.sh`, Zeit
+von Prozessstart bis Ende, ohne Pausen), auf 97d156b:
+
+```txt
+die 42 ohne Browser zusammen     95,0 s
+  test105   58,1 s   baut mit tsc nach /tmp und vergleicht
+  test103    8,9 s   der ZIP-Packer an seinen Grenzen
+  test578    8,4 s   baut die Inseln mit Vite nach /tmp
+  test537    3,4 s
+  test205    3,2 s
+  test216    2,7 s
+  test274    1,1 s   rot (11/12) — auf main seit E729
+  die übrigen 35   je 0,1 bis 0,6 s
+test96  (Browser, §31)    8,0 s   18 ok
+test100 (Browser, §31)    3,7 s   32 ok
+```
+
+**Der ganze schnelle Lauf**, so wie die CI ihn fährt
+(`npm run pruefen -- --schnell`, mit test610, unter dem Schloss, nach dem
+Umbau von alle.mts):
+
+```txt
+Läufe                     45   43 ohne Browser + test96 + test100
+Dauer                     4 min 14 s (253,9 s)
+  davon feste Pausen      2 min 12 s (44 × 3 s zwischen den Läufen)
+rot                       test274 (alt), test610 (Zwischenstand: CLAUDE.md
+                          noch nicht nachgezogen; nachher 22/22)
+zweite Messung, Endstand  3 min 57 s (237,3 s), 44 von 45 grün,
+                          rot nur test274 (11/12, auf main seit E729)
+zum Vergleich: voll       158 min für 550 Läufe (E743)
+```
+
+**Die Zeitgrenze in der CI.** Hier stand zuerst eine Schätzung der
+Einrichtung („rund 7 Minuten", ausdrücklich als geschätzt markiert). Die
+Durchsicht hat die echten Zeiten von GitHub dazugelegt; sie stehen unten.
+Gesetzt sind 20 Minuten, gut das Vierfache von Lauf und Einrichtung
+zusammen (4 min 14 s + 32 s).
+
+**Nebenbei gemessen: `--liste` in eine Röhre.** Die erste Fassung schrieb
+Zeile für Zeile und rief gleich danach `process.exit(0)`: von 40 Aufrufen
+`alle.mts --liste` über `spawnSync` kamen 3 abgeschnitten an (240, 273,
+298 statt 552 Zeilen). Mit EINEM Schreiben und dem Ende im Rückruf: 0 von
+40, dann 0 von 150.
+
+**Nach der Durchsicht (11. Oktober 2026, abends) nachgemessen.**
+
+*Die Einrichtung des Jobs auf GitHub.* Abgelesen aus den Zeitstempeln der
+Schritte, über die Schnittstelle von GitHub
+(`repos/Redurbabat/Redion/actions/jobs/114559416814`, nur gelesen): Lauf
+38169660632, Push auf `main`, 97d156b, 11. Oktober 2026, Job „Alle
+Prüfläufe" — dieselben Einrichtungsschritte wie im neuen Job, nur hiess
+„Pakete holen" dort „Playwright holen". Die Zeitstempel haben ganze
+Sekunden.
+
+```txt
+Quelltext holen                    19:49:57 → 19:50:01     4 s
+Node einrichten                    19:50:01 → 19:50:02     1 s
+Pakete holen (npm install)         19:50:02 → 19:50:04     2 s
+Chromium holen (--with-deps)       19:50:04 → 19:50:27    23 s
+Einzeldatei bauen                  19:50:27 → 19:50:28     1 s
+Ist die Einzeldatei nachgezogen?   19:50:28 → 19:50:29     1 s
+zusammen                           19:49:57 → 19:50:29    32 s
+Prüfläufe (der alte volle Lauf)    abgebrochen nach      2379 s
+```
+
+Im selben Lauf, Job „Quelltext und Logik" (114559416585): test105 53 s
+(auf dem Rechner der Sitzung 58,1 s), test578 11 s (8,4 s), test103 4 s
+(8,9 s). Das Bild ist gemischt: bei test105 und test103 war der Runner
+schneller, bei test578 langsamer — je ein Lauf auf beiden Seiten, der
+Runner in ganzen Sekunden. Ob er insgesamt schneller oder langsamer ist als
+dieser Rechner, sagen drei Einzelwerte nicht; wie lange der ganze schnelle
+Lauf dort braucht, zeigt erst der erste Push. (Hier stand zuerst „Der
+Runner ist also nicht langsamer als dieser Rechner" — test578 im selben
+Satz widersprach; zweite Durchsicht von E745. Die drei Zeiten des Runners
+am 12. Oktober aus der gespeicherten Antwort der Schnittstelle noch
+einmal nachgerechnet: 53, 11 und 4 s.)
+
+*Wer startet einen Browser — die drei Filter im Vergleich.* Jede Datei
+unter `pruefungen/lauf/`, Weg 1 „lädt Playwright", Weg 2 „ruft
+`chromium.launch(`" nach drei verschiedenen Filtern:
+
+```txt
+                                   97d156b (551)   Endstand (552)
+Weg 1: lädt Playwright                  509             509
+Weg 2 über nurCode                      508             508   test587 fehlt
+Weg 2 über ohneKommentare               508             508   test587 fehlt
+Weg 2 über ohneKommentareGenau          509             509   dieselben Läufe wie Weg 1
+```
+
+In test587 steht `'image/*'` in einer Zeichenkette; für die beiden Filter
+mit regulären Ausdrücken beginnt dort ein Kommentar, der erst beim nächsten
+echten Kommentarende schliesst und den Aufruf des Browsers verschluckt.
+`ohneKommentareGenau` liest Zeichen für Zeichen und kennt Zeichenketten,
+Schablonen und reguläre Ausdrücke. Gegen den Parser von TypeScript
+geprüft (Kommentarbereiche vor und hinter jedem Token,
+`getLeadingCommentRanges`/`getTrailingCommentRanges`, Leerraum nicht
+verglichen): in allen 552 Dateien entfernt er dieselben Kommentare; der
+Filter `ohneKommentare` tut das in 377. Nachgezählt am 12. Oktober mit
+zwei Verfahren, die beide 552 und 377 ergaben, auf dem Stand vor der
+zweiten Durchsicht (9442464) wie danach: die Kommentarbereiche vor und
+hinter jedem BLATT des Syntaxbaums, beide an dessen Anfang gefragt (das
+Verfahren dieser Messung), und dieselben Bereiche an jedem KNOTEN, die
+hinteren an dessen Ende (das der Durchsicht). Hier stand zuerst 378; die
+Zahl liess sich mit keinem der beiden nachstellen. Zeilentreu in 552 von
+552, für alle 552 Dateien zusammen 220 bis 245 ms.
+
+## §103 · Drehen und Ziehen zapfen nichts an: Netze, Wege, Zeit (E746, 11. Oktober 2026)
+
+**Die Netze um den FI**, Plan „Drehstrom, FI und Übertrager" (zwölf
+Leitungen, acht Teile, die Bilder der Übernahme), in der echten App
+(1440 × 900 und 390 × 844), F1 angeklickt, „r"; gruppiert aus
+`Stromfluss.netze`, nur die Gruppen mit F1:
+
+```txt
+vor dem Drehen          {E1:X1 F1:2} {E1:X2 F1:N2} {F1:1 G2:L} {F1:3} {F1:4} {F1:N G2:N}
+gedreht, main 97d156b   {E1:X1 E1:X2 F1:1 F1:2 F1:4 F1:N F1:N2 G2:L G2:N} {F1:3}   Meldung „l-n"
+gedreht, E746           wie vor dem Drehen                                          Lampe leuchtet
+```
+
+Auf `main` dabei neu geführt, ohne mit dem FI etwas zu tun zu haben: w2, w3,
+w4 (Motor), t1–t4 (Übertrager). w4 `[[170,120],[170,160],[220,160],[220,370],
+[50,370],[50,330]]` → `[[170,120],[170,330],[50,330]]`, und der neue Weg
+fasst M1:U2, V2, W2. Mit E746 bleiben alle acht Byte für Byte.
+
+**Der alte FI aus `test608`** (Pfeiltaste, dann „r"): kleinster Abstand von
+b2 zu N2 auf `main` 5 px (NAH ist 6 — angezapft, N und N2 ein Netz,
+„fi-loest-aus"); mit E746 über 6 px, N und N2 zwei Netze, die Lampe
+leuchtet, keine fi-Meldung.
+
+**`test611`**: gegen `main` 97d156b03 47 von 79, mit E746 79 von 79. Drei
+Gegenproben: alle Leitungen wieder neu (Winkel zuerst, Prüfung bleibt)
+78/79 · ohne Anzapf-Prüfung 59/79 · ohne Vorzug ausserhalb der Zeichen
+77/79 („f2 durch G2 | f3 durch F1 | f4 durch E1"). Die strenge Variante
+(`heilen` aus, fremde Leitungen nie angefasst): `test611` grün, `test608`
+67/69 („a1.nach liegt bei 320,100, X1:L bei 310,100", a3, a6).
+
+**Rechenzeit** im Browser (Chromium headless, Median aus 30 Läufen, je
+frisch gelesener Plan; `vorherMerken` und `nachziehen` getrennt):
+
+```txt
+Plan                      Handlung              vorherMerken  nachziehen  (grösster)
+W, 12 Leitungen           F1 drehen             0,3 ms        1,4 ms      15 ms
+W                         F1 drehen, spiegeln   0,2 ms        8,2 ms      28 ms
+W dreifach, 36 Leitungen  F1 drehen             0,8 ms        1,8 ms      3,5 ms
+W dreifach                F1 drehen, spiegeln   0,7 ms        19,6 ms     28,6 ms
+```
+
+Jede neu geführte Leitung fand in allen vier Fällen einen Weg der Stufe 1.
+Teuer ist der gespiegelte FI: dort liegt N oben in der rechten Spalte, und
+erst die Hakenwege (vier Strecken) erreichen es, ohne 3, 1 oder N2 zu
+streifen; der Vorzug für Wege ausserhalb der Zeichen lässt dabei mehr
+Kandidaten prüfen (vorher, ohne ihn: 3,6 ms im Plan W). Beim Ziehen mit der
+Maus fällt die Rechnung je Bewegung an.
+
+**Start:** 1919 → 1922 KB gzip über 255 Dateien (`test388` §5, Decke 1950;
+„vorher" gemessen in einem Abzug von 97d156b03). `redion-einzeldatei.html`
+9454 KB.
+
+**Beobachtet, nicht Teil von E746** (Sonde, zwei Widerstände, R1 mit der
+Maus um 40 × 30 px gezogen): Strg+Z macht den Zug nicht rückgängig — vorher
+100,100, nachher 150,140, nach einmal und nach zweimal Strg+Z weiter
+150,140; auf `main` genauso. `zugEnde` ruft `aendere` erst nach dem Zug,
+und `aendere` merkt den Stand, den es VOR seinem eigenen Schritt sieht —
+den schon gezogenen. Eingetragen in L253 als Punkt 8.
+
+### Nach der Durchsicht (11. Oktober 2026, abends)
+
+**Das Ziehen mit der Maus.** Sonde `zug.mts` (im Arbeitsordner der
+Sitzung, nicht im Verzeichnis): Plan W wie in `test611`, Chromium ohne
+Kopf, 1400 × 1000, F1 angeklickt, dann von seiner Mitte mit
+`mouse.down` und 60 `mouse.move` um 120 × 60 px (und um 30 × 30 px)
+gezogen. Gemessen wird jeder Aufruf von `Schaltplan.nachziehen` mit
+`performance.now()` um den Aufruf (ein Wrapper in der Seite), getrennt
+nach den Rechnungen je Bewegung und der einen beim Loslassen, dazu die
+ganze Zugzeit von `mouse.down` bis nach `mouse.up` und einem Bild (in
+Node gemessen, mit den Wegen zu Playwright). „×4" ist
+`Emulation.setCPUThrottlingRate` mit 4 über CDP. „Vorher" ist ein Abzug
+von fcb6d35fa (dem ersten Stand von E746), „main" ein Abzug von
+97d156b03 (rechnet beim Ziehen gar nicht nach, zeichnet aber jede
+Bewegung neu).
+
+```txt
+120 × 60 px, 60 Bewegungen
+                  Rechn.  Median     p90         grösste       >50 ms  Loslassen     ganzer Zug
+vorher  ×1 (3)    60      6,0 6,2 8,2  16,7 18,0 15,8  38,8 43,4 40,7  0  —             2375 2478 2470 ms
+vorher  ×4 (3)    60      25,6 29,4 23,9  61,9 80,1 75,6  144,8 217,3 126,8  8 12 7  —   7465 9061 7383 ms
+nachher ×1 (2)    30      0,6 0,7    1,2 1,2     3,1 4,4       0       16,5 35,0 ms  1600 1705 ms
+nachher ×4 (2)    30      2,8 2,5    6,4 7,0     13,2 9,2      0       98,4 131,5 ms 4628 4373 ms
+main    ×1 (2)    —                                                                  2036 1984 ms
+main    ×4 (2)    —                                                                  6115 6581 ms
+
+30 × 30 px, 60 Bewegungen
+vorher  ×1 (2)    60      3,8 4,0    8,4 8,3     36,1 19,3     0       —             2358 2111 ms
+vorher  ×4 (2)    60      8,3 11,4   39,6 44,3   89,3 125,2    5 4     —             6436 7454 ms
+nachher ×1 (2)    10      0,5 0,9    7,2 3,1     7,2 3,1       0       16,2 23,4 ms  1262 1268 ms
+nachher ×4 (2)    10      4,6 4,8    17,4 10,2   17,4 10,2     0       66,4 120,1 ms 2417 2567 ms
+main    ×1 (2)    —                                                                  2102 1888 ms
+main    ×4 (2)    —                                                                  6645 6318 ms
+```
+
+Die erste „vorher"-Zeile bei 120 × 60 stammt aus einem früheren Lauf
+derselben Sonde (vor der Trennung nach Bewegung und Loslassen — vorher
+ist jeder Aufruf eine Bewegung, die Zahl ist also dieselbe Grösse). Eine
+Rechnung je Bewegung gibt es nachher nur, wenn ein Teil über ein Raster
+wandert (30 von 60, 10 von 60). Der ganze Zug ist nachher schneller als
+auf `main`, weil eine Bewegung innerhalb desselben Rasters auch nicht neu
+zeichnet. Was bleibt: das Loslassen rechnet einmal voll, gedrosselt 66
+bis 132 ms in einem Stück.
+
+**Wo die billigen Wege nicht reichen** (Sonde `erkunde.mts`, ohne
+Bildschirm, im Modell): F1 im Plan W an jede Rasterlage von −100 … 200 ×
+−60 … 200 verschoben (ungespiegelt und gespiegelt), je einmal `schnell`
+und einmal voll nachgezogen. An 1143 Lagen ist das billige Ergebnis ein
+anderes als das volle, während das volle sauber ist; an einem Teil davon
+zapft das billige an — so bei 30 × 40 (f2 und f4 in Stufe 3, zwei
+geänderte Berührungen). Dort zieht `test611` §10.
+
+**Die eigene Klemme** (Plan Q aus `test611` §11): R1 bei (200,200), q
+senkrecht bei x = 250 von E1:X2 (250,110) nach E2:X1 (250,300). Gedreht
+liegt R1:1 bei (250,230); die Netzliste wird aus `E1:X2 E2:X1 l:q` zu
+`E1:X2 E2:X1 R1:1 l:q` — auf fcb6d35fa und auf `main` ohne Meldung,
+nachher mit „Nach dem Drehen: R1:1 berührt jetzt die Leitung E1:X2–E2:X1
+— die Verbindungen haben sich geändert, bitte prüfen."
+
+**Plan A** (`test611` §12, R9 gedreht): nachher ändern sich genau a1–a6,
+die Netzliste bleibt. Gegen `main` verbindet a3 danach G1:L mit G1:N
+(„a3: G1:L,X3:L → G1:L,G1:N,X3:L") und a5 fasst R8:1. Mit
+ungeprüften geheilten Wegen (Gegenprobe 9 in E746) fassen a4 X4:N, a5
+R8:1 und a6 X6:N und X6:PE.
+
+**`test611`**: 110 von 110; gegen fcb6d35fa 101 von 110, gegen `main`
+61 von 110. **Start:** 1923 KB gzip über 255 Dateien (`test388` §5,
+Decke 1950; vor der Durchsicht 1922). `redion-einzeldatei.html` 9460 KB.
+
+### Nach der zweiten Durchsicht (12. Oktober 2026)
+
+**Was während eines Zugs gespeichert wurde.** Zwei Sonden im Arbeitsordner
+der Sitzung (nicht im Verzeichnis): die der Durchsicht (`mitte.mts`) und
+`pfade.mts`. Plan W, Chromium ohne Kopf, 1400 × 1000 (für die Finger
+1400 × 1600), F1 angeklickt, angefasst bei (430,92) und in 24 Bewegungen an
+(460,132) gezogen — die Lage aus `test611` §10, an der die billigen Wege
+anzapfen. Finger über CDP (`Input.dispatchTouchEvent`). Verglichen wird
+die Netzliste der Ablage (`Stromfluss.netze`, nur Klemmen) mit der von vor
+dem Zug; „neu" ist die Gruppe, die dazukam. Je ein Lauf:
+
+```txt
+Weg                                  478791f5f                                  nachher
+„h h" im Zug, los, 3 × Strg+Z        Strg+Z 2 und 3: neu {E1:X2 F1:N F1:N2 G2:N}  alle drei wie vorher
+„r r" im Zug, los, 3 × Strg+Z        dasselbe                                   alle drei wie vorher
+Entf im Zug, los                     F1 gelöscht; jedes Strg+Z zapft an          F1 bleibt; alles wie vorher
+Strg+Z im Zug (T1 vorher gedreht)    T1 zurückgedreht; 1. bis 4. Umschalt+Strg+Z  T1 bleibt; alles wie vorher
+                                     zapfen an
+T1 gedreht, sofort F1 gezogen        in der Ablage mitten im Zug: neu            Ablage und IndexedDB wie
+(eine Bewegung), 900 ms gehalten     {E1:X2 F1:N F1:N2 G2:N}; in der IndexedDB    vor dem Zug
+                                     ebenso
+losgelassen über der Palette         nichts gesichert, der Zug liegt; Pfeil ab   beim Loslassen gesichert,
+                                     und auf speichert ein Zwischenbild, jedes    volle Suche
+                                     Strg+Z und Umschalt+Strg+Z zapft an
+zweiter Finger auf T1                der Zug liegt; Pfeil ab und auf speichert   beim Aufsetzen gesichert;
+                                     neu {E1:X2 F1:N F1:N2 G2:N}                  alles wie vorher
+Escape im Zug                        der Zug läuft weiter und wird beim          nichts gespeichert,
+                                     Loslassen gespeichert, Rückgängig-Knopf an  Rückgängig-Knopf aus
+zweiter Finger auf „Spiegeln"        kein `click` (pointerdown und pointerup am  —
+                                     Knopf, kein click) — in Chromium kein Weg
+```
+
+Losgelassen über der Palette mit vier Zwischenschritten (Sonde, nachher)
+zieht der Zeiger F1 über die Fläche mit, bis er sie verlässt: F1 steht bei
+20,210, gespeichert ist Byte für Byte die volle Suche an dieser Lage, und
+weil dort F1:3 auf der Leitung G1:L1–M1:U1 liegt, meldet die Fläche „Nach
+dem Ziehen: F1:3 berührt jetzt die Leitung G1:L1–M1:U1 — die Verbindungen
+haben sich geändert, bitte prüfen." (E746 Punkt 6; zurück geht es nach dem
+Loslassen nicht mit Strg+Z, L253 Punkt 8).
+
+**Die Kopie in `aendere`** (`JSON.parse(JSON.stringify(plan))`, Sonde
+`kopie.mts`; Median aus 9 × 500 Kopien, Chromium ohne Kopf, ungedrosselt,
+zwei Läufe):
+
+```txt
+Plan                         Leitungen  Teile  Bytes   Median je Kopie   kleinste … grösste
+W                            12         8      3272    0,038 · 0,026 ms  0,023 … 0,072 ms
+W dreimal nebeneinander      36         24     9872    0,080 · 0,071 ms  0,067 … 0,102 ms
+W zehnmal nebeneinander      120        80     32699   0,315 · 0,221 ms  0,207 … 0,461 ms
+```
+
+Die Zugzeiten oben sind nicht neu gemessen: der Weg je Bewegung und beim
+Loslassen ist im Code derselbe; dazu kommen beim Loslassen diese Kopie und
+drei Horcher am Dokument, die nur während eines Zugs hängen.
+
+**`test611`**: 172 von 172 in dreizehn Abschnitten; zuerst eingecheckt mit
+159 Zusagen, gegen 478791f5f 129 von 159; im Endstand gegen 478791f5f
+(Abzug von 046d4a8c0 mit dem heutigen Lauf) 137 von 171, alle 34
+Fehlschläge in §13. Gegenproben 10–20 in E746 (152/169 bis 171/172).
+**Start:** 1924 KB gzip über 255 Dateien (`test388` §5, Decke 1950; vor
+der zweiten Durchsicht 1923). `redion-einzeldatei.html` 9462 KB.
+
+### Nach der dritten Durchsicht (12. Oktober 2026)
+
+**Echte Maus, echte Tasten.** Die Sonde der Durchsicht (`wege.mts`, im
+Arbeitsordner der Sitzung, nicht im Verzeichnis) fährt die Wege aus
+`test611` §13 auch mit `mouse.down`/`mouse.move` und `keyboard.press` —
+keine Taste an die Wurzel geschickt. Dazu eine eigene (`fokus.mts`): T1
+angeklickt, dann ein echtes „r". Plan W, Chromium 141 ohne Kopf,
+1400 × 1000, F1 angeklickt und in 24 Bewegungen an die Lage aus §10
+gezogen. Je ein Lauf:
+
+```txt
+Weg                                  a8533763b                              nachher
+Fokus im Zug (echte Maus)            BODY — auch wenn er vorher auf         BODY (der Zug horcht am
+                                     .sp-wrap stand                         Dokument)
+echtes Escape im Zug                 F1 bleibt im Bild bei 430,100, beim    F1 sofort zurück bei 400,60,
+                                     Loslassen gespeichert                  nichts gespeichert
+echtes Strg+Z im Zug                 der Seitenverlauf baut die Seite neu,  nichts; beim Loslassen
+                                     F1 danach bei 400,60 (Zug verworfen)   gespeichert bei 430,100,
+                                                                            volle Suche
+echte Tasten im Zug: h h r → Entf    F1 danach bei 400,60 (Strg+Z verwarf   F1 bei 430,100, volle Suche
+Strg+Z Umschalt+Strg+Z Strg+D        den Zug)
+Klick auf T1, dann echtes „r"        Fokus BODY, T1 bleibt 0°               Fokus .sp-wrap, T1 90°
+```
+
+Nachher hält die ganze Sonde 64 von 69 Zusagen. Die fünf roten sind
+Annahmen der Sonde, keine Fehler, und vorher genau dieselben (die drei
+Wege nachgefahren gegen einen Abzug von a8533763b, Zusage für Zusage
+gleich): nach einem abgebrochenen Zeiger, einem zweiten Finger oder Escape
+ist der Zug vorbei, und das „h" oder „r" danach spiegelt oder dreht als
+gewöhnliche Handlung; die Sonde vergleicht die Ablage aber nur mit der
+vollen Suche ohne diese Handlung („cancel-maus" 2, „finger-zur-maus" 2,
+„esc-dann-h" 1).
+
+**Der Ring nach dem Klick.** Holt die Fläche den Fokus selbst zurück,
+zählt Chromium 141 das als `:focus-visible` — auch mit `focus({
+focusVisible: false })`, das es nicht kennt (gemessen an einer leeren
+Seite: mit und ohne die Option `true`). Ohne Gegenmittel stand nach jedem
+Klick ein Ring von 2 px um die Fläche (`box-shadow rgb(109, 74, 255) 0px
+0px 0px 2px`, Bild angesehen); mit dem Merkmal `data-zeigerfokus` steht
+dort `none`, und mit Umschalt+Tab ist der Ring da (`test611` §14).
+
+**Was während eines Zugs über Knöpfe und Menüs ankommt** (Sonde
+`knoepfe.mts`; je Weg ein frischer Plan W, F1 im Zug wie oben, der Knopf
+mit dem Fokus und die echte Eingabetaste; „Ablage im Zug" heisst Byte für
+Byte wie vor dem Zug, „danach" heisst Byte für Byte die volle Suche für F1
+bei 430,100, ungedreht — der Zug und nichts sonst):
+
+```txt
+Weg                                         Ablage im Zug  danach        Meldung
+Fuss: Drehen · Spiegeln · Duplizieren ·     wie vorher     nur der Zug   —
+Löschen · Ebene „Plan" aus
+Strg+A (Fokus auf der Fläche, 20 gewählt),  wie vorher     nur der Zug   —
+dann Fuss: Gruppieren
+Kopf: Rückgängig · Wiederholen              wie vorher     nur der Zug   —
+(freigeschaltet)
+„…": Stromschienen · Alle neu               wie vorher     nur der Zug   —
+durchnummerieren · Plan leeren
+Kopf: Planart (`selectOption`)              wie vorher     nur der Zug   — (das Feld zeigt im Zug
+                                                                            „stromlauf-zusammenhaengend",
+                                                                            der Plan „…-aufgeloest";
+                                                                            danach wieder „…-aufgeloest")
+„…": Raster zeigen                          wie vorher     nur der Zug   — (das Bild im Zug 12732 →
+                                                                            12494 Zeichen)
+Kopf: Strom ein · Werkzeug „Leitung" ·      wie vorher     nur der Zug   — (Strom danach an; Werkzeug
+Formelheft · Palette: ein Symbol                                            im Zug „leitung")
+„⚡ Schaltung": Netz (W hat eines)           wie vorher     nur der Zug   „Das Netz steht schon …"
+„⚡ Schaltung": eigene Vorlage              wie vorher     nur der Zug   —
+```
+
+Und in Plan P (zwei Lampen, kein Netz; E1 im Zug um 60 px): „⚡ Schaltung" →
+Netz und → das erste Beispiel — die Ablage im Zug wie vorher, danach zwei
+Teile und eine Leitung, E1 bei 160,100, keine Meldung (vor der Reparatur
+erschien beim Beispiel „Strom drücken, dann auf S1 tippen: E1 leuchtet.",
+`test611` §14). Keiner der Wege brachte einen Fehler auf der Seite.
+
+**`test611`**: 209 von 209 in vierzehn Abschnitten; zuerst eingecheckt mit
+207 Zusagen (7c0fa0ff1), gegen a8533763b 189 von 207; im Endstand gegen
+einen Abzug von a8533763b mit dem heutigen Lauf 191 von 209, alle 18
+Fehlschläge in §14. Gegenproben 21–32 in E746 (191/207 bis 208/209).
+**Start:** 1924 KB gzip über 255 Dateien (`test388` §5, Decke 1950; vor
+der dritten Durchsicht 1924). `redion-einzeldatei.html` 9464 KB.
+
+## §104 · Das Klemmenbrett und die Meldung „hängt an keiner Leitung" (E747, 11. Oktober 2026)
+
+**Wo und wie.** Zweig `claude/elektro-klemmenbrett-bruecken`, drei Stände
+von `quell/bereiche/elektro/simulation.js`: **97d156b03** (origin/main),
+**7560b2f22** (die erste Fassung von E747: jede Brücke zählt wie eine
+Leitung) und **d9b91d74d** (E747 mit dem Sternpunkt in der Stellung). Alle
+Zahlen dieses Abschnitts sind am 11. Oktober abends nach d9b91d74d neu
+gemessen; die erste Fassung dieses Abschnitts (zwei Stände) ist damit
+ersetzt. Eine Sonde im Kratzordner (`el-brett-fix/sonde3.mts`, nicht
+eingecheckt; sie erweitert `el-brett/sonde2.mts` der ersten Fassung) lädt
+`index.html` über einen eigenen HTTP-Server (`listen(0)`) in Chromium und
+ruft `Stromfluss.rechne` für dieselben Pläne, einmal je Stand: den Stand
+des Arbeitsbaums oder eine alte `simulation.js` (`git show`, an derselben
+Adresse ausgeliefert; sonst ist alles gleich). „Offen" heisst: eine Warnung
+„M1: Anschluss … hängt an keiner Leitung". Der Motorplan ist
+Drehstromquelle G1 und Klemmenbrett M1 mit den Leitungen w1–w4 aus dem Bild
+in L253 (L1–U1, L2–V1, L3–W1, PE–PE), N der Quelle frei.
+
+**Der Plan des Bildes aus L253** (zusätzlich FI mit Lampe, Übertrager mit
+Klingel), Zahl der Warnungen:
+
+```txt
+Stellung                   97d156b03   7560b2f22   d9b91d74d
+ohne Brücken               7           7           7
+Stern                      7           4           4
+Dreieck                    7           4           4
+Dreieck ohne Zuleitung U1  9           5           6
+```
+
+Die vier, die in Stern und Dreieck bleiben, sind auf allen drei Ständen
+dieselben: „G1: Anschluss N hängt an keiner Leitung", „F1: Anschluss 3 …",
+„F1: Anschluss 4 …" und „F1 löst aus: es fehlen 37.52 mA …". Im Dreieck
+ohne U1 kommt auf 97d156b03 „M1: U1" und die drei falschen W2, U2, V2 dazu,
+auf 7560b2f22 nichts von M1, auf d9b91d74d „M1: U1".
+
+**Einzelne Fälle** (offene Klemmen von M1):
+
+```txt
+Fall                                  97d156b03          7560b2f22    d9b91d74d
+Stern, alle Zuleitungen               U2 V2 W2           —            —
+Dreieck, alle Zuleitungen             U2 V2 W2           —            —
+ohne Brücken                          U2 V2 W2           U2 V2 W2     U2 V2 W2
+Stern ohne Zuleitung an U1            U1 U2 V2 W2        U1           U1
+Dreieck ohne Zuleitung an U1          U1 U2 V2 W2        —            U1
+Dreieck ohne Zuleitung an V1          U2 V1 V2 W2        —            V1
+Dreieck ohne alle drei Zuleitungen    U1 V1 W1 U2 V2 W2  —            U1 V1 W1
+Dreieck ohne jede Leitung (w1–w4)     PE U1 V1 W1        PE           PE U1 V1 W1
+                                      U2 V2 W2
+Stern ohne alle drei Zuleitungen      U1 V1 W1 U2 V2 W2  U1 V1 W1     U1 V1 W1
+Stern ohne jede Leitung (w1–w4)       PE U1 V1 W1        PE U1 V1 W1  PE U1 V1 W1
+                                      U2 V2 W2
+ohne Brücken ohne jede Leitung        alle sieben        alle sieben  alle sieben
+ohne Brücken, Stern als zwei          —                  —            —
+  Leitungen gezeichnet
+```
+
+Die übrigen Warnungen sind in jedem Fall auf allen drei Ständen gleich:
+G1 meldet jeden freien Ausgang (immer N, dazu den fehlenden Aussenleiter
+und ohne w4 PE), ohne w4 kommt die Meldung zur Schutzklasse I dazu, und
+der gezeichnete Stern ergibt dreimal „das Bauteil ist überbrückt" (W2/U2,
+W2/V2, U2/V2).
+
+Der grösste Strom ist in jedem Fall auf allen drei Ständen gleich (Stern
+3,8333 A, Dreieck 11,4998 A, Dreieck ohne U1 und Dreieck ohne V1 je
+9,9591 A, Stern ohne U1 3,3197 A, ohne Brücken und ohne Zuleitungen 0) —
+die Rechnung ist unverändert. 9,9591 A ist der Leiterstrom auf zwei
+Aussenleitern: ein Strang direkt an 400 V (6,64 A) und zwei in Reihe
+(3,32 A). Und eine Grenze, gemessen mit einer zweiten Sonde
+(`el-brett-fix/probe5.mts`, file://): im Dreieck ohne Zuleitung an U1,
+mit einer Leitung von W2 an X2 der Lampe (also an N), meldet d9b91d74d gar
+nichts — die Ecke erreicht eine fremde Klemme.
+
+**Rechenzeit:** je 2000 Rechnungen des Bild-Plans in Stern, Mittel je
+Rechnung, dreimal abwechselnd unter dem Browser-Schloss:
+
+```txt
+97d156b03   0,4588   0,4030   0,3996 ms
+7560b2f22   0,4653   0,4770   0,5555 ms
+d9b91d74d   0,3016   0,4630   0,2732 ms
+```
+
+Die Streuung innerhalb eines Standes ist grösser als jeder Unterschied
+zwischen ihnen. (Die erste Fassung hatte je eine Messung, 0,396 und
+0,421 ms.)
+
+**`test612` gegen die Stände** (über file://, unter dem Schloss,
+1400 × 1000; die zweite Fassung mit 38 Zusagen): 97d156b03 20/38;
+7560b2f22 33/38; d9b91d74d 38/38. Gegenproben auf d9b91d74d: Brücken
+übergangen 21/38; Kontakte aller schaltbaren Bauteile als Brücken 37/38;
+Brücken jeder Stellung 28/38; die Marke `sternpunkt` heraus 29/38; die
+Regel auch für Knoten ohne Brücke 37/38; jede Klemme der Ecke statt einer
+je Knoten 34/38. (Die erste Fassung mit 26 Zusagen: 97d156b03 15/26,
+7560b2f22 26/26, Gegenproben 15/26, 25/26, 22/26 — nicht nachgemessen,
+die Fassung gibt es nicht mehr.)
+
+**Bilder** (Kratzordner `bilder-abend/el-brett/`, nicht im Verzeichnis;
+Rechner 1440 × 900, Telefon 390 × 844 mit Pixeldichte 2, dunkel und hell;
+derselbe Plan, Simulation an, M1 einmal, zweimal, dreimal angetippt; dazu
+eine zweite Seite ohne die Zuleitung w1). Die Fusszeile, als Text aus dem
+DOM gelesen und in allen vier Ansichten gleich:
+
+```txt
+                  97d156b03                      7560b2f22                      d9b91d74d
+Stern             G1 N · M1 W2 · M1 U2 · „4"     G1 N · F1 3 · F1 4 · „1"       wie 7560b2f22
+Dreieck           G1 N · M1 W2 · M1 U2 · „4"     G1 N · F1 3 · F1 4 · „1"       wie 7560b2f22
+ohne Brücken      G1 N · M1 W2 · M1 U2 · „4"     gleich                         gleich
+Stern ohne U1     G1 L1 · G1 N · M1 U1 · „6"     G1 L1 · G1 N · M1 U1 · „3"     wie 7560b2f22
+Dreieck ohne U1   G1 L1 · G1 N · M1 U1 · „6"     G1 L1 · G1 N · F1 3 · „2"      G1 L1 · G1 N · M1 U1 · „3"
+```
+
+(„4" heisst „… und 4 weitere".) Angesehen (d9b91d74d): der Stern am
+Rechner dunkel, die Fusszeile des Dreiecks am Telefon hell, das Dreieck
+ohne U1 am Rechner hell, am Telefon dunkel und seine Fusszeile am Telefon
+hell.
+
+Was die Bilder sonst zeigen, auf allen Ständen und nicht Teil von E747:
+das Klemmenbrett zeichnet die Brücken der Stellung nicht (nur der Titel
+beim Antippen sagt „Stern" oder „Dreieck"); ohne Brücken steht an G1
+„230 V · 0 A · 317 nW" (Text im DOM, alle vier Ansichten, alle drei
+Stände) — je Strang 0,46 nA unter der Schwelle von 1 nA und deshalb „0 A",
+die Summe der drei Leistungen (je 0,106 µW) aber nicht; die erste Fassung
+dieses Abschnitts las im Bild „317 mW", das n ist dort vom m nicht zu
+unterscheiden. Am Telefon liest sich die Palettenbeschriftung „Öffner" als
+„Offner" — `.sp-sym-name` hat `overflow: hidden` bei 9,5 px Schrift und
+10,9 px Zeilenhöhe, die Punkte des Ö fallen heraus (aus der ersten Fassung,
+nicht nachgemessen); und am Telefon deckt die untere Leiste die letzte
+Zeile der Fusszeile („… und 3 weitere"), solange man nicht weiter rollt.
+L253 Punkt 3 (die Messwerte am Telefon) ist auf denselben Bildern zu
+sehen.
+
+**Der FI im Plan des Bildes** (`Stromfluss.rechne`, ohne Brücken, alle
+drei Stände gleich): durch F1 1–2 fliessen 457,76 mA, durch N–N2
+420,24 mA, durch die Lampe E1 und die Quelle G2 je 434,78 mA; die
+Differenz in F1 ist die gemeldete von 37,52 mA. Dieselbe Meldung steht in
+allen drei Stellungen.
+
+**Start:** 1919 KB gzip über 255 Dateien auf d9b91d74d (`test388` §5,
+Decke 1950); die erste Fassung hatte für 97d156b03 und 7560b2f22 dieselbe
+Zahl. `simulation.js` 58 566 → 59 173 → 60 004 Bytes (gzip -9 13 513 →
+13 614 → 13 790). `redion-einzeldatei.html` 9 665 704 → 9 666 311 →
+9 667 142 Bytes. Dienststand v1469 → v1470 → v1471.

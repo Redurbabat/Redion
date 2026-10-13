@@ -264,12 +264,19 @@ Geräten von Nutzern liegen. Also: erst nachsehen, dann tippen.
 ```
 npm run bauen:ts                  falls die Datei ausführbaren Code enthält
 npm run typecheck
-npm run pruefen -- --schnell
+node pruefungen/volllauf.mts      der volle Lauf, in Stücken (CLAUDE.md §30)
 node bauen.mts
 ```
 
 Alle vier. `bauen.mts` ist nicht optional — die Einzeldatei ist ein
 Auslieferungsweg, und sie bricht anders als die App.
+
+*Bis zum 11. Oktober 2026 stand in der dritten Zeile
+`npm run pruefen -- --schnell`. Das fuhr zuletzt alles ausser test73 —
+gemeint war der volle Lauf, und der ist es geblieben. Seit E745 heisst
+`--schnell` der schnelle Lauf: jeder Lauf ohne Browser, dazu test96 und
+test100. Für eine Datei, die der Browser lädt, reicht er allein nicht —
+sie prüfen fast nur Browserläufe.*
 
 **2. `any` ist erlaubt, aber nur an der Grenze.**
 

@@ -224,17 +224,51 @@ const Linse = (() => {
   };
 
   /* DIE LINSE AM SATZ (E712, Szene 03): gleitet einmal beim Ankommen über
-     „Aufmachen. / Weiterdenken." und ruht dann NEBEN dem Wort, rechts vom
+     „Aufmachen. / Weiterdenken." und hält dann NEBEN dem Wort, rechts vom
      Punkt (E740) — nicht mehr über „ken". Eine Abschrift in der Linse,
      verschoben und um 1,2 vergrössert — nur `transform`, die Bahn einmal
      gerechnet (Feder „knapp"). Unterwegs Milchglas (still weichgezeichnet,
-     nur Deckkraft), in Ruhe die Brechung `FAHRT`; neben dem Wort liegt
-     darunter leerer Grund, die ruhende Linse ist also eine stille Scheibe. */
+     nur Deckkraft), an den Halten die Brechung `FAHRT`; neben dem Wort liegt
+     darunter leerer Grund, die haltende Linse ist also eine leere Scheibe —
+     und darum VERBLASST sie dort (E744, siehe `verblassen`). */
   const SATZ_GESAMT = 1650;
   let satzBeginn = 0;
 
+  /* ══ VERBLASSEN (E744) ═══════════════════════════════════════════════
+   * Redur am 11. Oktober 2026, 19:43 UTC, auf die Frage „Die leere Linse
+   * neben dem Wort — stehen lassen oder nach der Fahrt verblassen?":
+   * „verblassen". Seit E740 hält die Linse rechts vom Punkt, über leerem
+   * Grund; in Ruhe war sie eine Glasscheibe, unter der nichts lag. Die
+   * Fahrt erklärt die Linse — in Ruhe hat sie nichts mehr zu zeigen.
+   *
+   * KEINE EIGENE DAUER. Was geht, nimmt die Marken aus grund.css (E259,
+   * E43): `--motion-slow` (320 ms, „grosse Überlagerungen" — die Linse ist
+   * die grösste Zier der Seite) und `--ease-exit`, die Kurve für alles, was
+   * geht. Gelesen wie in menue.ts; ohne Seite die Zahlen von dort.
+   *
+   * DANACH IST SIE WEG, nicht nur unsichtbar: ein Element mit Deckkraft 0
+   * trägt weiter zwei Abschriften und eine Brechung, die niemand sieht.
+   * Sie war schon `aria-hidden` und `pointer-events:none` (studio.css) —
+   * ohne Element fängt sie weder Zeiger noch Vorleser. */
+  const verblassen = (): { duration: number; easing: string } => {
+    try {
+      const marken = getComputedStyle(document.documentElement);
+      const roh = marken.getPropertyValue('--motion-slow').trim();
+      const n = parseFloat(roh);
+      /* Ohne Marke das Schlüsselwort, keine ausgeschriebene Kurve: eine
+         Kurve im TypeScript wäre eine zweite Federsprache neben den Marken
+         (test581 §9 — gefunden im vollen Lauf vom 12. Oktober). */
+      return { duration: Number.isFinite(n) ? (/ms$/.test(roh) ? n : n * 1000) : 320,
+               easing: marken.getPropertyValue('--ease-exit').trim() || 'ease-in' };
+    } catch {
+      return { duration: 320, easing: 'ease-in' };
+    }
+  };
+
   /* Ändert sich der Satz (Fenster, Schrift), legt sich die Linse neu an
-     ihren Ort, ohne neue Fahrt (Durchsicht E712). */
+     ihren Ort, ohne neue Fahrt (Durchsicht E712) — solange sie fährt oder
+     verblasst. In Ruhe gibt es keine mehr (E744), und der Beobachter holt
+     auch keine zurück. */
   let satzBeobachter: ResizeObserver | null = null;
   let beobachtet: HTMLElement | null = null;
   const beobachten = (satz: HTMLElement): void => {
@@ -268,9 +302,22 @@ const Linse = (() => {
 
     const still = typeof AppEinstellung !== 'undefined' && AppEinstellung.wenigBewegung();
     const jetzt = performance.now();
-    /* Zeichnet die Ansicht gleich danach neu, läuft dieselbe Fahrt weiter. */
-    const versatz = still ? SATZ_GESAMT
-      : gleiten ? 0 : (satzBeginn && jetzt - satzBeginn < SATZ_GESAMT ? jetzt - satzBeginn : SATZ_GESAMT);
+    /* DIE ZEITEN DER BAHN stehen vor dem Messen (E744): sie hängen nur an
+       der Feder, nicht an der Lage, und das Ende des Verblassens entscheidet,
+       ob überhaupt eine Linse kommt. Warten (T1), zum Ende der ersten Zeile,
+       warten bis T2, zum Ende der zweiten, halten bis T — dann verblassen. */
+    const feder = RedionSpring.sample(RedionSpring.preset('snappy'), 0, 1, 0, 16);
+    const T1 = 260, T2 = 900;
+    const ende1 = T1 + feder.duration;
+    const ab2 = Math.max(T2, ende1 + 20);
+    const ende2 = ab2 + feder.duration;
+    const T = Math.max(SATZ_GESAMT, ende2);
+    const aus = verblassen();
+    const ENDE = T + aus.duration;
+    /* Zeichnet die Ansicht gleich danach neu, läuft dieselbe Fahrt weiter —
+       auch mitten im Verblassen. */
+    const versatz = still ? ENDE
+      : gleiten ? 0 : (satzBeginn && jetzt - satzBeginn < ENDE ? jetzt - satzBeginn : ENDE);
     if (gleiten && !still) satzBeginn = jetzt;
 
     const kasten = traeger.getBoundingClientRect();
@@ -312,7 +359,11 @@ const Linse = (() => {
       z2.addEventListener('animationend', ev => { if (ev.target === z2) fertig(); }, { once: true });
       setTimeout(fertig, 2400);
     };
-    if (D < 40) { zeilenKommen(); return; }
+    /* KEINE LINSE IN RUHE (E744): nach dem Verblassen, beim Neuzeichnen
+       danach und ohne Bewegung („Ruhig", „weniger Bewegung") — ohne Fahrt
+       gäbe es kein Verblassen, das man sehen könnte, nur eine leere Scheibe.
+       Bis hierher lag die Linse dann still an ihrem Halt. */
+    if (D < 40 || still || versatz >= ENDE) { zeilenKommen(); return; }
 
     const linse = document.createElement('div');
     linse.className = 'ru-held-linse';
@@ -344,17 +395,7 @@ const Linse = (() => {
       `translate(${(D / 2 - S * (c.x - H.x)).toFixed(2)}px,${(D / 2 - S * (c.y - H.y)).toFixed(2)}px) scale(${S})`
     ];
 
-    if (still || versatz >= SATZ_GESAMT) {
-      const [l, b] = lagenText(P2);
-      linse.style.transform = l;
-      glasTeil.bild.style.transform = frostTeil.bild.style.transform = b;
-      frostTeil.huelle.style.opacity = '0';
-      return;
-    }
-
     /* Warten, zum Ende der ersten Zeile, ruhen, zum Ende der zweiten. */
-    const feder = RedionSpring.sample(RedionSpring.preset('snappy'), 0, 1, 0, 16);
-    const T1 = 260, T2 = 900;
     type Bild = { t: number; c: { x: number; y: number }; sx: number; sy: number };
     const bilder: Bild[] = [{ t: 0, c: P0, sx: 1, sy: 1 }, { t: T1, c: P0, sx: 1, sy: 1 }];
     const strecke = (von: { x: number; y: number }, nach: { x: number; y: number }, ab: number): number => {
@@ -370,10 +411,9 @@ const Linse = (() => {
       });
       return ab + feder.duration;
     };
-    const ende1 = strecke(P0, P1, T1);
+    strecke(P0, P1, T1);
     bilder.push({ t: Math.max(ende1, T2 - 1), c: P1, sx: 1, sy: 1 });
-    const ende2 = strecke(P1, P2, Math.max(T2, ende1 + 20));
-    const T = Math.max(SATZ_GESAMT, ende2);
+    strecke(P1, P2, ab2);
     bilder.push({ t: T, c: P2, sx: 1, sy: 1 });
 
     const lauf: Animation[] = [];
@@ -390,7 +430,7 @@ const Linse = (() => {
     const scharf: Keyframe[] = [
       { offset: 0, opacity: 1 }, { offset: blende(T1), opacity: 1 }, { offset: blende(T1 + 70), opacity: 0 },
       { offset: blende(ende1 - 140), opacity: 0 }, { offset: blende(ende1 - 60), opacity: 1 },
-      { offset: blende(Math.max(T2, ende1 + 20)), opacity: 1 }, { offset: blende(Math.max(T2, ende1 + 20) + 70), opacity: 0 },
+      { offset: blende(ab2), opacity: 1 }, { offset: blende(ab2 + 70), opacity: 0 },
       { offset: blende(ende2 - 140), opacity: 0 }, { offset: blende(ende2 - 60), opacity: 1 }, { offset: 1, opacity: 1 }
     ].sort((x, y) => (x.offset as number) - (y.offset as number));
     los(glasTeil.huelle, scharf);
@@ -400,13 +440,21 @@ const Linse = (() => {
       { duration: pop.duration, easing: pop.easing, fill: 'both' });
     auf.currentTime = Math.min(versatz, pop.duration);
     lauf.push(auf);
+    /* Am Halt verblassen (E744): erst nach dem Ende der Fahrt (`delay: T`),
+       vorher wirkt es nicht (`fill: 'forwards'`, sonst nähme es dem
+       Aufploppen die Deckkraft). Nach dem Aufploppen angelegt, gewinnt es
+       die Deckkraft, sobald es läuft. Dieselbe Uhr wie die Fahrt: beim
+       Neuzeichnen geht es an derselben Stelle weiter. */
+    const geht = linse.animate([{ opacity: 1 }, { opacity: 0 }],
+      { duration: aus.duration, delay: T, easing: aus.easing, fill: 'forwards' });
+    geht.currentTime = versatz;
+    lauf.push(geht);
 
     zeilenKommen();
     Promise.all(lauf.map(x => x.finished)).then(() => {
-      const [l, b] = lagenText(P2);
-      linse.style.transform = l;
-      glasTeil.bild.style.transform = frostTeil.bild.style.transform = b;
-      frostTeil.huelle.style.opacity = '0';
+      /* Verblasst: weg damit. Wurde die Ansicht inzwischen neu gezeichnet,
+         ist diese Linse schon entfernt, und `remove()` tut nichts. */
+      linse.remove();
       lauf.forEach(x => x.cancel());
     }).catch(() => { /* abgebrochen: die Ansicht ist schon weg */ });
   };

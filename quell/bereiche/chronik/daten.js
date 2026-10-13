@@ -4651,13 +4651,22 @@ const ChronikDaten = {
                     "zeitraum": "ab 19:43 UTC",
                     "dauer": "ca. 30 min",
                     "pruefungen": "Datei-Wächter 550 549 225 105 109 87 537, dazu test388, test422, test74 auf dem Endstand; der volle Lauf (537/550, 13 fremde rot) lief auf cd3d165, danach nur Doku und Chronik"
+                },
+                {
+                    "was": "Redurs vier Antworten: vier Zweige (E744 Linse verblasst, E745 CI schnell, E746 Elektro Punkt 4, E747 Elektro Punkt 2), je mit Wächter zuerst rot, dann die erste Durchsicht und ihre Nachzüge",
+                    "vonBis": "1b0c027 → a9e9ce1 (auf vier Zweigen)",
+                    "vonCommit": "1b0c027",
+                    "bisCommit": "a9e9ce1",
+                    "zeitraum": "20:11–23:59 UTC",
+                    "dauer": "ca. 3 h 50 min (vier Agenten nebeneinander, je in eigenem Arbeitsbaum, Browserläufe unter einem Schloss)",
+                    "pruefungen": "test610, test611, test612 neu, test589 §8/§16 mit Redurs Wort geändert — je zuerst rot; erste Durchsicht: vier Skeptiker, einer mit „issues“ (CI: Doku mit der alten Bedeutung von --schnell), drei „ok“ mit Funden; Nachzüge mit eigenen Gegenproben"
                 }
             ],
             "zahlen": {
-                "commits": 60,
-                "entscheidungen": 28,
-                "neuePrüfläufe": 6,
-                "gezählt": "Commits mit Datum 11. Oktober (UTC) bis b2367bc: 22 (10 Zusammenführungen, 5 Nachzüge, 7 der Durchsichten von E725/E726); danach der Abschluss mit dieser Chronik. Entscheidungen: 14 — E716 bis E728 stehen ab heute auf morgen-besser-3 — der Kopf von ENTSCHEIDUNGEN.md sagt 708, E1 bis E729 (E716–E728 über ihre Zweige, E729 an diesem Tag), die Klausel im Kopf („**E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen“) ist gestrichen. Prüfläufe: 544. Nach b2367bc bis zum Push auf claude/auf-main: der Zusammenführungs-Commit mit origin/main (009e2fc) und die Nachzüge aus vollem Lauf und Durchsicht. — Nachgezählt am Abend (git, Commit-Datum 11. Oktober UTC, auf claude/sechs-ja bis 462abbc): 60 Commits, danach der Abschluss mit dieser Chronik. Entscheidungen: 27 — dazu E730 bis E742 aus Redurs sechs Ja; der Kopf von ENTSCHEIDUNGEN.md sagt 721, E1 bis E742. Neue Prüfläufe: 6 (test604–test609); `ls pruefungen/lauf/test*.mts | wc -l` sagt 550. Am späten Abend kam E743 dazu (main vorgespult): 28 Entscheidungen; der Kopf sagt 722, E1 bis E743."
+                "commits": 84,
+                "entscheidungen": 32,
+                "neuePrüfläufe": 9,
+                "gezählt": "Commits mit Datum 11. Oktober (UTC) bis b2367bc: 22 (10 Zusammenführungen, 5 Nachzüge, 7 der Durchsichten von E725/E726); danach der Abschluss mit dieser Chronik. Entscheidungen: 14 — E716 bis E728 stehen ab heute auf morgen-besser-3 — der Kopf von ENTSCHEIDUNGEN.md sagt 708, E1 bis E729 (E716–E728 über ihre Zweige, E729 an diesem Tag), die Klausel im Kopf („**E716 bis E728** sind den Zweigen des Masterprompts vom 29. September vergeben und folgen, sobald sie landen“) ist gestrichen. Prüfläufe: 544. Nach b2367bc bis zum Push auf claude/auf-main: der Zusammenführungs-Commit mit origin/main (009e2fc) und die Nachzüge aus vollem Lauf und Durchsicht. — Nachgezählt am Abend (git, Commit-Datum 11. Oktober UTC, auf claude/sechs-ja bis 462abbc): 60 Commits, danach der Abschluss mit dieser Chronik. Entscheidungen: 27 — dazu E730 bis E742 aus Redurs sechs Ja; der Kopf von ENTSCHEIDUNGEN.md sagt 721, E1 bis E742. Neue Prüfläufe: 6 (test604–test609); `ls pruefungen/lauf/test*.mts | wc -l` sagt 550. Am späten Abend kam E743 dazu (main vorgespult): 28 Entscheidungen; der Kopf sagt 722, E1 bis E743. Am späten Abend (20:11–23:59 UTC) kamen auf den vier Zweigen zu Redurs Antworten E744 bis E747 und test610 bis test612 dazu; nachgezählt am 12. Oktober über alle Zweige (Commit-Datum 11. Oktober UTC): 84 Commits, 32 Entscheidungen, 9 neue Prüfläufe."
             },
             "groesstesProblem": "Ein Werkzeug, das Doku zusammenführt, hatte selbst einen Fehler, und er sah aus wie ein sauberes Ergebnis: im „Und“-Block standen vier Läufe doppelt und ein Absatz endete mitten im Satz, und test550 war trotzdem grün, weil er Zahlen zählt, keine Absätze (P126). Gefunden hat es das Lesen beim neunten Zusammenführen, nicht ein Wächter.",
             "interessantesteAnfrage": "„Ja für die 6 entscheideungen“ (11:00 UTC) — ein Satz für sechs Entscheidungen, und er war eindeutig, weil jede Frage nummeriert und als Ja/Nein gestellt war. Was nicht nummeriert war (die CI-Zeitgrenze), fiel nicht darunter.",
@@ -4709,6 +4718,76 @@ const ChronikDaten = {
                     "was": "main vorgespult — 1575a18 auf claude/auf-main-sechs-ja, ohne force (E743).",
                     "warum": "Redur, 19:43 UTC: „3.ja“ auf „main: auf diesen Stand ja oder nein?“. §46 ist hart; die Ausnahme steht als E743 in ENTSCHEIDUNGEN.md, §46 bekommt einen Hinweis, keinen neuen Wortlaut.",
                     "risiko": "Wer main holt, bekommt dreizehn benannte rote Läufe mit — dieselben wie vorher, einer weniger als bei E729. Keiner davon ist aus der Arbeit dieses Tages."
+                }
+            ]
+        },
+        {
+            "datum": "2026-10-12",
+            "wochentag": "Montag",
+            "titel": "Drei Durchsichten bis „ok“, die vier Abend-Zweige zusammengeführt, und die CI läuft zum ersten Mal zu Ende",
+            "wasIchWeiss": "Nach Mitternacht liefen die zweite, dritte und vierte Durchsicht der vier Zweige zu Redurs Antworten vom Vorabend. Die zweite fand an der Planfläche den schwersten Fehler des Tages: eine Taste mitten in einem Maus-Zug speicherte das billige Zwischenbild, und die Ablage hielt ohnehin nur einen Verweis auf den Plan — die Schreibpause schrieb ein angezapftes Netz in die IndexedDB (P134). Die dritte zeigte, dass der Wächter dafür seine Tasten an die Fläche GESCHICKT hatte: mit echter Maus und Tastatur lag der Fokus im Zug auf der Seite, Escape brach nichts ab und Strg+Z baute die Seite neu (P135). Die vierte brachte nur noch Kleinigkeiten. Die CI fuhr auf claude/ci-schnell zum ersten Mal einen Job bis zum Ende: 4 min 7 s, rot nur wegen test274, dem Fehlalarm unter den dreizehn alten roten Läufen — ihn zu richten braucht Redurs Wort, die Frage ist gestellt. Danach die vier Zweige zusammengeführt auf claude/abend-antworten (Kopf 726, E1 bis E747; 553 Läufe), neu zwei Lücken (L255 Öffner am Telefon, L256 lebende Verweise an Store.updateBlock). main ist nicht bewegt: E743 galt einmal.",
+            "nachrichten": [],
+            "arbeit": [
+                {
+                    "was": "Zweite bis vierte Durchsicht der vier Abend-Zweige und ihre Nachzüge",
+                    "vonBis": "046d4a8 → 9bb7471 (auf vier Zweigen)",
+                    "vonCommit": "046d4a8",
+                    "bisCommit": "9bb7471",
+                    "zeitraum": "00:53–04:47 UTC",
+                    "dauer": "ca. 3 h 55 min",
+                    "pruefungen": "je Runde ein frischer Skeptiker mit eigener Gegenprobe; Endstände: test589 152/152, test610 30/30, test611 209/209, test612 38/38; test611 §13/§14 zuerst rot (129/159, 189/207), Gegenproben 10–32 je rot und zurückgenommen"
+                },
+                {
+                    "was": "Zusammenführen auf claude/abend-antworten, Messung der CI auf GitHub, Doku und Chronik",
+                    "vonBis": "31b27ad → claude/abend-antworten",
+                    "vonCommit": "31b27ad",
+                    "bisCommit": "claude/abend-antworten",
+                    "zeitraum": "04:47 UTC – Ende des Blocks",
+                    "dauer": "ca. 1 h und die Läufe",
+                    "pruefungen": "Datei-Wächter 550 549 225 105 109 87 537 400 610 353 grün; 27 Browser-Läufe auf dem zusammengeführten Stand grün, keiner rot (611 209/209, 612 38/38, 604–608, 589, 539, 541, 576, 388, 74, 600 214/214, 601, 568, 238–242, 254, 319, 584, 598, 609, 444); auf GitHub der Job „Schneller Lauf“ 4 min 7 s (Lauf 38205835767), rot nur wegen test274"
+                },
+                {
+                    "was": "Voller Lauf auf claude/abend-antworten und zwei neue Rote gerichtet (claude/abend-antworten-2)",
+                    "vonBis": "fdbf6ee → claude/abend-antworten-2",
+                    "vonCommit": "fdbf6ee",
+                    "bisCommit": "claude/abend-antworten-2",
+                    "zeitraum": "05:14–07:58 UTC (der Lauf), danach die zwei Nachzüge",
+                    "dauer": "162 min Lauf, einmal nach der Zeitgrenze fortgesetzt; ca. 30 min Nachzug",
+                    "pruefungen": "volllauf.mts --neu: 553 Läufe, 538 grün, 15 rot — die dreizehn alten (201 270 274 332 348 351 365 425 448 470 493 524 533) und zwei neue: test467 („Execution context was destroyed“ im Aufbau, einzeln 3 von 3 grün — P131) und test581 §9 (eine ausgeschriebene Kurve in linse.ts aus E744 — P137). Nach den Nachzügen: test581 93/93, test467 dreimal 20/20, test589, 539, 541, 576, 388, 74 und die Datei-Wächter grün"
+                }
+            ],
+            "zahlen": {
+                "commits": 19,
+                "entscheidungen": 0,
+                "neuePrüfläufe": 0,
+                "gezählt": "Commits mit Commit-Datum 12. Oktober (UTC) über alle vier Zweige und claude/abend-antworten bis zu dieser Chronik: 19. Entscheidungen: keine neue Nummer — E744 bis E747 sind vom Vorabend und wurden hier nur nachgezogen; der Kopf sagt 726, E1 bis E747. Prüfläufe: 553. Danach der volle Lauf (553 Läufe, 538 grün, 15 rot) und die Nachzüge auf claude/abend-antworten-2."
+            },
+            "groesstesProblem": "Ein Speicher, der einen Verweis hält, speichert, was aus dem Objekt später wird: die Planfläche gab `z.plan` an Store.updateBlock, die Schreibpause schrieb mitten in einem Zug ein angezapftes Netz in die IndexedDB, und eine Taste im Zug machte daraus sogar einen Rückgängig-Schritt (P134). Gefunden hat es der zweite Skeptiker, nicht der Wächter des ersten Baus.",
+            "interessantesteAnfrage": "Keine neue an diesem Tag; gearbeitet wurde an Redurs vier Antworten vom Vorabend (19:43 UTC).",
+            "massnahmen": [
+                {
+                    "zeit": "02:10 UTC",
+                    "was": "E746: während eines Zugs ändert nur der Zug den Plan — aendere, zurueck und vorwaerts tun im Zug nichts, die Ablage bekommt eine Kopie.",
+                    "warum": "P134: eine Taste im Zug speicherte das billige Zwischenbild, und der Verweis liess die Schreibpause Zwischenstände schreiben (§9, §51).",
+                    "risiko": "Tasten im Zug werden still verworfen (L253 Punkt 9); eine Kopie je Speichern kostet bei grossen Plänen Zeit (gemessen in §103)."
+                },
+                {
+                    "zeit": "04:15 UTC",
+                    "was": "E746: ein Zug horcht am Dokument auf seine Tasten — Escape bricht ab, Strg+Z/Strg+Y werden geschluckt.",
+                    "warum": "P135: mit echter Eingabe lag der Fokus im Zug auf der Seite; der Wächter hatte die Tasten direkt an die Fläche geschickt.",
+                    "risiko": "Kommt das Loslassen nie an, hält der Horcher Strg+Z bis zum nächsten Klick (L253 Punkt 9, gelesen, nicht gemessen)."
+                },
+                {
+                    "zeit": "22:22 UTC am 11., wiederholt 00:34",
+                    "was": "test274 NICHT gerichtet; Redur gefragt.",
+                    "warum": "Er ist einer der dreizehn alten roten Läufe, und für sie gilt: Wächter nur mit Redurs Wort (E729). Er ist ein Fehlalarm, aber das macht die Ausnahme nicht kleiner.",
+                    "risiko": "Der Job „Schneller Lauf“ bleibt rot, bis Redur antwortet."
+                },
+                {
+                    "zeit": "ca. 08:55 UTC",
+                    "was": "test581 §9: der Rückfall in linse.ts heisst 'ease-in' statt einer ausgeschriebenen Kurve; test467 öffnet in einem eigenen Schritt.",
+                    "warum": "Beide waren im vollen Lauf rot. test581 hält eine Regel über alles TypeScript (eine Federsprache), test467 brach mit dem Muster aus P131 ab — AUFGABEN sagte „umstellen, sobald einer es tut“.",
+                    "risiko": "Keins sichtbar: mit der Marke --ease-exit (jeder gewöhnliche Start) ändert sich an der Linse nichts; test467s Zusagen sind dieselben."
                 }
             ]
         }
@@ -6477,6 +6556,58 @@ const ChronikDaten = {
             "loesung": "`&amp;` im SVG (E739); angezeigt wird dasselbe Wort.",
             "beweis": "test609 gegen den ersten eingebundenen Stand 23 von 24, danach 24/24; Gegenprobe mit dem rohen `&` wieder 23/24.",
             "lehre": "Eine Zusage über ALLE Bilder („jedes ist dekodierbar“) findet, wonach keiner gesucht hat. Sie kostet eine Schleife und ist mehr wert als zehn Zusagen über bekannte Fälle."
+        },
+        {
+            "nr": "P134",
+            "datum": "2026-10-12",
+            "titel": "Ein Speicher, der einen Verweis hält",
+            "schwere": "hoch",
+            "symptom": "Auf der Planfläche: Maus auf einem Teil gedrückt, gezogen, mitten im Zug zweimal „h“ (oder „r“, Entf, ein Pfeil), losgelassen — danach brachten Strg+Z 2 und 3 ein angezapftes Netz zurück ({E1:X2 F1:N F1:N2 G2:N}), und die IndexedDB hielt mitten im Zug denselben Stand.",
+            "falscheVermutung": "Gespeichert wird nur über `aendere`, und das läuft erst beim Loslassen mit der vollen Suche — also kann ein billiges Zwischenbild nie in die Ablage kommen.",
+            "wieGefunden": "Die zweite Durchsicht von E746 fuhr eine Sonde mit Tasten mitten im Zug; der Nachzug las danach die IndexedDB mitten im Zug und fand den zweiten Weg: `Store.updateBlock` übernahm den Verweis auf `z.plan`.",
+            "ursache": "Zwei Dinge: die Tasten im Zug riefen drehen/spiegeln/verschieben, die über `aendere` speicherten und einen Rückgängig-Schritt anlegten — mit dem billigen Zwischenbild; und die Ablage hielt einen lebenden Verweis, sodass die Schreibpause schrieb, was der Plan gerade war.",
+            "loesung": "E746 (zweite Durchsicht): aendere, zurueck und vorwaerts tun während eines Zugs nichts, Escape bricht ab, die Ablage bekommt eine JSON-Kopie.",
+            "beweis": "test611 §13 zuerst rot (129/159 gegen 478791f), danach 172/172; Gegenproben 10–17 je rot (u. a. „Ablage mit z.plan statt Kopie“ 166/170).",
+            "lehre": "Wer einem Speicher ein Objekt gibt und es danach weiter verändert, speichert die Zukunft mit. Dasselbe Muster steht an weiteren Stellen (L256) — nachsehen, nicht vermuten."
+        },
+        {
+            "nr": "P135",
+            "datum": "2026-10-12",
+            "titel": "Escape, das nie ankam",
+            "schwere": "mittel",
+            "symptom": "Ein Wächter verlangte und bestätigte, dass Escape einen Zug abbricht; mit echter Maus und echter Tastatur brach Escape nichts ab, und Strg+Z im Zug baute die Seite neu und verwarf den Zug.",
+            "falscheVermutung": "Was am Handler der Fläche ankommt, kommt auch beim Menschen an — also genügt es, die Taste an die Fläche zu schicken.",
+            "wieGefunden": "Die dritte Durchsicht schrieb eine Sonde nur mit page.mouse und page.keyboard: der Fokus lag im Zug auf BODY, weil male() beim Aufsetzen den Knoten unter dem Zeiger ersetzt.",
+            "ursache": "Der Tastengriff hing an der Wurzel der Fläche; der Fokus fiel beim Neuzeichnen auf die Seite. Der Wächter fokussierte die Fläche selbst und schickte dispatchEvent — er prüfte den Handler, nicht den Weg dorthin.",
+            "loesung": "E746 (dritte Durchsicht): der Zug hängt seinen Tastenhorcher in der Aufnahmephase ans Dokument; nach einem Klick holt die Fläche den Fokus zurück (ohne Ring, data-zeigerfokus).",
+            "beweis": "test611 §14 mit echter Eingabe zuerst rot (189/207), danach 209/209; Gegenproben 21–32 je rot.",
+            "lehre": "Ein Ereignis, das der Test selbst an den Handler schickt, beweist den Handler. Den Weg beweist nur echte Eingabe (§55.2)."
+        },
+        {
+            "nr": "P136",
+            "datum": "2026-10-11",
+            "titel": "„--schnell“ war nicht schnell",
+            "schwere": "niedrig",
+            "symptom": "L254 schlug „in der CI nur --schnell“ vor, und Redur wählte es; gemessen liess --schnell aber nur einen einzigen Lauf weg (test73) und war mit 549 von 550 so lang wie der volle Lauf.",
+            "falscheVermutung": "Ein Schalter, der „schnell“ heisst, ist der kurze Lauf — und die Doku, die ihn als „nach jeder Änderung“ empfiehlt, meint einen kurzen.",
+            "wieGefunden": "Der Zweig für die CI mass zuerst, was --schnell auswählt, bevor er die CI darauf stellte; die erste Durchsicht fand vier Stellen der Doku, die die alte Bedeutung (praktisch alles) brauchten.",
+            "ursache": "Die Bedeutung stammte aus einer Zeit mit 67 Läufen, in der „ohne die Messläufe“ wirklich kurz war; der Name blieb, die Zahl wuchs auf 550.",
+            "loesung": "E745: --schnell heisst jetzt die gemessene Auswahl ohne Browser plus die Sicherungsläufe aus §31; die Doku-Stellen, die den vollen Lauf meinten, sagen npm run pruefen oder volllauf.mts.",
+            "beweis": "test610 zuerst rot gegen 97d156b, danach 30/30; der Job auf GitHub 4 min 7 s statt Abbruch nach 40 min.",
+            "lehre": "Vor dem Bauen auf einem Namen nachmessen, was er tut — auch in den eigenen Vorschlägen (L254 war von mir)."
+        },
+        {
+            "nr": "P137",
+            "datum": "2026-10-12",
+            "titel": "Ein Wächter, der nicht auf der Nachbarliste stand",
+            "schwere": "niedrig",
+            "symptom": "Nach vier Runden Durchsicht und 27 grünen Browser-Läufen war im vollen Lauf test581 rot: „Keine eigene Kurve: jede Bewegung im TypeScript fährt eine Feder“ — mit zwei Zeilen aus linse.ts, geschrieben in E744.",
+            "falscheVermutung": "Die Nachbarn einer Änderung sind die Läufe, die dieselbe Ansicht prüfen — für die Linse also 589, 539, 541, 576.",
+            "wieGefunden": "Im vollen Lauf auf fdbf6ee, nicht in der Durchsicht: keiner der vier Skeptiker hatte test581 auf der Liste, weil er nicht von der Linse handelt.",
+            "ursache": "verblassen() las die Kurve aus der Marke --ease-exit und schrieb als Rückfall die Bézier-Kurve 0.4, 0, 1, 1 selbst als Zeichenkette aus — eine zweite Federsprache neben den Marken, die test581 §9 für alles TypeScript verbietet.",
+            "loesung": "Rückfall 'ease-in' (claude/abend-antworten-2), wie menue.ts ein Schlüsselwort nimmt.",
+            "beweis": "test581 gegen fdbf6ee 92/93 mit linse.ts:259/261, danach 93/93.",
+            "lehre": "Zu den Nachbarn einer Änderung gehören auch die Wächter, die eine Regel über eine ganze Sprache oder Schicht halten (Kurven, Escape, esc, Ports). Der volle Lauf ist der einzige, der sie sicher alle fragt — deshalb ist er die Schwelle für main. Und beim Aufschreiben fing derselbe Wächter die Chronik selbst: der erste Text zu P137 zitierte die Kurve wörtlich in Anführungszeichen, und daten.ts trug sie ins TypeScript — wie P130."
         }
     ]
 };

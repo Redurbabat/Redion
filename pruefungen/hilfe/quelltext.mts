@@ -109,6 +109,127 @@ export const ohneKommentare = (text: string): string => {
 };
 
 /**
+ * NUR die Kommentare heraus, Zeichen für Zeichen — Zeichenketten, Schablonen
+ * und reguläre Ausdrücke bleiben STEHEN, und ein `/*` IN ihnen eröffnet
+ * keinen Kommentar. Zeilentreu wie `ohneKommentare`.
+ *
+ * WARUM ES NEBEN `ohneKommentare` EINE ZWEITE FASSUNG GIBT. Die Filter oben
+ * arbeiten mit regulären Ausdrücken, und der erste Schritt nimmt jeden
+ * Blockkommentar weg, bevor feststeht, ob sein `/*` überhaupt Code ist. In
+ * `test587` steht `'image/*'` in einer Zeichenkette: dort beginnt für
+ * `nurCode` und `ohneKommentare` ein Kommentar, der erst beim nächsten
+ * Stern-Schrägstrich endet — und dazwischen lag `chromium.launch()`.
+ * Gemessen am 11. Oktober 2026: von 509 Läufen, die Playwright laden, fanden
+ * beide Filter den Aufruf in 508. `test610` zählte deshalb auf seinem
+ * „zweiten Weg" einen Lauf weniger, und weil er beide Wege vereinigte statt
+ * sie zu vergleichen, sah es niemand (Durchsicht von E745).
+ *
+ * Diese Fassung liest den Text so, wie ihn der Übersetzer liest: eine
+ * Zeichenkette (`'…'`, `"…"`) bis zu ihrem Ende, eine Schablone bis zum
+ * Backtick oder bis `${`, darin wieder Code bis zur passenden `}`; ein `/`
+ * beginnt einen regulären Ausdruck, wenn davor ein Operator, eine öffnende
+ * Klammer oder ein Wort wie `return` steht, sonst ist es eine Division. Eine
+ * Zeichenkette oder ein Ausdruck endet spätestens am Zeilenende — liest sie
+ * einmal falsch, verliert sie höchstens eine Zeile, nie den Rest der Datei.
+ *
+ * Die Filter oben ersetzt sie nicht: deren Wächter sind auf sie geeicht, und
+ * eine andere Fassung unter demselben Namen änderte, was sie finden.
+ */
+export const ohneKommentareGenau = (text: string): string => {
+  const n = text.length;
+  let aus = '';
+  /** Stelle des letzten Zeichens in `aus`, das kein Leerraum ist. */
+  let zuletzt = -1;
+  const schreib = (s: string): void => {
+    aus += s;
+    const leer = s.search(/\s*$/);
+    if (leer > 0) zuletzt = aus.length - s.length + leer - 1;
+  };
+  const REGEX_NACH = new Set([...'(,=:[!&|?{};+-*%<>~^}']);
+  const REGEX_WORT = /(?:^|[^\w$])(?:return|typeof|instanceof|in|of|new|delete|void|throw|case|do|else|yield|await)$/;
+  /** Je offener Schablone: wie viele `{` in ihrem `${ … }` noch offen sind. */
+  const offen: number[] = [];
+  let i = 0;
+  /** Liest ab einem Backtick oder ab der `}` eines `${…}` bis zum Ende der Schablone oder bis `${`. */
+  const schablone = (): void => {
+    const MARKE = /[\\`$]/g;
+    while (i < n) {
+      MARKE.lastIndex = i;
+      const treffer = MARKE.exec(text);
+      if (!treffer) { schreib(text.slice(i)); i = n; return; }
+      if (treffer.index > i) { schreib(text.slice(i, treffer.index)); i = treffer.index; }
+      const c = text[i];
+      if (c === '\\') { schreib(text.slice(i, i + 2)); i += 2; continue; }
+      if (c === '`') { schreib('`'); i++; return; }
+      if (text[i + 1] === '{') { schreib('${'); i += 2; offen.push(0); return; }
+      schreib('$'); i++;
+    }
+  };
+  const BESONDERS = /[/'"`{}]/g;
+  while (i < n) {
+    BESONDERS.lastIndex = i;
+    const treffer = BESONDERS.exec(text);
+    if (!treffer) { schreib(text.slice(i)); break; }
+    if (treffer.index > i) { schreib(text.slice(i, treffer.index)); i = treffer.index; }
+    const c = text[i] ?? '';
+    const d = text[i + 1];
+    if (c === '/' && d === '/') {
+      while (i < n && text[i] !== '\n') i++;
+      aus += ' ';
+      continue;
+    }
+    if (c === '/' && d === '*') {
+      const ende = text.indexOf('*/', i + 2);
+      const bis = ende < 0 ? n : ende + 2;
+      aus += ' ' + text.slice(i, bis).replace(/[^\n]/g, '');
+      i = bis;
+      continue;
+    }
+    if (c === "'" || c === '"') {
+      let k = i + 1;
+      while (k < n && text[k] !== c && text[k] !== '\n') k += text[k] === '\\' ? 2 : 1;
+      schreib(text.slice(i, k + 1));
+      i = k + 1;
+      continue;
+    }
+    if (c === '`') { schreib('`'); i++; schablone(); continue; }
+    if ((c === '{' || c === '}') && offen.length > 0) {
+      const oben = offen.length - 1;
+      const tiefe = offen[oben] ?? 0;
+      if (c === '}' && tiefe === 0) { offen.pop(); schreib('}'); i++; schablone(); continue; }
+      offen[oben] = tiefe + (c === '{' ? 1 : -1);
+      schreib(c); i++;
+      continue;
+    }
+    if (c === '/') {
+      const davor = zuletzt < 0 ? '' : (aus[zuletzt] ?? '');
+      const istAusdruck = davor === '' || REGEX_NACH.has(davor) ||
+        (/[\w$]/.test(davor) && REGEX_WORT.test(aus.slice(Math.max(0, zuletzt - 11), zuletzt + 1)));
+      if (istAusdruck) {
+        let k = i + 1;
+        let klasse = false;
+        while (k < n && text[k] !== '\n') {
+          const z = text[k];
+          if (z === '\\') { k += 2; continue; }
+          if (z === '[') klasse = true;
+          else if (z === ']') klasse = false;
+          else if (z === '/' && !klasse) break;
+          k++;
+        }
+        k++;
+        while (k < n && /[a-z]/i.test(text[k] ?? '')) k++;
+        schreib(text.slice(i, k));
+        i = k;
+        continue;
+      }
+    }
+    schreib(c);
+    i++;
+  }
+  return aus;
+};
+
+/**
  * Steht diese Stelle INNERHALB einer Zeichenkette?
  *
  * Gezählt werden die unmaskierten Anführungszeichen links davon: eine

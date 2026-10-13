@@ -34,17 +34,24 @@ const Planflaeche = (() => {
     auswahl: Set<string>;
     /** Das Symbol, das als Nächstes gesetzt wird (aus der Palette gewählt). */
     gewaehltesZeichen: string;
-    /** Läuft gerade ein Zug? */
+    /** Läuft gerade ein Zug? Solange ja, ändert nur er den Plan (`aendere`). */
     zieht: null | {
       art: 'teil' | 'leitung' | 'rahmen';
+      /** Der Zeiger, der zieht — Maus, Finger oder Stift. Nur seine
+          Bewegungen und sein Loslassen zählen (ein zweiter Finger nicht). */
+      zeiger: number;
       startX: number; startY: number;
       /** Ausgangslagen aller mitgezogenen Teile. */
       ausgang: Map<string, { x: number; y: number }>;
       /** Beim Leitungziehen: der Anfangspunkt. */
       von?: { x: number; y: number; teil?: string; nr?: string };
-      /** Beim Ziehen eines Teils: welche Klemme jedes Leitungsende meint,
-          gefragt VOR der ersten Bewegung (E738). */
-      klemmen?: Map<string, { von: string | undefined; nach: string | undefined }>;
+      /** Beim Ziehen eines Teils: was VOR der ersten Bewegung feststand —
+          welche Klemme jedes Leitungsende meint (E738), die Punkte und was
+          jede Leitung berührt (E746). Jede Bewegung rechnet von hier aus. */
+      vorher?: ReturnType<typeof Schaltplan.vorherMerken>;
+      /** Wo die gezogenen Teile beim letzten Bild standen („x,y;x,y") — ist
+          seither nichts über ein Raster gewandert, gibt es nichts zu rechnen. */
+      lage?: string;
     };
     /** Rückgängig und Wiederholen — der Abbild-Verlauf aus dem Kern (E687), 60 Schritte. */
     verlauf: ReturnType<typeof GfxHistory.erstelle>;
@@ -177,22 +184,48 @@ const Planflaeche = (() => {
     const abzug = (): string => JSON.stringify(z.plan);
 
     const aendere = (was: () => void, merken = true): void => {
+      /* WÄHREND EINES ZUGS ÄNDERT NUR DER ZUG DEN PLAN (E746, zweite
+         Durchsicht). Die Bilder eines Zugs rechnen nur die billigen Wege,
+         und die zapfen an manchen Lagen an. Was hier während eines Zugs
+         durchging — „r", „h", Entf, eine Pfeiltaste, ein Knopf —, nahm
+         dieses Zwischenbild als Stand von vorher, speicherte es und merkte
+         es als Rückgängig-Schritt: zweimal „h" mit der Maus unten, und das
+         zweite Strg+Z brachte {E1:X2 F1:N F1:N2 G2:N} zurück, ohne ein Wort
+         (test611 §13). Deshalb tut `aendere` während eines Zugs nichts; der
+         Zug selbst speichert beim Loslassen, nachdem `zugEnde` ihn beendet
+         hat — mit der vollen Suche. Escape bricht ihn ab. */
+      if (z.zieht) return;
       const vorher = merken ? abzug() : '';
       was();
+      /* EINE KOPIE IN DIE ABLAGE, NICHT DEN PLAN DER FLÄCHE. `updateBlock`
+         übernimmt, was es bekommt, als Verweis: bis zur zweiten Durchsicht
+         war der Plan in der Ablage danach DASSELBE Objekt wie `z.plan`, und
+         jede Bewegung eines Zugs schrieb ihr Zwischenbild mitten in die
+         Ablage — gemessen: T1 gedreht, gleich danach F1 gezogen, und die
+         nächste Schreibpause legte das angezapfte Zwischenbild in die
+         IndexedDB, ohne dass jemand eine Taste drückte. Dasselbe sah jeder,
+         der die Ablage las: Sicherung, Duplizieren, ein anderes Fenster. */
+      const kopie = JSON.parse(abzug());
       if (typeof Store !== 'undefined' && block && block.id)
-        Store.updateBlock(block.id, { plan: z.plan });
-      else if (block) block.plan = z.plan;
+        Store.updateBlock(block.id, { plan: kopie });
+      else if (block) block.plan = kopie;
       if (merken) z.verlauf.merken(vorher);
       male();
     };
 
+    /* Rückgängig und Wiederholen legen den jetzigen Stand auf den anderen
+       Stapel, BEVOR `aendere` gefragt wird — mitten in einem Zug wäre das
+       das Zwischenbild (Strg+Z im Zug, und Umschalt+Strg+Z holte es
+       zurück). Also auch hier: nicht während eines Zugs. */
     const zurueck = (): void => {
+      if (z.zieht) return;
       const vorher = z.verlauf.zurueck(abzug());
       if (vorher === null) return;
       z.plan = JSON.parse(vorher);
       aendere(() => {}, false);
     };
     const vorwaerts = (): void => {
+      if (z.zieht) return;
       const naechster = z.verlauf.vor(abzug());
       if (naechster === null) return;
       z.plan = JSON.parse(naechster);
@@ -422,7 +455,11 @@ const Planflaeche = (() => {
       }
       const beispiel = (Schaltplan.BEISPIELE as any[]).find(x => x.id === id);
       aendere(() => { Schaltplan.beispielBauen(z.plan, id, aktiveEbene()); });
-      if (beispiel) UI.toast(beispiel.hinweis);
+      /* Der Hinweis nur, wenn das Beispiel wirklich steht: während eines Zugs
+         verweigert `aendere`, und „Strom drücken, dann auf S1 tippen" über
+         einem Plan ohne S1 wäre eine Zusage ohne Inhalt (E746, dritte
+         Durchsicht; test611 §14). */
+      if (beispiel && !z.zieht) UI.toast(beispiel.hinweis);
     };
 
     /** Eine selbst gespeicherte Vorlage einsetzen — mit FRISCHEN Kennungen.
@@ -503,85 +540,134 @@ const Planflaeche = (() => {
     const teilVon = (id: string): any =>
       (z.plan.teile as any[]).find(t => t.id === id);
 
-    /* --- Welche Klemme meint jedes Leitungsende? (E738, L252) -------------
-       Gefragt wird VOR jeder Änderung, solange Leitung und Teil noch
-       zueinander passen: der Auflöser entscheidet zuerst am Ort, und nach dem
-       Schieben oder Drehen liegt das Ende nicht mehr an seiner Klemme. Beim
-       alten FI ist das der ganze Unterschied — `N` unten ist N2, `N` ohne
-       Ort ist das obere N, und ohne diese Frage sprang die untere Leitung
-       beim ersten Schieben auf den Eingang. Gespeichert wird der Name nicht
-       um; nur die Punkte rücken, wie bisher. */
-    const endKlemmen = (): Map<string, { von: string | undefined; nach: string | undefined }> => {
-      const m = new Map<string, { von: string | undefined; nach: string | undefined }>();
-      (z.plan.leitungen as any[]).forEach(l => {
-        const n = l.punkte.length;
-        m.set(l.id, {
-          von: l.vonTeil ? Schaltplan.klemmeFuer(teilVon(l.vonTeil), l.vonNr, l.punkte[0]) : undefined,
-          nach: l.nachTeil ? Schaltplan.klemmeFuer(teilVon(l.nachTeil), l.nachNr, l.punkte[n - 1]) : undefined
-        });
-      });
-      return m;
+    /* --- Nachziehen (E738, E746) --------------------------------------------
+       Was vor einer Lageänderung feststeht — welche Klemme jedes Leitungsende
+       meint (E738: gefragt, solange Leitung und Teil noch zueinander passen),
+       die Punkte und was jede Leitung berührt —, und danach EINE Stelle, die
+       die Leitungen nachzieht: `Schaltplan.nachziehen`. Sie führt nur neu, was
+       an einem bewegten Teil hängt, und nimmt keinen Weg, der etwas berührt,
+       was die Leitung vorher nicht berührte (L253 Punkt 4). Bis E746 stand
+       hier `leitungenNachziehen`, und das führte beim Drehen, Spiegeln und
+       Ziehen ALLE Leitungen des Plans als Winkel neu: nach dem Drehen des FI
+       lief b2 5 px neben N2 vorbei, und N und N2 waren ein Netz. */
+    type Bericht = ReturnType<typeof Schaltplan.nachziehen>;
+    type Aenderungen = ReturnType<typeof Schaltplan.veraendert>;
+    type Vorher = ReturnType<typeof Schaltplan.vorherMerken>;
+
+    /* Was eine Lageänderung an der Schaltung geändert hat, soll der Mensch
+       wissen — eine stille Änderung der Schaltung ist genau das, wogegen das
+       Nachziehen gebaut ist (§35: eine bekannte Lücke ist besser als ein
+       stiller Fehler; §51). Zwei Fälle:
+         · eine Leitung liess sich nicht so führen, dass sie genau dasselbe
+           berührt wie vorher (Stufe 2 oder 3);
+         · die eigene Klemme eines bewegten Teils liegt jetzt auf einer
+           fremden Leitung oder Klemme, oder nicht mehr (`veraendert`) — das
+           verhindert die Fläche nicht, denn vielleicht ist es gewollt, aber
+           sie sagt es, und zwar WAS: „R1:1 berührt jetzt die Leitung
+           E1:X2–E2:X1". */
+    const bmk = (tid: string): string => {
+      const t = teilVon(tid);
+      return String((t && t.bmk) || tid);
+    };
+    /** „Teil:Nr" als Betriebsmittelkennzeichen und Klemme, z. B. „R1:1". */
+    const klemmeName = (k: string): string => {
+      const i = k.lastIndexOf(':');
+      return i < 0 ? k : bmk(k.slice(0, i)) + k.slice(i);
+    };
+    const leitungName = (lid: string, vorher: Vorher): string => {
+      const l = (z.plan.leitungen as any[]).find(x => x.id === lid);
+      if (!l) return 'eine Leitung';
+      const k = vorher.klemmen.get(lid);
+      const a = l.vonTeil ? bmk(l.vonTeil) + ':' + (k?.von ?? l.vonNr) : '';
+      const b = l.nachTeil ? bmk(l.nachTeil) + ':' + (k?.nach ?? l.nachNr) : '';
+      return a && b ? `die Leitung ${a}–${b}` : (a || b) ? `die Leitung an ${a || b}` : 'eine freie Leitung';
+    };
+    const melde = (was: string, bericht: Bericht | undefined, aenderungen: Aenderungen | undefined,
+                   vorher: Vorher | undefined): void => {
+      if (typeof UI === 'undefined') return;
+      const stufe = !!bericht && bericht.some(b => b.stufe >= 2);
+      const liste = aenderungen || [];
+      if (!stufe && !liste.length) return;
+      const saetze = vorher ? liste.map(a => {
+        if (a.art === 'klemme') return a.jetzt
+          ? `${klemmeName(a.klemme)} berührt jetzt ${leitungName(a.leitung, vorher)}`
+          : `${klemmeName(a.klemme)} berührt ${leitungName(a.leitung, vorher)} nicht mehr`;
+        if (a.art === 'leitung') return a.jetzt
+          ? `${leitungName(a.leitung, vorher)} berührt jetzt ${leitungName(a.andere, vorher)}`
+          : `${leitungName(a.leitung, vorher)} berührt ${leitungName(a.andere, vorher)} nicht mehr`;
+        return a.jetzt
+          ? `${klemmeName(a.klemme)} liegt jetzt auf ${klemmeName(a.andere)} (ohne Leitung nicht verbunden)`
+          : `${klemmeName(a.klemme)} liegt nicht mehr auf ${klemmeName(a.andere)}`;
+      }) : [];
+      const was3 = saetze.slice(0, 3).join('; ') + (saetze.length > 3 ? ` und ${saetze.length - 3} weitere` : '');
+      const verbunden = liste.some(a => a.art !== 'aufeinander');
+      UI.toast(stufe
+        ? 'Eine Leitung liess sich nicht so nachziehen, dass sie genau dasselbe berührt wie vorher — bitte die Verbindungen prüfen' + (was3 ? ': ' + was3 + '.' : '.')
+        : `Nach dem ${was}: ${was3} — ` + (verbunden ? 'die Verbindungen haben sich geändert, bitte prüfen.' : 'bitte prüfen.'),
+        6000);
     };
 
+    /** Die Kennungen der ausgewählten TEILE (Leitungen und Texte drehen nicht). */
+    const auswahlTeile = (): any[] => [...z.auswahl].map(teilVon).filter(Boolean);
+
     /* --- Verschieben (Punkt 25), mit mitziehenden Leitungen -------------- */
-    const verschiebe = (dx: number, dy: number): void => {
-      const ziel = endKlemmen();
+    const verschiebe = (dx: number, dy: number): { bericht: Bericht; aenderungen: Aenderungen; vorher: Vorher } => {
+      const vorher = Schaltplan.vorherMerken(z.plan);
+      const teile: string[] = [];
+      const eigene = new Set<string>();
       z.auswahl.forEach(id => {
         const t = teilVon(id);
-        if (t) { t.x = Schaltplan.rasten(t.x + dx); t.y = Schaltplan.rasten(t.y + dy); return; }
+        if (t) { t.x = Schaltplan.rasten(t.x + dx); t.y = Schaltplan.rasten(t.y + dy); teile.push(id); return; }
         const l = (z.plan.leitungen as any[]).find(x => x.id === id);
-        if (l) l.punkte = l.punkte.map((p: any) =>
-          ({ x: Schaltplan.rasten(p.x + dx), y: Schaltplan.rasten(p.y + dy) }));
+        if (l) {
+          l.punkte = l.punkte.map((p: any) =>
+            ({ x: Schaltplan.rasten(p.x + dx), y: Schaltplan.rasten(p.y + dy) }));
+          eigene.add(id);
+        }
       });
-      /* Und die Leitungsenden, die an einem verschobenen Teil hängen (23). */
+      /* Eine Leitung, die selbst mitgeschoben wurde, gehört dem Menschen: nur
+         ihr Ende rückt auf die Klemme eines mitgeschobenen Teils (23), wie
+         bisher — Teil und Leitung sind um denselben Schritt gewandert. */
       (z.plan.leitungen as any[]).forEach(l => {
+        if (!eigene.has(l.id)) return;
+        const ziel = vorher.klemmen.get(l.id);
         if (l.vonTeil && z.auswahl.has(l.vonTeil)) {
           const t = teilVon(l.vonTeil);
-          const o = t && Schaltplan.anschlussOrt(t, ziel.get(l.id)?.von ?? l.vonNr);
+          const o = t && Schaltplan.anschlussOrt(t, ziel?.von ?? l.vonNr);
           if (o && l.punkte[0]) l.punkte[0] = o;
         }
         if (l.nachTeil && z.auswahl.has(l.nachTeil)) {
           const t = teilVon(l.nachTeil);
-          const o = t && Schaltplan.anschlussOrt(t, ziel.get(l.id)?.nach ?? l.nachNr);
+          const o = t && Schaltplan.anschlussOrt(t, ziel?.nach ?? l.nachNr);
           if (o && l.punkte.length) l.punkte[l.punkte.length - 1] = o;
         }
       });
+      /* Alle anderen, die an einem geschobenen Teil hängen, zieht dieselbe
+         Stelle nach wie beim Drehen. Ein Ende NEBEN seiner Klemme an einem
+         Teil, das stehen bleibt, rückt die Pfeiltaste nicht — das tat sie nie. */
+      const bericht = Schaltplan.nachziehen(z.plan, vorher, teile, { ohne: eigene });
+      return { bericht, aenderungen: Schaltplan.veraendert(z.plan, vorher), vorher };
     };
 
     /* --- Drehen (26), spiegeln (27), doppeln (28), gruppieren (29) ------- */
     const drehen = (): void => aendere(() => {
-      const ziel = endKlemmen();
-      z.auswahl.forEach(id => {
-        const t = teilVon(id);
-        if (t) t.drehung = ((t.drehung || 0) + 90) % 360;
-      });
-      leitungenNachziehen(ziel);
+      const vorher = Schaltplan.vorherMerken(z.plan);
+      const teile = auswahlTeile();
+      teile.forEach(t => { t.drehung = ((t.drehung || 0) + 90) % 360; });
+      if (teile.length) {
+        const bericht = Schaltplan.nachziehen(z.plan, vorher, teile.map(t => t.id), { heilen: true });
+        melde('Drehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
+      }
     });
     const spiegeln = (): void => aendere(() => {
-      const ziel = endKlemmen();
-      z.auswahl.forEach(id => {
-        const t = teilVon(id);
-        if (t) t.gespiegelt = !t.gespiegelt;
-      });
-      leitungenNachziehen(ziel);
+      const vorher = Schaltplan.vorherMerken(z.plan);
+      const teile = auswahlTeile();
+      teile.forEach(t => { t.gespiegelt = !t.gespiegelt; });
+      if (teile.length) {
+        const bericht = Schaltplan.nachziehen(z.plan, vorher, teile.map(t => t.id), { heilen: true });
+        melde('Spiegeln', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
+      }
     });
-    /* Nach Drehen und Spiegeln liegen die Anschlüsse woanders — die
-       Leitungen, die daran hängen, müssen mit. Ohne das enden sie in der
-       Luft und der Plan sieht verbunden aus, wo er es nicht ist. */
-    const leitungenNachziehen = (ziel: Map<string, { von: string | undefined; nach: string | undefined }>): void => {
-      (z.plan.leitungen as any[]).forEach(l => {
-        if (l.vonTeil) {
-          const o = Schaltplan.anschlussOrt(teilVon(l.vonTeil), ziel.get(l.id)?.von ?? l.vonNr);
-          if (o && l.punkte[0]) l.punkte[0] = o;
-        }
-        if (l.nachTeil) {
-          const o = Schaltplan.anschlussOrt(teilVon(l.nachTeil), ziel.get(l.id)?.nach ?? l.nachNr);
-          if (o && l.punkte.length) l.punkte[l.punkte.length - 1] = o;
-        }
-        if (l.punkte.length >= 2)
-          l.punkte = Schaltplan.rechtwinklig(l.punkte[0], l.punkte[l.punkte.length - 1]);
-      });
-    };
     const doppeln = (): void => aendere(() => {
       const neu: string[] = [];
       const versatz = Register.fachzeichen.RASTER * 2;
@@ -661,6 +747,135 @@ const Planflaeche = (() => {
     /* Für die Doppeltipp-Erkennung unten: welcher Teil, wie eben. */
     let letzterTipp = { id: '', zeit: 0 };
 
+    /* --- Ein Zug endet immer, und nur einer läuft (E746, zweite Durchsicht) -
+       Ein Zug gehört EINEM Zeiger und endet, wenn dieser loslässt oder
+       abbricht — wo auch immer auf der Seite. Bis zur zweiten Durchsicht
+       horchte nur die Bühne: der Zeigerfang am SVG geht mit dem ersten
+       neuen Bild verloren (`buehneMalen` ersetzt das SVG), und losgelassen
+       über der Palette kam das `pointerup` nie an. Der Zug blieb liegen, sein
+       Zwischenbild in `z.plan`, und die nächste Handlung speicherte es
+       (test611 §13). Und er endet, sobald irgendein Zeiger irgendwo
+       aufsetzt: ein zweiter Finger fing bisher einen NEUEN Zug an, nahm das
+       Zwischenbild des ersten als „vorher" und liess den ersten liegen.
+       Beendet wird ein Zug mit Teilen immer richtig — mit der vollen Suche
+       (`teilzugSichern`), nie mit einem Zwischenbild. Die Horcher am
+       Dokument hängen nur, solange ein Zug läuft. */
+    type Zug = NonNullable<Zustand['zieht']>;
+    const zugBeginnen = (zug: Zug): void => {
+      z.zieht = zug;
+      document.addEventListener('pointerdown', zugUnterbrechen, true);
+      document.addEventListener('pointerup', zugEnde, true);
+      document.addEventListener('pointercancel', zugEnde, true);
+      document.addEventListener('keydown', zugTaste, true);
+    };
+    const zugLoesen = (): void => {
+      z.zieht = null;
+      document.removeEventListener('pointerdown', zugUnterbrechen, true);
+      document.removeEventListener('pointerup', zugEnde, true);
+      document.removeEventListener('pointercancel', zugEnde, true);
+      document.removeEventListener('keydown', zugTaste, true);
+    };
+
+    /* --- Tasten im Zug, am Dokument gehorcht (E746, dritte Durchsicht) -----
+       Mit der Maus steht der Fokus während eines Zugs NICHT auf der Fläche:
+       das Anfassen zeichnet sie neu (`male`), der Knoten unter dem Zeiger
+       ist danach ein anderer, und der Browser setzt den Fokus beim
+       `mousedown` auf die Seite (`body`), weil er an einem Knoten ausserhalb
+       des Dokuments keinen fokussierbaren Vorfahren findet. Der Horcher an
+       der Wurzel hörte darum mit echter Maus und echter Tastatur nichts:
+       Escape brach weder einen Zug mit Teilen noch einen Rahmen ab, und
+       Strg+Z nahm der Seitenverlauf (E682) — er baute die Seite neu, und
+       der Zug war still verworfen (test611 §14). Deshalb horcht ein Zug auf
+       die Tasten so, wie er auf das Loslassen horcht: am Dokument, in der
+       Aufnahmephase, nur solange er läuft.
+         · Escape bricht den Zug ab. Ist aber ein Menü oder Fenster offen
+           (dieselbe Liste wie im gemeinsamen Escape-Griff der Schale),
+           schliesst dieser Druck zuerst das — ein Druck, ein Fenster (E711);
+           der nächste bricht ab.
+         · Rückgängig und Wiederholen (Strg+Z, Umschalt+Strg+Z, Strg+Y, mit
+           Cmd ebenso) tun nichts — weder an der Fläche (`zurueck` und
+           `vorwaerts` verweigern im Zug ohnehin) noch am Seitenverlauf, der
+           die Fläche abhängen und den Zug verwerfen würde. Der Zug läuft
+           weiter und wird beim Loslassen gespeichert wie sonst. Auch in
+           einem Textfeld: wer die Maus hält, hat den Zug in der Hand.
+       Die übrigen Tasten gehen während eines Mauszugs dorthin, wo der Fokus
+       steht — auf die Seite, wo „r", „h" und Entf nichts tun und die Pfeile
+       sie rollen (L253 Punkt 9). */
+    const OFFENES_FENSTER = '.menu, .overlay, dialog[open], .iblatt, #r-blatt.auf';
+    const zugTaste = (e: KeyboardEvent): void => {
+      if (!z.zieht) return;
+      if (e.key === 'Escape') {
+        if (document.querySelector(OFFENES_FENSTER)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        zugAbbrechen();
+        return;
+      }
+      const k = e.key.toLowerCase();
+      if ((e.ctrlKey || e.metaKey) && (k === 'z' || (k === 'y' && !e.shiftKey))) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    /** Einen Zug mit Teilen sichern — der einzige Weg, auf dem ein Zug in die
+     *  Ablage kommt. `z.zieht` ist dabei schon leer, sonst verweigerte
+     *  `aendere`. */
+    const teilzugSichern = (zug: Zug): void => {
+      const bewegt = zug.ausgang.size &&
+        [...zug.ausgang].some(([id, a]) => {
+          const t = teilVon(id);
+          return t && (t.x !== a.x || t.y !== a.y);
+        });
+      if (!bewegt) { male(); return; }
+      /* Erst jetzt die volle Suche, einmal, vom Anfassen aus — die
+         Zwischenbilder rechneten nur die billigen Wege, und eines davon
+         darf nie gespeichert werden. Sie läuft VOR `aendere`: der
+         Rückgängig-Schritt, den `aendere` merkt, ist der Stand vor
+         SEINEM Schritt, und ein Zwischenbild darf auch dort nicht
+         hinein (zum Rückgängig nach einem Zug: L253 Punkt 8). */
+      const vorher = zug.vorher ?? Schaltplan.vorherMerken(z.plan);
+      const bericht = Schaltplan.nachziehen(z.plan, vorher, [...zug.ausgang.keys()],
+        { heilen: true, vonVorn: true });
+      aendere(() => { /* geschoben und nachgezogen — nur sichern */ });
+      melde('Ziehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
+    };
+
+    /** Ein Zeiger setzt auf, während ein Zug läuft — ein zweiter Finger, oder
+     *  derselbe, dessen Loslassen nie ankam. Der Zug endet hier: mit Teilen
+     *  gesichert wie beim Loslassen; ein Rahmen oder eine Leitung, deren Ende
+     *  niemand gezeigt hat, verfällt. Ist die Fläche nicht mehr im Dokument
+     *  (die Seite wurde neu gezeichnet), wird nichts mehr gespeichert — sie
+     *  zeigt dann, was die Ablage hält. */
+    const zugUnterbrechen = (): void => {
+      const zug = z.zieht;
+      if (!zug) return;
+      zugLoesen();
+      if (!wurzel.isConnected) return;
+      if (zug.art === 'teil') teilzugSichern(zug); else male();
+    };
+
+    /** Escape im Zug: zurück auf den Stand beim Anfassen — die Lagen aus
+     *  `ausgang`, die Punkte aus `vorher`. Nichts gespeichert, kein
+     *  Rückgängig-Schritt; der Zug hat nie stattgefunden. */
+    const zugAbbrechen = (): void => {
+      const zug = z.zieht;
+      if (!zug) return;
+      zugLoesen();
+      if (zug.art === 'teil') {
+        zug.ausgang.forEach((a, id) => {
+          const t = teilVon(id);
+          if (t) { t.x = a.x; t.y = a.y; }
+        });
+        const punkte = zug.vorher ? zug.vorher.punkte : null;
+        if (punkte) (z.plan.leitungen as any[]).forEach(l => {
+          const alt = punkte.get(l.id);
+          if (alt) l.punkte = alt.map(q => ({ x: q.x, y: q.y }));
+        });
+      }
+      male();
+    };
+
     /* --- Zeigerereignisse ------------------------------------------------ */
     buehne.addEventListener('pointerdown', e => {
       const svg = buehne.querySelector('svg') as SVGSVGElement;
@@ -695,9 +910,9 @@ const Planflaeche = (() => {
 
       if (z.werkzeug === 'leitung') {
         const fang = Schaltplan.fangeAnschluss(z.plan, roh);
-        z.zieht = { art: 'leitung', startX: p.x, startY: p.y, ausgang: new Map(),
-                    von: fang ? { x: fang.x, y: fang.y, teil: fang.teil, nr: fang.nr }
-                              : { x: p.x, y: p.y } };
+        zugBeginnen({ art: 'leitung', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang: new Map(),
+                      von: fang ? { x: fang.x, y: fang.y, teil: fang.teil, nr: fang.nr }
+                                : { x: p.x, y: p.y } });
         svg.setPointerCapture(e.pointerId);
         return;
       }
@@ -708,7 +923,7 @@ const Planflaeche = (() => {
         /* Auf leere Fläche: Symbol setzen, oder Rahmen aufziehen. */
         if (z.gewaehltesZeichen) { setzeSymbol(z.gewaehltesZeichen, p.x, p.y); return; }
         if (!e.shiftKey) z.auswahl.clear();
-        z.zieht = { art: 'rahmen', startX: p.x, startY: p.y, ausgang: new Map() };
+        zugBeginnen({ art: 'rahmen', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang: new Map() });
         svg.setPointerCapture(e.pointerId);
         male();
         return;
@@ -739,13 +954,15 @@ const Planflaeche = (() => {
         const t = teilVon(x);
         if (t) ausgang.set(x, { x: t.x, y: t.y });
       });
-      z.zieht = { art: 'teil', startX: p.x, startY: p.y, ausgang, klemmen: endKlemmen() };
+      zugBeginnen({ art: 'teil', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang,
+                    vorher: Schaltplan.vorherMerken(z.plan),
+                    lage: [...ausgang.values()].map(a => a.x + ',' + a.y).join(';') });
       svg.setPointerCapture(e.pointerId);
       male();
     });
 
     buehne.addEventListener('pointermove', e => {
-      if (!z.zieht) return;
+      if (!z.zieht || e.pointerId !== z.zieht.zeiger) return;
       const svg = buehne.querySelector('svg') as SVGSVGElement;
       if (!svg) return;
       const p = ortAus(svg, e, z.plan);
@@ -756,7 +973,32 @@ const Planflaeche = (() => {
           const t = teilVon(id);
           if (t) { t.x = Schaltplan.rasten(a.x + dx); t.y = Schaltplan.rasten(a.y + dy); }
         });
-        leitungenNachziehen(z.zieht.klemmen ?? endKlemmen());
+        /* Steht jedes gezogene Teil noch auf demselben Raster wie beim
+           letzten Bild, gibt es nichts zu rechnen und nichts neu zu zeichnen.
+           (Eine Maus meldet viele Bewegungen je Raster.) */
+        const lage = [...z.zieht.ausgang.keys()].map(id => {
+          const t = teilVon(id);
+          return t ? t.x + ',' + t.y : '';
+        }).join(';');
+        if (lage === z.zieht.lage) return;
+        z.zieht.lage = lage;
+        /* Jede Bewegung rechnet vom Anfassen aus (`vonVorn`), nicht vom
+           letzten Zwischenstand — sonst hinge der Weg davon ab, wie schnell
+           die Maus war. Ist nichts über ein Raster gewandert, bleibt alles
+           wie beim Anfassen. Und sie rechnet `schnell`: nur die billigen
+           Wege, keine Z- und Hakenwege. Das ist ein Zwischenbild — die
+           volle Suche läuft beim Loslassen, und nur sie wird gespeichert
+           (`zugEnde`). Gemessen (messungen §103, F1 um 120 × 60 px in 60
+           Bewegungen, CPU vierfach gedrosselt, drei Läufe): mit der vollen
+           Suche je Bewegung im Median 23,9 bis 29,4 ms, höchstens 126,8 bis
+           217,3 ms; billig 2,5 bis 2,8 ms, höchstens 13,2 ms. */
+        const gewandert = [...z.zieht.ausgang].some(([id, a]) => {
+          const t = teilVon(id);
+          return t && (t.x !== a.x || t.y !== a.y);
+        });
+        const vorher = z.zieht.vorher ?? (z.zieht.vorher = Schaltplan.vorherMerken(z.plan));
+        Schaltplan.nachziehen(z.plan, vorher, gewandert ? [...z.zieht.ausgang.keys()] : [],
+          { heilen: gewandert, vonVorn: true, schnell: true });
         buehneMalen();
         return;
       }
@@ -786,23 +1028,22 @@ const Planflaeche = (() => {
       }
     });
 
+    /** Der ziehende Zeiger lässt los oder bricht ab (am Dokument gehorcht,
+     *  solange der Zug läuft — siehe `zugBeginnen`). */
     const zugEnde = (e: PointerEvent): void => {
-      if (!z.zieht) return;
+      if (!z.zieht || e.pointerId !== z.zieht.zeiger) return;
+      const zug = z.zieht;
+      zugLoesen();
+      if (!wurzel.isConnected) return;
       const svg = buehne.querySelector('svg') as SVGSVGElement;
       const p = svg ? ortAus(svg, e, z.plan) : { x: 0, y: 0 };
-      const zug = z.zieht;
-      z.zieht = null;
 
-      if (zug.art === 'teil') {
-        const bewegt = zug.ausgang.size &&
-          [...zug.ausgang].some(([id, a]) => {
-            const t = teilVon(id);
-            return t && (t.x !== a.x || t.y !== a.y);
-          });
-        if (bewegt) aendere(() => { /* schon geschoben — nur sichern */ });
-        else male();
-        return;
-      }
+      if (zug.art === 'teil') { teilzugSichern(zug); return; }
+
+      /* Ein Rahmen oder eine Leitung, losgelassen AUSSERHALB der Fläche,
+         verfällt: ihr Ende läge irgendwo neben dem Plan. Bis zur zweiten
+         Durchsicht kam so ein Loslassen gar nicht an (siehe oben). */
+      if (!buehne.contains(e.target as Node)) { male(); return; }
 
       if (zug.art === 'rahmen') {
         inRahmen({ x: zug.startX, y: zug.startY }, p).forEach(id => z.auswahl.add(id));
@@ -823,8 +1064,6 @@ const Planflaeche = (() => {
         }));
       }
     };
-    buehne.addEventListener('pointerup', zugEnde);
-    buehne.addEventListener('pointercancel', zugEnde);
 
     /* KEIN dblclick-Horcher mehr: das Doppeltippen erkennt der
        pointerdown selbst (Begründung dort). Ein zweiter Horcher öffnete
@@ -1011,9 +1250,44 @@ const Planflaeche = (() => {
 
     /* --- Tastatur --------------------------------------------------------- */
     wurzel.tabIndex = 0;
+    /* DER FOKUS BLEIBT BEI DER FLÄCHE (E746, dritte Durchsicht). Ein Klick
+       auf die Bühne zeichnet sie neu (Auswahl, Zug, Teil gesetzt), der
+       Knoten unter dem Zeiger ist danach ein anderer, und der Browser setzt
+       den Fokus beim `mousedown` auf die Seite statt auf die Fläche — stünde
+       der Knoten noch, nähme die Fläche ihn (`tabIndex` 0). Danach kam keine
+       echte Taste mehr hier an: „r" nach einem Klick auf ein Teil drehte
+       nichts, und Strg+Z nahm der Seitenverlauf statt der Fläche (test611
+       §14). Beim Loslassen über der Fläche holt sie den Fokus deshalb
+       zurück — nur, wenn er auf der Seite gelandet ist (`body`), nie aus
+       einem Feld, einem Knopf oder einem Dialog, und ohne zu rollen.
+       OHNE RING, wie ein Fokus mit der Maus: einen Fokus aus dem Skript
+       zeigt Chromium als `:focus-visible`, und `focus({ focusVisible:
+       false })` kennt es nicht (Chromium 141, gemessen). Das Merkmal
+       `data-zeigerfokus` nimmt den Ring weg (bausteine.css), bis der Fokus
+       die Fläche verlässt; wer mit der Tabulatortaste kommt, sieht ihn
+       (§38). */
+    wurzel.addEventListener('pointerup', () => {
+      const a = document.activeElement;
+      if ((!a || a === document.body) && wurzel.isConnected) {
+        wurzel.dataset.zeigerfokus = '';
+        wurzel.focus({ preventScroll: true });
+      }
+    });
+    wurzel.addEventListener('focusout', e => {
+      if (e.target === wurzel) delete wurzel.dataset.zeigerfokus;
+    });
     wurzel.addEventListener('keydown', e => {
       const inFeld = (e.target as HTMLElement).tagName === 'INPUT';
       if (inFeld) return;
+      /* Während eines Zugs zählt von den Tasten nur Escape: es bricht den
+         Zug ab — das tut `zugTaste` am Dokument (dritte Durchsicht), denn mit
+         der Maus steht der Fokus im Zug gar nicht hier. Kommt Escape im Zug
+         doch bis hierher, hat `zugTaste` es für ein offenes Menü
+         durchgelassen; dann gehört es dem Menü. „r", „h", Entf, die Pfeile,
+         Strg+D/G gehen weiter durch die Zweige unten und nehmen die Taste
+         (`preventDefault`), aber `aendere` tut während eines Zugs nichts
+         (E746, zweite Durchsicht — die Wahl und ihr Preis stehen dort). */
+      if (e.key === 'Escape' && z.zieht) return;
       const schritt = e.shiftKey ? Register.fachzeichen.RASTER * 5 : Register.fachzeichen.RASTER;
       const pfeile: Record<string, [number, number]> = {
         ArrowLeft: [-schritt, 0], ArrowRight: [schritt, 0],
@@ -1022,7 +1296,9 @@ const Planflaeche = (() => {
       if (pfeile[e.key] && z.auswahl.size) {
         e.preventDefault();
         const [dx, dy] = pfeile[e.key]!;
-        aendere(() => verschiebe(dx, dy));
+        let folge: ReturnType<typeof verschiebe> | undefined;
+        aendere(() => { folge = verschiebe(dx, dy); });
+        if (folge) melde('Schieben', folge.bericht, folge.aenderungen, folge.vorher);
         return;
       }
       if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); return loeschen(); }
@@ -1037,7 +1313,13 @@ const Planflaeche = (() => {
                              ...(z.plan.leitungen as any[]).map(l => l.id)]);
         male(); return;
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); return e.shiftKey ? vorwaerts() : zurueck(); }
+      /* Rückgängig und Wiederholen. Mit Umschalt meldet der Browser „Z",
+         nicht „z" — bis zur dritten Durchsicht ging Umschalt+Strg+Z darum an
+         der Fläche vorbei zum Seitenverlauf, ebenso Strg+Y, das hier gar
+         nicht stand (test611 §14). Strg+Umschalt+Y gehört den Favoriten. */
+      const k = e.key.toLowerCase();
+      if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); return e.shiftKey ? vorwaerts() : zurueck(); }
+      if ((e.ctrlKey || e.metaKey) && k === 'y' && !e.shiftKey) { e.preventDefault(); return vorwaerts(); }
     });
 
     /* --- Das Mehr-Menü ---------------------------------------------------- */
@@ -1080,6 +1362,11 @@ const Planflaeche = (() => {
     /* --- Vorlagen (Punkt 30) --------------------------------------------- */
     const VORLAGEN = 'elektro:planvorlagen';
     const vorlageSpeichern = (): void => {
+      /* Nicht während eines Zugs (E746, dritte Durchsicht): `z.plan` ist dann
+         ein Zwischenbild, die billigen Wege, und die Vorlage nähme es mit.
+         Erreichbar ist das mit der Tastatur — „…" hat den Fokus, Eingabe,
+         während die Maus noch zieht (test611 §14). */
+      if (z.zieht) { UI.toast('Erst loslassen — während eines Zugs wird keine Vorlage gespeichert.'); return; }
       void (async () => {
         const name = await UI.frage('Name der Vorlage', '');
         if (!name) return;
@@ -1104,6 +1391,8 @@ const Planflaeche = (() => {
     };
 
     const alsBildSpeichern = (): void => {
+      /* Ebenso: im Zug wäre das Bild ein Zwischenbild (siehe oben). */
+      if (z.zieht) { UI.toast('Erst loslassen — während eines Zugs wird kein Bild gespeichert.'); return; }
       const svg = Schaltplan.alsSvg(z.plan, { raster: false, anschluesse: false });
       const blob = new Blob(
         ['<?xml version="1.0" encoding="UTF-8"?>' +

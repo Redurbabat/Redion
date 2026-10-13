@@ -285,10 +285,18 @@ Einzeldatei nachgezogen?" prüft genau das.
 Zum Schluss der volle Lauf:
 
 ```
-node pruefungen/alle.mts --schnell
+node pruefungen/volllauf.mts
 ```
 
 Er dauert rund 20 Minuten (321 Läufe, drei Sekunden Pause dazwischen).
+
+*Nachtrag vom 11. Oktober 2026 (E745): hier stand
+`node pruefungen/alle.mts --schnell` — am 3. September der volle Lauf ohne
+die Startmessung test73. Seit E745 heisst `--schnell` der schnelle Lauf ohne Browser;
+der volle Lauf ist `node pruefungen/volllauf.mts` (CLAUDE.md §30). Die
+Dauer im Satz darüber ist vom 3. September; am 11. Oktober brauchte der
+volle Lauf 158 Minuten (E743).*
+
 **Bekannt rot, unabhängig von diesem Auftrag:** `test178` (zwei Punkte, PDF-
 Zeichenfläche fällt auf 0 × 0,83 px zusammen). Das ist nicht durch diesen
 Auftrag verursacht und muss nicht hier behoben werden — aber es darf auch

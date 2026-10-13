@@ -38,9 +38,10 @@
  *       und Stelle; Präsentieren geht denselben Weg wie sein Eintrag.
  *   §6  Am Telefon: das Blatt trägt dieselben drei Knöpfe unter dem Titel.
  *   §7  Ruhig und „weniger Bewegung": kein Tropfen, kein Fliessen, sofort.
- *   §8  Die Linse über „Heute": einmal beim Ankommen, dann Stillstand; die
- *       Schrift bleibt echte Schrift; EINE Brechung im Dokument; nach einer
- *       Grössenänderung liegt sie weiter NEBEN der zweiten Zeile (E740).
+ *   §8  Die Linse über „Heute": einmal beim Ankommen, dann verblasst sie
+ *       (E744); die Schrift bleibt echte Schrift; EINE Brechung im Dokument;
+ *       eine Grössenänderung holt keine Linse zurück — mitten im Verblassen
+ *       verblasst sie an derselben Stelle weiter, in der neuen Lage.
  *   §9  Die Kacheln in „Mehr" (Telefon): sieben Griffe, 44 px, jeder tut,
  *       was sein bisheriger Ort tut; beim Rollen eine Chipleiste.
  *   §10 Die Kacheln in den Einstellungen (Rechner): oben in „Allgemein",
@@ -53,9 +54,10 @@
  *   §15 Zusammenführen der zweiten Welle: EIN Klebefilter in der ganzen
  *       App — Löschen-Knopf (E709), Meldungen (E711) und Tropfen leihen
  *       `Linse.TROPFEN`; liest nur Dateien.
- *   §16 Die Linse ruht NEBEN dem Wort (E740, Redur am 11. Oktober 2026):
- *       kein Buchstabe der Überschrift unter der ruhenden Linse — und keiner
- *       in ihrer Abschrift (Durchsicht E740).
+ *   §16 Die Linse hält NEBEN dem Wort (E740, Redur am 11. Oktober 2026):
+ *       kein Buchstabe der Überschrift unter ihr — und keiner in ihrer
+ *       Abschrift (Durchsicht E740); danach verblasst sie ohne Sprung, und
+ *       in Ruhe ist keine Linse zu sehen (E744, Redur am 11. Oktober abends).
  *
  * DURCHSICHT (4. Oktober 2026; Redur am 3. Oktober, ca. 19:35 UTC: „Weiter
  * ohne pause,"). Der Bericht des Baus ging am Wochenlimit verloren; die
@@ -133,6 +135,79 @@
  *       die Fahrt am Ende der ersten Zeile an (~780 ms, Linse über
  *       „Aufmachen."), prüft, dass dort Buchstaben UNTER ihr liegen, und
  *       misst erst dann. Gegenprobe: die Linse zu 35 % gedeckt → rot.
+ *
+ * VERBLASSEN (§16, §8; 11. Oktober 2026 abends, E744). Die zweite Frage aus
+ * der Liste: die ruhende Linse ist neben dem Wort eine leere Glasscheibe —
+ * stehen lassen oder nach der Fahrt verblassen? Redur, 19:43 UTC:
+ * „verblassen". Was das heisst, stand vorher in AUFGABEN.md: „kein
+ * Buchstabe unter einer Linse" hält weiter, und §8/§16 verlangen in Ruhe
+ * keine Linse mehr — mit seinem Wort geändert, gegen 97d156b03 rot gesehen:
+ *   §16 GETEILT. Was E740 in Ruhe mass, misst er jetzt AM HALT: die Fahrt
+ *       wird eine Millisekunde vor ihrem Ende angehalten (die Linse ist
+ *       dort voll da, rechts neben dem Punkt) — dieselben vier Zusagen,
+ *       Zeichen für Zeichen, auch die Abschrift. Dann läuft sie weiter, und
+ *       in Ruhe gilt: keine sichtbare Linse (Deckkraft der ganzen Kette
+ *       ≤ 0,02, oder kein Element), nichts läuft, nichts fängt den Zeiger,
+ *       und kein Buchstabe unter einer sichtbaren Linse (bleibt). Dazu das
+ *       Verblassen selbst, Bild für Bild (requestAnimationFrame): erst voll
+ *       da, dann mindestens drei Bilder dazwischen, nie wieder heller, kurz
+ *       (höchstens 700 ms), am Ende weg — ein Verschwinden ohne Übergang
+ *       wäre kein Verblassen. „Weniger Bewegung": keine Fahrt, keine Linse.
+ *   §8  GEÄNDERT. „In Ruhe bricht die Linse" heisst „an ihrem ersten Halt
+ *       bricht die Linse" (beim Ankommen gemessen); nach der Fahrt ist sie
+ *       verblasst; die Grössenänderung auf 1000 px holt keine Linse zurück;
+ *       „Ruhig" und „weniger Bewegung": keine Linse statt einer stillen.
+ *
+ * DURCHSICHT DES VERBLASSENS (§16, §8; 11. Oktober 2026 abends, E744). Zwei
+ * Lücken, beide am gebauten Stand belegt; die Gegenproben am Quelltext
+ * linse.ts, gebaut mit `tsc -p tsconfig.bauen.json`, danach Byte für Byte
+ * zurück (sha256 von linse.ts und linse.js gleich):
+ *   §16 KEIN SPRUNG. Ein „Verblassen", das auf 0,5 stehen bleibt und dann in
+ *       einem Schritt weg ist (Keyframes [{opacity:1},{opacity:0.5}], danach
+ *       `remove()`), war 146 von 146 grün — die Linse fiel von 0,539 auf
+ *       „kein Element". Neu, je Fall mit Fahrt: das letzte sichtbare Bild vor
+ *       „weg oder leer" zeigt höchstens 0,2, von Bild zu Bild fällt die
+ *       Deckkraft um höchstens 0,25 (gerechnet aus `--ease-exit`: über ein
+ *       Bild höchstens 0,083, zwei 0,162, drei 0,239; gemessen am Bau in
+ *       einem Lauf 0,061–0,097 und 0,080–0,082 — siehe die zweite
+ *       Durchsicht). Stockt der Browser genau dort (über 40 ms auf der
+ *       Bilduhr), wird nachgemessen, höchstens dreimal. Mit der Gegenprobe:
+ *       148 ok, 4 offen — „zeigt 0.513 … fällt höchstens 0.513".
+ *   §8  MITTEN IM VERBLASSEN NEU GEZEICHNET. Ein neues Ankommen, 1740 ms
+ *       (seit der zweiten Durchsicht 1690 ms) nachdem die Linse da ist das
+ *       Fenster auf 1000 px: eine neue Linse ist da, halb verblasst
+ *       (zwischen 0,05 und 0,95) und fällt weiter, rechts vom Punkt in der
+ *       neuen Lage, die Abschrift in der neuen Grösse der Überschrift. Rot
+ *       gesehen: ohne `geht.currentTime = versatz` 151 ok, 1 offen („halb
+ *       verblasst (1 …)"); der Halt von vor E740 (über „ken") 139 ok,
+ *       13 offen („-51.3 px daneben", dazu §16 am Halt); die Schrift des
+ *       ersten Ankommens in der Abschrift 151 ok, 1 offen („44px" statt
+ *       „31px").
+ *
+ * ZWEITE DURCHSICHT DES VERBLASSENS (§8, §16; 12. Oktober 2026, E744). Drei
+ * kleine Funde, die Gegenproben wie oben am Quelltext linse.ts, danach Byte
+ * für Byte zurück:
+ *   §8  DAS FENSTER DER MESSUNG. Bei 1740 ms blieben dem Ändern des Fensters
+ *       und dem Neuzeichnen gut 200 ms, bevor die Deckkraft unter 0,05
+ *       fällt. Jetzt geht es bei 1690 ms los — `--ease-exit` beginnt
+ *       langsam, die Deckkraft liegt beim ersten Bild danach noch unter 0,95
+ *       (gemessen 0,846 und 0,866 in zwei Läufen) — und der Verzug steht in
+ *       der Zusage, damit ein verpasstes Fenster nicht wie ein Fehler
+ *       aussieht. Die Gegenprobe ohne `geht.currentTime = versatz` bleibt
+ *       rot: 151 ok, 1 offen („halb verblasst (1 …)" bei 42 ms Verzug).
+ *   §8  NEU ODER AN ORT UND STELLE. Die Messung wartete auf ein NEUES
+ *       Element; dieselbe Linse, an Ort und Stelle neu angelegt, war rot
+ *       (150 ok, 2 offen), obwohl sie richtig verblasste. Jetzt zählt auch
+ *       sie, wenn ihre Abschrift die neue Schriftgrösse trägt (152 von 152);
+ *       mit der alten Schrift bleibt sie rot (150 ok, 2 offen, „nur die alte
+ *       Linse, Abschrift 44px"), ebenso eine Linse, die beim Fenster gar
+ *       nicht neu gezeichnet wird (150 ok, 2 offen), und eine neue mit der
+ *       Schrift des ersten Ankommens (151 ok, 1 offen, „44px").
+ *   §16 DIE GEMESSENEN BEREICHE. „0,061–0,097 und 0,080–0,082" stammten aus
+ *       einem Lauf. In zwei weiteren: das letzte sichtbare Bild 0,021–0,093
+ *       — es liegt über 0,02 und höchstens einen Abfall darüber, je nachdem,
+ *       wo die Bilder auf der Kurve landen —, der grösste Abfall
+ *       0,080–0,083; also etwa 0,02–0,10 und 0,08 (messungen.md §101).
  *
  * KANN ER ROT WERDEN? Gegen den Stand b3cf1933 (vor E712) ist er rot, in
  * jedem Abschnitt ausser den „bleibt"-Zusagen — siehe Commit „test589 (rot)".
@@ -243,6 +318,21 @@ const seiteAuf = (s: Page) => s.evaluate(async () => {
   await new Promise(r => setTimeout(r, 600));
   return neu.id as string;
 });
+
+/* IST EINE LINSE ZU SEHEN? (E744). Seit Redurs „verblassen" geht die Linse
+   nach der Fahrt. Ob sie danach als unsichtbares Element stehen bleibt oder
+   gar nicht mehr da ist, entscheidet der Bau — gemessen wird, was man sieht:
+   da, `display` nicht `none`, `visibility` sichtbar, eine Fläche, und die
+   Deckkraft der GANZEN Kette bis zur Wurzel über 0,02. Für evaluate. */
+const LINSE_SICHTBAR = (): { da: boolean; sichtbar: boolean; deckkraft: number | null } => {
+  const l = document.querySelector<HTMLElement>('.lw-desk .ru-held-linse');
+  if (!l || !l.isConnected) return { da: false, sichtbar: false, deckkraft: null };
+  let deck = 1;
+  for (let e: Element | null = l; e; e = e.parentElement) deck *= parseFloat(getComputedStyle(e).opacity);
+  const cs = getComputedStyle(l), q = l.getBoundingClientRect();
+  const sichtbar = cs.display !== 'none' && cs.visibility === 'visible' && q.width > 0 && q.height > 0 && deck > 0.02;
+  return { da: true, sichtbar, deckkraft: Math.round(deck * 1000) / 1000 };
+};
 
 /* Was IN der Seite gemessen wird, als Zeichenkette — in jedem evaluate gleich. */
 const MESSEN = `
@@ -547,12 +637,25 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
       const t = (a.effect as KeyframeEffect | null)?.target as Element | null;
       return !!t && held.contains(t) && a.playState === 'running';
     });
+    /* AN IHREM ERSTEN HALT (E744). Hier wurde in RUHE gefragt, ob die Linse
+       mit der Brechung aus linse.ts bricht. In Ruhe ist seit Redurs
+       „verblassen" keine Linse mehr da — gefragt wird jetzt beim Ankommen,
+       wo sie über „Aufmachen." wartet und ihr Glas scharf zeigt. Dazu die
+       Abschrift in der Grösse der Überschrift (stand beim Fenster von
+       1000 px, das keine Linse mehr zurückholt). */
+    const bild = held.querySelector<HTMLElement>('.ru-held-linse-bild');
+    const h2 = held.querySelector<HTMLElement>('h2');
     return { laeuft: laeuft.length, nurTransform: (window as any).__nurTransform(),
-             linse: !!held.querySelector('.ru-held-linse[aria-hidden="true"]') };
+             linse: !!held.querySelector('.ru-held-linse[aria-hidden="true"]'),
+             bruch: [...held.querySelectorAll<HTMLElement>('.ru-held-linse *')]
+               .some(el => /ru-linse-fahrt/.test(getComputedStyle(el).filter || '')),
+             gleicheSchrift: !!bild && !!h2 && getComputedStyle(bild).fontSize === getComputedStyle(h2).fontSize };
   });
   p('Eine Linse liegt über dem Satz (aria-hidden)', frueh.linse);
   p('Beim Ankommen bewegt sie sich', frueh.laeuft > 0, String(frueh.laeuft));
   gleich('… nur transform und opacity', frueh.nurTransform, []);
+  p('An ihrem ersten Halt bricht die Linse mit der Brechung aus linse.ts, die Abschrift in der Grösse der Überschrift',
+    frueh.bruch && frueh.gleicheSchrift, JSON.stringify(frueh));
   await warte(s, 2600);
   const spaeter = await s.evaluate(() => {
     const held = document.querySelector('.lw-desk')!;
@@ -561,12 +664,12 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
       const t = (a.effect as KeyframeEffect | null)?.target as Element | null;
       return !!t && held.contains(t) && a.playState === 'running';
     }).length;
-    const bruch = [...held.querySelectorAll<HTMLElement>('.ru-held-linse *')]
-      .some(el => /ru-linse-fahrt/.test(getComputedStyle(el).filter || ''));
     return { laeuft, text: (h2.textContent || '').replace(/\s+/g, ''),
-             displacement: document.querySelectorAll('feDisplacementMap').length, bruch };
+             displacement: document.querySelectorAll('feDisplacementMap').length };
   });
+  const verblasst = await s.evaluate(LINSE_SICHTBAR);
   gleich('Danach steht alles still (keine Dauerbewegung)', spaeter.laeuft, 0);
+  p('Nach der Fahrt ist die Linse verblasst: in Ruhe ist keine zu sehen (E744)', !verblasst.sichtbar, JSON.stringify(verblasst));
   gleich('Die Überschrift bleibt echte Schrift', spaeter.text, 'Aufmachen.Weiterdenken.');
   /* VORLESER HÖREN SIE EINMAL (Durchsicht E712). Der Dunst, mit dem die
      Zeilen hereinkommen, ist `::before{content:attr(data-zeile)}` — und
@@ -575,7 +678,6 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
   const vorgelesen = await s.locator('.lw-desk h2').ariaSnapshot();
   gleich('Vorleser hören jede Zeile genau einmal', [
     (vorgelesen.match(/Aufmachen\./g) || []).length, (vorgelesen.match(/Weiterdenken\./g) || []).length], [1, 1]);
-  p('In Ruhe bricht die Linse mit der Brechung aus linse.ts', spaeter.bruch);
   gleich('EINE Brechung im Dokument (keine dritte)', spaeter.displacement, 1);
   /* DIE LINSE BLEIBT AM SATZ, WENN DAS FENSTER SICH ÄNDERT (Durchsicht
      E712). Die Überschrift wächst mit dem Fenster (clamp(28px, 3.1vw,
@@ -589,46 +691,183 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
      2026 „Ja" gesagt zur Frage aus der Liste vom 5. Oktober, ob sie „neben
      dem Wort ruhen" soll. Seither: ihr linker Rand liegt rechts vom Ende der
      Zeile, höchstens eine halbe Schriftgrösse daneben, ihre Mitte auf der
-     Höhe der Zeile. Zeichen für Zeichen misst es §16. */
+     Höhe der Zeile. Zeichen für Zeichen misst es §16.
+     KEINE LINSE ZURÜCK (E744). Seit Redurs „verblassen" ist die Linse in
+     Ruhe weg. Eine Grössenänderung zeichnet den Satz neu, und der
+     Beobachter legte die Linse bis hierher an ihren neuen Ort — eine Linse,
+     die man eben hat verblassen sehen, stünde nach dem Ziehen am Fenster
+     wieder da. Gemessen bei 1000 px: keine sichtbare Linse, nichts fährt,
+     die Überschrift bleibt. Die Abschrift in der Grösse der Überschrift
+     misst jetzt der erste Halt oben. */
   await s.setViewportSize({ width: 1000, height: 900 });
   await warte(s, 900);
   const schmal = await s.evaluate(() => {
     const held = document.querySelector('.lw-desk');
-    const l = held?.querySelector<HTMLElement>('.ru-held-linse');
-    const z = [...(held?.querySelectorAll<HTMLElement>('.ru-held-zeile') || [])];
-    const q = l?.getBoundingClientRect(), z2 = z[z.length - 1]?.getBoundingClientRect();
-    const my = q ? q.top + q.height / 2 : -1;
-    const bild = l?.querySelector<HTMLElement>('.ru-held-linse-bild');
-    const h2 = held?.querySelector<HTMLElement>('h2');
-    const fs = h2 ? parseFloat(getComputedStyle(h2).fontSize) : 0;
     return {
-      nebenZeile: !!(q && q.width && z2 && q.left >= z2.right - 0.5 && q.left - z2.right <= fs / 2 &&
-                     my >= z2.top && my <= z2.bottom),
-      gleicheSchrift: !!bild && !!h2 && getComputedStyle(bild).fontSize === getComputedStyle(h2).fontSize,
+      text: (held?.querySelector('h2')?.textContent || '').replace(/\s+/g, ''),
       laeuft: document.getAnimations().filter(a => {
         const t = (a.effect as KeyframeEffect | null)?.target as Element | null;
         return !!t && !!held && held.contains(t) && a.playState === 'running';
-      }).length,
-      lage: q && z2 ? { linksLinse: Math.round(q.left), endeZeile: Math.round(z2.right), mitte: Math.round(my),
-                        zeile: [Math.round(z2.top), Math.round(z2.bottom)] } : null
+      }).length
     };
   });
-  p('Schmaleres Fenster: die Linse liegt weiter NEBEN der zweiten Zeile, die Abschrift in der Grösse der Überschrift, nichts fährt',
-    schmal.nebenZeile && schmal.gleicheSchrift && schmal.laeuft === 0, JSON.stringify(schmal));
+  const schmalLinse = await s.evaluate(LINSE_SICHTBAR);
+  p('Schmaleres Fenster: die Grössenänderung holt keine Linse zurück, nichts fährt, die Überschrift bleibt (E744)',
+    !schmalLinse.sichtbar && schmal.laeuft === 0 && schmal.text === 'Aufmachen.Weiterdenken.',
+    JSON.stringify({ ...schmal, ...schmalLinse }));
   await s.setViewportSize({ width: 1440, height: 900 });
   await warte(s, 300);
+  /* MITTEN IM VERBLASSEN NEU GEZEICHNET (Durchsicht E744). linse.ts sagt
+     vom Verblassen: „Dieselbe Uhr wie die Fahrt: beim Neuzeichnen geht es
+     an derselben Stelle weiter" — und keine Zusage hielt das; die 1000 px
+     oben kommen erst, wenn alles vorbei ist. Hier: ein neues Ankommen bei
+     1440 px, und 1690 ms nachdem die Linse da ist (die Fahrt endet bei
+     1650 ms, das Verblassen bei 1970 ms) wird das Fenster 1000 px breit —
+     die Überschrift wird kleiner, der Beobachter zeichnet die Linse neu,
+     gut 1700 ms nach dem Ankommen. Sie muss da sein, halb verblasst
+     (Deckkraft der Kette zwischen 0,05 und 0,95) und vier Bilder später
+     weiter gefallen; sie steht rechts vom Punkt der zweiten Zeile, in der
+     NEUEN Lage (höchstens eine halbe Schriftgrösse daneben, auf der Höhe
+     der Zeile); ihre Abschrift hat die neue Grösse der Überschrift. Fängt
+     das Verblassen beim Neuzeichnen vorne an, steht die Linse mit Deckkraft
+     1 da und bleibt so (Gegenprobe).
+     DAS FENSTER DER MESSUNG (zweite Durchsicht E744). Hier stand 1740 ms.
+     Die erste Messung muss dort liegen, wo die Deckkraft zwischen 0,95 und
+     0,05 steht — gerechnet aus `--ease-exit` (320 ms) von etwa 55 bis etwa
+     310 ms nach dem Ende der Fahrt, also von etwa 1705 bis 1960 ms nach
+     dem Ankommen. Mit 1740 blieben dem Ändern des Fensters und dem
+     Neuzeichnen gut 200 ms. Die Kurve beginnt aber langsam (40 ms nach dem
+     Ende der Fahrt gerechnet noch 0,97), darum geht es jetzt bei 1690 ms
+     los. Gezählt wird der Verzug aber erst ab dem Entschluss — dem ersten
+     Bild ab 1690 ms, gemessen bei 1696–1706 ms —, also darf er etwa 5 bis
+     260 ms gross sein (dritte Durchsicht nachgerechnet); gemessen waren es
+     34–68 ms (messungen.md §101).
+     Der Verzug steht in der Zusage: ein verpasstes Fenster zeigt einen
+     grossen Verzug und eine Deckkraft unter 0,05, der Fehler aus der
+     Gegenprobe Deckkraft 1 bei gewöhnlichem Verzug.
+     NEU ODER AN ORT UND STELLE (zweite Durchsicht E744). linse.ts entfernt
+     beim Neuzeichnen die alte Linse und legt eine neue an; dieselbe Linse,
+     an Ort und Stelle neu angelegt, wäre genauso richtig. Darum zählt auch
+     das alte Element — aber erst, wenn seine Abschrift eine andere
+     Schriftgrösse trägt als vor dem Fenster: nur das zeigt, dass es neu
+     angelegt ist. Die Lage allein zeigt es nicht, denn mit dem Fenster
+     verschiebt sich der Träger, und eine Linse, die niemand neu zeichnet,
+     wandert mit. Trägt sie die alte Schrift, wartet die Messung weiter und
+     ist nach 800 ms rot wie zuvor; Lage, Höhe und Schrift misst die zweite
+     Zusage für beide Wege gleich. */
+  const MITTE = 1690;
+  const vorMitte = await s.evaluate((mitte: number) => new Promise<{ da: boolean; t: number; schrift: string }>(fertig => {
+    const t0 = performance.now();
+    let da = 0;
+    const tick = (): void => {
+      const jetzt = performance.now();
+      const l = document.querySelector<HTMLElement>('.lw-desk .ru-held-linse');
+      if (l && !da) da = jetzt;
+      if (da && jetzt - da >= mitte) {
+        (window as any).__alt589 = l;
+        const altBild = l?.querySelector<HTMLElement>('.ru-held-linse-bild');
+        (window as any).__altSchrift589 = altBild ? getComputedStyle(altBild).fontSize : null;
+        (window as any).__da589 = da;
+        fertig({ da: !!l, t: Math.round(jetzt - da),
+                 schrift: getComputedStyle(document.querySelector('.lw-desk h2')!).fontSize });
+      } else if (jetzt - t0 > 4000) fertig({ da: false, t: -1, schrift: '' });
+      else requestAnimationFrame(tick);
+    };
+    Produktwelten.lernen('heute');
+    requestAnimationFrame(tick);
+  }), MITTE);
+  await s.setViewportSize({ width: 1000, height: 900 });
+  const mitten = await s.evaluate(() => new Promise<{
+    gefunden: boolean; art: string; erst: number; t1: number; d1: number; t2: number; d2: number; daneben: number; fs: number;
+    aufHoehe: boolean; abschrift: string | null; ueberschrift: string }>(fertig => {
+    const alt = (window as any).__alt589 as HTMLElement | null, da = Number((window as any).__da589);
+    const altSchrift = (window as any).__altSchrift589 as string | null;
+    const t0 = performance.now();
+    const deck = (l: HTMLElement): number => {
+      if (!l.isConnected) return 0;
+      let o = getComputedStyle(l).display === 'none' ? 0 : 1;
+      for (let e: Element | null = l; e && o > 0; e = e.parentElement) o *= parseFloat(getComputedStyle(e).opacity);
+      return Math.round(o * 1000) / 1000;
+    };
+    const h2 = document.querySelector<HTMLElement>('.lw-desk h2');
+    const schriftIn = (l: HTMLElement): string | null => {
+      const b = l.querySelector<HTMLElement>('.ru-held-linse-bild');
+      return b ? getComputedStyle(b).fontSize : null;
+    };
+    /* `erst`: das erste Bild nach dem Fenster — daran hängt der Verzug, auch
+       wenn die Messung danach noch wartet. */
+    let erst = 0, gesehen = '';
+    const tick = (): void => {
+      if (!erst) erst = Math.round(performance.now() - da);
+      const l = document.querySelector<HTMLElement>('.lw-desk .ru-held-linse');
+      /* Eine neue Linse — oder die alte, neu angelegt (andere Schrift in der
+         Abschrift als vor dem Fenster); nur mitgewandert zählt nicht. */
+      const art = !l || !h2 ? '' : l !== alt ? 'neues Element'
+        : (schriftIn(l) !== null && schriftIn(l) !== altSchrift ? 'dasselbe Element, neu angelegt' : '');
+      if (!l || !h2 || !art) {
+        if (l && l === alt) gesehen = `nur die alte Linse, Abschrift ${schriftIn(l)}`;
+        if (performance.now() - t0 < 800) { requestAnimationFrame(tick); return; }
+        fertig({ gefunden: false, art: (gesehen || 'keine neue Linse') + (l ? '' : ', zuletzt keine Linse'), erst,
+                 t1: Math.round(performance.now() - da), d1: l ? deck(l) : -1, t2: NaN, d2: NaN,
+                 daneben: NaN, fs: 0, aufHoehe: false, abschrift: l ? schriftIn(l) : null, ueberschrift: h2 ? getComputedStyle(h2).fontSize : '' });
+        return;
+      }
+      /* Der rechte Rand des letzten Zeichens der zweiten Zeile — des Punkts. */
+      const zeilen = [...h2.querySelectorAll<HTMLElement>('.ru-held-zeile')];
+      const z2 = zeilen[zeilen.length - 1];
+      let ende2 = -Infinity;
+      if (z2) {
+        const gang = document.createTreeWalker(z2, NodeFilter.SHOW_TEXT);
+        for (let n = gang.nextNode() as Text | null; n; n = gang.nextNode() as Text | null)
+          for (let i = 0; i < n.data.length; i++) {
+            if (!n.data[i]!.trim()) continue;
+            const rg = document.createRange(); rg.setStart(n, i); rg.setEnd(n, i + 1);
+            for (const r of rg.getClientRects()) if (r.width) ende2 = Math.max(ende2, r.right);
+          }
+      }
+      const q = l.getBoundingClientRect(), zr = z2?.getBoundingClientRect();
+      const cy = q.top + q.height / 2;
+      const bild = l.querySelector<HTMLElement>('.ru-held-linse-bild');
+      const t1 = Math.round(performance.now() - da), d1 = deck(l);
+      const daneben = Math.round((q.left - ende2) * 10) / 10, fs = parseFloat(getComputedStyle(h2).fontSize);
+      const aufHoehe = !!zr && cy >= zr.top && cy <= zr.bottom;
+      const abschrift = bild ? getComputedStyle(bild).fontSize : null;
+      let n = 0;
+      const nach = (): void => {
+        if (++n < 4) { requestAnimationFrame(nach); return; }
+        fertig({ gefunden: true, art, erst, t1, d1, t2: Math.round(performance.now() - da), d2: deck(l), daneben, fs, aufHoehe,
+                 abschrift, ueberschrift: getComputedStyle(h2).fontSize });
+      };
+      requestAnimationFrame(nach);
+    };
+    requestAnimationFrame(tick);
+  }));
+  /* Der Verzug: vom Entschluss zum Fenster bis zum ersten Bild danach. */
+  const verzug = mitten.erst - vorMitte.t;
+  console.log(`    · Mitten im Verblassen: ${JSON.stringify({ vorMitte, verzug, mitten })}`);
+  p(`Mitten im Verblassen neu gezeichnet (1000 px bei ${vorMitte.t} ms, erstes Bild danach nach ${verzug} ms, gemessen bei ${mitten.t1} ms; das Fenster der Messung liegt bei etwa 1705–1960 ms): eine Linse ist da (${mitten.art}), halb verblasst (${mitten.d1}, zwischen 0,05 und 0,95), und sie fällt weiter (${mitten.t2} ms: ${mitten.d2})`,
+    vorMitte.da && mitten.gefunden && mitten.d1 > 0.05 && mitten.d1 < 0.95 && mitten.d2 < mitten.d1,
+    JSON.stringify({ vorMitte, verzug, mitten }));
+  p(`… sie steht rechts vom Punkt in der neuen Lage (${mitten.daneben} px daneben, höchstens eine halbe Schriftgrösse, auf der Höhe der Zeile), ihre Abschrift in der neuen Grösse der Überschrift (${mitten.abschrift}, vorher ${vorMitte.schrift})`,
+    mitten.gefunden && mitten.daneben >= 0 && mitten.daneben <= mitten.fs / 2 && mitten.aufHoehe &&
+    mitten.abschrift === mitten.ueberschrift && mitten.ueberschrift !== vorMitte.schrift,
+    JSON.stringify({ vorMitte, mitten }));
+  await s.setViewportSize({ width: 1440, height: 900 });
+  await warte(s, 400);
   await s.evaluate(() => Einstellungen.S('bewegung', 'ruhig'));
   await s.evaluate(() => Produktwelten.lernen('heute'));
   await warte(s, 400);
   const still = await s.evaluate(() => {
     const held = document.querySelector('.lw-desk');
-    return { linse: !!held?.querySelector('.ru-held-linse'),
-             laeuft: document.getAnimations().filter(a => {
+    return { laeuft: document.getAnimations().filter(a => {
                const t = (a.effect as KeyframeEffect | null)?.target as Element | null;
                return !!t && !!held && held.contains(t) && a.playState === 'running';
              }).length };
   });
-  gleich('Ruhig: die Linse liegt still an ihrem Ort, nichts gleitet', [still.linse, still.laeuft], [true, 0]);
+  const stillLinse = await s.evaluate(LINSE_SICHTBAR);
+  /* Bis E744: „die Linse liegt still an ihrem Ort". Ohne Fahrt gibt es kein
+     Verblassen, das man sehen könnte — also keine Linse (Redur: „verblassen"). */
+  gleich('Ruhig: keine Linse, nichts gleitet (E744)', [stillLinse.sichtbar, still.laeuft], [false, 0]);
   await ctx.close();
 }
 {
@@ -647,9 +886,9 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
     }));
     await warte(s, 120);
   }
-  const da = await s.evaluate(() => !!document.querySelector('.lw-desk .ru-held-linse'));
-  gleich('prefers-reduced-motion: die Linse liegt still, nichts gleitet, keine Zeile kommt geflogen',
-    [da, Math.max(...proben)], [true, 0]);
+  const da = await s.evaluate(LINSE_SICHTBAR);
+  gleich('prefers-reduced-motion: keine Linse, nichts gleitet, keine Zeile kommt geflogen (E744)',
+    [da.sichtbar, Math.max(...proben)], [false, 0]);
   await ctx.close();
 }
 {
@@ -1347,10 +1586,34 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
  * vergrössert in der leeren Scheibe — und alle Zusagen davor blieben grün.
  * Gemessen wird deshalb auch jedes Zeichen der Abschrift, und es zählt nur,
  * was man sehen kann (Deckkraft, `visibility`, Ausschnitt; siehe RUHE).
+ *
+ * DANN VERBLASST SIE (E744, Redur am 11. Oktober 2026, 19:43 UTC:
+ * „verblassen"). Neben dem Wort ist die ruhende Linse eine leere Scheibe;
+ * Redur will sie nach der Fahrt nicht stehen sehen. Darum ist dieser
+ * Abschnitt geteilt — mit seinem Wort:
+ *   AM HALT. Die Fahrt wird eine Millisekunde vor ihrem Ende angehalten
+ *   (das Ende der Animation, die `.ru-held-linse` selbst bewegt). Dort ist
+ *   die Linse voll da und hält, wo E740 sie ruhen liess — und die vier
+ *   Zusagen von oben gelten dort, Zeichen für Zeichen, die Abschrift
+ *   eingeschlossen. Ist keine Fahrt anzuhalten, ist das rot: „in Ruhe
+ *   keine Linse" darf nicht heissen „nie eine Linse" (§55.2).
+ *   IN RUHE. Dann läuft die Fahrt weiter, und nach dem Verblassen ist
+ *   keine Linse zu sehen (Deckkraft der Kette ≤ 0,02, oder kein Element),
+ *   nichts läuft, an ihrer Mitte fängt nichts von ihr den Zeiger — und kein
+ *   Buchstabe liegt unter einer sichtbaren Linse (bleibt).
+ *   DAS VERBLASSEN. Ein zweites Ankommen, Bild für Bild mit
+ *   `requestAnimationFrame` mitgeschrieben: erst voll da (≥ 0,98), danach
+ *   mindestens drei Bilder zwischen 0,05 und 0,95, nie wieder heller, in
+ *   höchstens 700 ms bei 0,02 oder darunter, und am Ende weg. Ein
+ *   Verschwinden ohne Übergang wäre kein Verblassen (Gegenprobe). Und es
+ *   springt nicht (Durchsicht E744): das letzte sichtbare Bild zeigt
+ *   höchstens 0,2, von Bild zu Bild fällt sie höchstens 0,25 — siehe KEIN
+ *   SPRUNG.
+ *   WENIGER BEWEGUNG. Keine Fahrt, also kein Verblassen, also keine Linse.
  * ========================================================================*/
 {
-  console.log('\n§16 · Die Linse ruht NEBEN dem Wort (Redur, 11. Oktober 2026)');
-  /* Die Lage der ruhenden Linse gegen jeden Buchstaben des Satzblocks. */
+  console.log('\n§16 · Die Linse hält NEBEN dem Wort, dann verblasst sie (Redur, 11. Oktober 2026)');
+  /* Die Lage der Linse gegen jeden Buchstaben des Satzblocks. */
   const RUHE = () => {
     const held = document.querySelector('.lw-desk');
     const copy = held?.querySelector<HTMLElement>('.lw-desk-copy');
@@ -1391,7 +1654,15 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
        Ausschnitts: unter 0 heisst drinnen. */
     type Zeichen = { ch: string; lage: string; ab: number; offen: boolean };
     const abschrift: Zeichen[] = [];
-    if (l && getComputedStyle(l).display !== 'none') {
+    /* SICHTBAR HEISST SICHTBAR (E744): seit die Linse verblasst, kann sie als
+       Element dastehen und nichts zeigen. Gezählt wird wie in LINSE_SICHTBAR
+       oben: Deckkraft der ganzen Kette über 0,02, `visibility`, Fläche. */
+    let deckkraft: number | null = null;
+    if (l) { deckkraft = 1; for (let e: Element | null = l; e; e = e.parentElement) deckkraft *= parseFloat(getComputedStyle(e).opacity); }
+    const lcs = l ? getComputedStyle(l) : null, lq = l ? l.getBoundingClientRect() : null;
+    const sichtbar = !!l && !!lcs && !!lq && lcs.display !== 'none' && lcs.visibility === 'visible' &&
+      lq.width > 0 && lq.height > 0 && (deckkraft ?? 0) > 0.02;
+    if (sichtbar) {
       const gang = document.createTreeWalker(l, NodeFilter.SHOW_TEXT);
       for (let n = gang.nextNode() as Text | null; n; n = gang.nextNode() as Text | null) {
         const eltern = n.parentElement;
@@ -1437,8 +1708,7 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
       /* Abstand des nächsten sichtbaren Zeichens der Abschrift zum Rand (px, unter 0 drinnen). */
       abschriftAbstand: offeneAb.length ? Math.round(Math.min(...offeneAb) * 10) / 10 : null
     };
-    const sichtbar = !!l && getComputedStyle(l).display !== 'none';
-    const q = sichtbar ? l!.getBoundingClientRect() : null;
+    const q = sichtbar ? lq : null;
     const fs = h2 ? parseFloat(getComputedStyle(h2).fontSize) : 0;
     const z2 = zeilen[zeilen.length - 1]?.getBoundingClientRect();
     const ende2 = Math.max(...kopf.filter(g => g.z === zeilen.length - 1).map(g => g.r.right));
@@ -1446,9 +1716,10 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
       const t = (a.effect as KeyframeEffect | null)?.target as Element | null;
       return !!t && !!held && held.contains(t) && a.playState === 'running';
     }).length;
+    const deck = deckkraft === null ? null : Math.round(deckkraft * 1000) / 1000;
     if (!q || !q.width || !h2 || !z2)
-      return { linse: false, laeuft, fs, buchstaben: kopf.length, trifft: [] as string[], darunter: [] as string[],
-               daneben: NaN, aufHoehe: false, inSpalte: false, d: 0, ...abschriftWerte };
+      return { linse: false, deckkraft: deck, laeuft, fs, buchstaben: kopf.length, trifft: [] as string[], darunter: [] as string[],
+               daneben: NaN, aufHoehe: false, inSpalte: false, d: 0, mitte: null as number[] | null, ...abschriftWerte };
     const cx = q.left + q.width / 2, cy = q.top + q.height / 2, r = q.width / 2;
     const unter = (g: Glyphe) => {
       const nx = Math.max(g.r.left, Math.min(cx, g.r.right)), ny = Math.max(g.r.top, Math.min(cy, g.r.bottom));
@@ -1456,13 +1727,112 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
     };
     const hr = h2.getBoundingClientRect();
     return {
-      linse: true, laeuft, fs, buchstaben: kopf.length,
+      linse: true, deckkraft: deck, laeuft, fs, buchstaben: kopf.length,
       trifft: kopf.filter(unter).map(g => g.ch),
       darunter: rest.filter(unter).map(g => g.ch),
       daneben: Math.round((q.left - ende2) * 10) / 10,
       aufHoehe: cy >= z2.top && cy <= z2.bottom,
       inSpalte: q.left >= hr.left - 0.5 && q.right <= hr.left + h2.clientWidth + 0.5,
-      d: Math.round(q.width), ...abschriftWerte
+      d: Math.round(q.width), mitte: [Math.round(cx), Math.round(cy)] as number[] | null, ...abschriftWerte
+    };
+  };
+  /* AM HALT, VOR DEM VERBLASSEN (E744): alle Animationen der Linse eine
+     Millisekunde vor dem Ende der Fahrt anhalten — das Ende der Animation,
+     die `.ru-held-linse` selbst bewegt (`transform`). */
+  const HALT = () => {
+    const l = document.querySelector<HTMLElement>('.lw-desk .ru-held-linse');
+    const an = l ? document.getAnimations().filter(a => {
+      const t = (a.effect as KeyframeEffect | null)?.target as Element | null;
+      return !!t && (t === l || l.contains(t));
+    }) : [];
+    const fahrt = an.find(a => (a.effect as KeyframeEffect).target === l &&
+      (a.effect as KeyframeEffect).getKeyframes().some(k => 'transform' in k));
+    const T = fahrt ? Number(fahrt.effect!.getComputedTiming().endTime) : 0;
+    if (T > 1) an.forEach(a => { a.pause(); a.currentTime = T - 1; });
+    (window as any).__halt589 = T > 1 ? an : [];
+    return { T: Math.round(T), angehalten: T > 1 ? an.length : 0 };
+  };
+  /* … und weiterlaufen lassen. Was schon zu Ende war (das Aufploppen),
+     wird beendet statt neu gestartet: `play()` spult ein beendetes
+     Abspielen an den Anfang zurück. */
+  const WEITER = () => {
+    for (const a of ((window as any).__halt589 || []) as Animation[]) {
+      const ende = Number(a.effect?.getComputedTiming().endTime ?? 0);
+      if (Number(a.currentTime ?? 0) >= ende) a.finish(); else a.play();
+    }
+  };
+  /* DAS VERBLASSEN, Bild für Bild: ein neues Ankommen, und bei jedem Bild
+     die Deckkraft der Linse (die ganze Kette; −1: kein Element) — dazu die
+     Zeit der Bilduhr (`document.timeline`), nach der die Animationen
+     rechnen: sie zeigt, ob der Browser zwischen zwei Bildern gestockt hat
+     (siehe KEIN SPRUNG). */
+  const VERLAUF = () => new Promise<[number, number, number][]>(fertig => {
+    const aus: [number, number, number][] = [];
+    const t0 = performance.now();
+    const tick = (): void => {
+      const l = document.querySelector<HTMLElement>('.lw-desk .ru-held-linse');
+      let o = -1;
+      if (l && l.isConnected) {
+        o = getComputedStyle(l).display === 'none' ? 0 : 1;
+        for (let e: Element | null = l; e && o > 0; e = e.parentElement) o *= parseFloat(getComputedStyle(e).opacity);
+      }
+      const t = performance.now() - t0;
+      aus.push([Math.round(t), Math.round(o * 1000) / 1000, Math.round(Number(document.timeline.currentTime ?? 0) * 10) / 10]);
+      if (t < 3200) requestAnimationFrame(tick); else fertig(aus);
+    };
+    Produktwelten.lernen('heute');
+    requestAnimationFrame(tick);
+  });
+  /* KEIN SPRUNG (Durchsicht E744). Die Zusage über das Verblassen liess ein
+     „Verblassen" durch, das auf halbem Weg stehen bleibt und dann in einem
+     Schritt weg ist: Keyframes `[{opacity:1},{opacity:0.5}]`, danach
+     `remove()` — 146 von 146 grün; die Linse fiel von 0,539 auf „kein
+     Element". Darum zwei Zusagen dazu: das letzte sichtbare Bild, bevor die
+     Linse weg oder leer ist (≤ 0,02), zeigt höchstens 0,2 — und von einem
+     Bild zum nächsten fällt die Deckkraft um höchstens 0,25.
+     DER SPIELRAUM IST GERECHNET. `--ease-exit` (cubic-bezier(0.4, 0, 1, 1))
+     endet mit der Steigung 1/0,6; in 320 ms fällt die Deckkraft darum über
+     ein Bild (16,7 ms) höchstens um 0,083, über zwei (33,3 ms) um 0,162,
+     über drei (50 ms) um 0,239 — und das letzte Bild vor dem Ende zeigt
+     höchstens dieselben Werte. Beide Grenzen halten also auch dann, wenn
+     ein Bild ausfällt; den Sprung hält 0,25 sogar bei zwei ausgefallenen.
+     STOCKT DER BROWSER genau dort, wo eine Zusage bricht — mehr als 40 ms
+     auf der Bilduhr zwischen den zwei Bildern, also mindestens drei
+     Bildabstände —, wird mit einem neuen Ankommen nachgemessen, höchstens
+     dreimal: ein echter Sprung springt jedes Mal, ein Stocken nicht. */
+  const STOCKEN = 40;
+  const beurteilen = (v: [number, number, number][]) => {
+    const o = (x: number): number => (x < 0 ? 0 : x);
+    let voll = -1;
+    v.forEach(([, d], i) => { if (d >= 0.98) voll = i; });
+    const danach = voll >= 0 ? v.slice(voll + 1) : [];
+    const zwischen = danach.filter(([, d]) => d > 0.05 && d < 0.95);
+    const nieHeller = danach.every(([, d], i) => i === 0 || o(d) <= o(danach[i - 1]![1]) + 0.01);
+    const iWeg = voll >= 0 ? v.findIndex(([, d], i) => i > voll && d <= 0.02) : -1;
+    const wegAb = iWeg > 0 ? v[iWeg] : undefined;
+    const dauer = voll >= 0 && wegAb ? wegAb[0] - v[voll]![0] : NaN;
+    const zuletzt = v[v.length - 1]?.[1] ?? 1;
+    /* Die zwei neuen Zusagen, je mit dem Abstand der Bilder auf der Bilduhr. */
+    const letzte = iWeg > 0 ? v[iWeg - 1]! : null;
+    const letzteAbstand = letzte && wegAb ? Math.round(wegAb[2] - letzte[2]) : NaN;
+    const spruenge: { bei: number; fall: number; abstand: number }[] = [];
+    let groesster = 0, groessterAbstand = 0;
+    for (let i = Math.max(1, voll + 1); voll >= 0 && i < v.length; i++) {
+      const fall = Math.round((o(v[i - 1]![1]) - o(v[i]![1])) * 1000) / 1000;
+      const abstand = Math.round(v[i]![2] - v[i - 1]![2]);
+      if (fall > groesster) { groesster = fall; groessterAbstand = abstand; }
+      if (fall > 0.25) spruenge.push({ bei: v[i]![0], fall, abstand });
+    }
+    const letzteZuHell = !letzte || o(letzte[1]) > 0.2;
+    const sanft = !!letzte && !letzteZuHell && spruenge.length === 0;
+    /* Nur gestockt, wenn JEDER Bruch an einem Stocken liegt. */
+    const gestockt = !sanft && !!letzte && (!letzteZuHell || letzteAbstand > STOCKEN) &&
+      spruenge.every(x => x.abstand > STOCKEN);
+    return {
+      voll, zwischen, nieHeller, wegAb, dauer, zuletzt, sanft, gestockt,
+      kurz: { vollBis: voll >= 0 ? v[voll]![0] : null, wegAb: wegAb?.[0] ?? null, dauer,
+              bilder: zwischen.length, werte: zwischen.map(([t, d]) => `${t}:${d}`).join(' '), zuletzt },
+      sprung: { letzte: letzte ? letzte[1] : null, letzteAbstand, groesster, groessterAbstand, spruenge }
     };
   };
   const faelle = [
@@ -1475,21 +1845,61 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
     await s.evaluate((t: string) => App.theme(t), thema);
     await s.evaluate(() => Produktwelten.lernen('heute'));
     await s.waitForSelector('.lw-desk h2', { timeout: 8000 });
-    await warte(s, weniger ? 500 : 2600);
+    let mitte: number[] | null = null;
+    if (!weniger) {
+      /* AM HALT (E740), eine Millisekunde vor dem Ende der Fahrt (E744).
+         1100 ms: die Zeilen sind hereingekommen (542 ms + 320 ms Versatz),
+         die Linse ist unterwegs über „Weiterdenken.". */
+      await warte(s, 1100);
+      const halt = await s.evaluate(HALT);
+      const r = await s.evaluate(RUHE);
+      mitte = r.mitte;
+      p(`${name}: unterwegs IST die Linse da — die Fahrt ist eine Millisekunde vor ihrem Ende angehalten (${halt.T} ms, ${halt.angehalten} Animationen)`,
+        halt.T >= 1000 && halt.angehalten > 0 && r.linse, JSON.stringify({ halt, linse: r.linse, deckkraft: r.deckkraft }));
+      p(`${name}: am Halt deckt die Linse keinen Buchstaben von „Aufmachen. / Weiterdenken." (${r.buchstaben} gemessen)`,
+        r.buchstaben >= 22 && r.trifft.length === 0, `unter der Linse: ${JSON.stringify(r.trifft)}`);
+      p(`${name}: sie hält rechts neben „Weiterdenken.", höchstens eine halbe Schriftgrösse daneben, auf der Höhe der Zeile`,
+        r.linse && r.daneben >= 0 && r.daneben <= r.fs / 2 && r.aufHoehe, JSON.stringify(r));
+      p(`${name}: in der Spalte der Überschrift, und darunter deckt sie nichts (bleibt)`,
+        r.linse && r.inSpalte && r.darunter.length === 0, JSON.stringify(r));
+      /* Durchsicht E740: die ABSCHRIFT in der Linse zeigt am Halt keinen
+         Buchstaben — sonst stünde „ken." vergrössert neben dem Wort, das
+         „Weiterdenl(en" an einem anderen Ort. ≥ 22 gemessene Zeichen, damit
+         „keine Abschrift gefunden" nicht als „leer" durchgeht (§55.2). */
+      p(`${name}: die Abschrift in der Linse zeigt am Halt keinen Buchstaben (${r.abschriftZeichen} Zeichen der Abschrift gemessen, Abstand des nächsten zum Rand ${r.abschriftAbstand} px, unter 0 heisst drinnen)`,
+        r.linse && r.abschriftZeichen >= 22 && r.abschriftSichtbar.length === 0,
+        `sichtbar in der Linse: ${JSON.stringify(r.abschriftSichtbar)}`);
+      await s.evaluate(WEITER);
+      await warte(s, 1200);
+    } else {
+      await warte(s, 500);
+    }
+    /* IN RUHE (E744): verblasst. */
     const r = await s.evaluate(RUHE);
-    p(`${name}: die ruhende Linse deckt keinen Buchstaben von „Aufmachen. / Weiterdenken." (${r.buchstaben} gemessen)`,
-      r.buchstaben >= 22 && r.trifft.length === 0, `unter der Linse: ${JSON.stringify(r.trifft)}`);
-    p(`${name}: sie ruht rechts neben „Weiterdenken.", höchstens eine halbe Schriftgrösse daneben, auf der Höhe der Zeile`,
-      r.linse && r.daneben >= 0 && r.daneben <= r.fs / 2 && r.aufHoehe, JSON.stringify(r));
-    p(`${name}: in der Spalte der Überschrift, still, und darunter deckt sie nichts (bleibt)`,
-      r.linse && r.inSpalte && r.laeuft === 0 && r.darunter.length === 0, JSON.stringify(r));
-    /* Durchsicht E740: die ABSCHRIFT in der ruhenden Linse zeigt keinen
-       Buchstaben — sonst stünde „ken." vergrössert neben dem Wort, das
-       „Weiterdenl(en" an einem anderen Ort. ≥ 22 gemessene Zeichen, damit
-       „keine Abschrift gefunden" nicht als „leer" durchgeht (§55.2). */
-    p(`${name}: die Abschrift in der ruhenden Linse zeigt keinen Buchstaben (${r.abschriftZeichen} Zeichen der Abschrift gemessen, Abstand des nächsten zum Rand ${r.abschriftAbstand} px, unter 0 heisst drinnen)`,
-      r.linse && r.abschriftZeichen >= 22 && r.abschriftSichtbar.length === 0,
-      `sichtbar in der Linse: ${JSON.stringify(r.abschriftSichtbar)}`);
+    const zeiger = mitte ? await s.evaluate(([x, y]) =>
+      document.elementFromPoint(x!, y!)?.closest('.ru-held-linse') ? 'Linse' : (document.elementFromPoint(x!, y!)?.className || '?'), mitte) : '—';
+    p(`${name}: in Ruhe ist keine Linse zu sehen (${r.deckkraft === null ? 'kein Element' : 'Deckkraft ' + r.deckkraft}), nichts läuft, an ihrer Mitte fängt sie keinen Zeiger`,
+      !r.linse && r.laeuft === 0 && zeiger !== 'Linse', JSON.stringify({ linse: r.linse, deckkraft: r.deckkraft, laeuft: r.laeuft, zeiger }));
+    p(`${name}: in Ruhe liegt kein Buchstabe unter einer sichtbaren Linse, darunter nichts, keine Abschrift zu sehen (bleibt; ${r.buchstaben} gemessen)`,
+      r.buchstaben >= 22 && r.trifft.length === 0 && r.darunter.length === 0 && r.abschriftSichtbar.length === 0,
+      JSON.stringify({ trifft: r.trifft, darunter: r.darunter, abschrift: r.abschriftSichtbar }));
+    if (!weniger) {
+      /* DAS VERBLASSEN, Bild für Bild (E744); nachgemessen nur, wenn ein
+         Sprung an einem Stocken des Browsers liegt (KEIN SPRUNG oben). */
+      let b = beurteilen(await s.evaluate(VERLAUF));
+      for (let messung = 2; b.gestockt && messung <= 3; messung++) {
+        console.log(`    · ${name}: gestockt, Messung ${messung} — ${JSON.stringify(b.sprung)}`);
+        b = beurteilen(await s.evaluate(VERLAUF));
+      }
+      const { voll, zwischen, nieHeller, dauer, zuletzt, kurz } = b;
+      console.log(`    · Verblassen ${name}: ${JSON.stringify(kurz)}`);
+      console.log(`    · Sprung ${name}: ${JSON.stringify(b.sprung)}`);
+      p(`${name}: die Linse verblasst — erst voll da, dann ${zwischen.length} Bilder dazwischen, nie wieder heller, in ${dauer} ms, am Ende weg`,
+        voll >= 0 && zwischen.length >= 3 && nieHeller && dauer > 0 && dauer <= 700 && zuletzt <= 0.02,
+        JSON.stringify({ ...kurz, nieHeller }));
+      p(`${name}: das Verblassen springt nicht — das letzte sichtbare Bild zeigt ${b.sprung.letzte} (höchstens 0,2), von Bild zu Bild fällt sie höchstens ${b.sprung.groesster} (höchstens 0,25)`,
+        b.sanft, JSON.stringify({ ...b.sprung, gestockt: b.gestockt }));
+    }
     await ctx.close();
   }
   {

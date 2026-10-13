@@ -147,6 +147,10 @@ sind der teuerste Teil und der lehrreichste.
 | P131 | 2026-10-11 | Ein Neuladen, das keines war | 🟠 mittel | — |
 | P132 | 2026-10-11 | Ein alter Plan rechnet nach dem Update still anders | hoch | — |
 | P133 | 2026-10-11 | Ein „&“ zerbricht ein Bild | niedrig | — |
+| P134 | 2026-10-12 | Ein Speicher, der einen Verweis hält | hoch | — |
+| P135 | 2026-10-12 | Escape, das nie ankam | 🟠 mittel | — |
+| P136 | 2026-10-11 | „--schnell“ war nicht schnell | niedrig | — |
+| P137 | 2026-10-12 | Ein Wächter, der nicht auf der Nachbarliste stand | niedrig | — |
 
 ---
 
@@ -2881,4 +2885,88 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** test609 gegen den ersten eingebundenen Stand 23 von 24, danach 24/24; Gegenprobe mit dem rohen `&` wieder 23/24.
 
 **Die Lehre.** Eine Zusage über ALLE Bilder („jedes ist dekodierbar“) findet, wonach keiner gesucht hat. Sie kostet eine Schleife und ist mehr wert als zehn Zusagen über bekannte Fälle.
+
+
+---
+
+## P134 · Ein Speicher, der einen Verweis hält
+
+*2026-10-12 · hoch*
+
+**Das Bild.** Auf der Planfläche: Maus auf einem Teil gedrückt, gezogen, mitten im Zug zweimal „h“ (oder „r“, Entf, ein Pfeil), losgelassen — danach brachten Strg+Z 2 und 3 ein angezapftes Netz zurück ({E1:X2 F1:N F1:N2 G2:N}), und die IndexedDB hielt mitten im Zug denselben Stand.
+
+**Die falsche Vermutung.** Gespeichert wird nur über `aendere`, und das läuft erst beim Loslassen mit der vollen Suche — also kann ein billiges Zwischenbild nie in die Ablage kommen.
+
+**Wie es gefunden wurde.** Die zweite Durchsicht von E746 fuhr eine Sonde mit Tasten mitten im Zug; der Nachzug las danach die IndexedDB mitten im Zug und fand den zweiten Weg: `Store.updateBlock` übernahm den Verweis auf `z.plan`.
+
+**Die Ursache.** Zwei Dinge: die Tasten im Zug riefen drehen/spiegeln/verschieben, die über `aendere` speicherten und einen Rückgängig-Schritt anlegten — mit dem billigen Zwischenbild; und die Ablage hielt einen lebenden Verweis, sodass die Schreibpause schrieb, was der Plan gerade war.
+
+**Die Lösung.** E746 (zweite Durchsicht): aendere, zurueck und vorwaerts tun während eines Zugs nichts, Escape bricht ab, die Ablage bekommt eine JSON-Kopie.
+
+**Der Beweis.** test611 §13 zuerst rot (129/159 gegen 478791f), danach 172/172; Gegenproben 10–17 je rot (u. a. „Ablage mit z.plan statt Kopie“ 166/170).
+
+**Die Lehre.** Wer einem Speicher ein Objekt gibt und es danach weiter verändert, speichert die Zukunft mit. Dasselbe Muster steht an weiteren Stellen (L256) — nachsehen, nicht vermuten.
+
+
+---
+
+## P135 · Escape, das nie ankam
+
+*2026-10-12 · 🟠 mittel*
+
+**Das Bild.** Ein Wächter verlangte und bestätigte, dass Escape einen Zug abbricht; mit echter Maus und echter Tastatur brach Escape nichts ab, und Strg+Z im Zug baute die Seite neu und verwarf den Zug.
+
+**Die falsche Vermutung.** Was am Handler der Fläche ankommt, kommt auch beim Menschen an — also genügt es, die Taste an die Fläche zu schicken.
+
+**Wie es gefunden wurde.** Die dritte Durchsicht schrieb eine Sonde nur mit page.mouse und page.keyboard: der Fokus lag im Zug auf BODY, weil male() beim Aufsetzen den Knoten unter dem Zeiger ersetzt.
+
+**Die Ursache.** Der Tastengriff hing an der Wurzel der Fläche; der Fokus fiel beim Neuzeichnen auf die Seite. Der Wächter fokussierte die Fläche selbst und schickte dispatchEvent — er prüfte den Handler, nicht den Weg dorthin.
+
+**Die Lösung.** E746 (dritte Durchsicht): der Zug hängt seinen Tastenhorcher in der Aufnahmephase ans Dokument; nach einem Klick holt die Fläche den Fokus zurück (ohne Ring, data-zeigerfokus).
+
+**Der Beweis.** test611 §14 mit echter Eingabe zuerst rot (189/207), danach 209/209; Gegenproben 21–32 je rot.
+
+**Die Lehre.** Ein Ereignis, das der Test selbst an den Handler schickt, beweist den Handler. Den Weg beweist nur echte Eingabe (§55.2).
+
+
+---
+
+## P136 · „--schnell“ war nicht schnell
+
+*2026-10-11 · niedrig*
+
+**Das Bild.** L254 schlug „in der CI nur --schnell“ vor, und Redur wählte es; gemessen liess --schnell aber nur einen einzigen Lauf weg (test73) und war mit 549 von 550 so lang wie der volle Lauf.
+
+**Die falsche Vermutung.** Ein Schalter, der „schnell“ heisst, ist der kurze Lauf — und die Doku, die ihn als „nach jeder Änderung“ empfiehlt, meint einen kurzen.
+
+**Wie es gefunden wurde.** Der Zweig für die CI mass zuerst, was --schnell auswählt, bevor er die CI darauf stellte; die erste Durchsicht fand vier Stellen der Doku, die die alte Bedeutung (praktisch alles) brauchten.
+
+**Die Ursache.** Die Bedeutung stammte aus einer Zeit mit 67 Läufen, in der „ohne die Messläufe“ wirklich kurz war; der Name blieb, die Zahl wuchs auf 550.
+
+**Die Lösung.** E745: --schnell heisst jetzt die gemessene Auswahl ohne Browser plus die Sicherungsläufe aus §31; die Doku-Stellen, die den vollen Lauf meinten, sagen npm run pruefen oder volllauf.mts.
+
+**Der Beweis.** test610 zuerst rot gegen 97d156b, danach 30/30; der Job auf GitHub 4 min 7 s statt Abbruch nach 40 min.
+
+**Die Lehre.** Vor dem Bauen auf einem Namen nachmessen, was er tut — auch in den eigenen Vorschlägen (L254 war von mir).
+
+
+---
+
+## P137 · Ein Wächter, der nicht auf der Nachbarliste stand
+
+*2026-10-12 · niedrig*
+
+**Das Bild.** Nach vier Runden Durchsicht und 27 grünen Browser-Läufen war im vollen Lauf test581 rot: „Keine eigene Kurve: jede Bewegung im TypeScript fährt eine Feder“ — mit zwei Zeilen aus linse.ts, geschrieben in E744.
+
+**Die falsche Vermutung.** Die Nachbarn einer Änderung sind die Läufe, die dieselbe Ansicht prüfen — für die Linse also 589, 539, 541, 576.
+
+**Wie es gefunden wurde.** Im vollen Lauf auf fdbf6ee, nicht in der Durchsicht: keiner der vier Skeptiker hatte test581 auf der Liste, weil er nicht von der Linse handelt.
+
+**Die Ursache.** verblassen() las die Kurve aus der Marke --ease-exit und schrieb als Rückfall die Bézier-Kurve 0.4, 0, 1, 1 selbst als Zeichenkette aus — eine zweite Federsprache neben den Marken, die test581 §9 für alles TypeScript verbietet.
+
+**Die Lösung.** Rückfall 'ease-in' (claude/abend-antworten-2), wie menue.ts ein Schlüsselwort nimmt.
+
+**Der Beweis.** test581 gegen fdbf6ee 92/93 mit linse.ts:259/261, danach 93/93.
+
+**Die Lehre.** Zu den Nachbarn einer Änderung gehören auch die Wächter, die eine Regel über eine ganze Sprache oder Schicht halten (Kurven, Escape, esc, Ports). Der volle Lauf ist der einzige, der sie sicher alle fragt — deshalb ist er die Schwelle für main. Und beim Aufschreiben fing derselbe Wächter die Chronik selbst: der erste Text zu P137 zitierte die Kurve wörtlich in Anführungszeichen, und daten.ts trug sie ins TypeScript — wie P130.
 

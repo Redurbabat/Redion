@@ -764,9 +764,17 @@ Phase 7 und Phase 8.
 **Nach jeder Codeänderung**
 
 ```
-npm run pruefen -- --schnell
+npm run pruefen -- --schnell      jeder Lauf ohne Browser, dazu test96 und test100
+node pruefungen/alle.mts NNN …    dazu die Browserläufe des geänderten Bereichs
 node bauen.mts
 ```
+
+*Bis zum 11. Oktober 2026 stand hier `npm run pruefen -- --schnell` allein —
+das fuhr zuletzt alles ausser test73, also praktisch den vollen Lauf. Seit
+E745 fährt es nur noch die Läufe ohne Browser und die zwei Sicherungsläufe;
+eine Änderung an der Oberfläche prüft es fast nicht. Deshalb die zweite
+Zeile: die Läufe, die den geänderten Bereich im Browser prüfen (CLAUDE.md
+§30, „Wann welche Prüfung Pflicht ist").*
 
 **Bei Backup, Import oder Export**
 
@@ -788,7 +796,9 @@ npm run bauen:ts          wenn eine Datei unter src/ liegt, die der Browser läd
 node pruefungen/alle.mts 105 109
 ```
 
-**Vor jedem Push** die volle Runde: `npm run pruefen`.
+**Vor jedem Push** die volle Runde: `npm run pruefen` — oder in Stücken
+und wiederaufnehmbar `node pruefungen/volllauf.mts` (CLAUDE.md §30). Die CI
+fährt sie nicht (E745).
 
 ---
 
@@ -1692,6 +1702,14 @@ Grund:
    vierzehn Werkzeuge, die Wortzeile bei 1360 und 1600 px rechnet mit
    dreizehn) und `test533` („Sie stehen alle auf EINER Höhe — ist 2, soll
    1" und „kein Wort ist sichtbar — ist 1, soll 0", die Tafel aus E614).
+   **Seit E745 macht einer davon die CI rot:** der schnelle Lauf fährt
+   jeden Lauf ohne Browser, und `test274` ist der einzige der dreizehn
+   darunter. Er meldet `redion-graphit` in `marken.ts` als verwaiste
+   Nachschlagestelle; `marken.ts` legt diesen Halter aber selbst an, als
+   `svg('svg', { id: 'redion-graphit', … })` (Zeile 888) — eine Schreibweise,
+   die test274 nicht als „entsteht" erkennt. Ein Fehlalarm des Wächters,
+   nicht der App. test274 zu ändern braucht Redurs Wort; bis dahin ist der
+   Job „Schneller Lauf" auf GitHub rot.
    ~~Dazu `test319` („Und `info` ist nicht die blasseste der drei — info
    12.09, warn 12.15, fehler 12.41"; auf morgen-besser-2 Ziffer für Ziffer
    gleich — alle drei Streifen liegen weit über 4,5 : 1, `info` nur um
@@ -1736,10 +1754,12 @@ Grund:
    15 von 15 grün; `test453`, `test459` und `test466` (die im vollen Lauf
    mit dieser Meldung rot waren) öffnen seither so. **Derselbe Aufbau —
    `Store.flush()` und `App.oeffne` im selben `evaluate`, auf einer oder
-   zwei Zeilen — steht noch in 116 weiteren Läufen**: 172 204 209 210 212 214 220 221 222 223 247 260 285 292 295 296 299 301 324 341 343 344 345 346 347 348 349 350 351 352 385 386 395 396 404 405 406 407 408 411 412 415 436 438 439 440 441 442 443 444 445 446 447 448 449 451 452 454 455 456 457 458 461 462 463 464 465 467 468 469 470 471 472 473 475 477 478 479 480 492 522 523 524 527 529 533 534 535 536 538 539 561 562 563 564 568 569 570 572 573 574 575 576 577 580 582 583 585 588 589 590 593 594 596 598 603. Sieben davon
+   zwei Zeilen — steht noch in 115 weiteren Läufen**: 172 204 209 210 212 214 220 221 222 223 247 260 285 292 295 296 299 301 324 341 343 344 345 346 347 348 349 350 351 352 385 386 395 396 404 405 406 407 408 411 412 415 436 438 439 440 441 442 443 444 445 446 447 448 449 451 452 454 455 456 457 458 461 462 463 464 465 468 469 470 471 472 473 475 477 478 479 480 492 522 523 524 527 529 533 534 535 536 538 539 561 562 563 564 568 569 570 572 573 574 575 576 577 580 582 583 585 588 589 590 593 594 596 598 603. Sieben davon
    waren im vollen Lauf rot, aber aus anderen Gründen (348, 351, 448, 470,
    524, 533 bleiben fremd rot; 588 war danach dreimal grün); keiner brach
-   mit „Execution context was destroyed" ab. Umstellen, sobald einer es
+   mit „Execution context was destroyed" ab — bis `test467` im vollen
+   Lauf vom 12. Oktober (553 Läufe) genau so abbrach; einzeln dreimal
+   grün, seither öffnet er in einem eigenen Schritt (P131). Umstellen, sobald einer es
    tut — oder in einem eigenen Zweig alle auf einmal, mit einem gemeinsamen
    Helfer statt hundert Kopien.
 
@@ -1766,14 +1786,21 @@ Grund:
    Eigenschaft versteht), `test524` („Beide Leisten tragen den Rollschatten —
    zwei Schatten, zwei Deckel"), `test582` (Sand und Wald 4,45 : 1).
    Ein eigener „Rot zuerst"-Zweig, Wächter nur mit Redurs Wort ändern.
-2. **Die leere Linse neben dem Wort** (E740) — eine Frage an Redur, keine
+2. ~~**Die leere Linse neben dem Wort** (E740) — eine Frage an Redur, keine
    Arbeit: seit dem 11. Oktober ruht die Linse auf „Heute" rechts neben
    „Weiterdenken." (sein „Ja" auf „neben dem Wort ruhen?"; erledigt, siehe
    ERLEDIGTE-AUFGABEN.md). In Ruhe liegt unter ihr leerer Grund, sie ist
    also eine leere Glasscheibe. Soll sie so stehen bleiben oder nach der
    Fahrt verblassen? Antwortet er „verblassen", hält `test589` §16 weiter
    (kein Buchstabe unter einer Linse), und §8/§16 verlangen dann keine
-   Linse mehr in Ruhe — mit seinem Wort geändert.
+   Linse mehr in Ruhe — mit seinem Wort geändert.~~ **Erledigt am
+   11. Oktober 2026: Redur „verblassen" — E744** auf
+   `claude/linse-verblasst`: nach der Fahrt verblasst die Linse in 320 ms
+   (`--motion-slow`, `--ease-exit`) und ist danach weg; ohne Bewegung
+   kommt keine. `test589` §16 misst die vier Zusagen von E740 jetzt am
+   Halt (eine Millisekunde vor dem Ende der Fahrt), in Ruhe keine sichtbare
+   Linse und das Verblassen Bild für Bild; §8 mit seinem Wort geändert.
+   146 von 146; gegen 97d156b03 132 ok, 14 offen.
 
 ## Die Fläche nach E722/E723 (6. Oktober 2026)
 
