@@ -582,7 +582,16 @@ const SelectionFlow = (() => {
     zeichen?: (k: HTMLElement) => HTMLElement | null;
     waehle: (k: HTMLElement, flaeche: HTMLElement) => void;
     zurueck: (k: HTMLElement | null, flaeche: HTMLElement) => void;
+    /** HINAUF ÜBERGEBEN (E749, freiwillig). Steigt der Finger über die
+     *  Oberkante der Reihe, fragt `ziehbar` hier, ob jemand den Zug nimmt —
+     *  gerade hinauf (`'hoch'`) oder aus einem laufenden Zug (`'aus-zug'`).
+     *  Wer ihn nimmt, bekommt Zug, Loslassen und Abbruch; Zeigerfang, das
+     *  Schlucken des Klicks und Escape bleiben hier. Ohne die Angabe ändert
+     *  sich nichts (test585). */
+    hinauf?: { nimm: (k: HTMLElement, wie: 'hoch' | 'aus-zug', x: number, y: number) => Uebernahme | null };
   };
+  /** Wer einen Zug übernommen hat (E749). */
+  type Uebernahme = { move: (x: number, y: number) => void; up: (x: number, y: number) => void; cancel: () => void };
 
   const ziehbar = (a: Ziehbar): void => {
     if (a.reihe.dataset['ziehbar']) return;           /* nie zweimal binden */
@@ -597,6 +606,9 @@ const SelectionFlow = (() => {
       ort: number; tempo: number; dehnung: number; hub: number;
       messer: ReturnType<typeof tempoMesser>;
       flaeche: HTMLElement | null; zuletzt: number; bild: number; vorn: HTMLElement | null;
+      /* E749: der gedrückte Knopf, die Oberkante der Reihe, ob es zuerst
+         hinaufging, wer übernommen hat, und ob es ohne Fläche nur hinauf geht. */
+      k: HTMLElement; oben: number; hoch: boolean; ue: Uebernahme | null; nurHinauf: boolean;
     };
     let zug: Zug | null = null;
     let gedrucktes: HTMLElement | null = null;
@@ -669,6 +681,7 @@ const SelectionFlow = (() => {
       const z = zug;
       zug = null;
       lasseLos(gedrucktes);
+      if (z?.ue) { schlucken = performance.now(); z.ue.cancel(); return; }
       if (!z || !z.amZiehen || !z.flaeche) return;
       aufraeumen(z);
       if (a.flaeche) setze(z.flaeche, z.ort, 0, z.dehnung, z.hub);
@@ -676,7 +689,7 @@ const SelectionFlow = (() => {
     };
 
     a.reihe.addEventListener('pointerdown', (e: PointerEvent) => {
-      if (e.button !== 0 || zug?.amZiehen) return;
+      if (e.button !== 0 || zug?.amZiehen || zug?.ue) return;
       const liste = a.optionen().filter(sichtbar);
       const ziel = e.target instanceof Element ? e.target : null;
       const k = liste.find(o => ziel && o.contains(ziel)) || null;
@@ -685,8 +698,20 @@ const SelectionFlow = (() => {
       gedrucktes = a.zeichen ? a.zeichen(k) : null;
       drueckeEin(gedrucktes, 0.9);
       const aktiv = a.gewaehlt();
-      if (!aktiv || !sichtbar(aktiv)) return;
-      if (a.nurAmGewaehlten && k !== aktiv) return;
+      /* Die Oberkante, einmal gemessen — nur, wenn jemand hinauf übernimmt. */
+      const oben = a.hinauf ? a.reihe.getBoundingClientRect().top : 0;
+      if (!aktiv || !sichtbar(aktiv) || (a.nurAmGewaehlten && k !== aktiv)) {
+        /* Ohne gewählte Fläche gibt es nichts zu ziehen — hinauf geht es
+           trotzdem (E749): auf dem Posteingang hat kein Reiter die Pille. */
+        if (a.hinauf) zug = {
+          id: e.pointerId, x0: e.clientX, y0: e.clientY, maus: e.pointerType === 'mouse',
+          zieht: false, amZiehen: false, nullX: 0, breite: 0, mitten: [], liste, aktiv: k, auf: false,
+          finger: 0, versatz: 0, ort: 0, tempo: 0, dehnung: 1, hub: 1, messer: tempoMesser(),
+          flaeche: null, zuletzt: performance.now(), bild: 0, vorn: null,
+          k, oben, hoch: false, ue: null, nurHinauf: true
+        };
+        return;
+      }
       /* Einmal gemessen, beim Aufsetzen — nicht je Bild. */
       const ar = aktiv.getBoundingClientRect();
       let nullX = ar.left;
@@ -703,32 +728,77 @@ const SelectionFlow = (() => {
         auf: Math.abs(finger - (stehtBei.ort + ar.width / 2)) <= ar.width / 2,
         finger, versatz: 0, ort: stehtBei.ort, tempo: stehtBei.tempo,
         dehnung: 1, hub: stehtBei.hub, messer: tempoMesser(),
-        flaeche: a.flaeche ?? null, zuletzt: performance.now(), bild: 0, vorn: null
+        flaeche: a.flaeche ?? null, zuletzt: performance.now(), bild: 0, vorn: null,
+        k, oben, hoch: false, ue: null, nurHinauf: false
       };
     });
+
+    /* ══ DIE ÜBERGABE NACH OBEN (E749) ══════════════════════════════════
+     * Der Finger ist über die Oberkante gestiegen. Ein laufender Pillenzug
+     * hält an (ohne Wahl: die Fläche bleibt, wo der Finger sie liess, und
+     * wer übernimmt, führt sie weiter); dann wird gefragt. Nimmt niemand,
+     * läuft der Zug weiter, als wäre nichts gewesen. */
+    const uebergeben = (z: Zug, e: PointerEvent): boolean => {
+      if (!a.hinauf) return false;
+      const zog = z.amZiehen;
+      const k = zog ? (z.vorn ?? z.k) : z.k;
+      if (zog) { cancelAnimationFrame(z.bild); z.vorn?.removeAttribute('data-anvisiert'); z.vorn = null; }
+      const ue = a.hinauf.nimm(k, zog ? 'aus-zug' : 'hoch', e.clientX, e.clientY);
+      if (!ue) {
+        if (zog) { z.zuletzt = performance.now(); z.bild = requestAnimationFrame(takt); }
+        return false;
+      }
+      /* Der Pillenzug ist vorbei: gehalten wird nichts mehr. Blieb das
+         Merkmal stehen, brach die ruhende Pille danach weiter das Licht
+         über dem Wort darunter (test614 §11e, beim Bauen gefunden). */
+      if (zog) delete a.reihe.dataset['gehalten'];
+      z.amZiehen = false;
+      z.hoch = false;
+      z.ue = ue;
+      lasseLos(gedrucktes);
+      try { a.reihe.setPointerCapture(e.pointerId); } catch { /* schon weg */ }
+      window.getSelection()?.removeAllRanges();
+      return true;
+    };
 
     a.reihe.addEventListener('pointermove', (e: PointerEvent) => {
       const z = zug;
       if (!z || e.pointerId !== z.id) return;
+      if (z.ue) { z.ue.move(e.clientX, e.clientY); return; }
       if (e.pointerType !== 'touch' && e.buttons === 0) { abbrechen(); return; }
-      if (!z.amZiehen) {
+      if (!z.amZiehen && !z.hoch) {
         const ax = achse(e.clientX - z.x0, e.clientY - z.y0, z.maus ? 2 : 10);
         if (ax === null) return;
-        if (ax === 'y') { zug = null; lasseLos(gedrucktes); return; }
-        /* ES WIRD GEZOGEN. */
-        z.amZiehen = true;
-        lasseLos(gedrucktes);
-        try { a.reihe.setPointerCapture(e.pointerId); } catch { /* schon weg */ }
-        window.getSelection()?.removeAllRanges();
-        a.reihe.dataset['gehalten'] = '';
-        if (!z.flaeche && a.baue) z.flaeche = a.baue(z.aktiv);
-        if (!z.flaeche) { zug = null; delete a.reihe.dataset['gehalten']; return; }
-        /* Gegriffen, wo sie ist (ab HIER, damit nichts springt), sonst gezogen. */
-        if (z.auf) z.versatz = (e.clientX - z.nullX) - (z.ort + z.breite / 2);
-        else z.zieht = true;
-        z.zuletzt = performance.now();
-        z.bild = requestAnimationFrame(takt);
+        if (ax === 'y') {
+          /* HINAUF IST BIS ZUR OBERKANTE NOCH EIN TIPP (E749): der Zug
+             bleibt, und wer davor loslässt, tippt genau einmal. Hinab und
+             ohne `hinauf` wie immer: der Zug ist vorbei. */
+          if (!(a.hinauf && e.clientY < z.y0)) { zug = null; lasseLos(gedrucktes); return; }
+          z.hoch = true;
+          lasseLos(gedrucktes);
+        } else if (z.nurHinauf) {
+          zug = null; lasseLos(gedrucktes); return;
+        } else {
+          /* ES WIRD GEZOGEN. */
+          z.amZiehen = true;
+          lasseLos(gedrucktes);
+          try { a.reihe.setPointerCapture(e.pointerId); } catch { /* schon weg */ }
+          window.getSelection()?.removeAllRanges();
+          a.reihe.dataset['gehalten'] = '';
+          if (!z.flaeche && a.baue) z.flaeche = a.baue(z.aktiv);
+          if (!z.flaeche) { zug = null; delete a.reihe.dataset['gehalten']; return; }
+          /* Gegriffen, wo sie ist (ab HIER, damit nichts springt), sonst gezogen. */
+          if (z.auf) z.versatz = (e.clientX - z.nullX) - (z.ort + z.breite / 2);
+          else z.zieht = true;
+          z.zuletzt = performance.now();
+          z.bild = requestAnimationFrame(takt);
+        }
       }
+      /* Über der Oberkante: wer nimmt den Zug (E749)? Erst nach der
+         Schwelle — ein Daumen, der oben an der Leiste aufsetzt und 3 px
+         rollt, tippt nur. */
+      if (a.hinauf && (z.hoch || z.amZiehen) && e.clientY < z.oben && uebergeben(z, e)) return;
+      if (z.hoch) return;
       z.finger = e.clientX - z.nullX;
       z.messer.dazu(z.finger - z.versatz, e.timeStamp);
     });
@@ -738,6 +808,23 @@ const SelectionFlow = (() => {
       if (!z || e.pointerId !== z.id) return;
       zug = null;
       lasseLos(gedrucktes);
+      /* Übernommen (E749): wer übernahm, wählt. Klickt er dabei einen Knopf
+         der Reihe, ist das SEIN Klick; geschluckt wird erst der des Browsers. */
+      if (z.ue) {
+        eigenerKlick = true;
+        try { z.ue.up(e.clientX, e.clientY); } finally { eigenerKlick = false; }
+        schlucken = performance.now();
+        return;
+      }
+      /* Hinauf, aber unter der Oberkante losgelassen: GENAU EIN Klick auf den
+         gedrückten Knopf. Der Browser klickt bis 15 px Weg selbst, darüber
+         nicht (gemessen, E749) — darum klickt `ziehbar` und schluckt seinen. */
+      if (z.hoch) {
+        eigenerKlick = true;
+        try { a.waehle(z.k, z.flaeche ?? a.flaeche ?? a.reihe); } finally { eigenerKlick = false; }
+        schlucken = performance.now();
+        return;
+      }
       if (!z.amZiehen || !z.flaeche) return;          /* ein Tipp: der Klick wählt */
       aufraeumen(z);
       const tempo = z.zieht ? z.tempo : z.messer.tempo(e.timeStamp);
@@ -756,7 +843,7 @@ const SelectionFlow = (() => {
       if (zug && e.pointerId === zug.id) abbrechen();
     });
     a.reihe.addEventListener('lostpointercapture', (e: PointerEvent) => {
-      if (e.target === a.reihe && zug && zug.amZiehen && e.pointerId === zug.id) abbrechen();
+      if (e.target === a.reihe && zug && (zug.amZiehen || zug.ue) && e.pointerId === zug.id) abbrechen();
     });
     /* Der Klick nach dem Ziehen ist kein Tipp — nur dieser, nur 0,5 s lang;
            ein Vorleser wählt ohne Aufsetzen und kommt immer an. */
@@ -774,7 +861,7 @@ const SelectionFlow = (() => {
       if (performance.now() - schlucken < 300) e.stopPropagation();
     });
     window.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || !zug?.amZiehen) return;
+      if (e.key !== 'Escape' || !(zug?.amZiehen || zug?.ue)) return;
       e.preventDefault();
       e.stopPropagation();
       abbrechen();
@@ -1112,14 +1199,18 @@ const SelectionFlow = (() => {
   };
 
   /** Aus dem Knopf aufgehen, auf `--feder-sanft` (E702). Die Scheibe per
-   *  `transform`; nur ihr Inhalt blendet (Glas, E703). */
-  const growFrom = (fenster: HTMLElement, anker: DOMRect | null | undefined): Animation | null => {
+   *  `transform`; nur ihr Inhalt blendet (Glas, E703). `rahmen` (E749,
+   *  freiwillig): wer die Scheibe eben gemessen hat, gibt das Mass mit —
+   *  ein zweites Messen nach dem Schreiben kostete eine Stilrechnung der
+   *  ganzen Seite (gemessen an der Zielleiste, rund 30 ms bei 4× Drossel). */
+  const growFrom = (fenster: HTMLElement, anker: DOMRect | null | undefined,
+                    rahmen?: Rechteck): Animation | null => {
     if (!anker || !anker.width || !anker.height || ruhig()) return null;
     const { easing, duration } = RedionSpring.token('smooth');
     if (!(duration > 2)) return null;
     /* Erst die eigene Ankunft ab, dann messen (`glas-ankunft` verschöbe es). */
     fenster.classList.add('ru-waechst');
-    const r = fenster.getBoundingClientRect();
+    const r = rahmen ?? fenster.getBoundingClientRect();
     if (!r.width || !r.height) return null;
     fenster.style.transformOrigin = '0 0';
     const von = 'translate(' + (anker.left - r.left).toFixed(1) + 'px,' + (anker.top - r.top).toFixed(1) + 'px)'

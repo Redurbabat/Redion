@@ -9208,3 +9208,109 @@ Bytes.
 `ba51915dc`) und `test567` einmal mit 38 von 39 (die Zählung über
 zufällig gezogene Ankreuzkarten; drei Wiederholungen 39 von 39, auf
 `7e41a4b4a` zweimal 39 von 39). Datei-Wächter grün.
+
+## §106 · Die Zielleiste am Telefon: Geste, Kosten, Breite (E749, 13. Oktober 2026)
+
+**Womit:** Sonden im Kratzordner (`ziel-handy/`), Telefon 390 × 844 mit
+echter Berührung über CDP (`Input.dispatchTouchEvent`), Chromium
+141.0.7390.37 der Prüfungen; vorher = `352eed65c` (Zweig
+`claude/zielleiste-quelle`), nachher = der Zweig `claude/zielleiste-handy`.
+
+**1 · Was senkrechtes Ziehen auf der Leiste vorher tat** (von „Dokumente",
+y = 805, 112 px hinauf in acht Schritten, auf dem Regal):
+
+```txt
+touch-action   Ereignisse an #handy-oben                                  #scroll    Klicks
+pan-y          pointerdown → touchstart → pointermove ×2 → touchmove →     0 → 0      0
+(vorher)       pointercancel → lostpointercapture → touchmove ×6 → touchend
+none           pointerdown → touchstart → pointermove ×2 → touchmove →     0 → 0      0
+               (pointermove → touchmove) ×6 → pointerup → lostpointercapture → touchend
+```
+
+`#scroll` wäre 317 px rollbar gewesen; `scrollY` 0, kein `scroll`-Ereignis.
+`pan-y` hat nichts gerollt, nur den Zug nach zwei Schritten abgebrochen.
+
+**2 · Ab wie viel Weg Chromium nach einer Berührung klickt** (auf
+„Lernen", zwei Züge, dann los; `pan-y` und `none` Zeile für Zeile gleich):
+
+```txt
+Weg      0   6↑  9↑  12↑  15↑  20↑  24↑  12↓  8→
+Klicks   1   1   1   1    1    0    0    1    1
+```
+
+**3 · Halten** (vorher; dasselbe mit verhindertem `contextmenu` und mit
+`touch-action:none`): 300, 550 und 800 ms ruhig — `pointerdown pointerup
+touchend click`, der Reiter wechselt. `Input.synthesizeTapGesture` über
+900 ms: `pointerdown touchstart pointerup touchend`, kein Klick, kein
+`contextmenu`. Die rechte Maustaste: `pointerdown contextmenu pointerup`.
+
+**4 · Weniger Transparenz lässt sich einstellen:** nach
+`Emulation.setEmulatedMedia({prefers-reduced-transparency: reduce})` sagt
+`matchMedia` `true`, `#handy-oben` hat `backdrop-filter: none` (vorher
+`saturate(1.8) blur(20px)`). `test539` §6 sagt seit dem 20. September das
+Gegenteil (L203); für diesen Browser stimmt das nicht mehr.
+
+**5 · Was das erste Öffnen kostet** (die Arbeit im `pointermove`, der die
+Kante überquert: Einfangen am `window` davor, Blasen am `window` danach;
+fünf frisch geladene Seiten je Zeile, Mitte in Klammern; „Lücke" = der
+grösste Abstand zweier Bilder um das Öffnen):
+
+```txt
+Stand          Drossel   erstes Öffnen (ms)                     zweites (Mitte)   Lücke (Mitte)
+erster Bau     1×        25,2 / 20,0 / 19,5 / 29,2 / 21,5 (21,5)   27,6              17
+erster Bau     4×        157 / 168 / 130 / 94 / 124 (130)          152               133
+nachher        1×        10,0 / 8,9 / 10,4 / 9,9 / 9,5 (9,9)       10,5              17
+nachher        4×        46 / 57 / 78 / 63 / 68 (63)               48                117
+```
+
+Sichtbar war die Zielleiste in jedem Lauf im ersten Bild nach dem Zug über
+die Kante (Zeitstempel des Bildes 0 bis 2 ms VOR dem des Ereignisses — das
+Bild, das ihn verarbeitet hat).
+
+Das Profil (4×, ein Lauf, Eigenzeit): erster Bau `getBoundingClientRect`
+47 ms, `highlight` 34, `fill` 30, `pillTo` 27 — vier erzwungene
+Stilrechnungen; nachher `getBoundingClientRect` 37 ms und
+`AppEinstellung.amTelefon` 34 (das `touchmove` von `pwa.ts` liest
+`innerWidth` und zahlt die Rechnung, die das Bild ohnehin braucht).
+
+**6 · Warum eine Stilrechnung so viel kostet** (Sonde, 4× Drossel, an
+einem Kind von `#ho-ziele`, dann `offsetTop` gelesen, Mitte aus 15):
+
+```txt
+geschrieben            ms
+nichts                 0
+hidden                 17,7
+aria-current           17,7
+ein Kind angehängt     17,9
+data-x am Kind         0
+eine Klasse am Kind    0
+data-x an der Leiste   0
+style.left am Kind     0
+```
+
+`body:has(#zm-pille:not([hidden]))`, `…:has(#sidebar .side-item[aria-current="page"])`
+und rund dreissig weitere `body:has(…)`-Regeln machen jedes `hidden` und
+jedes neue Kind zu einer Rechnung der ganzen Seite.
+
+**7 · Passt jedes Wort in sein Ziel?** (`scrollWidth` gegen `clientWidth`
+des Worts, fett nachgerechnet):
+
+```txt
+Breite   vorher (Lücke 2 px, Rand 2 px)     nachher (keine Lücke, Rand 1 px)
+390      Meine Ablage 66/66 (auf dem Bild   alle 25 passen, auch fett
+         „Meine Abla…", Bruchteile)
+360      Meine Ablage, Besprechung,          Meine Ablage 66/63
+         Einstellungen gekürzt
+320      fünf gekürzt                        Meine Ablage 66/55, Stundenplan 58/55,
+                                             Besprechung 61/55, Posteingang 57/55,
+                                             Einstellungen 62/55
+```
+
+**8 · Lesbar und Glas** (aus `test614`): die stille Schrift der Zielleiste
+über dem schwarz-weiss-rot-blauen Muster auf dem GPU-Weg — hell schlimmster
+4,72 : 1 (Mitte 4,92), dunkel 5,32 : 1 (Mitte 6,48). Mit offener
+Zielleiste stehen 13,5 % des Bildschirms unter Glas (Leiste und
+Zielleiste; die Grenze mit offenem Menü ist 60 %).
+
+**9 · Start:** `tab-shelf.js` 3,53 KB gzip; `test388` §5 1927 (255 Dateien, in einer Kopie von `352eed65c`) →
+1932 (256 Dateien) KB von 1950.

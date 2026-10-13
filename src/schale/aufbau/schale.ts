@@ -4922,12 +4922,44 @@ const App = (() => {
         if (typeof Wischen !== 'undefined') Wischen.ankunft(vorher, nachher);
       }));
     };
-    an('hl-dok', () => { PWA.schubladeZu && PWA.schubladeZu();
-                         dockWechsel('dokumente', 'hl-dok', () => { Bibliothek.oeffne(); handyLeiste(); }); });
-    an('hl-start', () => { PWA.schubladeZu && PWA.schubladeZu();
-                           dockWechsel('start', 'hl-start', () => { Produktwelten.lernen('heute'); handyLeiste(); }); });
-    an('hl-lernen', () => { PWA.schubladeZu && PWA.schubladeZu();
-                            dockWechsel('lernen', 'hl-lernen', () => { Produktwelten.lernen('lernen'); handyLeiste(); }); });
+    /* ══ DIE FÜNF REITER, EINMAL (E749) ═══════════════════════════════════
+     * Hier standen fünf Zeilen `an('hl-…', …)`, jede mit derselben Hülle um
+     * ihren eigenen Bildschirm. Seit der Zielleiste gibt es einen zweiten
+     * Eingang auf denselben Weg: ein Ort-Ziel (Favoriten, Trainer, Kalender)
+     * soll GENAU das tun, was der Tipp auf seinen Reiter tut — die Schublade
+     * zu, die Pille vorausschicken, zwei Bilder später der Bildschirm. Eine
+     * Tabelle für beide, damit es keinen zweiten Wechselweg gibt (§8):
+     * `wechsle` ist der einzige, und die Klicks wie die Zielleiste nehmen ihn.
+     *
+     * Die Kommentare zu einzelnen Reitern stehen an ihrer Zeile der Tabelle;
+     * was zwischen den alten Zeilen über WEGGEFALLENE Knöpfe stand, steht
+     * unverändert darunter. */
+    const REITER_UNTEN: Array<{ knopf: string; reiter: string; oeffnen: () => void }> = [
+      { knopf: 'hl-dok', reiter: 'dokumente', oeffnen: () => Bibliothek.oeffne() },
+      { knopf: 'hl-start', reiter: 'start', oeffnen: () => Produktwelten.lernen('heute') },
+      { knopf: 'hl-lernen', reiter: 'lernen', oeffnen: () => Produktwelten.lernen('lernen') },
+      /* AM TELEFON AUF DIE BÜHNE, am Rechner in die Seitenleiste. Vorher zog
+         dieser Reiter auch am Telefon die Schublade auf — also die
+         Seitenleiste des Rechners auf 390 px geschoben, samt Baum und
+         33-px-Zeilen. Genau davon ist das R-Blatt weggekommen (E38); ein
+         Reiter, der sie wieder hereinholt, macht die Hälfte davon rückgängig. */
+      { knopf: 'hl-bespr', reiter: 'bespr', oeffnen: () => Produktwelten.planung() },
+      /* „Mehr" statt „Eingang" (E42 §6): Werkzeuge, Hilfe, Sicherung, Import,
+         Papierkorb und Einstellungen brauchen einen Platz oben — ein
+         Posteingang, der meistens leer ist, nicht. Er wohnt jetzt als Zeile
+         in Mehr und ist damit keinen Griff weiter weg als vorher.
+         `reiter('mehr')`, nicht `'start'`: die Pille oben liest ihn. */
+      { knopf: 'hl-mehr', reiter: 'mehr', oeffnen: () => Ansichten.mehr() }
+    ];
+    /** Der EINE Wechselweg unten: Reiter `knopfId`, danach `tun` (ohne Angabe
+     *  der eigene Bildschirm des Reiters). */
+    const wechsle = (knopfId: string, tun?: () => void): void => {
+      const r = REITER_UNTEN.find(x => x.knopf === knopfId);
+      if (!r) return;
+      PWA.schubladeZu && PWA.schubladeZu();
+      dockWechsel(r.reiter, r.knopf, () => { (tun ?? r.oeffnen)(); handyLeiste(); });
+    };
+    REITER_UNTEN.forEach(r => an(r.knopf, () => wechsle(r.knopf)));
     /* HIER STAND `an('hl-seiten', …)` — bis E280 (L86).
        Der Knopf war seit E236 in keinem Markup mehr; die Zeile blieb als
        Erklärung stehen, „bis Redur sagt, dass der Weg wirklich weg soll".
@@ -4935,13 +4967,6 @@ const App = (() => {
        Der Weg selbst bleibt: `Produktwelten.workspace('start')` steht in
        `register/navigation.ts` (Knopf `btn-workspace`), in der
        Befehlspalette und in der Mehr-Kante. */
-    /* AM TELEFON AUF DIE BÜHNE, am Rechner in die Seitenleiste. Vorher zog
-       dieser Reiter auch am Telefon die Schublade auf — also die
-       Seitenleiste des Rechners auf 390 px geschoben, samt Baum und
-       33-px-Zeilen. Genau davon ist das R-Blatt weggekommen (E38); ein
-       Reiter, der sie wieder hereinholt, macht die Hälfte davon rückgängig. */
-    an('hl-bespr', () => { PWA.schubladeZu && PWA.schubladeZu();
-                           dockWechsel('bespr', 'hl-bespr', () => { Produktwelten.planung(); handyLeiste(); }); });
     /* `hu-ki`, `hu-suche` und `hu-neu` gab es in der schwebenden Leiste
        unten. Sie ist mit E236 weggefallen — zwei Leisten am unteren Rand
        wären eine zu viel gewesen. Die drei Wege sind nicht weg:
@@ -4967,13 +4992,6 @@ const App = (() => {
        Der R-Kreis steht seit E236 rechts in der Menüleiste; sein Klick
        hängt an `mb-konto` in `menueband.ts` und ruft dort `App.arbeitsbereich()`.
        Die Zeile hier band an nichts. */
-    /* „Mehr" statt „Eingang" (E42 §6): Werkzeuge, Hilfe, Sicherung, Import,
-       Papierkorb und Einstellungen brauchen einen Platz oben — ein
-       Posteingang, der meistens leer ist, nicht. Er wohnt jetzt als Zeile
-       in Mehr und ist damit keinen Griff weiter weg als vorher.
-       `reiter('mehr')`, nicht `'start'`: die Pille oben liest ihn. */
-    an('hl-mehr', () => { PWA.schubladeZu && PWA.schubladeZu();
-                          dockWechsel('mehr', 'hl-mehr', () => { Ansichten.mehr(); handyLeiste(); }); });
     an('btn-suche-handy', () => suche());
     /* HIER STAND `an('btn-suche-mitte', …)` — bis E272.
        Den Knopf gibt es seit dem Wegfall der grossen Suchbox nicht mehr.
@@ -4989,6 +5007,13 @@ const App = (() => {
        Geste alles gilt, was für den Tipp darüber gilt. Deshalb steht der
        Aufruf hier, hinter den fünf Bindungen, und nicht früher. */
     try { (window as any).Wischen?.starten?.(); } catch { /* ohne Geste */ }
+    /* DIE ZIELLEISTE ÜBER DER LEISTE (E749) — ein Ort-Ziel nimmt `wechsle`,
+       denselben Weg wie der Tipp auf seinen Reiter. Vor `handyLeiste()`,
+       weil dort `ziehbar` gebunden wird und nach der Zielleiste fragt. */
+    if (typeof TabShelf !== 'undefined') {
+      try { TabShelf.attach({ bar: document.getElementById('handy-oben'), go: (knopf, tun) => wechsle(knopf.id, tun) }); }
+      catch (e) { console.error('[Zielleiste]', e); }
+    }
     handyLeiste();
 
     /* Reiterleiste oben in der Seitenleiste */

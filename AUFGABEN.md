@@ -121,6 +121,15 @@ müsste den Reiter mit dem Ort merken — und träfe jede Sonderansicht, die
 man mit „Zurück" erreicht (aus dem Code gelesen, nicht gemessen). Ob die
 Pille dort zum Ort des Schritts zurück soll, ist eine Frage an Redur.
 
+**Seit E749 (13. Oktober): die Zielleiste an einem echten Telefon ansehen —
+braucht ein Gerät.** Gebaut und mit `test614` geprüft ist sie in Chromium
+mit CDP-Berührung. Am iPhone im Safari-Browser (nicht als PWA) und an einem
+Android-Telefon fehlt der Blick: hinaufziehen ohne Textauswahl und Lupe,
+ein langsamer Zug nach langem Liegen (Android: `contextmenu`,
+`pointercancel`?), der Home-Strich und die Rückgeste, VoiceOver an den
+Reitern. Die Liste und was danach offen bleibt (der Rechner, Phase 2):
+L257.
+
 ### 1 · Cloudflare wirklich aufsetzen — **braucht Redur**
 
 **Ziel** — Server, Konto und Sync einmal gegen echtes D1/R2 laufen lassen.

@@ -1811,7 +1811,8 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
  * ========================================================================== */
 /* `#handy-unten` stand hier mit drin — die schwebende Leiste fiel mit
    E236 weg, ihr Stil blieb bis E280 (L86). */
-#handy-oben{ display:none }
+#handy-oben,
+#ho-ziele{ display:none }
 
 @media(max-width:760px){
 
@@ -1920,8 +1921,21 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      die der Leiste (88 %, `--bg-schwebend-dicht`): der Inhalt läuft ständig
      dahinter durch, und die Namen unter den Zeichen sind klein. Gemessen:
      test576 §6, die Beschriftung über einem schwarz-weiss-rot-blauen Muster. */
+  /* DIE ZIELLEISTE (E749): die zweite Kapsel, 8 px über der Leiste, nur
+     solange ein Finger hinaufzieht. Lage, Glas und Knöpfe wie die Leiste;
+     die Gründe stehen in `tab-shelf.ts`. z-index 955: über Toast (900) und
+     Neu-Laden-Streifen (950), unter allem, was die Leiste verdeckt. */
+  #ho-ziele{
+    display:flex; align-items:stretch; gap:0;
+    position:fixed; left:10px; right:10px; z-index:955;
+    bottom:calc(var(--hunten) + 8px); height:var(--mobile-nav-height);
+    padding:5px 6px; background:var(--bg-card); border:1px solid var(--line);
+  }
+  #ho-ziele[hidden]{ display:none }
+  #ho-ziele[data-geht]{ pointer-events:none }
   @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-    #handy-oben{
+    #handy-oben,
+    #ho-ziele{
       background:var(--bg-schwebend-dicht);
       -webkit-backdrop-filter:var(--glas-blur); backdrop-filter:var(--glas-blur);
     }
@@ -1951,6 +1965,31 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
                color var(--motion-fast,.14s) var(--ease-standard,ease);
   }
   #handy-oben > button:active{ background:var(--bg-hover) }
+  /* Die Ziele: Zeichen über Wort wie die Reiter (§37: 48 px hoch). Keine
+     Farbüberblendung — bewegt wird nur `transform` (test614 §14). Ohne
+     Lücke und mit 1 px Rand: „Meine Ablage" fett braucht 66 px, und bei
+     390 px blieben mit den Massen der Leiste 65,6 (gemessen, E749). */
+  #ho-ziele > button{
+    flex:1 1 0; min-width:0; min-height:48px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:3px; padding:5px 1px 4px; border:0; border-radius:var(--radius-2xl); background:none;
+    color:var(--text-dim); position:relative; z-index:1;
+  }
+  #ho-ziele > button b{
+    display:block; font-size:10.5px; font-weight:500; letter-spacing:-.01em;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;
+  }
+  #ho-ziele > button:is([data-anvisiert],[aria-current="page"]){ color:var(--accent-text,var(--accent)) }
+  #ho-ziele > button[aria-current="page"] b{ font-weight:650 }
+  #ho-ziele .ho-z{ display:flex; align-items:center; justify-content:center;
+    transform-origin:50% 100%; transition:transform var(--feder-knapp-dauer) var(--feder-knapp) }
+  #ho-ziele .ho-z svg{ display:block }
+  /* Die Lupe (E625: ×1,3, Nachbarn ×1,13), nur mit Bewegung (`data-lupe`). */
+  #ho-ziele[data-lupe] > [data-anvisiert] .ho-z{ transform:scale(1.3) }
+  #ho-ziele[data-lupe] > [data-anvisiert] + button .ho-z,
+  #ho-ziele[data-lupe] > button:has(+ [data-anvisiert]) .ho-z{ transform:scale(1.13) }
+  #ho-ziele > .ru-marke{ border-radius:var(--radius-2xl) }
+  #ho-ziele[data-marke-weg] > .ru-marke{ opacity:0 }
   #handy-oben > button b{
     display:block; font-size:10.5px; font-weight:500; letter-spacing:-.01em;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;
@@ -2102,6 +2141,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      dazugeschrieben: ein Browser, der `url()` in `backdrop-filter` nicht
      kennt, verwirft NUR diese Zeile und behält die Fläche darüber. Stünde
      beides in einer Regel, fiele beides weg. */
+  #ho-ziele > .ru-marke.faehrt,
   #handy-oben[data-gehalten] #ho-pille,
   #handy-oben #ho-pille.faehrt{
     -webkit-backdrop-filter:url(#ru-linse-fahrt) saturate(1.55) brightness(1.13);
@@ -2135,8 +2175,16 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   #handy-oben[data-gehalten] > button[data-anvisiert]{
     color:var(--accent-text,var(--accent)); transition-delay:0s
   }
-  /* Seitwärts gehört der Finger der Pille, senkrecht rollt die Seite (Kit). */
-  #handy-oben{ touch-action:pan-y }
+  /* Offene Zielleiste (E749): ihr Reiter leuchtet — ohne die Brechung des
+     Haltens, die das Wort unter der Linse versetzt (Grund: tab-shelf.ts). */
+  #handy-oben[data-zielleiste] > button.an:not([data-anvisiert]){ color:var(--text-dim); transition-delay:0s }
+  #handy-oben[data-zielleiste] > button[data-anvisiert]{ color:var(--accent-text,var(--accent)); transition-delay:0s }
+  /* DER FINGER GEHÖRT DER LEISTE, IN BEIDE RICHTUNGEN (E749). Hier stand
+     `pan-y` („senkrecht rollt die Seite") — gemessen rollte senkrecht nichts
+     (`#scroll` ist kein Vorfahre), aber der Zug endete nach zwei Schritten
+     mit `pointercancel`, und hinauf zur Zielleiste kam nie etwas an. Keine
+     Auswahl und keine Lupe von iOS auf der Leiste, auch im Browser. */
+  #handy-oben{ touch-action:none; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none }
 
   /* DER GLANZRAND. Oben auf der Kapsel sitzt im Vorbild ein heller Bogen
      mit einem feinen Farbschimmer — die Kante des Glases, die das Licht
@@ -2191,6 +2239,8 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   @media (prefers-reduced-transparency:reduce){
     #handy-oben{ background:var(--bg-card);
                  -webkit-backdrop-filter:none; backdrop-filter:none }
+    #ho-ziele{ background:var(--bg-card); -webkit-backdrop-filter:none; backdrop-filter:none }
+    #ho-ziele > .ru-marke.faehrt{ -webkit-backdrop-filter:none; backdrop-filter:none }
     #handy-oben[data-gehalten] #ho-pille,
     #handy-oben #ho-pille,
     #handy-oben #ho-pille.faehrt{

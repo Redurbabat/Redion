@@ -46,7 +46,9 @@
  *       wo man steht, sagt `aria-current` und fette Schrift.
  *   §11 §37/§38: 44 px gerendert, Text, `menuitem`; angepeilt nicht nur über
  *       Farbe (Marke und gehobenes Zeichen); die Schrift 4,5 : 1 über dem
- *       schwarz-weiss-rot-blauen Muster, hell und dunkel.
+ *       schwarz-weiss-rot-blauen Muster, hell und dunkel; und der Reiter
+ *       unter der Pille bleibt lesbar — keine Brechung über seinem Wort,
+ *       solange die Zielleiste offen steht (§11e, vom BILD gefunden).
  *   §12 Tastatur: Pfeil hinauf am Reiter öffnet, Pfeile rundum, Pos1/Ende,
  *       Enter wählt, Escape gibt den Fokus zurück, Tab schliesst.
  *   §13 Ruhig (System UND „Ruhige Darstellung"): keine Animation, der
@@ -71,8 +73,13 @@
  * jeder Zug bei der Leiste an. Ein langer Tipp bringt in der kopflosen Schale
  * kein `contextmenu` (auch nicht über `synthesizeTapGesture`).
  *
- * KANN DIESER LAUF ROT WERDEN? (§55.2) Gegen `352eed65c` rot — die Zeilen
- * stehen im Commit „test614 (rot)". Die Gegenproben stehen in E749.
+ * KANN DIESER LAUF ROT WERDEN? (§55.2) Gegen `352eed65c` rot mit 29 von 105
+ * — die Zeilen stehen im Commit „test614 (rot)". Fünf Gegenproben, jede rot
+ * (E749): das Klickschlucken heraus (§1b zwei Klicks, §16a die Schublade),
+ * die Treffer aus `getBoundingClientRect` während des Wachsens (§4b wählt
+ * die Notizhefte statt der Favoriten), `touch-action:pan-y` zurück (61 rot:
+ * nichts kommt oben an), die Ruhig-Abfrage heraus (§13 „Ruhige
+ * Darstellung", 9 Animationen), `innerHTML` statt `textContent` (§10c).
  *
  * Kein fester Port (`listen(0)`) — test400 bleibt unberührt.
  *
@@ -218,7 +225,7 @@ const beobachten = (pc: Page) => pc.evaluate(BEOBACHTEN);
 
 type Stand = { klicks: Record<string, number>; wechsel: number; bild: number; offenBilder: number; sichtbarAb: number;
   ueberBild: number; zuBilder: number; offen: boolean; an: string[]; hash: string; wo: string; schublade: boolean;
-  anvisiert: string[]; expanded: string[]; titel: string; pille: number };
+  anvisiert: string[]; expanded: string[]; titel: string; pille: number; gehalten: boolean };
 const stand = (pc: Page): Promise<Stand> => pc.evaluate(() => {
   const z = (window as any).__z614;
   const pille = document.getElementById('ho-pille');
@@ -230,7 +237,8 @@ const stand = (pc: Page): Promise<Stand> => pc.evaluate(() => {
     anvisiert: [...document.querySelectorAll('#handy-oben > [data-anvisiert]')].map(b => b.id),
     expanded: [...document.querySelectorAll('#handy-oben [role="tab"][aria-expanded="true"]')].map(b => b.id),
     titel: document.title,
-    pille: pille ? Math.round(pille.getBoundingClientRect().left) : -1
+    pille: pille ? Math.round(pille.getBoundingClientRect().left) : -1,
+    gehalten: !!document.getElementById('handy-oben')?.hasAttribute('data-gehalten')
   };
 });
 
@@ -505,8 +513,9 @@ console.log('\n§5 Zwischen den Reitern tauscht nur der Inhalt');
   await fuehren(A.cdp, { x: be.x, y: oben - 30 }, { x: be.x, y: 560 }, 3, 16);
   await finger(A.cdp, 'touchEnd'); await warte(900);
   const s3 = await stand(A.pc);
-  p('§5g zu hoch losgelassen: nichts gewählt, „Heute" bleibt', s3.an[0] === 'hl-start' && s3.wechsel === 0
-    && Object.keys(s3.klicks).length === 0 && !s3.offen, JSON.stringify({ an: s3.an, wechsel: s3.wechsel, klicks: s3.klicks }));
+  p('§5g zu hoch losgelassen: nichts gewählt, „Heute" bleibt, und die Pille ist nicht mehr gehalten',
+    s3.an[0] === 'hl-start' && s3.wechsel === 0 && Object.keys(s3.klicks).length === 0 && !s3.offen && !s3.gehalten,
+    JSON.stringify({ an: s3.an, wechsel: s3.wechsel, klicks: s3.klicks, gehalten: s3.gehalten }));
   void s2;
 }
 
@@ -557,7 +566,7 @@ console.log('\n§7 Abbrechen: nichts geschieht');
   if (ziel) await fuehren(A.cdp, p1, ziel, 3, 16);
   await warte(60);
   await A.pc.keyboard.press('Escape');
-  await warte(80);
+  await warte(250);                         /* sie blendet in --motion-fast aus */
   const nachEsc = await stand(A.pc);
   await finger(A.cdp, 'touchEnd'); await warte(1000);
   const b = await stand(A.pc);
@@ -676,9 +685,13 @@ console.log('\n§10 Eine Quelle: was die Zielleiste zeigt, ist Register.navigati
         && r.ziele.every((z, i) => z.text === q[i]!.etikett && z.sym === q[i]!.zeichen && z.svg),
       JSON.stringify(r?.ziele.map(z => [z.text, z.sym, z.svg])));
     if (key === 'dokumente') {
-      p('§10b wo man steht (das Regal auf „Meine Ablage"), sagt aria-current UND fette Schrift — nur dort',
-        !!r && r.ziele[0]!.aktuell && r.ziele[0]!.fett >= 600 && r.ziele.slice(1).every(z => !z.aktuell && z.fett < 600),
-        JSON.stringify(r?.ziele.map(z => [z.text, z.aktuell, z.fett])));
+      /* Wo man steht, sagt die Quelle (`an()`); das Regal merkt sich seinen
+         Ort, also steht hier, was §9 zuletzt gewählt hat. */
+      const an = await A.pc.evaluate(() => (Register.navigation.ziele('dokumente') || [])
+        .map((z: any) => { try { return typeof z.an === 'function' && !!z.an(); } catch { return false; } }));
+      p('§10b wo man steht, sagt aria-current UND fette Schrift — genau dort, wo `an()` ja sagt',
+        !!r && an.filter(Boolean).length === 1 && r.ziele.every((z, i) => z.aktuell === an[i] && (an[i] ? z.fett >= 600 : z.fett < 600)),
+        JSON.stringify({ an, ziele: r?.ziele.map(z => [z.text, z.aktuell, z.fett]) }));
     }
     await fuehren(A.cdp, p0, { x: p0.x, y: 560 }, 3, 16);
     await finger(A.cdp, 'touchEnd'); await warte(700);
@@ -726,7 +739,8 @@ console.log('\n§11 44 px, Text, nicht nur Farbe, lesbar');
     const z = document.querySelector<HTMLElement>('#ho-ziele > button[data-anvisiert]');
     if (!m || !z) return null;
     const a = m.getBoundingClientRect(), b = z.getBoundingClientRect();
-    return { sichtbar: !m.hidden && a.width > 0, dx: Math.abs(a.left - b.left), db: Math.abs(a.width - b.width) };
+    return { sichtbar: !m.hidden && a.width > 0 && +getComputedStyle(m).opacity > 0.5,
+             dx: Math.abs(a.left - b.left), db: Math.abs(a.width - b.width) };
   });
   p('§11b angepeilt nicht nur über Farbe: die Marke liegt als Form unter dem Ziel',
     !!marke && marke.sichtbar && marke.dx <= 1.5 && marke.db <= 1.5, JSON.stringify(marke));
@@ -734,6 +748,19 @@ console.log('\n§11 44 px, Text, nicht nur Farbe, lesbar');
   p('§11c … und das Zeichen hebt sich (×1,3), die Nachbarn halb (×1,13), der Rest ruht',
     hub.length === 5 && Math.abs(hub[2]! - 1.3) < 0.02 && Math.abs(hub[1]! - 1.13) < 0.02 && Math.abs(hub[3]! - 1.13) < 0.02
       && hub[0] === 1 && hub[4] === 1 && !!r2?.ziele[2]!.anvisiert, JSON.stringify(hub));
+  /* GEFUNDEN AUF DEM BILD (§55.1): mit `data-gehalten` an der Leiste brach die
+     Pille das Licht, solange der Finger oben war, und das Wort darunter stand
+     doppelt und versetzt da („Do…okumente"). Gemessen wird die Brechung an der
+     ruhenden Pille, nicht das Wort. */
+  const lesbar = await A.pc.evaluate(() => {
+    const l = document.getElementById('handy-oben')!;
+    const pille = document.getElementById('ho-pille')!;
+    const unter = l.querySelector<HTMLElement>(':scope > button[data-anvisiert]');
+    return { gehalten: l.hasAttribute('data-gehalten'), bruch: /url\(/.test(getComputedStyle(pille).backdropFilter || ''),
+             reiter: unter?.id ?? null, still: pille.getAnimations().length };
+  });
+  p('§11e der Reiter unter der Pille bleibt lesbar: in Ruhe keine Brechung über seinem Wort, und er ist angepeilt',
+    !lesbar.gehalten && !lesbar.bruch && lesbar.still === 0 && lesbar.reiter === 'hl-lernen', JSON.stringify(lesbar));
   await fuehren(A.cdp, mitte ?? p0, { x: 195, y: 560 }, 3, 16);
   await finger(A.cdp, 'touchEnd'); await warte(700);
 }
@@ -893,7 +920,8 @@ for (const art of ['System (reduce)', 'Ruhige Darstellung'] as const) {
   const mitten = await R.pc.evaluate(() => {
     const m = document.querySelector<HTMLElement>('#ho-ziele > .ru-marke');
     const z = document.querySelector<HTMLElement>('#ho-ziele > button[data-anvisiert]');
-    return { marke: !!m && !m.hidden && !!z && Math.abs(m.getBoundingClientRect().left - z.getBoundingClientRect().left) <= 1.5,
+    return { marke: !!m && !m.hidden && +getComputedStyle(m).opacity > 0.5 && !!z
+               && Math.abs(m.getBoundingClientRect().left - z.getBoundingClientRect().left) <= 1.5,
              ziel: (z?.textContent || '').trim() };
   });
   await fuehren(R.cdp, ziel ?? p0, { x: lern.x, y: lern.y }, 4, 16);
@@ -1150,6 +1178,7 @@ console.log('\n§18 Das Glas der Leiste, und deckend, wo es kein Glas gibt');
     }
     return { anteil: summe / (innerWidth * innerHeight), namen };
   });
+  console.log(`    Glas mit offener Zielleiste: ${(flaeche.anteil * 100).toFixed(1)} % · ${flaeche.namen.join(' | ')}`);
   p('§18c mit offener Zielleiste höchstens 60 % des Bildschirms unter Glas — und sie ist eine davon',
     flaeche.anteil <= 0.6 && flaeche.namen.includes('ho-ziele'), JSON.stringify({ anteil: +(flaeche.anteil * 100).toFixed(1), namen: flaeche.namen }));
   await fuehren(A.cdp, p0, { x: p0.x, y: 560 }, 3, 16);
