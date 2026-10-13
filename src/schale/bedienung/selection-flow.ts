@@ -592,6 +592,12 @@ const SelectionFlow = (() => {
   };
   /** Wer einen Zug übernommen hat (E749). */
   type Uebernahme = { move: (x: number, y: number) => void; up: (x: number, y: number) => void; cancel: () => void };
+  /** Ab wie viel Weg nach oben übergeben wird (E749, Durchsicht): über dem
+   *  Tipp-Spielraum des Browsers. Chromium klickt nach einer Berührung bis
+   *  15 px Weg, ab 16 nicht mehr (gemessen, messungen §106). Darunter hat der
+   *  Daumen getippt — auch wenn er dabei über die Kante rollt: der Reiter
+   *  beginnt 6 px unter ihr. */
+  const UEBER_TIPP = 16;
 
   const ziehbar = (a: Ziehbar): void => {
     if (a.reihe.dataset['ziehbar']) return;           /* nie zweimal binden */
@@ -606,14 +612,19 @@ const SelectionFlow = (() => {
       ort: number; tempo: number; dehnung: number; hub: number;
       messer: ReturnType<typeof tempoMesser>;
       flaeche: HTMLElement | null; zuletzt: number; bild: number; vorn: HTMLElement | null;
-      /* E749: der gedrückte Knopf, die Oberkante der Reihe, ob es zuerst
-         hinaufging, wer übernommen hat, und ob es ohne Fläche nur hinauf geht. */
-      k: HTMLElement; oben: number; hoch: boolean; ue: Uebernahme | null; nurHinauf: boolean;
+      /* E749: der gedrückte Knopf und seine Spalte, die Oberkante der Reihe,
+         ob es zuerst hinaufging, wer übernommen hat, und ob es ohne Fläche
+         nur hinauf geht. */
+      k: HTMLElement; kLinks: number; kRechts: number; oben: number; hoch: boolean; ue: Uebernahme | null; nurHinauf: boolean;
     };
     let zug: Zug | null = null;
     let gedrucktes: HTMLElement | null = null;
+    /* Seit wann, und WESSEN Klick geschluckt wird (die `pointerId` der Geste —
+       Chromiums Klick nach einer Berührung trägt sie, gemessen, E749). */
     let schlucken = -Infinity;
+    let schluckId = NaN;
     let eigenerKlick = false;
+    const schlucke = (id: number): void => { schlucken = performance.now(); schluckId = id; };
 
     const sichtbar = (k: HTMLElement): boolean => k.getClientRects().length > 0 && k.offsetWidth > 0;
 
@@ -674,14 +685,14 @@ const SelectionFlow = (() => {
       delete a.reihe.dataset['gehalten'];
       z.vorn?.removeAttribute('data-anvisiert');
       z.vorn = null;
-      schlucken = performance.now();
+      schlucke(z.id);
     };
 
     const abbrechen = (): void => {
       const z = zug;
       zug = null;
       lasseLos(gedrucktes);
-      if (z?.ue) { schlucken = performance.now(); z.ue.cancel(); return; }
+      if (z?.ue) { schlucke(z.id); z.ue.cancel(); return; }
       if (!z || !z.amZiehen || !z.flaeche) return;
       aufraeumen(z);
       if (a.flaeche) setze(z.flaeche, z.ort, 0, z.dehnung, z.hub);
@@ -698,8 +709,11 @@ const SelectionFlow = (() => {
       gedrucktes = a.zeichen ? a.zeichen(k) : null;
       drueckeEin(gedrucktes, 0.9);
       const aktiv = a.gewaehlt();
-      /* Die Oberkante, einmal gemessen — nur, wenn jemand hinauf übernimmt. */
+      /* Die Oberkante und die Spalte des Knopfs, einmal gemessen — nur, wenn
+         jemand hinauf übernimmt. */
       const oben = a.hinauf ? a.reihe.getBoundingClientRect().top : 0;
+      const spalte = a.hinauf ? k.getBoundingClientRect() : null;
+      const kLinks = spalte?.left ?? 0, kRechts = spalte?.right ?? 0;
       if (!aktiv || !sichtbar(aktiv) || (a.nurAmGewaehlten && k !== aktiv)) {
         /* Ohne gewählte Fläche gibt es nichts zu ziehen — hinauf geht es
            trotzdem (E749): auf dem Posteingang hat kein Reiter die Pille. */
@@ -708,7 +722,7 @@ const SelectionFlow = (() => {
           zieht: false, amZiehen: false, nullX: 0, breite: 0, mitten: [], liste, aktiv: k, auf: false,
           finger: 0, versatz: 0, ort: 0, tempo: 0, dehnung: 1, hub: 1, messer: tempoMesser(),
           flaeche: null, zuletzt: performance.now(), bild: 0, vorn: null,
-          k, oben, hoch: false, ue: null, nurHinauf: true
+          k, kLinks, kRechts, oben, hoch: false, ue: null, nurHinauf: true
         };
         return;
       }
@@ -729,7 +743,7 @@ const SelectionFlow = (() => {
         finger, versatz: 0, ort: stehtBei.ort, tempo: stehtBei.tempo,
         dehnung: 1, hub: stehtBei.hub, messer: tempoMesser(),
         flaeche: a.flaeche ?? null, zuletzt: performance.now(), bild: 0, vorn: null,
-        k, oben, hoch: false, ue: null, nurHinauf: false
+        k, kLinks, kRechts, oben, hoch: false, ue: null, nurHinauf: false
       };
     });
 
@@ -794,10 +808,19 @@ const SelectionFlow = (() => {
           z.bild = requestAnimationFrame(takt);
         }
       }
-      /* Über der Oberkante: wer nimmt den Zug (E749)? Erst nach der
-         Schwelle — ein Daumen, der oben an der Leiste aufsetzt und 3 px
-         rollt, tippt nur. */
-      if (a.hinauf && (z.hoch || z.amZiehen) && e.clientY < z.oben && uebergeben(z, e)) return;
+      /* HINAUF UND DANN SEITWÄRTS (Durchsicht E749): wer die Spalte des
+         gedrückten Knopfs verlässt, tippt nicht mehr auf ihn. Wie ohne
+         `hinauf`: der Zug ist vorbei, ohne Klick — vorher klickte das
+         Loslassen den GEDRÜCKTEN Knopf, während der Finger auf einem anderen
+         lag. */
+      if (z.hoch && (e.clientX < z.kLinks || e.clientX > z.kRechts)) { zug = null; return; }
+      /* Über der Oberkante: wer nimmt den Zug (E749)? Erst über dem
+         Tipp-Spielraum (`UEBER_TIPP`, vom Aufsetzen an gezählt). Die Kante
+         allein reichte nicht: wer 1–7 px unter ihr aufsetzte und 10–15 px
+         rollte, öffnete die Zielleiste, und das Loslassen wählte ein Ziel
+         (Durchsicht E749, test614 §1c). Darunter bleibt es der Tipp unten. */
+      if (a.hinauf && (z.hoch || z.amZiehen) && e.clientY < z.oben && z.y0 - e.clientY >= UEBER_TIPP
+          && uebergeben(z, e)) return;
       if (z.hoch) return;
       z.finger = e.clientX - z.nullX;
       z.messer.dazu(z.finger - z.versatz, e.timeStamp);
@@ -813,7 +836,7 @@ const SelectionFlow = (() => {
       if (z.ue) {
         eigenerKlick = true;
         try { z.ue.up(e.clientX, e.clientY); } finally { eigenerKlick = false; }
-        schlucken = performance.now();
+        schlucke(z.id);
         return;
       }
       /* Hinauf, aber unter der Oberkante losgelassen: GENAU EIN Klick auf den
@@ -822,7 +845,7 @@ const SelectionFlow = (() => {
       if (z.hoch) {
         eigenerKlick = true;
         try { a.waehle(z.k, z.flaeche ?? a.flaeche ?? a.reihe); } finally { eigenerKlick = false; }
-        schlucken = performance.now();
+        schlucke(z.id);
         return;
       }
       if (!z.amZiehen || !z.flaeche) return;          /* ein Tipp: der Klick wählt */
@@ -846,14 +869,24 @@ const SelectionFlow = (() => {
       if (e.target === a.reihe && zug && (zug.amZiehen || zug.ue) && e.pointerId === zug.id) abbrechen();
     });
     /* Der Klick nach dem Ziehen ist kein Tipp — nur dieser, nur 0,5 s lang;
-           ein Vorleser wählt ohne Aufsetzen und kommt immer an. */
-    a.reihe.addEventListener('click', (e: MouseEvent) => {
-      if (eigenerKlick) return;
-      if (performance.now() - schlucken < 500) {
-        schlucken = -Infinity;
-        e.preventDefault();
-        e.stopPropagation();
-      }
+           ein Vorleser wählt ohne Aufsetzen und kommt immer an.
+       NUR DER KLICK DER GESTE (Durchsicht E749). Zwei Dinge gingen daneben:
+         · Folgte der Geste kein Klick (abgebrochen, zu hoch, mehr als 15 px),
+           schluckte das Fenster den NÄCHSTEN echten Tipp. Der Klick einer
+           Geste kommt aber immer vor dem nächsten Aufsetzen — also endet das
+           Schlucken mit jedem neuen `pointerdown`.
+         · Nach einem Hochrollen am Rand setzt Chromium seinen Tipp auf den
+           Inhalt ÜBER der Reihe (gemessen: die Zeile zum Aufklappen auf
+           „Dokumente"). Darum hört dieser Horcher am Fenster: auf der Reihe
+           wie immer, daneben nur der Klick des Zeigers, der gezogen hat. */
+    window.addEventListener('pointerdown', () => { schlucken = -Infinity; }, true);
+    window.addEventListener('click', (e: MouseEvent) => {
+      if (eigenerKlick || performance.now() - schlucken >= 500) return;
+      const aufReihe = e.target instanceof Node && a.reihe.contains(e.target);
+      if (!aufReihe && (e as Partial<PointerEvent>).pointerId !== schluckId) return;
+      schlucken = -Infinity;
+      e.preventDefault();
+      e.stopPropagation();
     }, true);
     /* Und die Schublade bleibt zu: ein Zug ab x < 26 sähe für `pwa.ts`
            aus wie der Wisch vom Rand. */

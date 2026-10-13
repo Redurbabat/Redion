@@ -1989,6 +1989,9 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   #ho-ziele[data-lupe] > [data-anvisiert] + button .ho-z,
   #ho-ziele[data-lupe] > button:has(+ [data-anvisiert]) .ho-z{ transform:scale(1.13) }
   #ho-ziele > .ru-marke{ border-radius:var(--radius-2xl) }
+  /* Ohne Lupe trägt die Marke das Angepeilte fast allein, und ihre Fläche
+     misst auf dem Glas 1,08 : 1 — der Ring macht sie zur Form (§38, E749). */
+  #ho-ziele:not([data-lupe]) > .ru-marke{ outline:2px solid var(--accent-text,var(--accent)); outline-offset:-2px }
   #ho-ziele[data-marke-weg] > .ru-marke{ opacity:0 }
   #handy-oben > button b{
     display:block; font-size:10.5px; font-weight:500; letter-spacing:-.01em;

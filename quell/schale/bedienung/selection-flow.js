@@ -273,6 +273,7 @@ const SelectionFlow = (() => {
         }
         return best;
     };
+    const UEBER_TIPP = 16;
     const ziehbar = (a) => {
         if (a.reihe.dataset['ziehbar'])
             return;
@@ -281,7 +282,9 @@ const SelectionFlow = (() => {
         let zug = null;
         let gedrucktes = null;
         let schlucken = -Infinity;
+        let schluckId = NaN;
         let eigenerKlick = false;
+        const schlucke = (id) => { schlucken = performance.now(); schluckId = id; };
         const sichtbar = (k) => k.getClientRects().length > 0 && k.offsetWidth > 0;
         const malen = (z) => {
             if (!z.flaeche)
@@ -344,14 +347,14 @@ const SelectionFlow = (() => {
             delete a.reihe.dataset['gehalten'];
             z.vorn?.removeAttribute('data-anvisiert');
             z.vorn = null;
-            schlucken = performance.now();
+            schlucke(z.id);
         };
         const abbrechen = () => {
             const z = zug;
             zug = null;
             lasseLos(gedrucktes);
             if (z?.ue) {
-                schlucken = performance.now();
+                schlucke(z.id);
                 z.ue.cancel();
                 return;
             }
@@ -375,6 +378,8 @@ const SelectionFlow = (() => {
             drueckeEin(gedrucktes, 0.9);
             const aktiv = a.gewaehlt();
             const oben = a.hinauf ? a.reihe.getBoundingClientRect().top : 0;
+            const spalte = a.hinauf ? k.getBoundingClientRect() : null;
+            const kLinks = spalte?.left ?? 0, kRechts = spalte?.right ?? 0;
             if (!aktiv || !sichtbar(aktiv) || (a.nurAmGewaehlten && k !== aktiv)) {
                 if (a.hinauf)
                     zug = {
@@ -382,7 +387,7 @@ const SelectionFlow = (() => {
                         zieht: false, amZiehen: false, nullX: 0, breite: 0, mitten: [], liste, aktiv: k, auf: false,
                         finger: 0, versatz: 0, ort: 0, tempo: 0, dehnung: 1, hub: 1, messer: tempoMesser(),
                         flaeche: null, zuletzt: performance.now(), bild: 0, vorn: null,
-                        k, oben, hoch: false, ue: null, nurHinauf: true
+                        k, kLinks, kRechts, oben, hoch: false, ue: null, nurHinauf: true
                     };
                 return;
             }
@@ -402,7 +407,7 @@ const SelectionFlow = (() => {
                 finger, versatz: 0, ort: stehtBei.ort, tempo: stehtBei.tempo,
                 dehnung: 1, hub: stehtBei.hub, messer: tempoMesser(),
                 flaeche: a.flaeche ?? null, zuletzt: performance.now(), bild: 0, vorn: null,
-                k, oben, hoch: false, ue: null, nurHinauf: false
+                k, kLinks, kRechts, oben, hoch: false, ue: null, nurHinauf: false
             };
         });
         const uebergeben = (z, e) => {
@@ -490,7 +495,12 @@ const SelectionFlow = (() => {
                     z.bild = requestAnimationFrame(takt);
                 }
             }
-            if (a.hinauf && (z.hoch || z.amZiehen) && e.clientY < z.oben && uebergeben(z, e))
+            if (z.hoch && (e.clientX < z.kLinks || e.clientX > z.kRechts)) {
+                zug = null;
+                return;
+            }
+            if (a.hinauf && (z.hoch || z.amZiehen) && e.clientY < z.oben && z.y0 - e.clientY >= UEBER_TIPP
+                && uebergeben(z, e))
                 return;
             if (z.hoch)
                 return;
@@ -511,7 +521,7 @@ const SelectionFlow = (() => {
                 finally {
                     eigenerKlick = false;
                 }
-                schlucken = performance.now();
+                schlucke(z.id);
                 return;
             }
             if (z.hoch) {
@@ -522,7 +532,7 @@ const SelectionFlow = (() => {
                 finally {
                     eigenerKlick = false;
                 }
-                schlucken = performance.now();
+                schlucke(z.id);
                 return;
             }
             if (!z.amZiehen || !z.flaeche)
@@ -555,14 +565,16 @@ const SelectionFlow = (() => {
             if (e.target === a.reihe && zug && (zug.amZiehen || zug.ue) && e.pointerId === zug.id)
                 abbrechen();
         });
-        a.reihe.addEventListener('click', (e) => {
-            if (eigenerKlick)
+        window.addEventListener('pointerdown', () => { schlucken = -Infinity; }, true);
+        window.addEventListener('click', (e) => {
+            if (eigenerKlick || performance.now() - schlucken >= 500)
                 return;
-            if (performance.now() - schlucken < 500) {
-                schlucken = -Infinity;
-                e.preventDefault();
-                e.stopPropagation();
-            }
+            const aufReihe = e.target instanceof Node && a.reihe.contains(e.target);
+            if (!aufReihe && e.pointerId !== schluckId)
+                return;
+            schlucken = -Infinity;
+            e.preventDefault();
+            e.stopPropagation();
         }, true);
         a.reihe.addEventListener('touchend', (e) => {
             if (performance.now() - schlucken < 300)

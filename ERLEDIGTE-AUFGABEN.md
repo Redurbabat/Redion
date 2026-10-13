@@ -1,5 +1,42 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 13. Oktober 2026 · E749 · Die Zielleiste nach der Durchsicht: ein Tipp am Rand bleibt ein Tipp
+
+**Gefunden** (Durchsicht von Bogen 2, gegen `f4ebb5816`): ein Daumen, der
+1–7 px unter dem oberen Rand eines Reiters aufsetzt und 10–15 px
+hinaufrollt, reichte über die Kante der Leiste — die Zielleiste ging auf,
+und das Loslassen wählte „Lernpfad". Genau das verbietet Redurs Korrektur
+(„aber beim klicken nicht"); Chromium klickt bis 15 px Weg selbst. Dazu:
+hinauf und dann seitwärts klickte den gedrückten Reiter; unter der Leiste
+losgelassen klickte den nächsten; nach einem Abbruch verschwand der nächste
+echte Tipp; Chromiums Klick fiel nach dem Hochrollen auf den Inhalt über der
+Leiste; ohne Lupe lag die Marke mit 1,08 : 1 auf der Scheibe; nach Enter
+auf einem Ort stand der Fokus auf `<body>`.
+
+**Gebaut:**
+
+- `ziehbar` übergibt erst ab 16 px Weg nach oben (`UEBER_TIPP`, über dem
+  gemessenen Spielraum: 15 px ein Klick, 16 keiner); verlässt der Finger
+  vorher die Spalte des Reiters, endet der Zug ohne Klick; das Schlucken
+  endet mit jedem neuen `pointerdown` und fängt daneben nur den Klick mit
+  der `pointerId` der Geste.
+- `TabShelf`: unter der Leiste ist abgebrochen; nach einer Wahl über die
+  Tastatur geht der Fokus an den Reiter, bevor gewählt wird.
+- Die Marke trägt einen Ring (`outline`, in der Farbe der Schrift), wo die
+  Lupe aus ist, und unter jedem Kontrast-Weg (`grund.css`).
+
+**Geprüft:** `test614` 122 Zusagen (16 neu: §1c, §1d, §6b, §6c, §7f,
+§11f, §12g, §12h), gegen `f4ebb5816` rot mit 15 von 122, sieben
+Gegenproben rot (eine baute zuerst nicht, §52.6); Nachbarn und
+Datei-Wächter in E749. Bilder vorher und nachher (ruhig, „Ruhige
+Darstellung", Hoher Kontrast, erzwungene Farben, mit Bewegung) im
+Kratzordner `bilder-ziel/handy/durchsicht/`, angesehen.
+
+**Offen:** L257 — der Vorleser mit Berührung kommt nicht hinein (Redurs
+Wahl), der Spielraum am echten Telefon.
+
+---
+
 ## 13. Oktober 2026 · E749 · Die Zielleiste am Telefon (Bogen 2): hinaufziehen, gleiten, loslassen
 
 **Redur**, 12. Oktober 2026: „… ich sollte direk mit hand ohne klick direk

@@ -8519,6 +8519,29 @@ kann nicht beweisen:
 - **VoiceOver/TalkBack:** wie `role="tab"` mit `aria-haspopup="menu"`
   vorgelesen wird. Die Geste ist für den Vorleser nicht nötig (Doppeltipp
   bleibt der Tipp, jedes Ziel steht auch auf dem Bildschirm seines Reiters).
+  **Und es gibt am Telefon keinen Weg hinein** (Durchsicht E749): die fünf
+  Reiter tragen immer `aria-haspopup="menu"` und `aria-expanded` und sagen
+  damit „Menü, eingeklappt" — aber wer mit Vorleser und Berührung bedient,
+  kann es nicht öffnen: der Doppeltipp ist der Tipp und wechselt den
+  Reiter, und der einzige Weg ohne Geste (Pfeil hinauf) braucht eine
+  Tastatur. Ob der Durchreich-Griff des Vorlesers (VoiceOver: doppeltippen,
+  halten, ziehen) die Geste weitergibt, ist ungeprüft. Zwei Wege, und die
+  Wahl ist Redurs: eine eigene Aktion für den Vorleser an jedem Reiter,
+  oder die zwei Merkmale nur, solange eine Tastatur benutzt wird (dann
+  sagt der Reiter am Telefon nichts mehr, das er nicht halten kann).
+- **Der Tipp-Spielraum:** `ziehbar` übergibt erst ab 16 px Weg
+  (`UEBER_TIPP`), weil Chromium in der kopflosen Schale bis 15 px selbst
+  klickt (gemessen, `messungen.md` §106 Punkt 10). Android und iOS haben
+  eigene Spielräume; ist der kleiner, klickt dort der Browser bei 10–15 px
+  nicht mehr, `ziehbar` aber weiterhin genau einmal (der Tipp-Weg) — die
+  Zielleiste öffnet so oder so erst ab 16 px. Am Gerät nachsehen, ob sich
+  das wie ein Tipp anfühlt.
+- **Der Klick daneben:** nach einem Hochrollen am Rand setzt Chromium
+  seinen Tipp auf den Inhalt ÜBER der Leiste. `ziehbar` schluckt ihn dort
+  nur, weil Chromiums Klick die `pointerId` der Berührung trägt (gemessen).
+  Ein Browser, dessen Klick sie nicht trägt, schluckt wie vorher nur auf
+  der Leiste — dort käme dieser eine Klick auf dem Inhalt an. Für Safari
+  und Firefox ungeprüft.
 
 **3 · Unter 390 px werden Namen gekürzt** (gemessen, `messungen.md` §106):
 bei 360 px „Meine Ablage" (66 px Wort, 63 px Platz), bei 320 px dazu
@@ -8544,7 +8567,8 @@ Brechung über den Namen der Leiste in Ordnung ist, hat E641 Redur
 (kein Weg fällt weg, E701), aber unbeantwortet, ob Redur einen Hinweis will.
 
 **Was fehlt:** die Phase für den Rechner mit eigenem Wächter; ein Blick an
-Redurs iPhone und an einem Android-Telefon; eine Antwort zu Punkt 3 und 5.
+Redurs iPhone und an einem Android-Telefon; eine Antwort zu Punkt 3 und 5,
+und zum Vorleser in Punkt 2 (eigene Aktion oder Merkmale nur mit Tastatur).
 
 ---
 

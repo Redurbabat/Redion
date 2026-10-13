@@ -2070,7 +2070,14 @@ je andere Abschnitte, und die erste der Treffer-Gegenprobe baute gar nicht
 (`noUnusedLocals`, §52.6). Zwei Zusagen kamen nicht von ihm: §11e vom BILD —
 unter der gehaltenen Pille stand „Dokumente" doppelt da —, und §5g, weil
 §11e danach in einem Lauf rot wurde, in dem ein Pillenzug `data-gehalten`
-stehen gelassen hatte. Gezählt am 13. Oktober, im selben Bogen: `ls
+stehen gelassen hatte. Die Durchsicht fand dann genau das, was die Korrektur
+verbietet: ein Daumen, der am oberen Rand des Reiters aufsetzt und 10–15 px
+hinaufrollt, reichte über die Kante, und das Loslassen wählte „Lernpfad" —
+§1b rollte nur von der Mitte des Reiters und konnte die Kante nie
+erreichen. Sechzehn Zusagen kamen dazu (122), gegen f4ebb5816 rot mit 15
+von 122; die eigenartigste misst Bildpunkte: ohne Lupe lag die Marke mit
+1,08 : 1 auf der Scheibe, und §11b hatte sie „da" genannt. Gezählt am
+13. Oktober, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 555.*
 
 ### Die Befehle

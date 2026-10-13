@@ -97,6 +97,8 @@ const TabShelf = (() => {
   /** Die EINE Marke der Liste (`SelectionFlow.highlight`), einmal angelegt. */
   let marker: HTMLElement | null = null;
   let barTop = 0;
+  /** Darunter liegt der Home-Strich, kein Reiter (Durchsicht E749). */
+  let barBottom = 0;
   /** Die Reiter der Leiste, gelesen beim Öffnen (die Leiste bewegt sich nicht). */
   let barLeft = 0;
   let tabCols: TabColumn[] = [];
@@ -228,6 +230,7 @@ const TabShelf = (() => {
     const neu = targetsOf(t);
     if (!neu.length) return false;
     barTop = rb.top;
+    barBottom = rb.bottom;
     barLeft = rb.left + bar.clientLeft - bar.scrollLeft;
     tabCols = tabs().map(b => ({ tab: b, left: b.offsetLeft, width: b.offsetWidth }));
     const anker = t.getBoundingClientRect();
@@ -293,8 +296,15 @@ const TabShelf = (() => {
   const choose = (i: number): void => {
     const z = targets[i];
     const t = tab;
+    const perTaste = mode === 'keys';
     close();
     if (!z || !t) return;
+    /* DIE TASTATUR BEHÄLT IHREN PLATZ (§38, Durchsicht E749). Die Zielleiste
+       hielt den Fokus, als sie verschwand, und er fiel auf <body> — Enter auf
+       dem Reiter selbst lässt ihn auf dem Reiter. Zurück an den Reiter, BEVOR
+       gewählt wird: ein Fenster, das eine Handlung öffnet, nimmt ihn sich
+       danach und gibt ihn beim Schliessen hierher zurück. */
+    if (perTaste) t.focus({ preventScroll: true });
     if (z.ort && go) { go(t, z.tun); return; }
     pillTo(null);
     try { z.tun(); } catch (e) { console.error('[Zielleiste]', e); }
@@ -303,7 +313,10 @@ const TabShelf = (() => {
   /* ══ DER FINGER ══════════════════════════════════════════════════════════
    * Drei Lagen: auf der Leiste (der Reiter darunter bekommt die Zielleiste),
    * im Zielbereich (24 px über der Scheibe bis zur Oberkante der Leiste,
-   * seitlich in der Scheibe — das Ziel darunter leuchtet), sonst nichts. */
+   * seitlich in der Scheibe — das Ziel darunter leuchtet), sonst nichts.
+   * „Sonst" ist auch UNTER der Leiste: dort liegt der Home-Strich, und ein
+   * Loslassen zählte als „auf dem nächsten Reiter" (Durchsicht E749). */
+  const onBar = (y: number): boolean => y >= barTop && y <= barBottom;
   const tabAt = (x: number): HTMLElement | null => {
     let best: HTMLElement | null = null, abstand = Infinity;
     for (const c of tabCols) {
@@ -325,7 +338,7 @@ const TabShelf = (() => {
 
   const move = (x: number, y: number): void => {
     if (mode !== 'finger') return;
-    if (y >= barTop) {
+    if (onBar(y)) {
       const t = tabAt(x);
       aim(-1);
       if (t && t !== tab && t.dataset['ziele']) {
@@ -349,7 +362,7 @@ const TabShelf = (() => {
 
   const up = (x: number, y: number): void => {
     if (mode !== 'finger') return;
-    if (y >= barTop) {
+    if (onBar(y)) {
       const t = tabAt(x);
       close();
       pillTo(null);

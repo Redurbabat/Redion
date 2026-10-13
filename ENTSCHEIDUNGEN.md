@@ -790,7 +790,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E746** — Drehen, Spiegeln, Ziehen und Schieben führen nur die eigenen Leitungen nach, und keine zapft dabei etwas an (L253 Punkt 4; Redur, 11. Oktober abends: „4. wie du willst“ zur Reihenfolge): EINE Stelle im Modell, `Schaltplan.vorherMerken`/`nachziehen`, führt nur neu, was an einem bewegten Teil hängt, und nimmt nur einen Weg, der genau dasselbe berührt wie vorher (alter Weg · nachgerückte Endstücke · Winkel · anderer Winkel · Z-Wege · Hakenwege), am liebsten durch kein Zeichen; sonst meldet die Fläche es. Fremde Leitungen bleiben Byte für Byte, ausser ihr Ende liegt neben seiner Klemme (E738, `test608` §5). Nach der Durchsicht: beim Ziehen rechnet jede Bewegung nur die billigen Wege und erst das Loslassen einmal voll; und landet die EIGENE Klemme eines bewegten Teils auf einer fremden Leitung (oder verlässt sie eine), sagt die Fläche, welche (`Schaltplan.veraendert`). Nach der zweiten Durchsicht: während eines Zugs ändert nur der Zug den Plan — `aendere`, Rückgängig und Wiederholen tun nichts, Tasten ausser Escape zählen nicht, Escape bricht ab; ein Zug gehört einem Zeiger und endet immer richtig, auch losgelassen ausserhalb oder von einem zweiten Finger unterbrochen; die Ablage bekommt eine Kopie des Plans, nicht ihn selbst. Nach der dritten Durchsicht: mit echter Maus stand der Fokus im Zug auf der Seite, und Escape und Strg+Z kamen nie an — jetzt horcht ein Zug am Dokument auf seine Tasten: Escape bricht ab (ein offenes Menü zuerst), Rückgängig und Wiederholen tun nichts, auch nicht am Seitenverlauf; nach einem Klick holt die Fläche den Fokus zurück (ohne Ring), Umschalt+Strg+Z und Strg+Y nimmt sie selbst; Vorlage und Bild verweigern im Zug, der Hinweis eines Beispiels kommt nur, wenn es steht. `test611`
 * **E747** — Eine Brücke des Klemmenbretts belegt ihre Klemmen (L253 Punkt 2; Redur, 11. Oktober abends: „4. wie du willst" zur Reihenfolge der Elektro-Punkte): die Meldung „Anschluss … hängt an keiner Leitung" kannte nur die Netzliste der Leitungen und meldete im Stern UND im Dreieck W2, U2 und V2 — gerade die Klemmen, auf denen die Brücken der Stellung liegen. Jetzt zählen für diese Meldung die Brücken der EINGESTELLTEN Stellung eines mehrteiligen Bauteils wie gezeichnete Leitungen; Schaltkontakte nicht (ein geschlossener Schalter mit offenem Ausgang hat eine vergessene Leitung), der feste Verbund N–PE der Drehstromquelle auch nicht. Ein Knoten, den NUR die eigenen Brücken halten, hängt trotzdem an nichts (im Dreieck ohne Zuleitung an U1 die Ecke U1–W2) — ausser die Stellung weist ihn selbst als `sternpunkt` aus, wie „Stern" für U2, V2, W2 (§5 Regel 3, §8). Die Netzliste bleibt, wie sie ist; EINE Hilfe `stellungIn` liest die Stellung innerhalb von `Stromfluss` für Rechnung und Meldung (ausserhalb lesen die Planfläche und die Aufgaben eine Stellungsnummer an fünf Stellen selbst, Punkt 5). `test612` (38 Zusagen; gegen 97d156b03 rot mit 20, gegen den ersten Stand 7560b2f22 mit 33 von 38; sechs Gegenproben).
 * **E748** — Was unter einem Reiter der unteren Leiste liegt, steht an EINER Stelle — und was oben unter „Heute ^" steht, leuchtet unten unter „Heute" (Redur, 12. Oktober 2026, zum Bild mit dem roten Feld über der Leiste: „dort nur sachen die mit unteren zutun haben dann für alle so"; Antworten 2 und 3 auf den Entwurf der Zielleiste: die Empfehlung): `Register.navigation.meldeZiele(reiter, fn)`/`ziele(reiter)` nach dem Muster von `Register.kontext` — jeder Lieferant jedes Mal neu gefragt und einzeln abgefangen, nach Rang, höchstens fünf; Schlüssel ist das Merkmal `data-ziele` an den fünf Reitern. Drei Lieferanten, jeder innerhalb seines Moduls und aus seiner bestehenden Liste (Bibliothek: `ORTE` und die Notizhefte; Lernwelt: `KLAPPEN`/`ANSICHTEN`; Ansichten: die Termine-Karten als Liste, die Kante „kalender", `mehrGruppen`), die `if`-Ketten von Mehr und Termine werden `mehrTun`/`termineTun` für Bildschirm und Ziel. L147 GESCHLOSSEN: die Klappe entscheidet Titel und Reiter (`titelVon`/`reiterVon`, auch für Uni und Arbeit), drinnen schreibt `wechseln()` zuerst die Adresse und meldet dann den Titel über den neuen schmalen Weg `App.sonderTitel`, der auch den Zeichner für „Zurück" nachführt (beides beim Fertigstellen gefunden: in der umgekehrten Folge leuchtete am Rechner nach einem Wechsel drinnen die falsche Kante, `test613` §7g, und „Zurück" zeigte die Ansicht vom Öffnen unter dem neuen Titel, §7i/§7j), und stellt beim Wechsel der Klappe auch den Reiter um (`Produktwelten.lernReiter`, dieselbe Regel wie beim Öffnen — in der zweiten Durchsicht gefunden: ohne sie sprang die Pille beim Öffnen einer Seite auf den Reiter vom Öffnen zurück, §7k–§7m); geändert eine Zusage, `test484` §5 (die alte Titelzeile wörtlich). Der Kommentar an `haupt` (navigation.ts) ist berichtigt: nur die Kante liest es. Nach der Durchsicht tragen die drei Termine-Karten ihr `zeigen` (`termineWeg`: fehlt das Modul, fehlt das Ziel), und `test613` erkennt jeden Dialog an seinem Kopf statt an der Zahl offener Dialoge. `test613` (102 Zusagen; gegen ba51915dc rot mit 12 von 68, die Fassung vor den Durchsichten mit 13 von 73; neun Gegenproben).
-* **E749** — Die Zielleiste am Telefon: hinaufziehen, gleiten, loslassen (Redur, 12. Oktober 2026, Antworten 1 und 4: die Empfehlung; seine Korrektur vom 13. Oktober, 01:08 UTC: „die neu dock nur wenn ich mit hand nach oven so zi eht kommt das doet aber beim klicken nicht“ — nur Hochziehen öffnet, kein Tipp, kein Halten): EINE Gestenmaschine, `SelectionFlow.ziehbar` mit der freiwilligen Übergabe `hinauf` (über der Oberkante nach 10 px oder aus einem Pillenzug; unter der Kante GENAU EIN Klick; hinab wie zuvor; ohne die Angabe nichts anders); `TabShelf` (`src/schale/aufbau/tab-shelf.ts`): `#ho-ziele` NEBEN der Leiste, Menü aus `Register.navigation.ziele`, Treffer aus dem Layout vor dem Wachsen, Loslassen wählt einmal über denselben Weg wie der Tipp (`schale.ts`: EINE Tabelle `REITER_UNTEN`, `wechsle`), zwischen Reitern tauscht der Inhalt, Marke mit der Linse der Pille, Lupe ×1,3/×1,13, Tastatur über Pfeil hinauf; `touch-action:none` an der Leiste (gemessen: `pan-y` rollte nichts). Vom Bild verworfen: `data-gehalten` (das Wort unter der Pille stand doppelt). Beim Bauen gefunden: jedes `hidden` weckt die `body:has(…)`-Regeln — das erste Öffnen 21,5 → 9,9 ms (4×: 130 → 63). `test614` (106 Zusagen; gegen 352eed65c rot mit 29 von 105; fünf Gegenproben). L257 offen (Rechner, echtes Telefon).
+* **E749** — Die Zielleiste am Telefon: hinaufziehen, gleiten, loslassen (Redur, 12. Oktober 2026, Antworten 1 und 4: die Empfehlung; seine Korrektur vom 13. Oktober, 01:08 UTC: „die neu dock nur wenn ich mit hand nach oven so zi eht kommt das doet aber beim klicken nicht“ — nur Hochziehen öffnet, kein Tipp, kein Halten): EINE Gestenmaschine, `SelectionFlow.ziehbar` mit der freiwilligen Übergabe `hinauf` (über der Oberkante UND ab 16 px Weg — über dem Tipp-Spielraum des Browsers, seit der Durchsicht —, gerade oder aus einem Pillenzug; davor GENAU EIN Klick, solange der Finger in der Spalte bleibt; hinab wie zuvor; ohne die Angabe nichts anders); `TabShelf` (`src/schale/aufbau/tab-shelf.ts`): `#ho-ziele` NEBEN der Leiste, Menü aus `Register.navigation.ziele`, Treffer aus dem Layout vor dem Wachsen, Loslassen wählt einmal über denselben Weg wie der Tipp (`schale.ts`: EINE Tabelle `REITER_UNTEN`, `wechsle`), zwischen Reitern tauscht der Inhalt, Marke mit der Linse der Pille, Lupe ×1,3/×1,13, Tastatur über Pfeil hinauf; `touch-action:none` an der Leiste (gemessen: `pan-y` rollte nichts). Vom Bild verworfen: `data-gehalten` (das Wort unter der Pille stand doppelt). Beim Bauen gefunden: jedes `hidden` weckt die `body:has(…)`-Regeln — das erste Öffnen 21,5 → 9,9 ms (4×: 130 → 63). `test614` (106 Zusagen; gegen 352eed65c rot mit 29 von 105; fünf Gegenproben). Nach der Durchsicht: ein Tipp am oberen Rand des Reiters öffnete und wählte (jetzt erst ab 16 px), hinauf-und-seitwärts klickte den gedrückten Reiter, unter der Leiste losgelassen den nächsten, der nächste echte Tipp verschwand (das Schlucken endet mit jedem `pointerdown`, daneben nur der Klick mit der `pointerId` der Geste), die Marke ohne Lupe lag mit 1,08 : 1 auf der Scheibe (jetzt ein Ring, auch unter Kontrast und erzwungenen Farben), der Fokus fiel nach Enter auf `<body>`; `test614` 122 Zusagen, gegen f4ebb5816 rot mit 15 von 122, sieben Gegenproben. L257 offen (Rechner, echtes Telefon, Vorleser mit Berührung).
 
 ---
 
@@ -68711,14 +68711,17 @@ offenen Dokument, nicht quer).
 1. **EINE Gestenmaschine** (`SelectionFlow.ziehbar`, E706) mit einer
    freiwilligen Übergabe `hinauf: { nimm(k, 'hoch' | 'aus-zug', x, y) }`.
    Steigt der Finger über die Oberkante der Reihe, fragt `ziehbar`, ob
-   jemand den Zug nimmt — gerade hinauf erst NACH der Schwelle von 10 px
-   (ein Daumen, der oben an der Leiste aufsetzt und 3 px rollt, tippt nur),
-   oder aus einem laufenden Pillenzug heraus (`'aus-zug'`, für den Reiter
-   unter der Pille). Wer übernimmt, bekommt Zug, Loslassen und Abbruch;
-   Zeigerfang, das Schlucken des Klicks (500 ms) und von `touchend`
-   (300 ms, die Schublade) und Escape bleiben in `ziehbar`. Hinauf, aber
-   unter der Oberkante losgelassen, ist GENAU EIN Klick auf den gedrückten
-   Reiter — `ziehbar` klickt selbst und schluckt den des Browsers, denn der
+   jemand den Zug nimmt — gerade hinauf oder aus einem laufenden Pillenzug
+   heraus (`'aus-zug'`, für den Reiter unter der Pille), und beides erst,
+   wenn der Finger mindestens 16 px über dem Punkt des Aufsetzens liegt:
+   über dem Tipp-Spielraum des Browsers (so seit der Durchsicht, unten —
+   vorher reichte die Kante nach 10 px, und ein Tipp am oberen Rand des
+   Reiters öffnete). Wer übernimmt, bekommt Zug, Loslassen und Abbruch;
+   Zeigerfang, das Schlucken des Klicks (500 ms, nur der Klick der Geste)
+   und von `touchend` (300 ms, die Schublade) und Escape bleiben in
+   `ziehbar`. Hinauf, aber vor der Übergabe losgelassen, ist GENAU EIN
+   Klick auf den gedrückten Reiter, solange der Finger in seiner Spalte
+   bleibt — `ziehbar` klickt selbst und schluckt den des Browsers, denn der
    klickt bis 15 px und darüber nicht. Hinab bleibt, wie es war. Ohne
    gewählten Reiter (Posteingang) geht nur hinauf. Ohne die Angabe ändert
    sich nichts (`test585` 93 von 93).
@@ -68734,7 +68737,8 @@ offenen Dokument, nicht quer).
 3. **Was das Loslassen tut, genau einmal:** auf einem Ort-Ziel derselbe Weg
    wie der Tipp auf seinen Reiter; auf einer Handlung nur `tun()` (die Pille
    kehrt zum gewählten Reiter zurück); auf der Leiste genau ein Klick des
-   Reiters darunter; sonst — zu hoch, seitlich hinaus, `pointercancel`,
+   Reiters darunter; sonst — zu hoch, seitlich hinaus, unter der Leiste
+   (der Home-Strich, seit der Durchsicht), `pointercancel`,
    `lostpointercapture`, Escape — nichts. Zwischen den Reitern tauscht nur
    der Inhalt; die Scheibe bleibt (`test614` §5: in keinem Bild weg).
 4. **EIN Wechselweg** (§8): in `schale.ts` werden die fünf Bindungen der
@@ -68761,7 +68765,9 @@ offenen Dokument, nicht quer).
    öffnet, der Fokus steht auf dem ersten Ziel; Pfeile laufen rundum,
    Pos1/Ende springen, Enter und Leertaste wählen, Escape schliesst und
    gibt den Fokus zurück (ein Druck, ein Fenster: der Griff der Schale
-   sieht ihn nicht), Tab schliesst; ein wandernder `tabindex`.
+   sieht ihn nicht), Tab schliesst; ein wandernder `tabindex`. Nach der
+   Wahl steht der Fokus auf dem Reiter, oder im Fenster der Handlung
+   (seit der Durchsicht).
 8. **Stil:** `z-index:955` (über Toast 900 und Neu-Laden-Streifen 950,
    Grund daneben), `bottom:calc(var(--hunten) + 8px)`, Höhe
    `--mobile-nav-height`; das Glas im SELBEN `@supports`-Block wie die
@@ -68850,6 +68856,13 @@ offenen Dokument, nicht quer).
 1927 → 1932 KB von 1950 (`test388` §5). Das erste Öffnen
 9,9 ms im Horcher (4× Drossel: 63 ms); sichtbar ist die Zielleiste im
 nächsten Bild nach dem Zug über die Kante (§3a: höchstens zwei Bilder).
+**Und die grösste Lücke zwischen zwei Bildern um das erste Öffnen** — die
+Zahl, nach der der Entwurf gefragt hatte („darf den ersten Frame … nicht
+kosten"), stand hier zuerst nicht (die Durchsicht hat es gefunden): ohne
+Drossel 17 ms, also kein Bild verloren; bei 4× Drossel Mitte 117 ms im Bau
+(`messungen.md` §106 Punkt 5), nach der Durchsicht nachgemessen 83 ms (zehn
+Ladungen, 17 bis 100 ms, Punkt 10e) — bei 4× gehen beim ersten Öffnen vier
+bis fünf Bilder verloren.
 `touch-action:none` an der Leiste kostet nichts Gemessenes: vorher rollte
 dort nichts.
 
@@ -68888,7 +68901,8 @@ Datei danach Byte für Byte wie vorher, `sha256`):
    `onerror` lief.
 
 **Bilder** (§55.3, im Kratzordner `bilder-ziel/handy/`, 390 × 844, hell und
-dunkel, angesehen und geschickt): Ruhe; die fünf Zielleisten, der Finger
+dunkel, angesehen; geschickt waren sie mit diesem Eintrag NICHT — hier stand
+„angesehen und geschickt", und die Durchsicht hat es gefunden): Ruhe; die fünf Zielleisten, der Finger
 auf dem Ziel über seinem Reiter; der Finger auf „Favoriten" mit Marke und
 Lupe (dazu nah); der Filmstreifen „Dokumente → Lernen" (zehn Bilder je
 33 ms Bewegungszeit, per CDP auf ein Zehntel verlangsamt); ohne Bewegung
@@ -68922,3 +68936,150 @@ sich nur um die Kopfzeile, Kommentare reisen seit E715 nicht mit) und
 **Was offen bleibt:** L257 — der Rechner (Phase 2), die Prüfung am echten
 Telefon (iOS Safari, Android, Vorleser), die gekürzten Namen unter 390 px,
 die Kosten der `body:has(…)`-Regeln für jedes `hidden` in Redion.
+
+**Nach der Durchsicht (13. Oktober).** Elf Funde, zwei davon derselbe; der
+erste ist ein Fehler im Verhalten, und zwar genau der, den Redurs Korrektur
+verbietet. Jeder Fund zuerst als Zusage (`test614`, Commit „test614 (rot)"
+der Durchsicht: gegen `f4ebb5816` rot mit 15 von 122), dann die Reparatur.
+
+1. **Ein Tipp am oberen Rand des Reiters öffnete die Zielleiste — und
+   wählte.** Die Übergabe kam, sobald die Achse nach 10 px stand und der
+   Finger über der Kante der Leiste lag (775). Der Reiter beginnt 6 px
+   tiefer (781), und Chromium klickt nach einer Berührung bis 15 px Weg
+   selbst (nachgemessen: 15 px ein Klick, 16 keiner). Wer 1–7 px unter dem
+   Rand aufsetzte und 10–15 px rollte — ein Daumen beim Tippen —, kam über
+   die Kante, das Loslassen fiel in den Zielbereich, und `choose()` wählte:
+   gegen `f4ebb5816` neunmal von zwölf „Lernpfad", mit 9–12 Bildern
+   Zielleiste (`messungen.md` §106 Punkt 10c). §1b rollte nur von der Mitte
+   des Reiters (805) und konnte die Kante nie erreichen. Jetzt übergibt
+   `ziehbar` erst, wenn der Finger über der Kante liegt UND mindestens
+   16 px über dem Punkt des Aufsetzens (`UEBER_TIPP`) — für den geraden Weg
+   und den Pillenzug gleich. Darunter bleibt es der Tipp-Weg, der schon
+   genau einmal klickt (§1c, zwölf Fälle).
+2. **Chromiums Klick fiel daneben** (auf dem Grundstand schon so): nach
+   13–15 px vom Rand setzt Chromium seinen Tipp auf den Inhalt ÜBER der
+   Leiste — auf „Dokumente" die Zeile „Noch keine vollständige Sicherung"
+   (`page@760…763`). Der Horcher, der schluckt, sass auf der Leiste und sah
+   ihn nicht; auf einer Seite mit Aufgaben könnte es ein Häkchen sein
+   (nicht gemessen). Jetzt hört er am
+   Fenster: auf der Leiste wie immer, daneben nur den Klick, dessen
+   `pointerId` die der Geste ist (gemessen: Chromiums Klick trägt die
+   Nummer seiner Berührung, Tastatur und `click()` tragen −1). §1c verlangt
+   „nichts daneben".
+3. **Hinauf, dann seitwärts klickte den gedrückten Reiter** (§1d): 14 px
+   hinauf, hinüber auf „Termine", los — ein Klick auf „Lernen". Auf dem
+   Grundstand geschah nichts. Jetzt endet der Zug ohne Klick, sobald der
+   Finger die Spalte des gedrückten Reiters verlässt (gemessen beim
+   Aufsetzen, nur mit `hinauf`).
+4. **Unter der Leiste losgelassen** (§6b, §6c): zwischen ihrer Unterkante
+   (835) und dem Rand liegt der Home-Strich; ein Loslassen dort zählte als
+   „auf dem nächsten Reiter" und klickte „Lernen". Jetzt ist nur
+   zwischen Ober- und Unterkante „auf der Leiste" (`onBar`); darunter
+   leuchtet kein Reiter vor, und das Loslassen bricht ab.
+5. **Der nächste echte Tipp verschwand** (§7f): jedes Loslassen nach einer
+   Übergabe und jedes `pointercancel` setzte das Schlucken für 500 ms, und
+   weil danach meist KEIN Klick des Browsers kam (über 15 px), traf es den
+   nächsten echten Tipp — nach einem Pillenzug schon auf dem Grundstand.
+   Der Klick einer Geste kommt aber immer vor dem nächsten Aufsetzen; also
+   endet das Schlucken mit jedem neuen `pointerdown` (am Fenster, in der
+   Einfangphase).
+6. **Die Marke war kaum zu sehen** (§11f, §38 „keine Information nur über
+   Farbe"): ohne Bewegung hebt sich kein Zeichen, und die Marke
+   (`--bg-hover`) lag auf der Scheibe mit 1,08 : 1 (hell), 1,2 (dunkel),
+   unter „Hoher Kontrast" 1,07 / 1,18 und unter erzwungenen Farben 1 : 1 —
+   das Angepeilte stand fast nur im Farbton der Schrift, und die stille und
+   die angepeilte Schrift stehen gegeneinander bei 1,03 : 1 (hell,
+   `rgb(102,101,95)` gegen `rgb(124,58,237)`) und 1,21 : 1 (dunkel) —
+   gemessen, `messungen.md` §106 Punkt 10d. §11b und §13 prüften nur, dass
+   die Marke DA ist; eine unsichtbare bestand beide (§55.2). Jetzt trägt
+   sie einen Ring in der Farbe der Schrift (`outline:2px solid
+   var(--accent-text,var(--accent))`, nach innen) — wo die Lupe aus ist
+   (`#ho-ziele:not([data-lupe])`, also genau ohne Bewegung) und unter jedem
+   Kontrast-Weg (`grund.css`: weniger Transparenz, mehr Kontrast,
+   erzwungene Farben, „Hoher Kontrast", „Starker Kontrast"). `outline`
+   statt `box-shadow`, weil erzwungene Farben jeden Schatten löschen.
+   Gemessen an Bildpunkten, Rand gegen Scheibe: 5,36 / 5,74 / 5,31 / 5,68 /
+   21 : 1. Mit Lupe bleibt die Marke, wie Redur sie gewählt hat: Glas, kein
+   Ring.
+7. **Nach Enter auf einem Ort stand der Fokus auf `<body>`** (§12g):
+   `choose()` schloss die Zielleiste, die ihn hielt. Jetzt geht er an den
+   Reiter, BEVOR gewählt wird — Enter auf dem Reiter selbst lässt ihn dort
+   auch; ein Fenster, das eine Handlung öffnet, nimmt ihn sich danach
+   (§12h, das war schon so und bleibt).
+8. **Der Vorleser am Telefon kommt nicht hinein.** Die fünf Reiter sagen
+   „Menü, eingeklappt", aber mit Berührung und VoiceOver/TalkBack gibt es
+   keinen Weg, es zu öffnen (der Doppeltipp ist der Tipp; Pfeil hinauf
+   braucht eine Tastatur). Nicht gebaut: eine eigene Aktion für den
+   Vorleser oder die Merkmale nur mit Tastatur — das ist Redurs Wahl
+   (L257 Punkt 2). Jedes Ziel bleibt auf dem Bildschirm seines Reiters
+   erreichbar.
+9. **„Angesehen und geschickt" stimmte nicht** (zweimal gemeldet): die
+   Bilder lagen im Kratzordner, geschickt waren sie nicht. Der Satz unter
+   „Bilder" ist berichtigt.
+10. **Die grösste Bildlücke fehlte unter „Was es kostet"** — die Zahl, nach
+   der der Entwurf gefragt hatte („darf den ersten Frame … nicht kosten").
+   Nachgemessen, jetzt dort.
+
+**Gegenproben der Durchsicht** (eingesetzt, gebaut, rot gesehen, wieder
+heraus; danach Quelle, Stilblätter und gebautes JavaScript Byte für Byte
+wie vorher, `sha256`):
+
+1. **Die Schwelle heraus** (`UEBER_TIPP * 0`: die Konstante bleibt
+   gelesen, sonst baut es nicht, §52.6): 119 von 122 — §1c dreimal,
+   „Lernpfad" mit 7–11 Bildern Zielleiste.
+2. **Die Spalte heraus:** 121 von 122 — §1d `{"hl-lernen":1}`.
+3. **Das Ende des Schluckens beim Aufsetzen heraus:** 119 von 122 — §7f
+   dreimal (`klicks: {}`; nach dem Pillenzug nur `hl-start`).
+4. **Daneben alles durchlassen** (`… || true`, `schluckId` bleibt
+   gelesen): 119 von 122 — §1c dreimal, jetzt mit GENAU EINEM Klick auf
+   „Lernen" und trotzdem rot: `page@760`, `@761`, `@762`, `@763`.
+5. **Unter der Leiste wieder „auf der Leiste"** (`barBottom + 1e6`): 120
+   von 122 — §6b `{"hl-lernen":1}`, §6c `anvisiert: ["hl-lernen"]`.
+6. **Der Fokus nicht zurück:** die erste Fassung (`perTaste && false`)
+   baute nicht — `'t' is possibly 'null'`, die Verengung fiel weg; die
+   zweite (`void t.id`): 121 von 122 — §12g, der Fokus auf `<body>`.
+7. **Der Ring heraus** (alle drei Regeln): 117 von 122 — §11f fünfmal,
+   1,08 / 1,2 / 1,07 / 1,18 / 1 : 1.
+
+**Was es danach kostet:** `tab-shelf.js` 3629 → 3707 B gzip (+78),
+`selection-flow.js` 9494 → 9691 (+197), `bausteine.css` +98 B,
+`grund.css` +56 B (gzip, gegen `f4ebb5816`); `tab-shelf.ts` 486 → 499
+Zeilen, `selection-flow.ts` 1254 → 1287. Start: 1932 KB von 1950, wie vorher (`test388` §5, 256 Dateien; die +429 B gzip gehen im Runden auf). Das erste Öffnen
+(zwei Läufe à fünf frische Ladungen, dasselbe Skript wie beim Bau): ohne
+Drossel 9,4 und 9,9 ms (Mitte), bei 4× 48,3 und 54,0 ms — die Übergabe
+kommt jetzt erst ab 16 px, kostet aber nichts dazu.
+
+**Bilder der Durchsicht:** im Kratzordner `bilder-ziel/handy/durchsicht/`,
+390 × 844, GPU-Weg, der Finger auf „PDFs" unter „Dokumente" — je vorher
+(`f4ebb5816`) und nachher: ruhig hell und dunkel, „Ruhige Darstellung",
+Hoher Kontrast hell und dunkel, erzwungene Farben, und mit Bewegung hell
+und dunkel (dort darf sich nichts ändern), jedes ganz und nah. Angesehen,
+nicht geschickt (die Pfade gehen mit dem Bericht). Gesehen: vorher ist die
+Marke ohne Lupe ein Hauch Grau, unter erzwungenen Farben ist „PDFs" von
+den anderen Zielen nicht zu unterscheiden; nachher liegt um „PDFs" ein
+Ring — violett, im Dunkeln heller violett, unter erzwungenen Farben
+schwarz —, „Meine Ablage" (wo man steht) bleibt fett und ohne Ring. Mit
+Bewegung ist das Bild vorher und nachher gleich: Lupe, Glas, kein Ring.
+Nichts abgeschnitten, nichts überdeckt.
+
+**Nachbarn der Durchsicht** — unter dem gemeinsamen Schloss, gegen den gebauten
+Stand (Dienststand v1529, `73b2623d81e1a08c`), 36 Läufe: `test614`
+(122 von 122), `test585` (93 von 93), `test541`, `test539`, `test581`,
+`test484`, `test114`, `test566`, `test588`, `test598`, `test590`,
+`test264`, `test576`, `test582`, `test589`, `test362`, `test141`,
+`test156`, `test385`, `test37`, `test40`, `test54`, `test67`, `test387`,
+`test392`, `test128`, `test126`, `test222`, `test390`, `test601`,
+`test597`, `test296`, `test587`, `test388`, `test613` (102 von 102): 35
+grün. Rot `test332` mit 13 von 14 („Keine einzige davon ist tot") — und
+zwar genau so auf `f4ebb5816` (dieselben neun Angaben) und auf
+`352eed65c` mit fünf davon, beide in einer Kopie ihrer Dateien
+nachgemessen: die Randfarbe von `#handy-oben` und `.menu .kenn` schon auf
+dem Grundstand, dazu die Randfarbe von `#ho-ziele` seit Bogen 2 — sie hat
+das Muster der Leiste übernommen (`border:1px solid var(--line)` in
+`bausteine.css`, unter Glas von `studio.css` auf `transparent` gesetzt).
+Die Durchsicht bringt keine dazu und fasst die Regel nicht an. Datei-Wächter
+`test550`, `test549`, `test225`, `test105`, `test109`, `test87`,
+`test537`, `test400`, `test290`: grün.
+
+**Geänderte Zusagen bestehender Läufe: keine.** Die sechzehn neuen kamen
+dazu; keine alte ist gelockert.

@@ -846,6 +846,7 @@ html[data-theme="light"]{
   body #handy-oben #ho-pille.faehrt::before{ opacity:0 }
   body #handy-oben #ho-pille::after{ background:none }
   body #ho-ziele > .ru-marke.faehrt{ -webkit-backdrop-filter:none; backdrop-filter:none }
+  body #ho-ziele > .ru-marke{ outline:2px solid var(--accent-text,var(--accent)); outline-offset:-2px }
   body .ru-fach-art{ background:#000; -webkit-backdrop-filter:none; backdrop-filter:none }
   html body #ai .ai-head .rmo-orb-karte{ background:var(--bg-card); -webkit-backdrop-filter:none; backdrop-filter:none }
   body .ru-held-linse{ display:none }
@@ -868,6 +869,8 @@ body[data-kontrast="hoch"], html[data-schema="kontrast"] > body{
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #handy-oben #ho-pille::after{ background:none }
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #ho-ziele > .ru-marke.faehrt{
   -webkit-backdrop-filter:none; backdrop-filter:none }
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #ho-ziele > .ru-marke{
+  outline:2px solid var(--accent-text,var(--accent)); outline-offset:-2px }
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) .ru-fach-art{
   background:#000; -webkit-backdrop-filter:none; backdrop-filter:none }
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #ai .ai-head .rmo-orb-karte{
@@ -15281,6 +15284,9 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   #ho-ziele[data-lupe] > [data-anvisiert] + button .ho-z,
   #ho-ziele[data-lupe] > button:has(+ [data-anvisiert]) .ho-z{ transform:scale(1.13) }
   #ho-ziele > .ru-marke{ border-radius:var(--radius-2xl) }
+  /* Ohne Lupe trägt die Marke das Angepeilte fast allein, und ihre Fläche
+     misst auf dem Glas 1,08 : 1 — der Ring macht sie zur Form (§38, E749). */
+  #ho-ziele:not([data-lupe]) > .ru-marke{ outline:2px solid var(--accent-text,var(--accent)); outline-offset:-2px }
   #ho-ziele[data-marke-weg] > .ru-marke{ opacity:0 }
   #handy-oben > button b{
     display:block; font-size:10.5px; font-weight:500; letter-spacing:-.01em;
@@ -27672,7 +27678,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1528, inhalt: '5ec32a6080a56425', gebaut: '2026-10-13T11:09:08.723Z' };
+const Stand = { fassung: 1529, inhalt: '73b2623d81e1a08c', gebaut: '2026-10-13T13:04:55.013Z' };
 window.Stand = Stand;
 
 </script>
@@ -48050,6 +48056,7 @@ const SelectionFlow = (() => {
         }
         return best;
     };
+    const UEBER_TIPP = 16;
     const ziehbar = (a) => {
         if (a.reihe.dataset['ziehbar'])
             return;
@@ -48058,7 +48065,9 @@ const SelectionFlow = (() => {
         let zug = null;
         let gedrucktes = null;
         let schlucken = -Infinity;
+        let schluckId = NaN;
         let eigenerKlick = false;
+        const schlucke = (id) => { schlucken = performance.now(); schluckId = id; };
         const sichtbar = (k) => k.getClientRects().length > 0 && k.offsetWidth > 0;
         const malen = (z) => {
             if (!z.flaeche)
@@ -48121,14 +48130,14 @@ const SelectionFlow = (() => {
             delete a.reihe.dataset['gehalten'];
             z.vorn?.removeAttribute('data-anvisiert');
             z.vorn = null;
-            schlucken = performance.now();
+            schlucke(z.id);
         };
         const abbrechen = () => {
             const z = zug;
             zug = null;
             lasseLos(gedrucktes);
             if (z?.ue) {
-                schlucken = performance.now();
+                schlucke(z.id);
                 z.ue.cancel();
                 return;
             }
@@ -48152,6 +48161,8 @@ const SelectionFlow = (() => {
             drueckeEin(gedrucktes, 0.9);
             const aktiv = a.gewaehlt();
             const oben = a.hinauf ? a.reihe.getBoundingClientRect().top : 0;
+            const spalte = a.hinauf ? k.getBoundingClientRect() : null;
+            const kLinks = spalte?.left ?? 0, kRechts = spalte?.right ?? 0;
             if (!aktiv || !sichtbar(aktiv) || (a.nurAmGewaehlten && k !== aktiv)) {
                 if (a.hinauf)
                     zug = {
@@ -48159,7 +48170,7 @@ const SelectionFlow = (() => {
                         zieht: false, amZiehen: false, nullX: 0, breite: 0, mitten: [], liste, aktiv: k, auf: false,
                         finger: 0, versatz: 0, ort: 0, tempo: 0, dehnung: 1, hub: 1, messer: tempoMesser(),
                         flaeche: null, zuletzt: performance.now(), bild: 0, vorn: null,
-                        k, oben, hoch: false, ue: null, nurHinauf: true
+                        k, kLinks, kRechts, oben, hoch: false, ue: null, nurHinauf: true
                     };
                 return;
             }
@@ -48179,7 +48190,7 @@ const SelectionFlow = (() => {
                 finger, versatz: 0, ort: stehtBei.ort, tempo: stehtBei.tempo,
                 dehnung: 1, hub: stehtBei.hub, messer: tempoMesser(),
                 flaeche: a.flaeche ?? null, zuletzt: performance.now(), bild: 0, vorn: null,
-                k, oben, hoch: false, ue: null, nurHinauf: false
+                k, kLinks, kRechts, oben, hoch: false, ue: null, nurHinauf: false
             };
         });
         const uebergeben = (z, e) => {
@@ -48267,7 +48278,12 @@ const SelectionFlow = (() => {
                     z.bild = requestAnimationFrame(takt);
                 }
             }
-            if (a.hinauf && (z.hoch || z.amZiehen) && e.clientY < z.oben && uebergeben(z, e))
+            if (z.hoch && (e.clientX < z.kLinks || e.clientX > z.kRechts)) {
+                zug = null;
+                return;
+            }
+            if (a.hinauf && (z.hoch || z.amZiehen) && e.clientY < z.oben && z.y0 - e.clientY >= UEBER_TIPP
+                && uebergeben(z, e))
                 return;
             if (z.hoch)
                 return;
@@ -48288,7 +48304,7 @@ const SelectionFlow = (() => {
                 finally {
                     eigenerKlick = false;
                 }
-                schlucken = performance.now();
+                schlucke(z.id);
                 return;
             }
             if (z.hoch) {
@@ -48299,7 +48315,7 @@ const SelectionFlow = (() => {
                 finally {
                     eigenerKlick = false;
                 }
-                schlucken = performance.now();
+                schlucke(z.id);
                 return;
             }
             if (!z.amZiehen || !z.flaeche)
@@ -48332,14 +48348,16 @@ const SelectionFlow = (() => {
             if (e.target === a.reihe && zug && (zug.amZiehen || zug.ue) && e.pointerId === zug.id)
                 abbrechen();
         });
-        a.reihe.addEventListener('click', (e) => {
-            if (eigenerKlick)
+        window.addEventListener('pointerdown', () => { schlucken = -Infinity; }, true);
+        window.addEventListener('click', (e) => {
+            if (eigenerKlick || performance.now() - schlucken >= 500)
                 return;
-            if (performance.now() - schlucken < 500) {
-                schlucken = -Infinity;
-                e.preventDefault();
-                e.stopPropagation();
-            }
+            const aufReihe = e.target instanceof Node && a.reihe.contains(e.target);
+            if (!aufReihe && e.pointerId !== schluckId)
+                return;
+            schlucken = -Infinity;
+            e.preventDefault();
+            e.stopPropagation();
         }, true);
         a.reihe.addEventListener('touchend', (e) => {
             if (performance.now() - schlucken < 300)
@@ -121468,6 +121486,7 @@ const TabShelf = (() => {
     let places = [];
     let marker = null;
     let barTop = 0;
+    let barBottom = 0;
     let barLeft = 0;
     let tabCols = [];
     let fade = null;
@@ -121581,6 +121600,7 @@ const TabShelf = (() => {
         if (!neu.length)
             return false;
         barTop = rb.top;
+        barBottom = rb.bottom;
         barLeft = rb.left + bar.clientLeft - bar.scrollLeft;
         tabCols = tabs().map(b => ({ tab: b, left: b.offsetLeft, width: b.offsetWidth }));
         const anker = t.getBoundingClientRect();
@@ -121652,9 +121672,12 @@ const TabShelf = (() => {
     const choose = (i) => {
         const z = targets[i];
         const t = tab;
+        const perTaste = mode === 'keys';
         close();
         if (!z || !t)
             return;
+        if (perTaste)
+            t.focus({ preventScroll: true });
         if (z.ort && go) {
             go(t, z.tun);
             return;
@@ -121667,6 +121690,7 @@ const TabShelf = (() => {
             console.error('[Zielleiste]', e);
         }
     };
+    const onBar = (y) => y >= barTop && y <= barBottom;
     const tabAt = (x) => {
         let best = null, abstand = Infinity;
         for (const c of tabCols) {
@@ -121696,7 +121720,7 @@ const TabShelf = (() => {
     const move = (x, y) => {
         if (mode !== 'finger')
             return;
-        if (y >= barTop) {
+        if (onBar(y)) {
             const t = tabAt(x);
             aim(-1);
             if (t && t !== tab && t.dataset['ziele']) {
@@ -121726,7 +121750,7 @@ const TabShelf = (() => {
     const up = (x, y) => {
         if (mode !== 'finger')
             return;
-        if (y >= barTop) {
+        if (onBar(y)) {
             const t = tabAt(x);
             close();
             pillTo(null);

@@ -16,6 +16,7 @@ const TabShelf = (() => {
     let places = [];
     let marker = null;
     let barTop = 0;
+    let barBottom = 0;
     let barLeft = 0;
     let tabCols = [];
     let fade = null;
@@ -129,6 +130,7 @@ const TabShelf = (() => {
         if (!neu.length)
             return false;
         barTop = rb.top;
+        barBottom = rb.bottom;
         barLeft = rb.left + bar.clientLeft - bar.scrollLeft;
         tabCols = tabs().map(b => ({ tab: b, left: b.offsetLeft, width: b.offsetWidth }));
         const anker = t.getBoundingClientRect();
@@ -200,9 +202,12 @@ const TabShelf = (() => {
     const choose = (i) => {
         const z = targets[i];
         const t = tab;
+        const perTaste = mode === 'keys';
         close();
         if (!z || !t)
             return;
+        if (perTaste)
+            t.focus({ preventScroll: true });
         if (z.ort && go) {
             go(t, z.tun);
             return;
@@ -215,6 +220,7 @@ const TabShelf = (() => {
             console.error('[Zielleiste]', e);
         }
     };
+    const onBar = (y) => y >= barTop && y <= barBottom;
     const tabAt = (x) => {
         let best = null, abstand = Infinity;
         for (const c of tabCols) {
@@ -244,7 +250,7 @@ const TabShelf = (() => {
     const move = (x, y) => {
         if (mode !== 'finger')
             return;
-        if (y >= barTop) {
+        if (onBar(y)) {
             const t = tabAt(x);
             aim(-1);
             if (t && t !== tab && t.dataset['ziele']) {
@@ -274,7 +280,7 @@ const TabShelf = (() => {
     const up = (x, y) => {
         if (mode !== 'finger')
             return;
-        if (y >= barTop) {
+        if (onBar(y)) {
             const t = tabAt(x);
             close();
             pillTo(null);

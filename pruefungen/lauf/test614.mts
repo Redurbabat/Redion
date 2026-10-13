@@ -91,7 +91,11 @@
  *
  * DIE DURCHSICHT (E749, 13. Oktober) brachte 16 Zusagen dazu: §1c, §1d, §6b,
  * §6c, §7f, §11f, §12g, §12h. Gegen `f4ebb5816` rot mit 15 von 122 — nur §12h
- * war schon grün (eine Handlung gab den Fokus schon ihrem Fenster).
+ * war schon grün (eine Handlung gab den Fokus schon ihrem Fenster). Sieben
+ * Gegenproben, jede rot (E749): die 16-px-Schwelle heraus (§1c), die Spalte
+ * (§1d), das Ende des Schluckens beim Aufsetzen (§7f), das Schlucken daneben
+ * (§1c, „page@760"), der Home-Strich (§6b, §6c), der Fokus (§12g), der Ring
+ * (§11f fünfmal).
  *
  * Kein fester Port (`listen(0)`) — test400 bleibt unberührt.
  *

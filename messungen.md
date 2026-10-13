@@ -9314,3 +9314,85 @@ Zielleiste; die Grenze mit offenem Menü ist 60 %).
 
 **9 · Start:** `tab-shelf.js` 3,53 KB gzip; `test388` §5 1927 (255 Dateien, in einer Kopie von `352eed65c`) →
 1932 (256 Dateien) KB von 1950.
+
+**10 · Die Durchsicht (13. Oktober)** — Sonde `durchsicht-ziel/sonde-zeiger.mts`
+im Kratzordner und `test614`, Telefon 390 × 844; vorher = `f4ebb5816`,
+nachher = der Stand nach der Durchsicht.
+
+*a) Der Tipp-Spielraum, genau* (auf „Lernen", zwei Züge hinab, dann los;
+Punkt 2 oben kannte nur 15 und 20):
+
+```txt
+Weg      15↓  16↓  17↓  18↓  19↓
+Klicks   1    0    0    0    0
+```
+
+*b) Welche `pointerId` der Klick trägt* (Einfangen am `window`):
+
+```txt
+Tipp auf „Dokumente"     pointerdown #2 → pointerup #2 → click #2 (touch, echt)
+Tipp auf „Lernen"        pointerdown #3 → pointerup #3 → click #3 (touch, echt)
+Enter auf „Dokumente"    click #-1 (kein Zeiger)
+element.click()          click #-1 (kein Zeiger, nicht echt)
+```
+
+Jede Berührung bekommt eine neue Nummer, und Chromiums Klick trägt die
+seiner Berührung — daran erkennt `ziehbar` den Klick DER Geste.
+
+*c) Am oberen Rand des Reiters* (Reiter ab y = 781, Leiste ab 775; vom
+Bildschirm „Dokumente" aus, zwei Züge hinauf, dann los; `test614` §1c):
+
+```txt
+aufgesetzt   10 px            12 px            14 px                     15 px
+vorher
+  782        Lernpfad (10 B)  Lernpfad (9 B)   Lernpfad (10 B), page@760  Lernpfad (12 B), page@760
+  785        Lernen           Lernpfad (10 B)  Lernpfad (10 B), page@762  Lernpfad (11 B), page@761
+  788        Lernen           Lernen           Lernpfad (10 B)            Lernpfad (9 B), page@763
+nachher
+  782–788    Lernen, genau ein Klick, 0 Bilder Zielleiste, nichts daneben
+```
+
+„B" = Bilder, in denen die Zielleiste offen stand; „page@…" = ein Klick
+auf den Inhalt über der Leiste (die Zeile „Noch keine vollständige
+Sicherung"), der bei der Seite ankam.
+
+*d) Die Marke gegen die Scheibe* (`test614` §11f, GPU-Weg, Bildpunkte, der
+Rand der Marke gegen die Scheibe 4–8 px daneben; Finger auf „Favoriten"):
+
+```txt
+                          vorher (Fläche)   nachher (Rand)   Fläche nachher
+ruhig, hell               1,08 : 1          5,36 : 1         1,08
+ruhig, dunkel             1,2               5,74             1,2
+Hoher Kontrast, hell      1,07              5,31             1,07
+Hoher Kontrast, dunkel    1,18              5,68             1,18
+erzwungene Farben         1                 21               1
+```
+
+Und die Schrift selbst (Sonde `sonde-farbe.mts`, ohne Bewegung, berechnete
+Farbe des Worts): still `rgb(102, 101, 95)` gegen angepeilt
+`rgb(124, 58, 237)` 1,03 : 1 (hell), `rgb(166, 168, 170)` gegen
+`rgb(155, 135, 255)` 1,21 : 1 (dunkel) — ohne Lupe und ohne Ring sagte
+nur der Farbton, welches Ziel gilt.
+
+*e) Was das erste Öffnen danach kostet* (dasselbe Skript wie Punkt 5,
+zwei Läufe à fünf frische Ladungen):
+
+```txt
+Drossel   erstes Öffnen im Horcher (ms)                Lücke um das Öffnen (ms)
+1×        12,2 / 9,4 / 9,1 / 9,3 / 9,5 (9,4)            17 / 17 / 17 / 17 / 17
+1×        9,3 / 9,9 / 10,1 / 9,8 / 12,1 (9,9)           17 / 17 / 17 / 17 / 17
+4×        64,4 / 38,9 / 53,4 / 36,6 / 48,3 (48,3)       17 / 67 / 83 / 67 / 83 (67)
+4×        55,2 / 63,0 / 46,3 / 54,0 / 42,0 (54,0)       100 / 100 / 83 / 83 / 67 (83)
+```
+
+Die Lücke bei 4× streut zwischen den Läufen (Punkt 5: Mitte 117 im Bau);
+über alle zehn Ladungen Mitte 83 ms, höchstens 100. Ohne Drossel verliert
+das erste Öffnen kein Bild. In einer Ladung des ersten Laufs stand das
+Bild 108 ms VOR dem Zug über die Kante im Protokoll — der Zeitstempel des
+Bildes gegen den des Ereignisses, unter der Drossel; die übrigen neun
+lagen bei −1 bis −3 ms wie in Punkt 5.
+
+*f) Was es an Bytes kostet* (gzip -6, gegen `f4ebb5816`): `tab-shelf.js`
+3629 → 3707 B, `selection-flow.js` 9494 → 9691, `bausteine.css`
+176158 → 176256, `grund.css` 14875 → 14931. Zusammen +429 B; der Start
+bleibt bei 1932 KB von 1950 (`test388` §5, 256 Dateien).
