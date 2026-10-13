@@ -26,7 +26,9 @@
  *       Reiter sagen, dass sie eines haben (aria-haspopup, aria-controls).
  *   §1  Ein Tipp bleibt ein Tipp: je Reiter genau ein Klick, und in KEINEM
  *       Bild ist die Zielleiste zu sehen. Ein Daumen, der innerhalb der Leiste
- *       12 oder 24 px hinaufrollt, tippt genau einmal.
+ *       12 oder 24 px hinaufrollt, tippt genau einmal — auch am oberen Rand
+ *       des Reiters, wo 10–15 px über die Kante reichen (§1c), und nichts
+ *       fällt daneben auf die Seite. Hinauf und dann seitwärts: nichts (§1d).
  *   §2  Halten öffnet nichts: 800 ms ruhig liegen — in keinem Bild eine
  *       Zielleiste, und das Loslassen tut, was es auf dem Grundstand tut.
  *   §3  Hinaufziehen öffnet in höchstens zwei Bildern, mit dem Namen des
@@ -35,9 +37,11 @@
  *       noch wächst. Kein Klick auf die Leiste, die Schublade bleibt zu.
  *   §5  Zwischen den Reitern tauscht nur der Inhalt; dieselbe Scheibe, in
  *       keinem Bild weg. Und aus dem Pillenzug heraus hinauf.
- *   §6  Losgelassen auf einem anderen Reiter: genau ein Klick dieses Reiters.
+ *   §6  Losgelassen auf einem anderen Reiter: genau ein Klick dieses Reiters;
+ *       unter der Leiste (Home-Strich) ist abgebrochen (§6b, §6c).
  *   §7  Abbrechen: zu hoch losgelassen, Escape mit dem Finger unten,
- *       touchCancel — nichts geschieht, die Pille kehrt zurück.
+ *       touchCancel — nichts geschieht, die Pille kehrt zurück; und der
+ *       nächste echte Tipp danach kommt an (§7f).
  *   §8  Hinab öffnet nichts und tut, was es auf dem Grundstand tut.
  *   §9  Jedes Ziel über die Geste: jeder der 17 Orte schaltet SEINEN Reiter
  *       an, jede der 8 Handlungen öffnet, was sie nennt, und der Reiter bleibt.
@@ -48,9 +52,13 @@
  *       Farbe (Marke und gehobenes Zeichen); die Schrift 4,5 : 1 über dem
  *       schwarz-weiss-rot-blauen Muster, hell und dunkel; und der Reiter
  *       unter der Pille bleibt lesbar — keine Brechung über seinem Wort,
- *       solange die Zielleiste offen steht (§11e, vom BILD gefunden).
+ *       solange die Zielleiste offen steht (§11e, vom BILD gefunden); die
+ *       Marke hebt sich mit 3 : 1 von der Scheibe ab, wo sich kein Zeichen
+ *       hebt — ruhig, Hoher Kontrast, erzwungene Farben (§11f, Bildpunkte).
  *   §12 Tastatur: Pfeil hinauf am Reiter öffnet, Pfeile rundum, Pos1/Ende,
- *       Enter wählt, Escape gibt den Fokus zurück, Tab schliesst.
+ *       Enter wählt, Escape gibt den Fokus zurück, Tab schliesst; nach der
+ *       Wahl eines Orts steht der Fokus auf dem Reiter (§12g), eine Handlung
+ *       gibt ihn ihrem Fenster (§12h).
  *   §13 Ruhig (System UND „Ruhige Darstellung"): keine Animation, der
  *       Zustand ist trotzdem zu sehen.
  *   §14 Nur `transform` und `opacity` in allen Bildern.
@@ -80,6 +88,10 @@
  * die Notizhefte statt der Favoriten), `touch-action:pan-y` zurück (61 rot:
  * nichts kommt oben an), die Ruhig-Abfrage heraus (§13 „Ruhige
  * Darstellung", 9 Animationen), `innerHTML` statt `textContent` (§10c).
+ *
+ * DIE DURCHSICHT (E749, 13. Oktober) brachte 16 Zusagen dazu: §1c, §1d, §6b,
+ * §6c, §7f, §11f, §12g, §12h. Gegen `f4ebb5816` rot mit 15 von 122 — nur §12h
+ * war schon grün (eine Handlung gab den Fokus schon ihrem Fenster).
  *
  * Kein fester Port (`listen(0)`) — test400 bleibt unberührt.
  *
@@ -139,12 +151,13 @@ const browser = await chromium.launch();
 
 type Auf = { ctx: BrowserContext; pc: Page; cdp: CDPSession; downloads: string[] };
 const aufmachen = async (o: { handy?: boolean; ruhig?: boolean; dunkel?: boolean; breite?: number; hoehe?: number;
-                              mit?: Browser; muster?: boolean } = {}): Promise<Auf> => {
+                              mit?: Browser; muster?: boolean; farben?: boolean } = {}): Promise<Auf> => {
   const handy = o.handy !== false;
   const ctx = await (o.mit ?? browser).newContext({
     viewport: { width: o.breite ?? (handy ? 390 : 1440), height: o.hoehe ?? (handy ? 844 : 900) },
     hasTouch: handy, isMobile: handy, colorScheme: o.dunkel ? 'dark' : 'light',
-    ...(o.ruhig ? { reducedMotion: 'reduce' as const } : {})
+    ...(o.ruhig ? { reducedMotion: 'reduce' as const } : {}),
+    ...(o.farben ? { forcedColors: 'active' as const } : {})
   });
   const pc = await ctx.newPage();
   const downloads: string[] = [];
@@ -189,10 +202,16 @@ const BEOBACHTEN = () => {
   const w = window as any;
   if (!w.__z614) {
     const z: any = w.__z614 = { klicks: {}, wechsel: 0, bild: 0, offenBilder: 0, sichtbarAb: -1, ueberBild: -1,
-      zuBilder: 0, laeuft: false, oben: 0 };
+      zuBilder: 0, laeuft: false, oben: 0, fremd: [] };
     document.addEventListener('click', e => {
-      const k = (e.target as Element | null)?.closest?.('#handy-oben > button');
+      const t = e.target as Element | null;
+      const k = t?.closest?.('#handy-oben > button');
       if (k) z.klicks[k.id] = (z.klicks[k.id] || 0) + 1;
+      /* DANEBEN (Durchsicht E749): ein Klick, der weder die Leiste noch die
+         Zielleiste trifft und trotzdem bei der Seite ankommt — so fiel
+         Chromiums Klick nach einem Hochrollen am Rand auf den Inhalt darüber. */
+      else if (t && !t.closest?.('#ho-ziele'))
+        z.fremd.push(((t.closest?.('[id]') as Element | null)?.id || t.tagName) + '@' + Math.round((e as MouseEvent).clientY));
     });
     if (typeof Wischen !== 'undefined' && typeof Wischen.ankunft === 'function') {
       const alt = Wischen.ankunft;
@@ -218,19 +237,19 @@ const BEOBACHTEN = () => {
     requestAnimationFrame(takt);
   }
   const z = w.__z614;
-  z.klicks = {}; z.wechsel = 0; z.offenBilder = 0; z.sichtbarAb = -1; z.ueberBild = -1; z.zuBilder = 0;
+  z.klicks = {}; z.wechsel = 0; z.offenBilder = 0; z.sichtbarAb = -1; z.ueberBild = -1; z.zuBilder = 0; z.fremd = [];
   z.oben = document.getElementById('handy-oben')?.getBoundingClientRect().top ?? 0;
 };
 const beobachten = (pc: Page) => pc.evaluate(BEOBACHTEN);
 
 type Stand = { klicks: Record<string, number>; wechsel: number; bild: number; offenBilder: number; sichtbarAb: number;
   ueberBild: number; zuBilder: number; offen: boolean; an: string[]; hash: string; wo: string; schublade: boolean;
-  anvisiert: string[]; expanded: string[]; titel: string; pille: number; gehalten: boolean };
+  anvisiert: string[]; expanded: string[]; titel: string; pille: number; gehalten: boolean; fremd: string[] };
 const stand = (pc: Page): Promise<Stand> => pc.evaluate(() => {
   const z = (window as any).__z614;
   const pille = document.getElementById('ho-pille');
   return {
-    klicks: { ...z.klicks }, wechsel: z.wechsel, bild: z.bild, offenBilder: z.offenBilder, sichtbarAb: z.sichtbarAb,
+    klicks: { ...z.klicks }, fremd: [...z.fremd], wechsel: z.wechsel, bild: z.bild, offenBilder: z.offenBilder, sichtbarAb: z.sichtbarAb,
     ueberBild: z.ueberBild, zuBilder: z.zuBilder, offen: z.sichtbar(),
     an: [...document.querySelectorAll('#handy-oben [role="tab"]')].filter(b => b.getAttribute('aria-selected') === 'true').map(b => b.id),
     hash: location.hash, wo: String(App.schauplatz()), schublade: document.body.classList.contains('side-offen'),
@@ -363,6 +382,52 @@ console.log('\n§1 Ein Tipp bleibt ein Tipp — und öffnet in keinem Bild etwas
       JSON.stringify(s.klicks) === '{"hl-lernen":1}' && s.an[0] === 'hl-lernen' && s.offenBilder === 0,
       JSON.stringify({ klicks: s.klicks, an: s.an, bilder: s.offenBilder }));
     await tippe(A, 'hl-dok');
+  }
+  /* §1c AM OBEREN RAND DES REITERS (Durchsicht E749, der Hauptfund). Der Reiter
+     beginnt 6 px unter der Oberkante der Leiste. Ein Daumen, der dort aufsetzt
+     und 10–15 px hinaufrollt, überquert die Kante — und hat getippt: Chromium
+     klickt bis 15 px Weg selbst, ab 16 nicht (gemessen, messungen §106). Gegen
+     f4ebb5816 ging hier die Zielleiste auf, und das Loslassen im Zielbereich
+     wählte „Lernpfad"; bei 13–15 px fiel Chromiums eigener Klick obendrein auf
+     den Inhalt ÜBER der Leiste (`fremd`). Gemessen vom Bildschirm „Dokumente"
+     aus, wo über der Leiste eine Zeile zum Aufklappen steht. */
+  const lernMitte = await reiterMitte(A.pc, 'hl-lernen');
+  const reiterOben = await A.pc.evaluate(() => document.getElementById('hl-lernen')!.getBoundingClientRect().top);
+  for (const unter of [1, 4, 7]) {
+    const falsch: string[] = [];
+    for (const weg of [10, 12, 14, 15]) {
+      await tippe(A, 'hl-dok');
+      await beobachten(A.pc);
+      const y0 = reiterOben + unter;
+      await finger(A.cdp, 'touchStart', lernMitte.x, y0); await warte(40);
+      await finger(A.cdp, 'touchMove', lernMitte.x, y0 - weg / 2); await warte(16);
+      await finger(A.cdp, 'touchMove', lernMitte.x, y0 - weg); await warte(30);
+      await finger(A.cdp, 'touchEnd'); await warte(900);
+      const s = await stand(A.pc);
+      if (!(JSON.stringify(s.klicks) === '{"hl-lernen":1}' && s.offenBilder === 0 && s.fremd.length === 0
+            && s.hash === '#welt-lernen-lernen'))
+        falsch.push(`${weg} px: ` + JSON.stringify({ klicks: s.klicks, bilder: s.offenBilder, fremd: s.fremd, hash: s.hash }));
+    }
+    p(`§1c ${unter} px unter dem Rand des Reiters, 10/12/14/15 px hinauf: je GENAU EIN Klick auf „Lernen", keine Zielleiste, nichts daneben`,
+      falsch.length === 0, falsch.join(' · '));
+  }
+  /* §1d HINAUF, DANN SEITWÄRTS (Durchsicht E749). Auf dem Grundstand geschah
+     nichts: die Achse warf den Zug ab, und über 15 px klickt Chromium nicht.
+     Gegen f4ebb5816 klickte `ziehbar` beim Loslassen den GEDRÜCKTEN Reiter —
+     „Lernen", während der Finger auf „Termine" lag. */
+  {
+    await tippe(A, 'hl-dok');
+    await beobachten(A.pc);
+    const te = await reiterMitte(A.pc, 'hl-bespr');
+    await finger(A.cdp, 'touchStart', lernMitte.x, lernMitte.y); await warte(40);
+    await finger(A.cdp, 'touchMove', lernMitte.x, lernMitte.y - 6); await warte(16);
+    await finger(A.cdp, 'touchMove', lernMitte.x, lernMitte.y - 14); await warte(16);
+    await fuehren(A.cdp, { x: lernMitte.x, y: lernMitte.y - 14 }, { x: te.x, y: lernMitte.y - 14 }, 6, 16);
+    await finger(A.cdp, 'touchEnd'); await warte(900);
+    const d = await stand(A.pc);
+    p('§1d 14 px hinauf, dann seitwärts auf „Termine": kein Klick, „Dokumente" bleibt — wie auf dem Grundstand',
+      Object.keys(d.klicks).length === 0 && d.an[0] === 'hl-dok' && d.offenBilder === 0 && d.wechsel === 0 && d.fremd.length === 0,
+      JSON.stringify({ klicks: d.klicks, an: d.an, bilder: d.offenBilder, fremd: d.fremd }));
   }
 }
 
@@ -534,6 +599,26 @@ console.log('\n§6 Losgelassen auf einem anderen Reiter: genau ein Klick');
   p('§6a GENAU EIN Klick auf „Termine", Termine gewählt, die Zielleiste ist weg',
     JSON.stringify(s.klicks) === '{"hl-bespr":1}' && s.an[0] === 'hl-bespr' && !s.offen && s.wechsel === 1,
     JSON.stringify({ klicks: s.klicks, an: s.an, offen: s.offen, wechsel: s.wechsel }));
+  /* §6b UNTER DER LEISTE LOSGELASSEN (Durchsicht E749). Zwischen der Unterkante
+     der Leiste und dem Rand liegt der Home-Strich, kein Reiter. Gegen
+     f4ebb5816 zählte ein Loslassen dort als „auf dem nächsten Reiter" und
+     klickte „Lernen". Der Entwurf sagt: anderswo losgelassen ist abgebrochen. */
+  await tippe(A, 'hl-dok', 1000);
+  await beobachten(A.pc);
+  const p1 = await hinauf(A, 'hl-lernen');
+  await warte(200);
+  const unten = await A.pc.evaluate(() => document.getElementById('handy-oben')!.getBoundingClientRect().bottom);
+  const le = await reiterMitte(A.pc, 'hl-lernen');
+  await fuehren(A.cdp, p1, { x: le.x, y: unten + 4 }, 4, 16);
+  await warte(60);
+  const dort = await stand(A.pc);
+  await finger(A.cdp, 'touchEnd'); await warte(1000);
+  const u = await stand(A.pc);
+  p('§6b unter der Leiste losgelassen (Home-Strich): kein Klick, nichts gewählt, „Dokumente" bleibt, die Zielleiste zu',
+    Object.keys(u.klicks).length === 0 && u.wechsel === 0 && u.an[0] === 'hl-dok' && !u.offen && u.expanded.length === 0,
+    JSON.stringify({ klicks: u.klicks, wechsel: u.wechsel, an: u.an, offen: u.offen }));
+  p('§6c … und solange der Finger dort liegt, leuchtet kein Reiter vor', dort.offen && dort.anvisiert.length === 0,
+    JSON.stringify({ offen: dort.offen, anvisiert: dort.anvisiert, y: unten + 4 }));
 }
 
 /* ═══ §7 Abbrechen ═══════════════════════════════════════════════════════ */
@@ -584,6 +669,36 @@ console.log('\n§7 Abbrechen: nichts geschieht');
   const offenNoch = await A.pc.evaluate(() => document.querySelectorAll('.overlay').length);
   p('§7e touchCancel: zu, nichts gewählt, kein Dialog', !c.offen && c.wechsel === 0 && Object.keys(c.klicks).length === 0
     && c.an[0] === 'hl-dok' && offenNoch === 0, JSON.stringify({ offen: c.offen, wechsel: c.wechsel, klicks: c.klicks, dialoge: offenNoch }));
+  /* §7f DER NÄCHSTE TIPP KOMMT AN (Durchsicht E749). Nach einer Geste schluckt
+     `ziehbar` den Klick des Browsers — aber nur DEN. Folgt keiner (abgebrochen,
+     zu hoch losgelassen, mehr als 15 px Weg), darf der nächste echte Tipp nicht
+     an seiner Stelle verschwinden. Gegen f4ebb5816 blieb ein Tipp auf „Termine"
+     120–200 ms danach ohne Wirkung; nach einem Pillenzug war es schon auf dem
+     Grundstand so. */
+  for (const [art, ms] of [['touchCancel', 200], ['zu hoch losgelassen', 120], ['nach einem Pillenzug', 150]] as const) {
+    await tippe(A, 'hl-dok', 1000);
+    await beobachten(A.pc);
+    const le = await reiterMitte(A.pc, 'hl-lernen');
+    const te = await reiterMitte(A.pc, 'hl-bespr');
+    if (art === 'nach einem Pillenzug') {
+      const d = await reiterMitte(A.pc, 'hl-dok');
+      const st = await reiterMitte(A.pc, 'hl-start');
+      await finger(A.cdp, 'touchStart', d.x, d.y); await warte(40);
+      await fuehren(A.cdp, d, st, 8, 20); await warte(60);
+      await finger(A.cdp, 'touchEnd');
+    } else {
+      await finger(A.cdp, 'touchStart', le.x, le.y); await warte(40);
+      await fuehren(A.cdp, le, { x: le.x, y: le.y - 70 }, 5, 16);
+      if (art === 'touchCancel') await finger(A.cdp, 'touchCancel');
+      else { await finger(A.cdp, 'touchMove', le.x, le.y - 400); await warte(16); await finger(A.cdp, 'touchEnd'); }
+    }
+    await warte(ms);
+    await finger(A.cdp, 'touchStart', te.x, te.y); await warte(50);
+    await finger(A.cdp, 'touchEnd'); await warte(1000);
+    const f = await stand(A.pc);
+    p(`§7f ${art}, ${ms} ms später ein echter Tipp auf „Termine": er kommt an — ein Klick, Termine gewählt`,
+      (f.klicks['hl-bespr'] ?? 0) === 1 && f.an[0] === 'hl-bespr', JSON.stringify({ klicks: f.klicks, an: f.an }));
+  }
 }
 
 /* ═══ §8 Hinab ═══════════════════════════════════════════════════════════ */
@@ -847,6 +962,78 @@ console.log('\n§11 44 px, Text, nicht nur Farbe, lesbar');
   }
   await gpu.close();
 }
+{
+  /* §11f DIE MARKE IST ZU SEHEN — gerade dort, wo sich kein Zeichen hebt
+     (Durchsicht E749, §38 „keine Information nur über Farbe"). Ohne Bewegung
+     (System oder „Ruhige Darstellung") ist die Lupe aus; dann tragen das
+     Angepeilte nur noch die Marke und der Farbton der Schrift. Gegen
+     f4ebb5816 gemessen: `--bg-hover` auf der Scheibe 1,08 : 1 (hell) — §11b
+     und §13 prüfen nur, dass die Marke DA ist, und eine unsichtbare bestand
+     beide (§55.2). Gemessen wird an Bildpunkten, auf dem GPU-Weg wie §11d:
+     der Rand der Marke gegen die Scheibe daneben, mindestens 3 : 1 (WCAG
+     1.4.11, Formen). Dazu „Hoher Kontrast" und erzwungene Farben, wo das
+     System Schatten und Hintergründe selbst setzt. */
+  const gpu = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader',
+    '--ignore-gpu-blocklist', '--enable-gpu-compositing'] });
+  const ARTEN = [
+    { art: 'ruhig, hell', ruhig: true, dunkel: false, kontrast: false, farben: false },
+    { art: 'ruhig, dunkel', ruhig: true, dunkel: true, kontrast: false, farben: false },
+    { art: 'Hoher Kontrast, hell', ruhig: false, dunkel: false, kontrast: true, farben: false },
+    { art: 'Hoher Kontrast, dunkel', ruhig: false, dunkel: true, kontrast: true, farben: false },
+    { art: 'erzwungene Farben', ruhig: false, dunkel: false, kontrast: false, farben: true }
+  ];
+  for (const v of ARTEN) {
+    const g = await aufmachen({ mit: gpu, dunkel: v.dunkel, ruhig: v.ruhig, farben: v.farben });
+    if (v.kontrast) await g.pc.evaluate(() => { Store.setMeta('kontrast', true); Einstellungen.anwenden(); });
+    await warte(200);
+    await tippe(g, 'hl-dok', 900);
+    const p0 = await hinauf(g, 'hl-dok');
+    await warte(900);
+    const r = await regal(g.pc);
+    const ziel = r?.ziele[2];
+    if (ziel) await fuehren(g.cdp, p0, ziel, 3, 16);
+    await warte(900);
+    const m = await g.pc.evaluate(() => {
+      const el = document.querySelector<HTMLElement>('#ho-ziele > .ru-marke');
+      const s = document.getElementById('ho-ziele');
+      const z = document.querySelector<HTMLElement>('#ho-ziele > button[data-anvisiert]');
+      if (!el || !s || s.hidden || !z) return null;
+      const a = el.getBoundingClientRect();
+      return { l: a.left, o: a.top, b: a.width, h: a.height, ziel: (z.textContent || '').trim() };
+    });
+    let k: { rand: number; innen: number } | null = null;
+    if (m && m.b > 20 && m.h > 20) {
+      /* Ein Streifen über den linken Rand der Marke, auf halber Höhe (die
+         Ecken sind rund, Zeichen und Wort stehen in der Mitte des Ziels). */
+      const x0 = Math.floor(m.l) - 10;
+      const y0 = Math.round(m.o + m.h * 0.35);
+      const bild = await g.pc.screenshot({ clip: { x: x0, y: y0, width: 22, height: Math.round(m.h * 0.3) } });
+      k = await g.pc.evaluate(async ([b64, rand]) => {
+        const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+        const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+        const gg = c.getContext('2d')!; gg.drawImage(img, 0, 0);
+        const d = gg.getImageData(0, 0, c.width, c.height).data;
+        const lin = (v: number) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+        const L = (x: number, y: number) => { const i = (y * c.width + x) * 4; return 0.2126 * lin(d[i]!) + 0.7152 * lin(d[i + 1]!) + 0.0722 * lin(d[i + 2]!); };
+        const spalte = (x: number) => { const w: number[] = []; for (let y = 0; y < c.height; y++) w.push(L(x, y)); w.sort((a, b) => a - b); return w[Math.floor(w.length / 2)]!; };
+        const kr = (a: number, b: number) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+        /* Die Scheibe: vier Spalten 4–7 px links der Marke. Der Rand: die
+           stärkste Spalte in den ersten 5 px der Marke. Das Innere: 8 px drin. */
+        const draussen = [2, 3, 4, 5].map(spalte).sort((a, b) => a - b)[1]!;
+        let bester = 1;
+        for (let x = rand - 1; x <= rand + 4; x++) bester = Math.max(bester, kr(spalte(x), draussen));
+        return { rand: +bester.toFixed(2), innen: +kr(spalte(rand + 8), draussen).toFixed(2) };
+      }, [bild.toString('base64'), Math.round(m.l - x0)] as const);
+    }
+    console.log(`    Marke (${v.art}): Rand ${k?.rand ?? '–'} : 1 · Fläche ${k?.innen ?? '–'} : 1 · auf „${m?.ziel ?? '–'}"`);
+    p(`§11f die Marke hebt sich ab: ihr Rand mindestens 3 : 1 gegen die Scheibe (${v.art})`, !!k && k.rand >= 3,
+      k ? `Rand ${k.rand} : 1 · Fläche ${k.innen} : 1` : 'nicht messbar — keine Marke');
+    await fuehren(g.cdp, ziel ?? p0, { x: 195, y: 560 }, 3, 16);
+    await finger(g.cdp, 'touchEnd'); await warte(300);
+    await g.ctx.close();
+  }
+  await gpu.close();
+}
 
 /* ═══ §12 Tastatur ══════════════════════════════════════════════════════ */
 console.log('\n§12 Die Tastatur ist der Weg ohne Geste (§38)');
@@ -888,9 +1075,27 @@ console.log('\n§12 Die Tastatur ist der Weg ohne Geste (§38)');
   await A.pc.keyboard.press('End');
   await A.pc.keyboard.press('Enter'); await warte(1400);
   const n = await stand(A.pc);
+  const fn = await f();
   p('§12f Enter wählt „Notizhefte": die Notizhefte, „Dokumente" leuchtet, eine Ankunft',
     n.wo === 'notizhefte' && n.an[0] === 'hl-dok' && n.wechsel === 1 && !n.offen,
     JSON.stringify({ wo: n.wo, an: n.an, wechsel: n.wechsel }));
+  /* Durchsicht E749 (§38 „die Tastaturbedienung bleibt erhalten"): Enter auf
+     dem Reiter selbst lässt den Fokus auf dem Reiter. Gegen f4ebb5816 stand er
+     nach der Wahl eines Orts auf <body> — die Zielleiste hielt ihn, als sie
+     verschwand, und niemand gab ihn zurück. */
+  p('§12g … und der Fokus steht danach auf „Dokumente", nicht auf der Seite', fn.id === 'hl-dok',
+    JSON.stringify({ id: fn.id, rolle: fn.rolle, text: fn.text.replace(/\s+/g, ' ').slice(0, 40) }));
+  await allesZu(A);
+  /* Eine Handlung bekommt den Fokus in ihr Fenster (die Einstellungen). */
+  await A.pc.focus('#hl-mehr');
+  await A.pc.keyboard.press('ArrowUp'); await warte(150);
+  await A.pc.keyboard.press('End');
+  await A.pc.keyboard.press('Enter'); await warte(900);
+  const fh = await A.pc.evaluate(() => {
+    const a = document.activeElement as HTMLElement | null;
+    return { tag: a?.tagName || '', imFenster: !!a?.closest('.overlay,[role="dialog"]'), offen: document.querySelectorAll('.overlay').length };
+  });
+  p('§12h Enter auf „Einstellungen": das Fenster ist offen und hat den Fokus', fh.offen > 0 && fh.imFenster, JSON.stringify(fh));
   await allesZu(A);
 }
 
