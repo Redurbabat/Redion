@@ -790,7 +790,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E746** — Drehen, Spiegeln, Ziehen und Schieben führen nur die eigenen Leitungen nach, und keine zapft dabei etwas an (L253 Punkt 4; Redur, 11. Oktober abends: „4. wie du willst“ zur Reihenfolge): EINE Stelle im Modell, `Schaltplan.vorherMerken`/`nachziehen`, führt nur neu, was an einem bewegten Teil hängt, und nimmt nur einen Weg, der genau dasselbe berührt wie vorher (alter Weg · nachgerückte Endstücke · Winkel · anderer Winkel · Z-Wege · Hakenwege), am liebsten durch kein Zeichen; sonst meldet die Fläche es. Fremde Leitungen bleiben Byte für Byte, ausser ihr Ende liegt neben seiner Klemme (E738, `test608` §5). Nach der Durchsicht: beim Ziehen rechnet jede Bewegung nur die billigen Wege und erst das Loslassen einmal voll; und landet die EIGENE Klemme eines bewegten Teils auf einer fremden Leitung (oder verlässt sie eine), sagt die Fläche, welche (`Schaltplan.veraendert`). Nach der zweiten Durchsicht: während eines Zugs ändert nur der Zug den Plan — `aendere`, Rückgängig und Wiederholen tun nichts, Tasten ausser Escape zählen nicht, Escape bricht ab; ein Zug gehört einem Zeiger und endet immer richtig, auch losgelassen ausserhalb oder von einem zweiten Finger unterbrochen; die Ablage bekommt eine Kopie des Plans, nicht ihn selbst. Nach der dritten Durchsicht: mit echter Maus stand der Fokus im Zug auf der Seite, und Escape und Strg+Z kamen nie an — jetzt horcht ein Zug am Dokument auf seine Tasten: Escape bricht ab (ein offenes Menü zuerst), Rückgängig und Wiederholen tun nichts, auch nicht am Seitenverlauf; nach einem Klick holt die Fläche den Fokus zurück (ohne Ring), Umschalt+Strg+Z und Strg+Y nimmt sie selbst; Vorlage und Bild verweigern im Zug, der Hinweis eines Beispiels kommt nur, wenn es steht. `test611`
 * **E747** — Eine Brücke des Klemmenbretts belegt ihre Klemmen (L253 Punkt 2; Redur, 11. Oktober abends: „4. wie du willst" zur Reihenfolge der Elektro-Punkte): die Meldung „Anschluss … hängt an keiner Leitung" kannte nur die Netzliste der Leitungen und meldete im Stern UND im Dreieck W2, U2 und V2 — gerade die Klemmen, auf denen die Brücken der Stellung liegen. Jetzt zählen für diese Meldung die Brücken der EINGESTELLTEN Stellung eines mehrteiligen Bauteils wie gezeichnete Leitungen; Schaltkontakte nicht (ein geschlossener Schalter mit offenem Ausgang hat eine vergessene Leitung), der feste Verbund N–PE der Drehstromquelle auch nicht. Ein Knoten, den NUR die eigenen Brücken halten, hängt trotzdem an nichts (im Dreieck ohne Zuleitung an U1 die Ecke U1–W2) — ausser die Stellung weist ihn selbst als `sternpunkt` aus, wie „Stern" für U2, V2, W2 (§5 Regel 3, §8). Die Netzliste bleibt, wie sie ist; EINE Hilfe `stellungIn` liest die Stellung innerhalb von `Stromfluss` für Rechnung und Meldung (ausserhalb lesen die Planfläche und die Aufgaben eine Stellungsnummer an fünf Stellen selbst, Punkt 5). `test612` (38 Zusagen; gegen 97d156b03 rot mit 20, gegen den ersten Stand 7560b2f22 mit 33 von 38; sechs Gegenproben).
 * **E750** — test274 nimmt `redion-graphit` in seine Ausnahmeliste (Redur, 13. Oktober, 00:55 UTC: „ja“ auf „Darf ich den Fehlalarm über seine Ausnahmeliste richten?“): `marken.ts` legt den Halter der Graphit-Muster selbst an, als Eigenschaft eines Objekts (`svg('svg', { id: 'redion-graphit', … })`), und test274 erkennt nur `id="…"` und `.id = …`. Seit E729 einer der dreizehn alten roten Läufe, seit E745 der einzige davon im schnellen Lauf der CI. Die Ausnahme steht mit Grund in der Tabelle `ERLAUBT`, wie die Tabelle es verlangt; der Wächter selbst ist unverändert.
-* **E751** — main auf den Stand von Redurs vier Antworten, mit zwölf benannten roten Läufen (Redur, 13. Oktober, 00:55 UTC: „ja“ auf „Soll main auf claude/abend-antworten-2 gehen?“): Fast-Forward ohne force von 97d156b auf claude/auf-main-abend (claude/abend-antworten-2 mit E744–E747, dazu E750 und dieser Eintrag). Rot bleiben zwölf, jeder schon auf main rot. Die dritte Ausnahme von §46 nach E729 und E743, wieder einmal.
+* **E751** — main auf dem Stand von Redurs vier Antworten, mit zwölf benannten roten Läufen (Redur, 13. Oktober, 00:55 UTC: „ja“ auf „Soll main auf claude/abend-antworten-2 gehen?“ — und um 00:57 UTC hat er Pull Request #119 selbst zusammengeführt): main steht seitdem auf a9cfb90, Baum für Baum claude/abend-antworten-2 (E744–E747 und die zwei Nachzüge nach dem vollen Lauf); E750 und dieser Eintrag kommen als Fast-Forward dazu. Rot bleiben zwölf, jeder schon vorher auf main rot. Die dritte Ausnahme von §46 nach E729 und E743, wieder einmal.
 
 ---
 
@@ -68230,13 +68230,22 @@ Ausnahme 12 von 12; ohne sie wieder 11 von 12.
 Läufe rot, nichts Neues. Soll `main` auf `claude/abend-antworten-2`
 gehen?") · **berührt** §46 [hart] · **Zweig** `claude/auf-main-abend`.
 
+**Was geschah.** Redur hat zwei Minuten nach seinem „ja" selbst
+gehandelt: um 00:57 UTC hat er Pull Request #119
+(`claude/abend-antworten-2` → `main`) auf GitHub zusammengeführt. `main`
+steht seitdem auf a9cfb90, einem Zusammenführungs-Commit, dessen Baum Byte
+für Byte der von `claude/abend-antworten-2` (ba51915) ist. Die CI auf
+a9cfb90 war rot — nur wegen test274, den E750 richtet.
+
 **Was entschieden wurde.**
 
-1. `main` wird von 97d156b (E743) auf `claude/auf-main-abend` vorgespult:
+1. `main` steht auf dem Stand von Redurs vier Antworten:
    `claude/abend-antworten` (E744 Linse verblasst, E745 CI schnell, E746
-   Elektro Drehen, E747 Elektro Klemmenbrett), `claude/abend-antworten-2`
-   (die zwei Nachzüge nach dem vollen Lauf: test581 §9 und test467) und
-   `claude/auf-main-abend` (E750 und dieser Eintrag).
+   Elektro Drehen, E747 Elektro Klemmenbrett) und
+   `claude/abend-antworten-2` (die zwei Nachzüge nach dem vollen Lauf:
+   test581 §9 und test467) — durch Redurs Zusammenführung. Dazu kommen
+   E750 und dieser Eintrag über `claude/auf-main-abend`, der a9cfb90 in
+   sich aufnimmt, damit es wieder ein Fast-Forward ist.
 2. **Die Grenze.** Rot sind auf diesem Stand zwölf Läufe, jeder schon auf
    `main` 97d156b rot: `test201`, `test270`, `test332`, `test348`,
    `test351`, `test365`, `test425`, `test448`, `test470`, `test493`,
@@ -68250,7 +68259,8 @@ gehen?") · **berührt** §46 [hart] · **Zweig** `claude/auf-main-abend`.
    93/93, test467 dreimal 20/20, dazu die Nachbarn der Linse und die
    Datei-Wächter). Nach fdbf6ee kam kein voller Lauf mehr; was sich
    änderte, sind diese zwei Nachzüge, test274 und Doku.
-4. **Ohne force.** `origin/main` (97d156b) ist Vorfahr dieses Zweigs.
+4. **Ohne force.** `origin/main` (a9cfb90) ist nach dem Zusammenführen
+   Vorfahr dieses Zweigs.
 5. **Einmal.** §46 gilt weiter. Die Zweige der Zielleiste (E748, E749),
    die gerade entstehen, landen nicht mit diesem Vorspulen.
 

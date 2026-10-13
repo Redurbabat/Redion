@@ -4810,7 +4810,7 @@
       "datum": "2026-10-13",
       "wochentag": "Dienstag",
       "titel": "Ein „ja“ für zwei Fragen: test274 mit Grund in seiner Ausnahmeliste, main auf den Stand der vier Antworten — und die Zielleiste im Bau",
-      "wasIchWeiss": "Um 00:55 UTC antwortete Redur „ja“ auf die zwei offenen Fragen (test274 richten, main vorspulen). Daraus E750 (test274 nimmt `redion-graphit` mit Grund in die Tabelle ERLAUBT; vorher 11/12, danach 12/12) und E751 (main von 97d156b auf claude/auf-main-abend, die dritte Ausnahme von §46, mit zwölf alten roten Läufen). Daneben lief im Hintergrund der Bau der Zielleiste auf zwei Zweigen (E748 Quelle, E749 Kapsel).",
+      "wasIchWeiss": "Um 00:55 UTC antwortete Redur „ja“ auf die zwei offenen Fragen (test274 richten, main vorspulen). Daraus E750 (test274 nimmt `redion-graphit` mit Grund in die Tabelle ERLAUBT; vorher 11/12, danach 12/12) und E751 (main auf dem Stand der vier Antworten, die dritte Ausnahme von §46, mit zwölf alten roten Läufen). Redur war schneller: um 00:57 UTC, zwei Minuten nach dem „ja“, hat er Pull Request #119 selbst zusammengeführt — main stand auf a9cfb90, Baum gleich ba51915, und die CI dort war rot, nur wegen test274. Der Zweig mit E750 nahm a9cfb90 in sich auf und kam als Fast-Forward dazu. Daneben lief im Hintergrund der Bau der Zielleiste auf zwei Zweigen (E748 Quelle, E749 Kapsel).",
       "nachrichten": [
         {
           "zeit": "00:55 UTC",
@@ -4833,18 +4833,24 @@
         }
       ],
       "zahlen": {
-        "commits": 1,
+        "commits": 3,
         "entscheidungen": 2,
         "neuePrüfläufe": 0,
-        "gezählt": "Am 13. Oktober bis zum Vorspulen: ein Commit auf claude/auf-main-abend (E750, E751). Der Kopf von ENTSCHEIDUNGEN.md sagt 728, E1 bis E751 (E748 und E749 den Zweigen der Zielleiste vergeben). Die Zweige der Zielleiste zählen hier noch nicht mit."
+        "gezählt": "Am 13. Oktober bis zum Fast-Forward: Redurs Zusammenführung #119 (a9cfb90), ein Commit mit E750/E751 und die Aufnahme von a9cfb90 auf claude/auf-main-abend. Der Kopf von ENTSCHEIDUNGEN.md sagt 728, E1 bis E751 (E748 und E749 den Zweigen der Zielleiste vergeben). Die Zweige der Zielleiste zählen hier noch nicht mit."
       },
       "groesstesProblem": "Keines; ein einziges Wort für zwei Fragen musste gedeutet werden, und die Deutung wurde Redur zurückgemeldet.",
       "interessantesteAnfrage": "„ja“ (00:55 UTC) — das kürzeste Ja dieser Woche, und es reichte für zwei Entscheidungen.",
       "massnahmen": [
         {
-          "zeit": "ca. 01:20 UTC",
-          "was": "main vorgespult — 97d156b auf claude/auf-main-abend, ohne force (E751).",
-          "warum": "Redur: „ja“. §46 ist hart; die Ausnahme steht als E751, §46 bekommt einen Hinweis.",
+          "zeit": "00:57 UTC (Redur)",
+          "was": "Redur führt Pull Request #119 (claude/abend-antworten-2 → main) selbst zusammen.",
+          "warum": "Sein „ja“ von 00:55.",
+          "risiko": "Die CI auf main war danach rot — test274, gerichtet mit E750."
+        },
+        {
+          "zeit": "ca. 01:40 UTC",
+          "was": "main per Fast-Forward um E750 und E751 ergänzt (claude/auf-main-abend nimmt a9cfb90 auf).",
+          "warum": "Redurs „ja“ zu test274; die Entscheidungen gehören neben den Stand, den sie beschreiben.",
           "risiko": "Wer main holt, bekommt zwölf benannte rote Läufe mit, alle älter als diese Arbeit; nach fdbf6ee lief kein voller Lauf mehr (nur zwei kleine Nachzüge, test274 und Doku)."
         }
       ]
