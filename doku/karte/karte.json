@@ -2142,8 +2142,8 @@
       "hauptdateien": [
         {
           "pfad": "/home/user/Redion/src/schale/bedienung/selection-flow.ts",
-          "rolle": "Kritisch gedämpfte Feder (OMEGA 0,026, Z. 105) als Keyframes auf transform allein: folge(flaeche, ziel, nachbar, sofort) (Z. 178) für eine Fläche in einer Zeile; fliege(flaeche, von, nach) (Z. 339) als FLIP-Flug eines position:fixed-Elements (Z. 335). Kopf Z. 58-65: gebaut, weil L204 EINEN Helfer für Pille und Werkzeugleiste verlangte. Rückgabe { folge, fliege, DAUER, OMEGA, DEHNUNG_MAX } (Z. 370), Global SelectionFlow (Z. 373).",
-          "zeilen": 373
+          "rolle": "Kritisch gedämpfte Feder (OMEGA 0,026, Z. 105) als Keyframes auf transform allein: folge(flaeche, ziel, nachbar, sofort) (Z. 178) für eine Fläche in einer Zeile; fliege(flaeche, von, nach) (Z. 339) als FLIP-Flug eines position:fixed-Elements (Z. 335). Kopf Z. 58-65: gebaut, weil L204 EINEN Helfer für Pille und Werkzeugleiste verlangte. Rückgabe { folge, fliege, DAUER, OMEGA, DEHNUNG_MAX } (Z. 370), Global SelectionFlow (Z. 373). E749: ziehbar(…) hat die freiwillige Übergabe hinauf {nimm(k, 'hoch'|'aus-zug', x, y)} — steigt der Finger über die Oberkante der Reihe UND mindestens 16 px über den Punkt des Aufsetzens (über dem Tipp-Spielraum des Browsers, Durchsicht E749; gerade hinauf oder aus einem laufenden Pillenzug), nimmt ein anderer den Zug (move/up/cancel); Zeigerfang, Klick- und touchend-Schlucken (nur der Klick der Geste: es endet mit jedem neuen pointerdown, daneben zählt die pointerId) und Escape bleiben in ziehbar; hinauf vor der Übergabe losgelassen ist GENAU EIN Klick, solange der Finger in der Spalte des gedrückten Knopfs bleibt. growFrom(fenster, anker, rahmen?) nimmt ein schon gemessenes Mass. Einziger Nutzer: die untere Leiste (seitenleiste.ts) an TabShelf.",
+          "zeilen": 1254
         },
         {
           "pfad": "/home/user/Redion/src/core/ink/geometry.ts",
@@ -2197,7 +2197,7 @@
           "name": "SelectionFlow.folge / fliege / DAUER / OMEGA / DEHNUNG_MAX",
           "datei": "/home/user/Redion/src/schale/bedienung/selection-flow.ts",
           "art": "global",
-          "beschreibung": "Z. 370-373. Aufrufer: schale/aufbau/seitenleiste.ts:352 (Pille der unteren Leiste, folge) und bereiche/pdf/marken.ts:6994-7009 (Werkzeugleiste, fliege, DAUER). Sonst niemand; schale/aufbau/studio.ts:18 animiert Einblendungen mit eigenem element.animate, linse.ts nennt SelectionFlow nicht (grep)."
+          "beschreibung": "Z. 370-373. Aufrufer: schale/aufbau/seitenleiste.ts:352 (Pille der unteren Leiste, folge; seit E749 ziehbar mit hinauf) und bereiche/pdf/marken.ts:6994-7009 (Werkzeugleiste, fliege, DAUER); seit E749 auch schale/aufbau/tab-shelf.ts (TabShelf: growFrom, highlight, glide, stagger, folge). Sonst niemand; schale/aufbau/studio.ts:18 animiert Einblendungen mit eigenem element.animate, linse.ts nennt SelectionFlow nicht (grep)."
         },
         {
           "name": "InkGeometry.*",
@@ -2799,7 +2799,7 @@
           "name": "Register.navigation.meldeZiele(reiter, fn) / ziele(reiter)",
           "datei": "src/register/navigation.ts:516, 524",
           "art": "register",
-          "beschreibung": "E748: was unter einem Reiter der unteren Leiste liegt, nach dem Muster von Register.kontext.meldeLieferant/fuer. Schlüssel = data-ziele am Reiterknopf (index.html). Lieferanten: wissen/bibliothek.ts (dokumente: ORTE mit zielRang + Notizhefte aus app-notizhefte), wissen/lernwelt.ts (heute, lernen: KLAPPEN + ANSICHTEN.zielRang), datenbanken/ansichten/dienst.ts (termine: TERMINE_KARTEN + Kante kalender; mehr: mehrGruppen.zielRang). Gelesen noch von niemandem in src — die Zielleiste kommt in Bogen 2. Wächter test613."
+          "beschreibung": "E748: was unter einem Reiter der unteren Leiste liegt, nach dem Muster von Register.kontext.meldeLieferant/fuer. Schlüssel = data-ziele am Reiterknopf (index.html). Lieferanten: wissen/bibliothek.ts (dokumente: ORTE mit zielRang + Notizhefte aus app-notizhefte), wissen/lernwelt.ts (heute, lernen: KLAPPEN + ANSICHTEN.zielRang), datenbanken/ansichten/dienst.ts (termine: TERMINE_KARTEN + Kante kalender; mehr: mehrGruppen.zielRang). Gelesen von schale/aufbau/tab-shelf.ts (TabShelf, die Zielleiste am Telefon, E749 — Bogen 2). Wächter test613 (Quelle) und test614 (Zielleiste)."
         },
         {
           "name": "Redion (Schnittstelle einer Erweiterung)",
@@ -4694,7 +4694,7 @@
     {
       "name": "SelectionFlow",
       "datei": "src/schale/bedienung/selection-flow.ts",
-      "was": "die Auswahl der Auswahlleiste (E646/E650), L204 offen für die Flächen"
+      "was": "die Auswahl der Auswahlleiste (E646/E650), L204 offen für die Flächen; ziehbar übergibt hinauf an die Zielleiste (E749)"
     },
     {
       "name": "Ereignis",
@@ -4827,6 +4827,7 @@
           "titel": "Die untere Leiste der Schale (was eine schwebende Leiste meiden muss)",
           "punkte": [
             "`nav#handy-oben` (`index.html:259–274`; heisst „oben\", steht unten): fünf Reiter. Linse `#ho-pille` über `seitenleiste.ts:283–371` (`pilleSchieben`, `SelectionFlow.folge`, `Linse.sicherstellen`), `handyLeiste` (429); Klicks `dockWechsel` `schale.ts:4226–4262`.",
+            "E749: seit der Zielleiste gehen die fünf Klicks über EINE Tabelle `REITER_UNTEN` und `wechsle(knopfId, tun?)` in `schale.ts` (vor `dockWechsel`); dieselbe Funktion nimmt ein Ort-Ziel der Zielleiste. `#ho-ziele` (TabShelf, `src/schale/aufbau/tab-shelf.ts`) steht NEBEN der Leiste (`bar.after`), weil `backdrop-filter` an `#handy-oben` jedes `position:fixed` darin einfängt; z-index 955 über Toast (900) und Neu-Laden-Streifen (950). `#handy-oben` hat `touch-action:none` (vorher `pan-y`).",
             "CSS `bausteine.css` 1729–1893 (Linse 1916–2081), nur `max-width:760px`; `position:fixed; left:10px; right:10px; bottom:calc(9px + env(safe-area-inset-bottom)); z-index:401`; Höhe `--mobile-nav-height: 60px` (`marken.css:76`); `--hunten = calc(9px + var(--mobile-nav-height) + env(safe-area-inset-bottom))` (bausteine.css:1809).",
             "Heute weichen aus: `#scroll{padding-bottom:calc(var(--hunten) + 24px)}` (2257); Schublade, Streifen, schwebende Knöpfe über `--hunten` (274, 4033–4046, 7973; ansichten.css 262); versteckt bei `body.schreibt` (2697) und im Dokumentmodus (6485, pdf-studio.css:115).",
             "Whiteboard-, Karten- und Schaltplanleiste sitzen INLINE oben im Block und rollen mit der Seite — sie brauchen nur das `#scroll`-Polster. Studio-Dock `.blatt-reihe`: `position:fixed; bottom:calc(var(--visual-bottom,0px) + max(14px, env(safe-area-inset-bottom))); z-index:80` (pdf-studio.css:240; `--visual-bottom` schreibt `kern/einstellung/app.ts` gegen die Bildschirmtastatur); Papier `padding-bottom` 110/100 (225, 388); Verlaufskapsel am Telefon `bottom:calc(var(--visual-bottom) + 84px)` (382–386).",

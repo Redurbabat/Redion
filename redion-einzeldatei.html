@@ -845,6 +845,8 @@ html[data-theme="light"]{
   body #handy-oben #ho-pille::before,
   body #handy-oben #ho-pille.faehrt::before{ opacity:0 }
   body #handy-oben #ho-pille::after{ background:none }
+  body #ho-ziele > .ru-marke.faehrt{ -webkit-backdrop-filter:none; backdrop-filter:none }
+  body #ho-ziele > .ru-marke{ outline:2px solid var(--accent-text,var(--accent)); outline-offset:-2px }
   body .ru-fach-art{ background:#000; -webkit-backdrop-filter:none; backdrop-filter:none }
   html body #ai .ai-head .rmo-orb-karte{ background:var(--bg-card); -webkit-backdrop-filter:none; backdrop-filter:none }
   body .ru-held-linse{ display:none }
@@ -865,6 +867,10 @@ body[data-kontrast="hoch"], html[data-schema="kontrast"] > body{
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #handy-oben #ho-pille::before,
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #handy-oben #ho-pille.faehrt::before{ opacity:0 }
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #handy-oben #ho-pille::after{ background:none }
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #ho-ziele > .ru-marke.faehrt{
+  -webkit-backdrop-filter:none; backdrop-filter:none }
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #ho-ziele > .ru-marke{
+  outline:2px solid var(--accent-text,var(--accent)); outline-offset:-2px }
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) .ru-fach-art{
   background:#000; -webkit-backdrop-filter:none; backdrop-filter:none }
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #ai .ai-head .rmo-orb-karte{
@@ -15100,7 +15106,8 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
  * ========================================================================== */
 /* `#handy-unten` stand hier mit drin — die schwebende Leiste fiel mit
    E236 weg, ihr Stil blieb bis E280 (L86). */
-#handy-oben{ display:none }
+#handy-oben,
+#ho-ziele{ display:none }
 
 @media(max-width:760px){
 
@@ -15209,8 +15216,21 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      die der Leiste (88 %, `--bg-schwebend-dicht`): der Inhalt läuft ständig
      dahinter durch, und die Namen unter den Zeichen sind klein. Gemessen:
      test576 §6, die Beschriftung über einem schwarz-weiss-rot-blauen Muster. */
+  /* DIE ZIELLEISTE (E749): die zweite Kapsel, 8 px über der Leiste, nur
+     solange ein Finger hinaufzieht. Lage, Glas und Knöpfe wie die Leiste;
+     die Gründe stehen in `tab-shelf.ts`. z-index 955: über Toast (900) und
+     Neu-Laden-Streifen (950), unter allem, was die Leiste verdeckt. */
+  #ho-ziele{
+    display:flex; align-items:stretch; gap:0;
+    position:fixed; left:10px; right:10px; z-index:955;
+    bottom:calc(var(--hunten) + 8px); height:var(--mobile-nav-height);
+    padding:5px 6px; background:var(--bg-card); border:1px solid var(--line);
+  }
+  #ho-ziele[hidden]{ display:none }
+  #ho-ziele[data-geht]{ pointer-events:none }
   @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-    #handy-oben{
+    #handy-oben,
+    #ho-ziele{
       background:var(--bg-schwebend-dicht);
       -webkit-backdrop-filter:var(--glas-blur); backdrop-filter:var(--glas-blur);
     }
@@ -15240,6 +15260,34 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
                color var(--motion-fast,.14s) var(--ease-standard,ease);
   }
   #handy-oben > button:active{ background:var(--bg-hover) }
+  /* Die Ziele: Zeichen über Wort wie die Reiter (§37: 48 px hoch). Keine
+     Farbüberblendung — bewegt wird nur `transform` (test614 §14). Ohne
+     Lücke und mit 1 px Rand: „Meine Ablage" fett braucht 66 px, und bei
+     390 px blieben mit den Massen der Leiste 65,6 (gemessen, E749). */
+  #ho-ziele > button{
+    flex:1 1 0; min-width:0; min-height:48px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:3px; padding:5px 1px 4px; border:0; border-radius:var(--radius-2xl); background:none;
+    color:var(--text-dim); position:relative; z-index:1;
+  }
+  #ho-ziele > button b{
+    display:block; font-size:10.5px; font-weight:500; letter-spacing:-.01em;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;
+  }
+  #ho-ziele > button:is([data-anvisiert],[aria-current="page"]){ color:var(--accent-text,var(--accent)) }
+  #ho-ziele > button[aria-current="page"] b{ font-weight:650 }
+  #ho-ziele .ho-z{ display:flex; align-items:center; justify-content:center;
+    transform-origin:50% 100%; transition:transform var(--feder-knapp-dauer) var(--feder-knapp) }
+  #ho-ziele .ho-z svg{ display:block }
+  /* Die Lupe (E625: ×1,3, Nachbarn ×1,13), nur mit Bewegung (`data-lupe`). */
+  #ho-ziele[data-lupe] > [data-anvisiert] .ho-z{ transform:scale(1.3) }
+  #ho-ziele[data-lupe] > [data-anvisiert] + button .ho-z,
+  #ho-ziele[data-lupe] > button:has(+ [data-anvisiert]) .ho-z{ transform:scale(1.13) }
+  #ho-ziele > .ru-marke{ border-radius:var(--radius-2xl) }
+  /* Ohne Lupe trägt die Marke das Angepeilte fast allein, und ihre Fläche
+     misst auf dem Glas 1,08 : 1 — der Ring macht sie zur Form (§38, E749). */
+  #ho-ziele:not([data-lupe]) > .ru-marke{ outline:2px solid var(--accent-text,var(--accent)); outline-offset:-2px }
+  #ho-ziele[data-marke-weg] > .ru-marke{ opacity:0 }
   #handy-oben > button b{
     display:block; font-size:10.5px; font-weight:500; letter-spacing:-.01em;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;
@@ -15391,6 +15439,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      dazugeschrieben: ein Browser, der `url()` in `backdrop-filter` nicht
      kennt, verwirft NUR diese Zeile und behält die Fläche darüber. Stünde
      beides in einer Regel, fiele beides weg. */
+  #ho-ziele > .ru-marke.faehrt,
   #handy-oben[data-gehalten] #ho-pille,
   #handy-oben #ho-pille.faehrt{
     -webkit-backdrop-filter:url(#ru-linse-fahrt) saturate(1.55) brightness(1.13);
@@ -15424,8 +15473,16 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   #handy-oben[data-gehalten] > button[data-anvisiert]{
     color:var(--accent-text,var(--accent)); transition-delay:0s
   }
-  /* Seitwärts gehört der Finger der Pille, senkrecht rollt die Seite (Kit). */
-  #handy-oben{ touch-action:pan-y }
+  /* Offene Zielleiste (E749): ihr Reiter leuchtet — ohne die Brechung des
+     Haltens, die das Wort unter der Linse versetzt (Grund: tab-shelf.ts). */
+  #handy-oben[data-zielleiste] > button.an:not([data-anvisiert]){ color:var(--text-dim); transition-delay:0s }
+  #handy-oben[data-zielleiste] > button[data-anvisiert]{ color:var(--accent-text,var(--accent)); transition-delay:0s }
+  /* DER FINGER GEHÖRT DER LEISTE, IN BEIDE RICHTUNGEN (E749). Hier stand
+     `pan-y` („senkrecht rollt die Seite") — gemessen rollte senkrecht nichts
+     (`#scroll` ist kein Vorfahre), aber der Zug endete nach zwei Schritten
+     mit `pointercancel`, und hinauf zur Zielleiste kam nie etwas an. Keine
+     Auswahl und keine Lupe von iOS auf der Leiste, auch im Browser. */
+  #handy-oben{ touch-action:none; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none }
 
   /* DER GLANZRAND. Oben auf der Kapsel sitzt im Vorbild ein heller Bogen
      mit einem feinen Farbschimmer — die Kante des Glases, die das Licht
@@ -15480,6 +15537,8 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   @media (prefers-reduced-transparency:reduce){
     #handy-oben{ background:var(--bg-card);
                  -webkit-backdrop-filter:none; backdrop-filter:none }
+    #ho-ziele{ background:var(--bg-card); -webkit-backdrop-filter:none; backdrop-filter:none }
+    #ho-ziele > .ru-marke.faehrt{ -webkit-backdrop-filter:none; backdrop-filter:none }
     #handy-oben[data-gehalten] #ho-pille,
     #handy-oben #ho-pille,
     #handy-oben #ho-pille.faehrt{
@@ -24600,7 +24659,7 @@ body[data-studio-tools="offen"] #menueband{animation:studio-tools-enter var(--mo
 :where(.menu:not(.blatt),.finder:not(.blatt))>*{animation:glas-inhalt var(--motion-fast) linear both}
 /* Auf Glas keine blasse Schrift (E695, grund.css): die stille Schrift rückt
    eine Stufe nach oben, weil `--text-faint` nur auf voller Fläche 3,9 : 1 hat. */
-:is(.menu,.finder,.auswahlleiste,#handy-oben){--text-faint:var(--text-dim)}
+:is(.menu,.finder,.auswahlleiste,#handy-oben,#ho-ziele){--text-faint:var(--text-dim)}
 @keyframes studio-arrive{from{opacity:0;transform:translateY(7px) scale(.985)}to{opacity:1;transform:none}}
 @keyframes studio-drawer{from{opacity:.3;transform:translateX(-10px)}to{opacity:1;transform:none}}
 @keyframes studio-sheet{from{opacity:.3;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -24671,11 +24730,11 @@ body[data-studio-tools="offen"] #menueband{animation:studio-tools-enter var(--mo
      eine Marke und nicht zwei Zahlen. Die Geometrie steht in
      `bausteine.css` bei `#handy-oben`, der Radius hier, weil diese Datei
      später lädt und sonst gewinnt. */
-  #handy-oben{border-radius:calc(var(--mobile-nav-height) / 2);
+  #handy-oben,#ho-ziele{border-radius:calc(var(--mobile-nav-height) / 2);
                box-shadow:var(--studio-highlight),var(--studio-elevation)}
   /* Dieselbe Lichtkante wie Menü und Dock (E703) — wo es Glas gibt. */
   @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
-    #handy-oben{box-shadow:var(--glas-kante),var(--studio-elevation);border-color:transparent}
+    #handy-oben,#ho-ziele{box-shadow:var(--glas-kante),var(--studio-elevation);border-color:transparent}
   }
   :is(.finder,.dlg){border-radius:var(--radius-2xl) var(--radius-2xl) 0 0}
   .lernwelt .lw-desk{grid-template-columns:minmax(0,1fr);padding:26px 22px;gap:12px}
@@ -27619,7 +27678,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1522, inhalt: '0f481c6729c2e70f', gebaut: '2026-10-20T19:26:35.632Z' };
+const Stand = { fassung: 1530, inhalt: '3f7af7caf749087a', gebaut: '2026-10-20T19:29:06.470Z' };
 window.Stand = Stand;
 
 </script>
@@ -47997,6 +48056,7 @@ const SelectionFlow = (() => {
         }
         return best;
     };
+    const UEBER_TIPP = 16;
     const ziehbar = (a) => {
         if (a.reihe.dataset['ziehbar'])
             return;
@@ -48005,7 +48065,9 @@ const SelectionFlow = (() => {
         let zug = null;
         let gedrucktes = null;
         let schlucken = -Infinity;
+        let schluckId = NaN;
         let eigenerKlick = false;
+        const schlucke = (id) => { schlucken = performance.now(); schluckId = id; };
         const sichtbar = (k) => k.getClientRects().length > 0 && k.offsetWidth > 0;
         const malen = (z) => {
             if (!z.flaeche)
@@ -48068,12 +48130,17 @@ const SelectionFlow = (() => {
             delete a.reihe.dataset['gehalten'];
             z.vorn?.removeAttribute('data-anvisiert');
             z.vorn = null;
-            schlucken = performance.now();
+            schlucke(z.id);
         };
         const abbrechen = () => {
             const z = zug;
             zug = null;
             lasseLos(gedrucktes);
+            if (z?.ue) {
+                schlucke(z.id);
+                z.ue.cancel();
+                return;
+            }
             if (!z || !z.amZiehen || !z.flaeche)
                 return;
             aufraeumen(z);
@@ -48082,7 +48149,7 @@ const SelectionFlow = (() => {
             a.zurueck(a.gewaehlt(), z.flaeche);
         };
         a.reihe.addEventListener('pointerdown', (e) => {
-            if (e.button !== 0 || zug?.amZiehen)
+            if (e.button !== 0 || zug?.amZiehen || zug?.ue)
                 return;
             const liste = a.optionen().filter(sichtbar);
             const ziel = e.target instanceof Element ? e.target : null;
@@ -48093,10 +48160,20 @@ const SelectionFlow = (() => {
             gedrucktes = a.zeichen ? a.zeichen(k) : null;
             drueckeEin(gedrucktes, 0.9);
             const aktiv = a.gewaehlt();
-            if (!aktiv || !sichtbar(aktiv))
+            const oben = a.hinauf ? a.reihe.getBoundingClientRect().top : 0;
+            const spalte = a.hinauf ? k.getBoundingClientRect() : null;
+            const kLinks = spalte?.left ?? 0, kRechts = spalte?.right ?? 0;
+            if (!aktiv || !sichtbar(aktiv) || (a.nurAmGewaehlten && k !== aktiv)) {
+                if (a.hinauf)
+                    zug = {
+                        id: e.pointerId, x0: e.clientX, y0: e.clientY, maus: e.pointerType === 'mouse',
+                        zieht: false, amZiehen: false, nullX: 0, breite: 0, mitten: [], liste, aktiv: k, auf: false,
+                        finger: 0, versatz: 0, ort: 0, tempo: 0, dehnung: 1, hub: 1, messer: tempoMesser(),
+                        flaeche: null, zuletzt: performance.now(), bild: 0, vorn: null,
+                        k, kLinks, kRechts, oben, hoch: false, ue: null, nurHinauf: true
+                    };
                 return;
-            if (a.nurAmGewaehlten && k !== aktiv)
-                return;
+            }
             const ar = aktiv.getBoundingClientRect();
             let nullX = ar.left;
             if (a.flaeche) {
@@ -48112,48 +48189,104 @@ const SelectionFlow = (() => {
                 auf: Math.abs(finger - (stehtBei.ort + ar.width / 2)) <= ar.width / 2,
                 finger, versatz: 0, ort: stehtBei.ort, tempo: stehtBei.tempo,
                 dehnung: 1, hub: stehtBei.hub, messer: tempoMesser(),
-                flaeche: a.flaeche ?? null, zuletzt: performance.now(), bild: 0, vorn: null
+                flaeche: a.flaeche ?? null, zuletzt: performance.now(), bild: 0, vorn: null,
+                k, kLinks, kRechts, oben, hoch: false, ue: null, nurHinauf: false
             };
         });
+        const uebergeben = (z, e) => {
+            if (!a.hinauf)
+                return false;
+            const zog = z.amZiehen;
+            const k = zog ? (z.vorn ?? z.k) : z.k;
+            if (zog) {
+                cancelAnimationFrame(z.bild);
+                z.vorn?.removeAttribute('data-anvisiert');
+                z.vorn = null;
+            }
+            const ue = a.hinauf.nimm(k, zog ? 'aus-zug' : 'hoch', e.clientX, e.clientY);
+            if (!ue) {
+                if (zog) {
+                    z.zuletzt = performance.now();
+                    z.bild = requestAnimationFrame(takt);
+                }
+                return false;
+            }
+            if (zog)
+                delete a.reihe.dataset['gehalten'];
+            z.amZiehen = false;
+            z.hoch = false;
+            z.ue = ue;
+            lasseLos(gedrucktes);
+            try {
+                a.reihe.setPointerCapture(e.pointerId);
+            }
+            catch { }
+            window.getSelection()?.removeAllRanges();
+            return true;
+        };
         a.reihe.addEventListener('pointermove', (e) => {
             const z = zug;
             if (!z || e.pointerId !== z.id)
                 return;
+            if (z.ue) {
+                z.ue.move(e.clientX, e.clientY);
+                return;
+            }
             if (e.pointerType !== 'touch' && e.buttons === 0) {
                 abbrechen();
                 return;
             }
-            if (!z.amZiehen) {
+            if (!z.amZiehen && !z.hoch) {
                 const ax = achse(e.clientX - z.x0, e.clientY - z.y0, z.maus ? 2 : 10);
                 if (ax === null)
                     return;
                 if (ax === 'y') {
+                    if (!(a.hinauf && e.clientY < z.y0)) {
+                        zug = null;
+                        lasseLos(gedrucktes);
+                        return;
+                    }
+                    z.hoch = true;
+                    lasseLos(gedrucktes);
+                }
+                else if (z.nurHinauf) {
                     zug = null;
                     lasseLos(gedrucktes);
                     return;
                 }
-                z.amZiehen = true;
-                lasseLos(gedrucktes);
-                try {
-                    a.reihe.setPointerCapture(e.pointerId);
+                else {
+                    z.amZiehen = true;
+                    lasseLos(gedrucktes);
+                    try {
+                        a.reihe.setPointerCapture(e.pointerId);
+                    }
+                    catch { }
+                    window.getSelection()?.removeAllRanges();
+                    a.reihe.dataset['gehalten'] = '';
+                    if (!z.flaeche && a.baue)
+                        z.flaeche = a.baue(z.aktiv);
+                    if (!z.flaeche) {
+                        zug = null;
+                        delete a.reihe.dataset['gehalten'];
+                        return;
+                    }
+                    if (z.auf)
+                        z.versatz = (e.clientX - z.nullX) - (z.ort + z.breite / 2);
+                    else
+                        z.zieht = true;
+                    z.zuletzt = performance.now();
+                    z.bild = requestAnimationFrame(takt);
                 }
-                catch { }
-                window.getSelection()?.removeAllRanges();
-                a.reihe.dataset['gehalten'] = '';
-                if (!z.flaeche && a.baue)
-                    z.flaeche = a.baue(z.aktiv);
-                if (!z.flaeche) {
-                    zug = null;
-                    delete a.reihe.dataset['gehalten'];
-                    return;
-                }
-                if (z.auf)
-                    z.versatz = (e.clientX - z.nullX) - (z.ort + z.breite / 2);
-                else
-                    z.zieht = true;
-                z.zuletzt = performance.now();
-                z.bild = requestAnimationFrame(takt);
             }
+            if (z.hoch && (e.clientX < z.kLinks || e.clientX > z.kRechts)) {
+                zug = null;
+                return;
+            }
+            if (a.hinauf && (z.hoch || z.amZiehen) && e.clientY < z.oben && z.y0 - e.clientY >= UEBER_TIPP
+                && uebergeben(z, e))
+                return;
+            if (z.hoch)
+                return;
             z.finger = e.clientX - z.nullX;
             z.messer.dazu(z.finger - z.versatz, e.timeStamp);
         });
@@ -48163,6 +48296,28 @@ const SelectionFlow = (() => {
                 return;
             zug = null;
             lasseLos(gedrucktes);
+            if (z.ue) {
+                eigenerKlick = true;
+                try {
+                    z.ue.up(e.clientX, e.clientY);
+                }
+                finally {
+                    eigenerKlick = false;
+                }
+                schlucke(z.id);
+                return;
+            }
+            if (z.hoch) {
+                eigenerKlick = true;
+                try {
+                    a.waehle(z.k, z.flaeche ?? a.flaeche ?? a.reihe);
+                }
+                finally {
+                    eigenerKlick = false;
+                }
+                schlucke(z.id);
+                return;
+            }
             if (!z.amZiehen || !z.flaeche)
                 return;
             aufraeumen(z);
@@ -48190,24 +48345,26 @@ const SelectionFlow = (() => {
                 abbrechen();
         });
         a.reihe.addEventListener('lostpointercapture', (e) => {
-            if (e.target === a.reihe && zug && zug.amZiehen && e.pointerId === zug.id)
+            if (e.target === a.reihe && zug && (zug.amZiehen || zug.ue) && e.pointerId === zug.id)
                 abbrechen();
         });
-        a.reihe.addEventListener('click', (e) => {
-            if (eigenerKlick)
+        window.addEventListener('pointerdown', () => { schlucken = -Infinity; }, true);
+        window.addEventListener('click', (e) => {
+            if (eigenerKlick || performance.now() - schlucken >= 500)
                 return;
-            if (performance.now() - schlucken < 500) {
-                schlucken = -Infinity;
-                e.preventDefault();
-                e.stopPropagation();
-            }
+            const aufReihe = e.target instanceof Node && a.reihe.contains(e.target);
+            if (!aufReihe && e.pointerId !== schluckId)
+                return;
+            schlucken = -Infinity;
+            e.preventDefault();
+            e.stopPropagation();
         }, true);
         a.reihe.addEventListener('touchend', (e) => {
             if (performance.now() - schlucken < 300)
                 e.stopPropagation();
         });
         window.addEventListener('keydown', (e) => {
-            if (e.key !== 'Escape' || !zug?.amZiehen)
+            if (e.key !== 'Escape' || !(zug?.amZiehen || zug?.ue))
                 return;
             e.preventDefault();
             e.stopPropagation();
@@ -48515,14 +48672,14 @@ const SelectionFlow = (() => {
         });
         gesehen.set(liste, jetzt);
     };
-    const growFrom = (fenster, anker) => {
+    const growFrom = (fenster, anker, rahmen) => {
         if (!anker || !anker.width || !anker.height || ruhig())
             return null;
         const { easing, duration } = RedionSpring.token('smooth');
         if (!(duration > 2))
             return null;
         fenster.classList.add('ru-waechst');
-        const r = fenster.getBoundingClientRect();
+        const r = rahmen ?? fenster.getBoundingClientRect();
         if (!r.width || !r.height)
             return null;
         fenster.style.transformOrigin = '0 0';
@@ -121376,6 +121533,427 @@ window.Wischen = Wischen;
 
 </script>
 <script>
+/* ===== quell/schale/aufbau/tab-shelf.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/tab-shelf.ts (npm run bauen:ts). */
+const TabShelf = (() => {
+    const REACH = 24;
+    const TICK_MS = 12;
+    let bar = null;
+    let shelf = null;
+    let go = null;
+    let mode = false;
+    let tab = null;
+    let targets = [];
+    let items = [];
+    let aimed = -1;
+    let box = { left: 0, right: 0, top: 0 };
+    let columns = [];
+    let places = [];
+    let marker = null;
+    let barTop = 0;
+    let barBottom = 0;
+    let barLeft = 0;
+    let tabCols = [];
+    let fade = null;
+    let blende = null;
+    const calm = () => typeof AppEinstellung !== 'undefined' && AppEinstellung.wenigBewegung();
+    const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const tabs = () => bar ? Array.from(bar.querySelectorAll(':scope > button[role="tab"]')) : [];
+    const pill = () => bar?.querySelector('#ho-pille') ?? null;
+    const label = (t) => (t.querySelector('b')?.textContent || t.getAttribute('title') || '').trim();
+    const pillTo = (t) => {
+        const p = pill();
+        if (!p || typeof SelectionFlow === 'undefined')
+            return;
+        const ziel = t ?? bar?.querySelector(':scope > button[aria-selected="true"]') ?? null;
+        const c = tabCols.find(x => x.tab === ziel);
+        if (c && c.width)
+            SelectionFlow.folge(p, c.left, true, false);
+    };
+    const markTab = (t) => {
+        tabs().forEach(b => { if (b !== t)
+            b.removeAttribute('data-anvisiert'); });
+        if (t)
+            t.setAttribute('data-anvisiert', '');
+    };
+    const targetsOf = (t) => {
+        if (typeof Register === 'undefined' || !Register.navigation?.ziele)
+            return [];
+        return Register.navigation.ziele(t.dataset['ziele'] || '').filter(z => z && typeof z.tun === 'function');
+    };
+    const fill = (t, neu) => {
+        if (!shelf)
+            return;
+        shelf.querySelectorAll(':scope > button').forEach(b => b.remove());
+        items = neu.map((z, i) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.setAttribute('role', 'menuitem');
+            b.tabIndex = i === 0 ? 0 : -1;
+            b.dataset['ziel'] = z.id;
+            const zeichen = document.createElement('span');
+            zeichen.className = 'ho-z';
+            zeichen.dataset['sym'] = z.zeichen;
+            zeichen.dataset['symGroesse'] = '19';
+            zeichen.setAttribute('aria-hidden', 'true');
+            const wort = document.createElement('b');
+            wort.textContent = z.kurz ?? z.name;
+            b.append(zeichen, wort);
+            let hier = false;
+            try {
+                hier = typeof z.an === 'function' && !!z.an();
+            }
+            catch { }
+            if (hier)
+                b.setAttribute('aria-current', 'page');
+            return b;
+        });
+        shelf.append(...items);
+        try {
+            Register.symbole?.fuelle?.(shelf);
+        }
+        catch { }
+        targets = neu;
+        tab = t;
+        shelf.setAttribute('aria-label', 'Ziele in ' + label(t));
+        tabs().forEach(b => b.setAttribute('aria-expanded', b === t ? 'true' : 'false'));
+        aimed = -1;
+    };
+    const measure = () => {
+        if (!shelf)
+            return;
+        const kante = box.left + shelf.clientLeft;
+        places = items.map(b => ({ left: b.offsetLeft, top: b.offsetTop, width: b.offsetWidth, height: b.offsetHeight }));
+        columns = places.map(q => ({ left: kante + q.left, right: kante + q.left + q.width }));
+    };
+    const aim = (i) => {
+        if (!shelf)
+            return;
+        if (i === aimed)
+            return;
+        const war = aimed;
+        aimed = i;
+        const q = places[i];
+        if (i < 0 || !q)
+            shelf.setAttribute('data-marke-weg', '');
+        else if (typeof SelectionFlow !== 'undefined') {
+            if (war < 0 && marker)
+                SelectionFlow.glide(marker, q, true);
+            else
+                SelectionFlow.highlight(shelf, items[i] ?? null, { still: true });
+            shelf.removeAttribute('data-marke-weg');
+        }
+        items.forEach((b, k) => { if (k === i)
+            b.setAttribute('data-anvisiert', '');
+        else
+            b.removeAttribute('data-anvisiert'); });
+        if (i >= 0 && mode === 'finger') {
+            try {
+                if (typeof navigator.vibrate === 'function')
+                    navigator.vibrate(TICK_MS);
+            }
+            catch { }
+        }
+    };
+    const open = (t, wie, x = NaN, y = NaN) => {
+        if (!bar || !shelf || !t.dataset['ziele'])
+            return false;
+        const rb = bar.getBoundingClientRect();
+        if (!(rb.width > 0 && rb.height > 0))
+            return false;
+        const neu = targetsOf(t);
+        if (!neu.length)
+            return false;
+        barTop = rb.top;
+        barBottom = rb.bottom;
+        barLeft = rb.left + bar.clientLeft - bar.scrollLeft;
+        tabCols = tabs().map(b => ({ tab: b, left: b.offsetLeft, width: b.offsetWidth }));
+        const anker = t.getBoundingClientRect();
+        fade?.cancel();
+        fade = null;
+        shelf.getAnimations().forEach(a => a.cancel());
+        shelf.removeAttribute('data-geht');
+        fill(t, neu);
+        shelf.hidden = false;
+        mode = wie;
+        if (calm())
+            shelf.removeAttribute('data-lupe');
+        else
+            shelf.setAttribute('data-lupe', '');
+        if (wie === 'finger') {
+            bar.setAttribute('data-zielleiste', '');
+            markTab(t);
+        }
+        const r = shelf.getBoundingClientRect();
+        box = { left: r.left, right: r.right, top: r.top };
+        measure();
+        if (!calm() && typeof SelectionFlow !== 'undefined')
+            SelectionFlow.growFrom(shelf, anker, { left: r.left, top: r.top, width: r.width, height: r.height });
+        if (wie === 'finger') {
+            pillTo(t);
+            if (Number.isFinite(x))
+                aim(itemAt(x, y));
+        }
+        return true;
+    };
+    const close = () => {
+        if (!shelf || !bar)
+            return;
+        const war = mode;
+        mode = false;
+        aimed = -1;
+        items.forEach(b => b.removeAttribute('data-anvisiert'));
+        shelf.setAttribute('data-marke-weg', '');
+        tabs().forEach(b => b.setAttribute('aria-expanded', 'false'));
+        if (war === 'finger') {
+            bar.removeAttribute('data-zielleiste');
+            markTab(null);
+        }
+        window.removeEventListener('pointerdown', outside, true);
+        if (shelf.hidden)
+            return;
+        if (calm()) {
+            shelf.hidden = true;
+            return;
+        }
+        if (!blende)
+            blende = { dauer: parseFloat(token('--motion-fast')), kurve: token('--ease-standard') || 'ease' };
+        if (!(blende.dauer > 2)) {
+            shelf.hidden = true;
+            return;
+        }
+        shelf.setAttribute('data-geht', '');
+        const a = shelf.animate([{ opacity: 1 }, { opacity: 0 }], { duration: blende.dauer, easing: blende.kurve });
+        fade = a;
+        a.finished.then(() => {
+            if (fade !== a || !shelf)
+                return;
+            fade = null;
+            shelf.hidden = true;
+            shelf.removeAttribute('data-geht');
+            a.cancel();
+        }).catch(() => { });
+    };
+    const choose = (i) => {
+        const z = targets[i];
+        const t = tab;
+        const perTaste = mode === 'keys';
+        close();
+        if (!z || !t)
+            return;
+        if (perTaste)
+            t.focus({ preventScroll: true });
+        if (z.ort && go) {
+            go(t, z.tun);
+            return;
+        }
+        pillTo(null);
+        try {
+            z.tun();
+        }
+        catch (e) {
+            console.error('[Zielleiste]', e);
+        }
+    };
+    const onBar = (y) => y >= barTop && y <= barBottom;
+    const tabAt = (x) => {
+        let best = null, abstand = Infinity;
+        for (const c of tabCols) {
+            if (!c.width)
+                continue;
+            const d = Math.abs(barLeft + c.left + c.width / 2 - x);
+            if (d < abstand) {
+                abstand = d;
+                best = c.tab;
+            }
+        }
+        return best;
+    };
+    const itemAt = (x, y) => {
+        if (y >= barTop || y < box.top - REACH || x < box.left || x > box.right)
+            return -1;
+        let best = -1, abstand = Infinity;
+        columns.forEach((c, i) => {
+            const d = x < c.left ? c.left - x : x > c.right ? x - c.right : 0;
+            if (d < abstand) {
+                abstand = d;
+                best = i;
+            }
+        });
+        return best;
+    };
+    const move = (x, y) => {
+        if (mode !== 'finger')
+            return;
+        if (onBar(y)) {
+            const t = tabAt(x);
+            aim(-1);
+            if (t && t !== tab && t.dataset['ziele']) {
+                const neu = targetsOf(t);
+                if (neu.length && shelf) {
+                    fill(t, neu);
+                    measure();
+                    if (typeof SelectionFlow !== 'undefined')
+                        SelectionFlow.stagger(shelf, items, items.map(b => (t.dataset['ziele'] || '') + ':' + (b.dataset['ziel'] || '')));
+                }
+            }
+            markTab(t);
+            pillTo(t);
+            return;
+        }
+        const i = itemAt(x, y);
+        aim(i);
+        if (i >= 0) {
+            markTab(tab);
+            pillTo(tab);
+        }
+        else {
+            markTab(null);
+            pillTo(null);
+        }
+    };
+    const up = (x, y) => {
+        if (mode !== 'finger')
+            return;
+        if (onBar(y)) {
+            const t = tabAt(x);
+            close();
+            pillTo(null);
+            t?.click();
+            return;
+        }
+        const i = itemAt(x, y);
+        if (i >= 0) {
+            choose(i);
+            return;
+        }
+        close();
+        pillTo(null);
+    };
+    const cancel = () => {
+        if (!mode)
+            return;
+        close();
+        pillTo(null);
+    };
+    const nimm = (k, _wie, x, y) => {
+        if (!open(k, 'finger', x, y))
+            return null;
+        return { move, up, cancel };
+    };
+    const focusItem = (i) => {
+        const n = items.length;
+        if (!n)
+            return;
+        const k = ((i % n) + n) % n;
+        items.forEach((b, j) => { b.tabIndex = j === k ? 0 : -1; });
+        items[k]?.focus();
+        aim(k);
+    };
+    const outside = (e) => {
+        const ziel = e.target instanceof Node ? e.target : null;
+        if (mode === 'keys' && shelf && ziel && !shelf.contains(ziel))
+            close();
+    };
+    const onBarKey = (e) => {
+        if (e.key !== 'ArrowUp' || mode)
+            return;
+        const t = e.target instanceof HTMLElement ? e.target.closest('button[role="tab"][data-ziele]') : null;
+        if (!t || !bar?.contains(t))
+            return;
+        if (!open(t, 'keys'))
+            return;
+        e.preventDefault();
+        window.addEventListener('pointerdown', outside, true);
+        focusItem(0);
+    };
+    const onShelfKey = (e) => {
+        if (mode !== 'keys')
+            return;
+        const jetzt = items.findIndex(b => b === document.activeElement);
+        const t = tab;
+        switch (e.key) {
+            case 'ArrowRight':
+            case 'ArrowDown':
+                focusItem(jetzt + 1);
+                break;
+            case 'ArrowLeft':
+            case 'ArrowUp':
+                focusItem(jetzt - 1);
+                break;
+            case 'Home':
+                focusItem(0);
+                break;
+            case 'End':
+                focusItem(items.length - 1);
+                break;
+            case 'Enter':
+            case ' ':
+                if (jetzt >= 0)
+                    choose(jetzt);
+                break;
+            case 'Escape':
+                e.stopPropagation();
+                close();
+                t?.focus();
+                break;
+            case 'Tab':
+                close();
+                return;
+            default: return;
+        }
+        e.preventDefault();
+    };
+    const attach = (o) => {
+        if (!o.bar || shelf)
+            return;
+        bar = o.bar;
+        go = o.go;
+        const s = document.createElement('div');
+        s.id = 'ho-ziele';
+        s.className = 'ru-waechst';
+        s.setAttribute('role', 'menu');
+        s.setAttribute('aria-orientation', 'horizontal');
+        s.hidden = true;
+        s.addEventListener('keydown', onShelfKey);
+        s.addEventListener('click', e => {
+            if (mode !== 'keys')
+                return;
+            const b = e.target instanceof Element ? e.target.closest('#ho-ziele > button') : null;
+            const i = b ? items.indexOf(b) : -1;
+            if (i >= 0)
+                choose(i);
+        });
+        s.addEventListener('focusout', e => {
+            const nach = e.relatedTarget instanceof Node ? e.relatedTarget : null;
+            if (mode === 'keys' && (!nach || !s.contains(nach)))
+                close();
+        });
+        bar.after(s);
+        shelf = s;
+        if (typeof Linse !== 'undefined')
+            Linse.sicherstellen();
+        if (typeof SelectionFlow !== 'undefined') {
+            marker = SelectionFlow.highlight(s, null, { still: true });
+            marker.hidden = false;
+            s.setAttribute('data-marke-weg', '');
+        }
+        for (const t of tabs()) {
+            if (!t.dataset['ziele'])
+                continue;
+            t.setAttribute('aria-haspopup', 'menu');
+            t.setAttribute('aria-controls', 'ho-ziele');
+            t.setAttribute('aria-expanded', 'false');
+        }
+        bar.addEventListener('keydown', onBarKey);
+    };
+    return { attach, nimm, offen: () => !!mode };
+})();
+window.TabShelf = TabShelf;
+
+</script>
+<script>
 /* ===== quell/bereiche/einstellungen/ansicht/aussehen.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/einstellungen/ansicht/aussehen.ts (npm run bauen:ts). */
@@ -148203,7 +148781,10 @@ const Seitenleiste = (() => {
                         SelectionFlow.folge(f, k.offsetLeft, true, false);
                     else
                         handyLeiste();
-                }
+                },
+                ...(typeof TabShelf !== 'undefined'
+                    ? { hinauf: { nimm: (k, wie, x, y) => TabShelf.nimm(k, wie, x, y) } }
+                    : {})
             });
         }
         if (!aktiv) {
@@ -155857,32 +156438,35 @@ const App = (() => {
                     Wischen.ankunft(vorher, nachher);
             }));
         };
-        an('hl-dok', () => {
+        const REITER_UNTEN = [
+            { knopf: 'hl-dok', reiter: 'dokumente', oeffnen: () => Bibliothek.oeffne() },
+            { knopf: 'hl-start', reiter: 'start', oeffnen: () => Produktwelten.lernen('heute') },
+            { knopf: 'hl-lernen', reiter: 'lernen', oeffnen: () => Produktwelten.lernen('lernen') },
+            { knopf: 'hl-bespr', reiter: 'bespr', oeffnen: () => Produktwelten.planung() },
+            { knopf: 'hl-mehr', reiter: 'mehr', oeffnen: () => Ansichten.mehr() }
+        ];
+        const wechsle = (knopfId, tun) => {
+            const r = REITER_UNTEN.find(x => x.knopf === knopfId);
+            if (!r)
+                return;
             PWA.schubladeZu && PWA.schubladeZu();
-            dockWechsel('dokumente', 'hl-dok', () => { Bibliothek.oeffne(); handyLeiste(); });
-        });
-        an('hl-start', () => {
-            PWA.schubladeZu && PWA.schubladeZu();
-            dockWechsel('start', 'hl-start', () => { Produktwelten.lernen('heute'); handyLeiste(); });
-        });
-        an('hl-lernen', () => {
-            PWA.schubladeZu && PWA.schubladeZu();
-            dockWechsel('lernen', 'hl-lernen', () => { Produktwelten.lernen('lernen'); handyLeiste(); });
-        });
-        an('hl-bespr', () => {
-            PWA.schubladeZu && PWA.schubladeZu();
-            dockWechsel('bespr', 'hl-bespr', () => { Produktwelten.planung(); handyLeiste(); });
-        });
-        an('hl-mehr', () => {
-            PWA.schubladeZu && PWA.schubladeZu();
-            dockWechsel('mehr', 'hl-mehr', () => { Ansichten.mehr(); handyLeiste(); });
-        });
+            dockWechsel(r.reiter, r.knopf, () => { (tun ?? r.oeffnen)(); handyLeiste(); });
+        };
+        REITER_UNTEN.forEach(r => an(r.knopf, () => wechsle(r.knopf)));
         an('btn-suche-handy', () => suche());
         an('btn-neu-handy', () => neueSeite());
         try {
             window.Wischen?.starten?.();
         }
         catch { }
+        if (typeof TabShelf !== 'undefined') {
+            try {
+                TabShelf.attach({ bar: document.getElementById('handy-oben'), go: (knopf, tun) => wechsle(knopf.id, tun) });
+            }
+            catch (e) {
+                console.error('[Zielleiste]', e);
+            }
+        }
         handyLeiste();
         document.getElementById('side-reiter')?.addEventListener('click', (e) => {
             const b = elVon(e)?.closest('[data-reiter]');

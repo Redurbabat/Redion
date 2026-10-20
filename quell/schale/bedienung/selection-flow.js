@@ -273,6 +273,7 @@ const SelectionFlow = (() => {
         }
         return best;
     };
+    const UEBER_TIPP = 16;
     const ziehbar = (a) => {
         if (a.reihe.dataset['ziehbar'])
             return;
@@ -281,7 +282,9 @@ const SelectionFlow = (() => {
         let zug = null;
         let gedrucktes = null;
         let schlucken = -Infinity;
+        let schluckId = NaN;
         let eigenerKlick = false;
+        const schlucke = (id) => { schlucken = performance.now(); schluckId = id; };
         const sichtbar = (k) => k.getClientRects().length > 0 && k.offsetWidth > 0;
         const malen = (z) => {
             if (!z.flaeche)
@@ -344,12 +347,17 @@ const SelectionFlow = (() => {
             delete a.reihe.dataset['gehalten'];
             z.vorn?.removeAttribute('data-anvisiert');
             z.vorn = null;
-            schlucken = performance.now();
+            schlucke(z.id);
         };
         const abbrechen = () => {
             const z = zug;
             zug = null;
             lasseLos(gedrucktes);
+            if (z?.ue) {
+                schlucke(z.id);
+                z.ue.cancel();
+                return;
+            }
             if (!z || !z.amZiehen || !z.flaeche)
                 return;
             aufraeumen(z);
@@ -358,7 +366,7 @@ const SelectionFlow = (() => {
             a.zurueck(a.gewaehlt(), z.flaeche);
         };
         a.reihe.addEventListener('pointerdown', (e) => {
-            if (e.button !== 0 || zug?.amZiehen)
+            if (e.button !== 0 || zug?.amZiehen || zug?.ue)
                 return;
             const liste = a.optionen().filter(sichtbar);
             const ziel = e.target instanceof Element ? e.target : null;
@@ -369,10 +377,20 @@ const SelectionFlow = (() => {
             gedrucktes = a.zeichen ? a.zeichen(k) : null;
             drueckeEin(gedrucktes, 0.9);
             const aktiv = a.gewaehlt();
-            if (!aktiv || !sichtbar(aktiv))
+            const oben = a.hinauf ? a.reihe.getBoundingClientRect().top : 0;
+            const spalte = a.hinauf ? k.getBoundingClientRect() : null;
+            const kLinks = spalte?.left ?? 0, kRechts = spalte?.right ?? 0;
+            if (!aktiv || !sichtbar(aktiv) || (a.nurAmGewaehlten && k !== aktiv)) {
+                if (a.hinauf)
+                    zug = {
+                        id: e.pointerId, x0: e.clientX, y0: e.clientY, maus: e.pointerType === 'mouse',
+                        zieht: false, amZiehen: false, nullX: 0, breite: 0, mitten: [], liste, aktiv: k, auf: false,
+                        finger: 0, versatz: 0, ort: 0, tempo: 0, dehnung: 1, hub: 1, messer: tempoMesser(),
+                        flaeche: null, zuletzt: performance.now(), bild: 0, vorn: null,
+                        k, kLinks, kRechts, oben, hoch: false, ue: null, nurHinauf: true
+                    };
                 return;
-            if (a.nurAmGewaehlten && k !== aktiv)
-                return;
+            }
             const ar = aktiv.getBoundingClientRect();
             let nullX = ar.left;
             if (a.flaeche) {
@@ -388,48 +406,104 @@ const SelectionFlow = (() => {
                 auf: Math.abs(finger - (stehtBei.ort + ar.width / 2)) <= ar.width / 2,
                 finger, versatz: 0, ort: stehtBei.ort, tempo: stehtBei.tempo,
                 dehnung: 1, hub: stehtBei.hub, messer: tempoMesser(),
-                flaeche: a.flaeche ?? null, zuletzt: performance.now(), bild: 0, vorn: null
+                flaeche: a.flaeche ?? null, zuletzt: performance.now(), bild: 0, vorn: null,
+                k, kLinks, kRechts, oben, hoch: false, ue: null, nurHinauf: false
             };
         });
+        const uebergeben = (z, e) => {
+            if (!a.hinauf)
+                return false;
+            const zog = z.amZiehen;
+            const k = zog ? (z.vorn ?? z.k) : z.k;
+            if (zog) {
+                cancelAnimationFrame(z.bild);
+                z.vorn?.removeAttribute('data-anvisiert');
+                z.vorn = null;
+            }
+            const ue = a.hinauf.nimm(k, zog ? 'aus-zug' : 'hoch', e.clientX, e.clientY);
+            if (!ue) {
+                if (zog) {
+                    z.zuletzt = performance.now();
+                    z.bild = requestAnimationFrame(takt);
+                }
+                return false;
+            }
+            if (zog)
+                delete a.reihe.dataset['gehalten'];
+            z.amZiehen = false;
+            z.hoch = false;
+            z.ue = ue;
+            lasseLos(gedrucktes);
+            try {
+                a.reihe.setPointerCapture(e.pointerId);
+            }
+            catch { }
+            window.getSelection()?.removeAllRanges();
+            return true;
+        };
         a.reihe.addEventListener('pointermove', (e) => {
             const z = zug;
             if (!z || e.pointerId !== z.id)
                 return;
+            if (z.ue) {
+                z.ue.move(e.clientX, e.clientY);
+                return;
+            }
             if (e.pointerType !== 'touch' && e.buttons === 0) {
                 abbrechen();
                 return;
             }
-            if (!z.amZiehen) {
+            if (!z.amZiehen && !z.hoch) {
                 const ax = achse(e.clientX - z.x0, e.clientY - z.y0, z.maus ? 2 : 10);
                 if (ax === null)
                     return;
                 if (ax === 'y') {
+                    if (!(a.hinauf && e.clientY < z.y0)) {
+                        zug = null;
+                        lasseLos(gedrucktes);
+                        return;
+                    }
+                    z.hoch = true;
+                    lasseLos(gedrucktes);
+                }
+                else if (z.nurHinauf) {
                     zug = null;
                     lasseLos(gedrucktes);
                     return;
                 }
-                z.amZiehen = true;
-                lasseLos(gedrucktes);
-                try {
-                    a.reihe.setPointerCapture(e.pointerId);
+                else {
+                    z.amZiehen = true;
+                    lasseLos(gedrucktes);
+                    try {
+                        a.reihe.setPointerCapture(e.pointerId);
+                    }
+                    catch { }
+                    window.getSelection()?.removeAllRanges();
+                    a.reihe.dataset['gehalten'] = '';
+                    if (!z.flaeche && a.baue)
+                        z.flaeche = a.baue(z.aktiv);
+                    if (!z.flaeche) {
+                        zug = null;
+                        delete a.reihe.dataset['gehalten'];
+                        return;
+                    }
+                    if (z.auf)
+                        z.versatz = (e.clientX - z.nullX) - (z.ort + z.breite / 2);
+                    else
+                        z.zieht = true;
+                    z.zuletzt = performance.now();
+                    z.bild = requestAnimationFrame(takt);
                 }
-                catch { }
-                window.getSelection()?.removeAllRanges();
-                a.reihe.dataset['gehalten'] = '';
-                if (!z.flaeche && a.baue)
-                    z.flaeche = a.baue(z.aktiv);
-                if (!z.flaeche) {
-                    zug = null;
-                    delete a.reihe.dataset['gehalten'];
-                    return;
-                }
-                if (z.auf)
-                    z.versatz = (e.clientX - z.nullX) - (z.ort + z.breite / 2);
-                else
-                    z.zieht = true;
-                z.zuletzt = performance.now();
-                z.bild = requestAnimationFrame(takt);
             }
+            if (z.hoch && (e.clientX < z.kLinks || e.clientX > z.kRechts)) {
+                zug = null;
+                return;
+            }
+            if (a.hinauf && (z.hoch || z.amZiehen) && e.clientY < z.oben && z.y0 - e.clientY >= UEBER_TIPP
+                && uebergeben(z, e))
+                return;
+            if (z.hoch)
+                return;
             z.finger = e.clientX - z.nullX;
             z.messer.dazu(z.finger - z.versatz, e.timeStamp);
         });
@@ -439,6 +513,28 @@ const SelectionFlow = (() => {
                 return;
             zug = null;
             lasseLos(gedrucktes);
+            if (z.ue) {
+                eigenerKlick = true;
+                try {
+                    z.ue.up(e.clientX, e.clientY);
+                }
+                finally {
+                    eigenerKlick = false;
+                }
+                schlucke(z.id);
+                return;
+            }
+            if (z.hoch) {
+                eigenerKlick = true;
+                try {
+                    a.waehle(z.k, z.flaeche ?? a.flaeche ?? a.reihe);
+                }
+                finally {
+                    eigenerKlick = false;
+                }
+                schlucke(z.id);
+                return;
+            }
             if (!z.amZiehen || !z.flaeche)
                 return;
             aufraeumen(z);
@@ -466,24 +562,26 @@ const SelectionFlow = (() => {
                 abbrechen();
         });
         a.reihe.addEventListener('lostpointercapture', (e) => {
-            if (e.target === a.reihe && zug && zug.amZiehen && e.pointerId === zug.id)
+            if (e.target === a.reihe && zug && (zug.amZiehen || zug.ue) && e.pointerId === zug.id)
                 abbrechen();
         });
-        a.reihe.addEventListener('click', (e) => {
-            if (eigenerKlick)
+        window.addEventListener('pointerdown', () => { schlucken = -Infinity; }, true);
+        window.addEventListener('click', (e) => {
+            if (eigenerKlick || performance.now() - schlucken >= 500)
                 return;
-            if (performance.now() - schlucken < 500) {
-                schlucken = -Infinity;
-                e.preventDefault();
-                e.stopPropagation();
-            }
+            const aufReihe = e.target instanceof Node && a.reihe.contains(e.target);
+            if (!aufReihe && e.pointerId !== schluckId)
+                return;
+            schlucken = -Infinity;
+            e.preventDefault();
+            e.stopPropagation();
         }, true);
         a.reihe.addEventListener('touchend', (e) => {
             if (performance.now() - schlucken < 300)
                 e.stopPropagation();
         });
         window.addEventListener('keydown', (e) => {
-            if (e.key !== 'Escape' || !zug?.amZiehen)
+            if (e.key !== 'Escape' || !(zug?.amZiehen || zug?.ue))
                 return;
             e.preventDefault();
             e.stopPropagation();
@@ -791,14 +889,14 @@ const SelectionFlow = (() => {
         });
         gesehen.set(liste, jetzt);
     };
-    const growFrom = (fenster, anker) => {
+    const growFrom = (fenster, anker, rahmen) => {
         if (!anker || !anker.width || !anker.height || ruhig())
             return null;
         const { easing, duration } = RedionSpring.token('smooth');
         if (!(duration > 2))
             return null;
         fenster.classList.add('ru-waechst');
-        const r = fenster.getBoundingClientRect();
+        const r = rahmen ?? fenster.getBoundingClientRect();
         if (!r.width || !r.height)
             return null;
         fenster.style.transformOrigin = '0 0';

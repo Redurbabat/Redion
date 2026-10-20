@@ -12,6 +12,90 @@ selbst zusammengeführt (a9cfb90, Baum gleich ba51915); E750 kommt als
 Fast-Forward dazu. Rot bleiben zwölf, jeder schon vorher auf `main` rot. Die Zweige der Zielleiste (E748, E749) landen
 nicht mit.
 
+## 13. Oktober 2026 · E749 · Die Zielleiste nach der Durchsicht: ein Tipp am Rand bleibt ein Tipp
+
+**Gefunden** (Durchsicht von Bogen 2, gegen `f4ebb5816`): ein Daumen, der
+1–7 px unter dem oberen Rand eines Reiters aufsetzt und 10–15 px
+hinaufrollt, reichte über die Kante der Leiste — die Zielleiste ging auf,
+und das Loslassen wählte „Lernpfad". Genau das verbietet Redurs Korrektur
+(„aber beim klicken nicht"); Chromium klickt bis 15 px Weg selbst. Dazu:
+hinauf und dann seitwärts klickte den gedrückten Reiter; unter der Leiste
+losgelassen klickte den nächsten; nach einem Abbruch verschwand der nächste
+echte Tipp; Chromiums Klick fiel nach dem Hochrollen auf den Inhalt über der
+Leiste; ohne Lupe lag die Marke mit 1,08 : 1 auf der Scheibe; nach Enter
+auf einem Ort stand der Fokus auf `<body>`.
+
+**Gebaut:**
+
+- `ziehbar` übergibt erst ab 16 px Weg nach oben (`UEBER_TIPP`, über dem
+  gemessenen Spielraum: 15 px ein Klick, 16 keiner); verlässt der Finger
+  vorher die Spalte des Reiters, endet der Zug ohne Klick; das Schlucken
+  endet mit jedem neuen `pointerdown` und fängt daneben nur den Klick mit
+  der `pointerId` der Geste.
+- `TabShelf`: unter der Leiste ist abgebrochen; nach einer Wahl über die
+  Tastatur geht der Fokus an den Reiter, bevor gewählt wird.
+- Die Marke trägt einen Ring (`outline`, in der Farbe der Schrift), wo die
+  Lupe aus ist, und unter jedem Kontrast-Weg (`grund.css`).
+
+**Geprüft:** `test614` 122 Zusagen (16 neu: §1c, §1d, §6b, §6c, §7f,
+§11f, §12g, §12h), gegen `f4ebb5816` rot mit 15 von 122, sieben
+Gegenproben rot (eine baute zuerst nicht, §52.6); Nachbarn und
+Datei-Wächter in E749. Bilder vorher und nachher (ruhig, „Ruhige
+Darstellung", Hoher Kontrast, erzwungene Farben, mit Bewegung) im
+Kratzordner `bilder-ziel/handy/durchsicht/`, angesehen.
+
+**Offen:** L257 — der Vorleser mit Berührung kommt nicht hinein (Redurs
+Wahl), der Spielraum am echten Telefon.
+
+---
+
+## 13. Oktober 2026 · E749 · Die Zielleiste am Telefon (Bogen 2): hinaufziehen, gleiten, loslassen
+
+**Redur**, 12. Oktober 2026: „… ich sollte direk mit hand ohne klick direk
+wächseln können es sollte flüssig sein mit appel efeck usw aber zuers nur
+bei handy …" — Antworten 1 und 4: die Empfehlung. Und seine Korrektur vom
+13. Oktober, 01:08 UTC: „die neu dock nur wenn ich mit hand nach oven so zi
+eht kommt das doet aber beim klicken nicht" — nur Hochziehen öffnet; kein
+Tipp, kein Halten.
+
+**Vorher gemessen** (Grundstand `352eed65c`): senkrechtes Ziehen auf der
+Leiste rollte nichts und brach nach zwei Zügen mit `pointercancel` ab;
+Chromium klickt nach einer Berührung bis 15 px Weg; Halten ist beim
+Loslassen ein Klick, ein `contextmenu` kommt in der kopflosen Schale nie.
+
+**Gebaut:**
+
+- `SelectionFlow.ziehbar` mit der freiwilligen Übergabe `hinauf`: über der
+  Oberkante (nach 10 px) oder aus einem Pillenzug übernimmt die
+  Zielleiste; unter der Kante bleibt es GENAU EIN Klick, hinab wie zuvor.
+- `src/schale/aufbau/tab-shelf.ts` (`TabShelf`): `#ho-ziele` neben der
+  Leiste, Menü mit fünf Zielen aus `Register.navigation.ziele`, gleiten
+  mit Marke und Lupe, zwischen Reitern tauscht der Inhalt, Loslassen wählt
+  einmal; Tastatur über Pfeil hinauf; ohne Bewegung ohne Animation.
+- `schale.ts`: die fünf Reiter EINE Tabelle (`REITER_UNTEN`, `wechsle`) —
+  für die Klicks und für jedes Ort-Ziel.
+- CSS in `bausteine.css`, `studio.css`, `grund.css` (Glas im Block der
+  Leiste, deckend ohne Glas, `z-index:955`, `touch-action:none`);
+  `index.html` und der GRUNDSTOCK; `ho-` im Verzeichnis der Namensräume;
+  die Karte nachgezogen.
+
+**Beim Bauen gefunden:** das BILD — mit `data-gehalten` stand „Dokumente"
+unter der brechenden Pille doppelt da (jetzt `data-zielleiste`, `test614`
+§11e); ein Pillenzug liess `data-gehalten` nach der Übergabe stehen;
+„Meine Ablage" passte fett um Bruchteile nicht; und das erste Öffnen
+kostete vier Stilrechnungen der ganzen Seite (21,5 ms, 4×: 130 ms), weil
+jedes `hidden` die `body:has(…)`-Regeln weckt — jetzt eine (9,9 ms, 4×:
+63 ms).
+
+**Geprüft:** `test614` neu (106 Zusagen; gegen `352eed65c` rot mit 29 von
+105), fünf Gegenproben rot; Nachbarn und Datei-Wächter in E749. Bilder
+hell und dunkel im Kratzordner `bilder-ziel/handy/`.
+
+**Offen:** L257 — der Rechner (Phase 2), das echte Telefon, die gekürzten
+Namen unter 390 px.
+
+---
+
 ## 13. Oktober 2026 · E748 · Die Ziele der unteren Reiter aus einer Quelle (Zielleiste, Bogen 1) — und L147
 
 **Redur**, 12. Oktober 2026, zum Bild mit dem roten Feld über der unteren

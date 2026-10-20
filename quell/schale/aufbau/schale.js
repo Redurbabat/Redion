@@ -3423,32 +3423,35 @@ const App = (() => {
                     Wischen.ankunft(vorher, nachher);
             }));
         };
-        an('hl-dok', () => {
+        const REITER_UNTEN = [
+            { knopf: 'hl-dok', reiter: 'dokumente', oeffnen: () => Bibliothek.oeffne() },
+            { knopf: 'hl-start', reiter: 'start', oeffnen: () => Produktwelten.lernen('heute') },
+            { knopf: 'hl-lernen', reiter: 'lernen', oeffnen: () => Produktwelten.lernen('lernen') },
+            { knopf: 'hl-bespr', reiter: 'bespr', oeffnen: () => Produktwelten.planung() },
+            { knopf: 'hl-mehr', reiter: 'mehr', oeffnen: () => Ansichten.mehr() }
+        ];
+        const wechsle = (knopfId, tun) => {
+            const r = REITER_UNTEN.find(x => x.knopf === knopfId);
+            if (!r)
+                return;
             PWA.schubladeZu && PWA.schubladeZu();
-            dockWechsel('dokumente', 'hl-dok', () => { Bibliothek.oeffne(); handyLeiste(); });
-        });
-        an('hl-start', () => {
-            PWA.schubladeZu && PWA.schubladeZu();
-            dockWechsel('start', 'hl-start', () => { Produktwelten.lernen('heute'); handyLeiste(); });
-        });
-        an('hl-lernen', () => {
-            PWA.schubladeZu && PWA.schubladeZu();
-            dockWechsel('lernen', 'hl-lernen', () => { Produktwelten.lernen('lernen'); handyLeiste(); });
-        });
-        an('hl-bespr', () => {
-            PWA.schubladeZu && PWA.schubladeZu();
-            dockWechsel('bespr', 'hl-bespr', () => { Produktwelten.planung(); handyLeiste(); });
-        });
-        an('hl-mehr', () => {
-            PWA.schubladeZu && PWA.schubladeZu();
-            dockWechsel('mehr', 'hl-mehr', () => { Ansichten.mehr(); handyLeiste(); });
-        });
+            dockWechsel(r.reiter, r.knopf, () => { (tun ?? r.oeffnen)(); handyLeiste(); });
+        };
+        REITER_UNTEN.forEach(r => an(r.knopf, () => wechsle(r.knopf)));
         an('btn-suche-handy', () => suche());
         an('btn-neu-handy', () => neueSeite());
         try {
             window.Wischen?.starten?.();
         }
         catch { }
+        if (typeof TabShelf !== 'undefined') {
+            try {
+                TabShelf.attach({ bar: document.getElementById('handy-oben'), go: (knopf, tun) => wechsle(knopf.id, tun) });
+            }
+            catch (e) {
+                console.error('[Zielleiste]', e);
+            }
+        }
         handyLeiste();
         document.getElementById('side-reiter')?.addEventListener('click', (e) => {
             const b = elVon(e)?.closest('[data-reiter]');

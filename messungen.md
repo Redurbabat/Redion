@@ -9312,3 +9312,191 @@ nach „Zurück" die Dokumente, der Knopf „Zurück" gesperrt) und
 `nachher3-…` (Heute, „Zurück" offen). Angesehen: alle vier.
 
 **Nachbarn** (unter dem Schloss, gegen v1521): `test613` (110 von 110) und 21 Läufe, alle grün: die Nachbarn aus dem Auftrag (`test537`, `test222`, `test390`, `test601`, `test600`, `test596`, `test565`, `test567`, `test217`, `test306`, `test388`, `test74`) und die Läufe, die den Verlauf (`App.zurueck`, `#btn-back`, `navMerken`) oder `zeigeSonder` anfassen: `test114`, `test581`, `test592`, `test40`, `test386`, `test67`, `test484`, `test423`, `test272`. Datei-Wächter `test550`, `test549`, `test225`, `test105`, `test109`, `test87`, `test537`, `test400`: grün.
+
+## §106 · Die Zielleiste am Telefon: Geste, Kosten, Breite (E749, 13. Oktober 2026)
+
+**Womit:** Sonden im Kratzordner (`ziel-handy/`), Telefon 390 × 844 mit
+echter Berührung über CDP (`Input.dispatchTouchEvent`), Chromium
+141.0.7390.37 der Prüfungen; vorher = `352eed65c` (Zweig
+`claude/zielleiste-quelle`), nachher = der Zweig `claude/zielleiste-handy`.
+
+**1 · Was senkrechtes Ziehen auf der Leiste vorher tat** (von „Dokumente",
+y = 805, 112 px hinauf in acht Schritten, auf dem Regal):
+
+```txt
+touch-action   Ereignisse an #handy-oben                                  #scroll    Klicks
+pan-y          pointerdown → touchstart → pointermove ×2 → touchmove →     0 → 0      0
+(vorher)       pointercancel → lostpointercapture → touchmove ×6 → touchend
+none           pointerdown → touchstart → pointermove ×2 → touchmove →     0 → 0      0
+               (pointermove → touchmove) ×6 → pointerup → lostpointercapture → touchend
+```
+
+`#scroll` wäre 317 px rollbar gewesen; `scrollY` 0, kein `scroll`-Ereignis.
+`pan-y` hat nichts gerollt, nur den Zug nach zwei Schritten abgebrochen.
+
+**2 · Ab wie viel Weg Chromium nach einer Berührung klickt** (auf
+„Lernen", zwei Züge, dann los; `pan-y` und `none` Zeile für Zeile gleich):
+
+```txt
+Weg      0   6↑  9↑  12↑  15↑  20↑  24↑  12↓  8→
+Klicks   1   1   1   1    1    0    0    1    1
+```
+
+**3 · Halten** (vorher; dasselbe mit verhindertem `contextmenu` und mit
+`touch-action:none`): 300, 550 und 800 ms ruhig — `pointerdown pointerup
+touchend click`, der Reiter wechselt. `Input.synthesizeTapGesture` über
+900 ms: `pointerdown touchstart pointerup touchend`, kein Klick, kein
+`contextmenu`. Die rechte Maustaste: `pointerdown contextmenu pointerup`.
+
+**4 · Weniger Transparenz lässt sich einstellen:** nach
+`Emulation.setEmulatedMedia({prefers-reduced-transparency: reduce})` sagt
+`matchMedia` `true`, `#handy-oben` hat `backdrop-filter: none` (vorher
+`saturate(1.8) blur(20px)`). `test539` §6 sagt seit dem 20. September das
+Gegenteil (L203); für diesen Browser stimmt das nicht mehr.
+
+**5 · Was das erste Öffnen kostet** (die Arbeit im `pointermove`, der die
+Kante überquert: Einfangen am `window` davor, Blasen am `window` danach;
+fünf frisch geladene Seiten je Zeile, Mitte in Klammern; „Lücke" = der
+grösste Abstand zweier Bilder um das Öffnen):
+
+```txt
+Stand          Drossel   erstes Öffnen (ms)                     zweites (Mitte)   Lücke (Mitte)
+erster Bau     1×        25,2 / 20,0 / 19,5 / 29,2 / 21,5 (21,5)   27,6              17
+erster Bau     4×        157 / 168 / 130 / 94 / 124 (130)          152               133
+nachher        1×        10,0 / 8,9 / 10,4 / 9,9 / 9,5 (9,9)       10,5              17
+nachher        4×        46 / 57 / 78 / 63 / 68 (63)               48                117
+```
+
+Sichtbar war die Zielleiste in jedem Lauf im ersten Bild nach dem Zug über
+die Kante (Zeitstempel des Bildes 0 bis 2 ms VOR dem des Ereignisses — das
+Bild, das ihn verarbeitet hat).
+
+Das Profil (4×, ein Lauf, Eigenzeit): erster Bau `getBoundingClientRect`
+47 ms, `highlight` 34, `fill` 30, `pillTo` 27 — vier erzwungene
+Stilrechnungen; nachher `getBoundingClientRect` 37 ms und
+`AppEinstellung.amTelefon` 34 (das `touchmove` von `pwa.ts` liest
+`innerWidth` und zahlt die Rechnung, die das Bild ohnehin braucht).
+
+**6 · Warum eine Stilrechnung so viel kostet** (Sonde, 4× Drossel, an
+einem Kind von `#ho-ziele`, dann `offsetTop` gelesen, Mitte aus 15):
+
+```txt
+geschrieben            ms
+nichts                 0
+hidden                 17,7
+aria-current           17,7
+ein Kind angehängt     17,9
+data-x am Kind         0
+eine Klasse am Kind    0
+data-x an der Leiste   0
+style.left am Kind     0
+```
+
+`body:has(#zm-pille:not([hidden]))`, `…:has(#sidebar .side-item[aria-current="page"])`
+und rund dreissig weitere `body:has(…)`-Regeln machen jedes `hidden` und
+jedes neue Kind zu einer Rechnung der ganzen Seite.
+
+**7 · Passt jedes Wort in sein Ziel?** (`scrollWidth` gegen `clientWidth`
+des Worts, fett nachgerechnet):
+
+```txt
+Breite   vorher (Lücke 2 px, Rand 2 px)     nachher (keine Lücke, Rand 1 px)
+390      Meine Ablage 66/66 (auf dem Bild   alle 25 passen, auch fett
+         „Meine Abla…", Bruchteile)
+360      Meine Ablage, Besprechung,          Meine Ablage 66/63
+         Einstellungen gekürzt
+320      fünf gekürzt                        Meine Ablage 66/55, Stundenplan 58/55,
+                                             Besprechung 61/55, Posteingang 57/55,
+                                             Einstellungen 62/55
+```
+
+**8 · Lesbar und Glas** (aus `test614`): die stille Schrift der Zielleiste
+über dem schwarz-weiss-rot-blauen Muster auf dem GPU-Weg — hell schlimmster
+4,72 : 1 (Mitte 4,92), dunkel 5,32 : 1 (Mitte 6,48). Mit offener
+Zielleiste stehen 13,5 % des Bildschirms unter Glas (Leiste und
+Zielleiste; die Grenze mit offenem Menü ist 60 %).
+
+**9 · Start:** `tab-shelf.js` 3,53 KB gzip; `test388` §5 1927 (255 Dateien, in einer Kopie von `352eed65c`) →
+1932 (256 Dateien) KB von 1950.
+
+**10 · Die Durchsicht (13. Oktober)** — Sonde `durchsicht-ziel/sonde-zeiger.mts`
+im Kratzordner und `test614`, Telefon 390 × 844; vorher = `f4ebb5816`,
+nachher = der Stand nach der Durchsicht.
+
+*a) Der Tipp-Spielraum, genau* (auf „Lernen", zwei Züge hinab, dann los;
+Punkt 2 oben kannte nur 15 und 20):
+
+```txt
+Weg      15↓  16↓  17↓  18↓  19↓
+Klicks   1    0    0    0    0
+```
+
+*b) Welche `pointerId` der Klick trägt* (Einfangen am `window`):
+
+```txt
+Tipp auf „Dokumente"     pointerdown #2 → pointerup #2 → click #2 (touch, echt)
+Tipp auf „Lernen"        pointerdown #3 → pointerup #3 → click #3 (touch, echt)
+Enter auf „Dokumente"    click #-1 (kein Zeiger)
+element.click()          click #-1 (kein Zeiger, nicht echt)
+```
+
+Jede Berührung bekommt eine neue Nummer, und Chromiums Klick trägt die
+seiner Berührung — daran erkennt `ziehbar` den Klick DER Geste.
+
+*c) Am oberen Rand des Reiters* (Reiter ab y = 781, Leiste ab 775; vom
+Bildschirm „Dokumente" aus, zwei Züge hinauf, dann los; `test614` §1c):
+
+```txt
+aufgesetzt   10 px            12 px            14 px                     15 px
+vorher
+  782        Lernpfad (10 B)  Lernpfad (9 B)   Lernpfad (10 B), page@760  Lernpfad (12 B), page@760
+  785        Lernen           Lernpfad (10 B)  Lernpfad (10 B), page@762  Lernpfad (11 B), page@761
+  788        Lernen           Lernen           Lernpfad (10 B)            Lernpfad (9 B), page@763
+nachher
+  782–788    Lernen, genau ein Klick, 0 Bilder Zielleiste, nichts daneben
+```
+
+„B" = Bilder, in denen die Zielleiste offen stand; „page@…" = ein Klick
+auf den Inhalt über der Leiste (die Zeile „Noch keine vollständige
+Sicherung"), der bei der Seite ankam.
+
+*d) Die Marke gegen die Scheibe* (`test614` §11f, GPU-Weg, Bildpunkte, der
+Rand der Marke gegen die Scheibe 4–8 px daneben; Finger auf „Favoriten"):
+
+```txt
+                          vorher (Fläche)   nachher (Rand)   Fläche nachher
+ruhig, hell               1,08 : 1          5,36 : 1         1,08
+ruhig, dunkel             1,2               5,74             1,2
+Hoher Kontrast, hell      1,07              5,31             1,07
+Hoher Kontrast, dunkel    1,18              5,68             1,18
+erzwungene Farben         1                 21               1
+```
+
+Und die Schrift selbst (Sonde `sonde-farbe.mts`, ohne Bewegung, berechnete
+Farbe des Worts): still `rgb(102, 101, 95)` gegen angepeilt
+`rgb(124, 58, 237)` 1,03 : 1 (hell), `rgb(166, 168, 170)` gegen
+`rgb(155, 135, 255)` 1,21 : 1 (dunkel) — ohne Lupe und ohne Ring sagte
+nur der Farbton, welches Ziel gilt.
+
+*e) Was das erste Öffnen danach kostet* (dasselbe Skript wie Punkt 5,
+zwei Läufe à fünf frische Ladungen):
+
+```txt
+Drossel   erstes Öffnen im Horcher (ms)                Lücke um das Öffnen (ms)
+1×        12,2 / 9,4 / 9,1 / 9,3 / 9,5 (9,4)            17 / 17 / 17 / 17 / 17
+1×        9,3 / 9,9 / 10,1 / 9,8 / 12,1 (9,9)           17 / 17 / 17 / 17 / 17
+4×        64,4 / 38,9 / 53,4 / 36,6 / 48,3 (48,3)       17 / 67 / 83 / 67 / 83 (67)
+4×        55,2 / 63,0 / 46,3 / 54,0 / 42,0 (54,0)       100 / 100 / 83 / 83 / 67 (83)
+```
+
+Die Lücke bei 4× streut zwischen den Läufen (Punkt 5: Mitte 117 im Bau);
+über alle zehn Ladungen Mitte 83 ms, höchstens 100. Ohne Drossel verliert
+das erste Öffnen kein Bild. In einer Ladung des ersten Laufs stand das
+Bild 108 ms VOR dem Zug über die Kante im Protokoll — der Zeitstempel des
+Bildes gegen den des Ereignisses, unter der Drossel; die übrigen neun
+lagen bei −1 bis −3 ms wie in Punkt 5.
+
+*f) Was es an Bytes kostet* (gzip -6, gegen `f4ebb5816`): `tab-shelf.js`
+3629 → 3707 B, `selection-flow.js` 9494 → 9691, `bausteine.css`
+176158 → 176256, `grund.css` 14875 → 14931. Zusammen +429 B; der Start
+bleibt bei 1932 KB von 1950 (`test388` §5, 256 Dateien).

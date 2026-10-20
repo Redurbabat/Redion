@@ -234,7 +234,7 @@ body[data-studio-tools="offen"] #menueband{animation:studio-tools-enter var(--mo
 :where(.menu:not(.blatt),.finder:not(.blatt))>*{animation:glas-inhalt var(--motion-fast) linear both}
 /* Auf Glas keine blasse Schrift (E695, grund.css): die stille Schrift rückt
    eine Stufe nach oben, weil `--text-faint` nur auf voller Fläche 3,9 : 1 hat. */
-:is(.menu,.finder,.auswahlleiste,#handy-oben){--text-faint:var(--text-dim)}
+:is(.menu,.finder,.auswahlleiste,#handy-oben,#ho-ziele){--text-faint:var(--text-dim)}
 @keyframes studio-arrive{from{opacity:0;transform:translateY(7px) scale(.985)}to{opacity:1;transform:none}}
 @keyframes studio-drawer{from{opacity:.3;transform:translateX(-10px)}to{opacity:1;transform:none}}
 @keyframes studio-sheet{from{opacity:.3;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -305,11 +305,11 @@ body[data-studio-tools="offen"] #menueband{animation:studio-tools-enter var(--mo
      eine Marke und nicht zwei Zahlen. Die Geometrie steht in
      `bausteine.css` bei `#handy-oben`, der Radius hier, weil diese Datei
      später lädt und sonst gewinnt. */
-  #handy-oben{border-radius:calc(var(--mobile-nav-height) / 2);
+  #handy-oben,#ho-ziele{border-radius:calc(var(--mobile-nav-height) / 2);
                box-shadow:var(--studio-highlight),var(--studio-elevation)}
   /* Dieselbe Lichtkante wie Menü und Dock (E703) — wo es Glas gibt. */
   @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
-    #handy-oben{box-shadow:var(--glas-kante),var(--studio-elevation);border-color:transparent}
+    #handy-oben,#ho-ziele{box-shadow:var(--glas-kante),var(--studio-elevation);border-color:transparent}
   }
   :is(.finder,.dlg){border-radius:var(--radius-2xl) var(--radius-2xl) 0 0}
   .lernwelt .lw-desk{grid-template-columns:minmax(0,1fr);padding:26px 22px;gap:12px}

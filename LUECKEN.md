@@ -8503,6 +8503,94 @@ grossen Blöcken eine Kopie je Speichern; gemessen ist das nicht.
 
 ---
 
+## L257 · Die Zielleiste: der Rechner und das echte Telefon fehlen noch — 13. Oktober 2026
+
+**Was es gibt (E749):** am Telefon zieht man von einem Reiter der unteren
+Leiste hinauf, die Zielleiste geht auf, man gleitet auf ein Ziel und lässt
+los. Gehalten wird dabei der Finger von EINER Gestenmaschine
+(`SelectionFlow.ziehbar` mit `hinauf`), gezeigt wird, was
+`Register.navigation.ziele` liefert (E748). Wächter `test614`.
+
+**1 · Der Rechner (Phase 2), Redur: später.** Sein erster Satz hatte beides:
+„sowohl bei laptop mit maus drauber gehen als auch b eim hand mit finderr".
+Die Antwort des Entwurfs dafür: am Rechner gibt es keine untere Leiste;
+Hovern über einen Ort in der linken Kante zeigt nach 0,22 s dieselben Ziele
+aus derselben Liste (das Vorbild ist die Glocke aus E711: 220 ms über dem
+Knopf, 280 ms nach dem Verlassen zu). Offen ist dabei, WELCHE Orte der Kante
+welchen Schlüssel tragen — die Kante hat andere Fünf als das Telefon
+(L123 F02, L117) —, und wo die Leiste steht (neben der Kante statt über
+einer Leiste). Gebaut ist davon nichts; `TabShelf.nimm` ist an die untere
+Leiste gebunden.
+
+**2 · Am echten Telefon geprüft ist nichts.** Chromium mit CDP-Berührung
+kann nicht beweisen:
+- **iOS Safari im Browser** (nicht als PWA): ob `-webkit-user-select:none`
+  und `-webkit-touch-callout:none` an `#handy-oben` Textauswahl und Lupe
+  beim Hinaufziehen wirklich verhindern; ob der Home-Strich oder die
+  Rückgeste einen eingefangenen Zug unterbricht. Einen Tick gibt es auf
+  iOS nicht (keine Vibrations-Schnittstelle).
+- **Android Chrome:** ob ein langsamer Zug nach langem Liegen ein
+  `contextmenu` und dann `pointercancel` bekommt. Der Entwurf wollte
+  `contextmenu` an der Leiste verhindern; gebaut ist es nicht, weil die
+  kopflose Schale beim langen Tipp keines schickt (gemessen, auch über
+  `Input.synthesizeTapGesture`) — es wäre ungeprüft gewesen, und Halten
+  soll bleiben, wie es ist.
+- **VoiceOver/TalkBack:** wie `role="tab"` mit `aria-haspopup="menu"`
+  vorgelesen wird. Die Geste ist für den Vorleser nicht nötig (Doppeltipp
+  bleibt der Tipp, jedes Ziel steht auch auf dem Bildschirm seines Reiters).
+  **Und es gibt am Telefon keinen Weg hinein** (Durchsicht E749): die fünf
+  Reiter tragen immer `aria-haspopup="menu"` und `aria-expanded` und sagen
+  damit „Menü, eingeklappt" — aber wer mit Vorleser und Berührung bedient,
+  kann es nicht öffnen: der Doppeltipp ist der Tipp und wechselt den
+  Reiter, und der einzige Weg ohne Geste (Pfeil hinauf) braucht eine
+  Tastatur. Ob der Durchreich-Griff des Vorlesers (VoiceOver: doppeltippen,
+  halten, ziehen) die Geste weitergibt, ist ungeprüft. Zwei Wege, und die
+  Wahl ist Redurs: eine eigene Aktion für den Vorleser an jedem Reiter,
+  oder die zwei Merkmale nur, solange eine Tastatur benutzt wird (dann
+  sagt der Reiter am Telefon nichts mehr, das er nicht halten kann).
+- **Der Tipp-Spielraum:** `ziehbar` übergibt erst ab 16 px Weg
+  (`UEBER_TIPP`), weil Chromium in der kopflosen Schale bis 15 px selbst
+  klickt (gemessen, `messungen.md` §106 Punkt 10). Android und iOS haben
+  eigene Spielräume; ist der kleiner, klickt dort der Browser bei 10–15 px
+  nicht mehr, `ziehbar` aber weiterhin genau einmal (der Tipp-Weg) — die
+  Zielleiste öffnet so oder so erst ab 16 px. Am Gerät nachsehen, ob sich
+  das wie ein Tipp anfühlt.
+- **Der Klick daneben:** nach einem Hochrollen am Rand setzt Chromium
+  seinen Tipp auf den Inhalt ÜBER der Leiste. `ziehbar` schluckt ihn dort
+  nur, weil Chromiums Klick die `pointerId` der Berührung trägt (gemessen).
+  Ein Browser, dessen Klick sie nicht trägt, schluckt wie vorher nur auf
+  der Leiste — dort käme dieser eine Klick auf dem Inhalt an. Für Safari
+  und Firefox ungeprüft.
+
+**3 · Unter 390 px werden Namen gekürzt** (gemessen, `messungen.md` §106):
+bei 360 px „Meine Ablage" (66 px Wort, 63 px Platz), bei 320 px dazu
+Stundenplan, Besprechung, Posteingang und Einstellungen. Die Leiste
+darunter kürzt „Dokumente" bei 320 px ebenso. Ein Kurzname (`kurz`) wäre
+Redurs Wort, nicht meines (Frage 2 legt die Namen fest).
+
+**4 · Jedes `hidden` kostet eine Stilrechnung der ganzen Seite** (gefunden
+beim Bauen, `messungen.md` §106): 17,7 ms bei 4× Drossel für ein `hidden`,
+ein `aria-current` oder ein neues Kind irgendwo im `body`, 0 ms für ein
+`data-`-Merkmal oder eine Klasse — die `body:has(…)`-Regeln der Stilblätter
+(`#zm-pille:not([hidden])`, `.side-item[aria-current="page"]`, …) machen
+es so. Die Zielleiste weicht dem aus (die Marke über `data-marke-weg`); für
+den Rest von Redion ist es nicht nachgesehen.
+
+**5 · Die fahrende Pille versetzt das Wort darunter** für rund 200 ms (die
+Fahrtbrechung aus E646, auf dem Filmstreifen von E749 zu sehen). Ob
+Brechung über den Namen der Leiste in Ordnung ist, hat E641 Redur
+überlassen; die Zielleiste selbst hält den Reiter in Ruhe brechungsfrei
+(`test614` §11e).
+
+**6 · Entdeckbarkeit:** die Geste ist unsichtbar. Bewusst hingenommen
+(kein Weg fällt weg, E701), aber unbeantwortet, ob Redur einen Hinweis will.
+
+**Was fehlt:** die Phase für den Rechner mit eigenem Wächter; ein Blick an
+Redurs iPhone und an einem Android-Telefon; eine Antwort zu Punkt 3 und 5,
+und zum Vorleser in Punkt 2 (eigene Aktion oder Merkmale nur mit Tastatur).
+
+---
+
 ## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — GESCHLOSSEN (E745) — 11. Oktober 2026
 
 **Gemessen** über die Schnittstelle von GitHub, nicht vermutet: die zwei
@@ -10862,7 +10950,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 11. Oktober 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 151 Lücken, 93 offene und 58 geschlossene. Der Befehl dazu ist
+Datei führt 152 Lücken, 94 offene und 58 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

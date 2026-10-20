@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 554 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 555 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2061,6 +2061,32 @@ Heute vorbei. Sechs Zusagen zum Verlauf und zwei zum Reiter am Rechner
 13. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
 554.*
 
+*Und 555: `test614` — die Zielleiste über der unteren Leiste, am Telefon
+(E749, Zielleiste Bogen 2). Er hält Redurs Korrektur vom 13. Oktober,
+01:08 UTC („die neu dock nur wenn ich mit hand nach oven so zi eht kommt das
+doet aber beim klicken nicht") als Zahlen: je Reiter ein Tipp, genau ein
+Klick und in KEINEM Bild eine Zielleiste; 800 ms Halten öffnet in keinem
+Bild etwas; hinaufgezogen ist sie im nächsten Bild offen. Er fährt nur echte
+Eingabe — Berührung über CDP, Tasten über die Tastatur — und beobachtet Bild
+für Bild. Seine Hauptzusage gilt dem Loslassen, und zwar während die Scheibe
+noch wächst: ein Finger, der nach 50 ms auf „Favoriten" steht, wählt
+„Favoriten", genau einmal, ohne Klick auf die Leiste — mit Treffern aus dem
+gemalten Kasten wählte er die Notizhefte. Gegen 352eed65c war er rot mit 29
+von 105; grün blieb, was gleich bleiben muss. Seine fünf Gegenproben treffen
+je andere Abschnitte, und die erste der Treffer-Gegenprobe baute gar nicht
+(`noUnusedLocals`, §52.6). Zwei Zusagen kamen nicht von ihm: §11e vom BILD —
+unter der gehaltenen Pille stand „Dokumente" doppelt da —, und §5g, weil
+§11e danach in einem Lauf rot wurde, in dem ein Pillenzug `data-gehalten`
+stehen gelassen hatte. Die Durchsicht fand dann genau das, was die Korrektur
+verbietet: ein Daumen, der am oberen Rand des Reiters aufsetzt und 10–15 px
+hinaufrollt, reichte über die Kante, und das Loslassen wählte „Lernpfad" —
+§1b rollte nur von der Mitte des Reiters und konnte die Kante nie
+erreichen. Sechzehn Zusagen kamen dazu (122), gegen f4ebb5816 rot mit 15
+von 122; die eigenartigste misst Bildpunkte: ohne Lupe lag die Marke mit
+1,08 : 1 auf der Scheibe, und §11b hatte sie „da" genannt. Gezählt am
+13. Oktober, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 555.*
+
 ### Die Befehle
 
 ```txt
@@ -2082,7 +2108,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 554 Läufe
+npm run pruefen                      alle 555 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2179,7 +2205,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 554 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 555 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

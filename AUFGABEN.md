@@ -133,6 +133,18 @@ Weg, der den Reiter setzt (`Produktwelten.lernen`, seit E748 auch der
 Wechsel der Klappe), bringt die Seiten zurück. Ob die Lade „Seiten" den
 Reiter überhaupt lesen soll, gehört zur selben Frage.
 
+**Seit E749 (13. Oktober): die Zielleiste an einem echten Telefon ansehen —
+braucht ein Gerät.** Gebaut und mit `test614` geprüft ist sie in Chromium
+mit CDP-Berührung. Am iPhone im Safari-Browser (nicht als PWA) und an einem
+Android-Telefon fehlt der Blick: hinaufziehen ohne Textauswahl und Lupe,
+ein langsamer Zug nach langem Liegen (Android: `contextmenu`,
+`pointercancel`?), der Home-Strich und die Rückgeste, VoiceOver an den
+Reitern — und ob ein Vorleser mit Berührung überhaupt hineinkommt (die
+Durchsicht sagt: nein; die Wahl, wie, ist Redurs, L257 Punkt 2) —, und ob
+sich 10–15 px Hochrollen am Gerät wie ein Tipp anfühlt (der Spielraum des
+Systems ist ein anderer als der von Chromium). Die Liste und was danach
+offen bleibt (der Rechner, Phase 2): L257.
+
 ### 1 · Cloudflare wirklich aufsetzen — **braucht Redur**
 
 **Ziel** — Server, Konto und Sync einmal gegen echtes D1/R2 laufen lassen.

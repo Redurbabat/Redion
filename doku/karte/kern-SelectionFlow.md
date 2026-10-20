@@ -10,7 +10,7 @@ stand: 25. September 2026
 
 # SelectionFlow
 
-`src/schale/bedienung/selection-flow.ts` — die Auswahl der Auswahlleiste (E646/E650), L204 offen für die Flächen
+`src/schale/bedienung/selection-flow.ts` — die Auswahl der Auswahlleiste (E646/E650), L204 offen für die Flächen; ziehbar übergibt hinauf an die Zielleiste (E749)
 
 ## Benutzt von
 

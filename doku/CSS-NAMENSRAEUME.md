@@ -23,13 +23,19 @@ L90 hält seither fest, dass das nicht die Lücke ist:
 > ins Leere, und der Fehler sieht wieder nicht wie ein Fehler aus — er sieht
 > aus wie ein Stil, den man nicht bestellt hat.
 
-Es sind nicht vierzig. Es sind **160** — gezählt, nicht fortgeschrieben.
+Es sind nicht vierzig. Es sind **162** — gezählt, nicht fortgeschrieben.
 
 *Hier stand 144, und das war schon vor diesem Durchgang falsch: das
 Verzeichnis trug 158 Einträge. Die Zahl im Fliesstext prüft `test290`
 nicht — nur die Einträge selbst. Sie wird deshalb beim Eintragen
 nachgezählt (`grep -cE "^[a-z]{2,4}\s+[0-9]+\s+[a-z]+\.css"`), nicht
 im Kopf fortgeschrieben.*
+
+*Am 13. Oktober (E749) stand hier 160, das Verzeichnis trug aber 161
+Einträge; dazu kam `ho-` — das Zeichen der unteren Leiste und der
+Zielleiste darüber (`.ho-z`, sieben Vorkommen in `bausteine.css`). Es war
+bis dahin mit zwei Vorkommen unter der Schwelle von vier. `#handy-oben`,
+`#ho-pille` und `#ho-ziele` sind Kennungen und zählen nicht mit.*
 
 ## Ein Präfix darf umziehen — aber nicht unbemerkt
 
@@ -213,6 +219,7 @@ gk       40  werkzeuge.css
 hat       6  notizhefte.css
 hk       12  bausteine.css
 hl        4  bausteine.css
+ho        7  bausteine.css
 home     63  werkzeuge.css
 hs       20  werkzeuge.css
 icon     16  bausteine.css
