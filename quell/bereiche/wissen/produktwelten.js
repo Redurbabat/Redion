@@ -42,8 +42,14 @@ const Produktwelten = (() => {
     };
     const lernmodul = () => globalThis.Lernwelt;
     const arbeitsmodul = () => globalThis.Arbeitswelt;
+    const lernReiter = (ansicht) => {
+        const modul = lernmodul();
+        reiterSetzen(typeof modul?.reiterVon === 'function' ? modul.reiterVon(ansicht)
+            : ansicht === 'heute' ? 'start' : 'lernen');
+    };
+    const routeVon = (welt, ansicht) => '#welt-' + welt + '-' + ansicht.replace(/[^a-z0-9-]/g, '');
     const routeSchreiben = (welt, ansicht) => {
-        const route = '#welt-' + welt + '-' + ansicht.replace(/[^a-z0-9-]/g, '');
+        const route = routeVon(welt, ansicht);
         try {
             history.replaceState(history.state, '', location.pathname + location.search + route);
         }
@@ -68,10 +74,10 @@ const Produktwelten = (() => {
             : ansicht === 'ausbildung' ? 'schule' : ansicht;
         weltSetzen('lernen');
         Store.setMeta(LERN_META, ziel);
-        reiterSetzen(ziel === 'heute' ? 'start' : 'lernen');
+        lernReiter(ziel);
         const modul = lernmodul();
         if (modul?.oeffnen) {
-            modul.oeffnen(ziel);
+            modul.oeffnen(ziel, routeVon('lernen', ziel));
             routeSchreiben('lernen', ziel);
             return;
         }
@@ -273,7 +279,9 @@ const Produktwelten = (() => {
     return {
         start, aktiv, markieren, wechseln: weltSetzen, zurAktivenWelt,
         lernen, workspace, bibliothek, aufgaben, kalender, whiteboards, planung, bereicheDialog,
-        routeAusHash, routeOeffnen
+        routeAusHash, routeOeffnen,
+        routeSchreiben,
+        lernReiter
     };
 })();
 window.Produktwelten = Produktwelten;

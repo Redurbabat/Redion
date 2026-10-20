@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-728 Entscheidungen, E1 bis E751 (**E748, E749** sind den Zweigen der Zielleiste (Redur, 12. Oktober) vergeben und folgen, sobald sie landen; **E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+729 Entscheidungen, E1 bis E751 (**E749** ist dem zweiten Zweig der Zielleiste (Redur, 12. Oktober) vergeben und folgt, sobald er landet; **E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -789,6 +789,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E745** — Die CI fährt den schnellen Lauf, der volle bleibt auf dem Rechner (Redur, 11. Oktober, 19:43 UTC: „2 . Scnell lauf", Weg (c) aus L254): `--schnell` heisst jetzt jeder Lauf ohne Browser und dazu test96 und test100 aus §31 (45 Läufe, gemessen 4 min 14 s) statt „alles ausser test73" (549 von 550); neu `--liste`; der Job „Alle Prüfläufe" (40 min, brach jeden vollen Lauf ab) wird „Schneller Lauf (ohne Browser, dazu die Sicherung)" mit `npm run pruefen -- --schnell`, Einzeldatei-Prüfung und 20 Minuten. `test610` neu; L254 GESCHLOSSEN
 * **E746** — Drehen, Spiegeln, Ziehen und Schieben führen nur die eigenen Leitungen nach, und keine zapft dabei etwas an (L253 Punkt 4; Redur, 11. Oktober abends: „4. wie du willst“ zur Reihenfolge): EINE Stelle im Modell, `Schaltplan.vorherMerken`/`nachziehen`, führt nur neu, was an einem bewegten Teil hängt, und nimmt nur einen Weg, der genau dasselbe berührt wie vorher (alter Weg · nachgerückte Endstücke · Winkel · anderer Winkel · Z-Wege · Hakenwege), am liebsten durch kein Zeichen; sonst meldet die Fläche es. Fremde Leitungen bleiben Byte für Byte, ausser ihr Ende liegt neben seiner Klemme (E738, `test608` §5). Nach der Durchsicht: beim Ziehen rechnet jede Bewegung nur die billigen Wege und erst das Loslassen einmal voll; und landet die EIGENE Klemme eines bewegten Teils auf einer fremden Leitung (oder verlässt sie eine), sagt die Fläche, welche (`Schaltplan.veraendert`). Nach der zweiten Durchsicht: während eines Zugs ändert nur der Zug den Plan — `aendere`, Rückgängig und Wiederholen tun nichts, Tasten ausser Escape zählen nicht, Escape bricht ab; ein Zug gehört einem Zeiger und endet immer richtig, auch losgelassen ausserhalb oder von einem zweiten Finger unterbrochen; die Ablage bekommt eine Kopie des Plans, nicht ihn selbst. Nach der dritten Durchsicht: mit echter Maus stand der Fokus im Zug auf der Seite, und Escape und Strg+Z kamen nie an — jetzt horcht ein Zug am Dokument auf seine Tasten: Escape bricht ab (ein offenes Menü zuerst), Rückgängig und Wiederholen tun nichts, auch nicht am Seitenverlauf; nach einem Klick holt die Fläche den Fokus zurück (ohne Ring), Umschalt+Strg+Z und Strg+Y nimmt sie selbst; Vorlage und Bild verweigern im Zug, der Hinweis eines Beispiels kommt nur, wenn es steht. `test611`
 * **E747** — Eine Brücke des Klemmenbretts belegt ihre Klemmen (L253 Punkt 2; Redur, 11. Oktober abends: „4. wie du willst" zur Reihenfolge der Elektro-Punkte): die Meldung „Anschluss … hängt an keiner Leitung" kannte nur die Netzliste der Leitungen und meldete im Stern UND im Dreieck W2, U2 und V2 — gerade die Klemmen, auf denen die Brücken der Stellung liegen. Jetzt zählen für diese Meldung die Brücken der EINGESTELLTEN Stellung eines mehrteiligen Bauteils wie gezeichnete Leitungen; Schaltkontakte nicht (ein geschlossener Schalter mit offenem Ausgang hat eine vergessene Leitung), der feste Verbund N–PE der Drehstromquelle auch nicht. Ein Knoten, den NUR die eigenen Brücken halten, hängt trotzdem an nichts (im Dreieck ohne Zuleitung an U1 die Ecke U1–W2) — ausser die Stellung weist ihn selbst als `sternpunkt` aus, wie „Stern" für U2, V2, W2 (§5 Regel 3, §8). Die Netzliste bleibt, wie sie ist; EINE Hilfe `stellungIn` liest die Stellung innerhalb von `Stromfluss` für Rechnung und Meldung (ausserhalb lesen die Planfläche und die Aufgaben eine Stellungsnummer an fünf Stellen selbst, Punkt 5). `test612` (38 Zusagen; gegen 97d156b03 rot mit 20, gegen den ersten Stand 7560b2f22 mit 33 von 38; sechs Gegenproben).
+* **E748** — Was unter einem Reiter der unteren Leiste liegt, steht an EINER Stelle — und was oben unter „Heute ^" steht, leuchtet unten unter „Heute" (Redur, 12. Oktober 2026, zum Bild mit dem roten Feld über der Leiste: „dort nur sachen die mit unteren zutun haben dann für alle so"; Antworten 2 und 3 auf den Entwurf der Zielleiste: die Empfehlung): `Register.navigation.meldeZiele(reiter, fn)`/`ziele(reiter)` nach dem Muster von `Register.kontext` — jeder Lieferant jedes Mal neu gefragt und einzeln abgefangen, nach Rang, höchstens fünf; Schlüssel ist das Merkmal `data-ziele` an den fünf Reitern. Drei Lieferanten, jeder innerhalb seines Moduls und aus seiner bestehenden Liste (Bibliothek: `ORTE` und die Notizhefte; Lernwelt: `KLAPPEN`/`ANSICHTEN`; Ansichten: die Termine-Karten als Liste, die Kante „kalender", `mehrGruppen`), die `if`-Ketten von Mehr und Termine werden `mehrTun`/`termineTun` für Bildschirm und Ziel. L147 GESCHLOSSEN: die Klappe entscheidet Titel und Reiter (`titelVon`/`reiterVon`, auch für Uni und Arbeit), drinnen schreibt `wechseln()` zuerst die Adresse und meldet dann den Titel über den neuen schmalen Weg `App.sonderTitel`, der auch den Zeichner für „Zurück" nachführt (beides beim Fertigstellen gefunden: in der umgekehrten Folge leuchtete am Rechner nach einem Wechsel drinnen die falsche Kante, `test613` §7g, und „Zurück" zeigte die Ansicht vom Öffnen unter dem neuen Titel, §7i/§7j), und stellt beim Wechsel der Klappe auch den Reiter um (`Produktwelten.lernReiter`, dieselbe Regel wie beim Öffnen — in der zweiten Durchsicht gefunden: ohne sie sprang die Pille beim Öffnen einer Seite auf den Reiter vom Öffnen zurück, §7k–§7m); geändert eine Zusage, `test484` §5 (die alte Titelzeile wörtlich). Der Kommentar an `haupt` (navigation.ts) ist berichtigt: nur die Kante liest es. Nach der Durchsicht tragen die drei Termine-Karten ihr `zeigen` (`termineWeg`: fehlt das Modul, fehlt das Ziel), und `test613` erkennt jeden Dialog an seinem Kopf statt an der Zahl offener Dialoge. In der dritten Durchsicht folgt der Schritt im Verlauf der Adresse der Ansicht (`App.zeigeSonder(titel, zeichner, adresse)`, von `Produktwelten.lernen` über `Lernwelt.oeffnen` genannt) — seit L147 führte „Heute → Noten → Zurück" an Heute vorbei —, und am Rechner ist der Umschalter der Seitenleiste, an dem derselbe Reiter hängt, nicht gezeichnet (gemessen, harmlos, gehalten). `test613` (110 Zusagen; gegen ba51915dc rot mit 12 von 68, die Fassung vor den Durchsichten mit 13 von 73, die vor der dritten mit 106 von 110; dreizehn Gegenproben).
+
 * **E750** — test274 nimmt `redion-graphit` in seine Ausnahmeliste (Redur, 13. Oktober, 00:55 UTC: „ja“ auf „Darf ich den Fehlalarm über seine Ausnahmeliste richten?“): `marken.ts` legt den Halter der Graphit-Muster selbst an, als Eigenschaft eines Objekts (`svg('svg', { id: 'redion-graphit', … })`), und test274 erkennt nur `id="…"` und `.id = …`. Seit E729 einer der dreizehn alten roten Läufe, seit E745 der einzige davon im schnellen Lauf der CI. Die Ausnahme steht mit Grund in der Tabelle `ERLAUBT`, wie die Tabelle es verlangt; der Wächter selbst ist unverändert.
 * **E751** — main auf dem Stand von Redurs vier Antworten, mit zwölf benannten roten Läufen (Redur, 13. Oktober, 00:55 UTC: „ja“ auf „Soll main auf claude/abend-antworten-2 gehen?“ — und um 00:57 UTC hat er Pull Request #119 selbst zusammengeführt): main steht seitdem auf a9cfb90, Baum für Baum claude/abend-antworten-2 (E744–E747 und die zwei Nachzüge nach dem vollen Lauf); E750 und dieser Eintrag kommen als Fast-Forward dazu. Rot bleiben zwölf, jeder schon vorher auf main rot. Die dritte Ausnahme von §46 nach E729 und E743, wieder einmal.
 
@@ -68183,6 +68185,612 @@ steht ohne Brücken „230 V · 0 A · 317 nW" — der Strom liegt unter der
 Schwelle von 1 nA und heisst 0, die Summe der drei Leistungen nicht. In der ersten Fassung von `messungen.md`
 §104 stand „317 mW": im Bild ist das n nicht vom m zu unterscheiden, der
 Text im DOM sagt nW.
+
+## E748 — Was unter einem Reiter liegt, steht an EINER Stelle: `Register.navigation.ziele` (Zielleiste, Bogen 1) — und was oben unter „Heute ^" steht, leuchtet unten unter „Heute" (L147)
+
+**Woher.** Redur, 12. Oktober 2026, mit einem Bild der unteren Leiste am
+Telefon (rotes Feld direkt darüber, ein Pfeil vom Reiter „Dokumente"
+hinauf):
+
+> „hier will ich etwas neues haben , wenn ich bei dokemnt bin und sowohl bei
+> laptop mit maus drauber gehen als auch b eim hand mit finderr das ich so
+> das es mir so oben wo rot gezeichnet ist eine neu dock dort kommen und
+> dort nur sachen die mit unteren zutun haben dann für alle so ich sollte
+> direk mit hand ohne klick direk wächseln können es sollte flüssig sein
+> mit appel efeck usw aber zuers nur bei handy ansich machen wir das"
+
+Auf den Entwurf („Zielleiste", drei Bögen) hat er vier Fragen bekommen und
+jedes Mal die Empfehlung gewählt. Zwei davon entscheiden diesen Bogen:
+
+- **Frage 2, der Inhalt:** Dokumente = Meine Ablage · Zuletzt · Favoriten ·
+  PDFs · Notizhefte. Heute = Heute · Prüfungen · Noten · Stundenplan ·
+  Schule. Lernen = Übersicht · Trainer · Lernpfad · Fehler · Fortschritt.
+  Termine = Übersicht · Kalender · Tagesplan · Besprechung · Verbinden.
+  Mehr = Posteingang · Sicherung · Wolke · Papierkorb · Einstellungen.
+- **Frage 3, L147:** „Prüfungen, Noten, Stundenplan und Schule schalten
+  unten künftig ‚Heute' an (wie oben unter ‚Heute ^', E726)."
+
+Bogen 1 ist die QUELLE, noch ohne Oberfläche: woher die Zielleiste in
+Bogen 2 weiss, was sie zeigt — und die Korrektur, ohne die sie bei jedem
+Wechsel einen Fehler vorführen würde.
+
+**Gefunden.** Gemessen auf `ba51915dc` am Telefon (390 × 844), über
+`Produktwelten.lernen(v)` geöffnet:
+
+```txt
+Ansicht        Klappe oben     Titel / Schauplatz     unten leuchtet
+heute          Heute ^         Heute / heute          Heute
+pruefungen     Heute ^         Lernzentrum / lernen   Lernen     ← L147
+noten          Heute ^         Lernzentrum / lernen   Lernen     ← L147
+stundenplan    Heute ^         Lernzentrum / lernen   Lernen     ← L147
+schule         Heute ^         Lernzentrum / lernen   Lernen     ← L147
+uni, arbeit    Heute ^         Lernzentrum / lernen   Lernen
+lernen …       Übersicht ^     Lernzentrum / lernen   Lernen
+```
+
+Auf dem Bild (`vorher-noten-hell.png`, `-dunkel.png`) steht oben „Noten ^"
+in der Klappe „Heute", unten leuchtet „Lernen" — zwei Antworten auf
+dieselbe Frage auf einem Bildschirm. Dazu der Fall, den L147 beim Namen
+nennt: in der Übersicht über „Heute ^" auf Noten gewechselt, blieb unten
+„Lernen" (`wechseln()` ruft `zeigeSonder` nicht und meldet den Ort nicht
+neu), und die Adresse blieb `#welt-lernen-lernen` — ein Neuladen führte
+zurück in die Übersicht.
+
+Und die fünf Listen, aus denen die 25 Ziele kommen, gab es alle schon —
+privat: `ORTE` in der Bibliothek, `KLAPPEN`/`ANSICHTEN` in der Lernwelt,
+die drei Karten und `mehrGruppen` in den Ansichten. Keine davon war mit
+dem Reiter verbunden, unter dem sie steht.
+
+Nebenbei: der Kommentar an `haupt` in `src/register/navigation.ts` sagte,
+die Hauptwege stünden „am Telefon in der unteren Fünferleiste" und es gebe
+sie „ab hier einmal". Gelesen wird `haupt` an genau einer Stelle,
+`alleHauptOrte()` in `context-rail.ts` (der Kante am Rechner); die untere
+Leiste steht fest in `index.html` und ist eine andere Fünf. Berichtigt.
+
+**Was entschieden wurde.**
+
+1. **`Register.navigation.meldeZiele(reiter, fn)` und `ziele(reiter)`** mit
+   dem Typ `Ziel = { id, name, kurz?, zeichen, rang?, ort?, an?, zeigen?,
+   tun }`. Gebaut nach `Register.kontext.meldeLieferant`/`fuer`: jeder
+   Lieferant wird bei JEDEM Fragen neu gefragt und einzeln abgefangen; ein
+   werfender Lieferant, eine Antwort, die keine Liste ist, ein werfendes
+   oder falsches `zeigen()`, ein Ziel ohne `tun` oder mit doppelter Kennung
+   nimmt nur sich selbst mit. Sortiert nach `rang` (ohne Rang 500, wie in
+   der Kante), höchstens fünf.
+2. **Der Schlüssel ist ein Merkmal:** `data-ziele` an den fünf Reitern
+   (`dokumente`, `heute`, `lernen`, `termine`, `mehr`). Die Schale wird in
+   Bogen 2 mit dem Merkmal des gedrückten Knopfes fragen und keinen Bereich
+   beim Namen kennen; der Bereich kennt keinen Knopf.
+3. **Drei Lieferanten, jeder INNERHALB seines Moduls**, damit die Listen
+   privat bleiben (nachgesehen: `Bibliothek.ORTE`, `Lernwelt.KLAPPEN`,
+   `Ansichten.mehrGruppen` sind nicht ausgeführt), und kein zweiter
+   Katalog (§8):
+   - **Bibliothek** (`dokumente`): `ORTE` bekommt `zielRang` und `kurz`
+     (Zuletzt, PDFs). Geöffnet über `ortOeffnen` — erst der Zustand
+     (`ortZustand`, dieselben Zeilen wie bisher in `ortSetzen`), dann das
+     Regal, also einmal gezeichnet. Die Notizhefte sind kein Ort des Regals,
+     gehören aber unter „Dokumente"; Name, Zeichen und Weg kommen aus dem
+     Navigationsregister (`app-notizhefte`), nicht abgeschrieben.
+   - **Lernwelt** (`heute`, `lernen`): die Klappe sagt, unter welchem
+     Reiter eine Ansicht steht, `ANSICHTEN.zielRang` (neu) welche Ansicht
+     ein Ziel ist und in welcher Folge; der Name ist der aus dem Kopf
+     (`ansichtName`, „Übersicht", „Meine Fehler", „Schule / Ausbildung"),
+     `kurz` das Wort für die schmale Leiste (Fehler, Schule). Geöffnet über
+     `Produktwelten.lernen` — derselbe Weg wie der Tipp auf den Reiter.
+     `Lernwelt.ansichten` gibt die zwei neuen Felder nicht heraus.
+   - **Ansichten** (`termine`, `mehr`): die drei Termine-Karten werden eine
+     Liste (`TERMINE_KARTEN`), aus der der Bildschirm zeichnet — Wörter,
+     Sätze, Zeichen und Folge wie vorher; `termineTun` ersetzt die
+     `if`-Kette im `onclick`. Den Weg jeder Karte hält seit der Durchsicht
+     `termineWeg` (`null`, wenn ihr Modul fehlt): `termineTun` ruft ihn, und
+     das `zeigen` ihrer drei Ziele fragt ihn — fehlt `Meeting`, fehlt die
+     Besprechung, so wie in der Kante ohne `Plan` der Tagesplan (der
+     Entwurf: „Jedes Ziel trägt `zeigen()` wie im Kontext-Register"). Jedes
+     Modul steht dabei einmal da, wie vorher in der Kette (`test537`
+     unverändert). Übersicht und Tagesplan kommen aus der Kante
+     „kalender" (`Register.kontext.fuer`, in derselben Datei angemeldet),
+     mit ihrem Namen, ihrem Weg und ihrem `zeigen` (ohne `Plan` kein
+     Tagesplan); nur die Übersicht trägt das Zeichen des Reiters
+     (`calendarDays`), sonst stünden zwei Kalenderblätter nebeneinander.
+     `mehrGruppen` bekommt `zielRang` an fünf Einträgen, die `if`-Kette
+     wird `mehrTun` — Zeile für Zeile dieselbe, für Bildschirm und Ziel.
+4. **Ort oder Handlung.** 17 der 25 Ziele sind Orte: danach steht man auf
+   einem Bildschirm dieses Reiters, und er leuchtet (`ort: true`, `an()`
+   sagt ja). Tagesplan, Besprechung, Verbinden, Sicherung, Wolke,
+   Papierkorb und Einstellungen öffnen einen Dialog oder speichern; der
+   Posteingang ist ein Bildschirm ohne Reiter (`ORTE_OHNE_KNOPF`). Bogen 2
+   lässt die Pille bei einer Handlung stehen.
+5. **L147, nach Redurs Antwort auf Frage 3: die Klappe entscheidet.**
+   `titelVon(ansicht)` in der Lernwelt: steht die Ansicht in der Klappe
+   „heute", heisst der Titel „Heute" (Schauplatz `heute`, Reiter „Heute"),
+   sonst „Lernzentrum". `reiterVon` daneben; `Produktwelten.lernReiter`
+   (gerufen von `lernen` und, seit der zweiten Durchsicht, von
+   `Lernwelt.wechseln`) fragt `Lernwelt.reiterVon`, statt „heute oder
+   nicht" ein zweites Mal zu entscheiden. Uni und Arbeit stehen ebenfalls unter „Heute ^" und
+   leuchten deshalb auch unter „Heute" — „wie oben" kennt keine Ausnahme.
+6. **Und drinnen.** `wechseln()` meldet den neuen Titel, sobald die Klappe
+   wechselt, über einen neuen schmalen Weg der Schale:
+   `App.sonderTitel(titel, vorher, zeichner)` ändert nur den Titel der
+   offenen Sonderansicht, zeichnet die Krume neu und meldet den Schauplatz —
+   ohne die Ansicht neu zu zeichnen, ohne Schritt im Verlauf, ohne die
+   Adresse anzufassen; `vorher` ist ein Vergleich (geändert wird nur, wenn
+   gerade dieser Titel offen ist). Der freiwillige `zeichner` ersetzt den,
+   den sich der Verlauf beim Weggehen merkt: die Lernwelt gibt ihn bei
+   JEDEM Wechsel mit (`render(ziel, ansicht)`), auch wenn die Klappe
+   bleibt, damit „Zurück" die Ansicht zeigt, die Titel und Adresse nennen. Die Adresse schreibt `wechseln()` über
+   `Produktwelten.routeSchreiben` (jetzt ausgeführt) — aber nur, wenn man an
+   einer Adresse des Lernzentrums steht, und ZUERST: der Titel meldet den
+   Schauplatz, die Kante am Rechner liest dabei zuerst die Adresse (E393),
+   und `replaceState` meldet sich danach nicht mehr. Danach leuchtet unten
+   der richtige Reiter, die Kante am Rechner leuchtet wie beim direkten
+   Öffnen derselben Ansicht, und ein Neuladen kommt zur Ansicht zurück, in
+   der man war. Zuletzt, und nur wenn der Titel wirklich gemeldet wurde
+   und die Klappe gewechselt hat, stellt `wechseln()` den Reiter um
+   (`Produktwelten.lernReiter`) — sonst leuchtet auf einer Seite, die man
+   danach öffnet, der Reiter vom Öffnen (zweite Durchsicht, unten).
+
+**Beim Fertigstellen gefunden: die Reihenfolge.** Die erste Fassung schrieb
+in `wechseln()` erst den Titel und dann die Adresse. Am Telefon fiel das
+nicht auf — die untere Leiste liest nur den Schauplatz. Eine Sonde am
+Rechner (1440 × 900) zeigte es: Noten direkt geöffnet, leuchtete in der
+Kante „Mehr Orte"; in der Übersicht über „Heute ^" auf Noten gewechselt,
+leuchtete weiter „Lernzentrum" — bei Schauplatz `heute`, Krume „Heute" und
+Adresse `#welt-lernen-noten`. Die Kante hatte beim Melden des Titels noch
+`#welt-lernen-lernen` gelesen und für die neue Adresse kein Zeichen mehr
+bekommen. Zuerst kam die Zusage (`test613` §7g, rot mit 95 von 96 und genau
+dieser Zeile), dann die Reparatur: die Adresse vor dem Titel. Der Kommentar
+in `wechseln()` hatte das Gegenteil behauptet („sonst sagte … die Kante am
+Rechner aber weiter ‚Lernzentrum'") — er beschrieb die Absicht, nicht die
+Wirkung. §7g misst die GLEICHHEIT mit dem direkten Öffnen, keinen
+bestimmten Knopf: welcher Knopf dort richtig ist, bleibt Redurs Frage
+(unten, „Ein Satz bleibt Redurs").
+
+**Und der Schritt zurück.** Eine zweite Sonde ging nach dem Wechsel weg
+(Bibliothek) und mit dem Knopf „Zurück" wieder hin. Der Verlauf merkt sich
+beim Weggehen Titel, Adresse und Zeichner der offenen Ansicht (`navOrt`);
+Titel und Adresse hatte der Wechsel nachgeführt, den Zeichner nicht. Zurück
+stand „Heute" im Kopf, `#welt-lernen-noten` in der Adresse — und darunter
+die Übersicht. Auf `ba51915dc` kam man ebenfalls in die Übersicht zurück,
+aber stimmig, unter „Lernzentrum" und `#welt-lernen-lernen`: die
+Unstimmigkeit kam mit diesem Bogen, und mit ihm geht sie. Zuerst die
+Zusagen (`test613` §7i und §7j, mit dem echten Knopf; rot mit 96 von 98),
+dann der freiwillige dritte Wert an `App.sonderTitel`. Seither kommt man
+dorthin zurück, wo man war — in die Noten, nicht in die Übersicht.
+
+**Geänderte Zusagen (Redurs Wort zu L147).** Eine einzige bestehende
+Zusage hielt die alte Regel fest, und sie ist geändert:
+
+- `test484` §5, letzte Zusage: sie suchte wörtlich die Zeile
+  `const titel = start === 'heute' ? 'Heute' : 'Lernzentrum';` in
+  `lernwelt.ts`. Sie hielt den Fund aus E526 („nicht mehr ‚Lernen &
+  Alltag'"), aber über den Wortlaut der Regel, die Redur geändert hat.
+  Jetzt verlangt sie den Titel aus der Klappe
+  (`klappeVon(ansicht)?.id === 'heute' ? 'Heute' : 'Lernzentrum'`),
+  `App.zeigeSonder(titelVon(start), …)` und kein `'Lernen & Alltag'` in der
+  Datei. Die Gegenprobe aus ihrem Kopf (der Titel wieder „Lernen & Alltag")
+  macht sie weiter rot.
+
+Gesucht wurde in allen Läufen, die `hl-start`, `hl-lernen`, „Lernzentrum",
+`App.schauplatz()` oder `Produktwelten.lernen('…')` mit einer der sechs
+Ansichten anfassen (43 Läufe: `test37`, `test40`, `test54`, `test67`, `test114`, `test206`, `test208`, `test209`, `test215`, `test217`, `test224`, `test247`, `test248`, `test249`, `test250`, `test259`, `test262`, `test272`, `test306`, `test387`, `test390`, `test392`, `test412`, `test423`, `test428`, `test436`, `test484`, `test493`, `test494`, `test541`, `test565`, `test567`, `test580`, `test581`, `test585`, `test589`, `test592`, `test595`, `test596`, `test601`, `test603`, `test606`, `test609`; jeder davon lief unten unter den Nachbarn); keine andere Zusage verlangte „Lernen"
+für eine Ansicht unter „Heute ^".
+
+**Was die Alternative war.**
+
+- **Die Ziele in `Register.kontext`.** Es gibt dort schon Lieferanten je
+  Schauplatz — aber die Kontext-Einträge füllen den Werkzeug-Platz der
+  Kante am Rechner. Orte darin hätten die Kante verändert, und ein
+  Schauplatz ist kein Reiter (`bibliothek` und `notizhefte` gehören beide
+  unter „Dokumente").
+- **Eine Liste der 25 im Register oder in der Schale.** Ein zweiter
+  Katalog neben `ORTE`, `KLAPPEN`, den Karten und `mehrGruppen`; der erste
+  umbenannte Eintrag liefe auseinander (§8).
+- **Die privaten Listen ausführen** (`Bibliothek.orte`,
+  `Lernwelt.klappen`, `Ansichten.mehrGruppen`) und in der Schale
+  zusammensetzen. Dann müsste die Schale wissen, welche Liste zu welchem
+  Reiter gehört — sie kennte die Bereiche beim Namen (§5).
+- **L147 nur beim Öffnen richten** (so stand es im Entwurf). Dann
+  leuchtete nach „Übersicht → Heute ^ → Noten" weiter „Lernen" — genau der
+  Fall, den L147 nennt, und Redurs „wie oben" wäre drinnen nicht wahr.
+- **Für drinnen `zeigeSonder` oder `Produktwelten.lernen` rufen.** Beide
+  zeichnen die ganze Lernwelt neu und legen einen Schritt in den Verlauf;
+  `zeigeSonder` schreibt ausserdem die Adresse auf `#heute`/`#lernzentrum`,
+  die kein Neuladen kennt. Der schmale Weg ändert nur, was sich ändert.
+- **Nur „Heute" unter den Reiter „Heute"** (die Lücke umgehen statt
+  schliessen). Von Redur mit Frage 3 verworfen.
+- **Uni und Arbeit ausnehmen.** Sie stehen oben unter „Heute ^"; eine
+  Ausnahme wäre wieder ein Bildschirm mit zwei Antworten.
+
+**Was es kostet.**
+
+- **Bytes:** +1824 B gzip über sieben gebaute Dateien (`navigation.js`
+  +344, `bibliothek.js` +357, `lernwelt.js` +414, `produktwelten.js` +33,
+  `ansichten/dienst.js` +527, `schale.js` +72, `index.html` +77; gzip -6
+  gegen `ba51915dc`); nach der Durchsicht `ansichten/dienst.js` +78 dazu
+  (`termineWeg`), zusammen +1902. Der Start 1925 → 1926 KB von 1950 (`test388` §5,
+  beide Stände gemessen, 255 Dateien). Die Kommentare gehen nicht mit
+  (E715).
+- **Neue Schnittstellen:** `Register.navigation.meldeZiele`/`ziele`,
+  `App.sonderTitel`, `Lernwelt.reiterVon`, `Produktwelten.routeSchreiben`
+  (bisher privat), seit der zweiten Durchsicht `Produktwelten.lernReiter`,
+  seit der dritten der freiwillige dritte Wert `adresse` an
+  `App.zeigeSonder` und der zweite an `Lernwelt.oeffnen`. Gelesen werden die Ziele in `src/` noch von niemandem —
+  die Zielleiste kommt in Bogen 2.
+- **Am Rechner sichtbar:** die Krume heisst bei Prüfungen, Noten,
+  Stundenplan, Schule, Uni und Arbeit „Heute" statt „Lernzentrum", und in
+  der Kante leuchtet dort, was bei „Heute" selbst leuchtet: „Mehr Orte"
+  (im ruhigen Modus liegt „Heute" dahinter, E388). Vorher „Lernzentrum".
+  Dasselbe nach einem Wechsel drinnen (Übersicht → „Heute ^" → Noten).
+  Bilder `vorher-rechner-noten-*.png`, `nachher-rechner-noten-*.png`,
+  `vorher-rechner-drinnen-noten-*.png`, `nachher-rechner-drinnen-noten-*.png`.
+- **Ein Satz bleibt Redurs:** ob „Mehr Orte" am Rechner das richtige Licht
+  für diese sechs Ansichten ist, oder ob „Heute" dort einen eigenen Platz
+  braucht — die Fünf der Kante sind seine Frage (L123 F02; seit der
+  Durchsicht auch in `AUFGABEN.md` beim Rest von F02, mit den Bildern).
+
+**Wächter: `test613`** — 110 Zusagen in elf Abschnitten, am Telefon
+(390 × 844, Berührung) und für §7g–§7j und §7n–§7u am Rechner (1440 × 900): der Vertrag (§1), Redurs fünf je Reiter in seiner
+Folge mit Zeichen, Rang und Ort/Handlung (§2), `data-ziele` (§3), jeder
+Name an seiner Quelle (§4): die vier Listen aus dem DOM gelesen —
+Ortsmenü, „Heute ^" und „Übersicht ^", Termine-Karten, Mehr-Liste —,
+Notizhefte, Übersicht und Tagesplan dagegen aus `Register.kontext`, den
+Kanten „bibliothek" und „kalender" (am Rechner die Kante; das Telefon zeigt
+diese drei Namen in keiner der vier Listen), alle 17 Orte über ihr eigenes `tun()`
+von einem anderen Bildschirm aus geöffnet: der eigene Reiter leuchtet,
+der Bildschirm zeigt das Ziel, `an()` sagt ja und kein Nachbar (§5), alle
+8 Handlungen öffnen ihren Dialog, ihren Bildschirm oder ihre Sicherung —
+jeder Dialog an seinem Kopf erkannt: Tagesplan, Besprechungsnotizen,
+Kalender verbinden, Wolke, Papierkorb, Einstellungen —, und der Reiter
+bleibt (§6), L147 geöffnet und drinnen mit echten Tipps,
+samt Adresse und Neuladen, und am Rechner leuchtet die Kante nach einem
+Wechsel drinnen wie nach dem direkten Öffnen, und „Zurück" bringt dieselbe
+Ansicht unter demselben Titel und derselben Adresse, und wer aus dem
+Lernzentrum eine Seite öffnet, behält unten den Reiter der Ansicht, und
+der Verlauf legt einen Schritt an, sobald über ein Ziel eine andere
+Ansicht aufgeht — keinen für dieselbe noch einmal und keinen drinnen —,
+und am Rechner ist kein Umschalter der Seitenleiste gezeichnet, und die
+Lade „Seiten" zeigt nach einem Wechsel drinnen, was sie nach dem
+direkten Öffnen zeigt (§7),
+die kaputten
+Lieferanten, und unter „Termine" fehlt ohne sein Modul jedes Ziel und nur
+dieses (§8, §8g), privat
+bleibt privat, die Lieferanten innerhalb ihres Moduls, die Schale ohne
+Ziele und `test537` grün (§9), Mehr und Termine wie vorher mit echten
+Tipps, Wolke und Besprechung am Kopf ihres Dialogs erkannt (§10), keine
+Seitenfehler (§11).
+
+Gegen `ba51915dc` rot: die erste Fassung mit 12 von 68 (Commit
+`test613 (rot)`), die endgültige mit 13 von 73 (§7f, die Adresse, kam beim
+Bau dazu, §7g bis §7j beim Fertigstellen; nachgemessen in einer Kopie der
+Dateien von `ba51915dc`, 25 Zusagen weniger, weil es dort keine Ziele gibt,
+über die §5 und §6 je eine Zeile schreiben). Grün schon dort, mit Absicht:
+§7c, §7h (der Rückweg zum Trainer — er war nie falsch), §9a, §9e, §9f,
+§10, §11. Mit E748: 98 von 98. Beim Fertigstellen kam noch eine Zeile
+Vorbereitung dazu: der Lauf setzt die Neuerungen als gesehen, sonst legt
+sich 1,8 s nach dem Neuladen in §7f der Kasten „Neu in Redion" über die
+Seite — gegen `ba51915dc` fing er den Tipp in §10b ab, und der Lauf brach
+ab, statt zu zählen.
+
+**Gegenproben** (jede eingesetzt, gebaut, rot gesehen, wieder heraus —
+danach waren die Quellen Byte für Byte die gesicherten, `cmp`; gefahren
+gegen die Endfassung mit 98 Zusagen):
+
+1. **Einen Lieferanten weglassen** (`meldeZiele('heute', …)` aus der
+   Lernwelt): 82 von 93 — §2 heute fünfmal, §2f (12 Orte statt 17), §3c
+   (`[5,0,5,5,5]`), §4c, §4h (die Kurzform „Schule" fehlt), §5z, §8e.
+2. **Die L147-Korrektur zurückdrehen** (`titelVon` wieder „heute oder
+   nicht", `klappeVon` bleibt gerufen, sonst baut der Zweig wegen
+   `noUnusedLocals` nicht, §52.6): 88 von 98 — §5 Prüfungen, Noten,
+   Stundenplan, Schule → `hl-lernen`, §7a, §7b, §7e, §7f, §7g, §7i.
+3. **Die Sortierung brechen** (das `sort` in `ziele` heraus): 89 von 98 —
+   §2a/§2d für Heute (Schule vor Stundenplan, wie die Klappe sie ordnet),
+   Termine und Mehr, §8a, §8c (`x0…x4` statt `x6…x2`), §8e.
+4. **Die alte Folge in `wechseln()`** (erst der Titel, dann die Adresse):
+   97 von 98 — nur §7g, mit der Zeile „drinnen lernzentrum · direkt
+   mehr-orte".
+5. **Den Zeichner nicht mitgeben** (`App.sonderTitel(titel, vorher)`):
+   96 von 98 — §7i und §7j, „zurück {view: lernen …}".
+
+Gegen die erste Fassung (94 Zusagen, vor §7g–§7j) waren die ersten drei
+78 von 89, 86 von 94 und 85 von 94.
+
+Nach der Durchsicht, gegen die Fassung mit 99 Zusagen:
+
+6. **Die Wege vertauscht** — unter „Mehr" öffnet „Wolke" die
+   Einstellungen, „Einstellungen" den Papierkorb, „Papierkorb" die Wolke;
+   unter „Termine" Besprechung und Verbinden über Kreuz; der Tagesplan der
+   Kante öffnet den Wochenrückblick (kein Modulname mehr oder weniger,
+   also `test537` unberührt): 90 von 99 — §6 sechsmal, jede Zeile mit dem
+   Kopf, der stattdessen dastand („Köpfe ["Einstellungen"]" bei Wolke),
+   §10c, §10f und §8g (die Karten fragen dann das falsche Modul). DIESELBE
+   Verdrahtung gegen `test613` vor der Durchsicht (`67fbfb3b2`, 98
+   Zusagen): 98 von 98 — das war der Fund.
+7. **Ohne `zeigen` an den Karten** (die eine Zeile heraus; `termineWeg`
+   bleibt von `termineTun` gerufen, baut also): 98 von 99 — nur §8g.
+
+**Nach der Durchsicht (13. Oktober).** Fünf Funde, keiner davon ein Fehler
+im Verhalten des Bildschirms:
+
+- **§6 und §10c/§10f zählten Dialoge, statt sie zu erkennen.** Ein „Wolke",
+  das die Einstellungen öffnet, blieb grün (Gegenprobe 6). Jetzt liest der
+  Lauf den Kopf jedes offenen Dialogs (`.fh`, sonst `h2`, sonst den
+  Platzhalter des Suchfelds — die Folge, nach der `fokus.ts` dem Dialog
+  seinen Namen gibt) und verlangt einen Dialog MEHR mit IHREM Kopf.
+  Gegen den Stand grün, weil die Wege richtig waren — rot zu sehen nur
+  über die Gegenprobe.
+- **Besprechung und Verbinden hatten kein `zeigen`.** Ohne `Meeting` stand
+  „Besprechung" weiter unter den Zielen, und ihr `tun` tat still nichts;
+  derselbe Satz für Verbinden ohne `Kalender` und Kalender ohne
+  `Produktwelten`. Zuerst die Zusage (`test613` §8g, Commit
+  `test613 (rot)` nach der Durchsicht, rot mit 98 von 99:
+  „ohne Meeting: [uebersicht, kal-auf, tagesplan, mtg, kal]"), dann
+  `termineWeg` (oben unter 3.). Ohne `Plan` fiel der Tagesplan schon vorher
+  weg — er erbt sein `zeigen` aus der Kante.
+- **„Aus dem DOM" stimmte für drei Namen nicht.** Dieser Text und der
+  Absatz in CLAUDE.md §30 sagten, jeder Name in §4 werde aus dem DOM
+  gelesen, „und die Kanten" dazu. Notizhefte, Übersicht und Tagesplan liest
+  §4 aber aus `Register.kontext` — Code, kein DOM; am Telefon stehen sie in
+  keiner der vier Listen. Der Kopf von `test613` sagte es richtig; der Text
+  ist berichtigt (oben unter „Wächter").
+- **Die Kopfzeile des Verzeichnisses** zählte E748 mit und nannte sie im
+  selben Satz „vergeben, folgt, sobald sie landet". Jetzt steht dort nur
+  noch E749.
+- **Am Rechner ändert L147 mehr als „unten".** Krume „Heute" und das Licht
+  auf „Mehr Orte" bei Prüfungen, Noten, Stundenplan, Schule, Uni und Arbeit
+  standen schon unter „Was es kostet"; die Durchsicht verlangt, dass die
+  Frage wirklich bei Redur ankommt. Sie steht jetzt auch in `AUFGABEN.md`
+  beim Rest von F02, mit den Bildern. Kein Code.
+
+Gemessen danach: `test613` 99 von 99; `test537` unverändert (123 Paare,
+511 Treffer, 6 Zugriffe über `(window as any)`); `ansichten/dienst.js`
+9882 → 9960 B gzip (+78); der Start bleibt bei 1926 KB von 1950
+(`test388` §5). Nachbarn unter dem Schloss, gegen den gebauten Stand
+(Dienststand v1515): die Läufe, die den Termine-Bildschirm, seine Karten,
+`Meeting.panel` oder `Kalender.dialog` anfassen, und die Nachbarn aus dem
+Auftrag — `test37`, `test40`, `test54`, `test67`, `test74`, `test114`, `test117`, `test128`, `test222`, `test247`, `test272`, `test388`, `test390`, `test392`, `test423`, `test484`, `test541`, `test580`, `test581`, `test585`, `test596`, `test599`, `test600`, `test601`: alle 24 grün. Dazu die Datei-Wächter `test550`, `test549`,
+`test225`, `test105`, `test109`, `test87`, `test537`, `test400`: grün.
+
+**Nachbarn** (unter dem gemeinsamen Schloss): 90 Läufe gegen den gebauten Endstand (Dienststand v1514, `a5d005ec4c799cca`): `test31`, `test33`, `test34`, `test37`, `test40`, `test54`, `test67`, `test74`, `test86`, `test89`, `test114`, `test117`, `test126`, `test128`, `test141`, `test156`, `test202`, `test206`, `test208`, `test209`, `test215`, `test217`, `test222`, `test224`, `test245`, `test247`, `test248`, `test249`, `test250`, `test258`, `test259`, `test262`, `test264`, `test265`, `test272`, `test274`, `test296`, `test302`, `test305`, `test306`, `test326`, `test331`, `test359`, `test362`, `test369`, `test385`, `test386`, `test387`, `test388`, `test390`, `test392`, `test396`, `test412`, `test423`, `test424`, `test428`, `test430`, `test431`, `test436`, `test484`, `test493`, `test494`, `test495`, `test537`, `test539`, `test541`, `test545`, `test565`, `test566`, `test567`, `test576`, `test580`, `test581`, `test582`, `test585`, `test587`, `test588`, `test589`, `test590`, `test592`, `test595`, `test596`, `test597`, `test598`, `test600`, `test601`, `test603`, `test606`, `test609`, `test613`. 88 grün, `test613` zweimal mit 98 von 98. Rot zwei, beide genau so auf `ba51915dc` (in derselben Kopie seiner Dateien nachgemessen) und ohne eine Datei dieses Bogens: `test274` mit 11 von 12 („Keine verwaiste Nachschlagestelle — src/bereiche/pdf/marken.ts: redion-graphit", wartet auf Redurs Wort) und `test493` mit 42 grün, 2 rot (`-webkit-backdrop-filter: blur(8px)` versteht der Prüfbrowser nicht). Gefahren in zwei Teilen: 27 Läufe bis zum Neustart des Containers (13. Oktober, ca. 04:53 UTC), danach die übrigen 63 und `test613` noch einmal — der Quelltext war dazwischen derselbe (`cmp` gegen die gesicherten Dateien, der Bau danach ohne Änderung an einer erzeugten Datei). Dazu die Datei-Wächter `test550`, `test549`, `test225`, `test105`, `test109`, `test87`, `test537`, `test400` und `test290`: grün. Der Start: 1926 KB von 1950 (`test388` §5).
+
+**Nach der zweiten Durchsicht (13. Oktober).** Drei Funde, der erste ein
+Fehler im Verhalten:
+
+- **L147 war nur zur Hälfte zu.** `wechseln()` führte Titel, Adresse und
+  Zeichner nach, den REITER nicht. Auf dem Lernzentrum fiel das nicht auf:
+  dort entscheidet der Schauplatz, was unten leuchtet (E274), und §7b bis
+  §7e waren grün. Wer danach eine Seite öffnet, steht am Schauplatz
+  `seite`, und dort leuchtet der Reiter, von dem man kam (`karte[reiter]`
+  in `seitenleiste.ts`) — den hatte nur das Öffnen gesetzt. Die Sonde der
+  Durchsicht, nachgemessen (Telefon 390 × 844; erst im Lernzentrum, dann
+  nach `App.oeffne` auf die erste Seite):
+
+  ```txt
+  Weg                               ba51915dc               7e41a4b4a                jetzt
+  Noten direkt geöffnet             hl-lernen → hl-lernen   hl-start → hl-start      hl-start → hl-start
+  Lernen → „Heute ^" → Noten        hl-lernen → hl-lernen   hl-start → hl-lernen  ←  hl-start → hl-start
+  Heute → „Übersicht ^" → Trainer   hl-start → hl-start     hl-lernen → hl-start  ←  hl-lernen → hl-lernen
+  ```
+
+  (Auf `ba51915dc` blieb die Pille stehen, aber sie stand schon im
+  Lernzentrum falsch — das war L147.) Zuerst die Zusagen
+  (`test613` §7k–§7m, Commit `test613 (rot)` der zweiten Durchsicht: gegen
+  `7e41a4b4a` 100 von 102, rot §7l „mit der Seite hl-lernen" und §7m „mit
+  der Seite hl-start"; §7k grün mit Absicht), dann die Reparatur:
+  `Produktwelten.lernReiter(ansicht)` hält die Regel „Reiter nach der
+  Klappe" an EINER Stelle; `lernen()` ruft sie wie vorher die Zeile, und
+  `wechseln()` ruft sie zuletzt, wenn `App.sonderTitel` den Titel
+  angenommen hat und die Klappe gewechselt hat. Derselbe Bereich
+  (`wissen`), kein neuer Querverweis (`test537`: 123 Paare, 511 Treffer,
+  6 über `window`, wie vorher). Kosten: `lernwelt.js` +51 B,
+  `produktwelten.js` +16 B gzip -6 (gegen `7e41a4b4a`). Bilder vorher und
+  nachher am Telefon, hell und dunkel (`vorher-`/`nachher-drinnen-noten-seite-*`,
+  `-drinnen-trainer-seite-*`): die Seite „Willkommen", unten vorher „Lernen"
+  nach Noten und „Heute" nach dem Trainer, nachher umgekehrt.
+
+  Die Zeile in `produktwelten.ts`, die E748 unter 5. nennt, hatte keinen
+  Wächter: mit der alten Regel blieb `test613` 99 von 99 grün (gemessen
+  von der Durchsicht, in einer Kopie). §7k hält sie jetzt — Gegenprobe 8
+  unten.
+
+- **Die Karte war halb nachgezogen.** Die Dateizeile von `navigation.ts`
+  trug die neuen Zeilen, die Zeilen im Verzeichnis der Schnittstellen und
+  bei den Duplikaten nicht (`melde` stand bei 423, ist bei 436;
+  `nimmZurueck` bei 431, ist bei 444). Nachgezogen sind alle Verweise auf
+  `navigation.ts` hinter der Stelle, an der dieser Bogen Zeilen eingefügt
+  hat (LISTE 427, `melde` 436, `vonAussen` 440, `nimmZurueck` 444, die
+  Sortierung 457), danach `doku/karte/register.md` neu erzeugt. Die
+  Verweise der Karte auf `schale.ts` und `index.html` lagen schon auf
+  `ba51915dc` Hunderte Zeilen daneben (`dockWechsel` „4226–4262", war
+  4861) — sie sind eine Momentaufnahme des Audits und hier nicht
+  angefasst.
+- **LUECKEN.md und E748 nannten die Gegenprobe 2 verschieden** (dort ohne
+  §7i). Nachgefahren gegen die Fassung mit 102 Zusagen: 90 von 102, rot §5
+  viermal (Prüfungen, Noten, Stundenplan, Schule → `hl-lernen`), §7a,
+  §7b, §7e, §7f, §7g, §7i, §7k, §7l. Diese Liste steht jetzt in beiden.
+
+**Gegenproben der zweiten Durchsicht** (eingesetzt, gebaut, rot gesehen,
+wieder heraus; danach `lernwelt.ts`, `produktwelten.ts` und ihr gebautes
+JavaScript Byte für Byte wie vorher, `sha256sum -c`):
+
+8. **Die alte Regel für den Reiter** (`lernReiter` wieder „heute → Start,
+   sonst Lernen"): 100 von 102 — §7k („mit der Seite hl-lernen") und §7l.
+9. **Ohne den Reiter in `wechseln()`** (der Ruf auskommentiert,
+   `gemeldet` bleibt gelesen, baut also): 100 von 102 — §7l und §7m.
+10. **`titelVon` wieder „heute oder nicht"** (Gegenprobe 2, nachgefahren):
+   90 von 102, die Zeilen oben.
+
+Der Dienststand zählte dabei von v1515 auf v1520 — jeder Bau einer
+Gegenprobe hebt ihn; der Inhalt von v1520 (`1e404b13aa24e171`) ist der
+des ersten Baus mit der Reparatur (v1516).
+
+**Ein Nachbarfall, gemessen und offen — nicht L147.** Noten öffnen, über
+„Dokumente" weggehen, mit „Zurück" wiederkommen: im Lernzentrum leuchtet
+„Heute" (auf `ba51915dc` noch „Lernen", L147); öffnet man danach eine
+Seite, leuchtet „Dokumente" — auf `ba51915dc`, `7e41a4b4a` und jetzt
+gleich: „Zurück" setzt keinen Reiter. Das
+gehört in die Schale (der Verlauf müsste den Reiter mit dem Ort merken)
+und steht in `AUFGABEN.md` beim Rest von F02.
+
+**Nachbarn der zweiten Durchsicht** (unter dem gemeinsamen Schloss, gegen
+den gebauten Stand, Dienststand v1520), 47 Läufe: `test613`, die Nachbarn aus dem Auftrag (`test537`, `test222`, `test390`, `test601`, `test600`, `test596`, `test565`, `test567`, `test217`, `test388`, `test74`) und jeder Lauf, der `hl-start`, `hl-lernen`, „Lernzentrum", `Produktwelten.lernen`, die Klappen (`data-lw-klappe`, `data-lw-nav`) oder `Seitenleiste.reiter` anfasst: `test37`, `test40`, `test54`, `test67`, `test114`, `test128`, `test206`, `test208`, `test209`, `test215`, `test224`, `test247`, `test248`, `test249`, `test250`, `test259`, `test262`, `test387`, `test392`, `test412`, `test424`, `test436`, `test484`, `test493`, `test494`, `test541`, `test580`, `test581`, `test585`, `test589`, `test592`, `test595`, `test603`, `test606`, `test609`. 45 grün.
+Rot `test493` mit 42 grün, 2 rot (`-webkit-backdrop-filter: blur(8px)`,
+wie oben unter „Nachbarn" und auf `ba51915dc`). Und `test567` einmal mit
+38 von 39: „Gespeichert steht die falsche Antwort meist zuletzt" zählt über
+die gezogenen Ankreuzkarten (mindestens 60 % mit der falschen Antwort an
+Platz 4) — drei Wiederholungen auf dem Zweig 39 von 39 (die knappste mit
+11 von 18), zwei auf `7e41a4b4a` ebenso. Der Lauf öffnet den Trainer über
+`Produktwelten.lernen('trainer')` und wechselt keine Klappe; der neue Ruf
+in `wechseln()` liegt nicht auf seinem Weg. Datei-Wächter `test550`,
+`test549`, `test225`, `test105`, `test109`, `test87`, `test537`, `test400`,
+`test290`: grün. Start 1926 → 1927 KB von 1950 (`test388` §5, beide Stände
+gemessen, `7e41a4b4a` in einer Kopie).
+
+**Nach der dritten Durchsicht (13. Oktober).** Drei Funde, der erste ein
+Fehler im Verhalten, den L147 mitgebracht hat:
+
+- **Der Verlauf sah nur den Titel.** `zeigeSonder` legte einen Schritt
+  an, wenn sich der TITEL änderte. Seit L147 heissen Prüfungen, Noten,
+  Stundenplan, Schule, Uni und Arbeit „Heute" — und „Heute → Noten →
+  Zurück" sprang an Heute vorbei in den Ort davor. Umgekehrt bekam
+  „Übersicht → Noten" einen Schritt, den es vorher nicht gab. Die Sonde,
+  am Rechner (1440 × 900), immer aus den Dokumenten, mit dem echten Knopf
+  „Zurück" (`ziel-r4/sonde-verlauf.mts` im Kratzordner):
+
+  ```txt
+  Weg (über Produktwelten.lernen)   ba51915dc         352eed65c       jetzt
+  Heute → Noten                     Heute, Dok.       Dok.  ←         Heute, Dok.
+  Heute → Noten → Heute             Noten, Heute      Dok.  ←         Noten, Heute
+  Übersicht → Noten                 Dok.              Übersicht       Übersicht
+  Übersicht → Trainer               Dok.              Dok.            Übersicht
+  Noten → Prüfungen                 Dok.              Dok.            Noten
+  Heute → Heute, Noten → Noten      Dok.              Dok.            Dok.
+  Heute → „Heute ^" → Noten         Dok.              Dok.            Dok.
+    (drinnen)
+  Übersicht → „Heute ^" → Noten     Übersicht         Dok.            Noten
+    (drinnen) → Heute
+  ```
+
+  („Dok." heisst: das erste „Zurück" führt in die Dokumente.) Die
+  Entscheidung: **der Schritt folgt der Ansicht.** `zeigeSonder` hat einen
+  dritten, freiwilligen Wert, `adresse` — die Adresse, an der die Ansicht
+  danach steht; wer sie nennt, bekommt einen Schritt, sobald sie sich von
+  `location.hash` unterscheidet, und keinen, wenn dieselbe Ansicht noch
+  einmal aufgeht. Verglichen wird mit der Adresse, weil der Verlauf genau
+  sie mit dem Ort merkt (`navOrt`). `Produktwelten.lernen` nennt sie
+  (`routeVon`, dieselbe Zeile, die `routeSchreiben` schreibt) und gibt sie
+  über `Lernwelt.oeffnen(ansicht, adresse)` weiter; alle anderen Rufer von
+  `zeigeSonder` behalten die alte Regel. Der Wechsel DRINNEN über die
+  Klappen bleibt ohne Schritt, wie auf `ba51915dc` und wie oben unter 6.
+  entschieden.
+
+  **Was das kostet, ehrlich:** drei Wege bekommen einen Schritt, den sie
+  auf `ba51915dc` nicht hatten — Übersicht → Trainer, Noten → Prüfungen und
+  (schon seit L147) Übersicht → Noten, jedes Mal über ein Ziel oder die
+  Befehlspalette geöffnet (alles, was `Produktwelten.lernen` ruft). Unter einem Titel waren sie
+  für den Verlauf ein Ort; jetzt ist jede Ansicht einer, so wie „Heute"
+  und „Noten" es auf `ba51915dc` waren. Die Alternative — die alte Grenze
+  „Heute oder nicht" für den Verlauf zurückholen — hätte die Regel wieder
+  eingeführt, die L147 abgeschafft hat, und unter „Lernen" führte
+  „Übersicht → Trainer → Zurück" in Bogen 2 weiter an der Übersicht
+  vorbei.
+
+  Zuerst die Zusagen (`test613` §7n–§7s, Commit `test613 (rot)` der
+  dritten Durchsicht, gegen `352eed65c` rot mit 106 von 110: §7n, §7o,
+  §7p, §7s), dann die Reparatur. §7q (dieselbe Ansicht zweimal ist kein
+  Schritt) und §7r (drinnen kein Schritt) waren dort mit Absicht grün —
+  sie halten, was schon stimmte.
+
+- **Der Reiter drinnen, am Rechner.** Die Durchsicht fragte, ob
+  `wechseln()` → `Produktwelten.lernReiter` → `Seitenleiste.reiter` am
+  Rechner den Umschalter der Seitenleiste (`#side-reiter`: Start · Chat ·
+  Besprechungen) umstellt. Gemessen bei 1440 × 900 (`ziel-r4/sonde-kante.mts`):
+  `#sidebar` ist dort nicht gezeichnet — `premium.css`,
+  `body[data-schale="premium"] #sidebar{display:none}` ab 761 px —, also
+  auch der Umschalter nicht, im ruhigen Modus wie ohne ihn. Die Sonde der
+  Durchsicht hatte `Seitenleiste.reiterWechseln('chat')` gerufen und den
+  unsichtbaren Baum gelesen. `#tree` erscheint am Rechner nur in der Lade
+  „Seiten" der Kante, und die schliesst, sobald eine Klappe aufgeht — das
+  Neuzeichnen des Baums geschieht also nie unter dem Auge (Kosten des
+  Neuzeichnens: Median 4,5 ms bei der Willkommensbibliothek, 7,6 ms mit
+  300 Seiten mehr, je neun Läufe; mit `.side-item, [data-id]` gezählt
+  beide Male 23 Zeilen in `#tree`). Sichtbar wird der Wert an EINER Stelle:
+  wer über „Termine" (`Produktwelten.planung`, Reiter `bespr`) und „Zurück"
+  ins Lernzentrum kommt, hat noch `bespr`, und die Lade „Seiten" zeigt dann
+  die Besprechungen („Bevorstehend"):
+
+  ```txt
+  Termine → Zurück → …             ba51915dc       7e41a4b4a       352eed65c / jetzt
+  → Lade „Seiten"                  Bevorstehend    Bevorstehend    Bevorstehend
+  → „Heute ^" → Noten → Lade       Bevorstehend    Bevorstehend    Seitenbaum
+  direkt Noten → Lade              Seitenbaum      Seitenbaum      Seitenbaum
+  ```
+
+  Die Entscheidung: **harmlos, und so gelassen.** Der Wechsel drinnen tut
+  am Rechner, was jeder Weg über `reiterSetzen` schon tut (`lernen`,
+  `bibliothek`, `workspace`): die Lade „Seiten" zeigt danach Seiten. Der
+  Wert, den er ersetzt, kam nicht vom Nutzer, sondern vom letzten Weg, und
+  einen Chat-Reiter kann man am Rechner gar nicht wählen (aus dem Code
+  gelesen: `btn-neuer-chat` und `#side-reiter` stehen in der
+  ungezeichneten Seitenleiste, Strg + O ruft `KI.neuerChat` ohne Reiter). Gehalten
+  von `test613` §7t (kein Umschalter gezeichnet, vor und nach dem Wechsel,
+  und die Lade schliesst mit der Klappe — wer die Seitenleiste am Rechner
+  zurückbringt, macht §7t rot und muss die Frage neu beantworten) und §7u
+  (nach Termine → Zurück → „Heute ^" → Noten zeigen Reiter und Lade, was
+  sie nach direkt geöffneten Noten zeigen). Dass die Lade „Seiten" nach
+  Termine und „Zurück" ohne Klappenwechsel die Besprechungen zeigt, ist
+  älter als dieser Bogen und steht in `AUFGABEN.md` beim Nachbarfall von
+  F02 — derselbe Grund: „Zurück" setzt keinen Reiter.
+
+- **CLAUDE.md §30 sagte „seine fünf Gegenproben"**, während hier zehn
+  standen (neun verschiedene). Jetzt steht dort, was hier steht.
+
+**Gegenproben der dritten Durchsicht** — gefahren in einer Kopie des
+Arbeitsbaums im Kratzordner (`ziel-r4/gp/`, gebaut mit `bauen.sh`, vorher
+Byte für Byte gleich dem Arbeitsbaum), damit der Dienststand des Zweigs
+nicht weiterzählt; jede eingesetzt, gebaut, unter dem Schloss rot gesehen,
+danach die Quelle aus dem Arbeitsbaum zurück:
+
+11. **Ohne die Adresse** (`Produktwelten.lernen` ruft wieder
+    `modul.oeffnen(ziel)`): 106 von 110 — §7n, §7o, §7p, §7s, dieselben
+    Zeilen wie gegen `352eed65c`.
+12. **Immer ein Schritt, wenn eine Adresse genannt ist** (der Vergleich mit
+    `location.hash` trifft nie): 109 von 110 — nur §7q, „heute: heute
+    #welt-lernen-heute".
+13. **Ein Schritt auch drinnen** (`navMerken()` in `App.sonderTitel`):
+    108 von 110 — §7r (das erste „Zurück" bleibt im Lernzentrum statt in
+    die Dokumente zu führen) und §7s.
+14. **Die Seitenleiste am Rechner gezeichnet** (die Regel in `premium.css`
+    leer): 109 von 110 — nur §7t („vorher {sidebar: true …}"; die Lade
+    liegt dann über der Klappe, „Klappe getippt false"). In der ersten
+    Fassung von §7t brach der Lauf an dieser Stelle nach 30 s ab, statt
+    rot zu zählen — seither meldet §7t/§7u einen Tipp, der nicht ankommt,
+    als rote Zeile.
+15. **Ohne den Reiter in `wechseln()`** (Gegenprobe 9, nachgefahren):
+    107 von 110 — §7l, §7m und §7u („drinnen {reiter: bespr, baum:
+    Bevorstehend}" gegen „direkt {reiter: start, …}").
+
+Und die neue Fassung von `test613` gegen eine vollständige Kopie von
+`7e41a4b4a` (vor der zweiten Durchsicht): 103 von 110 — §7l, §7m, §7n,
+§7o, §7p, §7s und §7u; §7u ist also gegen den Stand ohne den Reiter
+drinnen rot, §7q, §7r und §7t sind es dort nicht.
+
+Gemessen danach: `test613` 110 von 110; `test537` unverändert (123 Paare, 511 Treffer, 6
+über `window`). **Bytes**
+(gzip -6, gegen `352eed65c`): `schale.js` 39985 → 40045 (+60),
+`produktwelten.js` 3274 → 3294 (+20), `lernwelt.js` 38164 → 38172 (+8),
+zusammen +88; `redion-einzeldatei.html` 9 715 871 → 9 716 241 Bytes. Start
+1927 KB von 1950 (`test388` §5, unverändert). Neue Schnittstellen: der dritte Wert an `App.zeigeSonder`, der zweite an
+`Lernwelt.oeffnen`. Bilder (Kratzordner `bilder-ziel/quelle/`): `vorher3-`/`nachher3-rechner-heute-noten-zurueck-hell.png`
+und `-dunkel.png` — Dokumente → Heute → Noten → „Zurück": vorher die
+Dokumente mit gesperrtem „Zurück", nachher Heute mit offenem „Zurück";
+alle vier angesehen.
+
+**Nachbarn der dritten Durchsicht** (unter dem gemeinsamen Schloss, gegen
+den gebauten Stand, Dienststand v1521): `test613` (110 von 110) und 21 Läufe, alle grün: die Nachbarn aus dem Auftrag (`test537`, `test222`, `test390`, `test601`, `test600`, `test596`, `test565`, `test567`, `test217`, `test306`, `test388`, `test74`) und die Läufe, die den Verlauf (`App.zurueck`, `#btn-back`, `navMerken`) oder `zeigeSonder` anfassen: `test114`, `test581`, `test592`, `test40`, `test386`, `test67`, `test484`, `test423`, `test272`. Datei-Wächter `test550`, `test549`, `test225`, `test105`, `test109`, `test87`, `test537`, `test400`: grün.
+
+**Was nicht dazugehört:** die Zielleiste selbst (Bogen 2: Geste, Bild,
+Tastatur, `touch-action`), die Fassung für den Rechner (Phase 2), und die
+Frage oben zu „Mehr Orte".
 
 ## E750 — test274 nimmt `redion-graphit` in seine Ausnahmeliste: ein Fehlalarm, mit Grund
 

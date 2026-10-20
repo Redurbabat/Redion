@@ -387,6 +387,29 @@ const Ansichten = (() => {
                 App.papierkorb();
         };
     });
+    const TERMINE_KARTEN = [
+        { a: 'kal-auf', z: 'calendar', t: 'Kalender', s: 'Alle Termine in einer Chronologie',
+            zielRang: 2, ort: true, adresse: '#kalender' },
+        { a: 'kal', z: 'link', t: 'Kalender verbinden', s: 'Google, CalDAV — Termine hereinholen',
+            zielRang: 5, kurz: 'Verbinden' },
+        { a: 'mtg', z: 'mic', t: 'Besprechung', s: 'Mitreden statt mitschreiben', zielRang: 4 }
+    ];
+    const termineWeg = (a) => {
+        if (a === 'kal-auf') {
+            const m = window.Produktwelten;
+            return typeof m?.kalender === 'function' ? () => m.kalender() : null;
+        }
+        if (a === 'kal') {
+            const m = window.Kalender;
+            return typeof m?.dialog === 'function' ? () => m.dialog() : null;
+        }
+        if (a === 'mtg') {
+            const m = window.Meeting;
+            return typeof m?.panel === 'function' ? () => m.panel() : null;
+        }
+        return null;
+    };
+    const termineTun = (a) => { termineWeg(a)?.(); };
     const termine = () => bildschirm('Termine', (wrap) => {
         const kommend = (() => {
             try {
@@ -406,12 +429,8 @@ const Ansichten = (() => {
             '<div class="home">' +
                 '<h1>Termine</h1>' +
                 '<div class="home-karten">' +
-                '<button class="hk" data-a="kal-auf"><b>' + zeichen('calendar') + 'Kalender</b>' +
-                '<span>Alle Termine in einer Chronologie</span></button>' +
-                '<button class="hk" data-a="kal"><b>' + zeichen('link') + 'Kalender verbinden</b>' +
-                '<span>Google, CalDAV — Termine hereinholen</span></button>' +
-                '<button class="hk" data-a="mtg"><b>' + zeichen('mic') + 'Besprechung</b>' +
-                '<span>Mitreden statt mitschreiben</span></button>' +
+                TERMINE_KARTEN.map(k => '<button class="hk" data-a="' + esc(k.a) + '"><b>' + zeichen(k.z) + esc(k.t) + '</b>' +
+                    '<span>' + esc(k.s) + '</span></button>').join('') +
                 '</div>' +
                 block('Bevorstehend', kommend.map((t) => `<button data-open="${esc(t.id)}"><span>${zeichen('calendarDays')}</span>` +
                     `<span class="pt">${esc(t.text)}</span>` +
@@ -435,12 +454,7 @@ const Ansichten = (() => {
             const a = el?.closest('[data-a]');
             if (!a)
                 return;
-            if (a.dataset.a === 'kal-auf')
-                window.Produktwelten?.kalender?.();
-            else if (a.dataset.a === 'kal')
-                window.Kalender?.dialog?.();
-            else if (a.dataset.a === 'mtg')
-                window.Meeting?.panel?.();
+            termineTun(a.dataset.a || '');
         };
     });
     const mehrGruppen = () => [
@@ -455,14 +469,14 @@ const Ansichten = (() => {
                 { z: 'puzzle', t: 'Vorlagen', s: 'Startpakete und fertige Seiten.', a: 'vorlagen' }
             ] },
         { name: 'Daten und Sicherheit', eintraege: [
-                { z: 'download', t: 'Sicherung', s: 'JSON und .redion — mit Anhängen oder ohne.', a: 'sichern' },
+                { z: 'download', t: 'Sicherung', s: 'JSON und .redion — mit Anhängen oder ohne.', a: 'sichern', zielRang: 2 },
                 { z: 'upload', t: 'Importieren', s: 'Dateien und Sicherungen laden.', a: 'import' },
-                { z: 'inbox', t: 'Posteingang', s: 'Erinnerungen, Kommentare, Erwähnungen.', a: 'inbox' },
-                { z: 'cloud', t: 'Wolke', s: 'Konto, Anmelden und Abgleich zwischen Geräten.', a: 'wolke' },
-                { z: 'trash', t: 'Papierkorb', s: 'Gelöschte Seiten wiederherstellen.', a: 'papierkorb' }
+                { z: 'inbox', t: 'Posteingang', s: 'Erinnerungen, Kommentare, Erwähnungen.', a: 'inbox', zielRang: 1 },
+                { z: 'cloud', t: 'Wolke', s: 'Konto, Anmelden und Abgleich zwischen Geräten.', a: 'wolke', zielRang: 3 },
+                { z: 'trash', t: 'Papierkorb', s: 'Gelöschte Seiten wiederherstellen.', a: 'papierkorb', zielRang: 4 }
             ] },
         { name: 'System', eintraege: [
-                { z: 'settings', t: 'Einstellungen', s: 'Darstellung, Speicher, KI, Konto und Wolke.', a: 'einstellungen' },
+                { z: 'settings', t: 'Einstellungen', s: 'Darstellung, Speicher, KI, Konto und Wolke.', a: 'einstellungen', zielRang: 5 },
                 { z: 'info', t: 'Über Redion', s: 'Fassung, Hilfe und Angaben zum Projekt.', a: 'ueber' }
             ] }
     ];
@@ -488,38 +502,41 @@ const Ansichten = (() => {
             const a = el?.closest('[data-a]')?.dataset.a;
             if (!a)
                 return;
-            if (a === 'workspace')
-                Produktwelten.workspace('start');
-            else if (a === 'schublade')
-                App.arbeitsbereich();
-            else if (a === 'kompass')
-                kompass();
-            else if (a === 'befehle')
-                Werkzeuge.palette();
-            else if (a === 'tasten')
-                Werkzeuge.tastenkuerzel();
-            else if (a === 'vorlagen')
-                Werkzeuge.vorlagen && Werkzeuge.vorlagen();
-            else if (a === 'sichern')
-                App.sicherungSpeichern();
-            else if (a === 'import')
-                Werkzeuge.dateienLesen();
-            else if (a === 'inbox')
-                posteingang();
-            else if (a === 'wolke') {
-                if (typeof WolkeFenster !== 'undefined')
-                    WolkeFenster.dialog();
-                else
-                    UI.toast('Die Wolke ist in dieser Fassung nicht geladen.');
-            }
-            else if (a === 'papierkorb')
-                App.papierkorb();
-            else if (a === 'einstellungen')
-                App.einstellungen();
-            else if (a === 'ueber')
-                App.einstellungen('ueber');
+            mehrTun(a);
         };
     });
+    const mehrTun = (a) => {
+        if (a === 'workspace')
+            Produktwelten.workspace('start');
+        else if (a === 'schublade')
+            App.arbeitsbereich();
+        else if (a === 'kompass')
+            kompass();
+        else if (a === 'befehle')
+            Werkzeuge.palette();
+        else if (a === 'tasten')
+            Werkzeuge.tastenkuerzel();
+        else if (a === 'vorlagen')
+            Werkzeuge.vorlagen && Werkzeuge.vorlagen();
+        else if (a === 'sichern')
+            App.sicherungSpeichern();
+        else if (a === 'import')
+            Werkzeuge.dateienLesen();
+        else if (a === 'inbox')
+            posteingang();
+        else if (a === 'wolke') {
+            if (typeof WolkeFenster !== 'undefined')
+                WolkeFenster.dialog();
+            else
+                UI.toast('Die Wolke ist in dieser Fassung nicht geladen.');
+        }
+        else if (a === 'papierkorb')
+            App.papierkorb();
+        else if (a === 'einstellungen')
+            App.einstellungen();
+        else if (a === 'ueber')
+            App.einstellungen('ueber');
+    };
     const kompass = () => bildschirm('Kompass', (wrap) => {
         const aufbau = [
             ['Start', 'Armaturenbrett mit Schnellkarten, Sicherungsstand und zuletzt Bearbeitetem.'],
@@ -616,6 +633,42 @@ const Ansichten = (() => {
             void gezeigt;
         }
     };
+    if (typeof Register !== 'undefined' && Register.navigation?.meldeZiele) {
+        const adresse = () => { try {
+            return String(location.hash || '');
+        }
+        catch {
+            return '';
+        } };
+        Register.navigation.meldeZiele('termine', () => {
+            let kante = [];
+            try {
+                kante = Register.kontext?.fuer?.('kalender') || [];
+            }
+            catch {
+                kante = [];
+            }
+            const ausKante = (id, rang, dazu) => {
+                const k = kante.find((x) => x && x.id === id);
+                return k && typeof k.tun === 'function'
+                    ? { id, name: k.name, zeichen: k.zeichen, rang, tun: () => k.tun(), ...dazu } : null;
+            };
+            return [
+                ausKante('uebersicht', 1, { zeichen: 'calendarDays', ort: true, an: () => adresse() === '#termine' }),
+                ...TERMINE_KARTEN.map(k => ({
+                    id: k.a, name: k.t, ...(k.kurz ? { kurz: k.kurz } : {}), zeichen: k.z, rang: k.zielRang,
+                    ...(k.ort ? { ort: true, an: () => adresse() === k.adresse } : {}),
+                    zeigen: () => termineWeg(k.a) !== null,
+                    tun: () => termineTun(k.a)
+                })),
+                ausKante('tagesplan', 3, {})
+            ].filter(Boolean);
+        });
+        Register.navigation.meldeZiele('mehr', () => mehrGruppen()
+            .flatMap(g => g.eintraege)
+            .filter(e => typeof e.zielRang === 'number')
+            .map(e => ({ id: e.a, name: e.t, zeichen: e.z, rang: e.zielRang, tun: () => mehrTun(e.a) })));
+    }
     return { start, seiten, termine, mehr, kompass, posteingang, posteingangFilter,
         gruss, skelett, beimLaden };
 })();

@@ -896,8 +896,16 @@ const App = (() => {
         }
         catch { }
     };
-    const zeigeSonder = (titel, zeichner) => {
-        if (seiteId || !sonder || sonder.titel !== titel)
+    const zeigeSonder = (titel, zeichner, adresse) => {
+        let jetzt = '';
+        try {
+            jetzt = String(location.hash || '');
+        }
+        catch {
+            jetzt = '';
+        }
+        const woanders = typeof adresse === 'string' && adresse !== '' && adresse !== jetzt;
+        if (seiteId || !sonder || sonder.titel !== titel || woanders)
             navMerken();
         sonder = { titel, zeichner };
         seiteId = null;
@@ -911,6 +919,18 @@ const App = (() => {
         const scr = document.getElementById('scroll');
         if (scr)
             scr.scrollTop = 0;
+    };
+    const sonderTitel = (titel, vorher, zeichner) => {
+        if (seiteId || !sonder || !titel || sonder.titel !== vorher)
+            return false;
+        if (typeof zeichner === 'function')
+            sonder = { ...sonder, zeichner };
+        if (titel === vorher)
+            return true;
+        sonder = { ...sonder, titel };
+        zeichneCrumbs();
+        schauplatzMelden();
+        return true;
     };
     const oeffne = (id) => {
         if (sonder || seiteId !== id)
@@ -3672,7 +3692,7 @@ const App = (() => {
     };
     aktionenMelden();
     return {
-        start, oeffne, zeigeSonder, zeichneSeite, zeichneBaum, zeichneCrumbs, aktuelleSeite, setzeSeite,
+        start, oeffne, zeigeSonder, sonderTitel, zeichneSeite, zeichneBaum, zeichneCrumbs, aktuelleSeite, setzeSeite,
         zeigeBlock, blockAusHash,
         kiPanel, suche, seitenSuche, theme, einstellungen, papierkorb, neueSeite,
         vollbild, vollbildAn, vollbildGeht, volleBreite,

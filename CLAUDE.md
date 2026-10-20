@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 553 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 554 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2023,6 +2023,44 @@ neuen Port. Gezählt am 11. Oktober, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 551 auf seinem Zweig. Beim Zusammenführen nachgezählt
 (12. Oktober, `claude/abend-antworten`): 553.*
 
+*Und 554: `test613` — was unter einem Reiter der unteren Leiste liegt, steht
+an EINER Stelle (E748, Zielleiste Bogen 1, L147). Er hält Redurs Antwort
+auf Frage 2 — fünf Ziele je Reiter, in seiner Folge — gegen
+`Register.navigation.ziele`, und jeden Namen gegen seine Quelle: die vier
+Listen Ortsmenü, „Heute ^" und „Übersicht ^", Termine-Karten, Mehr-Liste
+aus dem DOM gelesen und nicht aus dem Code; nur Notizhefte, Übersicht und
+Tagesplan aus `Register.kontext` (der Kante am Rechner), weil das Telefon
+sie in keiner dieser Listen zeigt. Seine Hauptzusage ist eine
+Invariante: alle 17 Orte, jeder über sein eigenes `tun()` von einem anderen
+Bildschirm aus geöffnet, schalten den Reiter an, unter dem sie stehen —
+und genau dort fing er L147: Prüfungen, Noten, Stundenplan und Schule
+liessen „Lernen" leuchten, während oben „Noten ^" in der Klappe „Heute"
+stand. Gegen ba51915dc war er rot mit 12 von 68 (die Endfassung mit 13
+von 73). Seine Gegenproben stehen einzeln in E748 — fünfzehn, davon
+dreizehn verschiedene (zwei sind gegen eine spätere Fassung nachgefahren),
+und jede war rot. Fünf
+Zusagen kamen erst beim Bau: nach einem Wechsel drinnen stand die Adresse
+noch auf der Übersicht, und ein Neuladen führte dorthin zurück; am
+Rechner leuchtete danach die falsche Kante, weil der Titel VOR der
+Adresse gemeldet wurde; und „Zurück" brachte die Übersicht unter dem
+neuen Titel, weil sich der Verlauf den Zeichner vom Öffnen gemerkt hatte.
+Die letzten beiden fanden Sonden, nicht der Lauf — §7g war rot mit 95 von
+96, §7i/§7j mit 96 von 98, bevor die Reparatur kam. Und die Durchsicht fand
+an ihm selbst, was er zu viel behauptete: seine Handlungen zählten Dialoge,
+statt sie zu erkennen — ein „Wolke", das die Einstellungen öffnete, blieb
+98 von 98. Seither liest er den Kopf jedes Dialogs (99 Zusagen). Und die
+zweite Durchsicht fand, dass L147 eine Stufe später zurückkam: drinnen
+gewechselt, leuchtete im Lernzentrum der richtige Reiter — öffnete man
+danach eine Seite, sprang die Pille auf den vom Öffnen. Drei Zusagen dazu
+(§7k–§7m, 102), gegen den Stand davor rot mit 100 von 102. Die dritte
+Durchsicht fand, was L147 am Verlauf verschoben hatte: seit sechs
+Ansichten „Heute" heissen, legte `zeigeSonder`, das nur auf den Titel sah,
+zwischen Heute und Noten keinen Schritt mehr an, und „Zurück" sprang an
+Heute vorbei. Sechs Zusagen zum Verlauf und zwei zum Reiter am Rechner
+(§7n–§7u, 110), gegen den Stand davor rot mit 106 von 110. Gezählt am
+13. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+554.*
+
 ### Die Befehle
 
 ```txt
@@ -2044,7 +2082,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 553 Läufe
+npm run pruefen                      alle 554 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2141,7 +2179,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 553 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 554 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

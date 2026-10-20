@@ -621,6 +621,47 @@ const Ansichten = (() => {
    * nur angetippt, wenn es sie gibt; fehlt eines, fehlt die Zeile und nicht
    * die Ansicht.
    * ========================================================================*/
+  /* DIE DREI KARTEN ALS LISTE (E748). Sie standen als Zeichenkette im
+     Bildschirm, und was sie tun, als `if`-Kette in seinem `onclick`. Seit
+     die Ziele unter dem Reiter „Termine" dieselben drei nennen (Redur,
+     Frage 2: „Übersicht · Kalender · Tagesplan · Besprechung · Verbinden"),
+     gibt es sie EINMAL: der Bildschirm zeichnet aus dieser Liste, und
+     Bildschirm und Ziele tun über `termineTun` dasselbe (§8). Wörter, Sätze,
+     Zeichen und Folge sind die von vorher, Zeichen für Zeichen.
+     `zielRang`, `kurz`, `ort` und `adresse` lesen nur die Ziele. */
+  const TERMINE_KARTEN: Array<{ a: string; z: string; t: string; s: string; zielRang: number;
+                                kurz?: string; ort?: boolean; adresse?: string }> = [
+    { a: 'kal-auf', z: 'calendar', t: 'Kalender', s: 'Alle Termine in einer Chronologie',
+      zielRang: 2, ort: true, adresse: '#kalender' },
+    { a: 'kal', z: 'link', t: 'Kalender verbinden', s: 'Google, CalDAV — Termine hereinholen',
+      zielRang: 5, kurz: 'Verbinden' },
+    { a: 'mtg', z: 'mic', t: 'Besprechung', s: 'Mitreden statt mitschreiben', zielRang: 4 }
+  ];
+  /** Der Weg einer Karte, oder `null`, wenn ihr Modul fehlt — EINE Stelle
+   *  für das Tun und für das `zeigen` der Ziele. Fehlt `Meeting`, fehlt die
+   *  Besprechung unter den Zielen, statt still nichts zu tun (der Entwurf:
+   *  „Jedes Ziel trägt `zeigen()` wie im Kontext-Register"). Jeder Name
+   *  steht einmal da, wie vorher in der `if`-Kette; gerufen wird am Modul,
+   *  wie vorher (`m.kalender()`, nicht ein losgelöstes `kalender()`). */
+  const termineWeg = (a: string): (() => void) | null => {
+    if (a === 'kal-auf') {
+      const m = (window as any).Produktwelten;
+      return typeof m?.kalender === 'function' ? () => m.kalender() : null;
+    }
+    if (a === 'kal') {
+      const m = (window as any).Kalender;
+      return typeof m?.dialog === 'function' ? () => m.dialog() : null;
+    }
+    if (a === 'mtg') {
+      const m = (window as any).Meeting;
+      return typeof m?.panel === 'function' ? () => m.panel() : null;
+    }
+    return null;
+  };
+  /** Was eine Karte tut — für den Bildschirm und die Ziele. Ohne Modul
+   *  nichts, wie vorher. */
+  const termineTun = (a: string): void => { termineWeg(a)?.(); };
+
   const termine = (): void => bildschirm('Termine', (wrap: HTMLElement) => {
 
     const kommend = (() => {
@@ -651,12 +692,9 @@ const Ansichten = (() => {
            hat, bleibt sein Zeichen — nur wo Redion selbst eines erfand,
            steht jetzt ein Strich. */
         '<div class="home-karten">' +
-          '<button class="hk" data-a="kal-auf"><b>' + zeichen('calendar') + 'Kalender</b>' +
-            '<span>Alle Termine in einer Chronologie</span></button>' +
-          '<button class="hk" data-a="kal"><b>' + zeichen('link') + 'Kalender verbinden</b>' +
-            '<span>Google, CalDAV — Termine hereinholen</span></button>' +
-          '<button class="hk" data-a="mtg"><b>' + zeichen('mic') + 'Besprechung</b>' +
-            '<span>Mitreden statt mitschreiben</span></button>' +
+          TERMINE_KARTEN.map(k =>
+            '<button class="hk" data-a="' + esc(k.a) + '"><b>' + zeichen(k.z) + esc(k.t) + '</b>' +
+            '<span>' + esc(k.s) + '</span></button>').join('') +
         '</div>' +
         block('Bevorstehend', kommend.map((t: any) =>
           `<button data-open="${esc(t.id)}"><span>${zeichen('calendarDays')}</span>` +
@@ -682,9 +720,7 @@ const Ansichten = (() => {
       if (auf?.dataset.open) { App.oeffne(auf.dataset.open); return; }
       const a = el?.closest<HTMLElement>('[data-a]');
       if (!a) return;
-      if (a.dataset.a === 'kal-auf')  (window as any).Produktwelten?.kalender?.();
-      else if (a.dataset.a === 'kal') (window as any).Kalender?.dialog?.();
-      else if (a.dataset.a === 'mtg') (window as any).Meeting?.panel?.();
+      termineTun(a.dataset.a || '');
     };
   });
 
@@ -703,7 +739,12 @@ const Ansichten = (() => {
      derselbe Briefkasten für zwei verschiedene Wege. Jetzt hat „Importieren"
      den Pfeil hinauf wie in den Einstellungen und „Posteingang" den Kasten,
      wie in der Seitenleiste. */
-  const mehrGruppen = () => [
+  /* `zielRang` (E748): die fünf Einträge, die unter dem Reiter „Mehr" als
+     Ziele stehen, in Redurs Folge („Posteingang · Sicherung · Wolke ·
+     Papierkorb · Einstellungen"). Ein Feld an DIESER Liste, keine zweite
+     (§8); die übrigen acht bleiben auf dem Bildschirm. */
+  type MehrEintrag = { z: string; t: string; s: string; a: string; zielRang?: number };
+  const mehrGruppen = (): Array<{ name: string; eintraege: MehrEintrag[] }> => [
     /* DIE ZWEI WEGE, DIE UNTEN KEINEN PLATZ MEHR HABEN (E236).
        Die Navigation hat seit E236 fünf Wege statt sechs — und aus dem
        R-Kreis links oben wurde ein Knopf in der Menüleiste. „Workspace"
@@ -721,18 +762,18 @@ const Ansichten = (() => {
       { z: 'keyboard', t: 'Tastenkürzel', s: 'Alle wichtigen Kürzel.', a: 'tasten' },
       { z: 'puzzle', t: 'Vorlagen', s: 'Startpakete und fertige Seiten.', a: 'vorlagen' } ] },
     { name: 'Daten und Sicherheit', eintraege: [
-      { z: 'download', t: 'Sicherung', s: 'JSON und .redion — mit Anhängen oder ohne.', a: 'sichern' },
+      { z: 'download', t: 'Sicherung', s: 'JSON und .redion — mit Anhängen oder ohne.', a: 'sichern', zielRang: 2 },
       { z: 'upload', t: 'Importieren', s: 'Dateien und Sicherungen laden.', a: 'import' },
-      { z: 'inbox', t: 'Posteingang', s: 'Erinnerungen, Kommentare, Erwähnungen.', a: 'inbox' },
+      { z: 'inbox', t: 'Posteingang', s: 'Erinnerungen, Kommentare, Erwähnungen.', a: 'inbox', zielRang: 1 },
       /* DER WEG ZUR WOLKE (E251). Der Dialog konnte längst anmelden und
          abgleichen — erreichbar war er nur über die Befehlspalette, und
          ein Weg, den man nur über die Palette findet, ist verschwunden
          (dieselbe Regel wie zwei Gruppen weiter oben). Hier steht er
          neben Sicherung und Import, wo Daten-Dinge wohnen. */
-      { z: 'cloud', t: 'Wolke', s: 'Konto, Anmelden und Abgleich zwischen Geräten.', a: 'wolke' },
-      { z: 'trash', t: 'Papierkorb', s: 'Gelöschte Seiten wiederherstellen.', a: 'papierkorb' } ] },
+      { z: 'cloud', t: 'Wolke', s: 'Konto, Anmelden und Abgleich zwischen Geräten.', a: 'wolke', zielRang: 3 },
+      { z: 'trash', t: 'Papierkorb', s: 'Gelöschte Seiten wiederherstellen.', a: 'papierkorb', zielRang: 4 } ] },
     { name: 'System', eintraege: [
-      { z: 'settings', t: 'Einstellungen', s: 'Darstellung, Speicher, KI, Konto und Wolke.', a: 'einstellungen' },
+      { z: 'settings', t: 'Einstellungen', s: 'Darstellung, Speicher, KI, Konto und Wolke.', a: 'einstellungen', zielRang: 5 },
       { z: 'info', t: 'Über Redion', s: 'Fassung, Hilfe und Angaben zum Projekt.', a: 'ueber' } ] }
   ];
 
@@ -762,25 +803,32 @@ const Ansichten = (() => {
       const el = (e.target instanceof Element) ? e.target : null;
       const a = el?.closest<HTMLElement>('[data-a]')?.dataset.a;
       if (!a) return;
-      /* Die zwei Wege, die mit E236 aus der Navigation hierherkamen. */
-      if (a === 'workspace')          Produktwelten.workspace('start');
-      else if (a === 'schublade')     App.arbeitsbereich();
-      else if (a === 'kompass')       kompass();
-      else if (a === 'befehle')       Werkzeuge.palette();
-      else if (a === 'tasten')        Werkzeuge.tastenkuerzel();
-      else if (a === 'vorlagen')      Werkzeuge.vorlagen && Werkzeuge.vorlagen();
-      else if (a === 'sichern')       App.sicherungSpeichern();
-      else if (a === 'import')        Werkzeuge.dateienLesen();
-      else if (a === 'inbox')         posteingang();
-      else if (a === 'wolke') {
-        if (typeof WolkeFenster !== 'undefined') WolkeFenster.dialog();
-        else UI.toast('Die Wolke ist in dieser Fassung nicht geladen.');
-      }
-      else if (a === 'papierkorb')    App.papierkorb();
-      else if (a === 'einstellungen') App.einstellungen();
-      else if (a === 'ueber')         App.einstellungen('ueber');
+      mehrTun(a);
     };
   });
+
+  /** Was ein Eintrag unter „Mehr" tut — EINE Stelle für den Bildschirm und
+   *  die Ziele unter dem Reiter (E748). Bis dahin stand diese Kette im
+   *  `onclick` des Bildschirms; sie ist Zeile für Zeile dieselbe. */
+  const mehrTun = (a: string): void => {
+    /* Die zwei Wege, die mit E236 aus der Navigation hierherkamen. */
+    if (a === 'workspace')          Produktwelten.workspace('start');
+    else if (a === 'schublade')     App.arbeitsbereich();
+    else if (a === 'kompass')       kompass();
+    else if (a === 'befehle')       Werkzeuge.palette();
+    else if (a === 'tasten')        Werkzeuge.tastenkuerzel();
+    else if (a === 'vorlagen')      Werkzeuge.vorlagen && Werkzeuge.vorlagen();
+    else if (a === 'sichern')       App.sicherungSpeichern();
+    else if (a === 'import')        Werkzeuge.dateienLesen();
+    else if (a === 'inbox')         posteingang();
+    else if (a === 'wolke') {
+      if (typeof WolkeFenster !== 'undefined') WolkeFenster.dialog();
+      else UI.toast('Die Wolke ist in dieser Fassung nicht geladen.');
+    }
+    else if (a === 'papierkorb')    App.papierkorb();
+    else if (a === 'einstellungen') App.einstellungen();
+    else if (a === 'ueber')         App.einstellungen('ueber');
+  };
 
   /* ========================================================================
    * KOMPASS — was diese App kann, an einer Stelle
@@ -916,6 +964,61 @@ const Ansichten = (() => {
     try { return await arbeit(); }
     finally { clearTimeout(uhr); void gezeigt; }
   };
+
+  /* ══ DIE ZIELE UNTER „TERMINE" UND „MEHR" (E748) ═════════════════════════
+     Redur, Antwort auf Frage 2: „Übersicht · Kalender · Tagesplan ·
+     Besprechung · Verbinden" und „Posteingang · Sicherung · Wolke ·
+     Papierkorb · Einstellungen". Beide Lieferanten stehen HIER, innerhalb
+     des Moduls, damit `TERMINE_KARTEN` und `mehrGruppen` privat bleiben,
+     und beide tun über dieselbe Funktion wie der Bildschirm (`termineTun`,
+     `mehrTun`) — ein Ziel ist ein zweiter Weg zum selben Knopf, kein
+     zweiter Knopf.
+
+     TERMINE nimmt zwei Ziele aus der Kante „kalender" (`Register.kontext`,
+     unten in dieser Datei angemeldet): „Übersicht" ist dieser Bildschirm
+     selbst, „Tagesplan" der Tagesplan der Planung. Gelesen, nicht
+     abgeschrieben — Name, Weg und `zeigen` (ohne `Plan` kein Tagesplan)
+     kommen von dort. Nur das Zeichen der Übersicht ist das des Reiters
+     (`calendarDays`): sonst stünden „Übersicht" und „Kalender" mit
+     demselben Kalenderblatt nebeneinander.
+
+     Die drei Karten tragen ihr `zeigen` aus `termineWeg`: fehlt das Modul
+     (`Produktwelten`, `Kalender`, `Meeting`), fehlt das Ziel — wie in der
+     Kante. Gefunden in der Durchsicht; bis dahin stand „Besprechung" ohne
+     `Meeting` weiter da und tat still nichts (`test613` §8g).
+
+     ORT ist, was einen Bildschirm unter „Termine" öffnet (Übersicht,
+     Kalender); `an` erkennt ihn an seiner Adresse wie die Kante (E393).
+     Tagesplan, Besprechung und Verbinden sind Dialoge — Handlungen. Unter
+     „Mehr" ist alles eine Handlung: der Posteingang ist ein Bildschirm OHNE
+     Reiter (`ORTE_OHNE_KNOPF`), die übrigen vier öffnen einen Dialog oder
+     speichern eine Sicherung. */
+  if (typeof Register !== 'undefined' && Register.navigation?.meldeZiele) {
+    const adresse = (): string => { try { return String(location.hash || ''); } catch { return ''; } };
+    Register.navigation.meldeZiele('termine', (): unknown[] => {
+      let kante: any[] = [];
+      try { kante = Register.kontext?.fuer?.('kalender') || []; } catch { kante = []; }
+      const ausKante = (id: string, rang: number, dazu: Record<string, unknown>): unknown => {
+        const k = kante.find((x: any) => x && x.id === id);
+        return k && typeof k.tun === 'function'
+          ? { id, name: k.name, zeichen: k.zeichen, rang, tun: () => k.tun(), ...dazu } : null;
+      };
+      return [
+        ausKante('uebersicht', 1, { zeichen: 'calendarDays', ort: true, an: () => adresse() === '#termine' }),
+        ...TERMINE_KARTEN.map(k => ({
+          id: k.a, name: k.t, ...(k.kurz ? { kurz: k.kurz } : {}), zeichen: k.z, rang: k.zielRang,
+          ...(k.ort ? { ort: true, an: () => adresse() === k.adresse } : {}),
+          zeigen: () => termineWeg(k.a) !== null,
+          tun: () => termineTun(k.a)
+        })),
+        ausKante('tagesplan', 3, {})
+      ].filter(Boolean);
+    });
+    Register.navigation.meldeZiele('mehr', (): unknown[] => mehrGruppen()
+      .flatMap(g => g.eintraege)
+      .filter(e => typeof e.zielRang === 'number')
+      .map(e => ({ id: e.a, name: e.t, zeichen: e.z, rang: e.zielRang, tun: () => mehrTun(e.a) })));
+  }
 
   return { start, seiten, termine, mehr, kompass, posteingang, posteingangFilter,
            gruss, skelett, beimLaden };
