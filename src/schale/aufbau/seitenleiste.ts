@@ -306,7 +306,17 @@ const Seitenleiste = (() => {
         zurueck: (k, f) => {
           if (k) SelectionFlow.folge(f, k.offsetLeft, true, false);
           else handyLeiste();
-        }
+        },
+        /* HINAUF GEHT ES ZUR ZIELLEISTE (E749, Redur 13.10., 01:08 UTC: „die
+           neu dock nur wenn ich mit hand nach oven so zi eht kommt das doet
+           aber beim klicken nicht"). EINE Gestenmaschine: `ziehbar` übergibt,
+           sobald der Finger über die Oberkante steigt — und über den
+           Tipp-Spielraum hinaus (16 px vom Aufsetzen, Durchsicht E749: am
+           oberen Rand des Reiters reichten 10 px über die Kante). Ohne das
+           Modul fehlt die Angabe, und alles bleibt, wie es war. */
+        ...(typeof TabShelf !== 'undefined'
+          ? { hinauf: { nimm: (k: HTMLElement, wie: 'hoch' | 'aus-zug', x: number, y: number) => TabShelf.nimm(k, wie, x, y) } }
+          : {})
       });
     }
 
