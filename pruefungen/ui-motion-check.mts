@@ -14,7 +14,7 @@ if (!cssDateien.includes('quell/schale/stil/studio.css'))
 const styles = cssDateien.map(datei => {
   const inhalt = fs.readFileSync(path.join(root,datei),'utf8');
   // Die Style-Elemente werden nur hier erzeugt, ausserhalb der Live-App.
-  if (/<\\/style/i.test(inhalt)) throw new Error('Unerwartetes HTML in '+datei);
+  if (inhalt.toLowerCase().includes('</style')) throw new Error('Unerwartetes HTML in '+datei);
   return '<style>\n'+inhalt+'\n</style>';
 }).join('\n');
 const html = '<!doctype html><html lang="de" data-theme="dark"><head>' +
