@@ -42,6 +42,11 @@ const Produktwelten = (() => {
     };
     const lernmodul = () => globalThis.Lernwelt;
     const arbeitsmodul = () => globalThis.Arbeitswelt;
+    const lernReiter = (ansicht) => {
+        const modul = lernmodul();
+        reiterSetzen(typeof modul?.reiterVon === 'function' ? modul.reiterVon(ansicht)
+            : ansicht === 'heute' ? 'start' : 'lernen');
+    };
     const routeSchreiben = (welt, ansicht) => {
         const route = '#welt-' + welt + '-' + ansicht.replace(/[^a-z0-9-]/g, '');
         try {
@@ -68,7 +73,7 @@ const Produktwelten = (() => {
             : ansicht === 'ausbildung' ? 'schule' : ansicht;
         weltSetzen('lernen');
         Store.setMeta(LERN_META, ziel);
-        reiterSetzen(ziel === 'heute' ? 'start' : 'lernen');
+        lernReiter(ziel);
         const modul = lernmodul();
         if (modul?.oeffnen) {
             modul.oeffnen(ziel);
@@ -273,7 +278,9 @@ const Produktwelten = (() => {
     return {
         start, aktiv, markieren, wechseln: weltSetzen, zurAktivenWelt,
         lernen, workspace, bibliothek, aufgaben, kalender, whiteboards, planung, bereicheDialog,
-        routeAusHash, routeOeffnen
+        routeAusHash, routeOeffnen,
+        routeSchreiben,
+        lernReiter
     };
 })();
 window.Produktwelten = Produktwelten;
