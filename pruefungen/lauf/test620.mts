@@ -4,10 +4,22 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { torPruefen } from '../../server/sicherheit/tor.ts';
 import { alsAnfrage } from '../../server/cloudflare.ts';
-import { onRequest } from '../../functions/api/bruecke.ts';
+import ts from 'typescript';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const lies = (p: string) => fs.readFileSync(path.join(root, p), 'utf8');
+/* functions/ liegt in der CommonJS-Wurzel. Cloudflare baut es als ESM,
+ * Node lädt die rohe .ts sonst als CommonJS und verliert den benannten Export.
+ * Mit TS als ESM übersetzen, dann dieselbe Laufzeitlogik ohne Netz testen. */
+const proxyJs = ts.transpileModule(lies('functions/api/bruecke.ts'), {
+  compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 }
+}).outputText;
+const proxyModul = await import('data:text/javascript;base64,' +
+  Buffer.from(proxyJs, 'utf8').toString('base64')) as {
+    onRequest: (ctx: { request: Request }) => Promise<Response>
+  };
+const onRequest = proxyModul.onRequest;
+
 let ok = 0, rot = 0;
 const pruefe = (name: string, gut: boolean): void => {
   console.log((gut ? '✓ ' : '✗ ') + name);
