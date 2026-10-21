@@ -127,7 +127,7 @@ export async function onRequest(context: { request: Request; env?: unknown; ctx?
     antwort = await fetch(ziel.toString(), {
       method: request.method, headers: kopf,
       body: ['GET', 'HEAD'].includes(request.method)
-        ? undefined : (new Uint8Array(eingang).buffer as ArrayBuffer),
+        ? null : (new Uint8Array(eingang).buffer as ArrayBuffer),
       redirect: 'manual'
     });
   } catch {
