@@ -23,7 +23,7 @@ L90 hält seither fest, dass das nicht die Lücke ist:
 > ins Leere, und der Fehler sieht wieder nicht wie ein Fehler aus — er sieht
 > aus wie ein Stil, den man nicht bestellt hat.
 
-Es sind nicht vierzig. Es sind **161** — gezählt, nicht fortgeschrieben.
+Es sind nicht vierzig. Es sind **162** — gezählt, nicht fortgeschrieben.
 
 *Hier stand 144, und das war schon vor diesem Durchgang falsch: das
 Verzeichnis trug 158 Einträge. Die Zahl im Fliesstext prüft `test290`

@@ -99,6 +99,52 @@ Telefonleiste an `haupt: true` zu hängen — steht damit noch deutlicher:
 oben drei aus dem Register, unten fünf aus dem Markup (L117 Punkt 1).
 Redur entscheidet, welche vier es unten sein sollen.
 
+**Seit E748 (13. Oktober) gehört eine zweite Frage dazu — Redurs.** L147
+richtet Titel und Reiter nach der Klappe „Heute ^", und das wirkt auch am
+RECHNER: bei Prüfungen, Noten, Stundenplan, Schule, Uni und Arbeit heisst
+die Krume jetzt „Heute" statt „Lernzentrum", und in der Kante leuchtet
+„Mehr Orte" (dahinter liegt im ruhigen Modus „Heute", E388) statt
+„Lernzentrum" — während man sichtbar im Lernzentrum steht. Gemessen in
+`messungen.md` §105, Bilder `nachher-rechner-noten-hell.png`/`-dunkel.png`
+im Kratzordner `bilder-ziel/quelle/`. Die Frage: ist „Mehr Orte" dort das
+richtige Licht, oder braucht „Heute" in der Kante einen eigenen Platz?
+
+**Und ein Nachbarfall am Telefon — gemessen in der zweiten Durchsicht von
+E748, nicht Teil von L147, nicht behoben.** Wer Noten öffnet, über
+„Dokumente" weggeht und mit „Zurück" (`App.zurueck()`) wiederkommt, sieht
+im Lernzentrum „Heute"; öffnet er danach eine Seite, leuchtet unten
+„Dokumente" (390 × 844; die Seite auf `ba51915dc`, `7e41a4b4a` und nach
+der Durchsicht gleich, `messungen.md` §105). Am Schauplatz `seite` leuchtet
+der zuletzt gesetzte Reiter (`karte[reiter]` in `seitenleiste.ts`), und
+„Zurück" setzt keinen. Die Reparatur gehörte in die Schale — der Verlauf
+müsste den Reiter mit dem Ort merken — und träfe jede Sonderansicht, die
+man mit „Zurück" erreicht (aus dem Code gelesen, nicht gemessen). Ob die
+Pille dort zum Ort des Schritts zurück soll, ist eine Frage an Redur.
+
+**Derselbe Grund, am Rechner — gemessen in der dritten Durchsicht von
+E748, nicht behoben.** Der Reiter ist am Rechner auch der Schalter, was
+`#tree` zeigt (Seiten, Chats, Besprechungen), und `#tree` erscheint dort
+nur in der Lade „Seiten" der Kante. Wer über „Termine"
+(`Produktwelten.planung`, Reiter `bespr`) und „Zurück" ins Lernzentrum
+kommt und die Lade „Seiten" öffnet, sieht die Besprechungen
+(„Bevorstehend") unter dem Titel „Seiten" — auf `ba51915dc`, `7e41a4b4a`,
+`352eed65c` und jetzt gleich (1440 × 900, `messungen.md` §105). Erst ein
+Weg, der den Reiter setzt (`Produktwelten.lernen`, seit E748 auch der
+Wechsel der Klappe), bringt die Seiten zurück. Ob die Lade „Seiten" den
+Reiter überhaupt lesen soll, gehört zur selben Frage.
+
+**Seit E749 (13. Oktober): die Zielleiste an einem echten Telefon ansehen —
+braucht ein Gerät.** Gebaut und mit `test614` geprüft ist sie in Chromium
+mit CDP-Berührung. Am iPhone im Safari-Browser (nicht als PWA) und an einem
+Android-Telefon fehlt der Blick: hinaufziehen ohne Textauswahl und Lupe,
+ein langsamer Zug nach langem Liegen (Android: `contextmenu`,
+`pointercancel`?), der Home-Strich und die Rückgeste, VoiceOver an den
+Reitern — und ob ein Vorleser mit Berührung überhaupt hineinkommt (die
+Durchsicht sagt: nein; die Wahl, wie, ist Redurs, L257 Punkt 2) —, und ob
+sich 10–15 px Hochrollen am Gerät wie ein Tipp anfühlt (der Spielraum des
+Systems ist ein anderer als der von Chromium). Die Liste und was danach
+offen bleibt (der Rechner, Phase 2): L257.
+
 ### 1 · Cloudflare wirklich aufsetzen — **braucht Redur**
 
 **Ziel** — Server, Konto und Sync einmal gegen echtes D1/R2 laufen lassen.

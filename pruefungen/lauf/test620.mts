@@ -86,5 +86,39 @@ try {
   pruefe('Redirect wird nicht an fremdes Ziel gefolgt', umleitung.status === 502 && anzahl === 1);
 } finally { globalThis.fetch = originalFetch; }
 
+// Gegenprobe des Integrationsreviews: normale Byte-Angaben dürfen nicht
+// am Schutz scheitern. Kein Netz: nur die externe Gegenstelle wird ersetzt.
+try {
+  let body = '';
+  globalThis.fetch = async (_url, init) => {
+    anzahl++;
+    body = await new Response(init?.body).text();
+    return new Response('angenommen', { status: 200 });
+  };
+  const normal = await onRequest({ request: new Request(
+    'https://redion.example/api/bruecke?ziel=https%3A%2F%2Fapi.github.com',
+    { method: 'POST', headers: { 'Content-Length': '2', Origin: 'https://redion.example' }, body: '{}' }
+  ) });
+  pruefe('Gültige Content-Length wird akzeptiert und der Körper bleibt unverändert',
+    normal.status === 200 && body === '{}');
+  for (const laenge of ['unbekannt', '1048577']) {
+    const vorher = anzahl;
+    const antwort = await onRequest({ request: new Request(
+      'https://redion.example/api/bruecke?ziel=https%3A%2F%2Fapi.github.com',
+      { method: 'POST', headers: { 'Content-Length': laenge }, body: '{}' }
+    ) });
+    pruefe('Ungültige/zu grosse Content-Length bleibt gesperrt: ' + laenge,
+      antwort.status === 413 && anzahl === vorher);
+  }
+  globalThis.fetch = async () => new Response(null, { status: 205 });
+  let resetStatus = 0;
+  try {
+    resetStatus = (await onRequest({ request: new Request(
+      'https://redion.example/api/bruecke?ziel=https%3A%2F%2Fapi.github.com'
+    ) })).status;
+  } catch { /* Der Test soll einen ungültigen Antwortkörper sichtbar machen. */ }
+  pruefe('205 Reset Content bleibt eine gültige körperlose Antwort', resetStatus === 205);
+} finally { globalThis.fetch = originalFetch; }
+
 console.log('Suite 620: ' + ok + ' grün, ' + rot + ' rot');
 if (rot) process.exitCode = 1;

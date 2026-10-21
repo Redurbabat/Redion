@@ -1,8 +1,9 @@
 /* ============================================================================
- * worker.js — Der Einstiegspunkt bei Cloudflare
+ * worker.ts — Der Einstiegspunkt bei Cloudflare
  * ----------------------------------------------------------------------------
- * Cloudflare ruft diese Datei bei jeder Anfrage auf, die zu keiner Datei
- * passt. Sie hat genau zwei Aufgaben:
+ * Cloudflare ruft diese Datei vor JEDER Anfrage auf (run_worker_first).
+ * Zuerst wird der Access-Nachweis geprüft, danach werden API und Dateien
+ * geroutet. Ohne eingerichtetes Tor werden auch statische Dateien gesperrt.
  *
  *   1. /api/bruecke   selbst beantworten — das ist die Brücke zu Diensten,
  *                     die den Browser nicht direkt heranlassen (iCloud,
@@ -12,9 +13,8 @@
  *                     kommt die Startseite — dann funktionieren auch
  *                     Adressen wie /irgendwas, ohne dass etwas kaputtgeht.
  *
- * Die Dateien selbst (index.html, quell/…, oeffentlich/…) liefert Cloudflare
- * direkt aus, ohne diesen Code auch nur anzufassen. Er läuft nur für die
- * beiden Fälle oben.
+ * Die Dateien selbst (index.html, quell/…, oeffentlich/…) werden erst NACH
+ * dieser Prüfung über die ASSETS-Bindung ausgeliefert.
  * ==========================================================================*/
 
 import { torPruefen } from './server/sicherheit/tor.ts';
