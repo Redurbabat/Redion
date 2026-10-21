@@ -23,7 +23,7 @@ L90 hält seither fest, dass das nicht die Lücke ist:
 > ins Leere, und der Fehler sieht wieder nicht wie ein Fehler aus — er sieht
 > aus wie ein Stil, den man nicht bestellt hat.
 
-Es sind nicht vierzig. Es sind **160** — gezählt, nicht fortgeschrieben.
+Es sind nicht vierzig. Es sind **161** — gezählt, nicht fortgeschrieben.
 
 *Hier stand 144, und das war schon vor diesem Durchgang falsch: das
 Verzeichnis trug 158 Einträge. Die Zahl im Fliesstext prüft `test290`
@@ -149,6 +149,15 @@ trotzdem zu diesem Namensraum. Auf dem Zweig des Elektro-Bogens stand die
 Zahl deshalb auf 22 — eine Zählung nach anderer Regel als der Rest der
 Spalte; hier bleibt die Spalte bei der Regel und der Satz sagt den Rest.
 
+## Apple-inspirierte Navigation (21. Oktober 2026)
+
+`ho-` benennt die Zeichen in der unteren iPhone-Navigation (`.ho-z`).
+Seit dem Motion-/Liquid-Glass-Ausbau wird diese Klasse auch in
+`studio.css` für die Federanimationen verwendet. Es ist **derselbe**
+Navigationsbereich wie in `bausteine.css`, kein neuer Namensraum.
+Die Hauptdatei ist nach der Zielleisten-Integration wieder `bausteine.css` (vier Vorkommen hier und vier in `studio.css`; bei Gleichstand gewinnt die alphabetisch erste Datei). Die Einstellung `data-bewegung="ruhig"` und die
+Systemeinstellungen für reduzierte Bewegung/Transparenz gelten weiterhin.
+
 ## Das Verzeichnis
 
 ```
@@ -213,6 +222,7 @@ gk       40  werkzeuge.css
 hat       6  notizhefte.css
 hk       12  bausteine.css
 hl        4  bausteine.css
+ho        8  bausteine.css
 home     63  werkzeuge.css
 hs       20  werkzeuge.css
 icon     16  bausteine.css

@@ -352,22 +352,34 @@ Register.navigation = (() => {
      */
     marke?: string;
     /**
-     * EINER DER FÜNF HAUPTWEGE (E388).
+     * EIN HAUPTWEG DER KANTE AM RECHNER (E388).
      *
-     * Heute, Lernzentrum, Elektrotechnik, Bibliothek, Aufgaben. Sie sind
-     * das, wohin man täglich geht, und sie stehen deshalb IMMER da — am
-     * Rechner oben in der linken Leiste, am Telefon in der unteren
-     * Fünferleiste. Alles Übrige ist ein Ziel, das man sucht, und liegt
-     * hinter „Mehr Orte".
+     * Heute, Lernzentrum, Elektrotechnik, Bibliothek, Aufgaben und seit
+     * E457 Notizhefte. Sie sind das, wohin man täglich geht, und stehen
+     * deshalb am Rechner oben in der linken Leiste (im ruhigen Modus nur
+     * die ohne `ruhig: false`). Alles Übrige ist ein Ziel, das man sucht,
+     * und liegt hinter „Mehr Orte". Gelesen wird das Feld an GENAU einer
+     * Stelle: `alleHauptOrte()` in `context-rail.ts`.
+     *
+     * NICHT AM TELEFON. Hier stand bis E748, die Hauptwege stünden „am
+     * Telefon in der unteren Fünferleiste", und es gebe sie „ab hier
+     * einmal". Nachgesehen stimmte das nicht: die untere Leiste liest
+     * `haupt` nirgends. Ihre fünf Reiter stehen fest in `index.html`
+     * (Dokumente · Heute · Lernen · Termine · Mehr) und sind eine ANDERE
+     * Fünf als die der Kante. Welche fünf aufs Telefon gehören, ist Redurs
+     * Frage (L123 F02, L117) und nicht hier entschieden. Was UNTER jedem
+     * dieser Reiter liegt, steht seit E748 weiter unten in `ziele` — über
+     * das Merkmal `data-ziele` am Knopf, nicht über dieses Feld.
      *
      * WARUM DAS HIER STEHT UND NICHT IM MARKUP. Bis zum 3. September 2026
-     * gab es die Fünf DREIMAL: als `data-ruhig="bleibt"` in `index.html`,
-     * als Liste in der unteren Telefonleiste und als `SOLL` in test248.
-     * Gemessen kamen dabei ZWEI VERSCHIEDENE Fünfergruppen heraus — unten
-     * am Telefon stand „Dokumente · Heute · Lernen · Termine · Mehr", in
-     * der Seitenleiste „Heute · Lernzentrum · Elektrotechnik · Bibliothek
-     * · Aufgaben". Zwei Listen, die dasselbe behaupten, laufen auseinander
-     * (§8). Ab hier gibt es sie einmal, und zwar hier.
+     * gab es die Fünf der Leiste DREIMAL: als `data-ruhig="bleibt"` in
+     * `index.html`, als Liste in der unteren Telefonleiste und als `SOLL`
+     * in test248. Gemessen kamen dabei ZWEI VERSCHIEDENE Fünfergruppen
+     * heraus — unten am Telefon stand „Dokumente · Heute · Lernen · Termine
+     * · Mehr", in der Seitenleiste „Heute · Lernzentrum · Elektrotechnik ·
+     * Bibliothek · Aufgaben". Zwei Listen, die dasselbe behaupten, laufen
+     * auseinander (§8). Für die Kante gibt es sie seither einmal, hier; die
+     * Telefonleiste behauptet nicht dasselbe, sie ist eine andere Liste.
      */
     haupt?: boolean;
     /**
@@ -446,5 +458,93 @@ Register.navigation = (() => {
 
   const eines = (id: unknown): Eintrag | null => LISTE.find(x => x.id === id) || null;
 
-  return { alle, anPlatz, eines, melde, nimmZurueck, anzahl: () => LISTE.length };
+  /* ══ WAS UNTER EINEM REITER LIEGT (E748) ═══════════════════════════════
+   * Redur, 12. Oktober 2026, zum Bild mit dem roten Feld über der unteren
+   * Leiste: „dort nur sachen die mit unteren zutun haben dann für alle so".
+   * Je Reiter fünf Ziele — seine Antwort auf Frage 2 legt sie fest.
+   *
+   * KEIN ZWEITER KATALOG (§8). Was unter „Dokumente" liegt, weiss die
+   * Bibliothek (`ORTE`), was unter „Heute" und „Lernen" liegt, die Lernwelt
+   * (`KLAPPEN`), was unter „Termine" und „Mehr" liegt, die Ansichten. Jede
+   * dieser Listen ist privat und bleibt es. Der Bereich meldet deshalb
+   * einen LIEFERANTEN an, aus seinem eigenen Modul heraus, und hier steht
+   * nur, wer fragt und in welcher Folge geantwortet wird — das Muster von
+   * `Register.kontext.meldeLieferant`/`fuer`.
+   *
+   * DER SCHLÜSSEL IST EIN MERKMAL, kein Name: `data-ziele` am Reiterknopf
+   * (`dokumente`, `heute`, `lernen`, `termine`, `mehr`). Die Schale fragt
+   * mit dem Merkmal des gedrückten Knopfes und kennt keinen Bereich beim
+   * Namen; der Bereich kennt keinen Knopf.
+   *
+   * JEDER LIEFERANT WIRD BEI JEDEM FRAGEN NEU GEFRAGT und EINZELN
+   * abgefangen. Was später geladen wird, ist dann auch später da (der
+   * Grund, aus dem es `meldeLieferant` gibt), und ein kaputter Lieferant
+   * oder ein werfendes `zeigen()` nimmt nur sich selbst mit — nicht die
+   * anderen Ziele eines Reiters.
+   *
+   * HÖCHSTENS FÜNF, nach `rang`. Fünf ist keine Geschmacksfrage: es ist
+   * die Zahl der Reiter darunter, und die Ziele sollen in Bogen 2 genau so
+   * breit stehen wie sie (E236: „unten sollte max 4-5 Sachen sein"). */
+
+  /** Ein Ziel unter einem Reiter. */
+  type Ziel = {
+    id: string;
+    /** Der Name, wie er auf dem Bildschirm der Quelle steht. */
+    name: string;
+    /** Die Kurzform für die schmale Leiste — ein Stück des Namens
+     *  („Zuletzt" aus „Zuletzt geöffnet"). Fehlt sie, gilt `name`. */
+    kurz?: string;
+    /** Ein Zeichen aus `Register.symbole`. */
+    zeichen: string;
+    /** Kleiner steht weiter vorn; ohne Rang ganz hinten. */
+    rang?: number;
+    /** Ein ORT: danach steht man auf einem Bildschirm dieses Reiters, und
+     *  der Reiter leuchtet. Ohne `ort` ist es eine Handlung (ein Dialog,
+     *  eine Sicherung), und die Pille bleibt, wo sie ist. */
+    ort?: boolean;
+    /** Steht man gerade dort? */
+    an?: () => boolean;
+    /** false = das Ziel fehlt (z. B. ohne das Modul dahinter). */
+    zeigen?: () => boolean;
+    tun: () => void;
+  };
+
+  const HOECHSTENS = 5;
+  const ZIEL_LIEFERANTEN: Array<{ reiter: string; fn: () => unknown }> = [];
+
+  /** Einen Lieferanten für die Ziele eines Reiters anmelden. */
+  const meldeZiele = (reiter: unknown, fn: unknown): boolean => {
+    if (typeof reiter !== 'string' || !reiter || typeof fn !== 'function') return false;
+    if (ZIEL_LIEFERANTEN.some(l => l.reiter === reiter && l.fn === fn)) return false;
+    ZIEL_LIEFERANTEN.push({ reiter, fn: fn as () => unknown });
+    return true;
+  };
+
+  /** Die Ziele eines Reiters, in ihrer Folge — höchstens fünf. */
+  const ziele = (reiter: unknown): Ziel[] => {
+    if (typeof reiter !== 'string' || !reiter) return [];
+    const roh: Ziel[] = [];
+    for (const l of ZIEL_LIEFERANTEN) {
+      if (l.reiter !== reiter) continue;
+      try {
+        const teil = l.fn();
+        if (!Array.isArray(teil)) continue;
+        for (const z of teil as Ziel[]) {
+          if (!z || !z.id || !z.name || !z.zeichen || typeof z.tun !== 'function') continue;
+          if (roh.some(x => x.id === z.id)) continue;     /* kein Doppel */
+          roh.push(z);
+        }
+      } catch { /* ein kaputter Lieferant nimmt nicht die anderen mit */ }
+    }
+    return roh
+      .filter(z => {
+        if (typeof z.zeigen !== 'function') return true;
+        try { return !!z.zeigen(); }
+        catch { return false; }   /* ein kaputtes zeigen() nimmt EIN Ziel */
+      })
+      .sort((a, b) => (a.rang ?? 500) - (b.rang ?? 500))
+      .slice(0, HOECHSTENS);
+  };
+
+  return { alle, anPlatz, eines, melde, nimmZurueck, anzahl: () => LISTE.length, meldeZiele, ziele };
 })();

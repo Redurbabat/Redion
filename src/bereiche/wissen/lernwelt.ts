@@ -168,26 +168,34 @@ type LernweltZustand = {
 };
 
 const Lernwelt = (() => {
-  const ANSICHTEN: Array<{ id: LernweltAnsicht; icon: string; name: string }> = [
+  /* `zielRang` UND `kurz` (E748): welche Ansichten unter den Reitern
+     „Heute" und „Lernen" als Ziele stehen, in Redurs Folge („Heute ·
+     Prüfungen · Noten · Stundenplan · Schule" und „Übersicht · Trainer ·
+     Lernpfad · Fehler · Fortschritt"), und das kurze Wort für die schmale
+     Leiste. UNTER WELCHEM Reiter, sagt nicht dieses Feld, sondern die
+     Klappe (`KLAPPEN`, `klappeVon`) — dieselbe Antwort wie oben im Kopf.
+     Uni und Arbeit tragen keinen Rang: sie bleiben in „Heute ^". Nach
+     aussen (`Lernwelt.ansichten`) gehen beide Felder nicht. */
+  const ANSICHTEN: Array<{ id: LernweltAnsicht; icon: string; name: string; kurz?: string; zielRang?: number }> = [
     /* `icon` trägt seit E200 den NAMEN eines Zeichens aus `Register.symbole`,
        nicht mehr ein Emoji. Der Feldname bleibt, weil daran Aufrufer hängen
        (`Lernwelt.ansichten`) — und weil er weiterhin dasselbe bedeutet:
        das Zeichen dieser Ansicht. */
-    { id: 'heute', icon: 'today', name: 'Heute' },
-    { id: 'lernen', icon: 'cards', name: 'Lernen' },
-    { id: 'lernweg', icon: 'compass', name: 'Lernpfad' },
-    { id: 'fehler', icon: 'puzzle', name: 'Meine Fehler' },
-    { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen' },
-    { id: 'noten', icon: 'medal', name: 'Noten' },
-    { id: 'stundenplan', icon: 'calendar', name: 'Stundenplan' },
-    { id: 'schule', icon: 'learn', name: 'Schule / Ausbildung' },
+    { id: 'heute', icon: 'today', name: 'Heute', zielRang: 1 },
+    { id: 'lernen', icon: 'cards', name: 'Lernen', zielRang: 1 },
+    { id: 'lernweg', icon: 'compass', name: 'Lernpfad', zielRang: 3 },
+    { id: 'fehler', icon: 'puzzle', name: 'Meine Fehler', kurz: 'Fehler', zielRang: 4 },
+    { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen', zielRang: 2 },
+    { id: 'noten', icon: 'medal', name: 'Noten', zielRang: 3 },
+    { id: 'stundenplan', icon: 'calendar', name: 'Stundenplan', zielRang: 4 },
+    { id: 'schule', icon: 'learn', name: 'Schule / Ausbildung', kurz: 'Schule', zielRang: 5 },
     { id: 'uni', icon: 'building', name: 'Uni' },
     { id: 'arbeit', icon: 'briefcase', name: 'Arbeit' },
-    { id: 'fortschritt', icon: 'chart', name: 'Fortschritt' },
+    { id: 'fortschritt', icon: 'chart', name: 'Fortschritt', zielRang: 5 },
     /* DER TRAINER (E677): Boxen, Multiple Choice, Schreiben und Lücken über
        Lernkarten mit `quiz`. Er zeichnet sich selbst (`Trainer.render`) in
        den Platz, den `trainerAnsicht` freihält. */
-    { id: 'trainer', icon: 'checkCircle', name: 'Trainer' }
+    { id: 'trainer', icon: 'checkCircle', name: 'Trainer', zielRang: 2 }
   ];
 
   /**
@@ -269,6 +277,29 @@ const Lernwelt = (() => {
   /** In welcher Klappe steht die Ansicht, in der wir gerade sind? */
   const klappeVon = (ansicht: string): LernweltKlappe | null =>
     klappen().find(k => k.gruppen.some(g => g.unter.includes(ansicht as LernweltAnsicht))) || null;
+
+  /**
+   * UNTER WELCHEM REITER EINE ANSICHT STEHT — nach ihrer Klappe (L147, E748).
+   *
+   * Hier galt bis E748 eine Regel aus E526: „Heute" für die Tagesansicht,
+   * „Lernzentrum" für alle übrigen zehn. Seit E726 stehen aber Prüfungen,
+   * Noten, Stundenplan, Schule, Uni und Arbeit oben unter „Heute ^" — und
+   * unten leuchtete bei ihnen „Lernen". Zwei Antworten auf dieselbe Frage
+   * auf demselben Bildschirm (Bild in E748: „Noten ^" oben, „Lernen" unten).
+   *
+   * Redur, Antwort auf Frage 3: „Prüfungen, Noten, Stundenplan und Schule
+   * schalten unten künftig ‚Heute' an (wie oben unter ‚Heute ^', E726)."
+   * Die Klappe entscheidet also — für alles, was in ihr steht, Uni und
+   * Arbeit eingeschlossen, weil „wie oben" keine Ausnahme kennt.
+   *
+   * Zwei Namen, beide in `SCHAUPLATZ_NAMEN` (`schale.ts`) eingetragen:
+   * „Heute" → `heute` → Reiter „Heute", „Lernzentrum" → `lernen` → Reiter
+   * „Lernen". Der Reiter heisst in der Schale `start` und `lernen`.
+   */
+  const titelVon = (ansicht: string): 'Heute' | 'Lernzentrum' =>
+    klappeVon(ansicht)?.id === 'heute' ? 'Heute' : 'Lernzentrum';
+  const reiterVon = (ansicht: string): 'start' | 'lernen' =>
+    titelVon(ansicht) === 'Heute' ? 'start' : 'lernen';
 
   const zustand: LernweltZustand = {
     root: null,
@@ -3266,6 +3297,7 @@ const Lernwelt = (() => {
     ANSICHTEN.some(item => item.id === wert);
 
   const wechseln = (ansicht: LernweltAnsicht): void => {
+    const vorher = titelVon(zustand.ansicht);
     zustand.ansicht = ansicht;
     zustand.training = null;
     zustand.simulation = null;
@@ -3274,6 +3306,48 @@ const Lernwelt = (() => {
     zustand.ladeSchluessel = '';
     Store.setMeta(metaSchluessel('ansicht'), ansicht);
     zeichnen();
+    /* L147 (E748): wer drinnen von „Übersicht" auf „Noten" wechselt, steht
+       danach unter „Heute" — oben im Kopf, unten in der Leiste und am
+       Rechner in der Kante. Bis hier blieben Titel und Adresse die vom
+       Öffnen, und mit ihnen der Reiter.
+
+       ZUERST DIE ADRESSE — aber nur, wenn man an einer Adresse des
+       Lernzentrums steht: ein Lernzentrum, das woanders gezeichnet wird,
+       schreibt niemandem die Adresse um. Ohne sie führte ein Neuladen nach
+       „Übersicht → Noten" zurück in die Übersicht. Sie steht VOR dem Titel,
+       weil der Titel den Schauplatz meldet und die Kante dabei zuerst die
+       Adresse liest (E393); `replaceState` meldet sich danach nicht mehr.
+       In der anderen Folge las die Kante noch `#welt-lernen-lernen` und
+       liess „Lernzentrum" leuchten, während der Kopf „Heute ^" sagte
+       (`test613` §7g, gefunden beim Fertigstellen dieses Bogens). */
+    try {
+      if (zustand.root?.isConnected && /^#welt-lernen-/.test(location.hash))
+        Produktwelten.routeSchreiben('lernen', ansicht);
+    } catch { /* ohne Adresse bleibt der Inhalt */ }
+    /* Dann der Titel — er ändert sich nur, wenn die Klappe wechselt; der
+       Inhalt steht schon da. Und bei JEDEM Wechsel der Zeichner: der
+       Verlauf merkt ihn sich beim Weggehen, und „Zurück" soll dieselbe
+       Ansicht zeigen, die Titel und Adresse nennen — nicht die vom Öffnen
+       (`test613` §7i/§7j, ebenfalls beim Fertigstellen gefunden). */
+    const titel = titelVon(ansicht);
+    if (zustand.root?.isConnected) {
+      let gemeldet = false;
+      try { gemeldet = App.sonderTitel?.(titel, vorher, (ziel: HTMLElement) => render(ziel, ansicht)) === true; }
+      catch { /* ohne Schale bleibt der Inhalt */ }
+      /* Zuletzt der REITER, wenn die Klappe gewechselt hat (zweite
+         Durchsicht von E748). Auf dem Lernzentrum leuchtet unten, was der
+         Schauplatz sagt (E274) — der Titel oben reicht dafür. Aber wer
+         danach eine Seite öffnet, steht am Schauplatz `seite`, und dort
+         leuchtet der Reiter, von dem man kam. Blieb er der vom Öffnen,
+         sprang die Pille eine Stufe später zurück: „Lernen → Heute ^ →
+         Noten → Seite" unter „Lernen" (`test613` §7l/§7m). Dieselbe Regel
+         wie beim Öffnen (`Produktwelten.lernReiter`), und nur, wenn der
+         Titel wirklich gemeldet wurde: ein Lernzentrum, das nicht die
+         offene Ansicht ist, stellt keinen Reiter um. */
+      if (gemeldet && titel !== vorher) {
+        try { Produktwelten.lernReiter(ansicht); } catch { /* ohne Schale bleibt der Inhalt */ }
+      }
+    }
     zustand.root?.querySelector<HTMLElement>('#lernwelt-inhalt')?.focus();
   };
 
@@ -3842,18 +3916,51 @@ const Lernwelt = (() => {
    * für die Tagesansicht, „Lernzentrum" für alle übrigen. Die zehn
    * anderen Ansichten gehören unten alle unter „Lernen".
    *
-   * WAS DAMIT NOCH NICHT GELÖST IST: `wechseln()` schaltet die Ansicht
-   * INNERHALB der Welt um, ohne `zeigeSonder` noch einmal zu rufen — der
-   * Titel bleibt dann der vom Öffnen. Wer über „Heute" hereinkommt und
-   * drinnen auf „Lernweg" wechselt, sieht unten weiter „Heute". Das steht
-   * als L147 und nicht hier: es zu beheben heisst, den Schauplatz beim
-   * Umschalten neu zu melden, und das ist ein eigener Bogen.
+   * SEIT E748 ENTSCHEIDET DIE KLAPPE (`titelVon`), nicht mehr „heute oder
+   * nicht": was oben unter „Heute ^" steht, heisst „Heute" und leuchtet
+   * unten unter „Heute" — so hat Redur Frage 3 beantwortet.
+   *
+   * UND DRINNEN AUCH (L147, GESCHLOSSEN mit E748). `wechseln()` schaltet
+   * die Ansicht INNERHALB der Welt um, ohne `zeigeSonder` noch einmal zu
+   * rufen; der Titel blieb dann der vom Öffnen. Jetzt meldet `wechseln()`
+   * den neuen Titel über `App.sonderTitel`, sobald die Klappe wechselt —
+   * und stellt den Reiter um (`Produktwelten.lernReiter`), damit auch eine
+   * Seite, die man danach öffnet, unter dem richtigen Reiter steht.
    */
-  const oeffnen = (ansicht: LernweltAnsicht = 'heute'): void => {
+  const oeffnen = (ansicht: LernweltAnsicht = 'heute', adresse?: string): void => {
     const start = ansichtGueltig(ansicht) ? ansicht : 'heute';
-    const titel = start === 'heute' ? 'Heute' : 'Lernzentrum';
-    App.zeigeSonder(titel, (ziel: HTMLElement) => render(ziel, start));
+    App.zeigeSonder(titelVon(start), (ziel: HTMLElement) => render(ziel, start), adresse);
   };
+
+  /* ══ DIE ZIELE UNTER „HEUTE" UND „LERNEN" (E748) ═════════════════════════
+     Redur, Antwort auf Frage 2: „Heute · Prüfungen · Noten · Stundenplan ·
+     Schule" und „Übersicht · Trainer · Lernpfad · Fehler · Fortschritt".
+     Welcher Reiter, sagt die Klappe — die Klappe „heute" gehört unter den
+     Reiter „Heute", die Klappe „uebersicht" unter „Lernen". Was in ihr ein
+     Ziel ist, sagt `zielRang` an `ANSICHTEN`; der Name ist der aus dem Kopf
+     (`ansichtName`), damit unten nicht anders heisst, was oben steht.
+
+     Der Lieferant steht HIER, innerhalb des Moduls: `KLAPPEN`, `ANSICHTEN`
+     und `zustand` bleiben privat (§8). Geöffnet wird über
+     `Produktwelten.lernen` — denselben Weg wie der Tipp auf den Reiter,
+     derselbe Bereich (`wissen`). */
+  const zieleDerKlappe = (klappeId: 'heute' | 'uebersicht') => (): unknown[] => {
+    const klappe = klappen().find(k => k.id === klappeId);
+    if (!klappe) return [];
+    return klappe.gruppen.flatMap(g => g.unter)
+      .map(id => ANSICHTEN.find(a => a.id === id))
+      .filter((a): a is (typeof ANSICHTEN)[number] => !!a && typeof a.zielRang === 'number')
+      .map(a => ({
+        id: a.id, name: ansichtName(a.id), ...(a.kurz ? { kurz: a.kurz } : {}), zeichen: a.icon,
+        rang: a.zielRang, ort: true,
+        an: () => !!zustand.root?.isConnected && zustand.ansicht === a.id,
+        tun: () => Produktwelten.lernen(a.id)
+      }));
+  };
+  if (typeof Register !== 'undefined' && Register.navigation?.meldeZiele) {
+    Register.navigation.meldeZiele('heute', zieleDerKlappe('heute'));
+    Register.navigation.meldeZiele('lernen', zieleDerKlappe('uebersicht'));
+  }
 
   const aktualisieren = (): void => {
     zustand.extern = null;
@@ -3862,8 +3969,13 @@ const Lernwelt = (() => {
   };
 
   return {
-    ansichten: ANSICHTEN.map(item => ({ ...item })),
+    /* Ohne `kurz` und `zielRang` (E748): die gehören dem Lieferanten oben,
+       `Lernwelt.ansichten` bleibt, was es war — Kennung, Zeichen, Name. */
+    ansichten: ANSICHTEN.map(({ id, icon, name }) => ({ id, icon, name })),
     oeffnen,
+    /* Unter welchem Reiter eine Ansicht steht (L147): `Produktwelten.lernReiter`
+       fragt hier, statt „heute oder nicht" ein zweites Mal zu entscheiden. */
+    reiterVon,
     render,
     wechseln,
     aktualisieren,

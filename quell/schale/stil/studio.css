@@ -234,7 +234,7 @@ body[data-studio-tools="offen"] #menueband{animation:studio-tools-enter var(--mo
 :where(.menu:not(.blatt),.finder:not(.blatt))>*{animation:glas-inhalt var(--motion-fast) linear both}
 /* Auf Glas keine blasse Schrift (E695, grund.css): die stille Schrift rückt
    eine Stufe nach oben, weil `--text-faint` nur auf voller Fläche 3,9 : 1 hat. */
-:is(.menu,.finder,.auswahlleiste,#handy-oben){--text-faint:var(--text-dim)}
+:is(.menu,.finder,.auswahlleiste,#handy-oben,#ho-ziele){--text-faint:var(--text-dim)}
 @keyframes studio-arrive{from{opacity:0;transform:translateY(7px) scale(.985)}to{opacity:1;transform:none}}
 @keyframes studio-drawer{from{opacity:.3;transform:translateX(-10px)}to{opacity:1;transform:none}}
 @keyframes studio-sheet{from{opacity:.3;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -305,11 +305,11 @@ body[data-studio-tools="offen"] #menueband{animation:studio-tools-enter var(--mo
      eine Marke und nicht zwei Zahlen. Die Geometrie steht in
      `bausteine.css` bei `#handy-oben`, der Radius hier, weil diese Datei
      später lädt und sonst gewinnt. */
-  #handy-oben{border-radius:calc(var(--mobile-nav-height) / 2);
+  #handy-oben,#ho-ziele{border-radius:calc(var(--mobile-nav-height) / 2);
                box-shadow:var(--studio-highlight),var(--studio-elevation)}
   /* Dieselbe Lichtkante wie Menü und Dock (E703) — wo es Glas gibt. */
   @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
-    #handy-oben{box-shadow:var(--glas-kante),var(--studio-elevation);border-color:transparent}
+    #handy-oben,#ho-ziele{box-shadow:var(--glas-kante),var(--studio-elevation);border-color:transparent}
   }
   :is(.finder,.dlg){border-radius:var(--radius-2xl) var(--radius-2xl) 0 0}
   .lernwelt .lw-desk{grid-template-columns:minmax(0,1fr);padding:26px 22px;gap:12px}
@@ -848,4 +848,331 @@ body:has(.finder.such) #studio-search > [data-sym] > svg,
   #mb-suche:is(:active,:focus-visible){
     background:var(--bg-schwebend-dicht);-webkit-backdrop-filter:var(--glas-blur);backdrop-filter:var(--glas-blur);
     box-shadow:var(--glas-kante)}
+}
+
+
+/* ============================================================================
+ * REDION LIQUID GLASS / BEWEGUNG (Oktober 2026)
+ * --------------------------------------------------------------------------
+ * Apple-inspirierte Rückmeldung in der Schale. Keine neue Oberfläche, keine
+ * Bewegung im Editor und keine dauernd laufenden Animationen. Die bestehende
+ * SelectionFlow-Linse im mobilen Dock behält ihren eigenen Bewegungsablauf.
+ *
+ * Glas nur auf kleinen, schwebenden Kontrollen: keine Vollbild-Weichzeichnung,
+ * kein animiertes backdrop-filter. Die vorhandenen Glas-Marken und die
+ * Systemeinstellungen für Kontrast/Transparenz bleiben die einzige Wahrheit.
+ * ========================================================================== */
+body[data-schale="premium"] {
+  --liquid-ease: var(--feder-knapp, cubic-bezier(.22, 1, .36, 1));
+  --liquid-duration: var(--motion-normal, 340ms);
+  --liquid-highlight: color-mix(in srgb, var(--text) 13%, transparent);
+  --liquid-accent-glow: color-mix(in srgb, var(--accent) 17%, transparent);
+}
+
+/* Desktop-Suche: eine kleine, lesbare Glaslinse, keine glasierte Kopfzeile. */
+body[data-schale="premium"] #studio-bar .studio-search {
+  background: var(--bg-card);  /* Fallback ohne backdrop-filter */
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 var(--liquid-highlight), 0 2px 10px #0000000b;
+  transition: background var(--motion-fast) ease,
+              border-color var(--motion-fast) ease,
+              box-shadow var(--liquid-duration) var(--liquid-ease),
+              transform var(--liquid-duration) var(--liquid-ease);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  body[data-schale="premium"] #studio-bar .studio-search {
+    background: var(--bg-schwebend-dicht);
+    -webkit-backdrop-filter: var(--glas-blur);
+    backdrop-filter: var(--glas-blur);
+    border-color: transparent;
+    box-shadow: var(--glas-kante), 0 5px 16px #00000013;
+    --text-faint: var(--text-dim);
+  }
+  /* Bereits schwebende Glasflächen bekommen stärkere Kanten und Tiefen.
+     Die Unschärfe selbst bleibt statisch und auf 20 px begrenzt. */
+  body[data-schale="premium"] :is(.menu, .finder, .auswahlleiste) {
+    box-shadow: var(--glas-kante), 0 18px 44px #00000024,
+                0 2px 7px #00000016;
+  }
+}
+
+/* Die Fenster behalten ihre Glasdeckkraft während der Bewegung. */
+body[data-schale="premium"] :is(.menu, .finder):not(.blatt) {
+  animation-duration: var(--liquid-duration);
+  animation-timing-function: var(--liquid-ease);
+}
+body[data-schale="premium"] .r-sheet {
+  animation-timing-function: var(--feder-sanft, cubic-bezier(.22, 1, .36, 1));
+}
+body[data-schale="premium"] #kanten-lade:not([hidden]) {
+  animation-timing-function: var(--liquid-ease);
+}
+
+/* Akzentuierte Touch-Dock-Linse: verstärkte Lichtkante, keine zweite Linse.
+   Keine Transformation am Dock selbst: SelectionFlow misst seine Geometrie. */
+@media (max-width: 760px) {
+  body[data-schale="premium"] #handy-oben {
+    box-shadow: var(--glas-kante), 0 14px 38px #0000002b,
+                0 3px 9px #00000019;
+  }
+  body[data-schale="premium"] #handy-oben > button .ho-z {
+    transition: transform var(--liquid-duration) var(--liquid-ease),
+                color var(--motion-fast) ease;
+    transform-origin: 50% 55%;
+  }
+  body[data-schale="premium"] #handy-oben > button b {
+    transition: color var(--motion-fast) ease,
+                transform var(--liquid-duration) var(--liquid-ease);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Knöpfe und Reiter reagieren federnd statt abrupt, ohne Layout-Reflow. */
+  body[data-schale="premium"] #studio-bar :is(.studio-shortcuts button, .studio-icon) {
+    transition: color var(--motion-fast) ease,
+                background var(--motion-fast) ease,
+                border-color var(--motion-fast) ease,
+                box-shadow var(--liquid-duration) var(--liquid-ease),
+                transform var(--liquid-duration) var(--liquid-ease);
+  }
+
+  body[data-schale="premium"] :is(.ru-kachel, .agent-karte) {
+    transition: transform var(--liquid-duration) var(--liquid-ease),
+                box-shadow var(--liquid-duration) var(--liquid-ease),
+                border-color var(--motion-fast) ease,
+                background var(--motion-fast) ease;
+  }
+
+  body[data-schale="premium"] #reiterleiste .reiter {
+    transition: background var(--motion-fast) ease,
+                box-shadow var(--liquid-duration) var(--liquid-ease),
+                transform var(--liquid-duration) var(--liquid-ease);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    body[data-schale="premium"] #studio-bar .studio-search:is(:hover, :focus-visible) {
+      transform: translateY(-2px) scale(1.005);
+      border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+      box-shadow: var(--glas-kante), 0 12px 26px #0000001d,
+                  0 0 0 1px var(--liquid-accent-glow);
+    }
+    body[data-schale="premium"] #studio-bar .studio-shortcuts button:hover {
+      transform: translateY(-2px);
+      box-shadow: inset 0 1px 0 var(--liquid-highlight),
+                  0 5px 12px #00000013;
+    }
+    body[data-schale="premium"] #studio-bar .studio-icon:hover {
+      transform: translateY(-2px);
+    }
+    body[data-schale="premium"] .k-knopf:hover {
+      transform: translateX(3px);
+    }
+    body[data-schale="premium"] :is(.ru-kachel, .agent-karte):is(:hover, :focus-visible) {
+      transform: translateY(-3px) scale(1.012);
+      box-shadow: 0 12px 24px #00000016,
+                  inset 0 1px 0 var(--liquid-highlight);
+    }
+    body[data-schale="premium"] #reiterleiste .reiter:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  @media (max-width: 760px) {
+    body[data-schale="premium"] #handy-oben > button.an .ho-z {
+      transform: translateY(-2px) scale(1.10);
+    }
+    body[data-schale="premium"] #handy-oben > button.an b {
+      transform: translateY(-1px);
+    }
+    body[data-schale="premium"] #handy-oben > button:active .ho-z {
+      transform: translateY(1px) scale(.92);
+    }
+    /* Der Dockkörper fährt nicht: nur die Elemente reagieren auf den Finger. */
+  }
+}
+
+/* Redions eigener Ruhe-Schalter zusätzlich zur Betriebssystem-Vorgabe. */
+body[data-schale="premium"][data-bewegung="ruhig"]
+:is(#handy-oben > button .ho-z, #handy-oben > button b,
+    #studio-bar .studio-search, #studio-bar .studio-shortcuts button,
+    #studio-bar .studio-icon, .k-knopf, .ru-kachel, .agent-karte,
+    #reiterleiste .reiter) {
+  transform: none !important;
+  transition: none !important;
+}
+body[data-schale="premium"][data-bewegung="ruhig"] :is(.menu, .finder, .r-sheet) {
+  animation: none !important;
+}
+
+/* Erzwungene Farben und Redions hoher Kontrast: keine durchscheinende Fläche. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
+  body[data-schale="premium"] #studio-bar .studio-search {
+    background: var(--bg-card);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--line);
+    box-shadow: none;
+  }
+}
+:is(body[data-schale="premium"][data-kontrast="hoch"],
+    html[data-schema="kontrast"] > body[data-schale="premium"])
+#studio-bar .studio-search {
+  background: var(--bg-card);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-color: var(--line);
+  box-shadow: none;
+}
+
+
+/* ============================================================================
+ * REDION MOTION / FEINSCHLIFF (zweite Etappe, 21. Oktober 2026)
+ * --------------------------------------------------------------------------
+ * Dokumentenregal, Einstellungen und kleine Menüs bekommen klare Berührungs-
+ * antworten. Papier und Editor bleiben ohne Glas/fortlaufende Animation.
+ * Nur transform und opacity sind in Bewegung; Blur selbst steht still.
+ * ========================================================================== */
+
+/* Ordnerfilter bleiben durch den Text und den gewählten Rand unterscheidbar. */
+body[data-schale="premium"] .bib-pille {
+  box-shadow: inset 0 1px 0 var(--liquid-highlight),
+              0 2px 7px #0000000b;
+  transition: background var(--motion-fast) ease,
+              border-color var(--motion-fast) ease,
+              box-shadow var(--liquid-duration) var(--liquid-ease),
+              transform var(--liquid-duration) var(--liquid-ease);
+}
+body[data-schale="premium"] .bib-pille[data-gefiltert] {
+  box-shadow: inset 0 1px 0 var(--liquid-highlight),
+              0 0 0 1px var(--liquid-accent-glow);
+}
+body[data-schale="premium"] .bib-pille .bib-pille-pfeil {
+  transition: transform var(--liquid-duration) var(--liquid-ease);
+}
+body[data-schale="premium"] .bib-pille[aria-expanded="true"] .bib-pille-pfeil {
+  transform: rotate(180deg);
+}
+
+/* Die Weiterarbeiten-Karte bleibt deckend (lesen > Glas), wirkt aber wie
+ * ein leicht aufliegendes Material. Nur die Miniatur hebt sich bei Hover. */
+body[data-schale="premium"] .bib-studio-weiter {
+  box-shadow: inset 0 1px 0 var(--liquid-highlight),
+              0 8px 22px #0000000d;
+  transition: box-shadow var(--liquid-duration) var(--liquid-ease),
+              border-color var(--motion-fast) ease;
+}
+body[data-schale="premium"] .bib-studio-weiter .bib-studio-miniatur {
+  transition: transform var(--liquid-duration) var(--liquid-ease),
+              box-shadow var(--liquid-duration) var(--liquid-ease);
+}
+body[data-schale="premium"] .bib-studio-weiter button,
+body[data-schale="premium"] .bib-studio-import {
+  transition: transform var(--liquid-duration) var(--liquid-ease),
+              box-shadow var(--liquid-duration) var(--liquid-ease),
+              background var(--motion-fast) ease;
+}
+
+/* Einstellungsfenster öffnet sich wie ein Blatt; kein Blur auf der 920px-
+ * Oberfläche. Navigationszeilen verwenden weiterhin die gleichen Ziele. */
+body[data-schale="premium"] .einst-fenster {
+  box-shadow: 0 26px 70px #00000032,
+              0 4px 18px #00000014;
+}
+body[data-schale="premium"] .einst-nav button {
+  position: relative;
+  transition: color var(--motion-fast) ease,
+              background var(--motion-fast) ease,
+              transform var(--liquid-duration) var(--liquid-ease);
+}
+body[data-schale="premium"] .einst-nav button.on {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+body[data-schale="premium"] .einst-inhalt :is(.ez-gruppe,.ez-grp) {
+  transition: box-shadow var(--liquid-duration) var(--liquid-ease),
+              border-color var(--motion-fast) ease;
+}
+
+/* Das Suchfenster hebt gezielt die Ergebniszeile, nicht die ganze
+ * Glasscheibe. Dadurch bleiben Icons, Titel und Fokus gut lesbar. */
+body[data-schale="premium"] .finder .res > button,
+body[data-schale="premium"] .menu[role="menu"] button {
+  transition: background var(--motion-fast) ease,
+              color var(--motion-fast) ease,
+              transform var(--liquid-duration) var(--liquid-ease);
+}
+body[data-schale="premium"] .finder .res > button:focus-visible,
+body[data-schale="premium"] .menu[role="menu"] button:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Erst beim Öffnen animieren, nicht beim Scrollen oder Tippen. */
+  body[data-schale="premium"] .overlay:has(> .einst-fenster) > .einst-fenster {
+    animation: redion-settings-arrive var(--feder-sanft-dauer, 480ms)
+               var(--feder-sanft, ease-out) both;
+  }
+  @keyframes redion-settings-arrive {
+    from { opacity: .88; transform: translateY(12px) scale(.985); }
+    to { opacity: 1; transform: none; }
+  }
+  @media (hover: hover) and (pointer: fine) {
+    body[data-schale="premium"] .bib-pille:not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: inset 0 1px 0 var(--liquid-highlight),
+                  0 8px 18px #00000018;
+    }
+    body[data-schale="premium"] .bib-studio-weiter:hover {
+      box-shadow: inset 0 1px 0 var(--liquid-highlight),
+                  0 14px 30px #00000014;
+    }
+    body[data-schale="premium"] .bib-studio-weiter:hover .bib-studio-miniatur {
+      transform: perspective(var(--studio-perspective))
+                 rotateY(-6deg) rotate(-2deg) translateY(-3px);
+      box-shadow: 0 15px 28px #0000001c;
+    }
+    body[data-schale="premium"] .bib-studio-weiter button:hover,
+    body[data-schale="premium"] .bib-studio-import:not(:disabled):hover {
+      transform: translateY(-2px);
+    }
+    body[data-schale="premium"] .einst-nav button:hover:not(.on) {
+      transform: translateX(3px);
+    }
+    body[data-schale="premium"] .einst-inhalt :is(.ez-gruppe,.ez-grp):hover {
+      box-shadow: inset 0 1px 0 var(--liquid-highlight),
+                  0 7px 20px #0000000c;
+    }
+    body[data-schale="premium"] .finder .res > button:hover,
+    body[data-schale="premium"] .menu[role="menu"] button:hover {
+      transform: translateX(3px);
+    }
+  }
+}
+
+/* Ohne Animation bleibt die Funktion identisch und der aktuelle Fokus klar. */
+body[data-schale="premium"][data-bewegung="ruhig"]
+:is(.bib-pille,.bib-pille-pfeil,.bib-studio-miniatur,
+    .bib-studio-weiter button,.bib-studio-import,
+    .einst-nav button,.finder .res > button,
+    .menu[role="menu"] button) {
+  transition: none !important;
+  transform: none !important;
+}
+body[data-schale="premium"][data-bewegung="ruhig"]
+.overlay:has(> .einst-fenster) > .einst-fenster {
+  animation: none !important;
+}
+/* Die Miniatur hat im Ruhezustand ihren alten 3D-Winkel; bei "ruhig"
+ * wird keine neue Bewegung addiert, ihre bestehende Geometrie bleibt. */
+
+/* Keine schwebenden Schatten in Kontrastmodi. */
+@media (prefers-contrast: more), (forced-colors: active) {
+  body[data-schale="premium"] :is(.bib-pille,.bib-studio-weiter,.einst-fenster) {
+    box-shadow: none;
+  }
+}
+:is(body[data-schale="premium"][data-kontrast="hoch"],
+    html[data-schema="kontrast"] > body[data-schale="premium"])
+:is(.bib-pille,.bib-studio-weiter,.einst-fenster) {
+  box-shadow: none;
 }

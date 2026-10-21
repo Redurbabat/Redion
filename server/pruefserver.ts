@@ -16,7 +16,7 @@ import http from 'node:http';
 import type { Socket } from 'node:net';
 import { beantworte } from './kern.ts';
 import { ablageSpeicher, blobsSpeicher } from './ablage.ts';
-import { koerperZuGross, zuGrossAntwort } from './sicherheit/eingaben.ts';
+import { koerperZuGross, koerperGrenze, zuGrossAntwort } from './sicherheit/eingaben.ts';
 import type { Ablage, Antwort, Blobs, Kopfzeilen, Umwelt } from './typen.ts';
 
 /** Was ein Prüflauf beim Starten mitgeben kann: eine eigene Ablage (etwa eine
@@ -50,7 +50,20 @@ export const starte = async (port = 8790, opt: StartOpt = {}) => {
     }
 
     let roh = '';
-    for await (const stueck of req) roh += stueck;
+    let groesse = 0;
+    let zuGross = false;
+    // Ohne Content-Length gilt dieselbe Byte-Grenze wie im Cloudflare-Worker.
+    for await (const stueck of req) {
+      groesse += stueck.length;
+      if (groesse > koerperGrenze(u.pathname)) { zuGross = true; continue; }
+      roh += stueck.toString('utf8');
+    }
+    if (zuGross) {
+      const z = zuGrossAntwort(u.pathname);
+      res.writeHead(z.status, z.kopf);
+      res.end(z.koerper);
+      return;
+    }
     let koerper = {};
     if (roh) { try { koerper = JSON.parse(roh); } catch { koerper = { text: roh }; } }
 

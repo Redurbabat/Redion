@@ -124,7 +124,10 @@ const Seitenleiste = (() => {
                         SelectionFlow.folge(f, k.offsetLeft, true, false);
                     else
                         handyLeiste();
-                }
+                },
+                ...(typeof TabShelf !== 'undefined'
+                    ? { hinauf: { nimm: (k, wie, x, y) => TabShelf.nimm(k, wie, x, y) } }
+                    : {})
             });
         }
         if (!aktiv) {

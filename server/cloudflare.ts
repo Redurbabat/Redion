@@ -13,7 +13,7 @@ import { beantworte, weckrufeFaellig } from './kern.ts';
 import { ablageD1, blobsR2 } from './ablage.ts';
 import type { Anfrage, Antwort, Kopfzeilen, Umwelt } from './typen.ts';
 
-import { koerperZuGross, zuGrossAntwort } from './sicherheit/eingaben.ts';
+import { koerperZuGross, koerperGrenze, leseBegrenzt, zuGrossAntwort } from './sicherheit/eingaben.ts';
 import { stossen, schluesselLesen } from './sicherheit/push.ts';
 
 /**
@@ -36,17 +36,23 @@ export const alsAnfrage = async (request: Request): Promise<Anfrage | { zuGross:
      hier und nicht im Kern — dort ist der Körper längst im Speicher. */
   if (koerperZuGross(u.pathname, kopf['content-length'] ?? null)) return { zuGross: u.pathname };
 
+  const bytes = request.method === 'GET' || request.method === 'HEAD'
+    ? new Uint8Array(0) : await leseBegrenzt(request.body, koerperGrenze(u.pathname));
+  if (!bytes) return { zuGross: u.pathname };
+
   let koerper: Record<string, any> = {};
-  if (request.method !== 'GET' && request.method !== 'HEAD') {
+  if (bytes.length) {
     const art = kopf['content-type'] || '';
     try {
-      if (art.includes('application/json')) koerper = await request.json() as Record<string, any>;
-      else if (art.includes('form')) {
-        const f = await request.formData();
+      if (art.includes('form')) {
+        const nachricht = new Response(new Uint8Array(bytes).buffer,
+          { headers: { 'Content-Type': art } });
+        const f = await nachricht.formData();
         f.forEach((v: unknown, k: string) => { koerper[k] = v; });
       } else {
-        const text = await request.text();
-        if (text) { try { koerper = JSON.parse(text); } catch { koerper = { text }; } }
+        const inhalt = new TextDecoder().decode(bytes);
+        try { koerper = JSON.parse(inhalt) as Record<string, any>; }
+        catch { koerper = { text: inhalt }; }
       }
     } catch { koerper = {}; }
   }
