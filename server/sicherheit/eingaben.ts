@@ -162,3 +162,26 @@ export const zuGrossAntwort = (pfad: string) => ({
              Math.round(koerperGrenze(pfad) / MB * 10) / 10 + ' MB.'
   })
 });
+
+/** Stream-Schutz auch ohne Content-Length: nie mehr als `grenze` Bytes puffern. */
+export const leseBegrenzt = async (
+  strom: ReadableStream<Uint8Array> | null, grenze: number
+): Promise<Uint8Array | null> => {
+  if (!strom) return new Uint8Array(0);
+  const leser = strom.getReader();
+  const teile: Uint8Array[] = [];
+  let gesamt = 0;
+  try {
+    while (true) {
+      const { done, value } = await leser.read();
+      if (done) break;
+      gesamt += value.byteLength;
+      if (gesamt > grenze) { await leser.cancel(); return null; }
+      teile.push(value);
+    }
+  } finally { leser.releaseLock(); }
+  const daten = new Uint8Array(gesamt);
+  let stelle = 0;
+  for (const teil of teile) { daten.set(teil, stelle); stelle += teil.byteLength; }
+  return daten;
+};

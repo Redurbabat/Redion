@@ -48,6 +48,8 @@ compatibility_date = "2025-04-01"
 [assets]
 directory = "./"
 binding = "ASSETS"
+# Auch vorhandene HTML/JS/CSS-Dateien müssen vor der Auslieferung durch das Access-Tor.
+run_worker_first = true
 
 # ===========================================================================
 #  D1 — die Datenbank fuer Konten, Abgleich und Rechte

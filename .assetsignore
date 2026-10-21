@@ -58,6 +58,12 @@ Schul Inhalt
 #  UND DIE CHRONIK. `chronik/chronik.json` ist die QUELLE von UR.md und
 #  PROBLEME.md — Redurs Nachrichten im Wortlaut, jeder Arbeitstag, jedes
 #  Problem. Der Browser lädt sie nie: er liest `quell/bereiche/chronik/
+
+# Vertrauliche Projektchronik nie als öffentliche Datei ausliefern.
+# Die weitergebbare Einzeldatei enthält die Chronik ebenfalls inline.
+# Beide bleiben nur im privaten Repository bzw. auf dem lokalen Rechner.
+/quell/bereiche/chronik/daten.js
+/redion-einzeldatei.html
 #  daten.js`, und das ist Absicht (E514). Die Quelle daneben ist Werkstatt
 #  und hat im Netz nichts verloren.
 #

@@ -275,3 +275,38 @@ eigenen Gebrauch reicht.
 
 Die App selbst kostet nichts und wird nie etwas kosten — sie läuft in deinem
 Browser.
+
+---
+
+## Schutz vor der Veröffentlichung (Sicherheitskorrektur, 21. Oktober 2026)
+
+Im Worker wird **jede** Anfrage auf einen gültigen Cloudflare-Access-Nachweis
+geprüft, bevor HTML, JavaScript, API oder statische Dateien ausgeliefert
+werden. In `wrangler.toml` ist dazu `assets.run_worker_first = true` gesetzt.
+
+**Vor dem Merge und Deployment einrichten:** Cloudflare Zero Trust → Access →
+Applications: eine Access-Anwendung für die gesamte Domain und die zulässigen
+Personen konfigurieren. Am Worker folgende Umgebungsvariablen setzen:
+
+- `ACCESS_TEAM`: die eigene `<team>.cloudflareaccess.com`-Adresse
+- `ACCESS_AUD`: die Audience-Kennung der Access-Anwendung
+
+Fehlen die Angaben, antwortet der Worker absichtlich mit 503 (geschlossen).
+`TOR=offen` umgeht den Schutz nur nach ausdrücklicher Entscheidung; für
+vertrauliche Arbeitsbereiche darf dieser Wert **nicht** gesetzt werden.
+Geschützte Webseiten verhindern nicht, dass bereits veröffentlichte Daten
+von Dritten gespeichert worden sein könnten.
+
+Die persönliche Chronikdatei `quell/bereiche/chronik/daten.js` und die
+Einzeldatei `redion-einzeldatei.html`, in der die Chronik eingebettet ist,
+werden von `.assetsignore` von der Veröffentlichung ausgeschlossen.
+**Achtung:** Die Einzeldatei bleibt lokal vertraulich und darf nicht ohne
+vorherige Entfernung privater Inhalte weitergegeben werden. Die Chronik ist
+daher im Cloudflare-Betrieb nicht mehr aus der Website ladbar; lokal im
+Repository bleibt sie verfügbar. Für eine Online-Chronik braucht es eine
+separate, authentifizierte Daten-API statt einer statischen JS-Datei.
+
+Die Brücke nimmt aus Sicherheitsgründen nur erlaubte HTTPS-Hosts an, folgt
+keinen Redirects und lehnt fremde Origins ab. Beliebige `.ics`-URLs
+funktionieren nicht mehr über die Brücke. Sie müssen ausdrücklich als Host
+freigeschaltet oder direkt im Browser importiert werden.

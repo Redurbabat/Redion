@@ -17,11 +17,17 @@
  * beiden Fälle oben.
  * ==========================================================================*/
 
+import { torPruefen } from './server/sicherheit/tor.ts';
 import { onRequest as bruecke } from './functions/api/bruecke.ts';
 import { bedienen, istServerWeg, geplant } from './server/cloudflare.ts';
 
 export default {
   async fetch(request: any, env: any, ctx: any) {
+    // Jede Anfrage vor dem Routing prüfen, auch statische Dateien und /api/bruecke.
+    // Voraussetzung: assets.run_worker_first = true in wrangler.toml.
+    const verweigert = await torPruefen(request, env || {});
+    if (verweigert) return verweigert;
+
     const url = new URL(request.url);
 
     /* --- Die Brücke ---------------------------------------------------- */
