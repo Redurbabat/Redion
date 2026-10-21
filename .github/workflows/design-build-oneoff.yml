@@ -1,0 +1,43 @@
+# Einmaliger Erzeuger für den Design-Branch; nach erfolgreicher Ausführung löschen.
+name: Design-Build einmalig
+on:
+  push:
+    branches:
+      - fix/redion-sicherheit-und-datenschutz-20261021
+    paths:
+      - .github/workflows/design-build-oneoff.yml
+permissions:
+  contents: write
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Installieren
+        run: npm install --no-audit --no-fund
+      - name: CSS, Testzahlen und Animationen prüfen
+        run: |
+          node pruefungen/lauf/test290.mts
+          node pruefungen/lauf/test550.mts
+          node pruefungen/lauf/test621.mts
+      - name: Offline- und Einzeldatei neu bauen
+        run: |
+          npm run bauen:ts
+          node bauen.mts
+          npm run stand
+      - name: Erzeugte Artefakte committen
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- src/dienst/sw.ts src/kern/einstellung/stand.ts sw.js quell/kern/einstellung/stand.js redion-einzeldatei.html
+          if ! git diff --cached --quiet; then
+            git commit -m "build: Redion-Motion-Dateien und Offline-Version aktualisieren"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          else
+            echo "Build-Artefakte unverändert."
+          fi
