@@ -896,8 +896,16 @@ const App = (() => {
         }
         catch { }
     };
-    const zeigeSonder = (titel, zeichner) => {
-        if (seiteId || !sonder || sonder.titel !== titel)
+    const zeigeSonder = (titel, zeichner, adresse) => {
+        let jetzt = '';
+        try {
+            jetzt = String(location.hash || '');
+        }
+        catch {
+            jetzt = '';
+        }
+        const woanders = typeof adresse === 'string' && adresse !== '' && adresse !== jetzt;
+        if (seiteId || !sonder || sonder.titel !== titel || woanders)
             navMerken();
         sonder = { titel, zeichner };
         seiteId = null;
