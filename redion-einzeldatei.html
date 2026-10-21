@@ -25216,6 +25216,180 @@ body:has(.finder.such) #studio-search > [data-sym] > svg,
     box-shadow:var(--glas-kante)}
 }
 
+
+/* ============================================================================
+ * REDION LIQUID GLASS / BEWEGUNG (Oktober 2026)
+ * --------------------------------------------------------------------------
+ * Apple-inspirierte Rückmeldung in der Schale. Keine neue Oberfläche, keine
+ * Bewegung im Editor und keine dauernd laufenden Animationen. Die bestehende
+ * SelectionFlow-Linse im mobilen Dock behält ihren eigenen Bewegungsablauf.
+ *
+ * Glas nur auf kleinen, schwebenden Kontrollen: keine Vollbild-Weichzeichnung,
+ * kein animiertes backdrop-filter. Die vorhandenen Glas-Marken und die
+ * Systemeinstellungen für Kontrast/Transparenz bleiben die einzige Wahrheit.
+ * ========================================================================== */
+body[data-schale="premium"] {
+  --liquid-ease: var(--feder-knapp, cubic-bezier(.22, 1, .36, 1));
+  --liquid-duration: var(--motion-normal, 340ms);
+  --liquid-highlight: color-mix(in srgb, var(--text) 13%, transparent);
+  --liquid-accent-glow: color-mix(in srgb, var(--accent) 17%, transparent);
+}
+
+/* Desktop-Suche: eine kleine, lesbare Glaslinse, keine glasierte Kopfzeile. */
+body[data-schale="premium"] #studio-bar .studio-search {
+  background: var(--bg-card);  /* Fallback ohne backdrop-filter */
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 var(--liquid-highlight), 0 2px 10px #0000000b;
+  transition: background var(--motion-fast) ease,
+              border-color var(--motion-fast) ease,
+              box-shadow var(--liquid-duration) var(--liquid-ease),
+              transform var(--liquid-duration) var(--liquid-ease);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  body[data-schale="premium"] #studio-bar .studio-search {
+    background: var(--bg-schwebend-dicht);
+    -webkit-backdrop-filter: var(--glas-blur);
+    backdrop-filter: var(--glas-blur);
+    border-color: transparent;
+    box-shadow: var(--glas-kante), 0 5px 16px #00000013;
+    --text-faint: var(--text-dim);
+  }
+  /* Bereits schwebende Glasflächen bekommen stärkere Kanten und Tiefen.
+     Die Unschärfe selbst bleibt statisch und auf 20 px begrenzt. */
+  body[data-schale="premium"] :is(.menu, .finder, .auswahlleiste) {
+    box-shadow: var(--glas-kante), 0 18px 44px #00000024,
+                0 2px 7px #00000016;
+  }
+}
+
+/* Die Fenster behalten ihre Glasdeckkraft während der Bewegung. */
+body[data-schale="premium"] :is(.menu, .finder):not(.blatt) {
+  animation-duration: var(--liquid-duration);
+  animation-timing-function: var(--liquid-ease);
+}
+body[data-schale="premium"] .r-sheet {
+  animation-timing-function: var(--feder-sanft, cubic-bezier(.22, 1, .36, 1));
+}
+body[data-schale="premium"] #kanten-lade:not([hidden]) {
+  animation-timing-function: var(--liquid-ease);
+}
+
+/* Akzentuierte Touch-Dock-Linse: verstärkte Lichtkante, keine zweite Linse.
+   Keine Transformation am Dock selbst: SelectionFlow misst seine Geometrie. */
+@media (max-width: 760px) {
+  body[data-schale="premium"] #handy-oben {
+    box-shadow: var(--glas-kante), 0 14px 38px #0000002b,
+                0 3px 9px #00000019;
+  }
+  body[data-schale="premium"] #handy-oben > button .ho-z {
+    transition: transform var(--liquid-duration) var(--liquid-ease),
+                color var(--motion-fast) ease;
+    transform-origin: 50% 55%;
+  }
+  body[data-schale="premium"] #handy-oben > button b {
+    transition: color var(--motion-fast) ease,
+                transform var(--liquid-duration) var(--liquid-ease);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Knöpfe und Reiter reagieren federnd statt abrupt, ohne Layout-Reflow. */
+  body[data-schale="premium"] #studio-bar :is(.studio-shortcuts button, .studio-icon) {
+    transition: color var(--motion-fast) ease,
+                background var(--motion-fast) ease,
+                border-color var(--motion-fast) ease,
+                box-shadow var(--liquid-duration) var(--liquid-ease),
+                transform var(--liquid-duration) var(--liquid-ease);
+  }
+
+  body[data-schale="premium"] :is(.ru-kachel, .agent-karte) {
+    transition: transform var(--liquid-duration) var(--liquid-ease),
+                box-shadow var(--liquid-duration) var(--liquid-ease),
+                border-color var(--motion-fast) ease,
+                background var(--motion-fast) ease;
+  }
+
+  body[data-schale="premium"] #reiterleiste .reiter {
+    transition: background var(--motion-fast) ease,
+                box-shadow var(--liquid-duration) var(--liquid-ease),
+                transform var(--liquid-duration) var(--liquid-ease);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    body[data-schale="premium"] #studio-bar .studio-search:is(:hover, :focus-visible) {
+      transform: translateY(-2px) scale(1.005);
+      border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+      box-shadow: var(--glas-kante), 0 12px 26px #0000001d,
+                  0 0 0 1px var(--liquid-accent-glow);
+    }
+    body[data-schale="premium"] #studio-bar .studio-shortcuts button:hover {
+      transform: translateY(-2px);
+      box-shadow: inset 0 1px 0 var(--liquid-highlight),
+                  0 5px 12px #00000013;
+    }
+    body[data-schale="premium"] #studio-bar .studio-icon:hover {
+      transform: translateY(-2px);
+    }
+    body[data-schale="premium"] .k-knopf:hover {
+      transform: translateX(3px);
+    }
+    body[data-schale="premium"] :is(.ru-kachel, .agent-karte):is(:hover, :focus-visible) {
+      transform: translateY(-3px) scale(1.012);
+      box-shadow: 0 12px 24px #00000016,
+                  inset 0 1px 0 var(--liquid-highlight);
+    }
+    body[data-schale="premium"] #reiterleiste .reiter:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  @media (max-width: 760px) {
+    body[data-schale="premium"] #handy-oben > button.an .ho-z {
+      transform: translateY(-2px) scale(1.10);
+    }
+    body[data-schale="premium"] #handy-oben > button.an b {
+      transform: translateY(-1px);
+    }
+    body[data-schale="premium"] #handy-oben > button:active .ho-z {
+      transform: translateY(1px) scale(.92);
+    }
+    /* Der Dockkörper fährt nicht: nur die Elemente reagieren auf den Finger. */
+  }
+}
+
+/* Redions eigener Ruhe-Schalter zusätzlich zur Betriebssystem-Vorgabe. */
+body[data-schale="premium"][data-bewegung="ruhig"]
+:is(#handy-oben > button .ho-z, #handy-oben > button b,
+    #studio-bar .studio-search, #studio-bar .studio-shortcuts button,
+    #studio-bar .studio-icon, .k-knopf, .ru-kachel, .agent-karte,
+    #reiterleiste .reiter) {
+  transform: none !important;
+  transition: none !important;
+}
+body[data-schale="premium"][data-bewegung="ruhig"] :is(.menu, .finder, .r-sheet) {
+  animation: none !important;
+}
+
+/* Erzwungene Farben und Redions hoher Kontrast: keine durchscheinende Fläche. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
+  body[data-schale="premium"] #studio-bar .studio-search {
+    background: var(--bg-card);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--line);
+    box-shadow: none;
+  }
+}
+:is(body[data-schale="premium"][data-kontrast="hoch"],
+    html[data-schema="kontrast"] > body[data-schale="premium"])
+#studio-bar .studio-search {
+  background: var(--bg-card);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-color: var(--line);
+  box-shadow: none;
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/bibliothek-studio.css ===== */
@@ -27617,7 +27791,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1498, inhalt: '3f841fba39923ae0', gebaut: '2026-10-13T01:03:46.478Z' };
+const Stand = { fassung: 1499, inhalt: '46daa5693dd0382d', gebaut: '2026-10-21T04:47:02.091Z' };
 window.Stand = Stand;
 
 </script>
