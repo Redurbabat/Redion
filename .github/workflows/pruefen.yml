@@ -209,6 +209,12 @@ jobs:
       - name: Der schnelle Lauf
         run: npm run pruefen -- --schnell
 
+      # Ein echter Chromium-Lauf auf den vorhandenen Stilblättern: Verhalten
+      # bei Desktop/iPhone, Bewegung reduziert und hohem Kontrast.
+      # Keine Screenshots, keine Nutzerdaten, kein Netz/Deployment nötig.
+      - name: Liquid Glass und Motion im Browser prüfen
+        run: node pruefungen/ui-motion-check.mts
+
       # Wenn etwas schiefging, ist der Bildschirm des Browsers das Erste,
       # was man sehen will. Playwright legt nichts von selbst ab; die Läufe
       # tun es auch nicht — deshalb bleibt hier nur das Protokoll, und das
