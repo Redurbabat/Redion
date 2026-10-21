@@ -1,0 +1,41 @@
+# Temporärer Build zur Übernahme von Zielleiste-Quelle und Zielleiste-Handy.
+# Nach synchronisiertem Quellenstand wieder entfernen.
+name: Funktionsbranches Build
+on:
+  push:
+    branches:
+      - fix/redion-sicherheit-und-datenschutz-20261021
+    paths:
+      - .github/workflows/branch-fusion-build-temp.yml
+permissions:
+  contents: write
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Abhängigkeiten
+        run: npm install --no-audit --no-fund
+      - name: Typen prüfen
+        run: npm run typecheck
+      - name: JavaScript und Offline-Artefakte aus den Quellen bauen
+        run: |
+          npm run bauen:ts
+          node bauen.mts
+          npm run stand
+      - name: Geprüfte Artefakte committen
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- quell src/dienst/sw.ts src/kern/einstellung/stand.ts sw.js redion-einzeldatei.html
+          if ! git diff --cached --quiet; then
+            git commit -m "build: Zielleiste und Navigationsverlauf mit TypeScript synchronisieren"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          else
+            echo "Erzeugte Dateien sind schon synchron."
+          fi
