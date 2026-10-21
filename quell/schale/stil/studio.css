@@ -1023,3 +1023,156 @@ body[data-schale="premium"][data-bewegung="ruhig"] :is(.menu, .finder, .r-sheet)
   border-color: var(--line);
   box-shadow: none;
 }
+
+
+/* ============================================================================
+ * REDION MOTION / FEINSCHLIFF (zweite Etappe, 21. Oktober 2026)
+ * --------------------------------------------------------------------------
+ * Dokumentenregal, Einstellungen und kleine Menüs bekommen klare Berührungs-
+ * antworten. Papier und Editor bleiben ohne Glas/fortlaufende Animation.
+ * Nur transform und opacity sind in Bewegung; Blur selbst steht still.
+ * ========================================================================== */
+
+/* Ordnerfilter bleiben durch den Text und den gewählten Rand unterscheidbar. */
+body[data-schale="premium"] .bib-pille {
+  box-shadow: inset 0 1px 0 var(--liquid-highlight),
+              0 2px 7px #0000000b;
+  transition: background var(--motion-fast) ease,
+              border-color var(--motion-fast) ease,
+              box-shadow var(--liquid-duration) var(--liquid-ease),
+              transform var(--liquid-duration) var(--liquid-ease);
+}
+body[data-schale="premium"] .bib-pille[data-gefiltert] {
+  box-shadow: inset 0 1px 0 var(--liquid-highlight),
+              0 0 0 1px var(--liquid-accent-glow);
+}
+body[data-schale="premium"] .bib-pille .bib-pille-pfeil {
+  transition: transform var(--liquid-duration) var(--liquid-ease);
+}
+body[data-schale="premium"] .bib-pille[aria-expanded="true"] .bib-pille-pfeil {
+  transform: rotate(180deg);
+}
+
+/* Die Weiterarbeiten-Karte bleibt deckend (lesen > Glas), wirkt aber wie
+ * ein leicht aufliegendes Material. Nur die Miniatur hebt sich bei Hover. */
+body[data-schale="premium"] .bib-studio-weiter {
+  box-shadow: inset 0 1px 0 var(--liquid-highlight),
+              0 8px 22px #0000000d;
+  transition: box-shadow var(--liquid-duration) var(--liquid-ease),
+              border-color var(--motion-fast) ease;
+}
+body[data-schale="premium"] .bib-studio-weiter .bib-studio-miniatur {
+  transition: transform var(--liquid-duration) var(--liquid-ease),
+              box-shadow var(--liquid-duration) var(--liquid-ease);
+}
+body[data-schale="premium"] .bib-studio-weiter button,
+body[data-schale="premium"] .bib-studio-import {
+  transition: transform var(--liquid-duration) var(--liquid-ease),
+              box-shadow var(--liquid-duration) var(--liquid-ease),
+              background var(--motion-fast) ease;
+}
+
+/* Einstellungsfenster öffnet sich wie ein Blatt; kein Blur auf der 920px-
+ * Oberfläche. Navigationszeilen verwenden weiterhin die gleichen Ziele. */
+body[data-schale="premium"] .einst-fenster {
+  box-shadow: 0 26px 70px #00000032,
+              0 4px 18px #00000014;
+}
+body[data-schale="premium"] .einst-nav button {
+  position: relative;
+  transition: color var(--motion-fast) ease,
+              background var(--motion-fast) ease,
+              transform var(--liquid-duration) var(--liquid-ease);
+}
+body[data-schale="premium"] .einst-nav button.on {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+body[data-schale="premium"] .einst-inhalt :is(.ez-gruppe,.ez-grp) {
+  transition: box-shadow var(--liquid-duration) var(--liquid-ease),
+              border-color var(--motion-fast) ease;
+}
+
+/* Das Suchfenster hebt gezielt die Ergebniszeile, nicht die ganze
+ * Glasscheibe. Dadurch bleiben Icons, Titel und Fokus gut lesbar. */
+body[data-schale="premium"] .finder .res > button,
+body[data-schale="premium"] .menu[role="menu"] button {
+  transition: background var(--motion-fast) ease,
+              color var(--motion-fast) ease,
+              transform var(--liquid-duration) var(--liquid-ease);
+}
+body[data-schale="premium"] .finder .res > button:focus-visible,
+body[data-schale="premium"] .menu[role="menu"] button:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Erst beim Öffnen animieren, nicht beim Scrollen oder Tippen. */
+  body[data-schale="premium"] .overlay:has(> .einst-fenster) > .einst-fenster {
+    animation: redion-settings-arrive var(--feder-sanft-dauer, 480ms)
+               var(--feder-sanft, ease-out) both;
+  }
+  @keyframes redion-settings-arrive {
+    from { opacity: .88; transform: translateY(12px) scale(.985); }
+    to { opacity: 1; transform: none; }
+  }
+  @media (hover: hover) and (pointer: fine) {
+    body[data-schale="premium"] .bib-pille:not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: inset 0 1px 0 var(--liquid-highlight),
+                  0 8px 18px #00000018;
+    }
+    body[data-schale="premium"] .bib-studio-weiter:hover {
+      box-shadow: inset 0 1px 0 var(--liquid-highlight),
+                  0 14px 30px #00000014;
+    }
+    body[data-schale="premium"] .bib-studio-weiter:hover .bib-studio-miniatur {
+      transform: perspective(var(--studio-perspective))
+                 rotateY(-6deg) rotate(-2deg) translateY(-3px);
+      box-shadow: 0 15px 28px #0000001c;
+    }
+    body[data-schale="premium"] .bib-studio-weiter button:hover,
+    body[data-schale="premium"] .bib-studio-import:not(:disabled):hover {
+      transform: translateY(-2px);
+    }
+    body[data-schale="premium"] .einst-nav button:hover:not(.on) {
+      transform: translateX(3px);
+    }
+    body[data-schale="premium"] .einst-inhalt :is(.ez-gruppe,.ez-grp):hover {
+      box-shadow: inset 0 1px 0 var(--liquid-highlight),
+                  0 7px 20px #0000000c;
+    }
+    body[data-schale="premium"] .finder .res > button:hover,
+    body[data-schale="premium"] .menu[role="menu"] button:hover {
+      transform: translateX(3px);
+    }
+  }
+}
+
+/* Ohne Animation bleibt die Funktion identisch und der aktuelle Fokus klar. */
+body[data-schale="premium"][data-bewegung="ruhig"]
+:is(.bib-pille,.bib-pille-pfeil,.bib-studio-miniatur,
+    .bib-studio-weiter button,.bib-studio-import,
+    .einst-nav button,.finder .res > button,
+    .menu[role="menu"] button) {
+  transition: none !important;
+  transform: none !important;
+}
+body[data-schale="premium"][data-bewegung="ruhig"]
+.overlay:has(> .einst-fenster) > .einst-fenster {
+  animation: none !important;
+}
+/* Die Miniatur hat im Ruhezustand ihren alten 3D-Winkel; bei "ruhig"
+ * wird keine neue Bewegung addiert, ihre bestehende Geometrie bleibt. */
+
+/* Keine schwebenden Schatten in Kontrastmodi. */
+@media (prefers-contrast: more), (forced-colors: active) {
+  body[data-schale="premium"] :is(.bib-pille,.bib-studio-weiter,.einst-fenster) {
+    box-shadow: none;
+  }
+}
+:is(body[data-schale="premium"][data-kontrast="hoch"],
+    html[data-schema="kontrast"] > body[data-schale="premium"])
+:is(.bib-pille,.bib-studio-weiter,.einst-fenster) {
+  box-shadow: none;
+}
