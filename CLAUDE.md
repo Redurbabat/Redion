@@ -2604,6 +2604,13 @@ Auch sie gilt einmal.*
 
 ---
 
+*Vierte einmalige Ausnahme (E752, 21. Oktober 2026): Redur verlangt den
+Sicherheitsbranch auf main und erlaubt ausdrücklich die bekannten alten
+Fehler sowie die belegten Windows-Testhilfen test216/test578 („Ja, jetzt
+integrieren und pushen“). Der Integrationsbericht nennt die gefahrenen Prüfungen; ein neuer
+vollständiger Lauf wird nicht behauptet. Die Regel für spätere Änderungen
+bleibt bestehen.*
+
 ## 47. Nicht tun  **[hart]**
 
 Die Kurzliste. Jeder Punkt hat oben seinen Abschnitt:

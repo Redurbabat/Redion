@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-730 Entscheidungen, E1 bis E751 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+731 Entscheidungen, E1 bis E752 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -798,6 +798,10 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 
 ---
 
+
+* **E752** — Den Sicherheitsbranch und den Laptop vollständig auf main zusammenführen (Redur, 21. Oktober 2026). Die ausdrücklich erlaubte Ausnahme lässt die zwölf bereits dokumentierten Altfehler aus E751 offen; Schnelltests und betroffene Wege werden geprüft. Keine unfertige lokale Kachel-Feder, kein Force-Push, kein Cloudflare-Deployment. Details am Ende und im Integrationsbericht.
+
+---
 
 ## Grundregel
 
@@ -69333,3 +69337,57 @@ Stand MIT einer benannten Liste roter Läufe. Die Liste ist wieder kürzer
 geworden (zwölf statt dreizehn). Dass es die dritte Ausnahme in drei Tagen
 ist, sagt dasselbe wie in E743: solange die zwölf rot sind, ist jedes
 Vorspulen eine Ausnahme.
+
+## E752 — Sicherheitsbranch, Glas und Zielleisten auf einem gemeinsamen main
+
+**Auftrag:** Redur nennt am 21. Oktober 2026
+`fix/redion-sicherheit-und-datenschutz-20261021` und verlangt dessen
+Änderungen auf `main` sowie einen schnellen Push. Zuvor hat er in diesem
+Dialog auf die ausdrückliche Frage zu §46 geantwortet:
+„Ja, bekannte alte Fehler dürfen offen bleiben“.
+
+**Stand:** GitHub-main war `020f51ce1`. Der genannte Branch
+(`97123abd6`) enthält Sicherheitskorrekturen, zwei Etappen der
+Glas-/Bewegungsregeln sowie E748/E749. Der lokale Integrationsstand
+`d8f7c6c30` enthält zusätzlich die vollständige Dokumentation der beiden
+Zielleisten-Zweige. `98906028d` führt beide zusammen. Keine Funktionen
+werden anhand eines Datums zurückgesetzt; beide ursprünglichen Zweige
+bleiben in der Abstammung erhalten.
+
+**Beim Prüfen repariert:** Die Brücke lehnte normale Content-Length-Werte
+wegen eines doppelt maskierten Ziffernausdrucks ab. Für Status 205 entstand
+ein unerlaubter Antwortkörper. `test620` hält jetzt beide Fälle:
+zuerst 13 grün / 2 rot, nach den Reparaturen 15 grün / 0 rot.
+Die Prüfung auf zu grosse oder ungültige Angaben bleibt erhalten.
+Die Cloudflare-/Workers-Prüfvorgaben wurden für den Review benutzt;
+`run_worker_first` bleibt an, das Access-Tor wird nicht abgeschaltet.
+
+**Messstelle nachgezogen:** `test585` griff bei der Druckfeder auf die
+erste Animation zu. Die neue Glasgestaltung liefert zusätzliche
+CSS-Übergänge; jetzt wird gezielt genau eine `scale`-Feder geprüft.
+Stützstellenzahl und Nachschwinggrenzen bleiben unverändert. Der
+Abschlussbericht hält Erstlauf und Wiederholung getrennt fest.
+
+**Sicherung:** Die unfertige lokale Symbolfeder liegt separat in
+`24365d989` (`codex/apple-glass-20oct`), der ältere PDF-Zwischenstand
+in `19a3de648`. Sie werden nicht ungeprüft auf main übertragen.
+
+**Ausnahme, wieder einmalig:** Kein neuer vollständiger Lauf ist damit
+behauptet. Die zwölf aus E751 bekannten roten Läufe sind
+201, 270, 332, 348, 351, 365, 425, 448, 470, 493, 524 und 533.
+Die aktuellen Prüfergebnisse und Grenzen stehen in
+`doku/INTEGRATION-2026-10-21.md`. Das nächste Vorspulen braucht wieder
+einen vollständig grünen Lauf oder Redurs neues ausdrückliches Wort.
+
+**Windows-Nachtrag, ebenfalls ausdrücklich erlaubt:** Der aktuelle
+Schnelllauf hat 45 von 47 grüne Läufe. `test216` erwartet ein
+Unix-Shell-Ersatzprogramm für Tesseract samt Unix-PATH; `test578`
+erzeugt TypeScript-Dateimuster mit Windows-Rückstrichen und bekommt
+TS18003 (keine Eingabedateien). Beide Tests und ihre betroffenen
+Produkt-/Builddateien sind gegenüber `020f51ce1` unverändert.
+Auf die konkrete Frage, auch diese zwei Testhilfen offen zu lassen,
+antwortet Redur: „Ja, jetzt integrieren und pushen“.
+
+**Deployment-Grenze:** Beauftragt ist der GitHub-Push, nicht das Einrichten
+von Cloudflare-Zugängen. Ohne ACCESS_TEAM/ACCESS_AUD antwortet der Worker
+absichtlich mit 503. Bestehende lokale Browserdaten bleiben unverändert.

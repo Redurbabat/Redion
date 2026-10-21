@@ -42,6 +42,24 @@ mehr gibt.
 
 ## Was jetzt offen ist
 
+### Integrationsnachtrag 21. Oktober 2026 (E752)
+
+- **Windows-Prüfhilfen portabel machen:** `test216` liefert ein Unix-Shell-
+  Ersatzprogramm für Tesseract und baut PATH mit `:`; `test578` erzeugt
+  unter Windows Rückstriche in TypeScript-Globmustern (TS18003).
+  Beide gegenüber bisherigem main unverändert, im Schnelllauf 45/47 grün.
+  Fertig: beide Läufe prüfen denselben Vertrag unter Windows und Linux,
+  ohne Überspringen oder Lockerung. Priorität: mittel.
+- **Cloudflare-Access vor einem Deployment nachsehen:** ACCESS_TEAM und
+  ACCESS_AUD müssen zur Access-Anwendung passen. Ohne sie sperrt der neue
+  Worker absichtlich auch HTML/JS mit 503. Zugangskonfiguration wurde bei
+  dieser GitHub-Integration nicht verändert. Priorität: hoch vor Deployment.
+- **Unfertige lokale Kachel-Symbolfeder:** separat gesichert in `24365d989`
+  auf `codex/apple-glass-20oct`, noch ohne eigene Browserabnahme und ohne
+  vollständigen CSS-Teil. Nicht als fertige Funktion in main übernommen.
+  Bei Fortsetzung nur diesen Zusatz prüfen, nicht die alten Merges erneut
+  einspielen. Priorität: niedrig.
+
 Sechs Punkte, jeder nachgesehen am 3. September 2026.
 
 ### 0 · Der Prüfbericht vom 3. September, was davon noch aussteht
