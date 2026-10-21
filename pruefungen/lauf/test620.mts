@@ -22,9 +22,11 @@ pruefe('Worker prüft Access vor dem Routing',
   worker.indexOf('await torPruefen(') < worker.indexOf("url.pathname === '/api/bruecke'"));
 pruefe('Cloudflare schickt auch Assets durch den Worker',
   /run_worker_first\s*=\s*true/.test(wrangler));
-pruefe('Chronik und Einzeldatei werden nicht als Assets verteilt',
-  ignore.includes('/quell/bereiche/chronik/daten.js') &&
+pruefe('Einzeldatei bleibt ausserhalb des Deployments',
   ignore.includes('/redion-einzeldatei.html'));
+pruefe('Chronik bleibt für Offline-Cache vorhanden und ist durch Access geschützt',
+  !ignore.split('\n').some(x => x.trim() === '/quell/bereiche/chronik/daten.js') &&
+  worker.indexOf('await torPruefen(') < worker.indexOf('env.ASSETS.fetch(request)'));
 
 const request = new Request('https://redion.example/index.html');
 const nichtEingerichtet = await torPruefen(request, {});

@@ -297,14 +297,13 @@ vertrauliche Arbeitsbereiche darf dieser Wert **nicht** gesetzt werden.
 Geschützte Webseiten verhindern nicht, dass bereits veröffentlichte Daten
 von Dritten gespeichert worden sein könnten.
 
-Die persönliche Chronikdatei `quell/bereiche/chronik/daten.js` und die
-Einzeldatei `redion-einzeldatei.html`, in der die Chronik eingebettet ist,
-werden von `.assetsignore` von der Veröffentlichung ausgeschlossen.
-**Achtung:** Die Einzeldatei bleibt lokal vertraulich und darf nicht ohne
-vorherige Entfernung privater Inhalte weitergegeben werden. Die Chronik ist
-daher im Cloudflare-Betrieb nicht mehr aus der Website ladbar; lokal im
-Repository bleibt sie verfügbar. Für eine Online-Chronik braucht es eine
-separate, authentifizierte Daten-API statt einer statischen JS-Datei.
+Die persönliche Chronikdatei `quell/bereiche/chronik/daten.js` wird auch
+vom Service Worker benötigt und bleibt daher hinter dem Access-Tor verfügbar.
+**Ohne gültigen Access-Nachweis darf diese Datei nicht ausgeliefert werden.**
+Den Tor-Modus `offen` NICHT verwenden, wenn die Chronik privat bleiben soll.
+Die Einzeldatei `redion-einzeldatei.html` enthält die Chronik im Klartext und
+ist deshalb per `.assetsignore` aus dem Deployment ausgeschlossen. Sie darf
+lokal nicht ungeschützt weitergegeben werden.
 
 Die Brücke nimmt aus Sicherheitsgründen nur erlaubte HTTPS-Hosts an, folgt
 keinen Redirects und lehnt fremde Origins ab. Beliebige `.ics`-URLs

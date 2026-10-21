@@ -82,7 +82,7 @@ const rueckKopf = (ursprung: string) => ({
   'Cache-Control': 'no-store'
 });
 
-export async function onRequest(context: { request: Request }) {
+export async function onRequest(context: { request: Request; env?: unknown; ctx?: unknown }) {
   const { request } = context;
   const eigeneAdresse = new URL(request.url).origin;
   const herkunft = request.headers.get('Origin');
@@ -127,7 +127,7 @@ export async function onRequest(context: { request: Request }) {
     antwort = await fetch(ziel.toString(), {
       method: request.method, headers: kopf,
       body: ['GET', 'HEAD'].includes(request.method)
-        ? undefined : new Uint8Array(eingang).buffer,
+        ? undefined : (new Uint8Array(eingang).buffer as ArrayBuffer),
       redirect: 'manual'
     });
   } catch {
@@ -156,5 +156,7 @@ export async function onRequest(context: { request: Request }) {
     const wert = antwort.headers.get(name);
     if (wert) raus.set(name, wert);
   }
-  return new Response(new Uint8Array(ausgang).buffer, { status: antwort.status, headers: raus });
+  const body = request.method === 'HEAD' || antwort.status === 204
+    ? null : (new Uint8Array(ausgang).buffer as ArrayBuffer);
+  return new Response(body, { status: antwort.status, headers: raus });
 }
