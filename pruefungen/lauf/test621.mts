@@ -39,7 +39,7 @@ pruef('Hoher Kontrast, reduzierte Transparenz und Forced Colors werden beachtet'
 pruef('Feder-Kurven werden aus dem etablierten Designsystem gelesen',
   s.includes('--feder-sanft-dauer') && s.includes('--feder-knapp'));
 pruef('CSS-Namensraum ho- ist registriert',
-  /^ho\s+\d+\s+studio\.css$/m.test(cssNamen));
+  /^ho\s+\d+\s+bausteine\.css$/m.test(cssNamen));
 pruef('Schrift, Eingaben und Touch-Klickflächen werden nicht verkleinert',
   !/REDION MOTION \/ FEINSCHLIFF[\s\S]*?font-size\s*:\s*[0-9]+px/.test(s));
 console.log('Suite 621: ' + gut + ' grün, ' + schlecht + ' rot');
