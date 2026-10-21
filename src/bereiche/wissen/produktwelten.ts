@@ -73,6 +73,27 @@ const Produktwelten = (() => {
   const lernmodul = (): any => (globalThis as any).Lernwelt;
   const arbeitsmodul = (): any => (globalThis as any).Arbeitswelt;
 
+  /* DER REITER EINER ANSICHT DES LERNZENTRUMS — nach ihrer Klappe (L147,
+     E748). Hier stand „heute → Start, alles andere → Lernen" — und Noten,
+     Prüfungen, Stundenplan und Schule stehen seit E726 oben unter „Heute ^".
+     Die Lernwelt weiss, in welcher Klappe eine Ansicht steht; gefragt wird
+     sie, nicht nachgebaut. Der Rückfall gilt nur für alte Einzeldateien ohne
+     `reiterVon`.
+
+     Gerufen beim Öffnen (`lernen`) UND beim Umschalten drinnen
+     (`Lernwelt.wechseln`, sobald die Klappe wechselt). Auf dem Lernzentrum
+     selbst entscheidet zwar der Schauplatz, was unten leuchtet (E274) — aber
+     wer danach eine Seite öffnet, steht am Schauplatz `seite`, und dort
+     leuchtet der Reiter, von dem man kam (`karte[reiter]` in
+     `seitenleiste.ts`). Setzte nur das Öffnen ihn, sprang die Pille nach
+     „Lernen → Heute ^ → Noten" beim Öffnen einer Seite zurück auf „Lernen"
+     (zweite Durchsicht von E748, `test613` §7k–§7m). */
+  const lernReiter = (ansicht: string): void => {
+    const modul = lernmodul();
+    reiterSetzen(typeof modul?.reiterVon === 'function' ? modul.reiterVon(ansicht)
+      : ansicht === 'heute' ? 'start' : 'lernen');
+  };
+
   const routeSchreiben = (welt: Welt, ansicht: string): void => {
     const route = '#welt-' + welt + '-' + ansicht.replace(/[^a-z0-9-]/g, '');
     try { history.replaceState(history.state, '', location.pathname + location.search + route); }
@@ -102,7 +123,7 @@ const Produktwelten = (() => {
       : ansicht === 'ausbildung' ? 'schule' : ansicht;
     weltSetzen('lernen');
     Store.setMeta(LERN_META, ziel);
-    reiterSetzen(ziel === 'heute' ? 'start' : 'lernen');
+    lernReiter(ziel);
     const modul = lernmodul();
     if (modul?.oeffnen) { modul.oeffnen(ziel); routeSchreiben('lernen', ziel); return; }
     if (modul?.open) { modul.open(ziel); routeSchreiben('lernen', ziel); return; }
@@ -334,7 +355,15 @@ const Produktwelten = (() => {
   return {
     start, aktiv, markieren, wechseln: weltSetzen, zurAktivenWelt,
     lernen, workspace, bibliothek, aufgaben, kalender, whiteboards, planung, bereicheDialog,
-    routeAusHash, routeOeffnen
+    routeAusHash, routeOeffnen,
+    /* Die Adresse schreiben, ohne zu öffnen (L147, E748): wer im
+       Lernzentrum drinnen umschaltet, steht danach an der Adresse der neuen
+       Ansicht — die Kante am Rechner liest sie (E393), und ein Neuladen
+       kommt dorthin zurück. Derselbe Schreiber wie beim Öffnen. */
+    routeSchreiben,
+    /* Und den Reiter, wenn drinnen die Klappe wechselt (zweite Durchsicht
+       von E748) — dieselbe Regel wie beim Öffnen, nicht eine zweite. */
+    lernReiter
   };
 })();
 
