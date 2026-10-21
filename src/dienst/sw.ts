@@ -311,6 +311,7 @@ const GRUNDSTOCK = [
   './quell/schale/aufbau/context-rail.js',
   './quell/schale/aufbau/inhaltsflaeche.js',
   './quell/schale/aufbau/wischen.js',
+  './quell/schale/aufbau/tab-shelf.js',
   './quell/schale/aufbau/schale.js',
   './quell/start.js',
   './quell/schale/stil/marken.css',

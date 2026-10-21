@@ -220,10 +220,17 @@ console.log('\n§5 Tippen bleibt — und markiert den richtigen Weg');
     await seite.click('#' + id); await seite.waitForTimeout(560);
     gleich(`Klick auf ${name} markiert ${name}`, await aktiv(), id);
   }
-  /* Und die Quelle des Fundes: der Titel entscheidet den Schauplatz. */
+  /* Und die Quelle des Fundes: der Titel entscheidet den Schauplatz.
+     SEIT E748 (L147, Redurs Antwort auf Frage 3) kommt der Titel aus der
+     KLAPPE: was oben unter „Heute ^" steht, heisst „Heute", alles andere
+     „Lernzentrum". Hier stand der alte Satz wörtlich
+     (`start === 'heute' ? 'Heute' : 'Lernzentrum'`) — er hielt die Regel,
+     die Redur geändert hat, nicht den Fund. Der Fund bleibt gehalten:
+     zwei Titel, kein „Lernen & Alltag". */
   const lern = fs.readFileSync(path.join(WURZEL, 'src/bereiche/wissen/lernwelt.ts'), 'utf8');
-  p('Das Lernzentrum meldet sich nicht mehr als „Lernen & Alltag"',
-    /const titel = start === 'heute' \? 'Heute' : 'Lernzentrum';/.test(lern));
+  p('Das Lernzentrum meldet sich nicht mehr als „Lernen & Alltag" — der Titel kommt aus der Klappe',
+    /klappeVon\(ansicht\)\?\.id === 'heute' \? 'Heute' : 'Lernzentrum'/.test(lern) &&
+      /App\.zeigeSonder\(titelVon\(start\)/.test(lern) && !lern.includes("'Lernen & Alltag'"));
 }
 
 /* ══ §6 AM RECHNER PASSIERT NICHTS ═══════════════════════════════════════ */

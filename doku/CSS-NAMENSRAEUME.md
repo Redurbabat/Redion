@@ -155,8 +155,7 @@ Spalte; hier bleibt die Spalte bei der Regel und der Satz sagt den Rest.
 Seit dem Motion-/Liquid-Glass-Ausbau wird diese Klasse auch in
 `studio.css` für die Federanimationen verwendet. Es ist **derselbe**
 Navigationsbereich wie in `bausteine.css`, kein neuer Namensraum.
-Die Hauptdatei ist jetzt `studio.css` (vier Vorkommen gegenüber zwei in
-`bausteine.css`). Die Einstellung `data-bewegung="ruhig"` und die
+Die Hauptdatei ist nach der Zielleisten-Integration wieder `bausteine.css` (vier Vorkommen hier und vier in `studio.css`; bei Gleichstand gewinnt die alphabetisch erste Datei). Die Einstellung `data-bewegung="ruhig"` und die
 Systemeinstellungen für reduzierte Bewegung/Transparenz gelten weiterhin.
 
 ## Das Verzeichnis
@@ -223,7 +222,7 @@ gk       40  werkzeuge.css
 hat       6  notizhefte.css
 hk       12  bausteine.css
 hl        4  bausteine.css
-ho        6  studio.css
+ho        8  bausteine.css
 home     63  werkzeuge.css
 hs       20  werkzeuge.css
 icon     16  bausteine.css
