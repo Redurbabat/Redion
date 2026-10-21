@@ -9,47 +9,47 @@
       "system": "A · Editor und Blockmodell — Block-Editor (`Blocks`), Auswahlleiste (`Auswahl`), Mehrfachauswahl (`Mehrfach`), Blockregister (`Register.bloecke`), Blockmodell in `Store` (`src/kern/ablage/indexdb.ts`), Seiten-Undo (`Verlauf`). Ohne die räumlichen Arten unter `src/bereiche/bloecke/arten/`. Hinweis: `src/bereiche/bloecke/` enthält NUR den Ordner `arten/` (zeichenflaeche, gedankenkarte, blatt, schaltplan, planflaeche) — einen nicht-räumlichen Teil gibt es dort nicht (`ls src/bereiche/bloecke/` → nur `arten`).",
       "hauptdateien": [
         {
-          "pfad": "/home/user/Redion/src/bereiche/editor/ansicht/editor.ts",
+          "pfad": "src/bereiche/editor/ansicht/editor.ts",
           "rolle": "Der Block-Editor `Blocks`: Katalog aus dem Register (Z.41 `Register.bloecke.alle()`), Einbettdienste DIENSTE (Z.51), Markdown-Leser/Schreiber mdLesen/mdEinsetzen (Z.177/275), render(block) mit switch(block.type) (Z.430-985, default Z.985 = unbekannter Typ wird als Textfeld gezeichnet, nicht gelöscht), bindeEditor (Tastatur, Drag&Drop, Slash) (Z.1568), umwandeln (Z.2077), Block-Operationen einruecken/ausruecken/verschiebe/lege/dupliziere (Z.2151-2232), Slash-Menü (Z.2667), Block-Handle-Menü (Z.2962), Mehrfachauswahl auswahl* (Z.3178-3479); Export Z.3550-3564",
           "zeilen": 3565
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/editor/ansicht/auswahlleiste.ts",
+          "pfad": "src/bereiche/editor/ansicht/auswahlleiste.ts",
           "rolle": "`Auswahl`: schwebende Textauszeichnungsleiste über markiertem Text; stelleImText (Z.113) trifft die markierte Stelle statt des ersten Vorkommens (E650); umschliesse/linkSetzen sind seit E668 der EINE Weg auch für Strg+B (editor.ts:2068-2071 delegiert)",
           "zeilen": 357
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/editor/mehrfach.ts",
+          "pfad": "src/bereiche/editor/mehrfach.ts",
           "rolle": "`Mehrfach`: zweite, ältere Mehrfachauswahl (Set gewaehlt, Z.15), aus notion.js herausgelöst; einziger Aufrufer schale.ts:4093 (`Mehrfach.start()`)",
           "zeilen": 160
         },
         {
-          "pfad": "/home/user/Redion/src/register/bloecke.ts",
+          "pfad": "src/register/bloecke.ts",
           "rolle": "`Register.bloecke`: EINGEBAUT (Z.35-222, Blockarten + Aktionen a-*), NUR_NAME für pdfseite/zeichenflaeche/spalte/database/tabelle (Z.250-265), melde/nimmZurueck/alle/benannt/eines/zuMarkdown/zifferZuTyp/ueberschriften/suche (Z.313-362). `melde()` hat in src/ keinen Aufrufer (grep 'bloecke.melde' src → leer); nur test86/test272 rufen es",
           "zeilen": 363
         },
         {
-          "pfad": "/home/user/Redion/src/kern/ablage/indexdb.ts",
+          "pfad": "src/kern/ablage/indexdb.ts",
           "rolle": "`Store`: addBlock (Z.391), updateBlock (Z.440), trashBlock (Z.470), restoreBlock (Z.489), purgeBlock (Z.539), childrenOf (Z.762, filtert alive), rohSetzen (Z.958, für Abgleich, ohne edited-Stempel), baum/baumEinfuegen/kinderLeeren (Z.2483/2503/2567), Versionsverlauf versionSpeichern/versionen (Z.2658/2695); Export Z.3042-3070",
           "zeilen": 3071
         },
         {
-          "pfad": "/home/user/Redion/src/kern/zustand/verlauf.ts",
+          "pfad": "src/kern/zustand/verlauf.ts",
           "rolle": "`Verlauf`: Rückgängig/Wiederholen als zwei Stapel ganzer Seiten-Bäume (MAX 60, Zaun 700 ms), hängt sich per Monkeypatch an Store.updateBlock/addBlock/trashBlock/purgeBlock/setProp/addDatabase/addRow (Z.100-108)",
           "zeilen": 112
         },
         {
-          "pfad": "/home/user/Redion/src/core/types/block.ts",
+          "pfad": "src/core/types/block.ts",
           "rolle": "Typen RedionBlock/RedionRow/RedionPage/RedionVersion — Feldnamen wie gespeichert (created, edited, erstelltVon, alive, parentTable)",
           "zeilen": 115
         },
         {
-          "pfad": "/home/user/Redion/src/core/types/id.ts",
+          "pfad": "src/core/types/id.ts",
           "rolle": "ID/BlockId/PageId/CollectionId als string-Aliasse (bewusst nicht branded, Z.12-16), Result<T>",
           "zeilen": 62
         },
         {
-          "pfad": "/home/user/Redion/src/core/helpers/ids.ts",
+          "pfad": "src/core/helpers/ids.ts",
           "rolle": "`Ids.long()` = UUID (crypto.randomUUID) für alles Gespeicherte, `Ids.short()` für Spaltenschlüssel (nie rein numerisch, E96)",
           "zeilen": 80
         }
@@ -356,58 +356,58 @@
       "system": "B · Whiteboard / Zeichenfläche — Blocktyp `whiteboard`, gebaut in `Zusatz.whiteboard()` (src/bereiche/bloecke/arten/zeichenflaeche.ts:73–799): ein SVG mit `viewBox` als Ausschnitt über frei liegenden Formen. Antwort auf die Kernfrage: komplett EIGENE Geometrie. Die Datei enthält keinen einzigen Aufruf von `InkGeometry`, `InkShapes`, `InkStroke`, `SheetSpace` oder `Verlauf` (grep über zeichenflaeche.ts: 0 Treffer). `core/ink/geometry.ts` wurde in E125 (ENTSCHEIDUNGEN.md:8975–8990) bewusst NEBEN dieser Fläche gebaut („Sie zu importieren hätte zwei unvereinbare Wahrheiten über dieselbe Geometrie geschaffen“; „spätere Flächen dürfen den neutralen Kern verwenden“), und `core/sheet/space.ts:11–33` zitiert die Zeigerumrechnung des Whiteboards wörtlich als das Muster, das es ersetzt. Daneben führt das Register noch einen Blocktyp `zeichenflaeche` (src/register/bloecke.ts:208, `nurName:true`) — ein reiner Name; in src/ rendert ihn niemand (grep `'zeichenflaeche'`: nur register/bloecke.ts:208 und kern/helfer/vorschau.ts:196, 309; kein `case` in editor.ts).",
       "hauptdateien": [
         {
-          "pfad": "/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts",
+          "pfad": "src/bereiche/bloecke/arten/zeichenflaeche.ts",
           "rolle": "Quelle. IIFE `Zusatz` mit fünf Teilen (Whiteboard, Diagramm, Tabelle, Mathematik, Syntax-Einfärbung; Kopf Z. 9–17). Das Whiteboard ist Teil 1 (Z. 73–799): Werkzeugleiste (105–146), `rahmenVon`/`randPunkt` (202–224), `male()` mit viewBox (226–262), Formen zeichnen (353–470), `punkt()` Bildschirm→Fläche (494–498), `massstab`/`insBild` (507–536), Zeiger-Ereignisse mit Kneifen/Hand/Zeiger/Griff (548–692), Rad-Zoom (741–747), Höhengriff (720–733), PNG-Export `alsBild` (802–830). Export: `(window as any).Zusatz = Zusatz` (1513).",
           "zeilen": 1513
         },
         {
-          "pfad": "/home/user/Redion/quell/schale/stil/werkzeuge.css",
+          "pfad": "quell/schale/stil/werkzeuge.css",
           "rolle": "Stil: `.wb`, `.wb-tools`, `.wb-farbe`, `.wb-sep` (763–782), `.wb-flaeche` mit `touch-action:none` (783), `.wb-griff` (784–785); `.wb-massstab, .gk-massstab` seit E637 EINE Regel (1175)."
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/editor/ansicht/editor.ts",
+          "pfad": "src/bereiche/editor/ansicht/editor.ts",
           "rolle": "Aufrufstelle: `case 'whiteboard': box.appendChild(Zusatz.whiteboard(block))` (898–900)."
         },
         {
-          "pfad": "/home/user/Redion/src/register/bloecke.ts",
+          "pfad": "src/register/bloecke.ts",
           "rolle": "Registereintrag `{ id:'whiteboard', name:'Whiteboard', icon:'🖍', gruppe:'Wissen', cmd:['whiteboard','zeichnen','canvas','skizze'] }` (96); daneben `{ id:'zeichenflaeche', name:'Zeichenfläche', nurName:true }` (208)."
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/wissen/arbeitswelt.ts",
+          "pfad": "src/bereiche/wissen/arbeitswelt.ts",
           "rolle": "Der „eigene Bereich“ aus E138: Ansicht `whiteboards` (17, 215), Schnellaktion `new-whiteboard` (1049, 1333), und `miniatur(blockId)` (1261–1300), die `block.shapes` direkt liest und mit eigener Rahmen- und Pfadrechnung klein zeichnet."
         },
         {
-          "pfad": "/home/user/Redion/src/core/ink/geometry.ts",
+          "pfad": "src/core/ink/geometry.ts",
           "rolle": "Der neutrale Geometriekern (E125): `points, simplify, densify, outline, path, rectangle, bounds, move, intersects, distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, union, scale, rotate, textLayout, ecken, drehung …` (Rückgabe 1061–1069; `(window as any).InkGeometry` 1071). Nutzer: pdf/marken.ts (79 Treffer), pdf/document-mode.ts (9), dateien/recognition.ts, dateien/einlesen.ts, chronik/daten.ts — NICHT zeichenflaeche.ts.",
           "zeilen": 1071
         },
         {
-          "pfad": "/home/user/Redion/src/core/ink/shapes.ts",
+          "pfad": "src/core/ink/shapes.ts",
           "rolle": "Formerkennung `recognize(pts)` → line/ellipse/rectangle/triangle (63, 276); kennt weder Store noch DOM (Kopf 8–14). Nutzer: pdf/marken.ts, kern/helfer/vorschau.ts, chronik/daten.ts — nicht das Whiteboard.",
           "zeilen": 279
         },
         {
-          "pfad": "/home/user/Redion/src/core/ink/stroke.ts",
+          "pfad": "src/core/ink/stroke.ts",
           "rolle": "Der nasse Strich (E376): `Feder, glaetter, druckGlaetter, vorhersage` (488). Nutzer: pdf/marken.ts — nicht das Whiteboard.",
           "zeilen": 493
         },
         {
-          "pfad": "/home/user/Redion/src/core/ink/thumbnail.ts",
+          "pfad": "src/core/ink/thumbnail.ts",
           "rolle": "Deckel eines handbeschriebenen Blattes (E374): `deckel, farbeSicher, ausduennen, hatInhalt` (147). Für `marken`, nicht für `shapes`.",
           "zeilen": 151
         },
         {
-          "pfad": "/home/user/Redion/src/core/sheet/space.ts",
+          "pfad": "src/core/sheet/space.ts",
           "rolle": "Der Blattraum: `zuBlatt(svg, e)` über `getScreenCTM` (56–59), `umrechner`, `A4_BREITE/HOEHE`, `RAUM_VERSION` (162). Kopf 11–33 nennt die rohe `clientX - r.left`-Rechnung der Zeichenfläche als das Problem. Nutzer: pdf/marken.ts, pdf/seite.ts, pdf/document-mode.ts, pdf/einlesen.ts, wissen/notebook.ts, dateien/recognition.ts — nicht das Whiteboard.",
           "zeilen": 165
         },
         {
-          "pfad": "/home/user/Redion/src/kern/zustand/verlauf.ts",
+          "pfad": "src/kern/zustand/verlauf.ts",
           "rolle": "Gemeinsames Rückgängig auf Seitenebene: zwei Stapel, MAX 60, 700-ms-Zaun (32–55); `start()` umwickelt `Store.updateBlock/addBlock/…` und ruft `merke` (96–104); `(window as any).Verlauf` (113). Das Whiteboard nutzt ihn nicht, wird aber von ihm erfasst (siehe Risiken).",
           "zeilen": 113
         },
         {
-          "pfad": "/home/user/Redion/index.html",
+          "pfad": "index.html",
           "rolle": "Ladereihenfolge: core/ink/geometry.js, shapes.js, stroke.js, thumbnail.js (499–503) vor bereiche/bloecke/arten/zeichenflaeche.js (584)."
         }
       ],
@@ -661,33 +661,33 @@
       "system": "C · Gedankenkarte (Mindmap) — Blockart `mindmap`, globaler Name `Gedankenkarte`, CSS-Namensraum `gk-`",
       "hauptdateien": [
         {
-          "pfad": "/home/user/Redion/src/bereiche/bloecke/arten/gedankenkarte.ts",
+          "pfad": "src/bereiche/bloecke/arten/gedankenkarte.ts",
           "rolle": "Die ganze Gedankenkarte: Modell (GkKnoten/GkVerbindung/GkKarte, Z. 48–103), Palette/Formen/Vorlagen (Z. 123–260), leseKarte (Z. 291), baum (Z. 376), aufbauen = Layout ohne DOM (Z. 430), zeichne = Leiste, Bühne, Griffe, Verbindungen, Rückgängig, Zoom/Pan, Tastatur (Z. 533–1590). Export: { zeichne, leseKarte, neueKarte, aufbauen, baum, PALETTE, farbeVon } (Z. 1593), global (window as any).Gedankenkarte (Z. 1596)",
           "zeilen": 1596
         },
         {
-          "pfad": "/home/user/Redion/quell/schale/stil/werkzeuge.css",
+          "pfad": "quell/schale/stil/werkzeuge.css",
           "rolle": "Stil der Karte, Namensraum gk- (Z. 1340–1556): Schichten .gk-buehne/.gk-welt/.gk-linien (Kopf Z. 1340–1352), Griffe .gk-griffel (Z. 1461–1473, Telefon Z. 1551–1554), Verbindungen .gk-verb-fang/.gk-verb-linie/.gk-spitze (Z. 1490–1497), Formen über [data-form] (Z. 1511–1538). Kein src-Gegenstück: CSS liegt nur unter quell/ (git ls-files zeigt nur quell/schale/stil/werkzeuge.css)",
           "zeilen": 0
         },
         {
-          "pfad": "/home/user/Redion/src/register/bloecke.ts",
+          "pfad": "src/register/bloecke.ts",
           "rolle": "Registereintrag { id:'mindmap', name:'Gedankenkarte', icon:'🧠', gruppe:'Wissen', cmd:[…'xmind'…], ph:'Zentrales Thema' } (Z. 97–99)"
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/editor/ansicht/editor.ts",
+          "pfad": "src/bereiche/editor/ansicht/editor.ts",
           "rolle": "Einziger Aufrufer: case 'mindmap': box.appendChild(Gedankenkarte.zeichne(block)) (Z. 904–905)"
         },
         {
-          "pfad": "/home/user/Redion/src/kern/helfer/vorschau.ts",
+          "pfad": "src/kern/helfer/vorschau.ts",
           "rolle": "'mindmap' in TRAEGT_KEINEN_TEXT — Miniatur zeichnet für die Karte keinen Textstreifen (Z. 195–196)"
         },
         {
-          "pfad": "/home/user/Redion/index.html",
+          "pfad": "index.html",
           "rolle": "<script src=\"quell/bereiche/bloecke/arten/gedankenkarte.js\" defer> (Z. 585); dazu GRUNDSTOCK-Eintrag in src/dienst/sw.ts Z. 171"
         },
         {
-          "pfad": "/home/user/Redion/bilder.mts",
+          "pfad": "bilder.mts",
           "rolle": "Bildansichten gedankenkarte (Z. 1770), gkformen (Z. 4181), gkvorlagen (Z. 4229)"
         }
       ],
@@ -935,62 +935,62 @@
       "system": "D · PDF-Schreibstudio und Ink — Blockarten `blatt` und `pdfseite`; globale Namen `Marken` (Zeichenschicht), `DocumentMode` (Schreibstudio), `PdfSeite`, `PdfLeser` (einzige pdf.js-Stelle), `PdfEinlesen`, `InkRuler`, `InkMenu`; Kerne `SheetSpace` (src/core/sheet/space.ts) und `InkGeometry`/`InkShapes`/`InkStroke`/`InkThumbnail` (src/core/ink/). CSS-Namensraum `blatt-`/`document-`.",
       "hauptdateien": [
         {
-          "pfad": "/home/user/Redion/src/bereiche/pdf/marken.ts",
+          "pfad": "src/bereiche/pdf/marken.ts",
           "rolle": "Ink-Schicht `Marken`: ein SVG je Blatt/Seite (`schicht` Z.1608-4556, viewBox in PDF-Punkten Z.1805-1807); Kataloge FORMEN Z.79-102, STIFTE Z.141, WERKZEUGE Z.301, RADIERER Z.54-69; `zeichneMarkeRoh` Z.1080-1513 (15 Markenarten: stift, marker, line, arrow, rectangle, roundrect, ellipse, triangle, curve, text, textfix, zettel, zeichen, bild, abdeck); Auswahl mit Eck-/Kurven-/Drehgriff und Lasso (`renderSelection` Z.2060-2133); Radierer Z.2289-2362; Zeiger-Normalisierung Z.2364-2537; Formerkennung beim Absetzen (`finish` Z.2871, Z.3024); Undo/Redo Z.1800-2030; Leiste Z.5175-7149; Tasten Z.7150-7248; Speichern Z.1949; PDF-Annotation `alsAnnotation` Z.850; Rueckgabe Z.7250-7268",
           "zeilen": 7268
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/pdf/document-mode.ts",
+          "pfad": "src/bereiche/pdf/document-mode.ts",
           "rolle": "Schreibstudio `DocumentMode`, nur eine Ansicht auf dieselben Bloecke (Kopf Z.1-7). `DocumentState` Z.10-20; Seite/Zoom als Meta `dokSeite:` Z.31, `dokZoom:` Z.49 (Klammer 60-180 Z.54); Zoom = Breite der Buehne (`passen` Z.2818-2829); Regler Z.1889-1892, `zoomSetzen` Z.4527-4536, Strg+Rad Z.4792-4796, Kneifen Z.4797-4812; Lupe Z.4544-4766; Ausschnitt `SourceRegion` Z.22/1717/1792; Ereignis `ink-studio-ready` Z.2712",
           "zeilen": 4916
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/pdf/seite.ts",
+          "pfad": "src/bereiche/pdf/seite.ts",
           "rolle": "`PdfSeite.zeichne`: Seitenbild + `Marken.schicht(block, bw, bh, 0, rand)` (Z.48) + Leiste; Zoom ist allein die Kastenbreite (Z.14-17); `bw`/`bh` mit A4-Rueckfall Z.33-34; CSS `aspect-ratio` Z.115",
           "zeilen": 327
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/pdf/leser.ts",
+          "pfad": "src/bereiche/pdf/leser.ts",
           "rolle": "`PdfLeser`: pdf.js nur als Umwandler, einmal je Dokument (Kopf Z.7-18); rastert auf 1654 px = 200 dpi (Z.33); Passwort wird nie abgelegt (Z.53-57)",
           "zeilen": 347
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/pdf/einlesen.ts",
+          "pfad": "src/bereiche/pdf/einlesen.ts",
           "rolle": "`PdfEinlesen.alsSeiten`: Original als Anhang, eine Seite zur Zeit, Seitenbilder `abgeleitet: true` (Kopf Z.7-19); legt `pdfseite`-Bloecke mit nr, bw, bh, dreh, quelleId, raumVersion an (Z.272-274), `bildDateiId` nachgetragen (Z.293)",
           "zeilen": 1046
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/pdf/ink-ruler.ts",
+          "pfad": "src/bereiche/pdf/ink-ruler.ts",
           "rolle": "`InkRuler.create`: Lineal als SVG-Gruppe im Dokumentraum, 72 pt = 1 Zoll (Z.1-3); `pointer-events=none` Z.31; Lage als `translate/rotate` Z.57; `project`/`begin`/`constrained` Z.135/212",
           "zeilen": 238
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/pdf/ink-menu.ts",
+          "pfad": "src/bereiche/pdf/ink-menu.ts",
           "rolle": "`InkMenu`: Bedienfelder als natives `popover` am `document.body`, `closeAll` Z.30, `open` Z.40; kein Dokumentinhalt",
           "zeilen": 137
         },
         {
-          "pfad": "/home/user/Redion/src/core/ink/geometry.ts",
+          "pfad": "src/core/ink/geometry.ts",
           "rolle": "`InkGeometry`: neutrale Geometrie ohne DOM/Store (Kopf Z.8-12): simplify (RDP) Z.38, outline Z.214, path Z.278, rectangle Z.291, bounds Z.625, boundsLokal Z.635, move Z.658, rotate Z.679, scale Z.1018, intersects Z.733, distanceToPolyline Z.738, touchesCircle Z.814, splitByCircle Z.883, insidePolygon Z.936, union Z.962, drehung/ecken/drehePunkte Z.587-617, Textlayout Z.418-579; Rueckgabe Z.1061-1068",
           "zeilen": 1071
         },
         {
-          "pfad": "/home/user/Redion/src/core/ink/shapes.ts",
+          "pfad": "src/core/ink/shapes.ts",
           "rolle": "`InkShapes.recognize`: Linie/Ellipse/Rechteck/Dreieck aus Freihand (Z.1-19), Rueckgabe Z.276",
           "zeilen": 279
         },
         {
-          "pfad": "/home/user/Redion/src/core/ink/stroke.ts",
+          "pfad": "src/core/ink/stroke.ts",
           "rolle": "`InkStroke`: nasser Strich — `Feder` (wachsender Umriss) Z.92, `glaetter` Z.300, `druckGlaetter` Z.396, `vorhersage` Z.466 (nie gespeichert, Kopf Z.40-45)",
           "zeilen": 493
         },
         {
-          "pfad": "/home/user/Redion/src/core/ink/thumbnail.ts",
+          "pfad": "src/core/ink/thumbnail.ts",
           "rolle": "`InkThumbnail.deckel`: Vorschaupfade aus `marken`, Rueckgabe Z.147",
           "zeilen": 151
         },
         {
-          "pfad": "/home/user/Redion/src/core/sheet/space.ts",
+          "pfad": "src/core/sheet/space.ts",
           "rolle": "`SheetSpace`: A4 in Punkten (Z.38-39), RAND Z.42, RAUM_VERSION=1 Z.44, `zuBlatt` Z.56, `umrechner` (getScreenCTM einmal je Ereignis) Z.93-105, Rueckgabe Z.162",
           "zeilen": 165
         }
@@ -1337,52 +1337,52 @@
       "system": "E · Präsentationen / Folien — Vortragsmodus, Folienlayouts, .pptx lesen und schreiben. Es gibt KEINEN eigenen Folien-Blocktyp: eine Folie ist ein `blatt`-Block mit Folienmass (src/bereiche/dateien/einlesen.ts:993-998), ihre Objekte sind `marken` der Zeichenschicht `Marken` (src/bereiche/pdf/marken.ts). Der Kern `Folien` (src/core/slides/folien.ts) teilt eine Seite in Folien; `Folienvorlagen` (src/bereiche/vorlagen/folien.ts) baut Layouts als Markenlisten; Import/Export liegen in src/bereiche/dateien; der Vortrag in src/bereiche/wissen/werkzeuge.ts.",
       "hauptdateien": [
         {
-          "pfad": "/home/user/Redion/src/core/slides/folien.ts",
+          "pfad": "src/core/slides/folien.ts",
           "rolle": "Der Kern: `Folien.teilen` (Z.59) zerlegt eine Seite in Folien (TRENNT=['divider','h1','h2'] Z.26, EIGENE_KINDER Z.29, EIGENE_FOLIE=['blatt','pdfseite'] Z.48, MIT_KINDERN Z.51), `alsZeilen` (Z.143) macht flache Textzeilen fuer PPTX/Handout, `ohneMarkierung` (Z.125). Rein: kein DOM, kein Store (Z.8). Global `window.Folien` (Z.198).",
           "zeilen": 198
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/vorlagen/folien.ts",
+          "pfad": "src/bereiche/vorlagen/folien.ts",
           "rolle": "`Folienvorlagen`: 8 Layouts (LISTE Z.116-200) als Markenlisten auf BREITE=960/HOEHE=540 pt (Z.36-37); `neueFolie` legt `blatt`-Block mit blattBreite/blattHoehe/papier an und schreibt `marken` (Z.218-227); `neuePraesentation` setzt `dokumentModus` (Z.236-241); `istFoliensatz` = Blatt breiter als hoch (Z.357-363); Waehler-Dialog (Z.276-316), Menueband-Reiter `praesentation` (Z.386-429), Befehle 'Neue Folie'/'Neue Praesentation' (Z.435-445). Global Z.452.",
           "zeilen": 452
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/dateien/einlesen.ts",
+          "pfad": "src/bereiche/dateien/einlesen.ts",
           "rolle": ".pptx-Leser (Abschnitt ab Z.991): `emuZuPunkt` (Z.1013), FORMEN prst-Karte (Z.1363-1368), `formGeometrie` (Z.1370), `formDrehung` (Z.1421), `formLage` (Z.1430), UEBERGAENGE-Karte + `uebergangLesen` (Z.1450-1508), `klickschritte` aus p:timing (Z.1533), `pptxLesen` (Z.1922; Reihenfolge aus sldIdLst Z.1938-1946), Gruppen-Abbildung `abbilden` (Z.2033-2038), Rueckspur `quelle:{sp,p}` (Z.2236-2240), Blockanlage je Folie (Z.2563-2650).",
           "zeilen": 2726
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/dateien/ausgeben.ts",
+          "pfad": "src/bereiche/dateien/ausgeben.ts",
           "rolle": ".pptx-Schreiber (ab Z.2605): FOLIE_BREITE/HOEHE in EMU (Z.2633), `pptxFolie` mit festen Textrahmen (Z.2701-2739), `pptxTeile` (Z.2751), `originalPaket` (Z.2877), `alsPowerPoint` mit zwei Wegen: Original durchreichen + `folieMitText` (Z.2924-2992) oder frisch aus `Folien.teilen`/`alsZeilen` (Z.2994-3001).",
           "zeilen": 3015
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/wissen/werkzeuge.ts",
+          "pfad": "src/bereiche/wissen/werkzeuge.ts",
           "rolle": "Vortragsmodus `praesentation` (Z.1060): nutzt `Folien.teilen` (Z.1076), Schrittzaehler fuer Abdeckungen (Z.1096-1144), `uebergangDerFolie` (Z.1121), setzt data-uebergang/--ueb-dauer (Z.1196-1203), zeichnet `blatt` als <figure> mit `markenAlsSvg` (Z.1268-1276, Z.2186-2194).",
           "zeilen": 3172
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/pdf/marken.ts",
+          "pfad": "src/bereiche/pdf/marken.ts",
           "rolle": "Die Zeichenschicht, auf der die Folienobjekte leben: `zeichneMarke` (Z.1019, Drehung Z.1021-1025), Live-Schicht `schicht` (Z.1608; selection Z.1798, history Z.1800-1801, Griffe Z.2094-2130, nachVorn/nachHinten Z.2165-2181, Lasso/Kritzel Z.2823-2870, Pointer Z.3894-3990). Nicht folienspezifisch, aber jedes Folienobjekt geht hier durch.",
           "zeilen": 7268
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/pdf/document-mode.ts",
+          "pfad": "src/bereiche/pdf/document-mode.ts",
           "rolle": "Foliensatz-Ansicht: `documentsIn` sammelt `pdfseite`/`blatt` in Inhaltsreihenfolge (Z.452-470), `istFoliensatz` fragt Folienvorlagen (Z.673-676), Wort 'Folie'/'Seite' (Z.696-697), Folienmenue + Folienband (Z.706, Z.846), Miniatur `markenVorschau` (Z.1073), Seiten verschieben ueber `content` der Eltern (Z.3443-3457).",
           "zeilen": 4916
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/bloecke/arten/blatt.ts",
+          "pfad": "src/bereiche/bloecke/arten/blatt.ts",
           "rolle": "Zeichnet den `blatt`-Block: Mass aus blattBreite/blattHoehe, sonst A4 (Z.157-158), `grundfarbe` als --paper (Z.188-190), Drehhuelle via SheetSpace (Z.195). Register-Eintrag `blatt` in src/register/bloecke.ts:95.",
           "zeilen": 320
         },
         {
-          "pfad": "/home/user/Redion/src/core/sheet/space.ts",
+          "pfad": "src/core/sheet/space.ts",
           "rolle": "Gemeinsamer Blattraum: A4-Masse (Z.38-39), `zuBlatt`/`umrechner` ueber getScreenCTM (Z.56-105), `gedrehtVon`/`masseVon`/`drehHuelle` (Z.124-147).",
           "zeilen": 165
         },
         {
-          "pfad": "/home/user/Redion/src/core/ink/geometry.ts",
+          "pfad": "src/core/ink/geometry.ts",
           "rolle": "Gemeinsame Geometrie: bounds/boundsRoh/ecken/drehung (Z.603-640), rotate (Z.679), kastenEcken (Z.730), scale (Z.1018), textLayout, move, intersects usw. (Export Z.1061-1068).",
           "zeilen": 1071
         }
@@ -1748,57 +1748,57 @@
       "system": "F · Schaltplan, Fachzeichen, Elektro",
       "hauptdateien": [
         {
-          "pfad": "/home/user/Redion/src/bereiche/bloecke/arten/schaltplan.ts",
+          "pfad": "src/bereiche/bloecke/arten/schaltplan.ts",
           "rolle": "Modell + Bild des Plans, ohne Ereignisse: Typen Teil/Punkt/Leitung/Text/Ebene/Plan (Z. 94-117), 11 Planarten ARTEN (Z. 127-161), lesen/heilen (Z. 208-247), rasten (Z. 86), anschlussOrt/anschluesseVon (Z. 279-296), fangeAnschluss FANG=14 (Z. 305-316), rechtwinklig (Z. 326-331), Nachziehen ohne Anzapfen: nahAnStrecke (dieselbe Regel wie aufStrecke in simulation.ts, test611 §7), beruehrung, vorherMerken, veraendert, gleitend, zWege, hakenWege, nachziehen (E746), aufStrecke/verbindungspunkte/kreuzungen (Z. 346-421), leitungPfad (Z. 423), alsSvg (Z. 458-703), schienenBauen/netzBauen/BEISPIELE/beispielBauen (Z. 696-818). Global `Schaltplan` (Z. 820-828).",
           "zeilen": 828
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/bloecke/arten/planflaeche.ts",
+          "pfad": "src/bereiche/bloecke/arten/planflaeche.ts",
           "rolle": "Bedienung des schaltplan-Blocks: Zustand (Z. 29-64), Palette (Z. 95-133), ortAus Bildschirm->Plan (Z. 136-144), aendere/Undo-Stapel (Z. 174-203), pointerdown/move/up (Z. 642-808), inRahmen/verschiebe/drehen/spiegeln/doppeln/gruppieren/loeschen (Z. 488-591; das Nachziehen der Leitungen steht seit E746 im Modell, `Schaltplan.vorherMerken`/`nachziehen`; die Planfläche zieht beim Ziehen `schnell` und beim Loslassen voll nach und meldet, was `Schaltplan.veraendert` findet; während eines Zugs ändert nur der Zug den Plan: `aendere`/`zurueck`/`vorwaerts` tun nichts, Escape bricht ab (`zugAbbrechen`), ein Zug gehört einem Zeiger und endet am Dokument gehorcht (`zugBeginnen`/`zugEnde`/`zugUnterbrechen`, `teilzugSichern`), und die Ablage bekommt eine Kopie des Plans — E746 Punkt 7), teilDialog (Z. 811), Tastatur (Z. 991-1019), Vorlagen in Store.meta (Z. 1058-1081), SVG-Export (Z. 1083). Global `Planflaeche` (Z. 1101-1104); eingehängt in editor.ts:909-911.",
           "zeilen": 1104
         },
         {
-          "pfad": "/home/user/Redion/src/register/fachzeichen.ts",
+          "pfad": "src/register/fachzeichen.ts",
           "rolle": "Symbolregister: RASTER=10 (Z. 41), Typ Zeichen mit w/h/pfad/anschluesse/kennbuchstabe (Z. 47-63), 15 Gruppen (Z. 65-90), alsSvg mit rotate/scale (Z. 1113-1156, Sanitize.farbe Z. 1123), anschlussLage = eigene Drehmatrix (Z. 1166-1182), masse nach Drehung (Z. 1185-1190). Export Z. 1192-1193.",
           "zeilen": 1194
         },
         {
-          "pfad": "/home/user/Redion/src/register/elektroformeln.ts",
+          "pfad": "src/register/elektroformeln.ts",
           "rolle": "Formelregister als Daten: Typen Groesse/Zeile/Abschnitt/Formel (Z. 34-120), `loese` als gewöhnliche Funktionen (kein eval, Z. 100-108). Schnittstelle Z. 4952-5088 (alle, holen, imKapitel, kapitel, suche, loesbarNach, rechne, abschnitte, aufSeite, seiteVon). Keine Geometrie.",
           "zeilen": 5089
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/elektro/simulation.ts",
+          "pfad": "src/bereiche/elektro/simulation.ts",
           "rolle": "`Stromfluss`: MNA-Rechnung über den Plan; Klemmen über Schaltplan.anschluesseVon (Z. 300-313), Netzbildung mit eigener Näherungsgeometrie NAH=6, nahBei, aufStrecke (Z. 282-294, 322-347). Export Z. 920-926.",
           "zeilen": 926
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/elektro/formelheft.ts",
+          "pfad": "src/bereiche/elektro/formelheft.ts",
           "rolle": "`Formelheft`: schwebendes, verschiebbares Fenster über Register.elektroformeln plus eigenes PDF als Anhang; eigenes esc (Z. 39) und tief (Z. 81). Export Z. 929-934.",
           "zeilen": 934
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/elektro/aufgaben.ts",
+          "pfad": "src/bereiche/elektro/aufgaben.ts",
           "rolle": "`Elektroaufgaben`: erzeugt Aufgaben aus Register.fachzeichen, Register.elektroformeln und Stromfluss mit gesätem Zufall (mulberry32 Z. 50-60); liest Klemmen über Schaltplan.anschluesseVon (Z. 658, 1098, 1118). Export Z. 1815-1819.",
           "zeilen": 1819
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/elektro/arbeitsplatz.ts",
+          "pfad": "src/bereiche/elektro/arbeitsplatz.ts",
           "rolle": "`Elektroarbeitsplatz`: Üben/Prüfung/drei Spalten; zeichnet Aufgabenpläne über Schaltplan.alsSvg mit tippbar/auswahl (Z. 128-132). Meta-Schlüssel Z. 46-48. Export Z. 687-691.",
           "zeilen": 691
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/elektro/skizzen.ts",
+          "pfad": "src/bereiche/elektro/skizzen.ts",
           "rolle": "`Elektroskizzen`: Formelbuch-Skizzen als echte Pläne über Schaltplan.neuerPlan/anschluesseVon/alsSvg (Z. 87-151), Diagramme als eigenes SVG; eigenes esc (Z. 42) und tief (Z. 217). Return Z. 1185 (keine window-Zuweisung per grep gefunden).",
           "zeilen": 1189
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/elektro/lernbilder.ts",
+          "pfad": "src/bereiche/elektro/lernbilder.ts",
           "rolle": "`Elektrolernbilder`: Formeldreieck und Sinuskurve als reines SVG aus Register.elektroformeln. Export Z. 403-407.",
           "zeilen": 407
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/elektro/start.ts",
+          "pfad": "src/bereiche/elektro/start.ts",
           "rolle": "`Elektrostart`: Elektro-Seite als Ort (L65/E238), Kacheln aus Register.menueband.inReiter('elektro'), erkennt Elektro-Seiten an Blocktyp 'schaltplan' (Z. 35). Export Z. 195-198.",
           "zeilen": 246
         }
@@ -2141,52 +2141,52 @@
       "system": "G · Was es an gemeinsamer räumlicher Infrastruktur SCHON gibt — SelectionFlow (schale/bedienung), InkGeometry/InkShapes/InkStroke (core/ink), SheetSpace (core/sheet), Transaktion (kern/ablage/befehle), Ereignisse/ARTEN/Protokoll (kern/ereignisse), dazu Verlauf (kern/zustand). Befund: der Kern ist da und wird von GENAU EINEM räumlichen System benutzt (Blatt/PDF-Seite, bereiche/pdf/marken.ts); Whiteboard (zeichenflaeche.ts), Gedankenkarte (gedankenkarte.ts) und Schaltplan/Planfläche (schaltplan.ts/planflaeche.ts) rechnen Zeiger, Kasten, Auswahl, Zoom und Rückgängig jeweils selbst (grep der Globalnamen über src/bereiche, 25. September 2026; deckt sich mit doku/REDION-PLATTFORM-AUDIT.md:85-93, §2.1–2.3).",
       "hauptdateien": [
         {
-          "pfad": "/home/user/Redion/src/schale/bedienung/selection-flow.ts",
-          "rolle": "Kritisch gedämpfte Feder (OMEGA 0,026, Z. 105) als Keyframes auf transform allein: folge(flaeche, ziel, nachbar, sofort) (Z. 178) für eine Fläche in einer Zeile; fliege(flaeche, von, nach) (Z. 339) als FLIP-Flug eines position:fixed-Elements (Z. 335). Kopf Z. 58-65: gebaut, weil L204 EINEN Helfer für Pille und Werkzeugleiste verlangte. Rückgabe { folge, fliege, DAUER, OMEGA, DEHNUNG_MAX } (Z. 370), Global SelectionFlow (Z. 373).",
-          "zeilen": 373
+          "pfad": "src/schale/bedienung/selection-flow.ts",
+          "rolle": "Kritisch gedämpfte Feder (OMEGA 0,026, Z. 105) als Keyframes auf transform allein: folge(flaeche, ziel, nachbar, sofort) (Z. 178) für eine Fläche in einer Zeile; fliege(flaeche, von, nach) (Z. 339) als FLIP-Flug eines position:fixed-Elements (Z. 335). Kopf Z. 58-65: gebaut, weil L204 EINEN Helfer für Pille und Werkzeugleiste verlangte. Rückgabe { folge, fliege, DAUER, OMEGA, DEHNUNG_MAX } (Z. 370), Global SelectionFlow (Z. 373). E749: ziehbar(…) hat die freiwillige Übergabe hinauf {nimm(k, 'hoch'|'aus-zug', x, y)} — steigt der Finger über die Oberkante der Reihe UND mindestens 16 px über den Punkt des Aufsetzens (über dem Tipp-Spielraum des Browsers, Durchsicht E749; gerade hinauf oder aus einem laufenden Pillenzug), nimmt ein anderer den Zug (move/up/cancel); Zeigerfang, Klick- und touchend-Schlucken (nur der Klick der Geste: es endet mit jedem neuen pointerdown, daneben zählt die pointerId) und Escape bleiben in ziehbar; hinauf vor der Übergabe losgelassen ist GENAU EIN Klick, solange der Finger in der Spalte des gedrückten Knopfs bleibt. growFrom(fenster, anker, rahmen?) nimmt ein schon gemessenes Mass. Einziger Nutzer: die untere Leiste (seitenleiste.ts) an TabShelf.",
+          "zeilen": 1254
         },
         {
-          "pfad": "/home/user/Redion/src/core/ink/geometry.ts",
+          "pfad": "src/core/ink/geometry.ts",
           "rolle": "DOM-freier Geometriekern für Marken (Kopf Z. 8-11: kennt weder PDF noch Whiteboard noch Store, damit Blatt, PDF-Seite und ein späteres Whiteboard dieselben Regeln verwenden, E125). Exporte Z. 1061-1069: points, simplify, densify, outline/outlinePunkte, path, rectangle, bounds, boundsLokal, ecken, drehung, drehePunkte, move, rotate, scale, intersects, overlapConvex, kastenEcken, distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, textWidth/textLines/textLayout, SCHRIFTEN. Global InkGeometry (Z. 1071).",
           "zeilen": 1071
         },
         {
-          "pfad": "/home/user/Redion/src/core/ink/shapes.ts",
+          "pfad": "src/core/ink/shapes.ts",
           "rolle": "Formerkennung aus einem Strich: recognize(pts) gibt line, ellipse, rectangle oder triangle (mit dreh) und zwei Kastenpunkte zurück (Z. 63-274); kennt weder Store noch DOM noch Zeit (Kopf Z. 13). Rückgabe { recognize } (Z. 276), Global InkShapes (Z. 279).",
           "zeilen": 279
         },
         {
-          "pfad": "/home/user/Redion/src/core/sheet/space.ts",
+          "pfad": "src/core/sheet/space.ts",
           "rolle": "Der Blattraum: A4 in PDF-Punkten (Z. 38-39), RAUM_VERSION 1 (Z. 44), zuBlatt(svg, e) (Z. 56) und umrechner(svg) (Z. 93) über getScreenCTM().inverse() — Kopf Z. 10: EINE STELLE, DIE BILDSCHIRM IN BLATT ÜBERSETZT, und keine zweite; Z. 14-15 zitiert wörtlich die Zeichenflächen-Formel clientX - r.left als Gegenbeispiel. Seitendrehung gedrehtVon/masseVon/drehHuelle (Z. 124-160). Rückgabe Z. 162, Global SheetSpace (Z. 165).",
           "zeilen": 165
         },
         {
-          "pfad": "/home/user/Redion/src/core/ink/stroke.ts",
+          "pfad": "src/core/ink/stroke.ts",
           "rolle": "Der nasse Strich (E376): Feder, glaetter, druckGlaetter, vorhersage — ohne Uhr, Ablage, DOM (Kopf Z. 26-38); Rückgabe Z. 488. Nur von marken.ts genutzt.",
           "zeilen": 493
         },
         {
-          "pfad": "/home/user/Redion/src/kern/ablage/befehle.ts",
+          "pfad": "src/kern/ablage/befehle.ts",
           "rolle": "Transaktion: Notions fünf Befehle set/update/listAfter/listBefore/listRemove auf Store-Datensätze (Z. 102-188), ausfuehren() alles-oder-nichts mit Rückrollen (Z. 200-251), Verlauf.merke(true) als EIN Undo-Schritt je Transaktion (Z. 215), verlauf im Speicher MAX 50 (Z. 197-198), Endpunkte loadPageChunk/queryCollection/submitTransaction. Rückgabe Z. 533-536, Global Transaktion (Z. 538). Nicht räumlich; kein Zeichenblock ruft es.",
           "zeilen": 538
         },
         {
-          "pfad": "/home/user/Redion/src/kern/ereignisse/bus.ts",
+          "pfad": "src/kern/ereignisse/bus.ts",
           "rolle": "Der Bus: horche/einmal/melde/frage, meldeAsync/frageAsync, darf/darfAsync, schonGemeldet (Z. 91-236); Kopfregel Z. 9-10: ein Modul ruft kein anderes Modul. Global Ereignisse (Z. 57 ff.).",
           "zeilen": 240
         },
         {
-          "pfad": "/home/user/Redion/src/kern/ereignisse/arten.ts",
+          "pfad": "src/kern/ereignisse/arten.ts",
           "rolle": "Namensliste ARTEN (Z. 27-109), darunter auswahlGeaendert: 'auswahl.geaendert' (Z. 51) — den meldet und hört niemand (grep über src ausser arten.ts: 0 Treffer). artKennt Typwächter (Z. 121). Globals Z. 124-125.",
           "zeilen": 125
         },
         {
-          "pfad": "/home/user/Redion/src/kern/ereignisse/protokoll.ts",
+          "pfad": "src/kern/ereignisse/protokoll.ts",
           "rolle": "Ein Protokoll in meta 'protokoll', MAX 2000 (Z. 42-43), klinkt sich in Store.addBlock/trashBlock/… ein (Z. 172-250). Rückgabe Z. 400.",
           "zeilen": 404
         },
         {
-          "pfad": "/home/user/Redion/src/kern/zustand/verlauf.ts",
+          "pfad": "src/kern/zustand/verlauf.ts",
           "rolle": "Rückgängig/Wiederholen der Schale: ganze Seite je Schritt (Store.baum, Z. 42), Zaun 700 ms, MAX 60 (Z. 33, 46-56). Global Verlauf (Z. 113). Von befehle.ts:215 und editor/mehrfach.ts:87,94 gerufen; register/menueband.ts:785-791 hängt Zurück/Vor daran.",
           "zeilen": 113
         }
@@ -2195,67 +2195,67 @@
       "schnittstellen": [
         {
           "name": "SelectionFlow.folge / fliege / DAUER / OMEGA / DEHNUNG_MAX",
-          "datei": "/home/user/Redion/src/schale/bedienung/selection-flow.ts",
+          "datei": "src/schale/bedienung/selection-flow.ts",
           "art": "global",
-          "beschreibung": "Z. 370-373. Aufrufer: schale/aufbau/seitenleiste.ts:352 (Pille der unteren Leiste, folge) und bereiche/pdf/marken.ts:6994-7009 (Werkzeugleiste, fliege, DAUER). Sonst niemand; schale/aufbau/studio.ts:18 animiert Einblendungen mit eigenem element.animate, linse.ts nennt SelectionFlow nicht (grep)."
+          "beschreibung": "Z. 370-373. Aufrufer: schale/aufbau/seitenleiste.ts:352 (Pille der unteren Leiste, folge; seit E749 ziehbar mit hinauf) und bereiche/pdf/marken.ts:6994-7009 (Werkzeugleiste, fliege, DAUER); seit E749 auch schale/aufbau/tab-shelf.ts (TabShelf: growFrom, highlight, glide, stagger, folge). Sonst niemand; schale/aufbau/studio.ts:18 animiert Einblendungen mit eigenem element.animate, linse.ts nennt SelectionFlow nicht (grep)."
         },
         {
           "name": "InkGeometry.*",
-          "datei": "/home/user/Redion/src/core/ink/geometry.ts",
+          "datei": "src/core/ink/geometry.ts",
           "art": "global",
           "beschreibung": "Z. 1061-1071. Aufrufer in src/bereiche: pdf/marken.ts (bounds 1023, union 2056-2057, insidePolygon 2139, touchesCircle 2336, move 4131, scale 4162, rotate 4196, intersects/overlapConvex/ecken 2903-2909), pdf/document-mode.ts:241-244, pdf/seite.ts, dateien/recognition.ts:308, dateien/einlesen.ts, core/export/pdfWriter.ts. NICHT: bloecke/arten/zeichenflaeche.ts, gedankenkarte.ts, planflaeche.ts, schaltplan.ts, elektro/*."
         },
         {
           "name": "InkShapes.recognize",
-          "datei": "/home/user/Redion/src/core/ink/shapes.ts",
+          "datei": "src/core/ink/shapes.ts",
           "art": "global",
           "beschreibung": "Z. 276-279. Einziger Aufrufer: bereiche/pdf/marken.ts. Das Whiteboard hat Stiftstriche (zeichenflaeche.ts:220 s.art === 'stift') und keine Formerkennung."
         },
         {
           "name": "SheetSpace.zuBlatt / umrechner / A4_* / RAUM_VERSION / gedrehtVon / masseVon / drehHuelle / seiten / rund",
-          "datei": "/home/user/Redion/src/core/sheet/space.ts",
+          "datei": "src/core/sheet/space.ts",
           "art": "global",
           "beschreibung": "Z. 162-165. Aufrufer: pdf/marken.ts (const R = SheetSpace Z. 1610; zuBlatt 2496, 3826, 3894, 4071, 4102, 4225; umrechner 4095), pdf/document-mode.ts:173-175, 313-315, 1054-1055, pdf/seite.ts, pdf/einlesen.ts:237, bloecke/arten/blatt.ts:262, dateien/recognition.ts:247-248, 409, wissen/notebook.ts:267 (nur A4_HOEHE). NICHT: zeichenflaeche.ts:511-514 (eigene Formel), planflaeche.ts:136-144 (eigene Formel), gedankenkarte.ts (misst mit getBoundingClientRect, Z. 1214-1215, 1234, 1254)."
         },
         {
           "name": "InkStroke (Feder, glaetter, druckGlaetter, vorhersage)",
-          "datei": "/home/user/Redion/src/core/ink/stroke.ts",
+          "datei": "src/core/ink/stroke.ts",
           "art": "global",
           "beschreibung": "Z. 488. Nur bereiche/pdf/marken.ts."
         },
         {
           "name": "Transaktion.ausfuehren / befehlAusfuehren / abspielen / setze / aendere / dahinter / davor / heraus / loadPageChunk / queryCollection / submitTransaction / anfrage",
-          "datei": "/home/user/Redion/src/kern/ablage/befehle.ts",
+          "datei": "src/kern/ablage/befehle.ts",
           "art": "global",
           "beschreibung": "Z. 533-538. Aufrufer: hilfe/rundgang.ts, hilfe/stand.ts, hilfe/wissensseiten.ts, verbinden/schnittstelle.ts, wissen/werkzeuge.ts, core/jobs/modell.ts, kern/ablage/indexdb.ts, kern/auftraege/maschine.ts, schale/aufbau/schale.ts. Kein räumlicher Block (grep in bloecke/ und pdf/: 0)."
         },
         {
           "name": "/api/v3/loadPageChunk, /api/v3/queryCollection, /api/v3/submitTransaction",
-          "datei": "/home/user/Redion/src/kern/ablage/befehle.ts",
+          "datei": "src/kern/ablage/befehle.ts",
           "art": "http",
           "beschreibung": "Kopf Z. 12-14, 32-34: der Dienstarbeiter beantwortet sie lokal in Notions Form (test69, test70)."
         },
         {
           "name": "Ereignisse.horche / einmal / melde / frage / meldeAsync / frageAsync / darf / darfAsync / schonGemeldet",
-          "datei": "/home/user/Redion/src/kern/ereignisse/bus.ts",
+          "datei": "src/kern/ereignisse/bus.ts",
           "art": "ereignis",
           "beschreibung": "Z. 236. Räumliche Nutzer: pdf/document-mode.ts, pdf/einlesen.ts, pdf/seite.ts. NICHT: zeichenflaeche.ts, gedankenkarte.ts, planflaeche.ts; schaltplan.ts hat ein EIGENES lokales ARTEN-Array (Planarten, schaltplan.ts:166) ohne Busbezug — Namensgleichheit mit kern/ereignisse/arten.ts."
         },
         {
           "name": "ARTEN.auswahlGeaendert ('auswahl.geaendert')",
-          "datei": "/home/user/Redion/src/kern/ereignisse/arten.ts",
+          "datei": "src/kern/ereignisse/arten.ts",
           "art": "ereignis",
           "beschreibung": "Z. 51. Der einzige räumliche Name im Bus — ohne Melder und Hörer (grep über src ausser arten.ts: nichts)."
         },
         {
           "name": "Verlauf.merke / zurueck / vor",
-          "datei": "/home/user/Redion/src/kern/zustand/verlauf.ts",
+          "datei": "src/kern/zustand/verlauf.ts",
           "art": "global",
           "beschreibung": "Z. 107-113. Gerufen von kern/ablage/befehle.ts:215, bereiche/editor/mehrfach.ts:87,94, register/menueband.ts:785-791. Kein Zeichenblock ruft merke; alle vier führen eigene Stapel (siehe duplikate)."
         },
         {
           "name": "Register.fachzeichen.masse / anschlussLage / RASTER",
-          "datei": "/home/user/Redion/src/bereiche/bloecke/arten/planflaeche.ts",
+          "datei": "src/bereiche/bloecke/arten/planflaeche.ts",
           "art": "register",
           "beschreibung": "Z. 493, schaltplan.ts:83-86, 281: der Schaltplan holt Kastenmasse und Raster aus dem Register statt aus InkGeometry — der einzige Nicht-Nutzer, dessen Geometrie über register/ läuft."
         }
@@ -2511,68 +2511,68 @@
       "duplikate": [
         {
           "was": "Rückgängig-Stapel aus JSON-Abbildern, zwei Listen, feste Tiefe — viermal in Bereichen, einmal im Kern",
-          "hier": "/home/user/Redion/src/kern/zustand/verlauf.ts:53-55",
-          "dort": "/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts:164-166 und gedankenkarte.ts:646-648 (Zeile für Zeile gleich), planflaeche.ts:183-185, pdf/marken.ts:2022-2031",
+          "hier": "src/kern/zustand/verlauf.ts:53-55",
+          "dort": "src/bereiche/bloecke/arten/zeichenflaeche.ts:164-166 und gedankenkarte.ts:646-648 (Zeile für Zeile gleich), planflaeche.ts:183-185, pdf/marken.ts:2022-2031",
           "beleg": "verlauf.ts: zurueckStapel.push(m); if (zurueckStapel.length > MAX) zurueckStapel.shift(); vorStapel.length = 0; — zeichenflaeche.ts UND gedankenkarte.ts: const SCHRITTE = 40; const zurueckStapel: string[] = []; const vorStapel: string[] = []; — planflaeche.ts: z.zurueck.push(vorher); if (z.zurueck.length > 60) z.zurueck.shift(); z.vorwaerts.length = 0;"
         },
         {
           "was": "Bildschirm → Raum: drei Formeln neben der einen Matrix",
-          "hier": "/home/user/Redion/src/core/sheet/space.ts:56-59, 93-104",
-          "dort": "/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts:511-514 und planflaeche.ts:136-144",
+          "hier": "src/core/sheet/space.ts:56-59, 93-104",
+          "dort": "src/bereiche/bloecke/arten/zeichenflaeche.ts:511-514 und planflaeche.ts:136-144",
           "beleg": "space.ts:10: EINE STELLE, DIE BILDSCHIRM IN BLATT ÜBERSETZT — und keine zweite; Z. 14-15 zitiert das Gegenbeispiel wörtlich: return [Math.round(e.clientX - r.left), …]. zeichenflaeche.ts:513: return [Math.round(sicht.x + (e.clientX - r.left) / sicht.z), …]. planflaeche.ts:141: const x = (e.clientX - r.left) * sx; (sx = plan.breite / r.width, kennt weder Letterbox noch CSS-Verwandlung)."
         },
         {
           "was": "distanceToSegment — zweimal im Kern selbst, Zeichen für Zeichen gleich",
-          "hier": "/home/user/Redion/src/core/ink/geometry.ts:27-35",
-          "dort": "/home/user/Redion/src/core/ink/shapes.ts:31-38",
+          "hier": "src/core/ink/geometry.ts:27-35",
+          "dort": "src/core/ink/shapes.ts:31-38",
           "beleg": "beide: const amount = Math.max(0, Math.min(1, ((point[0] - start[0]) * dx + (point[1] - start[1]) * dy) / (dx * dx + dy * dy))); return Math.hypot(point[0] - (start[0] + amount * dx), point[1] - (start[1] + amount * dy));"
         },
         {
           "was": "Punktprobe an einer Strecke, dritte Fassung (nur achsenparallel)",
-          "hier": "/home/user/Redion/src/core/ink/geometry.ts:27 distanceToSegment, 738 distanceToPolyline",
-          "dort": "/home/user/Redion/src/bereiche/elektro/simulation.ts:287-294 aufStrecke",
+          "hier": "src/core/ink/geometry.ts:27 distanceToSegment, 738 distanceToPolyline",
+          "dort": "src/bereiche/elektro/simulation.ts:287-294 aufStrecke",
           "beleg": "simulation.ts: if (Math.abs(ay - by) <= 1 && Math.abs(py - ay) <= NAH) return px >= Math.min(ax, bx) - NAH && px <= Math.max(ax, bx) + NAH; — dieselbe Frage (liegt p nahe an der Strecke a–b), auf waagrecht/senkrecht beschränkt."
         },
         {
           "was": "Kasten um eine Punktliste (min/max über xs/ys)",
-          "hier": "/home/user/Redion/src/core/ink/geometry.ts:595-599 umschliessend, 635-655 boundsRoh",
-          "dort": "/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts:220-224 rahmenVon für 'stift'",
+          "hier": "src/core/ink/geometry.ts:595-599 umschliessend, 635-655 boundsRoh",
+          "dort": "src/bereiche/bloecke/arten/zeichenflaeche.ts:220-224 rahmenVon für 'stift'",
           "beleg": "geometry.ts: const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]); const x0 = Math.min(...xs), y0 = Math.min(...ys); return { x: x0, y: y0, width: Math.max(...xs) - x0, … } — zeichenflaeche.ts: const xs = s.pts.map((q: any) => q[0]), ys = s.pts.map((q: any) => q[1]); const x = Math.min(...xs), y = Math.min(...ys); return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };"
         },
         {
           "was": "Union mehrerer Kästen für alles ins Bild",
-          "hier": "/home/user/Redion/src/core/ink/geometry.ts:962-969 union",
-          "dort": "/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts:540-544 insBild",
+          "hier": "src/core/ink/geometry.ts:962-969 union",
+          "dort": "src/bereiche/bloecke/arten/zeichenflaeche.ts:540-544 insBild",
           "beleg": "geometry.ts: const x0 = Math.min(...boxes.map(b => b.x)); … const x1 = Math.max(...boxes.map(b => b.x + b.width)); — zeichenflaeche.ts: const x1 = Math.min(...rahmen.map(r => r.x)) - 30; … const x2 = Math.max(...rahmen.map(r => r.x + r.w)) + 30;"
         },
         {
           "was": "Wo ein Verbinder den Rand seines Kastens trifft — zwei Formeln für eine Aufgabe",
-          "hier": "/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts:233-241 randPunkt",
-          "dort": "/home/user/Redion/src/bereiche/bloecke/arten/gedankenkarte.ts:822-829",
+          "hier": "src/bereiche/bloecke/arten/zeichenflaeche.ts:233-241 randPunkt",
+          "dort": "src/bereiche/bloecke/arten/gedankenkarte.ts:822-829",
           "beleg": "zeichenflaeche.ts: const anteil = Math.min(halbW / Math.abs(dx || .0001), halbH / Math.abs(dy || .0001)); return [mx + dx * anteil, my + dy * anteil]; (Strahl aus der Mitte) — gedankenkarte.ts: const p1 = waagerecht ? { x: bmx >= amx ? a.x + aM.w : a.x, y: amy } : { x: amx, y: bmy >= amy ? a.y + aM.h : a.y }; (Seitenmitte). Kein Kern kennt Verbinder (geometry.ts:579 LINIEN nur line/arrow)."
         },
         {
           "was": "Höhen-Griff am Block und Speichern der Höhe",
-          "hier": "/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts:146-149, 829",
-          "dort": "/home/user/Redion/src/bereiche/bloecke/arten/gedankenkarte.ts:640-643, 1570",
+          "hier": "src/bereiche/bloecke/arten/zeichenflaeche.ts:146-149, 829",
+          "dort": "src/bereiche/bloecke/arten/gedankenkarte.ts:640-643, 1570",
           "beleg": "beide: const griff = document.createElement('div'); griff.className = 'wb-griff' bzw. 'gk-griff'; griff.title = 'Höhe ziehen'; w.appendChild(griff); — und beide: Store.updateBlock(block.id, { hoehe: Math.round(….getBoundingClientRect().height) });"
         },
         {
           "was": "Ausschnitt sicht {x,y,z} als Blockfeld, zweimal geschrieben, ohne Typ und ohne raumVersion",
-          "hier": "/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts:517-519",
-          "dort": "/home/user/Redion/src/bereiche/bloecke/arten/gedankenkarte.ts:275, 663",
+          "hier": "src/bereiche/bloecke/arten/zeichenflaeche.ts:517-519",
+          "dort": "src/bereiche/bloecke/arten/gedankenkarte.ts:275, 663",
           "beleg": "zeichenflaeche.ts: Store.updateBlock(block.id, { sicht: { x: Math.round(sicht.x), y: Math.round(sicht.y), z: Math.round(sicht.z * 100) / 100 } }) — gedankenkarte.ts: sicht: { x: 0, y: 0, z: 1 } … Store.updateBlock(block.id, { karte: … }); PDF legt den Zoom dagegen bewusst in meta (document-mode.ts:41-58: Zoomen soll weder edited anheben noch eine Fassung erzeugen)."
         },
         {
           "was": "Rahmenauswahl (Kastenzug)",
-          "hier": "/home/user/Redion/src/bereiche/pdf/marken.ts:2894-2909 (über InkGeometry.union/intersects/overlapConvex)",
-          "dort": "/home/user/Redion/src/bereiche/bloecke/arten/planflaeche.ts:488-500 inRahmen",
+          "hier": "src/bereiche/pdf/marken.ts:2894-2909 (über InkGeometry.union/intersects/overlapConvex)",
+          "dort": "src/bereiche/bloecke/arten/planflaeche.ts:488-500 inRahmen",
           "beleg": "marken.ts: if (!InkGeometry.intersects(box, InkGeometry.bounds(mark))) return; — planflaeche.ts: const x1 = Math.min(a.x, b.x), x2 = Math.max(a.x, b.x); … if (t.x >= x1 && t.y >= y1 && t.x + m.w <= x2 && t.y + m.h <= y2) raus.push(t.id); (dasselbe wie InkGeometry.rectangle Z. 291 + Enthaltensein, von Hand)."
         },
         {
           "was": "sv(name, attrs) — SVG-Element mit Attributschleife",
-          "hier": "/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts:31-36",
-          "dort": "/home/user/Redion/src/bereiche/bloecke/arten/gedankenkarte.ts:113-118",
+          "hier": "src/bereiche/bloecke/arten/zeichenflaeche.ts:31-36",
+          "dort": "src/bereiche/bloecke/arten/gedankenkarte.ts:113-118",
           "beleg": "beide: const NS = 'http://www.w3.org/2000/svg'; const sv = (name: string, attrs: Record<string, unknown> = {}) => { const e = document.createElementNS(NS, name); Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, String(v))); return e; }; (AUDIT D4 nennt 7 Dateien mit createElementNS(NS))."
         }
       ],
@@ -2597,167 +2597,167 @@
       "system": "H · Register, Erweiterungspunkte, Befehle, Hooks, Automationen — die 17 Kataloge unter src/register/ (16 als Register.*, Textstile als eigener Globaler), das Erweiterungsfenster Erweiterung/Redion (src/bereiche/einstellungen/erweiterungen.ts), Ereignisbus Ereignisse + ARTEN und Protokoll (src/kern/ereignisse/), die Auftragsmaschine Auftraege (src/kern/auftraege/maschine.ts), Datenbank-Automationen und Knopf-Aktionen (in steuerung.ts und editor.ts; ein eigener Ordner existiert nicht: find src -iname '*automat*' trifft nur schale/bedienung/zustandsknopf.ts), MCP in beide Richtungen (src/bereiche/ki/werkzeuge.ts, server/kern.ts:1712) und die /v1-Schnittstelle (src/bereiche/verbinden/schnittstelle.ts). BEFUND IN EINEM SATZ: Es gibt heute elf Erweiterungspunkte mit melde(), aber die einzige echte Fremdcode-Schnittstelle (Redion.*) umgeht drei davon, kein Registereintrag trägt seine Herkunft, sieben Register kennen kein nimmZurueck, und L30/E181 sagen „bewusst nicht gebaut“, während erweiterungen.ts:166 new Function(…) mit Nutzercode ausführt, in index.html:675 geladen und in schale.ts:4110 gestartet wird. WAS L30 WÖRTLICH SAGT (LUECKEN.md:1116-1138): „## L30 · Erweiterungen und Marktplatz — BEWUSST NICHT GEBAUT … 25. August 2026 — entschieden statt offengelassen (E181). … Eine Erweiterung ist FREMDER CODE im selben Fenster wie die Notizen. Er sieht IndexedDB, Store, die Zwischenablage und jedes offene Dokument. … Es sicher zu bauen bräuchte: eine echte Sandbox (eigener Ursprung, iframe, Nachrichten statt Zugriff), ein Rechtemodell je Erweiterung, Signaturen und einen Weg, eine Erweiterung im Nachhinein zurückzuziehen. Das ist ein eigenes Projekt und nicht eine Zeile in einer Lückenliste. Also: nicht gebaut, und das ist die Entscheidung — kein Versäumnis. Wer Redion erweitern will, hat heute drei Wege, die ohne Fremdcode auskommen: die Register (bloecke, eigenschaften, formeln, befehle), die Automationen, und .redion-Sicherungen als Datenschnittstelle.“ WELCHE ERWEITERUNGSPUNKTE ES HEUTE GIBT: (1) Register mit melde(): befehle (+meldeLieferant), bloecke, eigenschaften, ansichten, einstellungen, formeln (nur Beschreibung, kein Code), menueband (+meldeLieferant), kontext (+meldeLieferant, meldeStapel), navigation, module, tasten, vorlagen (baut seit E677 selbst), verbindungen, fachzeichen, elektroformeln — ohne melde: symbole (symbole.ts:606) und textstile (textstile.ts:71). (2) Fremdcode-Hooks in Erweiterung: Redion.formel/befehl/knopf/beimStart/beiAenderung (erweiterungen.ts:74-87). (3) Start-Hooks: nur Ereignisse.melde(ARTEN.appStartet/appSteht) in start.ts:29/34 und die feste Startliste schale.ts:4093-4116. (4) Änderungs-Hooks: Store.on(fn) (indexdb.ts:3069, notify Z.56) und drei Monkeypatches auf Store-Funktionen (verlauf.ts:97-103, protokoll.ts:178-187, steuerung.ts:8812-8813). (5) Automationen: 15 Auslöser (steuerung.ts:7567-7590), 20 Aktionen (7792-7813), als Daten in coll.automationen. (6) Knopf-Block: 11 Aktionsarten AKTIONS_NAMEN editor.ts:2315-2323, knopfAusfuehren 2324; Knopf-Spalte knopfInZelle steuerung.ts:1615. (7) Aufträge: Auftraege.anmelden(art, laeufer, name) maschine.ts:243-259, heute drei Läufer (archiveImport.ts:613, pdf/einlesen.ts:678-679). (8) MCP: Client mit Freigabeliste (werkzeuge.ts:51-60), eigener Katalog aus Agent.WERKZEUGE (Z.163), Server tools/list mit 5 Werkzeugen (server/kern.ts:1712-1751). (9) /v1-API mit Token (schnittstelle.ts:1-50). WAS FÜR EIN PLUGIN-MANIFEST MIT RECHTEN UND LEBENSZYKLUS FEHLT: kein Manifest (eine Erweiterung ist {name, kurz, code, an}, erweiterungen.ts:395-397); keine Herkunft am Registereintrag (nur bloecke/eigenschaften führen ein vonAussen-Set ohne Namen, navigation ein vonAussen-Flag); kein Rechtemodell — Redion.schreibe schreibt direkt Store.addBlock/addRow (Z.115-131), das einzige Rechtemodell je Werkzeug hat der KI-Agent (recht: lesen/bearbeiten/loeschen, agenten.ts:161-686, Konten.darf Z.474) und die Automationen (SCHREIBAKTIONEN steuerung.ts:7897); kein Lebenszyklus — beimStart läuft bei jedem alleLaufen (Toggle Z.342, Entfernen Z.351, Probelauf Z.417), beiAenderung wird nur in start() an Store.on gehängt (Z.448) und start() steigt bei leerer Liste vorher aus (Z.446), sieben Register ohne nimmZurueck (ansichten, einstellungen, formeln, tasten, vorlagen, verbindungen, elektroformeln), keine Fassungsnummer, keine Signatur, kein Widerruf, keine Sandbox (ABGESCHIRMT ist laut Z.152 „ein Zaun, kein Tresor“).",
       "hauptdateien": [
         {
-          "pfad": "/home/user/Redion/src/register/befehle.ts",
+          "pfad": "src/register/befehle.ts",
           "rolle": "Register.befehle — die Befehlspalette. Befehl {titel, tun, gruppe?, zeigen?, [k]:any} (Z.40-46); meldeLieferant(fn) Z.56-60 (wird bei jedem Öffnen gefragt), melde(befehl) Z.63-68, nimmZurueck(titel) Z.70-75, alle() fängt kaputte Lieferanten einzeln ab Z.83-97; Export Z.114-116. 10 Aufrufer in src (elektro, chronik, vorlagen/folien).",
           "zeilen": 117
         },
         {
-          "pfad": "/home/user/Redion/src/register/bloecke.ts",
+          "pfad": "src/register/bloecke.ts",
           "rolle": "Register.bloecke — Blockart {id,name,icon,zeichen?,gruppe?,cmd?,kurz?,md?,ph?,stufe?,nurName?} Z.234-263; melde Z.271-277 und nimmZurueck Z.280-287 mit vonAussen-Set (nur Fremdes darf gehen); alle() ist IMMER dieselbe Liste (Z.222-225, Editor hält sie ab editor.ts:41 fest); Export Z.360-362. melde() hat in src keinen Aufrufer — nur test86/test272.",
           "zeilen": 363
         },
         {
-          "pfad": "/home/user/Redion/src/register/eigenschaften.ts",
+          "pfad": "src/register/eigenschaften.ts",
           "rolle": "Register.eigenschaften — Feldart {id,name,icon,dienst?} Z.65; 36 eingebaute Spaltentypen Z.22-62; melde Z.74-81, nimmZurueck Z.92-99 (vonAussen, seit test142); GRUPPEN fürs Typmenü Z.108-114. Kein Aufrufer von melde in src.",
           "zeilen": 127
         },
         {
-          "pfad": "/home/user/Redion/src/register/ansichten.ts",
+          "pfad": "src/register/ansichten.ts",
           "rolle": "Register.ansichten — Dreier [id, Zeichen, Name] Z.24, 14 Ansichtsarten Z.26-49; melde(id, icon?, name?) Z.54-58; KEIN nimmZurueck.",
           "zeilen": 67
         },
         {
-          "pfad": "/home/user/Redion/src/register/einstellungen.ts",
+          "pfad": "src/register/einstellungen.ts",
           "rolle": "Register.einstellungen — Einstellung {id,gruppe,name,art,vorgabe,was?,werte?,min?,max?} Z.109-114; melde Z.118-124 (kein nimmZurueck); lies/setze sind der einzige Weg in den Bestand (Z.132-161, Schlüssel = id in Store.meta), setze meldet ARTEN.einstellungGeaendert Z.158-159.",
           "zeilen": 171
         },
         {
-          "pfad": "/home/user/Redion/src/register/formeln.ts",
+          "pfad": "src/register/formeln.ts",
           "rolle": "Register.formeln — Formeleintrag {name,gruppe,args?,notion?,was?,beispiel?} Z.628-629; melde Z.633-639 legt NUR eine Beschreibung ab („ein Register beschreibt, es rechnet nicht“ Z.17-18); der Code bleibt in Formula (ausDerMaschine Z.642-647); abgleich() Z.677-684 nennt Funktionen ohne Beschreibung; kein nimmZurueck.",
           "zeilen": 688
         },
         {
-          "pfad": "/home/user/Redion/src/register/menueband.ts",
+          "pfad": "src/register/menueband.ts",
           "rolle": "Register.menueband — BandEintrag {reiter,gruppe,id,name,zeichen,kurz?,hinweis?,gross?,an?,probe?,tun,zeigen?} Z.48-78; fremde/lieferanten Z.987-988; melde Z.990-995, meldeLieferant Z.997-1001, nimmZurueck Z.1003, nimmZurueckLieferant Z.1020-1024 (E277, L87); Export Z.1163-1164. Reiter Einfügen kommt aus Register.bloecke (Z.32-35).",
           "zeilen": 1165
         },
         {
-          "pfad": "/home/user/Redion/src/register/context.ts",
+          "pfad": "src/register/context.ts",
           "rolle": "Register.kontext (RegisterKontext, Z.224) — Kontextkante E272 Phase F. KontextKnopf {bereich,id,name,zeichen,rang?,zeigen?,tun?(anker),liefern?} Z.59-78, KontextZeile Z.48-56; melde Z.97-106 (Schlüssel bereich+id), meldeLieferant(bereich, fn) Z.122-127 (bei JEDEM fuer() gefragt, Grund: Elektro verlor zwei Werkzeuge beim Laden, Z.111-121), nimmZurueck Z.129-134, fuer() Z.145-172, meldeStapel Z.187-191; Export Z.219-221. Aufrufer: elektro/start.ts:229, pdf/document-mode.ts:4881.",
           "zeilen": 224
         },
         {
-          "pfad": "/home/user/Redion/src/register/aktionen.ts",
+          "pfad": "src/register/aktionen.ts",
           "rolle": "Register.aktionen (RegisterAktionen) — E721: was man mit einem Ding (einer Seite) tun kann. AktionEintrag {id,name|fn,zeichen,gruppe,gefahr?,taste?,rang?,gilt?(ding,ort),tun(ding,ort)}, AktionOrt {kontext,art?,anker?,hinein?}; melde, fuer(ding,ort) (geordnet nach GRUPPEN, Gefahr zuletzt, ein werfendes gilt() nimmt nur sich mit), tun(id,ding,ort) (die EINE Tür, test597 §7), taste('Entf',…), alle. Melder: schale.ts aktionenMelden (oeffnen, favorit, umbenennen, symbol, duplizieren, link, papierkorb), wissen/werkzeuge.ts (verschieben), wissen/notebook.ts (heft-/fach-oeffnen, farbe, sperren, entsperren, fach), wissen/bibliothek.ts (hinein, als-seite, blick). Gezeichnet von Menue.aktionen, gebunden von Menue.aktionenBinden (schale/ueberlagerung/menue.ts).",
           "zeilen": 182
         },
         {
-          "pfad": "/home/user/Redion/src/register/navigation.ts",
-          "rolle": "Register.navigation — Eintrag {id,name,icon,platz,rang,tun?,zeigen?,vonAussen?,knopfId?,kuerzel?,hinweis?,gruppe?,marke?,haupt?,schauplatz?,adresse?,hauptRang?,ruhig?} Z.315-410; melde setzt vonAussen:true Z.423-429, nimmZurueck Z.431-436, anPlatz Z.441-444. Platz 'unten' ist der Anhängepunkt für fremde Bereiche (Z.38-40). Eintrag app-erweitern → Erweiterung.dialog() Z.239-240.",
-          "zeilen": 449
+          "pfad": "src/register/navigation.ts",
+          "rolle": "Register.navigation — Eintrag {id,name,icon,platz,rang,tun?,zeigen?,vonAussen?,knopfId?,kuerzel?,hinweis?,gruppe?,marke?,haupt?,schauplatz?,adresse?,hauptRang?,ruhig?} Z.316-425; melde setzt vonAussen:true Z.436-442, nimmZurueck Z.444-449, anPlatz Z.454-457. Platz 'unten' ist der Anhängepunkt für fremde Bereiche (Z.38-40). Eintrag app-erweitern → Erweiterung.dialog() Z.239-240. haupt liest nur die Kante (context-rail.ts alleHauptOrte), NICHT die Telefonleiste (Kommentar berichtigt mit E748). E748: Ziel {id,name,kurz?,zeichen,rang?,ort?,an?,zeigen?,tun} Z.490-510; meldeZiele(reiter, fn) Z.516-521, ziele(reiter) Z.524-547 — Lieferanten je Reiter (Schlüssel = data-ziele am Reiterknopf: dokumente/heute/lernen/termine/mehr), bei jedem Fragen neu gefragt und einzeln abgefangen, nach rang, höchstens fünf; angemeldet von Bibliothek (dokumente), Lernwelt (heute, lernen) und Ansichten (termine, mehr), jeweils innerhalb des eigenen Moduls. Wächter test613.",
+          "zeilen": 550
         },
         {
-          "pfad": "/home/user/Redion/src/register/module.ts",
+          "pfad": "src/register/module.ts",
           "rolle": "Register.module — Bereich {id,name,icon,zeichen,was,oeffnen} Z.127-130; 17 eingebaute Bereiche Z.47-164; melde Z.135-141, nimmZurueck Z.156-160, oeffne() mit Reporter-Warnung statt stillem Fehlschlag Z.210-222.",
           "zeilen": 225
         },
         {
-          "pfad": "/home/user/Redion/src/register/tasten.ts",
+          "pfad": "src/register/tasten.ts",
           "rolle": "Register.tasten — Gruppe = [name, [taste, was][]] Z.165-168; melde(gruppe, taste, was) Z.174-181 legt fehlende Gruppen an; doppelte()/mehrfach() Z.202-230 für Prüfläufe; kein nimmZurueck. Reine Übersichtsliste — die Griffe stehen im Code (Z.9-19).",
           "zeilen": 236
         },
         {
-          "pfad": "/home/user/Redion/src/register/vorlagen.ts",
+          "pfad": "src/register/vorlagen.ts",
           "rolle": "Register.vorlagen — Vorlage {id, [k]:any} Z.25; melde Z.29-34; alle() mischt Galerie.VORLAGEN mit Gemeldetem Z.42-45; bauen() ruft seit E677 v.bauen() und markiert über Fassung Z.68-74; kein nimmZurueck. Aufrufer: wissen/nin-quiz.ts:461, wissen/staatskunde-inhalt.ts:367, wissen/dark-dossier.ts:330.",
           "zeilen": 91
         },
         {
-          "pfad": "/home/user/Redion/src/register/verbindungen.ts",
+          "pfad": "src/register/verbindungen.ts",
           "rolle": "Register.verbindungen — Verbindung {id,name,art,hinaus,herein,schluessel,bereit()} Z.40-44, hinaus/herein Pflicht (Z.36-38); 8 Einträge inkl. webhook-aus, webhook-ein, mcp Z.86-102; melde Z.107-113; wasHinausgeht() Z.130; kein nimmZurueck.",
           "zeilen": 134
         },
         {
-          "pfad": "/home/user/Redion/src/register/fachzeichen.ts",
+          "pfad": "src/register/fachzeichen.ts",
           "rolle": "Register.fachzeichen — Zeichen (Z.47) mit Anschluss {nr,x,y} (Z.44) auf RASTER 10 (Z.26-29, 42); melde Z.1084-1088, vergiss Z.1091 (nur Nicht-Eingebautes); Export Z.1192-1193.",
           "zeilen": 1194
         },
         {
-          "pfad": "/home/user/Redion/src/register/elektroformeln.ts",
+          "pfad": "src/register/elektroformeln.ts",
           "rolle": "Register.elektroformeln — Formel (Z.95) mit Groesse (Z.35); melde Z.5012-5016 „für spätere Erweiterungen“; kein nimmZurueck; Export Z.5085.",
           "zeilen": 5089
         },
         {
-          "pfad": "/home/user/Redion/src/register/symbole.ts",
+          "pfad": "src/register/symbole.ts",
           "rolle": "Register.symbole — gezeichnete Strichzeichen 24×24; KEIN melde: return { hat, alsSvg, fuelle, alle } Z.606. Kein Erweiterungspunkt.",
           "zeilen": 607
         },
         {
-          "pfad": "/home/user/Redion/src/register/textstile.ts",
+          "pfad": "src/register/textstile.ts",
           "rolle": "Textstile (globaler Name, NICHT Register.textstile, Z.30/74) — GROESSEN/SCHRIFTEN als Kennungen, klassen() Z.63-69; kein melde.",
           "zeilen": 74
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/einstellungen/erweiterungen.ts",
+          "pfad": "src/bereiche/einstellungen/erweiterungen.ts",
           "rolle": "Erweiterung — Nutzer-JavaScript als Text. Speicher Store.meta 'erweiterungen' Z.44-45; angemeldet {formeln, befehle, knoepfe, aenderung} mit von Z.49-55; Schnittstelle Redion Z.70-139 (formel/befehl/knopf/beimStart/beiAenderung, daten.*, schreibe.*, melde/frage/oeffne/zeichne); ABGESCHIRMT-Parameterliste Z.154-158 („Zaun, kein Tresor“ Z.152); einzeln() = new Function('Redion', ...ABGESCHIRMT, code) Z.162-173; alleLaufen hängt Formeln direkt in Formula.F Z.179-182; knoepfeZeigen baut #erw-knoepfe im Baum Z.189-210; gemeldet() Z.213-217; start() Z.445-449; Export Z.451-453.",
           "zeilen": 456
         },
         {
-          "pfad": "/home/user/Redion/src/kern/ereignisse/arten.ts",
+          "pfad": "src/kern/ereignisse/arten.ts",
           "rolle": "ARTEN — 51 gefrorene Ereignisnamen '<gegenstand>.<was geschah>' (Z.27-109, gezählt: app 3, seite 8, block 5, datenbank 7, ablage 3, abgleich 5, konto 3, suche 2, oberfläche 3, frage 5, auftrag 6, einstellung 1); artKennt() Typwächter Z.121-122.",
           "zeilen": 125
         },
         {
-          "pfad": "/home/user/Redion/src/kern/ereignisse/bus.ts",
+          "pfad": "src/kern/ereignisse/bus.ts",
           "rolle": "Ereignisse — horche(name, fn, {nachreichen}) Z.91-106, einmal Z.109, melde Z.124-140 (Rückgabewert der Zuhörer wird verworfen), meldeAsync Z.147, frage Z.169-191 (Promise = Fehler, E362), frageAsync Z.198, darf/darfAsync Z.216-218 (Veto), schonGemeldet Z.221, uebersicht/mitschneiden/letzte/leeren; Export Z.236-237. Nur 1 frage-Aufrufer in src (werkzeuge.ts:986), 13 horche-Aufrufer.",
           "zeilen": 240
         },
         {
-          "pfad": "/home/user/Redion/src/kern/ereignisse/protokoll.ts",
+          "pfad": "src/kern/ereignisse/protokoll.ts",
           "rolle": "Protokoll — EIN Protokoll statt drei (Z.9-22); lokales ARTEN (Protokollarten, Z.47ff, u. a. 'automation'), meta 'protokoll' MAX 2000 Z.42-43; notieren Z.109; einklinken() monkeypatcht Store.addBlock Z.172-187; dialog Z.280, start Z.393; Export Z.400.",
           "zeilen": 404
         },
         {
-          "pfad": "/home/user/Redion/src/kern/auftraege/maschine.ts",
+          "pfad": "src/kern/auftraege/maschine.ts",
           "rolle": "Auftraege — Arbeit, die einen Neustart überlebt (E286). Werkzeug = Läufer (auftrag, {schritt, abgebrochen, lebt}) Z.85-95; anmelden(art, werkzeug, name) Z.243-259 gibt Abmeldefunktion; anlegen(art, eingabe, opt) Z.271-296 schreibt vor der Arbeit Store.auftragPut und meldet ARTEN.auftragAngelegt; benutzt den Bus nur zum MELDEN, nie zum Steuern (Z.28-43, L102 §4); Pacht gegen zwei Tabs Z.48-57; Export Z.578-584.",
           "zeilen": 587
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/datenbanken/steuerung.ts",
+          "pfad": "src/bereiche/datenbanken/steuerung.ts",
           "rolle": "Datenbank-Automationen (kein eigenes Modul): AUSLOESER 15 Arten Z.7567-7590 inkl. 'wiederkehrend' Z.7578, OHNE_SPALTE Z.7592-7594, AKTIONEN 20 Arten Z.7792-7813 (inkl. variablen, neue-zeile, benachricht, mail Z.7802-7805), SCHREIBAKTIONEN Z.7897-7901, automationenLaufen Z.8036 (a.an, a.wenn, a.weitereWenn, a.wennModus, a.bedingungen, a.sonst Z.8049-8170), Protokoll.notieren('automation') Z.8181, Webhook Z.8447-8494, wiederkehrendeAutomationen Z.8722, automationenEinklinken Z.8802-8830 (Zeitgeber + Monkeypatch Store.addRow Z.8812-8813), automationenMenue Z.8993; Speicherung coll.automationen via Store.updateCollection Z.7989/8765.",
           "zeilen": 9949
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/editor/ansicht/editor.ts",
+          "pfad": "src/bereiche/editor/ansicht/editor.ts",
           "rolle": "Knopf-Block (Notions Button): AKTIONS_NAMEN 11 Arten Z.2315-2323 (block, zeile, seite, meldung, timer, aendern, oeffnen, webhook, mail, benachricht, variablen); knopfAusfuehren(block) Z.2324 liest block.aktionen[] bzw. block.aktion und block.bestaetigen Z.2326-2332.",
           "zeilen": 3565
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/ki/werkzeuge.ts",
+          "pfad": "src/bereiche/ki/werkzeuge.ts",
           "rolle": "MCP — Client: Server in meta 'mcp:server', Freigabeliste 'mcp:freigabe' Z.51-60; Server-Seite: eigenerKatalog() aus Agent.WERKZEUGE Z.163, beantworten() tools/list Z.184; start() hängt Werkzeuge in den Agenten Z.428; Export Z.430-432.",
           "zeilen": 435
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/ki/agenten.ts",
+          "pfad": "src/bereiche/ki/agenten.ts",
           "rolle": "Agent.WERKZEUGE Z.158 — 17 Werkzeuge mit recht: 'lesen' | 'bearbeiten' | 'loeschen' (Z.161-686); loeschen fragt Konten.darf('loeschen', id) Z.474; Auswertung nach recht Z.728/1154/1165. Das einzige Rechtemodell je Werkzeug im Projekt.",
           "zeilen": 1200
         },
         {
-          "pfad": "/home/user/Redion/server/kern.ts",
+          "pfad": "server/kern.ts",
           "rolle": "MCP_WERKZEUGE Z.1712 — 5 Server-Werkzeuge (seiten_suchen, seite_lesen, seite_anlegen, bereiche_zeigen, redion); tools/list Z.1751, tools/call Z.1753.",
           "zeilen": 1840
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/verbinden/schnittstelle.ts",
+          "pfad": "src/bereiche/verbinden/schnittstelle.ts",
           "rolle": "Api — /v1/ in Notions Form, mit Token (Z.9-33, 48-50); Servicearbeiter reicht fetch() hierher durch (Z.19-24); Export Z.900.",
           "zeilen": 906
         },
         {
-          "pfad": "/home/user/Redion/src/schale/aufbau/schale.ts",
+          "pfad": "src/schale/aufbau/schale.ts",
           "rolle": "Die einzige Start-Reihenfolge: feste Liste von .start()-Aufrufen Z.4093-4116 (MCP.start 4104, Erweiterung.start 4110, Protokoll.start 4113) — kein Start-Register, kein Hook.",
           "zeilen": 4500
         },
         {
-          "pfad": "/home/user/Redion/doku/AUTOMATIONEN-UND-KNOEPFE.md",
+          "pfad": "doku/AUTOMATIONEN-UND-KNOEPFE.md",
           "rolle": "Referenz Stand 2. August 2026 — VERALTET: sagt Z.22 „Every {frequency} ⚠ fehlt bei uns“ und Z.78-84 „Add page to / Send notification / Send mail / Define variables fehlt“, alle fünf stehen seit L16/E-Folge im Code (steuerung.ts:7578, 7802-7805).",
           "zeilen": 221
         },
         {
-          "pfad": "/home/user/Redion/src/register/ki.ts",
+          "pfad": "src/register/ki.ts",
           "rolle": "Register.ki (E724, 6. Oktober) — der EINE Katalog der KI-Befehle: 22 Einträge {id, name, icon, art:'auftrag'|'werkzeug', gruppe, ziel:'markierung'|'block'|'seite'|'datenbank'|'chat', auftrag (EINE Fassung je Kennung), ausgabe:'ersetzen'|'darunter'|'karteikarten'|'neueSeite'|'chat', frage?, vorgabe?, haeufig?, palette?, alt:{sb,faehig,block}}; finde/alle/ausAlt/auftrag. Ersetzt fünf Kataloge (data-p-Knöpfe, SCHREIB_BEFEHLE, FAEHIG_START-Aufträge, blockAktion, die vier Palettenabschriften in wissen). Gelesen von ki/dienst.ts (ausfuehren, schreibLauf, befehlsMenue, Palettenlieferant) und schale.ts (uebersetzenMenue). Wächter test599 §7.",
           "zeilen": 194
         }
       ],
-      "datenmodell": "Vier verschiedene Ablagen, keine gemeinsam. (a) REGISTER liegen nur im RAM: jedes hält `const LISTE = EINGEBAUT.slice()` (bloecke.ts:266, eigenschaften.ts:68, module.ts:133, navigation.ts:412, einstellungen.ts:116, verbindungen.ts:105, tasten.ts:171, formeln.ts:631) bzw. leere Listen (befehle.ts:52-53 lieferanten/feste, menueband.ts:987-988 fremde/lieferanten, context.ts:81-85 LISTE/LIEFERANTEN/stapelQuellen, vorlagen.ts:27). Nichts davon geht in IndexedDB, nichts in eine Sicherung; nach dem Neuladen ist alles weg, was nicht Code ist. Herkunft je Eintrag: bloecke.ts:267 und eigenschaften.ts:72 führen ein `vonAussen: Set<string>` (nur Kennung, kein Name), navigation.ts:427 setzt `vonAussen: true`; alle anderen unterscheiden Eingebautes und Gemeldetes nicht. (b) ERWEITERUNGEN: Fach `meta`, Schlüssel `erweiterungen` (erweiterungen.ts:44-45), eine Liste von `{ name, kurz, code, an }` (Z.395-397 lesen(), Z.432 Einbauen, Z.341 an-Schalter). Kein Manifest, keine Fassung, keine Rechte, keine Signatur, kein Zeitstempel. Was eine Erweiterung angemeldet hat, steht nur im RAM `angemeldet` (Z.49-55) mit `von: name`. (c) AUTOMATIONEN: Daten IM Datenbankobjekt, Fach `collections`, Feld `coll.automationen[]` (steuerung.ts:7989 `Store.updateCollection(coll.id, { automationen })`, 8765); ein Eintrag hat `an`, `wenn {art, key, wert}`, `weitereWenn[]`, `wennModus ('alle')`, `bedingungen[]`, `sonst[]` (Z.8049-8170, 7741); Aktionsarten und Auslöserarten sind Code-Listen (Z.7567, 7792), keine Registerobjekte. Der Laufverlauf steht im Protokoll: Fach `meta`, Schlüssel `protokoll`, höchstens 2000 Einträge (protokoll.ts:42-43), Art 'automation' (Z.55, steuerung.ts:8181). Knopf-Block: Fach `blocks`, Felder `aktionen[]` bzw. `aktion`, `bestaetigen` (editor.ts:2326-2332). (d) AUFTRÄGE: Fach `auftraege` über `Store.auftragPut` (maschine.ts:288), Form aus `JobModell.anlegen(id, art, eingabe, jetzt, zeitText, {schritte, maxVersuche, text, bedingung})` (Z.286-287); die Läufer selbst nur im RAM `werkzeuge: Map<string, Werkzeug>` (Z.97). (e) BUS: Zuhörer `Map<string, Set>` und letzte Meldung je Name `gemeldet` (bus.ts:60, 67) — RAM je Tab. (f) MCP: Fach `meta`, `mcp:server` und `mcp:freigabe` (werkzeuge.ts:51-54). (g) EINSTELLUNGEN: Fach `meta`, Schlüssel = `id` des Registereintrags (einstellungen.ts:136 `Store.getMeta(id, e.vorgabe)`, 157 `Store.setMeta(id, wert)`).",
+      "datenmodell": "Vier verschiedene Ablagen, keine gemeinsam. (a) REGISTER liegen nur im RAM: jedes hält `const LISTE = EINGEBAUT.slice()` (bloecke.ts:266, eigenschaften.ts:68, module.ts:133, navigation.ts:427, einstellungen.ts:116, verbindungen.ts:105, tasten.ts:171, formeln.ts:631) bzw. leere Listen (befehle.ts:52-53 lieferanten/feste, menueband.ts:987-988 fremde/lieferanten, context.ts:81-85 LISTE/LIEFERANTEN/stapelQuellen, vorlagen.ts:27). Nichts davon geht in IndexedDB, nichts in eine Sicherung; nach dem Neuladen ist alles weg, was nicht Code ist. Herkunft je Eintrag: bloecke.ts:267 und eigenschaften.ts:72 führen ein `vonAussen: Set<string>` (nur Kennung, kein Name), navigation.ts:440 setzt `vonAussen: true`; alle anderen unterscheiden Eingebautes und Gemeldetes nicht. (b) ERWEITERUNGEN: Fach `meta`, Schlüssel `erweiterungen` (erweiterungen.ts:44-45), eine Liste von `{ name, kurz, code, an }` (Z.395-397 lesen(), Z.432 Einbauen, Z.341 an-Schalter). Kein Manifest, keine Fassung, keine Rechte, keine Signatur, kein Zeitstempel. Was eine Erweiterung angemeldet hat, steht nur im RAM `angemeldet` (Z.49-55) mit `von: name`. (c) AUTOMATIONEN: Daten IM Datenbankobjekt, Fach `collections`, Feld `coll.automationen[]` (steuerung.ts:7989 `Store.updateCollection(coll.id, { automationen })`, 8765); ein Eintrag hat `an`, `wenn {art, key, wert}`, `weitereWenn[]`, `wennModus ('alle')`, `bedingungen[]`, `sonst[]` (Z.8049-8170, 7741); Aktionsarten und Auslöserarten sind Code-Listen (Z.7567, 7792), keine Registerobjekte. Der Laufverlauf steht im Protokoll: Fach `meta`, Schlüssel `protokoll`, höchstens 2000 Einträge (protokoll.ts:42-43), Art 'automation' (Z.55, steuerung.ts:8181). Knopf-Block: Fach `blocks`, Felder `aktionen[]` bzw. `aktion`, `bestaetigen` (editor.ts:2326-2332). (d) AUFTRÄGE: Fach `auftraege` über `Store.auftragPut` (maschine.ts:288), Form aus `JobModell.anlegen(id, art, eingabe, jetzt, zeitText, {schritte, maxVersuche, text, bedingung})` (Z.286-287); die Läufer selbst nur im RAM `werkzeuge: Map<string, Werkzeug>` (Z.97). (e) BUS: Zuhörer `Map<string, Set>` und letzte Meldung je Name `gemeldet` (bus.ts:60, 67) — RAM je Tab. (f) MCP: Fach `meta`, `mcp:server` und `mcp:freigabe` (werkzeuge.ts:51-54). (g) EINSTELLUNGEN: Fach `meta`, Schlüssel = `id` des Registereintrags (einstellungen.ts:136 `Store.getMeta(id, e.vorgabe)`, 157 `Store.setMeta(id, wert)`).",
       "schnittstellen": [
         {
           "name": "Register.befehle.melde / meldeLieferant / nimmZurueck",
@@ -2791,9 +2791,15 @@
         },
         {
           "name": "Register.navigation.melde / Register.module.melde / Register.ansichten.melde / Register.einstellungen.melde / Register.formeln.melde / Register.tasten.melde / Register.vorlagen.melde / Register.verbindungen.melde / Register.fachzeichen.melde / Register.elektroformeln.melde",
-          "datei": "src/register/navigation.ts:423, module.ts:135, ansichten.ts:54, einstellungen.ts:118, formeln.ts:633, tasten.ts:174, vorlagen.ts:29, verbindungen.ts:107, fachzeichen.ts:1084, elektroformeln.ts:5012",
+          "datei": "src/register/navigation.ts:436, module.ts:135, ansichten.ts:54, einstellungen.ts:118, formeln.ts:633, tasten.ts:174, vorlagen.ts:29, verbindungen.ts:107, fachzeichen.ts:1084, elektroformeln.ts:5012",
           "art": "register",
-          "beschreibung": "Je ein melde(); nimmZurueck nur bei navigation (Z.431), module (Z.156), fachzeichen (vergiss Z.1091). Aufrufer in src nur vorlagen.melde (wissen/nin-quiz.ts:461, staatskunde-inhalt.ts:367, dark-dossier.ts:330)."
+          "beschreibung": "Je ein melde(); nimmZurueck nur bei navigation (Z.444), module (Z.156), fachzeichen (vergiss Z.1091). Aufrufer in src nur vorlagen.melde (wissen/nin-quiz.ts:461, staatskunde-inhalt.ts:367, dark-dossier.ts:330)."
+        },
+        {
+          "name": "Register.navigation.meldeZiele(reiter, fn) / ziele(reiter)",
+          "datei": "src/register/navigation.ts:516, 524",
+          "art": "register",
+          "beschreibung": "E748: was unter einem Reiter der unteren Leiste liegt, nach dem Muster von Register.kontext.meldeLieferant/fuer. Schlüssel = data-ziele am Reiterknopf (index.html). Lieferanten: wissen/bibliothek.ts (dokumente: ORTE mit zielRang + Notizhefte aus app-notizhefte), wissen/lernwelt.ts (heute, lernen: KLAPPEN + ANSICHTEN.zielRang), datenbanken/ansichten/dienst.ts (termine: TERMINE_KARTEN + Kante kalender; mehr: mehrGruppen.zielRang). Gelesen von schale/aufbau/tab-shelf.ts (TabShelf, die Zielleiste am Telefon, E749 — Bogen 2). Wächter test613 (Quelle) und test614 (Zielleiste)."
         },
         {
           "name": "Redion (Schnittstelle einer Erweiterung)",
@@ -2917,7 +2923,7 @@
         "zOrder": {
           "vorhanden": true,
           "eigen": true,
-          "wo": "nur als Reihenfolge, nicht als Zeichenebene: rang-Sortierung in context.ts:170 `(a.rang ?? 500) - (b.rang ?? 500)` und navigation.ts:444 `(a.rang || 100) - (b.rang || 100)` — zwei Vorgaben (500 und 100) für dieselbe Frage"
+          "wo": "nur als Reihenfolge, nicht als Zeichenebene: rang-Sortierung in context.ts:170 `(a.rang ?? 500) - (b.rang ?? 500)` und navigation.ts:457 `(a.rang || 100) - (b.rang || 100)` — zwei Vorgaben (500 und 100) für dieselbe Frage"
         },
         "undo": {
           "vorhanden": false,
@@ -3075,8 +3081,8 @@
         {
           "was": "Erweiterungs-Knöpfe: eigene DOM-Liste im Baum statt des vorgesehenen Anhängepunkts platz 'unten' im Navigationsregister",
           "hier": "src/bereiche/einstellungen/erweiterungen.ts:189-210",
-          "dort": "src/register/navigation.ts:38-40, 423-429 und src/schale/aufbau/seitenleiste.ts:878",
-          "beleg": "erweiterungen.ts:196-198 `d.id = 'erw-knoepfe'; … d.innerHTML = '<div class=\"side-section\"><span>Erweiterungen</span></div>' + angemeldet.knoepfe.map(…)`; navigation.ts:38 „platz 'unten' der Anhängepunkt für fremde Bereiche (`vonAussen`)“, Z.427 `LISTE.push(Object.assign({ vonAussen: true }, e))`; seitenleiste.ts:878 „Erweiterungsknöpfe wieder anhängen — zeichneBaum leert den Baum“"
+          "dort": "src/register/navigation.ts:38-40, 436-442 und src/schale/aufbau/seitenleiste.ts:878",
+          "beleg": "erweiterungen.ts:196-198 `d.id = 'erw-knoepfe'; … d.innerHTML = '<div class=\"side-section\"><span>Erweiterungen</span></div>' + angemeldet.knoepfe.map(…)`; navigation.ts:38 „platz 'unten' der Anhängepunkt für fremde Bereiche (`vonAussen`)“, Z.440 `LISTE.push(Object.assign({ vonAussen: true }, e))`; seitenleiste.ts:878 „Erweiterungsknöpfe wieder anhängen — zeichneBaum leert den Baum“"
         },
         {
           "was": "Drei Monkeypatches auf Store-Funktionen statt des vorhandenen Store.on-Hooks — Änderungs-Hook viermal verschieden gebaut",
@@ -3099,8 +3105,8 @@
         {
           "was": "Zwei Vorgaben für denselben Rang-Sortierschlüssel",
           "hier": "src/register/context.ts:170",
-          "dort": "src/register/navigation.ts:444",
-          "beleg": "context.ts:170 `.sort((a, b) => (a.rang ?? 500) - (b.rang ?? 500))`; navigation.ts:444 `.sort((a, b) => (a.rang || 100) - (b.rang || 100))` — ein Eintrag ohne rang steht in der Kante hinten, in der Seitenleiste vorn"
+          "dort": "src/register/navigation.ts:457",
+          "beleg": "context.ts:170 `.sort((a, b) => (a.rang ?? 500) - (b.rang ?? 500))`; navigation.ts:457 `.sort((a, b) => (a.rang || 100) - (b.rang || 100))` — ein Eintrag ohne rang steht in der Kante hinten, in der Seitenleiste vorn"
         },
         {
           "was": "Dieselbe Hilfsfunktion elVon(e) dreimal im System (und esc() ebenso)",
@@ -3132,115 +3138,115 @@
       "system": "I · MCP, Server-API, CLI-Vorläufer — drei Wege nach aussen, die heute nebeneinander stehen: (1) `Api` (`src/bereiche/verbinden/schnittstelle.ts`), die /v1/-Schnittstelle in Notions Form, IM BROWSER beantwortet; der Dienst-Arbeiter (`src/dienst/sw.ts:373-407`) reicht echte `fetch('/v1/…')` und Notions `/api/v3/…` (`Transaktion`, `src/kern/ablage/befehle.ts`) ans offene Fenster durch. (2) Der optionale Server (`server/kern.ts`, Cloudflare Worker über `worker.ts` → `server/cloudflare.ts`, lokal `server/pruefserver.ts`) mit 14 Wegfamilien, darunter ein schmaleres `/v1/` (nur pages GET/PATCH, search, users/me) und `/mcp` (JSON-RPC 2.0, vier Werkzeuge). (3) MCP im Browser (`src/bereiche/ki/werkzeuge.ts`, global `MCP`): Client zu fremden HTTP-MCP-Servern und ein eigener Katalog `notizen_*`, der nur beantwortet, was ihm jemand hereinreicht. Dazu die Node-Werkzeuge in der Wurzel (bauen, chronik, dienststand, bilder, karte, volllauf, alle, bruecke, zehn TS-Umzugshelfer) — jedes mit eigener `process.argv`-Auswertung, ohne gemeinsamen Einstieg. Ein `redion`-CLI gibt es nicht: `grep -i doctor|inspect *.mts pruefungen/*.mts src/kern src/core` → 0 Treffer; `package.json` hat kein `bin`. Geometrie hat dieses System keine (grep getBoundingClientRect|clientX|clientY|transform|zoom|hitTest|snap in schnittstelle.ts und server/*.ts → 0 Treffer). HEAD 855475f, 25. September 2026.",
       "hauptdateien": [
         {
-          "pfad": "/home/user/Redion/src/bereiche/verbinden/schnittstelle.ts",
+          "pfad": "src/bereiche/verbinden/schnittstelle.ts",
           "rolle": "`Api` — /v1/ in Notions Form, im Browser: Token (Z.53-66, meta `apiToken`), fehler() mit Notion-Codes (Z.71), TYP_API Spaltentyp→Notion (Z.97-111), wertRaus/wertRein (Z.113-201), elternVon/seiteRaus (Z.206-232), BLOCK_API/API_BLOCK (Z.236-249), blockRaus (Z.252), datenbankRaus (Z.294, scannt Store.cache.blocks Z.295), blaettern start_cursor/has_more (Z.337), OP_API/filterRein/sortRein → eigene Filterform (Z.362-405), anfrage(methode,pfad,koerper,kopf) Dispatcher pages/blocks/databases/search/users/comments (Z.419-540), Handgriffe seiteAnlegen…kommentarSchreiben (Z.545-735), horchen() = SW-Relais `api-anfrage` (Z.744-761), Dialog mit Token und Probe-Fenster (Z.813-895), Export Z.899-902, `window.Api` Z.906",
           "zeilen": 906
         },
         {
-          "pfad": "/home/user/Redion/src/dienst/sw.ts",
+          "pfad": "src/dienst/sw.ts",
           "rolle": "Der Weg von aussen ins Fenster: beimFenster() (Z.373-407) — 503 ohne offenes Fenster (Z.375-380), MessageChannel mit 5-s-Uhr (Z.399-405), fetch-Handler fängt /v1/ und /api/v3/ auch für POST/PATCH/DELETE (Z.447-455); GRUNDSTOCK nennt schnittstelle.js (Z.256) und konten.js (Z.216)"
         },
         {
-          "pfad": "/home/user/Redion/src/kern/ablage/befehle.ts",
+          "pfad": "src/kern/ablage/befehle.ts",
           "rolle": "`Transaktion` — Notions interne /api/v3/loadPageChunk, queryCollection, submitTransaction mit set/update/listAfter/listBefore/listRemove (Kopf Z.9-23); holen/sichern gegen Store (Z.49-60); Export Z.532 (ausfuehren, befehlAusfuehren, abspielen, verlauf, …), `window.Transaktion` Z.538; wird von Api.horchen für /api/v3/ gerufen (schnittstelle.ts:752-754)"
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/ki/werkzeuge.ts",
+          "pfad": "src/bereiche/ki/werkzeuge.ts",
           "rolle": "`MCP` — Client: server()/serverSpeichern meta `mcp:server` (Z.51-52), Freigabeliste `mcp:freigabe` (Z.55-63), ruf() JSON-RPC über Verbindungen.ruf mit Mcp-Session-Id und SSE-Entpacken (Z.66-92), verbinden/werkzeugeHolen/werkzeugRufen (Z.95-125); Server-Seite: eigenerKatalog() = Agent.WERKZEUGE als `notizen_*` (Z.163-171), beantworten() initialize/tools/list/tools/call mit Konten.darf (Z.173-200); Export Z.430-432; Kopfkommentar Z.24-27 verspricht „bruecke.js … echter MCP-Server“ — bruecke.mts kennt weder MCP noch JSON-RPC (grep → 0)",
           "zeilen": 435
         },
         {
-          "pfad": "/home/user/Redion/server/kern.ts",
+          "pfad": "server/kern.ts",
           "rolle": "Der Serverkern, ohne zu wissen wo er läuft (Kopf Z.1-25): antwort/fehler (Z.47-55), teile (Z.194), beantworteRoh Dispatcher (Z.208-306): OPTIONS Z.216, /api/stand Z.225, /s/{schluessel} öffentlich Z.241, /konto Z.244, werFragt Z.247, torPruefen für Marken Z.255, dann sync/datei/freigabe/feldrecht/veroeffentlichen/bereich/protokoll/marken/push/v1/mcp (Z.259-269), 500 mit Kennung statt Innenbau (Z.289-305); beantworte = mitSicherheitsKopf(mitCors(…)) Z.315; kontoWeg Z.322 (ich, abmelden, loeschen, code, code-freigeben, code-holen, oauth, geraete, geraete/{id}/weg); syncWeg Z.734 (/sync/runter, /sync/hoch); bereichWeg Z.878 (POST/GET, {id}/besitz, {id}/suche, PATCH); feldrechtWeg Z.1089; freigabeWeg Z.1145; oeffentlichZeigen Z.1217; veroeffentlichenWeg Z.1283; pushWeg Z.1404 (schluessel, anmelden, wecken, abmelden); markenWeg Z.1530 (POST, GET, DELETE {kennung}); protokollWeg Z.1580; v1Weg Z.1604-1701 (pages GET/PATCH, search, users/me; Unterwege 404 Z.1630-1632); MCP_WERKZEUGE Z.1706-1731; mcpWeg Z.1734-1833; _intern Z.1836",
           "zeilen": 1838
         },
         {
-          "pfad": "/home/user/Redion/server/ablage.ts",
+          "pfad": "server/ablage.ts",
           "rolle": "Sieben-Funktionen-Ablage (Kopf Z.1-17): SCHEMA als Zeichenkette (Z.23-194), TABELLEN 12 Namen (Z.196-198), SCHLUESSEL je Tabelle (Z.201-208), ablageSpeicher Map-basiert (Z.213-277), ablageD1 mit `?`-Parametern, nie Werte im Text (Z.280-355; einrichten führt SCHEMA aus Z.294-299), blobsSpeicher (Z.366), blobsR2 (Z.378)",
           "zeilen": 387
         },
         {
-          "pfad": "/home/user/Redion/server/typen.ts",
+          "pfad": "server/typen.ts",
           "rolle": "Die fünf Formen: Satz/Wo/FindeOpt (Z.36-49), Ablage (Z.58-67), Blobs Schlüssel `bereich/dateiId/nr` (Z.70-79), Kopfzeilen klein (Z.87), Anfrage (Z.95-102), Antwort (Z.105-109), Wer = Konto + Sitzung ODER Marke (Z.117-122), Umwelt (Z.130-152). Erzeugt nichts (Z.27-29)",
           "zeilen": 152
         },
         {
-          "pfad": "/home/user/Redion/server/schema.sql",
+          "pfad": "server/schema.sql",
           "rolle": "12 Tabellen für D1: konten (Z.1), sitzungen (Z.11), bereiche (Z.20), saetze (Z.29-41: id, bereich, tabelle, daten TEXT, verschluesselt, seite, version, geaendert, geloescht, vonGeraet; PK bereich+id), freigaben (Z.45), oeffentlich (Z.56), protokoll (Z.70), marken (Z.81-91: wert PK, art, kontoId, bereich, name, rechte, angelegt, bis, benutzt), feldrechte (Z.99), bremse (Z.126), dateien nur Metadaten (Z.141), weckrufe ohne Erinnerungstext (Z.168)",
           "zeilen": 178
         },
         {
-          "pfad": "/home/user/Redion/server/cloudflare.ts",
+          "pfad": "server/cloudflare.ts",
           "rolle": "Übersetzung Request↔Kern: alsAnfrage mit Grössenprüfung VOR dem Lesen (Z.27-59), alsAntwort (Z.62), ohneDatenbank 503 mit den vier wrangler-Schritten (Z.65-76), istServerWeg Regex der 13 Familien + /v1/ + /api/stand (Z.78-80), bedienen (Z.84-131, Umwelt aus env inkl. blobs: env.R2 Z.126), geplant = Cron für Weckrufe (Z.138-146)",
           "zeilen": 146
         },
         {
-          "pfad": "/home/user/Redion/server/pruefserver.ts",
+          "pfad": "server/pruefserver.ts",
           "rolle": "Derselbe Kern auf diesem Rechner (Z.1-13): starte(port=8790, {ablage, blobs, holen, umwelt}) Z.27, http.createServer → beantworte (Z.36-72), stopp() das wirklich anhält (Z.74-117), Direktstart `node server/pruefserver.ts [port]` Z.124-131; `npm run server` (package.json)",
           "zeilen": 132
         },
         {
-          "pfad": "/home/user/Redion/server/dateien.ts",
+          "pfad": "server/dateien.ts",
           "rolle": "Anhänge in der Wolke: fünf POST-Wege /datei/melden|stueck|runter|stand|weg (Kopf Z.11-16, Code Z.97-183), DATEI_GRENZE 100 MB (Z.41), STUECK_GRENZE 2 MB (Z.46), dateiWeg Z.66",
           "zeilen": 199
         },
         {
-          "pfad": "/home/user/Redion/server/sicherheit/marken.ts",
+          "pfad": "server/sicherheit/marken.ts",
           "rolle": "Das Tor für Programme: MARKEN_RECHTE ['lesen','schreiben','alles'] Z.40, NUR_MIT_SITZUNG ['marken','freigabe','feldrecht','push'] Z.54, rechteVon Z.92, darfMarke Z.103, torPruefen(wer, familie, methode) Z.118-141 — Mensch passiert, Marke wird gegen Methode geprüft"
         },
         {
-          "pfad": "/home/user/Redion/worker.ts",
+          "pfad": "worker.ts",
           "rolle": "Cloudflare-Einstieg: /api/bruecke → functions/api/bruecke.ts (Z.27-29), istServerWeg → bedienen (Z.36-39), /api/status Lebenszeichen (Z.43-49), Rest an env.ASSETS (Z.52-58)"
         },
         {
-          "pfad": "/home/user/Redion/functions/api/bruecke.ts",
+          "pfad": "functions/api/bruecke.ts",
           "rolle": "CORS-Brücke auf Cloudflare: ERLAUBT 18 Gegenstellen (Z.24-42), passt() mit .ics-Ausnahme (Z.44-47), kopfZurueck lässt Mcp-Session-Id durch (Z.49-55), onRequest Z.57"
         },
         {
-          "pfad": "/home/user/Redion/bruecke.mts",
+          "pfad": "bruecke.mts",
           "rolle": "Dieselbe Brücke zu Hause, Port 8081 (Z.11-13, 24): ERLAUBT 11 Gegenstellen (Z.28-33), passt() Z.35, http.createServer Z.38-77; kein MCP, kein JSON-RPC (grep → 0)",
           "zeilen": 80
         },
         {
-          "pfad": "/home/user/Redion/src/kern/abgleich/maschine.ts",
+          "pfad": "src/kern/abgleich/maschine.ts",
           "rolle": "`Wolke` — der Browser-Client zum Server: ruf(weg,{m,kopf,k}) mit Bearer-Token und Redion-Geraet (Z.77-110), Marken anlegen/listen/löschen über /marken (Z.1127-1135), Export Z.1169-1175, `window.Wolke` Z.1181"
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/verbinden/ansicht/wolke.ts",
+          "pfad": "src/bereiche/verbinden/ansicht/wolke.ts",
           "rolle": "Das Wolke-Fenster mit dem Marken-Reiter: „Eine Marke ist ein Schlüssel für ein Programm — für /v1/ oder für MCP“ (Z.833-836), Anlegen mit Rechten lesen|lesen,schreiben und Tagen (Z.838-844)"
         },
         {
-          "pfad": "/home/user/Redion/pruefungen/alle.mts",
+          "pfad": "pruefungen/alle.mts",
           "rolle": "Orchestrator aller Prüfläufe: Argumente --schnell, --alt, `server`, --liste, Nummern (Z.46-55), Kindprozess je Lauf mit 3 s Pause (Kopf Z.3-6); `npm run pruefen`. --schnell (E745) = jeder Lauf ohne Browser (Playwright-Import, gelesen aus der Datei) + SCHNELL_MIT_BROWSER (Z.80, test96/test100 aus §31) — das fährt die CI; --liste druckt die Auswahl ohne zu fahren und wartet aufs Schreiben, bevor es endet (Z.149), test610 prüft sie",
           "zeilen": 283
         },
         {
-          "pfad": "/home/user/Redion/pruefungen/volllauf.mts",
+          "pfad": "pruefungen/volllauf.mts",
           "rolle": "Der volle Lauf in Stücken (E657, §30): --neu, --stand, --stueck N, --rot (Z.16-21), Merkdatei pruefungen/.volllauf-stand.json (Z.42), läuft nur bei Direktstart (Z.46) damit test553 die Zerlegung prüfen kann",
           "zeilen": 230
         },
         {
-          "pfad": "/home/user/Redion/bauen.mts",
+          "pfad": "bauen.mts",
           "rolle": "Baut redion-einzeldatei.html aus index.html, Stil und Skripten (Z.1-8); CSS-@import rekursiv mit Kreisprüfung (Z.19-45); `npm run bauen`",
           "zeilen": 171
         },
         {
-          "pfad": "/home/user/Redion/chronik.mts",
+          "pfad": "chronik.mts",
           "rolle": "Aus chronik/chronik.json → UR.md, PROBLEME.md, src/bereiche/chronik/daten.ts (Z.10-16); `--pruefen` für die CI (Z.31, 38)",
           "zeilen": 201
         },
         {
-          "pfad": "/home/user/Redion/dienststand.mts",
+          "pfad": "dienststand.mts",
           "rolle": "Stempel über den GRUNDSTOCK, hebt VERSION in src/dienst/sw.ts und stand.ts (Z.1-22); grundstock() Z.34, inhaltsStempel() Z.41; `--pruefen` → Rückgabe 1 wenn veraltet; läuft in `npm run bauen:ts`",
           "zeilen": 117
         },
         {
-          "pfad": "/home/user/Redion/bilder.mts",
+          "pfad": "bilder.mts",
           "rolle": "Bildschirmfotos über eigenen http-Server (PORT 8891 oder REDION_BILD_PORT, Z.60) und Playwright; Argumente Ansicht und Gerät (Z.5-7); GERAETE Z.69",
           "zeilen": 4324
         },
         {
-          "pfad": "/home/user/Redion/karte.mts",
+          "pfad": "karte.mts",
           "rolle": "Die Karte des Quelltexts aus doku/karte/karte.json → doku/karte/*.md als Obsidian-Vault mit [[Verweisen]] und Mermaid-Graph (Z.1-31); `--pruefen` Z.38. Dieser Befund ist ein Eintrag dieser Quelle",
           "zeilen": 302
         }
@@ -3630,48 +3636,48 @@
       "system": "J · Abgleich, Anhänge, Stücke, Zusammenführen — Globals `Wolke` (src/kern/abgleich/maschine.ts), `Zusammen` (src/kern/abgleich/zusammenfuehren.ts), `Dateien` (src/bereiche/dateien/ablage.ts) sowie die Fächer basis/vorrat/stuecke/dateien in `Store` (src/kern/ablage/indexdb.ts). Serverseite: server/kern.ts (/sync/hoch, /sync/runter), server/dateien.ts (/datei/melden|stueck|runter|stand|weg). Hinweis: einlesen.ts und ausgeben.ts (Excel/Word/PPTX/EPUB/Obsidian-Austausch) liegen zwar im selben Ordner, haben mit dem Abgleich aber nichts zu tun — sie liefern nur den ZIP-Leser/-Schreiber, den der .redion-Weg in schale.ts benutzt.",
       "hauptdateien": [
         {
-          "pfad": "/home/user/Redion/src/kern/abgleich/maschine.ts",
+          "pfad": "src/kern/abgleich/maschine.ts",
           "rolle": "Global `Wolke`: Server-Adresse, Token, PBKDF2/AES-GCM-Schlüssel (Z.124–195), Sätze hoch (`zuSchicken` Z.384, `hoch` Z.450), runter (`runter` Z.563, `runterEinmal` Z.658), Block-Grabsteine (`bloeckeWeg` Z.602), Schalter E1/E34 (`abgleichErlaubt` Z.797), `abgleichen` Z.809, Takt Z.852, Anhänge 6b (`dateienWeg` Z.936, `dateienRunter` Z.970, `dateienHoch` Z.1034, `dateienAbgleichen` Z.1069), Teilen/Marken/Geräte, `start` Z.1140",
           "zeilen": 1181
         },
         {
-          "pfad": "/home/user/Redion/src/kern/abgleich/zusammenfuehren.ts",
+          "pfad": "src/kern/abgleich/zusammenfuehren.ts",
           "rolle": "Global `Zusammen`: Drei-Wege-Merge — wortweise (`lcs` Z.78, `textDreiWege` Z.135), listenweise (`listeDreiWege` Z.176), feldweise (`dreiWege` Z.242 mit Sets ZEIT/TEXT/LISTE Z.223–230), Konfliktliste in meta `konflikte` (`merke` Z.336, `loese` Z.380, MAX_KONFLIKTE=200 Z.331), Dialog Z.423",
           "zeilen": 524
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/dateien/ablage.ts",
+          "pfad": "src/bereiche/dateien/ablage.ts",
           "rolle": "Global `Dateien`: Anhänge in 1-MB-Stücken — `anmelden` Z.70, `stueckSchicken` Z.99, `bestaetigen` Z.117, `ablegen` Z.156, `alsBlob` Z.200 (verweigert unvollständige Dateien), Blob-URL-Cache `adresse` Z.233, `weg` Z.277 (schreibt Datei-Grabstein), `verwaist`/`aufraeumen` Z.294/311, Dialog",
           "zeilen": 483
         },
         {
-          "pfad": "/home/user/Redion/src/kern/ablage/indexdb.ts",
+          "pfad": "src/kern/ablage/indexdb.ts",
           "rolle": "Global `Store`: Schema-Upgrade Fächer dateien/stuecke (V3, Z.112–119), basis (V4, Z.127), vorrat (V5, Z.132); Grabstein-Merklisten `dateiGrabstein`/`blockGrabstein` (Z.2836–2875) mit atomarem `metaListeAendern` (Z.1200); `basisPut/basisHolen/basisLeeren` Z.2885–2904; `vorratPut…` Z.2907–2910; `stueckPut/stueckeVon` Z.3000–3033; `importAll` Z.2063 (leert basis beim Ersetzen, Z.2421); FAECHER_IMMER/MIT_ANHANG/NIE Z.1790–1806",
           "zeilen": 3071
         },
         {
-          "pfad": "/home/user/Redion/server/kern.ts",
+          "pfad": "server/kern.ts",
           "rolle": "Server: /sync/hoch Versionsregel „veraltet“ (Z.825–833), speichert `version`, `geaendert`, `geloescht`, `vonGeraet` (Z.855–860); Kopfzeile `Redion-Geraet` (Z.741)"
         },
         {
-          "pfad": "/home/user/Redion/server/dateien.ts",
+          "pfad": "server/dateien.ts",
           "rolle": "Server: Anhänge — Metadaten in D1, Bytes in R2 unter bereich/dateiId/nr; fünf POST-Wege (Kopf Z.10–16); DATEI_GRENZE = 100 MB (Z.41)"
         },
         {
-          "pfad": "/home/user/Redion/src/schale/aufbau/schale.ts",
+          "pfad": "src/schale/aufbau/schale.ts",
           "rolle": ".redion-Sicherung schreiben (Z.2074–2211: daten.json + dateien.json + dateien/) und Anhänge einspielen (`anhaengeEinspielen` Z.2286ff, Stücke neu schneiden Z.2357–2362)"
         },
         {
-          "pfad": "/home/user/Redion/src/core/types/file.ts",
+          "pfad": "src/core/types/file.ts",
           "rolle": "Typen `RedionFile` (Z.33) und `FileChunk` (Z.59), `UploadState` = 'wartet'|'laeuft'|'fertig' (Z.30)"
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/dateien/einlesen.ts",
+          "pfad": "src/bereiche/dateien/einlesen.ts",
           "rolle": "NICHT Abgleich: ZIP-Leser (`zipLesen` Z.152, `zipLesenAusBlob` Z.288, ZIP64 Z.31ff), xlsx/ods/docx/pptx/epub → Blöcke; liefert den Leser für .redion und ArchivImport",
           "zeilen": 2726
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/dateien/ausgeben.ts",
+          "pfad": "src/bereiche/dateien/ausgeben.ts",
           "rolle": "NICHT Abgleich: ZIP-Schreiber (`zipSchreiben` Z.123, `crc32Strom` Z.67 stückweise), docx/xlsx/ods-Ausgabe, Trello/Evernote/Obsidian-Import; liefert den Packer für .redion",
           "zeilen": 3015
         }
@@ -3680,55 +3686,55 @@
       "schnittstellen": [
         {
           "name": "Wolke",
-          "datei": "/home/user/Redion/src/kern/abgleich/maschine.ts",
+          "datei": "src/kern/abgleich/maschine.ts",
           "art": "global",
           "beschreibung": "(window as any).Wolke (Z.1181); exportiert Z.1169–1179: adresse, token, bereich, angemeldet, geraeteName, zustand, beiAenderung, anmeldenMit, codeHolen/codeWarten/codeFreigeben, tokenUebernehmen, abmelden, abgleichErlaubt, abgleichSetzen, kontoLoeschen, neuAbgleichOffen, neuAbgleichAntwort, schluesselSetzen, hatSchluessel, verschluessele, entschluessele, hoch, runter, abgleichen, dateienAbgleichen, takt, taktSetzen, zuSchicken, seiteVon, geteiltSetzen, istGeteilt, freigeben, freigaben, veroeffentlichen, zurueckziehen, markeAnlegen, markenListe, markeWeg, geraeteListe, geraetWeg, ruf, start"
         },
         {
           "name": "Zusammen",
-          "datei": "/home/user/Redion/src/kern/abgleich/zusammenfuehren.ts",
+          "datei": "src/kern/abgleich/zusammenfuehren.ts",
           "art": "global",
           "beschreibung": "(window as any).Zusammen (Z.524); exportiert Z.518–521: dreiWege, textDreiWege, listeDreiWege, teile, stuecke, lcs, offene, merke, loese, alleLoesen, dialog, melde, hinweisen, start, pfadName, setzeTief"
         },
         {
           "name": "Dateien",
-          "datei": "/home/user/Redion/src/bereiche/dateien/ablage.ts",
+          "datei": "src/bereiche/dateien/ablage.ts",
           "art": "global",
           "beschreibung": "(window as any).Dateien (Z.483); exportiert Z.478–482: STUECK, KLEIN, GRENZE, anmelden, stueckSchicken, bestaetigen, abbrechen, ablegen, verknuepfen, alsBlob, adresse, adresseBekannt, adresseWeg, herunterladen, weg, verwaist, aufraeumen, zahlen, groesseText, lohntSich, dialog"
         },
         {
           "name": "Store.basis*/vorrat*/stueck*/datei*/…Grabstein*",
-          "datei": "/home/user/Redion/src/kern/ablage/indexdb.ts",
+          "datei": "src/kern/ablage/indexdb.ts",
           "art": "funktion",
           "beschreibung": "Z.3056–3064: dateiPut/dateiHolen/dateiWeg/dateiAlle, blockGrabsteine/blockGrabstein/blockGrabsteinWeg, dateiGrabstein/dateiGrabsteine/dateiGrabsteinWeg, basisPut/basisHolen/basisWeg/basisAlle/basisLeeren, vorratPut/vorratHolen/vorratWeg/vorratAlle, stueckPut/stueckHolen/stueckWeg/stueckeVon; rohSetzen (Z.958, setzt Satz aus dem Abgleich ohne edited-Bump und nimmt Grabstein zurück); metaListeAendern (Z.1200, atomar über Tabs)"
         },
         {
           "name": "Store.on('import') / Ereignisse.horche(ARTEN.einstellungGeaendert)",
-          "datei": "/home/user/Redion/src/kern/abgleich/maschine.ts",
+          "datei": "src/kern/abgleich/maschine.ts",
           "art": "ereignis",
           "beschreibung": "Z.1148–1149: nach einem Einspielen `melden()`; Z.1166–1168: Takt neu stellen, wenn `wolkeTakt` im Register geändert wird; visibilitychange stösst abgleichen an (Z.1160)"
         },
         {
           "name": "POST /sync/hoch, /sync/runter",
-          "datei": "/home/user/Redion/server/kern.ts",
+          "datei": "server/kern.ts",
           "art": "http",
           "beschreibung": "Client maschine.ts:507 und :659; Server nimmt {bereich, saetze[]} und antwortet {angenommen, abgelehnt[{id,grund:'veraltet'|…}], angepasst[]}; runter liefert {saetze, marke, mehr, rolle}"
         },
         {
           "name": "POST /datei/melden, /datei/stueck, /datei/runter, /datei/stand, /datei/weg",
-          "datei": "/home/user/Redion/server/dateien.ts",
+          "datei": "server/dateien.ts",
           "art": "http",
           "beschreibung": "Client maschine.ts:937, 976, 1002, 1048, 1054; Base64-Stücke höchstens 2 MB roh; Rechte über die Seite (bearbeiten/lesen)"
         },
         {
           "name": "Register.einstellungen.setze('wolkeTakt')",
-          "datei": "/home/user/Redion/src/kern/abgleich/maschine.ts",
+          "datei": "src/kern/abgleich/maschine.ts",
           "art": "register",
           "beschreibung": "Z.874–878: taktSetzen schreibt über das Register, nicht daneben (§8)"
         },
         {
           "name": "Aufrufer in der Oberfläche",
-          "datei": "/home/user/Redion/src/bereiche/verbinden/ansicht/wolke.ts",
+          "datei": "src/bereiche/verbinden/ansicht/wolke.ts",
           "art": "funktion",
           "beschreibung": "Wolke.abgleichen (Z.127, 445, 709), Wolke.neuAbgleichAntwort (Z.92, 100); Zusammen.start in schale.ts:4114; Wolke.abgleichen in einstellungen/pwa.ts:784 (online-Ereignis)"
         }
@@ -3909,38 +3915,38 @@
       "duplikate": [
         {
           "was": "Seite eines Blocks bestimmen (Elternkette bis 40 Stufen, Zeile ausgenommen)",
-          "hier": "/home/user/Redion/src/kern/abgleich/maschine.ts:423–433",
-          "dort": "/home/user/Redion/src/kern/ablage/indexdb.ts:629–639 (`seiteVonHier`)",
+          "hier": "src/kern/abgleich/maschine.ts:423–433",
+          "dort": "src/kern/ablage/indexdb.ts:629–639 (`seiteVonHier`)",
           "beleg": "maschine.ts: `if (cur.type === 'page' && cur.parentTable !== 'collection') return cur.id; if (!cur.parentId) return cur.id; const eltern = Store.getBlock(cur.parentId);` — indexdb.ts: wortgleich mit `cache.blocks[cur.parentId]`; der Kommentar dort sagt selbst „hier noch einmal, weil sie IM PURGE-MOMENT laufen muss“"
         },
         {
           "was": "LCS-Tabelle für den Wortvergleich (tab/setzeTab, Uint32Array vs Int32Array)",
-          "hier": "/home/user/Redion/src/kern/abgleich/zusammenfuehren.ts:88–94",
-          "dort": "/home/user/Redion/src/bereiche/seiten/ansicht/fassungen.ts:86–93",
+          "hier": "src/kern/abgleich/zusammenfuehren.ts:88–94",
+          "dort": "src/bereiche/seiten/ansicht/fassungen.ts:86–93",
           "beleg": "beide: `const tab = (i, j) => t[i]?.[j] ?? 0; const setzeTab = …; setzeTab(i, j, a[i] === b[j] ? tab(i + 1, j + 1) + 1 : Math.max(tab(i + 1, j), tab(i, j + 1)));` — zusammenfuehren.ts:83 verweist ausdrücklich: „Dieselben zwei Handgriffe wie in `fassungen.ts`“"
         },
         {
           "was": "AES-GCM verschlüsseln/entschlüsseln mit 12-Byte-IV vorangestellt — einmal für Text (Base64), einmal für Bytes",
-          "hier": "/home/user/Redion/src/kern/abgleich/maschine.ts:172–194 (`verschluessele`/`entschluessele`)",
-          "dort": "/home/user/Redion/src/kern/abgleich/maschine.ts:901–919 (`verschluesseleBytes`/`entschluesseleBytes`)",
+          "hier": "src/kern/abgleich/maschine.ts:172–194 (`verschluessele`/`entschluessele`)",
+          "dort": "src/kern/abgleich/maschine.ts:901–919 (`verschluesseleBytes`/`entschluesseleBytes`)",
           "beleg": "Z.174–178: `const iv = crypto.getRandomValues(new Uint8Array(12)); … encrypt({ name: 'AES-GCM', iv }, schluessel, daten); const alles = new Uint8Array(iv.length + chiffre.byteLength); alles.set(iv); alles.set(new Uint8Array(chiffre), iv.length);` — Z.902–907 identisch, nur ohne TextEncoder/Base64"
         },
         {
           "was": "esc()-Helfer (4-Zeichen-Fassung ohne Apostroph) je Modul statt gemeinsam",
-          "hier": "/home/user/Redion/src/kern/abgleich/zusammenfuehren.ts:51–52 und /home/user/Redion/src/bereiche/dateien/ablage.ts:347–348",
-          "dort": "/home/user/Redion/src/kern/zugang/rechte.ts:39, src/kern/ereignisse/protokoll.ts:257, src/bereiche/verbinden/ansicht/wolke.ts:25",
+          "hier": "src/kern/abgleich/zusammenfuehren.ts:51–52 und src/bereiche/dateien/ablage.ts:347–348",
+          "dort": "src/kern/zugang/rechte.ts:39, src/kern/ereignisse/protokoll.ts:257, src/bereiche/verbinden/ansicht/wolke.ts:25",
           "beleg": "überall: `const esc = (s: unknown): string => String(s ?? '').replace(/[&<>\"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' })[c] ?? c)`; in src/core/helpers gibt es KEIN esc (grep leer) — §19/§52.14 verlangen zudem auch `'`→`&#39;`, das fehlt in allen diesen Fassungen"
         },
         {
           "was": "Obergrenze für Server-Anhänge (100 MB) an zwei Orten",
-          "hier": "/home/user/Redion/src/kern/abgleich/maschine.ts:53–55 (`SERVER_DATEI_MAX = KONSTANTEN.SERVER_DATEI_MAX || 100 * 1024 * 1024`)",
-          "dort": "/home/user/Redion/server/dateien.ts:41 (`export const DATEI_GRENZE = 100 * MB`)",
+          "hier": "src/kern/abgleich/maschine.ts:53–55 (`SERVER_DATEI_MAX = KONSTANTEN.SERVER_DATEI_MAX || 100 * 1024 * 1024`)",
+          "dort": "server/dateien.ts:41 (`export const DATEI_GRENZE = 100 * MB`)",
           "beleg": "maschine.ts:47–50: „ohne Verbindung zu `DATEI_GRENZE` in `server/dateien.ts`, das dieselbe Zahl trägt … `test140` rechnet beide Zahlen nach“ — bewusst geduldet und gewacht, aber weiterhin zwei Quellen"
         },
         {
           "was": "Der Wettlauf-Wächter `wegOffen` (vorgemerkte Löschungen nicht wiederbeleben) zweimal ausgeschrieben",
-          "hier": "/home/user/Redion/src/kern/abgleich/maschine.ts:663–665 (Blöcke, `wolkeBloeckeWeg`)",
-          "dort": "/home/user/Redion/src/kern/abgleich/maschine.ts:974–976 (Dateien, `wolkeDateienWeg`)",
+          "hier": "src/kern/abgleich/maschine.ts:663–665 (Blöcke, `wolkeBloeckeWeg`)",
+          "dort": "src/kern/abgleich/maschine.ts:974–976 (Dateien, `wolkeDateienWeg`)",
           "beleg": "Z.664: `const wegOffen = new Set<string>((Store.getMeta('wolkeBloeckeWeg', []) || []).map(e => e && e.id).filter(Boolean));` … `if (wegOffen.has(s.id)) continue;` — Z.975: `const wegOffen = new Set<string>(Store.getMeta('wolkeDateienWeg', []) || []);` … `if (wegOffen.has(d.id)) continue;`; Kommentar Z.661: „dasselbe Muster wie `wegOffen` bei den Dateien“"
         }
       ],
@@ -3964,92 +3970,92 @@
       "system": "K · Import, Export, .redion, Sicherung — die Sicherung in zwei Formen (`.json` ohne Anhänge, `.redion` = ZIP mit `daten.json` + `dateien.json` + `dateien/`), ihr Manifest (`enthaelt`/`fehlt`/`hinweis`), das Einspielen (`ersetzen`/`zusammenfuehren`, eine Transaktion), die Umzüge der Ablage (`Umzuege`), die verschlüsselte Sicherung (`Krypto`), die Ordner-Sicherung (`OrdnerSicherung`), und der Austausch mit fremden Formaten (Word/Excel/ODS/PowerPoint/EPUB, Notion-ZIP, Obsidian-Vault, Trello, Evernote, Asana, Apple Notes, ZIP ins Regal). WICHTIG ZUR ORTSANGABE IM AUFTRAG: `format.ts`, `archiveImport.ts`, `ausgeben.ts`, `einlesen.ts` liegen NICHT in `src/kern/ablage/` (dort: befehle.ts, formen.ts, indexdb.ts, nachbarn.ts, umzuege.ts), sondern in `src/bereiche/dateien/`. Der eigentliche `.redion`-Packer und -Leser steht in `src/schale/aufbau/schale.ts:2148-2545`, der Manifest-Bau in `src/kern/ablage/indexdb.ts:1843-1983` (`Store.exportAll`), das Einspielen in `indexdb.ts:2063-2470` (`Store.importAll`). Ein Kern-Ordner `src/core/import/` liefert die reinen Teile (Entschärfen, Prüfen, Vergleichen, ZIP-Details). Die Karte `doku/karte/karte.json` (Quelle für `node karte.mts`, Obsidian-Vault unter `doku/karte/`) kennt dieses System noch nicht — sie führt nur A/B/C.",
       "hauptdateien": [
         {
-          "pfad": "/home/user/Redion/src/kern/ablage/indexdb.ts",
+          "pfad": "src/kern/ablage/indexdb.ts",
           "rolle": "`Store`: VERSION = Umzuege.JETZIGE (Z.51); GEHEIM ['wolkeToken','wolkeProbe'] + Präfix 'api:' (Z.1690-1692), GERAETEIGEN (Z.1723); die drei Fachlisten FAECHER_IMMER ['blocks','collections','views','meta','versions'] (Z.1790), FAECHER_MIT_ANHANG ['dateien','stuecke'] (Z.1793), FAECHER_NIE {auftraege, basis, vorrat, suchindex} mit Grund (Z.1802-1807); faecherUnbekannt (Z.1817), satzZuUnbekannten (Z.1834); exportAll(mitAnhaengen, mitGeheimnissen) baut das Manifest (Z.1843-1983: version, exportiert, enthaelt Z.1940, fehlt Z.1951-1959, abgeleitetAusgelassen Z.1962, hinweis Z.1963-1974, blocks/collections/views/meta/versions Z.1975-1980); exportVorbereiten liest den Verlauf (exportVersionen = await all('versions') Z.2009); importAll(json, art) (Z.2063-2470): settled (Z.2066), ImportSicherheit.lesen (Z.2088), nur 'ersetzen'|'zusammenfuehren' sonst Fehler (Z.2092-2095), ImportValidierung.pruefen (Z.2098), Ordnerzugriff bleibt (E270), Wolke-Merklisten überleben (Z.2193-2222), Sync-Marken auf null + wolkeNeuAbgleich (Z.2236-2245), EINE Transaktion über blocks/collections/views/meta/versions/suchindex (Z.2264-2318), Ersetzen löscht Schlüssel, die nicht in der Sicherung sind (Z.2286-2313), Cache erst nach oncomplete (Z.2333-2340), Umzuege.zuruecksetzen()+laufen() nach dem Einspielen (Z.2439), Rückgabe {bloecke, versionen, fehlt, frage, entschaerft, befund, fassung} (Z.2456-2470); Umzuege.laufen beim Öffnen (Z.356)",
           "zeilen": 3071
         },
         {
-          "pfad": "/home/user/Redion/src/schale/aufbau/schale.ts",
+          "pfad": "src/schale/aufbau/schale.ts",
           "rolle": "Der `.redion`-Packer und -Leser (nicht im Kern): sicherungPaketBauen (Z.2148) — ohne Anhänge `.json`, sonst `daten.json` = Store.exportAll(true) (Z.2177), abgeleitete Dateien gefiltert (Z.2174-2175), Namensregel `/[\\\\/:*?\"<>|]/g → '-'` und `-2`, `-3` vor der Endung (Z.2186-2196), `dateien.json` = {version:1, saetze, zuordnung} (Z.2204-2205), Austausch.zipSchreiben (Z.2212); sicherungSpeichern lädt `redion-sicherung-JJJJ-MM-TT.<endung>` (Z.2218-2226); anhaengeEinspielen(zip, art) (Z.2291-2409): dateien.json über ImportSicherheit.lesen (Z.2302), Stücke unter satz.id (Z.2357-2364), Satz mit TATSÄCHLICHER Länge (Z.2374), Ersetzen entfernt fremde Anhänge nur bei .redion (Z.2394-2404); sicherungLaden (Z.2411): erkennt ZIP an `PK` (Z.2421-2422), Dialog mit ImportVergleich (Z.2476-2495), Sicherheitskopie vor dem Ersetzen (Z.2510-2519), Store.importAll (Z.2530), Anhänge NACH den Blöcken (Z.2537)",
           "zeilen": 4582
         },
         {
-          "pfad": "/home/user/Redion/src/kern/ablage/umzuege.ts",
+          "pfad": "src/kern/ablage/umzuege.ts",
           "rolle": "`Umzuege`: FASSUNGEN 1-7 der Ablage mit Fächern und Grund (Z.46-98: 1 Grundfächer, 2 versions, 3 dateien+stuecke, 4 basis, 5 vorrat, 6 suchindex, 7 auftraege), JETZIGE (Z.102), faecher/zwischen (Z.105-109), hinweisZuAlt (Z.117); Inhaltsumzüge INHALT (Z.281-319): 'zeitstempel-an-sammlungen', 'spaltenschluessel-ohne-ziffer' (spaltenschluesselHeilen Z.214-279, L36/E172), 'alive-ergaenzen'; gemerkt unter meta 'umzuegeGelaufen' (Z.321), laufen() einmalig + wiederholbar (Z.331-359), zuruecksetzen (Z.364); Export Z.366-367",
           "zeilen": 371
         },
         {
-          "pfad": "/home/user/Redion/src/core/types/backup.ts",
+          "pfad": "src/core/types/backup.ts",
           "rolle": "Die Typen der Sicherung: StoreName (Z.26-33), MetaEntry (Z.36), RedionPackageManifest {version, exportiert, enthaelt, fehlt, hinweis} (Z.43-53), RedionPackageData mit VERZEICHNISSEN statt Listen (Z.66-83, Begründung Z.67-75), RedionFileMap {version, saetze, zuordnung} (Z.95-101), RedionPackage (Z.115-118), ImportMode 'ersetzen'|'zusammenfuehren' ohne Vorgabe (Z.130), ImportReport (Z.151-155). Nur Typen, kein Laufzeitcode (noEmit)",
           "zeilen": 156
         },
         {
-          "pfad": "/home/user/Redion/src/core/import/sicherheit.ts",
+          "pfad": "src/core/import/sicherheit.ts",
           "rolle": "`ImportSicherheit` (E284): lesen/entgiften/verzeichnis liefern prototyplose Verzeichnisse; GEFAEHRLICH ['__proto__','constructor','prototype'] (Z.76), MAX_TIEFE 100 (Z.105); Fund wird mitgereicht (satz); Export Z.263-266",
           "zeilen": 269
         },
         {
-          "pfad": "/home/user/Redion/src/core/import/validierung.ts",
+          "pfad": "src/core/import/validierung.ts",
           "rolle": "`ImportValidierung`: FAECHER (Z.54), pruefen(d, jetzige) → Befund {taugt, fassung, exportiert, fehlt, zahlen, punkte} (Z.90); Mindestens `blocks` als Verzeichnis (Z.104-112); Fassungsvergleich: keine → hinweis, neuer → warnen, älter → hinweis (Z.134-150); nachsichtig gegen fremde Felder (Z.40-41); brauchtRueckfrage (Z.195)",
           "zeilen": 205
         },
         {
-          "pfad": "/home/user/Redion/src/core/import/vergleich.ts",
+          "pfad": "src/core/import/vergleich.ts",
           "rolle": "`ImportVergleich`: rein, rechnet vor dem Einspielen neu/ersetzt/gleich/verschwindet je Fach (Z.23-28), satz() für den Dialog; Export Z.170",
           "zeilen": 173
         },
         {
-          "pfad": "/home/user/Redion/src/core/import/zipdetails.ts",
+          "pfad": "src/core/import/zipdetails.ts",
           "rolle": "`ZipDetails` (E363): CRC-32 fortlaufend (crc32Start/Weiter/Fertig), UTF8_BIT, VERSCHLUESSELT_BIT, nameDecodieren (CP437-Rückfall) — die EINE Prüfsummentafel für Schreiber und Leser; Export Z.87",
           "zeilen": 91
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/dateien/ausgeben.ts",
+          "pfad": "src/bereiche/dateien/ausgeben.ts",
           "rolle": "`Austausch`: eigener ZIP-Packer zipSchreiben (Z.123-330) mit ZIP64 nur bei Bedarf (Z.94-120, Zusatzfeld 0x0001 Z.226, Schlusssätze Z.282-318), crc32Strom scheibchenweise (Z.65-73 über ZipDetails); alsWord (Z.869), alsExcel (Z.1422), alsOds (Z.1269), alsPowerPoint (Z.2924); Obsidian: VaultFrontmatter {redionId, redionPath, redionTitle, aliases} (Z.1633-1638), vaultFrontmatter schreibt `redion-id`/`redion-path`/`redion-title`/`aliases` (Z.1753-1763), safeVaultSegment (Z.1765), alsObsidianVault (Z.1866-1874), ausMarkdownOrdner in zwei Durchgängen (Z.1910ff; Kennung nur mit BEIDEN Ankern id+path, Konfliktregeln Z.2051-2081, Wikilinks über `Links.loeseSeitenverweis` Z.1849); ausNotionZip (Z.2158), ausAppleNotes (Z.2470), dialog (Z.2517ff), grenzen nur für Prüfläufe (Z.3008-3012); Export Z.3003-3013",
           "zeilen": 3015
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/dateien/einlesen.ts",
+          "pfad": "src/bereiche/dateien/einlesen.ts",
           "rolle": "`Einlesen`: zwei ZIP-Leser — zipLesen(ArrayBuffer) (Z.152) und zipLesenAusBlob(Blob) (Z.288, liest nur das 65-KB-Fenster am Ende, dann je Eintrag per slice); ZIP64 am Wegweiser 0x07064b50 erkannt (istZip64 Z.62-63, lies64 Z.68, zip64Zusatz Z.80ff, E39); Prüfsumme/Name/verschlüsselt über ZipDetails (Z.186-408); xlsx/ods/docx/epub/pptx-Leser; pptx-Formen werden Marken mit pts (Z.2625-2672); Export Z.2721-2723",
           "zeilen": 2726
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/dateien/archiveImport.ts",
+          "pfad": "src/bereiche/dateien/archiveImport.ts",
           "rolle": "`ArchivImport` (E350): eine fremde ZIP so ins Regal wie sie ist — Ordner werden Fächer, jede Datei ein Dokument, stückweise über Einlesen.zipLesenAusBlob + Dateien.ablegen (Kopf Z.1-38); Optionen/Zwischenstand für den Auftragsläufer (Z.43-54, E365); MIME-Tafel (Z.75-80); `..`/absolute Pfade/ZIP-in-ZIP werden nicht angelegt (Z.29-33); Export Z.731-733",
           "zeilen": 736
         },
         {
-          "pfad": "/home/user/Redion/src/bereiche/dateien/format.ts",
+          "pfad": "src/bereiche/dateien/format.ts",
           "rolle": "`NotionFormat`: Notions `[[\"80\"]]`-Werte und Formelbaum ↔ Redions flache Werte/Formeltext (Kopf Z.1-30); wertLesen (Z.55), wertSchreiben, zeileLesen/zeileSchreiben, formelAlsNotion/formelAusNotion, idMitStrichen/idOhneStriche; speichert nichts (Z.26-27); Export Z.438-442",
           "zeilen": 445
         },
         {
-          "pfad": "/home/user/Redion/src/kern/sicherheit/krypto.ts",
+          "pfad": "src/kern/sicherheit/krypto.ts",
           "rolle": "`Krypto`: die verschlüsselte Sicherung — PAKET_ART 'redion-verschluesselt' (Z.59), bestandSammeln ruft Store.exportAll(false, mitGeheimnissen) und stellt art:'redion-sicherung', fassung:1 voran (Z.244-251), sicherungSchreiben (Z.254), sicherungLesen → Store.importAll (Z.282, Z.319), paketBauen = verschlüsseltes .redion MIT Anhängen über Austausch.zipSchreiben (Z.512, Z.542 exportAll(true,true), Z.595) und Einlesen.zipLesenAusBlob (Z.618)",
           "zeilen": 1034
         },
         {
-          "pfad": "/home/user/Redion/src/kern/helfer/ordnersicherung.ts",
+          "pfad": "src/kern/helfer/ordnersicherung.ts",
           "rolle": "`OrdnerSicherung` (E270): schreibt die Sicherung selbst in einen gewählten Ordner (File System Access); MUSTER `redion-sicherung-JJJJ-MM-TT-HHMM.(redion|json)` ist das einzige Löschmuster (Z.63), BEHALTEN_TAGE 7 (Z.66), TAKT 5 min (Z.51); jetztSichern ruft `App.sicherungPaketBauen` aus der SCHALE (Z.277, Z.301) und Sicherung.merken (Z.313); Export Z.475-477",
           "zeilen": 480
         },
         {
-          "pfad": "/home/user/Redion/src/kern/helfer/sicherung.ts",
+          "pfad": "src/kern/helfer/sicherung.ts",
           "rolle": "`Sicherung`: stand() (Alter der letzten Sicherung, Stufen gut/erinnern/warnen ab 7/30 Tagen Z.39-40), merken(art), papierkorb(), platz(); Export Z.160",
           "zeilen": 163
         },
         {
-          "pfad": "/home/user/Redion/doku/REDION-FORMAT.md",
+          "pfad": "doku/REDION-FORMAT.md",
           "rolle": "Die Formatbeschreibung: zwei Formate (Z.12-25), Aufbau (Z.29-42), daten.json und Manifest (Z.46-93), Geheimnisse (Z.95-133), Ersetzen ≠ Identität (Z.135-145), dateien.json (Z.170-198), abgeleitete Dateien (Z.202-269), Einspielen (Z.273-292), ZIP64-Grenzen (Z.296-372), verschlüsselte Sicherung (Z.386-421), „Was noch fehlt\" (Z.425-442, teilweise veraltet — siehe dokuStand)",
           "zeilen": 442
         },
         {
-          "pfad": "/home/user/Redion/pruefungen/lauf/test96.mts",
+          "pfad": "pruefungen/lauf/test96.mts",
           "rolle": "Suite 61 — Die Sicherung hält, was sie verspricht: Verlauf war nie dabei, Import räumte nur den Cache, Anhänge fehlen und die Sicherung sagt es (Kopf Z.1-45)",
           "zeilen": 269
         },
         {
-          "pfad": "/home/user/Redion/pruefungen/lauf/test100.mts",
+          "pfad": "pruefungen/lauf/test100.mts",
           "rolle": "Suite 65 — Die Sicherung nimmt die Anhänge mit: `.redion` Rundlauf mit echten Bytes, Ersetzen räumt fremde Anhänge, `.json` lässt sie in Ruhe (Kopf Z.1-47; Messpunkte Z.136-418)",
           "zeilen": 430
         }
@@ -4688,7 +4694,7 @@
     {
       "name": "SelectionFlow",
       "datei": "src/schale/bedienung/selection-flow.ts",
-      "was": "die Auswahl der Auswahlleiste (E646/E650), L204 offen für die Flächen"
+      "was": "die Auswahl der Auswahlleiste (E646/E650), L204 offen für die Flächen; ziehbar übergibt hinauf an die Zielleiste (E749)"
     },
     {
       "name": "Ereignis",
@@ -4821,6 +4827,7 @@
           "titel": "Die untere Leiste der Schale (was eine schwebende Leiste meiden muss)",
           "punkte": [
             "`nav#handy-oben` (`index.html:259–274`; heisst „oben\", steht unten): fünf Reiter. Linse `#ho-pille` über `seitenleiste.ts:283–371` (`pilleSchieben`, `SelectionFlow.folge`, `Linse.sicherstellen`), `handyLeiste` (429); Klicks `dockWechsel` `schale.ts:4226–4262`.",
+            "E749: seit der Zielleiste gehen die fünf Klicks über EINE Tabelle `REITER_UNTEN` und `wechsle(knopfId, tun?)` in `schale.ts` (vor `dockWechsel`); dieselbe Funktion nimmt ein Ort-Ziel der Zielleiste. `#ho-ziele` (TabShelf, `src/schale/aufbau/tab-shelf.ts`) steht NEBEN der Leiste (`bar.after`), weil `backdrop-filter` an `#handy-oben` jedes `position:fixed` darin einfängt; z-index 955 über Toast (900) und Neu-Laden-Streifen (950). `#handy-oben` hat `touch-action:none` (vorher `pan-y`).",
             "CSS `bausteine.css` 1729–1893 (Linse 1916–2081), nur `max-width:760px`; `position:fixed; left:10px; right:10px; bottom:calc(9px + env(safe-area-inset-bottom)); z-index:401`; Höhe `--mobile-nav-height: 60px` (`marken.css:76`); `--hunten = calc(9px + var(--mobile-nav-height) + env(safe-area-inset-bottom))` (bausteine.css:1809).",
             "Heute weichen aus: `#scroll{padding-bottom:calc(var(--hunten) + 24px)}` (2257); Schublade, Streifen, schwebende Knöpfe über `--hunten` (274, 4033–4046, 7973; ansichten.css 262); versteckt bei `body.schreibt` (2697) und im Dokumentmodus (6485, pdf-studio.css:115).",
             "Whiteboard-, Karten- und Schaltplanleiste sitzen INLINE oben im Block und rollen mit der Seite — sie brauchen nur das `#scroll`-Polster. Studio-Dock `.blatt-reihe`: `position:fixed; bottom:calc(var(--visual-bottom,0px) + max(14px, env(safe-area-inset-bottom))); z-index:80` (pdf-studio.css:240; `--visual-bottom` schreibt `kern/einstellung/app.ts` gegen die Bildschirmtastatur); Papier `padding-bottom` 110/100 (225, 388); Verlaufskapsel am Telefon `bottom:calc(var(--visual-bottom) + 84px)` (382–386).",

@@ -6490,8 +6490,106 @@ Symbole holt das Betriebssystem beim Installieren, nicht der Browser beim
 
 ---
 
-L147 · Innerhalb der Lernwelt umschalten meldet den Ort nicht neu — offen
+L147 · Innerhalb der Lernwelt umschalten meldet den Ort nicht neu — GESCHLOSSEN mit E748
 --------------------------------------------------------------------------
+
+**Geschlossen am 13. Oktober 2026 (E748), nach Redurs Antwort auf
+Frage 3 des Zielleisten-Entwurfs:** „Prüfungen, Noten, Stundenplan und
+Schule schalten unten künftig ‚Heute' an (wie oben unter ‚Heute ^', E726)."
+
+Seit E726 war die Lücke grösser als hier beschrieben: nicht nur drinnen,
+schon beim ÖFFNEN meldeten sich Prüfungen, Noten, Stundenplan, Schule, Uni
+und Arbeit als „Lernzentrum" und liessen unten „Lernen" leuchten, während
+oben „Noten ^" in der Klappe „Heute" stand (gemessen auf `ba51915dc`,
+Bilder `vorher-noten-hell.png`/`-dunkel.png`).
+
+**Was jetzt gilt:** die Klappe entscheidet (`titelVon`/`reiterVon` in
+`lernwelt.ts`, `Produktwelten.lernen` fragt `Lernwelt.reiterVon`). Drinnen
+meldet `wechseln()` den neuen Titel über den schmalen Weg, den dieser
+Eintrag verlangt hat — `App.sonderTitel(titel, vorher)`: nur der Titel, die
+Krume und der Schauplatz, kein Neuzeichnen, kein Schritt im Verlauf — und
+schreibt VORHER die Adresse der neuen Ansicht (`Produktwelten.routeSchreiben`),
+damit die Kante am Rechner (E393) und ein Neuladen dasselbe sagen. Die
+Folge zählt: in der umgekehrten las die Kante beim Melden des Titels noch
+die alte Adresse und liess „Lernzentrum" leuchten (beim Fertigstellen
+gefunden, E748). Und `App.sonderTitel` führt bei jedem Wechsel auch den
+Zeichner nach, den sich der Verlauf beim Weggehen merkt — sonst brachte
+„Zurück" die Übersicht unter „Heute" und `#welt-lernen-noten` wieder
+(ebenfalls beim Fertigstellen gefunden). Und wechselt drinnen die Klappe,
+stellt `wechseln()` zuletzt auch den REITER um — über
+`Produktwelten.lernReiter`, dieselbe Regel wie beim Öffnen.
+
+**Das fehlte bis zur zweiten Durchsicht, und die Lücke kam damit eine
+Stufe später zurück, während dieser Eintrag schon GESCHLOSSEN hiess.** Auf
+dem Lernzentrum entscheidet der Schauplatz, welcher Reiter leuchtet
+(E274), und dort stimmte es. Wer danach eine Seite öffnet, steht am
+Schauplatz `seite`, und dort leuchtet der Reiter, von dem man kam
+(`karte[reiter]` in `seitenleiste.ts`) — den hatte nur das Öffnen gesetzt.
+Gemessen auf `7e41a4b4a` (Telefon 390 × 844): „Lernen → Heute ^ → Noten",
+dann eine Seite → unten „Lernen"; „Heute → Übersicht ^ → Trainer", dann
+eine Seite → unten „Heute". Auf `ba51915dc` sprang die Pille dabei nicht,
+leuchtete aber schon im Lernzentrum falsch (das war L147 selbst).
+
+**Beleg:** `test613` §7 (dreizehn Zusagen; die ersten zehn waren gegen
+`ba51915dc` acht davon rot, die drei aus der zweiten Durchsicht gegen
+`7e41a4b4a` zwei davon):
+geöffnet leuchten die sieben Ansichten unter „Heute ^" unter „Heute", die
+fünf unter „Übersicht ^" unter „Lernen"; drinnen mit echten Tipps
+Übersicht → „Heute ^" → Noten → „Heute", „Übersicht ^" → Trainer →
+„Lernen", der Hauptteil „Heute" → „Heute", Stundenplan bleibt „Heute"; und
+nach „Übersicht → Noten" steht die Adresse `#welt-lernen-noten`, und ein
+Neuladen zeigt Noten unter „Heute" (vorher: die Übersicht); am Rechner
+leuchtet die Kante nach „Übersicht → Noten" so wie nach direkt geöffneten
+Noten, und nach „→ Trainer" wieder wie beim Trainer (§7g/§7h); weg und mit
+dem Knopf „Zurück" wieder da, steht dieselbe Ansicht unter demselben Titel
+und derselben Adresse (§7i/§7j); wer aus Noten — direkt geöffnet oder
+drinnen über „Heute ^" erreicht — eine Seite öffnet, sieht unten weiter
+„Heute", aus dem Trainer über „Übersicht ^" weiter „Lernen" (§7k–§7m). §5
+öffnet zusätzlich alle 17 Orte der Zielleisten-Quelle. Gegenproben, gegen
+die Fassung mit 102 Zusagen gefahren: `titelVon` wieder „heute oder nicht"
+→ 90 von 102, rot §5 viermal und §7a, §7b, §7e, §7f, §7g, §7i, §7k, §7l
+(gegen die Fassung mit 98 Zusagen waren es 88 von 98 und dieselben Zeilen
+ohne §7k und §7l — hier stand bis zur zweiten Durchsicht die Liste ohne
+§7i, E748 nannte sie mit); die alte Regel „heute oder nicht" für den
+Reiter in `Produktwelten.lernReiter` → 100 von 102, rot §7k und §7l; ohne
+den Reiter in `wechseln()` → 100 von 102, rot §7l und §7m; die alte Folge
+in `wechseln()` (Titel vor Adresse) → §7g rot; ohne den Zeichner →
+§7i/§7j rot. Bilder nachher:
+`nachher-noten-hell.png`/`-dunkel.png` (Telefon), `nachher-rechner-noten-*`
+und `nachher-rechner-drinnen-noten-*` (am Rechner heisst die Krume „Heute",
+die Kante zeigt „Mehr Orte" wie bei „Heute" selbst); aus der zweiten
+Durchsicht `vorher-`/`nachher-drinnen-noten-seite-*` und
+`-drinnen-trainer-seite-*` (Telefon, hell und dunkel: die Seite
+„Willkommen", unten vorher „Lernen" bzw. „Heute", nachher „Heute" bzw.
+„Lernen").
+
+**Was L147 am Verlauf verschoben hatte — dritte Durchsicht.** Seit
+sechs Ansichten „Heute" heissen, legte `zeigeSonder`, das nur auf den
+Titel sah, zwischen Heute und Noten keinen Schritt mehr an: „Heute →
+Noten → Zurück" führte am Rechner (1440 × 900, echter Knopf) in die
+Dokumente statt nach Heute — auf `ba51915dc` nach Heute. Jetzt folgt der
+Schritt der Ansicht: `Produktwelten.lernen` nennt die Adresse
+(`routeVon`), `Lernwelt.oeffnen` gibt sie an `App.zeigeSonder` weiter,
+und die Schale legt einen Schritt an, sobald sie sich von `location.hash`
+unterscheidet — keinen für dieselbe Ansicht noch einmal und, wie bisher,
+keinen für den Wechsel drinnen über die Klappen. Neu gegenüber
+`ba51915dc` sind damit die Schritte Übersicht → Trainer und Noten →
+Prüfungen (E748, „Nach der dritten Durchsicht"). Und am Rechner ist der
+Umschalter der Seitenleiste, an dem derselbe Reiter hängt, gar nicht
+gezeichnet (`premium.css` ab 761 px); sichtbar wird der Reiter nur in der
+Lade „Seiten" der Kante, und die zeigt nach einem Wechsel drinnen, was sie
+nach dem direkten Öffnen zeigt. **Beleg:** `test613` §7n–§7u (gegen
+`352eed65c` 106 von 110, rot §7n, §7o, §7p, §7s; §7q, §7r, §7t, §7u dort
+mit Absicht grün), Gegenproben 11 bis 15 in E748.
+
+**Nicht Teil dieser Lücke, gemessen und offen** (steht in `AUFGABEN.md`
+beim Rest von F02): wer Noten öffnet, über „Dokumente" weggeht und mit
+„Zurück" wiederkommt, sieht im Lernzentrum „Heute" — öffnet er danach
+eine Seite, leuchtet „Dokumente". Die Seite leuchtet so auf `ba51915dc`,
+`7e41a4b4a` und nach der zweiten Durchsicht: „Zurück" setzt keinen
+Reiter.
+
+### Was hier stand — zum Nachlesen
 
 Gefunden beim Bau des Wischens (E526), als Rest des dort behobenen Fehlers.
 
@@ -8402,6 +8500,94 @@ in der Handlung lesen, wie die Sonde der Planfläche), und — wo es trifft —
 dieselbe Abhilfe: eine Kopie in die Ablage, oder `updateBlock` kopiert
 selbst. Das zweite wäre die Lösung an EINER Stelle (§8), kostet aber bei
 grossen Blöcken eine Kopie je Speichern; gemessen ist das nicht.
+
+---
+
+## L257 · Die Zielleiste: der Rechner und das echte Telefon fehlen noch — 13. Oktober 2026
+
+**Was es gibt (E749):** am Telefon zieht man von einem Reiter der unteren
+Leiste hinauf, die Zielleiste geht auf, man gleitet auf ein Ziel und lässt
+los. Gehalten wird dabei der Finger von EINER Gestenmaschine
+(`SelectionFlow.ziehbar` mit `hinauf`), gezeigt wird, was
+`Register.navigation.ziele` liefert (E748). Wächter `test614`.
+
+**1 · Der Rechner (Phase 2), Redur: später.** Sein erster Satz hatte beides:
+„sowohl bei laptop mit maus drauber gehen als auch b eim hand mit finderr".
+Die Antwort des Entwurfs dafür: am Rechner gibt es keine untere Leiste;
+Hovern über einen Ort in der linken Kante zeigt nach 0,22 s dieselben Ziele
+aus derselben Liste (das Vorbild ist die Glocke aus E711: 220 ms über dem
+Knopf, 280 ms nach dem Verlassen zu). Offen ist dabei, WELCHE Orte der Kante
+welchen Schlüssel tragen — die Kante hat andere Fünf als das Telefon
+(L123 F02, L117) —, und wo die Leiste steht (neben der Kante statt über
+einer Leiste). Gebaut ist davon nichts; `TabShelf.nimm` ist an die untere
+Leiste gebunden.
+
+**2 · Am echten Telefon geprüft ist nichts.** Chromium mit CDP-Berührung
+kann nicht beweisen:
+- **iOS Safari im Browser** (nicht als PWA): ob `-webkit-user-select:none`
+  und `-webkit-touch-callout:none` an `#handy-oben` Textauswahl und Lupe
+  beim Hinaufziehen wirklich verhindern; ob der Home-Strich oder die
+  Rückgeste einen eingefangenen Zug unterbricht. Einen Tick gibt es auf
+  iOS nicht (keine Vibrations-Schnittstelle).
+- **Android Chrome:** ob ein langsamer Zug nach langem Liegen ein
+  `contextmenu` und dann `pointercancel` bekommt. Der Entwurf wollte
+  `contextmenu` an der Leiste verhindern; gebaut ist es nicht, weil die
+  kopflose Schale beim langen Tipp keines schickt (gemessen, auch über
+  `Input.synthesizeTapGesture`) — es wäre ungeprüft gewesen, und Halten
+  soll bleiben, wie es ist.
+- **VoiceOver/TalkBack:** wie `role="tab"` mit `aria-haspopup="menu"`
+  vorgelesen wird. Die Geste ist für den Vorleser nicht nötig (Doppeltipp
+  bleibt der Tipp, jedes Ziel steht auch auf dem Bildschirm seines Reiters).
+  **Und es gibt am Telefon keinen Weg hinein** (Durchsicht E749): die fünf
+  Reiter tragen immer `aria-haspopup="menu"` und `aria-expanded` und sagen
+  damit „Menü, eingeklappt" — aber wer mit Vorleser und Berührung bedient,
+  kann es nicht öffnen: der Doppeltipp ist der Tipp und wechselt den
+  Reiter, und der einzige Weg ohne Geste (Pfeil hinauf) braucht eine
+  Tastatur. Ob der Durchreich-Griff des Vorlesers (VoiceOver: doppeltippen,
+  halten, ziehen) die Geste weitergibt, ist ungeprüft. Zwei Wege, und die
+  Wahl ist Redurs: eine eigene Aktion für den Vorleser an jedem Reiter,
+  oder die zwei Merkmale nur, solange eine Tastatur benutzt wird (dann
+  sagt der Reiter am Telefon nichts mehr, das er nicht halten kann).
+- **Der Tipp-Spielraum:** `ziehbar` übergibt erst ab 16 px Weg
+  (`UEBER_TIPP`), weil Chromium in der kopflosen Schale bis 15 px selbst
+  klickt (gemessen, `messungen.md` §106 Punkt 10). Android und iOS haben
+  eigene Spielräume; ist der kleiner, klickt dort der Browser bei 10–15 px
+  nicht mehr, `ziehbar` aber weiterhin genau einmal (der Tipp-Weg) — die
+  Zielleiste öffnet so oder so erst ab 16 px. Am Gerät nachsehen, ob sich
+  das wie ein Tipp anfühlt.
+- **Der Klick daneben:** nach einem Hochrollen am Rand setzt Chromium
+  seinen Tipp auf den Inhalt ÜBER der Leiste. `ziehbar` schluckt ihn dort
+  nur, weil Chromiums Klick die `pointerId` der Berührung trägt (gemessen).
+  Ein Browser, dessen Klick sie nicht trägt, schluckt wie vorher nur auf
+  der Leiste — dort käme dieser eine Klick auf dem Inhalt an. Für Safari
+  und Firefox ungeprüft.
+
+**3 · Unter 390 px werden Namen gekürzt** (gemessen, `messungen.md` §106):
+bei 360 px „Meine Ablage" (66 px Wort, 63 px Platz), bei 320 px dazu
+Stundenplan, Besprechung, Posteingang und Einstellungen. Die Leiste
+darunter kürzt „Dokumente" bei 320 px ebenso. Ein Kurzname (`kurz`) wäre
+Redurs Wort, nicht meines (Frage 2 legt die Namen fest).
+
+**4 · Jedes `hidden` kostet eine Stilrechnung der ganzen Seite** (gefunden
+beim Bauen, `messungen.md` §106): 17,7 ms bei 4× Drossel für ein `hidden`,
+ein `aria-current` oder ein neues Kind irgendwo im `body`, 0 ms für ein
+`data-`-Merkmal oder eine Klasse — die `body:has(…)`-Regeln der Stilblätter
+(`#zm-pille:not([hidden])`, `.side-item[aria-current="page"]`, …) machen
+es so. Die Zielleiste weicht dem aus (die Marke über `data-marke-weg`); für
+den Rest von Redion ist es nicht nachgesehen.
+
+**5 · Die fahrende Pille versetzt das Wort darunter** für rund 200 ms (die
+Fahrtbrechung aus E646, auf dem Filmstreifen von E749 zu sehen). Ob
+Brechung über den Namen der Leiste in Ordnung ist, hat E641 Redur
+überlassen; die Zielleiste selbst hält den Reiter in Ruhe brechungsfrei
+(`test614` §11e).
+
+**6 · Entdeckbarkeit:** die Geste ist unsichtbar. Bewusst hingenommen
+(kein Weg fällt weg, E701), aber unbeantwortet, ob Redur einen Hinweis will.
+
+**Was fehlt:** die Phase für den Rechner mit eigenem Wächter; ein Blick an
+Redurs iPhone und an einem Android-Telefon; eine Antwort zu Punkt 3 und 5,
+und zum Vorleser in Punkt 2 (eigene Aktion oder Merkmale nur mit Tastatur).
 
 ---
 
@@ -10764,7 +10950,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 11. Oktober 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 151 Lücken, 93 offene und 58 geschlossene. Der Befehl dazu ist
+Datei führt 152 Lücken, 94 offene und 58 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

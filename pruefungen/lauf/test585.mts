@@ -413,14 +413,25 @@ console.log('\n3 · Die Pille lässt sich mit dem Daumen ziehen');
   await warte(30);
   const zurueck = await a.pc.evaluate(`(() => {
     const z = document.querySelector('#hl-start .ho-z');
-    const an = z.getAnimations()[0];
+    /* Neben der Druckfeder laufen die Farb-/Transform-Übergänge der
+       Glasgestaltung. Ihre Reihenfolge ist keine Zusage des Produkts;
+       gemessen wird genau die eine Feder auf der eigenen scale-Eigenschaft. */
+    const federn = z.getAnimations().filter(function (a) {
+      const bilder = a.effect.getKeyframes();
+      return bilder.length > 0 && bilder.every(function (k) {
+        return typeof k.scale === 'string' && Number.isFinite(parseFloat(k.scale));
+      });
+    });
+    const an = federn[0];
     const werte = an ? an.effect.getKeyframes().map(function (k) { return parseFloat(k.scale); }) : [];
-    return { werte: werte.length, hoechster: werte.length ? Math.max.apply(null, werte) : 0 };
+    return { federn: federn.length, werte: werte.length,
+      hoechster: werte.length ? Math.max.apply(null, werte) : 0 };
   })()`) as any;
   /* Druckfeder des Kits (Schwung 0,3) von 0,9 aus: rund 4,6 % des Weges
      über 1 hinaus, also etwa 1,0046. */
   p('Losgelassen federt es zurück — auf der Druckfeder, mit Nachschwingen über 1',
-    zurueck.werte >= 20 && zurueck.hoechster > 1.002 && zurueck.hoechster < 1.02, JSON.stringify(zurueck));
+    zurueck.federn === 1 && zurueck.werte >= 20 && zurueck.hoechster > 1.002
+      && zurueck.hoechster < 1.02, JSON.stringify(zurueck));
   await warte(900);
   const ruht = await a.pc.evaluate(`parseFloat(getComputedStyle(document.querySelector('#hl-start .ho-z')).scale) || 1`) as number;
   p('… und steht danach wieder bei 1', Math.abs(ruht - 1) < 0.002, String(ruht));

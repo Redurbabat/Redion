@@ -8929,3 +8929,574 @@ Decke 1950); die erste Fassung hatte für 97d156b03 und 7560b2f22 dieselbe
 Zahl. `simulation.js` 58 566 → 59 173 → 60 004 Bytes (gzip -9 13 513 →
 13 614 → 13 790). `redion-einzeldatei.html` 9 665 704 → 9 666 311 →
 9 667 142 Bytes. Dienststand v1469 → v1470 → v1471.
+
+
+## §105 · Die Ziele der unteren Reiter und L147 (E748, 13. Oktober 2026)
+
+**Was gemessen wurde:** welcher Reiter unten leuchtet, wenn man eine
+Ansicht des Lernzentrums öffnet oder drinnen wechselt, und was die Quelle
+der Zielleiste (`Register.navigation.ziele`) liefert. Telefon 390 × 844
+(Berührung, Pixeldichte 2), Rechner 1440 × 900; `ba51915dc` aus einer Kopie
+seiner Dateien (`git archive` in den Kratzordner), E748 aus dem Zweig
+`claude/zielleiste-quelle`.
+
+**Welcher Reiter leuchtet** (`#handy-oben [aria-selected="true"]`,
+`App.schauplatz()`, geöffnet über `Produktwelten.lernen(v)`):
+
+```txt
+Ansicht        ba51915dc                    E748
+heute          hl-start  heute              hl-start  heute
+pruefungen     hl-lernen lernen             hl-start  heute
+noten          hl-lernen lernen             hl-start  heute
+stundenplan    hl-lernen lernen             hl-start  heute
+schule         hl-lernen lernen             hl-start  heute
+uni            hl-lernen lernen             hl-start  heute
+arbeit         hl-lernen lernen             hl-start  heute
+lernen, trainer, lernweg, fehler, fortschritt
+               hl-lernen lernen             hl-lernen lernen
+```
+
+**Drinnen** (echte Tipps: `#hl-lernen`, dann „Heute ^" → Noten):
+
+```txt
+                         ba51915dc                   E748
+Reiter / Schauplatz      hl-lernen / lernen          hl-start / heute
+Adresse                  #welt-lernen-lernen         #welt-lernen-noten
+nach dem Neuladen        Übersicht, hl-lernen        Noten, hl-start
+```
+
+**Am Rechner** (die Kante, `#kante .k-orte .k-knopf.ist-hier`; im ruhigen
+Modus stehen dort Bibliothek, Notizhefte, Lernzentrum, Mehr Orte):
+
+```txt
+Ansicht                  ba51915dc        E748, erste Folge   E748
+heute                    mehr-orte        mehr-orte           mehr-orte
+noten, pruefungen,
+stundenplan              lernzentrum      mehr-orte           mehr-orte
+lernen, trainer          lernzentrum      lernzentrum         lernzentrum
+drinnen: Übersicht →
+„Heute ^" → Noten        lernzentrum      lernzentrum  ←      mehr-orte
+                         (wo lernen)      (wo heute)          (wo heute)
+```
+
+„Erste Folge" ist der Stand, in dem `wechseln()` erst den Titel und dann
+die Adresse schrieb: Schauplatz `heute`, Krume „Heute", Adresse
+`#welt-lernen-noten` — und die Kante bei „Lernzentrum", weil sie beim
+Melden des Titels noch `#welt-lernen-lernen` las. Gemessen mit einer Sonde
+(`kante.mts` im Kratzordner) und danach mit `test613` §7g (95 von 96);
+nach dem Tausch der zwei Zeilen 96 von 96. Die Krume heisst bei Noten
+„Lernzentrum" (vorher) und „Heute" (nachher).
+
+**Weg und „Zurück"** (am Rechner, drinnen gewechselt, dann über die Kante
+in die Bibliothek und mit dem Knopf `#btn-back` zurück; Sonde
+`zurueck.mts`, danach `test613` §7i/§7j):
+
+```txt
+                         ba51915dc               E748 ohne Zeichner      E748
+nach „Heute ^" → Noten   Übersicht               Übersicht  ←            Noten
+                         Lernzentrum             Heute                   Heute
+                         #welt-lernen-lernen     #welt-lernen-noten      #welt-lernen-noten
+nach „Übersicht ^" →     Übersicht               Übersicht  ←            Trainer
+Trainer                  #welt-lernen-lernen     #welt-lernen-trainer    #welt-lernen-trainer
+```
+
+Auf `ba51915dc` kam man stimmig in die Übersicht zurück (dorthin, wo man
+das Lernzentrum betreten hatte); mit Titel und Adresse, aber ohne den
+Zeichner nachzuführen, passte der Inhalt nicht mehr zu Kopf und Adresse
+(`test613` 96 von 98); mit dem Zeichner kommt man dorthin zurück, wo man
+war (98 von 98).
+
+**Was die Quelle liefert** (`ziele(key)`, `kurz ?? name`):
+
+```txt
+dokumente  Meine Ablage · Zuletzt · Favoriten · PDFs · Notizhefte       5 Orte
+heute      Heute · Prüfungen · Noten · Stundenplan · Schule             5 Orte
+lernen     Übersicht · Trainer · Lernpfad · Fehler · Fortschritt        5 Orte
+termine    Übersicht · Kalender · Tagesplan · Besprechung · Verbinden   2 Orte, 3 Handlungen
+mehr       Posteingang · Sicherung · Wolke · Papierkorb · Einstellungen 5 Handlungen
+```
+
+Jeder Ort, über sein `tun()` von „Mehr" (bei Mehr-Zielen: von
+„Dokumente") aus geöffnet, schaltet seinen eigenen Reiter an: 17 von 17.
+Jede Handlung öffnet ihren Dialog (Tagesplan, Besprechung, Verbinden,
+Wolke, Papierkorb, Einstellungen: eine `.overlay` mehr — seit der
+Durchsicht auch mit IHREM Kopf, Tabelle unten), den Posteingang
+(Schauplatz `posteingang`, kein Reiter) oder speichert eine Sicherung
+(`redion-sicherung-2026-10-13.json`): 8 von 8.
+
+**test613:** 98 von 98. Gegen `ba51915dc`: die erste Fassung 12 von 68,
+die endgültige 13 von 73 (in einer Kopie der Dateien von `ba51915dc`).
+Gegenproben gegen die Endfassung: ohne den Lieferanten „heute" 82 von 93,
+`titelVon` wieder „heute oder nicht" 88 von 98, ohne `sort` 89 von 98, die
+alte Folge in `wechseln()` 97 von 98, ohne Zeichner 96 von 98. Gegen die
+erste Fassung (94 Zusagen) waren die ersten drei 78 von 89, 86 von 94 und
+85 von 94.
+
+**test537:** 123 Paare, 511 Treffer, 6 Zugriffe über `(window as any)` —
+vorher und nachher dieselben Zahlen. Die drei Termine-Wege stehen jetzt
+in `termineTun` statt im `onclick`, die Mehr-Wege in `mehrTun`; Übersicht
+und Tagesplan liest der Lieferant aus der Kante, statt `Plan` ein zweites
+Mal zu rufen.
+
+**Bytes** (gzip -6, gebaut, gegen `ba51915dc`):
+
+```txt
+Datei                                    ba51915dc   E748    Zuwachs
+quell/register/navigation.js                  2652    2996     +344
+quell/bereiche/wissen/bibliothek.js          19603   19960     +357
+quell/bereiche/wissen/lernwelt.js            37699   38113     +414
+quell/bereiche/wissen/produktwelten.js        3225    3258      +33
+quell/bereiche/datenbanken/ansichten/dienst.js 9355    9882     +527
+quell/schale/aufbau/schale.js                39913   39985      +72
+index.html                                   13591   13668      +77
+zusammen                                                      +1824
+```
+
+**Start:** 1925 → 1926 KB gzip über 255 Dateien (`test388` §5, Decke 1950;
+der alte Stand in einer vollständigen Kopie von `ba51915dc` gemessen). `redion-einzeldatei.html` 9 707 778 → 9 715 112
+Bytes. Dienststand v1496 → v1514 (jeder Bau zählt weiter, auch die der
+Gegenproben; der Inhalt von v1514, `a5d005ec4c799cca`, ist der von v1508,
+dem Bau mit dem Zeichner). Der Tausch der zwei Zeilen kostete kein Byte;
+der Zeichner 3 B in `lernwelt.js` weniger und 9 B in `schale.js` mehr.
+
+**Bilder** (Kratzordner `bilder-ziel/quelle/`, nicht im Verzeichnis):
+`vorher-noten-hell.png`, `vorher-noten-dunkel.png`, `nachher-noten-hell.png`,
+`nachher-noten-dunkel.png` (Telefon: oben „Noten ^", unten vorher „Lernen",
+nachher „Heute"); `vorher-rechner-noten-*.png`, `nachher-rechner-noten-*.png`,
+`vorher-rechner-drinnen-noten-*.png`, `nachher-rechner-drinnen-noten-*.png`
+und `vorher-rechner-zurueck-noten-*.png`, `nachher-rechner-zurueck-noten-*.png`
+(Rechner: Krume und Kante wie in den Tabellen oben — vorher „Lernzentrum"
+in Krume und Kante, nachher „Heute" in der Krume und „Mehr Orte" in der
+Kante; zurück vorher die Übersicht, nachher die Noten). Angesehen: alle vier
+am Telefon, am Rechner die hellen, das dunkle nachher und das dunkle
+drinnen und zurück nachher.
+
+### Nach der Durchsicht (13. Oktober 2026)
+
+**Woran ein Dialog zu erkennen ist** — der Kopf des neuen `.overlay`
+(`.fh`, sonst `h2`, sonst der Platzhalter des Suchfelds), am Telefon über
+das `tun()` des Ziels geöffnet (Sonde `fix/dialoge.mts` im Kratzordner,
+danach `test613` §6):
+
+```txt
+Ziel           Kopf des Dialogs
+Tagesplan      ☀ TagesplanDi., 13. Okt.✕
+Besprechung    🎙 Besprechungsnotizen✕
+Verbinden      📅 Kalender verbinden✕
+Wolke          ☁ Wolke✕
+Papierkorb     Seiten im Papierkorb suchen        (kein Kopf, der Platzhalter)
+Einstellungen  Einstellungen                      (h2)
+```
+
+(So, ohne Leerzeichen zwischen Titel, Datum und ✕, wie `textContent` sie
+aneinanderreiht.) Derselbe Kopf nach einem echten Tipp auf „Wolke" in der Mehr-Liste und auf
+die Karte „Besprechung" (`test613` §10c, §10f).
+
+**Gegenprobe der Durchsicht, nachgefahren:** „Wolke" → Einstellungen,
+„Einstellungen" → Papierkorb, „Papierkorb" → Wolke, Besprechung und
+Verbinden über Kreuz, Tagesplan → Wochenrückblick (gebaut mit
+`tsc -p tsconfig.bauen.json`):
+
+```txt
+test613 vor der Durchsicht (67fbfb3b2, 98 Zusagen)    98 von 98   grün
+test613 nach der Durchsicht (99 Zusagen)              90 von 99   rot: §6 ×6, §10c, §10f, §8g
+```
+
+Die roten Zeilen nennen den falschen Kopf, z. B. „§6 mehr › Wolke … Köpfe
+["Einstellungen"]", „§6 termine › Tagesplan … Köpfe ["📅 Wochenrückblick
+Mo., 12. Okt. – So., 18. Okt.✕"]" (im Lauf ohne Umbruch). Danach `dienst.ts` aus der Sicherung
+zurück und voll gebaut: alle sieben berührten Dateien wieder Byte für
+Byte (`sha256sum -c`), Dienststand v1515 unverändert.
+
+**Fehlt das Modul, fehlt das Ziel** (`ziele('termine')`, je ein Modul kurz
+vom Fenster genommen; `test613` §8g):
+
+```txt
+                 67fbfb3b2                                  nach der Durchsicht
+alle             uebersicht kal-auf tagesplan mtg kal       dieselben fünf
+ohne Meeting     alle fünf                                  ohne mtg
+ohne Kalender    alle fünf                                  ohne kal
+ohne Produktw.   alle fünf                                  ohne kal-auf
+ohne Plan        ohne tagesplan                             ohne tagesplan
+```
+
+`test613 (rot)` nach der Durchsicht: 98 von 99 (nur §8g). Mit `termineWeg`:
+99 von 99. Gegenprobe ohne die `zeigen`-Zeile: 98 von 99, nur §8g.
+
+**test537:** 123 Paare, 511 Treffer, 6 Zugriffe über `(window as any)` —
+dieselben Zahlen wie vorher; `termineWeg` nennt jedes Modul einmal, wie
+die `if`-Kette.
+
+**Bytes:** `quell/bereiche/datenbanken/ansichten/dienst.js` 9882 → 9960 B
+gzip -6 (+78; roh 43 705 → 44 095). `redion-einzeldatei.html` 9 715 112 →
+9 715 502 Bytes. Dienststand v1514 → v1515 (`15abde3db24e459b`). Start
+1926 KB gzip über 255 Dateien (`test388` §5, Decke 1950) — unverändert.
+
+**Nachbarn** (unter dem Schloss, 24 Läufe, gegen v1515): alle grün.
+
+### Nach der zweiten Durchsicht (13. Oktober 2026)
+
+**Welcher Reiter leuchtet, wenn man aus dem Lernzentrum eine Seite öffnet**
+— Telefon 390 × 844, erst im Lernzentrum, dann nach `App.oeffne` auf die
+erste Seite (`Store.rootPages()[0]`, „Willkommen"); die Sonde der
+Durchsicht (`ziel-quelle-pruef/sonde-reiter.mts` im Kratzordner), gefahren
+gegen eine Kopie von `ba51915dc`, eine von `7e41a4b4a` (`git archive`) und
+den Zweig nach der Reparatur:
+
+```txt
+Weg                               ba51915dc               7e41a4b4a                jetzt
+Noten direkt geöffnet             hl-lernen → hl-lernen   hl-start → hl-start      hl-start → hl-start
+Lernen → „Heute ^" → Noten        hl-lernen → hl-lernen   hl-start → hl-lernen  ←  hl-start → hl-start
+Heute → „Übersicht ^" → Trainer   hl-start → hl-start     hl-lernen → hl-start  ←  hl-lernen → hl-lernen
+```
+
+Schauplatz mit der Seite jedes Mal `seite`; Seitenfehler 0. Für die zwei
+Wege drinnen dieselben Zahlen in der Bild-Sonde
+(`ziel-quelle-d2/bild-seite.mts`), hell und dunkel.
+
+**Ein Nachbarfall, nur gemessen:** Noten direkt → `#hl-dok` →
+`App.zurueck()` → eine Seite:
+
+```txt
+                       ba51915dc    7e41a4b4a    jetzt
+im Lernzentrum zurück  hl-lernen    hl-start     hl-start
+mit der Seite          hl-dok       hl-dok       hl-dok
+```
+
+„Zurück" setzt keinen Reiter; offen, steht in `AUFGABEN.md`.
+
+**test613:** gegen `7e41a4b4a` mit den drei neuen Zusagen 100 von 102 (rot
+§7l, §7m); mit der Reparatur 102 von 102. Gegenproben, je gebaut mit
+`npm run bauen:ts` und unter dem Schloss gefahren:
+
+```txt
+lernReiter wieder „heute → Start, sonst Lernen"   100 von 102   §7k, §7l
+ohne den Reiter in wechseln()                      100 von 102   §7l, §7m
+titelVon wieder „heute oder nicht"                  90 von 102   §5 ×4, §7a, §7b, §7e, §7f, §7g, §7i, §7k, §7l
+```
+
+Danach die zwei Quellen aus der Sicherung zurück und voll gebaut:
+`lernwelt.ts`, `produktwelten.ts`, `lernwelt.js` und `produktwelten.js`
+wieder Byte für Byte (`sha256sum -c`); der Dienststand zählte über die
+Gegenproben von v1516 auf v1520, der Inhalt ist derselbe
+(`1e404b13aa24e171`).
+
+**test537:** 123 Paare, 511 Treffer, 6 Zugriffe über `(window as any)` —
+unverändert.
+
+**Bytes** (gzip -6, gegen `7e41a4b4a`):
+
+```txt
+quell/bereiche/wissen/lernwelt.js        38113 → 38164    +51
+quell/bereiche/wissen/produktwelten.js    3258 →  3274    +16
+```
+
+**Bilder** (Kratzordner `bilder-ziel/quelle/`):
+`vorher-drinnen-noten-seite-hell.png`/`-dunkel.png`,
+`vorher-drinnen-trainer-seite-*`, `nachher-drinnen-noten-seite-*`,
+`nachher-drinnen-trainer-seite-*` — die Seite „Willkommen", unten vorher
+„Lernen" (nach Noten) und „Heute" (nach dem Trainer), nachher „Heute" und
+„Lernen". Angesehen: Noten hell vorher und nachher, Trainer dunkel vorher
+und nachher.
+
+**Start:** 1926 KB (`7e41a4b4a`, Kopie) → 1927 KB gzip über 255 Dateien
+(`test388` §5, Decke 1950). `redion-einzeldatei.html` 9 715 502 → 9 715 871
+Bytes.
+
+**Nachbarn** (unter dem Schloss, 47 Läufe, gegen v1520): 45 grün; rot
+`test493` (42 grün, 2 rot — `-webkit-backdrop-filter`, wie auf
+`ba51915dc`) und `test567` einmal mit 38 von 39 (die Zählung über
+zufällig gezogene Ankreuzkarten; drei Wiederholungen 39 von 39, auf
+`7e41a4b4a` zweimal 39 von 39). Datei-Wächter grün.
+
+### Nach der dritten Durchsicht (13. Oktober 2026)
+
+**Wohin „Zurück" führt** — Rechner 1440 × 900, jeder Weg aus den
+Dokumenten (`Bibliothek.oeffne()`), geöffnet über `Produktwelten.lernen`
+(die Ziele unter „Heute" nehmen denselben Weg, eine Zeile der Sonde über
+`ziele('heute')` gab dieselben Werte), zurück mit dem echten Knopf
+`#btn-back`; Sonde `ziel-r4/sonde-verlauf.mts` im Kratzordner, gefahren
+gegen Kopien von `ba51915dc`, `7e41a4b4a` und `352eed65c` (`git archive`)
+und den Zweig nach der Reparatur. Eingetragen ist, wo das erste und, wenn
+es einen gibt, das zweite „Zurück" landet; „Dok." heisst die Dokumente:
+
+```txt
+Weg                                  ba51915dc      7e41a4b4a,     jetzt
+                                                    352eed65c
+Heute → Noten                        Heute, Dok.    Dok.  ←        Heute, Dok.
+Heute → Noten → Heute                Noten, Heute   Dok.  ←        Noten, Heute
+Übersicht → Noten                    Dok.           Übersicht      Übersicht
+Übersicht → Trainer                  Dok.           Dok.           Übersicht
+Noten → Prüfungen                    Dok.           Dok.           Noten
+Heute → Heute                        Dok.           Dok.           Dok.
+Noten → Noten                        Dok.           Dok.           Dok.
+Heute → „Heute ^" → Noten (drinnen)  Dok.           Dok.           Dok.
+Übersicht → „Heute ^" → Noten        Übersicht      Dok.           Noten
+  (drinnen) → Heute
+```
+
+Auf `ba51915dc` hing der Schritt am Titel „Heute"/„Lernzentrum"; seit
+L147 heissen sechs Ansichten „Heute", und der Schritt zwischen Heute und
+Noten fiel weg. Jetzt hängt er an der Adresse der Ansicht. Neu gegenüber
+`ba51915dc` sind die Schritte Übersicht → Trainer und Noten → Prüfungen
+(Übersicht → Noten seit L147). Seitenfehler 0.
+
+**Am Rechner ist die Seitenleiste nicht gezeichnet** — 1440 × 900,
+`getComputedStyle(#sidebar).display` = `none` (`premium.css`, ab 761 px),
+`#side-reiter` ohne Rechteck, im ruhigen Modus und nach
+`Ruhig.setzen(false)` gleich (Sonden `ziel-r4/sonde-rechner.mts`,
+`sonde-blick.mts`). `#tree` erscheint nur in der Lade „Seiten" der Kante
+(`#kanten-lade`); sie schliesst, sobald eine Klappe aufgeht
+(`ziel-r4/sonde-kante.mts`, Teil B: Lade offen → Klappe offen → Lade zu).
+
+**Was die Lade „Seiten" zeigt** (die erste Zeile von `#tree` in der Lade;
+„Bevorstehend" ist die Liste der Besprechungen, „Privat" der Seitenbaum),
+nach `Produktwelten.planung()` (Reiter `bespr`) und `#btn-back` ins
+Lernzentrum (`ziel-r4/sonde-kante3.mts`):
+
+```txt
+danach                       ba51915dc      7e41a4b4a      352eed65c      jetzt
+gleich die Lade              Bevorstehend   Bevorstehend   Bevorstehend   Bevorstehend
+„Heute ^" → Noten, Lade      Bevorstehend   Bevorstehend   Privat         Privat
+direkt Noten, Lade           Privat         Privat         Privat         Privat
+```
+
+**Das Neuzeichnen des Baums**, das `reiterSetzen` bei jedem Klappenwechsel
+auslöst (`Seitenleiste.zeichne()`, neun Läufe, 1440 × 900,
+`ziel-r4/sonde-baumzeit.mts`): mit den Seiten der Willkommensbibliothek
+Median 4,5 ms (3,3–5,7), mit 300 Seiten mehr 7,6 ms (5,4–15,7). Mit
+`#tree .side-item, #tree [data-id]` gezählt standen beide Male 23 Zeilen
+da — ob die 300 Seiten einzeln gezeichnet wurden, sagt diese Zählung
+nicht sicher. Am Rechner nie sichtbar (siehe oben); am Telefon liegt
+`#tree` in der Schublade, die beim Wechsel einer Klappe zu ist (aus dem
+Code gelesen, nicht gemessen).
+
+**test613:** gegen `352eed65c` mit den acht neuen Zusagen 106 von 110 (rot
+§7n, §7o, §7p, §7s); mit der Reparatur 110 von 110. Gegenproben, gefahren
+in einer Kopie des Arbeitsbaums (`ziel-r4/gp/`, vor der ersten Gegenprobe
+gebaut und Byte für Byte gleich dem Arbeitsbaum: `lernwelt.js`,
+`produktwelten.js`, `schale.js`, `stand.js`, `sw.js`,
+`redion-einzeldatei.html`):
+
+```txt
+ohne die Adresse (lernen ruft modul.oeffnen(ziel))      106 von 110   §7n, §7o, §7p, §7s
+immer ein Schritt, wenn eine Adresse genannt ist        109 von 110   §7q
+ein Schritt auch drinnen (navMerken in sonderTitel)     108 von 110   §7r, §7s
+die Seitenleiste am Rechner gezeichnet (premium.css)    109 von 110   §7t
+ohne den Reiter in wechseln() (Gegenprobe 9)            107 von 110   §7l, §7m, §7u
+```
+
+Die neue Fassung gegen eine vollständige Kopie von `7e41a4b4a`: 103 von
+110, rot §7l, §7m, §7n, §7o, §7p, §7s, §7u.
+
+**test537:** 123 Paare, 511 Treffer, 6 Zugriffe über `(window as any)` —
+unverändert; `Lernwelt` ruft `Produktwelten` wie vorher (derselbe Bereich).
+
+**Bytes** (gzip -6, gegen `352eed65c`):
+
+```txt
+quell/schale/aufbau/schale.js              39985 → 40045    +60
+quell/bereiche/wissen/produktwelten.js      3274 →  3294    +20
+quell/bereiche/wissen/lernwelt.js          38164 → 38172     +8
+```
+
+`redion-einzeldatei.html` 9 715 871 → 9 716 241 Bytes. Dienststand v1520
+→ v1521 (`9f3d9270763e5286`; die Gegenproben bauten in der Kopie und
+zählten dort). **Start:** 1927 KB gzip über 255 Dateien (`test388` §5, Decke
+1950) — wie vorher.
+
+**Bilder** (Kratzordner `bilder-ziel/quelle/`, Sonde
+`ziel-r4/bild-verlauf.mts`, Thema über `App.theme`):
+`vorher3-rechner-heute-noten-zurueck-hell.png`/`-dunkel.png` (352eed65c:
+nach „Zurück" die Dokumente, der Knopf „Zurück" gesperrt) und
+`nachher3-…` (Heute, „Zurück" offen). Angesehen: alle vier.
+
+**Nachbarn** (unter dem Schloss, gegen v1521): `test613` (110 von 110) und 21 Läufe, alle grün: die Nachbarn aus dem Auftrag (`test537`, `test222`, `test390`, `test601`, `test600`, `test596`, `test565`, `test567`, `test217`, `test306`, `test388`, `test74`) und die Läufe, die den Verlauf (`App.zurueck`, `#btn-back`, `navMerken`) oder `zeigeSonder` anfassen: `test114`, `test581`, `test592`, `test40`, `test386`, `test67`, `test484`, `test423`, `test272`. Datei-Wächter `test550`, `test549`, `test225`, `test105`, `test109`, `test87`, `test537`, `test400`: grün.
+
+## §106 · Die Zielleiste am Telefon: Geste, Kosten, Breite (E749, 13. Oktober 2026)
+
+**Womit:** Sonden im Kratzordner (`ziel-handy/`), Telefon 390 × 844 mit
+echter Berührung über CDP (`Input.dispatchTouchEvent`), Chromium
+141.0.7390.37 der Prüfungen; vorher = `352eed65c` (Zweig
+`claude/zielleiste-quelle`), nachher = der Zweig `claude/zielleiste-handy`.
+
+**1 · Was senkrechtes Ziehen auf der Leiste vorher tat** (von „Dokumente",
+y = 805, 112 px hinauf in acht Schritten, auf dem Regal):
+
+```txt
+touch-action   Ereignisse an #handy-oben                                  #scroll    Klicks
+pan-y          pointerdown → touchstart → pointermove ×2 → touchmove →     0 → 0      0
+(vorher)       pointercancel → lostpointercapture → touchmove ×6 → touchend
+none           pointerdown → touchstart → pointermove ×2 → touchmove →     0 → 0      0
+               (pointermove → touchmove) ×6 → pointerup → lostpointercapture → touchend
+```
+
+`#scroll` wäre 317 px rollbar gewesen; `scrollY` 0, kein `scroll`-Ereignis.
+`pan-y` hat nichts gerollt, nur den Zug nach zwei Schritten abgebrochen.
+
+**2 · Ab wie viel Weg Chromium nach einer Berührung klickt** (auf
+„Lernen", zwei Züge, dann los; `pan-y` und `none` Zeile für Zeile gleich):
+
+```txt
+Weg      0   6↑  9↑  12↑  15↑  20↑  24↑  12↓  8→
+Klicks   1   1   1   1    1    0    0    1    1
+```
+
+**3 · Halten** (vorher; dasselbe mit verhindertem `contextmenu` und mit
+`touch-action:none`): 300, 550 und 800 ms ruhig — `pointerdown pointerup
+touchend click`, der Reiter wechselt. `Input.synthesizeTapGesture` über
+900 ms: `pointerdown touchstart pointerup touchend`, kein Klick, kein
+`contextmenu`. Die rechte Maustaste: `pointerdown contextmenu pointerup`.
+
+**4 · Weniger Transparenz lässt sich einstellen:** nach
+`Emulation.setEmulatedMedia({prefers-reduced-transparency: reduce})` sagt
+`matchMedia` `true`, `#handy-oben` hat `backdrop-filter: none` (vorher
+`saturate(1.8) blur(20px)`). `test539` §6 sagt seit dem 20. September das
+Gegenteil (L203); für diesen Browser stimmt das nicht mehr.
+
+**5 · Was das erste Öffnen kostet** (die Arbeit im `pointermove`, der die
+Kante überquert: Einfangen am `window` davor, Blasen am `window` danach;
+fünf frisch geladene Seiten je Zeile, Mitte in Klammern; „Lücke" = der
+grösste Abstand zweier Bilder um das Öffnen):
+
+```txt
+Stand          Drossel   erstes Öffnen (ms)                     zweites (Mitte)   Lücke (Mitte)
+erster Bau     1×        25,2 / 20,0 / 19,5 / 29,2 / 21,5 (21,5)   27,6              17
+erster Bau     4×        157 / 168 / 130 / 94 / 124 (130)          152               133
+nachher        1×        10,0 / 8,9 / 10,4 / 9,9 / 9,5 (9,9)       10,5              17
+nachher        4×        46 / 57 / 78 / 63 / 68 (63)               48                117
+```
+
+Sichtbar war die Zielleiste in jedem Lauf im ersten Bild nach dem Zug über
+die Kante (Zeitstempel des Bildes 0 bis 2 ms VOR dem des Ereignisses — das
+Bild, das ihn verarbeitet hat).
+
+Das Profil (4×, ein Lauf, Eigenzeit): erster Bau `getBoundingClientRect`
+47 ms, `highlight` 34, `fill` 30, `pillTo` 27 — vier erzwungene
+Stilrechnungen; nachher `getBoundingClientRect` 37 ms und
+`AppEinstellung.amTelefon` 34 (das `touchmove` von `pwa.ts` liest
+`innerWidth` und zahlt die Rechnung, die das Bild ohnehin braucht).
+
+**6 · Warum eine Stilrechnung so viel kostet** (Sonde, 4× Drossel, an
+einem Kind von `#ho-ziele`, dann `offsetTop` gelesen, Mitte aus 15):
+
+```txt
+geschrieben            ms
+nichts                 0
+hidden                 17,7
+aria-current           17,7
+ein Kind angehängt     17,9
+data-x am Kind         0
+eine Klasse am Kind    0
+data-x an der Leiste   0
+style.left am Kind     0
+```
+
+`body:has(#zm-pille:not([hidden]))`, `…:has(#sidebar .side-item[aria-current="page"])`
+und rund dreissig weitere `body:has(…)`-Regeln machen jedes `hidden` und
+jedes neue Kind zu einer Rechnung der ganzen Seite.
+
+**7 · Passt jedes Wort in sein Ziel?** (`scrollWidth` gegen `clientWidth`
+des Worts, fett nachgerechnet):
+
+```txt
+Breite   vorher (Lücke 2 px, Rand 2 px)     nachher (keine Lücke, Rand 1 px)
+390      Meine Ablage 66/66 (auf dem Bild   alle 25 passen, auch fett
+         „Meine Abla…", Bruchteile)
+360      Meine Ablage, Besprechung,          Meine Ablage 66/63
+         Einstellungen gekürzt
+320      fünf gekürzt                        Meine Ablage 66/55, Stundenplan 58/55,
+                                             Besprechung 61/55, Posteingang 57/55,
+                                             Einstellungen 62/55
+```
+
+**8 · Lesbar und Glas** (aus `test614`): die stille Schrift der Zielleiste
+über dem schwarz-weiss-rot-blauen Muster auf dem GPU-Weg — hell schlimmster
+4,72 : 1 (Mitte 4,92), dunkel 5,32 : 1 (Mitte 6,48). Mit offener
+Zielleiste stehen 13,5 % des Bildschirms unter Glas (Leiste und
+Zielleiste; die Grenze mit offenem Menü ist 60 %).
+
+**9 · Start:** `tab-shelf.js` 3,53 KB gzip; `test388` §5 1927 (255 Dateien, in einer Kopie von `352eed65c`) →
+1932 (256 Dateien) KB von 1950.
+
+**10 · Die Durchsicht (13. Oktober)** — Sonde `durchsicht-ziel/sonde-zeiger.mts`
+im Kratzordner und `test614`, Telefon 390 × 844; vorher = `f4ebb5816`,
+nachher = der Stand nach der Durchsicht.
+
+*a) Der Tipp-Spielraum, genau* (auf „Lernen", zwei Züge hinab, dann los;
+Punkt 2 oben kannte nur 15 und 20):
+
+```txt
+Weg      15↓  16↓  17↓  18↓  19↓
+Klicks   1    0    0    0    0
+```
+
+*b) Welche `pointerId` der Klick trägt* (Einfangen am `window`):
+
+```txt
+Tipp auf „Dokumente"     pointerdown #2 → pointerup #2 → click #2 (touch, echt)
+Tipp auf „Lernen"        pointerdown #3 → pointerup #3 → click #3 (touch, echt)
+Enter auf „Dokumente"    click #-1 (kein Zeiger)
+element.click()          click #-1 (kein Zeiger, nicht echt)
+```
+
+Jede Berührung bekommt eine neue Nummer, und Chromiums Klick trägt die
+seiner Berührung — daran erkennt `ziehbar` den Klick DER Geste.
+
+*c) Am oberen Rand des Reiters* (Reiter ab y = 781, Leiste ab 775; vom
+Bildschirm „Dokumente" aus, zwei Züge hinauf, dann los; `test614` §1c):
+
+```txt
+aufgesetzt   10 px            12 px            14 px                     15 px
+vorher
+  782        Lernpfad (10 B)  Lernpfad (9 B)   Lernpfad (10 B), page@760  Lernpfad (12 B), page@760
+  785        Lernen           Lernpfad (10 B)  Lernpfad (10 B), page@762  Lernpfad (11 B), page@761
+  788        Lernen           Lernen           Lernpfad (10 B)            Lernpfad (9 B), page@763
+nachher
+  782–788    Lernen, genau ein Klick, 0 Bilder Zielleiste, nichts daneben
+```
+
+„B" = Bilder, in denen die Zielleiste offen stand; „page@…" = ein Klick
+auf den Inhalt über der Leiste (die Zeile „Noch keine vollständige
+Sicherung"), der bei der Seite ankam.
+
+*d) Die Marke gegen die Scheibe* (`test614` §11f, GPU-Weg, Bildpunkte, der
+Rand der Marke gegen die Scheibe 4–8 px daneben; Finger auf „Favoriten"):
+
+```txt
+                          vorher (Fläche)   nachher (Rand)   Fläche nachher
+ruhig, hell               1,08 : 1          5,36 : 1         1,08
+ruhig, dunkel             1,2               5,74             1,2
+Hoher Kontrast, hell      1,07              5,31             1,07
+Hoher Kontrast, dunkel    1,18              5,68             1,18
+erzwungene Farben         1                 21               1
+```
+
+Und die Schrift selbst (Sonde `sonde-farbe.mts`, ohne Bewegung, berechnete
+Farbe des Worts): still `rgb(102, 101, 95)` gegen angepeilt
+`rgb(124, 58, 237)` 1,03 : 1 (hell), `rgb(166, 168, 170)` gegen
+`rgb(155, 135, 255)` 1,21 : 1 (dunkel) — ohne Lupe und ohne Ring sagte
+nur der Farbton, welches Ziel gilt.
+
+*e) Was das erste Öffnen danach kostet* (dasselbe Skript wie Punkt 5,
+zwei Läufe à fünf frische Ladungen):
+
+```txt
+Drossel   erstes Öffnen im Horcher (ms)                Lücke um das Öffnen (ms)
+1×        12,2 / 9,4 / 9,1 / 9,3 / 9,5 (9,4)            17 / 17 / 17 / 17 / 17
+1×        9,3 / 9,9 / 10,1 / 9,8 / 12,1 (9,9)           17 / 17 / 17 / 17 / 17
+4×        64,4 / 38,9 / 53,4 / 36,6 / 48,3 (48,3)       17 / 67 / 83 / 67 / 83 (67)
+4×        55,2 / 63,0 / 46,3 / 54,0 / 42,0 (54,0)       100 / 100 / 83 / 83 / 67 (83)
+```
+
+Die Lücke bei 4× streut zwischen den Läufen (Punkt 5: Mitte 117 im Bau);
+über alle zehn Ladungen Mitte 83 ms, höchstens 100. Ohne Drossel verliert
+das erste Öffnen kein Bild. In einer Ladung des ersten Laufs stand das
+Bild 108 ms VOR dem Zug über die Kante im Protokoll — der Zeitstempel des
+Bildes gegen den des Ereignisses, unter der Drossel; die übrigen neun
+lagen bei −1 bis −3 ms wie in Punkt 5.
+
+*f) Was es an Bytes kostet* (gzip -6, gegen `f4ebb5816`): `tab-shelf.js`
+3629 → 3707 B, `selection-flow.js` 9494 → 9691, `bausteine.css`
+176158 → 176256, `grund.css` 14875 → 14931. Zusammen +429 B; der Start
+bleibt bei 1932 KB von 1950 (`test388` §5, 256 Dateien).

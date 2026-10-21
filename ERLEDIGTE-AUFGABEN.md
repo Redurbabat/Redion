@@ -12,6 +12,199 @@ selbst zusammengeführt (a9cfb90, Baum gleich ba51915); E750 kommt als
 Fast-Forward dazu. Rot bleiben zwölf, jeder schon vorher auf `main` rot. Die Zweige der Zielleiste (E748, E749) landen
 nicht mit.
 
+## 13. Oktober 2026 · E749 · Die Zielleiste nach der Durchsicht: ein Tipp am Rand bleibt ein Tipp
+
+**Gefunden** (Durchsicht von Bogen 2, gegen `f4ebb5816`): ein Daumen, der
+1–7 px unter dem oberen Rand eines Reiters aufsetzt und 10–15 px
+hinaufrollt, reichte über die Kante der Leiste — die Zielleiste ging auf,
+und das Loslassen wählte „Lernpfad". Genau das verbietet Redurs Korrektur
+(„aber beim klicken nicht"); Chromium klickt bis 15 px Weg selbst. Dazu:
+hinauf und dann seitwärts klickte den gedrückten Reiter; unter der Leiste
+losgelassen klickte den nächsten; nach einem Abbruch verschwand der nächste
+echte Tipp; Chromiums Klick fiel nach dem Hochrollen auf den Inhalt über der
+Leiste; ohne Lupe lag die Marke mit 1,08 : 1 auf der Scheibe; nach Enter
+auf einem Ort stand der Fokus auf `<body>`.
+
+**Gebaut:**
+
+- `ziehbar` übergibt erst ab 16 px Weg nach oben (`UEBER_TIPP`, über dem
+  gemessenen Spielraum: 15 px ein Klick, 16 keiner); verlässt der Finger
+  vorher die Spalte des Reiters, endet der Zug ohne Klick; das Schlucken
+  endet mit jedem neuen `pointerdown` und fängt daneben nur den Klick mit
+  der `pointerId` der Geste.
+- `TabShelf`: unter der Leiste ist abgebrochen; nach einer Wahl über die
+  Tastatur geht der Fokus an den Reiter, bevor gewählt wird.
+- Die Marke trägt einen Ring (`outline`, in der Farbe der Schrift), wo die
+  Lupe aus ist, und unter jedem Kontrast-Weg (`grund.css`).
+
+**Geprüft:** `test614` 122 Zusagen (16 neu: §1c, §1d, §6b, §6c, §7f,
+§11f, §12g, §12h), gegen `f4ebb5816` rot mit 15 von 122, sieben
+Gegenproben rot (eine baute zuerst nicht, §52.6); Nachbarn und
+Datei-Wächter in E749. Bilder vorher und nachher (ruhig, „Ruhige
+Darstellung", Hoher Kontrast, erzwungene Farben, mit Bewegung) im
+Kratzordner `bilder-ziel/handy/durchsicht/`, angesehen.
+
+**Offen:** L257 — der Vorleser mit Berührung kommt nicht hinein (Redurs
+Wahl), der Spielraum am echten Telefon.
+
+---
+
+## 13. Oktober 2026 · E749 · Die Zielleiste am Telefon (Bogen 2): hinaufziehen, gleiten, loslassen
+
+**Redur**, 12. Oktober 2026: „… ich sollte direk mit hand ohne klick direk
+wächseln können es sollte flüssig sein mit appel efeck usw aber zuers nur
+bei handy …" — Antworten 1 und 4: die Empfehlung. Und seine Korrektur vom
+13. Oktober, 01:08 UTC: „die neu dock nur wenn ich mit hand nach oven so zi
+eht kommt das doet aber beim klicken nicht" — nur Hochziehen öffnet; kein
+Tipp, kein Halten.
+
+**Vorher gemessen** (Grundstand `352eed65c`): senkrechtes Ziehen auf der
+Leiste rollte nichts und brach nach zwei Zügen mit `pointercancel` ab;
+Chromium klickt nach einer Berührung bis 15 px Weg; Halten ist beim
+Loslassen ein Klick, ein `contextmenu` kommt in der kopflosen Schale nie.
+
+**Gebaut:**
+
+- `SelectionFlow.ziehbar` mit der freiwilligen Übergabe `hinauf`: über der
+  Oberkante (nach 10 px) oder aus einem Pillenzug übernimmt die
+  Zielleiste; unter der Kante bleibt es GENAU EIN Klick, hinab wie zuvor.
+- `src/schale/aufbau/tab-shelf.ts` (`TabShelf`): `#ho-ziele` neben der
+  Leiste, Menü mit fünf Zielen aus `Register.navigation.ziele`, gleiten
+  mit Marke und Lupe, zwischen Reitern tauscht der Inhalt, Loslassen wählt
+  einmal; Tastatur über Pfeil hinauf; ohne Bewegung ohne Animation.
+- `schale.ts`: die fünf Reiter EINE Tabelle (`REITER_UNTEN`, `wechsle`) —
+  für die Klicks und für jedes Ort-Ziel.
+- CSS in `bausteine.css`, `studio.css`, `grund.css` (Glas im Block der
+  Leiste, deckend ohne Glas, `z-index:955`, `touch-action:none`);
+  `index.html` und der GRUNDSTOCK; `ho-` im Verzeichnis der Namensräume;
+  die Karte nachgezogen.
+
+**Beim Bauen gefunden:** das BILD — mit `data-gehalten` stand „Dokumente"
+unter der brechenden Pille doppelt da (jetzt `data-zielleiste`, `test614`
+§11e); ein Pillenzug liess `data-gehalten` nach der Übergabe stehen;
+„Meine Ablage" passte fett um Bruchteile nicht; und das erste Öffnen
+kostete vier Stilrechnungen der ganzen Seite (21,5 ms, 4×: 130 ms), weil
+jedes `hidden` die `body:has(…)`-Regeln weckt — jetzt eine (9,9 ms, 4×:
+63 ms).
+
+**Geprüft:** `test614` neu (106 Zusagen; gegen `352eed65c` rot mit 29 von
+105), fünf Gegenproben rot; Nachbarn und Datei-Wächter in E749. Bilder
+hell und dunkel im Kratzordner `bilder-ziel/handy/`.
+
+**Offen:** L257 — der Rechner (Phase 2), das echte Telefon, die gekürzten
+Namen unter 390 px.
+
+---
+
+## 13. Oktober 2026 · E748 · Die Ziele der unteren Reiter aus einer Quelle (Zielleiste, Bogen 1) — und L147
+
+**Redur**, 12. Oktober 2026, zum Bild mit dem roten Feld über der unteren
+Leiste: „… eine neu dock dort kommen und dort nur sachen die mit unteren
+zutun haben dann für alle so …". Auf die vier Fragen des Entwurfs hat er
+jedes Mal die Empfehlung gewählt; Frage 2 legt die fünf Ziele je Reiter
+fest, Frage 3 richtet L147 („Prüfungen, Noten, Stundenplan und Schule
+schalten unten künftig ‚Heute' an").
+
+**Gefunden** (auf `ba51915dc`, Telefon 390 × 844): sechs Ansichten unter
+„Heute ^" liessen unten „Lernen" leuchten — oben „Noten ^", unten „Lernen"
+auf demselben Bildschirm; drinnen gewechselt blieben Reiter und Adresse
+stehen, ein Neuladen führte in die Übersicht zurück. Und die Listen der 25
+Ziele gab es alle schon, privat und mit keinem Reiter verbunden.
+
+**Gebaut**, ohne neue Oberfläche:
+
+- `Register.navigation.meldeZiele`/`ziele` mit dem Typ `Ziel`, nach dem
+  Muster von `Register.kontext` (jedes Mal neu gefragt, einzeln
+  abgefangen, nach Rang, höchstens fünf); Schlüssel `data-ziele` an den
+  fünf Reitern in `index.html`.
+- Drei Lieferanten, jeder in seinem Modul und aus seiner Liste: Bibliothek
+  (`ORTE` mit `zielRang`/`kurz`, `ortOeffnen`; die Notizhefte aus
+  `app-notizhefte`), Lernwelt (`KLAPPEN` + `ANSICHTEN.zielRang`/`kurz`),
+  Ansichten (`TERMINE_KARTEN`, aus denen der Bildschirm jetzt zeichnet, die
+  Kante „kalender", `mehrGruppen.zielRang`; `termineTun`/`mehrTun` für
+  Bildschirm und Ziel).
+- L147: `titelVon`/`reiterVon` nach der Klappe, `Produktwelten.lernen`
+  fragt `Lernwelt.reiterVon`; drinnen zuerst die Adresse über
+  `Produktwelten.routeSchreiben`, dann der Titel über `App.sonderTitel`
+  (neu: nur der Titel, und der Zeichner, den sich der Verlauf merkt).
+- Der Kommentar an `haupt` in `navigation.ts` berichtigt; die Karte
+  (`doku/karte/register.md`) nachgezogen.
+
+**Beim Fertigstellen gefunden**, beide mit einer Sonde und nicht vom Lauf:
+am Rechner leuchtete nach „Übersicht → ‚Heute ^' → Noten" in der Kante
+weiter „Lernzentrum", nach direkt geöffneten Noten „Mehr Orte" — der Titel
+wurde vor der Adresse gemeldet; und wer danach weg- und mit „Zurück"
+wiederkam, sah die Übersicht unter „Heute" und `#welt-lernen-noten` — der
+Verlauf hatte sich den Zeichner vom Öffnen gemerkt. Jeweils erst die
+Zusage (`test613` §7g rot mit 95 von 96, §7i/§7j rot mit 96 von 98), dann
+die Reparatur.
+
+**Geprüft:** `test613` neu, 98 von 98 (gegen `ba51915dc` rot mit 12 von 68,
+die Endfassung 13 von 73); fünf Gegenproben rot (82/93, 88/98, 89/98, 97/98, 96/98). Geändert genau eine bestehende Zusage: `test484` §5, die die alte
+Titelzeile wörtlich suchte. 90 Nachbarn unter dem gemeinsamen Schloss, 88 grün; rot nur `test274` und `test493`, beide genau so auf `ba51915dc`; die Datei-Wächter grün; der Start 1926 KB von 1950. Bilder vorher/nachher am Telefon
+(hell, dunkel) und am Rechner (direkt geöffnet, drinnen gewechselt, weg und
+zurück).
+
+**Nach der Durchsicht** (13. Oktober): `test613` erkennt jeden Dialog an
+seinem Kopf statt an der Zahl offener Dialoge — die Gegenprobe der
+Durchsicht („Wolke" öffnet die Einstellungen, dazu Besprechung/Verbinden
+über Kreuz und der Tagesplan als Wochenrückblick) war gegen die alte
+Fassung 98 von 98 grün, gegen die neue 90 von 99 rot. Die drei
+Termine-Karten tragen jetzt ihr `zeigen` (`termineWeg`: fehlt `Meeting`,
+fehlt die Besprechung) — zuerst rot (`test613` §8g, 98 von 99), dann
+gebaut, Gegenprobe ohne die Zeile wieder rot. „Aus dem DOM" in E748 und
+CLAUDE.md berichtigt (Notizhefte, Übersicht und Tagesplan kommen aus
+`Register.kontext`), die Kopfzeile von ENTSCHEIDUNGEN.md nennt nur noch
+E749 als vergeben, und die Frage zu „Mehr Orte" am Rechner steht jetzt auch
+in `AUFGABEN.md`. `test613` 99 von 99, `test537` unverändert,
+`ansichten/dienst.js` +78 B gzip, Start 1926 KB von 1950; 24 Nachbarn
+unter dem Schloss grün, die Datei-Wächter grün.
+
+**Nach der zweiten Durchsicht** (13. Oktober): L147 war nur zur Hälfte
+zu. `wechseln()` stellte den Reiter nicht um — auf dem Lernzentrum fiel
+das nicht auf (dort entscheidet der Schauplatz), aber wer danach eine
+Seite öffnete, sah die Pille zurückspringen: „Lernen → Heute ^ → Noten →
+Seite" unter „Lernen", „Heute → Übersicht ^ → Trainer → Seite" unter
+„Heute". Zuerst die Zusagen (`test613` §7k–§7m, gegen `7e41a4b4a` rot mit
+100 von 102), dann `Produktwelten.lernReiter` — die Regel „Reiter nach der
+Klappe" an einer Stelle, gerufen beim Öffnen und, wenn die Klappe
+wechselt, aus `wechseln()`. `test613` 102 von 102; drei Gegenproben rot
+(100/102, 100/102, 90/102 — die letzte ist Gegenprobe 2, nachgefahren, und
+ihre Zeilen stehen jetzt in LUECKEN.md und E748 gleich). Die Karte
+nachgezogen (alle Verweise auf `navigation.ts` hinter der eingefügten
+Stelle, `register.md` neu erzeugt). Bilder vorher/nachher am Telefon, hell
+und dunkel. 47 Nachbarn unter dem Schloss, 45 grün; rot `test493` wie
+auf `ba51915dc` und `test567` einmal (eine Zählung über zufällig gezogene
+Karten, dreimal wiederholt grün). Datei-Wächter grün, Start 1927 KB von
+1950.
+
+**Nach der dritten Durchsicht** (13. Oktober): der Verlauf sah nur den
+Titel, und seit L147 heissen sechs Ansichten „Heute" — „Heute → Noten →
+Zurück" führte in die Dokumente statt nach Heute (am Rechner gemessen, auf
+`ba51915dc` noch richtig). Jetzt nennt `Produktwelten.lernen` die Adresse
+der Ansicht (`routeVon`), `Lernwelt.oeffnen` gibt sie an `App.zeigeSonder`
+weiter, und die Schale legt einen Schritt an, sobald sie sich ändert —
+keinen für dieselbe Ansicht noch einmal, keinen für den Wechsel drinnen.
+Neu gegenüber `ba51915dc`: Übersicht → Trainer und Noten → Prüfungen sind
+Schritte. Die zweite Frage der Durchsicht — springt am Rechner der
+Umschalter der Seitenleiste mit dem Reiter? — ist gemessen und harmlos:
+`#sidebar` ist ab 761 px nicht gezeichnet, `#tree` steht nur in der Lade
+„Seiten", und die schliesst mit der Klappe; sie zeigt danach Seiten, wie
+nach jedem Weg über `reiterSetzen`. Zuerst die Zusagen (`test613`
+§7n–§7u, gegen `352eed65c` rot mit 106 von 110), dann die Reparatur;
+`test613` 110 von 110, fünf Gegenproben rot. CLAUDE.md §30 nennt die
+Gegenproben jetzt so, wie E748 sie zählt. Gemessen am Rande und in
+`AUFGABEN.md` eingetragen: nach Termine und „Zurück" zeigt die Lade
+„Seiten" die Besprechungen — älter als E748.
+
+**Offen:** ob am Rechner für die sechs Ansichten unter „Heute ^" „Mehr
+Orte" leuchten soll (so wie bei „Heute" selbst) — Redurs Frage, L123 F02,
+jetzt auch in `AUFGABEN.md` beim Rest von F02. Und ein Nachbarfall am
+Telefon, gemessen, nicht L147: nach „Zurück" ins Lernzentrum leuchtet auf
+einer danach geöffneten Seite „Dokumente", wenn man über „Dokumente"
+weggegangen war (`AUFGABEN.md`, gleiche Stelle). Die Zielleiste selbst ist
+Bogen 2.
+
 ## 12. Oktober 2026 · Redurs vier Antworten — zusammengeführt auf `claude/abend-antworten`
 
 **Der Auftrag.** Redur am 11. Oktober um 19:43 UTC: „1. verblassen / 2 .

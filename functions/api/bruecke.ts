@@ -108,7 +108,7 @@ export async function onRequest(context: { request: Request; env?: unknown; ctx?
   }
 
   const art = request.headers.get('content-length');
-  if (art && (!/^\\d+$/.test(art) || Number(art) > MAX_EINGANG))
+  if (art && (!/^\d+$/.test(art) || Number(art) > MAX_EINGANG))
     return new Response('Anfrage zu gross.', { status: 413, headers: kopfZurueck() });
 
   // Bereits beim Lesen begrenzen; Content-Length ist optional und nicht vertrauenswürdig.
@@ -156,7 +156,7 @@ export async function onRequest(context: { request: Request; env?: unknown; ctx?
     const wert = antwort.headers.get(name);
     if (wert) raus.set(name, wert);
   }
-  const body = request.method === 'HEAD' || antwort.status === 204
+  const body = request.method === 'HEAD' || antwort.status === 204 || antwort.status === 205
     ? null : (new Uint8Array(ausgang).buffer as ArrayBuffer);
   return new Response(body, { status: antwort.status, headers: raus });
 }

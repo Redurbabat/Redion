@@ -19,7 +19,7 @@ Zurück zur [[Redion|Übersicht]].
 
 | Datei | Rolle | Zeilen |
 |---|---|---|
-| `src/schale/bedienung/selection-flow.ts` | Kritisch gedämpfte Feder (OMEGA 0,026, Z. 105) als Keyframes auf transform allein: folge(flaeche, ziel, nachbar, sofort) (Z. 178) für eine Fläche in einer Zeile; fliege(flaeche, von, nach) (Z. 339) als FLIP-Flug eines position:fixed-Elements (Z. 335). Kopf Z. 58-65: gebaut, weil L204 EINEN Helfer für Pille und Werkzeugleiste verlangte. Rückgabe { folge, fliege, DAUER, OMEGA, DEHNUNG_MAX } (Z. 370), Global SelectionFlow (Z. 373). | 373 |
+| `src/schale/bedienung/selection-flow.ts` | Kritisch gedämpfte Feder (OMEGA 0,026, Z. 105) als Keyframes auf transform allein: folge(flaeche, ziel, nachbar, sofort) (Z. 178) für eine Fläche in einer Zeile; fliege(flaeche, von, nach) (Z. 339) als FLIP-Flug eines position:fixed-Elements (Z. 335). Kopf Z. 58-65: gebaut, weil L204 EINEN Helfer für Pille und Werkzeugleiste verlangte. Rückgabe { folge, fliege, DAUER, OMEGA, DEHNUNG_MAX } (Z. 370), Global SelectionFlow (Z. 373). E749: ziehbar(…) hat die freiwillige Übergabe hinauf {nimm(k, 'hoch'\|'aus-zug', x, y)} — steigt der Finger über die Oberkante der Reihe UND mindestens 16 px über den Punkt des Aufsetzens (über dem Tipp-Spielraum des Browsers, Durchsicht E749; gerade hinauf oder aus einem laufenden Pillenzug), nimmt ein anderer den Zug (move/up/cancel); Zeigerfang, Klick- und touchend-Schlucken (nur der Klick der Geste: es endet mit jedem neuen pointerdown, daneben zählt die pointerId) und Escape bleiben in ziehbar; hinauf vor der Übergabe losgelassen ist GENAU EIN Klick, solange der Finger in der Spalte des gedrückten Knopfs bleibt. growFrom(fenster, anker, rahmen?) nimmt ein schon gemessenes Mass. Einziger Nutzer: die untere Leiste (seitenleiste.ts) an TabShelf. | 1254 |
 | `src/core/ink/geometry.ts` | DOM-freier Geometriekern für Marken (Kopf Z. 8-11: kennt weder PDF noch Whiteboard noch Store, damit Blatt, PDF-Seite und ein späteres Whiteboard dieselben Regeln verwenden, E125). Exporte Z. 1061-1069: points, simplify, densify, outline/outlinePunkte, path, rectangle, bounds, boundsLokal, ecken, drehung, drehePunkte, move, rotate, scale, intersects, overlapConvex, kastenEcken, distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, textWidth/textLines/textLayout, SCHRIFTEN. Global InkGeometry (Z. 1071). | 1071 |
 | `src/core/ink/shapes.ts` | Formerkennung aus einem Strich: recognize(pts) gibt line, ellipse, rectangle oder triangle (mit dreh) und zwei Kastenpunkte zurück (Z. 63-274); kennt weder Store noch DOM noch Zeit (Kopf Z. 13). Rückgabe { recognize } (Z. 276), Global InkShapes (Z. 279). | 279 |
 | `src/core/sheet/space.ts` | Der Blattraum: A4 in PDF-Punkten (Z. 38-39), RAUM_VERSION 1 (Z. 44), zuBlatt(svg, e) (Z. 56) und umrechner(svg) (Z. 93) über getScreenCTM().inverse() — Kopf Z. 10: EINE STELLE, DIE BILDSCHIRM IN BLATT ÜBERSETZT, und keine zweite; Z. 14-15 zitiert wörtlich die Zeichenflächen-Formel clientX - r.left als Gegenbeispiel. Seitendrehung gedrehtVon/masseVon/drehHuelle (Z. 124-160). Rückgabe Z. 162, Global SheetSpace (Z. 165). | 165 |
@@ -38,17 +38,17 @@ G speichert selbst fast nichts; es rechnet. (1) SelectionFlow: Lauf {ziel, x0, v
 
 | Name | Art | Datei | Was |
 |---|---|---|---|
-| `SelectionFlow.folge / fliege / DAUER / OMEGA / DEHNUNG_MAX` | global | `/home/user/Redion/src/schale/bedienung/selection-flow.ts` | Z. 370-373. Aufrufer: schale/aufbau/seitenleiste.ts:352 (Pille der unteren Leiste, folge) und bereiche/pdf/marken.ts:6994-7009 (Werkzeugleiste, fliege, DAUER). Sonst niemand; schale/aufbau/studio.ts:18 animiert Einblendungen mit eigenem element.animate, linse.ts nennt SelectionFlow nicht (grep). |
-| `InkGeometry.*` | global | `/home/user/Redion/src/core/ink/geometry.ts` | Z. 1061-1071. Aufrufer in src/bereiche: pdf/marken.ts (bounds 1023, union 2056-2057, insidePolygon 2139, touchesCircle 2336, move 4131, scale 4162, rotate 4196, intersects/overlapConvex/ecken 2903-2909), pdf/document-mode.ts:241-244, pdf/seite.ts, dateien/recognition.ts:308, dateien/einlesen.ts, core/export/pdfWriter.ts. NICHT: bloecke/arten/zeichenflaeche.ts, gedankenkarte.ts, planflaeche.ts, schaltplan.ts, elektro/*. |
-| `InkShapes.recognize` | global | `/home/user/Redion/src/core/ink/shapes.ts` | Z. 276-279. Einziger Aufrufer: bereiche/pdf/marken.ts. Das Whiteboard hat Stiftstriche (zeichenflaeche.ts:220 s.art === 'stift') und keine Formerkennung. |
-| `SheetSpace.zuBlatt / umrechner / A4_* / RAUM_VERSION / gedrehtVon / masseVon / drehHuelle / seiten / rund` | global | `/home/user/Redion/src/core/sheet/space.ts` | Z. 162-165. Aufrufer: pdf/marken.ts (const R = SheetSpace Z. 1610; zuBlatt 2496, 3826, 3894, 4071, 4102, 4225; umrechner 4095), pdf/document-mode.ts:173-175, 313-315, 1054-1055, pdf/seite.ts, pdf/einlesen.ts:237, bloecke/arten/blatt.ts:262, dateien/recognition.ts:247-248, 409, wissen/notebook.ts:267 (nur A4_HOEHE). NICHT: zeichenflaeche.ts:511-514 (eigene Formel), planflaeche.ts:136-144 (eigene Formel), gedankenkarte.ts (misst mit getBoundingClientRect, Z. 1214-1215, 1234, 1254). |
-| `InkStroke (Feder, glaetter, druckGlaetter, vorhersage)` | global | `/home/user/Redion/src/core/ink/stroke.ts` | Z. 488. Nur bereiche/pdf/marken.ts. |
-| `Transaktion.ausfuehren / befehlAusfuehren / abspielen / setze / aendere / dahinter / davor / heraus / loadPageChunk / queryCollection / submitTransaction / anfrage` | global | `/home/user/Redion/src/kern/ablage/befehle.ts` | Z. 533-538. Aufrufer: hilfe/rundgang.ts, hilfe/stand.ts, hilfe/wissensseiten.ts, verbinden/schnittstelle.ts, wissen/werkzeuge.ts, core/jobs/modell.ts, kern/ablage/indexdb.ts, kern/auftraege/maschine.ts, schale/aufbau/schale.ts. Kein räumlicher Block (grep in bloecke/ und pdf/: 0). |
-| `/api/v3/loadPageChunk, /api/v3/queryCollection, /api/v3/submitTransaction` | http | `/home/user/Redion/src/kern/ablage/befehle.ts` | Kopf Z. 12-14, 32-34: der Dienstarbeiter beantwortet sie lokal in Notions Form (test69, test70). |
-| `Ereignisse.horche / einmal / melde / frage / meldeAsync / frageAsync / darf / darfAsync / schonGemeldet` | ereignis | `/home/user/Redion/src/kern/ereignisse/bus.ts` | Z. 236. Räumliche Nutzer: pdf/document-mode.ts, pdf/einlesen.ts, pdf/seite.ts. NICHT: zeichenflaeche.ts, gedankenkarte.ts, planflaeche.ts; schaltplan.ts hat ein EIGENES lokales ARTEN-Array (Planarten, schaltplan.ts:166) ohne Busbezug — Namensgleichheit mit kern/ereignisse/arten.ts. |
-| `ARTEN.auswahlGeaendert ('auswahl.geaendert')` | ereignis | `/home/user/Redion/src/kern/ereignisse/arten.ts` | Z. 51. Der einzige räumliche Name im Bus — ohne Melder und Hörer (grep über src ausser arten.ts: nichts). |
-| `Verlauf.merke / zurueck / vor` | global | `/home/user/Redion/src/kern/zustand/verlauf.ts` | Z. 107-113. Gerufen von kern/ablage/befehle.ts:215, bereiche/editor/mehrfach.ts:87,94, register/menueband.ts:785-791. Kein Zeichenblock ruft merke; alle vier führen eigene Stapel (siehe duplikate). |
-| `Register.fachzeichen.masse / anschlussLage / RASTER` | register | `/home/user/Redion/src/bereiche/bloecke/arten/planflaeche.ts` | Z. 493, schaltplan.ts:83-86, 281: der Schaltplan holt Kastenmasse und Raster aus dem Register statt aus InkGeometry — der einzige Nicht-Nutzer, dessen Geometrie über register/ läuft. |
+| `SelectionFlow.folge / fliege / DAUER / OMEGA / DEHNUNG_MAX` | global | `src/schale/bedienung/selection-flow.ts` | Z. 370-373. Aufrufer: schale/aufbau/seitenleiste.ts:352 (Pille der unteren Leiste, folge; seit E749 ziehbar mit hinauf) und bereiche/pdf/marken.ts:6994-7009 (Werkzeugleiste, fliege, DAUER); seit E749 auch schale/aufbau/tab-shelf.ts (TabShelf: growFrom, highlight, glide, stagger, folge). Sonst niemand; schale/aufbau/studio.ts:18 animiert Einblendungen mit eigenem element.animate, linse.ts nennt SelectionFlow nicht (grep). |
+| `InkGeometry.*` | global | `src/core/ink/geometry.ts` | Z. 1061-1071. Aufrufer in src/bereiche: pdf/marken.ts (bounds 1023, union 2056-2057, insidePolygon 2139, touchesCircle 2336, move 4131, scale 4162, rotate 4196, intersects/overlapConvex/ecken 2903-2909), pdf/document-mode.ts:241-244, pdf/seite.ts, dateien/recognition.ts:308, dateien/einlesen.ts, core/export/pdfWriter.ts. NICHT: bloecke/arten/zeichenflaeche.ts, gedankenkarte.ts, planflaeche.ts, schaltplan.ts, elektro/*. |
+| `InkShapes.recognize` | global | `src/core/ink/shapes.ts` | Z. 276-279. Einziger Aufrufer: bereiche/pdf/marken.ts. Das Whiteboard hat Stiftstriche (zeichenflaeche.ts:220 s.art === 'stift') und keine Formerkennung. |
+| `SheetSpace.zuBlatt / umrechner / A4_* / RAUM_VERSION / gedrehtVon / masseVon / drehHuelle / seiten / rund` | global | `src/core/sheet/space.ts` | Z. 162-165. Aufrufer: pdf/marken.ts (const R = SheetSpace Z. 1610; zuBlatt 2496, 3826, 3894, 4071, 4102, 4225; umrechner 4095), pdf/document-mode.ts:173-175, 313-315, 1054-1055, pdf/seite.ts, pdf/einlesen.ts:237, bloecke/arten/blatt.ts:262, dateien/recognition.ts:247-248, 409, wissen/notebook.ts:267 (nur A4_HOEHE). NICHT: zeichenflaeche.ts:511-514 (eigene Formel), planflaeche.ts:136-144 (eigene Formel), gedankenkarte.ts (misst mit getBoundingClientRect, Z. 1214-1215, 1234, 1254). |
+| `InkStroke (Feder, glaetter, druckGlaetter, vorhersage)` | global | `src/core/ink/stroke.ts` | Z. 488. Nur bereiche/pdf/marken.ts. |
+| `Transaktion.ausfuehren / befehlAusfuehren / abspielen / setze / aendere / dahinter / davor / heraus / loadPageChunk / queryCollection / submitTransaction / anfrage` | global | `src/kern/ablage/befehle.ts` | Z. 533-538. Aufrufer: hilfe/rundgang.ts, hilfe/stand.ts, hilfe/wissensseiten.ts, verbinden/schnittstelle.ts, wissen/werkzeuge.ts, core/jobs/modell.ts, kern/ablage/indexdb.ts, kern/auftraege/maschine.ts, schale/aufbau/schale.ts. Kein räumlicher Block (grep in bloecke/ und pdf/: 0). |
+| `/api/v3/loadPageChunk, /api/v3/queryCollection, /api/v3/submitTransaction` | http | `src/kern/ablage/befehle.ts` | Kopf Z. 12-14, 32-34: der Dienstarbeiter beantwortet sie lokal in Notions Form (test69, test70). |
+| `Ereignisse.horche / einmal / melde / frage / meldeAsync / frageAsync / darf / darfAsync / schonGemeldet` | ereignis | `src/kern/ereignisse/bus.ts` | Z. 236. Räumliche Nutzer: pdf/document-mode.ts, pdf/einlesen.ts, pdf/seite.ts. NICHT: zeichenflaeche.ts, gedankenkarte.ts, planflaeche.ts; schaltplan.ts hat ein EIGENES lokales ARTEN-Array (Planarten, schaltplan.ts:166) ohne Busbezug — Namensgleichheit mit kern/ereignisse/arten.ts. |
+| `ARTEN.auswahlGeaendert ('auswahl.geaendert')` | ereignis | `src/kern/ereignisse/arten.ts` | Z. 51. Der einzige räumliche Name im Bus — ohne Melder und Hörer (grep über src ausser arten.ts: nichts). |
+| `Verlauf.merke / zurueck / vor` | global | `src/kern/zustand/verlauf.ts` | Z. 107-113. Gerufen von kern/ablage/befehle.ts:215, bereiche/editor/mehrfach.ts:87,94, register/menueband.ts:785-791. Kein Zeichenblock ruft merke; alle vier führen eigene Stapel (siehe duplikate). |
+| `Register.fachzeichen.masse / anschlussLage / RASTER` | register | `src/bereiche/bloecke/arten/planflaeche.ts` | Z. 493, schaltplan.ts:83-86, 281: der Schaltplan holt Kastenmasse und Raster aus dem Register statt aus InkGeometry — der einzige Nicht-Nutzer, dessen Geometrie über register/ läuft. |
 
 ## Geometrie — was dieses System selbst rechnet
 
@@ -93,48 +93,48 @@ G speichert selbst fast nichts; es rechnet. (1) SelectionFlow: Lauf {ziel, x0, v
 Führen zu: [[zeichenflaeche|B · Whiteboard / Zeichenfläche]] · [[elektro|F · Schaltplan, Fachzeichen, Elektro]] · [[gedankenkarte|C · Gedankenkarte (Mindmap)]]
 
 1. **Rückgängig-Stapel aus JSON-Abbildern, zwei Listen, feste Tiefe — viermal in Bereichen, einmal im Kern**
-   - hier: `/home/user/Redion/src/kern/zustand/verlauf.ts:53-55`
-   - dort: `/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts:164-166 und gedankenkarte.ts:646-648 (Zeile für Zeile gleich), planflaeche.ts:183-185, pdf/marken.ts:2022-2031`
+   - hier: `src/kern/zustand/verlauf.ts:53-55`
+   - dort: `src/bereiche/bloecke/arten/zeichenflaeche.ts:164-166 und gedankenkarte.ts:646-648 (Zeile für Zeile gleich), planflaeche.ts:183-185, pdf/marken.ts:2022-2031`
    - Beleg: verlauf.ts: zurueckStapel.push(m); if (zurueckStapel.length > MAX) zurueckStapel.shift(); vorStapel.length = 0; — zeichenflaeche.ts UND gedankenkarte.ts: const SCHRITTE = 40; const zurueckStapel: string[] = []; const vorStapel: string[] = []; — planflaeche.ts: z.zurueck.push(vorher); if (z.zurueck.length > 60) z.zurueck.shift(); z.vorwaerts.length = 0;
 2. **Bildschirm → Raum: drei Formeln neben der einen Matrix**
-   - hier: `/home/user/Redion/src/core/sheet/space.ts:56-59, 93-104`
-   - dort: `/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts:511-514 und planflaeche.ts:136-144`
+   - hier: `src/core/sheet/space.ts:56-59, 93-104`
+   - dort: `src/bereiche/bloecke/arten/zeichenflaeche.ts:511-514 und planflaeche.ts:136-144`
    - Beleg: space.ts:10: EINE STELLE, DIE BILDSCHIRM IN BLATT ÜBERSETZT — und keine zweite; Z. 14-15 zitiert das Gegenbeispiel wörtlich: return [Math.round(e.clientX - r.left), …]. zeichenflaeche.ts:513: return [Math.round(sicht.x + (e.clientX - r.left) / sicht.z), …]. planflaeche.ts:141: const x = (e.clientX - r.left) * sx; (sx = plan.breite / r.width, kennt weder Letterbox noch CSS-Verwandlung).
 3. **distanceToSegment — zweimal im Kern selbst, Zeichen für Zeichen gleich**
-   - hier: `/home/user/Redion/src/core/ink/geometry.ts:27-35`
-   - dort: `/home/user/Redion/src/core/ink/shapes.ts:31-38`
+   - hier: `src/core/ink/geometry.ts:27-35`
+   - dort: `src/core/ink/shapes.ts:31-38`
    - Beleg: beide: const amount = Math.max(0, Math.min(1, ((point[0] - start[0]) * dx + (point[1] - start[1]) * dy) / (dx * dx + dy * dy))); return Math.hypot(point[0] - (start[0] + amount * dx), point[1] - (start[1] + amount * dy));
 4. **Punktprobe an einer Strecke, dritte Fassung (nur achsenparallel)**
-   - hier: `/home/user/Redion/src/core/ink/geometry.ts:27 distanceToSegment, 738 distanceToPolyline`
-   - dort: `/home/user/Redion/src/bereiche/elektro/simulation.ts:287-294 aufStrecke`
+   - hier: `src/core/ink/geometry.ts:27 distanceToSegment, 738 distanceToPolyline`
+   - dort: `src/bereiche/elektro/simulation.ts:287-294 aufStrecke`
    - Beleg: simulation.ts: if (Math.abs(ay - by) <= 1 && Math.abs(py - ay) <= NAH) return px >= Math.min(ax, bx) - NAH && px <= Math.max(ax, bx) + NAH; — dieselbe Frage (liegt p nahe an der Strecke a–b), auf waagrecht/senkrecht beschränkt.
 5. **Kasten um eine Punktliste (min/max über xs/ys)**
-   - hier: `/home/user/Redion/src/core/ink/geometry.ts:595-599 umschliessend, 635-655 boundsRoh`
-   - dort: `/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts:220-224 rahmenVon für 'stift'`
+   - hier: `src/core/ink/geometry.ts:595-599 umschliessend, 635-655 boundsRoh`
+   - dort: `src/bereiche/bloecke/arten/zeichenflaeche.ts:220-224 rahmenVon für 'stift'`
    - Beleg: geometry.ts: const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]); const x0 = Math.min(...xs), y0 = Math.min(...ys); return { x: x0, y: y0, width: Math.max(...xs) - x0, … } — zeichenflaeche.ts: const xs = s.pts.map((q: any) => q[0]), ys = s.pts.map((q: any) => q[1]); const x = Math.min(...xs), y = Math.min(...ys); return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
 6. **Union mehrerer Kästen für alles ins Bild**
-   - hier: `/home/user/Redion/src/core/ink/geometry.ts:962-969 union`
-   - dort: `/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts:540-544 insBild`
+   - hier: `src/core/ink/geometry.ts:962-969 union`
+   - dort: `src/bereiche/bloecke/arten/zeichenflaeche.ts:540-544 insBild`
    - Beleg: geometry.ts: const x0 = Math.min(...boxes.map(b => b.x)); … const x1 = Math.max(...boxes.map(b => b.x + b.width)); — zeichenflaeche.ts: const x1 = Math.min(...rahmen.map(r => r.x)) - 30; … const x2 = Math.max(...rahmen.map(r => r.x + r.w)) + 30;
 7. **Wo ein Verbinder den Rand seines Kastens trifft — zwei Formeln für eine Aufgabe**
-   - hier: `/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts:233-241 randPunkt`
-   - dort: `/home/user/Redion/src/bereiche/bloecke/arten/gedankenkarte.ts:822-829`
+   - hier: `src/bereiche/bloecke/arten/zeichenflaeche.ts:233-241 randPunkt`
+   - dort: `src/bereiche/bloecke/arten/gedankenkarte.ts:822-829`
    - Beleg: zeichenflaeche.ts: const anteil = Math.min(halbW / Math.abs(dx || .0001), halbH / Math.abs(dy || .0001)); return [mx + dx * anteil, my + dy * anteil]; (Strahl aus der Mitte) — gedankenkarte.ts: const p1 = waagerecht ? { x: bmx >= amx ? a.x + aM.w : a.x, y: amy } : { x: amx, y: bmy >= amy ? a.y + aM.h : a.y }; (Seitenmitte). Kein Kern kennt Verbinder (geometry.ts:579 LINIEN nur line/arrow).
 8. **Höhen-Griff am Block und Speichern der Höhe**
-   - hier: `/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts:146-149, 829`
-   - dort: `/home/user/Redion/src/bereiche/bloecke/arten/gedankenkarte.ts:640-643, 1570`
+   - hier: `src/bereiche/bloecke/arten/zeichenflaeche.ts:146-149, 829`
+   - dort: `src/bereiche/bloecke/arten/gedankenkarte.ts:640-643, 1570`
    - Beleg: beide: const griff = document.createElement('div'); griff.className = 'wb-griff' bzw. 'gk-griff'; griff.title = 'Höhe ziehen'; w.appendChild(griff); — und beide: Store.updateBlock(block.id, { hoehe: Math.round(….getBoundingClientRect().height) });
 9. **Ausschnitt sicht {x,y,z} als Blockfeld, zweimal geschrieben, ohne Typ und ohne raumVersion**
-   - hier: `/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts:517-519`
-   - dort: `/home/user/Redion/src/bereiche/bloecke/arten/gedankenkarte.ts:275, 663`
+   - hier: `src/bereiche/bloecke/arten/zeichenflaeche.ts:517-519`
+   - dort: `src/bereiche/bloecke/arten/gedankenkarte.ts:275, 663`
    - Beleg: zeichenflaeche.ts: Store.updateBlock(block.id, { sicht: { x: Math.round(sicht.x), y: Math.round(sicht.y), z: Math.round(sicht.z * 100) / 100 } }) — gedankenkarte.ts: sicht: { x: 0, y: 0, z: 1 } … Store.updateBlock(block.id, { karte: … }); PDF legt den Zoom dagegen bewusst in meta (document-mode.ts:41-58: Zoomen soll weder edited anheben noch eine Fassung erzeugen).
 10. **Rahmenauswahl (Kastenzug)**
-   - hier: `/home/user/Redion/src/bereiche/pdf/marken.ts:2894-2909 (über InkGeometry.union/intersects/overlapConvex)`
-   - dort: `/home/user/Redion/src/bereiche/bloecke/arten/planflaeche.ts:488-500 inRahmen`
+   - hier: `src/bereiche/pdf/marken.ts:2894-2909 (über InkGeometry.union/intersects/overlapConvex)`
+   - dort: `src/bereiche/bloecke/arten/planflaeche.ts:488-500 inRahmen`
    - Beleg: marken.ts: if (!InkGeometry.intersects(box, InkGeometry.bounds(mark))) return; — planflaeche.ts: const x1 = Math.min(a.x, b.x), x2 = Math.max(a.x, b.x); … if (t.x >= x1 && t.y >= y1 && t.x + m.w <= x2 && t.y + m.h <= y2) raus.push(t.id); (dasselbe wie InkGeometry.rectangle Z. 291 + Enthaltensein, von Hand).
 11. **sv(name, attrs) — SVG-Element mit Attributschleife**
-   - hier: `/home/user/Redion/src/bereiche/bloecke/arten/zeichenflaeche.ts:31-36`
-   - dort: `/home/user/Redion/src/bereiche/bloecke/arten/gedankenkarte.ts:113-118`
+   - hier: `src/bereiche/bloecke/arten/zeichenflaeche.ts:31-36`
+   - dort: `src/bereiche/bloecke/arten/gedankenkarte.ts:113-118`
    - Beleg: beide: const NS = 'http://www.w3.org/2000/svg'; const sv = (name: string, attrs: Record<string, unknown> = {}) => { const e = document.createElementNS(NS, name); Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, String(v))); return e; }; (AUDIT D4 nennt 7 Dateien mit createElementNS(NS)).
 
 ## Prüfläufe

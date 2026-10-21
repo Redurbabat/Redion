@@ -2023,6 +2023,70 @@ neuen Port. Gezählt am 11. Oktober, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 551 auf seinem Zweig. Beim Zusammenführen nachgezählt
 (12. Oktober, `claude/abend-antworten`): 553.*
 
+*Und 554: `test613` — was unter einem Reiter der unteren Leiste liegt, steht
+an EINER Stelle (E748, Zielleiste Bogen 1, L147). Er hält Redurs Antwort
+auf Frage 2 — fünf Ziele je Reiter, in seiner Folge — gegen
+`Register.navigation.ziele`, und jeden Namen gegen seine Quelle: die vier
+Listen Ortsmenü, „Heute ^" und „Übersicht ^", Termine-Karten, Mehr-Liste
+aus dem DOM gelesen und nicht aus dem Code; nur Notizhefte, Übersicht und
+Tagesplan aus `Register.kontext` (der Kante am Rechner), weil das Telefon
+sie in keiner dieser Listen zeigt. Seine Hauptzusage ist eine
+Invariante: alle 17 Orte, jeder über sein eigenes `tun()` von einem anderen
+Bildschirm aus geöffnet, schalten den Reiter an, unter dem sie stehen —
+und genau dort fing er L147: Prüfungen, Noten, Stundenplan und Schule
+liessen „Lernen" leuchten, während oben „Noten ^" in der Klappe „Heute"
+stand. Gegen ba51915dc war er rot mit 12 von 68 (die Endfassung mit 13
+von 73). Seine Gegenproben stehen einzeln in E748 — fünfzehn, davon
+dreizehn verschiedene (zwei sind gegen eine spätere Fassung nachgefahren),
+und jede war rot. Fünf
+Zusagen kamen erst beim Bau: nach einem Wechsel drinnen stand die Adresse
+noch auf der Übersicht, und ein Neuladen führte dorthin zurück; am
+Rechner leuchtete danach die falsche Kante, weil der Titel VOR der
+Adresse gemeldet wurde; und „Zurück" brachte die Übersicht unter dem
+neuen Titel, weil sich der Verlauf den Zeichner vom Öffnen gemerkt hatte.
+Die letzten beiden fanden Sonden, nicht der Lauf — §7g war rot mit 95 von
+96, §7i/§7j mit 96 von 98, bevor die Reparatur kam. Und die Durchsicht fand
+an ihm selbst, was er zu viel behauptete: seine Handlungen zählten Dialoge,
+statt sie zu erkennen — ein „Wolke", das die Einstellungen öffnete, blieb
+98 von 98. Seither liest er den Kopf jedes Dialogs (99 Zusagen). Und die
+zweite Durchsicht fand, dass L147 eine Stufe später zurückkam: drinnen
+gewechselt, leuchtete im Lernzentrum der richtige Reiter — öffnete man
+danach eine Seite, sprang die Pille auf den vom Öffnen. Drei Zusagen dazu
+(§7k–§7m, 102), gegen den Stand davor rot mit 100 von 102. Die dritte
+Durchsicht fand, was L147 am Verlauf verschoben hatte: seit sechs
+Ansichten „Heute" heissen, legte `zeigeSonder`, das nur auf den Titel sah,
+zwischen Heute und Noten keinen Schritt mehr an, und „Zurück" sprang an
+Heute vorbei. Sechs Zusagen zum Verlauf und zwei zum Reiter am Rechner
+(§7n–§7u, 110), gegen den Stand davor rot mit 106 von 110. Gezählt am
+13. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+554.*
+
+*Und 555: `test614` — die Zielleiste über der unteren Leiste, am Telefon
+(E749, Zielleiste Bogen 2). Er hält Redurs Korrektur vom 13. Oktober,
+01:08 UTC („die neu dock nur wenn ich mit hand nach oven so zi eht kommt das
+doet aber beim klicken nicht") als Zahlen: je Reiter ein Tipp, genau ein
+Klick und in KEINEM Bild eine Zielleiste; 800 ms Halten öffnet in keinem
+Bild etwas; hinaufgezogen ist sie im nächsten Bild offen. Er fährt nur echte
+Eingabe — Berührung über CDP, Tasten über die Tastatur — und beobachtet Bild
+für Bild. Seine Hauptzusage gilt dem Loslassen, und zwar während die Scheibe
+noch wächst: ein Finger, der nach 50 ms auf „Favoriten" steht, wählt
+„Favoriten", genau einmal, ohne Klick auf die Leiste — mit Treffern aus dem
+gemalten Kasten wählte er die Notizhefte. Gegen 352eed65c war er rot mit 29
+von 105; grün blieb, was gleich bleiben muss. Seine fünf Gegenproben treffen
+je andere Abschnitte, und die erste der Treffer-Gegenprobe baute gar nicht
+(`noUnusedLocals`, §52.6). Zwei Zusagen kamen nicht von ihm: §11e vom BILD —
+unter der gehaltenen Pille stand „Dokumente" doppelt da —, und §5g, weil
+§11e danach in einem Lauf rot wurde, in dem ein Pillenzug `data-gehalten`
+stehen gelassen hatte. Die Durchsicht fand dann genau das, was die Korrektur
+verbietet: ein Daumen, der am oberen Rand des Reiters aufsetzt und 10–15 px
+hinaufrollt, reichte über die Kante, und das Loslassen wählte „Lernpfad" —
+§1b rollte nur von der Mitte des Reiters und konnte die Kante nie
+erreichen. Sechzehn Zusagen kamen dazu (122), gegen f4ebb5816 rot mit 15
+von 122; die eigenartigste misst Bildpunkte: ohne Lupe lag die Marke mit
+1,08 : 1 auf der Scheibe, und §11b hatte sie „da" genannt. Gezählt am
+13. Oktober, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 555.*
+
 ### Die Befehle
 
 ```txt
@@ -2539,6 +2603,13 @@ vier Antworten; rot sind zwölf Läufe, jeder schon vorher auf `main` rot.
 Auch sie gilt einmal.*
 
 ---
+
+*Vierte einmalige Ausnahme (E752, 21. Oktober 2026): Redur verlangt den
+Sicherheitsbranch auf main und erlaubt ausdrücklich die bekannten alten
+Fehler sowie die belegten Windows-Testhilfen test216/test578 („Ja, jetzt
+integrieren und pushen“). Der Integrationsbericht nennt die gefahrenen Prüfungen; ein neuer
+vollständiger Lauf wird nicht behauptet. Die Regel für spätere Änderungen
+bleibt bestehen.*
 
 ## 47. Nicht tun  **[hart]**
 

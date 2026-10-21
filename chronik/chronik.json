@@ -4854,6 +4854,42 @@
           "risiko": "Wer main holt, bekommt zwölf benannte rote Läufe mit, alle älter als diese Arbeit; nach fdbf6ee lief kein voller Lauf mehr (nur zwei kleine Nachzüge, test274 und Doku)."
         }
       ]
+    },
+    {
+      "datum": "2026-10-21",
+      "wochentag": "Mittwoch",
+      "titel": "Sicherheitsbranch und Laptop auf einen gemeinsamen Stand bringen",
+      "wasIchWeiss": "Redur nennt fix/redion-sicherheit-und-datenschutz-20261021 und verlangt alle Änderungen auf main sowie einen schnellen Push. Der Branch 97123abd6 enthält bereits Sicherheitskorrekturen, neue Glas-/Bewegungsregeln und beide Zielleisten-Zweige. Der lokale Stand d8f7c6c30 enthält zusätzlich deren vollständige Dokumentation. Beides wird in 98906028d zusammengeführt. Die unfertige lokale Symbolfeder bleibt separat in 24365d989 auf codex/apple-glass-20oct; der ältere PDF-Zwischenstand bleibt in 19a3de648 erhalten. Redur erlaubt in diesem Dialog ausdrücklich, bekannte alte Testfehler offen zu lassen. Das ist keine Behauptung über einen neuen vollständigen Lauf.",
+      "nachrichten": [
+        {
+          "zeit": "nicht protokolliert",
+          "wortlaut": "schau mal das an und nehe alle änderungen auf main und pusche alles sobald wie möglich auf github",
+          "woher": "Aktueller Dialog, zusammen mit dem Link auf fix/redion-sicherheit-und-datenschutz-20261021",
+          "gemeint": "Den genannten Integrationsbranch prüfen, vollständig auf main übernehmen und auf GitHub pushen.",
+          "besser": "Prüfe den Sicherheitsbranch, integriere alle Änderungen in main und pushe den gemeinsamen Stand.",
+          "besserePrompt": "Der konkrete Branch-Link macht den Auftrag eindeutig."
+        },
+        {
+          "zeit": "nicht protokolliert",
+          "wortlaut": "Ja, jetzt integrieren und pushen",
+          "woher": "Antwort im aktuellen Dialog auf die Rückfrage zu den zwei unveränderten Windows-Testhilfen test216 und test578 zusätzlich zu zwölf bekannten Altfehlern",
+          "gemeint": "Diese belegten Testprobleme dokumentiert offen lassen und nach den Browserprüfungen den gemeinsamen Stand auf main pushen.",
+          "besser": "Die Rückfrage ist eindeutig beantwortet.",
+          "besserePrompt": "Keine zusätzliche Formulierung nötig."
+        }
+      ],
+      "arbeit": [
+        {
+          "was": "Remote-Branch und lokale Zielleisten-Dokumentation integriert; Content-Length-Regulärausdruck und körperlose 205-Antwort in der Brücke repariert. Die Quelltextkarte verwendet relative Pfade, damit ihr Generator auf Windows und Linux dasselbe schreibt.",
+          "vonCommit": "97123abd6",
+          "bisCommit": "98906028d",
+          "zeitraum": "21. Oktober 2026; Uhrzeiten nicht protokolliert",
+          "dauer": "",
+          "pruefungen": "test620 erweitert: vorher 13 grün / 2 rot, nachher 15 grün / 0 rot; Typecheck, Build und Dienststand grün. Abschluss der übrigen Prüfungen in E752 und messungen.md."
+        }
+      ],
+      "groesstesProblem": "Die Sicherheitsprüfung blockierte jede normale Content-Length und die Brücke baute für HTTP 205 einen unerlaubten Antwortkörper. Beide Fälle waren im vorhandenen Test nicht enthalten.",
+      "massnahmen": []
     }
   ],
   "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",

@@ -42,6 +42,24 @@ mehr gibt.
 
 ## Was jetzt offen ist
 
+### Integrationsnachtrag 21. Oktober 2026 (E752)
+
+- **Windows-Prüfhilfen portabel machen:** `test216` liefert ein Unix-Shell-
+  Ersatzprogramm für Tesseract und baut PATH mit `:`; `test578` erzeugt
+  unter Windows Rückstriche in TypeScript-Globmustern (TS18003).
+  Beide gegenüber bisherigem main unverändert, im Schnelllauf 45/47 grün.
+  Fertig: beide Läufe prüfen denselben Vertrag unter Windows und Linux,
+  ohne Überspringen oder Lockerung. Priorität: mittel.
+- **Cloudflare-Access vor einem Deployment nachsehen:** ACCESS_TEAM und
+  ACCESS_AUD müssen zur Access-Anwendung passen. Ohne sie sperrt der neue
+  Worker absichtlich auch HTML/JS mit 503. Zugangskonfiguration wurde bei
+  dieser GitHub-Integration nicht verändert. Priorität: hoch vor Deployment.
+- **Unfertige lokale Kachel-Symbolfeder:** separat gesichert in `24365d989`
+  auf `codex/apple-glass-20oct`, noch ohne eigene Browserabnahme und ohne
+  vollständigen CSS-Teil. Nicht als fertige Funktion in main übernommen.
+  Bei Fortsetzung nur diesen Zusatz prüfen, nicht die alten Merges erneut
+  einspielen. Priorität: niedrig.
+
 Sechs Punkte, jeder nachgesehen am 3. September 2026.
 
 ### 0 · Der Prüfbericht vom 3. September, was davon noch aussteht
@@ -98,6 +116,52 @@ dort. Das ist die Antwort für den RECHNER. Der F02-Rest oben — die untere
 Telefonleiste an `haupt: true` zu hängen — steht damit noch deutlicher:
 oben drei aus dem Register, unten fünf aus dem Markup (L117 Punkt 1).
 Redur entscheidet, welche vier es unten sein sollen.
+
+**Seit E748 (13. Oktober) gehört eine zweite Frage dazu — Redurs.** L147
+richtet Titel und Reiter nach der Klappe „Heute ^", und das wirkt auch am
+RECHNER: bei Prüfungen, Noten, Stundenplan, Schule, Uni und Arbeit heisst
+die Krume jetzt „Heute" statt „Lernzentrum", und in der Kante leuchtet
+„Mehr Orte" (dahinter liegt im ruhigen Modus „Heute", E388) statt
+„Lernzentrum" — während man sichtbar im Lernzentrum steht. Gemessen in
+`messungen.md` §105, Bilder `nachher-rechner-noten-hell.png`/`-dunkel.png`
+im Kratzordner `bilder-ziel/quelle/`. Die Frage: ist „Mehr Orte" dort das
+richtige Licht, oder braucht „Heute" in der Kante einen eigenen Platz?
+
+**Und ein Nachbarfall am Telefon — gemessen in der zweiten Durchsicht von
+E748, nicht Teil von L147, nicht behoben.** Wer Noten öffnet, über
+„Dokumente" weggeht und mit „Zurück" (`App.zurueck()`) wiederkommt, sieht
+im Lernzentrum „Heute"; öffnet er danach eine Seite, leuchtet unten
+„Dokumente" (390 × 844; die Seite auf `ba51915dc`, `7e41a4b4a` und nach
+der Durchsicht gleich, `messungen.md` §105). Am Schauplatz `seite` leuchtet
+der zuletzt gesetzte Reiter (`karte[reiter]` in `seitenleiste.ts`), und
+„Zurück" setzt keinen. Die Reparatur gehörte in die Schale — der Verlauf
+müsste den Reiter mit dem Ort merken — und träfe jede Sonderansicht, die
+man mit „Zurück" erreicht (aus dem Code gelesen, nicht gemessen). Ob die
+Pille dort zum Ort des Schritts zurück soll, ist eine Frage an Redur.
+
+**Derselbe Grund, am Rechner — gemessen in der dritten Durchsicht von
+E748, nicht behoben.** Der Reiter ist am Rechner auch der Schalter, was
+`#tree` zeigt (Seiten, Chats, Besprechungen), und `#tree` erscheint dort
+nur in der Lade „Seiten" der Kante. Wer über „Termine"
+(`Produktwelten.planung`, Reiter `bespr`) und „Zurück" ins Lernzentrum
+kommt und die Lade „Seiten" öffnet, sieht die Besprechungen
+(„Bevorstehend") unter dem Titel „Seiten" — auf `ba51915dc`, `7e41a4b4a`,
+`352eed65c` und jetzt gleich (1440 × 900, `messungen.md` §105). Erst ein
+Weg, der den Reiter setzt (`Produktwelten.lernen`, seit E748 auch der
+Wechsel der Klappe), bringt die Seiten zurück. Ob die Lade „Seiten" den
+Reiter überhaupt lesen soll, gehört zur selben Frage.
+
+**Seit E749 (13. Oktober): die Zielleiste an einem echten Telefon ansehen —
+braucht ein Gerät.** Gebaut und mit `test614` geprüft ist sie in Chromium
+mit CDP-Berührung. Am iPhone im Safari-Browser (nicht als PWA) und an einem
+Android-Telefon fehlt der Blick: hinaufziehen ohne Textauswahl und Lupe,
+ein langsamer Zug nach langem Liegen (Android: `contextmenu`,
+`pointercancel`?), der Home-Strich und die Rückgeste, VoiceOver an den
+Reitern — und ob ein Vorleser mit Berührung überhaupt hineinkommt (die
+Durchsicht sagt: nein; die Wahl, wie, ist Redurs, L257 Punkt 2) —, und ob
+sich 10–15 px Hochrollen am Gerät wie ein Tipp anfühlt (der Spielraum des
+Systems ist ein anderer als der von Chromium). Die Liste und was danach
+offen bleibt (der Rechner, Phase 2): L257.
 
 ### 1 · Cloudflare wirklich aufsetzen — **braucht Redur**
 

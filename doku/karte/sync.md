@@ -46,15 +46,15 @@ PAKETFORM zum Server (maschine.ts:497–505): { id, tabelle, seite, daten (Klart
 
 | Name | Art | Datei | Was |
 |---|---|---|---|
-| `Wolke` | global | `/home/user/Redion/src/kern/abgleich/maschine.ts` | (window as any).Wolke (Z.1181); exportiert Z.1169–1179: adresse, token, bereich, angemeldet, geraeteName, zustand, beiAenderung, anmeldenMit, codeHolen/codeWarten/codeFreigeben, tokenUebernehmen, abmelden, abgleichErlaubt, abgleichSetzen, kontoLoeschen, neuAbgleichOffen, neuAbgleichAntwort, schluesselSetzen, hatSchluessel, verschluessele, entschluessele, hoch, runter, abgleichen, dateienAbgleichen, takt, taktSetzen, zuSchicken, seiteVon, geteiltSetzen, istGeteilt, freigeben, freigaben, veroeffentlichen, zurueckziehen, markeAnlegen, markenListe, markeWeg, geraeteListe, geraetWeg, ruf, start |
-| `Zusammen` | global | `/home/user/Redion/src/kern/abgleich/zusammenfuehren.ts` | (window as any).Zusammen (Z.524); exportiert Z.518–521: dreiWege, textDreiWege, listeDreiWege, teile, stuecke, lcs, offene, merke, loese, alleLoesen, dialog, melde, hinweisen, start, pfadName, setzeTief |
-| `Dateien` | global | `/home/user/Redion/src/bereiche/dateien/ablage.ts` | (window as any).Dateien (Z.483); exportiert Z.478–482: STUECK, KLEIN, GRENZE, anmelden, stueckSchicken, bestaetigen, abbrechen, ablegen, verknuepfen, alsBlob, adresse, adresseBekannt, adresseWeg, herunterladen, weg, verwaist, aufraeumen, zahlen, groesseText, lohntSich, dialog |
-| `Store.basis*/vorrat*/stueck*/datei*/…Grabstein*` | funktion | `/home/user/Redion/src/kern/ablage/indexdb.ts` | Z.3056–3064: dateiPut/dateiHolen/dateiWeg/dateiAlle, blockGrabsteine/blockGrabstein/blockGrabsteinWeg, dateiGrabstein/dateiGrabsteine/dateiGrabsteinWeg, basisPut/basisHolen/basisWeg/basisAlle/basisLeeren, vorratPut/vorratHolen/vorratWeg/vorratAlle, stueckPut/stueckHolen/stueckWeg/stueckeVon; rohSetzen (Z.958, setzt Satz aus dem Abgleich ohne edited-Bump und nimmt Grabstein zurück); metaListeAendern (Z.1200, atomar über Tabs) |
-| `Store.on('import') / Ereignisse.horche(ARTEN.einstellungGeaendert)` | ereignis | `/home/user/Redion/src/kern/abgleich/maschine.ts` | Z.1148–1149: nach einem Einspielen `melden()`; Z.1166–1168: Takt neu stellen, wenn `wolkeTakt` im Register geändert wird; visibilitychange stösst abgleichen an (Z.1160) |
-| `POST /sync/hoch, /sync/runter` | http | `/home/user/Redion/server/kern.ts` | Client maschine.ts:507 und :659; Server nimmt {bereich, saetze[]} und antwortet {angenommen, abgelehnt[{id,grund:'veraltet'\|…}], angepasst[]}; runter liefert {saetze, marke, mehr, rolle} |
-| `POST /datei/melden, /datei/stueck, /datei/runter, /datei/stand, /datei/weg` | http | `/home/user/Redion/server/dateien.ts` | Client maschine.ts:937, 976, 1002, 1048, 1054; Base64-Stücke höchstens 2 MB roh; Rechte über die Seite (bearbeiten/lesen) |
-| `Register.einstellungen.setze('wolkeTakt')` | register | `/home/user/Redion/src/kern/abgleich/maschine.ts` | Z.874–878: taktSetzen schreibt über das Register, nicht daneben (§8) |
-| `Aufrufer in der Oberfläche` | funktion | `/home/user/Redion/src/bereiche/verbinden/ansicht/wolke.ts` | Wolke.abgleichen (Z.127, 445, 709), Wolke.neuAbgleichAntwort (Z.92, 100); Zusammen.start in schale.ts:4114; Wolke.abgleichen in einstellungen/pwa.ts:784 (online-Ereignis) |
+| `Wolke` | global | `src/kern/abgleich/maschine.ts` | (window as any).Wolke (Z.1181); exportiert Z.1169–1179: adresse, token, bereich, angemeldet, geraeteName, zustand, beiAenderung, anmeldenMit, codeHolen/codeWarten/codeFreigeben, tokenUebernehmen, abmelden, abgleichErlaubt, abgleichSetzen, kontoLoeschen, neuAbgleichOffen, neuAbgleichAntwort, schluesselSetzen, hatSchluessel, verschluessele, entschluessele, hoch, runter, abgleichen, dateienAbgleichen, takt, taktSetzen, zuSchicken, seiteVon, geteiltSetzen, istGeteilt, freigeben, freigaben, veroeffentlichen, zurueckziehen, markeAnlegen, markenListe, markeWeg, geraeteListe, geraetWeg, ruf, start |
+| `Zusammen` | global | `src/kern/abgleich/zusammenfuehren.ts` | (window as any).Zusammen (Z.524); exportiert Z.518–521: dreiWege, textDreiWege, listeDreiWege, teile, stuecke, lcs, offene, merke, loese, alleLoesen, dialog, melde, hinweisen, start, pfadName, setzeTief |
+| `Dateien` | global | `src/bereiche/dateien/ablage.ts` | (window as any).Dateien (Z.483); exportiert Z.478–482: STUECK, KLEIN, GRENZE, anmelden, stueckSchicken, bestaetigen, abbrechen, ablegen, verknuepfen, alsBlob, adresse, adresseBekannt, adresseWeg, herunterladen, weg, verwaist, aufraeumen, zahlen, groesseText, lohntSich, dialog |
+| `Store.basis*/vorrat*/stueck*/datei*/…Grabstein*` | funktion | `src/kern/ablage/indexdb.ts` | Z.3056–3064: dateiPut/dateiHolen/dateiWeg/dateiAlle, blockGrabsteine/blockGrabstein/blockGrabsteinWeg, dateiGrabstein/dateiGrabsteine/dateiGrabsteinWeg, basisPut/basisHolen/basisWeg/basisAlle/basisLeeren, vorratPut/vorratHolen/vorratWeg/vorratAlle, stueckPut/stueckHolen/stueckWeg/stueckeVon; rohSetzen (Z.958, setzt Satz aus dem Abgleich ohne edited-Bump und nimmt Grabstein zurück); metaListeAendern (Z.1200, atomar über Tabs) |
+| `Store.on('import') / Ereignisse.horche(ARTEN.einstellungGeaendert)` | ereignis | `src/kern/abgleich/maschine.ts` | Z.1148–1149: nach einem Einspielen `melden()`; Z.1166–1168: Takt neu stellen, wenn `wolkeTakt` im Register geändert wird; visibilitychange stösst abgleichen an (Z.1160) |
+| `POST /sync/hoch, /sync/runter` | http | `server/kern.ts` | Client maschine.ts:507 und :659; Server nimmt {bereich, saetze[]} und antwortet {angenommen, abgelehnt[{id,grund:'veraltet'\|…}], angepasst[]}; runter liefert {saetze, marke, mehr, rolle} |
+| `POST /datei/melden, /datei/stueck, /datei/runter, /datei/stand, /datei/weg` | http | `server/dateien.ts` | Client maschine.ts:937, 976, 1002, 1048, 1054; Base64-Stücke höchstens 2 MB roh; Rechte über die Seite (bearbeiten/lesen) |
+| `Register.einstellungen.setze('wolkeTakt')` | register | `src/kern/abgleich/maschine.ts` | Z.874–878: taktSetzen schreibt über das Register, nicht daneben (§8) |
+| `Aufrufer in der Oberfläche` | funktion | `src/bereiche/verbinden/ansicht/wolke.ts` | Wolke.abgleichen (Z.127, 445, 709), Wolke.neuAbgleichAntwort (Z.92, 100); Zusammen.start in schale.ts:4114; Wolke.abgleichen in einstellungen/pwa.ts:784 (online-Ereignis) |
 
 ## Geometrie — was dieses System selbst rechnet
 
@@ -100,28 +100,28 @@ PAKETFORM zum Server (maschine.ts:497–505): { id, tabelle, seite, daten (Klart
 Führen zu: [[gemeinsam|G · Gemeinsame räumliche Infrastruktur]] · [[mcp|I · MCP, Server-API, CLI-Vorläufer]]
 
 1. **Seite eines Blocks bestimmen (Elternkette bis 40 Stufen, Zeile ausgenommen)**
-   - hier: `/home/user/Redion/src/kern/abgleich/maschine.ts:423–433`
-   - dort: `/home/user/Redion/src/kern/ablage/indexdb.ts:629–639 (`seiteVonHier`)`
+   - hier: `src/kern/abgleich/maschine.ts:423–433`
+   - dort: `src/kern/ablage/indexdb.ts:629–639 (`seiteVonHier`)`
    - Beleg: maschine.ts: `if (cur.type === 'page' && cur.parentTable !== 'collection') return cur.id; if (!cur.parentId) return cur.id; const eltern = Store.getBlock(cur.parentId);` — indexdb.ts: wortgleich mit `cache.blocks[cur.parentId]`; der Kommentar dort sagt selbst „hier noch einmal, weil sie IM PURGE-MOMENT laufen muss“
 2. **LCS-Tabelle für den Wortvergleich (tab/setzeTab, Uint32Array vs Int32Array)**
-   - hier: `/home/user/Redion/src/kern/abgleich/zusammenfuehren.ts:88–94`
-   - dort: `/home/user/Redion/src/bereiche/seiten/ansicht/fassungen.ts:86–93`
+   - hier: `src/kern/abgleich/zusammenfuehren.ts:88–94`
+   - dort: `src/bereiche/seiten/ansicht/fassungen.ts:86–93`
    - Beleg: beide: `const tab = (i, j) => t[i]?.[j] ?? 0; const setzeTab = …; setzeTab(i, j, a[i] === b[j] ? tab(i + 1, j + 1) + 1 : Math.max(tab(i + 1, j), tab(i, j + 1)));` — zusammenfuehren.ts:83 verweist ausdrücklich: „Dieselben zwei Handgriffe wie in `fassungen.ts`“
 3. **AES-GCM verschlüsseln/entschlüsseln mit 12-Byte-IV vorangestellt — einmal für Text (Base64), einmal für Bytes**
-   - hier: `/home/user/Redion/src/kern/abgleich/maschine.ts:172–194 (`verschluessele`/`entschluessele`)`
-   - dort: `/home/user/Redion/src/kern/abgleich/maschine.ts:901–919 (`verschluesseleBytes`/`entschluesseleBytes`)`
+   - hier: `src/kern/abgleich/maschine.ts:172–194 (`verschluessele`/`entschluessele`)`
+   - dort: `src/kern/abgleich/maschine.ts:901–919 (`verschluesseleBytes`/`entschluesseleBytes`)`
    - Beleg: Z.174–178: `const iv = crypto.getRandomValues(new Uint8Array(12)); … encrypt({ name: 'AES-GCM', iv }, schluessel, daten); const alles = new Uint8Array(iv.length + chiffre.byteLength); alles.set(iv); alles.set(new Uint8Array(chiffre), iv.length);` — Z.902–907 identisch, nur ohne TextEncoder/Base64
 4. **esc()-Helfer (4-Zeichen-Fassung ohne Apostroph) je Modul statt gemeinsam**
-   - hier: `/home/user/Redion/src/kern/abgleich/zusammenfuehren.ts:51–52 und /home/user/Redion/src/bereiche/dateien/ablage.ts:347–348`
-   - dort: `/home/user/Redion/src/kern/zugang/rechte.ts:39, src/kern/ereignisse/protokoll.ts:257, src/bereiche/verbinden/ansicht/wolke.ts:25`
+   - hier: `src/kern/abgleich/zusammenfuehren.ts:51–52 und src/bereiche/dateien/ablage.ts:347–348`
+   - dort: `src/kern/zugang/rechte.ts:39, src/kern/ereignisse/protokoll.ts:257, src/bereiche/verbinden/ansicht/wolke.ts:25`
    - Beleg: überall: `const esc = (s: unknown): string => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] ?? c)`; in src/core/helpers gibt es KEIN esc (grep leer) — §19/§52.14 verlangen zudem auch `'`→`&#39;`, das fehlt in allen diesen Fassungen
 5. **Obergrenze für Server-Anhänge (100 MB) an zwei Orten**
-   - hier: `/home/user/Redion/src/kern/abgleich/maschine.ts:53–55 (`SERVER_DATEI_MAX = KONSTANTEN.SERVER_DATEI_MAX || 100 * 1024 * 1024`)`
-   - dort: `/home/user/Redion/server/dateien.ts:41 (`export const DATEI_GRENZE = 100 * MB`)`
+   - hier: `src/kern/abgleich/maschine.ts:53–55 (`SERVER_DATEI_MAX = KONSTANTEN.SERVER_DATEI_MAX || 100 * 1024 * 1024`)`
+   - dort: `server/dateien.ts:41 (`export const DATEI_GRENZE = 100 * MB`)`
    - Beleg: maschine.ts:47–50: „ohne Verbindung zu `DATEI_GRENZE` in `server/dateien.ts`, das dieselbe Zahl trägt … `test140` rechnet beide Zahlen nach“ — bewusst geduldet und gewacht, aber weiterhin zwei Quellen
 6. **Der Wettlauf-Wächter `wegOffen` (vorgemerkte Löschungen nicht wiederbeleben) zweimal ausgeschrieben**
-   - hier: `/home/user/Redion/src/kern/abgleich/maschine.ts:663–665 (Blöcke, `wolkeBloeckeWeg`)`
-   - dort: `/home/user/Redion/src/kern/abgleich/maschine.ts:974–976 (Dateien, `wolkeDateienWeg`)`
+   - hier: `src/kern/abgleich/maschine.ts:663–665 (Blöcke, `wolkeBloeckeWeg`)`
+   - dort: `src/kern/abgleich/maschine.ts:974–976 (Dateien, `wolkeDateienWeg`)`
    - Beleg: Z.664: `const wegOffen = new Set<string>((Store.getMeta('wolkeBloeckeWeg', []) || []).map(e => e && e.id).filter(Boolean));` … `if (wegOffen.has(s.id)) continue;` — Z.975: `const wegOffen = new Set<string>(Store.getMeta('wolkeDateienWeg', []) || []);` … `if (wegOffen.has(d.id)) continue;`; Kommentar Z.661: „dasselbe Muster wie `wegOffen` bei den Dateien“
 
 ## Prüfläufe
