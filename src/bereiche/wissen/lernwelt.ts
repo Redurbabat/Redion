@@ -3927,9 +3927,9 @@ const Lernwelt = (() => {
    * und stellt den Reiter um (`Produktwelten.lernReiter`), damit auch eine
    * Seite, die man danach öffnet, unter dem richtigen Reiter steht.
    */
-  const oeffnen = (ansicht: LernweltAnsicht = 'heute'): void => {
+  const oeffnen = (ansicht: LernweltAnsicht = 'heute', adresse?: string): void => {
     const start = ansichtGueltig(ansicht) ? ansicht : 'heute';
-    App.zeigeSonder(titelVon(start), (ziel: HTMLElement) => render(ziel, start));
+    App.zeigeSonder(titelVon(start), (ziel: HTMLElement) => render(ziel, start), adresse);
   };
 
   /* ══ DIE ZIELE UNTER „HEUTE" UND „LERNEN" (E748) ═════════════════════════

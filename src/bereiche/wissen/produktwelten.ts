@@ -94,8 +94,11 @@ const Produktwelten = (() => {
       : ansicht === 'heute' ? 'start' : 'lernen');
   };
 
+  const routeVon = (welt: Welt, ansicht: string): string =>
+    '#welt-' + welt + '-' + ansicht.replace(/[^a-z0-9-]/g, '');
+
   const routeSchreiben = (welt: Welt, ansicht: string): void => {
-    const route = '#welt-' + welt + '-' + ansicht.replace(/[^a-z0-9-]/g, '');
+    const route = routeVon(welt, ansicht);
     try { history.replaceState(history.state, '', location.pathname + location.search + route); }
     catch { location.hash = route; }
   };
@@ -125,7 +128,7 @@ const Produktwelten = (() => {
     Store.setMeta(LERN_META, ziel);
     lernReiter(ziel);
     const modul = lernmodul();
-    if (modul?.oeffnen) { modul.oeffnen(ziel); routeSchreiben('lernen', ziel); return; }
+    if (modul?.oeffnen) { modul.oeffnen(ziel, routeVon('lernen', ziel)); routeSchreiben('lernen', ziel); return; }
     if (modul?.open) { modul.open(ziel); routeSchreiben('lernen', ziel); return; }
     /* Rückfall für alte Einzeldateien, in denen das neue Modul noch fehlt. */
     if (ansicht === 'heute' && typeof Ansichten !== 'undefined') Ansichten.start();

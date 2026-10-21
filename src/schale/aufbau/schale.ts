@@ -1107,8 +1107,13 @@ const App = (() => {
     } catch { /* ohne CustomEvent bleibt der Rest */ }
   };
 
-  const zeigeSonder = (titel: string, zeichner: any) => {
-    if (seiteId || !sonder || sonder.titel !== titel) navMerken();
+  /* Eine neue Lernansicht bekommt auch bei gleichem Titel einen eigenen
+     Verlaufschritt. Nur der optional angegebene Ziel-Hash entscheidet,
+     ob sie sich vom jetzigen Ort unterscheidet (E748, test613 §7n–§7s). */
+  const zeigeSonder = (titel: string, zeichner: any, adresse?: string) => {
+    let jetzt = ''; try { jetzt = String(location.hash || ''); } catch { jetzt = ''; }
+    const woanders = typeof adresse === 'string' && adresse !== '' && adresse !== jetzt;
+    if (seiteId || !sonder || sonder.titel !== titel || woanders) navMerken();
     sonder = { titel, zeichner };
     seiteId = null;
     navKnoepfeStellen();
