@@ -1997,9 +1997,16 @@ const DocumentMode = (() => {
        am Telefon 411 px breit in einem 390 px breiten Fenster; jedes Zeichen
        darin kostete den Ausgang. `randKnopf` steht jetzt in
        `renderInspector` und heisst dort beim Namen statt nur `⇥`. */
-    const position = document.createElement('span');
+    /* WORKSPACE 2.0 — DIE SEITENZAHL IST EIN WEG (kein zweiter Navigator).
+       Ein Druck öffnet Redions bestehenden Dialog und springt durch
+       `springe` an dieselbe Seite wie Miniaturen und Pfeilknöpfe. */
+    const position = document.createElement('button');
+    position.type = 'button';
     position.className = 'document-position';
+    position.dataset.documentAction = 'page-jump';
     position.textContent = wortEins(page) + ' ' + (state.index + 1) + '/' + documents.length;
+    position.title = 'Direkt zu einer ' + wortEins(page).toLowerCase() + ' springen';
+    position.disabled = documents.length < 2;
     position.setAttribute('aria-live', 'polite');
     position.setAttribute('aria-atomic', 'true');
     const previousButton = topButton('previous', '‹', 'Vorherige Seite');
@@ -2023,10 +2030,29 @@ const DocumentMode = (() => {
        Dokumentmodus weg; ohne diese Zeile hiesse das offene Dokument
        nirgends mehr beim Namen. `textContent`, nicht `innerHTML` — der Titel
        ist Nutzertext (§19). */
+    /* WORKSPACE 2.0 — DOKUMENTKOMPASS: Name, Art, Umfang und Lesefortschritt.
+       Die Seitenzahl steht weiter nur EINMAL im vorhandenen Blätterknopf
+       (test210); hier stehen Typ und Umfang. Kein zweites Dokumentmodell,
+       keine gespeicherte Fortschrittszahl, keine zusätzliche Navigation. */
     const titel = document.createElement('div');
     titel.className = 'document-title';
-    titel.textContent = page.text || 'Ohne Titel';
     titel.title = page.text || 'Ohne Titel';
+    const titelName = document.createElement('span');
+    titelName.className = 'document-title-name';
+    titelName.textContent = page.text || 'Ohne Titel';
+    const titelMeta = document.createElement('span');
+    titelMeta.className = 'document-title-meta';
+    const art = istFoliensatz(page) ? 'Präsentation'
+      : documents.some((block: any) => block.type === 'pdfseite') ? 'PDF' : 'Notizheft';
+    titelMeta.textContent = art + ' · ' + documents.length + ' ' +
+      (documents.length === 1 ? wortEins(page) : wortViele(page));
+    const titelFortschritt = document.createElement('progress');
+    titelFortschritt.className = 'document-title-progress';
+    titelFortschritt.max = documents.length;
+    titelFortschritt.value = state.index + 1;
+    titelFortschritt.hidden = documents.length <= 1;
+    titelFortschritt.setAttribute('aria-label', 'Lesefortschritt im Dokument');
+    titel.append(titelName, titelMeta, titelFortschritt);
     top.append(titel);
 
     /* UND DER EINE HINWEIS AUS DEM KOPF, DER HIER WEITER GILT. Eine gegen
@@ -3141,6 +3167,14 @@ const DocumentMode = (() => {
     const aktivMarkieren = (): void => {
       previousButton.disabled = state.index === 0;
       nextButton.disabled = state.index === documents.length - 1;
+      /* Derselbe Zustand für Sprungknopf und Fortschrittsanzeige,
+         auch wenn die sichtbare Seite nur durch Scrollen wechselt. */
+      position.setAttribute('aria-label', wortEins(page) + ' ' + (state.index + 1) +
+        ' von ' + documents.length + ' — zu einer anderen ' +
+        wortEins(page).toLowerCase() + ' springen');
+      titelFortschritt.value = state.index + 1;
+      titelFortschritt.setAttribute('aria-valuetext', wortEins(page) + ' ' +
+        (state.index + 1) + ' von ' + documents.length);
       thumbnails.querySelectorAll<HTMLElement>('[data-document-index]').forEach(button => {
         if (Number(button.dataset.documentIndex) === state.index) button.setAttribute('aria-current', 'page');
         else button.removeAttribute('aria-current');
@@ -4419,6 +4453,36 @@ const DocumentMode = (() => {
       const zielSeite = Number.isInteger(zielNr) ? documents[zielNr] : undefined;
       if (zielSeite) menueSchliessen();
       if (!action) return;
+      if (action === 'page-jump') {
+        /* Derselbe Dialog wie an den anderen Redion-Eingabestellen.
+           Kein Browser-prompt über der iPhone-Tastatur und kein eigener
+           Auswahlzustand. Ungültige Zahlen verändern keine Dokumentdaten. */
+        if (documents.length < 2 || position.disabled) return;
+        position.disabled = true; // Doppelte Dialoge bei schnellen Tipps verhindern.
+        void (async () => {
+          try {
+            const antwort = await UI.frage(
+              'Zu welcher ' + wortEins(page) + ' springen? (1–' + documents.length + ')',
+              String(state.index + 1));
+            if (antwort === null || !workspace.isConnected) return;
+            const eingabe = String(antwort).trim();
+            const nummer = Number(eingabe);
+            if (!/^[0-9]+$/.test(eingabe) || !Number.isSafeInteger(nummer) ||
+                nummer < 1 || nummer > documents.length) {
+              UI.toast('Bitte eine ' + wortEins(page) + ' zwischen 1 und ' +
+                documents.length + ' eingeben.');
+              return;
+            }
+            springe(nummer - 1);
+          } catch (err: unknown) {
+            UI.toast('Die Seite konnte nicht aufgerufen werden: ' +
+              (err instanceof Error ? err.message : String(err)));
+          } finally {
+            position.disabled = false;
+          }
+        })();
+        return;
+      }
       if (action === 'ink-ruler' && canAnnotate) {
         toolsSetzen(true);
         inkToolbar()?.querySelector<HTMLButtonElement>('[data-act="lineal"]')?.click();

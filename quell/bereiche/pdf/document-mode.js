@@ -1308,9 +1308,13 @@ const DocumentMode = (() => {
         navigation.className = 'document-navigation';
         navigation.append(zurueck, thumbnailButton);
         top.append(navigation);
-        const position = document.createElement('span');
+        const position = document.createElement('button');
+        position.type = 'button';
         position.className = 'document-position';
+        position.dataset.documentAction = 'page-jump';
         position.textContent = wortEins(page) + ' ' + (state.index + 1) + '/' + documents.length;
+        position.title = 'Direkt zu einer ' + wortEins(page).toLowerCase() + ' springen';
+        position.disabled = documents.length < 2;
         position.setAttribute('aria-live', 'polite');
         position.setAttribute('aria-atomic', 'true');
         const previousButton = topButton('previous', '‹', 'Vorherige Seite');
@@ -1336,8 +1340,23 @@ const DocumentMode = (() => {
         zoomGroup.append(zoom, zoomLabel, topButton('fit', 'Anpassen', wortEins(page) + ' an die verfügbare Breite anpassen'));
         const titel = document.createElement('div');
         titel.className = 'document-title';
-        titel.textContent = page.text || 'Ohne Titel';
         titel.title = page.text || 'Ohne Titel';
+        const titelName = document.createElement('span');
+        titelName.className = 'document-title-name';
+        titelName.textContent = page.text || 'Ohne Titel';
+        const titelMeta = document.createElement('span');
+        titelMeta.className = 'document-title-meta';
+        const art = istFoliensatz(page) ? 'Präsentation'
+            : documents.some((block) => block.type === 'pdfseite') ? 'PDF' : 'Notizheft';
+        titelMeta.textContent = art + ' · ' + documents.length + ' ' +
+            (documents.length === 1 ? wortEins(page) : wortViele(page));
+        const titelFortschritt = document.createElement('progress');
+        titelFortschritt.className = 'document-title-progress';
+        titelFortschritt.max = documents.length;
+        titelFortschritt.value = state.index + 1;
+        titelFortschritt.hidden = documents.length <= 1;
+        titelFortschritt.setAttribute('aria-label', 'Lesefortschritt im Dokument');
+        titel.append(titelName, titelMeta, titelFortschritt);
         top.append(titel);
         if (page.gesperrt) {
             const schloss = document.createElement('span');
@@ -1934,6 +1953,12 @@ const DocumentMode = (() => {
         const aktivMarkieren = () => {
             previousButton.disabled = state.index === 0;
             nextButton.disabled = state.index === documents.length - 1;
+            position.setAttribute('aria-label', wortEins(page) + ' ' + (state.index + 1) +
+                ' von ' + documents.length + ' — zu einer anderen ' +
+                wortEins(page).toLowerCase() + ' springen');
+            titelFortschritt.value = state.index + 1;
+            titelFortschritt.setAttribute('aria-valuetext', wortEins(page) + ' ' +
+                (state.index + 1) + ' von ' + documents.length);
             thumbnails.querySelectorAll('[data-document-index]').forEach(button => {
                 if (Number(button.dataset.documentIndex) === state.index)
                     button.setAttribute('aria-current', 'page');
@@ -3063,6 +3088,35 @@ const DocumentMode = (() => {
                 menueSchliessen();
             if (!action)
                 return;
+            if (action === 'page-jump') {
+                if (documents.length < 2 || position.disabled)
+                    return;
+                position.disabled = true;
+                void (async () => {
+                    try {
+                        const antwort = await UI.frage('Zu welcher ' + wortEins(page) + ' springen? (1–' + documents.length + ')', String(state.index + 1));
+                        if (antwort === null || !workspace.isConnected)
+                            return;
+                        const eingabe = String(antwort).trim();
+                        const nummer = Number(eingabe);
+                        if (!/^[0-9]+$/.test(eingabe) || !Number.isSafeInteger(nummer) ||
+                            nummer < 1 || nummer > documents.length) {
+                            UI.toast('Bitte eine ' + wortEins(page) + ' zwischen 1 und ' +
+                                documents.length + ' eingeben.');
+                            return;
+                        }
+                        springe(nummer - 1);
+                    }
+                    catch (err) {
+                        UI.toast('Die Seite konnte nicht aufgerufen werden: ' +
+                            (err instanceof Error ? err.message : String(err)));
+                    }
+                    finally {
+                        position.disabled = false;
+                    }
+                })();
+                return;
+            }
             if (action === 'ink-ruler' && canAnnotate) {
                 toolsSetzen(true);
                 inkToolbar()?.querySelector('[data-act="lineal"]')?.click();
