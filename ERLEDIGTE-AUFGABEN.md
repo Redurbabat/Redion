@@ -1,5 +1,27 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 24. Oktober 2026 · E753 · Workspace-Bibliothek und Windows-Nachprüfung
+
+Die Bibliothek verwendet jetzt übersichtlichere responsive Dokumentkarten,
+vorhandene echte Vorschauen und Metadaten, direkte Favoriten mit
+Fokus-/Scroll-Erhalt und kontextbezogene leere Ansichten. Suche, Orts-/Art-
+und Darstellungswahl verwenden die bisherigen Wege. Keine Datenmigration
+oder neue Produktabhängigkeit. Der erste Stand wurde auf Redurs ausdrücklichen
+Wunsch sofort als `34ac00a62` gepusht; PR #135 ist ein Entwurf.
+
+Die beiden im Integrationsnachtrag E752 offenen Windows-Prüfungen sind
+inzwischen von main repariert übernommen: test216 und test578 im aktuellen
+Schnelllauf grün. Der gesamte Schnelllauf ist dennoch nur 46/47 grün:
+test109 beanstandet vierzehn bereits auf main vorhandene JavaScript-Dateien.
+Das ist nicht als Bibliotheksfehler oder als insgesamt grüner Stand verkauft.
+
+test597 hielt zunächst noch die Position zum alten Vorschaublatt. Der neue
+Aufbau bekommt eine strengere Messung der ganzen Karte und vollständigen
+Trefferflächen; dabei fehlten am Telefon sieben Pixel Textabstand. Korrigiert,
+93/93 Zusagen inklusive zweier Gegenproben grün. Weitere Ergebnisse und
+Grenzen: `doku/WORKSPACE-2-BIBLIOTHEK.md`. Das gesamte Workspace-Upgrade
+ist damit nicht als erledigt markiert.
+
 ## 13. Oktober 2026 · E750, E751 · test274 mit Grund in seiner Ausnahmeliste, main vorgespult
 
 Redur um 00:55 UTC: „ja" — auf die zwei offenen Fragen. **E750:** test274

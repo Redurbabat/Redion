@@ -3455,9 +3455,100 @@ Keines; ein einziges Wort für zwei Fragen musste gedeutet werden, und die Deutu
 | 00:57 UTC (Redur) | Redur führt Pull Request #119 (claude/abend-antworten-2 → main) selbst zusammen. | Sein „ja“ von 00:55. | Die CI auf main war danach rot — test274, gerichtet mit E750. |
 | ca. 01:40 UTC | main per Fast-Forward um E750 und E751 ergänzt (claude/auf-main-abend nimmt a9cfb90 auf). | Redurs „ja“ zu test274; die Entscheidungen gehören neben den Stand, den sie beschreiben. | Wer main holt, bekommt zwölf benannte rote Läufe mit, alle älter als diese Arbeit; nach fdbf6ee lief kein voller Lauf mehr (nur zwei kleine Nachzüge, test274 und Doku). |
 
+### 2026-10-21 · Mittwoch — Sicherheitsbranch und Laptop auf einen gemeinsamen Stand bringen
+
+> Redur nennt fix/redion-sicherheit-und-datenschutz-20261021 und verlangt alle Änderungen auf main sowie einen schnellen Push. Der Branch 97123abd6 enthält bereits Sicherheitskorrekturen, neue Glas-/Bewegungsregeln und beide Zielleisten-Zweige. Der lokale Stand d8f7c6c30 enthält zusätzlich deren vollständige Dokumentation. Beides wird in 98906028d zusammengeführt. Die unfertige lokale Symbolfeder bleibt separat in 24365d989 auf codex/apple-glass-20oct; der ältere PDF-Zwischenstand bleibt in 19a3de648 erhalten. Redur erlaubt in diesem Dialog ausdrücklich, bekannte alte Testfehler offen zu lassen. Das ist keine Behauptung über einen neuen vollständigen Lauf.
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · nicht protokolliert**
+
+> schau mal das an und nehe alle änderungen auf main und pusche alles sobald wie möglich auf github
+
+**Gemeint:** Den genannten Integrationsbranch prüfen, vollständig auf main übernehmen und auf GitHub pushen.
+
+**Besser geschrieben:** Prüfe den Sicherheitsbranch, integriere alle Änderungen in main und pushe den gemeinsamen Stand.
+
+**Besserer Prompt:** Der konkrete Branch-Link macht den Auftrag eindeutig.
+
+
+**2 · nicht protokolliert**
+
+> Ja, jetzt integrieren und pushen
+
+**Gemeint:** Diese belegten Testprobleme dokumentiert offen lassen und nach den Browserprüfungen den gemeinsamen Stand auf main pushen.
+
+**Besser geschrieben:** Die Rückfrage ist eindeutig beantwortet.
+
+**Besserer Prompt:** Keine zusätzliche Formulierung nötig.
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| Remote-Branch und lokale Zielleisten-Dokumentation integriert; Content-Length-Regulärausdruck und körperlose 205-Antwort in der Brücke repariert. Die Quelltextkarte verwendet relative Pfade, damit ihr Generator auf Windows und Linux dasselbe schreibt. | `97123abd6` → `98906028d` | 21. Oktober 2026; Uhrzeiten nicht protokolliert | — | test620 erweitert: vorher 13 grün / 2 rot, nachher 15 grün / 0 rot; Typecheck, Build und Dienststand grün. Abschluss der übrigen Prüfungen in E752 und messungen.md. |
+
+#### Das grösste Problem
+
+Die Sicherheitsprüfung blockierte jede normale Content-Length und die Brücke baute für HTTP 205 einen unerlaubten Antwortkörper. Beide Fälle waren im vorhandenen Test nicht enthalten.
+
+### 2026-10-24 · Samstag — Workspace 2.0 beginnt mit der Dokumentbibliothek
+
+> Redur übergibt den grossen Workspace-Auftrag aus Issue 134. Das sichtbare Upgrade soll im vorhandenen Redion entstehen, mit demselben Webcode für Desktop und iOS und ohne Datenmigration. Sein ausdrücklich erlaubter erster Lieferumfang ist eine benutzbare, geprüfte Bibliothek statt vieler halbfertiger Ansichten. Aktuelles main ist 72b4dae5d, 65 Commits vor dem bisherigen lokalen main. Ein neuer Branch beginnt direkt dort. Während der Prüfungen verlangt Redur den sofortigen Push; 34ac00a62 und Entwurfs-PR 135 sichern diesen Zwischenstand. Nach seinem weiteren Auftrag wird gemäss Git-Regel auf einem frischen Folgebranch weitergearbeitet. Kein Merge und kein Deployment.
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · nicht protokolliert**
+
+> Setze die Änderungen tatsächlich im Repository um. Erstelle nicht nur einen Plan.
+
+**Gemeint:** Ein sichtbares, benutzbares Upgrade im bestehenden Produkt bauen und die Daten-/iOS-Wege erhalten.
+
+**Besser geschrieben:** Der Auftrag ist eindeutig und enthält selbst eine sinnvolle erste Liefergrenze.
+
+**Besserer Prompt:** Zuerst die vollständige Bibliothek mit Bildern und Prüfungen liefern; danach Editor und Navigation.
+
+
+**2 · nicht protokolliert**
+
+> pusche alles sofort auf github
+
+**Gemeint:** Den vorhandenen Zwischenstand sofort sichern; kein Auftrag zum Merge oder Deployment.
+
+**Besser geschrieben:** Pushe den aktuellen Arbeitsbranch jetzt, auch wenn die weiteren Prüfungen noch laufen.
+
+**Besserer Prompt:** Die Freigabegrenze von Workspace 2.0 bleibt bestehen.
+
+
+**3 · nicht protokolliert**
+
+> weiter
+
+**Gemeint:** Die offenen Prüfungen und Verbesserungen fortsetzen.
+
+**Besser geschrieben:** Den Bibliotheksbogen abschliessen und die übrigen Workspace-Phasen getrennt halten.
+
+**Besserer Prompt:** Keine weitere Klärung nötig.
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| Bibliothekskarten, Kopf, direkte Favoriten und leere Ansichten umgesetzt; vorhandene Suche, Menüs und Datenwege wiederverwendet. Den Sicherungseintrag typensicher adressiert und Deklarationen der bestehenden Windows-Testhilfen ergänzt. Nach dem sofortigen Push folgen strengere Kartenmessung, sieben Pixel Textabstand am Telefon, kontextbezogene Leerzustände, Zustandsbilder und eine echte native Paket-Gegenprobe. | `72b4dae5d` → `34ac00a62 und anschliessender Bibliotheks-Review` | 24. Oktober 2026; erster Commit um 18:02:09 Europe/Zurich laut git | nicht protokolliert | TypeScript/Build und Bibliotheksmatrix grün; test597 nach verschärfter Messung 93/93. Schnelllauf 46/47, test109 meldet vierzehn schon auf main vorhandene JavaScript-Dateien. Echte native Brücke gebaut, 482 Webdateien bytegleich, abweichende Bibliothek als Gegenprobe erkannt. Vollständige Ergebnisse und offene Grenzen im Workspace-Prüfbericht; kein voller grüner Gesamtlauf behauptet. |
+
+#### Das grösste Problem
+
+Die alte Geometrieprüfung mass die neue Bedienzeile am inneren Vorschaublatt. Die richtige Messung der ganzen Karte fand danach einen tatsächlichen fehlenden Textabstand am Telefon. Die zweite Bildabnahme fand einen alten Ordnerpfad in globalen Favoriten und einen kurzzeitig weissen Ausschnitt neben der noch wachsenden Suchauswahl; beide zuerst rot nachgewiesen und korrigiert. Ein zusätzlicher Unix-OCR-Hilfentest ist unter Windows nicht ausführbar; der produktnahe Windows-Lauf selbst ist grün.
+
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 137 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 138 Einträge.
 

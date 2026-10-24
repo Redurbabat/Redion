@@ -9500,3 +9500,58 @@ lagen bei −1 bis −3 ms wie in Punkt 5.
 3629 → 3707 B, `selection-flow.js` 9494 → 9691, `bausteine.css`
 176158 → 176256, `grund.css` 14875 → 14931. Zusammen +429 B; der Start
 bleibt bei 1932 KB von 1950 (`test388` §5, 256 Dateien).
+
+## §107 · Workspace-Bibliothek: echte Zustände statt Konzeptbilder (E753, 24. Oktober 2026)
+
+**Basis:** main `72b4dae5d`; erster gepushter Stand `34ac00a62`, danach
+Bibliotheks-Review auf einem frischen Folgebranch. Windows, Node 22.18.0,
+vorhandenes Playwright; Chromium und zur Paketfassung passendes WebKit 26.0.
+Alle Browserkontexte frisch, ausschliesslich synthetische Dokumente.
+
+**Matrix:** 390×844, 430×932, 1366×768 und 1440×900, jeweils hell/dunkel.
+`pruefungen/workspace-library.mts` prüft echte Karten, 44-px-Hauptziele,
+Überlauf, Textkontrast mindestens 4,5, Favoriten per Leertaste und Touch,
+Fokus nach Neuzeichnen/Entfernen, Artfilter und leeren Filter, die echte
+Inhaltssuche im Ordner, Menüs, Ordner, Liste, Öffnen per Enter, Erstellen im
+leeren Ordner, Neuladen/Persistenz sowie reduzierte Bewegung. Der letzte
+Kontext wird gemeinsam mit dem Browser geschlossen; vorher hingen zwei
+WebKit-Windows-Läufe im doppelten Teardown. Nur diese eigenen Prozesse wurden
+beendet, keine App-/Nutzerdaten gelöscht.
+
+**Was die Bilder fanden:** Der neue Typ-Textbereich war am Telefon sieben
+Pixel zu breit; test597 misst jetzt vollständige Trefferflächen statt des
+alten Vorschaublatts: erst 85/91, danach 92/93, korrigiert 93/93. Die neue
+Prüfung erkennt einen absichtlich in die Vorschau verschobenen Favoriten.
+Die zweite Bildabnahme fand zusätzlich eine alte Ordnerkrume in globalen
+Favoriten und einen mehrzeiligen Suchtreffer, dessen weisse Schrift während
+der wachsenden Auswahlmarke kurz auf der hellen Fläche lag. Beide neuen
+Zusagen wurden vor der Korrektur rot nachgewiesen. Die gewählte Suchzeile
+trägt nun während dieser Bewegung ihren deckenden Grund selbst; die
+Auswahlfeder bleibt dieselbe.
+
+**Bestehende Nachbarn:** PDF-Import test482 29/29, Bibliothek/Suchbereiche
+test600 214/214, Aufwärtsgeste test614 122/122, PDF-Ink test622 bei
+390/820/1440 grün. Architektur test537 18/18, Inseln test578 115/115 und
+Motion-Marken test581 93/93. Die isolierte Einzeldatei test74 12/12 ohne
+JavaScript-Fehler. Quellen-, CSS- und CI-Wächter im Prüfbericht.
+
+**Nicht alles grün:** Schnelllauf 46/47, test109 rot wegen vierzehn bereits
+auf der Basis vorhandener JavaScript-Dateien; keine Ausnahme hinzugefügt.
+Ein zusätzlicher Lauf aus sieben nativen-/Testhilfen-Dateien liefert
+36/37: der unveränderte Unix-OCR-Skriptstart schlägt unter Windows mit
+ENOENT fehl. Der produktnahe Windows-OCR-Lauf test216 und der Insel-Lauf
+test578 sind inzwischen grün; die alten E752-Aufgaben dafür sind erledigt.
+
+**iOS:** `workspace-parity.mts` baut die echte native Brücke mit den schon
+von Codemagic verwendeten Werkzeugen, kopiert dieselben Webdateien und
+verwendet den vorhandenen SHA-256-Vergleicher. 482 Dateien bytegleich;
+eine isoliert veränderte Bibliothek wird erkannt. Die übrigen sechs
+nativen-/Pfad-Testdateien liefern 33/33 ohne übersprungene Fälle.
+Das ist weder ein Xcode-Build noch eine echte iPhone-/VoiceOver-Abnahme.
+
+**Bilder:** echte acht Vorher-/Nachher-Paare und je Browser die Filter-,
+Favoriten-, Such-, Menü-, Listen- und Leerzustände; lokale Galerie unter
+`bilder/workspace-2/galerie.html`. Der PR-Workflow stellt diese ausschliesslich
+synthetischen Prüfbilder als 14 Tage verfügbares Artefakt bereit, nicht als
+Dateien im Git-Bestand. Kein Deployment. Voller Gesamtlauf nicht gefahren;
+Endergebnisse und Wiederholungsbefehle in `doku/WORKSPACE-2-BIBLIOTHEK.md`.

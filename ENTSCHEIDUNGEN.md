@@ -69391,3 +69391,46 @@ antwortet Redur: „Ja, jetzt integrieren und pushen“.
 **Deployment-Grenze:** Beauftragt ist der GitHub-Push, nicht das Einrichten
 von Cloudflare-Zugängen. Ohne ACCESS_TEAM/ACCESS_AUD antwortet der Worker
 absichtlich mit 503. Bestehende lokale Browserdaten bleiben unverändert.
+
+## E753 — Workspace 2 beginnt mit einer echten Bibliothek, nicht einer zweiten App
+
+**Auftrag, 24. Oktober 2026:** Redur übergibt Issue #134 und verlangt eine
+sichtbare Modernisierung für Desktop und iPhone. Er erlaubt ausdrücklich,
+zuerst eine benutzbare Bibliothek statt vieler halbfertiger Oberflächen zu
+liefern. Während der Prüfung verlangt er den sofortigen Push; der erste
+Stand liegt in `34ac00a62`, Entwurfs-PR #135. Nach „weiter“ beginnt gemäss
+§43 ein frischer Folgebranch direkt darauf. Kein Merge und kein Deployment.
+
+**Eine Oberfläche, dieselben Wege:** Karten bekommen eine eigene Bedienzeile,
+echte Vorschauen, klarere Titel und Metadaten. Favorit und Menü sind native
+Geschwister-Buttons, keine verschachtelten Schaltflächen. Die Favoritenaktion
+verwendet das vorhandene Register; die Suche öffnet die vorhandene globale
+Suche mitsamt ihrem Bibliotheks-/Ordnerbereich. Die drei bestehenden
+Darstellungen, Orts- und Artfilter bleiben erhalten. Leere Filter,
+Favoriten und zuletzt geöffnete Dokumente sagen jeweils etwas anderes.
+
+**Keine neue Architektur:** kein neues UI-Kit, keine zweite React-App,
+keine externe Schrift oder zusätzliche Produktabhängigkeit. Vorhandene
+Design- und Motion-Marken bleiben die Grundlage. Der gepinnte Touch-Kit-
+Quellcode wird nicht bearbeitet. Keine Datenmigration, kein neues
+Sicherungsformat, kein Eingriff in PDF-Ink. Die iOS-App kopiert die gleichen
+Webdateien; nur ihre vorhandene native Brücke kommt hinzu.
+
+**Messung statt alter Messpunkte:** test597 prüfte die Menüposition relativ
+zum inneren Vorschaublatt. Die neue Bedienzeile liegt absichtlich darüber.
+Jetzt werden vollständige 44-px-Flächen gegen die ganze Karte, gegenseitige
+Überdeckung und der reservierte Textraum gemessen. Die strengere Messung
+fand sieben fehlende Pixel Abstand am Telefon; korrigiert. Eine absichtlich
+in die Vorschau verschobene Favoritenfläche muss die Gegenprobe rot machen.
+
+**Grenzen:** Ergebnisse, echte Bilder, iPhone-Prüfanleitung und offene
+Altfehler stehen in `doku/WORKSPACE-2-BIBLIOTHEK.md`. Ein isolierter
+WebKit-Lauf und bytegleicher Webcode sind keine native Geräteabnahme.
+Editor/PDF-Studio und Navigation bleiben eigene, noch offene Bögen.
+
+**Zweite Bildabnahme:** Der globale Favoritenort zeigte noch die vorherige
+Ordnerkrume. Die Krume wird jetzt ausschliesslich in der Ablage gezeichnet.
+Beim Übergang von einer kurzen auf eine mehrzeilige Suchzeile wuchs die
+Auswahlmarke hinter schon weisser Schrift. Bis die vorhandene Feder ankommt,
+trägt nur der gewählte Treffer seinen deckenden Akzentgrund selbst. Beide
+Fälle wurden vor der Korrektur durch den neuen Browserlauf rot nachgewiesen.

@@ -21,7 +21,10 @@
  *       aria-hidden, sein Name enthält den Namen des Dings, er misst
  *       mindestens 44 × 44 und sitzt im oberen rechten Viertel des Deckels.
  *       (Rot: ein <i aria-hidden> von 20 × 20 IM Kartenknopf.)
- *   §1b Bei 1440 (hell) und 390 (dunkel): wo der Stern oder die Scheibe des
+ *   §1b Workspace 2: eigene Bedienzeile ohne überdeckte Vorschau/Titel,
+ *       44-px-Flächen innerhalb der Karte und ohne gegenseitige Überlagerung;
+ *       Gegenprobe verschiebt den Favoriten absichtlich in die Vorschau.
+ *       Für alte Karten: wo der Stern oder die Scheibe des
  *       „…" auf dem Vorschautext eines Deckels liegt, liegt sie auf
  *       DECKENDEM Grund — und die beiden decken einander nicht. Eine lange
  *       erste Zeile auf Höhe der Ecke weicht mit „…" und endet vor dem
@@ -262,10 +265,14 @@ const deckelPruefen = async (s: Page): Promise<any> => s.evaluate<any>(`(() => {
     if (!benannt.includes(name)) { fehlt.push(name + ': Name „' + benannt + '"'); continue; }
     const kr = knopf.getBoundingClientRect();
     if (kr.width < 44 || kr.height < 44) { fehlt.push(name + ': ' + Math.round(kr.width) + '×' + Math.round(kr.height)); continue; }
-    const blatt = (k.querySelector('.bib-deckel-blatt') || k).getBoundingClientRect();
+    // Workspace 2: Der Menügriff sitzt in der Karte ÜBER dem Vorschaublatt.
+    // Die vollständige Trefferfläche muss innerhalb der ganzen Karte liegen.
+    const blatt = k.getBoundingClientRect();
     const cx = kr.left + kr.width / 2, cy = kr.top + kr.height / 2;
     if (cx < blatt.left + blatt.width / 2 || cy > blatt.top + blatt.height / 2 || cx > blatt.right + 4 || cy < blatt.top - 4)
       fehlt.push(name + ': Mitte ' + Math.round(cx - blatt.left) + ',' + Math.round(cy - blatt.top) + ' im Deckel ' + Math.round(blatt.width) + '×' + Math.round(blatt.height));
+    if (kr.left < blatt.left - 1 || kr.right > blatt.right + 1 || kr.top < blatt.top - 1 || kr.bottom > blatt.bottom + 1)
+      fehlt.push(name + ': Trefferfläche ragt aus der Karte');
   }
   return { zahl: karten.length, fehlt };
 })()`);
@@ -847,8 +854,8 @@ await sk.k.close();
    Eine Seite mit langer erster Zeile, damit der Vorschautext sicher bis
    unter die Ecke reicht — sonst misst die Prüfung nichts (§55.2). Ein
    eigener Aufbau, damit die Karte die Zählungen oben nicht verschiebt. */
-type Lang = { imBand: boolean; gekuerzt: boolean; auslassung: boolean; rechts: number; sternLinks: number } | null;
-const eckePruefen = (s: Page): Promise<{ mitText: number; fehlt: string[]; lang: Lang }> => s.evaluate<any>(`(() => {
+type Lang = { imBand: boolean; gekuerzt: boolean; auslassung: boolean; rechts: number; sternLinks: number; separat?: boolean } | null;
+const eckePruefen = (s: Page): Promise<{ mitText: number; fehlt: string[]; lang: Lang; separat: number }> => s.evaluate<any>(`(() => {
   const alpha = c => {
     if (!c || c === 'transparent') return 0;
     if (/^color\\(/.test(c)) { const m = c.match(/\\/\\s*([\\d.]+)\\s*\\)$/); return m ? Number(m[1]) : 1; }
@@ -856,12 +863,43 @@ const eckePruefen = (s: Page): Promise<{ mitText: number; fehlt: string[]; lang:
     return z.length >= 4 ? z[3] : 1;
   };
   const schneidet = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5;
-  const fehlt = []; let mitText = 0, lang = null;
+  const fehlt = []; let mitText = 0, lang = null, separat = 0;
   for (const z of document.querySelectorAll('.bib-gitter .bib-zelle')) {
     const deckel = z.querySelector('.bib-deckel'), blatt = z.querySelector('.bib-deckel-blatt');
     if (!deckel || !blatt) continue;
     const name = deckel.getAttribute('title') || '';
     const br = blatt.getBoundingClientRect();
+    const favorite = z.querySelector('.bib-favorite');
+    if (favorite) {
+      // Eigene Bedienzeile: keine transparente Überlagerung mehr. Hier
+      // zählen die ganzen 44-px-Flächen, nicht bloss das gezeichnete Zeichen.
+      const more = z.querySelector('.bib-deckel-mehr');
+      const fr = favorite.getBoundingClientRect(), mr = more?.getBoundingClientRect();
+      const cr = deckel.getBoundingClientRect();
+      const content = [blatt, z.querySelector('.bib-deckel-name'), z.querySelector('.bib-card-meta')].filter(Boolean);
+      if (!mr) fehlt.push(name + ': Menü fehlt');
+      for (const [wer, r] of [['Favorit', fr], ['Menü', mr]]) {
+        if (!r) continue;
+        if (r.width < 44 || r.height < 44 || r.left < cr.left - 1 || r.right > cr.right + 1 || r.top < cr.top - 1 || r.bottom > br.top + 1)
+          fehlt.push(name + ': ' + wer + ' hat keinen eigenen 44-px-Platz');
+        if (content.some(el => schneidet(r, el.getBoundingClientRect()))) fehlt.push(name + ': ' + wer + ' verdeckt Inhalt');
+      }
+      if (mr && schneidet(fr, mr)) fehlt.push(name + ': Favorit und Menü überlappen');
+      const type = deckel.querySelector('.bib-card-kind');
+      if (!type || !type.textContent.trim()) fehlt.push(name + ': Typ fehlt');
+      else {
+        const tr = type.getBoundingClientRect();
+        if (tr.right - parseFloat(getComputedStyle(type).paddingRight) > fr.left + 1)
+          fehlt.push(name + ': Typ hat keinen reservierten Textraum');
+      }
+      separat++;
+      if (name === 'Lange Vorschau') {
+        const line = [...blatt.querySelectorAll('*')].find(el => el.firstChild?.nodeType === 3 && el.textContent.startsWith('Schutzleiter'));
+        if (line) lang = { separat: true, imBand: false, gekuerzt: line.scrollWidth > line.clientWidth + 1,
+          auslassung: getComputedStyle(line).textOverflow === 'ellipsis', rechts: Math.round(line.getBoundingClientRect().right - br.left), sternLinks: Math.round(fr.left - br.left) };
+      }
+      continue;
+    }
     /* Was vom Vorschautext zu sehen ist: jede Zeile, auf den Deckel beschnitten. */
     const zeilen = [];
     const w = document.createTreeWalker(blatt, NodeFilter.SHOW_TEXT);
@@ -912,8 +950,8 @@ const eckePruefen = (s: Page): Promise<{ mitText: number; fehlt: string[]; lang:
       }
     }
   }
-  return { mitText, fehlt, lang };
-})()`) as Promise<{ mitText: number; fehlt: string[]; lang: Lang }>;
+  return { mitText, fehlt, lang, separat };
+})()`) as Promise<{ mitText: number; fehlt: string[]; lang: Lang; separat: number }>;
 
 for (const [wo, o] of [['1440 × 900, hell', {}], ['390 × 844, dunkel', { handy: true, dunkel: true }]] as const) {
   const e = await aufmachen(o);
@@ -925,11 +963,16 @@ for (const [wo, o] of [['1440 × 900, hell', {}], ['390 × 844, dunkel', { handy
   await zurBibliothek(e.s);
   console.log('\n§1b · Die Zeichen der Ecke auf dem Vorschautext (' + wo + ')');
   const ek = await eckePruefen(e.s);
-  p(`Stern und „…" liegen nie ohne deckenden Grund auf Vorschautext (${ek.mitText}× berührt, die lange Zeile auf Höhe der Ecke)`,
-    !!ek.lang && ek.lang.imBand && ek.fehlt.length === 0,
-    !ek.lang || !ek.lang.imBand ? 'die lange Zeile liegt nicht auf Höhe der Ecke — die Prüfung misst nichts ' + JSON.stringify(ek.lang) : ek.fehlt.slice(0, 3).join(' | '));
-  p('Die lange erste Zeile endet mit „…" vor dem Stern, nicht als Splitter darunter',
-    !!ek.lang && ek.lang.gekuerzt && ek.lang.auslassung && ek.lang.rechts <= ek.lang.sternLinks, JSON.stringify(ek.lang));
+  p(`Stern und „…" verdecken keinen Inhalt (${ek.separat} eigene Bedienzeilen, sonst deckender Grund)`,
+    !!ek.lang && (ek.lang.separat || ek.lang.imBand) && ek.fehlt.length === 0,
+    !ek.lang || (!ek.lang.separat && !ek.lang.imBand) ? 'Keine aussagekräftige lange Vorschau ' + JSON.stringify(ek.lang) : ek.fehlt.slice(0, 3).join(' | '));
+  p('Die lange erste Zeile wird sauber gekürzt; der Stern hat getrennten Platz oder steht rechts daneben',
+    !!ek.lang && ek.lang.gekuerzt && ek.lang.auslassung && (ek.lang.separat || ek.lang.rechts <= ek.lang.sternLinks), JSON.stringify(ek.lang));
+  if (ek.separat) {
+    await e.s.evaluate<any>(`document.querySelector('.bib-favorite').style.top='100px'`);
+    const broken = await eckePruefen(e.s);
+    p('Gegenprobe: ein in die Vorschau verschobener Favorit wird erkannt', broken.fehlt.length > 0, JSON.stringify(broken));
+  }
   await e.k.close();
 }
 

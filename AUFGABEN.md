@@ -42,14 +42,34 @@ mehr gibt.
 
 ## Was jetzt offen ist
 
+### Workspace 2.0 — nach der Bibliothek (Issue #134, E753)
+
+- **Ziel:** Editor/PDF-Studio und mobile Navigation sichtbar modernisieren,
+  nachdem der Bibliotheksbogen geprüft ist. Bestehende Ink-/Dateiwege und
+  die ausschliesslich durch Hochziehen geöffnete Zielleiste erhalten.
+  Dateien: vorhandener Editor, `src/bereiche/pdf/document-mode.ts`,
+  Schalen-Stile und bestehende Touch-Kit-Inseln. Fertig: gemeinsame Web-/iOS-
+  Oberfläche mit echten Vorher-/Nachher-Bildern und grünen zuständigen
+  Regressionen. Tests: PDF-Import/Export/Ink, Tastatur, Safe-Areas,
+  390×844/430×932 und Desktop, hell/dunkel, reduzierte Bewegung.
+  Priorität: hoch, nächster Produktbogen; kein automatischer Merge/Deploy.
+- **Echtes iPhone:** Bibliothek und native Exporte aus demselben Git-Commit
+  wie die Web-Testversion installieren und prüfen. Kein Gerät und kein
+  Xcode auf dem Windows-Prüfrechner. Vorher externe Sicherung, App nicht
+  löschen und Bundle-ID nicht ändern. Fertig: Gerätebericht mit Offline-,
+  Tastatur-, Touch-/VoiceOver- und Safe-Area-Prüfung. Priorität: vor Freigabe.
+- **Bereits auf main rote JavaScript-Bestandsprüfung:** test109 findet
+  vierzehn `.mjs`-Dateien aus den jüngsten iOS-/Windows-Korrekturen, die
+  nicht im bisherigen Null-Bestand stehen. Alle vierzehn sind schon in
+  `72b4dae5d` enthalten und im Bibliotheksbogen unverändert. Nicht durch
+  eine pauschale Ausnahme verstecken: gesondert nach TypeScript migrieren
+  und alle Aufrufstellen/Codemagic aktualisieren. Dazu erwartet der neue
+  OCR-Hilfentest einen Unix-Skriptstart auch unter Windows; der produktnahe
+  Windows-Lauf test216 ist dagegen grün. Fertig: beide Verträge unter den
+  tatsächlichen Plattformen geprüft. Priorität: mittel; E753-Prüfbericht.
+
 ### Integrationsnachtrag 21. Oktober 2026 (E752)
 
-- **Windows-Prüfhilfen portabel machen:** `test216` liefert ein Unix-Shell-
-  Ersatzprogramm für Tesseract und baut PATH mit `:`; `test578` erzeugt
-  unter Windows Rückstriche in TypeScript-Globmustern (TS18003).
-  Beide gegenüber bisherigem main unverändert, im Schnelllauf 45/47 grün.
-  Fertig: beide Läufe prüfen denselben Vertrag unter Windows und Linux,
-  ohne Überspringen oder Lockerung. Priorität: mittel.
 - **Cloudflare-Access vor einem Deployment nachsehen:** ACCESS_TEAM und
   ACCESS_AUD müssen zur Access-Anwendung passen. Ohne sie sperrt der neue
   Worker absichtlich auch HTML/JS mit 503. Zugangskonfiguration wurde bei
