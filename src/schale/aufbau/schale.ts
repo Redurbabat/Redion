@@ -2751,15 +2751,29 @@ const App = (() => {
          `dateien.json` aus derselben Liste entsteht: ein Satz darin, dessen
          Bytes fehlen, wäre ein Anhang, den der Block sucht und nicht
          findet. Lieber gar nicht erwähnt als falsch versprochen. */
-      const saetze = (await Store.dateiAlle())
+      const gefundeneSaetze = (await Store.dateiAlle())
         .filter((s: any) => !(s && s.abgeleitet));
+      /* Nur wirklich gepackte Dateien dürfen in dateien.json stehen.
+         Sonst verspricht das Manifest einen Anhang, den das ZIP nicht hat
+         (z. B. nach einem abgebrochenen Upload). */
+      const saetze: any[] = [];
+      const ausgelassen: string[] = [];
       const eintraege: { name: string; inhalt: any; kennung?: string }[] =
-        [{ name: 'daten.json', inhalt: Store.exportAll(true) }];
+        [{ name: 'daten.json', inhalt: '' }];
       const belegt = new Set(['daten.json']);
 
-      for (const satz of saetze) {
+      for (const satz of gefundeneSaetze) {
         const inhalt = await Dateien.alsBlob(satz.id);
-        if (!inhalt) continue;             /* angefangener Upload ohne Stücke */
+        /* Auch eine vorhandene, aber verkürzte Datei darf nicht als
+           vollständig in die Sicherung geraten. Das Original bleibt in
+           der Ablage; der Export benennt ausdrücklich, was fehlt. */
+        if (!inhalt || (typeof satz.groesse === 'number' &&
+            Number.isFinite(satz.groesse) && satz.groesse >= 0 &&
+            inhalt.size !== satz.groesse)) {
+          ausgelassen.push(String(satz.name || satz.id || 'Unbenannte Datei'));
+          continue;
+        }
+        saetze.push(satz);
         /* Zwei Bilder dürfen „foto.jpg" heissen. Im Archiv darf ein Name nur
            einmal vorkommen, sonst überschreibt das Auspacken das eine mit dem
            anderen — still, wie immer bei dieser Sorte Fehler. */
@@ -2775,6 +2789,30 @@ const App = (() => {
         }
         belegt.add(name);
         eintraege.push({ name, inhalt, kennung: satz.id } as { name: string; inhalt: any; kennung?: string });
+      }
+
+      /* Enthält das Archiv unvollständige Dateien nicht, darf daten.json
+         nicht still "vollständig" behaupten. Die normale Sicherung wird
+         trotzdem erstellt: alle lesbaren Notizen und Anhänge bleiben
+         gesichert, die nicht lesbaren Dateien werden ausdrücklich genannt.
+         Das bestehende .redion-Format bleibt lesbar. */
+      const datenRoh = Store.exportAll(true);
+      if (ausgelassen.length) {
+        const daten = JSON.parse(datenRoh);
+        daten.unvollstaendigeDateienAusgelassen = ausgelassen.length;
+        const beispiele = ausgelassen.slice(0, 5).join(', ');
+        const weitere = ausgelassen.length > 5
+          ? ' und ' + (ausgelassen.length - 5) + ' weitere' : '';
+        daten.hinweis = String(daten.hinweis || '') +
+          ' ACHTUNG: ' + ausgelassen.length +
+          ' unvollständige Datei(en) sind NICHT in dieser Sicherung: ' +
+          beispiele + weitere + '. Sie bleiben auf diesem Gerät; erst ' +
+          'nach dem vollständigen Einlesen erneut sichern.';
+        eintraege[0].inhalt = JSON.stringify(daten);
+        sagen('ACHTUNG: ' + ausgelassen.length +
+          ' unvollständige Datei(en) nicht mitgesichert — siehe Sicherungshinweis.');
+      } else {
+        eintraege[0].inhalt = datenRoh;
       }
 
       /* Die Zuordnung Name → Kennung gehört in die Sicherung, sonst weiss
