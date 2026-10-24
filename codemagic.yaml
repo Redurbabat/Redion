@@ -15,6 +15,8 @@ workflows:
         script: |
           set -euo pipefail
           npm ci --no-audit --no-fund
+          # Vite-8-Peer-Abgleich vor dem Build pruefen (npm ERESOLVE abfangen).
+          node --test ios/codemagic-dependency-versions.test.mjs
           npm run bauen:ts
           # Bestehende PDF- und Office-Exporte unter Web und iOS pruefen.
           node --test ios/generated-download-routing.test.mjs
@@ -43,7 +45,7 @@ workflows:
           set -euo pipefail
           npm install --no-save --package-lock=false --no-audit --no-fund \
             @capacitor/core@8 @capacitor/cli@8 @capacitor/ios@8 \
-            @capacitor/filesystem@8 @capacitor/share@8 esbuild@0.25
+            @capacitor/filesystem@8 @capacitor/share@8 esbuild@0.28.2
           npx esbuild ios/native-sicherung.ts \
             --bundle --platform=browser --format=iife --target=es2022 \
             --outfile=www/redion-native-sicherung.js
