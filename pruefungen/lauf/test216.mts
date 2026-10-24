@@ -26,6 +26,7 @@ import type { ChildProcess } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { createTesseractStub, withTestPath } from '../ocr-test-stub.mjs';
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
 const PORT = 8765;
@@ -43,22 +44,11 @@ const werkbank = await fs.mkdtemp(path.join(os.tmpdir(), 'redion-ocr-pruefung-')
 const stubOrdner = path.join(werkbank, 'bin');
 await fs.mkdir(stubOrdner);
 
-/* Das Ersatz-`tesseract`. Es liest die Datei, damit die Prüfung merkt, wenn
-   der Dienst gar keine schreibt, und schreibt einen Text, der die Sprache
-   und die Bildgrösse mitnennt — so ist am Ergebnis ablesbar, was ankam. */
-const STUB = `#!/bin/sh
-bild="$1"
-sprache=""
-while [ $# -gt 0 ]; do
-  if [ "$1" = "-l" ]; then sprache="$2"; fi
-  shift
-done
-if [ ! -f "$bild" ]; then echo "kein Bild: $bild" >&2; exit 2; fi
-groesse=$(wc -c < "$bild" | tr -d ' ')
-echo "tesseract 5.9.0" >&2
-printf 'Verteiler UV3\\nSprache %s\\nBytes %s\\n' "$sprache" "$groesse"
-`;
-await fs.writeFile(path.join(stubOrdner, 'tesseract'), STUB, { mode: 0o755 });
+/* Windows 11: der Test erzeugt ein echtes tesseract.exe mit dem
+   systemeigenen Windows-PowerShell-C#-Compiler. Unter Unix bleibt es beim
+   bisherigen ausführbaren sh-Skript. Der Produktivdienst verwendet weiter
+   spawn('tesseract', ..., { shell:false }) und bleibt unverändert. */
+await createTesseractStub(stubOrdner);
 
 /* Ein winziges, gültiges PNG (1×1, rot) — echte Bytes, kein Platzhalter. */
 const PNG = Buffer.from(
@@ -67,7 +57,7 @@ const PNG = Buffer.from(
 
 const starten = (pfad: string): ChildProcess => spawn(
   process.execPath, [path.join(WURZEL, 'dienste', 'ocr.mts'), '--port', String(PORT)],
-  { env: { ...process.env, PATH: pfad }, stdio: ['ignore', 'pipe', 'pipe'] });
+  { env: withTestPath(process.env, pfad), stdio: ['ignore', 'pipe', 'pipe'] });
 
 const wartenAufBereit = async (kind: ChildProcess): Promise<boolean> => {
   for (let versuch = 0; versuch < 60; versuch++) {
@@ -103,7 +93,7 @@ const stoppen = async (kind: ChildProcess): Promise<void> => {
  * §1 · Der Dienst startet und meldet sich
  * ========================================================================*/
 console.log('\n1 · Der Dienst startet und meldet sich');
-const dienst = starten(`${stubOrdner}:${process.env['PATH'] || ''}`);
+const dienst = starten(stubOrdner + path.delimiter + (process.env['PATH'] || process.env['Path'] || ''));
 const fehlerstrom: string[] = [];
 dienst.stderr?.on('data', (d: Buffer) => fehlerstrom.push(d.toString()));
 p('Er ist innerhalb von sechs Sekunden oben', await wartenAufBereit(dienst),
