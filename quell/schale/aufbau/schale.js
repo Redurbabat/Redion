@@ -2132,7 +2132,7 @@ const App = (() => {
             for (const satz of gefundeneSaetze) {
                 const inhalt = await Dateien.alsBlob(satz.id);
                 if (!inhalt || (satz.zustand && satz.zustand !== 'fertig') ||
-            (typeof satz.groesse === 'number' &&
+                    (typeof satz.groesse === 'number' &&
                     Number.isFinite(satz.groesse) && satz.groesse >= 0 &&
                     inhalt.size !== satz.groesse)) {
                     ausgelassen.push(String(satz.name || satz.id || 'Unbenannte Datei'));
