@@ -13,6 +13,8 @@ typische iOS-Eingaben:
 - Helles Redion → dunkle Symbole.
 - Wenn Redion von Hell zu Dunkel umgestellt wird, folgt die native
   Statusleiste, ohne die Seite neu zu laden.
+- Nur die **Statusbar** wird farblich angepasst. Der iOS-Home-Indikator
+  bleibt unter Kontrolle von iOS (`SystemBarType.StatusBar`).
 - Die iPhone-Statusleiste **bleibt sichtbar**. Kein Fullscreen,
   keine Änderungen an Safe-Areas oder am Home-Indikator.
 - Technisch nutzt Redion **`SystemBars` aus `@capacitor/core@8`**.
@@ -46,7 +48,14 @@ temporär** installiert (`npm --no-save --package-lock=false`).
 Es wird **nicht** in `package.json`, `package-lock.json`
 oder die normale Website aufgenommen.
 `npx cap sync ios` bindet die native Plugin-Implementierung in das
-generierte Xcode-Projekt ein. Das gemeinsame Redion-JavaScript hat
+generierte Xcode-Projekt ein. Damit Capacitor 8 trotz temporärer Installation die Plugins
+tatsächlich in Swift Package Manager aufnimmt, enthält
+`capacitor.config.json` jetzt `includePlugins` mit genau
+`@capacitor/filesystem`, `@capacitor/share` und
+`@capacitor/haptics`. Die ersten beiden gehören zu den bereits
+vorhandenen nativen Sicherungs- und Exportfunktionen, die dritte
+zu dieser Haptik-Erweiterung. Die Website benötigt keine davon.
+Das gemeinsame Redion-JavaScript hat
 keine Kenntnis von diesem Plugin.
 
 ## Trennung von Website und iOS
@@ -62,10 +71,13 @@ Die bestehende Webparitätsprüfung erlaubt **genau dieses**
 zusätzliche Skript. Alle Website-Dateien (`index.html`,
 `quell/`, `src/`, CSS, PWA) sind weiterhin bytegleich.
 
-Die App-ID bleibt `ch.redurbabat.redion`.
-Keine Änderungen an den iOS-Dateiexporten, Swift-Privacy-Shield,
-`ios/`-Quellen, `build/ios-capacitor`, IndexedDB,
-Notizen oder Sicherungsformaten.
+Die App-ID bleibt `ch.redurbabat.redion`; der
+generierte Xcode-Pfad `build/ios-capacitor` bleibt ebenfalls gleich.
+Nur die **Capacitor-Plugin-Erkennung** in der bestehenden
+`capacitor.config.json` wird ergänzt.
+Keine Änderung an iOS-Dateiexporten, Swift-Privacy-Shield,
+`build/ios-capacitor`, IndexedDB, Notizen oder
+Sicherungsformaten.
 
 ## Neue Regressionstests
 
