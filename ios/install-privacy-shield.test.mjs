@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { injectPrivacyShield } from './install-privacy-shield.mjs';
+import { injectPrivacyShield, nativeAppDelegatePath } from './install-privacy-shield.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const swift = fs.readFileSync(path.join(root, 'ios/privacy-shield.swift'), 'utf8');
@@ -52,7 +52,19 @@ test('Nur native Lebenszyklusbenachrichtigungen verdecken Screenshots', () => {
 
 test('Kein Webseiten-Skript, keine Änderung an index.html oder Capacitor-Konfiguration', () => {
   const script = fs.readFileSync(path.join(root, 'ios/install-privacy-shield.mjs'), 'utf8');
-  assert.match(script, /ios\/App\/App\/AppDelegate.swift/);
+  assert.match(script, /nativeAppDelegatePath\(root, config\)/);
   assert.doesNotMatch(script, /writeFileSync\([^)]*index\.html/);
   assert.doesNotMatch(script, /(?:readFileSync|writeFileSync)\([^\n]*project\.pbxproj/);
+});
+
+test('Die native AppDelegate liegt nur im separaten Capacitor-Buildordner', () => {
+  const config = JSON.parse(fs.readFileSync(path.join(root, 'capacitor.config.json'), 'utf8'));
+  assert.equal(nativeAppDelegatePath(root, config),
+    path.join(root, 'build/ios-capacitor/App/App/AppDelegate.swift'));
+  assert.throws(() => nativeAppDelegatePath(root, {
+    ...config, ios: { path: 'ios' }
+  }), /Unerwarteter nativer iOS-Projektpfad/);
+  assert.throws(() => nativeAppDelegatePath(root, {
+    ...config, ios: { path: '../ios' }
+  }), /Unerwarteter nativer iOS-Projektpfad/);
 });
