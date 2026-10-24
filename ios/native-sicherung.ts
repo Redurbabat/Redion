@@ -17,6 +17,7 @@ import { Share } from '@capacitor/share';
 import { Haptics } from '@capacitor/haptics';
 import { createNativeFileExporter } from './native-file-export.mjs';
 import { startIosNativeFeel } from './native-feel.mjs';
+import { createHomeShortcutRouter } from './home-shortcuts.mjs';
 
 const saveFile = createNativeFileExporter({
   filesystem: Filesystem,
@@ -57,4 +58,10 @@ if (Capacitor.getPlatform() === 'ios' && Capacitor.isNativePlatform()) {
   } else {
     prepare();
   }
+
+  // Native iOS Home Screen Quick Actions (long-press app icon) use the
+  // EXISTING Redion tab click handlers. This global is defined only in
+  // the iOS IPA, never on the browser/PWA website.
+  (globalThis as any).RedionNativeShortcut =
+    createHomeShortcutRouter({ document });
 }
