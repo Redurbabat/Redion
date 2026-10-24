@@ -37,6 +37,7 @@ import os from 'node:os';
 import vm from 'node:vm';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
+import { typescriptGlob } from '../ts-glob-pfad.mjs';
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
 
@@ -566,8 +567,13 @@ p('tsc -p tsconfig.islands.json: sauber', fehlerKit === '',
     extends: path.join(WURZEL, 'tsconfig.islands.json'),
     compilerOptions: { noUncheckedIndexedAccess: true, exactOptionalPropertyTypes: true,
                        useUnknownInCatchVariables: true, noImplicitReturns: true },
-    include: [path.join(WURZEL, 'src/islands/**/*.tsx'), path.join(WURZEL, 'fremd/touch/**/*.ts'),
-              path.join(WURZEL, 'fremd/touch/**/*.tsx')]
+    /* Auf Windows liefert path.join C:\\...\\**\\*.tsx – der tsc-Glob
+       erkennt das dort nicht (TS18003). Immer / im JSON-Glob benutzen. */
+    include: [
+      typescriptGlob(WURZEL, 'src/islands', 'tsx'),
+      typescriptGlob(WURZEL, 'fremd/touch', 'ts'),
+      typescriptGlob(WURZEL, 'fremd/touch', 'tsx')
+    ]
   }));
   const aus = da('tsconfig.islands.json') ? tsc(streng) : '';
   const zeilen = aus.split('\n').filter(z => /error TS/.test(z));
