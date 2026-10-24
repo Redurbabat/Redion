@@ -1,0 +1,62 @@
+name: Workspace-Bibliothek
+
+on:
+  pull_request:
+    paths:
+      - 'src/bereiche/wissen/bibliothek.ts'
+      - 'quell/schale/stil/bibliothek-studio.css'
+      - 'quell/schale/stil/studio.css'
+      - 'pruefungen/workspace-library.mts'
+      - '.github/workflows/workspace-library.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  library:
+    name: Chromium, WebKit und echte Vergleichsbilder
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Unveränderten Vergleichsstand holen
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          path: bilder/workspace-2/basis
+          persist-credentials: false
+      - name: Echte Vorher-Bilder, ausschliesslich synthetische Prüfdaten
+        env:
+          REDION_WORKSPACE_ROOT: ${{ github.workspace }}/bilder/workspace-2/basis
+        run: node pruefungen/workspace-library.mts --capture=vorher
+      - name: Echte Nachher-Bilder mit identischen Prüfdaten
+        run: node pruefungen/workspace-library.mts --capture=nachher
+      - name: Bibliothekswege unter Chromium
+        run: node pruefungen/workspace-library.mts --states
+      - name: Bibliothekswege unter WebKit
+        run: node pruefungen/workspace-library.mts --webkit --states
+      - name: Lokale Vergleichsgalerie erzeugen
+        if: always()
+        run: node pruefungen/workspace-gallery.mts
+      # Nur die vom isolierten Prüfstand erzeugten PNGs, niemals den
+      # Basis-Checkout, Browserprofile, Sicherungen oder persönliche Daten.
+      - name: Vergleichsbilder im PR-Lauf bereitstellen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace-bibliothek-vorher-nachher
+          path: |
+            bilder/workspace-2/galerie.html
+            bilder/workspace-2/chromium/**/*.png
+            bilder/workspace-2/webkit/**/*.png
+          if-no-files-found: warn
+          retention-days: 14

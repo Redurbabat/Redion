@@ -2,20 +2,29 @@
  * --capture=vorher / --capture=nachher: dieselben acht Bildschirmfotos.
  * Ohne Argument: die neuen Bedienverträge gegen die laufende Bibliothek.
  */
-import { chromium, type Page } from 'playwright';
+import { chromium, webkit, type Page } from 'playwright';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const root = path.resolve(import.meta.dirname, '..');
+const repo = path.resolve(import.meta.dirname, '..');
+// Vergleichsbilder dürfen einen getrennten Basis-Checkout öffnen. Die Bilder
+// landen weiterhin nur im ignorierten Arbeitsmaterial dieses Prüflaufs.
+const root = path.resolve(process.env.REDION_WORKSPACE_ROOT || repo);
+const engine = process.argv.includes('--webkit') ? 'webkit' : 'chromium';
 const capture = process.argv.find(a => a.startsWith('--capture='))?.split('=')[1];
 if (capture && !['vorher', 'nachher'].includes(capture)) throw new Error('Unbekannter Bildlauf');
-const output = path.join(root, 'bilder', 'workspace-2', capture || 'pruefung');
+const output = path.join(repo, 'bilder', 'workspace-2', engine, capture || 'pruefung');
 fs.mkdirSync(output, { recursive: true });
 const sizes = [[390, 844], [430, 932], [1366, 768], [1440, 900]] as const;
-const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader',
-  '--ignore-gpu-blocklist', '--enable-gpu-compositing'] });
+const selectedCase=process.argv.find(a=>a.startsWith('--case='))?.slice(7);
+const cases=sizes.flatMap(([width,height])=>[false,true].map(dark=>({width,height,dark})))
+  .filter(({width,dark})=>!selectedCase || selectedCase===`${width}-${dark?'dunkel':'hell'}`);
+assert.ok(cases.length,'Unbekannter Bildschirmfall');
+const browser = engine === 'webkit' ? await webkit.launch() : await chromium.launch({
+  args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader',
+    '--ignore-gpu-blocklist', '--enable-gpu-compositing'] });
 
 async function seed(page: Page, dark: boolean) {
   await page.goto(pathToFileURL(path.join(root, 'index.html')).href);
@@ -48,13 +57,18 @@ async function seed(page: Page, dark: boolean) {
   })()`) as {folder:string;notes:string;pdf:string;sub:string;long:string;blank:string};
 }
 
+let activePage: Page | undefined;
 try {
-  for (const [width,height] of sizes) for (const dark of [false,true]) {
+  for (const [caseIndex,{width,height,dark}] of cases.entries()) {
     const context = await browser.newContext({viewport:{width,height},deviceScaleFactor:1,
       hasTouch:width<761,isMobile:width<761,colorScheme:dark?'dark':'light'});
-    const page = await context.newPage(); page.setDefaultTimeout(15000);
+    const page = await context.newPage(); activePage=page; page.setDefaultTimeout(15000);
     const errors:string[]=[]; page.on('pageerror',e=>errors.push(e.message));
     const ids=await seed(page,dark);
+    const screenshot = async (state: string) => {
+      if (!process.argv.includes('--states')) return;
+      await page.screenshot({path:path.join(output,`${width}-${dark?'dunkel':'hell'}-${state}.png`)});
+    };
     await page.waitForSelector('.bib-gitter .bib-deckel'); await page.waitForTimeout(500);
     if (capture) {
       await page.screenshot({path:path.join(output,`${width}-${dark?'dunkel':'hell'}.png`)});
@@ -63,6 +77,21 @@ try {
       assert.equal(await page.locator('.bib-workspace-intro').count(),1,'Ein gemeinsamer neuer Kopf');
       const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);
       assert.equal(overflow,false,`${width}: kein horizontaler Überlauf`);
+      const contrast = await page.locator('.bib-gitter .bib-deckel').first().evaluate(card=>{
+        const luminance=(color:string) => {
+          const rgb=(color.match(/[\d.]+/g)||[]).slice(0,3).map(Number).map(v=>{
+            const value=v/255; return value<=.04045?value/12.92:((value+.055)/1.055)**2.4;
+          });
+          return .2126*(rgb[0]||0)+.7152*(rgb[1]||0)+.0722*(rgb[2]||0);
+        };
+        const background=luminance(getComputedStyle(card).backgroundColor);
+        return ['.bib-card-kind','.bib-card-meta','.bib-deckel-name b'].map(selector=>{
+          const element=card.querySelector(selector)!;
+          const foreground=luminance(getComputedStyle(element).color);
+          return {selector,ratio:(Math.max(foreground,background)+.05)/(Math.min(foreground,background)+.05)};
+        });
+      });
+      for (const {selector,ratio} of contrast) assert.ok(ratio>=4.5,`${selector}: Textkontrast ${ratio.toFixed(2)}`);
       for (const selector of ['[data-bib-search]','[data-neu-auf]','[data-form-wahl]',`[data-bib-favorite="${ids.notes}"]`]) {
         const r=await page.locator('.bib '+selector).first().boundingBox();
         assert.ok(r && r.width>=44 && r.height>=44,selector+' mindestens 44 × 44');
@@ -72,11 +101,66 @@ try {
       if (process.argv.includes('--counterprobe')) await favorite.evaluate(el=>el.replaceWith(el.cloneNode(true)));
       await favorite.focus(); await page.keyboard.press('Space');
       await page.waitForFunction(id=>document.querySelector(`[data-bib-favorite="${id}"]`)?.getAttribute('aria-pressed')==='true',ids.notes);
+      // Der Fokus wird nach dem Neuzeichnen im nächsten Bild restauriert.
+      // WebKit kann den Zustandswechsel schon VOR diesem Bild liefern.
+      await page.waitForFunction(id=>document.activeElement?.getAttribute('data-bib-favorite')===id,ids.notes,{timeout:1000});
       assert.equal(await page.evaluate(id=>document.activeElement?.getAttribute('data-bib-favorite')===id,ids.notes),true,'Fokus bleibt beim Favoriten');
+      await page.locator('[data-art-wahl]').click();
+      await page.locator('[data-wahl="pdf"]').click();
+      assert.equal(await page.locator('.bib-gitter .bib-deckel').count(),1,'Artfilter zeigt nur die echte PDF');
+      assert.equal(await page.locator(`.bib-deckel[data-id="${ids.pdf}"]`).count(),1);
+      await screenshot('pdf-filter');
+      // Reale Zustandsänderung: die letzte passende PDF liegt nun im
+      // Unterordner. Der offene Filter bleibt bestehen; kein Dokument löschen.
+      await page.evaluate(`Store.updateBlock('${ids.pdf}',{parentId:'${ids.sub}'}); App.zeichneSeite()`);
+      await page.waitForSelector('[data-bib-reset]');
+      await screenshot('filter-leer');
+      await page.locator('[data-bib-reset]').click();
+      assert.equal(await page.locator('.bib-gitter .bib-deckel').count(),5,'Filter zurücksetzen zeigt alle verbliebenen direkten Kinder');
+      await page.evaluate(`Store.updateBlock('${ids.pdf}',{parentId:'${ids.folder}'}); App.zeichneSeite()`);
+      assert.equal(await page.locator('.bib-gitter .bib-deckel').count(),6,'Die verschobene PDF ist unverändert vorhanden');
+      await page.locator('[data-orte]').click();
+      await page.locator('[data-wahl="favoriten"]').click();
+      assert.equal(await page.locator('.bib-gitter .bib-deckel').count(),2,'Favoriten sind echte gespeicherte Dokumente');
+      assert.equal(await page.locator('.bib-krume').count(),0,'Globale Favoriten zeigen keinen veralteten Ordnerpfad');
+      await screenshot('favoriten');
+      if (width<761) await favorite.tap(); else await favorite.click();
+      await page.waitForFunction(id=>!document.querySelector(`[data-bib-favorite="${id}"]`),ids.notes);
+      await page.waitForFunction(()=>document.activeElement?.hasAttribute('data-orte'),null,{timeout:1000});
+      assert.equal(await page.locator('.bib-gitter .bib-deckel').count(),1,'Entfernen eines Favoriten entfernt nur die Markierung');
+      await page.locator('.bib-favorite').click();
+      await page.waitForSelector('[data-bib-home]');
+      assert.ok((await page.locator('.bib-empty-title').textContent())?.includes('Favoriten'));
+      await screenshot('favoriten-leer');
+      await page.locator('[data-bib-home]').click();
+      await page.locator(`.bib-deckel[data-id="${ids.folder}"]`).click();
       await page.locator('.bib [data-bib-search]').click();
-      await page.waitForSelector('.finder.such'); await page.keyboard.press('Escape');
+      await page.waitForSelector('.finder.such');
+      await page.locator('#q').fill('Zusammenhänge');
+      await page.waitForFunction(()=>Array.from(document.querySelectorAll('#res button[data-i]')).some(el=>el.textContent?.includes('Ideen für die nächste Woche')));
+      assert.ok((await page.locator('.finder.such .such-bereich [aria-checked="true"]').textContent())?.includes('Arbeitsunterlagen'),'Suchknopf erhält den echten Ordnerbereich');
+      const selection=await page.locator('#res > button.on').evaluate(button=>{
+        const marker=button.parentElement?.querySelector('.ru-marke');
+        const br=button.getBoundingClientRect(), mr=marker?.getBoundingClientRect();
+        const background=getComputedStyle(button).backgroundColor;
+        const numbers=(background.match(/[\d.]+/g)||[]).map(Number);
+        const opaque=background!=='transparent' && (numbers.length===3 || (numbers[3]||0)>=.99);
+        return {opaque,covered:!!mr && mr.top<=br.top+1 && mr.bottom>=br.bottom-1};
+      });
+      assert.ok(selection.opaque || selection.covered,'Auch während der Auswahlbewegung steht der ganze Suchtreffer auf lesbarem Grund');
+      if(process.argv.includes('--diagnose')) {
+        const geometry=()=>page.evaluate(()=>Array.from(document.querySelectorAll('#res,#res > button.on,#res > .ru-marke,#res .snip')).map(el=>({
+          tag:el.tagName,classes:el.className,rect:el.getBoundingClientRect().toJSON(),
+          height:getComputedStyle(el).height,color:getComputedStyle(el).color,background:getComputedStyle(el).backgroundColor,
+          transform:getComputedStyle(el).transform,animations:el.getAnimations().length
+        })));
+        console.log('Suche sofort:',JSON.stringify(await geometry()));
+        await page.waitForTimeout(1000);
+        console.log('Suche nach 1s:',JSON.stringify(await geometry()));
+      }
+      await screenshot('suche'); await page.keyboard.press('Escape');
       await page.locator(`[data-mehr-id="${ids.notes}"]`).click();
-      await page.waitForSelector('.menu,.r-sheet,.overlay'); await page.keyboard.press('Escape');
+      await page.waitForSelector('.menu,.r-sheet,.overlay'); await screenshot('menue'); await page.keyboard.press('Escape');
       await page.locator(`[data-id="${ids.sub}"].bib-deckel`).click();
       await page.waitForFunction(()=>document.querySelector('.bib-dkopf h1')?.textContent==='Projekt Nord');
       assert.equal(await page.locator('.bib-gitter .bib-deckel').count(),2,'Ordner öffnet seine Kinder');
@@ -85,6 +169,7 @@ try {
       await page.locator('[data-wahl="liste"]').click();
       await page.waitForSelector('.bib-tab');
       assert.equal(await page.locator('.bib-zeile[data-id]').count(),6,'Alle Dokumente auch in der Tabelle');
+      await screenshot('liste');
       await page.evaluate(`Store.setMeta('bibForm','deckel'); Bibliothek.oeffne('${ids.folder}')`);
       await page.locator(`.bib-deckel[data-id="${ids.notes}"]`).focus(); await page.keyboard.press('Enter');
       await page.waitForSelector('#title');
@@ -92,6 +177,15 @@ try {
       await page.evaluate(`Bibliothek.oeffne('${ids.blank}')`);
       await page.waitForSelector('.bib-empty-title');
       assert.equal(await page.locator('.bib-leer [data-neu-auf]').count(),1,'Leerer Ordner hat eine echte Aktion');
+      await screenshot('ordner-leer');
+      await page.locator('.bib-leer [data-neu-auf]').click();
+      await page.waitForSelector('.menu,.r-sheet,.overlay');
+      await page.keyboard.press('Escape');
+      await page.evaluate('Store.flush()');
+      await page.reload();
+      await page.waitForFunction("typeof Store !== 'undefined' && !!Store.getBlock('"+ids.folder+"')");
+      assert.equal(await page.evaluate(`!!Store.getBlock('${ids.notes}').favorite`),false,'Favoritenänderung bleibt nach Neuladen erhalten');
+      assert.equal(await page.evaluate(`Store.childrenOf('${ids.folder}').filter(p=>p.alive!==false).length`),6,'Keine Seite beim Favoritenwechsel verloren');
       await page.emulateMedia({reducedMotion:'reduce'});
       await page.evaluate(`Bibliothek.oeffne('${ids.folder}')`);
       assert.equal(await page.locator('.bib-gitter').evaluate(el=>getComputedStyle(el).animationName),'none','Keine Ankunft bei weniger Bewegung');
@@ -100,6 +194,11 @@ try {
       assert.deepEqual(errors,[],'Keine Browserfehler');
     }
     console.log(`✓ ${width} × ${height} ${dark?'dunkel':'hell'} ${capture||'Bedienung'}`);
-    await context.close();
+    // Der letzte Kontext wird gemeinsam mit dem Browser geschlossen.
+    // Kein doppelter Teardown desselben WebKit-Prozesses auf Windows.
+    if (caseIndex<cases.length-1) await context.close();
   }
-} finally { await browser.close(); }
+} catch (error) {
+  await activePage?.screenshot({path:path.join(output,'fehler.png')}).catch(()=>{});
+  throw error;
+} finally { await browser.close(); console.log(`✓ ${engine} geschlossen`); }

@@ -151,6 +151,7 @@ sind der teuerste Teil und der lehrreichste.
 | P135 | 2026-10-12 | Escape, das nie ankam | 🟠 mittel | — |
 | P136 | 2026-10-11 | „--schnell“ war nicht schnell | niedrig | — |
 | P137 | 2026-10-12 | Ein Wächter, der nicht auf der Nachbarliste stand | niedrig | — |
+| P138 | 2026-10-24 | Die neue Karte wurde am alten Blatt gemessen | 🟡 klein | — |
 
 ---
 
@@ -2969,4 +2970,25 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** test581 gegen fdbf6ee 92/93 mit linse.ts:259/261, danach 93/93.
 
 **Die Lehre.** Zu den Nachbarn einer Änderung gehören auch die Wächter, die eine Regel über eine ganze Sprache oder Schicht halten (Kurven, Escape, esc, Ports). Der volle Lauf ist der einzige, der sie sicher alle fragt — deshalb ist er die Schwelle für main. Und beim Aufschreiben fing derselbe Wächter die Chronik selbst: der erste Text zu P137 zitierte die Kurve wörtlich in Anführungszeichen, und daten.ts trug sie ins TypeScript — wie P130.
+
+
+---
+
+## P138 · Die neue Karte wurde am alten Blatt gemessen
+
+*2026-10-24 · 🟡 klein*
+
+**Das Bild.** test597 meldete im ersten Bibliothekslauf sechs rote Zusagen: Menügriffe angeblich oberhalb der Karte und eine fehlende überlagerte Vorschauzeile.
+
+**Die falsche Vermutung.** Der neue Menügriff liegt ausserhalb seiner Dokumentkarte.
+
+**Wie es gefunden wurde.** Die tatsächlich gemalten Karten und die verwendeten Rechtecke verglichen: der Test verwendete das innere Vorschaublatt. Die neue Bedienzeile liegt absichtlich darüber.
+
+**Die Ursache.** Ein Messpunkt für den alten Aufbau wurde mit einem Verhaltensvertrag verwechselt. Nach der Korrektur der Messung war zusätzlich der reservierte Textraum am Telefon sieben Pixel zu breit.
+
+**Die Lösung.** Die ganze Karte und vollständige 44-Pixel-Trefferflächen prüfen, Überdeckung von Vorschau/Titel ausschliessen, Textraum reservieren und den tatsächlichen Abstand korrigieren. Eine isolierte Gegenprobe verschiebt den Favoriten absichtlich in den Inhalt.
+
+**Der Beweis.** Erstlauf 85/91; strengere Messung danach 92/93 und nach der Abstandskorrektur 93/93, einschliesslich zweier erkannter Gegenproben.
+
+**Die Lehre.** Beim Umbau den ursprünglichen Bedienvertrag erhalten und den Messpunkt nachsehen. Eine echte Gegenprobe schützt davor, nur den Test an eine hübsche Oberfläche anzupassen.
 

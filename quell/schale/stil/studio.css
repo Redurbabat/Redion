@@ -530,6 +530,11 @@ body :is(.stat-karte.lw-metrik,.rmo-health-metric):not(:hover,:focus-within,:act
    seine Fläche und seine Schrift — sonst stand dort Weiss auf Weiss (vierte
    Durchsicht E711, test588 §12). */
 .finder .res.ru-marke-traeger > button.on{background:transparent;color:var(--auf-accent);transition:color var(--motion-fast) var(--ease)}
+/* Bei einem längeren Inhaltstreffer wächst die gleitende Marke erst auf
+   die neue Zeilenhöhe. Die gewählte Zeile trägt bis dahin selbst ihren
+   deckenden Grund: kein weisser Ausschnitt auf weisser Dialogfläche.
+   Die eine Auswahlmarke und ihre bestehende Feder bleiben unverändert. */
+.finder.such .res.ru-marke-traeger:has(> .ru-marke.faehrt) > button.on{background:var(--accent);transition:none}
 /* Kürzel und Ausschnitt voll auf der Marke: mit .82 nur 3,77–3,99 : 1 (Durchsicht E711). */
 .finder .res.ru-marke-traeger > button.on :is(.pth,.snip){color:inherit;opacity:1}
 /* Der Stern folgt auf der Marke der Zeile (Grau/Gold dort 1,0–2,7 : 1); ★/☆ sagt die Form (§38). */

@@ -906,6 +906,8 @@ const Bibliothek = (() => {
   /** Die Brotkrume der Ablage. An der Wurzel schweigt sie — ein Pfad mit
    *  genau einem Glied ist kein Pfad, sondern eine Zeile Luft. */
   const ordnerKrume = (): string => {
+    // Favoriten und „Zuletzt“ sind globale Fragen, keine Ordneransichten.
+    if (zustand.reiter !== 'ablage') return '';
     const weg = ordnerWeg();
     if (!weg.length) return '';
     return '<nav class="bib-krume" aria-label="Wo ich bin">' +
@@ -1555,16 +1557,22 @@ const Bibliothek = (() => {
   const emptyLibrary = (): string => {
     const filtered = zustand.art !== 'alle';
     const favorites = zustand.reiter === 'favoriten';
+    const recent = zustand.reiter === 'kuerzlich';
+    const otherPlace = ['geteilt', 'privat', 'datenbank'].includes(zustand.reiter);
     const title = filtered ? 'Hier passt noch kein Dokument'
-      : favorites ? 'Platz für deine Favoriten' : 'Hier beginnt etwas Neues';
+      : favorites ? 'Platz für deine Favoriten'
+      : recent ? 'Noch nichts geöffnet'
+      : otherPlace ? 'Hier gibt es noch keine Dokumente' : 'Hier beginnt etwas Neues';
     const detail = filtered ? 'Wähle eine andere Art oder zeige wieder alle Dokumente an.'
       : favorites ? 'Mit dem Stern an einer Dokumentkarte findest du Wichtiges hier wieder.'
+      : recent ? 'Öffne ein Dokument aus deiner Ablage. Hier findest du es anschliessend schnell wieder.'
+      : otherPlace ? 'Dieser Ort ist leer. Deine übrigen Dokumente findest du weiterhin in deiner Ablage.'
       : 'Lege deine erste Seite an. Notizen, PDFs und Ideen bleiben an einem Ort.';
     return '<section class="bib-leer" aria-label="Leere Bibliotheksansicht">' +
       '<span class="bib-empty-symbol" data-sym="' + (favorites ? 'star' : 'pages') + '" aria-hidden="true"></span>' +
       '<h2 class="bib-empty-title">' + title + '</h2><p>' + detail + '</p>' +
       (filtered ? '<button type="button" data-bib-reset>Alle Arten zeigen</button>'
-        : favorites ? '<button type="button" data-bib-home>Zur Ablage</button>'
+        : (favorites || recent || otherPlace) ? '<button type="button" data-bib-home>Zur Ablage</button>'
         : '<button type="button" data-neu-auf' + (!permitted('bearbeiten', zustand.ordner || undefined) ? ' disabled' : '') + '>Erste Seite erstellen</button>') +
       '</section>';
   };

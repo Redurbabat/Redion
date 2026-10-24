@@ -4856,6 +4856,86 @@ const ChronikDaten = {
                     "risiko": "Wer main holt, bekommt zwölf benannte rote Läufe mit, alle älter als diese Arbeit; nach fdbf6ee lief kein voller Lauf mehr (nur zwei kleine Nachzüge, test274 und Doku)."
                 }
             ]
+        },
+        {
+            "datum": "2026-10-21",
+            "wochentag": "Mittwoch",
+            "titel": "Sicherheitsbranch und Laptop auf einen gemeinsamen Stand bringen",
+            "wasIchWeiss": "Redur nennt fix/redion-sicherheit-und-datenschutz-20261021 und verlangt alle Änderungen auf main sowie einen schnellen Push. Der Branch 97123abd6 enthält bereits Sicherheitskorrekturen, neue Glas-/Bewegungsregeln und beide Zielleisten-Zweige. Der lokale Stand d8f7c6c30 enthält zusätzlich deren vollständige Dokumentation. Beides wird in 98906028d zusammengeführt. Die unfertige lokale Symbolfeder bleibt separat in 24365d989 auf codex/apple-glass-20oct; der ältere PDF-Zwischenstand bleibt in 19a3de648 erhalten. Redur erlaubt in diesem Dialog ausdrücklich, bekannte alte Testfehler offen zu lassen. Das ist keine Behauptung über einen neuen vollständigen Lauf.",
+            "nachrichten": [
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "schau mal das an und nehe alle änderungen auf main und pusche alles sobald wie möglich auf github",
+                    "woher": "Aktueller Dialog, zusammen mit dem Link auf fix/redion-sicherheit-und-datenschutz-20261021",
+                    "gemeint": "Den genannten Integrationsbranch prüfen, vollständig auf main übernehmen und auf GitHub pushen.",
+                    "besser": "Prüfe den Sicherheitsbranch, integriere alle Änderungen in main und pushe den gemeinsamen Stand.",
+                    "besserePrompt": "Der konkrete Branch-Link macht den Auftrag eindeutig."
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "Ja, jetzt integrieren und pushen",
+                    "woher": "Antwort im aktuellen Dialog auf die Rückfrage zu den zwei unveränderten Windows-Testhilfen test216 und test578 zusätzlich zu zwölf bekannten Altfehlern",
+                    "gemeint": "Diese belegten Testprobleme dokumentiert offen lassen und nach den Browserprüfungen den gemeinsamen Stand auf main pushen.",
+                    "besser": "Die Rückfrage ist eindeutig beantwortet.",
+                    "besserePrompt": "Keine zusätzliche Formulierung nötig."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "Remote-Branch und lokale Zielleisten-Dokumentation integriert; Content-Length-Regulärausdruck und körperlose 205-Antwort in der Brücke repariert. Die Quelltextkarte verwendet relative Pfade, damit ihr Generator auf Windows und Linux dasselbe schreibt.",
+                    "vonCommit": "97123abd6",
+                    "bisCommit": "98906028d",
+                    "zeitraum": "21. Oktober 2026; Uhrzeiten nicht protokolliert",
+                    "dauer": "",
+                    "pruefungen": "test620 erweitert: vorher 13 grün / 2 rot, nachher 15 grün / 0 rot; Typecheck, Build und Dienststand grün. Abschluss der übrigen Prüfungen in E752 und messungen.md."
+                }
+            ],
+            "groesstesProblem": "Die Sicherheitsprüfung blockierte jede normale Content-Length und die Brücke baute für HTTP 205 einen unerlaubten Antwortkörper. Beide Fälle waren im vorhandenen Test nicht enthalten.",
+            "massnahmen": []
+        },
+        {
+            "datum": "2026-10-24",
+            "wochentag": "Samstag",
+            "titel": "Workspace 2.0 beginnt mit der Dokumentbibliothek",
+            "wasIchWeiss": "Redur übergibt den grossen Workspace-Auftrag aus Issue 134. Das sichtbare Upgrade soll im vorhandenen Redion entstehen, mit demselben Webcode für Desktop und iOS und ohne Datenmigration. Sein ausdrücklich erlaubter erster Lieferumfang ist eine benutzbare, geprüfte Bibliothek statt vieler halbfertiger Ansichten. Aktuelles main ist 72b4dae5d, 65 Commits vor dem bisherigen lokalen main. Ein neuer Branch beginnt direkt dort. Während der Prüfungen verlangt Redur den sofortigen Push; 34ac00a62 und Entwurfs-PR 135 sichern diesen Zwischenstand. Nach seinem weiteren Auftrag wird gemäss Git-Regel auf einem frischen Folgebranch weitergearbeitet. Kein Merge und kein Deployment.",
+            "nachrichten": [
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "Setze die Änderungen tatsächlich im Repository um. Erstelle nicht nur einen Plan.",
+                    "woher": "Masterprompt im aktuellen Dialog, zum Auftrag Redion Workspace 2.0 und GitHub-Issue 134",
+                    "gemeint": "Ein sichtbares, benutzbares Upgrade im bestehenden Produkt bauen und die Daten-/iOS-Wege erhalten.",
+                    "besser": "Der Auftrag ist eindeutig und enthält selbst eine sinnvolle erste Liefergrenze.",
+                    "besserePrompt": "Zuerst die vollständige Bibliothek mit Bildern und Prüfungen liefern; danach Editor und Navigation."
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "pusche alles sofort auf github",
+                    "woher": "Aktueller Dialog, während der Bibliotheksprüfung",
+                    "gemeint": "Den vorhandenen Zwischenstand sofort sichern; kein Auftrag zum Merge oder Deployment.",
+                    "besser": "Pushe den aktuellen Arbeitsbranch jetzt, auch wenn die weiteren Prüfungen noch laufen.",
+                    "besserePrompt": "Die Freigabegrenze von Workspace 2.0 bleibt bestehen."
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "weiter",
+                    "woher": "Aktueller Dialog nach dem bestätigten Push von 34ac00a62",
+                    "gemeint": "Die offenen Prüfungen und Verbesserungen fortsetzen.",
+                    "besser": "Den Bibliotheksbogen abschliessen und die übrigen Workspace-Phasen getrennt halten.",
+                    "besserePrompt": "Keine weitere Klärung nötig."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "Bibliothekskarten, Kopf, direkte Favoriten und leere Ansichten umgesetzt; vorhandene Suche, Menüs und Datenwege wiederverwendet. Den Sicherungseintrag typensicher adressiert und Deklarationen der bestehenden Windows-Testhilfen ergänzt. Nach dem sofortigen Push folgen strengere Kartenmessung, sieben Pixel Textabstand am Telefon, kontextbezogene Leerzustände, Zustandsbilder und eine echte native Paket-Gegenprobe.",
+                    "vonCommit": "72b4dae5d",
+                    "bisCommit": "34ac00a62 und anschliessender Bibliotheks-Review",
+                    "zeitraum": "24. Oktober 2026; erster Commit um 18:02:09 Europe/Zurich laut git",
+                    "dauer": "nicht protokolliert",
+                    "pruefungen": "TypeScript/Build und Bibliotheksmatrix grün; test597 nach verschärfter Messung 93/93. Schnelllauf 46/47, test109 meldet vierzehn schon auf main vorhandene JavaScript-Dateien. Echte native Brücke gebaut, 482 Webdateien bytegleich, abweichende Bibliothek als Gegenprobe erkannt. Vollständige Ergebnisse und offene Grenzen im Workspace-Prüfbericht; kein voller grüner Gesamtlauf behauptet."
+                }
+            ],
+            "groesstesProblem": "Die alte Geometrieprüfung mass die neue Bedienzeile am inneren Vorschaublatt. Die richtige Messung der ganzen Karte fand danach einen tatsächlichen fehlenden Textabstand am Telefon. Die zweite Bildabnahme fand einen alten Ordnerpfad in globalen Favoriten und einen kurzzeitig weissen Ausschnitt neben der noch wachsenden Suchauswahl; beide zuerst rot nachgewiesen und korrigiert. Ein zusätzlicher Unix-OCR-Hilfentest ist unter Windows nicht ausführbar; der produktnahe Windows-Lauf selbst ist grün.",
+            "massnahmen": []
         }
     ],
     "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
@@ -6674,6 +6754,19 @@ const ChronikDaten = {
             "loesung": "Rückfall 'ease-in' (claude/abend-antworten-2), wie menue.ts ein Schlüsselwort nimmt.",
             "beweis": "test581 gegen fdbf6ee 92/93 mit linse.ts:259/261, danach 93/93.",
             "lehre": "Zu den Nachbarn einer Änderung gehören auch die Wächter, die eine Regel über eine ganze Sprache oder Schicht halten (Kurven, Escape, esc, Ports). Der volle Lauf ist der einzige, der sie sicher alle fragt — deshalb ist er die Schwelle für main. Und beim Aufschreiben fing derselbe Wächter die Chronik selbst: der erste Text zu P137 zitierte die Kurve wörtlich in Anführungszeichen, und daten.ts trug sie ins TypeScript — wie P130."
+        },
+        {
+            "nr": "P138",
+            "datum": "2026-10-24",
+            "titel": "Die neue Karte wurde am alten Blatt gemessen",
+            "schwere": "klein",
+            "symptom": "test597 meldete im ersten Bibliothekslauf sechs rote Zusagen: Menügriffe angeblich oberhalb der Karte und eine fehlende überlagerte Vorschauzeile.",
+            "falscheVermutung": "Der neue Menügriff liegt ausserhalb seiner Dokumentkarte.",
+            "wieGefunden": "Die tatsächlich gemalten Karten und die verwendeten Rechtecke verglichen: der Test verwendete das innere Vorschaublatt. Die neue Bedienzeile liegt absichtlich darüber.",
+            "ursache": "Ein Messpunkt für den alten Aufbau wurde mit einem Verhaltensvertrag verwechselt. Nach der Korrektur der Messung war zusätzlich der reservierte Textraum am Telefon sieben Pixel zu breit.",
+            "loesung": "Die ganze Karte und vollständige 44-Pixel-Trefferflächen prüfen, Überdeckung von Vorschau/Titel ausschliessen, Textraum reservieren und den tatsächlichen Abstand korrigieren. Eine isolierte Gegenprobe verschiebt den Favoriten absichtlich in den Inhalt.",
+            "beweis": "Erstlauf 85/91; strengere Messung danach 92/93 und nach der Abstandskorrektur 93/93, einschliesslich zweier erkannter Gegenproben.",
+            "lehre": "Beim Umbau den ursprünglichen Bedienvertrag erhalten und den Messpunkt nachsehen. Eine echte Gegenprobe schützt davor, nur den Test an eine hübsche Oberfläche anzupassen."
         }
     ]
 };
