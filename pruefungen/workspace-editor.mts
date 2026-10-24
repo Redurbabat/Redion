@@ -129,10 +129,17 @@ try {
 
     const data = await page.evaluate((pageId: string) => {
       const b = Store.getBlock(pageId);
-      return { title: b.text, blockCount: Store.childrenOf(pageId).length };
+      const children = Store.childrenOf(pageId);
+      return {
+        title: b.text,
+        heading: children.some((block: any) =>
+          block.type === 'heading' && block.text === 'Stromkreise verstehen'),
+        text: children.some((block: any) =>
+          block.type === 'text' && String(block.text || '').includes('Sicherungen schützen'))
+      };
     }, id);
     check(label + ': Notiztexte und Blöcke bleiben bestehen',
-      data.title === 'Elektrotechnik – Lernnotizen' && data.blockCount === 2);
+      data.title === 'Elektrotechnik – Lernnotizen' && data.heading && data.text);
     check(label + ': keine Browserfehler', errors.length === 0);
     await context.close(); active = null;
   }
