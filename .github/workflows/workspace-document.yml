@@ -1,0 +1,56 @@
+name: Workspace-Dokumentenkompass
+
+on:
+  pull_request:
+    paths:
+      - 'src/bereiche/pdf/document-mode.ts'
+      - 'quell/bereiche/pdf/document-mode.js'
+      - 'quell/schale/stil/pdf-studio.css'
+      - 'pruefungen/workspace-document.mts'
+      - '.github/workflows/workspace-document.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  document:
+    name: Dokumentansicht in Chromium und WebKit
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+      - run: npm run bauen:ts
+      - run: npm run typecheck
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Vorher-Stand aus demselben Pull Request holen
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          path: bilder/workspace-2/basis
+          persist-credentials: false
+      - name: Echte Vorher-Bilder aus synthetischen Dokumenten
+        env:
+          REDION_WORKSPACE_ROOT: ${{ github.workspace }}/bilder/workspace-2/basis
+        run: |
+          node pruefungen/workspace-document.mts --baseline --capture
+          node pruefungen/workspace-document.mts --webkit --baseline --capture
+      - name: Neue Ansicht und Seitenwechsel in Chromium prüfen
+        run: node pruefungen/workspace-document.mts --capture
+      - name: Neue Ansicht und Seitenwechsel in WebKit prüfen
+        run: node pruefungen/workspace-document.mts --webkit --capture
+      - name: Nur synthetische Vorher-/Nachher-Bilder hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace-dokument-kompass
+          path: bilder/workspace-2/document/**/*.png
+          if-no-files-found: warn
+          retention-days: 14
