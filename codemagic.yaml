@@ -30,6 +30,8 @@ workflows:
           node --test ios/install-privacy-shield.test.mjs
           # Die iOS-Quellen im Repo und das neue Xcode-Ziel muessen getrennt bleiben.
           node --test ios/native-project-layout.test.mjs
+          # Native Startansicht nur im iPhone-Xcode-Projekt, mit echten Farben.
+          node --test ios/install-launch-screen.test.mjs
 
       - name: Lokale Web-Dateien fuer Capacitor bereitstellen
         script: |
@@ -84,6 +86,23 @@ workflows:
           node ios/install-privacy-shield.mjs
           grep -q 'RedionPrivacyShield.start()' build/ios-capacitor/App/App/AppDelegate.swift
           grep -q 'redion-snapshot-privacy-cover' build/ios-capacitor/App/App/AppDelegate.swift
+
+      - name: iPhone-Startbildschirm mit echtem Redion-Symbol
+        script: |
+          set -euo pipefail
+          # Nur das von Capacitor erzeugte UIKit-Storyboard bearbeiten.
+          # Keine Aenderung an index.html, PWA oder Redions ios/-Quellen.
+          node ios/install-launch-screen.mjs
+          test -f build/ios-capacitor/App/App/Base.lproj/LaunchScreen.storyboard
+          test -f build/ios-capacitor/App/App/Assets.xcassets/RedionLaunchIcon.imageset/Contents.json
+          test -f build/ios-capacitor/App/App/Assets.xcassets/RedionLaunchBackground.colorset/Contents.json
+          test -f build/ios-capacitor/App/App/Assets.xcassets/RedionLaunchText.colorset/Contents.json
+          # IB-Lint: validates the real storyboard on the same macOS/Xcode
+          # machine used for packaging. Fail before xcodebuild if invalid.
+          mkdir -p "$CM_BUILD_DIR/build"
+          xcrun ibtool --errors --warnings --notices \
+            --compile "$CM_BUILD_DIR/build/redion-launch-check.storyboardc" \
+            build/ios-capacitor/App/App/Base.lproj/LaunchScreen.storyboard
 
       - name: Sicherungen in der iOS-Dateien-App sichtbar machen
         script: |
