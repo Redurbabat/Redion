@@ -26,6 +26,7 @@ workflows:
           # Windows- und Unix-Stellvertretungen fuer Redions lokalen OCR-Test.
           node --test pruefungen/ocr-test-stub.test.mjs
           node --test ios/native-file-export.test.mjs
+          node --test ios/native-feel.test.mjs
           node --test ios/install-privacy-shield.test.mjs
           # Die iOS-Quellen im Repo und das neue Xcode-Ziel muessen getrennt bleiben.
           node --test ios/native-project-layout.test.mjs
@@ -47,7 +48,7 @@ workflows:
           set -euo pipefail
           npm install --no-save --package-lock=false --no-audit --no-fund \
             @capacitor/core@8 @capacitor/cli@8 @capacitor/ios@8 \
-            @capacitor/filesystem@8 @capacitor/share@8 esbuild@0.28.2
+            @capacitor/filesystem@8 @capacitor/share@8 @capacitor/haptics@8 esbuild@0.28.2
           npx esbuild ios/native-sicherung.ts \
             --bundle --platform=browser --format=iife --target=es2022 \
             --outfile=www/redion-native-sicherung.js
@@ -86,10 +87,14 @@ workflows:
           set -euo pipefail
           PLIST="build/ios-capacitor/App/App/Info.plist"
           test -f "$PLIST"
-          for schluessel in UIFileSharingEnabled LSSupportsOpeningDocumentsInPlace; do
+          for schluessel in UIFileSharingEnabled LSSupportsOpeningDocumentsInPlace UIViewControllerBasedStatusBarAppearance; do
             /usr/libexec/PlistBuddy -c "Add :$schluessel bool true" "$PLIST" || \
               /usr/libexec/PlistBuddy -c "Set :$schluessel true" "$PLIST"
           done
+          # The built-in Capacitor SystemBars API changes status-bar text
+          # with html[data-theme]; preserve the iPhone clock and battery.
+          /usr/libexec/PlistBuddy -c "Add :UIStatusBarHidden bool false" "$PLIST" || \
+            /usr/libexec/PlistBuddy -c "Set :UIStatusBarHidden false" "$PLIST"
 
 
       - name: Redion-Appsymbol verwenden
