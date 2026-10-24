@@ -211,12 +211,22 @@ const nachRadieren = await seite.evaluate(async (arg: any) => {
   pfad!.dispatchEvent(new PointerEvent('pointerdown', {
     bubbles: true, isPrimary: true, pointerId: 1,
     clientX: k.left + k.width / 2, clientY: k.top + k.height / 2 }));
+  const waehrend = ((Store.getBlock(arg.blatt) || {}).marken || []).length;
+  const vorschau = document.querySelectorAll('svg.blatt-marken path[data-sid]').length;
+  /* Der ganze Radierzug ist eine Transaktion; pointercancel muss die
+     Vorschau zurücknehmen können, ohne vorher Dokumentdaten zu schreiben. */
+  document.querySelector('svg.blatt-marken')!.dispatchEvent(new PointerEvent('pointerup', {
+    bubbles: true, isPrimary: true, pointerId: 1,
+    clientX: k.left + k.width / 2, clientY: k.top + k.height / 2 }));
   await new Promise(r => setTimeout(r, 300));
   return {
+    waehrend, vorschau,
     marken: ((Store.getBlock(arg.blatt) || {}).marken || []).length,
     gezeichnet: document.querySelectorAll('svg.blatt-marken path[data-sid]').length
   };
 }, bau);
+gleich('Vor dem Loslassen bleiben die gespeicherten Daten erhalten', nachRadieren.waehrend, vorher);
+gleich('Die Vorschau reagiert schon beim Aufsetzen', nachRadieren.vorschau, vorher - 1);
 gleich('Ein Strich weniger in den Daten', (nachRadieren as any).marken, vorher - 1);
 gleich('… und einer weniger im Bild', (nachRadieren as any).gezeichnet, vorher - 1);
 

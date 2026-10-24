@@ -4291,9 +4291,9 @@ const Marken = (() => {
         flaeche.appendChild(kreis);
         radierStrich.kreis = kreis;
         const getroffen = (targetId && radiereMarke(targetId, point)) || radiereBei(point);
-        /* Sofort sichern, nicht erst beim Loslassen: ein Tipp ist fertig,
-           wenn er da ist (der Verlauf bekommt seinen Schritt in `finish`). */
-        if (getroffen) { radierStrich.geaendert = true; save(); }
+        /* Die Vorschau reagiert sofort. Gesichert wird der ganze Zug in
+           finish; ein Browserabbruch kann ihn so vollständig zurücknehmen. */
+        if (getroffen) radierStrich.geaendert = true;
         try { flaeche.setPointerCapture(event.pointerId); } catch { /* optional */ }
         return;
       }
@@ -4446,6 +4446,41 @@ const Marken = (() => {
       try { flaeche.setPointerCapture(event.pointerId); } catch { /* optional */ }
     });
 
+    /* Die echte Radierbahn: Zwischenpunkte erhalten Kurven, statt die
+       beiden äusseren Ereignisse mit einer löschenden Sehne zu verbinden.
+       Derselbe Weg nimmt auch die letzte Position beim Abheben mit. */
+    const eraseTo = (point: number[]): void => {
+      if (!radierStrich) return;
+      /* Zwischen zwei Ereignissen kann der Zeiger weit springen; damit
+         kein Strich in der Luecke ueberlebt, wird der Weg in Schritten
+         von einem halben Radius abgefahren. */
+      const vx = radierStrich.letzter[0] ?? 0, vy = radierStrich.letzter[1] ?? 0;
+      const px = point[0] ?? 0, py = point[1] ?? 0;
+      const abstand = Math.hypot(px - vx, py - vy);
+      if (abstand < 0.001) return;
+      const n = Math.max(1, Math.ceil(abstand / Math.max(1, radierRadius() / 2)));
+      for (let i = 1; i <= n; i++) {
+        const zw = [vx + (px - vx) * i / n, vy + (py - vy) * i / n];
+        if (radiereBei(zw)) radierStrich.geaendert = true;
+      }
+      radierStrich.letzter = point;
+      radierStrich.kreis?.setAttribute('cx', String(point[0]));
+      radierStrich.kreis?.setAttribute('cy', String(point[1]));
+    };
+    const eraseSamples = (event: PointerEvent): void => {
+      const convert = R.umrechner(flaeche);
+      const samples = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
+      for (const sample of samples) {
+        const point = convert(sample);
+        if (point) eraseTo(point);
+      }
+      const last = samples[samples.length - 1];
+      if (!last || last.clientX !== event.clientX || last.clientY !== event.clientY) {
+        const point = convert(event);
+        if (point) eraseTo(point);
+      }
+    };
+
     flaeche.addEventListener('pointermove', (event: PointerEvent) => {
       if (fingerPan && fingerPan.id === event.pointerId) {
         event.preventDefault();
@@ -4491,25 +4526,9 @@ const Marken = (() => {
         bildAnfordern();
         return;
       }
+      if (radierStrich) { eraseSamples(event); return; }
       const point = R.zuBlatt(flaeche, event);
       if (!point) return;
-      if (radierStrich) {
-        /* Zwischen zwei Ereignissen kann der Zeiger weit springen; damit
-           kein Strich in der Luecke ueberlebt, wird der Weg in Schritten
-           von einem halben Radius abgefahren. */
-        const vx = radierStrich.letzter[0] ?? 0, vy = radierStrich.letzter[1] ?? 0;
-        const px = point[0] ?? 0, py = point[1] ?? 0;
-        const abstand = Math.hypot(px - vx, py - vy);
-        const n = Math.max(1, Math.ceil(abstand / Math.max(1, radierRadius() / 2)));
-        for (let i = 1; i <= n; i++) {
-          const zw = [vx + (px - vx) * i / n, vy + (py - vy) * i / n];
-          if (radiereBei(zw)) radierStrich.geaendert = true;
-        }
-        radierStrich.letzter = point;
-        radierStrich.kreis?.setAttribute('cx', String(point[0]));
-        radierStrich.kreis?.setAttribute('cy', String(point[1]));
-        return;
-      }
       if (selectDrag) {
         selectDrag.end = point;
         if (selectDrag.mode === 'move') {
@@ -4611,6 +4630,7 @@ const Marken = (() => {
       /* Der Laser verblasst und ist weg — kein `finish`, weil es nichts
          abzuschliessen gibt (E512). */
       if (laserZug) { laserAus(); aktiverZeiger = null; return; }
+      if (event.type === 'pointerup' && radierStrich) eraseSamples(event);
       // pointerup may carry a final position that no pointermove delivered.
       // Keep the previous pressure: pen devices report zero pressure on lift.
       if (event.type === 'pointerup' && running && (running.art === 'stift' || running.art === 'marker')) {
@@ -4653,6 +4673,15 @@ const Marken = (() => {
     const beiAbbruch = (event: PointerEvent): void => {
       if (fingerPan?.id === event.pointerId) { fingerPan = null; return; }
       if (aktiverZeiger !== null && event.pointerId !== aktiverZeiger) return;
+      if (radierStrich) {
+        const before = radierStrich.before;
+        radierStrich.kreis?.remove();
+        radierStrich = null;
+        aktiverZeiger = null;
+        marks.splice(0, marks.length, ...before);
+        redraw(); notifyState();
+        return;
+      }
       if (running && running.zeigerArt !== 'pen') { verwerfen(); return; }
       beiEnde(event);
     };
@@ -7832,3 +7861,4 @@ const Marken = (() => {
 })();
 
 (window as any).Marken = Marken;
+
