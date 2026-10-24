@@ -826,7 +826,7 @@ body[data-dokument="an"] .document-studio .blatt-werk{
 .document-studio .document-title-meta{
   display:inline-flex;align-items:center;justify-content:center;
   gap:6px;max-width:100%;min-width:0;
-  color:var(--text-dim);font-size:.6875rem;font-weight:550;
+  color:var(--text-dim);font-size:.75rem;font-weight:550;
   letter-spacing:.025em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
 .document-studio .document-title-meta::before{
@@ -902,7 +902,7 @@ body[data-dokument="an"] .document-studio .blatt-werk{
 @media(max-width:760px){
   .document-studio .document-title{align-items:stretch;gap:3px;min-width:0}
   .document-studio .document-title-name{font-size:.8125rem;line-height:1.15}
-  .document-studio .document-title-meta{justify-content:flex-start;font-size:.625rem}
+  .document-studio .document-title-meta{justify-content:flex-start;font-size:.6875rem}
   .document-studio .document-title-progress{width:min(8rem,82%)}
 }
 @media(prefers-reduced-motion:reduce){
