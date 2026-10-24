@@ -1,6 +1,8 @@
 # Was nie ins Repository gehört
 .env
 node_modules/
+# Von Capacitor erzeugtes Xcode-Projekt (nicht Redions ios/-Quellordner).
+/build/ios-capacitor/
 .wrangler/
 .DS_Store
 Thumbs.db
