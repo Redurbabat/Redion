@@ -2728,7 +2728,7 @@ const App = (() => {
   const sicherungPaketBauen = async (
     melden?: ((text: string) => void) | null
   ): Promise<{ blob: Blob; art: 'json' | 'redion'; endung: string;
-               anhaenge: number; versionen: number }> => {
+               anhaenge: number; versionen: number; ausgelassen: number }> => {
     const sagen = melden || ((t: string) => UI.toast(t));
     /* Erst holen, was nicht im Zwischenspeicher liegt — der Versionsverlauf.
        Er fehlte in jeder Sicherung, die diese App je geschrieben hat. */
@@ -2737,7 +2737,7 @@ const App = (() => {
     if (!stand.dateien) {
       return { blob: new Blob([Store.exportAll()], { type: 'application/json' }),
                art: 'json', endung: '.json',
-               anhaenge: 0, versionen: stand.versionen };
+               anhaenge: 0, versionen: stand.versionen, ausgelassen: 0 };
     }
 
     sagen(stand.dateien + ' Anhänge kommen mit — das dauert einen Moment');
@@ -2829,7 +2829,8 @@ const App = (() => {
       const blob = await Austausch.zipSchreiben(eintraege,
         (name: string, anteil: any) => { if (anteil >= 1) sagen('Geprüft: ' + name.replace('dateien/', '') + ' — wird verpackt'); });
       return { blob, art: 'redion', endung: '.redion',
-               anhaenge: eintraege.length - 2, versionen: stand.versionen };
+               anhaenge: eintraege.length - 2, versionen: stand.versionen,
+               ausgelassen: ausgelassen.length };
     }
   };
 
@@ -2845,18 +2846,24 @@ const App = (() => {
       const nativeSicherung = (globalThis as any).RedionNativeSicherung;
       if (nativeSicherung && typeof nativeSicherung.speichern === 'function') {
         await nativeSicherung.speichern(paket.blob, name);
-        sicherungGemerkt(paket.art);
-        UI.toast('Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
+        if (!paket.ausgelassen) sicherungGemerkt(paket.art);
+        UI.toast(paket.ausgelassen
+          ? 'Sicherung mit Lücken gespeichert: ' + paket.ausgelassen +
+            ' Datei(en) fehlen. Hinweis in der Sicherung lesen und erneut sichern.'
+          : 'Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
         return true;
       }
       const l = document.createElement('a');
       l.href = URL.createObjectURL(paket.blob);
       l.download = name;
       l.click();
-      sicherungGemerkt(paket.art);
-      UI.toast(paket.art === 'json'
-        ? 'Sicherung gespeichert (' + paket.versionen + ' Fassungen im Verlauf)'
-        : 'Sicherung gespeichert — mit ' + paket.anhaenge + ' Anhang/Anhängen');
+      if (!paket.ausgelassen) sicherungGemerkt(paket.art);
+      UI.toast(paket.ausgelassen
+        ? 'Sicherung mit Lücken gespeichert: ' + paket.ausgelassen +
+          ' Datei(en) fehlen. Hinweis in der Sicherung lesen und erneut sichern.'
+        : paket.art === 'json'
+          ? 'Sicherung gespeichert (' + paket.versionen + ' Fassungen im Verlauf)'
+          : 'Sicherung gespeichert — mit ' + paket.anhaenge + ' Anhang/Anhängen');
       return true;
     } catch (err) {
       /* Kein stiller Fehlschlag. Wer glaubt, gesichert zu haben, und es nicht
