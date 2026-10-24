@@ -1,6 +1,6 @@
 # Redion Workspace 2.0 – Dokumentkompass & PDF-Studio
 
-**Stand: 24. Oktober 2026 · Umsetzung im eigenen PR, noch nicht für `main` freigegeben.**
+**Stand: 24. Oktober 2026 · Code mit PR #137 nach `main` übernommen, Dokumentation als gesonderter PR.**
 
 Dieser Bogen setzt **Issue #134** nach der gemergten Bibliothek 2.0 fort.
 Es ist eine **sichtbare Verbesserung der bestehenden** Dokument- und
@@ -62,7 +62,7 @@ IndexedDB, PDF-Annotationen oder `.redion`-Archiven.
 Ohne neuen Codemagic-Build wird die bereits installierte iPhone-App
 nicht automatisch aktualisiert. Das Live-Deployment der Website
 muss ebenfalls denselben Commit verwenden, damit beide live gleich
-sind. **Kein Merge und kein Deployment durch diesen PR.**
+sind. **Die Änderungen an der Website sind noch nicht als öffentliches Deployment nachgewiesen.**
 
 ## Reale Browserprüfungen und Bilder
 
@@ -105,11 +105,16 @@ Prüfverträge:
 9. Browserfehler müssen ausbleiben.
 
 **Status der automatisierten Prüfungen:** Die Prüfungen und der
-Actions-Workflow sind erstellt. Ein tatsächliches Chromium/WebKit-
-Ergebnis oder neue Screenshots liegen **erst nach erfolgreichem
-CI-Lauf** vor; in dieser Sitzung wurde noch kein vollständiger
-Playwright- oder Codemagic-Build ausgeführt. Bestehende passende
-Tests sind zusätzlich `test202`, `test210`, `test285`,
+Actions-Workflow sind erstellt, aber die ersten GitHub-Actions-Läufe
+zu PR #137 meldeten nach etwa 2–3 Sekunden **Fehlschlag ohne Runner
+und ohne einzigen ausgeführten Job-Schritt** (0 Steps, keine Job-Logs).
+Das ist **kein bestandener TypeScript-/Browser-Test** und ebenso kein
+Beweis für einen Codefehler. Die Ursache der Runner-/Kontosperre muss
+im Actions-UI geprüft und behoben werden. Ein tatsächliches
+Chromium/WebKit-Ergebnis, Vergleichsbilder und ein Codemagic-/iPhone-
+Build liegen daher noch nicht vor. Bis dahin den lokalen Lauf unter
+Windows 11 oder einen lauffähigen CI-Runner verwenden.
+Bestehende passende Tests sind zusätzlich `test202`, `test210`, `test285`,
 `test395`, `test453`, `test508`, `test597`,
 `test105` sowie die Codemagic-Webparität.
 
