@@ -11,10 +11,12 @@
  * Die Share Sheet bietet eine zweite Kopie ausserhalb der App an.
  * Eine Kopie in diesem Container wird beim Deinstallieren geloescht!
  */
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { Haptics } from '@capacitor/haptics';
 import { createNativeFileExporter } from './native-file-export.mjs';
+import { startIosNativeFeel } from './native-feel.mjs';
 
 const saveFile = createNativeFileExporter({
   filesystem: Filesystem,
@@ -38,4 +40,20 @@ async function exportAttachment(blob: Blob, name: string) {
 if (Capacitor.getPlatform() === 'ios' && Capacitor.isNativePlatform()) {
   (globalThis as any).RedionNativeSicherung = Object.freeze({ speichern: saveBackup });
   (globalThis as any).RedionNativeDateien = Object.freeze({ speichern: exportAttachment });
+
+  // The web/PWA never loads this module. Do not alter Redion's routes,
+  // TabShelf gestures, documents or CSS: only tell native UIKit when
+  // touch selection and the existing theme change.
+  const prepare = () => startIosNativeFeel({
+    document,
+    haptics: Haptics,
+    bars: SystemBars,
+    styles: SystemBarsStyle,
+    quiet: () => document.body?.dataset?.bewegung === 'ruhig'
+  });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', prepare, { once: true });
+  } else {
+    prepare();
+  }
 }
