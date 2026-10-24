@@ -1,0 +1,46 @@
+name: Workspace Mobile Navigation 2.0
+
+on:
+  pull_request:
+    paths:
+      - 'src/schale/aufbau/tab-shelf.ts'
+      - 'quell/schale/aufbau/tab-shelf.js'
+      - 'quell/schale/stil/bausteine.css'
+      - 'pruefungen/lauf/test614.mts'
+      - 'doku/WORKSPACE-2-MOBILE-NAVIGATION.md'
+      - '.github/workflows/workspace-mobile-nav.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-nav:
+    name: iPhone-Geste, VoiceOver-Labels und Zielvorschau
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Entwicklungsabhängigkeiten installieren
+        run: npm ci --no-audit --no-fund
+      - name: Gemeinsamen Redion-Code bauen
+        run: npm run bauen:ts
+      - name: TypeScript und React-Inseln prüfen
+        run: npm run typecheck
+      - name: Chromium für echte Touch-Ereignisse installieren
+        run: npx playwright install --with-deps chromium
+      - name: Echte Gesten- und Navigationstests mit Screenshots
+        run: node pruefungen/lauf/test614.mts --capture
+      - name: Nur künstliche Navigations-Testbilder hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: redion-workspace-mobile-navigation
+          path: bilder/workspace-2/mobile-nav/*.png
+          if-no-files-found: warn
+          retention-days: 14
