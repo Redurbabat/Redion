@@ -29,7 +29,11 @@ Auch eine zu kurze Blob-Datei war zuvor im Export nicht gesondert abgefangen.
    Das System löscht oder verändert die unvollständigen Quelldateien nicht.
 5. Redion meldet bei einer lückenhaften Sicherung ausdrücklich
    `Sicherung mit Lücken gespeichert` und aktualisiert nicht den
-   Zeitstempel einer **vollständigen** Sicherung.
+   Zeitstempel einer **vollständigen** Sicherung. Der Rückgabewert von
+   `App.sicherungSpeichern()` ist dann `false`, auch wenn ein
+   **Teil-Archiv** geschrieben wurde. So dürfen aufrufende Dialoge nicht
+   fälschlich eine vollständige Sicherung bestätigen oder danach
+   automatisch destruktive Folgeschritte freigeben.
 6. Die Änderung gilt gleichermassen für den Web-Download und den
    nativen iOS-Export in die Dateien-App. Bedienoberfläche,
    `index.html`, Web-Design, Datenschema und App-ID bleiben unverändert.
