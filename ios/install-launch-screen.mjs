@@ -111,9 +111,10 @@ export function installLaunchScreen(root = process.cwd()) {
   const imageBytes = IMAGES.map(image => {
     const bytes = fs.readFileSync(path.join(root, image.source));
     if (!pngValid(bytes)) throw new Error('Redion-Icon ist kein gültiges PNG: ' + image.source);
-    const expectedSize = Number(image.scale[0]) * 96;
-    if (bytes.readUInt32BE(16) !== expectedSize || bytes.readUInt32BE(20) !== expectedSize) {
-      throw new Error('Unpassende Auflösung für native iOS-Icon-Skala: ' + image.source);
+    const expectedSize = Number(image.source.match(/icon-(\\d+)\\.png$/)?.[1]);
+    if (!Number.isSafeInteger(expectedSize) ||
+        bytes.readUInt32BE(16) !== expectedSize || bytes.readUInt32BE(20) !== expectedSize) {
+      throw new Error('Unpassende Auflösung des originalen Redion-Icons: ' + image.source);
     }
     return bytes;
   });
