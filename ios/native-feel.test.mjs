@@ -132,6 +132,7 @@ test('Ruhemodus, versteckte App und reduzierte Bewegung bleiben still', async ()
 
 test('Native Fehler duerfen Navigation und Theme-Umschaltung nie blockieren', async () => {
   const h = harness();
+  await h.settle(); // first dark-theme update completes before fault injection
   h.native.haptics.impact = () => Promise.reject(new Error('Taptic Engine nicht da'));
   h.native.bars.setStyle = () => Promise.reject(new Error('Native Controller nicht bereit'));
   h.click(h.button);
