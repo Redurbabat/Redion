@@ -316,6 +316,16 @@ const Kopfleiste = (() => {
     if (!p.ohneTools && eigen) {
       const tools = document.createElement('div');
       tools.className = 'pg-tools';
+      tools.setAttribute('role', 'group');
+      tools.setAttribute('aria-label', 'Seitenwerkzeuge');
+      /* WORKSPACE 2.0: das vorhandene, bisher versteckte Toolbar-Angebot
+         am Desktop dauerhaft erkennen lassen. Die kleine Rubrik ist
+         dekorativ; die echten Registeraktionen und das Click-Delegating
+         bleiben identisch. Keine zweite Werkzeugleiste, keine Datenlogik. */
+      const caption = document.createElement('span');
+      caption.className = 'pg-tools-caption';
+      caption.textContent = 'Seitenwerkzeuge';
+      caption.setAttribute('aria-hidden', 'true');
       /* GEZEICHNETE ZEICHEN STATT 🖼 ↔ ▤ ⚡ 🅰 🧩 ✨ (E701). Die Zeile bleibt
          am Telefon stehen, wie bausteine.css es begründet („gehören zum
          Titel") — nur rief sie mit fünf farbigen Bildchen lauter als der
@@ -335,6 +345,7 @@ const Kopfleiste = (() => {
         '<button data-a="font">' + z('typeface') + 'Schrift</button>' +
         '<button data-a="vorlage">' + z('puzzle') + 'Vorlage</button>' +
         '<button data-a="ai">' + z('sparkle') + 'Mit KI</button>';
+      tools.prepend(caption);
       tools.addEventListener('click', e => {
         const b = elVon(e)?.closest<HTMLElement>('button[data-a]');
         if (!b) return;

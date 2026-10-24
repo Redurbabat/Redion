@@ -220,6 +220,12 @@ const Kopfleiste = (() => {
         if (!p.ohneTools && eigen) {
             const tools = document.createElement('div');
             tools.className = 'pg-tools';
+            tools.setAttribute('role', 'group');
+            tools.setAttribute('aria-label', 'Seitenwerkzeuge');
+            const caption = document.createElement('span');
+            caption.className = 'pg-tools-caption';
+            caption.textContent = 'Seitenwerkzeuge';
+            caption.setAttribute('aria-hidden', 'true');
             const z = (name) => {
                 try {
                     return Register.symbole.alsSvg(name, 15);
@@ -239,6 +245,7 @@ const Kopfleiste = (() => {
                     '<button data-a="font">' + z('typeface') + 'Schrift</button>' +
                     '<button data-a="vorlage">' + z('puzzle') + 'Vorlage</button>' +
                     '<button data-a="ai">' + z('sparkle') + 'Mit KI</button>';
+            tools.prepend(caption);
             tools.addEventListener('click', e => {
                 const b = elVon(e)?.closest('button[data-a]');
                 if (!b)

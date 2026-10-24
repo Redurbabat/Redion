@@ -1181,3 +1181,75 @@ body[data-schale="premium"][data-bewegung="ruhig"]
 :is(.bib-pille,.bib-studio-weiter,.einst-fenster) {
   box-shadow: none;
 }
+
+/* ══ WORKSPACE 2.0 · SICHTBARE SEITENWERKZEUGE ════════════════════════════
+   Bisher war die Werkzeugzeile auf dem Desktop transparent, bis jemand
+   mit der Maus über die SEITE fuhr. Das erschwerte die Entdeckung und
+   zeigte bei Tastaturfokus dieselbe Leiste unsichtbar. Die bestehenden
+   Werkzeuge bleiben genau dieselben Registeraktionen; nur die Darstellung
+   als lesbare, immer sichtbare Kommandochips ändert sich.
+
+   Scope bewusst nur direkt unter #page: Datenbank-, Dokument- und
+   eingebettete Werkzeuge bekommen keine neue Leiste. Auf dem iPhone bleibt
+   es dieselbe horizontale Rollzeile aus bausteine.css, statt drei Reihen
+   oberhalb des eigentlichen Texts. */
+#page > .pg-tools{
+  display:flex;flex-wrap:wrap;align-items:center;gap:6px 7px;
+  opacity:1;min-width:0;max-width:100%;margin:10px 0 22px;padding:9px;
+  background:var(--bg-card);border:1px solid var(--line);
+  border-radius:var(--radius-xl);
+  box-shadow:var(--studio-highlight),var(--shadow-1)
+}
+#page > .pg-tools > .pg-tools-caption{
+  flex:0 0 100%;display:block;min-width:0;
+  padding:2px 8px 3px;color:var(--text-dim);
+  font-size:10px;line-height:1.25;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase
+}
+#page > .pg-tools > button{
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;
+  min-height:var(--touch-min);min-width:0;padding:8px 11px;
+  border:1px solid transparent;border-radius:var(--radius-lg);
+  background:var(--bg-hover);color:var(--text);
+  font-size:12px;line-height:1.2;font-weight:550;white-space:nowrap;
+  transition:background var(--motion-fast) var(--ease),
+             border-color var(--motion-fast) var(--ease),
+             transform var(--motion-fast) var(--ease)
+}
+#page > .pg-tools > button:is(:hover,:focus-visible){
+  color:var(--text);background:var(--accent-schwach);
+  border-color:var(--accent);outline-offset:2px
+}
+#page > .pg-tools > button:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px
+}
+#page > .pg-tools > button:active{transform:scale(.98)}
+@media(max-width:760px){
+  #page > .pg-tools{
+    flex-wrap:nowrap;gap:5px;overflow-x:auto;scrollbar-width:none;
+    padding:5px;margin:0 0 16px;
+    border-radius:var(--radius-lg);
+  }
+  #page > .pg-tools > .pg-tools-caption{display:none}
+  #page > .pg-tools > button{flex:0 0 auto;min-height:var(--touch-min);padding:8px 10px}
+  /* Die bestehenden sticky Scroll-Hinweise liegen über dem Inhalt.
+     Ihr Hintergrund muss nun zur Chip-Scheibe passen, statt zum Papier. */
+  #page > .pg-tools::before{
+    background:linear-gradient(to right,var(--bg-card),transparent)
+  }
+  #page > .pg-tools::after{
+    background:linear-gradient(to left,var(--bg-card),transparent)
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #page > .pg-tools > button{transition:none}
+  #page > .pg-tools > button:active{transform:none}
+}
+body[data-bewegung="ruhig"] #page > .pg-tools > button{
+  transition:none
+}
+body[data-bewegung="ruhig"] #page > .pg-tools > button:active{transform:none}
+@media(forced-colors:active),(prefers-contrast:more){
+  #page > .pg-tools{box-shadow:none}
+  #page > .pg-tools > button{border-color:var(--line)}
+}
