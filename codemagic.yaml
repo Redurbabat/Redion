@@ -17,6 +17,7 @@ workflows:
           npm ci --no-audit --no-fund
           npm run bauen:ts
           node --test ios/backup-chunks.test.mjs
+          node --test ios/native-file-export.test.mjs
 
       - name: Lokale Web-Dateien fuer Capacitor bereitstellen
         script: |
