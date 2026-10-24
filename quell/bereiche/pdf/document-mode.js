@@ -3219,7 +3219,8 @@ const DocumentMode = (() => {
                     }
                     const gespeichert = await herunterladen(blob, String(page.text || 'Dokument').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.pdf');
                     if (gespeichert)
-                        UI.toast(seiten.length + (seiten.length === 1 ? ' Seite' : ' Seiten') + ' als PDF gesichert');
+                        UI.toast(seiten.length +
+                            (seiten.length === 1 ? ' Seite' : ' Seiten') + ' als PDF gesichert');
                 }).catch(() => {
                     UI.toast('Das Dokument liess sich nicht als PDF schreiben.');
                 }).finally(() => {

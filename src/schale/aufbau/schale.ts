@@ -2758,8 +2758,9 @@ const App = (() => {
          (z. B. nach einem abgebrochenen Upload). */
       const saetze: any[] = [];
       const ausgelassen: string[] = [];
+      const dataEntry = { name: 'daten.json', inhalt: '' };
       const eintraege: { name: string; inhalt: any; kennung?: string }[] =
-        [{ name: 'daten.json', inhalt: '' }];
+        [dataEntry];
       const belegt = new Set(['daten.json']);
 
       for (const satz of gefundeneSaetze) {
@@ -2819,11 +2820,11 @@ const App = (() => {
           ' unvollständige Datei(en) sind NICHT in dieser Sicherung: ' +
           beispiele + weitere + '. Sie bleiben auf diesem Gerät; erst ' +
           'nach dem vollständigen Einlesen erneut sichern.';
-        eintraege[0].inhalt = JSON.stringify(daten);
+        dataEntry.inhalt = JSON.stringify(daten);
         sagen('ACHTUNG: ' + ausgelassen.length +
           ' unvollständige Datei(en) nicht mitgesichert — siehe Sicherungshinweis.');
       } else {
-        eintraege[0].inhalt = datenRoh;
+        dataEntry.inhalt = datenRoh;
       }
 
       /* Die Zuordnung Name → Kennung gehört in die Sicherung, sonst weiss

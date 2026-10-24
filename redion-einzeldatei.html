@@ -25713,6 +25713,93 @@ body[data-schale="premium"][data-bewegung="ruhig"]
   .bib-ablage-baum{max-height:240px}
 }
 
+/* Workspace 2.0 · dieselbe Bibliothek, keine zweite Daten-/Navigationsschicht.
+   Karten behalten echte Vorschaubilder, Handschrift und Ordnerfächer. */
+.bib[data-bib-bereich]{max-width:1440px;padding:28px 36px 72px}
+.bib[data-bib-bereich] .bib-dkopf{gap:20px 16px;margin-bottom:24px}
+.bib-workspace-intro{flex:1;min-width:0}
+.bib-workspace-eyebrow{display:block;margin-bottom:6px;color:var(--text-dim);font-size:12px;font-weight:600;letter-spacing:.025em}
+.bib[data-bib-bereich] .bib-dkopf h1{min-width:0;font-size:clamp(24px,2.5vw,34px);line-height:1.2;letter-spacing:-.035em;overflow-wrap:anywhere}
+.bib-workspace-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bib-workspace-actions .bib-search{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:44px;min-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--bg-card);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
+.bib-search svg{width:18px;height:18px}
+.bib-search:hover{background:var(--bg-hover)}
+.bib-search:focus-visible,.bib-favorite:focus-visible,.bib-leer button:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
+.bib-search:active,.bib-leer button:active{background:var(--bg-active)}
+.bib[data-bib-bereich] .bib-wahl{padding-top:16px;border-top:1px solid var(--line);gap:8px}
+.bib[data-bib-bereich] .bib-wahl .bib-form-knopf{margin-left:auto}
+.bib[data-bib-bereich] .bib-ablage-baum:not([open]){border:0;box-shadow:none}
+.bib[data-bib-bereich] .bib-ablage-baum-kopf{padding-left:0}
+.bib[data-bib-bereich] .bib-gitter{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;align-items:stretch}
+.bib[data-bib-bereich] .bib-zelle{min-width:0;isolation:isolate}
+.bib[data-bib-bereich] .bib-deckel{height:100%;padding:0 14px 16px;border:1px solid var(--line);border-radius:18px;background:var(--bg-card);box-shadow:0 2px 5px #00000006;transition:border-color var(--motion-fast) var(--ease),box-shadow var(--motion-fast) var(--ease)}
+.bib-card-kind{display:flex;align-items:center;min-height:44px;padding-right:78px;font-size:11px;font-weight:600;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bib[data-bib-bereich] .bib-deckel-blatt{aspect-ratio:4/3;margin:0 0 12px;border-radius:8px;box-shadow:none;background:var(--bg-side);font-size:10px;line-height:1.65;padding:14px 12px 0;transform-origin:50% 90%}
+.bib[data-bib-bereich] .bib-deckel-blatt::after{background:linear-gradient(transparent,var(--bg-side))}
+.bib[data-bib-bereich] .bib-zelle>.bib-deckel:not([data-art="ordner"]) .bib-deckel-blatt::before{display:none}
+.bib[data-bib-bereich] .bib-deckel-name{padding-top:0;gap:6px}
+.bib[data-bib-bereich] .bib-deckel-name b{font-size:15px;line-height:1.4;min-height:42px;font-weight:620;overflow-wrap:anywhere}
+.bib[data-bib-bereich] .bib-card-meta{font-size:11px;line-height:1.6;margin-top:6px;color:var(--text-dim)}
+.bib[data-bib-bereich] .bib-deckel-bild{object-fit:contain;background:var(--bg-side)}
+.bib[data-bib-bereich] .bib-zelle>.bib-deckel-mehr{top:0;right:0}
+.bib[data-bib-bereich] .bib-zelle>.bib-deckel-mehr i{box-shadow:none;background:transparent}
+.bib-favorite{position:absolute;top:0;right:44px;z-index:3;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:0;background:none;color:var(--text-dim);cursor:pointer}
+.bib-favorite svg{width:17px;height:17px}
+.bib-favorite[aria-pressed="true"]{color:var(--accent-text)}
+.bib-favorite[aria-pressed="true"] svg{fill:currentColor}
+.bib-favorite:is(:hover,:active){color:var(--accent-text);background:var(--accent-schwach)}
+.bib[data-bib-bereich] .bib-blick{top:82px;left:14px}
+.bib[data-bib-bereich] .bib-deckel[data-art="ordner"] .bib-deckel-blatt{margin-top:0;aspect-ratio:4/3}
+.bib[data-bib-bereich] .bib-deckel:is(:hover,:focus-visible){border-color:var(--accent-text);box-shadow:var(--shadow-2)}
+.bib[data-bib-bereich] .bib-deckel:focus-visible{outline-offset:3px}
+.bib[data-bib-bereich] .bib-studio-weiter{padding:18px 22px;margin-bottom:16px;background:linear-gradient(120deg,var(--accent-schwach),var(--bg-card));box-shadow:none}
+.bib[data-bib-bereich] .rmo-recent{margin:0 0 20px}
+.bib[data-bib-bereich] .rmo-recent-track{padding:4px 3px 8px;gap:10px}
+.bib[data-bib-bereich] .rmo-recent-card{min-height:86px;padding:12px 14px;gap:5px;box-shadow:none;background:var(--bg-card)}
+.bib[data-bib-bereich] .bib-leer{display:flex;flex-direction:column;align-items:center;gap:12px;padding:44px 24px;border:1px dashed var(--line-stark);border-radius:20px;background:var(--bg-card);text-align:center;color:var(--text-dim)}
+.bib-empty-symbol{display:grid;place-items:center;width:64px;height:64px;border-radius:20px;background:var(--accent-schwach);color:var(--accent-text)}
+.bib-empty-symbol svg{width:28px;height:28px}
+.bib-empty-title{margin:0;color:var(--text);font-size:22px;line-height:1.3;letter-spacing:-.02em}
+.bib-leer p{max-width:360px;margin:0;font-size:14px;line-height:1.6}
+.bib-leer button{min-height:44px;margin-top:8px;padding:0 18px;border:1px solid var(--line-stark);border-radius:var(--radius-lg);background:var(--bg-card);color:var(--text);font:inherit;font-size:14px;cursor:pointer}
+.bib-leer button:disabled{opacity:.5;cursor:not-allowed}
+.bib-leer .rmo-carousel{display:none}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){
+  .bib[data-bib-bereich] .bib-deckel:hover .bib-deckel-blatt{transform:translateY(-2px) rotateX(1deg);box-shadow:0 4px 12px #00000010}
+}
+@media(prefers-reduced-motion:no-preference){
+  .bib[data-bib-bereich] :is(.bib-gitter,.bib-regal,.bib-tab){animation:bib-workspace-arrive var(--motion-normal) var(--feder-knapp) both}
+  @keyframes bib-workspace-arrive{from{opacity:.7;transform:translateY(6px)}to{opacity:1;transform:none}}
+}
+body[data-bewegung="ruhig"] .bib[data-bib-bereich] :is(.bib-gitter,.bib-regal,.bib-tab){animation:none}
+@media(max-width:760px){
+  .bib[data-bib-bereich]{padding:16px 0 calc(28px + env(safe-area-inset-bottom,0px))}
+  .bib[data-bib-bereich] .bib-dkopf{gap:14px;margin-bottom:12px}
+  .bib-workspace-intro{flex-basis:100%}
+  .bib-workspace-eyebrow{font-size:11px;margin-bottom:4px}
+  .bib-workspace-actions{width:100%;gap:8px;flex-wrap:nowrap}
+  .bib-workspace-actions .bib-studio-import{order:0;flex:1 1 auto;padding:0 10px;min-width:0}
+  .bib-workspace-actions .bib-search{padding:0 12px}
+  .bib-workspace-actions .bib-neu{padding:0 12px}
+  .bib-workspace-actions .bib-search>span:last-child{display:none}
+  .bib[data-bib-bereich] .bib-wahl{order:0;padding-top:12px;gap:6px}
+  .bib[data-bib-bereich] .bib-gitter{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .bib[data-bib-bereich] .bib-deckel{padding:0 10px 12px;border-radius:14px}
+  .bib[data-bib-bereich] .bib-deckel-name b{font-size:14px;min-height:40px}
+  .bib-card-kind{font-size:10px;padding-right:70px}
+  .bib[data-bib-bereich] .bib-deckel-blatt{padding:10px 8px 0;font-size:9px;margin-bottom:10px}
+  .bib[data-bib-bereich] .bib-card-meta{font-size:10px}
+  .bib[data-bib-bereich] .bib-studio-weiter{gap:12px;padding:14px}
+  .bib[data-bib-bereich] .bib-studio-miniatur{flex-basis:38px;height:52px}
+  .bib[data-bib-bereich] .bib-studio-weiter button{width:auto;padding:8px 12px;margin-left:auto}
+  .bib[data-bib-bereich] .bib-studio-weiter h2{font-size:14px}
+  .bib[data-bib-bereich] .bib-leer{padding:32px 18px}
+}
+@media(prefers-contrast:more),(forced-colors:active){
+  .bib[data-bib-bereich] .bib-deckel{box-shadow:none;border-color:var(--text)}
+}
+body[data-kontrast="hoch"] .bib[data-bib-bereich] .bib-deckel{box-shadow:none;border-color:var(--text)}
+
 </style>
 <style>
 /* ===== quell/schale/stil/pdf-studio.css ===== */
@@ -28005,7 +28092,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1533, inhalt: 'c228246f13564d54', gebaut: '2026-10-24T08:12:28.911Z' };
+const Stand = { fassung: 1534, inhalt: 'f18b7173737e25ec', gebaut: '2026-10-24T15:53:47.174Z' };
 window.Stand = Stand;
 
 </script>
@@ -80747,7 +80834,19 @@ const DocumentMode = (() => {
             melden(seiten.length, seiten.length);
         return schreiber.schliessen();
     };
-    const herunterladen = (blob, name) => {
+    const herunterladen = async (blob, name) => {
+        const nativeDateien = globalThis.RedionNativeDateien;
+        if (nativeDateien && typeof nativeDateien.speichern === 'function') {
+            try {
+                await nativeDateien.speichern(blob, name);
+                return true;
+            }
+            catch (err) {
+                UI.toast('Datei konnte nicht in iOS-Dateien gespeichert werden: ' +
+                    (err instanceof Error ? err.message : String(err)));
+                return false;
+            }
+        }
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -80756,6 +80855,7 @@ const DocumentMode = (() => {
         document.body.appendChild(a);
         a.click();
         setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 2000);
+        return true;
     };
     const griffeSchliessen = () => {
         try {
@@ -83666,15 +83766,16 @@ const DocumentMode = (() => {
             }
             if (action === 'page-export-image') {
                 const block = zielSeite || jetzt();
-                void seiteAlsBild(block).then(blob => {
+                void seiteAlsBild(block).then(async (blob) => {
                     if (!blob) {
                         UI.toast('Die Seite liess sich nicht als Bild zeichnen.');
                         return;
                     }
                     const nr = documentsIn(page).findIndex(b => b.id === block.id) + 1;
-                    herunterladen(blob, String(page.text || 'Seite').replace(/[\\/:*?"<>|]+/g, ' ').trim() + ' – Seite ' + nr + '.png');
-                    UI.toast(wortEins(page) + ' ' + nr + ' als PNG gesichert');
-                });
+                    const gespeichert = await herunterladen(blob, String(page.text || 'Seite').replace(/[\\/:*?"<>|]+/g, ' ').trim() + ' – Seite ' + nr + '.png');
+                    if (gespeichert)
+                        UI.toast(wortEins(page) + ' ' + nr + ' als PNG gesichert');
+                }).catch(() => UI.toast('Die Seite liess sich nicht als Bild sichern.'));
                 return;
             }
             if (action === 'praesentieren') {
@@ -83737,23 +83838,22 @@ const DocumentMode = (() => {
                     if (knopf)
                         knopf.textContent = fertig >= gesamt
                             ? '⤓ Wird gesichert …' : '⤓ Seite ' + (fertig + 1) + '/' + gesamt + ' …';
-                }).then(blob => {
-                    if (knopf) {
-                        knopf.disabled = false;
-                        knopf.textContent = wort;
-                    }
+                }).then(async (blob) => {
                     if (!blob) {
                         UI.toast('Das Dokument liess sich nicht als PDF schreiben.');
                         return;
                     }
-                    herunterladen(blob, String(page.text || 'Dokument').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.pdf');
-                    UI.toast(seiten.length + (seiten.length === 1 ? ' Seite' : ' Seiten') + ' als PDF gesichert');
+                    const gespeichert = await herunterladen(blob, String(page.text || 'Dokument').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.pdf');
+                    if (gespeichert)
+                        UI.toast(seiten.length +
+                            (seiten.length === 1 ? ' Seite' : ' Seiten') + ' als PDF gesichert');
                 }).catch(() => {
+                    UI.toast('Das Dokument liess sich nicht als PDF schreiben.');
+                }).finally(() => {
                     if (knopf) {
                         knopf.disabled = false;
                         knopf.textContent = wort;
                     }
-                    UI.toast('Das Dokument liess sich nicht als PDF schreiben.');
                 });
                 return;
             }
@@ -123242,12 +123342,26 @@ const Austausch = (() => {
         schreibe32(ende, 16, Math.min(versatz, ZIP_GRENZE));
         return new Blob([...teile, ...verzeichnis, ...schluss, ende], { type: 'application/zip' });
     };
-    const laden = (blob, name) => {
+    const laden = async (blob, name) => {
+        const nativeDateien = globalThis.RedionNativeDateien;
+        if (nativeDateien && typeof nativeDateien.speichern === 'function') {
+            try {
+                await nativeDateien.speichern(blob, name);
+                return true;
+            }
+            catch (err) {
+                if (typeof UI !== 'undefined' && UI.toast)
+                    UI.toast('Die Datei konnte nicht in iOS-Dateien gespeichert werden: ' +
+                        (err instanceof Error ? err.message : String(err)));
+                return false;
+            }
+        }
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = name;
         a.click();
         setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+        return true;
     };
     const W_STIL = {
         h1: 'Heading1', h2: 'Heading2', h3: 'Heading3',
@@ -123645,7 +123759,7 @@ const Austausch = (() => {
                 teile.push({ name, ...teil });
             }
             const blob = await zipSchreiben(teile);
-            laden(blob, (seite.text || 'Seite').replace(/[\\/:*?"<>|]/g, '-') + '.docx');
+            await laden(blob, (seite.text || 'Seite').replace(/[\\/:*?"<>|]/g, '-') + '.docx');
             const hinweis = geschrieben
                 ? 'Die Originaldatei ist vollständig erhalten; '
                     + geschrieben + (geschrieben === 1 ? ' Absatz wurde' : ' Absätze wurden')
@@ -123736,7 +123850,7 @@ const Austausch = (() => {
             }))
         ];
         const blob = await zipSchreiben(dateien);
-        laden(blob, (seite.text || 'Seite').replace(/[\\/:*?"<>|]/g, '-') + '.docx');
+        await laden(blob, (seite.text || 'Seite').replace(/[\\/:*?"<>|]/g, '-') + '.docx');
         return blob;
     };
     const spaltenName = (n) => {
@@ -123976,7 +124090,7 @@ const Austausch = (() => {
                     '</office:spreadsheet></office:body></office:document-content>' }
         ];
         const blob = await zipSchreiben(dateien);
-        laden(blob, (dateiname || 'Redion') + '.ods');
+        await laden(blob, (dateiname || 'Redion') + '.ods');
         return blob;
     };
     const datenbankAlsOds = (coll) => {
@@ -124108,7 +124222,7 @@ const Austausch = (() => {
         ].concat(blaetter.map((b, i) => ({ name: `xl/worksheets/sheet${i + 1}.xml`,
             inhalt: blattXml(b.zeilen, stile.je[i] || undefined, b.formeln || undefined) })));
         const blob = await zipSchreiben(dateien);
-        laden(blob, (dateiname || 'Redion') + '.xlsx');
+        await laden(blob, (dateiname || 'Redion') + '.xlsx');
         return blob;
     };
     const datenbankAlsExcel = (coll) => {
@@ -124469,7 +124583,7 @@ const Austausch = (() => {
             name: path + '.md', inhalt: vaultMarkdown(Store.getBlock(id), path, paths)
         }));
         const blob = await zipSchreiben(files);
-        laden(blob, safeVaultSegment(dateiname) + '.zip');
+        await laden(blob, safeVaultSegment(dateiname) + '.zip');
         return blob;
     };
     const validRedionId = (value) => {
@@ -125386,7 +125500,7 @@ const Austausch = (() => {
                 teile.push({ name, ...teil });
             }
             const blob = await zipSchreiben(teile);
-            laden(blob, dateiName);
+            await laden(blob, dateiName);
             const folien = paket.leser.namen
                 .filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n)).length;
             const hinweis = geschrieben
@@ -125407,7 +125521,7 @@ const Austausch = (() => {
             titel: f.titel, zeilen: Folien.alsZeilen(f, (id) => Store.childrenOf(id))
         }));
         const blob = await zipSchreiben(pptxTeile(folien));
-        laden(blob, dateiName);
+        await laden(blob, dateiName);
         return { blob, folien: folien.length, durchgereicht: false };
     };
     return { zipSchreiben, crc32, laden, alsWord, alsPowerPoint, pptxTeile, alsExcel,
@@ -130637,6 +130751,30 @@ const Dateien = (() => {
     };
     const herunterladen = async (dateiId) => {
         const satz = await Store.dateiHolen(dateiId);
+        const nativeDateien = globalThis.RedionNativeDateien;
+        if (nativeDateien && typeof nativeDateien.speichern === 'function') {
+            if (!satz) {
+                UI.toast('Diese Datei gibt es nicht mehr');
+                return false;
+            }
+            const blob = await alsBlob(dateiId);
+            if (!blob) {
+                UI.toast('Diese Datei ist nicht vollständig lesbar');
+                return false;
+            }
+            try {
+                await nativeDateien.speichern(blob, String(satz.name || 'Datei'));
+                UI.toast('Datei unter Auf meinem iPhone → Redion → Exporte gespeichert. Für iCloud Drive im Teilen-Menü „In Dateien sichern“ wählen.');
+                if (typeof Protokoll !== 'undefined')
+                    Protokoll.notieren('export', 'Datei „' + satz.name + '“ in iOS-Dateien exportiert', { id: dateiId });
+                return true;
+            }
+            catch (err) {
+                UI.toast('Datei konnte nicht gespeichert werden: ' +
+                    (err instanceof Error ? err.message : String(err)));
+                return false;
+            }
+        }
         const url = await adresse(dateiId);
         if (!url || !satz) {
             UI.toast('Diese Datei gibt es nicht mehr');
@@ -136642,24 +136780,27 @@ const Bibliothek = (() => {
         const bild = datei
             ? `<img class="bib-deckel-bild" data-vorschau="${esc(datei)}" alt="" loading="lazy">`
             : (tinte || (MIT_TEXT.has(art.id) ? (Vorschau.miniatur(p.id, 5) || '') : ''));
-        const wann = wannText(p.zuletztGeoeffnet || p.edited || p.created);
+        const wann = wannText(p.edited || p.created);
         const deckel = `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}"` +
             Farben.marke(p.color) + ' ' +
             `title="${esc(p.text || 'Ohne Titel')}">` +
+            '<span class="bib-card-kind">' + esc(art.id === 'ordner' ? 'Ordner' : art.name) + '</span>' +
             `<span class="bib-deckel-blatt mini-zeilen${bild ? '' : ' is-leer'}${tinte ? ' hat-tinte' : ''}">` +
             '<i class="bib-papier" aria-hidden="true"></i>' +
             (bild || '') + folderPreview +
             (art.id === 'pdf' ? '<i class="bib-deckel-marke">PDF</i>' : '') +
-            `<i class="bib-deckel-stern${p.favorite ? ' an' : ''}" aria-hidden="true">` +
-            (p.favorite ? '\u2605' : '\u2606') + '</i>' +
             '</span>' +
             '<span class="bib-deckel-name">' +
             (eigenesSymbol(p) ? '<i class="bib-deckel-symbol" aria-hidden="true">' + esc(eigenesSymbol(p)) + '</i>' : '') +
             '<b>' + esc(p.text || 'Ohne Titel') + '</b></span>' +
-            '<small>' + esc(art.name) + ' \u00b7 ' + esc(wann) + '</small>' +
+            '<small class="bib-card-meta">' + (art.id === 'ordner' ? esc(art.name) : 'Bearbeitet ' + esc(wann)) + '</small>' +
             '</button>';
         return '<span class="bib-zelle">' + deckel +
             (art.id === 'ordner' ? blickKnopf(p.id, p.text) : '') +
+            `<button type="button" class="bib-favorite" data-bib-favorite="${esc(p.id)}" ` +
+            `aria-pressed="${!!p.favorite}" aria-label="Favorit: ${esc(p.text || 'Ohne Titel')}" ` +
+            `title="${p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'}">` +
+            '<span data-sym="star" aria-hidden="true"></span></button>' +
             mehrKnopf(p.id, p.text) + '</span>';
     };
     const hefte = (liste) => {
@@ -136925,6 +137066,22 @@ const Bibliothek = (() => {
             '<span class="bib-pille-wort">' + esc(jetzt ? jetzt.name : 'Alle Arten') + '</span>' +
             '<span class="bib-pille-pfeil" data-sym="chevronD" aria-hidden="true"></span></button>';
     };
+    const emptyLibrary = () => {
+        const filtered = zustand.art !== 'alle';
+        const favorites = zustand.reiter === 'favoriten';
+        const title = filtered ? 'Hier passt noch kein Dokument'
+            : favorites ? 'Platz für deine Favoriten' : 'Hier beginnt etwas Neues';
+        const detail = filtered ? 'Wähle eine andere Art oder zeige wieder alle Dokumente an.'
+            : favorites ? 'Mit dem Stern an einer Dokumentkarte findest du Wichtiges hier wieder.'
+                : 'Lege deine erste Seite an. Notizen, PDFs und Ideen bleiben an einem Ort.';
+        return '<section class="bib-leer" aria-label="Leere Bibliotheksansicht">' +
+            '<span class="bib-empty-symbol" data-sym="' + (favorites ? 'star' : 'pages') + '" aria-hidden="true"></span>' +
+            '<h2 class="bib-empty-title">' + title + '</h2><p>' + detail + '</p>' +
+            (filtered ? '<button type="button" data-bib-reset>Alle Arten zeigen</button>'
+                : favorites ? '<button type="button" data-bib-home>Zur Ablage</button>'
+                    : '<button type="button" data-neu-auf' + (!permitted('bearbeiten', zustand.ordner || undefined) ? ' disabled' : '') + '>Erste Seite erstellen</button>') +
+            '</section>';
+    };
     const zeichneDeckel = (wrap) => {
         const { liste: alle, gesamt } = auswahl();
         const liste = zustand.art === 'alle'
@@ -136943,9 +137100,7 @@ const Bibliothek = (() => {
                 studioWeiter() + recentCarousel() +
                 (liste.length
                     ? '<div class="bib-gitter">' + liste.map(deckelKarte).join('') + '</div>'
-                    : '<p class="bib-leer">' + (zustand.art === 'alle'
-                        ? 'Hier ist noch nichts. Tippe auf „Neu", um anzufangen.'
-                        : 'Von dieser Art gibt es hier nichts.') + '</p>') +
+                    : emptyLibrary()) +
                 (zustand.reiter === 'ablage' ? '</div></div>' : '') +
                 sicherungsKarte() +
                 '</div>';
@@ -136979,14 +137134,18 @@ const Bibliothek = (() => {
         const hier = weg.length ? String(weg[weg.length - 1].text || 'Ohne Titel') : 'Dokumente';
         return '<header class="bib-dkopf">' +
             ordnerKrume() +
-            '<h1>' + esc(hier) + '</h1>' +
+            '<div class="bib-workspace-intro"><span class="bib-workspace-eyebrow">Dein Arbeitsbereich</span>' +
+            '<h1>' + esc(hier) + '</h1></div>' +
+            '<div class="bib-workspace-actions">' +
+            '<button type="button" class="bib-search" data-bib-search aria-label="Dokumente durchsuchen">' +
+            '<span data-sym="search" aria-hidden="true"></span><span>Suchen</span></button>' +
             '<button class="bib-neu" data-neu-auf>' +
             '<b aria-hidden="true">+</b><span>Neu</span></button>' +
             '<button class="bib-studio-import" data-studio-import' +
             (pdfImportLaeuft || !permitted('bearbeiten', zustand.ordner || undefined)
                 ? ' disabled title="Import läuft oder Bearbeitungsrechte fehlen"' : '') +
             '><span data-sym="plus" aria-hidden="true"></span>' +
-            '<span class="wort">' + IMPORT_WORT + '</span></button>' +
+            '<span class="wort">' + IMPORT_WORT + '</span></button></div>' +
             '<div class="bib-wahl" role="group" aria-label="Was die Bibliothek zeigt">' +
             ortPille(ort, ' \u00b7 ' + satzZahl, satzEinheit) +
             artPille(alle) +
@@ -137009,7 +137168,7 @@ const Bibliothek = (() => {
                 bibKopf(liste, alle, gesamt) +
                 (regal.length
                     ? '<div class="bib-regal">' + regal.map(heftKarte).join('') + '</div>'
-                    : '<p class="bib-leer">Hier ist noch nichts. Seiten erscheinen automatisch.</p>') +
+                    : emptyLibrary()) +
                 (hand.length > 1
                     ? '<section class="bib-abschnitt"><header><h2>Zuletzt in der Hand</h2>' +
                         '<p>heftübergreifend</p></header>' +
@@ -137137,6 +137296,34 @@ const Bibliothek = (() => {
         });
     };
     const binde = (wrap) => {
+        wrap.querySelector('[data-bib-search]')?.addEventListener('click', () => App.suche());
+        wrap.querySelector('[data-bib-reset]')?.addEventListener('click', () => {
+            zustand.art = 'alle';
+            App.zeichneSeite();
+            pilleFokus('[data-art-wahl], [data-orte]');
+        });
+        wrap.querySelector('[data-bib-home]')?.addEventListener('click', () => {
+            ortSetzen('ablage');
+            pilleFokus('[data-orte]');
+        });
+        wrap.querySelectorAll('[data-bib-favorite]').forEach(button => {
+            button.addEventListener('click', () => {
+                const id = button.dataset['bibFavorite'] || '';
+                const page = Store.getBlock(id);
+                if (!page || !permitted('lesen', id))
+                    return;
+                const scroller = document.getElementById('scroll');
+                const scrollTop = scroller?.scrollTop || 0;
+                Register.aktionen.tun('favorit', page, ortFuer(page, button));
+                requestAnimationFrame(() => {
+                    if (scroller)
+                        scroller.scrollTop = scrollTop;
+                    const replacement = Array.from(document.querySelectorAll('.bib [data-bib-favorite]'))
+                        .find(el => el.dataset['bibFavorite'] === id);
+                    (replacement || document.querySelector('.bib [data-orte]'))?.focus({ preventScroll: true });
+                });
+            });
+        });
         wrap.querySelectorAll('[data-rmo-open]').forEach(button => button.addEventListener('click', () => {
             const id = button.dataset.rmoOpen;
             if (id && permitted('lesen', id))
@@ -137249,7 +137436,7 @@ const Bibliothek = (() => {
                         return `<div class="bib-zeile" data-id="${p.id}" data-art="${artVon(p).id}">` +
                             spalten.map(s => zellen[s.id]).join('') + '</div>';
                     }).join('')
-                    : '<div class="bib-leer">Hier ist noch nichts. Seiten erscheinen automatisch.</div>') +
+                    : emptyLibrary()) +
                 '</div>' +
                 `<div class="bib-fuss">${liste.length} ${liste.length === 1 ? 'Seite' : 'Seiten'}</div>` +
                 '</div>';
@@ -155493,18 +155680,27 @@ const App = (() => {
         if (!stand.dateien) {
             return { blob: new Blob([Store.exportAll()], { type: 'application/json' }),
                 art: 'json', endung: '.json',
-                anhaenge: 0, versionen: stand.versionen };
+                anhaenge: 0, versionen: stand.versionen, ausgelassen: 0 };
         }
         sagen(stand.dateien + ' Anhänge kommen mit — das dauert einen Moment');
         {
-            const saetze = (await Store.dateiAlle())
+            const gefundeneSaetze = (await Store.dateiAlle())
                 .filter((s) => !(s && s.abgeleitet));
-            const eintraege = [{ name: 'daten.json', inhalt: Store.exportAll(true) }];
+            const saetze = [];
+            const ausgelassen = [];
+            const dataEntry = { name: 'daten.json', inhalt: '' };
+            const eintraege = [dataEntry];
             const belegt = new Set(['daten.json']);
-            for (const satz of saetze) {
+            for (const satz of gefundeneSaetze) {
                 const inhalt = await Dateien.alsBlob(satz.id);
-                if (!inhalt)
+                if (!inhalt || (satz.zustand && satz.zustand !== 'fertig') ||
+                    (typeof satz.groesse === 'number' &&
+                        Number.isFinite(satz.groesse) && satz.groesse >= 0 &&
+                        inhalt.size !== satz.groesse)) {
+                    ausgelassen.push(String(satz.name || satz.id || 'Unbenannte Datei'));
                     continue;
+                }
+                saetze.push(satz);
                 const roh = String(satz.name || 'Datei').replace(/[\\/:*?"<>|]/g, '-');
                 let name = 'dateien/' + roh;
                 if (belegt.has(name)) {
@@ -155519,6 +155715,32 @@ const App = (() => {
                 belegt.add(name);
                 eintraege.push({ name, inhalt, kennung: satz.id });
             }
+            const datenRoh = Store.exportAll(true);
+            if (ausgelassen.length) {
+                const daten = JSON.parse(datenRoh);
+                daten.unvollstaendigeDateienAusgelassen = ausgelassen.length;
+                const beispiele = ausgelassen.slice(0, 5).join(', ');
+                const weitere = ausgelassen.length > 5
+                    ? ' und ' + (ausgelassen.length - 5) + ' weitere' : '';
+                const versprochen = 'Vollständig: die ' + gefundeneSaetze.length +
+                    ' Datei(en) liegen im Ordner „dateien" desselben Archivs.';
+                const teilweise = 'Teilweise: ' + saetze.length + ' von ' +
+                    gefundeneSaetze.length + ' Datei(en) sind im Archiv vorhanden.';
+                const vorherHinweis = String(daten.hinweis || '');
+                daten.hinweis = (vorherHinweis.includes(versprochen)
+                    ? vorherHinweis.replace(versprochen, teilweise)
+                    : teilweise + ' ' + vorherHinweis) +
+                    ' ACHTUNG: ' + ausgelassen.length +
+                    ' unvollständige Datei(en) sind NICHT in dieser Sicherung: ' +
+                    beispiele + weitere + '. Sie bleiben auf diesem Gerät; erst ' +
+                    'nach dem vollständigen Einlesen erneut sichern.';
+                dataEntry.inhalt = JSON.stringify(daten);
+                sagen('ACHTUNG: ' + ausgelassen.length +
+                    ' unvollständige Datei(en) nicht mitgesichert — siehe Sicherungshinweis.');
+            }
+            else {
+                dataEntry.inhalt = datenRoh;
+            }
             const karte = {};
             eintraege.forEach(e => { if (e.kennung)
                 karte[e.name] = e.kennung; });
@@ -155528,22 +155750,39 @@ const App = (() => {
             const blob = await Austausch.zipSchreiben(eintraege, (name, anteil) => { if (anteil >= 1)
                 sagen('Geprüft: ' + name.replace('dateien/', '') + ' — wird verpackt'); });
             return { blob, art: 'redion', endung: '.redion',
-                anhaenge: eintraege.length - 2, versionen: stand.versionen };
+                anhaenge: eintraege.length - 2, versionen: stand.versionen,
+                ausgelassen: ausgelassen.length };
         }
     };
     const sicherungSpeichern = async () => {
         try {
             const paket = await sicherungPaketBauen();
             const heute = new Date().toISOString().slice(0, 10);
+            const name = 'redion-sicherung-' + heute + paket.endung;
+            const nativeSicherung = globalThis.RedionNativeSicherung;
+            if (nativeSicherung && typeof nativeSicherung.speichern === 'function') {
+                await nativeSicherung.speichern(paket.blob, name);
+                if (!paket.ausgelassen)
+                    sicherungGemerkt(paket.art);
+                UI.toast(paket.ausgelassen
+                    ? 'Sicherung mit Lücken gespeichert: ' + paket.ausgelassen +
+                        ' Datei(en) fehlen. Hinweis in der Sicherung lesen und erneut sichern.'
+                    : 'Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
+                return paket.ausgelassen === 0;
+            }
             const l = document.createElement('a');
             l.href = URL.createObjectURL(paket.blob);
-            l.download = 'redion-sicherung-' + heute + paket.endung;
+            l.download = name;
             l.click();
-            sicherungGemerkt(paket.art);
-            UI.toast(paket.art === 'json'
-                ? 'Sicherung gespeichert (' + paket.versionen + ' Fassungen im Verlauf)'
-                : 'Sicherung gespeichert — mit ' + paket.anhaenge + ' Anhang/Anhängen');
-            return true;
+            if (!paket.ausgelassen)
+                sicherungGemerkt(paket.art);
+            UI.toast(paket.ausgelassen
+                ? 'Sicherung mit Lücken gespeichert: ' + paket.ausgelassen +
+                    ' Datei(en) fehlen. Hinweis in der Sicherung lesen und erneut sichern.'
+                : paket.art === 'json'
+                    ? 'Sicherung gespeichert (' + paket.versionen + ' Fassungen im Verlauf)'
+                    : 'Sicherung gespeichert — mit ' + paket.anhaenge + ' Anhang/Anhängen');
+            return paket.ausgelassen === 0;
         }
         catch (err) {
             alert('Die Sicherung kam nicht zustande: ' +

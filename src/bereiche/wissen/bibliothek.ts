@@ -1097,25 +1097,26 @@ const Bibliothek = (() => {
     const bild = datei
       ? `<img class="bib-deckel-bild" data-vorschau="${esc(datei)}" alt="" loading="lazy">`
       : (tinte || (MIT_TEXT.has(art.id) ? (Vorschau.miniatur(p.id, 5) || '') : ''));
-    const wann = wannText(p.zuletztGeoeffnet || p.edited || p.created);
+    // Auf der Karte steht Bearbeitung; die Öffnungszeit gehört ausschliesslich
+    // in „Zuletzt geöffnet“. Beides sind verschiedene Aussagen.
+    const wann = wannText(p.edited || p.created);
     const deckel = `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}"` +
       /* DIE FARBE DES ORDNERS (E672) — dieselbe Marke wie beim Heft und
          beim Fach; das Stilblatt kennt eine Regel für alle drei. */
       Farben.marke(p.color) + ' ' +
       `title="${esc(p.text || 'Ohne Titel')}">` +
+      '<span class="bib-card-kind">' + esc(art.id === 'ordner' ? 'Ordner' : art.name) + '</span>' +
       `<span class="bib-deckel-blatt mini-zeilen${bild ? '' : ' is-leer'}${tinte ? ' hat-tinte' : ''}">` +
         '<i class="bib-papier" aria-hidden="true"></i>' +
         (bild || '') + folderPreview +
         /* Die Marke bleibt: sie sagt, WAS es ist, und das sagt ein Bild
            der ersten Seite nicht. Sie sitzt in der Ecke, nicht davor. */
         (art.id === 'pdf' ? '<i class="bib-deckel-marke">PDF</i>' : '') +
-        `<i class="bib-deckel-stern${p.favorite ? ' an' : ''}" aria-hidden="true">` +
-          (p.favorite ? '\u2605' : '\u2606') + '</i>' +
       '</span>' +
       '<span class="bib-deckel-name">' +
         (eigenesSymbol(p) ? '<i class="bib-deckel-symbol" aria-hidden="true">' + esc(eigenesSymbol(p)) + '</i>' : '') +
         '<b>' + esc(p.text || 'Ohne Titel') + '</b></span>' +
-      '<small>' + esc(art.name) + ' \u00b7 ' + esc(wann) + '</small>' +
+      '<small class="bib-card-meta">' + (art.id === 'ordner' ? esc(art.name) : 'Bearbeitet ' + esc(wann)) + '</small>' +
       '</button>';
     /* DAS AUGE AM ORDNER (E463). „Blick hinein" stand seit E459 nur im
        ⌄-Menü — ein Weg, den man kennen muss. Jetzt sitzt am Deckel jedes
@@ -1133,6 +1134,10 @@ const Bibliothek = (() => {
        JEDE Karte bekommt die Zelle, nicht nur der Ordner. */
     return '<span class="bib-zelle">' + deckel +
       (art.id === 'ordner' ? blickKnopf(p.id, p.text) : '') +
+      `<button type="button" class="bib-favorite" data-bib-favorite="${esc(p.id)}" ` +
+        `aria-pressed="${!!p.favorite}" aria-label="Favorit: ${esc(p.text || 'Ohne Titel')}" ` +
+        `title="${p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'}">` +
+        '<span data-sym="star" aria-hidden="true"></span></button>' +
       mehrKnopf(p.id, p.text) + '</span>';
   };
 
@@ -1545,6 +1550,25 @@ const Bibliothek = (() => {
   /* ---------------------------------------------------------------- *
    * DIE DECKELANSICHT (E236)
    * ---------------------------------------------------------------- */
+  /** Leere Orte sind kein Fehler und ein leerer Filter keine leere Ablage.
+   * Die Handlungen verwenden dieselben Wege wie die Kopfzeile. */
+  const emptyLibrary = (): string => {
+    const filtered = zustand.art !== 'alle';
+    const favorites = zustand.reiter === 'favoriten';
+    const title = filtered ? 'Hier passt noch kein Dokument'
+      : favorites ? 'Platz für deine Favoriten' : 'Hier beginnt etwas Neues';
+    const detail = filtered ? 'Wähle eine andere Art oder zeige wieder alle Dokumente an.'
+      : favorites ? 'Mit dem Stern an einer Dokumentkarte findest du Wichtiges hier wieder.'
+      : 'Lege deine erste Seite an. Notizen, PDFs und Ideen bleiben an einem Ort.';
+    return '<section class="bib-leer" aria-label="Leere Bibliotheksansicht">' +
+      '<span class="bib-empty-symbol" data-sym="' + (favorites ? 'star' : 'pages') + '" aria-hidden="true"></span>' +
+      '<h2 class="bib-empty-title">' + title + '</h2><p>' + detail + '</p>' +
+      (filtered ? '<button type="button" data-bib-reset>Alle Arten zeigen</button>'
+        : favorites ? '<button type="button" data-bib-home>Zur Ablage</button>'
+        : '<button type="button" data-neu-auf' + (!permitted('bearbeiten', zustand.ordner || undefined) ? ' disabled' : '') + '>Erste Seite erstellen</button>') +
+      '</section>';
+  };
+
   const zeichneDeckel = (wrap: HTMLElement): void => {
     const { liste: alle, gesamt } = auswahl();
     const liste = zustand.art === 'alle'
@@ -1567,9 +1591,7 @@ const Bibliothek = (() => {
         studioWeiter() + recentCarousel() +
         (liste.length
           ? '<div class="bib-gitter">' + liste.map(deckelKarte).join('') + '</div>'
-          : '<p class="bib-leer">' + (zustand.art === 'alle'
-              ? 'Hier ist noch nichts. Tippe auf „Neu", um anzufangen.'
-              : 'Von dieser Art gibt es hier nichts.') + '</p>') +
+          : emptyLibrary()) +
         /* DIE SICHERUNG UND DER PLATZ GEHÖREN IN JEDE FORM.
            Der erste Entwurf liess beide weg — sie standen nur im
            Heftregal, und das ist seit E236 nicht mehr die Vorgabe. Damit
@@ -1643,7 +1665,11 @@ const Bibliothek = (() => {
     const hier = weg.length ? String(weg[weg.length - 1].text || 'Ohne Titel') : 'Dokumente';
     return '<header class="bib-dkopf">' +
       ordnerKrume() +
-      '<h1>' + esc(hier) + '</h1>' +
+      '<div class="bib-workspace-intro"><span class="bib-workspace-eyebrow">Dein Arbeitsbereich</span>' +
+      '<h1>' + esc(hier) + '</h1></div>' +
+      '<div class="bib-workspace-actions">' +
+      '<button type="button" class="bib-search" data-bib-search aria-label="Dokumente durchsuchen">' +
+        '<span data-sym="search" aria-hidden="true"></span><span>Suchen</span></button>' +
       '<button class="bib-neu" data-neu-auf>' +
         '<b aria-hidden="true">+</b><span>Neu</span></button>' +
       /* EIN WORT FÜR EINE HANDLUNG (E516). Der Knopf im Kopf heisst „PDF
@@ -1656,7 +1682,7 @@ const Bibliothek = (() => {
         (pdfImportLaeuft || !permitted('bearbeiten', zustand.ordner || undefined)
           ? ' disabled title="Import läuft oder Bearbeitungsrechte fehlen"' : '') +
         '><span data-sym="plus" aria-hidden="true"></span>' +
-        '<span class="wort">' + IMPORT_WORT + '</span></button>' +
+        '<span class="wort">' + IMPORT_WORT + '</span></button></div>' +
       /* EINE ZEILE FÜR DIE DREI FRAGEN (E725): WO (Ort), WAS (Art), WIE
          (Form) — je die gewählte Antwort als Pille, die übrigen hinter ihr
          als Menü (`Menue.wahl`, E721). Redur: „von jeder kategorie nur eine
@@ -1696,7 +1722,7 @@ const Bibliothek = (() => {
         bibKopf(liste, alle, gesamt) +
         (regal.length
           ? '<div class="bib-regal">' + regal.map(heftKarte).join('') + '</div>'
-          : '<p class="bib-leer">Hier ist noch nichts. Seiten erscheinen automatisch.</p>') +
+          : emptyLibrary()) +
         (hand.length > 1
           ? '<section class="bib-abschnitt"><header><h2>Zuletzt in der Hand</h2>' +
               '<p>heftübergreifend</p></header>' +
@@ -1854,6 +1880,30 @@ const Bibliothek = (() => {
   };
 
   const binde = (wrap: HTMLElement): void => {
+    wrap.querySelector<HTMLElement>('[data-bib-search]')?.addEventListener('click', () => App.suche());
+    wrap.querySelector<HTMLElement>('[data-bib-reset]')?.addEventListener('click', () => {
+      zustand.art = 'alle'; App.zeichneSeite(); pilleFokus('[data-art-wahl], [data-orte]');
+    });
+    wrap.querySelector<HTMLElement>('[data-bib-home]')?.addEventListener('click', () => {
+      ortSetzen('ablage'); pilleFokus('[data-orte]');
+    });
+    wrap.querySelectorAll<HTMLButtonElement>('[data-bib-favorite]').forEach(button => {
+      button.addEventListener('click', () => {
+        const id = button.dataset['bibFavorite'] || '';
+        const page = Store.getBlock(id);
+        if (!page || !permitted('lesen', id)) return;
+        const scroller = document.getElementById('scroll');
+        const scrollTop = scroller?.scrollTop || 0;
+        // Keine zweite Speicherlogik: dieselbe Aktion wie im Kontextmenü.
+        Register.aktionen.tun('favorit', page, ortFuer(page, button));
+        requestAnimationFrame(() => {
+          if (scroller) scroller.scrollTop = scrollTop;
+          const replacement = Array.from(document.querySelectorAll<HTMLElement>('.bib [data-bib-favorite]'))
+            .find(el => el.dataset['bibFavorite'] === id);
+          (replacement || document.querySelector<HTMLElement>('.bib [data-orte]'))?.focus({preventScroll:true});
+        });
+      });
+    });
     wrap.querySelectorAll<HTMLElement>('[data-rmo-open]').forEach(button =>
       button.addEventListener('click', () => {
         const id = button.dataset.rmoOpen;
@@ -1993,7 +2043,7 @@ const Bibliothek = (() => {
                 return `<div class="bib-zeile" data-id="${p.id}" data-art="${artVon(p).id}">` +
                        spalten.map(s => zellen[s.id]).join('') + '</div>';
               }).join('')
-            : '<div class="bib-leer">Hier ist noch nichts. Seiten erscheinen automatisch.</div>') +
+            : emptyLibrary()) +
         '</div>' +
         `<div class="bib-fuss">${liste.length} ${liste.length === 1 ? 'Seite' : 'Seiten'}</div>` +
       '</div>';
