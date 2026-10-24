@@ -35,7 +35,7 @@ test('Codemagic pinnt exakt ein esbuild im nativen Installationsschritt', () => 
   assert.equal(pins.length, 1, 'Es muss exakt eine explizite esbuild-Version geben.');
   assert.match(workflow, /npm install --no-save --package-lock=false --no-audit --no-fund/);
   assert.match(workflow, /@capacitor\/core@8 @capacitor\/cli@8 @capacitor\/ios@8/);
-  assert.match(workflow, /@capacitor\/filesystem@8 @capacitor\/share@8 @capacitor\/haptics@8 esbuild@/);
+  assert.match(workflow, /@capacitor\/filesystem@8 @capacitor\/share@8 @capacitor\/haptics@8 @capacitor\/browser@8 esbuild@/);
   assert.doesNotMatch(workflow, /--(?:force|legacy-peer-deps)\b/,
     'Kein unsicherer npm-Peer-Override.');
 });
