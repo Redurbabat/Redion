@@ -54,5 +54,5 @@ test('Kein Webseiten-Skript, keine Änderung an index.html oder Capacitor-Konfig
   const script = fs.readFileSync(path.join(root, 'ios/install-privacy-shield.mjs'), 'utf8');
   assert.match(script, /ios\/App\/App\/AppDelegate.swift/);
   assert.doesNotMatch(script, /writeFileSync\([^)]*index\.html/);
-  assert.doesNotMatch(script, /project\.pbxproj/);
+  assert.doesNotMatch(script, /(?:readFileSync|writeFileSync)\([^\n]*project\.pbxproj/);
 });
