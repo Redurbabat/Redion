@@ -2119,18 +2119,25 @@ const App = (() => {
         if (!stand.dateien) {
             return { blob: new Blob([Store.exportAll()], { type: 'application/json' }),
                 art: 'json', endung: '.json',
-                anhaenge: 0, versionen: stand.versionen };
+                anhaenge: 0, versionen: stand.versionen, ausgelassen: 0 };
         }
         sagen(stand.dateien + ' Anhänge kommen mit — das dauert einen Moment');
         {
-            const saetze = (await Store.dateiAlle())
+            const gefundeneSaetze = (await Store.dateiAlle())
                 .filter((s) => !(s && s.abgeleitet));
-            const eintraege = [{ name: 'daten.json', inhalt: Store.exportAll(true) }];
+            const saetze = [];
+            const ausgelassen = [];
+            const eintraege = [{ name: 'daten.json', inhalt: '' }];
             const belegt = new Set(['daten.json']);
-            for (const satz of saetze) {
+            for (const satz of gefundeneSaetze) {
                 const inhalt = await Dateien.alsBlob(satz.id);
-                if (!inhalt)
+                if (!inhalt || (typeof satz.groesse === 'number' &&
+                    Number.isFinite(satz.groesse) && satz.groesse >= 0 &&
+                    inhalt.size !== satz.groesse)) {
+                    ausgelassen.push(String(satz.name || satz.id || 'Unbenannte Datei'));
                     continue;
+                }
+                saetze.push(satz);
                 const roh = String(satz.name || 'Datei').replace(/[\\/:*?"<>|]/g, '-');
                 let name = 'dateien/' + roh;
                 if (belegt.has(name)) {
@@ -2145,6 +2152,25 @@ const App = (() => {
                 belegt.add(name);
                 eintraege.push({ name, inhalt, kennung: satz.id });
             }
+            const datenRoh = Store.exportAll(true);
+            if (ausgelassen.length) {
+                const daten = JSON.parse(datenRoh);
+                daten.unvollstaendigeDateienAusgelassen = ausgelassen.length;
+                const beispiele = ausgelassen.slice(0, 5).join(', ');
+                const weitere = ausgelassen.length > 5
+                    ? ' und ' + (ausgelassen.length - 5) + ' weitere' : '';
+                daten.hinweis = String(daten.hinweis || '') +
+                    ' ACHTUNG: ' + ausgelassen.length +
+                    ' unvollständige Datei(en) sind NICHT in dieser Sicherung: ' +
+                    beispiele + weitere + '. Sie bleiben auf diesem Gerät; erst ' +
+                    'nach dem vollständigen Einlesen erneut sichern.';
+                eintraege[0].inhalt = JSON.stringify(daten);
+                sagen('ACHTUNG: ' + ausgelassen.length +
+                    ' unvollständige Datei(en) nicht mitgesichert — siehe Sicherungshinweis.');
+            }
+            else {
+                eintraege[0].inhalt = datenRoh;
+            }
             const karte = {};
             eintraege.forEach(e => { if (e.kennung)
                 karte[e.name] = e.kennung; });
@@ -2154,7 +2180,8 @@ const App = (() => {
             const blob = await Austausch.zipSchreiben(eintraege, (name, anteil) => { if (anteil >= 1)
                 sagen('Geprüft: ' + name.replace('dateien/', '') + ' — wird verpackt'); });
             return { blob, art: 'redion', endung: '.redion',
-                anhaenge: eintraege.length - 2, versionen: stand.versionen };
+                anhaenge: eintraege.length - 2, versionen: stand.versionen,
+                ausgelassen: ausgelassen.length };
         }
     };
     const sicherungSpeichern = async () => {
@@ -2165,18 +2192,26 @@ const App = (() => {
             const nativeSicherung = globalThis.RedionNativeSicherung;
             if (nativeSicherung && typeof nativeSicherung.speichern === 'function') {
                 await nativeSicherung.speichern(paket.blob, name);
-                sicherungGemerkt(paket.art);
-                UI.toast('Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
+                if (!paket.ausgelassen)
+                    sicherungGemerkt(paket.art);
+                UI.toast(paket.ausgelassen
+                    ? 'Sicherung mit Lücken gespeichert: ' + paket.ausgelassen +
+                        ' Datei(en) fehlen. Hinweis in der Sicherung lesen und erneut sichern.'
+                    : 'Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
                 return true;
             }
             const l = document.createElement('a');
             l.href = URL.createObjectURL(paket.blob);
             l.download = name;
             l.click();
-            sicherungGemerkt(paket.art);
-            UI.toast(paket.art === 'json'
-                ? 'Sicherung gespeichert (' + paket.versionen + ' Fassungen im Verlauf)'
-                : 'Sicherung gespeichert — mit ' + paket.anhaenge + ' Anhang/Anhängen');
+            if (!paket.ausgelassen)
+                sicherungGemerkt(paket.art);
+            UI.toast(paket.ausgelassen
+                ? 'Sicherung mit Lücken gespeichert: ' + paket.ausgelassen +
+                    ' Datei(en) fehlen. Hinweis in der Sicherung lesen und erneut sichern.'
+                : paket.art === 'json'
+                    ? 'Sicherung gespeichert (' + paket.versionen + ' Fassungen im Verlauf)'
+                    : 'Sicherung gespeichert — mit ' + paket.anhaenge + ' Anhang/Anhängen');
             return true;
         }
         catch (err) {
