@@ -804,3 +804,107 @@ body[data-dokument="an"] .document-studio .blatt-werk{
     -webkit-mask-image:linear-gradient(to right, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%);
     mask-image:linear-gradient(to right, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%) }
 }
+
+/* ══ WORKSPACE 2.0 · DOKUMENTKOMPASS (Web und iOS, gleicher Webcode) ══════
+   Die Kopfzeile braucht einen erkennbaren Dokumentnamen, seine Art, den
+   tatsächlichen Umfang und einen aus dem aktiven Index errechneten
+   Lesefortschritt. Keine neue Route und kein zweiter Seitenspeicher.
+   Die Fortschrittsanzeige ist ein natives <progress>, keine Animation
+   mit eigener Uhr. Die Zahl selbst steht weiter nur im bisherigen
+   .document-position (test210: nicht zweimal auf demselben Bildschirm). */
+.document-studio .document-title{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;flex:1 1 auto;min-width:0;overflow:hidden;
+  white-space:normal;line-height:1.15
+}
+.document-studio .document-title-name{
+  display:block;width:100%;min-width:0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;
+  font-size:clamp(.8125rem,1vw,.9375rem);font-weight:700;
+  letter-spacing:-.012em;color:var(--text)
+}
+.document-studio .document-title-meta{
+  display:inline-flex;align-items:center;justify-content:center;
+  gap:6px;max-width:100%;min-width:0;
+  color:var(--text-dim);font-size:.6875rem;font-weight:550;
+  letter-spacing:.025em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.document-studio .document-title-meta::before{
+  content:'';display:inline-block;flex:none;width:6px;height:6px;
+  border-radius:50%;background:var(--accent)
+}
+.document-studio .document-title-progress{
+  width:min(9rem,82%);height:3px;flex:none;margin:0;
+  border:0;border-radius:999px;overflow:hidden;
+  color:var(--accent);background:var(--line-soft)
+}
+.document-studio .document-title-progress[hidden]{display:none}
+.document-studio .document-title-progress::-webkit-progress-bar{
+  background:var(--line-soft);border-radius:999px
+}
+.document-studio .document-title-progress::-webkit-progress-value{
+  background:var(--accent);border-radius:999px
+}
+.document-studio .document-title-progress::-moz-progress-bar{
+  background:var(--accent);border-radius:999px
+}
+/* „Seite 8/140“ ist jetzt auch ein Knopf: derselbe Springweg wie die
+   Miniaturen, aber ohne mehrfach hundertmal Pfeil zu drücken. */
+.document-studio .document-pagination .document-position{
+  padding-inline:12px;min-width:90px;min-height:var(--touch-min);
+  border:1px solid var(--line);border-radius:var(--radius-lg);
+  background:var(--bg-card);color:var(--text);font-size:.75rem;
+  font-variant-numeric:tabular-nums;cursor:pointer;
+  transition:background var(--motion-fast) var(--ease),border-color var(--motion-fast) var(--ease)
+}
+.document-studio .document-pagination .document-position:not(:disabled):is(:hover,:focus-visible){
+  color:var(--text);border-color:var(--accent);background:var(--accent-schwach)
+}
+.document-studio .document-pagination .document-position:disabled{
+  cursor:default;opacity:.65
+}
+/* Der schon vorhandene Inspector wird zum ruhigen, scanbaren Dokumentblatt.
+   Die Bedienelemente und die Geschäftslogik bleiben genau dieselben. */
+.document-studio .document-inspector-heading{
+  margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--line-soft)
+}
+.document-studio .document-inspector-heading strong{font-size:.9375rem;letter-spacing:-.012em}
+.document-studio .document-inspector-source{
+  padding:10px 12px;border:1px solid var(--line-soft);
+  background:var(--bg-card);border-radius:var(--radius-lg);
+  line-height:1.4;overflow-wrap:anywhere
+}
+.document-studio .document-inspector-summary{
+  grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+  padding:12px 0;border-block:0
+}
+.document-studio .document-inspector-summary>div{
+  display:flex;flex-direction:column-reverse;align-items:center;justify-content:center;
+  text-align:center;gap:5px;min-width:0;padding:12px 5px;
+  border:1px solid var(--line-soft);border-radius:var(--radius-lg);
+  background:var(--bg-card)
+}
+.document-studio .document-inspector-summary>div b{
+  color:var(--text);font-size:1.3125rem;font-weight:700;
+  font-variant-numeric:tabular-nums;line-height:1.1
+}
+.document-studio .document-inspector-summary>div span{
+  max-width:100%;font-size:.6875rem;color:var(--text-dim);
+  overflow-wrap:anywhere;line-height:1.3
+}
+.document-studio .document-inspector-list button{
+  background:var(--bg-card);border-color:var(--line-soft);
+  text-align:left;min-height:var(--touch-min)
+}
+.document-studio .document-inspector-list button:hover{
+  background:var(--bg-hover);border-color:var(--line)
+}
+@media(max-width:760px){
+  .document-studio .document-title{align-items:stretch;gap:3px;min-width:0}
+  .document-studio .document-title-name{font-size:.8125rem;line-height:1.15}
+  .document-studio .document-title-meta{justify-content:flex-start;font-size:.625rem}
+  .document-studio .document-title-progress{width:min(8rem,82%)}
+}
+@media(prefers-reduced-motion:reduce){
+  .document-studio .document-pagination .document-position{transition:none}
+}
