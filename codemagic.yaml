@@ -16,6 +16,7 @@ workflows:
           set -euo pipefail
           npm ci --no-audit --no-fund
           npm run bauen:ts
+          node --test ios/backup-chunks.test.mjs
 
       - name: Lokale Web-Dateien fuer Capacitor bereitstellen
         script: |
@@ -33,16 +34,25 @@ workflows:
         script: |
           set -euo pipefail
           npm install --no-save --package-lock=false --no-audit --no-fund \
-            @capacitor/core@8 @capacitor/cli@8 @capacitor/ios@8
-          cat > capacitor.config.json <<'EOF'
-          {
-            "appId": "ch.redurbabat.redion",
-            "appName": "Redion",
-            "webDir": "www"
-          }
-          EOF
+            @capacitor/core@8 @capacitor/cli@8 @capacitor/ios@8 \
+            @capacitor/filesystem@8 @capacitor/share@8 esbuild@0.25
+          npx esbuild ios/native-sicherung.ts \
+            --bundle --platform=browser --format=iife --target=es2022 \
+            --outfile=www/redion-native-sicherung.js
+          node ios/vorbereiten.mjs
           npx cap add ios --packagemanager SPM
           npx cap sync ios
+
+      - name: Sicherungen in der iOS-Dateien-App sichtbar machen
+        script: |
+          set -euo pipefail
+          PLIST="ios/App/App/Info.plist"
+          test -f "$PLIST"
+          for schluessel in UIFileSharingEnabled LSSupportsOpeningDocumentsInPlace; do
+            /usr/libexec/PlistBuddy -c "Add :$schluessel bool true" "$PLIST" || \
+              /usr/libexec/PlistBuddy -c "Set :$schluessel true" "$PLIST"
+          done
+
 
       - name: Redion-Appsymbol verwenden
         script: |

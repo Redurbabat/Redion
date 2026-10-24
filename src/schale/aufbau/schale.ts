@@ -2799,9 +2799,21 @@ const App = (() => {
     try {
       const paket = await sicherungPaketBauen();
       const heute = new Date().toISOString().slice(0, 10);
+      const name = 'redion-sicherung-' + heute + paket.endung;
+      /* Capacitor iOS: Der WebView-Download eines Blob-URLs ist keine
+         zuverlässige Sicherung. Stattdessen schreibt die native Brücke
+         die Datei scheibenweise und prüft die Bytezahl. Die bisherige
+         Browser- und PWA-Version ändert sich dadurch nicht. */
+      const nativeSicherung = (globalThis as any).RedionNativeSicherung;
+      if (nativeSicherung && typeof nativeSicherung.speichern === 'function') {
+        await nativeSicherung.speichern(paket.blob, name);
+        sicherungGemerkt(paket.art);
+        UI.toast('Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
+        return true;
+      }
       const l = document.createElement('a');
       l.href = URL.createObjectURL(paket.blob);
-      l.download = 'redion-sicherung-' + heute + paket.endung;
+      l.download = name;
       l.click();
       sicherungGemerkt(paket.art);
       UI.toast(paket.art === 'json'
