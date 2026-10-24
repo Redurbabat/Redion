@@ -2161,9 +2161,17 @@ const App = (() => {
         try {
             const paket = await sicherungPaketBauen();
             const heute = new Date().toISOString().slice(0, 10);
+            const name = 'redion-sicherung-' + heute + paket.endung;
+            const nativeSicherung = globalThis.RedionNativeSicherung;
+            if (nativeSicherung && typeof nativeSicherung.speichern === 'function') {
+                await nativeSicherung.speichern(paket.blob, name);
+                sicherungGemerkt(paket.art);
+                UI.toast('Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
+                return true;
+            }
             const l = document.createElement('a');
             l.href = URL.createObjectURL(paket.blob);
-            l.download = 'redion-sicherung-' + heute + paket.endung;
+            l.download = name;
             l.click();
             sicherungGemerkt(paket.art);
             UI.toast(paket.art === 'json'
