@@ -4,5 +4,10 @@
   "webDir": "www",
   "ios": {
     "path": "build/ios-capacitor"
-  }
+  },
+  "includePlugins": [
+    "@capacitor/filesystem",
+    "@capacitor/share",
+    "@capacitor/haptics"
+  ]
 }
