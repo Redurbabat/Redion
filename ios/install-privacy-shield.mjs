@@ -12,6 +12,18 @@ const SIGNATURE = 'func application(_ application: UIApplication, didFinishLaunc
 const HOOK = 'RedionPrivacyShield.start()';
 const MARKER = '// REDION_IOS_PRIVACY_SHIELD – NUR NATIVE APP';
 
+/* Die Quelldateien unter ios/ gehoeren Redion und werden nie ersetzt.
+ * Nur die von Capacitor unter build/ erzeugte Swift-Datei bearbeiten.
+ * Der exakte iOS-Projektpfad ist derselbe wie in capacitor.config.json.
+ */
+export function nativeAppDelegatePath(root, config) {
+  if (config?.appId !== 'ch.redurbabat.redion' ||
+      config?.ios?.path !== 'build/ios-capacitor') {
+    throw new Error('Unerwarteter nativer iOS-Projektpfad – Quelldateien schuetzen.');
+  }
+  return path.join(root, config.ios.path, 'App', 'App', 'AppDelegate.swift');
+}
+
 export function injectPrivacyShield(appDelegate, shieldSource) {
   if (typeof appDelegate !== 'string' || typeof shieldSource !== 'string') {
     throw new TypeError('Swift-Quelldateien fehlen.');
@@ -38,7 +50,8 @@ export function injectPrivacyShield(appDelegate, shieldSource) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const root = process.cwd();
-  const dest = path.join(root, 'ios/App/App/AppDelegate.swift');
+  const config = JSON.parse(fs.readFileSync(path.join(root, 'capacitor.config.json'), 'utf8'));
+  const dest = nativeAppDelegatePath(root, config);
   const source = path.join(root, 'ios/privacy-shield.swift');
   if (!fs.existsSync(dest) || !fs.existsSync(source)) {
     console.error('Capacitor iOS-AppDelegate oder Datenschutzschirm fehlt.');
