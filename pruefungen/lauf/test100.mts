@@ -326,21 +326,35 @@ const halb = await seite.evaluate(async () => {
   HTMLAnchorElement.prototype.click = function (this: HTMLAnchorElement) {
     if (this.download) return; return echtClick.call(this);
   };
-  try { await App.sicherungSpeichern(); }
+  let ok = true;
+  try { ok = await App.sicherungSpeichern(); }
   finally {
     (URL as any).createObjectURL = echtURL;
     HTMLAnchorElement.prototype.click = echtClick;
   }
   const zip = gefangen.blob ? await Einlesen.zipLesenAusBlob(gefangen.blob) : null;
+  const karte = zip ? JSON.parse(await zip.text('dateien.json')) : null;
+  const daten = zip ? JSON.parse(await zip.text('daten.json')) : null;
   /* Aufräumen, damit der Rest des Laufs den Torso nicht mitschleppt. */
   await Dateien.weg(satz.id);
-  return { blobIstNull: blob === null,
-           imArchiv: zip ? (zip.namen ?? []).some((n: string) => n.includes('abgebrochen')) : null };
+  return { blobIstNull: blob === null, vollstaendig: ok,
+           imArchiv: zip ? (zip.namen ?? []).some((n: string) => n.includes('abgebrochen')) : null,
+           imManifest: karte ? karte.saetze.some((e: any) => e.id === satz.id) : null,
+           gewarnt: daten ? Number(daten.unvollstaendigeDateienAusgelassen) >= 1 &&
+             /abgebrochen\.mp4/.test(daten.hinweis || '') &&
+             /Teilweise:/.test(daten.hinweis || '') &&
+             !/Vollständig: die/.test(daten.hinweis || '') : false };
 });
 p('`alsBlob` setzt einen halben Upload NICHT zusammen',
   (halb as any).blobIstNull === true);
 gleich('… und die Sicherung trägt ihn nicht als Datei',
   (halb as any).imArchiv, false);
+gleich('… und verspricht ihn auch nicht in dateien.json',
+  (halb as any).imManifest, false);
+p('… und daten.json warnt ausdrücklich vor der unvollständigen Datei',
+  (halb as any).gewarnt === true);
+gleich('… und der Export gibt keine vollständige Sicherung für Folgeschritte frei',
+  (halb as any).vollstaendig, false);
 
 /* ========================================================================= *
  * 3 · DIE BEIDEN RICHTUNGEN, IN DENEN ES SCHIEFGEHT

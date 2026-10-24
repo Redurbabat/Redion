@@ -2728,7 +2728,7 @@ const App = (() => {
   const sicherungPaketBauen = async (
     melden?: ((text: string) => void) | null
   ): Promise<{ blob: Blob; art: 'json' | 'redion'; endung: string;
-               anhaenge: number; versionen: number }> => {
+               anhaenge: number; versionen: number; ausgelassen: number }> => {
     const sagen = melden || ((t: string) => UI.toast(t));
     /* Erst holen, was nicht im Zwischenspeicher liegt — der Versionsverlauf.
        Er fehlte in jeder Sicherung, die diese App je geschrieben hat. */
@@ -2737,7 +2737,7 @@ const App = (() => {
     if (!stand.dateien) {
       return { blob: new Blob([Store.exportAll()], { type: 'application/json' }),
                art: 'json', endung: '.json',
-               anhaenge: 0, versionen: stand.versionen };
+               anhaenge: 0, versionen: stand.versionen, ausgelassen: 0 };
     }
 
     sagen(stand.dateien + ' Anhänge kommen mit — das dauert einen Moment');
@@ -2751,15 +2751,30 @@ const App = (() => {
          `dateien.json` aus derselben Liste entsteht: ein Satz darin, dessen
          Bytes fehlen, wäre ein Anhang, den der Block sucht und nicht
          findet. Lieber gar nicht erwähnt als falsch versprochen. */
-      const saetze = (await Store.dateiAlle())
+      const gefundeneSaetze = (await Store.dateiAlle())
         .filter((s: any) => !(s && s.abgeleitet));
+      /* Nur wirklich gepackte Dateien dürfen in dateien.json stehen.
+         Sonst verspricht das Manifest einen Anhang, den das ZIP nicht hat
+         (z. B. nach einem abgebrochenen Upload). */
+      const saetze: any[] = [];
+      const ausgelassen: string[] = [];
       const eintraege: { name: string; inhalt: any; kennung?: string }[] =
-        [{ name: 'daten.json', inhalt: Store.exportAll(true) }];
+        [{ name: 'daten.json', inhalt: '' }];
       const belegt = new Set(['daten.json']);
 
-      for (const satz of saetze) {
+      for (const satz of gefundeneSaetze) {
         const inhalt = await Dateien.alsBlob(satz.id);
-        if (!inhalt) continue;             /* angefangener Upload ohne Stücke */
+        /* Auch eine vorhandene, aber verkürzte Datei darf nicht als
+           vollständig in die Sicherung geraten. Das Original bleibt in
+           der Ablage; der Export benennt ausdrücklich, was fehlt. */
+        if (!inhalt || (satz.zustand && satz.zustand !== 'fertig') ||
+            (typeof satz.groesse === 'number' &&
+            Number.isFinite(satz.groesse) && satz.groesse >= 0 &&
+            inhalt.size !== satz.groesse)) {
+          ausgelassen.push(String(satz.name || satz.id || 'Unbenannte Datei'));
+          continue;
+        }
+        saetze.push(satz);
         /* Zwei Bilder dürfen „foto.jpg" heissen. Im Archiv darf ein Name nur
            einmal vorkommen, sonst überschreibt das Auspacken das eine mit dem
            anderen — still, wie immer bei dieser Sorte Fehler. */
@@ -2777,6 +2792,40 @@ const App = (() => {
         eintraege.push({ name, inhalt, kennung: satz.id } as { name: string; inhalt: any; kennung?: string });
       }
 
+      /* Enthält das Archiv unvollständige Dateien nicht, darf daten.json
+         nicht still "vollständig" behaupten. Die normale Sicherung wird
+         trotzdem erstellt: alle lesbaren Notizen und Anhänge bleiben
+         gesichert, die nicht lesbaren Dateien werden ausdrücklich genannt.
+         Das bestehende .redion-Format bleibt lesbar. */
+      const datenRoh = Store.exportAll(true);
+      if (ausgelassen.length) {
+        const daten = JSON.parse(datenRoh);
+        daten.unvollstaendigeDateienAusgelassen = ausgelassen.length;
+        const beispiele = ausgelassen.slice(0, 5).join(', ');
+        const weitere = ausgelassen.length > 5
+          ? ' und ' + (ausgelassen.length - 5) + ' weitere' : '';
+        /* Das alte "Vollständig" darf bei ausgelassenen Anhängen
+           nicht stehenbleiben. Andernfalls widersprechen sich zwei
+           Sätze desselben Sicherungsmanifests. */
+        const versprochen = 'Vollständig: die ' + gefundeneSaetze.length +
+          ' Datei(en) liegen im Ordner „dateien" desselben Archivs.';
+        const teilweise = 'Teilweise: ' + saetze.length + ' von ' +
+          gefundeneSaetze.length + ' Datei(en) sind im Archiv vorhanden.';
+        const vorherHinweis = String(daten.hinweis || '');
+        daten.hinweis = (vorherHinweis.includes(versprochen)
+          ? vorherHinweis.replace(versprochen, teilweise)
+          : teilweise + ' ' + vorherHinweis) +
+          ' ACHTUNG: ' + ausgelassen.length +
+          ' unvollständige Datei(en) sind NICHT in dieser Sicherung: ' +
+          beispiele + weitere + '. Sie bleiben auf diesem Gerät; erst ' +
+          'nach dem vollständigen Einlesen erneut sichern.';
+        eintraege[0].inhalt = JSON.stringify(daten);
+        sagen('ACHTUNG: ' + ausgelassen.length +
+          ' unvollständige Datei(en) nicht mitgesichert — siehe Sicherungshinweis.');
+      } else {
+        eintraege[0].inhalt = datenRoh;
+      }
+
       /* Die Zuordnung Name → Kennung gehört in die Sicherung, sonst weiss
          beim Einspielen niemand, welcher Block welches Bild meint. */
       const karte: Record<string, string> = {};
@@ -2791,7 +2840,8 @@ const App = (() => {
       const blob = await Austausch.zipSchreiben(eintraege,
         (name: string, anteil: any) => { if (anteil >= 1) sagen('Geprüft: ' + name.replace('dateien/', '') + ' — wird verpackt'); });
       return { blob, art: 'redion', endung: '.redion',
-               anhaenge: eintraege.length - 2, versionen: stand.versionen };
+               anhaenge: eintraege.length - 2, versionen: stand.versionen,
+               ausgelassen: ausgelassen.length };
     }
   };
 
@@ -2807,19 +2857,25 @@ const App = (() => {
       const nativeSicherung = (globalThis as any).RedionNativeSicherung;
       if (nativeSicherung && typeof nativeSicherung.speichern === 'function') {
         await nativeSicherung.speichern(paket.blob, name);
-        sicherungGemerkt(paket.art);
-        UI.toast('Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
-        return true;
+        if (!paket.ausgelassen) sicherungGemerkt(paket.art);
+        UI.toast(paket.ausgelassen
+          ? 'Sicherung mit Lücken gespeichert: ' + paket.ausgelassen +
+            ' Datei(en) fehlen. Hinweis in der Sicherung lesen und erneut sichern.'
+          : 'Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
+        return paket.ausgelassen === 0;
       }
       const l = document.createElement('a');
       l.href = URL.createObjectURL(paket.blob);
       l.download = name;
       l.click();
-      sicherungGemerkt(paket.art);
-      UI.toast(paket.art === 'json'
-        ? 'Sicherung gespeichert (' + paket.versionen + ' Fassungen im Verlauf)'
-        : 'Sicherung gespeichert — mit ' + paket.anhaenge + ' Anhang/Anhängen');
-      return true;
+      if (!paket.ausgelassen) sicherungGemerkt(paket.art);
+      UI.toast(paket.ausgelassen
+        ? 'Sicherung mit Lücken gespeichert: ' + paket.ausgelassen +
+          ' Datei(en) fehlen. Hinweis in der Sicherung lesen und erneut sichern.'
+        : paket.art === 'json'
+          ? 'Sicherung gespeichert (' + paket.versionen + ' Fassungen im Verlauf)'
+          : 'Sicherung gespeichert — mit ' + paket.anhaenge + ' Anhang/Anhängen');
+      return paket.ausgelassen === 0;
     } catch (err) {
       /* Kein stiller Fehlschlag. Wer glaubt, gesichert zu haben, und es nicht
          hat, ist schlechter dran als jemand, der es weiss.
