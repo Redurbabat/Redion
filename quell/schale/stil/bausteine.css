@@ -1931,6 +1931,21 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     bottom:calc(var(--hunten) + 8px); height:var(--mobile-nav-height);
     padding:5px 6px; background:var(--bg-card); border:1px solid var(--line);
   }
+  /* Zieh-Griff als dezente Entdeckungshilfe IN der vorhandenen
+     unteren Navigation. Kein Element, keine Trefferfläche, kein Listener.
+     Beim Hochziehen verschwindet er hinter der erscheinenden Zielleiste. */
+  #handy-oben::before{
+    content:'';position:absolute;left:50%;top:-8px;
+    width:42px;height:3px;border-radius:999px;
+    background:var(--text-dim);opacity:.55;
+    transform:translateX(-50%);pointer-events:none;
+    transition:opacity var(--motion-fast) var(--ease)
+  }
+  #handy-oben[data-zielleiste]::before{opacity:0}
+  @media(prefers-reduced-motion:reduce){
+    #handy-oben::before{transition:none}
+  }
+  body[data-bewegung="ruhig"] #handy-oben::before{transition:none}
   #ho-ziele[hidden]{ display:none }
   #ho-ziele[data-geht]{ pointer-events:none }
   /* WORKSPACE 2.0 — VOLLSTÄNDIGES ZIEL LESBAR BEIM HOCHZIEHEN.
