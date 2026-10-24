@@ -17,6 +17,8 @@ workflows:
           npm ci --no-audit --no-fund
           npm run bauen:ts
           node --test ios/backup-chunks.test.mjs
+          # Windows- und Unix-Stellvertretungen fuer Redions lokalen OCR-Test.
+          node --test pruefungen/ocr-test-stub.test.mjs
           node --test ios/native-file-export.test.mjs
           node --test ios/install-privacy-shield.test.mjs
 
