@@ -2127,14 +2127,15 @@ const App = (() => {
                 .filter((s) => !(s && s.abgeleitet));
             const saetze = [];
             const ausgelassen = [];
-            const eintraege = [{ name: 'daten.json', inhalt: '' }];
+            const dataEntry = { name: 'daten.json', inhalt: '' };
+            const eintraege = [dataEntry];
             const belegt = new Set(['daten.json']);
             for (const satz of gefundeneSaetze) {
                 const inhalt = await Dateien.alsBlob(satz.id);
                 if (!inhalt || (satz.zustand && satz.zustand !== 'fertig') ||
                     (typeof satz.groesse === 'number' &&
-                    Number.isFinite(satz.groesse) && satz.groesse >= 0 &&
-                    inhalt.size !== satz.groesse)) {
+                        Number.isFinite(satz.groesse) && satz.groesse >= 0 &&
+                        inhalt.size !== satz.groesse)) {
                     ausgelassen.push(String(satz.name || satz.id || 'Unbenannte Datei'));
                     continue;
                 }
@@ -2172,12 +2173,12 @@ const App = (() => {
                     ' unvollständige Datei(en) sind NICHT in dieser Sicherung: ' +
                     beispiele + weitere + '. Sie bleiben auf diesem Gerät; erst ' +
                     'nach dem vollständigen Einlesen erneut sichern.';
-                eintraege[0].inhalt = JSON.stringify(daten);
+                dataEntry.inhalt = JSON.stringify(daten);
                 sagen('ACHTUNG: ' + ausgelassen.length +
                     ' unvollständige Datei(en) nicht mitgesichert — siehe Sicherungshinweis.');
             }
             else {
-                eintraege[0].inhalt = datenRoh;
+                dataEntry.inhalt = datenRoh;
             }
             const karte = {};
             eintraege.forEach(e => { if (e.kennung)
