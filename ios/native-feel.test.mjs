@@ -152,6 +152,10 @@ test('Nur natives IPA bekommt die Erweiterung, Webseite bleibt identisch', () =>
   const nativeSource = fs.readFileSync(path.join(root, 'ios/native-sicherung.ts'), 'utf8');
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   assert.equal(config.appId, 'ch.redurbabat.redion');
+  assert.equal(config.ios.path, 'build/ios-capacitor');
+  assert.deepEqual(config.includePlugins, [
+    '@capacitor/filesystem', '@capacitor/share', '@capacitor/haptics'
+  ], 'Capacitor muss temporäre iOS-Plugins auch ohne package.json erkennen.');
   assert.match(workflow, /@capacitor\/haptics@8/);
   assert.match(workflow, /UIViewControllerBasedStatusBarAppearance/);
   assert.match(workflow, /UIStatusBarHidden/);
@@ -159,4 +163,31 @@ test('Nur natives IPA bekommt die Erweiterung, Webseite bleibt identisch', () =>
   assert.match(nativeSource, /startIosNativeFeel/);
   assert.doesNotMatch(html, /redion-native-sicherung\.js|native-feel\.mjs/);
   assert.doesNotMatch(workflow, /(?:--force|--legacy-peer-deps)/);
+});
+
+test('Unbeteiligte Klicks, deaktivierte Ziele und Gesten ohne Auswahl bleiben ohne Haptik', async () => {
+  const h = harness();
+  const disabled = { disabled: false, getAttribute: () => 'true' };
+  h.click(null, 1);
+  h.click(disabled, 1);
+  await h.settle();
+  assert.equal(h.impacts.length, 0, 'Keine Haptik auf unbeteiligten oder gesperrten Zielen.');
+  const noAim = { parentElement: { id: 'ho-ziele' },
+    hasAttribute() { return false; } };
+  h.hover(noAim);
+  await h.settle();
+  assert.equal(h.impacts.length, 0);
+  h.stop();
+});
+
+test('Schneller Hell-Dunkel-Wechsel wird in korrekter Reihenfolge an iOS uebergeben', async () => {
+  const h = harness();
+  h.theme('light');
+  h.theme('dark');
+  h.theme('light');
+  // The mock records native calls; the queued updates must finish in order
+  // regardless of the intervening MutationObserver notifications.
+  await h.settle();
+  assert.deepEqual(h.styles, ['DARK', 'LIGHT', 'DARK', 'LIGHT']);
+  h.stop();
 });
