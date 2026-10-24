@@ -1,0 +1,55 @@
+name: Workspace Editor 2.0
+
+on:
+  pull_request:
+    paths:
+      - 'src/schale/aufbau/kopfleiste.ts'
+      - 'quell/schale/aufbau/kopfleiste.js'
+      - 'quell/schale/stil/studio.css'
+      - 'pruefungen/workspace-editor.mts'
+      - '.github/workflows/workspace-editor.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  editor:
+    name: Editor unter Chromium und WebKit
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+      - run: npm run bauen:ts
+      - run: npm run typecheck
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Vergleichsstand vor dem PR laden
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          path: bilder/workspace-2/basis
+          persist-credentials: false
+      - name: Gleiche synthetische Notiz vor dem PR
+        env:
+          REDION_WORKSPACE_ROOT: ${{ github.workspace }}/bilder/workspace-2/basis
+        run: |
+          node pruefungen/workspace-editor.mts --baseline --capture
+          node pruefungen/workspace-editor.mts --webkit --baseline --capture
+      - name: Sichtbare neue Kommandozeile und bestehende Funktionen – Chromium
+        run: node pruefungen/workspace-editor.mts --capture
+      - name: Dasselbe unter WebKit (iPhone-Browserengine)
+        run: node pruefungen/workspace-editor.mts --webkit --capture
+      - name: Nur Bilder synthetischer Testdaten
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace-editor-vorher-nachher
+          path: bilder/workspace-2/editor/**/*.png
+          if-no-files-found: warn
+          retention-days: 14
