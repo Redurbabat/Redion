@@ -329,12 +329,28 @@ const Austausch = (() => {
                     { type: 'application/zip' });
   };
 
-  const laden = (blob: any, name: string) => {
+  /* Word, Excel, ODS, PowerPoint und Vault: derselbe Export auf Web und iOS.
+     Nur die iOS-App bringt den nativen Adapter mit. Auf der Website bleibt
+     der seit Jahren benutzte Download über ein Blob-URL erhalten. */
+  const laden = async (blob: Blob, name: string): Promise<boolean> => {
+    const nativeDateien = (globalThis as any).RedionNativeDateien;
+    if (nativeDateien && typeof nativeDateien.speichern === 'function') {
+      try {
+        await nativeDateien.speichern(blob, name);
+        return true;
+      } catch (err: unknown) {
+        if (typeof UI !== 'undefined' && UI.toast) UI.toast(
+          'Die Datei konnte nicht in iOS-Dateien gespeichert werden: ' +
+          (err instanceof Error ? err.message : String(err)));
+        return false;
+      }
+    }
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = name;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+    return true;
   };
 
   /* ========================================================================
@@ -900,7 +916,7 @@ const Austausch = (() => {
         teile.push({ name, ...teil });
       }
       const blob = await zipSchreiben(teile);
-      laden(blob, (seite.text || 'Seite').replace(/[\\/:*?"<>|]/g, '-') + '.docx');
+      await laden(blob, (seite.text || 'Seite').replace(/[\\/:*?"<>|]/g, '-') + '.docx');
       const hinweis = geschrieben
         ? 'Die Originaldatei ist vollständig erhalten; '
           + geschrieben + (geschrieben === 1 ? ' Absatz wurde' : ' Absätze wurden')
@@ -1009,7 +1025,7 @@ const Austausch = (() => {
     ];
 
     const blob = await zipSchreiben(dateien);
-    laden(blob, (seite.text || 'Seite').replace(/[\\/:*?"<>|]/g, '-') + '.docx');
+    await laden(blob, (seite.text || 'Seite').replace(/[\\/:*?"<>|]/g, '-') + '.docx');
     return blob;
   };
 
@@ -1303,7 +1319,7 @@ const Austausch = (() => {
     ];
 
     const blob = await zipSchreiben(dateien);
-    laden(blob, (dateiname || 'Redion') + '.ods');
+    await laden(blob, (dateiname || 'Redion') + '.ods');
     return blob;
   };
 
@@ -1467,7 +1483,7 @@ const Austausch = (() => {
          inhalt: blattXml(b.zeilen, stile.je[i] || undefined, b.formeln || undefined) })));
 
     const blob = await zipSchreiben(dateien);
-    laden(blob, (dateiname || 'Redion') + '.xlsx');
+    await laden(blob, (dateiname || 'Redion') + '.xlsx');
     return blob;
   };
 
@@ -1870,7 +1886,7 @@ const Austausch = (() => {
       name: path + '.md', inhalt: vaultMarkdown(Store.getBlock(id), path, paths)
     }));
     const blob = await zipSchreiben(files);
-    laden(blob, safeVaultSegment(dateiname) + '.zip');
+    await laden(blob, safeVaultSegment(dateiname) + '.zip');
     return blob;
   };
 
@@ -2966,7 +2982,7 @@ const Austausch = (() => {
         teile.push({ name, ...teil });
       }
       const blob = await zipSchreiben(teile);
-      laden(blob, dateiName);
+      await laden(blob, dateiName);
       const folien = paket.leser.namen
         .filter((n: string) => /^ppt\/slides\/slide\d+\.xml$/.test(n)).length;
       /* EHRLICH SAGEN, WAS NOCH NICHT GEHT (§35): die Folien stehen so
@@ -2997,7 +3013,7 @@ const Austausch = (() => {
       titel: f.titel, zeilen: Folien.alsZeilen(f, (id: string) => Store.childrenOf(id))
     }));
     const blob = await zipSchreiben(pptxTeile(folien));
-    laden(blob, dateiName);
+    await laden(blob, dateiName);
     return { blob, folien: folien.length, durchgereicht: false };
   };
 
