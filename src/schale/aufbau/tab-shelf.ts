@@ -88,6 +88,11 @@ const TabShelf = (() => {
   let tab: HTMLElement | null = null;
   let targets: Target[] = [];
   let items: HTMLElement[] = [];
+  /* Workspace 2.0: volle Zielnamen über der schmalen 5er-Leiste zeigen.
+     Ausschliesslich eine nicht-interaktive Beschriftung der EINEN Zielleiste:
+     keine zweite Navigation, kein Klick-Ziel, keine neue Gestenmaschine. */
+  let previewCategory: HTMLElement | null = null;
+  let previewName: HTMLElement | null = null;
   let aimed = -1;
   /** Gemessen beim Öffnen, VOR dem Wachsen (siehe Kopf). */
   let box = { left: 0, right: 0, top: 0 };
@@ -160,6 +165,10 @@ const TabShelf = (() => {
       b.setAttribute('role', 'menuitem');
       b.tabIndex = i === 0 ? 0 : -1;
       b.dataset['ziel'] = z.id;
+      /* Die gekürzte sichtbare Beschriftung darf den vollständigen Namen
+         für VoiceOver und Tastatur nicht ersetzen. */
+      b.setAttribute('aria-label', z.name);
+      b.title = z.name;
       const zeichen = document.createElement('span');
       zeichen.className = 'ho-z';
       zeichen.dataset['sym'] = z.zeichen;
@@ -177,6 +186,11 @@ const TabShelf = (() => {
     try { Register.symbole?.fuelle?.(shelf); } catch { /* ohne Zeichen bleibt das Wort */ }
     targets = neu;
     tab = t;
+    /* Beim Reiterwechsel dieselbe Vorschau neu beschriften, ohne die
+       Geometrie der Ziele, die Swipe-Koordinaten oder das Glas zu ändern. */
+    if (previewCategory) previewCategory.textContent = label(t);
+    if (previewName) previewName.textContent = '';
+    shelf.removeAttribute('data-vorschau-aktiv');
     shelf.setAttribute('aria-label', 'Ziele in ' + label(t));
     tabs().forEach(b => b.setAttribute('aria-expanded', b === t ? 'true' : 'false'));
     aimed = -1;
@@ -203,6 +217,15 @@ const TabShelf = (() => {
     const war = aimed;
     aimed = i;
     const q = places[i];
+    /* Volle Namen statt 10px Ellipse: der Finger darf weiterhin ausschliesslich
+       das Originalziel in der Zielleiste wählen. Vorschau bleibt aria-hidden
+       und pointer-events:none, damit kein zweiter Fokus- oder Touchweg entsteht. */
+    if (i >= 0 && targets[i] && previewName) {
+      previewName.textContent = targets[i]!.name;
+      shelf.setAttribute('data-vorschau-aktiv', '');
+    } else {
+      shelf.removeAttribute('data-vorschau-aktiv');
+    }
     if (i < 0 || !q) shelf.setAttribute('data-marke-weg', '');
     else if (typeof SelectionFlow !== 'undefined') {
       if (war < 0 && marker) SelectionFlow.glide(marker, q, true);
@@ -269,6 +292,7 @@ const TabShelf = (() => {
     aimed = -1;
     items.forEach(b => b.removeAttribute('data-anvisiert'));
     shelf.setAttribute('data-marke-weg', '');
+    shelf.removeAttribute('data-vorschau-aktiv');
     tabs().forEach(b => b.setAttribute('aria-expanded', 'false'));
     if (war === 'finger') { bar.removeAttribute('data-zielleiste'); markTab(null); }
     window.removeEventListener('pointerdown', outside, true);
@@ -458,6 +482,20 @@ const TabShelf = (() => {
     s.className = 'ru-waechst';
     s.setAttribute('role', 'menu');
     s.setAttribute('aria-orientation', 'horizontal');
+    /* Absolut über dem Menü, ohne dessen Höhe oder Trefferflächen zu
+       verändern. aria-hidden vermeidet ständige VoiceOver-Ansagen beim
+       Ziehen; die Originalknöpfe bekommen oben ihren vollen aria-label. */
+    const preview = document.createElement('div');
+    preview.className = 'ho-ziel-vorschau';
+    preview.setAttribute('aria-hidden', 'true');
+    const previewType = document.createElement('span');
+    previewType.className = 'ho-ziel-vorschau-bereich';
+    const previewText = document.createElement('strong');
+    previewText.className = 'ho-ziel-vorschau-name';
+    preview.append(previewType, previewText);
+    s.appendChild(preview);
+    previewCategory = previewType;
+    previewName = previewText;
     s.hidden = true;
     s.addEventListener('keydown', onShelfKey);
     /* Ein Klick auf ein Ziel zählt nur, wenn die Tastatur das Menü geöffnet
