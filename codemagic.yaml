@@ -27,6 +27,8 @@ workflows:
           node --test pruefungen/ocr-test-stub.test.mjs
           node --test ios/native-file-export.test.mjs
           node --test ios/native-feel.test.mjs
+          # Native iOS-Appsymbol-Schnellaktionen: Kaltstart, Warmstart, Web-Paritaet.
+          node --test ios/home-shortcuts.test.mjs
           node --test ios/install-privacy-shield.test.mjs
           # Die iOS-Quellen im Repo und das neue Xcode-Ziel muessen getrennt bleiben.
           node --test ios/native-project-layout.test.mjs
@@ -118,6 +120,21 @@ workflows:
           /usr/libexec/PlistBuddy -c "Add :UIStatusBarHidden bool false" "$PLIST" || \
             /usr/libexec/PlistBuddy -c "Set :UIStatusBarHidden false" "$PLIST"
 
+
+      - name: iPhone-Appsymbol-Schnellaktionen (Dokumente, Heute, Lernen)
+        script: |
+          set -euo pipefail
+          # Nur die generierte UIScene-Vorlage und Info.plist anpassen,
+          # niemals den versionskontrollierten Redion-ios/-Quellordner.
+          node ios/install-home-shortcuts.mjs
+          SCENE="build/ios-capacitor/App/App/SceneDelegate.swift"
+          PLIST="build/ios-capacitor/App/App/Info.plist"
+          grep -q 'REDION_NATIVE_HOME_SHORTCUTS' "$SCENE"
+          grep -q 'completionHandler(handled)' "$SCENE"
+          /usr/libexec/PlistBuddy -c 'Print :UIApplicationShortcutItems:0:UIApplicationShortcutItemType' "$PLIST" |
+            grep -qx 'ch.redurbabat.redion.dokumente'
+          /usr/libexec/PlistBuddy -c 'Print :UIApplicationShortcutItems:2:UIApplicationShortcutItemType' "$PLIST" |
+            grep -qx 'ch.redurbabat.redion.lernen'
 
       - name: Redion-Appsymbol verwenden
         script: |
