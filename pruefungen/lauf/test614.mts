@@ -111,6 +111,10 @@ import zlib from 'node:zlib';
 declare const App: any, Store: any, UI: any, Register: any, Einstellungen: any, Aussehen: any, Wischen: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
+/* Echte Vergleichsbilder der laufenden Redion-App nur mit synthetischem
+   Browserkontext. Die bisherige 614er-Suite bleibt ohne --capture unverändert. */
+const BILDER = process.argv.includes('--capture')
+  ? path.join(WURZEL, 'bilder', 'workspace-2', 'mobile-nav') : '';
 const TYP: Record<string, string> = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.json': 'application/json',
@@ -368,6 +372,10 @@ await beobachten(A.pc);
   });
   p('§0f die neue Vollnamen-Vorschau ist in Ruhe verborgen, dekorativ und kein zweiter Touchweg',
     preview.da && preview.versteckt && preview.nurDekoration && preview.keinFingerziel, JSON.stringify(preview));
+  if (BILDER) {
+    fs.mkdirSync(BILDER, { recursive: true });
+    await A.pc.screenshot({ path: path.join(BILDER, '390-hell-untere-leiste.png') });
+  }
 }
 
 /* ═══ §1 Ein Tipp bleibt ein Tipp ═════════════════════════════════════════ */
@@ -516,6 +524,12 @@ console.log('\n§4 Gleiten und Loslassen wählt genau einmal — auch während d
   if (fav) { await finger(A.cdp, 'touchMove', (m.x + fav.x) / 2, fav.y); await warte(16); await finger(A.cdp, 'touchMove', fav.x, fav.y); }
   await warte(16);
   const waechst = await A.pc.evaluate(() => (document.getElementById('ho-ziele')?.getAnimations() ?? []).filter(a => a.playState === 'running').length);
+  /* Für den Bildlauf erst nach dem Testfenster eine kurze visuelle Pause.
+     Der normale §4-Test misst weiterhin die laufende Feder vor Loslassen. */
+  if (BILDER) {
+    await warte(280);
+    await A.pc.screenshot({ path: path.join(BILDER, '390-hell-zielvorschau.png') });
+  }
   const vorschau = await A.pc.evaluate(() => {
     const s = document.getElementById('ho-ziele');
     const v = s?.querySelector<HTMLElement>('.ho-ziel-vorschau');
