@@ -27,6 +27,8 @@ workflows:
           node --test pruefungen/ocr-test-stub.test.mjs
           node --test ios/native-file-export.test.mjs
           node --test ios/install-privacy-shield.test.mjs
+          # Die iOS-Quellen im Repo und das neue Xcode-Ziel muessen getrennt bleiben.
+          node --test ios/native-project-layout.test.mjs
 
       - name: Lokale Web-Dateien fuer Capacitor bereitstellen
         script: |
@@ -54,8 +56,21 @@ workflows:
           # Nur der iOS-native Export darf im IPA zusaetzlich sein.
           node --test ios/vergleiche-webstand.test.mjs
           node ios/vergleiche-webstand.mjs
+          # Der bestehende ios/-Ordner enthaelt unsere TS/Swift-Skripte.
+          # Capacitor 8 darf dort KEIN Xcode-Projekt erzeugen oder etwas loeschen.
+          # capacitor.config.json: ios.path = build/ios-capacitor
+          test -f ios/native-sicherung.ts
+          test -f ios/privacy-shield.swift
+          mkdir -p build
+          test ! -e build/ios-capacitor || {
+            echo "Fehler: generiertes iOS-Projekt existiert bereits. Frischen Codemagic-Checkout verwenden." >&2
+            exit 1
+          }
           npx cap add ios --packagemanager SPM
           npx cap sync ios
+          test -f build/ios-capacitor/App/App/AppDelegate.swift
+          test -f build/ios-capacitor/App/App.xcodeproj/project.pbxproj
+          test -f ios/native-sicherung.ts
 
       - name: iPhone-Datenschutzschirm nur in Swift einbauen
         script: |
@@ -63,13 +78,13 @@ workflows:
           # UIKit wird nur in die bereits kompilierte AppDelegate eingefuegt,
           # NICHT in die Website, PWA oder gemeinsame Redion-Weboberflaeche.
           node ios/install-privacy-shield.mjs
-          grep -q 'RedionPrivacyShield.start()' ios/App/App/AppDelegate.swift
-          grep -q 'redion-snapshot-privacy-cover' ios/App/App/AppDelegate.swift
+          grep -q 'RedionPrivacyShield.start()' build/ios-capacitor/App/App/AppDelegate.swift
+          grep -q 'redion-snapshot-privacy-cover' build/ios-capacitor/App/App/AppDelegate.swift
 
       - name: Sicherungen in der iOS-Dateien-App sichtbar machen
         script: |
           set -euo pipefail
-          PLIST="ios/App/App/Info.plist"
+          PLIST="build/ios-capacitor/App/App/Info.plist"
           test -f "$PLIST"
           for schluessel in UIFileSharingEnabled LSSupportsOpeningDocumentsInPlace; do
             /usr/libexec/PlistBuddy -c "Add :$schluessel bool true" "$PLIST" || \
@@ -80,7 +95,7 @@ workflows:
       - name: Redion-Appsymbol verwenden
         script: |
           set -euo pipefail
-          ICONSET="ios/App/App/Assets.xcassets/AppIcon.appiconset"
+          ICONSET="build/ios-capacitor/App/App/Assets.xcassets/AppIcon.appiconset"
           mkdir -p "$ICONSET"
           sips -s format png -z 1024 1024 \
             oeffentlich/icons/icon-512.png \
@@ -104,7 +119,7 @@ workflows:
           set -euo pipefail
           mkdir -p build
           xcodebuild \
-            -project ios/App/App.xcodeproj \
+            -project build/ios-capacitor/App/App.xcodeproj \
             -scheme App \
             -configuration Release \
             -sdk iphoneos \
