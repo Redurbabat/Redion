@@ -2206,7 +2206,7 @@ const App = (() => {
                     ? 'Sicherung mit Lücken gespeichert: ' + paket.ausgelassen +
                         ' Datei(en) fehlen. Hinweis in der Sicherung lesen und erneut sichern.'
                     : 'Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
-                return true;
+                return paket.ausgelassen === 0;
             }
             const l = document.createElement('a');
             l.href = URL.createObjectURL(paket.blob);
@@ -2220,7 +2220,7 @@ const App = (() => {
                 : paket.art === 'json'
                     ? 'Sicherung gespeichert (' + paket.versionen + ' Fassungen im Verlauf)'
                     : 'Sicherung gespeichert — mit ' + paket.anhaenge + ' Anhang/Anhängen');
-            return true;
+            return paket.ausgelassen === 0;
         }
         catch (err) {
             alert('Die Sicherung kam nicht zustande: ' +
