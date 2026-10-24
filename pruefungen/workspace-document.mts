@@ -5,6 +5,7 @@
  *
  * node pruefungen/workspace-document.mts
  * node pruefungen/workspace-document.mts --webkit --capture
+ * REDION_WORKSPACE_ROOT=<base-checkout> node pruefungen/workspace-document.mts --baseline --capture
  */
 import { chromium, webkit, type Page } from 'playwright';
 import assert from 'node:assert/strict';
@@ -15,9 +16,12 @@ import { pathToFileURL } from 'node:url';
 declare const Store: any;
 declare const App: any;
 
-const root = path.resolve(import.meta.dirname, '..');
+const repo = path.resolve(import.meta.dirname, '..');
+const root = path.resolve(process.env.REDION_WORKSPACE_ROOT || repo);
 const webkitMode = process.argv.includes('--webkit');
 const capture = process.argv.includes('--capture');
+const baseline = process.argv.includes('--baseline');
+if (baseline && !capture) throw new Error('Vorher-Lauf benötigt --capture.');
 const engine = webkitMode ? 'webkit' : 'chromium';
 const screens = [
   { width: 390, height: 844, dark: false },
@@ -56,7 +60,7 @@ async function openDocument(page: Page, dark: boolean): Promise<{ id: string; or
   }, dark);
   // App.oeffne getrennt von Store.flush – schützt vor Context-Verlust.
   await page.evaluate((pageId: string) => { App.oeffne(pageId); }, id);
-  await page.waitForSelector('.document-workspace .document-title-progress');
+  await page.waitForSelector('.document-workspace .document-title');
   await page.waitForTimeout(250);
   const original = await page.evaluate((pageId: string) => {
     const p = Store.getBlock(pageId);
@@ -85,6 +89,16 @@ try {
     page.on('pageerror', error => errors.push(error.message));
     const { id, original } = await openDocument(page, dark);
     const label = width + 'px ' + (dark ? 'dunkel' : 'hell');
+    const folder = path.join(repo, 'bilder', 'workspace-2', 'document', engine);
+    if (capture) fs.mkdirSync(folder, { recursive: true });
+    if (baseline) {
+      // Dieselben synthetischen Daten, der echte Webstand vor dem PR.
+      await page.screenshot({ path: path.join(folder, width + '-' +
+        (dark ? 'dunkel' : 'hell') + '-vorher.png') });
+      await context.close();
+      current = null;
+      continue;
+    }
 
     pass(label + ': echter Titel sichtbar',
       (await page.locator('.document-title-name').textContent()) === 'Elektrotechnik – Prüfungsunterlagen 2026.pdf');
@@ -103,9 +117,8 @@ try {
       'Titelbreite: ' + String(title?.width) + ', Seitenüberlauf: ' + overflow);
 
     if (capture) {
-      const folder = path.join(root, 'bilder', 'workspace-2', 'document', engine);
-      fs.mkdirSync(folder, { recursive: true });
-      await page.screenshot({ path: path.join(folder, width + '-' + (dark ? 'dunkel' : 'hell') + '-start.png') });
+      await page.screenshot({ path: path.join(folder, width + '-' +
+        (dark ? 'dunkel' : 'hell') + '-nachher.png') });
     }
 
     await page.locator('[data-document-action="view"]').first().click();
@@ -148,8 +161,8 @@ try {
     pass(label + ': keine Browserfehler', errors.length === 0, errors.join(' | '));
 
     if (capture) {
-      const folder = path.join(root, 'bilder', 'workspace-2', 'document', engine);
-      await page.screenshot({ path: path.join(folder, width + '-' + (dark ? 'dunkel' : 'hell') + '-kompass.png') });
+      await page.screenshot({ path: path.join(folder, width + '-' +
+        (dark ? 'dunkel' : 'hell') + '-seitenwechsel.png') });
     }
     await context.close();
     current = null;
