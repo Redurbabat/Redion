@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Redion native iOS launch screen. NEVER referenced by the website/PWA.
+     Apple's static-only LaunchScreen: UIKit view, labels, image and constraints;
+     no JavaScript, no animation, no links to user documents or app state. -->
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB"
+          version="3.0" toolsVersion="23505" targetRuntime="iOS.CocoaTouch"
+          propertyAccessControl="none" useAutolayout="YES" launchScreen="YES"
+          useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES"
+          initialViewController="01J-lp-oVM">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23503"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <scene sceneID="EHf-IW-A2E">
+            <objects>
+                <viewController id="01J-lp-oVM" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Ze5-6b-2t3">
+                        <rect key="frame" x="0" y="0" width="393" height="852"/>
+                        <subviews>
+                            <imageView opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO"
+                                       contentMode="scaleAspectFit" image="RedionLaunchIcon"
+                                       translatesAutoresizingMaskIntoConstraints="NO" id="RD1-IM-AGE">
+                                <rect key="frame" x="148.5" y="340" width="96" height="96"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="96" id="RD1-WI-DTH"/>
+                                    <constraint firstAttribute="height" constant="96" id="RD1-HE-IGH"/>
+                                </constraints>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left"
+                                   horizontalHuggingPriority="251" verticalHuggingPriority="251"
+                                   text="Redion" textAlignment="center" lineBreakMode="tailTruncation"
+                                   translatesAutoresizingMaskIntoConstraints="NO" id="RD1-NA-MEL">
+                                <rect key="frame" x="135" y="460" width="123" height="38"/>
+                                <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="30"/>
+                                <color key="textColor" name="RedionLaunchText"/>
+                            </label>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                        <color key="backgroundColor" name="RedionLaunchBackground"/>
+                        <constraints>
+                            <constraint firstItem="RD1-IM-AGE" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="RD1-CX-IMG"/>
+                            <constraint firstItem="RD1-IM-AGE" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" constant="-38" id="RD1-CY-IMG"/>
+                            <constraint firstItem="RD1-NA-MEL" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="RD1-CX-LBL"/>
+                            <constraint firstItem="RD1-NA-MEL" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" constant="64" id="RD1-CY-LBL"/>
+                            <constraint firstItem="RD1-NA-MEL" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="RD1-L-MIN"/>
+                            <constraint firstItem="RD1-NA-MEL" firstAttribute="trailing" relation="lessThanOrEqual" secondItem="6Tk-OE-BBY" secondAttribute="trailing" constant="-20" id="RD1-R-MAX"/>
+                        </constraints>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1"
+                             userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="53" y="375"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="RedionLaunchIcon" width="96" height="96"/>
+        <namedColor name="RedionLaunchBackground">
+            <color red="0.976" green="0.980" blue="0.988" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <namedColor name="RedionLaunchText">
+            <color red="0.098" green="0.102" blue="0.118" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+    </resources>
+</document>
