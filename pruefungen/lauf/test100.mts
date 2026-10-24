@@ -340,7 +340,9 @@ const halb = await seite.evaluate(async () => {
            imArchiv: zip ? (zip.namen ?? []).some((n: string) => n.includes('abgebrochen')) : null,
            imManifest: karte ? karte.saetze.some((e: any) => e.id === satz.id) : null,
            gewarnt: daten ? Number(daten.unvollstaendigeDateienAusgelassen) >= 1 &&
-             /abgebrochen\.mp4/.test(daten.hinweis || '') : false };
+             /abgebrochen\.mp4/.test(daten.hinweis || '') &&
+             /Teilweise:/.test(daten.hinweis || '') &&
+             !/Vollständig: die/.test(daten.hinweis || '') : false };
 });
 p('`alsBlob` setzt einen halben Upload NICHT zusammen',
   (halb as any).blobIstNull === true);
