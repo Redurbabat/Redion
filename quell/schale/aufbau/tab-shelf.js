@@ -10,6 +10,8 @@ const TabShelf = (() => {
     let tab = null;
     let targets = [];
     let items = [];
+    let previewCategory = null;
+    let previewName = null;
     let aimed = -1;
     let box = { left: 0, right: 0, top: 0 };
     let columns = [];
@@ -56,6 +58,8 @@ const TabShelf = (() => {
             b.setAttribute('role', 'menuitem');
             b.tabIndex = i === 0 ? 0 : -1;
             b.dataset['ziel'] = z.id;
+            b.setAttribute('aria-label', z.name);
+            b.title = z.name;
             const zeichen = document.createElement('span');
             zeichen.className = 'ho-z';
             zeichen.dataset['sym'] = z.zeichen;
@@ -80,6 +84,11 @@ const TabShelf = (() => {
         catch { }
         targets = neu;
         tab = t;
+        if (previewCategory)
+            previewCategory.textContent = label(t);
+        if (previewName)
+            previewName.textContent = '';
+        shelf.removeAttribute('data-vorschau-aktiv');
         shelf.setAttribute('aria-label', 'Ziele in ' + label(t));
         tabs().forEach(b => b.setAttribute('aria-expanded', b === t ? 'true' : 'false'));
         aimed = -1;
@@ -99,6 +108,13 @@ const TabShelf = (() => {
         const war = aimed;
         aimed = i;
         const q = places[i];
+        if (i >= 0 && targets[i] && previewName) {
+            previewName.textContent = targets[i].name;
+            shelf.setAttribute('data-vorschau-aktiv', '');
+        }
+        else {
+            shelf.removeAttribute('data-vorschau-aktiv');
+        }
         if (i < 0 || !q)
             shelf.setAttribute('data-marke-weg', '');
         else if (typeof SelectionFlow !== 'undefined') {
@@ -169,6 +185,7 @@ const TabShelf = (() => {
         aimed = -1;
         items.forEach(b => b.removeAttribute('data-anvisiert'));
         shelf.setAttribute('data-marke-weg', '');
+        shelf.removeAttribute('data-vorschau-aktiv');
         tabs().forEach(b => b.setAttribute('aria-expanded', 'false'));
         if (war === 'finger') {
             bar.removeAttribute('data-zielleiste');
@@ -379,6 +396,17 @@ const TabShelf = (() => {
         s.className = 'ru-waechst';
         s.setAttribute('role', 'menu');
         s.setAttribute('aria-orientation', 'horizontal');
+        const preview = document.createElement('div');
+        preview.className = 'ho-ziel-vorschau';
+        preview.setAttribute('aria-hidden', 'true');
+        const previewType = document.createElement('span');
+        previewType.className = 'ho-ziel-vorschau-bereich';
+        const previewText = document.createElement('strong');
+        previewText.className = 'ho-ziel-vorschau-name';
+        preview.append(previewType, previewText);
+        s.appendChild(preview);
+        previewCategory = previewType;
+        previewName = previewText;
         s.hidden = true;
         s.addEventListener('keydown', onShelfKey);
         s.addEventListener('click', e => {
