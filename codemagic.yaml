@@ -16,6 +16,8 @@ workflows:
           set -euo pipefail
           npm ci --no-audit --no-fund
           npm run bauen:ts
+          # Bestehende PDF- und Office-Exporte unter Web und iOS pruefen.
+          node --test ios/generated-download-routing.test.mjs
           # Auch Windows-Dateimuster des UI-Kit-Typechecks gegenpruefen.
           node --test pruefungen/ts-glob-pfad.test.mjs
           node --test ios/backup-chunks.test.mjs

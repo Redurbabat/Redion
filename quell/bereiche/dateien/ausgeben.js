@@ -140,12 +140,26 @@ const Austausch = (() => {
         schreibe32(ende, 16, Math.min(versatz, ZIP_GRENZE));
         return new Blob([...teile, ...verzeichnis, ...schluss, ende], { type: 'application/zip' });
     };
-    const laden = (blob, name) => {
+    const laden = async (blob, name) => {
+        const nativeDateien = globalThis.RedionNativeDateien;
+        if (nativeDateien && typeof nativeDateien.speichern === 'function') {
+            try {
+                await nativeDateien.speichern(blob, name);
+                return true;
+            }
+            catch (err) {
+                if (typeof UI !== 'undefined' && UI.toast)
+                    UI.toast('Die Datei konnte nicht in iOS-Dateien gespeichert werden: ' +
+                        (err instanceof Error ? err.message : String(err)));
+                return false;
+            }
+        }
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = name;
         a.click();
         setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+        return true;
     };
     const W_STIL = {
         h1: 'Heading1', h2: 'Heading2', h3: 'Heading3',
@@ -543,7 +557,7 @@ const Austausch = (() => {
                 teile.push({ name, ...teil });
             }
             const blob = await zipSchreiben(teile);
-            laden(blob, (seite.text || 'Seite').replace(/[\\/:*?"<>|]/g, '-') + '.docx');
+            await laden(blob, (seite.text || 'Seite').replace(/[\\/:*?"<>|]/g, '-') + '.docx');
             const hinweis = geschrieben
                 ? 'Die Originaldatei ist vollständig erhalten; '
                     + geschrieben + (geschrieben === 1 ? ' Absatz wurde' : ' Absätze wurden')
@@ -634,7 +648,7 @@ const Austausch = (() => {
             }))
         ];
         const blob = await zipSchreiben(dateien);
-        laden(blob, (seite.text || 'Seite').replace(/[\\/:*?"<>|]/g, '-') + '.docx');
+        await laden(blob, (seite.text || 'Seite').replace(/[\\/:*?"<>|]/g, '-') + '.docx');
         return blob;
     };
     const spaltenName = (n) => {
@@ -874,7 +888,7 @@ const Austausch = (() => {
                     '</office:spreadsheet></office:body></office:document-content>' }
         ];
         const blob = await zipSchreiben(dateien);
-        laden(blob, (dateiname || 'Redion') + '.ods');
+        await laden(blob, (dateiname || 'Redion') + '.ods');
         return blob;
     };
     const datenbankAlsOds = (coll) => {
@@ -1006,7 +1020,7 @@ const Austausch = (() => {
         ].concat(blaetter.map((b, i) => ({ name: `xl/worksheets/sheet${i + 1}.xml`,
             inhalt: blattXml(b.zeilen, stile.je[i] || undefined, b.formeln || undefined) })));
         const blob = await zipSchreiben(dateien);
-        laden(blob, (dateiname || 'Redion') + '.xlsx');
+        await laden(blob, (dateiname || 'Redion') + '.xlsx');
         return blob;
     };
     const datenbankAlsExcel = (coll) => {
@@ -1367,7 +1381,7 @@ const Austausch = (() => {
             name: path + '.md', inhalt: vaultMarkdown(Store.getBlock(id), path, paths)
         }));
         const blob = await zipSchreiben(files);
-        laden(blob, safeVaultSegment(dateiname) + '.zip');
+        await laden(blob, safeVaultSegment(dateiname) + '.zip');
         return blob;
     };
     const validRedionId = (value) => {
@@ -2284,7 +2298,7 @@ const Austausch = (() => {
                 teile.push({ name, ...teil });
             }
             const blob = await zipSchreiben(teile);
-            laden(blob, dateiName);
+            await laden(blob, dateiName);
             const folien = paket.leser.namen
                 .filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n)).length;
             const hinweis = geschrieben
@@ -2305,7 +2319,7 @@ const Austausch = (() => {
             titel: f.titel, zeilen: Folien.alsZeilen(f, (id) => Store.childrenOf(id))
         }));
         const blob = await zipSchreiben(pptxTeile(folien));
-        laden(blob, dateiName);
+        await laden(blob, dateiName);
         return { blob, folien: folien.length, durchgereicht: false };
     };
     return { zipSchreiben, crc32, laden, alsWord, alsPowerPoint, pptxTeile, alsExcel,

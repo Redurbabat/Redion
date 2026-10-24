@@ -368,13 +368,25 @@ const DocumentMode = (() => {
     return schreiber.schliessen();
   };
 
-  /** Ein Blob als Datei zum Speichern anbieten — ohne Server, ohne Fenster. */
-  const herunterladen = (blob: Blob, name: string): void => {
+  /** Ein generiertes PDF/PNG anbieten: iOS als echte Datei, Web unverändert. */
+  const herunterladen = async (blob: Blob, name: string): Promise<boolean> => {
+    const nativeDateien = (globalThis as any).RedionNativeDateien;
+    if (nativeDateien && typeof nativeDateien.speichern === 'function') {
+      try {
+        await nativeDateien.speichern(blob, name);
+        return true;
+      } catch (err: unknown) {
+        UI.toast('Datei konnte nicht in iOS-Dateien gespeichert werden: ' +
+          (err instanceof Error ? err.message : String(err)));
+        return false;
+      }
+    }
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = name; a.style.display = 'none';
     document.body.appendChild(a); a.click();
     setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 2000);
+    return true;
   };
 
   /* Die offenen PDF-Quellen der Suche (E468), je Quelle ein Griff — und
@@ -4450,12 +4462,13 @@ const DocumentMode = (() => {
       if (action === 'lupe-weiter') { lupeWeiter(); return; }
       if (action === 'page-export-image') {
         const block = zielSeite || jetzt();
-        void seiteAlsBild(block).then(blob => {
+        void seiteAlsBild(block).then(async blob => {
           if (!blob) { UI.toast('Die Seite liess sich nicht als Bild zeichnen.'); return; }
           const nr = documentsIn(page).findIndex(b => b.id === block.id) + 1;
-          herunterladen(blob, String(page.text || 'Seite').replace(/[\\/:*?"<>|]+/g, ' ').trim() + ' – Seite ' + nr + '.png');
-          UI.toast(wortEins(page) + ' ' + nr + ' als PNG gesichert');
-        });
+          const gespeichert = await herunterladen(blob,
+            String(page.text || 'Seite').replace(/[\\/:*?"<>|]+/g, ' ').trim() + ' – Seite ' + nr + '.png');
+          if (gespeichert) UI.toast(wortEins(page) + ' ' + nr + ' als PNG gesichert');
+        }).catch(() => UI.toast('Die Seite liess sich nicht als Bild sichern.'));
         return;
       }
       /* ══ EINE MARKE ENTSPERREN (E492) ═══════════════════════════════════
@@ -4538,14 +4551,16 @@ const DocumentMode = (() => {
         void alsPdf(seiten, (fertig, gesamt) => {
           if (knopf) knopf.textContent = fertig >= gesamt
             ? '⤓ Wird gesichert …' : '⤓ Seite ' + (fertig + 1) + '/' + gesamt + ' …';
-        }).then(blob => {
-          if (knopf) { knopf.disabled = false; knopf.textContent = wort; }
+        }).then(async blob => {
           if (!blob) { UI.toast('Das Dokument liess sich nicht als PDF schreiben.'); return; }
-          herunterladen(blob, String(page.text || 'Dokument').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.pdf');
-          UI.toast(seiten.length + (seiten.length === 1 ? ' Seite' : ' Seiten') + ' als PDF gesichert');
+          const gespeichert = await herunterladen(blob,
+            String(page.text || 'Dokument').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.pdf');
+          if (gespeichert) UI.toast(seiten.length +
+            (seiten.length === 1 ? ' Seite' : ' Seiten') + ' als PDF gesichert');
         }).catch(() => {
-          if (knopf) { knopf.disabled = false; knopf.textContent = wort; }
           UI.toast('Das Dokument liess sich nicht als PDF schreiben.');
+        }).finally(() => {
+          if (knopf) { knopf.disabled = false; knopf.textContent = wort; }
         });
         return;
       }
