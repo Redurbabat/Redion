@@ -1,0 +1,91 @@
+# Codemagic: kostenloser manueller iPhone-Build auf macOS M2.
+# Die IPA ist UNSIGNIERT und muss vor der Installation signiert werden.
+workflows:
+  redion-ios-unsigned:
+    name: Redion iPhone IPA (unsigniert)
+    instance_type: mac_mini_m2
+    max_build_duration: 90
+    environment:
+      node: v22.20.0
+      xcode: latest
+    triggering:
+      events: [] # Nur manuell starten; verbraucht keine Minuten bei jedem Push.
+    scripts:
+      - name: Redion aus TypeScript bauen
+        script: |
+          set -euo pipefail
+          npm ci --no-audit --no-fund
+          npm run bauen:ts
+
+      - name: Lokale Web-Dateien fuer Capacitor bereitstellen
+        script: |
+          set -euo pipefail
+          mkdir -p www
+          cp index.html sw.js www/
+          for ordner in quell oeffentlich fremd lernpakete lernen; do
+            if [ -d "$ordner" ]; then
+              cp -R "$ordner" www/
+            fi
+          done
+          test -f www/index.html
+
+      - name: iOS-Projekt mit Capacitor 8 erzeugen
+        script: |
+          set -euo pipefail
+          npm install --no-save --package-lock=false --no-audit --no-fund \
+            @capacitor/core@8 @capacitor/cli@8 @capacitor/ios@8
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "ch.redurbabat.redion",
+            "appName": "Redion",
+            "webDir": "www"
+          }
+          EOF
+          npx cap add ios --packagemanager SPM
+          npx cap sync ios
+
+      - name: Redion-Appsymbol verwenden
+        script: |
+          set -euo pipefail
+          ICONSET="ios/App/App/Assets.xcassets/AppIcon.appiconset"
+          mkdir -p "$ICONSET"
+          sips -s format png -z 1024 1024 \
+            oeffentlich/icons/icon-512.png \
+            --out "$ICONSET/AppIcon-512@2x.png" >/dev/null
+          cat > "$ICONSET/Contents.json" <<'EOF'
+          {
+            "images": [
+              {
+                "filename": "AppIcon-512@2x.png",
+                "idiom": "universal",
+                "platform": "ios",
+                "size": "1024x1024"
+              }
+            ],
+            "info": {"author": "xcode", "version": 1}
+          }
+          EOF
+
+      - name: iPhone-App ohne Code-Signierung kompilieren
+        script: |
+          set -euo pipefail
+          mkdir -p build
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$CM_BUILD_DIR/build/ios-derived-data" \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee "$CM_BUILD_DIR/build/ios-xcodebuild.log"
+          APP="$CM_BUILD_DIR/build/ios-derived-data/Build/Products/Release-iphoneos/App.app"
+          test -d "$APP"
+          mkdir -p "$CM_BUILD_DIR/build/ipa/Payload"
+          ditto "$APP" "$CM_BUILD_DIR/build/ipa/Payload/App.app"
+          cd "$CM_BUILD_DIR/build/ipa"
+          /usr/bin/zip -qry Redion-unsigned.ipa Payload
+
+    artifacts:
+      - build/ipa/Redion-unsigned.ipa
+      - build/ios-xcodebuild.log
