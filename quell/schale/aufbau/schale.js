@@ -2131,7 +2131,8 @@ const App = (() => {
             const belegt = new Set(['daten.json']);
             for (const satz of gefundeneSaetze) {
                 const inhalt = await Dateien.alsBlob(satz.id);
-                if (!inhalt || (typeof satz.groesse === 'number' &&
+                if (!inhalt || (satz.zustand && satz.zustand !== 'fertig') ||
+            (typeof satz.groesse === 'number' &&
                     Number.isFinite(satz.groesse) && satz.groesse >= 0 &&
                     inhalt.size !== satz.groesse)) {
                     ausgelassen.push(String(satz.name || satz.id || 'Unbenannte Datei'));
@@ -2159,7 +2160,14 @@ const App = (() => {
                 const beispiele = ausgelassen.slice(0, 5).join(', ');
                 const weitere = ausgelassen.length > 5
                     ? ' und ' + (ausgelassen.length - 5) + ' weitere' : '';
-                daten.hinweis = String(daten.hinweis || '') +
+                const versprochen = 'Vollständig: die ' + gefundeneSaetze.length +
+                    ' Datei(en) liegen im Ordner „dateien" desselben Archivs.';
+                const teilweise = 'Teilweise: ' + saetze.length + ' von ' +
+                    gefundeneSaetze.length + ' Datei(en) sind im Archiv vorhanden.';
+                const vorherHinweis = String(daten.hinweis || '');
+                daten.hinweis = (vorherHinweis.includes(versprochen)
+                    ? vorherHinweis.replace(versprochen, teilweise)
+                    : teilweise + ' ' + vorherHinweis) +
                     ' ACHTUNG: ' + ausgelassen.length +
                     ' unvollständige Datei(en) sind NICHT in dieser Sicherung: ' +
                     beispiele + weitere + '. Sie bleiben auf diesem Gerät; erst ' +
