@@ -32,12 +32,15 @@ function harness() {
   const styles = [];
   const native = {
     haptics: { async impact(args) { impacts.push(args); } },
-    bars: { async setStyle(args) { styles.push(args.style); } },
+    bars: { async setStyle(args) {
+      assert.equal(args.bar, 'StatusBar', 'Home-Indikator nicht umgestalten.');
+      styles.push(args.style);
+    } },
     styles: { Dark: 'DARK', Light: 'LIGHT' }
   };
   let time = 1000;
   const stop = startIosNativeFeel({
-    document: doc, ...native, Observer, clock: () => time,
+    document: doc, ...native, statusBar: 'StatusBar', Observer, clock: () => time,
     quiet: () => doc.body.dataset.bewegung === 'ruhig'
   });
   const settle = () => new Promise(resolve => setImmediate(resolve));
