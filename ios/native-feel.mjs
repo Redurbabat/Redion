@@ -14,6 +14,7 @@
  * @param {{impact: (options: {style: string}) => Promise<void>}} options.haptics
  * @param {{setStyle: (options: {style: string}) => Promise<void>}} options.bars
  * @param {{Dark: string, Light: string}} options.styles
+ * @param {string} options.statusBar Capacitor SystemBarType.StatusBar
  * @param {() => number} [options.clock]
  * @param {typeof MutationObserver} [options.Observer]
  * @param {() => boolean} [options.quiet]
@@ -24,13 +25,15 @@ export function startIosNativeFeel({
   haptics,
   bars,
   styles,
+  statusBar,
   clock = Date.now,
   Observer = MutationObserver,
   quiet = () => false
 }) {
   if (!doc?.documentElement || !doc?.body ||
       typeof haptics?.impact !== 'function' ||
-      typeof bars?.setStyle !== 'function') {
+      typeof bars?.setStyle !== 'function' ||
+      typeof statusBar !== 'string' || !statusBar) {
     throw new TypeError('Native UI bridge is incomplete.');
   }
 
@@ -52,7 +55,7 @@ export function startIosNativeFeel({
     // bar with a stale style due to out-of-order bridge promises.
     pending = pending.catch(() => {}).then(async () => {
       if (ended) return;
-      await bars.setStyle({ style: desired });
+      await bars.setStyle({ style: desired, bar: statusBar });
     }).catch(() => {
       // A failed native appearance call must not prevent subsequent changes.
       if (appliedStyle === desired) appliedStyle = null;
