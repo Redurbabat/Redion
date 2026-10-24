@@ -95,6 +95,10 @@ try {
       // Dieselben synthetischen Daten, der echte Webstand vor dem PR.
       await page.screenshot({ path: path.join(folder, width + '-' +
         (dark ? 'dunkel' : 'hell') + '-vorher.png') });
+      await page.locator('.document-topbar [data-document-action="inspector"]').click();
+      await page.waitForTimeout(250);
+      await page.screenshot({ path: path.join(folder, width + '-' +
+        (dark ? 'dunkel' : 'hell') + '-inspector-vorher.png') });
       await context.close();
       current = null;
       continue;
@@ -163,6 +167,10 @@ try {
     if (capture) {
       await page.screenshot({ path: path.join(folder, width + '-' +
         (dark ? 'dunkel' : 'hell') + '-seitenwechsel.png') });
+      await page.locator('.document-topbar [data-document-action="inspector"]').click();
+      await page.waitForTimeout(250);
+      await page.screenshot({ path: path.join(folder, width + '-' +
+        (dark ? 'dunkel' : 'hell') + '-inspector-nachher.png') });
     }
     await context.close();
     current = null;
