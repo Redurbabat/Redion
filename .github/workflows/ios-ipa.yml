@@ -1,0 +1,72 @@
+name: Redion iPhone IPA
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ios:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - name: Repository holen
+        uses: actions/checkout@v4
+
+      - name: Node.js vorbereiten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Redion aus TypeScript bauen
+        run: |
+          npm ci
+          npm run bauen:ts
+
+      - name: Web-Dateien fuer iOS zusammenstellen
+        run: |
+          mkdir -p www
+          cp index.html www/
+          cp -R quell oeffentlich lernpakete fremd lernen www/
+          cp sw.js www/
+
+      - name: Capacitor iOS-Projekt erzeugen
+        run: |
+          npm install --no-save --package-lock=false @capacitor/core@8 @capacitor/cli@8 @capacitor/ios@8
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "ch.redurbabat.redion",
+            "appName": "Redion",
+            "webDir": "www"
+          }
+          EOF
+          npx cap add ios
+          npx cap sync ios
+
+      - name: Nicht signierte iPhone-App kompilieren
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/redion-build" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: IPA-Datei verpacken
+        run: |
+          mkdir -p Payload
+          cp -R "$RUNNER_TEMP/redion-build/Build/Products/Release-iphoneos/App.app" Payload/
+          zip -qry Redion-unsigned.ipa Payload
+
+      - name: IPA zum Herunterladen bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: Redion-iPhone-IPA
+          path: Redion-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 7
