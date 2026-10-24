@@ -40,6 +40,10 @@ workflows:
             --bundle --platform=browser --format=iife --target=es2022 \
             --outfile=www/redion-native-sicherung.js
           node ios/vorbereiten.mjs
+          # Gemeinsame Redion-Weboberflaeche MUSS bytegleich bleiben.
+          # Nur der iOS-native Export darf im IPA zusaetzlich sein.
+          node --test ios/vergleiche-webstand.test.mjs
+          node ios/vergleiche-webstand.mjs
           npx cap add ios --packagemanager SPM
           npx cap sync ios
 
@@ -99,3 +103,4 @@ workflows:
     artifacts:
       - build/ipa/Redion-unsigned.ipa
       - build/ios-xcodebuild.log
+      - build/ios-web-paritaet.json
