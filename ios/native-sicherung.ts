@@ -11,7 +11,7 @@
  * Die Share Sheet bietet eine zweite Kopie ausserhalb der App an.
  * Eine Kopie in diesem Container wird beim Deinstallieren geloescht!
  */
-import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
+import { Capacitor, SystemBars, SystemBarsStyle, SystemBarType } from '@capacitor/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Haptics } from '@capacitor/haptics';
@@ -49,6 +49,7 @@ if (Capacitor.getPlatform() === 'ios' && Capacitor.isNativePlatform()) {
     haptics: Haptics,
     bars: SystemBars,
     styles: SystemBarsStyle,
+    statusBar: SystemBarType.StatusBar,
     quiet: () => document.body?.dataset?.bewegung === 'ruhig'
   });
   if (document.readyState === 'loading') {
