@@ -172,6 +172,27 @@ try {
       await page.screenshot({ path: path.join(folder, width + '-' +
         (dark ? 'dunkel' : 'hell') + '-inspector-nachher.png') });
     }
+    if (width === 1440) {
+      /* Ein einzelnes Blatt benötigt weder einen Scheinfortschritt noch
+         einen Knopf, der nirgendwohin springen kann. */
+      const oneId = await page.evaluate(async () => {
+        const single = Store.addPage(null, { text: 'Einzelnes A4-Blatt' });
+        Store.addBlock(single.id, 'blatt', {
+          text: '', blattBreite: 595, blattHoehe: 842, raumVersion: 1
+        });
+        Store.updateBlock(single.id, { dokumentModus: true });
+        await Store.flush();
+        return single.id as string;
+      });
+      await page.evaluate((pageId: string) => App.oeffne(pageId), oneId);
+      await page.waitForFunction(() =>
+        document.querySelector('.document-title-meta')?.textContent === 'Notizheft · 1 Seite');
+      const single = await progress(page);
+      pass(label + ': bei einer Seite gibt es keinen künstlichen Fortschrittsbalken',
+        single.hidden && single.max === 1);
+      pass(label + ': bei einer Seite ist der Sprungknopf deaktiviert',
+        await page.locator('.document-position').isDisabled());
+    }
     await context.close();
     current = null;
   }
