@@ -157,7 +157,8 @@ test('Nur natives IPA bekommt die Erweiterung, Webseite bleibt identisch', () =>
   assert.equal(config.appId, 'ch.redurbabat.redion');
   assert.equal(config.ios.path, 'build/ios-capacitor');
   assert.deepEqual(config.includePlugins, [
-    '@capacitor/filesystem', '@capacitor/share', '@capacitor/haptics'
+    '@capacitor/filesystem', '@capacitor/share', '@capacitor/haptics',
+    '@capacitor/browser'
   ], 'Capacitor muss temporäre iOS-Plugins auch ohne package.json erkennen.');
   assert.match(workflow, /@capacitor\/haptics@8/);
   assert.match(workflow, /UIViewControllerBasedStatusBarAppearance/);
