@@ -8,6 +8,7 @@
   "includePlugins": [
     "@capacitor/filesystem",
     "@capacitor/share",
-    "@capacitor/haptics"
+    "@capacitor/haptics",
+    "@capacitor/browser"
   ]
 }
