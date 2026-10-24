@@ -18,6 +18,7 @@ workflows:
           npm run bauen:ts
           node --test ios/backup-chunks.test.mjs
           node --test ios/native-file-export.test.mjs
+          node --test ios/install-privacy-shield.test.mjs
 
       - name: Lokale Web-Dateien fuer Capacitor bereitstellen
         script: |
@@ -47,6 +48,15 @@ workflows:
           node ios/vergleiche-webstand.mjs
           npx cap add ios --packagemanager SPM
           npx cap sync ios
+
+      - name: iPhone-Datenschutzschirm nur in Swift einbauen
+        script: |
+          set -euo pipefail
+          # UIKit wird nur in die bereits kompilierte AppDelegate eingefuegt,
+          # NICHT in die Website, PWA oder gemeinsame Redion-Weboberflaeche.
+          node ios/install-privacy-shield.mjs
+          grep -q 'RedionPrivacyShield.start()' ios/App/App/AppDelegate.swift
+          grep -q 'redion-snapshot-privacy-cover' ios/App/App/AppDelegate.swift
 
       - name: Sicherungen in der iOS-Dateien-App sichtbar machen
         script: |
