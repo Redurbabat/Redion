@@ -1,5 +1,8 @@
 {
   "appId": "ch.redurbabat.redion",
   "appName": "Redion",
-  "webDir": "www"
+  "webDir": "www",
+  "ios": {
+    "path": "build/ios-capacitor"
+  }
 }
