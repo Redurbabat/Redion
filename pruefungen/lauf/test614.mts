@@ -111,6 +111,10 @@ import zlib from 'node:zlib';
 declare const App: any, Store: any, UI: any, Register: any, Einstellungen: any, Aussehen: any, Wischen: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
+/* Echte Vergleichsbilder der laufenden Redion-App nur mit synthetischem
+   Browserkontext. Die bisherige 614er-Suite bleibt ohne --capture unverändert. */
+const BILDER = process.argv.includes('--capture')
+  ? path.join(WURZEL, 'bilder', 'workspace-2', 'mobile-nav') : '';
 const TYP: Record<string, string> = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.json': 'application/json',
@@ -359,6 +363,19 @@ await beobachten(A.pc);
     r.popup.every(x => x === 'menu/ho-ziele/false'), JSON.stringify(r.popup));
   p('§0e die Zielleiste liegt NEBEN der Leiste, nicht darin (das Glas der Leiste fängt `position:fixed`)',
     r.ausserhalb === true, String(r.ausserhalb));
+  const preview = await A.pc.evaluate(() => {
+    const el = document.querySelector<HTMLElement>('#ho-ziele > .ho-ziel-vorschau');
+    const nav = document.getElementById('ho-ziele');
+    return { da: !!el, versteckt: !nav?.hasAttribute('data-vorschau-aktiv'),
+      nurDekoration: el?.getAttribute('aria-hidden') === 'true',
+      keinFingerziel: el ? getComputedStyle(el).pointerEvents === 'none' : false };
+  });
+  p('§0f die neue Vollnamen-Vorschau ist in Ruhe verborgen, dekorativ und kein zweiter Touchweg',
+    preview.da && preview.versteckt && preview.nurDekoration && preview.keinFingerziel, JSON.stringify(preview));
+  if (BILDER) {
+    fs.mkdirSync(BILDER, { recursive: true });
+    await A.pc.screenshot({ path: path.join(BILDER, '390-hell-untere-leiste.png') });
+  }
 }
 
 /* ═══ §1 Ein Tipp bleibt ein Tipp ═════════════════════════════════════════ */
@@ -507,6 +524,31 @@ console.log('\n§4 Gleiten und Loslassen wählt genau einmal — auch während d
   if (fav) { await finger(A.cdp, 'touchMove', (m.x + fav.x) / 2, fav.y); await warte(16); await finger(A.cdp, 'touchMove', fav.x, fav.y); }
   await warte(16);
   const waechst = await A.pc.evaluate(() => (document.getElementById('ho-ziele')?.getAnimations() ?? []).filter(a => a.playState === 'running').length);
+  /* Für den Bildlauf erst nach dem Testfenster eine kurze visuelle Pause.
+     Der normale §4-Test misst weiterhin die laufende Feder vor Loslassen. */
+  if (BILDER) {
+    await warte(280);
+    await A.pc.screenshot({ path: path.join(BILDER, '390-hell-zielvorschau.png') });
+  }
+  const vorschau = await A.pc.evaluate(() => {
+    const s = document.getElementById('ho-ziele');
+    const v = s?.querySelector<HTMLElement>('.ho-ziel-vorschau');
+    const active = s?.querySelector<HTMLElement>(':scope > button[data-anvisiert]');
+    const key = active?.dataset.ziel || '';
+    const full = (window as any).Register?.navigation?.ziele?.('dokumente')
+      ?.find((z: any) => z.id === key)?.name || '';
+    const vr = v?.getBoundingClientRect(), sr = s?.getBoundingClientRect();
+    return {
+      sichtbar: s?.hasAttribute('data-vorschau-aktiv') &&
+        v ? getComputedStyle(v).visibility === 'visible' : false,
+      name: v?.querySelector('.ho-ziel-vorschau-name')?.textContent || '',
+      bereich: v?.querySelector('.ho-ziel-vorschau-bereich')?.textContent || '',
+      quelle: full, above: !!vr && !!sr && vr.bottom <= sr.top,
+      original: active?.getAttribute('aria-label') || '',
+      keinZiel: v ? getComputedStyle(v).pointerEvents === 'none' : false,
+      hoehe: sr?.height ?? 0
+    };
+  });
   await finger(A.cdp, 'touchEnd'); await warte(1300);
   const s = await stand(A.pc);
   const an = await A.pc.evaluate(() => {
@@ -520,6 +562,13 @@ console.log('\n§4 Gleiten und Loslassen wählt genau einmal — auch während d
     s.wechsel === 1 && Object.keys(s.klicks).length === 0, JSON.stringify({ wechsel: s.wechsel, klicks: s.klicks }));
   p('§4d die Schublade bleibt zu, die Zielleiste ist weg, nichts mehr aufgeklappt',
     !s.schublade && !s.offen && s.expanded.length === 0 && s.anvisiert.length === 0, JSON.stringify(s));
+  p('§4e beim Ziehen steht der VOLLE Name über der unveränderten 60px-Zielleiste',
+    vorschau.sichtbar && vorschau.name === vorschau.quelle && !!vorschau.name &&
+      vorschau.bereich === 'Dokumente' && vorschau.above && vorschau.hoehe === 60 &&
+      vorschau.original === vorschau.quelle && vorschau.keinZiel, JSON.stringify(vorschau));
+  const reset = await A.pc.evaluate(() =>
+    !document.getElementById('ho-ziele')?.hasAttribute('data-vorschau-aktiv'));
+  p('§4f beim Loslassen verschwindet die Vorschau ohne offene Zusatzleiste', reset);
 }
 
 /* ═══ §5 Zwischen Reitern ═════════════════════════════════════════════════ */

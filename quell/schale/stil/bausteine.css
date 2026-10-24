@@ -1931,8 +1931,65 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     bottom:calc(var(--hunten) + 8px); height:var(--mobile-nav-height);
     padding:5px 6px; background:var(--bg-card); border:1px solid var(--line);
   }
+  /* Zieh-Griff als dezente Entdeckungshilfe IN der vorhandenen
+     unteren Navigation. Kein Element, keine Trefferfläche, kein Listener.
+     Beim Hochziehen verschwindet er hinter der erscheinenden Zielleiste. */
+  #handy-oben::before{
+    content:'';position:absolute;left:50%;top:-8px;
+    width:42px;height:3px;border-radius:999px;
+    background:var(--text-dim);opacity:.55;
+    transform:translateX(-50%);pointer-events:none;
+    transition:opacity var(--motion-fast) var(--ease)
+  }
+  #handy-oben[data-zielleiste]::before{opacity:0}
+  @media(prefers-reduced-motion:reduce){
+    #handy-oben::before{transition:none}
+  }
+  body[data-bewegung="ruhig"] #handy-oben::before{transition:none}
   #ho-ziele[hidden]{ display:none }
   #ho-ziele[data-geht]{ pointer-events:none }
+  /* WORKSPACE 2.0 — VOLLSTÄNDIGES ZIEL LESBAR BEIM HOCHZIEHEN.
+     Die vorhandene 60px-Zielleiste behält exakt ihre Geometrie (test614):
+     fünf gleich breite Fingerziele und dieselben Hitboxen. Ausschliesslich
+     eine kleine, nicht-interaktive Beschriftung darüber; kein zweites Dock,
+     keine neuen Klick- oder Gestenwege. Die Fläche ist absichtlich deckend:
+     klein gedruckte Wörter dürfen nicht mit dem Papier dahinter verschmelzen.
+     Das Sichtbarwerden bewegt NUR transform/opacity, nicht die Geometrie. */
+  #ho-ziele > .ho-ziel-vorschau{
+    position:absolute;left:50%;bottom:calc(100% + 10px);
+    box-sizing:border-box;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:3px;width:max-content;
+    max-width:calc(100vw - 36px);min-width:150px;min-height:54px;
+    padding:9px 20px 10px;border:1px solid var(--line);
+    border-radius:var(--radius-2xl);background:var(--bg-card);
+    color:var(--text);box-shadow:var(--studio-highlight),var(--shadow-2);
+    text-align:center;pointer-events:none;user-select:none;
+    opacity:0;visibility:hidden;transform:translate(-50%,6px) scale(.97);
+    transition:opacity var(--motion-fast) var(--ease),
+               transform var(--feder-knapp-dauer) var(--feder-knapp)
+  }
+  #ho-ziele[data-vorschau-aktiv]:not([data-geht]) > .ho-ziel-vorschau{
+    opacity:1;visibility:visible;transform:translate(-50%,0) scale(1)
+  }
+  #ho-ziele .ho-ziel-vorschau-bereich{
+    display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;color:var(--text-dim);font-size:11px;
+    line-height:1.2;font-weight:600;letter-spacing:.04em
+  }
+  #ho-ziele .ho-ziel-vorschau-name{
+    display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;color:var(--text);font-size:15px;
+    line-height:1.2;font-weight:700;letter-spacing:-.012em
+  }
+  @media(prefers-reduced-motion:reduce){
+    #ho-ziele > .ho-ziel-vorschau{transition:none}
+  }
+  body[data-bewegung="ruhig"] #ho-ziele > .ho-ziel-vorschau{
+    transition:none
+  }
+  @media(prefers-contrast:more),(forced-colors:active),(prefers-reduced-transparency:reduce){
+    #ho-ziele > .ho-ziel-vorschau{background:var(--bg-card);border-color:var(--text);box-shadow:none}
+  }
   @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
     #handy-oben,
     #ho-ziele{
