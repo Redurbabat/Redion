@@ -262,6 +262,26 @@ const Dateien = (() => {
   /** Herunterladen, ohne die Datei je ganz durch den Arbeitsspeicher zu ziehen. */
   const herunterladen = async (dateiId: string): Promise<boolean> => {
     const satz = await Store.dateiHolen(dateiId);
+    /* Auf iOS legt die native Brücke den Anhang in der Dateien-App ab.
+       Im Web bleibt der bisherige Blob-Download exakt unverändert.
+       Ein iOS-Fehler darf nicht still als „heruntergeladen“ gelten. */
+    const nativeDateien = (globalThis as any).RedionNativeDateien;
+    if (nativeDateien && typeof nativeDateien.speichern === 'function') {
+      if (!satz) { UI.toast('Diese Datei gibt es nicht mehr'); return false; }
+      const blob = await alsBlob(dateiId);
+      if (!blob) { UI.toast('Diese Datei ist nicht vollständig lesbar'); return false; }
+      try {
+        await nativeDateien.speichern(blob, String(satz.name || 'Datei'));
+        UI.toast('Datei unter Auf meinem iPhone → Redion → Exporte gespeichert. Für iCloud Drive im Teilen-Menü „In Dateien sichern“ wählen.');
+        if (typeof Protokoll !== 'undefined')
+          Protokoll.notieren('export', 'Datei „' + satz.name + '“ in iOS-Dateien exportiert', { id: dateiId });
+        return true;
+      } catch (err: unknown) {
+        UI.toast('Datei konnte nicht gespeichert werden: ' +
+          (err instanceof Error ? err.message : String(err)));
+        return false;
+      }
+    }
     const url = await adresse(dateiId);
     if (!url || !satz) { UI.toast('Diese Datei gibt es nicht mehr'); return false; }
     const a = document.createElement('a');

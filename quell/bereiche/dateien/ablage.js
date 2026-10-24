@@ -158,6 +158,30 @@ const Dateien = (() => {
     };
     const herunterladen = async (dateiId) => {
         const satz = await Store.dateiHolen(dateiId);
+        const nativeDateien = globalThis.RedionNativeDateien;
+        if (nativeDateien && typeof nativeDateien.speichern === 'function') {
+            if (!satz) {
+                UI.toast('Diese Datei gibt es nicht mehr');
+                return false;
+            }
+            const blob = await alsBlob(dateiId);
+            if (!blob) {
+                UI.toast('Diese Datei ist nicht vollständig lesbar');
+                return false;
+            }
+            try {
+                await nativeDateien.speichern(blob, String(satz.name || 'Datei'));
+                UI.toast('Datei unter Auf meinem iPhone → Redion → Exporte gespeichert. Für iCloud Drive im Teilen-Menü „In Dateien sichern“ wählen.');
+                if (typeof Protokoll !== 'undefined')
+                    Protokoll.notieren('export', 'Datei „' + satz.name + '“ in iOS-Dateien exportiert', { id: dateiId });
+                return true;
+            }
+            catch (err) {
+                UI.toast('Datei konnte nicht gespeichert werden: ' +
+                    (err instanceof Error ? err.message : String(err)));
+                return false;
+            }
+        }
         const url = await adresse(dateiId);
         if (!url || !satz) {
             UI.toast('Diese Datei gibt es nicht mehr');
