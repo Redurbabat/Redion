@@ -22,7 +22,7 @@ export const SHORTCUTS = Object.freeze([
 ]);
 
 const SWIFT_HANDLER = `
-\(MARKER)
+${MARKER}
 private final class RedionHomeShortcuts {
     static let shared = RedionHomeShortcuts()
     private var token = 0
@@ -60,7 +60,7 @@ private final class RedionHomeShortcuts {
         }
     }
 }
-`.replace('\\(MARKER)', MARKER).trim();
+`.trim();
 
 export function injectQuickActions(sceneSource) {
   if (typeof sceneSource !== 'string' ||
