@@ -1249,6 +1249,7 @@ body[data-bewegung="ruhig"] #page > .pg-tools > button{
   transition:none
 }
 body[data-bewegung="ruhig"] #page > .pg-tools > button:active{transform:none}
+@media print{#page > .pg-tools{display:none!important}}
 @media(forced-colors:active),(prefers-contrast:more){
   #page > .pg-tools{box-shadow:none}
   #page > .pg-tools > button{border-color:var(--line)}
