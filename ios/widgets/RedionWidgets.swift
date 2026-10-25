@@ -245,7 +245,9 @@ private struct RedionOrbitWidgetView: View {
                     mediumLayout
                 }
             }
-            .padding(14)
+            // Leave room for the 3 separate touch zones even on compact
+            // iPhone widget sizes; older iOS versions add system margins.
+            .padding(11)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .widgetBackground()
