@@ -42,6 +42,7 @@ export function createIosShareInbox({ store, app, document: doc }) {
   if (!store || typeof store.addPage !== 'function' ||
       typeof store.addBlock !== 'function' ||
       typeof store.getBlock !== 'function' ||
+      typeof store.updateBlock !== 'function' ||
       typeof store.flush !== 'function' ||
       typeof store.speichertNicht !== 'function') {
     throw new TypeError('Redion-Speicher ist nicht bereit.');
@@ -81,6 +82,12 @@ export function createIosShareInbox({ store, app, document: doc }) {
         child = store.addBlock(ids.page, 'text', {
           id: ids.content, text: item.value, iosShareId: item.id
         });
+      } else if (!Array.isArray(page.content) || !page.content.includes(ids.content)) {
+        // Rare recovery case: an older partial backup contains the child,
+        // but its page has lost the link. Never ACK an invisible text block.
+        page = store.updateBlock(ids.page, {
+          content: [...(Array.isArray(page.content) ? page.content : []), ids.content]
+        });
       }
 
       // Even when an earlier attempt left both blocks in memory, retry the
@@ -88,6 +95,7 @@ export function createIosShareInbox({ store, app, document: doc }) {
       await store.flush();
       if (store.speichertNicht() ||
           store.getBlock(ids.page)?.iosShareId !== item.id ||
+          !store.getBlock(ids.page)?.content?.includes(ids.content) ||
           store.getBlock(ids.content)?.iosShareId !== item.id) return false;
 
       try { app?.zeichneBaum?.(); app?.oeffne?.(page.id); } catch {}
