@@ -339,13 +339,21 @@ struct RedionQuickWidget: Widget {
     let kind = "RedionQuickWidget"
 
     var body: some WidgetConfiguration {
+        if #available(iOSApplicationExtension 17.0, *) {
+            configuration.contentMarginsDisabled()
+        } else {
+            // iOS 15/16 use system-provided widget safe-area padding.
+            configuration
+        }
+    }
+
+    private var configuration: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: RedionWidgetProvider()) { entry in
             RedionOrbitWidgetView(entry: entry)
         }
         .configurationDisplayName("Redion Orbit")
         .description("Dein Redion – drei direkte Wege, ruhige Farbphasen und sanfte Übergänge.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
-        .contentMarginsDisabled()
     }
 }
 
