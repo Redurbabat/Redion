@@ -84,10 +84,17 @@
 /* DAS GLAS AUS §16 (E695): erst deckend, Glas nur mit Unschärfe, und mit Präfix — vorher fragte @supports nur die unpräfixierte Form, also gab es auf dem iPhone vor Safari 18 keins. */
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.document-studio .blatt-werk{background:var(--bg-schwebend);-webkit-backdrop-filter:var(--glas-blur);backdrop-filter:var(--glas-blur)}}
 @media(max-width:1100px){.document-zoom-group input{width:70px}.document-commandbar{padding-inline:10px;gap:8px}}
-@media(max-width:760px){
+@media(max-width:760px), (pointer:coarse) and (max-height:500px){
   .document-studio .document-topbar{display:flex;flex-wrap:nowrap;gap:2px;padding:4px;min-height:52px}
   .document-navigation,.document-top-actions{gap:0;flex:none}
   .document-studio .document-title{order:0;flex:1 1 auto;min-width:0;text-align:left;padding:3px 6px;font-size:12px}
+  /* iPhone landscape has wide CSS pixels but coarse touch and a short
+     viewport. Protect controls beside the Dynamic Island/notch while
+     keeping all 44px targets in the same shared document toolbar. */
+  .document-studio .document-topbar{
+    padding-inline-start:max(4px,env(safe-area-inset-left,0px));
+    padding-inline-end:max(4px,env(safe-area-inset-right,0px));
+  }
   .document-studio .document-topbar button{width:var(--touch-min);min-width:var(--touch-min);min-height:var(--touch-min);padding:0}
   .document-studio .document-topbar button::after{content:none}
   .document-studio .document-topbar [data-document-action="thumbnails"],
@@ -108,6 +115,9 @@
      the absolute menu extend below the visible WebKit viewport. The shared
      --visual-height is updated by AppEinstellung on visualViewport resize. */
   .document-studio[data-document-view="open"] .document-commandbar{
+    /* Menu must remain inside the notched landscape safe areas. */
+    left:max(8px,env(safe-area-inset-left,0px));
+    right:max(8px,env(safe-area-inset-right,0px));
     max-height:max(120px,calc(var(--visual-height,100dvh) - 104px - env(safe-area-inset-top,0px)));
     overflow-y:auto;
     overscroll-behavior:contain;
@@ -352,10 +362,17 @@ body[data-dokument="an"] .document-studio .blatt-werk .blatt-zeilenbruch{display
    Verlauf werden oben bereits nur im geschlossenen Zustand ausgeblendet. */
 body[data-dokument="an"] .document-studio .blatt-marken[data-stift="an"]{touch-action:none}
 body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{touch-action:pan-x pan-y pinch-zoom}
-@media(max-width:760px){
-  body[data-dokument="an"] #reiterleiste{min-height:var(--touch-min);padding-inline:6px}
+@media(max-width:760px), (pointer:coarse) and (max-height:500px){
+  body[data-dokument="an"] #reiterleiste{
+    min-height:var(--touch-min);
+    padding-inline-start:max(6px,env(safe-area-inset-left,0px));
+    padding-inline-end:max(6px,env(safe-area-inset-right,0px));
+  }
   body[data-dokument="an"] #reiterleiste .rt-tab{min-width:120px;max-width:180px;min-height:40px}
-  body[data-dokument="an"] .document-studio .document-topbar{padding-inline:4px}
+  body[data-dokument="an"] .document-studio .document-topbar{
+    padding-inline-start:max(4px,env(safe-area-inset-left,0px));
+    padding-inline-end:max(4px,env(safe-area-inset-right,0px));
+  }
   .document-studio .document-topbar .document-zurueck .dz-wort{display:none}
   /* „Präsentieren" ist am Telefon gar nicht im Kopf, sondern in der
      Ansichtsklappe (E493, bausteine.css) — derselbe Weg wie bei der Suche.
@@ -402,7 +419,10 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
     position:absolute; top:auto; bottom:calc(var(--visual-bottom, 0px) + 84px);
     left:8px; margin:0; padding:3px
   }
-  .document-studio .document-commandbar{left:8px;right:8px}
+  .document-studio .document-commandbar{
+    left:max(8px,env(safe-area-inset-left,0px));
+    right:max(8px,env(safe-area-inset-right,0px));
+  }
   body[data-dokument="an"] .document-studio .document-center{padding:10px 8px 100px}
   .document-source-master .do-name{font-size:11px}.document-source-master .do-wort{font-size:10px}
   .document-copy-label{font-size:10px}
@@ -638,7 +658,7 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
    Auf dem Bild war er ausserdem der einzige Knopf der Leiste, der am
    Telefon sein WORT zeigte. Alle anderen tragen dort nur ihr Zeichen. */
 .document-commandbar .document-folien-klappe{display:none}
-@media (max-width:760px){
+@media (max-width:760px), (pointer:coarse) and (max-height:500px){
   .document-studio .document-topbar [data-document-action="folienmenue"]{display:none}
   .document-commandbar .document-folien-klappe:not([hidden]){display:inline-flex}
 }
@@ -911,7 +931,7 @@ body[data-dokument="an"] .document-studio .blatt-werk{
 .document-studio .document-inspector-list button:hover{
   background:var(--bg-hover);border-color:var(--line)
 }
-@media(max-width:760px){
+@media(max-width:760px), (pointer:coarse) and (max-height:500px){
   .document-studio .document-title{align-items:stretch;gap:3px;min-width:0}
   .document-studio .document-title-name{font-size:.8125rem;line-height:1.15}
   .document-studio .document-title-meta{justify-content:flex-start;font-size:.6875rem}

@@ -40,6 +40,7 @@ export function startIosNativeFeel({
   let ended = false;
   let lastHaptic = -Infinity;
   let appliedStyle = null;
+  let generation = 0;
   let pending = Promise.resolve();
   const html = doc.documentElement;
 
@@ -53,14 +54,19 @@ export function startIosNativeFeel({
     const desired = html.dataset?.theme === 'light' ? styles.Light : styles.Dark;
     if (!force && desired === appliedStyle) return;
     appliedStyle = desired;
-    // Serialize updates: rapid theme flips must never leave the iOS status
-    // bar with a stale style due to out-of-order bridge promises.
+    const request = ++generation;
+    // Serialize native calls, but discard superseded calls still in the
+    // queue. UIKit can be slow to resume, while WebKit can switch themes or
+    // return from the app switcher multiple times in the same event loop.
     pending = pending.catch(() => {}).then(async () => {
-      if (ended) return;
+      // Do not touch the status bar while the app is backgrounded. Reapply
+      // on visibilitychange/pageshow/focus after WebKit becomes visible.
+      if (ended || doc.hidden || request !== generation) return;
       await bars.setStyle({ style: desired, bar: statusBar });
     }).catch(() => {
-      // A failed native appearance call must not prevent subsequent changes.
-      if (appliedStyle === desired) appliedStyle = null;
+      // Only the latest failed request may invalidate the style cache:
+      // an older rejected bridge call must not erase a newer request.
+      if (request === generation && appliedStyle === desired) appliedStyle = null;
     });
   };
 

@@ -29,6 +29,8 @@ workflows:
           node --test ios/native-feel.test.mjs
           # Foreground-Rueckkehr, Unicode-Dateinamen und sichere Temp-Dateien.
           node --test ios/native-lifecycle-export.test.mjs
+          # Simulierte verzögerte UIKit-Antworten und App-Wechsel.
+          node --test ios/native-statusbar-queue.test.mjs
           # Erfolgshaptik nach nativen Exporten und iPhone-PDF-Tastaturhoehe.
           node --test ios/native-export-feedback.test.mjs
           node --test ios/native-mobile-document.test.mjs

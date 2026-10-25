@@ -184,14 +184,14 @@ test('Unbeteiligte Klicks, deaktivierte Ziele und Gesten ohne Auswahl bleiben oh
   h.stop();
 });
 
-test('Schneller Hell-Dunkel-Wechsel wird in korrekter Reihenfolge an iOS uebergeben', async () => {
+test('Schneller Hell-Dunkel-Wechsel uebergibt nur das letzte Theme an iOS', async () => {
   const h = harness();
   h.theme('light');
   h.theme('dark');
   h.theme('light');
-  // The mock records native calls; the queued updates must finish in order
-  // regardless of the intervening MutationObserver notifications.
+  // Queued stale requests are coalesced before they reach UIKit; the last
+  // requested color is all the user should see, without intermediate flashes.
   await h.settle();
-  assert.deepEqual(h.styles, ['DARK', 'LIGHT', 'DARK', 'LIGHT']);
+  assert.deepEqual(h.styles, ['LIGHT']);
   h.stop();
 });

@@ -84,7 +84,8 @@ test('pageshow and focus resync the system appearance without navigating', async
   h.windowListeners.get('pageshow')();
   h.windowListeners.get('focus')();
   await h.settle();
-  assert.deepEqual(h.calls.map(call => call.style), ['DARK', 'DARK', 'DARK']);
+  assert.deepEqual(h.calls.map(call => call.style), ['DARK', 'DARK'],
+    'Adjacent resume events coalesce into one native update.');
   h.stop();
   assert.equal(h.documentListeners.has('visibilitychange'), false);
   assert.equal(h.windowListeners.has('pageshow'), false);
