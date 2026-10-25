@@ -103,6 +103,17 @@
   .document-studio[data-document-view="open"] .document-commandbar{animation:studio-arrive var(--motion-normal) var(--ease-enter)}
   .document-mode-switch{flex:1;justify-content:center}.document-pagination{margin-left:auto}
   .document-commandbar button{min-height:var(--touch-min);padding-inline:10px}
+  /* A mobile document menu can contain multiple rows (zoom, paging, modes).
+     Keep every action reachable above the iOS keyboard instead of letting
+     the absolute menu extend below the visible WebKit viewport. The shared
+     --visual-height is updated by AppEinstellung on visualViewport resize. */
+  .document-studio[data-document-view="open"] .document-commandbar{
+    max-height:max(120px,calc(var(--visual-height,100dvh) - 104px - env(safe-area-inset-top,0px)));
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    scroll-padding-block:8px;
+  }
   .document-zoom-group{width:100%;justify-content:center;border-top:1px solid var(--line-soft);padding-top:3px}
   .document-zoom-group input{flex:1;max-width:150px;min-width:0}.document-zoom-group button{min-height:var(--touch-min)}
   .document-zoom-label{display:inline;min-width:var(--touch-min)}
@@ -110,6 +121,7 @@
   .document-studio .blatt-werk{border-radius:var(--radius-lg);margin-bottom:8px}
 }
 @media(prefers-reduced-transparency:reduce){.document-studio .blatt-werk{background:var(--bg-card);-webkit-backdrop-filter:none;backdrop-filter:none}}
+body[data-bewegung="ruhig"] .document-studio[data-document-view="open"] .document-commandbar{animation:none}
 @media(prefers-reduced-motion:reduce){
   .document-studio .document-thumbnails.is-open,.document-studio .document-inspector.is-open,.document-studio[data-document-view="open"] .document-commandbar{animation:none}
   .document-studio :is(.document-topbar,.document-commandbar) button:active:not(:disabled){transform:none}

@@ -17,16 +17,21 @@ import { Share } from '@capacitor/share';
 import { Haptics } from '@capacitor/haptics';
 import { Browser } from '@capacitor/browser';
 import { createNativeFileExporter } from './native-file-export.mjs';
+import { withNativeExportFeedback } from './native-export-feedback.mjs';
 import { startIosNativeFeel } from './native-feel.mjs';
 import { createHomeShortcutRouter } from './home-shortcuts.mjs';
 import { enableIosSafariLinks } from './native-safari-links.mjs';
 
-const saveFile = createNativeFileExporter({
+const saveFile = withNativeExportFeedback(createNativeFileExporter({
   filesystem: Filesystem,
   share: Share,
   directory: Directory.Documents,
   createId: () => crypto.randomUUID(),
   now: () => new Date()
+}), {
+  haptics: Haptics,
+  document,
+  quiet: () => document.body?.dataset?.bewegung === 'ruhig'
 });
 
 async function saveBackup(blob: Blob, name: string) {
