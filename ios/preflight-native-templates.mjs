@@ -35,10 +35,18 @@ export function preflightNativeTemplates(root = process.cwd()) {
   const storyboard = fs.readFileSync(paths.storyboard, 'utf8');
   checkLaunchStoryboard(storyboard);
   const privacy = fs.readFileSync(path.join(root, 'ios/privacy-shield.swift'), 'utf8');
+  const appDelegate = fs.readFileSync(paths.appDelegate, 'utf8');
+  const sceneDelegate = fs.readFileSync(paths.sceneDelegate, 'utf8');
+  // Redion installs home-screen shortcuts into SceneDelegate. It must
+  // actually be wired up by UIApplicationDelegate in the current SPM app;
+  // a present but unused Swift file would otherwise silently pass.
+  if (!appDelegate.includes('SceneDelegate.self')) {
+    throw new Error('Capacitor-AppDelegate verbindet die UIScene nicht mit SceneDelegate.');
+  }
   // Prove that our current injectors would accept the upstream source,
   // but do NOT write their results until the individual Codemagic stages.
-  const delegate = injectPrivacyShield(fs.readFileSync(paths.appDelegate, 'utf8'), privacy);
-  const scene = injectQuickActions(fs.readFileSync(paths.sceneDelegate, 'utf8'));
+  const delegate = injectPrivacyShield(appDelegate, privacy);
+  const scene = injectQuickActions(sceneDelegate);
   if (!delegate.includes('RedionPrivacyShield.start()') ||
       !scene.includes('REDION_NATIVE_HOME_SHORTCUTS')) {
     throw new Error('Native Redion-Hooks fehlen nach Probeinbindung.');
