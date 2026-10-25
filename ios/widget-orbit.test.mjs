@@ -120,6 +120,8 @@ test('WidgetKit motion is under two seconds and is disabled for Reduce Motion', 
 test('motion redesign does not activate unsigned preview extensions by default', () => {
   assert.match(codemagic, /REDION_IOS_EXTENSIONS:-0/);
   assert.match(codemagic, /node --test ios\/widget-orbit\.test\.mjs/);
+  assert.match(codemagic, /xcrun swiftc -frontend -parse ios\/widgets\/RedionWidgets\.swift/);
+  assert.match(codemagic, /xcrun swiftc -frontend -parse ios\/share-extension\/RedionShareViewController\.swift/);
   assert.doesNotMatch(widget, /\bStore\b|\bIndexedDB\b|\bFileManager\b|\bUserDefaults\b/);
   const config = JSON.parse(fs.readFileSync(path.join(root, 'capacitor.config.json'), 'utf8'));
   assert.equal(config.appId, 'ch.redurbabat.redion');
