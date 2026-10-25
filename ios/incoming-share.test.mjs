@@ -12,7 +12,7 @@ function harness({ persisted = new Map(), failFlush = false, volatile = false,
   const blocks = new Map([...persisted].map(([key, block]) => [key, structuredClone(block)]));
   const pending = new Set();
   const disk = new Map([...persisted].map(([key, block]) => [key, structuredClone(block)]));
-  const counters = { pages: 0, children: 0, flushes: 0, redraws: 0 };
+  const counters = { pages: 0, children: 0, updates: 0, flushes: 0, redraws: 0 };
   let failure = failFlush;
   let release = null;
   const store = {
@@ -25,6 +25,14 @@ function harness({ persisted = new Map(), failFlush = false, volatile = false,
       blocks.set(page.id, page);
       pending.add(page.id);
       return page;
+    },
+    updateBlock(key, patch) {
+      counters.updates++;
+      const existing = blocks.get(key);
+      if (!existing) return null;
+      Object.assign(existing, patch);
+      pending.add(key);
+      return existing;
     },
     addBlock(parent, type, patch) {
       counters.children++;
@@ -118,6 +126,20 @@ test('partial cached share is repaired before committing', async () => {
   assert.ok(h.disk.has(ids.content));
 });
 
+test('orphaned content is relinked in the same transaction without adding a duplicate', async () => {
+  const ids = shareBlockIds(id);
+  const persisted = new Map([
+    [ids.page, { id: ids.page, type: 'page', iosShareId: id,
+      text: 'Imported', content: [], alive: true }],
+    [ids.content, { id: ids.content, type: 'text', parentId: ids.page,
+      iosShareId: id, text: 'Von Safari geteilt' }]
+  ]);
+  const h = harness({ persisted });
+  assert.equal(await h.inbox.receive(incoming()), true);
+  assert.deepEqual(h.disk.get(ids.page).content, [ids.content]);
+  assert.deepEqual([h.counters.pages, h.counters.children, h.counters.updates], [0, 0, 1]);
+});
+
 test('colliding page or content ID is rejected without overwriting data', async () => {
   const ids = shareBlockIds(id);
   for (const bad of [
@@ -171,7 +193,7 @@ test('two deliveries in flight share a single write transaction', async () => {
   assert.equal(h.counters.flushes, 1);
 });
 
-test('receipt requires getBlock and permanent Store.flush support', () => {
+test('receipt requires getBlock, updateBlock and permanent Store.flush support', () => {
   assert.throws(() => createIosShareInbox({
     store: { addPage() {}, addBlock() {}, flush() {} }, document: {}
   }), /Speicher ist nicht bereit/);
