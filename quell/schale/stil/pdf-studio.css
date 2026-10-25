@@ -363,9 +363,16 @@ body[data-dokument="an"] .document-studio .blatt-werk .blatt-zeilenbruch{display
 body[data-dokument="an"] .document-studio .blatt-marken[data-stift="an"]{touch-action:none}
 body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{touch-action:pan-x pan-y pinch-zoom}
 @media(max-width:760px), (pointer:coarse) and (max-height:500px){
-  body[data-dokument="an"] #reiterleiste{min-height:var(--touch-min);padding-inline:6px}
+  body[data-dokument="an"] #reiterleiste{
+    min-height:var(--touch-min);
+    padding-inline-start:max(6px,env(safe-area-inset-left,0px));
+    padding-inline-end:max(6px,env(safe-area-inset-right,0px));
+  }
   body[data-dokument="an"] #reiterleiste .rt-tab{min-width:120px;max-width:180px;min-height:40px}
-  body[data-dokument="an"] .document-studio .document-topbar{padding-inline:4px}
+  body[data-dokument="an"] .document-studio .document-topbar{
+    padding-inline-start:max(4px,env(safe-area-inset-left,0px));
+    padding-inline-end:max(4px,env(safe-area-inset-right,0px));
+  }
   .document-studio .document-topbar .document-zurueck .dz-wort{display:none}
   /* „Präsentieren" ist am Telefon gar nicht im Kopf, sondern in der
      Ansichtsklappe (E493, bausteine.css) — derselbe Weg wie bei der Suche.
@@ -412,7 +419,10 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
     position:absolute; top:auto; bottom:calc(var(--visual-bottom, 0px) + 84px);
     left:8px; margin:0; padding:3px
   }
-  .document-studio .document-commandbar{left:8px;right:8px}
+  .document-studio .document-commandbar{
+    left:max(8px,env(safe-area-inset-left,0px));
+    right:max(8px,env(safe-area-inset-right,0px));
+  }
   body[data-dokument="an"] .document-studio .document-center{padding:10px 8px 100px}
   .document-source-master .do-name{font-size:11px}.document-source-master .do-wort{font-size:10px}
   .document-copy-label{font-size:10px}
