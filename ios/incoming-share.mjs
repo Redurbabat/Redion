@@ -47,8 +47,16 @@ export function createIosShareInbox({ store, app, document: doc, clock = () => n
       // A literal text block intentionally does not trigger a webpage
       // preview/fetch. Foreign links remain inert until opened by the user.
       store.addBlock(page.id, 'text', { text: item.value });
+      // The seen marker must be persisted together with the new page.
+      // If flush fails, roll it back in memory so a later retry NEVER
+      // acknowledges and discards a still-unimported native inbox file.
       store.setMeta(key, true);
-      await store.flush();
+      try {
+        await store.flush();
+      } catch {
+        try { store.setMeta(key, false); } catch {}
+        return false;
+      }
       try { app?.zeichneBaum?.(); app?.oeffne?.(page.id); } catch {}
       return true;
     })().catch(() => false).finally(() => ongoing.delete(item.id));
