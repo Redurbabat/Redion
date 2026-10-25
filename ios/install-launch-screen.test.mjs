@@ -95,6 +95,45 @@ test('Generated Xcode launch screen is replaced, versioned Redion scripts are no
   })
 );
 
+// Exact template from ionic-team/capacitor@8.0.0 ios-spm-template.
+// Capacitor deliberately uses <imageView key="view"> as the root, not <view>.
+const capacitor8SpmFixture = path.join(repo, 'ios/fixtures/capacitor8-spm-launch.storyboard');
+
+test('Capacitor 8 SPM imageView launch root is accepted and replaced in generated project', () =>
+  fixture(({ root, write }) => {
+    const original = fs.readFileSync(capacitor8SpmFixture, 'utf8');
+    assert.match(original, /<imageView key="view"/);
+    assert.doesNotThrow(() => checkLaunchStoryboard(original));
+    write(generatedStoryboard, original);
+    const versioned = fs.readFileSync(path.join(root, 'ios/native-launch.storyboard'));
+    const result = installLaunchScreen(root);
+    const installed = fs.readFileSync(result.storyboard, 'utf8');
+    checkRedionStoryboard(installed);
+    assert.notEqual(installed, original, 'Default Splash placeholder must be replaced.');
+    assert.equal(installed, versioned.toString('utf8'),
+      'Only the reviewed Redion native storyboard should be installed.');
+    assert.deepEqual(fs.readFileSync(path.join(root, 'ios/native-launch.storyboard')), versioned);
+    assert.ok(fs.existsSync(path.join(result.catalogue,
+      'RedionLaunchIcon.imageset/Contents.json')));
+    assert.ok(fs.existsSync(path.join(result.catalogue,
+      'RedionLaunchBackground.colorset/Contents.json')));
+    assert.ok(fs.existsSync(path.join(result.catalogue,
+      'RedionLaunchText.colorset/Contents.json')));
+  })
+);
+
+test('Only valid view or imageView launch roots are accepted (not other UIKit tags)', () =>
+  fixture(({ root, write }) => {
+    const original = fs.readFileSync(capacitor8SpmFixture, 'utf8');
+    const unexpected = original.replace('<imageView key="view"', '<tableView key="view"');
+    write(generatedStoryboard, unexpected);
+    assert.throws(() => installLaunchScreen(root), /erwartete LaunchScreen/);
+    assert.equal(fs.readFileSync(path.join(root, generatedStoryboard), 'utf8'), unexpected);
+    assert.equal(fs.existsSync(path.join(root, generatedAssets,
+      'RedionLaunchIcon.imageset')), false);
+  })
+);
+
 test('An unexpected Capacitor template aborts without overwriting anything', () =>
   fixture(({ root, write }) => {
     write(generatedStoryboard, '<document/>');
