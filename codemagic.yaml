@@ -45,6 +45,8 @@ workflows:
           node --test ios/native-project-layout.test.mjs
           # Native Startansicht nur im iPhone-Xcode-Projekt, mit echten Farben.
           node --test ios/install-launch-screen.test.mjs
+          # Pruefe reale Capacitor-8-SPM-Templates auf Swift/Storyboard-Kompatibilitaet.
+          node --test ios/capacitor8-spm-native-integration.test.mjs
 
       - name: Lokale Web-Dateien fuer Capacitor bereitstellen
         script: |
@@ -89,6 +91,9 @@ workflows:
           npx cap sync ios
           test -f build/ios-capacitor/App/App/AppDelegate.swift
           test -f build/ios-capacitor/App/App.xcodeproj/project.pbxproj
+          # Vor JEDEM nativen Patch die tatsaechlich generierten UIKit-/Swift-
+          # Vorlagen pruefen. Dieser Schritt liest nur; kein Projekt wird veraendert.
+          node ios/preflight-native-templates.mjs
           test -f ios/native-sicherung.ts
 
       - name: iPhone-Datenschutzschirm nur in Swift einbauen
@@ -115,7 +120,8 @@ workflows:
           mkdir -p "$CM_BUILD_DIR/build"
           xcrun ibtool --errors --warnings --notices \
             --compile "$CM_BUILD_DIR/build/redion-launch-check.storyboardc" \
-            build/ios-capacitor/App/App/Base.lproj/LaunchScreen.storyboard
+            build/ios-capacitor/App/App/Base.lproj/LaunchScreen.storyboard \
+            2>&1 | tee "$CM_BUILD_DIR/build/ios-ibtool.log"
 
       - name: Sicherungen in der iOS-Dateien-App sichtbar machen
         script: |
@@ -192,4 +198,5 @@ workflows:
     artifacts:
       - build/ipa/Redion-unsigned.ipa
       - build/ios-xcodebuild.log
+      - build/ios-ibtool.log
       - build/ios-web-paritaet.json
