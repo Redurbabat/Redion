@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - 'ios/**'
+      - 'quell/schale/stil/pdf-studio.css'
+      - 'src/kern/einstellung/app.ts'
       - 'src/schale/aufbau/wischen.ts'
       - 'quell/schale/aufbau/wischen.js'
       - 'pruefungen/wischen-multitouch.test.mjs'
