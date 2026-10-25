@@ -110,10 +110,25 @@ export function startIosNativeFeel({
     }
   };
 
+  let viewportRefreshQueued = false;
   const onResume = () => {
-    // Capacitor's web view emits standard page/visibility lifecycle events;
-    // no new plugin and no changes to the shared Redion UI are required.
-    if (!doc.hidden) syncBars(true);
+    // Capacitor's web view emits standard page/visibility lifecycle events.
+    // WebKit may restore a stale visualViewport after the app switcher without
+    // emitting resize. Redion already owns the keyboard/safe-area calculation;
+    // reuse it rather than introducing a competing native CSS calculation.
+    if (ended || doc.hidden) return;
+    syncBars(true);
+    if (viewportRefreshQueued) return;
+    viewportRefreshQueued = true;
+    Promise.resolve().then(() => {
+      viewportRefreshQueued = false;
+      if (ended || doc.hidden) return;
+      try {
+        doc.defaultView?.AppEinstellung?.viewportAktualisieren?.();
+      } catch {
+        // Layout refresh is visual-only; never interrupt normal navigation.
+      }
+    });
   };
 
   const themeObserver = new Observer(() => syncBars());
