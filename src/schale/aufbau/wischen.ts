@@ -276,7 +276,9 @@ const Wischen = (() => {
     addEventListener('pointerdown', (e: PointerEvent) => {
       /* Der Stift zeichnet, er wischt nicht. */
       if (e.pointerType === 'pen') return;
-      if (zeiger !== -1) { zeiger = -1; return; }   /* zweiter Finger: aus */
+      /* Multi-Touch muss auch den bereits verschobenen Inhalt loslassen.
+         Nur die Kennung zurückzusetzen liess #scroll seitlich stehen. */
+      if (zeiger !== -1) { loslassen(); return; }   /* zweiter Finger: aus */
       if (!darf(e.target, e.clientX)) return;
       zeiger = e.pointerId; x0 = e.clientX; y0 = e.clientY;
       t0 = e.timeStamp; gefangen = false;
@@ -326,7 +328,11 @@ const Wischen = (() => {
       ziel.click();
     };
     addEventListener('pointerup', ende, { passive: true });
-    addEventListener('pointercancel', () => loslassen(), { passive: true });
+    addEventListener('pointercancel', (e: PointerEvent) => {
+      /* Ein anderes abgebrochenes Pointer-Ereignis gehoert nicht zu
+         unserem aktiven Finger und darf die Geste nicht beenden. */
+      if (e.pointerId === zeiger) loslassen();
+    }, { passive: true });
   };
 
   /* `reiter`, `nachbar` und `darf` stehen mit im Rückgabewert, damit ein
