@@ -4,6 +4,9 @@ on:
   pull_request:
     paths:
       - 'ios/**'
+      - 'src/schale/aufbau/wischen.ts'
+      - 'quell/schale/aufbau/wischen.js'
+      - 'pruefungen/wischen-multitouch.test.mjs'
       - 'capacitor.config.json'
       - 'codemagic.yaml'
       - '.github/workflows/ios-native-tests.yml'
