@@ -44,10 +44,9 @@ export function createIosShareInbox({ store, app, document: doc, clock = () => n
       // Add a normal Redion page to the local-first store. Only plain text:
       // no HTML injection, no WebView navigation and no network requests.
       const page = store.addPage(null, { text: title });
-      store.addBlock(page.id, item.kind === 'url' ? 'bookmark' : 'text',
-        item.kind === 'url'
-          ? { text: item.value, src: item.value }
-          : { text: item.value });
+      // A literal text block intentionally does not trigger a webpage
+      // preview/fetch. Foreign links remain inert until opened by the user.
+      store.addBlock(page.id, 'text', { text: item.value });
       store.setMeta(key, true);
       await store.flush();
       try { app?.zeichneBaum?.(); app?.oeffne?.(page.id); } catch {}
