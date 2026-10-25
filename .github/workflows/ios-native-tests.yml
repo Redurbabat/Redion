@@ -1,0 +1,42 @@
+name: iOS native regression tests
+
+on:
+  pull_request:
+    paths:
+      - 'ios/**'
+      - 'capacitor.config.json'
+      - 'codemagic.yaml'
+      - '.github/workflows/ios-native-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ios-native-unit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Redion
+        uses: actions/checkout@v4
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.20.0'
+      - name: Check iOS adapters and non-destructive project configuration
+        run: |
+          set -euo pipefail
+          node --test \
+            ios/backup-chunks.test.mjs \
+            ios/codemagic-dependency-versions.test.mjs \
+            ios/native-file-export.test.mjs \
+            ios/native-feel.test.mjs \
+            ios/native-lifecycle-export.test.mjs \
+            ios/native-safari-links.test.mjs \
+            ios/home-shortcuts.test.mjs \
+            ios/install-privacy-shield.test.mjs \
+            ios/native-project-layout.test.mjs \
+            ios/install-launch-screen.test.mjs \
+            ios/vergleiche-webstand.test.mjs
+
+# Deliberately no IPA packaging, Apple signing, deployment, or merge.
+# Real Xcode/iPhone checks remain manual in Codemagic.
