@@ -41,7 +41,8 @@ jobs:
             ios/install-privacy-shield.test.mjs \
             ios/native-project-layout.test.mjs \
             ios/install-launch-screen.test.mjs \
-            ios/vergleiche-webstand.test.mjs
+            ios/vergleiche-webstand.test.mjs \
+            pruefungen/wischen-multitouch.test.mjs
 
 # Deliberately no IPA packaging, Apple signing, deployment, or merge.
 # Real Xcode/iPhone checks remain manual in Codemagic.
