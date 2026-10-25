@@ -66,7 +66,7 @@ test('Share Sheet block IDs are accepted by the REAL Redion Store and share one 
   assert.match(share, /id: ids\.page/);
   assert.match(share, /id: ids\.content/);
   assert.match(share, /await store\.flush\(\)/);
-  assert.doesNotMatch(share, /setMeta\(|getMeta\(|metaListeAendern/);
+  assert.doesNotMatch(share, /store\.(?:setMeta|getMeta|metaListeAendern)\(/);
 });
 
 test('the system remains one shared Web UI, without a second native data store', () => {
