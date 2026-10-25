@@ -42,6 +42,8 @@ test('real Capacitor-8-SPM AppDelegate and SceneDelegate accept Redion native ho
   const delegate = fs.readFileSync(path.join(repo, upstream + 'capacitor8-spm-appdelegate.swift'), 'utf8');
   const scene = fs.readFileSync(path.join(repo, upstream + 'capacitor8-spm-scenedelegate.swift'), 'utf8');
   const privacy = fs.readFileSync(path.join(repo, 'ios/privacy-shield.swift'), 'utf8');
+  assert.match(delegate, /config\.delegateClass = SceneDelegate\.self/,
+    'The captured UIScene AppDelegate must actually use the SceneDelegate fixture.');
   const storyboard = fs.readFileSync(path.join(repo, upstream + 'capacitor8-spm-launch.storyboard'), 'utf8');
   assert.doesNotThrow(() => checkLaunchStoryboard(storyboard));
   const guarded = injectPrivacyShield(delegate, privacy);
@@ -89,6 +91,18 @@ test('Capacitor template drift in launch screen or Swift is a hard failure', () 
     make(native + '/AppDelegate.swift', 'import UIKit\nclass AppDelegate {}');
     assert.throws(() => preflightNativeTemplates(root), /Startfunktion/);
     assert.deepEqual(fs.readFileSync(scene), original);
+  })
+);
+
+test('SceneDelegate must be connected by AppDelegate, not just present as an unused file', () =>
+  fixture(({ root, make }) => {
+    const original = fs.readFileSync(path.join(root, native, 'AppDelegate.swift'), 'utf8');
+    make(native + '/AppDelegate.swift', original.replace(
+      'config.delegateClass = SceneDelegate.self',
+      'config.delegateClass = AppDelegate.self'));
+    assert.throws(() => preflightNativeTemplates(root), /verbindet die UIScene nicht/);
+    assert.equal(fs.existsSync(path.join(root, native,
+      'Assets.xcassets/RedionLaunchIcon.imageset')), false);
   })
 );
 
