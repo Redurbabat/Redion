@@ -98,6 +98,7 @@ if (Capacitor.getPlatform() === 'ios' && Capacitor.isNativePlatform()) {
       if (!readiness.ready() || !store?.cache ||
           typeof store.flush !== 'function' ||
           typeof store.getBlock !== 'function' ||
+          typeof store.updateBlock !== 'function' ||
           typeof store.speichertNicht !== 'function') return Promise.resolve(false);
       if (!incoming) incoming = createIosShareInbox({
         store,
