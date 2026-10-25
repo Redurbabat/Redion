@@ -61,11 +61,11 @@ struct RedionDestination: Identifiable {
 
 private let destinations: [RedionDestination] = [
     RedionDestination(id: "dokumente", title: "Dokumente", subtitle: "Deine Ideen",
-                      symbol: "doc.text", tint: RedionPalette.violet),
+                      symbol: "doc.text", tint: RedionPalette.teal),
     RedionDestination(id: "heute", title: "Heute", subtitle: "Dein Moment",
-                      symbol: "sun.max", tint: RedionPalette.teal),
+                      symbol: "sun.max", tint: RedionPalette.peach),
     RedionDestination(id: "lernen", title: "Lernen", subtitle: "Dein Wissen",
-                      symbol: "book.closed", tint: RedionPalette.peach)
+                      symbol: "book.closed", tint: RedionPalette.violet)
 ]
 
 // MARK: - Orbit artwork: all native SwiftUI shapes, no external bitmaps.
@@ -271,12 +271,12 @@ private struct RedionDestinationTile: View {
                                 .font(.system(size: 14, weight: .semibold, design: .rounded))
                             Text(destination.subtitle)
                                 .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(RedionPalette.white.opacity(0.62))
+                                .foregroundStyle(RedionPalette.white.opacity(0.73))
                         }
                         Spacer(minLength: 0)
                         Image(systemName: "arrow.up.right")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(RedionPalette.white.opacity(0.68))
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(destination.tint)
                     }
                 } else {
                     VStack(alignment: .leading, spacing: 7) {
@@ -284,35 +284,47 @@ private struct RedionDestinationTile: View {
                             icon
                             Spacer(minLength: 0)
                             Image(systemName: "arrow.up.right")
-                                .font(.system(size: 9, weight: .medium))
-                                .foregroundStyle(RedionPalette.white.opacity(0.50))
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(destination.tint)
                         }
                         Text(destination.title)
                             .font(.system(size: 11, weight: .semibold, design: .rounded))
                             .lineLimit(1)
-                            .minimumScaleFactor(0.82)
+                            .minimumScaleFactor(0.80)
                     }
                 }
             }
             .foregroundStyle(RedionPalette.white)
-            .padding(vertical ? 11 : 9)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, vertical ? 12 : 8)
+            .padding(.vertical, vertical ? 10 : 9)
+            .frame(maxWidth: .infinity, minHeight: vertical ? 55 : 65,
+                   alignment: .leading)
             .background {
-                RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    .fill(RedionPalette.white.opacity(0.085))
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(LinearGradient(colors: [
+                        destination.tint.opacity(0.22),
+                        RedionPalette.night.opacity(0.80),
+                        RedionPalette.violet.opacity(0.11)
+                    ], startPoint: .topLeading, endPoint: .bottomTrailing))
                     .overlay {
-                        RoundedRectangle(cornerRadius: 15, style: .continuous)
-                            .stroke(RedionPalette.white.opacity(0.15), lineWidth: 0.7)
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(LinearGradient(colors: [
+                                destination.tint.opacity(0.84),
+                                RedionPalette.white.opacity(0.18),
+                                destination.tint.opacity(0.48)
+                            ], startPoint: .topLeading, endPoint: .bottomTrailing),
+                            lineWidth: 1.1)
                     }
+                    .shadow(color: destination.tint.opacity(0.28), radius: 9, y: 3)
             }
-            .contentShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .accessibilityLabel(destination.title + " in Redion öffnen")
     }
 
     private var icon: some View {
         Image(systemName: destination.symbol)
-            .font(.system(size: vertical ? 17 : 15, weight: .medium))
+            .font(.system(size: vertical ? 18 : 16, weight: .medium))
             .foregroundStyle(destination.tint)
             .frame(width: 24, height: 24)
     }
