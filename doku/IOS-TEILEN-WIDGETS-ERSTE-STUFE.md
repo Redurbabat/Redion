@@ -42,6 +42,40 @@ Deep-Links und zeigen **keine** vertraulichen Notizen. Die
 Farbkomposition orientiert sich an Redions dunklem Studio mit
 Violett als Primärakzent und Türkis/Apricot als Lichtfarben.
 
+### Anpassung an die gezeigten iPhone-Konzeptbilder
+
+Die Bildvorschauen waren **Designrenderings**, keine Fotos eines
+laufenden Builds. Die tatsächliche `RedionWidgets.swift` hat nun
+deutlich mehr dieser sichtbaren Elemente als zuvor:
+
+- `RedionPlanet` zeichnet pro Widget zwei skalierte Planeten
+  mit radialer Schattierung, heller Kante, Farbreflexen,
+  kleiner Lichtmondsichel und weichem Farbhalo vollständig
+  in SwiftUI, **ohne eingebettete Fotos**.
+- `RedionOrbitBackdrop` erzeugt zwei elliptische,
+  mehrfarbig leuchtende Umlaufbahnen, deterministische
+  Sternpunkte und räumlich verteilte Türkis-/Violett-Nebel.
+- Die **drei verschiedenen** Kacheln haben abgerundete
+  Verlaufspanels und passende Leuchtkanten: Dokumente türkis,
+  Heute apricot, Lernen violett.
+- Kleine Widgetvariante: „Ein Gedanke.“ und eine kleine
+  schimmernde Kapsel „Heute öffnen“. Mittlere Variante:
+  „Drei Wege. Alles deins.“. Große Variante:
+  „Ideen finden. Wissen bewegen.“ über drei breiten Zielen.
+- Die Platzverhältnisse wurden für ältere iOS 15/16-Widgets
+  mit zusätzlichen Systemrändern reduziert. Auf iOS 17+
+  darf der Orbit-Hintergrund die volle Fläche einnehmen.
+- Die reduzierte Bewegung schaltet sowohl den geplanten
+  Orbitalpositionswechsel als auch explizite Animationen ab.
+
+**Nicht pixelidentisch:** Die gerenderten Vorschaubilder
+zeigen fotorealistische, detailliert texturierte Planeten.
+Die native Umsetzung verwendet absichtlich sparsame SwiftUI-
+Vektorformen: gleiche Stilrichtung und Bedienelemente,
+aber nicht dieselben Bildpixel. Den wirklichen Abstand zum
+Konzept kann nur eine Xcode-Widgetvorschau bzw. ein
+Geräte-Screenshot nach erfolgreichem Build zeigen.
+
 Die Bewegung ist **echt WidgetKit-konform**, kein künstlicher
 Endlosloop: `RedionWidgetProvider` gibt alle **drei Stunden** einen
 neuen Orbit-Zustand vor. Das System kann dann die neuen Farbflächen und
