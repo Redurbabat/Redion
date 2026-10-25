@@ -367,22 +367,42 @@ private struct RedionOrbitWidgetView: View {
             RedionSignature(compact: true)
             Spacer(minLength: 2)
             Image(systemName: "sparkles.rectangle.stack")
-                .font(.system(size: 32, weight: .ultraLight))
+                .font(.system(size: 30, weight: .ultraLight))
                 .foregroundStyle(RedionPalette.teal)
+                .shadow(color: RedionPalette.teal.opacity(0.85), radius: 8)
                 .accessibilityHidden(true)
             Spacer(minLength: 2)
-            Text("Ein Gedanke.")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
-                .foregroundStyle(RedionPalette.white)
-                .minimumScaleFactor(0.75)
-                .lineLimit(1)
+            (
+                Text("Ein ").foregroundColor(RedionPalette.white)
+                + Text("Gedanke.").foregroundColor(RedionPalette.peach)
+            )
+            .font(.system(size: 16, weight: .bold, design: .rounded))
+            .minimumScaleFactor(0.76)
+            .lineLimit(1)
             HStack {
                 Text("Heute öffnen")
                 Spacer(minLength: 0)
                 Image(systemName: "arrow.up.right")
             }
-            .font(.system(size: 10, weight: .medium))
-            .foregroundStyle(RedionPalette.white.opacity(0.8))
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(RedionPalette.white)
+            .padding(.horizontal, 10)
+            .frame(minHeight: 32)
+            .background {
+                Capsule()
+                    .fill(LinearGradient(colors: [
+                        RedionPalette.teal.opacity(0.23),
+                        RedionPalette.plum.opacity(0.75),
+                        RedionPalette.peach.opacity(0.17)
+                    ], startPoint: .leading, endPoint: .trailing))
+                    .overlay {
+                        Capsule()
+                            .stroke(LinearGradient(colors: [
+                                RedionPalette.teal.opacity(0.85),
+                                RedionPalette.peach.opacity(0.78)
+                            ], startPoint: .leading, endPoint: .trailing), lineWidth: 1)
+                    }
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .widgetURL(URL(string: "redion://widget/heute"))
@@ -400,10 +420,13 @@ private struct RedionOrbitWidgetView: View {
                     .foregroundStyle(RedionPalette.white.opacity(0.67))
             }
 
-            Text("Drei Wege. Alles deins.")
-                .font(.system(size: 14, weight: .medium, design: .rounded))
-                .foregroundStyle(RedionPalette.white.opacity(0.94))
-                .lineLimit(1)
+            (
+                Text("Drei Wege. ").foregroundColor(RedionPalette.white)
+                + Text("Alles deins.").foregroundColor(RedionPalette.peach)
+            )
+            .font(.system(size: 15, weight: .semibold, design: .rounded))
+            .minimumScaleFactor(0.80)
+            .lineLimit(1)
 
             HStack(spacing: 7) {
                 ForEach(destinations) { destination in
@@ -424,12 +447,17 @@ private struct RedionOrbitWidgetView: View {
                     .accessibilityHidden(true)
             }
             Spacer(minLength: 6)
-            Text("Ideen finden.\nWissen bewegen.")
-                .font(.system(size: 26, weight: .bold, design: .rounded))
-                .foregroundStyle(RedionPalette.white)
-                .lineSpacing(2)
-                .minimumScaleFactor(0.75)
-                .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Ideen finden.")
+                    .foregroundStyle(RedionPalette.white)
+                Text("Wissen bewegen.")
+                    .foregroundStyle(LinearGradient(colors: [
+                        RedionPalette.peach, RedionPalette.violet
+                    ], startPoint: .leading, endPoint: .trailing))
+            }
+            .font(.system(size: 25, weight: .bold, design: .rounded))
+            .minimumScaleFactor(0.75)
+            .fixedSize(horizontal: false, vertical: true)
             Text("Dein Raum für das, was zählt.")
                 .font(.system(size: 11))
                 .foregroundStyle(RedionPalette.white.opacity(0.70))
