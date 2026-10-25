@@ -46,10 +46,12 @@ export function startIosNativeFeel({
   // "Dark" means LIGHT system bar symbols over a dark background in
   // Capacitor 8 SystemBars; "Light" means DARK symbols on light.
   // Redion changes html[data-theme] on every theme switch.
-  const syncBars = () => {
-    if (ended) return;
+  const syncBars = (force = false) => {
+    // WKWebView can regain the foreground with a reset UIKit bar style even
+    // though html[data-theme] has not changed. Reapply after app activation.
+    if (ended || doc.hidden) return;
     const desired = html.dataset?.theme === 'light' ? styles.Light : styles.Dark;
-    if (desired === appliedStyle) return;
+    if (!force && desired === appliedStyle) return;
     appliedStyle = desired;
     // Serialize updates: rapid theme flips must never leave the iOS status
     // bar with a stale style due to out-of-order bridge promises.
@@ -102,13 +104,22 @@ export function startIosNativeFeel({
     }
   };
 
-  const themeObserver = new Observer(syncBars);
+  const onResume = () => {
+    // Capacitor's web view emits standard page/visibility lifecycle events;
+    // no new plugin and no changes to the shared Redion UI are required.
+    if (!doc.hidden) syncBars(true);
+  };
+
+  const themeObserver = new Observer(() => syncBars());
   const gestureObserver = new Observer(onGestureSelection);
   themeObserver.observe(html, { attributes: true, attributeFilter: ['data-theme'] });
   gestureObserver.observe(doc.body, {
     attributes: true, subtree: true, attributeFilter: ['data-anvisiert']
   });
   doc.addEventListener('click', onClick, { passive: true });
+  doc.addEventListener('visibilitychange', onResume);
+  doc.defaultView?.addEventListener?.('pageshow', onResume);
+  doc.defaultView?.addEventListener?.('focus', onResume);
   syncBars();
 
   return () => {
@@ -116,5 +127,8 @@ export function startIosNativeFeel({
     themeObserver.disconnect();
     gestureObserver.disconnect();
     doc.removeEventListener('click', onClick);
+    doc.removeEventListener('visibilitychange', onResume);
+    doc.defaultView?.removeEventListener?.('pageshow', onResume);
+    doc.defaultView?.removeEventListener?.('focus', onResume);
   };
 }

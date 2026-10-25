@@ -14,10 +14,25 @@ export function safeFileName(input) {
     .replace(/[.\s]+$/, '')
     .trim();
   if (!clean) return 'Datei';
-  if (clean.length <= 150) return clean;
+  // APFS limits one file-name component to 255 UTF-8 bytes, not 255
+  // JavaScript characters. Leave room for Redion's date and unique ID
+  // suffix; otherwise a long emoji/CJK title can fail on a real iPhone.
+  const limit = 180;
+  const encoder = new TextEncoder();
+  const size = (value) => encoder.encode(value).length;
+  if (size(clean) <= limit) return clean;
   const dot = clean.lastIndexOf('.');
-  const extension = dot > 0 && clean.length - dot <= 12 ? clean.slice(dot) : '';
-  return clean.slice(0, 150 - extension.length) + extension;
+  const extension = dot > 0 && size(clean.slice(dot)) <= 24
+    ? clean.slice(dot) : '';
+  let stem = '';
+  let used = size(extension);
+  for (const character of clean.slice(0, clean.length - extension.length)) {
+    const bytes = size(character);
+    if (used + bytes > limit) break;
+    stem += character;
+    used += bytes;
+  }
+  return (stem || 'Datei') + extension;
 }
 
 /**
@@ -52,8 +67,10 @@ export function createNativeFileExporter({ filesystem, share, directory, createI
     await filesystem.mkdir({ path: folder, directory, recursive: true });
     let hasPartial = false;
     try {
-      await filesystem.writeFile({ path: partial, directory, data: '' });
+      // Some native filesystems may create the partial file and still reject
+      // the write call; in that case it too must be cleaned up.
       hasPartial = true;
+      await filesystem.writeFile({ path: partial, directory, data: '' });
       for await (const data of basis64Scheiben(blob)) {
         await filesystem.appendFile({ path: partial, directory, data });
       }
