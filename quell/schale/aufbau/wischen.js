@@ -144,7 +144,7 @@ const Wischen = (() => {
             if (e.pointerType === 'pen')
                 return;
             if (zeiger !== -1) {
-                zeiger = -1;
+                loslassen();
                 return;
             }
             if (!darf(e.target, e.clientX))
@@ -210,7 +210,10 @@ const Wischen = (() => {
             ziel.click();
         };
         addEventListener('pointerup', ende, { passive: true });
-        addEventListener('pointercancel', () => loslassen(), { passive: true });
+        addEventListener('pointercancel', (e) => {
+            if (e.pointerId === zeiger)
+                loslassen();
+        }, { passive: true });
     };
     return { starten, reiter, nachbar, darf, jetzt, einblenden, ankunft, letzte: () => letzte };
 })();
