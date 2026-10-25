@@ -44,6 +44,7 @@ jobs:
             ios/home-shortcuts.test.mjs \
             ios/incoming-share.test.mjs \
             ios/share-widget-integration.test.mjs \
+            ios/widget-orbit.test.mjs \
             ios/install-privacy-shield.test.mjs \
             ios/native-project-layout.test.mjs \
             ios/install-launch-screen.test.mjs \
