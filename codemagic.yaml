@@ -40,6 +40,10 @@ workflows:
           node --test ios/native-safari-links.test.mjs
           # Native iOS-Appsymbol-Schnellaktionen: Kaltstart, Warmstart, Web-Paritaet.
           node --test ios/home-shortcuts.test.mjs
+          # Share-Sheet-Eingang + WidgetKit: sichere iOS-only Tests.
+          node --test ios/incoming-share.test.mjs
+          node --test ios/share-widget-integration.test.mjs
+          node --test ios/widget-orbit.test.mjs
           node --test ios/install-privacy-shield.test.mjs
           # Die iOS-Quellen im Repo und das neue Xcode-Ziel muessen getrennt bleiben.
           node --test ios/native-project-layout.test.mjs
@@ -152,6 +156,30 @@ workflows:
             grep -qx 'ch.redurbabat.redion.dokumente'
           /usr/libexec/PlistBuddy -c 'Print :UIApplicationShortcutItems:2:UIApplicationShortcutItemType' "$PLIST" |
             grep -qx 'ch.redurbabat.redion.lernen'
+
+      - name: Redion aus anderen Apps teilen und iPhone-Widgets (Vorschau)
+        script: |
+          set -euo pipefail
+          # Separates Xcode-Ziel braucht beim spaeteren Signieren ein Apple
+          # Developer App-Group-Profil fuer App + Share Extension.
+          # Bis zur Geräte-/Signing-Abnahme opt-in, damit der bestehende
+          # unsignierte iPhone-Build auf keinen Fall unbemerkt ausfällt.
+          if [ "${REDION_IOS_EXTENSIONS:-0}" != "1" ]; then
+            echo "Share Extension/WidgetKit noch nicht aktiviert: REDION_IOS_EXTENSIONS=1"
+            exit 0
+          fi
+          # Swift-Syntax frueh auf dem echten macOS-Xcode-Host pruefen.
+          # Dies ersetzt NICHT die WidgetKit-/Signing-Kompilierung.
+          xcrun swiftc -frontend -parse ios/widgets/RedionWidgets.swift
+          xcrun swiftc -frontend -parse ios/share-extension/RedionShareViewController.swift
+          ruby -e 'require "xcodeproj"; abort if Gem::Version.new(Xcodeproj::VERSION) < Gem::Version.new("1.27.0")' ||
+            gem install xcodeproj -v 1.27.0 --no-document --user-install
+          node ios/install-incoming-share-widget.mjs
+          ruby ios/install-share-widget-targets.rb
+          test -f build/ios-capacitor/App/RedionShare/RedionShareViewController.swift
+          test -f build/ios-capacitor/App/RedionWidgets/RedionWidgets.swift
+          grep -q 'RedionShare' build/ios-capacitor/App/App.xcodeproj/project.pbxproj
+          grep -q 'RedionWidgets' build/ios-capacitor/App/App.xcodeproj/project.pbxproj
 
       - name: Redion-Appsymbol verwenden
         script: |
