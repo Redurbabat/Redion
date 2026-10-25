@@ -88,7 +88,7 @@ private struct RedionOrbitBackdrop: View {
                     .fill(RadialGradient(colors: [RedionPalette.violet.opacity(0.40), .clear],
                                          center: .center, startRadius: 3, endRadius: size * 0.48))
                     .frame(width: size, height: size)
-                    .offset(x: geometry.size.width * (0.40 + Double(position) * 0.014),
+                    .offset(x: geometry.size.width * (0.40 + CGFloat(position) * 0.014),
                             y: -geometry.size.height * 0.25)
 
                 Circle()
@@ -96,7 +96,7 @@ private struct RedionOrbitBackdrop: View {
                                          center: .center, startRadius: 4, endRadius: size * 0.34))
                     .frame(width: size * 0.74, height: size * 0.74)
                     .offset(x: -geometry.size.width * 0.36,
-                            y: geometry.size.height * (0.25 - Double(position) * 0.011))
+                            y: geometry.size.height * (0.25 - CGFloat(position) * 0.011))
 
                 // The ellipse rotates only as WidgetKit selects a new phase;
                 // it never starts a TimelineView or a repeating timer.
@@ -245,7 +245,7 @@ private struct RedionOrbitWidgetView: View {
                     mediumLayout
                 }
             }
-            .padding(4)
+            .padding(14)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .widgetBackground()
@@ -345,6 +345,7 @@ struct RedionQuickWidget: Widget {
         .configurationDisplayName("Redion Orbit")
         .description("Dein Redion – drei direkte Wege, ruhige Farbphasen und sanfte Übergänge.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .contentMarginsDisabled()
     }
 }
 
