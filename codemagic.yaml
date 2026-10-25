@@ -168,6 +168,10 @@ workflows:
             echo "Share Extension/WidgetKit noch nicht aktiviert: REDION_IOS_EXTENSIONS=1"
             exit 0
           fi
+          # Swift-Syntax frueh auf dem echten macOS-Xcode-Host pruefen.
+          # Dies ersetzt NICHT die WidgetKit-/Signing-Kompilierung.
+          xcrun swiftc -frontend -parse ios/widgets/RedionWidgets.swift
+          xcrun swiftc -frontend -parse ios/share-extension/RedionShareViewController.swift
           ruby -e 'require "xcodeproj"; abort if Gem::Version.new(Xcodeproj::VERSION) < Gem::Version.new("1.27.0")' ||
             gem install xcodeproj -v 1.27.0 --no-document --user-install
           node ios/install-incoming-share-widget.mjs
