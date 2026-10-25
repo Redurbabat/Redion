@@ -16,7 +16,7 @@ const mobileRules = css.slice(mobile, nextMedia);
 test('iPhone PDF action menu respects visual viewport while keyboard is open', () => {
   assert.ok(mobile >= 0, 'mobile media query missing');
   const marker = '.document-studio[data-document-view="open"] .document-commandbar{';
-  const start = mobileRules.indexOf(marker);
+  const start = mobileRules.lastIndexOf(marker);
   assert.ok(start >= 0, 'PDF menu must be styled only when opened');
   const block = mobileRules.slice(start + marker.length, mobileRules.indexOf('}', start));
   assert.match(block, /max-height:/);
