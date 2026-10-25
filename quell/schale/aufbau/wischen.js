@@ -91,10 +91,12 @@ const Wischen = (() => {
             return false;
         }
     };
+    let federGeneration = 0;
     const schieben = (dx) => {
         const b = buehne();
         if (!b || ruhig())
             return;
+        federGeneration++;
         b.style.transition = 'none';
         const wand = !nachbar(dx < 0 ? 1 : -1);
         const f = wand ? ZUG_WAND : ZUG;
@@ -105,9 +107,13 @@ const Wischen = (() => {
     const loslassen = () => {
         const b = buehne();
         if (b && b.style.transform) {
+            const generation = ++federGeneration;
             b.style.transition = 'transform .22s var(--ease-standard, ease)';
             b.style.transform = '';
-            setTimeout(() => { b.style.transition = ''; }, 260);
+            setTimeout(() => {
+                if (generation === federGeneration)
+                    b.style.transition = '';
+            }, 260);
         }
         zeiger = -1;
         gefangen = false;
