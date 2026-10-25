@@ -12,6 +12,7 @@ const source = fs.readFileSync(
 
 function harness() {
   const handlers = new Map();
+  const timers = [];
   let selected = 0;
   const stage = { style: { transition: '', transform: '' } };
   const tab = (active) => ({
@@ -40,7 +41,7 @@ function harness() {
     innerWidth: 390,
     getComputedStyle: () => ({ overflowX: 'visible' }),
     addEventListener(name, handler) { handlers.set(name, handler); },
-    setTimeout() { return 1; }
+    setTimeout(callback) { timers.push(callback); return timers.length; }
   };
   vm.runInNewContext(source, world, { filename: 'quell/schale/aufbau/wischen.js' });
   world.window.Wischen.starten();
@@ -51,7 +52,7 @@ function harness() {
     };
     handlers.get(name)(event);
   };
-  return { send, stage, selected: () => selected };
+  return { send, stage, timers, selected: () => selected };
 }
 
 test('second finger cancels a dragged mobile page and restores its position', () => {
@@ -101,4 +102,28 @@ test('simple taps never select a new tab by a swipe handler', () => {
 test('mobile swipe keeps the extra TabShelf navigation independent', () => {
   assert.doesNotMatch(source, /#ho-ziele|TabShelf\.oeffnen/);
   assert.match(source, /addEventListener\('pointercancel', \(e\) =>/);
+});
+
+test('a previous spring cleanup never interrupts the next finger drag', () => {
+  const h = harness();
+  h.send('pointerdown', 5, 280, 300, 0);
+  h.send('pointermove', 5, 220, 300, 25);
+  h.send('pointerup', 5, 220, 300, 50);
+  assert.match(h.stage.style.transition, /transform/);
+  const previousSpring = h.timers.find(fn => typeof fn === 'function');
+  assert.equal(typeof previousSpring, 'function');
+
+  h.send('pointerdown', 6, 280, 300, 55);
+  h.send('pointermove', 6, 200, 300, 70);
+  assert.equal(h.stage.style.transition, 'none', 'Finger follows without easing.');
+  previousSpring();
+  assert.equal(h.stage.style.transition, 'none', 'Old timer must not override active drag.');
+  assert.match(h.stage.style.transform, /translateX/);
+
+  h.send('pointercancel', 6, 200, 300, 80);
+  assert.equal(h.stage.style.transform, '');
+  const currentSpring = h.timers.filter(fn => typeof fn === 'function').at(-1);
+  currentSpring();
+  assert.equal(h.stage.style.transition, '');
+  assert.equal(h.selected(), 0);
 });
