@@ -32,14 +32,16 @@ Startbildschirm und Home-Screen-Schnellaktionen:
 Für den neuen Node-Test
 `ios/capacitor8-spm-native-integration.test.mjs` liegen
 versionskontrollierte Vorlagen von Capacitors SPM-Generator vor:
-`ios/fixtures/capacitor8-spm-appdelegate.swift` entspricht
-Capacitor 8.0.0, und `ios/fixtures/capacitor8-spm-scenedelegate.swift`
-entspricht der aktuellen upstream SPM-UIScene-Vorlage.
+`ios/fixtures/capacitor8-spm-appdelegate.swift` und
+`ios/fixtures/capacitor8-spm-scenedelegate.swift` stammen beide
+aus der aktuellen offiziellen SPM-UIScene-Vorlage von Capacitor.
 Die bereits bestehende echte Capacitor-8-SPM-Storyboard-Fixture
-wird wiederverwendet. Die gemischten Snapshot-Stände decken
-die separaten, aktuell genutzten Swift-Template-Verträge ab;
-sie behaupten **keinen** vollständigen Release-Snapshot eines
-bestimmten Capacitor-Patches.
+von Version 8.0.0 wird wiederverwendet (der gültige
+`imageView`-Wurzeltyp ist in aktuellen Vorlagen unverändert).
+Eine zusätzliche Prüfung stellt sicher, dass
+`AppDelegate` die tatsächlich verwendete `SceneDelegate`-Klasse
+verdrahtet, damit Appsymbol-Schnellaktionen nicht in einer
+ungenutzten Swift-Datei landen.
 
 **Wichtig:** Frühere 8.x-Vorlagen können keine `SceneDelegate.swift`
 enthalten. Ist die für Redions Schnellaktionen benötigte
