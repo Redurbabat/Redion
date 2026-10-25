@@ -68,57 +68,152 @@ private let destinations: [RedionDestination] = [
                       symbol: "book.closed", tint: RedionPalette.peach)
 ]
 
-// MARK: - Background. Carefully composed depth without battery-draining loops.
+// MARK: - Orbit artwork: all native SwiftUI shapes, no external bitmaps.
+//
+// The reference images use planets, glowing edge light and orbital rings.
+// This is the matching live WidgetKit composition rather than a static mock:
+// compact vector layers, deterministic star positions, no downloads/timers.
+
+private struct RedionPlanet: View {
+    let diameter: CGFloat
+    let phase: Int
+    let accent: Color
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(RadialGradient(stops: [
+                    .init(color: Color(red: 0.19, green: 0.25, blue: 0.50), location: 0),
+                    .init(color: RedionPalette.plum, location: 0.34),
+                    .init(color: RedionPalette.night, location: 0.75),
+                    .init(color: Color.black.opacity(0.98), location: 1)
+                ], center: UnitPoint(x: 0.25, y: 0.18),
+                startRadius: 2, endRadius: diameter * 0.74))
+
+            // Planet rim: a brighter sunrise edge towards the top right.
+            Circle()
+                .stroke(AngularGradient(colors: [
+                    accent.opacity(0.02), RedionPalette.teal.opacity(0.34),
+                    RedionPalette.white.opacity(0.88), RedionPalette.peach.opacity(0.95),
+                    RedionPalette.violet.opacity(0.34), accent.opacity(0.04)
+                ], center: .center, angle: .degrees(28)), lineWidth: 1.5)
+
+            Circle()
+                .trim(from: 0.03, to: 0.29)
+                .stroke(AngularGradient(colors: [
+                    RedionPalette.peach.opacity(0.05), RedionPalette.peach,
+                    RedionPalette.violet.opacity(0.70)
+                ], center: .center), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .blur(radius: 5)
+                .rotationEffect(.degrees(Double(phase) * 3 - 12))
+
+            Circle()
+                .fill(RadialGradient(colors: [
+                    RedionPalette.teal.opacity(0.33), .clear
+                ], center: .center, startRadius: 0, endRadius: diameter * 0.27))
+                .frame(width: diameter * 0.46, height: diameter * 0.46)
+                .offset(x: -diameter * 0.29, y: -diameter * 0.31)
+                .blur(radius: 4)
+        }
+        .frame(width: diameter, height: diameter)
+        .clipShape(Circle())
+        .shadow(color: accent.opacity(0.34), radius: 13)
+        .accessibilityHidden(true)
+    }
+}
 
 private struct RedionOrbitBackdrop: View {
     let phase: Int
     let reducedMotion: Bool
 
     private var position: Int { reducedMotion ? 0 : phase % 8 }
-    private var rotation: Double { Double(position) * 12.0 }
+    private var rotation: Double { Double(position) * 5.0 }
 
     var body: some View {
         GeometryReader { geometry in
-            let size = max(geometry.size.width, geometry.size.height)
+            let width = geometry.size.width
+            let height = geometry.size.height
+            let size = max(width, height)
             ZStack {
-                LinearGradient(colors: [RedionPalette.plum, RedionPalette.night, RedionPalette.night],
-                               startPoint: .topLeading, endPoint: .bottomTrailing)
+                LinearGradient(colors: [
+                    RedionPalette.plum, RedionPalette.night,
+                    Color(red: 0.034, green: 0.050, blue: 0.105)
+                ], startPoint: .topLeading, endPoint: .bottomTrailing)
+
+                // Screenprinted nebula: subtle radial haloes that do not
+                // obscure the text or navigation hit regions.
+                Circle()
+                    .fill(RadialGradient(colors: [
+                        RedionPalette.violet.opacity(0.39), .clear
+                    ], center: .center, startRadius: 1, endRadius: size * 0.45))
+                    .frame(width: size * 0.92, height: size * 0.92)
+                    .position(x: width * 0.83, y: height * 0.15)
 
                 Circle()
-                    .fill(RadialGradient(colors: [RedionPalette.violet.opacity(0.40), .clear],
-                                         center: .center, startRadius: 3, endRadius: size * 0.48))
-                    .frame(width: size, height: size)
-                    .offset(x: geometry.size.width * (0.40 + CGFloat(position) * 0.014),
-                            y: -geometry.size.height * 0.25)
+                    .fill(RadialGradient(colors: [
+                        RedionPalette.teal.opacity(0.25), .clear
+                    ], center: .center, startRadius: 0, endRadius: size * 0.32))
+                    .frame(width: size * 0.70, height: size * 0.70)
+                    .position(x: width * 0.15, y: height * 0.78)
 
-                Circle()
-                    .fill(RadialGradient(colors: [RedionPalette.teal.opacity(0.23), .clear],
-                                         center: .center, startRadius: 4, endRadius: size * 0.34))
-                    .frame(width: size * 0.74, height: size * 0.74)
-                    .offset(x: -geometry.size.width * 0.36,
-                            y: geometry.size.height * (0.25 - CGFloat(position) * 0.011))
+                // Planetary bodies scale with the actual widget bounds.
+                // The right edge is deliberately cut off like the preview.
+                RedionPlanet(diameter: size * 0.66,
+                             phase: position, accent: RedionPalette.violet)
+                    .position(x: width * (0.91 - CGFloat(position) * 0.005),
+                              y: height * 0.02)
 
-                // The ellipse rotates only as WidgetKit selects a new phase;
-                // it never starts a TimelineView or a repeating timer.
+                RedionPlanet(diameter: size * 0.31,
+                             phase: position, accent: RedionPalette.teal)
+                    .position(x: width * 0.37, y: height * 0.28)
+                    .opacity(0.75)
+
+                // Glowing orbital paths, rather than free-running rotation.
                 Ellipse()
                     .stroke(AngularGradient(colors: [
-                        RedionPalette.violet.opacity(0.05),
-                        RedionPalette.teal.opacity(0.50),
-                        RedionPalette.violet.opacity(0.12),
-                        RedionPalette.peach.opacity(0.55),
-                        RedionPalette.violet.opacity(0.05)
+                        RedionPalette.teal.opacity(0.05),
+                        RedionPalette.teal.opacity(0.90),
+                        RedionPalette.white.opacity(0.28),
+                        RedionPalette.peach.opacity(0.85),
+                        RedionPalette.violet.opacity(0.04)
                     ], center: .center), lineWidth: 1.2)
-                    .frame(width: size * 1.05, height: size * 0.54)
-                    .rotationEffect(.degrees(-23 + rotation))
-                    .offset(x: geometry.size.width * 0.29,
-                            y: -geometry.size.height * 0.12)
+                    .frame(width: size * 1.27, height: size * 0.55)
+                    .rotationEffect(.degrees(-20 + rotation))
+                    .position(x: width * 0.55, y: height * 0.52)
+                    .shadow(color: RedionPalette.teal.opacity(0.60), radius: 4)
+
+                Ellipse()
+                    .trim(from: 0.05, to: 0.64)
+                    .stroke(AngularGradient(colors: [
+                        RedionPalette.violet.opacity(0.04),
+                        RedionPalette.peach.opacity(0.80),
+                        RedionPalette.violet.opacity(0.75),
+                        RedionPalette.teal.opacity(0.05)
+                    ], center: .center),
+                    style: StrokeStyle(lineWidth: 0.85, lineCap: .round))
+                    .frame(width: size * 1.10, height: size * 0.39)
+                    .rotationEffect(.degrees(27 - rotation * 0.6))
+                    .position(x: width * 0.47, y: height * 0.45)
+
+                // Stable, non-random star field; no network or animation loop.
+                ForEach(0..<19, id: \.self) { index in
+                    Circle()
+                        .fill(RedionPalette.white.opacity(index.isMultiple(of: 4) ? 0.65 : 0.24))
+                        .frame(width: index.isMultiple(of: 5) ? 2 : 1,
+                               height: index.isMultiple(of: 5) ? 2 : 1)
+                        .position(x: width * CGFloat((index * 43 + 17) % 97) / 100,
+                                  y: height * CGFloat((index * 29 + 11) % 91) / 100)
+                }
 
                 Circle()
-                    .fill(RedionPalette.white.opacity(0.82))
-                    .frame(width: 3, height: 3)
-                    .offset(x: geometry.size.width * 0.31, y: -geometry.size.height * 0.32)
+                    .fill(RadialGradient(colors: [
+                        RedionPalette.white, RedionPalette.teal, RedionPalette.violet
+                    ], center: .topLeading, startRadius: 0, endRadius: 12))
+                    .frame(width: 13, height: 13)
+                    .position(x: width * 0.71, y: height * 0.13)
+                    .shadow(color: RedionPalette.teal.opacity(0.9), radius: 7)
             }
-            .frame(width: geometry.size.width, height: geometry.size.height)
+            .frame(width: width, height: height)
             .clipped()
             .animation(reducedMotion ? nil : .easeInOut(duration: 0.9), value: position)
         }
