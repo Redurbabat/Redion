@@ -20,12 +20,22 @@ basierend auf `main` nach dem Merge von PR #156.
    eine normale Seite („Von iPhone geteilt ...“) mit einem reinen
    Textblock, auch bei einer URL. Keine Linkvorschau und kein
    automatischer Netzwerkaufruf.
-4. Die native Datei wird erst nach einer bestätigten
+4. **Vor dem Import wartet die native Brücke auf das echte
+   `ablage.geladen`-Ereignis** und eine beschreibbare lokale Datenbank.
+   Der `Store`-Name allein reicht nicht: Redion lädt den Bestand
+   asynchron.
+5. Seite und Text erhalten **zwei stabile Kennungen aus der
+   Share-UUID**. Sie werden im selben `Store.flush()`-
+   IndexedDB-Block-Commit gespeichert. Bei App-Neustart,
+   fehlgeschlagenem Flush und mehrfacher Zustellung erkennt
+   Redion die vorhandenen Kennungen wieder und erzeugt
+   **keine doppelten Seiten**.
+6. Die native Datei wird erst nach einer bestätigten
    `Store.flush()`-Ausführung gelöscht. Bei einem Absturz,
    gesperrten/volatilen Speicher oder fehlender Bridge verbleibt sie
-   zur späteren erneuten Annahme in der App Group. Eine über die
-   gespeicherte UUID gemerkte Empfangsbestätigung verhindert
-   Duplikate nach erneutem Ausliefern.
+   zur späteren Annahme in der App Group. Eine separate
+   `setMeta()`-Empfangsmarkierung wird **nicht mehr verwendet**,
+   weil sie nicht mit dem Block-Commit verbunden war.
 
 **Widgets – Redion Orbit:** Drei SwiftUI-Größen mit einer
 gemeinsamen ruhigen Designsprache:
@@ -111,8 +121,13 @@ ist erst nach einem tatsächlichen Xcode-/iPhone-Test bestätigt.
   atomare App-Group-Datei. Echte Fehler werden nicht als
   erfolgreiches Teilen gemeldet.
 - `ios/incoming-share.mjs`: externe Daten validieren,
-  ausschließlich **Textblöcke** anlegen, auf dauerhafte
-  Speicherung warten, empfangene IDs deduplizieren.
+  ausschließlich **Textblöcke** anlegen, mit aus der Share-ID
+  abgeleiteten stabilen Seiten-/Block-IDs und einem gemeinsamen
+  `Store.flush()` speichern; fehlende Kindverweise sicher
+  reparieren und empfangene IDs ohne Metadaten-Sidecar deduplizieren.
+- `ios/incoming-share-readiness.mjs`: erst nach dem mit Replay
+  verfügbaren Ereignis `ablage.geladen` den lokalen Store
+  als initialisiert behandeln. Bei fehlendem Bus keine Annahme.
 - `ios/install-incoming-share-widget.mjs`: nur das
   **generierte** `SceneDelegate.swift` ergänzen;
   WebKit ruft `RedionNativeShare.receive` über
@@ -168,6 +183,7 @@ Geräteversuch wird vorausgesetzt.
 
 ```sh
 node --test ios/incoming-share.test.mjs
+node --test ios/incoming-share-store-contract.test.mjs
 node --test ios/share-widget-integration.test.mjs
 node --test ios/widget-orbit.test.mjs
 node --test ios/home-shortcuts.test.mjs
