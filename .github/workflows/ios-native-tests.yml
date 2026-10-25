@@ -45,6 +45,7 @@ jobs:
             ios/install-privacy-shield.test.mjs \
             ios/native-project-layout.test.mjs \
             ios/install-launch-screen.test.mjs \
+            ios/capacitor8-spm-native-integration.test.mjs \
             ios/vergleiche-webstand.test.mjs \
             pruefungen/wischen-multitouch.test.mjs
 
