@@ -22,11 +22,14 @@ import { startIosNativeFeel } from './native-feel.mjs';
 import { createHomeShortcutRouter } from './home-shortcuts.mjs';
 import { enableIosSafariLinks } from './native-safari-links.mjs';
 import { createIosShareInbox } from './incoming-share.mjs';
+import { createIosShareReadiness } from './incoming-share-readiness.mjs';
 
 // The same global lexical store used by Redion's classic browser scripts.
 // A Share Extension never sees these objects; only the foreground host does.
 declare const Store: any;
 declare const App: any;
+declare const Ereignisse: any;
+declare const ARTEN: any;
 
 const saveFile = withNativeExportFeedback(createNativeFileExporter({
   filesystem: Filesystem,
@@ -81,11 +84,21 @@ if (Capacitor.getPlatform() === 'ios' && Capacitor.isNativePlatform()) {
   // When iOS returns from another app's Share Sheet, accept the App
   // Group item only after the ordinary Redion store has saved it. The
   // extension's JSON file stays on disk if Redion is not ready or fails.
+  const readiness = createIosShareReadiness({
+    events: typeof Ereignisse !== 'undefined' ? Ereignisse : null,
+    eventName: typeof ARTEN !== 'undefined' && ARTEN.ablageGeladen
+      ? ARTEN.ablageGeladen : 'ablage.geladen'
+  });
   let incoming: ReturnType<typeof createIosShareInbox> | null = null;
   (globalThis as any).RedionNativeShare = Object.freeze({
     receive(raw: unknown): Promise<boolean> {
       const store = typeof Store !== 'undefined' ? Store : (globalThis as any).Store;
-      if (!store?.cache || typeof store.flush !== 'function') return Promise.resolve(false);
+      // The classic Store is available before its async IndexedDB load.
+      // Never create a page in an uninitialized/locked-out local cache.
+      if (!readiness.ready() || !store?.cache ||
+          typeof store.flush !== 'function' ||
+          typeof store.getBlock !== 'function' ||
+          typeof store.speichertNicht !== 'function') return Promise.resolve(false);
       if (!incoming) incoming = createIosShareInbox({
         store,
         app: typeof App !== 'undefined' ? App : (globalThis as any).App,
