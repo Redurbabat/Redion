@@ -43,6 +43,7 @@ jobs:
             ios/native-safari-links.test.mjs \
             ios/home-shortcuts.test.mjs \
             ios/incoming-share.test.mjs \
+            ios/incoming-share-store-contract.test.mjs \
             ios/share-widget-integration.test.mjs \
             ios/widget-orbit.test.mjs \
             ios/install-privacy-shield.test.mjs \
