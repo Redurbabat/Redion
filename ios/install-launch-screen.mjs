@@ -67,8 +67,10 @@ export function checkLaunchStoryboard(xml) {
   if (typeof xml !== 'string' ||
       !xml.includes('<document ') ||
       !xml.includes('launchScreen="YES"') ||
-      !xml.includes('<viewController ') ||
-      !xml.includes('<view key="view"')) {
+      // Capacitor 8's SPM template uses an imageView as the root view
+      // (key="view", image="Splash"); older templates use a plain view.
+      // Only accept these two UIKit roots inside the actual controller.
+      !/<viewController\\b[^>]*>\\s*<(?:view|imageView)\\b[^>]*\\bkey="view"/.test(xml)) {
     throw new Error('Capacitor hat keine erwartete LaunchScreen.storyboard erzeugt.');
   }
   if (xml.includes('RD1-IM-AGE') || xml.includes('RedionLaunchIcon')) {
