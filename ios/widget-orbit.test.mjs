@@ -47,6 +47,50 @@ test('depth is drawn from native gradients/orbits, with no downloaded graphics',
   assert.doesNotMatch(widget, /AsyncImage|URLSession|URLRequest|FileManager|UserDefaults|AppGroup|IndexedDB/);
 });
 
+test('Orbit planets are rendered by SwiftUI with rim light, crescent and real starfield', () => {
+  assert.match(widget, /private struct RedionPlanet: View/);
+  assert.match(widget, /RedionPlanet\(diameter: size \* 0\.66/);
+  assert.match(widget, /RedionPlanet\(diameter: size \* 0\.31/);
+  assert.match(widget, /RadialGradient\(stops: \[/);
+  assert.match(widget, /\.trim\(from: 0\.03, to: 0\.29\)/);
+  assert.match(widget, /ForEach\(0\.\.<19, id: \\.self\)/);
+  assert.match(widget, /\.shadow\(color: accent\.opacity\(0\.34\), radius: 13\)/);
+  assert.doesNotMatch(widget, /Double\.random|Int\.random|arc4random|URLSession|AsyncImage/);
+});
+
+test('reference-inspired cyan, apricot and violet glass cards remain real links', () => {
+  assert.match(widget, /id: "dokumente"[^]*?tint: RedionPalette\.teal\)/);
+  assert.match(widget, /id: "heute"[^]*?tint: RedionPalette\.peach\)/);
+  assert.match(widget, /id: "lernen"[^]*?tint: RedionPalette\.violet\)/);
+  assert.match(widget, /RoundedRectangle\(cornerRadius: 16/);
+  assert.match(widget, /\.stroke\(LinearGradient\(colors:/);
+  assert.match(widget, /\.shadow\(color: destination\.tint\.opacity\(0\.28\), radius: 9/);
+  assert.match(widget, /\.frame\(maxWidth: \.infinity, minHeight: vertical \? 55 : 65/);
+  assert.match(widget, /Link\(destination: url\)/);
+});
+
+test('the three layouts reflect the photographed headline and small widget action', () => {
+  assert.match(widget, /Text\("Ein "\)/);
+  assert.match(widget, /Text\("Gedanke\."\)/);
+  assert.match(widget, /Text\("Heute öffnen"\)/);
+  assert.match(widget, /Text\("Drei Wege\. "\)/);
+  assert.match(widget, /Text\("Alles deins\."\)/);
+  assert.match(widget, /Text\("Ideen finden\."\)/);
+  assert.match(widget, /Text\("Wissen bewegen\."\)/);
+  assert.match(widget, /Text\("Dein Raum für das, was zählt\."\)/);
+  assert.match(widget, /Capsule\(\)/);
+});
+
+test('native illustration stays static in reduced motion and old iOS retains margins', () => {
+  assert.match(widget, /private var position: Int \{ reducedMotion \? 0 : phase % 8 \}/);
+  assert.match(widget, /RedionPlanet\(diameter: size \* 0\.66,[^]*?phase: position/);
+  assert.match(widget, /@Environment\(\\\.accessibilityReduceMotion\)/);
+  assert.match(widget, /if #available\(iOSApplicationExtension 17\.0, \*\)/);
+  assert.match(widget, /configuration\.contentMarginsDisabled\(\)/);
+  assert.match(widget, /configuration\n        \}/);
+  assert.doesNotMatch(widget, /\.repeatForever\(|TimelineView\s*\{|Timer\.scheduledTimer/);
+});
+
 test('the orbit updates on a 3-hour timeline, not continuous battery-draining timers', () => {
   assert.match(widget, /component\(\.hour, from: date\) \/ 3/);
   assert.match(widget, /index \* 3/);
