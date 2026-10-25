@@ -15,9 +15,11 @@ import { Capacitor, SystemBars, SystemBarsStyle, SystemBarType } from '@capacito
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Haptics } from '@capacitor/haptics';
+import { Browser } from '@capacitor/browser';
 import { createNativeFileExporter } from './native-file-export.mjs';
 import { startIosNativeFeel } from './native-feel.mjs';
 import { createHomeShortcutRouter } from './home-shortcuts.mjs';
+import { enableIosSafariLinks } from './native-safari-links.mjs';
 
 const saveFile = createNativeFileExporter({
   filesystem: Filesystem,
@@ -64,4 +66,14 @@ if (Capacitor.getPlatform() === 'ios' && Capacitor.isNativePlatform()) {
   // the iOS IPA, never on the browser/PWA website.
   (globalThis as any).RedionNativeShortcut =
     createHomeShortcutRouter({ document });
+
+  // An external HTTPS web link should not replace the local-first notes
+  // view. Apple SFSafariViewController has a native Done button to return.
+  // A failed browser presentation falls back to the existing native Share
+  // sheet so the original Redion document stays in place.
+  enableIosSafariLinks({
+    document,
+    browser: Browser,
+    onFail: (url: string) => Share.share({ title: 'Weblink öffnen', url })
+  });
 }

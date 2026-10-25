@@ -27,6 +27,7 @@ workflows:
           node --test pruefungen/ocr-test-stub.test.mjs
           node --test ios/native-file-export.test.mjs
           node --test ios/native-feel.test.mjs
+          node --test ios/native-safari-links.test.mjs
           # Native iOS-Appsymbol-Schnellaktionen: Kaltstart, Warmstart, Web-Paritaet.
           node --test ios/home-shortcuts.test.mjs
           node --test ios/install-privacy-shield.test.mjs
@@ -52,9 +53,9 @@ workflows:
           set -euo pipefail
           npm install --no-save --package-lock=false --no-audit --no-fund \
             @capacitor/core@8 @capacitor/cli@8 @capacitor/ios@8 \
-            @capacitor/filesystem@8 @capacitor/share@8 @capacitor/haptics@8 esbuild@0.28.2
+            @capacitor/filesystem@8 @capacitor/share@8 @capacitor/haptics@8 @capacitor/browser@8 esbuild@0.28.2
           # Capacitor erkennt --no-save-Plugins nur ueber includePlugins.
-          # Vor dem nativen Build muessen alle drei wirklich installiert sein.
+          # Vor dem nativen Build muessen alle vier wirklich installiert sein.
           node -e "const fs=require('fs');const c=require('./capacitor.config.json');for(const p of c.includePlugins || []){if(!fs.existsSync('node_modules/'+p+'/package.json')){throw Error('Native Capacitor-Abhaengigkeit fehlt: '+p)}}"
           npx esbuild ios/native-sicherung.ts \
             --bundle --platform=browser --format=iife --target=es2022 \
