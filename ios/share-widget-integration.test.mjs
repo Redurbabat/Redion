@@ -12,8 +12,10 @@ const originalScene = read('ios/fixtures/capacitor8-spm-scenedelegate.swift');
 
 test('widget deeplinks reuse the existing secure three-destination router', () => {
   const patched = injectIncomingShareWidget(injectQuickActions(originalScene));
-  assert.match(patched, /context\.url\.scheme == "redion"/);
-  assert.match(patched, /context\.url\.host == "widget"/);
+  assert.match(patched, /url\.scheme == "redion"/);
+  assert.match(patched, /connectionOptions\.urlContexts/);
+  assert.match(patched, /routeRedionWidget\(context\.url\)/);
+  assert.match(patched, /url\.host == "widget"/);
   assert.match(patched, /\["dokumente", "heute", "lernen"\]\.contains\(action\)/);
   assert.match(patched, /RedionHomeShortcuts\.shared\.open\(item, window: window\)/);
   assert.match(patched, /SceneDelegateProxy\.shared\.scene\(scene, openURLContexts: URLContexts\)/);
