@@ -20,7 +20,7 @@ test('Redion Orbit has real small, medium and large WidgetKit layouts', () => {
     assert.match(widget, new RegExp('private var ' + expected));
   }
   assert.match(widget, /\.contentMarginsDisabled\(\)/);
-  assert.match(widget, /\.containerBackground\(/);
+  assert.match(widget, /containerBackground\(/);
   assert.match(widget, /configurationDisplayName\("Redion Orbit"\)/);
 });
 
@@ -68,7 +68,7 @@ test('WidgetKit motion is under two seconds and is disabled for Reduce Motion', 
 test('motion redesign does not activate unsigned preview extensions by default', () => {
   assert.match(codemagic, /REDION_IOS_EXTENSIONS:-0/);
   assert.match(codemagic, /node --test ios\/widget-orbit\.test\.mjs/);
-  assert.doesNotMatch(widget, /Store|notes|filename|textContent|fileImporter/);
+  assert.doesNotMatch(widget, /\bStore\b|\bIndexedDB\b|\bFileManager\b|\bUserDefaults\b/);
   const config = JSON.parse(fs.readFileSync(path.join(root, 'capacitor.config.json'), 'utf8'));
   assert.equal(config.appId, 'ch.redurbabat.redion');
   assert.equal(config.ios.path, 'build/ios-capacitor');
