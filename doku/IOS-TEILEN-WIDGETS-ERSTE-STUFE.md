@@ -27,14 +27,35 @@ basierend auf `main` nach dem Merge von PR #156.
    gespeicherte UUID gemerkte Empfangsbestätigung verhindert
    Duplikate nach erneutem Ausliefern.
 
-**Widgets:** Ein schlichtes Widget „Redion öffnen“ im mittleren
-Format bietet **Dokumente, Heute und Lernen**. Keine Titel, keine
-Vorschaubilder und keine sensiblen Nutzerdaten in einem
-Sperrbildschirm-/Home-Screen-Widget. Jede Auswahl ruft ausschließlich
-`redion://widget/{dokumente|heute|lernen}` auf; die Swift-Brücke
-verwendet Redions bestehenden Home-Shortcut-Router und damit die
-vorhandenen Tab-Buttons statt eine neue Navigation. Auch
-Kaltstart-Links werden abgefangen.
+**Widgets – Redion Orbit:** Drei SwiftUI-Größen mit einer
+gemeinsamen ruhigen Designsprache:
+
+- **Klein:** Tiefes Violett und ein heller Orbit um den Redion-Schriftzug.
+  Die ganze Fläche öffnet den bestehenden Ort **Heute**.
+- **Mittel:** Drei separat antippbare, leicht schwebende Kacheln
+  **Dokumente, Heute, Lernen**, begleitet von sanften Lichtbahnen.
+- **Groß:** Ein deutliches Redion-Studio mit ausgreifendem Ornament,
+  dem Motto „Ideen finden. Wissen bewegen.“ und drei breiten Zielen.
+
+Alle Varianten verwenden dieselben drei unveränderten iPhone-Navigations-
+Deep-Links und zeigen **keine** vertraulichen Notizen. Die
+Farbkomposition orientiert sich an Redions dunklem Studio mit
+Violett als Primärakzent und Türkis/Apricot als Lichtfarben.
+
+Die Bewegung ist **echt WidgetKit-konform**, kein künstlicher
+Endlosloop: `RedionWidgetProvider` gibt alle **drei Stunden** einen
+neuen Orbit-Zustand vor. Das System kann dann die neuen Farbflächen und
+Ellipse sanft überblenden bzw. ihre Position kurz animieren
+(0,8–0,9 Sekunden; durch iOS geplant und ggf. verzögert). Bei
+**„Bewegung reduzieren“** bleibt die Orbitposition konstant, und
+die expliziten Animationen sind abgeschaltet. StandBy-/Always-On-
+Modus und WidgetKit-Energiebudgets haben Vorrang.
+
+**iOS-Grenze:** Ein Widget ist keine ständig laufende SwiftUI-App.
+Dauerhaftes Pulsieren, rotierende Sterne oder 60-FPS-Animationen
+würden von WidgetKit nicht zuverlässig ausgeführt. Daher bewusst
+kurze, ereignisgebundene Übergänge und keine Timer. Die Animation
+ist erst nach einem tatsächlichen Xcode-/iPhone-Test bestätigt.
 
 ## Bewusst noch nicht unterstützt
 
@@ -63,8 +84,12 @@ Kaltstart-Links werden abgefangen.
   WebKit ruft `RedionNativeShare.receive` über
   `callAsyncJavaScript` mit Datenargumenten auf (keine
   JavaScript-String-Injektion). Datei erst nach `true` löschen.
-- `ios/widgets/RedionWidgets.swift`: WidgetKit, statische
-  drei Links, keine Datensynchronisation.
+- `ios/widgets/RedionWidgets.swift`: Redion-Orbit-Design,
+  drei Widgetgrößen und dreistündige Timeline-Zustände mit
+  reduzierbarer Kurzanimation, ohne Datensynchronisation.
+- `ios/widget-orbit.test.mjs`: Regressionen gegen Dauer-Timer,
+  private Daten, unbekannte Zielrouten, ungeprüfte Widgetgrößen
+  und ignoriertes Reduced Motion.
 - `ios/install-share-widget-targets.rb`: zwei echte
   iOS App-Extension-Targets über `xcodeproj`, ausschließlich
   im generierten `build/ios-capacitor/App/App.xcodeproj`.
@@ -110,6 +135,7 @@ Geräteversuch wird vorausgesetzt.
 ```sh
 node --test ios/incoming-share.test.mjs
 node --test ios/share-widget-integration.test.mjs
+node --test ios/widget-orbit.test.mjs
 node --test ios/home-shortcuts.test.mjs
 npm run bauen:ts
 npm run typecheck
