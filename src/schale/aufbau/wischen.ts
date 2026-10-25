@@ -213,9 +213,13 @@ const Wischen = (() => {
     catch { return false; }
   };
 
+  /* Ein aelterer Rueckfeder-Timer darf eine neue Fingerbewegung nicht
+   * ploetzlich wieder mit CSS-Transition verzoegern. */
+  let federGeneration = 0;
   const schieben = (dx: number): void => {
     const b = buehne();
     if (!b || ruhig()) return;
+    federGeneration++;
     /* Beim Ziehen folgt die Fläche dem Finger OHNE Übergang — ein Übergang
        liefe der Hand hinterher. Erst beim Loslassen wird er eingeschaltet,
        damit das Zurückschnellen weich ist. */
@@ -230,9 +234,12 @@ const Wischen = (() => {
   const loslassen = (): void => {
     const b = buehne();
     if (b && b.style.transform) {
+      const generation = ++federGeneration;
       b.style.transition = 'transform .22s var(--ease-standard, ease)';
       b.style.transform = '';
-      setTimeout(() => { b.style.transition = ''; }, 260);
+      setTimeout(() => {
+        if (generation === federGeneration) b.style.transition = '';
+      }, 260);
     }
     zeiger = -1; gefangen = false;
   };
@@ -276,7 +283,9 @@ const Wischen = (() => {
     addEventListener('pointerdown', (e: PointerEvent) => {
       /* Der Stift zeichnet, er wischt nicht. */
       if (e.pointerType === 'pen') return;
-      if (zeiger !== -1) { zeiger = -1; return; }   /* zweiter Finger: aus */
+      /* Multi-Touch muss auch den bereits verschobenen Inhalt loslassen.
+         Nur die Kennung zurückzusetzen liess #scroll seitlich stehen. */
+      if (zeiger !== -1) { loslassen(); return; }   /* zweiter Finger: aus */
       if (!darf(e.target, e.clientX)) return;
       zeiger = e.pointerId; x0 = e.clientX; y0 = e.clientY;
       t0 = e.timeStamp; gefangen = false;
@@ -326,7 +335,11 @@ const Wischen = (() => {
       ziel.click();
     };
     addEventListener('pointerup', ende, { passive: true });
-    addEventListener('pointercancel', () => loslassen(), { passive: true });
+    addEventListener('pointercancel', (e: PointerEvent) => {
+      /* Ein anderes abgebrochenes Pointer-Ereignis gehoert nicht zu
+         unserem aktiven Finger und darf die Geste nicht beenden. */
+      if (e.pointerId === zeiger) loslassen();
+    }, { passive: true });
   };
 
   /* `reiter`, `nachbar` und `darf` stehen mit im Rückgabewert, damit ein

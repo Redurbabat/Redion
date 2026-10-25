@@ -32,6 +32,8 @@ workflows:
           # Erfolgshaptik nach nativen Exporten und iPhone-PDF-Tastaturhoehe.
           node --test ios/native-export-feedback.test.mjs
           node --test ios/native-mobile-document.test.mjs
+          # Native Touch-Regressionsschutz: Geste nicht nach einem Zweitfinger haengen lassen.
+          node --test pruefungen/wischen-multitouch.test.mjs
           node --test ios/native-safari-links.test.mjs
           # Native iOS-Appsymbol-Schnellaktionen: Kaltstart, Warmstart, Web-Paritaet.
           node --test ios/home-shortcuts.test.mjs

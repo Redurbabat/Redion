@@ -4,6 +4,9 @@ on:
   pull_request:
     paths:
       - 'ios/**'
+      - 'src/schale/aufbau/wischen.ts'
+      - 'quell/schale/aufbau/wischen.js'
+      - 'pruefungen/wischen-multitouch.test.mjs'
       - 'capacitor.config.json'
       - 'codemagic.yaml'
       - '.github/workflows/ios-native-tests.yml'
@@ -38,7 +41,8 @@ jobs:
             ios/install-privacy-shield.test.mjs \
             ios/native-project-layout.test.mjs \
             ios/install-launch-screen.test.mjs \
-            ios/vergleiche-webstand.test.mjs
+            ios/vergleiche-webstand.test.mjs \
+            pruefungen/wischen-multitouch.test.mjs
 
 # Deliberately no IPA packaging, Apple signing, deployment, or merge.
 # Real Xcode/iPhone checks remain manual in Codemagic.
