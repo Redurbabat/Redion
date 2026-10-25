@@ -92,6 +92,10 @@ test('failed durable flush does not acknowledge the native App Group file', asyn
   const h = harness({ failFlush: true });
   assert.equal(await h.inbox.receive({ id, kind: 'text', value: 'Prüfen' }), false);
   assert.equal(h.redraws(), 0);
+  assert.equal(h.seen.get('iosEingang:' + id), false,
+    'A failed flush must NOT leave a true seen-marker that could ACK a retry.');
+  assert.equal(await h.inbox.receive({ id, kind: 'text', value: 'Prüfen' }), false,
+    'Native share must remain available for retry after a second failed flush.');
 });
 
 test('in-flight repeats share one durable transaction', async () => {
