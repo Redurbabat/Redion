@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - 'ios/**'
+      - 'quell/schale/stil/pdf-studio.css'
+      - 'src/kern/einstellung/app.ts'
       - 'capacitor.config.json'
       - 'codemagic.yaml'
       - '.github/workflows/ios-native-tests.yml'
