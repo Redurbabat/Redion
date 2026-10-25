@@ -54,8 +54,8 @@ embed.dst_path = ''
 configs.each do |name, conf|
   target = project.new_target(:app_extension, name, :ios, '15.0')
   dir = project.main_group.find_subpath(name, true)
-  dir.set_source_tree('<group>')
-  dir.set_path(name)
+  dir.source_tree = '<group>'
+  dir.path = name
   swift = dir.new_file(conf['swift'])
   dir.new_file('Info.plist')
   dir.new_file('RedionShare.entitlements') if conf['entitlements']
@@ -73,36 +73,28 @@ configs.each do |name, conf|
     settings['CODE_SIGN_ENTITLEMENTS'] = name + '/RedionShare.entitlements' if conf['entitlements']
   end
   app.add_dependency(target)
-  embed.add_file_reference(target.product_reference, true)
+  embedded = embed.add_file_reference(target.product_reference, true)
+  embedded.settings = { 'ATTRIBUTES' => ['CodeSignOnCopy', 'RemoveHeadersOnCopy'] }
 end
 
 app.build_configurations.each do |configuration|
   configuration.build_settings['CODE_SIGN_ENTITLEMENTS'] = 'RedionApp/RedionApp.entitlements'
 end
 
-# Widgets open only the three existing destinations via a custom URL scheme.
-# For Swift to handle links, the host App must advertise its own URL scheme.
-# Prefer a native plist edit rather than touching Capacitor's Web routes.
+# A supported, trusted app-only URL scheme for the navigation widget.
 plist = File.join(ios, 'App/App/Info.plist')
-abort 'Generated app Info.plist is missing' unless File.file?(plist)
-require 'rexml/document'
-doc = REXML::Document.new(File.read(plist))
-dict = doc.elements['plist/dict']
-abort 'Unexpected App Info.plist' unless dict
-# Append CFBundleURLTypes without deleting existing iOS config.
-key = dict.add_element('key')
-key.text = 'CFBundleURLTypes'
-array = dict.add_element('array')
-urltype = array.add_element('dict')
-n = urltype.add_element('key')
-n.text = 'CFBundleURLName'
-v = urltype.add_element('string')
-v.text = 'ch.redurbabat.redion'
-n = urltype.add_element('key')
-n.text = 'CFBundleURLSchemes'
-a = urltype.add_element('array')
-v = a.add_element('string')
-v.text = 'redion'
-File.open(plist, 'w') { |f| doc.write(f, 2) }
+abort 'Generated app Info.plist missing' unless File.file?(plist)
+abort 'Redion URL scheme already installed' if File.read(plist).include?('<string>redion</string>')
 project.save
+plutil = '/usr/libexec/PlistBuddy'
+commands = [
+  'Add :CFBundleURLTypes array',
+  'Add :CFBundleURLTypes:0 dict',
+  'Add :CFBundleURLTypes:0:CFBundleURLName string ch.redurbabat.redion',
+  'Add :CFBundleURLTypes:0:CFBundleURLSchemes array',
+  'Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string redion'
+]
+commands.each do |command|
+  abort "Could not register Redion URL scheme: #{command}" unless system(plutil, '-c', command, plist)
+end
 puts 'Redion iOS: Share Extension and WidgetKit targets added to generated Xcode project.'
