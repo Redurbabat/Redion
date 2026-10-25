@@ -65,8 +65,16 @@ test('reference-inspired cyan, apricot and violet glass cards remain real links'
   assert.match(widget, /RoundedRectangle\(cornerRadius: 16/);
   assert.match(widget, /\.stroke\(LinearGradient\(colors:/);
   assert.match(widget, /\.shadow\(color: destination\.tint\.opacity\(0\.28\), radius: 9/);
-  assert.match(widget, /\.frame\(maxWidth: \.infinity, minHeight: vertical \? 55 : 65/);
+  assert.match(widget, /\.frame\(maxWidth: \.infinity, minHeight: vertical \? 55 : 56/);
   assert.match(widget, /Link\(destination: url\)/);
+});
+
+test('small and medium layouts fit legacy iOS widget margins', () => {
+  assert.match(widget, /\.padding\(8\)/);
+  assert.match(widget, /private var mediumLayout: some View \{[^]*?RedionSignature\(compact: true\)/);
+  assert.match(widget, /\.frame\(maxWidth: \.infinity, minHeight: vertical \? 55 : 56/);
+  assert.match(widget, /extra 30pt icon that clips small widgets on iOS 15\/16/);
+  assert.doesNotMatch(widget, /Image\(systemName: "sparkles\.rectangle\.stack"\)/);
 });
 
 test('the three layouts reflect the photographed headline and small widget action', () => {
