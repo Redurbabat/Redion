@@ -34,6 +34,7 @@ jobs:
             ios/native-file-export.test.mjs \
             ios/native-feel.test.mjs \
             ios/native-lifecycle-export.test.mjs \
+            ios/native-statusbar-queue.test.mjs \
             ios/native-export-feedback.test.mjs \
             ios/native-mobile-document.test.mjs \
             ios/native-safari-links.test.mjs \
