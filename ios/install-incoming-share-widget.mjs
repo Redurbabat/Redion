@@ -74,22 +74,27 @@ export function injectIncomingShareWidget(scene) {
     throw new Error('Redion-SceneDelegate-Klassenende fehlt oder ist mehrdeutig.');
   }
   let out = scene.replace(ANCHOR, ANCHOR + `
+        // Cold-start deep links arrive here, not in openURLContexts.
+        for context in connectionOptions.urlContexts {
+            routeRedionWidget(context.url)
+        }
         DispatchQueue.main.async {
             RedionIncomingInbox.shared.drain(window: self.window)
         }`);
-  out = out.replace(URI, `// URL handling is restricted to the three fixed widget destinations.
-        for context in URLContexts {
-            if context.url.scheme == "redion", context.url.host == "widget" {
-                let action = context.url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-                if ["dokumente", "heute", "lernen"].contains(action) {
-                    let item = UIApplicationShortcutItem(
-                        type: "ch.redurbabat.redion." + action, localizedTitle: "Redion")
-                    _ = RedionHomeShortcuts.shared.open(item, window: window)
-                }
-            }
+  out = out.replace(URI, `for context in URLContexts {
+            routeRedionWidget(context.url)
         }
         ${URI}`);
   out = out.replace(oldClose, `
+    private func routeRedionWidget(_ url: URL) {
+        guard url.scheme == "redion", url.host == "widget" else { return }
+        let action = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        guard ["dokumente", "heute", "lernen"].contains(action) else { return }
+        let item = UIApplicationShortcutItem(
+            type: "ch.redurbabat.redion." + action, localizedTitle: "Redion")
+        _ = RedionHomeShortcuts.shared.open(item, window: window)
+    }
+
     func sceneDidBecomeActive(_ scene: UIScene) {
         RedionIncomingInbox.shared.drain(window: window)
     }
