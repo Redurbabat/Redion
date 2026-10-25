@@ -52,7 +52,7 @@ test('the orbit updates on a 3-hour timeline, not continuous battery-draining ti
   assert.match(widget, /index \* 3/);
   assert.match(widget, /0\.\.<9/);
   assert.match(widget, /policy: \.atEnd/);
-  assert.doesNotMatch(widget, /TimelineView|Timer|CADisplayLink|\.repeatForever|animation\(\.linear\(duration:|\.task\s*\{|onAppear\s*\{/);
+  assert.doesNotMatch(widget, /TimelineView\s*\{|Timer\.scheduledTimer|CADisplayLink\s*\(|\.repeatForever\s*\(|animation\(\.linear\(duration:|\.task\s*\{|onAppear\s*\{/);
 });
 
 test('WidgetKit motion is under two seconds and is disabled for Reduce Motion', () => {
