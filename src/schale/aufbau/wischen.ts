@@ -213,9 +213,13 @@ const Wischen = (() => {
     catch { return false; }
   };
 
+  /* Ein aelterer Rueckfeder-Timer darf eine neue Fingerbewegung nicht
+   * ploetzlich wieder mit CSS-Transition verzoegern. */
+  let federGeneration = 0;
   const schieben = (dx: number): void => {
     const b = buehne();
     if (!b || ruhig()) return;
+    federGeneration++;
     /* Beim Ziehen folgt die Fläche dem Finger OHNE Übergang — ein Übergang
        liefe der Hand hinterher. Erst beim Loslassen wird er eingeschaltet,
        damit das Zurückschnellen weich ist. */
@@ -230,9 +234,12 @@ const Wischen = (() => {
   const loslassen = (): void => {
     const b = buehne();
     if (b && b.style.transform) {
+      const generation = ++federGeneration;
       b.style.transition = 'transform .22s var(--ease-standard, ease)';
       b.style.transform = '';
-      setTimeout(() => { b.style.transition = ''; }, 260);
+      setTimeout(() => {
+        if (generation === federGeneration) b.style.transition = '';
+      }, 260);
     }
     zeiger = -1; gefangen = false;
   };
