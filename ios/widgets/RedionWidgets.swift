@@ -279,7 +279,7 @@ private struct RedionDestinationTile: View {
                             .foregroundStyle(destination.tint)
                     }
                 } else {
-                    VStack(alignment: .leading, spacing: 7) {
+                    VStack(alignment: .leading, spacing: 4) {
                         HStack {
                             icon
                             Spacer(minLength: 0)
@@ -296,8 +296,8 @@ private struct RedionDestinationTile: View {
             }
             .foregroundStyle(RedionPalette.white)
             .padding(.horizontal, vertical ? 12 : 8)
-            .padding(.vertical, vertical ? 10 : 9)
-            .frame(maxWidth: .infinity, minHeight: vertical ? 55 : 65,
+            .padding(.vertical, vertical ? 10 : 5)
+            .frame(maxWidth: .infinity, minHeight: vertical ? 55 : 56,
                    alignment: .leading)
             .background {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -354,7 +354,7 @@ private struct RedionOrbitWidgetView: View {
             }
             // Leave room for the 3 separate touch zones even on compact
             // iPhone widget sizes; older iOS versions add system margins.
-            .padding(11)
+            .padding(8)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .widgetBackground()
@@ -365,13 +365,9 @@ private struct RedionOrbitWidgetView: View {
     private var smallLayout: some View {
         VStack(alignment: .leading, spacing: 8) {
             RedionSignature(compact: true)
-            Spacer(minLength: 2)
-            Image(systemName: "sparkles.rectangle.stack")
-                .font(.system(size: 30, weight: .ultraLight))
-                .foregroundStyle(RedionPalette.teal)
-                .shadow(color: RedionPalette.teal.opacity(0.85), radius: 8)
-                .accessibilityHidden(true)
-            Spacer(minLength: 2)
+            // Let the vector planet be the hero illustration; avoid an
+            // extra 30pt icon that clips small widgets on iOS 15/16.
+            Spacer(minLength: 6)
             (
                 Text("Ein ").foregroundColor(RedionPalette.white)
                 + Text("Gedanke.").foregroundColor(RedionPalette.peach)
@@ -410,9 +406,9 @@ private struct RedionOrbitWidgetView: View {
     }
 
     private var mediumLayout: some View {
-        VStack(alignment: .leading, spacing: 9) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .center) {
-                RedionSignature()
+                RedionSignature(compact: true)
                 Spacer(minLength: 0)
                 Text("DEIN RAUM")
                     .font(.system(size: 8, weight: .bold, design: .rounded))
