@@ -44,6 +44,7 @@ workflows:
           node --test ios/incoming-share.test.mjs
           node --test ios/incoming-share-store-contract.test.mjs
           node --test ios/share-widget-integration.test.mjs
+          node --test ios/share-widget-xcode-build.test.mjs
           node --test ios/widget-orbit.test.mjs
           node --test ios/install-privacy-shield.test.mjs
           # Die iOS-Quellen im Repo und das neue Xcode-Ziel muessen getrennt bleiben.
