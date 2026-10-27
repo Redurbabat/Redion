@@ -76,6 +76,8 @@ test('Codemagic explicitly verifies BOTH compiled .appex bundles before IPA pack
   assert.match(yaml, /com\.apple\.widgetkit-extension/);
   assert.match(yaml, /com\.apple\.share-services/);
   assert.match(yaml, /Print :CFBundleIdentifier/);
+  assert.match(yaml, /EXECUTABLE="\$\(\/usr\/libexec\/PlistBuddy -c 'Print :CFBundleExecutable'/);
+  assert.match(yaml, /test -f "\$EXT\/\$EXECUTABLE"/);
   assert.match(yaml, /test "\$\(\/usr\/libexec\/PlistBuddy/);
   assert.ok(yaml.indexOf('test -d "$EXT"') < yaml.indexOf('mkdir -p "$CM_BUILD_DIR/build/ipa/Payload"'));
 });
