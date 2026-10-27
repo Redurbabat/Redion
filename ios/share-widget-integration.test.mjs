@@ -22,6 +22,29 @@ test('widget deeplinks reuse the existing secure three-destination router', () =
   assert.throws(() => injectIncomingShareWidget(patched), /bereits eingebaut/);
 });
 
+test('generated Capacitor UIScene imports WebKit and keeps retry budget for every new share', () => {
+  const prepared = injectQuickActions(originalScene);
+  const patched = injectIncomingShareWidget(prepared);
+  assert.match(patched, /^import WebKit$/m);
+  assert.equal((patched.match(/^import WebKit$/gm) || []).length, 1);
+  assert.match(patched, /private var attempts = 0/);
+  assert.match(patched, /func foreground\(window: UIWindow\?\)/);
+  assert.match(patched, /attempts = 0\s+drain\(window: window\)/);
+  assert.match(patched, /self\.attempts = 0\s+try\? FileManager\.default\.removeItem\(at: file\)/);
+  assert.match(patched, /RedionIncomingInbox\.shared\.foreground\(window: window\)/);
+  assert.match(patched, /if self\.attempts < 45/);
+  assert.match(patched, /SceneDelegateProxy\.shared\.scene\(scene, willConnectTo:/);
+  assert.match(patched, /RedionHomeShortcuts\.shared\.open\(shortcutItem, window: window\)/);
+});
+
+test('existing WebKit module is not imported twice in UIScene', () => {
+  const prepared = injectQuickActions(originalScene.replace(
+    'import Capacitor', 'import Capacitor\nimport WebKit'));
+  const patched = injectIncomingShareWidget(prepared);
+  assert.equal((patched.match(/^import WebKit$/gm) || []).length, 1);
+  assert.throws(() => injectIncomingShareWidget(patched), /bereits eingebaut/);
+});
+
 test('host receives App Group shares only after explicit durable JS acknowledgement', () => {
   const patched = injectIncomingShareWidget(injectQuickActions(originalScene));
   assert.equal(GROUP, 'group.ch.redurbabat.redion.share');

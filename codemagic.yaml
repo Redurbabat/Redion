@@ -44,6 +44,7 @@ workflows:
           node --test ios/incoming-share.test.mjs
           node --test ios/incoming-share-store-contract.test.mjs
           node --test ios/share-widget-integration.test.mjs
+          node --test ios/share-widget-xcode-build.test.mjs
           node --test ios/widget-orbit.test.mjs
           node --test ios/install-privacy-shield.test.mjs
           # Die iOS-Quellen im Repo und das neue Xcode-Ziel muessen getrennt bleiben.
@@ -176,6 +177,9 @@ workflows:
           ruby -e 'require "xcodeproj"; abort if Gem::Version.new(Xcodeproj::VERSION) < Gem::Version.new("1.27.0")' ||
             gem install xcodeproj -v 1.27.0 --no-document --user-install
           node ios/install-incoming-share-widget.mjs
+          # Real generated UIScene includes BOTH Quick Actions and Share bridge.
+          xcrun swiftc -frontend -parse build/ios-capacitor/App/App/SceneDelegate.swift
+          ruby -c ios/install-share-widget-targets.rb
           ruby ios/install-share-widget-targets.rb
           test -f build/ios-capacitor/App/RedionShare/RedionShareViewController.swift
           test -f build/ios-capacitor/App/RedionWidgets/RedionWidgets.swift
@@ -219,6 +223,28 @@ workflows:
             build 2>&1 | tee "$CM_BUILD_DIR/build/ios-xcodebuild.log"
           APP="$CM_BUILD_DIR/build/ios-derived-data/Build/Products/Release-iphoneos/App.app"
           test -d "$APP"
+          # Never report a working share/widget build merely because the
+          # main App.app exists. Check BOTH embedded, compiled appex products.
+          if [ "${REDION_IOS_EXTENSIONS:-0}" = "1" ]; then
+            for extension in RedionShare RedionWidgets; do
+              EXT="$APP/PlugIns/$extension.appex"
+              test -d "$EXT"
+              test -f "$EXT/Info.plist"
+              EXECUTABLE="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$EXT/Info.plist")"
+              test -n "$EXECUTABLE"
+              test -f "$EXT/$EXECUTABLE"
+              if [ "$extension" = RedionShare ]; then
+                POINT="com.apple.share-services"
+                BUNDLE="ch.redurbabat.redion.share"
+              else
+                POINT="com.apple.widgetkit-extension"
+                BUNDLE="ch.redurbabat.redion.widgets"
+              fi
+              test "$(/usr/libexec/PlistBuddy -c 'Print :NSExtension:NSExtensionPointIdentifier' "$EXT/Info.plist")" = "$POINT"
+              test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$EXT/Info.plist")" = "$BUNDLE"
+            done
+            echo "Redion iOS: Beide Erweiterungen kompiliert und in App.app/PlugIns eingebettet."
+          fi
           mkdir -p "$CM_BUILD_DIR/build/ipa/Payload"
           ditto "$APP" "$CM_BUILD_DIR/build/ipa/Payload/App.app"
           cd "$CM_BUILD_DIR/build/ipa"

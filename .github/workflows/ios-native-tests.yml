@@ -45,6 +45,7 @@ jobs:
             ios/incoming-share.test.mjs \
             ios/incoming-share-store-contract.test.mjs \
             ios/share-widget-integration.test.mjs \
+            ios/share-widget-xcode-build.test.mjs \
             ios/widget-orbit.test.mjs \
             ios/install-privacy-shield.test.mjs \
             ios/native-project-layout.test.mjs \

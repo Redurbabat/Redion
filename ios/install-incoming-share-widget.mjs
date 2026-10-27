@@ -21,6 +21,13 @@ private final class RedionIncomingInbox {
     private var inFlight = Set<String>()
     private var attempts = 0
 
+    // A failed WebKit startup must never exhaust future shares forever.
+    // Every real foreground transition gets a fresh bounded retry budget.
+    func foreground(window: UIWindow?) {
+        attempts = 0
+        drain(window: window)
+    }
+
     func drain(window: UIWindow?) {
         guard let web = (window?.rootViewController as? CAPBridgeViewController)?.webView,
               let container = FileManager.default.containerURL(
@@ -47,6 +54,7 @@ private final class RedionIncomingInbox {
                 guard let self = self else { return }
                 self.inFlight.remove(name)
                 if case .success(let value) = result, let accepted = value as? Bool, accepted {
+                    self.attempts = 0
                     try? FileManager.default.removeItem(at: file)
                 } else if self.attempts < 45 {
                     self.attempts += 1
@@ -73,7 +81,8 @@ export function injectIncomingShareWidget(scene) {
   if (scene.split(oldClose).length !== 2) {
     throw new Error('Redion-SceneDelegate-Klassenende fehlt oder ist mehrdeutig.');
   }
-  let out = scene.replace(ANCHOR, ANCHOR + `
+  let out = scene.includes('import WebKit') ? scene : scene.replace('import Capacitor', 'import Capacitor\nimport WebKit');
+  out = out.replace(ANCHOR, ANCHOR + `
         // Cold-start deep links arrive here, not in openURLContexts.
         for context in connectionOptions.urlContexts {
             routeRedionWidget(context.url)
@@ -96,7 +105,7 @@ export function injectIncomingShareWidget(scene) {
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
-        RedionIncomingInbox.shared.drain(window: window)
+        RedionIncomingInbox.shared.foreground(window: window)
     }
 }
 

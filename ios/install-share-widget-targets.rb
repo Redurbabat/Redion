@@ -31,8 +31,37 @@ configs = {
   }
 }
 
-# Copy checked-in templates to the generated project first. It is disposable,
-# so the main app's tracked ios/ files are never overwritten or deleted.
+# Validate the complete, generated and tracked inputs BEFORE creating
+# extension targets. An extension never modifies the tracked source tree.
+plist = File.join(ios, 'App/App/Info.plist')
+abort 'Generated app Info.plist is missing' unless File.file?(plist)
+host_info = Xcodeproj::Plist.read_from_path(plist)
+abort 'Unexpected host Info.plist format' unless host_info.is_a?(Hash)
+url_types = host_info.fetch('CFBundleURLTypes', [])
+abort 'Unexpected CFBundleURLTypes structure' unless url_types.is_a?(Array) &&
+  url_types.all? { |entry| entry.is_a?(Hash) && entry.fetch('CFBundleURLSchemes', []).is_a?(Array) }
+abort 'Redion URL scheme already installed' if url_types.any? { |entry|
+  entry.fetch('CFBundleURLSchemes', []).include?('redion')
+}
+
+configs.each do |name, conf|
+  abort "Missing extension source for #{name}" unless File.file?(File.join(root, conf['source']))
+  extension_info = Xcodeproj::Plist.read_from_path(File.join(root, conf['plist']))
+  required_point = name == 'RedionShare' ? 'com.apple.share-services' : 'com.apple.widgetkit-extension'
+  abort "Invalid extension point for #{name}" unless
+    extension_info.dig('NSExtension', 'NSExtensionPointIdentifier') == required_point
+  if conf['entitlements']
+    entitlements = Xcodeproj::Plist.read_from_path(File.join(root, conf['entitlements']))
+    host_entitlements = Xcodeproj::Plist.read_from_path(
+      File.join(root, 'ios/share-extension/RedionApp.entitlements'))
+    group_id = 'group.ch.redurbabat.redion.share'
+    abort 'Share and host must use identical App Group' unless
+      entitlements['com.apple.security.application-groups'] == [group_id] &&
+      host_entitlements['com.apple.security.application-groups'] == [group_id]
+  end
+end
+
+# Copy checked-in templates into the disposable generated project ONLY.
 configs.each do |name, conf|
   directory = File.join(ios, name)
   abort "Generated extension folder already exists: #{name}" if File.exist?(directory)
@@ -81,20 +110,23 @@ app.build_configurations.each do |configuration|
   configuration.build_settings['CODE_SIGN_ENTITLEMENTS'] = 'RedionApp/RedionApp.entitlements'
 end
 
-# A supported, trusted app-only URL scheme for the navigation widget.
-plist = File.join(ios, 'App/App/Info.plist')
-abort 'Generated app Info.plist missing' unless File.file?(plist)
-abort 'Redion URL scheme already installed' if File.read(plist).include?('<string>redion</string>')
+# Preserve any Capacitor or plugin-provided URL registrations.
+# Both Xcode targets and the changed host plist were validated above.
+host_info['CFBundleURLTypes'] = url_types + [{
+  'CFBundleURLName' => 'ch.redurbabat.redion',
+  'CFBundleURLSchemes' => ['redion']
+}]
+Xcodeproj::Plist.write_to_path(host_info, plist)
 project.save
-plutil = '/usr/libexec/PlistBuddy'
-commands = [
-  'Add :CFBundleURLTypes array',
-  'Add :CFBundleURLTypes:0 dict',
-  'Add :CFBundleURLTypes:0:CFBundleURLName string ch.redurbabat.redion',
-  'Add :CFBundleURLTypes:0:CFBundleURLSchemes array',
-  'Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string redion'
-]
-commands.each do |command|
-  abort "Could not register Redion URL scheme: #{command}" unless system(plutil, '-c', command, plist)
+
+# Check the saved target and embedded product relationships, not merely
+# the presence of filenames in the generated Xcode project.
+verified = Xcodeproj::Project.open(project_path)
+host = verified.targets.find { |target| target.name == 'App' }
+names = host.copy_files_build_phases.flat_map { |phase|
+  phase.files.map { |file| file.file_ref&.display_name }
+}.compact
+%w[RedionShare.appex RedionWidgets.appex].each do |name|
+  abort "Extension is not embedded in App: #{name}" unless names.include?(name)
 end
-puts 'Redion iOS: Share Extension and WidgetKit targets added to generated Xcode project.'
+puts 'Redion iOS: Share Extension and WidgetKit targets verified in generated Xcode project.'
