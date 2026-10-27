@@ -230,7 +230,9 @@ workflows:
               EXT="$APP/PlugIns/$extension.appex"
               test -d "$EXT"
               test -f "$EXT/Info.plist"
-              /usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$EXT/Info.plist" >/dev/null
+              EXECUTABLE="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$EXT/Info.plist")"
+              test -n "$EXECUTABLE"
+              test -f "$EXT/$EXECUTABLE"
               if [ "$extension" = RedionShare ]; then
                 POINT="com.apple.share-services"
                 BUNDLE="ch.redurbabat.redion.share"
