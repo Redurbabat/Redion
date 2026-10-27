@@ -29,7 +29,6 @@ import { createIosShareReadiness } from './incoming-share-readiness.mjs';
 declare const Store: any;
 declare const App: any;
 declare const Ereignisse: any;
-declare const ARTEN: any;
 
 const saveFile = withNativeExportFeedback(createNativeFileExporter({
   filesystem: Filesystem,
@@ -90,8 +89,9 @@ if (Capacitor.getPlatform() === 'ios' && Capacitor.isNativePlatform()) {
     // NEVER while the native module itself is evaluated.
     events: () => typeof Ereignisse !== 'undefined'
       ? Ereignisse : (globalThis as any).Ereignisse,
-    eventName: typeof ARTEN !== 'undefined' && ARTEN.ablageGeladen
-      ? ARTEN.ablageGeladen : 'ablage.geladen',
+    // This is the exact value of ARTEN.ablageGeladen in Redion's bus.
+    // Avoid early access to a deferred global lexical constant.
+    eventName: 'ablage.geladen',
     document
   });
   let incoming: ReturnType<typeof createIosShareInbox> | null = null;
