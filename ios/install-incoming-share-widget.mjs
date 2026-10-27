@@ -81,7 +81,7 @@ export function injectIncomingShareWidget(scene) {
   if (scene.split(oldClose).length !== 2) {
     throw new Error('Redion-SceneDelegate-Klassenende fehlt oder ist mehrdeutig.');
   }
-  let out = scene.includes('import WebKit') ? scene : scene.replace('import Capacitor', 'import Capacitor\\nimport WebKit');
+  let out = scene.includes('import WebKit') ? scene : scene.replace('import Capacitor', 'import Capacitor\nimport WebKit');
   out = out.replace(ANCHOR, ANCHOR + `
         // Cold-start deep links arrive here, not in openURLContexts.
         for context in connectionOptions.urlContexts {
