@@ -25,6 +25,42 @@ Erweiterungen zuverlässig zum generierten Xcode-Projekt gehören.
    fertiges `App.app` beweisen nicht, dass die iOS-Share-Extension
    oder WidgetKit-Extension tatsächlich eingebettet wurden.
 
+## Swift-Share-Brücke beim iPhone-Appwechsel
+
+Die bereits in `SceneDelegate.swift` eingebaute lokale Share-Zustellung
+hatte bisher einen gemeinsamen Zähler für maximal 45 fehlgeschlagene
+WebKit-Aufrufe. Dieser Zähler blieb auch nach einer erfolgreich
+übernommenen Notiz gesetzt. Nach einem schlechten Kaltstart konnte
+eine später aus Safari geteilte Notiz dadurch sofort aufhören,
+automatisch erneut zugestellt zu werden.
+
+Der Swift-Installer `ios/install-incoming-share-widget.mjs` erzeugt
+nun folgende Schutzvorkehrungen:
+
+- `import WebKit` wird explizit und **nur einmal** eingefügt, damit
+  `WKWebView.callAsyncJavaScript` auf dem Xcode-Compiler verfügbar ist.
+- `sceneDidBecomeActive` ruft `foreground(window:)` auf;
+  jede Vordergrund-Rückkehr bekommt einen neuen Retry-Zähler.
+- Nach bestätigter lokaler Speicherung (`true` aus der
+  bestehenden `RedionNativeShare.receive(...)`-Methode) wird
+  der Retry-Zähler ebenfalls zurückgesetzt.
+- Bei fehlendem WebKit-/Store-Ready-Signal oder fehlgeschlagenem
+  IndexedDB-`flush()` bleibt die JSON-Eingangsdatei weiterhin
+  bestehen. Ein Fehlschlag wird **niemals** als Import-Erfolg
+  ausgegeben.
+- Die normale `SceneDelegateProxy`-Verarbeitung, das
+  Widget-Kaltstart-Routing und die Appsymbol-Schnellaktionen
+  werden nicht umgangen.
+
+Der bestehende Test
+`ios/share-widget-integration.test.mjs` enthält dazu
+zwei zusätzliche Fälle: aktueller Capacitor-8-SPM-Start
+mit Reset/Import und bereits importiertes WebKit-Modul.
+Acht Tests dieser Suite wurden gegen die aktuellen
+Branchdateien im isolierten JavaScript-Harness erfolgreich
+ausgeführt; echte Swift-Typprüfung und Gerätetest
+stehen weiterhin aus.
+
 ## Neue native Integrationsprüfungen
 
 Die Buildkette bleibt bei **`REDION_IOS_EXTENSIONS=1` opt-in**.
