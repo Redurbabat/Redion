@@ -85,9 +85,14 @@ if (Capacitor.getPlatform() === 'ios' && Capacitor.isNativePlatform()) {
   // Group item only after the ordinary Redion store has saved it. The
   // extension's JSON file stays on disk if Redion is not ready or fails.
   const readiness = createIosShareReadiness({
-    events: typeof Ereignisse !== 'undefined' ? Ereignisse : null,
+    // The native bridge is inserted before </body>; Redion's regular
+    // scripts are deferred. Look up Ereignisse only during delivery,
+    // NEVER while the native module itself is evaluated.
+    events: () => typeof Ereignisse !== 'undefined'
+      ? Ereignisse : (globalThis as any).Ereignisse,
     eventName: typeof ARTEN !== 'undefined' && ARTEN.ablageGeladen
-      ? ARTEN.ablageGeladen : 'ablage.geladen'
+      ? ARTEN.ablageGeladen : 'ablage.geladen',
+    document
   });
   let incoming: ReturnType<typeof createIosShareInbox> | null = null;
   (globalThis as any).RedionNativeShare = Object.freeze({
