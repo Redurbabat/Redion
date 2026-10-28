@@ -53,6 +53,11 @@ function startRedionAutoUpdates({
   interval?.unref?.();
   return Object.freeze({
     enabled: true,
+    // Windows session-end can interrupt a detached NSIS installer halfway.
+    // If Windows is shutting down/logging off, defer until a regular exit.
+    onSystemShutdown() {
+      updater.autoInstallOnAppQuit = false;
+    },
     stop() {
       stopped = true;
       clearTimeout(first);
