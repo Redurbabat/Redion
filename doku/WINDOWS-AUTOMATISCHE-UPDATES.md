@@ -61,6 +61,9 @@ Die Funktion läuft ausschließlich, wenn:
   die **Authenticode-Verifikation nicht deaktiviert** ist.
 
 `autoDownload = true`, `autoInstallOnAppQuit = true`.
+Bei Windows-Abmeldung oder -Herunterfahren (`session-end`) wird
+die Installation stattdessen bewusst ausgesetzt: Ein NSIS-Installer
+darf nicht durch einen System-Shutdown halb ausgeführt werden.
 Downgrades und Vorabversionen sind aus. Fehler werden
 protokolliert, aber **nicht** mit einem erzwungenen
 App-Exit oder verloren gegangenen Inhalten beantwortet.
