@@ -101,6 +101,9 @@ test('signed NSIS app silently checks every six hours and never force-restarts',
     assert.equal(checks, 2);
     assert.equal(typeof updater.quitAndInstall, 'undefined',
       'no forced shutdown while Redion is editing');
+    control.onSystemShutdown();
+    assert.equal(updater.autoInstallOnAppQuit, false,
+      'never spawn an updater while Windows is shutting down');
     control.stop();
     callbacks[1]();
     await new Promise(resolve => setImmediate(resolve));
