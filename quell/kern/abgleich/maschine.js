@@ -1,10 +1,28 @@
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/abgleich/maschine.ts (npm run bauen:ts). */
 const Wolke = (() => {
+    const serverAdressePruefen = (wert) => {
+        const roh = String(wert ?? '').trim();
+        if (!roh)
+            return '';
+        try {
+            const u = new URL(roh);
+            const lokal = u.protocol === 'http:' && location.protocol === 'http:' &&
+                /^(localhost|127\.0\.0\.1|\[::1\])$/i.test(u.hostname);
+            if (u.protocol !== 'https:' && !lokal)
+                return '';
+            if (u.username || u.password || u.search || u.hash || u.pathname !== '/')
+                return '';
+            return u.origin;
+        }
+        catch {
+            return '';
+        }
+    };
     const adresse = () => {
         const eigen = Store.getMeta('wolkeAdresse', '');
         if (eigen)
-            return String(eigen).replace(/\/+$/, '');
+            return serverAdressePruefen(eigen);
         if (location.protocol === 'http:' || location.protocol === 'https:')
             return location.origin;
         return '';
@@ -27,8 +45,7 @@ const Wolke = (() => {
     const ruf = async (weg, opt = {}) => {
         const wurzel = adresse();
         if (!wurzel)
-            throw new Error('Von einer Datei aus gibt es keinen Server. Öffne Redion über eine Adresse — ' +
-                'oder trage in den Einstellungen eine eigene ein.');
+            throw new Error('Kein sicherer Redion-Server eingerichtet. In „Wolke“ eine gültige HTTPS-Serveradresse eintragen.');
         const kopf = { 'Content-Type': 'application/json',
             'Redion-Geraet': geraeteName(), ...(opt.kopf || {}) };
         if (token() && !kopf.Authorization)
@@ -842,7 +859,7 @@ const Wolke = (() => {
                     takt();
             });
     };
-    return { adresse, token, bereich, angemeldet, geraeteName, zustand, beiAenderung,
+    return { adresse, serverAdressePruefen, token, bereich, angemeldet, geraeteName, zustand, beiAenderung,
         anmeldenMit, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
         abgleichErlaubt, abgleichSetzen, kontoLoeschen,
         neuAbgleichOffen, neuAbgleichAntwort,
