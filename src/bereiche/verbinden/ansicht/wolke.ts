@@ -138,7 +138,21 @@ const WolkeFenster = (() => {
         if (was === 'adresse') {
           const neu = await UI.frage('Adresse des Servers',
             Wolke.adresse() || 'https://…');
-          if (neu !== null) { Store.setMeta('wolkeAdresse', neu.trim()); await zeichne(); }
+          if (neu !== null) {
+            const eingabe = neu.trim();
+            const sicher = eingabe ? Wolke.serverAdressePruefen(eingabe) : '';
+            if (eingabe && !sicher)
+              throw new Error('Nur HTTPS-Serveradressen ohne Pfad oder Zugangsdaten sind erlaubt.');
+            /* Ein laufender Bearer-Token gehört immer zum bisher gewählten
+               Server. Beim Wechsel darf er niemals an einen neuen Host gehen. */
+            const ziel = sicher || (
+              location.protocol === 'https:' || location.protocol === 'http:'
+                ? location.origin : '');
+            if (Wolke.angemeldet() && Wolke.adresse() !== ziel)
+              throw new Error('Bitte zuerst von der Wolke abmelden, bevor du den Server wechselst.');
+            Store.setMeta('wolkeAdresse', sicher);
+            await zeichne();
+          }
         }
         if (was === 'pruefen') {
           a.disabled = true; a.textContent = 'Sehe nach …';
@@ -184,8 +198,8 @@ const WolkeFenster = (() => {
     if (!ziel) return;
     if (!Wolke.adresse()) {
       ziel.innerHTML = kasten('weg',
-        '<b>Redion läuft gerade als Datei.</b> Von hier aus gibt es keinen Server — ' +
-        'öffne Redion über eine Adresse, oder trage oben eine eigene ein.');
+        '<b>Kein sicherer Sync-Server verbunden.</b> Die lokale App bleibt offline nutzbar. ' +
+        'Unter „Server: ändern“ eine HTTPS-Adresse eintragen.');
       return;
     }
     let stand: any = null;
@@ -266,9 +280,9 @@ const WolkeFenster = (() => {
               'Mit einem Code von einem anderen Gerät</button>' +
           '</div>'
         : '<div style="padding:14px; border:1px solid var(--line); border-radius:8px; ' +
-          'font-size:13px; line-height:1.6">Redion läuft gerade als Datei auf deinem ' +
-          'Rechner — da gibt es keinen Server. Öffne es über eine Adresse, oder trage ' +
-          'unten eine eigene ein.</div>') +
+          'font-size:13px; line-height:1.6"><b>Offline, kein Sync-Server verbunden.</b> ' +
+          'Deine Notizen bleiben lokal erhalten. Für iPhone und Windows zuerst ' +
+          'eine sichere HTTPS-Serveradresse unter „Server: ändern“ eintragen.</div>') +
       '<hr style="border:none;border-top:1px solid var(--line); margin:18px 0">' +
       '<div style="font-size:12px; color:var(--text-faint); line-height:1.6">' +
         'Server: <code>' + esc(wurzel || 'keiner') + '</code> ' +
