@@ -15,7 +15,7 @@ const APP_ID = 'ch.redurbabat.redion.windows';
 
 protocol.registerSchemesAsPrivileged([{
   scheme: SCHEME,
-  privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true }
+  privileges: { standard: true, secure: true, supportFetchAPI: true, allowServiceWorkers: true, stream: true }
 }]);
 
 // Stable profile is critical: Chromium IndexedDB lives here across updates.
