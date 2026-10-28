@@ -31,6 +31,7 @@ if (!lock) {
   app.quit();
 } else {
   let mainWindow = null;
+  let updateController = null;
 
   const isInternal = (raw) => {
     try {
@@ -125,6 +126,8 @@ if (!lock) {
     mainWindow.webContents.session.setPermissionRequestHandler((_wc, _permission, callback) => {
       callback(false);
     });
+    // Do not run NSIS while Windows is logging off or shutting down.
+    mainWindow.on('session-end', () => updateController?.onSystemShutdown?.());
     mainWindow.once('ready-to-show', () => mainWindow?.show());
     mainWindow.on('closed', () => { mainWindow = null; });
     mainWindow.loadURL(START_URL).catch(error => {
@@ -137,7 +140,7 @@ if (!lock) {
     launchWindow();
     // Silent background checks ONLY in a signed NSIS release with a verified
     // HTTPS feed. An ordinary local/unsigned build remains fully offline.
-    startRedionAutoUpdates({
+    updateController = startRedionAutoUpdates({
       app,
       updater: require('electron-updater').autoUpdater,
       yaml: require('js-yaml')
