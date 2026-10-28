@@ -8,6 +8,7 @@ const { app, BrowserWindow, Menu, protocol, net, shell, dialog } = require('elec
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { resolveBundledAsset } = require('./paths.cjs');
+const { startRedionAutoUpdates } = require('./auto-update.cjs');
 
 const SCHEME = 'redion-local';
 const START_URL = 'redion-local://app/index.html';
@@ -134,6 +135,13 @@ if (!lock) {
   app.whenReady().then(() => {
     appMenu();
     launchWindow();
+    // Silent background checks ONLY in a signed NSIS release with a verified
+    // HTTPS feed. An ordinary local/unsigned build remains fully offline.
+    startRedionAutoUpdates({
+      app,
+      updater: require('electron-updater').autoUpdater,
+      yaml: require('js-yaml')
+    });
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) launchWindow();
     });
