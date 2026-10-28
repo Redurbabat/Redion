@@ -12,7 +12,9 @@
     "bauen:ts": "node bauen-inseln.mts && tsc -p tsconfig.bauen.json && node dienststand.mts && tsc -p tsconfig.stand.json && tsc -p tsconfig.sw.json",
     "stand": "node dienststand.mts --pruefen",
     "server": "node server/pruefserver.ts 8790",
-    "veroeffentlichen": "npx wrangler deploy"
+    "veroeffentlichen": "npx wrangler deploy",
+    "sync:check": "node tools/sync-readiness.mjs",
+    "test:sync-readiness": "node --test tools/sync-readiness.test.mjs"
   },
   "keywords": [
     "notizen",
