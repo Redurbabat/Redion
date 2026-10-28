@@ -3,6 +3,9 @@
 node_modules/
 # Von Capacitor erzeugtes Xcode-Projekt (nicht Redions ios/-Quellordner).
 /build/ios-capacitor/
+# Generierte Offline-Dateien und EXE-Installer für Windows (keine Nutzerdateien).
+/build/windows-app/
+/build/windows-dist/
 .wrangler/
 .DS_Store
 Thumbs.db

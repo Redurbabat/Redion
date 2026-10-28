@@ -1,0 +1,64 @@
+{
+  "name": "redion-windows",
+  "version": "2026.8.3",
+  "private": true,
+  "description": "Redion für Windows – vollständig offline",
+  "main": "main.cjs",
+  "author": "Redion",
+  "scripts": {
+    "prepare:app": "node prepare.mjs",
+    "start": "npm run prepare:app && electron .",
+    "test": "node --test *.test.cjs",
+    "dist": "npm run prepare:app && electron-builder --win nsis portable --x64"
+  },
+  "devDependencies": {
+    "electron": "45.1.0",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "ch.redurbabat.redion.windows",
+    "productName": "Redion",
+    "asar": true,
+    "files": [
+      "main.cjs",
+      "paths.cjs",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../build/windows-app",
+        "to": "redion-web",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "directories": {
+      "output": "../build/windows-dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "../oeffentlich/icons/icon-512.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
