@@ -88,9 +88,22 @@ test('Capacitor template drift in launch screen or Swift is a hard failure', () 
     assert.deepEqual(fs.readFileSync(scene), original, 'No partial scene injection.');
     make(native + '/Base.lproj/LaunchScreen.storyboard',
       fs.readFileSync(path.join(repo, upstream + 'capacitor8-spm-launch.storyboard')));
-    make(native + '/AppDelegate.swift', 'import UIKit\nclass AppDelegate {}');
+    // Preserve the SceneDelegate wiring here. Otherwise preflight
+    // correctly rejects that earlier, before the launch-method validator,
+    // and this test cannot verify the distinct missing-signature failure.
+    const delegate = fs.readFileSync(
+      path.join(repo, upstream + 'capacitor8-spm-appdelegate.swift'), 'utf8');
+    const signature = 'func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {';
+    assert.ok(delegate.includes(signature), 'Upstream fixture must contain the original launch signature.');
+    assert.match(delegate, /config\.delegateClass = SceneDelegate\.self/);
+    make(native + '/AppDelegate.swift', delegate.replace(
+      signature, 'func unexpectedLaunch(_ application: UIApplication) -> Bool {'));
     assert.throws(() => preflightNativeTemplates(root), /Startfunktion/);
-    assert.deepEqual(fs.readFileSync(scene), original);
+    assert.deepEqual(fs.readFileSync(scene), original, 'No partial Swift mutation.');
+    assert.deepEqual(fs.readFileSync(path.join(root, native, 'AppDelegate.swift')),
+      Buffer.from(delegate.replace(signature,
+        'func unexpectedLaunch(_ application: UIApplication) -> Bool {')),
+      'Preflight never edits the invalid input.');
   })
 );
 
