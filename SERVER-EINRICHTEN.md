@@ -1,6 +1,12 @@
 # Den Redion-Server einrichten
 
-**Zeitaufwand: etwa zehn Minuten. Kosten: keine.**
+**Wichtiger Nachtrag, 29. Oktober 2026:** Für die erste Verbindung der nativen
+iPhone-/Windows-Apps zuerst [SYNC-ERSTEINRICHTUNG](doku/SYNC-ERSTEINRICHTUNG.md)
+lesen. Das aktuelle Access-Tor und die native Anmeldung müssen zusätzlich
+eingerichtet werden. Ein Gerätecode allein erzeugt kein erstes Konto.
+Die nachfolgenden historischen Kurzangaben sind keine pauschale Kosten- oder
+Freigabezusage; insbesondere benötigt R2 eine Subscription mit nutzungsabhängiger
+Abrechnung. Keine Ressourcen oder Deployments ungeprüft anlegen.
 
 Redion braucht keinen Server. Ohne ihn liegt alles auf dem Gerät, und das
 bleibt der Normalfall — wer diese Anleitung überspringt, verliert nichts von

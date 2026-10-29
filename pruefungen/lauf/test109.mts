@@ -52,11 +52,15 @@ const p = (n: string, b: boolean, extra: string = ''): void => {
  * Alles einsammeln
  * ------------------------------------------------------------------------*/
 const UEBERGANGEN = ['.git', 'node_modules', '.wrangler'];
+// Native Paketkopien sind keine neuen handgeschriebenen Quellen. Nur diese
+// expliziten, ignorierten Bauausgaben auslassen, nicht pauschal build/.
+const NATIVE_AUSGABEN = new Set(['build/windows-app', 'build/windows-dist', 'build/ios-capacitor', 'windows/generated', 'www']);
 
 const alleDateien = (ordner: string, gesammelt: string[] = []): string[] => {
   for (const eintrag of liesOrdner(ordner)) {
     if (UEBERGANGEN.includes(eintrag)) continue;
     const voll = dazu(ordner, eintrag);
+    if (NATIVE_AUSGABEN.has(rel(WURZEL, voll).split('\\').join('/'))) continue;
     if (stat(voll).isDirectory()) alleDateien(voll, gesammelt);
     else gesammelt.push(rel(WURZEL, voll).split('\\').join('/'));
   }

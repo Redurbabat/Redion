@@ -186,6 +186,13 @@ workflows:
           grep -q 'RedionShare' build/ios-capacitor/App/App.xcodeproj/project.pbxproj
           grep -q 'RedionWidgets' build/ios-capacitor/App/App.xcodeproj/project.pbxproj
 
+      - name: PDF und Redion-Dateien aus der Dateien-App übernehmen
+        script: |
+          set -euo pipefail
+          node --test ios/native-documents.test.mts
+          node ios/install-open-documents.mts
+          xcrun swiftc -frontend -parse build/ios-capacitor/App/App/SceneDelegate.swift
+
       - name: Redion-Appsymbol verwenden
         script: |
           set -euo pipefail

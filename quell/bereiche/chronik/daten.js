@@ -4936,6 +4936,58 @@ const ChronikDaten = {
             ],
             "groesstesProblem": "Die alte Geometrieprüfung mass die neue Bedienzeile am inneren Vorschaublatt. Die richtige Messung der ganzen Karte fand danach einen tatsächlichen fehlenden Textabstand am Telefon. Die zweite Bildabnahme fand einen alten Ordnerpfad in globalen Favoriten und einen kurzzeitig weissen Ausschnitt neben der noch wachsenden Suchauswahl; beide zuerst rot nachgewiesen und korrigiert. Ein zusätzlicher Unix-OCR-Hilfentest ist unter Windows nicht ausführbar; der produktnahe Windows-Lauf selbst ist grün.",
             "massnahmen": []
+        },
+        {
+            "datum": "2026-10-29",
+            "wochentag": "Donnerstag",
+            "titel": "Bestehende iPhone- und Windows-Apps sicher integrieren",
+            "wasIchWeiss": "Glass Wheel bleibt auf Wunsch liegen. Redur nutzt bereits die Windows-App und die iPhone-App über Codemagic/IPA. Ein eigener Sync-Server existiert nicht. Neuer lokaler Integrationsbranch von main 326533b06; App-IDs, Herkunft und bestehende Datenprofile bleiben unverändert.",
+            "nachrichten": [
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "mache alles",
+                    "woher": "Aktueller Dialog nach den Vorschlägen zur Geräteintegration",
+                    "gemeint": "Die vorhandenen nativen Apps und ihre sichere Geräteübertragung tatsächlich weiterentwickeln.",
+                    "besser": "Bestehende Apps erhalten und native Dateieingänge, Sicherungen sowie den freiwilligen Abgleich prüfen.",
+                    "besserePrompt": "Kein neuer Anlauf für Glass; echte Integrationen mit Tests und offenen externen Voraussetzungen liefern."
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "auf laptop als windows app und auf iphone als iphone app direk",
+                    "woher": "Antwort auf die Gerätefrage im aktuellen Dialog",
+                    "gemeint": "Beide Apps sind bereits installiert; keine Neuanlage ihrer Identität oder Speicherorte.",
+                    "besser": "Windows und iPhone verwenden bereits installierte Redion-Apps.",
+                    "besserePrompt": "Datenhaltende In-place-Updates mit denselben IDs vorbereiten."
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "also über codemagit nehmen ich die ipa date und dann lade ich es auf iphone",
+                    "woher": "Antwort im aktuellen Dialog",
+                    "gemeint": "Den bisherigen Codemagic-/IPA-Installationsweg beibehalten.",
+                    "besser": "Ich installiere die über Codemagic gebaute IPA auf dem iPhone.",
+                    "besserePrompt": "Codemagic verwenden; TestFlight nicht als bereits eingerichtet voraussetzen."
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "nein ich habe keine server",
+                    "woher": "Antwort auf die Sync-Voraussetzung im aktuellen Dialog",
+                    "gemeint": "Ein produktiver Geräteabgleich ist noch nicht eingerichtet.",
+                    "besser": "Ich habe noch keinen eigenen Sync-Server.",
+                    "besserePrompt": "Einrichtung vorbereiten, ohne Ressourcen, Abrechnung oder Upload ungefragt zu aktivieren."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E754: gemeinsame Geräteübersicht, sicherer Windows-Dateiwähler/Export, Betriebssystem-Dateiübergabe, iOS-Dokumentkopie und gemeinsamer Import. Gleiche Codemagic-/GitHub-IPA-Schritte, Windows-Web-Parität und Ausschluss nativer Bauordner aus öffentlichen Assets. Live-Sync und Signierung bleiben ausdrücklich externe Freigabeschritte.",
+                    "vonCommit": "326533b06",
+                    "bisCommit": "lokaler Integrationsbranch codex/iphone-windows-integration",
+                    "zeitraum": "29. Oktober 2026; Uhrzeit nicht protokolliert",
+                    "dauer": "nicht protokolliert",
+                    "pruefungen": "Echte Electron-App mit isoliertem Testprofil zweimal gestartet, Notiz über Neustart erhalten und native IPC nach Fragmentnavigation geprüft. Acht Browseransichten hell/dunkel und native Adaptertests. Bestehende Sicherungs- und Zwei-Geräte-Prüfungen gefahren; Schlussstand und Grenzen stehen im Integrationsbericht. Export-Gegenprobe entfernt im Test die Vollständigkeitsprüfung und wird nachweislich rot. Kein vollständiger grüner Gesamtlauf behauptet."
+                }
+            ],
+            "groesstesProblem": "Die erste native IPC-Prüfung erwartete eine URL ohne Fragment, obwohl Redion seine Bibliothek über Fragmentziele öffnet. Der reale Electron-Start deckte das auf. Jetzt bleibt die Einstiegsdatei exakt festgelegt, während Fragmentnavigation erlaubt und fremde Pfade/Frames gesperrt sind. Zusätzlich zeigte die Cloudflare-Prüfung, dass ein fehlender Server und der native Access-/CORS-Anmeldeweg nicht durch eine blosse Datenbankbindung ersetzt werden können.",
+            "massnahmen": []
         }
     ],
     "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",

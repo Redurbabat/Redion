@@ -13292,6 +13292,28 @@ body > .ru-loesch{ z-index: 580; }
 
 </style>
 <style>
+/* ===== quell/schale/stil/devices.css ===== */
+.dev-overview{max-width:720px;color:var(--text);overflow-wrap:anywhere}
+.dev-overview p{line-height:1.6}
+.dev-intro{color:var(--text-dim)}
+.dev-overview dl{display:grid;grid-template-columns:minmax(120px,1fr) 2fr;gap:12px 18px;padding:18px;background:var(--bg-hover);border:1px solid var(--line);border-radius:14px}
+.dev-overview dt{color:var(--text-dim)}
+.dev-overview dd{margin:0;font-weight:600}
+.dev-actions{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0}
+.dev-overview .dev-actions button{min-height:44px;padding:10px 15px;border-radius:10px;background:var(--bg-hover);border:1px solid var(--line);color:var(--text);font:inherit;cursor:pointer}
+.dev-overview .dev-actions button:hover{background:var(--bg-active)}
+.dev-overview .dev-actions button:active{transform:translateY(1px)}
+.dev-overview .dev-actions button:focus-visible,.dev-overview summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.dev-overview ol{padding-inline-start:24px}
+.dev-overview summary{min-height:44px;display:list-item;align-content:center;cursor:pointer;font-weight:600}
+.dev-overview li{margin:8px 0;line-height:1.55}
+.dev-warning{padding:14px;border-left:3px solid var(--accent);background:var(--bg-hover);border-radius:6px}
+@media(max-width:600px){.dev-overview dl{grid-template-columns:1fr;gap:5px}.dev-overview dd{margin-bottom:12px}.dev-actions{flex-direction:column}.dev-actions button{width:100%;text-align:left}}
+@media(prefers-reduced-motion:reduce){.dev-overview .dev-actions button:active{transform:none}}
+body[data-bewegung="ruhig"] .dev-actions button:active{transform:none}
+
+</style>
+<style>
 /* ===== quell/schale/stil/bausteine.css ===== */
 /* ============================================================================
  * bausteine.css — was übrig bleibt
@@ -15226,8 +15248,65 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     bottom:calc(var(--hunten) + 8px); height:var(--mobile-nav-height);
     padding:5px 6px; background:var(--bg-card); border:1px solid var(--line);
   }
+  /* Zieh-Griff als dezente Entdeckungshilfe IN der vorhandenen
+     unteren Navigation. Kein Element, keine Trefferfläche, kein Listener.
+     Beim Hochziehen verschwindet er hinter der erscheinenden Zielleiste. */
+  #handy-oben::before{
+    content:'';position:absolute;left:50%;top:-8px;
+    width:42px;height:3px;border-radius:999px;
+    background:var(--text-dim);opacity:.55;
+    transform:translateX(-50%);pointer-events:none;
+    transition:opacity var(--motion-fast) var(--ease)
+  }
+  #handy-oben[data-zielleiste]::before{opacity:0}
+  @media(prefers-reduced-motion:reduce){
+    #handy-oben::before{transition:none}
+  }
+  body[data-bewegung="ruhig"] #handy-oben::before{transition:none}
   #ho-ziele[hidden]{ display:none }
   #ho-ziele[data-geht]{ pointer-events:none }
+  /* WORKSPACE 2.0 — VOLLSTÄNDIGES ZIEL LESBAR BEIM HOCHZIEHEN.
+     Die vorhandene 60px-Zielleiste behält exakt ihre Geometrie (test614):
+     fünf gleich breite Fingerziele und dieselben Hitboxen. Ausschliesslich
+     eine kleine, nicht-interaktive Beschriftung darüber; kein zweites Dock,
+     keine neuen Klick- oder Gestenwege. Die Fläche ist absichtlich deckend:
+     klein gedruckte Wörter dürfen nicht mit dem Papier dahinter verschmelzen.
+     Das Sichtbarwerden bewegt NUR transform/opacity, nicht die Geometrie. */
+  #ho-ziele > .ho-ziel-vorschau{
+    position:absolute;left:50%;bottom:calc(100% + 10px);
+    box-sizing:border-box;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:3px;width:max-content;
+    max-width:calc(100vw - 36px);min-width:150px;min-height:54px;
+    padding:9px 20px 10px;border:1px solid var(--line);
+    border-radius:var(--radius-2xl);background:var(--bg-card);
+    color:var(--text);box-shadow:var(--studio-highlight),var(--shadow-2);
+    text-align:center;pointer-events:none;user-select:none;
+    opacity:0;visibility:hidden;transform:translate(-50%,6px) scale(.97);
+    transition:opacity var(--motion-fast) var(--ease),
+               transform var(--feder-knapp-dauer) var(--feder-knapp)
+  }
+  #ho-ziele[data-vorschau-aktiv]:not([data-geht]) > .ho-ziel-vorschau{
+    opacity:1;visibility:visible;transform:translate(-50%,0) scale(1)
+  }
+  #ho-ziele .ho-ziel-vorschau-bereich{
+    display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;color:var(--text-dim);font-size:11px;
+    line-height:1.2;font-weight:600;letter-spacing:.04em
+  }
+  #ho-ziele .ho-ziel-vorschau-name{
+    display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;color:var(--text);font-size:15px;
+    line-height:1.2;font-weight:700;letter-spacing:-.012em
+  }
+  @media(prefers-reduced-motion:reduce){
+    #ho-ziele > .ho-ziel-vorschau{transition:none}
+  }
+  body[data-bewegung="ruhig"] #ho-ziele > .ho-ziel-vorschau{
+    transition:none
+  }
+  @media(prefers-contrast:more),(forced-colors:active),(prefers-reduced-transparency:reduce){
+    #ho-ziele > .ho-ziel-vorschau{background:var(--bg-card);border-color:var(--text);box-shadow:none}
+  }
   @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
     #handy-oben,
     #ho-ziele{
@@ -25607,6 +25686,79 @@ body[data-schale="premium"][data-bewegung="ruhig"]
   box-shadow: none;
 }
 
+/* ══ WORKSPACE 2.0 · SICHTBARE SEITENWERKZEUGE ════════════════════════════
+   Bisher war die Werkzeugzeile auf dem Desktop transparent, bis jemand
+   mit der Maus über die SEITE fuhr. Das erschwerte die Entdeckung und
+   zeigte bei Tastaturfokus dieselbe Leiste unsichtbar. Die bestehenden
+   Werkzeuge bleiben genau dieselben Registeraktionen; nur die Darstellung
+   als lesbare, immer sichtbare Kommandochips ändert sich.
+
+   Scope bewusst nur direkt unter #page: Datenbank-, Dokument- und
+   eingebettete Werkzeuge bekommen keine neue Leiste. Auf dem iPhone bleibt
+   es dieselbe horizontale Rollzeile aus bausteine.css, statt drei Reihen
+   oberhalb des eigentlichen Texts. */
+#page > .pg-tools{
+  display:flex;flex-wrap:wrap;align-items:center;gap:6px 7px;
+  opacity:1;min-width:0;max-width:100%;margin:10px 0 22px;padding:9px;
+  background:var(--bg-card);border:1px solid var(--line);
+  border-radius:var(--radius-xl);
+  box-shadow:var(--studio-highlight),var(--shadow-1)
+}
+#page > .pg-tools > .pg-tools-caption{
+  flex:0 0 100%;display:block;min-width:0;
+  padding:2px 8px 3px;color:var(--text-dim);
+  font-size:10px;line-height:1.25;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase
+}
+#page > .pg-tools > button{
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;
+  min-height:var(--touch-min);min-width:0;padding:8px 11px;
+  border:1px solid transparent;border-radius:var(--radius-lg);
+  background:var(--bg-hover);color:var(--text);
+  font-size:12px;line-height:1.2;font-weight:550;white-space:nowrap;
+  transition:background var(--motion-fast) var(--ease),
+             border-color var(--motion-fast) var(--ease),
+             transform var(--motion-fast) var(--ease)
+}
+#page > .pg-tools > button:is(:hover,:focus-visible){
+  color:var(--text);background:var(--accent-schwach);
+  border-color:var(--accent);outline-offset:2px
+}
+#page > .pg-tools > button:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px
+}
+#page > .pg-tools > button:active{transform:scale(.98)}
+@media(max-width:760px){
+  #page > .pg-tools{
+    flex-wrap:nowrap;gap:5px;overflow-x:auto;scrollbar-width:none;
+    padding:5px;margin:0 0 16px;
+    border-radius:var(--radius-lg);
+  }
+  #page > .pg-tools > .pg-tools-caption{display:none}
+  #page > .pg-tools > button{flex:0 0 auto;min-height:var(--touch-min);padding:8px 10px}
+  /* Die bestehenden sticky Scroll-Hinweise liegen über dem Inhalt.
+     Ihr Hintergrund muss nun zur Chip-Scheibe passen, statt zum Papier. */
+  #page > .pg-tools::before{
+    background:linear-gradient(to right,var(--bg-card),transparent)
+  }
+  #page > .pg-tools::after{
+    background:linear-gradient(to left,var(--bg-card),transparent)
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #page > .pg-tools > button{transition:none}
+  #page > .pg-tools > button:active{transform:none}
+}
+body[data-bewegung="ruhig"] #page > .pg-tools > button{
+  transition:none
+}
+body[data-bewegung="ruhig"] #page > .pg-tools > button:active{transform:none}
+@media print{#page > .pg-tools{display:none!important}}
+@media(forced-colors:active),(prefers-contrast:more){
+  #page > .pg-tools{box-shadow:none}
+  #page > .pg-tools > button{border-color:var(--line)}
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/bibliothek-studio.css ===== */
@@ -25895,10 +26047,17 @@ body[data-kontrast="hoch"] .bib[data-bib-bereich] .bib-deckel{box-shadow:none;bo
 /* DAS GLAS AUS §16 (E695): erst deckend, Glas nur mit Unschärfe, und mit Präfix — vorher fragte @supports nur die unpräfixierte Form, also gab es auf dem iPhone vor Safari 18 keins. */
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.document-studio .blatt-werk{background:var(--bg-schwebend);-webkit-backdrop-filter:var(--glas-blur);backdrop-filter:var(--glas-blur)}}
 @media(max-width:1100px){.document-zoom-group input{width:70px}.document-commandbar{padding-inline:10px;gap:8px}}
-@media(max-width:760px){
+@media(max-width:760px), (pointer:coarse) and (max-height:500px){
   .document-studio .document-topbar{display:flex;flex-wrap:nowrap;gap:2px;padding:4px;min-height:52px}
   .document-navigation,.document-top-actions{gap:0;flex:none}
   .document-studio .document-title{order:0;flex:1 1 auto;min-width:0;text-align:left;padding:3px 6px;font-size:12px}
+  /* iPhone landscape has wide CSS pixels but coarse touch and a short
+     viewport. Protect controls beside the Dynamic Island/notch while
+     keeping all 44px targets in the same shared document toolbar. */
+  .document-studio .document-topbar{
+    padding-inline-start:max(4px,env(safe-area-inset-left,0px));
+    padding-inline-end:max(4px,env(safe-area-inset-right,0px));
+  }
   .document-studio .document-topbar button{width:var(--touch-min);min-width:var(--touch-min);min-height:var(--touch-min);padding:0}
   .document-studio .document-topbar button::after{content:none}
   .document-studio .document-topbar [data-document-action="thumbnails"],
@@ -25914,6 +26073,20 @@ body[data-kontrast="hoch"] .bib[data-bib-bereich] .bib-deckel{box-shadow:none;bo
   .document-studio[data-document-view="open"] .document-commandbar{animation:studio-arrive var(--motion-normal) var(--ease-enter)}
   .document-mode-switch{flex:1;justify-content:center}.document-pagination{margin-left:auto}
   .document-commandbar button{min-height:var(--touch-min);padding-inline:10px}
+  /* A mobile document menu can contain multiple rows (zoom, paging, modes).
+     Keep every action reachable above the iOS keyboard instead of letting
+     the absolute menu extend below the visible WebKit viewport. The shared
+     --visual-height is updated by AppEinstellung on visualViewport resize. */
+  .document-studio[data-document-view="open"] .document-commandbar{
+    /* Menu must remain inside the notched landscape safe areas. */
+    left:max(8px,env(safe-area-inset-left,0px));
+    right:max(8px,env(safe-area-inset-right,0px));
+    max-height:max(120px,calc(var(--visual-height,100dvh) - 104px - env(safe-area-inset-top,0px)));
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    scroll-padding-block:8px;
+  }
   .document-zoom-group{width:100%;justify-content:center;border-top:1px solid var(--line-soft);padding-top:3px}
   .document-zoom-group input{flex:1;max-width:150px;min-width:0}.document-zoom-group button{min-height:var(--touch-min)}
   .document-zoom-label{display:inline;min-width:var(--touch-min)}
@@ -25921,6 +26094,7 @@ body[data-kontrast="hoch"] .bib[data-bib-bereich] .bib-deckel{box-shadow:none;bo
   .document-studio .blatt-werk{border-radius:var(--radius-lg);margin-bottom:8px}
 }
 @media(prefers-reduced-transparency:reduce){.document-studio .blatt-werk{background:var(--bg-card);-webkit-backdrop-filter:none;backdrop-filter:none}}
+body[data-bewegung="ruhig"] .document-studio[data-document-view="open"] .document-commandbar{animation:none}
 @media(prefers-reduced-motion:reduce){
   .document-studio .document-thumbnails.is-open,.document-studio .document-inspector.is-open,.document-studio[data-document-view="open"] .document-commandbar{animation:none}
   .document-studio :is(.document-topbar,.document-commandbar) button:active:not(:disabled){transform:none}
@@ -26151,10 +26325,17 @@ body[data-dokument="an"] .document-studio .blatt-werk .blatt-zeilenbruch{display
    Verlauf werden oben bereits nur im geschlossenen Zustand ausgeblendet. */
 body[data-dokument="an"] .document-studio .blatt-marken[data-stift="an"]{touch-action:none}
 body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{touch-action:pan-x pan-y pinch-zoom}
-@media(max-width:760px){
-  body[data-dokument="an"] #reiterleiste{min-height:var(--touch-min);padding-inline:6px}
+@media(max-width:760px), (pointer:coarse) and (max-height:500px){
+  body[data-dokument="an"] #reiterleiste{
+    min-height:var(--touch-min);
+    padding-inline-start:max(6px,env(safe-area-inset-left,0px));
+    padding-inline-end:max(6px,env(safe-area-inset-right,0px));
+  }
   body[data-dokument="an"] #reiterleiste .rt-tab{min-width:120px;max-width:180px;min-height:40px}
-  body[data-dokument="an"] .document-studio .document-topbar{padding-inline:4px}
+  body[data-dokument="an"] .document-studio .document-topbar{
+    padding-inline-start:max(4px,env(safe-area-inset-left,0px));
+    padding-inline-end:max(4px,env(safe-area-inset-right,0px));
+  }
   .document-studio .document-topbar .document-zurueck .dz-wort{display:none}
   /* „Präsentieren" ist am Telefon gar nicht im Kopf, sondern in der
      Ansichtsklappe (E493, bausteine.css) — derselbe Weg wie bei der Suche.
@@ -26201,7 +26382,10 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
     position:absolute; top:auto; bottom:calc(var(--visual-bottom, 0px) + 84px);
     left:8px; margin:0; padding:3px
   }
-  .document-studio .document-commandbar{left:8px;right:8px}
+  .document-studio .document-commandbar{
+    left:max(8px,env(safe-area-inset-left,0px));
+    right:max(8px,env(safe-area-inset-right,0px));
+  }
   body[data-dokument="an"] .document-studio .document-center{padding:10px 8px 100px}
   .document-source-master .do-name{font-size:11px}.document-source-master .do-wort{font-size:10px}
   .document-copy-label{font-size:10px}
@@ -26437,7 +26621,7 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
    Auf dem Bild war er ausserdem der einzige Knopf der Leiste, der am
    Telefon sein WORT zeigte. Alle anderen tragen dort nur ihr Zeichen. */
 .document-commandbar .document-folien-klappe{display:none}
-@media (max-width:760px){
+@media (max-width:760px), (pointer:coarse) and (max-height:500px){
   .document-studio .document-topbar [data-document-action="folienmenue"]{display:none}
   .document-commandbar .document-folien-klappe:not([hidden]){display:inline-flex}
 }
@@ -26614,6 +26798,110 @@ body[data-dokument="an"] .document-studio .blatt-werk{
   body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe[data-mehr="beides"] .blatt-werk{
     -webkit-mask-image:linear-gradient(to right, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%);
     mask-image:linear-gradient(to right, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%) }
+}
+
+/* ══ WORKSPACE 2.0 · DOKUMENTKOMPASS (Web und iOS, gleicher Webcode) ══════
+   Die Kopfzeile braucht einen erkennbaren Dokumentnamen, seine Art, den
+   tatsächlichen Umfang und einen aus dem aktiven Index errechneten
+   Lesefortschritt. Keine neue Route und kein zweiter Seitenspeicher.
+   Die Fortschrittsanzeige ist ein natives <progress>, keine Animation
+   mit eigener Uhr. Die Zahl selbst steht weiter nur im bisherigen
+   .document-position (test210: nicht zweimal auf demselben Bildschirm). */
+.document-studio .document-title{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;flex:1 1 auto;min-width:0;overflow:hidden;
+  white-space:normal;line-height:1.15
+}
+.document-studio .document-title-name{
+  display:block;width:100%;min-width:0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;
+  font-size:clamp(.8125rem,1vw,.9375rem);font-weight:700;
+  letter-spacing:-.012em;color:var(--text)
+}
+.document-studio .document-title-meta{
+  display:inline-flex;align-items:center;justify-content:center;
+  gap:6px;max-width:100%;min-width:0;
+  color:var(--text-dim);font-size:.75rem;font-weight:550;
+  letter-spacing:.025em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.document-studio .document-title-meta::before{
+  content:'';display:inline-block;flex:none;width:6px;height:6px;
+  border-radius:50%;background:var(--accent)
+}
+.document-studio .document-title-progress{
+  width:min(9rem,82%);height:3px;flex:none;margin:0;
+  border:0;border-radius:999px;overflow:hidden;
+  color:var(--accent);background:var(--line-soft)
+}
+.document-studio .document-title-progress[hidden]{display:none}
+.document-studio .document-title-progress::-webkit-progress-bar{
+  background:var(--line-soft);border-radius:999px
+}
+.document-studio .document-title-progress::-webkit-progress-value{
+  background:var(--accent);border-radius:999px
+}
+.document-studio .document-title-progress::-moz-progress-bar{
+  background:var(--accent);border-radius:999px
+}
+/* „Seite 8/140“ ist jetzt auch ein Knopf: derselbe Springweg wie die
+   Miniaturen, aber ohne mehrfach hundertmal Pfeil zu drücken. */
+.document-studio .document-pagination .document-position{
+  padding-inline:12px;min-width:90px;min-height:var(--touch-min);
+  border:1px solid var(--line);border-radius:var(--radius-lg);
+  background:var(--bg-card);color:var(--text);font-size:.75rem;
+  font-variant-numeric:tabular-nums;cursor:pointer;
+  transition:background var(--motion-fast) var(--ease),border-color var(--motion-fast) var(--ease)
+}
+.document-studio .document-pagination .document-position:not(:disabled):is(:hover,:focus-visible){
+  color:var(--text);border-color:var(--accent);background:var(--accent-schwach)
+}
+.document-studio .document-pagination .document-position:disabled{
+  cursor:default;opacity:.65
+}
+/* Der schon vorhandene Inspector wird zum ruhigen, scanbaren Dokumentblatt.
+   Die Bedienelemente und die Geschäftslogik bleiben genau dieselben. */
+.document-studio .document-inspector-heading{
+  margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--line-soft)
+}
+.document-studio .document-inspector-heading strong{font-size:.9375rem;letter-spacing:-.012em}
+.document-studio .document-inspector-source{
+  padding:10px 12px;border:1px solid var(--line-soft);
+  background:var(--bg-card);border-radius:var(--radius-lg);
+  line-height:1.4;overflow-wrap:anywhere
+}
+.document-studio .document-inspector-summary{
+  grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+  padding:12px 0;border-block:0
+}
+.document-studio .document-inspector-summary>div{
+  display:flex;flex-direction:column-reverse;align-items:center;justify-content:center;
+  text-align:center;gap:5px;min-width:0;padding:12px 5px;
+  border:1px solid var(--line-soft);border-radius:var(--radius-lg);
+  background:var(--bg-card)
+}
+.document-studio .document-inspector-summary>div b{
+  color:var(--text);font-size:1.3125rem;font-weight:700;
+  font-variant-numeric:tabular-nums;line-height:1.1
+}
+.document-studio .document-inspector-summary>div span{
+  max-width:100%;font-size:.6875rem;color:var(--text-dim);
+  overflow-wrap:anywhere;line-height:1.3
+}
+.document-studio .document-inspector-list button{
+  background:var(--bg-card);border-color:var(--line-soft);
+  text-align:left;min-height:var(--touch-min)
+}
+.document-studio .document-inspector-list button:hover{
+  background:var(--bg-hover);border-color:var(--line)
+}
+@media(max-width:760px), (pointer:coarse) and (max-height:500px){
+  .document-studio .document-title{align-items:stretch;gap:3px;min-width:0}
+  .document-studio .document-title-name{font-size:.8125rem;line-height:1.15}
+  .document-studio .document-title-meta{justify-content:flex-start;font-size:.6875rem}
+  .document-studio .document-title-progress{width:min(8rem,82%)}
+}
+@media(prefers-reduced-motion:reduce){
+  .document-studio .document-pagination .document-position{transition:none}
 }
 
 </style>
@@ -28098,7 +28386,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1538, inhalt: 'e0e419e9e6d14dc1', gebaut: '2026-10-24T16:38:38.226Z' };
+const Stand = { fassung: 1543, inhalt: 'e34f39325d4886f3', gebaut: '2026-10-29T20:26:32.846Z' };
 window.Stand = Stand;
 
 </script>
@@ -78404,6 +78692,58 @@ const ChronikDaten = {
             ],
             "groesstesProblem": "Die alte Geometrieprüfung mass die neue Bedienzeile am inneren Vorschaublatt. Die richtige Messung der ganzen Karte fand danach einen tatsächlichen fehlenden Textabstand am Telefon. Die zweite Bildabnahme fand einen alten Ordnerpfad in globalen Favoriten und einen kurzzeitig weissen Ausschnitt neben der noch wachsenden Suchauswahl; beide zuerst rot nachgewiesen und korrigiert. Ein zusätzlicher Unix-OCR-Hilfentest ist unter Windows nicht ausführbar; der produktnahe Windows-Lauf selbst ist grün.",
             "massnahmen": []
+        },
+        {
+            "datum": "2026-10-29",
+            "wochentag": "Donnerstag",
+            "titel": "Bestehende iPhone- und Windows-Apps sicher integrieren",
+            "wasIchWeiss": "Glass Wheel bleibt auf Wunsch liegen. Redur nutzt bereits die Windows-App und die iPhone-App über Codemagic/IPA. Ein eigener Sync-Server existiert nicht. Neuer lokaler Integrationsbranch von main 326533b06; App-IDs, Herkunft und bestehende Datenprofile bleiben unverändert.",
+            "nachrichten": [
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "mache alles",
+                    "woher": "Aktueller Dialog nach den Vorschlägen zur Geräteintegration",
+                    "gemeint": "Die vorhandenen nativen Apps und ihre sichere Geräteübertragung tatsächlich weiterentwickeln.",
+                    "besser": "Bestehende Apps erhalten und native Dateieingänge, Sicherungen sowie den freiwilligen Abgleich prüfen.",
+                    "besserePrompt": "Kein neuer Anlauf für Glass; echte Integrationen mit Tests und offenen externen Voraussetzungen liefern."
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "auf laptop als windows app und auf iphone als iphone app direk",
+                    "woher": "Antwort auf die Gerätefrage im aktuellen Dialog",
+                    "gemeint": "Beide Apps sind bereits installiert; keine Neuanlage ihrer Identität oder Speicherorte.",
+                    "besser": "Windows und iPhone verwenden bereits installierte Redion-Apps.",
+                    "besserePrompt": "Datenhaltende In-place-Updates mit denselben IDs vorbereiten."
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "also über codemagit nehmen ich die ipa date und dann lade ich es auf iphone",
+                    "woher": "Antwort im aktuellen Dialog",
+                    "gemeint": "Den bisherigen Codemagic-/IPA-Installationsweg beibehalten.",
+                    "besser": "Ich installiere die über Codemagic gebaute IPA auf dem iPhone.",
+                    "besserePrompt": "Codemagic verwenden; TestFlight nicht als bereits eingerichtet voraussetzen."
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "nein ich habe keine server",
+                    "woher": "Antwort auf die Sync-Voraussetzung im aktuellen Dialog",
+                    "gemeint": "Ein produktiver Geräteabgleich ist noch nicht eingerichtet.",
+                    "besser": "Ich habe noch keinen eigenen Sync-Server.",
+                    "besserePrompt": "Einrichtung vorbereiten, ohne Ressourcen, Abrechnung oder Upload ungefragt zu aktivieren."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E754: gemeinsame Geräteübersicht, sicherer Windows-Dateiwähler/Export, Betriebssystem-Dateiübergabe, iOS-Dokumentkopie und gemeinsamer Import. Gleiche Codemagic-/GitHub-IPA-Schritte, Windows-Web-Parität und Ausschluss nativer Bauordner aus öffentlichen Assets. Live-Sync und Signierung bleiben ausdrücklich externe Freigabeschritte.",
+                    "vonCommit": "326533b06",
+                    "bisCommit": "lokaler Integrationsbranch codex/iphone-windows-integration",
+                    "zeitraum": "29. Oktober 2026; Uhrzeit nicht protokolliert",
+                    "dauer": "nicht protokolliert",
+                    "pruefungen": "Echte Electron-App mit isoliertem Testprofil zweimal gestartet, Notiz über Neustart erhalten und native IPC nach Fragmentnavigation geprüft. Acht Browseransichten hell/dunkel und native Adaptertests. Bestehende Sicherungs- und Zwei-Geräte-Prüfungen gefahren; Schlussstand und Grenzen stehen im Integrationsbericht. Export-Gegenprobe entfernt im Test die Vollständigkeitsprüfung und wird nachweislich rot. Kein vollständiger grüner Gesamtlauf behauptet."
+                }
+            ],
+            "groesstesProblem": "Die erste native IPC-Prüfung erwartete eine URL ohne Fragment, obwohl Redion seine Bibliothek über Fragmentziele öffnet. Der reale Electron-Start deckte das auf. Jetzt bleibt die Einstiegsdatei exakt festgelegt, während Fragmentnavigation erlaubt und fremde Pfade/Frames gesperrt sind. Zusätzlich zeigte die Cloudflare-Prüfung, dass ein fehlender Server und der native Access-/CORS-Anmeldeweg nicht durch eine blosse Datenbankbindung ersetzt werden können.",
+            "massnahmen": []
         }
     ],
     "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
@@ -82033,9 +82373,13 @@ const DocumentMode = (() => {
         navigation.className = 'document-navigation';
         navigation.append(zurueck, thumbnailButton);
         top.append(navigation);
-        const position = document.createElement('span');
+        const position = document.createElement('button');
+        position.type = 'button';
         position.className = 'document-position';
+        position.dataset.documentAction = 'page-jump';
         position.textContent = wortEins(page) + ' ' + (state.index + 1) + '/' + documents.length;
+        position.title = 'Direkt zu einer ' + wortEins(page).toLowerCase() + ' springen';
+        position.disabled = documents.length < 2;
         position.setAttribute('aria-live', 'polite');
         position.setAttribute('aria-atomic', 'true');
         const previousButton = topButton('previous', '‹', 'Vorherige Seite');
@@ -82061,8 +82405,23 @@ const DocumentMode = (() => {
         zoomGroup.append(zoom, zoomLabel, topButton('fit', 'Anpassen', wortEins(page) + ' an die verfügbare Breite anpassen'));
         const titel = document.createElement('div');
         titel.className = 'document-title';
-        titel.textContent = page.text || 'Ohne Titel';
         titel.title = page.text || 'Ohne Titel';
+        const titelName = document.createElement('span');
+        titelName.className = 'document-title-name';
+        titelName.textContent = page.text || 'Ohne Titel';
+        const titelMeta = document.createElement('span');
+        titelMeta.className = 'document-title-meta';
+        const art = istFoliensatz(page) ? 'Präsentation'
+            : documents.some((block) => block.type === 'pdfseite') ? 'PDF' : 'Notizheft';
+        titelMeta.textContent = art + ' · ' + documents.length + ' ' +
+            (documents.length === 1 ? wortEins(page) : wortViele(page));
+        const titelFortschritt = document.createElement('progress');
+        titelFortschritt.className = 'document-title-progress';
+        titelFortschritt.max = documents.length;
+        titelFortschritt.value = state.index + 1;
+        titelFortschritt.hidden = documents.length <= 1;
+        titelFortschritt.setAttribute('aria-label', 'Lesefortschritt im Dokument');
+        titel.append(titelName, titelMeta, titelFortschritt);
         top.append(titel);
         if (page.gesperrt) {
             const schloss = document.createElement('span');
@@ -82659,6 +83018,12 @@ const DocumentMode = (() => {
         const aktivMarkieren = () => {
             previousButton.disabled = state.index === 0;
             nextButton.disabled = state.index === documents.length - 1;
+            position.setAttribute('aria-label', wortEins(page) + ' ' + (state.index + 1) +
+                ' von ' + documents.length + ' — zu einer anderen ' +
+                wortEins(page).toLowerCase() + ' springen');
+            titelFortschritt.value = state.index + 1;
+            titelFortschritt.setAttribute('aria-valuetext', wortEins(page) + ' ' +
+                (state.index + 1) + ' von ' + documents.length);
             thumbnails.querySelectorAll('[data-document-index]').forEach(button => {
                 if (Number(button.dataset.documentIndex) === state.index)
                     button.setAttribute('aria-current', 'page');
@@ -83788,6 +84153,35 @@ const DocumentMode = (() => {
                 menueSchliessen();
             if (!action)
                 return;
+            if (action === 'page-jump') {
+                if (documents.length < 2 || position.disabled)
+                    return;
+                position.disabled = true;
+                void (async () => {
+                    try {
+                        const antwort = await UI.frage('Zu welcher ' + wortEins(page) + ' springen? (1–' + documents.length + ')', String(state.index + 1));
+                        if (antwort === null || !workspace.isConnected)
+                            return;
+                        const eingabe = String(antwort).trim();
+                        const nummer = Number(eingabe);
+                        if (!/^[0-9]+$/.test(eingabe) || !Number.isSafeInteger(nummer) ||
+                            nummer < 1 || nummer > documents.length) {
+                            UI.toast('Bitte eine ' + wortEins(page) + ' zwischen 1 und ' +
+                                documents.length + ' eingeben.');
+                            return;
+                        }
+                        springe(nummer - 1);
+                    }
+                    catch (err) {
+                        UI.toast('Die Seite konnte nicht aufgerufen werden: ' +
+                            (err instanceof Error ? err.message : String(err)));
+                    }
+                    finally {
+                        position.disabled = false;
+                    }
+                })();
+                return;
+            }
             if (action === 'ink-ruler' && canAnnotate) {
                 toolsSetzen(true);
                 inkToolbar()?.querySelector('[data-act="lineal"]')?.click();
@@ -102218,55 +102612,59 @@ const Werkzeuge = (() => {
             '.docx,.pptx,.ppsx,.pptm,.ppsm,.epub,.pdf,.zip,image/*';
         inp.multiple = true;
         inp.addEventListener('change', async () => {
-            let n = 0;
-            for (const f of Array.from(inp.files ?? [])) {
-                const name = f.name.toLowerCase();
-                try {
-                    if (/\.zip$/i.test(name) && typeof ArchivImport !== 'undefined') {
-                        const erg = await ArchivImport.importZip(f, null, { still: true });
-                        UI.toast(erg.hinweis, 9000);
-                        n++;
-                        continue;
-                    }
-                    const textig = /\.(html?|htm|csv|tsv|md|markdown|txt)$/i.test(name) || f.type.startsWith('text/');
-                    if (!textig && !/\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i.test(name) && typeof ArchivImport !== 'undefined') {
-                        await ArchivImport.dateiAlsDokument(f, null);
-                        n++;
-                        continue;
-                    }
-                    if (/\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i.test(name)) {
-                        const erg = await Einlesen.datei(f);
-                        if (erg) {
-                            UI.toast(f.name + ': ' + erg.hinweis);
-                            n++;
-                            continue;
-                        }
-                    }
-                    const text = await f.text();
-                    if (/\.(html|htm)$/i.test(name)) {
-                        const p2 = Store.addPage(null, { text: f.name.replace(/\.[^.]+$/, ''), icon: '🌐' });
-                        ausHtml(p2.id, text);
-                    }
-                    else if (/\.(csv|tsv)$/i.test(name)) {
-                        const p2 = Store.addPage(null, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📊' });
-                        Einlesen.alsDatenbank(p2.id, p2.text, Datenbank.csvZerlegen(text.replace(/^﻿/, '')));
-                    }
-                    else {
-                        await mdDateiAnlegen(f.name, text);
-                    }
-                    n++;
-                }
-                catch (err) {
-                    UI.banner(f.name + ': ' +
-                        (err instanceof Error ? err.message : String(err)), 'fehler');
-                }
-            }
-            App.zeichneBaum();
-            if (typeof ArchivImport !== 'undefined')
-                ArchivImport.ansichtAuffrischen();
-            UI.toast(n + (n === 1 ? ' Datei eingelesen' : ' Dateien eingelesen'));
+            await importFiles(Array.from(inp.files ?? []));
         });
         inp.click();
+    };
+    const importFiles = async (files) => {
+        let n = 0;
+        for (const f of files) {
+            const name = f.name.toLowerCase();
+            try {
+                if (/\.zip$/i.test(name) && typeof ArchivImport !== 'undefined') {
+                    const erg = await ArchivImport.importZip(f, null, { still: true });
+                    UI.toast(erg.hinweis, 9000);
+                    n++;
+                    continue;
+                }
+                const textig = /\.(html?|htm|csv|tsv|md|markdown|txt)$/i.test(name) || f.type.startsWith('text/');
+                if (!textig && !/\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i.test(name) && typeof ArchivImport !== 'undefined') {
+                    await ArchivImport.dateiAlsDokument(f, null);
+                    n++;
+                    continue;
+                }
+                if (/\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i.test(name)) {
+                    const erg = await Einlesen.datei(f);
+                    if (erg) {
+                        UI.toast(f.name + ': ' + erg.hinweis);
+                        n++;
+                        continue;
+                    }
+                }
+                const text = await f.text();
+                if (/\.(html|htm)$/i.test(name)) {
+                    const p2 = Store.addPage(null, { text: f.name.replace(/\.[^.]+$/, ''), icon: '🌐' });
+                    ausHtml(p2.id, text);
+                }
+                else if (/\.(csv|tsv)$/i.test(name)) {
+                    const p2 = Store.addPage(null, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📊' });
+                    Einlesen.alsDatenbank(p2.id, p2.text, Datenbank.csvZerlegen(text.replace(/^﻿/, '')));
+                }
+                else {
+                    await mdDateiAnlegen(f.name, text);
+                }
+                n++;
+            }
+            catch (err) {
+                UI.banner(f.name + ': ' +
+                    (err instanceof Error ? err.message : String(err)), 'fehler');
+            }
+        }
+        App.zeichneBaum();
+        if (typeof ArchivImport !== 'undefined')
+            ArchivImport.ansichtAuffrischen();
+        UI.toast(n + (n === 1 ? ' Datei eingelesen' : ' Dateien eingelesen'));
+        return n;
     };
     const ordnerLesen = async () => {
         if (!window.showDirectoryPicker) {
@@ -103346,7 +103744,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         formelBibliothek, formelBibliothekLesen, formelBibliothekAnwenden,
         erinnerungSetzen, erinnerungen, erinnerungenPruefen, geraeteMeldung, posteingangMelden, meldungen, meldungGelesen, meldungenAlleGelesen, meldungenLeeren,
         weckrufLegen, naechsteErinnerung,
-        ordnerSchreiben, ordnerLesen, dateienLesen, einzelDatei,
+        ordnerSchreiben, ordnerLesen, dateienLesen, importFiles, einzelDatei,
         htmlExport, drucken, seiteAlsHtml, verschiebenNach, verschiebe,
         alleToggles, tastenkuerzel, systemSeite, datumLang, zeitKurz, papierkorbAufraeumen,
         wikiUmwandeln, wikiIndex, teilenMenue,
@@ -106516,6 +106914,7 @@ const Einstellungen = (() => {
                 ['emoji', 'smile', 'Emoji']
             ]],
         ['Verwaltung', [
+                ['geraete', 'workspace', 'iPhone und Windows'],
                 ['arbeitsplatz', 'workspace', 'Arbeitsbereich'],
                 ['analysen', 'chart', 'Analysen'],
                 ['bereiche', 'users', 'Bereiche'],
@@ -106743,6 +107142,7 @@ const Einstellungen = (() => {
     const feld = (schluessel, wert, platzhalter = '') => `<input data-set="${schluessel}" value="${esc(wert)}" placeholder="${esc(platzhalter)}">`;
     const kopf = (titel, unter) => `<h2>${titel}</h2>` + (unter ? `<p class="ez-unter">${unter}</p>` : '');
     const inhalt = (b) => ({
+        geraete: () => kopf('iPhone und Windows', 'Geräte, Sicherungen und freiwilliger Abgleich') + DeviceIntegration.overview(),
         konto: () => {
             const w = globalThis.Wolke;
             const angemeldet = !!(w && w.angemeldet && w.angemeldet());
@@ -121964,10 +122364,12 @@ const Wischen = (() => {
             return false;
         }
     };
+    let federGeneration = 0;
     const schieben = (dx) => {
         const b = buehne();
         if (!b || ruhig())
             return;
+        federGeneration++;
         b.style.transition = 'none';
         const wand = !nachbar(dx < 0 ? 1 : -1);
         const f = wand ? ZUG_WAND : ZUG;
@@ -121978,9 +122380,13 @@ const Wischen = (() => {
     const loslassen = () => {
         const b = buehne();
         if (b && b.style.transform) {
+            const generation = ++federGeneration;
             b.style.transition = 'transform .22s var(--ease-standard, ease)';
             b.style.transform = '';
-            setTimeout(() => { b.style.transition = ''; }, 260);
+            setTimeout(() => {
+                if (generation === federGeneration)
+                    b.style.transition = '';
+            }, 260);
         }
         zeiger = -1;
         gefangen = false;
@@ -122017,7 +122423,7 @@ const Wischen = (() => {
             if (e.pointerType === 'pen')
                 return;
             if (zeiger !== -1) {
-                zeiger = -1;
+                loslassen();
                 return;
             }
             if (!darf(e.target, e.clientX))
@@ -122083,7 +122489,10 @@ const Wischen = (() => {
             ziel.click();
         };
         addEventListener('pointerup', ende, { passive: true });
-        addEventListener('pointercancel', () => loslassen(), { passive: true });
+        addEventListener('pointercancel', (e) => {
+            if (e.pointerId === zeiger)
+                loslassen();
+        }, { passive: true });
     };
     return { starten, reiter, nachbar, darf, jetzt, einblenden, ankunft, letzte: () => letzte };
 })();
@@ -122104,6 +122513,8 @@ const TabShelf = (() => {
     let tab = null;
     let targets = [];
     let items = [];
+    let previewCategory = null;
+    let previewName = null;
     let aimed = -1;
     let box = { left: 0, right: 0, top: 0 };
     let columns = [];
@@ -122150,6 +122561,8 @@ const TabShelf = (() => {
             b.setAttribute('role', 'menuitem');
             b.tabIndex = i === 0 ? 0 : -1;
             b.dataset['ziel'] = z.id;
+            b.setAttribute('aria-label', z.name);
+            b.title = z.name;
             const zeichen = document.createElement('span');
             zeichen.className = 'ho-z';
             zeichen.dataset['sym'] = z.zeichen;
@@ -122174,6 +122587,11 @@ const TabShelf = (() => {
         catch { }
         targets = neu;
         tab = t;
+        if (previewCategory)
+            previewCategory.textContent = label(t);
+        if (previewName)
+            previewName.textContent = '';
+        shelf.removeAttribute('data-vorschau-aktiv');
         shelf.setAttribute('aria-label', 'Ziele in ' + label(t));
         tabs().forEach(b => b.setAttribute('aria-expanded', b === t ? 'true' : 'false'));
         aimed = -1;
@@ -122193,6 +122611,13 @@ const TabShelf = (() => {
         const war = aimed;
         aimed = i;
         const q = places[i];
+        if (i >= 0 && targets[i] && previewName) {
+            previewName.textContent = targets[i].name;
+            shelf.setAttribute('data-vorschau-aktiv', '');
+        }
+        else {
+            shelf.removeAttribute('data-vorschau-aktiv');
+        }
         if (i < 0 || !q)
             shelf.setAttribute('data-marke-weg', '');
         else if (typeof SelectionFlow !== 'undefined') {
@@ -122263,6 +122688,7 @@ const TabShelf = (() => {
         aimed = -1;
         items.forEach(b => b.removeAttribute('data-anvisiert'));
         shelf.setAttribute('data-marke-weg', '');
+        shelf.removeAttribute('data-vorschau-aktiv');
         tabs().forEach(b => b.setAttribute('aria-expanded', 'false'));
         if (war === 'finger') {
             bar.removeAttribute('data-zielleiste');
@@ -122473,6 +122899,17 @@ const TabShelf = (() => {
         s.className = 'ru-waechst';
         s.setAttribute('role', 'menu');
         s.setAttribute('aria-orientation', 'horizontal');
+        const preview = document.createElement('div');
+        preview.className = 'ho-ziel-vorschau';
+        preview.setAttribute('aria-hidden', 'true');
+        const previewType = document.createElement('span');
+        previewType.className = 'ho-ziel-vorschau-bereich';
+        const previewText = document.createElement('strong');
+        previewText.className = 'ho-ziel-vorschau-name';
+        preview.append(previewType, previewText);
+        s.appendChild(preview);
+        previewCategory = previewType;
+        previewName = previewText;
         s.hidden = true;
         s.addEventListener('keydown', onShelfKey);
         s.addEventListener('click', e => {
@@ -123450,7 +123887,7 @@ const Austausch = (() => {
             }
             catch (err) {
                 if (typeof UI !== 'undefined' && UI.toast)
-                    UI.toast('Die Datei konnte nicht in iOS-Dateien gespeichert werden: ' +
+                    UI.toast('Die Datei konnte nicht nativ gespeichert werden: ' +
                         (err instanceof Error ? err.message : String(err)));
                 return false;
             }
@@ -130863,9 +131300,9 @@ const Dateien = (() => {
             }
             try {
                 await nativeDateien.speichern(blob, String(satz.name || 'Datei'));
-                UI.toast('Datei unter Auf meinem iPhone → Redion → Exporte gespeichert. Für iCloud Drive im Teilen-Menü „In Dateien sichern“ wählen.');
+                UI.toast(nativeDateien.ort || 'Datei unter Auf meinem iPhone → Redion → Exporte gespeichert. Für iCloud Drive im Teilen-Menü „In Dateien sichern“ wählen.');
                 if (typeof Protokoll !== 'undefined')
-                    Protokoll.notieren('export', 'Datei „' + satz.name + '“ in iOS-Dateien exportiert', { id: dateiId });
+                    Protokoll.notieren('export', 'Datei „' + satz.name + '“ nativ exportiert', { id: dateiId });
                 return true;
             }
             catch (err) {
@@ -150374,6 +150811,12 @@ const Kopfleiste = (() => {
         if (!p.ohneTools && eigen) {
             const tools = document.createElement('div');
             tools.className = 'pg-tools';
+            tools.setAttribute('role', 'group');
+            tools.setAttribute('aria-label', 'Seitenwerkzeuge');
+            const caption = document.createElement('span');
+            caption.className = 'pg-tools-caption';
+            caption.textContent = 'Seitenwerkzeuge';
+            caption.setAttribute('aria-hidden', 'true');
             const z = (name) => {
                 try {
                     return Register.symbole.alsSvg(name, 15);
@@ -150393,6 +150836,7 @@ const Kopfleiste = (() => {
                     '<button data-a="font">' + z('typeface') + 'Schrift</button>' +
                     '<button data-a="vorlage">' + z('puzzle') + 'Vorlage</button>' +
                     '<button data-a="ai">' + z('sparkle') + 'Mit KI</button>';
+            tools.prepend(caption);
             tools.addEventListener('click', e => {
                 const b = elVon(e)?.closest('button[data-a]');
                 if (!b)
@@ -155874,7 +156318,7 @@ const App = (() => {
                 UI.toast(paket.ausgelassen
                     ? 'Sicherung mit Lücken gespeichert: ' + paket.ausgelassen +
                         ' Datei(en) fehlen. Hinweis in der Sicherung lesen und erneut sichern.'
-                    : 'Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
+                    : nativeSicherung.ort || 'Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
                 return paket.ausgelassen === 0;
             }
             const l = document.createElement('a');
@@ -155991,116 +156435,121 @@ const App = (() => {
             const f = inp.files?.[0];
             if (!f)
                 return;
-            let zip = null, text = '';
-            const kopf = new Uint8Array(await f.slice(0, 4).arrayBuffer());
-            const istZip = kopf[0] === 0x50 && kopf[1] === 0x4B;
-            if (istZip) {
-                try {
-                    zip = await Einlesen.zipLesenAusBlob(f);
-                    text = await zip.text('daten.json') || '';
-                }
-                catch (e) {
-                    alert('Dieses Archiv liess sich nicht öffnen: ' +
-                        (e instanceof Error ? e.message : String(e)));
-                    return;
-                }
-                if (!text) {
-                    alert('In diesem Archiv steckt keine „daten.json" — es ist keine ' +
-                        'Redion-Sicherung.');
-                    return;
-                }
-            }
-            else {
-                text = await f.text();
-            }
-            let vorschau = {};
-            try {
-                vorschau = JSON.parse(text);
-            }
-            catch {
-                alert('Diese Datei ist keine Sicherung — sie lässt sich nicht lesen.');
-                return;
-            }
-            const faecherJetzt = {
-                blocks: Store.cache.blocks || {},
-                collections: Store.cache.collections || {},
-                views: Store.cache.views || {}
-            };
-            const faecherDatei = {
-                blocks: vorschau.blocks || {},
-                collections: vorschau.collections || {},
-                views: vorschau.views || {}
-            };
-            const beimErsetzen = ImportVergleich.rechnen(faecherJetzt, faecherDatei, 'ersetzen');
-            const beimDazu = ImportVergleich.rechnen(faecherJetzt, faecherDatei, 'zusammenfuehren');
-            const wahl = await Dialog.wahl({
-                titel: 'Sicherung einspielen',
-                text: 'Die Datei enthält ' +
-                    Object.keys(vorschau.blocks || {}).length + ' Blöcke' +
-                    (Array.isArray(vorschau.versions) ? ' und ' + vorschau.versions.length +
-                        ' Fassungen aus dem Verlauf' : '') + '.' +
-                    (vorschau.hinweis ? '\n\n' + vorschau.hinweis : ''),
-                knoepfe: [
-                    { id: 'ersetzen', text: 'Ersetzen',
-                        hinweis: ImportVergleich.satz(beimErsetzen) +
-                            ' Vorher lädt Redion eine Sicherheitskopie des jetzigen ' +
-                            'Standes herunter.' },
-                    { id: 'zusammenfuehren', text: 'Dazulegen',
-                        hinweis: ImportVergleich.satz(beimDazu) +
-                            ' Es wird nichts gelöscht.' },
-                    { id: '', text: 'Abbrechen' }
-                ]
-            });
-            if (!wahl)
-                return;
-            let kopie = false;
-            if (wahl === 'ersetzen') {
-                kopie = await sicherungSpeichern();
-                if (!kopie) {
-                    alert('Es wurde NICHTS eingespielt — dein Bestand steht unverändert.\n\n' +
-                        'Ohne Sicherheitskopie wäre das Ersetzen ein Sprung ohne Netz.');
-                    return;
-                }
-            }
-            try {
-                const erg = await Store.importAll(text, wahl);
-                let anhaenge = { da: 0, erwartet: 0, fehlend: [], unvollstaendig: [] };
-                if (zip)
-                    anhaenge = await anhaengeEinspielen(zip, wahl);
-                danach && danach();
-                zeichneBaum();
-                zeichneSeite();
-                UI.toast('Sicherung geladen — ' + erg.bloecke + ' Blöcke' +
-                    (kopie ? ' (der alte Stand liegt als Sicherheitskopie im ' +
-                        'Download-Ordner)' : '') +
-                    (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : '') +
-                    (anhaenge.da ? ', ' + anhaenge.da + ' Anhang/Anhänge' : '') +
-                    (anhaenge.fehlend.length
-                        ? '. ' + anhaenge.fehlend.length + ' von ' + anhaenge.erwartet +
-                            ' Anhängen fehlen: ' + anhaenge.fehlend.slice(0, 3).join(', ') +
-                            (anhaenge.fehlend.length > 3 ? ' …' : '') +
-                            '. Die Sicherung liegt noch — du kannst sie erneut einspielen.'
-                        : '') +
-                    (anhaenge.unvollstaendig.length
-                        ? '. ' + anhaenge.unvollstaendig.length + ' Anhang/Anhänge ' +
-                            'kamen verkürzt an: ' +
-                            anhaenge.unvollstaendig.slice(0, 3).join(', ') +
-                            (anhaenge.unvollstaendig.length > 3 ? ' …' : '') +
-                            '. Sie wurden trotzdem übernommen — was da ist, ist da.'
-                        : '') +
-                    (erg.frage
-                        ? '. Der Abgleich mit der Wolke steht still: dort liegt noch ' +
-                            'der Stand von vorher. Entscheide unter „Mehr → Wolke", ob ' +
-                            'dieses Gerät nur lokal weiterarbeitet oder vollständig neu ' +
-                            'abgleicht.'
-                        : ''), erg.frage ? 14000 : undefined);
-            }
-            catch (err) {
-                alert('Konnte nicht geladen werden: ' +
-                    (err instanceof Error ? err.message : String(err)));
-            }
+            await importBackupFile(f, danach);
         });
         inp.click();
+    };
+    const importBackupFile = async (f, danach) => {
+        let zip = null, text = '';
+        const kopf = new Uint8Array(await f.slice(0, 4).arrayBuffer());
+        const istZip = kopf[0] === 0x50 && kopf[1] === 0x4B;
+        if (istZip) {
+            try {
+                zip = await Einlesen.zipLesenAusBlob(f);
+                text = await zip.text('daten.json') || '';
+            }
+            catch (e) {
+                alert('Dieses Archiv liess sich nicht öffnen: ' +
+                    (e instanceof Error ? e.message : String(e)));
+                return 'failed';
+            }
+            if (!text) {
+                alert('In diesem Archiv steckt keine „daten.json" — es ist keine ' +
+                    'Redion-Sicherung.');
+                return 'failed';
+            }
+        }
+        else {
+            text = await f.text();
+        }
+        let vorschau = {};
+        try {
+            vorschau = JSON.parse(text);
+        }
+        catch {
+            alert('Diese Datei ist keine Sicherung — sie lässt sich nicht lesen.');
+            return 'failed';
+        }
+        const faecherJetzt = {
+            blocks: Store.cache.blocks || {},
+            collections: Store.cache.collections || {},
+            views: Store.cache.views || {}
+        };
+        const faecherDatei = {
+            blocks: vorschau.blocks || {},
+            collections: vorschau.collections || {},
+            views: vorschau.views || {}
+        };
+        const beimErsetzen = ImportVergleich.rechnen(faecherJetzt, faecherDatei, 'ersetzen');
+        const beimDazu = ImportVergleich.rechnen(faecherJetzt, faecherDatei, 'zusammenfuehren');
+        const wahl = await Dialog.wahl({
+            titel: 'Sicherung einspielen',
+            text: 'Die Datei enthält ' +
+                Object.keys(vorschau.blocks || {}).length + ' Blöcke' +
+                (Array.isArray(vorschau.versions) ? ' und ' + vorschau.versions.length +
+                    ' Fassungen aus dem Verlauf' : '') + '.' +
+                (vorschau.hinweis ? '\n\n' + vorschau.hinweis : ''),
+            knoepfe: [
+                { id: 'ersetzen', text: 'Ersetzen',
+                    hinweis: ImportVergleich.satz(beimErsetzen) +
+                        ' Vorher lädt Redion eine Sicherheitskopie des jetzigen ' +
+                        'Standes herunter.' },
+                { id: 'zusammenfuehren', text: 'Dazulegen',
+                    hinweis: ImportVergleich.satz(beimDazu) +
+                        ' Es wird nichts gelöscht.' },
+                { id: '', text: 'Abbrechen' }
+            ]
+        });
+        if (!wahl)
+            return 'cancelled';
+        let kopie = false;
+        if (wahl === 'ersetzen') {
+            kopie = await sicherungSpeichern();
+            if (!kopie) {
+                alert('Es wurde NICHTS eingespielt — dein Bestand steht unverändert.\n\n' +
+                    'Ohne Sicherheitskopie wäre das Ersetzen ein Sprung ohne Netz.');
+                return 'failed';
+            }
+        }
+        try {
+            const erg = await Store.importAll(text, wahl);
+            let anhaenge = { da: 0, erwartet: 0, fehlend: [], unvollstaendig: [] };
+            if (zip)
+                anhaenge = await anhaengeEinspielen(zip, wahl);
+            danach && danach();
+            zeichneBaum();
+            zeichneSeite();
+            UI.toast('Sicherung geladen — ' + erg.bloecke + ' Blöcke' +
+                (kopie ? ' (der alte Stand liegt als Sicherheitskopie im ' +
+                    'Download-Ordner)' : '') +
+                (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : '') +
+                (anhaenge.da ? ', ' + anhaenge.da + ' Anhang/Anhänge' : '') +
+                (anhaenge.fehlend.length
+                    ? '. ' + anhaenge.fehlend.length + ' von ' + anhaenge.erwartet +
+                        ' Anhängen fehlen: ' + anhaenge.fehlend.slice(0, 3).join(', ') +
+                        (anhaenge.fehlend.length > 3 ? ' …' : '') +
+                        '. Die Sicherung liegt noch — du kannst sie erneut einspielen.'
+                    : '') +
+                (anhaenge.unvollstaendig.length
+                    ? '. ' + anhaenge.unvollstaendig.length + ' Anhang/Anhänge ' +
+                        'kamen verkürzt an: ' +
+                        anhaenge.unvollstaendig.slice(0, 3).join(', ') +
+                        (anhaenge.unvollstaendig.length > 3 ? ' …' : '') +
+                        '. Sie wurden trotzdem übernommen — was da ist, ist da.'
+                    : '') +
+                (erg.frage
+                    ? '. Der Abgleich mit der Wolke steht still: dort liegt noch ' +
+                        'der Stand von vorher. Entscheide unter „Mehr → Wolke", ob ' +
+                        'dieses Gerät nur lokal weiterarbeitet oder vollständig neu ' +
+                        'abgleicht.'
+                    : ''), erg.frage ? 14000 : undefined);
+            return anhaenge.fehlend.length || anhaenge.unvollstaendig.length ? 'failed' : 'imported';
+        }
+        catch (err) {
+            alert('Konnte nicht geladen werden: ' +
+                (err instanceof Error ? err.message : String(err)));
+            return 'failed';
+        }
     };
     const setzeBreite = (px) => {
         const s = document.getElementById('sidebar');
@@ -157310,6 +157759,12 @@ const App = (() => {
                 console.error('Die Startansicht konnte nicht geöffnet werden:', fehler);
             }
         }
+        try {
+            DeviceIntegration.start();
+        }
+        catch (error) {
+            console.error('Geräteintegration konnte nicht starten:', error);
+        }
     };
     const beispielAnlegen = () => {
         const p = Store.addPage(null, { text: 'Willkommen', icon: '👋' });
@@ -157424,11 +157879,186 @@ const App = (() => {
         kuerzlich, kommendeTermine,
         schauplatz,
         ABSCHNITTE, abschnittAn, abschnittSchalten, abschnitteAnpassen, reiterWechseln,
-        sicherungSpeichern, sicherungPaketBauen, sicherungLaden, zurueck, vorwaerts, arbeitsbereich,
+        sicherungSpeichern, sicherungPaketBauen, sicherungLaden, importBackupFile, zurueck, vorwaerts, arbeitsbereich,
         anhaengeEinspielen,
         erstellenBlatt,
         erstellenWege, erstellenWeg
     };
+})();
+
+</script>
+<script>
+/* ===== quell/schale/aufbau/device-integration.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/device-integration.ts (npm run bauen:ts). */
+const DeviceIntegration = (() => {
+    const desktop = () => globalThis.RedionDesktop;
+    let started = false, draining = false;
+    const esc = (value) => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+    const snapshot = () => {
+        const native = !!globalThis.RedionNativeDateien;
+        const platform = desktop() ? 'Windows-App' : native ? 'iPhone-App' : 'Web / PWA';
+        const disk = !Store.speichertNicht();
+        const cloud = Wolke.zustand;
+        const conflicts = Zusammen.offene().length;
+        const sync = Wolke.neuAbgleichOffen() ? 'Entscheidung nach Wiederherstellung erforderlich'
+            : conflicts ? conflicts + ' offene Konflikte – nichts still überschreiben'
+                : cloud.fehler || cloud.fehlerDateien ? 'Abgleich fehlgeschlagen: ' + (cloud.fehler || cloud.fehlerDateien)
+                    : cloud.laeuft ? 'Abgleich läuft …'
+                        : !Wolke.abgleichErlaubt() ? 'Ausgeschaltet – nur lokal'
+                            : !Wolke.angemeldet() ? 'Nicht angemeldet'
+                                : !Wolke.hatSchluessel() ? 'Verschlüsselung entsperren'
+                                    : !navigator.onLine ? 'Offline – Abgleich wartet'
+                                        : cloud.letzter ? 'Letzter Abgleich: ' + new Date(cloud.letzter).toLocaleString('de-CH')
+                                            : 'Eingerichtet – noch kein erfolgreicher Abgleich in dieser Sitzung';
+        return { platform, disk, sync, conflicts, backup: Sicherung.stand(), version: Stand.inhalt };
+    };
+    const overview = () => {
+        const state = snapshot();
+        return '<div class="dev-overview">' +
+            '<p class="dev-intro">Ein Redion auf deinen Geräten. Dokumente bleiben lokal; ein Geräteabgleich ist freiwillig.</p>' +
+            '<dl><dt>Dieses Gerät</dt><dd>' + esc(state.platform) + '</dd>' +
+            '<dt>Lokaler Speicher</dt><dd>' + (state.disk ? 'Dauerhafte Ablage verfügbar' : 'WARNUNG: nur Arbeitsspeicher – jetzt extern sichern') + '</dd>' +
+            '<dt>Letzte vollständige Sicherung</dt><dd>' + (state.backup.wann
+            ? esc(new Date(state.backup.wann).toLocaleString('de-CH')) + ' (' + esc(state.backup.art) + ')'
+            : 'Keine vollständige Sicherung bekannt') + '</dd>' +
+            '<dt>Geräteabgleich</dt><dd>' + esc(state.sync) + '</dd>' +
+            '<dt>Web-Code-Stand</dt><dd><code>' + esc(state.version) + '</code></dd></dl>' +
+            '<p>Gleicher Code bedeutet nicht automatisch gleiche Notizen. iPhone-App, Windows-App und Browser haben zunächst getrennte lokale Speicher.</p>' +
+            '<div class="dev-actions"><button data-device="backup">Vollständig sichern</button>' +
+            '<button data-device="restore">Sicherung übernehmen</button>' +
+            '<button data-device="open">PDF oder Datei öffnen</button>' +
+            '<button data-device="sync">Geräteabgleich einrichten</button></div>' +
+            '<details><summary>Sicher zum anderen Gerät wechseln</summary><ol>' +
+            '<li>Auf dem bisherigen Gerät eine vollständige Sicherung speichern. Mit Anhängen ist das eine .redion-Datei.</li>' +
+            '<li>Die Datei außerhalb des App-Containers ablegen und auf das andere Gerät übertragen.</li>' +
+            '<li>Dort „Sicherung übernehmen“ wählen. Vorschau lesen und bewusst Dazulegen oder Ersetzen wählen.</li>' +
+            '<li>Notizen, PDFs und Anhänge prüfen. Die Original-Sicherung behalten.</li></ol>' +
+            '<p>Dazulegen ist kein konfliktfreier Zwei-Wege-Abgleich: Bei gleichen Kennungen kann die Sicherungsfassung gewinnen. Nicht wiederholt zwischen Geräten hin- und herimportieren.</p></details>' +
+            '<p class="dev-warning">Vor App-Updates extern sichern. Die bestehende App nicht löschen und App-ID bzw. Windows-Profil nicht wechseln.</p></div>';
+    };
+    const act = async (action) => {
+        if (action === 'backup')
+            await App.sicherungSpeichern();
+        if (action === 'restore')
+            App.sicherungLaden();
+        if (action === 'open') {
+            const bridge = desktop();
+            if (bridge) {
+                await bridge.pick();
+                await drain();
+            }
+            else
+                Werkzeuge.dateienLesen();
+        }
+        if (action === 'sync')
+            WolkeFenster.dialog();
+    };
+    const save = async (blob, name) => {
+        const bridge = desktop();
+        if (!bridge)
+            throw new Error('Windows-Dateibrücke fehlt.');
+        const id = await bridge.saveBegin(name, blob.size);
+        if (!id)
+            throw new DOMException('Speichern abgebrochen. Es wurde nichts geschrieben.', 'AbortError');
+        try {
+            for (let offset = 0; offset < blob.size; offset += 1024 * 1024)
+                await bridge.saveWrite(id, new Uint8Array(await blob.slice(offset, offset + 1024 * 1024).arrayBuffer()));
+            if (!await bridge.saveCommit(id))
+                throw new Error('Speichern nicht bestätigt.');
+        }
+        catch (error) {
+            await bridge.saveCancel(id).catch(() => { });
+            throw error;
+        }
+    };
+    const importFile = async (file) => {
+        if (Store.speichertNicht())
+            throw new Error('Die lokale Ablage ist nicht verfügbar. Erst sichern und den Speicherfehler beheben.');
+        const choice = await Dialog.wahl({ titel: 'In Redion übernehmen?',
+            text: file.name + ' – ' + Sicherung.groesse(file.size) +
+                '\nDas Original bleibt unverändert. Eine Sicherung wird erst nach einer weiteren Vorschau eingespielt.',
+            knoepfe: [{ id: 'open', text: 'Übernehmen' }, { id: '', text: 'Abbrechen' }] });
+        if (choice !== 'open')
+            return;
+        if (/\.(redion|json)$/i.test(file.name)) {
+            if (await App.importBackupFile(file) === 'failed')
+                throw new Error('Die Sicherung wurde nicht vollständig übernommen.');
+        }
+        else if (await Werkzeuge.importFiles([file]) !== 1)
+            throw new Error('Die Datei konnte nicht übernommen werden.');
+        await Store.flush();
+    };
+    const drain = async () => {
+        const bridge = desktop();
+        if (!started || !bridge || draining)
+            return;
+        draining = true;
+        try {
+            for (const item of await bridge.pending()) {
+                try {
+                    if (!Number.isSafeInteger(item.size) || item.size < 0 || item.size >= 4 * 1024 ** 3)
+                        throw new Error('Ungültige Dateigröße.');
+                    const chunks = [];
+                    let offset = 0;
+                    while (offset < item.size) {
+                        const bytes = new Uint8Array(await bridge.read(item.id, offset));
+                        if (!bytes.length || bytes.length > item.size - offset)
+                            throw new Error('Datei unvollständig gelesen.');
+                        chunks.push(new Blob([bytes]));
+                        offset += bytes.length;
+                    }
+                    await importFile(new File(chunks, item.name));
+                }
+                catch (error) {
+                    UI.banner('Datei nicht übernommen: ' + (error instanceof Error ? error.message : String(error)) +
+                        ' Das Original bleibt erhalten und kann erneut geöffnet werden.', 'fehler');
+                }
+                finally {
+                    await bridge.release(item.id);
+                }
+            }
+        }
+        finally {
+            draining = false;
+        }
+    };
+    const start = () => {
+        if (started)
+            return;
+        started = true;
+        const bridge = desktop();
+        if (bridge) {
+            globalThis.RedionNativeSicherung = Object.freeze({ speichern: save,
+                ort: 'Sicherung am gewählten Windows-Speicherort gespeichert.' });
+            globalThis.RedionNativeDateien = Object.freeze({ speichern: save,
+                ort: 'Datei am gewählten Windows-Speicherort gespeichert.' });
+            bridge.onFiles(() => { void drain().catch(report); });
+            window.addEventListener('focus', () => { void drain().catch(report); });
+            void drain().catch(report);
+        }
+        document.addEventListener('click', event => {
+            const target = event.target instanceof Element ? event.target.closest('[data-device]') : null;
+            if (!target)
+                return;
+            void act(target.dataset.device || '').catch(report).finally(refresh);
+        });
+        Wolke.beiAenderung(refresh);
+        Register.befehle.melde({ gruppe: 'Geräte', titel: 'iPhone, Windows und Sicherungen',
+            tun: () => Einstellungen.oeffne('geraete') });
+    };
+    const refresh = () => {
+        const current = document.querySelector('.dev-overview dl');
+        if (!current)
+            return;
+        const template = document.createElement('template');
+        template.innerHTML = overview();
+        const next = template.content.querySelector('dl');
+        if (next && next.innerHTML !== current.innerHTML)
+            current.replaceWith(next);
+    };
+    const report = (error) => UI.banner(error instanceof Error ? error.message : String(error), 'fehler');
+    return { start, snapshot, overview, importFile, save };
 })();
 
 </script>

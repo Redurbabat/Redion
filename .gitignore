@@ -3,9 +3,12 @@
 node_modules/
 # Von Capacitor erzeugtes Xcode-Projekt (nicht Redions ios/-Quellordner).
 /build/ios-capacitor/
+/build/ios-web-paritaet.json
 # Generierte Offline-Dateien und EXE-Installer für Windows (keine Nutzerdateien).
 /build/windows-app/
 /build/windows-dist/
+/windows/generated/
+/www/
 .wrangler/
 .DS_Store
 Thumbs.db
@@ -31,6 +34,7 @@ bilder/
 #
 # Deshalb: das Muster steht hier, BEVOR es passieren kann.
 *.redion
+redion-sicherung-*.json
 
 # Und die echten Geheimnisse. `.env` allein reichte nicht — `.env.local`,
 # `.env.produktion` und `.dev.vars` (Wranglers lokale Geheimnisse) gingen

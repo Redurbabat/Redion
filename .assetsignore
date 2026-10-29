@@ -38,6 +38,13 @@ skripte/
 dienste/
 bilder/
 doku/
+/windows/
+/ios/
+/build/
+/www/
+*.cts
+*.swift
+*.exe
 
 # --- PERSÖNLICHES: gehört Redur, nicht dem Netz (E520) ---------------------
 #  GEFUNDEN IM DEPLOY-LOG vom 9. September, Zeile für Zeile mitgelesen:
@@ -54,6 +61,7 @@ Redur_Babat_FZ_MOE_Lehrpersonen.pdf
 Schul Inhalt
 *.pdf
 *.redion
+redion-sicherung-*.json
 
 #  UND DIE CHRONIK. `chronik/chronik.json` ist die QUELLE von UR.md und
 #  PROBLEME.md — Redurs Nachrichten im Wortlaut, jeder Arbeitstag, jedes

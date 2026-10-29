@@ -6,6 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { compareWindowsWeb } from './compare-web.mts';
 
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const target = path.join(root, 'build/windows-app');
@@ -34,6 +35,8 @@ export function prepareWindowsApp(from = root, to = target) {
   if (!html.includes('quell/start.js') || html.includes('redion-native-sicherung.js')) {
     throw new Error('Falsche Web- oder iOS-Vorlage im Windows-Build.');
   }
+  // Lieber abbrechen als alte Dateien aus einem früheren Branch ausliefern.
+  compareWindowsWeb(root, target);
   console.log('Redion Windows: identische Weboberfläche offline paketiert.');
   return target;
 }

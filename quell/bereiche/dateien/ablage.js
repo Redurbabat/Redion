@@ -171,9 +171,9 @@ const Dateien = (() => {
             }
             try {
                 await nativeDateien.speichern(blob, String(satz.name || 'Datei'));
-                UI.toast('Datei unter Auf meinem iPhone → Redion → Exporte gespeichert. Für iCloud Drive im Teilen-Menü „In Dateien sichern“ wählen.');
+                UI.toast(nativeDateien.ort || 'Datei unter Auf meinem iPhone → Redion → Exporte gespeichert. Für iCloud Drive im Teilen-Menü „In Dateien sichern“ wählen.');
                 if (typeof Protokoll !== 'undefined')
-                    Protokoll.notieren('export', 'Datei „' + satz.name + '“ in iOS-Dateien exportiert', { id: dateiId });
+                    Protokoll.notieren('export', 'Datei „' + satz.name + '“ nativ exportiert', { id: dateiId });
                 return true;
             }
             catch (err) {

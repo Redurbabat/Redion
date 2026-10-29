@@ -1,0 +1,18 @@
+.dev-overview{max-width:720px;color:var(--text);overflow-wrap:anywhere}
+.dev-overview p{line-height:1.6}
+.dev-intro{color:var(--text-dim)}
+.dev-overview dl{display:grid;grid-template-columns:minmax(120px,1fr) 2fr;gap:12px 18px;padding:18px;background:var(--bg-hover);border:1px solid var(--line);border-radius:14px}
+.dev-overview dt{color:var(--text-dim)}
+.dev-overview dd{margin:0;font-weight:600}
+.dev-actions{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0}
+.dev-overview .dev-actions button{min-height:44px;padding:10px 15px;border-radius:10px;background:var(--bg-hover);border:1px solid var(--line);color:var(--text);font:inherit;cursor:pointer}
+.dev-overview .dev-actions button:hover{background:var(--bg-active)}
+.dev-overview .dev-actions button:active{transform:translateY(1px)}
+.dev-overview .dev-actions button:focus-visible,.dev-overview summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.dev-overview ol{padding-inline-start:24px}
+.dev-overview summary{min-height:44px;display:list-item;align-content:center;cursor:pointer;font-weight:600}
+.dev-overview li{margin:8px 0;line-height:1.55}
+.dev-warning{padding:14px;border-left:3px solid var(--accent);background:var(--bg-hover);border-radius:6px}
+@media(max-width:600px){.dev-overview dl{grid-template-columns:1fr;gap:5px}.dev-overview dd{margin-bottom:12px}.dev-actions{flex-direction:column}.dev-actions button{width:100%;text-align:left}}
+@media(prefers-reduced-motion:reduce){.dev-overview .dev-actions button:active{transform:none}}
+body[data-bewegung="ruhig"] .dev-actions button:active{transform:none}

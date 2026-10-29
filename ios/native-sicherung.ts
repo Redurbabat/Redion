@@ -23,12 +23,14 @@ import { createHomeShortcutRouter } from './home-shortcuts.mjs';
 import { enableIosSafariLinks } from './native-safari-links.mjs';
 import { createIosShareInbox } from './incoming-share.mjs';
 import { createIosShareReadiness } from './incoming-share-readiness.mjs';
+import { createNativeDocumentInbox } from './native-documents.mts';
 
 // The same global lexical store used by Redion's classic browser scripts.
 // A Share Extension never sees these objects; only the foreground host does.
 declare const Store: any;
 declare const App: any;
 declare const Ereignisse: any;
+declare const DeviceIntegration: any;
 
 const saveFile = withNativeExportFeedback(createNativeFileExporter({
   filesystem: Filesystem,
@@ -95,6 +97,13 @@ if (Capacitor.getPlatform() === 'ios' && Capacitor.isNativePlatform()) {
     document
   });
   let incoming: ReturnType<typeof createIosShareInbox> | null = null;
+  (globalThis as any).RedionNativeDocuments = createNativeDocumentInbox({
+    filesystem: Filesystem, directory: Directory.Documents,
+    ready: () => readiness.ready() && typeof DeviceIntegration !== 'undefined',
+    importFile: (file: File) => DeviceIntegration.importFile(file),
+    onError: (error: unknown) => alert('Datei nicht übernommen. Das Original und die native Arbeitskopie bleiben erhalten. ' +
+      (error instanceof Error ? error.message : String(error)))
+  });
   (globalThis as any).RedionNativeShare = Object.freeze({
     receive(raw: unknown): Promise<boolean> {
       const store = typeof Store !== 'undefined' ? Store : (globalThis as any).Store;

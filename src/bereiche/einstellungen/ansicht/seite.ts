@@ -63,6 +63,7 @@ const Einstellungen = (() => {
       ['emoji',        'smile',       'Emoji']
     ]],
     ['Verwaltung', [
+      ['geraete',      'workspace',   'iPhone und Windows'],
       ['arbeitsplatz', 'workspace',   'Arbeitsbereich'],
       ['analysen',     'chart',       'Analysen'],
       ['bereiche',     'users',       'Bereiche'],
@@ -402,6 +403,7 @@ const Einstellungen = (() => {
    * DIE EINZELNEN BEREICHE
    * ======================================================================*/
   const inhalt = (b: any): string => (({
+    geraete: () => kopf('iPhone und Windows', 'Geräte, Sicherungen und freiwilliger Abgleich') + DeviceIntegration.overview(),
     /* HIER STAND DAS GEGENTEIL DESSEN, WAS GEBAUT IST (E270).
        „Diese App kennt kein Konto und keinen Server", „es gibt keine
        Anmeldung", „Nichts wird übertragen, es gibt keine Sitzungen" —
