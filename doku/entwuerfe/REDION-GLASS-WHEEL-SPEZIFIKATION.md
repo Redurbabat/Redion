@@ -61,6 +61,17 @@ Vor Beginn **aktuelle** Quellen lesen statt vorhandene Datenmodelle erneut erfin
 - Keine permanenten 60-fps-Hintergrundeffekte oder schweren WebGL-/Canvas-Animationen, wenn das Gerät schwach ist; Darstellung muss auch mit `backdrop-filter`-Fallback funktionieren.
 - Farben und Texte müssen bedienbar sein, 44×44 px Touch-Ziele, Tastatur-/Screenreader-Fokus, kein horizontaler Seitenüberlauf auf 390×844/430×932.
 
+## Umfang: vollständiges, aber optionales Erscheinungsbild
+
+**Nicht nur eine neue Startseite.** Nach der freiwilligen Wahl „Glass Wheel“ sollen die gesamte Schale, Start-/Bereichsansichten, Dokumentkarten, Tabs, Seitenkopf, Seitenleisten, Menüs, Dialoge, Editor-Werkzeugleisten, PDFs, Datenbankansichten, Suche und Statusanzeigen nach einem **zusammenhängenden Glass-Design-System** aussehen. Die bestehende Funktionalität und der Inhalt selbst bleiben erhalten.
+
+- Erarbeite wiederverwendbare Material-/Farb-/Abstands-/Motion-Tokens (ein zentraler Scoping-Wurzelknoten, z. B. `data-ui-shell="glass-wheel"`), statt pro Komponente unabhängige Styles.
+- Shell-Navigation, Rad und Dokumentablage sind die spektakuläre visuelle Identität; laufende **Texteditor-, Tabellen- und PDF-Flächen bleiben bewusst lesbar und funktional**, ohne schwer lesbares transparentes Papier.
+- Zustände für Hover, Fokus, Auswahl, Drag, Offline, Sync, Ladezustand, Fehler, leer und deaktiviert sind in **beiden** Layoutvarianten vollständig gestaltet.
+- Dock, PDF-Werkzeugleiste, Notizen, Datenbanken und Dialoge verwenden vorhandene Kommandos, Rollen und Datenquellen und werden **nur visuell**, nicht funktional verdoppelt.
+- „Klassisch“ rendert die bisherige CSS-/DOM-Darstellung nach wie vor unverändert; alle Glass-Stile sind **streng auf den neuen Modus begrenzt**, keine globalen Überschreibungen.
+- Ein später hinzugefügtes Redion-Tool soll durch zentrale Tokens/Konventionen automatisch konsistent erscheinen.
+
 ## Akzeptanztests und Screenshots
 
 1. Frische sowie bestehende Installation startet **klassisch**; neue Oberfläche wird ausschließlich nach Nutzerwahl geladen.
