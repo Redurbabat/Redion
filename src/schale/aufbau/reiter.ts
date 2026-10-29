@@ -72,6 +72,7 @@ const Fenster = (() => {
   };
 
   const zeichnen = (): void => {
+    document.dispatchEvent(new CustomEvent('redion:reiter'));
     let leiste = document.getElementById('reiterleiste');
     if (!leiste) {
       leiste = document.createElement('div');
@@ -147,6 +148,18 @@ const Fenster = (() => {
     else if (i < aktiv) aktiv--;
     sichern();
     wechseln(aktiv);
+  };
+
+  /** Derselbe Reiterzug für die vorhandene Leiste und ihre Glass-Projektion. */
+  const verschieben = (von: number, nach: number): void => {
+    if (!Number.isInteger(von) || !Number.isInteger(nach) || von < 0 ||
+        nach < 0 || von >= reiter.length || nach >= reiter.length || von === nach) return;
+    const activeTab = reiter[aktiv];
+    const [tab] = reiter.splice(von, 1);
+    if (!tab) return;
+    reiter.splice(nach, 0, tab);
+    aktiv = Math.max(0, reiter.indexOf(activeTab!));
+    sichern(); zeichnen();
   };
 
   /** Zeigt diese Seite ein Dokument — eine PDF, ein Heft, eine Mappe? */
@@ -474,16 +487,12 @@ const Fenster = (() => {
       const t = elVon(e)?.closest<HTMLElement>('[data-i]');
       if (!t || zieht === null) return;
       const nach = +(t.dataset["i"] ?? 0);
-      const [x] = reiter.splice(zieht, 1);
-      if (!x) return;
-      reiter.splice(nach, 0, x);
-      aktiv = nach;
+      verschieben(zieht, nach);
       zieht = null;
-      sichern(); zeichnen();
     });
   };
 
-  return { start, zeichnen, gemerkt, neuerReiter, schliessen, wechseln,
+  return { start, zeichnen, gemerkt, neuerReiter, schliessen, wechseln, verschieben,
            teilen, teilenAus, zeichneTeil, vorschauZeigen, vorschauZu,
            reiter: () => reiter, aktiv: () => aktiv, geteilt: () => geteilt };
 })();

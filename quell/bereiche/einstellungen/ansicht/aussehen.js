@@ -296,7 +296,8 @@ const Aussehen = (() => {
             const s = einstellung();
             if (reiter === 'farbe') {
                 inhalt.innerHTML =
-                    '<div class="au-staffelei" id="au-staffelei"></div>' +
+                    '<div data-glass-wheel-settings></div>' +
+                        '<div class="au-staffelei" id="au-staffelei"></div>' +
                         '<div class="au-titel">Farbschema</div>' +
                         '<div class="au-schemata">' + SCHEMATA.map(x => {
                         const stil = stilblatt(x.grund);
@@ -315,6 +316,8 @@ const Aussehen = (() => {
                         '<div class="au-titel">Akzentfarbe</div>' +
                         akzentWahl(s) +
                         akzentVorschau();
+                if (typeof GlassWheel !== 'undefined')
+                    inhalt.querySelector('[data-glass-wheel-settings]')?.append(GlassWheel.settings());
                 const platz = inhalt.querySelector('#au-staffelei');
                 if (platz && typeof Staffelei !== 'undefined') {
                     const grund = SCHEMATA.find(x => x.id === s.schema)?.grund || 'dark';

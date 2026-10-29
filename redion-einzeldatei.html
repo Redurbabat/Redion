@@ -15226,8 +15226,65 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     bottom:calc(var(--hunten) + 8px); height:var(--mobile-nav-height);
     padding:5px 6px; background:var(--bg-card); border:1px solid var(--line);
   }
+  /* Zieh-Griff als dezente Entdeckungshilfe IN der vorhandenen
+     unteren Navigation. Kein Element, keine Trefferfläche, kein Listener.
+     Beim Hochziehen verschwindet er hinter der erscheinenden Zielleiste. */
+  #handy-oben::before{
+    content:'';position:absolute;left:50%;top:-8px;
+    width:42px;height:3px;border-radius:999px;
+    background:var(--text-dim);opacity:.55;
+    transform:translateX(-50%);pointer-events:none;
+    transition:opacity var(--motion-fast) var(--ease)
+  }
+  #handy-oben[data-zielleiste]::before{opacity:0}
+  @media(prefers-reduced-motion:reduce){
+    #handy-oben::before{transition:none}
+  }
+  body[data-bewegung="ruhig"] #handy-oben::before{transition:none}
   #ho-ziele[hidden]{ display:none }
   #ho-ziele[data-geht]{ pointer-events:none }
+  /* WORKSPACE 2.0 — VOLLSTÄNDIGES ZIEL LESBAR BEIM HOCHZIEHEN.
+     Die vorhandene 60px-Zielleiste behält exakt ihre Geometrie (test614):
+     fünf gleich breite Fingerziele und dieselben Hitboxen. Ausschliesslich
+     eine kleine, nicht-interaktive Beschriftung darüber; kein zweites Dock,
+     keine neuen Klick- oder Gestenwege. Die Fläche ist absichtlich deckend:
+     klein gedruckte Wörter dürfen nicht mit dem Papier dahinter verschmelzen.
+     Das Sichtbarwerden bewegt NUR transform/opacity, nicht die Geometrie. */
+  #ho-ziele > .ho-ziel-vorschau{
+    position:absolute;left:50%;bottom:calc(100% + 10px);
+    box-sizing:border-box;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:3px;width:max-content;
+    max-width:calc(100vw - 36px);min-width:150px;min-height:54px;
+    padding:9px 20px 10px;border:1px solid var(--line);
+    border-radius:var(--radius-2xl);background:var(--bg-card);
+    color:var(--text);box-shadow:var(--studio-highlight),var(--shadow-2);
+    text-align:center;pointer-events:none;user-select:none;
+    opacity:0;visibility:hidden;transform:translate(-50%,6px) scale(.97);
+    transition:opacity var(--motion-fast) var(--ease),
+               transform var(--feder-knapp-dauer) var(--feder-knapp)
+  }
+  #ho-ziele[data-vorschau-aktiv]:not([data-geht]) > .ho-ziel-vorschau{
+    opacity:1;visibility:visible;transform:translate(-50%,0) scale(1)
+  }
+  #ho-ziele .ho-ziel-vorschau-bereich{
+    display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;color:var(--text-dim);font-size:11px;
+    line-height:1.2;font-weight:600;letter-spacing:.04em
+  }
+  #ho-ziele .ho-ziel-vorschau-name{
+    display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap;color:var(--text);font-size:15px;
+    line-height:1.2;font-weight:700;letter-spacing:-.012em
+  }
+  @media(prefers-reduced-motion:reduce){
+    #ho-ziele > .ho-ziel-vorschau{transition:none}
+  }
+  body[data-bewegung="ruhig"] #ho-ziele > .ho-ziel-vorschau{
+    transition:none
+  }
+  @media(prefers-contrast:more),(forced-colors:active),(prefers-reduced-transparency:reduce){
+    #ho-ziele > .ho-ziel-vorschau{background:var(--bg-card);border-color:var(--text);box-shadow:none}
+  }
   @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
     #handy-oben,
     #ho-ziele{
@@ -25607,6 +25664,79 @@ body[data-schale="premium"][data-bewegung="ruhig"]
   box-shadow: none;
 }
 
+/* ══ WORKSPACE 2.0 · SICHTBARE SEITENWERKZEUGE ════════════════════════════
+   Bisher war die Werkzeugzeile auf dem Desktop transparent, bis jemand
+   mit der Maus über die SEITE fuhr. Das erschwerte die Entdeckung und
+   zeigte bei Tastaturfokus dieselbe Leiste unsichtbar. Die bestehenden
+   Werkzeuge bleiben genau dieselben Registeraktionen; nur die Darstellung
+   als lesbare, immer sichtbare Kommandochips ändert sich.
+
+   Scope bewusst nur direkt unter #page: Datenbank-, Dokument- und
+   eingebettete Werkzeuge bekommen keine neue Leiste. Auf dem iPhone bleibt
+   es dieselbe horizontale Rollzeile aus bausteine.css, statt drei Reihen
+   oberhalb des eigentlichen Texts. */
+#page > .pg-tools{
+  display:flex;flex-wrap:wrap;align-items:center;gap:6px 7px;
+  opacity:1;min-width:0;max-width:100%;margin:10px 0 22px;padding:9px;
+  background:var(--bg-card);border:1px solid var(--line);
+  border-radius:var(--radius-xl);
+  box-shadow:var(--studio-highlight),var(--shadow-1)
+}
+#page > .pg-tools > .pg-tools-caption{
+  flex:0 0 100%;display:block;min-width:0;
+  padding:2px 8px 3px;color:var(--text-dim);
+  font-size:10px;line-height:1.25;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase
+}
+#page > .pg-tools > button{
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;
+  min-height:var(--touch-min);min-width:0;padding:8px 11px;
+  border:1px solid transparent;border-radius:var(--radius-lg);
+  background:var(--bg-hover);color:var(--text);
+  font-size:12px;line-height:1.2;font-weight:550;white-space:nowrap;
+  transition:background var(--motion-fast) var(--ease),
+             border-color var(--motion-fast) var(--ease),
+             transform var(--motion-fast) var(--ease)
+}
+#page > .pg-tools > button:is(:hover,:focus-visible){
+  color:var(--text);background:var(--accent-schwach);
+  border-color:var(--accent);outline-offset:2px
+}
+#page > .pg-tools > button:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px
+}
+#page > .pg-tools > button:active{transform:scale(.98)}
+@media(max-width:760px){
+  #page > .pg-tools{
+    flex-wrap:nowrap;gap:5px;overflow-x:auto;scrollbar-width:none;
+    padding:5px;margin:0 0 16px;
+    border-radius:var(--radius-lg);
+  }
+  #page > .pg-tools > .pg-tools-caption{display:none}
+  #page > .pg-tools > button{flex:0 0 auto;min-height:var(--touch-min);padding:8px 10px}
+  /* Die bestehenden sticky Scroll-Hinweise liegen über dem Inhalt.
+     Ihr Hintergrund muss nun zur Chip-Scheibe passen, statt zum Papier. */
+  #page > .pg-tools::before{
+    background:linear-gradient(to right,var(--bg-card),transparent)
+  }
+  #page > .pg-tools::after{
+    background:linear-gradient(to left,var(--bg-card),transparent)
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #page > .pg-tools > button{transition:none}
+  #page > .pg-tools > button:active{transform:none}
+}
+body[data-bewegung="ruhig"] #page > .pg-tools > button{
+  transition:none
+}
+body[data-bewegung="ruhig"] #page > .pg-tools > button:active{transform:none}
+@media print{#page > .pg-tools{display:none!important}}
+@media(forced-colors:active),(prefers-contrast:more){
+  #page > .pg-tools{box-shadow:none}
+  #page > .pg-tools > button{border-color:var(--line)}
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/bibliothek-studio.css ===== */
@@ -25808,6 +25938,130 @@ body[data-kontrast="hoch"] .bib[data-bib-bereich] .bib-deckel{box-shadow:none;bo
 
 </style>
 <style>
+/* ===== quell/schale/stil/glasswheel.css ===== */
+/* Glass Wheel: ausschliesslich freiwilliger Schalenmodus. Einstellungen
+   stehen auch klassisch zur Wahl; kein bestehender Klassiker-Selektor wird
+   ausserhalb von [data-ui-shell] verändert. Ruhiges Papier bleibt deckend. */
+.gw-settings{margin:0 0 24px;color:var(--text)}
+.gw-settings h3{font-size:16px;margin:0 0 12px}
+.gw-settings p{font-size:12px;line-height:1.6;color:var(--text-dim)}
+.gw-mode-choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.gw-mode-card{display:flex;flex-direction:column;gap:8px;align-items:flex-start;text-align:left;padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--bg-card);min-height:44px}
+.gw-mode-card[aria-pressed="true"]{outline:2px solid var(--accent-text);outline-offset:1px}
+.gw-mode-card small{font-size:12px;line-height:1.5;color:var(--text-dim)}
+.gw-mode-preview{width:100%;height:64px;border-radius:10px;background:linear-gradient(90deg,var(--bg-side) 22%,var(--bg) 22%);border:1px solid var(--line)}
+.gw-preview-glass-wheel{background:radial-gradient(circle,transparent 18%,#d8baff 19%,#9572de66 22%,transparent 24%,transparent 36%,#82e5fc 38%,#ad8be988 42%,transparent 45%),linear-gradient(125deg,#18244c,#342149)}
+.gw-mode-card:is(:hover,:active){background:var(--bg-hover)}
+.gw-mode-card:focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
+
+body[data-ui-shell="glass-wheel"]{
+  --gw-paper:var(--bg-card);--gw-surface:color-mix(in srgb,var(--bg-side) 88%,transparent);
+  --gw-edge:color-mix(in srgb,var(--accent-text) 32%,var(--line));
+  --gw-shadow:0 14px 38px #090c2525;--gw-blur:12px;
+  background:radial-gradient(ellipse at 62% 20%,#9471fa22,transparent 62%),radial-gradient(ellipse at 12% 80%,#38d9d91a,transparent 55%),var(--bg);
+}
+body[data-ui-shell="glass-wheel"] #main{background:transparent;padding-bottom:86px;min-width:0}
+body[data-ui-shell="glass-wheel"] :is(#studio-bar,#topbar,#sidebar,#context-rail,#reiterleiste){background:var(--gw-surface);border-color:var(--gw-edge)}
+body[data-ui-shell="glass-wheel"] :is(.menu,.finder,.r-dialog,.r-sheet,.document-toolbar,.document-drawingbar,.mb-band,.pg-tools){background:var(--gw-paper);border-color:var(--gw-edge);border-radius:18px;box-shadow:var(--gw-shadow)}
+body[data-ui-shell="glass-wheel"] :is(.db,.db-toolbar,.bib-deckel,.nh-karte,.home-karte,.ki-panel){border-color:var(--gw-edge);border-radius:16px}
+body[data-ui-shell="glass-wheel"] :is(#page,.document-sheet,.pg-flaeche,.db-zelle,.ct){backdrop-filter:none}
+body[data-ui-shell="glass-wheel"] :is(.document-sheet,.pg-flaeche,.db-table){background:var(--gw-paper)}
+body[data-ui-shell="glass-wheel"] #page:has(#title){background:var(--gw-paper);border:1px solid var(--gw-edge);border-radius:20px}
+body[data-ui-shell="glass-wheel"] #reiterleiste{display:none!important}
+body[data-ui-shell="glass-wheel"] #handy-oben{position:fixed;z-index:100;display:flex!important;bottom:12px;left:50%;right:auto;width:min(520px,calc(100% - 24px));transform:translateX(-50%);border:1px solid var(--gw-edge);border-radius:30px;background:var(--gw-surface);box-shadow:0 12px 36px #05081e33,inset 0 1px 0 #ffffff55;padding-bottom:env(safe-area-inset-bottom,0px)}
+body[data-ui-shell="glass-wheel"] #handy-oben button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;min-height:52px;flex:1;padding:6px 4px}
+body[data-ui-shell="glass-wheel"] #handy-oben button b{font-size:10px;font-weight:600;white-space:nowrap}
+body[data-ui-shell="glass-wheel"] #handy-oben .ho-z svg{width:19px;height:19px}
+body[data-ui-shell="glass-wheel"] #ho-ziele{border-color:var(--gw-edge);background:var(--gw-paper)}
+
+body[data-ui-shell="glass-wheel"] .gw-shell{position:relative;flex:0 0 auto;min-width:0;margin:12px 24px 8px;color:var(--text)}
+body[data-ui-shell="glass-wheel"] .gw-shell-heading{display:flex;gap:8px;align-items:center;min-height:44px;flex-wrap:wrap}
+body[data-ui-shell="glass-wheel"] .gw-identity{font-weight:760;letter-spacing:.08em;flex:1}
+body[data-ui-shell="glass-wheel"] .gw-identity small{font-size:9px;letter-spacing:.12em;color:var(--text-dim);margin-left:10px}
+body[data-ui-shell="glass-wheel"] .gw-shell button{min-height:44px;min-width:44px;color:var(--text);font:inherit;cursor:pointer}
+body[data-ui-shell="glass-wheel"] .gw-shell-heading button{font-size:12px;padding:0 14px;border:1px solid var(--gw-edge);border-radius:22px;background:var(--gw-paper)}
+body[data-ui-shell="glass-wheel"] .gw-wheel-stage{position:relative;text-align:center;overflow:hidden}
+body[data-ui-shell="glass-wheel"] .gw-wheel-stage h2{position:absolute;top:12px;left:0;text-align:left;margin:0;font-size:25px;letter-spacing:-.03em;z-index:1;pointer-events:none}
+body[data-ui-shell="glass-wheel"] .gw-wheel-stage>p:first-of-type{position:absolute;top:48px;left:0;text-align:left;margin:0;color:var(--text-dim);font-size:13px;pointer-events:none}
+body[data-ui-shell="glass-wheel"] .gw-wheel{position:relative;width:min(420px,100%);height:min(320px,38vh);margin:0 auto;touch-action:none;user-select:none;border-radius:50%;isolation:isolate;outline-offset:3px}
+body[data-ui-shell="glass-wheel"] .gw-rim{position:absolute;width:82%;aspect-ratio:1;left:9%;top:50%;translate:0 -50%;border-radius:50%;border:2px solid var(--gw-edge);background:conic-gradient(from var(--gw-turn,0deg),#73dfff33,#f39cfc33,#9777fb22,#88ecd833,#73dfff33);box-shadow:inset 0 0 0 14px #ffffff0a,inset 0 1px 1px #ffffffaa,0 0 0 6px #b7c1ff0a,0 18px 45px #080e2b33;pointer-events:none}
+body[data-ui-shell="glass-wheel"] .gw-rim:after{content:"";position:absolute;inset:24%;border-radius:50%;border:1px solid var(--gw-edge);background:var(--gw-surface);box-shadow:inset 0 2px 3px #ffffff44}
+@supports(mask:radial-gradient(transparent,#000)){
+  body[data-ui-shell="glass-wheel"] .gw-rim{mask:radial-gradient(circle,transparent 0 57%,#000 58%);background:conic-gradient(from var(--gw-turn,0deg),#b8edff66,#ffc4ef44,#9c87ff33,#9af3dc55,#b8edff66)}
+  body[data-ui-shell="glass-wheel"] .gw-rim:after{inset:18%;background:none;border-color:#d9ddff77}
+}
+body[data-ui-shell="glass-wheel"] .gw-hub{position:absolute;left:50%;top:50%;translate:-50% -50%;width:28%;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:50%;background:var(--gw-paper);border:2px solid var(--gw-edge);box-shadow:0 4px 24px #c58af535,inset 0 1px 0 #ffffff77;pointer-events:none}
+body[data-ui-shell="glass-wheel"] .gw-hub>b{font-size:43px;line-height:1.1;font-style:italic;background:linear-gradient(120deg,var(--accent-text),#6484f0,#bf77c1);background-clip:text;color:transparent}
+body[data-ui-shell="glass-wheel"] .gw-center-name{font-size:10px;font-weight:650;max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+body[data-ui-shell="glass-wheel"] .gw-area{position:absolute;top:50%;left:50%;transform:translate(var(--gw-x),var(--gw-y)) translate(-50%,-50%);display:grid;place-items:center;width:88px;min-height:48px;padding:7px;border:1px solid var(--gw-edge);border-radius:20px;background:var(--gw-paper);box-shadow:0 4px 10px #00000015,inset 0 1px 0 #ffffff55;line-height:1.3;font-size:12px!important;overflow-wrap:anywhere;transition:transform var(--motion-normal) var(--feder-sanft),box-shadow var(--motion-fast) var(--ease)}
+body[data-ui-shell="glass-wheel"] .gw-area[aria-pressed="true"]{border:2px solid var(--accent-text);box-shadow:0 0 0 4px var(--accent-schwach),0 5px 28px #bd8aff30;font-weight:700}
+body[data-ui-shell="glass-wheel"] .gw-area[hidden]{display:none}
+body[data-ui-shell="glass-wheel"] .gw-spoke{position:absolute;left:50%;top:50%;height:2px;transform-origin:0 50%;background:linear-gradient(90deg,var(--gw-edge),#b8d8ff88,var(--gw-edge));pointer-events:none;z-index:1}
+body[data-ui-shell="glass-wheel"] .gw-spoke[hidden]{display:none}
+body[data-ui-shell="glass-wheel"] .gw-hub{z-index:2}
+body[data-ui-shell="glass-wheel"] .gw-area{z-index:3}
+body[data-ui-shell="glass-wheel"] .gw-area-label{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+body[data-ui-shell="glass-wheel"] .gw-wheel[data-dragging="true"] .gw-area{transition:none}
+body[data-ui-shell="glass-wheel"] .gw-shell button:is(:hover,:active){box-shadow:0 0 0 2px var(--accent-text)}
+body[data-ui-shell="glass-wheel"] .gw-shell button:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+body[data-ui-shell="glass-wheel"] .gw-shell :is(button,.gw-wheel):focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
+body[data-ui-shell="glass-wheel"] .gw-wheel-controls{display:flex;justify-content:center;align-items:center;gap:14px;font-size:12px;color:var(--text-dim);margin-top:-12px}
+body[data-ui-shell="glass-wheel"] .gw-wheel-controls button{border:1px solid var(--gw-edge);border-radius:50%;background:var(--gw-paper)}
+body[data-ui-shell="glass-wheel"] .gw-no-areas{font-size:13px;color:var(--text-dim)}
+body[data-ui-shell="glass-wheel"] .gw-selection{margin:2px auto 4px;max-width:600px;font-size:12px;line-height:1.5;color:var(--text-dim);overflow-wrap:anywhere}
+body[data-ui-shell="glass-wheel"] .gw-tray{margin:10px auto 0;max-width:1200px;padding:10px 14px;border:1px solid var(--gw-edge);border-radius:20px;background:var(--gw-surface);box-shadow:inset 0 1px 0 #ffffff44;min-width:0}
+body[data-ui-shell="glass-wheel"] .gw-tray-heading{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+body[data-ui-shell="glass-wheel"] .gw-tray-heading h3{font-size:13px;flex:1;margin:0;min-width:0;overflow-wrap:anywhere}
+body[data-ui-shell="glass-wheel"] .gw-tray-heading button{font-size:11px;border:0;border-radius:14px;padding:0 10px;background:none}
+body[data-ui-shell="glass-wheel"] .gw-tray-heading button[aria-pressed="true"]{background:var(--accent-schwach);color:var(--accent-text)}
+body[data-ui-shell="glass-wheel"] .gw-open-list{display:flex;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;padding:5px 2px;min-width:0}
+body[data-ui-shell="glass-wheel"] .gw-tab-card{position:relative;display:flex;flex:0 0 220px;min-width:0;border:1px solid var(--gw-edge);border-radius:14px;background:var(--gw-paper)}
+body[data-ui-shell="glass-wheel"] .gw-tab-open{display:flex;flex:1;flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;border:0;background:none;min-width:0;padding:9px 8px 9px 12px;gap:3px}
+body[data-ui-shell="glass-wheel"] .gw-tab-open small{color:var(--text-dim);font-size:10px}
+body[data-ui-shell="glass-wheel"] .gw-tab-open strong{font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body[data-ui-shell="glass-wheel"] .gw-tab-open[aria-current="true"]{box-shadow:inset 3px 0 var(--accent-text);border-radius:14px}
+body[data-ui-shell="glass-wheel"] .gw-tab-close{border:0;border-left:1px solid var(--line);background:none;border-radius:0 14px 14px 0}
+body[data-ui-shell="glass-wheel"] .gw-empty{font-size:12px;color:var(--text-dim);margin:4px 0;line-height:1.5}
+body[data-ui-shell="glass-wheel"] .gw-shell[data-expanded="false"] .gw-wheel-stage{display:none}
+body[data-ui-shell="glass-wheel"] .gw-announcement{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@supports(backdrop-filter:blur(1px)){
+  body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){backdrop-filter:blur(var(--gw-blur)) saturate(1.3)}
+}
+@media(max-width:760px){
+  body[data-ui-shell="glass-wheel"] .gw-shell{margin:8px 12px}
+  body[data-ui-shell="glass-wheel"] .gw-identity small{display:none}
+  body[data-ui-shell="glass-wheel"] .gw-wheel-stage h2{font-size:20px;top:4px}
+  body[data-ui-shell="glass-wheel"] .gw-wheel-stage>p:first-of-type{display:none}
+  body[data-ui-shell="glass-wheel"] .gw-wheel{height:265px;margin-top:20px;width:100%}
+  body[data-ui-shell="glass-wheel"] .gw-area{width:68px;font-size:11px!important}
+  body[data-ui-shell="glass-wheel"] .gw-shell-heading button{padding:0 10px;font-size:11px}
+  body[data-ui-shell="glass-wheel"] .gw-shell-heading .gw-identity{font-size:12px}
+  body[data-ui-shell="glass-wheel"] .gw-tray{padding:6px 10px;margin-top:6px}
+  body[data-ui-shell="glass-wheel"] .gw-tray-heading{gap:0}
+  body[data-ui-shell="glass-wheel"] .gw-tray-heading h3{flex-basis:100%}
+  body[data-ui-shell="glass-wheel"] .gw-tab-card{flex-basis:180px}
+  body[data-ui-shell="glass-wheel"] #main{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+}
+@media(min-width:761px){
+  body[data-ui-shell="glass-wheel"][data-schale="premium"] #main{grid-template-rows:auto auto auto auto auto minmax(0,1fr)}
+  body[data-ui-shell="glass-wheel"][data-schale="premium"] #main>.gw-shell{grid-column:2;grid-row:5}
+  body[data-ui-shell="glass-wheel"][data-schale="premium"] #main>#scroll{grid-row:6}
+}
+@media(prefers-reduced-motion:reduce){body[data-ui-shell="glass-wheel"] .gw-area{transition:none}}
+body[data-ui-shell="glass-wheel"][data-bewegung="ruhig"] .gw-area{transition:none}
+@media(prefers-reduced-transparency:reduce),(prefers-contrast:more),(forced-colors:active){
+  body[data-ui-shell="glass-wheel"]{--gw-surface:var(--bg-side);--gw-edge:var(--text);--gw-blur:0px;--gw-shadow:none}
+  body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){backdrop-filter:none}
+  body[data-ui-shell="glass-wheel"]{background:var(--bg)}
+  body[data-ui-shell="glass-wheel"] .gw-hub>b{background:none;color:var(--text)}
+}
+body[data-ui-shell="glass-wheel"][data-kontrast="hoch"]{--gw-surface:var(--bg-side);--gw-edge:var(--text);--gw-blur:0px;--gw-shadow:none}
+body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.gw-rim,#handy-oben){backdrop-filter:none}
+:root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"]{--gw-surface:var(--bg-side);--gw-edge:var(--text);--gw-shadow:none;background:var(--bg)}
+:root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){backdrop-filter:none}
+
+</style>
+<style>
 /* ===== quell/schale/stil/pdf-studio.css ===== */
 /* Document workbench: controls use material; the original paper stays opaque. */
 
@@ -25895,10 +26149,17 @@ body[data-kontrast="hoch"] .bib[data-bib-bereich] .bib-deckel{box-shadow:none;bo
 /* DAS GLAS AUS §16 (E695): erst deckend, Glas nur mit Unschärfe, und mit Präfix — vorher fragte @supports nur die unpräfixierte Form, also gab es auf dem iPhone vor Safari 18 keins. */
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.document-studio .blatt-werk{background:var(--bg-schwebend);-webkit-backdrop-filter:var(--glas-blur);backdrop-filter:var(--glas-blur)}}
 @media(max-width:1100px){.document-zoom-group input{width:70px}.document-commandbar{padding-inline:10px;gap:8px}}
-@media(max-width:760px){
+@media(max-width:760px), (pointer:coarse) and (max-height:500px){
   .document-studio .document-topbar{display:flex;flex-wrap:nowrap;gap:2px;padding:4px;min-height:52px}
   .document-navigation,.document-top-actions{gap:0;flex:none}
   .document-studio .document-title{order:0;flex:1 1 auto;min-width:0;text-align:left;padding:3px 6px;font-size:12px}
+  /* iPhone landscape has wide CSS pixels but coarse touch and a short
+     viewport. Protect controls beside the Dynamic Island/notch while
+     keeping all 44px targets in the same shared document toolbar. */
+  .document-studio .document-topbar{
+    padding-inline-start:max(4px,env(safe-area-inset-left,0px));
+    padding-inline-end:max(4px,env(safe-area-inset-right,0px));
+  }
   .document-studio .document-topbar button{width:var(--touch-min);min-width:var(--touch-min);min-height:var(--touch-min);padding:0}
   .document-studio .document-topbar button::after{content:none}
   .document-studio .document-topbar [data-document-action="thumbnails"],
@@ -25914,6 +26175,20 @@ body[data-kontrast="hoch"] .bib[data-bib-bereich] .bib-deckel{box-shadow:none;bo
   .document-studio[data-document-view="open"] .document-commandbar{animation:studio-arrive var(--motion-normal) var(--ease-enter)}
   .document-mode-switch{flex:1;justify-content:center}.document-pagination{margin-left:auto}
   .document-commandbar button{min-height:var(--touch-min);padding-inline:10px}
+  /* A mobile document menu can contain multiple rows (zoom, paging, modes).
+     Keep every action reachable above the iOS keyboard instead of letting
+     the absolute menu extend below the visible WebKit viewport. The shared
+     --visual-height is updated by AppEinstellung on visualViewport resize. */
+  .document-studio[data-document-view="open"] .document-commandbar{
+    /* Menu must remain inside the notched landscape safe areas. */
+    left:max(8px,env(safe-area-inset-left,0px));
+    right:max(8px,env(safe-area-inset-right,0px));
+    max-height:max(120px,calc(var(--visual-height,100dvh) - 104px - env(safe-area-inset-top,0px)));
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    scroll-padding-block:8px;
+  }
   .document-zoom-group{width:100%;justify-content:center;border-top:1px solid var(--line-soft);padding-top:3px}
   .document-zoom-group input{flex:1;max-width:150px;min-width:0}.document-zoom-group button{min-height:var(--touch-min)}
   .document-zoom-label{display:inline;min-width:var(--touch-min)}
@@ -25921,6 +26196,7 @@ body[data-kontrast="hoch"] .bib[data-bib-bereich] .bib-deckel{box-shadow:none;bo
   .document-studio .blatt-werk{border-radius:var(--radius-lg);margin-bottom:8px}
 }
 @media(prefers-reduced-transparency:reduce){.document-studio .blatt-werk{background:var(--bg-card);-webkit-backdrop-filter:none;backdrop-filter:none}}
+body[data-bewegung="ruhig"] .document-studio[data-document-view="open"] .document-commandbar{animation:none}
 @media(prefers-reduced-motion:reduce){
   .document-studio .document-thumbnails.is-open,.document-studio .document-inspector.is-open,.document-studio[data-document-view="open"] .document-commandbar{animation:none}
   .document-studio :is(.document-topbar,.document-commandbar) button:active:not(:disabled){transform:none}
@@ -26151,10 +26427,17 @@ body[data-dokument="an"] .document-studio .blatt-werk .blatt-zeilenbruch{display
    Verlauf werden oben bereits nur im geschlossenen Zustand ausgeblendet. */
 body[data-dokument="an"] .document-studio .blatt-marken[data-stift="an"]{touch-action:none}
 body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{touch-action:pan-x pan-y pinch-zoom}
-@media(max-width:760px){
-  body[data-dokument="an"] #reiterleiste{min-height:var(--touch-min);padding-inline:6px}
+@media(max-width:760px), (pointer:coarse) and (max-height:500px){
+  body[data-dokument="an"] #reiterleiste{
+    min-height:var(--touch-min);
+    padding-inline-start:max(6px,env(safe-area-inset-left,0px));
+    padding-inline-end:max(6px,env(safe-area-inset-right,0px));
+  }
   body[data-dokument="an"] #reiterleiste .rt-tab{min-width:120px;max-width:180px;min-height:40px}
-  body[data-dokument="an"] .document-studio .document-topbar{padding-inline:4px}
+  body[data-dokument="an"] .document-studio .document-topbar{
+    padding-inline-start:max(4px,env(safe-area-inset-left,0px));
+    padding-inline-end:max(4px,env(safe-area-inset-right,0px));
+  }
   .document-studio .document-topbar .document-zurueck .dz-wort{display:none}
   /* „Präsentieren" ist am Telefon gar nicht im Kopf, sondern in der
      Ansichtsklappe (E493, bausteine.css) — derselbe Weg wie bei der Suche.
@@ -26201,7 +26484,10 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
     position:absolute; top:auto; bottom:calc(var(--visual-bottom, 0px) + 84px);
     left:8px; margin:0; padding:3px
   }
-  .document-studio .document-commandbar{left:8px;right:8px}
+  .document-studio .document-commandbar{
+    left:max(8px,env(safe-area-inset-left,0px));
+    right:max(8px,env(safe-area-inset-right,0px));
+  }
   body[data-dokument="an"] .document-studio .document-center{padding:10px 8px 100px}
   .document-source-master .do-name{font-size:11px}.document-source-master .do-wort{font-size:10px}
   .document-copy-label{font-size:10px}
@@ -26437,7 +26723,7 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
    Auf dem Bild war er ausserdem der einzige Knopf der Leiste, der am
    Telefon sein WORT zeigte. Alle anderen tragen dort nur ihr Zeichen. */
 .document-commandbar .document-folien-klappe{display:none}
-@media (max-width:760px){
+@media (max-width:760px), (pointer:coarse) and (max-height:500px){
   .document-studio .document-topbar [data-document-action="folienmenue"]{display:none}
   .document-commandbar .document-folien-klappe:not([hidden]){display:inline-flex}
 }
@@ -26614,6 +26900,110 @@ body[data-dokument="an"] .document-studio .blatt-werk{
   body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe[data-mehr="beides"] .blatt-werk{
     -webkit-mask-image:linear-gradient(to right, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%);
     mask-image:linear-gradient(to right, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%) }
+}
+
+/* ══ WORKSPACE 2.0 · DOKUMENTKOMPASS (Web und iOS, gleicher Webcode) ══════
+   Die Kopfzeile braucht einen erkennbaren Dokumentnamen, seine Art, den
+   tatsächlichen Umfang und einen aus dem aktiven Index errechneten
+   Lesefortschritt. Keine neue Route und kein zweiter Seitenspeicher.
+   Die Fortschrittsanzeige ist ein natives <progress>, keine Animation
+   mit eigener Uhr. Die Zahl selbst steht weiter nur im bisherigen
+   .document-position (test210: nicht zweimal auf demselben Bildschirm). */
+.document-studio .document-title{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;flex:1 1 auto;min-width:0;overflow:hidden;
+  white-space:normal;line-height:1.15
+}
+.document-studio .document-title-name{
+  display:block;width:100%;min-width:0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;
+  font-size:clamp(.8125rem,1vw,.9375rem);font-weight:700;
+  letter-spacing:-.012em;color:var(--text)
+}
+.document-studio .document-title-meta{
+  display:inline-flex;align-items:center;justify-content:center;
+  gap:6px;max-width:100%;min-width:0;
+  color:var(--text-dim);font-size:.75rem;font-weight:550;
+  letter-spacing:.025em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.document-studio .document-title-meta::before{
+  content:'';display:inline-block;flex:none;width:6px;height:6px;
+  border-radius:50%;background:var(--accent)
+}
+.document-studio .document-title-progress{
+  width:min(9rem,82%);height:3px;flex:none;margin:0;
+  border:0;border-radius:999px;overflow:hidden;
+  color:var(--accent);background:var(--line-soft)
+}
+.document-studio .document-title-progress[hidden]{display:none}
+.document-studio .document-title-progress::-webkit-progress-bar{
+  background:var(--line-soft);border-radius:999px
+}
+.document-studio .document-title-progress::-webkit-progress-value{
+  background:var(--accent);border-radius:999px
+}
+.document-studio .document-title-progress::-moz-progress-bar{
+  background:var(--accent);border-radius:999px
+}
+/* „Seite 8/140“ ist jetzt auch ein Knopf: derselbe Springweg wie die
+   Miniaturen, aber ohne mehrfach hundertmal Pfeil zu drücken. */
+.document-studio .document-pagination .document-position{
+  padding-inline:12px;min-width:90px;min-height:var(--touch-min);
+  border:1px solid var(--line);border-radius:var(--radius-lg);
+  background:var(--bg-card);color:var(--text);font-size:.75rem;
+  font-variant-numeric:tabular-nums;cursor:pointer;
+  transition:background var(--motion-fast) var(--ease),border-color var(--motion-fast) var(--ease)
+}
+.document-studio .document-pagination .document-position:not(:disabled):is(:hover,:focus-visible){
+  color:var(--text);border-color:var(--accent);background:var(--accent-schwach)
+}
+.document-studio .document-pagination .document-position:disabled{
+  cursor:default;opacity:.65
+}
+/* Der schon vorhandene Inspector wird zum ruhigen, scanbaren Dokumentblatt.
+   Die Bedienelemente und die Geschäftslogik bleiben genau dieselben. */
+.document-studio .document-inspector-heading{
+  margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--line-soft)
+}
+.document-studio .document-inspector-heading strong{font-size:.9375rem;letter-spacing:-.012em}
+.document-studio .document-inspector-source{
+  padding:10px 12px;border:1px solid var(--line-soft);
+  background:var(--bg-card);border-radius:var(--radius-lg);
+  line-height:1.4;overflow-wrap:anywhere
+}
+.document-studio .document-inspector-summary{
+  grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+  padding:12px 0;border-block:0
+}
+.document-studio .document-inspector-summary>div{
+  display:flex;flex-direction:column-reverse;align-items:center;justify-content:center;
+  text-align:center;gap:5px;min-width:0;padding:12px 5px;
+  border:1px solid var(--line-soft);border-radius:var(--radius-lg);
+  background:var(--bg-card)
+}
+.document-studio .document-inspector-summary>div b{
+  color:var(--text);font-size:1.3125rem;font-weight:700;
+  font-variant-numeric:tabular-nums;line-height:1.1
+}
+.document-studio .document-inspector-summary>div span{
+  max-width:100%;font-size:.6875rem;color:var(--text-dim);
+  overflow-wrap:anywhere;line-height:1.3
+}
+.document-studio .document-inspector-list button{
+  background:var(--bg-card);border-color:var(--line-soft);
+  text-align:left;min-height:var(--touch-min)
+}
+.document-studio .document-inspector-list button:hover{
+  background:var(--bg-hover);border-color:var(--line)
+}
+@media(max-width:760px), (pointer:coarse) and (max-height:500px){
+  .document-studio .document-title{align-items:stretch;gap:3px;min-width:0}
+  .document-studio .document-title-name{font-size:.8125rem;line-height:1.15}
+  .document-studio .document-title-meta{justify-content:flex-start;font-size:.6875rem}
+  .document-studio .document-title-progress{width:min(8rem,82%)}
+}
+@media(prefers-reduced-motion:reduce){
+  .document-studio .document-pagination .document-position{transition:none}
 }
 
 </style>
@@ -28098,7 +28488,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1538, inhalt: 'e0e419e9e6d14dc1', gebaut: '2026-10-24T16:38:38.226Z' };
+const Stand = { fassung: 1542, inhalt: 'cf888cc05e9f3296', gebaut: '2026-10-29T19:32:10.627Z' };
 window.Stand = Stand;
 
 </script>
@@ -82033,9 +82423,13 @@ const DocumentMode = (() => {
         navigation.className = 'document-navigation';
         navigation.append(zurueck, thumbnailButton);
         top.append(navigation);
-        const position = document.createElement('span');
+        const position = document.createElement('button');
+        position.type = 'button';
         position.className = 'document-position';
+        position.dataset.documentAction = 'page-jump';
         position.textContent = wortEins(page) + ' ' + (state.index + 1) + '/' + documents.length;
+        position.title = 'Direkt zu einer ' + wortEins(page).toLowerCase() + ' springen';
+        position.disabled = documents.length < 2;
         position.setAttribute('aria-live', 'polite');
         position.setAttribute('aria-atomic', 'true');
         const previousButton = topButton('previous', '‹', 'Vorherige Seite');
@@ -82061,8 +82455,23 @@ const DocumentMode = (() => {
         zoomGroup.append(zoom, zoomLabel, topButton('fit', 'Anpassen', wortEins(page) + ' an die verfügbare Breite anpassen'));
         const titel = document.createElement('div');
         titel.className = 'document-title';
-        titel.textContent = page.text || 'Ohne Titel';
         titel.title = page.text || 'Ohne Titel';
+        const titelName = document.createElement('span');
+        titelName.className = 'document-title-name';
+        titelName.textContent = page.text || 'Ohne Titel';
+        const titelMeta = document.createElement('span');
+        titelMeta.className = 'document-title-meta';
+        const art = istFoliensatz(page) ? 'Präsentation'
+            : documents.some((block) => block.type === 'pdfseite') ? 'PDF' : 'Notizheft';
+        titelMeta.textContent = art + ' · ' + documents.length + ' ' +
+            (documents.length === 1 ? wortEins(page) : wortViele(page));
+        const titelFortschritt = document.createElement('progress');
+        titelFortschritt.className = 'document-title-progress';
+        titelFortschritt.max = documents.length;
+        titelFortschritt.value = state.index + 1;
+        titelFortschritt.hidden = documents.length <= 1;
+        titelFortschritt.setAttribute('aria-label', 'Lesefortschritt im Dokument');
+        titel.append(titelName, titelMeta, titelFortschritt);
         top.append(titel);
         if (page.gesperrt) {
             const schloss = document.createElement('span');
@@ -82659,6 +83068,12 @@ const DocumentMode = (() => {
         const aktivMarkieren = () => {
             previousButton.disabled = state.index === 0;
             nextButton.disabled = state.index === documents.length - 1;
+            position.setAttribute('aria-label', wortEins(page) + ' ' + (state.index + 1) +
+                ' von ' + documents.length + ' — zu einer anderen ' +
+                wortEins(page).toLowerCase() + ' springen');
+            titelFortschritt.value = state.index + 1;
+            titelFortschritt.setAttribute('aria-valuetext', wortEins(page) + ' ' +
+                (state.index + 1) + ' von ' + documents.length);
             thumbnails.querySelectorAll('[data-document-index]').forEach(button => {
                 if (Number(button.dataset.documentIndex) === state.index)
                     button.setAttribute('aria-current', 'page');
@@ -83788,6 +84203,35 @@ const DocumentMode = (() => {
                 menueSchliessen();
             if (!action)
                 return;
+            if (action === 'page-jump') {
+                if (documents.length < 2 || position.disabled)
+                    return;
+                position.disabled = true;
+                void (async () => {
+                    try {
+                        const antwort = await UI.frage('Zu welcher ' + wortEins(page) + ' springen? (1–' + documents.length + ')', String(state.index + 1));
+                        if (antwort === null || !workspace.isConnected)
+                            return;
+                        const eingabe = String(antwort).trim();
+                        const nummer = Number(eingabe);
+                        if (!/^[0-9]+$/.test(eingabe) || !Number.isSafeInteger(nummer) ||
+                            nummer < 1 || nummer > documents.length) {
+                            UI.toast('Bitte eine ' + wortEins(page) + ' zwischen 1 und ' +
+                                documents.length + ' eingeben.');
+                            return;
+                        }
+                        springe(nummer - 1);
+                    }
+                    catch (err) {
+                        UI.toast('Die Seite konnte nicht aufgerufen werden: ' +
+                            (err instanceof Error ? err.message : String(err)));
+                    }
+                    finally {
+                        position.disabled = false;
+                    }
+                })();
+                return;
+            }
             if (action === 'ink-ruler' && canAnnotate) {
                 toolsSetzen(true);
                 inkToolbar()?.querySelector('[data-act="lineal"]')?.click();
@@ -121473,6 +121917,7 @@ const Fenster = (() => {
         return (b.icon ? b.icon + ' ' : '') + (b.text || 'Ohne Titel');
     };
     const zeichnen = () => {
+        document.dispatchEvent(new CustomEvent('redion:reiter'));
         let leiste = document.getElementById('reiterleiste');
         if (!leiste) {
             leiste = document.createElement('div');
@@ -121545,6 +121990,19 @@ const Fenster = (() => {
             aktiv--;
         sichern();
         wechseln(aktiv);
+    };
+    const verschieben = (von, nach) => {
+        if (!Number.isInteger(von) || !Number.isInteger(nach) || von < 0 ||
+            nach < 0 || von >= reiter.length || nach >= reiter.length || von === nach)
+            return;
+        const activeTab = reiter[aktiv];
+        const [tab] = reiter.splice(von, 1);
+        if (!tab)
+            return;
+        reiter.splice(nach, 0, tab);
+        aktiv = Math.max(0, reiter.indexOf(activeTab));
+        sichern();
+        zeichnen();
     };
     const istDokument = (id) => !!(id && Store.getBlock(id)?.dokumentModus);
     const gemerkt = (id) => {
@@ -121852,17 +122310,11 @@ const Fenster = (() => {
             if (!t || zieht === null)
                 return;
             const nach = +(t.dataset["i"] ?? 0);
-            const [x] = reiter.splice(zieht, 1);
-            if (!x)
-                return;
-            reiter.splice(nach, 0, x);
-            aktiv = nach;
+            verschieben(zieht, nach);
             zieht = null;
-            sichern();
-            zeichnen();
         });
     };
-    return { start, zeichnen, gemerkt, neuerReiter, schliessen, wechseln,
+    return { start, zeichnen, gemerkt, neuerReiter, schliessen, wechseln, verschieben,
         teilen, teilenAus, zeichneTeil, vorschauZeigen, vorschauZu,
         reiter: () => reiter, aktiv: () => aktiv, geteilt: () => geteilt };
 })();
@@ -121964,10 +122416,12 @@ const Wischen = (() => {
             return false;
         }
     };
+    let federGeneration = 0;
     const schieben = (dx) => {
         const b = buehne();
         if (!b || ruhig())
             return;
+        federGeneration++;
         b.style.transition = 'none';
         const wand = !nachbar(dx < 0 ? 1 : -1);
         const f = wand ? ZUG_WAND : ZUG;
@@ -121978,9 +122432,13 @@ const Wischen = (() => {
     const loslassen = () => {
         const b = buehne();
         if (b && b.style.transform) {
+            const generation = ++federGeneration;
             b.style.transition = 'transform .22s var(--ease-standard, ease)';
             b.style.transform = '';
-            setTimeout(() => { b.style.transition = ''; }, 260);
+            setTimeout(() => {
+                if (generation === federGeneration)
+                    b.style.transition = '';
+            }, 260);
         }
         zeiger = -1;
         gefangen = false;
@@ -122017,7 +122475,7 @@ const Wischen = (() => {
             if (e.pointerType === 'pen')
                 return;
             if (zeiger !== -1) {
-                zeiger = -1;
+                loslassen();
                 return;
             }
             if (!darf(e.target, e.clientX))
@@ -122083,7 +122541,10 @@ const Wischen = (() => {
             ziel.click();
         };
         addEventListener('pointerup', ende, { passive: true });
-        addEventListener('pointercancel', () => loslassen(), { passive: true });
+        addEventListener('pointercancel', (e) => {
+            if (e.pointerId === zeiger)
+                loslassen();
+        }, { passive: true });
     };
     return { starten, reiter, nachbar, darf, jetzt, einblenden, ankunft, letzte: () => letzte };
 })();
@@ -122104,6 +122565,8 @@ const TabShelf = (() => {
     let tab = null;
     let targets = [];
     let items = [];
+    let previewCategory = null;
+    let previewName = null;
     let aimed = -1;
     let box = { left: 0, right: 0, top: 0 };
     let columns = [];
@@ -122150,6 +122613,8 @@ const TabShelf = (() => {
             b.setAttribute('role', 'menuitem');
             b.tabIndex = i === 0 ? 0 : -1;
             b.dataset['ziel'] = z.id;
+            b.setAttribute('aria-label', z.name);
+            b.title = z.name;
             const zeichen = document.createElement('span');
             zeichen.className = 'ho-z';
             zeichen.dataset['sym'] = z.zeichen;
@@ -122174,6 +122639,11 @@ const TabShelf = (() => {
         catch { }
         targets = neu;
         tab = t;
+        if (previewCategory)
+            previewCategory.textContent = label(t);
+        if (previewName)
+            previewName.textContent = '';
+        shelf.removeAttribute('data-vorschau-aktiv');
         shelf.setAttribute('aria-label', 'Ziele in ' + label(t));
         tabs().forEach(b => b.setAttribute('aria-expanded', b === t ? 'true' : 'false'));
         aimed = -1;
@@ -122193,6 +122663,13 @@ const TabShelf = (() => {
         const war = aimed;
         aimed = i;
         const q = places[i];
+        if (i >= 0 && targets[i] && previewName) {
+            previewName.textContent = targets[i].name;
+            shelf.setAttribute('data-vorschau-aktiv', '');
+        }
+        else {
+            shelf.removeAttribute('data-vorschau-aktiv');
+        }
         if (i < 0 || !q)
             shelf.setAttribute('data-marke-weg', '');
         else if (typeof SelectionFlow !== 'undefined') {
@@ -122263,6 +122740,7 @@ const TabShelf = (() => {
         aimed = -1;
         items.forEach(b => b.removeAttribute('data-anvisiert'));
         shelf.setAttribute('data-marke-weg', '');
+        shelf.removeAttribute('data-vorschau-aktiv');
         tabs().forEach(b => b.setAttribute('aria-expanded', 'false'));
         if (war === 'finger') {
             bar.removeAttribute('data-zielleiste');
@@ -122473,6 +122951,17 @@ const TabShelf = (() => {
         s.className = 'ru-waechst';
         s.setAttribute('role', 'menu');
         s.setAttribute('aria-orientation', 'horizontal');
+        const preview = document.createElement('div');
+        preview.className = 'ho-ziel-vorschau';
+        preview.setAttribute('aria-hidden', 'true');
+        const previewType = document.createElement('span');
+        previewType.className = 'ho-ziel-vorschau-bereich';
+        const previewText = document.createElement('strong');
+        previewText.className = 'ho-ziel-vorschau-name';
+        preview.append(previewType, previewText);
+        s.appendChild(preview);
+        previewCategory = previewType;
+        previewName = previewText;
         s.hidden = true;
         s.addEventListener('keydown', onShelfKey);
         s.addEventListener('click', e => {
@@ -122811,7 +123300,8 @@ const Aussehen = (() => {
             const s = einstellung();
             if (reiter === 'farbe') {
                 inhalt.innerHTML =
-                    '<div class="au-staffelei" id="au-staffelei"></div>' +
+                    '<div data-glass-wheel-settings></div>' +
+                        '<div class="au-staffelei" id="au-staffelei"></div>' +
                         '<div class="au-titel">Farbschema</div>' +
                         '<div class="au-schemata">' + SCHEMATA.map(x => {
                         const stil = stilblatt(x.grund);
@@ -122830,6 +123320,8 @@ const Aussehen = (() => {
                         '<div class="au-titel">Akzentfarbe</div>' +
                         akzentWahl(s) +
                         akzentVorschau();
+                if (typeof GlassWheel !== 'undefined')
+                    inhalt.querySelector('[data-glass-wheel-settings]')?.append(GlassWheel.settings());
                 const platz = inhalt.querySelector('#au-staffelei');
                 if (platz && typeof Staffelei !== 'undefined') {
                     const grund = SCHEMATA.find(x => x.id === s.schema)?.grund || 'dark';
@@ -150374,6 +150866,12 @@ const Kopfleiste = (() => {
         if (!p.ohneTools && eigen) {
             const tools = document.createElement('div');
             tools.className = 'pg-tools';
+            tools.setAttribute('role', 'group');
+            tools.setAttribute('aria-label', 'Seitenwerkzeuge');
+            const caption = document.createElement('span');
+            caption.className = 'pg-tools-caption';
+            caption.textContent = 'Seitenwerkzeuge';
+            caption.setAttribute('aria-hidden', 'true');
             const z = (name) => {
                 try {
                     return Register.symbole.alsSvg(name, 15);
@@ -150393,6 +150891,7 @@ const Kopfleiste = (() => {
                     '<button data-a="font">' + z('typeface') + 'Schrift</button>' +
                     '<button data-a="vorlage">' + z('puzzle') + 'Vorlage</button>' +
                     '<button data-a="ai">' + z('sparkle') + 'Mit KI</button>';
+            tools.prepend(caption);
             tools.addEventListener('click', e => {
                 const b = elVon(e)?.closest('button[data-a]');
                 if (!b)
@@ -157099,6 +157598,8 @@ const App = (() => {
         Menueband.start();
         if (typeof StudioSchale !== 'undefined')
             StudioSchale.start();
+        if (typeof GlassWheel !== 'undefined')
+            GlassWheel.start();
         Blocks.auswahlEinklinken();
         Rundgang.vielleichtStarten();
         const an = (id, fn) => document.getElementById(id)?.addEventListener('click', fn);
@@ -157429,6 +157930,501 @@ const App = (() => {
         erstellenBlatt,
         erstellenWege, erstellenWeg
     };
+})();
+
+</script>
+<script>
+/* ===== quell/schale/bedienung/glass-wheel-geometry.js ===== */
+"use strict";
+const GlassWheelGeometry = (() => {
+    const wrap = (value, count) => count > 0
+        ? ((Math.round(value) % count) + count) % count : -1;
+    const step = (count) => 360 / Math.max(1, Math.min(8, count));
+    const delta = (from, to) => ((to - from + 540) % 360 + 360) % 360 - 180;
+    const distance = (index, selected, count) => {
+        if (count < 1)
+            return 0;
+        return ((index - selected + count / 2) % count + count) % count - count / 2;
+    };
+    const positions = (count, rotation) => {
+        if (count < 1)
+            return [];
+        const increment = step(count), raw = Math.round(-rotation / increment);
+        const selected = wrap(raw, count), residual = rotation + raw * increment;
+        return Array.from({ length: count }, (_, index) => ({ index,
+            offset: distance(index, selected, count) }))
+            .filter(item => count <= 8 || Math.abs(item.offset) <= 3)
+            .map(item => ({ index: item.index, angle: -90 + item.offset * increment + residual }));
+    };
+    const settle = (rotation, velocity, count, reduced = false) => {
+        if (count <= 1)
+            return 0;
+        const increment = step(count);
+        const coast = reduced ? 0 : Math.max(-2 * increment, Math.min(2 * increment, velocity * 140));
+        return Math.round((rotation + coast) / increment) * increment;
+    };
+    return { wrap, step, delta, distance, positions, settle };
+})();
+
+</script>
+<script>
+/* ===== quell/schale/aufbau/glass-wheel.js ===== */
+"use strict";
+const GlassWheel = (() => {
+    const MODE_KEY = 'redion:ui-shell:v1', AREA_KEY = 'redion:glass-wheel:area:v1';
+    let current = 'classic', selected = '', expanded = true, allOpen = false;
+    let started = false, frame = 0, paintFrame = 0, generation = 0, rotation = 0, signature = '';
+    let host = null, ring = null, tray = null;
+    let areas = [], drag = null;
+    let suppressClick = false, wheelTimer;
+    let hostEvents = null;
+    const read = (key) => { try {
+        return localStorage.getItem(key) || '';
+    }
+    catch {
+        return '';
+    } };
+    const write = (key, value) => {
+        try {
+            localStorage.setItem(key, value);
+            return true;
+        }
+        catch {
+            UI.toast('Die Oberflächenwahl gilt nur für diese Sitzung: lokaler Speicher ist gesperrt.');
+            return false;
+        }
+    };
+    const calm = () => AppEinstellung.wenigBewegung();
+    const button = (text, action, className = '') => {
+        const node = document.createElement('button');
+        node.type = 'button';
+        node.className = className;
+        node.textContent = text;
+        node.addEventListener('click', action);
+        return node;
+    };
+    const readable = (id) => {
+        const page = Store.getBlock(id);
+        return !!page && page.alive !== false && Lesefrage.erlaubt('lesen', id) &&
+            Store.pathOf(id).every((parent) => parent.alive !== false);
+    };
+    const kindOf = (id) => {
+        const page = Store.getBlock(id);
+        if (page?.type === 'database')
+            return 'Datenbank';
+        const children = Store.childrenOf(id);
+        if (children.some((child) => child.type === 'pdfseite'))
+            return 'PDF';
+        if (children.some((child) => child.type === 'database'))
+            return 'Datenbank';
+        return page?.dokumentModus ? 'Dokument' : 'Notiz';
+    };
+    const saveArea = () => { write(AREA_KEY, selected); };
+    const announce = () => {
+        const live = host?.querySelector('.gw-announcement');
+        if (live)
+            live.textContent = areas.find(area => area.id === selected)?.name
+                ? areas.find(area => area.id === selected).name + ' ausgewählt' : 'Keine Lebensbereiche angelegt';
+    };
+    const paint = () => {
+        if (!ring)
+            return;
+        const positions = GlassWheelGeometry.positions(areas.length, rotation);
+        const radius = Math.min(176, ring.clientWidth * .34, (ring.clientHeight - 52) / 2);
+        const shown = new Set(positions.map(position => String(position.index)));
+        ring.querySelectorAll('[data-gw-area]').forEach(node => {
+            const index = Number(node.dataset['gwArea']), point = positions.find(position => position.index === index);
+            node.hidden = !shown.has(String(index));
+            if (!point)
+                return;
+            const radians = point.angle * Math.PI / 180;
+            node.style.setProperty('--gw-x', (Math.cos(radians) * radius).toFixed(2) + 'px');
+            node.style.setProperty('--gw-y', (Math.sin(radians) * radius).toFixed(2) + 'px');
+            node.setAttribute('aria-pressed', String(areas[index]?.id === selected));
+            node.tabIndex = areas[index]?.id === selected ? 0 : -1;
+        });
+        ring.querySelectorAll('[data-gw-spoke]').forEach(node => {
+            const point = positions.find(position => position.index === Number(node.dataset['gwSpoke']));
+            node.hidden = !point;
+            if (point) {
+                node.style.transform = `rotate(${point.angle.toFixed(2)}deg) translateX(${(radius * .4).toFixed(2)}px)`;
+                node.style.width = (radius * .58).toFixed(2) + 'px';
+            }
+        });
+        ring.style.setProperty('--gw-turn', rotation.toFixed(2) + 'deg');
+        ring.dataset['dragging'] = String(!!drag);
+        const center = host?.querySelector('.gw-center-name');
+        if (center)
+            center.textContent = areas.find(area => area.id === selected)?.name || 'Deine Bereiche';
+        const count = host?.querySelector('.gw-count');
+        if (count)
+            count.textContent = areas.length ? `${areas.findIndex(area => area.id === selected) + 1} / ${areas.length}` : '0 Bereiche';
+        host?.querySelectorAll('.gw-wheel-controls button').forEach(node => node.disabled = areas.length < 2);
+        const selection = host?.querySelector('.gw-selection');
+        if (selection)
+            selection.textContent = areas.find(area => area.id === selected)?.name || '';
+    };
+    const chooseRotation = (next, remember = true) => {
+        rotation = next;
+        const index = GlassWheelGeometry.wrap(Math.round(-rotation / GlassWheelGeometry.step(areas.length)), areas.length);
+        selected = areas[index]?.id || '';
+        if (remember) {
+            if (paintFrame)
+                cancelAnimationFrame(paintFrame);
+            paintFrame = 0;
+            paint();
+        }
+        else if (!paintFrame)
+            paintFrame = requestAnimationFrame(() => { paintFrame = 0; paint(); });
+        if (remember) {
+            saveArea();
+            announce();
+            void refreshTray();
+        }
+    };
+    const select = (index) => {
+        const previous = areas.findIndex(area => area.id === selected);
+        const shift = GlassWheelGeometry.distance(index, previous, areas.length);
+        chooseRotation(rotation - shift * GlassWheelGeometry.step(areas.length));
+    };
+    const turn = (direction) => {
+        if (areas.length < 2)
+            return;
+        chooseRotation(GlassWheelGeometry.settle(rotation - direction * GlassWheelGeometry.step(areas.length), 0, areas.length, true));
+    };
+    const refreshTray = async () => {
+        const version = ++generation, target = tray;
+        if (current !== 'glass-wheel' || !target)
+            return;
+        const tabs = Fenster.reiter().map((tab, index) => ({ index, id: tab.id }));
+        const projected = [];
+        for (const tab of tabs) {
+            if (!readable(tab.id))
+                continue;
+            const membership = await Lebensbereiche.bereicheVon({ art: 'page', id: tab.id });
+            if (!allOpen && (!selected || !membership.some(area => area.id === selected)))
+                continue;
+            const page = Store.getBlock(tab.id);
+            projected.push({ ...tab, title: String(page.text || 'Ohne Titel'), kind: kindOf(tab.id) });
+        }
+        if (version !== generation || current !== 'glass-wheel' || !target.isConnected)
+            return;
+        const active = Fenster.aktiv();
+        const nextSignature = JSON.stringify([selected, allOpen, active, projected]);
+        if (target.dataset['snapshot'] === nextSignature)
+            return;
+        target.dataset['snapshot'] = nextSignature;
+        const focused = document.activeElement?.dataset['gwTab'];
+        target.replaceChildren();
+        const title = document.createElement('h3');
+        title.textContent = allOpen ? 'Alle geöffnet' : `Geöffnet · ${areas.find(area => area.id === selected)?.name || 'Deine Bereiche'}`;
+        const tools = document.createElement('div');
+        tools.className = 'gw-tray-heading';
+        tools.append(title);
+        const all = button('Alle geöffnet', () => { allOpen = true; void refreshTray(); });
+        all.setAttribute('aria-pressed', String(allOpen));
+        const area = button('Im Bereich', () => { allOpen = false; void refreshTray(); });
+        area.setAttribute('aria-pressed', String(!allOpen));
+        tools.append(area, all);
+        target.append(tools);
+        const list = document.createElement('div');
+        list.className = 'gw-open-list';
+        list.setAttribute('aria-label', title.textContent);
+        if (!projected.length) {
+            const empty = document.createElement('p');
+            empty.className = 'gw-empty';
+            empty.textContent = allOpen ? 'Noch keine lesbaren Dokumente geöffnet. Öffne einen Inhalt in Redion.'
+                : 'In diesem Bereich ist noch kein Dokument geöffnet. „Alle geöffnet“ zeigt auch Inhalte ohne Bereich.';
+            list.append(empty);
+        }
+        for (const tab of projected) {
+            const card = document.createElement('div');
+            card.className = 'gw-tab-card';
+            card.draggable = true;
+            const open = button('', () => { if (readable(tab.id)) {
+                Fenster.wechseln(tab.index);
+                setExpanded(false);
+            } }, 'gw-tab-open');
+            open.dataset['gwTab'] = String(tab.index);
+            open.setAttribute('aria-current', String(tab.index === active));
+            const kind = document.createElement('small');
+            kind.textContent = tab.kind;
+            const name = document.createElement('strong');
+            name.textContent = tab.title;
+            open.title = tab.title;
+            open.append(kind, name);
+            const close = button('×', () => { Fenster.schliessen(tab.index); schedule(); }, 'gw-tab-close');
+            close.setAttribute('aria-label', tab.title + ' schliessen');
+            close.disabled = tabs.length <= 1;
+            card.addEventListener('dragstart', event => event.dataTransfer?.setData('text/redion-tab', String(tab.index)));
+            card.addEventListener('dragover', event => event.preventDefault());
+            card.addEventListener('drop', event => {
+                event.preventDefault();
+                const raw = event.dataTransfer?.getData('text/redion-tab');
+                if (raw && /^\d+$/.test(raw))
+                    Fenster.verschieben(Number(raw), tab.index);
+            });
+            open.addEventListener('keydown', event => {
+                if (event.altKey && event.shiftKey && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+                    event.preventDefault();
+                    Fenster.verschieben(tab.index, tab.index + (event.key === 'ArrowRight' ? 1 : -1));
+                }
+            });
+            card.append(open, close);
+            list.append(card);
+        }
+        target.append(list);
+        if (focused)
+            target.querySelector(`[data-gw-tab="${CSS.escape(focused)}"]`)?.focus({ preventScroll: true });
+    };
+    const setExpanded = (value) => {
+        expanded = value;
+        if (!host)
+            return;
+        host.dataset['expanded'] = String(value);
+        const toggle = host.querySelector('[data-gw-expand]');
+        toggle?.setAttribute('aria-expanded', String(value));
+        if (toggle)
+            toggle.textContent = value ? 'Rad einklappen' : 'Bereichsrad öffnen';
+    };
+    const cancelDrag = () => {
+        if (drag) {
+            rotation = drag.startRotation;
+            selected = areas[GlassWheelGeometry.wrap(Math.round(-rotation / GlassWheelGeometry.step(areas.length)), areas.length)]?.id || '';
+        }
+        drag = null;
+        paint();
+    };
+    const refresh = async () => {
+        if (current !== 'glass-wheel' || !host)
+            return;
+        const next = Lebensbereiche.auflisten(), nextSignature = JSON.stringify(next.map(area => [area.id, area.name, area.icon]));
+        if (signature !== nextSignature) {
+            cancelDrag();
+            areas = next;
+            signature = nextSignature;
+            if (!areas.some(area => area.id === selected))
+                selected = areas[0]?.id || '';
+            rotation = -Math.max(0, areas.findIndex(area => area.id === selected)) * GlassWheelGeometry.step(areas.length);
+            ring?.querySelectorAll('[data-gw-area],[data-gw-spoke]').forEach(node => node.remove());
+            areas.forEach((area, index) => {
+                const item = button(area.name, event => { if (!suppressClick || event.detail === 0)
+                    select(index); }, 'gw-area');
+                const label = document.createElement('span');
+                label.className = 'gw-area-label';
+                label.textContent = area.name;
+                item.replaceChildren(label);
+                item.dataset['gwArea'] = String(index);
+                item.title = area.name;
+                item.setAttribute('aria-label', area.name);
+                const spoke = document.createElement('span');
+                spoke.className = 'gw-spoke';
+                spoke.dataset['gwSpoke'] = String(index);
+                spoke.setAttribute('aria-hidden', 'true');
+                ring?.append(spoke, item);
+            });
+            const empty = host.querySelector('.gw-no-areas');
+            if (empty)
+                empty.hidden = !!areas.length;
+            saveArea();
+            announce();
+        }
+        paint();
+        await refreshTray();
+    };
+    const fail = (error) => {
+        console.error('Glass Wheel konnte nicht dargestellt werden', error);
+        setMode('classic');
+        UI.toast('Glass Wheel ist nicht verfügbar. Klassisch ist wieder aktiv; deine Inhalte bleiben erhalten.');
+    };
+    const schedule = () => {
+        if (current !== 'glass-wheel' || frame)
+            return;
+        frame = requestAnimationFrame(() => { frame = 0; void refresh().catch(fail); });
+    };
+    const mount = () => {
+        const main = document.getElementById('main'), scroll = document.getElementById('scroll');
+        if (!main || !scroll)
+            throw new Error('Die vorhandene Redion-Schale fehlt.');
+        if (!getComputedStyle(document.body).getPropertyValue('--gw-paper').trim())
+            throw new Error('Das Glass-Stilblatt fehlt.');
+        host = document.createElement('section');
+        host.id = 'glass-wheel-shell';
+        host.className = 'gw-shell';
+        host.setAttribute('aria-label', 'Glass Wheel – Lebensbereiche und offene Dokumente');
+        host.dataset['keinWisch'] = '';
+        host.innerHTML = '<div class="gw-shell-heading"><span class="gw-identity">REDION <small>DEIN WISSENSRAUM</small></span></div>' +
+            '<div class="gw-wheel-stage"><h2>Deine Bereiche</h2><p>Ein Raum für alles, was dich bewegt.</p>' +
+            '<div class="gw-wheel" role="group" aria-label="Bereichsrad – ziehen, scrollen oder Pfeiltasten" tabindex="0">' +
+            '<span class="gw-rim" aria-hidden="true"></span><div class="gw-hub"><b aria-hidden="true">R</b><span class="gw-center-name"></span></div></div>' +
+            '<div class="gw-wheel-controls"><span class="gw-count"></span></div><p class="gw-selection"></p><p class="gw-no-areas">Noch keine Lebensbereiche. Lege sie in den vorhandenen Einstellungen an.</p></div>' +
+            '<div class="gw-tray"></div><span class="gw-announcement" aria-live="polite" role="status"></span>';
+        const heading = host.querySelector('.gw-shell-heading');
+        const expand = button('', () => { setExpanded(!expanded); paint(); });
+        expand.dataset['gwExpand'] = '';
+        heading.append(expand);
+        heading.append(button('Klassisch', () => setMode('classic'), 'gw-classic-return'));
+        host.querySelector('.gw-no-areas')?.append(button('Bereiche verwalten', () => Einstellungen.oeffne('bereiche')));
+        ring = host.querySelector('.gw-wheel');
+        tray = host.querySelector('.gw-tray');
+        const controls = host.querySelector('.gw-wheel-controls');
+        controls.prepend(button('←', () => turn(-1)));
+        controls.append(button('→', () => turn(1)));
+        controls.firstElementChild?.setAttribute('aria-label', 'Vorheriger Bereich');
+        controls.lastElementChild?.setAttribute('aria-label', 'Nächster Bereich');
+        main.insertBefore(host, scroll);
+        setExpanded(expanded);
+        signature = '';
+        hostEvents = new AbortController();
+        const signal = hostEvents.signal;
+        ring.addEventListener('keydown', event => {
+            if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key))
+                return;
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.key === 'Home')
+                select(0);
+            else if (event.key === 'End')
+                select(areas.length - 1);
+            else
+                turn(['ArrowRight', 'ArrowDown'].includes(event.key) ? 1 : -1);
+        }, { signal });
+        const angle = (event) => {
+            const rect = ring.getBoundingClientRect();
+            return Math.atan2(event.clientY - rect.top - rect.height / 2, event.clientX - rect.left - rect.width / 2) * 180 / Math.PI;
+        };
+        ring.addEventListener('pointerdown', event => {
+            if (drag && drag.id !== event.pointerId) {
+                suppressClick = true;
+                cancelDrag();
+                return;
+            }
+            suppressClick = false;
+            if (areas.length < 2 || event.button !== 0)
+                return;
+            drag = { id: event.pointerId, angle: angle(event), time: event.timeStamp, velocity: 0, moved: false, x: event.clientX, y: event.clientY, startRotation: rotation };
+        }, { signal });
+        ring.addEventListener('pointermove', event => {
+            if (!drag || drag.id !== event.pointerId)
+                return;
+            if (!drag.moved && Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < 8)
+                return;
+            const next = angle(event), change = GlassWheelGeometry.delta(drag.angle, next);
+            drag.velocity = change / Math.max(1, event.timeStamp - drag.time);
+            drag.time = event.timeStamp;
+            drag.angle = next;
+            if (!drag.moved) {
+                drag.moved = true;
+                ring.setPointerCapture(event.pointerId);
+            }
+            rotation += change;
+            chooseRotation(rotation, false);
+        }, { signal });
+        ring.addEventListener('pointerup', event => {
+            if (!drag || drag.id !== event.pointerId)
+                return;
+            suppressClick = drag.moved;
+            const velocity = event.timeStamp - drag.time > 90 ? 0 : drag.velocity;
+            drag = null;
+            chooseRotation(GlassWheelGeometry.settle(rotation, velocity, areas.length, calm()));
+        }, { signal });
+        ring.addEventListener('pointercancel', () => { cancelDrag(); chooseRotation(GlassWheelGeometry.settle(rotation, 0, areas.length, true)); }, { signal });
+        ring.addEventListener('wheel', event => {
+            if (event.ctrlKey || areas.length < 2)
+                return;
+            event.preventDefault();
+            rotation -= Math.max(-50, Math.min(50, (event.deltaY || event.deltaX) * .18));
+            chooseRotation(rotation, false);
+            clearTimeout(wheelTimer);
+            wheelTimer = setTimeout(() => chooseRotation(GlassWheelGeometry.settle(rotation, 0, areas.length, calm())), 110);
+        }, { signal, passive: false });
+        void refresh().catch(fail);
+    };
+    function setMode(value) {
+        if (value !== 'classic' && value !== 'glass-wheel')
+            return false;
+        if (current === value)
+            return true;
+        generation++;
+        current = value;
+        write(MODE_KEY, value);
+        if (value === 'glass-wheel') {
+            try {
+                document.body.dataset['uiShell'] = value;
+                mount();
+            }
+            catch (error) {
+                fail(error);
+                return false;
+            }
+        }
+        else {
+            hostEvents?.abort();
+            hostEvents = null;
+            clearTimeout(wheelTimer);
+            cancelDrag();
+            if (frame)
+                cancelAnimationFrame(frame);
+            frame = 0;
+            if (paintFrame)
+                cancelAnimationFrame(paintFrame);
+            paintFrame = 0;
+            host?.remove();
+            host = null;
+            ring = null;
+            tray = null;
+            delete document.body.dataset['uiShell'];
+        }
+        document.querySelectorAll('[data-gw-mode]').forEach(node => node.setAttribute('aria-pressed', String(node.dataset['gwMode'] === current)));
+        return true;
+    }
+    const settings = () => {
+        const node = document.createElement('section');
+        node.className = 'gw-settings';
+        const title = document.createElement('h3');
+        title.textContent = 'Oberfläche';
+        node.append(title);
+        const choices = document.createElement('div');
+        choices.className = 'gw-mode-choices';
+        for (const [mode, name, detail] of [['classic', 'Klassisch', 'Dein vertrauter Arbeitsplatz'], ['glass-wheel', 'Glass Wheel', 'Lebensbereiche als drehbares Glasrad']]) {
+            const option = button('', () => setMode(mode), 'gw-mode-card');
+            option.dataset['gwMode'] = mode;
+            option.setAttribute('aria-pressed', String(current === mode));
+            const preview = document.createElement('span');
+            preview.className = 'gw-mode-preview gw-preview-' + mode;
+            preview.setAttribute('aria-hidden', 'true');
+            const label = document.createElement('b');
+            label.textContent = name;
+            const hint = document.createElement('small');
+            hint.textContent = detail;
+            option.append(preview, label, hint);
+            choices.append(option);
+        }
+        const note = document.createElement('p');
+        note.textContent = 'Nur auf diesem Gerät · Dieselben Inhalte · Jederzeit zurück zu Klassisch';
+        node.append(choices, note);
+        return node;
+    };
+    const start = () => {
+        if (started)
+            return;
+        started = true;
+        selected = read(AREA_KEY);
+        document.addEventListener('redion:reiter', schedule);
+        document.addEventListener('redion:schauplatz', () => { if (document.querySelector('#title'))
+            setExpanded(false); schedule(); });
+        document.addEventListener('click', event => {
+            if (event.target instanceof Element && event.target.closest('#handy-oben,#kante,#sidebar'))
+                setExpanded(false);
+            schedule();
+        });
+        document.addEventListener('change', schedule);
+        window.addEventListener('resize', schedule);
+        Store.on(schedule);
+        if (read(MODE_KEY) === 'glass-wheel')
+            setMode('glass-wheel');
+    };
+    return { start, setMode, mode: () => current, settings, refresh, select, keys: Object.freeze({ mode: MODE_KEY, area: AREA_KEY }) };
 })();
 
 </script>

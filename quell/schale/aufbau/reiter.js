@@ -28,6 +28,7 @@ const Fenster = (() => {
         return (b.icon ? b.icon + ' ' : '') + (b.text || 'Ohne Titel');
     };
     const zeichnen = () => {
+        document.dispatchEvent(new CustomEvent('redion:reiter'));
         let leiste = document.getElementById('reiterleiste');
         if (!leiste) {
             leiste = document.createElement('div');
@@ -100,6 +101,19 @@ const Fenster = (() => {
             aktiv--;
         sichern();
         wechseln(aktiv);
+    };
+    const verschieben = (von, nach) => {
+        if (!Number.isInteger(von) || !Number.isInteger(nach) || von < 0 ||
+            nach < 0 || von >= reiter.length || nach >= reiter.length || von === nach)
+            return;
+        const activeTab = reiter[aktiv];
+        const [tab] = reiter.splice(von, 1);
+        if (!tab)
+            return;
+        reiter.splice(nach, 0, tab);
+        aktiv = Math.max(0, reiter.indexOf(activeTab));
+        sichern();
+        zeichnen();
     };
     const istDokument = (id) => !!(id && Store.getBlock(id)?.dokumentModus);
     const gemerkt = (id) => {
@@ -407,17 +421,11 @@ const Fenster = (() => {
             if (!t || zieht === null)
                 return;
             const nach = +(t.dataset["i"] ?? 0);
-            const [x] = reiter.splice(zieht, 1);
-            if (!x)
-                return;
-            reiter.splice(nach, 0, x);
-            aktiv = nach;
+            verschieben(zieht, nach);
             zieht = null;
-            sichern();
-            zeichnen();
         });
     };
-    return { start, zeichnen, gemerkt, neuerReiter, schliessen, wechseln,
+    return { start, zeichnen, gemerkt, neuerReiter, schliessen, wechseln, verschieben,
         teilen, teilenAus, zeichneTeil, vorschauZeigen, vorschauZu,
         reiter: () => reiter, aktiv: () => aktiv, geteilt: () => geteilt };
 })();
