@@ -49,8 +49,8 @@ private final class RedionIncomingInbox {
             inFlight.insert(name)
             web.callAsyncJavaScript(
                 "return await (window.RedionNativeShare?.receive(payload) ?? false)",
-                arguments: ["payload": object], in: nil, contentWorld: .page
-            ) { [weak self] result in
+                arguments: ["payload": object], in: nil, in: .page,
+                completionHandler: { [weak self] result in
                 guard let self = self else { return }
                 self.inFlight.remove(name)
                 if case .success(let value) = result, let accepted = value as? Bool, accepted {
@@ -62,7 +62,7 @@ private final class RedionIncomingInbox {
                         self?.drain(window: window)
                     }
                 }
-            }
+            })
         }
     }
 }

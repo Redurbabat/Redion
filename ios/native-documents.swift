@@ -86,7 +86,7 @@ private final class RedionDocumentInbox {
               let payload = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
         delivering = true
         web.callAsyncJavaScript("return await (window.RedionNativeDocuments?.receive(payload) ?? 'wait')",
-            arguments: ["payload": payload], in: nil, contentWorld: .page) { [weak self] result in
+            arguments: ["payload": payload], in: nil, in: .page, completionHandler: { [weak self] result in
             guard let self = self else { return }
             self.delivering = false
             if case .success(let value) = result, let status = value as? String, status == "done" {
@@ -100,6 +100,6 @@ private final class RedionDocumentInbox {
                 self.attempts += 1
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { self.drain(window: window) }
             }
-        }
+        })
     }
 }

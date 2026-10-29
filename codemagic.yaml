@@ -15,6 +15,8 @@ workflows:
         script: |
           set -euo pipefail
           npm ci --no-audit --no-fund
+          # Echter WebKit-SDK-Vertrag; -frontend -parse erkennt falsche API-Labels nicht.
+          node --test ios/webkit-call-contract.test.mts
           # Vite-8-Peer-Abgleich vor dem Build pruefen (npm ERESOLVE abfangen).
           node --test ios/codemagic-dependency-versions.test.mjs
           npm run bauen:ts

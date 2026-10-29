@@ -69500,3 +69500,22 @@ Altfehlern und weiterhin offenen nativen iPhone-/Signierungsfreigaben.
 Gezielte Prüfungen werden gefahren; ein voller grüner Gesamtlauf wird nicht
 behauptet. Kein Deployment, keine Installation, keine Cloud-Ressourcen.
 Details und Prüfbefunde: `doku/MAIN-GERAETE-GLASS-INTEGRATION.md`.
+
+## E756 — Den gemeldeten iPhone-Kompilierfehler unmittelbar auf main reparieren
+
+Redur liefert den Codemagic-Log mit Status 65 und verlangt: „behe das sofort
+auf main puschen dann dringend“. Dieser konkrete Auftrag erlaubt den
+sofortigen, begrenzten Reparatur-Push trotz weiterhin nicht behauptetem
+grünem Gesamtlauf (§46); er ist keine dauerhafte Ausnahme für spätere Arbeit.
+
+Ursache ist das falsche Swift-Argumentlabel `contentWorld:` mit einer
+Ergebnis-Closure. Beide betroffenen WebKit-Aufrufe verwenden jetzt die
+Callback-Überladung `in:in:completionHandler:`. Signierung, App-Identität,
+Bestätigungslogik und Nutzerdaten bleiben unverändert. Ein neuer Wächter
+war vor der Reparatur rot und prüft auf Codemagic zusätzlich semantisch
+gegen das echte iPhone-SDK; ein Syntaxcheck allein reicht dafür nicht.
+
+28 gezielte Tests und TypeScript sind grün; der SDK-Test ist auf Windows
+übersprungen. Ein neuer Codemagic-/Xcode-Lauf bleibt erforderlich. Belege
+und Grenzen: `doku/IOS-CODEMAGIC-WEBKIT-CALLBACK-FIX.md`. Keine Erweiterung
+des Auftrags, kein Force-Push und kein behauptetes fertiges IPA.

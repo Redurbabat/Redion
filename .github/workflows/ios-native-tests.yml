@@ -53,6 +53,7 @@ jobs:
             ios/capacitor8-spm-native-integration.test.mjs \
             ios/vergleiche-webstand.test.mjs \
             ios/native-documents.test.mts \
+            ios/webkit-call-contract.test.mts \
             pruefungen/wischen-multitouch.test.mjs
 
 # Deliberately no IPA packaging, Apple signing, deployment, or merge.
