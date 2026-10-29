@@ -149,7 +149,7 @@ const Austausch = (() => {
             }
             catch (err) {
                 if (typeof UI !== 'undefined' && UI.toast)
-                    UI.toast('Die Datei konnte nicht in iOS-Dateien gespeichert werden: ' +
+                    UI.toast('Die Datei konnte nicht nativ gespeichert werden: ' +
                         (err instanceof Error ? err.message : String(err)));
                 return false;
             }

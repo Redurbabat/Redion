@@ -803,6 +803,13 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 
 ---
 
+* **E754** — Gemeinsame Geräteübersicht, sichere native Dateitüren und vorbereiteter,
+  nicht vorgetäuschter Live-Sync (29. Oktober 2026; vollständiger Eintrag am Ende).
+
+* **E755** — Geräteintegration auf dem neuesten main mit bereits enthaltenem Glass Wheel
+  zusammenführen; neuere Update-/Sync-Schutzregeln erhalten, dokumentierte einmalige
+  Ausnahme für bekannte Altfehler und offene Gerätefreigaben (29. Oktober 2026).
+
 ## Grundregel
 
 Wenn eine Entscheidung Auswirkungen auf Daten, Speicher, Import, Export, Sync,
@@ -69434,3 +69441,62 @@ Beim Übergang von einer kurzen auf eine mehrzeilige Suchzeile wuchs die
 Auswahlmarke hinter schon weisser Schrift. Bis die vorhandene Feder ankommt,
 trägt nur der gewählte Treffer seinen deckenden Akzentgrund selbst. Beide
 Fälle wurden vor der Korrektur durch den neuen Browserlauf rot nachgewiesen.
+
+## E754 — Vorhandene iPhone-/Windows-Apps verbinden, ohne ihre Identität zu wechseln
+
+**Auftrag:** Redur sagt „mache alles“ zu Installation/Dateiübergabe,
+Geräteübertragung, Bedienung und sichtbarer Datensicherheit. Er nutzt bereits
+eine Windows-App und eine per Codemagic gebaute iPhone-IPA. Danach bestätigt
+er „nein ich habe keine server“. Glass Wheel bleibt ausdrücklich liegen.
+
+**Entscheidung:** Neuer Branch vom aktuellen main, keine Glass-Übernahme und
+keine neue Oberfläche oder Datenbank. Gemeinsame Gerätestatus-/Sicherungsansicht,
+vorhandene Import-/Exportdialoge über schmale native Adapter wiederverwenden.
+Windows-Dateizugriffe erhalten kurzlebige Kennungen, nie freie Systempfade;
+IPC prüft Hauptframe und lokale Einstiegsdatei einschließlich Fragmentnavigation.
+Exporte schreiben Stücke, prüfen Vollständigkeit und ersetzen erst nach Flush.
+Neue native Windows-Logik ist TypeScript (`.cts`) und wird separat in ignorierte
+CommonJS-Bauausgaben übersetzt, nicht als handgeschriebenes JavaScript ergänzt.
+iOS kopiert koordiniert vom File Provider, bestätigt fehlgeschlagenen Import
+nicht und verändert das Original nicht. App-IDs, Herkunft und Profile bleiben.
+
+**Alternative/Kosten:** Keine zweite App, kein automatischer Backup-Import als
+vermeintlicher Sync und keine freien Dateisystem-APIs. Dafür bleiben native
+Mac-/Geräteprüfung und Signierung echte Freigabeschritte. Ein altes GitHub-IPA-
+Verfahren überschrieb die Capacitor-Konfiguration; es benutzt nun Codemagics
+gleiche Schritte. Windows-Paketkopien werden byteweise geprüft; Bauordner sind
+keine neuen JavaScript-Quellen und werden von Webassets ausgeschlossen.
+
+**Servergrenze:** Keine Cloud-Ressourcen oder Abrechnung ohne bewusste
+Einrichtung. D1/R2 sind nicht aktiv gebunden. Das bestehende Access-Tor und
+CORS brauchen einen sicheren nativen Anmeldeweg. Weder TOR=offen noch ein
+Service-Geheimnis in IPA/EXE sind ein Ersatz. Lokale Vorprüfung und Anleitung
+benennen diese offenen Punkte; bestehende Zwei-Geräte-/Konflikttests ersetzen
+keinen produktiven Dienst. Die Cloudflare-/Cloudflare-One-Prüfung beeinflusst
+damit bewusst die Freigabegrenze, nicht die Schutzregeln des Servers.
+
+**Prüfbelege und Grenzen:** `doku/IPHONE-WINDOWS-INTEGRATION.md` und
+`doku/SYNC-ERSTEINRICHTUNG.md`; kein vollständiger grüner Gesamtlauf und kein
+bereits installiertes Update behauptet. Keine Veröffentlichung oder main-Änderung.
+
+## E755 — Beide Geräteoberflächen auf dem neuesten main, nicht auf einem alten Stand
+
+Redur verlangt: „also das am ende sollte beides auf main sein , also pusche alles
+jetzt auf main“. Bei der Aktualisierung ist Glass Wheel bereits über PR #168
+auf main (`084c98bc5`); auch signierte Windows-Updates und native Sync-
+Sicherheitsprüfungen aus PR #163/#165/#166 sind neuer als die Gerätebasis.
+
+Entschieden wird ein frischer Integrationsbranch von diesem main und ein
+echter Merge mit `766105fab`, kein Überschreiben und kein Force-Push.
+Windows behält Update-Controller/Shutdown-Schutz UND neue Datei-Brücke;
+die Paketliste enthält beides. Generierte Dateien entstehen neu aus der
+gemeinsamen Quelle. Das Glass-Gesamtschalenblatt wird als optionale spätere
+Kaskadenstufe geführt, nicht als Bauteil zwischen den Studio-Blättern.
+Klassisch bleibt Standard. Es werden keine Glass-Funktionen weiterentwickelt.
+
+Zur §46-Ausnahme antwortet Redur ausdrücklich: „Ja, dokumentiert auf main
+übernehmen“. Sie gilt einmal für diesen Integrationsstand mit benannten
+Altfehlern und weiterhin offenen nativen iPhone-/Signierungsfreigaben.
+Gezielte Prüfungen werden gefahren; ein voller grüner Gesamtlauf wird nicht
+behauptet. Kein Deployment, keine Installation, keine Cloud-Ressourcen.
+Details und Prüfbefunde: `doku/MAIN-GERAETE-GLASS-INTEGRATION.md`.

@@ -1,4 +1,5 @@
 "use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/glass-wheel.ts (npm run bauen:ts). */
 const GlassWheel = (() => {
     const MODE_KEY = 'redion:ui-shell:v1', AREA_KEY = 'redion:glass-wheel:area:v1';
     let current = 'classic', selected = '', expanded = true, allOpen = false;

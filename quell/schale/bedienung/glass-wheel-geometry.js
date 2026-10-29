@@ -1,4 +1,5 @@
 "use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/glass-wheel-geometry.ts (npm run bauen:ts). */
 const GlassWheelGeometry = (() => {
     const wrap = (value, count) => count > 0
         ? ((Math.round(value) % count) + count) % count : -1;

@@ -4,11 +4,12 @@
  * Start-menu entry and installer. The renderer uses the existing Redion UI.
  * No Node APIs reach notes or the editor; all app files are read-only.
  */
-const { app, BrowserWindow, Menu, protocol, net, shell, dialog } = require('electron');
+const { app, BrowserWindow, Menu, protocol, net, shell, dialog, ipcMain } = require('electron');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { resolveBundledAsset } = require('./paths.cjs');
 const { startRedionAutoUpdates } = require('./auto-update.cjs');
+const { NativeFiles, trustedSender, safeExportName } = require('./generated/files.cjs');
 
 const SCHEME = 'redion-local';
 const START_URL = 'redion-local://app/index.html';
@@ -32,6 +33,58 @@ if (!lock) {
 } else {
   let mainWindow = null;
   let updateController = null;
+  const files = new NativeFiles();
+  let operations = Promise.resolve();
+  const serial = fn => {
+    const result = operations.then(fn);
+    operations = result.catch(() => {});
+    return result;
+  };
+  const offerFiles = paths => serial(async () => {
+    let skipped = 0;
+    for (const filename of paths) {
+      try { if (!await files.offer(filename)) skipped++; }
+      catch { skipped++; }
+    }
+    if (skipped) dialog.showErrorBox('Nicht alle Dateien geöffnet', skipped + ' Datei(en) konnten nicht geöffnet werden. Höchstens 16 Dateien gleichzeitig, unterstütztes Format und maximal 4 GB. Unlesbare oder veränderte Dateien bitte erneut auswählen. Originale bleiben unverändert.');
+    mainWindow?.webContents.send('redion:files:available');
+  });
+  const argumentsFiles = args => args.filter(value => path.isAbsolute(value) && /\.(redion|pdf)$/i.test(value));
+  const chooseFiles = async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'In Redion öffnen', properties: ['openFile', 'multiSelections'],
+      filters: [{ name: 'Redion, PDF, Notizen und Bilder', extensions: ['redion', 'json', 'pdf', 'md', 'txt', 'png', 'jpg', 'jpeg', 'webp', 'gif'] }]
+    });
+    if (!result.canceled) await offerFiles(result.filePaths);
+  };
+
+  // Jeder privilegierte Aufruf muss vom Hauptframe DER lokalen App kommen.
+  // Ein importiertes Dokument/iframe bekommt weder Pfade noch Systemrechte.
+  const handle = (channel, fn) => ipcMain.handle(channel, (event, ...args) => {
+    if (!trustedSender(event, mainWindow?.webContents)) throw new Error('Dateizugriff nicht erlaubt.');
+    return serial(() => fn(...args));
+  });
+  handle('redion:files:list', () => files.pending());
+  // pick() läuft außerhalb der serial-Kette, offerFiles reiht selbst ein.
+  ipcMain.handle('redion:files:pick', async event => {
+    if (!trustedSender(event, mainWindow?.webContents)) throw new Error('Dateizugriff nicht erlaubt.');
+    await chooseFiles();
+  });
+  handle('redion:files:read', (id, offset) => files.read(id, offset));
+  handle('redion:files:release', id => files.release(id));
+  handle('redion:save:begin', async (name, size) => {
+    name = safeExportName(name);
+    if (!Number.isSafeInteger(size) || size < 0 || size >= 4 * 1024 ** 3) throw new Error('Export zu groß.');
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: 'Redion-Datei speichern', defaultPath: path.join(app.getPath('documents'), name),
+      properties: ['showOverwriteConfirmation', 'createDirectory']
+    });
+    if (result.canceled || !result.filePath) return null;
+    return files.begin(result.filePath, size);
+  });
+  handle('redion:save:write', (id, bytes) => files.write(id, bytes));
+  handle('redion:save:commit', id => files.commit(id));
+  handle('redion:save:cancel', id => files.cancel(id));
 
   const isInternal = (raw) => {
     try {
@@ -50,7 +103,8 @@ if (!lock) {
     } catch {}
   };
 
-  app.on('second-instance', () => {
+  app.on('second-instance', (_event, argv) => {
+    void offerFiles(argumentsFiles(argv));
     if (!mainWindow || mainWindow.isDestroyed()) return;
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();
@@ -58,7 +112,11 @@ if (!lock) {
 
   function appMenu() {
     Menu.setApplicationMenu(Menu.buildFromTemplate([
-      { label: 'Datei', submenu: [{ role: 'quit', label: 'Redion beenden' }] },
+      { label: 'Datei', submenu: [
+        { label: 'Öffnen …', accelerator: 'CmdOrCtrl+O', click: () => { void chooseFiles(); } },
+        { type: 'separator' },
+        { role: 'quit', label: 'Redion beenden' }
+      ] },
       { label: 'Bearbeiten', submenu: [
         { role: 'undo', label: 'Rückgängig' },
         { role: 'redo', label: 'Wiederholen' },
@@ -107,6 +165,7 @@ if (!lock) {
         nodeIntegration: false,
         contextIsolation: true,
         sandbox: true,
+        preload: path.join(__dirname, 'generated/preload.cjs'),
         webSecurity: true,
         webviewTag: false
       }
@@ -129,7 +188,7 @@ if (!lock) {
     // Do not run NSIS while Windows is logging off or shutting down.
     mainWindow.on('session-end', () => updateController?.onSystemShutdown?.());
     mainWindow.once('ready-to-show', () => mainWindow?.show());
-    mainWindow.on('closed', () => { mainWindow = null; });
+    mainWindow.on('closed', () => { mainWindow = null; void serial(() => files.close()); });
     mainWindow.loadURL(START_URL).catch(error => {
       dialog.showErrorBox('Redion konnte nicht starten', String(error));
     });
@@ -145,6 +204,7 @@ if (!lock) {
       updater: require('electron-updater').autoUpdater,
       yaml: require('js-yaml')
     });
+    void offerFiles(argumentsFiles(process.argv));
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) launchWindow();
     });

@@ -2862,7 +2862,7 @@ const App = (() => {
         UI.toast(paket.ausgelassen
           ? 'Sicherung mit Lücken gespeichert: ' + paket.ausgelassen +
             ' Datei(en) fehlen. Hinweis in der Sicherung lesen und erneut sichern.'
-          : 'Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
+          : nativeSicherung.ort || 'Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
         return paket.ausgelassen === 0;
       }
       const l = document.createElement('a');
@@ -3061,6 +3061,14 @@ const App = (() => {
     inp.type = 'file'; inp.accept = '.json,.redion,.zip';
     inp.addEventListener('change', async () => {
       const f = inp.files?.[0]; if (!f) return;
+      await importBackupFile(f, danach);
+    });
+    inp.click();
+  };
+
+  // Native Plattformen liefern eine Datei, keine zweite Wiederherstellung.
+  // Vorschau, Dazulegen/Ersetzen und Sicherheitskopie bleiben unverändert.
+  const importBackupFile = async (f: File, danach?: () => void): Promise<'imported' | 'cancelled' | 'failed'> => {
 
       /* Ein `.redion` ist ein ZIP mit `daten.json` darin. Erkannt wird es am
          Inhalt und nicht an der Endung: eine umbenannte Datei ist deswegen
@@ -3076,12 +3084,12 @@ const App = (() => {
         } catch (e) {
           alert('Dieses Archiv liess sich nicht öffnen: ' +
             (e instanceof Error ? e.message : String(e)));
-          return;
+          return 'failed';
         }
         if (!text) {
           alert('In diesem Archiv steckt keine „daten.json" — es ist keine ' +
                 'Redion-Sicherung.');
-          return;
+          return 'failed';
         }
       } else {
         text = await f.text();
@@ -3098,7 +3106,7 @@ const App = (() => {
       let vorschau: Record<string, any> = {};
       try { vorschau = JSON.parse(text); } catch {
         alert('Diese Datei ist keine Sicherung — sie lässt sich nicht lesen.');
-        return;
+        return 'failed';
       }
       /* --- WAS SICH ÄNDERT, NICHT WIE GROSS DIE DATEI IST (L101, E316) ---
          Hier stand: „Die Datei enthält 1247 Blöcke. In diesem Bestand
@@ -3143,7 +3151,7 @@ const App = (() => {
           { id: '', text: 'Abbrechen' }
         ]
       });
-      if (!wahl) return;
+      if (!wahl) return 'cancelled';
 
       /* DAS NETZ UNTER DEM SEIL (E292, L101 Punkt 3).
          Der VERSCHLÜSSELTE Weg schreibt seit jeher eine Sicherheitskopie,
@@ -3171,7 +3179,7 @@ const App = (() => {
         if (!kopie) {
           alert('Es wurde NICHTS eingespielt — dein Bestand steht unverändert.\n\n' +
                 'Ohne Sicherheitskopie wäre das Ersetzen ein Sprung ohne Netz.');
-          return;
+          return 'failed';
         }
       }
 
@@ -3226,10 +3234,9 @@ const App = (() => {
                      'abgleicht.'
                    : ''),
                  erg.frage ? 14000 : undefined);
+        return anhaenge.fehlend.length || anhaenge.unvollstaendig.length ? 'failed' : 'imported';
       } catch (err: unknown) { alert('Konnte nicht geladen werden: ' +
-        (err instanceof Error ? err.message : String(err))); }
-    });
-    inp.click();
+        (err instanceof Error ? err.message : String(err))); return 'failed'; }
   };
 
   const setzeBreite = (px: any) => {
@@ -5232,6 +5239,8 @@ const App = (() => {
         console.error('Die Startansicht konnte nicht geöffnet werden:', fehler);
       }
     }
+    try { DeviceIntegration.start(); }
+    catch (error) { console.error('Geräteintegration konnte nicht starten:', error); }
   };
 
   /* --- Beispielinhalt beim ersten Start ----------------------------------- */
@@ -5384,7 +5393,7 @@ const App = (() => {
     /* Wo man gerade ist — für die Kontextkante (E272). */
     schauplatz,
     ABSCHNITTE, abschnittAn, abschnittSchalten, abschnitteAnpassen, reiterWechseln,
-    sicherungSpeichern, sicherungPaketBauen, sicherungLaden, zurueck, vorwaerts, arbeitsbereich,
+    sicherungSpeichern, sicherungPaketBauen, sicherungLaden, importBackupFile, zurueck, vorwaerts, arbeitsbereich,
     /* Seit E317 auch einzeln: nur so lässt sich messen, was ein Archiv mit
        Loch macht — der Weg dorthin führt sonst über einen Dateiwähler, und
        den kann kein Prüflauf antippen. */

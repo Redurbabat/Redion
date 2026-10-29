@@ -105,10 +105,13 @@ npm install --prefix windows --no-package-lock --no-audit --no-fund
 npm --prefix windows start
 ```
 
-**Der Build wurde hier noch nicht auf Windows ausgeführt
-und die Installer-Dateien wurden nicht erstellt.**
-Das Programm ist ein erster überprüfbarer Quellcode-
-Stand, nicht bereits ein installierter Release.
+**Nachtrag 29. Oktober 2026:** Setup und portable EXE wurden lokal auf
+Windows gebaut. Der echte Electron-Prozess startet offline und erhält eine
+Testnotiz über einen Neustart; ausschließlich ein temporäres Testprofil
+wurde benutzt. Die ausführbare Paketkopie enthält dieselben nativen Quellen
+und denselben Webcode. Das ist noch keine Prüfung eines installierten,
+signierten Updates mit echten Nutzerdaten. Details und offene Freigaben:
+[iPhone-/Windows-Integration](IPHONE-WINDOWS-INTEGRATION.md).
 
 ## Sicherheit
 
@@ -145,10 +148,11 @@ Stand, nicht bereits ein installierter Release.
 5. Ein signiertes Installationspaket für die reguläre
    Verteilung einrichten. **Unsig­nierte EXEs können
    Windows-SmartScreen-Warnungen auslösen.**
-6. Optional später: native Windows-Dateiablage, Drag&Drop,
-   Öffnen mit Redion, Integrations-Suche und eine
-   Ende-zu-Ende-verschlüsselte, explizit aktivierbare
-   iPhone↔Windows-Synchronisierung.
+6. Native Dateiauswahl, Speichern-Dialog und „Öffnen mit Redion“ sind im
+   Integrationsbranch ergänzt. Deren Installer-/Gerätefreigabe bleibt offen;
+   bestehendes Drag&Drop wird wiederverwendet. Integrations-Suche und eine
+   produktiv eingerichtete, verschlüsselte iPhone↔Windows-Synchronisierung
+   bleiben spätere Schritte. Es wird kein Server oder Abgleich automatisch aktiviert.
 
 **Die bestehenden iPhone- und Web-App-Pfade bleiben unberührt;
 der Windows-Build liegt vollständig unter `windows/`

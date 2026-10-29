@@ -3546,6 +3546,91 @@ Die Sicherheitsprüfung blockierte jede normale Content-Length und die Brücke b
 
 Die alte Geometrieprüfung mass die neue Bedienzeile am inneren Vorschaublatt. Die richtige Messung der ganzen Karte fand danach einen tatsächlichen fehlenden Textabstand am Telefon. Die zweite Bildabnahme fand einen alten Ordnerpfad in globalen Favoriten und einen kurzzeitig weissen Ausschnitt neben der noch wachsenden Suchauswahl; beide zuerst rot nachgewiesen und korrigiert. Ein zusätzlicher Unix-OCR-Hilfentest ist unter Windows nicht ausführbar; der produktnahe Windows-Lauf selbst ist grün.
 
+### 2026-10-29 · Donnerstag — Bestehende iPhone- und Windows-Apps sicher integrieren
+
+> Glass Wheel bleibt auf Wunsch liegen. Redur nutzt bereits die Windows-App und die iPhone-App über Codemagic/IPA. Ein eigener Sync-Server existiert nicht. Neuer lokaler Integrationsbranch von main 326533b06; App-IDs, Herkunft und bestehende Datenprofile bleiben unverändert.
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · nicht protokolliert**
+
+> mache alles
+
+**Gemeint:** Die vorhandenen nativen Apps und ihre sichere Geräteübertragung tatsächlich weiterentwickeln.
+
+**Besser geschrieben:** Bestehende Apps erhalten und native Dateieingänge, Sicherungen sowie den freiwilligen Abgleich prüfen.
+
+**Besserer Prompt:** Kein neuer Anlauf für Glass; echte Integrationen mit Tests und offenen externen Voraussetzungen liefern.
+
+
+**2 · nicht protokolliert**
+
+> auf laptop als windows app und auf iphone als iphone app direk
+
+**Gemeint:** Beide Apps sind bereits installiert; keine Neuanlage ihrer Identität oder Speicherorte.
+
+**Besser geschrieben:** Windows und iPhone verwenden bereits installierte Redion-Apps.
+
+**Besserer Prompt:** Datenhaltende In-place-Updates mit denselben IDs vorbereiten.
+
+
+**3 · nicht protokolliert**
+
+> also über codemagit nehmen ich die ipa date und dann lade ich es auf iphone
+
+**Gemeint:** Den bisherigen Codemagic-/IPA-Installationsweg beibehalten.
+
+**Besser geschrieben:** Ich installiere die über Codemagic gebaute IPA auf dem iPhone.
+
+**Besserer Prompt:** Codemagic verwenden; TestFlight nicht als bereits eingerichtet voraussetzen.
+
+
+**4 · nicht protokolliert**
+
+> nein ich habe keine server
+
+**Gemeint:** Ein produktiver Geräteabgleich ist noch nicht eingerichtet.
+
+**Besser geschrieben:** Ich habe noch keinen eigenen Sync-Server.
+
+**Besserer Prompt:** Einrichtung vorbereiten, ohne Ressourcen, Abrechnung oder Upload ungefragt zu aktivieren.
+
+
+**5 · nicht protokolliert**
+
+> also das am ende sollte beides auf main sein , also pusche alles jetzt auf main
+
+**Gemeint:** Geräteintegration und bestehenden Glass-Wheel-Stand auf dem neuesten main zusammenbringen.
+
+**Besser geschrieben:** Beide Stände auf aktuellem main zusammenführen und pushen.
+
+**Besserer Prompt:** Neuere main-Änderungen erhalten, Konflikte prüfen und beide ursprünglichen Commits als Vorfahren nachweisen.
+
+
+**6 · nicht protokolliert**
+
+> Ja, dokumentiert auf main übernehmen
+
+**Gemeint:** Bekannte Altfehler und offene echte iPhone-/Signierungsprüfungen dürfen für diesen main-Push dokumentiert bleiben.
+
+**Besser geschrieben:** Nach grünen Integrationsprüfungen mit dokumentierten offenen Freigaben auf main übernehmen.
+
+**Besserer Prompt:** Die Ausnahme gilt nur einmal; kein vollständig grüner Gesamtlauf und kein Deployment werden behauptet.
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| E755: Gerätecommit 766105fab auf dem neueren main 084c98bc5 integriert. Dort war Glass Wheel über PR 168 schon enthalten, ebenso neuere Update-/Sync-Schutzregeln. Windows-Controller und Datei-Brücke gemeinsam erhalten, generierte Dateien neu gebaut und optionale Glass-Kaskade richtig eingeordnet. Bekannte Altfehler und offene native Freigaben bleiben ausdrücklich benannt. | `084c98bc5 und 766105fab` → `gemeinsamer main-Integrationscommit` | 29. Oktober 2026; Uhrzeit nicht protokolliert | nicht protokolliert | 194 kombinierte native/Update-/Sync-Unitprüfungen grün. Typecheck und Bau grün; test87 zuerst wegen Glass-Kaskade rot, danach 189/189. Browsermatrizen und Windows-Neustart werden am gemeinsamen Stand geprüft; Ergebnis im Main-Integrationsbericht. Redur bestätigt die einmalige Ausnahme ausdrücklich. |
+| E754: gemeinsame Geräteübersicht, sicherer Windows-Dateiwähler/Export, Betriebssystem-Dateiübergabe, iOS-Dokumentkopie und gemeinsamer Import. Gleiche Codemagic-/GitHub-IPA-Schritte, Windows-Web-Parität und Ausschluss nativer Bauordner aus öffentlichen Assets. Live-Sync und Signierung bleiben ausdrücklich externe Freigabeschritte. | `326533b06` → `lokaler Integrationsbranch codex/iphone-windows-integration` | 29. Oktober 2026; Uhrzeit nicht protokolliert | nicht protokolliert | Echte Electron-App mit isoliertem Testprofil zweimal gestartet, Notiz über Neustart erhalten und native IPC nach Fragmentnavigation geprüft. Acht Browseransichten hell/dunkel und native Adaptertests. Bestehende Sicherungs- und Zwei-Geräte-Prüfungen gefahren; Schlussstand und Grenzen stehen im Integrationsbericht. Export-Gegenprobe entfernt im Test die Vollständigkeitsprüfung und wird nachweislich rot. Kein vollständiger grüner Gesamtlauf behauptet. |
+
+#### Das grösste Problem
+
+Die erste native IPC-Prüfung erwartete eine URL ohne Fragment, obwohl Redion seine Bibliothek über Fragmentziele öffnet. Der reale Electron-Start deckte das auf. Jetzt bleibt die Einstiegsdatei exakt festgelegt, während Fragmentnavigation erlaubt und fremde Pfade/Frames gesperrt sind. Zusätzlich zeigte die Cloudflare-Prüfung, dass ein fehlender Server und der native Access-/CORS-Anmeldeweg nicht durch eine blosse Datenbankbindung ersetzt werden können.
+
 ---
 
 ## Teil IV — Wo die Probleme stehen

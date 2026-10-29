@@ -230,7 +230,10 @@ const STUFE: Record<string, number> = { 'marken.css': 0, 'dunkel.css': 0, 'hell.
                    die drei Studio-Blätter hier und zählten als Bauteile
                    (Stufe 2): der Wächter stand seit dem Merge rot. */
                 'premium.css': 4, 'studio.css': 4,
-                'bibliothek-studio.css': 4, 'pdf-studio.css': 4 };
+                'bibliothek-studio.css': 4, 'pdf-studio.css': 4,
+                // Optionale Gesamtschale, kein Bauteil: nur mit data-ui-shell.
+                // Nach allen vier klassischen Schalenblättern, nie dazwischen.
+                'glasswheel.css': 5 };
 const stufeVon = (d: string) => STUFE[d] ?? 2;
 
 const html = _lies(_dazu(WURZEL, 'index.html'), 'utf8');

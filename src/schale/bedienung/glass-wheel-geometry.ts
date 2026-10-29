@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/glass-wheel-geometry.ts (npm run bauen:ts). */
 /* Reine Rad-Geometrie. Keine Ablage, kein DOM, keine laufende Animation. */
 const GlassWheelGeometry = (() => {
   const wrap = (value: number, count: number): number => count > 0

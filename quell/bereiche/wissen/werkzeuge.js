@@ -1507,55 +1507,59 @@ const Werkzeuge = (() => {
             '.docx,.pptx,.ppsx,.pptm,.ppsm,.epub,.pdf,.zip,image/*';
         inp.multiple = true;
         inp.addEventListener('change', async () => {
-            let n = 0;
-            for (const f of Array.from(inp.files ?? [])) {
-                const name = f.name.toLowerCase();
-                try {
-                    if (/\.zip$/i.test(name) && typeof ArchivImport !== 'undefined') {
-                        const erg = await ArchivImport.importZip(f, null, { still: true });
-                        UI.toast(erg.hinweis, 9000);
-                        n++;
-                        continue;
-                    }
-                    const textig = /\.(html?|htm|csv|tsv|md|markdown|txt)$/i.test(name) || f.type.startsWith('text/');
-                    if (!textig && !/\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i.test(name) && typeof ArchivImport !== 'undefined') {
-                        await ArchivImport.dateiAlsDokument(f, null);
-                        n++;
-                        continue;
-                    }
-                    if (/\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i.test(name)) {
-                        const erg = await Einlesen.datei(f);
-                        if (erg) {
-                            UI.toast(f.name + ': ' + erg.hinweis);
-                            n++;
-                            continue;
-                        }
-                    }
-                    const text = await f.text();
-                    if (/\.(html|htm)$/i.test(name)) {
-                        const p2 = Store.addPage(null, { text: f.name.replace(/\.[^.]+$/, ''), icon: '🌐' });
-                        ausHtml(p2.id, text);
-                    }
-                    else if (/\.(csv|tsv)$/i.test(name)) {
-                        const p2 = Store.addPage(null, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📊' });
-                        Einlesen.alsDatenbank(p2.id, p2.text, Datenbank.csvZerlegen(text.replace(/^﻿/, '')));
-                    }
-                    else {
-                        await mdDateiAnlegen(f.name, text);
-                    }
-                    n++;
-                }
-                catch (err) {
-                    UI.banner(f.name + ': ' +
-                        (err instanceof Error ? err.message : String(err)), 'fehler');
-                }
-            }
-            App.zeichneBaum();
-            if (typeof ArchivImport !== 'undefined')
-                ArchivImport.ansichtAuffrischen();
-            UI.toast(n + (n === 1 ? ' Datei eingelesen' : ' Dateien eingelesen'));
+            await importFiles(Array.from(inp.files ?? []));
         });
         inp.click();
+    };
+    const importFiles = async (files) => {
+        let n = 0;
+        for (const f of files) {
+            const name = f.name.toLowerCase();
+            try {
+                if (/\.zip$/i.test(name) && typeof ArchivImport !== 'undefined') {
+                    const erg = await ArchivImport.importZip(f, null, { still: true });
+                    UI.toast(erg.hinweis, 9000);
+                    n++;
+                    continue;
+                }
+                const textig = /\.(html?|htm|csv|tsv|md|markdown|txt)$/i.test(name) || f.type.startsWith('text/');
+                if (!textig && !/\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i.test(name) && typeof ArchivImport !== 'undefined') {
+                    await ArchivImport.dateiAlsDokument(f, null);
+                    n++;
+                    continue;
+                }
+                if (/\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i.test(name)) {
+                    const erg = await Einlesen.datei(f);
+                    if (erg) {
+                        UI.toast(f.name + ': ' + erg.hinweis);
+                        n++;
+                        continue;
+                    }
+                }
+                const text = await f.text();
+                if (/\.(html|htm)$/i.test(name)) {
+                    const p2 = Store.addPage(null, { text: f.name.replace(/\.[^.]+$/, ''), icon: '🌐' });
+                    ausHtml(p2.id, text);
+                }
+                else if (/\.(csv|tsv)$/i.test(name)) {
+                    const p2 = Store.addPage(null, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📊' });
+                    Einlesen.alsDatenbank(p2.id, p2.text, Datenbank.csvZerlegen(text.replace(/^﻿/, '')));
+                }
+                else {
+                    await mdDateiAnlegen(f.name, text);
+                }
+                n++;
+            }
+            catch (err) {
+                UI.banner(f.name + ': ' +
+                    (err instanceof Error ? err.message : String(err)), 'fehler');
+            }
+        }
+        App.zeichneBaum();
+        if (typeof ArchivImport !== 'undefined')
+            ArchivImport.ansichtAuffrischen();
+        UI.toast(n + (n === 1 ? ' Datei eingelesen' : ' Dateien eingelesen'));
+        return n;
     };
     const ordnerLesen = async () => {
         if (!window.showDirectoryPicker) {
@@ -2635,7 +2639,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         formelBibliothek, formelBibliothekLesen, formelBibliothekAnwenden,
         erinnerungSetzen, erinnerungen, erinnerungenPruefen, geraeteMeldung, posteingangMelden, meldungen, meldungGelesen, meldungenAlleGelesen, meldungenLeeren,
         weckrufLegen, naechsteErinnerung,
-        ordnerSchreiben, ordnerLesen, dateienLesen, einzelDatei,
+        ordnerSchreiben, ordnerLesen, dateienLesen, importFiles, einzelDatei,
         htmlExport, drucken, seiteAlsHtml, verschiebenNach, verschiebe,
         alleToggles, tastenkuerzel, systemSeite, datumLang, zeitKurz, papierkorbAufraeumen,
         wikiUmwandeln, wikiIndex, teilenMenue,

@@ -2206,7 +2206,7 @@ const App = (() => {
                 UI.toast(paket.ausgelassen
                     ? 'Sicherung mit Lücken gespeichert: ' + paket.ausgelassen +
                         ' Datei(en) fehlen. Hinweis in der Sicherung lesen und erneut sichern.'
-                    : 'Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
+                    : nativeSicherung.ort || 'Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
                 return paket.ausgelassen === 0;
             }
             const l = document.createElement('a');
@@ -2323,116 +2323,121 @@ const App = (() => {
             const f = inp.files?.[0];
             if (!f)
                 return;
-            let zip = null, text = '';
-            const kopf = new Uint8Array(await f.slice(0, 4).arrayBuffer());
-            const istZip = kopf[0] === 0x50 && kopf[1] === 0x4B;
-            if (istZip) {
-                try {
-                    zip = await Einlesen.zipLesenAusBlob(f);
-                    text = await zip.text('daten.json') || '';
-                }
-                catch (e) {
-                    alert('Dieses Archiv liess sich nicht öffnen: ' +
-                        (e instanceof Error ? e.message : String(e)));
-                    return;
-                }
-                if (!text) {
-                    alert('In diesem Archiv steckt keine „daten.json" — es ist keine ' +
-                        'Redion-Sicherung.');
-                    return;
-                }
-            }
-            else {
-                text = await f.text();
-            }
-            let vorschau = {};
-            try {
-                vorschau = JSON.parse(text);
-            }
-            catch {
-                alert('Diese Datei ist keine Sicherung — sie lässt sich nicht lesen.');
-                return;
-            }
-            const faecherJetzt = {
-                blocks: Store.cache.blocks || {},
-                collections: Store.cache.collections || {},
-                views: Store.cache.views || {}
-            };
-            const faecherDatei = {
-                blocks: vorschau.blocks || {},
-                collections: vorschau.collections || {},
-                views: vorschau.views || {}
-            };
-            const beimErsetzen = ImportVergleich.rechnen(faecherJetzt, faecherDatei, 'ersetzen');
-            const beimDazu = ImportVergleich.rechnen(faecherJetzt, faecherDatei, 'zusammenfuehren');
-            const wahl = await Dialog.wahl({
-                titel: 'Sicherung einspielen',
-                text: 'Die Datei enthält ' +
-                    Object.keys(vorschau.blocks || {}).length + ' Blöcke' +
-                    (Array.isArray(vorschau.versions) ? ' und ' + vorschau.versions.length +
-                        ' Fassungen aus dem Verlauf' : '') + '.' +
-                    (vorschau.hinweis ? '\n\n' + vorschau.hinweis : ''),
-                knoepfe: [
-                    { id: 'ersetzen', text: 'Ersetzen',
-                        hinweis: ImportVergleich.satz(beimErsetzen) +
-                            ' Vorher lädt Redion eine Sicherheitskopie des jetzigen ' +
-                            'Standes herunter.' },
-                    { id: 'zusammenfuehren', text: 'Dazulegen',
-                        hinweis: ImportVergleich.satz(beimDazu) +
-                            ' Es wird nichts gelöscht.' },
-                    { id: '', text: 'Abbrechen' }
-                ]
-            });
-            if (!wahl)
-                return;
-            let kopie = false;
-            if (wahl === 'ersetzen') {
-                kopie = await sicherungSpeichern();
-                if (!kopie) {
-                    alert('Es wurde NICHTS eingespielt — dein Bestand steht unverändert.\n\n' +
-                        'Ohne Sicherheitskopie wäre das Ersetzen ein Sprung ohne Netz.');
-                    return;
-                }
-            }
-            try {
-                const erg = await Store.importAll(text, wahl);
-                let anhaenge = { da: 0, erwartet: 0, fehlend: [], unvollstaendig: [] };
-                if (zip)
-                    anhaenge = await anhaengeEinspielen(zip, wahl);
-                danach && danach();
-                zeichneBaum();
-                zeichneSeite();
-                UI.toast('Sicherung geladen — ' + erg.bloecke + ' Blöcke' +
-                    (kopie ? ' (der alte Stand liegt als Sicherheitskopie im ' +
-                        'Download-Ordner)' : '') +
-                    (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : '') +
-                    (anhaenge.da ? ', ' + anhaenge.da + ' Anhang/Anhänge' : '') +
-                    (anhaenge.fehlend.length
-                        ? '. ' + anhaenge.fehlend.length + ' von ' + anhaenge.erwartet +
-                            ' Anhängen fehlen: ' + anhaenge.fehlend.slice(0, 3).join(', ') +
-                            (anhaenge.fehlend.length > 3 ? ' …' : '') +
-                            '. Die Sicherung liegt noch — du kannst sie erneut einspielen.'
-                        : '') +
-                    (anhaenge.unvollstaendig.length
-                        ? '. ' + anhaenge.unvollstaendig.length + ' Anhang/Anhänge ' +
-                            'kamen verkürzt an: ' +
-                            anhaenge.unvollstaendig.slice(0, 3).join(', ') +
-                            (anhaenge.unvollstaendig.length > 3 ? ' …' : '') +
-                            '. Sie wurden trotzdem übernommen — was da ist, ist da.'
-                        : '') +
-                    (erg.frage
-                        ? '. Der Abgleich mit der Wolke steht still: dort liegt noch ' +
-                            'der Stand von vorher. Entscheide unter „Mehr → Wolke", ob ' +
-                            'dieses Gerät nur lokal weiterarbeitet oder vollständig neu ' +
-                            'abgleicht.'
-                        : ''), erg.frage ? 14000 : undefined);
-            }
-            catch (err) {
-                alert('Konnte nicht geladen werden: ' +
-                    (err instanceof Error ? err.message : String(err)));
-            }
+            await importBackupFile(f, danach);
         });
         inp.click();
+    };
+    const importBackupFile = async (f, danach) => {
+        let zip = null, text = '';
+        const kopf = new Uint8Array(await f.slice(0, 4).arrayBuffer());
+        const istZip = kopf[0] === 0x50 && kopf[1] === 0x4B;
+        if (istZip) {
+            try {
+                zip = await Einlesen.zipLesenAusBlob(f);
+                text = await zip.text('daten.json') || '';
+            }
+            catch (e) {
+                alert('Dieses Archiv liess sich nicht öffnen: ' +
+                    (e instanceof Error ? e.message : String(e)));
+                return 'failed';
+            }
+            if (!text) {
+                alert('In diesem Archiv steckt keine „daten.json" — es ist keine ' +
+                    'Redion-Sicherung.');
+                return 'failed';
+            }
+        }
+        else {
+            text = await f.text();
+        }
+        let vorschau = {};
+        try {
+            vorschau = JSON.parse(text);
+        }
+        catch {
+            alert('Diese Datei ist keine Sicherung — sie lässt sich nicht lesen.');
+            return 'failed';
+        }
+        const faecherJetzt = {
+            blocks: Store.cache.blocks || {},
+            collections: Store.cache.collections || {},
+            views: Store.cache.views || {}
+        };
+        const faecherDatei = {
+            blocks: vorschau.blocks || {},
+            collections: vorschau.collections || {},
+            views: vorschau.views || {}
+        };
+        const beimErsetzen = ImportVergleich.rechnen(faecherJetzt, faecherDatei, 'ersetzen');
+        const beimDazu = ImportVergleich.rechnen(faecherJetzt, faecherDatei, 'zusammenfuehren');
+        const wahl = await Dialog.wahl({
+            titel: 'Sicherung einspielen',
+            text: 'Die Datei enthält ' +
+                Object.keys(vorschau.blocks || {}).length + ' Blöcke' +
+                (Array.isArray(vorschau.versions) ? ' und ' + vorschau.versions.length +
+                    ' Fassungen aus dem Verlauf' : '') + '.' +
+                (vorschau.hinweis ? '\n\n' + vorschau.hinweis : ''),
+            knoepfe: [
+                { id: 'ersetzen', text: 'Ersetzen',
+                    hinweis: ImportVergleich.satz(beimErsetzen) +
+                        ' Vorher lädt Redion eine Sicherheitskopie des jetzigen ' +
+                        'Standes herunter.' },
+                { id: 'zusammenfuehren', text: 'Dazulegen',
+                    hinweis: ImportVergleich.satz(beimDazu) +
+                        ' Es wird nichts gelöscht.' },
+                { id: '', text: 'Abbrechen' }
+            ]
+        });
+        if (!wahl)
+            return 'cancelled';
+        let kopie = false;
+        if (wahl === 'ersetzen') {
+            kopie = await sicherungSpeichern();
+            if (!kopie) {
+                alert('Es wurde NICHTS eingespielt — dein Bestand steht unverändert.\n\n' +
+                    'Ohne Sicherheitskopie wäre das Ersetzen ein Sprung ohne Netz.');
+                return 'failed';
+            }
+        }
+        try {
+            const erg = await Store.importAll(text, wahl);
+            let anhaenge = { da: 0, erwartet: 0, fehlend: [], unvollstaendig: [] };
+            if (zip)
+                anhaenge = await anhaengeEinspielen(zip, wahl);
+            danach && danach();
+            zeichneBaum();
+            zeichneSeite();
+            UI.toast('Sicherung geladen — ' + erg.bloecke + ' Blöcke' +
+                (kopie ? ' (der alte Stand liegt als Sicherheitskopie im ' +
+                    'Download-Ordner)' : '') +
+                (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : '') +
+                (anhaenge.da ? ', ' + anhaenge.da + ' Anhang/Anhänge' : '') +
+                (anhaenge.fehlend.length
+                    ? '. ' + anhaenge.fehlend.length + ' von ' + anhaenge.erwartet +
+                        ' Anhängen fehlen: ' + anhaenge.fehlend.slice(0, 3).join(', ') +
+                        (anhaenge.fehlend.length > 3 ? ' …' : '') +
+                        '. Die Sicherung liegt noch — du kannst sie erneut einspielen.'
+                    : '') +
+                (anhaenge.unvollstaendig.length
+                    ? '. ' + anhaenge.unvollstaendig.length + ' Anhang/Anhänge ' +
+                        'kamen verkürzt an: ' +
+                        anhaenge.unvollstaendig.slice(0, 3).join(', ') +
+                        (anhaenge.unvollstaendig.length > 3 ? ' …' : '') +
+                        '. Sie wurden trotzdem übernommen — was da ist, ist da.'
+                    : '') +
+                (erg.frage
+                    ? '. Der Abgleich mit der Wolke steht still: dort liegt noch ' +
+                        'der Stand von vorher. Entscheide unter „Mehr → Wolke", ob ' +
+                        'dieses Gerät nur lokal weiterarbeitet oder vollständig neu ' +
+                        'abgleicht.'
+                    : ''), erg.frage ? 14000 : undefined);
+            return anhaenge.fehlend.length || anhaenge.unvollstaendig.length ? 'failed' : 'imported';
+        }
+        catch (err) {
+            alert('Konnte nicht geladen werden: ' +
+                (err instanceof Error ? err.message : String(err)));
+            return 'failed';
+        }
     };
     const setzeBreite = (px) => {
         const s = document.getElementById('sidebar');
@@ -3644,6 +3649,12 @@ const App = (() => {
                 console.error('Die Startansicht konnte nicht geöffnet werden:', fehler);
             }
         }
+        try {
+            DeviceIntegration.start();
+        }
+        catch (error) {
+            console.error('Geräteintegration konnte nicht starten:', error);
+        }
     };
     const beispielAnlegen = () => {
         const p = Store.addPage(null, { text: 'Willkommen', icon: '👋' });
@@ -3758,7 +3769,7 @@ const App = (() => {
         kuerzlich, kommendeTermine,
         schauplatz,
         ABSCHNITTE, abschnittAn, abschnittSchalten, abschnitteAnpassen, reiterWechseln,
-        sicherungSpeichern, sicherungPaketBauen, sicherungLaden, zurueck, vorwaerts, arbeitsbereich,
+        sicherungSpeichern, sicherungPaketBauen, sicherungLaden, importBackupFile, zurueck, vorwaerts, arbeitsbereich,
         anhaengeEinspielen,
         erstellenBlatt,
         erstellenWege, erstellenWeg

@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/glass-wheel.ts (npm run bauen:ts). */
 /* Optionale Projektion der vorhandenen Bereiche/Reiter. Keine Inhaltskopien.
  * Die zwei lokalen Anzeigepräferenzen gehören absichtlich NICHT in Store:
  * weder Sync noch Sicherungsimport dürfen das Gerät in einen Modus zwingen.

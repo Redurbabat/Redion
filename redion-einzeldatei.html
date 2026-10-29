@@ -13292,6 +13292,28 @@ body > .ru-loesch{ z-index: 580; }
 
 </style>
 <style>
+/* ===== quell/schale/stil/devices.css ===== */
+.dev-overview{max-width:720px;color:var(--text);overflow-wrap:anywhere}
+.dev-overview p{line-height:1.6}
+.dev-intro{color:var(--text-dim)}
+.dev-overview dl{display:grid;grid-template-columns:minmax(120px,1fr) 2fr;gap:12px 18px;padding:18px;background:var(--bg-hover);border:1px solid var(--line);border-radius:14px}
+.dev-overview dt{color:var(--text-dim)}
+.dev-overview dd{margin:0;font-weight:600}
+.dev-actions{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0}
+.dev-overview .dev-actions button{min-height:44px;padding:10px 15px;border-radius:10px;background:var(--bg-hover);border:1px solid var(--line);color:var(--text);font:inherit;cursor:pointer}
+.dev-overview .dev-actions button:hover{background:var(--bg-active)}
+.dev-overview .dev-actions button:active{transform:translateY(1px)}
+.dev-overview .dev-actions button:focus-visible,.dev-overview summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.dev-overview ol{padding-inline-start:24px}
+.dev-overview summary{min-height:44px;display:list-item;align-content:center;cursor:pointer;font-weight:600}
+.dev-overview li{margin:8px 0;line-height:1.55}
+.dev-warning{padding:14px;border-left:3px solid var(--accent);background:var(--bg-hover);border-radius:6px}
+@media(max-width:600px){.dev-overview dl{grid-template-columns:1fr;gap:5px}.dev-overview dd{margin-bottom:12px}.dev-actions{flex-direction:column}.dev-actions button{width:100%;text-align:left}}
+@media(prefers-reduced-motion:reduce){.dev-overview .dev-actions button:active{transform:none}}
+body[data-bewegung="ruhig"] .dev-actions button:active{transform:none}
+
+</style>
+<style>
 /* ===== quell/schale/stil/bausteine.css ===== */
 /* ============================================================================
  * bausteine.css — was übrig bleibt
@@ -25938,130 +25960,6 @@ body[data-kontrast="hoch"] .bib[data-bib-bereich] .bib-deckel{box-shadow:none;bo
 
 </style>
 <style>
-/* ===== quell/schale/stil/glasswheel.css ===== */
-/* Glass Wheel: ausschliesslich freiwilliger Schalenmodus. Einstellungen
-   stehen auch klassisch zur Wahl; kein bestehender Klassiker-Selektor wird
-   ausserhalb von [data-ui-shell] verändert. Ruhiges Papier bleibt deckend. */
-.gw-settings{margin:0 0 24px;color:var(--text)}
-.gw-settings h3{font-size:16px;margin:0 0 12px}
-.gw-settings p{font-size:12px;line-height:1.6;color:var(--text-dim)}
-.gw-mode-choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.gw-mode-card{display:flex;flex-direction:column;gap:8px;align-items:flex-start;text-align:left;padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--bg-card);min-height:44px}
-.gw-mode-card[aria-pressed="true"]{outline:2px solid var(--accent-text);outline-offset:1px}
-.gw-mode-card small{font-size:12px;line-height:1.5;color:var(--text-dim)}
-.gw-mode-preview{width:100%;height:64px;border-radius:10px;background:linear-gradient(90deg,var(--bg-side) 22%,var(--bg) 22%);border:1px solid var(--line)}
-.gw-preview-glass-wheel{background:radial-gradient(circle,transparent 18%,#d8baff 19%,#9572de66 22%,transparent 24%,transparent 36%,#82e5fc 38%,#ad8be988 42%,transparent 45%),linear-gradient(125deg,#18244c,#342149)}
-.gw-mode-card:is(:hover,:active){background:var(--bg-hover)}
-.gw-mode-card:focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
-
-body[data-ui-shell="glass-wheel"]{
-  --gw-paper:var(--bg-card);--gw-surface:color-mix(in srgb,var(--bg-side) 88%,transparent);
-  --gw-edge:color-mix(in srgb,var(--accent-text) 32%,var(--line));
-  --gw-shadow:0 14px 38px #090c2525;--gw-blur:12px;
-  background:radial-gradient(ellipse at 62% 20%,#9471fa22,transparent 62%),radial-gradient(ellipse at 12% 80%,#38d9d91a,transparent 55%),var(--bg);
-}
-body[data-ui-shell="glass-wheel"] #main{background:transparent;padding-bottom:86px;min-width:0}
-body[data-ui-shell="glass-wheel"] :is(#studio-bar,#topbar,#sidebar,#context-rail,#reiterleiste){background:var(--gw-surface);border-color:var(--gw-edge)}
-body[data-ui-shell="glass-wheel"] :is(.menu,.finder,.r-dialog,.r-sheet,.document-toolbar,.document-drawingbar,.mb-band,.pg-tools){background:var(--gw-paper);border-color:var(--gw-edge);border-radius:18px;box-shadow:var(--gw-shadow)}
-body[data-ui-shell="glass-wheel"] :is(.db,.db-toolbar,.bib-deckel,.nh-karte,.home-karte,.ki-panel){border-color:var(--gw-edge);border-radius:16px}
-body[data-ui-shell="glass-wheel"] :is(#page,.document-sheet,.pg-flaeche,.db-zelle,.ct){backdrop-filter:none}
-body[data-ui-shell="glass-wheel"] :is(.document-sheet,.pg-flaeche,.db-table){background:var(--gw-paper)}
-body[data-ui-shell="glass-wheel"] #page:has(#title){background:var(--gw-paper);border:1px solid var(--gw-edge);border-radius:20px}
-body[data-ui-shell="glass-wheel"] #reiterleiste{display:none!important}
-body[data-ui-shell="glass-wheel"] #handy-oben{position:fixed;z-index:100;display:flex!important;bottom:12px;left:50%;right:auto;width:min(520px,calc(100% - 24px));transform:translateX(-50%);border:1px solid var(--gw-edge);border-radius:30px;background:var(--gw-surface);box-shadow:0 12px 36px #05081e33,inset 0 1px 0 #ffffff55;padding-bottom:env(safe-area-inset-bottom,0px)}
-body[data-ui-shell="glass-wheel"] #handy-oben button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;min-height:52px;flex:1;padding:6px 4px}
-body[data-ui-shell="glass-wheel"] #handy-oben button b{font-size:10px;font-weight:600;white-space:nowrap}
-body[data-ui-shell="glass-wheel"] #handy-oben .ho-z svg{width:19px;height:19px}
-body[data-ui-shell="glass-wheel"] #ho-ziele{border-color:var(--gw-edge);background:var(--gw-paper)}
-
-body[data-ui-shell="glass-wheel"] .gw-shell{position:relative;flex:0 0 auto;min-width:0;margin:12px 24px 8px;color:var(--text)}
-body[data-ui-shell="glass-wheel"] .gw-shell-heading{display:flex;gap:8px;align-items:center;min-height:44px;flex-wrap:wrap}
-body[data-ui-shell="glass-wheel"] .gw-identity{font-weight:760;letter-spacing:.08em;flex:1}
-body[data-ui-shell="glass-wheel"] .gw-identity small{font-size:9px;letter-spacing:.12em;color:var(--text-dim);margin-left:10px}
-body[data-ui-shell="glass-wheel"] .gw-shell button{min-height:44px;min-width:44px;color:var(--text);font:inherit;cursor:pointer}
-body[data-ui-shell="glass-wheel"] .gw-shell-heading button{font-size:12px;padding:0 14px;border:1px solid var(--gw-edge);border-radius:22px;background:var(--gw-paper)}
-body[data-ui-shell="glass-wheel"] .gw-wheel-stage{position:relative;text-align:center;overflow:hidden}
-body[data-ui-shell="glass-wheel"] .gw-wheel-stage h2{position:absolute;top:12px;left:0;text-align:left;margin:0;font-size:25px;letter-spacing:-.03em;z-index:1;pointer-events:none}
-body[data-ui-shell="glass-wheel"] .gw-wheel-stage>p:first-of-type{position:absolute;top:48px;left:0;text-align:left;margin:0;color:var(--text-dim);font-size:13px;pointer-events:none}
-body[data-ui-shell="glass-wheel"] .gw-wheel{position:relative;width:min(420px,100%);height:min(320px,38vh);margin:0 auto;touch-action:none;user-select:none;border-radius:50%;isolation:isolate;outline-offset:3px}
-body[data-ui-shell="glass-wheel"] .gw-rim{position:absolute;width:82%;aspect-ratio:1;left:9%;top:50%;translate:0 -50%;border-radius:50%;border:2px solid var(--gw-edge);background:conic-gradient(from var(--gw-turn,0deg),#73dfff33,#f39cfc33,#9777fb22,#88ecd833,#73dfff33);box-shadow:inset 0 0 0 14px #ffffff0a,inset 0 1px 1px #ffffffaa,0 0 0 6px #b7c1ff0a,0 18px 45px #080e2b33;pointer-events:none}
-body[data-ui-shell="glass-wheel"] .gw-rim:after{content:"";position:absolute;inset:24%;border-radius:50%;border:1px solid var(--gw-edge);background:var(--gw-surface);box-shadow:inset 0 2px 3px #ffffff44}
-@supports(mask:radial-gradient(transparent,#000)){
-  body[data-ui-shell="glass-wheel"] .gw-rim{mask:radial-gradient(circle,transparent 0 57%,#000 58%);background:conic-gradient(from var(--gw-turn,0deg),#b8edff66,#ffc4ef44,#9c87ff33,#9af3dc55,#b8edff66)}
-  body[data-ui-shell="glass-wheel"] .gw-rim:after{inset:18%;background:none;border-color:#d9ddff77}
-}
-body[data-ui-shell="glass-wheel"] .gw-hub{position:absolute;left:50%;top:50%;translate:-50% -50%;width:28%;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:50%;background:var(--gw-paper);border:2px solid var(--gw-edge);box-shadow:0 4px 24px #c58af535,inset 0 1px 0 #ffffff77;pointer-events:none}
-body[data-ui-shell="glass-wheel"] .gw-hub>b{font-size:43px;line-height:1.1;font-style:italic;background:linear-gradient(120deg,var(--accent-text),#6484f0,#bf77c1);background-clip:text;color:transparent}
-body[data-ui-shell="glass-wheel"] .gw-center-name{font-size:10px;font-weight:650;max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
-body[data-ui-shell="glass-wheel"] .gw-area{position:absolute;top:50%;left:50%;transform:translate(var(--gw-x),var(--gw-y)) translate(-50%,-50%);display:grid;place-items:center;width:88px;min-height:48px;padding:7px;border:1px solid var(--gw-edge);border-radius:20px;background:var(--gw-paper);box-shadow:0 4px 10px #00000015,inset 0 1px 0 #ffffff55;line-height:1.3;font-size:12px!important;overflow-wrap:anywhere;transition:transform var(--motion-normal) var(--feder-sanft),box-shadow var(--motion-fast) var(--ease)}
-body[data-ui-shell="glass-wheel"] .gw-area[aria-pressed="true"]{border:2px solid var(--accent-text);box-shadow:0 0 0 4px var(--accent-schwach),0 5px 28px #bd8aff30;font-weight:700}
-body[data-ui-shell="glass-wheel"] .gw-area[hidden]{display:none}
-body[data-ui-shell="glass-wheel"] .gw-spoke{position:absolute;left:50%;top:50%;height:2px;transform-origin:0 50%;background:linear-gradient(90deg,var(--gw-edge),#b8d8ff88,var(--gw-edge));pointer-events:none;z-index:1}
-body[data-ui-shell="glass-wheel"] .gw-spoke[hidden]{display:none}
-body[data-ui-shell="glass-wheel"] .gw-hub{z-index:2}
-body[data-ui-shell="glass-wheel"] .gw-area{z-index:3}
-body[data-ui-shell="glass-wheel"] .gw-area-label{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-body[data-ui-shell="glass-wheel"] .gw-wheel[data-dragging="true"] .gw-area{transition:none}
-body[data-ui-shell="glass-wheel"] .gw-shell button:is(:hover,:active){box-shadow:0 0 0 2px var(--accent-text)}
-body[data-ui-shell="glass-wheel"] .gw-shell button:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
-body[data-ui-shell="glass-wheel"] .gw-shell :is(button,.gw-wheel):focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
-body[data-ui-shell="glass-wheel"] .gw-wheel-controls{display:flex;justify-content:center;align-items:center;gap:14px;font-size:12px;color:var(--text-dim);margin-top:-12px}
-body[data-ui-shell="glass-wheel"] .gw-wheel-controls button{border:1px solid var(--gw-edge);border-radius:50%;background:var(--gw-paper)}
-body[data-ui-shell="glass-wheel"] .gw-no-areas{font-size:13px;color:var(--text-dim)}
-body[data-ui-shell="glass-wheel"] .gw-selection{margin:2px auto 4px;max-width:600px;font-size:12px;line-height:1.5;color:var(--text-dim);overflow-wrap:anywhere}
-body[data-ui-shell="glass-wheel"] .gw-tray{margin:10px auto 0;max-width:1200px;padding:10px 14px;border:1px solid var(--gw-edge);border-radius:20px;background:var(--gw-surface);box-shadow:inset 0 1px 0 #ffffff44;min-width:0}
-body[data-ui-shell="glass-wheel"] .gw-tray-heading{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-body[data-ui-shell="glass-wheel"] .gw-tray-heading h3{font-size:13px;flex:1;margin:0;min-width:0;overflow-wrap:anywhere}
-body[data-ui-shell="glass-wheel"] .gw-tray-heading button{font-size:11px;border:0;border-radius:14px;padding:0 10px;background:none}
-body[data-ui-shell="glass-wheel"] .gw-tray-heading button[aria-pressed="true"]{background:var(--accent-schwach);color:var(--accent-text)}
-body[data-ui-shell="glass-wheel"] .gw-open-list{display:flex;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;padding:5px 2px;min-width:0}
-body[data-ui-shell="glass-wheel"] .gw-tab-card{position:relative;display:flex;flex:0 0 220px;min-width:0;border:1px solid var(--gw-edge);border-radius:14px;background:var(--gw-paper)}
-body[data-ui-shell="glass-wheel"] .gw-tab-open{display:flex;flex:1;flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;border:0;background:none;min-width:0;padding:9px 8px 9px 12px;gap:3px}
-body[data-ui-shell="glass-wheel"] .gw-tab-open small{color:var(--text-dim);font-size:10px}
-body[data-ui-shell="glass-wheel"] .gw-tab-open strong{font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-body[data-ui-shell="glass-wheel"] .gw-tab-open[aria-current="true"]{box-shadow:inset 3px 0 var(--accent-text);border-radius:14px}
-body[data-ui-shell="glass-wheel"] .gw-tab-close{border:0;border-left:1px solid var(--line);background:none;border-radius:0 14px 14px 0}
-body[data-ui-shell="glass-wheel"] .gw-empty{font-size:12px;color:var(--text-dim);margin:4px 0;line-height:1.5}
-body[data-ui-shell="glass-wheel"] .gw-shell[data-expanded="false"] .gw-wheel-stage{display:none}
-body[data-ui-shell="glass-wheel"] .gw-announcement{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-@supports(backdrop-filter:blur(1px)){
-  body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){backdrop-filter:blur(var(--gw-blur)) saturate(1.3)}
-}
-@media(max-width:760px){
-  body[data-ui-shell="glass-wheel"] .gw-shell{margin:8px 12px}
-  body[data-ui-shell="glass-wheel"] .gw-identity small{display:none}
-  body[data-ui-shell="glass-wheel"] .gw-wheel-stage h2{font-size:20px;top:4px}
-  body[data-ui-shell="glass-wheel"] .gw-wheel-stage>p:first-of-type{display:none}
-  body[data-ui-shell="glass-wheel"] .gw-wheel{height:265px;margin-top:20px;width:100%}
-  body[data-ui-shell="glass-wheel"] .gw-area{width:68px;font-size:11px!important}
-  body[data-ui-shell="glass-wheel"] .gw-shell-heading button{padding:0 10px;font-size:11px}
-  body[data-ui-shell="glass-wheel"] .gw-shell-heading .gw-identity{font-size:12px}
-  body[data-ui-shell="glass-wheel"] .gw-tray{padding:6px 10px;margin-top:6px}
-  body[data-ui-shell="glass-wheel"] .gw-tray-heading{gap:0}
-  body[data-ui-shell="glass-wheel"] .gw-tray-heading h3{flex-basis:100%}
-  body[data-ui-shell="glass-wheel"] .gw-tab-card{flex-basis:180px}
-  body[data-ui-shell="glass-wheel"] #main{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
-}
-@media(min-width:761px){
-  body[data-ui-shell="glass-wheel"][data-schale="premium"] #main{grid-template-rows:auto auto auto auto auto minmax(0,1fr)}
-  body[data-ui-shell="glass-wheel"][data-schale="premium"] #main>.gw-shell{grid-column:2;grid-row:5}
-  body[data-ui-shell="glass-wheel"][data-schale="premium"] #main>#scroll{grid-row:6}
-}
-@media(prefers-reduced-motion:reduce){body[data-ui-shell="glass-wheel"] .gw-area{transition:none}}
-body[data-ui-shell="glass-wheel"][data-bewegung="ruhig"] .gw-area{transition:none}
-@media(prefers-reduced-transparency:reduce),(prefers-contrast:more),(forced-colors:active){
-  body[data-ui-shell="glass-wheel"]{--gw-surface:var(--bg-side);--gw-edge:var(--text);--gw-blur:0px;--gw-shadow:none}
-  body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){backdrop-filter:none}
-  body[data-ui-shell="glass-wheel"]{background:var(--bg)}
-  body[data-ui-shell="glass-wheel"] .gw-hub>b{background:none;color:var(--text)}
-}
-body[data-ui-shell="glass-wheel"][data-kontrast="hoch"]{--gw-surface:var(--bg-side);--gw-edge:var(--text);--gw-blur:0px;--gw-shadow:none}
-body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.gw-rim,#handy-oben){backdrop-filter:none}
-:root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"]{--gw-surface:var(--bg-side);--gw-edge:var(--text);--gw-shadow:none;background:var(--bg)}
-:root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){backdrop-filter:none}
-
-</style>
-<style>
 /* ===== quell/schale/stil/pdf-studio.css ===== */
 /* Document workbench: controls use material; the original paper stays opaque. */
 
@@ -27005,6 +26903,130 @@ body[data-dokument="an"] .document-studio .blatt-werk{
 @media(prefers-reduced-motion:reduce){
   .document-studio .document-pagination .document-position{transition:none}
 }
+
+</style>
+<style>
+/* ===== quell/schale/stil/glasswheel.css ===== */
+/* Glass Wheel: ausschliesslich freiwilliger Schalenmodus. Einstellungen
+   stehen auch klassisch zur Wahl; kein bestehender Klassiker-Selektor wird
+   ausserhalb von [data-ui-shell] verändert. Ruhiges Papier bleibt deckend. */
+.gw-settings{margin:0 0 24px;color:var(--text)}
+.gw-settings h3{font-size:16px;margin:0 0 12px}
+.gw-settings p{font-size:12px;line-height:1.6;color:var(--text-dim)}
+.gw-mode-choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.gw-mode-card{display:flex;flex-direction:column;gap:8px;align-items:flex-start;text-align:left;padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--bg-card);min-height:44px}
+.gw-mode-card[aria-pressed="true"]{outline:2px solid var(--accent-text);outline-offset:1px}
+.gw-mode-card small{font-size:12px;line-height:1.5;color:var(--text-dim)}
+.gw-mode-preview{width:100%;height:64px;border-radius:10px;background:linear-gradient(90deg,var(--bg-side) 22%,var(--bg) 22%);border:1px solid var(--line)}
+.gw-preview-glass-wheel{background:radial-gradient(circle,transparent 18%,#d8baff 19%,#9572de66 22%,transparent 24%,transparent 36%,#82e5fc 38%,#ad8be988 42%,transparent 45%),linear-gradient(125deg,#18244c,#342149)}
+.gw-mode-card:is(:hover,:active){background:var(--bg-hover)}
+.gw-mode-card:focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
+
+body[data-ui-shell="glass-wheel"]{
+  --gw-paper:var(--bg-card);--gw-surface:color-mix(in srgb,var(--bg-side) 88%,transparent);
+  --gw-edge:color-mix(in srgb,var(--accent-text) 32%,var(--line));
+  --gw-shadow:0 14px 38px #090c2525;--gw-blur:12px;
+  background:radial-gradient(ellipse at 62% 20%,#9471fa22,transparent 62%),radial-gradient(ellipse at 12% 80%,#38d9d91a,transparent 55%),var(--bg);
+}
+body[data-ui-shell="glass-wheel"] #main{background:transparent;padding-bottom:86px;min-width:0}
+body[data-ui-shell="glass-wheel"] :is(#studio-bar,#topbar,#sidebar,#context-rail,#reiterleiste){background:var(--gw-surface);border-color:var(--gw-edge)}
+body[data-ui-shell="glass-wheel"] :is(.menu,.finder,.r-dialog,.r-sheet,.document-toolbar,.document-drawingbar,.mb-band,.pg-tools){background:var(--gw-paper);border-color:var(--gw-edge);border-radius:18px;box-shadow:var(--gw-shadow)}
+body[data-ui-shell="glass-wheel"] :is(.db,.db-toolbar,.bib-deckel,.nh-karte,.home-karte,.ki-panel){border-color:var(--gw-edge);border-radius:16px}
+body[data-ui-shell="glass-wheel"] :is(#page,.document-sheet,.pg-flaeche,.db-zelle,.ct){backdrop-filter:none}
+body[data-ui-shell="glass-wheel"] :is(.document-sheet,.pg-flaeche,.db-table){background:var(--gw-paper)}
+body[data-ui-shell="glass-wheel"] #page:has(#title){background:var(--gw-paper);border:1px solid var(--gw-edge);border-radius:20px}
+body[data-ui-shell="glass-wheel"] #reiterleiste{display:none!important}
+body[data-ui-shell="glass-wheel"] #handy-oben{position:fixed;z-index:100;display:flex!important;bottom:12px;left:50%;right:auto;width:min(520px,calc(100% - 24px));transform:translateX(-50%);border:1px solid var(--gw-edge);border-radius:30px;background:var(--gw-surface);box-shadow:0 12px 36px #05081e33,inset 0 1px 0 #ffffff55;padding-bottom:env(safe-area-inset-bottom,0px)}
+body[data-ui-shell="glass-wheel"] #handy-oben button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;min-height:52px;flex:1;padding:6px 4px}
+body[data-ui-shell="glass-wheel"] #handy-oben button b{font-size:10px;font-weight:600;white-space:nowrap}
+body[data-ui-shell="glass-wheel"] #handy-oben .ho-z svg{width:19px;height:19px}
+body[data-ui-shell="glass-wheel"] #ho-ziele{border-color:var(--gw-edge);background:var(--gw-paper)}
+
+body[data-ui-shell="glass-wheel"] .gw-shell{position:relative;flex:0 0 auto;min-width:0;margin:12px 24px 8px;color:var(--text)}
+body[data-ui-shell="glass-wheel"] .gw-shell-heading{display:flex;gap:8px;align-items:center;min-height:44px;flex-wrap:wrap}
+body[data-ui-shell="glass-wheel"] .gw-identity{font-weight:760;letter-spacing:.08em;flex:1}
+body[data-ui-shell="glass-wheel"] .gw-identity small{font-size:9px;letter-spacing:.12em;color:var(--text-dim);margin-left:10px}
+body[data-ui-shell="glass-wheel"] .gw-shell button{min-height:44px;min-width:44px;color:var(--text);font:inherit;cursor:pointer}
+body[data-ui-shell="glass-wheel"] .gw-shell-heading button{font-size:12px;padding:0 14px;border:1px solid var(--gw-edge);border-radius:22px;background:var(--gw-paper)}
+body[data-ui-shell="glass-wheel"] .gw-wheel-stage{position:relative;text-align:center;overflow:hidden}
+body[data-ui-shell="glass-wheel"] .gw-wheel-stage h2{position:absolute;top:12px;left:0;text-align:left;margin:0;font-size:25px;letter-spacing:-.03em;z-index:1;pointer-events:none}
+body[data-ui-shell="glass-wheel"] .gw-wheel-stage>p:first-of-type{position:absolute;top:48px;left:0;text-align:left;margin:0;color:var(--text-dim);font-size:13px;pointer-events:none}
+body[data-ui-shell="glass-wheel"] .gw-wheel{position:relative;width:min(420px,100%);height:min(320px,38vh);margin:0 auto;touch-action:none;user-select:none;border-radius:50%;isolation:isolate;outline-offset:3px}
+body[data-ui-shell="glass-wheel"] .gw-rim{position:absolute;width:82%;aspect-ratio:1;left:9%;top:50%;translate:0 -50%;border-radius:50%;border:2px solid var(--gw-edge);background:conic-gradient(from var(--gw-turn,0deg),#73dfff33,#f39cfc33,#9777fb22,#88ecd833,#73dfff33);box-shadow:inset 0 0 0 14px #ffffff0a,inset 0 1px 1px #ffffffaa,0 0 0 6px #b7c1ff0a,0 18px 45px #080e2b33;pointer-events:none}
+body[data-ui-shell="glass-wheel"] .gw-rim:after{content:"";position:absolute;inset:24%;border-radius:50%;border:1px solid var(--gw-edge);background:var(--gw-surface);box-shadow:inset 0 2px 3px #ffffff44}
+@supports(mask:radial-gradient(transparent,#000)){
+  body[data-ui-shell="glass-wheel"] .gw-rim{mask:radial-gradient(circle,transparent 0 57%,#000 58%);background:conic-gradient(from var(--gw-turn,0deg),#b8edff66,#ffc4ef44,#9c87ff33,#9af3dc55,#b8edff66)}
+  body[data-ui-shell="glass-wheel"] .gw-rim:after{inset:18%;background:none;border-color:#d9ddff77}
+}
+body[data-ui-shell="glass-wheel"] .gw-hub{position:absolute;left:50%;top:50%;translate:-50% -50%;width:28%;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:50%;background:var(--gw-paper);border:2px solid var(--gw-edge);box-shadow:0 4px 24px #c58af535,inset 0 1px 0 #ffffff77;pointer-events:none}
+body[data-ui-shell="glass-wheel"] .gw-hub>b{font-size:43px;line-height:1.1;font-style:italic;background:linear-gradient(120deg,var(--accent-text),#6484f0,#bf77c1);background-clip:text;color:transparent}
+body[data-ui-shell="glass-wheel"] .gw-center-name{font-size:10px;font-weight:650;max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+body[data-ui-shell="glass-wheel"] .gw-area{position:absolute;top:50%;left:50%;transform:translate(var(--gw-x),var(--gw-y)) translate(-50%,-50%);display:grid;place-items:center;width:88px;min-height:48px;padding:7px;border:1px solid var(--gw-edge);border-radius:20px;background:var(--gw-paper);box-shadow:0 4px 10px #00000015,inset 0 1px 0 #ffffff55;line-height:1.3;font-size:12px!important;overflow-wrap:anywhere;transition:transform var(--motion-normal) var(--feder-sanft),box-shadow var(--motion-fast) var(--ease)}
+body[data-ui-shell="glass-wheel"] .gw-area[aria-pressed="true"]{border:2px solid var(--accent-text);box-shadow:0 0 0 4px var(--accent-schwach),0 5px 28px #bd8aff30;font-weight:700}
+body[data-ui-shell="glass-wheel"] .gw-area[hidden]{display:none}
+body[data-ui-shell="glass-wheel"] .gw-spoke{position:absolute;left:50%;top:50%;height:2px;transform-origin:0 50%;background:linear-gradient(90deg,var(--gw-edge),#b8d8ff88,var(--gw-edge));pointer-events:none;z-index:1}
+body[data-ui-shell="glass-wheel"] .gw-spoke[hidden]{display:none}
+body[data-ui-shell="glass-wheel"] .gw-hub{z-index:2}
+body[data-ui-shell="glass-wheel"] .gw-area{z-index:3}
+body[data-ui-shell="glass-wheel"] .gw-area-label{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+body[data-ui-shell="glass-wheel"] .gw-wheel[data-dragging="true"] .gw-area{transition:none}
+body[data-ui-shell="glass-wheel"] .gw-shell button:is(:hover,:active){box-shadow:0 0 0 2px var(--accent-text)}
+body[data-ui-shell="glass-wheel"] .gw-shell button:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+body[data-ui-shell="glass-wheel"] .gw-shell :is(button,.gw-wheel):focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
+body[data-ui-shell="glass-wheel"] .gw-wheel-controls{display:flex;justify-content:center;align-items:center;gap:14px;font-size:12px;color:var(--text-dim);margin-top:-12px}
+body[data-ui-shell="glass-wheel"] .gw-wheel-controls button{border:1px solid var(--gw-edge);border-radius:50%;background:var(--gw-paper)}
+body[data-ui-shell="glass-wheel"] .gw-no-areas{font-size:13px;color:var(--text-dim)}
+body[data-ui-shell="glass-wheel"] .gw-selection{margin:2px auto 4px;max-width:600px;font-size:12px;line-height:1.5;color:var(--text-dim);overflow-wrap:anywhere}
+body[data-ui-shell="glass-wheel"] .gw-tray{margin:10px auto 0;max-width:1200px;padding:10px 14px;border:1px solid var(--gw-edge);border-radius:20px;background:var(--gw-surface);box-shadow:inset 0 1px 0 #ffffff44;min-width:0}
+body[data-ui-shell="glass-wheel"] .gw-tray-heading{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+body[data-ui-shell="glass-wheel"] .gw-tray-heading h3{font-size:13px;flex:1;margin:0;min-width:0;overflow-wrap:anywhere}
+body[data-ui-shell="glass-wheel"] .gw-tray-heading button{font-size:11px;border:0;border-radius:14px;padding:0 10px;background:none}
+body[data-ui-shell="glass-wheel"] .gw-tray-heading button[aria-pressed="true"]{background:var(--accent-schwach);color:var(--accent-text)}
+body[data-ui-shell="glass-wheel"] .gw-open-list{display:flex;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;padding:5px 2px;min-width:0}
+body[data-ui-shell="glass-wheel"] .gw-tab-card{position:relative;display:flex;flex:0 0 220px;min-width:0;border:1px solid var(--gw-edge);border-radius:14px;background:var(--gw-paper)}
+body[data-ui-shell="glass-wheel"] .gw-tab-open{display:flex;flex:1;flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;border:0;background:none;min-width:0;padding:9px 8px 9px 12px;gap:3px}
+body[data-ui-shell="glass-wheel"] .gw-tab-open small{color:var(--text-dim);font-size:10px}
+body[data-ui-shell="glass-wheel"] .gw-tab-open strong{font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body[data-ui-shell="glass-wheel"] .gw-tab-open[aria-current="true"]{box-shadow:inset 3px 0 var(--accent-text);border-radius:14px}
+body[data-ui-shell="glass-wheel"] .gw-tab-close{border:0;border-left:1px solid var(--line);background:none;border-radius:0 14px 14px 0}
+body[data-ui-shell="glass-wheel"] .gw-empty{font-size:12px;color:var(--text-dim);margin:4px 0;line-height:1.5}
+body[data-ui-shell="glass-wheel"] .gw-shell[data-expanded="false"] .gw-wheel-stage{display:none}
+body[data-ui-shell="glass-wheel"] .gw-announcement{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@supports(backdrop-filter:blur(1px)){
+  body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){backdrop-filter:blur(var(--gw-blur)) saturate(1.3)}
+}
+@media(max-width:760px){
+  body[data-ui-shell="glass-wheel"] .gw-shell{margin:8px 12px}
+  body[data-ui-shell="glass-wheel"] .gw-identity small{display:none}
+  body[data-ui-shell="glass-wheel"] .gw-wheel-stage h2{font-size:20px;top:4px}
+  body[data-ui-shell="glass-wheel"] .gw-wheel-stage>p:first-of-type{display:none}
+  body[data-ui-shell="glass-wheel"] .gw-wheel{height:265px;margin-top:20px;width:100%}
+  body[data-ui-shell="glass-wheel"] .gw-area{width:68px;font-size:11px!important}
+  body[data-ui-shell="glass-wheel"] .gw-shell-heading button{padding:0 10px;font-size:11px}
+  body[data-ui-shell="glass-wheel"] .gw-shell-heading .gw-identity{font-size:12px}
+  body[data-ui-shell="glass-wheel"] .gw-tray{padding:6px 10px;margin-top:6px}
+  body[data-ui-shell="glass-wheel"] .gw-tray-heading{gap:0}
+  body[data-ui-shell="glass-wheel"] .gw-tray-heading h3{flex-basis:100%}
+  body[data-ui-shell="glass-wheel"] .gw-tab-card{flex-basis:180px}
+  body[data-ui-shell="glass-wheel"] #main{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+}
+@media(min-width:761px){
+  body[data-ui-shell="glass-wheel"][data-schale="premium"] #main{grid-template-rows:auto auto auto auto auto minmax(0,1fr)}
+  body[data-ui-shell="glass-wheel"][data-schale="premium"] #main>.gw-shell{grid-column:2;grid-row:5}
+  body[data-ui-shell="glass-wheel"][data-schale="premium"] #main>#scroll{grid-row:6}
+}
+@media(prefers-reduced-motion:reduce){body[data-ui-shell="glass-wheel"] .gw-area{transition:none}}
+body[data-ui-shell="glass-wheel"][data-bewegung="ruhig"] .gw-area{transition:none}
+@media(prefers-reduced-transparency:reduce),(prefers-contrast:more),(forced-colors:active){
+  body[data-ui-shell="glass-wheel"]{--gw-surface:var(--bg-side);--gw-edge:var(--text);--gw-blur:0px;--gw-shadow:none}
+  body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){backdrop-filter:none}
+  body[data-ui-shell="glass-wheel"]{background:var(--bg)}
+  body[data-ui-shell="glass-wheel"] .gw-hub>b{background:none;color:var(--text)}
+}
+body[data-ui-shell="glass-wheel"][data-kontrast="hoch"]{--gw-surface:var(--bg-side);--gw-edge:var(--text);--gw-blur:0px;--gw-shadow:none}
+body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.gw-rim,#handy-oben){backdrop-filter:none}
+:root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"]{--gw-surface:var(--bg-side);--gw-edge:var(--text);--gw-shadow:none;background:var(--bg)}
+:root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){backdrop-filter:none}
 
 </style>
 
@@ -28488,7 +28510,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1542, inhalt: 'cf888cc05e9f3296', gebaut: '2026-10-29T19:32:10.627Z' };
+const Stand = { fassung: 1547, inhalt: '392f380d9849e56d', gebaut: '2026-10-29T20:46:57.847Z' };
 window.Stand = Stand;
 
 </script>
@@ -78794,6 +78816,82 @@ const ChronikDaten = {
             ],
             "groesstesProblem": "Die alte Geometrieprüfung mass die neue Bedienzeile am inneren Vorschaublatt. Die richtige Messung der ganzen Karte fand danach einen tatsächlichen fehlenden Textabstand am Telefon. Die zweite Bildabnahme fand einen alten Ordnerpfad in globalen Favoriten und einen kurzzeitig weissen Ausschnitt neben der noch wachsenden Suchauswahl; beide zuerst rot nachgewiesen und korrigiert. Ein zusätzlicher Unix-OCR-Hilfentest ist unter Windows nicht ausführbar; der produktnahe Windows-Lauf selbst ist grün.",
             "massnahmen": []
+        },
+        {
+            "datum": "2026-10-29",
+            "wochentag": "Donnerstag",
+            "titel": "Bestehende iPhone- und Windows-Apps sicher integrieren",
+            "wasIchWeiss": "Glass Wheel bleibt auf Wunsch liegen. Redur nutzt bereits die Windows-App und die iPhone-App über Codemagic/IPA. Ein eigener Sync-Server existiert nicht. Neuer lokaler Integrationsbranch von main 326533b06; App-IDs, Herkunft und bestehende Datenprofile bleiben unverändert.",
+            "nachrichten": [
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "mache alles",
+                    "woher": "Aktueller Dialog nach den Vorschlägen zur Geräteintegration",
+                    "gemeint": "Die vorhandenen nativen Apps und ihre sichere Geräteübertragung tatsächlich weiterentwickeln.",
+                    "besser": "Bestehende Apps erhalten und native Dateieingänge, Sicherungen sowie den freiwilligen Abgleich prüfen.",
+                    "besserePrompt": "Kein neuer Anlauf für Glass; echte Integrationen mit Tests und offenen externen Voraussetzungen liefern."
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "auf laptop als windows app und auf iphone als iphone app direk",
+                    "woher": "Antwort auf die Gerätefrage im aktuellen Dialog",
+                    "gemeint": "Beide Apps sind bereits installiert; keine Neuanlage ihrer Identität oder Speicherorte.",
+                    "besser": "Windows und iPhone verwenden bereits installierte Redion-Apps.",
+                    "besserePrompt": "Datenhaltende In-place-Updates mit denselben IDs vorbereiten."
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "also über codemagit nehmen ich die ipa date und dann lade ich es auf iphone",
+                    "woher": "Antwort im aktuellen Dialog",
+                    "gemeint": "Den bisherigen Codemagic-/IPA-Installationsweg beibehalten.",
+                    "besser": "Ich installiere die über Codemagic gebaute IPA auf dem iPhone.",
+                    "besserePrompt": "Codemagic verwenden; TestFlight nicht als bereits eingerichtet voraussetzen."
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "nein ich habe keine server",
+                    "woher": "Antwort auf die Sync-Voraussetzung im aktuellen Dialog",
+                    "gemeint": "Ein produktiver Geräteabgleich ist noch nicht eingerichtet.",
+                    "besser": "Ich habe noch keinen eigenen Sync-Server.",
+                    "besserePrompt": "Einrichtung vorbereiten, ohne Ressourcen, Abrechnung oder Upload ungefragt zu aktivieren."
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "also das am ende sollte beides auf main sein , also pusche alles jetzt auf main",
+                    "woher": "Aktueller Dialog nach dem Gerätebranch-Push",
+                    "gemeint": "Geräteintegration und bestehenden Glass-Wheel-Stand auf dem neuesten main zusammenbringen.",
+                    "besser": "Beide Stände auf aktuellem main zusammenführen und pushen.",
+                    "besserePrompt": "Neuere main-Änderungen erhalten, Konflikte prüfen und beide ursprünglichen Commits als Vorfahren nachweisen."
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "Ja, dokumentiert auf main übernehmen",
+                    "woher": "Ausdrückliche Antwort zur neuen einmaligen Ausnahme nach CLAUDE §46",
+                    "gemeint": "Bekannte Altfehler und offene echte iPhone-/Signierungsprüfungen dürfen für diesen main-Push dokumentiert bleiben.",
+                    "besser": "Nach grünen Integrationsprüfungen mit dokumentierten offenen Freigaben auf main übernehmen.",
+                    "besserePrompt": "Die Ausnahme gilt nur einmal; kein vollständig grüner Gesamtlauf und kein Deployment werden behauptet."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E755: Gerätecommit 766105fab auf dem neueren main 084c98bc5 integriert. Dort war Glass Wheel über PR 168 schon enthalten, ebenso neuere Update-/Sync-Schutzregeln. Windows-Controller und Datei-Brücke gemeinsam erhalten, generierte Dateien neu gebaut und optionale Glass-Kaskade richtig eingeordnet. Bekannte Altfehler und offene native Freigaben bleiben ausdrücklich benannt.",
+                    "vonCommit": "084c98bc5 und 766105fab",
+                    "bisCommit": "gemeinsamer main-Integrationscommit",
+                    "zeitraum": "29. Oktober 2026; Uhrzeit nicht protokolliert",
+                    "dauer": "nicht protokolliert",
+                    "pruefungen": "194 kombinierte native/Update-/Sync-Unitprüfungen grün. Typecheck und Bau grün; test87 zuerst wegen Glass-Kaskade rot, danach 189/189. Browsermatrizen und Windows-Neustart werden am gemeinsamen Stand geprüft; Ergebnis im Main-Integrationsbericht. Redur bestätigt die einmalige Ausnahme ausdrücklich."
+                },
+                {
+                    "was": "E754: gemeinsame Geräteübersicht, sicherer Windows-Dateiwähler/Export, Betriebssystem-Dateiübergabe, iOS-Dokumentkopie und gemeinsamer Import. Gleiche Codemagic-/GitHub-IPA-Schritte, Windows-Web-Parität und Ausschluss nativer Bauordner aus öffentlichen Assets. Live-Sync und Signierung bleiben ausdrücklich externe Freigabeschritte.",
+                    "vonCommit": "326533b06",
+                    "bisCommit": "lokaler Integrationsbranch codex/iphone-windows-integration",
+                    "zeitraum": "29. Oktober 2026; Uhrzeit nicht protokolliert",
+                    "dauer": "nicht protokolliert",
+                    "pruefungen": "Echte Electron-App mit isoliertem Testprofil zweimal gestartet, Notiz über Neustart erhalten und native IPC nach Fragmentnavigation geprüft. Acht Browseransichten hell/dunkel und native Adaptertests. Bestehende Sicherungs- und Zwei-Geräte-Prüfungen gefahren; Schlussstand und Grenzen stehen im Integrationsbericht. Export-Gegenprobe entfernt im Test die Vollständigkeitsprüfung und wird nachweislich rot. Kein vollständiger grüner Gesamtlauf behauptet."
+                }
+            ],
+            "groesstesProblem": "Die erste native IPC-Prüfung erwartete eine URL ohne Fragment, obwohl Redion seine Bibliothek über Fragmentziele öffnet. Der reale Electron-Start deckte das auf. Jetzt bleibt die Einstiegsdatei exakt festgelegt, während Fragmentnavigation erlaubt und fremde Pfade/Frames gesperrt sind. Zusätzlich zeigte die Cloudflare-Prüfung, dass ein fehlender Server und der native Access-/CORS-Anmeldeweg nicht durch eine blosse Datenbankbindung ersetzt werden können.",
+            "massnahmen": []
         }
     ],
     "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
@@ -102662,55 +102760,59 @@ const Werkzeuge = (() => {
             '.docx,.pptx,.ppsx,.pptm,.ppsm,.epub,.pdf,.zip,image/*';
         inp.multiple = true;
         inp.addEventListener('change', async () => {
-            let n = 0;
-            for (const f of Array.from(inp.files ?? [])) {
-                const name = f.name.toLowerCase();
-                try {
-                    if (/\.zip$/i.test(name) && typeof ArchivImport !== 'undefined') {
-                        const erg = await ArchivImport.importZip(f, null, { still: true });
-                        UI.toast(erg.hinweis, 9000);
-                        n++;
-                        continue;
-                    }
-                    const textig = /\.(html?|htm|csv|tsv|md|markdown|txt)$/i.test(name) || f.type.startsWith('text/');
-                    if (!textig && !/\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i.test(name) && typeof ArchivImport !== 'undefined') {
-                        await ArchivImport.dateiAlsDokument(f, null);
-                        n++;
-                        continue;
-                    }
-                    if (/\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i.test(name)) {
-                        const erg = await Einlesen.datei(f);
-                        if (erg) {
-                            UI.toast(f.name + ': ' + erg.hinweis);
-                            n++;
-                            continue;
-                        }
-                    }
-                    const text = await f.text();
-                    if (/\.(html|htm)$/i.test(name)) {
-                        const p2 = Store.addPage(null, { text: f.name.replace(/\.[^.]+$/, ''), icon: '🌐' });
-                        ausHtml(p2.id, text);
-                    }
-                    else if (/\.(csv|tsv)$/i.test(name)) {
-                        const p2 = Store.addPage(null, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📊' });
-                        Einlesen.alsDatenbank(p2.id, p2.text, Datenbank.csvZerlegen(text.replace(/^﻿/, '')));
-                    }
-                    else {
-                        await mdDateiAnlegen(f.name, text);
-                    }
-                    n++;
-                }
-                catch (err) {
-                    UI.banner(f.name + ': ' +
-                        (err instanceof Error ? err.message : String(err)), 'fehler');
-                }
-            }
-            App.zeichneBaum();
-            if (typeof ArchivImport !== 'undefined')
-                ArchivImport.ansichtAuffrischen();
-            UI.toast(n + (n === 1 ? ' Datei eingelesen' : ' Dateien eingelesen'));
+            await importFiles(Array.from(inp.files ?? []));
         });
         inp.click();
+    };
+    const importFiles = async (files) => {
+        let n = 0;
+        for (const f of files) {
+            const name = f.name.toLowerCase();
+            try {
+                if (/\.zip$/i.test(name) && typeof ArchivImport !== 'undefined') {
+                    const erg = await ArchivImport.importZip(f, null, { still: true });
+                    UI.toast(erg.hinweis, 9000);
+                    n++;
+                    continue;
+                }
+                const textig = /\.(html?|htm|csv|tsv|md|markdown|txt)$/i.test(name) || f.type.startsWith('text/');
+                if (!textig && !/\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i.test(name) && typeof ArchivImport !== 'undefined') {
+                    await ArchivImport.dateiAlsDokument(f, null);
+                    n++;
+                    continue;
+                }
+                if (/\.(xlsx|xlsm|docx|pptx|ppsx|pptm|ppsm|epub)$/i.test(name)) {
+                    const erg = await Einlesen.datei(f);
+                    if (erg) {
+                        UI.toast(f.name + ': ' + erg.hinweis);
+                        n++;
+                        continue;
+                    }
+                }
+                const text = await f.text();
+                if (/\.(html|htm)$/i.test(name)) {
+                    const p2 = Store.addPage(null, { text: f.name.replace(/\.[^.]+$/, ''), icon: '🌐' });
+                    ausHtml(p2.id, text);
+                }
+                else if (/\.(csv|tsv)$/i.test(name)) {
+                    const p2 = Store.addPage(null, { text: f.name.replace(/\.[^.]+$/, ''), icon: '📊' });
+                    Einlesen.alsDatenbank(p2.id, p2.text, Datenbank.csvZerlegen(text.replace(/^﻿/, '')));
+                }
+                else {
+                    await mdDateiAnlegen(f.name, text);
+                }
+                n++;
+            }
+            catch (err) {
+                UI.banner(f.name + ': ' +
+                    (err instanceof Error ? err.message : String(err)), 'fehler');
+            }
+        }
+        App.zeichneBaum();
+        if (typeof ArchivImport !== 'undefined')
+            ArchivImport.ansichtAuffrischen();
+        UI.toast(n + (n === 1 ? ' Datei eingelesen' : ' Dateien eingelesen'));
+        return n;
     };
     const ordnerLesen = async () => {
         if (!window.showDirectoryPicker) {
@@ -103790,7 +103892,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         formelBibliothek, formelBibliothekLesen, formelBibliothekAnwenden,
         erinnerungSetzen, erinnerungen, erinnerungenPruefen, geraeteMeldung, posteingangMelden, meldungen, meldungGelesen, meldungenAlleGelesen, meldungenLeeren,
         weckrufLegen, naechsteErinnerung,
-        ordnerSchreiben, ordnerLesen, dateienLesen, einzelDatei,
+        ordnerSchreiben, ordnerLesen, dateienLesen, importFiles, einzelDatei,
         htmlExport, drucken, seiteAlsHtml, verschiebenNach, verschiebe,
         alleToggles, tastenkuerzel, systemSeite, datumLang, zeitKurz, papierkorbAufraeumen,
         wikiUmwandeln, wikiIndex, teilenMenue,
@@ -106960,6 +107062,7 @@ const Einstellungen = (() => {
                 ['emoji', 'smile', 'Emoji']
             ]],
         ['Verwaltung', [
+                ['geraete', 'workspace', 'iPhone und Windows'],
                 ['arbeitsplatz', 'workspace', 'Arbeitsbereich'],
                 ['analysen', 'chart', 'Analysen'],
                 ['bereiche', 'users', 'Bereiche'],
@@ -107187,6 +107290,7 @@ const Einstellungen = (() => {
     const feld = (schluessel, wert, platzhalter = '') => `<input data-set="${schluessel}" value="${esc(wert)}" placeholder="${esc(platzhalter)}">`;
     const kopf = (titel, unter) => `<h2>${titel}</h2>` + (unter ? `<p class="ez-unter">${unter}</p>` : '');
     const inhalt = (b) => ({
+        geraete: () => kopf('iPhone und Windows', 'Geräte, Sicherungen und freiwilliger Abgleich') + DeviceIntegration.overview(),
         konto: () => {
             const w = globalThis.Wolke;
             const angemeldet = !!(w && w.angemeldet && w.angemeldet());
@@ -123942,7 +124046,7 @@ const Austausch = (() => {
             }
             catch (err) {
                 if (typeof UI !== 'undefined' && UI.toast)
-                    UI.toast('Die Datei konnte nicht in iOS-Dateien gespeichert werden: ' +
+                    UI.toast('Die Datei konnte nicht nativ gespeichert werden: ' +
                         (err instanceof Error ? err.message : String(err)));
                 return false;
             }
@@ -131355,9 +131459,9 @@ const Dateien = (() => {
             }
             try {
                 await nativeDateien.speichern(blob, String(satz.name || 'Datei'));
-                UI.toast('Datei unter Auf meinem iPhone → Redion → Exporte gespeichert. Für iCloud Drive im Teilen-Menü „In Dateien sichern“ wählen.');
+                UI.toast(nativeDateien.ort || 'Datei unter Auf meinem iPhone → Redion → Exporte gespeichert. Für iCloud Drive im Teilen-Menü „In Dateien sichern“ wählen.');
                 if (typeof Protokoll !== 'undefined')
-                    Protokoll.notieren('export', 'Datei „' + satz.name + '“ in iOS-Dateien exportiert', { id: dateiId });
+                    Protokoll.notieren('export', 'Datei „' + satz.name + '“ nativ exportiert', { id: dateiId });
                 return true;
             }
             catch (err) {
@@ -134980,10 +135084,28 @@ window.Vorrat = Vorrat;
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/abgleich/maschine.ts (npm run bauen:ts). */
 const Wolke = (() => {
+    const serverAdressePruefen = (wert) => {
+        const roh = String(wert ?? '').trim();
+        if (!roh)
+            return '';
+        try {
+            const u = new URL(roh);
+            const lokal = u.protocol === 'http:' && location.protocol === 'http:' &&
+                /^(localhost|127\.0\.0\.1|\[::1\])$/i.test(u.hostname);
+            if (u.protocol !== 'https:' && !lokal)
+                return '';
+            if (u.username || u.password || u.search || u.hash || u.pathname !== '/')
+                return '';
+            return u.origin;
+        }
+        catch {
+            return '';
+        }
+    };
     const adresse = () => {
         const eigen = Store.getMeta('wolkeAdresse', '');
         if (eigen)
-            return String(eigen).replace(/\/+$/, '');
+            return serverAdressePruefen(eigen);
         if (location.protocol === 'http:' || location.protocol === 'https:')
             return location.origin;
         return '';
@@ -135006,8 +135128,7 @@ const Wolke = (() => {
     const ruf = async (weg, opt = {}) => {
         const wurzel = adresse();
         if (!wurzel)
-            throw new Error('Von einer Datei aus gibt es keinen Server. Öffne Redion über eine Adresse — ' +
-                'oder trage in den Einstellungen eine eigene ein.');
+            throw new Error('Kein sicherer Redion-Server eingerichtet. In „Wolke“ eine gültige HTTPS-Serveradresse eintragen.');
         const kopf = { 'Content-Type': 'application/json',
             'Redion-Geraet': geraeteName(), ...(opt.kopf || {}) };
         if (token() && !kopf.Authorization)
@@ -135821,7 +135942,7 @@ const Wolke = (() => {
                     takt();
             });
     };
-    return { adresse, token, bereich, angemeldet, geraeteName, zustand, beiAenderung,
+    return { adresse, serverAdressePruefen, token, bereich, angemeldet, geraeteName, zustand, beiAenderung,
         anmeldenMit, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
         abgleichErlaubt, abgleichSetzen, kontoLoeschen,
         neuAbgleichOffen, neuAbgleichAntwort,
@@ -135968,7 +136089,15 @@ const WolkeFenster = (() => {
                 if (was === 'adresse') {
                     const neu = await UI.frage('Adresse des Servers', Wolke.adresse() || 'https://…');
                     if (neu !== null) {
-                        Store.setMeta('wolkeAdresse', neu.trim());
+                        const eingabe = neu.trim();
+                        const sicher = eingabe ? Wolke.serverAdressePruefen(eingabe) : '';
+                        if (eingabe && !sicher)
+                            throw new Error('Nur HTTPS-Serveradressen ohne Pfad oder Zugangsdaten sind erlaubt.');
+                        const ziel = sicher || (location.protocol === 'https:' || location.protocol === 'http:'
+                            ? location.origin : '');
+                        if (Wolke.angemeldet() && Wolke.adresse() !== ziel)
+                            throw new Error('Bitte zuerst von der Wolke abmelden, bevor du den Server wechselst.');
+                        Store.setMeta('wolkeAdresse', sicher);
                         await zeichne();
                     }
                 }
@@ -135998,8 +136127,8 @@ const WolkeFenster = (() => {
         if (!ziel)
             return;
         if (!Wolke.adresse()) {
-            ziel.innerHTML = kasten('weg', '<b>Redion läuft gerade als Datei.</b> Von hier aus gibt es keinen Server — ' +
-                'öffne Redion über eine Adresse, oder trage oben eine eigene ein.');
+            ziel.innerHTML = kasten('weg', '<b>Kein sicherer Sync-Server verbunden.</b> Die lokale App bleibt offline nutzbar. ' +
+                'Unter „Server: ändern“ eine HTTPS-Adresse eintragen.');
             return;
         }
         let stand = null;
@@ -136061,9 +136190,9 @@ const WolkeFenster = (() => {
                     'Mit einem Code von einem anderen Gerät</button>' +
                     '</div>'
                 : '<div style="padding:14px; border:1px solid var(--line); border-radius:8px; ' +
-                    'font-size:13px; line-height:1.6">Redion läuft gerade als Datei auf deinem ' +
-                    'Rechner — da gibt es keinen Server. Öffne es über eine Adresse, oder trage ' +
-                    'unten eine eigene ein.</div>') +
+                    'font-size:13px; line-height:1.6"><b>Offline, kein Sync-Server verbunden.</b> ' +
+                    'Deine Notizen bleiben lokal erhalten. Für iPhone und Windows zuerst ' +
+                    'eine sichere HTTPS-Serveradresse unter „Server: ändern“ eintragen.</div>') +
             '<hr style="border:none;border-top:1px solid var(--line); margin:18px 0">' +
             '<div style="font-size:12px; color:var(--text-faint); line-height:1.6">' +
             'Server: <code>' + esc(wurzel || 'keiner') + '</code> ' +
@@ -156373,7 +156502,7 @@ const App = (() => {
                 UI.toast(paket.ausgelassen
                     ? 'Sicherung mit Lücken gespeichert: ' + paket.ausgelassen +
                         ' Datei(en) fehlen. Hinweis in der Sicherung lesen und erneut sichern.'
-                    : 'Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
+                    : nativeSicherung.ort || 'Sicherung in Dateien → Auf meinem iPhone → Redion → Backups gespeichert. Für Schutz bei App-Löschung zusätzlich in iCloud Drive sichern.');
                 return paket.ausgelassen === 0;
             }
             const l = document.createElement('a');
@@ -156490,116 +156619,121 @@ const App = (() => {
             const f = inp.files?.[0];
             if (!f)
                 return;
-            let zip = null, text = '';
-            const kopf = new Uint8Array(await f.slice(0, 4).arrayBuffer());
-            const istZip = kopf[0] === 0x50 && kopf[1] === 0x4B;
-            if (istZip) {
-                try {
-                    zip = await Einlesen.zipLesenAusBlob(f);
-                    text = await zip.text('daten.json') || '';
-                }
-                catch (e) {
-                    alert('Dieses Archiv liess sich nicht öffnen: ' +
-                        (e instanceof Error ? e.message : String(e)));
-                    return;
-                }
-                if (!text) {
-                    alert('In diesem Archiv steckt keine „daten.json" — es ist keine ' +
-                        'Redion-Sicherung.');
-                    return;
-                }
-            }
-            else {
-                text = await f.text();
-            }
-            let vorschau = {};
-            try {
-                vorschau = JSON.parse(text);
-            }
-            catch {
-                alert('Diese Datei ist keine Sicherung — sie lässt sich nicht lesen.');
-                return;
-            }
-            const faecherJetzt = {
-                blocks: Store.cache.blocks || {},
-                collections: Store.cache.collections || {},
-                views: Store.cache.views || {}
-            };
-            const faecherDatei = {
-                blocks: vorschau.blocks || {},
-                collections: vorschau.collections || {},
-                views: vorschau.views || {}
-            };
-            const beimErsetzen = ImportVergleich.rechnen(faecherJetzt, faecherDatei, 'ersetzen');
-            const beimDazu = ImportVergleich.rechnen(faecherJetzt, faecherDatei, 'zusammenfuehren');
-            const wahl = await Dialog.wahl({
-                titel: 'Sicherung einspielen',
-                text: 'Die Datei enthält ' +
-                    Object.keys(vorschau.blocks || {}).length + ' Blöcke' +
-                    (Array.isArray(vorschau.versions) ? ' und ' + vorschau.versions.length +
-                        ' Fassungen aus dem Verlauf' : '') + '.' +
-                    (vorschau.hinweis ? '\n\n' + vorschau.hinweis : ''),
-                knoepfe: [
-                    { id: 'ersetzen', text: 'Ersetzen',
-                        hinweis: ImportVergleich.satz(beimErsetzen) +
-                            ' Vorher lädt Redion eine Sicherheitskopie des jetzigen ' +
-                            'Standes herunter.' },
-                    { id: 'zusammenfuehren', text: 'Dazulegen',
-                        hinweis: ImportVergleich.satz(beimDazu) +
-                            ' Es wird nichts gelöscht.' },
-                    { id: '', text: 'Abbrechen' }
-                ]
-            });
-            if (!wahl)
-                return;
-            let kopie = false;
-            if (wahl === 'ersetzen') {
-                kopie = await sicherungSpeichern();
-                if (!kopie) {
-                    alert('Es wurde NICHTS eingespielt — dein Bestand steht unverändert.\n\n' +
-                        'Ohne Sicherheitskopie wäre das Ersetzen ein Sprung ohne Netz.');
-                    return;
-                }
-            }
-            try {
-                const erg = await Store.importAll(text, wahl);
-                let anhaenge = { da: 0, erwartet: 0, fehlend: [], unvollstaendig: [] };
-                if (zip)
-                    anhaenge = await anhaengeEinspielen(zip, wahl);
-                danach && danach();
-                zeichneBaum();
-                zeichneSeite();
-                UI.toast('Sicherung geladen — ' + erg.bloecke + ' Blöcke' +
-                    (kopie ? ' (der alte Stand liegt als Sicherheitskopie im ' +
-                        'Download-Ordner)' : '') +
-                    (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : '') +
-                    (anhaenge.da ? ', ' + anhaenge.da + ' Anhang/Anhänge' : '') +
-                    (anhaenge.fehlend.length
-                        ? '. ' + anhaenge.fehlend.length + ' von ' + anhaenge.erwartet +
-                            ' Anhängen fehlen: ' + anhaenge.fehlend.slice(0, 3).join(', ') +
-                            (anhaenge.fehlend.length > 3 ? ' …' : '') +
-                            '. Die Sicherung liegt noch — du kannst sie erneut einspielen.'
-                        : '') +
-                    (anhaenge.unvollstaendig.length
-                        ? '. ' + anhaenge.unvollstaendig.length + ' Anhang/Anhänge ' +
-                            'kamen verkürzt an: ' +
-                            anhaenge.unvollstaendig.slice(0, 3).join(', ') +
-                            (anhaenge.unvollstaendig.length > 3 ? ' …' : '') +
-                            '. Sie wurden trotzdem übernommen — was da ist, ist da.'
-                        : '') +
-                    (erg.frage
-                        ? '. Der Abgleich mit der Wolke steht still: dort liegt noch ' +
-                            'der Stand von vorher. Entscheide unter „Mehr → Wolke", ob ' +
-                            'dieses Gerät nur lokal weiterarbeitet oder vollständig neu ' +
-                            'abgleicht.'
-                        : ''), erg.frage ? 14000 : undefined);
-            }
-            catch (err) {
-                alert('Konnte nicht geladen werden: ' +
-                    (err instanceof Error ? err.message : String(err)));
-            }
+            await importBackupFile(f, danach);
         });
         inp.click();
+    };
+    const importBackupFile = async (f, danach) => {
+        let zip = null, text = '';
+        const kopf = new Uint8Array(await f.slice(0, 4).arrayBuffer());
+        const istZip = kopf[0] === 0x50 && kopf[1] === 0x4B;
+        if (istZip) {
+            try {
+                zip = await Einlesen.zipLesenAusBlob(f);
+                text = await zip.text('daten.json') || '';
+            }
+            catch (e) {
+                alert('Dieses Archiv liess sich nicht öffnen: ' +
+                    (e instanceof Error ? e.message : String(e)));
+                return 'failed';
+            }
+            if (!text) {
+                alert('In diesem Archiv steckt keine „daten.json" — es ist keine ' +
+                    'Redion-Sicherung.');
+                return 'failed';
+            }
+        }
+        else {
+            text = await f.text();
+        }
+        let vorschau = {};
+        try {
+            vorschau = JSON.parse(text);
+        }
+        catch {
+            alert('Diese Datei ist keine Sicherung — sie lässt sich nicht lesen.');
+            return 'failed';
+        }
+        const faecherJetzt = {
+            blocks: Store.cache.blocks || {},
+            collections: Store.cache.collections || {},
+            views: Store.cache.views || {}
+        };
+        const faecherDatei = {
+            blocks: vorschau.blocks || {},
+            collections: vorschau.collections || {},
+            views: vorschau.views || {}
+        };
+        const beimErsetzen = ImportVergleich.rechnen(faecherJetzt, faecherDatei, 'ersetzen');
+        const beimDazu = ImportVergleich.rechnen(faecherJetzt, faecherDatei, 'zusammenfuehren');
+        const wahl = await Dialog.wahl({
+            titel: 'Sicherung einspielen',
+            text: 'Die Datei enthält ' +
+                Object.keys(vorschau.blocks || {}).length + ' Blöcke' +
+                (Array.isArray(vorschau.versions) ? ' und ' + vorschau.versions.length +
+                    ' Fassungen aus dem Verlauf' : '') + '.' +
+                (vorschau.hinweis ? '\n\n' + vorschau.hinweis : ''),
+            knoepfe: [
+                { id: 'ersetzen', text: 'Ersetzen',
+                    hinweis: ImportVergleich.satz(beimErsetzen) +
+                        ' Vorher lädt Redion eine Sicherheitskopie des jetzigen ' +
+                        'Standes herunter.' },
+                { id: 'zusammenfuehren', text: 'Dazulegen',
+                    hinweis: ImportVergleich.satz(beimDazu) +
+                        ' Es wird nichts gelöscht.' },
+                { id: '', text: 'Abbrechen' }
+            ]
+        });
+        if (!wahl)
+            return 'cancelled';
+        let kopie = false;
+        if (wahl === 'ersetzen') {
+            kopie = await sicherungSpeichern();
+            if (!kopie) {
+                alert('Es wurde NICHTS eingespielt — dein Bestand steht unverändert.\n\n' +
+                    'Ohne Sicherheitskopie wäre das Ersetzen ein Sprung ohne Netz.');
+                return 'failed';
+            }
+        }
+        try {
+            const erg = await Store.importAll(text, wahl);
+            let anhaenge = { da: 0, erwartet: 0, fehlend: [], unvollstaendig: [] };
+            if (zip)
+                anhaenge = await anhaengeEinspielen(zip, wahl);
+            danach && danach();
+            zeichneBaum();
+            zeichneSeite();
+            UI.toast('Sicherung geladen — ' + erg.bloecke + ' Blöcke' +
+                (kopie ? ' (der alte Stand liegt als Sicherheitskopie im ' +
+                    'Download-Ordner)' : '') +
+                (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : '') +
+                (anhaenge.da ? ', ' + anhaenge.da + ' Anhang/Anhänge' : '') +
+                (anhaenge.fehlend.length
+                    ? '. ' + anhaenge.fehlend.length + ' von ' + anhaenge.erwartet +
+                        ' Anhängen fehlen: ' + anhaenge.fehlend.slice(0, 3).join(', ') +
+                        (anhaenge.fehlend.length > 3 ? ' …' : '') +
+                        '. Die Sicherung liegt noch — du kannst sie erneut einspielen.'
+                    : '') +
+                (anhaenge.unvollstaendig.length
+                    ? '. ' + anhaenge.unvollstaendig.length + ' Anhang/Anhänge ' +
+                        'kamen verkürzt an: ' +
+                        anhaenge.unvollstaendig.slice(0, 3).join(', ') +
+                        (anhaenge.unvollstaendig.length > 3 ? ' …' : '') +
+                        '. Sie wurden trotzdem übernommen — was da ist, ist da.'
+                    : '') +
+                (erg.frage
+                    ? '. Der Abgleich mit der Wolke steht still: dort liegt noch ' +
+                        'der Stand von vorher. Entscheide unter „Mehr → Wolke", ob ' +
+                        'dieses Gerät nur lokal weiterarbeitet oder vollständig neu ' +
+                        'abgleicht.'
+                    : ''), erg.frage ? 14000 : undefined);
+            return anhaenge.fehlend.length || anhaenge.unvollstaendig.length ? 'failed' : 'imported';
+        }
+        catch (err) {
+            alert('Konnte nicht geladen werden: ' +
+                (err instanceof Error ? err.message : String(err)));
+            return 'failed';
+        }
     };
     const setzeBreite = (px) => {
         const s = document.getElementById('sidebar');
@@ -157811,6 +157945,12 @@ const App = (() => {
                 console.error('Die Startansicht konnte nicht geöffnet werden:', fehler);
             }
         }
+        try {
+            DeviceIntegration.start();
+        }
+        catch (error) {
+            console.error('Geräteintegration konnte nicht starten:', error);
+        }
     };
     const beispielAnlegen = () => {
         const p = Store.addPage(null, { text: 'Willkommen', icon: '👋' });
@@ -157925,7 +158065,7 @@ const App = (() => {
         kuerzlich, kommendeTermine,
         schauplatz,
         ABSCHNITTE, abschnittAn, abschnittSchalten, abschnitteAnpassen, reiterWechseln,
-        sicherungSpeichern, sicherungPaketBauen, sicherungLaden, zurueck, vorwaerts, arbeitsbereich,
+        sicherungSpeichern, sicherungPaketBauen, sicherungLaden, importBackupFile, zurueck, vorwaerts, arbeitsbereich,
         anhaengeEinspielen,
         erstellenBlatt,
         erstellenWege, erstellenWeg
@@ -157936,6 +158076,7 @@ const App = (() => {
 <script>
 /* ===== quell/schale/bedienung/glass-wheel-geometry.js ===== */
 "use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/glass-wheel-geometry.ts (npm run bauen:ts). */
 const GlassWheelGeometry = (() => {
     const wrap = (value, count) => count > 0
         ? ((Math.round(value) % count) + count) % count : -1;
@@ -157970,6 +158111,7 @@ const GlassWheelGeometry = (() => {
 <script>
 /* ===== quell/schale/aufbau/glass-wheel.js ===== */
 "use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/glass-wheel.ts (npm run bauen:ts). */
 const GlassWheel = (() => {
     const MODE_KEY = 'redion:ui-shell:v1', AREA_KEY = 'redion:glass-wheel:area:v1';
     let current = 'classic', selected = '', expanded = true, allOpen = false;
@@ -158425,6 +158567,181 @@ const GlassWheel = (() => {
             setMode('glass-wheel');
     };
     return { start, setMode, mode: () => current, settings, refresh, select, keys: Object.freeze({ mode: MODE_KEY, area: AREA_KEY }) };
+})();
+
+</script>
+<script>
+/* ===== quell/schale/aufbau/device-integration.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/device-integration.ts (npm run bauen:ts). */
+const DeviceIntegration = (() => {
+    const desktop = () => globalThis.RedionDesktop;
+    let started = false, draining = false;
+    const esc = (value) => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+    const snapshot = () => {
+        const native = !!globalThis.RedionNativeDateien;
+        const platform = desktop() ? 'Windows-App' : native ? 'iPhone-App' : 'Web / PWA';
+        const disk = !Store.speichertNicht();
+        const cloud = Wolke.zustand;
+        const conflicts = Zusammen.offene().length;
+        const sync = Wolke.neuAbgleichOffen() ? 'Entscheidung nach Wiederherstellung erforderlich'
+            : conflicts ? conflicts + ' offene Konflikte – nichts still überschreiben'
+                : cloud.fehler || cloud.fehlerDateien ? 'Abgleich fehlgeschlagen: ' + (cloud.fehler || cloud.fehlerDateien)
+                    : cloud.laeuft ? 'Abgleich läuft …'
+                        : !Wolke.abgleichErlaubt() ? 'Ausgeschaltet – nur lokal'
+                            : !Wolke.angemeldet() ? 'Nicht angemeldet'
+                                : !Wolke.hatSchluessel() ? 'Verschlüsselung entsperren'
+                                    : !navigator.onLine ? 'Offline – Abgleich wartet'
+                                        : cloud.letzter ? 'Letzter Abgleich: ' + new Date(cloud.letzter).toLocaleString('de-CH')
+                                            : 'Eingerichtet – noch kein erfolgreicher Abgleich in dieser Sitzung';
+        return { platform, disk, sync, conflicts, backup: Sicherung.stand(), version: Stand.inhalt };
+    };
+    const overview = () => {
+        const state = snapshot();
+        return '<div class="dev-overview">' +
+            '<p class="dev-intro">Ein Redion auf deinen Geräten. Dokumente bleiben lokal; ein Geräteabgleich ist freiwillig.</p>' +
+            '<dl><dt>Dieses Gerät</dt><dd>' + esc(state.platform) + '</dd>' +
+            '<dt>Lokaler Speicher</dt><dd>' + (state.disk ? 'Dauerhafte Ablage verfügbar' : 'WARNUNG: nur Arbeitsspeicher – jetzt extern sichern') + '</dd>' +
+            '<dt>Letzte vollständige Sicherung</dt><dd>' + (state.backup.wann
+            ? esc(new Date(state.backup.wann).toLocaleString('de-CH')) + ' (' + esc(state.backup.art) + ')'
+            : 'Keine vollständige Sicherung bekannt') + '</dd>' +
+            '<dt>Geräteabgleich</dt><dd>' + esc(state.sync) + '</dd>' +
+            '<dt>Web-Code-Stand</dt><dd><code>' + esc(state.version) + '</code></dd></dl>' +
+            '<p>Gleicher Code bedeutet nicht automatisch gleiche Notizen. iPhone-App, Windows-App und Browser haben zunächst getrennte lokale Speicher.</p>' +
+            '<div class="dev-actions"><button data-device="backup">Vollständig sichern</button>' +
+            '<button data-device="restore">Sicherung übernehmen</button>' +
+            '<button data-device="open">PDF oder Datei öffnen</button>' +
+            '<button data-device="sync">Geräteabgleich einrichten</button></div>' +
+            '<details><summary>Sicher zum anderen Gerät wechseln</summary><ol>' +
+            '<li>Auf dem bisherigen Gerät eine vollständige Sicherung speichern. Mit Anhängen ist das eine .redion-Datei.</li>' +
+            '<li>Die Datei außerhalb des App-Containers ablegen und auf das andere Gerät übertragen.</li>' +
+            '<li>Dort „Sicherung übernehmen“ wählen. Vorschau lesen und bewusst Dazulegen oder Ersetzen wählen.</li>' +
+            '<li>Notizen, PDFs und Anhänge prüfen. Die Original-Sicherung behalten.</li></ol>' +
+            '<p>Dazulegen ist kein konfliktfreier Zwei-Wege-Abgleich: Bei gleichen Kennungen kann die Sicherungsfassung gewinnen. Nicht wiederholt zwischen Geräten hin- und herimportieren.</p></details>' +
+            '<p class="dev-warning">Vor App-Updates extern sichern. Die bestehende App nicht löschen und App-ID bzw. Windows-Profil nicht wechseln.</p></div>';
+    };
+    const act = async (action) => {
+        if (action === 'backup')
+            await App.sicherungSpeichern();
+        if (action === 'restore')
+            App.sicherungLaden();
+        if (action === 'open') {
+            const bridge = desktop();
+            if (bridge) {
+                await bridge.pick();
+                await drain();
+            }
+            else
+                Werkzeuge.dateienLesen();
+        }
+        if (action === 'sync')
+            WolkeFenster.dialog();
+    };
+    const save = async (blob, name) => {
+        const bridge = desktop();
+        if (!bridge)
+            throw new Error('Windows-Dateibrücke fehlt.');
+        const id = await bridge.saveBegin(name, blob.size);
+        if (!id)
+            throw new DOMException('Speichern abgebrochen. Es wurde nichts geschrieben.', 'AbortError');
+        try {
+            for (let offset = 0; offset < blob.size; offset += 1024 * 1024)
+                await bridge.saveWrite(id, new Uint8Array(await blob.slice(offset, offset + 1024 * 1024).arrayBuffer()));
+            if (!await bridge.saveCommit(id))
+                throw new Error('Speichern nicht bestätigt.');
+        }
+        catch (error) {
+            await bridge.saveCancel(id).catch(() => { });
+            throw error;
+        }
+    };
+    const importFile = async (file) => {
+        if (Store.speichertNicht())
+            throw new Error('Die lokale Ablage ist nicht verfügbar. Erst sichern und den Speicherfehler beheben.');
+        const choice = await Dialog.wahl({ titel: 'In Redion übernehmen?',
+            text: file.name + ' – ' + Sicherung.groesse(file.size) +
+                '\nDas Original bleibt unverändert. Eine Sicherung wird erst nach einer weiteren Vorschau eingespielt.',
+            knoepfe: [{ id: 'open', text: 'Übernehmen' }, { id: '', text: 'Abbrechen' }] });
+        if (choice !== 'open')
+            return;
+        if (/\.(redion|json)$/i.test(file.name)) {
+            if (await App.importBackupFile(file) === 'failed')
+                throw new Error('Die Sicherung wurde nicht vollständig übernommen.');
+        }
+        else if (await Werkzeuge.importFiles([file]) !== 1)
+            throw new Error('Die Datei konnte nicht übernommen werden.');
+        await Store.flush();
+    };
+    const drain = async () => {
+        const bridge = desktop();
+        if (!started || !bridge || draining)
+            return;
+        draining = true;
+        try {
+            for (const item of await bridge.pending()) {
+                try {
+                    if (!Number.isSafeInteger(item.size) || item.size < 0 || item.size >= 4 * 1024 ** 3)
+                        throw new Error('Ungültige Dateigröße.');
+                    const chunks = [];
+                    let offset = 0;
+                    while (offset < item.size) {
+                        const bytes = new Uint8Array(await bridge.read(item.id, offset));
+                        if (!bytes.length || bytes.length > item.size - offset)
+                            throw new Error('Datei unvollständig gelesen.');
+                        chunks.push(new Blob([bytes]));
+                        offset += bytes.length;
+                    }
+                    await importFile(new File(chunks, item.name));
+                }
+                catch (error) {
+                    UI.banner('Datei nicht übernommen: ' + (error instanceof Error ? error.message : String(error)) +
+                        ' Das Original bleibt erhalten und kann erneut geöffnet werden.', 'fehler');
+                }
+                finally {
+                    await bridge.release(item.id);
+                }
+            }
+        }
+        finally {
+            draining = false;
+        }
+    };
+    const start = () => {
+        if (started)
+            return;
+        started = true;
+        const bridge = desktop();
+        if (bridge) {
+            globalThis.RedionNativeSicherung = Object.freeze({ speichern: save,
+                ort: 'Sicherung am gewählten Windows-Speicherort gespeichert.' });
+            globalThis.RedionNativeDateien = Object.freeze({ speichern: save,
+                ort: 'Datei am gewählten Windows-Speicherort gespeichert.' });
+            bridge.onFiles(() => { void drain().catch(report); });
+            window.addEventListener('focus', () => { void drain().catch(report); });
+            void drain().catch(report);
+        }
+        document.addEventListener('click', event => {
+            const target = event.target instanceof Element ? event.target.closest('[data-device]') : null;
+            if (!target)
+                return;
+            void act(target.dataset.device || '').catch(report).finally(refresh);
+        });
+        Wolke.beiAenderung(refresh);
+        Register.befehle.melde({ gruppe: 'Geräte', titel: 'iPhone, Windows und Sicherungen',
+            tun: () => Einstellungen.oeffne('geraete') });
+    };
+    const refresh = () => {
+        const current = document.querySelector('.dev-overview dl');
+        if (!current)
+            return;
+        const template = document.createElement('template');
+        template.innerHTML = overview();
+        const next = template.content.querySelector('dl');
+        if (next && next.innerHTML !== current.innerHTML)
+            current.replaceWith(next);
+    };
+    const report = (error) => UI.banner(error instanceof Error ? error.message : String(error), 'fehler');
+    return { start, snapshot, overview, importFile, save };
 })();
 
 </script>

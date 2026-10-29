@@ -42,6 +42,24 @@ mehr gibt.
 
 ## Was jetzt offen ist
 
+### iPhone-/Windows-Integration (29. Oktober 2026, E754)
+
+- **Live-Sync einrichten:** Redur bestätigt, keinen Server zu haben. Ziel:
+  eigener D1-/R2-Dienst mit sicherem nativem Access-/CORS-Anmeldeweg. Vorher
+  Konto, Kosten und Host bewusst festlegen. Keine alten IDs aktivieren,
+  keine Service-Secrets in Clients und kein TOR=offen. Fertig erst nach
+  echten Geräte-/Konflikt-/Anhangtests. Dateien und Abnahme:
+  `doku/SYNC-ERSTEINRICHTUNG.md`. Priorität: hoch vor Geräteabgleich.
+- **Native Freigabe:** neuer Codemagic-Mac-Bau und In-place-Update auf dem
+  vorhandenen iPhone; Windows-Setup/Portable samt Datenhaltung auf echtem
+  Installationsweg prüfen. Signiertes Auto-Update braucht Zertifikat und
+  vertrauenswürdigen Releasekanal. Quellcode, Tests und Grenzen stehen in
+  `doku/IPHONE-WINDOWS-INTEGRATION.md`. Priorität: hoch vor Veröffentlichung.
+- **Glass-Wheel-Weiterentwicklung bleibt pausiert:** Der bisherige Zwischenstand
+  aus PR #168 liegt inzwischen auf main. Redur verlangt am 29. Oktober ausdrücklich
+  die gemeinsame main-Integration mit den Geräteänderungen (E755). Das ist keine
+  vollständige Produktfreigabe; Klassisch bleibt Standard, offene Prüfungen bleiben.
+
 ### Workspace 2.0 — nach der Bibliothek (Issue #134, E753)
 
 - **Ziel:** Editor/PDF-Studio und mobile Navigation sichtbar modernisieren,

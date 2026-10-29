@@ -52,6 +52,7 @@ jobs:
             ios/install-launch-screen.test.mjs \
             ios/capacitor8-spm-native-integration.test.mjs \
             ios/vergleiche-webstand.test.mjs \
+            ios/native-documents.test.mts \
             pruefungen/wischen-multitouch.test.mjs
 
 # Deliberately no IPA packaging, Apple signing, deployment, or merge.

@@ -6,7 +6,7 @@
   "main": "main.cjs",
   "author": "Redion",
   "scripts": {
-    "prepare:app": "node prepare.mjs",
+    "prepare:app": "node ../node_modules/typescript/bin/tsc -p tsconfig.json && node prepare.mjs",
     "start": "npm run prepare:app && electron .",
     "test": "node --test windows-desktop.test.cjs auto-update.test.cjs",
     "dist": "npm run prepare:app && electron-builder --win nsis portable --x64",
@@ -25,6 +25,7 @@
       "paths.cjs",
       "auto-update.cjs",
       "update-policy.cjs",
+      "generated/*.cjs",
       "package.json"
     ],
     "extraResources": [
@@ -40,6 +41,18 @@
       "output": "../build/windows-dist"
     },
     "win": {
+      "fileAssociations": [
+        {
+          "ext": "redion",
+          "name": "Redion-Sicherung",
+          "role": "Editor"
+        },
+        {
+          "ext": "pdf",
+          "name": "PDF-Dokument",
+          "role": "Viewer"
+        }
+      ],
       "target": [
         {
           "target": "nsis",
@@ -66,6 +79,7 @@
   },
   "dependencies": {
     "electron-updater": "6.8.10",
-    "js-yaml": "4.1.0"
+    "js-yaml": "4.1.0",
+    "redion": "file:.."
   }
 }

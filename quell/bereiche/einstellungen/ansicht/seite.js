@@ -23,6 +23,7 @@ const Einstellungen = (() => {
                 ['emoji', 'smile', 'Emoji']
             ]],
         ['Verwaltung', [
+                ['geraete', 'workspace', 'iPhone und Windows'],
                 ['arbeitsplatz', 'workspace', 'Arbeitsbereich'],
                 ['analysen', 'chart', 'Analysen'],
                 ['bereiche', 'users', 'Bereiche'],
@@ -250,6 +251,7 @@ const Einstellungen = (() => {
     const feld = (schluessel, wert, platzhalter = '') => `<input data-set="${schluessel}" value="${esc(wert)}" placeholder="${esc(platzhalter)}">`;
     const kopf = (titel, unter) => `<h2>${titel}</h2>` + (unter ? `<p class="ez-unter">${unter}</p>` : '');
     const inhalt = (b) => ({
+        geraete: () => kopf('iPhone und Windows', 'Geräte, Sicherungen und freiwilliger Abgleich') + DeviceIntegration.overview(),
         konto: () => {
             const w = globalThis.Wolke;
             const angemeldet = !!(w && w.angemeldet && w.angemeldet());

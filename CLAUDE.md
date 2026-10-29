@@ -2611,6 +2611,13 @@ integrieren und pushen“). Der Integrationsbericht nennt die gefahrenen Prüfun
 vollständiger Lauf wird nicht behauptet. Die Regel für spätere Änderungen
 bleibt bestehen.*
 
+*Fünfte einmalige Ausnahme (E755, 29. Oktober 2026): Redur verlangt Geräteintegration
+und Glass Wheel auf main und bestätigt ausdrücklich „Ja, dokumentiert auf main
+übernehmen“. Bekannte Altfehler und offene echte iPhone-/Signierungsprüfungen
+dürfen dokumentiert bleiben. Gezielte Integrationsprüfungen müssen grün sein;
+kein vollständig grüner Gesamtlauf wird behauptet. Details:
+`doku/MAIN-GERAETE-GLASS-INTEGRATION.md`. Die Regel für spätere Änderungen bleibt.*
+
 ## 47. Nicht tun  **[hart]**
 
 Die Kurzliste. Jeder Punkt hat oben seinen Abschnitt:

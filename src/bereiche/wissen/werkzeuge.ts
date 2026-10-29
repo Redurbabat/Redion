@@ -1833,8 +1833,15 @@ const Werkzeuge = (() => {
                  '.docx,.pptx,.ppsx,.pptm,.ppsm,.epub,.pdf,.zip,image/*';
     inp.multiple = true;
     inp.addEventListener('change', async () => {
+      await importFiles(Array.from(inp.files ?? []));
+    });
+    inp.click();
+  };
+
+  // Dateiwähler und native Dateiübergabe benutzen denselben Importweg.
+  const importFiles = async (files: File[]): Promise<number> => {
       let n = 0;
-      for (const f of Array.from(inp.files ?? [])) {
+      for (const f of files) {
         const name = f.name.toLowerCase();
         try {
           if (/\.zip$/i.test(name) && typeof ArchivImport !== 'undefined') {
@@ -1868,8 +1875,7 @@ const Werkzeuge = (() => {
       App.zeichneBaum();
       if (typeof ArchivImport !== 'undefined') ArchivImport.ansichtAuffrischen();
       UI.toast(n + (n === 1 ? ' Datei eingelesen' : ' Dateien eingelesen'));
-    });
-    inp.click();
+      return n;
   };
 
   const ordnerLesen = async () => {
@@ -3105,7 +3111,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     formelBibliothek, formelBibliothekLesen, formelBibliothekAnwenden,
     erinnerungSetzen, erinnerungen, erinnerungenPruefen, geraeteMeldung, posteingangMelden, meldungen, meldungGelesen, meldungenAlleGelesen, meldungenLeeren,
     weckrufLegen, naechsteErinnerung,
-    ordnerSchreiben, ordnerLesen, dateienLesen, einzelDatei,
+    ordnerSchreiben, ordnerLesen, dateienLesen, importFiles, einzelDatei,
     htmlExport, drucken, seiteAlsHtml, verschiebenNach, verschiebe,
     alleToggles, tastenkuerzel, systemSeite, datumLang, zeitKurz, papierkorbAufraeumen,
     wikiUmwandeln, wikiIndex, teilenMenue,
