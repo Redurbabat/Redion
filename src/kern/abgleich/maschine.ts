@@ -35,11 +35,29 @@ const Wolke = (() => {
   /* ========================================================================
    * 1 · WO STEHT DER SERVER
    * ======================================================================*/
+  /* Native Windows-App: redion-local:// ist ein lokaler Dokumentursprung,
+     aber KEIN Sync-Server. Erlaubt ist nur eine echte HTTPS-Serveradresse.
+     HTTP bleibt ausschliesslich für lokale Browser-Entwicklung (localhost).
+     Keine Zugangsdaten/Fragmente/Pfade in einer Adresse, an die später ein
+     Bearer-Token geschickt wird. */
+  const serverAdressePruefen = (wert: any): string => {
+    const roh = String(wert ?? '').trim();
+    if (!roh) return '';
+    try {
+      const u = new URL(roh);
+      const lokal = u.protocol === 'http:' && location.protocol === 'http:' &&
+        /^(localhost|127\.0\.0\.1|\[::1\])$/i.test(u.hostname);
+      if (u.protocol !== 'https:' && !lokal) return '';
+      if (u.username || u.password || u.search || u.hash || u.pathname !== '/') return '';
+      return u.origin;
+    } catch { return ''; }
+  };
+
   const adresse = () => {
     const eigen = Store.getMeta('wolkeAdresse', '');
-    if (eigen) return String(eigen).replace(/\/+$/, '');
-    /* Von einer echten Adresse aus ist der Server dieselbe Adresse. Von
-       einer Datei aus (file://) gibt es keinen — dann bleibt alles lokal. */
+    if (eigen) return serverAdressePruefen(eigen);
+    /* Im Browser ist derselbe Ursprung auch der Server. Eine installierte
+       Windows-App benötigt eine ausdrücklich gesetzte HTTPS-Adresse. */
     if (location.protocol === 'http:' || location.protocol === 'https:')
       return location.origin;
     return '';
@@ -78,8 +96,7 @@ const Wolke = (() => {
   const ruf = async (weg: any, opt: { m?: string; kopf?: Record<string, string>; k?: any } = {}) => {
     const wurzel = adresse();
     if (!wurzel) throw new Error(
-      'Von einer Datei aus gibt es keinen Server. Öffne Redion über eine Adresse — ' +
-      'oder trage in den Einstellungen eine eigene ein.');
+      'Kein sicherer Redion-Server eingerichtet. In „Wolke“ eine gültige HTTPS-Serveradresse eintragen.');
 
     const kopf: Record<string, string> = { 'Content-Type': 'application/json',
                    'Redion-Geraet': geraeteName(), ...(opt.kopf || {}) };
@@ -1167,7 +1184,7 @@ const Wolke = (() => {
     });
   };
 
-  return { adresse, token, bereich, angemeldet, geraeteName, zustand, beiAenderung,
+  return { adresse, serverAdressePruefen, token, bereich, angemeldet, geraeteName, zustand, beiAenderung,
            anmeldenMit, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
            abgleichErlaubt, abgleichSetzen, kontoLoeschen,
            neuAbgleichOffen, neuAbgleichAntwort,
