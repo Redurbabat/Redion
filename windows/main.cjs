@@ -8,6 +8,7 @@ const { app, BrowserWindow, Menu, protocol, net, shell, dialog } = require('elec
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { resolveBundledAsset } = require('./paths.cjs');
+const { startRedionAutoUpdates } = require('./auto-update.cjs');
 
 const SCHEME = 'redion-local';
 const START_URL = 'redion-local://app/index.html';
@@ -30,6 +31,7 @@ if (!lock) {
   app.quit();
 } else {
   let mainWindow = null;
+  let updateController = null;
 
   const isInternal = (raw) => {
     try {
@@ -124,6 +126,8 @@ if (!lock) {
     mainWindow.webContents.session.setPermissionRequestHandler((_wc, _permission, callback) => {
       callback(false);
     });
+    // Do not run NSIS while Windows is logging off or shutting down.
+    mainWindow.on('session-end', () => updateController?.onSystemShutdown?.());
     mainWindow.once('ready-to-show', () => mainWindow?.show());
     mainWindow.on('closed', () => { mainWindow = null; });
     mainWindow.loadURL(START_URL).catch(error => {
@@ -134,6 +138,13 @@ if (!lock) {
   app.whenReady().then(() => {
     appMenu();
     launchWindow();
+    // Silent background checks ONLY in a signed NSIS release with a verified
+    // HTTPS feed. An ordinary local/unsigned build remains fully offline.
+    updateController = startRedionAutoUpdates({
+      app,
+      updater: require('electron-updater').autoUpdater,
+      yaml: require('js-yaml')
+    });
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) launchWindow();
     });

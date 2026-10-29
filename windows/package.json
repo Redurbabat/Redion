@@ -8,8 +8,9 @@
   "scripts": {
     "prepare:app": "node prepare.mjs",
     "start": "npm run prepare:app && electron .",
-    "test": "node --test *.test.cjs",
-    "dist": "npm run prepare:app && electron-builder --win nsis portable --x64"
+    "test": "node --test windows-desktop.test.cjs auto-update.test.cjs",
+    "dist": "npm run prepare:app && electron-builder --win nsis portable --x64",
+    "release:signed": "npm run prepare:app && node release-signed.mjs"
   },
   "devDependencies": {
     "electron": "45.1.0",
@@ -22,6 +23,8 @@
     "files": [
       "main.cjs",
       "paths.cjs",
+      "auto-update.cjs",
+      "update-policy.cjs",
       "package.json"
     ],
     "extraResources": [
@@ -60,5 +63,9 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
     }
+  },
+  "dependencies": {
+    "electron-updater": "6.8.10",
+    "js-yaml": "4.1.0"
   }
 }
