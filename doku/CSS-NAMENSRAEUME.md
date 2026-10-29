@@ -219,6 +219,7 @@ fx        5  bausteine.css
 gal       6  einstellungen.css
 gfx       17  werkzeuge.css
 gk       40  werkzeuge.css
+gw       79  glasswheel.css
 hat       6  notizhefte.css
 hk       12  bausteine.css
 hl        4  bausteine.css

@@ -4843,6 +4843,7 @@ const App = (() => {
        leer geblieben, ohne dass jemand einen Fehler gesehen hätte. */
     Menueband.start();
     if (typeof StudioSchale !== 'undefined') StudioSchale.start();
+    if (typeof GlassWheel !== 'undefined') GlassWheel.start();
     Blocks.auswahlEinklinken();
     /* DER WILLKOMMENSBILDSCHIRM BLEIBT DER WILLKOMMENSBILDSCHIRM (E137).
        Hier stand `ProduktOnboarding.vielleichtStarten()` zuerst, und der

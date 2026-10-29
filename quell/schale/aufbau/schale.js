@@ -3431,6 +3431,8 @@ const App = (() => {
         Menueband.start();
         if (typeof StudioSchale !== 'undefined')
             StudioSchale.start();
+        if (typeof GlassWheel !== 'undefined')
+            GlassWheel.start();
         Blocks.auswahlEinklinken();
         Rundgang.vielleichtStarten();
         const an = (id, fn) => document.getElementById(id)?.addEventListener('click', fn);
