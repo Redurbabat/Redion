@@ -25370,8 +25370,29 @@ body:has(.finder.such) #studio-search > [data-sym] > svg,
  * Glas nur auf kleinen, schwebenden Kontrollen: keine Vollbild-Weichzeichnung,
  * kein animiertes backdrop-filter. Die vorhandenen Glas-Marken und die
  * Systemeinstellungen für Kontrast/Transparenz bleiben die einzige Wahrheit.
+ *
+ * NUR IM GLASS WHEEL (E757, 30. Oktober 2026). Redur hat im Fragebogen
+ * „Klassische Bewegungen vom 13. Okt." gewählt: „Die 'Liquid Glass'-
+ * Änderungen von Codex (20./21. Okt.) im klassischen Design zurücknehmen:
+ * Knöpfe heben sich schräg statt gerade, kein Glas und kein Federn am
+ * Suchfeld, Einstellungsfenster ohne neues Einfliegen." Diese beiden Blöcke
+ * galten für `body[data-schale="premium"]`, und das ist JEDER Start — auch
+ * der klassische. Jede ihrer Regeln hängt deshalb jetzt zusätzlich an
+ * `:where([data-ui-shell="glass-wheel"])` (glass-wheel.ts setzt das Attribut
+ * nur, solange das Glass Wheel gewählt ist).
+ *
+ * Warum `:where()`: es wiegt null. Das Gewicht jeder Regel bleibt genau, wie
+ * es war, also entscheidet die Kaskade im Glass Wheel Wert für Wert wie vorher
+ * (gemessen: 65 766 berechnete Werte, vorher = nachher, messungen.md). §39
+ * verbietet `:where()` um den KNOPF-Teil eines Zustands; hier steht es um die
+ * Schale, und dort soll es kein Gewicht tragen. Im klassischen Design greift
+ * keine dieser Regeln mehr, und es gilt, was am 13. Oktober galt (`test623`).
+ *
+ * Ausgenommen ist eine Regel, Wort für Wort unverändert: der sichtbare
+ * Tastenfokus der Ergebniszeilen im Suchfenster und in Menüs (§38). Er ist
+ * eine Verbesserung, keine Bewegung, und gilt weiter in beiden Schalen.
  * ========================================================================== */
-body[data-schale="premium"] {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) {
   --liquid-ease: var(--feder-knapp, cubic-bezier(.22, 1, .36, 1));
   --liquid-duration: var(--motion-normal, 340ms);
   --liquid-highlight: color-mix(in srgb, var(--text) 13%, transparent);
@@ -25379,7 +25400,7 @@ body[data-schale="premium"] {
 }
 
 /* Desktop-Suche: eine kleine, lesbare Glaslinse, keine glasierte Kopfzeile. */
-body[data-schale="premium"] #studio-bar .studio-search {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #studio-bar .studio-search {
   background: var(--bg-card);  /* Fallback ohne backdrop-filter */
   border: 1px solid var(--line);
   box-shadow: inset 0 1px 0 var(--liquid-highlight), 0 2px 10px #0000000b;
@@ -25389,7 +25410,7 @@ body[data-schale="premium"] #studio-bar .studio-search {
               transform var(--liquid-duration) var(--liquid-ease);
 }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  body[data-schale="premium"] #studio-bar .studio-search {
+  body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #studio-bar .studio-search {
     background: var(--bg-schwebend-dicht);
     -webkit-backdrop-filter: var(--glas-blur);
     backdrop-filter: var(--glas-blur);
@@ -25399,37 +25420,37 @@ body[data-schale="premium"] #studio-bar .studio-search {
   }
   /* Bereits schwebende Glasflächen bekommen stärkere Kanten und Tiefen.
      Die Unschärfe selbst bleibt statisch und auf 20 px begrenzt. */
-  body[data-schale="premium"] :is(.menu, .finder, .auswahlleiste) {
+  body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) :is(.menu, .finder, .auswahlleiste) {
     box-shadow: var(--glas-kante), 0 18px 44px #00000024,
                 0 2px 7px #00000016;
   }
 }
 
 /* Die Fenster behalten ihre Glasdeckkraft während der Bewegung. */
-body[data-schale="premium"] :is(.menu, .finder):not(.blatt) {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) :is(.menu, .finder):not(.blatt) {
   animation-duration: var(--liquid-duration);
   animation-timing-function: var(--liquid-ease);
 }
-body[data-schale="premium"] .r-sheet {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .r-sheet {
   animation-timing-function: var(--feder-sanft, cubic-bezier(.22, 1, .36, 1));
 }
-body[data-schale="premium"] #kanten-lade:not([hidden]) {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #kanten-lade:not([hidden]) {
   animation-timing-function: var(--liquid-ease);
 }
 
 /* Akzentuierte Touch-Dock-Linse: verstärkte Lichtkante, keine zweite Linse.
    Keine Transformation am Dock selbst: SelectionFlow misst seine Geometrie. */
 @media (max-width: 760px) {
-  body[data-schale="premium"] #handy-oben {
+  body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #handy-oben {
     box-shadow: var(--glas-kante), 0 14px 38px #0000002b,
                 0 3px 9px #00000019;
   }
-  body[data-schale="premium"] #handy-oben > button .ho-z {
+  body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #handy-oben > button .ho-z {
     transition: transform var(--liquid-duration) var(--liquid-ease),
                 color var(--motion-fast) ease;
     transform-origin: 50% 55%;
   }
-  body[data-schale="premium"] #handy-oben > button b {
+  body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #handy-oben > button b {
     transition: color var(--motion-fast) ease,
                 transform var(--liquid-duration) var(--liquid-ease);
   }
@@ -25437,7 +25458,7 @@ body[data-schale="premium"] #kanten-lade:not([hidden]) {
 
 @media (prefers-reduced-motion: no-preference) {
   /* Knöpfe und Reiter reagieren federnd statt abrupt, ohne Layout-Reflow. */
-  body[data-schale="premium"] #studio-bar :is(.studio-shortcuts button, .studio-icon) {
+  body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #studio-bar :is(.studio-shortcuts button, .studio-icon) {
     transition: color var(--motion-fast) ease,
                 background var(--motion-fast) ease,
                 border-color var(--motion-fast) ease,
@@ -25445,55 +25466,55 @@ body[data-schale="premium"] #kanten-lade:not([hidden]) {
                 transform var(--liquid-duration) var(--liquid-ease);
   }
 
-  body[data-schale="premium"] :is(.ru-kachel, .agent-karte) {
+  body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) :is(.ru-kachel, .agent-karte) {
     transition: transform var(--liquid-duration) var(--liquid-ease),
                 box-shadow var(--liquid-duration) var(--liquid-ease),
                 border-color var(--motion-fast) ease,
                 background var(--motion-fast) ease;
   }
 
-  body[data-schale="premium"] #reiterleiste .reiter {
+  body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #reiterleiste .reiter {
     transition: background var(--motion-fast) ease,
                 box-shadow var(--liquid-duration) var(--liquid-ease),
                 transform var(--liquid-duration) var(--liquid-ease);
   }
 
   @media (hover: hover) and (pointer: fine) {
-    body[data-schale="premium"] #studio-bar .studio-search:is(:hover, :focus-visible) {
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #studio-bar .studio-search:is(:hover, :focus-visible) {
       transform: translateY(-2px) scale(1.005);
       border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
       box-shadow: var(--glas-kante), 0 12px 26px #0000001d,
                   0 0 0 1px var(--liquid-accent-glow);
     }
-    body[data-schale="premium"] #studio-bar .studio-shortcuts button:hover {
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #studio-bar .studio-shortcuts button:hover {
       transform: translateY(-2px);
       box-shadow: inset 0 1px 0 var(--liquid-highlight),
                   0 5px 12px #00000013;
     }
-    body[data-schale="premium"] #studio-bar .studio-icon:hover {
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #studio-bar .studio-icon:hover {
       transform: translateY(-2px);
     }
-    body[data-schale="premium"] .k-knopf:hover {
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .k-knopf:hover {
       transform: translateX(3px);
     }
-    body[data-schale="premium"] :is(.ru-kachel, .agent-karte):is(:hover, :focus-visible) {
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) :is(.ru-kachel, .agent-karte):is(:hover, :focus-visible) {
       transform: translateY(-3px) scale(1.012);
       box-shadow: 0 12px 24px #00000016,
                   inset 0 1px 0 var(--liquid-highlight);
     }
-    body[data-schale="premium"] #reiterleiste .reiter:hover {
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #reiterleiste .reiter:hover {
       transform: translateY(-2px);
     }
   }
 
   @media (max-width: 760px) {
-    body[data-schale="premium"] #handy-oben > button.an .ho-z {
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #handy-oben > button.an .ho-z {
       transform: translateY(-2px) scale(1.10);
     }
-    body[data-schale="premium"] #handy-oben > button.an b {
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #handy-oben > button.an b {
       transform: translateY(-1px);
     }
-    body[data-schale="premium"] #handy-oben > button:active .ho-z {
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #handy-oben > button:active .ho-z {
       transform: translateY(1px) scale(.92);
     }
     /* Der Dockkörper fährt nicht: nur die Elemente reagieren auf den Finger. */
@@ -25501,7 +25522,7 @@ body[data-schale="premium"] #kanten-lade:not([hidden]) {
 }
 
 /* Redions eigener Ruhe-Schalter zusätzlich zur Betriebssystem-Vorgabe. */
-body[data-schale="premium"][data-bewegung="ruhig"]
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"])[data-bewegung="ruhig"]
 :is(#handy-oben > button .ho-z, #handy-oben > button b,
     #studio-bar .studio-search, #studio-bar .studio-shortcuts button,
     #studio-bar .studio-icon, .k-knopf, .ru-kachel, .agent-karte,
@@ -25509,13 +25530,13 @@ body[data-schale="premium"][data-bewegung="ruhig"]
   transform: none !important;
   transition: none !important;
 }
-body[data-schale="premium"][data-bewegung="ruhig"] :is(.menu, .finder, .r-sheet) {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"])[data-bewegung="ruhig"] :is(.menu, .finder, .r-sheet) {
   animation: none !important;
 }
 
 /* Erzwungene Farben und Redions hoher Kontrast: keine durchscheinende Fläche. */
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
-  body[data-schale="premium"] #studio-bar .studio-search {
+  body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #studio-bar .studio-search {
     background: var(--bg-card);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
@@ -25523,8 +25544,8 @@ body[data-schale="premium"][data-bewegung="ruhig"] :is(.menu, .finder, .r-sheet)
     box-shadow: none;
   }
 }
-:is(body[data-schale="premium"][data-kontrast="hoch"],
-    html[data-schema="kontrast"] > body[data-schale="premium"])
+:is(body[data-schale="premium"]:where([data-ui-shell="glass-wheel"])[data-kontrast="hoch"],
+    html[data-schema="kontrast"] > body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]))
 #studio-bar .studio-search {
   background: var(--bg-card);
   -webkit-backdrop-filter: none;
@@ -25543,7 +25564,7 @@ body[data-schale="premium"][data-bewegung="ruhig"] :is(.menu, .finder, .r-sheet)
  * ========================================================================== */
 
 /* Ordnerfilter bleiben durch den Text und den gewählten Rand unterscheidbar. */
-body[data-schale="premium"] .bib-pille {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .bib-pille {
   box-shadow: inset 0 1px 0 var(--liquid-highlight),
               0 2px 7px #0000000b;
   transition: background var(--motion-fast) ease,
@@ -25551,31 +25572,31 @@ body[data-schale="premium"] .bib-pille {
               box-shadow var(--liquid-duration) var(--liquid-ease),
               transform var(--liquid-duration) var(--liquid-ease);
 }
-body[data-schale="premium"] .bib-pille[data-gefiltert] {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .bib-pille[data-gefiltert] {
   box-shadow: inset 0 1px 0 var(--liquid-highlight),
               0 0 0 1px var(--liquid-accent-glow);
 }
-body[data-schale="premium"] .bib-pille .bib-pille-pfeil {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .bib-pille .bib-pille-pfeil {
   transition: transform var(--liquid-duration) var(--liquid-ease);
 }
-body[data-schale="premium"] .bib-pille[aria-expanded="true"] .bib-pille-pfeil {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .bib-pille[aria-expanded="true"] .bib-pille-pfeil {
   transform: rotate(180deg);
 }
 
 /* Die Weiterarbeiten-Karte bleibt deckend (lesen > Glas), wirkt aber wie
  * ein leicht aufliegendes Material. Nur die Miniatur hebt sich bei Hover. */
-body[data-schale="premium"] .bib-studio-weiter {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .bib-studio-weiter {
   box-shadow: inset 0 1px 0 var(--liquid-highlight),
               0 8px 22px #0000000d;
   transition: box-shadow var(--liquid-duration) var(--liquid-ease),
               border-color var(--motion-fast) ease;
 }
-body[data-schale="premium"] .bib-studio-weiter .bib-studio-miniatur {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .bib-studio-weiter .bib-studio-miniatur {
   transition: transform var(--liquid-duration) var(--liquid-ease),
               box-shadow var(--liquid-duration) var(--liquid-ease);
 }
-body[data-schale="premium"] .bib-studio-weiter button,
-body[data-schale="premium"] .bib-studio-import {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .bib-studio-weiter button,
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .bib-studio-import {
   transition: transform var(--liquid-duration) var(--liquid-ease),
               box-shadow var(--liquid-duration) var(--liquid-ease),
               background var(--motion-fast) ease;
@@ -25583,28 +25604,28 @@ body[data-schale="premium"] .bib-studio-import {
 
 /* Einstellungsfenster öffnet sich wie ein Blatt; kein Blur auf der 920px-
  * Oberfläche. Navigationszeilen verwenden weiterhin die gleichen Ziele. */
-body[data-schale="premium"] .einst-fenster {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .einst-fenster {
   box-shadow: 0 26px 70px #00000032,
               0 4px 18px #00000014;
 }
-body[data-schale="premium"] .einst-nav button {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .einst-nav button {
   position: relative;
   transition: color var(--motion-fast) ease,
               background var(--motion-fast) ease,
               transform var(--liquid-duration) var(--liquid-ease);
 }
-body[data-schale="premium"] .einst-nav button.on {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .einst-nav button.on {
   box-shadow: inset 3px 0 0 var(--accent);
 }
-body[data-schale="premium"] .einst-inhalt :is(.ez-gruppe,.ez-grp) {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .einst-inhalt :is(.ez-gruppe,.ez-grp) {
   transition: box-shadow var(--liquid-duration) var(--liquid-ease),
               border-color var(--motion-fast) ease;
 }
 
 /* Das Suchfenster hebt gezielt die Ergebniszeile, nicht die ganze
  * Glasscheibe. Dadurch bleiben Icons, Titel und Fokus gut lesbar. */
-body[data-schale="premium"] .finder .res > button,
-body[data-schale="premium"] .menu[role="menu"] button {
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .finder .res > button,
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .menu[role="menu"] button {
   transition: background var(--motion-fast) ease,
               color var(--motion-fast) ease,
               transform var(--liquid-duration) var(--liquid-ease);
@@ -25617,7 +25638,7 @@ body[data-schale="premium"] .menu[role="menu"] button:focus-visible {
 
 @media (prefers-reduced-motion: no-preference) {
   /* Erst beim Öffnen animieren, nicht beim Scrollen oder Tippen. */
-  body[data-schale="premium"] .overlay:has(> .einst-fenster) > .einst-fenster {
+  body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .overlay:has(> .einst-fenster) > .einst-fenster {
     animation: redion-settings-arrive var(--feder-sanft-dauer, 480ms)
                var(--feder-sanft, ease-out) both;
   }
@@ -25626,40 +25647,40 @@ body[data-schale="premium"] .menu[role="menu"] button:focus-visible {
     to { opacity: 1; transform: none; }
   }
   @media (hover: hover) and (pointer: fine) {
-    body[data-schale="premium"] .bib-pille:not(:disabled):hover {
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .bib-pille:not(:disabled):hover {
       transform: translateY(-2px);
       box-shadow: inset 0 1px 0 var(--liquid-highlight),
                   0 8px 18px #00000018;
     }
-    body[data-schale="premium"] .bib-studio-weiter:hover {
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .bib-studio-weiter:hover {
       box-shadow: inset 0 1px 0 var(--liquid-highlight),
                   0 14px 30px #00000014;
     }
-    body[data-schale="premium"] .bib-studio-weiter:hover .bib-studio-miniatur {
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .bib-studio-weiter:hover .bib-studio-miniatur {
       transform: perspective(var(--studio-perspective))
                  rotateY(-6deg) rotate(-2deg) translateY(-3px);
       box-shadow: 0 15px 28px #0000001c;
     }
-    body[data-schale="premium"] .bib-studio-weiter button:hover,
-    body[data-schale="premium"] .bib-studio-import:not(:disabled):hover {
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .bib-studio-weiter button:hover,
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .bib-studio-import:not(:disabled):hover {
       transform: translateY(-2px);
     }
-    body[data-schale="premium"] .einst-nav button:hover:not(.on) {
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .einst-nav button:hover:not(.on) {
       transform: translateX(3px);
     }
-    body[data-schale="premium"] .einst-inhalt :is(.ez-gruppe,.ez-grp):hover {
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .einst-inhalt :is(.ez-gruppe,.ez-grp):hover {
       box-shadow: inset 0 1px 0 var(--liquid-highlight),
                   0 7px 20px #0000000c;
     }
-    body[data-schale="premium"] .finder .res > button:hover,
-    body[data-schale="premium"] .menu[role="menu"] button:hover {
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .finder .res > button:hover,
+    body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) .menu[role="menu"] button:hover {
       transform: translateX(3px);
     }
   }
 }
 
 /* Ohne Animation bleibt die Funktion identisch und der aktuelle Fokus klar. */
-body[data-schale="premium"][data-bewegung="ruhig"]
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"])[data-bewegung="ruhig"]
 :is(.bib-pille,.bib-pille-pfeil,.bib-studio-miniatur,
     .bib-studio-weiter button,.bib-studio-import,
     .einst-nav button,.finder .res > button,
@@ -25667,7 +25688,7 @@ body[data-schale="premium"][data-bewegung="ruhig"]
   transition: none !important;
   transform: none !important;
 }
-body[data-schale="premium"][data-bewegung="ruhig"]
+body[data-schale="premium"]:where([data-ui-shell="glass-wheel"])[data-bewegung="ruhig"]
 .overlay:has(> .einst-fenster) > .einst-fenster {
   animation: none !important;
 }
@@ -25676,12 +25697,12 @@ body[data-schale="premium"][data-bewegung="ruhig"]
 
 /* Keine schwebenden Schatten in Kontrastmodi. */
 @media (prefers-contrast: more), (forced-colors: active) {
-  body[data-schale="premium"] :is(.bib-pille,.bib-studio-weiter,.einst-fenster) {
+  body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) :is(.bib-pille,.bib-studio-weiter,.einst-fenster) {
     box-shadow: none;
   }
 }
-:is(body[data-schale="premium"][data-kontrast="hoch"],
-    html[data-schema="kontrast"] > body[data-schale="premium"])
+:is(body[data-schale="premium"]:where([data-ui-shell="glass-wheel"])[data-kontrast="hoch"],
+    html[data-schema="kontrast"] > body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]))
 :is(.bib-pille,.bib-studio-weiter,.einst-fenster) {
   box-shadow: none;
 }
@@ -28510,7 +28531,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1547, inhalt: '392f380d9849e56d', gebaut: '2026-10-29T20:46:57.847Z' };
+const Stand = { fassung: 1548, inhalt: '03138468082a6d03', gebaut: '2026-10-30T15:21:01.197Z' };
 window.Stand = Stand;
 
 </script>

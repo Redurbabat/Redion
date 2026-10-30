@@ -9555,3 +9555,93 @@ Favoriten-, Such-, Menü-, Listen- und Leerzustände; lokale Galerie unter
 synthetischen Prüfbilder als 14 Tage verfügbares Artefakt bereit, nicht als
 Dateien im Git-Bestand. Kein Deployment. Voller Gesamtlauf nicht gefahren;
 Endergebnisse und Wiederholungsbefehle in `doku/WORKSPACE-2-BIBLIOTHEK.md`.
+
+## §108 · Klassisch wie am 13. Oktober, Liquid Glass im Glass Wheel (E757, 30. Oktober 2026)
+
+**Womit:** Chromium der Prüfungen (Playwright 1.56.1, Build 1194), die
+echte App über file://, frisches Profil, keine reduzierte Bewegung.
+Stände: „13. Okt." = 020f51ce1, „vorher" = de375a43f (main am
+29. Oktober), „nachher" = Zweig `claude/klassik-wie-13-oktober`. Werkzeuge
+im Kratzordner: `test623` (und eine Kopie, deren Wurzel 020f51ce1 ist),
+ein Abzug JEDER Eigenschaft von `getComputedStyle` an 21 Elementen der
+Schale (Ruhe, Zeiger über vier Kopfknöpfen, Einstellungen, Bibliothek;
+1440 × 900 und 390 × 844, hell und dunkel) und der Bewegungs-Fingerabdruck
+über acht Stände.
+
+**1 · Klassisch, hell — die Werte aus `test623`** („nachher" ist in jeder
+Zeile Wert für Wert „13. Okt."):
+
+```txt
+                                   13. Okt. = nachher                   vorher (de375a43f)
+.studio-icon, #studio-create
+  Übergang                         transform 0.14s cubic-bezier(        color/background/border-color
+                                   0.2, 0.8, 0.3, 1)                    0.14s, box-shadow und transform
+                                                                        0.2s linear(… 34 Stützstellen)
+  unter dem Zeiger                 matrix(1, 0, 0, 1, 2, -2)  schräg    matrix(1, 0, 0, 1, 0, -2)  gerade
+Suchfeld
+  backdrop-filter                  none                                 saturate(1.8) blur(20px)
+  Schatten                         none                                 Glaskante + 0 5px 16px
+  unter dem Zeiger                 none                                 matrix(1.005, 0, 0, 1.005, 0, -2)
+.k-knopf unter dem Zeiger          none                                 matrix(1, 0, 0, 1, 3, 0)
+Menü am „+": Dauer/Kurve           0s · ease                            0.2s · linear(…)
+  Wurf                             0 12px 36px .16, 0 1px 3px .1        0 18px 44px .14, 0 2px 7px .086
+Filterpille: unter dem Zeiger      none                                 matrix(1, 0, 0, 1, 0, -2)
+Einstellungen: Animation           none                                 redion-settings-arrive 0.796s linear()
+  Schatten                         rgba(15,15,15,.12) 0 8px 28px        0 26px 70px .196, 0 4px 18px .08
+  gewählte Zeile                   kein Schatten, static                inset 3px Akzent, relative
+  andere Zeile unter dem Zeiger    none                                 matrix(1, 0, 0, 1, 3, 0)
+Telefon: aktives Zeichen .ho-z     none, Übergang 0s                    matrix(1.1, 0, 0, 1.1, 0, -2), 0.2s/0.14s
+  aktives Wort                     none                                 matrix(1, 0, 0, 1, 0, -1)
+  gedrückt (:active)               none                                 matrix(0.92, 0, 0, 0.92, 0, 1)
+  Wurf der Leiste                  0 12px 36px .16, 0 1px 3px .1        0 14px 38px .17, 0 3px 9px .098
+--liquid-* (4 Marken)              leer                                 gesetzt (200ms, linear(…), …)
+```
+
+`test623` gegen de375a43f: 23 von 55; nachher 55 von 55. Die Kopie gegen
+020f51ce1: 32 von 39 — rot nur, was es am 13. Oktober nicht gab (Glass
+Wheel zweimal, Ziehgriff, Namensblase, die Blöcke in studio.css dreimal).
+Der gedrückte Reiter: ein Finger über CDP (`touchStart`, 160 ms) setzte am
+Stand 020f51ce1 kein `:active`; gemessen wird deshalb mit
+`CSS.forcePseudoState`, und `matches(':active')` ist dabei wahr.
+
+**2 · Glass Wheel, alles:** vorher gegen nachher 0 Unterschiede in 65 766
+berechneten Werten. Zwei Läufe desselben Stands „vorher": ebenfalls 0 —
+der Abzug schwankt nicht.
+
+**3 · Klassisch, alles:** vorher → nachher änderten sich 694 Werte; 678
+davon sind jetzt die vom 13. Oktober, die übrigen 16 sind die vier
+`--liquid-*` an `#ho-ziele` in vier Lagen (jetzt leer; `#ho-ziele` gab es
+am 13. Oktober nicht). Was nachher noch vom 13. Oktober abweicht: 2 996 von
+59 394 Werten, und keiner aus der Liquid-Glass-Familie —
+
+```txt
+2 970   #ho-ziele                       die Zielleiste (E749 und Codex' Namensblase), gab es nicht
+   16   #page: Höhe, Ursprünge          längerer/kürzerer Inhalt der Startseite
+   10   #handy-oben und seine Zeichen:  die Geste der Zielleiste (E749)
+        touch-action none, user-select none
+```
+
+Zum Vergleich vorher gegen den 13. Oktober: 3 674.
+
+**4 · Bewegungs-Fingerabdruck:** 13. Okt. gegen vorher 387 Unterschiede in
+276 Zeilen; 13. Okt. gegen nachher 189 in 160 Zeilen. Übrig sind die
+Zielleiste (Hochziehen, Schnippen, Lupe, Griff, `#scroll` 796 ms beim
+Schnippen), Workspace 2.0 (Ankunft des Regals 200 ms, Übergänge der Karten
+140 ms), die vier Marken als „fehlt" gegen „leer" und Bildzahlen ±1 (eine
+Messung nachher gegen zwei am 13. Oktober). Das schräge Heben ist wieder
+da: unter dem Zeiger wandert `.studio-icon` 2 px nach rechts, in zwei
+Zwischenbildern (vorher 0 px, kein Zwischenbild).
+
+**5 · Gegenproben an `test623`** (je eine Stelle in studio.css, danach die
+Datei zurückkopiert, Prüfsumme gleich):
+
+```txt
+G1  Heben der Kopfknöpfe ohne Glass Wheel          51/55  schräg ×2, Rückweg, Quelle
+G2  Glass Wheel MIT Gewicht statt :where()         53/55  Quelle ×2
+G3  Fokus der Ergebniszeilen ans Glass Wheel       53/55  Fokus, Quelle
+G4  Einfliegen an einer falschen Schale            52/55  Glass Wheel Rechner + Telefon, Quelle
+```
+
+**6 · Codex' `ui-motion-check.mts`:** mit `<body data-schale="premium">`
+(klassisch) nach der Änderung 5 von 9 — rot: Glas am Suchfeld, Pfeil der
+Pille, Reiter 1,1, Einfliegen. Mit `data-ui-shell="glass-wheel"` 9 von 9.
