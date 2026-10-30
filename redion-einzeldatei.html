@@ -28527,7 +28527,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1550, inhalt: '66e62cb9b203e6db', gebaut: '2026-10-30T20:29:41.015Z' };
+const Stand = { fassung: 1551, inhalt: '93f36dbeb67b9f3b', gebaut: '2026-10-30T20:30:36.118Z' };
 window.Stand = Stand;
 
 </script>
@@ -46625,12 +46625,33 @@ const Hinweis = (() => {
         const k = reihe.indexOf(g);
         (reihe[k + 1] ?? reihe[k - 1])?.focus();
     };
+    let fensterWache = null;
+    const fensterWachen = (an) => {
+        if (!an) {
+            fensterWache?.disconnect();
+            return;
+        }
+        fensterWache ??= new MutationObserver(aend => {
+            if (!faecherOffen())
+                return;
+            for (const a of aend) {
+                for (const n of Array.from(a.addedNodes)) {
+                    if (n instanceof HTMLElement && (n.matches('.overlay') || n.querySelector('.overlay'))) {
+                        faecherSchliessen(true);
+                        return;
+                    }
+                }
+            }
+        });
+        fensterWache.observe(document.body, { childList: true, subtree: true });
+    };
     const faecherSchliessen = (sofort = false) => {
         clearTimeout(faecherUhr);
         clearTimeout(faecherZu);
         const f = faecher;
         if (!f || f.hidden)
             return;
+        fensterWachen(false);
         const g = faecherGlocke;
         g?.setAttribute('aria-expanded', 'false');
         if (g && f.contains(document.activeElement))
@@ -46856,6 +46877,7 @@ const Hinweis = (() => {
         }
         glocke.setAttribute('aria-controls', f.id);
         glocke.setAttribute('aria-expanded', 'true');
+        fensterWachen(true);
         if (fokus)
             f.querySelector('button')?.focus();
     };

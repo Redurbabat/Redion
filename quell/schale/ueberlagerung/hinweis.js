@@ -289,12 +289,33 @@ const Hinweis = (() => {
         const k = reihe.indexOf(g);
         (reihe[k + 1] ?? reihe[k - 1])?.focus();
     };
+    let fensterWache = null;
+    const fensterWachen = (an) => {
+        if (!an) {
+            fensterWache?.disconnect();
+            return;
+        }
+        fensterWache ??= new MutationObserver(aend => {
+            if (!faecherOffen())
+                return;
+            for (const a of aend) {
+                for (const n of Array.from(a.addedNodes)) {
+                    if (n instanceof HTMLElement && (n.matches('.overlay') || n.querySelector('.overlay'))) {
+                        faecherSchliessen(true);
+                        return;
+                    }
+                }
+            }
+        });
+        fensterWache.observe(document.body, { childList: true, subtree: true });
+    };
     const faecherSchliessen = (sofort = false) => {
         clearTimeout(faecherUhr);
         clearTimeout(faecherZu);
         const f = faecher;
         if (!f || f.hidden)
             return;
+        fensterWachen(false);
         const g = faecherGlocke;
         g?.setAttribute('aria-expanded', 'false');
         if (g && f.contains(document.activeElement))
@@ -520,6 +541,7 @@ const Hinweis = (() => {
         }
         glocke.setAttribute('aria-controls', f.id);
         glocke.setAttribute('aria-expanded', 'true');
+        fensterWachen(true);
         if (fokus)
             f.querySelector('button')?.focus();
     };

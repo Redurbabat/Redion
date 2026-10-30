@@ -375,10 +375,38 @@ const Hinweis = (() => {
     (reihe[k + 1] ?? reihe[k - 1])?.focus();
   };
 
+  /* EIN FENSTER GEHT AUF, DER FÄCHER GEHT ZU (E758, test588 §11). Mit der
+     Maus aufgefächert, schloss ihn bis hier nur das Verlassen der Glocke:
+     das Fenster legt sich über sie, und der Browser meldet `pointerleave`
+     erst, wenn er den ruhenden Zeiger neu einordnet — manchmal sofort,
+     manchmal nicht in den 500 ms des Laufs. Dann lag der Fächer
+     (`z-index:880`) über der Suche (`.overlay`, 700): gemessen an de375a43f
+     und an 928e1a6e4, an den Ständen dazwischen nicht — ein Wettlauf, kein
+     Stand. Der Fächer ist ein Menü der Glocke, kein Fenster über den
+     Fenstern: ein neues `.overlay` schliesst ihn sofort. Gehorcht wird nur,
+     solange er offen ist. */
+  let fensterWache: MutationObserver | null = null;
+  const fensterWachen = (an: boolean): void => {
+    if (!an) { fensterWache?.disconnect(); return; }
+    fensterWache ??= new MutationObserver(aend => {
+      if (!faecherOffen()) return;
+      for (const a of aend) {
+        for (const n of Array.from(a.addedNodes)) {
+          if (n instanceof HTMLElement && (n.matches('.overlay') || n.querySelector('.overlay'))) {
+            faecherSchliessen(true);
+            return;
+          }
+        }
+      }
+    });
+    fensterWache.observe(document.body, { childList: true, subtree: true });
+  };
+
   const faecherSchliessen = (sofort = false): void => {
     clearTimeout(faecherUhr); clearTimeout(faecherZu);
     const f = faecher;
     if (!f || f.hidden) return;
+    fensterWachen(false);
     /* Wer darin stand, steht wieder im Kopf; die Glocke sagt „zu". */
     const g = faecherGlocke;
     g?.setAttribute('aria-expanded', 'false');
@@ -585,6 +613,7 @@ const Hinweis = (() => {
     }
     glocke.setAttribute('aria-controls', f.id);
     glocke.setAttribute('aria-expanded', 'true');
+    fensterWachen(true);
     if (fokus) f.querySelector<HTMLElement>('button')?.focus();
   };
 
