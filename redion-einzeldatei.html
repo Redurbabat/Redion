@@ -847,6 +847,7 @@ html[data-theme="light"]{
   body #handy-oben #ho-pille::after{ background:none }
   body #ho-ziele > .ru-marke.faehrt{ -webkit-backdrop-filter:none; backdrop-filter:none }
   body #ho-ziele > .ru-marke{ outline:2px solid var(--accent-text,var(--accent)); outline-offset:-2px }
+  body #ho-ziele > .ho-ziel-vorschau{ background:var(--bg-card); border-color:var(--text); box-shadow:none }
   body .ru-fach-art{ background:#000; -webkit-backdrop-filter:none; backdrop-filter:none }
   html body #ai .ai-head .rmo-orb-karte{ background:var(--bg-card); -webkit-backdrop-filter:none; backdrop-filter:none }
   body .ru-held-linse{ display:none }
@@ -871,6 +872,8 @@ body[data-kontrast="hoch"], html[data-schema="kontrast"] > body{
   -webkit-backdrop-filter:none; backdrop-filter:none }
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #ho-ziele > .ru-marke{
   outline:2px solid var(--accent-text,var(--accent)); outline-offset:-2px }
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #ho-ziele > .ho-ziel-vorschau{
+  background:var(--bg-card); border-color:var(--text); box-shadow:none }
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) .ru-fach-art{
   background:#000; -webkit-backdrop-filter:none; backdrop-filter:none }
 :is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) #ai .ai-head .rmo-orb-karte{
@@ -15304,9 +15307,6 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   body[data-bewegung="ruhig"] #ho-ziele > .ho-ziel-vorschau{
     transition:none
   }
-  @media(prefers-contrast:more),(forced-colors:active),(prefers-reduced-transparency:reduce){
-    #ho-ziele > .ho-ziel-vorschau{background:var(--bg-card);border-color:var(--text);box-shadow:none}
-  }
   @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
     #handy-oben,
     #ho-ziele{
@@ -26953,7 +26953,7 @@ body[data-ui-shell="glass-wheel"] #main{background:transparent;padding-bottom:86
 body[data-ui-shell="glass-wheel"] :is(#studio-bar,#topbar,#sidebar,#context-rail,#reiterleiste){background:var(--gw-surface);border-color:var(--gw-edge)}
 body[data-ui-shell="glass-wheel"] :is(.menu,.finder,.r-dialog,.r-sheet,.document-toolbar,.document-drawingbar,.mb-band,.pg-tools){background:var(--gw-paper);border-color:var(--gw-edge);border-radius:18px;box-shadow:var(--gw-shadow)}
 body[data-ui-shell="glass-wheel"] :is(.db,.db-toolbar,.bib-deckel,.nh-karte,.home-karte,.ki-panel){border-color:var(--gw-edge);border-radius:16px}
-body[data-ui-shell="glass-wheel"] :is(#page,.document-sheet,.pg-flaeche,.db-zelle,.ct){backdrop-filter:none}
+body[data-ui-shell="glass-wheel"] :is(#page,.document-sheet,.pg-flaeche,.db-zelle,.ct){-webkit-backdrop-filter:none;backdrop-filter:none}
 body[data-ui-shell="glass-wheel"] :is(.document-sheet,.pg-flaeche,.db-table){background:var(--gw-paper)}
 body[data-ui-shell="glass-wheel"] #page:has(#title){background:var(--gw-paper);border:1px solid var(--gw-edge);border-radius:20px}
 body[data-ui-shell="glass-wheel"] #reiterleiste{display:none!important}
@@ -27013,8 +27013,8 @@ body[data-ui-shell="glass-wheel"] .gw-tab-close{border:0;border-left:1px solid v
 body[data-ui-shell="glass-wheel"] .gw-empty{font-size:12px;color:var(--text-dim);margin:4px 0;line-height:1.5}
 body[data-ui-shell="glass-wheel"] .gw-shell[data-expanded="false"] .gw-wheel-stage{display:none}
 body[data-ui-shell="glass-wheel"] .gw-announcement{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-@supports(backdrop-filter:blur(1px)){
-  body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){backdrop-filter:blur(var(--gw-blur)) saturate(1.3)}
+@supports((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){-webkit-backdrop-filter:blur(var(--gw-blur)) saturate(1.3);backdrop-filter:blur(var(--gw-blur)) saturate(1.3)}
 }
 @media(max-width:760px){
   body[data-ui-shell="glass-wheel"] .gw-shell{margin:8px 12px}
@@ -27040,14 +27040,14 @@ body[data-ui-shell="glass-wheel"] .gw-announcement{position:absolute;width:1px;h
 body[data-ui-shell="glass-wheel"][data-bewegung="ruhig"] .gw-area{transition:none}
 @media(prefers-reduced-transparency:reduce),(prefers-contrast:more),(forced-colors:active){
   body[data-ui-shell="glass-wheel"]{--gw-surface:var(--bg-side);--gw-edge:var(--text);--gw-blur:0px;--gw-shadow:none}
-  body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){backdrop-filter:none}
+  body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){-webkit-backdrop-filter:none;backdrop-filter:none}
   body[data-ui-shell="glass-wheel"]{background:var(--bg)}
   body[data-ui-shell="glass-wheel"] .gw-hub>b{background:none;color:var(--text)}
 }
 body[data-ui-shell="glass-wheel"][data-kontrast="hoch"]{--gw-surface:var(--bg-side);--gw-edge:var(--text);--gw-blur:0px;--gw-shadow:none}
-body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.gw-rim,#handy-oben){backdrop-filter:none}
+body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.gw-rim,#handy-oben){-webkit-backdrop-filter:none;backdrop-filter:none}
 :root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"]{--gw-surface:var(--bg-side);--gw-edge:var(--text);--gw-shadow:none;background:var(--bg)}
-:root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){backdrop-filter:none}
+:root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){-webkit-backdrop-filter:none;backdrop-filter:none}
 
 </style>
 
@@ -28531,7 +28531,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1548, inhalt: '03138468082a6d03', gebaut: '2026-10-30T15:21:01.197Z' };
+const Stand = { fassung: 1549, inhalt: '4681d00e52d5c2fc', gebaut: '2026-10-30T20:27:48.830Z' };
 window.Stand = Stand;
 
 </script>

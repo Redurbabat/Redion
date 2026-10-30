@@ -1987,9 +1987,6 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   body[data-bewegung="ruhig"] #ho-ziele > .ho-ziel-vorschau{
     transition:none
   }
-  @media(prefers-contrast:more),(forced-colors:active),(prefers-reduced-transparency:reduce){
-    #ho-ziele > .ho-ziel-vorschau{background:var(--bg-card);border-color:var(--text);box-shadow:none}
-  }
   @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
     #handy-oben,
     #ho-ziele{
