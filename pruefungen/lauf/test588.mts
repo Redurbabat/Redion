@@ -582,7 +582,22 @@ const rechteck = (pc: Page, wahl: string) => pc.evaluate(`(() => {
   const ueber = await pc.evaluate(`(() => { const f = document.getElementById('ru-glocken-faecher');
     if (!f || f.hidden) return null; const r = f.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + 30 }; })()`) as { x: number; y: number } | null;
   await pc.keyboard.press('Control+p');
-  await pc.waitForTimeout(500);
+  /* SCHON IM NÄCHSTEN AUGENBLICK (E758). Die Zusage unten misst nach 500 ms
+     — und war ein Wettlauf: geschlossen hat den Fächer bis dahin nur das
+     `pointerleave`, das der Browser meldet, wenn er den RUHENDEN Zeiger
+     unter dem neuen Fenster neu einordnet. Mal kam es rechtzeitig (s1, s3–s6
+     grün), mal nicht (928e1a6e4, de375a43f rot), und dazwischen lag der
+     Fächer 280 ms Wartezeit und 140 ms Ausblenden lang über der Suche. Ein
+     Menü über einem Fenster ist auch für 400 ms ein Menü über einem
+     Fenster: nach 100 ms muss er zu sein oder darunter liegen. */
+  await pc.waitForTimeout(100);
+  const frueh = await pc.evaluate(`(() => { const f = document.getElementById('ru-glocken-faecher'); const o = document.querySelector('.overlay');
+    const offen = !!f && !f.hidden && getComputedStyle(f).display !== 'none';
+    return { such: !!o && !!o.querySelector('.finder.such'), offen,
+             zf: f ? Number(getComputedStyle(f).zIndex) : null, zo: o ? Number(getComputedStyle(o).zIndex) : null }; })()`) as any;
+  p('Mit der Maus aufgefächert, dann Strg P: schon nach 100 ms liegt der Fächer nicht über der Suche',
+    !!ueber && frueh.such && (!frueh.offen || frueh.zf < frueh.zo), JSON.stringify({ ueber, frueh }));
+  await pc.waitForTimeout(400);
   /* Gemessen wird, was GEMALT wird, nicht der Treffer (`elementFromPoint`
      überspringt den Fächer, sobald `fokus.ts` ihn hinter dem Fenster träge
      macht — gemalt wird er trotzdem, test244 kennt das vom Toast). */
