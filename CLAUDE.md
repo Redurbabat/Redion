@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 558 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 559 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2087,6 +2087,30 @@ von 122; die eigenartigste misst Bildpunkte: ohne Lupe lag die Marke mit
 13. Oktober, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 555.*
 
+*556 bis 558 sind `test620` bis `test622`; sie kamen am 21. und
+24. Oktober mit den Zweigen von Codex (Sicherheitsbranch samt Glasregeln,
+Radierer) und tragen hier keinen eigenen Absatz. Die Zahl oben hat sie
+mitgezählt.*
+
+*Und 559: `test623` — klassisch bewegt sich wie am 13. Oktober (E757).
+Redurs Antwort im Fragebogen vom 30. Oktober, „Klassische Bewegungen vom
+13. Okt.", in 55 Zusagen: im klassischen Design am Rechner und am Telefon
+die Werte, die derselbe Lauf an 020f51ce1 abliest — der Knopf hebt sich
+schräg (2, −2), das Suchfeld hat kein Glas und federt nicht, die
+Einstellungen fliegen nicht ein, das Zeichen des aktiven Reiters bleibt
+bei 1 —, und mit eingeschaltetem Glass Wheel Liquid Glass genau wie
+heute. Gegen de375a43f rot mit 23 von 55; gegen 020f51ce1 (eine Kopie mit
+diesem Wurzelpfad) sind alle Zusagen zum klassischen Design grün. Seine
+eigenartigste Zusage misst einen gedrückten Reiter, ohne ihn zu drücken:
+ein echter Finger über CDP setzte `:active` in 160 ms nicht, also setzt
+der Lauf den Zustand über `CSS.forcePseudoState` und verlangt zuerst, dass
+der Reiter dann wirklich `:active` ist — sonst mässe er nichts (§55.2).
+Und einmal war er aus dem FALSCHEN Grund rot: er schnitt die Quelle ab dem
+Titel des Kopfkommentars statt ab seinem `/*`, und der neue Kommentar, der
+`body[data-schale="premium"]` erklärt, galt ihm als Regel. Gezählt am
+30. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+559.*
+
 ### Die Befehle
 
 ```txt
@@ -2108,7 +2132,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 558 Läufe
+npm run pruefen                      alle 559 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2205,7 +2229,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 558 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 559 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

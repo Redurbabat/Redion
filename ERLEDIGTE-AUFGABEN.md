@@ -1,5 +1,38 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 30. Oktober 2026 · E757 · Klassisch bewegt sich wieder wie am 13. Oktober
+
+**Auftrag:** Redurs Antwort im Fragebogen, „Klassische Bewegungen vom
+13. Okt." — die Liquid-Glass-Änderungen von Codex (20./21. Oktober) im
+klassischen Design zurücknehmen; die Zusätze der Zielleiste und das Glass
+Wheel bleiben.
+
+**Fund:** Die zwei Blöcke „REDION LIQUID GLASS / BEWEGUNG" und „REDION
+MOTION / FEINSCHLIFF" am Ende von `studio.css` (a3917c13d, über E752 auf
+main) galten für `body[data-schale="premium"]` — also bei jedem Start.
+Gemessen gegen 020f51ce1: Kopfknöpfe hoben sich gerade statt schräg, mit
+0,2-s-Federn statt 0,14 s; das Suchfeld war Glas und federte auf 1,005; die
+Einstellungen flogen 0,796 s ein und trugen einen Akzentstrich; am Telefon
+war das aktive Zeichen 1,1 und gehoben. Keine TypeScript-Änderung gehört
+dazu; Pull Request #123 ist trotz seines Namens eine Radierer-Reparatur.
+
+**Bau:** Jede Regel der beiden Blöcke (56 Stellen) hängt zusätzlich an
+`:where([data-ui-shell="glass-wheel"])` — Gewicht null, im Glass Wheel
+65 766 berechnete Werte vorher = nachher. Nichts gelöscht; der sichtbare
+Tastenfokus der Ergebniszeilen (§38) bleibt Wort für Wort und überall.
+Codex' `ui-motion-check.mts` prüft dieselben neun Zusagen jetzt im Glass
+Wheel (Grund in der Datei).
+
+**Prüfung:** `test623` gegen de375a43f rot mit 23 von 55, danach 55 von 55;
+gegen 020f51ce1 alle Zusagen zum klassischen Design grün; vier Gegenproben
+rot und genau zurückgestellt. Klassisch weicht nachher vom 13. Oktober nur
+noch in der Zielleiste und in der Höhe der Startseite ab (messungen.md
+§108). NACHBARN
+
+**Bilder:** `bilder-klassik/e757/` im Kratzordner — 13. Oktober, vorher,
+nachher, je klassisch und Glass Wheel, Rechner und Telefon, hell und
+dunkel. Am echten iPhone und in der Windows-App nicht gesehen (L258).
+
 ## 24. Oktober 2026 · E753 · Workspace-Bibliothek und Windows-Nachprüfung
 
 Die Bibliothek verwendet jetzt übersichtlichere responsive Dokumentkarten,

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-731 Entscheidungen, E1 bis E752 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+736 Entscheidungen, E1 bis E757 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -801,6 +801,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 
 * **E752** — Den Sicherheitsbranch und den Laptop vollständig auf main zusammenführen (Redur, 21. Oktober 2026). Die ausdrücklich erlaubte Ausnahme lässt die zwölf bereits dokumentierten Altfehler aus E751 offen; Schnelltests und betroffene Wege werden geprüft. Keine unfertige lokale Kachel-Feder, kein Force-Push, kein Cloudflare-Deployment. Details am Ende und im Integrationsbericht.
 
+* **E753** — Workspace 2 beginnt mit einer echten Bibliothek, nicht einer zweiten App (Redur, 24. Oktober 2026, Issue #134): Karten mit eigener Bedienzeile, echten Vorschauen, Favorit und Menü als Geschwister-Knöpfe; dieselbe globale Suche, dieselben Darstellungen und Filter; keine neue Architektur, keine Datenmigration (Eintrag nachgetragen am 30. Oktober, der Text stand schon da).
+
 ---
 
 * **E754** — Gemeinsame Geräteübersicht, sichere native Dateitüren und vorbereiteter,
@@ -809,6 +811,10 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E755** — Geräteintegration auf dem neuesten main mit bereits enthaltenem Glass Wheel
   zusammenführen; neuere Update-/Sync-Schutzregeln erhalten, dokumentierte einmalige
   Ausnahme für bekannte Altfehler und offene Gerätefreigaben (29. Oktober 2026).
+
+* **E756** — Den gemeldeten iPhone-Kompilierfehler unmittelbar auf main reparieren (Redur, Codemagic-Log mit Status 65: „behe das sofort auf main puschen dann dringend"): beide WebKit-Aufrufe nehmen die Callback-Überladung `in:in:completionHandler:`; einmalige, begrenzte Ausnahme von §46 (Eintrag nachgetragen am 30. Oktober, der Text stand schon da).
+
+* **E757** — Klassisch bewegt sich wieder wie am 13. Oktober; Liquid Glass gehört dem Glass Wheel (Redur, 30. Oktober 2026, im Fragebogen: „Klassische Bewegungen vom 13. Okt."): jede Regel der beiden Liquid-Glass-Blöcke in `studio.css` (a3917c13d, über E752 auf main) hängt zusätzlich an `:where([data-ui-shell="glass-wheel"])` — Gewicht null, im Glass Wheel 65 766 berechnete Werte vorher = nachher; im klassischen Design wieder die Werte vom 13. Oktober (schräges Heben, kein Glas und kein Federn am Suchfeld, kein Einfliegen der Einstellungen, kein 1,1 am Reiter). Nichts gelöscht; der sichtbare Fokus der Ergebniszeilen (§38) bleibt überall; `ui-motion-check.mts` prüft jetzt im Glass Wheel — `test623`
 
 ## Grundregel
 
@@ -69519,3 +69525,118 @@ gegen das echte iPhone-SDK; ein Syntaxcheck allein reicht dafür nicht.
 übersprungen. Ein neuer Codemagic-/Xcode-Lauf bleibt erforderlich. Belege
 und Grenzen: `doku/IOS-CODEMAGIC-WEBKIT-CALLBACK-FIX.md`. Keine Erweiterung
 des Auftrags, kein Force-Push und kein behauptetes fertiges IPA.
+
+## E757 — Klassisch bewegt sich wieder wie am 13. Oktober; Liquid Glass gehört dem Glass Wheel
+
+**Auftrag.** Redur benutzt Redion als iPhone-App und als Windows-App
+(E754). Am 30. Oktober 2026 meldete er, dass die Bewegungen und
+Effekte des KLASSISCHEN Designs seit den Änderungen von Codex nicht mehr
+seien wie vorher, und dass sich das besondere Dock verändert habe (sein
+Wortlaut liegt diesem Bogen nicht vor; hier steht nur, was der Fragebogen
+festhält). Im Fragebogen wählte er die Antwort „Klassische Bewegungen vom
+13. Okt." mit der Beschreibung:
+
+    „Die 'Liquid Glass'-Änderungen von Codex (20./21. Okt.) im klassischen
+     Design zurücknehmen: Knöpfe heben sich schräg statt gerade, kein Glas
+     und kein Federn am Suchfeld, Einstellungsfenster ohne neues
+     Einfliegen."
+
+Nicht gewählt hat er, die Zusätze der Zielleiste zurückzunehmen (die
+Namensblase `.ho-ziel-vorschau` und der Ziehgriff `#handy-oben::before`
+bleiben). Das Glass Wheel ist seine freiwillige Wahl (E755) und bleibt, wie
+es heute aussieht.
+
+**Was war.** E752 brachte am 21. Oktober mit dem Sicherheitszweig „zwei
+Etappen der Glas-/Bewegungsregeln" von `codex/apple-glass-20oct` auf main
+(a3917c13d): die Blöcke „REDION LIQUID GLASS / BEWEGUNG (Oktober 2026)" und
+„REDION MOTION / FEINSCHLIFF (zweite Etappe, 21. Oktober 2026)", 327 Zeilen
+am Ende von `quell/schale/stil/studio.css`. Jede Regel begann mit
+`body[data-schale="premium"]`, und dieses Attribut steht fest in
+`index.html` (E272) — die Regeln galten also bei JEDEM Start, auch im
+klassischen Design. Das Glass Wheel (`body[data-ui-shell="glass-wheel"]`,
+gesetzt von `glass-wheel.ts`, nur solange es gewählt ist) kam erst danach.
+
+**Das Inventar.** Die Etappen haben keinen eigenen Commit: sie kamen über
+eine Wurzel ohne Eltern (771700a77) in den Zweig. Getrennt habe ich sie
+deshalb über den Stand d8f7c6c30 — das ist 020f51ce1 (13. Oktober) plus
+genau die Zielleisten-Zweige E748/E749 und sonst nichts; der Unterschied
+d8f7c6c30 → a3917c13d in Stil und TypeScript ist die Familie. Danach
+nachgemessen mit dem Bewegungs-Fingerabdruck über acht Stände (s0 =
+020f51ce1 bis s7 = de375a43f) und einem vollständigen Abzug aller
+berechneten Werte (messungen.md §108).
+
+```txt
+Hunk (studio.css)                                         Art          jetzt
+--liquid-ease/-duration/-highlight/-accent-glow           Marken       nur Glass Wheel
+Suchfeld: Glas, Kante, Schatten, Rückfall, Feder 1,005     Effekt       nur Glass Wheel
+.menu/.finder/.auswahlleiste: tieferer Schatten            Effekt       nur Glass Wheel
+.menu/.finder/.r-sheet/#kanten-lade: Dauer und Kurve       Bewegung     nur Glass Wheel
+#handy-oben: Schatten; .ho-z/b: Übergang, Ursprung         Bewegung     nur Glass Wheel
+.ho-z 1,1 und gehoben, b gehoben, :active 0,92             Bewegung     nur Glass Wheel
+Kopfknöpfe, Kurzwahl, Kacheln, Agentenkarten, Reiter:
+  Übergänge 0,2 s linear(), Heben gerade (0, −2)           Bewegung     nur Glass Wheel
+.k-knopf rückt 3 px                                        Bewegung     nur Glass Wheel
+Filterpille: Schatten, Heben, Pfeil 180°                   Effekt       nur Glass Wheel
+Weiterarbeiten-Karte, Miniatur, Import-Knopf               Effekt       nur Glass Wheel
+Einstellungen: Schatten, Einfliegen 0,796 s,
+  Akzentstrich, Rücken 3 px, Gruppenschatten               Bewegung     nur Glass Wheel
+Ergebniszeilen und Menüpunkte rücken 3 px                  Bewegung     nur Glass Wheel
+„ruhig" und Kontrast zu all dem                            folgt        nur Glass Wheel
+Ergebniszeilen/Menüpunkte: sichtbarer Tastenfokus          Verbesserung bleibt überall (§38)
+```
+
+TypeScript: die Etappen änderten kein Verhalten — zwischen d8f7c6c30 und
+a3917c13d fielen in `lernwelt.ts`, `produktwelten.ts` und `schale.ts` nur
+Kommentare weg; nicht angefasst. Pull Request #123 (928e1a6e4,
+`feat/pdf-studio-liquid-glass-motion`) trägt trotz seines Namens keine
+Bewegung: er lässt den Radierer den Zwischenpunkten folgen und nimmt einen
+abgebrochenen Zug zurück (`test622`) — eine Reparatur, sie bleibt. Nicht
+aus dieser Familie und deshalb unberührt: die Zielleiste (E748/E749 und
+Codex' Zusätze), Workspace 2.0 (die Ankunft des Regals, die Übergänge der
+Karten, die sichtbaren Seitenwerkzeuge), `glasswheel.css`, die Gerätetüren.
+
+**Entschieden.** Jede Regel der beiden Blöcke — 56 Stellen — hängt
+zusätzlich an `:where([data-ui-shell="glass-wheel"])`:
+`body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) …`.
+Nichts gelöscht, keine Regel verschoben, kein Wert geändert. Ausgenommen
+ist die eine Verbesserung: der sichtbare Tastenfokus der Ergebniszeilen und
+Menüpunkte steht Wort für Wort, wie er stand, und gilt in beiden Schalen.
+
+**Warum `:where()`.** Es wiegt null. Jede Regel behält ihr Gewicht, also
+entscheidet die Kaskade im Glass Wheel genau wie vorher — gemessen: 65 766
+berechnete Werte (Rechner und Telefon, hell und dunkel, Ruhe, Zeiger,
+Einstellungen, Bibliothek), vorher = nachher, und zwei Läufe desselben
+Stands unterscheiden sich in keinem. Mit Gewicht (`[data-ui-shell=…]`)
+wäre z. B. der Menüschatten von (0,2,1) auf (0,3,1) gestiegen und hätte im
+Glass Wheel die gleich schwere, später geladene Regel aus `glasswheel.css`
+(`--gw-shadow`) geschlagen — das Glass Wheel hätte anders ausgesehen. §39
+verbietet `:where()` um den KNOPF-Teil eines Zustands, weil der Zustand
+sonst verliert; hier steht es um die Schale, die gerade kein Gewicht
+tragen soll.
+
+**Alternativen.** (a) Die Blöcke löschen: nimmt dem Glass Wheel, was es
+heute zeigt, und wirft Codex' Arbeit weg. (b) Die Werte vom 13. Oktober für
+klassisch daneben noch einmal schreiben: zwei Wahrheiten für dieselben
+Knöpfe, die auseinanderlaufen (derselbe Grund wie §8). (c) Das Glass Wheel
+mit Gewicht nennen: ändert die Kaskade im Glass Wheel (oben). (d) Nur die
+drei Dinge aus der Beschreibung zurücknehmen: der Fingerabdruck zeigte mehr
+— 1,1 am Reiter, 3 px an der Kante, die 0,2-s-Federn statt 0,14 s —, und
+Redur hat „die Liquid-Glass-Änderungen" gewählt, nicht drei davon.
+
+**Kosten.** Im klassischen Design gibt es ab jetzt kein Glas und kein
+Federn am Suchfeld, keinen Pfeil, der sich an der offenen Filterpille
+dreht, keinen Akzentstrich an der gewählten Einstellungszeile (sie trägt
+weiter ihren Grund, wie am 13. Oktober), keine tieferen Schatten — so war
+es am 13. Oktober. Wer Liquid Glass will, wählt das Glass Wheel. Codex'
+Browserprüfung `pruefungen/ui-motion-check.mts` hielt Liquid Glass IM
+KLASSISCHEN fest (ihr `<body>` trug nur `data-schale="premium"`); nach
+dieser Änderung scheiterte sie an 4 von 9. Sie prüft seither dieselben
+neun Zusagen im Glass Wheel (`data-ui-shell="glass-wheel"`, Grund in der
+Datei): 9 von 9. Gelöscht wurde keine Zusage.
+
+**Wächter.** `test623` (55 Zusagen): klassisch am Rechner (1440 × 900) und
+am Telefon (390 × 844) mit den Werten, die derselbe Lauf an 020f51ce1
+abliest; das Glass Wheel mit den Werten von de375a43f; der Rückweg ohne
+Neuladen; die Quelle (jede Regel am Rad, nie mit Gewicht, der Fokus
+unverändert). Gegen de375a43f rot mit 23 von 55, danach 55 von 55; vier
+Gegenproben, jede rot und genau zurückgestellt (messungen.md §108).

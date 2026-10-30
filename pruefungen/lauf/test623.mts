@@ -236,9 +236,9 @@ const handyMessen = async (a: Auf) => {
   m.leiste = await stil(a.pc, '#handy-oben');
   m.zeichenAn = await stil(a.pc, '#handy-oben > button.an .ho-z');
   m.wortAn = await stil(a.pc, '#handy-oben > button.an b');
-  /* Ein gedrückter Reiter. Ein echter Finger über CDP setzt `:active` nicht
-     verlässlich (gemessen: 160 ms Auflegen, `matches(':active')` blieb
-     falsch — die Leiste nimmt die Berührung selbst). Deshalb setzt der Lauf
+  /* Ein gedrückter Reiter. Ein echter Finger über CDP setzte `:active` nicht
+     (gemessen am Stand 020f51ce1: 160 ms Auflegen, `matches(':active')`
+     blieb falsch; warum, ist nicht untersucht). Deshalb setzt der Lauf
      den Zustand über die Werkzeuge des Browsers (`CSS.forcePseudoState`)
      und liest, was die Kaskade dann zeigt. Gemessen nur, wenn der Reiter
      dabei wirklich `:active` ist — sonst misst es nichts (§55.2). */
@@ -371,7 +371,9 @@ p('Beide Blöcke stehen in studio.css, vor den Seitenwerkzeugen', anfang > 0 && 
    bleibt Wort für Wort, wie er war — an derselben Stelle, mit demselben
    Gewicht —, damit sich der Fokus im klassischen Design nicht ändert. */
 const FOKUS = /body\[data-schale="premium"\] \.finder \.res > button:focus-visible,\s*body\[data-schale="premium"\] \.menu\[role="menu"\] button:focus-visible\s*\{\s*outline: 2px solid var\(--accent-text\);\s*outline-offset: -2px;\s*\}/;
-const roh = studio.slice(anfang, ende).replace(/\/\*[\s\S]*?\*\//g, '');
+/* Ab dem `/*` des Kopfkommentars geschnitten, nicht ab seinem Titel —
+   sonst gälte der Rest des Kommentars als Regeltext. */
+const roh = studio.slice(studio.lastIndexOf('/*', anfang), studio.lastIndexOf('/*', ende)).replace(/\/\*[\s\S]*?\*\//g, '');
 p('Der Tastenfokus der Ergebniszeilen gilt weiter überall (§38), unverändert', FOKUS.test(roh));
 const block = roh.replace(FOKUS, '');
 const schale = block.match(/body\[data-schale="premium"\][^\s,{]*/g) ?? [];

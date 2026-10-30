@@ -8591,6 +8591,36 @@ und zum Vorleser in Punkt 2 (eigene Aktion oder Merkmale nur mit Tastatur).
 
 ---
 
+## L258 · Klassisch wie am 13. Oktober: auf Redurs Geräten nicht gesehen — 30. Oktober 2026
+
+**Was es gibt (E757):** die Liquid-Glass-Regeln aus `studio.css` gelten nur
+noch im Glass Wheel; im klassischen Design stehen die Werte vom
+13. Oktober (020f51ce1) — gemessen in Chromium an 59 394 berechneten Werten,
+gehalten von `test623`.
+
+**1 · Die echten Geräte.** Redur hat die Änderung an der iPhone-App und an
+der Windows-App bemerkt. Geprüft ist nur Chromium (Playwright, Build 1194),
+nicht WebKit im iPhone und nicht die Windows-App. Die Rücknahme ist reines
+CSS — `:where()` und Attributwähler kennen beide Engines seit Jahren —,
+aber gesehen hat es dort niemand. Fertig: ein Blick an beiden Geräten auf
+die drei Stellen aus Redurs Wahl (Kopfknöpfe schräg, Suchfeld ohne Glas und
+ohne Federn, Einstellungen ohne Einfliegen) und auf die untere Leiste.
+
+**2 · Was bleibt, weil Redur es nicht abgewählt hat:** die Zielleiste mit
+Ziehgriff und Namensblase (E749 und Codex' Workspace 2.0) und die Geste,
+die `#handy-oben` dafür `touch-action: none` gibt. Am 13. Oktober gab es
+sie noch nicht; das Dock sieht deshalb nicht Bit für Bit aus wie damals
+(der Griff liegt 8 px über der Leiste).
+
+**3 · Rot, wie auf main, und nicht aus dieser Familie:** `test621` meldet
+seit Workspace 2.0 „Schrift … wird nicht verkleinert", weil sein Muster ab
+„REDION MOTION / FEINSCHLIFF" bis zur ersten `font-size` der ganzen Datei
+sucht und dabei die Seitenwerkzeuge (`font-size:10px`, 24. Oktober)
+erreicht. Ob die Zusage über das Ende des Blocks hinaus gilt, ist eine
+Frage an den Lauf, nicht an E757.
+
+---
+
 ## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — GESCHLOSSEN (E745) — 11. Oktober 2026
 
 **Gemessen** über die Schnittstelle von GitHub, nicht vermutet: die zwei
@@ -10950,7 +10980,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 11. Oktober 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 152 Lücken, 94 offene und 58 geschlossene. Der Befehl dazu ist
+Datei führt 153 Lücken, 95 offene und 58 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt
