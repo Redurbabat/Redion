@@ -1234,8 +1234,7 @@ body[data-schale="premium"]:where([data-ui-shell="glass-wheel"])[data-bewegung="
   background:var(--bg-hover);color:var(--text);
   font-size:12px;line-height:1.2;font-weight:550;white-space:nowrap;
   transition:background var(--motion-fast) var(--ease),
-             border-color var(--motion-fast) var(--ease),
-             transform var(--motion-fast) var(--ease)
+             border-color var(--motion-fast) var(--ease)
 }
 #page > .pg-tools > button:is(:hover,:focus-visible){
   color:var(--text);background:var(--accent-schwach);
@@ -1244,7 +1243,6 @@ body[data-schale="premium"]:where([data-ui-shell="glass-wheel"])[data-bewegung="
 #page > .pg-tools > button:focus-visible{
   outline:2px solid var(--accent);outline-offset:2px
 }
-#page > .pg-tools > button:active{transform:scale(.98)}
 @media(max-width:760px){
   #page > .pg-tools{
     flex-wrap:nowrap;gap:5px;overflow-x:auto;scrollbar-width:none;
@@ -1264,12 +1262,10 @@ body[data-schale="premium"]:where([data-ui-shell="glass-wheel"])[data-bewegung="
 }
 @media(prefers-reduced-motion:reduce){
   #page > .pg-tools > button{transition:none}
-  #page > .pg-tools > button:active{transform:none}
 }
 body[data-bewegung="ruhig"] #page > .pg-tools > button{
   transition:none
 }
-body[data-bewegung="ruhig"] #page > .pg-tools > button:active{transform:none}
 @media print{#page > .pg-tools{display:none!important}}
 @media(forced-colors:active),(prefers-contrast:more){
   #page > .pg-tools{box-shadow:none}
