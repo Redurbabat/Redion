@@ -8617,6 +8617,10 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 body:has(#zm-pille) #scroll{ padding-bottom:calc(var(--touch-min) + 2 * var(--space-5)) }
 @media(min-width:761px){
   body:has(#ai.open) :is(.zm-pille, .zm-karte){ right:calc(var(--ki-breite, 0px) + var(--space-5)) }
+  /* 6. Am Rechner ebenso (E758) */
+  body:has(#zm-pille:not([hidden])) #offline-streifen{
+    translate:0 calc(-1 * (var(--touch-min) + var(--space-3)))
+  }
 }
 /* Ausser bei der Zeichenleiste unten (nicht im Dokument): sie klebt in
    `#scroll` und steigt mit dessen Polster (2.) selbst über die Pille. Auf
