@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-736 Entscheidungen, E1 bis E757 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+737 Entscheidungen, E1 bis E758 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -815,6 +815,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E756** — Den gemeldeten iPhone-Kompilierfehler unmittelbar auf main reparieren (Redur, Codemagic-Log mit Status 65: „behe das sofort auf main puschen dann dringend"): beide WebKit-Aufrufe nehmen die Callback-Überladung `in:in:completionHandler:`; einmalige, begrenzte Ausnahme von §46 (Eintrag nachgetragen am 30. Oktober, der Text stand schon da).
 
 * **E757** — Klassisch bewegt sich wieder wie am 13. Oktober; Liquid Glass gehört dem Glass Wheel (Redur, 30. Oktober 2026, im Fragebogen: „Klassische Bewegungen vom 13. Okt."): jede Regel der beiden Liquid-Glass-Blöcke in `studio.css` (a3917c13d, über E752 auf main) hängt zusätzlich an `:where([data-ui-shell="glass-wheel"])` — Gewicht null, im Glass Wheel 65 766 berechnete Werte vorher = nachher; im klassischen Design wieder die Werte vom 13. Oktober (schräges Heben, kein Glas und kein Federn am Suchfeld, kein Einfliegen der Einstellungen, kein 1,1 am Reiter). Nichts gelöscht; der sichtbare Fokus der Ergebniszeilen (§38) bleibt überall; `ui-motion-check.mts` prüft jetzt im Glass Wheel — `test623`
+* **E758** — Die roten Wächter nach Codex: das Produkt repariert, wo der Wächter recht hat (30. Oktober 2026): die Namensblase der Zielleiste in der EINEN Regel für „keine Durchsicht" (`test539` §6), das Glas des Glass Wheel mit iPhone-Zwilling und als entschiedenes Zierstück (`test576`), die Seitenwerkzeuge ohne zweites `:active`-Einsinken (`test581`), ein neues Fenster schliesst den Fächer der Glocke sofort (`test588`, zuerst schärfer gemacht), am Rechner rückt der Offline-Streifen über die Zeitpille (`test590`, rot schon am 13. Oktober), `test614` §4e misst das Layout statt der wachsenden Feder; `test534` und `test614` §7f bleiben offen (L259)
 
 ## Grundregel
 
@@ -69640,3 +69641,157 @@ abliest; das Glass Wheel mit den Werten von de375a43f; der Rückweg ohne
 Neuladen; die Quelle (jede Regel am Rad, nie mit Gewicht, der Fokus
 unverändert). Gegen de375a43f rot mit 23 von 55, danach 55 von 55; vier
 Gegenproben, jede rot und genau zurückgestellt (messungen.md §108).
+
+## E758 — Die roten Wächter nach Codex: das Produkt repariert, wo der Wächter recht hat
+
+**Auftrag.** Nach E757 (klassisch wie am 13. Oktober) standen auf dem
+Zweig noch rote Wächter, die auch auf main rot sind: `test539` §6,
+`test576`, `test581`, `test588`, `test590`, `test614` §4e und `test534`.
+Der Auftrag dieses Bogens: jeden ansehen, den ersten schlechten Stand über
+die acht Stände s0 = 020f51ce1 (13. Oktober) bis s7 = de375a43f suchen,
+die Ursache mit Datei und Zeile nennen und das PRODUKT reparieren, wo der
+Wächter recht hat — nie die Zusage lockern. Ausgangsstand 544c68b9f
+(E757), gemessen im selben Lauf: 534 mit 51 von 52, 539 mit 47 von 51,
+576 mit 28 von 30, 581 mit 92 von 93, 588 mit 78 von 78 (in diesem Lauf
+grün — siehe unten), 590 mit 67 von 68, 614 mit 123 von 125.
+
+**1 · `test539` §6 — eine zweite Medienabfrage vor der echten (§8).**
+Workspace 2.0 (5de400cce, 24. Oktober, zwischen s3 und s4) schrieb für die
+Namensblase `#ho-ziele > .ho-ziel-vorschau` eine eigene
+`@media(prefers-contrast:more),(forced-colors:active),(prefers-reduced-transparency:reduce)`
+in `bausteine.css` (an 544c68b9f Zeile 1990–1992), VOR die Regel „ohne
+Durchsicht gibt es kein Glas" der unteren Leiste. Der Wächter liest die
+erste Stelle, an der diese Abfrage steht — und fand die Blase statt der
+Leiste. Er hatte recht: es gibt für diese drei Eingänge EINE Regel, „EIN
+SCHALTER MACHT ALLES GLAS DECKEND" in `grund.css` (E703), samt ihrem
+Zwilling für Redions eigene Schalter (`body[data-kontrast]`,
+`html[data-schema="kontrast"]`). **Entschieden:** die Zeile der Blase steht
+jetzt dort, in beiden Blöcken, und die eigene Abfrage ist weg. Die Blase
+war schon deckend; sie bekommt dort, wie vorher, die Kante in Textfarbe
+statt des Schattens. Neu ist nur, dass auch „Hoher Kontrast" in den
+Einstellungen und das Schema „Starker Kontrast" ihr diese Kante geben —
+dieselbe Antwort wie für die Leiste daneben (gemessen: vorher Rand
+`rgb(138, 143, 152)` mit Schatten, nachher Textfarbe ohne Schatten).
+*Im Browser nachgesehen, nicht nur im Text:* mit `emulateMedia` gesetzt,
+`contrast: 'more'` und `forcedColors: 'active'`, hell und dunkel — die
+Blase hat vorher (de375a43f) und nachher dieselben Werte (hell: Rand
+`rgb(55, 53, 47)`, kein Schatten; dunkel: `rgb(241, 242, 244)`; erzwungen:
+Schwarz auf Weiss bzw. Weiss auf Schwarz). `prefers-reduced-transparency`
+kann dieser Chromium (Build 1194) weiterhin nicht: `matchMedia` bleibt
+auch mit `emulateMedia({ reducedTransparency: 'reduce' })` falsch — das
+ist L203, und deshalb prüft §6 die Quelle.
+
+**2 · `test576` — Glas des Glass Wheel ohne iPhone-Zwilling.**
+`glasswheel.css` (e0b0d08a1, 29. Oktober, zwischen s6 und s7; an
+544c68b9f Zeile 26, 86–88, 113, 118, 120) setzte `backdrop-filter` an
+fünf Stellen ohne `-webkit-backdrop-filter`, und die Bedingung
+`@supports(backdrop-filter:blur(1px))` fragte den Präfix nicht mit. Die
+iPhone-App rendert mit WebKit; dort hing das Glas des Rads und des Docks an
+der unpräfixierten Eigenschaft allein. **Entschieden:** jede der fünf
+Stellen trägt den Zwilling im selben Block, und das `@supports` fragt
+`(backdrop-filter:…) or (-webkit-backdrop-filter:…)` — wie alle anderen
+Glasstellen. Der Wert des Rads (`blur(var(--gw-blur)) saturate(1.3)`,
+12 px) bleibt: Redur hat entschieden, dass das Glass Wheel bleibt, wie es
+aussieht (E757); mit der Marke `--glas-blur` (20 px, 180 %) sähe es anders
+aus. Er steht deshalb als ZIERSTÜCK auf der Liste von `test576` — die Liste
+darf nur mit einer Entscheidung wachsen, und dies ist sie. Der Eintrag
+nennt den vollen Wähler `body[data-ui-shell="glass-wheel"] :is(.gw-rim,
+#handy-oben)`: im klassischen Design kann er nichts erlauben.
+*Alternativen:* (a) die Marke `--glas-blur` nehmen — ändert das Glass
+Wheel, gegen E757; (b) das Glas weglassen — dito; (c) die Zusage lockern —
+ausgeschlossen. *Kosten:* ein fünfter Eintrag auf einer Liste, die
+schrumpfen soll.
+
+**3 · `test581` — doppeltes Einsinken der Seitenwerkzeuge.**
+Die Kommandochips von Workspace 2.0 (9a8e3c22b, 24. Oktober, zwischen s3
+und s4) trugen `#page > .pg-tools > button:active{transform:scale(.98)}`
+(`studio.css`, an 544c68b9f Zeile 1247). Die Druckfeder (press.ts) lässt
+jeden Knopf auf der Eigenschaft `scale` einsinken; daneben sank der Chip
+ein zweites Mal, und auf dem iPhone, das `:active` beim kurzen Tipp nicht
+malt, über diese Regel gar nicht. E757 hatte sie nicht erfasst — sie gehört
+nicht zur Liquid-Glass-Familie. **Entschieden:** die Regel ist weg, mit ihr
+`transform` aus dem Übergang und die zwei `:active{transform:none}` für
+„weniger Bewegung" und „Ruhig" (die Feder hält dort selbst an). Gemessen am
+gedrückten Chip: vorher `transform: matrix(0.98, …)` UND die Feder, nachher
+nur die Feder (`scale: 0.96`, `data-gedrueckt`; messungen.md §109).
+
+**4 · `test588` — der Fächer über der Suche: ein Wettlauf, kein Stand.**
+Über die Stände je ein Lauf: s1 grün, s2 (928e1a6e4) rot, s3 bis s6 grün,
+s7 rot, der Zweig an 544c68b9f grün. Es gibt keinen ersten schlechten
+Commit. Die Ursache steht in `hinweis.ts` (an 544c68b9f Zeile 619–623):
+mit der Maus aufgefächert, schloss den Fächer nur das `pointerleave` der
+Glocke, und das meldet der Browser für einen RUHENDEN Zeiger erst, wenn er
+ihn unter dem neuen Fenster neu einordnet — dazu 280 ms Wartezeit und
+140 ms Ausblenden. Kam das nicht in den 500 ms des Laufs, lag der Fächer
+(`z-index:880`) über der Suche (`.overlay`, 700). **Der Wächter wurde
+zuerst schärfer:** eine Zusage misst schon 100 ms nach Strg P — gegen den
+alten Stand rot, jedes Mal, mit `{"offen":true,"zf":880,"zo":700}`.
+**Entschieden:** der Fächer ist ein Menü der Glocke, kein Fenster über den
+Fenstern; ein neues `.overlay` schliesst ihn sofort (ein
+`MutationObserver`, der nur horcht, solange der Fächer offen ist). Danach
+79 von 79. Die alte 500-ms-Zusage bleibt, wie sie war.
+
+**5 · `test590` §16 — der Streifen auf der Pille, schon am 13. Oktober.**
+Rot schon an s0 (020f51ce1), also nicht aus Codex' Arbeit. Gemessen bei
+1024 × 768 mit der Seite „Elektrotechnik Skript": Offline-Streifen
+271–753 px, Zeitpille 749–1008 px, beide auf derselben Höhe — 4 × 33 px
+Schnitt (der Lauf: 129 px²). Die Pille trägt den Namen der Seite und
+wächst damit nach links in den mittigen Streifen; ohne Seitennamen beginnt
+sie bei 811 px. Am Telefon rückte der Streifen schon über sie (Regel 5 der
+Pille, `bausteine.css`), am Rechner nicht. **Entschieden:** dieselbe
+Antwort am Rechner — solange die Pille sichtbar ist, rückt der Streifen um
+ihre Höhe und eine Lücke hinauf (`translate`, damit das `transform` der
+Mitte bleibt). Das gilt auch bei 1440 px, wo sich beide nicht berührten:
+eine Regel, die nach der Fensterbreite rät, ob sich zwei Dinge treffen,
+wäre geraten. Danach 68 von 68.
+
+**6 · `test614` §4e — die Zusage mass die Feder, nicht die Leiste.**
+Die Zusage kam mit Workspace 2.0 (1a618b878, 24. Oktober) und verlangte
+„die unveränderte 60px-Zielleiste" über `getBoundingClientRect().height`.
+Gemessen wird aber im selben Augenblick, in dem §4a verlangt, dass die
+Scheibe noch WÄCHST: `growFrom` (`selection-flow.ts`) legt ein
+`transform: scale(…)` darüber, und der gemalte Kasten mass 53,17 px (main)
+und 53,99 px (Zweig), je nachdem, wie weit die Feder war. Grün war sie nur
+mit `--capture`, das vorher 280 ms wartet. Das Produkt schrumpft nicht: die
+Treffer kommen aus dem Layout (`tab-shelf.ts`, `offsetLeft`/`offsetWidth`),
+und das Layout ist 60 px hoch. **Entschieden:** die Zusage misst, was
+„unverändert" meint — `offsetHeight` 60 und fünf gleich breite Ziele; das
+gemalte Mass steht als Auskunft daneben. Das ist keine Lockerung: eine
+Gegenprobe, in der die Leiste wirklich schrumpft (`height:53px` solange die
+Blase steht), macht sie rot (`hoeheLayout: 53`).
+
+**7 · Was offen bleibt (L259).** `test534` §4 (rot schon an s0): der
+Wächter zieht die Leiste in die FENSTERMITTE (720, 480) und erwartet
+„frei" — die Leiste dockt aber an die Ränder ihrer Hülle `.blatt-huelle`,
+und deren Oberkante liegt bei 477 px; 3 px unter ihr ist innerhalb des
+Fangbands von 64 px, also „oben". Ob der Wächter die Mitte der Hülle meinen
+sollte oder die Leiste am Fenster docken soll, ist eine Frage, keine
+billige Reparatur. Und `test614` §7f „zu hoch losgelassen": nach einem
+schnellen Wisch über die Leiste hinaus kommt ein echter Tipp 120 ms (auch
+700 ms) danach nicht an — Chromium erzeugt weder `mousedown` noch `click`,
+und Redion ruft kein einziges `preventDefault`; nach 2 s kommt er an, nach
+einem LANGSAMEN Loslassen schon nach 120 ms. Rot war das schon an
+fce1cdb72 (E749s letzter Stand); auf main grün nur, weil ein
+Liquid-Glass-Übergang (`.ho-z{transition: color 140ms}`) ihn verdeckte —
+mit E757 ist er im klassischen Design wieder weg. Die Spur führt zur
+Tippunterdrückung nach einem Wurf; repariert ist nichts.
+
+**Nebenbei: die Kommentare.** Die Begründungen stehen hier und in den
+Läufen, nicht in den Stilblättern — Kommentare in CSS reisen beim Start
+mit, und `test388` §5 ist auf main schon gerissen (1957 KB gegen die Decke
+von 1950). Gemessen über `test388`: 544c68b9f 1958 KB, nach E758 1958 KB.
+
+**Nachbarn** (ein Lauf, unter der Sperre): `test52`, `87`, `114`, `258`,
+`539`, `573`, `576`, `581`, `582`, `585`, `588`, `590`, `602`, `623`
+grün. Rot wie vorher, keiner neu: `test221` (an 544c68b9f und de375a43f
+gleich rot, an 020f51ce1 grün), `test285`, `test388`, `test580` und
+`test603` (auf main gleich rot), `test614` §7f (oben, L259).
+
+**Wächter.** `test539` 51 von 51, `test576` 30 von 30, `test581` 93 von 93,
+`test588` 79 von 79, `test590` 68 von 68, `test614` §4e grün. Gegenproben,
+jede rot und danach genau zurückgestellt (Prüfsumme der Änderung gleich):
+die Abfrage der Blase wieder vor die echte → `test539` 47 von 51; Zwilling
+und Zierstück weg → `test576` 28 von 30; das `:active`-Einsinken zurück →
+`test581` 92 von 93; die Leiste schrumpft unter der Blase → `test614` §4e
+rot. `test588` und `test590` waren gegen den alten Stand rot (78 von 79,
+67 von 68). Zahlen in messungen.md §109.

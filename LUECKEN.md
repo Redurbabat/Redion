@@ -8621,6 +8621,77 @@ Frage an den Lauf, nicht an E757.
 
 ---
 
+## L259 · Was nach E758 rot bleibt — 30. Oktober 2026
+
+**Was E758 grün gemacht hat:** `test539` §6, `test576`, `test581`,
+`test588`, `test590` §16 und `test614` §4e (ENTSCHEIDUNGEN.md E758,
+messungen.md §109). Zwei Stellen aus dem Auftrag bleiben rot, beide mit
+Befund und ohne Reparatur, weil keine billig und eindeutig ein Fehler des
+Produkts ist; dazu fünf, die bei den Nachbarn rot waren und es auf main
+genauso sind (3).
+
+**1 · `test534` §4 „In die Mitte gezogen heisst «frei»" — rot schon am
+13. Oktober (020f51ce1, dort mit drei Zeilen, auf main und auf dem Zweig
+mit einer).** Der Lauf zieht den Griff der Zeichenleiste in die
+FENSTERMITTE, (720, 480) bei 1440 × 960, und erwartet „frei". Die Leiste
+dockt aber an die Ränder ihrer Hülle `.blatt-huelle` (`marken.ts`,
+`FANG = 64`), nicht an die des Fensters. Gemessen mit einer Sonde im selben
+Aufbau wie der Lauf: die Hülle steht bei 244–1380 × 477–2176 px, ihre
+Oberkante also 3 px über dem Loslassen — innerhalb des Fangbands, und die
+Leiste geht nach „oben". Offen ist, was gemeint war: die Mitte der
+SICHTBAREN Hülle (dann stimmt der Ort des Wächters nicht), oder ein
+Andocken am Fensterrand (dann ist `beenden` in `marken.ts` zu ändern).
+Fertig: eine Antwort auf diese Frage, danach der passende Schritt.
+
+**2 · `test614` §7f „zu hoch losgelassen, 120 ms später ein echter Tipp
+auf „Termine": er kommt an" — rot schon an fce1cdb72 (E749s letzter
+Stand, 121 von 122), auf main grün, auf dem Zweig seit E757 wieder rot.**
+Gemessen mit einer Sonde (die Gesten des Laufs, jedes Ereignis am Fenster
+in der Aufnahmephase mitgeschrieben, `Event.prototype.preventDefault`
+belauscht):
+
+```txt
+schneller Wisch hinaus (330 px in 16 ms), Tipp nach  147 ms   kein mousedown, kein click
+                                                    718 ms   kein mousedown, kein click
+                                                   2017 ms   Klick kommt an
+langsam hinaus (20 × 30 ms, 300 ms halten), nach    133 ms   Klick kommt an
+mit .ho-z{transition: color 140ms ease} (aus Liquid Glass), nach 151 ms   Klick kommt an
+mit nur .ho-z{transition: transform 200ms …}, nach  150 ms   kein click
+preventDefault auf touch/pointer/mouse/click        0 Aufrufe
+```
+
+`touchstart` und `touchend` des Tipps kommen beide auf „Termine" an;
+Chromium erzeugt daraus keinen Klick. Die Spur führt zur Unterdrückung
+eines Tipps, der einen Wurf beendet — nach einem SCHNELLEN Loslassen.
+Warum ein Farbübergang am Zeichen das ändert, ist nicht verstanden. Nicht
+gemessen: ob WebKit im iPhone denselben Tipp verliert. Fertig: die Ursache
+verstanden, dann entweder eine Reparatur im Produkt (ohne einen Übergang,
+der nur zufällig hilft — das wäre Zeit verschoben, um einem Fehler
+auszuweichen) oder der Befund, dass es nur Chromium ohne Bildschirm
+betrifft.
+
+**3 · Bei den Nachbarn rot, auf main genauso, nicht angesehen.** Je ein
+Lauf; keiner ist durch E758 neu rot geworden.
+
+```txt
+test221  „Und keines fängt am Bildschirmrand an — pg-tools:0"   rot an 544c68b9f und de375a43f,
+                                                                 grün an 020f51ce1 (Workspace 2.0?)
+test285  „Der Name steht in der Kopfzeile des Dokuments —
+          ist »Elektrotechnik – SkriptPDF · 4 Seiten«"           rot an 544c68b9f
+test388  §5 Decke 1950 KB                                        1957 KB an de375a43f, 1958 KB
+                                                                 an 544c68b9f und nach E758
+test580  „Einstellungen: dieselben 19 Bereiche …"                rot an de375a43f
+test603  „Glas der Kapsel … und nirgends ausserhalb davon"       rot an de375a43f; das Muster liest
+                                                                 einen Kommentar („Fallback ohne
+                                                                 backdrop-filter") und zwei Regeln
+                                                                 `backdrop-filter:none` im Liquid-
+                                                                 Glass-Block (seit E757 nur Glass Wheel)
+```
+
+Fertig: je ein Befund wie in 1 und 2, dann Reparatur oder Entscheidung.
+
+---
+
 ## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — GESCHLOSSEN (E745) — 11. Oktober 2026
 
 **Gemessen** über die Schnittstelle von GitHub, nicht vermutet: die zwei
@@ -10979,8 +11050,8 @@ eine Zeile im Stilblatt (L206).
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 11. Oktober 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 153 Lücken, 95 offene und 58 geschlossene. Der Befehl dazu ist
+**Gemessen am 30. Oktober 2026 (mit L259), nachgezählt statt fortgeschrieben:** die
+Datei führt 154 Lücken, 96 offene und 58 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

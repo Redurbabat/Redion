@@ -9645,3 +9645,93 @@ G4  Einfliegen an einer falschen Schale            52/55  Glass Wheel Rechner + 
 **6 · Codex' `ui-motion-check.mts`:** mit `<body data-schale="premium">`
 (klassisch) nach der Änderung 5 von 9 — rot: Glas am Suchfeld, Pfeil der
 Pille, Reiter 1,1, Einfliegen. Mit `data-ui-shell="glass-wheel"` 9 von 9.
+
+## §109 · Die roten Wächter nach Codex (E758, 30. Oktober 2026)
+
+**Womit:** Chromium der Prüfungen (Playwright 1.56.1, Build 1194), jeder
+Browserstart unter der gemeinsamen Sperre. Stände: „vorher" = 544c68b9f
+(E757), „nachher" = Zweig `claude/waechter-und-zielleiste` nach E758,
+s0 … s7 = die acht Stände 020f51ce1 … de375a43f. Sonden im Kratzordner
+(`regression/e758/`).
+
+**1 · Die Läufe, vorher → nachher**
+
+```txt
+test539   47/51 → 51/51     §6: die erste Abfrage „ohne Durchsicht" war die der Namensblase
+test576   28/30 → 30/30     glasswheel.css: fünf Stellen ohne -webkit-, Glas ohne Marke
+test581   92/93 → 93/93     studio.css: #page > .pg-tools > button:active{transform:scale(.98)}
+test588   78/78 → 79/79     (+1 neue Zusage, gegen vorher rot: 78/79)
+test590   67/68 → 68/68     §16 Rechner 1024: Schnitt 129 px²
+test614  123/125 → 124/125  §4e grün; §7f bleibt rot (L259)
+test534   51/52 → 51/52     unverändert (L259)
+```
+
+**2 · Gegenproben** (eine Änderung je Wächter, alle in einem Lauf, danach
+die Dateien zurückkopiert — `git diff` vorher und nachher Byte für Byte
+gleich):
+
+```txt
+G1  die Abfrage der Namensblase wieder vor die echte (bausteine.css)     test539 47/51
+G2  Zwilling am Rad weg und das Zierstück aus der Liste                   test576 28/30
+G3  :active{transform:scale(.98)} an den Seitenwerkzeugen zurück          test581 92/93
+G4  #ho-ziele[data-vorschau-aktiv]{height:53px}                            test614 §4e rot
+                                                                          (hoeheLayout 53)
+```
+
+**3 · test588 über die Stände** (je ein Lauf von `test588`, alte Fassung):
+s1 grün · s2 (928e1a6e4) rot `{"offen":true,"zf":880,"zo":700}` · s3 grün
+· s4 grün · s5 grün · s6 grün · s7 rot (Lauf vom 30. Oktober) · vorher
+grün. Kein erster schlechter Stand — ein Wettlauf. Die neue Zusage (100 ms
+nach Strg P) gegen vorher: rot, `{"offen":true,"zf":880,"zo":700}`.
+
+**4 · test590 §16, die Lage** (Sonde, 1024 × 768, Seite „Elektrotechnik
+Skript", ohne Netz, Karte zugeklappt):
+
+```txt
+                       Streifen (l,o,r,u)      Pille (l,o,r,u)
+vorher und an s0       271,719,753,754          749,708,1008,752    Schnitt 4 × 33
+ohne Seitennamen       271,719,753,754          811,708,1008,752    kein Schnitt
+1440 × 900, vorher     479,851,961,886         1165,840,1424,884    kein Schnitt
+```
+
+Nachher steht der Streifen um `--touch-min` + `--space-3` höher (Bild
+`streifen-pille/nachher-1024x768-*.png`).
+
+**5 · test614 §4e, die Feder:** der gemalte Kasten der Zielleiste mass im
+Augenblick der Zusage 53,17 px (main) und 53,99 px (vorher) — die Scheibe
+wuchs noch (`growFrom`, `transform: scale`). Nachher: `offsetHeight` 60,
+Breiten `[71,71,71,71,71]` in der Gegenprobe gleich, Höhe dort 53.
+
+**6 · test539 §6 im Browser** (`emulateMedia`, 390 × 844, Namensblase
+sichtbar gesetzt): `prefers-reduced-transparency` bleibt in Build 1194
+falsch (L203). Mehr Kontrast, hell: Rand `rgb(55, 53, 47)`, Schatten
+`none` — vorher wie nachher; dunkel `rgb(241, 242, 244)`. Erzwungene
+Farben: Rand Schwarz bzw. Weiss, vorher wie nachher. Redions „Hoher
+Kontrast" (`body[data-kontrast="hoch"]`): vorher Rand `rgb(138, 143, 152)`
+mit drei Schatten, nachher Textfarbe und `none`.
+
+**7 · test581, der gedrückte Chip** (Maus gedrückt, 220 ms):
+
+```txt
+                 transform                         scale   data-gedrueckt
+vorher           matrix(0.98, 0, 0, 0.98, 0, 0)    0.96    ja
+nachher          none                              0.96    ja
+```
+
+**8 · test388 §5, der Start** (über `test388`): de375a43f 1957 KB,
+vorher 1958 KB, nachher 1958 KB (Decke 1950 — auf main schon gerissen).
+Gzip-Zuwachs der geänderten Dateien nachher gegen vorher: bausteine.css
+−4 B, grund.css +32 B, studio.css −24 B, glasswheel.css +25 B, hinweis.js
++181 B.
+
+**9 · test614 §7f, der verlorene Tipp** (Sonde mit den Gesten des Laufs,
+Ereignisse am Fenster in der Aufnahmephase, `preventDefault` belauscht):
+schneller Wisch hinaus, Tipp nach 147 ms und 718 ms: kein `mousedown`,
+kein `click`; nach 2017 ms: Klick. Langsam hinaus: Klick nach 133 ms. Mit
+`.ho-z{transition: color 140ms ease}`: Klick nach 151 ms; mit nur dem
+Übergang auf `transform`: kein Klick nach 150 ms. `preventDefault` auf
+Zeiger-, Berührungs-, Maus- und Klickereignissen: 0 Aufrufe.
+
+**10 · test534 §4, die Hülle** (Sonde wie der Lauf, 1440 × 960):
+`.blatt-huelle` 244–1380 × 477–2176 px; losgelassen bei (720, 480), 3 px
+unter ihrer Oberkante, Fangband 64 px → „oben".

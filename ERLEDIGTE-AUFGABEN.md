@@ -1,5 +1,44 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 30. Oktober 2026 · E758 · Die roten Wächter nach Codex
+
+**Auftrag:** die nach E757 noch roten Wächter (`test539` §6, `test576`,
+`test581`, `test588`, `test590`, `test614` §4e, `test534`) ansehen, den
+ersten schlechten Stand suchen, das Produkt reparieren, wo der Wächter
+recht hat — nie die Zusage lockern.
+
+**Fund:** Vier kamen aus Codex' Arbeit nach dem 21. Oktober: eine zweite
+Abfrage „ohne Durchsicht" für die Namensblase vor der echten (5de400cce),
+Glas im Glass Wheel ohne iPhone-Zwilling (e0b0d08a1), ein zweites
+`:active`-Einsinken an den Seitenwerkzeugen (9a8e3c22b) und eine Zusage,
+die die wachsende Feder statt der Leiste mass (1a618b878). `test588` war ein
+Wettlauf (der Fächer schloss nur über `pointerleave`, rot an s2 und s7),
+`test590` war schon am 13. Oktober rot (Streifen und Pille bei 1024 px).
+
+**Bau:** Namensblase in die eine Regel in `grund.css`; `-webkit-`-Zwilling
+und präfixbewusstes `@supports` in `glasswheel.css`, das Rad als
+entschiedenes Zierstück in `test576`; das `:active`-Einsinken der
+Seitenwerkzeuge weg; ein neues `.overlay` schliesst den Fächer sofort;
+am Rechner rückt der Offline-Streifen über die Zeitpille; `test614` §4e
+misst `offsetHeight` und die fünf Breiten. Kommentare in den Stilblättern
+so knapp wie möglich — `test388` §5 ist auf main schon gerissen.
+
+**Prüfung:** 539 51/51, 576 30/30, 581 93/93, 588 79/79 (die neue
+100-ms-Zusage zuerst rot), 590 68/68, 614 124/125 (§4e grün). Vier
+Gegenproben rot und genau zurückgestellt. Nachbarn 52, 87, 114, 258, 573,
+582, 585, 602, 623 grün; rot wie auf main 221, 285, 388, 580, 603
+(messungen.md §109).
+
+**Offen (L259):** `test534` §4 (der Wächter zieht in die Fenstermitte, die
+Leiste dockt an ihre Hülle) und `test614` §7f (ein Tipp nach einem
+schnellen Wisch kommt in Chromium nicht an; verdeckt war das bis E757 von
+einem Liquid-Glass-Übergang).
+
+**Bilder:** `bilder-klassik/e758/` im Kratzordner — Streifen und Pille
+(1440, 1024, 390; hell, dunkel; vorher, nachher), der Fächer 100 ms nach
+Strg P (1440, hell, dunkel), die Namensblase unter „Hoher Kontrast" (390),
+die gedrückten Seitenwerkzeuge (1440, 390).
+
 ## 30. Oktober 2026 · E757 · Klassisch bewegt sich wieder wie am 13. Oktober
 
 **Auftrag:** Redurs Antwort im Fragebogen, „Klassische Bewegungen vom
