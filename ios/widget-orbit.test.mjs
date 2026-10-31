@@ -33,7 +33,7 @@ test('small widget is a single tap; medium and large retain three real links', (
   assert.match(shortcuts, /dokumente: 'hl-dok'/);
   assert.match(shortcuts, /heute: 'hl-start'/);
   assert.match(shortcuts, /lernen: 'hl-lernen'/);
-  assert.match(scene, /\["dokumente", "heute", "lernen"\]/);
+  assert.match(scene, /\["neu", "dokumente", "heute", "lernen"\]/);
 });
 
 test('depth is drawn from native gradients/orbits, with no downloaded graphics', () => {

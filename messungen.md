@@ -9645,3 +9645,18 @@ G4  Einfliegen an einer falschen Schale            52/55  Glass Wheel Rechner + 
 **6 · Codex' `ui-motion-check.mts`:** mit `<body data-schale="premium">`
 (klassisch) nach der Änderung 5 von 9 — rot: Glas am Suchfeld, Pfeil der
 Pille, Reiter 1,1, Einfliegen. Mit `data-ui-shell="glass-wheel"` 9 von 9.
+
+## §109 · Die Gegenproben von test624 (E758, 31. Oktober 2026)
+
+Je Gegenprobe wurde das gebaute `.js` geändert, der Lauf gefahren und die Datei
+zurückgestellt. Fenster 1280 × 800, Chromium von Playwright.
+
+| Änderung | Ergebnis |
+|---|---|
+| Aufruf `seiteKommtAn()` entfernt | rot: „§1 eine geöffnete Seite kommt an" |
+| beide Horcher von `mitfuehren` entfernt | rot: Schreibzeile bei 75,5 % statt um 42 % der Höhe |
+| `notizenSichtbar` beginnt mit true | rot: „§5 die Notizen sind am Anfang verborgen" |
+| Prüfung auf `type="body"` entfernt | rot: Notiz wird „7\nErst die Frage stellen" |
+| `mitDruck` immer falsch | rot: „§7 der Stiftstrich ist eine Fläche" |
+
+Nachtrag E759: Zwei weitere Gegenproben, gleiche Art. `eintrag.formen` nicht gesetzt: rot in §8 („kein Platzhalter", „die Lage stimmt"). `notizZurueck` nicht gerufen: rot in §9 („die geänderte Notiz", „wird gemeldet"). Gemessen vor der Reparatur: eine selbst gebaute Folie las sich nach Export und Einlesen als der eine Text „[A4-Blatt]".

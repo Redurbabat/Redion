@@ -5012,6 +5012,75 @@ const ChronikDaten = {
             ],
             "groesstesProblem": "Die erste native IPC-Prüfung erwartete eine URL ohne Fragment, obwohl Redion seine Bibliothek über Fragmentziele öffnet. Der reale Electron-Start deckte das auf. Jetzt bleibt die Einstiegsdatei exakt festgelegt, während Fragmentnavigation erlaubt und fremde Pfade/Frames gesperrt sind. Zusätzlich zeigte die Cloudflare-Prüfung, dass ein fehlender Server und der native Access-/CORS-Anmeldeweg nicht durch eine blosse Datenbankbindung ersetzt werden können.",
             "massnahmen": []
+        },
+        {
+            "datum": "2026-10-31",
+            "wochentag": "Samstag",
+            "titel": "Erste Welle für den täglichen Gebrauch",
+            "wasIchWeiss": "Redion war in Zeichnen, Schreiben und Folien schon weit; Stift-Sätze und Folienübergänge gab es, selbst wählbare Übergänge und Sprechernotizen nicht. Kein Mac und kein iPhone an diesem Rechner.",
+            "nachrichten": [
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "ich will so überlal animationen übergangen widget für iphone und bei der windows ales integriern maximul neu bereichen , animatioen, usw alles haben kreativen desing, es sollte bessere als goodnotes sein bei zeichenn und besser als word beim schreiben und besser als powepoint beim ppowepoint erstellen dann will ich das du es komplet an iphone integrierst und das ich redion komplet täglich schneu nutzenkönntest",
+                    "woher": "Aktueller Dialog",
+                    "gemeint": "Redion soll sich im Alltag auf allen Geräten hochwertig anfühlen und drei Fachprogramme ersetzen können.",
+                    "besser": "Eine Rangfolge der drei Bereiche nennen.",
+                    "besserePrompt": "Was fehlt dir beim täglichen Zeichnen, Schreiben und Präsentieren am meisten? Fang damit an."
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "du kannst die github.com/Redurbabat/UI-Kit komplet nutzen es ist meien webseite",
+                    "woher": "Aktueller Dialog",
+                    "gemeint": "Das UI-Kit darf ohne Rückfrage verwendet werden.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "bist du am arbeiten",
+                    "woher": "Aktueller Dialog",
+                    "gemeint": "Lebenszeichen erbeten, weil lange nichts kam.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "weiter",
+                    "woher": "Aktueller Dialog",
+                    "gemeint": "Am nächsten Punkt der Liste weiterarbeiten.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "hast du ales auf githb gepuscht",
+                    "woher": "Aktueller Dialog",
+                    "gemeint": "Frage nach dem Stand auf GitHub.",
+                    "besser": "",
+                    "besserePrompt": ""
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "pusch auf eien pr und dann mergen",
+                    "woher": "Aktueller Dialog",
+                    "gemeint": "Commit, Push, Pull Request und Zusammenführen auf main; einmalige Ausnahme E760.",
+                    "besser": "",
+                    "besserePrompt": ""
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "Zweig claude/taeglich-erste-welle: E758, E759, E760, test624; per Pull Request auf main."
+                }
+            ],
+            "zahlen": {
+                "commits": 0,
+                "entscheidungen": 3,
+                "neuePruefungen": 1
+            },
+            "groesstesProblem": "Der Auftrag lässt sich in einem Bogen nicht erfüllen; die offene Liste steht deshalb als L259 da.",
+            "interessantesteAnfrage": "Besser als drei Fachprogramme zugleich.",
+            "massnahmen": []
         }
     ],
     "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",

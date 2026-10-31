@@ -1526,7 +1526,25 @@ const Einlesen = (() => {
                 .sort((a, b) => a.y - b.y)
                 .map(o => String(o.text).split('\n')[0].trim())
                 .filter(z => z && z.length <= 80);
-            folien.push({ titel, objekte, kandidaten, grundfarbe,
+            let notizen = '';
+            try {
+                const notizPfad = String(Object.entries(rels)
+                    .find(([, z]) => /notesSlides\//.test(String(z)))?.[1] || '');
+                const notizDoc = await holeXml(notizPfad);
+                const absaetze = [];
+                for (const form of Array.from(notizDoc?.getElementsByTagName('p:sp') || [])) {
+                    const ph = form.getElementsByTagName('p:ph')[0];
+                    if (ph?.getAttribute('type') !== 'body')
+                        continue;
+                    for (const absatz of Array.from(form.getElementsByTagName('a:p')))
+                        absaetze.push(Array.from(absatz.getElementsByTagName('a:t')).map(t => t.textContent || '').join(''));
+                }
+                notizen = absaetze.join('\n').trim();
+            }
+            catch {
+                notizen = '';
+            }
+            folien.push({ titel, objekte, kandidaten, grundfarbe, notizen,
                 uebergang: uebergangLesen(doc),
                 weg: [...weggelassen.entries()] });
         }
@@ -1684,7 +1702,8 @@ const Einlesen = (() => {
                     text: folie.titel || ('Folie ' + (nr + 1)),
                     blattBreite: p.breite, blattHoehe: p.hoehe, papier: 'blanko',
                     ...(folie.grundfarbe ? { grundfarbe: folie.grundfarbe } : {}),
-                    ...(folie.uebergang ? { uebergang: folie.uebergang } : {})
+                    ...(folie.uebergang ? { uebergang: folie.uebergang } : {}),
+                    ...(folie.notizen ? { notizen: folie.notizen } : {})
                 });
                 const marken = [];
                 for (const o of folie.objekte) {

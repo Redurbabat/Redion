@@ -77,3 +77,26 @@ test('local-first app and iOS app are never modified by Windows packager', () =>
   assert.equal(JSON.parse(fs.readFileSync(path.resolve(__dirname, '../capacitor.config.json'))).appId,
     'ch.redurbabat.redion');
 });
+
+test('jump list only ever yields fixed destinations', () => {
+  const { destinationFromArgs, jumpTasks, DESTINATIONS } = require('./generated/desktop-shell.cjs');
+  assert.equal(destinationFromArgs(['redion.exe', '--redion-ziel=neu']), 'neu');
+  assert.equal(destinationFromArgs(['--redion-ziel=https://example.com']), null);
+  assert.equal(destinationFromArgs(['--redion-ziel=__proto__']), null);
+  assert.equal(destinationFromArgs(['C:\a.pdf']), null);
+  const tasks = jumpTasks('C:\Redion.exe');
+  assert.equal(tasks.length, DESTINATIONS.length);
+  for (const task of tasks) assert.equal(destinationFromArgs([task.arguments]) !== null, true);
+});
+
+test('remembered window position must still be on a screen', () => {
+  const { readWindowState, windowStateToSave } = require('./generated/desktop-shell.cjs');
+  const screens = [{ x: 0, y: 0, width: 1920, height: 1080 }];
+  const saved = JSON.stringify(windowStateToSave({ x: 10, y: 20, width: 1000, height: 700 }, true));
+  assert.deepEqual(readWindowState(() => saved, screens), { x: 10, y: 20, width: 1000, height: 700, maximized: true });
+  const away = JSON.stringify({ x: 5000, y: 20, width: 1000, height: 700 });
+  assert.equal(readWindowState(() => away, screens), null);
+  assert.equal(readWindowState(() => '{kaputt', screens), null);
+  assert.equal(readWindowState(() => { throw new Error('fehlt'); }, screens), null);
+  assert.equal(readWindowState(() => JSON.stringify({ x: 0, y: 0, width: 100, height: 100 }), screens), null);
+});

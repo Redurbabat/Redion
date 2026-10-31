@@ -932,7 +932,25 @@ const App = (() => {
         schauplatzMelden();
         return true;
     };
+    const seiteKommtAn = () => {
+        try {
+            if (AppEinstellung.wenigBewegung())
+                return;
+            const flaeche = document.getElementById('page');
+            if (!flaeche?.animate)
+                return;
+            const blatt = document.body.dataset['dokument'] === 'an';
+            flaeche.getAnimations().filter(a => a.id === 'seite-kommt-an').forEach(a => a.cancel());
+            const { easing, duration } = RedionSpring.token('smooth');
+            flaeche.animate(blatt
+                ? [{ opacity: 0 }, { opacity: 1 }]
+                : [{ opacity: 0, translate: '0 12px' }, { opacity: 1, translate: '0 0' }], { duration, easing }).id = 'seite-kommt-an';
+        }
+        catch { }
+    };
     const oeffne = (id) => {
+        if (id && seiteId !== id)
+            seiteKommtAn();
         if (sonder || seiteId !== id)
             navMerken();
         sonder = null;

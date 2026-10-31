@@ -1,6 +1,14 @@
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/device-integration.ts (npm run bauen:ts). */
 const DeviceIntegration = (() => {
+    const ZIEL_KNOPF = {
+        neu: 'btn-new-bottom', heute: 'hl-start', dokumente: 'hl-dok', lernen: 'hl-lernen'
+    };
+    const zielAbholen = async () => {
+        const ziel = await desktop()?.takeDestination?.();
+        if (ziel && Object.hasOwn(ZIEL_KNOPF, ziel))
+            document.getElementById(ZIEL_KNOPF[ziel])?.click();
+    };
     const desktop = () => globalThis.RedionDesktop;
     let started = false, draining = false;
     const esc = (value) => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
@@ -143,6 +151,8 @@ const DeviceIntegration = (() => {
             globalThis.RedionNativeDateien = Object.freeze({ speichern: save,
                 ort: 'Datei am gewählten Windows-Speicherort gespeichert.' });
             bridge.onFiles(() => { void drain().catch(report); });
+            bridge.onDestination?.(() => { void zielAbholen().catch(report); });
+            void zielAbholen().catch(report);
             window.addEventListener('focus', () => { void drain().catch(report); });
             void drain().catch(report);
         }
