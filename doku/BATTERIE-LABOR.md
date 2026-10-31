@@ -11,14 +11,18 @@
    Werkzeug **Leitung ziehen** nutzt den bestehenden Anschlussfang,
    rechtwinklige Leitungen, das Raster, die Netzliste und Undo/Redo.
    Die Ausgangsklemmen dürfen an Anschluss 1 **oder 2** angeschlossen
-   werden.
+   werden. Bei reinen Parallelschaltungen stehen die Zellen nebeneinander,
+   damit die Plus- und Minusschienen übersichtlich bleiben.
 4. Über dem Plan erscheinen **U**, **Ri**, **Imax** und **Q** aus der
    tatsächlichen Verdrahtung. Die Anzeige erkennt Kurzschluss, offene
    Zweige, vertauschte Polarität und falsche Gesamtspannung.
 5. Eine Batteriezelle auswählen: im Fach darunter **U**, **Ri**, **Imax**
    und **Q** eintragen und die Zellwerte übernehmen. Änderungen gehen durch
    die normale Schaltplan-Speicherung.
-6. Optional den Widerstand eines Verbrauchers eingeben und den
+6. Mit **„Musterverdrahtung einsetzen“** kann eine überprüfte Beispielschaltung
+   als echte Redion-Leitungen eingesetzt werden. Eine vorhandene Verdrahtung
+   wird nur nach Bestätigung ersetzt und lässt sich zurücknehmen.
+7. Optional den Widerstand eines Verbrauchers eingeben und den
    Versuchsschalter an-/ausschalten. Laststrom, Lastspannung und Leistung
    entstehen aus Leerlaufspannung und Gesamtinnenwiderstand, soweit
    beide bekannt sind.
