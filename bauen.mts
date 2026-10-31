@@ -157,7 +157,10 @@ html = html.replace(INSELN_MARKE, () => [
  * die Einzeldatei daran, dass jede Zeile es trägt, und eine ohne würde
  * still als `<script src>` in der Einzeldatei stehenbleiben. Genau das
  * fängt `test105`/`test74` nicht, weil die Datei ja gebaut WIRD. */
-html = html.replace(/<script src="(quell\/[^"]+)"(?:\s+defer)?><\/script>/g,
+/* Auch die zwei kleinen Batterie-Aufgaben-Skripte aus der Projektwurzel
+ * gehören in die Weitergabe-Einzeldatei. Eine eingebettete Zeichenfläche,
+ * deren Messungen nur mit Neben-Dateien laufen, wäre keine Einzeldatei. */
+html = html.replace(/<script src="((?:quell\/[^"]+)|(?:batterie-(?:labor-kern|aufgaben)\.js))"(?:\s+defer)?><\/script>/g,
   (_m: string, datei: string) =>
     '<script>\n/* ===== ' + datei + ' ===== */\n' + lies(datei) + '\n</script>');
 
