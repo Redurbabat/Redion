@@ -198,6 +198,8 @@ const GRUNDSTOCK = [
   './quell/bereiche/bloecke/arten/blatt.js',
   './quell/bereiche/elektro/simulation.js',
   './quell/bereiche/bloecke/arten/schaltplan.js',
+  './batterie-labor-kern.js',
+  './batterie-aufgaben.js',
   './quell/bereiche/bloecke/arten/planflaeche.js',
   './quell/bereiche/chronik/daten.js',
   './quell/bereiche/chronik/laden.js',
