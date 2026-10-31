@@ -24,10 +24,14 @@ redion-local://app/index.html
 
 Sie ist in Electron als `standard` und `secure` registriert,
 damit relative Ressourcen und insbesondere **IndexedDB** unter
-einer beständigen Herkunft funktionieren. Alle Dateien werden
-ausschließlich aus dem mitgelieferten Paket
-`resources/redion-web` gelesen. Es läuft **kein localhost-Server**,
-es gibt keinen Remote-Website-Start und keinen Cloud-Zwang.
+einer beständigen Herkunft funktionieren. Im normalen Modus werden alle Webdateien aus dem mitgelieferten Paket
+`resources/redion-web` gelesen. Nur nach ausdrücklichem Verbinden
+eines lokalen, vertrauenswürdigen Redion-Projektordners kann die
+**installierte Windows-App** dessen fertige Webdateien automatisch
+in einer **separaten Entwicklungsumgebung** anzeigen; Details:
+[GitHub-Ordner automatisch übernehmen](WINDOWS-ORDNER-AUTOUPDATE.md).
+Es läuft **kein localhost-Server**; es gibt keinen Remote-Website-Start
+und keinen Cloud-Zwang.
 
 Der Chromium-Profilspeicher liegt dauerhaft unter:
 
@@ -73,7 +77,7 @@ Windows können zunächst unabhängig offline arbeiten.
 
 ## Windows-Live: Änderungen im Redion-Ordner automatisch übernehmen
 
-Für die **eigene Entwicklung auf dem Windows-PC** gibt es jetzt einen
+Für die **eigene Entwicklung auf dem Windows-PC** gibt es einen
 automatischen Live-Modus: **`Redion-Live.bat` im Redion-Projektordner
 doppelt anklicken**. Beim ersten Start braucht der PC Node.js 22.18+
 und Internet für die einmalige Installation der npm-/Electron-Abhängigkeiten.
@@ -95,11 +99,13 @@ automatisch unterbrochen.
 
 Wichtige Grenzen:
 
-- Das ist ein **Entwicklungsmodus**. Die aus dem Installer gestartete
-  `Redion.exe` aktualisiert sich **nicht** durch eine beliebige
-  lokale Änderung am Quellordner. Für diese Version benötigt man
-  weiterhin signierte Releases mit überprüftem Updatekanal
-  (siehe `WINDOWS-AUTOMATISCHE-UPDATES.md`).
+- Neben `Redion-Live.bat` kann die **neu gebaute installierte EXE**
+  nun über **Entwicklung → Lokalen Redion-Ordner verbinden …**
+  denselben lokalen Webcode beobachten. Dafür ist die erstmalige
+  Installation der neuen EXE und eine ausdrückliche Ordnerauswahl nötig.
+  Diese Funktion aktualisiert nur **Webdateien**, nicht die native
+  EXE. Für echte Programm-/Installer-Updates bleiben signierte Releases
+  mit überprüftem Updatekanal erforderlich.
 - Das Live-Fenster verwendet **`%APPDATA%\Redion-Entwicklung`**,
   nicht `%APPDATA%\Redion`. Damit kann ein fehlerhafter
   Entwicklungsstand nicht versehentlich die eigenen produktiven
