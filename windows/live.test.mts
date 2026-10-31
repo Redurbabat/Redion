@@ -5,10 +5,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { classifyChange } from './live.mjs';
-import { webRootFiles } from './web-files.mjs';
+import { classifyChange } from './live.mts';
+import { webRootFiles } from './web-files.mts';
 const require = createRequire(import.meta.url);
-const { startLiveReload, readRevision } = require('./live-reload.cjs');
+const { startLiveReload, readRevision } = require('./generated/live-reload.cjs');
 
 test('nur relevante Ordneränderungen triggern den Live-Bau', () => {
   assert.equal(classifyChange('src','bereiche/test.ts'), 'compile');
