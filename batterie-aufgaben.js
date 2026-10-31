@@ -42,13 +42,17 @@
       plan.teile.push(t);
       return t;
     };
-    const cols = a.zahl === 6 ? 2 : 3;
-    const stepX = a.zahl === 6 ? 230 : 200;
+    /* Bei 1,5-V-Parallelschaltungen stehen die sechs Zellen auf einer
+     * waagrechten Reihe. So lassen sich die beiden Sammelleitungen sichtbar
+     * oberhalb und unterhalb führen, ohne andere Zellklemmen zu streifen. */
+    const parallel=a.zahl===6 && a.zielU===a.u;
+    const cols = parallel ? 6 : (a.zahl === 6 ? 2 : 3);
+    const stepX = parallel ? 120 : (a.zahl === 6 ? 230 : 200);
     const stepY = a.zahl === 6 ? 165 : 140;
     for (let i=0;i<a.zahl;i++) {
       const row=Math.floor(i/cols), col=i%cols;
       const t=einsetzen('batterie','G'+(i+1),
-        130 + stepX*col, 80 + stepY*row,
+        (parallel?75:130) + stepX*col, (parallel?280:80) + stepY*row,
         {
           U:a.u, Imax:a.i,
           ...(a.ri===null ? {} : { Ri:a.ri }),
@@ -56,11 +60,11 @@
         });
       teile.push(t.id);
     }
-    const plus=einsetzen('klemme','X+',785,220);
-    const minus=einsetzen('klemme','X−',785,430);
+    const plus=einsetzen('klemme','X+',parallel?850:785,parallel?150:220);
+    const minus=einsetzen('klemme','X−',parallel?850:785,parallel?520:430);
     const text=(x,y,t)=>plan.texte.push({id:Schaltplan.uid(),x,y,t,ebene:'plan'});
-    text(850,220,'+ Ausgang');
-    text(850,430,'− Ausgang');
+    text(parallel?900:850,parallel?150:220,'+ Ausgang');
+    text(parallel?900:850,parallel?520:430,'− Ausgang');
     text(70,40,'Batteriezellen: Anschlüsse + / −');
     plan.batterieUebung={id:a.id, plus:plus.id, minus:minus.id, teile};
     return plan;
