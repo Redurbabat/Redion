@@ -56,3 +56,54 @@ test('Verschiedene Zellspannungen werden statt falscher Rechnung abgelehnt', () 
   assert.equal(r.ok,false);
   assert.match(r.grund,/unterschiedliche/);
 });
+
+
+test('Schulaufgabe setzt 6 editierbare Zellen und zwei echte Klemmen in den Redion-Plan', () => {
+  let nummer=0;
+  const original=global.Schaltplan;
+  global.Schaltplan={
+    uid:()=> 'test' + (++nummer),
+    neuerPlan:art=>({art,breite:800,hoehe:700,teile:[],leitungen:[],texte:[],
+      ebenen:[{id:'plan',name:'Plan',farbe:'black',sichtbar:true}]})
+  };
+  try {
+    const {planFuer}=require('../batterie-aufgaben.js');
+    const plan=planFuer('k9');
+    assert.equal(plan.teile.filter(x=>x.zeichen==='batterie').length,6);
+    assert.equal(plan.teile.filter(x=>x.zeichen==='klemme').length,2);
+    assert.equal(plan.batterieUebung.teile.length,6);
+    assert.deepEqual(plan.teile.filter(x=>x.zeichen==='batterie').map(x=>x.werte.U),
+      [1.5,1.5,1.5,1.5,1.5,1.5]);
+    assert.equal(plan.leitungen.length,0);
+  } finally {global.Schaltplan=original;}
+});
+test('Redion-Netznummern: parallel verdrahtete Zellen werden an Klemme 2 erkannt', () => {
+  const teile=Array.from({length:6}, (_,i)=>({
+    id:'B'+i, zeichen:'batterie', bmk:'G'+(i+1),
+    werte:{U:1.5,Ri:.3,Imax:1,Q:.5}
+  }));
+  const plan={
+    teile:[...teile,{id:'Xplus',zeichen:'klemme'},{id:'Xminus',zeichen:'klemme'}],
+    batterieUebung:{id:'k45',teile:teile.map(t=>t.id),plus:'Xplus',minus:'Xminus'}
+  };
+  const verbindungen=b.reiheParallel(6,3);
+  const alle=['aus+','aus-',...Array.from({length:6},(_,i)=>['n'+i,'p'+i]).flat()];
+  const vater=new Map(alle.map(x=>[x,x]));
+  const finde=x=>{let v=x;while(vater.get(v)!==v)v=vater.get(v);return v;};
+  verbindungen.forEach(([a,c])=>vater.set(finde(a),finde(c)));
+  const nummern=new Map();
+  const nr=x=>{const r= finde(x);if(!nummern.has(r))nummern.set(r,nummern.size);return nummern.get(r);};
+  const netzVon=new Map();
+  teile.forEach((t,i)=>{
+    netzVon.set('k:'+t.id+':−',nr('n'+i));
+    netzVon.set('k:'+t.id+':+',nr('p'+i));
+  });
+  // Die Übung kann an der unteren statt oberen Klemmen-Seite verdrahtet sein.
+  netzVon.set('k:Xplus:1',1000);
+  netzVon.set('k:Xplus:2',nr('aus+'));
+  netzVon.set('k:Xminus:1',1001);
+  netzVon.set('k:Xminus:2',nr('aus-'));
+  const r=b.ausPlan(plan,{netzVon});
+  assert.equal(r.ok,true);
+  fast(r.u,4.5);fast(r.ri,.45);fast(r.maxA,2);fast(r.ah,1);
+});
