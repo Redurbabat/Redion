@@ -10,7 +10,7 @@ export const webFolders = Object.freeze(['quell', 'oeffentlich', 'fremd', 'lernp
 
 export function webRootFiles(root) {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-  const names = new Set(['index.html', 'sw.js']);
+  const names = new Set(['index.html', 'sw.js', 'version.json', 'version.md']);
   for (const match of html.matchAll(/<(?:script|link)\b[^>]*?\b(?:src|href)="([^"]+)"[^>]*>/gi)) {
     const url = match[1];
     if (!url || url.includes('/') || url.startsWith('.') || url.includes('\\')) continue;
