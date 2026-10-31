@@ -235,7 +235,7 @@ if (!lock) {
     if (LIVE) {
       // Only the locally started developer window sees the build-ready marker.
       // Reload is deferred while the user edits; Store.flush runs first.
-      liveReload = require('./live-reload.cjs').startLiveReload({
+      liveReload = require('./generated/live-reload.cjs').startLiveReload({
         buildDir: path.resolve(__dirname, '../build'),
         window: mainWindow
       });
