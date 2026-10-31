@@ -1,0 +1,36 @@
+# Redion – Versionen und Änderungen
+
+Dieses Dokument hält **ab jetzt jede neue Redion-Version** mit Versionsnummer, Datum, Neuerungen, Fehlerbehebungen und Veröffentlichungsstand fest. Die Windows-App zeigt die aktuelle Nummer unter **Hilfe → Version und Änderungen** an. Die Angaben stehen auch maschinenlesbar in `version.json`.
+
+## 2026.8.4 – 31. Oktober 2026
+**Status:** In Entwicklung (noch nicht als Installer veröffentlicht)
+
+**Neu**
+- Die normale Redion-Windows-App kann über **Entwicklung → Lokalen Redion-Ordner verbinden …** einmalig einen vertrauenswürdigen, auf dem PC gespeicherten GitHub-Projektordner auswählen.
+- Sobald GitHub Desktop neue **fertige Webdateien** in diesem Ordner speichert, erstellt Redion automatisch eine isolierte, vollständige Momentaufnahme und aktualisiert die laufende Oberfläche. Kein manueller Neubau und kein erneutes Installieren der EXE bei reinen Webänderungen.
+- Version und kurze Änderungsliste erscheinen im Windows-Menü **Hilfe → Version und Änderungen**. GitHub-Verlauf in dieser Datei `version.md` und maschinenlesbar in `version.json`.
+- Der lokale Entwicklungsstand verwendet das getrennte Datenprofil `%APPDATA%\Redion-Entwicklung`. Die normale Datenablage `%APPDATA%\Redion` wird nicht durch nicht signierten Projektcode geöffnet.
+- Bei fehlenden, unvollständigen oder unzulässigen Dateien wird der bisherige lauffähige Stand beibehalten. Keine automatischen GitHub-Anmeldedaten, kein ungeprüftes Update der nativen EXE.
+
+**Wichtig:** Die Funktion muss **einmal** als neue Windows-App-Version installiert werden, damit die bestehende EXE den neuen Ordner-Modus kennt. Danach können Änderungen der Weboberfläche über den lokalen Ordner ohne neue Installation übernommen werden. Änderungen am nativen Electron-Code (z. B. `windows/main.cjs`) erfordern weiterhin eine neue signierte EXE. TypeScript-`src/`-Dateien müssen vorher in `quell/` übersetzt sein (bei synchronisierten GitHub-Commits mit eingecheckten Ausgabe-Dateien ist das bereits geschehen).
+
+**Prüfung:** Windows-Testlauf und signierte End-to-End-Auslieferung stehen noch aus. **Nicht als veröffentlichte Version ausgeben.**
+
+## 2026.8.3 – bisheriger Ausgangsstand
+**Status:** Vorherige in den Projektdateien verzeichnete Versionsnummer; keine verifizierte signierte Windows-Veröffentlichung.
+
+- Bestehende Redion-Windows-App mit lokalem Offline-Paket und festen IndexedDB-Daten.
+- Vorbereiteter, aber noch nicht produktiv freigegebener signierter Windows-Auto-Updater.
+- Separater **Redion-Live**-Entwicklungsmodus zum automatischen Bauen und Aktualisieren lokaler Projektdateien (über PR #179).
+
+## Regeln für kommende Versionen
+
+Redion verwendet vorerst das bestehende **Kalenderversionsschema `JAHR.MINOR.PATCH`** mit drei numerischen Teilen (z. B. `2026.8.4`). Die Nummer wird pro zusammengehöriger Änderung bzw. Release erhöht und **nicht bei jedem Speichern** neu vergeben. Die Nummern dürfen nicht rückwärts laufen.
+
+Bei jeder neuen Version:
+1. Neue Überschrift in `version.md` ganz oben: **Nummer, Datum, Status**.
+2. Präzise aufschreiben, **was neu**, **was behoben**, **welche Daten betroffen** sind und ob die **Windows-EXE neu installiert werden muss**.
+3. Dieselbe Nummer in `package.json`, `package-lock.json`, `windows/package.json` und `version.json` eintragen; in `version.json` die Kurzänderungen aktualisieren.
+4. `npm run version:pruefen` und `npm --prefix windows test` ausführen. Nach Abnahme Status auf `veröffentlicht` setzen. **Ein Git-Commit oder Pull Request alleine ist keine installierte Veröffentlichung.**
+
+**Zwei unabhängige Versionsstände:** Unter Hilfe zeigt die Windows-App die **EXE-Version** (nur per Installer aktualisierbar) und die **Webstand-Version** (aus dem verbundenen lokalen Ordner oder dem installierten Paket). Die Nummern können im Entwicklungsmodus verschieden sein.
