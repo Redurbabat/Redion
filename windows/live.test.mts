@@ -8,7 +8,7 @@ import { createRequire } from 'node:module';
 import { classifyChange } from './live.mts';
 import { webRootFiles } from './web-files.mts';
 const require = createRequire(import.meta.url);
-const { startLiveReload, readRevision } = require('./generated/live-reload.cjs');
+const { startLiveReload, readRevision } = require('./live-reload.cts');
 
 test('nur relevante Ordneränderungen triggern den Live-Bau', () => {
   assert.equal(classifyChange('src','bereiche/test.ts'), 'compile');
