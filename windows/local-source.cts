@@ -152,6 +152,11 @@ function startSourceUpdates({ source, previewBase, markerDir, appData, onReady,
   if (typeof onReady !== 'function') throw new Error('onReady fehlt.');
   let stopped = false, watcher = null, debounce = null;
   let revision = 0, active = null, pending = false, staging = false;
+  try {
+    const previous = JSON.parse(fs.readFileSync(path.join(markerDir, MARKER_NAME), 'utf8'));
+    if (Number.isSafeInteger(previous.revision) && previous.revision > 0)
+      revision = previous.revision;
+  } catch { /* first local preview */ }
   // Never allow two concurrent snapshots while GitHub Desktop is updating.
   function stage() {
     if (stopped || staging) { pending = true; return; }
@@ -180,6 +185,14 @@ function startSourceUpdates({ source, previewBase, markerDir, appData, onReady,
     clearTimeout(debounce);
     debounce = setTimeout(stage, debounceMs);
     debounce.unref?.();
+  }
+  // Remove an abandoned .tmp from a previous interrupted Git checkout.
+  // Only our dedicated preview cache is touched, never the source or notes.
+  if (fs.existsSync(previewBase)) {
+    for (const name of fs.readdirSync(previewBase)) {
+      if (/^stand-\d+\.tmp$/.test(name))
+        fs.rmSync(path.join(previewBase, name), { recursive: true, force: true });
+    }
   }
   // An initial snapshot is required before the first load of the renderer.
   stage();
