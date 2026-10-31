@@ -12,6 +12,9 @@ Dieses Dokument hält **ab jetzt jede neue Redion-Version** mit Versionsnummer, 
 - Der lokale Entwicklungsstand verwendet das getrennte Datenprofil `%APPDATA%\Redion-Entwicklung`. Die normale Datenablage `%APPDATA%\Redion` wird nicht durch nicht signierten Projektcode geöffnet.
 - Bei fehlenden, unvollständigen oder unzulässigen Dateien wird der bisherige lauffähige Stand beibehalten. Keine automatischen GitHub-Anmeldedaten, kein ungeprüftes Update der nativen EXE.
 
+**Behoben**
+- Der Windows-Installer packte den ganzen Projektordner ein, samt allen früheren EXE-Dateien (`"redion": "file:.."` in `windows/package.json`); am 31. Oktober erreichte das Archiv 3,9 GB und überschritt die 2-GB-Grenze. Der Eintrag ist entfernt, ein Wächter in `windows/windows-desktop.test.cjs` hält es fest (E763). Daten sind nicht betroffen. Nach dem Holen in `windows/` einmal `npm install`, alte Dateien in `build/windows-dist` löschen, dann `npm run dist`.
+
 **Wichtig:** Die Funktion muss **einmal** als neue Windows-App-Version installiert werden, damit die bestehende EXE den neuen Ordner-Modus kennt. Danach können Änderungen der Weboberfläche über den lokalen Ordner ohne neue Installation übernommen werden. Änderungen am nativen Electron-Code (z. B. `windows/main.cjs`) erfordern weiterhin eine neue signierte EXE. TypeScript-`src/`-Dateien müssen vorher in `quell/` übersetzt sein (bei synchronisierten GitHub-Commits mit eingecheckten Ausgabe-Dateien ist das bereits geschehen).
 
 **Prüfung:** Windows-Testlauf und signierte End-to-End-Auslieferung stehen noch aus. **Nicht als veröffentlichte Version ausgeben.**

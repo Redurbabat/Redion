@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-741 Entscheidungen, E1 bis E762 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+742 Entscheidungen, E1 bis E763 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -826,6 +826,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E757** — Klassisch bewegt sich wieder wie am 13. Oktober; Liquid Glass gehört dem Glass Wheel (Redur, 30. Oktober 2026, im Fragebogen: „Klassische Bewegungen vom 13. Okt."): jede Regel der beiden Liquid-Glass-Blöcke in `studio.css` (a3917c13d, über E752 auf main) hängt zusätzlich an `:where([data-ui-shell="glass-wheel"])` — Gewicht null, im Glass Wheel 65 766 berechnete Werte vorher = nachher; im klassischen Design wieder die Werte vom 13. Oktober (schräges Heben, kein Glas und kein Federn am Suchfeld, kein Einfliegen der Einstellungen, kein 1,1 am Reiter). Nichts gelöscht; der sichtbare Fokus der Ergebniszeilen (§38) bleibt überall; `ui-motion-check.mts` prüft jetzt im Glass Wheel — `test623`
 * **E761** — Die roten Wächter nach Codex: das Produkt repariert, wo der Wächter recht hat (30. Oktober 2026): die Namensblase der Zielleiste in der EINEN Regel für „keine Durchsicht" (`test539` §6), das Glas des Glass Wheel mit iPhone-Zwilling und als entschiedenes Zierstück (`test576`), die Seitenwerkzeuge ohne zweites `:active`-Einsinken (`test581`), ein neues Fenster schliesst den Fächer der Glocke sofort (`test588`, zuerst schärfer gemacht), am Rechner rückt der Offline-Streifen über die Zeitpille (`test590`, rot schon am 13. Oktober), `test614` §4e misst das Layout statt der wachsenden Feder; `test534` und `test614` §7f bleiben offen (L260)
 * **E762** — Die Schaltplanfläche: Vollbild, Zoom, Leiter schieben, nichts übereinander, alles drehen, Schienen, flüssig, radieren (31. Oktober 2026): Vollbild über die feste Ebene am `body` und `requestFullscreen` des Dokuments, Zoom über die viewBox mit EINER Umrechnung (`getScreenCTM`), Strecken quer schieben ohne neue Berührung, neue Leitungen geführt statt gewinkelt (4 → 0 Überlappungen in Redurs Plan), Gruppe drehen und spiegeln, Werkzeug „Schiene" (`leitung.schiene`), Ziehen ohne Neubau des SVG, Radierer wie im PDF (`test625`, L261)
+* **E763** — Der Windows-Installer packt nur die App, nicht den Projektordner (31. Oktober 2026): `"redion": "file:.."` aus `windows/package.json` entfernt; mit ihr lag der ganze Checkout samt früheren EXE-Dateien im Paket, das NSIS-Archiv erreichte 3,9 GB (Grenze 2 GB). Wächter in `windows/windows-desktop.test.cjs`
 
 ## Grundregel
 
@@ -70039,3 +70040,38 @@ Strecke liegt auf k3, und k1 und k3 sind ein Netz. Danach beide Quellen
 aus der Sicherung zurückkopiert — `git status` zeigt sie unverändert.
 
 **Offen:** L261.
+
+## E763 — Der Windows-Installer packt nur die App, nicht den Projektordner
+
+**Was geschah (31. Oktober 2026, Redurs PC).** `npm run dist` in
+`windows/` meldete beim Signierschritt Dateien wie
+`resources\app.asar.unpacked\node_modules\redion\build\windows-dist\Redion Setup 2026.8.3.exe`.
+Das Archiv `redion-windows-2026.8.4-x64.nsis` stand bei 3 919 329 KB —
+über der Grenze von 2 GB, die NSIS für einen Installer hat.
+
+**Ursache.** `windows/package.json` führte unter `dependencies` den Eintrag
+`"redion": "file:.."`. Eine Abhängigkeit packt electron-builder immer mit
+ein; diese zeigt auf den ganzen Projektordner — `node_modules`,
+`build/windows-dist` mit allen früheren Installern, `win-unpacked`. Jeder
+Bau packte damit den vorigen ein, und das Paket wuchs von Bau zu Bau. Die
+Weboberfläche kommt ohnehin über `extraResources` aus `build/windows-app`
+(prepare.mjs); keine Datei unter `windows/` liest das Paket `redion`
+(nachgesehen: `require`/`import` in allen `.cjs`, `.cts`, `.mjs`, `.mts`).
+
+**Entschieden.** Der Eintrag ist weg. `tsc -p windows/tsconfig.json`
+findet `@types/node` weiter über das `node_modules` der Wurzel (gebaut und
+geprüft ohne den Eintrag). Ein Wächter in `windows/windows-desktop.test.cjs`
+verlangt, dass keine Abhängigkeit auf einen Ordner zeigt (`file:`,
+`link:`, relative Pfade) und dass `redion` keine Abhängigkeit ist — gegen
+den alten Stand rot, jetzt `npm --prefix windows test` 7 von 7 (die zwei
+Läufe, die `generated/` brauchen, nach `tsc` gebaut).
+
+**Alternative.** Den Ordner im `build.files` ausschliessen — hält den
+Eintrag am Leben, und die nächste Abhängigkeit mit `file:` hätte dasselbe
+Loch. **Kosten:** keine für die Nutzung; wer `windows/` neu installiert,
+bekommt kein `node_modules/redion` mehr.
+
+**Für Redur:** in GitHub Desktop „Pull origin", in `windows/` einmal
+`npm install` (es entfernt den Verweis), dann die alten Dateien in
+`build/windows-dist` löschen und `npm run dist`. Eingetragen in
+`version.md` unter 2026.8.4, „Behoben".
