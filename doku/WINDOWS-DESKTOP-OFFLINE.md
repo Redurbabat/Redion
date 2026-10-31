@@ -71,6 +71,60 @@ dieses ersten Windows-Desktop-Builds. Der Redion-Cloud-
 Server ist noch nicht produktiv freigegeben. iPhone und
 Windows können zunächst unabhängig offline arbeiten.
 
+## Windows-Live: Änderungen im Redion-Ordner automatisch übernehmen
+
+Für die **eigene Entwicklung auf dem Windows-PC** gibt es jetzt einen
+automatischen Live-Modus: **`Redion-Live.bat` im Redion-Projektordner
+doppelt anklicken**. Beim ersten Start braucht der PC Node.js 22.18+
+und Internet für die einmalige Installation der npm-/Electron-Abhängigkeiten.
+Die Batch-Datei prüft die benötigten Pakete und installiert sie bei Bedarf.
+
+Der Live-Modus startet den normalen Electron-Editor mit der bekannten
+`redion-local://app/index.html`-Oberfläche, beobachtet aber gleichzeitig
+den lokalen Redion-Ordner. Danach muss bei Änderungen an `src/`,
+`quell/`, `index.html`, `sw.js`, Stilblättern, Bildern oder
+Windows-Dateien **kein manueller Bau und kein Strg+R** mehr ausgeführt
+werden. TypeScript wird bei Quelländerungen gebaut, Webdateien werden
+in `build/windows-app` aktualisiert und das **gleiche** Fenster wird
+nach erfolgreichem Bau neu geladen. Wenn es einen Fehler gibt,
+bleibt die vorherige Oberfläche geöffnet. Windows-native
+`.cjs`-/`.cts`-Änderungen führen zu einem Neustart des
+Entwicklungsfensters. Die Änderungen werden nach kurzer Eingabepause
+und `Store.flush()` übernommen; ein offener Dialog wird nicht
+automatisch unterbrochen.
+
+Wichtige Grenzen:
+
+- Das ist ein **Entwicklungsmodus**. Die aus dem Installer gestartete
+  `Redion.exe` aktualisiert sich **nicht** durch eine beliebige
+  lokale Änderung am Quellordner. Für diese Version benötigt man
+  weiterhin signierte Releases mit überprüftem Updatekanal
+  (siehe `WINDOWS-AUTOMATISCHE-UPDATES.md`).
+- Das Live-Fenster verwendet **`%APPDATA%\Redion-Entwicklung`**,
+  nicht `%APPDATA%\Redion`. Damit kann ein fehlerhafter
+  Entwicklungsstand nicht versehentlich die eigenen produktiven
+  Notizen oder die installierte App verändern. Wer dieselben
+  Notizen prüfen will, exportiert/importiert bewusst eine
+  `.redion`-Sicherung.
+- Es werden **keine** Dateien nach `src/`, `ios/` oder ins
+  installierte Windows-Programm zurückgeschrieben; der Bau verwendet
+  nur die Kopie in `build/windows-app`.
+- Der Offline-Cache des Service Workers wird unter
+  `redion-local:` nicht registriert. Das ist hier sicher,
+  weil alle Ressourcen lokal im Electron-Paket liegen, und
+  verhindert alte CSS/JS-Stände nach dem Reload.
+- Redion-Live läuft, solange das Entwicklungsfenster offen ist.
+  Es verändert keine andere bereits installierte App und ist
+  kein unsichtbarer Windows-Hintergrunddienst.
+
+Ohne Batch-Datei geht derselbe Modus im Projektordner über
+`npm --prefix windows start`. Ein einmaliger Start ohne Ordnerbeobachtung
+bleibt als `npm --prefix windows run start:once` möglich.
+
+Mit `npm --prefix windows test` werden die Stempel-/Reload-
+und Verzeichnisregeln geprüft. Der lokale Node-/Electron-Build
+ist zusätzlich auf einem Windows-Rechner zu testen.
+
 ## Windows 10/11 – lokal bauen
 
 Benötigt werden Node.js (mindestens 22.18, empfohlen 24)
