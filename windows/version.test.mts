@@ -21,9 +21,16 @@ test('Versionsnummern in Web, Windows, npm und Changelog stimmen überein', () =
   assert.ok(json.status?.length > 4);
   assert.ok(Array.isArray(json.aenderungen) && json.aenderungen.length > 0);
   assert.ok(json.aenderungen.every(v => typeof v === 'string' && v.length > 8));
-  assert.ok(markdown.includes('## ' + version), 'version.md enthält einen Eintrag');
-  assert.ok(markdown.indexOf('## ' + version) < markdown.indexOf('## 2026.8.3'),
-    'neueste Version zuerst');
-  assert.ok(markdown.includes(json.datum.split('-').reverse().join('.')) ||
-    markdown.includes('31. Oktober 2026'), 'Datum erscheint im Versionsverlauf');
+  const headings = markdown.split(/\r?\n/).filter(line => line.startsWith('## 20'));
+  assert.ok(headings.length >= 1 && headings[0].startsWith('## ' + version),
+    'die neueste Version steht im Versionsverlauf ganz oben');
+  const date = new Date(json.datum + 'T12:00:00Z');
+  assert.ok(Number.isFinite(date.getTime()), 'Datum ist gültig');
+  const germanDate = date.toLocaleDateString('de-CH', {
+    day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC'
+  });
+  assert.ok(headings[0].includes(json.datum) || headings[0].includes(germanDate),
+    'die neueste Überschrift muss das Datum der version.json enthalten');
+  assert.match(markdown.slice(markdown.indexOf(headings[0]), markdown.indexOf(headings[0]) + 220),
+    /\*\*Status:\*\*/, 'jede neue Version nennt ihren Status');
 });
