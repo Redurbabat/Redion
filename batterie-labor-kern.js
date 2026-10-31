@@ -162,7 +162,61 @@
     };
   }
 
-  const api = { pruefen, reiheParallel, idMinus, idPlus, AUS_MINUS, AUS_PLUS };
+  /* Die echte Redion-Planfläche liefert Netze. Keine zweite Geometrie und
+   * keine zweite Definition von Kreuzung/Verbindung: genau die Netzliste
+   * des bestehenden Elektrozeichners gilt auch für die Batterieübung. */
+  function ausPlan(plan, netze) {
+    const uebung = plan && plan.batterieUebung;
+    if (!uebung || !Array.isArray(uebung.teile) ||
+        !uebung.teile.length || uebung.teile.length > 32)
+      return fehler('Keine Batterieübung in diesem Schaltplan.');
+    const teile = Array.isArray(plan.teile) ? plan.teile : [];
+    const nachId = new Map(teile.map(t => [String(t.id), t]));
+    if (!nachId.has(uebung.plus) || !nachId.has(uebung.minus) ||
+        nachId.get(uebung.plus).zeichen !== 'klemme' ||
+        nachId.get(uebung.minus).zeichen !== 'klemme')
+      return fehler('Die beiden Ausgangsklemmen X+ und X− fehlen.');
+    if (!netze || !(netze.netzVon instanceof Map))
+      return fehler('Die Netzliste steht nicht zur Verfügung.');
+    const zellen = [];
+    const punkte = [
+      { id: AUS_MINUS, klemme: 'k:' + uebung.minus + ':1' },
+      { id: AUS_PLUS, klemme: 'k:' + uebung.plus + ':1' }
+    ];
+    for (let i = 0; i < uebung.teile.length; i++) {
+      const t = nachId.get(uebung.teile[i]);
+      if (!t || t.zeichen !== 'batterie')
+        return fehler('Eine Zelle der Aufgabe wurde entfernt oder ersetzt.');
+      const w = t.werte || {};
+      const maxA = Number(w.Imax);
+      if (!Number.isFinite(maxA) || maxA <= 0)
+        return fehler('Bei ' + (t.bmk || 'einer Zelle') + ' fehlt der zulässige Strom Imax.');
+      zellen.push({
+        u: Number(w.U), ri: w.Ri == null ? null : Number(w.Ri),
+        maxA, ah: w.Q == null ? null : Number(w.Q)
+      });
+      punkte.push(
+        { id: idMinus(i), klemme: 'k:' + t.id + ':−' },
+        { id: idPlus(i), klemme: 'k:' + t.id + ':+' }
+      );
+    }
+    const nachNetz = new Map();
+    for (const p of punkte) {
+      const nr = netze.netzVon.get(p.klemme);
+      if (nr === undefined) return fehler('Ein Anschluss ist in der Netzliste nicht vorhanden.');
+      const liste = nachNetz.get(nr) || [];
+      liste.push(p.id);
+      nachNetz.set(nr, liste);
+    }
+    const leitungen = [];
+    nachNetz.forEach(liste => {
+      for (let i = 1; i < liste.length; i++)
+        leitungen.push([liste[0], liste[i]]);
+    });
+    return pruefen(zellen, leitungen);
+  }
+
+  const api = { pruefen, ausPlan, reiheParallel, idMinus, idPlus, AUS_MINUS, AUS_PLUS };
   wurzel.BatterieKern = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
