@@ -5070,14 +5070,14 @@ const ChronikDaten = {
      "zeit": "nicht protokolliert",
      "wortlaut": "pusch auf eien pr und dann mergen",
      "woher": "Aktueller Dialog",
-     "gemeint": "Commit, Push, Pull Request und Zusammenführen auf main; einmalige Ausnahme E759.",
+     "gemeint": "Commit, Push, Pull Request und Zusammenführen auf main; einmalige Ausnahme E760.",
      "besser": "",
      "besserePrompt": ""
     }
    ],
    "arbeit": [
     {
-     "was": "Zweig claude/taeglich-erste-welle: E757, E758, E759, test623; per Pull Request auf main."
+     "was": "Zweig claude/taeglich-erste-welle: E758, E759, E760, test624; per Pull Request auf main."
     }
    ],
    "zahlen": {
@@ -5085,7 +5085,7 @@ const ChronikDaten = {
     "entscheidungen": 3,
     "neuePruefungen": 1
    },
-   "groesstesProblem": "Der Auftrag lässt sich in einem Bogen nicht erfüllen; die offene Liste steht deshalb als L258 da.",
+   "groesstesProblem": "Der Auftrag lässt sich in einem Bogen nicht erfüllen; die offene Liste steht deshalb als L259 da.",
    "interessantesteAnfrage": "Besser als drei Fachprogramme zugleich.",
    "massnahmen": []
   }

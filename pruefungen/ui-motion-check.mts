@@ -17,9 +17,19 @@ const styles = cssDateien.map(datei => {
   if (inhalt.toLowerCase().includes('</style')) throw new Error('Unerwartetes HTML in '+datei);
   return '<style>\n'+inhalt+'\n</style>';
 }).join('\n');
+/* GLASS WHEEL, NICHT KLASSISCH (E757, 30. Oktober 2026). Bis hier stand der
+   Körper als `<body data-schale="premium">` da — das ist das klassische
+   Design, und dieser Lauf hielt damit Liquid Glass IM KLASSISCHEN fest.
+   Redur hat im Fragebogen „Klassische Bewegungen vom 13. Okt." gewählt:
+   „Die 'Liquid Glass'-Änderungen von Codex (20./21. Okt.) im klassischen
+   Design zurücknehmen …". Seither hängen die Regeln in studio.css an
+   `:where([data-ui-shell="glass-wheel"])`, und genau dort prüft dieser Lauf
+   sie weiter — jede Zusage unverändert, nur die Schale ist die des Glass
+   Wheel. Dass das klassische Design wieder dem 13. Oktober folgt, hält
+   test623 in der echten App. */
 const html = '<!doctype html><html lang="de" data-theme="dark"><head>' +
   '<meta name="viewport" content="width=device-width,initial-scale=1">' +
-  styles + '</head><body data-schale="premium">' +
+  styles + '</head><body data-schale="premium" data-ui-shell="glass-wheel">' +
   '<header id="studio-bar"><button class="studio-search">Suche</button></header>' +
   '<div class="bib"><button class="bib-pille" aria-expanded="true">Filter' +
   '<span class="bib-pille-pfeil">⌄</span></button></div>' +

@@ -49,7 +49,7 @@ mehr gibt.
   repariert. Priorität: zuerst.
 - **Echte PowerPoint-Prüfung (E759):** eine exportierte Datei in PowerPoint öffnen. Sagt
   es „reparieren", ist das ein Fehler in `pptxTeile`. Priorität: hoch, braucht Redur.
-- **Nächster Bogen aus L258:** Seitenumbruch, Formatvorlagen und Referentenansicht.
+- **Nächster Bogen aus L259:** Seitenumbruch, Formatvorlagen und Referentenansicht.
   Dateien: `src/register/bloecke.ts`, `src/bereiche/wissen/werkzeuge.ts`. Priorität: hoch.
 - **Gerätelauf:** Codemagic-Bau mit Sperrbildschirm-Widget und Schnellaktion „Neue
   Seite", dann auf dem iPhone prüfen; Sprungliste im installierten Windows-Paket

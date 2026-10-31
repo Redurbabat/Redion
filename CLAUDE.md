@@ -2087,6 +2087,30 @@ von 122; die eigenartigste misst Bildpunkte: ohne Lupe lag die Marke mit
 13. Oktober, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 555.*
 
+*556 bis 558 sind `test620` bis `test622`; sie kamen am 21. und
+24. Oktober mit den Zweigen von Codex (Sicherheitsbranch samt Glasregeln,
+Radierer) und tragen hier keinen eigenen Absatz. Die Zahl oben hat sie
+mitgezählt.*
+
+*Und 559: `test623` — klassisch bewegt sich wie am 13. Oktober (E757).
+Redurs Antwort im Fragebogen vom 30. Oktober, „Klassische Bewegungen vom
+13. Okt.", in 55 Zusagen: im klassischen Design am Rechner und am Telefon
+die Werte, die derselbe Lauf an 020f51ce1 abliest — der Knopf hebt sich
+schräg (2, −2), das Suchfeld hat kein Glas und federt nicht, die
+Einstellungen fliegen nicht ein, das Zeichen des aktiven Reiters bleibt
+bei 1 —, und mit eingeschaltetem Glass Wheel Liquid Glass genau wie
+heute. Gegen de375a43f rot mit 23 von 55; gegen 020f51ce1 (eine Kopie mit
+diesem Wurzelpfad) sind alle Zusagen zum klassischen Design grün. Seine
+eigenartigste Zusage misst einen gedrückten Reiter, ohne ihn zu drücken:
+ein echter Finger über CDP setzte `:active` in 160 ms nicht, also setzt
+der Lauf den Zustand über `CSS.forcePseudoState` und verlangt zuerst, dass
+der Reiter dann wirklich `:active` ist — sonst mässe er nichts (§55.2).
+Und einmal war er aus dem FALSCHEN Grund rot: er schnitt die Quelle ab dem
+Titel des Kopfkommentars statt ab seinem `/*`, und der neue Kommentar, der
+`body[data-schale="premium"]` erklärt, galt ihm als Regel. Gezählt am
+30. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+559.*
+
 *Und 560: `test624` — der Alltag (E758): die geöffnete Seite kommt an, der Fokus-Modus
 zeigt nur das Blatt und führt die Schreibzeile, der Vortrag hat Uhr und Notizen, die
 Tafel hat Druck. Bemerkenswert sind zwei Dinge: seine Prüfung der Schreibzeile war

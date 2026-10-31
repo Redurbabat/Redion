@@ -3698,7 +3698,7 @@ Die erste native IPC-Prüfung erwartete eine URL ohne Fragment, obwohl Redion se
 
 > pusch auf eien pr und dann mergen
 
-**Gemeint:** Commit, Push, Pull Request und Zusammenführen auf main; einmalige Ausnahme E759.
+**Gemeint:** Commit, Push, Pull Request und Zusammenführen auf main; einmalige Ausnahme E760.
 
 **Besser geschrieben:** 
 
@@ -3709,7 +3709,7 @@ Die erste native IPC-Prüfung erwartete eine URL ohne Fragment, obwohl Redion se
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
 |---|---|---|---|---|
-| Zweig claude/taeglich-erste-welle: E757, E758, E759, test623; per Pull Request auf main. | `` → `` |  | — | — |
+| Zweig claude/taeglich-erste-welle: E758, E759, E760, test624; per Pull Request auf main. | `` → `` |  | — | — |
 
 #### Zahlen des Tages
 
@@ -3719,7 +3719,7 @@ Die erste native IPC-Prüfung erwartete eine URL ohne Fragment, obwohl Redion se
 
 #### Das grösste Problem
 
-Der Auftrag lässt sich in einem Bogen nicht erfüllen; die offene Liste steht deshalb als L258 da.
+Der Auftrag lässt sich in einem Bogen nicht erfüllen; die offene Liste steht deshalb als L259 da.
 
 #### Das Interessanteste, das Redur wollte
 
