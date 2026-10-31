@@ -181,7 +181,9 @@
     const zellen = [];
     const punkte = [
       { id: AUS_MINUS, klemme: 'k:' + uebung.minus + ':1' },
-      { id: AUS_PLUS, klemme: 'k:' + uebung.plus + ':1' }
+      { id: AUS_MINUS, klemme: 'k:' + uebung.minus + ':2' },
+      { id: AUS_PLUS, klemme: 'k:' + uebung.plus + ':1' },
+      { id: AUS_PLUS, klemme: 'k:' + uebung.plus + ':2' }
     ];
     for (let i = 0; i < uebung.teile.length; i++) {
       const t = nachId.get(uebung.teile[i]);
@@ -211,7 +213,7 @@
     const leitungen = [];
     nachNetz.forEach(liste => {
       for (let i = 1; i < liste.length; i++)
-        leitungen.push([liste[0], liste[i]]);
+        if (liste[0] !== liste[i]) leitungen.push([liste[0], liste[i]]);
     });
     return pruefen(zellen, leitungen);
   }
