@@ -128,7 +128,7 @@
       return html;
     };
     function aktualisiere() {
-      if (!el || !el.isConnected) return;
+      if (!el) return;
       const plan=optionen.holePlan();
       const a=plan.batterieUebung ? get(plan.batterieUebung.id) : get(wahl);
       const zellen=plan.batterieUebung ? plan.batterieUebung.teile.length : a.zahl;
