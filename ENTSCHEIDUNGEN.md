@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-737 Entscheidungen, E1 bis E758 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+738 Entscheidungen, E1 bis E759 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -816,6 +816,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 
 * **E757** — Klassisch bewegt sich wieder wie am 13. Oktober; Liquid Glass gehört dem Glass Wheel (Redur, 30. Oktober 2026, im Fragebogen: „Klassische Bewegungen vom 13. Okt."): jede Regel der beiden Liquid-Glass-Blöcke in `studio.css` (a3917c13d, über E752 auf main) hängt zusätzlich an `:where([data-ui-shell="glass-wheel"])` — Gewicht null, im Glass Wheel 65 766 berechnete Werte vorher = nachher; im klassischen Design wieder die Werte vom 13. Oktober (schräges Heben, kein Glas und kein Federn am Suchfeld, kein Einfliegen der Einstellungen, kein 1,1 am Reiter). Nichts gelöscht; der sichtbare Fokus der Ergebniszeilen (§38) bleibt überall; `ui-motion-check.mts` prüft jetzt im Glass Wheel — `test623`
 * **E758** — Die roten Wächter nach Codex: das Produkt repariert, wo der Wächter recht hat (30. Oktober 2026): die Namensblase der Zielleiste in der EINEN Regel für „keine Durchsicht" (`test539` §6), das Glas des Glass Wheel mit iPhone-Zwilling und als entschiedenes Zierstück (`test576`), die Seitenwerkzeuge ohne zweites `:active`-Einsinken (`test581`), ein neues Fenster schliesst den Fächer der Glocke sofort (`test588`, zuerst schärfer gemacht), am Rechner rückt der Offline-Streifen über die Zeitpille (`test590`, rot schon am 13. Oktober), `test614` §4e misst das Layout statt der wachsenden Feder; `test534` und `test614` §7f bleiben offen (L259)
+* **E759** — Die Schaltplanfläche: Vollbild, Zoom, Leiter schieben, nichts übereinander, alles drehen, Schienen, flüssig, radieren (31. Oktober 2026): Vollbild über die feste Ebene am `body` und `requestFullscreen` des Dokuments, Zoom über die viewBox mit EINER Umrechnung (`getScreenCTM`), Strecken quer schieben ohne neue Berührung, neue Leitungen geführt statt gewinkelt (4 → 0 Überlappungen in Redurs Plan), Gruppe drehen und spiegeln, Werkzeug „Schiene" (`leitung.schiene`), Ziehen ohne Neubau des SVG, Radierer wie im PDF (`test624`, L260)
 
 ## Grundregel
 
@@ -69795,3 +69796,153 @@ und Zierstück weg → `test576` 28 von 30; das `:active`-Einsinken zurück →
 `test581` 92 von 93; die Leiste schrumpft unter der Blase → `test614` §4e
 rot. `test588` und `test590` waren gegen den alten Stand rot (78 von 79,
 67 von 68). Zahlen in messungen.md §109.
+
+## E759 — Die Schaltplanfläche: Vollbild, Zoom, Leiter schieben, nichts übereinander, alles drehen, Schienen, flüssig, radieren
+
+**Auftrag.** Redur, 31. Oktober 2026, unter einem Bild der Planfläche
+(„Stromlaufplan, aufgelöst", L1 oben, N unten, G1, E1, E2, S2, S3):
+„hier beim schalterzeichen ist es nicht so gut ich kann nicht es volmodu
+öfnne zommen, leiterschieben, und alle leiter gehen übereinander es sollte
+nicht so sein und ich sollte alles umdrehen können und die l und n selber
+zeichnen können dann flüsiger behebe das" — und am selben Tag: „Und für
+lösche auch verbesser das auch also ich sollte wie beim löschen von pdf
+dort auch so haben entweder mir finger oder masud oder stift oder nur
+eienzeäne leiter". Vorrang (am selben Tag): zuerst die Windows-App —
+Electron lädt dieselbe Seite in einem Fenster von 1300 × 860, mindestens
+860 breit; Maus, Rad, Trackpad, Tastatur. Das Telefon später.
+
+**Der Wächter zuerst.** `test624` stand eingecheckt, bevor eine Zeile
+geändert war (f8daad4b4), und war gegen ab2567a48 rot mit 50 von 110
+(messungen.md §110). Mit E759 110 von 110.
+
+**1 · Vollbild.** ⛶ im Kopf, die Taste F; zurück mit ✕ (44 px, fest in der
+Ecke) und Escape (erst die Auswahl, dann das Vollbild — ein Druck, eine
+Sache). Die Fläche legt sich als feste Ebene über das Fenster (z-index 560:
+über der unteren Leiste, unter Menüs, Formelheft und Fenstern), und wo der
+Browser es erlaubt — die Windows-App — wird zusätzlich das GANZE Dokument
+in den Vollbildmodus gebeten, nicht die Fläche: Menüs, Dialoge und
+Meldungen hängen am `body` und blieben sonst unsichtbar. Dafür zieht die
+Fläche an den `body` um und danach an ihren Platz zurück (ein Kommentar
+hält ihn): in der Seite fing der Stapel der Schale ihr `position:fixed`
+ein, und `#topbar` lag obenauf — gemessen. Dasselbe Element, derselbe
+Zustand; nichts geht verloren.
+
+*Ein Fund, der nach Chromium aussieht und trotzdem hier behandelt ist:*
+direkt nach `requestFullscreen` kam bei 1300 × 860 kein einziges Rad mehr
+bei der Seite an — weder an der Bühne noch am Dokument —, bis irgendein
+Horcher NEU angemeldet wurde. Das Neu-Anmelden der eigenen blockierenden
+Horcher half nicht, ein zusätzlicher passiver Horcher nach dem Wechsel
+schon (gemessen rot ohne, grün mit, je zweimal). Er tut nichts und hängt
+nur, solange das Vollbild steht. Ob die Windows-App denselben Fehler hat,
+ist im Container nicht prüfbar (keine Electron-Installation, L260 Punkt 1).
+
+**2 · Zoom und Lage.** Gezoomt wird über die viewBox — das SVG bleibt
+dasselbe Element. Bei Zoom 1 und Lage 0,0 ist die viewBox das Blatt,
+Zeichen für Zeichen das Bild von vorher (`test624` §0 vergleicht das SVG
+der fünf Pläne aus `test611` mit dem Hash von ab2567a48). EINE Umrechnung:
+`ortAus` fragt die Matrix des SVG (`getScreenCTM`), wie E686 am Whiteboard;
+Treffen, Einrasten, Leitungziehen, Rahmen, Radierer und Schiene rechnen
+damit bei jedem Zoom gleich. Strg/⌘+Rad (so meldet auch ein Trackpad das
+Auseinanderziehen) zoomt um den Zeiger; das Rad allein verschiebt nur, wenn
+gezoomt, verschoben oder im Vollbild — sonst rollt es die Seite wie bisher.
+Mittlere Taste und Leertaste+Ziehen verschieben; + − 0 auf der Tastatur;
+− Prozent + ⤢ rechts im Fuss. Zwei Finger zoomen und verschieben.
+
+*Warum die Zoomknöpfe im Fuss stehen und nicht über der Fläche:* über der
+Fläche deckten sie die rechte obere Ecke des Plans zu — `test611` §14
+zog seinen Rahmen um H1 genau dort an und fing auf dem Zoom an (§37: „Die
+Werkzeugleiste darf nicht verdecken, was sie bedient").
+
+**3 · Leiter schieben.** Eine Leitung an einer Strecke anfassen wählt sie
+und zieht diese Strecke quer (`Schaltplan.streckeSchieben`): waagrecht nach
+oben oder unten, senkrecht nach links oder rechts. Die erste oder letzte
+Strecke bekommt einen Stich, damit das Ende auf seiner Klemme bleibt. Jede
+Lage wird mit der Regel des Nachziehens geprüft (E746): berührt der neue
+Weg etwas, das der alte nicht berührte, oder nicht mehr, was er berührte,
+folgt die Strecke nicht — die letzte gute Lage bleibt. Ein Zug ist ein
+Rückgängig-Schritt (der Stand beim Anfassen wird gemerkt, `aendere(…,
+vorherAbzug)`).
+
+**4 · Nichts übereinander.** Die Ursache war nicht das Nachziehen, sondern
+das ZEICHNEN: jede neue Leitung lief als `rechtwinklig`, ohne Prüfung. Von
+der Klemme zur Schiene lag ihr zweiter Schenkel auf der Schiene — im
+nachgebauten Plan aus Redurs Bild vier Überlappungen bei sechs Leitungen —,
+und eine Leitung quer durch den Plan fasste unterwegs jede Klemme, über
+die ihr Winkel lief: S2:4 nach E2:X2 berührte S3:4 und E2:X1, zwei Netze
+verbunden. Jetzt führt `Schaltplan.leitungFuehren`: ein Weg darf nur
+berühren, was an seinen Enden gemeint ist (die Klemmen und die Leitungen,
+auf denen ein Ende liegt), auf keiner anderen Leitung entlanglaufen und
+möglichst durch kein Zeichen gehen; probiert werden die zwei Winkel, die
+Z-Wege, die Hakenwege. Und das Nachziehen nimmt einen Weg, der auf einer
+anderen Leitung entlangläuft, nur noch als Notfall, wie einen durch ein
+Zeichen. Gemessen: 4 → 0 Überlappungen, die Querleitung fasst genau S2:4
+und E2:X2; die eingebauten Beispiele hatten keine und haben keine.
+Eine Kreuzung ohne Verbindung bleibt, wie sie war: eine Lücke in der
+waagrechten Leitung, kein Punkt (Punkt 16, unverändert — sonst sähen alte
+Pläne anders aus); ein Punkt steht nur an einer Verbindung.
+
+**5 · Alles drehen.** Ist mehr als ein Ding gewählt, drehen und spiegeln R
+und H die ganze Auswahl als GRUPPE um ihre Mitte
+(`Schaltplan.gruppeUmformen`): die Mitte jedes Teils, jeder Punkt jeder
+Leitung, der Anker jedes Texts (die Schrift bleibt waagrecht). Die Drehung
+eines Teils folgt: gedreht +90°, gespiegelt (360 − d) mit umgelegtem
+Spiegel — das Register spiegelt zuerst und dreht dann. Leitungen zu Teilen
+ausserhalb zieht `nachziehen` nach. Ein einzelnes Teil dreht wie bisher an
+seinem Ort (dieselbe Drehung um dieselbe Mitte, `test611` misst sie so).
+„… → Ganzen Plan drehen (90°)" dreht alles und tauscht Breite und Höhe.
+Der Rahmen und Strg+A fassen jetzt auch Texte, und ein gewählter Text
+zeigt es (Akzent und unterstrichen, §38).
+
+**6 · L und N selber zeichnen.** Das Werkzeug „Schiene" (☰) zieht L1, L2,
+L3, N oder PE als gerade Linie, mit der Beschriftung am Anfang. Eine
+Schiene ist eine gewöhnliche Leitung mit dem neuen, optionalen Feld
+`schiene` — die Netzliste liest es nicht; wer einen Zweig auf ihr enden
+lässt, ist verbunden wie an den erzeugten Schienen (E262 bleibt). Nur das
+Bild zeichnet sie kräftiger. `lesen` behält das Feld nur, wenn es einer der
+fünf Namen ist; ein Plan von vor E759 bekommt kein neues Feld, auch kein
+leeres (§9). Beschrieben in doku/REDION-FORMAT.md.
+
+**7 · Flüssig.** Bis hier rief jede Bewegung eines Zugs `buehneMalen` —
+das ganze SVG als Text, geparst, ersetzt. Jetzt rückt ein Zug nur, was
+sich bewegt (`teilweiseMalen`: die `transform` der gezogenen Teile, das `d`
+jeder Leitung, deren Weg oder Lücke sich ändert, die Verbindungspunkte),
+und die Vorschau von Leitung, Rahmen, Schiene und Radierkreis liegt in
+einer eigenen Gruppe obenauf. Zoomen ändert nur die viewBox. Zahlen:
+messungen.md §110.
+
+**8 · Radieren wie im PDF.** Ein Kreis folgt dem Zeiger — Maus, Finger,
+Stift, und das Radierende eines Stifts radiert bei jedem Werkzeug (wie
+E352) —, was er berührt, wird blass und gestrichelt markiert (nicht nur
+blasser, §38) und beim Loslassen in EINEM Schritt gelöscht. „Alles"
+radiert Leitungen, Teile und Texte; „Nur Leiter" nie ein Teil. Ein Tipp
+ohne Wisch radiert genau ein Ding: die nächste Leitung unter dem Kreis
+(bei „Alles" zuerst das Teil unter dem Zeiger). Drei Grössen (8, 16,
+28 px am Bildschirm — bei jedem Zoom gleich gross). Art und Grösse liegen
+in `elektro:radierer` in `Store.meta`, wie die Favoriten: sie gehören dem
+Menschen, nicht dem Plan. Eine gelöschte Leitung trennt nur sich selbst.
+
+**Nebenbei, am Telefon:** die rechte Gruppe des Kopfs lief über den Rand —
+↷, „…" und ⛶ lagen bei x = 448 bis 492 von 390, das Menü „…" war am
+Telefon nicht zu erreichen. Sie bricht jetzt um.
+
+**Was es kostet.** Zwei Dateien mehr Code (Ansicht, Radierer, Gesten);
+eine Umrechnung statt zwei; ein optionales Feld im Format. Eine Leitung,
+die man zeichnet, liegt nicht mehr immer im ersten Winkel — wer genau den
+wollte, schiebt ihre Strecke (Punkt 3).
+
+**Die Alternative.** Zoom per CSS-`transform` auf dem SVG statt viewBox —
+verworfen: zwei Umrechnungen (CSS und viewBox), und die Stricke würden
+anders gerastert. Das Vollbild über `requestFullscreen` der Fläche statt
+des Dokuments — verworfen: Menüs und Dialoge am `body` wären unsichtbar.
+
+**Gegenproben** (jede rot, dann genau zurückgestellt): in EINEM Lauf, weil jede einen anderen Abschnitt trifft, gegen
+`test624` 99 von 110. (1) `leitungFuehren` gibt wieder den ersten Winkel
+→ §4a/§4c/§4d rot, wörtlich die vier Überlappungen und „fasst E2:X1 E2:X2
+S2:4 S3:4". (2) Jede Bewegung eines Teilzugs baut das SVG neu → §7b „ist 4,
+soll 0". (3) Kein passiver Horcher nach dem Vollbildwechsel → §10c bei
+1300 × 860 rot. (4) „Nur Leiter" radiert auch Teile → §8g, §8j (und §8l)
+rot. (5) `streckeSchieben` ohne Berührungsprüfung → §3d, §3e, §3g rot: die
+Strecke liegt auf k3, und k1 und k3 sind ein Netz. Danach beide Quellen
+aus der Sicherung zurückkopiert — `git status` zeigt sie unverändert.
+
+**Offen:** L260.

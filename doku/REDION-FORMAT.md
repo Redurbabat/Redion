@@ -519,3 +519,28 @@ zweite Fassung.
   nur den Textbestand ab — siehe oben.
 - **ZIP64**, falls jemand mehr als 65 535 Anhänge oder mehr als 4 GB sichern
   will. Bis dahin gilt: eine ehrliche Meldung statt eines kaputten Archivs.
+
+---
+
+## Schaltplan-Blöcke: `block.plan` (E759)
+
+Ein Schaltplan ist ein gewöhnlicher Block (`type: 'schaltplan'`) und reist in
+`daten.json` mit; sein Inhalt steht in `block.plan`:
+`{ art, breite, hoehe, teile[], leitungen[], texte[], ebenen[] }`. Eine
+Leitung ist `{ id, punkte: [{x, y}, …], ebene, vonTeil?, vonNr?, nachTeil?,
+nachNr? }`.
+
+**Seit E759 kann eine Leitung zusätzlich `schiene` tragen** — `'L1'`,
+`'L2'`, `'L3'`, `'N'` oder `'PE'` —, wenn sie mit dem Werkzeug „Schiene"
+selbst gezeichnet wurde. Das Feld ist optional und fehlt bei jeder anderen
+Leitung und in jedem Plan von vor E759; `Schaltplan.lesen` behält es nur
+mit einem dieser fünf Werte und setzt es nie leer. Die Netzliste liest es
+nicht (eine Schiene ist eine Leitung wie jede andere), nur das Bild zeichnet
+sie kräftiger. Eine ältere Fassung von Redion, die das Feld nicht kennt,
+lässt es beim nächsten Speichern des Plans fallen — die Leitung und ihre
+Beschriftung (ein gewöhnlicher Text) bleiben.
+
+Zoom, Lage, Vollbild und die Wahl des Radierers stehen NICHT im Plan: die
+Ansicht gehört dem Bildschirm, der Radierer dem Menschen (`Store.meta`,
+`elektro:radierer`).
+

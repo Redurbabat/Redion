@@ -9735,3 +9735,57 @@ Zeiger-, Berührungs-, Maus- und Klickereignissen: 0 Aufrufe.
 **10 · test534 §4, die Hülle** (Sonde wie der Lauf, 1440 × 960):
 `.blatt-huelle` 244–1380 × 477–2176 px; losgelassen bei (720, 480), 3 px
 unter ihrer Oberkante, Fangband 64 px → „oben".
+
+## §110 · Die Schaltplanfläche (E759, 31. Oktober 2026)
+
+**Womit:** Chromium der Prüfungen (Playwright 1.56.1), unter der gemeinsamen
+Sperre, Fenster 1440 × 900, ohne Berührung (der Weg der Windows-App).
+„vorher" = ab2567a48 (eine Kopie über `git archive`), „nachher" = Zweig
+`claude/schaltplan-flaeche` mit E759. Sonden im Kratzordner
+(`schaltplan/messen.mts`, `probe*.mts`).
+
+**1 · `test624`:** vorher 50 von 110, nachher 110 von 110.
+
+**2 · Überlappungen** (zwei Strecken verschiedener Leitungen auf derselben
+Linie, mit gemeinsamem Stück > 0), im Plan aus Redurs Bild, die sechs
+Leitungen mit der Maus gezeichnet wie ein Mensch (Klemme → Schiene,
+Klemme → Klemme), dazu die Querleitung S2:4 → E2:X2:
+
+```txt
+                              vorher                          nachher
+sechs Leitungen               4  (zweimal auf L1, zweimal auf N)   0
+Querleitung S2:4 → E2:X2      fasst E2:X1 E2:X2 S2:4 S3:4     fasst E2:X2 S2:4
+                              und liegt auf S3:4–E2:X1        liegt auf nichts
+eingebaute Beispiele (3)      0                               0
+```
+
+**3 · Bildzeiten beim Ziehen, CPU vierfach gedrosselt** (CDP
+`Emulation.setCPUThrottlingRate 4`). Plan „Drehstrom, FI und Übertrager"
+(der aus test611), F1 um 120 × 60 Planeinheiten in 60 Bewegungen, 16 ms
+auseinander, drei Läufe. „Handler" = Zeit vom Zeigerereignis am Fenster
+(Aufnahme) bis zum Ende seiner Behandlung (Blase am Fenster); „Bilder" =
+Abstände der `requestAnimationFrame`-Rückrufe während des Zugs.
+
+```txt
+F1 ziehen          Handler p95 / max            Bilder Median / p95 / max
+vorher   Lauf 1    22,0 / 34,4 ms               16,7 / 66,7 / 133,4 ms
+         Lauf 2    13,5 / 15,4 ms               16,7 / 66,6 /  83,3 ms
+         Lauf 3    11,8 / 32,6 ms               16,7 / 50,0 / 100,1 ms
+nachher  Lauf 1    14,3 / 19,0 ms               16,7 / 33,3 /  99,9 ms
+         Lauf 2     3,7 /  4,8 ms               16,7 / 16,8 /  50,0 ms
+         Lauf 3     5,2 /  9,8 ms               16,7 / 16,8 /  33,4 ms
+```
+
+Neu, ohne Vorher (das gab es nicht): eine Strecke von f2 um 20 Planeinheiten
+in 40 Bewegungen — Handler im Median 2,9–3,0 ms, p95 5,3–9,2 ms; Bilder im
+Median 16,7 ms, p95 50–67 ms. Strg+Rad, 30 Schritte — Handler im Median
+2,3 ms, p95 3,6–4,4 ms; Bilder im Median 16,8 bis 33,3 ms, p95 50 ms.
+
+**Was die Zahlen sagen.** Das Ziehen eines Teils hält jetzt meist 60 Bilder
+je Sekunde (p95 16,8 ms in zwei von drei Läufen, vorher 50–67 ms) — der
+Neubau des SVG je Bewegung ist weg. Beim Zoomen und beim Schieben einer
+Strecke ist der Handler billig (2–3 ms), aber das NEUZEICHNEN des ganzen
+SVG durch den Browser kostet bei vierfacher Drosselung um 30 ms: das sind
+30 Bilder je Sekunde, nicht 60 (L260 Punkt 2). Ohne Drosselung nicht
+gemessen.
+

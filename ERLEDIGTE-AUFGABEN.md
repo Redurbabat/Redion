@@ -1,5 +1,32 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 31. Oktober 2026 · E759 · Die Schaltplanfläche
+
+**Auftrag:** Redur unter einem Bild der Planfläche — Vollbild, zoomen,
+Leiter schieben, „alle leiter gehen übereinander", alles umdrehen, L und N
+selber zeichnen, flüssiger; dazu radieren wie im PDF (Maus, Finger, Stift,
+nur einzelne Leiter). Zuerst für die Windows-App.
+
+**Fund:** Die Überlappungen kamen vom Zeichnen, nicht vom Nachziehen: jede
+neue Leitung lief als erster Winkel ohne Prüfung — auf der Schiene entlang
+und über fremde Klemmen (S2:4 → E2:X2 fasste S3:4 und E2:X1). Im Vollbild
+lag `#topbar` über der Fläche, solange sie in der Seite stand; über der
+Fläche deckten Zoomknöpfe die Ecke des Plans zu; am Telefon lagen ↷, „…"
+und ⛶ ausserhalb des Bildes.
+
+**Bau:** `planflaeche.ts` (Ansicht über die viewBox, `ortAus` über
+`getScreenCTM`, Vollbild am `body` mit `requestFullscreen` des Dokuments,
+Strecken-, Radier-, Schienen- und Schwenkzüge, `teilweiseMalen`, zwei
+Finger), `schaltplan.ts` (`leitungFuehren`, `streckeSchieben`,
+`gruppeUmformen`, `planDrehen`, `ueberlappt`, Feld `schiene`),
+`bausteine.css`.
+
+**Prüfung:** `test624` zuerst rot (50 von 110 gegen ab2567a48), jetzt 110
+von 110; Nachbarn grün: 222, 263, 537, 568, 570, 571, 572, 575, 576, 581,
+598, 604, 605, 606, 607, 608, 611 (209/209), 612; Dateiwächter 87, 105,
+225, 537, 549; `test109` rot wie auf main (die `.mjs` von Codex).
+Zahlen in messungen.md §110, offen in L260.
+
 ## 30. Oktober 2026 · E758 · Die roten Wächter nach Codex
 
 **Auftrag:** die nach E757 noch roten Wächter (`test539` §6, `test576`,

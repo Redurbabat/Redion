@@ -8692,6 +8692,45 @@ Fertig: je ein Befund wie in 1 und 2, dann Reparatur oder Entscheidung.
 
 ---
 
+
+## L260 · Was an der Schaltplanfläche nach E759 offen bleibt — 31. Oktober 2026
+
+**Was E759 gebaut hat:** Vollbild, Zoom und Lage, Strecken schieben,
+geführte Leitungen ohne Überlappung, Gruppe drehen und spiegeln, Schienen
+selbst zeichnen, Ziehen ohne Neubau des SVG, Radierer wie im PDF
+(ENTSCHEIDUNGEN.md E759, `test624` 110 von 110, messungen.md §110).
+
+**1 · Die Windows-App selbst ist nicht gefahren.** Geprüft ist Chromium in
+den Fenstergrössen der App (1300 × 860, 860 × 700, 1440 × 900), mit und ohne
+`requestFullscreen`. Electron liegt im Container nicht (kein
+`windows/node_modules`), `pruefungen/windows-app-smoke.mts` läuft hier
+nicht. Ein Fund aus Chromium (nach dem Vollbildwechsel kam kein Rad an,
+bis ein passiver Horcher neu angemeldet wurde) ist im Code behandelt; ob
+Electron ihn auch hat, ist ungeprüft.
+
+**2 · Zoomen und Strecken-Schieben bei vierfacher Drosselung: 30, nicht 60
+Bilder je Sekunde.** Der Handler kostet 2–3 ms; teuer ist das Neuzeichnen
+des ganzen SVG durch den Browser (Punktraster als Muster, alle Zeichen).
+Ein Weg wäre, das Raster beim Zoomen als CSS-Hintergrund zu führen oder
+das Zeichnen während der Geste auf ein `transform` zu legen und erst danach
+die viewBox zu setzen — nicht gebaut.
+
+**3 · Das Telefon ist nicht der Schwerpunkt dieses Bogens** (Redur, 31.
+Oktober: zuerst die Windows-App). Was `test624` am Telefon hält, ist grün
+(Vollbild deckt, ✕ und Zoomknöpfe 44 px, zwei Finger zoomen und
+verschieben, Finger radiert); nicht angesehen sind Bilder am Telefon, die
+Palette im Vollbild am Telefon und das Schieben einer Strecke mit dem
+Finger.
+
+**4 · Eine Kreuzung ohne Verbindung zeigt weiter die Lücke** in der
+waagrechten Leitung (Punkt 16), nicht die glatte Kreuzung der heutigen
+Norm — mit Absicht, damit alte Pläne aussehen wie vorher (`test624` §0).
+Eine Einstellung dafür wäre ein eigener Entscheid.
+
+**5 · Strg+Z nach dem Ziehen eines TEILS** merkt weiter den Stand nach dem
+Zug (L253 Punkt 8, unverändert); Strecke und Radierer merken seit E759 den
+Stand beim Anfassen.
+
 ## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — GESCHLOSSEN (E745) — 11. Oktober 2026
 
 **Gemessen** über die Schnittstelle von GitHub, nicht vermutet: die zwei
@@ -11050,8 +11089,8 @@ eine Zeile im Stilblatt (L206).
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 30. Oktober 2026 (mit L259), nachgezählt statt fortgeschrieben:** die
-Datei führt 154 Lücken, 96 offene und 58 geschlossene. Der Befehl dazu ist
+**Gemessen am 31. Oktober 2026 (mit L260), nachgezählt statt fortgeschrieben:** die
+Datei führt 155 Lücken, 97 offene und 58 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt
