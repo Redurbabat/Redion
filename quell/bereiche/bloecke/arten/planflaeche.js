@@ -182,7 +182,8 @@ const Planflaeche = (() => {
                             `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
                             `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
                         : '') +
-                    `<button class="sp-start${z.simulation ? ' an' : ''}" data-a="simulation" ` +
+                    `<button class="sp-netz" data-a="batterie-labor" title="Mit Batteriezellen Reihen- und Parallelschaltungen üben" aria-label="Batterieübungen öffnen">🔋 Batterien</button>` +
+        `<button class="sp-start${z.simulation ? ' an' : ''}" data-a="simulation" ` +
                     `title="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
                     `aria-pressed="${z.simulation}" ` +
                     `aria-label="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}">` +
@@ -1408,6 +1409,10 @@ const Planflaeche = (() => {
             }
             if (b.dataset.a === 'netz')
                 return schaltungMenue(b);
+            if (b.dataset.a === 'batterie-labor') {
+                window.open(new URL('batterie-labor.html', document.baseURI).href, '_blank', 'noopener');
+                return;
+            }
             if (b.dataset.a === 'heft')
                 return heftUmschalten();
             if (b.dataset.a === 'simulation')
