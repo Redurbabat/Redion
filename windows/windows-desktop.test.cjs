@@ -64,8 +64,8 @@ test('Windows installer packages two EXEs and a stable offline data profile', ()
   assert.match(prepare, /webFolders/);
   assert.match(prepare, /webRootFiles/);
   assert.match(prepare, /prune\(target\)/);
-  assert.match(prepare, /index\\.html', 'sw\\.js', 'quell\\/start\\.js'/);
-  assert.match(main, /startSourceUpdates\\(/);
+  assert.match(prepare, /index\.html', 'sw\.js', 'quell\/start\.js'/);
+  assert.match(main, /startSourceUpdates\(/);
   assert.match(main, /Redion-Entwicklung/);
   assert.match(html, /quell\/start\.js/);
   assert.doesNotMatch(main, /loadURL\(['"]https?:/);
