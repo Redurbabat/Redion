@@ -109,9 +109,9 @@ const Schaltplan = (() => {
     id: string; punkte: Punkt[]; ebene: string;
     /** Woran die Enden hängen — für das Mitziehen beim Verschieben. */
     vonTeil?: string; vonNr?: string; nachTeil?: string; nachNr?: string;
-    /** Selbst gezeichnete Stromschiene (E759): welcher Leiter — L1, L2, L3,
+    /** Selbst gezeichnete Stromschiene (E762): welcher Leiter — L1, L2, L3,
         N oder PE. Fehlt bei jeder gewöhnlichen Leitung und bei allen Plänen
-        von vor E759; die Netzliste liest es nicht (eine Schiene ist eine
+        von vor E762; die Netzliste liest es nicht (eine Schiene ist eine
         Leitung wie jede andere), nur das Bild zeichnet sie kräftiger. */
     schiene?: string;
   };
@@ -171,7 +171,7 @@ const Schaltplan = (() => {
 
   const artVon = (id: string) => ARTEN.find(a => a.id === id) || ARTEN[0]!;
 
-  /** Die Leiter, die man als Schiene selbst zeichnen kann (E759). */
+  /** Die Leiter, die man als Schiene selbst zeichnen kann (E762). */
   const SCHIENEN = ['L1', 'L2', 'L3', 'N', 'PE'];
 
   /* ------------------------------------------------------------------------
@@ -242,7 +242,7 @@ const Schaltplan = (() => {
         nachTeil: l.nachTeil ? String(l.nachTeil) : undefined,
         nachNr: l.nachNr ? String(l.nachNr) : undefined,
         /* Nur gesetzt, wenn es eine bekannte Schiene ist — ein Plan von vor
-           E759 bekommt kein neues Feld, auch kein leeres (§9). */
+           E762 bekommt kein neues Feld, auch kein leeres (§9). */
         ...(SCHIENEN.includes(String(l.schiene)) ? { schiene: String(l.schiene) } : {})
       })).filter((l: Leitung) => l.punkte.length >= 2),
       texte: (Array.isArray(roh.texte) ? roh.texte : []).map((x: any) => ({
@@ -866,7 +866,7 @@ const Schaltplan = (() => {
       let notfalls: Punkt[] | null = null;
       const nimm = (w: Punkt[]): boolean => {
         /* Auch ein Weg, der AUF einer anderen Leitung entlangläuft, ist nur
-           ein Notfall (E759, „alle leiter gehen übereinander"): er passt —
+           ein Notfall (E762, „alle leiter gehen übereinander"): er passt —
            er berührte sie ja schon vorher, etwa die Schiene, an der er
            endet —, aber zwei Striche aufeinander liest niemand. */
         if (!durchZeichen(w, ks) && !ueberlappt(w, plan.leitungen, l.id)) { gewaehlt = w; return true; }
@@ -911,7 +911,7 @@ const Schaltplan = (() => {
   };
 
   /* ------------------------------------------------------------------------
-   * NICHTS ÜBEREINANDER, LEITER SCHIEBEN, ALLES DREHEN (E759)
+   * NICHTS ÜBEREINANDER, LEITER SCHIEBEN, ALLES DREHEN (E762)
    * ------------------------------------------------------------------------
    * Redur, 31. Oktober 2026: „alle leiter gehen übereinander es sollte nicht
    * so sein und ich sollte alles umdrehen können". Drei Rechnungen, alle
@@ -950,7 +950,7 @@ const Schaltplan = (() => {
   };
 
   /**
-   * EINE NEUE LEITUNG FÜHREN (E759).
+   * EINE NEUE LEITUNG FÜHREN (E762).
    *
    * Bis hier zog die Fläche jede neue Leitung als `rechtwinklig` — den Winkel,
    * der zuerst in die längere Richtung läuft — und prüfte nichts. Von der
@@ -1027,7 +1027,7 @@ const Schaltplan = (() => {
   };
 
   /**
-   * EINE STRECKE QUER SCHIEBEN (E759, „leiterschieben").
+   * EINE STRECKE QUER SCHIEBEN (E762, „leiterschieben").
    *
    * Die Strecke `i` (von Punkt i zu i+1) wandert um `d` quer zu ihrer
    * Richtung: eine waagrechte nach oben oder unten, eine senkrechte nach
@@ -1060,7 +1060,7 @@ const Schaltplan = (() => {
   };
 
   /**
-   * TEILE, LEITUNGEN UND TEXTE ALS GRUPPE UMFORMEN (E759, „alles umdrehen").
+   * TEILE, LEITUNGEN UND TEXTE ALS GRUPPE UMFORMEN (E762, „alles umdrehen").
    *
    * Bis hier drehte „R" jedes gewählte Teil an seinem eigenen Ort, und
    * Leitungen und Texte drehten gar nicht. Jetzt wandert alles, was gewählt
@@ -1330,7 +1330,7 @@ const Schaltplan = (() => {
       const d = leitungPfad(l, luecken);
       if (!d) return;
       const gewaehlt = opt.auswahl && opt.auswahl.has(l.id);
-      /* Eine selbst gezeichnete Schiene (E759) ist kräftiger — wie die
+      /* Eine selbst gezeichnete Schiene (E762) ist kräftiger — wie die
          Sammelschiene im Lehrmittel. Was sie ist, sagt ihre Beschriftung,
          nicht die Breite (§38). Pläne ohne Schiene zeichnen wie bisher. */
       teile.push(`<path class="sp-leitung${l.schiene ? ' sp-schiene' : ''}${gewaehlt ? ' sp-gewaehlt' : ''}" data-id="${esc(l.id)}" ` +
@@ -1599,7 +1599,7 @@ const Schaltplan = (() => {
     /* Freie Beschriftungen (Punkt 47) */
     plan.texte.forEach(x => {
       if (!sichtbar(x.ebene)) return;
-      /* Ein gewählter Text trägt die Auswahl wie Teil und Leitung (E759:
+      /* Ein gewählter Text trägt die Auswahl wie Teil und Leitung (E762:
          der Rahmen fasst jetzt auch Texte, und was gewählt ist, muss man
          sehen). Ungewählt zeichnet er wie bisher. */
       const gewaehlt = !!(opt.auswahl && opt.auswahl.has(x.id));

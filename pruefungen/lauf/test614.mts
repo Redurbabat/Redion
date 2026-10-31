@@ -546,7 +546,7 @@ console.log('\n§4 Gleiten und Loslassen wählt genau einmal — auch während d
       quelle: full, above: !!vr && !!sr && vr.bottom <= sr.top,
       original: active?.getAttribute('aria-label') || '',
       keinZiel: v ? getComputedStyle(v).pointerEvents === 'none' : false,
-      /* DIE GEOMETRIE, NICHT DAS BILD DER FEDER (E758). Hier stand nur
+      /* DIE GEOMETRIE, NICHT DAS BILD DER FEDER (E761). Hier stand nur
          `getBoundingClientRect().height` — und die Scheibe WÄCHST in
          diesem Augenblick noch (§4a verlangt genau das): `growFrom` legt
          ein `transform: scale(…)` darüber, der gemalte Kasten mass 53,17

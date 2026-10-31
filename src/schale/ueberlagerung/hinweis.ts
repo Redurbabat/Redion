@@ -375,7 +375,7 @@ const Hinweis = (() => {
     (reihe[k + 1] ?? reihe[k - 1])?.focus();
   };
 
-  /* EIN FENSTER GEHT AUF, DER FÄCHER GEHT ZU (E758, test588 §11). Mit der
+  /* EIN FENSTER GEHT AUF, DER FÄCHER GEHT ZU (E761, test588 §11). Mit der
      Maus aufgefächert, schloss ihn bis hier nur das Verlassen der Glocke:
      das Fenster legt sich über sie, und der Browser meldet `pointerleave`
      erst, wenn er den ruhenden Zeiger neu einordnet — manchmal sofort,

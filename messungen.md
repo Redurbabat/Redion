@@ -9646,11 +9646,11 @@ G4  Einfliegen an einer falschen Schale            52/55  Glass Wheel Rechner + 
 (klassisch) nach der Änderung 5 von 9 — rot: Glas am Suchfeld, Pfeil der
 Pille, Reiter 1,1, Einfliegen. Mit `data-ui-shell="glass-wheel"` 9 von 9.
 
-## §109 · Die roten Wächter nach Codex (E758, 30. Oktober 2026)
+## §110 · Die roten Wächter nach Codex (E761, 30. Oktober 2026)
 
 **Womit:** Chromium der Prüfungen (Playwright 1.56.1, Build 1194), jeder
 Browserstart unter der gemeinsamen Sperre. Stände: „vorher" = 544c68b9f
-(E757), „nachher" = Zweig `claude/waechter-und-zielleiste` nach E758,
+(E757), „nachher" = Zweig `claude/waechter-und-zielleiste` nach E761,
 s0 … s7 = die acht Stände 020f51ce1 … de375a43f. Sonden im Kratzordner
 (`regression/e758/`).
 
@@ -9662,8 +9662,8 @@ test576   28/30 → 30/30     glasswheel.css: fünf Stellen ohne -webkit-, Glas 
 test581   92/93 → 93/93     studio.css: #page > .pg-tools > button:active{transform:scale(.98)}
 test588   78/78 → 79/79     (+1 neue Zusage, gegen vorher rot: 78/79)
 test590   67/68 → 68/68     §16 Rechner 1024: Schnitt 129 px²
-test614  123/125 → 124/125  §4e grün; §7f bleibt rot (L259)
-test534   51/52 → 51/52     unverändert (L259)
+test614  123/125 → 124/125  §4e grün; §7f bleibt rot (L260)
+test534   51/52 → 51/52     unverändert (L260)
 ```
 
 **2 · Gegenproben** (eine Änderung je Wächter, alle in einem Lauf, danach
@@ -9736,15 +9736,15 @@ Zeiger-, Berührungs-, Maus- und Klickereignissen: 0 Aufrufe.
 `.blatt-huelle` 244–1380 × 477–2176 px; losgelassen bei (720, 480), 3 px
 unter ihrer Oberkante, Fangband 64 px → „oben".
 
-## §110 · Die Schaltplanfläche (E759, 31. Oktober 2026)
+## §111 · Die Schaltplanfläche (E762, 31. Oktober 2026)
 
 **Womit:** Chromium der Prüfungen (Playwright 1.56.1), unter der gemeinsamen
 Sperre, Fenster 1440 × 900, ohne Berührung (der Weg der Windows-App).
 „vorher" = ab2567a48 (eine Kopie über `git archive`), „nachher" = Zweig
-`claude/schaltplan-flaeche` mit E759. Sonden im Kratzordner
+`claude/schaltplan-flaeche` mit E762. Sonden im Kratzordner
 (`schaltplan/messen.mts`, `probe*.mts`).
 
-**1 · `test624`:** vorher 50 von 110, nachher 110 von 110.
+**1 · `test625`:** vorher 50 von 110, nachher 110 von 110.
 
 **2 · Überlappungen** (zwei Strecken verschiedener Leitungen auf derselben
 Linie, mit gemeinsamem Stück > 0), im Plan aus Redurs Bild, die sechs
@@ -9786,6 +9786,6 @@ je Sekunde (p95 16,8 ms in zwei von drei Läufen, vorher 50–67 ms) — der
 Neubau des SVG je Bewegung ist weg. Beim Zoomen und beim Schieben einer
 Strecke ist der Handler billig (2–3 ms), aber das NEUZEICHNEN des ganzen
 SVG durch den Browser kostet bei vierfacher Drosselung um 30 ms: das sind
-30 Bilder je Sekunde, nicht 60 (L260 Punkt 2). Ohne Drosselung nicht
+30 Bilder je Sekunde, nicht 60 (L261 Punkt 2). Ohne Drosselung nicht
 gemessen.
 

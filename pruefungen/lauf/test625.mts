@@ -1,5 +1,5 @@
-/* Suite 624 — Die Schaltplanfläche: Vollbild, Zoom, Leiter schieben, nichts
- * übereinander, alles drehen, Schienen selber zeichnen, flüssig, radieren (E759)
+/* Suite 625 — Die Schaltplanfläche: Vollbild, Zoom, Leiter schieben, nichts
+ * übereinander, alles drehen, Schienen selber zeichnen, flüssig, radieren (E762)
  * ============================================================================
  * Redur, 31. Oktober 2026, unter einem Bild der Planfläche („Stromlaufplan,
  * aufgelöst", L1 oben, N unten, G1, E1, E2, S2, S3):
@@ -19,7 +19,7 @@
  * zwei Fingern, CDP-Stift), nie über einen Aufruf in die Fläche:
  *
  *   §0  Alte Pläne sehen aus wie vorher: das SVG der fünf Pläne aus test611
- *       (W, B, P, Q, A) ist Zeichen für Zeichen das vom Stand vor E759
+ *       (W, B, P, Q, A) ist Zeichen für Zeichen das vom Stand vor E762
  *       (sha256, abgelesen am Stand ab2567a48, bevor eine Zeile geändert war).
  *   §1  Vollbild: ⛶ im Kopf und die Taste F öffnen die Fläche über den ganzen
  *       Bildschirm; ein sichtbarer Schliessknopf (≥ 44 px) und Escape führen
@@ -62,7 +62,7 @@
  *
  * Kein Port: geladen wird über file:// — test400 zählt nichts Neues.
  *
- *   node pruefungen/lauf/test624.mts
+ *   node pruefungen/lauf/test625.mts
  * ==========================================================================*/
 import { chromium } from 'playwright';
 import type { Page, CDPSession, BrowserContext } from 'playwright';
@@ -172,7 +172,7 @@ const PLAENE = `
       teile: [T('G1', 'wechselspannung', 60, 300), T('E1', 'lampe', 400, 300)] }
   };`;
 
-/* §0: das SVG der alten Pläne, abgelesen am Stand vor E759. */
+/* §0: das SVG der alten Pläne, abgelesen am Stand vor E762. */
 const SVG_VORHER: Record<string, string> = {
   W: '0aa92759b26b0f8614aba5ec', B: 'b4b765ca491282f3fb0f1ac5', P: 'b0df59f093ce7bba9d845d76',
   Q: '413bf94c2655ba2cab7d5d1b', A: '88cb56a380f96add456f6361'

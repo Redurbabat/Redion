@@ -2111,7 +2111,7 @@ Titel des Kopfkommentars statt ab seinem `/*`, und der neue Kommentar, der
 30. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
 559.*
 
-*Und 560: `test624` — die Schaltplanfläche (E759). Redurs zwei Sätze vom
+*Und 560: `test625` — die Schaltplanfläche (E762). Redurs zwei Sätze vom
 31. Oktober — „ich kann nicht es volmodu öfnne zommen, leiterschieben, und
 alle leiter gehen übereinander …" und „für lösche … wie beim löschen von
 pdf" — in 110 Zusagen, mit echter Eingabe (Maus, Tastatur, zwei Finger und

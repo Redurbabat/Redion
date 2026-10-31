@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-738 Entscheidungen, E1 bis E759 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+738 Entscheidungen, E1 bis E762 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -815,8 +815,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E756** — Den gemeldeten iPhone-Kompilierfehler unmittelbar auf main reparieren (Redur, Codemagic-Log mit Status 65: „behe das sofort auf main puschen dann dringend"): beide WebKit-Aufrufe nehmen die Callback-Überladung `in:in:completionHandler:`; einmalige, begrenzte Ausnahme von §46 (Eintrag nachgetragen am 30. Oktober, der Text stand schon da).
 
 * **E757** — Klassisch bewegt sich wieder wie am 13. Oktober; Liquid Glass gehört dem Glass Wheel (Redur, 30. Oktober 2026, im Fragebogen: „Klassische Bewegungen vom 13. Okt."): jede Regel der beiden Liquid-Glass-Blöcke in `studio.css` (a3917c13d, über E752 auf main) hängt zusätzlich an `:where([data-ui-shell="glass-wheel"])` — Gewicht null, im Glass Wheel 65 766 berechnete Werte vorher = nachher; im klassischen Design wieder die Werte vom 13. Oktober (schräges Heben, kein Glas und kein Federn am Suchfeld, kein Einfliegen der Einstellungen, kein 1,1 am Reiter). Nichts gelöscht; der sichtbare Fokus der Ergebniszeilen (§38) bleibt überall; `ui-motion-check.mts` prüft jetzt im Glass Wheel — `test623`
-* **E758** — Die roten Wächter nach Codex: das Produkt repariert, wo der Wächter recht hat (30. Oktober 2026): die Namensblase der Zielleiste in der EINEN Regel für „keine Durchsicht" (`test539` §6), das Glas des Glass Wheel mit iPhone-Zwilling und als entschiedenes Zierstück (`test576`), die Seitenwerkzeuge ohne zweites `:active`-Einsinken (`test581`), ein neues Fenster schliesst den Fächer der Glocke sofort (`test588`, zuerst schärfer gemacht), am Rechner rückt der Offline-Streifen über die Zeitpille (`test590`, rot schon am 13. Oktober), `test614` §4e misst das Layout statt der wachsenden Feder; `test534` und `test614` §7f bleiben offen (L259)
-* **E759** — Die Schaltplanfläche: Vollbild, Zoom, Leiter schieben, nichts übereinander, alles drehen, Schienen, flüssig, radieren (31. Oktober 2026): Vollbild über die feste Ebene am `body` und `requestFullscreen` des Dokuments, Zoom über die viewBox mit EINER Umrechnung (`getScreenCTM`), Strecken quer schieben ohne neue Berührung, neue Leitungen geführt statt gewinkelt (4 → 0 Überlappungen in Redurs Plan), Gruppe drehen und spiegeln, Werkzeug „Schiene" (`leitung.schiene`), Ziehen ohne Neubau des SVG, Radierer wie im PDF (`test624`, L260)
+* **E761** — Die roten Wächter nach Codex: das Produkt repariert, wo der Wächter recht hat (30. Oktober 2026): die Namensblase der Zielleiste in der EINEN Regel für „keine Durchsicht" (`test539` §6), das Glas des Glass Wheel mit iPhone-Zwilling und als entschiedenes Zierstück (`test576`), die Seitenwerkzeuge ohne zweites `:active`-Einsinken (`test581`), ein neues Fenster schliesst den Fächer der Glocke sofort (`test588`, zuerst schärfer gemacht), am Rechner rückt der Offline-Streifen über die Zeitpille (`test590`, rot schon am 13. Oktober), `test614` §4e misst das Layout statt der wachsenden Feder; `test534` und `test614` §7f bleiben offen (L260)
+* **E762** — Die Schaltplanfläche: Vollbild, Zoom, Leiter schieben, nichts übereinander, alles drehen, Schienen, flüssig, radieren (31. Oktober 2026): Vollbild über die feste Ebene am `body` und `requestFullscreen` des Dokuments, Zoom über die viewBox mit EINER Umrechnung (`getScreenCTM`), Strecken quer schieben ohne neue Berührung, neue Leitungen geführt statt gewinkelt (4 → 0 Überlappungen in Redurs Plan), Gruppe drehen und spiegeln, Werkzeug „Schiene" (`leitung.schiene`), Ziehen ohne Neubau des SVG, Radierer wie im PDF (`test625`, L261)
 
 ## Grundregel
 
@@ -69643,7 +69643,7 @@ Neuladen; die Quelle (jede Regel am Rad, nie mit Gewicht, der Fokus
 unverändert). Gegen de375a43f rot mit 23 von 55, danach 55 von 55; vier
 Gegenproben, jede rot und genau zurückgestellt (messungen.md §108).
 
-## E758 — Die roten Wächter nach Codex: das Produkt repariert, wo der Wächter recht hat
+## E761 — Die roten Wächter nach Codex: das Produkt repariert, wo der Wächter recht hat
 
 **Auftrag.** Nach E757 (klassisch wie am 13. Oktober) standen auf dem
 Zweig noch rote Wächter, die auch auf main rot sind: `test539` §6,
@@ -69714,7 +69714,7 @@ nicht zur Liquid-Glass-Familie. **Entschieden:** die Regel ist weg, mit ihr
 `transform` aus dem Übergang und die zwei `:active{transform:none}` für
 „weniger Bewegung" und „Ruhig" (die Feder hält dort selbst an). Gemessen am
 gedrückten Chip: vorher `transform: matrix(0.98, …)` UND die Feder, nachher
-nur die Feder (`scale: 0.96`, `data-gedrueckt`; messungen.md §109).
+nur die Feder (`scale: 0.96`, `data-gedrueckt`; messungen.md §110).
 
 **4 · `test588` — der Fächer über der Suche: ein Wettlauf, kein Stand.**
 Über die Stände je ein Lauf: s1 grün, s2 (928e1a6e4) rot, s3 bis s6 grün,
@@ -69761,7 +69761,7 @@ gemalte Mass steht als Auskunft daneben. Das ist keine Lockerung: eine
 Gegenprobe, in der die Leiste wirklich schrumpft (`height:53px` solange die
 Blase steht), macht sie rot (`hoeheLayout: 53`).
 
-**7 · Was offen bleibt (L259).** `test534` §4 (rot schon an s0): der
+**7 · Was offen bleibt (L260).** `test534` §4 (rot schon an s0): der
 Wächter zieht die Leiste in die FENSTERMITTE (720, 480) und erwartet
 „frei" — die Leiste dockt aber an die Ränder ihrer Hülle `.blatt-huelle`,
 und deren Oberkante liegt bei 477 px; 3 px unter ihr ist innerhalb des
@@ -69780,13 +69780,13 @@ Tippunterdrückung nach einem Wurf; repariert ist nichts.
 **Nebenbei: die Kommentare.** Die Begründungen stehen hier und in den
 Läufen, nicht in den Stilblättern — Kommentare in CSS reisen beim Start
 mit, und `test388` §5 ist auf main schon gerissen (1957 KB gegen die Decke
-von 1950). Gemessen über `test388`: 544c68b9f 1958 KB, nach E758 1958 KB.
+von 1950). Gemessen über `test388`: 544c68b9f 1958 KB, nach E761 1958 KB.
 
 **Nachbarn** (ein Lauf, unter der Sperre): `test52`, `87`, `114`, `258`,
 `539`, `573`, `576`, `581`, `582`, `585`, `588`, `590`, `602`, `623`
 grün. Rot wie vorher, keiner neu: `test221` (an 544c68b9f und de375a43f
 gleich rot, an 020f51ce1 grün), `test285`, `test388`, `test580` und
-`test603` (auf main gleich rot), `test614` §7f (oben, L259).
+`test603` (auf main gleich rot), `test614` §7f (oben, L260).
 
 **Wächter.** `test539` 51 von 51, `test576` 30 von 30, `test581` 93 von 93,
 `test588` 79 von 79, `test590` 68 von 68, `test614` §4e grün. Gegenproben,
@@ -69795,9 +69795,9 @@ die Abfrage der Blase wieder vor die echte → `test539` 47 von 51; Zwilling
 und Zierstück weg → `test576` 28 von 30; das `:active`-Einsinken zurück →
 `test581` 92 von 93; die Leiste schrumpft unter der Blase → `test614` §4e
 rot. `test588` und `test590` waren gegen den alten Stand rot (78 von 79,
-67 von 68). Zahlen in messungen.md §109.
+67 von 68). Zahlen in messungen.md §110.
 
-## E759 — Die Schaltplanfläche: Vollbild, Zoom, Leiter schieben, nichts übereinander, alles drehen, Schienen, flüssig, radieren
+## E762 — Die Schaltplanfläche: Vollbild, Zoom, Leiter schieben, nichts übereinander, alles drehen, Schienen, flüssig, radieren
 
 **Auftrag.** Redur, 31. Oktober 2026, unter einem Bild der Planfläche
 („Stromlaufplan, aufgelöst", L1 oben, N unten, G1, E1, E2, S2, S3):
@@ -69811,9 +69811,9 @@ eienzeäne leiter". Vorrang (am selben Tag): zuerst die Windows-App —
 Electron lädt dieselbe Seite in einem Fenster von 1300 × 860, mindestens
 860 breit; Maus, Rad, Trackpad, Tastatur. Das Telefon später.
 
-**Der Wächter zuerst.** `test624` stand eingecheckt, bevor eine Zeile
+**Der Wächter zuerst.** `test625` stand eingecheckt, bevor eine Zeile
 geändert war (f8daad4b4), und war gegen ab2567a48 rot mit 50 von 110
-(messungen.md §110). Mit E759 110 von 110.
+(messungen.md §111). Mit E762 110 von 110.
 
 **1 · Vollbild.** ⛶ im Kopf, die Taste F; zurück mit ✕ (44 px, fest in der
 Ecke) und Escape (erst die Auswahl, dann das Vollbild — ein Druck, eine
@@ -69834,11 +69834,11 @@ Horcher NEU angemeldet wurde. Das Neu-Anmelden der eigenen blockierenden
 Horcher half nicht, ein zusätzlicher passiver Horcher nach dem Wechsel
 schon (gemessen rot ohne, grün mit, je zweimal). Er tut nichts und hängt
 nur, solange das Vollbild steht. Ob die Windows-App denselben Fehler hat,
-ist im Container nicht prüfbar (keine Electron-Installation, L260 Punkt 1).
+ist im Container nicht prüfbar (keine Electron-Installation, L261 Punkt 1).
 
 **2 · Zoom und Lage.** Gezoomt wird über die viewBox — das SVG bleibt
 dasselbe Element. Bei Zoom 1 und Lage 0,0 ist die viewBox das Blatt,
-Zeichen für Zeichen das Bild von vorher (`test624` §0 vergleicht das SVG
+Zeichen für Zeichen das Bild von vorher (`test625` §0 vergleicht das SVG
 der fünf Pläne aus `test611` mit dem Hash von ab2567a48). EINE Umrechnung:
 `ortAus` fragt die Matrix des SVG (`getScreenCTM`), wie E686 am Whiteboard;
 Treffen, Einrasten, Leitungziehen, Rahmen, Radierer und Schiene rechnen
@@ -69899,7 +69899,7 @@ Schiene ist eine gewöhnliche Leitung mit dem neuen, optionalen Feld
 `schiene` — die Netzliste liest es nicht; wer einen Zweig auf ihr enden
 lässt, ist verbunden wie an den erzeugten Schienen (E262 bleibt). Nur das
 Bild zeichnet sie kräftiger. `lesen` behält das Feld nur, wenn es einer der
-fünf Namen ist; ein Plan von vor E759 bekommt kein neues Feld, auch kein
+fünf Namen ist; ein Plan von vor E762 bekommt kein neues Feld, auch kein
 leeres (§9). Beschrieben in doku/REDION-FORMAT.md.
 
 **7 · Flüssig.** Bis hier rief jede Bewegung eines Zugs `buehneMalen` —
@@ -69908,7 +69908,7 @@ sich bewegt (`teilweiseMalen`: die `transform` der gezogenen Teile, das `d`
 jeder Leitung, deren Weg oder Lücke sich ändert, die Verbindungspunkte),
 und die Vorschau von Leitung, Rahmen, Schiene und Radierkreis liegt in
 einer eigenen Gruppe obenauf. Zoomen ändert nur die viewBox. Zahlen:
-messungen.md §110.
+messungen.md §111.
 
 **8 · Radieren wie im PDF.** Ein Kreis folgt dem Zeiger — Maus, Finger,
 Stift, und das Radierende eines Stifts radiert bei jedem Werkzeug (wie
@@ -69936,7 +69936,7 @@ anders gerastert. Das Vollbild über `requestFullscreen` der Fläche statt
 des Dokuments — verworfen: Menüs und Dialoge am `body` wären unsichtbar.
 
 **Gegenproben** (jede rot, dann genau zurückgestellt): in EINEM Lauf, weil jede einen anderen Abschnitt trifft, gegen
-`test624` 99 von 110. (1) `leitungFuehren` gibt wieder den ersten Winkel
+`test625` 99 von 110. (1) `leitungFuehren` gibt wieder den ersten Winkel
 → §4a/§4c/§4d rot, wörtlich die vier Überlappungen und „fasst E2:X1 E2:X2
 S2:4 S3:4". (2) Jede Bewegung eines Teilzugs baut das SVG neu → §7b „ist 4,
 soll 0". (3) Kein passiver Horcher nach dem Vollbildwechsel → §10c bei
@@ -69945,4 +69945,4 @@ rot. (5) `streckeSchieben` ohne Berührungsprüfung → §3d, §3e, §3g rot: di
 Strecke liegt auf k3, und k1 und k3 sind ein Netz. Danach beide Quellen
 aus der Sicherung zurückkopiert — `git status` zeigt sie unverändert.
 
-**Offen:** L260.
+**Offen:** L261.

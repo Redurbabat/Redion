@@ -582,7 +582,7 @@ const rechteck = (pc: Page, wahl: string) => pc.evaluate(`(() => {
   const ueber = await pc.evaluate(`(() => { const f = document.getElementById('ru-glocken-faecher');
     if (!f || f.hidden) return null; const r = f.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + 30 }; })()`) as { x: number; y: number } | null;
   await pc.keyboard.press('Control+p');
-  /* SCHON IM NÄCHSTEN AUGENBLICK (E758). Die Zusage unten misst nach 500 ms
+  /* SCHON IM NÄCHSTEN AUGENBLICK (E761). Die Zusage unten misst nach 500 ms
      — und war ein Wettlauf: geschlossen hat den Fächer bis dahin nur das
      `pointerleave`, das der Browser meldet, wenn er den RUHENDEN Zeiger
      unter dem neuen Fenster neu einordnet. Mal kam es rechtzeitig (s1, s3–s6

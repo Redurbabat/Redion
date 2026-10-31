@@ -37,7 +37,7 @@ const Planflaeche = (() => {
     gewaehltesZeichen: string;
     /** Läuft gerade ein Zug? Solange ja, ändert nur er den Plan (`aendere`). */
     zieht: null | {
-      /* `strecke`, `radieren`, `schiene` und `schwenk` kamen mit E759:
+      /* `strecke`, `radieren`, `schiene` und `schwenk` kamen mit E762:
          eine Strecke einer Leitung quer schieben, wischend radieren, eine
          Schiene zeichnen, die Ansicht verschieben (mittlere Taste,
          Leertaste). */
@@ -57,7 +57,7 @@ const Planflaeche = (() => {
       /** Wo die gezogenen Teile beim letzten Bild standen („x,y;x,y") — ist
           seither nichts über ein Raster gewandert, gibt es nichts zu rechnen. */
       lage?: string;
-      /** Der Plan beim Anfassen (E759) — der Rückgängig-Schritt eines Zugs,
+      /** Der Plan beim Anfassen (E762) — der Rückgängig-Schritt eines Zugs,
           der den Plan unterwegs schon ändert (Strecke, Radierer). */
       abzugStart?: string;
       /** Beim Schieben einer Strecke: welche Leitung, welche Strecke, wie sie liegt. */
@@ -77,14 +77,14 @@ const Planflaeche = (() => {
     zeigeNummern: boolean;
     zeigeRaster: boolean;
 
-    /* --- Die Ansicht (E759) -------------------------------------------------
+    /* --- Die Ansicht (E762) -------------------------------------------------
      * Zoom und Lage gehören dem Bildschirm, nicht dem Block: wer den Plan
      * morgen öffnet, sieht ihn ganz, wie er gezeichnet ist. `zoom` 1 mit
-     * Lage 0,0 ist genau das Bild von vor E759 (viewBox = das Blatt). */
+     * Lage 0,0 ist genau das Bild von vor E762 (viewBox = das Blatt). */
     ansicht: { zoom: number; x: number; y: number };
     /** Steht die Fläche im Vollbild? */
     voll: boolean;
-    /** Der Radierer (E759): alles oder nur Leiter, und wie gross der Kreis ist (px am Bildschirm). */
+    /** Der Radierer (E762): alles oder nur Leiter, und wie gross der Kreis ist (px am Bildschirm). */
     radierModus: 'alles' | 'leiter';
     radierGroesse: number;
     /** Welche Schiene das Werkzeug „Schiene" zeichnet. */
@@ -177,7 +177,7 @@ const Planflaeche = (() => {
 
   /** Bildschirmpunkt in Plankoordinaten — mit Raster (Punkt 22).
    *
-   *  EINE UMRECHNUNG, ÜBER DIE MATRIX DES SVG (E759, wie E686 am Whiteboard).
+   *  EINE UMRECHNUNG, ÜBER DIE MATRIX DES SVG (E762, wie E686 am Whiteboard).
    *  Bis hier stand der Kasten des SVG geteilt durch die Planbreite — das
    *  stimmt nur, solange die viewBox das ganze Blatt ist. Mit Zoom, Lage und
    *  Vollbild (in dem das Blatt mittig im Kasten steht) nicht mehr. Die
@@ -258,7 +258,7 @@ const Planflaeche = (() => {
          hat — mit der vollen Suche. Escape bricht ihn ab. */
       if (z.zieht) return;
       /* `vorherAbzug`: ein Zug, der den Plan unterwegs schon geändert hat
-         (Strecke, Radierer — E759), gibt den Stand beim Anfassen mit. Sonst
+         (Strecke, Radierer — E762), gibt den Stand beim Anfassen mit. Sonst
          merkte der Verlauf das Ende des Zugs als „vorher", und Strg+Z täte
          nichts. */
       const vorher = merken ? (vorherAbzug ?? abzug()) : '';
@@ -308,7 +308,7 @@ const Planflaeche = (() => {
     const fuss = document.createElement('div');
     fuss.className = 'sp-fuss';
 
-    /* Die Zeichnung steht in der Leinwand, die Zoomknöpfe im Fuss (E759):
+    /* Die Zeichnung steht in der Leinwand, die Zoomknöpfe im Fuss (E762):
        `buehneMalen` ersetzt nur die Leinwand, `fussMalen` nur den Inhalt
        neben den Knöpfen — die Knöpfe bleiben. Sie liegen NICHT über der
        Fläche: dort deckten sie die rechte obere Ecke des Plans zu (gemessen:
@@ -352,7 +352,7 @@ const Planflaeche = (() => {
         ([['zeigen', '↖', 'Auswählen und verschieben'],
           ['leitung', '⌐', 'Leitung ziehen'],
           ['text', 'T', 'Beschriftung setzen'],
-          /* E759: L1, L2, L3, N und PE selbst zeichnen. */
+          /* E762: L1, L2, L3, N und PE selbst zeichnen. */
           ['schiene', '☰', 'Schiene zeichnen — L1, L2, L3, N, PE'],
           ['radieren', '⌫', 'Radieren — über die Fläche wischen']] as Array<[Werkzeug, string, string]>).map(([id, ic, t]) =>
           `<button class="sp-wz${z.werkzeug === id ? ' an' : ''}" data-wz="${id}" ` +
@@ -377,7 +377,7 @@ const Planflaeche = (() => {
         `<button data-a="zurueck" title="Rückgängig" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>↶</button>` +
         `<button data-a="vorwaerts" title="Wiederholen" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>↷</button>` +
         `<button data-a="mehr" title="Mehr" aria-label="Mehr">…</button>` +
-        /* Vollbild (E759): im Vollbild steht an derselben Stelle ein
+        /* Vollbild (E762): im Vollbild steht an derselben Stelle ein
            Schliessknopf mit 44 px, auch am Rechner — er ist der sichtbare
            Rückweg neben Escape. */
         (z.voll
@@ -427,7 +427,7 @@ const Planflaeche = (() => {
         return;
       }
       const gewaehlt = z.auswahl.size;
-      /* Das Werkzeug bringt seine Wahl mit (E759): der Radierer seine Art
+      /* Das Werkzeug bringt seine Wahl mit (E762): der Radierer seine Art
          und Grösse wie im PDF, die Schiene ihren Leiter. */
       const knopfAn = (an: boolean): string => ` aria-pressed="${an}"${an ? ' class="an"' : ''}`;
       const werkzeugWahl = z.werkzeug === 'radieren'
@@ -530,11 +530,11 @@ const Planflaeche = (() => {
 
     const male = (): void => { rechnen(); kopfMalen(); buehneMalen(); fussMalen(); };
 
-    /* --- Die Ansicht: Zoom und Lage (E759) ---------------------------------
+    /* --- Die Ansicht: Zoom und Lage (E762) ---------------------------------
      * Gezoomt wird über die viewBox, nicht über ein neues Bild: das SVG
      * bleibt dasselbe Element, und `ortAus` rechnet über seine Matrix. Bei
      * Zoom 1 und Lage 0,0 ist die viewBox das ganze Blatt — Zeichen für
-     * Zeichen das Bild von vor E759 (test624 §0). */
+     * Zeichen das Bild von vor E762 (test625 §0). */
     const ZOOM_MIN = 0.25, ZOOM_MAX = 8;
     const svgJetzt = (): SVGSVGElement | null => leinwand.querySelector('svg.sp-flaeche');
     const ansichtAnwenden = (): void => {
@@ -591,12 +591,12 @@ const Planflaeche = (() => {
       else if (b.dataset.a === 'zoom-alles') allesZeigen();
     });
 
-    /* --- Ein Bild während eines Zugs, ohne das SVG neu zu bauen (E759) -------
+    /* --- Ein Bild während eines Zugs, ohne das SVG neu zu bauen (E762) -------
      * Bis hier rief jede Bewegung eines Zugs `buehneMalen` — das ganze SVG
      * als Text, geparst, ersetzt, bei jedem Raster. Jetzt rückt ein Zug nur,
      * was sich bewegt: die `transform` der gezogenen Teile, das `d` jeder
      * Leitung, deren Weg (oder deren Lücke an einer Kreuzung) sich ändert,
-     * und die Verbindungspunkte. Gemessen in messungen.md (§110). */
+     * und die Verbindungspunkte. Gemessen in messungen.md (§111). */
     const teilweiseMalen = (teilIds: Iterable<string>): void => {
       const svg = svgJetzt();
       if (!svg) return;
@@ -750,7 +750,7 @@ const Planflaeche = (() => {
         if (l.punkte.every((p: any) => p.x >= x1 && p.x <= x2 && p.y >= y1 && p.y <= y2))
           raus.push(l.id);
       });
-      /* Texte auch (E759): sonst dreht eine Gruppe ohne ihre Beschriftung. */
+      /* Texte auch (E762): sonst dreht eine Gruppe ohne ihre Beschriftung. */
       (z.plan.texte as any[]).forEach(t => {
         if (t.x >= x1 && t.x <= x2 && t.y >= y1 && t.y <= y2) raus.push(t.id);
       });
@@ -870,7 +870,7 @@ const Planflaeche = (() => {
     };
 
     /* --- Drehen (26), spiegeln (27), doppeln (28), gruppieren (29) -------
-       ALLES DREHT ALS GRUPPE (E759, Redur: „ich sollte alles umdrehen
+       ALLES DREHT ALS GRUPPE (E762, Redur: „ich sollte alles umdrehen
        können"). Ist mehr als ein Ding gewählt — Teile, Leitungen, Texte —,
        dreht und spiegelt die ganze Auswahl um ihre Mitte
        (`Schaltplan.gruppeUmformen`). Ein einzelnes Teil dreht wie bisher an
@@ -1121,13 +1121,13 @@ const Planflaeche = (() => {
       male();
     };
 
-    /* --- Eine Strecke sichern (E759) -------------------------------------- */
+    /* --- Eine Strecke sichern (E762) -------------------------------------- */
     const streckeSichern = (zug: Zug): void => {
       if (zug.abzugStart === undefined || zug.abzugStart === abzug()) { male(); return; }
       aendere(() => { /* geschoben und geprüft — nur sichern */ }, true, zug.abzugStart);
     };
 
-    /* --- Der Radierer (E759, wie im PDF: E352, E576) ------------------------
+    /* --- Der Radierer (E762, wie im PDF: E352, E576) ------------------------
      * Redur: „ich sollte wie beim löschen von pdf dort auch so haben entweder
      * mir finger oder masud oder stift oder nur eienzeäne leiter". Ein Kreis
      * folgt dem Zeiger — Maus, Finger, Stift —, und was er berührt, wird
@@ -1216,7 +1216,7 @@ const Planflaeche = (() => {
       }, true, zug.abzugStart);
     };
 
-    /* --- Zwei Finger: zoomen und verschieben (E759) ------------------------
+    /* --- Zwei Finger: zoomen und verschieben (E762) ------------------------
      * Ein Finger zeichnet, zwei Finger bewegen die Ansicht — wie in jeder
      * Karte. Setzt der zweite auf, endet der Zug des ersten (`zugUnterbrechen`,
      * wie seit E746), und bis der letzte Finger loslässt, zeichnet keiner. */
@@ -1268,7 +1268,7 @@ const Planflaeche = (() => {
       const roh = ortAus(svg, e, z.plan, true);
       const p = ortAus(svg, e, z.plan);
 
-      /* Die Ansicht verschieben (E759): mittlere Taste, oder Leertaste und
+      /* Die Ansicht verschieben (E762): mittlere Taste, oder Leertaste und
          Ziehen. Das geht immer, auch in der Simulation. */
       if (e.button === 1 || (z.leertaste && e.button === 0)) {
         e.preventDefault();
@@ -1338,7 +1338,7 @@ const Planflaeche = (() => {
 
       const id = g.dataset.id;
 
-      /* LEITER SCHIEBEN (E759): wer eine Leitung an einer Strecke anfasst,
+      /* LEITER SCHIEBEN (E762): wer eine Leitung an einer Strecke anfasst,
          wählt sie und zieht diese Strecke quer — die Enden bleiben auf ihren
          Klemmen, und wohin sie etwas Neues berühren würde, folgt sie nicht
          (`Schaltplan.streckeSchieben`). */
@@ -1451,7 +1451,7 @@ const Planflaeche = (() => {
            (`zugEnde`). Gemessen (messungen §103, F1 um 120 × 60 px in 60
            Bewegungen, CPU vierfach gedrosselt, drei Läufe): mit der vollen
            Suche je Bewegung im Median 23,9 bis 29,4 ms, höchstens 126,8 bis
-           217,3 ms; billig 2,5 bis 2,8 ms, höchstens 13,2 ms. Und seit E759
+           217,3 ms; billig 2,5 bis 2,8 ms, höchstens 13,2 ms. Und seit E762
            baut das Bild dabei das SVG nicht mehr neu (`teilweiseMalen`). */
         const gewandert = [...zug.ausgang].some(([id, a]) => {
           const t = teilVon(id);
@@ -1465,7 +1465,7 @@ const Planflaeche = (() => {
       }
       /* Vorschau beim Leitungziehen, beim Rahmen und bei der Schiene — ohne
          den Plan zu ändern, damit ein abgebrochener Zug nichts hinterlässt,
-         und ohne das SVG neu zu bauen (E759). */
+         und ohne das SVG neu zu bauen (E762). */
       if (zug.art === 'leitung' && zug.von) {
         const fang = Schaltplan.fangeAnschluss(z.plan, p);
         const bis = fang ? { x: fang.x, y: fang.y } : p;
@@ -1520,7 +1520,7 @@ const Planflaeche = (() => {
          verfällt: ihr Ende läge irgendwo neben dem Plan. Bis zur zweiten
          Durchsicht kam so ein Loslassen gar nicht an (siehe oben). */
       /* Gefragt wird die STELLE, nicht das Ziel: der Zug hält den Zeiger am
-         SVG fest (seit E759 wird es während des Zugs nicht mehr ersetzt),
+         SVG fest (seit E762 wird es während des Zugs nicht mehr ersetzt),
          also ist `e.target` immer das SVG — auch über der Palette. */
       const unter = document.elementFromPoint(e.clientX, e.clientY);
       if (!unter || !buehne.contains(unter)) { male(); return; }
@@ -1557,7 +1557,7 @@ const Planflaeche = (() => {
         const fang = Schaltplan.fangeAnschluss(z.plan, p);
         const bis = fang ? { x: fang.x, y: fang.y } : p;
         if (bis.x === zug.von.x && bis.y === zug.von.y) { male(); return; }
-        /* Geführt, nicht nur gewinkelt (E759): der Weg berührt nur, was an
+        /* Geführt, nicht nur gewinkelt (E762): der Weg berührt nur, was an
            seinen Enden gemeint ist, und läuft auf keiner anderen Leitung. */
         const punkte = Schaltplan.leitungFuehren(z.plan, { x: zug.von.x, y: zug.von.y }, bis,
           zug.von.teil ? { teil: zug.von.teil, nr: zug.von.nr ?? '' } : null,
@@ -1572,7 +1572,7 @@ const Planflaeche = (() => {
       }
     };
 
-    /* Das Rad (E759): mit Strg oder ⌘ — und so meldet ein Trackpad auch das
+    /* Das Rad (E762): mit Strg oder ⌘ — und so meldet ein Trackpad auch das
        Auseinanderziehen zweier Finger — zoomt es um den Zeiger. Ohne Strg
        verschiebt es die Ansicht, aber nur, wenn es etwas zu verschieben gibt
        (gezoomt, verschoben oder im Vollbild): sonst rollt es die Seite wie
@@ -1595,14 +1595,14 @@ const Planflaeche = (() => {
       schwenken(-(quer ? e.deltaY : e.deltaX) * schritt, -(quer ? 0 : e.deltaY) * schritt);
     };
     buehne.addEventListener('wheel', rad, { passive: false });
-    /* Im Vollbild horcht das Rad zusätzlich am Dokument. Gemessen (test624
+    /* Im Vollbild horcht das Rad zusätzlich am Dokument. Gemessen (test625
        §10, 1300 × 860): nach dem Umzug der Fläche an den `body` kam das erste
        Strg+Rad gar nicht bei ihr an — Chromium kennt die Stelle mit dem
        Horcher erst nach dem nächsten Neuzeichnen und rollte oder zoomte so
        lange am Horcher vorbei. Am Dokument gibt es diese Lücke nicht; das
        WeakSet sorgt dafür, dass ein Rad nur einmal zählt. */
     const vollRad = (e: WheelEvent): void => rad(e);
-    /* NACH DEM WECHSEL IN DEN VOLLBILDMODUS NEU HORCHEN. Gemessen (test624
+    /* NACH DEM WECHSEL IN DEN VOLLBILDMODUS NEU HORCHEN. Gemessen (test625
        §10, 1300 × 860, Chromium 141): nach `requestFullscreen` kam kein
        einziges Rad mehr bei der Seite an — weder an der Bühne noch am
        Dokument —, bis irgendein Horcher neu angemeldet wurde. Der Browser
@@ -1625,7 +1625,7 @@ const Planflaeche = (() => {
        hier verschiebt sie die Ansicht. */
     buehne.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
 
-    /* --- Vollbild (E759) ----------------------------------------------------
+    /* --- Vollbild (E762) ----------------------------------------------------
      * Redur: „ich kann nicht es volmodu öfnne". Die Fläche legt sich über den
      * ganzen Bildschirm — als feste Ebene über der Seite (das geht überall,
      * auch am iPhone, das ein Element nicht in den Vollbildmodus lässt), und
@@ -1639,7 +1639,7 @@ const Planflaeche = (() => {
      * der Seite (ein Kommentar hält ihn frei). In der Seite fing ihr
      * `position:fixed` der Stapel der Schale ein: der Kopf der Seite
      * (`#topbar`) lag obenauf, gemessen am Telefon über dem Schliessknopf
-     * und am Rechner über der oberen Kante (test624 §1l, §10). Am `body`
+     * und am Rechner über der oberen Kante (test625 §1l, §10). Am `body`
      * gilt ihr z-index gegen die ganze Seite. Zeichnet die Seite sich
      * inzwischen neu (der Platzhalter ist weg), geht die Fläche beim
      * Schliessen einfach — die Seite hat dann ihre eigene, und was hier
@@ -1937,7 +1937,7 @@ const Planflaeche = (() => {
          (`preventDefault`), aber `aendere` tut während eines Zugs nichts
          (E746, zweite Durchsicht — die Wahl und ihr Preis stehen dort). */
       if (e.key === 'Escape' && z.zieht) return;
-      /* Ansicht (E759): Leertaste halten und ziehen verschiebt; F Vollbild;
+      /* Ansicht (E762): Leertaste halten und ziehen verschiebt; F Vollbild;
          + − 0 zoomen. Die Leertaste rollt dabei die Seite nicht. */
       if (e.key === ' ' && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();

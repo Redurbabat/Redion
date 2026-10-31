@@ -1,6 +1,6 @@
 # ERLEDIGTE-AUFGABEN.md
 
-## 31. Oktober 2026 · E759 · Die Schaltplanfläche
+## 31. Oktober 2026 · E762 · Die Schaltplanfläche
 
 **Auftrag:** Redur unter einem Bild der Planfläche — Vollbild, zoomen,
 Leiter schieben, „alle leiter gehen übereinander", alles umdrehen, L und N
@@ -21,13 +21,13 @@ Finger), `schaltplan.ts` (`leitungFuehren`, `streckeSchieben`,
 `gruppeUmformen`, `planDrehen`, `ueberlappt`, Feld `schiene`),
 `bausteine.css`.
 
-**Prüfung:** `test624` zuerst rot (50 von 110 gegen ab2567a48), jetzt 110
+**Prüfung:** `test625` zuerst rot (50 von 110 gegen ab2567a48), jetzt 110
 von 110; Nachbarn grün: 222, 263, 537, 568, 570, 571, 572, 575, 576, 581,
 598, 604, 605, 606, 607, 608, 611 (209/209), 612; Dateiwächter 87, 105,
 225, 537, 549; `test109` rot wie auf main (die `.mjs` von Codex).
-Zahlen in messungen.md §110, offen in L260.
+Zahlen in messungen.md §111, offen in L261.
 
-## 30. Oktober 2026 · E758 · Die roten Wächter nach Codex
+## 30. Oktober 2026 · E761 · Die roten Wächter nach Codex
 
 **Auftrag:** die nach E757 noch roten Wächter (`test539` §6, `test576`,
 `test581`, `test588`, `test590`, `test614` §4e, `test534`) ansehen, den
@@ -54,9 +54,9 @@ so knapp wie möglich — `test388` §5 ist auf main schon gerissen.
 100-ms-Zusage zuerst rot), 590 68/68, 614 124/125 (§4e grün). Vier
 Gegenproben rot und genau zurückgestellt. Nachbarn 52, 87, 114, 258, 573,
 582, 585, 602, 623 grün; rot wie auf main 221, 285, 388, 580, 603
-(messungen.md §109).
+(messungen.md §110).
 
-**Offen (L259):** `test534` §4 (der Wächter zieht in die Fenstermitte, die
+**Offen (L260):** `test534` §4 (der Wächter zieht in die Fenstermitte, die
 Leiste dockt an ihre Hülle) und `test614` §7f (ein Tipp nach einem
 schnellen Wisch kommt in Chromium nicht an; verdeckt war das bis E757 von
 einem Liquid-Glass-Übergang).

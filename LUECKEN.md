@@ -8621,11 +8621,11 @@ Frage an den Lauf, nicht an E757.
 
 ---
 
-## L259 · Was nach E758 rot bleibt — 30. Oktober 2026
+## L260 · Was nach E761 rot bleibt — 30. Oktober 2026
 
-**Was E758 grün gemacht hat:** `test539` §6, `test576`, `test581`,
-`test588`, `test590` §16 und `test614` §4e (ENTSCHEIDUNGEN.md E758,
-messungen.md §109). Zwei Stellen aus dem Auftrag bleiben rot, beide mit
+**Was E761 grün gemacht hat:** `test539` §6, `test576`, `test581`,
+`test588`, `test590` §16 und `test614` §4e (ENTSCHEIDUNGEN.md E761,
+messungen.md §110). Zwei Stellen aus dem Auftrag bleiben rot, beide mit
 Befund und ohne Reparatur, weil keine billig und eindeutig ein Fehler des
 Produkts ist; dazu fünf, die bei den Nachbarn rot waren und es auf main
 genauso sind (3).
@@ -8671,7 +8671,7 @@ auszuweichen) oder der Befund, dass es nur Chromium ohne Bildschirm
 betrifft.
 
 **3 · Bei den Nachbarn rot, auf main genauso, nicht angesehen.** Je ein
-Lauf; keiner ist durch E758 neu rot geworden.
+Lauf; keiner ist durch E761 neu rot geworden.
 
 ```txt
 test221  „Und keines fängt am Bildschirmrand an — pg-tools:0"   rot an 544c68b9f und de375a43f,
@@ -8679,7 +8679,7 @@ test221  „Und keines fängt am Bildschirmrand an — pg-tools:0"   rot an 544c
 test285  „Der Name steht in der Kopfzeile des Dokuments —
           ist »Elektrotechnik – SkriptPDF · 4 Seiten«"           rot an 544c68b9f
 test388  §5 Decke 1950 KB                                        1957 KB an de375a43f, 1958 KB
-                                                                 an 544c68b9f und nach E758
+                                                                 an 544c68b9f und nach E761
 test580  „Einstellungen: dieselben 19 Bereiche …"                rot an de375a43f
 test603  „Glas der Kapsel … und nirgends ausserhalb davon"       rot an de375a43f; das Muster liest
                                                                  einen Kommentar („Fallback ohne
@@ -8693,12 +8693,12 @@ Fertig: je ein Befund wie in 1 und 2, dann Reparatur oder Entscheidung.
 ---
 
 
-## L260 · Was an der Schaltplanfläche nach E759 offen bleibt — 31. Oktober 2026
+## L261 · Was an der Schaltplanfläche nach E762 offen bleibt — 31. Oktober 2026
 
-**Was E759 gebaut hat:** Vollbild, Zoom und Lage, Strecken schieben,
+**Was E762 gebaut hat:** Vollbild, Zoom und Lage, Strecken schieben,
 geführte Leitungen ohne Überlappung, Gruppe drehen und spiegeln, Schienen
 selbst zeichnen, Ziehen ohne Neubau des SVG, Radierer wie im PDF
-(ENTSCHEIDUNGEN.md E759, `test624` 110 von 110, messungen.md §110).
+(ENTSCHEIDUNGEN.md E762, `test625` 110 von 110, messungen.md §111).
 
 **1 · Die Windows-App selbst ist nicht gefahren.** Geprüft ist Chromium in
 den Fenstergrössen der App (1300 × 860, 860 × 700, 1440 × 900), mit und ohne
@@ -8716,7 +8716,7 @@ das Zeichnen während der Geste auf ein `transform` zu legen und erst danach
 die viewBox zu setzen — nicht gebaut.
 
 **3 · Das Telefon ist nicht der Schwerpunkt dieses Bogens** (Redur, 31.
-Oktober: zuerst die Windows-App). Was `test624` am Telefon hält, ist grün
+Oktober: zuerst die Windows-App). Was `test625` am Telefon hält, ist grün
 (Vollbild deckt, ✕ und Zoomknöpfe 44 px, zwei Finger zoomen und
 verschieben, Finger radiert); nicht angesehen sind Bilder am Telefon, die
 Palette im Vollbild am Telefon und das Schieben einer Strecke mit dem
@@ -8724,15 +8724,15 @@ Finger.
 
 **4 · Eine Kreuzung ohne Verbindung zeigt weiter die Lücke** in der
 waagrechten Leitung (Punkt 16), nicht die glatte Kreuzung der heutigen
-Norm — mit Absicht, damit alte Pläne aussehen wie vorher (`test624` §0).
+Norm — mit Absicht, damit alte Pläne aussehen wie vorher (`test625` §0).
 Eine Einstellung dafür wäre ein eigener Entscheid.
 
 **5 · Strg+Z nach dem Ziehen eines TEILS** merkt weiter den Stand nach dem
-Zug (L253 Punkt 8, unverändert); Strecke und Radierer merken seit E759 den
+Zug (L253 Punkt 8, unverändert); Strecke und Radierer merken seit E762 den
 Stand beim Anfassen.
 
 **6 · `test388` (Decke des Starts) war schon vorher rot und ist es mehr:**
-vor E759 1958 KB (E758), mit E759 1967 KB bei einer Decke von 1950 KB —
+vor E762 1958 KB (E761), mit E762 1967 KB bei einer Decke von 1950 KB —
 die neun KB sind der neue Code von Planfläche und Schaltplan (Kommentare
 reisen nicht mit, E715). Die Fläche lädt beim Start mit, weil jeder
 Seitenblock „schaltplan" sie sofort braucht; sie erst beim ersten Plan zu
@@ -11096,7 +11096,7 @@ eine Zeile im Stilblatt (L206).
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 31. Oktober 2026 (mit L260), nachgezählt statt fortgeschrieben:** die
+**Gemessen am 31. Oktober 2026 (mit L261), nachgezählt statt fortgeschrieben:** die
 Datei führt 155 Lücken, 97 offene und 58 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 

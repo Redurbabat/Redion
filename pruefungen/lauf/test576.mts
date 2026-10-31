@@ -130,7 +130,7 @@ const ZIER: Array<{ stelle: string; wert: string; grund: string }> = [
     grund: 'das Etikett auf dem Ordnerblatt — ein Aufkleber, keine schwebende Fläche' },
   { stelle: '.rmo-orb-karte', wert: 'blur(8px)',
     grund: 'die Glaskugel neben „Redion KI" (ANIMATIONEN-ZUORDNUNG.md) — ein Schmuckstück' },
-  /* DAZUGESCHRIEBEN MIT ENTSCHEIDUNG (E758, 30. Oktober 2026). Das Glass
+  /* DAZUGESCHRIEBEN MIT ENTSCHEIDUNG (E761, 30. Oktober 2026). Das Glass
      Wheel ist Redurs freiwillige Schale (E755), und er hat entschieden, dass
      es bleibt, wie es aussieht (E757). Sein Rad und sein schwebendes Dock
      brechen mit eigenem Glas (`--gw-blur`, 12 px, Sättigung 1,3) — mit
@@ -138,7 +138,7 @@ const ZIER: Array<{ stelle: string; wert: string; grund: string }> = [
      `body[data-ui-shell="glass-wheel"]`; im klassischen Design gibt es
      dieses Glas nicht. Fehlte vorher: der Zwilling fürs iPhone (§1). */
   { stelle: 'body[data-ui-shell=""] :is(.gw-rim,#handy-oben)', wert: 'blur(var(--gw-blur)) saturate(1.3)',
-    grund: 'Rad und Dock des Glass Wheel (E755/E757/E758) — nur in dieser freiwilligen Schale' }
+    grund: 'Rad und Dock des Glass Wheel (E755/E757/E761) — nur in dieser freiwilligen Schale' }
 ];
 const istZier = (d: Dekl) => ZIER.some(z =>
   z.wert === d.wert && d.kontext.some(k => k.includes(z.stelle)));

@@ -522,7 +522,7 @@ zweite Fassung.
 
 ---
 
-## Schaltplan-Blöcke: `block.plan` (E759)
+## Schaltplan-Blöcke: `block.plan` (E762)
 
 Ein Schaltplan ist ein gewöhnlicher Block (`type: 'schaltplan'`) und reist in
 `daten.json` mit; sein Inhalt steht in `block.plan`:
@@ -530,10 +530,10 @@ Ein Schaltplan ist ein gewöhnlicher Block (`type: 'schaltplan'`) und reist in
 Leitung ist `{ id, punkte: [{x, y}, …], ebene, vonTeil?, vonNr?, nachTeil?,
 nachNr? }`.
 
-**Seit E759 kann eine Leitung zusätzlich `schiene` tragen** — `'L1'`,
+**Seit E762 kann eine Leitung zusätzlich `schiene` tragen** — `'L1'`,
 `'L2'`, `'L3'`, `'N'` oder `'PE'` —, wenn sie mit dem Werkzeug „Schiene"
 selbst gezeichnet wurde. Das Feld ist optional und fehlt bei jeder anderen
-Leitung und in jedem Plan von vor E759; `Schaltplan.lesen` behält es nur
+Leitung und in jedem Plan von vor E762; `Schaltplan.lesen` behält es nur
 mit einem dieser fünf Werte und setzt es nie leer. Die Netzliste liest es
 nicht (eine Schiene ist eine Leitung wie jede andere), nur das Bild zeichnet
 sie kräftiger. Eine ältere Fassung von Redion, die das Feld nicht kennt,
