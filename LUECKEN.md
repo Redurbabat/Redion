@@ -8763,6 +8763,31 @@ reisen nicht mit, E715). Die Fläche lädt beim Start mit, weil jeder
 Seitenblock „schaltplan" sie sofort braucht; sie erst beim ersten Plan zu
 laden wäre der Weg, ist aber ein eigener Bogen.
 
+## L262 · Zwei Leisten nebeneinander, die linke abgeschnitten — 31. Oktober 2026
+
+**Was Redur sah (Bild 8, Windows-App).** Eine gewöhnliche Seite mit einer
+eingelesenen PDF, „Nebeneinander" eingelesen: links die PDF-Seite, rechts ein
+Notizblatt, je in einer Spalte (`einlesen.ts`, `columns` → `spalte`, E102).
+Über JEDER Spalte steht ihre eigene Zeichenleiste; links trägt sie dazu den
+festen Teil der PDF-Seite (🔗, ⊕, ✂, „Seite 1 von 13"). Bei rund 510 px
+Spaltenbreite nimmt der feste Teil fast zwei Drittel; von den Werkzeugen
+stehen Hand, Lasso und ein halber Stift im Bild, der Rest rollt dahinter.
+
+**Nicht dieselbe Ursache wie E764.** Dort war es ein gemerkter Platz
+«links»/«rechts»; hier steht die Leiste «oben», und die Enge kommt aus der
+Spalte. Am Telefon bricht `.blatt-fest` seit E179 unter die Werkzeuge um —
+aber über `@media (max-width:760px)`, also nach der FENSTERbreite, nicht
+nach der Breite der Spalte. Eine Behälterabfrage kann die Reihe selbst
+nicht umbrechen (sie ist ihr eigener Behälter, `container-type` an
+`.blatt-reihe`), es bräuchte den Behälter eine Ebene höher — kein
+Einzeiler, und er gehört zum Umbau, den Redur am selben Tag verlangt hat.
+
+**Nicht gemessen:** nachgestellt ist der Fall nur am Code und am Bild,
+noch nicht mit einer Sonde. Fertig heisst: bei Spalten unter rund 600 px
+steht der feste Teil unter den Werkzeugen (oder hinter „…"), alle Werkzeuge
+der PDF-Seite sind ohne Rollen zu treffen, mit einem Wächter, der zuerst
+rot war.
+
 ## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — GESCHLOSSEN (E745) — 11. Oktober 2026
 
 **Gemessen** über die Schnittstelle von GitHub, nicht vermutet: die zwei
@@ -11121,8 +11146,8 @@ eine Zeile im Stilblatt (L206).
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 31. Oktober 2026 (mit L261), nachgezählt statt fortgeschrieben:** die
-Datei führt 156 Lücken, 98 offene und 58 geschlossene. Der Befehl dazu ist
+**Gemessen am 31. Oktober 2026 (mit L262), nachgezählt statt fortgeschrieben:** die
+Datei führt 157 Lücken, 99 offene und 58 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 561 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 562 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2134,6 +2134,21 @@ dem Ort: über der Fläche deckten die Zoomknöpfe die Ecke zu, in der
 Fläche, solange sie in der Seite stand. Gezählt am 31. Oktober, im selben
 Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 560 — auf seinem Zweig; beim Zusammenführen mit der Alltagswelle nachgezählt: 561.*
 
+*Und 562: `test626` — ein gemerkter Platz «links» oder «rechts» zerlegt das
+Studio-Dock nicht (E764). Redurs Bild vom 31. Oktober aus der Windows-App:
+eine PDF, der Füller, und unten neun gestauchte Pastelltupfer und EIN
+Füller-Knopf über die ganze Leiste. Der Lauf hat den Fall erst gefunden, als
+er den gemerkten Platz mitnahm — fünf Sonden ohne ihn (Schema, Fenster,
+Berührung, zwei Reiter, Neuladen) waren grün, und keine davon war falsch;
+sie fragten nur nicht nach `meta`. Gegen 214c6f5f0 rot mit 11 von 60:
+42 Knöpfe je 1242 bzw. 1842 px breit, 39 fremde beim Stift, und auch die
+Spalte der gewöhnlichen Seite zeigte beim Stift die Formenwahl. Seine
+schwächste Stelle ist eine alte: `test534 §2` prüfte seit dem 19. September
+denselben Fall und blieb grün, weil er nur den Kasten mass (≥ 300 px breit,
+≤ 220 hoch, eine Zeile) — ein Kasten aus einem Riesenknopf ist auch einer.
+Gezählt am 31. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 562.*
+
 ### Die Befehle
 
 ```txt
@@ -2155,7 +2170,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 561 Läufe
+npm run pruefen                      alle 562 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2252,7 +2267,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 561 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 562 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

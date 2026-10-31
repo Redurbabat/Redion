@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-742 Entscheidungen, E1 bis E763 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+743 Entscheidungen, E1 bis E764 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -827,6 +827,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E761** — Die roten Wächter nach Codex: das Produkt repariert, wo der Wächter recht hat (30. Oktober 2026): die Namensblase der Zielleiste in der EINEN Regel für „keine Durchsicht" (`test539` §6), das Glas des Glass Wheel mit iPhone-Zwilling und als entschiedenes Zierstück (`test576`), die Seitenwerkzeuge ohne zweites `:active`-Einsinken (`test581`), ein neues Fenster schliesst den Fächer der Glocke sofort (`test588`, zuerst schärfer gemacht), am Rechner rückt der Offline-Streifen über die Zeitpille (`test590`, rot schon am 13. Oktober), `test614` §4e misst das Layout statt der wachsenden Feder; `test534` und `test614` §7f bleiben offen (L260)
 * **E762** — Die Schaltplanfläche: Vollbild, Zoom, Leiter schieben, nichts übereinander, alles drehen, Schienen, flüssig, radieren (31. Oktober 2026): Vollbild über die feste Ebene am `body` und `requestFullscreen` des Dokuments, Zoom über die viewBox mit EINER Umrechnung (`getScreenCTM`), Strecken quer schieben ohne neue Berührung, neue Leitungen geführt statt gewinkelt (4 → 0 Überlappungen in Redurs Plan), Gruppe drehen und spiegeln, Werkzeug „Schiene" (`leitung.schiene`), Ziehen ohne Neubau des SVG, Radierer wie im PDF (`test625`, L261)
 * **E763** — Der Windows-Installer packt nur die App, nicht den Projektordner (31. Oktober 2026): `"redion": "file:.."` aus `windows/package.json` entfernt; mit ihr lag der ganze Checkout samt früheren EXE-Dateien im Paket, das NSIS-Archiv erreichte 3,9 GB (Grenze 2 GB). Wächter in `windows/windows-desktop.test.cjs`
+* **E764** — Ein gemerkter Platz «links»/«rechts» zerlegt das Studio-Dock nicht mehr (31. Oktober 2026, Redurs Bild aus der Windows-App: neun Pastelle und EIN Füller über die ganze Leiste): die Spaltenform in `bausteine.css` gilt nur noch ausserhalb von `.document-studio` (`:where(:not(.document-studio *))`, ohne Gewicht), und sie setzt `display` nur noch für die Werkzeuge — welche Gruppe sichtbar ist, sagt wieder allein die Gruppenregel, auch in der Spalte der gewöhnlichen Seite. Kein neues Verhalten, kein Datenfeld; latent seit E573/E619 — `test626`
 
 ## Grundregel
 
@@ -70075,3 +70076,78 @@ bekommt kein `node_modules/redion` mehr.
 `npm install` (es entfernt den Verweis), dann die alten Dateien in
 `build/windows-dist` löschen und `npm run dist`. Eingetragen in
 `version.md` unter 2026.8.4, „Behoben".
+
+## E764 — Ein gemerkter Platz «links» oder «rechts» zerlegt das Studio-Dock nicht mehr
+
+**Was Redur sah (31. Oktober 2026, Windows-App, Bilder 5 und 6).** Eine PDF
+im Schreibstudio, Werkzeug Füller. Unten im Dock: neun Pastelltupfer,
+gestaucht zu Ovalen, und dahinter ein einziger gelb umrandeter Knopf
+„Füller", der die ganze übrige Leiste füllte. Kugelschreiber, Pinsel,
+Bleistift, Schutzleiter, Leiter, die fünf Tinten, das „+", die drei
+Breiten, Formen, Kritzeln und das Lineal waren weg. Sein Satz: „wieso ist
+es bei pdf zeichenn so es sieht nich so gut auch".
+
+**Wie es gefunden wurde.** Fünf Sonden mit frisch eingelesener PDF waren
+grün — im Schema „Starker Kontrast" wie auf Redurs Bild, bei 1280 × 740
+(die CSS-Grösse seines Fensters bei 150 % Anzeige), mit Berührung, mit zwei
+Reitern, nach Neuladen. Rot wurde es erst mit dem gemerkten Platz der
+Leiste (`zeichnen:leistenlage` in `meta`, E512): «links» oder «rechts»,
+gewählt irgendwann auf einer gewöhnlichen Seite. Damit stand das Bild
+Pixel für Pixel nach.
+
+**Ursache — zwei Regeln, die einander nicht kannten.**
+
+1. Die Spaltenform (E512) gab jedem Knopf der Tafel `width:100%` und
+   `display:inline-flex`, mit dem Gewicht (0,4,1). Die Gruppenregel
+   `.blatt-werk[data-tool] > .blatt-tafel > [data-gruppe]{display:none}`
+   (E356) wiegt (0,4,0) — sie verlor. In der Spalte standen also ALLE
+   Gruppen, auch die neun Haftnotizfarben, die nach `ordnungAnwenden` ganz
+   vorn liegen, weil sie in `GRUPPEN` nicht vorkommen.
+2. Seit E573 (14. September, `4ac55759f`) verlässt sich das Studio-Dock auf
+   genau diese Gruppenregel; seit E619 (19. September, `7270830e3`) dreht
+   `pdf-studio.css` die Spalte im Studio nur in eine ZEILE zurück. Die
+   `width:100%` blieb — jeder Knopf wurde so breit wie die ganze Leiste
+   (1242 px bei 1300, 1842 px bei 1900). Sichtbar blieben die Pastelle und
+   der erste Knopf dahinter, der Füller.
+
+Kein Fehler der letzten Tage: der Zweig bis 2f059f1de (E512) zurück
+nachgemessen (`git bisect` mit einer Sonde, die den Platz setzt). Neu war
+nur, dass in Redurs Windows-Profil ein «links» lag.
+
+**Entschieden.**
+
+- Die Spaltenform gilt nur ausserhalb des Studios: jede ihrer Regeln trägt
+  `:where(:not(.document-studio *))`. `:where()` wiegt null — ausserhalb
+  des Studios gewinnt jede Regel wie vorher. Das ist der Satz aus E619
+  („ein gemerkter Platz von der gewöhnlichen Seite verformt ihn nicht
+  mehr"), jetzt an der Wurzel statt durch Zurückdrehen. Die dritte
+  Rückdreh-Zeile in `pdf-studio.css` (`.wort{display:revert}`) ist dadurch
+  überflüssig und weg; die zwei übrigen bleiben als Sicherung für «unten»
+  und «frei».
+- Die Spaltenform setzt `display` nur noch für die Werkzeuge
+  (`.blatt-werk > button`). Was in der Tafel sichtbar ist, entscheidet die
+  Gruppenregel; sie setzt ihre Knöpfe selbst auf `inline-flex`. Auf der
+  gewöhnlichen Seite zeigt die Spalte beim Stift damit 25 statt 66 Knöpfe
+  — ohne Formenwahl, Schrift, Auswahl, Laser, Radierer.
+
+**Gegenproben.** `display:inline-flex` zurück in die Tafelregel: `test626`
+§7 rot (59 von 60). Die Studio-Grenze heraus: §1, §3, §4, §6 rot (20 von
+60, Knöpfe 624 px). Beides wieder drin: 60 von 60.
+
+**Alternative.** Den Platz im Studio gar nicht erst an die Leiste
+schreiben (`marken.ts`). Verworfen: der Platz wird einmal gebaut und gilt
+für beide Betriebsarten — der Dokumentmodus schaltet zur Laufzeit um
+(E619) —, und `test534` setzt das Attribut selbst; eine Regel im
+Stilblatt hält beide Wege.
+
+**Kosten.** Keine Daten, kein Feld, keine Migration; der gemerkte Platz
+bleibt, wie er ist, und wirkt auf der gewöhnlichen Seite weiter. Eine neue
+Windows-EXE ist nicht nötig: es ist eine Webdatei (`bausteine.css`,
+`pdf-studio.css`), sie kommt über den lokalen Ordner oder das nächste
+Paket. Eingetragen in `version.md` unter 2026.8.4, „Behoben".
+
+**Was offen bleibt.** `test534 §2` hielt diesen Fall seit E619 und blieb
+grün, weil er nur den Kasten mass. Er ist nicht geändert — `test626` hält
+jetzt die Knöpfe. Redurs Bild 8 (zwei Leisten nebeneinander auf einer Seite
+mit eingebetteter PDF, die linke abgeschnitten) hat eine andere Ursache
+und steht als L262.
