@@ -80,7 +80,6 @@
   },
   "dependencies": {
     "electron-updater": "6.8.10",
-    "js-yaml": "4.1.0",
-    "redion": "file:.."
+    "js-yaml": "4.1.0"
   }
 }

@@ -104,3 +104,16 @@ test('remembered window position must still be on a screen', () => {
   assert.equal(readWindowState(() => { throw new Error('fehlt'); }, screens), null);
   assert.equal(readWindowState(() => JSON.stringify({ x: 0, y: 0, width: 100, height: 100 }), screens), null);
 });
+
+// Der Installer packt nur, was die App braucht (version.md 2026.8.4, Behoben).
+// Mit "redion": "file:.." lag der ganze Projektordner als Abhängigkeit im
+// Paket — samt build/windows-dist mit allen früheren EXE-Dateien. Jeder Bau
+// packte den vorigen ein, und das NSIS-Archiv wuchs am 31. Oktober auf 3,9 GB
+// (Grenze 2 GB). Keine Abhängigkeit darf auf einen Ordner zeigen.
+test('no dependency points to a local folder (the project itself would be packed)', () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+  const deps = { ...(pkg.dependencies || {}), ...(pkg.optionalDependencies || {}) };
+  const lokal = Object.entries(deps).filter(([, spec]) => /^(file:|link:|\.|\/)/.test(String(spec)));
+  assert.deepEqual(lokal, [], 'lokale Abhängigkeiten: ' + JSON.stringify(lokal));
+  assert.equal(Object.prototype.hasOwnProperty.call(deps, 'redion'), false);
+});
