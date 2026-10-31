@@ -22,6 +22,11 @@ export function prepareWindowsApp(from = root, to = target) {
       throw new Error('Redion-Web-Build fehlt: ' + filename);
     }
   }
+  // Never follow a symlink if a damaged or hostile build folder is present.
+  if (fs.existsSync(target) && (!fs.lstatSync(target).isDirectory() ||
+      fs.lstatSync(target).isSymbolicLink())) {
+    throw new Error('Windows-Bauordner ist kein echtes Verzeichnis.');
+  }
   fs.mkdirSync(target, { recursive: true });
   for (const filename of webRootFiles(root)) {
     fs.copyFileSync(path.join(root, filename), path.join(target, filename));
