@@ -15,6 +15,8 @@ test('nur relevante Ordneränderungen triggern den Live-Bau', () => {
   assert.equal(classifyChange('src','register/fachzeichen.ts'), 'compile');
   assert.equal(classifyChange('root','index.html'), 'stage');
   assert.equal(classifyChange('root','sw.js'), 'stage');
+  assert.equal(classifyChange('root','batterie-aufgaben.js'), 'stage');
+  assert.equal(classifyChange('src',null), 'compile');
   assert.equal(classifyChange('root','package.json'), 'compile');
   assert.equal(classifyChange('quell','schale/stil/bausteine.css'), 'stage');
   assert.equal(classifyChange('quell','schale/aufbau/app.js',true), null);
