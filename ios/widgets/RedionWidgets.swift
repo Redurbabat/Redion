@@ -574,7 +574,7 @@ struct RedionLockWidget: Widget {
 private extension View {
     @ViewBuilder func redionLockBackground() -> some View {
         if #available(iOSApplicationExtension 17.0, *) {
-            containerBackground(.clear, for: .widget)
+            containerBackground(Color.clear, for: .widget)
         } else {
             self
         }

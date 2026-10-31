@@ -160,3 +160,15 @@ test('Nur native Buildartefakte; gemeinsamer Webcode bleibt unberührt', () => {
   assert.match(native, /createHomeShortcutRouter\(\{ document \}\)/);
   assert.doesNotMatch(website, /RedionNativeShortcut|home-shortcuts\.mjs/);
 });
+
+/* Die PlistBuddy-Zeilen laufen nur auf dem Mac. Am 31. Oktober 2026 prüfte der
+ * Bauschritt noch die alte Reihenfolge und brach die IPA mit Status 1 ab, während
+ * jeder Test unter Windows grün war. Hier wird sein Text gegen die Liste gehalten. */
+test('der Codemagic-Schritt prüft die Schnellaktionen in ihrer echten Reihenfolge', async () => {
+  const fs = await import('node:fs');
+  const yaml = fs.readFileSync(new URL('../codemagic.yaml', import.meta.url), 'utf8');
+  const proben = [...yaml.matchAll(/UIApplicationShortcutItems:(\d+):UIApplicationShortcutItemType'[^\n]*\n\s*grep -qx 'ch\.redurbabat\.redion\.(\w+)'/g)];
+  assert.ok(proben.length >= 2, 'der Schritt prüft mindestens den ersten und den letzten Eintrag');
+  for (const [, nummer, id] of proben) assert.equal(SHORTCUTS[Number(nummer)]?.id, id);
+  assert.ok(proben.some(([, nummer]) => Number(nummer) === SHORTCUTS.length - 1), 'auch der letzte Eintrag wird geprüft');
+});
