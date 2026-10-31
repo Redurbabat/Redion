@@ -103,6 +103,8 @@ const Schaltplan = (() => {
     gruppe: string;
     /** Auf welcher Ebene er liegt (Punkt 48). */
     ebene: string;
+    /** Zahlen des Bauteils; U, Ri, Imax und Q gehören der Zeichnung. */
+    werte?: Record<string, number>;
   };
   type Punkt = { x: number; y: number };
   type Leitung = {
@@ -120,6 +122,7 @@ const Schaltplan = (() => {
   type Plan = {
     art: string; breite: number; hoehe: number;
     teile: Teil[]; leitungen: Leitung[]; texte: Text[]; ebenen: Ebene[];
+    batterieUebung?: { id: string; plus: string; minus: string; teile: string[] };
   };
 
   /* ------------------------------------------------------------------------
@@ -230,7 +233,10 @@ const Schaltplan = (() => {
         bmk: String(t.bmk || ''),
         nummern: (t.nummern && typeof t.nummern === 'object') ? t.nummern : {},
         gruppe: String(t.gruppe || ''),
-        ebene: String(t.ebene || 'plan')
+        ebene: String(t.ebene || 'plan'),
+        ...(t.werte && typeof t.werte === 'object' && !Array.isArray(t.werte)
+          ? { werte: Object.fromEntries(Object.entries(t.werte).filter(([, v]) =>
+              typeof v === 'number' && Number.isFinite(v))) } : {})
       })).filter((t: Teil) => t.zeichen),
       leitungen: (Array.isArray(roh.leitungen) ? roh.leitungen : []).map((l: any) => ({
         id: String(l.id || uid()),
@@ -255,7 +261,15 @@ const Schaltplan = (() => {
             id: String(e.id || 'plan'), name: String(e.name || 'Plan'),
             farbe: String(e.farbe || 'var(--text)'), sichtbar: e.sichtbar !== false
           }))
-        : EBENEN_VORGABE.map(e => ({ ...e })))
+        : EBENEN_VORGABE.map(e => ({ ...e }))),
+      ...(roh.batterieUebung && typeof roh.batterieUebung === 'object' &&
+           Array.isArray(roh.batterieUebung.teile)
+        ? { batterieUebung: {
+            id: String(roh.batterieUebung.id || ''),
+            plus: String(roh.batterieUebung.plus || ''),
+            minus: String(roh.batterieUebung.minus || ''),
+            teile: roh.batterieUebung.teile.map(String).slice(0, 32)
+          } } : {})
     };
   };
 
