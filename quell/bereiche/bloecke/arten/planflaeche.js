@@ -75,6 +75,8 @@ const Planflaeche = (() => {
     const zeichne = (block) => {
         const wurzel = document.createElement('div');
         wurzel.className = 'sp-wrap';
+        let batterieOffen = !!(block && block.plan && block.plan.batterieUebung);
+        let batterie = null;
         const z = {
             block,
             plan: Schaltplan.lesen(block),
@@ -132,6 +134,10 @@ const Planflaeche = (() => {
         };
         const kopf = document.createElement('div');
         kopf.className = 'sp-kopf';
+        const batteriePanel = document.createElement('section');
+        batteriePanel.className = 'sp-batterie-fach';
+        batteriePanel.setAttribute('aria-label', 'Batterieanlagen und Übungen');
+        batteriePanel.hidden = !batterieOffen;
         const palette = document.createElement('div');
         palette.className = 'sp-palette';
         const buehne = document.createElement('div');
@@ -159,6 +165,7 @@ const Planflaeche = (() => {
         fuss.appendChild(fussInhalt);
         fuss.appendChild(zoomleiste);
         wurzel.appendChild(kopf);
+        wurzel.appendChild(batteriePanel);
         wurzel.appendChild(koerper);
         wurzel.appendChild(fuss);
         const kopfMalen = () => {
@@ -182,8 +189,8 @@ const Planflaeche = (() => {
                             `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
                             `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
                         : '') +
-                    `<button class="sp-netz" data-a="batterie-labor" title="Mit Batteriezellen Reihen- und Parallelschaltungen üben" aria-label="Batterieübungen öffnen">🔋 Batterien</button>` +
-        `<button class="sp-start${z.simulation ? ' an' : ''}" data-a="simulation" ` +
+                    `<button class="sp-netz${batterieOffen ? ' an' : ''}" data-a="batterie-labor" title="Batteriezellen direkt im Schaltplan platzieren, verbinden und messen" aria-pressed="${batterieOffen}" aria-label="Batterieübungen in diesem Schaltplan">🔋 Batterien</button>` +
+        `<button class="sp-start${z.simulation ? ' an' : ''}" data-a="simulation" ${z.plan.batterieUebung ? 'disabled title="Batterieanlage über das Batterien-Fach prüfen"' : ''} ` +
                     `title="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
                     `aria-pressed="${z.simulation}" ` +
                     `aria-label="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}">` +
@@ -319,7 +326,7 @@ const Planflaeche = (() => {
                 g.appendChild(titel);
             });
         };
-        const male = () => { rechnen(); kopfMalen(); buehneMalen(); fussMalen(); };
+        const male = () => { rechnen(); kopfMalen(); buehneMalen(); fussMalen(); if (batterie) batterie.aktualisiere(); };
         const ZOOM_MIN = 0.25, ZOOM_MAX = 8;
         const svgJetzt = () => leinwand.querySelector('svg.sp-flaeche');
         const ansichtAnwenden = () => {
@@ -1376,6 +1383,15 @@ const Planflaeche = (() => {
             return undefined;
         };
         const simulationUmschalten = () => {
+            if (z.plan.batterieUebung) {
+                batterieOffen = true;
+                batteriePanel.hidden = false;
+                kopfMalen();
+                if (batterie)
+                    batterie.aktualisiere();
+                UI.toast('Batterieanlagen im Fach „Batterien“ messen: ideale Parallelquellen werden hier nicht simuliert.');
+                return;
+            }
             z.simulation = !z.simulation;
             z.auswahl.clear();
             if (z.simulation) {
@@ -1410,7 +1426,11 @@ const Planflaeche = (() => {
             if (b.dataset.a === 'netz')
                 return schaltungMenue(b);
             if (b.dataset.a === 'batterie-labor') {
-                window.open(new URL('batterie-labor.html', document.baseURI).href, '_blank', 'noopener');
+                batterieOffen = !batterieOffen;
+                batteriePanel.hidden = !batterieOffen;
+                kopfMalen();
+                if (batterie)
+                    batterie.aktualisiere();
                 return;
             }
             if (b.dataset.a === 'heft')
@@ -1709,6 +1729,22 @@ const Planflaeche = (() => {
             a.click();
             setTimeout(() => URL.revokeObjectURL(a.href), 4000);
         };
+        batterie = window.BatterieAufgaben ? window.BatterieAufgaben.erstelle({
+            element: batteriePanel,
+            holePlan: () => z.plan,
+            holeAuswahl: () => [...z.auswahl],
+            aendere: (was) => aendere(was),
+            setzePlan: (plan) => {
+                z.plan = plan;
+                z.auswahl.clear();
+                z.werkzeug = 'leitung';
+                z.gewaehltesZeichen = '';
+                z.simulation = false;
+                batterieOffen = true;
+                batteriePanel.hidden = false;
+            },
+            nachPlanwechsel: () => paletteMalen()
+        }) : null;
         paletteMalen();
         male();
         return wurzel;
