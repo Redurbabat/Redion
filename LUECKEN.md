@@ -8731,6 +8731,13 @@ Eine Einstellung dafür wäre ein eigener Entscheid.
 Zug (L253 Punkt 8, unverändert); Strecke und Radierer merken seit E759 den
 Stand beim Anfassen.
 
+**6 · `test388` (Decke des Starts) war schon vorher rot und ist es mehr:**
+vor E759 1958 KB (E758), mit E759 1967 KB bei einer Decke von 1950 KB —
+die neun KB sind der neue Code von Planfläche und Schaltplan (Kommentare
+reisen nicht mit, E715). Die Fläche lädt beim Start mit, weil jeder
+Seitenblock „schaltplan" sie sofort braucht; sie erst beim ersten Plan zu
+laden wäre der Weg, ist aber ein eigener Bogen.
+
 ## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — GESCHLOSSEN (E745) — 11. Oktober 2026
 
 **Gemessen** über die Schnittstelle von GitHub, nicht vermutet: die zwei
