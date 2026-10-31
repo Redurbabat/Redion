@@ -9660,3 +9660,147 @@ zurückgestellt. Fenster 1280 × 800, Chromium von Playwright.
 | `mitDruck` immer falsch | rot: „§7 der Stiftstrich ist eine Fläche" |
 
 Nachtrag E759: Zwei weitere Gegenproben, gleiche Art. `eintrag.formen` nicht gesetzt: rot in §8 („kein Platzhalter", „die Lage stimmt"). `notizZurueck` nicht gerufen: rot in §9 („die geänderte Notiz", „wird gemeldet"). Gemessen vor der Reparatur: eine selbst gebaute Folie las sich nach Export und Einlesen als der eine Text „[A4-Blatt]".
+
+## §110 · Die roten Wächter nach Codex (E761, 30. Oktober 2026)
+
+**Womit:** Chromium der Prüfungen (Playwright 1.56.1, Build 1194), jeder
+Browserstart unter der gemeinsamen Sperre. Stände: „vorher" = 544c68b9f
+(E757), „nachher" = Zweig `claude/waechter-und-zielleiste` nach E761,
+s0 … s7 = die acht Stände 020f51ce1 … de375a43f. Sonden im Kratzordner
+(`regression/e758/`).
+
+**1 · Die Läufe, vorher → nachher**
+
+```txt
+test539   47/51 → 51/51     §6: die erste Abfrage „ohne Durchsicht" war die der Namensblase
+test576   28/30 → 30/30     glasswheel.css: fünf Stellen ohne -webkit-, Glas ohne Marke
+test581   92/93 → 93/93     studio.css: #page > .pg-tools > button:active{transform:scale(.98)}
+test588   78/78 → 79/79     (+1 neue Zusage, gegen vorher rot: 78/79)
+test590   67/68 → 68/68     §16 Rechner 1024: Schnitt 129 px²
+test614  123/125 → 124/125  §4e grün; §7f bleibt rot (L260)
+test534   51/52 → 51/52     unverändert (L260)
+```
+
+**2 · Gegenproben** (eine Änderung je Wächter, alle in einem Lauf, danach
+die Dateien zurückkopiert — `git diff` vorher und nachher Byte für Byte
+gleich):
+
+```txt
+G1  die Abfrage der Namensblase wieder vor die echte (bausteine.css)     test539 47/51
+G2  Zwilling am Rad weg und das Zierstück aus der Liste                   test576 28/30
+G3  :active{transform:scale(.98)} an den Seitenwerkzeugen zurück          test581 92/93
+G4  #ho-ziele[data-vorschau-aktiv]{height:53px}                            test614 §4e rot
+                                                                          (hoeheLayout 53)
+```
+
+**3 · test588 über die Stände** (je ein Lauf von `test588`, alte Fassung):
+s1 grün · s2 (928e1a6e4) rot `{"offen":true,"zf":880,"zo":700}` · s3 grün
+· s4 grün · s5 grün · s6 grün · s7 rot (Lauf vom 30. Oktober) · vorher
+grün. Kein erster schlechter Stand — ein Wettlauf. Die neue Zusage (100 ms
+nach Strg P) gegen vorher: rot, `{"offen":true,"zf":880,"zo":700}`.
+
+**4 · test590 §16, die Lage** (Sonde, 1024 × 768, Seite „Elektrotechnik
+Skript", ohne Netz, Karte zugeklappt):
+
+```txt
+                       Streifen (l,o,r,u)      Pille (l,o,r,u)
+vorher und an s0       271,719,753,754          749,708,1008,752    Schnitt 4 × 33
+ohne Seitennamen       271,719,753,754          811,708,1008,752    kein Schnitt
+1440 × 900, vorher     479,851,961,886         1165,840,1424,884    kein Schnitt
+```
+
+Nachher steht der Streifen um `--touch-min` + `--space-3` höher (Bild
+`streifen-pille/nachher-1024x768-*.png`).
+
+**5 · test614 §4e, die Feder:** der gemalte Kasten der Zielleiste mass im
+Augenblick der Zusage 53,17 px (main) und 53,99 px (vorher) — die Scheibe
+wuchs noch (`growFrom`, `transform: scale`). Nachher: `offsetHeight` 60,
+Breiten `[71,71,71,71,71]` in der Gegenprobe gleich, Höhe dort 53.
+
+**6 · test539 §6 im Browser** (`emulateMedia`, 390 × 844, Namensblase
+sichtbar gesetzt): `prefers-reduced-transparency` bleibt in Build 1194
+falsch (L203). Mehr Kontrast, hell: Rand `rgb(55, 53, 47)`, Schatten
+`none` — vorher wie nachher; dunkel `rgb(241, 242, 244)`. Erzwungene
+Farben: Rand Schwarz bzw. Weiss, vorher wie nachher. Redions „Hoher
+Kontrast" (`body[data-kontrast="hoch"]`): vorher Rand `rgb(138, 143, 152)`
+mit drei Schatten, nachher Textfarbe und `none`.
+
+**7 · test581, der gedrückte Chip** (Maus gedrückt, 220 ms):
+
+```txt
+                 transform                         scale   data-gedrueckt
+vorher           matrix(0.98, 0, 0, 0.98, 0, 0)    0.96    ja
+nachher          none                              0.96    ja
+```
+
+**8 · test388 §5, der Start** (über `test388`): de375a43f 1957 KB,
+vorher 1958 KB, nachher 1958 KB (Decke 1950 — auf main schon gerissen).
+Gzip-Zuwachs der geänderten Dateien nachher gegen vorher: bausteine.css
+−4 B, grund.css +32 B, studio.css −24 B, glasswheel.css +25 B, hinweis.js
++181 B.
+
+**9 · test614 §7f, der verlorene Tipp** (Sonde mit den Gesten des Laufs,
+Ereignisse am Fenster in der Aufnahmephase, `preventDefault` belauscht):
+schneller Wisch hinaus, Tipp nach 147 ms und 718 ms: kein `mousedown`,
+kein `click`; nach 2017 ms: Klick. Langsam hinaus: Klick nach 133 ms. Mit
+`.ho-z{transition: color 140ms ease}`: Klick nach 151 ms; mit nur dem
+Übergang auf `transform`: kein Klick nach 150 ms. `preventDefault` auf
+Zeiger-, Berührungs-, Maus- und Klickereignissen: 0 Aufrufe.
+
+**10 · test534 §4, die Hülle** (Sonde wie der Lauf, 1440 × 960):
+`.blatt-huelle` 244–1380 × 477–2176 px; losgelassen bei (720, 480), 3 px
+unter ihrer Oberkante, Fangband 64 px → „oben".
+
+## §111 · Die Schaltplanfläche (E762, 31. Oktober 2026)
+
+**Womit:** Chromium der Prüfungen (Playwright 1.56.1), unter der gemeinsamen
+Sperre, Fenster 1440 × 900, ohne Berührung (der Weg der Windows-App).
+„vorher" = ab2567a48 (eine Kopie über `git archive`), „nachher" = Zweig
+`claude/schaltplan-flaeche` mit E762. Sonden im Kratzordner
+(`schaltplan/messen.mts`, `probe*.mts`).
+
+**1 · `test625`:** vorher 50 von 110, nachher 110 von 110.
+
+**2 · Überlappungen** (zwei Strecken verschiedener Leitungen auf derselben
+Linie, mit gemeinsamem Stück > 0), im Plan aus Redurs Bild, die sechs
+Leitungen mit der Maus gezeichnet wie ein Mensch (Klemme → Schiene,
+Klemme → Klemme), dazu die Querleitung S2:4 → E2:X2:
+
+```txt
+                              vorher                          nachher
+sechs Leitungen               4  (zweimal auf L1, zweimal auf N)   0
+Querleitung S2:4 → E2:X2      fasst E2:X1 E2:X2 S2:4 S3:4     fasst E2:X2 S2:4
+                              und liegt auf S3:4–E2:X1        liegt auf nichts
+eingebaute Beispiele (3)      0                               0
+```
+
+**3 · Bildzeiten beim Ziehen, CPU vierfach gedrosselt** (CDP
+`Emulation.setCPUThrottlingRate 4`). Plan „Drehstrom, FI und Übertrager"
+(der aus test611), F1 um 120 × 60 Planeinheiten in 60 Bewegungen, 16 ms
+auseinander, drei Läufe. „Handler" = Zeit vom Zeigerereignis am Fenster
+(Aufnahme) bis zum Ende seiner Behandlung (Blase am Fenster); „Bilder" =
+Abstände der `requestAnimationFrame`-Rückrufe während des Zugs.
+
+```txt
+F1 ziehen          Handler p95 / max            Bilder Median / p95 / max
+vorher   Lauf 1    22,0 / 34,4 ms               16,7 / 66,7 / 133,4 ms
+         Lauf 2    13,5 / 15,4 ms               16,7 / 66,6 /  83,3 ms
+         Lauf 3    11,8 / 32,6 ms               16,7 / 50,0 / 100,1 ms
+nachher  Lauf 1    14,3 / 19,0 ms               16,7 / 33,3 /  99,9 ms
+         Lauf 2     3,7 /  4,8 ms               16,7 / 16,8 /  50,0 ms
+         Lauf 3     5,2 /  9,8 ms               16,7 / 16,8 /  33,4 ms
+```
+
+Neu, ohne Vorher (das gab es nicht): eine Strecke von f2 um 20 Planeinheiten
+in 40 Bewegungen — Handler im Median 2,9–3,0 ms, p95 5,3–9,2 ms; Bilder im
+Median 16,7 ms, p95 50–67 ms. Strg+Rad, 30 Schritte — Handler im Median
+2,3 ms, p95 3,6–4,4 ms; Bilder im Median 16,8 bis 33,3 ms, p95 50 ms.
+
+**Was die Zahlen sagen.** Das Ziehen eines Teils hält jetzt meist 60 Bilder
+je Sekunde (p95 16,8 ms in zwei von drei Läufen, vorher 50–67 ms) — der
+Neubau des SVG je Bewegung ist weg. Beim Zoomen und beim Schieben einer
+Strecke ist der Handler billig (2–3 ms), aber das NEUZEICHNEN des ganzen
+SVG durch den Browser kostet bei vierfacher Drosselung um 30 ms: das sind
+30 Bilder je Sekunde, nicht 60 (L261 Punkt 2). Ohne Drosselung nicht
+gemessen.
+

@@ -546,7 +546,19 @@ console.log('\n§4 Gleiten und Loslassen wählt genau einmal — auch während d
       quelle: full, above: !!vr && !!sr && vr.bottom <= sr.top,
       original: active?.getAttribute('aria-label') || '',
       keinZiel: v ? getComputedStyle(v).pointerEvents === 'none' : false,
-      hoehe: sr?.height ?? 0
+      /* DIE GEOMETRIE, NICHT DAS BILD DER FEDER (E761). Hier stand nur
+         `getBoundingClientRect().height` — und die Scheibe WÄCHST in
+         diesem Augenblick noch (§4a verlangt genau das): `growFrom` legt
+         ein `transform: scale(…)` darüber, der gemalte Kasten mass 53,17
+         und 53,99 px, je nachdem, wie weit die Feder war. Grün war die
+         Zusage nur mit `--capture`, das vorher 280 ms wartet. „Unverändert"
+         meint, was die Treffer trägt: die Treffer kommen aus dem Layout
+         (tab-shelf.ts, `offsetLeft`/`offsetWidth`), also misst sie das
+         Layout — 60 px hoch, fünf gleich breite Ziele. Das gemalte Mass
+         steht daneben, als Auskunft. */
+      hoehe: sr?.height ?? 0,
+      hoeheLayout: s?.offsetHeight ?? 0,
+      breiten: [...(s?.querySelectorAll<HTMLElement>(':scope > button') ?? [])].map(b => b.offsetWidth)
     };
   });
   await finger(A.cdp, 'touchEnd'); await warte(1300);
@@ -564,7 +576,8 @@ console.log('\n§4 Gleiten und Loslassen wählt genau einmal — auch während d
     !s.schublade && !s.offen && s.expanded.length === 0 && s.anvisiert.length === 0, JSON.stringify(s));
   p('§4e beim Ziehen steht der VOLLE Name über der unveränderten 60px-Zielleiste',
     vorschau.sichtbar && vorschau.name === vorschau.quelle && !!vorschau.name &&
-      vorschau.bereich === 'Dokumente' && vorschau.above && vorschau.hoehe === 60 &&
+      vorschau.bereich === 'Dokumente' && vorschau.above && vorschau.hoeheLayout === 60 &&
+      vorschau.breiten.length === 5 && new Set(vorschau.breiten).size === 1 &&
       vorschau.original === vorschau.quelle && vorschau.keinZiel, JSON.stringify(vorschau));
   const reset = await A.pc.evaluate(() =>
     !document.getElementById('ho-ziele')?.hasAttribute('data-vorschau-aktiv'));

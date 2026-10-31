@@ -24,7 +24,8 @@ const Planflaeche = (() => {
 
   const esc = Schaltplan.esc;
 
-  type Werkzeug = 'zeigen' | 'leitung' | 'text' | 'radieren';
+  type Werkzeug = 'zeigen' | 'leitung' | 'text' | 'radieren' | 'schiene';
+  type Punkt = { x: number; y: number };
 
   /** Was gerade am Bildschirm passiert — nichts davon gehört in den Block. */
   type Zustand = {
@@ -36,7 +37,11 @@ const Planflaeche = (() => {
     gewaehltesZeichen: string;
     /** Läuft gerade ein Zug? Solange ja, ändert nur er den Plan (`aendere`). */
     zieht: null | {
-      art: 'teil' | 'leitung' | 'rahmen';
+      /* `strecke`, `radieren`, `schiene` und `schwenk` kamen mit E762:
+         eine Strecke einer Leitung quer schieben, wischend radieren, eine
+         Schiene zeichnen, die Ansicht verschieben (mittlere Taste,
+         Leertaste). */
+      art: 'teil' | 'leitung' | 'rahmen' | 'strecke' | 'radieren' | 'schiene' | 'schwenk';
       /** Der Zeiger, der zieht — Maus, Finger oder Stift. Nur seine
           Bewegungen und sein Loslassen zählen (ein zweiter Finger nicht). */
       zeiger: number;
@@ -52,12 +57,40 @@ const Planflaeche = (() => {
       /** Wo die gezogenen Teile beim letzten Bild standen („x,y;x,y") — ist
           seither nichts über ein Raster gewandert, gibt es nichts zu rechnen. */
       lage?: string;
+      /** Der Plan beim Anfassen (E762) — der Rückgängig-Schritt eines Zugs,
+          der den Plan unterwegs schon ändert (Strecke, Radierer). */
+      abzugStart?: string;
+      /** Beim Schieben einer Strecke: welche Leitung, welche Strecke, wie sie liegt. */
+      strecke?: { lid: string; i: number; waag: boolean; d: number };
+      /** Beim Radieren: was der Kreis berührt hat, wo er zuletzt war, ob er wanderte. */
+      weg?: Set<string>;
+      letzter?: Punkt;
+      gewandert?: boolean;
+      /** Beim Verschieben der Ansicht: der letzte Bildschirmpunkt. */
+      schirm?: Punkt;
+      /** Beim Leitungziehen: das Ende der letzten Vorschau („x,y"). */
+      vorschauEnde?: string;
     };
     /** Rückgängig und Wiederholen — der Abbild-Verlauf aus dem Kern (E687), 60 Schritte. */
     verlauf: ReturnType<typeof GfxHistory.erstelle>;
     zeigeAnschluesse: boolean;
     zeigeNummern: boolean;
     zeigeRaster: boolean;
+
+    /* --- Die Ansicht (E762) -------------------------------------------------
+     * Zoom und Lage gehören dem Bildschirm, nicht dem Block: wer den Plan
+     * morgen öffnet, sieht ihn ganz, wie er gezeichnet ist. `zoom` 1 mit
+     * Lage 0,0 ist genau das Bild von vor E762 (viewBox = das Blatt). */
+    ansicht: { zoom: number; x: number; y: number };
+    /** Steht die Fläche im Vollbild? */
+    voll: boolean;
+    /** Der Radierer (E762): alles oder nur Leiter, und wie gross der Kreis ist (px am Bildschirm). */
+    radierModus: 'alles' | 'leiter';
+    radierGroesse: number;
+    /** Welche Schiene das Werkzeug „Schiene" zeichnet. */
+    schieneArt: string;
+    /** Wird die Leertaste gehalten? Dann verschiebt Ziehen die Ansicht. */
+    leertaste: boolean;
 
     /* --- Die Simulation (Punkte 13, 14, 30) ---------------------------------
      * Nichts davon gehört in den Block. Eine Schalterstellung ist kein Teil
@@ -142,15 +175,38 @@ const Planflaeche = (() => {
    * DIE FLÄCHE
    * ----------------------------------------------------------------------*/
 
-  /** Bildschirmpunkt in Plankoordinaten — mit Raster (Punkt 22). */
-  const ortAus = (svg: SVGSVGElement, e: PointerEvent | MouseEvent, plan: any,
+  /** Bildschirmpunkt in Plankoordinaten — mit Raster (Punkt 22).
+   *
+   *  EINE UMRECHNUNG, ÜBER DIE MATRIX DES SVG (E762, wie E686 am Whiteboard).
+   *  Bis hier stand der Kasten des SVG geteilt durch die Planbreite — das
+   *  stimmt nur, solange die viewBox das ganze Blatt ist. Mit Zoom, Lage und
+   *  Vollbild (in dem das Blatt mittig im Kasten steht) nicht mehr. Die
+   *  Matrix kennt viewBox, Lage im Kasten und jede Verschiebung; Treffen,
+   *  Einrasten und Leitungziehen rechnen damit bei jedem Zoom gleich. */
+  const ortAus = (svg: SVGSVGElement, e: { clientX: number; clientY: number }, plan: any,
                   ohneRaster = false): { x: number; y: number } => {
-    const r = svg.getBoundingClientRect();
-    const sx = plan.breite / (r.width || 1);
-    const sy = plan.hoehe / (r.height || 1);
-    const x = (e.clientX - r.left) * sx;
-    const y = (e.clientY - r.top) * sy;
+    const m = svg.getScreenCTM();
+    let x: number, y: number;
+    if (m) {
+      const q = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+      x = q.x; y = q.y;
+    } else {
+      const r = svg.getBoundingClientRect();
+      x = (e.clientX - r.left) * plan.breite / (r.width || 1);
+      y = (e.clientY - r.top) * plan.hoehe / (r.height || 1);
+    }
     return ohneRaster ? { x, y } : { x: Schaltplan.rasten(x), y: Schaltplan.rasten(y) };
+  };
+
+  /* Der Radierer gehört dem Menschen, nicht dem Plan — wie die Favoriten
+     (oben) und wie der Radierer im PDF (`zeichnen:radierer`, E352/E576). */
+  const RADIERER = 'elektro:radierer';
+  const RADIER_GROESSEN: Array<[number, string]> = [[8, 'klein'], [16, 'mittel'], [28, 'gross']];
+  const radiererLesen = (): { modus: 'alles' | 'leiter'; groesse: number } => {
+    const roh = (typeof Store !== 'undefined') ? Store.getMeta(RADIERER, null) : null;
+    const modus = roh && roh.modus === 'leiter' ? 'leiter' : 'alles';
+    const g = roh ? Number(roh.groesse) : 16;
+    return { modus, groesse: RADIER_GROESSEN.some(x => x[0] === g) ? g : 16 };
   };
 
   /**
@@ -174,6 +230,12 @@ const Planflaeche = (() => {
       zeigeAnschluesse: true,
       zeigeNummern: false,
       zeigeRaster: true,
+      ansicht: { zoom: 1, x: 0, y: 0 },
+      voll: false,
+      radierModus: radiererLesen().modus,
+      radierGroesse: radiererLesen().groesse,
+      schieneArt: 'L1',
+      leertaste: false,
       simulation: false,
       stellungen: {},
       spulenStand: {},
@@ -183,7 +245,7 @@ const Planflaeche = (() => {
     /* --- Speichern, zeichnen, merken — in dieser Reihenfolge -------------- */
     const abzug = (): string => JSON.stringify(z.plan);
 
-    const aendere = (was: () => void, merken = true): void => {
+    const aendere = (was: () => void, merken = true, vorherAbzug?: string): void => {
       /* WÄHREND EINES ZUGS ÄNDERT NUR DER ZUG DEN PLAN (E746, zweite
          Durchsicht). Die Bilder eines Zugs rechnen nur die billigen Wege,
          und die zapfen an manchen Lagen an. Was hier während eines Zugs
@@ -195,7 +257,11 @@ const Planflaeche = (() => {
          Zug selbst speichert beim Loslassen, nachdem `zugEnde` ihn beendet
          hat — mit der vollen Suche. Escape bricht ihn ab. */
       if (z.zieht) return;
-      const vorher = merken ? abzug() : '';
+      /* `vorherAbzug`: ein Zug, der den Plan unterwegs schon geändert hat
+         (Strecke, Radierer — E762), gibt den Stand beim Anfassen mit. Sonst
+         merkte der Verlauf das Ende des Zugs als „vorher", und Strg+Z täte
+         nichts. */
+      const vorher = merken ? (vorherAbzug ?? abzug()) : '';
       was();
       /* EINE KOPIE IN DIE ABLAGE, NICHT DEN PLAN DER FLÄCHE. `updateBlock`
          übernimmt, was es bekommt, als Verweis: bis zur zweiten Durchsicht
@@ -242,10 +308,33 @@ const Planflaeche = (() => {
     const fuss = document.createElement('div');
     fuss.className = 'sp-fuss';
 
+    /* Die Zeichnung steht in der Leinwand, die Zoomknöpfe im Fuss (E762):
+       `buehneMalen` ersetzt nur die Leinwand, `fussMalen` nur den Inhalt
+       neben den Knöpfen — die Knöpfe bleiben. Sie liegen NICHT über der
+       Fläche: dort deckten sie die rechte obere Ecke des Plans zu (gemessen:
+       der Rahmen um H1 in test611 §14 fing auf dem Zoom an, §37 „Die
+       Werkzeugleiste darf nicht verdecken, was sie bedient"). */
+    const leinwand = document.createElement('div');
+    leinwand.className = 'sp-leinwand';
+    buehne.appendChild(leinwand);
+    const zoomleiste = document.createElement('div');
+    zoomleiste.className = 'sp-zoom';
+    zoomleiste.setAttribute('role', 'group');
+    zoomleiste.setAttribute('aria-label', 'Zoom');
+    zoomleiste.innerHTML =
+      `<button type="button" data-a="zoom-minus" title="Verkleinern (−)" aria-label="Verkleinern">−</button>` +
+      `<span class="sp-zoomwert" aria-live="polite">100 %</span>` +
+      `<button type="button" data-a="zoom-plus" title="Vergrössern (+)" aria-label="Vergrössern">+</button>` +
+      `<button type="button" data-a="zoom-alles" title="Alles zeigen (0)" aria-label="Alles zeigen">⤢</button>`;
+
     const koerper = document.createElement('div');
     koerper.className = 'sp-koerper';
     koerper.appendChild(palette);
     koerper.appendChild(buehne);
+    const fussInhalt = document.createElement('div');
+    fussInhalt.className = 'sp-fuss-inhalt';
+    fuss.appendChild(fussInhalt);
+    fuss.appendChild(zoomleiste);
     wurzel.appendChild(kopf);
     wurzel.appendChild(koerper);
     wurzel.appendChild(fuss);
@@ -263,7 +352,9 @@ const Planflaeche = (() => {
         ([['zeigen', '↖', 'Auswählen und verschieben'],
           ['leitung', '⌐', 'Leitung ziehen'],
           ['text', 'T', 'Beschriftung setzen'],
-          ['radieren', '⌫', 'Löschen']] as Array<[Werkzeug, string, string]>).map(([id, ic, t]) =>
+          /* E762: L1, L2, L3, N und PE selbst zeichnen. */
+          ['schiene', '☰', 'Schiene zeichnen — L1, L2, L3, N, PE'],
+          ['radieren', '⌫', 'Radieren — über die Fläche wischen']] as Array<[Werkzeug, string, string]>).map(([id, ic, t]) =>
           `<button class="sp-wz${z.werkzeug === id ? ' an' : ''}" data-wz="${id}" ` +
           `title="${esc(t)}" aria-label="${esc(t)}">${ic}</button>`).join('') +
         `</span>` +
@@ -285,7 +376,14 @@ const Planflaeche = (() => {
         `aria-pressed="${heftOffen()}" aria-label="Formelheft">📐</button>` +
         `<button data-a="zurueck" title="Rückgängig" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>↶</button>` +
         `<button data-a="vorwaerts" title="Wiederholen" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>↷</button>` +
-        `<button data-a="mehr" title="Mehr" aria-label="Mehr">…</button></span>`;
+        `<button data-a="mehr" title="Mehr" aria-label="Mehr">…</button>` +
+        /* Vollbild (E762): im Vollbild steht an derselben Stelle ein
+           Schliessknopf mit 44 px, auch am Rechner — er ist der sichtbare
+           Rückweg neben Escape. */
+        (z.voll
+          ? `<button class="sp-vollzu" data-a="vollbild-zu" title="Vollbild beenden (Esc)" aria-label="Vollbild beenden">✕</button>`
+          : `<button data-a="vollbild" title="Vollbild (F)" aria-label="Vollbild">⛶</button>`) +
+        `</span>`;
     };
 
     /* --- Der Fuss: Ebenen und Auswahl ------------------------------------ */
@@ -316,7 +414,7 @@ const Planflaeche = (() => {
         const e = z.ergebnis;
         const leuchtet = e && e.ok
           ? Object.keys(e.werte).filter(k => (e.werte[k].helligkeit || 0) > 0.01).length : 0;
-        fuss.innerHTML =
+        fussInhalt.innerHTML =
           `<span class="sp-simzahlen">` +
           (e && e.ok
             ? `${leuchtet} ${leuchtet === 1 ? 'leuchtet' : 'leuchten'} · ` +
@@ -329,7 +427,25 @@ const Planflaeche = (() => {
         return;
       }
       const gewaehlt = z.auswahl.size;
-      fuss.innerHTML =
+      /* Das Werkzeug bringt seine Wahl mit (E762): der Radierer seine Art
+         und Grösse wie im PDF, die Schiene ihren Leiter. */
+      const knopfAn = (an: boolean): string => ` aria-pressed="${an}"${an ? ' class="an"' : ''}`;
+      const werkzeugWahl = z.werkzeug === 'radieren'
+        ? `<span class="sp-wahl" role="group" aria-label="Radierer">` +
+          `<button type="button" data-radiermodus="alles"${knopfAn(z.radierModus === 'alles')} title="Radiert, was der Kreis berührt: Leitungen, Teile, Texte">Alles</button>` +
+          `<button type="button" data-radiermodus="leiter"${knopfAn(z.radierModus === 'leiter')} title="Radiert nur Leitungen — kein Teil">Nur Leiter</button>` +
+          RADIER_GROESSEN.map(([g, name]) =>
+            `<button type="button" class="sp-radiergroesse" data-radiergroesse="${g}"${knopfAn(z.radierGroesse === g)} ` +
+            `title="Radierer ${name}" aria-label="Radierer ${name}" style="--kreis:${Math.round(g * 0.7 + 4)}px"><i aria-hidden="true"></i></button>`).join('') +
+          `</span><span class="sp-hinweis">Über die Fläche wischen — mit Maus, Finger oder Stift. Ein Tipp radiert eine Leitung.</span>`
+        : z.werkzeug === 'schiene'
+          ? `<span class="sp-wahl" role="group" aria-label="Schiene">` +
+            (Schaltplan.SCHIENEN as string[]).map(k =>
+              `<button type="button" data-schiene="${k}"${knopfAn(z.schieneArt === k)}>${k}</button>`).join('') +
+            `</span><span class="sp-hinweis">Ziehen, um ${esc(z.schieneArt)} als gerade Schiene zu zeichnen — Teile hängen daran wie am Netz.</span>`
+          : '';
+      fussInhalt.innerHTML = werkzeugWahl ? werkzeugWahl +
+        `<span class="sp-zahlen">${z.plan.teile.length} Teile · ${z.plan.leitungen.length} Leitungen</span>` :
         `<span class="sp-ebenen">` + (z.plan.ebenen as any[]).map(e =>
           `<button class="sp-ebene${e.sichtbar ? ' an' : ''}" data-ebene="${esc(e.id)}" ` +
           `title="${e.sichtbar ? 'Ausblenden' : 'Einblenden'}: ${esc(e.name)}">` +
@@ -390,7 +506,8 @@ const Planflaeche = (() => {
       /* `werte` bringt die Richtung schon mit — sie steht an jedem Messwert
          (E731). Hier ist deshalb nichts weiterzureichen ausser dem, was
          ohnehin durchgeht. */
-      buehne.innerHTML = Schaltplan.alsSvg(z.plan, opt);
+      leinwand.innerHTML = Schaltplan.alsSvg(z.plan, opt);
+      ansichtAnwenden();
       buehne.classList.toggle('sp-laeuft', z.simulation);
       if (!z.simulation) return;
       /* Schaltbare Bauteile bekommen den Zeigefinger und eine Ansage, was ein
@@ -412,6 +529,105 @@ const Planflaeche = (() => {
     };
 
     const male = (): void => { rechnen(); kopfMalen(); buehneMalen(); fussMalen(); };
+
+    /* --- Die Ansicht: Zoom und Lage (E762) ---------------------------------
+     * Gezoomt wird über die viewBox, nicht über ein neues Bild: das SVG
+     * bleibt dasselbe Element, und `ortAus` rechnet über seine Matrix. Bei
+     * Zoom 1 und Lage 0,0 ist die viewBox das ganze Blatt — Zeichen für
+     * Zeichen das Bild von vor E762 (test625 §0). */
+    const ZOOM_MIN = 0.25, ZOOM_MAX = 8;
+    const svgJetzt = (): SVGSVGElement | null => leinwand.querySelector('svg.sp-flaeche');
+    const ansichtAnwenden = (): void => {
+      const svg = svgJetzt();
+      const { zoom, x, y } = z.ansicht;
+      const B = Number(z.plan.breite) || 800, H = Number(z.plan.hoehe) || 700;
+      if (svg) svg.setAttribute('viewBox', (zoom === 1 && x === 0 && y === 0)
+        ? `0 0 ${B} ${H}`
+        : `${+x.toFixed(3)} ${+y.toFixed(3)} ${+(B / zoom).toFixed(3)} ${+(H / zoom).toFixed(3)}`);
+      const wert = zoomleiste.querySelector('.sp-zoomwert');
+      if (wert) wert.textContent = Math.round(zoom * 100) + ' %';
+    };
+    /** Wie das Blatt bei Zoom 1 im Kasten des SVG steht: Massstab und linke obere Ecke. */
+    const schirm = (): { s1: number; cx: number; cy: number } => {
+      const svg = svgJetzt();
+      const B = Number(z.plan.breite) || 800, H = Number(z.plan.hoehe) || 700;
+      if (!svg) return { s1: 1, cx: 0, cy: 0 };
+      const r = svg.getBoundingClientRect();
+      const s1 = Math.min(r.width / B, r.height / H) || 1;
+      return { s1, cx: r.left + (r.width - B * s1) / 2, cy: r.top + (r.height - H * s1) / 2 };
+    };
+    const planAm = (sx: number, sy: number): Punkt => {
+      const g = schirm(), k = g.s1 * z.ansicht.zoom;
+      return { x: z.ansicht.x + (sx - g.cx) / k, y: z.ansicht.y + (sy - g.cy) / k };
+    };
+    /** Zoom setzen, sodass der Planpunkt `P` am Bildschirmpunkt (sx, sy) steht. */
+    const zoomSetzen = (zoom: number, P: Punkt, sx: number, sy: number): void => {
+      const zz = Math.round(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom)) * 1000) / 1000;
+      const g = schirm(), k = g.s1 * zz;
+      z.ansicht = { zoom: zz, x: P.x - (sx - g.cx) / k, y: P.y - (sy - g.cy) / k };
+      if (zz === 1 && Math.abs(z.ansicht.x) < 0.5 && Math.abs(z.ansicht.y) < 0.5) z.ansicht = { zoom: 1, x: 0, y: 0 };
+      ansichtAnwenden();
+    };
+    const zoomUm = (faktor: number, sx?: number, sy?: number): void => {
+      const svg = svgJetzt();
+      if (!svg) return;
+      if (sx === undefined || sy === undefined) {
+        const r = svg.getBoundingClientRect();
+        sx = r.left + r.width / 2; sy = r.top + r.height / 2;
+      }
+      zoomSetzen(z.ansicht.zoom * faktor, planAm(sx, sy), sx, sy);
+    };
+    const allesZeigen = (): void => { z.ansicht = { zoom: 1, x: 0, y: 0 }; ansichtAnwenden(); };
+    const schwenken = (dx: number, dy: number): void => {
+      const g = schirm(), k = g.s1 * z.ansicht.zoom;
+      z.ansicht = { zoom: z.ansicht.zoom, x: z.ansicht.x - dx / k, y: z.ansicht.y - dy / k };
+      ansichtAnwenden();
+    };
+    zoomleiste.addEventListener('click', e => {
+      const b = (e.target as Element).closest<HTMLElement>('[data-a]');
+      if (!b) return;
+      if (b.dataset.a === 'zoom-plus') zoomUm(1.25);
+      else if (b.dataset.a === 'zoom-minus') zoomUm(0.8);
+      else if (b.dataset.a === 'zoom-alles') allesZeigen();
+    });
+
+    /* --- Ein Bild während eines Zugs, ohne das SVG neu zu bauen (E762) -------
+     * Bis hier rief jede Bewegung eines Zugs `buehneMalen` — das ganze SVG
+     * als Text, geparst, ersetzt, bei jedem Raster. Jetzt rückt ein Zug nur,
+     * was sich bewegt: die `transform` der gezogenen Teile, das `d` jeder
+     * Leitung, deren Weg (oder deren Lücke an einer Kreuzung) sich ändert,
+     * und die Verbindungspunkte. Gemessen in messungen.md (§111). */
+    const teilweiseMalen = (teilIds: Iterable<string>): void => {
+      const svg = svgJetzt();
+      if (!svg) return;
+      for (const id of teilIds) {
+        const t = teilVon(id);
+        const g = svg.querySelector(`.sp-teil[data-id="${CSS.escape(id)}"]`);
+        if (t && g) g.setAttribute('transform', `translate(${t.x} ${t.y})`);
+      }
+      const luecken = Schaltplan.kreuzungen(z.plan);
+      const nachId = new Map<string, any>((z.plan.leitungen as any[]).map(l => [l.id, l]));
+      svg.querySelectorAll<SVGPathElement>('path.sp-leitung').forEach(el => {
+        const l = nachId.get(el.dataset.id || '');
+        if (!l) return;
+        const d = Schaltplan.leitungPfad(l, luecken);
+        if (el.getAttribute('d') !== d) el.setAttribute('d', d);
+      });
+      svg.querySelectorAll('.sp-knoten').forEach(c => c.remove());
+      const knoten = (Schaltplan.verbindungspunkte(z.plan) as Punkt[]).map(q =>
+        `<circle class="sp-knoten" cx="${q.x}" cy="${q.y}" r="4" fill="currentColor"/>`).join('');
+      const vor = svg.querySelector('.sp-teil, .sp-text, .sp-vorschau');
+      if (knoten) { if (vor) vor.insertAdjacentHTML('beforebegin', knoten); else svg.insertAdjacentHTML('beforeend', knoten); }
+    };
+    /** Die Vorschau eines Zugs (Leitung, Rahmen, Schiene, Radierkreis) — eine
+     *  Gruppe obenauf, deren Inhalt jede Bewegung ersetzt; das SVG bleibt. */
+    const vorschau = (html: string): void => {
+      const svg = svgJetzt();
+      if (!svg) return;
+      let g = svg.querySelector('g.sp-vorschau');
+      if (!g) { svg.insertAdjacentHTML('beforeend', '<g class="sp-vorschau"></g>'); g = svg.querySelector('g.sp-vorschau'); }
+      if (g) g.innerHTML = html;
+    };
 
     /* --- Symbol setzen (Punkt 12) ---------------------------------------- */
     const setzeSymbol = (id: string, x: number, y: number): void => {
@@ -534,6 +750,10 @@ const Planflaeche = (() => {
         if (l.punkte.every((p: any) => p.x >= x1 && p.x <= x2 && p.y >= y1 && p.y <= y2))
           raus.push(l.id);
       });
+      /* Texte auch (E762): sonst dreht eine Gruppe ohne ihre Beschriftung. */
+      (z.plan.texte as any[]).forEach(t => {
+        if (t.x >= x1 && t.x <= x2 && t.y >= y1 && t.y <= y2) raus.push(t.id);
+      });
       return raus;
     };
 
@@ -649,8 +869,29 @@ const Planflaeche = (() => {
       return { bericht, aenderungen: Schaltplan.veraendert(z.plan, vorher), vorher };
     };
 
-    /* --- Drehen (26), spiegeln (27), doppeln (28), gruppieren (29) ------- */
-    const drehen = (): void => aendere(() => {
+    /* --- Drehen (26), spiegeln (27), doppeln (28), gruppieren (29) -------
+       ALLES DREHT ALS GRUPPE (E762, Redur: „ich sollte alles umdrehen
+       können"). Ist mehr als ein Ding gewählt — Teile, Leitungen, Texte —,
+       dreht und spiegelt die ganze Auswahl um ihre Mitte
+       (`Schaltplan.gruppeUmformen`). Ein einzelnes Teil dreht wie bisher an
+       seinem Ort; das ist dieselbe Drehung um dieselbe Mitte, nur ohne den
+       Umweg über das Raster (test611 misst sie so). */
+    const leitungVon = (id: string): any => (z.plan.leitungen as any[]).find(l => l.id === id);
+    const textVon = (id: string): any => (z.plan.texte as any[]).find(x => x.id === id);
+    const alsGruppe = (): boolean => {
+      const ids = [...z.auswahl].filter(id => teilVon(id) || leitungVon(id) || textVon(id));
+      return ids.length > 1 || (ids.length === 1 && !teilVon(ids[0]!));
+    };
+    const gruppeUmformen = (art: 'drehen' | 'spiegeln'): void => aendere(() => {
+      const r = Schaltplan.gruppeUmformen(z.plan, z.auswahl, art);
+      melde(art === 'drehen' ? 'Drehen' : 'Spiegeln', r.bericht, Schaltplan.veraendert(z.plan, r.vorher), r.vorher);
+    });
+    const planDrehen = (): void => aendere(() => {
+      const r = Schaltplan.planDrehen(z.plan);
+      z.ansicht = { zoom: 1, x: 0, y: 0 };
+      melde('Drehen', r.bericht, Schaltplan.veraendert(z.plan, r.vorher), r.vorher);
+    });
+    const drehen = (): void => alsGruppe() ? gruppeUmformen('drehen') : aendere(() => {
       const vorher = Schaltplan.vorherMerken(z.plan);
       const teile = auswahlTeile();
       teile.forEach(t => { t.drehung = ((t.drehung || 0) + 90) % 360; });
@@ -659,7 +900,7 @@ const Planflaeche = (() => {
         melde('Drehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
       }
     });
-    const spiegeln = (): void => aendere(() => {
+    const spiegeln = (): void => alsGruppe() ? gruppeUmformen('spiegeln') : aendere(() => {
       const vorher = Schaltplan.vorherMerken(z.plan);
       const teile = auswahlTeile();
       teile.forEach(t => { t.gespiegelt = !t.gespiegelt; });
@@ -852,7 +1093,10 @@ const Planflaeche = (() => {
       if (!zug) return;
       zugLoesen();
       if (!wurzel.isConnected) return;
-      if (zug.art === 'teil') teilzugSichern(zug); else male();
+      if (zug.art === 'teil') teilzugSichern(zug);
+      else if (zug.art === 'strecke') streckeSichern(zug);
+      else if (zug.art === 'radieren') radierenSichern(zug, false);
+      else male();
     };
 
     /** Escape im Zug: zurück auf den Stand beim Anfassen — die Lagen aus
@@ -862,7 +1106,7 @@ const Planflaeche = (() => {
       const zug = z.zieht;
       if (!zug) return;
       zugLoesen();
-      if (zug.art === 'teil') {
+      if (zug.art === 'teil' || zug.art === 'strecke') {
         zug.ausgang.forEach((a, id) => {
           const t = teilVon(id);
           if (t) { t.x = a.x; t.y = a.y; }
@@ -873,16 +1117,170 @@ const Planflaeche = (() => {
           if (alt) l.punkte = alt.map(q => ({ x: q.x, y: q.y }));
         });
       }
+      if (zug.art === 'schwenk') return;
       male();
+    };
+
+    /* --- Eine Strecke sichern (E762) -------------------------------------- */
+    const streckeSichern = (zug: Zug): void => {
+      if (zug.abzugStart === undefined || zug.abzugStart === abzug()) { male(); return; }
+      aendere(() => { /* geschoben und geprüft — nur sichern */ }, true, zug.abzugStart);
+    };
+
+    /* --- Der Radierer (E762, wie im PDF: E352, E576) ------------------------
+     * Redur: „ich sollte wie beim löschen von pdf dort auch so haben entweder
+     * mir finger oder masud oder stift oder nur eienzeäne leiter". Ein Kreis
+     * folgt dem Zeiger — Maus, Finger, Stift —, und was er berührt, wird
+     * markiert und beim Loslassen in EINEM Schritt gelöscht (ein Strg+Z holt
+     * den ganzen Wisch zurück). „Nur Leiter" löscht nie ein Teil. Ein Tipp
+     * ohne Wisch löscht genau EIN Ding: die nächste Leitung unter dem Kreis
+     * (oder, bei „Alles", das Teil unter dem Zeiger). Eine gelöschte Leitung
+     * trennt nur sich selbst — die anderen behalten ihre Punkte. */
+    const radius = (): number => {
+      const g = schirm();
+      return z.radierGroesse / ((g.s1 || 1) * z.ansicht.zoom);
+    };
+    const abstandZuStrecke = (q: Punkt, a: Punkt, b: Punkt): number => {
+      const dx = b.x - a.x, dy = b.y - a.y, L = dx * dx + dy * dy;
+      const t = L ? Math.max(0, Math.min(1, ((q.x - a.x) * dx + (q.y - a.y) * dy) / L)) : 0;
+      return Math.hypot(q.x - (a.x + t * dx), q.y - (a.y + t * dy));
+    };
+    const abstandZuKasten = (q: Punkt, k: { x1: number; y1: number; x2: number; y2: number }): number =>
+      Math.hypot(Math.max(k.x1 - q.x, 0, q.x - k.x2), Math.max(k.y1 - q.y, 0, q.y - k.y2));
+    const teilKasten = (t: any): { x1: number; y1: number; x2: number; y2: number } => {
+      const zc = Register.fachzeichen.holen(t.zeichen);
+      const m = Register.fachzeichen.masse(t.zeichen, t.drehung);
+      const cx = t.x + (zc ? zc.w : 0) / 2, cy = t.y + (zc ? zc.h : 0) / 2;
+      return { x1: cx - m.w / 2, y1: cy - m.h / 2, x2: cx + m.w / 2, y2: cy + m.h / 2 };
+    };
+    const sichtbarAuf = (ebene: string): boolean => {
+      const e = (z.plan.ebenen as any[]).find(x => x.id === ebene);
+      return !e || e.sichtbar;
+    };
+    /** Was der Kreis um `q` berührt, mit Abstand — nur Sichtbares. */
+    const radierTreffer = (q: Punkt, r: number): Array<{ id: string; d: number; art: 'leitung' | 'teil' | 'text' }> => {
+      const raus: Array<{ id: string; d: number; art: 'leitung' | 'teil' | 'text' }> = [];
+      (z.plan.leitungen as any[]).forEach(l => {
+        if (!sichtbarAuf(l.ebene)) return;
+        let d = Infinity;
+        for (let i = 0; i + 1 < l.punkte.length; i++) d = Math.min(d, abstandZuStrecke(q, l.punkte[i], l.punkte[i + 1]));
+        if (d <= r) raus.push({ id: l.id, d, art: 'leitung' });
+      });
+      if (z.radierModus === 'leiter') return raus;
+      (z.plan.teile as any[]).forEach(t => {
+        if (!sichtbarAuf(t.ebene)) return;
+        const d = abstandZuKasten(q, teilKasten(t));
+        if (d <= r) raus.push({ id: t.id, d, art: 'teil' });
+      });
+      (z.plan.texte as any[]).forEach(x => {
+        if (!sichtbarAuf(x.ebene)) return;
+        const d = abstandZuKasten(q, { x1: x.x - 2, y1: x.y - 12, x2: x.x + String(x.t).length * 7.5, y2: x.y + 3 });
+        if (d <= r) raus.push({ id: x.id, d, art: 'text' });
+      });
+      return raus;
+    };
+    const radierMarken = (zug: Zug): void => {
+      const svg = svgJetzt();
+      if (!svg || !zug.weg) return;
+      zug.weg.forEach(id => svg.querySelectorAll(`[data-id="${CSS.escape(id)}"]`).forEach(el => el.classList.add('sp-weg')));
+    };
+    /** Den Kreis von `von` nach `bis` wischen: alles dazwischen zählt. */
+    const radierWisch = (zug: Zug, von: Punkt, bis: Punkt): void => {
+      const r = radius();
+      const n = Math.max(1, Math.ceil(Math.hypot(bis.x - von.x, bis.y - von.y) / Math.max(1, r / 2)));
+      for (let k = 0; k <= n; k++) {
+        const q = { x: von.x + (bis.x - von.x) * k / n, y: von.y + (bis.y - von.y) * k / n };
+        radierTreffer(q, r).forEach(h => zug.weg!.add(h.id));
+      }
+      radierMarken(zug);
+      vorschau(`<circle class="sp-radierkreis" cx="${+bis.x.toFixed(1)}" cy="${+bis.y.toFixed(1)}" r="${+r.toFixed(1)}"/>`);
+    };
+    const radierenSichern = (zug: Zug, tipp: boolean): void => {
+      let weg = [...(zug.weg || [])];
+      if (tipp && zug.letzter) {
+        /* Ein Tipp: genau ein Ding. Bei „Alles" zuerst das Teil, in dessen
+           Kasten der Zeiger liegt, sonst die nächste Leitung, sonst ein Text. */
+        const h = radierTreffer(zug.letzter, radius());
+        const teil = h.filter(x => x.art === 'teil' && x.d === 0)[0];
+        const naechste = (art: string) => h.filter(x => x.art === art).sort((a, b) => a.d - b.d)[0];
+        const eins = teil || naechste('leitung') || naechste('text');
+        weg = eins ? [eins.id] : [];
+      }
+      if (!weg.length) { male(); return; }
+      const raus = new Set(weg);
+      aendere(() => {
+        z.plan.teile = (z.plan.teile as any[]).filter(t => !raus.has(t.id));
+        z.plan.leitungen = (z.plan.leitungen as any[]).filter(l => !raus.has(l.id));
+        z.plan.texte = (z.plan.texte as any[]).filter(x => !raus.has(x.id));
+        raus.forEach(id => z.auswahl.delete(id));
+      }, true, zug.abzugStart);
+    };
+
+    /* --- Zwei Finger: zoomen und verschieben (E762) ------------------------
+     * Ein Finger zeichnet, zwei Finger bewegen die Ansicht — wie in jeder
+     * Karte. Setzt der zweite auf, endet der Zug des ersten (`zugUnterbrechen`,
+     * wie seit E746), und bis der letzte Finger loslässt, zeichnet keiner. */
+    const finger = new Map<number, Punkt>();
+    let geste: null | { d0: number; P0: Punkt; zoom0: number } = null;
+    const fingerMitte = (): Punkt => {
+      const ps = [...finger.values()];
+      return { x: (ps[0]!.x + ps[1]!.x) / 2, y: (ps[0]!.y + ps[1]!.y) / 2 };
+    };
+    const fingerAbstand = (): number => {
+      const ps = [...finger.values()];
+      return Math.hypot(ps[0]!.x - ps[1]!.x, ps[0]!.y - ps[1]!.y);
+    };
+    const fingerBewegt = (e: PointerEvent): void => {
+      if (!finger.has(e.pointerId)) return;
+      finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (!geste || finger.size < 2) return;
+      const m = fingerMitte();
+      zoomSetzen(geste.zoom0 * fingerAbstand() / (geste.d0 || 1), geste.P0, m.x, m.y);
+    };
+    const fingerWeg = (e: PointerEvent): void => {
+      if (!finger.delete(e.pointerId)) return;
+      if (finger.size) return;
+      geste = null;
+      document.removeEventListener('pointermove', fingerBewegt, true);
+      document.removeEventListener('pointerup', fingerWeg, true);
+      document.removeEventListener('pointercancel', fingerWeg, true);
     };
 
     /* --- Zeigerereignisse ------------------------------------------------ */
     buehne.addEventListener('pointerdown', e => {
-      const svg = buehne.querySelector('svg') as SVGSVGElement;
+      const svg = svgJetzt();
       if (!svg) return;
+      if (e.pointerType === 'touch') {
+        if (!finger.size) {
+          document.addEventListener('pointermove', fingerBewegt, true);
+          document.addEventListener('pointerup', fingerWeg, true);
+          document.addEventListener('pointercancel', fingerWeg, true);
+        }
+        finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (finger.size === 2) {
+          const m = fingerMitte();
+          geste = { d0: fingerAbstand(), P0: planAm(m.x, m.y), zoom0: z.ansicht.zoom };
+          return;
+        }
+      }
+      if (geste || finger.size > 2) return;
       const ziel = e.target as Element;
       const roh = ortAus(svg, e, z.plan, true);
       const p = ortAus(svg, e, z.plan);
+
+      /* Die Ansicht verschieben (E762): mittlere Taste, oder Leertaste und
+         Ziehen. Das geht immer, auch in der Simulation. */
+      if (e.button === 1 || (z.leertaste && e.button === 0)) {
+        e.preventDefault();
+        zugBeginnen({ art: 'schwenk', zeiger: e.pointerId, startX: 0, startY: 0, ausgang: new Map(),
+                      schirm: { x: e.clientX, y: e.clientY } });
+        svg.setPointerCapture(e.pointerId);
+        return;
+      }
+      /* Das Radierende eines Stifts radiert, welches Werkzeug auch gewählt
+         ist — wie im PDF (E352). */
+      const stiftRadiert = e.pointerType === 'pen' && (e.button === 5 || (e.buttons & 32) !== 0);
+      if (e.button !== 0 && !stiftRadiert) return;
 
       /* Läuft die Simulation, ist die Fläche kein Zeichenbrett mehr, sondern
          eine Schalttafel. Nichts wird verschoben, nichts gelöscht — man kann
@@ -893,9 +1291,12 @@ const Planflaeche = (() => {
         return;
       }
 
-      if (z.werkzeug === 'radieren') {
-        const g = teilAm(ziel);
-        if (g && g.dataset.id) { z.auswahl = new Set([g.dataset.id]); loeschen(); }
+      if (z.werkzeug === 'radieren' || stiftRadiert) {
+        const zug: Zug = { art: 'radieren', zeiger: e.pointerId, startX: e.clientX, startY: e.clientY,
+                           ausgang: new Map(), abzugStart: abzug(), weg: new Set(), letzter: roh, gewandert: false };
+        zugBeginnen(zug);
+        svg.setPointerCapture(e.pointerId);
+        radierWisch(zug, roh, roh);
         return;
       }
 
@@ -905,6 +1306,12 @@ const Planflaeche = (() => {
           if (t) aendere(() => z.plan.texte.push({
             id: Schaltplan.uid(), x: p.x, y: p.y, t, ebene: aktiveEbene() }));
         })();
+        return;
+      }
+
+      if (z.werkzeug === 'schiene') {
+        zugBeginnen({ art: 'schiene', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang: new Map() });
+        svg.setPointerCapture(e.pointerId);
         return;
       }
 
@@ -930,6 +1337,30 @@ const Planflaeche = (() => {
       }
 
       const id = g.dataset.id;
+
+      /* LEITER SCHIEBEN (E762): wer eine Leitung an einer Strecke anfasst,
+         wählt sie und zieht diese Strecke quer — die Enden bleiben auf ihren
+         Klemmen, und wohin sie etwas Neues berühren würde, folgt sie nicht
+         (`Schaltplan.streckeSchieben`). */
+      const leitung = g.classList.contains('sp-leitung') ? leitungVon(id) : null;
+      if (leitung) {
+        if (e.shiftKey) { if (z.auswahl.has(id)) z.auswahl.delete(id); else z.auswahl.add(id); }
+        else if (!z.auswahl.has(id)) z.auswahl = new Set([id]);
+        let i = 0, best = Infinity;
+        for (let k = 0; k + 1 < leitung.punkte.length; k++) {
+          const d = abstandZuStrecke(roh, leitung.punkte[k], leitung.punkte[k + 1]);
+          if (d < best) { best = d; i = k; }
+        }
+        const a = leitung.punkte[i], b = leitung.punkte[i + 1];
+        if (a && b && (a.x === b.x || a.y === b.y)) {
+          zugBeginnen({ art: 'strecke', zeiger: e.pointerId, startX: roh.x, startY: roh.y, ausgang: new Map(),
+                        vorher: Schaltplan.vorherMerken(z.plan), abzugStart: abzug(),
+                        strecke: { lid: id, i, waag: a.y === b.y, d: 0 } });
+          svg.setPointerCapture(e.pointerId);
+        }
+        male();
+        return;
+      }
 
       /* Doppeltipp aufs Teil: sein Dialog (Betriebsmittel, Anschlüsse,
          Punkte 18/19). Von Hand erkannt, nicht über das native dblclick —
@@ -963,25 +1394,54 @@ const Planflaeche = (() => {
 
     buehne.addEventListener('pointermove', e => {
       if (!z.zieht || e.pointerId !== z.zieht.zeiger) return;
-      const svg = buehne.querySelector('svg') as SVGSVGElement;
+      const svg = svgJetzt();
       if (!svg) return;
+      const zug = z.zieht;
+
+      if (zug.art === 'schwenk') {
+        const s0 = zug.schirm || { x: e.clientX, y: e.clientY };
+        schwenken(e.clientX - s0.x, e.clientY - s0.y);
+        zug.schirm = { x: e.clientX, y: e.clientY };
+        return;
+      }
+      if (zug.art === 'radieren') {
+        const roh = ortAus(svg, e, z.plan, true);
+        if (Math.hypot(e.clientX - zug.startX, e.clientY - zug.startY) > 4) zug.gewandert = true;
+        radierWisch(zug, zug.letzter || roh, roh);
+        zug.letzter = roh;
+        return;
+      }
+      if (zug.art === 'strecke' && zug.strecke && zug.vorher) {
+        const roh = ortAus(svg, e, z.plan, true);
+        const st = zug.strecke;
+        const d = Schaltplan.rasten(st.waag ? roh.y - zug.startY : roh.x - zug.startX);
+        if (d === st.d) return;
+        const neu = Schaltplan.streckeSchieben(z.plan, zug.vorher, st.lid, st.i, d);
+        if (!neu) return;           /* dorthin nicht — die letzte gute Lage bleibt */
+        const l = leitungVon(st.lid);
+        if (l) l.punkte = neu;
+        st.d = d;
+        teilweiseMalen([]);
+        return;
+      }
+
       const p = ortAus(svg, e, z.plan);
 
-      if (z.zieht.art === 'teil') {
-        const dx = p.x - z.zieht.startX, dy = p.y - z.zieht.startY;
-        z.zieht.ausgang.forEach((a, id) => {
+      if (zug.art === 'teil') {
+        const dx = p.x - zug.startX, dy = p.y - zug.startY;
+        zug.ausgang.forEach((a, id) => {
           const t = teilVon(id);
           if (t) { t.x = Schaltplan.rasten(a.x + dx); t.y = Schaltplan.rasten(a.y + dy); }
         });
         /* Steht jedes gezogene Teil noch auf demselben Raster wie beim
            letzten Bild, gibt es nichts zu rechnen und nichts neu zu zeichnen.
            (Eine Maus meldet viele Bewegungen je Raster.) */
-        const lage = [...z.zieht.ausgang.keys()].map(id => {
+        const lage = [...zug.ausgang.keys()].map(id => {
           const t = teilVon(id);
           return t ? t.x + ',' + t.y : '';
         }).join(';');
-        if (lage === z.zieht.lage) return;
-        z.zieht.lage = lage;
+        if (lage === zug.lage) return;
+        zug.lage = lage;
         /* Jede Bewegung rechnet vom Anfassen aus (`vonVorn`), nicht vom
            letzten Zwischenstand — sonst hinge der Weg davon ab, wie schnell
            die Maus war. Ist nichts über ein Raster gewandert, bleibt alles
@@ -991,42 +1451,55 @@ const Planflaeche = (() => {
            (`zugEnde`). Gemessen (messungen §103, F1 um 120 × 60 px in 60
            Bewegungen, CPU vierfach gedrosselt, drei Läufe): mit der vollen
            Suche je Bewegung im Median 23,9 bis 29,4 ms, höchstens 126,8 bis
-           217,3 ms; billig 2,5 bis 2,8 ms, höchstens 13,2 ms. */
-        const gewandert = [...z.zieht.ausgang].some(([id, a]) => {
+           217,3 ms; billig 2,5 bis 2,8 ms, höchstens 13,2 ms. Und seit E762
+           baut das Bild dabei das SVG nicht mehr neu (`teilweiseMalen`). */
+        const gewandert = [...zug.ausgang].some(([id, a]) => {
           const t = teilVon(id);
           return t && (t.x !== a.x || t.y !== a.y);
         });
-        const vorher = z.zieht.vorher ?? (z.zieht.vorher = Schaltplan.vorherMerken(z.plan));
-        Schaltplan.nachziehen(z.plan, vorher, gewandert ? [...z.zieht.ausgang.keys()] : [],
+        const vorher = zug.vorher ?? (zug.vorher = Schaltplan.vorherMerken(z.plan));
+        Schaltplan.nachziehen(z.plan, vorher, gewandert ? [...zug.ausgang.keys()] : [],
           { heilen: gewandert, vonVorn: true, schnell: true });
-        buehneMalen();
+        teilweiseMalen(zug.ausgang.keys());
         return;
       }
-      /* Vorschau beim Leitungziehen und beim Rahmen — ohne den Plan zu
-         ändern, damit ein abgebrochener Zug nichts hinterlässt. */
-      buehneMalen();
-      const svg2 = buehne.querySelector('svg') as SVGSVGElement;
-      if (!svg2) return;
-      if (z.zieht.art === 'leitung' && z.zieht.von) {
-        const punkte = Schaltplan.rechtwinklig(z.zieht.von, p);
-        const d = punkte.map((q: any, i: number) =>
-          (i ? 'L' : 'M') + q.x + ',' + q.y).join(' ');
-        svg2.insertAdjacentHTML('beforeend',
-          `<path d="${d}" fill="none" stroke="currentColor" stroke-width="2" ` +
-          `stroke-dasharray="4 3" opacity=".7"/>`);
+      /* Vorschau beim Leitungziehen, beim Rahmen und bei der Schiene — ohne
+         den Plan zu ändern, damit ein abgebrochener Zug nichts hinterlässt,
+         und ohne das SVG neu zu bauen (E762). */
+      if (zug.art === 'leitung' && zug.von) {
         const fang = Schaltplan.fangeAnschluss(z.plan, p);
-        if (fang) svg2.insertAdjacentHTML('beforeend',
-          `<circle cx="${fang.x}" cy="${fang.y}" r="7" fill="none" ` +
-          `stroke="currentColor" stroke-width="2" opacity=".8"/>`);
+        const bis = fang ? { x: fang.x, y: fang.y } : p;
+        const schluessel = bis.x + ',' + bis.y;
+        if (schluessel === zug.vorschauEnde) return;
+        zug.vorschauEnde = schluessel;
+        const punkte = Schaltplan.leitungFuehren(z.plan, zug.von, bis,
+          zug.von.teil ? { teil: zug.von.teil, nr: zug.von.nr ?? '' } : null,
+          fang ? { teil: fang.teil, nr: fang.nr } : null, { schnell: true });
+        const d = punkte.map((q: any, i: number) => (i ? 'L' : 'M') + q.x + ',' + q.y).join(' ');
+        vorschau(`<path d="${d}" fill="none" stroke="currentColor" stroke-width="2" ` +
+          `stroke-dasharray="4 3" opacity=".7"/>` +
+          (fang ? `<circle cx="${fang.x}" cy="${fang.y}" r="7" fill="none" ` +
+                  `stroke="currentColor" stroke-width="2" opacity=".8"/>` : ''));
+        return;
       }
-      if (z.zieht.art === 'rahmen') {
-        const x = Math.min(z.zieht.startX, p.x), y = Math.min(z.zieht.startY, p.y);
-        svg2.insertAdjacentHTML('beforeend',
-          `<rect x="${x}" y="${y}" width="${Math.abs(p.x - z.zieht.startX)}" ` +
-          `height="${Math.abs(p.y - z.zieht.startY)}" fill="currentColor" ` +
+      if (zug.art === 'schiene') {
+        const b = schieneEnde({ x: zug.startX, y: zug.startY }, p);
+        vorschau(`<path d="M${zug.startX},${zug.startY} L${b.x},${b.y}" fill="none" stroke="currentColor" ` +
+          `stroke-width="3.5" stroke-dasharray="6 4" opacity=".75"/>` +
+          `<text x="${zug.startX + 6}" y="${zug.startY - 8}" font-size="13" fill="currentColor" stroke="none">${esc(z.schieneArt)}</text>`);
+        return;
+      }
+      if (zug.art === 'rahmen') {
+        const x = Math.min(zug.startX, p.x), y = Math.min(zug.startY, p.y);
+        vorschau(`<rect x="${x}" y="${y}" width="${Math.abs(p.x - zug.startX)}" ` +
+          `height="${Math.abs(p.y - zug.startY)}" fill="currentColor" ` +
           `fill-opacity=".07" stroke="currentColor" stroke-dasharray="4 3"/>`);
       }
     });
+
+    /** Eine Schiene ist gerade: sie folgt der Richtung, in die mehr gezogen wurde. */
+    const schieneEnde = (a: Punkt, p: Punkt): Punkt =>
+      Math.abs(p.x - a.x) >= Math.abs(p.y - a.y) ? { x: p.x, y: a.y } : { x: a.x, y: p.y };
 
     /** Der ziehende Zeiger lässt los oder bricht ab (am Dokument gehorcht,
      *  solange der Zug läuft — siehe `zugBeginnen`). */
@@ -1035,15 +1508,22 @@ const Planflaeche = (() => {
       const zug = z.zieht;
       zugLoesen();
       if (!wurzel.isConnected) return;
-      const svg = buehne.querySelector('svg') as SVGSVGElement;
+      const svg = svgJetzt();
       const p = svg ? ortAus(svg, e, z.plan) : { x: 0, y: 0 };
 
+      if (zug.art === 'schwenk') return;
       if (zug.art === 'teil') { teilzugSichern(zug); return; }
+      if (zug.art === 'strecke') { streckeSichern(zug); return; }
+      if (zug.art === 'radieren') { radierenSichern(zug, !zug.gewandert); return; }
 
       /* Ein Rahmen oder eine Leitung, losgelassen AUSSERHALB der Fläche,
          verfällt: ihr Ende läge irgendwo neben dem Plan. Bis zur zweiten
          Durchsicht kam so ein Loslassen gar nicht an (siehe oben). */
-      if (!buehne.contains(e.target as Node)) { male(); return; }
+      /* Gefragt wird die STELLE, nicht das Ziel: der Zug hält den Zeiger am
+         SVG fest (seit E762 wird es während des Zugs nicht mehr ersetzt),
+         also ist `e.target` immer das SVG — auch über der Palette. */
+      const unter = document.elementFromPoint(e.clientX, e.clientY);
+      if (!unter || !buehne.contains(unter)) { male(); return; }
 
       if (zug.art === 'rahmen') {
         inRahmen({ x: zug.startX, y: zug.startY }, p).forEach(id => z.auswahl.add(id));
@@ -1051,18 +1531,172 @@ const Planflaeche = (() => {
         return;
       }
 
+      if (zug.art === 'schiene') {
+        const a = { x: zug.startX, y: zug.startY };
+        const b = schieneEnde(a, p);
+        if (a.x === b.x && a.y === b.y) { male(); return; }
+        const art = z.schieneArt;
+        aendere(() => {
+          const ebene = aktiveEbene();
+          z.plan.leitungen.push({ id: Schaltplan.uid(), punkte: [a, b], ebene, schiene: art });
+          /* Die Beschriftung am Anfang, auf dem Raster (`lesen` rastet Texte):
+             links neben einer waagrechten Schiene, wenn dort Platz ist, sonst
+             darüber; neben einer senkrechten rechts oben. */
+          const waag = a.y === b.y;
+          const x0 = Math.min(a.x, b.x), y0 = Math.min(a.y, b.y);
+          const R = Register.fachzeichen.RASTER;
+          const ort = waag
+            ? (x0 - 3 * R >= 0 ? { x: x0 - 3 * R, y: a.y } : { x: x0, y: a.y - R })
+            : { x: a.x + R, y: y0 + R };
+          z.plan.texte.push({ id: Schaltplan.uid(), x: ort.x, y: ort.y, t: art, ebene });
+        });
+        return;
+      }
+
       if (zug.art === 'leitung' && zug.von) {
         const fang = Schaltplan.fangeAnschluss(z.plan, p);
         const bis = fang ? { x: fang.x, y: fang.y } : p;
         if (bis.x === zug.von.x && bis.y === zug.von.y) { male(); return; }
+        /* Geführt, nicht nur gewinkelt (E762): der Weg berührt nur, was an
+           seinen Enden gemeint ist, und läuft auf keiner anderen Leitung. */
+        const punkte = Schaltplan.leitungFuehren(z.plan, { x: zug.von.x, y: zug.von.y }, bis,
+          zug.von.teil ? { teil: zug.von.teil, nr: zug.von.nr ?? '' } : null,
+          fang ? { teil: fang.teil, nr: fang.nr } : null);
         aendere(() => z.plan.leitungen.push({
           id: Schaltplan.uid(),
-          punkte: Schaltplan.rechtwinklig({ x: zug.von!.x, y: zug.von!.y }, bis),
+          punkte,
           ebene: aktiveEbene(),
           vonTeil: zug.von!.teil, vonNr: zug.von!.nr,
           nachTeil: fang ? fang.teil : undefined, nachNr: fang ? fang.nr : undefined
         }));
       }
+    };
+
+    /* Das Rad (E762): mit Strg oder ⌘ — und so meldet ein Trackpad auch das
+       Auseinanderziehen zweier Finger — zoomt es um den Zeiger. Ohne Strg
+       verschiebt es die Ansicht, aber nur, wenn es etwas zu verschieben gibt
+       (gezoomt, verschoben oder im Vollbild): sonst rollt es die Seite wie
+       bisher, und ein Plan mitten auf der Seite fängt das Rollen nicht ab. */
+    const radGesehen = new WeakSet<Event>();
+    const rad = (e: WheelEvent): void => {
+      if (radGesehen.has(e) || !buehne.contains(e.target as Node)) return;
+      radGesehen.add(e);
+      if (!svgJetzt()) return;
+      const schritt = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        zoomUm(Math.exp(-e.deltaY * schritt * 0.0015), e.clientX, e.clientY);
+        return;
+      }
+      const a = z.ansicht;
+      if (!z.voll && a.zoom === 1 && !a.x && !a.y) return;
+      e.preventDefault();
+      const quer = e.shiftKey && !e.deltaX;
+      schwenken(-(quer ? e.deltaY : e.deltaX) * schritt, -(quer ? 0 : e.deltaY) * schritt);
+    };
+    buehne.addEventListener('wheel', rad, { passive: false });
+    /* Im Vollbild horcht das Rad zusätzlich am Dokument. Gemessen (test625
+       §10, 1300 × 860): nach dem Umzug der Fläche an den `body` kam das erste
+       Strg+Rad gar nicht bei ihr an — Chromium kennt die Stelle mit dem
+       Horcher erst nach dem nächsten Neuzeichnen und rollte oder zoomte so
+       lange am Horcher vorbei. Am Dokument gibt es diese Lücke nicht; das
+       WeakSet sorgt dafür, dass ein Rad nur einmal zählt. */
+    const vollRad = (e: WheelEvent): void => rad(e);
+    /* NACH DEM WECHSEL IN DEN VOLLBILDMODUS NEU HORCHEN. Gemessen (test625
+       §10, 1300 × 860, Chromium 141): nach `requestFullscreen` kam kein
+       einziges Rad mehr bei der Seite an — weder an der Bühne noch am
+       Dokument —, bis irgendein Horcher neu angemeldet wurde. Der Browser
+       vergisst beim Wechsel offenbar, dass die Seite ein Rad haben will.
+       Das Neu-Anmelden der eigenen (blockierenden) Horcher half NICHT; erst
+       ein zusätzlicher passiver Horcher, NACH dem Wechsel angemeldet, brachte
+       die Räder zurück (gemessen: rot ohne, grün mit, je zweimal). Er tut
+       nichts und hängt nur, solange das Vollbild steht. */
+    const leerRad = (): void => { /* nur angemeldet sein */ };
+    const radNeuAnmelden = (): void => {
+      buehne.removeEventListener('wheel', rad);
+      buehne.addEventListener('wheel', rad, { passive: false });
+      if (!z.voll) return;
+      document.removeEventListener('wheel', vollRad, { capture: true } as EventListenerOptions);
+      document.addEventListener('wheel', vollRad, { passive: false, capture: true });
+      document.removeEventListener('wheel', leerRad, { capture: true } as EventListenerOptions);
+      document.addEventListener('wheel', leerRad, { passive: true, capture: true });
+    };
+    /* Die mittlere Taste öffnet in manchen Browsern das Rollen per Maus —
+       hier verschiebt sie die Ansicht. */
+    buehne.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
+
+    /* --- Vollbild (E762) ----------------------------------------------------
+     * Redur: „ich kann nicht es volmodu öfnne". Die Fläche legt sich über den
+     * ganzen Bildschirm — als feste Ebene über der Seite (das geht überall,
+     * auch am iPhone, das ein Element nicht in den Vollbildmodus lässt), und
+     * wo der Browser es erlaubt (Rechner, die Windows-App), dazu der echte
+     * Vollbildmodus des Fensters. Gebeten wird um das GANZE Dokument, nicht
+     * um die Fläche: Menüs, Dialoge und Meldungen hängen am `body` und
+     * blieben sonst unsichtbar hinter dem Vollbild. Dasselbe Element, derselbe
+     * Zustand — nichts geht verloren; Escape und ✕ führen zurück.
+     *
+     * DIE FLÄCHE ZIEHT DAFÜR AN DEN `body` UM, und zurück an ihren Platz in
+     * der Seite (ein Kommentar hält ihn frei). In der Seite fing ihr
+     * `position:fixed` der Stapel der Schale ein: der Kopf der Seite
+     * (`#topbar`) lag obenauf, gemessen am Telefon über dem Schliessknopf
+     * und am Rechner über der oberen Kante (test625 §1l, §10). Am `body`
+     * gilt ihr z-index gegen die ganze Seite. Zeichnet die Seite sich
+     * inzwischen neu (der Platzhalter ist weg), geht die Fläche beim
+     * Schliessen einfach — die Seite hat dann ihre eigene, und was hier
+     * geändert wurde, steht längst im Block. */
+    let vollPerApi = false;
+    let platzhalter: Comment | null = null;
+    const vollGeaendert = (): void => {
+      if (!document.fullscreenElement && vollPerApi) { vollPerApi = false; vollAus(); }
+    };
+    const vollAn = (): void => {
+      if (z.voll) return;
+      z.voll = true;
+      if (wurzel.parentNode && wurzel.parentNode !== document.body) {
+        platzhalter = document.createComment('Schaltplan im Vollbild');
+        wurzel.parentNode.insertBefore(platzhalter, wurzel);
+        document.body.appendChild(wurzel);
+      }
+      document.addEventListener('wheel', vollRad, { passive: false, capture: true });
+      wurzel.classList.add('sp-voll');
+      const d = document.documentElement as any;
+      if (!document.fullscreenElement && typeof d.requestFullscreen === 'function') {
+        try {
+          Promise.resolve(d.requestFullscreen({ navigationUI: 'hide' })).then(() => {
+            if (!z.voll) { if (document.fullscreenElement) void document.exitFullscreen().catch(() => {}); return; }
+            vollPerApi = true;
+            document.addEventListener('fullscreenchange', vollGeaendert);
+            radNeuAnmelden();
+            /* Der Wechsel dauert; wann er fertig ist, meldet nicht jeder
+               Browser gleich (ein `resize` gibt es nur, wenn das Fenster
+               wirklich wächst). Deshalb noch zweimal danach. */
+            for (const ms of [250, 800]) setTimeout(radNeuAnmelden, ms);
+          }).catch(() => { /* nicht erlaubt — die feste Ebene genügt */ });
+        } catch { /* ebenso */ }
+      }
+      kopfMalen();
+      ansichtAnwenden();
+      wurzel.focus({ preventScroll: true });
+    };
+    const vollAus = (): void => {
+      if (!z.voll) return;
+      z.voll = false;
+      wurzel.classList.remove('sp-voll');
+      if (platzhalter) {
+        if (platzhalter.isConnected && platzhalter.parentNode) platzhalter.parentNode.replaceChild(wurzel, platzhalter);
+        else wurzel.remove();
+        platzhalter = null;
+      }
+      document.removeEventListener('fullscreenchange', vollGeaendert);
+      document.removeEventListener('wheel', vollRad, { capture: true } as EventListenerOptions);
+      document.removeEventListener('wheel', leerRad, { capture: true } as EventListenerOptions);
+      if (vollPerApi && document.fullscreenElement) {
+        void document.exitFullscreen().then(() => radNeuAnmelden()).catch(() => {});
+      }
+      vollPerApi = false;
+      kopfMalen();
+      ansichtAnwenden();
+      if (wurzel.isConnected) wurzel.focus({ preventScroll: true });
     };
 
     /* KEIN dblclick-Horcher mehr: das Doppeltippen erkennt der
@@ -1202,11 +1836,22 @@ const Planflaeche = (() => {
       if (b.dataset.a === 'zurueck') return zurueck();
       if (b.dataset.a === 'vorwaerts') return vorwaerts();
       if (b.dataset.a === 'mehr') return mehrMenue(b);
+      if (b.dataset.a === 'vollbild') return vollAn();
+      if (b.dataset.a === 'vollbild-zu') return vollAus();
     });
 
     fuss.addEventListener('click', e => {
-      const b = (e.target as Element).closest<HTMLElement>('[data-ebene],[data-a]');
+      const b = (e.target as Element).closest<HTMLElement>('[data-ebene],[data-a],[data-radiermodus],[data-radiergroesse],[data-schiene]');
       if (!b) return;
+      /* Die Wahl des Radierers bleibt für das nächste Mal (wie im PDF). */
+      if (b.dataset.radiermodus || b.dataset.radiergroesse) {
+        if (b.dataset.radiermodus) z.radierModus = b.dataset.radiermodus === 'leiter' ? 'leiter' : 'alles';
+        if (b.dataset.radiergroesse) z.radierGroesse = Number(b.dataset.radiergroesse) || 16;
+        if (typeof Store !== 'undefined') Store.setMeta(RADIERER, { modus: z.radierModus, groesse: z.radierGroesse });
+        fussMalen();
+        return;
+      }
+      if (b.dataset.schiene) { z.schieneArt = b.dataset.schiene; fussMalen(); return; }
       if (b.dataset.ebene) {
         aendere(() => {
           const ebene = (z.plan.ebenen as any[]).find(x => x.id === b.dataset.ebene);
@@ -1275,6 +1920,10 @@ const Planflaeche = (() => {
     });
     wurzel.addEventListener('focusout', e => {
       if (e.target === wurzel) delete wurzel.dataset.zeigerfokus;
+      if (z.leertaste) { z.leertaste = false; buehne.classList.remove('sp-greifen'); }
+    });
+    wurzel.addEventListener('keyup', e => {
+      if (e.key === ' ') { z.leertaste = false; buehne.classList.remove('sp-greifen'); }
     });
     wurzel.addEventListener('keydown', e => {
       const inFeld = (e.target as HTMLElement).tagName === 'INPUT';
@@ -1288,6 +1937,19 @@ const Planflaeche = (() => {
          (`preventDefault`), aber `aendere` tut während eines Zugs nichts
          (E746, zweite Durchsicht — die Wahl und ihr Preis stehen dort). */
       if (e.key === 'Escape' && z.zieht) return;
+      /* Ansicht (E762): Leertaste halten und ziehen verschiebt; F Vollbild;
+         + − 0 zoomen. Die Leertaste rollt dabei die Seite nicht. */
+      if (e.key === ' ' && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        if (!z.leertaste) { z.leertaste = true; buehne.classList.add('sp-greifen'); }
+        return;
+      }
+      if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (e.key === 'f' || e.key === 'F') { e.preventDefault(); return z.voll ? vollAus() : vollAn(); }
+        if (e.key === '+' || e.key === '=') { e.preventDefault(); return zoomUm(1.25); }
+        if (e.key === '-') { e.preventDefault(); return zoomUm(0.8); }
+        if (e.key === '0') { e.preventDefault(); return allesZeigen(); }
+      }
       const schritt = e.shiftKey ? Register.fachzeichen.RASTER * 5 : Register.fachzeichen.RASTER;
       const pfeile: Record<string, [number, number]> = {
         ArrowLeft: [-schritt, 0], ArrowRight: [schritt, 0],
@@ -1304,13 +1966,18 @@ const Planflaeche = (() => {
       if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); return loeschen(); }
       if (e.key === 'r' || e.key === 'R') { e.preventDefault(); return drehen(); }
       if (e.key === 'h' || e.key === 'H') { e.preventDefault(); return spiegeln(); }
-      if (e.key === 'Escape') { z.auswahl.clear(); z.gewaehltesZeichen = ''; male(); paletteMalen(); return; }
+      if (e.key === 'Escape') {
+        /* Erst die Auswahl, dann das Vollbild — ein Druck, eine Sache (E711). */
+        if (z.voll && !z.auswahl.size && !z.gewaehltesZeichen) { e.preventDefault(); vollAus(); return; }
+        z.auswahl.clear(); z.gewaehltesZeichen = ''; male(); paletteMalen(); return;
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === 'd') { e.preventDefault(); return doppeln(); }
       if ((e.ctrlKey || e.metaKey) && e.key === 'g') { e.preventDefault(); return gruppieren(); }
       if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
         e.preventDefault();
         z.auswahl = new Set([...(z.plan.teile as any[]).map(t => t.id),
-                             ...(z.plan.leitungen as any[]).map(l => l.id)]);
+                             ...(z.plan.leitungen as any[]).map(l => l.id),
+                             ...(z.plan.texte as any[]).map(x => x.id)]);
         male(); return;
       }
       /* Rückgängig und Wiederholen. Mit Umschalt meldet der Browser „Z",
@@ -1332,6 +1999,7 @@ const Planflaeche = (() => {
         '<hr>' +
         '<button data-m="schienen">Stromschienen einzeichnen</button>' +
         '<button data-m="nummerieren">Alle neu durchnummerieren</button>' +
+        '<button data-m="plandrehen">Ganzen Plan drehen (90°)</button>' +
         '<hr>' +
         '<button data-m="vorlage">Als Vorlage speichern</button>' +
         '<button data-m="svg">Als Bild speichern (SVG)</button>' +
@@ -1346,6 +2014,7 @@ const Planflaeche = (() => {
         if (was === 'anschluesse') { z.zeigeAnschluesse = !z.zeigeAnschluesse; return male(); }
         if (was === 'nummern') { z.zeigeNummern = !z.zeigeNummern; return male(); }
         if (was === 'schienen') return aendere(() => Schaltplan.schienenBauen(z.plan));
+        if (was === 'plandrehen') return planDrehen();
         if (was === 'nummerieren') return aendere(() => {
           /* Erst leeren, dann von vorn — sonst blieben Lücken bestehen. */
           (z.plan.teile as any[]).forEach(t => { t.bmk = ''; });

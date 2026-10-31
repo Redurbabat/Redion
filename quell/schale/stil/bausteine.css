@@ -1987,9 +1987,6 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   body[data-bewegung="ruhig"] #ho-ziele > .ho-ziel-vorschau{
     transition:none
   }
-  @media(prefers-contrast:more),(forced-colors:active),(prefers-reduced-transparency:reduce){
-    #ho-ziele > .ho-ziel-vorschau{background:var(--bg-card);border-color:var(--text);box-shadow:none}
-  }
   @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
     #handy-oben,
     #ho-ziele{
@@ -7645,6 +7642,8 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .sp-teil.sp-gewaehlt rect[fill="transparent"]{fill:var(--accent); fill-opacity:.14;
   stroke:var(--accent); stroke-width:1.5; stroke-dasharray:4 3}
 .sp-leitung.sp-gewaehlt{stroke:var(--accent); stroke-width:3.5}
+/* Ein gewählter Text (E762): Akzent UND unterstrichen — nicht nur die Farbe (§38). */
+.sp-text.sp-gewaehlt{fill:var(--accent-text); text-decoration:underline}
 .sp-knoten{pointer-events:none}
 
 /* ---- Die Simulation: der Strom fliesst -----------------------------------
@@ -7737,6 +7736,57 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   color:var(--text-faint); font-variant-numeric:tabular-nums}
 .sp-nr input{flex:1}
 
+/* ---- Zoom, Vollbild, Radierer, Schienen (E762) ---------------------------
+   Die Zoomknöpfe stehen rechts im Fuss, nicht über der Fläche (sie deckten
+   dort die Ecke des Plans zu). Die Leinwand trägt das SVG. */
+.sp-leinwand{display:flex; justify-content:center; align-items:flex-start; min-width:0}
+.sp-fuss-inhalt{display:contents}
+.sp-zoom{display:flex; align-items:center; gap:2px; padding:2px; border-radius:9px;
+  border:1px solid var(--line); background:var(--bg)}
+.sp-zoom button{width:32px; height:32px; border:0; border-radius:7px; background:transparent;
+  color:var(--text-dim); font-size:17px; line-height:1; cursor:pointer}
+.sp-zoom button:hover{background:var(--bg-hover); color:var(--text)}
+.sp-zoom button:active, .sp-zoom button[data-gedrueckt]{background:var(--bg-input)}
+.sp-zoom button:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+.sp-zoomwert{min-width:48px; text-align:center; font-size:12px; color:var(--text-dim);
+  font-variant-numeric:tabular-nums}
+.sp-buehne.sp-greifen, .sp-buehne.sp-greifen *{cursor:grab}
+
+/* Vollbild: dieselbe Fläche, fest über der Seite — über der unteren Leiste
+   (520), unter Menüs (600), Formelheft (640) und Fenstern, damit „…", die
+   Beispiele und der Dialog am Teil obenauf liegen. */
+.sp-wrap.sp-voll{position:fixed; inset:0; z-index:560; border:0; border-radius:0}
+.sp-voll .sp-koerper{flex:1 1 auto; height:auto; min-height:0}
+.sp-voll .sp-buehne{padding:8px; overflow:hidden}
+.sp-voll .sp-leinwand{width:100%; height:100%}
+.sp-voll .sp-flaeche{width:100%; height:100%; max-width:none}
+.sp-rechts .sp-vollzu{width:44px; height:44px; font-size:18px; color:var(--text);
+  background:var(--bg-hover)}
+/* Der Schliessknopf steht im Vollbild fest in der Ecke — wie lang der Kopf
+   auch wird, er rutscht nicht aus dem Bild (am Telefon lag er sonst bei
+   x = 448 von 390, gemessen in test625 §1l). */
+.sp-voll .sp-vollzu{position:absolute; top:6px; right:6px; z-index:3}
+.sp-voll .sp-kopf{padding-right:58px}
+
+/* Der Radierer: was der Kreis berührt, wird blass und gestrichelt — nicht nur
+   blasser (§38: keine Aussage allein über die Farbe). */
+.sp-flaeche .sp-weg{opacity:.3; stroke-dasharray:3 3}
+.sp-radierkreis{fill:var(--accent); fill-opacity:.12; stroke:var(--accent); stroke-width:1.5;
+  vector-effect:non-scaling-stroke; pointer-events:none}
+.sp-vorschau{pointer-events:none}
+.sp-wahl{display:flex; align-items:center; gap:4px; flex-wrap:wrap}
+.sp-wahl button{min-height:32px; padding:4px 11px; border:1px solid var(--line); border-radius:20px;
+  background:var(--bg); color:var(--text-dim); font-size:12px; cursor:pointer; position:relative}
+.sp-wahl button:hover{background:var(--bg-hover); color:var(--text)}
+.sp-wahl button.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
+.sp-wahl button:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+/* 44 px Trefffläche nach oben und unten, wie bei der Auswahl (§37). */
+.sp-wahl button::after{content:""; position:absolute; left:0; right:0; top:50%;
+  height:var(--touch-min); transform:translateY(-50%)}
+.sp-radiergroesse{width:36px; padding:0 !important; display:inline-flex; align-items:center; justify-content:center}
+.sp-radiergroesse i{display:block; width:var(--kreis, 14px); height:var(--kreis, 14px); border-radius:50%;
+  border:1.5px solid currentColor}
+
 @media (max-width:760px){
   .sp-koerper{flex-direction:column-reverse}
   .sp-palette{width:auto; border-right:0; border-top:1px solid var(--line);
@@ -7747,6 +7797,15 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   .sp-wz, .sp-rechts button{width:44px; height:44px}
   .sp-auswahl button{width:40px; height:40px}
   .sp-ebene{padding:8px 12px}
+  /* §37: die Zoomknöpfe und die Wahl des Werkzeugs sind Hauptwege. */
+  .sp-zoom button{width:44px; height:44px}
+  .sp-wahl button{min-height:44px}
+  .sp-radiergroesse{width:44px}
+  .sp-voll .sp-palette{max-height:150px}
+  /* Die rechte Gruppe des Kopfs bricht um, statt über den Rand zu laufen:
+     bei 390 px standen ↷, „…" und ⛶ ausserhalb des Bildes (gemessen bis
+     x = 492) — das Menü „…" war am Telefon nicht zu erreichen (E762). */
+  .sp-rechts{flex-wrap:wrap; max-width:100%}
 }
 
 /* ==========================================================================
@@ -8620,6 +8679,10 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 body:has(#zm-pille) #scroll{ padding-bottom:calc(var(--touch-min) + 2 * var(--space-5)) }
 @media(min-width:761px){
   body:has(#ai.open) :is(.zm-pille, .zm-karte){ right:calc(var(--ki-breite, 0px) + var(--space-5)) }
+  /* 6. Am Rechner ebenso (E761) */
+  body:has(#zm-pille:not([hidden])) #offline-streifen{
+    translate:0 calc(-1 * (var(--touch-min) + var(--space-3)))
+  }
 }
 /* Ausser bei der Zeichenleiste unten (nicht im Dokument): sie klebt in
    `#scroll` und steigt mit dessen Polster (2.) selbst über die Pille. Auf

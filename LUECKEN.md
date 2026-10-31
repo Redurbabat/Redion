@@ -8621,6 +8621,148 @@ Frage an den Lauf, nicht an E757.
 
 ---
 
+## L259 · Was zu „besser als GoodNotes, Word und PowerPoint" noch fehlt — 31. Oktober 2026
+
+Gezählt im Quelltext am 31. Oktober 2026 (Suche nach den Begriffen in `src/`), nach
+E758. Keine Rangliste gegen die fremden Programme: die wurden nicht nebeneinander
+gemessen.
+
+**Schreiben:** Änderungen nachverfolgen, Formatvorlagen, Seitenumbruch als Block.
+
+**Präsentieren:** Referentenansicht auf einem zweiten Bildschirm; Objektanimationen
+selbst anlegen (gelesen wird nur `p:timing` für Abdeckungen). **`.pptx` zurück:** E759
+schreibt Inhalt, Notizen und Übergänge; offen sind Schriftfamilie, gemischte Läufe, Klickschritte,
+eine neue Notizenseite in einer fremden Datei und der Test in echtem PowerPoint.
+
+**Zeichnen:** Stiftmessung am echten iPad (L227 S1) fehlt weiter; die Druckrechnung
+der Tafel und des Blatts gehört in den Kern; ob ein Export der Tafel den Druck zeigt,
+ist nicht geprüft.
+
+**Bewegung:** Der Rest von L225 und B2/B3 bleibt offen; die Ankunft einer Seite ersetzt sie nicht.
+
+**iPhone:** Kein Lauf auf einem echten Gerät (Widget, Schnellaktion, Bewegung).
+Share- und Widget-Ziele bleiben wegen der App Group opt-in. Der tägliche Abgleich
+zwischen Geräten braucht den Server, den es noch nicht gibt (E754).
+
+---
+
+## L260 · Was nach E761 rot bleibt — 30. Oktober 2026
+
+**Was E761 grün gemacht hat:** `test539` §6, `test576`, `test581`,
+`test588`, `test590` §16 und `test614` §4e (ENTSCHEIDUNGEN.md E761,
+messungen.md §110). Zwei Stellen aus dem Auftrag bleiben rot, beide mit
+Befund und ohne Reparatur, weil keine billig und eindeutig ein Fehler des
+Produkts ist; dazu fünf, die bei den Nachbarn rot waren und es auf main
+genauso sind (3).
+
+**1 · `test534` §4 „In die Mitte gezogen heisst «frei»" — rot schon am
+13. Oktober (020f51ce1, dort mit drei Zeilen, auf main und auf dem Zweig
+mit einer).** Der Lauf zieht den Griff der Zeichenleiste in die
+FENSTERMITTE, (720, 480) bei 1440 × 960, und erwartet „frei". Die Leiste
+dockt aber an die Ränder ihrer Hülle `.blatt-huelle` (`marken.ts`,
+`FANG = 64`), nicht an die des Fensters. Gemessen mit einer Sonde im selben
+Aufbau wie der Lauf: die Hülle steht bei 244–1380 × 477–2176 px, ihre
+Oberkante also 3 px über dem Loslassen — innerhalb des Fangbands, und die
+Leiste geht nach „oben". Offen ist, was gemeint war: die Mitte der
+SICHTBAREN Hülle (dann stimmt der Ort des Wächters nicht), oder ein
+Andocken am Fensterrand (dann ist `beenden` in `marken.ts` zu ändern).
+Fertig: eine Antwort auf diese Frage, danach der passende Schritt.
+
+**2 · `test614` §7f „zu hoch losgelassen, 120 ms später ein echter Tipp
+auf „Termine": er kommt an" — rot schon an fce1cdb72 (E749s letzter
+Stand, 121 von 122), auf main grün, auf dem Zweig seit E757 wieder rot.**
+Gemessen mit einer Sonde (die Gesten des Laufs, jedes Ereignis am Fenster
+in der Aufnahmephase mitgeschrieben, `Event.prototype.preventDefault`
+belauscht):
+
+```txt
+schneller Wisch hinaus (330 px in 16 ms), Tipp nach  147 ms   kein mousedown, kein click
+                                                    718 ms   kein mousedown, kein click
+                                                   2017 ms   Klick kommt an
+langsam hinaus (20 × 30 ms, 300 ms halten), nach    133 ms   Klick kommt an
+mit .ho-z{transition: color 140ms ease} (aus Liquid Glass), nach 151 ms   Klick kommt an
+mit nur .ho-z{transition: transform 200ms …}, nach  150 ms   kein click
+preventDefault auf touch/pointer/mouse/click        0 Aufrufe
+```
+
+`touchstart` und `touchend` des Tipps kommen beide auf „Termine" an;
+Chromium erzeugt daraus keinen Klick. Die Spur führt zur Unterdrückung
+eines Tipps, der einen Wurf beendet — nach einem SCHNELLEN Loslassen.
+Warum ein Farbübergang am Zeichen das ändert, ist nicht verstanden. Nicht
+gemessen: ob WebKit im iPhone denselben Tipp verliert. Fertig: die Ursache
+verstanden, dann entweder eine Reparatur im Produkt (ohne einen Übergang,
+der nur zufällig hilft — das wäre Zeit verschoben, um einem Fehler
+auszuweichen) oder der Befund, dass es nur Chromium ohne Bildschirm
+betrifft.
+
+**3 · Bei den Nachbarn rot, auf main genauso, nicht angesehen.** Je ein
+Lauf; keiner ist durch E761 neu rot geworden.
+
+```txt
+test221  „Und keines fängt am Bildschirmrand an — pg-tools:0"   rot an 544c68b9f und de375a43f,
+                                                                 grün an 020f51ce1 (Workspace 2.0?)
+test285  „Der Name steht in der Kopfzeile des Dokuments —
+          ist »Elektrotechnik – SkriptPDF · 4 Seiten«"           rot an 544c68b9f
+test388  §5 Decke 1950 KB                                        1957 KB an de375a43f, 1958 KB
+                                                                 an 544c68b9f und nach E761
+test580  „Einstellungen: dieselben 19 Bereiche …"                rot an de375a43f
+test603  „Glas der Kapsel … und nirgends ausserhalb davon"       rot an de375a43f; das Muster liest
+                                                                 einen Kommentar („Fallback ohne
+                                                                 backdrop-filter") und zwei Regeln
+                                                                 `backdrop-filter:none` im Liquid-
+                                                                 Glass-Block (seit E757 nur Glass Wheel)
+```
+
+Fertig: je ein Befund wie in 1 und 2, dann Reparatur oder Entscheidung.
+
+---
+
+
+## L261 · Was an der Schaltplanfläche nach E762 offen bleibt — 31. Oktober 2026
+
+**Was E762 gebaut hat:** Vollbild, Zoom und Lage, Strecken schieben,
+geführte Leitungen ohne Überlappung, Gruppe drehen und spiegeln, Schienen
+selbst zeichnen, Ziehen ohne Neubau des SVG, Radierer wie im PDF
+(ENTSCHEIDUNGEN.md E762, `test625` 110 von 110, messungen.md §111).
+
+**1 · Die Windows-App selbst ist nicht gefahren.** Geprüft ist Chromium in
+den Fenstergrössen der App (1300 × 860, 860 × 700, 1440 × 900), mit und ohne
+`requestFullscreen`. Electron liegt im Container nicht (kein
+`windows/node_modules`), `pruefungen/windows-app-smoke.mts` läuft hier
+nicht. Ein Fund aus Chromium (nach dem Vollbildwechsel kam kein Rad an,
+bis ein passiver Horcher neu angemeldet wurde) ist im Code behandelt; ob
+Electron ihn auch hat, ist ungeprüft.
+
+**2 · Zoomen und Strecken-Schieben bei vierfacher Drosselung: 30, nicht 60
+Bilder je Sekunde.** Der Handler kostet 2–3 ms; teuer ist das Neuzeichnen
+des ganzen SVG durch den Browser (Punktraster als Muster, alle Zeichen).
+Ein Weg wäre, das Raster beim Zoomen als CSS-Hintergrund zu führen oder
+das Zeichnen während der Geste auf ein `transform` zu legen und erst danach
+die viewBox zu setzen — nicht gebaut.
+
+**3 · Das Telefon ist nicht der Schwerpunkt dieses Bogens** (Redur, 31.
+Oktober: zuerst die Windows-App). Was `test625` am Telefon hält, ist grün
+(Vollbild deckt, ✕ und Zoomknöpfe 44 px, zwei Finger zoomen und
+verschieben, Finger radiert); nicht angesehen sind Bilder am Telefon, die
+Palette im Vollbild am Telefon und das Schieben einer Strecke mit dem
+Finger.
+
+**4 · Eine Kreuzung ohne Verbindung zeigt weiter die Lücke** in der
+waagrechten Leitung (Punkt 16), nicht die glatte Kreuzung der heutigen
+Norm — mit Absicht, damit alte Pläne aussehen wie vorher (`test625` §0).
+Eine Einstellung dafür wäre ein eigener Entscheid.
+
+**5 · Strg+Z nach dem Ziehen eines TEILS** merkt weiter den Stand nach dem
+Zug (L253 Punkt 8, unverändert); Strecke und Radierer merken seit E762 den
+Stand beim Anfassen.
+
+**6 · `test388` (Decke des Starts) war schon vorher rot und ist es mehr:**
+vor E762 1958 KB (E761), mit E762 1967 KB bei einer Decke von 1950 KB —
+die neun KB sind der neue Code von Planfläche und Schaltplan (Kommentare
+reisen nicht mit, E715). Die Fläche lädt beim Start mit, weil jeder
+Seitenblock „schaltplan" sie sofort braucht; sie erst beim ersten Plan zu
+laden wäre der Weg, ist aber ein eigener Bogen.
+
 ## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — GESCHLOSSEN (E745) — 11. Oktober 2026
 
 **Gemessen** über die Schnittstelle von GitHub, nicht vermutet: die zwei
@@ -10979,8 +11121,8 @@ eine Zeile im Stilblatt (L206).
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 11. Oktober 2026, nachgezählt statt fortgeschrieben:** die
-Datei führt 153 Lücken, 95 offene und 58 geschlossene. Der Befehl dazu ist
+**Gemessen am 31. Oktober 2026 (mit L261), nachgezählt statt fortgeschrieben:** die
+Datei führt 156 Lücken, 98 offene und 58 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt
@@ -12383,26 +12525,3 @@ hingeschrieben hat. Dazu kommt `prefers-reduced-motion`, das bei
 JavaScript nicht. Eigener Bogen, eigene Gegenprobe.
 
 ---
-
-## L259 · Was zu „besser als GoodNotes, Word und PowerPoint" noch fehlt — 31. Oktober 2026
-
-Gezählt im Quelltext am 31. Oktober 2026 (Suche nach den Begriffen in `src/`), nach
-E758. Keine Rangliste gegen die fremden Programme: die wurden nicht nebeneinander
-gemessen.
-
-**Schreiben:** Änderungen nachverfolgen, Formatvorlagen, Seitenumbruch als Block.
-
-**Präsentieren:** Referentenansicht auf einem zweiten Bildschirm; Objektanimationen
-selbst anlegen (gelesen wird nur `p:timing` für Abdeckungen). **`.pptx` zurück:** E759
-schreibt Inhalt, Notizen und Übergänge; offen sind Schriftfamilie, gemischte Läufe, Klickschritte,
-eine neue Notizenseite in einer fremden Datei und der Test in echtem PowerPoint.
-
-**Zeichnen:** Stiftmessung am echten iPad (L227 S1) fehlt weiter; die Druckrechnung
-der Tafel und des Blatts gehört in den Kern; ob ein Export der Tafel den Druck zeigt,
-ist nicht geprüft.
-
-**Bewegung:** Der Rest von L225 und B2/B3 bleibt offen; die Ankunft einer Seite ersetzt sie nicht.
-
-**iPhone:** Kein Lauf auf einem echten Gerät (Widget, Schnellaktion, Bewegung).
-Share- und Widget-Ziele bleiben wegen der App Group opt-in. Der tägliche Abgleich
-zwischen Geräten braucht den Server, den es noch nicht gibt (E754).
