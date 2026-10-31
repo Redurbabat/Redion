@@ -271,11 +271,16 @@
         if(plan.leitungen.length &&
            !window.confirm('Die bisherigen Leitungen durch das Muster ersetzen?\n' +
              'Mit Rückgängig bekommst du die eigene Verdrahtung wieder.')) return;
-        optionen.aendere(()=>{
-          const neu=optionen.holePlan();
-          neu.leitungen=[];
-          musterFuer(neu);
-        });
+        /* Erst an einer Kopie berechnen. Ist ein Zeichen entfernt oder
+         eine Position unbrauchbar, bleibt der originale Plan unverändert. */
+        const kopie=JSON.parse(JSON.stringify(plan));
+        kopie.leitungen=[];
+        try { musterFuer(kopie); }
+        catch (fehler) {
+          window.alert('Muster nicht einsetzbar: ' + fehler.message);
+          return;
+        }
+        optionen.aendere(()=>{optionen.holePlan().leitungen=kopie.leitungen;});
         return;
       }
       const plan=optionen.holePlan(), ids=optionen.holeAuswahl();
