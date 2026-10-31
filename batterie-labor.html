@@ -152,10 +152,10 @@ const aufgaben = {
  f3: {name:'Kap. 12.1 d',zahl:6,u:1.5,ri:.3,maxA:1,ah:.5,zielU:3,art:'Leclanché-Zelle'},
  u9: {name:'Blatt 57 a · links',zahl:6,u:1.5,ri:.5,maxA:.5,ah:.25,zielU:9,art:'Leclanché-Zelle'},
  u15:{name:'Blatt 57 a · rechts',zahl:6,u:1.5,ri:.5,maxA:.5,ah:.25,zielU:1.5,art:'Leclanché-Zelle'},
- u6: {name:'Blatt 57 b · links',zahl:6,u:2,ri:.05,maxA:12,ah:72,zielU:6,art:'Bleiakku-Zelle'},
- u4: {name:'Blatt 57 b · rechts',zahl:6,u:2,ri:.05,maxA:12,ah:72,zielU:4,art:'Bleiakku-Zelle'},
- b12:{name:'Kap. 12.2 · Aufgabe 2',zahl:12,u:2,ri:null,maxA:3,ah:null,zielA:12,art:'Bleiakku-Zelle'},
- b3: {name:'Kap. 12.2 · Aufgabe 3',zahl:12,u:1.5,ri:null,maxA:1,ah:null,zielA:3,art:'Leclanché-Zelle'}
+ u6: {name:'Blatt 57 b · links',zahl:6,u:2,ri:.05,maxA:12,ah:72,zielU:6,art:'Bleiakku-Zelle',annahme:'Für Bleiakku-Zellen werden 2 V pro Zelle angenommen.'},
+ u4: {name:'Blatt 57 b · rechts',zahl:6,u:2,ri:.05,maxA:12,ah:72,zielU:4,art:'Bleiakku-Zelle',annahme:'Für Bleiakku-Zellen werden 2 V pro Zelle angenommen.'},
+ b12:{name:'Kap. 12.2 · Aufgabe 2',zahl:12,u:2,ri:null,maxA:3,ah:null,zielA:12,art:'Bleiakku-Zelle',annahme:'2 V je Bleiakku-Zelle angenommen; Ri und Q sind nicht angegeben.'},
+ b3: {name:'Kap. 12.2 · Aufgabe 3',zahl:12,u:1.5,ri:null,maxA:1,ah:null,zielA:3,art:'Leclanché-Zelle',annahme:'1,5 V je Leclanché-Zelle angenommen; Ri und Q sind nicht angegeben.'}
 };
 const $ = id => document.getElementById(id);
 const form = $('aufgabe'), plan = $('plan'), anordnung = $('anordnung');
@@ -299,7 +299,8 @@ function laden() {
    '<span>Imax = <b>'+fmt(z.maxA,'A')+'</b></span>'+
    '<span>Q = <b>'+(z.ah===null?'–':z.ah<1?fmt(z.ah*1000,'mAh'):fmt(z.ah,'Ah'))+'</b></span>'+
    '<span>Ziel: <b>'+(z.zielU===undefined?'':fmt(z.zielU,'V'))+
-   (z.zielA===undefined?'':fmt(z.zielA,'A'))+'</b></span>';
+   (z.zielA===undefined?'':fmt(z.zielA,'A'))+'</b></span>'+
+   (z.annahme?'<span><b>Annahme:</b> '+z.annahme+'</span>':'');
  const moeglich=Array.from(anordnung.options);
  moeglich.forEach(opt=>{const v=+opt.value;opt.disabled=v>0&&z.zahl%v!==0;});
  anordnung.value='0'; anschluesse(); neuZeichnen();
