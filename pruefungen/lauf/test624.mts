@@ -316,14 +316,38 @@ const klick = async (s: Page, sel: string): Promise<boolean> => {
   await s.waitForTimeout(150);
   return true;
 };
-/** Mit der Maus von Planpunkt zu Planpunkt ziehen, in Schritten. */
+/** Liegen die Planpunkte sichtbar auf der Bühne (nicht unter dem Kopf der
+    Seite, nicht unter dem Rand)? Sonst die Zeichnung in die Mitte rollen —
+    ein Mensch rollt auch, bevor er zieht. */
+const zeige = async (s: Page, pkte: Array<[number, number]>): Promise<void> => {
+  const frei = async (): Promise<boolean> => {
+    for (const [x, y] of pkte) {
+      const [sx, sy] = await bild(s, x, y);
+      const drin = await s.evaluate(([a, b]: [number, number]) =>
+        !!document.elementFromPoint(a, b)?.closest('.sp-buehne'), [sx, sy] as [number, number]);
+      if (!drin) return false;
+    }
+    return true;
+  };
+  if (await frei()) return;
+  await s.evaluate(() => [...document.querySelectorAll<SVGSVGElement>('.sp-wrap svg.sp-flaeche')].pop()!
+    .scrollIntoView({ block: 'center', inline: 'nearest' }));
+  await s.waitForTimeout(150);
+};
+/** Mit der Maus von Planpunkt zu Planpunkt ziehen, in Schritten. `nachErster`
+    läuft nach der ersten Bewegung (dort fängt §7 an zu zählen). */
 const zieheMaus = async (s: Page, von: [number, number], nach: [number, number], schritte = 8,
-                         knopf: 'left' | 'middle' = 'left', vorLoslassen?: () => Promise<void>): Promise<void> => {
+                         knopf: 'left' | 'middle' = 'left', vorLoslassen?: () => Promise<void>,
+                         nachErster?: () => Promise<void>): Promise<void> => {
+  await zeige(s, [von, nach]);
   const [x0, y0] = await bild(s, von[0], von[1]);
   const [x1, y1] = await bild(s, nach[0], nach[1]);
   await s.mouse.move(x0, y0);
   await s.mouse.down({ button: knopf });
-  for (let i = 1; i <= schritte; i++) await s.mouse.move(x0 + (x1 - x0) * i / schritte, y0 + (y1 - y0) * i / schritte);
+  for (let i = 1; i <= schritte; i++) {
+    await s.mouse.move(x0 + (x1 - x0) * i / schritte, y0 + (y1 - y0) * i / schritte);
+    if (i === 1 && nachErster) await nachErster();
+  }
   if (vorLoslassen) await vorLoslassen();
   await s.mouse.up({ button: knopf });
   await s.waitForTimeout(450);
@@ -513,8 +537,10 @@ const T = await aufmachen({ touch: true });
   await s.evaluate(() => [...document.querySelectorAll<HTMLElement>('.sp-wrap')].pop()!.focus());
   const [lx0, ly0] = await bild(s, 300, 200);
   await s.keyboard.down(' ');
-  const leer = await planpunkt(s, lx0, ly0 - 0);
-  await zieheMaus(s, [leer[0] + 150, leer[1] - 30], [leer[0] + 150 + 60 / m2, leer[1] - 30 + 40 / m2], 6);
+  /* Neben (300,200), wo nichts liegt: 30 px rechts, 20 px tiefer. */
+  const leer = await planpunkt(s, lx0 + 30, ly0 + 20);
+  const leer2 = await planpunkt(s, lx0 + 90, ly0 + 60);
+  await zieheMaus(s, leer, leer2, 6);
   await s.keyboard.up(' ');
   const [lx1, ly1] = await bild(s, 300, 200);
   p('§2k Leertaste + Ziehen verschiebt', nahe(lx1 - lx0, 60, 8) && nahe(ly1 - ly0, 40, 8), JSON.stringify([lx1 - lx0, ly1 - ly0]));
@@ -568,10 +594,9 @@ const T = await aufmachen({ touch: true });
   await s.mouse.click(hx, hy); await s.waitForTimeout(450);
   p('§2q bei Zoom trifft ein Klick das Teil', await s.locator('.sp-wrap .sp-teil.sp-gewaehlt[data-id="E1"]').count() > 0);
   const e1vor = (await plan(s, bid)).teile.find((t: any) => t.id === 'E1');
-  await svgZaehler(s);
   await zieheMaus(s, [130, 130], [170, 130], 10, 'left', async () => {
     gleich('§7b beim Ziehen eines Teils wird das SVG nicht neu gebaut', await neueSvg(s), 0);
-  });
+  }, () => svgZaehler(s));
   const e1nach = (await plan(s, bid)).teile.find((t: any) => t.id === 'E1');
   gleich('§2r bei Zoom setzt ein Zug um 40 Planeinheiten das Teil um genau 40', [e1nach.x - e1vor.x, e1nach.y - e1vor.y], [40, 0]);
   /* Leitung ziehen bei Zoom: von E1:X1 nach E2:X1 (E2 liegt bei 300,100). */
@@ -598,12 +623,11 @@ const T = await aufmachen({ touch: true });
   const vorJson = await planText(s, bid);
   const vorNetz = await teilung(s, bid);
   /* Die Mittelstrecke von k1 (y = 220) anklicken und 40 nach unten ziehen. */
-  await s.mouse.click(...(await bild(s, 230, 220))); await s.waitForTimeout(450);
+  await zeige(s, [[230, 220]]); await s.mouse.click(...(await bild(s, 230, 220))); await s.waitForTimeout(450);
   p('§3a ein Klick auf die Strecke wählt die Leitung', await s.locator('.sp-wrap .sp-leitung.sp-gewaehlt[data-id="k1"]').count() > 0);
-  await svgZaehler(s);
   await zieheMaus(s, [230, 220], [230, 260], 8, 'left', async () => {
     gleich('§7c beim Ziehen einer Strecke wird das SVG nicht neu gebaut', await neueSvg(s), 0);
-  });
+  }, () => svgZaehler(s));
   const k1 = (await plan(s, bid)).leitungen.find((l: any) => l.id === 'k1');
   gleich('§3b die Strecke liegt 40 tiefer, die Enden bleiben', k1.punkte, [{ x: 130, y: 160 }, { x: 130, y: 260 }, { x: 330, y: 260 }, { x: 330, y: 160 }]);
   gleich('§3c die Netzliste ist dieselbe', await teilung(s, bid), vorNetz);
@@ -720,8 +744,10 @@ const T = await aufmachen({ touch: true });
   gleich('§5f die Netzliste bleibt', await teilung(s, bid), vorNetz);
   await taste(s, 'Control+z'); await taste(s, 'Control+z');
   gleich('§5g zwei Strg+Z geben den Plan Byte für Byte zurück', await planText(s, bid), vorJson);
-  /* Ein einzelnes Teil dreht an Ort und Stelle, wie bisher. */
-  await s.mouse.click(5, 450); await s.waitForTimeout(100);
+  /* Ein einzelnes Teil dreht an Ort und Stelle, wie bisher. Escape leert
+     erst die Auswahl (sonst ist E2 noch Teil der Gruppe). */
+  await s.evaluate(() => [...document.querySelectorAll<HTMLElement>('.sp-wrap')].pop()!.focus());
+  await taste(s, 'Escape');
   await waehle(s, 'E2');
   await taste(s, 'r');
   const e2 = (await plan(s, bid)).teile.find((t: any) => t.id === 'E2');
@@ -813,13 +839,14 @@ const T = await aufmachen({ touch: true });
   await taste(s, 'Control+z');
   gleich('§8h ein Wisch ist EIN Rückgängig-Schritt', await planText(s, bid), vorJson);
   /* Ein Tipp auf k3 löscht nur k3; ein Tipp auf E1 löscht nichts. */
-  await s.mouse.click(...(await bild(s, 360, 280))); await s.waitForTimeout(400);
+  await zeige(s, [[360, 280]]); await s.mouse.click(...(await bild(s, 360, 280))); await s.waitForTimeout(400);
   gleich('§8i ein Tipp löscht eine einzelne Leitung', (await plan(s, bid)).leitungen.map((l: any) => l.id), ['k1']);
-  await s.mouse.click(...(await bild(s, 130, 130))); await s.waitForTimeout(400);
+  await zeige(s, [[130, 130]]); await s.mouse.click(...(await bild(s, 130, 130))); await s.waitForTimeout(400);
   gleich('§8j „Nur Leiter": ein Tipp auf ein Teil löscht nichts', (await plan(s, bid)).teile.map((t: any) => t.id), ['E1', 'E2']);
   const netzVor = await teilung(s, bid);
   void netzVor;
   /* Mit dem Stift über k1. */
+  await zeige(s, [[230, 200], [230, 240]]);
   const [sa, sb] = await bild(s, 230, 200), [sc, sd] = await bild(s, 230, 240);
   await stift(cdp, 'mouseMoved', sa, sb);
   await stift(cdp, 'mousePressed', sa, sb);
@@ -840,6 +867,7 @@ const T = await aufmachen({ touch: true });
   const vorJson = await planText(s, bid);
   await klick(s, '.sp-kopf [data-wz="radieren"]');
   await klick(s, '.sp-fuss [data-radiermodus="alles"]');
+  await zeige(s, [[290, 130], [370, 130]]);
   const [fa, fb] = await bild(s, 290, 130), [fc, fd] = await bild(s, 370, 130);
   await finger(cdp, 'touchStart', [[fa, fb]]);
   for (let i = 1; i <= 8; i++) { await finger(cdp, 'touchMove', [[fa + (fc - fa) * i / 8, fb + (fd - fb) * i / 8]]); await warte(16); }
@@ -869,7 +897,12 @@ for (const [breite, hoehe] of [[1300, 860], [860, 700]] as Array<[number, number
     const wie = ohneApi ? 'ohne Vollbild-Schnittstelle' : 'mit Vollbild-Schnittstelle';
     if (ohneApi) await s.evaluate(() => { (document.documentElement as any).requestFullscreen = undefined; });
     await klick(s, '.sp-kopf [data-a="vollbild"]');
-    await s.waitForTimeout(400);
+    /* Mit der Schnittstelle wechselt das Fenster in den Vollbildmodus; das
+       dauert einen Augenblick, und Chromium nimmt währenddessen kein Rad an
+       (gemessen: das erste Strg+Rad direkt nach dem Klick ging verloren, das
+       zweite nicht). Ein Mensch dreht in dieser Zeit noch nicht. */
+    if (!ohneApi) await s.waitForFunction(() => !!document.fullscreenElement, null, { timeout: 2000 }).catch(() => {});
+    await s.waitForTimeout(700);
     const r = await s.evaluate(() => {
       const w = [...document.querySelectorAll<HTMLElement>('.sp-wrap')].pop()!;
       const b = w.getBoundingClientRect();
@@ -889,7 +922,8 @@ for (const [breite, hoehe] of [[1300, 860], [860, 700]] as Array<[number, number
     for (let i = 0; i < 3; i++) { await s.mouse.wheel(0, -120); await s.waitForTimeout(40); }
     await s.keyboard.up('Control');
     await s.waitForTimeout(150);
-    p(`§10c ${breite}: Strg+Rad zoomt im Vollbild`, (await massstab(s)) > m0 * 1.4, `${m0} → ${await massstab(s)}`);
+    const wo = await s.evaluate(([a, b]: [number, number]) => document.elementFromPoint(a, b)?.outerHTML.slice(0, 80) ?? '—', [qx, qy] as [number, number]);
+    p(`§10c ${breite}: Strg+Rad zoomt im Vollbild`, (await massstab(s)) > m0 * 1.4, `${m0} → ${await massstab(s)} bei ${qx},${qy}: ${wo}`);
     const [hx, hy] = await bild(s, 330, 130);
     await s.mouse.click(hx, hy); await s.waitForTimeout(450);
     p(`§10d ${breite}: bei Zoom trifft ein Klick E2`, await s.locator('.sp-wrap .sp-teil.sp-gewaehlt[data-id="E2"]').count() > 0);

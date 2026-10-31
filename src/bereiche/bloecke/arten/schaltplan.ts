@@ -109,6 +109,11 @@ const Schaltplan = (() => {
     id: string; punkte: Punkt[]; ebene: string;
     /** Woran die Enden hängen — für das Mitziehen beim Verschieben. */
     vonTeil?: string; vonNr?: string; nachTeil?: string; nachNr?: string;
+    /** Selbst gezeichnete Stromschiene (E759): welcher Leiter — L1, L2, L3,
+        N oder PE. Fehlt bei jeder gewöhnlichen Leitung und bei allen Plänen
+        von vor E759; die Netzliste liest es nicht (eine Schiene ist eine
+        Leitung wie jede andere), nur das Bild zeichnet sie kräftiger. */
+    schiene?: string;
   };
   type Text = { id: string; x: number; y: number; t: string; ebene: string };
   type Ebene = { id: string; name: string; farbe: string; sichtbar: boolean };
@@ -165,6 +170,9 @@ const Schaltplan = (() => {
   ];
 
   const artVon = (id: string) => ARTEN.find(a => a.id === id) || ARTEN[0]!;
+
+  /** Die Leiter, die man als Schiene selbst zeichnen kann (E759). */
+  const SCHIENEN = ['L1', 'L2', 'L3', 'N', 'PE'];
 
   /* ------------------------------------------------------------------------
    * EBENEN (Punkte 48, 49)
@@ -232,7 +240,10 @@ const Schaltplan = (() => {
         vonTeil: l.vonTeil ? String(l.vonTeil) : undefined,
         vonNr: l.vonNr ? String(l.vonNr) : undefined,
         nachTeil: l.nachTeil ? String(l.nachTeil) : undefined,
-        nachNr: l.nachNr ? String(l.nachNr) : undefined
+        nachNr: l.nachNr ? String(l.nachNr) : undefined,
+        /* Nur gesetzt, wenn es eine bekannte Schiene ist — ein Plan von vor
+           E759 bekommt kein neues Feld, auch kein leeres (§9). */
+        ...(SCHIENEN.includes(String(l.schiene)) ? { schiene: String(l.schiene) } : {})
       })).filter((l: Leitung) => l.punkte.length >= 2),
       texte: (Array.isArray(roh.texte) ? roh.texte : []).map((x: any) => ({
         id: String(x.id || uid()),
@@ -854,7 +865,11 @@ const Schaltplan = (() => {
       let gewaehlt: Punkt[] | null = null;
       let notfalls: Punkt[] | null = null;
       const nimm = (w: Punkt[]): boolean => {
-        if (!durchZeichen(w, ks)) { gewaehlt = w; return true; }
+        /* Auch ein Weg, der AUF einer anderen Leitung entlangläuft, ist nur
+           ein Notfall (E759, „alle leiter gehen übereinander"): er passt —
+           er berührte sie ja schon vorher, etwa die Schiene, an der er
+           endet —, aber zwei Striche aufeinander liest niemand. */
+        if (!durchZeichen(w, ks) && !ueberlappt(w, plan.leitungen, l.id)) { gewaehlt = w; return true; }
         if (!notfalls) notfalls = w;
         return false;
       };
@@ -893,6 +908,223 @@ const Schaltplan = (() => {
       bericht.push({ id: l.id, stufe });
     });
     return bericht;
+  };
+
+  /* ------------------------------------------------------------------------
+   * NICHTS ÜBEREINANDER, LEITER SCHIEBEN, ALLES DREHEN (E759)
+   * ------------------------------------------------------------------------
+   * Redur, 31. Oktober 2026: „alle leiter gehen übereinander es sollte nicht
+   * so sein und ich sollte alles umdrehen können". Drei Rechnungen, alle
+   * ohne ein einziges Ereignis — die Planfläche ruft sie, die Prüfläufe
+   * können sie auch ohne Zeiger fragen.
+   * ----------------------------------------------------------------------*/
+
+  /** Liegen zwei Strecken auf derselben Linie und teilen ein Stück (> 0)? */
+  const streckenAufeinander = (a: Punkt, b: Punkt, c: Punkt, d: Punkt): boolean => {
+    if (a.y === b.y && c.y === d.y && a.y === c.y)
+      return Math.min(Math.max(a.x, b.x), Math.max(c.x, d.x)) - Math.max(Math.min(a.x, b.x), Math.min(c.x, d.x)) > 0;
+    if (a.x === b.x && c.x === d.x && a.x === c.x)
+      return Math.min(Math.max(a.y, b.y), Math.max(c.y, d.y)) - Math.max(Math.min(a.y, b.y), Math.min(c.y, d.y)) > 0;
+    return false;
+  };
+  /** Läuft der Weg `w` irgendwo AUF einer anderen Leitung entlang? */
+  const ueberlappt = (w: Punkt[], andere: Leitung[], ohne?: string): boolean => {
+    for (const m of andere) {
+      if (m.id === ohne) continue;
+      for (let i = 0; i + 1 < w.length; i++)
+        for (let k = 0; k + 1 < m.punkte.length; k++)
+          if (streckenAufeinander(w[i]!, w[i + 1]!, m.punkte[k]!, m.punkte[k + 1]!)) return true;
+    }
+    return false;
+  };
+  /** Alle Paare von Strecken verschiedener Leitungen, die aufeinanderliegen —
+      für die Messung (messungen.md) und die Prüfläufe. */
+  const ueberlappungen = (plan: Plan): number => {
+    let n = 0;
+    plan.leitungen.forEach((l, i) => plan.leitungen.slice(i + 1).forEach(m => {
+      for (let a = 0; a + 1 < l.punkte.length; a++)
+        for (let b = 0; b + 1 < m.punkte.length; b++)
+          if (streckenAufeinander(l.punkte[a]!, l.punkte[a + 1]!, m.punkte[b]!, m.punkte[b + 1]!)) n++;
+    }));
+    return n;
+  };
+
+  /**
+   * EINE NEUE LEITUNG FÜHREN (E759).
+   *
+   * Bis hier zog die Fläche jede neue Leitung als `rechtwinklig` — den Winkel,
+   * der zuerst in die längere Richtung läuft — und prüfte nichts. Von der
+   * Klemme zur Schiene lief der zweite Schenkel darum AUF der Schiene, und
+   * eine Leitung quer durch den Plan fasste unterwegs jede Klemme, über die
+   * ihr Winkel lief: S2:4 nach E2:X2 berührte S3:4 und E2:X1 — zwei Netze
+   * verbunden, die niemand verbunden hatte, und im Bild sah es aus wie
+   * gewollt.
+   *
+   * Jetzt gilt derselbe Massstab wie beim Nachziehen (E746): ein Weg darf
+   * nur berühren, was gemeint ist — die Klemmen an seinen Enden und die
+   * Leitungen, auf denen ein Ende liegt (dort ist die Verbindung gewollt).
+   * Probiert wird in fester Reihenfolge: die zwei Winkel, die Z-Wege, die
+   * Hakenwege. Der erste, der nichts Fremdes berührt, auf keiner Leitung
+   * entlangläuft und durch kein Zeichen geht, gilt; sonst der erste ohne
+   * Fremdes; sonst der Winkel wie bisher. `schnell` lässt die Hakenwege aus
+   * und nimmt nur die ersten vierzig Z-Wege — für die Vorschau beim Ziehen.
+   */
+  const leitungFuehren = (plan: Plan, a: Punkt, b: Punkt,
+                          vonFang?: { teil: string; nr: string } | null,
+                          nachFang?: { teil: string; nr: string } | null,
+                          wie: { schnell?: boolean } = {}): Punkt[] => {
+    const erster = ohneDoppel(rechtwinklig(a, b));
+    if (gleicherPunkt(a, b)) return erster;
+    const l: Leitung = { id: '\u0000neu', punkte: [], ebene: 'plan' };
+    if (vonFang) { l.vonTeil = vonFang.teil; l.vonNr = vonFang.nr; }
+    if (nachFang) { l.nachTeil = nachFang.teil; l.nachNr = nachFang.nr; }
+    const klemmen = new Set<string>();
+    if (vonFang) klemmen.add(vonFang.teil + ':' + endeGenau(plan, vonFang.teil, vonFang.nr, a).nr);
+    if (nachFang) klemmen.add(nachFang.teil + ':' + endeGenau(plan, nachFang.teil, nachFang.nr, b).nr);
+    const leitungen = new Set<string>();
+    plan.leitungen.forEach(m => {
+      for (let i = 0; i + 1 < m.punkte.length; i++)
+        if (nahAnStrecke(a, m.punkte[i]!, m.punkte[i + 1]!) || nahAnStrecke(b, m.punkte[i]!, m.punkte[i + 1]!)) {
+          leitungen.add(m.id); return;
+        }
+    });
+    /* Eine Klemme, die mitten auf einer dieser Leitungen liegt, berührt der
+       Weg über die Leitung ohnehin — sie ist kein fremder Griff. */
+    const orte = klemmorte(plan);
+    const ks = kaesten(plan);
+    const erlaubt = { klemmen, leitungen };
+    const breite = Number(plan.breite) || 1000, hoehe = Number(plan.hoehe) || 700;
+    let ohneFremdes: Punkt[] | null = null;
+    const probiert = new Set<string>();
+    const pruefe = (w: Punkt[] | null): boolean => {
+      if (!w || w.length < 2) return false;
+      const sch = JSON.stringify(w);
+      if (probiert.has(sch)) return false;
+      probiert.add(sch);
+      if (!pruefeBeruehrung(plan, l, w, orte, plan.leitungen, erlaubt)) return false;
+      if (ueberlappt(w, plan.leitungen)) return false;
+      if (!ohneFremdes) ohneFremdes = w;
+      return !durchZeichen(w, ks);
+    };
+    for (const w of [erster, andererWinkel(a, b)]) if (pruefe(w)) return w!;
+    const zw = zWege(a, b, breite, hoehe);
+    for (const w of (wie.schnell ? zw.slice(0, 40) : zw)) if (pruefe(w)) return w;
+    if (!wie.schnell) for (const w of hakenWege(a, b, breite, hoehe)) if (pruefe(w)) return w;
+    return ohneFremdes || erster;
+  };
+
+  /** Doppelte Punkte und Punkte mitten auf einer Geraden heraus (die Enden bleiben). */
+  const vereinfachen = (ps: Punkt[]): Punkt[] => {
+    const q = ohneDoppel(ps);
+    const raus: Punkt[] = [];
+    q.forEach((p, i) => {
+      if (i === 0 || i === q.length - 1) { raus.push(p); return; }
+      const a = raus[raus.length - 1]!, b = q[i + 1]!;
+      if ((a.x === p.x && p.x === b.x) || (a.y === p.y && p.y === b.y)) return;
+      raus.push(p);
+    });
+    return raus;
+  };
+
+  /**
+   * EINE STRECKE QUER SCHIEBEN (E759, „leiterschieben").
+   *
+   * Die Strecke `i` (von Punkt i zu i+1) wandert um `d` quer zu ihrer
+   * Richtung: eine waagrechte nach oben oder unten, eine senkrechte nach
+   * links oder rechts. Ist sie die erste oder letzte Strecke, bekommt das
+   * Ende einen Stich, damit es auf seiner Klemme bleibt. Gibt die neuen
+   * Punkte zurück — oder null, wenn der neue Weg etwas anderes berührte als
+   * der alte (E746: eine Handlung, die nur die Lage ändert, verbindet nichts
+   * Neues und trennt nichts).
+   */
+  const streckeSchieben = (plan: Plan, vorher: Vorher, lid: string, i: number, d: number): Punkt[] | null => {
+    const l = plan.leitungen.find(x => x.id === lid);
+    const alt = vorher.punkte.get(lid);
+    if (!l || !alt || i < 0 || i + 1 >= alt.length) return null;
+    const waag = alt[i]!.y === alt[i + 1]!.y;
+    if (!waag && alt[i]!.x !== alt[i + 1]!.x) return null;
+    const q = alt.map(p => ({ x: p.x, y: p.y }));
+    let a = i, b = i + 1;
+    if (a === 0) { q.unshift({ ...q[0]! }); a++; b++; }
+    if (b === q.length - 1) q.push({ ...q[q.length - 1]! });
+    if (waag) { q[a]!.y += d; q[b]!.y += d; } else { q[a]!.x += d; q[b]!.x += d; }
+    const neu = vereinfachen(q);
+    if (!d) return alt.map(p => ({ x: p.x, y: p.y }));
+    const vor = vorher.beruehrt.get(lid) || { klemmen: [], leitungen: [] };
+    const andere = plan.leitungen.filter(x => x.id !== lid);
+    const k = pruefeBeruehrung(plan, l, neu, klemmorte(plan), andere,
+      { klemmen: new Set(vor.klemmen), leitungen: new Set(vor.leitungen) });
+    if (!k) return null;
+    if (vor.klemmen.some(x => !k.klemmen.includes(x)) || vor.leitungen.some(x => !k.leitungen.includes(x))) return null;
+    return neu;
+  };
+
+  /**
+   * TEILE, LEITUNGEN UND TEXTE ALS GRUPPE UMFORMEN (E759, „alles umdrehen").
+   *
+   * Bis hier drehte „R" jedes gewählte Teil an seinem eigenen Ort, und
+   * Leitungen und Texte drehten gar nicht. Jetzt wandert alles, was gewählt
+   * ist, mit derselben Abbildung `T`: die Mitte jedes Teils (um die das
+   * Register dreht, `gedreht`), jeder Punkt jeder Leitung, der Anker jedes
+   * Texts (die Schrift selbst bleibt waagrecht — lesbar). Die Drehung eines
+   * Teils folgt der Abbildung: gedreht +90°, gespiegelt (360 − d) mit
+   * umgelegtem Spiegel, denn das Register spiegelt zuerst und dreht dann.
+   *
+   * Leitungen zu Teilen ausserhalb der Auswahl zieht dieselbe Stelle nach
+   * wie beim Drehen eines Teils (`nachziehen`, E746); eine gewählte Leitung
+   * zwischen zwei gewählten Teilen liegt danach genau auf ihren Klemmen und
+   * bleibt, wie sie ist.
+   */
+  type Umformung = 'drehen' | 'spiegeln';
+  const gruppeUmformen = (plan: Plan, ids: Set<string>, art: Umformung,
+                          T?: (p: Punkt) => Punkt): { teile: string[]; bericht: Bericht; vorher: Vorher } => {
+    const vorher = vorherMerken(plan);
+    const F = (typeof Register !== 'undefined') ? Register.fachzeichen : null;
+    const teile = plan.teile.filter(t => ids.has(t.id));
+    const leitungen = plan.leitungen.filter(l => ids.has(l.id));
+    const texte = plan.texte.filter(x => ids.has(x.id));
+    let abb = T;
+    if (!abb) {
+      /* Die Mitte der Auswahl, auf dem Raster — so landet jeder Rasterpunkt
+         wieder auf einem. */
+      const xs: number[] = [], ys: number[] = [];
+      teile.forEach(t => {
+        const z = F ? F.holen(t.zeichen) : null;
+        const m = F ? F.masse(t.zeichen, t.drehung) : { w: 0, h: 0 };
+        const cx = t.x + (z ? z.w : 0) / 2, cy = t.y + (z ? z.h : 0) / 2;
+        xs.push(cx - m.w / 2, cx + m.w / 2); ys.push(cy - m.h / 2, cy + m.h / 2);
+      });
+      leitungen.forEach(l => l.punkte.forEach(p => { xs.push(p.x); ys.push(p.y); }));
+      texte.forEach(x => { xs.push(x.x); ys.push(x.y); });
+      if (!xs.length) return { teile: [], bericht: [], vorher };
+      const g = { x: rasten((Math.min(...xs) + Math.max(...xs)) / 2), y: rasten((Math.min(...ys) + Math.max(...ys)) / 2) };
+      abb = art === 'drehen'
+        ? (p: Punkt) => ({ x: g.x - (p.y - g.y), y: g.y + (p.x - g.x) })
+        : (p: Punkt) => ({ x: 2 * g.x - p.x, y: p.y });
+    }
+    teile.forEach(t => {
+      const z = F ? F.holen(t.zeichen) : null;
+      const w = z ? z.w : 0, h = z ? z.h : 0;
+      const c = abb!({ x: t.x + w / 2, y: t.y + h / 2 });
+      const d = ((Number(t.drehung) || 0) % 360 + 360) % 360;
+      if (art === 'drehen') t.drehung = (d + 90) % 360;
+      else { t.drehung = (360 - d) % 360; t.gespiegelt = !t.gespiegelt; }
+      t.x = rasten(c.x - w / 2); t.y = rasten(c.y - h / 2);
+    });
+    leitungen.forEach(l => { l.punkte = l.punkte.map(p => { const q = abb!(p); return { x: rasten(q.x), y: rasten(q.y) }; }); });
+    texte.forEach(x => { const q = abb!(x); x.x = rasten(q.x); x.y = rasten(q.y); });
+    const ids2 = teile.map(t => t.id);
+    const bericht = ids2.length ? nachziehen(plan, vorher, ids2, { heilen: true }) : [];
+    return { teile: ids2, bericht, vorher };
+  };
+
+  /** Den ganzen Plan um 90° drehen: Breite und Höhe tauschen, alles mit. */
+  const planDrehen = (plan: Plan): { bericht: Bericht; vorher: Vorher } => {
+    const H = Number(plan.hoehe) || 700, W = Number(plan.breite) || 800;
+    const alle = new Set<string>([...plan.teile.map(t => t.id), ...plan.leitungen.map(l => l.id), ...plan.texte.map(x => x.id)]);
+    const r = gruppeUmformen(plan, alle, 'drehen', p => ({ x: H - p.y, y: p.x }));
+    plan.breite = H; plan.hoehe = W;
+    return { bericht: r.bericht, vorher: r.vorher };
   };
 
   /* ------------------------------------------------------------------------
@@ -1098,8 +1330,11 @@ const Schaltplan = (() => {
       const d = leitungPfad(l, luecken);
       if (!d) return;
       const gewaehlt = opt.auswahl && opt.auswahl.has(l.id);
-      teile.push(`<path class="sp-leitung${gewaehlt ? ' sp-gewaehlt' : ''}" data-id="${esc(l.id)}" ` +
-        `d="${d}" fill="none" stroke="${farbeVon(l.ebene)}" stroke-width="2" ` +
+      /* Eine selbst gezeichnete Schiene (E759) ist kräftiger — wie die
+         Sammelschiene im Lehrmittel. Was sie ist, sagt ihre Beschriftung,
+         nicht die Breite (§38). Pläne ohne Schiene zeichnen wie bisher. */
+      teile.push(`<path class="sp-leitung${l.schiene ? ' sp-schiene' : ''}${gewaehlt ? ' sp-gewaehlt' : ''}" data-id="${esc(l.id)}" ` +
+        `d="${d}" fill="none" stroke="${farbeVon(l.ebene)}" stroke-width="${l.schiene ? 3.5 : 2}" ` +
         `stroke-linecap="round"/>`);
 
       /* Und darüber, wenn die Simulation läuft, der fliessende Strich.
@@ -1364,7 +1599,11 @@ const Schaltplan = (() => {
     /* Freie Beschriftungen (Punkt 47) */
     plan.texte.forEach(x => {
       if (!sichtbar(x.ebene)) return;
-      teile.push(`<text class="sp-text" data-id="${esc(x.id)}" x="${x.x}" y="${x.y}" ` +
+      /* Ein gewählter Text trägt die Auswahl wie Teil und Leitung (E759:
+         der Rahmen fasst jetzt auch Texte, und was gewählt ist, muss man
+         sehen). Ungewählt zeichnet er wie bisher. */
+      const gewaehlt = !!(opt.auswahl && opt.auswahl.has(x.id));
+      teile.push(`<text class="sp-text${gewaehlt ? ' sp-gewaehlt' : ''}" data-id="${esc(x.id)}" x="${x.x}" y="${x.y}" ` +
         `font-size="13" fill="${farbeVon(x.ebene)}" stroke="none">${tief(x.t)}</text>`);
     });
 
@@ -1506,7 +1745,8 @@ const Schaltplan = (() => {
     ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, rasten,
     naechstesBmk, anschlussOrt, anschluesseVon, klemmeFuer, fangeAnschluss, rechtwinklig,
     kontakte, vorherMerken, nachziehen, veraendert, verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
-    netzBauen, BEISPIELE, beispielBauen, uid, esc
+    netzBauen, BEISPIELE, beispielBauen, uid, esc,
+    SCHIENEN, leitungFuehren, ueberlappt, ueberlappungen, streckeSchieben, gruppeUmformen, planDrehen
   };
 })();
 
