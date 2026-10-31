@@ -146,7 +146,7 @@ workflows:
             /usr/libexec/PlistBuddy -c "Set :UIStatusBarHidden false" "$PLIST"
 
 
-      - name: iPhone-Appsymbol-Schnellaktionen (Dokumente, Heute, Lernen)
+      - name: iPhone-Appsymbol-Schnellaktionen (Neue Seite, Dokumente, Heute, Lernen)
         script: |
           set -euo pipefail
           # Nur die generierte UIScene-Vorlage und Info.plist anpassen,
@@ -157,8 +157,8 @@ workflows:
           grep -q 'REDION_NATIVE_HOME_SHORTCUTS' "$SCENE"
           grep -q 'completionHandler(handled)' "$SCENE"
           /usr/libexec/PlistBuddy -c 'Print :UIApplicationShortcutItems:0:UIApplicationShortcutItemType' "$PLIST" |
-            grep -qx 'ch.redurbabat.redion.dokumente'
-          /usr/libexec/PlistBuddy -c 'Print :UIApplicationShortcutItems:2:UIApplicationShortcutItemType' "$PLIST" |
+            grep -qx 'ch.redurbabat.redion.neu'
+          /usr/libexec/PlistBuddy -c 'Print :UIApplicationShortcutItems:3:UIApplicationShortcutItemType' "$PLIST" |
             grep -qx 'ch.redurbabat.redion.lernen'
 
       - name: Redion aus anderen Apps teilen und iPhone-Widgets (Vorschau)

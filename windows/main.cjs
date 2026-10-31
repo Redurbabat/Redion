@@ -4,11 +4,13 @@
  * Start-menu entry and installer. The renderer uses the existing Redion UI.
  * No Node APIs reach notes or the editor; all app files are read-only.
  */
-const { app, BrowserWindow, Menu, protocol, net, shell, dialog, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, protocol, net, shell, dialog, ipcMain, screen } = require('electron');
+const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { resolveBundledAsset } = require('./paths.cjs');
 const { startRedionAutoUpdates } = require('./auto-update.cjs');
+const { destinationFromArgs, jumpTasks, readWindowState, windowStateToSave } = require('./generated/desktop-shell.cjs');
 const { NativeFiles, trustedSender, safeExportName } = require('./generated/files.cjs');
 
 const SCHEME = 'redion-local';
@@ -64,6 +66,15 @@ if (!lock) {
     if (!trustedSender(event, mainWindow?.webContents)) throw new Error('Dateizugriff nicht erlaubt.');
     return serial(() => fn(...args));
   });
+  // Ziel aus der Sprungliste: der Hauptprozess merkt es, bis die App es abholt.
+  // Nur Bezeichner aus der festen Liste, nie eine Adresse oder ein Pfad.
+  let pendingDestination = destinationFromArgs(process.argv);
+  ipcMain.handle('redion:ziel:holen', event => {
+    if (!trustedSender(event, mainWindow?.webContents)) throw new Error('Zugriff nicht erlaubt.');
+    const ziel = pendingDestination;
+    pendingDestination = null;
+    return ziel;
+  });
   handle('redion:files:list', () => files.pending());
   // pick() läuft außerhalb der serial-Kette, offerFiles reiht selbst ein.
   ipcMain.handle('redion:files:pick', async event => {
@@ -105,6 +116,11 @@ if (!lock) {
 
   app.on('second-instance', (_event, argv) => {
     void offerFiles(argumentsFiles(argv));
+    const ziel = destinationFromArgs(argv);
+    if (ziel) {
+      pendingDestination = ziel;
+      mainWindow?.webContents.send('redion:ziel:bereit');
+    }
     if (!mainWindow || mainWindow.isDestroyed()) return;
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.focus();
@@ -151,10 +167,16 @@ if (!lock) {
     });
 
     const icon = path.join(assets, 'oeffentlich/icons/icon-512.png');
+    // Eine eigene kleine Datei neben dem Profil. Sie enthält nur Fensterlage,
+    // keine Notizen; ist sie kaputt, startet das Fenster in der Standardgröße.
+    const stateFile = path.join(app.getPath('userData'), 'fenster.json');
+    const remembered = readWindowState(() => fs.readFileSync(stateFile, 'utf8'),
+      screen.getAllDisplays().map(display => display.workArea));
     mainWindow = new BrowserWindow({
       title: 'Redion',
-      width: 1300,
-      height: 860,
+      width: remembered?.width ?? 1300,
+      height: remembered?.height ?? 860,
+      ...(remembered ? { x: remembered.x, y: remembered.y } : {}),
       minWidth: 860,
       minHeight: 580,
       backgroundColor: '#191a1e',
@@ -187,7 +209,16 @@ if (!lock) {
     });
     // Do not run NSIS while Windows is logging off or shutting down.
     mainWindow.on('session-end', () => updateController?.onSystemShutdown?.());
-    mainWindow.once('ready-to-show', () => mainWindow?.show());
+    mainWindow.once('ready-to-show', () => {
+      if (remembered?.maximized) mainWindow?.maximize();
+      mainWindow?.show();
+    });
+    mainWindow.on('close', () => {
+      try {
+        fs.writeFileSync(stateFile, JSON.stringify(windowStateToSave(
+          mainWindow.getNormalBounds(), mainWindow.isMaximized())));
+      } catch { /* Fensterlage ist Komfort; sie darf das Schliessen nie aufhalten */ }
+    });
     mainWindow.on('closed', () => { mainWindow = null; void serial(() => files.close()); });
     mainWindow.loadURL(START_URL).catch(error => {
       dialog.showErrorBox('Redion konnte nicht starten', String(error));
@@ -196,6 +227,9 @@ if (!lock) {
 
   app.whenReady().then(() => {
     appMenu();
+    if (process.platform === 'win32' && app.isPackaged) {
+      app.setUserTasks(jumpTasks(process.execPath));
+    }
     launchWindow();
     // Silent background checks ONLY in a signed NSIS release with a verified
     // HTTPS feed. An ordinary local/unsigned build remains fully offline.

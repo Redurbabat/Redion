@@ -8621,6 +8621,31 @@ Frage an den Lauf, nicht an E757.
 
 ---
 
+## L259 · Was zu „besser als GoodNotes, Word und PowerPoint" noch fehlt — 31. Oktober 2026
+
+Gezählt im Quelltext am 31. Oktober 2026 (Suche nach den Begriffen in `src/`), nach
+E758. Keine Rangliste gegen die fremden Programme: die wurden nicht nebeneinander
+gemessen.
+
+**Schreiben:** Änderungen nachverfolgen, Formatvorlagen, Seitenumbruch als Block.
+
+**Präsentieren:** Referentenansicht auf einem zweiten Bildschirm; Objektanimationen
+selbst anlegen (gelesen wird nur `p:timing` für Abdeckungen). **`.pptx` zurück:** E759
+schreibt Inhalt, Notizen und Übergänge; offen sind Schriftfamilie, gemischte Läufe, Klickschritte,
+eine neue Notizenseite in einer fremden Datei und der Test in echtem PowerPoint.
+
+**Zeichnen:** Stiftmessung am echten iPad (L227 S1) fehlt weiter; die Druckrechnung
+der Tafel und des Blatts gehört in den Kern; ob ein Export der Tafel den Druck zeigt,
+ist nicht geprüft.
+
+**Bewegung:** Der Rest von L225 und B2/B3 bleibt offen; die Ankunft einer Seite ersetzt sie nicht.
+
+**iPhone:** Kein Lauf auf einem echten Gerät (Widget, Schnellaktion, Bewegung).
+Share- und Widget-Ziele bleiben wegen der App Group opt-in. Der tägliche Abgleich
+zwischen Geräten braucht den Server, den es noch nicht gibt (E754).
+
+---
+
 ## L260 · Was nach E761 rot bleibt — 30. Oktober 2026
 
 **Was E761 grün gemacht hat:** `test539` §6, `test576`, `test581`,
@@ -11097,7 +11122,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 31. Oktober 2026 (mit L261), nachgezählt statt fortgeschrieben:** die
-Datei führt 155 Lücken, 97 offene und 58 geschlossene. Der Befehl dazu ist
+Datei führt 156 Lücken, 98 offene und 58 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

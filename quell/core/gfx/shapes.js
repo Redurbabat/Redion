@@ -81,14 +81,24 @@ const GfxShapes = (() => {
                         ? String(kern.path(pts.map((q) => [zahl(q?.[0]), zahl(q?.[1])])))
                         : 'M' + pts.map((q) => zahl(q?.[0]) + ' ' + zahl(q?.[1])).join(' L'))
                 : `M${zahl(s.x)} ${zahl(s.y)} L${zahl(s.x) + zahl(s.w)} ${zahl(s.y) + zahl(s.h)}`;
-            const p = sv('path', {
-                d, stroke: farbe, 'stroke-width': strich, fill: 'none',
-                'stroke-linecap': 'round', 'stroke-linejoin': 'round'
-            });
+            const druck = s.pressure;
+            const mitDruck = s.art === 'stift' && Array.isArray(druck) && druck.length === pts.length &&
+                pts.length >= 3 && typeof kern?.outline === 'function' && typeof kern?.verjuengen === 'function';
+            const umriss = mitDruck ? (() => {
+                const punkte = pts.map((q) => [zahl(q?.[0]), zahl(q?.[1])]);
+                const halb = druck.map(w => strich / 2 * (0.5 + Math.max(0.05, Math.min(1, zahl(w, 0.5)))));
+                return String(kern.outline(punkte, kern.verjuengen(punkte, halb, 0.35, Math.max(3, Math.min(12, strich * 2.2)))));
+            })() : '';
+            const p = umriss
+                ? sv('path', { d: umriss, fill: farbe, stroke: 'none' })
+                : sv('path', {
+                    d, stroke: farbe, 'stroke-width': strich, fill: 'none',
+                    'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+                });
             if (s.art === 'pfeil' && o.pfeilMarke)
                 p.setAttribute('marker-end', `url(#${o.pfeilMarke})`);
             p.dataset.sid = s.id;
-            tinte(p, 'strich', farbe);
+            tinte(p, umriss ? 'schrift' : 'strich', farbe);
             const fang = sv('path', {
                 d, stroke: 'transparent', 'stroke-width': 16,
                 fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round'

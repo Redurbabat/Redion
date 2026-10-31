@@ -16,6 +16,7 @@ const CLASS_NAME = 'class SceneDelegate: UIResponder, UIWindowSceneDelegate';
 const METHOD = 'func windowScene(_ windowScene: UIWindowScene, performActionFor shortcutItem: UIApplicationShortcutItem';
 
 export const SHORTCUTS = Object.freeze([
+  { id: 'neu', title: 'Neue Seite', subtitle: 'Sofort losschreiben', icon: 'UIApplicationShortcutIconTypeCompose' },
   { id: 'dokumente', title: 'Dokumente', subtitle: 'Bibliothek öffnen', icon: 'UIApplicationShortcutIconTypeBookmark' },
   { id: 'heute', title: 'Heute', subtitle: 'Tagesübersicht öffnen', icon: 'UIApplicationShortcutIconTypeTime' },
   { id: 'lernen', title: 'Lernen', subtitle: 'Lernbereich öffnen', icon: 'UIApplicationShortcutIconTypePlay' }
@@ -29,6 +30,7 @@ private final class RedionHomeShortcuts {
 
     func open(_ shortcut: UIApplicationShortcutItem, window: UIWindow?) -> Bool {
         let actions = [
+            "ch.redurbabat.redion.neu": "neu",
             "ch.redurbabat.redion.dokumente": "dokumente",
             "ch.redurbabat.redion.heute": "heute",
             "ch.redurbabat.redion.lernen": "lernen"
@@ -45,7 +47,7 @@ private final class RedionHomeShortcuts {
             retry(action, window: window, token: token, tries: tries)
             return
         }
-        // Action is selected from the three fixed strings above, never user
+        // Action is selected from the fixed strings above, never user
         // input. JavaScript returns true only after the IPA bridge is loaded.
         let js = "Boolean(window.RedionNativeShortcut && window.RedionNativeShortcut.receive('" + action + "'))"
         web.evaluateJavaScript(js) { [weak self] result, error in
@@ -126,7 +128,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       execFileSync('/usr/libexec/PlistBuddy', ['-c', cmd, plist], { stdio: 'pipe' });
     }
     fs.writeFileSync(swift, updated);
-    console.log('Redion iOS: 3 Appsymbol-Schnellaktionen nativ eingerichtet.');
+    console.log('Redion iOS: ' + SHORTCUTS.length + ' Appsymbol-Schnellaktionen nativ eingerichtet.');
   } catch (error) {
     console.error('Redion iOS: Home-Schnellaktionen nicht eingebaut:', error.message);
     process.exitCode = 1;

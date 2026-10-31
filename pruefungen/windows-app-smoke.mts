@@ -19,6 +19,19 @@ for (const [key, value] of Object.entries(process.env)) if (value !== undefined)
 delete env.ELECTRON_RUN_AS_NODE;
 let current: Awaited<ReturnType<typeof electron.launch>> | undefined;
 try {
+  // Sprungliste: dieselbe Befehlszeile, die Windows beim Antippen übergibt.
+  {
+    current = await electron.launch({ executablePath, args: [bootstrap, '--redion-ziel=neu'], env });
+    const page = await current.firstWindow();
+    await page.waitForFunction(() => typeof App !== 'undefined' && !!App.aktuelleSeite?.() &&
+      document.activeElement?.id === 'title', undefined, { timeout: 30000 });
+    assert.equal(await page.evaluate(() => (window as any).RedionDesktop.takeDestination()), null,
+      'ein Ziel wird nur einmal abgeholt');
+    await current.close();
+    current = undefined;
+    assert.equal(JSON.parse(fs.readFileSync(path.join(profile, 'Redion', 'fenster.json'), 'utf8')).width >= 860, true,
+      'die Fensterlage ist beim Schliessen gemerkt');
+  }
   let id = '';
   for (let run = 0; run < 2; run++) {
     current = await electron.launch({ executablePath, args: [bootstrap], env });

@@ -98,7 +98,7 @@ export function injectIncomingShareWidget(scene) {
     private func routeRedionWidget(_ url: URL) {
         guard url.scheme == "redion", url.host == "widget" else { return }
         let action = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        guard ["dokumente", "heute", "lernen"].contains(action) else { return }
+        guard ["neu", "dokumente", "heute", "lernen"].contains(action) else { return }
         let item = UIApplicationShortcutItem(
             type: "ch.redurbabat.redion." + action, localizedTitle: "Redion")
         _ = RedionHomeShortcuts.shared.open(item, window: window)

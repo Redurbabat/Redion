@@ -37,10 +37,10 @@ function setup() {
   return { route, doc, buttons, clicked, tasks, tick, time(ms) { currentTime += ms; } };
 }
 
-test('iPhone Appsymbol bietet drei echte Redion-Bereiche an', () => {
-  assert.deepEqual(Object.keys(SHORTCUT_TABS), ['dokumente', 'heute', 'lernen']);
+test('iPhone Appsymbol bietet vier echte Redion-Wege an', () => {
+  assert.deepEqual(Object.keys(SHORTCUT_TABS), ['neu', 'dokumente', 'heute', 'lernen']);
   assert.deepEqual(SHORTCUTS.map(x => x.id), Object.keys(SHORTCUT_TABS));
-  assert.deepEqual(Object.values(SHORTCUT_TABS), ['hl-dok', 'hl-start', 'hl-lernen']);
+  assert.deepEqual(Object.values(SHORTCUT_TABS), ['btn-new-bottom', 'hl-dok', 'hl-start', 'hl-lernen']);
 });
 
 test('Kaltstart wartet, bis die Originalnavigation klickbereit ist', () => {
@@ -141,7 +141,7 @@ test('Veränderte UIScene-Templates werden nicht blind gepatcht', () => {
 test('Info.plist definiert sichere, feste Home-Screen-Kurzbefehle', () => {
   const cmds = plistCommands();
   assert.equal(cmds[0], 'Add :UIApplicationShortcutItems array');
-  assert.equal(cmds.length, 1 + 3 * 5);
+  assert.equal(cmds.length, 1 + 4 * 5);
   for (const id of Object.keys(SHORTCUT_TABS)) {
     assert.ok(cmds.some(v => v.endsWith('ch.redurbabat.redion.' + id)));
   }
@@ -159,4 +159,16 @@ test('Nur native Buildartefakte; gemeinsamer Webcode bleibt unberührt', () => {
   assert.match(yaml, /node --test ios\/home-shortcuts\.test\.mjs/);
   assert.match(native, /createHomeShortcutRouter\(\{ document \}\)/);
   assert.doesNotMatch(website, /RedionNativeShortcut|home-shortcuts\.mjs/);
+});
+
+/* Die PlistBuddy-Zeilen laufen nur auf dem Mac. Am 31. Oktober 2026 prüfte der
+ * Bauschritt noch die alte Reihenfolge und brach die IPA mit Status 1 ab, während
+ * jeder Test unter Windows grün war. Hier wird sein Text gegen die Liste gehalten. */
+test('der Codemagic-Schritt prüft die Schnellaktionen in ihrer echten Reihenfolge', async () => {
+  const fs = await import('node:fs');
+  const yaml = fs.readFileSync(new URL('../codemagic.yaml', import.meta.url), 'utf8');
+  const proben = [...yaml.matchAll(/UIApplicationShortcutItems:(\d+):UIApplicationShortcutItemType'[^\n]*\n\s*grep -qx 'ch\.redurbabat\.redion\.(\w+)'/g)];
+  assert.ok(proben.length >= 2, 'der Schritt prüft mindestens den ersten und den letzten Eintrag');
+  for (const [, nummer, id] of proben) assert.equal(SHORTCUTS[Number(nummer)]?.id, id);
+  assert.ok(proben.some(([, nummer]) => Number(nummer) === SHORTCUTS.length - 1), 'auch der letzte Eintrag wird geprüft');
 });

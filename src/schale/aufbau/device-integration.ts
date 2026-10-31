@@ -8,6 +8,16 @@ const DeviceIntegration = (() => {
     saveBegin(name: string, size: number): Promise<string | null>;
     saveWrite(id: string, bytes: Uint8Array): Promise<void>; saveCommit(id: string): Promise<boolean>;
     saveCancel(id: string): Promise<void>; onFiles(callback: () => void): () => void;
+    takeDestination?(): Promise<string | null>; onDestination?(callback: () => void): () => void;
+  };
+  /* Die Ziele der Windows-Sprungliste drücken dieselben Knöpfe wie die
+     iPhone-Schnellaktionen; es gibt keinen zweiten Weg durch die App. */
+  const ZIEL_KNOPF: Record<string, string> = {
+    neu: 'btn-new-bottom', heute: 'hl-start', dokumente: 'hl-dok', lernen: 'hl-lernen'
+  };
+  const zielAbholen = async (): Promise<void> => {
+    const ziel = await desktop()?.takeDestination?.();
+    if (ziel && Object.hasOwn(ZIEL_KNOPF, ziel)) document.getElementById(ZIEL_KNOPF[ziel]!)?.click();
   };
   const desktop = (): Desktop | undefined => (globalThis as any).RedionDesktop;
   let started = false, draining = false;
@@ -128,6 +138,8 @@ const DeviceIntegration = (() => {
       (globalThis as any).RedionNativeDateien = Object.freeze({ speichern: save,
         ort: 'Datei am gewählten Windows-Speicherort gespeichert.' });
       bridge.onFiles(() => { void drain().catch(report); });
+      bridge.onDestination?.(() => { void zielAbholen().catch(report); });
+      void zielAbholen().catch(report);
       window.addEventListener('focus', () => { void drain().catch(report); });
       void drain().catch(report);
     }

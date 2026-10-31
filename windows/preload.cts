@@ -11,6 +11,12 @@ contextBridge.exposeInMainWorld('RedionDesktop', Object.freeze({
   saveWrite: (id: string, bytes: Uint8Array) => ipcRenderer.invoke('redion:save:write', id, bytes),
   saveCommit: (id: string) => ipcRenderer.invoke('redion:save:commit', id),
   saveCancel: (id: string) => ipcRenderer.invoke('redion:save:cancel', id),
+  takeDestination: () => ipcRenderer.invoke('redion:ziel:holen'),
+  onDestination: (callback: () => void) => {
+    const listener = () => callback();
+    ipcRenderer.on('redion:ziel:bereit', listener);
+    return () => ipcRenderer.removeListener('redion:ziel:bereit', listener);
+  },
   onFiles: (callback: () => void) => {
     const listener = () => callback();
     ipcRenderer.on('redion:files:available', listener);

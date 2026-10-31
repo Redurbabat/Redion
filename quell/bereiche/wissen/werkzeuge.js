@@ -933,18 +933,85 @@ const Werkzeuge = (() => {
             los(); });
         setTimeout(() => inp.focus(), 50);
     };
+    let begleiterEnde = null;
+    let fokusTaste = null;
+    const schreibbegleiter = (an) => {
+        begleiterEnde?.();
+        begleiterEnde = null;
+        if (!an)
+            return;
+        const pille = document.createElement('div');
+        pille.className = 'fokus-zaehler';
+        const zahl = document.createElement('span');
+        zahl.setAttribute('role', 'status');
+        const fertig = document.createElement('button');
+        fertig.type = 'button';
+        fertig.className = 'fokus-fertig';
+        fertig.textContent = 'Fertig';
+        fertig.addEventListener('click', () => fokus(false));
+        pille.append(zahl, fertig);
+        document.body.appendChild(pille);
+        let warte = null;
+        const zaehlen = () => {
+            const seite = Store.getBlock(App.aktuelleSeite());
+            if (!seite) {
+                zahl.textContent = '';
+                return;
+            }
+            const { woerter, lesezeit } = statistikZahlen(seite);
+            zahl.textContent = woerter + (woerter === 1 ? ' Wort' : ' Wörter') +
+                ' · ' + lesezeit + ' min';
+        };
+        const spaeter = () => { if (warte)
+            clearTimeout(warte); warte = setTimeout(zaehlen, 400); };
+        const mitfuehren = () => {
+            const auswahl = document.getSelection();
+            if (!auswahl?.isCollapsed || !auswahl.rangeCount)
+                return;
+            const start = auswahl.anchorNode instanceof Element ? auswahl.anchorNode : auswahl.anchorNode?.parentElement;
+            if (!start?.closest('#page [contenteditable="true"], #page [contenteditable=""]'))
+                return;
+            let rahmen = auswahl.getRangeAt(0).getClientRects()[0];
+            if (!rahmen)
+                rahmen = start.getBoundingClientRect();
+            let rolle = start.closest('#page');
+            while (rolle && !(rolle.scrollHeight > rolle.clientHeight + 1 &&
+                /auto|scroll/.test(getComputedStyle(rolle).overflowY)))
+                rolle = rolle.parentElement;
+            if (!rolle)
+                return;
+            const r = rolle.getBoundingClientRect();
+            const abstand = rahmen.top - (r.top + r.height * 0.42);
+            if (Math.abs(abstand) < 24)
+                return;
+            rolle.scrollBy({ top: abstand, behavior: AppEinstellung.wenigBewegung() ? 'auto' : 'smooth' });
+        };
+        document.addEventListener('input', spaeter, true);
+        document.addEventListener('input', mitfuehren, true);
+        document.addEventListener('keyup', mitfuehren, true);
+        zaehlen();
+        begleiterEnde = () => {
+            if (warte)
+                clearTimeout(warte);
+            document.removeEventListener('input', spaeter, true);
+            document.removeEventListener('input', mitfuehren, true);
+            document.removeEventListener('keyup', mitfuehren, true);
+            pille.remove();
+        };
+    };
     const fokus = (an) => {
         const jetzt = an === undefined ? !document.body.classList.contains('fokus') : an;
         document.body.classList.toggle('fokus', jetzt);
         UI.toast(jetzt ? 'Fokus-Modus — Esc beendet ihn' : 'Fokus-Modus beendet');
+        schreibbegleiter(jetzt);
+        if (fokusTaste) {
+            document.removeEventListener('keydown', fokusTaste);
+            fokusTaste = null;
+        }
         if (jetzt) {
-            const raus = (e) => {
-                if (e.key === 'Escape') {
-                    fokus(false);
-                    document.removeEventListener('keydown', raus);
-                }
-            };
-            document.addEventListener('keydown', raus);
+            fokusTaste = (e) => { if (e.key === 'Escape')
+                fokus(false); };
+            document.addEventListener('keydown', fokusTaste);
         }
     };
     const praesentation = async (p) => {
@@ -1003,6 +1070,44 @@ const Werkzeuge = (() => {
             if (feld)
                 feld.textContent = zaehlerText();
         };
+        const startZeit = Date.now();
+        let notizenSichtbar = false;
+        const uhrText = () => {
+            const s = Math.floor((Date.now() - startZeit) / 1000);
+            return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+        };
+        const notizenDerFolie = (f) => {
+            for (const e of f?.bloecke || [])
+                if (typeof e?.b?.notizen === 'string' && e.b.notizen.trim())
+                    return e.b.notizen;
+            return '';
+        };
+        const notizenHtml = (n) => {
+            if (!notizenSichtbar)
+                return '';
+            const danach = folien[n + 1];
+            const naechste = danach ? 'Als Nächstes: ' + (danach.titel || 'Folie ' + (n + 2)) : 'Letzte Folie';
+            const text = notizenDerFolie(folien[n]);
+            return '<aside class="praesi-notizen" aria-label="Sprechernotizen">' +
+                '<p class="praesi-notiztext">' + (text ? esc(text) : 'Keine Notizen zu dieser Folie.') + '</p>' +
+                '<p class="praesi-naechste">' + esc(naechste) + '</p></aside>';
+        };
+        const uhrLauf = setInterval(() => {
+            if (!o.isConnected) {
+                clearInterval(uhrLauf);
+                return;
+            }
+            const uhr = o.querySelector('.praesi-uhr');
+            if (uhr)
+                uhr.textContent = uhrText();
+        }, 1000);
+        const notizenUmschalten = () => {
+            notizenSichtbar = !notizenSichtbar;
+            o.querySelector('.praesi-notizen')?.remove();
+            o.querySelector('[data-a="notizen"]')?.setAttribute('aria-pressed', String(notizenSichtbar));
+            if (notizenSichtbar)
+                o.insertAdjacentHTML('beforeend', notizenHtml(i));
+        };
         const zeichne = () => {
             const f = folien[i];
             if (!f) {
@@ -1020,8 +1125,10 @@ const Werkzeuge = (() => {
                     `<button data-a="vor">‹</button>` +
                     `<span>${zaehlerText()}</span>` +
                     `<button data-a="zurueck">›</button>` +
-                    `<button data-a="zu">Beenden (Esc)</button>` +
-                    `</div>`;
+                    `<time class="praesi-uhr" aria-label="Laufzeit des Vortrags">${uhrText()}</time>` +
+                    `<button data-a="notizen" aria-pressed="${notizenSichtbar}" title="Sprechernotizen (N)">Notizen</button>` +
+                    `<button data-a="zu">Beenden<span class="praesi-esc"> (Esc)</span></button>` +
+                    `</div>` + notizenHtml(i);
             const bild = o.querySelector('.folie');
             const ueb = uebergangDerFolie(f);
             if (bild && ueb && ueb.art !== 'keine'
@@ -1115,6 +1222,10 @@ const Werkzeuge = (() => {
                 schliessen();
                 return;
             }
+            if (e.key === 'n' || e.key === 'N') {
+                notizenUmschalten();
+                return;
+            }
             if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
                 e.preventDefault();
                 weiter(1);
@@ -1129,6 +1240,7 @@ const Werkzeuge = (() => {
                 springe(folien.length - 1, true);
         };
         const schliessen = () => {
+            clearInterval(uhrLauf);
             o.remove();
             document.removeEventListener('keydown', tasten);
             if (document.fullscreenElement)
@@ -1137,6 +1249,10 @@ const Werkzeuge = (() => {
         o.addEventListener('click', e => {
             if (elVon(e)?.closest('[data-a="zu"]'))
                 return schliessen();
+            if (elVon(e)?.closest('[data-a="notizen"]'))
+                return notizenUmschalten();
+            if (elVon(e)?.closest('.praesi-notizen'))
+                return;
             if (elVon(e)?.closest('[data-a="vor"]'))
                 return weiter(-1);
             if (elVon(e)?.closest('[data-a="zurueck"]'))
