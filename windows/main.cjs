@@ -27,6 +27,11 @@ protocol.registerSchemesAsPrivileged([{
 // app with a temporary session.
 app.setName('Redion');
 app.setPath('userData', path.join(app.getPath('appData'), 'Redion'));
+// Live development is intentionally separate from the installed user's notes.
+// The signed/portable app is NOT linked to a writable source-code folder.
+const LIVE = !app.isPackaged && process.env.REDION_WINDOWS_LIVE === '1' &&
+  process.argv.includes('--redion-live');
+if (LIVE) app.setPath('userData', path.join(app.getPath('appData'), 'Redion-Entwicklung'));
 if (process.platform === 'win32') app.setAppUserModelId(APP_ID);
 
 const lock = app.requestSingleInstanceLock();
@@ -35,6 +40,7 @@ if (!lock) {
 } else {
   let mainWindow = null;
   let updateController = null;
+  let liveReload = null;
   const files = new NativeFiles();
   let operations = Promise.resolve();
   const serial = fn => {
@@ -219,10 +225,21 @@ if (!lock) {
           mainWindow.getNormalBounds(), mainWindow.isMaximized())));
       } catch { /* Fensterlage ist Komfort; sie darf das Schliessen nie aufhalten */ }
     });
-    mainWindow.on('closed', () => { mainWindow = null; void serial(() => files.close()); });
+    mainWindow.on('closed', () => {
+      liveReload?.stop(); liveReload = null;
+      mainWindow = null; void serial(() => files.close());
+    });
     mainWindow.loadURL(START_URL).catch(error => {
       dialog.showErrorBox('Redion konnte nicht starten', String(error));
     });
+    if (LIVE) {
+      // Only the locally started developer window sees the build-ready marker.
+      // Reload is deferred while the user edits; Store.flush runs first.
+      liveReload = require('./live-reload.cjs').startLiveReload({
+        buildDir: path.resolve(__dirname, '../build'),
+        window: mainWindow
+      });
+    }
   }
 
   app.whenReady().then(() => {
