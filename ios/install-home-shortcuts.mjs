@@ -128,7 +128,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       execFileSync('/usr/libexec/PlistBuddy', ['-c', cmd, plist], { stdio: 'pipe' });
     }
     fs.writeFileSync(swift, updated);
-    console.log('Redion iOS: 3 Appsymbol-Schnellaktionen nativ eingerichtet.');
+    console.log('Redion iOS: ' + SHORTCUTS.length + ' Appsymbol-Schnellaktionen nativ eingerichtet.');
   } catch (error) {
     console.error('Redion iOS: Home-Schnellaktionen nicht eingebaut:', error.message);
     process.exitCode = 1;
