@@ -70,6 +70,9 @@ jobs:
       - name: Typen prüfen
         run: npm run typecheck
 
+      - name: Versionsnummer und Änderungsverlauf prüfen
+        run: npm run version:pruefen
+
       # Hat jemand eine Datei des Grundstocks geändert und den Bau vergessen?
       # Dann sagen sw.ts und stand.ts eine alte Fassung, der Dienst-Arbeiter
       # mischt bei Redur alte und neue Dateien, und niemand merkt es (L83).

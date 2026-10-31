@@ -157,6 +157,15 @@ function startSourceUpdates({ source, previewBase, markerDir, appData, onReady,
     if (Number.isSafeInteger(previous.revision) && previous.revision > 0)
       revision = previous.revision;
   } catch { /* first local preview */ }
+  // A crash between snapshot rename and writing the marker may leave a
+  // completed stand-N without a matching marker. Never overwrite it.
+  if (fs.existsSync(previewBase)) {
+    for (const filename of fs.readdirSync(previewBase)) {
+      const match = /^stand-(\d+)$/.exec(filename);
+      if (match && Number.isSafeInteger(Number(match[1])))
+        revision = Math.max(revision, Number(match[1]));
+    }
+  }
   // Never allow two concurrent snapshots while GitHub Desktop is updating.
   function stage() {
     if (stopped || staging) { pending = true; return; }
@@ -203,7 +212,7 @@ function startSourceUpdates({ source, previewBase, markerDir, appData, onReady,
     });
     watcher.on?.('error', error => logger.warn('Ordnerbeobachtung unterbrochen:', String(error)));
   } catch (error) {
-    logger.warn('Automatische Ordnerbeobachtung nicht verfügbar:', String(error));
+    throw new Error('Automatische Redion-Ordnerbeobachtung nicht verfügbar: ' + String(error));
   }
   return {
     get active() { return active; },

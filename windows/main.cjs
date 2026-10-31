@@ -30,7 +30,7 @@ protocol.registerSchemesAsPrivileged([{
 app.setName('Redion');
 app.setPath('userData', path.join(app.getPath('appData'), 'Redion'));
 // Live development is intentionally separate from the installed user's notes.
-// The signed/portable app is NOT linked to a writable source-code folder.
+// Only an explicitly chosen, read-only snapshot is served, in an isolated profile.
 const LIVE = !app.isPackaged && process.env.REDION_WINDOWS_LIVE === '1' &&
   process.argv.includes('--redion-live');
 // A configured checkout is never served with the real notes / production profile.
@@ -140,12 +140,15 @@ if (!lock) {
     mainWindow.focus();
   });
 
-  async function restartAfterSave() {
+  async function restartAfterSave(changeConfiguration) {
     try {
       if (mainWindow && !mainWindow.isDestroyed()) {
         await mainWindow.webContents.executeJavaScript(
           "typeof Store !== 'undefined' && typeof Store.flush === 'function' ? Store.flush() : Promise.resolve()");
       }
+      // Only change the persistent launch mode after the previous notes were
+      // safely stored. A failed flush must never silently switch profiles.
+      changeConfiguration();
       app.relaunch();
       app.quit();
     } catch (error) {
@@ -174,8 +177,7 @@ if (!lock) {
           'Windows-Programm benötigen weiterhin einen neuen Installer.\n\n' + directory
       });
       if (confirm.response !== 1) return;
-      saveConfiguredSource(app.getPath('appData'), directory);
-      await restartAfterSave();
+      await restartAfterSave(() => saveConfiguredSource(app.getPath('appData'), directory));
     } catch (error) {
       dialog.showErrorBox('Redion-Ordner nicht verbunden', String(error));
     }
@@ -191,8 +193,7 @@ if (!lock) {
         'und dem ursprünglichen Datenprofil. Die Entwicklungsdaten werden nicht gelöscht.'
     });
     if (answer.response !== 1) return;
-    saveConfiguredSource(app.getPath('appData'), null);
-    await restartAfterSave();
+    await restartAfterSave(() => saveConfiguredSource(app.getPath('appData'), null));
   }
 
   function showVersion() {

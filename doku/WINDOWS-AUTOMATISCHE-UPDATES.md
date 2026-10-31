@@ -1,12 +1,24 @@
 # Redion Windows – automatische, signierte Updates
 
-**Nicht mit Windows-Live verwechseln:** Wer den **lokalen Redion-Quellordner**
-bearbeitet, kann die separate Entwickleransicht über `Redion-Live.bat`
-starten. Sie baut Änderungen automatisch und lädt dasselbe Entwicklungsfenster
-neu, verwendet aber bewusst `%APPDATA%\\Redion-Entwicklung`.
-Sie ersetzt **weder** den signierten Updatekanal **noch** aktualisiert sie
-eine bereits installierte `Redion.exe`. Details:
-`WINDOWS-DESKTOP-OFFLINE.md`.
+**Drei unterschiedliche Wege zur Aktualisierung:**
+
+- **Installierte EXE:** Nur ein signierter NSIS-Installer mit freigegebenem
+  HTTPS-Release-Kanal kann das native Windows-Programm sicher ersetzen.
+  Der nachstehend beschriebene Auto-Updater dafür ist noch nicht produktiv
+  freigegeben.
+- **Lokaler GitHub-Ordner in der installierten Redion-App:** Ab der neuen
+  Entwicklungsversion **2026.8.4** kann Redion nach einer *einmaligen
+  bestätigten Ordnerauswahl* fertige Webdateien aus einem lokalen Checkout
+  automatisch übernehmen. Das aktualisiert die Redion-Oberfläche **in der
+  gewohnten EXE**, aber **nicht die EXE-Datei selbst**. Diese Vorschau
+  nutzt das getrennte Profil `%APPDATA%\\Redion-Entwicklung`.
+  Siehe [GitHub-Ordner-Autoaktualisierung](WINDOWS-ORDNER-AUTOUPDATE.md).
+- **Redion-Live.bat:** Separater Entwicklerstart mit automatischem
+  TypeScript-Bau und Neustart der lokalen Entwickleransicht.
+
+Die installierte alte **2026.8.3** muss einmal aktualisiert werden,
+bevor sie die neue lokale Ordnerfunktion überhaupt kennt. Ein Commit
+oder GitHub-Pull allein fügt einer alten EXE keine Fähigkeiten hinzu.
 
 ## Was sich für den Benutzer ändert
 
