@@ -10,6 +10,8 @@ const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { resolveBundledAsset } = require('./paths.cjs');
 const { startRedionAutoUpdates } = require('./auto-update.cjs');
+const { configuredSource, saveConfiguredSource, startSourceUpdates, validateSource } =
+  require('./generated/local-source.cjs');
 const { destinationFromArgs, jumpTasks, readWindowState, windowStateToSave } = require('./generated/desktop-shell.cjs');
 const { NativeFiles, trustedSender, safeExportName } = require('./generated/files.cjs');
 
@@ -31,7 +33,10 @@ app.setPath('userData', path.join(app.getPath('appData'), 'Redion'));
 // The signed/portable app is NOT linked to a writable source-code folder.
 const LIVE = !app.isPackaged && process.env.REDION_WINDOWS_LIVE === '1' &&
   process.argv.includes('--redion-live');
-if (LIVE) app.setPath('userData', path.join(app.getPath('appData'), 'Redion-Entwicklung'));
+// A configured checkout is never served with the real notes / production profile.
+const LOCAL_SOURCE = app.isPackaged ? configuredSource(app.getPath('appData')) : null;
+if (LIVE || LOCAL_SOURCE)
+  app.setPath('userData', path.join(app.getPath('appData'), 'Redion-Entwicklung'));
 if (process.platform === 'win32') app.setAppUserModelId(APP_ID);
 
 const lock = app.requestSingleInstanceLock();
@@ -41,6 +46,9 @@ if (!lock) {
   let mainWindow = null;
   let updateController = null;
   let liveReload = null;
+  let localController = null;
+  let servedAssets = null;
+  let protocolReady = false;
   const files = new NativeFiles();
   let operations = Promise.resolve();
   const serial = fn => {
@@ -132,6 +140,82 @@ if (!lock) {
     mainWindow.focus();
   });
 
+  async function restartAfterSave() {
+    try {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        await mainWindow.webContents.executeJavaScript(
+          "typeof Store !== 'undefined' && typeof Store.flush === 'function' ? Store.flush() : Promise.resolve()");
+      }
+      app.relaunch();
+      app.quit();
+    } catch (error) {
+      dialog.showErrorBox('Redion konnte nicht neu starten',
+        'Die aktuelle Arbeit konnte nicht sicher gespeichert werden: ' + String(error));
+    }
+  }
+
+  async function connectLocalSource() {
+    const selected = await dialog.showOpenDialog(mainWindow, {
+      title: 'Lokalen Redion-Projektordner auswählen',
+      properties: ['openDirectory']
+    });
+    if (selected.canceled || !selected.filePaths[0]) return;
+    const directory = selected.filePaths[0];
+    try {
+      validateSource(directory, app.getPath('appData'));
+      const confirm = await dialog.showMessageBox(mainWindow, {
+        type: 'warning', buttons: ['Abbrechen', 'Ordner verbinden'],
+        defaultId: 0, cancelId: 0,
+        title: 'Lokalen Entwicklungsstand verwenden?',
+        message: 'Nur einem selbst bearbeiteten, vertrauenswürdigen Redion-Ordner zustimmen.',
+        detail: 'Redion führt die lokal gespeicherten JavaScript-Dateien aus diesem Projekt aus. ' +
+          'Die Windows-App nutzt dafür ein getrenntes Entwicklungsprofil; deine ' +
+          'normalen Redion-Daten bleiben unverändert. Änderungen am nativen ' +
+          'Windows-Programm benötigen weiterhin einen neuen Installer.\n\n' + directory
+      });
+      if (confirm.response !== 1) return;
+      saveConfiguredSource(app.getPath('appData'), directory);
+      await restartAfterSave();
+    } catch (error) {
+      dialog.showErrorBox('Redion-Ordner nicht verbunden', String(error));
+    }
+  }
+
+  async function disconnectLocalSource() {
+    if (!LOCAL_SOURCE) return;
+    const answer = await dialog.showMessageBox(mainWindow, {
+      type: 'question', buttons: ['Abbrechen', 'Trennen'],
+      defaultId: 0, cancelId: 0,
+      message: 'Lokalen Redion-Ordner trennen?',
+      detail: 'Anschliessend startet Redion wieder mit dem installierten Programm ' +
+        'und dem ursprünglichen Datenprofil. Die Entwicklungsdaten werden nicht gelöscht.'
+    });
+    if (answer.response !== 1) return;
+    saveConfiguredSource(app.getPath('appData'), null);
+    await restartAfterSave();
+  }
+
+  function showVersion() {
+    let info = null;
+    try {
+      const source = servedAssets || (app.isPackaged
+        ? path.join(process.resourcesPath, 'redion-web')
+        : path.resolve(__dirname, '../build/windows-app'));
+      info = JSON.parse(fs.readFileSync(path.join(source, 'version.json'), 'utf8'));
+    } catch {}
+    const version = typeof info?.version === 'string' ? info.version : app.getVersion();
+    const changes = Array.isArray(info?.aenderungen)
+      ? info.aenderungen.filter(x => typeof x === 'string').slice(0, 9) : [];
+    dialog.showMessageBox(mainWindow, {
+      type: 'info', title: 'Redion – Version und Änderungen',
+      message: 'Redion Windows ' + app.getVersion() + (LOCAL_SOURCE ? ' (lokaler Code)' : ''),
+      detail: 'Webstand: ' + version + (info?.status ? ' · ' + info.status : '') +
+        '\n\n' + changes.map(x => '• ' + x).join('\n') +
+        (LOCAL_SOURCE ? '\n\nLokaler Ordner: ' + LOCAL_SOURCE : '') +
+        '\n\nAlle Versionen: VERSION.md im GitHub-Projekt.'
+    });
+  }
+
   function appMenu() {
     Menu.setApplicationMenu(Menu.buildFromTemplate([
       { label: 'Datei', submenu: [
@@ -155,6 +239,14 @@ if (!lock) {
         { role: 'zoomIn', label: 'Vergrößern' },
         { role: 'zoomOut', label: 'Verkleinern' },
         { role: 'togglefullscreen', label: 'Vollbild' }
+      ] },
+      { label: 'Entwicklung', submenu: [
+        { label: 'Lokalen Redion-Ordner verbinden …', click: () => { void connectLocalSource(); } },
+        { label: 'Lokalen Ordner trennen', enabled: !!LOCAL_SOURCE,
+          click: () => { void disconnectLocalSource(); } }
+      ] },
+      { label: 'Hilfe', submenu: [
+        { label: 'Version und Änderungen …', click: showVersion }
       ] }
     ]));
   }
@@ -163,14 +255,33 @@ if (!lock) {
     const assets = app.isPackaged
       ? path.join(process.resourcesPath, 'redion-web')
       : path.resolve(__dirname, '../build/windows-app');
+    servedAssets = assets;
+    if (LOCAL_SOURCE) {
+      try {
+        localController = startSourceUpdates({
+          source: LOCAL_SOURCE,
+          previewBase: path.join(app.getPath('userData'), 'lokaler-code'),
+          markerDir: path.join(app.getPath('userData'), 'lokaler-live'),
+          appData: app.getPath('appData'),
+          onReady(directory) { servedAssets = directory; }
+        });
+      } catch (error) {
+        dialog.showErrorBox('Lokale Redion-Version nicht verfügbar',
+          String(error) + '\n\nDie installierte Oberfläche bleibt in der Entwicklungsumgebung nutzbar. ' +
+          'Unter Entwicklung kannst du den Ordner erneut verbinden oder trennen.');
+      }
+    }
 
-    // File URLs are not the document origin. Chromium gets a proper secure,
-    // standard origin for IndexedDB and relative CSS/JS assets instead.
-    protocol.handle(SCHEME, request => {
-      const file = resolveBundledAsset(assets, request.url);
-      if (!file) return new Response('Nicht gefunden', { status: 404 });
-      return net.fetch(pathToFileURL(file).href);
-    });
+    // Fixed secure origin for IndexedDB. Even in local-code mode only a staged,
+    // allowlisted web snapshot is served, never arbitrary paths or source files.
+    if (!protocolReady) {
+      protocol.handle(SCHEME, request => {
+        const file = resolveBundledAsset(servedAssets || assets, request.url);
+        if (!file) return new Response('Nicht gefunden', { status: 404 });
+        return net.fetch(pathToFileURL(file).href);
+      });
+      protocolReady = true;
+    }
 
     const icon = path.join(assets, 'oeffentlich/icons/icon-512.png');
     // Eine eigene kleine Datei neben dem Profil. Sie enthält nur Fensterlage,
@@ -179,7 +290,7 @@ if (!lock) {
     const remembered = readWindowState(() => fs.readFileSync(stateFile, 'utf8'),
       screen.getAllDisplays().map(display => display.workArea));
     mainWindow = new BrowserWindow({
-      title: 'Redion',
+      title: LOCAL_SOURCE ? 'Redion · Lokaler Entwicklungsstand' : 'Redion',
       width: remembered?.width ?? 1300,
       height: remembered?.height ?? 860,
       ...(remembered ? { x: remembered.x, y: remembered.y } : {}),
@@ -227,16 +338,19 @@ if (!lock) {
     });
     mainWindow.on('closed', () => {
       liveReload?.stop(); liveReload = null;
+      localController?.stop(); localController = null;
       mainWindow = null; void serial(() => files.close());
     });
     mainWindow.loadURL(START_URL).catch(error => {
       dialog.showErrorBox('Redion konnte nicht starten', String(error));
     });
-    if (LIVE) {
-      // Only the locally started developer window sees the build-ready marker.
-      // Reload is deferred while the user edits; Store.flush runs first.
+    if (LIVE || (LOCAL_SOURCE && localController)) {
+      // Update only after a complete, atomically staged web snapshot.
+      // Store.flush runs first; pending edits and dialogs defer the reload.
       liveReload = require('./generated/live-reload.cjs').startLiveReload({
-        buildDir: path.resolve(__dirname, '../build'),
+        buildDir: LOCAL_SOURCE
+          ? path.join(app.getPath('userData'), 'lokaler-live')
+          : path.resolve(__dirname, '../build'),
         window: mainWindow
       });
     }
