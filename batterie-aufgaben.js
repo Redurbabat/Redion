@@ -70,6 +70,66 @@
     return plan;
   }
 
+  /* Ein überprüfbares Muster direkt als Redion-Leitungen. Kein Canvas und
+   * keine Abkürzung in die Lösung: das Beispiel lässt sich danach mit dem
+   * Leitung-Werkzeug anfassen und mit Undo wieder entfernen. */
+  function musterFuer(plan) {
+    const a=get(plan.batterieUebung && plan.batterieUebung.id);
+    const meta=plan.batterieUebung;
+    if (!meta || !Array.isArray(meta.teile)) throw new Error('Keine Batterieaufgabe.');
+    const nachId=new Map(plan.teile.map(t=>[t.id,t]));
+    const zellen=meta.teile.map(id=>nachId.get(id));
+    const plus=nachId.get(meta.plus), minus=nachId.get(meta.minus);
+    if (!plus || !minus || zellen.some(t=>!t || t.zeichen!=='batterie'))
+      throw new Error('Bauteile der Aufgabe fehlen.');
+    const reihe=a.zielU===undefined
+      ? a.zahl / Math.ceil(a.zielI/a.i)
+      : Math.round(a.zielU/a.u);
+    if (!Number.isInteger(reihe) || reihe<1 || a.zahl%reihe)
+      throw new Error('Für diese Aufgabe ist kein Muster hinterlegt.');
+    const terminal=(t,nr)=>Schaltplan.anschlussOrt(t,nr);
+    const einfuegen=(punkte,vonTeil,vonNr,nachTeil,nachNr)=>{
+      if (!Array.isArray(punkte) || punkte.length<2)
+        throw new Error('Leitung nicht erzeugt.');
+      plan.leitungen.push({
+        id:Schaltplan.uid(), punkte:punkte.map(p=>({x:p.x,y:p.y})),
+        ebene:'plan',
+        ...(vonTeil ? {vonTeil,vonNr} : {}),
+        ...(nachTeil ? {nachTeil,nachNr} : {})
+      });
+    };
+    if (reihe===1) {
+      // Alle Zellen parallel: zwei separate Sammelleitungen mit je sechs
+      // senkrechten Anschlüssen. Beide Busse liegen ausserhalb der Teile.
+      const pOut=terminal(plus,'1'), nOut=terminal(minus,'1');
+      const ps=zellen.map(t=>terminal(t,'+'));
+      const ns=zellen.map(t=>terminal(t,'−'));
+      const posY=Math.max(35,Math.min(...ps.map(x=>x.y))-85);
+      const negY=Math.min(plan.hoehe-35,Math.max(...ns.map(x=>x.y))+85);
+      const minX=Math.min(...ps.map(x=>x.x));
+      einfuegen([pOut,{x:pOut.x,y:posY},{x:minX,y:posY}],plus.id,'1');
+      einfuegen([nOut,{x:nOut.x,y:negY},{x:minX,y:negY}],minus.id,'1');
+      zellen.forEach((t,i)=>{
+        einfuegen([ps[i],{x:ps[i].x,y:posY}],t.id,'+');
+        einfuegen([ns[i],{x:ns[i].x,y:negY}],t.id,'−');
+      });
+      return;
+    }
+    const teile=[];
+    zellen.forEach((t,i)=>{teile.push(['n'+i,t,'−'],['p'+i,t,'+']);});
+    const endpoints=new Map(teile.map(([k,t,nr])=>[k,{t,nr}]));
+    endpoints.set('aus+',{t:plus,nr:'1'});
+    endpoints.set('aus-',{t:minus,nr:'1'});
+    const links=window.BatterieKern.reiheParallel(zellen.length,reihe);
+    links.forEach(([von,nach])=>{
+      const x=endpoints.get(von),y=endpoints.get(nach);
+      const start=terminal(x.t,x.nr),ziel=terminal(y.t,y.nr);
+      const pfad=Schaltplan.leitungFuehren(plan,start,ziel,
+        {teil:x.t.id,nr:x.nr},{teil:y.t.id,nr:y.nr});
+      einfuegen(pfad,x.t.id,x.nr,y.t.id,y.nr);
+    });
+  }
+
   function erstelle(optionen) {
     const el=optionen.element;
     let wahl=(optionen.holePlan().batterieUebung || {}).id || 'k9';
@@ -160,6 +220,7 @@
           ' · Ziel '+esc(a.zielU===undefined?zeige(a.zielI,'A'):zeige(a.zielU,'V'))+
           (a.annahme?' · Annahme: '+esc(a.annahme):'')+
           '</p><p class="sp-bat-hinweis">'+hilfe+'</p>';
+        html+='<div class="sp-bat-bedienung"><button type="button" data-bat="muster">Musterverdrahtung einsetzen</button></div>';
         if(teil) {
           html+='<fieldset class="sp-bat-eingaben"><legend>'+esc(teil.bmk||'Batterie')+
             ' · ausgewählte Zelle bearbeiten</legend>' +
@@ -191,7 +252,7 @@
       if (t.dataset.bat==='schalter') {schalter=t.checked; aktualisiere();}
     });
     el.addEventListener('click',e=>{
-      const b=e.target.closest('[data-bat="einsetzen"],[data-bat="werte"]');
+      const b=e.target.closest('[data-bat="einsetzen"],[data-bat="muster"],[data-bat="werte"]');
       if (!b) return;
       if(b.dataset.bat==='einsetzen') {
         const plan=optionen.holePlan();
@@ -202,6 +263,19 @@
         optionen.aendere(()=>optionen.setzePlan(neu));
         optionen.nachPlanwechsel();
         aktualisiere();
+        return;
+      }
+      if(b.dataset.bat==='muster') {
+        const plan=optionen.holePlan();
+        if(!plan.batterieUebung) return;
+        if(plan.leitungen.length &&
+           !window.confirm('Die bisherigen Leitungen durch das Muster ersetzen?\n' +
+             'Mit Rückgängig bekommst du die eigene Verdrahtung wieder.')) return;
+        optionen.aendere(()=>{
+          const neu=optionen.holePlan();
+          neu.leitungen=[];
+          musterFuer(neu);
+        });
         return;
       }
       const plan=optionen.holePlan(), ids=optionen.holeAuswahl();
@@ -232,7 +306,7 @@
     return { aktualisiere };
   }
 
-  wurzel.BatterieAufgaben={ erstelle, planFuer, aufgaben:AUFGABEN };
+  wurzel.BatterieAufgaben={ erstelle, planFuer, musterFuer, aufgaben:AUFGABEN };
   if (typeof module!=='undefined'&&module.exports)
-    module.exports={ erstelle, planFuer, aufgaben:AUFGABEN };
+    module.exports={ erstelle, planFuer, musterFuer, aufgaben:AUFGABEN };
 })(typeof window!=='undefined'?window:globalThis);
