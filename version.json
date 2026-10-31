@@ -1,0 +1,12 @@
+{
+  "version": "2026.8.4",
+  "datum": "2026-10-31",
+  "status": "In Entwicklung – noch nicht veröffentlicht",
+  "aenderungen": [
+    "Lokalen Redion-GitHub-Ordner einmalig in der Windows-App verbinden.",
+    "Nach GitHub-Desktop-Synchronisierung neue Webdateien automatisch übernehmen.",
+    "Separates Entwicklungsprofil schützt die normalen Redion-Notizen.",
+    "Versionsnummer und Änderungsliste im Windows-Menü anzeigen.",
+    "Native EXE-Änderungen benötigen weiterhin einen neuen Installer."
+  ]
+}
