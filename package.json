@@ -1,6 +1,6 @@
 {
   "name": "redion",
-  "version": "2026.8.3",
+  "version": "2026.8.4",
   "description": "Redion — Notizen, Datenbanken und Formeln, die auf dem eigenen Gerät liegen",
   "private": true,
   "type": "commonjs",
@@ -14,7 +14,8 @@
     "server": "node server/pruefserver.ts 8790",
     "veroeffentlichen": "npx wrangler deploy",
     "sync:check": "node tools/sync-readiness.mjs",
-    "test:sync-readiness": "node --test tools/sync-readiness.test.mjs"
+    "test:sync-readiness": "node --test tools/sync-readiness.test.mjs",
+    "version:pruefen": "node --test windows/version.test.mts"
   },
   "keywords": [
     "notizen",
