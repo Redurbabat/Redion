@@ -84,8 +84,7 @@ const Schaltplan = (() => {
                 gruppe: String(t.gruppe || ''),
                 ebene: String(t.ebene || 'plan'),
                 ...(t.werte && typeof t.werte === 'object' && !Array.isArray(t.werte)
-                    ? { werte: Object.fromEntries(Object.entries(t.werte).filter(([, v]) =>
-                        typeof v === 'number' && Number.isFinite(v))) } : {})
+                    ? { werte: Object.fromEntries(Object.entries(t.werte).filter(([, v]) => typeof v === 'number' && Number.isFinite(v))) } : {})
             })).filter((t) => t.zeichen),
             leitungen: (Array.isArray(roh.leitungen) ? roh.leitungen : []).map((l) => ({
                 id: String(l.id || uid()),
@@ -112,11 +111,11 @@ const Schaltplan = (() => {
             ...(roh.batterieUebung && typeof roh.batterieUebung === 'object' &&
                 Array.isArray(roh.batterieUebung.teile)
                 ? { batterieUebung: {
-                    id: String(roh.batterieUebung.id || ''),
-                    plus: String(roh.batterieUebung.plus || ''),
-                    minus: String(roh.batterieUebung.minus || ''),
-                    teile: roh.batterieUebung.teile.map(String).slice(0, 32)
-                } } : {})
+                        id: String(roh.batterieUebung.id || ''),
+                        plus: String(roh.batterieUebung.plus || ''),
+                        minus: String(roh.batterieUebung.minus || ''),
+                        teile: roh.batterieUebung.teile.map(String).slice(0, 32)
+                    } } : {})
         };
     };
     const naechstesBmk = (plan, zeichenId) => {

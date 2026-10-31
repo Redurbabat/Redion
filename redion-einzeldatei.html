@@ -23793,6 +23793,61 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
   stroke-linejoin:round; pointer-events:none}
 .sp-richtung title{pointer-events:auto}
 
+
+/* Batterieanlagen (Kapitel 12): ein Fach IM Schaltplanblock, kein zweites Blatt.
+   Eingaben und Ergebnisse stehen oberhalb der eigentlichen Zeichenfläche.
+   Das Fach verändert deren Raster und die Zeigerbehandlung nicht. */
+.sp-batterie-fach[hidden]{display:none!important}
+.sp-batterie-fach{padding:12px 14px; background:var(--bg-card);
+  border-bottom:1px solid var(--line); display:grid; gap:10px;
+  font-size:13px; color:var(--text); min-width:0}
+.sp-bat-kopf{display:flex; justify-content:space-between; flex-wrap:wrap;
+  align-items:baseline; gap:6px}
+.sp-bat-kopf strong{font-size:15px}
+.sp-bat-kopf span,.sp-bat-hinweis{color:var(--text-dim)}
+.sp-bat-hinweis{margin:0; line-height:1.55}
+.sp-bat-bedienung{display:flex; align-items:end; gap:8px; flex-wrap:wrap}
+.sp-bat-bedienung>label{flex:1 1 220px; min-width:0}
+.sp-batterie-fach label{display:flex; flex-direction:column; gap:4px;
+  font-size:12px; color:var(--text-dim)}
+.sp-batterie-fach select,.sp-batterie-fach input[type=number]{
+  width:100%; min-width:0; min-height:38px; padding:6px 9px;
+  border:1px solid var(--line); border-radius:7px; font-size:14px;
+  color:var(--text); background:var(--bg)}
+.sp-batterie-fach button{padding:8px 12px; min-height:38px;
+  background:var(--bg-hover); color:var(--text); border:1px solid var(--line);
+  border-radius:7px; cursor:pointer}
+.sp-batterie-fach button:hover{border-color:var(--accent)}
+.sp-batterie-fach :is(button,input,select):focus-visible{
+  outline:2px solid var(--accent); outline-offset:2px}
+.sp-bat-eingaben{border:1px solid var(--line); border-radius:9px;
+  display:flex; flex-wrap:wrap; align-items:end; gap:8px; min-width:0;
+  padding:8px 11px 10px; margin:0}
+.sp-bat-eingaben legend{padding:0 5px; font-weight:600; color:var(--text)}
+.sp-bat-eingaben label{flex:1 1 112px; min-width:0}
+.sp-bat-messung{background:var(--bg); border:1px solid var(--line);
+  padding:10px; border-radius:9px; display:grid; gap:8px}
+.sp-bat-messung p{margin:0; line-height:1.45}
+.sp-bat-fehler{color:var(--danger,#c87164); font-weight:650}
+.sp-bat-gut{color:var(--success,#45996b); font-weight:650}
+.sp-bat-werte{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px}
+.sp-bat-werte span{border:1px solid var(--line); border-radius:6px;
+  padding:6px; min-width:0; overflow-wrap:anywhere}
+.sp-bat-werte b{display:block; font-size:11px; color:var(--text-dim)}
+.sp-bat-last{display:flex; flex-wrap:wrap; align-items:end; gap:10px}
+.sp-bat-last>label:first-child{min-width:150px; max-width:230px}
+.sp-batterie-fach .sp-bat-check{display:flex; flex-direction:row;
+  gap:8px; align-items:center; color:var(--text); font-size:13px;
+  min-height:40px; cursor:pointer}
+.sp-bat-check input{width:18px; height:18px}
+@media(max-width:760px){
+  .sp-batterie-fach{padding:10px}
+  .sp-batterie-fach button,.sp-batterie-fach select,
+  .sp-batterie-fach input[type=number]{min-height:44px}
+  .sp-bat-werte{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sp-bat-bedienung>button{width:100%}
+}
+
 </style>
 <!-- DIE PREMIUM-SCHALE (E272). Sie steht ABSICHTLICH als letzte: sie ordnet,
      was die Blätter darüber gebaut haben, und muss deshalb gewinnen. Alles
@@ -28638,7 +28693,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1558, inhalt: '15ca6231ebeb7f05', gebaut: '2026-10-31T16:44:45.277Z' };
+const Stand = { fassung: 1559, inhalt: '600ee48c2d3f5793', gebaut: '2026-10-31T19:31:51.410Z' };
 window.Stand = Stand;
 
 </script>
@@ -68624,7 +68679,9 @@ const Schaltplan = (() => {
                 bmk: String(t.bmk || ''),
                 nummern: (t.nummern && typeof t.nummern === 'object') ? t.nummern : {},
                 gruppe: String(t.gruppe || ''),
-                ebene: String(t.ebene || 'plan')
+                ebene: String(t.ebene || 'plan'),
+                ...(t.werte && typeof t.werte === 'object' && !Array.isArray(t.werte)
+                    ? { werte: Object.fromEntries(Object.entries(t.werte).filter(([, v]) => typeof v === 'number' && Number.isFinite(v))) } : {})
             })).filter((t) => t.zeichen),
             leitungen: (Array.isArray(roh.leitungen) ? roh.leitungen : []).map((l) => ({
                 id: String(l.id || uid()),
@@ -68647,7 +68704,15 @@ const Schaltplan = (() => {
                     id: String(e.id || 'plan'), name: String(e.name || 'Plan'),
                     farbe: String(e.farbe || 'var(--text)'), sichtbar: e.sichtbar !== false
                 }))
-                : EBENEN_VORGABE.map(e => ({ ...e })))
+                : EBENEN_VORGABE.map(e => ({ ...e }))),
+            ...(roh.batterieUebung && typeof roh.batterieUebung === 'object' &&
+                Array.isArray(roh.batterieUebung.teile)
+                ? { batterieUebung: {
+                        id: String(roh.batterieUebung.id || ''),
+                        plus: String(roh.batterieUebung.plus || ''),
+                        minus: String(roh.batterieUebung.minus || ''),
+                        teile: roh.batterieUebung.teile.map(String).slice(0, 32)
+                    } } : {})
         };
     };
     const naechstesBmk = (plan, zeichenId) => {
@@ -69704,6 +69769,555 @@ window.Schaltplan = Schaltplan;
 
 </script>
 <script>
+/* ===== batterie-labor-kern.js ===== */
+/* Batterieanlagen: reine Netzprüfung für die Zeichenübungen.
+ * Keine ideale Parallelschaltung ungleicher Spannungen, keine Lade-/Entladekurve.
+ * Im Browser und mit node --test verwendbar. */
+(function (wurzel) {
+  'use strict';
+
+  const fehler = (grund) => ({ ok: false, grund });
+  const idMinus = (i) => 'n' + i;
+  const idPlus = (i) => 'p' + i;
+  const AUS_MINUS = 'aus-';
+  const AUS_PLUS = 'aus+';
+
+  function reiheParallel(anzahl, inReihe) {
+    if (!Number.isInteger(anzahl) || anzahl < 1 ||
+        !Number.isInteger(inReihe) || inReihe < 1 || anzahl % inReihe)
+      throw new Error('Die Zellen müssen vollständig auf gleich lange Zweige verteilt werden.');
+    const leitungen = [];
+    const zweige = anzahl / inReihe;
+    for (let z = 0; z < zweige; z++) {
+      const von = z * inReihe;
+      leitungen.push([AUS_MINUS, idMinus(von)]);
+      for (let k = 1; k < inReihe; k++)
+        leitungen.push([idPlus(von + k - 1), idMinus(von + k)]);
+      leitungen.push([idPlus(von + inReihe - 1), AUS_PLUS]);
+    }
+    return leitungen;
+  }
+
+  function gleichung(loesung, rechte) {
+    const n = rechte.length;
+    const a = loesung.map((r, i) => [...r, rechte[i]]);
+    for (let c = 0; c < n; c++) {
+      let p = c;
+      for (let r = c + 1; r < n; r++)
+        if (Math.abs(a[r][c]) > Math.abs(a[p][c])) p = r;
+      if (Math.abs(a[p][c]) < 1e-11) return null;
+      [a[c], a[p]] = [a[p], a[c]];
+      const teiler = a[c][c];
+      for (let j = c; j <= n; j++) a[c][j] /= teiler;
+      for (let r = 0; r < n; r++) {
+        if (r === c) continue;
+        const faktor = a[r][c];
+        for (let j = c; j <= n; j++) a[r][j] -= faktor * a[c][j];
+      }
+    }
+    return a.map(r => r[n]);
+  }
+
+  function pruefen(zellen, leitungen) {
+    if (!Array.isArray(zellen) || !zellen.length || zellen.length > 32)
+      return fehler('Keine gültige Anzahl von Batteriezellen.');
+    if (!Array.isArray(leitungen)) return fehler('Die Verbindungen sind ungültig.');
+    const ids = [AUS_MINUS, AUS_PLUS];
+    zellen.forEach((_, i) => ids.push(idMinus(i), idPlus(i)));
+    const bekannt = new Set(ids);
+    const eltern = new Map(ids.map(x => [x, x]));
+    const finde = (id) => {
+      let p = id;
+      while (eltern.get(p) !== p) p = eltern.get(p);
+      while (id !== p) {
+        const alt = eltern.get(id);
+        eltern.set(id, p);
+        id = alt;
+      }
+      return p;
+    };
+    for (const paar of leitungen) {
+      if (!Array.isArray(paar) || paar.length !== 2 ||
+          !bekannt.has(paar[0]) || !bekannt.has(paar[1]) ||
+          paar[0] === paar[1]) return fehler('Eine Leitung hat ungültige Endpunkte.');
+      eltern.set(finde(paar[0]), finde(paar[1]));
+    }
+    const n = finde(AUS_MINUS), p = finde(AUS_PLUS);
+    if (n === p) return fehler('Kurzschluss: Ausgang + und − sind direkt verbunden.');
+    const kanten = [];
+    for (let i = 0; i < zellen.length; i++) {
+      const z = zellen[i], a = finde(idMinus(i)), b = finde(idPlus(i));
+      if (!z || !Number.isFinite(z.u) || z.u <= 0 ||
+          !Number.isFinite(z.maxA) || z.maxA <= 0)
+        return fehler('Die Nenndaten einer Zelle sind ungültig.');
+      if (a === b) return fehler('Kurzschluss an Zelle ' + (i + 1) + '.');
+      kanten.push({ a, b, i, r: Number.isFinite(z.ri) && z.ri > 0 ? z.ri : 1 });
+    }
+    // Nur gleichartige Zellen: andernfalls entstehen innere Ausgleichsströme.
+    if (zellen.some(z => Math.abs(z.u - zellen[0].u) > 1e-8))
+      return fehler('Für unterschiedliche Zellspannungen ist diese Übungsrechnung nicht geeignet.');
+
+    const ad = new Map();
+    const add = (a, b, richtung) => {
+      if (!ad.has(a)) ad.set(a, []);
+      ad.get(a).push({ zu: b, richtung });
+    };
+    kanten.forEach(k => { add(k.a, k.b, 1); add(k.b, k.a, -1); });
+    const tiefen = new Map([[n, 0]]);
+    const offen = [n];
+    while (offen.length) {
+      const a = offen.shift();
+      for (const { zu, richtung } of ad.get(a) || []) {
+        const tiefe = tiefen.get(a) + richtung;
+        if (tiefen.has(zu) && tiefen.get(zu) !== tiefe)
+          return fehler('Zellen sind gegenpolig verbunden oder bilden eine widersprüchliche Schleife.');
+        if (!tiefen.has(zu)) { tiefen.set(zu, tiefe); offen.push(zu); }
+      }
+    }
+    if (!tiefen.has(p)) return fehler('Ausgang + und − sind noch nicht über Zellen verbunden.');
+    if (tiefen.get(p) <= 0) return fehler('Die Polarität am Ausgang ist vertauscht.');
+    if (kanten.some(k => !tiefen.has(k.a) || !tiefen.has(k.b)))
+      return fehler('Nicht alle Zellen sind an die Batterieanlage angeschlossen.');
+
+    // Jede Zelle muss auf einem vollständigen, korrekt gepolten Zweig liegen.
+    const erreicht = (start, rueckwaerts) => {
+      const gesehen = new Set([start]), q = [start];
+      while (q.length) {
+        const a = q.shift();
+        for (const k of kanten) {
+          const von = rueckwaerts ? k.b : k.a;
+          const nach = rueckwaerts ? k.a : k.b;
+          if (von === a && !gesehen.has(nach)) { gesehen.add(nach); q.push(nach); }
+        }
+      }
+      return gesehen;
+    };
+    const vonMinus = erreicht(n, false), nachPlus = erreicht(p, true);
+    if (kanten.some(k => !vonMinus.has(k.a) || !nachPlus.has(k.b)))
+      return fehler('Mindestens eine Zelle liegt in einem offenen Nebenast.');
+
+    const orte = [...new Set(kanten.flatMap(k => [k.a, k.b]))].filter(id => id !== n);
+    const index = new Map(orte.map((id, i) => [id, i]));
+    const matrix = orte.map(() => orte.map(() => 0));
+    const strom = orte.map(id => id === p ? 1 : 0);
+    for (const k of kanten) {
+      const g = 1 / k.r;
+      const a = index.get(k.a), b = index.get(k.b);
+      if (a !== undefined) matrix[a][a] += g;
+      if (b !== undefined) matrix[b][b] += g;
+      if (a !== undefined && b !== undefined) {
+        matrix[a][b] -= g; matrix[b][a] -= g;
+      }
+    }
+    const v = gleichung(matrix, strom);
+    if (!v) return fehler('Das Leitungsnetz lässt sich nicht eindeutig berechnen.');
+    const perAmpere = kanten.map(k =>
+      Math.abs(((index.has(k.b) ? v[index.get(k.b)] : 0) -
+                (index.has(k.a) ? v[index.get(k.a)] : 0)) / k.r));
+    if (perAmpere.some(x => !Number.isFinite(x) || x < 0))
+      return fehler('Die Stromaufteilung ist ungültig.');
+    const innenBekannt = zellen.every(z => Number.isFinite(z.ri) && z.ri > 0);
+    const kapBekannt = zellen.every(z => Number.isFinite(z.ah) && z.ah > 0);
+    const schrank = (feld) => Math.min(...perAmpere.map((anteil, i) =>
+      anteil < 1e-10 ? Infinity : zellen[i][feld] / anteil));
+    const maxA = schrank('maxA');
+    const ah = kapBekannt ? schrank('ah') : null;
+    return {
+      ok: true,
+      reihe: tiefen.get(p),
+      u: tiefen.get(p) * zellen[0].u,
+      ri: innenBekannt ? v[index.get(p)] : null,
+      maxA,
+      ah,
+      anteile: perAmpere,
+      alle: zellen.length
+    };
+  }
+
+  /* Die echte Redion-Planfläche liefert Netze. Keine zweite Geometrie und
+   * keine zweite Definition von Kreuzung/Verbindung: genau die Netzliste
+   * des bestehenden Elektrozeichners gilt auch für die Batterieübung. */
+  function ausPlan(plan, netze) {
+    const uebung = plan && plan.batterieUebung;
+    if (!uebung || !Array.isArray(uebung.teile) ||
+        !uebung.teile.length || uebung.teile.length > 32)
+      return fehler('Keine Batterieübung in diesem Schaltplan.');
+    const teile = Array.isArray(plan.teile) ? plan.teile : [];
+    const nachId = new Map(teile.map(t => [String(t.id), t]));
+    if (!nachId.has(uebung.plus) || !nachId.has(uebung.minus) ||
+        nachId.get(uebung.plus).zeichen !== 'klemme' ||
+        nachId.get(uebung.minus).zeichen !== 'klemme')
+      return fehler('Die beiden Ausgangsklemmen X+ und X− fehlen.');
+    if (!netze || !(netze.netzVon instanceof Map))
+      return fehler('Die Netzliste steht nicht zur Verfügung.');
+    const zellen = [];
+    const punkte = [
+      { id: AUS_MINUS, klemme: 'k:' + uebung.minus + ':1' },
+      { id: AUS_MINUS, klemme: 'k:' + uebung.minus + ':2' },
+      { id: AUS_PLUS, klemme: 'k:' + uebung.plus + ':1' },
+      { id: AUS_PLUS, klemme: 'k:' + uebung.plus + ':2' }
+    ];
+    for (let i = 0; i < uebung.teile.length; i++) {
+      const t = nachId.get(uebung.teile[i]);
+      if (!t || t.zeichen !== 'batterie')
+        return fehler('Eine Zelle der Aufgabe wurde entfernt oder ersetzt.');
+      const w = t.werte || {};
+      const maxA = Number(w.Imax);
+      if (!Number.isFinite(maxA) || maxA <= 0)
+        return fehler('Bei ' + (t.bmk || 'einer Zelle') + ' fehlt der zulässige Strom Imax.');
+      zellen.push({
+        u: Number(w.U), ri: w.Ri == null ? null : Number(w.Ri),
+        maxA, ah: w.Q == null ? null : Number(w.Q)
+      });
+      punkte.push(
+        { id: idMinus(i), klemme: 'k:' + t.id + ':−' },
+        { id: idPlus(i), klemme: 'k:' + t.id + ':+' }
+      );
+    }
+    const nachNetz = new Map();
+    for (const p of punkte) {
+      const nr = netze.netzVon.get(p.klemme);
+      if (nr === undefined) return fehler('Ein Anschluss ist in der Netzliste nicht vorhanden.');
+      const liste = nachNetz.get(nr) || [];
+      liste.push(p.id);
+      nachNetz.set(nr, liste);
+    }
+    const leitungen = [];
+    nachNetz.forEach(liste => {
+      for (let i = 1; i < liste.length; i++)
+        if (liste[0] !== liste[i]) leitungen.push([liste[0], liste[i]]);
+    });
+    return pruefen(zellen, leitungen);
+  }
+
+  const api = { pruefen, ausPlan, reiheParallel, idMinus, idPlus, AUS_MINUS, AUS_PLUS };
+  wurzel.BatterieKern = api;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* ===== batterie-aufgaben.js ===== */
+/* Batterieaufgaben im ECHTEN Schaltplanblock, keine zweite Zeichenfläche.
+ * Baut ausschliesslich Schaltplan-Teile; Leitungen, Raster, Undo, Speicherung,
+ * Fang und Netzliste bleiben die des Redion-Editors.
+ * Je Aufgabe: drei Eingaben/Anzeigen, nur ein Rechner BatterieKern. */
+(function (wurzel) {
+  'use strict';
+  const AUFGABEN = [
+    { id:'k9',   name:'Kap. 12.1 a · 9 V',          zahl:6,  u:1.5, ri:.3,  i:1,  q:.5,   zielU:9,   art:'Leclanché' },
+    { id:'k15',  name:'Kap. 12.1 b · 1,5 V',        zahl:6,  u:1.5, ri:.3,  i:1,  q:.5,   zielU:1.5, art:'Leclanché' },
+    { id:'k45',  name:'Kap. 12.1 c · 4,5 V',        zahl:6,  u:1.5, ri:.3,  i:1,  q:.5,   zielU:4.5, art:'Leclanché' },
+    { id:'k3',   name:'Kap. 12.1 d · 3 V',          zahl:6,  u:1.5, ri:.3,  i:1,  q:.5,   zielU:3,   art:'Leclanché' },
+    { id:'u9',   name:'Blatt 57 a · 9 V',           zahl:6,  u:1.5, ri:.5,  i:.5, q:.25,  zielU:9,   art:'Leclanché' },
+    { id:'u15',  name:'Blatt 57 a · 1,5 V',         zahl:6,  u:1.5, ri:.5,  i:.5, q:.25,  zielU:1.5, art:'Leclanché' },
+    { id:'u6',   name:'Blatt 57 b · 6 V',           zahl:6,  u:2,   ri:.05, i:12, q:72,   zielU:6,   art:'Bleiakku', annahme:'2 V je Bleiakku-Zelle angenommen.' },
+    { id:'u4',   name:'Blatt 57 b · 4 V',           zahl:6,  u:2,   ri:.05, i:12, q:72,   zielU:4,   art:'Bleiakku', annahme:'2 V je Bleiakku-Zelle angenommen.' },
+    { id:'a12',  name:'Kap. 12.2 · 12 A',          zahl:12, u:2,   ri:null,i:3,q:null,  zielI:12,  art:'Bleiakku', annahme:'2 V je Bleiakku-Zelle angenommen; Ri und Q nicht angegeben.' },
+    { id:'a3',   name:'Kap. 12.2 · 3 A',           zahl:12, u:1.5, ri:null,i:1,q:null,  zielI:3,   art:'Leclanché', annahme:'1,5 V je Leclanché-Zelle angenommen; Ri und Q nicht angegeben.' }
+  ];
+  const esc = wert => String(wert == null ? '' : wert).replace(/[&<>"']/g, c => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  })[c]);
+  const zeige = (v,einheit) => v == null ? '–' : new Intl.NumberFormat('de-CH', {
+    maximumFractionDigits: 4
+  }).format(v) + ' ' + einheit;
+  const get = id => AUFGABEN.find(x=>x.id===id) || AUFGABEN[0];
+
+  /* Rein planbezogener Aufbau: dieselben Blöcke, die das Zeichnen-Werkzeug
+     von Hand schreibt. Die Klemmen X+ und X− sind echte Fachzeichen;
+     angeschlossen wird jeweils Klemme 1. */
+  function planFuer(aufgabe) {
+    const a = get(aufgabe);
+    const plan = Schaltplan.neuerPlan('stromlauf-aufgeloest');
+    plan.breite = 1000;
+    plan.hoehe = 700;
+    const teile = [];
+    const einsetzen = (zeichen, bmk, x, y, werte) => {
+      const t = {
+        id:Schaltplan.uid(), zeichen, x,y, drehung:0, gespiegelt:false,
+        bmk, nummern:{}, gruppe:'', ebene:'plan'
+      };
+      if (werte) t.werte=werte;
+      plan.teile.push(t);
+      return t;
+    };
+    /* Bei 1,5-V-Parallelschaltungen stehen die sechs Zellen auf einer
+     * waagrechten Reihe. So lassen sich die beiden Sammelleitungen sichtbar
+     * oberhalb und unterhalb führen, ohne andere Zellklemmen zu streifen. */
+    const parallel=a.zahl===6 && a.zielU===a.u;
+    const cols = parallel ? 6 : (a.zahl === 6 ? 2 : 3);
+    const stepX = parallel ? 120 : (a.zahl === 6 ? 230 : 200);
+    const stepY = a.zahl === 6 ? 165 : 140;
+    for (let i=0;i<a.zahl;i++) {
+      const row=Math.floor(i/cols), col=i%cols;
+      const t=einsetzen('batterie','G'+(i+1),
+        (parallel?75:130) + stepX*col, (parallel?280:80) + stepY*row,
+        {
+          U:a.u, Imax:a.i,
+          ...(a.ri===null ? {} : { Ri:a.ri }),
+          ...(a.q===null ? {} : { Q:a.q })
+        });
+      teile.push(t.id);
+    }
+    const plus=einsetzen('klemme','X+',parallel?850:785,parallel?150:220);
+    const minus=einsetzen('klemme','X−',parallel?850:785,parallel?520:430);
+    const text=(x,y,t)=>plan.texte.push({id:Schaltplan.uid(),x,y,t,ebene:'plan'});
+    text(parallel?900:850,parallel?150:220,'+ Ausgang');
+    text(parallel?900:850,parallel?520:430,'− Ausgang');
+    text(70,40,'Batteriezellen: Anschlüsse + / −');
+    plan.batterieUebung={id:a.id, plus:plus.id, minus:minus.id, teile};
+    return plan;
+  }
+
+  /* Ein überprüfbares Muster direkt als Redion-Leitungen. Kein Canvas und
+   * keine Abkürzung in die Lösung: das Beispiel lässt sich danach mit dem
+   * Leitung-Werkzeug anfassen und mit Undo wieder entfernen. */
+  function musterFuer(plan) {
+    const a=get(plan.batterieUebung && plan.batterieUebung.id);
+    const meta=plan.batterieUebung;
+    if (!meta || !Array.isArray(meta.teile)) throw new Error('Keine Batterieaufgabe.');
+    const nachId=new Map(plan.teile.map(t=>[t.id,t]));
+    const zellen=meta.teile.map(id=>nachId.get(id));
+    const plus=nachId.get(meta.plus), minus=nachId.get(meta.minus);
+    if (!plus || !minus || zellen.some(t=>!t || t.zeichen!=='batterie'))
+      throw new Error('Bauteile der Aufgabe fehlen.');
+    const reihe=a.zielU===undefined
+      ? a.zahl / Math.ceil(a.zielI/a.i)
+      : Math.round(a.zielU/a.u);
+    if (!Number.isInteger(reihe) || reihe<1 || a.zahl%reihe)
+      throw new Error('Für diese Aufgabe ist kein Muster hinterlegt.');
+    const terminal=(t,nr)=>Schaltplan.anschlussOrt(t,nr);
+    const einfuegen=(punkte,vonTeil,vonNr,nachTeil,nachNr)=>{
+      if (!Array.isArray(punkte) || punkte.length<2)
+        throw new Error('Leitung nicht erzeugt.');
+      plan.leitungen.push({
+        id:Schaltplan.uid(), punkte:punkte.map(p=>({x:p.x,y:p.y})),
+        ebene:'plan',
+        ...(vonTeil ? {vonTeil,vonNr} : {}),
+        ...(nachTeil ? {nachTeil,nachNr} : {})
+      });
+    };
+    if (reihe===1) {
+      // Alle Zellen parallel: zwei separate Sammelleitungen mit je sechs
+      // senkrechten Anschlüssen. Beide Busse liegen ausserhalb der Teile.
+      const pOut=terminal(plus,'1'), nOut=terminal(minus,'1');
+      const ps=zellen.map(t=>terminal(t,'+'));
+      const ns=zellen.map(t=>terminal(t,'−'));
+      const posY=Math.max(35,Math.min(...ps.map(x=>x.y))-85);
+      const negY=Math.min(plan.hoehe-35,Math.max(...ns.map(x=>x.y))+85);
+      const minX=Math.min(...ps.map(x=>x.x));
+      einfuegen([pOut,{x:pOut.x,y:posY},{x:minX,y:posY}],plus.id,'1');
+      einfuegen([nOut,{x:nOut.x,y:negY},{x:minX,y:negY}],minus.id,'1');
+      zellen.forEach((t,i)=>{
+        einfuegen([ps[i],{x:ps[i].x,y:posY}],t.id,'+');
+        einfuegen([ns[i],{x:ns[i].x,y:negY}],t.id,'−');
+      });
+      return;
+    }
+    const teile=[];
+    zellen.forEach((t,i)=>{teile.push(['n'+i,t,'−'],['p'+i,t,'+']);});
+    const endpoints=new Map(teile.map(([k,t,nr])=>[k,{t,nr}]));
+    endpoints.set('aus+',{t:plus,nr:'1'});
+    endpoints.set('aus-',{t:minus,nr:'1'});
+    const links=window.BatterieKern.reiheParallel(zellen.length,reihe);
+    links.forEach(([von,nach])=>{
+      const x=endpoints.get(von),y=endpoints.get(nach);
+      const start=terminal(x.t,x.nr),ziel=terminal(y.t,y.nr);
+      const pfad=Schaltplan.leitungFuehren(plan,start,ziel,
+        {teil:x.t.id,nr:x.nr},{teil:y.t.id,nr:y.nr});
+      einfuegen(pfad,x.t.id,x.nr,y.t.id,y.nr);
+    });
+  }
+
+  function erstelle(optionen) {
+    const el=optionen.element;
+    let wahl=(optionen.holePlan().batterieUebung || {}).id || 'k9';
+    let widerstand='';
+    let schalter=true;
+    let zuletzt='';
+    const hilfe='Wähle links das Werkzeug „Leitung ziehen“ und verbinde die ' +
+      'Pole der Zellen mit den Klemmen X+ und X−. Der normale Redion-Zeichner ' +
+      'speichert alle Leitungen und kann sie zurücknehmen.';
+
+    const messung=()=>{
+      const plan=optionen.holePlan();
+      const meta=plan.batterieUebung;
+      if (!meta) return null;
+      if (!wurzel.BatterieKern || typeof Stromfluss === 'undefined')
+        return { ok:false, grund:'Batterie-Rechner oder Netzliste nicht geladen.' };
+      try {
+        return wurzel.BatterieKern.ausPlan(plan,Stromfluss.netze(plan));
+      } catch(e) {
+        return { ok:false, grund:'Die Planverbindungen konnten nicht gelesen werden.' };
+      }
+    };
+    const auswertung=(r,a)=>{
+      if (!r) return '';
+      if (!r.ok) return '<p class="sp-bat-fehler" role="status">' + esc(r.grund) + '</p>';
+      const spannungOK=a.zielU === undefined || Math.abs(r.u-a.zielU)<1e-6;
+      const stromOK=a.zielI === undefined || r.maxA + 1e-6 >= a.zielI;
+      const richtig=spannungOK && stromOK;
+      const meldung=richtig?'Ziel erreicht — richtig verdrahtet.':
+        'Noch nicht richtig: Spannung oder Strombelastbarkeit passen nicht.';
+      let html='<p class="' + (richtig?'sp-bat-gut':'sp-bat-fehler') +
+        '" role="status">' + esc(meldung) + '</p>';
+      const paar=[['U (Leerlauf)',zeige(r.u,'V')],
+                  ['Ri (gesamt)',zeige(r.ri,'Ω')],
+                  ['Imax (gesamt)',zeige(r.maxA,'A')],
+                  ['Q (gesamt)',zeige(r.ah,'Ah')]];
+      html+='<div class="sp-bat-werte">' +
+        paar.map(p=>'<span><b>'+esc(p[0])+'</b> '+esc(p[1])+'</span>').join('') + '</div>';
+      if (!widerstand.trim()) {
+        html+='<p class="sp-bat-hinweis">Für die Laststrom-Rechnung den Widerstand R eingeben. ' +
+          'Ohne R ist der Lampenstrom nicht bestimmbar.</p>';
+      } else {
+        const last=Number(widerstand);
+        if (!Number.isFinite(last) || last<=0 || last>1000000) {
+          html+='<p class="sp-bat-fehler">R muss zwischen 0 und 1 000 000 Ω liegen.</p>';
+        } else if (!schalter) {
+          html+='<p>Schalter offen: Strom am Verbraucher <b>0 A</b>.</p>';
+        } else if (r.ri===null) {
+          html+='<p class="sp-bat-hinweis">Ohne angegebenen Innenwiderstand Ri ist ' +
+            'der tatsächliche Laststrom nicht bestimmbar.</p>';
+        } else {
+          const i=r.u/(last+r.ri), u=i*last;
+          html+='<p>Laststrom <b>'+esc(zeige(i,'A'))+'</b> · ' +
+            'Spannung am Verbraucher <b>'+esc(zeige(u,'V'))+'</b> · ' +
+            'Leistung <b>'+esc(zeige(u*i,'W'))+'</b>' +
+            (i>r.maxA+1e-8?' · <strong class="sp-bat-fehler">Nennstrom überschritten!</strong>':'') +
+            '</p>';
+        }
+      }
+      return html;
+    };
+    function aktualisiere() {
+      if (!el) return;
+      const plan=optionen.holePlan();
+      const a=plan.batterieUebung ? get(plan.batterieUebung.id) : get(wahl);
+      const zellen=plan.batterieUebung ? plan.batterieUebung.teile.length : a.zahl;
+      const gewaehlt=optionen.holeAuswahl();
+      const teil=plan.batterieUebung && gewaehlt.length===1
+        ? plan.teile.find(t=>t.id===gewaehlt[0] && t.zeichen==='batterie') : null;
+      const w=teil ? (teil.werte || {}) : {};
+      let html='<div class="sp-bat-kopf"><strong>Batterien auf dieser Zeichenfläche</strong>' +
+        '<span>Kapitel 12 · Reihen- / Parallelschaltung</span></div>';
+      html+='<div class="sp-bat-bedienung">' +
+        '<label>Aufgabe <select data-bat="wahl">' +
+        AUFGABEN.map(e=>'<option value="'+esc(e.id)+'"'+(e.id===wahl?' selected':'')+'>'+
+          esc(e.name)+'</option>').join('') +
+        '</select></label><button type="button" data-bat="einsetzen">Aufgabe auf diese Fläche setzen</button></div>';
+      if(!plan.batterieUebung) {
+        html+='<p class="sp-bat-hinweis">Du kannst eine Schulaufgabe mit einzelnen Batteriezellen ' +
+          'hier in den bestehenden Schaltplan einsetzen. Ein vorhandener Plan wird ' +
+          'nur nach deiner Bestätigung ersetzt.</p>';
+      } else {
+        html+='<p class="sp-bat-hinweis">Aktiv: '+esc(a.name)+
+          ' · '+zellen+' '+esc(a.art)+'-Zellen · je '+esc(zeige(a.u,'V'))+
+          ' · Ri '+esc(zeige(a.ri,'Ω'))+
+          ' · Imax '+esc(zeige(a.i,'A'))+
+          ' · Q '+esc(zeige(a.q,'Ah'))+
+          ' · Ziel '+esc(a.zielU===undefined?zeige(a.zielI,'A'):zeige(a.zielU,'V'))+
+          (a.annahme?' · Annahme: '+esc(a.annahme):'')+
+          '</p><p class="sp-bat-hinweis">'+hilfe+'</p>';
+        html+='<div class="sp-bat-bedienung"><button type="button" data-bat="muster">Musterverdrahtung einsetzen</button></div>';
+        if(teil) {
+          html+='<fieldset class="sp-bat-eingaben"><legend>'+esc(teil.bmk||'Batterie')+
+            ' · ausgewählte Zelle bearbeiten</legend>' +
+            [['U','Spannung U (V)'],['Ri','Innenwiderstand Ri (Ω)'],
+             ['Imax','Maximalstrom (A)'],['Q','Kapazität Q (Ah)']].map(([key,name])=>
+              '<label>'+esc(name)+'<input type="number" inputmode="decimal" ' +
+              'min="0" step="any" data-bat-wert="'+key+'" value="'+
+              esc(w[key]===undefined?'':w[key])+'" placeholder="nicht angegeben"></label>').join('') +
+            '<button type="button" data-bat="werte">Zellwerte übernehmen</button></fieldset>';
+        } else {
+          html+='<p class="sp-bat-hinweis">Eine Zelle auswählen, um ihre Nenndaten zu ändern.</p>';
+        }
+        html+='<div class="sp-bat-messung" aria-live="polite">' +
+          auswertung(messung(),a)+'</div>' +
+          '<div class="sp-bat-last">' +
+          '<label>Verbraucher R (Ω)<input type="number" data-bat="last" min="0.01" ' +
+            'max="1000000" step="any" value="'+esc(widerstand)+'" placeholder="z. B. 20"></label>' +
+          '<label class="sp-bat-check"><input type="checkbox" data-bat="schalter" ' +
+            (schalter?'checked':'')+'> Schalter geschlossen</label></div>';
+      }
+      el.innerHTML=html;
+    }
+
+    el.addEventListener('change',e=>{
+      const t=e.target;
+      if (!t || !t.dataset) return;
+      if (t.dataset.bat==='wahl') {wahl=t.value; aktualisiere();}
+      if (t.dataset.bat==='last') {widerstand=t.value; aktualisiere();}
+      if (t.dataset.bat==='schalter') {schalter=t.checked; aktualisiere();}
+    });
+    el.addEventListener('click',e=>{
+      const b=e.target.closest('[data-bat="einsetzen"],[data-bat="muster"],[data-bat="werte"]');
+      if (!b) return;
+      if(b.dataset.bat==='einsetzen') {
+        const plan=optionen.holePlan();
+        if ((plan.teile.length || plan.leitungen.length || plan.texte.length) &&
+            !window.confirm('Die aktuelle Schaltung durch die Batterieaufgabe ersetzen?\n' +
+              'Der bisherige Plan bleibt über Rückgängig wiederherstellbar.')) return;
+        const neu=planFuer(wahl);
+        optionen.aendere(()=>optionen.setzePlan(neu));
+        optionen.nachPlanwechsel();
+        aktualisiere();
+        return;
+      }
+      if(b.dataset.bat==='muster') {
+        const plan=optionen.holePlan();
+        if(!plan.batterieUebung) return;
+        if(plan.leitungen.length &&
+           !window.confirm('Die bisherigen Leitungen durch das Muster ersetzen?\n' +
+             'Mit Rückgängig bekommst du die eigene Verdrahtung wieder.')) return;
+        /* Erst an einer Kopie berechnen. Ist ein Zeichen entfernt oder
+         eine Position unbrauchbar, bleibt der originale Plan unverändert. */
+        const kopie=JSON.parse(JSON.stringify(plan));
+        kopie.leitungen=[];
+        try { musterFuer(kopie); }
+        catch (fehler) {
+          window.alert('Muster nicht einsetzbar: ' + fehler.message);
+          return;
+        }
+        optionen.aendere(()=>{optionen.holePlan().leitungen=kopie.leitungen;});
+        return;
+      }
+      const plan=optionen.holePlan(), ids=optionen.holeAuswahl();
+      const t=ids.length===1?plan.teile.find(x=>x.id===ids[0]&&x.zeichen==='batterie'):null;
+      if(!t)return;
+      const daten={...t.werte};
+      for(const f of el.querySelectorAll('[data-bat-wert]')) {
+        const key=f.dataset.batWert, raw=f.value.trim().replace(',','.');
+        if(!raw) {
+          if(key==='U'||key==='Imax') {
+            zuletzt='Spannung U und maximaler Strom Imax dürfen nicht leer sein.';
+            window.alert(zuletzt); return;
+          }
+          delete daten[key]; continue;
+        }
+        const wert=Number(raw);
+        if(!Number.isFinite(wert)||wert<=0||wert>1e6) {
+          zuletzt='Nur positive, endliche Nenndaten bis 1 000 000 eingeben.';
+          window.alert(zuletzt); return;
+        }
+        daten[key]=wert;
+      }
+      optionen.aendere(()=>{
+        const aktuell=optionen.holePlan().teile.find(x=>x.id===t.id);
+        if(aktuell) aktuell.werte=daten;
+      });
+    });
+    return { aktualisiere };
+  }
+
+  wurzel.BatterieAufgaben={ erstelle, planFuer, musterFuer, aufgaben:AUFGABEN };
+  if (typeof module!=='undefined'&&module.exports)
+    module.exports={ erstelle, planFuer, musterFuer, aufgaben:AUFGABEN };
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<script>
 /* ===== quell/bereiche/bloecke/arten/planflaeche.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/bloecke/arten/planflaeche.ts (npm run bauen:ts). */
@@ -69782,6 +70396,8 @@ const Planflaeche = (() => {
     const zeichne = (block) => {
         const wurzel = document.createElement('div');
         wurzel.className = 'sp-wrap';
+        let batterieOffen = !!(block && block.plan && block.plan.batterieUebung);
+        let batterie = null;
         const z = {
             block,
             plan: Schaltplan.lesen(block),
@@ -69839,6 +70455,10 @@ const Planflaeche = (() => {
         };
         const kopf = document.createElement('div');
         kopf.className = 'sp-kopf';
+        const batteriePanel = document.createElement('section');
+        batteriePanel.className = 'sp-batterie-fach';
+        batteriePanel.setAttribute('aria-label', 'Batterieanlagen und Übungen');
+        batteriePanel.hidden = !batterieOffen;
         const palette = document.createElement('div');
         palette.className = 'sp-palette';
         const buehne = document.createElement('div');
@@ -69866,6 +70486,7 @@ const Planflaeche = (() => {
         fuss.appendChild(fussInhalt);
         fuss.appendChild(zoomleiste);
         wurzel.appendChild(kopf);
+        wurzel.appendChild(batteriePanel);
         wurzel.appendChild(koerper);
         wurzel.appendChild(fuss);
         const kopfMalen = () => {
@@ -69889,8 +70510,9 @@ const Planflaeche = (() => {
                             `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
                             `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
                         : '') +
-                    `<button class="sp-start${z.simulation ? ' an' : ''}" data-a="simulation" ` +
-                    `title="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
+                    `<button class="sp-netz${batterieOffen ? ' an' : ''}" data-a="batterie-labor" title="Batteriezellen direkt im Schaltplan platzieren, verbinden und messen" aria-pressed="${batterieOffen}" aria-label="Batterieübungen in diesem Schaltplan">🔋 Batterien</button>` +
+                    `<button class="sp-start${z.simulation ? ' an' : ''}" data-a="simulation" ${z.plan.batterieUebung ? 'disabled' : ''} ` +
+                    `title="${z.plan.batterieUebung ? 'Batterieanlage im Batterie-Fach messen' : z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
                     `aria-pressed="${z.simulation}" ` +
                     `aria-label="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}">` +
                     `${z.simulation ? '◼' : '▶'} Strom</button>` +
@@ -70025,7 +70647,8 @@ const Planflaeche = (() => {
                 g.appendChild(titel);
             });
         };
-        const male = () => { rechnen(); kopfMalen(); buehneMalen(); fussMalen(); };
+        const male = () => { rechnen(); kopfMalen(); buehneMalen(); fussMalen(); if (batterie)
+            batterie.aktualisiere(); };
         const ZOOM_MIN = 0.25, ZOOM_MAX = 8;
         const svgJetzt = () => leinwand.querySelector('svg.sp-flaeche');
         const ansichtAnwenden = () => {
@@ -71082,6 +71705,15 @@ const Planflaeche = (() => {
             return undefined;
         };
         const simulationUmschalten = () => {
+            if (z.plan.batterieUebung) {
+                batterieOffen = true;
+                batteriePanel.hidden = false;
+                kopfMalen();
+                if (batterie)
+                    batterie.aktualisiere();
+                UI.toast('Batterieanlagen im Fach „Batterien“ messen: ideale Parallelquellen werden hier nicht simuliert.');
+                return;
+            }
             z.simulation = !z.simulation;
             z.auswahl.clear();
             if (z.simulation) {
@@ -71115,6 +71747,14 @@ const Planflaeche = (() => {
             }
             if (b.dataset.a === 'netz')
                 return schaltungMenue(b);
+            if (b.dataset.a === 'batterie-labor') {
+                batterieOffen = !batterieOffen;
+                batteriePanel.hidden = !batterieOffen;
+                kopfMalen();
+                if (batterie)
+                    batterie.aktualisiere();
+                return;
+            }
             if (b.dataset.a === 'heft')
                 return heftUmschalten();
             if (b.dataset.a === 'simulation')
@@ -71411,6 +72051,22 @@ const Planflaeche = (() => {
             a.click();
             setTimeout(() => URL.revokeObjectURL(a.href), 4000);
         };
+        batterie = window.BatterieAufgaben ? window.BatterieAufgaben.erstelle({
+            element: batteriePanel,
+            holePlan: () => z.plan,
+            holeAuswahl: () => [...z.auswahl],
+            aendere: (was) => aendere(was),
+            setzePlan: (plan) => {
+                z.plan = plan;
+                z.auswahl.clear();
+                z.werkzeug = 'leitung';
+                z.gewaehltesZeichen = '';
+                z.simulation = false;
+                batterieOffen = true;
+                batteriePanel.hidden = false;
+            },
+            nachPlanwechsel: () => paletteMalen()
+        }) : null;
         paletteMalen();
         male();
         return wurzel;
@@ -118601,7 +119257,7 @@ const PWA = (() => {
     const workerAnmelden = async () => {
         if (!('serviceWorker' in navigator))
             return;
-        if (location.protocol === 'file:')
+        if (location.protocol === 'file:' || location.protocol === 'redion-local:')
             return;
         try {
             const reg = await navigator.serviceWorker.register('sw.js', { scope: './' });
