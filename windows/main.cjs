@@ -212,7 +212,7 @@ if (!lock) {
       detail: 'Webstand: ' + version + (info?.status ? ' · ' + info.status : '') +
         '\n\n' + changes.map(x => '• ' + x).join('\n') +
         (LOCAL_SOURCE ? '\n\nLokaler Ordner: ' + LOCAL_SOURCE : '') +
-        '\n\nAlle Versionen: VERSION.md im GitHub-Projekt.'
+        '\n\nAlle Versionen: version.md im GitHub-Projekt.'
     });
   }
 
