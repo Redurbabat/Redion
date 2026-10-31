@@ -61,7 +61,9 @@ test('Windows installer packages two EXEs and a stable offline data profile', ()
   assert.match(main, /nodeIntegration: false/);
   assert.match(main, /webSecurity: true/);
   assert.match(main, /setPermissionRequestHandler/);
-  assert.match(prepare, /\['quell','oeffentlich','fremd','lernpakete','lernen'\]/);
+  assert.match(prepare, /webFolders/);
+  assert.match(prepare, /webRootFiles/);
+  assert.match(prepare, /prune\(target\)/);
   assert.match(prepare, /index\.html','sw\.js/);
   assert.match(html, /quell\/start\.js/);
   assert.doesNotMatch(main, /loadURL\(['"]https?:/);
