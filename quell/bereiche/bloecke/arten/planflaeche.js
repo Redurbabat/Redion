@@ -190,8 +190,8 @@ const Planflaeche = (() => {
                             `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
                         : '') +
                     `<button class="sp-netz${batterieOffen ? ' an' : ''}" data-a="batterie-labor" title="Batteriezellen direkt im Schaltplan platzieren, verbinden und messen" aria-pressed="${batterieOffen}" aria-label="Batterieübungen in diesem Schaltplan">🔋 Batterien</button>` +
-        `<button class="sp-start${z.simulation ? ' an' : ''}" data-a="simulation" ${z.plan.batterieUebung ? 'disabled title="Batterieanlage über das Batterien-Fach prüfen"' : ''} ` +
-                    `title="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
+        `<button class="sp-start${z.simulation ? ' an' : ''}" data-a="simulation" ${z.plan.batterieUebung ? 'disabled' : ''} ` +
+                    `title="${z.plan.batterieUebung ? 'Batterieanlage im Batterie-Fach messen' : z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
                     `aria-pressed="${z.simulation}" ` +
                     `aria-label="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}">` +
                     `${z.simulation ? '◼' : '▶'} Strom</button>` +
