@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compareWindowsWeb, expectedWebFiles } from './compare-web.mts';
-import { webFolders, webRootFiles } from './web-files.mjs';
+import { webFolders, webRootFiles } from './web-files.mts';
 
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const target = path.join(root, 'build/windows-app');
