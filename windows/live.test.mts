@@ -38,7 +38,7 @@ test('nur ausdrücklich von index.html referenzierte Root-JS-Dateien werden pake
       '<script src="quell/start.js" defer></script>'+
       '<script src="../secret.js"></script>'+
       '<script src="https://example.org/remote.js"></script>');
-    assert.deepEqual(webRootFiles(root), ['batterie-aufgaben.js','index.html','sw.js']);
+    assert.deepEqual(webRootFiles(root), ['batterie-aufgaben.js','index.html','sw.js','version.json','version.md']);
   } finally {fs.rmSync(root,{recursive:true,force:true});}
 });
 
