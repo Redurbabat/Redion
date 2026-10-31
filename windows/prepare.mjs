@@ -29,7 +29,11 @@ export function prepareWindowsApp(from = root, to = target) {
   }
   fs.mkdirSync(target, { recursive: true });
   for (const filename of webRootFiles(root)) {
-    fs.copyFileSync(path.join(root, filename), path.join(target, filename));
+    const source = path.join(root, filename);
+    if (!fs.lstatSync(source).isFile() || fs.lstatSync(source).isSymbolicLink()) {
+      throw new Error('Ungültige Root-Webdatei: ' + filename);
+    }
+    fs.copyFileSync(source, path.join(target, filename));
   }
   for (const folder of webFolders) {
     const source = path.join(root, folder);
