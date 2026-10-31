@@ -212,7 +212,7 @@ function startSourceUpdates({ source, previewBase, markerDir, appData, onReady,
     });
     watcher.on?.('error', error => logger.warn('Ordnerbeobachtung unterbrochen:', String(error)));
   } catch (error) {
-    logger.warn('Automatische Ordnerbeobachtung nicht verfügbar:', String(error));
+    throw new Error('Automatische Redion-Ordnerbeobachtung nicht verfügbar: ' + String(error));
   }
   return {
     get active() { return active; },
