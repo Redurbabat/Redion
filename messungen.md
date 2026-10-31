@@ -9804,3 +9804,59 @@ SVG durch den Browser kostet bei vierfacher Drosselung um 30 ms: das sind
 30 Bilder je Sekunde, nicht 60 (L261 Punkt 2). Ohne Drosselung nicht
 gemessen.
 
+
+## §112 · Ein gemerkter Platz und das Studio-Dock (E764, 31. Oktober 2026)
+
+**Methode:** Playwright/Chromium, eigener lokaler Dateiserver, eine
+erzeugte zweiseitige PDF im Querformat, über die Bibliothek eingelesen
+(`.bib-studio-import`), Werkzeug oben im Band mit der Maus gewählt. Der
+gemerkte Platz steht vor dem Einlesen in `meta` (`zeichnen:leistenlage`).
+`node pruefungen/lauf/test626.mts`. Die Windows-App selbst (Electron) ist
+nicht gefahren; die Fenster sind ihre CSS-Grössen (1300 × 860; Redurs Bild
+1918 px breit bei 150 % Anzeige ≈ 1280 CSS-px).
+
+**1 · Was den Fall auslöst — fünf Sonden grün, die sechste rot.**
+
+```txt
+Sonde (1280 × 740, Füller)                         sichtbare Knöpfe  breiter 150 px  Pastelle
+frisch, Schema Standard                             18                0               0
+frisch, Schema Starker Kontrast (Redurs Gelb)       18                0               0
+mit Berührung (hasTouch), 1280 und 1530             18                0               0
+zwei PDF-Reiter, viermal gewechselt                 18                0               0
+gezeichnet, neu geladen, wieder geöffnet            18                0               0
+gemerkt «unten» / «frei» / «oben»                   18                0               0
+gemerkt «links» oder «rechts»                       57                42              9
+```
+
+**2 · Seit wann (`git bisect` mit derselben Sonde, Platz «links»).**
+
+```txt
+Stand                         fremde Knöpfe beim Stift   breiteste
+2f059f1de^ (vor E512)         0                          —
+2f059f1de  (E512, 8. Sept.)   3                          —
+4ac55759f  (E573, 14. Sept.)  37   ← erster mit dem Zuviel
+7270830e3^ (vor E619)         37   (Spalte 74 px quer über dem Papier)
+7270830e3  (E619, 19. Sept.)  37   1222 px  ← die Zeile aus Riesenknöpfen
+214c6f5f0  (main, 31. Okt.)   38   1242 px bei 1300, 1842 px bei 1900
+```
+
+**3 · test626, vorher und nachher.**
+
+```txt
+                    vorher (214c6f5f0)   nachher (E764)
+Zusagen             11 von 60            60 von 60
+breiteste Knopf     1842 px (1900)       82 px (Kugelschreiber)
+fremd beim Stift    39                   0
+Tinten              26 × 44 (gestaucht)  44 × 44
+Spalte, Seite       66 Knöpfe            25 Knöpfe
+```
+
+Gegenproben: `display:inline-flex` zurück → 59 von 60 (§7 rot); die
+Studio-Grenze heraus → 20 von 60 (Knöpfe 624 px, weil die Gruppen jetzt
+stimmen, die Breite aber nicht).
+
+**Was die Zahlen sagen.** Kein Fehler der letzten Tage: der Zustand ist
+seit dem 14. September da und wurde nur mit einem gemerkten «links» oder
+«rechts» sichtbar — und eine frische Sonde hat keinen. Bilder:
+`bilder/vorher-*` und `bilder/nachher-*` im Arbeitsverzeichnis (nicht im
+Verzeichnis, §55.4).

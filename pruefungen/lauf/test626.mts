@@ -152,7 +152,6 @@ const werkzeug = async (s: Page, id: string): Promise<void> => {
   await s.waitForTimeout(450);
 };
 
-type Knopf = { wort: string; gruppe: string; act: string; w: number; h: number; trifft: boolean; imBild: boolean };
 /** Alles, was im Dock der aktiven Seite zu sehen ist. */
 const dock = (s: Page) => s.evaluate(() => {
   const werk = document.querySelector<HTMLElement>('.document-stage[data-aktiv] .blatt-werk');

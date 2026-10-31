@@ -5163,8 +5163,8 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    breiter Streifen am Blattrand, in dem nichts zu erkennen war.
    Jetzt steht die Zahl da: 64 px, und die Knöpfe füllen sie. (§55 — das
    hat kein Prüflauf gefunden, sondern das Hinsehen.) */
-.blatt-reihe[data-lage="links"],
-.blatt-reihe[data-lage="rechts"]{
+.blatt-reihe[data-lage="links"]:where(:not(.document-studio *)),
+.blatt-reihe[data-lage="rechts"]:where(:not(.document-studio *)){
   /* Nie über den Fensterrand hinaus (E696): `--reihe-platz` rechnet
      `marken.ts` aus der Oberkante der Hülle. Ohne sie gilt der alte Wert. */
   position:absolute; top:0; bottom:auto; max-height:min(78vh, 100%, var(--reihe-platz, 78vh));
@@ -5172,42 +5172,61 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   border-radius:10px; border:1px solid var(--line);
   box-shadow:var(--shadow-3); background:var(--bg-card)
 }
-.blatt-reihe[data-lage="links"] .blatt-werk,
-.blatt-reihe[data-lage="rechts"] .blatt-werk{width:100%; padding:6px 4px}
-.blatt-reihe[data-lage="links"] .blatt-werk > button,
-.blatt-reihe[data-lage="links"] .blatt-werk > .blatt-tafel > button,
-.blatt-reihe[data-lage="rechts"] .blatt-werk > button,
-.blatt-reihe[data-lage="rechts"] .blatt-werk > .blatt-tafel > button{
+.blatt-reihe[data-lage="links"]:where(:not(.document-studio *)) .blatt-werk,
+.blatt-reihe[data-lage="rechts"]:where(:not(.document-studio *)) .blatt-werk{width:100%; padding:6px 4px}
+.blatt-reihe[data-lage="links"]:where(:not(.document-studio *)) .blatt-werk > button,
+.blatt-reihe[data-lage="links"]:where(:not(.document-studio *)) .blatt-werk > .blatt-tafel > button,
+.blatt-reihe[data-lage="rechts"]:where(:not(.document-studio *)) .blatt-werk > button,
+.blatt-reihe[data-lage="rechts"]:where(:not(.document-studio *)) .blatt-werk > .blatt-tafel > button{
   width:100%; min-width:0; padding:4px 0;
-  display:inline-flex; align-items:center; justify-content:center
+  align-items:center; justify-content:center
+}
+/* ══ DIE SPALTE ENTSCHEIDET NICHT, WAS ZU SEHEN IST (E764) ═══════════════
+   Hier stand `display:inline-flex` für JEDEN Knopf der Spalte — mit dem
+   Gewicht (0,4,1), und das schlägt die Gruppenregel `.blatt-werk[data-tool]
+   > .blatt-tafel > [data-gruppe]{display:none}` (0,4,0) weiter unten. Also
+   stand in der Spalte beim Stift AUCH Formenwahl, Schrift, Auswahl, Laser,
+   Radierer und die neun Haftnotizfarben: 66 Knöpfe statt 25 (test626 §7).
+   Was sichtbar ist, sagt die Gruppenregel; sie setzt ihre Knöpfe selbst auf
+   `inline-flex`, also wirken `align-items` und `justify-content` oben
+   weiter. Nur die Werkzeuge stehen immer — sie bekommen ihr `display` hier.
+
+   UND IM STUDIO GILT DIE SPALTE GAR NICHT (`:where(:not(.document-studio
+   *))`, ohne Gewicht). E619 hat dort nur die Richtung zurückgedreht; die
+   `width:100%` blieb, und jeder Knopf wurde so breit wie die ganze Leiste —
+   Redurs Bild vom 31. Oktober: neun Pastelle und EIN Füller über alles.
+   `:where()` hier und nicht um einen Zustand, also im Sinn von §39. */
+.blatt-reihe[data-lage="links"]:where(:not(.document-studio *)) .blatt-werk > button,
+.blatt-reihe[data-lage="rechts"]:where(:not(.document-studio *)) .blatt-werk > button{
+  display:inline-flex
 }
 /* Die Farbtupfer bleiben rund und mittig — sie sind keine Knöpfe mit Text. */
-.blatt-reihe[data-lage="links"] .blatt-werk > .blatt-tafel > .blatt-farbe,
-.blatt-reihe[data-lage="rechts"] .blatt-werk > .blatt-tafel > .blatt-farbe{
+.blatt-reihe[data-lage="links"]:where(:not(.document-studio *)) .blatt-werk > .blatt-tafel > .blatt-farbe,
+.blatt-reihe[data-lage="rechts"]:where(:not(.document-studio *)) .blatt-werk > .blatt-tafel > .blatt-farbe{
   width:26px; min-width:26px; align-self:center
 }
-.blatt-reihe[data-lage="links"] .blatt-werk > .blatt-tafel > .blatt-farbe-leiter,
-.blatt-reihe[data-lage="rechts"] .blatt-werk > .blatt-tafel > .blatt-farbe-leiter{
+.blatt-reihe[data-lage="links"]:where(:not(.document-studio *)) .blatt-werk > .blatt-tafel > .blatt-farbe-leiter,
+.blatt-reihe[data-lage="rechts"]:where(:not(.document-studio *)) .blatt-werk > .blatt-tafel > .blatt-farbe-leiter{
   width:44px; min-width:var(--touch-min)
 }
-.blatt-reihe[data-lage="links"]{left:6px}
-.blatt-reihe[data-lage="rechts"]{right:6px}
-.blatt-reihe[data-lage="links"] .blatt-werk,
-.blatt-reihe[data-lage="rechts"] .blatt-werk{
+.blatt-reihe[data-lage="links"]:where(:not(.document-studio *)){left:6px}
+.blatt-reihe[data-lage="rechts"]:where(:not(.document-studio *)){right:6px}
+.blatt-reihe[data-lage="links"]:where(:not(.document-studio *)) .blatt-werk,
+.blatt-reihe[data-lage="rechts"]:where(:not(.document-studio *)) .blatt-werk{
   flex-direction:column; flex-wrap:nowrap; align-items:stretch;
   overflow-y:auto; overflow-x:hidden; max-height:min(74vh, 100%); scrollbar-width:none
 }
-.blatt-reihe[data-lage="links"] .blatt-werk::-webkit-scrollbar,
-.blatt-reihe[data-lage="rechts"] .blatt-werk::-webkit-scrollbar{display:none}
-.blatt-reihe[data-lage="links"] .blatt-fest,
-.blatt-reihe[data-lage="rechts"] .blatt-fest{flex-direction:column; padding:0 8px 6px}
+.blatt-reihe[data-lage="links"]:where(:not(.document-studio *)) .blatt-werk::-webkit-scrollbar,
+.blatt-reihe[data-lage="rechts"]:where(:not(.document-studio *)) .blatt-werk::-webkit-scrollbar{display:none}
+.blatt-reihe[data-lage="links"]:where(:not(.document-studio *)) .blatt-fest,
+.blatt-reihe[data-lage="rechts"]:where(:not(.document-studio *)) .blatt-fest{flex-direction:column; padding:0 8px 6px}
 /* Ein Trenner, der in einer Spalte steht, ist ein Strich quer — nicht längs. */
-.blatt-reihe[data-lage="links"] .blatt-trenn,
-.blatt-reihe[data-lage="rechts"] .blatt-trenn{width:100%; height:1px; margin:3px 0}
+.blatt-reihe[data-lage="links"]:where(:not(.document-studio *)) .blatt-trenn,
+.blatt-reihe[data-lage="rechts"]:where(:not(.document-studio *)) .blatt-trenn{width:100%; height:1px; margin:3px 0}
 /* Die Wörter gehen weg: eine 82 px breite Spalte trägt Zeichen, keine
    Namen. Titel und aria-label bleiben (§38). */
-.blatt-reihe[data-lage="links"] .wort,
-.blatt-reihe[data-lage="rechts"] .wort{display:none}
+.blatt-reihe[data-lage="links"]:where(:not(.document-studio *)) .wort,
+.blatt-reihe[data-lage="rechts"]:where(:not(.document-studio *)) .wort{display:none}
 
 /* UNTEN IN DER MITTE — die schwebende Leiste aus GoodNotes.
 
@@ -6229,8 +6248,8 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 @media (max-width:760px){
   .blatt-werk .zeichen[data-sym]{width:24px; height:24px}
 }
-.blatt-reihe[data-lage="links"] .blatt-werk .zeichen[data-sym],
-.blatt-reihe[data-lage="rechts"] .blatt-werk .zeichen[data-sym]{width:24px; height:24px;
+.blatt-reihe[data-lage="links"]:where(:not(.document-studio *)) .blatt-werk .zeichen[data-sym],
+.blatt-reihe[data-lage="rechts"]:where(:not(.document-studio *)) .blatt-werk .zeichen[data-sym]{width:24px; height:24px;
                                                                 margin-right:0}
 /* Die Schrift-Knoepfe (E360): das Muster zeigt die Familie, das F ist fett. */
 .blatt-werk [data-act="schriftart"] .zeichen{font-size:15px}

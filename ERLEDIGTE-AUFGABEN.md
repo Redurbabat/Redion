@@ -1,5 +1,32 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 31. Oktober 2026 · E764 · Das Studio-Dock mit gemerktem Platz «links»/«rechts»
+
+**Auftrag:** Redurs Bilder 5 und 6 aus der Windows-App — im PDF beim Füller
+unten neun Pastelltupfer und ein einziger Füller-Knopf über die ganze
+Leiste, die gewohnte Leiste (Bild 7) weg. „wieso ist es bei pdf zeichenn
+so".
+
+**Fund:** Ein gemerkter Platz der Leiste (`zeichnen:leistenlage` =
+«links»/«rechts», E512) löst es aus. Die Spaltenform gab jedem Tafelknopf
+`width:100%` und `display:inline-flex` mit mehr Gewicht als die
+Gruppenregel — alle Gruppen sichtbar, die Haftnotizfarben vorn; das Studio
+drehte seit E619 nur die Richtung zurück, also war jeder Knopf so breit wie
+die Leiste. Latent seit E573 (14. September), sichtbar so seit E619 (19.
+September); auf der gewöhnlichen Seite zeigte die Spalte beim Stift
+dasselbe Zuviel.
+
+**Bau:** `bausteine.css` (Spaltenform nur ausserhalb von
+`.document-studio`, `display` nur für die Werkzeuge), `pdf-studio.css`
+(die überflüssige Rückdreh-Zeile für `.wort` weg). Keine Daten, kein Feld.
+
+**Prüfung:** `test626` zuerst rot (11 von 60 gegen 214c6f5f0, eigener
+Commit), jetzt 60 von 60; zwei Gegenproben rot. Nachbarn und Dateiwächter
+siehe Commit; Bilder vorher/nachher bei 1900 × 1100 und 1300 × 860, hell
+und dunkel, dazu Redurs Kontrastschema bei 1280 × 740. Zahlen in
+messungen.md §112. Bild 8 (zwei Leisten nebeneinander) hat eine andere
+Ursache: L262.
+
 ## 31. Oktober 2026 · E762 · Die Schaltplanfläche
 
 **Auftrag:** Redur unter einem Bild der Planfläche — Vollbild, zoomen,
