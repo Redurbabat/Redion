@@ -2,16 +2,20 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { webFolders, webRootFiles } from './web-files.mjs';
 
-const folders = ['quell', 'oeffentlich', 'fremd', 'lernpakete', 'lernen'];
 const list = (root: string, prefix = ''): string[] => fs.readdirSync(root, { withFileTypes: true }).flatMap(entry => {
   const name = path.posix.join(prefix, entry.name);
   if (entry.isSymbolicLink()) throw new Error('Symlink im Web-Paket.');
   return entry.isDirectory() ? list(path.join(root, entry.name), name) : [name];
 }).sort();
-export function compareWindowsWeb(root: string, target: string) {
-  const expected = ['index.html', 'sw.js', ...folders.flatMap(folder =>
+export function expectedWebFiles(root: string): string[] {
+  return [...webRootFiles(root), ...webFolders.flatMap(folder =>
     fs.existsSync(path.join(root, folder)) ? list(path.join(root, folder), folder) : [])].sort();
+}
+
+export function compareWindowsWeb(root: string, target: string) {
+  const expected = expectedWebFiles(root);
   const found = list(target);
   if (JSON.stringify(expected) !== JSON.stringify(found)) throw new Error('Windows-Webpaket enthält fehlende oder veraltete Dateien.');
   const files = expected.map(name => {
