@@ -12,7 +12,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const WEB_FOLDERS = Object.freeze(['quell', 'oeffentlich', 'fremd', 'lernpakete', 'lernen']);
-const ROOT_FILES = Object.freeze(['index.html', 'sw.js', 'version.json', 'VERSION.md']);
+const ROOT_FILES = Object.freeze(['index.html', 'sw.js', 'version.json', 'version.md']);
 const CONFIG_NAME = 'lokaler-redion-ordner.json';
 const MARKER_NAME = 'windows-live-stand.json';
 
@@ -144,7 +144,7 @@ function shouldRestage(filename) {
       part === 'build' || part === 'windows' || part === 'src' ||
       part === 'pruefungen' || part === 'doku')) return false;
   return WEB_FOLDERS.includes(pieces[0]) ||
-    ['index.html','sw.js','version.json','VERSION.md'].includes(filename) ||
+    ['index.html','sw.js','version.json','version.md'].includes(filename) ||
     /^[\w-]+\.(?:js|css)$/.test(filename);
 }
 function startSourceUpdates({ source, previewBase, markerDir, appData, onReady,
