@@ -8,7 +8,7 @@
   "scripts": {
     "prepare:app": "node ../node_modules/typescript/bin/tsc -p tsconfig.json && node prepare.mjs",
     "start": "node live.mjs",
-    "test": "node --test windows-desktop.test.cjs auto-update.test.cjs live.test.cjs",
+    "test": "node --test windows-desktop.test.cjs auto-update.test.cjs live.test.mjs",
     "dist": "npm run prepare:app && electron-builder --win nsis portable --x64",
     "release:signed": "npm run prepare:app && node release-signed.mjs",
     "start:once": "npm run prepare:app && electron ."
