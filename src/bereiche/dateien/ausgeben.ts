@@ -2715,7 +2715,142 @@ const Austausch = (() => {
     '<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>';
 
   /** Eine Folie: Titel oben, Text darunter. Zwei Formen, mehr nicht. */
-  const pptxFolie = (titel: string, zeilen: any[]): string => {
+  /* ══ EIGENE FOLIEN WANDERN WIRKLICH MIT (Redur, 31. Oktober 2026) ══════════
+     Gemessen: eine in Redion gebaute Folie kam als Text „[A4-Blatt]" in der
+     .pptx an, der ganze Inhalt fehlte. Der Kern kennt nur Blöcke, die Folie
+     trägt aber Marken. Hier werden sie zu echten Formen: Massstab von
+     Blattpunkten auf EMU, Text bleibt Text, Bilder bleiben eigene Dateien. */
+  const pptxText = (s: unknown): string =>
+    esc(String(s ?? '')).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+  const pptxFarbe = (wert: unknown, ersatz = '000000'): string => {
+    const hex = String(wert ?? '').trim().replace('#', '');
+    return /^[0-9a-fA-F]{6}$/.test(hex) ? hex.toUpperCase() : ersatz;
+  };
+  const PPTX_BILD: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpeg', 'image/gif': 'gif' };
+
+  /** Eine Liste von Marken als Formen-XML; was es nicht kann, wird gezählt. */
+  const pptxMarken = async (marken: any[], breite: number, hoehe: number): Promise<any> => {
+    const sx = FOLIE_BREITE / (breite || 960), sy = FOLIE_HOEHE / (hoehe || 540);
+    const emuX = (v: unknown): number => Math.round((Number(v) || 0) * sx);
+    const emuY = (v: unknown): number => Math.round((Number(v) || 0) * sy);
+    let id = 100, xml = '', ausgelassen = 0;
+    const bilder: any[] = [];
+    const kasten = (m: any): { x: number; y: number; w: number; h: number } | null => {
+      if (Array.isArray(m.pts) && m.pts.length >= 2) {
+        const xs = m.pts.map((q: any) => Number(q?.[0]) || 0), ys = m.pts.map((q: any) => Number(q?.[1]) || 0);
+        const x = Math.min(...xs), y = Math.min(...ys);
+        return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
+      }
+      if (Number.isFinite(Number(m.x)) && Number.isFinite(Number(m.w)))
+        return { x: Number(m.x), y: Number(m.y) || 0, w: Number(m.w), h: Number(m.h) || 0 };
+      return null;
+    };
+    const lage = (k: { x: number; y: number; w: number; h: number }, m: any, zusatz = ''): string =>
+      '<a:xfrm' + (m.dreh ? ' rot="' + Math.round(Number(m.dreh) * 60000) + '"' : '') + zusatz + '>' +
+      '<a:off x="' + emuX(k.x) + '" y="' + emuY(k.y) + '"/>' +
+      '<a:ext cx="' + Math.max(0, emuX(k.w)) + '" cy="' + Math.max(0, emuY(k.h)) + '"/></a:xfrm>';
+    const linie = (m: any, durchsichtig = false, ende = ''): string =>
+      '<a:ln w="' + Math.round(Math.max(0.25, Number(m.breite) || 1) * 12700) + '" cap="rnd">' +
+      '<a:solidFill><a:srgbClr val="' + pptxFarbe(m.farbe) + '">' +
+      (durchsichtig ? '<a:alpha val="40000"/>' : '') + '</a:srgbClr></a:solidFill><a:round/>' + ende + '</a:ln>';
+    const FORM: Record<string, string> = { rectangle: 'rect', roundrect: 'roundRect', ellipse: 'ellipse', triangle: 'triangle' };
+
+    for (const m of marken || []) {
+      if (!m || !m.art) continue;
+      const nr = id++;
+      if (m.art === 'text') {
+        const punkt = Array.isArray(m.point) ? m.point : [m.x, m.y];
+        const lay = typeof InkGeometry !== 'undefined' && InkGeometry.textLayout ? InkGeometry.textLayout(m) : null;
+        const k = { x: Number(punkt[0]) || 0, y: Number(punkt[1]) || 0,
+                    w: Number(lay?.width ?? m.breiteBox) || 300, h: Number(lay?.height) || (Number(m.fontSize) || 16) * 1.4 };
+        const pad = Math.round((Number(lay?.pad) || 0) * 12700);
+        const algn = m.ausricht === 'mitte' ? 'ctr' : m.ausricht === 'rechts' ? 'r' : 'l';
+        const absaetze = String(m.text ?? '').split('\n').map(z =>
+          '<a:p><a:pPr algn="' + algn + '"/><a:r><a:rPr lang="de-DE" sz="' + Math.round((Number(m.fontSize) || 16) * 100) + '"' +
+          (m.fett ? ' b="1"' : '') + ' dirty="0"><a:solidFill><a:srgbClr val="' + pptxFarbe(m.farbe) + '"/></a:solidFill></a:rPr>' +
+          '<a:t>' + pptxText(z) + '</a:t></a:r></a:p>').join('');
+        xml += '<p:sp><p:nvSpPr><p:cNvPr id="' + nr + '" name="Text ' + nr + '"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>' +
+          '<p:spPr>' + lage(k, m) + '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr>' +
+          '<p:txBody><a:bodyPr wrap="square" lIns="' + pad + '" tIns="' + pad + '" rIns="' + pad + '" bIns="' + pad + '"><a:noAutofit/></a:bodyPr><a:lstStyle/>' +
+          absaetze + '</p:txBody></p:sp>';
+        continue;
+      }
+      if (m.art === 'line' || m.art === 'arrow') {
+        const a = m.pts?.[0], b = m.pts?.[m.pts.length - 1];
+        const k = kasten(m);
+        if (!a || !b || !k) { ausgelassen++; continue; }
+        const flip = (b[0] < a[0] ? ' flipH="1"' : '') + (b[1] < a[1] ? ' flipV="1"' : '');
+        xml += '<p:cxnSp><p:nvCxnSpPr><p:cNvPr id="' + nr + '" name="Linie ' + nr + '"/><p:cNvCxnSpPr/><p:nvPr/></p:nvCxnSpPr>' +
+          '<p:spPr>' + lage(k, m, flip) + '<a:prstGeom prst="line"><a:avLst/></a:prstGeom>' +
+          linie(m, false, m.art === 'arrow' ? '<a:tailEnd type="triangle"/>' : '') + '</p:spPr></p:cxnSp>';
+        continue;
+      }
+      if (FORM[m.art] || m.art === 'abdeck') {
+        const k = kasten(m);
+        if (!k) { ausgelassen++; continue; }
+        const fuell = m.art === 'abdeck' ? m.farbe : m.fuellung;
+        xml += '<p:sp><p:nvSpPr><p:cNvPr id="' + nr + '" name="Form ' + nr + '"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>' +
+          '<p:spPr>' + lage(k, m) + '<a:prstGeom prst="' + (FORM[m.art] || 'rect') + '"><a:avLst/></a:prstGeom>' +
+          (fuell ? '<a:solidFill><a:srgbClr val="' + pptxFarbe(fuell) + '"/></a:solidFill>' : '<a:noFill/>') +
+          (m.art === 'abdeck' ? '<a:ln><a:noFill/></a:ln>' : linie(m)) + '</p:spPr>' +
+          '<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="de-DE"/></a:p></p:txBody></p:sp>';
+        continue;
+      }
+      if ((m.art === 'stift' || m.art === 'marker') && Array.isArray(m.pts) && m.pts.length >= 2) {
+        const k = kasten(m)!;
+        const w = Math.max(1, emuX(k.w)), h = Math.max(1, emuY(k.h));
+        const schritte = m.pts.map((q: any, i: number) => {
+          const x = emuX((Number(q?.[0]) || 0) - k.x), y = emuY((Number(q?.[1]) || 0) - k.y);
+          return i ? '<a:lnTo><a:pt x="' + x + '" y="' + y + '"/></a:lnTo>' : '<a:moveTo><a:pt x="' + x + '" y="' + y + '"/></a:moveTo>';
+        }).join('');
+        xml += '<p:sp><p:nvSpPr><p:cNvPr id="' + nr + '" name="Strich ' + nr + '"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>' +
+          '<p:spPr>' + lage(k, m) + '<a:custGeom><a:avLst/><a:gdLst/><a:ahLst/><a:cxnLst/><a:rect l="0" t="0" r="r" b="b"/>' +
+          '<a:pathLst><a:path w="' + w + '" h="' + h + '" fill="none">' + schritte + '</a:path></a:pathLst></a:custGeom><a:noFill/>' +
+          linie(m.art === 'marker' ? { ...m, breite: (Number(m.breite) || 1) * 4 } : m, m.art === 'marker') + '</p:spPr>' +
+          '<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="de-DE"/></a:p></p:txBody></p:sp>';
+        continue;
+      }
+      if (m.art === 'bild' && m.dateiId && typeof Dateien !== 'undefined' && Dateien.alsBlob) {
+        const k = kasten(m);
+        let blob: Blob | null = null;
+        try { blob = await Dateien.alsBlob(m.dateiId); } catch { blob = null; }
+        const endung = blob ? PPTX_BILD[blob.type] : undefined;
+        if (!k || !blob || !endung) { ausgelassen++; continue; }
+        const rid = 'rIdBild' + nr;
+        bilder.push({ rid, endung, bytes: new Uint8Array(await blob.arrayBuffer()) });
+        xml += '<p:pic><p:nvPicPr><p:cNvPr id="' + nr + '" name="Bild ' + nr + '"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>' +
+          '<p:blipFill><a:blip r:embed="' + rid + '"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>' +
+          '<p:spPr>' + lage(k, m) + '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>';
+        continue;
+      }
+      ausgelassen++;
+    }
+    return { xml, bilder, ausgelassen };
+  };
+
+  /* Der Übergang als XML. `keine` und Unbekanntes ergeben nichts. */
+  const pptxUebergang = (u: any): string => {
+    if (!u || typeof u !== 'object') return '';
+    const dir = /^[lrud]$/.test(String(u.richtung || '')) ? ' dir="' + u.richtung + '"' : '';
+    const effekt: Record<string, string> = {
+      blenden: '<p:fade/>', schieben: '<p:push' + dir + '/>', decken: '<p:cover' + dir + '/>',
+      wischen: '<p:wipe' + dir + '/>', zoom: '<p:zoom/>'
+    };
+    const inhalt = effekt[String(u.art)];
+    if (!inhalt) return '';
+    const dauer = Number(u.dauer) || 700;
+    return '<p:transition spd="' + (dauer <= 500 ? 'fast' : dauer >= 850 ? 'slow' : 'med') + '">' + inhalt + '</p:transition>';
+  };
+
+  const pptxNotizAbsaetze = (text: string): string =>
+    String(text).split('\n').map(z =>
+      '<a:p><a:r><a:rPr lang="de-DE" dirty="0"/><a:t>' + pptxText(z) + '</a:t></a:r></a:p>').join('');
+  const pptxNotizKoerper = (inhalt: string, lageXml: string): string =>
+    '<p:sp><p:nvSpPr><p:cNvPr id="2" name="Notizen"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>' +
+    '<p:nvPr><p:ph type="body" idx="1"/></p:nvPr></p:nvSpPr><p:spPr>' + lageXml + '</p:spPr>' +
+    '<p:txBody><a:bodyPr/><a:lstStyle/>' + inhalt + '</p:txBody></p:sp>';
+
+  const pptxFolie = (titel: string, zeilen: any[], extra: { formen?: string; uebergang?: any } = {}): string => {
     const rahmen = (x: number, y: number, cx: number, cy: number) =>
       '<a:off x="' + x + '" y="' + y + '"/><a:ext cx="' + cx + '" cy="' + cy + '"/>';
     const form = (id: number, name: string, x: number, y: number,
@@ -2734,6 +2869,7 @@ const Austausch = (() => {
         '<a:p><a:pPr algn="l"/><a:r><a:rPr lang="de-DE" sz="4000" b="1" dirty="0"/>' +
         '<a:t>' + esc(titel) + '</a:t></a:r></a:p>');
     }
+    const nurFormen = !zeilen.length && !!extra.formen;
     const oben = titel ? 1828800 : 685800;
     const absaetze = zeilen.length
       ? zeilen.map((z: any) =>
@@ -2744,13 +2880,15 @@ const Austausch = (() => {
       /* Eine leere Folie braucht trotzdem einen Absatz — ein Textkörper
          ohne `a:p` ist nach Schema ungültig. */
       : '<a:p><a:endParaRPr lang="de-DE"/></a:p>';
-    formen += form(id++, 'Inhalt', rand, oben, FOLIE_BREITE - 2 * rand,
+    /* Eine Folie aus Marken braucht keinen leeren Inhaltskasten darüber. */
+    if (!nurFormen) formen += form(id++, 'Inhalt', rand, oben, FOLIE_BREITE - 2 * rand,
       FOLIE_HOEHE - oben - 457200, absaetze);
+    formen += extra.formen || '';
 
     return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<p:sld ' + PPTX_NS + '>' +
       '<p:cSld>' + pptxBaum(formen) + '</p:cSld>' +
-      '<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>';
+      '<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>' + pptxUebergang(extra.uebergang) + '</p:sld>';
   };
 
   const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/';
@@ -2770,6 +2908,8 @@ const Austausch = (() => {
     const nr: number[] = [];
     for (let i = 1; i <= n; i++) nr.push(i);
     const PML = 'application/vnd.openxmlformats-officedocument.presentationml.';
+    const mitNotizen = folien.some((f: any) => f && typeof f.notizen === 'string' && f.notizen.trim());
+    const bildEndungen = [...new Set(folien.flatMap((f: any) => (f?.bilder || []).map((b: any) => b.endung)))];
 
     const dateien: any[] = [
       { name: '[Content_Types].xml', inhalt:
@@ -2777,7 +2917,14 @@ const Austausch = (() => {
         '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
         '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
         '<Default Extension="xml" ContentType="application/xml"/>' +
+        bildEndungen.map(e => '<Default Extension="' + e + '" ContentType="image/' + e + '"/>').join('') +
         '<Override PartName="/ppt/presentation.xml" ContentType="' + PML + 'presentation.main+xml"/>' +
+        (mitNotizen
+          ? '<Override PartName="/ppt/notesMasters/notesMaster1.xml" ContentType="' + PML + 'notesMaster+xml"/>' +
+            '<Override PartName="/ppt/theme/theme2.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>' +
+            nr.filter(i => String(folien[i - 1]?.notizen || '').trim()).map(i =>
+              '<Override PartName="/ppt/notesSlides/notesSlide' + i + '.xml" ContentType="' + PML + 'notesSlide+xml"/>').join('')
+          : '') +
         '<Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="' + PML + 'slideMaster+xml"/>' +
         '<Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="' + PML + 'slideLayout+xml"/>' +
         '<Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>' +
@@ -2792,6 +2939,7 @@ const Austausch = (() => {
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
         '<p:presentation ' + PPTX_NS + '>' +
         '<p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst>' +
+        (mitNotizen ? '<p:notesMasterIdLst><p:notesMasterId r:id="rId' + (n + 3) + '"/></p:notesMasterIdLst>' : '') +
         '<p:sldIdLst>' + nr.map(i =>
           '<p:sldId id="' + (255 + i) + '" r:id="rId' + (i + 1) + '"/>').join('') +
         '</p:sldIdLst>' +
@@ -2802,7 +2950,8 @@ const Austausch = (() => {
       { name: 'ppt/_rels/presentation.xml.rels', inhalt:
         rels(rel('rId1', 'slideMaster', 'slideMasters/slideMaster1.xml') +
              nr.map(i => rel('rId' + (i + 1), 'slide', 'slides/slide' + i + '.xml')).join('') +
-             rel('rId' + (n + 2), 'theme', 'theme/theme1.xml')) },
+             rel('rId' + (n + 2), 'theme', 'theme/theme1.xml') +
+             (mitNotizen ? rel('rId' + (n + 3), 'notesMaster', 'notesMasters/notesMaster1.xml') : '')) },
 
       { name: 'ppt/slideMasters/slideMaster1.xml', inhalt: pptxMaster() },
       { name: 'ppt/slideMasters/_rels/slideMaster1.xml.rels', inhalt:
@@ -2819,11 +2968,88 @@ const Austausch = (() => {
     nr.forEach(i => {
       const f = folien[i - 1] || { titel: '', zeilen: [] };
       dateien.push({ name: 'ppt/slides/slide' + i + '.xml',
-        inhalt: pptxFolie(String(f.titel || ''), f.zeilen || []) });
+        inhalt: pptxFolie(String(f.titel || ''), f.zeilen || [],
+          { formen: f.formen, uebergang: f.uebergang }) });
+      const notiz = String(f.notizen || '').trim() ? String(f.notizen) : '';
+      for (const [j, b] of (f.bilder || []).entries())
+        dateien.push({ name: 'ppt/media/folie' + i + '-' + j + '.' + b.endung, inhalt: b.bytes });
       dateien.push({ name: 'ppt/slides/_rels/slide' + i + '.xml.rels',
-        inhalt: rels(rel('rId1', 'slideLayout', '../slideLayouts/slideLayout1.xml')) });
+        inhalt: rels(rel('rId1', 'slideLayout', '../slideLayouts/slideLayout1.xml') +
+          (f.bilder || []).map((b: any, j: number) =>
+            rel(b.rid, 'image', '../media/folie' + i + '-' + j + '.' + b.endung)).join('') +
+          (notiz ? rel('rIdNotiz', 'notesSlide', '../notesSlides/notesSlide' + i + '.xml') : '')) });
+      if (notiz) {
+        dateien.push({ name: 'ppt/notesSlides/notesSlide' + i + '.xml', inhalt:
+          '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:notes ' + PPTX_NS + '><p:cSld>' +
+          pptxBaum(pptxNotizKoerper(pptxNotizAbsaetze(notiz), '')) +
+          '</p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:notes>' });
+        dateien.push({ name: 'ppt/notesSlides/_rels/notesSlide' + i + '.xml.rels', inhalt:
+          rels(rel('rId1', 'notesMaster', '../notesMasters/notesMaster1.xml') +
+               rel('rId2', 'slide', '../slides/slide' + i + '.xml')) });
+      }
     });
+    if (mitNotizen) {
+      dateien.push({ name: 'ppt/notesMasters/notesMaster1.xml', inhalt:
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:notesMaster ' + PPTX_NS + '><p:cSld>' +
+        pptxBaum(pptxNotizKoerper('<a:p><a:endParaRPr lang="de-DE"/></a:p>',
+          '<a:xfrm><a:off x="685800" y="3429000"/><a:ext cx="5486400" cy="2743200"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom>')) +
+        '</p:cSld><p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" ' +
+        'accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/></p:notesMaster>' });
+      dateien.push({ name: 'ppt/notesMasters/_rels/notesMaster1.xml.rels', inhalt: rels(rel('rId1', 'theme', '../theme/theme2.xml')) });
+      dateien.push({ name: 'ppt/theme/theme2.xml', inhalt: pptxThema() });
+    }
     return dateien;
+  };
+
+  /* Den Übergang einer fremden Folie ersetzen. Auch die `mc:AlternateContent`
+     um einen neueren Effekt geht weg, aber nur die, die wirklich einen trägt:
+     Formen dürfen ebenfalls darin liegen. Eingesetzt wird nach `p:clrMapOvr`,
+     wie das Schema es verlangt, sonst nach `p:cSld`. */
+  const folieMitUebergang = (xml: string, u: any): string => {
+    const ohne = xml
+      .replace(/<mc:AlternateContent\b(?:(?!<\/mc:AlternateContent>)[\s\S])*?<p:transition\b[\s\S]*?<\/mc:AlternateContent>/g, '')
+      .replace(/<p:transition\b(?:[^>]*\/>|[^>]*>[\s\S]*?<\/p:transition>)/g, '');
+    const neu = pptxUebergang(u);
+    if (!neu) return ohne;
+    if (ohne.includes('</p:clrMapOvr>')) return ohne.replace('</p:clrMapOvr>', () => '</p:clrMapOvr>' + neu);
+    if (/<p:clrMapOvr\b[^>]*\/>/.test(ohne)) return ohne.replace(/<p:clrMapOvr\b[^>]*\/>/, m => m + neu);
+    return ohne.replace('</p:cSld>', () => '</p:cSld>' + neu);
+  };
+
+  /* Die Notiz einer fremden Folie zurückschreiben. Geändert wird nur der Text
+     im Platzhalter `body`, und nur, wenn er sich unterscheidet. Eine Notizenseite
+     neu anzulegen hiesse, in die Datei einen Notizen-Master einzubauen; das bleibt
+     offen und wird gemeldet. */
+  const notizZurueck = async (leser: any, folie: string, text: string): Promise<any> => {
+    const ordner = folie.slice(0, folie.lastIndexOf('/'));
+    const relsText = String(await leser.text(ordner + '/_rels/' + folie.slice(ordner.length + 1) + '.rels') || '');
+    const ziel = relsText.match(/Target="([^"]*notesSlides\/[^"]+)"/)?.[1];
+    if (!ziel) return { ohnePlatz: !!text.trim() };
+    const name = 'ppt/notesSlides/' + ziel.slice(ziel.lastIndexOf('/') + 1);
+    const alt = String(await leser.text(name) || '');
+    if (!alt) return {};
+    const doc = new DOMParser().parseFromString(alt, 'application/xml');
+    if (doc.getElementsByTagName('parsererror').length) return {};
+    const koerper = Array.from(doc.getElementsByTagName('p:sp'))
+      .find(sp => sp.getElementsByTagName('p:ph')[0]?.getAttribute('type') === 'body');
+    const tx = koerper?.getElementsByTagName('p:txBody')[0];
+    if (!tx) return { ohnePlatz: !!text.trim() };
+    const absaetze = Array.from(tx.getElementsByTagName('a:p'));
+    const bisher = absaetze.map(a => Array.from(a.getElementsByTagName('a:t')).map(t => t.textContent || '').join('')).join('\n').trim();
+    if (bisher === text.trim()) return {};
+    absaetze.forEach(a => a.remove());
+    const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
+    for (const zeile of (text.trim() ? text.split('\n') : [''])) {
+      const p = doc.createElementNS(A_NS, 'a:p');
+      if (zeile) {
+        const lauf = doc.createElementNS(A_NS, 'a:r');
+        const t = doc.createElementNS(A_NS, 'a:t');
+        t.textContent = zeile.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+        lauf.appendChild(t); p.appendChild(lauf);
+      }
+      tx.appendChild(p);
+    }
+    return { neu: { name, xml: new XMLSerializer().serializeToString(doc) } };
   };
 
   /* ══ EINEN GEÄNDERTEN TEXT IN DIE FOLIE ZURÜCKSCHREIBEN (E593, O5b) ══════
@@ -2957,13 +3183,27 @@ const Austausch = (() => {
           (Number(a.match(/(\d+)/)?.[1]) || 0) - (Number(b.match(/(\d+)/)?.[1]) || 0));
       const neueFolien = new Map<string, string>();
       let geschrieben = 0;
+      let notizenOhnePlatz = 0;
       for (const [i, name] of folienNamen.entries()) {
         const blatt = blaetter[i];
-        if (!blatt || !Array.isArray(blatt.marken) || !blatt.marken.length) continue;
+        if (!blatt) continue;
         try {
-          const alt = await paket.leser.text(name);
-          const neu = folieMitText(String(alt || ''), blatt.marken);
-          if (neu.geschrieben) { neueFolien.set(name, neu.xml); geschrieben += neu.geschrieben; }
+          let xml = String(await paket.leser.text(name) || '');
+          let geaendert = false;
+          if (Array.isArray(blatt.marken) && blatt.marken.length) {
+            const neu = folieMitText(xml, blatt.marken);
+            if (neu.geschrieben) { xml = neu.xml; geschrieben += neu.geschrieben; geaendert = true; }
+          }
+          /* Ein eingelesener Übergang trägt `original` und bleibt, wie er in der
+             Datei steht. Nur ein in Redion gewählter wird geschrieben. */
+          if (blatt.uebergang?.art && !blatt.uebergang.original) {
+            xml = folieMitUebergang(xml, blatt.uebergang);
+            geaendert = true;
+          }
+          if (geaendert) neueFolien.set(name, xml);
+          const notiz = await notizZurueck(paket.leser, name, typeof blatt.notizen === 'string' ? blatt.notizen : '');
+          if (notiz.neu) neueFolien.set(notiz.neu.name, notiz.neu.xml);
+          if (notiz.ohnePlatz) notizenOhnePlatz++;
         } catch { /* diese Folie bleibt, wie sie war */ }
       }
 
@@ -2994,12 +3234,16 @@ const Austausch = (() => {
          Zurückgeschrieben wird nur, was eine Rückspur trägt. Der Satz
          richtet sich deshalb danach, ob überhaupt etwas geschrieben wurde —
          eine feste Formel wäre in einem der beiden Fälle gelogen. */
-      const hinweis = geschrieben
+      const hinweis = (geschrieben
         ? 'Die Originaldatei ist vollständig erhalten; '
           + geschrieben + (geschrieben === 1 ? ' Textstelle wurde' : ' Textstellen wurden')
           + ' übernommen. Formen ohne eindeutige Zuordnung stehen unverändert darin.'
         : 'Die Originaldatei ist vollständig erhalten. In Redion '
-          + 'geänderte Folieninhalte stehen noch nicht darin.';
+          + 'geänderte Folieninhalte stehen noch nicht darin.')
+        + (notizenOhnePlatz
+          ? ' Sprechernotizen auf ' + notizenOhnePlatz + (notizenOhnePlatz === 1 ? ' Folie' : ' Folien')
+            + ' ohne Notizenseite im Original stehen nur in Redion.'
+          : '');
       /* UND ZWAR SICHTBAR, nicht nur im Rückgabewert. Wer speichert, sieht
          eine Datei und glaubt sonst, seine Änderung sei darin — das wäre
          ein stiller Verlust, und still ist hier das Schlimmere (§35). */
@@ -3009,12 +3253,39 @@ const Austausch = (() => {
     }
 
     const roh = Folien.teilen(seite, (id: string) => Store.childrenOf(id));
-    const folien = roh.map((f: any) => ({
-      titel: f.titel, zeilen: Folien.alsZeilen(f, (id: string) => Store.childrenOf(id))
-    }));
+    let ausgelassen = 0;
+    const folien: any[] = [];
+    for (const f of roh) {
+      const zeilen = Folien.alsZeilen(f, (id: string) => Store.childrenOf(id));
+      const bloecke = (f.eintraege || []).map((e: any) => e.block);
+      const blatt = bloecke.find((b: any) => b?.type === 'blatt');
+      const eintrag: any = { titel: f.titel, zeilen };
+      if (blatt) {
+        const teil = await pptxMarken(blatt.marken || [], Number(blatt.blattBreite), Number(blatt.blattHoehe));
+        ausgelassen += teil.ausgelassen;
+        eintrag.formen = teil.xml;
+        eintrag.bilder = teil.bilder;
+        /* Der Platzhalter „[A4-Blatt]" weicht; sein Text steht jetzt als Formen da.
+           Was als Text im Blatt steht, bleibt als Absatz erhalten. */
+        const kinder = (Store.childrenOf(blatt.id) || [])
+          .map((k: any) => String(k?.text || '')).filter((t: string) => t.trim());
+        eintrag.zeilen = [...zeilen.filter((z: any) => z.art !== 'bild' || !/^\[A4-Blatt\]$/.test(z.text)),
+                          ...kinder.map((text: string) => ({ text, tiefe: 0 }))];
+      }
+      const traeger = bloecke.find((b: any) => typeof b?.notizen === 'string' && b.notizen.trim());
+      if (traeger) eintrag.notizen = traeger.notizen;
+      const mitUebergang = bloecke.find((b: any) => b?.uebergang?.art);
+      if (mitUebergang) eintrag.uebergang = mitUebergang.uebergang;
+      folien.push(eintrag);
+    }
     const blob = await zipSchreiben(pptxTeile(folien));
     await laden(blob, dateiName);
-    return { blob, folien: folien.length, durchgereicht: false };
+    /* §35: was nicht mitkam, wird gesagt, nicht verschwiegen. */
+    const hinweis = ausgelassen
+      ? ausgelassen + (ausgelassen === 1 ? ' Element' : ' Elemente') + ' der Folien liess sich nicht als PowerPoint-Form schreiben und fehlt in der Datei.'
+      : '';
+    if (hinweis) { try { UI.toast(hinweis, 7000); } catch { /* der Rückgabewert sagt es */ } }
+    return { blob, folien: folien.length, durchgereicht: false, ausgelassen, hinweis };
   };
 
   return { zipSchreiben, crc32, laden, alsWord, alsPowerPoint, pptxTeile, alsExcel,

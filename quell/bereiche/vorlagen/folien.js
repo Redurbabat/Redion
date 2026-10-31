@@ -244,6 +244,42 @@ const Folienvorlagen = (() => {
         const id = typeof App !== 'undefined' ? String(App.aktuelleSeite() || '') : '';
         return id && istFoliensatz(id) ? id : '';
     };
+    const UEBERGAENGE = [
+        { wert: 'keine', name: 'Keiner', hinweis: 'Harter Schnitt' },
+        { wert: 'blenden', name: 'Blenden', hinweis: 'Die Folie erscheint weich' },
+        { wert: 'schieben', name: 'Schieben', hinweis: 'Kommt von rechts herein', richtung: 'l' },
+        { wert: 'wischen', name: 'Wischen', hinweis: 'Wird von rechts aufgedeckt', richtung: 'l' },
+        { wert: 'zoom', name: 'Zoom', hinweis: 'Wächst aus der Mitte' }
+    ];
+    const folienDes = (satzId) => (Store.childrenOf(satzId) || []).filter((b) => b?.type === 'blatt');
+    const uebergangWaehlen = async (satzId) => {
+        const folien = folienDes(satzId);
+        if (!folien.length)
+            return;
+        const wahl = await Dialog.wahl({ titel: 'Übergang für alle Folien',
+            text: 'Gilt beim Präsentieren, wenn jemand weiterblättert.',
+            knoepfe: UEBERGAENGE.map(u => ({ id: u.wert, text: u.name, hinweis: u.hinweis })) });
+        const art = UEBERGAENGE.find(u => u.wert === wahl);
+        if (!art)
+            return;
+        for (const folie of folien)
+            Store.updateBlock(folie.id, {
+                uebergang: { art: art.wert, dauer: 600, ...(art.richtung ? { richtung: art.richtung } : {}) }
+            });
+        UI.toast('Übergang: ' + art.name);
+    };
+    const notizenBearbeiten = async (satzId) => {
+        const folien = folienDes(satzId);
+        if (!folien.length)
+            return;
+        const gemerkt = Number(Store.getMeta('dokSeite:' + satzId));
+        const nr = Math.max(0, Math.min(folien.length - 1, Number.isFinite(gemerkt) ? Math.floor(gemerkt) : 0));
+        const folie = folien[nr];
+        const text = await Dialog.mehrzeilig('Sprechernotizen, Folie ' + (nr + 1), String(folie.notizen || ''));
+        if (text === null)
+            return;
+        Store.updateBlock(folie.id, { notizen: text });
+    };
     const bandEintraege = () => {
         const satz = offenerSatz();
         if (!satz)
@@ -277,6 +313,12 @@ const Folienvorlagen = (() => {
                 gross: true, hinweis: 'Vollbild — ein Klick deckt die nächste Antwort auf',
                 wenn: () => da(() => Werkzeuge.praesentation),
                 tun: () => { void Werkzeuge.praesentation(Store.getBlock(offenerSatz())); } }),
+            eintrag({ gruppe: 'Vortrag', id: 'pv-uebergang', name: 'Übergang', zeichen: 'play',
+                hinweis: 'Wie eine Folie auf die nächste folgt — für den ganzen Satz',
+                tun: () => { void uebergangWaehlen(offenerSatz()); } }),
+            eintrag({ gruppe: 'Vortrag', id: 'pv-notizen', name: 'Sprechernotizen', zeichen: 'page',
+                hinweis: 'Notizen zur offenen Folie — im Vortrag mit der Taste N',
+                tun: () => { void notizenBearbeiten(offenerSatz()); } }),
             eintrag({ gruppe: 'Ausgeben', id: 'pv-pptx', name: 'Als PowerPoint', zeichen: 'download',
                 hinweis: 'Die Folien als .pptx-Datei sichern',
                 wenn: () => da(() => Austausch.alsPowerPoint),

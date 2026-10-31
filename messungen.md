@@ -9555,3 +9555,18 @@ Favoriten-, Such-, Menü-, Listen- und Leerzustände; lokale Galerie unter
 synthetischen Prüfbilder als 14 Tage verfügbares Artefakt bereit, nicht als
 Dateien im Git-Bestand. Kein Deployment. Voller Gesamtlauf nicht gefahren;
 Endergebnisse und Wiederholungsbefehle in `doku/WORKSPACE-2-BIBLIOTHEK.md`.
+
+## §108 · Die Gegenproben von test624 (E758, 31. Oktober 2026)
+
+Je Gegenprobe wurde das gebaute `.js` geändert, der Lauf gefahren und die Datei
+zurückgestellt. Fenster 1280 × 800, Chromium von Playwright.
+
+| Änderung | Ergebnis |
+|---|---|
+| Aufruf `seiteKommtAn()` entfernt | rot: „§1 eine geöffnete Seite kommt an" |
+| beide Horcher von `mitfuehren` entfernt | rot: Schreibzeile bei 75,5 % statt um 42 % der Höhe |
+| `notizenSichtbar` beginnt mit true | rot: „§5 die Notizen sind am Anfang verborgen" |
+| Prüfung auf `type="body"` entfernt | rot: Notiz wird „7\nErst die Frage stellen" |
+| `mitDruck` immer falsch | rot: „§7 der Stiftstrich ist eine Fläche" |
+
+Nachtrag E759: Zwei weitere Gegenproben, gleiche Art. `eintrag.formen` nicht gesetzt: rot in §8 („kein Platzhalter", „die Lage stimmt"). `notizZurueck` nicht gerufen: rot in §9 („die geänderte Notiz", „wird gemeldet"). Gemessen vor der Reparatur: eine selbst gebaute Folie las sich nach Export und Einlesen als der eine Text „[A4-Blatt]".

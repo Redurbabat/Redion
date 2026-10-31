@@ -1052,15 +1052,82 @@ const Werkzeuge = (() => {
   /* ========================================================================
    * 8. FOKUS-MODUS   (MarkText, Zettlr, iA Writer)
    * ======================================================================*/
+  /* ══ DER SCHREIBBEGLEITER (Redur, 31. Oktober 2026: „besser als Word beim
+     Schreiben") ══════════════════════════════════════════════════════════
+     Zwei Dinge, nur im Fokus-Modus und nur zur Laufzeit; nichts davon wird
+     gespeichert:
+       · Die Schreibzeile bleibt auf Augenhöhe (42 % der Höhe), statt dass
+         sie langsam an den unteren Rand wandert.
+       · Wörter und Lesezeit stehen in einer stillen Pille, ohne Dialog.
+     Gerechnet wird über `statistikZahlen`, damit der Dialog „Statistik"
+     und die Pille nie zwei Zahlen zeigen. */
+  let begleiterEnde: (() => void) | null = null;
+  let fokusTaste: ((e: KeyboardEvent) => void) | null = null;
+  const schreibbegleiter = (an: boolean): void => {
+    begleiterEnde?.(); begleiterEnde = null;
+    if (!an) return;
+    const pille = document.createElement('div');
+    pille.className = 'fokus-zaehler';
+    /* Am Telefon gibt es kein Escape: ohne diesen Knopf wäre der Fokus-Modus
+       dort eine Falle, weil auch die untere Leiste verschwindet (§37). */
+    const zahl = document.createElement('span');
+    zahl.setAttribute('role', 'status');
+    const fertig = document.createElement('button');
+    fertig.type = 'button';
+    fertig.className = 'fokus-fertig';
+    fertig.textContent = 'Fertig';
+    fertig.addEventListener('click', () => fokus(false));
+    pille.append(zahl, fertig);
+    document.body.appendChild(pille);
+    let warte: ReturnType<typeof setTimeout> | null = null;
+    const zaehlen = (): void => {
+      const seite = Store.getBlock(App.aktuelleSeite());
+      if (!seite) { zahl.textContent = ''; return; }
+      const { woerter, lesezeit } = statistikZahlen(seite);
+      zahl.textContent = woerter + (woerter === 1 ? ' Wort' : ' Wörter') +
+        ' · ' + lesezeit + ' min';
+    };
+    const spaeter = (): void => { if (warte) clearTimeout(warte); warte = setTimeout(zaehlen, 400); };
+    const mitfuehren = (): void => {
+      const auswahl = document.getSelection();
+      if (!auswahl?.isCollapsed || !auswahl.rangeCount) return;
+      const start = auswahl.anchorNode instanceof Element ? auswahl.anchorNode : auswahl.anchorNode?.parentElement;
+      if (!start?.closest('#page [contenteditable="true"], #page [contenteditable=""]')) return;
+      let rahmen = auswahl.getRangeAt(0).getClientRects()[0];
+      if (!rahmen) rahmen = start.getBoundingClientRect();
+      let rolle: HTMLElement | null = start.closest('#page');
+      while (rolle && !(rolle.scrollHeight > rolle.clientHeight + 1 &&
+          /auto|scroll/.test(getComputedStyle(rolle).overflowY))) rolle = rolle.parentElement;
+      if (!rolle) return;
+      const r = rolle.getBoundingClientRect();
+      const abstand = rahmen.top - (r.top + r.height * 0.42);
+      if (Math.abs(abstand) < 24) return;
+      rolle.scrollBy({ top: abstand, behavior: AppEinstellung.wenigBewegung() ? 'auto' : 'smooth' });
+    };
+    document.addEventListener('input', spaeter, true);
+    document.addEventListener('input', mitfuehren, true);
+    document.addEventListener('keyup', mitfuehren, true);
+    zaehlen();
+    begleiterEnde = () => {
+      if (warte) clearTimeout(warte);
+      document.removeEventListener('input', spaeter, true);
+      document.removeEventListener('input', mitfuehren, true);
+      document.removeEventListener('keyup', mitfuehren, true);
+      pille.remove();
+    };
+  };
+
   const fokus = (an?: any) => {
     const jetzt = an === undefined ? !document.body.classList.contains('fokus') : an;
     document.body.classList.toggle('fokus', jetzt);
     UI.toast(jetzt ? 'Fokus-Modus — Esc beendet ihn' : 'Fokus-Modus beendet');
+    schreibbegleiter(jetzt);
+    /* Der Horcher geht auch weg, wenn „Fertig" beendet hat; sonst meldete das
+       nächste Escape ein zweites Mal „beendet". */
+    if (fokusTaste) { document.removeEventListener('keydown', fokusTaste); fokusTaste = null; }
     if (jetzt) {
-      const raus = (e: any) => {
-        if (e.key === 'Escape') { fokus(false); document.removeEventListener('keydown', raus); }
-      };
-      document.addEventListener('keydown', raus);
+      fokusTaste = (e: KeyboardEvent) => { if (e.key === 'Escape') fokus(false); };
+      document.addEventListener('keydown', fokusTaste);
     }
   };
 
@@ -1165,6 +1232,43 @@ const Werkzeuge = (() => {
       if (feld) feld.textContent = zaehlerText();
     };
 
+    /* ══ SPRECHERNOTIZEN UND UHR (Redur, 31. Oktober 2026: „besser als
+       PowerPoint") ═══════════════════════════════════════════════════════
+       Die Notizen stehen am ersten Block einer Folie, der welche trägt.
+       Sichtbar erst auf Wunsch: an einem einzigen Bildschirm sieht das
+       Publikum dasselbe wie der Vortragende. Die Uhr läuft nur in dieser
+       Ansicht und wird nie gespeichert. */
+    const startZeit = Date.now();
+    let notizenSichtbar = false;
+    const uhrText = (): string => {
+      const s = Math.floor((Date.now() - startZeit) / 1000);
+      return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    };
+    const notizenDerFolie = (f: any): string => {
+      for (const e of f?.bloecke || []) if (typeof e?.b?.notizen === 'string' && e.b.notizen.trim()) return e.b.notizen;
+      return '';
+    };
+    const notizenHtml = (n: number): string => {
+      if (!notizenSichtbar) return '';
+      const danach = folien[n + 1];
+      const naechste = danach ? 'Als Nächstes: ' + (danach.titel || 'Folie ' + (n + 2)) : 'Letzte Folie';
+      const text = notizenDerFolie(folien[n]);
+      return '<aside class="praesi-notizen" aria-label="Sprechernotizen">' +
+        '<p class="praesi-notiztext">' + (text ? esc(text) : 'Keine Notizen zu dieser Folie.') + '</p>' +
+        '<p class="praesi-naechste">' + esc(naechste) + '</p></aside>';
+    };
+    const uhrLauf = setInterval(() => {
+      if (!o.isConnected) { clearInterval(uhrLauf); return; }
+      const uhr = o.querySelector('.praesi-uhr');
+      if (uhr) uhr.textContent = uhrText();
+    }, 1000);
+    const notizenUmschalten = (): void => {
+      notizenSichtbar = !notizenSichtbar;
+      o.querySelector('.praesi-notizen')?.remove();
+      o.querySelector('[data-a="notizen"]')?.setAttribute('aria-pressed', String(notizenSichtbar));
+      if (notizenSichtbar) o.insertAdjacentHTML('beforeend', notizenHtml(i));
+    };
+
     const zeichne = () => {
       const f = folien[i];
       /* Eine Seite ohne einen einzigen Block ergibt keine Folie. Vorher wäre
@@ -1192,8 +1296,10 @@ const Werkzeuge = (() => {
           `<button data-a="vor">‹</button>` +
           `<span>${zaehlerText()}</span>` +
           `<button data-a="zurueck">›</button>` +
-          `<button data-a="zu">Beenden (Esc)</button>` +
-        `</div>`;
+          `<time class="praesi-uhr" aria-label="Laufzeit des Vortrags">${uhrText()}</time>` +
+          `<button data-a="notizen" aria-pressed="${notizenSichtbar}" title="Sprechernotizen (N)">Notizen</button>` +
+          `<button data-a="zu">Beenden<span class="praesi-esc"> (Esc)</span></button>` +
+        `</div>` + notizenHtml(i);
       /* ══ UND JETZT DER ÜBERGANG (E600) ══════════════════════════════════
          `zeichne` baut die Folie jedes Mal neu — der Knoten ist also frisch,
          und die Animation startet von selbst. Genau deshalb steht sie hier
@@ -1309,6 +1415,7 @@ const Werkzeuge = (() => {
     };
     const tasten = (e: any) => {
       if (e.key === 'Escape') { schliessen(); return; }
+      if (e.key === 'n' || e.key === 'N') { notizenUmschalten(); return; }
       if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); weiter(1); }
       if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); weiter(-1); }
       /* Home und End springen über ALLES hinweg — sie dürfen nicht in den
@@ -1318,11 +1425,14 @@ const Werkzeuge = (() => {
       if (e.key === 'End') springe(folien.length - 1, true);
     };
     const schliessen = () => {
+      clearInterval(uhrLauf);
       o.remove(); document.removeEventListener('keydown', tasten);
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     };
     o.addEventListener('click', e => {
       if (elVon(e)?.closest<HTMLElement>('[data-a="zu"]')) return schliessen();
+      if (elVon(e)?.closest<HTMLElement>('[data-a="notizen"]')) return notizenUmschalten();
+      if (elVon(e)?.closest<HTMLElement>('.praesi-notizen')) return;
       if (elVon(e)?.closest<HTMLElement>('[data-a="vor"]')) return weiter(-1);
       if (elVon(e)?.closest<HTMLElement>('[data-a="zurueck"]')) return weiter(1);
       /* Die Leiste ist Bedienung, keine Folie — ein Klick daneben darf nicht

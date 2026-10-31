@@ -37,10 +37,10 @@ function setup() {
   return { route, doc, buttons, clicked, tasks, tick, time(ms) { currentTime += ms; } };
 }
 
-test('iPhone Appsymbol bietet drei echte Redion-Bereiche an', () => {
-  assert.deepEqual(Object.keys(SHORTCUT_TABS), ['dokumente', 'heute', 'lernen']);
+test('iPhone Appsymbol bietet vier echte Redion-Wege an', () => {
+  assert.deepEqual(Object.keys(SHORTCUT_TABS), ['neu', 'dokumente', 'heute', 'lernen']);
   assert.deepEqual(SHORTCUTS.map(x => x.id), Object.keys(SHORTCUT_TABS));
-  assert.deepEqual(Object.values(SHORTCUT_TABS), ['hl-dok', 'hl-start', 'hl-lernen']);
+  assert.deepEqual(Object.values(SHORTCUT_TABS), ['btn-new-bottom', 'hl-dok', 'hl-start', 'hl-lernen']);
 });
 
 test('Kaltstart wartet, bis die Originalnavigation klickbereit ist', () => {
@@ -141,7 +141,7 @@ test('Veränderte UIScene-Templates werden nicht blind gepatcht', () => {
 test('Info.plist definiert sichere, feste Home-Screen-Kurzbefehle', () => {
   const cmds = plistCommands();
   assert.equal(cmds[0], 'Add :UIApplicationShortcutItems array');
-  assert.equal(cmds.length, 1 + 3 * 5);
+  assert.equal(cmds.length, 1 + 4 * 5);
   for (const id of Object.keys(SHORTCUT_TABS)) {
     assert.ok(cmds.some(v => v.endsWith('ch.redurbabat.redion.' + id)));
   }

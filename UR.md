@@ -3631,6 +3631,100 @@ Die alte Geometrieprüfung mass die neue Bedienzeile am inneren Vorschaublatt. D
 
 Die erste native IPC-Prüfung erwartete eine URL ohne Fragment, obwohl Redion seine Bibliothek über Fragmentziele öffnet. Der reale Electron-Start deckte das auf. Jetzt bleibt die Einstiegsdatei exakt festgelegt, während Fragmentnavigation erlaubt und fremde Pfade/Frames gesperrt sind. Zusätzlich zeigte die Cloudflare-Prüfung, dass ein fehlender Server und der native Access-/CORS-Anmeldeweg nicht durch eine blosse Datenbankbindung ersetzt werden können.
 
+### 2026-10-31 · Samstag — Erste Welle für den täglichen Gebrauch
+
+> Redion war in Zeichnen, Schreiben und Folien schon weit; Stift-Sätze und Folienübergänge gab es, selbst wählbare Übergänge und Sprechernotizen nicht. Kein Mac und kein iPhone an diesem Rechner.
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · nicht protokolliert**
+
+> ich will so überlal animationen übergangen widget für iphone und bei der windows ales integriern maximul neu bereichen , animatioen, usw alles haben kreativen desing, es sollte bessere als goodnotes sein bei zeichenn und besser als word beim schreiben und besser als powepoint beim ppowepoint erstellen dann will ich das du es komplet an iphone integrierst und das ich redion komplet täglich schneu nutzenkönntest
+
+**Gemeint:** Redion soll sich im Alltag auf allen Geräten hochwertig anfühlen und drei Fachprogramme ersetzen können.
+
+**Besser geschrieben:** Eine Rangfolge der drei Bereiche nennen.
+
+**Besserer Prompt:** Was fehlt dir beim täglichen Zeichnen, Schreiben und Präsentieren am meisten? Fang damit an.
+
+
+**2 · nicht protokolliert**
+
+> du kannst die github.com/Redurbabat/UI-Kit komplet nutzen es ist meien webseite
+
+**Gemeint:** Das UI-Kit darf ohne Rückfrage verwendet werden.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**3 · nicht protokolliert**
+
+> bist du am arbeiten
+
+**Gemeint:** Lebenszeichen erbeten, weil lange nichts kam.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**4 · nicht protokolliert**
+
+> weiter
+
+**Gemeint:** Am nächsten Punkt der Liste weiterarbeiten.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**5 · nicht protokolliert**
+
+> hast du ales auf githb gepuscht
+
+**Gemeint:** Frage nach dem Stand auf GitHub.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+**6 · nicht protokolliert**
+
+> pusch auf eien pr und dann mergen
+
+**Gemeint:** Commit, Push, Pull Request und Zusammenführen auf main; einmalige Ausnahme E759.
+
+**Besser geschrieben:** 
+
+**Besserer Prompt:** 
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| Zweig claude/taeglich-erste-welle: E757, E758, E759, test623; per Pull Request auf main. | `` → `` |  | — | — |
+
+#### Zahlen des Tages
+
+- **commits:** 0
+- **entscheidungen:** 3
+- **neuePruefungen:** 1
+
+#### Das grösste Problem
+
+Der Auftrag lässt sich in einem Bogen nicht erfüllen; die offene Liste steht deshalb als L258 da.
+
+#### Das Interessanteste, das Redur wollte
+
+Besser als drei Fachprogramme zugleich.
+
 ---
 
 ## Teil IV — Wo die Probleme stehen

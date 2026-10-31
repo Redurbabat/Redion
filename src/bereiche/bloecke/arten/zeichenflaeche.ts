@@ -556,6 +556,7 @@ const Zusatz = (() => {
       return [r2(sicht.x + (e.clientX - r.left) / sicht.z), r2(sicht.y + (e.clientY - r.top) / sicht.z)];
     };
     let stiftGlatt: ((p: [number, number], dt: number) => [number, number]) | null = null;
+    let stiftDruck: ((p: number) => number) | null = null;
     let stiftZeit = 0;
     let stiftBildGeplant = false;
     /** Nur den wachsenden Strich neu setzen — einmal je Bild. */
@@ -564,8 +565,20 @@ const Zusatz = (() => {
       if (!aktiv || aktiv.art !== 'stift') return;
       const pfade = flaeche.querySelectorAll<SVGPathElement>(`path[data-sid="${aktiv.id}"]`);
       if (!pfade.length) { male(); return; }
-      const d = GfxShapes.zeichne({ ...aktiv }).querySelector('path')?.getAttribute('d') || '';
-      pfade.forEach(pfad => pfad.setAttribute('d', d));
+      /* Je Pfad sein eigener: mit Druck ist der Griff die Mittellinie und das
+         Sichtbare ein Umriss, und ab dem dritten Punkt wechselt es von der
+         Linie zur Fläche — also gehen auch diese Merkmale mit. */
+      const neu = GfxShapes.zeichne({ ...aktiv }).querySelectorAll('path');
+      pfade.forEach((pfad, i) => {
+        const vorlage = neu[i];
+        if (!vorlage) return;
+        for (const name of ['d', 'fill', 'stroke', 'stroke-width']) {
+          const wert = vorlage.getAttribute(name);
+          if (wert === null) pfad.removeAttribute(name); else pfad.setAttribute(name, wert);
+        }
+        const tinte = vorlage.getAttribute('data-tinte');
+        if (tinte) pfad.setAttribute('data-tinte', tinte);
+      });
     };
 
     const sichtSichern = () => Store.updateBlock(block.id, {
@@ -749,6 +762,13 @@ const Zusatz = (() => {
         : { id: Store.uid().slice(0, 8), art: werkzeug, x, y, w: 0, h: 0, farbe };
       stiftGlatt = werkzeug === 'stift' && typeof InkStroke !== 'undefined'
         ? InkStroke.glaetter(fein as [number, number]) as any : null;
+      /* Nur ein echter Stift meldet Druck. Maus und Finger melden feste Werte
+         und bekommen deshalb gar kein Feld, wie auf dem Blatt. */
+      stiftDruck = null;
+      if (werkzeug === 'stift' && e.pointerType === 'pen' && e.pressure > 0 && typeof InkStroke !== 'undefined') {
+        stiftDruck = InkStroke.druckGlaetter(e.pressure);
+        aktiv.pressure = [Math.round(e.pressure * 1000) / 1000];
+      }
       stiftZeit = Number(e.timeStamp) || 0;
       daten.push(aktiv);
     });
@@ -805,6 +825,9 @@ const Zusatz = (() => {
           /* Weniger als ein halbes Pixel auf dem Glas ist kein neuer Punkt. */
           if (letzter && Math.hypot(q[0] - letzter[0], q[1] - letzter[1]) < 0.6 / Math.max(0.1, sicht.z)) continue;
           aktiv.pts.push([Math.round(q[0] * 100) / 100, Math.round(q[1] * 100) / 100]);
+          /* Ein kurzer Aussetzer (0) behält den letzten Wert (E675). */
+          if (aktiv.pressure) aktiv.pressure.push(stiftDruck && ereignis.pressure > 0
+            ? stiftDruck(ereignis.pressure) : aktiv.pressure[aktiv.pressure.length - 1]);
         }
         if (!stiftBildGeplant) { stiftBildGeplant = true; requestAnimationFrame(stiftNachziehen); }
         return;
@@ -825,14 +848,20 @@ const Zusatz = (() => {
           if (e && typeof e.clientX === 'number' && e.type === 'pointerup') {
             const roh = punktFein(e);
             const letzter = aktiv.pts[aktiv.pts.length - 1];
-            if (Math.hypot(roh[0] - letzter[0], roh[1] - letzter[1]) >= 0.3) aktiv.pts.push(roh);
+            if (Math.hypot(roh[0] - letzter[0], roh[1] - letzter[1]) >= 0.3) {
+              aktiv.pts.push(roh);
+              if (aktiv.pressure) aktiv.pressure.push(aktiv.pressure[aktiv.pressure.length - 1]);
+            }
           }
           if (typeof InkGeometry !== 'undefined' && aktiv.pts.length > 3) {
-            aktiv.pts = InkGeometry.simplify(aktiv.pts, 0.5 / Math.max(0.1, sicht.z))
-              .map((q: number[]) => [Math.round(Number(q[0]) * 100) / 100, Math.round(Number(q[1]) * 100) / 100]);
+            /* Über die Nummern, damit Punkte und Druck gleich lang bleiben. */
+            const behalten: number[] = InkGeometry.simplifyIndices(aktiv.pts, 0.5 / Math.max(0.1, sicht.z));
+            const alt = aktiv;
+            aktiv.pts = behalten.map(i => [Math.round(Number(alt.pts[i][0]) * 100) / 100, Math.round(Number(alt.pts[i][1]) * 100) / 100]);
+            if (alt.pressure) aktiv.pressure = behalten.map(i => alt.pressure[i]);
           }
         }
-        stiftGlatt = null;
+        stiftGlatt = null; stiftDruck = null;
         const klein = aktiv.art === 'stift' ? aktiv.pts.length < 2 : Math.abs(aktiv.w) < 4 && Math.abs(aktiv.h) < 4;
         if (klein) {
           daten.pop();

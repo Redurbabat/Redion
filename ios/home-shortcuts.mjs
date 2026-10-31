@@ -6,6 +6,7 @@
  * navigation/business logic. No storage, app state writes or network calls.
  */
 export const SHORTCUT_TABS = Object.freeze({
+  neu: 'btn-new-bottom',
   dokumente: 'hl-dok',
   heute: 'hl-start',
   lernen: 'hl-lernen'

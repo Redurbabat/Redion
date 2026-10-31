@@ -2107,7 +2107,140 @@ const Austausch = (() => {
         '<p:sldLayout ' + PPTX_NS + ' type="blank" preserve="1">' +
         '<p:cSld name="Leer">' + pptxBaum('') + '</p:cSld>' +
         '<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>';
-    const pptxFolie = (titel, zeilen) => {
+    const pptxText = (s) => esc(String(s ?? '')).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+    const pptxFarbe = (wert, ersatz = '000000') => {
+        const hex = String(wert ?? '').trim().replace('#', '');
+        return /^[0-9a-fA-F]{6}$/.test(hex) ? hex.toUpperCase() : ersatz;
+    };
+    const PPTX_BILD = { 'image/png': 'png', 'image/jpeg': 'jpeg', 'image/gif': 'gif' };
+    const pptxMarken = async (marken, breite, hoehe) => {
+        const sx = FOLIE_BREITE / (breite || 960), sy = FOLIE_HOEHE / (hoehe || 540);
+        const emuX = (v) => Math.round((Number(v) || 0) * sx);
+        const emuY = (v) => Math.round((Number(v) || 0) * sy);
+        let id = 100, xml = '', ausgelassen = 0;
+        const bilder = [];
+        const kasten = (m) => {
+            if (Array.isArray(m.pts) && m.pts.length >= 2) {
+                const xs = m.pts.map((q) => Number(q?.[0]) || 0), ys = m.pts.map((q) => Number(q?.[1]) || 0);
+                const x = Math.min(...xs), y = Math.min(...ys);
+                return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
+            }
+            if (Number.isFinite(Number(m.x)) && Number.isFinite(Number(m.w)))
+                return { x: Number(m.x), y: Number(m.y) || 0, w: Number(m.w), h: Number(m.h) || 0 };
+            return null;
+        };
+        const lage = (k, m, zusatz = '') => '<a:xfrm' + (m.dreh ? ' rot="' + Math.round(Number(m.dreh) * 60000) + '"' : '') + zusatz + '>' +
+            '<a:off x="' + emuX(k.x) + '" y="' + emuY(k.y) + '"/>' +
+            '<a:ext cx="' + Math.max(0, emuX(k.w)) + '" cy="' + Math.max(0, emuY(k.h)) + '"/></a:xfrm>';
+        const linie = (m, durchsichtig = false, ende = '') => '<a:ln w="' + Math.round(Math.max(0.25, Number(m.breite) || 1) * 12700) + '" cap="rnd">' +
+            '<a:solidFill><a:srgbClr val="' + pptxFarbe(m.farbe) + '">' +
+            (durchsichtig ? '<a:alpha val="40000"/>' : '') + '</a:srgbClr></a:solidFill><a:round/>' + ende + '</a:ln>';
+        const FORM = { rectangle: 'rect', roundrect: 'roundRect', ellipse: 'ellipse', triangle: 'triangle' };
+        for (const m of marken || []) {
+            if (!m || !m.art)
+                continue;
+            const nr = id++;
+            if (m.art === 'text') {
+                const punkt = Array.isArray(m.point) ? m.point : [m.x, m.y];
+                const lay = typeof InkGeometry !== 'undefined' && InkGeometry.textLayout ? InkGeometry.textLayout(m) : null;
+                const k = { x: Number(punkt[0]) || 0, y: Number(punkt[1]) || 0,
+                    w: Number(lay?.width ?? m.breiteBox) || 300, h: Number(lay?.height) || (Number(m.fontSize) || 16) * 1.4 };
+                const pad = Math.round((Number(lay?.pad) || 0) * 12700);
+                const algn = m.ausricht === 'mitte' ? 'ctr' : m.ausricht === 'rechts' ? 'r' : 'l';
+                const absaetze = String(m.text ?? '').split('\n').map(z => '<a:p><a:pPr algn="' + algn + '"/><a:r><a:rPr lang="de-DE" sz="' + Math.round((Number(m.fontSize) || 16) * 100) + '"' +
+                    (m.fett ? ' b="1"' : '') + ' dirty="0"><a:solidFill><a:srgbClr val="' + pptxFarbe(m.farbe) + '"/></a:solidFill></a:rPr>' +
+                    '<a:t>' + pptxText(z) + '</a:t></a:r></a:p>').join('');
+                xml += '<p:sp><p:nvSpPr><p:cNvPr id="' + nr + '" name="Text ' + nr + '"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>' +
+                    '<p:spPr>' + lage(k, m) + '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr>' +
+                    '<p:txBody><a:bodyPr wrap="square" lIns="' + pad + '" tIns="' + pad + '" rIns="' + pad + '" bIns="' + pad + '"><a:noAutofit/></a:bodyPr><a:lstStyle/>' +
+                    absaetze + '</p:txBody></p:sp>';
+                continue;
+            }
+            if (m.art === 'line' || m.art === 'arrow') {
+                const a = m.pts?.[0], b = m.pts?.[m.pts.length - 1];
+                const k = kasten(m);
+                if (!a || !b || !k) {
+                    ausgelassen++;
+                    continue;
+                }
+                const flip = (b[0] < a[0] ? ' flipH="1"' : '') + (b[1] < a[1] ? ' flipV="1"' : '');
+                xml += '<p:cxnSp><p:nvCxnSpPr><p:cNvPr id="' + nr + '" name="Linie ' + nr + '"/><p:cNvCxnSpPr/><p:nvPr/></p:nvCxnSpPr>' +
+                    '<p:spPr>' + lage(k, m, flip) + '<a:prstGeom prst="line"><a:avLst/></a:prstGeom>' +
+                    linie(m, false, m.art === 'arrow' ? '<a:tailEnd type="triangle"/>' : '') + '</p:spPr></p:cxnSp>';
+                continue;
+            }
+            if (FORM[m.art] || m.art === 'abdeck') {
+                const k = kasten(m);
+                if (!k) {
+                    ausgelassen++;
+                    continue;
+                }
+                const fuell = m.art === 'abdeck' ? m.farbe : m.fuellung;
+                xml += '<p:sp><p:nvSpPr><p:cNvPr id="' + nr + '" name="Form ' + nr + '"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>' +
+                    '<p:spPr>' + lage(k, m) + '<a:prstGeom prst="' + (FORM[m.art] || 'rect') + '"><a:avLst/></a:prstGeom>' +
+                    (fuell ? '<a:solidFill><a:srgbClr val="' + pptxFarbe(fuell) + '"/></a:solidFill>' : '<a:noFill/>') +
+                    (m.art === 'abdeck' ? '<a:ln><a:noFill/></a:ln>' : linie(m)) + '</p:spPr>' +
+                    '<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="de-DE"/></a:p></p:txBody></p:sp>';
+                continue;
+            }
+            if ((m.art === 'stift' || m.art === 'marker') && Array.isArray(m.pts) && m.pts.length >= 2) {
+                const k = kasten(m);
+                const w = Math.max(1, emuX(k.w)), h = Math.max(1, emuY(k.h));
+                const schritte = m.pts.map((q, i) => {
+                    const x = emuX((Number(q?.[0]) || 0) - k.x), y = emuY((Number(q?.[1]) || 0) - k.y);
+                    return i ? '<a:lnTo><a:pt x="' + x + '" y="' + y + '"/></a:lnTo>' : '<a:moveTo><a:pt x="' + x + '" y="' + y + '"/></a:moveTo>';
+                }).join('');
+                xml += '<p:sp><p:nvSpPr><p:cNvPr id="' + nr + '" name="Strich ' + nr + '"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>' +
+                    '<p:spPr>' + lage(k, m) + '<a:custGeom><a:avLst/><a:gdLst/><a:ahLst/><a:cxnLst/><a:rect l="0" t="0" r="r" b="b"/>' +
+                    '<a:pathLst><a:path w="' + w + '" h="' + h + '" fill="none">' + schritte + '</a:path></a:pathLst></a:custGeom><a:noFill/>' +
+                    linie(m.art === 'marker' ? { ...m, breite: (Number(m.breite) || 1) * 4 } : m, m.art === 'marker') + '</p:spPr>' +
+                    '<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="de-DE"/></a:p></p:txBody></p:sp>';
+                continue;
+            }
+            if (m.art === 'bild' && m.dateiId && typeof Dateien !== 'undefined' && Dateien.alsBlob) {
+                const k = kasten(m);
+                let blob = null;
+                try {
+                    blob = await Dateien.alsBlob(m.dateiId);
+                }
+                catch {
+                    blob = null;
+                }
+                const endung = blob ? PPTX_BILD[blob.type] : undefined;
+                if (!k || !blob || !endung) {
+                    ausgelassen++;
+                    continue;
+                }
+                const rid = 'rIdBild' + nr;
+                bilder.push({ rid, endung, bytes: new Uint8Array(await blob.arrayBuffer()) });
+                xml += '<p:pic><p:nvPicPr><p:cNvPr id="' + nr + '" name="Bild ' + nr + '"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>' +
+                    '<p:blipFill><a:blip r:embed="' + rid + '"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>' +
+                    '<p:spPr>' + lage(k, m) + '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>';
+                continue;
+            }
+            ausgelassen++;
+        }
+        return { xml, bilder, ausgelassen };
+    };
+    const pptxUebergang = (u) => {
+        if (!u || typeof u !== 'object')
+            return '';
+        const dir = /^[lrud]$/.test(String(u.richtung || '')) ? ' dir="' + u.richtung + '"' : '';
+        const effekt = {
+            blenden: '<p:fade/>', schieben: '<p:push' + dir + '/>', decken: '<p:cover' + dir + '/>',
+            wischen: '<p:wipe' + dir + '/>', zoom: '<p:zoom/>'
+        };
+        const inhalt = effekt[String(u.art)];
+        if (!inhalt)
+            return '';
+        const dauer = Number(u.dauer) || 700;
+        return '<p:transition spd="' + (dauer <= 500 ? 'fast' : dauer >= 850 ? 'slow' : 'med') + '">' + inhalt + '</p:transition>';
+    };
+    const pptxNotizAbsaetze = (text) => String(text).split('\n').map(z => '<a:p><a:r><a:rPr lang="de-DE" dirty="0"/><a:t>' + pptxText(z) + '</a:t></a:r></a:p>').join('');
+    const pptxNotizKoerper = (inhalt, lageXml) => '<p:sp><p:nvSpPr><p:cNvPr id="2" name="Notizen"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>' +
+        '<p:nvPr><p:ph type="body" idx="1"/></p:nvPr></p:nvSpPr><p:spPr>' + lageXml + '</p:spPr>' +
+        '<p:txBody><a:bodyPr/><a:lstStyle/>' + inhalt + '</p:txBody></p:sp>';
+    const pptxFolie = (titel, zeilen, extra = {}) => {
         const rahmen = (x, y, cx, cy) => '<a:off x="' + x + '" y="' + y + '"/><a:ext cx="' + cx + '" cy="' + cy + '"/>';
         const form = (id, name, x, y, cx, cy, inhalt) => '<p:sp><p:nvSpPr><p:cNvPr id="' + id + '" name="' + esc(name) + '"/>' +
             '<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr/></p:nvSpPr>' +
@@ -2121,6 +2254,7 @@ const Austausch = (() => {
             formen += form(id++, 'Titel', rand, 457200, FOLIE_BREITE - 2 * rand, 1200000, '<a:p><a:pPr algn="l"/><a:r><a:rPr lang="de-DE" sz="4000" b="1" dirty="0"/>' +
                 '<a:t>' + esc(titel) + '</a:t></a:r></a:p>');
         }
+        const nurFormen = !zeilen.length && !!extra.formen;
         const oben = titel ? 1828800 : 685800;
         const absaetze = zeilen.length
             ? zeilen.map((z) => '<a:p><a:pPr lvl="' + Math.max(0, Math.min(8, Number(z.tiefe) || 0)) + '"/>' +
@@ -2128,11 +2262,13 @@ const Austausch = (() => {
                 (z.art === 'kopf' ? ' b="1"' : '') + ' dirty="0"/>' +
                 '<a:t>' + esc(z.text) + '</a:t></a:r></a:p>').join('')
             : '<a:p><a:endParaRPr lang="de-DE"/></a:p>';
-        formen += form(id++, 'Inhalt', rand, oben, FOLIE_BREITE - 2 * rand, FOLIE_HOEHE - oben - 457200, absaetze);
+        if (!nurFormen)
+            formen += form(id++, 'Inhalt', rand, oben, FOLIE_BREITE - 2 * rand, FOLIE_HOEHE - oben - 457200, absaetze);
+        formen += extra.formen || '';
         return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
             '<p:sld ' + PPTX_NS + '>' +
             '<p:cSld>' + pptxBaum(formen) + '</p:cSld>' +
-            '<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>';
+            '<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>' + pptxUebergang(extra.uebergang) + '</p:sld>';
     };
     const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/';
     const rels = (eintraege) => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
@@ -2145,12 +2281,20 @@ const Austausch = (() => {
         for (let i = 1; i <= n; i++)
             nr.push(i);
         const PML = 'application/vnd.openxmlformats-officedocument.presentationml.';
+        const mitNotizen = folien.some((f) => f && typeof f.notizen === 'string' && f.notizen.trim());
+        const bildEndungen = [...new Set(folien.flatMap((f) => (f?.bilder || []).map((b) => b.endung)))];
         const dateien = [
             { name: '[Content_Types].xml', inhalt: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
                     '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
                     '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
                     '<Default Extension="xml" ContentType="application/xml"/>' +
+                    bildEndungen.map(e => '<Default Extension="' + e + '" ContentType="image/' + e + '"/>').join('') +
                     '<Override PartName="/ppt/presentation.xml" ContentType="' + PML + 'presentation.main+xml"/>' +
+                    (mitNotizen
+                        ? '<Override PartName="/ppt/notesMasters/notesMaster1.xml" ContentType="' + PML + 'notesMaster+xml"/>' +
+                            '<Override PartName="/ppt/theme/theme2.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>' +
+                            nr.filter(i => String(folien[i - 1]?.notizen || '').trim()).map(i => '<Override PartName="/ppt/notesSlides/notesSlide' + i + '.xml" ContentType="' + PML + 'notesSlide+xml"/>').join('')
+                        : '') +
                     '<Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="' + PML + 'slideMaster+xml"/>' +
                     '<Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="' + PML + 'slideLayout+xml"/>' +
                     '<Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>' +
@@ -2161,6 +2305,7 @@ const Austausch = (() => {
             { name: 'ppt/presentation.xml', inhalt: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
                     '<p:presentation ' + PPTX_NS + '>' +
                     '<p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst>' +
+                    (mitNotizen ? '<p:notesMasterIdLst><p:notesMasterId r:id="rId' + (n + 3) + '"/></p:notesMasterIdLst>' : '') +
                     '<p:sldIdLst>' + nr.map(i => '<p:sldId id="' + (255 + i) + '" r:id="rId' + (i + 1) + '"/>').join('') +
                     '</p:sldIdLst>' +
                     '<p:sldSz cx="' + FOLIE_BREITE + '" cy="' + FOLIE_HOEHE + '"/>' +
@@ -2168,7 +2313,8 @@ const Austausch = (() => {
                     '</p:presentation>' },
             { name: 'ppt/_rels/presentation.xml.rels', inhalt: rels(rel('rId1', 'slideMaster', 'slideMasters/slideMaster1.xml') +
                     nr.map(i => rel('rId' + (i + 1), 'slide', 'slides/slide' + i + '.xml')).join('') +
-                    rel('rId' + (n + 2), 'theme', 'theme/theme1.xml')) },
+                    rel('rId' + (n + 2), 'theme', 'theme/theme1.xml') +
+                    (mitNotizen ? rel('rId' + (n + 3), 'notesMaster', 'notesMasters/notesMaster1.xml') : '')) },
             { name: 'ppt/slideMasters/slideMaster1.xml', inhalt: pptxMaster() },
             { name: 'ppt/slideMasters/_rels/slideMaster1.xml.rels', inhalt: rels(rel('rId1', 'slideLayout', '../slideLayouts/slideLayout1.xml') +
                     rel('rId2', 'theme', '../theme/theme1.xml')) },
@@ -2179,11 +2325,81 @@ const Austausch = (() => {
         nr.forEach(i => {
             const f = folien[i - 1] || { titel: '', zeilen: [] };
             dateien.push({ name: 'ppt/slides/slide' + i + '.xml',
-                inhalt: pptxFolie(String(f.titel || ''), f.zeilen || []) });
+                inhalt: pptxFolie(String(f.titel || ''), f.zeilen || [], { formen: f.formen, uebergang: f.uebergang }) });
+            const notiz = String(f.notizen || '').trim() ? String(f.notizen) : '';
+            for (const [j, b] of (f.bilder || []).entries())
+                dateien.push({ name: 'ppt/media/folie' + i + '-' + j + '.' + b.endung, inhalt: b.bytes });
             dateien.push({ name: 'ppt/slides/_rels/slide' + i + '.xml.rels',
-                inhalt: rels(rel('rId1', 'slideLayout', '../slideLayouts/slideLayout1.xml')) });
+                inhalt: rels(rel('rId1', 'slideLayout', '../slideLayouts/slideLayout1.xml') +
+                    (f.bilder || []).map((b, j) => rel(b.rid, 'image', '../media/folie' + i + '-' + j + '.' + b.endung)).join('') +
+                    (notiz ? rel('rIdNotiz', 'notesSlide', '../notesSlides/notesSlide' + i + '.xml') : '')) });
+            if (notiz) {
+                dateien.push({ name: 'ppt/notesSlides/notesSlide' + i + '.xml', inhalt: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:notes ' + PPTX_NS + '><p:cSld>' +
+                        pptxBaum(pptxNotizKoerper(pptxNotizAbsaetze(notiz), '')) +
+                        '</p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:notes>' });
+                dateien.push({ name: 'ppt/notesSlides/_rels/notesSlide' + i + '.xml.rels', inhalt: rels(rel('rId1', 'notesMaster', '../notesMasters/notesMaster1.xml') +
+                        rel('rId2', 'slide', '../slides/slide' + i + '.xml')) });
+            }
         });
+        if (mitNotizen) {
+            dateien.push({ name: 'ppt/notesMasters/notesMaster1.xml', inhalt: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:notesMaster ' + PPTX_NS + '><p:cSld>' +
+                    pptxBaum(pptxNotizKoerper('<a:p><a:endParaRPr lang="de-DE"/></a:p>', '<a:xfrm><a:off x="685800" y="3429000"/><a:ext cx="5486400" cy="2743200"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom>')) +
+                    '</p:cSld><p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" ' +
+                    'accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/></p:notesMaster>' });
+            dateien.push({ name: 'ppt/notesMasters/_rels/notesMaster1.xml.rels', inhalt: rels(rel('rId1', 'theme', '../theme/theme2.xml')) });
+            dateien.push({ name: 'ppt/theme/theme2.xml', inhalt: pptxThema() });
+        }
         return dateien;
+    };
+    const folieMitUebergang = (xml, u) => {
+        const ohne = xml
+            .replace(/<mc:AlternateContent\b(?:(?!<\/mc:AlternateContent>)[\s\S])*?<p:transition\b[\s\S]*?<\/mc:AlternateContent>/g, '')
+            .replace(/<p:transition\b(?:[^>]*\/>|[^>]*>[\s\S]*?<\/p:transition>)/g, '');
+        const neu = pptxUebergang(u);
+        if (!neu)
+            return ohne;
+        if (ohne.includes('</p:clrMapOvr>'))
+            return ohne.replace('</p:clrMapOvr>', () => '</p:clrMapOvr>' + neu);
+        if (/<p:clrMapOvr\b[^>]*\/>/.test(ohne))
+            return ohne.replace(/<p:clrMapOvr\b[^>]*\/>/, m => m + neu);
+        return ohne.replace('</p:cSld>', () => '</p:cSld>' + neu);
+    };
+    const notizZurueck = async (leser, folie, text) => {
+        const ordner = folie.slice(0, folie.lastIndexOf('/'));
+        const relsText = String(await leser.text(ordner + '/_rels/' + folie.slice(ordner.length + 1) + '.rels') || '');
+        const ziel = relsText.match(/Target="([^"]*notesSlides\/[^"]+)"/)?.[1];
+        if (!ziel)
+            return { ohnePlatz: !!text.trim() };
+        const name = 'ppt/notesSlides/' + ziel.slice(ziel.lastIndexOf('/') + 1);
+        const alt = String(await leser.text(name) || '');
+        if (!alt)
+            return {};
+        const doc = new DOMParser().parseFromString(alt, 'application/xml');
+        if (doc.getElementsByTagName('parsererror').length)
+            return {};
+        const koerper = Array.from(doc.getElementsByTagName('p:sp'))
+            .find(sp => sp.getElementsByTagName('p:ph')[0]?.getAttribute('type') === 'body');
+        const tx = koerper?.getElementsByTagName('p:txBody')[0];
+        if (!tx)
+            return { ohnePlatz: !!text.trim() };
+        const absaetze = Array.from(tx.getElementsByTagName('a:p'));
+        const bisher = absaetze.map(a => Array.from(a.getElementsByTagName('a:t')).map(t => t.textContent || '').join('')).join('\n').trim();
+        if (bisher === text.trim())
+            return {};
+        absaetze.forEach(a => a.remove());
+        const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
+        for (const zeile of (text.trim() ? text.split('\n') : [''])) {
+            const p = doc.createElementNS(A_NS, 'a:p');
+            if (zeile) {
+                const lauf = doc.createElementNS(A_NS, 'a:r');
+                const t = doc.createElementNS(A_NS, 'a:t');
+                t.textContent = zeile.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+                lauf.appendChild(t);
+                p.appendChild(lauf);
+            }
+            tx.appendChild(p);
+        }
+        return { neu: { name, xml: new XMLSerializer().serializeToString(doc) } };
     };
     const folieMitText = (xml, marken) => {
         const spuren = (marken || []).filter((m) => m && m.art === 'text' && m.quelle && m.quelle.sp && typeof m.text === 'string');
@@ -2271,17 +2487,33 @@ const Austausch = (() => {
                 .sort((a, b) => (Number(a.match(/(\d+)/)?.[1]) || 0) - (Number(b.match(/(\d+)/)?.[1]) || 0));
             const neueFolien = new Map();
             let geschrieben = 0;
+            let notizenOhnePlatz = 0;
             for (const [i, name] of folienNamen.entries()) {
                 const blatt = blaetter[i];
-                if (!blatt || !Array.isArray(blatt.marken) || !blatt.marken.length)
+                if (!blatt)
                     continue;
                 try {
-                    const alt = await paket.leser.text(name);
-                    const neu = folieMitText(String(alt || ''), blatt.marken);
-                    if (neu.geschrieben) {
-                        neueFolien.set(name, neu.xml);
-                        geschrieben += neu.geschrieben;
+                    let xml = String(await paket.leser.text(name) || '');
+                    let geaendert = false;
+                    if (Array.isArray(blatt.marken) && blatt.marken.length) {
+                        const neu = folieMitText(xml, blatt.marken);
+                        if (neu.geschrieben) {
+                            xml = neu.xml;
+                            geschrieben += neu.geschrieben;
+                            geaendert = true;
+                        }
                     }
+                    if (blatt.uebergang?.art && !blatt.uebergang.original) {
+                        xml = folieMitUebergang(xml, blatt.uebergang);
+                        geaendert = true;
+                    }
+                    if (geaendert)
+                        neueFolien.set(name, xml);
+                    const notiz = await notizZurueck(paket.leser, name, typeof blatt.notizen === 'string' ? blatt.notizen : '');
+                    if (notiz.neu)
+                        neueFolien.set(notiz.neu.name, notiz.neu.xml);
+                    if (notiz.ohnePlatz)
+                        notizenOhnePlatz++;
                 }
                 catch { }
             }
@@ -2301,12 +2533,16 @@ const Austausch = (() => {
             await laden(blob, dateiName);
             const folien = paket.leser.namen
                 .filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n)).length;
-            const hinweis = geschrieben
+            const hinweis = (geschrieben
                 ? 'Die Originaldatei ist vollständig erhalten; '
                     + geschrieben + (geschrieben === 1 ? ' Textstelle wurde' : ' Textstellen wurden')
                     + ' übernommen. Formen ohne eindeutige Zuordnung stehen unverändert darin.'
                 : 'Die Originaldatei ist vollständig erhalten. In Redion '
-                    + 'geänderte Folieninhalte stehen noch nicht darin.';
+                    + 'geänderte Folieninhalte stehen noch nicht darin.')
+                + (notizenOhnePlatz
+                    ? ' Sprechernotizen auf ' + notizenOhnePlatz + (notizenOhnePlatz === 1 ? ' Folie' : ' Folien')
+                        + ' ohne Notizenseite im Original stehen nur in Redion.'
+                    : '');
             try {
                 if (typeof UI !== 'undefined' && UI.toast)
                     UI.toast(hinweis, 7000);
@@ -2315,12 +2551,43 @@ const Austausch = (() => {
             return { blob, folien, durchgereicht: true, geschrieben, hinweis };
         }
         const roh = Folien.teilen(seite, (id) => Store.childrenOf(id));
-        const folien = roh.map((f) => ({
-            titel: f.titel, zeilen: Folien.alsZeilen(f, (id) => Store.childrenOf(id))
-        }));
+        let ausgelassen = 0;
+        const folien = [];
+        for (const f of roh) {
+            const zeilen = Folien.alsZeilen(f, (id) => Store.childrenOf(id));
+            const bloecke = (f.eintraege || []).map((e) => e.block);
+            const blatt = bloecke.find((b) => b?.type === 'blatt');
+            const eintrag = { titel: f.titel, zeilen };
+            if (blatt) {
+                const teil = await pptxMarken(blatt.marken || [], Number(blatt.blattBreite), Number(blatt.blattHoehe));
+                ausgelassen += teil.ausgelassen;
+                eintrag.formen = teil.xml;
+                eintrag.bilder = teil.bilder;
+                const kinder = (Store.childrenOf(blatt.id) || [])
+                    .map((k) => String(k?.text || '')).filter((t) => t.trim());
+                eintrag.zeilen = [...zeilen.filter((z) => z.art !== 'bild' || !/^\[A4-Blatt\]$/.test(z.text)),
+                    ...kinder.map((text) => ({ text, tiefe: 0 }))];
+            }
+            const traeger = bloecke.find((b) => typeof b?.notizen === 'string' && b.notizen.trim());
+            if (traeger)
+                eintrag.notizen = traeger.notizen;
+            const mitUebergang = bloecke.find((b) => b?.uebergang?.art);
+            if (mitUebergang)
+                eintrag.uebergang = mitUebergang.uebergang;
+            folien.push(eintrag);
+        }
         const blob = await zipSchreiben(pptxTeile(folien));
         await laden(blob, dateiName);
-        return { blob, folien: folien.length, durchgereicht: false };
+        const hinweis = ausgelassen
+            ? ausgelassen + (ausgelassen === 1 ? ' Element' : ' Elemente') + ' der Folien liess sich nicht als PowerPoint-Form schreiben und fehlt in der Datei.'
+            : '';
+        if (hinweis) {
+            try {
+                UI.toast(hinweis, 7000);
+            }
+            catch { }
+        }
+        return { blob, folien: folien.length, durchgereicht: false, ausgelassen, hinweis };
     };
     return { zipSchreiben, crc32, laden, alsWord, alsPowerPoint, pptxTeile, alsExcel,
         datenbankAlsExcel,

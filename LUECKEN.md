@@ -12353,3 +12353,26 @@ hingeschrieben hat. Dazu kommt `prefers-reduced-motion`, das bei
 JavaScript nicht. Eigener Bogen, eigene Gegenprobe.
 
 ---
+
+## L258 · Was zu „besser als GoodNotes, Word und PowerPoint" noch fehlt — 31. Oktober 2026
+
+Gezählt im Quelltext am 31. Oktober 2026 (Suche nach den Begriffen in `src/`), nach
+E758. Keine Rangliste gegen die fremden Programme: die wurden nicht nebeneinander
+gemessen.
+
+**Schreiben:** Änderungen nachverfolgen, Formatvorlagen, Seitenumbruch als Block.
+
+**Präsentieren:** Referentenansicht auf einem zweiten Bildschirm; Objektanimationen
+selbst anlegen (gelesen wird nur `p:timing` für Abdeckungen). **`.pptx` zurück:** E759
+schreibt Inhalt, Notizen und Übergänge; offen sind Schriftfamilie, gemischte Läufe, Klickschritte,
+eine neue Notizenseite in einer fremden Datei und der Test in echtem PowerPoint.
+
+**Zeichnen:** Stiftmessung am echten iPad (L227 S1) fehlt weiter; die Druckrechnung
+der Tafel und des Blatts gehört in den Kern; ob ein Export der Tafel den Druck zeigt,
+ist nicht geprüft.
+
+**Bewegung:** Der Rest von L225 und B2/B3 bleibt offen; die Ankunft einer Seite ersetzt sie nicht.
+
+**iPhone:** Kein Lauf auf einem echten Gerät (Widget, Schnellaktion, Bewegung).
+Share- und Widget-Ziele bleiben wegen der App Group opt-in. Der tägliche Abgleich
+zwischen Geräten braucht den Server, den es noch nicht gibt (E754).

@@ -42,6 +42,19 @@ mehr gibt.
 
 ## Was jetzt offen ist
 
+### Alltag nach E758 (31. Oktober 2026)
+
+- **Voller Lauf nach E760:** `node pruefungen/volllauf.mts --neu` auf dem neuen main, in
+  einem eigenen Arbeitsbaum. Fertig: Bilanz in `messungen.md`, jeder neue rote Lauf
+  repariert. Priorität: zuerst.
+- **Echte PowerPoint-Prüfung (E759):** eine exportierte Datei in PowerPoint öffnen. Sagt
+  es „reparieren", ist das ein Fehler in `pptxTeile`. Priorität: hoch, braucht Redur.
+- **Nächster Bogen aus L258:** Seitenumbruch, Formatvorlagen und Referentenansicht.
+  Dateien: `src/register/bloecke.ts`, `src/bereiche/wissen/werkzeuge.ts`. Priorität: hoch.
+- **Gerätelauf:** Codemagic-Bau mit Sperrbildschirm-Widget und Schnellaktion „Neue
+  Seite", dann auf dem iPhone prüfen; Sprungliste im installierten Windows-Paket
+  ansehen. Fertig: Gerätebericht. Priorität: vor Freigabe.
+
 ### iPhone-/Windows-Integration (29. Oktober 2026, E754)
 
 - **Live-Sync einrichten:** Redur bestätigt, keinen Server zu haben. Ziel:

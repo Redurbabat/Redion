@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-731 Entscheidungen, E1 bis E752 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+738 Entscheidungen, E1 bis E760 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -803,12 +803,21 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 
 ---
 
+* **E753** — Workspace 2 beginnt mit einer echten Bibliothek, nicht einer zweiten App (24. Oktober 2026).
+
 * **E754** — Gemeinsame Geräteübersicht, sichere native Dateitüren und vorbereiteter,
   nicht vorgetäuschter Live-Sync (29. Oktober 2026; vollständiger Eintrag am Ende).
 
 * **E755** — Geräteintegration auf dem neuesten main mit bereits enthaltenem Glass Wheel
   zusammenführen; neuere Update-/Sync-Schutzregeln erhalten, dokumentierte einmalige
   Ausnahme für bekannte Altfehler und offene Gerätefreigaben (29. Oktober 2026).
+* **E756** — Den gemeldeten iPhone-Kompilierfehler unmittelbar auf main reparieren (29. Oktober 2026).
+
+* **E758** — Erste Welle für den Alltag: Ortswechsel, Schreibbegleiter, Vortrag mit Notizen, Druck auf der Tafel, Sprungliste und Sperrbildschirm
+
+* **E759** — Eigene Folien wandern wirklich in die .pptx; Notizen und gewählte Übergänge auch (31. Oktober 2026).
+
+* **E760** — Sechste einmalige Ausnahme von §46: die Alltagswelle kommt per Pull Request auf main, ohne vollen grünen Lauf (Redur, 31. Oktober 2026).
 
 ## Grundregel
 
@@ -69519,3 +69528,87 @@ gegen das echte iPhone-SDK; ein Syntaxcheck allein reicht dafür nicht.
 übersprungen. Ein neuer Codemagic-/Xcode-Lauf bleibt erforderlich. Belege
 und Grenzen: `doku/IOS-CODEMAGIC-WEBKIT-CALLBACK-FIX.md`. Keine Erweiterung
 des Auftrags, kein Force-Push und kein behauptetes fertiges IPA.
+
+## E758 — Erste Welle für den Alltag, statt alles auf einmal zu behaupten
+
+Redur, 31. Oktober 2026: „ich will so überlal animationen übergangen widget für
+iphone und bei der windows ales integriern … es sollte bessere als goodnotes sein
+bei zeichenn und besser als word beim schreiben und besser als powepoint beim
+ppowepoint erstellen dann will ich das du es komplet an iphone integrierst und das
+ich redion komplet täglich schneu nutzenkönntest". Dazu: „du kannst die
+github.com/Redurbabat/UI-Kit komplet nutzen es ist meien webseite".
+
+**Was entschieden wurde.** „Besser als GoodNotes, Word und PowerPoint" ist kein
+Zustand, den ein Bogen erreicht. Gebaut wurde deshalb, was vermessen fehlte und
+täglich trifft; was fehlt, steht als L258 mit Namen da:
+
+- Eine geöffnete Seite kommt an: `seiteKommtAn` in `schale.ts`, auf der Feder der Schale. Reiter hatten ihre Ankunft schon; ein erster Einzug für jeden Ort wurde von `test581` §6 abgelehnt und wieder entfernt.
+- Der Fokus-Modus zeigt wirklich nur das Blatt, hält die Schreibzeile auf Augenhöhe
+  und nennt Wörter und Lesezeit; am Telefon führt „Fertig" hinaus.
+- Foliensatz: Übergang selbst wählen, Sprechernotizen schreiben und aus `.pptx`
+  lesen, im Vortrag Uhr, Notizen auf Wunsch (Taste N) und die nächste Folie.
+- Die Tafel: ein echter Stift zeichnet mit Druck (L227 Punkt 4, S3).
+- Windows: Sprungliste und gemerkte Fensterlage.
+- iPhone: „Neue Seite" als Schnellaktion und als Sperrbildschirm-Widget.
+
+**Warum kein `startViewTransition`.** Sein Rückruf läuft erst im nächsten Bild, und
+`oeffne()` hat Aufrufer, die sofort danach den neuen Inhalt lesen. Die Alternative
+hätte jeden dieser Aufrufer asynchron gemacht. Kosten: kein gemeinsames Element
+zwischen zwei Orten, nur eine Ankunft.
+
+**Warum der Druck getrennt liegt.** `pressure` steht neben `pts`, wie auf dem Blatt
+(E125). Ein älterer Stand liest den Strich weiter als Linie; alte Striche ändern
+sich nicht. Die Rechnung 0,5 + Druck steht damit zweimal, in `shapes.ts` und in
+`druckFaktor`; sie in den Kern zu ziehen bleibt offen (L258).
+
+**Warum das Ziel der Sprungliste abgeholt wird.** Der Hauptprozess nennt nur einen
+Bezeichner aus einer festen Liste, nie eine Adresse. Die App holt ihn über die
+geprüfte Brücke ab und drückt denselben Knopf wie die iPhone-Schnellaktion.
+
+**UI-Kit.** Redur hat es freigegeben. Neue Kit-Dateien wurden nicht übernommen:
+der Touch-Kit-Stand reicht für diese Welle, und ein neuer Stand hiesse, die
+Prüfsummen in `fremd/touch/HERKUNFT.txt` neu zu setzen.
+
+**Nicht geprüft.** Swift ist auf diesem Rechner nicht übersetzbar; Widget und
+Schnellaktion sind nur über Textverträge geprüft und brauchen einen Codemagic-Lauf
+und ein echtes iPhone. Die Sprungliste läuft nur im installierten Paket; geprüft
+ist die übergebene Befehlszeile in der echten Electron-App, nicht die Taskleiste.
+Der Wächter ist `test624`; seine fünf Gegenproben stehen in `messungen.md`.
+
+## E759 — Eigene Folien wandern wirklich in die .pptx
+
+Beim Bau der Notizen gemessen: eine in Redion gebaute Folie kam als der eine Text
+„[A4-Blatt]" in der PowerPoint-Datei an, ihr ganzer Inhalt fehlte, ohne Meldung. Das
+ist die schwerste Lücke, die dieser Bogen gefunden hat, und sie stand in keiner Liste.
+
+**Entschieden.** `pptxMarken` schreibt Text, Linien, Pfeile, Formen, Abdeckungen,
+Stift- und Markerstriche und PNG-, JPEG- und GIF-Bilder als echte Formen. Was es nicht
+schreiben kann, wird gezählt und gemeldet (§35). Notizen und Übergänge gehen auf beiden
+Wegen mit: im frischen Paket mit eigenem Notizen-Master; im Original nur, was in Redion
+wirklich geändert wurde. Ein eingelesener Übergang trägt `original` und bleibt, wie er in
+der Datei steht.
+
+**Alternative.** Jede Folie als Bild ausgeben. Das sähe genau gleich aus, ist in
+PowerPoint aber nicht mehr bearbeitbar, und genau das verlangt „besser als PowerPoint".
+
+**Kosten und Grenzen.** Die Formen tragen keine Schriftfamilie und keine gemischten Läufe;
+eine Abdeckung steht als gefülltes Rechteck ohne Klickschritt da; ein Stiftstrich als Linie
+ohne Druck. Eine Notiz auf einer fremden Folie ohne Notizenseite bleibt in Redion und
+wird gemeldet. **Geöffnet wurde die Datei nur von Redions Leser und einem XML-Prüfer,
+nicht von PowerPoint**: das steht auf diesem Rechner nicht zur Prüfung bereit.
+
+## E760 — Die Alltagswelle kommt ohne vollen Lauf auf main
+
+Redur, 31. Oktober 2026: „pusch auf eien pr und dann mergen". Zuvor stand im Gespräch,
+dass der volle Lauf aussteht und `test109`, `test578` und `test581` rot sind.
+
+**Entschieden.** Eine einmalige Ausnahme von §46, wie E729, E743, E751, E752 und E755.
+Gefahren wurden gezielte Läufe; ein voller grüner Lauf wird nicht behauptet. Die Regel
+gilt für die nächste Änderung wieder.
+
+**Alternative.** Erst den vollen Lauf fahren (rund 158 Minuten laut E743). Redur hat das
+Zusammenführen jetzt verlangt.
+
+**Kosten.** Ein Fehler, den nur ein nicht gefahrener Lauf findet, käme auf `main`.
+Widget, Schnellaktion und der Export in echtem PowerPoint bleiben ungeprüft (E758, E759).
+Der volle Lauf steht deshalb als erste Aufgabe in `AUFGABEN.md`.

@@ -2355,7 +2355,25 @@ const Einlesen = (() => {
         .sort((a, b) => a.y - b.y)
         .map(o => String(o.text).split('\n')[0]!.trim())
         .filter(z => z && z.length <= 80);
-      folien.push({ titel, objekte, kandidaten, grundfarbe,
+      /* DIE SPRECHERNOTIZEN stehen in einem eigenen Teil, verbunden über die
+         `.rels` der Folie. Nur der Platzhalter vom Typ `body`: die übrigen
+         tragen Seitenzahl und Kopfzeile, das sind keine Notizen. Eine
+         unlesbare Notiz kostet nie die Folie. */
+      let notizen = '';
+      try {
+        const notizPfad = String(Object.entries(rels)
+          .find(([, z]) => /notesSlides\//.test(String(z)))?.[1] || '');
+        const notizDoc = await holeXml(notizPfad);
+        const absaetze: string[] = [];
+        for (const form of Array.from(notizDoc?.getElementsByTagName('p:sp') || [])) {
+          const ph = form.getElementsByTagName('p:ph')[0];
+          if (ph?.getAttribute('type') !== 'body') continue;
+          for (const absatz of Array.from(form.getElementsByTagName('a:p')))
+            absaetze.push(Array.from(absatz.getElementsByTagName('a:t')).map(t => t.textContent || '').join(''));
+        }
+        notizen = absaetze.join('\n').trim();
+      } catch { notizen = ''; }
+      folien.push({ titel, objekte, kandidaten, grundfarbe, notizen,
                     uebergang: uebergangLesen(doc),
                     weg: [...weggelassen.entries()] });
     }
@@ -2588,7 +2606,8 @@ const Einlesen = (() => {
           ...((folie as any).grundfarbe ? { grundfarbe: (folie as any).grundfarbe } : {}),
           /* Der Übergang beim Blättern im Vortrag (E600). Nur wenn die Folie
              einen nennt — ein leeres Feld an jedem Blatt wäre Ballast. */
-          ...((folie as any).uebergang ? { uebergang: (folie as any).uebergang } : {}) });
+          ...((folie as any).uebergang ? { uebergang: (folie as any).uebergang } : {}),
+          ...((folie as any).notizen ? { notizen: (folie as any).notizen } : {}) });
         const marken: any[] = [];
         for (const o of folie.objekte) {
           const id = 'm' + Math.random().toString(36).slice(2, 10);

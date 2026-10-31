@@ -500,9 +500,91 @@ private extension View {
     }
 }
 
+// MARK: - Lock Screen: one tap from the locked iPhone into a new page.
+//
+// iOS 15 offers no accessory families, so the list is empty there and the
+// system simply does not show this widget in its gallery.
+private var redionLockFamilies: [WidgetFamily] {
+    if #available(iOSApplicationExtension 16.0, *) {
+        return [.accessoryCircular, .accessoryRectangular, .accessoryInline]
+    }
+    return []
+}
+
+@available(iOSApplicationExtension 16.0, *)
+private struct RedionLockView: View {
+    @Environment(\.widgetFamily) private var family
+
+    var body: some View {
+        content
+            .widgetURL(URL(string: "redion://widget/neu"))
+            .accessibilityLabel("Redion – Neue Seite anlegen")
+    }
+
+    @ViewBuilder private var content: some View {
+        switch family {
+        case .accessoryRectangular:
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Redion").font(.headline)
+                Label("Neue Seite", systemImage: "square.and.pencil").font(.caption)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        case .accessoryInline:
+            Label("Neue Seite", systemImage: "square.and.pencil")
+        default:
+            ZStack {
+                AccessoryWidgetBackground()
+                Image(systemName: "square.and.pencil").font(.title3)
+            }
+        }
+    }
+}
+
+private struct RedionLockProvider: TimelineProvider {
+    func placeholder(in context: Context) -> RedionWidgetEntry {
+        RedionWidgetEntry(date: Date(), phase: 0)
+    }
+
+    func getSnapshot(in context: Context, completion: @escaping (RedionWidgetEntry) -> Void) {
+        completion(placeholder(in: context))
+    }
+
+    func getTimeline(in context: Context, completion: @escaping (Timeline<RedionWidgetEntry>) -> Void) {
+        // The content never changes, so one entry and no refresh budget.
+        completion(Timeline(entries: [placeholder(in: context)], policy: .never))
+    }
+}
+
+struct RedionLockWidget: Widget {
+    let kind = "RedionLockWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: RedionLockProvider()) { _ in
+            if #available(iOSApplicationExtension 16.0, *) {
+                RedionLockView().redionLockBackground()
+            }
+        }
+        .configurationDisplayName("Redion Neue Seite")
+        .description("Vom Sperrbildschirm direkt in eine neue Seite.")
+        .supportedFamilies(redionLockFamilies)
+    }
+}
+
+@available(iOSApplicationExtension 16.0, *)
+private extension View {
+    @ViewBuilder func redionLockBackground() -> some View {
+        if #available(iOSApplicationExtension 17.0, *) {
+            containerBackground(.clear, for: .widget)
+        } else {
+            self
+        }
+    }
+}
+
 @main
 struct RedionWidgets: WidgetBundle {
     var body: some Widget {
         RedionQuickWidget()
+        RedionLockWidget()
     }
 }

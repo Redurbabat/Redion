@@ -163,13 +163,29 @@ const GfxShapes = (() => {
             ? String(kern.path(pts.map((q: any) => [zahl(q?.[0]), zahl(q?.[1])])))
             : 'M' + pts.map((q: any) => zahl(q?.[0]) + ' ' + zahl(q?.[1])).join(' L'))
         : `M${zahl(s.x)} ${zahl(s.y)} L${zahl(s.x) + zahl(s.w)} ${zahl(s.y) + zahl(s.h)}`;
-      const p = sv('path', {
-        d, stroke: farbe, 'stroke-width': strich, fill: 'none',
-        'stroke-linecap': 'round', 'stroke-linejoin': 'round'
-      });
+      /* DER DRUCK AUF DER TAFEL (L227 Punkt 4, 31. Oktober 2026). Trägt ein
+         Strich `pressure`, je Punkt eine Zahl wie auf dem Blatt (E125), wird er
+         eine gefüllte Form mit wechselnder Breite und läuft spitz aus. Alles
+         andere bleibt die Linie von vorher: Maus, Finger und jeder alte Strich.
+         Die Rechnung 0,5 + Druck ist der Grundfall von `druckFaktor` im Blatt. */
+      const druck: unknown = s.pressure;
+      const mitDruck = s.art === 'stift' && Array.isArray(druck) && druck.length === pts.length &&
+        pts.length >= 3 && typeof kern?.outline === 'function' && typeof kern?.verjuengen === 'function';
+      const umriss = mitDruck ? (() => {
+        const punkte = pts.map((q: any) => [zahl(q?.[0]), zahl(q?.[1])]);
+        const halb = (druck as unknown[]).map(w =>
+          strich / 2 * (0.5 + Math.max(0.05, Math.min(1, zahl(w, 0.5)))));
+        return String(kern.outline(punkte, kern.verjuengen(punkte, halb, 0.35, Math.max(3, Math.min(12, strich * 2.2)))));
+      })() : '';
+      const p = umriss
+        ? sv('path', { d: umriss, fill: farbe, stroke: 'none' })
+        : sv('path', {
+          d, stroke: farbe, 'stroke-width': strich, fill: 'none',
+          'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+        });
       if (s.art === 'pfeil' && o.pfeilMarke) p.setAttribute('marker-end', `url(#${o.pfeilMarke})`);
       p.dataset.sid = s.id;
-      tinte(p, 'strich', farbe);
+      tinte(p, umriss ? 'schrift' : 'strich', farbe);
       /* EIN STRICH IST ZWEIEINHALB PIXEL BREIT — mit dem Finger trifft man
          ihn nicht. Darunter liegt deshalb derselbe Pfad noch einmal, 16 px
          breit und durchsichtig: er fängt den Griff, malt aber nichts. */

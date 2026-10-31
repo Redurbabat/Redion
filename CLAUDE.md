@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 558 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 560 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2087,6 +2087,15 @@ von 122; die eigenartigste misst Bildpunkte: ohne Lupe lag die Marke mit
 13. Oktober, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 555.*
 
+*Und 560: `test624` — der Alltag (E758): die geöffnete Seite kommt an, der Fokus-Modus
+zeigt nur das Blatt und führt die Schreibzeile, der Vortrag hat Uhr und Notizen, die
+Tafel hat Druck. Bemerkenswert sind zwei Dinge: seine Prüfung der Schreibzeile war
+zuerst grün, auch ohne die Funktion, weil er in die letzte Zeile schrieb und dorthin
+schon der Browser rollt; erst eine Zeile unten im Bild trennt beides (§55.2). Und vier
+Mängel fand er gar nicht, sondern das BILD: die Wortzahl hinter der unteren Leiste,
+die Kante und die Werkzeuge im Fokus-Modus, und die umbrochene Vortragsleiste (§55.1).
+Gezählt am 31. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 560.*
+
 ### Die Befehle
 
 ```txt
@@ -2108,7 +2117,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 558 Läufe
+npm run pruefen                      alle 560 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2205,7 +2214,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 558 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 560 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
@@ -2617,6 +2626,10 @@ und Glass Wheel auf main und bestätigt ausdrücklich „Ja, dokumentiert auf ma
 dürfen dokumentiert bleiben. Gezielte Integrationsprüfungen müssen grün sein;
 kein vollständig grüner Gesamtlauf wird behauptet. Details:
 `doku/MAIN-GERAETE-GLASS-INTEGRATION.md`. Die Regel für spätere Änderungen bleibt.*
+
+*Sechste einmalige Ausnahme (E760, 31. Oktober 2026): Redur verlangt die Alltagswelle
+per Pull Request auf main („pusch auf eien pr und dann mergen"). Rot bleiben `test109`,
+`test578` und `test581`; ein voller Lauf wurde nicht gefahren. Die Regel bleibt.*
 
 ## 47. Nicht tun  **[hart]**
 

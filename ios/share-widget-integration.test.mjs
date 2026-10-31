@@ -10,13 +10,13 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const originalScene = read('ios/fixtures/capacitor8-spm-scenedelegate.swift');
 
-test('widget deeplinks reuse the existing secure three-destination router', () => {
+test('widget deeplinks reuse the existing secure destination router', () => {
   const patched = injectIncomingShareWidget(injectQuickActions(originalScene));
   assert.match(patched, /url\.scheme == "redion"/);
   assert.match(patched, /connectionOptions\.urlContexts/);
   assert.match(patched, /routeRedionWidget\(context\.url\)/);
   assert.match(patched, /url\.host == "widget"/);
-  assert.match(patched, /\["dokumente", "heute", "lernen"\]\.contains\(action\)/);
+  assert.match(patched, /\["neu", "dokumente", "heute", "lernen"\]\.contains\(action\)/);
   assert.match(patched, /RedionHomeShortcuts\.shared\.open\(item, window: window\)/);
   assert.match(patched, /SceneDelegateProxy\.shared\.scene\(scene, openURLContexts: URLContexts\)/);
   assert.throws(() => injectIncomingShareWidget(patched), /bereits eingebaut/);
