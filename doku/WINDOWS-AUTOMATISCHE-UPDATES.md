@@ -1,5 +1,13 @@
 # Redion Windows – automatische, signierte Updates
 
+**Nicht mit Windows-Live verwechseln:** Wer den **lokalen Redion-Quellordner**
+bearbeitet, kann die separate Entwickleransicht über `Redion-Live.bat`
+starten. Sie baut Änderungen automatisch und lädt dasselbe Entwicklungsfenster
+neu, verwendet aber bewusst `%APPDATA%\\Redion-Entwicklung`.
+Sie ersetzt **weder** den signierten Updatekanal **noch** aktualisiert sie
+eine bereits installierte `Redion.exe`. Details:
+`WINDOWS-DESKTOP-OFFLINE.md`.
+
 ## Was sich für den Benutzer ändert
 
 Bei einer späteren **signierten Windows-Installation** prüft Redion

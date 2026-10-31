@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { compareWindowsWeb, expectedWebFiles } from './compare-web.mts';
-import { webFolders, webRootFiles } from './web-files.mjs';
+import { webFolders, webRootFiles } from './web-files.mts';
 
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const target = path.join(root, 'build/windows-app');
@@ -22,9 +22,18 @@ export function prepareWindowsApp(from = root, to = target) {
       throw new Error('Redion-Web-Build fehlt: ' + filename);
     }
   }
+  // Never follow a symlink if a damaged or hostile build folder is present.
+  if (fs.existsSync(target) && (!fs.lstatSync(target).isDirectory() ||
+      fs.lstatSync(target).isSymbolicLink())) {
+    throw new Error('Windows-Bauordner ist kein echtes Verzeichnis.');
+  }
   fs.mkdirSync(target, { recursive: true });
   for (const filename of webRootFiles(root)) {
-    fs.copyFileSync(path.join(root, filename), path.join(target, filename));
+    const source = path.join(root, filename);
+    if (!fs.lstatSync(source).isFile() || fs.lstatSync(source).isSymbolicLink()) {
+      throw new Error('Ungültige Root-Webdatei: ' + filename);
+    }
+    fs.copyFileSync(source, path.join(target, filename));
   }
   for (const folder of webFolders) {
     const source = path.join(root, folder);

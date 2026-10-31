@@ -13,7 +13,7 @@ const PWA = (() => {
     const workerAnmelden = async () => {
         if (!('serviceWorker' in navigator))
             return;
-        if (location.protocol === 'file:')
+        if (location.protocol === 'file:' || location.protocol === 'redion-local:')
             return;
         try {
             const reg = await navigator.serviceWorker.register('sw.js', { scope: './' });

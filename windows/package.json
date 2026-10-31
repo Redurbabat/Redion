@@ -7,10 +7,11 @@
   "author": "Redion",
   "scripts": {
     "prepare:app": "node ../node_modules/typescript/bin/tsc -p tsconfig.json && node prepare.mjs",
-    "start": "npm run prepare:app && electron .",
-    "test": "node --test windows-desktop.test.cjs auto-update.test.cjs",
+    "start": "node live.mts",
+    "test": "node --test windows-desktop.test.cjs auto-update.test.cjs live.test.mts",
     "dist": "npm run prepare:app && electron-builder --win nsis portable --x64",
-    "release:signed": "npm run prepare:app && node release-signed.mjs"
+    "release:signed": "npm run prepare:app && node release-signed.mjs",
+    "start:once": "npm run prepare:app && electron ."
   },
   "devDependencies": {
     "electron": "45.1.0",

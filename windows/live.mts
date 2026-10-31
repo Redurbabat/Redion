@@ -17,13 +17,16 @@ const marker = path.join(build, 'windows-live-stand.json');
 const isWindows = process.platform === 'win32';
 
 export function classifyChange(folder, filename, compiling = false) {
-  if (typeof filename !== 'string' || !filename) return null;
+  // Some Windows file systems omit the filename; rebuild conservatively.
+  if (typeof filename !== 'string' || !filename) {
+    return folder === 'windows' ? 'native' : (folder === 'src' || folder === 'root' ? 'compile' : 'stage');
+  }
   const f = filename.replace(/\\/g, '/');
   const parts = f.split('/');
   if (parts.some(part => !part || part[0] === '.' ||
       ['node_modules', 'generated', 'build', 'windows-dist', '__pycache__'].includes(part))) return null;
   if (folder === 'root') {
-    if (/^(index\.html|sw\.js)$/.test(f)) return 'stage';
+    if (/^(index\.html|sw\.js)$/.test(f) || /\.(?:js|css|html)$/.test(f)) return 'stage';
     if (/^(package(?:-lock)?\.json|tsconfig[^/]*\.json|dienststand\.mts|bauen-inseln\.mts)$/.test(f))
       return 'compile';
     return null;

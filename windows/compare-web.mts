@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { webFolders, webRootFiles } from './web-files.mjs';
+import { webFolders, webRootFiles } from './web-files.mts';
 
 const list = (root: string, prefix = ''): string[] => fs.readdirSync(root, { withFileTypes: true }).flatMap(entry => {
   const name = path.posix.join(prefix, entry.name);
