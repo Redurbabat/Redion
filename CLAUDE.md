@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 562 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 563 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2149,6 +2149,16 @@ denselben Fall und blieb grün, weil er nur den Kasten mass (≥ 300 px breit,
 Gezählt am 31. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts |
 wc -l` sagt 562.*
 
+*Und 563: `test628` — Zoom am Zeiger im PDF-Dokument (E766), aus Redurs
+ZIP vom 1. November in den vorhandenen Regler übernommen. Er misst den
+Punkt des Blatts unter dem Zeiger als Anteil, vor und nach Strg+Rad und
+Kneifen (±2 px), und zählt die Neuzeichnen eines Kneifens. Sein erster
+Anlauf war an genau dieser Zählung blind: ein `MutationObserver` meldet
+erst, wenn der Stapel leer ist, und „im Bild" war darum auch im alten Stand
+null — er liest jetzt `takeRecords()`. Gegen `12802efa4` rot mit 13 von 19.
+Gezählt am 1. November, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 563.*
+
 ### Die Befehle
 
 ```txt
@@ -2170,7 +2180,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 562 Läufe
+npm run pruefen                      alle 563 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2267,7 +2277,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 562 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 563 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

@@ -1,5 +1,17 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 1. November 2026 · E766 · Zoom am Zeiger im PDF (aus Redurs ZIP)
+
+**Auftrag:** Redurs ZIP übernehmen, geprüft und nach den Regeln; Schritt 1:
+der PDF-Zoom.
+
+**Bau:** `document-mode.ts` — `zoomSetzen` nimmt einen Anker, Strg+Rad
+gibt den Zeiger mit, das Kneifen die Fingermitte und zeichnet über
+`requestAnimationFrame`. Kein zweites Dock, keine neuen Tastenkürzel.
+
+**Prüfung:** `test628` zuerst rot (13 von 19), jetzt 19 von 19; zwei
+Gegenproben rot; `test346` 31 von 31. Zahlen in messungen.md.
+
 ## 31. Oktober 2026 · E764 · Das Studio-Dock mit gemerktem Platz «links»/«rechts»
 
 **Auftrag:** Redurs Bilder 5 und 6 aus der Windows-App — im PDF beim Füller

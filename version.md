@@ -11,6 +11,7 @@ Dieses Dokument hält **ab jetzt jede neue Redion-Version** mit Versionsnummer, 
 - Version und kurze Änderungsliste erscheinen im Windows-Menü **Hilfe → Version und Änderungen**. GitHub-Verlauf in dieser Datei `version.md` und maschinenlesbar in `version.json`.
 - Der lokale Entwicklungsstand verwendet das getrennte Datenprofil `%APPDATA%\Redion-Entwicklung`. Die normale Datenablage `%APPDATA%\Redion` wird nicht durch nicht signierten Projektcode geöffnet.
 - Bei fehlenden, unvollständigen oder unzulässigen Dateien wird der bisherige lauffähige Stand beibehalten. Keine automatischen GitHub-Anmeldedaten, kein ungeprüftes Update der nativen EXE.
+- PDF-Dokument: Strg+Rad und Kneifen zoomen jetzt um den Punkt unter dem Zeiger bzw. zwischen den Fingern, statt um die obere linke Ecke; das Kneifen zeichnet ruhiger (einmal je Bild). Aus Redurs ZIP, in den vorhandenen Regler übernommen (E766, `test628`). **Daten:** nicht betroffen. **Neue EXE:** nicht nötig.
 
 **Behoben**
 - Der Windows-Installer packte den ganzen Projektordner ein, samt allen früheren EXE-Dateien (`"redion": "file:.."` in `windows/package.json`); am 31. Oktober erreichte das Archiv 3,9 GB und überschritt die 2-GB-Grenze. Der Eintrag ist entfernt, ein Wächter in `windows/windows-desktop.test.cjs` hält es fest (E763). Daten sind nicht betroffen. Nach dem Holen in `windows/` einmal `npm install`, alte Dateien in `build/windows-dist` löschen, dann `npm run dist`.

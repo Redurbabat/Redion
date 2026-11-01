@@ -9860,3 +9860,22 @@ seit dem 14. September da und wurde nur mit einem gemerkten «links» oder
 «rechts» sichtbar — und eine frische Sonde hat keinen. Bilder:
 `bilder/vorher-*` und `bilder/nachher-*` im Arbeitsverzeichnis (nicht im
 Verzeichnis, §55.4).
+
+
+## §113 · Zoom am Zeiger im PDF-Dokument (E766, 1. November 2026)
+
+**Methode:** Playwright/Chromium 1280 × 900, drei erzeugte PDF-Seiten
+(PNG, 595 × 842) im Dokumentmodus, `WheelEvent` mit `ctrlKey` und
+`clientX/Y` auf `.document-center`, Kneifen mit zwei `PointerEvent`-Fingern.
+Gemessen wird der Anteil des Punkts am getroffenen `.blatt-papier`, die
+Abweichung in Pixeln mit der Blattgrösse NACH dem Zoom.
+`node pruefungen/lauf/test628.mts`.
+
+```txt
+                                     12802efa4     E766
+Strg+Rad 100→110 %, senkrecht         52,3 px       ≤ 2 px
+Strg+Rad 150→160 %, waagrecht         58,5 px       ≤ 2 px
+Kneifen 100→140 %, senkrecht         194,4 px       ≤ 2 px
+Neuzeichnen bei 10 Bewegungspaaren
+  in einem Bild                       20            0 (im nächsten Bild 1)
+```

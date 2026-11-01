@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-743 Entscheidungen, E1 bis E764 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+744 Entscheidungen, E1 bis E766 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -828,6 +828,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E762** — Die Schaltplanfläche: Vollbild, Zoom, Leiter schieben, nichts übereinander, alles drehen, Schienen, flüssig, radieren (31. Oktober 2026): Vollbild über die feste Ebene am `body` und `requestFullscreen` des Dokuments, Zoom über die viewBox mit EINER Umrechnung (`getScreenCTM`), Strecken quer schieben ohne neue Berührung, neue Leitungen geführt statt gewinkelt (4 → 0 Überlappungen in Redurs Plan), Gruppe drehen und spiegeln, Werkzeug „Schiene" (`leitung.schiene`), Ziehen ohne Neubau des SVG, Radierer wie im PDF (`test625`, L261)
 * **E763** — Der Windows-Installer packt nur die App, nicht den Projektordner (31. Oktober 2026): `"redion": "file:.."` aus `windows/package.json` entfernt; mit ihr lag der ganze Checkout samt früheren EXE-Dateien im Paket, das NSIS-Archiv erreichte 3,9 GB (Grenze 2 GB). Wächter in `windows/windows-desktop.test.cjs`
 * **E764** — Ein gemerkter Platz «links»/«rechts» zerlegt das Studio-Dock nicht mehr (31. Oktober 2026, Redurs Bild aus der Windows-App: neun Pastelle und EIN Füller über die ganze Leiste): die Spaltenform in `bausteine.css` gilt nur noch ausserhalb von `.document-studio` (`:where(:not(.document-studio *))`, ohne Gewicht), und sie setzt `display` nur noch für die Werkzeuge — welche Gruppe sichtbar ist, sagt wieder allein die Gruppenregel, auch in der Spalte der gewöhnlichen Seite. Kein neues Verhalten, kein Datenfeld; latent seit E573/E619 — `test626`
+* **E766** — Zoom am Zeiger im PDF-Dokument, aus Redurs ZIP (1. November 2026): Strg+Rad und Kneifen halten den Punkt des Blatts unter Zeiger oder Fingermitte fest (±2 px), das Kneifen zeichnet höchstens einmal je Bild (`requestAnimationFrame`); übernommen in den VORHANDENEN Regler — kein zweites Zoom-Dock, Strg +/−/0 bleiben die Schriftgrösse, kein Knopf „weniger Werkzeuge" (es gibt „Leiste einrichten", E570), die Kommentare F07/E469 bleiben — `test628`
 
 ## Grundregel
 
@@ -70151,3 +70152,46 @@ grün, weil er nur den Kasten mass. Er ist nicht geändert — `test626` hält
 jetzt die Knöpfe. Redurs Bild 8 (zwei Leisten nebeneinander auf einer Seite
 mit eingebetteter PDF, die linke abgeschnitten) hat eine andere Ursache
 und steht als L262.
+
+## E766 — Zoom am Zeiger im PDF-Dokument (aus Redurs ZIP)
+
+**Woher.** Redurs ZIP „Redion_NUR_VIER_BEREICHE" vom 1. November 2026
+(Basis `12802efa4`) bringt in `document-mode.ts` vier Dinge: Zoom am
+Zeiger, gebündeltes Kneifen, ein zweites Zoom-Dock oben rechts mit
+Strg +/−/0/9 und einen Knopf „▦ weniger Werkzeuge". Redurs Entscheid vom
+1. November: die ZIP übernehmen, geprüft, verbessert, die Regeln
+gehalten; für das PDF die Vorgaben aus der Analyse.
+
+**Entschieden.**
+
+- **Übernommen:** `zoomSetzen(wert, anker?)`. Mit Anker (Strg+Rad: der
+  Zeiger; Kneifen: die Mitte der zwei Finger) misst es vor dem Neuzeichnen,
+  wo im Blatt der Punkt liegt (als Anteil 0…1), und verschiebt die Rolle
+  danach um die Differenz. Liegt der Zeiger neben dem Blatt, bleibt die
+  Mitte des aktiven Blatts stehen. In der Lupe (E469) und ohne Anker
+  (Regler, Neuladen, Lupe zu) bleibt alles wie vorher. Nur die Ansicht
+  wandert; Marken und SVG-Koordinaten bleiben unberührt.
+- **Übernommen:** Kneifen über `requestAnimationFrame` — gemerkt wird nur
+  der letzte Wunsch, gezeichnet im nächsten Bild; beim Abheben sofort.
+- **Nicht übernommen:** das zweite Zoom-Dock (E80: keine zweite
+  Oberfläche — der Regler ist die Wahrheit seit E354), Strg +/−/0/9 mit
+  `stopPropagation` (sie sind in `register/tasten` die Schriftgrösse; §18
+  „bestehende Tastenkürzel nicht brechen"), der Knopf „weniger Werkzeuge"
+  (dafür gibt es „Leiste einrichten", E570). Die zwei Kommentare, die die
+  ZIP gelöscht hatte (F07, E469), stehen weiter.
+
+**Prüfung.** `test628`, zuerst rot gegen `12802efa4` mit 13 von 19
+(„Senkrecht bleibt der Punkt — ist 52,3 px", waagrecht 58,5 px, Kneifen
+194,4 px und 20 Neuzeichnen in einem Bild). Sein erster Anlauf zählte die
+Neuzeichnen „im Bild" mit einem `MutationObserver`, der erst meldet, wenn
+der Stapel leer ist — „im Bild" war darum auch im alten Stand null; er
+liest jetzt `takeRecords()` (§55.2). Gegenproben: ohne das Verschieben der
+Rolle rot an fünf Stellen (14 von 19), ohne `requestAnimationFrame` rot an
+drei (16 von 19 — der Punkt unter den Fingern wandert dann um 6,4 px, weil
+jeder Zwischenschritt rundet). `test346` (Strg+Rad, Kneifen) bleibt 31 von
+31.
+
+**Alternative.** Die ZIP-Fassung ganz. Verworfen aus den Gründen oben.
+
+**Kosten.** Keine Daten, kein Feld. Eine neue Windows-EXE ist nicht nötig
+(Webdatei). In `version.md` unter 2026.8.4.
