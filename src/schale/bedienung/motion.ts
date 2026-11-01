@@ -73,6 +73,10 @@ const RedionMotion = (() => {
     return element.hasAttribute('disabled') ? 'inaktiv' : 'bereit';
   };
   const decorateElement = (element: Element): void => {
+    /* Der RED-MGT-Glasschalter (E772) bringt sein eigenes Innenleben und
+       seine eigene Bewegung mit: kein Glühfaden-Hebel aus E535 hinein, sonst
+       stehen dessen Schrauben neben dem Schalter (gesehen im Bild, §55). */
+    if (element.classList.contains('red-mgt-area')) return;
     const ids = effects.filter(effect => element.matches(effect.selector)).map(effect => effect.id);
     set(element, 'data-rmo', ids.join(' '));
     set(element, 'data-rmo-state', state(element));

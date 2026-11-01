@@ -761,6 +761,8 @@ const Planflaeche = (() => {
             });
         };
         const kontextMalen = () => {
+            if (karteId && !z.auswahl.has(karteId))
+                karteSchliessen();
             const ausgewaehlt = [...z.auswahl].filter(id => z.plan.teile.some(t => t.id === id) ||
                 z.plan.leitungen.some(l => l.id === id));
             kontextleiste.hidden = !!z.simulation || !ausgewaehlt.length;

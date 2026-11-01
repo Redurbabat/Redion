@@ -984,6 +984,8 @@ const Planflaeche = (() => {
     };
 
     const kontextMalen = (): void => {
+      /* Die Schnellkarte gehört zur Auswahl: ohne sie geht sie zu (Escape, 1–5). */
+      if (karteId && !z.auswahl.has(karteId)) karteSchliessen();
       const ausgewaehlt = [...z.auswahl].filter(id =>
         (z.plan.teile as any[]).some(t => t.id === id) ||
         (z.plan.leitungen as any[]).some(l => l.id === id));
