@@ -1724,6 +1724,8 @@ const Planflaeche = (() => {
         `<p class="sp-erkl">${esc(zeichen.erklaerung)}</p>` +
         `<label>Betriebsmittel<input id="sp-bmk" value="${esc(t.bmk)}" ` +
         `placeholder="${esc(zeichen.kennbuchstabe || 'K')}1"></label>` +
+        `<label>Beschriftung<input id="sp-beschriftung" maxlength="120" value="${esc(t.beschriftung || '')}" ` +
+        `placeholder="z. B. Hauptschütz"></label>` +
         `<div class="sp-nrs"><span>Anschlussnummern</span>` +
         zeichen.anschluesse.map((a: any) =>
           `<label class="sp-nr"><i>${esc(a.nr)}</i>` +
@@ -1738,6 +1740,7 @@ const Planflaeche = (() => {
         if (e.target === o || (b && b.dataset.a === 'zu')) { zu(); return; }
         if (!b || b.dataset.a !== 'ok') return;
         const bmk = (o.querySelector('#sp-bmk') as HTMLInputElement).value.trim();
+        const beschriftung = (o.querySelector('#sp-beschriftung') as HTMLInputElement).value.trim().slice(0, 120);
         const nummern: Record<string, string> = {};
         o.querySelectorAll<HTMLInputElement>('[data-nr]').forEach(f => {
           const vorgabe = f.dataset.nr || '';
@@ -1745,7 +1748,11 @@ const Planflaeche = (() => {
           if (wert && wert !== vorgabe) nummern[vorgabe] = wert;
         });
         zu();
-        aendere(() => { t.bmk = bmk; t.nummern = nummern; });
+        aendere(() => {
+          t.bmk = bmk; t.nummern = nummern;
+          /* E767: leer heisst „kein Feld", nicht ein leerer Text. */
+          if (beschriftung) t.beschriftung = beschriftung; else delete t.beschriftung;
+        });
       });
       (o.querySelector('#sp-bmk') as HTMLInputElement)?.focus();
     };

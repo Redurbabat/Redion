@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-744 Entscheidungen, E1 bis E766 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+745 Entscheidungen, E1 bis E767 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -829,6 +829,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E763** — Der Windows-Installer packt nur die App, nicht den Projektordner (31. Oktober 2026): `"redion": "file:.."` aus `windows/package.json` entfernt; mit ihr lag der ganze Checkout samt früheren EXE-Dateien im Paket, das NSIS-Archiv erreichte 3,9 GB (Grenze 2 GB). Wächter in `windows/windows-desktop.test.cjs`
 * **E764** — Ein gemerkter Platz «links»/«rechts» zerlegt das Studio-Dock nicht mehr (31. Oktober 2026, Redurs Bild aus der Windows-App: neun Pastelle und EIN Füller über die ganze Leiste): die Spaltenform in `bausteine.css` gilt nur noch ausserhalb von `.document-studio` (`:where(:not(.document-studio *))`, ohne Gewicht), und sie setzt `display` nur noch für die Werkzeuge — welche Gruppe sichtbar ist, sagt wieder allein die Gruppenregel, auch in der Spalte der gewöhnlichen Seite. Kein neues Verhalten, kein Datenfeld; latent seit E573/E619 — `test626`
 * **E766** — Zoom am Zeiger im PDF-Dokument, aus Redurs ZIP (1. November 2026): Strg+Rad und Kneifen halten den Punkt des Blatts unter Zeiger oder Fingermitte fest (±2 px), das Kneifen zeichnet höchstens einmal je Bild (`requestAnimationFrame`); übernommen in den VORHANDENEN Regler — kein zweites Zoom-Dock, Strg +/−/0 bleiben die Schriftgrösse, kein Knopf „weniger Werkzeuge" (es gibt „Leiste einrichten", E570), die Kommentare F07/E469 bleiben — `test628`
+* **E767** — Drei neue, optionale Felder im Schaltplan, aus Redurs ZIP (1. November 2026): `beschriftung` am Teil (lesbarer Name neben dem BMK, ≤ 120 Zeichen, gezeichnet unter dem BMK, im Teildialog bearbeitbar, leer = kein Feld), `legacySpalte` (0–29, die Spalte des alten Relais-Rasters) und `relaisLegacy` am Plan (die Originalbytes einer .sch, genau 5760 Zeichen Base64, mit dem, was NICHT gesichert ist); `lesen()` lässt nur Gültiges durch, alte Pläne bekommen nichts dazu; Rundreise über .json und .redion geprüft — `test629`
 
 ## Grundregel
 
@@ -70195,3 +70196,51 @@ jeder Zwischenschritt rundet). `test346` (Strg+Rad, Kneifen) bleibt 31 von
 
 **Kosten.** Keine Daten, kein Feld. Eine neue Windows-EXE ist nicht nötig
 (Webdatei). In `version.md` unter 2026.8.4.
+
+## E767 — Beschriftung, alte Rasterspalte und die Originalbytes eines Relais-Plans
+
+**Woher.** Redurs ZIP vom 1. November 2026 (Basis `12802efa4`) erweitert
+das Datenformat des Schaltplans um drei Felder. Redur hat die Übernahme am
+1. November entschieden; die zehn Relais-Dateien gehören ihm (E769).
+
+**Entschieden.**
+
+- `teil.beschriftung` — ein lesbarer Name neben dem normgerechten BMK
+  („Hauptschütz"). `lesen()` trimmt und kürzt auf 120 Zeichen; leer oder
+  kein Text heisst: kein Feld. Gezeichnet unter dem BMK in 11 px, ab 38
+  Zeichen gekürzt mit dem vollen Text im `<title>`, durch `esc` (§19).
+  Bearbeitet im vorhandenen Teildialog (Doppeltipp) — nicht in einer
+  Schnellkarte (Redur: Schnellkarte nein).
+- `teil.legacySpalte` — die Spalte 0–29 des alten Relais-Rasters, aus der
+  ein Teil eingelesen wurde. Eine Lage, keine Verdrahtung.
+- `plan.relaisLegacy` — die Originalbytes der .sch (4320 Byte, als
+  Base64 genau 5760 Zeichen), die rohe .txt (≤ 22 000 Zeichen), bis zu 30
+  Spaltentitel, `verifiziert` (nur `true` zählt), `bearbeitet`,
+  `texteBearbeitet` und bis zu acht Sätze, was NICHT gesichert ist. Eine
+  andere Länge der Rohbytes oder fehlende Titel: das ganze Feld fällt weg.
+  Der Lesecode steht als eigene, getypte Funktion (`relaisLegacyLesen`).
+
+**Rückwärts (§9).** Alle drei Felder sind optional; ein alter Plan liest
+sich wie vorher und bekommt keines dazu (`test629` §1). Gespeichert wird
+der Plan in `block.plan` — `.json` und `.redion` tragen die Felder also
+ohne eigene Regel mit; `test629` §4 prüft beide Runden Zeichen für Zeichen,
+`test100` bleibt grün.
+
+**Vorwärts — der Haken.** Ein Gerät mit altem Stand (etwa die iPhone-App
+vor dem nächsten Paket) wirft die Felder in `lesen()` weg und speichert den
+Plan bei der nächsten Änderung ohne sie — derselbe Fall wie bei
+`batterieUebung`. Steht als L264.
+
+**Nicht übernommen.** Die Zeile der ZIP, die die Flussanimation an
+`--sp-labor-tempo` hängt, gehört zum Live-Stromlabor und kommt mit ihm.
+
+**Prüfung.** `test629`, zuerst rot gegen `12802efa4` (zehn Zusagen rot,
+dann Abbruch, weil der Dialog kein Feld hatte), jetzt 24 von 24.
+Gegenprobe ohne `relaisLegacyLesen` und mit „leerer Text statt kein Feld":
+rot an vier Stellen (20 von 24). Der Lauf war zweimal aus dem FALSCHEN
+Grund rot: `Schaltplan.lesen` nimmt einen Block, nicht einen Plan, und der
+Doppeltipp auf die Mitte des Teils traf das Raster, sobald die Beschriftung
+kürzer wurde — er tippt jetzt aufs Zeichen.
+
+**Kosten.** Ein neues Datenfeld je Teil und eines je Plan, keine
+Migration. Keine neue Windows-EXE nötig.

@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 563 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 564 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2159,6 +2159,15 @@ null — er liest jetzt `takeRecords()`. Gegen `12802efa4` rot mit 13 von 19.
 Gezählt am 1. November, im selben Bogen: `ls pruefungen/lauf/test*.mts |
 wc -l` sagt 563.*
 
+*Und 564: `test629` — Beschriftung, alte Rasterspalte und die
+Originalbytes eines Relais-Plans (E767). Er prüft das Lesen mit Grenzfällen,
+die Zeichnung (escaped, gekürzt), den Teildialog und zwei echte
+Sicherungsrunden über `.json` und `.redion`. Zweimal war er aus dem
+falschen Grund rot: `Schaltplan.lesen` nimmt einen Block, und der
+Doppeltipp auf die Mitte des Teils traf das Raster, sobald die Beschriftung
+kürzer wurde. Gezählt am 1. November, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 564.*
+
 ### Die Befehle
 
 ```txt
@@ -2180,7 +2189,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 563 Läufe
+npm run pruefen                      alle 564 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2277,7 +2286,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 563 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 564 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

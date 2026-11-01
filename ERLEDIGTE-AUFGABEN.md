@@ -1,5 +1,13 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 1. November 2026 · E767 · Neue Schaltplanfelder aus Redurs ZIP
+
+**Bau:** `schaltplan.ts` (Typen, `lesen`, Zeichnung), `planflaeche.ts`
+(Feld „Beschriftung" im Teildialog).
+
+**Prüfung:** `test629` zuerst rot, jetzt 24 von 24; Gegenprobe rot (20 von
+24); `test100` grün. Offen: L264 (alte Geräte werfen die Felder weg).
+
 ## 1. November 2026 · E766 · Zoom am Zeiger im PDF (aus Redurs ZIP)
 
 **Auftrag:** Redurs ZIP übernehmen, geprüft und nach den Regeln; Schritt 1:

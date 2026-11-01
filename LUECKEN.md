@@ -10960,6 +10960,19 @@ bevor eine Zeile geschrieben wird: 2 (verändert alte Striche) und 8
 rot sehen, reparieren, Gegenprobe, Bild, wo es eines gibt.
 
 
+
+## L264 · Ein altes Gerät wirft die neuen Schaltplanfelder weg — 1. November 2026
+
+E767 bringt `beschriftung`, `legacySpalte` und `relaisLegacy`. Ein Gerät
+mit älterem Stand (die iPhone-App vor dem nächsten Paket, eine alte
+Einzeldatei) liest den Plan mit seinem `lesen()`, das die Felder nicht
+kennt, und schreibt ihn bei der nächsten Änderung ohne sie zurück — über
+den Abgleich oder eine Sicherung kommt der Plan dann ohne Beschriftung und
+ohne Originalbytes zurück. Derselbe Fall besteht seit `batterieUebung`.
+Fertig heisst: `lesen()` reicht unbekannte Felder eines Plans und eines
+Teils unverändert durch (ein Topf „unbekannt"), mit einem Lauf, der einen
+Plan aus einem „neueren Stand" liest, ändert und vergleicht.
+
 # Anhang A · Was gemessen wurde
 
 Diese Zahlen sind die Grundlage für mehrere Lücken. Sie stehen hier, damit
