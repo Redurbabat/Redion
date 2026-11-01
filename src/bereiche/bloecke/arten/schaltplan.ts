@@ -105,6 +105,12 @@ const Schaltplan = (() => {
     ebene: string;
     /** Zahlen des Bauteils; U, Ri, Imax und Q gehören der Zeichnung. */
     werte?: Record<string, number>;
+    /** Ein lesbarer Name neben dem normgerechten BMK, etwa „Hauptschütz"
+        (E767, aus Redurs ZIP). Höchstens 120 Zeichen; fehlt, wenn leer. */
+    beschriftung?: string;
+    /** Die Spalte (0–29) des alten Relais-Rasters, aus dem das Teil
+        eingelesen wurde — eine Lage, keine behauptete Verdrahtung (E767). */
+    legacySpalte?: number;
   };
   type Punkt = { x: number; y: number };
   type Leitung = {
@@ -123,7 +129,13 @@ const Schaltplan = (() => {
     art: string; breite: number; hoehe: number;
     teile: Teil[]; leitungen: Leitung[]; texte: Text[]; ebenen: Ebene[];
     batterieUebung?: { id: string; plus: string; minus: string; teile: string[] };
+    /** Die Originalbytes einer alten Relais-.sch (Base64, genau 4320 Byte =
+        5760 Zeichen) samt Spaltentiteln und dem, was NICHT gesichert ist —
+        nie eine behauptete Netzliste (E767, E769). */
+    relaisLegacy?: RelaisLegacy;
   };
+  type RelaisLegacy = { name: string; format: string; roh: string; txtRoh: string; texte: string[];
+    verifiziert: boolean; bearbeitet: boolean; nichtVerifiziert: string[]; texteBearbeitet?: boolean };
 
   /* ------------------------------------------------------------------------
    * DIE PLANARTEN (Punkte 31–40)
@@ -217,6 +229,26 @@ const Schaltplan = (() => {
    * Teil ohne Drehung steht auf null. Ein Editor, der an einem alten Plan
    * abstürzt, ist schlimmer als einer, der ihn ergänzt.
    */
+  /** E767: die Originalbytes einer Relais-.sch nur, wenn sie wirklich eine
+      sind (Länge der Rohbytes, Liste der Spaltentitel); alles andere gekürzt. */
+  const relaisLegacyLesen = (r: unknown): { relaisLegacy: RelaisLegacy } | null => {
+    if (!r || typeof r !== 'object') return null;
+    const o = r as Record<string, unknown>;
+    if (typeof o.roh !== 'string' || o.roh.length !== 5760 || !Array.isArray(o.texte)) return null;
+    return { relaisLegacy: {
+      name: String(o.name || '').slice(0, 150),
+      format: 'Relais-Schaltplan 9×30',
+      roh: o.roh,
+      txtRoh: typeof o.txtRoh === 'string' && o.txtRoh.length <= 22000 ? o.txtRoh : '',
+      texte: o.texte.slice(0, 30).map(v => String(v).slice(0, 200)),
+      verifiziert: o.verifiziert === true,
+      bearbeitet: o.bearbeitet === true,
+      texteBearbeitet: o.texteBearbeitet === true,
+      nichtVerifiziert: Array.isArray(o.nichtVerifiziert)
+        ? o.nichtVerifiziert.slice(0, 8).map(v => String(v).slice(0, 240)) : []
+    } };
+  };
+
   const lesen = (block: any): Plan => {
     const roh = (block && block.plan) || {};
     const a = artVon(String(roh.art || ''));
@@ -234,6 +266,11 @@ const Schaltplan = (() => {
         nummern: (t.nummern && typeof t.nummern === 'object') ? t.nummern : {},
         gruppe: String(t.gruppe || ''),
         ebene: String(t.ebene || 'plan'),
+        /* E767: nur gültige Werte; ein alter Plan bekommt keines der Felder. */
+        ...(typeof t.beschriftung === 'string' && t.beschriftung.trim()
+          ? { beschriftung: t.beschriftung.trim().slice(0, 120) } : {}),
+        ...(Number.isInteger(t.legacySpalte) && t.legacySpalte >= 0 && t.legacySpalte < 30
+          ? { legacySpalte: t.legacySpalte as number } : {}),
         ...(t.werte && typeof t.werte === 'object' && !Array.isArray(t.werte)
           ? { werte: Object.fromEntries(Object.entries(t.werte).filter(([, v]) =>
               typeof v === 'number' && Number.isFinite(v))) } : {})
@@ -262,6 +299,7 @@ const Schaltplan = (() => {
             farbe: String(e.farbe || 'var(--text)'), sichtbar: e.sichtbar !== false
           }))
         : EBENEN_VORGABE.map(e => ({ ...e }))),
+      ...(relaisLegacyLesen(roh.relaisLegacy) ?? {}),
       ...(roh.batterieUebung && typeof roh.batterieUebung === 'object' &&
            Array.isArray(roh.batterieUebung.teile)
         ? { batterieUebung: {
@@ -1607,6 +1645,11 @@ const Schaltplan = (() => {
         (opt.bmk !== false && t.bmk
           ? `<text x="${mass.w + 6}" y="12" font-size="12" fill="${farbe}" stroke="none" ` +
             `font-weight="600">${esc(t.bmk)}</text>` : '') +
+        /* E767: die Beschriftung unter dem BMK, gekürzt; der volle Text im Titel. */
+        (t.beschriftung
+          ? `<text class="sp-teil-beschriftung" x="${mass.w + 6}" y="27" font-size="11" ` +
+            `fill="${farbe}" stroke="none" opacity=".84">${esc(t.beschriftung.length > 38 ? t.beschriftung.slice(0, 37) + '…' : t.beschriftung)}` +
+            `<title>${esc(t.beschriftung)}</title></text>` : '') +
         `</g>`);
     });
 

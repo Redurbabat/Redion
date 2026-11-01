@@ -8788,6 +8788,45 @@ steht der feste Teil unter den Werkzeugen (oder hinter „…"), alle Werkzeuge
 der PDF-Seite sind ohne Rollen zu treffen, mit einem Wächter, der zuerst
 rot war.
 
+
+## L264 · Ein altes Gerät wirft die neuen Schaltplanfelder weg — 1. November 2026
+
+E767 bringt `beschriftung`, `legacySpalte` und `relaisLegacy`. Ein Gerät
+mit älterem Stand (die iPhone-App vor dem nächsten Paket, eine alte
+Einzeldatei) liest den Plan mit seinem `lesen()`, das die Felder nicht
+kennt, und schreibt ihn bei der nächsten Änderung ohne sie zurück — über
+den Abgleich oder eine Sicherung kommt der Plan dann ohne Beschriftung und
+ohne Originalbytes zurück. Derselbe Fall besteht seit `batterieUebung`.
+Fertig heisst: `lesen()` reicht unbekannte Felder eines Plans und eines
+Teils unverändert durch (ein Topf „unbekannt"), mit einem Lauf, der einen
+Plan aus einem „neueren Stand" liest, ändert und vergleicht.
+
+
+## L265 · Was aus Redurs ZIP vom 1. November noch nicht übernommen ist — 1. November 2026
+
+Übernommen sind E766 (PDF-Zoom am Zeiger), E767 (Schaltplanfelder), E768
+(Zeitrelais, Taster) und E769 (Relais-Werkstatt). Nach Redurs Entscheiden
+vom 1. November stehen noch aus, jeder Schritt mit eigenem Wächter, der
+zuerst rot ist:
+
+1. **Ziehen aus der Palette direkt auf den Plan** (die Palette bleibt
+   offen; kein Menü „Bereiche", keine Kürzel 1–5/P/B//), dazu die
+   **Kontextleiste** über der Auswahl und das **Elektro Studio**
+   (Alt+Umschalt+E). `test611` und `test625` müssen grün bleiben — im
+   Versuch kam in `test625 §4b` ein gezogener Draht nicht an. Die
+   Schnellkarte nicht (Redur: nein).
+2. **Prüfzentrum** (Alt+Umschalt+P) als getyptes `.ts` in
+   `bloecke/arten`, mit E747 zusammengelegt, Bericht ohne „BABAT",
+   `Dialog` statt `confirm`, CSV gegen Formel-Einschleusung.
+3. **Live-Stromlabor** (Uhr, Tempo, Pause) mit Redions Marken, und der
+   **RED-MGT-Glasschalter** an Stelle von „▶ Strom" — angepasst: Marken
+   statt Orange, „Aus"/„Ein", Redions Federn, keine Endlosanimation, 44 px,
+   Glas über die Marke, echter Schalter mit `aria-pressed`,
+   `data-a="simulation"` bleibt (`test612`); Herkunft in FREMDCODE als
+   Redurs eigener Entwurf.
+4. Bilder der Kopfleiste, der Werkstatt und des Labors bei 1300 × 860 und
+   1900 × 1100, hell und dunkel (§55) — für E767–E769 noch nicht gemacht.
+
 ## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — GESCHLOSSEN (E745) — 11. Oktober 2026
 
 **Gemessen** über die Schnittstelle von GitHub, nicht vermutet: die zwei
@@ -10959,7 +10998,6 @@ bevor eine Zeile geschrieben wird: 2 (verändert alte Striche) und 8
 (nimmt E498 zurück). Die übrigen sind Bögen wie E673–E675: Wächter zuerst,
 rot sehen, reparieren, Gegenprobe, Bild, wo es eines gibt.
 
-
 # Anhang A · Was gemessen wurde
 
 Diese Zahlen sind die Grundlage für mehrere Lücken. Sie stehen hier, damit
@@ -11146,8 +11184,8 @@ eine Zeile im Stilblatt (L206).
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 31. Oktober 2026 (mit L262), nachgezählt statt fortgeschrieben:** die
-Datei führt 157 Lücken, 99 offene und 58 geschlossene. Der Befehl dazu ist
+**Gemessen am 1. November 2026 (mit L264), nachgezählt statt fortgeschrieben:** die
+Datei führt 159 Lücken, 101 offene und 58 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

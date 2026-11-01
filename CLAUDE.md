@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 562 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 566 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2149,6 +2149,44 @@ denselben Fall und blieb grün, weil er nur den Kasten mass (≥ 300 px breit,
 Gezählt am 31. Oktober, im selben Bogen: `ls pruefungen/lauf/test*.mts |
 wc -l` sagt 562.*
 
+*Und 563: `test628` — Zoom am Zeiger im PDF-Dokument (E766), aus Redurs
+ZIP vom 1. November in den vorhandenen Regler übernommen. Er misst den
+Punkt des Blatts unter dem Zeiger als Anteil, vor und nach Strg+Rad und
+Kneifen (±2 px), und zählt die Neuzeichnen eines Kneifens. Sein erster
+Anlauf war an genau dieser Zählung blind: ein `MutationObserver` meldet
+erst, wenn der Stapel leer ist, und „im Bild" war darum auch im alten Stand
+null — er liest jetzt `takeRecords()`. Gegen `12802efa4` rot mit 13 von 19.
+Gezählt am 1. November, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 563.*
+
+*Und 564: `test629` — Beschriftung, alte Rasterspalte und die
+Originalbytes eines Relais-Plans (E767). Er prüft das Lesen mit Grenzfällen,
+die Zeichnung (escaped, gekürzt), den Teildialog und zwei echte
+Sicherungsrunden über `.json` und `.redion`. Zweimal war er aus dem
+falschen Grund rot: `Schaltplan.lesen` nimmt einen Block, und der
+Doppeltipp auf die Mitte des Teils traf das Raster, sobald die Beschriftung
+kürzer wurde. Gezählt am 1. November, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 564.*
+
+*Und 565: `test630` — Zeitrelais mit echter Zeit, und Taster federn
+zurück (E768). Er zählt jeden laufenden 100-ms-Takt über eine umwickelte
+`setInterval`-Funktion und verlangt null vor der Simulation, einen mit
+Zeitspule, null ohne. Sein Treppenhaus drückt den Taster mit echter Maus,
+hält, lässt los und wartet die Abfallverzögerung ab. Zuerst war er aus dem
+falschen Grund rot: 24 V reichen einer 230-V-Spule nicht zum Anziehen.
+Gezählt am 1. November, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 565.*
+
+*Und 566: `test631` — die Relais-Werkstatt mit Redurs zehn
+Original-Schaltungen (E769). Er verlangt, dass der Start keines der drei
+Skripte holt, rechnet jede SHA-256 der `.sch`-Bytes nach, setzt eine
+Schaltung ein, sichert sie Byte für Byte zurück, gibt sie über das Fenster
+der Schale frei, liest eine eigene Datei ein und öffnet die Einzeldatei
+ohne Ordner. Zweimal war er aus dem falschen Grund rot: die Maus traf den
+Kasten des Tasters statt einer Linie, und `mouse.move` rollt den Taster
+nicht ins Bild. Gezählt am 1. November, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 566.*
+
 ### Die Befehle
 
 ```txt
@@ -2170,7 +2208,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 562 Läufe
+npm run pruefen                      alle 566 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2267,7 +2305,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 562 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 566 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

@@ -66,6 +66,25 @@ const Schaltplan = (() => {
             ebenen: EBENEN_VORGABE.map(e => ({ ...e }))
         };
     };
+    const relaisLegacyLesen = (r) => {
+        if (!r || typeof r !== 'object')
+            return null;
+        const o = r;
+        if (typeof o.roh !== 'string' || o.roh.length !== 5760 || !Array.isArray(o.texte))
+            return null;
+        return { relaisLegacy: {
+                name: String(o.name || '').slice(0, 150),
+                format: 'Relais-Schaltplan 9×30',
+                roh: o.roh,
+                txtRoh: typeof o.txtRoh === 'string' && o.txtRoh.length <= 22000 ? o.txtRoh : '',
+                texte: o.texte.slice(0, 30).map(v => String(v).slice(0, 200)),
+                verifiziert: o.verifiziert === true,
+                bearbeitet: o.bearbeitet === true,
+                texteBearbeitet: o.texteBearbeitet === true,
+                nichtVerifiziert: Array.isArray(o.nichtVerifiziert)
+                    ? o.nichtVerifiziert.slice(0, 8).map(v => String(v).slice(0, 240)) : []
+            } };
+    };
     const lesen = (block) => {
         const roh = (block && block.plan) || {};
         const a = artVon(String(roh.art || ''));
@@ -83,6 +102,10 @@ const Schaltplan = (() => {
                 nummern: (t.nummern && typeof t.nummern === 'object') ? t.nummern : {},
                 gruppe: String(t.gruppe || ''),
                 ebene: String(t.ebene || 'plan'),
+                ...(typeof t.beschriftung === 'string' && t.beschriftung.trim()
+                    ? { beschriftung: t.beschriftung.trim().slice(0, 120) } : {}),
+                ...(Number.isInteger(t.legacySpalte) && t.legacySpalte >= 0 && t.legacySpalte < 30
+                    ? { legacySpalte: t.legacySpalte } : {}),
                 ...(t.werte && typeof t.werte === 'object' && !Array.isArray(t.werte)
                     ? { werte: Object.fromEntries(Object.entries(t.werte).filter(([, v]) => typeof v === 'number' && Number.isFinite(v))) } : {})
             })).filter((t) => t.zeichen),
@@ -108,6 +131,7 @@ const Schaltplan = (() => {
                     farbe: String(e.farbe || 'var(--text)'), sichtbar: e.sichtbar !== false
                 }))
                 : EBENEN_VORGABE.map(e => ({ ...e }))),
+            ...(relaisLegacyLesen(roh.relaisLegacy) ?? {}),
             ...(roh.batterieUebung && typeof roh.batterieUebung === 'object' &&
                 Array.isArray(roh.batterieUebung.teile)
                 ? { batterieUebung: {
@@ -1044,6 +1068,10 @@ const Schaltplan = (() => {
                 (opt.bmk !== false && t.bmk
                     ? `<text x="${mass.w + 6}" y="12" font-size="12" fill="${farbe}" stroke="none" ` +
                         `font-weight="600">${esc(t.bmk)}</text>` : '') +
+                (t.beschriftung
+                    ? `<text class="sp-teil-beschriftung" x="${mass.w + 6}" y="27" font-size="11" ` +
+                        `fill="${farbe}" stroke="none" opacity=".84">${esc(t.beschriftung.length > 38 ? t.beschriftung.slice(0, 37) + '…' : t.beschriftung)}` +
+                        `<title>${esc(t.beschriftung)}</title></text>` : '') +
                 `</g>`);
         });
         plan.texte.forEach(x => {

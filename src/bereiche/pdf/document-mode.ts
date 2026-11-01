@@ -4751,15 +4751,47 @@ const DocumentMode = (() => {
        Regler bleibt die Wahrheit: beide Wege schreiben in ihn hinein, damit
        Regler, Zahl und Ansicht nie auseinanderlaufen. Ohne Strg rollt das
        Rad wie immer; das Kneifen zaehlt nur Finger, nie Stift oder Maus. */
-    const zoomSetzen = (wert: number): void => {
+    /* ZOOM AM ZEIGER (E766, aus Redurs ZIP vom 1. November). Mit einem
+       Anker bleibt der Punkt des Blatts unter Zeiger oder Fingermitte
+       stehen: vorher als Anteil am Blatt gemessen, nachher die Rolle um die
+       Differenz verschoben. Ohne Anker (Regler, Lupe, Neuladen) wie bisher.
+       Nur die Ansicht wandert — Marken und SVG-Koordinaten bleiben, wie sie
+       sind. Liegt der Zeiger neben dem Blatt, hält die Mitte des aktiven
+       Blatts still (nie ein negativer Anteil). */
+    type ZoomAnker = { clientX: number; clientY: number };
+    const zoomSetzen = (wert: number, anker?: ZoomAnker): void => {
       /* Im Zoom-Fenster (E469) darf es 300 sein — der Regler bleibt bei 180. */
       const neu = Math.max(60, Math.min(state.lupe ? 300 : 180, Math.round(wert)));
       if (neu === state.zoom) return;
+      let papier: HTMLElement | null = null;
+      let vorher: DOMRect | null = null;
+      let fx = 0.5, fy = 0.5, ax = 0, ay = 0;
+      if (anker && !state.lupe) {
+        const box = center.getBoundingClientRect();
+        ax = Math.max(box.left, Math.min(box.right, anker.clientX));
+        ay = Math.max(box.top, Math.min(box.bottom, anker.clientY));
+        const getroffen = document.elementFromPoint(ax, ay)?.closest<HTMLElement>('.blatt-papier') ?? null;
+        papier = getroffen && center.contains(getroffen) ? getroffen
+          : staende[state.index]?.querySelector<HTMLElement>('.blatt-papier') ?? null;
+        vorher = papier?.getBoundingClientRect() ?? null;
+        if (getroffen && vorher && vorher.width && vorher.height) {
+          fx = Math.max(0, Math.min(1, (ax - vorher.left) / vorher.width));
+          fy = Math.max(0, Math.min(1, (ay - vorher.top) / vorher.height));
+        } else if (vorher) {
+          /* neben dem Blatt: dessen Mitte bleibt, wo sie war */
+          ax = vorher.left + vorher.width / 2; ay = vorher.top + vorher.height / 2;
+        }
+      }
       state.zoom = neu;
       if (!state.lupe) zoomMerken(page.id, neu);   /* F07 — auch Strg+Rad und Kneifen; die Lupe merkt nicht */
       zoom.value = String(neu);
       zoomLabel.textContent = neu + ' %';
       passen();
+      if (papier?.isConnected && vorher) {
+        const nachher = papier.getBoundingClientRect();
+        center.scrollLeft += (nachher.left + fx * nachher.width) - ax;
+        center.scrollTop += (nachher.top + fy * nachher.height) - ay;
+      }
     };
     /* ══ DAS ZOOM-FENSTER (E469, umgebaut E470) ═════════════════════════════
        GoodNotes' Lupe: unten ein Streifen, in den man in Handschriftgroesse
@@ -5019,10 +5051,18 @@ const DocumentMode = (() => {
     center.addEventListener('wheel', (event: WheelEvent) => {
       if (!event.ctrlKey && !event.metaKey) return;
       event.preventDefault();
-      zoomSetzen(state.zoom + (event.deltaY < 0 ? 10 : -10));
+      zoomSetzen(state.zoom + (event.deltaY < 0 ? 10 : -10), { clientX: event.clientX, clientY: event.clientY });
     }, { passive: false });
     const finger = new Map<number, [number, number]>();
     let kneifen: { abstand: number; zoom: number } | null = null;
+    /* EIN NEUZEICHNEN JE BILD (E766): ein Finger meldet mehr Bewegungen, als
+       der Bildschirm Bilder zeigt; jedes `passen()` richtet alle Blätter neu
+       aus. Gemerkt wird nur der letzte Wunsch, gezeichnet im nächsten Bild —
+       und beim Abheben sofort, damit der letzte Stand nicht verloren geht. */
+    let kneifBild = 0;
+    let kneifWert = 100;
+    let kneifAnker: ZoomAnker = { clientX: 0, clientY: 0 };
+    const kneifZeichnen = (): void => { kneifBild = 0; zoomSetzen(kneifWert, kneifAnker); };
     center.addEventListener('pointerdown', (event: PointerEvent) => {
       if (event.pointerType !== 'touch') return;
       finger.set(event.pointerId, [event.clientX, event.clientY]);
@@ -5036,11 +5076,16 @@ const DocumentMode = (() => {
       finger.set(event.pointerId, [event.clientX, event.clientY]);
       const [a, b] = [...finger.values()] as [[number, number], [number, number]];
       const abstand = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1;
-      zoomSetzen(kneifen.zoom * abstand / kneifen.abstand);
+      kneifWert = kneifen.zoom * abstand / kneifen.abstand;
+      kneifAnker = { clientX: (a[0] + b[0]) / 2, clientY: (a[1] + b[1]) / 2 };
+      if (!kneifBild) kneifBild = requestAnimationFrame(kneifZeichnen);
     }, true);
     const fingerWeg = (event: PointerEvent): void => {
       finger.delete(event.pointerId);
-      if (finger.size < 2) kneifen = null;
+      if (finger.size < 2) {
+        kneifen = null;
+        if (kneifBild) { cancelAnimationFrame(kneifBild); kneifZeichnen(); }
+      }
     };
     center.addEventListener('pointerup', fingerWeg, true);
     center.addEventListener('pointercancel', fingerWeg, true);

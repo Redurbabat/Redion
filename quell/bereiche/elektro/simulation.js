@@ -1,6 +1,7 @@
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/elektro/simulation.ts (npm run bauen:ts). */
 const Stromfluss = (() => {
+    const ZEIT_ANNAHME = 'Die Verzögerung wird nicht gerechnet — die Simulation kennt keine Zeit. Der Kontakt folgt sofort.';
     const AUF_ZU = (a, b) => [
         { name: 'offen', zu: [] },
         { name: 'geschlossen', zu: [[a, b]] }
@@ -84,9 +85,9 @@ const Stromfluss = (() => {
         'schuetz-hauptkontakt': { art: 'schalter', stellungen: AUF_ZU('1', '2'), folgtSpule: 'schliesser' },
         spule: { art: 'spule', von: 'A1', nach: 'A2', wert: 1500, einheit: 'Ω' },
         'spule-anzugsverzoegert': { art: 'spule', von: 'A1', nach: 'A2', wert: 1500, einheit: 'Ω',
-            annahme: 'Die Verzögerung wird nicht gerechnet — die Simulation kennt keine Zeit. Der Kontakt folgt sofort.' },
+            annahme: ZEIT_ANNAHME },
         'spule-abfallverzoegert': { art: 'spule', von: 'A1', nach: 'A2', wert: 1500, einheit: 'Ω',
-            annahme: 'Die Verzögerung wird nicht gerechnet — die Simulation kennt keine Zeit. Der Kontakt folgt sofort.' },
+            annahme: ZEIT_ANNAHME },
         lampe: { art: 'widerstand', von: 'X1', nach: 'X2', wert: 529, einheit: 'Ω',
             annahme: 'Eine 100-W-Lampe an 230 V. Der Kaltwiderstand einer Glühlampe ist deutlich kleiner; hier wird der Betriebswert gerechnet.' },
         signalleuchte: { art: 'widerstand', von: 'X1', nach: 'X2', wert: 23000, einheit: 'Ω' },
@@ -815,7 +816,7 @@ const Stromfluss = (() => {
             anschlussfehler: []
         };
     };
-    const rechne = (plan, stellung = {}, vorher) => {
+    const rechne = (plan, stellung = {}, vorher, zeitAusgaenge) => {
         if (!plan || !Array.isArray(plan.teile))
             return leer('Kein Plan.');
         const netzInfo = netze(plan);
@@ -824,10 +825,14 @@ const Stromfluss = (() => {
             const v = verhalten(t.zeichen);
             return !!(v && v.folgtSpule);
         });
+        const zeitSpulen = new Set(zeitAusgaenge ? teile.filter(t => t.bmk &&
+            (t.zeichen === 'spule-anzugsverzoegert' || t.zeichen === 'spule-abfallverzoegert'))
+            .map(t => String(t.bmk)) : []);
+        const folgtAn = (bmk, spulen) => zeitAusgaenge && zeitSpulen.has(bmk) ? !!zeitAusgaenge[bmk] : !!spulen[bmk];
         let stand = Object.assign({}, stellung);
         if (vorher)
             folger.forEach(t => {
-                if (t.bmk && vorher[t.bmk])
+                if (t.bmk && folgtAn(t.bmk, vorher))
                     stand[t.id] = 1;
             });
         const mitFehlern = (e) => {
@@ -845,7 +850,7 @@ const Stromfluss = (() => {
             const naechster = Object.assign({}, stellung);
             folger.forEach(t => {
                 const v = verhalten(t.zeichen);
-                const an = t.bmk ? !!erg.spulen[t.bmk] : false;
+                const an = t.bmk ? folgtAn(t.bmk, erg.spulen) : false;
                 naechster[t.id] = an ? 1 : 0;
                 if (v.folgtSpule === 'oeffner')
                     naechster[t.id] = an ? 1 : 0;
@@ -874,6 +879,8 @@ const Stromfluss = (() => {
             runde++;
         }
         erg.durchgaenge = runde;
+        if (zeitAusgaenge)
+            erg.annahmen = erg.annahmen.filter(a => a !== ZEIT_ANNAHME);
         const gemeldet = new Set();
         teile.forEach(t => {
             const v = verhalten(t.zeichen);

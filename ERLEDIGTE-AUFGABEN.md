@@ -1,5 +1,43 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 1. November 2026 · E769 · Die Relais-Werkstatt (Redurs zehn Schaltungen)
+
+**Bau:** drei neue getypte Dateien unter `src/bereiche/bloecke/arten/`
+(`relais-kern`, `relais-vorlagen`, `relais-werkstatt`), `planflaeche.ts`
+(Knopf „⚙ Relais", Nachladen, Sperre für nicht freigegebene Importe),
+`index.html` (Marke), `bauen.mts`, `sw.ts` (GRUNDSTOCK),
+`bausteine.css`, `FREMDCODE.md`.
+
+**Prüfung:** `test631` zuerst rot, jetzt 23 von 23; Gegenprobe rot.
+
+## 1. November 2026 · E768 · Zeitrelais und Taster aus Redurs ZIP
+
+**Bau:** `simulation.ts` (`zeitAusgaenge`, Hinweis als Konstante),
+`planflaeche.ts` (Zeit, Takt, federnde Taster, Feld T im Teildialog).
+
+**Prüfung:** `test630` zuerst rot, jetzt 21 von 21; Gegenprobe rot;
+604, 605, 612, 625 grün.
+
+## 1. November 2026 · E767 · Neue Schaltplanfelder aus Redurs ZIP
+
+**Bau:** `schaltplan.ts` (Typen, `lesen`, Zeichnung), `planflaeche.ts`
+(Feld „Beschriftung" im Teildialog).
+
+**Prüfung:** `test629` zuerst rot, jetzt 24 von 24; Gegenprobe rot (20 von
+24); `test100` grün. Offen: L264 (alte Geräte werfen die Felder weg).
+
+## 1. November 2026 · E766 · Zoom am Zeiger im PDF (aus Redurs ZIP)
+
+**Auftrag:** Redurs ZIP übernehmen, geprüft und nach den Regeln; Schritt 1:
+der PDF-Zoom.
+
+**Bau:** `document-mode.ts` — `zoomSetzen` nimmt einen Anker, Strg+Rad
+gibt den Zeiger mit, das Kneifen die Fingermitte und zeichnet über
+`requestAnimationFrame`. Kein zweites Dock, keine neuen Tastenkürzel.
+
+**Prüfung:** `test628` zuerst rot (13 von 19), jetzt 19 von 19; zwei
+Gegenproben rot; `test346` 31 von 31. Zahlen in messungen.md.
+
 ## 31. Oktober 2026 · E764 · Das Studio-Dock mit gemerktem Platz «links»/«rechts»
 
 **Auftrag:** Redurs Bilder 5 und 6 aus der Windows-App — im PDF beim Füller

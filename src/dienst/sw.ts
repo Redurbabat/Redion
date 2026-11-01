@@ -36,11 +36,11 @@ const ich = self as unknown as ServiceWorkerGlobalScope;
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
 
-const VERSION = 'notizen-v1560';
+const VERSION = 'notizen-v1564';
 /** Der Stempel über den Grundstock — geschrieben von `dienststand.mts`,
  *  von Hand nicht anfassen. Er steht NEBEN der Nummer, nicht in ihr:
  *  `test143` prüft an `VERSION` die Form `notizen-v<Zahl>`. */
-const INHALT = 'c784a65f49feb6d0';
+const INHALT = '60f50791ccab9c5b';
 /* DER ABLAGENAME FOLGT DEM INHALT, NICHT DER NUMMER (E610).
    Hier stand `const ABLAGE = VERSION;`. Solange die Nummer nur steigt, geht
    das gut — sie steigt aber nicht immer: ein `git revert` nimmt sw.ts und
@@ -201,6 +201,10 @@ const GRUNDSTOCK = [
   './batterie-labor-kern.js',
   './batterie-aufgaben.js',
   './quell/bereiche/bloecke/arten/planflaeche.js',
+  /* E769: nachgeladen mit der Relais-Werkstatt, trotzdem offline da (§28) */
+  './quell/bereiche/bloecke/arten/relais-kern.js',
+  './quell/bereiche/bloecke/arten/relais-vorlagen.js',
+  './quell/bereiche/bloecke/arten/relais-werkstatt.js',
   './quell/bereiche/chronik/daten.js',
   './quell/bereiche/chronik/laden.js',
   './quell/bereiche/chronik/chronik.js',

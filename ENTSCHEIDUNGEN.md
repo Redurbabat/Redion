@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-743 Entscheidungen, E1 bis E764 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+747 Entscheidungen, E1 bis E769 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -828,6 +828,10 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E762** — Die Schaltplanfläche: Vollbild, Zoom, Leiter schieben, nichts übereinander, alles drehen, Schienen, flüssig, radieren (31. Oktober 2026): Vollbild über die feste Ebene am `body` und `requestFullscreen` des Dokuments, Zoom über die viewBox mit EINER Umrechnung (`getScreenCTM`), Strecken quer schieben ohne neue Berührung, neue Leitungen geführt statt gewinkelt (4 → 0 Überlappungen in Redurs Plan), Gruppe drehen und spiegeln, Werkzeug „Schiene" (`leitung.schiene`), Ziehen ohne Neubau des SVG, Radierer wie im PDF (`test625`, L261)
 * **E763** — Der Windows-Installer packt nur die App, nicht den Projektordner (31. Oktober 2026): `"redion": "file:.."` aus `windows/package.json` entfernt; mit ihr lag der ganze Checkout samt früheren EXE-Dateien im Paket, das NSIS-Archiv erreichte 3,9 GB (Grenze 2 GB). Wächter in `windows/windows-desktop.test.cjs`
 * **E764** — Ein gemerkter Platz «links»/«rechts» zerlegt das Studio-Dock nicht mehr (31. Oktober 2026, Redurs Bild aus der Windows-App: neun Pastelle und EIN Füller über die ganze Leiste): die Spaltenform in `bausteine.css` gilt nur noch ausserhalb von `.document-studio` (`:where(:not(.document-studio *))`, ohne Gewicht), und sie setzt `display` nur noch für die Werkzeuge — welche Gruppe sichtbar ist, sagt wieder allein die Gruppenregel, auch in der Spalte der gewöhnlichen Seite. Kein neues Verhalten, kein Datenfeld; latent seit E573/E619 — `test626`
+* **E766** — Zoom am Zeiger im PDF-Dokument, aus Redurs ZIP (1. November 2026): Strg+Rad und Kneifen halten den Punkt des Blatts unter Zeiger oder Fingermitte fest (±2 px), das Kneifen zeichnet höchstens einmal je Bild (`requestAnimationFrame`); übernommen in den VORHANDENEN Regler — kein zweites Zoom-Dock, Strg +/−/0 bleiben die Schriftgrösse, kein Knopf „weniger Werkzeuge" (es gibt „Leiste einrichten", E570), die Kommentare F07/E469 bleiben — `test628`
+* **E767** — Drei neue, optionale Felder im Schaltplan, aus Redurs ZIP (1. November 2026): `beschriftung` am Teil (lesbarer Name neben dem BMK, ≤ 120 Zeichen, gezeichnet unter dem BMK, im Teildialog bearbeitbar, leer = kein Feld), `legacySpalte` (0–29, die Spalte des alten Relais-Rasters) und `relaisLegacy` am Plan (die Originalbytes einer .sch, genau 5760 Zeichen Base64, mit dem, was NICHT gesichert ist); `lesen()` lässt nur Gültiges durch, alte Pläne bekommen nichts dazu; Rundreise über .json und .redion geprüft — `test629`
+* **E768** — Zeitrelais mit echter Zeit, und Taster federn zurück, aus Redurs ZIP (1. November 2026): `Stromfluss.rechne(…, zeitAusgaenge)` lässt die Kontakte einer Zeitspule ihrem Zeitausgang folgen; die Planfläche zählt die Zeit in einem 100-ms-Takt NUR während der Simulation und nur mit Zeitspule (E528), Schritt höchstens 250 ms; T im Teildialog (0–3600 s, `werte.T`); der Hinweis „kennt keine Zeit" fällt nur weg, wo wirklich Zeit gerechnet wird; ein Taster ist gedrückt, solange der Zeiger unten ist — `test630`
+* **E769** — Die Relais-Werkstatt mit Redurs zehn Original-Schaltungen, nachgeladen (1. November 2026, Redur: „sie gehören mir"): `relais-kern.ts` (liest .sch 4320 Byte und .txt 30 × `[Text]`, baut einen NEUTRALEN Plan ohne behauptete Verdrahtung, zwei verdrahtete Lehrbeispiele), `relais-vorlagen.ts` (60 KB Base64 mit SHA-256), `relais-werkstatt.ts` (Einsetzen, Einlesen, Original sichern, Spaltentitel, Freigeben über `Dialog.bestaetigen`); alle getypt im Bereich der Planfläche, NICHT beim Start geladen (Skript beim ersten Öffnen, GRUNDSTOCK, Marke in der Einzeldatei); ein nicht freigegebener Import simuliert nicht — `test631`
 
 ## Grundregel
 
@@ -70151,3 +70155,201 @@ grün, weil er nur den Kasten mass. Er ist nicht geändert — `test626` hält
 jetzt die Knöpfe. Redurs Bild 8 (zwei Leisten nebeneinander auf einer Seite
 mit eingebetteter PDF, die linke abgeschnitten) hat eine andere Ursache
 und steht als L262.
+
+## E766 — Zoom am Zeiger im PDF-Dokument (aus Redurs ZIP)
+
+**Woher.** Redurs ZIP „Redion_NUR_VIER_BEREICHE" vom 1. November 2026
+(Basis `12802efa4`) bringt in `document-mode.ts` vier Dinge: Zoom am
+Zeiger, gebündeltes Kneifen, ein zweites Zoom-Dock oben rechts mit
+Strg +/−/0/9 und einen Knopf „▦ weniger Werkzeuge". Redurs Entscheid vom
+1. November: die ZIP übernehmen, geprüft, verbessert, die Regeln
+gehalten; für das PDF die Vorgaben aus der Analyse.
+
+**Entschieden.**
+
+- **Übernommen:** `zoomSetzen(wert, anker?)`. Mit Anker (Strg+Rad: der
+  Zeiger; Kneifen: die Mitte der zwei Finger) misst es vor dem Neuzeichnen,
+  wo im Blatt der Punkt liegt (als Anteil 0…1), und verschiebt die Rolle
+  danach um die Differenz. Liegt der Zeiger neben dem Blatt, bleibt die
+  Mitte des aktiven Blatts stehen. In der Lupe (E469) und ohne Anker
+  (Regler, Neuladen, Lupe zu) bleibt alles wie vorher. Nur die Ansicht
+  wandert; Marken und SVG-Koordinaten bleiben unberührt.
+- **Übernommen:** Kneifen über `requestAnimationFrame` — gemerkt wird nur
+  der letzte Wunsch, gezeichnet im nächsten Bild; beim Abheben sofort.
+- **Nicht übernommen:** das zweite Zoom-Dock (E80: keine zweite
+  Oberfläche — der Regler ist die Wahrheit seit E354), Strg +/−/0/9 mit
+  `stopPropagation` (sie sind in `register/tasten` die Schriftgrösse; §18
+  „bestehende Tastenkürzel nicht brechen"), der Knopf „weniger Werkzeuge"
+  (dafür gibt es „Leiste einrichten", E570). Die zwei Kommentare, die die
+  ZIP gelöscht hatte (F07, E469), stehen weiter.
+
+**Prüfung.** `test628`, zuerst rot gegen `12802efa4` mit 13 von 19
+(„Senkrecht bleibt der Punkt — ist 52,3 px", waagrecht 58,5 px, Kneifen
+194,4 px und 20 Neuzeichnen in einem Bild). Sein erster Anlauf zählte die
+Neuzeichnen „im Bild" mit einem `MutationObserver`, der erst meldet, wenn
+der Stapel leer ist — „im Bild" war darum auch im alten Stand null; er
+liest jetzt `takeRecords()` (§55.2). Gegenproben: ohne das Verschieben der
+Rolle rot an fünf Stellen (14 von 19), ohne `requestAnimationFrame` rot an
+drei (16 von 19 — der Punkt unter den Fingern wandert dann um 6,4 px, weil
+jeder Zwischenschritt rundet). `test346` (Strg+Rad, Kneifen) bleibt 31 von
+31.
+
+**Alternative.** Die ZIP-Fassung ganz. Verworfen aus den Gründen oben.
+
+**Kosten.** Keine Daten, kein Feld. Eine neue Windows-EXE ist nicht nötig
+(Webdatei). In `version.md` unter 2026.8.4.
+
+## E767 — Beschriftung, alte Rasterspalte und die Originalbytes eines Relais-Plans
+
+**Woher.** Redurs ZIP vom 1. November 2026 (Basis `12802efa4`) erweitert
+das Datenformat des Schaltplans um drei Felder. Redur hat die Übernahme am
+1. November entschieden; die zehn Relais-Dateien gehören ihm (E769).
+
+**Entschieden.**
+
+- `teil.beschriftung` — ein lesbarer Name neben dem normgerechten BMK
+  („Hauptschütz"). `lesen()` trimmt und kürzt auf 120 Zeichen; leer oder
+  kein Text heisst: kein Feld. Gezeichnet unter dem BMK in 11 px, ab 38
+  Zeichen gekürzt mit dem vollen Text im `<title>`, durch `esc` (§19).
+  Bearbeitet im vorhandenen Teildialog (Doppeltipp) — nicht in einer
+  Schnellkarte (Redur: Schnellkarte nein).
+- `teil.legacySpalte` — die Spalte 0–29 des alten Relais-Rasters, aus der
+  ein Teil eingelesen wurde. Eine Lage, keine Verdrahtung.
+- `plan.relaisLegacy` — die Originalbytes der .sch (4320 Byte, als
+  Base64 genau 5760 Zeichen), die rohe .txt (≤ 22 000 Zeichen), bis zu 30
+  Spaltentitel, `verifiziert` (nur `true` zählt), `bearbeitet`,
+  `texteBearbeitet` und bis zu acht Sätze, was NICHT gesichert ist. Eine
+  andere Länge der Rohbytes oder fehlende Titel: das ganze Feld fällt weg.
+  Der Lesecode steht als eigene, getypte Funktion (`relaisLegacyLesen`).
+
+**Rückwärts (§9).** Alle drei Felder sind optional; ein alter Plan liest
+sich wie vorher und bekommt keines dazu (`test629` §1). Gespeichert wird
+der Plan in `block.plan` — `.json` und `.redion` tragen die Felder also
+ohne eigene Regel mit; `test629` §4 prüft beide Runden Zeichen für Zeichen,
+`test100` bleibt grün.
+
+**Vorwärts — der Haken.** Ein Gerät mit altem Stand (etwa die iPhone-App
+vor dem nächsten Paket) wirft die Felder in `lesen()` weg und speichert den
+Plan bei der nächsten Änderung ohne sie — derselbe Fall wie bei
+`batterieUebung`. Steht als L264.
+
+**Nicht übernommen.** Die Zeile der ZIP, die die Flussanimation an
+`--sp-labor-tempo` hängt, gehört zum Live-Stromlabor und kommt mit ihm.
+
+**Prüfung.** `test629`, zuerst rot gegen `12802efa4` (zehn Zusagen rot,
+dann Abbruch, weil der Dialog kein Feld hatte), jetzt 24 von 24.
+Gegenprobe ohne `relaisLegacyLesen` und mit „leerer Text statt kein Feld":
+rot an vier Stellen (20 von 24). Der Lauf war zweimal aus dem FALSCHEN
+Grund rot: `Schaltplan.lesen` nimmt einen Block, nicht einen Plan, und der
+Doppeltipp auf die Mitte des Teils traf das Raster, sobald die Beschriftung
+kürzer wurde — er tippt jetzt aufs Zeichen.
+
+**Kosten.** Ein neues Datenfeld je Teil und eines je Plan, keine
+Migration. Keine neue Windows-EXE nötig.
+
+## E768 — Zeitrelais mit echter Zeit, und Taster federn zurück
+
+**Woher.** Redurs ZIP vom 1. November 2026: `zeitTick` in der Planfläche,
+`RelaisKern.zeitschritt`, ein vierter Parameter an `Stromfluss.rechne` und
+federnde Taster. Redurs Entscheid: übernehmen; die Vorgaben aus der
+Analyse (Zeit nur während der Simulation, Hinweis nur weg, wo Zeit
+gerechnet wird).
+
+**Entschieden.**
+
+- `Stromfluss.rechne(plan, stellung, vorher, zeitAusgaenge?)` — mit dem
+  vierten Parameter folgen die Kontakte einer an- oder abfallverzögerten
+  Spule deren Zeitausgang statt der Spule. Ohne ihn bleibt alles wie
+  vorher, MIT dem Hinweis „Die Verzögerung wird nicht gerechnet — die
+  Simulation kennt keine Zeit" (die ZIP strich ihn überall, auch dort, wo
+  keine Zeit gerechnet wird, etwa in `wissen/electrical.ts`). Der Satz ist
+  jetzt eine Konstante; mit Zeitausgängen wird er aus `annahmen` genommen.
+- Die Zeit zählt die Planfläche selbst (`zeitSchritt`, getypt, im selben
+  Bereich wie die Fläche — kein neuer Griff in einen fremden Bereich,
+  `test537`). Anzugsverzögert: Ausgang an, wenn die Spule T Sekunden
+  ununterbrochen Spannung hatte. Abfallverzögert: an mit der Spule, aus T
+  Sekunden nach ihr. T aus `werte.T` (Vorgabe 3 s, 0–3600). Was ohne
+  Wartezeit umschaltet, schaltet in derselben Rechnung (höchstens zwei
+  Nachrechnungen).
+- Der Takt: `setInterval` 100 ms, gestartet beim Einschalten der
+  Simulation und nur, wenn der Plan eine Zeitspule mit BMK hat; gestoppt
+  beim Ausschalten und wenn die Fläche nicht mehr im Dokument hängt. Ein
+  Schritt ist höchstens 250 ms lang — ein Tab im Hintergrund springt nicht
+  um Minuten. Neu gezeichnet wird nur, wenn ein Ausgang umschaltet. Der
+  Zustand lebt nur in der Fläche, nie in `block.plan`.
+- Taster (`taster-schliesser`, `taster-oeffner`) sind in der Simulation
+  gedrückt, solange der Zeiger unten ist (`pointerup`/`pointercancel` am
+  Dokument, danach wieder entfernt). Schalter rasten weiter.
+- Der Teildialog einer Zeitspule hat „Verzögerung T in Sekunden" mit
+  Prüfung 0–3600.
+
+**Nicht übernommen.** Das Live-Stromlabor (Uhr, Tempo, Pause) ist ein
+eigener Schritt und kommt mit dem Glasschalter.
+
+**Prüfung.** `test630`, rot gegen den Stand davor mit acht roten Zusagen
+und Abbruch im Dialog, jetzt 21 von 21. Gegenprobe: ohne Zurückfedern rot
+(„… nach T aus — ist true"). Zuerst war der Lauf aus dem FALSCHEN Grund
+rot: sein Plan hatte 24 V Gleichspannung, und eine Spule zieht erst ab der
+halben Nennspannung von 230 V an. Nachbarn `test604`, `test605`,
+`test612`, `test625` grün.
+
+**Kosten.** Keine Daten (T lag schon in `werte`). Der Takt kostet nur
+während der Simulation mit Zeitspule. Keine neue Windows-EXE.
+
+## E769 — Die Relais-Werkstatt mit Redurs zehn Original-Schaltungen
+
+**Woher.** Redurs ZIP vom 1. November 2026 bringt `relais-kern.ts`,
+`relais-panel.ts` und `relais-vorlagen.ts` in `bereiche/elektro`, alle
+mit `// @ts-nocheck`, dazu `window.confirm` und 60 KB Vorlagen beim Start.
+Redurs Antwort vom 1. November: „sie gehören mir" — alle zehn Dateien
+nehmen, mit dem Import, getypt, die Vorlagen erst bei Bedarf.
+
+**Entschieden.**
+
+- **Ort:** `src/bereiche/bloecke/arten/`, neben der Planfläche. In
+  `bereiche/elektro` hätte die Fläche über `window` in einen fremden
+  Bereich gegriffen (§5 Regel 1, `test537` war im Versuch rot).
+- **Getypt**, ohne `@ts-nocheck` (§52.7). Die Zeitlogik der ZIP
+  (`zeitNeustart`, `zeitschritt`) steht nicht im Kern, sondern seit E768
+  in der Fläche.
+- **Nicht beim Start.** Die drei Skripte (zusammen rund 70 KB, davon 60 KB
+  Base64) hängt `relaisLaden` in `planflaeche.ts` ein, wenn jemand
+  „⚙ Relais" öffnet — ein `<script>`, kein `fetch` (file://, wie die
+  Chronik E613). Im GRUNDSTOCK stehen sie trotzdem (§28), in der
+  Einzeldatei über die neue Marke „relais-werkstatt" in `index.html`
+  (`bauen.mts`, wie „chronik-daten"). Der Start holt keines davon
+  (`test631` §1).
+- **Neutraler Plan.** Die Leitungsführung des alten Formats ist nicht
+  entschlüsselt. Ein Import setzt die Bauteile an ihren Rasterplatz (mit
+  `legacySpalte`), zeichnet die Leitungsfelder als kurze Striche OHNE
+  Bindung (Lagehinweise) und legt die Originalbytes in `relaisLegacy`
+  (E767) mit `verifiziert: false`. „▶ Strom" rechnet einen solchen Plan
+  nicht, sondern öffnet die Werkstatt und sagt warum. Erst „Verdrahtung
+  freigeben …" — nach Rückfrage über `Dialog.bestaetigen` statt
+  `window.confirm` (E710) — setzt `verifiziert`.
+- **Zwei verdrahtete Lehrbeispiele** (Selbsthaltung, Treppenhaus mit
+  abfallverzögertem Relais), in Redion gebaut, sofort simulierbar.
+- **Original sichern** gibt die `.sch` Byte für Byte zurück und die
+  `.txt` — die rohe, solange die Titel nicht bearbeitet sind.
+- **Ersetzen** fragt, wenn der Plan nicht leer ist; jede Änderung geht über
+  `aendere` der Fläche, ist also rückgängig zu machen.
+- Kein „BABAT" mehr (§1); Texte deutsch und ohne „EXE"-Sätze für Nutzer.
+
+**Eigentum (§57).** Redurs eigene Dateien aus seinem Programm „Relais";
+eingetragen in `FREMDCODE.md`, Abschnitt 1. Nur Nutzdaten, nichts wird
+ausgeführt, nichts geht hinaus.
+
+**Prüfung.** `test631`, gegen den Stand davor rot (kein Knopf, keine
+Schaltungen, kein Plan — Abbruch), jetzt 23 von 23. Gegenprobe: ein
+`window.confirm` vor dem Freigeben macht §9 rot. Zweimal war er aus dem
+FALSCHEN Grund rot: die Maus drückte auf den Kasten des Tasters statt auf
+eine gezeichnete Linie, und der Taster lag ausserhalb des Bildes
+(`mouse.move` rollt nicht). Eine erste Gegenprobe war ungültig — ein
+`sed` mit falschen Anführungszeichen zerbrach das Skript.
+
+**Startgrösse.** `test388` bleibt rot wie auf `main` (Decke 1950 KB):
+1989 KB gegen 1986 KB auf `12802efa4`. Die 3 KB sind der Code von E767
+bis E769 in Fläche, Plan und Simulation; die Werkstatt selbst wiegt beim
+Start nichts.
+
+**Kosten.** Kein neues Datenfeld über E767 hinaus. Keine neue Windows-EXE.

@@ -173,6 +173,10 @@ const Stromfluss = (() => {
   };
 
   /* Die beiden Stellungslisten, die fast überall gebraucht werden. */
+  /** Der Satz an den zwei Zeitspulen, solange KEINE Zeit gerechnet wird.
+      Wer `rechne` die Zeitausgänge mitgibt (die Planfläche in der Simulation,
+      E768), bekommt ihn nicht — dort stimmt er nicht mehr. */
+  const ZEIT_ANNAHME = 'Die Verzögerung wird nicht gerechnet — die Simulation kennt keine Zeit. Der Kontakt folgt sofort.';
   const AUF_ZU = (a: string, b: string): Stellung[] => [
     { name: 'offen', zu: [] },
     { name: 'geschlossen', zu: [[a, b]] }
@@ -290,9 +294,9 @@ const Stromfluss = (() => {
     /* ---- Spulen: Verbraucher UND Auslöser zugleich ---- */
     spule:                    { art: 'spule', von: 'A1', nach: 'A2', wert: 1500, einheit: 'Ω' },
     'spule-anzugsverzoegert': { art: 'spule', von: 'A1', nach: 'A2', wert: 1500, einheit: 'Ω',
-      annahme: 'Die Verzögerung wird nicht gerechnet — die Simulation kennt keine Zeit. Der Kontakt folgt sofort.' },
+      annahme: ZEIT_ANNAHME },
     'spule-abfallverzoegert': { art: 'spule', von: 'A1', nach: 'A2', wert: 1500, einheit: 'Ω',
-      annahme: 'Die Verzögerung wird nicht gerechnet — die Simulation kennt keine Zeit. Der Kontakt folgt sofort.' },
+      annahme: ZEIT_ANNAHME },
 
     /* ---- Verbraucher ---- */
     lampe:            { art: 'widerstand', von: 'X1', nach: 'X2', wert: 529, einheit: 'Ω',
@@ -1501,7 +1505,8 @@ const Stromfluss = (() => {
    * sondern ein Unfall.
    */
   const rechne = (plan: any, stellung: Record<string, number> = {},
-                  vorher?: Record<string, boolean>): Ergebnis => {
+                  vorher?: Record<string, boolean>,
+                  zeitAusgaenge?: Record<string, boolean>): Ergebnis => {
     if (!plan || !Array.isArray(plan.teile)) return leer('Kein Plan.');
     const netzInfo = netze(plan);
     const teile = plan.teile as any[];
@@ -1523,9 +1528,19 @@ const Stromfluss = (() => {
        Schaltung. Wer sie ohne rechnet, bekommt die Ruhelage — das ist der
        Fall „Spannung war weg und ist wiedergekommen", und auch der ist
        richtig, nur eben eine andere Frage. */
+    /* ZEITRELAIS (E768): mit `zeitAusgaenge` folgen die Kontakte einer
+       Zeitspule deren ZEITAUSGANG, nicht der Spule — die Zeit selbst zählt
+       der Aufrufer (die Planfläche, nur während der Simulation). Ohne den
+       Parameter bleibt alles wie vorher: der Kontakt folgt sofort, und der
+       Hinweis „kennt keine Zeit" steht da. */
+    const zeitSpulen = new Set<string>(zeitAusgaenge ? teile.filter(t => t.bmk &&
+      (t.zeichen === 'spule-anzugsverzoegert' || t.zeichen === 'spule-abfallverzoegert'))
+      .map(t => String(t.bmk)) : []);
+    const folgtAn = (bmk: string, spulen: Record<string, boolean>): boolean =>
+      zeitAusgaenge && zeitSpulen.has(bmk) ? !!zeitAusgaenge[bmk] : !!spulen[bmk];
     let stand: Record<string, number> = Object.assign({}, stellung);
     if (vorher) folger.forEach(t => {
-      if (t.bmk && vorher[t.bmk]) stand[t.id] = 1;
+      if (t.bmk && folgtAn(t.bmk, vorher)) stand[t.id] = 1;
     });
 
     /**
@@ -1556,7 +1571,7 @@ const Stromfluss = (() => {
       const naechster: Record<string, number> = Object.assign({}, stellung);
       folger.forEach(t => {
         const v = verhalten(t.zeichen)!;
-        const an = t.bmk ? !!erg.spulen[t.bmk] : false;
+        const an = t.bmk ? folgtAn(t.bmk, erg.spulen) : false;
         /* Schliesser: 0 = offen, 1 = geschlossen. Öffner andersherum —
            die Stellungsliste ist deshalb schon in der richtigen Reihenfolge
            angelegt, und hier steht nur noch „an" oder „aus". */
@@ -1587,6 +1602,7 @@ const Stromfluss = (() => {
     }
 
     erg.durchgaenge = runde;
+    if (zeitAusgaenge) erg.annahmen = erg.annahmen.filter(a => a !== ZEIT_ANNAHME);
 
     /* Überbrückte Bauteile melden.
        -----------------------------------------------------------------
