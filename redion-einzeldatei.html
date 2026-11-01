@@ -13472,7 +13472,7 @@ body[data-bewegung="ruhig"] .dev-actions button:active{transform:none}
   height: 78px;
 }
 .sp-wrap .sp-rechts .red-mgt-area .red-mgt-input:focus-visible + .red-mgt-control {
-  outline: 4px solid #83d5ff;
+  outline: 4px solid var(--accent);
   outline-offset: 5px;
 }
 .sp-wrap .sp-rechts .red-mgt-area .red-mgt-input:disabled {
@@ -13859,7 +13859,7 @@ body[data-bewegung="ruhig"] .dev-actions button:active{transform:none}
 .sp-wrap .sp-kontextleiste button {flex:0 0 auto;min-width:37px;min-height:38px;
   background:transparent;color:inherit;border:0;border-radius:10px;cursor:pointer;
   transition:transform 140ms ease,background-color 160ms ease}
-.sp-wrap .sp-kontextleiste button:hover {background:var(--bg-hover)}.sp-wrap .sp-kontextleiste button[data-kontext="loeschen"]:hover {color:#df5660}
+.sp-wrap .sp-kontextleiste button:hover {background:var(--bg-hover)}.sp-wrap .sp-kontextleiste button[data-kontext="loeschen"]:hover {color:var(--gefahr)}
 @keyframes sp-dock-ein {from {opacity:0;transform:translate(-50%,11px) scale(.97)}
   to {opacity:1;transform:translate(-50%,0) scale(1)}}
 @keyframes sp-kontext-ein {from{opacity:0;transform:translate(-50%,-6px)}
@@ -14000,8 +14000,8 @@ body[data-bewegung="ruhig"] .dev-actions button:active{transform:none}
 .sp-wrap.sp-original-schalter .sp-original-toggle{background:color-mix(in srgb,var(--accent) 16%,var(--bg))}
 
 .sp-wrap .sp-sim-status{padding:6px 10px;border:1px solid var(--line);border-radius:999px;font:750 11px/1.3 system-ui,sans-serif;color:var(--text-dim);background:var(--bg);white-space:normal}
-.sp-wrap .sp-sim-status.fliesst{background:color-mix(in srgb,#ffad2a 14%,var(--bg));border-color:#bd812c;color:var(--text)}
-.sp-wrap .sp-sim-status.offen{background:color-mix(in srgb,#eaac58 8%,var(--bg))}
+.sp-wrap .sp-sim-status.fliesst{background:color-mix(in srgb,var(--sp-strom) 14%,var(--bg));border-color:color-mix(in srgb,var(--sp-strom) 70%,var(--text));color:var(--text)}
+.sp-wrap .sp-sim-status.offen{background:color-mix(in srgb,var(--sp-strom) 8%,var(--bg))}
 .sp-wrap .sp-sim-back{min-height:36px;padding:8px 14px;border:1px solid color-mix(in srgb,var(--accent) 58%,var(--line));border-radius:10px;background:color-mix(in srgb,var(--accent) 16%,var(--bg));color:var(--text);font-weight:800;cursor:pointer;white-space:nowrap}
 .sp-wrap .sp-sim-back:hover{background:color-mix(in srgb,var(--accent) 24%,var(--bg))}
 .sp-wrap .sp-quick-help{font-size:10px;color:var(--text-faint);white-space:normal}
@@ -14041,7 +14041,7 @@ body[data-bewegung="ruhig"] .dev-actions button:active{transform:none}
 .sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-header-actions [data-p-compact]{min-width:45px}
 
 /* ── aus redion-live-labor.css ── */
-.sp-live-labor { --sp-labor-gelb: var(--sp-strom, #e8a020);
+.sp-live-labor { --sp-labor-gelb: var(--sp-strom);
   border-block: 1px solid color-mix(in srgb, var(--sp-labor-gelb) 25%, var(--border, #777));
   background:linear-gradient(110deg, color-mix(in srgb, var(--sp-labor-gelb) 9%, var(--bg, #fff)), var(--bg, #fff));
   padding: 7px 12px; color: var(--text); }
@@ -14051,8 +14051,8 @@ body[data-bewegung="ruhig"] .dev-actions button:active{transform:none}
 .sp-labor-zeichen {display:inline-grid; place-items:center; width:28px; height:28px;
   border:1px solid var(--sp-labor-gelb); border-radius:11px; color:var(--sp-labor-gelb);
   background:color-mix(in srgb, var(--sp-labor-gelb) 14%, transparent);}
-.sp-labor-lauf {display:inline-flex; border-radius:999px; background:color-mix(in srgb, #18a86b 15%, transparent);
-  color:var(--text); border:1px solid color-mix(in srgb, #18a86b 45%, transparent);
+.sp-labor-lauf {display:inline-flex; border-radius:999px; background:color-mix(in srgb, var(--erfolg) 15%, transparent);
+  color:var(--text); border:1px solid color-mix(in srgb, var(--erfolg) 45%, transparent);
   padding:3px 8px; font-size:11px; font-weight:700; white-space:nowrap;}
 .sp-labor-lauf[data-pause] {background:color-mix(in srgb, var(--sp-labor-gelb) 13%, transparent);
   border-color: var(--sp-labor-gelb)}
