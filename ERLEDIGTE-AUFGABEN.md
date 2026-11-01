@@ -1,5 +1,15 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 1. November 2026 · E769 · Die Relais-Werkstatt (Redurs zehn Schaltungen)
+
+**Bau:** drei neue getypte Dateien unter `src/bereiche/bloecke/arten/`
+(`relais-kern`, `relais-vorlagen`, `relais-werkstatt`), `planflaeche.ts`
+(Knopf „⚙ Relais", Nachladen, Sperre für nicht freigegebene Importe),
+`index.html` (Marke), `bauen.mts`, `sw.ts` (GRUNDSTOCK),
+`bausteine.css`, `FREMDCODE.md`.
+
+**Prüfung:** `test631` zuerst rot, jetzt 23 von 23; Gegenprobe rot.
+
 ## 1. November 2026 · E768 · Zeitrelais und Taster aus Redurs ZIP
 
 **Bau:** `simulation.ts` (`zeitAusgaenge`, Hinweis als Konstante),

@@ -101,6 +101,19 @@ html = html.replace(CHRONIK_MARKE,
   () => '<script>\n/* ===== quell/bereiche/chronik/daten.js ===== */\n' +
         lies('quell/bereiche/chronik/daten.js') + '\n</script>');
 
+/* DIE RELAIS-WERKSTATT IN DIE EINZELDATEI (E769) — dasselbe Muster wie die
+ * Chronik: im Ordnerbetrieb lädt die Planfläche die drei Skripte erst, wenn
+ * jemand die Werkstatt öffnet; die Einzeldatei hat keinen Ordner, also stehen
+ * sie hier. Ihr Auswerten legt nur drei Konstanten an. */
+const RELAIS_MARKE = /<!-- relais-werkstatt:[\s\S]*?-->/;
+if (!RELAIS_MARKE.test(html)) {
+  throw new Error('bauen.mts: die Marke „relais-werkstatt" fehlt in index.html — ' +
+    'ohne sie hätte die Einzeldatei keine Relais-Werkstatt.');
+}
+html = html.replace(RELAIS_MARKE, () => ['relais-kern.js', 'relais-vorlagen.js', 'relais-werkstatt.js']
+  .map(d => '<script>\n/* ===== quell/bereiche/bloecke/arten/' + d + ' ===== */\n' +
+    lies('quell/bereiche/bloecke/arten/' + d) + '\n</script>').join('\n'));
+
 /* DIE REACT-INSELN IN DIE EINZELDATEI (E699) — dasselbe Muster, mit EINEM
  * Unterschied, und der ist der Punkt.
  *

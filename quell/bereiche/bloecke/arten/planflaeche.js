@@ -76,6 +76,8 @@ const Planflaeche = (() => {
         const wurzel = document.createElement('div');
         wurzel.className = 'sp-wrap';
         let batterieOffen = !!(block && block.plan && block.plan.batterieUebung);
+        let relaisOffen = !!(block && block.plan && block.plan.relaisLegacy);
+        let relais = null;
         let batterie = null;
         const z = {
             block,
@@ -138,6 +140,10 @@ const Planflaeche = (() => {
         batteriePanel.className = 'sp-batterie-fach';
         batteriePanel.setAttribute('aria-label', 'Batterieanlagen und Übungen');
         batteriePanel.hidden = !batterieOffen;
+        const relaisPanel = document.createElement('section');
+        relaisPanel.className = 'sp-batterie-fach sp-relais-fach';
+        relaisPanel.setAttribute('aria-label', 'Relais-Werkstatt');
+        relaisPanel.hidden = true;
         const palette = document.createElement('div');
         palette.className = 'sp-palette';
         const buehne = document.createElement('div');
@@ -166,6 +172,7 @@ const Planflaeche = (() => {
         fuss.appendChild(zoomleiste);
         wurzel.appendChild(kopf);
         wurzel.appendChild(batteriePanel);
+        wurzel.appendChild(relaisPanel);
         wurzel.appendChild(koerper);
         wurzel.appendChild(fuss);
         const kopfMalen = () => {
@@ -190,6 +197,10 @@ const Planflaeche = (() => {
                             `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
                         : '') +
                     `<button class="sp-netz${batterieOffen ? ' an' : ''}" data-a="batterie-labor" title="Batteriezellen direkt im Schaltplan platzieren, verbinden und messen" aria-pressed="${batterieOffen}" aria-label="Batterieübungen in diesem Schaltplan">🔋 Batterien</button>` +
+                    (z.plan.art.startsWith('stromlauf')
+                        ? `<button class="sp-netz${relaisOffen ? ' an' : ''}" data-a="relais" aria-pressed="${relaisOffen}" ` +
+                            `title="Redurs Relais-Schaltungen einsetzen oder eine alte .sch einlesen" aria-label="Relais-Werkstatt">⚙ Relais</button>`
+                        : '') +
                     `<button class="sp-start${z.simulation ? ' an' : ''}" data-a="simulation" ${z.plan.batterieUebung ? 'disabled' : ''} ` +
                     `title="${z.plan.batterieUebung ? 'Batterieanlage im Batterie-Fach messen' : z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
                     `aria-pressed="${z.simulation}" ` +
@@ -1485,7 +1496,63 @@ const Planflaeche = (() => {
                     return kapitel;
             return undefined;
         };
+        const relaisLaden = () => {
+            const w = window;
+            if (w.RelaisWerkstatt && w.RelaisKern && w.RelaisVorlagen)
+                return Promise.resolve();
+            if (w.__relaisLaden)
+                return w.__relaisLaden;
+            const eins = (datei) => new Promise((ja, nein) => {
+                const s = document.createElement('script');
+                s.src = 'quell/bereiche/bloecke/arten/' + datei;
+                s.addEventListener('load', () => ja());
+                s.addEventListener('error', () => nein(new Error(datei + ' liess sich nicht laden.')));
+                document.head.appendChild(s);
+            });
+            const v = eins('relais-kern.js').then(() => eins('relais-vorlagen.js'))
+                .then(() => eins('relais-werkstatt.js'));
+            w.__relaisLaden = v;
+            v.catch(() => { w.__relaisLaden = null; });
+            return v;
+        };
+        const relaisZeigen = () => {
+            relaisPanel.hidden = !relaisOffen;
+            if (!relaisOffen)
+                return;
+            if (relais) {
+                relais.aktualisiere();
+                return;
+            }
+            relaisPanel.innerHTML = '<p class="sp-bat-hinweis" role="status">Die Relais-Werkstatt wird geladen …</p>';
+            relaisLaden().then(() => {
+                if (relais || !wurzel.isConnected)
+                    return;
+                relais = window.RelaisWerkstatt.erstelle({
+                    element: relaisPanel,
+                    holePlan: () => z.plan,
+                    aendere: (was) => aendere(was),
+                    setzePlan: (plan) => {
+                        z.plan = Schaltplan.lesen({ plan });
+                        z.auswahl.clear();
+                        z.simulation = false;
+                        z.stellungen = {};
+                        z.spulenStand = {};
+                        z.ergebnis = null;
+                        zeitAnhalten();
+                    }
+                });
+            }).catch((err) => {
+                relaisPanel.innerHTML = '<p class="sp-bat-hinweis" role="alert">' + esc(err.message) + '</p>';
+            });
+        };
         const simulationUmschalten = () => {
+            if (!z.simulation && z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert) {
+                relaisOffen = true;
+                relaisZeigen();
+                kopfMalen();
+                UI.toast('Die Verdrahtung dieser alten Relais-Datei ist nicht geprüft. Prüfe die Leitungen und gib sie in der Relais-Werkstatt frei.');
+                return;
+            }
             if (z.plan.batterieUebung) {
                 batterieOffen = true;
                 batteriePanel.hidden = false;
@@ -1539,6 +1606,12 @@ const Planflaeche = (() => {
             }
             if (b.dataset.a === 'heft')
                 return heftUmschalten();
+            if (b.dataset.a === 'relais') {
+                relaisOffen = !relaisOffen;
+                relaisZeigen();
+                kopfMalen();
+                return;
+            }
             if (b.dataset.a === 'simulation')
                 return simulationUmschalten();
             if (b.dataset.a === 'zurueck')
@@ -1852,6 +1925,8 @@ const Planflaeche = (() => {
         }) : null;
         paletteMalen();
         male();
+        if (relaisOffen)
+            relaisZeigen();
         return wurzel;
     };
     return { zeichne, paletteHtml, favoriten, favoritUmschalten, ortAus };

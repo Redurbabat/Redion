@@ -54,6 +54,21 @@ hier nicht bearbeitet werden darf: was anders sein soll, wird dort geändert
 und neu geholt (`skripte/touch-holen.mts`). Und zwei seiner Dateien sind
 wirklich fremd: der Glas-Code aus ALEXalesha/LiquidGlass (MIT).
 
+**Redurs zehn Relais-Schaltungen gehören Redur** (E769, 1. November 2026,
+Redur: „sie gehören mir"). Herkunft: sein Programm „Relais", zehn Dateien
+`.sch` (je 4320 Byte) mit passender `.txt` — Alarmanlage,
+Alarmquittierung Drucküberwachung, Blinker, Lampe, Selbsthaltung,
+SternDreieckSchaltung, Test_TasterVerriegelung, Treppenhauslicht,
+Wendeschützschaltung, Zeitrelais. Sie kamen am 1. November mit seiner ZIP
+„Redion_NUR_VIER_BEREICHE" und stehen als Base64 in
+`src/bereiche/bloecke/arten/relais-vorlagen.ts`, je mit der SHA-256 der
+`.sch`-Bytes; `test631` rechnet sie nach. Nur Nutzdaten, keine EXE,
+nichts davon wird ausgeführt (`relais-kern.ts` liest die Bytes als Zahlen);
+nichts geht hinaus. Geändert ist nichts — die Bytes sind die Originale.
+Den Lese- und Werkstattcode der ZIP hat Redur mitgeliefert; er ist hier
+getypt neu geschrieben (`relais-kern.ts`, `relais-werkstatt.ts`) und
+Redions Code.
+
 ---
 
 ## 2. Was fremd ist

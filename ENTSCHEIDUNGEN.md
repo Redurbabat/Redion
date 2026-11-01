@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-746 Entscheidungen, E1 bis E768 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+747 Entscheidungen, E1 bis E769 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -831,6 +831,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E766** — Zoom am Zeiger im PDF-Dokument, aus Redurs ZIP (1. November 2026): Strg+Rad und Kneifen halten den Punkt des Blatts unter Zeiger oder Fingermitte fest (±2 px), das Kneifen zeichnet höchstens einmal je Bild (`requestAnimationFrame`); übernommen in den VORHANDENEN Regler — kein zweites Zoom-Dock, Strg +/−/0 bleiben die Schriftgrösse, kein Knopf „weniger Werkzeuge" (es gibt „Leiste einrichten", E570), die Kommentare F07/E469 bleiben — `test628`
 * **E767** — Drei neue, optionale Felder im Schaltplan, aus Redurs ZIP (1. November 2026): `beschriftung` am Teil (lesbarer Name neben dem BMK, ≤ 120 Zeichen, gezeichnet unter dem BMK, im Teildialog bearbeitbar, leer = kein Feld), `legacySpalte` (0–29, die Spalte des alten Relais-Rasters) und `relaisLegacy` am Plan (die Originalbytes einer .sch, genau 5760 Zeichen Base64, mit dem, was NICHT gesichert ist); `lesen()` lässt nur Gültiges durch, alte Pläne bekommen nichts dazu; Rundreise über .json und .redion geprüft — `test629`
 * **E768** — Zeitrelais mit echter Zeit, und Taster federn zurück, aus Redurs ZIP (1. November 2026): `Stromfluss.rechne(…, zeitAusgaenge)` lässt die Kontakte einer Zeitspule ihrem Zeitausgang folgen; die Planfläche zählt die Zeit in einem 100-ms-Takt NUR während der Simulation und nur mit Zeitspule (E528), Schritt höchstens 250 ms; T im Teildialog (0–3600 s, `werte.T`); der Hinweis „kennt keine Zeit" fällt nur weg, wo wirklich Zeit gerechnet wird; ein Taster ist gedrückt, solange der Zeiger unten ist — `test630`
+* **E769** — Die Relais-Werkstatt mit Redurs zehn Original-Schaltungen, nachgeladen (1. November 2026, Redur: „sie gehören mir"): `relais-kern.ts` (liest .sch 4320 Byte und .txt 30 × `[Text]`, baut einen NEUTRALEN Plan ohne behauptete Verdrahtung, zwei verdrahtete Lehrbeispiele), `relais-vorlagen.ts` (60 KB Base64 mit SHA-256), `relais-werkstatt.ts` (Einsetzen, Einlesen, Original sichern, Spaltentitel, Freigeben über `Dialog.bestaetigen`); alle getypt im Bereich der Planfläche, NICHT beim Start geladen (Skript beim ersten Öffnen, GRUNDSTOCK, Marke in der Einzeldatei); ein nicht freigegebener Import simuliert nicht — `test631`
 
 ## Grundregel
 
@@ -70294,3 +70295,61 @@ halben Nennspannung von 230 V an. Nachbarn `test604`, `test605`,
 
 **Kosten.** Keine Daten (T lag schon in `werte`). Der Takt kostet nur
 während der Simulation mit Zeitspule. Keine neue Windows-EXE.
+
+## E769 — Die Relais-Werkstatt mit Redurs zehn Original-Schaltungen
+
+**Woher.** Redurs ZIP vom 1. November 2026 bringt `relais-kern.ts`,
+`relais-panel.ts` und `relais-vorlagen.ts` in `bereiche/elektro`, alle
+mit `// @ts-nocheck`, dazu `window.confirm` und 60 KB Vorlagen beim Start.
+Redurs Antwort vom 1. November: „sie gehören mir" — alle zehn Dateien
+nehmen, mit dem Import, getypt, die Vorlagen erst bei Bedarf.
+
+**Entschieden.**
+
+- **Ort:** `src/bereiche/bloecke/arten/`, neben der Planfläche. In
+  `bereiche/elektro` hätte die Fläche über `window` in einen fremden
+  Bereich gegriffen (§5 Regel 1, `test537` war im Versuch rot).
+- **Getypt**, ohne `@ts-nocheck` (§52.7). Die Zeitlogik der ZIP
+  (`zeitNeustart`, `zeitschritt`) steht nicht im Kern, sondern seit E768
+  in der Fläche.
+- **Nicht beim Start.** Die drei Skripte (zusammen rund 70 KB, davon 60 KB
+  Base64) hängt `relaisLaden` in `planflaeche.ts` ein, wenn jemand
+  „⚙ Relais" öffnet — ein `<script>`, kein `fetch` (file://, wie die
+  Chronik E613). Im GRUNDSTOCK stehen sie trotzdem (§28), in der
+  Einzeldatei über die neue Marke „relais-werkstatt" in `index.html`
+  (`bauen.mts`, wie „chronik-daten"). Der Start holt keines davon
+  (`test631` §1).
+- **Neutraler Plan.** Die Leitungsführung des alten Formats ist nicht
+  entschlüsselt. Ein Import setzt die Bauteile an ihren Rasterplatz (mit
+  `legacySpalte`), zeichnet die Leitungsfelder als kurze Striche OHNE
+  Bindung (Lagehinweise) und legt die Originalbytes in `relaisLegacy`
+  (E767) mit `verifiziert: false`. „▶ Strom" rechnet einen solchen Plan
+  nicht, sondern öffnet die Werkstatt und sagt warum. Erst „Verdrahtung
+  freigeben …" — nach Rückfrage über `Dialog.bestaetigen` statt
+  `window.confirm` (E710) — setzt `verifiziert`.
+- **Zwei verdrahtete Lehrbeispiele** (Selbsthaltung, Treppenhaus mit
+  abfallverzögertem Relais), in Redion gebaut, sofort simulierbar.
+- **Original sichern** gibt die `.sch` Byte für Byte zurück und die
+  `.txt` — die rohe, solange die Titel nicht bearbeitet sind.
+- **Ersetzen** fragt, wenn der Plan nicht leer ist; jede Änderung geht über
+  `aendere` der Fläche, ist also rückgängig zu machen.
+- Kein „BABAT" mehr (§1); Texte deutsch und ohne „EXE"-Sätze für Nutzer.
+
+**Eigentum (§57).** Redurs eigene Dateien aus seinem Programm „Relais";
+eingetragen in `FREMDCODE.md`, Abschnitt 1. Nur Nutzdaten, nichts wird
+ausgeführt, nichts geht hinaus.
+
+**Prüfung.** `test631`, gegen den Stand davor rot (kein Knopf, keine
+Schaltungen, kein Plan — Abbruch), jetzt 23 von 23. Gegenprobe: ein
+`window.confirm` vor dem Freigeben macht §9 rot. Zweimal war er aus dem
+FALSCHEN Grund rot: die Maus drückte auf den Kasten des Tasters statt auf
+eine gezeichnete Linie, und der Taster lag ausserhalb des Bildes
+(`mouse.move` rollt nicht). Eine erste Gegenprobe war ungültig — ein
+`sed` mit falschen Anführungszeichen zerbrach das Skript.
+
+**Startgrösse.** `test388` bleibt rot wie auf `main` (Decke 1950 KB):
+1989 KB gegen 1986 KB auf `12802efa4`. Die 3 KB sind der Code von E767
+bis E769 in Fläche, Plan und Simulation; die Werkstatt selbst wiegt beim
+Start nichts.
+
+**Kosten.** Kein neues Datenfeld über E767 hinaus. Keine neue Windows-EXE.

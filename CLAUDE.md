@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 565 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 566 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2177,6 +2177,16 @@ falschen Grund rot: 24 V reichen einer 230-V-Spule nicht zum Anziehen.
 Gezählt am 1. November, im selben Bogen: `ls pruefungen/lauf/test*.mts |
 wc -l` sagt 565.*
 
+*Und 566: `test631` — die Relais-Werkstatt mit Redurs zehn
+Original-Schaltungen (E769). Er verlangt, dass der Start keines der drei
+Skripte holt, rechnet jede SHA-256 der `.sch`-Bytes nach, setzt eine
+Schaltung ein, sichert sie Byte für Byte zurück, gibt sie über das Fenster
+der Schale frei, liest eine eigene Datei ein und öffnet die Einzeldatei
+ohne Ordner. Zweimal war er aus dem falschen Grund rot: die Maus traf den
+Kasten des Tasters statt einer Linie, und `mouse.move` rollt den Taster
+nicht ins Bild. Gezählt am 1. November, im selben Bogen: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 566.*
+
 ### Die Befehle
 
 ```txt
@@ -2198,7 +2208,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 565 Läufe
+npm run pruefen                      alle 566 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2295,7 +2305,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 565 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 566 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
