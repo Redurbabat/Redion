@@ -69,6 +69,21 @@ Den Lese- und Werkstattcode der ZIP hat Redur mitgeliefert; er ist hier
 getypt neu geschrieben (`relais-kern.ts`, `relais-werkstatt.ts`) und
 Redions Code.
 
+**Der RED-MGT-Glasschalter gehört Redur** (E772, 1. November 2026). Es ist
+sein eigener Entwurf: das Stilblatt kam mit seiner ZIP
+„Redion_NUR_VIER_BEREICHE" als `red-mgt-original.css` („supplied by the
+user"), und dieselbe Gestaltung stand schon als „Vorlage" hinter dem
+Strom-Knopf aus E535. Redur will ihn „1:1". Er steht in
+`quell/schale/stil/schaltatelier.css` (Abschnitt „aus red-mgt-original.css"),
+Aussehen, Masse, Kurven und Farben unverändert. **Geändert** ist: die
+Zustandswörter sind deutsch („AUS"/„EIN" statt „STANDBY"/„POWER ON", §3),
+die Lichtnaht steht bei weniger Bewegung (System und „Ruhige Darstellung"),
+die zwei `!important` der Vorlage sind weg, die englischen Kommentare
+ebenso; die Einpassung in die Leiste (Massstab 0,6) und die 1:1-Ansicht
+sind Redions Code. Nichts geht hinaus, nichts wird geladen. Wächter:
+`test634` (Schalter, Wörter, Bewegung, 1:1), `test584` (die Farben mit
+Grund in der Liste).
+
 ---
 
 ## 2. Was fremd ist

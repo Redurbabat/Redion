@@ -9893,3 +9893,33 @@ beim Start geladen                                0 Skripte (test631 §1)
 test388 Start (gzip)        12802efa4: 1986 KB    E769: 1989 KB (Decke 1950)
 ```
 Die +3 KB sind der Code von E767–E769 in planflaeche/schaltplan/simulation.
+
+
+## §115 · Redurs ZIP 1:1 in der Schaltplanfläche (E770–E772, 1. November 2026)
+
+**Startgrösse** (`test388`, gzip wie ein Server, Fenster 1300 × 860):
+
+```txt
+                         vorher (a6472d3f7)   nachher (ef6bcbbc1)
+Start gesamt             1989 KB, 263 Dateien  2016 KB, 264 Dateien
+planflaeche.js           20,5 KB               36,7 KB
+schaltatelier.css        —                     11,4 KB
+schaltplan-pruefung.js   —                     3,4 KB (nachgeladen, nicht im Start)
+```
+
++27 KB; das Ziel „höchstens +5 KB" ist nicht erreicht (L265). Die ZIP
+selbst hätte +46 KB gebracht (Versuch vom 1. November).
+
+**Die drei Fehler der ZIP, gemessen:** Schnellkarte im Fluss — ein Teil
+63,5 × 68 px vor dem ersten Tipp, 47,4 × 51,0 px danach (`sonde3`);
+abgeschnittene Bühne — Körper 628, Bühne 544, SVG 600 px hoch bei
+`overflow:hidden`, nachher SVG 505 px im Kasten; `test625` §4b von 7
+(Versuch) bzw. 4 (erster Bau) auf 8 Leitungen.
+
+**Läufe:** 632 (32), 633 (16), 634 (19) grün; neu ausgerichtet und grün:
+611 (209), 612 (38), 629 (24), 630 (21), 631 (23), 625 (110); dazu 628,
+604–608, 623, 626, 576, 581 grün; 584 bei den 24 alten Funden; 495 mit dem
+alten Rot (§3, auch auf a6472d3f7); 388 rot wie vorher, +27 KB.
+Gegenproben: Palette offen → 632 §1 rot; ohne `max-height` → 625 rot
+(102 von 110); ohne Hochkomma und E747 → 633 dreimal rot; ohne Tempo →
+634 §2 rot.

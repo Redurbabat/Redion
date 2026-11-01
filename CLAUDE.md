@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 566 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 569 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2187,6 +2187,29 @@ Kasten des Tasters statt einer Linie, und `mouse.move` rollt den Taster
 nicht ins Bild. Gezählt am 1. November, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 566.*
 
+*Und 567: `test632` — die Schaltplanfläche aus Redurs ZIP, 1:1 (E770).
+Palette zu und auf mit „▦ Bauteile", B und /, ein Menü „Bereiche" statt
+dreier Knöpfe, 1–5, ein Bauteil aus der Palette gezogen (genau ein Teil,
+genau ein Schritt, Escape bricht ab), Kontextleiste, Schnellkarte, Studio.
+Seinen wichtigsten Fund machten zwei ALTE Wächter: `test629` §3 (der
+Doppeltipp traf nach der Schnellkarte daneben — sie stand im Fluss) und
+`test625` §4b (die Bühne schnitt den Plan ab, das Dock lag darauf).
+Gezählt am 1. November, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 567 auf seinem Zweig.*
+
+*Und 568: `test633` — das Prüfzentrum (E771): nachgeladen, offene Klemmen
+mit genau den Sätzen der Rechnung (E747), die CSV mit Hochkomma vor
+„=HYPERLINK(…)", „Leitungen aufräumen" mit einem Rückgängig. Seine
+Gegenprobe (ohne Hochkomma, ohne E747) war an drei Stellen rot.*
+
+*Und 569: `test634` — der RED-MGT-Glasschalter und das Live-Stromlabor
+(E772): Checkbox mit role="switch", „AUS"/„EIN", 44 px, Leertaste mit
+Fokus; die Uhr läuft mit Zeitrelais, 4× schneller als 1×, steht in der
+Pause; ohne Zeitrelais „—". Seine Gegenprobe ohne Tempo war rot („4×:
+1.00 s · 1×: 0.90 s"); die ohne den eigenen Ruhe-Block blieb grün, weil
+Redions allgemeine Bewegungsregel die Lichtnaht schon anhält (L265).
+Gezählt am 1. November: der Befehl sagt 569.*
+
 ### Die Befehle
 
 ```txt
@@ -2208,7 +2231,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 566 Läufe
+npm run pruefen                      alle 569 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2305,7 +2328,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 566 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 569 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-747 Entscheidungen, E1 bis E769 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+750 Entscheidungen, E1 bis E772 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -832,6 +832,9 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E767** — Drei neue, optionale Felder im Schaltplan, aus Redurs ZIP (1. November 2026): `beschriftung` am Teil (lesbarer Name neben dem BMK, ≤ 120 Zeichen, gezeichnet unter dem BMK, im Teildialog bearbeitbar, leer = kein Feld), `legacySpalte` (0–29, die Spalte des alten Relais-Rasters) und `relaisLegacy` am Plan (die Originalbytes einer .sch, genau 5760 Zeichen Base64, mit dem, was NICHT gesichert ist); `lesen()` lässt nur Gültiges durch, alte Pläne bekommen nichts dazu; Rundreise über .json und .redion geprüft — `test629`
 * **E768** — Zeitrelais mit echter Zeit, und Taster federn zurück, aus Redurs ZIP (1. November 2026): `Stromfluss.rechne(…, zeitAusgaenge)` lässt die Kontakte einer Zeitspule ihrem Zeitausgang folgen; die Planfläche zählt die Zeit in einem 100-ms-Takt NUR während der Simulation und nur mit Zeitspule (E528), Schritt höchstens 250 ms; T im Teildialog (0–3600 s, `werte.T`); der Hinweis „kennt keine Zeit" fällt nur weg, wo wirklich Zeit gerechnet wird; ein Taster ist gedrückt, solange der Zeiger unten ist — `test630`
 * **E769** — Die Relais-Werkstatt mit Redurs zehn Original-Schaltungen, nachgeladen (1. November 2026, Redur: „sie gehören mir"): `relais-kern.ts` (liest .sch 4320 Byte und .txt 30 × `[Text]`, baut einen NEUTRALEN Plan ohne behauptete Verdrahtung, zwei verdrahtete Lehrbeispiele), `relais-vorlagen.ts` (60 KB Base64 mit SHA-256), `relais-werkstatt.ts` (Einsetzen, Einlesen, Original sichern, Spaltentitel, Freigeben über `Dialog.bestaetigen`); alle getypt im Bereich der Planfläche, NICHT beim Start geladen (Skript beim ersten Öffnen, GRUNDSTOCK, Marke in der Einzeldatei); ein nicht freigegebener Import simuliert nicht — `test631`
+* **E770** — Die Schaltplanfläche aus Redurs ZIP 1:1 (1. November 2026, Redur im Fragebogen „1:1 übernehmen": „Alle Funktionen 1:1, sauber gebaut"; ERSETZT seine früheren Antworten „Palette offen lassen" und „keine Schnellkarte"): Palette beim Öffnen zu (▦ Bauteile, B, /), ein Menü „✦ Bereiche ▾" statt 🔋/⚙/📐, Kürzel 1–5, P, B, /, Alt+Umschalt+E/P in `Register.tasten` (§8), Ziehen aus Palette und Studio, Kontextleiste, Schnellkarte, Elektro Studio; getypt, ohne fremde Projektnamen; drei Fehler der ZIP behoben (Schnellkarte im Fluss, abgeschnittene Bühne, Dock über der Zeichnung); `test611` neu ausgerichtet (Palette öffnen) — `test632`
+* **E771** — Das Prüfzentrum aus Redurs ZIP (1. November 2026, „1:1"): Alt+Umschalt+P, im Menü „Bereiche" und im ⋯; Prüfpunkte, Stückliste, Netze, Filter, Sprung in den Plan; Kern getypt in `bloecke/arten/schaltplan-pruefung.ts` statt handgeschriebenem JS in `bereiche/elektro`, NACHGELADEN beim ersten Öffnen (GRUNDSTOCK, Einzeldatei über die Relais-Marke); offene Klemmen aus derselben Rechnung wie die Fusszeile (E747), keine zweite Geometrie; CSV mit BOM, Semikolon und Hochkomma gegen Formel-Einschleusung; Bericht „Redion · Schaltplan-Prüfbericht"; „Leitungen aufräumen" über `aendere` — `test633`
+* **E772** — Der RED-MGT-Glasschalter im Original-Aussehen an Stelle von „▶ Strom", und das Live-Stromlabor (1. November 2026, Redur: „1:1"; ERSETZT „RED-MGT angepasst"): Checkbox mit role="switch" und `data-a="simulation"`, „AUS"/„EIN" statt STANDBY/POWER ON (§3), 187 × 50 in der Leiste, 1:1-Ansicht 330 × 180; Redurs Kurven und Orange bleiben (test584 führt `.red-mgt-` mit Grund), die Endlos-Lichtnaht steht bei weniger Bewegung; RedionMotion schmückt ihn nicht; Labor mit Uhr, Tempo 0,25–4×, Pause, Reset und Zeitrelais-Balken auf dem Takt aus E768 — ohne Zeitrelais kein Takt (E528); test612/630/631 neu ausgerichtet — `test634`
 
 ## Grundregel
 
@@ -70353,3 +70356,166 @@ bis E769 in Fläche, Plan und Simulation; die Werkstatt selbst wiegt beim
 Start nichts.
 
 **Kosten.** Kein neues Datenfeld über E767 hinaus. Keine neue Windows-EXE.
+
+## E770 — Die Schaltplanfläche aus Redurs ZIP, 1:1
+
+**Wer.** Redur, 1. November 2026, ~20:40, Fragebogen „1:1 übernehmen":
+„Alle Funktionen 1:1, sauber gebaut". Das ERSETZT drei frühere Antworten
+desselben Tages: „Palette offen lassen", „RED-MGT angepasst" (siehe E772)
+und „keine Schnellkarte". L265 hatte sie noch so geführt.
+
+**Entschieden — was die ZIP tut, so wie sie aussieht:**
+
+- Die Bauteilpalette ist beim Öffnen **zu**; „▦ Bauteile" im Dock, `B`
+  und `/` (mit Fokus in der Suche) öffnen sie. Karten mit ★, Filterchips,
+  „Zuletzt" (`redion:elektro:letzte:v1` im Meta-Fach, kein Plandatum).
+- „🔋 Batterien", „⚙ Relais" und „📐" weichen **einem Menü „✦ Bereiche ▾"**
+  (Bauteile, Studio, Relais, Batterielabor, Prüfzentrum, Formelheft, Nur
+  die Zeichenfläche, Grossansicht). Den Eintrag „Text-Menüband" der ZIP
+  gibt es nicht: er setzte eine Körperklasse ohne Stil und griff in die
+  Schale (§5).
+- **Kürzel** `1`–`5` (Zeigen, Leitung, Text, Stromschiene, Radierer),
+  `B`, `/`, `P`, Alt+Umschalt+E und Alt+Umschalt+P — eingetragen in
+  `Register.tasten` unter „Schaltplan" (§8), nur solange die Fläche den
+  Fokus hat und niemand tippt.
+- **Ziehen** aus Palette und Studio auf den Plan, mit Maus, Finger oder
+  Stift: ein Geist zeigt den Platz, Escape bricht ab, gespeichert wird
+  genau ein `aendere` (ein Schritt Rückgängig). Wie in der ZIP bleibt das
+  Zeichen danach gewählt.
+- **Kontextleiste** über der Auswahl (Bearbeiten, Drehen, Spiegeln,
+  Duplizieren, Löschen, Abwählen) und **Schnellkarte** (Beschriftung, BMK,
+  Verzögerung T) — beide lesen `z.plan`, schreiben über `aendere`.
+- **Elektro Studio** (Alt+Umschalt+E) ersetzt die Palette, statt sie zu
+  verdoppeln: Einfügen, Eigenschaften, Übersicht.
+
+**Sauber gebaut heisst:** TypeScript ohne `@ts-nocheck` (§52.7); die zwei
+Helfer der ZIP (`studio-helfer.js`, `stromlabor-kern.js`, handgeschriebenes
+JS unter `bereiche/elektro`, über `window` gerufen) sind getypt in
+`planflaeche.ts` (§54, §5 Regel 1); kein „BABAT" (§1); ein Stilblatt
+`schaltatelier.css` statt fünf, ohne die 75 `!important` der ZIP, ohne
+`:active{transform:scale}` (die Feder des Kits, `test581`), Glas über
+`--glas-blur` (`test576`). Drei Querverweise in den Bereich elektro, die
+dazugekommen wären, sind durch zwei gemeinsame Helfer (`schaltart`,
+`stromRechnung`, `stromText`) aufgehoben — `test537` bleibt bei 511.
+
+**Drei Fehler der ZIP, gefunden über bestehende Wächter, behoben im
+Produkt:**
+
+1. Die **Schnellkarte** hatte keine Lage und stand im Fluss der Bühne: der
+   erste Tipp auf ein Teil schob die Zeichnung zusammen (63 → 47 px je
+   Teil), der zweite traf daneben — Doppeltipp und Teildialog gingen
+   verloren (`test629` §3). Sie schwebt jetzt unten rechts.
+2. Die **Bühne schnitt den Plan ab** (`overflow:hidden`, fester Körper),
+   und mit geschlossener Palette ist sie breit: ein 800 × 600-Plan lief
+   unten aus dem Bild. Der Plan passt jetzt in Breite UND Höhe
+   (`max-height:100%`), die Bühne rollt wieder (`test625` §4b, der Fund
+   aus dem Versuch — „sechs Leitungen gezeichnet — 7").
+3. Das **Dock** lag über dem unteren Rand der Zeichnung; ein Zug zur
+   Schiene N endete auf ihm. Der Körper hält unten 84 px frei (§37: „Die
+   Werkzeugleiste darf nicht verdecken, was sie bedient"). Am Telefon
+   haben die Dockknöpfe 44 px statt der 37 × 41 der ZIP.
+
+**Wächter neu ausgerichtet, nicht gelockert.** `test611` hält seine 209
+Zusagen; zwei seiner Züge lassen ÜBER der Palette los, also öffnet er sie
+dort (aus dem Code, damit der Zug der Maus nicht endet). `test631` öffnet
+die Werkstatt über „Bereiche". Grund jeweils im Lauf.
+
+**Alternative.** Die Palette offen lassen und nur das Ziehen nehmen (L265
+alt) — von Redur ersetzt.
+
+**Kosten.** Der Start wächst: `planflaeche.js` von 20,5 auf 36,7 KB gzip,
+dazu `schaltatelier.css` mit 11,4 KB; `test388` misst 2016 statt 1989 KB
+(+27 KB, Decke 1950 KB, schon vorher rot). Das Ziel „höchstens +5 KB" ist
+NICHT erreicht — nachgeladen ist nur der Kern des Prüfzentrums (E771).
+Studio, Labor und Stil nachzuladen braucht eine Kontext-Schnittstelle der
+Fläche und eine Regel für Blätter ausserhalb des Startwegs (`test87`
+verlangt jedes Blatt in `index.html`); offen in L265.
+
+## E771 — Das Prüfzentrum
+
+**Woher.** Redurs ZIP vom 1. November 2026, `quell/bereiche/elektro/
+planpruefung.js` — handgeschriebenes JavaScript ohne Quelle (§54), über
+`window.Planpruefung` aus einem fremden Bereich gerufen (§5 Regel 1), der
+Bericht beginnt mit einem fremden Projektnamen (§1). Redur: „1:1".
+
+**Entschieden.**
+
+- **Ort und Sprache:** `src/bereiche/bloecke/arten/schaltplan-pruefung.ts`,
+  getypt, neben der Planfläche. Er schreibt nie in einen Block;
+  `vereinfachen` ändert nur die Kopie, die die Fläche über `aendere`
+  zurücklegt — „Leitungen aufräumen" ist ein Schritt Rückgängig.
+- **Nachgeladen** wie die Relais-Werkstatt (E769): `pruefLaden` hängt das
+  Skript beim ersten Öffnen ein; GRUNDSTOCK (§28); in der Einzeldatei steht
+  es mit an der Marke „relais-werkstatt" (`bauen.mts`). Der Start holt es
+  nicht (`test633` §1).
+- **Mit E747 in einem Satz.** Offene Klemmen meldet das Prüfzentrum nicht
+  aus eigener Geometrie, sondern liest die Sätze „… hängt an keiner
+  Leitung." aus derselben Rechnung wie die Fusszeile (`stromRechnung`) —
+  mit Brücken und Sternpunkt. Fusszeile und Prüfzentrum können einander
+  nicht widersprechen. Die übrigen Prüfungen der ZIP (doppelte Kennung,
+  Überlagerung, unbekanntes Zeichen, ausserhalb des Blatts, Null-Länge,
+  schräges Stück, entfernbarer Zwischenpunkt, offenes Leitungsende) bleiben.
+- **Ausgeben:** Bericht als TXT („Redion · Schaltplan-Prüfbericht", Stufen
+  FEHLER/WARNUNG/HINWEIS, der Satz „keine elektrische Sicherheitsabnahme"),
+  Stückliste und Netze als CSV mit BOM und Semikolon. Ein Feld, das mit
+  = + @ - Tab oder Wagenrücklauf beginnt, bekommt ein Hochkomma.
+
+**Alternative.** Die offene Klemme zweimal melden (ZIP: „offenes Ende"
+neben der Fusszeile) — zwei Antworten auf dieselbe Frage laufen
+auseinander (§8).
+
+**Kosten.** 3,4 KB gzip, nur wer das Prüfzentrum öffnet. Das Prüfzentrum
+ist keine Abnahme; es sagt es in Kopf und Bericht.
+
+## E772 — Der RED-MGT-Glasschalter und das Live-Stromlabor
+
+**Wer.** Redur, 1. November 2026, „1:1 übernehmen". Das ERSETZT seine
+Antwort vom selben Tag „RED-MGT angepasst" (Marken statt Orange, Redions
+Federn, keine Endlosanimation), die L265 noch führte.
+
+**Entschieden — der Schalter.**
+
+- Der Glasschalter steht an Stelle von „▶ Strom", in seinem
+  **Original-Aussehen**: Metallgehäuse, Glasröhre, Glühfaden, Schrauben,
+  Lichtnaht, Redurs Kurven `cubic-bezier(.5,2,.3,.8)` und
+  `(.5,-.8,.3,.8)` und sein Orange `#ff8800`. In der Leiste auf 0,6
+  skaliert (187 × 50 px, Telefon 158 × 44), über ⤢ in Originalgrösse
+  330 × 180.
+- **Eine echte Checkbox** mit `role="switch"` und `aria-checked` — die
+  Leertaste schaltet, der Fokus bleibt nach dem Neuzeichnen. `data-a`
+  bleibt „simulation", der Klick landet im selben `simulationUmschalten`.
+- **Deutsch:** „AUS" und „EIN" statt „STANDBY" und „POWER ON" (§3 hart).
+- **Bewegung:** die Lichtnaht läuft endlos, solange der Schalter aus ist —
+  aber nur, wo Bewegung erwünscht ist. Mit `prefers-reduced-motion` und
+  mit „Ruhige Darstellung" (`body[data-bewegung="ruhig"]`) steht sie, und
+  jede Fahrt wird gesetzt.
+- **Kein zweiter Schmuck:** RedionMotion hängte den Glühfaden-Hebel aus
+  E535 auch in den neuen Schalter; seine Schrauben schwebten neben dem
+  Glas (gesehen im Bild, §55). `motion.ts` überspringt `.red-mgt-area`,
+  wie in der ZIP.
+- **Ausnahmen in Wächtern:** nur eine, und die mit Grund — `test584` führt
+  `.red-mgt-` in seiner Liste der Farben, die ein Bild sind (Redurs
+  Entwurf). `test581` und `test576` brauchten keine: die Kurven stehen im
+  Stilblatt, nicht in einer Zeichenkette des Codes, und der Schalter hat
+  kein `backdrop-filter`. Die übrigen sieben festen Farben der ZIP (Labor,
+  Status, Kontextleiste, Fokusrahmen) laufen über Marken.
+
+**Entschieden — das Labor.** Ein Streifen über der Fläche, solange Strom
+fliesst: Lampen, Relais, durchflossene Leitungen, I<sub>max</sub> — nur aus
+der vorhandenen Rechnung, nichts im Plan gespeichert. Uhr, Tempo 0,25× bis
+4× (gedeckelt wird VOR dem Strecken, 250 ms), Pause, Reset und je
+Zeitrelais ein Balken. Die Uhr ist die Uhr der Zeitrelais aus E768: sie
+läuft nur, wenn der Plan ein Zeitrelais hat; ohne läuft kein Takt (E528,
+`test630` §3) und sie zeigt „—". Die ZIP liess einen zweiten 100-ms-Takt
+immer laufen — der ist nicht übernommen.
+
+**Wächter neu ausgerichtet:** `test612`, `test630` und `test631` suchten
+`button[data-a="simulation"]`; der Schalter ist eine Checkbox, der Wähler
+heisst `[data-a="simulation"]`, und `test631` liest `aria-checked`
+statt `aria-pressed`. Grund jeweils im Lauf.
+
+**Alternative.** „RED-MGT angepasst" — von Redur ersetzt.
+
+**Kosten.** Der Schalter ist 187 px breit statt 34; die Kopfleiste kürzt
+unter 1220 px die seltenen Knöpfe (wie in der ZIP). Eine Endlosanimation
+im Leerlauf, ausdrücklich gewünscht, abschaltbar.

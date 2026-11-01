@@ -12,6 +12,9 @@
     "Schaltplan: Bauteile mit lesbarer Beschriftung neben dem BMK.",
     "Schaltplan: Zeitrelais mit echter Zeit, Taster federn zurück.",
     "Schaltplan: Relais-Werkstatt mit Redurs zehn Original-Schaltungen.",
+    "Schaltplan wie in Redurs ZIP: Palette zu, Menü „Bereiche\", Ziehen auf den Plan, Kontextleiste, Schnellkarte, Elektro Studio.",
+    "Schaltplan: Prüfzentrum mit Stückliste, Netzliste und CSV-Export.",
+    "Schaltplan: RED-MGT-Glasschalter und Live-Stromlabor mit Uhr, Tempo und Pause.",
     "Native EXE-Änderungen benötigen weiterhin einen neuen Installer."
   ]
 }
