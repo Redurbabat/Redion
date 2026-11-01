@@ -488,10 +488,69 @@ const Planflaeche = (() => {
      * zwei Anzeigen aus einer Rechnung. Zwei Rechnungen würden irgendwann
      * verschiedene Dinge behaupten.
      * --------------------------------------------------------------------- */
+    /* --- Zeitrelais mit echter Zeit (E768, aus Redurs ZIP) ----------------
+     * Eine anzugsverzögerte Spule schliesst ihre Kontakte erst, wenn sie T
+     * Sekunden ununterbrochen Spannung hatte; eine abfallverzögerte hält sie
+     * T Sekunden nach dem Abschalten noch. Die Zeit zählt NUR, solange die
+     * Simulation läuft und der Plan eine Zeitspule hat (E528: keine Schleife
+     * im Leerlauf) — ein Takt von 100 ms, kein Neuzeichnen je Bild, und ein
+     * Schritt höchstens 250 ms (ein Hintergrund-Tab springt nicht um
+     * Minuten). Der Zustand lebt nur hier, nie in `block.plan`.
+     * --------------------------------------------------------------------- */
+    type ZeitStand = { relais: Record<string, { zeit: number; ausgang: boolean }>;
+                       ausgaenge: Record<string, boolean> };
+    const ZEITSPULEN = new Set(['spule-anzugsverzoegert', 'spule-abfallverzoegert']);
+    const zeitspulen = (): any[] => (z.plan.teile as any[]).filter(t => ZEITSPULEN.has(t.zeichen) && t.bmk);
+    let zeitStand: ZeitStand = { relais: {}, ausgaenge: {} };
+    let zeitTakt: ReturnType<typeof setInterval> | null = null;
+    let zeitLetzter = 0;
+    /** Ein Schritt um `deltaMs`; true, wenn ein Zeitausgang umgeschaltet hat. */
+    const zeitSchritt = (spulen: Record<string, boolean>, deltaMs: number): boolean => {
+      let anders = false;
+      zeitspulen().forEach(t => {
+        const T = Number.isFinite(t.werte?.T) ? Number(t.werte.T) : 3;
+        const dauer = Math.max(0, Math.min(3600, T)) * 1000;
+        const an = !!spulen[t.bmk];
+        const r = zeitStand.relais[t.bmk] ?? { zeit: 0, ausgang: false };
+        if (t.zeichen === 'spule-anzugsverzoegert') {
+          r.zeit = an ? Math.min(dauer, r.zeit + deltaMs) : 0;
+          r.ausgang = an && r.zeit >= dauer;
+        } else if (an) { r.zeit = dauer; r.ausgang = true; }
+        else { r.zeit = Math.max(0, r.zeit - deltaMs); r.ausgang = r.zeit > 0; }
+        zeitStand.relais[t.bmk] = r;
+        if (zeitStand.ausgaenge[t.bmk] !== r.ausgang) anders = true;
+        zeitStand.ausgaenge[t.bmk] = r.ausgang;
+      });
+      return anders;
+    };
+    const zeitAnhalten = (): void => { if (zeitTakt) clearInterval(zeitTakt); zeitTakt = null; };
+    const zeitTick = (): void => {
+      if (!wurzel.isConnected || !z.simulation) { zeitAnhalten(); return; }
+      const jetzt = performance.now();
+      const delta = Math.max(0, Math.min(250, jetzt - zeitLetzter));
+      zeitLetzter = jetzt;
+      if (!z.ergebnis || !z.ergebnis.ok) return;
+      if (zeitSchritt(z.ergebnis.spulen, delta)) { rechnen(); buehneMalen(); fussMalen(); }
+    };
+    const zeitStarten = (): void => {
+      zeitAnhalten();
+      zeitStand = { relais: {}, ausgaenge: {} };
+      if (!z.simulation || !zeitspulen().length) return;
+      zeitLetzter = performance.now();
+      zeitTakt = setInterval(zeitTick, 100);
+    };
+
     const rechnen = (): void => {
       if (!z.simulation || typeof Stromfluss === 'undefined') { z.ergebnis = null; return; }
-      z.ergebnis = Stromfluss.rechne(z.plan, z.stellungen, z.spulenStand);
-      if (z.ergebnis && z.ergebnis.ok) z.spulenStand = z.ergebnis.spulen;
+      const mitZeit = zeitspulen().length > 0;
+      /* Was ohne Wartezeit umschaltet (abfallverzögert an, anzugsverzögert
+         aus), schaltet sofort — höchstens zwei Nachrechnungen. */
+      for (let runde = 0; runde < 3; runde++) {
+        z.ergebnis = Stromfluss.rechne(z.plan, z.stellungen, z.spulenStand,
+          mitZeit ? zeitStand.ausgaenge : undefined);
+        if (z.ergebnis && z.ergebnis.ok) z.spulenStand = z.ergebnis.spulen;
+        if (!mitZeit || !z.ergebnis?.ok || !zeitSchritt(z.ergebnis.spulen, 0)) break;
+      }
     };
 
     const buehneMalen = (): void => {
@@ -1295,7 +1354,23 @@ const Planflaeche = (() => {
          den Plan beim Ausprobieren nicht versehentlich kaputt machen. */
       if (z.simulation) {
         const g = teilAm(ziel);
-        if (g && g.dataset.id) schalte(g.dataset.id);
+        if (!g || !g.dataset.id) return;
+        /* TASTER FEDERN ZURÜCK (E768): gedrückt nur, solange der Zeiger
+           unten ist — wie in echt. Ein Schalter rastet weiter. */
+        const teil = (z.plan.teile as any[]).find(t => t.id === g.dataset.id);
+        if (teil && (teil.zeichen === 'taster-schliesser' || teil.zeichen === 'taster-oeffner')) {
+          const id = String(teil.id);
+          const los = (): void => {
+            document.removeEventListener('pointerup', los, true);
+            document.removeEventListener('pointercancel', los, true);
+            if (z.simulation) { z.stellungen[id] = 0; male(); }
+          };
+          document.addEventListener('pointerup', los, true);
+          document.addEventListener('pointercancel', los, true);
+          z.stellungen[id] = 1; male();
+          return;
+        }
+        schalte(g.dataset.id);
         return;
       }
 
@@ -1726,6 +1801,9 @@ const Planflaeche = (() => {
         `placeholder="${esc(zeichen.kennbuchstabe || 'K')}1"></label>` +
         `<label>Beschriftung<input id="sp-beschriftung" maxlength="120" value="${esc(t.beschriftung || '')}" ` +
         `placeholder="z. B. Hauptschütz"></label>` +
+        (ZEITSPULEN.has(t.zeichen)
+          ? `<label>Verzögerung T in Sekunden<input id="sp-zeit" type="number" min="0" max="3600" step="0.1" ` +
+            `value="${Number.isFinite(t.werte?.T) ? Number(t.werte.T) : 3}"></label>` : '') +
         `<div class="sp-nrs"><span>Anschlussnummern</span>` +
         zeichen.anschluesse.map((a: any) =>
           `<label class="sp-nr"><i>${esc(a.nr)}</i>` +
@@ -1741,6 +1819,11 @@ const Planflaeche = (() => {
         if (!b || b.dataset.a !== 'ok') return;
         const bmk = (o.querySelector('#sp-bmk') as HTMLInputElement).value.trim();
         const beschriftung = (o.querySelector('#sp-beschriftung') as HTMLInputElement).value.trim().slice(0, 120);
+        const zeitFeld = o.querySelector<HTMLInputElement>('#sp-zeit');
+        const sekunden = zeitFeld ? Number(zeitFeld.value) : 0;
+        if (zeitFeld && (!zeitFeld.value.trim() || !Number.isFinite(sekunden) || sekunden < 0 || sekunden > 3600)) {
+          zeitFeld.setCustomValidity('0 bis 3600 Sekunden eingeben.'); zeitFeld.reportValidity(); return;
+        }
         const nummern: Record<string, string> = {};
         o.querySelectorAll<HTMLInputElement>('[data-nr]').forEach(f => {
           const vorgabe = f.dataset.nr || '';
@@ -1752,6 +1835,7 @@ const Planflaeche = (() => {
           t.bmk = bmk; t.nummern = nummern;
           /* E767: leer heisst „kein Feld", nicht ein leerer Text. */
           if (beschriftung) t.beschriftung = beschriftung; else delete t.beschriftung;
+          if (zeitFeld) t.werte = { ...(t.werte || {}), T: sekunden };
         });
       });
       (o.querySelector('#sp-bmk') as HTMLInputElement)?.focus();
@@ -1838,6 +1922,7 @@ const Planflaeche = (() => {
       z.auswahl.clear();
       if (z.simulation) { z.werkzeug = 'zeigen'; z.gewaehltesZeichen = ''; }
       else { z.stellungen = {}; z.spulenStand = {}; z.ergebnis = null; }
+      zeitStarten();
       male();
       paletteMalen();
     };
@@ -1890,7 +1975,7 @@ const Planflaeche = (() => {
         return;
       }
       if (b.dataset.a === 'ruhelage') {
-        z.stellungen = {}; z.spulenStand = {}; male(); return;
+        z.stellungen = {}; z.spulenStand = {}; zeitStarten(); male(); return;
       }
       if (b.classList.contains('annahme')) {
         const e = z.ergebnis;

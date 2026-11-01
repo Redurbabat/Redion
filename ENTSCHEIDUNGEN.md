@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-745 Entscheidungen, E1 bis E767 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+746 Entscheidungen, E1 bis E768 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -830,6 +830,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E764** — Ein gemerkter Platz «links»/«rechts» zerlegt das Studio-Dock nicht mehr (31. Oktober 2026, Redurs Bild aus der Windows-App: neun Pastelle und EIN Füller über die ganze Leiste): die Spaltenform in `bausteine.css` gilt nur noch ausserhalb von `.document-studio` (`:where(:not(.document-studio *))`, ohne Gewicht), und sie setzt `display` nur noch für die Werkzeuge — welche Gruppe sichtbar ist, sagt wieder allein die Gruppenregel, auch in der Spalte der gewöhnlichen Seite. Kein neues Verhalten, kein Datenfeld; latent seit E573/E619 — `test626`
 * **E766** — Zoom am Zeiger im PDF-Dokument, aus Redurs ZIP (1. November 2026): Strg+Rad und Kneifen halten den Punkt des Blatts unter Zeiger oder Fingermitte fest (±2 px), das Kneifen zeichnet höchstens einmal je Bild (`requestAnimationFrame`); übernommen in den VORHANDENEN Regler — kein zweites Zoom-Dock, Strg +/−/0 bleiben die Schriftgrösse, kein Knopf „weniger Werkzeuge" (es gibt „Leiste einrichten", E570), die Kommentare F07/E469 bleiben — `test628`
 * **E767** — Drei neue, optionale Felder im Schaltplan, aus Redurs ZIP (1. November 2026): `beschriftung` am Teil (lesbarer Name neben dem BMK, ≤ 120 Zeichen, gezeichnet unter dem BMK, im Teildialog bearbeitbar, leer = kein Feld), `legacySpalte` (0–29, die Spalte des alten Relais-Rasters) und `relaisLegacy` am Plan (die Originalbytes einer .sch, genau 5760 Zeichen Base64, mit dem, was NICHT gesichert ist); `lesen()` lässt nur Gültiges durch, alte Pläne bekommen nichts dazu; Rundreise über .json und .redion geprüft — `test629`
+* **E768** — Zeitrelais mit echter Zeit, und Taster federn zurück, aus Redurs ZIP (1. November 2026): `Stromfluss.rechne(…, zeitAusgaenge)` lässt die Kontakte einer Zeitspule ihrem Zeitausgang folgen; die Planfläche zählt die Zeit in einem 100-ms-Takt NUR während der Simulation und nur mit Zeitspule (E528), Schritt höchstens 250 ms; T im Teildialog (0–3600 s, `werte.T`); der Hinweis „kennt keine Zeit" fällt nur weg, wo wirklich Zeit gerechnet wird; ein Taster ist gedrückt, solange der Zeiger unten ist — `test630`
 
 ## Grundregel
 
@@ -70244,3 +70245,52 @@ kürzer wurde — er tippt jetzt aufs Zeichen.
 
 **Kosten.** Ein neues Datenfeld je Teil und eines je Plan, keine
 Migration. Keine neue Windows-EXE nötig.
+
+## E768 — Zeitrelais mit echter Zeit, und Taster federn zurück
+
+**Woher.** Redurs ZIP vom 1. November 2026: `zeitTick` in der Planfläche,
+`RelaisKern.zeitschritt`, ein vierter Parameter an `Stromfluss.rechne` und
+federnde Taster. Redurs Entscheid: übernehmen; die Vorgaben aus der
+Analyse (Zeit nur während der Simulation, Hinweis nur weg, wo Zeit
+gerechnet wird).
+
+**Entschieden.**
+
+- `Stromfluss.rechne(plan, stellung, vorher, zeitAusgaenge?)` — mit dem
+  vierten Parameter folgen die Kontakte einer an- oder abfallverzögerten
+  Spule deren Zeitausgang statt der Spule. Ohne ihn bleibt alles wie
+  vorher, MIT dem Hinweis „Die Verzögerung wird nicht gerechnet — die
+  Simulation kennt keine Zeit" (die ZIP strich ihn überall, auch dort, wo
+  keine Zeit gerechnet wird, etwa in `wissen/electrical.ts`). Der Satz ist
+  jetzt eine Konstante; mit Zeitausgängen wird er aus `annahmen` genommen.
+- Die Zeit zählt die Planfläche selbst (`zeitSchritt`, getypt, im selben
+  Bereich wie die Fläche — kein neuer Griff in einen fremden Bereich,
+  `test537`). Anzugsverzögert: Ausgang an, wenn die Spule T Sekunden
+  ununterbrochen Spannung hatte. Abfallverzögert: an mit der Spule, aus T
+  Sekunden nach ihr. T aus `werte.T` (Vorgabe 3 s, 0–3600). Was ohne
+  Wartezeit umschaltet, schaltet in derselben Rechnung (höchstens zwei
+  Nachrechnungen).
+- Der Takt: `setInterval` 100 ms, gestartet beim Einschalten der
+  Simulation und nur, wenn der Plan eine Zeitspule mit BMK hat; gestoppt
+  beim Ausschalten und wenn die Fläche nicht mehr im Dokument hängt. Ein
+  Schritt ist höchstens 250 ms lang — ein Tab im Hintergrund springt nicht
+  um Minuten. Neu gezeichnet wird nur, wenn ein Ausgang umschaltet. Der
+  Zustand lebt nur in der Fläche, nie in `block.plan`.
+- Taster (`taster-schliesser`, `taster-oeffner`) sind in der Simulation
+  gedrückt, solange der Zeiger unten ist (`pointerup`/`pointercancel` am
+  Dokument, danach wieder entfernt). Schalter rasten weiter.
+- Der Teildialog einer Zeitspule hat „Verzögerung T in Sekunden" mit
+  Prüfung 0–3600.
+
+**Nicht übernommen.** Das Live-Stromlabor (Uhr, Tempo, Pause) ist ein
+eigener Schritt und kommt mit dem Glasschalter.
+
+**Prüfung.** `test630`, rot gegen den Stand davor mit acht roten Zusagen
+und Abbruch im Dialog, jetzt 21 von 21. Gegenprobe: ohne Zurückfedern rot
+(„… nach T aus — ist true"). Zuerst war der Lauf aus dem FALSCHEN Grund
+rot: sein Plan hatte 24 V Gleichspannung, und eine Spule zieht erst ab der
+halben Nennspannung von 230 V an. Nachbarn `test604`, `test605`,
+`test612`, `test625` grün.
+
+**Kosten.** Keine Daten (T lag schon in `werte`). Der Takt kostet nur
+während der Simulation mit Zeitspule. Keine neue Windows-EXE.

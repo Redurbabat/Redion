@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 564 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 565 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2168,6 +2168,15 @@ Doppeltipp auf die Mitte des Teils traf das Raster, sobald die Beschriftung
 kürzer wurde. Gezählt am 1. November, im selben Bogen: `ls
 pruefungen/lauf/test*.mts | wc -l` sagt 564.*
 
+*Und 565: `test630` — Zeitrelais mit echter Zeit, und Taster federn
+zurück (E768). Er zählt jeden laufenden 100-ms-Takt über eine umwickelte
+`setInterval`-Funktion und verlangt null vor der Simulation, einen mit
+Zeitspule, null ohne. Sein Treppenhaus drückt den Taster mit echter Maus,
+hält, lässt los und wartet die Abfallverzögerung ab. Zuerst war er aus dem
+falschen Grund rot: 24 V reichen einer 230-V-Spule nicht zum Anziehen.
+Gezählt am 1. November, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 565.*
+
 ### Die Befehle
 
 ```txt
@@ -2189,7 +2198,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 564 Läufe
+npm run pruefen                      alle 565 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2286,7 +2295,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 564 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 565 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

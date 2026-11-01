@@ -1,5 +1,13 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## 1. November 2026 · E768 · Zeitrelais und Taster aus Redurs ZIP
+
+**Bau:** `simulation.ts` (`zeitAusgaenge`, Hinweis als Konstante),
+`planflaeche.ts` (Zeit, Takt, federnde Taster, Feld T im Teildialog).
+
+**Prüfung:** `test630` zuerst rot, jetzt 21 von 21; Gegenprobe rot;
+604, 605, 612, 625 grün.
+
 ## 1. November 2026 · E767 · Neue Schaltplanfelder aus Redurs ZIP
 
 **Bau:** `schaltplan.ts` (Typen, `lesen`, Zeichnung), `planflaeche.ts`
