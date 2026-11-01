@@ -127,8 +127,12 @@ const oeffne = async (spule: string, schalter: string, T: number, titel: string)
   await seite.waitForSelector('.sp-wrap .sp-teil[data-id="S1"]');
   return id;
 };
+/* E772 (Redurs Entscheid vom 1. November 2026, „Alle Funktionen 1:1"): der
+   Strom-Knopf ist jetzt der RED-MGT-Glasschalter, eine Checkbox mit
+   role="switch" und data-a="simulation" — nicht mehr ein <button>. Der
+   Wähler ist darum ohne „button"; was geprüft wird, bleibt gleich. */
 const strom = async (): Promise<void> => {
-  const k = seite.locator('.sp-wrap button[data-a="simulation"]').first();
+  const k = seite.locator('.sp-wrap [data-a="simulation"]').first();
   await k.scrollIntoViewIfNeeded(); await k.click(); await seite.waitForTimeout(200);
 };
 const leuchtet = () => seite.evaluate(() => !!document.querySelector('.sp-wrap .sp-fluss[data-id="lampe"]'));

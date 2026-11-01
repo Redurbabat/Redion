@@ -2,6 +2,92 @@
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/bloecke/arten/planflaeche.ts (npm run bauen:ts). */
 const Planflaeche = (() => {
     const esc = Schaltplan.esc;
+    const Labor = {
+        TEMPI: [0.25, 0.5, 1, 2, 4],
+        tempo(wert) {
+            const v = Number(wert);
+            return Labor.TEMPI.includes(v) ? v : 1;
+        },
+        zeitAnzeigen(plan, relais, spulen) {
+            const teile = Array.isArray(plan?.teile) ? plan.teile : [];
+            return teile.filter(t => t && (t.zeichen === 'spule-anzugsverzoegert' || t.zeichen === 'spule-abfallverzoegert'))
+                .map(t => {
+                const s = (t.bmk && relais[t.bmk]) || {};
+                const T = Number.isFinite(t.werte?.T) ? Math.max(0, Math.min(3600, Number(t.werte.T))) : 3;
+                const gesamt = T * 1000;
+                const laufend = !!spulen[t.bmk];
+                const istEin = t.zeichen === 'spule-anzugsverzoegert';
+                const zeit = Number.isFinite(s.zeit) ? Math.max(0, Math.min(gesamt, Number(s.zeit))) : 0;
+                const aktiv = !!s.ausgang;
+                const rest = istEin ? (laufend ? gesamt - zeit : gesamt) : (!laufend && aktiv ? zeit : 0);
+                const fortschritt = gesamt > 0
+                    ? Math.max(0, Math.min(1, istEin ? zeit / gesamt : (laufend ? 1 : (aktiv ? zeit / gesamt : 0))))
+                    : (aktiv ? 1 : 0);
+                const phase = istEin ? (laufend ? (aktiv ? 'Geschaltet' : 'Einschaltverzögerung') : 'Ruhelage')
+                    : (laufend ? 'Spule aktiv' : (aktiv ? 'Ausschaltverzögerung' : 'Ruhelage'));
+                return { id: String(t.id || ''), bmk: String(t.bmk || 'K?'), art: istEin ? 'EIN' : 'AUS',
+                    gesamt, rest, fortschritt, aktiv, phase };
+            });
+        },
+        statistik(plan, r, spulen) {
+            const teile = Array.isArray(plan?.teile) ? plan.teile : [];
+            if (!r || !r.ok)
+                return { gueltig: false, lampen: 0, relais: 0, leitungen: 0, strom: 0 };
+            const werte = r.werte || {};
+            const lampen = teile.filter(t => /^(lampe|signalleuchte|ch-kontrolllampe)$/.test(t.zeichen) &&
+                werte[t.id] && Number(werte[t.id].helligkeit) > 0.01).length;
+            const aktive = new Set(teile.filter(t => /^(spule|spule-anzugsverzoegert|spule-abfallverzoegert)$/.test(t.zeichen) &&
+                t.bmk && spulen[t.bmk]).map(t => t.bmk));
+            const netzStrom = r.netzStrom || {};
+            const leitungen = Object.values(r.leitungNetz || {}).filter(n => typeof n === 'number' && Number(netzStrom[n]) > 1e-9).length;
+            return { gueltig: true, lampen, relais: aktive.size, leitungen,
+                strom: Number.isFinite(r.maxStrom) ? Math.max(0, r.maxStrom) : 0 };
+        }
+    };
+    const schaltart = (zeichen) => ({ st: Stromfluss.stellungenVon(zeichen), vh: Stromfluss.verhalten(zeichen) });
+    const stromRechnung = (plan, stellungen, spulen, zeit) => Stromfluss.rechne(plan, stellungen, spulen, zeit);
+    const stromText = (wert) => Stromfluss.zeige(wert, 'A');
+    const StudioHilfe = {
+        text: (v) => String(v ?? '').toLocaleLowerCase('de').normalize('NFKD').replace(/[̀-ͯ]/g, ''),
+        leseLetzte(roh) {
+            return Array.isArray(roh)
+                ? [...new Set(roh.filter((x) => typeof x === 'string' && x.length < 90))].slice(0, 8) : [];
+        },
+        merkeLetzte(roh, id) {
+            return id && id.length < 90 ? [id, ...StudioHilfe.leseLetzte(roh).filter(x => x !== id)].slice(0, 8)
+                : StudioHilfe.leseLetzte(roh);
+        },
+        suche(liste, wort = '', gruppe = 'alle', limit = 36) {
+            if (!Array.isArray(liste))
+                return [];
+            const frage = StudioHilfe.text(wort).trim().slice(0, 90);
+            const grenze = Number.isInteger(limit) && limit >= 0 ? Math.min(limit, 120) : 36;
+            return liste.filter(s => s && typeof s.id === 'string' && typeof s.name === 'string' &&
+                (gruppe === 'alle' || s.gruppe === gruppe)).map((s, i) => {
+                const name = StudioHilfe.text(s.name), id = StudioHilfe.text(s.id), erkl = StudioHilfe.text(s.erklaerung);
+                const rang = !frage ? 0 : id === frage || name === frage ? 0 : name.startsWith(frage) ? 1 :
+                    id.startsWith(frage) ? 2 : name.includes(frage) ? 3 : id.includes(frage) ? 4 : erkl.includes(frage) ? 5 : 99;
+                return { s, i, rang };
+            }).filter(x => x.rang < 99).sort((a, b) => a.rang - b.rang || a.i - b.i).slice(0, grenze).map(x => x.s);
+        },
+        ueberblick(plan, holeSymbol) {
+            const teile = Array.isArray(plan?.teile) ? plan.teile : [];
+            const gruppen = new Map(), bmk = new Map();
+            for (const t of teile) {
+                const g = String(holeSymbol(t?.zeichen)?.gruppe || t?.zeichen || 'Unbekannt').split('-')[0] || 'Unbekannt';
+                gruppen.set(g, (gruppen.get(g) || 0) + 1);
+                const k = String(t?.bmk || '').trim();
+                if (k)
+                    bmk.set(k, (bmk.get(k) || 0) + 1);
+            }
+            return { teile: teile.length,
+                leitungen: Array.isArray(plan?.leitungen) ? plan.leitungen.length : 0,
+                texte: Array.isArray(plan?.texte) ? plan.texte.length : 0,
+                gruppen: [...gruppen].map(([gruppe, anzahl]) => ({ gruppe, anzahl }))
+                    .sort((a, b) => b.anzahl - a.anzahl || a.gruppe.localeCompare(b.gruppe)),
+                doppelteKennzeichen: [...bmk].filter(([, n]) => n > 1).map(([k]) => k) };
+        }
+    };
     const FAVORITEN = 'elektro:favoriten';
     const favoriten = () => {
         const roh = (typeof Store !== 'undefined') ? Store.getMeta(FAVORITEN, []) : [];
@@ -18,7 +104,7 @@ const Planflaeche = (() => {
             Store.setMeta(FAVORITEN, liste);
         return i < 0;
     };
-    const paletteHtml = (planArt, suche = '') => {
+    const paletteHtml = (planArt, suche = '', filter = 'alle', aktiv = '') => {
         if (typeof Register === 'undefined' || !Register.fachzeichen)
             return '';
         const art = Schaltplan.artVon(planArt);
@@ -27,27 +113,59 @@ const Planflaeche = (() => {
             ...art.gruppen.map(g => alleGruppen.find(x => x[0] === g)).filter(Boolean),
             ...alleGruppen.filter(x => !art.gruppen.includes(x[0]))
         ];
-        const q = suche.trim().toLowerCase();
-        const passt = (z) => !q ||
-            z.name.toLowerCase().includes(q) || z.id.includes(q) ||
-            z.erklaerung.toLowerCase().includes(q);
-        const knopf = (z, favorit) => `<button class="sp-sym${favorit ? ' sp-fav' : ''}" data-sym="${esc(z.id)}" ` +
-            `title="${esc(z.name)} — ${esc(z.erklaerung)}" aria-label="${esc(z.name)}">` +
-            `<span class="sp-sym-bild">${Register.fachzeichen.alsSvg(z.id, { strich: 2 })}</span>` +
-            `<span class="sp-sym-name">${esc(z.name)}</span></button>`;
+        const q = suche.trim().toLocaleLowerCase('de');
+        const passt = (z) => !q || [z.name, z.id, z.erklaerung, z.kennbuchstabe]
+            .some(w => String(w || '').toLocaleLowerCase('de').includes(q));
         const fav = favoriten();
-        const favZeichen = fav.map(id => Register.fachzeichen.holen(id)).filter(Boolean).filter(passt);
-        return (favZeichen.length
-            ? `<div class="sp-grp">★ Favoriten</div><div class="sp-syms">` +
-                favZeichen.map((z) => knopf(z, true)).join('') + '</div>'
-            : '') +
-            sortiert.map(g => {
-                const zeichen = Register.fachzeichen.inGruppe(g[0]).filter(passt);
-                if (!zeichen.length)
-                    return '';
-                return `<div class="sp-grp">${esc(g[2])} ${esc(g[1])}</div><div class="sp-syms">` +
-                    zeichen.map(z => knopf(z, fav.includes(z.id))).join('') + '</div>';
-            }).join('');
+        const letzte = ((typeof Store !== 'undefined')
+            ? Store.getMeta('redion:elektro:letzte:v1', []) : []);
+        const zuletzt = Array.isArray(letzte) ? letzte.filter((id) => typeof id === 'string').slice(0, 8) : [];
+        const schon = new Set();
+        const karte = (z) => {
+            schon.add(z.id);
+            const favorit = fav.includes(z.id);
+            return `<div class="sp-zeichenkarte${z.id === aktiv ? ' ist-gewaehlt' : ''}">` +
+                `<button type="button" class="sp-sym${favorit ? ' sp-fav' : ''}${z.id === aktiv ? ' an' : ''}" data-sym="${esc(z.id)}" ` +
+                `title="${esc(z.name)} — ${esc(z.erklaerung)}" aria-label="${esc(z.name)} platzieren" aria-pressed="${z.id === aktiv}">` +
+                `<span class="sp-sym-bild" aria-hidden="true">${Register.fachzeichen.alsSvg(z.id, { strich: 2 })}</span>` +
+                `<span class="sp-sym-name">${esc(z.name)}</span>` +
+                `<span class="sp-sym-code">${esc(z.kennbuchstabe || z.id)}</span></button>` +
+                `<button type="button" class="sp-favorit${favorit ? ' an' : ''}" data-p-fav="${esc(z.id)}" ` +
+                `aria-label="${favorit ? 'Favorit entfernen:' : 'Zu Favoriten hinzufügen:'} ${esc(z.name)}" ` +
+                `aria-pressed="${favorit}" title="${favorit ? 'Aus Favoriten entfernen' : 'Als Favorit speichern'}">${favorit ? '★' : '☆'}</button></div>`;
+        };
+        const abschnitt = (name, zeichen) => zeichen.length ?
+            `<section class="sp-zeichenabschnitt"><h4 class="sp-grp">${esc(name)}<span>${zeichen.length}</span></h4>` +
+                `<div class="sp-syms">${zeichen.map(karte).join('')}</div></section>` : '';
+        const hole = (ids) => ids.map(id => Register.fachzeichen.holen(id)).filter(Boolean).filter(passt);
+        const teile = [];
+        if (filter === 'favoriten') {
+            teile.push(abschnitt('★ Meine Favoriten', hole(fav)));
+        }
+        else if (filter === 'zuletzt') {
+            teile.push(abschnitt('Zuletzt verwendet', hole(zuletzt)));
+        }
+        else if (filter !== 'alle') {
+            const g = alleGruppen.find(x => x[0] === filter);
+            if (g)
+                teile.push(abschnitt(g[2] + ' ' + g[1], Register.fachzeichen.inGruppe(g[0]).filter(passt)));
+        }
+        else {
+            const favorisiert = hole(fav);
+            if (!q && favorisiert.length)
+                teile.push(abschnitt('★ Favoriten', favorisiert));
+            const neu = hole(zuletzt).filter(z => !schon.has(z.id));
+            if (!q && neu.length)
+                teile.push(abschnitt('Zuletzt verwendet', neu));
+            sortiert.forEach(g => {
+                const zeichen = Register.fachzeichen.inGruppe(g[0]).filter(passt)
+                    .filter(z => !schon.has(z.id));
+                if (zeichen.length)
+                    teile.push(abschnitt(g[2] + ' ' + g[1], zeichen));
+            });
+        }
+        return teile.filter(Boolean).join('') ||
+            '<div class="sp-pal-leer"><strong>Keine Schaltzeichen gefunden</strong><p>Suche ändern oder eine andere Kategorie wählen.</p></div>';
     };
     const ortAus = (svg, e, plan, ohneRaster = false) => {
         const m = svg.getScreenCTM();
@@ -79,6 +197,24 @@ const Planflaeche = (() => {
         let relaisOffen = !!(block && block.plan && block.plan.relaisLegacy);
         let relais = null;
         let batterie = null;
+        let studioOffen = false;
+        let paletteOffen = false;
+        let paletteGruppe = 'alle';
+        let paletteSuche = '';
+        let paletteKompakt = window.matchMedia('(max-width: 850px)').matches;
+        let volleSchalterAnsicht = false;
+        let merkwahl = null;
+        let planFokus = false;
+        let studioTab = 'eigenschaften';
+        let studioSuchtext = '';
+        let studioGruppe = 'alle';
+        let studioLetzte = [];
+        let pruefungOffen = false;
+        let pruefAnsicht = 'diagnose';
+        let pruefSuche = '';
+        let laborTempo = 1;
+        let karteId = '';
+        let teilKlickStart = null;
         const z = {
             block,
             plan: Schaltplan.lesen(block),
@@ -107,6 +243,15 @@ const Planflaeche = (() => {
                 return;
             const vorher = merken ? (vorherAbzug ?? abzug()) : '';
             was();
+            if (z.plan.relaisLegacy && vorher &&
+                JSON.stringify({ teile: z.plan.teile, leitungen: z.plan.leitungen, texte: z.plan.texte }) !==
+                    JSON.stringify((() => {
+                        const p = JSON.parse(vorher);
+                        return {
+                            teile: p.teile, leitungen: p.leitungen, texte: p.texte
+                        };
+                    })()))
+                z.plan.relaisLegacy.bearbeitet = true;
             const kopie = JSON.parse(abzug());
             if (typeof Store !== 'undefined' && block && block.id)
                 Store.updateBlock(block.id, { plan: kopie });
@@ -136,14 +281,26 @@ const Planflaeche = (() => {
         };
         const kopf = document.createElement('div');
         kopf.className = 'sp-kopf';
+        const labor = document.createElement('section');
+        labor.className = 'sp-live-labor';
+        labor.setAttribute('aria-label', 'Live-Stromlabor – Strom, Relais und Zeit');
+        labor.hidden = true;
         const batteriePanel = document.createElement('section');
         batteriePanel.className = 'sp-batterie-fach';
         batteriePanel.setAttribute('aria-label', 'Batterieanlagen und Übungen');
         batteriePanel.hidden = !batterieOffen;
         const relaisPanel = document.createElement('section');
         relaisPanel.className = 'sp-batterie-fach sp-relais-fach';
-        relaisPanel.setAttribute('aria-label', 'Relais-Werkstatt');
-        relaisPanel.hidden = true;
+        relaisPanel.setAttribute('aria-label', 'Relais-Werkstatt und Import');
+        relaisPanel.hidden = !relaisOffen;
+        const pruefPanel = document.createElement('section');
+        pruefPanel.className = 'sp-pruef-fach sp-batterie-fach';
+        pruefPanel.setAttribute('aria-label', 'Schaltplan-Prüfzentrum und Stückliste');
+        pruefPanel.hidden = true;
+        const studioPanel = document.createElement('aside');
+        studioPanel.className = 'sp-studio';
+        studioPanel.setAttribute('aria-label', 'Elektro Studio – Bauteile, Eigenschaften und Übersicht');
+        studioPanel.hidden = !studioOffen;
         const palette = document.createElement('div');
         palette.className = 'sp-palette';
         const buehne = document.createElement('div');
@@ -153,6 +310,17 @@ const Planflaeche = (() => {
         const leinwand = document.createElement('div');
         leinwand.className = 'sp-leinwand';
         buehne.appendChild(leinwand);
+        const schnellkarte = document.createElement('aside');
+        schnellkarte.className = 'sp-schnellkarte';
+        schnellkarte.setAttribute('aria-label', 'Bauteil direkt bearbeiten');
+        schnellkarte.hidden = true;
+        buehne.appendChild(schnellkarte);
+        const kontextleiste = document.createElement('div');
+        kontextleiste.className = 'sp-kontextleiste';
+        kontextleiste.setAttribute('role', 'toolbar');
+        kontextleiste.setAttribute('aria-label', 'Ausgewählte Bauteile bearbeiten');
+        kontextleiste.hidden = true;
+        buehne.appendChild(kontextleiste);
         const zoomleiste = document.createElement('div');
         zoomleiste.className = 'sp-zoom';
         zoomleiste.setAttribute('role', 'group');
@@ -166,17 +334,43 @@ const Planflaeche = (() => {
         koerper.className = 'sp-koerper';
         koerper.appendChild(palette);
         koerper.appendChild(buehne);
+        koerper.appendChild(studioPanel);
         const fussInhalt = document.createElement('div');
         fussInhalt.className = 'sp-fuss-inhalt';
         fuss.appendChild(fussInhalt);
         fuss.appendChild(zoomleiste);
         wurzel.appendChild(kopf);
-        wurzel.appendChild(batteriePanel);
-        wurzel.appendChild(relaisPanel);
+        wurzel.appendChild(labor);
         wurzel.appendChild(koerper);
         wurzel.appendChild(fuss);
+        wurzel.appendChild(batteriePanel);
+        wurzel.appendChild(relaisPanel);
+        wurzel.appendChild(pruefPanel);
+        const fachSchliessen = document.createElement('button');
+        fachSchliessen.type = 'button';
+        fachSchliessen.className = 'sp-fach-schliessen';
+        fachSchliessen.textContent = '✕ Schliessen';
+        fachSchliessen.setAttribute('aria-label', 'Elektro-Zusatzfach schliessen');
+        fachSchliessen.hidden = true;
+        wurzel.appendChild(fachSchliessen);
+        fachSchliessen.addEventListener('click', () => {
+            batterieOffen = false;
+            relaisOffen = false;
+            pruefungOffen = false;
+            batteriePanel.hidden = true;
+            relaisPanel.hidden = true;
+            pruefPanel.hidden = true;
+            kopfMalen();
+            wurzel.querySelector('.sp-buehne')?.focus({ preventScroll: true });
+        });
+        const fachStatus = () => {
+            fachSchliessen.hidden = !(batterieOffen || relaisOffen || pruefungOffen);
+            wurzel.classList.toggle('sp-fach-offen', !fachSchliessen.hidden);
+        };
         const kopfMalen = () => {
             const art = Schaltplan.artVon(z.plan.art);
+            fachStatus();
+            wurzel.classList.toggle('sp-original-schalter', volleSchalterAnsicht);
             kopf.innerHTML =
                 `<select class="sp-art" aria-label="Planart">` +
                     Schaltplan.ARTEN.map(a => `<option value="${esc(a.id)}"${a.id === z.plan.art ? ' selected' : ''}>` +
@@ -188,7 +382,10 @@ const Planflaeche = (() => {
                         ['text', 'T', 'Beschriftung setzen'],
                         ['schiene', '☰', 'Schiene zeichnen — L1, L2, L3, N, PE'],
                         ['radieren', '⌫', 'Radieren — über die Fläche wischen']].map(([id, ic, t]) => `<button class="sp-wz${z.werkzeug === id ? ' an' : ''}" data-wz="${id}" ` +
-                        `title="${esc(t)}" aria-label="${esc(t)}">${ic}</button>`).join('') +
+                        `title="${esc(t)}" aria-label="${esc(t)}" aria-pressed="${z.werkzeug === id}">${ic}</button>`).join('') +
+                    `<span class="sp-dock-trenner" aria-hidden="true"></span>` +
+                    `<button type="button" class="sp-palette-knopf${paletteOffen ? ' an' : ''}" data-a="palette-toggle" aria-label="Bauteilpalette öffnen oder schliessen" aria-expanded="${paletteOffen}" title="Bauteile ausklappen und direkt auf die Zeichnung ziehen">▦ <span>Bauteile</span></button>` +
+                    `<button type="button" class="sp-dock-fit" data-a="zoom-alles" title="Gesamten Schaltplan anzeigen (0)" aria-label="Gesamten Schaltplan anzeigen">⤢</button>` +
                     `</span>` +
                     `<span class="sp-rechts">` +
                     (z.plan.art.startsWith('stromlauf')
@@ -196,19 +393,29 @@ const Planflaeche = (() => {
                             `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
                             `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
                         : '') +
-                    `<button class="sp-netz${batterieOffen ? ' an' : ''}" data-a="batterie-labor" title="Batteriezellen direkt im Schaltplan platzieren, verbinden und messen" aria-pressed="${batterieOffen}" aria-label="Batterieübungen in diesem Schaltplan">🔋 Batterien</button>` +
-                    (z.plan.art.startsWith('stromlauf')
-                        ? `<button class="sp-netz${relaisOffen ? ' an' : ''}" data-a="relais" aria-pressed="${relaisOffen}" ` +
-                            `title="Redurs Relais-Schaltungen einsetzen oder eine alte .sch einlesen" aria-label="Relais-Werkstatt">⚙ Relais</button>`
-                        : '') +
-                    `<button class="sp-start${z.simulation ? ' an' : ''}" data-a="simulation" ${z.plan.batterieUebung ? 'disabled' : ''} ` +
-                    `title="${z.plan.batterieUebung ? 'Batterieanlage im Batterie-Fach messen' : z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
-                    `aria-pressed="${z.simulation}" ` +
-                    `aria-label="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}">` +
-                    `${z.simulation ? '◼' : '▶'} Strom</button>` +
-                    `<button class="sp-heft${heftOffen() ? ' an' : ''}" data-a="heft" ` +
-                    `title="Formelheft — beim Zeichnen nachschlagen und rechnen" ` +
-                    `aria-pressed="${heftOffen()}" aria-label="Formelheft">📐</button>` +
+                    `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" aria-haspopup="menu">✦ Bereiche ▾</button>` +
+                    `<div class="sp-start red-mgt-area${z.simulation ? ' an' : ''}${z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ? ' sp-strom-ungeprueft' : ''}" ` +
+                    `title="${z.plan.batterieUebung ? 'Batterieanlage im Batterie-Fach messen' :
+                        z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ?
+                            'Original-Verdrahtung ungeprüft: in der Relais-Werkstatt zuerst prüfen und freigeben.' :
+                            z.simulation ? 'Stromfluss und Animation anhalten' : 'Strom geben: animierte Leitungen und Lampen anzeigen'}">` +
+                    `<label class="red-mgt-wrap"><input class="red-mgt-input" type="checkbox" role="switch" aria-checked="${z.simulation}" ` +
+                    `data-a="simulation" ${z.simulation ? 'checked ' : ''}${z.plan.batterieUebung ? 'disabled ' : ''}` +
+                    `aria-label="${z.simulation ? 'Stromsimulation ausschalten' : 'Strom geben und animieren'}" />` +
+                    `<span class="red-mgt-control"><span class="red-mgt-left">` +
+                    `<span class="red-mgt-case"><span class="red-mgt-mask"></span></span>` +
+                    `<span class="red-mgt-line"></span>` +
+                    `<span class="red-mgt-screw red-mgt-screw-a"></span>` +
+                    `<span class="red-mgt-screw red-mgt-screw-b"></span></span>` +
+                    `<span class="red-mgt-right"><span class="red-mgt-glass"><span class="red-mgt-reflex"></span></span>` +
+                    `<svg class="red-mgt-filament red-mgt-filament-blur" viewBox="0 0 120 30" aria-hidden="true">` +
+                    `<path d="M4 15 C22 2 34 28 52 15 S82 2 98 15 S112 26 116 15" fill="none" stroke="currentColor" /></svg>` +
+                    `<svg class="red-mgt-filament" viewBox="0 0 120 30" aria-hidden="true">` +
+                    `<path d="M4 15 C22 2 34 28 52 15 S82 2 98 15 S112 26 116 15" fill="none" stroke="currentColor" /></svg>` +
+                    `<span class="red-mgt-state red-mgt-state-off">AUS</span>` +
+                    `<span class="red-mgt-state red-mgt-state-on">EIN</span>` +
+                    `</span></span></label></div>` +
+                    `<button type="button" class="sp-original-toggle" data-a="original-schalter" aria-pressed="${volleSchalterAnsicht}" aria-label="Original-Stromschalter in voller Größe anzeigen" title="Originalschalter 1:1 vergrößern">${volleSchalterAnsicht ? '✕' : '⤢'}</button>` +
                     `<button data-a="zurueck" title="Rückgängig" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>↶</button>` +
                     `<button data-a="vorwaerts" title="Wiederholen" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>↷</button>` +
                     `<button data-a="mehr" title="Mehr" aria-label="Mehr">…</button>` +
@@ -234,6 +441,94 @@ const Planflaeche = (() => {
                 teile.push(`<span class="sp-meldung gut">✓ Die Schaltung rechnet.</span>`);
             return teile.join('');
         };
+        const laborZeit = () => zeitspulen().length
+            ? (zeitStand.laufzeit / 1000).toFixed(1) + ' s' : '—';
+        const laborAktualisieren = () => {
+            if (!z.simulation)
+                return;
+            const daten = Labor.statistik(z.plan, z.ergebnis, z.spulenStand);
+            const anzeige = labor.querySelector('[data-labor-status]');
+            if (anzeige)
+                anzeige.textContent = daten.gueltig
+                    ? `${daten.lampen} Lampen · ${daten.relais} Relais · ${daten.leitungen} durchflossene Leitungen`
+                    : 'Noch kein gültiger Stromkreis';
+            const strom = labor.querySelector('[data-labor-strom]');
+            if (strom)
+                strom.textContent = daten.gueltig ? stromText(daten.strom) : '—';
+            const uhr = labor.querySelector('[data-labor-uhr]');
+            if (uhr)
+                uhr.textContent = laborZeit();
+            const zeiten = Labor.zeitAnzeigen(z.plan, zeitStand.relais, z.spulenStand);
+            zeiten.slice(0, 8).forEach(zeit => {
+                const element = labor.querySelector(`[data-labor-zeitid="${CSS.escape(zeit.id)}"]`);
+                if (!element)
+                    return;
+                const bar = element.querySelector('[data-labor-balken]');
+                if (bar)
+                    bar.style.width = Math.round(zeit.fortschritt * 100) + '%';
+                const phase = element.querySelector('[data-labor-phase]');
+                if (phase)
+                    phase.textContent = `${zeit.phase} · ${Math.max(0, zeit.rest / 1000).toFixed(1)} s`;
+                element.classList.toggle('sp-labor-zeitaktiv', zeit.aktiv);
+            });
+        };
+        const laborMalen = () => {
+            labor.hidden = !z.simulation;
+            wurzel.classList.toggle('sp-labor-pause', !!(z.simulation && zeitStand.pause));
+            wurzel.style.setProperty('--sp-labor-tempo', String(laborTempo));
+            if (!z.simulation) {
+                labor.replaceChildren();
+                return;
+            }
+            const pausiert = zeitStand.pause;
+            const zeiten = Labor.zeitAnzeigen(z.plan, zeitStand.relais, z.spulenStand);
+            labor.innerHTML = `<div class="sp-labor-kopf">` +
+                `<span class="sp-labor-zeichen" aria-hidden="true">⚡</span>` +
+                `<strong>Live-Stromlabor</strong>` +
+                `<span class="sp-labor-lauf"${pausiert ? ' data-pause="true"' : ''}>${pausiert ? '⏸ Pausiert' : '● Aktiv'}</span>` +
+                `<span class="sp-labor-mess" data-labor-status></span>` +
+                `<span class="sp-labor-mess">I<sub>max</sub> <b data-labor-strom>—</b></span>` +
+                `<span class="sp-labor-uhr" title="Simulationszeit — sie läuft, sobald der Plan ein Zeitrelais hat" data-labor-uhr>—</span>` +
+                `<label class="sp-labor-tempo">Tempo <select data-labor-tempo aria-label="Simulationsgeschwindigkeit">` +
+                [0.25, 0.5, 1, 2, 4].map(t => `<option value="${t}"${t === laborTempo ? ' selected' : ''}>${t}×</option>`).join('') +
+                `</select></label>` +
+                `<button type="button" class="sp-labor-aktion" data-labor-aktion="pause" aria-pressed="${pausiert}" title="Simulation pausieren oder fortsetzen">${pausiert ? '▶ Weiter' : '⏸ Pause'}</button>` +
+                `<button type="button" class="sp-labor-aktion" data-labor-aktion="reset" title="Simulationsuhr, Schalter und Relais zurücksetzen">↺ Reset</button>` +
+                `</div>` +
+                (zeiten.length ? `<div class="sp-labor-zeitliste" aria-label="Zeitrelais-Fortschritt">` +
+                    zeiten.slice(0, 8).map(u => `<div class="sp-labor-zeit" data-labor-zeitid="${esc(u.id)}">` +
+                        `<strong>${esc(u.bmk)}</strong><small>${esc(u.art)} · ${Math.round(u.gesamt) / 1000} s</small>` +
+                        `<span class="sp-labor-balken"><i data-labor-balken></i></span>` +
+                        `<span data-labor-phase></span></div>`).join('') +
+                    (zeiten.length > 8 ? `<small>+${zeiten.length - 8} weitere Zeitrelais</small>` : '') +
+                    `</div>` : '');
+            laborAktualisieren();
+        };
+        labor.addEventListener('change', event => {
+            const ziel = event.target;
+            if (!ziel.matches('[data-labor-tempo]'))
+                return;
+            laborTempo = Labor.tempo(ziel.value);
+            zeitLetzter = performance.now();
+            wurzel.style.setProperty('--sp-labor-tempo', String(laborTempo));
+        });
+        labor.addEventListener('click', event => {
+            const knopf = event.target.closest('[data-labor-aktion]');
+            if (!knopf || !z.simulation)
+                return;
+            if (knopf.dataset.laborAktion === 'pause') {
+                zeitStand.pause = !zeitStand.pause;
+                zeitLetzter = performance.now();
+            }
+            else if (knopf.dataset.laborAktion === 'reset') {
+                z.stellungen = {};
+                z.spulenStand = {};
+                zeitStarten();
+                male();
+                return;
+            }
+            laborMalen();
+        });
         const fussMalen = () => {
             if (z.simulation) {
                 const e = z.ergebnis;
@@ -243,9 +538,12 @@ const Planflaeche = (() => {
                     `<span class="sp-simzahlen">` +
                         (e && e.ok
                             ? `${leuchtet} ${leuchtet === 1 ? 'leuchtet' : 'leuchten'} · ` +
-                                `grösster Strom ${esc(Stromfluss.zeige(e.maxStrom, 'A'))}` +
+                                `grösster Strom ${esc(stromText(e.maxStrom))}` +
                                 (e.durchgaenge > 1 ? ` · ${e.durchgaenge} Durchgänge` : '')
-                            : 'nichts gerechnet') + `</span>` +
+                            : 'Noch kein gültiger Stromkreis') + `</span>` +
+                        `<span class="sp-sim-status ${e && e.ok && e.maxStrom > 0.000001 ? 'fliesst' : 'offen'}" role="status">` +
+                        (e && e.ok && e.maxStrom > 0.000001 ? '● Strom fließt' : '○ Kein Stromfluss – Quelle, Leitungen und Schalter prüfen') + `</span>` +
+                        `<button type="button" class="sp-sim-back" data-a="zurueck-zeichnen" title="Simulation stoppen und zum Zeichnen zurückkehren">✎ Weiterzeichnen</button>` +
                         meldungHtml() +
                         `<span class="sp-simhinweis">Auf einen Schalter tippen zum Schalten` +
                         `<button data-a="ruhelage" title="Alle Schalter in die Ruhelage">Ruhelage</button></span>`;
@@ -280,22 +578,64 @@ const Planflaeche = (() => {
                         : `<span class="sp-hinweis">${esc(z.gewaehltesZeichen
                             ? 'Auf die Fläche tippen, um „' +
                                 (Register.fachzeichen.holen(z.gewaehltesZeichen) || { name: '?' }).name + '" zu setzen'
-                            : 'Links ein Symbol wählen, dann auf die Fläche tippen')}</span>`) +
-                    `<span class="sp-zahlen">${z.plan.teile.length} Teile · ${z.plan.leitungen.length} Leitungen</span>`;
+                            : 'Bauteil mit Maus, Finger oder Stift direkt aus der Palette ziehen')}</span>`) +
+                    `<span class="sp-zahlen">${z.plan.teile.length} Teile · ${z.plan.leitungen.length} Leitungen</span>` +
+                    `<span class="sp-quick-help">B: Palette · /: Suche · P: Stromtest · 1–5: Werkzeuge</span>`;
         };
-        const paletteMalen = (suche = '') => {
+        const paletteInfokarte = (id = z.gewaehltesZeichen) => {
+            const kasten = palette.querySelector('.sp-pal-inspektor');
+            if (!kasten)
+                return;
+            const sym = id ? Register.fachzeichen.holen(id) : null;
+            if (!sym) {
+                kasten.innerHTML = '<span class="sp-pal-info-icon" aria-hidden="true">⌁</span>' +
+                    '<div><strong>Ein Zeichen auswählen</strong><small>Antippen zum Platzieren oder auf den Plan ziehen.</small></div>';
+                return;
+            }
+            const pins = (sym.anschluesse || []).map((a) => a.nr).join(' · ');
+            kasten.innerHTML = `<span class="sp-pal-info-icon" aria-hidden="true">${Register.fachzeichen.alsSvg(sym.id, { strich: 2 })}</span>` +
+                `<div><strong>${esc(sym.name)}</strong><small>${esc(sym.erklaerung)}</small>` +
+                (pins ? `<span class="sp-pal-klemmen">Anschlüsse: ${esc(pins)}</span>` : '') + '</div>';
+        };
+        const paletteTrefferMalen = () => {
+            const liste = palette.querySelector('.sp-liste');
+            if (!liste)
+                return;
+            liste.innerHTML = paletteHtml(z.plan.art, paletteSuche, paletteGruppe, z.gewaehltesZeichen);
+            const n = liste.querySelectorAll('[data-sym]').length;
+            const counter = palette.querySelector('.sp-pal-count');
+            if (counter)
+                counter.textContent = `${n} Schaltzeichen`;
+            paletteInfokarte();
+        };
+        const paletteMalen = (suche = paletteSuche) => {
+            paletteSuche = suche;
+            const gruppen = Register.fachzeichen.gruppen();
+            const filter = [['alle', 'Alle', ''], ['favoriten', 'Favoriten', '★'], ['zuletzt', 'Zuletzt', '◷']]
+                .concat(gruppen.map(g => [g[0], g[1], g[2]]));
             palette.innerHTML =
-                `<div class="sp-suche"><input type="search" placeholder="Symbol suchen …" ` +
-                    `value="${esc(suche)}" aria-label="Symbol suchen"></div>` +
-                    `<div class="sp-liste">${paletteHtml(z.plan.art, suche)}</div>`;
-            palette.querySelectorAll('[data-sym]').forEach(b => {
-                if (b.dataset.sym === z.gewaehltesZeichen)
-                    b.classList.add('an');
-            });
+                '<div class="sp-pal-kopf"><div><span class="sp-pal-eyebrow">ELEKTRO • BIBLIOTHEK</span>' +
+                    '<h3>Schaltzeichen <span class="sp-pal-kopf-punkt" aria-hidden="true">✦</span></h3>' +
+                    '<p>Finden. Anfassen. Platzieren.</p></div>' +
+                    '<div class="sp-pal-header-actions"><button type="button" data-p-original title="Original RED-MGT-Stromschalter in voller Größe anzeigen" aria-label="RED-MGT-Schalter in Originalgröße umschalten" aria-pressed="' + String(volleSchalterAnsicht) + '">⤢ 1:1</button><button type="button" data-p-compact aria-pressed="' + String(paletteKompakt) + '" aria-label="Kompakte Schaltzeichenpalette umschalten" title="Kompakte Ansicht umschalten">' + (paletteKompakt ? '▣ Groß' : '▤ Klein') + '</button>' +
+                    '<button type="button" data-p-close class="sp-pal-schliessen" aria-label="Schaltzeichen-Bibliothek schliessen" title="Schliessen">×</button></div></div>' +
+                    `<label class="sp-suche"><span class="sp-suche-titel">Symbol finden</span>` +
+                    `<input type="search" placeholder="z. B. Schliesser, Relais, Lampe …" ` +
+                    `value="${esc(suche)}" aria-label="Schaltzeichen suchen" autocomplete="off" spellcheck="false"></label>` +
+                    `<div class="sp-pal-filter" role="group" aria-label="Schaltzeichen-Kategorien">` +
+                    filter.map(([id, name, icon]) => `<button type="button" data-p-filter="${esc(id)}" ` +
+                        `class="sp-pal-chip${paletteGruppe === id ? ' an' : ''}" aria-pressed="${paletteGruppe === id}" ` +
+                        `title="${esc(name)}">${icon ? `<span aria-hidden="true">${esc(icon)}</span>` : ''}${esc(name)}</button>`).join('') +
+                    `</div><div class="sp-pal-ergebnis"><span class="sp-pal-count" role="status" aria-live="polite"></span>` +
+                    '<span>★ Favorit speichern</span></div>' +
+                    '<div class="sp-liste" aria-label="Schaltzeichen und Gruppen"></div>' +
+                    '<div class="sp-pal-inspektor" aria-label="Information zum Schaltzeichen"></div>';
+            palette.classList.toggle('sp-pal-kompakt', paletteKompakt);
+            paletteTrefferMalen();
         };
         const ZEITSPULEN = new Set(['spule-anzugsverzoegert', 'spule-abfallverzoegert']);
         const zeitspulen = () => z.plan.teile.filter(t => ZEITSPULEN.has(t.zeichen) && t.bmk);
-        let zeitStand = { relais: {}, ausgaenge: {} };
+        let zeitStand = { relais: {}, ausgaenge: {}, laufzeit: 0, pause: false };
         let zeitTakt = null;
         let zeitLetzter = 0;
         const zeitSchritt = (spulen, deltaMs) => {
@@ -332,19 +672,21 @@ const Planflaeche = (() => {
                 return;
             }
             const jetzt = performance.now();
-            const delta = Math.max(0, Math.min(250, jetzt - zeitLetzter));
+            const delta = Math.max(0, Math.min(250, jetzt - zeitLetzter)) * laborTempo;
             zeitLetzter = jetzt;
-            if (!z.ergebnis || !z.ergebnis.ok)
+            if (zeitStand.pause)
                 return;
-            if (zeitSchritt(z.ergebnis.spulen, delta)) {
+            zeitStand.laufzeit += delta;
+            if (z.ergebnis && z.ergebnis.ok && zeitSchritt(z.ergebnis.spulen, delta)) {
                 rechnen();
                 buehneMalen();
                 fussMalen();
             }
+            laborAktualisieren();
         };
         const zeitStarten = () => {
             zeitAnhalten();
-            zeitStand = { relais: {}, ausgaenge: {} };
+            zeitStand = { relais: {}, ausgaenge: {}, laufzeit: 0, pause: false };
             if (!z.simulation || !zeitspulen().length)
                 return;
             zeitLetzter = performance.now();
@@ -357,7 +699,7 @@ const Planflaeche = (() => {
             }
             const mitZeit = zeitspulen().length > 0;
             for (let runde = 0; runde < 3; runde++) {
-                z.ergebnis = Stromfluss.rechne(z.plan, z.stellungen, z.spulenStand, mitZeit ? zeitStand.ausgaenge : undefined);
+                z.ergebnis = stromRechnung(z.plan, z.stellungen, z.spulenStand, mitZeit ? zeitStand.ausgaenge : undefined);
                 if (z.ergebnis && z.ergebnis.ok)
                     z.spulenStand = z.ergebnis.spulen;
                 if (!mitZeit || !z.ergebnis?.ok || !zeitSchritt(z.ergebnis.spulen, 0))
@@ -382,11 +724,30 @@ const Planflaeche = (() => {
             buehne.classList.toggle('sp-laeuft', z.simulation);
             if (!z.simulation)
                 return;
+            if (e && e.ok)
+                z.plan.teile.forEach(t => {
+                    const grp = buehne.querySelector(`g[data-id="${CSS.escape(t.id)}"]`);
+                    if (!grp)
+                        return;
+                    const spule = /^(spule|spule-anzugsverzoegert|spule-abfallverzoegert)$/.test(t.zeichen);
+                    const kontakt = /^(schuetz-schliesser|schuetz-oeffner)$/.test(t.zeichen);
+                    const lampe = /^(lampe|signalleuchte|ch-kontrolllampe)$/.test(t.zeichen);
+                    if (spule || kontakt) {
+                        const aktiv = !!z.spulenStand[t.bmk] || !!zeitStand.ausgaenge[t.bmk];
+                        grp.classList.toggle('sp-labor-relais-an', aktiv);
+                        grp.classList.toggle('sp-labor-relais-aus', !aktiv);
+                        grp.setAttribute('data-labor-zustand', aktiv ? 'angezogen' : 'ruhelage');
+                    }
+                    if (lampe) {
+                        const hell = Number(e.werte?.[t.id]?.helligkeit) || 0;
+                        grp.classList.toggle('sp-labor-lampe-an', hell > 0.01);
+                        grp.style.setProperty('--sp-labor-hell', String(Math.max(0, Math.min(1, hell))));
+                    }
+                });
             z.plan.teile.forEach(t => {
-                const st = Stromfluss.stellungenVon(t.zeichen);
+                const { st, vh } = schaltart(t.zeichen);
                 if (st.length < 2)
                     return;
-                const vh = Stromfluss.verhalten(t.zeichen);
                 if (vh && vh.folgtSpule)
                     return;
                 const g = buehne.querySelector(`[data-id="${CSS.escape(t.id)}"]`);
@@ -399,8 +760,45 @@ const Planflaeche = (() => {
                 g.appendChild(titel);
             });
         };
-        const male = () => { rechnen(); kopfMalen(); buehneMalen(); fussMalen(); if (batterie)
-            batterie.aktualisiere(); };
+        const kontextMalen = () => {
+            const ausgewaehlt = [...z.auswahl].filter(id => z.plan.teile.some(t => t.id === id) ||
+                z.plan.leitungen.some(l => l.id === id));
+            kontextleiste.hidden = !!z.simulation || !ausgewaehlt.length;
+            if (kontextleiste.hidden) {
+                kontextleiste.replaceChildren();
+                return;
+            }
+            const teil = z.plan.teile.find(t => t.id === ausgewaehlt[0]);
+            const titel = ausgewaehlt.length > 1 ? `${ausgewaehlt.length} ausgewählt` :
+                String(teil?.beschriftung || teil?.bmk ||
+                    (teil ? Register.fachzeichen.holen(teil.zeichen)?.name : 'Leitung') || 'Auswahl');
+            kontextleiste.innerHTML =
+                `<span class="sp-kontext-titel" title="${esc(titel)}">${esc(titel)}</span>` +
+                    `<button type="button" data-kontext="eigenschaften" title="Eigenschaften bearbeiten" aria-label="Eigenschaften der Auswahl öffnen">✎ <span>Bearbeiten</span></button>` +
+                    `<button type="button" data-kontext="drehen" title="Drehen (R)" aria-label="Drehen">↻</button>` +
+                    `<button type="button" data-kontext="spiegeln" title="Spiegeln (H)" aria-label="Spiegeln">⇄</button>` +
+                    `<button type="button" data-kontext="doppeln" title="Duplizieren (Strg+D)" aria-label="Duplizieren">⧉</button>` +
+                    `<button type="button" data-kontext="loeschen" title="Löschen (Entf)" aria-label="Löschen">✕</button>` +
+                    `<button type="button" data-kontext="abwahl" title="Auswahl aufheben" aria-label="Auswahl aufheben">×</button>`;
+        };
+        const male = () => {
+            if (z.simulation && karteId)
+                karteSchliessen();
+            rechnen();
+            kopfMalen();
+            buehneMalen();
+            fussMalen();
+            laborMalen();
+            kontextMalen();
+            if (batterie && !batteriePanel.hidden)
+                batterie.aktualisiere();
+            if (relais && !relaisPanel.hidden)
+                relais.aktualisiere();
+            if (pruefungOffen)
+                pruefMalen();
+            if (studioOffen)
+                studioMalen();
+        };
         const ZOOM_MIN = 0.25, ZOOM_MAX = 8;
         const svgJetzt = () => leinwand.querySelector('svg.sp-flaeche');
         const ansichtAnwenden = () => {
@@ -464,6 +862,207 @@ const Planflaeche = (() => {
             else if (b.dataset.a === 'zoom-alles')
                 allesZeigen();
         });
+        const pruefLaden = () => {
+            const w = window;
+            if (w.Planpruefung)
+                return Promise.resolve();
+            if (w.__pruefLaden)
+                return w.__pruefLaden;
+            const v = new Promise((ja, nein) => {
+                const s = document.createElement('script');
+                s.src = 'quell/bereiche/bloecke/arten/schaltplan-pruefung.js';
+                s.addEventListener('load', () => ja());
+                s.addEventListener('error', () => nein(new Error('Das Prüfzentrum liess sich nicht laden.')));
+                document.head.appendChild(s);
+            });
+            w.__pruefLaden = v;
+            v.catch(() => { w.__pruefLaden = null; });
+            return v;
+        };
+        const pruefDaten = () => window.Planpruefung.analysieren(z.plan, {
+            anschluesseVon: (t) => Schaltplan.anschluesseVon(t),
+            holeSymbol: (id) => Register.fachzeichen.holen(id),
+            netze: (plan) => Stromfluss.netze(plan),
+            offeneKlemmen: (plan) => {
+                const r = stromRechnung(plan, {}, {});
+                return ((r && r.warnungen) || []).filter((w) => / hängt an keiner Leitung\.$/.test(w));
+            }
+        });
+        const pruefMalen = () => {
+            if (!pruefungOffen)
+                return;
+            if (!window.Planpruefung) {
+                pruefPanel.innerHTML = '<p class="sp-bat-hinweis" role="status">Das Prüfzentrum wird geladen …</p>';
+                pruefLaden().then(() => { if (pruefungOffen && wurzel.isConnected)
+                    pruefMalen(); })
+                    .catch((err) => { pruefPanel.innerHTML = '<p class="sp-bat-hinweis" role="alert">' + esc(err.message) + '</p>'; });
+                return;
+            }
+            const r = pruefDaten();
+            const tasten = ['diagnose', 'bauteile', 'netze'].map((id, i) => `<button type="button" data-p-tab="${id}" aria-pressed="${pruefAnsicht === id}"` +
+                ` class="${pruefAnsicht === id ? 'an' : ''}">${['Prüfpunkte', 'Stückliste', 'Netze'][i]}</button>`).join('');
+            const kopf = `<div class="sp-pruef-titel"><div><strong>Schaltplan-Prüfzentrum</strong>` +
+                `<p>Hinweise zur Zeichnung – keine elektrische Sicherheitsabnahme.</p></div>` +
+                `<button type="button" data-p-a="schliessen" aria-label="Prüfzentrum schliessen">✕</button></div>` +
+                `<div class="sp-pruef-kennzahlen" aria-live="polite">` +
+                `<span>${r.statistik.teile} Bauteile</span><span>${r.statistik.leitungen} Leitungen</span>` +
+                `<span>${r.statistik.netze} Netze</span><span>${r.zaehler.fehler} Fehler</span>` +
+                `<span>${r.zaehler.warnung} Warnungen</span><span>${r.zaehler.hinweis} Hinweise</span></div>` +
+                `<div class="sp-pruef-tabs" role="group" aria-label="Prüfzentrum Ansichten">${tasten}</div>`;
+            let liste = '';
+            if (pruefAnsicht === 'diagnose') {
+                liste = r.punkte.length ? r.punkte.slice(0, 250).map((eintrag, i) => `<button type="button" class="sp-pruef-zeile" data-p-id="${esc(eintrag.id)}" data-p-index="${i}"` +
+                    ` data-suche="${esc((eintrag.text + ' ' + eintrag.id).toLocaleLowerCase('de'))}"` +
+                    ` title="Im Schaltplan auswählen"><span class="sp-pruef-stufe ${esc(eintrag.stufe)}">${esc(eintrag.stufe)}</span>` +
+                    `<span>${esc(eintrag.text)}</span></button>`).join('') :
+                    '<p class="sp-pruef-leer">Keine Auffälligkeiten in den geprüften Strukturregeln.</p>';
+                if (r.punkte.length > 250)
+                    liste += `<p>${r.punkte.length - 250} weitere Hinweise im Textbericht.</p>`;
+            }
+            else if (pruefAnsicht === 'bauteile') {
+                liste = r.bauteile.map((b) => `<button type="button" title="Bauteile dieses Typs auswählen" class="sp-pruef-bestand" data-p-typ="${esc(b.zeichen)}"` +
+                    ` data-suche="${esc((b.name + ' ' + b.zeichen + ' ' + b.kennzeichen.join(' ')).toLocaleLowerCase('de'))}">` +
+                    `<b>${esc(b.name)}</b><span>${b.anzahl} ×</span><small>${esc(b.kennzeichen.join(', ') || b.zeichen)}</small></button>`).join('') ||
+                    '<p class="sp-pruef-leer">Noch keine Bauteile im Plan.</p>';
+            }
+            else {
+                liste = r.netze.map((n) => `<button type="button" title="Netz im Plan auswählen" class="sp-pruef-bestand" data-p-netz="${n.nummer}"` +
+                    ` data-suche="${esc(('N' + n.nummer + ' ' + n.klemmen.map((k) => k.teil + ' ' + k.nr).join(' ')).toLocaleLowerCase('de'))}">` +
+                    `<b>Netz ${n.nummer + 1}</b><span>${n.leitungen.length} Leiter</span>` +
+                    `<small>${esc(n.klemmen.map((k) => `${k.teil}:${k.nr}`).join(', ') || 'Keine Bauteilklemme')}</small></button>`).join('') ||
+                    '<p class="sp-pruef-leer">Keine elektrischen Netze vorhanden.</p>';
+            }
+            pruefPanel.innerHTML = kopf + `<div class="sp-pruef-werkzeuge">` +
+                `<label>Filtern<input type="search" class="sp-pruef-suche" value="${esc(pruefSuche)}" placeholder="Kennzeichen, Typ, Fundstelle …" /></label>` +
+                `<button type="button" data-p-a="export">${pruefAnsicht === 'diagnose' ? 'Bericht TXT' : 'Export CSV'}</button>` +
+                `<button type="button" data-p-a="aufraeumen" title="Redundante Zwischenpunkte entfernen – Anschlusspunkte bleiben erhalten">Leitungen aufräumen</button>` +
+                `</div><div class="sp-pruef-liste">${liste}</div>`;
+            pruefFiltern();
+        };
+        const pruefFiltern = () => {
+            const wort = pruefSuche.trim().toLocaleLowerCase('de');
+            pruefPanel.querySelectorAll('[data-suche]').forEach(el => {
+                el.hidden = !!wort && !(el.dataset.suche || '').includes(wort);
+            });
+        };
+        const pruefFokussieren = (eintrag) => {
+            if (z.zieht || !eintrag?.id)
+                return;
+            const teil = z.plan.teile.find(t => t.id === eintrag.id);
+            const leitung = z.plan.leitungen.find(l => l.id === eintrag.id);
+            const t = z.plan.texte.find(t => t.id === eintrag.id);
+            const p = Number.isFinite(eintrag.x) && Number.isFinite(eintrag.y)
+                ? { x: eintrag.x, y: eintrag.y }
+                : teil || t || (leitung && leitung.punkte?.[0]);
+            if (!p)
+                return;
+            z.auswahl.clear();
+            z.auswahl.add(eintrag.id);
+            z.werkzeug = 'zeigen';
+            z.gewaehltesZeichen = '';
+            const zoom = Math.max(1.5, z.ansicht.zoom);
+            z.ansicht = { zoom: Math.min(3, zoom),
+                x: p.x - z.plan.breite / (2 * Math.min(3, zoom)),
+                y: p.y - z.plan.hoehe / (2 * Math.min(3, zoom)) };
+            male();
+            wurzel.focus({ preventScroll: true });
+        };
+        const pruefMehrfach = (ids) => {
+            if (z.zieht || !ids.length)
+                return;
+            z.auswahl = new Set(ids);
+            z.werkzeug = 'zeigen';
+            z.gewaehltesZeichen = '';
+            const punkte = [];
+            z.plan.teile.forEach(t => { if (z.auswahl.has(t.id))
+                punkte.push({ x: t.x, y: t.y }); });
+            z.plan.leitungen.forEach(l => { if (z.auswahl.has(l.id))
+                punkte.push(...l.punkte); });
+            if (punkte.length) {
+                const links = Math.min(...punkte.map(p => p.x)), rechts = Math.max(...punkte.map(p => p.x));
+                const oben = Math.min(...punkte.map(p => p.y)), unten = Math.max(...punkte.map(p => p.y));
+                const zoom = Math.max(.25, Math.min(3, z.plan.breite / (rechts - links + 120), z.plan.hoehe / (unten - oben + 120)));
+                z.ansicht = { zoom, x: (links + rechts) / 2 - z.plan.breite / (2 * zoom),
+                    y: (oben + unten) / 2 - z.plan.hoehe / (2 * zoom) };
+            }
+            male();
+            wurzel.focus({ preventScroll: true });
+        };
+        const pruefHerunterladen = (text, datei, mime) => {
+            if (z.zieht) {
+                UI.toast('Erst den laufenden Zug beenden.');
+                return;
+            }
+            const blob = new Blob([text], { type: mime });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = datei;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 4000);
+        };
+        pruefPanel.addEventListener('input', e => {
+            const el = e.target;
+            if (!el.classList.contains('sp-pruef-suche'))
+                return;
+            pruefSuche = el.value;
+            pruefFiltern();
+        });
+        pruefPanel.addEventListener('click', e => {
+            const b = e.target.closest('[data-p-tab],[data-p-a],[data-p-id],[data-p-typ],[data-p-netz]');
+            if (!b)
+                return;
+            if (b.dataset.pTab) {
+                pruefAnsicht = b.dataset.pTab;
+                pruefMalen();
+                return;
+            }
+            if (b.dataset.pTyp) {
+                const ids = z.plan.teile.filter(t => t.zeichen === b.dataset.pTyp).map(t => t.id);
+                pruefMehrfach(ids);
+                return;
+            }
+            if (b.dataset.pNetz !== undefined) {
+                const n = pruefDaten().netze.find((n) => String(n.nummer) === b.dataset.pNetz);
+                if (n)
+                    pruefMehrfach([...new Set([...n.leitungen, ...n.klemmen.map((k) => k.teil)])]);
+                return;
+            }
+            if (b.dataset.pId) {
+                const r = pruefDaten();
+                const eintrag = r.punkte[Number(b.dataset.pIndex)];
+                if (eintrag?.id === b.dataset.pId)
+                    pruefFokussieren(eintrag);
+                return;
+            }
+            if (b.dataset.pA === 'schliessen') {
+                pruefungOffen = false;
+                pruefPanel.hidden = true;
+                kopfMalen();
+                return;
+            }
+            if (b.dataset.pA === 'export') {
+                const r = pruefDaten(), P = window.Planpruefung;
+                const daten = pruefAnsicht === 'diagnose' ? P.berichtText(r) :
+                    pruefAnsicht === 'bauteile' ? P.bauteileCsv(r) : P.netzeCsv(r);
+                pruefHerunterladen(daten, pruefAnsicht === 'diagnose' ? 'Redion-Schaltplan-Pruefbericht.txt' :
+                    pruefAnsicht === 'bauteile' ? 'Redion-Stueckliste.csv' : 'Redion-Netzliste.csv', pruefAnsicht === 'diagnose' ? 'text/plain;charset=utf-8' : 'text/csv;charset=utf-8');
+                return;
+            }
+            if (b.dataset.pA === 'aufraeumen') {
+                if (z.zieht)
+                    return;
+                const P = window.Planpruefung;
+                const kopie = JSON.parse(JSON.stringify(z.plan));
+                const ergebnis = P.vereinfachen(kopie, (t) => Schaltplan.anschluesseVon(t));
+                if (!ergebnis.entfernt) {
+                    UI.toast('Keine sicher entfernbaren Zwischenpunkte gefunden.');
+                    return;
+                }
+                aendere(() => { z.plan.leitungen = kopie.leitungen; });
+                UI.toast(`${ergebnis.entfernt} überflüssige Zwischenpunkte entfernt – mit Rückgängig umkehrbar.`);
+            }
+        });
         const teilweiseMalen = (teilIds) => {
             const svg = svgJetzt();
             if (!svg)
@@ -507,11 +1106,12 @@ const Planflaeche = (() => {
                 g.innerHTML = html;
         };
         const setzeSymbol = (id, x, y) => {
-            if (!id)
-                return;
+            if (!id || z.simulation || z.zieht || !Register.fachzeichen.holen(id))
+                return null;
+            const neu = Schaltplan.uid();
             aendere(() => {
                 z.plan.teile.push({
-                    id: Schaltplan.uid(), zeichen: id,
+                    id: neu, zeichen: id,
                     x: Schaltplan.rasten(x), y: Schaltplan.rasten(y),
                     drehung: 0, gespiegelt: false,
                     bmk: Schaltplan.naechstesBmk(z.plan, id),
@@ -519,6 +1119,10 @@ const Planflaeche = (() => {
                     ebene: aktiveEbene()
                 });
             });
+            const g = svgJetzt()?.querySelector(`.sp-teil[data-id="${CSS.escape(neu)}"]`);
+            if (g)
+                g.classList.add('sp-frisch-eingesetzt');
+            return neu;
         };
         const netzSchonDa = () => z.plan.texte.some(t => t && t.t === 'L1') ||
             z.plan.teile.some(t => t && t.zeichen === 'wechselspannung');
@@ -760,10 +1364,9 @@ const Planflaeche = (() => {
             const t = teilVon(teilId);
             if (!t)
                 return false;
-            const st = Stromfluss.stellungenVon(t.zeichen);
+            const { st, vh } = schaltart(t.zeichen);
             if (st.length < 2)
                 return false;
-            const vh = Stromfluss.verhalten(t.zeichen);
             if (vh && vh.folgtSpule) {
                 UI.toast(`${t.bmk || 'Dieser Kontakt'} wird von der Spule geschaltet, nicht von Hand.`);
                 return true;
@@ -814,9 +1417,15 @@ const Planflaeche = (() => {
                     return t && (t.x !== a.x || t.y !== a.y);
                 });
             if (!bewegt) {
+                const tip = teilKlickStart;
+                teilKlickStart = null;
                 male();
+                if (tip && !tip.schicht)
+                    karteOeffnen(tip.id);
                 return;
             }
+            teilKlickStart = null;
+            karteSchliessen();
             const vorher = zug.vorher ?? Schaltplan.vorherMerken(z.plan);
             const bericht = Schaltplan.nachziehen(z.plan, vorher, [...zug.ausgang.keys()], { heilen: true, vonVorn: true });
             aendere(() => { });
@@ -985,7 +1594,278 @@ const Planflaeche = (() => {
             document.removeEventListener('pointerup', fingerWeg, true);
             document.removeEventListener('pointercancel', fingerWeg, true);
         };
+        let platzZug = null;
+        let platzGeist = null;
+        let platzGeistId = '';
+        let platzBildFrame = 0;
+        let platzKlickBlockBis = 0;
+        let platzLetzteBild = null;
+        const geistEntfernen = () => {
+            if (platzBildFrame)
+                cancelAnimationFrame(platzBildFrame);
+            platzBildFrame = 0;
+            platzLetzteBild = null;
+            platzGeist?.remove();
+            platzGeist = null;
+            platzGeistId = '';
+        };
+        const platzOrt = (clientX, clientY) => {
+            const svg = svgJetzt();
+            if (!svg || !wurzel.isConnected)
+                return null;
+            const unter = document.elementFromPoint(clientX, clientY);
+            if (!unter || !leinwand.contains(unter))
+                return null;
+            const roh = ortAus(svg, { clientX, clientY }, z.plan, true);
+            if (roh.x < 0 || roh.y < 0 || roh.x > z.plan.breite || roh.y > z.plan.hoehe)
+                return null;
+            const p = ortAus(svg, { clientX, clientY }, z.plan);
+            const m = svg.getScreenCTM();
+            const bild = m ? new DOMPoint(p.x, p.y).matrixTransform(m) : null;
+            return { x: p.x, y: p.y, sx: bild?.x ?? clientX, sy: bild?.y ?? clientY };
+        };
+        const platzGeistZeigen = (id, clientX, clientY) => {
+            const ort = platzOrt(clientX, clientY);
+            if (!platzGeist || platzGeistId !== id) {
+                geistEntfernen();
+                platzGeist = document.createElement('div');
+                platzGeist.className = 'sp-platziergeist';
+                platzGeist.setAttribute('aria-hidden', 'true');
+                const bild = document.createElement('div');
+                bild.className = 'sp-platziergeist-bild';
+                bild.innerHTML = Register.fachzeichen.alsSvg(id, { strich: 2 });
+                const name = document.createElement('span');
+                name.textContent = Register.fachzeichen.holen(id)?.name || id;
+                platzGeist.append(bild, name);
+                document.body.appendChild(platzGeist);
+                platzGeistId = id;
+            }
+            platzLetzteBild = { x: ort?.sx ?? clientX, y: ort?.sy ?? clientY, ok: !!ort };
+            if (!platzBildFrame)
+                platzBildFrame = requestAnimationFrame(() => {
+                    platzBildFrame = 0;
+                    const el = platzGeist, pos = platzLetzteBild;
+                    if (!el || !pos || !wurzel.isConnected) {
+                        geistEntfernen();
+                        return;
+                    }
+                    el.style.left = `${pos.x}px`;
+                    el.style.top = `${pos.y}px`;
+                    el.classList.toggle('sp-platziergeist-gueltig', pos.ok);
+                });
+            return ort;
+        };
+        const platzZugAbbrechen = () => {
+            platzZug = null;
+            document.removeEventListener('pointermove', platzZugBewegen, true);
+            document.removeEventListener('pointerup', platzZugEnde, true);
+            document.removeEventListener('pointercancel', platzZugCancel, true);
+            document.removeEventListener('pointerdown', platzZugZweiterFinger, true);
+            document.removeEventListener('keydown', platzZugEscape, true);
+            geistEntfernen();
+        };
+        const platzZugZweiterFinger = (e) => {
+            if (platzZug && e.pointerId !== platzZug.pointerId)
+                platzZugAbbrechen();
+        };
+        const platzZugEscape = (e) => {
+            if (e.key !== 'Escape')
+                return;
+            e.preventDefault();
+            e.stopPropagation();
+            platzZugAbbrechen();
+        };
+        const platzZugBewegen = (e) => {
+            const zug = platzZug;
+            if (!zug || e.pointerId !== zug.pointerId)
+                return;
+            if (!wurzel.isConnected) {
+                platzZugAbbrechen();
+                return;
+            }
+            const strecke = Math.hypot(e.clientX - zug.startX, e.clientY - zug.startY);
+            if (!zug.bewegt && strecke < (zug.art === 'touch' ? 10 : 6))
+                return;
+            zug.bewegt = true;
+            e.preventDefault();
+            platzGeistZeigen(zug.id, e.clientX, e.clientY);
+        };
+        const platzZugCancel = (e) => {
+            if (platzZug && e.pointerId === platzZug.pointerId)
+                platzZugAbbrechen();
+        };
+        const platzZugEnde = (e) => {
+            const zug = platzZug;
+            if (!zug || zug.pointerId !== e.pointerId)
+                return;
+            const ort = zug.bewegt && !z.simulation && !z.zieht
+                ? platzOrt(e.clientX, e.clientY) : null;
+            platzZugAbbrechen();
+            if (!zug.bewegt)
+                return;
+            platzKlickBlockBis = Date.now() + 380;
+            if (!ort || !wurzel.isConnected)
+                return;
+            studioZeichenWahl(zug.id, false);
+            const neu = setzeSymbol(zug.id, ort.x, ort.y);
+            paletteMalen(palette.querySelector('input')?.value || '');
+            if (neu) {
+                const puls = document.createElement('div');
+                puls.className = 'sp-platzierpuls';
+                puls.setAttribute('aria-hidden', 'true');
+                puls.style.left = `${ort.sx}px`;
+                puls.style.top = `${ort.sy}px`;
+                document.body.appendChild(puls);
+                puls.addEventListener('animationend', () => puls.remove(), { once: true });
+                setTimeout(() => puls.remove(), 800);
+            }
+        };
+        const platzQuelle = (e) => {
+            const ziel = e.target;
+            const b = ziel.closest('[data-st-symbol], [data-sym]');
+            const id = b?.dataset.stSymbol || b?.dataset.sym;
+            if (!id || e.button !== 0 || e.altKey || z.simulation || z.zieht || platzZug ||
+                !Register.fachzeichen.holen(id))
+                return;
+            platzZug = { id, pointerId: e.pointerId, startX: e.clientX, startY: e.clientY,
+                bewegt: false, art: e.pointerType };
+            document.addEventListener('pointermove', platzZugBewegen, { capture: true, passive: false });
+            document.addEventListener('pointerup', platzZugEnde, true);
+            document.addEventListener('pointercancel', platzZugCancel, true);
+            document.addEventListener('pointerdown', platzZugZweiterFinger, true);
+            document.addEventListener('keydown', platzZugEscape, true);
+            if (e.pointerType !== 'mouse')
+                e.preventDefault();
+        };
+        palette.addEventListener('pointerdown', platzQuelle);
+        studioPanel.addEventListener('pointerdown', platzQuelle);
+        const karteSchliessen = () => {
+            karteId = '';
+            schnellkarte.hidden = true;
+            schnellkarte.replaceChildren();
+        };
+        const istZeitspule = (t) => t.zeichen === 'spule-anzugsverzoegert' || t.zeichen === 'spule-abfallverzoegert';
+        const spalteVon = (t) => window.RelaisKern?.spaltenTitel?.(z.plan, t) || '';
+        const karteMalen = () => {
+            const t = karteId && teilVon(karteId);
+            if (!t || z.simulation) {
+                karteSchliessen();
+                return;
+            }
+            const sym = Register.fachzeichen.holen(t.zeichen);
+            const original = spalteVon(t);
+            const zeit = istZeitspule(t);
+            schnellkarte.hidden = false;
+            schnellkarte.innerHTML =
+                `<div class="sp-schnellkarte-kopf"><div><b>${esc(sym?.name || t.zeichen)}</b>` +
+                    `<small>Bauteil · ${esc(t.bmk || 'ohne Kennzeichen')}</small></div>` +
+                    `<button type="button" data-sk="zu" aria-label="Eigenschaftenkarte schliessen">✕</button></div>` +
+                    `<form data-sk-form><label>Beschriftung` +
+                    `<input name="beschriftung" maxlength="120" autocomplete="off" placeholder="z. B. Hauptschütz, Alarm, Motor rechts" value="${esc(t.beschriftung || '')}"></label>` +
+                    `<label>Betriebsmittelkennzeichen` +
+                    `<input name="bmk" maxlength="40" autocomplete="off" value="${esc(t.bmk || '')}"></label>` +
+                    (zeit ? `<label>Verzögerung in Sekunden` +
+                        `<input type="number" min="0" max="3600" step="0.1" name="verzoegerung" value="${Number.isFinite(t.werte?.T) ? t.werte.T : 3}"></label>` : '') +
+                    (original ? `<div class="sp-schnellkarte-original"><small>Original-Spaltenüberschrift (${Number(t.legacySpalte) + 1}):</small>` +
+                        `<span>${esc(original)}</span><button type="button" data-sk="spalte">Als Beschriftung übernehmen</button>` +
+                        `<small>Die Zuordnung ist eine manuelle Entscheidung, keine bestätigte Originalverbindung.</small></div>` : '') +
+                    `<div class="sp-schnellkarte-aktionen"><button class="prim" type="submit">Speichern</button>` +
+                    `<button type="button" data-sk="details">Anschlüsse</button></div></form>` +
+                    `<p class="sp-schnellkarte-hilfe">Einmal antippen zum Bearbeiten · Zum Verschieben ziehen</p>`;
+        };
+        const karteOeffnen = (id) => {
+            if (!teilVon(id) || z.simulation)
+                return;
+            karteId = id;
+            studioTab = 'eigenschaften';
+            if (studioOffen)
+                studioMalen();
+            karteMalen();
+        };
+        schnellkarte.addEventListener('pointerdown', e => e.stopPropagation());
+        schnellkarte.addEventListener('click', e => {
+            const b = e.target.closest('[data-sk]');
+            if (!b)
+                return;
+            const t = teilVon(karteId);
+            if (b.dataset.sk === 'zu') {
+                karteSchliessen();
+                return;
+            }
+            if (!t || z.simulation)
+                return;
+            if (b.dataset.sk === 'spalte') {
+                const feld = schnellkarte.querySelector('[name="beschriftung"]');
+                if (feld) {
+                    feld.value = spalteVon(t);
+                    feld.focus();
+                }
+                return;
+            }
+            if (b.dataset.sk === 'details') {
+                karteSchliessen();
+                teilDialog(t);
+            }
+        });
+        schnellkarte.addEventListener('submit', e => {
+            const form = e.target.closest('[data-sk-form]');
+            if (!form)
+                return;
+            e.preventDefault();
+            const t = teilVon(karteId);
+            if (!t || z.simulation || z.zieht)
+                return;
+            const bmk = form.elements.namedItem('bmk').value.trim().slice(0, 40);
+            const beschriftung = form.elements.namedItem('beschriftung').value.trim().slice(0, 120);
+            const zeitFeld = form.elements.namedItem('verzoegerung');
+            const sekunden = zeitFeld ? Number(zeitFeld.value) : null;
+            if (zeitFeld && (!zeitFeld.value.trim() || !Number.isFinite(sekunden) || sekunden < 0 || sekunden > 3600)) {
+                zeitFeld.setCustomValidity('Bitte 0 bis 3600 Sekunden eingeben.');
+                zeitFeld.reportValidity();
+                return;
+            }
+            if (t.bmk !== bmk || (t.beschriftung || '') !== beschriftung ||
+                (zeitFeld && (Number.isFinite(t.werte?.T) ? t.werte.T : 3) !== sekunden)) {
+                aendere(() => {
+                    t.bmk = bmk;
+                    if (beschriftung)
+                        t.beschriftung = beschriftung;
+                    else
+                        delete t.beschriftung;
+                    if (zeitFeld)
+                        t.werte = { ...(t.werte || {}), T: sekunden };
+                });
+            }
+            karteMalen();
+        });
+        kontextleiste.addEventListener('pointerdown', e => e.stopPropagation());
+        kontextleiste.addEventListener('click', e => {
+            const knop = e.target.closest('[data-kontext]');
+            if (!knop || z.simulation || z.zieht)
+                return;
+            const aktion = knop.dataset.kontext;
+            if (aktion === 'abwahl') {
+                z.auswahl.clear();
+                karteSchliessen();
+                male();
+                return;
+            }
+            if (aktion === 'eigenschaften') {
+                studioOffen = true;
+                studioTab = 'eigenschaften';
+                studioPanel.hidden = false;
+                paletteOffen = false;
+                palette.hidden = true;
+                wurzel.classList.remove('sp-palette-offen');
+                studioMalen();
+                kopfMalen();
+                return;
+            }
+            ({ drehen, spiegeln, doppeln, loeschen }[aktion || '']?.());
+        });
         buehne.addEventListener('pointerdown', e => {
+            if (e.target.closest('.sp-schnellkarte,.sp-kontextleiste'))
+                return;
             const svg = svgJetzt();
             if (!svg)
                 return;
@@ -1075,11 +1955,14 @@ const Planflaeche = (() => {
             const g = teilAm(ziel);
             if (!g || !g.dataset.id) {
                 if (z.gewaehltesZeichen) {
+                    geistEntfernen();
                     setzeSymbol(z.gewaehltesZeichen, p.x, p.y);
                     return;
                 }
-                if (!e.shiftKey)
+                if (!e.shiftKey) {
                     z.auswahl.clear();
+                    karteSchliessen();
+                }
                 zugBeginnen({ art: 'rahmen', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang: new Map() });
                 svg.setPointerCapture(e.pointerId);
                 male();
@@ -1119,6 +2002,7 @@ const Planflaeche = (() => {
                 letzterTipp = { id: '', zeit: 0 };
                 const t = teilVon(id);
                 if (t) {
+                    karteSchliessen();
                     teilDialog(t);
                     return;
                 }
@@ -1135,6 +2019,7 @@ const Planflaeche = (() => {
                 if (t)
                     ausgang.set(x, { x: t.x, y: t.y });
             });
+            teilKlickStart = { id, x: e.clientX, y: e.clientY, schicht: e.shiftKey };
             zugBeginnen({ art: 'teil', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang,
                 vorher: Schaltplan.vorherMerken(z.plan),
                 lage: [...ausgang.values()].map(a => a.x + ',' + a.y).join(';') });
@@ -1142,7 +2027,15 @@ const Planflaeche = (() => {
             male();
         });
         buehne.addEventListener('pointermove', e => {
-            if (!z.zieht || e.pointerId !== z.zieht.zeiger)
+            if (!z.zieht) {
+                if (!platzZug && e.pointerType !== 'touch' && !e.buttons &&
+                    !z.simulation && z.werkzeug === 'zeigen' && z.gewaehltesZeichen)
+                    platzGeistZeigen(z.gewaehltesZeichen, e.clientX, e.clientY);
+                else if (!platzZug)
+                    geistEntfernen();
+                return;
+            }
+            if (e.pointerId !== z.zieht.zeiger)
                 return;
             const svg = svgJetzt();
             if (!svg)
@@ -1233,6 +2126,8 @@ const Planflaeche = (() => {
                     `fill-opacity=".07" stroke="currentColor" stroke-dasharray="4 3"/>`);
             }
         });
+        buehne.addEventListener('pointerleave', () => { if (!platzZug)
+            geistEntfernen(); });
         const schieneEnde = (a, p) => Math.abs(p.x - a.x) >= Math.abs(p.y - a.y) ? { x: p.x, y: a.y } : { x: a.x, y: p.y };
         const zugEnde = (e) => {
             if (!z.zieht || e.pointerId !== z.zieht.zeiger)
@@ -1246,6 +2141,8 @@ const Planflaeche = (() => {
             if (zug.art === 'schwenk')
                 return;
             if (zug.art === 'teil') {
+                if (teilKlickStart && Math.hypot(e.clientX - teilKlickStart.x, e.clientY - teilKlickStart.y) > 9)
+                    teilKlickStart = null;
                 teilzugSichern(zug);
                 return;
             }
@@ -1405,6 +2302,219 @@ const Planflaeche = (() => {
             if (wurzel.isConnected)
                 wurzel.focus({ preventScroll: true });
         };
+        const studioHelfer = () => StudioHilfe;
+        const studioLetzteLaden = () => {
+            const roh = typeof Store !== 'undefined' ? Store.getMeta('redion:elektro:letzte:v1', []) : [];
+            return studioHelfer()?.leseLetzte(roh) || [];
+        };
+        studioLetzte = studioLetzteLaden();
+        const studioZeichenWahl = (id, neuZeichnen = true) => {
+            if (z.simulation || z.zieht || !Register.fachzeichen.holen(id))
+                return;
+            z.werkzeug = 'zeigen';
+            z.gewaehltesZeichen = id;
+            z.auswahl.clear();
+            studioLetzte = studioHelfer()?.merkeLetzte(studioLetzte, id) || [id];
+            if (typeof Store !== 'undefined')
+                Store.setMeta('redion:elektro:letzte:v1', studioLetzte);
+            if (neuZeichnen) {
+                paletteMalen(palette.querySelector('input')?.value || '');
+                male();
+            }
+        };
+        const studioMalen = () => {
+            if (!studioOffen || studioPanel.hidden)
+                return;
+            const helper = studioHelfer();
+            const symbols = Register.fachzeichen.alle();
+            const gewaehlt = [...z.auswahl].map(id => z.plan.teile.find(t => t.id === id)).filter(Boolean);
+            const tabs = [['einsetzen', 'Einfügen'], ['eigenschaften', 'Eigenschaften'], ['status', 'Übersicht']]
+                .map(([id, name]) => `<button type="button" data-st-tab="${id}" aria-pressed="${studioTab === id}" class="${studioTab === id ? 'an' : ''}">${name}</button>`).join('');
+            let inhalt = '';
+            if (studioTab === 'einsetzen') {
+                const gefunden = helper?.suche(symbols, studioSuchtext, studioGruppe, 36) || [];
+                const letzte = studioSuchtext || studioGruppe !== 'alle' ? [] : studioLetzte
+                    .map(id => Register.fachzeichen.holen(id)).filter(Boolean).slice(0, 8);
+                const symbolKarte = (teil, art) => `<button type="button" class="sp-studio-symbol${z.gewaehltesZeichen === teil.id ? ' an' : ''}" data-st-symbol="${esc(teil.id)}" ` +
+                    `title="${esc(teil.name + ' – ' + (teil.erklaerung || ''))}" ${z.simulation ? 'disabled' : ''}>` +
+                    `<span class="sp-studio-bild" aria-hidden="true">${Register.fachzeichen.alsSvg(teil.id, { strich: 2 })}</span>` +
+                    `<span>${esc(teil.name)}</span>${art === 'neu' ? '<small>Zuletzt</small>' : ''}</button>`;
+                const gruppen = Register.fachzeichen.gruppen();
+                inhalt = `<label class="sp-studio-suchfeld">Symbol suchen ` +
+                    `<input type="search" data-st-suche placeholder="z. B. Schliesser, Lampe …" value="${esc(studioSuchtext)}" autocomplete="off" ${z.simulation ? 'disabled' : ''}></label>` +
+                    `<label class="sp-studio-suchfeld">Kategorie <select data-st-gruppe ${z.simulation ? 'disabled' : ''}>` +
+                    `<option value="alle">Alle Bauteile</option>` +
+                    gruppen.map(g => `<option value="${esc(g[0])}"${studioGruppe === g[0] ? ' selected' : ''}>${esc(g[1])}</option>`).join('') +
+                    `</select></label>` +
+                    (letzte.length ? `<div class="sp-studio-letzte"><div class="sp-studio-untertitel">Zuletzt benutzt</div><div class="sp-studio-raster">${letzte.map((x) => symbolKarte(x, 'neu')).join('')}</div></div>` : '') +
+                    `<div class="sp-studio-untertitel sp-studio-treffer-zahl">${gefunden.length} Treffer${studioSuchtext ? ' für „' + esc(studioSuchtext) + '“' : ''}</div>` +
+                    `<div class="sp-studio-raster sp-studio-treffer">${gefunden.map((x) => symbolKarte(x, 'normal')).join('') || '<p>Kein Bauteil gefunden.</p>'}</div>` +
+                    `<p class="sp-studio-hilfe">Mit Maus, Finger oder Stift ein Bauteil anfassen und direkt auf den Plan ziehen. Oder antippen und anschliessend auf der Fläche platzieren. Alt + Klick links fügt ein Symbol zu Favoriten hinzu.</p>`;
+            }
+            else if (studioTab === 'eigenschaften') {
+                if (z.simulation)
+                    inhalt = '<p class="sp-studio-hilfe">Simulation anhalten, um Bauteile zu bearbeiten.</p>';
+                else if (gewaehlt.length === 1 && z.auswahl.size === 1) {
+                    const t = gewaehlt[0];
+                    const symbol = Register.fachzeichen.holen(t.zeichen);
+                    const infos = helper?.ueberblick(z.plan, (id) => Register.fachzeichen.holen(id)) || {};
+                    inhalt = `<div class="sp-studio-auswahl"><div class="sp-studio-bild">${Register.fachzeichen.alsSvg(t.zeichen, { strich: 2 })}</div><div><strong>${esc(symbol?.name || t.zeichen)}</strong><small>${esc(t.id)}</small></div></div>` +
+                        `<form data-st-form><input type="hidden" name="teil" value="${esc(t.id)}">` +
+                        `<label>Betriebsmittelkennzeichen<input name="bmk" maxlength="40" value="${esc(t.bmk || '')}" placeholder="z. B. K1"></label>` +
+                        `<label>Beschriftung<input name="beschriftung" maxlength="120" value="${esc(t.beschriftung || '')}" placeholder="z. B. Hauptschütz"></label>` +
+                        (istZeitspule(t) ? `<label>Zeitrelais-Verzögerung (s)<input name="verzoegerung" type="number" step="0.1" min="0" max="3600" value="${Number.isFinite(t.werte?.T) ? t.werte.T : 3}"></label>` : '') +
+                        (spalteVon(t) ? `<p class="sp-studio-hilfe">Original-Spaltenüberschrift: <b>${esc(spalteVon(t))}</b> (nicht automatisch ein Bauteilname).</p>` : '') +
+                        `<p class="sp-studio-hilfe">Rasterposition: ${Number(t.x)} / ${Number(t.y)} · Drehung: ${Number(t.drehung) || 0}°</p>` +
+                        `<div class="sp-studio-actions"><button type="submit" class="prim">Eigenschaften speichern</button>` +
+                        `<button type="button" data-st-a="details">Anschlüsse …</button></div></form>` +
+                        `<div class="sp-studio-actions"><button type="button" data-st-a="drehen">↻ Drehen</button>` +
+                        `<button type="button" data-st-a="spiegeln">⇋ Spiegeln</button>` +
+                        `<button type="button" data-st-a="doppeln">⊕ Duplizieren</button></div>` +
+                        (infos.doppelteKennzeichen?.includes(String(t.bmk || '').trim()) ? '<p class="sp-studio-warn">Dieses Kennzeichen kommt mehrfach vor. Das kann für Relaiskontakte beabsichtigt sein – Zuordnung prüfen.</p>' : '');
+                }
+                else if (gewaehlt.length) {
+                    inhalt = `<p><b>${gewaehlt.length} Bauteile</b> ausgewählt</p>` +
+                        `<p class="sp-studio-hilfe">Gruppenweise drehen, spiegeln und duplizieren geht über die vorhandenen Werkzeuge.</p>` +
+                        `<div class="sp-studio-actions"><button data-st-a="drehen">↻ Drehen</button><button data-st-a="spiegeln">⇋ Spiegeln</button><button data-st-a="doppeln">⊕ Duplizieren</button></div>`;
+                }
+                else {
+                    inhalt = '<p class="sp-studio-hilfe">Ein Bauteil im Schaltplan auswählen. Hier kannst du es direkt beschriften, drehen und bearbeiten.</p>';
+                }
+            }
+            else {
+                const u = helper?.ueberblick(z.plan, (id) => Register.fachzeichen.holen(id)) || { teile: 0, leitungen: 0, texte: 0, gruppen: [], doppelteKennzeichen: [] };
+                inhalt = `<div class="sp-studio-kennzahlen"><div><strong>${u.teile}</strong><small>Bauteile</small></div>` +
+                    `<div><strong>${u.leitungen}</strong><small>Leitungen</small></div>` +
+                    `<div><strong>${u.texte}</strong><small>Texte</small></div></div>` +
+                    `<div class="sp-studio-untertitel">Verwendete Symbolgruppen</div>` +
+                    `<div class="sp-studio-gruppen">${u.gruppen.map((g) => `<span>${esc(g.gruppe)} <b>${g.anzahl}</b></span>`).join('') || 'Noch keine Bauteile'}</div>` +
+                    `<p class="sp-studio-hilfe">${u.doppelteKennzeichen.length ? `${u.doppelteKennzeichen.length} mehrfach verwendete Kennzeichen. Bei Spulen und Kontakten kann das richtig sein.` : 'Keine mehrfach verwendeten Betriebsmittelkennzeichen.'}</p>` +
+                    `<div class="sp-studio-actions"><button type="button" data-st-a="pruefen">✓ Prüfzentrum</button>` +
+                    `<button type="button" data-st-a="zoom">⤢ Plan zeigen</button></div>`;
+            }
+            studioPanel.innerHTML = `<div class="sp-studio-kopf"><div><b>Elektro Studio</b><small>Bauteile · Bearbeiten · Prüfen</small></div>` +
+                `<button type="button" data-st-a="schliessen" aria-label="Elektro Studio schliessen">✕</button></div>` +
+                `<div class="sp-studio-tabs" role="group" aria-label="Elektro Studio Bereiche">${tabs}</div>` +
+                `<div class="sp-studio-inhalt">${inhalt}</div>`;
+        };
+        studioPanel.addEventListener('input', e => {
+            const f = e.target;
+            if (!f.matches('[data-st-suche]'))
+                return;
+            studioSuchtext = f.value.slice(0, 90);
+            const letzteElemente = studioPanel.querySelector('.sp-studio-letzte');
+            if (letzteElemente)
+                letzteElemente.hidden = !!studioSuchtext;
+            const gefunden = studioHelfer()?.suche(Register.fachzeichen.alle(), studioSuchtext, studioGruppe, 36) || [];
+            const raster = studioPanel.querySelector('.sp-studio-treffer');
+            if (raster)
+                raster.replaceChildren(...gefunden.map((x) => {
+                    const b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'sp-studio-symbol' + (z.gewaehltesZeichen === x.id ? ' an' : '');
+                    b.dataset.stSymbol = x.id;
+                    b.title = x.name;
+                    const img = document.createElement('span');
+                    img.className = 'sp-studio-bild';
+                    img.innerHTML = Register.fachzeichen.alsSvg(x.id, { strich: 2 });
+                    const t = document.createElement('span');
+                    t.textContent = x.name;
+                    b.append(img, t);
+                    return b;
+                }));
+            const count = studioPanel.querySelector('.sp-studio-treffer-zahl');
+            if (count)
+                count.textContent = `${gefunden.length} Treffer`;
+        });
+        studioPanel.addEventListener('change', e => {
+            const f = e.target;
+            if (!f.matches('[data-st-gruppe]'))
+                return;
+            studioGruppe = f.value;
+            studioMalen();
+        });
+        studioPanel.addEventListener('submit', e => {
+            const form = e.target.closest('[data-st-form]');
+            if (!form)
+                return;
+            e.preventDefault();
+            if (z.simulation || z.zieht)
+                return;
+            const id = form.querySelector('[name="teil"]')?.value;
+            const bmk = form.querySelector('[name="bmk"]')?.value.trim().slice(0, 40) || '';
+            const beschriftung = form.querySelector('[name="beschriftung"]')?.value.trim().slice(0, 120) || '';
+            const zeitFeld = form.querySelector('[name="verzoegerung"]');
+            const sekunden = zeitFeld ? Number(zeitFeld.value) : null;
+            if (zeitFeld && (!zeitFeld.value.trim() || !Number.isFinite(sekunden) || sekunden < 0 || sekunden > 3600)) {
+                zeitFeld.setCustomValidity('Bitte 0 bis 3600 Sekunden eingeben.');
+                zeitFeld.reportValidity();
+                return;
+            }
+            const teil = z.plan.teile.find(t => t.id === id);
+            if (!teil || (teil.bmk === bmk && (teil.beschriftung || '') === beschriftung &&
+                (!zeitFeld || (Number.isFinite(teil.werte?.T) ? teil.werte.T : 3) === sekunden)))
+                return;
+            aendere(() => {
+                teil.bmk = bmk;
+                if (beschriftung)
+                    teil.beschriftung = beschriftung;
+                else
+                    delete teil.beschriftung;
+                if (zeitFeld)
+                    teil.werte = { ...(teil.werte || {}), T: sekunden };
+            });
+            if (karteId === teil.id)
+                karteMalen();
+        });
+        studioPanel.addEventListener('click', e => {
+            if (Date.now() < platzKlickBlockBis)
+                return;
+            const b = e.target.closest('[data-st-tab],[data-st-a],[data-st-symbol]');
+            if (!b)
+                return;
+            if (b.dataset.stTab) {
+                studioTab = b.dataset.stTab;
+                studioMalen();
+                return;
+            }
+            if (b.dataset.stSymbol) {
+                studioZeichenWahl(b.dataset.stSymbol);
+                return;
+            }
+            const a = b.dataset.stA;
+            if (a === 'schliessen') {
+                studioOffen = false;
+                studioPanel.hidden = true;
+                kopfMalen();
+                return;
+            }
+            if (z.zieht)
+                return;
+            if (a === 'pruefen') {
+                pruefungOffen = true;
+                pruefPanel.hidden = false;
+                kopfMalen();
+                pruefMalen();
+                return;
+            }
+            if (a === 'zoom') {
+                allesZeigen();
+                return;
+            }
+            if (z.simulation)
+                return;
+            if (a === 'details') {
+                const t = z.plan.teile.find(t => z.auswahl.has(t.id));
+                if (t)
+                    teilDialog(t);
+            }
+            if (a === 'drehen')
+                drehen();
+            if (a === 'spiegeln')
+                spiegeln();
+            if (a === 'doppeln')
+                doppeln();
+        });
         const teilDialog = (t) => {
             const zeichen = Register.fachzeichen.holen(t.zeichen);
             if (!zeichen)
@@ -1562,6 +2672,8 @@ const Planflaeche = (() => {
                 UI.toast('Batterieanlagen im Fach „Batterien“ messen: ideale Parallelquellen werden hier nicht simuliert.');
                 return;
             }
+            if (!z.simulation)
+                merkwahl = { werkzeug: z.werkzeug, zeichen: z.gewaehltesZeichen };
             z.simulation = !z.simulation;
             z.auswahl.clear();
             if (z.simulation) {
@@ -1572,6 +2684,11 @@ const Planflaeche = (() => {
                 z.stellungen = {};
                 z.spulenStand = {};
                 z.ergebnis = null;
+                if (merkwahl) {
+                    z.werkzeug = merkwahl.werkzeug;
+                    z.gewaehltesZeichen = merkwahl.zeichen;
+                    merkwahl = null;
+                }
             }
             zeitStarten();
             male();
@@ -1594,6 +2711,63 @@ const Planflaeche = (() => {
                 male();
                 return;
             }
+            if (b.dataset.a === 'palette-toggle') {
+                paletteOffen = !paletteOffen;
+                if (paletteOffen && studioOffen) {
+                    studioOffen = false;
+                    studioPanel.hidden = true;
+                }
+                wurzel.classList.toggle('sp-palette-offen', paletteOffen);
+                palette.hidden = !paletteOffen;
+                kopfMalen();
+                return;
+            }
+            if (b.dataset.a === 'original-schalter') {
+                volleSchalterAnsicht = !volleSchalterAnsicht;
+                kopfMalen();
+                kopf.querySelector('[data-a="original-schalter"]')?.focus({ preventScroll: true });
+                return;
+            }
+            if (b.dataset.a === 'zoom-alles')
+                return allesZeigen();
+            if (b.dataset.a === 'bereiche')
+                return bereicheMenue(b);
+            if (b.dataset.a === 'plan-fokus') {
+                planFokus = !planFokus;
+                wurzel.classList.toggle('sp-plan-fokus', planFokus);
+                geistEntfernen();
+                kopfMalen();
+                ansichtAnwenden();
+                return;
+            }
+            if (b.dataset.a === 'elektro-studio') {
+                studioOffen = !studioOffen;
+                studioPanel.hidden = !studioOffen;
+                if (studioOffen) {
+                    paletteOffen = false;
+                    palette.hidden = true;
+                    wurzel.classList.remove('sp-palette-offen');
+                    studioTab = 'eigenschaften';
+                }
+                kopfMalen();
+                if (studioOffen)
+                    studioMalen();
+                return;
+            }
+            if (b.dataset.a === 'pruefzentrum') {
+                pruefungOffen = !pruefungOffen;
+                pruefPanel.hidden = !pruefungOffen;
+                kopfMalen();
+                if (pruefungOffen)
+                    pruefMalen();
+                return;
+            }
+            if (b.dataset.a === 'relais-werkstatt') {
+                relaisOffen = !relaisOffen;
+                relaisZeigen();
+                kopfMalen();
+                return;
+            }
             if (b.dataset.a === 'netz')
                 return schaltungMenue(b);
             if (b.dataset.a === 'batterie-labor') {
@@ -1606,14 +2780,15 @@ const Planflaeche = (() => {
             }
             if (b.dataset.a === 'heft')
                 return heftUmschalten();
-            if (b.dataset.a === 'relais') {
-                relaisOffen = !relaisOffen;
-                relaisZeigen();
-                kopfMalen();
+            if (b.dataset.a === 'simulation') {
+                if (z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert && !z.simulation)
+                    e.preventDefault();
+                const hadFocus = document.activeElement === b;
+                simulationUmschalten();
+                if (hadFocus)
+                    kopf.querySelector('.red-mgt-input')?.focus();
                 return;
             }
-            if (b.dataset.a === 'simulation')
-                return simulationUmschalten();
             if (b.dataset.a === 'zurueck')
                 return zurueck();
             if (b.dataset.a === 'vorwaerts')
@@ -1652,6 +2827,10 @@ const Planflaeche = (() => {
                 });
                 return;
             }
+            if (b.dataset.a === 'zurueck-zeichnen') {
+                simulationUmschalten();
+                return;
+            }
             if (b.dataset.a === 'ruhelage') {
                 z.stellungen = {};
                 z.spulenStand = {};
@@ -1669,27 +2848,93 @@ const Planflaeche = (() => {
             ({ drehen, spiegeln, doppeln, gruppieren, loeschen }[b.dataset.a || '']?.());
         });
         palette.addEventListener('click', e => {
-            const b = e.target.closest('[data-sym]');
+            if (Date.now() < platzKlickBlockBis)
+                return;
+            const ziel = e.target;
+            const schliessen = ziel.closest('[data-p-close]');
+            if (schliessen) {
+                paletteOffen = false;
+                palette.hidden = true;
+                wurzel.classList.remove('sp-palette-offen');
+                kopfMalen();
+                kopf.querySelector('[data-a="palette-toggle"]')?.focus({ preventScroll: true });
+                return;
+            }
+            const original = ziel.closest('[data-p-original]');
+            if (original) {
+                volleSchalterAnsicht = !volleSchalterAnsicht;
+                kopfMalen();
+                original.setAttribute('aria-pressed', String(volleSchalterAnsicht));
+                return;
+            }
+            const kompakt = ziel.closest('[data-p-compact]');
+            if (kompakt) {
+                paletteKompakt = !paletteKompakt;
+                palette.classList.toggle('sp-pal-kompakt', paletteKompakt);
+                kompakt.setAttribute('aria-pressed', String(paletteKompakt));
+                kompakt.textContent = paletteKompakt ? '▣ Groß' : '▤ Klein';
+                kompakt.title = paletteKompakt ? 'Große Palette zeigen' : 'Kompakte Palette zeigen';
+                return;
+            }
+            const filter = ziel.closest('[data-p-filter]');
+            if (filter?.dataset.pFilter) {
+                paletteGruppe = filter.dataset.pFilter;
+                palette.querySelectorAll('[data-p-filter]').forEach(b => {
+                    const aktiv = b.dataset.pFilter === paletteGruppe;
+                    b.classList.toggle('an', aktiv);
+                    b.setAttribute('aria-pressed', String(aktiv));
+                });
+                paletteTrefferMalen();
+                palette.querySelector('.sp-liste')?.scrollTo({ top: 0 });
+                return;
+            }
+            const favorit = ziel.closest('[data-p-fav]');
+            if (favorit?.dataset.pFav) {
+                favoritUmschalten(favorit.dataset.pFav);
+                paletteTrefferMalen();
+                return;
+            }
+            const b = ziel.closest('[data-sym]');
             if (!b || !b.dataset.sym)
                 return;
             if (e.altKey) {
                 favoritUmschalten(b.dataset.sym);
-                paletteMalen(palette.querySelector('input')?.value || '');
+                paletteTrefferMalen();
                 return;
             }
             z.gewaehltesZeichen = z.gewaehltesZeichen === b.dataset.sym ? '' : b.dataset.sym;
-            palette.querySelectorAll('.sp-sym').forEach(x => x.classList.remove('an'));
-            if (z.gewaehltesZeichen)
-                b.classList.add('an');
+            if (z.gewaehltesZeichen) {
+                studioLetzte = studioHelfer()?.merkeLetzte(studioLetzte, z.gewaehltesZeichen) || studioLetzte;
+                if (typeof Store !== 'undefined')
+                    Store.setMeta('redion:elektro:letzte:v1', studioLetzte);
+            }
+            palette.querySelectorAll('.sp-sym').forEach(x => {
+                const an = x.dataset.sym === z.gewaehltesZeichen;
+                x.classList.toggle('an', an);
+                x.setAttribute('aria-pressed', String(an));
+                x.closest('.sp-zeichenkarte')?.classList.toggle('ist-gewaehlt', an);
+            });
+            paletteInfokarte();
             fussMalen();
+            if (studioOffen)
+                studioMalen();
         });
         palette.addEventListener('input', e => {
             const f = e.target;
-            if (f.type !== 'search')
+            if (!f.matches('.sp-suche input[type="search"]'))
                 return;
-            const liste = palette.querySelector('.sp-liste');
-            if (liste)
-                liste.innerHTML = paletteHtml(z.plan.art, f.value);
+            paletteSuche = f.value;
+            paletteTrefferMalen();
+        });
+        palette.addEventListener('pointerover', e => {
+            const b = e.target.closest('[data-sym]');
+            if (b?.dataset.sym)
+                paletteInfokarte(b.dataset.sym);
+        });
+        palette.addEventListener('focusin', e => {
+            const b = e.target.closest('[data-sym]');
+            if (b?.dataset.sym)
+                paletteInfokarte(b.dataset.sym);
         });
         wurzel.tabIndex = 0;
         wurzel.addEventListener('pointerup', () => {
@@ -1714,11 +2959,33 @@ const Planflaeche = (() => {
             }
         });
         wurzel.addEventListener('keydown', e => {
-            const inFeld = e.target.tagName === 'INPUT';
+            const inFeld = e.target.matches('input,textarea,select,[contenteditable], [contenteditable] *');
             if (inFeld)
                 return;
             if (e.key === 'Escape' && z.zieht)
                 return;
+            if (e.key === 'Escape' && volleSchalterAnsicht) {
+                e.preventDefault();
+                volleSchalterAnsicht = false;
+                kopfMalen();
+                kopf.querySelector('[data-a="original-schalter"]')?.focus({ preventScroll: true });
+                return;
+            }
+            if (!e.ctrlKey && !e.metaKey && e.altKey && e.shiftKey && e.key.toLowerCase() === 'e') {
+                e.preventDefault();
+                studioOffen = !studioOffen;
+                studioPanel.hidden = !studioOffen;
+                if (studioOffen) {
+                    paletteOffen = false;
+                    palette.hidden = true;
+                    wurzel.classList.remove('sp-palette-offen');
+                    studioTab = 'eigenschaften';
+                }
+                kopfMalen();
+                if (studioOffen)
+                    studioMalen();
+                return;
+            }
             if (e.key === ' ' && !e.ctrlKey && !e.metaKey) {
                 e.preventDefault();
                 if (!z.leertaste) {
@@ -1727,7 +2994,59 @@ const Planflaeche = (() => {
                 }
                 return;
             }
-            if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+            if (!z.simulation && !e.altKey && !e.ctrlKey && !e.metaKey && e.key === '/' && !studioOffen) {
+                e.preventDefault();
+                if (!paletteOffen) {
+                    paletteOffen = true;
+                    palette.hidden = false;
+                    wurzel.classList.add('sp-palette-offen');
+                    kopfMalen();
+                }
+                palette.querySelector('.sp-suche input')?.focus();
+                return;
+            }
+            if (!z.simulation && !e.altKey && !e.ctrlKey && !e.metaKey && e.key === '/' && studioOffen) {
+                e.preventDefault();
+                studioTab = 'einsetzen';
+                studioMalen();
+                studioPanel.querySelector('[data-st-suche]')?.focus();
+                return;
+            }
+            if (!z.simulation && !e.altKey && !e.ctrlKey && !e.metaKey && /^[1-5]$/.test(e.key)) {
+                e.preventDefault();
+                z.werkzeug = { '1': 'zeigen', '2': 'leitung', '3': 'text', '4': 'schiene', '5': 'radieren' }[e.key];
+                z.gewaehltesZeichen = '';
+                z.auswahl.clear();
+                paletteMalen(palette.querySelector('input')?.value || '');
+                male();
+                return;
+            }
+            if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+                if (e.key.toLowerCase() === 'p') {
+                    e.preventDefault();
+                    simulationUmschalten();
+                    return;
+                }
+                if (e.key.toLowerCase() === 'b') {
+                    e.preventDefault();
+                    if (z.simulation) {
+                        simulationUmschalten();
+                        return;
+                    }
+                    if (!paletteOffen) {
+                        paletteOffen = true;
+                        palette.hidden = false;
+                        wurzel.classList.add('sp-palette-offen');
+                        kopfMalen();
+                    }
+                    else {
+                        paletteOffen = false;
+                        palette.hidden = true;
+                        wurzel.classList.remove('sp-palette-offen');
+                        kopfMalen();
+                    }
+                    return;
+                }
                 if (e.key === 'f' || e.key === 'F') {
                     e.preventDefault();
                     return z.voll ? vollAus() : vollAn();
@@ -1783,6 +3102,15 @@ const Planflaeche = (() => {
                 paletteMalen();
                 return;
             }
+            if (!e.ctrlKey && !e.metaKey && e.altKey && e.shiftKey && e.key.toLowerCase() === 'p') {
+                e.preventDefault();
+                pruefungOffen = !pruefungOffen;
+                pruefPanel.hidden = !pruefungOffen;
+                kopfMalen();
+                if (pruefungOffen)
+                    pruefMalen();
+                return;
+            }
             if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
                 e.preventDefault();
                 return doppeln();
@@ -1809,6 +3137,81 @@ const Planflaeche = (() => {
                 return vorwaerts();
             }
         });
+        const bereicheMenue = (anker) => {
+            const r = anker.getBoundingClientRect();
+            const m = UI.menu(`<button data-bereich="palette">${paletteOffen ? '✓ ' : ''}Bauteile &amp; Suche</button>` +
+                `<button data-bereich="studio">${studioOffen ? '✓ ' : ''}Eigenschaften &amp; Studio</button>` +
+                `<hr>` +
+                `<button data-bereich="relais">${relaisOffen ? '✓ ' : ''}Relais &amp; alte .sch-Schaltungen</button>` +
+                `<button data-bereich="batterien">${batterieOffen ? '✓ ' : ''}Batterielabor</button>` +
+                `<button data-bereich="pruefung">${pruefungOffen ? '✓ ' : ''}Prüfzentrum &amp; Netzliste</button>` +
+                `<button data-bereich="heft">${heftOffen() ? '✓ ' : ''}Formelheft</button>` +
+                `<hr>` +
+                `<button data-bereich="fokus">${planFokus ? '✓ ' : ''}Nur die Zeichenfläche</button>` +
+                `<button data-bereich="voll">Grossansicht (F)</button>`, Math.max(8, r.left - 120), r.bottom + 8);
+            m.addEventListener('click', e => {
+                const b = e.target.closest('[data-bereich]');
+                if (!b)
+                    return;
+                m.remove();
+                const was = b.dataset.bereich;
+                if (was === 'palette')
+                    return kopf.querySelector('[data-a="palette-toggle"]')?.click();
+                if (was === 'studio')
+                    return (() => {
+                        studioOffen = !studioOffen;
+                        studioPanel.hidden = !studioOffen;
+                        if (studioOffen) {
+                            paletteOffen = false;
+                            palette.hidden = true;
+                            wurzel.classList.remove('sp-palette-offen');
+                            studioTab = 'eigenschaften';
+                            studioMalen();
+                        }
+                        kopfMalen();
+                    })();
+                if (was === 'fokus') {
+                    planFokus = !planFokus;
+                    wurzel.classList.toggle('sp-plan-fokus', planFokus);
+                    kopfMalen();
+                    ansichtAnwenden();
+                    return;
+                }
+                if (was === 'voll')
+                    return vollAn();
+                if (was === 'heft')
+                    return heftUmschalten();
+                if (was === 'relais') {
+                    relaisOffen = !relaisOffen;
+                    if (relaisOffen) {
+                        pruefungOffen = false;
+                        batterieOffen = false;
+                    }
+                }
+                else if (was === 'batterien') {
+                    batterieOffen = !batterieOffen;
+                    if (batterieOffen) {
+                        pruefungOffen = false;
+                        relaisOffen = false;
+                    }
+                }
+                else if (was === 'pruefung') {
+                    pruefungOffen = !pruefungOffen;
+                    if (pruefungOffen) {
+                        relaisOffen = false;
+                        batterieOffen = false;
+                    }
+                }
+                relaisZeigen();
+                batteriePanel.hidden = !batterieOffen;
+                pruefPanel.hidden = !pruefungOffen;
+                if (batterieOffen)
+                    batterie?.aktualisiere();
+                if (pruefungOffen)
+                    pruefMalen();
+                kopfMalen();
+            });
+        };
         const mehrMenue = (anker) => {
             const r = anker.getBoundingClientRect();
             const m = UI.menu(`<button data-m="raster">${z.zeigeRaster ? '✓ ' : ''}Raster zeigen</button>` +
@@ -1819,6 +3222,7 @@ const Planflaeche = (() => {
                 '<button data-m="nummerieren">Alle neu durchnummerieren</button>' +
                 '<button data-m="plandrehen">Ganzen Plan drehen (90°)</button>' +
                 '<hr>' +
+                '<button data-m="pruefzentrum">Prüfzentrum / Stückliste (Alt+Umschalt+P)</button>' +
                 '<button data-m="vorlage">Als Vorlage speichern</button>' +
                 '<button data-m="svg">Als Bild speichern (SVG)</button>' +
                 '<button data-m="leeren" data-gefahr>Plan leeren</button>', r.left - 180, r.bottom + 6);
@@ -1828,6 +3232,13 @@ const Planflaeche = (() => {
                     return;
                 m.remove();
                 const was = b.dataset.m;
+                if (was === 'pruefzentrum') {
+                    pruefungOffen = true;
+                    pruefPanel.hidden = false;
+                    kopfMalen();
+                    pruefMalen();
+                    return;
+                }
                 if (was === 'raster') {
                     z.zeigeRaster = !z.zeigeRaster;
                     return male();
@@ -1923,6 +3334,7 @@ const Planflaeche = (() => {
             },
             nachPlanwechsel: () => paletteMalen()
         }) : null;
+        palette.hidden = !paletteOffen;
         paletteMalen();
         male();
         if (relaisOffen)

@@ -110,7 +110,7 @@ if (!RELAIS_MARKE.test(html)) {
   throw new Error('bauen.mts: die Marke „relais-werkstatt" fehlt in index.html — ' +
     'ohne sie hätte die Einzeldatei keine Relais-Werkstatt.');
 }
-html = html.replace(RELAIS_MARKE, () => ['relais-kern.js', 'relais-vorlagen.js', 'relais-werkstatt.js']
+html = html.replace(RELAIS_MARKE, () => ['relais-kern.js', 'relais-vorlagen.js', 'relais-werkstatt.js', 'schaltplan-pruefung.js']
   .map(d => '<script>\n/* ===== quell/bereiche/bloecke/arten/' + d + ' ===== */\n' +
     lies('quell/bereiche/bloecke/arten/' + d) + '\n</script>').join('\n'));
 

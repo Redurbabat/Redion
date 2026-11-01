@@ -357,6 +357,18 @@ const oeffne = async (welcher: 'W' | 'B' | 'P' | 'Q' | 'A'): Promise<string> => 
   await seite.waitForSelector('.sp-wrap .sp-teil');
   return id;
 };
+/* DIE PALETTE IST SEIT E770 ZU (Redurs Entscheid vom 1. November 2026,
+   „Alle Funktionen 1:1"): sie öffnet über „▦ Bauteile", B oder /. Die zwei
+   Züge unten lassen ÜBER der Palette los, also wird sie dort geöffnet — mit
+   einem Klick aus dem Code, damit der laufende Zug der Maus nicht endet.
+   Was sie prüfen, bleibt Wort für Wort dasselbe. */
+const paletteAuf = async (): Promise<void> => {
+  await seite.evaluate(() => {
+    const pal = document.querySelector<HTMLElement>('.sp-wrap .sp-palette');
+    if (pal && pal.hidden) document.querySelector<HTMLElement>('.sp-wrap [data-a="palette-toggle"]')?.click();
+  });
+  await seite.waitForTimeout(120);
+};
 const zustand = (bid: string): Promise<any> => seite.evaluate((b: string) => (window as any).zustand(b), bid);
 
 /** Ein Teil anklicken (wählt es aus) — Mitte seines Kastens. */
@@ -1085,6 +1097,7 @@ await zugMit('Schreibpause im Zug', {
 await zugMit('Losgelassen ausserhalb', {
   waehrend: async () => {},
   loslassen: async () => {
+    await paletteAuf();
     const pal = await seite.locator('.sp-wrap .sp-palette').boundingBox();
     if (!pal) throw new Error('keine Palette');
     await seite.mouse.move(pal.x + pal.width / 2, pal.y + Math.min(200, pal.height / 2));
@@ -1182,6 +1195,7 @@ await cdp.detach();
   await seite.mouse.move(x0, y0);
   await seite.mouse.down();
   for (let i = 1; i <= 6; i++) { const [x, y] = bild(700 + 10 * i, 300); await seite.mouse.move(x, y); }
+  await paletteAuf();
   const pal = await seite.locator('.sp-wrap .sp-palette').boundingBox();
   if (!pal) throw new Error('keine Palette');
   await seite.mouse.move(pal.x + pal.width / 2, pal.y + Math.min(200, pal.height / 2));

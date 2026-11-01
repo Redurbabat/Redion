@@ -86,9 +86,13 @@ const blk = await seite.evaluate(async () => {
   document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung').forEach(el => el.remove());
   return b.id as string;
 });
-const knopf = seite.locator('.sp-wrap button[data-a="relais"]').first();
-p('Der Kopf hat „⚙ Relais", 44 px hoch erreichbar', await knopf.count() === 1);
-if (await knopf.count()) { await knopf.click(); }
+/* E772 (Redurs Entscheid vom 1. November 2026, „Alle Funktionen 1:1"): „⚙ Relais"
+   steht jetzt im Menü „✦ Bereiche ▾", und der Strom-Knopf ist der
+   RED-MGT-Glasschalter (Checkbox, role="switch", aria-checked, data-a bleibt).
+   Was geprüft wird, bleibt gleich. */
+const knopf = seite.locator('.sp-wrap button[data-a="bereiche"]').first();
+p('Der Kopf hat „✦ Bereiche" mit der Relais-Werkstatt', await knopf.count() === 1);
+if (await knopf.count()) { await knopf.click(); await seite.locator('[data-bereich="relais"]').first().click(); }
 await seite.waitForSelector('.sp-relais-fach select[data-rel="wahl"]', { timeout: 8000 }).catch(() => {});
 const vorlagen = await seite.evaluate(async () => {
   const V = (window as any).RelaisVorlagen as any[] | undefined;
@@ -124,10 +128,10 @@ gleich('Name, 5760 Zeichen Rohbytes, 30 Titel, nicht freigegeben',
   [plan.name, plan.roh, plan.texte, plan.verifiziert], ['Treppenhauslicht', 5760, 30, false]);
 p('Bauteile stehen da, jedes mit seiner alten Spalte', plan.teile > 0 && plan.spalten, JSON.stringify(plan));
 gleich('Keine Leitung ist an eine Klemme gebunden (Lagehinweise)', plan.gebunden, 0);
-await seite.click('.sp-wrap button[data-a="simulation"]');
+await seite.click('.sp-wrap [data-a="simulation"]');
 await seite.waitForTimeout(250);
 gleich('Strom startet nicht', await seite.evaluate(() =>
-  document.querySelector('.sp-wrap button[data-a="simulation"]')?.getAttribute('aria-pressed')), 'false');
+  document.querySelector('.sp-wrap [data-a="simulation"]')?.getAttribute('aria-checked')), 'false');
 p('… und die Meldung sagt warum', await seite.evaluate(() =>
   (document.getElementById('toast')?.textContent ?? document.body.textContent ?? '').includes('nicht geprüft')));
 
@@ -179,7 +183,7 @@ const lehr = await seite.evaluate((id: string) => {
     gebunden: pl.leitungen.filter((l: any) => l.vonTeil || l.nachTeil).length };
 }, blk);
 gleich('Verdrahtet, mit abfallverzögertem Relais, ohne Originalbytes', [lehr.legacy, lehr.abfall, lehr.gebunden > 4], [false, true, true]);
-await seite.click('.sp-wrap button[data-a="simulation"]');
+await seite.click('.sp-wrap [data-a="simulation"]');
 await seite.waitForTimeout(250);
 const s1 = await seite.evaluate((id: string) => Store.getBlock(id).plan.teile.find((t: any) => t.bmk === 'S1')?.id, blk);
 await seite.locator(`.sp-wrap svg .sp-teil[data-id="${s1}"]`).first().scrollIntoViewIfNeeded();
@@ -197,10 +201,10 @@ const ziel = await seite.evaluate((id: string) => {
 }, s1);
 const box = ziel ? { x: ziel.x - 12, y: ziel.y - 18 } : null;
 if (box) { await seite.mouse.move(box.x + 12, box.y + 18); await seite.mouse.down(); await seite.waitForTimeout(250); }
-const fluss = await seite.evaluate(() => ({ n: document.querySelectorAll('.sp-wrap .sp-fluss').length, fuss: (document.querySelector('.sp-wrap .sp-fuss')?.textContent ?? '').slice(0, 200), an: document.querySelector('.sp-wrap button[data-a="simulation"]')?.getAttribute('aria-pressed') }));
+const fluss = await seite.evaluate(() => ({ n: document.querySelectorAll('.sp-wrap .sp-fluss').length, fuss: (document.querySelector('.sp-wrap .sp-fuss')?.textContent ?? '').slice(0, 200), an: document.querySelector('.sp-wrap [data-a="simulation"]')?.getAttribute('aria-checked') }));
 p('Taster gedrückt: Strom fliesst zur Lampe', fluss.n >= 4, JSON.stringify(fluss));
 await seite.mouse.up();
-await seite.click('.sp-wrap button[data-a="simulation"]');
+await seite.click('.sp-wrap [data-a="simulation"]');
 
 /* ══ §7 Eigene Dateien ═══════════════════════════════════════════════════ */
 console.log('\n§7 Eine eigene .sch einlesen');
