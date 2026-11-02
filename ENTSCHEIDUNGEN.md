@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-751 Entscheidungen, E1 bis E773 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+752 Entscheidungen, E1 bis E774 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -836,6 +836,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E771** — Das Prüfzentrum aus Redurs ZIP (1. November 2026, „1:1"): Alt+Umschalt+P, im Menü „Bereiche" und im ⋯; Prüfpunkte, Stückliste, Netze, Filter, Sprung in den Plan; Kern getypt in `bloecke/arten/schaltplan-pruefung.ts` statt handgeschriebenem JS in `bereiche/elektro`, NACHGELADEN beim ersten Öffnen (GRUNDSTOCK, Einzeldatei über die Relais-Marke); offene Klemmen aus derselben Rechnung wie die Fusszeile (E747), keine zweite Geometrie; CSV mit BOM, Semikolon und Hochkomma gegen Formel-Einschleusung; Bericht „Redion · Schaltplan-Prüfbericht"; „Leitungen aufräumen" über `aendere` — `test633`
 * **E772** — Der RED-MGT-Glasschalter im Original-Aussehen an Stelle von „▶ Strom", und das Live-Stromlabor (1. November 2026, Redur: „1:1"; ERSETZT „RED-MGT angepasst"): Checkbox mit role="switch" und `data-a="simulation"`, „AUS"/„EIN" statt STANDBY/POWER ON (§3), 187 × 50 in der Leiste, 1:1-Ansicht 330 × 180; Redurs Kurven und Orange bleiben (test584 führt `.red-mgt-` mit Grund), die Endlos-Lichtnaht steht bei weniger Bewegung; RedionMotion schmückt ihn nicht; Labor mit Uhr, Tempo 0,25–4×, Pause, Reset und Zeitrelais-Balken auf dem Takt aus E768 — ohne Zeitrelais kein Takt (E528); test612/630/631 neu ausgerichtet — `test634`
 * **E773** — Ein und Aus ist wieder „▶ Strom" (2. November 2026, Redur: „Für ein-aus sollte wie früher sein, damals war besser"; nimmt den Schalter aus E772 zurück, das Labor bleibt): `<button>` mit `aria-pressed`, Hebel und Glühfaden aus E535, so hoch wie „Bereiche"; der Glasschalter, die 1:1-Ansicht, `.red-mgt-` in `test584` und der Sprung in `motion.ts` sind weg — `test634`
+* **E774** — Ein eigener Skill „redion-animationen" statt der SwiftUI-Beispiele (2. November 2026, Redur: Skills aus `open-swiftui-animations` installieren, vorhandene löschen; dann „Eigenen Skill schreiben", „Nichts löschen"): das Projekt hat keine Skills und keine Lizenz, also nur Ideen, kein Code (§57); der Skill liegt in `.claude/skills/redion-animationen/` und übersetzt sechzehn Ideen in Redions Federn und Regeln
 
 ## Grundregel
 
@@ -70557,4 +70558,40 @@ hat „wie früher" gesagt, nicht „kleiner".
 
 **Kosten.** Keine Daten, nichts gespeichert. Die Startlast sinkt um das
 Stilblatt des Schalters (test388 lag 27 KB über dem Budget).
+
+## E774 — Ein eigener Skill „redion-animationen"
+
+**Wer.** Redur, 2. November 2026: „Instalier dieser skils daten udn lösche
+die alle sikls daten die gibt", mit dem Link
+`github.com/amosgyamfi/open-swiftui-animations`. Auf die Rückfrage:
+„Eigenen Skill schreiben" und „Nichts löschen".
+
+**Was nachgesehen wurde.** Das Projekt enthält **keine Skills** (keine
+`SKILL.md`), sondern ein Xcode-Projekt mit SwiftUI-Beispielen und GIFs,
+321 MB, und **keine Lizenzdatei**. Nach §57 kommt Code ohne Lizenz nie
+herein; SwiftUI läuft ausserdem nicht in Redion (Browser, auf dem iPhone
+WKWebView).
+
+**Entschieden.**
+
+- Ein eigener Skill `.claude/skills/redion-animationen/SKILL.md`, im
+  Repository, damit er in jeder Sitzung mitkommt. Er nimmt nur die
+  **Namen und Ideen** der Beispiele (Feder, Phasen, Schlüsselbilder,
+  Glas-Morphing, Ziffernrollen, Schreibmaschine, wandernde Ränder, Herzen,
+  Wischen zum Bestätigen, 3D-Drehen …) und sagt für jede, wie sie in Redion
+  entsteht — mit `--feder-…` aus `grund.css`, `RedionSpring`,
+  RedionMotion — und wo sie passen würde.
+- Er hält die Regeln, die schon gelten: nur `transform`/`opacity`, weniger
+  Bewegung auf zwei Wegen, keine bewegten Treffer, Klassik bleibt Klassik
+  (E757), erst ein Wächter, dann der Bau, Bilder schicken.
+- **Nichts gelöscht.** Die übrigen Skills kommen aus Redurs claude.ai-Konto
+  (einer, `red-efz-powerpoint`, ist sein eigener); im Container gelöscht
+  kämen sie beim nächsten Start wieder.
+
+**Alternative.** Das Projekt als „Fremdcode" einbinden — ohne Lizenz
+verboten, und SwiftUI hätte keinen Ort in Redion.
+
+**Kosten.** Eine Markdown-Datei; sie geht nicht ins Netz (`*.md` steht in
+`.assetsignore`) und nicht in die Einzeldatei. Kein Wächter: es ist Doku,
+kein Verhalten.
 

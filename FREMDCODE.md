@@ -126,6 +126,7 @@ wie es ist.
 |---|---|---|---|
 | **AFFiNE** (`AFFiNE-canary`) | `blocksuite` und die meisten Pakete MIT; `packages/backend` eigene Lizenz | Plattform-Audit (E681): GFX-Aufbau; Redurs Bild der Edgeless-Leiste (AUFGABEN W6) | **nichts** — kein Code, kein Icon, keine Oberfläche; die Struktur der Werkzeugleiste ist als Massstab in W6 beschrieben |
 | **SiYuan** (`siyuan-master`) | AGPL-3.0 | Plattform-Audit (E681): Plugin-System, Marktplatz, Kernel-API | **nichts** — und AGPL-Code kann auch künftig nur mit einer eigenen Lizenzentscheidung Redurs herein (er würde Redion mit lizenzieren) |
+| **open-swiftui-animations** (Amos Gyamfi, GitHub) | **keine Lizenzdatei** — damit nichts übernehmbar | Redurs Wunsch vom 2. November 2026 (E774): Namen und Ideen der SwiftUI-Beispiele | **nichts** — kein Code, kein GIF; der Skill `.claude/skills/redion-animationen/` ist Redions eigener Text und baut die Ideen mit Redions Federn |
 | **Amdion** | eigenes Projekt Redurs | Lesequelle (`doku/AMDION-UEBERNAHME.md`) | nach den dortigen Regeln |
 
 Die Archive liegen ausserhalb des Verzeichnisses (§1, §42 sinngemäss).
