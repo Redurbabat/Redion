@@ -221,7 +221,7 @@
   function ausPlan(plan, netze, ausgangIndex) {
     const uebung = plan && plan.batterieUebung;
     if (!uebung || !Array.isArray(uebung.teile) ||
-        !uebung.teile.length || uebung.teile.length > 64)
+        (uebung.id !== 'selbst' && !uebung.teile.length) || uebung.teile.length > 64)
       return fehler('Keine Batterieübung in diesem Schaltplan.');
     const teile = Array.isArray(plan.teile) ? plan.teile : [];
     const nachId = new Map(teile.map(t => [String(t.id), t]));
