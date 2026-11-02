@@ -356,7 +356,7 @@
         '<span>Reihe · Parallel · Akku-Pakete · Stromfluss</span></div>'+
         '<div class="sp-bat-bedienung"><label>Lehrmittel-Aufgabe <select data-bat="wahl">'+
         AUFGABEN.map(e=>'<option value="'+esc(e.id)+'"'+
-          (e.id===(meta?meta.id:wahl)?' selected':'')+'>'+esc(e.name)+'</option>').join('')+
+          (e.id===wahl?' selected':'')+'>'+esc(e.name)+'</option>').join('')+
         '</select></label><button type="button" data-bat="einsetzen">Aufgabe einsetzen</button></div>';
       if(!meta){
         html+='<p class="sp-bat-hinweis">Aufgabe auswählen, dann auf die vorhandene Zeichenfläche setzen. '+
