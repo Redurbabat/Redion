@@ -13362,6 +13362,668 @@ body[data-bewegung="ruhig"] .dev-actions button:active{transform:none}
 
 </style>
 <style>
+/* ===== quell/schale/stil/schaltatelier.css ===== */
+/* ============================================================================
+ * schaltatelier.css — die Schaltplanfläche aus Redurs ZIP (E770–E773)
+ * ----------------------------------------------------------------------------
+ * Redur am 1. November 2026: „Alle Funktionen 1:1, sauber gebaut". Darin
+ * stehen die Blätter der ZIP als eines: Palette/Studio/Schnellkarte/
+ * Kontextleiste, die Kompaktpalette und das Live-Stromlabor. Den RED-MGT-
+ * Glasschalter hat Redur am 2. November zurückgenommen („für ein-aus sollte
+ * wie früher sein, damals war besser", E773): Ein und Aus ist wieder der
+ * Knopf „▶ Strom" mit Hebel und Glühfaden aus motion.css (E535).
+ *
+ * WAS „SAUBER" HIER HEISST, und jeder Punkt hat seinen Wächter:
+ *   · kein `!important` (die ZIP hatte 75) — das Blatt steht vor
+ *     `bausteine.css` (test87, Stufe 2) und gewinnt über Genauigkeit;
+ *   · kein `:active{transform:scale()}` — das Einsinken macht die Feder
+ *     des Kits (press.ts, test581 §8);
+ *   · Glas nur über die Marke `--glas-blur` unter `@supports` (test576);
+ *   · keine Namen aus anderen Projekten (§1): `--sp-ease` statt der alten;
+ *   · jede Fahrt steht still, wenn weniger Bewegung gewünscht ist (System
+ *     ODER „Ruhige Darstellung").
+ * ==========================================================================*/
+
+
+/* ── aus redion-elektro-ateliers.css ── */
+@media(min-width:761px){
+ body[data-schale="premium"] #page:has(.sp-wrap){max-width:none;width:100%;padding-left:clamp(12px,1.4vw,24px);padding-right:clamp(12px,1.4vw,24px);box-sizing:border-box}
+ body[data-schale="premium"] #page:has(.sp-wrap) .sp-wrap{width:100%;max-width:none}
+}
+.sp-wrap{--sp-ease:cubic-bezier(.16,1,.3,1); isolation:isolate}
+.sp-wrap .sp-koerper{height:clamp(460px,70vh,760px);min-height:460px}
+.sp-wrap .sp-palette{width:clamp(165px,16vw,210px)}
+.sp-wrap .sp-buehne {min-width:0;padding:clamp(8px,1.25vw,16px)}
+.sp-wrap .sp-studio{flex-basis:clamp(215px,23vw,288px)}
+.sp-wrap .sp-flaeche{max-width:100%}
+
+.sp-wrap > :is(.sp-batterie-fach,.sp-relais-fach,.sp-pruef-fach):not([hidden]){
+ max-height:clamp(260px,37vh,400px);overflow:auto;overscroll-behavior:contain;
+ border-top:1px solid var(--line);border-bottom:none;
+ animation:sp-fach-ein 270ms var(--sp-ease) both;
+}
+.sp-wrap .sp-kopf{gap:6px;flex-wrap:wrap;align-items:center}
+.sp-wrap .sp-arterkl{max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-wrap .sp-rechts{flex-wrap:wrap;justify-content:flex-end;margin-left:auto}
+
+.sp-wrap .sp-rechts .sp-netz{transition:transform 170ms var(--sp-ease),background-color 160ms ease,opacity 160ms ease}
+.sp-wrap .sp-rechts .sp-netz:hover:not(:disabled){transform:translateY(-2px)}.sp-wrap .sp-studio:not([hidden]){animation:sp-fach-ein 250ms var(--sp-ease) both}
+.sp-wrap .sp-studio-symbol, .sp-wrap .sp-sym {transform:translateZ(0);transition:transform 200ms var(--sp-ease),background-color 150ms ease,border-color 150ms ease}
+@media(hover:hover) and (pointer:fine){.sp-wrap .sp-studio-symbol:hover,.sp-wrap .sp-sym:hover{transform:translateY(-2px)}}.sp-wrap .sp-studio-symbol:focus-visible,.sp-wrap .sp-sym:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sp-wrap .sp-schnellkarte:not([hidden]){animation:sp-fach-ein 220ms var(--sp-ease) both}
+.sp-wrap .sp-platziergeist:not([hidden]){transition:transform 80ms linear,opacity 100ms ease}
+.sp-wrap .sp-buehne.sp-laeuft .sp-flaeche{transition:opacity 160ms ease}
+.sp-wrap .sp-labor-aktion,.sp-wrap .sp-zoom button{transition:transform 150ms var(--sp-ease),background-color 150ms ease}@keyframes sp-fach-ein{from{opacity:.5;transform:translateY(-7px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:1100px){
+ .sp-wrap .sp-palette{width:172px}
+ .sp-wrap .sp-studio{flex-basis:225px}
+ .sp-wrap .sp-arterkl{display:none}
+}
+@media(max-width:760px){
+ .sp-wrap .sp-koerper{height:auto;min-height:390px}
+ .sp-wrap .sp-palette{width:100%;max-height:120px}
+ .sp-wrap .sp-buehne{min-height:410px}
+ .sp-wrap .sp-studio{flex-basis:auto;max-width:none}
+}
+
+
+
+
+.sp-wrap {
+  position:relative;
+  border:1px solid var(--line);
+  border-radius:18px;
+  overflow:hidden;
+  min-width:0;
+  background:var(--bg-card);
+  --sp-plan-dauer:220ms;
+  --sp-plan-kurve:cubic-bezier(.2,.82,.2,1);
+}
+.sp-wrap .sp-kopf {
+  min-height:62px;
+  padding:8px clamp(10px,1.4vw,18px);
+  flex-wrap:nowrap;
+  gap:7px;
+  background:var(--bg-card);
+  box-sizing:border-box;
+  border-bottom:1px solid var(--line);
+}
+.sp-wrap .sp-arterkl {display:none}
+.sp-wrap .sp-art {
+  flex:0 1 194px;
+  min-width:95px;
+  max-width:194px;
+  height:37px;
+  background:var(--bg);
+  border-radius:11px;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.sp-wrap .sp-werkzeuge {
+  display:flex;
+  flex:0 0 auto;
+  align-items:center;
+  gap:3px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  padding:3px;
+  background:var(--bg);
+}
+.sp-wrap .sp-wz {width:35px;height:34px;border-radius:9px}
+.sp-wrap .sp-wz.an {box-shadow:0 2px 9px color-mix(in srgb,var(--accent) 20%,transparent)}
+.sp-wrap .sp-rechts {
+  align-items:center;
+  flex-wrap:nowrap;
+  gap:3px;
+  margin-left:auto;
+  min-width:0;
+}
+.sp-wrap .sp-rechts > button {min-width:32px;min-height:35px;border-radius:10px}
+.sp-wrap .sp-rechts .sp-bereiche {
+  background:var(--bg-hover);
+  border:1px solid var(--line);
+  font-weight:600;
+  min-height:38px;
+}
+.sp-wrap .sp-palette-knopf {
+  flex:0 0 auto;
+  height:37px;
+  border:1px solid var(--line);
+  background:var(--bg);
+  color:var(--text);
+  border-radius:11px;
+  padding:0 11px;
+  font-weight:600;
+  font-size:12.5px;
+  cursor:pointer;
+}
+.sp-wrap .sp-palette-knopf.an,.sp-wrap .sp-palette-knopf:hover {
+  border-color:var(--accent);
+  background:var(--bg-hover);
+}
+.sp-wrap .sp-koerper {
+  position:relative;
+  display:flex;
+  height:clamp(500px,73vh,920px);
+  min-height:500px;
+  overflow:hidden;
+  isolation:isolate;
+}
+.sp-wrap .sp-buehne {
+  order:0;
+  flex:1 1 auto;
+  width:100%;
+  min-width:0;
+  min-height:0;
+  height:100%;
+  padding:clamp(10px,1.5vw,22px);
+  /* DIE BÜHNE ROLLT (E770), wie vor der ZIP (bausteine.css). Die ZIP schnitt
+     sie ab (`overflow:hidden`): was bei 100 % unter dem Rand lag — die
+     Schiene N eines grossen Plans —, war mit keinem Zug zu erreichen, und
+     ein Zug dorthin endete auf dem Dock oder im Kopf (test625 §4b). */
+  overflow:auto;
+  background:var(--bg);
+  transition:background-color 170ms ease;
+}
+.sp-wrap .sp-leinwand {width:100%;min-width:0}
+.sp-wrap .sp-flaeche {max-width:100%}
+/* DER GANZE PLAN BEI 100 % (E770). Vor der ZIP stand die Palette neben der
+   Fläche, und die Breite allein hielt den Plan im Bild. Mit geschlossener
+   Palette ist die Fläche breit, und ein 800 × 600-Plan lief unten aus dem
+   Bild — die Schiene N war dann nur noch über das Dock zu erreichen
+   (test625 §4b). Jetzt passt das Blatt in Breite UND Höhe; Zoom und
+   Verschieben (E762) bleiben, wie sie sind. */
+.sp-wrap .sp-buehne > .sp-leinwand{height:100%;align-items:center;justify-content:center}
+.sp-wrap .sp-buehne .sp-flaeche{max-height:100%}
+.sp-wrap .sp-palette,
+.sp-wrap .sp-studio {
+  position:absolute;
+  top:12px;
+  bottom:12px;
+  height:auto;
+  z-index:26;
+  box-sizing:border-box;
+  border:1px solid var(--line);
+  border-radius:17px;
+  box-shadow:0 12px 40px rgb(0 0 0 / .24);
+  background:var(--bg-card);
+  overflow:hidden;
+  animation:sp-fach-ein 240ms var(--sp-plan-kurve) both;
+}
+.sp-wrap .sp-palette {
+  order:1;
+  left:12px;
+  right:auto;
+  width:clamp(194px,19vw,244px);
+  max-height:none;
+}
+.sp-wrap .sp-studio {
+  order:2;
+  right:12px;
+  left:auto;
+  width:clamp(240px,23vw,306px);
+  min-width:0;
+  max-width:none;
+  flex:none;
+  border-left:1px solid var(--line);
+}
+.sp-wrap .sp-palette[hidden],.sp-wrap .sp-studio[hidden],
+.sp-wrap .sp-fach-schliessen[hidden] {display:none}
+.sp-wrap .sp-suche {padding:12px 12px 8px}
+.sp-wrap .sp-suche input {min-height:39px;font-size:13px;padding:8px 11px;border-radius:10px}
+.sp-wrap .sp-liste {padding:0 9px 15px}
+.sp-wrap .sp-grp {padding-left:3px;margin-top:13px}
+.sp-wrap .sp-syms {gap:7px}
+.sp-wrap .sp-sym {
+  min-height:86px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--bg);
+  transition:transform 190ms var(--sp-plan-kurve),border-color 150ms ease,background-color 150ms ease;
+}
+.sp-wrap .sp-sym-name {font-size:11px}
+.sp-wrap .sp-sym-bild {height:48px}
+.sp-wrap .sp-fuss {
+  min-height:49px;
+  padding:7px 14px;
+  flex-wrap:nowrap;
+  gap:10px;
+  overflow-x:auto;
+  background:var(--bg-card);
+}
+.sp-wrap .sp-hinweis {white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-wrap .sp-zoom {margin-left:auto;flex:0 0 auto}
+
+.sp-wrap > :is(.sp-batterie-fach,.sp-relais-fach,.sp-pruef-fach):not([hidden]) {
+  position:absolute;
+  left:clamp(12px,3vw,36px);
+  right:auto;
+  bottom:65px;
+  z-index:42;
+  box-sizing:border-box;
+  width:min(720px,calc(100% - 24px));
+  height:auto;
+  max-height:min(54vh,530px);
+  overflow:auto;
+  overscroll-behavior:contain;
+  padding:clamp(14px,2vw,24px);
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:var(--bg-card);
+  box-shadow:0 20px 60px rgb(0 0 0 / .28);
+  animation:sp-fach-ein 220ms var(--sp-plan-kurve) both;
+}
+.sp-wrap > .sp-fach-schliessen {
+  position:absolute;
+  right:clamp(22px,3vw,44px);
+  bottom:min(54vh,530px);
+  z-index:49;
+  min-width:100px;
+  min-height:36px;
+  padding:6px 12px;
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:12px;
+  color:var(--text);
+  cursor:pointer;
+  box-shadow:0 5px 18px rgb(0 0 0 / .2);
+}
+.sp-wrap > .sp-fach-schliessen:hover {background:var(--bg-hover);border-color:var(--accent)}
+/* DIE SCHNELLKARTE SCHWEBT (E770). In der ZIP hatte sie keine Lage und
+   stand im Fluss der Bühne: der erste Tipp auf ein Bauteil schob die
+   Zeichenfläche zusammen (63 → 47 px je Teil), und der nächste Tipp oder
+   Zug traf daneben — der Fund aus test625 §4b. Jetzt liegt sie über der
+   Fläche, unten rechts, und die Fläche behält ihre Grösse. */
+.sp-wrap .sp-buehne{position:relative}
+.sp-wrap .sp-schnellkarte{position:absolute;right:12px;bottom:12px;z-index:6;
+  width:min(320px,calc(100% - 24px));max-height:calc(100% - 24px);overflow:auto;
+  box-sizing:border-box;padding:12px 14px;border-radius:16px;
+  background:var(--bg-card);color:var(--text);border:1px solid var(--line);
+  box-shadow:0 15px 44px rgb(0 0 0 / .24)}
+.sp-wrap .sp-schnellkarte[hidden]{display:none}
+.sp-wrap .sp-schnellkarte-kopf{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
+.sp-wrap .sp-schnellkarte-kopf small{display:block;color:var(--text-dim);font-size:12px}
+.sp-wrap .sp-schnellkarte-kopf button{min-width:44px;min-height:44px;border:0;border-radius:12px;background:transparent;color:inherit;cursor:pointer}
+.sp-wrap .sp-schnellkarte form{display:grid;gap:8px}
+.sp-wrap .sp-schnellkarte label{display:grid;gap:3px;font-size:12px;color:var(--text-dim)}
+.sp-wrap .sp-schnellkarte input{min-height:40px;box-sizing:border-box;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
+.sp-wrap .sp-schnellkarte-aktionen{display:flex;gap:8px}
+.sp-wrap .sp-schnellkarte-aktionen button{min-height:44px;padding:0 14px;border-radius:12px}
+.sp-wrap .sp-schnellkarte-hilfe{margin:8px 0 0;font-size:11px;color:var(--text-dim)}
+.sp-wrap :is(button,input,select):focus-visible {outline:2px solid var(--accent);outline-offset:2px}
+@media(min-width:850px) and (hover:hover) and (pointer:fine) {
+  .sp-wrap .sp-palette-knopf:hover,.sp-wrap .sp-rechts button:hover:not(:disabled) {transform:translateY(-1px)}
+  .sp-wrap .sp-sym:hover {transform:translateY(-3px)}
+}
+@media(max-width:1220px) {
+  .sp-wrap .sp-art {max-width:155px;flex-basis:155px}
+  .sp-wrap .sp-palette-knopf span {display:none}
+  .sp-wrap .sp-rechts > button:not(.sp-start):not(.sp-bereiche):not([data-a="vollbild"]):not([data-a="vollbild-zu"]) {display:none}
+}
+@media(max-width:850px){
+  .sp-wrap .sp-kopf {flex-wrap:wrap;min-height:0}
+  .sp-wrap .sp-werkzeuge{order:3;width:auto}
+  .sp-wrap .sp-rechts {order:4;flex:1 1 auto;justify-content:flex-end}
+  .sp-wrap .sp-art {max-width:none;flex:1 1 145px}
+  .sp-wrap .sp-koerper {height:clamp(380px,61vh,760px);min-height:380px;flex-direction:row}
+  .sp-wrap .sp-palette {top:8px;bottom:8px;left:8px;width:min(248px,78vw);max-height:none}
+  .sp-wrap .sp-studio {top:8px;bottom:8px;right:8px;width:min(306px,87vw);max-height:none}
+  .sp-wrap .sp-buehne{height:100%;min-height:0;flex:1 1 auto}
+  .sp-wrap .sp-fuss .sp-hinweis {display:none}
+  .sp-wrap > :is(.sp-batterie-fach,.sp-relais-fach,.sp-pruef-fach):not([hidden]) {max-height:55vh;bottom:52px}
+}
+@media(max-width:530px){
+  .sp-wrap .sp-werkzeuge{gap:0}
+  .sp-wrap .sp-kopf{padding:8px}
+  .sp-wrap .sp-rechts .sp-start{font-size:12px}
+  .sp-wrap .sp-rechts .sp-bereiche{font-size:12px}
+  .sp-wrap .sp-fuss{padding:6px}
+  .sp-wrap .sp-fuss .sp-zahlen{display:none}
+  .sp-wrap > .sp-fach-schliessen {bottom:56vh;right:12px}
+}
+
+
+
+.sp-wrap .sp-kopf {min-height:58px;overflow:visible}
+.sp-wrap .sp-werkzeuge {
+  position:absolute;
+  z-index:32;
+  left:50%;bottom:65px;
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  padding:8px 9px;
+  gap:5px;
+  border-radius:20px;
+  border:1px solid color-mix(in srgb,var(--line) 75%,white 12%);
+  background:color-mix(in srgb,var(--bg-card) 91%,transparent);
+  box-shadow:0 16px 48px rgb(0 0 0 / .24),0 3px 13px rgb(0 0 0 / .15);
+  
+  
+  animation:sp-dock-ein 340ms cubic-bezier(.17,1.15,.32,1) both;
+  white-space:nowrap;
+  max-width:calc(100% - 24px);
+}
+/* DAS DOCK VERDECKT NICHTS, WAS ES BEDIENT (§37, E770). In der ZIP lag es
+   über dem unteren Rand der Zeichnung: die Schiene N stand darunter, und
+   ein Zug, der dort endete, landete auf dem Dock (test625 §4b). Der Körper
+   hält unten einen Streifen frei, und das Dock schwebt über ihm. */
+.sp-wrap .sp-koerper{padding-bottom:84px;box-sizing:border-box}
+.sp-wrap .sp-werkzeuge .sp-wz,
+.sp-wrap .sp-werkzeuge .sp-dock-fit {
+  width:44px;height:44px;min-width:44px;
+  border:1px solid transparent;
+  background:transparent;
+  color:var(--text);
+  border-radius:13px;
+  font-size:21px;
+  cursor:pointer;
+  transition:transform 170ms var(--sp-plan-kurve),
+    background-color 170ms ease,border-color 170ms ease;
+}
+.sp-wrap .sp-werkzeuge .sp-wz.an {background:var(--accent);color:var(--auf-accent);border-color:transparent}
+.sp-wrap .sp-werkzeuge .sp-wz:hover:not(.an),
+.sp-wrap .sp-werkzeuge .sp-dock-fit:hover {background:var(--bg-hover)}
+.sp-wrap .sp-werkzeuge .sp-palette-knopf {
+  height:44px;min-width:90px;border-radius:13px;font-size:12px;
+  background:var(--bg-hover);
+}
+.sp-wrap .sp-dock-trenner {width:1px;height:26px;background:var(--line);margin:0 4px}
+.sp-wrap .sp-kontextleiste {
+  position:absolute;top:17px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:4px;
+  max-width:calc(100% - 25px);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:5px 6px 5px 12px;
+  background:color-mix(in srgb,var(--bg-card) 93%,transparent);
+  color:var(--text);
+  box-shadow:0 10px 32px rgb(0 0 0 / .20);
+  
+  z-index:31;
+  animation:sp-kontext-ein 210ms var(--sp-plan-kurve) both;
+}
+.sp-wrap .sp-kontextleiste[hidden]{display:none}
+.sp-wrap .sp-kontext-titel {display:block;font-size:12px;font-weight:650;
+  max-width:140px;min-width:42px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  border-right:1px solid var(--line);margin-right:5px;padding-right:10px}
+.sp-wrap .sp-kontextleiste button {flex:0 0 auto;min-width:37px;min-height:38px;
+  background:transparent;color:inherit;border:0;border-radius:10px;cursor:pointer;
+  transition:transform 140ms ease,background-color 160ms ease}
+.sp-wrap .sp-kontextleiste button:hover {background:var(--bg-hover)}.sp-wrap .sp-kontextleiste button[data-kontext="loeschen"]:hover {color:var(--gefahr)}
+@keyframes sp-dock-ein {from {opacity:0;transform:translate(-50%,11px) scale(.97)}
+  to {opacity:1;transform:translate(-50%,0) scale(1)}}
+@keyframes sp-kontext-ein {from{opacity:0;transform:translate(-50%,-6px)}
+  to{opacity:1;transform:translate(-50%,0)}}
+@media (hover:hover) and (pointer:fine) {
+  .sp-wrap .sp-werkzeuge .sp-wz:hover,
+  .sp-wrap .sp-werkzeuge .sp-dock-fit:hover {transform:translateY(-2px)}
+}
+@media (max-width:800px) {
+  .sp-wrap .sp-werkzeuge {bottom:62px;padding:5px;gap:2px;border-radius:15px}
+  .sp-wrap .sp-werkzeuge .sp-wz,.sp-wrap .sp-werkzeuge .sp-dock-fit {width:44px;min-width:44px;height:44px}
+  .sp-wrap .sp-werkzeuge .sp-palette-knopf {height:44px;min-width:44px;padding:0 9px}
+  .sp-wrap .sp-werkzeuge .sp-palette-knopf span {display:none}
+  .sp-wrap .sp-kontextleiste {top:8px;gap:1px;padding:4px}
+  .sp-wrap .sp-kontext-titel {max-width:85px}
+  .sp-wrap .sp-kontextleiste button {min-width:35px;min-height:37px}
+  .sp-wrap .sp-kontextleiste button span{display:none}
+}
+
+
+
+.sp-wrap .sp-palette {
+  width:clamp(312px,25vw,368px);
+  border:1px solid color-mix(in srgb,var(--accent) 16%,var(--line));
+  border-radius:23px;
+  background:color-mix(in srgb,var(--bg-card) 97%,var(--bg));
+  box-shadow:0 28px 78px rgb(0 0 0 / .38),0 2px 10px rgb(0 0 0 / .12),inset 0 1px #ffffff12;
+  
+  
+  gap:0;
+}
+.sp-wrap .sp-pal-kopf {display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:23px 20px 12px;position:relative;flex:0 0 auto}
+.sp-wrap .sp-pal-kopf:before{content:"";position:absolute;inset:0 0 auto;height:95px;pointer-events:none;background:radial-gradient(ellipse at 15% -30%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 80%);opacity:.85}
+.sp-wrap .sp-pal-kopf>div,.sp-wrap .sp-pal-schliessen{position:relative}
+.sp-wrap .sp-pal-eyebrow {font:800 9px/1.2 system-ui,sans-serif;letter-spacing:.19em;color:var(--accent-text);text-transform:uppercase}
+.sp-wrap .sp-pal-kopf h3 {margin:7px 0 4px;font-size:23px;line-height:1.16;font-weight:800;letter-spacing:-.045em;color:var(--text)}
+.sp-wrap .sp-pal-kopf-punkt{color:var(--accent-text);font-size:16px;vertical-align:top}
+.sp-wrap .sp-pal-kopf p{margin:0;color:var(--text-faint);font-size:11.5px;line-height:1.5}
+.sp-wrap .sp-pal-schliessen {display:grid;place-items:center;width:34px;height:34px;min-width:34px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--text-dim);font-size:23px;line-height:1;cursor:pointer}
+.sp-wrap .sp-pal-schliessen:hover{background:var(--bg-hover);color:var(--text)}
+.sp-wrap .sp-suche {display:grid;gap:7px;margin:0;padding:9px 17px 12px;flex:0 0 auto}
+.sp-wrap .sp-suche-titel{font-size:11px;font-weight:750;color:var(--text-dim)}
+.sp-wrap .sp-suche input {min-height:43px;background:var(--bg);border-radius:12px;padding:10px 12px;color:var(--text);border:1px solid var(--line);font-size:12px;box-shadow:inset 0 1px 3px #0002}
+.sp-wrap .sp-suche input:focus-visible {outline:2px solid var(--accent);outline-offset:2px}
+.sp-wrap .sp-pal-filter{display:flex;flex:0 0 auto;align-items:center;gap:6px;overflow-x:auto;overflow-y:hidden;padding:3px 17px 12px;scrollbar-width:thin;scroll-snap-type:x proximity}
+.sp-wrap .sp-pal-chip{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:35px;padding:6px 12px;border:1px solid var(--line);border-radius:10px;color:var(--text-dim);background:var(--bg);font:750 11px/1.2 system-ui,sans-serif;cursor:pointer;white-space:nowrap;scroll-snap-align:start;transition:background-color .16s,border-color .16s}
+.sp-wrap .sp-pal-chip:hover{background:var(--bg-hover);color:var(--text)}
+.sp-wrap .sp-pal-chip.an {border-color:color-mix(in srgb,var(--accent) 65%,var(--line));background:color-mix(in srgb,var(--accent) 17%,var(--bg-card));color:var(--text);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 20%,transparent)}
+.sp-wrap .sp-pal-chip span{font-size:13px}
+.sp-wrap .sp-pal-ergebnis{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 19px 8px;border-top:1px solid var(--line);color:var(--text-faint);font-size:10px;font-weight:650}
+.sp-wrap .sp-pal-count{font-weight:800;color:var(--text-dim);font-variant-numeric:tabular-nums}
+.sp-wrap .sp-liste{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:0 13px 15px;scrollbar-width:thin}
+.sp-wrap .sp-zeichenabschnitt{padding-bottom:2px}
+.sp-wrap .sp-grp{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:15px 4px 9px;padding:0;font:800 10px/1.3 system-ui,sans-serif;letter-spacing:.035em;text-transform:none;color:var(--text-dim)}
+.sp-wrap .sp-grp span {border:1px solid var(--line);border-radius:7px;padding:2px 7px;color:var(--text-faint);font:750 10px/1.2 system-ui,sans-serif}
+.sp-wrap .sp-syms{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sp-wrap .sp-zeichenkarte{min-width:0;position:relative;border:1px solid var(--line);border-radius:16px;background:color-mix(in srgb,var(--bg) 85%,var(--bg-card));overflow:hidden;box-shadow:0 3px 10px #00000013;transition:border-color .15s,box-shadow .2s}
+.sp-wrap .sp-zeichenkarte:hover{border-color:color-mix(in srgb,var(--accent) 60%,var(--line));box-shadow:0 7px 19px #0002}
+.sp-wrap .sp-zeichenkarte.ist-gewaehlt{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent),0 5px 19px color-mix(in srgb,var(--accent) 19%,transparent)}
+.sp-wrap .sp-zeichenkarte .sp-sym{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:100%;min-height:130px;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--text);padding:14px 10px 12px;text-align:center;cursor:grab;transition:transform .17s ease}
+.sp-wrap .sp-zeichenkarte .sp-sym:hover {transform:translateY(-2px)}.sp-wrap .sp-zeichenkarte .sp-sym-bild {height:60px;width:100%;display:flex;align-items:center;justify-content:center;color:var(--text)}
+.sp-wrap .sp-zeichenkarte .sp-sym-bild svg {max-width:77px;max-height:57px;width:auto;height:auto;filter:drop-shadow(0 2px 3px #0002)}
+.sp-wrap .sp-zeichenkarte .sp-sym-name {display:block;min-height:23px;max-width:100%;font:750 11px/1.3 system-ui,sans-serif;color:var(--text);letter-spacing:-.008em;overflow-wrap:anywhere}
+.sp-wrap .sp-zeichenkarte .sp-sym-code{font:650 9px/1.2 ui-monospace,Consolas,monospace;color:var(--text-faint);max-width:95%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp-wrap .sp-zeichenkarte .sp-sym.sp-fav .sp-sym-name::before {content:none}
+.sp-wrap .sp-favorit{position:absolute;top:7px;right:7px;width:30px;height:30px;z-index:2;display:grid;place-items:center;border:1px solid transparent;border-radius:9px;background:color-mix(in srgb,var(--bg-card) 85%,transparent);color:var(--text-faint);font-size:19px;cursor:pointer;line-height:1}
+.sp-wrap .sp-favorit:hover{color:var(--accent-text);background:var(--bg-hover);border-color:var(--line)}
+.sp-wrap .sp-favorit.an{color:var(--accent-text);background:color-mix(in srgb,var(--accent) 16%,var(--bg-card))}
+.sp-wrap :is(.sp-sym,.sp-favorit,.sp-pal-chip,.sp-pal-schliessen):focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+.sp-wrap .sp-pal-leer {margin:22px 0;text-align:center;padding:25px 10px;border:1px dashed var(--line);border-radius:15px;color:var(--text-dim)}
+.sp-wrap .sp-pal-leer strong{display:block;font-size:13px}
+.sp-wrap .sp-pal-leer p{margin:7px 0 0;font-size:11px;color:var(--text-faint)}
+.sp-wrap .sp-pal-inspektor {display:flex;gap:11px;align-items:center;flex:0 0 auto;min-height:83px;border-top:1px solid var(--line);padding:12px 17px;background:color-mix(in srgb,var(--accent) 5%,var(--bg-card))}
+.sp-wrap .sp-pal-info-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;flex:0 0 48px;border:1px solid var(--line);border-radius:14px;background:var(--bg);color:var(--text-dim);font-size:24px}
+.sp-wrap .sp-pal-info-icon svg{max-width:36px;max-height:35px;width:auto;height:auto}
+.sp-wrap .sp-pal-inspektor>div {min-width:0;display:grid;gap:4px}
+.sp-wrap .sp-pal-inspektor strong{font-size:11px;color:var(--text);line-height:1.3}
+.sp-wrap .sp-pal-inspektor small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--text-dim);font-size:10px;line-height:1.35}
+.sp-wrap .sp-pal-klemmen{font:700 9px/1.4 ui-monospace,Consolas,monospace;color:var(--accent-text)}
+@media(max-width:850px){
+ .sp-wrap .sp-palette {width:min(332px,calc(100% - 16px));top:8px;bottom:78px;left:8px;border-radius:18px}
+ .sp-wrap .sp-pal-kopf{padding:16px 15px 9px}
+ .sp-wrap .sp-pal-kopf h3{font-size:19px}
+ .sp-wrap .sp-zeichenkarte .sp-sym{min-height:109px;padding:9px}
+ .sp-wrap .sp-zeichenkarte .sp-sym-bild{height:47px}
+ .sp-wrap .sp-zeichenkarte .sp-sym-bild svg{max-height:43px}
+ .sp-wrap .sp-pal-inspektor{padding:8px 12px;min-height:67px}
+}
+
+/* ── aus redion-elektro-workflow.css ── */
+.sp-wrap .sp-pal-header-actions{position:relative;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.sp-wrap .sp-pal-header-actions [data-p-compact]{min-height:34px;padding:5px 8px;border-radius:10px;border:1px solid var(--line);color:var(--text-dim);background:var(--bg);font:750 10px/1 system-ui,sans-serif;cursor:pointer}
+.sp-wrap .sp-pal-header-actions [data-p-compact]:focus-visible,.sp-wrap .sp-sim-back:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.sp-wrap .sp-pal-header-actions [data-p-compact]:hover{background:var(--bg-hover);color:var(--text)}
+.sp-wrap .sp-palette.sp-pal-kompakt{width:222px;max-width:60vw}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-kopf{padding:13px 11px 7px;gap:6px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-kopf h3{font-size:17px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-kopf p,.sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-eyebrow{display:none}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-suche{padding:7px 9px;gap:4px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-suche input{min-height:39px;padding:7px 8px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-filter{padding:4px 8px 8px;gap:4px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-chip{min-height:32px;padding:5px 8px;font-size:10px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-ergebnis{padding:8px 11px 5px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-ergebnis>span:last-child{display:none}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-liste{padding:0 8px 10px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-syms{gap:5px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-zeichenkarte{border-radius:11px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-zeichenkarte .sp-sym{min-height:91px;padding:5px 3px;gap:3px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-sym-bild{height:39px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-sym-bild svg{max-height:37px;max-width:54px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-sym-name{min-height:18px;font-size:9px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-sym-code{font-size:8px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-favorit{width:24px;height:24px;top:2px;right:2px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-inspektor{min-height:54px;padding:6px 8px;gap:6px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-inspektor small{display:none}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-info-icon{width:34px;height:34px;flex-basis:34px;border-radius:10px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-info-icon svg{max-height:29px;max-width:29px}
+
+
+.sp-wrap .sp-sim-status{padding:6px 10px;border:1px solid var(--line);border-radius:999px;font:750 11px/1.3 system-ui,sans-serif;color:var(--text-dim);background:var(--bg);white-space:normal}
+.sp-wrap .sp-sim-status.fliesst{background:color-mix(in srgb,var(--sp-strom) 14%,var(--bg));border-color:color-mix(in srgb,var(--sp-strom) 70%,var(--text));color:var(--text)}
+.sp-wrap .sp-sim-status.offen{background:color-mix(in srgb,var(--sp-strom) 8%,var(--bg))}
+.sp-wrap .sp-sim-back{min-height:36px;padding:8px 14px;border:1px solid color-mix(in srgb,var(--accent) 58%,var(--line));border-radius:10px;background:color-mix(in srgb,var(--accent) 16%,var(--bg));color:var(--text);font-weight:800;cursor:pointer;white-space:nowrap}
+.sp-wrap .sp-sim-back:hover{background:color-mix(in srgb,var(--accent) 24%,var(--bg))}
+.sp-wrap .sp-quick-help{font-size:10px;color:var(--text-faint);white-space:normal}
+
+.sp-wrap .sp-flaeche .sp-punkt{cursor:crosshair;transition:opacity .18s,filter .18s,r .18s}
+.sp-wrap .sp-flaeche .sp-teil:hover .sp-punkt{opacity:1;filter:drop-shadow(0 0 4px var(--accent));r:5.5}
+.sp-wrap .sp-flaeche .sp-frisch-eingesetzt{animation:sp-einsetzen-150 .36s cubic-bezier(.2,1.5,.3,1)}
+@keyframes sp-einsetzen-150{from{opacity:.55;filter:drop-shadow(0 0 7px var(--accent))}to{opacity:1;filter:none}}
+@media(max-width:850px){
+ .sp-wrap .sp-palette.sp-pal-kompakt{width:172px;max-width:46vw;top:8px;bottom:78px;left:8px}
+ .sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-kopf h3{font-size:14px}
+ .sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-header-actions{gap:2px}
+ .sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-header-actions [data-p-compact]{font-size:9px;padding:4px;min-height:30px}
+ .sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-schliessen{width:29px;height:29px;min-width:29px}
+ .sp-wrap .sp-palette.sp-pal-kompakt .sp-zeichenkarte .sp-sym{min-height:85px}
+ .sp-wrap .sp-quick-help{display:none}
+}
+
+
+@media(max-width:850px){
+ .sp-wrap .sp-sim-back{position:absolute;right:13px;bottom:82px;z-index:470;
+   box-shadow:0 10px 30px #0005;border-radius:999px;max-width:calc(100% - 26px)}
+ .sp-wrap .sp-simhinweis{display:none}
+ .sp-wrap .sp-sim-status{font-size:10px;white-space:nowrap;flex:0 0 auto}
+}
+
+
+.sp-wrap .sp-pal-header-actions [data-p-original]{min-height:34px;padding:5px 8px;border-radius:10px;border:1px solid color-mix(in srgb,var(--accent) 50%,var(--line));color:var(--text);background:color-mix(in srgb,var(--accent) 12%,var(--bg));font:760 10px/1 system-ui,sans-serif;cursor:pointer}
+.sp-wrap .sp-pal-header-actions [data-p-original]:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media(max-width:850px){.sp-wrap .sp-pal-header-actions [data-p-original]{min-height:30px;padding:3px;font-size:9px}}
+
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-kopf{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:6px}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-kopf>div:first-child{width:100%}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-header-actions{display:flex;justify-content:flex-end;width:100%}
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-header-actions [data-p-original],
+.sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-header-actions [data-p-compact]{min-width:45px}
+
+/* ── aus redion-live-labor.css ── */
+.sp-live-labor { --sp-labor-gelb: var(--sp-strom);
+  border-block: 1px solid color-mix(in srgb, var(--sp-labor-gelb) 25%, var(--border, #777));
+  background:linear-gradient(110deg, color-mix(in srgb, var(--sp-labor-gelb) 9%, var(--bg, #fff)), var(--bg, #fff));
+  padding: 7px 12px; color: var(--text); }
+.sp-live-labor[hidden] { display:none }
+.sp-labor-kopf {display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px; min-height:36px; }
+.sp-labor-kopf strong {font-size:13px; letter-spacing:.01em; white-space:nowrap}
+.sp-labor-zeichen {display:inline-grid; place-items:center; width:28px; height:28px;
+  border:1px solid var(--sp-labor-gelb); border-radius:11px; color:var(--sp-labor-gelb);
+  background:color-mix(in srgb, var(--sp-labor-gelb) 14%, transparent);}
+.sp-labor-lauf {display:inline-flex; border-radius:999px; background:color-mix(in srgb, var(--erfolg) 15%, transparent);
+  color:var(--text); border:1px solid color-mix(in srgb, var(--erfolg) 45%, transparent);
+  padding:3px 8px; font-size:11px; font-weight:700; white-space:nowrap;}
+.sp-labor-lauf[data-pause] {background:color-mix(in srgb, var(--sp-labor-gelb) 13%, transparent);
+  border-color: var(--sp-labor-gelb)}
+.sp-labor-mess {font-size:12px; color:var(--text); opacity:.9; white-space:nowrap}
+.sp-labor-uhr {font-variant-numeric: tabular-nums; font-size:12px; font-weight:700; min-width:50px}
+.sp-labor-tempo {display:inline-flex; gap:5px; align-items:center; font-size:12px; margin-left:auto}
+.sp-labor-tempo select {border:1px solid var(--border, #999); background:var(--bg, #fff);
+  color:var(--text); border-radius:9px; min-height:32px; padding:3px 6px; font:inherit}
+.sp-labor-aktion {min-height:32px; padding:4px 10px; border:1px solid var(--border, #999);
+  border-radius:10px; color:var(--text); background:var(--bg, #fff); font:inherit; font-size:12px;
+  cursor:pointer; transition:background 150ms, border-color 150ms}
+.sp-labor-aktion:hover {border-color:var(--sp-labor-gelb); background:color-mix(in srgb,var(--sp-labor-gelb) 9%,var(--bg,#fff))}
+.sp-labor-aktion:focus-visible,.sp-labor-tempo select:focus-visible {outline:2px solid var(--sp-labor-gelb);outline-offset:2px}
+.sp-labor-zeitliste {display:flex; flex-wrap:wrap; gap:8px; padding:5px 0 2px; }
+.sp-labor-zeit {display:grid; grid-template-columns:auto auto minmax(50px,80px) auto;
+  align-items:center; gap:6px; max-width:100%; background:var(--bg, #fff);
+  border:1px solid var(--border, #999); border-radius:10px; padding:5px 8px;
+  font-size:11px; font-variant-numeric:tabular-nums}
+.sp-labor-zeit strong {font-size:12px}
+.sp-labor-zeit small {opacity:.7}
+.sp-labor-zeitaktiv {border-color:var(--sp-labor-gelb)}
+.sp-labor-balken {display:block; width:80px; max-width:100%; height:5px; border-radius:99px;
+  background:color-mix(in srgb,var(--text) 15%,transparent);overflow:hidden}
+.sp-labor-balken i {display:block; width:0%; height:100%; background:var(--sp-labor-gelb);
+  border-radius:inherit; transition:width 110ms linear}
+.sp-wrap.sp-labor-pause .sp-fluss {animation-play-state:paused; opacity:.58}
+.sp-wrap.sp-labor-pause .sp-leuchtet {animation-play-state:paused}
+.sp-wrap.sp-labor-pause .sp-labor-balken i {transition:none}
+.sp-buehne g.sp-labor-relais-an:not(.sp-labor-lampe-an) {
+  filter: drop-shadow(0 0 2px color-mix(in srgb,var(--sp-labor-gelb) 65%,transparent));
+  transition: filter 180ms ease-out}
+.sp-buehne g.sp-labor-lampe-an {filter: drop-shadow(0 0 5px var(--sp-schein, #ffdf77));
+  transition:filter 240ms ease-out}
+.sp-buehne .sp-labor-lampe-an .sp-leuchtet {opacity:var(--sp-labor-hell,1)}
+@media(max-width:740px) {
+  .sp-labor-kopf {gap:6px 8px}
+  .sp-labor-mess {white-space:normal}
+  .sp-labor-tempo {margin-left:0}
+  .sp-labor-zeit {grid-template-columns:auto auto minmax(42px,60px) auto}
+}
+
+/* ── Studio und Prüfzentrum von innen (E770/E771) ──
+   Die ZIP brachte für beide nur den Kasten; Kopf, Reiter, Raster und
+   Zeilen standen ungestaltet untereinander (gesehen im Bild, §55). */
+.sp-wrap .sp-studio{display:flex;flex-direction:column;gap:10px;padding:14px;overflow:auto;box-sizing:border-box}
+.sp-wrap .sp-studio-kopf,.sp-wrap .sp-pruef-titel{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.sp-wrap .sp-studio-kopf small,.sp-wrap .sp-pruef-titel p{display:block;margin:2px 0 0;color:var(--text-dim);font-size:12px}
+.sp-wrap .sp-studio-kopf button,.sp-wrap .sp-pruef-titel button{min-width:44px;min-height:44px;border:0;border-radius:12px;background:transparent;color:inherit;cursor:pointer}
+.sp-wrap :is(.sp-studio-tabs,.sp-pruef-tabs){display:flex;gap:4px;padding:3px;border-radius:12px;background:var(--bg-hover)}
+.sp-wrap :is(.sp-studio-tabs,.sp-pruef-tabs) button{flex:1 1 0;min-height:40px;border:0;border-radius:10px;background:transparent;color:var(--text-dim);font:inherit;font-size:13px;cursor:pointer}
+.sp-wrap :is(.sp-studio-tabs,.sp-pruef-tabs) button.an{background:var(--bg-card);color:var(--text);box-shadow:0 1px 3px rgb(0 0 0 / .18)}
+.sp-wrap .sp-studio-suchfeld,.sp-wrap .sp-pruef-werkzeuge label{display:grid;gap:4px;font-size:12px;color:var(--text-dim)}
+.sp-wrap .sp-studio :is(input,select),.sp-wrap .sp-pruef-suche{min-height:40px;box-sizing:border-box;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
+.sp-wrap .sp-studio-untertitel{font-size:12px;font-weight:650;color:var(--text-dim)}
+.sp-wrap .sp-studio-raster{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.sp-wrap .sp-studio-symbol{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:88px;padding:8px 6px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--text);font:inherit;font-size:12px;cursor:grab;touch-action:none}
+.sp-wrap .sp-studio-symbol.an{border-color:var(--accent)}
+.sp-wrap .sp-studio-bild svg{max-width:64px;max-height:44px}
+.sp-wrap :is(.sp-studio-hilfe,.sp-pruef-leer){margin:0;font-size:12px;color:var(--text-dim)}
+.sp-wrap .sp-studio-warn{color:var(--warnung)}
+.sp-wrap :is(.sp-studio-actions,.sp-pruef-werkzeuge){display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.sp-wrap :is(.sp-studio-actions,.sp-pruef-werkzeuge) button{min-height:44px;padding:0 14px;border-radius:12px}
+.sp-wrap .sp-pruef-werkzeuge label{flex:1 1 200px}
+.sp-wrap :is(.sp-studio-kennzahlen,.sp-pruef-kennzahlen){display:flex;flex-wrap:wrap;gap:6px}
+.sp-wrap :is(.sp-studio-kennzahlen,.sp-pruef-kennzahlen) span{padding:3px 9px;border-radius:999px;background:var(--bg-hover);font-size:12px}
+.sp-wrap .sp-pruef-fach{display:flex;flex-direction:column;gap:10px}
+.sp-wrap .sp-pruef-liste{display:grid;gap:6px}
+.sp-wrap :is(.sp-pruef-zeile,.sp-pruef-bestand){display:flex;align-items:baseline;gap:10px;width:100%;min-height:44px;padding:8px 10px;text-align:left;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
+.sp-wrap .sp-pruef-bestand small{margin-left:auto;color:var(--text-dim)}
+.sp-wrap .sp-pruef-stufe{flex:0 0 auto;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:650;background:var(--bg-hover)}
+.sp-wrap .sp-pruef-stufe.fehler{background:color-mix(in srgb,var(--gefahr) 22%,transparent)}
+.sp-wrap .sp-pruef-stufe.warnung{background:color-mix(in srgb,var(--warnung) 24%,transparent)}
+
+/* ── Glas über die Marke (E695): Werkzeuge, Kontextleiste, Palette ── */
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .sp-wrap .sp-werkzeuge,
+  .sp-wrap .sp-kontextleiste,
+  .sp-wrap .sp-palette{
+    -webkit-backdrop-filter:var(--glas-blur); backdrop-filter:var(--glas-blur);
+  }
+}
+
+/* ── Weniger Bewegung: System ODER „Ruhige Darstellung" (E528) ──
+   Der Stromfluss läuft endlos — aber nur, wo Bewegung erwünscht ist.
+   Hier steht er still, und jeder Übergang wird gesetzt. */
+@media (prefers-reduced-motion:reduce){
+  .sp-wrap .sp-fluss,
+  .sp-wrap .sp-flaeche .sp-frisch-eingesetzt,
+  .sp-wrap > :is(.sp-batterie-fach,.sp-relais-fach,.sp-pruef-fach),
+  .sp-wrap :is(.sp-studio,.sp-schnellkarte,.sp-kontextleiste,.sp-werkzeuge,.sp-palette){animation:none}
+  .sp-wrap :is(
+    .sp-zeichenkarte,.sp-zeichenkarte .sp-sym,.sp-pal-chip,.sp-favorit,.sp-netz,.sp-start,.sp-labor-aktion){transition:none}
+}
+body[data-bewegung="ruhig"] .sp-wrap .sp-fluss, body[data-bewegung="ruhig"] .sp-wrap .sp-flaeche .sp-frisch-eingesetzt,
+body[data-bewegung="ruhig"] .sp-wrap > :is(.sp-batterie-fach,.sp-relais-fach,.sp-pruef-fach),
+body[data-bewegung="ruhig"] .sp-wrap :is(.sp-studio,.sp-schnellkarte,.sp-kontextleiste,.sp-werkzeuge,.sp-palette){animation:none}
+body[data-bewegung="ruhig"] .sp-wrap :is(
+  .sp-zeichenkarte,.sp-zeichenkarte .sp-sym,.sp-pal-chip,.sp-favorit,.sp-netz,.sp-start,.sp-labor-aktion){transition:none}
+
+</style>
+<style>
 /* ===== quell/schale/stil/bausteine.css ===== */
 /* ============================================================================
  * bausteine.css — was übrig bleibt
@@ -28725,7 +29387,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1564, inhalt: '60f50791ccab9c5b', gebaut: '2026-11-01T19:15:42.269Z' };
+const Stand = { fassung: 1572, inhalt: '5e899fbea694b3c7', gebaut: '2026-11-02T05:31:58.333Z' };
 window.Stand = Stand;
 
 </script>
@@ -37969,6 +38631,12 @@ Register.tasten = (() => {
                 ['N', 'Haftnotiz'], ['M', 'Fachzeichen'], ['R', 'Lineal'], ['I', 'Bild'],
                 ['Strg Z', 'Zurück'], ['Strg Shift Z', 'Vor'], ['Strg C · Strg V', 'Auswahl kopieren, einsetzen'],
                 ['Entf', 'Auswahl löschen']
+            ]],
+        ['Schaltplan', [
+                ['1 – 5', 'Zeigen, Leitung, Text, Stromschiene, Radierer'], ['B', 'Bauteilpalette auf/zu'],
+                ['/', 'Bauteil suchen'], ['P', 'Strom ein / aus'], ['R', 'Drehen'], ['H', 'Spiegeln'],
+                ['Alt Shift E', 'Elektro Studio'], ['Alt Shift P', 'Prüfzentrum'],
+                ['Esc', 'Ziehen abbrechen, Auswahl aufheben']
             ]],
         ['Formatierung', [
                 ['Strg B', 'Fett'], ['Strg I', 'Kursiv'], ['Strg U', 'Unterstrichen'],
@@ -70390,6 +71058,92 @@ window.Schaltplan = Schaltplan;
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/bloecke/arten/planflaeche.ts (npm run bauen:ts). */
 const Planflaeche = (() => {
     const esc = Schaltplan.esc;
+    const Labor = {
+        TEMPI: [0.25, 0.5, 1, 2, 4],
+        tempo(wert) {
+            const v = Number(wert);
+            return Labor.TEMPI.includes(v) ? v : 1;
+        },
+        zeitAnzeigen(plan, relais, spulen) {
+            const teile = Array.isArray(plan?.teile) ? plan.teile : [];
+            return teile.filter(t => t && (t.zeichen === 'spule-anzugsverzoegert' || t.zeichen === 'spule-abfallverzoegert'))
+                .map(t => {
+                const s = (t.bmk && relais[t.bmk]) || {};
+                const T = Number.isFinite(t.werte?.T) ? Math.max(0, Math.min(3600, Number(t.werte.T))) : 3;
+                const gesamt = T * 1000;
+                const laufend = !!spulen[t.bmk];
+                const istEin = t.zeichen === 'spule-anzugsverzoegert';
+                const zeit = Number.isFinite(s.zeit) ? Math.max(0, Math.min(gesamt, Number(s.zeit))) : 0;
+                const aktiv = !!s.ausgang;
+                const rest = istEin ? (laufend ? gesamt - zeit : gesamt) : (!laufend && aktiv ? zeit : 0);
+                const fortschritt = gesamt > 0
+                    ? Math.max(0, Math.min(1, istEin ? zeit / gesamt : (laufend ? 1 : (aktiv ? zeit / gesamt : 0))))
+                    : (aktiv ? 1 : 0);
+                const phase = istEin ? (laufend ? (aktiv ? 'Geschaltet' : 'Einschaltverzögerung') : 'Ruhelage')
+                    : (laufend ? 'Spule aktiv' : (aktiv ? 'Ausschaltverzögerung' : 'Ruhelage'));
+                return { id: String(t.id || ''), bmk: String(t.bmk || 'K?'), art: istEin ? 'EIN' : 'AUS',
+                    gesamt, rest, fortschritt, aktiv, phase };
+            });
+        },
+        statistik(plan, r, spulen) {
+            const teile = Array.isArray(plan?.teile) ? plan.teile : [];
+            if (!r || !r.ok)
+                return { gueltig: false, lampen: 0, relais: 0, leitungen: 0, strom: 0 };
+            const werte = r.werte || {};
+            const lampen = teile.filter(t => /^(lampe|signalleuchte|ch-kontrolllampe)$/.test(t.zeichen) &&
+                werte[t.id] && Number(werte[t.id].helligkeit) > 0.01).length;
+            const aktive = new Set(teile.filter(t => /^(spule|spule-anzugsverzoegert|spule-abfallverzoegert)$/.test(t.zeichen) &&
+                t.bmk && spulen[t.bmk]).map(t => t.bmk));
+            const netzStrom = r.netzStrom || {};
+            const leitungen = Object.values(r.leitungNetz || {}).filter(n => typeof n === 'number' && Number(netzStrom[n]) > 1e-9).length;
+            return { gueltig: true, lampen, relais: aktive.size, leitungen,
+                strom: Number.isFinite(r.maxStrom) ? Math.max(0, r.maxStrom) : 0 };
+        }
+    };
+    const schaltart = (zeichen) => ({ st: Stromfluss.stellungenVon(zeichen), vh: Stromfluss.verhalten(zeichen) });
+    const stromRechnung = (plan, stellungen, spulen, zeit) => Stromfluss.rechne(plan, stellungen, spulen, zeit);
+    const stromText = (wert) => Stromfluss.zeige(wert, 'A');
+    const StudioHilfe = {
+        text: (v) => String(v ?? '').toLocaleLowerCase('de').normalize('NFKD').replace(/[̀-ͯ]/g, ''),
+        leseLetzte(roh) {
+            return Array.isArray(roh)
+                ? [...new Set(roh.filter((x) => typeof x === 'string' && x.length < 90))].slice(0, 8) : [];
+        },
+        merkeLetzte(roh, id) {
+            return id && id.length < 90 ? [id, ...StudioHilfe.leseLetzte(roh).filter(x => x !== id)].slice(0, 8)
+                : StudioHilfe.leseLetzte(roh);
+        },
+        suche(liste, wort = '', gruppe = 'alle', limit = 36) {
+            if (!Array.isArray(liste))
+                return [];
+            const frage = StudioHilfe.text(wort).trim().slice(0, 90);
+            const grenze = Number.isInteger(limit) && limit >= 0 ? Math.min(limit, 120) : 36;
+            return liste.filter(s => s && typeof s.id === 'string' && typeof s.name === 'string' &&
+                (gruppe === 'alle' || s.gruppe === gruppe)).map((s, i) => {
+                const name = StudioHilfe.text(s.name), id = StudioHilfe.text(s.id), erkl = StudioHilfe.text(s.erklaerung);
+                const rang = !frage ? 0 : id === frage || name === frage ? 0 : name.startsWith(frage) ? 1 :
+                    id.startsWith(frage) ? 2 : name.includes(frage) ? 3 : id.includes(frage) ? 4 : erkl.includes(frage) ? 5 : 99;
+                return { s, i, rang };
+            }).filter(x => x.rang < 99).sort((a, b) => a.rang - b.rang || a.i - b.i).slice(0, grenze).map(x => x.s);
+        },
+        ueberblick(plan, holeSymbol) {
+            const teile = Array.isArray(plan?.teile) ? plan.teile : [];
+            const gruppen = new Map(), bmk = new Map();
+            for (const t of teile) {
+                const g = String(holeSymbol(t?.zeichen)?.gruppe || t?.zeichen || 'Unbekannt').split('-')[0] || 'Unbekannt';
+                gruppen.set(g, (gruppen.get(g) || 0) + 1);
+                const k = String(t?.bmk || '').trim();
+                if (k)
+                    bmk.set(k, (bmk.get(k) || 0) + 1);
+            }
+            return { teile: teile.length,
+                leitungen: Array.isArray(plan?.leitungen) ? plan.leitungen.length : 0,
+                texte: Array.isArray(plan?.texte) ? plan.texte.length : 0,
+                gruppen: [...gruppen].map(([gruppe, anzahl]) => ({ gruppe, anzahl }))
+                    .sort((a, b) => b.anzahl - a.anzahl || a.gruppe.localeCompare(b.gruppe)),
+                doppelteKennzeichen: [...bmk].filter(([, n]) => n > 1).map(([k]) => k) };
+        }
+    };
     const FAVORITEN = 'elektro:favoriten';
     const favoriten = () => {
         const roh = (typeof Store !== 'undefined') ? Store.getMeta(FAVORITEN, []) : [];
@@ -70406,7 +71160,7 @@ const Planflaeche = (() => {
             Store.setMeta(FAVORITEN, liste);
         return i < 0;
     };
-    const paletteHtml = (planArt, suche = '') => {
+    const paletteHtml = (planArt, suche = '', filter = 'alle', aktiv = '') => {
         if (typeof Register === 'undefined' || !Register.fachzeichen)
             return '';
         const art = Schaltplan.artVon(planArt);
@@ -70415,27 +71169,59 @@ const Planflaeche = (() => {
             ...art.gruppen.map(g => alleGruppen.find(x => x[0] === g)).filter(Boolean),
             ...alleGruppen.filter(x => !art.gruppen.includes(x[0]))
         ];
-        const q = suche.trim().toLowerCase();
-        const passt = (z) => !q ||
-            z.name.toLowerCase().includes(q) || z.id.includes(q) ||
-            z.erklaerung.toLowerCase().includes(q);
-        const knopf = (z, favorit) => `<button class="sp-sym${favorit ? ' sp-fav' : ''}" data-sym="${esc(z.id)}" ` +
-            `title="${esc(z.name)} — ${esc(z.erklaerung)}" aria-label="${esc(z.name)}">` +
-            `<span class="sp-sym-bild">${Register.fachzeichen.alsSvg(z.id, { strich: 2 })}</span>` +
-            `<span class="sp-sym-name">${esc(z.name)}</span></button>`;
+        const q = suche.trim().toLocaleLowerCase('de');
+        const passt = (z) => !q || [z.name, z.id, z.erklaerung, z.kennbuchstabe]
+            .some(w => String(w || '').toLocaleLowerCase('de').includes(q));
         const fav = favoriten();
-        const favZeichen = fav.map(id => Register.fachzeichen.holen(id)).filter(Boolean).filter(passt);
-        return (favZeichen.length
-            ? `<div class="sp-grp">★ Favoriten</div><div class="sp-syms">` +
-                favZeichen.map((z) => knopf(z, true)).join('') + '</div>'
-            : '') +
-            sortiert.map(g => {
-                const zeichen = Register.fachzeichen.inGruppe(g[0]).filter(passt);
-                if (!zeichen.length)
-                    return '';
-                return `<div class="sp-grp">${esc(g[2])} ${esc(g[1])}</div><div class="sp-syms">` +
-                    zeichen.map(z => knopf(z, fav.includes(z.id))).join('') + '</div>';
-            }).join('');
+        const letzte = ((typeof Store !== 'undefined')
+            ? Store.getMeta('redion:elektro:letzte:v1', []) : []);
+        const zuletzt = Array.isArray(letzte) ? letzte.filter((id) => typeof id === 'string').slice(0, 8) : [];
+        const schon = new Set();
+        const karte = (z) => {
+            schon.add(z.id);
+            const favorit = fav.includes(z.id);
+            return `<div class="sp-zeichenkarte${z.id === aktiv ? ' ist-gewaehlt' : ''}">` +
+                `<button type="button" class="sp-sym${favorit ? ' sp-fav' : ''}${z.id === aktiv ? ' an' : ''}" data-sym="${esc(z.id)}" ` +
+                `title="${esc(z.name)} — ${esc(z.erklaerung)}" aria-label="${esc(z.name)} platzieren" aria-pressed="${z.id === aktiv}">` +
+                `<span class="sp-sym-bild" aria-hidden="true">${Register.fachzeichen.alsSvg(z.id, { strich: 2 })}</span>` +
+                `<span class="sp-sym-name">${esc(z.name)}</span>` +
+                `<span class="sp-sym-code">${esc(z.kennbuchstabe || z.id)}</span></button>` +
+                `<button type="button" class="sp-favorit${favorit ? ' an' : ''}" data-p-fav="${esc(z.id)}" ` +
+                `aria-label="${favorit ? 'Favorit entfernen:' : 'Zu Favoriten hinzufügen:'} ${esc(z.name)}" ` +
+                `aria-pressed="${favorit}" title="${favorit ? 'Aus Favoriten entfernen' : 'Als Favorit speichern'}">${favorit ? '★' : '☆'}</button></div>`;
+        };
+        const abschnitt = (name, zeichen) => zeichen.length ?
+            `<section class="sp-zeichenabschnitt"><h4 class="sp-grp">${esc(name)}<span>${zeichen.length}</span></h4>` +
+                `<div class="sp-syms">${zeichen.map(karte).join('')}</div></section>` : '';
+        const hole = (ids) => ids.map(id => Register.fachzeichen.holen(id)).filter(Boolean).filter(passt);
+        const teile = [];
+        if (filter === 'favoriten') {
+            teile.push(abschnitt('★ Meine Favoriten', hole(fav)));
+        }
+        else if (filter === 'zuletzt') {
+            teile.push(abschnitt('Zuletzt verwendet', hole(zuletzt)));
+        }
+        else if (filter !== 'alle') {
+            const g = alleGruppen.find(x => x[0] === filter);
+            if (g)
+                teile.push(abschnitt(g[2] + ' ' + g[1], Register.fachzeichen.inGruppe(g[0]).filter(passt)));
+        }
+        else {
+            const favorisiert = hole(fav);
+            if (!q && favorisiert.length)
+                teile.push(abschnitt('★ Favoriten', favorisiert));
+            const neu = hole(zuletzt).filter(z => !schon.has(z.id));
+            if (!q && neu.length)
+                teile.push(abschnitt('Zuletzt verwendet', neu));
+            sortiert.forEach(g => {
+                const zeichen = Register.fachzeichen.inGruppe(g[0]).filter(passt)
+                    .filter(z => !schon.has(z.id));
+                if (zeichen.length)
+                    teile.push(abschnitt(g[2] + ' ' + g[1], zeichen));
+            });
+        }
+        return teile.filter(Boolean).join('') ||
+            '<div class="sp-pal-leer"><strong>Keine Schaltzeichen gefunden</strong><p>Suche ändern oder eine andere Kategorie wählen.</p></div>';
     };
     const ortAus = (svg, e, plan, ohneRaster = false) => {
         const m = svg.getScreenCTM();
@@ -70467,6 +71253,23 @@ const Planflaeche = (() => {
         let relaisOffen = !!(block && block.plan && block.plan.relaisLegacy);
         let relais = null;
         let batterie = null;
+        let studioOffen = false;
+        let paletteOffen = false;
+        let paletteGruppe = 'alle';
+        let paletteSuche = '';
+        let paletteKompakt = window.matchMedia('(max-width: 850px)').matches;
+        let merkwahl = null;
+        let planFokus = false;
+        let studioTab = 'eigenschaften';
+        let studioSuchtext = '';
+        let studioGruppe = 'alle';
+        let studioLetzte = [];
+        let pruefungOffen = false;
+        let pruefAnsicht = 'diagnose';
+        let pruefSuche = '';
+        let laborTempo = 1;
+        let karteId = '';
+        let teilKlickStart = null;
         const z = {
             block,
             plan: Schaltplan.lesen(block),
@@ -70495,6 +71298,15 @@ const Planflaeche = (() => {
                 return;
             const vorher = merken ? (vorherAbzug ?? abzug()) : '';
             was();
+            if (z.plan.relaisLegacy && vorher &&
+                JSON.stringify({ teile: z.plan.teile, leitungen: z.plan.leitungen, texte: z.plan.texte }) !==
+                    JSON.stringify((() => {
+                        const p = JSON.parse(vorher);
+                        return {
+                            teile: p.teile, leitungen: p.leitungen, texte: p.texte
+                        };
+                    })()))
+                z.plan.relaisLegacy.bearbeitet = true;
             const kopie = JSON.parse(abzug());
             if (typeof Store !== 'undefined' && block && block.id)
                 Store.updateBlock(block.id, { plan: kopie });
@@ -70524,14 +71336,26 @@ const Planflaeche = (() => {
         };
         const kopf = document.createElement('div');
         kopf.className = 'sp-kopf';
+        const labor = document.createElement('section');
+        labor.className = 'sp-live-labor';
+        labor.setAttribute('aria-label', 'Live-Stromlabor – Strom, Relais und Zeit');
+        labor.hidden = true;
         const batteriePanel = document.createElement('section');
         batteriePanel.className = 'sp-batterie-fach';
         batteriePanel.setAttribute('aria-label', 'Batterieanlagen und Übungen');
         batteriePanel.hidden = !batterieOffen;
         const relaisPanel = document.createElement('section');
         relaisPanel.className = 'sp-batterie-fach sp-relais-fach';
-        relaisPanel.setAttribute('aria-label', 'Relais-Werkstatt');
-        relaisPanel.hidden = true;
+        relaisPanel.setAttribute('aria-label', 'Relais-Werkstatt und Import');
+        relaisPanel.hidden = !relaisOffen;
+        const pruefPanel = document.createElement('section');
+        pruefPanel.className = 'sp-pruef-fach sp-batterie-fach';
+        pruefPanel.setAttribute('aria-label', 'Schaltplan-Prüfzentrum und Stückliste');
+        pruefPanel.hidden = true;
+        const studioPanel = document.createElement('aside');
+        studioPanel.className = 'sp-studio';
+        studioPanel.setAttribute('aria-label', 'Elektro Studio – Bauteile, Eigenschaften und Übersicht');
+        studioPanel.hidden = !studioOffen;
         const palette = document.createElement('div');
         palette.className = 'sp-palette';
         const buehne = document.createElement('div');
@@ -70541,6 +71365,17 @@ const Planflaeche = (() => {
         const leinwand = document.createElement('div');
         leinwand.className = 'sp-leinwand';
         buehne.appendChild(leinwand);
+        const schnellkarte = document.createElement('aside');
+        schnellkarte.className = 'sp-schnellkarte';
+        schnellkarte.setAttribute('aria-label', 'Bauteil direkt bearbeiten');
+        schnellkarte.hidden = true;
+        buehne.appendChild(schnellkarte);
+        const kontextleiste = document.createElement('div');
+        kontextleiste.className = 'sp-kontextleiste';
+        kontextleiste.setAttribute('role', 'toolbar');
+        kontextleiste.setAttribute('aria-label', 'Ausgewählte Bauteile bearbeiten');
+        kontextleiste.hidden = true;
+        buehne.appendChild(kontextleiste);
         const zoomleiste = document.createElement('div');
         zoomleiste.className = 'sp-zoom';
         zoomleiste.setAttribute('role', 'group');
@@ -70554,17 +71389,42 @@ const Planflaeche = (() => {
         koerper.className = 'sp-koerper';
         koerper.appendChild(palette);
         koerper.appendChild(buehne);
+        koerper.appendChild(studioPanel);
         const fussInhalt = document.createElement('div');
         fussInhalt.className = 'sp-fuss-inhalt';
         fuss.appendChild(fussInhalt);
         fuss.appendChild(zoomleiste);
         wurzel.appendChild(kopf);
-        wurzel.appendChild(batteriePanel);
-        wurzel.appendChild(relaisPanel);
+        wurzel.appendChild(labor);
         wurzel.appendChild(koerper);
         wurzel.appendChild(fuss);
+        wurzel.appendChild(batteriePanel);
+        wurzel.appendChild(relaisPanel);
+        wurzel.appendChild(pruefPanel);
+        const fachSchliessen = document.createElement('button');
+        fachSchliessen.type = 'button';
+        fachSchliessen.className = 'sp-fach-schliessen';
+        fachSchliessen.textContent = '✕ Schliessen';
+        fachSchliessen.setAttribute('aria-label', 'Elektro-Zusatzfach schliessen');
+        fachSchliessen.hidden = true;
+        wurzel.appendChild(fachSchliessen);
+        fachSchliessen.addEventListener('click', () => {
+            batterieOffen = false;
+            relaisOffen = false;
+            pruefungOffen = false;
+            batteriePanel.hidden = true;
+            relaisPanel.hidden = true;
+            pruefPanel.hidden = true;
+            kopfMalen();
+            wurzel.querySelector('.sp-buehne')?.focus({ preventScroll: true });
+        });
+        const fachStatus = () => {
+            fachSchliessen.hidden = !(batterieOffen || relaisOffen || pruefungOffen);
+            wurzel.classList.toggle('sp-fach-offen', !fachSchliessen.hidden);
+        };
         const kopfMalen = () => {
             const art = Schaltplan.artVon(z.plan.art);
+            fachStatus();
             kopf.innerHTML =
                 `<select class="sp-art" aria-label="Planart">` +
                     Schaltplan.ARTEN.map(a => `<option value="${esc(a.id)}"${a.id === z.plan.art ? ' selected' : ''}>` +
@@ -70576,7 +71436,10 @@ const Planflaeche = (() => {
                         ['text', 'T', 'Beschriftung setzen'],
                         ['schiene', '☰', 'Schiene zeichnen — L1, L2, L3, N, PE'],
                         ['radieren', '⌫', 'Radieren — über die Fläche wischen']].map(([id, ic, t]) => `<button class="sp-wz${z.werkzeug === id ? ' an' : ''}" data-wz="${id}" ` +
-                        `title="${esc(t)}" aria-label="${esc(t)}">${ic}</button>`).join('') +
+                        `title="${esc(t)}" aria-label="${esc(t)}" aria-pressed="${z.werkzeug === id}">${ic}</button>`).join('') +
+                    `<span class="sp-dock-trenner" aria-hidden="true"></span>` +
+                    `<button type="button" class="sp-palette-knopf${paletteOffen ? ' an' : ''}" data-a="palette-toggle" aria-label="Bauteilpalette öffnen oder schliessen" aria-expanded="${paletteOffen}" title="Bauteile ausklappen und direkt auf die Zeichnung ziehen">▦ <span>Bauteile</span></button>` +
+                    `<button type="button" class="sp-dock-fit" data-a="zoom-alles" title="Gesamten Schaltplan anzeigen (0)" aria-label="Gesamten Schaltplan anzeigen">⤢</button>` +
                     `</span>` +
                     `<span class="sp-rechts">` +
                     (z.plan.art.startsWith('stromlauf')
@@ -70584,19 +71447,16 @@ const Planflaeche = (() => {
                             `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
                             `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
                         : '') +
-                    `<button class="sp-netz${batterieOffen ? ' an' : ''}" data-a="batterie-labor" title="Batteriezellen direkt im Schaltplan platzieren, verbinden und messen" aria-pressed="${batterieOffen}" aria-label="Batterieübungen in diesem Schaltplan">🔋 Batterien</button>` +
-                    (z.plan.art.startsWith('stromlauf')
-                        ? `<button class="sp-netz${relaisOffen ? ' an' : ''}" data-a="relais" aria-pressed="${relaisOffen}" ` +
-                            `title="Redurs Relais-Schaltungen einsetzen oder eine alte .sch einlesen" aria-label="Relais-Werkstatt">⚙ Relais</button>`
-                        : '') +
-                    `<button class="sp-start${z.simulation ? ' an' : ''}" data-a="simulation" ${z.plan.batterieUebung ? 'disabled' : ''} ` +
-                    `title="${z.plan.batterieUebung ? 'Batterieanlage im Batterie-Fach messen' : z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
+                    `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" aria-haspopup="menu">✦ Bereiche ▾</button>` +
+                    `<button type="button" class="sp-start${z.simulation ? ' an' : ''}${z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ? ' sp-strom-ungeprueft' : ''}" ` +
+                    `data-a="simulation" ${z.plan.batterieUebung ? 'disabled ' : ''}` +
+                    `title="${z.plan.batterieUebung ? 'Batterieanlage im Batterie-Fach messen' :
+                        z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ?
+                            'Original-Verdrahtung ungeprüft: in der Relais-Werkstatt zuerst prüfen und freigeben.' :
+                            z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
                     `aria-pressed="${z.simulation}" ` +
                     `aria-label="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}">` +
                     `${z.simulation ? '◼' : '▶'} Strom</button>` +
-                    `<button class="sp-heft${heftOffen() ? ' an' : ''}" data-a="heft" ` +
-                    `title="Formelheft — beim Zeichnen nachschlagen und rechnen" ` +
-                    `aria-pressed="${heftOffen()}" aria-label="Formelheft">📐</button>` +
                     `<button data-a="zurueck" title="Rückgängig" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>↶</button>` +
                     `<button data-a="vorwaerts" title="Wiederholen" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>↷</button>` +
                     `<button data-a="mehr" title="Mehr" aria-label="Mehr">…</button>` +
@@ -70622,6 +71482,94 @@ const Planflaeche = (() => {
                 teile.push(`<span class="sp-meldung gut">✓ Die Schaltung rechnet.</span>`);
             return teile.join('');
         };
+        const laborZeit = () => zeitspulen().length
+            ? (zeitStand.laufzeit / 1000).toFixed(1) + ' s' : '—';
+        const laborAktualisieren = () => {
+            if (!z.simulation)
+                return;
+            const daten = Labor.statistik(z.plan, z.ergebnis, z.spulenStand);
+            const anzeige = labor.querySelector('[data-labor-status]');
+            if (anzeige)
+                anzeige.textContent = daten.gueltig
+                    ? `${daten.lampen} Lampen · ${daten.relais} Relais · ${daten.leitungen} durchflossene Leitungen`
+                    : 'Noch kein gültiger Stromkreis';
+            const strom = labor.querySelector('[data-labor-strom]');
+            if (strom)
+                strom.textContent = daten.gueltig ? stromText(daten.strom) : '—';
+            const uhr = labor.querySelector('[data-labor-uhr]');
+            if (uhr)
+                uhr.textContent = laborZeit();
+            const zeiten = Labor.zeitAnzeigen(z.plan, zeitStand.relais, z.spulenStand);
+            zeiten.slice(0, 8).forEach(zeit => {
+                const element = labor.querySelector(`[data-labor-zeitid="${CSS.escape(zeit.id)}"]`);
+                if (!element)
+                    return;
+                const bar = element.querySelector('[data-labor-balken]');
+                if (bar)
+                    bar.style.width = Math.round(zeit.fortschritt * 100) + '%';
+                const phase = element.querySelector('[data-labor-phase]');
+                if (phase)
+                    phase.textContent = `${zeit.phase} · ${Math.max(0, zeit.rest / 1000).toFixed(1)} s`;
+                element.classList.toggle('sp-labor-zeitaktiv', zeit.aktiv);
+            });
+        };
+        const laborMalen = () => {
+            labor.hidden = !z.simulation;
+            wurzel.classList.toggle('sp-labor-pause', !!(z.simulation && zeitStand.pause));
+            wurzel.style.setProperty('--sp-labor-tempo', String(laborTempo));
+            if (!z.simulation) {
+                labor.replaceChildren();
+                return;
+            }
+            const pausiert = zeitStand.pause;
+            const zeiten = Labor.zeitAnzeigen(z.plan, zeitStand.relais, z.spulenStand);
+            labor.innerHTML = `<div class="sp-labor-kopf">` +
+                `<span class="sp-labor-zeichen" aria-hidden="true">⚡</span>` +
+                `<strong>Live-Stromlabor</strong>` +
+                `<span class="sp-labor-lauf"${pausiert ? ' data-pause="true"' : ''}>${pausiert ? '⏸ Pausiert' : '● Aktiv'}</span>` +
+                `<span class="sp-labor-mess" data-labor-status></span>` +
+                `<span class="sp-labor-mess">I<sub>max</sub> <b data-labor-strom>—</b></span>` +
+                `<span class="sp-labor-uhr" title="Simulationszeit — sie läuft, sobald der Plan ein Zeitrelais hat" data-labor-uhr>—</span>` +
+                `<label class="sp-labor-tempo">Tempo <select data-labor-tempo aria-label="Simulationsgeschwindigkeit">` +
+                [0.25, 0.5, 1, 2, 4].map(t => `<option value="${t}"${t === laborTempo ? ' selected' : ''}>${t}×</option>`).join('') +
+                `</select></label>` +
+                `<button type="button" class="sp-labor-aktion" data-labor-aktion="pause" aria-pressed="${pausiert}" title="Simulation pausieren oder fortsetzen">${pausiert ? '▶ Weiter' : '⏸ Pause'}</button>` +
+                `<button type="button" class="sp-labor-aktion" data-labor-aktion="reset" title="Simulationsuhr, Schalter und Relais zurücksetzen">↺ Reset</button>` +
+                `</div>` +
+                (zeiten.length ? `<div class="sp-labor-zeitliste" aria-label="Zeitrelais-Fortschritt">` +
+                    zeiten.slice(0, 8).map(u => `<div class="sp-labor-zeit" data-labor-zeitid="${esc(u.id)}">` +
+                        `<strong>${esc(u.bmk)}</strong><small>${esc(u.art)} · ${Math.round(u.gesamt) / 1000} s</small>` +
+                        `<span class="sp-labor-balken"><i data-labor-balken></i></span>` +
+                        `<span data-labor-phase></span></div>`).join('') +
+                    (zeiten.length > 8 ? `<small>+${zeiten.length - 8} weitere Zeitrelais</small>` : '') +
+                    `</div>` : '');
+            laborAktualisieren();
+        };
+        labor.addEventListener('change', event => {
+            const ziel = event.target;
+            if (!ziel.matches('[data-labor-tempo]'))
+                return;
+            laborTempo = Labor.tempo(ziel.value);
+            zeitLetzter = performance.now();
+            wurzel.style.setProperty('--sp-labor-tempo', String(laborTempo));
+        });
+        labor.addEventListener('click', event => {
+            const knopf = event.target.closest('[data-labor-aktion]');
+            if (!knopf || !z.simulation)
+                return;
+            if (knopf.dataset.laborAktion === 'pause') {
+                zeitStand.pause = !zeitStand.pause;
+                zeitLetzter = performance.now();
+            }
+            else if (knopf.dataset.laborAktion === 'reset') {
+                z.stellungen = {};
+                z.spulenStand = {};
+                zeitStarten();
+                male();
+                return;
+            }
+            laborMalen();
+        });
         const fussMalen = () => {
             if (z.simulation) {
                 const e = z.ergebnis;
@@ -70631,9 +71579,12 @@ const Planflaeche = (() => {
                     `<span class="sp-simzahlen">` +
                         (e && e.ok
                             ? `${leuchtet} ${leuchtet === 1 ? 'leuchtet' : 'leuchten'} · ` +
-                                `grösster Strom ${esc(Stromfluss.zeige(e.maxStrom, 'A'))}` +
+                                `grösster Strom ${esc(stromText(e.maxStrom))}` +
                                 (e.durchgaenge > 1 ? ` · ${e.durchgaenge} Durchgänge` : '')
-                            : 'nichts gerechnet') + `</span>` +
+                            : 'Noch kein gültiger Stromkreis') + `</span>` +
+                        `<span class="sp-sim-status ${e && e.ok && e.maxStrom > 0.000001 ? 'fliesst' : 'offen'}" role="status">` +
+                        (e && e.ok && e.maxStrom > 0.000001 ? '● Strom fließt' : '○ Kein Stromfluss – Quelle, Leitungen und Schalter prüfen') + `</span>` +
+                        `<button type="button" class="sp-sim-back" data-a="zurueck-zeichnen" title="Simulation stoppen und zum Zeichnen zurückkehren">✎ Weiterzeichnen</button>` +
                         meldungHtml() +
                         `<span class="sp-simhinweis">Auf einen Schalter tippen zum Schalten` +
                         `<button data-a="ruhelage" title="Alle Schalter in die Ruhelage">Ruhelage</button></span>`;
@@ -70668,22 +71619,64 @@ const Planflaeche = (() => {
                         : `<span class="sp-hinweis">${esc(z.gewaehltesZeichen
                             ? 'Auf die Fläche tippen, um „' +
                                 (Register.fachzeichen.holen(z.gewaehltesZeichen) || { name: '?' }).name + '" zu setzen'
-                            : 'Links ein Symbol wählen, dann auf die Fläche tippen')}</span>`) +
-                    `<span class="sp-zahlen">${z.plan.teile.length} Teile · ${z.plan.leitungen.length} Leitungen</span>`;
+                            : 'Bauteil mit Maus, Finger oder Stift direkt aus der Palette ziehen')}</span>`) +
+                    `<span class="sp-zahlen">${z.plan.teile.length} Teile · ${z.plan.leitungen.length} Leitungen</span>` +
+                    `<span class="sp-quick-help">B: Palette · /: Suche · P: Stromtest · 1–5: Werkzeuge</span>`;
         };
-        const paletteMalen = (suche = '') => {
+        const paletteInfokarte = (id = z.gewaehltesZeichen) => {
+            const kasten = palette.querySelector('.sp-pal-inspektor');
+            if (!kasten)
+                return;
+            const sym = id ? Register.fachzeichen.holen(id) : null;
+            if (!sym) {
+                kasten.innerHTML = '<span class="sp-pal-info-icon" aria-hidden="true">⌁</span>' +
+                    '<div><strong>Ein Zeichen auswählen</strong><small>Antippen zum Platzieren oder auf den Plan ziehen.</small></div>';
+                return;
+            }
+            const pins = (sym.anschluesse || []).map((a) => a.nr).join(' · ');
+            kasten.innerHTML = `<span class="sp-pal-info-icon" aria-hidden="true">${Register.fachzeichen.alsSvg(sym.id, { strich: 2 })}</span>` +
+                `<div><strong>${esc(sym.name)}</strong><small>${esc(sym.erklaerung)}</small>` +
+                (pins ? `<span class="sp-pal-klemmen">Anschlüsse: ${esc(pins)}</span>` : '') + '</div>';
+        };
+        const paletteTrefferMalen = () => {
+            const liste = palette.querySelector('.sp-liste');
+            if (!liste)
+                return;
+            liste.innerHTML = paletteHtml(z.plan.art, paletteSuche, paletteGruppe, z.gewaehltesZeichen);
+            const n = liste.querySelectorAll('[data-sym]').length;
+            const counter = palette.querySelector('.sp-pal-count');
+            if (counter)
+                counter.textContent = `${n} Schaltzeichen`;
+            paletteInfokarte();
+        };
+        const paletteMalen = (suche = paletteSuche) => {
+            paletteSuche = suche;
+            const gruppen = Register.fachzeichen.gruppen();
+            const filter = [['alle', 'Alle', ''], ['favoriten', 'Favoriten', '★'], ['zuletzt', 'Zuletzt', '◷']]
+                .concat(gruppen.map(g => [g[0], g[1], g[2]]));
             palette.innerHTML =
-                `<div class="sp-suche"><input type="search" placeholder="Symbol suchen …" ` +
-                    `value="${esc(suche)}" aria-label="Symbol suchen"></div>` +
-                    `<div class="sp-liste">${paletteHtml(z.plan.art, suche)}</div>`;
-            palette.querySelectorAll('[data-sym]').forEach(b => {
-                if (b.dataset.sym === z.gewaehltesZeichen)
-                    b.classList.add('an');
-            });
+                '<div class="sp-pal-kopf"><div><span class="sp-pal-eyebrow">ELEKTRO • BIBLIOTHEK</span>' +
+                    '<h3>Schaltzeichen <span class="sp-pal-kopf-punkt" aria-hidden="true">✦</span></h3>' +
+                    '<p>Finden. Anfassen. Platzieren.</p></div>' +
+                    '<div class="sp-pal-header-actions"><button type="button" data-p-compact aria-pressed="' + String(paletteKompakt) + '" aria-label="Kompakte Schaltzeichenpalette umschalten" title="Kompakte Ansicht umschalten">' + (paletteKompakt ? '▣ Groß' : '▤ Klein') + '</button>' +
+                    '<button type="button" data-p-close class="sp-pal-schliessen" aria-label="Schaltzeichen-Bibliothek schliessen" title="Schliessen">×</button></div></div>' +
+                    `<label class="sp-suche"><span class="sp-suche-titel">Symbol finden</span>` +
+                    `<input type="search" placeholder="z. B. Schliesser, Relais, Lampe …" ` +
+                    `value="${esc(suche)}" aria-label="Schaltzeichen suchen" autocomplete="off" spellcheck="false"></label>` +
+                    `<div class="sp-pal-filter" role="group" aria-label="Schaltzeichen-Kategorien">` +
+                    filter.map(([id, name, icon]) => `<button type="button" data-p-filter="${esc(id)}" ` +
+                        `class="sp-pal-chip${paletteGruppe === id ? ' an' : ''}" aria-pressed="${paletteGruppe === id}" ` +
+                        `title="${esc(name)}">${icon ? `<span aria-hidden="true">${esc(icon)}</span>` : ''}${esc(name)}</button>`).join('') +
+                    `</div><div class="sp-pal-ergebnis"><span class="sp-pal-count" role="status" aria-live="polite"></span>` +
+                    '<span>★ Favorit speichern</span></div>' +
+                    '<div class="sp-liste" aria-label="Schaltzeichen und Gruppen"></div>' +
+                    '<div class="sp-pal-inspektor" aria-label="Information zum Schaltzeichen"></div>';
+            palette.classList.toggle('sp-pal-kompakt', paletteKompakt);
+            paletteTrefferMalen();
         };
         const ZEITSPULEN = new Set(['spule-anzugsverzoegert', 'spule-abfallverzoegert']);
         const zeitspulen = () => z.plan.teile.filter(t => ZEITSPULEN.has(t.zeichen) && t.bmk);
-        let zeitStand = { relais: {}, ausgaenge: {} };
+        let zeitStand = { relais: {}, ausgaenge: {}, laufzeit: 0, pause: false };
         let zeitTakt = null;
         let zeitLetzter = 0;
         const zeitSchritt = (spulen, deltaMs) => {
@@ -70720,19 +71713,21 @@ const Planflaeche = (() => {
                 return;
             }
             const jetzt = performance.now();
-            const delta = Math.max(0, Math.min(250, jetzt - zeitLetzter));
+            const delta = Math.max(0, Math.min(250, jetzt - zeitLetzter)) * laborTempo;
             zeitLetzter = jetzt;
-            if (!z.ergebnis || !z.ergebnis.ok)
+            if (zeitStand.pause)
                 return;
-            if (zeitSchritt(z.ergebnis.spulen, delta)) {
+            zeitStand.laufzeit += delta;
+            if (z.ergebnis && z.ergebnis.ok && zeitSchritt(z.ergebnis.spulen, delta)) {
                 rechnen();
                 buehneMalen();
                 fussMalen();
             }
+            laborAktualisieren();
         };
         const zeitStarten = () => {
             zeitAnhalten();
-            zeitStand = { relais: {}, ausgaenge: {} };
+            zeitStand = { relais: {}, ausgaenge: {}, laufzeit: 0, pause: false };
             if (!z.simulation || !zeitspulen().length)
                 return;
             zeitLetzter = performance.now();
@@ -70745,7 +71740,7 @@ const Planflaeche = (() => {
             }
             const mitZeit = zeitspulen().length > 0;
             for (let runde = 0; runde < 3; runde++) {
-                z.ergebnis = Stromfluss.rechne(z.plan, z.stellungen, z.spulenStand, mitZeit ? zeitStand.ausgaenge : undefined);
+                z.ergebnis = stromRechnung(z.plan, z.stellungen, z.spulenStand, mitZeit ? zeitStand.ausgaenge : undefined);
                 if (z.ergebnis && z.ergebnis.ok)
                     z.spulenStand = z.ergebnis.spulen;
                 if (!mitZeit || !z.ergebnis?.ok || !zeitSchritt(z.ergebnis.spulen, 0))
@@ -70770,11 +71765,30 @@ const Planflaeche = (() => {
             buehne.classList.toggle('sp-laeuft', z.simulation);
             if (!z.simulation)
                 return;
+            if (e && e.ok)
+                z.plan.teile.forEach(t => {
+                    const grp = buehne.querySelector(`g[data-id="${CSS.escape(t.id)}"]`);
+                    if (!grp)
+                        return;
+                    const spule = /^(spule|spule-anzugsverzoegert|spule-abfallverzoegert)$/.test(t.zeichen);
+                    const kontakt = /^(schuetz-schliesser|schuetz-oeffner)$/.test(t.zeichen);
+                    const lampe = /^(lampe|signalleuchte|ch-kontrolllampe)$/.test(t.zeichen);
+                    if (spule || kontakt) {
+                        const aktiv = !!z.spulenStand[t.bmk] || !!zeitStand.ausgaenge[t.bmk];
+                        grp.classList.toggle('sp-labor-relais-an', aktiv);
+                        grp.classList.toggle('sp-labor-relais-aus', !aktiv);
+                        grp.setAttribute('data-labor-zustand', aktiv ? 'angezogen' : 'ruhelage');
+                    }
+                    if (lampe) {
+                        const hell = Number(e.werte?.[t.id]?.helligkeit) || 0;
+                        grp.classList.toggle('sp-labor-lampe-an', hell > 0.01);
+                        grp.style.setProperty('--sp-labor-hell', String(Math.max(0, Math.min(1, hell))));
+                    }
+                });
             z.plan.teile.forEach(t => {
-                const st = Stromfluss.stellungenVon(t.zeichen);
+                const { st, vh } = schaltart(t.zeichen);
                 if (st.length < 2)
                     return;
-                const vh = Stromfluss.verhalten(t.zeichen);
                 if (vh && vh.folgtSpule)
                     return;
                 const g = buehne.querySelector(`[data-id="${CSS.escape(t.id)}"]`);
@@ -70787,8 +71801,47 @@ const Planflaeche = (() => {
                 g.appendChild(titel);
             });
         };
-        const male = () => { rechnen(); kopfMalen(); buehneMalen(); fussMalen(); if (batterie)
-            batterie.aktualisiere(); };
+        const kontextMalen = () => {
+            if (karteId && !z.auswahl.has(karteId))
+                karteSchliessen();
+            const ausgewaehlt = [...z.auswahl].filter(id => z.plan.teile.some(t => t.id === id) ||
+                z.plan.leitungen.some(l => l.id === id));
+            kontextleiste.hidden = !!z.simulation || !ausgewaehlt.length;
+            if (kontextleiste.hidden) {
+                kontextleiste.replaceChildren();
+                return;
+            }
+            const teil = z.plan.teile.find(t => t.id === ausgewaehlt[0]);
+            const titel = ausgewaehlt.length > 1 ? `${ausgewaehlt.length} ausgewählt` :
+                String(teil?.beschriftung || teil?.bmk ||
+                    (teil ? Register.fachzeichen.holen(teil.zeichen)?.name : 'Leitung') || 'Auswahl');
+            kontextleiste.innerHTML =
+                `<span class="sp-kontext-titel" title="${esc(titel)}">${esc(titel)}</span>` +
+                    `<button type="button" data-kontext="eigenschaften" title="Eigenschaften bearbeiten" aria-label="Eigenschaften der Auswahl öffnen">✎ <span>Bearbeiten</span></button>` +
+                    `<button type="button" data-kontext="drehen" title="Drehen (R)" aria-label="Drehen">↻</button>` +
+                    `<button type="button" data-kontext="spiegeln" title="Spiegeln (H)" aria-label="Spiegeln">⇄</button>` +
+                    `<button type="button" data-kontext="doppeln" title="Duplizieren (Strg+D)" aria-label="Duplizieren">⧉</button>` +
+                    `<button type="button" data-kontext="loeschen" title="Löschen (Entf)" aria-label="Löschen">✕</button>` +
+                    `<button type="button" data-kontext="abwahl" title="Auswahl aufheben" aria-label="Auswahl aufheben">×</button>`;
+        };
+        const male = () => {
+            if (z.simulation && karteId)
+                karteSchliessen();
+            rechnen();
+            kopfMalen();
+            buehneMalen();
+            fussMalen();
+            laborMalen();
+            kontextMalen();
+            if (batterie && !batteriePanel.hidden)
+                batterie.aktualisiere();
+            if (relais && !relaisPanel.hidden)
+                relais.aktualisiere();
+            if (pruefungOffen)
+                pruefMalen();
+            if (studioOffen)
+                studioMalen();
+        };
         const ZOOM_MIN = 0.25, ZOOM_MAX = 8;
         const svgJetzt = () => leinwand.querySelector('svg.sp-flaeche');
         const ansichtAnwenden = () => {
@@ -70852,6 +71905,207 @@ const Planflaeche = (() => {
             else if (b.dataset.a === 'zoom-alles')
                 allesZeigen();
         });
+        const pruefLaden = () => {
+            const w = window;
+            if (w.Planpruefung)
+                return Promise.resolve();
+            if (w.__pruefLaden)
+                return w.__pruefLaden;
+            const v = new Promise((ja, nein) => {
+                const s = document.createElement('script');
+                s.src = 'quell/bereiche/bloecke/arten/schaltplan-pruefung.js';
+                s.addEventListener('load', () => ja());
+                s.addEventListener('error', () => nein(new Error('Das Prüfzentrum liess sich nicht laden.')));
+                document.head.appendChild(s);
+            });
+            w.__pruefLaden = v;
+            v.catch(() => { w.__pruefLaden = null; });
+            return v;
+        };
+        const pruefDaten = () => window.Planpruefung.analysieren(z.plan, {
+            anschluesseVon: (t) => Schaltplan.anschluesseVon(t),
+            holeSymbol: (id) => Register.fachzeichen.holen(id),
+            netze: (plan) => Stromfluss.netze(plan),
+            offeneKlemmen: (plan) => {
+                const r = stromRechnung(plan, {}, {});
+                return ((r && r.warnungen) || []).filter((w) => / hängt an keiner Leitung\.$/.test(w));
+            }
+        });
+        const pruefMalen = () => {
+            if (!pruefungOffen)
+                return;
+            if (!window.Planpruefung) {
+                pruefPanel.innerHTML = '<p class="sp-bat-hinweis" role="status">Das Prüfzentrum wird geladen …</p>';
+                pruefLaden().then(() => { if (pruefungOffen && wurzel.isConnected)
+                    pruefMalen(); })
+                    .catch((err) => { pruefPanel.innerHTML = '<p class="sp-bat-hinweis" role="alert">' + esc(err.message) + '</p>'; });
+                return;
+            }
+            const r = pruefDaten();
+            const tasten = ['diagnose', 'bauteile', 'netze'].map((id, i) => `<button type="button" data-p-tab="${id}" aria-pressed="${pruefAnsicht === id}"` +
+                ` class="${pruefAnsicht === id ? 'an' : ''}">${['Prüfpunkte', 'Stückliste', 'Netze'][i]}</button>`).join('');
+            const kopf = `<div class="sp-pruef-titel"><div><strong>Schaltplan-Prüfzentrum</strong>` +
+                `<p>Hinweise zur Zeichnung – keine elektrische Sicherheitsabnahme.</p></div>` +
+                `<button type="button" data-p-a="schliessen" aria-label="Prüfzentrum schliessen">✕</button></div>` +
+                `<div class="sp-pruef-kennzahlen" aria-live="polite">` +
+                `<span>${r.statistik.teile} Bauteile</span><span>${r.statistik.leitungen} Leitungen</span>` +
+                `<span>${r.statistik.netze} Netze</span><span>${r.zaehler.fehler} Fehler</span>` +
+                `<span>${r.zaehler.warnung} Warnungen</span><span>${r.zaehler.hinweis} Hinweise</span></div>` +
+                `<div class="sp-pruef-tabs" role="group" aria-label="Prüfzentrum Ansichten">${tasten}</div>`;
+            let liste = '';
+            if (pruefAnsicht === 'diagnose') {
+                liste = r.punkte.length ? r.punkte.slice(0, 250).map((eintrag, i) => `<button type="button" class="sp-pruef-zeile" data-p-id="${esc(eintrag.id)}" data-p-index="${i}"` +
+                    ` data-suche="${esc((eintrag.text + ' ' + eintrag.id).toLocaleLowerCase('de'))}"` +
+                    ` title="Im Schaltplan auswählen"><span class="sp-pruef-stufe ${esc(eintrag.stufe)}">${esc(eintrag.stufe)}</span>` +
+                    `<span>${esc(eintrag.text)}</span></button>`).join('') :
+                    '<p class="sp-pruef-leer">Keine Auffälligkeiten in den geprüften Strukturregeln.</p>';
+                if (r.punkte.length > 250)
+                    liste += `<p>${r.punkte.length - 250} weitere Hinweise im Textbericht.</p>`;
+            }
+            else if (pruefAnsicht === 'bauteile') {
+                liste = r.bauteile.map((b) => `<button type="button" title="Bauteile dieses Typs auswählen" class="sp-pruef-bestand" data-p-typ="${esc(b.zeichen)}"` +
+                    ` data-suche="${esc((b.name + ' ' + b.zeichen + ' ' + b.kennzeichen.join(' ')).toLocaleLowerCase('de'))}">` +
+                    `<b>${esc(b.name)}</b><span>${b.anzahl} ×</span><small>${esc(b.kennzeichen.join(', ') || b.zeichen)}</small></button>`).join('') ||
+                    '<p class="sp-pruef-leer">Noch keine Bauteile im Plan.</p>';
+            }
+            else {
+                liste = r.netze.map((n) => `<button type="button" title="Netz im Plan auswählen" class="sp-pruef-bestand" data-p-netz="${n.nummer}"` +
+                    ` data-suche="${esc(('N' + n.nummer + ' ' + n.klemmen.map((k) => k.teil + ' ' + k.nr).join(' ')).toLocaleLowerCase('de'))}">` +
+                    `<b>Netz ${n.nummer + 1}</b><span>${n.leitungen.length} Leiter</span>` +
+                    `<small>${esc(n.klemmen.map((k) => `${k.teil}:${k.nr}`).join(', ') || 'Keine Bauteilklemme')}</small></button>`).join('') ||
+                    '<p class="sp-pruef-leer">Keine elektrischen Netze vorhanden.</p>';
+            }
+            pruefPanel.innerHTML = kopf + `<div class="sp-pruef-werkzeuge">` +
+                `<label>Filtern<input type="search" class="sp-pruef-suche" value="${esc(pruefSuche)}" placeholder="Kennzeichen, Typ, Fundstelle …" /></label>` +
+                `<button type="button" data-p-a="export">${pruefAnsicht === 'diagnose' ? 'Bericht TXT' : 'Export CSV'}</button>` +
+                `<button type="button" data-p-a="aufraeumen" title="Redundante Zwischenpunkte entfernen – Anschlusspunkte bleiben erhalten">Leitungen aufräumen</button>` +
+                `</div><div class="sp-pruef-liste">${liste}</div>`;
+            pruefFiltern();
+        };
+        const pruefFiltern = () => {
+            const wort = pruefSuche.trim().toLocaleLowerCase('de');
+            pruefPanel.querySelectorAll('[data-suche]').forEach(el => {
+                el.hidden = !!wort && !(el.dataset.suche || '').includes(wort);
+            });
+        };
+        const pruefFokussieren = (eintrag) => {
+            if (z.zieht || !eintrag?.id)
+                return;
+            const teil = z.plan.teile.find(t => t.id === eintrag.id);
+            const leitung = z.plan.leitungen.find(l => l.id === eintrag.id);
+            const t = z.plan.texte.find(t => t.id === eintrag.id);
+            const p = Number.isFinite(eintrag.x) && Number.isFinite(eintrag.y)
+                ? { x: eintrag.x, y: eintrag.y }
+                : teil || t || (leitung && leitung.punkte?.[0]);
+            if (!p)
+                return;
+            z.auswahl.clear();
+            z.auswahl.add(eintrag.id);
+            z.werkzeug = 'zeigen';
+            z.gewaehltesZeichen = '';
+            const zoom = Math.max(1.5, z.ansicht.zoom);
+            z.ansicht = { zoom: Math.min(3, zoom),
+                x: p.x - z.plan.breite / (2 * Math.min(3, zoom)),
+                y: p.y - z.plan.hoehe / (2 * Math.min(3, zoom)) };
+            male();
+            wurzel.focus({ preventScroll: true });
+        };
+        const pruefMehrfach = (ids) => {
+            if (z.zieht || !ids.length)
+                return;
+            z.auswahl = new Set(ids);
+            z.werkzeug = 'zeigen';
+            z.gewaehltesZeichen = '';
+            const punkte = [];
+            z.plan.teile.forEach(t => { if (z.auswahl.has(t.id))
+                punkte.push({ x: t.x, y: t.y }); });
+            z.plan.leitungen.forEach(l => { if (z.auswahl.has(l.id))
+                punkte.push(...l.punkte); });
+            if (punkte.length) {
+                const links = Math.min(...punkte.map(p => p.x)), rechts = Math.max(...punkte.map(p => p.x));
+                const oben = Math.min(...punkte.map(p => p.y)), unten = Math.max(...punkte.map(p => p.y));
+                const zoom = Math.max(.25, Math.min(3, z.plan.breite / (rechts - links + 120), z.plan.hoehe / (unten - oben + 120)));
+                z.ansicht = { zoom, x: (links + rechts) / 2 - z.plan.breite / (2 * zoom),
+                    y: (oben + unten) / 2 - z.plan.hoehe / (2 * zoom) };
+            }
+            male();
+            wurzel.focus({ preventScroll: true });
+        };
+        const pruefHerunterladen = (text, datei, mime) => {
+            if (z.zieht) {
+                UI.toast('Erst den laufenden Zug beenden.');
+                return;
+            }
+            const blob = new Blob([text], { type: mime });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = datei;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 4000);
+        };
+        pruefPanel.addEventListener('input', e => {
+            const el = e.target;
+            if (!el.classList.contains('sp-pruef-suche'))
+                return;
+            pruefSuche = el.value;
+            pruefFiltern();
+        });
+        pruefPanel.addEventListener('click', e => {
+            const b = e.target.closest('[data-p-tab],[data-p-a],[data-p-id],[data-p-typ],[data-p-netz]');
+            if (!b)
+                return;
+            if (b.dataset.pTab) {
+                pruefAnsicht = b.dataset.pTab;
+                pruefMalen();
+                return;
+            }
+            if (b.dataset.pTyp) {
+                const ids = z.plan.teile.filter(t => t.zeichen === b.dataset.pTyp).map(t => t.id);
+                pruefMehrfach(ids);
+                return;
+            }
+            if (b.dataset.pNetz !== undefined) {
+                const n = pruefDaten().netze.find((n) => String(n.nummer) === b.dataset.pNetz);
+                if (n)
+                    pruefMehrfach([...new Set([...n.leitungen, ...n.klemmen.map((k) => k.teil)])]);
+                return;
+            }
+            if (b.dataset.pId) {
+                const r = pruefDaten();
+                const eintrag = r.punkte[Number(b.dataset.pIndex)];
+                if (eintrag?.id === b.dataset.pId)
+                    pruefFokussieren(eintrag);
+                return;
+            }
+            if (b.dataset.pA === 'schliessen') {
+                pruefungOffen = false;
+                pruefPanel.hidden = true;
+                kopfMalen();
+                return;
+            }
+            if (b.dataset.pA === 'export') {
+                const r = pruefDaten(), P = window.Planpruefung;
+                const daten = pruefAnsicht === 'diagnose' ? P.berichtText(r) :
+                    pruefAnsicht === 'bauteile' ? P.bauteileCsv(r) : P.netzeCsv(r);
+                pruefHerunterladen(daten, pruefAnsicht === 'diagnose' ? 'Redion-Schaltplan-Pruefbericht.txt' :
+                    pruefAnsicht === 'bauteile' ? 'Redion-Stueckliste.csv' : 'Redion-Netzliste.csv', pruefAnsicht === 'diagnose' ? 'text/plain;charset=utf-8' : 'text/csv;charset=utf-8');
+                return;
+            }
+            if (b.dataset.pA === 'aufraeumen') {
+                if (z.zieht)
+                    return;
+                const P = window.Planpruefung;
+                const kopie = JSON.parse(JSON.stringify(z.plan));
+                const ergebnis = P.vereinfachen(kopie, (t) => Schaltplan.anschluesseVon(t));
+                if (!ergebnis.entfernt) {
+                    UI.toast('Keine sicher entfernbaren Zwischenpunkte gefunden.');
+                    return;
+                }
+                aendere(() => { z.plan.leitungen = kopie.leitungen; });
+                UI.toast(`${ergebnis.entfernt} überflüssige Zwischenpunkte entfernt – mit Rückgängig umkehrbar.`);
+            }
+        });
         const teilweiseMalen = (teilIds) => {
             const svg = svgJetzt();
             if (!svg)
@@ -70895,11 +72149,12 @@ const Planflaeche = (() => {
                 g.innerHTML = html;
         };
         const setzeSymbol = (id, x, y) => {
-            if (!id)
-                return;
+            if (!id || z.simulation || z.zieht || !Register.fachzeichen.holen(id))
+                return null;
+            const neu = Schaltplan.uid();
             aendere(() => {
                 z.plan.teile.push({
-                    id: Schaltplan.uid(), zeichen: id,
+                    id: neu, zeichen: id,
                     x: Schaltplan.rasten(x), y: Schaltplan.rasten(y),
                     drehung: 0, gespiegelt: false,
                     bmk: Schaltplan.naechstesBmk(z.plan, id),
@@ -70907,6 +72162,10 @@ const Planflaeche = (() => {
                     ebene: aktiveEbene()
                 });
             });
+            const g = svgJetzt()?.querySelector(`.sp-teil[data-id="${CSS.escape(neu)}"]`);
+            if (g)
+                g.classList.add('sp-frisch-eingesetzt');
+            return neu;
         };
         const netzSchonDa = () => z.plan.texte.some(t => t && t.t === 'L1') ||
             z.plan.teile.some(t => t && t.zeichen === 'wechselspannung');
@@ -71148,10 +72407,9 @@ const Planflaeche = (() => {
             const t = teilVon(teilId);
             if (!t)
                 return false;
-            const st = Stromfluss.stellungenVon(t.zeichen);
+            const { st, vh } = schaltart(t.zeichen);
             if (st.length < 2)
                 return false;
-            const vh = Stromfluss.verhalten(t.zeichen);
             if (vh && vh.folgtSpule) {
                 UI.toast(`${t.bmk || 'Dieser Kontakt'} wird von der Spule geschaltet, nicht von Hand.`);
                 return true;
@@ -71202,9 +72460,15 @@ const Planflaeche = (() => {
                     return t && (t.x !== a.x || t.y !== a.y);
                 });
             if (!bewegt) {
+                const tip = teilKlickStart;
+                teilKlickStart = null;
                 male();
+                if (tip && !tip.schicht)
+                    karteOeffnen(tip.id);
                 return;
             }
+            teilKlickStart = null;
+            karteSchliessen();
             const vorher = zug.vorher ?? Schaltplan.vorherMerken(z.plan);
             const bericht = Schaltplan.nachziehen(z.plan, vorher, [...zug.ausgang.keys()], { heilen: true, vonVorn: true });
             aendere(() => { });
@@ -71373,7 +72637,278 @@ const Planflaeche = (() => {
             document.removeEventListener('pointerup', fingerWeg, true);
             document.removeEventListener('pointercancel', fingerWeg, true);
         };
+        let platzZug = null;
+        let platzGeist = null;
+        let platzGeistId = '';
+        let platzBildFrame = 0;
+        let platzKlickBlockBis = 0;
+        let platzLetzteBild = null;
+        const geistEntfernen = () => {
+            if (platzBildFrame)
+                cancelAnimationFrame(platzBildFrame);
+            platzBildFrame = 0;
+            platzLetzteBild = null;
+            platzGeist?.remove();
+            platzGeist = null;
+            platzGeistId = '';
+        };
+        const platzOrt = (clientX, clientY) => {
+            const svg = svgJetzt();
+            if (!svg || !wurzel.isConnected)
+                return null;
+            const unter = document.elementFromPoint(clientX, clientY);
+            if (!unter || !leinwand.contains(unter))
+                return null;
+            const roh = ortAus(svg, { clientX, clientY }, z.plan, true);
+            if (roh.x < 0 || roh.y < 0 || roh.x > z.plan.breite || roh.y > z.plan.hoehe)
+                return null;
+            const p = ortAus(svg, { clientX, clientY }, z.plan);
+            const m = svg.getScreenCTM();
+            const bild = m ? new DOMPoint(p.x, p.y).matrixTransform(m) : null;
+            return { x: p.x, y: p.y, sx: bild?.x ?? clientX, sy: bild?.y ?? clientY };
+        };
+        const platzGeistZeigen = (id, clientX, clientY) => {
+            const ort = platzOrt(clientX, clientY);
+            if (!platzGeist || platzGeistId !== id) {
+                geistEntfernen();
+                platzGeist = document.createElement('div');
+                platzGeist.className = 'sp-platziergeist';
+                platzGeist.setAttribute('aria-hidden', 'true');
+                const bild = document.createElement('div');
+                bild.className = 'sp-platziergeist-bild';
+                bild.innerHTML = Register.fachzeichen.alsSvg(id, { strich: 2 });
+                const name = document.createElement('span');
+                name.textContent = Register.fachzeichen.holen(id)?.name || id;
+                platzGeist.append(bild, name);
+                document.body.appendChild(platzGeist);
+                platzGeistId = id;
+            }
+            platzLetzteBild = { x: ort?.sx ?? clientX, y: ort?.sy ?? clientY, ok: !!ort };
+            if (!platzBildFrame)
+                platzBildFrame = requestAnimationFrame(() => {
+                    platzBildFrame = 0;
+                    const el = platzGeist, pos = platzLetzteBild;
+                    if (!el || !pos || !wurzel.isConnected) {
+                        geistEntfernen();
+                        return;
+                    }
+                    el.style.left = `${pos.x}px`;
+                    el.style.top = `${pos.y}px`;
+                    el.classList.toggle('sp-platziergeist-gueltig', pos.ok);
+                });
+            return ort;
+        };
+        const platzZugAbbrechen = () => {
+            platzZug = null;
+            document.removeEventListener('pointermove', platzZugBewegen, true);
+            document.removeEventListener('pointerup', platzZugEnde, true);
+            document.removeEventListener('pointercancel', platzZugCancel, true);
+            document.removeEventListener('pointerdown', platzZugZweiterFinger, true);
+            document.removeEventListener('keydown', platzZugEscape, true);
+            geistEntfernen();
+        };
+        const platzZugZweiterFinger = (e) => {
+            if (platzZug && e.pointerId !== platzZug.pointerId)
+                platzZugAbbrechen();
+        };
+        const platzZugEscape = (e) => {
+            if (e.key !== 'Escape')
+                return;
+            e.preventDefault();
+            e.stopPropagation();
+            platzZugAbbrechen();
+        };
+        const platzZugBewegen = (e) => {
+            const zug = platzZug;
+            if (!zug || e.pointerId !== zug.pointerId)
+                return;
+            if (!wurzel.isConnected) {
+                platzZugAbbrechen();
+                return;
+            }
+            const strecke = Math.hypot(e.clientX - zug.startX, e.clientY - zug.startY);
+            if (!zug.bewegt && strecke < (zug.art === 'touch' ? 10 : 6))
+                return;
+            zug.bewegt = true;
+            e.preventDefault();
+            platzGeistZeigen(zug.id, e.clientX, e.clientY);
+        };
+        const platzZugCancel = (e) => {
+            if (platzZug && e.pointerId === platzZug.pointerId)
+                platzZugAbbrechen();
+        };
+        const platzZugEnde = (e) => {
+            const zug = platzZug;
+            if (!zug || zug.pointerId !== e.pointerId)
+                return;
+            const ort = zug.bewegt && !z.simulation && !z.zieht
+                ? platzOrt(e.clientX, e.clientY) : null;
+            platzZugAbbrechen();
+            if (!zug.bewegt)
+                return;
+            platzKlickBlockBis = Date.now() + 380;
+            if (!ort || !wurzel.isConnected)
+                return;
+            studioZeichenWahl(zug.id, false);
+            const neu = setzeSymbol(zug.id, ort.x, ort.y);
+            paletteMalen(palette.querySelector('input')?.value || '');
+            if (neu) {
+                const puls = document.createElement('div');
+                puls.className = 'sp-platzierpuls';
+                puls.setAttribute('aria-hidden', 'true');
+                puls.style.left = `${ort.sx}px`;
+                puls.style.top = `${ort.sy}px`;
+                document.body.appendChild(puls);
+                puls.addEventListener('animationend', () => puls.remove(), { once: true });
+                setTimeout(() => puls.remove(), 800);
+            }
+        };
+        const platzQuelle = (e) => {
+            const ziel = e.target;
+            const b = ziel.closest('[data-st-symbol], [data-sym]');
+            const id = b?.dataset.stSymbol || b?.dataset.sym;
+            if (!id || e.button !== 0 || e.altKey || z.simulation || z.zieht || platzZug ||
+                !Register.fachzeichen.holen(id))
+                return;
+            platzZug = { id, pointerId: e.pointerId, startX: e.clientX, startY: e.clientY,
+                bewegt: false, art: e.pointerType };
+            document.addEventListener('pointermove', platzZugBewegen, { capture: true, passive: false });
+            document.addEventListener('pointerup', platzZugEnde, true);
+            document.addEventListener('pointercancel', platzZugCancel, true);
+            document.addEventListener('pointerdown', platzZugZweiterFinger, true);
+            document.addEventListener('keydown', platzZugEscape, true);
+            if (e.pointerType !== 'mouse')
+                e.preventDefault();
+        };
+        palette.addEventListener('pointerdown', platzQuelle);
+        studioPanel.addEventListener('pointerdown', platzQuelle);
+        const karteSchliessen = () => {
+            karteId = '';
+            schnellkarte.hidden = true;
+            schnellkarte.replaceChildren();
+        };
+        const istZeitspule = (t) => t.zeichen === 'spule-anzugsverzoegert' || t.zeichen === 'spule-abfallverzoegert';
+        const spalteVon = (t) => window.RelaisKern?.spaltenTitel?.(z.plan, t) || '';
+        const karteMalen = () => {
+            const t = karteId && teilVon(karteId);
+            if (!t || z.simulation) {
+                karteSchliessen();
+                return;
+            }
+            const sym = Register.fachzeichen.holen(t.zeichen);
+            const original = spalteVon(t);
+            const zeit = istZeitspule(t);
+            schnellkarte.hidden = false;
+            schnellkarte.innerHTML =
+                `<div class="sp-schnellkarte-kopf"><div><b>${esc(sym?.name || t.zeichen)}</b>` +
+                    `<small>Bauteil · ${esc(t.bmk || 'ohne Kennzeichen')}</small></div>` +
+                    `<button type="button" data-sk="zu" aria-label="Eigenschaftenkarte schliessen">✕</button></div>` +
+                    `<form data-sk-form><label>Beschriftung` +
+                    `<input name="beschriftung" maxlength="120" autocomplete="off" placeholder="z. B. Hauptschütz, Alarm, Motor rechts" value="${esc(t.beschriftung || '')}"></label>` +
+                    `<label>Betriebsmittelkennzeichen` +
+                    `<input name="bmk" maxlength="40" autocomplete="off" value="${esc(t.bmk || '')}"></label>` +
+                    (zeit ? `<label>Verzögerung in Sekunden` +
+                        `<input type="number" min="0" max="3600" step="0.1" name="verzoegerung" value="${Number.isFinite(t.werte?.T) ? t.werte.T : 3}"></label>` : '') +
+                    (original ? `<div class="sp-schnellkarte-original"><small>Original-Spaltenüberschrift (${Number(t.legacySpalte) + 1}):</small>` +
+                        `<span>${esc(original)}</span><button type="button" data-sk="spalte">Als Beschriftung übernehmen</button>` +
+                        `<small>Die Zuordnung ist eine manuelle Entscheidung, keine bestätigte Originalverbindung.</small></div>` : '') +
+                    `<div class="sp-schnellkarte-aktionen"><button class="prim" type="submit">Speichern</button>` +
+                    `<button type="button" data-sk="details">Anschlüsse</button></div></form>` +
+                    `<p class="sp-schnellkarte-hilfe">Einmal antippen zum Bearbeiten · Zum Verschieben ziehen</p>`;
+        };
+        const karteOeffnen = (id) => {
+            if (!teilVon(id) || z.simulation)
+                return;
+            karteId = id;
+            studioTab = 'eigenschaften';
+            if (studioOffen)
+                studioMalen();
+            karteMalen();
+        };
+        schnellkarte.addEventListener('pointerdown', e => e.stopPropagation());
+        schnellkarte.addEventListener('click', e => {
+            const b = e.target.closest('[data-sk]');
+            if (!b)
+                return;
+            const t = teilVon(karteId);
+            if (b.dataset.sk === 'zu') {
+                karteSchliessen();
+                return;
+            }
+            if (!t || z.simulation)
+                return;
+            if (b.dataset.sk === 'spalte') {
+                const feld = schnellkarte.querySelector('[name="beschriftung"]');
+                if (feld) {
+                    feld.value = spalteVon(t);
+                    feld.focus();
+                }
+                return;
+            }
+            if (b.dataset.sk === 'details') {
+                karteSchliessen();
+                teilDialog(t);
+            }
+        });
+        schnellkarte.addEventListener('submit', e => {
+            const form = e.target.closest('[data-sk-form]');
+            if (!form)
+                return;
+            e.preventDefault();
+            const t = teilVon(karteId);
+            if (!t || z.simulation || z.zieht)
+                return;
+            const bmk = form.elements.namedItem('bmk').value.trim().slice(0, 40);
+            const beschriftung = form.elements.namedItem('beschriftung').value.trim().slice(0, 120);
+            const zeitFeld = form.elements.namedItem('verzoegerung');
+            const sekunden = zeitFeld ? Number(zeitFeld.value) : null;
+            if (zeitFeld && (!zeitFeld.value.trim() || !Number.isFinite(sekunden) || sekunden < 0 || sekunden > 3600)) {
+                zeitFeld.setCustomValidity('Bitte 0 bis 3600 Sekunden eingeben.');
+                zeitFeld.reportValidity();
+                return;
+            }
+            if (t.bmk !== bmk || (t.beschriftung || '') !== beschriftung ||
+                (zeitFeld && (Number.isFinite(t.werte?.T) ? t.werte.T : 3) !== sekunden)) {
+                aendere(() => {
+                    t.bmk = bmk;
+                    if (beschriftung)
+                        t.beschriftung = beschriftung;
+                    else
+                        delete t.beschriftung;
+                    if (zeitFeld)
+                        t.werte = { ...(t.werte || {}), T: sekunden };
+                });
+            }
+            karteMalen();
+        });
+        kontextleiste.addEventListener('pointerdown', e => e.stopPropagation());
+        kontextleiste.addEventListener('click', e => {
+            const knop = e.target.closest('[data-kontext]');
+            if (!knop || z.simulation || z.zieht)
+                return;
+            const aktion = knop.dataset.kontext;
+            if (aktion === 'abwahl') {
+                z.auswahl.clear();
+                karteSchliessen();
+                male();
+                return;
+            }
+            if (aktion === 'eigenschaften') {
+                studioOffen = true;
+                studioTab = 'eigenschaften';
+                studioPanel.hidden = false;
+                paletteOffen = false;
+                palette.hidden = true;
+                wurzel.classList.remove('sp-palette-offen');
+                studioMalen();
+                kopfMalen();
+                return;
+            }
+            ({ drehen, spiegeln, doppeln, loeschen }[aktion || '']?.());
+        });
         buehne.addEventListener('pointerdown', e => {
+            if (e.target.closest('.sp-schnellkarte,.sp-kontextleiste'))
+                return;
             const svg = svgJetzt();
             if (!svg)
                 return;
@@ -71463,11 +72998,14 @@ const Planflaeche = (() => {
             const g = teilAm(ziel);
             if (!g || !g.dataset.id) {
                 if (z.gewaehltesZeichen) {
+                    geistEntfernen();
                     setzeSymbol(z.gewaehltesZeichen, p.x, p.y);
                     return;
                 }
-                if (!e.shiftKey)
+                if (!e.shiftKey) {
                     z.auswahl.clear();
+                    karteSchliessen();
+                }
                 zugBeginnen({ art: 'rahmen', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang: new Map() });
                 svg.setPointerCapture(e.pointerId);
                 male();
@@ -71507,6 +73045,7 @@ const Planflaeche = (() => {
                 letzterTipp = { id: '', zeit: 0 };
                 const t = teilVon(id);
                 if (t) {
+                    karteSchliessen();
                     teilDialog(t);
                     return;
                 }
@@ -71523,6 +73062,7 @@ const Planflaeche = (() => {
                 if (t)
                     ausgang.set(x, { x: t.x, y: t.y });
             });
+            teilKlickStart = { id, x: e.clientX, y: e.clientY, schicht: e.shiftKey };
             zugBeginnen({ art: 'teil', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang,
                 vorher: Schaltplan.vorherMerken(z.plan),
                 lage: [...ausgang.values()].map(a => a.x + ',' + a.y).join(';') });
@@ -71530,7 +73070,15 @@ const Planflaeche = (() => {
             male();
         });
         buehne.addEventListener('pointermove', e => {
-            if (!z.zieht || e.pointerId !== z.zieht.zeiger)
+            if (!z.zieht) {
+                if (!platzZug && e.pointerType !== 'touch' && !e.buttons &&
+                    !z.simulation && z.werkzeug === 'zeigen' && z.gewaehltesZeichen)
+                    platzGeistZeigen(z.gewaehltesZeichen, e.clientX, e.clientY);
+                else if (!platzZug)
+                    geistEntfernen();
+                return;
+            }
+            if (e.pointerId !== z.zieht.zeiger)
                 return;
             const svg = svgJetzt();
             if (!svg)
@@ -71621,6 +73169,8 @@ const Planflaeche = (() => {
                     `fill-opacity=".07" stroke="currentColor" stroke-dasharray="4 3"/>`);
             }
         });
+        buehne.addEventListener('pointerleave', () => { if (!platzZug)
+            geistEntfernen(); });
         const schieneEnde = (a, p) => Math.abs(p.x - a.x) >= Math.abs(p.y - a.y) ? { x: p.x, y: a.y } : { x: a.x, y: p.y };
         const zugEnde = (e) => {
             if (!z.zieht || e.pointerId !== z.zieht.zeiger)
@@ -71634,6 +73184,8 @@ const Planflaeche = (() => {
             if (zug.art === 'schwenk')
                 return;
             if (zug.art === 'teil') {
+                if (teilKlickStart && Math.hypot(e.clientX - teilKlickStart.x, e.clientY - teilKlickStart.y) > 9)
+                    teilKlickStart = null;
                 teilzugSichern(zug);
                 return;
             }
@@ -71793,6 +73345,219 @@ const Planflaeche = (() => {
             if (wurzel.isConnected)
                 wurzel.focus({ preventScroll: true });
         };
+        const studioHelfer = () => StudioHilfe;
+        const studioLetzteLaden = () => {
+            const roh = typeof Store !== 'undefined' ? Store.getMeta('redion:elektro:letzte:v1', []) : [];
+            return studioHelfer()?.leseLetzte(roh) || [];
+        };
+        studioLetzte = studioLetzteLaden();
+        const studioZeichenWahl = (id, neuZeichnen = true) => {
+            if (z.simulation || z.zieht || !Register.fachzeichen.holen(id))
+                return;
+            z.werkzeug = 'zeigen';
+            z.gewaehltesZeichen = id;
+            z.auswahl.clear();
+            studioLetzte = studioHelfer()?.merkeLetzte(studioLetzte, id) || [id];
+            if (typeof Store !== 'undefined')
+                Store.setMeta('redion:elektro:letzte:v1', studioLetzte);
+            if (neuZeichnen) {
+                paletteMalen(palette.querySelector('input')?.value || '');
+                male();
+            }
+        };
+        const studioMalen = () => {
+            if (!studioOffen || studioPanel.hidden)
+                return;
+            const helper = studioHelfer();
+            const symbols = Register.fachzeichen.alle();
+            const gewaehlt = [...z.auswahl].map(id => z.plan.teile.find(t => t.id === id)).filter(Boolean);
+            const tabs = [['einsetzen', 'Einfügen'], ['eigenschaften', 'Eigenschaften'], ['status', 'Übersicht']]
+                .map(([id, name]) => `<button type="button" data-st-tab="${id}" aria-pressed="${studioTab === id}" class="${studioTab === id ? 'an' : ''}">${name}</button>`).join('');
+            let inhalt = '';
+            if (studioTab === 'einsetzen') {
+                const gefunden = helper?.suche(symbols, studioSuchtext, studioGruppe, 36) || [];
+                const letzte = studioSuchtext || studioGruppe !== 'alle' ? [] : studioLetzte
+                    .map(id => Register.fachzeichen.holen(id)).filter(Boolean).slice(0, 8);
+                const symbolKarte = (teil, art) => `<button type="button" class="sp-studio-symbol${z.gewaehltesZeichen === teil.id ? ' an' : ''}" data-st-symbol="${esc(teil.id)}" ` +
+                    `title="${esc(teil.name + ' – ' + (teil.erklaerung || ''))}" ${z.simulation ? 'disabled' : ''}>` +
+                    `<span class="sp-studio-bild" aria-hidden="true">${Register.fachzeichen.alsSvg(teil.id, { strich: 2 })}</span>` +
+                    `<span>${esc(teil.name)}</span>${art === 'neu' ? '<small>Zuletzt</small>' : ''}</button>`;
+                const gruppen = Register.fachzeichen.gruppen();
+                inhalt = `<label class="sp-studio-suchfeld">Symbol suchen ` +
+                    `<input type="search" data-st-suche placeholder="z. B. Schliesser, Lampe …" value="${esc(studioSuchtext)}" autocomplete="off" ${z.simulation ? 'disabled' : ''}></label>` +
+                    `<label class="sp-studio-suchfeld">Kategorie <select data-st-gruppe ${z.simulation ? 'disabled' : ''}>` +
+                    `<option value="alle">Alle Bauteile</option>` +
+                    gruppen.map(g => `<option value="${esc(g[0])}"${studioGruppe === g[0] ? ' selected' : ''}>${esc(g[1])}</option>`).join('') +
+                    `</select></label>` +
+                    (letzte.length ? `<div class="sp-studio-letzte"><div class="sp-studio-untertitel">Zuletzt benutzt</div><div class="sp-studio-raster">${letzte.map((x) => symbolKarte(x, 'neu')).join('')}</div></div>` : '') +
+                    `<div class="sp-studio-untertitel sp-studio-treffer-zahl">${gefunden.length} Treffer${studioSuchtext ? ' für „' + esc(studioSuchtext) + '“' : ''}</div>` +
+                    `<div class="sp-studio-raster sp-studio-treffer">${gefunden.map((x) => symbolKarte(x, 'normal')).join('') || '<p>Kein Bauteil gefunden.</p>'}</div>` +
+                    `<p class="sp-studio-hilfe">Mit Maus, Finger oder Stift ein Bauteil anfassen und direkt auf den Plan ziehen. Oder antippen und anschliessend auf der Fläche platzieren. Alt + Klick links fügt ein Symbol zu Favoriten hinzu.</p>`;
+            }
+            else if (studioTab === 'eigenschaften') {
+                if (z.simulation)
+                    inhalt = '<p class="sp-studio-hilfe">Simulation anhalten, um Bauteile zu bearbeiten.</p>';
+                else if (gewaehlt.length === 1 && z.auswahl.size === 1) {
+                    const t = gewaehlt[0];
+                    const symbol = Register.fachzeichen.holen(t.zeichen);
+                    const infos = helper?.ueberblick(z.plan, (id) => Register.fachzeichen.holen(id)) || {};
+                    inhalt = `<div class="sp-studio-auswahl"><div class="sp-studio-bild">${Register.fachzeichen.alsSvg(t.zeichen, { strich: 2 })}</div><div><strong>${esc(symbol?.name || t.zeichen)}</strong><small>${esc(t.id)}</small></div></div>` +
+                        `<form data-st-form><input type="hidden" name="teil" value="${esc(t.id)}">` +
+                        `<label>Betriebsmittelkennzeichen<input name="bmk" maxlength="40" value="${esc(t.bmk || '')}" placeholder="z. B. K1"></label>` +
+                        `<label>Beschriftung<input name="beschriftung" maxlength="120" value="${esc(t.beschriftung || '')}" placeholder="z. B. Hauptschütz"></label>` +
+                        (istZeitspule(t) ? `<label>Zeitrelais-Verzögerung (s)<input name="verzoegerung" type="number" step="0.1" min="0" max="3600" value="${Number.isFinite(t.werte?.T) ? t.werte.T : 3}"></label>` : '') +
+                        (spalteVon(t) ? `<p class="sp-studio-hilfe">Original-Spaltenüberschrift: <b>${esc(spalteVon(t))}</b> (nicht automatisch ein Bauteilname).</p>` : '') +
+                        `<p class="sp-studio-hilfe">Rasterposition: ${Number(t.x)} / ${Number(t.y)} · Drehung: ${Number(t.drehung) || 0}°</p>` +
+                        `<div class="sp-studio-actions"><button type="submit" class="prim">Eigenschaften speichern</button>` +
+                        `<button type="button" data-st-a="details">Anschlüsse …</button></div></form>` +
+                        `<div class="sp-studio-actions"><button type="button" data-st-a="drehen">↻ Drehen</button>` +
+                        `<button type="button" data-st-a="spiegeln">⇋ Spiegeln</button>` +
+                        `<button type="button" data-st-a="doppeln">⊕ Duplizieren</button></div>` +
+                        (infos.doppelteKennzeichen?.includes(String(t.bmk || '').trim()) ? '<p class="sp-studio-warn">Dieses Kennzeichen kommt mehrfach vor. Das kann für Relaiskontakte beabsichtigt sein – Zuordnung prüfen.</p>' : '');
+                }
+                else if (gewaehlt.length) {
+                    inhalt = `<p><b>${gewaehlt.length} Bauteile</b> ausgewählt</p>` +
+                        `<p class="sp-studio-hilfe">Gruppenweise drehen, spiegeln und duplizieren geht über die vorhandenen Werkzeuge.</p>` +
+                        `<div class="sp-studio-actions"><button data-st-a="drehen">↻ Drehen</button><button data-st-a="spiegeln">⇋ Spiegeln</button><button data-st-a="doppeln">⊕ Duplizieren</button></div>`;
+                }
+                else {
+                    inhalt = '<p class="sp-studio-hilfe">Ein Bauteil im Schaltplan auswählen. Hier kannst du es direkt beschriften, drehen und bearbeiten.</p>';
+                }
+            }
+            else {
+                const u = helper?.ueberblick(z.plan, (id) => Register.fachzeichen.holen(id)) || { teile: 0, leitungen: 0, texte: 0, gruppen: [], doppelteKennzeichen: [] };
+                inhalt = `<div class="sp-studio-kennzahlen"><div><strong>${u.teile}</strong><small>Bauteile</small></div>` +
+                    `<div><strong>${u.leitungen}</strong><small>Leitungen</small></div>` +
+                    `<div><strong>${u.texte}</strong><small>Texte</small></div></div>` +
+                    `<div class="sp-studio-untertitel">Verwendete Symbolgruppen</div>` +
+                    `<div class="sp-studio-gruppen">${u.gruppen.map((g) => `<span>${esc(g.gruppe)} <b>${g.anzahl}</b></span>`).join('') || 'Noch keine Bauteile'}</div>` +
+                    `<p class="sp-studio-hilfe">${u.doppelteKennzeichen.length ? `${u.doppelteKennzeichen.length} mehrfach verwendete Kennzeichen. Bei Spulen und Kontakten kann das richtig sein.` : 'Keine mehrfach verwendeten Betriebsmittelkennzeichen.'}</p>` +
+                    `<div class="sp-studio-actions"><button type="button" data-st-a="pruefen">✓ Prüfzentrum</button>` +
+                    `<button type="button" data-st-a="zoom">⤢ Plan zeigen</button></div>`;
+            }
+            studioPanel.innerHTML = `<div class="sp-studio-kopf"><div><b>Elektro Studio</b><small>Bauteile · Bearbeiten · Prüfen</small></div>` +
+                `<button type="button" data-st-a="schliessen" aria-label="Elektro Studio schliessen">✕</button></div>` +
+                `<div class="sp-studio-tabs" role="group" aria-label="Elektro Studio Bereiche">${tabs}</div>` +
+                `<div class="sp-studio-inhalt">${inhalt}</div>`;
+        };
+        studioPanel.addEventListener('input', e => {
+            const f = e.target;
+            if (!f.matches('[data-st-suche]'))
+                return;
+            studioSuchtext = f.value.slice(0, 90);
+            const letzteElemente = studioPanel.querySelector('.sp-studio-letzte');
+            if (letzteElemente)
+                letzteElemente.hidden = !!studioSuchtext;
+            const gefunden = studioHelfer()?.suche(Register.fachzeichen.alle(), studioSuchtext, studioGruppe, 36) || [];
+            const raster = studioPanel.querySelector('.sp-studio-treffer');
+            if (raster)
+                raster.replaceChildren(...gefunden.map((x) => {
+                    const b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'sp-studio-symbol' + (z.gewaehltesZeichen === x.id ? ' an' : '');
+                    b.dataset.stSymbol = x.id;
+                    b.title = x.name;
+                    const img = document.createElement('span');
+                    img.className = 'sp-studio-bild';
+                    img.innerHTML = Register.fachzeichen.alsSvg(x.id, { strich: 2 });
+                    const t = document.createElement('span');
+                    t.textContent = x.name;
+                    b.append(img, t);
+                    return b;
+                }));
+            const count = studioPanel.querySelector('.sp-studio-treffer-zahl');
+            if (count)
+                count.textContent = `${gefunden.length} Treffer`;
+        });
+        studioPanel.addEventListener('change', e => {
+            const f = e.target;
+            if (!f.matches('[data-st-gruppe]'))
+                return;
+            studioGruppe = f.value;
+            studioMalen();
+        });
+        studioPanel.addEventListener('submit', e => {
+            const form = e.target.closest('[data-st-form]');
+            if (!form)
+                return;
+            e.preventDefault();
+            if (z.simulation || z.zieht)
+                return;
+            const id = form.querySelector('[name="teil"]')?.value;
+            const bmk = form.querySelector('[name="bmk"]')?.value.trim().slice(0, 40) || '';
+            const beschriftung = form.querySelector('[name="beschriftung"]')?.value.trim().slice(0, 120) || '';
+            const zeitFeld = form.querySelector('[name="verzoegerung"]');
+            const sekunden = zeitFeld ? Number(zeitFeld.value) : null;
+            if (zeitFeld && (!zeitFeld.value.trim() || !Number.isFinite(sekunden) || sekunden < 0 || sekunden > 3600)) {
+                zeitFeld.setCustomValidity('Bitte 0 bis 3600 Sekunden eingeben.');
+                zeitFeld.reportValidity();
+                return;
+            }
+            const teil = z.plan.teile.find(t => t.id === id);
+            if (!teil || (teil.bmk === bmk && (teil.beschriftung || '') === beschriftung &&
+                (!zeitFeld || (Number.isFinite(teil.werte?.T) ? teil.werte.T : 3) === sekunden)))
+                return;
+            aendere(() => {
+                teil.bmk = bmk;
+                if (beschriftung)
+                    teil.beschriftung = beschriftung;
+                else
+                    delete teil.beschriftung;
+                if (zeitFeld)
+                    teil.werte = { ...(teil.werte || {}), T: sekunden };
+            });
+            if (karteId === teil.id)
+                karteMalen();
+        });
+        studioPanel.addEventListener('click', e => {
+            if (Date.now() < platzKlickBlockBis)
+                return;
+            const b = e.target.closest('[data-st-tab],[data-st-a],[data-st-symbol]');
+            if (!b)
+                return;
+            if (b.dataset.stTab) {
+                studioTab = b.dataset.stTab;
+                studioMalen();
+                return;
+            }
+            if (b.dataset.stSymbol) {
+                studioZeichenWahl(b.dataset.stSymbol);
+                return;
+            }
+            const a = b.dataset.stA;
+            if (a === 'schliessen') {
+                studioOffen = false;
+                studioPanel.hidden = true;
+                kopfMalen();
+                return;
+            }
+            if (z.zieht)
+                return;
+            if (a === 'pruefen') {
+                pruefungOffen = true;
+                pruefPanel.hidden = false;
+                kopfMalen();
+                pruefMalen();
+                return;
+            }
+            if (a === 'zoom') {
+                allesZeigen();
+                return;
+            }
+            if (z.simulation)
+                return;
+            if (a === 'details') {
+                const t = z.plan.teile.find(t => z.auswahl.has(t.id));
+                if (t)
+                    teilDialog(t);
+            }
+            if (a === 'drehen')
+                drehen();
+            if (a === 'spiegeln')
+                spiegeln();
+            if (a === 'doppeln')
+                doppeln();
+        });
         const teilDialog = (t) => {
             const zeichen = Register.fachzeichen.holen(t.zeichen);
             if (!zeichen)
@@ -71950,6 +73715,8 @@ const Planflaeche = (() => {
                 UI.toast('Batterieanlagen im Fach „Batterien“ messen: ideale Parallelquellen werden hier nicht simuliert.');
                 return;
             }
+            if (!z.simulation)
+                merkwahl = { werkzeug: z.werkzeug, zeichen: z.gewaehltesZeichen };
             z.simulation = !z.simulation;
             z.auswahl.clear();
             if (z.simulation) {
@@ -71960,6 +73727,11 @@ const Planflaeche = (() => {
                 z.stellungen = {};
                 z.spulenStand = {};
                 z.ergebnis = null;
+                if (merkwahl) {
+                    z.werkzeug = merkwahl.werkzeug;
+                    z.gewaehltesZeichen = merkwahl.zeichen;
+                    merkwahl = null;
+                }
             }
             zeitStarten();
             male();
@@ -71982,6 +73754,57 @@ const Planflaeche = (() => {
                 male();
                 return;
             }
+            if (b.dataset.a === 'palette-toggle') {
+                paletteOffen = !paletteOffen;
+                if (paletteOffen && studioOffen) {
+                    studioOffen = false;
+                    studioPanel.hidden = true;
+                }
+                wurzel.classList.toggle('sp-palette-offen', paletteOffen);
+                palette.hidden = !paletteOffen;
+                kopfMalen();
+                return;
+            }
+            if (b.dataset.a === 'zoom-alles')
+                return allesZeigen();
+            if (b.dataset.a === 'bereiche')
+                return bereicheMenue(b);
+            if (b.dataset.a === 'plan-fokus') {
+                planFokus = !planFokus;
+                wurzel.classList.toggle('sp-plan-fokus', planFokus);
+                geistEntfernen();
+                kopfMalen();
+                ansichtAnwenden();
+                return;
+            }
+            if (b.dataset.a === 'elektro-studio') {
+                studioOffen = !studioOffen;
+                studioPanel.hidden = !studioOffen;
+                if (studioOffen) {
+                    paletteOffen = false;
+                    palette.hidden = true;
+                    wurzel.classList.remove('sp-palette-offen');
+                    studioTab = 'eigenschaften';
+                }
+                kopfMalen();
+                if (studioOffen)
+                    studioMalen();
+                return;
+            }
+            if (b.dataset.a === 'pruefzentrum') {
+                pruefungOffen = !pruefungOffen;
+                pruefPanel.hidden = !pruefungOffen;
+                kopfMalen();
+                if (pruefungOffen)
+                    pruefMalen();
+                return;
+            }
+            if (b.dataset.a === 'relais-werkstatt') {
+                relaisOffen = !relaisOffen;
+                relaisZeigen();
+                kopfMalen();
+                return;
+            }
             if (b.dataset.a === 'netz')
                 return schaltungMenue(b);
             if (b.dataset.a === 'batterie-labor') {
@@ -71994,14 +73817,13 @@ const Planflaeche = (() => {
             }
             if (b.dataset.a === 'heft')
                 return heftUmschalten();
-            if (b.dataset.a === 'relais') {
-                relaisOffen = !relaisOffen;
-                relaisZeigen();
-                kopfMalen();
+            if (b.dataset.a === 'simulation') {
+                const hadFocus = document.activeElement === b;
+                simulationUmschalten();
+                if (hadFocus)
+                    kopf.querySelector('[data-a="simulation"]')?.focus();
                 return;
             }
-            if (b.dataset.a === 'simulation')
-                return simulationUmschalten();
             if (b.dataset.a === 'zurueck')
                 return zurueck();
             if (b.dataset.a === 'vorwaerts')
@@ -72040,6 +73862,10 @@ const Planflaeche = (() => {
                 });
                 return;
             }
+            if (b.dataset.a === 'zurueck-zeichnen') {
+                simulationUmschalten();
+                return;
+            }
             if (b.dataset.a === 'ruhelage') {
                 z.stellungen = {};
                 z.spulenStand = {};
@@ -72057,27 +73883,86 @@ const Planflaeche = (() => {
             ({ drehen, spiegeln, doppeln, gruppieren, loeschen }[b.dataset.a || '']?.());
         });
         palette.addEventListener('click', e => {
-            const b = e.target.closest('[data-sym]');
+            if (Date.now() < platzKlickBlockBis)
+                return;
+            const ziel = e.target;
+            const schliessen = ziel.closest('[data-p-close]');
+            if (schliessen) {
+                paletteOffen = false;
+                palette.hidden = true;
+                wurzel.classList.remove('sp-palette-offen');
+                kopfMalen();
+                kopf.querySelector('[data-a="palette-toggle"]')?.focus({ preventScroll: true });
+                return;
+            }
+            const kompakt = ziel.closest('[data-p-compact]');
+            if (kompakt) {
+                paletteKompakt = !paletteKompakt;
+                palette.classList.toggle('sp-pal-kompakt', paletteKompakt);
+                kompakt.setAttribute('aria-pressed', String(paletteKompakt));
+                kompakt.textContent = paletteKompakt ? '▣ Groß' : '▤ Klein';
+                kompakt.title = paletteKompakt ? 'Große Palette zeigen' : 'Kompakte Palette zeigen';
+                return;
+            }
+            const filter = ziel.closest('[data-p-filter]');
+            if (filter?.dataset.pFilter) {
+                paletteGruppe = filter.dataset.pFilter;
+                palette.querySelectorAll('[data-p-filter]').forEach(b => {
+                    const aktiv = b.dataset.pFilter === paletteGruppe;
+                    b.classList.toggle('an', aktiv);
+                    b.setAttribute('aria-pressed', String(aktiv));
+                });
+                paletteTrefferMalen();
+                palette.querySelector('.sp-liste')?.scrollTo({ top: 0 });
+                return;
+            }
+            const favorit = ziel.closest('[data-p-fav]');
+            if (favorit?.dataset.pFav) {
+                favoritUmschalten(favorit.dataset.pFav);
+                paletteTrefferMalen();
+                return;
+            }
+            const b = ziel.closest('[data-sym]');
             if (!b || !b.dataset.sym)
                 return;
             if (e.altKey) {
                 favoritUmschalten(b.dataset.sym);
-                paletteMalen(palette.querySelector('input')?.value || '');
+                paletteTrefferMalen();
                 return;
             }
             z.gewaehltesZeichen = z.gewaehltesZeichen === b.dataset.sym ? '' : b.dataset.sym;
-            palette.querySelectorAll('.sp-sym').forEach(x => x.classList.remove('an'));
-            if (z.gewaehltesZeichen)
-                b.classList.add('an');
+            if (z.gewaehltesZeichen) {
+                studioLetzte = studioHelfer()?.merkeLetzte(studioLetzte, z.gewaehltesZeichen) || studioLetzte;
+                if (typeof Store !== 'undefined')
+                    Store.setMeta('redion:elektro:letzte:v1', studioLetzte);
+            }
+            palette.querySelectorAll('.sp-sym').forEach(x => {
+                const an = x.dataset.sym === z.gewaehltesZeichen;
+                x.classList.toggle('an', an);
+                x.setAttribute('aria-pressed', String(an));
+                x.closest('.sp-zeichenkarte')?.classList.toggle('ist-gewaehlt', an);
+            });
+            paletteInfokarte();
             fussMalen();
+            if (studioOffen)
+                studioMalen();
         });
         palette.addEventListener('input', e => {
             const f = e.target;
-            if (f.type !== 'search')
+            if (!f.matches('.sp-suche input[type="search"]'))
                 return;
-            const liste = palette.querySelector('.sp-liste');
-            if (liste)
-                liste.innerHTML = paletteHtml(z.plan.art, f.value);
+            paletteSuche = f.value;
+            paletteTrefferMalen();
+        });
+        palette.addEventListener('pointerover', e => {
+            const b = e.target.closest('[data-sym]');
+            if (b?.dataset.sym)
+                paletteInfokarte(b.dataset.sym);
+        });
+        palette.addEventListener('focusin', e => {
+            const b = e.target.closest('[data-sym]');
+            if (b?.dataset.sym)
+                paletteInfokarte(b.dataset.sym);
         });
         wurzel.tabIndex = 0;
         wurzel.addEventListener('pointerup', () => {
@@ -72102,11 +73987,26 @@ const Planflaeche = (() => {
             }
         });
         wurzel.addEventListener('keydown', e => {
-            const inFeld = e.target.tagName === 'INPUT';
+            const inFeld = e.target.matches('input,textarea,select,[contenteditable], [contenteditable] *');
             if (inFeld)
                 return;
             if (e.key === 'Escape' && z.zieht)
                 return;
+            if (!e.ctrlKey && !e.metaKey && e.altKey && e.shiftKey && e.key.toLowerCase() === 'e') {
+                e.preventDefault();
+                studioOffen = !studioOffen;
+                studioPanel.hidden = !studioOffen;
+                if (studioOffen) {
+                    paletteOffen = false;
+                    palette.hidden = true;
+                    wurzel.classList.remove('sp-palette-offen');
+                    studioTab = 'eigenschaften';
+                }
+                kopfMalen();
+                if (studioOffen)
+                    studioMalen();
+                return;
+            }
             if (e.key === ' ' && !e.ctrlKey && !e.metaKey) {
                 e.preventDefault();
                 if (!z.leertaste) {
@@ -72115,7 +74015,59 @@ const Planflaeche = (() => {
                 }
                 return;
             }
-            if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+            if (!z.simulation && !e.altKey && !e.ctrlKey && !e.metaKey && e.key === '/' && !studioOffen) {
+                e.preventDefault();
+                if (!paletteOffen) {
+                    paletteOffen = true;
+                    palette.hidden = false;
+                    wurzel.classList.add('sp-palette-offen');
+                    kopfMalen();
+                }
+                palette.querySelector('.sp-suche input')?.focus();
+                return;
+            }
+            if (!z.simulation && !e.altKey && !e.ctrlKey && !e.metaKey && e.key === '/' && studioOffen) {
+                e.preventDefault();
+                studioTab = 'einsetzen';
+                studioMalen();
+                studioPanel.querySelector('[data-st-suche]')?.focus();
+                return;
+            }
+            if (!z.simulation && !e.altKey && !e.ctrlKey && !e.metaKey && /^[1-5]$/.test(e.key)) {
+                e.preventDefault();
+                z.werkzeug = { '1': 'zeigen', '2': 'leitung', '3': 'text', '4': 'schiene', '5': 'radieren' }[e.key];
+                z.gewaehltesZeichen = '';
+                z.auswahl.clear();
+                paletteMalen(palette.querySelector('input')?.value || '');
+                male();
+                return;
+            }
+            if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+                if (e.key.toLowerCase() === 'p') {
+                    e.preventDefault();
+                    simulationUmschalten();
+                    return;
+                }
+                if (e.key.toLowerCase() === 'b') {
+                    e.preventDefault();
+                    if (z.simulation) {
+                        simulationUmschalten();
+                        return;
+                    }
+                    if (!paletteOffen) {
+                        paletteOffen = true;
+                        palette.hidden = false;
+                        wurzel.classList.add('sp-palette-offen');
+                        kopfMalen();
+                    }
+                    else {
+                        paletteOffen = false;
+                        palette.hidden = true;
+                        wurzel.classList.remove('sp-palette-offen');
+                        kopfMalen();
+                    }
+                    return;
+                }
                 if (e.key === 'f' || e.key === 'F') {
                     e.preventDefault();
                     return z.voll ? vollAus() : vollAn();
@@ -72171,6 +74123,15 @@ const Planflaeche = (() => {
                 paletteMalen();
                 return;
             }
+            if (!e.ctrlKey && !e.metaKey && e.altKey && e.shiftKey && e.key.toLowerCase() === 'p') {
+                e.preventDefault();
+                pruefungOffen = !pruefungOffen;
+                pruefPanel.hidden = !pruefungOffen;
+                kopfMalen();
+                if (pruefungOffen)
+                    pruefMalen();
+                return;
+            }
             if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
                 e.preventDefault();
                 return doppeln();
@@ -72197,6 +74158,81 @@ const Planflaeche = (() => {
                 return vorwaerts();
             }
         });
+        const bereicheMenue = (anker) => {
+            const r = anker.getBoundingClientRect();
+            const m = UI.menu(`<button data-bereich="palette">${paletteOffen ? '✓ ' : ''}Bauteile &amp; Suche</button>` +
+                `<button data-bereich="studio">${studioOffen ? '✓ ' : ''}Eigenschaften &amp; Studio</button>` +
+                `<hr>` +
+                `<button data-bereich="relais">${relaisOffen ? '✓ ' : ''}Relais &amp; alte .sch-Schaltungen</button>` +
+                `<button data-bereich="batterien">${batterieOffen ? '✓ ' : ''}Batterielabor</button>` +
+                `<button data-bereich="pruefung">${pruefungOffen ? '✓ ' : ''}Prüfzentrum &amp; Netzliste</button>` +
+                `<button data-bereich="heft">${heftOffen() ? '✓ ' : ''}Formelheft</button>` +
+                `<hr>` +
+                `<button data-bereich="fokus">${planFokus ? '✓ ' : ''}Nur die Zeichenfläche</button>` +
+                `<button data-bereich="voll">Grossansicht (F)</button>`, Math.max(8, r.left - 120), r.bottom + 8);
+            m.addEventListener('click', e => {
+                const b = e.target.closest('[data-bereich]');
+                if (!b)
+                    return;
+                m.remove();
+                const was = b.dataset.bereich;
+                if (was === 'palette')
+                    return kopf.querySelector('[data-a="palette-toggle"]')?.click();
+                if (was === 'studio')
+                    return (() => {
+                        studioOffen = !studioOffen;
+                        studioPanel.hidden = !studioOffen;
+                        if (studioOffen) {
+                            paletteOffen = false;
+                            palette.hidden = true;
+                            wurzel.classList.remove('sp-palette-offen');
+                            studioTab = 'eigenschaften';
+                            studioMalen();
+                        }
+                        kopfMalen();
+                    })();
+                if (was === 'fokus') {
+                    planFokus = !planFokus;
+                    wurzel.classList.toggle('sp-plan-fokus', planFokus);
+                    kopfMalen();
+                    ansichtAnwenden();
+                    return;
+                }
+                if (was === 'voll')
+                    return vollAn();
+                if (was === 'heft')
+                    return heftUmschalten();
+                if (was === 'relais') {
+                    relaisOffen = !relaisOffen;
+                    if (relaisOffen) {
+                        pruefungOffen = false;
+                        batterieOffen = false;
+                    }
+                }
+                else if (was === 'batterien') {
+                    batterieOffen = !batterieOffen;
+                    if (batterieOffen) {
+                        pruefungOffen = false;
+                        relaisOffen = false;
+                    }
+                }
+                else if (was === 'pruefung') {
+                    pruefungOffen = !pruefungOffen;
+                    if (pruefungOffen) {
+                        relaisOffen = false;
+                        batterieOffen = false;
+                    }
+                }
+                relaisZeigen();
+                batteriePanel.hidden = !batterieOffen;
+                pruefPanel.hidden = !pruefungOffen;
+                if (batterieOffen)
+                    batterie?.aktualisiere();
+                if (pruefungOffen)
+                    pruefMalen();
+                kopfMalen();
+            });
+        };
         const mehrMenue = (anker) => {
             const r = anker.getBoundingClientRect();
             const m = UI.menu(`<button data-m="raster">${z.zeigeRaster ? '✓ ' : ''}Raster zeigen</button>` +
@@ -72207,6 +74243,7 @@ const Planflaeche = (() => {
                 '<button data-m="nummerieren">Alle neu durchnummerieren</button>' +
                 '<button data-m="plandrehen">Ganzen Plan drehen (90°)</button>' +
                 '<hr>' +
+                '<button data-m="pruefzentrum">Prüfzentrum / Stückliste (Alt+Umschalt+P)</button>' +
                 '<button data-m="vorlage">Als Vorlage speichern</button>' +
                 '<button data-m="svg">Als Bild speichern (SVG)</button>' +
                 '<button data-m="leeren" data-gefahr>Plan leeren</button>', r.left - 180, r.bottom + 6);
@@ -72216,6 +74253,13 @@ const Planflaeche = (() => {
                     return;
                 m.remove();
                 const was = b.dataset.m;
+                if (was === 'pruefzentrum') {
+                    pruefungOffen = true;
+                    pruefPanel.hidden = false;
+                    kopfMalen();
+                    pruefMalen();
+                    return;
+                }
                 if (was === 'raster') {
                     z.zeigeRaster = !z.zeigeRaster;
                     return male();
@@ -72311,6 +74355,7 @@ const Planflaeche = (() => {
             },
             nachPlanwechsel: () => paletteMalen()
         }) : null;
+        palette.hidden = !paletteOffen;
         paletteMalen();
         male();
         if (relaisOffen)
@@ -72722,6 +74767,244 @@ const RelaisWerkstatt = (() => {
     return { erstelle };
 })();
 window.RelaisWerkstatt = RelaisWerkstatt;
+
+</script>
+<script>
+/* ===== quell/bereiche/bloecke/arten/schaltplan-pruefung.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/bloecke/arten/schaltplan-pruefung.ts (npm run bauen:ts). */
+const Planpruefung = (() => {
+    const feld = (v) => Array.isArray(v) ? v : [];
+    const pos = (p) => !!p && Number.isFinite(p.x) && Number.isFinite(p.y);
+    const key = (p) => `${p.x}:${p.y}`;
+    const gleich = (a, b) => a.x === b.x && a.y === b.y;
+    const aufStrecke = (p, a, b) => {
+        if (!pos(p) || !pos(a) || !pos(b))
+            return false;
+        const kreuz = (p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x);
+        if (Math.abs(kreuz) > 0.00001)
+            return false;
+        return p.x >= Math.min(a.x, b.x) - 0.00001 && p.x <= Math.max(a.x, b.x) + 0.00001 &&
+            p.y >= Math.min(a.y, b.y) - 0.00001 && p.y <= Math.max(a.y, b.y) + 0.00001;
+    };
+    const zwischen = (a, p, b) => aufStrecke(p, a, b) && !gleich(a, p) && !gleich(p, b);
+    const ort = (p) => `${Math.round(p.x)}, ${Math.round(p.y)}`;
+    const schutzpunkte = (plan, anschluesseVon) => {
+        const schuetzen = new Set();
+        feld(plan.teile).forEach(t => {
+            try {
+                feld(anschluesseVon(t)).forEach(p => { if (pos(p))
+                    schuetzen.add(key(p)); });
+            }
+            catch { }
+        });
+        const leitungen = feld(plan.leitungen);
+        for (const l of leitungen) {
+            const ps = feld(l.punkte);
+            for (let i = 1; i + 1 < ps.length; i++) {
+                const p = ps[i];
+                if (!pos(p))
+                    continue;
+                for (const andere of leitungen) {
+                    if (andere === l)
+                        continue;
+                    const weg = feld(andere.punkte);
+                    if (weg.some(q => pos(q) && gleich(q, p)) ||
+                        weg.some((a, j) => j + 1 < weg.length && aufStrecke(p, a, weg[j + 1]))) {
+                        schuetzen.add(key(p));
+                        break;
+                    }
+                }
+            }
+        }
+        return schuetzen;
+    };
+    const vereinfachen = (plan, anschluesseVon) => {
+        const schuetzen = schutzpunkte(plan, anschluesseVon || (() => []));
+        let entfernt = 0, geaendert = 0;
+        feld(plan.leitungen).forEach(l => {
+            const alt = feld(l.punkte);
+            if (alt.length < 3 || !alt.every(pos))
+                return;
+            const neu = alt.map(p => ({ ...p }));
+            for (let i = neu.length - 2; i >= 1; i--) {
+                const p = neu[i], a = neu[i - 1], b = neu[i + 1];
+                if (!p || !a || !b || schuetzen.has(key(p)))
+                    continue;
+                if (gleich(a, p) || gleich(p, b) || zwischen(a, p, b)) {
+                    neu.splice(i, 1);
+                    entfernt++;
+                }
+            }
+            if (neu.length >= 2 && neu.length !== alt.length) {
+                l.punkte = neu;
+                geaendert++;
+            }
+        });
+        return { geaendert, entfernt };
+    };
+    const analysieren = (plan, hilfen = {}) => {
+        const teile = feld(plan?.teile), leitungen = feld(plan?.leitungen), texte = feld(plan?.texte);
+        const anschluesseVon = hilfen.anschluesseVon || (() => []);
+        const holeSymbol = hilfen.holeSymbol || (() => null);
+        const punkte = [];
+        const melden = (stufe, art, text, id, o) => {
+            punkte.push({ stufe, art, text, id: String(id || ''),
+                x: pos(o) ? o.x : null, y: pos(o) ? o.y : null });
+        };
+        const ids = new Set();
+        for (const t of [...teile, ...leitungen, ...texte]) {
+            if (!t || !t.id)
+                continue;
+            if (ids.has(t.id))
+                melden('fehler', 'doppelte-id', `Kennung ${String(t.id)} ist mehrfach vorhanden.`, t.id, t);
+            ids.add(t.id);
+        }
+        const teileAnOrt = new Map();
+        for (const t of teile) {
+            if (!t || !pos(t)) {
+                melden('warnung', 'koordinate', 'Bauteil ohne gültige Koordinaten.', t?.id);
+                continue;
+            }
+            const k = key(t), vorher = teileAnOrt.get(k);
+            if (vorher)
+                melden('warnung', 'ueberlagerung', `${t.bmk || t.zeichen || 'Bauteil'} liegt genau auf ${vorher.bmk || vorher.zeichen || 'einem weiteren Bauteil'}.`, t.id, t);
+            else
+                teileAnOrt.set(k, t);
+            if (!holeSymbol(t.zeichen))
+                melden('warnung', 'symbol', `Unbekanntes Fachzeichen: ${String(t.zeichen || 'ohne Kennung')}.`, t.id, t);
+            if (t.x < 0 || t.y < 0 || t.x > Number(plan.breite) || t.y > Number(plan.hoehe))
+                melden('hinweis', 'ausserhalb', `${t.bmk || t.zeichen || 'Bauteil'} liegt ausserhalb des Planblatts.`, t.id, t);
+        }
+        const schuetzen = schutzpunkte(plan, anschluesseVon);
+        const verbindungAmEnde = (l, p) => {
+            for (const t of teile) {
+                try {
+                    if (feld(anschluesseVon(t)).some(a => pos(a) && gleich(a, p)))
+                        return true;
+                }
+                catch { }
+            }
+            for (const andere of leitungen)
+                if (andere !== l) {
+                    const ps = feld(andere.punkte);
+                    for (let i = 0; i < ps.length - 1; i++)
+                        if (aufStrecke(p, ps[i], ps[i + 1]))
+                            return true;
+                }
+            return false;
+        };
+        for (const l of leitungen) {
+            const ps = feld(l?.punkte);
+            if (ps.length < 2 || !ps.every(pos)) {
+                melden('fehler', 'leitung-ungueltig', 'Leitung hat weniger als zwei gültige Punkte.', l?.id);
+                continue;
+            }
+            for (let i = 0; i < ps.length - 1; i++) {
+                const a = ps[i], b = ps[i + 1];
+                if (gleich(a, b))
+                    melden('warnung', 'nullsegment', `Null-Länge bei ${ort(a)}.`, l.id, a);
+                else if (a.x !== b.x && a.y !== b.y)
+                    melden('warnung', 'diagonal', `Schräges Leitungsstück bei ${ort(a)} – ${ort(b)}.`, l.id, a);
+            }
+            for (let i = 1; i < ps.length - 1; i++) {
+                if (!schuetzen.has(key(ps[i])) && zwischen(ps[i - 1], ps[i], ps[i + 1])) {
+                    melden('hinweis', 'redundant', 'Gerades Leitungsstück enthält einen entfernbaren Zwischenpunkt.', l.id, ps[i]);
+                    break;
+                }
+            }
+            const erster = ps[0], letzter = ps[ps.length - 1];
+            for (const p of [erster, letzter]) {
+                if (!verbindungAmEnde(l, p) && !(l.vonTeil && gleich(p, erster)) && !(l.nachTeil && gleich(p, letzter)))
+                    melden('hinweis', 'offenes-ende', `Offenes Leitungsende bei ${ort(p)} (gegebenenfalls beabsichtigt).`, l.id, p);
+            }
+        }
+        if (typeof hilfen.offeneKlemmen === 'function') {
+            try {
+                hilfen.offeneKlemmen(plan).forEach(satz => {
+                    const bmk = satz.split(':')[0] || '';
+                    const t = teile.find(x => x && (x.bmk === bmk || x.zeichen === bmk));
+                    melden('warnung', 'offene-klemme', satz, t?.id, t);
+                });
+            }
+            catch {
+                melden('hinweis', 'netzliste', 'Offene Klemmen konnten für diesen Plan nicht bestimmt werden.');
+            }
+        }
+        let netzListe = [];
+        if (typeof hilfen.netze === 'function') {
+            try {
+                const n = hilfen.netze(plan);
+                const gruppen = new Map();
+                const gruppe = (nr) => {
+                    let g = gruppen.get(nr);
+                    if (!g) {
+                        g = { nummer: nr, klemmen: [], leitungen: [] };
+                        gruppen.set(nr, g);
+                    }
+                    return g;
+                };
+                for (const k of feld(n.klemmen)) {
+                    const nr = n.netzVon.get(k.schluessel);
+                    if (typeof nr === 'number')
+                        gruppe(nr).klemmen.push({ teil: String(k.teil), nr: String(k.nr) });
+                }
+                for (const l of leitungen) {
+                    const nr = n.leitungNetz[l.id];
+                    if (typeof nr === 'number')
+                        gruppe(nr).leitungen.push(String(l.id));
+                }
+                netzListe = [...gruppen.values()].sort((a, b) => a.nummer - b.nummer);
+            }
+            catch {
+                melden('hinweis', 'netzliste', 'Netzliste konnte für diesen Plan nicht berechnet werden.');
+            }
+        }
+        const bestand = new Map();
+        teile.forEach(t => {
+            const typ = String(t?.zeichen || 'unbekannt');
+            let b = bestand.get(typ);
+            if (!b) {
+                b = { zeichen: typ, name: holeSymbol(typ)?.name || typ, anzahl: 0, kennzeichen: [] };
+                bestand.set(typ, b);
+            }
+            b.anzahl++;
+            if (t?.bmk)
+                b.kennzeichen.push(String(t.bmk));
+        });
+        const bauteile = [...bestand.values()].sort((a, b) => a.name.localeCompare(b.name, 'de'));
+        const zaehler = { fehler: 0, warnung: 0, hinweis: 0 };
+        punkte.forEach(p => { zaehler[p.stufe]++; });
+        return { zaehler, punkte, bauteile, netze: netzListe,
+            statistik: { teile: teile.length, leitungen: leitungen.length, texte: texte.length, netze: netzListe.length } };
+    };
+    const csvFeld = (v) => {
+        let s = String(v ?? '');
+        if (/^[\s]*[=+@\-\t\r]/.test(s))
+            s = "'" + s;
+        return '"' + s.replace(/"/g, '""') + '"';
+    };
+    const csv = (zeilen) => '﻿' + zeilen.map(z => z.map(csvFeld).join(';')).join('\r\n') + '\r\n';
+    const bauteileCsv = (r) => csv([
+        ['Fachzeichen', 'Name', 'Anzahl', 'Betriebsmittelkennzeichen'],
+        ...r.bauteile.map(b => [b.zeichen, b.name, b.anzahl, b.kennzeichen.join(', ')])
+    ]);
+    const netzeCsv = (r) => csv([
+        ['Netz', 'Bauteilklemmen', 'Leitungskennungen'],
+        ...r.netze.map(n => [n.nummer, n.klemmen.map(k => `${k.teil}:${k.nr}`).join(', '), n.leitungen.join(', ')])
+    ]);
+    const STUFE = { fehler: 'FEHLER', warnung: 'WARNUNG', hinweis: 'HINWEIS' };
+    const berichtText = (r) => [
+        'Redion · Schaltplan-Prüfbericht',
+        `Bauteile: ${r.statistik.teile} | Leitungen: ${r.statistik.leitungen} | Netze: ${r.statistik.netze}`,
+        `Fehler: ${r.zaehler.fehler} | Warnungen: ${r.zaehler.warnung} | Hinweise: ${r.zaehler.hinweis}`,
+        'Hinweise zur Zeichnung — keine elektrische Sicherheitsabnahme.',
+        '',
+        ...r.punkte.map(p => `[${STUFE[p.stufe]}] ${p.text}${p.id ? ` (${p.id})` : ''}`)
+    ].join('\n') + '\n';
+    return { analysieren, vereinfachen, bauteileCsv, netzeCsv, berichtText };
+})();
+window.Planpruefung = Planpruefung;
 
 </script>
 <script>

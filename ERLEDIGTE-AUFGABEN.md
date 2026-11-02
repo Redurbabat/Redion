@@ -1,5 +1,26 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## Ein und Aus wieder „▶ Strom" — 2. November 2026
+
+**Fund.** Redur nach den Bildern von E772: „Für ein-aus sollte wie früher
+sein, damals war besser."
+**Bau.** E773: der Knopf „▶ Strom" / „◼ Strom" mit Hebel und Glühfaden ist
+zurück, so hoch wie „Bereiche"; Glasschalter, 1:1-Ansicht und ihre
+Ausnahmen sind weg, das Labor bleibt.
+**Prüfung.** `test634` neu gefasst, rot gegen 5901e351f, jetzt grün;
+`test612`, `630`, `631` suchen wieder den Knopf.
+
+## Redurs ZIP 1:1 in der Schaltplanfläche — 1. November 2026
+
+**Fund.** Redur entschied „Alle Funktionen 1:1, sauber gebaut" und ersetzte
+damit „Palette offen", „RED-MGT angepasst" und „keine Schnellkarte".
+**Bau.** E770 (Palette zu, Menü „Bereiche", Kürzel, Ziehen, Kontextleiste,
+Schnellkarte, Studio; drei Fehler der ZIP behoben), E771 (Prüfzentrum,
+nachgeladen, mit E747), E772 (RED-MGT-Glasschalter im Original, Labor).
+**Prüfung.** `test632`–`test634` grün, vorher rot; `test611`, `612`, `630`,
+`631` neu ausgerichtet (Grund im Lauf), `test625` durch eine echte
+Reparatur grün. Offen: Startgrösse +27 KB (L265).
+
 ## 1. November 2026 · E769 · Die Relais-Werkstatt (Redurs zehn Schaltungen)
 
 **Bau:** drei neue getypte Dateien unter `src/bereiche/bloecke/arten/`

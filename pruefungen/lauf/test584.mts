@@ -160,6 +160,8 @@ const ERLAUBT: ReadonlyArray<readonly [RegExp, string]> = [
   [/(^|\s)\.ru-(geste|drucker)|\.rmo-ticket/, 'die gezeichnete Hand, der Drucker, das Ticket (Bilder)'],
   [/^#ai \.ai-compose::before|^\.ki-aktivitaet/, 'der Schimmer, solange die KI arbeitet (Zier der Bewegung)'],
   [/^#page mark/, 'Suchtreffer im Text: Textmarker-Gelb, wie auf Papier, in beiden Modi'],
+  /* Die Ausnahme für den RED-MGT-Glasschalter (E772) ist mit ihm gegangen
+     (E773, 2. November 2026) — die Liste schrumpft. */
 ];
 const MARKENDATEIEN = new Set(['dunkel.css', 'hell.css', 'grund.css', 'marken.css']);
 console.log('\n§11 · Keine feste Signalfarbe in den Stilblättern');

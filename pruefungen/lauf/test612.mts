@@ -245,6 +245,9 @@ await seite.evaluate(async () => {
     .forEach(el => el.remove());
 });
 await seite.waitForSelector('.sp-wrap .sp-teil[data-id="M1"]');
+/* E773 (Redur, 2. November 2026: „Für ein-aus sollte wie früher sein"):
+   der Strom-Knopf ist wieder der <button> „▶ Strom" — E772 hatte ihn kurz
+   durch den RED-MGT-Glasschalter (eine Checkbox) ersetzt. */
 const start = seite.locator('.sp-wrap button[data-a="simulation"]').first();
 await start.scrollIntoViewIfNeeded();
 await start.click();

@@ -86,9 +86,13 @@ const blk = await seite.evaluate(async () => {
   document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung').forEach(el => el.remove());
   return b.id as string;
 });
-const knopf = seite.locator('.sp-wrap button[data-a="relais"]').first();
-p('Der Kopf hat „⚙ Relais", 44 px hoch erreichbar', await knopf.count() === 1);
-if (await knopf.count()) { await knopf.click(); }
+/* E772 (Redurs Entscheid vom 1. November 2026, „Alle Funktionen 1:1"): „⚙ Relais"
+   steht jetzt im Menü „✦ Bereiche ▾". Der Strom-Knopf ist seit E773 wieder
+   der <button> „▶ Strom" mit aria-pressed (E772 hatte kurz eine Checkbox).
+   Was geprüft wird, bleibt gleich. */
+const knopf = seite.locator('.sp-wrap button[data-a="bereiche"]').first();
+p('Der Kopf hat „✦ Bereiche" mit der Relais-Werkstatt', await knopf.count() === 1);
+if (await knopf.count()) { await knopf.click(); await seite.locator('[data-bereich="relais"]').first().click(); }
 await seite.waitForSelector('.sp-relais-fach select[data-rel="wahl"]', { timeout: 8000 }).catch(() => {});
 const vorlagen = await seite.evaluate(async () => {
   const V = (window as any).RelaisVorlagen as any[] | undefined;

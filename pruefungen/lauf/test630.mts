@@ -127,6 +127,9 @@ const oeffne = async (spule: string, schalter: string, T: number, titel: string)
   await seite.waitForSelector('.sp-wrap .sp-teil[data-id="S1"]');
   return id;
 };
+/* E773 (Redur, 2. November 2026: „Für ein-aus sollte wie früher sein"):
+   der Strom-Knopf ist wieder der <button> „▶ Strom" — E772 hatte ihn kurz
+   durch den RED-MGT-Glasschalter (eine Checkbox) ersetzt. */
 const strom = async (): Promise<void> => {
   const k = seite.locator('.sp-wrap button[data-a="simulation"]').first();
   await k.scrollIntoViewIfNeeded(); await k.click(); await seite.waitForTimeout(200);

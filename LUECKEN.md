@@ -8805,27 +8805,35 @@ Plan aus einem „neueren Stand" liest, ändert und vergleicht.
 ## L265 · Was aus Redurs ZIP vom 1. November noch nicht übernommen ist — 1. November 2026
 
 Übernommen sind E766 (PDF-Zoom am Zeiger), E767 (Schaltplanfelder), E768
-(Zeitrelais, Taster) und E769 (Relais-Werkstatt). Nach Redurs Entscheiden
-vom 1. November stehen noch aus, jeder Schritt mit eigenem Wächter, der
-zuerst rot ist:
+(Zeitrelais, Taster), E769 (Relais-Werkstatt) und — nach Redurs Entscheid
+„Alle Funktionen 1:1, sauber gebaut", der seine früheren Antworten ersetzt —
+E770 (Palette zu, Menü „Bereiche", Kürzel, Ziehen, Kontextleiste,
+Schnellkarte, Studio), E771 (Prüfzentrum) und E772 (RED-MGT-Glasschalter,
+Live-Stromlabor). Den Glasschalter hat Redur am 2. November zurückgenommen
+(E773, Ein und Aus wieder „▶ Strom"). Offen bleibt:
 
-1. **Ziehen aus der Palette direkt auf den Plan** (die Palette bleibt
-   offen; kein Menü „Bereiche", keine Kürzel 1–5/P/B//), dazu die
-   **Kontextleiste** über der Auswahl und das **Elektro Studio**
-   (Alt+Umschalt+E). `test611` und `test625` müssen grün bleiben — im
-   Versuch kam in `test625 §4b` ein gezogener Draht nicht an. Die
-   Schnellkarte nicht (Redur: nein).
-2. **Prüfzentrum** (Alt+Umschalt+P) als getyptes `.ts` in
-   `bloecke/arten`, mit E747 zusammengelegt, Bericht ohne „BABAT",
-   `Dialog` statt `confirm`, CSV gegen Formel-Einschleusung.
-3. **Live-Stromlabor** (Uhr, Tempo, Pause) mit Redions Marken, und der
-   **RED-MGT-Glasschalter** an Stelle von „▶ Strom" — angepasst: Marken
-   statt Orange, „Aus"/„Ein", Redions Federn, keine Endlosanimation, 44 px,
-   Glas über die Marke, echter Schalter mit `aria-pressed`,
-   `data-a="simulation"` bleibt (`test612`); Herkunft in FREMDCODE als
-   Redurs eigener Entwurf.
-4. Bilder der Kopfleiste, der Werkstatt und des Labors bei 1300 × 860 und
-   1900 × 1100, hell und dunkel (§55) — für E767–E769 noch nicht gemacht.
+1. **Die Startgrösse.** `test388` misst 2013 KB (seit E773; vorher 2016) statt 1989 KB (+24 KB;
+   Decke 1950 KB, schon vorher rot). Das Ziel war höchstens +5 KB.
+   Nachgeladen ist nur der Kern des Prüfzentrums. Der Rest — Studio,
+   Labor, Schnellkarte und ihr Stil (`schaltatelier.css`, 11,4 KB) — liegt
+   in der Schliessung von `planflaeche.ts`. Weg: eine Kontext-Schnittstelle
+   der Fläche (wie bei der Relais-Werkstatt) und eine Regel, wie ein
+   Stilblatt ausserhalb des Startwegs geladen wird (`test87` verlangt jedes
+   Blatt in `index.html`; die Einzeldatei kennt kein `<link>`, E714).
+2. **Bilder** bei 1300 × 860, hell und dunkel, liegen auf dem Rechner
+   (Kopf aus/ein, Menü, Kontextleiste + Schnellkarte, Studio, Prüfzentrum,
+   Werkstatt, Labor, 1:1). Bei 1900 × 1100 und am Telefon sind sie nicht
+   gemacht.
+3. ~~**`test634` §3**~~ — mit dem Glasschalter gegangen (E773); §3 prüft
+   jetzt den Hebel von „▶ Strom". Früher stand hier: §3 (Lichtnaht steht
+   bei weniger Bewegung) blieb in der Gegenprobe ohne den eigenen Ruhe-Block grün: Redions allgemeine
+   Bewegungsregel hält die Lichtnaht schon an. Der Abschnitt ist darum
+   ein Wächter über das Ergebnis, nicht über `schaltatelier.css`.
+4. Das Fach (Batterien, Relais, Prüfzentrum) schwebt wie in der ZIP über
+   dem Plan und deckt eine offene Palette zu; ein Fach schliesst die
+   Palette nicht.
+5. Der Datei-Wähler der Werkstatt zeigt die Wörter des Browsers
+   („Choose File"), nicht deutsche.
 
 ## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — GESCHLOSSEN (E745) — 11. Oktober 2026
 

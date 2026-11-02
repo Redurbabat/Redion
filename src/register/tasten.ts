@@ -57,6 +57,15 @@ Register.tasten = (() => {
         ['Strg Z', 'Zurück'], ['Strg Shift Z', 'Vor'], ['Strg C · Strg V', 'Auswahl kopieren, einsetzen'],
         ['Entf', 'Auswahl löschen']
       ]],
+      /* AUF DER SCHALTPLANFLÄCHE (E770, aus Redurs ZIP): ein Buchstabe oder
+         eine Ziffer, nur solange niemand tippt und die Fläche den Fokus hat.
+         Die Griffe stehen in `planflaeche.ts` (keydown der Fläche). */
+      ['Schaltplan', [
+        ['1 – 5', 'Zeigen, Leitung, Text, Stromschiene, Radierer'], ['B', 'Bauteilpalette auf/zu'],
+        ['/', 'Bauteil suchen'], ['P', 'Strom ein / aus'], ['R', 'Drehen'], ['H', 'Spiegeln'],
+        ['Alt Shift E', 'Elektro Studio'], ['Alt Shift P', 'Prüfzentrum'],
+        ['Esc', 'Ziehen abbrechen, Auswahl aufheben']
+      ]],
       ['Formatierung', [
         ['Strg B', 'Fett'], ['Strg I', 'Kursiv'], ['Strg U', 'Unterstrichen'],
         ['Strg Shift S', 'Durchgestrichen'], ['Strg E', 'Code'], ['Strg Shift H', 'Letzte Farbe'],

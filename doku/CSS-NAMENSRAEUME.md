@@ -23,7 +23,7 @@ L90 hält seither fest, dass das nicht die Lücke ist:
 > ins Leere, und der Fehler sieht wieder nicht wie ein Fehler aus — er sieht
 > aus wie ein Stil, den man nicht bestellt hat.
 
-Es sind nicht vierzig. Es sind **162** — gezählt, nicht fortgeschrieben.
+Es sind nicht vierzig. Es sind **164** — gezählt, nicht fortgeschrieben (2. November 2026; `red-` kam am 1. November und ging am 2. wieder, E773).
 
 *Hier stand 144, und das war schon vor diesem Durchgang falsch: das
 Verzeichnis trug 158 Einträge. Die Zahl im Fliesstext prüft `test290`
@@ -45,6 +45,14 @@ Zusage heisst „kein Bereich ist UNBEMERKT gezogen", nicht „kein Bereich
 zieht". Bemerkt heisst: die Zeile wird nachgezogen und der Grund steht
 dabei. Was NICHT erlaubt wäre: ein zweiter Bereich, der `pg-` für etwas
 anderes benutzt — das ist der Fall der Dateifläche und `bs-` von oben.
+
+`sp-` ist der Schaltplan. Mit **E770** (Redurs ZIP vom 1. November 2026,
+„Alle Funktionen 1:1") kamen Palette, Studio, Schnellkarte, Kontextleiste,
+und das Labor in ein eigenes Blatt, `schaltatelier.css`:
+gezählt 763 Vorkommen dort, 214 in `bausteine.css`, 40 in `motion.css` —
+die Hauptdatei hat gewechselt. Einen Tag lang stand dort auch `red-`,
+der RED-MGT-Glasschalter; Redur hat ihn am 2. November zurückgenommen
+(E773), und mit ihm ging das Präfix.
 
 ## Zwei Sorten Präfix, und die zweite sieht nicht danach aus
 
@@ -290,7 +298,7 @@ sk       46  bausteine.css
 sl        7  bausteine.css
 sm       21  bausteine.css
 so        5  bausteine.css
-sp      162  bausteine.css
+sp     1018  schaltatelier.css
 stab     19  werkzeuge.css
 stat     45  motion.css
 such     18  einstellungen.css
