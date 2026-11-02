@@ -50,11 +50,25 @@ test('Offener Nebenast zählt nicht als vollständige Batterieanlage', () => {
   assert.equal(r.ok,false);
   assert.match(r.grund,/offenen Nebenast/);
 });
-test('Verschiedene Zellspannungen werden statt falscher Rechnung abgelehnt', () => {
-  const s=zellen(2);s[1].u=2;
+test('Verschiedene Spannungen in Reihe addieren sich wie im Lehrmittel', () => {
+  const s=[{u:12,maxA:6,ri:null,ah:null},{u:6,maxA:6,ri:null,ah:null}];
   const r=b.pruefen(s,b.reiheParallel(2,2));
+  assert.equal(r.ok,true); fast(r.u,18);fast(r.maxA,6);
+});
+test('Ungleiche Parallelausgänge werden wegen Ausgleichsstrom abgelehnt',()=>{
+  const s=[{u:12,maxA:6,ri:null,ah:null},{u:6,maxA:6,ri:null,ah:null}];
+  const r=b.pruefen(s,b.reiheParallel(2,1));
   assert.equal(r.ok,false);
-  assert.match(r.grund,/unterschiedliche/);
+  assert.match(r.grund,/Unterschiedliche Zweigspannungen/);
+});
+test('Gemischte Akkupakete: Nennstrom nach Engpassregel',()=>{
+  const s=[{u:12,maxA:2,ri:null,ah:null},{u:12,maxA:4,ri:null,ah:null},
+           {u:12,maxA:4,ri:null,ah:null},{u:6,maxA:2,ri:null,ah:null},
+           {u:6,maxA:2,ri:null,ah:null}];
+  const links=[['aus-','n0'],['p0','n3'],['p3','n4'],['p4','aus+'],
+               ['aus-','n1'],['p1','n2'],['p2','aus+']];
+  const r=b.pruefen(s,links);
+  assert.equal(r.ok,true);fast(r.u,24);fast(r.maxA,6);
 });
 
 

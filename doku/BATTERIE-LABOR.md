@@ -1,118 +1,105 @@
-# Batterieanlagen direkt in Redions Schaltplan
+# Kapitel 12: Batterien direkt im Redion-Schaltplan üben
 
 ## Bedienung
 
-1. In einem bestehenden Redion-Schaltplanblock **🔋 Batterien** öffnen.
-2. Im eingeblendeten Fach eine Übung wählen und **„Aufgabe auf diese Fläche setzen“** drücken.
-   Ist der Plan nicht leer, fordert Redion zuerst eine Bestätigung. Der
-   vorherige Zustand bleibt über die normale Rückgängig-Funktion erreichbar.
-3. Alle Batterien und die beiden Ausgangsklemmen **X+** und **X−** sind
-   gewöhnliche Redion-Fachzeichen, in demselben Block gespeichert. Das
-   Werkzeug **Leitung ziehen** nutzt den bestehenden Anschlussfang,
-   rechtwinklige Leitungen, das Raster, die Netzliste und Undo/Redo.
-   Die Ausgangsklemmen dürfen an Anschluss 1 **oder 2** angeschlossen
-   werden. Bei reinen Parallelschaltungen stehen die Zellen nebeneinander,
-   damit die Plus- und Minusschienen übersichtlich bleiben.
-4. Über dem Plan erscheinen **U**, **Ri**, **Imax** und **Q** aus der
-   tatsächlichen Verdrahtung. Die Anzeige erkennt Kurzschluss, offene
-   Zweige, vertauschte Polarität und falsche Gesamtspannung.
-5. Eine Batteriezelle auswählen: im Fach darunter **U**, **Ri**, **Imax**
-   und **Q** eintragen und die Zellwerte übernehmen. Änderungen gehen durch
-   die normale Schaltplan-Speicherung.
-6. Mit **„Musterverdrahtung einsetzen“** kann eine überprüfte Beispielschaltung
-   als echte Redion-Leitungen eingesetzt werden. Eine vorhandene Verdrahtung
-   wird nur nach Bestätigung ersetzt und lässt sich zurücknehmen.
-7. Optional den Widerstand eines Verbrauchers eingeben und den
-   Versuchsschalter an-/ausschalten. Laststrom, Lastspannung und Leistung
-   entstehen aus Leerlaufspannung und Gesamtinnenwiderstand, soweit
-   beide bekannt sind.
+Redion öffnen → Schaltplan → **✦ Bereiche → Batterielabor**.
+Eine Aufgabe auswählen und **Aufgabe einsetzen** anklicken. Alle Teile
+stehen auf der **gewöhnlichen Schaltplan-Zeichenfläche**, nicht in
+einem extra Editor. Dort können sie mit den normalen Werkzeugen
+verschoben, gedreht und mit **Leitung ziehen** (Taste 2) verbunden werden.
 
-**Es gibt keine zweite Zeichenfläche und keinen externen Tab.** Der
-Schaltplan-Editor selbst zeichnet und verschiebt die Batterieelemente;
-das Batterie-Fach zeigt nur Übungen, Nenndaten und die Berechnung an.
+1. **Reihe:** Pluspol der einen Batterie an Minuspol der nächsten.
+   **Parallel:** Alle Pluspole und alle Minuspole jeweils zusammen.
+2. Ausgewählte Zelle anklicken; **U, Ri, Imax, Q** bearbeiten.
+   Fehlende Nennwerte aus Blatt 58 selbst eintragen.
+3. Bei Aufgaben mit zusätzlichen Akkus das Feld **Weiteren Akku
+   hinzufügen** verwenden (bis zu 64 Akkus).
+4. Redion prüft die Verdrahtung und zeigt **U, Ri, Imax, Q** sowie
+   Kurzschlüsse, falsche Polarität und offene Stromzweige.
+5. Im unteren Fach die Last (R in Ω oder 2-Ω-Widerstandsbeispiele)
+   wählen und **Strom einschalten**. Die Lampe leuchtet bei Strom;
+   die Anzeige enthält Laststrom, Lastspannung, Leistung und
+   Nennstrom-Warnung.
+6. **Musterverdrahtung zeigen** zeichnet eine funktionierende Lösung
+   mit echten Redion-Leitungen. Auch erforderliche zusätzliche Akkus
+   und fehlende Nenndaten werden beim Muster ergänzt. Mit
+   Rückgängig kann die eigene Lösung wiederhergestellt werden.
+7. **Freies Üben** erlaubt beliebige Reihen-/Parallelschaltungen
+   ohne feste Zielspannung.
 
-## Quellen der Aufgaben
+Ein bestehender Plan wird vor dem Ersetzen nicht ohne Bestätigung
+überschrieben.
 
-- *Schaltungen von Spannungsquellen*, Kapitel 12.1, Aufgabe 1 a–d:
-  sechs Leclanché-Zellen mit 1,5 V, Ri=0,3 Ω, Q=500 mAh,
-  Imax=1 A. Zielspannungen 9 V / 1,5 V / 4,5 V / 3 V.
-- *Batterieanlagen*, Blatt 57, Aufgabe 1a: sechs Leclanché-Zellen,
-  Ri=0,5 Ω, Q=250 mAh, Imax=0,5 A. Ziel 9 V und 1,5 V.
-- *Batterieanlagen*, Blatt 57, Aufgabe 1b: sechs Bleiakku-Zellen,
-  Ri=50 mΩ, Q=72 Ah, Imax=12 A. Ziel 6 V und 4 V.
-  **2 V pro Zelle wird als Annahme beschriftet.**
-- *Schaltungen von Spannungsquellen*, Kapitel 12.2, Aufgaben 2 und 3:
-  zwölf Zellen, geforderter Strom 12 A bzw. 3 A.
-  Wo im Arbeitsblatt keine Ri-/Q-Angaben stehen, erscheinen diese
-  Messergebnisse als **unbekannt**, nicht als erfundene Zahl.
+## Aufgaben (beide vom Nutzer bereitgestellten PDFs)
 
-Die anspruchsvolleren Aufgaben aus Kapitel 12.3–12.4 und Blatt 58
-mit verschiedenartigen **Batteriepaketen** sind in dieser ersten
-Fassung **noch nicht** nachgebildet. Hier werden gleichartige
-*Einzelzellen* verschaltet. Die Zeichnungen der Zellen kommen aus dem
-bestehenden Fachzeichenregister und nicht aus kopierten PDF-Bildern.
+| Abschnitt | Aufgabenziele |
+|---|---|
+| Kapitel 12.1, Aufgabe 1a–d | 9 V, 1,5 V, 4,5 V, 3 V; sechs Leclanché-Zellen (500 mAh, 0,3 Ω, 1 A) |
+| Kapitel 12.2, Aufgabe 2 | Zwölf Bleiakku-Zellen zu 3 A; 12 A erreichen; im Blatt vier 2-Ω-Widerstände |
+| Kapitel 12.2, Aufgabe 3 | Zwölf Leclanché-Zellen zu 1 A; 3 A erreichen; im Blatt vier 2-Ω-Widerstände |
+| Kapitel 12.3, Aufgabe 4 | Vier Abgänge: 4 V / 50 A, 6 V / 40 A, 8 V / 20 A, 12 V / 10 A; fehlende Bleiakkus ergänzen |
+| Kapitel 12.3, Aufgabe 5 | 24 V / 12 A aus 2 × 12 V / 6 A und 2 × 6 V / 12 A |
+| Kapitel 12.4, Aufgabe 6a | 24 V / 6 A aus 12-V- und 6-V-Akkupaketen |
+| Kapitel 12.4, Aufgabe 6b | 12 V / 6 A aus 2-V-, 4-V- und 8-V-Akkupaketen |
+| Kapitel 12.4, Aufgabe 6c | 28 V / 10 A, zusätzlicher 8-V-/6-A-Akku nötig |
+| Blatt 57, Aufgabe 1a | 9 V / 1,5 V aus je sechs Leclanché-Zellen; 0,5 A, 0,5 Ω, 250 mAh |
+| Blatt 57, Aufgabe 1b | 6 V / 4 V aus je sechs Bleiakku-Zellen; 12 A, 50 mΩ, 72 Ah |
+| Blatt 58, Aufgabe 2 oben | 72 V / 12 A; fehlende U- und I-Angaben |
+| Blatt 58, Aufgabe 2 Mitte | 48 V / 12 A; zusätzlicher 24-V-/8-A-Akku |
+| Blatt 58, Aufgabe 2 unten | 36 V / 18 A; fehlender Stromwert, 12-V-Akkus parallel |
 
-## Rechnungsweg
+Die Kapitel-12.2-Blätter geben keine ausdrückliche *Zielspannung* vor.
+Die in Redion gewählten 6 V stellen **eine abgeleitete mögliche
+Musterlösung** dar. 2 V pro Bleiakku-Zelle und 1,5 V pro
+Leclanché-Zelle sind beim jeweiligen Übungsdatensatz als Annahmen
+gekennzeichnet. Die Muster sind elektrisch passende
+Verdrahtungen, nicht identische Kopien der Papierzeichnungen.
 
-Das Modul **batterie-aufgaben.js** erzeugt gewöhnliche
-\`Schaltplan.neuerPlan\`-Daten. Die Kennungen der sechs oder zwölf Zellen
-und der Klemmen X+ und X− liegen in \`plan.batterieUebung\`.
-Jede Zelle trägt ihre \`werte = {U, Ri?, Imax, Q?}\`.
+## Schulmodell
 
-Das Modul **batterie-labor-kern.js** bekommt die Plan-Netze direkt von
-\`Stromfluss.netze(plan)\`. Es berechnet die Akkuverbände **nicht** noch
-einmal mit einer selbst geschriebenen Kreuzungs- oder Fang-Geometrie.
-Zuerst werden angeschlossene Klemmen zu Netzen zusammengefasst,
-dann die Zellstufen und die Richtung gegen den Ausgang geprüft.
+- **Reihe:** Spannungen addieren, der schwächste Stromgrenzwert
+  begrenzt den gemeinsamen Strom, Innenwiderstände addieren.
+- **Parallel:** Nur gleiche *Gesamtzweigspannungen* sind für das
+  vereinfachte Modell zulässig. Nennströme addieren sich idealisiert.
+  Unterschiedliche Zweigspannungen melden eine Ausgleichsstrom-Gefahr.
+- **Gemischte Pakete:** Verschiedene Akkuspannungen in einer
+  *Reihenschaltung* werden addiert. Nennströme ohne bekannte
+  Innenwiderstände werden nach der Schul-Engpassregel bestimmt,
+  nicht als gemessene physikalische Stromaufteilung ausgegeben.
+- **Kapazität Q:** Wird nur angezeigt, wenn die erforderlichen
+  Nennkapazitäten vorliegen. Andere fehlende Nenndaten werden
+  nicht geschätzt.
+- **Last:** Bei bekanntem Ri gilt I = U_leerlauf / (R_last + Ri).
+  Fehlt Ri, verwendet die Lampe die ausdrücklich benannte ideale
+  Näherung I = U_leerlauf / R_last. Eine echte Glühlampe ist nicht
+  ohmsch konstant. Der Schalter im Fach ist eine Lernsimulation.
+- **Vier Ausgänge:** In Kapitel 12.3/4 wird jeder Ausgang
+  unabhängig geprüft; gleichzeitige Volllast aller Abgänge
+  ist damit nicht nachgewiesen.
 
-Für bekannte Innenwiderstände wird das reine Widerstandsnetz bei
-1 A Teststrom gelöst. Daraus folgen Gesamt-Ri, Zellstromanteile,
-Grenzstrom und eine vereinfachte Nutzkapazität bis zur ersten
-entladenen Zelle. Die Berechnung gilt für identische, gleich geladene
-Zellen und reine Gleichspannung. Ungleiche Zellen und Ausgleichsströme
-sind **kein** unterstützter Einsatzfall.
+Die bisherige **▶ Strom**-Simulation von Redion bleibt für
+Batterieübungen gesperrt, weil sie ideale Spannungsquellen voraussetzt.
+Stattdessen liest das Batterielabor die **wirkliche Redion-Netzliste**.
+Bei normalen Schaltplänen wird die bisherige Simulation nicht verändert.
 
-Die vorhandene **▶ Strom**-Simulation von Redion behandelt
-Spannungsquellen ideal. Sie kann parallele ideale Quellen nicht
-allgemein bestimmen. Daher ist der Knopf in einer Batterieübung
-gesperrt, solange das Batterie-Fach die eigenen Messwerte erzeugt.
-Das vermeidet widersprüchliche Ergebnisse. In normalen Schaltplänen
-bleibt die bisherige Stromsimulation unverändert.
+## Technik und Prüfungen
 
-Eine echte Glühlampe hat keinen während des Betriebs konstanten
-Widerstand; das optionale Lastfeld rechnet ausdrücklich einen
-**ohmschen Verbraucher**. Ohne Lastwiderstand ist sein Strom unbekannt.
+- Batterie-Rechnung: batterie-labor-kern.js
+- Aufgaben, Bauteile, echte Musterleitungen: batterie-aufgaben.js
+- Speicherformat mit bis zu 64 Zellen und Mehrfachabgängen:
+  src/bereiche/bloecke/arten/schaltplan.ts und quell/.../schaltplan.js
+- Darstellung: quell/schale/stil/schaltatelier.css
+- Tests: pruefungen/batterie-labor.test.cjs und
+  pruefungen/batterie-schaltplan.test.cjs
 
-## Bestandteile
+Kern-/Netztests mit Node.js ausführen:
 
-- \`batterie-labor-kern.js\`: reine Netz-/Schaltungsrechnung
-- \`batterie-aufgaben.js\`: Übungen, editierbare Zellwerte, Ergebnisfach
-- \`src/bereiche/bloecke/arten/planflaeche.ts\`: native Werkzeugleiste,
-  Panel-Einhängung, dieselben Speichern-/Undo-Wege
-- \`src/bereiche/bloecke/arten/schaltplan.ts\`: erhält
-  \`werte\` und \`batterieUebung\` beim Wiederöffnen
-- \`index.html\`, \`src/dienst/sw.ts\`, \`bauen.mts\`: laden die
-  beiden Module online, offline und in der Redion-Einzeldatei
-- \`pruefungen/batterie-labor.test.cjs\`: Rechen- und Planformatproben
+    node --test pruefungen/batterie-labor.test.cjs pruefungen/batterie-schaltplan.test.cjs
 
-Die eigenständige HTML-Übungsseite des ersten Entwurfs wurde
-**entfernt**, da das Lernen nun auf der normalen Zeichenfläche
-stattfindet. Keine der hochgeladenen PDF-Dateien wird im Repository
-gespeichert.
+Danach optional Projektprüfungen:
 
-## Prüfung
+    npm run bauen:ts && npm run typecheck
 
-Mit Node.js:
-
-\`node --test pruefungen/batterie-labor.test.cjs\`
-
-Anschliessend im vollständigen Projekt:
-
-\`npm run bauen:ts && npm run typecheck\`
-
-Für die Benutzeroberfläche ist zusätzlich eine echte Browserprobe
-erforderlich: Redion öffnen, Schaltplan anlegen, Übung einsetzen,
-Leitungen von Hand ziehen, Enden umhängen, Akkuwerte ändern, speichern,
-Seite neu laden und alles erneut messen. Die zehn Rechenfälle sind
-getrennt davon syntaktisch und rechnerisch geprüft; ein erfolgreicher
-gesamter Browserlauf wird nicht behauptet.
+Eine zusätzliche Browserprobe mit Touch/Maus, Speichern und
+Wiederöffnen ist weiterhin erforderlich. Es werden keine
+hochgeladenen PDF-Seiten in das Repository kopiert.

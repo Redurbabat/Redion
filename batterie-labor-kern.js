@@ -46,9 +46,56 @@
     return a.map(r => r[n]);
   }
 
-  function pruefen(zellen, leitungen) {
-    if (!Array.isArray(zellen) || !zellen.length || zellen.length > 32)
-      return fehler('Keine gültige Anzahl von Batteriezellen.');
+  /* Einfache Nennstrom-Regeln auch für Akku-Pakete mit unterschiedlichen
+   * Spannungen. Nur Reihen-/Parallelschaltungen mit derselben
+   * Ausgangsspannung pro parallelem Zweig sind erlaubt.
+   * Für unbekanntes Ri ist die Nennstrom-Angabe eine
+   * Schaltungsregel (Engpass-Flow), keine physikalische Lastkurve. */
+  function maximalfluss(kanten, von, nach, feld) {
+    const nachbarn = new Map();
+    const add = (a,b,c) => {
+      if(!nachbarn.has(a)) nachbarn.set(a,[]);
+      if(!nachbarn.has(b)) nachbarn.set(b,[]);
+      const v=nachbarn.get(a),w=nachbarn.get(b);
+      v.push({zu:b,rest:c,rev:w.length});
+      w.push({zu:a,rest:0,rev:v.length-1});
+    };
+    kanten.forEach(k=>add(k.a,k.b,k.z[feld]));
+    let summe=0;
+    for(let versuch=0;versuch<256;versuch++) {
+      const eltern=new Map([[von,null]]), queue=[von];
+      while(queue.length && !eltern.has(nach)){
+        const ort=queue.shift();
+        for(let j=0;j<(nachbarn.get(ort)||[]).length;j++){
+          const k=nachbarn.get(ort)[j];
+          if(k.rest>1e-10 && !eltern.has(k.zu)){
+            eltern.set(k.zu,[ort,j]);queue.push(k.zu);
+          }
+        }
+      }
+      if(!eltern.has(nach)) break;
+      let rest=Infinity,jetzt=nach;
+      while(jetzt!==von){
+        const [alt,j]=eltern.get(jetzt);
+        rest=Math.min(rest,nachbarn.get(alt)[j].rest);
+        jetzt=alt;
+      }
+      if(!Number.isFinite(rest)) break;
+      jetzt=nach;
+      while(jetzt!==von){
+        const [alt,j]=eltern.get(jetzt),k=nachbarn.get(alt)[j];
+        k.rest-=rest;
+        nachbarn.get(jetzt)[k.rev].rest+=rest;
+        jetzt=alt;
+      }
+      summe+=rest;
+    }
+    return summe;
+  }
+
+  function pruefen(zellen, leitungen, optionen) {
+    if (!Array.isArray(zellen) || !zellen.length || zellen.length > 64)
+      return fehler('Keine gültige Anzahl von Batteriezellen oder Akku-Paketen.');
     if (!Array.isArray(leitungen)) return fehler('Die Verbindungen sind ungültig.');
     const ids = [AUS_MINUS, AUS_PLUS];
     zellen.forEach((_, i) => ids.push(idMinus(i), idPlus(i)));
@@ -77,113 +124,123 @@
       const z = zellen[i], a = finde(idMinus(i)), b = finde(idPlus(i));
       if (!z || !Number.isFinite(z.u) || z.u <= 0 ||
           !Number.isFinite(z.maxA) || z.maxA <= 0)
-        return fehler('Die Nenndaten einer Zelle sind ungültig.');
-      if (a === b) return fehler('Kurzschluss an Zelle ' + (i + 1) + '.');
-      kanten.push({ a, b, i, r: Number.isFinite(z.ri) && z.ri > 0 ? z.ri : 1 });
+        return fehler('Die Nenndaten von G' + (i + 1) + ' fehlen oder sind ungültig. Zelle auswählen und U/Imax ergänzen.');
+      if (a === b) return fehler('Kurzschluss an Zelle/Akku G' + (i + 1) + '.');
+      kanten.push({ a, b, i, z, r: Number.isFinite(z.ri) && z.ri > 0 ? z.ri : 1 });
     }
-    // Nur gleichartige Zellen: andernfalls entstehen innere Ausgleichsströme.
-    if (zellen.some(z => Math.abs(z.u - zellen[0].u) > 1e-8))
-      return fehler('Für unterschiedliche Zellspannungen ist diese Übungsrechnung nicht geeignet.');
 
-    const ad = new Map();
-    const add = (a, b, richtung) => {
-      if (!ad.has(a)) ad.set(a, []);
-      ad.get(a).push({ zu: b, richtung });
-    };
-    kanten.forEach(k => { add(k.a, k.b, 1); add(k.b, k.a, -1); });
-    const tiefen = new Map([[n, 0]]);
-    const offen = [n];
-    while (offen.length) {
-      const a = offen.shift();
-      for (const { zu, richtung } of ad.get(a) || []) {
-        const tiefe = tiefen.get(a) + richtung;
-        if (tiefen.has(zu) && tiefen.get(zu) !== tiefe)
-          return fehler('Zellen sind gegenpolig verbunden oder bilden eine widersprüchliche Schleife.');
-        if (!tiefen.has(zu)) { tiefen.set(zu, tiefe); offen.push(zu); }
-      }
-    }
-    if (!tiefen.has(p)) return fehler('Ausgang + und − sind noch nicht über Zellen verbunden.');
-    if (tiefen.get(p) <= 0) return fehler('Die Polarität am Ausgang ist vertauscht.');
-    if (kanten.some(k => !tiefen.has(k.a) || !tiefen.has(k.b)))
-      return fehler('Nicht alle Zellen sind an die Batterieanlage angeschlossen.');
-
-    // Jede Zelle muss auf einem vollständigen, korrekt gepolten Zweig liegen.
-    const erreicht = (start, rueckwaerts) => {
-      const gesehen = new Set([start]), q = [start];
-      while (q.length) {
-        const a = q.shift();
-        for (const k of kanten) {
-          const von = rueckwaerts ? k.b : k.a;
-          const nach = rueckwaerts ? k.a : k.b;
-          if (von === a && !gesehen.has(nach)) { gesehen.add(nach); q.push(nach); }
+    const zugang = (start, rueckwaerts, liste) => {
+      const gesehen=new Set([start]), queue=[start];
+      while(queue.length) {
+        const ort=queue.shift();
+        for(const k of liste) {
+          const von=rueckwaerts?k.b:k.a, zu=rueckwaerts?k.a:k.b;
+          if(von===ort&&!gesehen.has(zu)){gesehen.add(zu);queue.push(zu);}
         }
       }
       return gesehen;
     };
-    const vonMinus = erreicht(n, false), nachPlus = erreicht(p, true);
-    if (kanten.some(k => !vonMinus.has(k.a) || !nachPlus.has(k.b)))
+    const vonMinus=zugang(n,false,kanten),nachPlus=zugang(p,true,kanten);
+    const aktive=kanten.filter(k=>vonMinus.has(k.a)&&nachPlus.has(k.b));
+    if(!aktive.length) {
+      const undirected=new Set([n]),queue=[n];
+      while(queue.length){
+        const ort=queue.shift();
+        for(const k of kanten){
+          const zu=k.a===ort?k.b:k.b===ort?k.a:null;
+          if(zu!==null&&!undirected.has(zu)){undirected.add(zu);queue.push(zu);}
+        }
+      }
+      return fehler(undirected.has(p)
+        ? 'Die Polarität am Ausgang ist vertauscht oder eine Zelle ist gegenpolig.'
+        : 'Ausgang + und − sind noch nicht über Zellen verbunden.');
+    }
+    if(!optionen?.nurAusgang && aktive.length!==kanten.length)
       return fehler('Mindestens eine Zelle liegt in einem offenen Nebenast.');
 
-    const orte = [...new Set(kanten.flatMap(k => [k.a, k.b]))].filter(id => id !== n);
-    const index = new Map(orte.map((id, i) => [id, i]));
-    const matrix = orte.map(() => orte.map(() => 0));
-    const strom = orte.map(id => id === p ? 1 : 0);
-    for (const k of kanten) {
-      const g = 1 / k.r;
-      const a = index.get(k.a), b = index.get(k.b);
-      if (a !== undefined) matrix[a][a] += g;
-      if (b !== undefined) matrix[b][b] += g;
-      if (a !== undefined && b !== undefined) {
-        matrix[a][b] -= g; matrix[b][a] -= g;
+    // Spannungspotenziale: Uneinheitliche Zellen in Serie sind erlaubt.
+    // Unterschiedliche Gesamtspannung paralleler Zweige ist dagegen
+    // widersprüchlich (Ausgleichsstrom) und wird nicht idealisiert.
+    const spannung=new Map([[n,0]]),offen=[n];
+    while(offen.length){
+      const ort=offen.shift();
+      for(const k of aktive){
+        let zu=null,delta=0;
+        if(k.a===ort){zu=k.b;delta=k.z.u;}
+        else if(k.b===ort){zu=k.a;delta=-k.z.u;}
+        if(zu===null)continue;
+        const soll=spannung.get(ort)+delta;
+        if(spannung.has(zu)){
+          if(Math.abs(spannung.get(zu)-soll)>1e-7)
+            return fehler('Unterschiedliche Zweigspannungen oder gegenpolig verbundene Akkus: Ausgleichsstrom-Gefahr.');
+        }else{spannung.set(zu,soll);offen.push(zu);}
       }
     }
-    const v = gleichung(matrix, strom);
-    if (!v) return fehler('Das Leitungsnetz lässt sich nicht eindeutig berechnen.');
-    const perAmpere = kanten.map(k =>
-      Math.abs(((index.has(k.b) ? v[index.get(k.b)] : 0) -
-                (index.has(k.a) ? v[index.get(k.a)] : 0)) / k.r));
-    if (perAmpere.some(x => !Number.isFinite(x) || x < 0))
-      return fehler('Die Stromaufteilung ist ungültig.');
-    const innenBekannt = zellen.every(z => Number.isFinite(z.ri) && z.ri > 0);
-    const kapBekannt = zellen.every(z => Number.isFinite(z.ah) && z.ah > 0);
-    const schrank = (feld) => Math.min(...perAmpere.map((anteil, i) =>
-      anteil < 1e-10 ? Infinity : zellen[i][feld] / anteil));
-    const maxA = schrank('maxA');
-    const ah = kapBekannt ? schrank('ah') : null;
+    if(!spannung.has(p)||spannung.get(p)<=0)
+      return fehler('Die Polarität am Ausgang ist vertauscht.');
+    const u=spannung.get(p);
+
+    // Teststrom 1 A für den Gesamtinnenwiderstand bzw. für die
+    // Stromanteile bei bekannter, passender Innenwiderstandsangabe.
+    const orte=[...new Set(aktive.flatMap(k=>[k.a,k.b]))].filter(x=>x!==n);
+    const index=new Map(orte.map((x,i)=>[x,i]));
+    const matrix=orte.map(()=>orte.map(()=>0));
+    const rechte=orte.map(x=>x===p?1:0);
+    for(const k of aktive){
+      const g=1/k.r,a=index.get(k.a),b=index.get(k.b);
+      if(a!==undefined)matrix[a][a]+=g;
+      if(b!==undefined)matrix[b][b]+=g;
+      if(a!==undefined&&b!==undefined){matrix[a][b]-=g;matrix[b][a]-=g;}
+    }
+    const v=gleichung(matrix,rechte);
+    if(!v)return fehler('Das Leitungsnetz lässt sich nicht eindeutig berechnen.');
+    const anteile=aktive.map(k=>Math.abs(
+      ((index.has(k.b)?v[index.get(k.b)]:0)-
+       (index.has(k.a)?v[index.get(k.a)]:0))/k.r));
+    const riBekannt=aktive.every(k=>Number.isFinite(k.z.ri)&&k.z.ri>0);
+    const qBekannt=aktive.every(k=>Number.isFinite(k.z.ah)&&k.z.ah>0);
+    const grenze=(feld)=>Math.min(...aktive.map((k,i)=>
+      anteile[i]<1e-10?Infinity:k.z[feld]/anteile[i]));
+    const maxA=riBekannt?grenze('maxA'):maximalfluss(aktive,n,p,'maxA');
+    const ah=qBekannt
+      ? (riBekannt?grenze('ah'):maximalfluss(aktive,n,p,'ah')) : null;
+    if(!Number.isFinite(maxA)||maxA<=0)
+      return fehler('Der Stromweg ist unvollständig oder die Zellströme sind ungültig.');
     return {
-      ok: true,
-      reihe: tiefen.get(p),
-      u: tiefen.get(p) * zellen[0].u,
-      ri: innenBekannt ? v[index.get(p)] : null,
-      maxA,
-      ah,
-      anteile: perAmpere,
-      alle: zellen.length
+      ok:true, reihe:null, u,
+      ri:riBekannt?v[index.get(p)]:null,
+      maxA, ah, anteile, alle:aktive.length,
+      ignorierte:zellen.length-aktive.length,
+      nennregel:!riBekannt
     };
   }
 
   /* Die echte Redion-Planfläche liefert Netze. Keine zweite Geometrie und
    * keine zweite Definition von Kreuzung/Verbindung: genau die Netzliste
    * des bestehenden Elektrozeichners gilt auch für die Batterieübung. */
-  function ausPlan(plan, netze) {
+  function ausPlan(plan, netze, ausgangIndex) {
     const uebung = plan && plan.batterieUebung;
     if (!uebung || !Array.isArray(uebung.teile) ||
-        !uebung.teile.length || uebung.teile.length > 32)
+        !uebung.teile.length || uebung.teile.length > 64)
       return fehler('Keine Batterieübung in diesem Schaltplan.');
     const teile = Array.isArray(plan.teile) ? plan.teile : [];
     const nachId = new Map(teile.map(t => [String(t.id), t]));
-    if (!nachId.has(uebung.plus) || !nachId.has(uebung.minus) ||
-        nachId.get(uebung.plus).zeichen !== 'klemme' ||
+    const mehr=Array.isArray(uebung.ausgaenge) && uebung.ausgaenge.length>0;
+    const index=Number.isInteger(ausgangIndex)?ausgangIndex:0;
+    const plusId=mehr && uebung.ausgaenge[index]
+      ? String(uebung.ausgaenge[index].id) : uebung.plus;
+    if (!nachId.has(plusId) || !nachId.has(uebung.minus) ||
+        nachId.get(plusId).zeichen !== 'klemme' ||
         nachId.get(uebung.minus).zeichen !== 'klemme')
-      return fehler('Die beiden Ausgangsklemmen X+ und X− fehlen.');
+      return fehler('Die Ausgangsklemmen X+ und X− fehlen.');
     if (!netze || !(netze.netzVon instanceof Map))
       return fehler('Die Netzliste steht nicht zur Verfügung.');
     const zellen = [];
     const punkte = [
       { id: AUS_MINUS, klemme: 'k:' + uebung.minus + ':1' },
       { id: AUS_MINUS, klemme: 'k:' + uebung.minus + ':2' },
-      { id: AUS_PLUS, klemme: 'k:' + uebung.plus + ':1' },
-      { id: AUS_PLUS, klemme: 'k:' + uebung.plus + ':2' }
+      { id: AUS_PLUS, klemme: 'k:' + plusId + ':1' },
+      { id: AUS_PLUS, klemme: 'k:' + plusId + ':2' }
     ];
     for (let i = 0; i < uebung.teile.length; i++) {
       const t = nachId.get(uebung.teile[i]);
@@ -215,7 +272,7 @@
       for (let i = 1; i < liste.length; i++)
         if (liste[0] !== liste[i]) leitungen.push([liste[0], liste[i]]);
     });
-    return pruefen(zellen, leitungen);
+    return pruefen(zellen, leitungen, {nurAusgang:mehr});
   }
 
   const api = { pruefen, ausPlan, reiheParallel, idMinus, idPlus, AUS_MINUS, AUS_PLUS };
