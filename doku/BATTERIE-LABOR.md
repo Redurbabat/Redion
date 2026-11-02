@@ -2,11 +2,43 @@
 
 ## Bedienung
 
-Redion öffnen → Schaltplan → **✦ Bereiche → Batterielabor**.
+**Windows-App:** Redion öffnen → Schaltplan → **✦ Bereiche → Batterielabor**.
 Eine Aufgabe auswählen und **Aufgabe einsetzen** anklicken. Alle Teile
 stehen auf der **gewöhnlichen Schaltplan-Zeichenfläche**, nicht in
 einem extra Editor. Dort können sie mit den normalen Werkzeugen
 verschoben, gedreht und mit **Leitung ziehen** (Taste 2) verbunden werden.
+
+**Komplett selber zeichnen:** „Leere Batteriezeichnung starten“ wählen.
+Das Blatt enthält nur die Klemmen X+ und X−. Batterien über die normale
+Bauteilpalette einsetzen, ihre Werte U, Imax, Ri und Q bearbeiten und mit
+Taste 2 verdrahten. Neue Batterien aus der Palette werden im freien Modus
+automatisch mitgerechnet. Alternativ Batterien erst in einem normalen
+Schaltplan zeichnen: Beim ersten **▶ Strom** werden die zwei
+Ausgangsklemmen ohne Löschen des bisherigen Plans angelegt.
+Danach die Ausgangsklemmen verdrahten.
+
+**▶ Strom** in der normalen Schaltplan-Kopfleiste funktioniert jetzt auch
+für Batterieanlagen: einmal einschalten, nochmals ausschalten. Das
+Batterielabor zeigt die **berechnete Leerlaufspannung U in V**, den
+**Gesamtinnenwiderstand Ri in Ω**, den **maximal zulässigen Strom Imax
+in A**, die Kapazität Q und den **wirklich simulierten Laststrom I in A**.
+Die Werte werden anhand der *gezeichneten Verbindungen* ermittelt.
+Die herkömmliche Netzsimulation für übrige Schaltpläne bleibt unverändert.
+
+Für den Laststrom gibt es zwei Möglichkeiten:
+- **Widerstand wirklich zeichnen:** Einen oder mehrere Widerstände
+  zwischen X+ und X− anschliessen. Seriell/parallele Widerstandsnetze
+  werden auf ihren Ersatzwiderstand R in Ω reduziert. Fehlt eine Verbindung,
+  bleibt der Laststrom 0; es wird kein fiktiver Testwiderstand verwendet.
+- **Eingestellte Testlast:** Bei Lehrmittelaufgaben ohne eingezeichneten
+  Verbraucher einen Testwiderstand im Batteriefach auswählen. Beim
+  frei gezeichneten Blatt ist standardmässig **Leerlauf** eingestellt,
+  bis man ausdrücklich eine Testlast auswählt.
+
+Bei geschlossenem Stromkreis gilt unter den Modellannahmen
+I = U_leerlauf / (R_Last + Ri). Ist Ri unbekannt, wird die
+ideale Näherung klar markiert. Überschreitet der berechnete
+Laststrom Imax, gibt Redion eine Nennstromwarnung aus.
 
 1. **Reihe:** Pluspol der einen Batterie an Minuspol der nächsten.
    **Parallel:** Alle Pluspole und alle Minuspole jeweils zusammen.
@@ -77,10 +109,13 @@ Verdrahtungen, nicht identische Kopien der Papierzeichnungen.
   unabhängig geprüft; gleichzeitige Volllast aller Abgänge
   ist damit nicht nachgewiesen.
 
-Die bisherige **▶ Strom**-Simulation von Redion bleibt für
-Batterieübungen gesperrt, weil sie ideale Spannungsquellen voraussetzt.
-Stattdessen liest das Batterielabor die **wirkliche Redion-Netzliste**.
-Bei normalen Schaltplänen wird die bisherige Simulation nicht verändert.
+**Wichtig:** Beim Batterieplan ruft **▶ Strom** das Batterielabor
+auf, nicht den Standard-Simulator für ideale Spannungsquellen.
+Das Labor liest die **wirkliche Redion-Netzliste**. Bei normalen
+Schaltplänen bleibt die bisherige Simulation unverändert. Die
+Batterieanzeige ist ein **Schulmodell** und keine SPICE-Simulation:
+ein physikalischer Temperaturverlauf, Ladezustand oder eine
+nichtlineare Glühlampe werden nicht berechnet.
 
 ## Technik und Prüfungen
 
@@ -103,3 +138,15 @@ Danach optional Projektprüfungen:
 Eine zusätzliche Browserprobe mit Touch/Maus, Speichern und
 Wiederöffnen ist weiterhin erforderlich. Es werden keine
 hochgeladenen PDF-Seiten in das Repository kopiert.
+
+## Windows-Auslieferung
+
+Die Dateien `batterie-labor-kern.js`, `batterie-aufgaben.js` und
+`quell/bereiche/bloecke/arten/planflaeche.js` sind Webdateien,
+die die Windows-App laden kann. Die bereits installierte EXE ändert
+sich durch GitHub nicht automatisch. Bei einer Windows-App mit
+verbundenem lokalen Redion-Projektordner: GitHub Desktop → **Pull origin**.
+Ist noch kein Ordner verbunden, muss die Version mit dieser Funktion
+bereits installiert sein; siehe `doku/WINDOWS-ORDNER-AUTOUPDATE.md`.
+Ein echter Windows-Test (Maus, Touch, Speichern, Wiederöffnen und
+▶ Strom) ist weiterhin nötig.
