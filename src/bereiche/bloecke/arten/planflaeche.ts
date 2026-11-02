@@ -355,7 +355,8 @@ const Planflaeche = (() => {
     let relaisOffen = !!(block && block.plan && block.plan.relaisLegacy);
 
     let relais: { aktualisiere: () => void } | null = null;
-    let batterie: { aktualisiere: () => void } | null = null;
+    let batterie: { aktualisiere: () => void; stromAn: () => boolean;
+      stromSetzen: (an: boolean) => void; ausZeichnung: () => boolean } | null = null;
     let studioOffen = false; /* das Studio ersetzt die Palette, es verdoppelt sie nicht */
     let paletteOffen = false; // Die Zeichenfläche erhält beim Öffnen die volle Breite
     let paletteGruppe = 'alle';
@@ -596,15 +597,15 @@ const Planflaeche = (() => {
            (E535) an `.sp-start`; der Text bleibt echter Text. Was E772 dazu
            gebracht hat, bleibt: ein ungeprüfter Relais-Import sperrt den
            Strom und sagt im Titel, warum; eingeschaltet geht das Labor auf. */
-        `<button type="button" class="sp-start${z.simulation ? ' an' : ''}${z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ? ' sp-strom-ungeprueft' : ''}" ` +
-        `data-a="simulation" ${z.plan.batterieUebung ? 'disabled ' : ''}` +
-        `title="${z.plan.batterieUebung ? 'Batterieanlage im Batterie-Fach messen' :
+        `<button type="button" class="sp-start${z.simulation || (z.plan.batterieUebung && batterie?.stromAn()) ? ' an' : ''}${z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ? ' sp-strom-ungeprueft' : ''}" ` +
+        `data-a="simulation" ` +
+        `title="${z.plan.batterieUebung ? (batterie?.stromAn() ? 'Batteriestrom ausschalten' : 'Batterieschaltung einschalten und U, R, I messen') :
           z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ?
           'Original-Verdrahtung ungeprüft: in der Relais-Werkstatt zuerst prüfen und freigeben.' :
           z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
-        `aria-pressed="${z.simulation}" ` +
-        `aria-label="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}">` +
-        `${z.simulation ? '◼' : '▶'} Strom</button>` +
+        `aria-pressed="${!!(z.simulation || (z.plan.batterieUebung && batterie?.stromAn()))}" ` +
+        `aria-label="${z.simulation || (z.plan.batterieUebung && batterie?.stromAn()) ? 'Strom ausschalten' : 'Strom einschalten'}">` +
+        `${z.simulation || (z.plan.batterieUebung && batterie?.stromAn()) ? '◼' : '▶'} Strom</button>` +
         `<button data-a="zurueck" title="Rückgängig" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>↶</button>` +
         `<button data-a="vorwaerts" title="Wiederholen" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>↷</button>` +
         `<button data-a="mehr" title="Mehr" aria-label="Mehr">…</button>` +
@@ -2967,12 +2968,17 @@ const Planflaeche = (() => {
         UI.toast('Die Verdrahtung dieser alten Relais-Datei ist nicht geprüft. Prüfe die Leitungen und gib sie in der Relais-Werkstatt frei.');
         return;
       }
+      /* Batterien aus der normalen Bauteilpalette erhalten beim ersten
+       * Einschalten eigene Ausgangsklemmen, ohne den Plan zu löschen.
+       * Die Berechnung verwendet ausschliesslich die echte Netzliste. */
+      if (!z.plan.batterieUebung && z.plan.teile.some((t: any) => t.zeichen === 'batterie')) {
+        if (!batterie?.ausZeichnung()) return;
+      }
       if (z.plan.batterieUebung) {
         batterieOffen = true;
         batteriePanel.hidden = false;
+        if (batterie) batterie.stromSetzen(!batterie.stromAn());
         kopfMalen();
-        if (batterie) batterie.aktualisiere();
-        UI.toast('Batterieanlagen im Fach „Batterien“ messen: ideale Parallelquellen werden hier nicht simuliert.');
         return;
       }
 
@@ -3431,6 +3437,7 @@ const Planflaeche = (() => {
 
     batterie = (window as any).BatterieAufgaben ? (window as any).BatterieAufgaben.erstelle({
       element: batteriePanel,
+      nachStromwechsel: () => kopfMalen(),
       holePlan: () => z.plan,
       holeAuswahl: () => [...z.auswahl],
       aendere: (was: () => void) => aendere(was),
