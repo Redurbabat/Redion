@@ -86,7 +86,7 @@ jobs:
         run: node pruefungen/lauf/test88.mts
       - name: Werkzeug-Logik prüfen
         run: node pruefungen/lauf/test89.mts
-      - name: Kapitel 12 Batterielabor: Lehrmittel und echtes Netz
+      - name: "Kapitel 12 Batterielabor: Lehrmittel und echtes Netz"
         run: node --test pruefungen/batterie-labor.test.cjs pruefungen/batterie-schaltplan.test.cjs
       # Braucht keinen Browser: Node 20 bringt Blob und TextEncoder mit.
       - name: Die Grenzen des ZIP-Packers prüfen
