@@ -1,0 +1,34 @@
+# Einmaliger Abgleich der erzeugten Redion-Artefakte für Kapitel 12.
+# Die Datei wird nach erfolgreichem Lauf wieder entfernt.
+name: Kapitel-12-Artefakte synchronisieren
+on:
+  push:
+    branches:
+      - feature/batterien-kapitel-12-lernlabor
+permissions:
+  contents: write
+jobs:
+  artefakte:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund --ignore-scripts
+      - name: Erzeugte JS-Dateien, Dienststand und Einzeldatei aktualisieren
+        run: |
+          npm run bauen:ts
+          npm run bauen
+          git status --short
+      - name: Geänderte Artefakte einchecken
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- src/dienst/sw.ts src/kern/einstellung/stand.ts sw.js quell/kern/einstellung/stand.js redion-einzeldatei.html
+          git diff --cached --quiet || git commit -m "Generierte Redion-Artefakte für Batterielabor nachziehen"
+          git push
