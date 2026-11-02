@@ -25,18 +25,22 @@ for(const datei of [
 const {Schaltplan,Stromfluss,BatterieKern,BatterieAufgaben}=context;
 
 for(const a of BatterieAufgaben.aufgaben) {
-  test('Batterieplan '+a.id+' als echte Redion-Netze richtig berechnen',()=>{
+  test('Kapitel-12-Aufgabe '+a.id+' mit echten Redion-Netzen',()=>{
     const plan=BatterieAufgaben.planFuer(a.id);
-    assert.equal(plan.teile.filter(t=>t.zeichen==='batterie').length,a.zahl);
-    assert.equal(plan.teile.filter(t=>t.zeichen==='klemme').length,2);
+    assert.equal(plan.teile.filter(t=>t.zeichen==='batterie').length,a.anfang||a.zellen.length);
+    assert.equal(plan.teile.filter(t=>t.zeichen==='klemme').length,a.ausgaenge?5:2);
     assert.equal(plan.leitungen.length,0);
     BatterieAufgaben.musterFuer(plan);
-    const r=BatterieKern.ausPlan(plan,Stromfluss.netze(plan));
-    assert.equal(r.ok,true, 'Falsches Netz: '+(r.grund||''));
-    if(a.zielU!==undefined)assert.ok(Math.abs(r.u-a.zielU)<1e-6);
-    if(a.zielI!==undefined)assert.ok(r.maxA+1e-6>=a.zielI);
-    if(a.ri===null)assert.equal(r.ri,null);
-    if(a.q===null)assert.equal(r.ah,null);
+    assert.equal(plan.batterieUebung.teile.length,a.zellen.length);
+    const ziele=a.ausgaenge||[a];
+    ziele.forEach((ziel,i)=>{
+      const r=BatterieKern.ausPlan(plan,Stromfluss.netze(plan),i);
+      assert.equal(r.ok,true,'Falsches Netz für '+a.id+' Ausgang '+i+': '+(r.grund||''));
+      if(ziel.zielU!==undefined)assert.ok(Math.abs(r.u-ziel.zielU)<1e-6);
+      if(ziel.zielI!==undefined)assert.ok(r.maxA+1e-6>=ziel.zielI);
+      if(a.zellen.every(x=>x.ri===null))assert.equal(r.ri,null);
+      if(a.zellen.every(x=>x.q===null))assert.equal(r.ah,null);
+    });
   });
 }
 
