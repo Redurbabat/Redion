@@ -77,3 +77,63 @@ test('Vier Batterieabgänge und 36 Zellen werden nach dem Laden erhalten',()=>{
     assert.ok(Math.abs(r.u-ziel.zielU)<1e-7);
   });
 });
+
+/* Echte frei gezeichnete Bauteile müssen ohne Arbeitsblatt-Vorlage messbar
+ * sein; der Windows-Stromknopf verwendet genau diese Netzliste. */
+test('Leeres Batterieblatt: frei eingesetzte Zelle wird in U, Ri, A und Q gemessen',()=>{
+  const plan=BatterieAufgaben.planFuer('selbst');
+  assert.equal(plan.batterieUebung.teile.length,0);
+  const zelle={id:Schaltplan.uid(),zeichen:'batterie',bmk:'G1',x:200,y:220,
+    drehung:0,gespiegelt:false,nummern:{},gruppe:'',ebene:'plan',
+    werte:{U:1.5,Ri:.3,Imax:1,Q:.5}};
+  plan.teile.push(zelle);
+  const plus=plan.teile.find(t=>t.id===plan.batterieUebung.plus);
+  const minus=plan.teile.find(t=>t.id===plan.batterieUebung.minus);
+  const draht=(a,an,b,bn)=>{
+    const s=Schaltplan.anschlussOrt(a,an),e=Schaltplan.anschlussOrt(b,bn);
+    const punkte=Schaltplan.leitungFuehren(plan,s,e,
+      {teil:a.id,nr:an},{teil:b.id,nr:bn});
+    plan.leitungen.push({id:Schaltplan.uid(),punkte,
+      ebene:'plan',vonTeil:a.id,vonNr:an,nachTeil:b.id,nachNr:bn});
+  };
+  draht(zelle,'+',plus,'1');draht(zelle,'−',minus,'1');
+  const r=BatterieKern.ausPlan(plan,Stromfluss.netze(plan));
+  assert.equal(r.ok,true,r.grund);
+  assert.equal(r.u,1.5);
+  assert.ok(Math.abs(r.ri-.3)<1e-7);
+  assert.ok(Math.abs(r.maxA-1)<1e-7);
+  assert.ok(Math.abs(r.ah-.5)<1e-7);
+
+  const resistor={id:Schaltplan.uid(),zeichen:'widerstand',bmk:'R1',
+    x:400,y:400,drehung:0,gespiegelt:false,nummern:{},gruppe:'',ebene:'plan',
+    werte:{R:3}};
+  plan.teile.push(resistor);
+  draht(resistor,'1',plus,'2');draht(resistor,'2',minus,'2');
+  const last=BatterieKern.lastAusPlan(plan,Stromfluss.netze(plan));
+  assert.equal(last.ok,true,last.grund);
+  assert.ok(Math.abs(last.ohm-3)<1e-7);
+  assert.ok(Math.abs(r.u/(last.ohm+r.ri)-(1.5/3.3))<1e-7);
+});
+
+test('Widerstandsersatzwert: mehrere parallele gezeichnete Verbraucher',()=>{
+  const plan=BatterieAufgaben.planFuer('selbst');
+  const plus=plan.teile.find(t=>t.id===plan.batterieUebung.plus);
+  const minus=plan.teile.find(t=>t.id===plan.batterieUebung.minus);
+  // Klemmen 1/2 gelten jeweils als derselbe Ausgang. Resistornetze können
+  // dabei je eine andere Anschlussseite verwenden.
+  for(let i=0;i<2;i++){
+    const t={id:Schaltplan.uid(),zeichen:'widerstand',bmk:'R'+i,
+      x:160+i*150,y:300,drehung:0,gespiegelt:false,nummern:{},
+      gruppe:'',ebene:'plan',werte:{R:4}};
+    plan.teile.push(t);
+    for(const [nr,k] of [['1',plus],['2',minus]]){
+      const a=Schaltplan.anschlussOrt(t,nr),b=Schaltplan.anschlussOrt(k,'2');
+      const punkte=Schaltplan.leitungFuehren(plan,a,b,{teil:t.id,nr},{teil:k.id,nr:'2'});
+      plan.leitungen.push({id:Schaltplan.uid(),punkte,ebene:'plan',
+        vonTeil:t.id,vonNr:nr,nachTeil:k.id,nachNr:'2'});
+    }
+  }
+  const result=BatterieKern.lastAusPlan(plan,Stromfluss.netze(plan));
+  assert.equal(result.ok,true,result.grund);
+  assert.ok(Math.abs(result.ohm-2)<1e-7,result.ohm);
+});
