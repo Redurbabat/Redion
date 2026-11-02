@@ -75,7 +75,13 @@
   })[c]);
   const zeige=(v,e)=>v==null||!Number.isFinite(v)?'nicht angegeben':
     new Intl.NumberFormat('de-CH',{maximumFractionDigits:4}).format(v)+(e?' '+e:'');
-  const get=id=>AUFGABEN.find(a=>a.id===id)||AUFGABEN[0];
+  /* Keine vorgezeichneten Akkus: alles mit der normalen Palette selbst einsetzen. */
+  const SELBST={id:'selbst',name:'Eigene Zeichnung · Batterien frei platzieren',
+    art:'frei',zellen:[],
+    info:'Batterien aus „Bauteile“ auf den Plan ziehen und mit Taste 2 verbinden. '+
+      'Auch nachträglich platzierte Zellen werden automatisch mitgemessen. '+
+      'Eine Batterie erhält ihre tatsächlichen Werte über „Akku einstellen“.'};
+  const get=id=>id==='selbst'?SELBST:AUFGABEN.find(a=>a.id===id)||AUFGABEN[0];
   const soll=a=>a.zellen.length;
   const werteVon=p=>({
     ...(p.u==null?{}:{U:p.u}),
@@ -95,7 +101,7 @@
     const mehr=!!a.ausgaenge;
     const einzeln=a.zellen.length===6 && a.zielU===a.zellen[0].u;
     const z=mehr?Math.min(a.anfang||soll(a),soll(a)):Math.min(a.anfang||soll(a),soll(a));
-    const cols=mehr?6:einzeln?6:z>10?4:z>6?4:Math.min(3,z);
+    const cols=mehr?6:einzeln?6:z>10?4:z>6?4:Math.max(1,Math.min(3,z));
     const dx=mehr?170:einzeln?145:175,dy=mehr?120:180;
     plan.breite=mehr?1660:Math.max(1150,160+cols*dx+300);
     plan.hoehe=mehr?1150:Math.max(720,200+Math.ceil(z/cols)*dy+150);
@@ -242,6 +248,7 @@
     const meta=plan&&plan.batterieUebung;
     if(!meta)throw Error('Keine Batterieaufgabe.');
     const a=get(meta.id);
+    if(a.id==='selbst')throw Error('Für frei gezeichnete Schaltungen gibt es kein festes Muster.');
     const nachId=()=>new Map(plan.teile.map(t=>[t.id,t]));
     if(meta.teile.length>soll(a) && a.id!=='frei')
       throw Error('Für dieses Muster sind zusätzliche Zellen vorhanden.');
@@ -313,6 +320,27 @@
       'akku-6': {u:6,i:12,ri:null,q:null},
       'akku-8': {u:8,i:6,ri:null,q:null}
     };
+    function eigeneAusZeichnung() {
+      const plan=optionen.holePlan();
+      if(plan.batterieUebung)return true;
+      const akkus=plan.teile.filter(t=>t.zeichen==='batterie');
+      if(!akkus.length)return false;
+      const x=Math.max(960,...plan.teile.map(t=>Number(t.x)||0))+160;
+      const y=Math.max(260,...plan.teile.map(t=>Number(t.y)||0))+150;
+      optionen.aendere(()=>{
+        const plus={id:Schaltplan.uid(),zeichen:'klemme',bmk:'X+',
+          x,y:180,drehung:0,gespiegelt:false,nummern:{},gruppe:'',ebene:'plan'};
+        const minus={...plus,id:Schaltplan.uid(),bmk:'X−',y};
+        plan.teile.push(plus,minus);
+        plan.texte.push({id:Schaltplan.uid(),x:x+52,y:170,t:'X+ · PLUS',ebene:'plan'});
+        plan.texte.push({id:Schaltplan.uid(),x:x+52,y:y-9,t:'− MINUS',ebene:'plan'});
+        plan.batterieUebung={id:'selbst',plus:plus.id,minus:minus.id,
+          teile:akkus.slice(0,64).map(t=>t.id)};
+        plan.breite=Math.max(Number(plan.breite)||0,x+250);
+        plan.hoehe=Math.max(Number(plan.hoehe)||0,y+160);
+      });
+      wahl='selbst';schalter=false;return true;
+    }
     function messung(i) {
       const plan=optionen.holePlan();
       if(!plan.batterieUebung)return null;
@@ -329,22 +357,38 @@
       [['U (Leerlauf)',zeige(r.u,'V')],['Ri (gesamt)',zeige(r.ri,'Ω')],
        ['Imax',zeige(r.maxA,'A')],['Q (gesamt)',zeige(r.ah,'Ah')]].map(
         ([x,y])=>'<span><b>'+esc(x)+'</b> '+esc(y)+'</span>').join('')+'</div>';
+    function wirksameLast() {
+      const plan=optionen.holePlan();
+      if(plan.batterieUebung&&wurzel.BatterieKern&&typeof Stromfluss!=='undefined'){
+        try {
+          const gezeichnet=wurzel.BatterieKern.lastAusPlan(
+            plan,Stromfluss.netze(plan),ausgang);
+          if(gezeichnet)return {...gezeichnet,gezeichnet:true};
+        }catch(_e){/* Die Netzliste wird bei der eigentlichen Messung geprüft. */}
+      }
+      const ohm=Number(widerstand);
+      return {ok:Number.isFinite(ohm)&&ohm>0&&ohm<=1000000,
+        ohm,gezeichnet:false,grund:'Gib einen positiven Testlastwiderstand in Ω ein.'};
+    }
     function lastAnzeige(r) {
-      const R=Number(widerstand);
-      const hatR=Number.isFinite(R)&&R>0&&R<=1000000;
-      const strom=r&&r.ok&&schalter&&hatR?r.u/(R+(r.ri||0)):0;
-      const spannung=r&&r.ok&&hatR?strom*R:0;
+      const last=wirksameLast(),R=last.ohm;
+      const strom=r&&r.ok&&schalter&&last.ok?r.u/(R+(r.ri||0)):0;
+      const spannung=strom*R;
       const leuchtet=strom>1e-8;
       let txt='';
-      if(!r||!r.ok)txt='Erst die Batterie korrekt verdrahten.';
-      else if(!schalter)txt='Schalter AUS · 0 A · Lampe dunkel.';
-      else if(!hatR)txt='Gib einen positiven Lastwiderstand in Ω ein.';
-      else txt='Strom '+zeige(strom,'A')+' · Spannung an der Last '+
-        zeige(spannung,'V')+' · Leistung '+zeige(strom*spannung,'W')+
-        (r.ri===null?' · Idealmodell ohne unbekannten Innenwiderstand':'')+
+      if(!r||!r.ok)txt='Kein Strom: '+(r&&r.grund?r.grund:'Erst die Batterien verdrahten.');
+      else if(!schalter)txt='Strom AUS · I = 0 A. '+(last.ok?'R der Last = '+zeige(R,'Ω'):'');
+      else if(!last.ok)txt=last.grund;
+      else txt='Strom I = '+zeige(strom,'A')+' · Last R = '+zeige(R,'Ω')+
+        (last.gezeichnet?' (aus deiner Zeichnung)':' (einstellbare Testlast)')+
+        ' · Gesamtwiderstand Ri + R = '+(r.ri===null?'nicht vollständig bekannt':
+          zeige(R+r.ri,'Ω'))+
+        ' · Lastspannung = '+zeige(spannung,'V')+
+        ' · Leistung = '+zeige(strom*spannung,'W')+
+        (r.ri===null?' · Idealmodell, da Innenwiderstand unbekannt':'')+
         (strom>r.maxA+1e-8?' · ACHTUNG: Nennstrom überschritten!':'');
       return '<div class="sp-bat-strombild"><span class="sp-bat-birne '+
-        (leuchtet?'an':'')+'" role="img" aria-label="'+(leuchtet?'Lampe leuchtet':'Lampe dunkel')+
+        (leuchtet?'an':'')+'" role="img" aria-label="'+(leuchtet?'Verbraucher eingeschaltet':'Kein Stromfluss')+
         '">◉</span><span class="sp-bat-stromtext">'+esc(txt)+'</span></div>';
     }
     function ergebnis(r,ziel,plan,a) {
@@ -369,6 +413,8 @@
       const a=meta?get(meta.id):get(wahl),ids=optionen.holeAuswahl();
       const t=meta&&ids.length===1?plan.teile.find(x=>
         x.id===ids[0]&&x.zeichen==='batterie'):null;
+      const eigene=meta&&meta.id==='selbst';
+      const gezeichnete=plan.teile.filter(x=>x.zeichen==='batterie').length;
       const w=t?t.werte||{}:{};
       const ziel=a.ausgaenge?a.ausgaenge[Math.min(ausgang,a.ausgaenge.length-1)]:a;
       let html='<div class="sp-bat-kopf"><strong>Kapitel 12 · Batterien live üben</strong>'+
@@ -376,13 +422,17 @@
         '<div class="sp-bat-bedienung"><label>Lehrmittel-Aufgabe <select data-bat="wahl">'+
         AUFGABEN.map(e=>'<option value="'+esc(e.id)+'"'+
           (e.id===wahl?' selected':'')+'>'+esc(e.name)+'</option>').join('')+
-        '</select></label><button type="button" data-bat="einsetzen">Aufgabe einsetzen</button></div>';
+        '</select></label><button type="button" data-bat="einsetzen">Aufgabe einsetzen</button>'+
+        '<button type="button" data-bat="leer">Leere Batteriezeichnung starten</button></div>';
       if(!meta){
-        html+='<p class="sp-bat-hinweis">Aufgabe auswählen, dann auf die vorhandene Zeichenfläche setzen. '+
-          'Anschliessend Akkus selber verdrahten und Strom einschalten.</p>';
+        html+='<p class="sp-bat-hinweis">Batterien komplett selbst zeichnen? „Leere Batteriezeichnung starten“ '+
+          'wählen oder mit der normalen Bauteilpalette Akkus platzieren und dann „Vorhandene Zeichnung messen“ anklicken.</p>'+
+          '<button type="button" data-bat="uebernehmen">Vorhandene Zeichnung messen ('+
+          gezeichnete+' Batterien)</button>';
       }else{
-        html+='<p class="sp-bat-hinweis"><b>'+esc(a.name)+'</b> · '+meta.teile.length+
-          ' von '+soll(a)+' geplanten '+esc(a.art)+'-Zellen/Paketen'+
+        html+='<p class="sp-bat-hinweis"><b>'+esc(a.name)+'</b> · '+
+          (eigene?gezeichnete+' selbst gezeichnete Batterien':
+            meta.teile.length+' von '+soll(a)+' geplanten '+esc(a.art)+'-Zellen/Paketen')+
           (a.zielU?' · Ziel '+zeige(a.zielU,'V'):'')+
           (a.zielI?' / '+zeige(a.zielI,'A'):'')+'.</p>';
         if(a.annahme)html+='<p class="sp-bat-hinweis">Annahme: '+esc(a.annahme)+'</p>';
@@ -397,7 +447,7 @@
           '<p><b>Achtung:</b> Die Stromanzeige ist eine Lernsimulation, keine echte Stromversorgung. Bei unbekanntem Innenwiderstand wird die ideale Näherung verwendet.</p></details>';
         html+='<p class="sp-bat-hinweis">'+esc(anschlussHilfe)+'</p>'+
           '<div class="sp-bat-bedienung">'+
-          '<button type="button" data-bat="muster">Musterverdrahtung zeigen</button>'+
+          (eigene?'':'<button type="button" data-bat="muster">Musterverdrahtung zeigen</button>')+
           '<button type="button" data-bat="pruefen">Jetzt prüfen</button></div>';
         html+='<div class="sp-bat-ergaenzen"><label>Weiteren Akku hinzufügen <select data-bat="neuArt">'+
           [['leclanche','1,5 V / 1 A · Leclanché'],['bleiak','2 V / 10 A · Bleiakku'],
@@ -429,7 +479,10 @@
         }
         const r=messung(ausgang);
         html+='<div class="sp-bat-messung" aria-live="polite">'+ergebnis(r,ziel,plan,a)+'</div>'+
-          '<div class="sp-bat-last"><label>Last aus Widerständen <select data-bat="lastart">'+
+          '<div class="sp-bat-last"><p class="sp-bat-hinweis">Ist ein gezeichneter Widerstands-Stromkreis '+
+          'zwischen X+ und X− geschlossen, wird dessen Ersatzwiderstand automatisch verwendet. '+
+          'Sonst gilt die hier eingestellte Testlast.</p>'+
+          '<label>Testlast aus Widerständen <select data-bat="lastart">'+
           [['eigen','Eigener Widerstand'],['einzeln','Ein Widerstand 2 Ω'],
            ['vierparallel','4 × 2 Ω parallel = 0,5 Ω'],
            ['vierreihe','4 × 2 Ω in Reihe = 8 Ω'],
@@ -448,7 +501,10 @@
       if(t.dataset.bat==='ausgang')ausgang=Number(t.value)||0;
       if(t.dataset.bat==='neuArt')neuArt=t.value;
       if(t.dataset.bat==='anzahl')anzahl=Math.min(16,Math.max(1,Number(t.value)||1));
-      if(t.dataset.bat==='schalter')schalter=t.checked;
+      if(t.dataset.bat==='schalter'){
+        schalter=t.checked;
+        if(optionen.nachStromwechsel)optionen.nachStromwechsel();
+      }
       if(t.dataset.bat==='last')widerstand=t.value.replace(',','.');
       if(t.dataset.bat==='lastart'){
         lastart=t.value;
@@ -459,9 +515,20 @@
     });
     el.addEventListener('click',e=>{
       const b=e.target.closest('[data-bat]');
-      if(!b||!['einsetzen','muster','pruefen','hinzu','werte','loeschen'].includes(b.dataset.bat))
+      if(!b||!['einsetzen','leer','uebernehmen','muster','pruefen','hinzu','werte','loeschen'].includes(b.dataset.bat))
         return;
       const action=b.dataset.bat,plan=optionen.holePlan();
+      if(action==='uebernehmen'){
+        if(!eigeneAusZeichnung())window.alert('Platziere zuerst mindestens eine Batterie aus der Bauteilpalette.');
+        aktualisiere();return;
+      }
+      if(action==='leer'){
+        if((plan.teile.length||plan.leitungen.length||plan.texte.length)&&
+          !window.confirm('Aktuellen Plan durch eine leere Batteriezeichnung ersetzen?'))return;
+        const neu=planFuer('selbst');wahl='selbst';ausgang=0;schalter=false;
+        optionen.aendere(()=>optionen.setzePlan(neu));
+        optionen.nachPlanwechsel();aktualisiere();return;
+      }
       if(action==='einsetzen'){
         if((plan.teile.length||plan.leitungen.length||plan.texte.length)&&
           !window.confirm('Aktuellen Plan durch diese Aufgabe ersetzen? Rückgängig bleibt möglich.'))return;
@@ -525,7 +592,9 @@
       });
       aktualisiere();
     });
-    return {aktualisiere};
+    return {aktualisiere,stromAn:()=>schalter,
+      stromSetzen:(an)=>{schalter=!!an;if(optionen.nachStromwechsel)optionen.nachStromwechsel();aktualisiere();},
+      ausZeichnung:eigeneAusZeichnung};
   }
   wurzel.BatterieAufgaben={erstelle,planFuer,musterFuer,aufgaben:AUFGABEN};
   if(typeof module!=='undefined'&&module.exports)
