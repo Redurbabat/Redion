@@ -227,7 +227,7 @@
     if(!meta)throw Error('Keine Batterieaufgabe.');
     const a=get(meta.id);
     const nachId=()=>new Map(plan.teile.map(t=>[t.id,t]));
-    if(meta.teile.length>soll(a))
+    if(meta.teile.length>soll(a) && a.id!=='frei')
       throw Error('Für dieses Muster sind zusätzliche Zellen vorhanden.');
     const spalten=a.ausgaenge?6:Math.min(4,soll(a));
     while(meta.teile.length<soll(a)){
@@ -265,7 +265,9 @@
       zellen.forEach((t,i)=>{t.x=150+(i%2)*350;t.y=230+Math.floor(i/2)*240;});
       plus.x=2020;plus.y=120;minus.x=2020;minus.y=1660;
     }
-    const links=gruppenFuer(a);
+    const links=a.id==='frei'
+      ? wurzel.BatterieKern.reiheParallel(meta.teile.length,meta.teile.length)
+      : gruppenFuer(a);
     for(const [von,nach] of links){
       const x=endpoints.get(von),y=endpoints.get(nach);
       if(!x||!y)throw Error('Musteranschluss '+von+' / '+nach+' fehlt.');
