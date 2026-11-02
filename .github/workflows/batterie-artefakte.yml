@@ -20,6 +20,8 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-audit --no-fund --ignore-scripts
+      - name: Kapitel-12-Netzrechnungen und Lehrmittelaufgaben prüfen
+        run: node --test pruefungen/batterie-labor.test.cjs pruefungen/batterie-schaltplan.test.cjs
       - name: Erzeugte JS-Dateien, Dienststand und Einzeldatei aktualisieren
         run: |
           npm run bauen:ts
