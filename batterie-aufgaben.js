@@ -153,6 +153,20 @@
       :a.zellen.length;
     return wurzel.BatterieKern.reiheParallel(a.zellen.length,inReihe);
   }
+  function beschriftungenNachziehen(plan) {
+    const meta=plan.batterieUebung;
+    if(!meta)return;
+    const nachId=new Map(plan.teile.map(t=>[t.id,t]));
+    const plusId=meta.ausgaenge?meta.ausgaenge.map(o=>o.id):[meta.plus];
+    const labels=plan.texte.filter(t=>typeof t.t==='string'&&t.t.includes(' · PLUS'));
+    plusId.forEach((id,i)=>{
+      const t=nachId.get(id),label=labels[i];
+      if(t&&label){label.x=t.x+52;label.y=t.y-9;}
+    });
+    const mi=nachId.get(meta.minus),neg=plan.texte.find(t=>t.t==='− MINUS');
+    if(mi&&neg){neg.x=mi.x+52;neg.y=mi.y-9;}
+  }
+
   /* Lehrmittel mit Mehrfachabgängen und verschachtelten Parallelläufen:
    * vorhersehbare Busschienen statt automatischem Wegfinden mit
    * unbeabsichtigten Leitungskreuzungen. */
@@ -198,6 +212,7 @@
       }
       minus.x=2450;minus.y=1110;
       waagrecht(minus,'1',140);
+      beschriftungenNachziehen(plan);
       return true;
     }
     plan.breite=1780;plan.hoehe=1450;
@@ -219,6 +234,7 @@
       parallel.forEach(i=>senkrecht(zellen[i],'−',660));
       draht([{x:x0,y:660},{x:x1,y:660}]);
     }
+    beschriftungenNachziehen(plan);
     return true;
   }
 
@@ -279,6 +295,7 @@
       plan.leitungen.push({id:Schaltplan.uid(),punkte:pfad.map(p=>({x:p.x,y:p.y})),
         ebene:'plan',vonTeil:x.t.id,vonNr:x.nr,nachTeil:y.t.id,nachNr:y.nr});
     }
+    beschriftungenNachziehen(plan);
     return plan;
   }
   function erstelle(optionen) {
