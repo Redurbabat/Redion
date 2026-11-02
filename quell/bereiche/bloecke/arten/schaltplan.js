@@ -138,7 +138,13 @@ const Schaltplan = (() => {
                         id: String(roh.batterieUebung.id || ''),
                         plus: String(roh.batterieUebung.plus || ''),
                         minus: String(roh.batterieUebung.minus || ''),
-                        teile: roh.batterieUebung.teile.map(String).slice(0, 32)
+                        teile: roh.batterieUebung.teile.map(String).slice(0, 64),
+            ...(Array.isArray(roh.batterieUebung.ausgaenge) ? {
+              ausgaenge: roh.batterieUebung.ausgaenge.slice(0, 8).map((x) => ({
+                id: String(x.id || ''), name: String(x.name || ''),
+                zielU: Number(x.zielU) || 0, zielI: Number(x.zielI) || 0
+              }))
+            } : {})
                     } } : {})
         };
     };
