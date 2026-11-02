@@ -64,3 +64,16 @@ test('Löschen eines Zellenblocks darf keine fiktive korrekte Anlage ergeben',()
   assert.equal(r.ok,false);
   assert.match(r.grund,/entfernt oder ersetzt/);
 });
+
+test('Vier Batterieabgänge und 36 Zellen werden nach dem Laden erhalten',()=>{
+  const plan=BatterieAufgaben.planFuer('taps');
+  BatterieAufgaben.musterFuer(plan);
+  const geladen=Schaltplan.lesen({plan});
+  assert.equal(geladen.batterieUebung.teile.length,36);
+  assert.equal(geladen.batterieUebung.ausgaenge.length,4);
+  geladen.batterieUebung.ausgaenge.forEach((ziel,i)=>{
+    const r=BatterieKern.ausPlan(geladen,Stromfluss.netze(geladen),i);
+    assert.equal(r.ok,true,r.grund||'');
+    assert.ok(Math.abs(r.u-ziel.zielU)<1e-7);
+  });
+});
