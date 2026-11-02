@@ -153,6 +153,75 @@
       :a.zellen.length;
     return wurzel.BatterieKern.reiheParallel(a.zellen.length,inReihe);
   }
+  /* Lehrmittel mit Mehrfachabgängen und verschachtelten Parallelläufen:
+   * vorhersehbare Busschienen statt automatischem Wegfinden mit
+   * unbeabsichtigten Leitungskreuzungen. */
+  function schienenMuster(plan,a) {
+    if(a.id!=='taps'&&a.id!=='b58-36')return false;
+    const meta=plan.batterieUebung;
+    const lookup=id=>plan.teile.find(t=>t.id===id);
+    const zellen=meta.teile.map(lookup),minus=lookup(meta.minus);
+    const out=meta.ausgaenge?meta.ausgaenge.map(x=>lookup(x.id)):[lookup(meta.plus)];
+    const ort=(t,nr)=>Schaltplan.anschlussOrt(t,nr);
+    const draht=(punkte,an=null,anNr=null,bis=null,bisNr=null)=>{
+      plan.leitungen.push({id:Schaltplan.uid(),punkte:punkte.map(p=>({x:p.x,y:p.y})),
+        ebene:'plan',
+        ...(an?{vonTeil:an.id,vonNr:anNr}:{}),
+        ...(bis?{nachTeil:bis.id,nachNr:bisNr}:{})});
+    };
+    const senkrecht=(t,nr,y)=>{const p=ort(t,nr);draht([p,{x:p.x,y}],t,nr);};
+    const waagrecht=(t,nr,x)=>{const p=ort(t,nr);draht([p,{x,y:p.y}],t,nr);};
+    if(a.id==='taps'){
+      plan.breite=2700;plan.hoehe=1260;
+      const gruppen=[{n:2,z:5},{n:3,z:4},{n:4,z:2},{n:6,z:1}];
+      let spalte=0,index=0;
+      for(let gi=0;gi<gruppen.length;gi++){
+        const g=gruppen[gi],xs=[];
+        for(let j=0;j<g.z;j++){
+          const x=120+(spalte++)*180;xs.push(x+20);
+          const kette=[];
+          for(let k=0;k<g.n;k++){
+            const t=zellen[index++];
+            t.x=x;t.y=980-k*125;kette.push(t);
+          }
+          senkrecht(kette[0],'−',1110);
+          for(let k=1;k<kette.length;k++){
+            const unten=ort(kette[k-1],'+'),oben=ort(kette[k],'−');
+            draht([unten,oben],kette[k-1],'+',kette[k],'−');
+          }
+          const bussY=980-(g.n-1)*125-70;
+          senkrecht(kette[g.n-1],'+',bussY);
+        }
+        const y=980-(g.n-1)*125-70, p=out[gi];
+        p.x=Math.max(...xs)+110-20;p.y=y;
+        waagrecht(p,'1',Math.min(...xs));
+      }
+      minus.x=2450;minus.y=1110;
+      waagrecht(minus,'1',140);
+      return true;
+    }
+    plan.breite=1780;plan.hoehe=1450;
+    const pos=[[200,740],[650,840],[1100,840],[570,430],
+               [710,430],[1020,430],[1180,430]];
+    zellen.forEach((t,i)=>{t.x=pos[i][0];t.y=pos[i][1];});
+    const plus=out[0];
+    plus.x=1450;plus.y=130;minus.x=1450;minus.y=1290;
+    waagrecht(plus,'1',220);
+    waagrecht(minus,'1',220);
+    for(const i of [0,3,4,5,6])senkrecht(zellen[i],'+',130);
+    for(const i of [0,1,2])senkrecht(zellen[i],'−',1290);
+    // Zwei unabhängige Mittelschienen: jeweils 24 V in Reihe
+    // mit zwei parallelen 12-V-/3-A-Paketen.
+    for(const [vor,parallel] of [[1,[3,4]],[2,[5,6]]]){
+      const x0=ort(zellen[parallel[0]],'−').x;
+      const x1=ort(zellen[parallel[1]],'−').x;
+      senkrecht(zellen[vor],'+',660);
+      parallel.forEach(i=>senkrecht(zellen[i],'−',660));
+      draht([{x:x0,y:660},{x:x1,y:660}]);
+    }
+    return true;
+  }
+
   function musterFuer(plan) {
     const meta=plan&&plan.batterieUebung;
     if(!meta)throw Error('Keine Batterieaufgabe.');
@@ -190,6 +259,7 @@
       endpoints.set('aus+'+i,{t,nr:'1'});
     });
     plan.leitungen=[];
+    if(schienenMuster(plan,a))return plan;
     const links=gruppenFuer(a);
     for(const [von,nach] of links){
       const x=endpoints.get(von),y=endpoints.get(nach);
