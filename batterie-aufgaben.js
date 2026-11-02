@@ -387,6 +387,14 @@
           (a.zielI?' / '+zeige(a.zielI,'A'):'')+'.</p>';
         if(a.annahme)html+='<p class="sp-bat-hinweis">Annahme: '+esc(a.annahme)+'</p>';
         if(a.info)html+='<p class="sp-bat-hinweis">'+esc(a.info)+'</p>';
+        html+='<details class="sp-bat-lernhilfe"><summary>So übst du die Schaltung Schritt für Schritt</summary>'+
+          '<p><b>1. Batterien einsetzen:</b> Die Zellen erscheinen direkt in der Zeichenfläche. Zusätzliche Akkus mit „Weiteren Akku hinzufügen“ platzieren; eine Zelle anklicken, um U, Ri, Imax und Q zu bearbeiten.</p>'+
+          '<p><b>2. Reihenschaltung:</b> Plus (+) mit dem Minus (−) der nächsten Batterie verbinden. Die Spannungen addieren sich, der zulässige Strom wird durch das schwächste Glied begrenzt.</p>'+
+          '<p><b>3. Parallelschaltung:</b> Alle Pluspole miteinander und alle Minuspole miteinander verbinden. Nur Zweige mit gleicher Spannung parallel verbinden. Die zulässigen Ströme addieren sich im vereinfachten Schulmodell.</p>'+
+          '<p><b>4. Leitungen ziehen:</b> Mit dem vorhandenen Werkzeug „Leitung ziehen“ (Taste 2) die Anschlüsse verbinden. Am Ende die Schaltung an die Klemmen X+ und X− anschliessen.</p>'+
+          '<p><b>5. Testen:</b> „Jetzt prüfen“ anklicken, dann eine Last wählen und „Strom einschalten“ aktivieren. Angezeigt werden Spannung, Strom, Leistung und mögliche Fehler.</p>'+
+          '<p><b>6. Lösung vergleichen:</b> „Musterverdrahtung zeigen“ verwenden; danach mit Rückgängig wieder selbst probieren.</p>'+
+          '<p><b>Achtung:</b> Die Stromanzeige ist eine Lernsimulation, keine echte Stromversorgung. Bei unbekanntem Innenwiderstand wird die ideale Näherung verwendet.</p></details>';
         html+='<p class="sp-bat-hinweis">'+esc(anschlussHilfe)+'</p>'+
           '<div class="sp-bat-bedienung">'+
           '<button type="button" data-bat="muster">Musterverdrahtung zeigen</button>'+
