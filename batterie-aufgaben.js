@@ -339,7 +339,7 @@
         plan.breite=Math.max(Number(plan.breite)||0,x+250);
         plan.hoehe=Math.max(Number(plan.hoehe)||0,y+160);
       });
-      wahl='selbst';schalter=false;return true;
+      wahl='selbst';schalter=false;lastart='ohne';return true;
     }
     function messung(i) {
       const plan=optionen.holePlan();
@@ -366,6 +366,12 @@
           if(gezeichnet)return {...gezeichnet,gezeichnet:true};
         }catch(_e){/* Die Netzliste wird bei der eigentlichen Messung geprüft. */}
       }
+      /* Eine offene selbst gezeichnete Last darf keine erfundene
+         Stromstärke durch den Testwiderstand anzeigen. */
+      if(plan.teile.some(t=>t.zeichen==='widerstand'))
+        return {ok:false,gezeichnet:true,grund:'Gezeichneter Verbraucher offen: Widerstand mit X+ und X− verbinden.'};
+      if(plan.batterieUebung&&plan.batterieUebung.id==='selbst'&&lastart==='ohne')
+        return {ok:false,gezeichnet:false,grund:'Leerlauf: I = 0 A. Zeichne einen Widerstand oder wähle eine Testlast.'};
       const ohm=Number(widerstand);
       return {ok:Number.isFinite(ohm)&&ohm>0&&ohm<=1000000,
         ohm,gezeichnet:false,grund:'Gib einen positiven Testlastwiderstand in Ω ein.'};
@@ -483,7 +489,7 @@
           'zwischen X+ und X− geschlossen, wird dessen Ersatzwiderstand automatisch verwendet. '+
           'Sonst gilt die hier eingestellte Testlast.</p>'+
           '<label>Testlast aus Widerständen <select data-bat="lastart">'+
-          [['eigen','Eigener Widerstand'],['einzeln','Ein Widerstand 2 Ω'],
+          [['ohne','Kein Verbraucher (Leerlauf)'],['eigen','Eigener Widerstand'],['einzeln','Ein Widerstand 2 Ω'],
            ['vierparallel','4 × 2 Ω parallel = 0,5 Ω'],
            ['vierreihe','4 × 2 Ω in Reihe = 8 Ω'],
            ['viergemischt','2+2 Ω parallel zu 2+2 Ω = 2 Ω']].map(([v,n])=>
@@ -525,14 +531,14 @@
       if(action==='leer'){
         if((plan.teile.length||plan.leitungen.length||plan.texte.length)&&
           !window.confirm('Aktuellen Plan durch eine leere Batteriezeichnung ersetzen?'))return;
-        const neu=planFuer('selbst');wahl='selbst';ausgang=0;schalter=false;
+        const neu=planFuer('selbst');wahl='selbst';ausgang=0;schalter=false;lastart='ohne';
         optionen.aendere(()=>optionen.setzePlan(neu));
         optionen.nachPlanwechsel();aktualisiere();return;
       }
       if(action==='einsetzen'){
         if((plan.teile.length||plan.leitungen.length||plan.texte.length)&&
           !window.confirm('Aktuellen Plan durch diese Aufgabe ersetzen? Rückgängig bleibt möglich.'))return;
-        const neu=planFuer(wahl);ausgang=0;schalter=false;
+        const neu=planFuer(wahl);ausgang=0;schalter=false;lastart='eigen';
         optionen.aendere(()=>optionen.setzePlan(neu));
         optionen.nachPlanwechsel();aktualisiere();return;
       }
