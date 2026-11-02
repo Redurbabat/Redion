@@ -1,23 +1,25 @@
-/* Suite 634 — Der RED-MGT-Glasschalter und das Live-Stromlabor (E772)
+/* Suite 634 — Ein und Aus ist wieder „▶ Strom", und das Live-Stromlabor (E772, E773)
  * ============================================================================
- * Redur am 1. November 2026: „Alle Funktionen 1:1, sauber gebaut" — der
- * Glasschalter in seinem ORIGINAL-Aussehen an Stelle von „▶ Strom", und
- * das Labor mit Uhr, Tempo 0,25× bis 4×, Pause und Zurücksetzen. Das ersetzt
- * seine frühere Antwort „RED-MGT angepasst" (E772).
+ * Redur am 1. November 2026: „Alle Funktionen 1:1, sauber gebaut" — dazu
+ * gehört das Labor mit Uhr, Tempo 0,25× bis 4×, Pause und Zurücksetzen
+ * (E772). Den RED-MGT-Glasschalter, der damals an Stelle von „▶ Strom" kam,
+ * hat er am 2. November zurückgenommen: „Für ein-aus sollte wie früher sein,
+ * damals war besser" (E773).
  *
- *   §1 Der Schalter ist eine echte Checkbox mit role="switch",
- *      `data-a="simulation"`, deutsch beschriftet („AUS"/„EIN"), mindestens
- *      44 px hoch; Klick und Leertaste schalten, der Fokus bleibt.
+ *   §1 Ein und Aus ist ein <button> „▶ Strom" / „◼ Strom" mit aria-pressed
+ *      und `data-a="simulation"`, so hoch wie „Bereiche" daneben; Klick und
+ *      Enter schalten, der Fokus bleibt am Knopf.
  *   §2 Das Labor erscheint nur mit Strom. Seine Uhr läuft mit einem
  *      Zeitrelais, 4× schneller als 1×, steht in der Pause still und fängt
  *      nach „Reset" bei null an. Ohne Zeitrelais zeigt sie „—" und es läuft
  *      kein Takt (E528, test630 §3).
- *   §3 Die Endlos-Lichtnaht läuft nur, wo Bewegung erwünscht ist: mit
- *      `prefers-reduced-motion` und mit „Ruhige Darstellung" steht sie.
- *   §4 Die 1:1-Ansicht zeigt den Schalter in Originalgrösse (330 × 180).
+ *   §3 Der Knopf trägt wieder Hebel und Glühfaden aus motion.ts (E535), und
+ *      sein Zustand folgt dem Strom.
+ *   §4 Vom Glasschalter ist nichts übrig: kein `.red-mgt-` im Plan, keine
+ *      Regel dafür in den Stilblättern, kein Knopf „⤢ 1:1".
  *
- * Gegen den Stand vor E772 (a6472d3f7) rot: dort ist der Strom ein
- * <button> „▶ Strom", und es gibt kein Labor.
+ * Gegen den Stand von E772 (5901e351f) rot: dort ist der Strom eine
+ * Checkbox im Glasschalter, und `motion.ts` lässt den Hebel weg.
  *
  *   node pruefungen/lauf/test634.mts
  * ==========================================================================*/
@@ -57,9 +59,9 @@ const oeffne = async (mitZeit: boolean): Promise<void> => {
     await new Promise(f => setTimeout(f, 900));
     document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung').forEach(el => el.remove());
   }, mitZeit);
-  await s.waitForSelector('.sp-wrap .red-mgt-input');
+  await s.waitForSelector('.sp-wrap button[data-a="simulation"]');
 };
-const schalter = () => s.locator('.sp-wrap .red-mgt-input[data-a="simulation"]').first();
+const schalter = () => s.locator('.sp-wrap button[data-a="simulation"]').first();
 const laborOffen = () => s.evaluate(() => !(document.querySelector('.sp-wrap .sp-live-labor') as HTMLElement | null)?.hidden);
 const uhr = async (): Promise<number> => {
   const t = await s.evaluate(() => document.querySelector('.sp-wrap [data-labor-uhr]')?.textContent ?? '');
@@ -67,26 +69,22 @@ const uhr = async (): Promise<number> => {
 };
 
 /* ══ §1 ════════════════════════════════════════════════════════════════════ */
-console.log('\n§1 Der Schalter');
+console.log('\n§1 Der Knopf „▶ Strom"');
 await oeffne(true);
-gleich('Kein alter <button> „▶ Strom" mehr', await s.locator('.sp-wrap button[data-a="simulation"]').count(), 0);
-gleich('Eine Checkbox mit role="switch", aus', await schalter().evaluate((i: HTMLInputElement) =>
-  [i.type, i.getAttribute('role'), i.getAttribute('aria-checked'), i.checked]), ['checkbox', 'switch', 'false', false]);
-gleich('Die Wörter sind deutsch', await s.locator('.sp-wrap .red-mgt-state').allTextContents(), ['AUS', 'EIN']);
-const gross = await s.locator('.sp-wrap .red-mgt-area.sp-start').boundingBox();
-p('In der Leiste mindestens 44 px hoch (§37)', !!gross && gross.height >= 44, JSON.stringify(gross));
-const zuvor = await s.locator('.sp-wrap [data-a="bereiche"]').boundingBox();
-p('Das ausgefahrene Gehäuse liegt nicht über „Bereiche"', !!gross && !!zuvor &&
-  await s.evaluate(([x, y]) => !document.elementFromPoint(x, y)?.closest('.red-mgt-area'), [zuvor!.x + zuvor!.width - 4, zuvor!.y + zuvor!.height / 2] as [number, number]));
+gleich('Genau ein <button> mit data-a="simulation"', await s.locator('.sp-wrap [data-a="simulation"]').evaluateAll(l => l.map(e => e.tagName)), ['BUTTON']);
+gleich('Aus: „▶ Strom", aria-pressed false', [(await schalter().innerText()).trim(), await schalter().getAttribute('aria-pressed')], ['▶ Strom', 'false']);
+const knopf = await schalter().boundingBox();
+const nachbar = await s.locator('.sp-wrap [data-a="bereiche"]').boundingBox();
+p('So hoch wie „Bereiche" daneben', !!knopf && !!nachbar && Math.abs(knopf.height - nachbar.height) <= 1, JSON.stringify([knopf?.height, nachbar?.height]));
 gleich('Vor dem Strom kein Labor', await laborOffen(), false);
 await schalter().click();
 await s.waitForTimeout(250);
-gleich('Klick: Strom ein, aria-checked, Labor da', [await schalter().getAttribute('aria-checked'), await laborOffen()], ['true', true]);
+gleich('Klick: „◼ Strom", aria-pressed true, Labor da', [(await schalter().innerText()).trim(), await schalter().getAttribute('aria-pressed'), await laborOffen()], ['◼ Strom', 'true', true]);
 await schalter().focus();
-await s.keyboard.press('Space');
+await s.keyboard.press('Enter');
 await s.waitForTimeout(250);
-gleich('Leertaste: wieder aus, und der Fokus bleibt am Schalter', [await schalter().getAttribute('aria-checked'),
-  await s.evaluate(() => document.activeElement?.classList.contains('red-mgt-input'))], ['false', true]);
+gleich('Enter: wieder aus, und der Fokus bleibt am Knopf', [await schalter().getAttribute('aria-pressed'),
+  await s.evaluate(() => document.activeElement?.getAttribute('data-a'))], ['false', 'simulation']);
 
 /* ══ §2 ════════════════════════════════════════════════════════════════════ */
 console.log('\n§2 Das Labor');
@@ -114,29 +112,30 @@ await s.waitForTimeout(400);
 gleich('Ohne Zeitrelais zeigt die Uhr „—"', await s.evaluate(() => document.querySelector('.sp-wrap [data-labor-uhr]')?.textContent), '—');
 
 /* ══ §3 ════════════════════════════════════════════════════════════════════ */
-console.log('\n§3 Die Lichtnaht und weniger Bewegung');
+console.log('\n§3 Hebel und Glühfaden (E535)');
+await schalter().click();
+await s.waitForTimeout(400);
+const hebel = () => schalter().evaluate((k: Element) => [!!k.querySelector('.rmo-hebel'), k.getAttribute('data-rmo-state')]);
+gleich('Aus: der Hebel ist da, Zustand „aus"', await hebel(), [true, 'aus']);
+await schalter().click();
+await s.waitForTimeout(400);
+gleich('Ein: Zustand „an"', await hebel(), [true, 'an']);
 await schalter().click();
 await s.waitForTimeout(200);
-const naht = () => s.evaluate(() => {
-  const n = document.querySelector('.sp-wrap .red-mgt-line') as HTMLElement;
-  const c = getComputedStyle(n);
-  return c.animationName + ' ' + c.animationIterationCount;
-});
-gleich('Ausgeschaltet läuft die Lichtnaht endlos', await naht(), 'red-mgt-line infinite');
-await s.emulateMedia({ reducedMotion: 'reduce' });
-p('Mit „weniger Bewegung" steht sie', (await naht()).startsWith('none'), await naht());
-await s.emulateMedia({ reducedMotion: 'no-preference' });
-await s.evaluate(() => document.body.setAttribute('data-bewegung', 'ruhig'));
-p('Mit „Ruhige Darstellung" steht sie auch', (await naht()).startsWith('none'), await naht());
-await s.evaluate(() => document.body.removeAttribute('data-bewegung'));
 
 /* ══ §4 ════════════════════════════════════════════════════════════════════ */
-console.log('\n§4 Die 1:1-Ansicht');
-await s.locator('.sp-wrap [data-a="original-schalter"]').click();
-await s.waitForTimeout(300);
-const voll = await s.locator('.sp-wrap .red-mgt-area.sp-start').boundingBox();
-p('Der Schalter steht in Originalgrösse da (330 × 180)', !!voll && Math.round(voll.width) === 330 && Math.round(voll.height) === 180, JSON.stringify(voll));
-await s.locator('.sp-wrap [data-a="original-schalter"]').click();
+console.log('\n§4 Vom Glasschalter ist nichts übrig');
+gleich('Kein .red-mgt- im Plan', await s.locator('.sp-wrap [class*="red-mgt-"]').count(), 0);
+gleich('Keine Regel für .red-mgt- in den Stilblättern', await s.evaluate(() => {
+  let n = 0;
+  const geh = (regeln: CSSRuleList): void => { for (const r of Array.from(regeln)) {
+    if ((r as CSSStyleRule).selectorText?.includes('red-mgt')) n++;
+    if ((r as CSSGroupingRule).cssRules) geh((r as CSSGroupingRule).cssRules);
+  } };
+  for (const sh of Array.from(document.styleSheets)) { try { geh(sh.cssRules); } catch { /* fremdes Blatt */ } }
+  return n;
+}), 0);
+gleich('Kein Knopf „⤢ 1:1" in Kopf und Palette', await s.locator('.sp-wrap [data-a="original-schalter"], .sp-wrap [data-p-original]').count(), 0);
 
 gleich('Keine Fehler', fehler, []);
 await browser.close();

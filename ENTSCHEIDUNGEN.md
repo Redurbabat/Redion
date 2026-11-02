@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-750 Entscheidungen, E1 bis E772 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+751 Entscheidungen, E1 bis E773 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -835,6 +835,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E770** — Die Schaltplanfläche aus Redurs ZIP 1:1 (1. November 2026, Redur im Fragebogen „1:1 übernehmen": „Alle Funktionen 1:1, sauber gebaut"; ERSETZT seine früheren Antworten „Palette offen lassen" und „keine Schnellkarte"): Palette beim Öffnen zu (▦ Bauteile, B, /), ein Menü „✦ Bereiche ▾" statt 🔋/⚙/📐, Kürzel 1–5, P, B, /, Alt+Umschalt+E/P in `Register.tasten` (§8), Ziehen aus Palette und Studio, Kontextleiste, Schnellkarte, Elektro Studio; getypt, ohne fremde Projektnamen; drei Fehler der ZIP behoben (Schnellkarte im Fluss, abgeschnittene Bühne, Dock über der Zeichnung); `test611` neu ausgerichtet (Palette öffnen) — `test632`
 * **E771** — Das Prüfzentrum aus Redurs ZIP (1. November 2026, „1:1"): Alt+Umschalt+P, im Menü „Bereiche" und im ⋯; Prüfpunkte, Stückliste, Netze, Filter, Sprung in den Plan; Kern getypt in `bloecke/arten/schaltplan-pruefung.ts` statt handgeschriebenem JS in `bereiche/elektro`, NACHGELADEN beim ersten Öffnen (GRUNDSTOCK, Einzeldatei über die Relais-Marke); offene Klemmen aus derselben Rechnung wie die Fusszeile (E747), keine zweite Geometrie; CSV mit BOM, Semikolon und Hochkomma gegen Formel-Einschleusung; Bericht „Redion · Schaltplan-Prüfbericht"; „Leitungen aufräumen" über `aendere` — `test633`
 * **E772** — Der RED-MGT-Glasschalter im Original-Aussehen an Stelle von „▶ Strom", und das Live-Stromlabor (1. November 2026, Redur: „1:1"; ERSETZT „RED-MGT angepasst"): Checkbox mit role="switch" und `data-a="simulation"`, „AUS"/„EIN" statt STANDBY/POWER ON (§3), 187 × 50 in der Leiste, 1:1-Ansicht 330 × 180; Redurs Kurven und Orange bleiben (test584 führt `.red-mgt-` mit Grund), die Endlos-Lichtnaht steht bei weniger Bewegung; RedionMotion schmückt ihn nicht; Labor mit Uhr, Tempo 0,25–4×, Pause, Reset und Zeitrelais-Balken auf dem Takt aus E768 — ohne Zeitrelais kein Takt (E528); test612/630/631 neu ausgerichtet — `test634`
+* **E773** — Ein und Aus ist wieder „▶ Strom" (2. November 2026, Redur: „Für ein-aus sollte wie früher sein, damals war besser"; nimmt den Schalter aus E772 zurück, das Labor bleibt): `<button>` mit `aria-pressed`, Hebel und Glühfaden aus E535, so hoch wie „Bereiche"; der Glasschalter, die 1:1-Ansicht, `.red-mgt-` in `test584` und der Sprung in `motion.ts` sind weg — `test634`
 
 ## Grundregel
 
@@ -70519,3 +70520,41 @@ statt `aria-pressed`. Grund jeweils im Lauf.
 **Kosten.** Der Schalter ist 187 px breit statt 34; die Kopfleiste kürzt
 unter 1220 px die seltenen Knöpfe (wie in der ZIP). Eine Endlosanimation
 im Leerlauf, ausdrücklich gewünscht, abschaltbar.
+
+## E773 — Ein und Aus ist wieder „▶ Strom"
+
+**Wer.** Redur, 2. November 2026, nachdem er die Bilder von E772 gesehen
+hatte: „Für ein-aus sollte wie früher sein, damals war besser." Das nimmt
+den Schalter aus E772 zurück — nicht das Labor und nicht den Rest der ZIP.
+
+**Entschieden.**
+
+- Ein und Aus ist wieder der Knopf **„▶ Strom" / „◼ Strom"**, ein
+  `<button>` mit `aria-pressed` und `data-a="simulation"`, mit Hebel und
+  Glühfaden, die RedionMotion seit E535 an `.sp-start` hängt. Er ist so
+  hoch wie „✦ Bereiche" daneben (38 px, sonst springt die Leiste um 3 px).
+- **Was von E772 bleibt:** ein ungeprüfter Relais-Import sperrt den Strom
+  und sagt im Titel, warum (E769); eingeschaltet geht das Live-Stromlabor
+  auf; der Fokus bleibt nach dem Neuzeichnen am Knopf.
+- **Was geht:** der Glasschalter samt Stilblatt (rund 110 Zeilen in
+  `schaltatelier.css`), die 1:1-Ansicht (⤢ im Kopf, „⤢ 1:1" in der
+  Palette, Escape-Zweig), die Ausnahme `.red-mgt-` in `test584` und der
+  Sprung über `.red-mgt-area` in `motion.ts`. Das Präfix `red-` ist aus
+  `doku/CSS-NAMENSRAEUME.md` gestrichen. Der Entwurf selbst bleibt in der
+  Geschichte von git (5901e351f) und in Redurs ZIP.
+- `test612`, `test630` und `test631` suchen wieder
+  `button[data-a="simulation"]` und lesen `aria-pressed`.
+
+**Wächter.** `test634` §1 und §3–§4 neu: ein `<button>`, „▶ Strom" →
+„◼ Strom", Höhe wie „Bereiche", Enter schaltet und der Fokus bleibt, Hebel
+mit Zustand `aus`/`an`, kein `.red-mgt-` im Plan und keine Regel dafür in
+den Stilblättern, kein „⤢ 1:1". Gegen 5901e351f rot (es gibt keinen
+Knopf); gegen den ersten Stand dieses Bogens rot mit 17 von 18 (35 gegen
+38 px).
+
+**Alternative.** Den Glasschalter behalten und nur kleiner machen — Redur
+hat „wie früher" gesagt, nicht „kleiner".
+
+**Kosten.** Keine Daten, nichts gespeichert. Die Startlast sinkt um das
+Stilblatt des Schalters (test388 lag 27 KB über dem Budget).
+

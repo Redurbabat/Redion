@@ -8809,9 +8809,10 @@ Plan aus einem „neueren Stand" liest, ändert und vergleicht.
 „Alle Funktionen 1:1, sauber gebaut", der seine früheren Antworten ersetzt —
 E770 (Palette zu, Menü „Bereiche", Kürzel, Ziehen, Kontextleiste,
 Schnellkarte, Studio), E771 (Prüfzentrum) und E772 (RED-MGT-Glasschalter,
-Live-Stromlabor). Offen bleibt:
+Live-Stromlabor). Den Glasschalter hat Redur am 2. November zurückgenommen
+(E773, Ein und Aus wieder „▶ Strom"). Offen bleibt:
 
-1. **Die Startgrösse.** `test388` misst 2016 statt 1989 KB (+27 KB;
+1. **Die Startgrösse.** `test388` misst 2013 KB (seit E773; vorher 2016) statt 1989 KB (+24 KB;
    Decke 1950 KB, schon vorher rot). Das Ziel war höchstens +5 KB.
    Nachgeladen ist nur der Kern des Prüfzentrums. Der Rest — Studio,
    Labor, Schnellkarte und ihr Stil (`schaltatelier.css`, 11,4 KB) — liegt
@@ -8823,8 +8824,9 @@ Live-Stromlabor). Offen bleibt:
    (Kopf aus/ein, Menü, Kontextleiste + Schnellkarte, Studio, Prüfzentrum,
    Werkstatt, Labor, 1:1). Bei 1900 × 1100 und am Telefon sind sie nicht
    gemacht.
-3. **`test634` §3** (Lichtnaht steht bei weniger Bewegung) blieb in der
-   Gegenprobe ohne den eigenen Ruhe-Block grün: Redions allgemeine
+3. ~~**`test634` §3**~~ — mit dem Glasschalter gegangen (E773); §3 prüft
+   jetzt den Hebel von „▶ Strom". Früher stand hier: §3 (Lichtnaht steht
+   bei weniger Bewegung) blieb in der Gegenprobe ohne den eigenen Ruhe-Block grün: Redions allgemeine
    Bewegungsregel hält die Lichtnaht schon an. Der Abschnitt ist darum
    ein Wächter über das Ergebnis, nicht über `schaltatelier.css`.
 4. Das Fach (Batterien, Relais, Prüfzentrum) schwebt wie in der ZIP über

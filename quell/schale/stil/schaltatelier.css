@@ -1,11 +1,12 @@
 /* ============================================================================
- * schaltatelier.css — die Schaltplanfläche aus Redurs ZIP (E770–E772)
+ * schaltatelier.css — die Schaltplanfläche aus Redurs ZIP (E770–E773)
  * ----------------------------------------------------------------------------
  * Redur am 1. November 2026: „Alle Funktionen 1:1, sauber gebaut". Darin
- * stehen fünf Blätter der ZIP als eines: der RED-MGT-Glasschalter in seinem
- * Original-Aussehen (Redurs eigener Entwurf, FREMDCODE.md), seine Einpassung
- * in die Kopfleiste, Palette/Studio/Schnellkarte/Kontextleiste, die
- * Kompaktpalette mit der 1:1-Ansicht des Schalters und das Live-Stromlabor.
+ * stehen die Blätter der ZIP als eines: Palette/Studio/Schnellkarte/
+ * Kontextleiste, die Kompaktpalette und das Live-Stromlabor. Den RED-MGT-
+ * Glasschalter hat Redur am 2. November zurückgenommen („für ein-aus sollte
+ * wie früher sein, damals war besser", E773): Ein und Aus ist wieder der
+ * Knopf „▶ Strom" mit Hebel und Glühfaden aus motion.css (E535).
  *
  * WAS „SAUBER" HIER HEISST, und jeder Punkt hat seinen Wächter:
  *   · kein `!important` (die ZIP hatte 75) — das Blatt steht vor
@@ -14,120 +15,10 @@
  *     des Kits (press.ts, test581 §8);
  *   · Glas nur über die Marke `--glas-blur` unter `@supports` (test576);
  *   · keine Namen aus anderen Projekten (§1): `--sp-ease` statt der alten;
- *   · die Endlos-Lichtnaht des Schalters und jede Fahrt stehen still, wenn
- *     weniger Bewegung gewünscht ist (System ODER „Ruhige Darstellung").
- * Die Kurven und Farben des Schalters sind Redurs Original und bleiben.
+ *   · jede Fahrt steht still, wenn weniger Bewegung gewünscht ist (System
+ *     ODER „Ruhige Darstellung").
  * ==========================================================================*/
 
-/* ── aus red-mgt-original.css ── */
-.red-mgt-area{--red-mgt-primary:#ff8800;--red-mgt-h:78px;--red-mgt-ease:cubic-bezier(.5,2,.3,.8);display:grid;place-items:center;min-width:330px;min-height:180px;position:relative}
-.red-mgt-wrap{position:relative;display:block;padding:22px 8px;cursor:pointer;filter:drop-shadow(0 22px 38px rgba(0,0,0,.46));transition:transform .55s var(--red-mgt-ease)}
-.red-mgt-wrap:hover{transform:translateY(4px) scale(.99)}
-.red-mgt-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:20}
-.red-mgt-control{position:relative;display:flex;height:var(--red-mgt-h);border-radius:999px;isolation:isolate}
-.red-mgt-control::before,.red-mgt-control::after{content:"";position:absolute;pointer-events:none;opacity:0;transition:opacity .7s ease,transform .7s ease}
-.red-mgt-control::before{left:26%;top:8%;width:72%;height:84%;border-radius:999px;background:linear-gradient(90deg,var(--red-mgt-primary),transparent);filter:blur(30px);mix-blend-mode:color-dodge}
-.red-mgt-control::after{left:31%;top:16px;width:46px;height:46px;border-radius:50%;background:var(--red-mgt-primary);filter:blur(16px);mix-blend-mode:color-dodge}
-.red-mgt-wrap:hover .red-mgt-control::before,.red-mgt-wrap:hover .red-mgt-control::after,.red-mgt-input:checked~.red-mgt-control::before,.red-mgt-input:checked~.red-mgt-control::after{opacity:.9}
-.red-mgt-left{position:relative;width:82px;height:var(--red-mgt-h);z-index:2;border-radius:999px 12px 12px 999px}
-.red-mgt-case{position:absolute;inset:0;border-radius:inherit;transform:translateX(-40px);transition:transform 1.15s cubic-bezier(.5,-.8,.3,.8)}
-.red-mgt-mask{position:absolute;inset:0;overflow:hidden;border-radius:inherit;background:linear-gradient(#353941,#252831 48%,#17191e);box-shadow:inset 8px -15px 15px -10px #000,inset 10px -17px 12px -12px #fff,0 30px 70px -5px #111;transition:box-shadow .7s var(--red-mgt-ease)}
-.red-mgt-mask::before{content:"";position:absolute;left:30%;top:22%;width:100%;height:30%;border-radius:inherit;background:#fff;filter:blur(12px);opacity:.68}
-.red-mgt-mask::after{content:"";position:absolute;right:0;inset-block:0;width:4px;background:rgba(255,255,255,.22);mix-blend-mode:overlay}
-.red-mgt-line{position:absolute;right:-1px;top:50%;width:1px;height:0;background:#fff;box-shadow:1px 0 10px 3px #ffa600;border-radius:99px;transform:translateY(-50%);animation:red-mgt-line 1.8s ease infinite;transition:opacity .3s}
-.red-mgt-screw{position:absolute;right:10px;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#d5d7da,#666b70 58%,#222 60%);box-shadow:inset 0 0 0 1px #111,0 1px 3px #000;z-index:3;transition:transform .65s ease,filter .65s}
-.red-mgt-screw::after{content:"";position:absolute;left:2px;right:2px;top:4px;height:1px;background:#27292c;transform:rotate(-18deg)}
-.red-mgt-screw-a{top:15px}
-.red-mgt-screw-b{bottom:15px}
-.red-mgt-right{position:relative;width:190px;height:var(--red-mgt-h);display:grid;place-items:center;border-radius:12px 999px 999px 12px;overflow:hidden}
-.red-mgt-glass{position:absolute;inset:0;border-radius:inherit;border-left:1px solid rgba(0,0,0,.3);background:linear-gradient(rgba(255,255,255,.17),rgba(255,255,255,.22) 48%,rgba(0,0,0,.55));box-shadow:inset 0 0 7px -4px #fff,inset 0 -10px 10px -8px rgba(255,255,255,.45),inset 8px -15px 15px -10px #000,inset 8px -10px 12px -12px #fff,0 30px 70px -5px #111;transition:box-shadow .7s var(--red-mgt-ease),filter .7s}
-.red-mgt-glass::before{content:"";position:absolute;left:0;right:14%;top:10%;height:70%;border-radius:0 25px 0 0;background:linear-gradient(rgba(255,255,255,.5),transparent 60%)}
-.red-mgt-glass::after{content:"";position:absolute;left:0;right:5%;bottom:15%;height:75%;border-radius:0 30px 30px 0;box-shadow:inset -2px -6px 5px -5px rgba(255,255,255,.8);filter:blur(3px)}
-.red-mgt-reflex{position:absolute;inset:0;width:70%;border-radius:0 50% 50% 0;background:linear-gradient(90deg,rgba(255,255,255,.03),rgba(255,255,255,.25));transform:translateX(-115%) skewX(30deg)}
-.red-mgt-wrap:hover .red-mgt-reflex{animation:red-mgt-reflex .65s ease}
-.red-mgt-filament{position:absolute;width:118px;height:28px;color:#e7e7e7;stroke-width:2;opacity:.28;transition:opacity .6s,color .6s,filter .6s}
-.red-mgt-filament path{stroke-dasharray:100 100;stroke-dashoffset:100;transition:stroke-dasharray .7s ease .2s}
-.red-mgt-filament-blur{color:#ffd000;stroke-width:10;filter:blur(8px);opacity:0}
-.red-mgt-state{position:absolute;z-index:4;color:rgba(255,255,255,.92);font:800 14px/1 Inter,system-ui,sans-serif;letter-spacing:.16em;transition:opacity .5s ease,transform .55s var(--red-mgt-ease),filter .45s ease;text-shadow:0 2px 10px rgba(0,0,0,.5)}
-.red-mgt-state-on{opacity:0;transform:translateY(16px) scale(.92);filter:blur(5px);color:#ffd18c}
-.red-mgt-input:checked~.red-mgt-control .red-mgt-case{transform:translateX(0)}
-.red-mgt-input:checked~.red-mgt-control .red-mgt-line{opacity:0}
-.red-mgt-input:checked~.red-mgt-control .red-mgt-screw{transform:rotate(180deg) scaleY(.86);filter:drop-shadow(0 0 4px var(--red-mgt-primary))}
-.red-mgt-input:checked~.red-mgt-control .red-mgt-glass{box-shadow:inset 0 0 10px -3px #fff,inset 0 -10px 10px -8px rgba(255,255,255,.5),inset 8px -15px 15px -10px #000,0 20px 48px -8px #111,0 0 24px rgba(255,136,0,.18)}
-.red-mgt-input:checked~.red-mgt-control .red-mgt-filament{opacity:1;color:#ff9d28}
-.red-mgt-input:checked~.red-mgt-control .red-mgt-filament path{stroke-dasharray:100 0}
-.red-mgt-input:checked~.red-mgt-control .red-mgt-filament-blur{opacity:1}
-.red-mgt-input:checked~.red-mgt-control .red-mgt-state-off{opacity:0;transform:translateY(-16px) scale(1.15);filter:blur(5px)}
-.red-mgt-input:checked~.red-mgt-control .red-mgt-state-on{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
-@keyframes red-mgt-line{0%{height:0;opacity:1}50%{height:100%;opacity:1}100%{height:140%;opacity:0}}
-@keyframes red-mgt-reflex{from{transform:translateX(-115%) skewX(30deg)}to{transform:translateX(145%) skewX(30deg)}}
-@media(max-width:480px){.red-mgt-area{transform:scale(.82);min-width:280px}}
-
-/* ── aus redion-red-mgt-adapter.css ── */
-.sp-wrap .sp-rechts .red-mgt-area.sp-start {
-  --red-mgt-toolbar-scale: .60;
-  width: 187px;
-  min-width: 187px;
-  height: 50px;
-  min-height: 50px;
-  max-width: 187px;
-  padding: 0;
-  display: block;
-  position: relative;
-  flex: 0 0 187px;
-  /* Das Gehäuse fährt ausgeschaltet 40 px (× 0,6) nach links aus — Platz
-     dafür, damit es den Knopf daneben nicht überdeckt. */
-  margin-left: 26px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  overflow: visible;
-  transform: none;
-  isolation: isolate;
-}
-.sp-wrap .sp-rechts .red-mgt-area > .red-mgt-wrap {
-  position: absolute;
-  display: block;
-  top: 50%; left: 1px;
-  width: 288px;
-  transform: translateY(-50%) scale(var(--red-mgt-toolbar-scale));
-  transform-origin: left center;
-  
-}
-@media (hover:hover) {
-  .sp-wrap .sp-rechts .red-mgt-area > .red-mgt-wrap:hover {
-    transform: translateY(calc(-50% + 4px)) scale(calc(var(--red-mgt-toolbar-scale) * .99));
-  }
-}
-
-.sp-wrap .sp-rechts .red-mgt-area .red-mgt-input {
-  inset: 22px auto auto 8px;
-  width: 272px;
-  height: 78px;
-}
-.sp-wrap .sp-rechts .red-mgt-area .red-mgt-input:focus-visible + .red-mgt-control {
-  outline: 4px solid var(--accent);
-  outline-offset: 5px;
-}
-.sp-wrap .sp-rechts .red-mgt-area .red-mgt-input:disabled {
-  cursor: not-allowed;
-}
-.sp-wrap .sp-rechts .red-mgt-area:has(.red-mgt-input:disabled) .red-mgt-wrap {
-  opacity: .42;
-  filter: grayscale(1);
-}
-@media (max-width: 700px) {
-  .sp-wrap .sp-rechts .red-mgt-area.sp-start {
-    --red-mgt-toolbar-scale: .50;
-    width: 158px;
-    min-width: 158px;
-    height: 44px;
-    min-height: 44px;
-    max-width: 158px;
-    flex-basis: 158px;
-  }
-}
 
 /* ── aus redion-elektro-ateliers.css ── */
 @media(min-width:761px){
@@ -229,6 +120,9 @@
   font-weight:600;
   min-height:38px;
 }
+/* „▶ Strom" (E773) steht neben „Bereiche" und trägt wie er Text: dieselbe
+   Höhe, sonst springt die Leiste um 3 px (test634 §1). */
+.sp-wrap .sp-rechts .sp-start {min-height:38px}
 .sp-wrap .sp-palette-knopf {
   flex:0 0 auto;
   height:37px;
@@ -587,7 +481,7 @@
 /* ── aus redion-elektro-workflow.css ── */
 .sp-wrap .sp-pal-header-actions{position:relative;display:flex;align-items:center;gap:6px;flex-shrink:0}
 .sp-wrap .sp-pal-header-actions [data-p-compact]{min-height:34px;padding:5px 8px;border-radius:10px;border:1px solid var(--line);color:var(--text-dim);background:var(--bg);font:750 10px/1 system-ui,sans-serif;cursor:pointer}
-.sp-wrap .sp-pal-header-actions [data-p-compact]:focus-visible,.sp-wrap .sp-sim-back:focus-visible,.sp-wrap .sp-original-toggle:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.sp-wrap .sp-pal-header-actions [data-p-compact]:focus-visible,.sp-wrap .sp-sim-back:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .sp-wrap .sp-pal-header-actions [data-p-compact]:hover{background:var(--bg-hover);color:var(--text)}
 .sp-wrap .sp-palette.sp-pal-kompakt{width:222px;max-width:60vw}
 .sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-kopf{padding:13px 11px 7px;gap:6px}
@@ -613,26 +507,6 @@
 .sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-info-icon{width:34px;height:34px;flex-basis:34px;border-radius:10px}
 .sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-info-icon svg{max-height:29px;max-width:29px}
 
-.sp-wrap .sp-original-toggle{min-width:34px;min-height:34px;padding:6px;border:1px solid var(--line);background:var(--bg);border-radius:10px;color:var(--text);font-size:17px;cursor:pointer}
-.sp-wrap.sp-original-schalter .sp-rechts .red-mgt-area.sp-start{
-  box-sizing:border-box;position:fixed;top:auto;left:auto;right:20px;
-  bottom:20px;z-index:9999;
-  width:330px;min-width:330px;max-width:330px;
-  height:180px;min-height:180px;
-  padding:0; background:radial-gradient(ellipse at 50% 50%,#493226,#141117 75%);
-  border:1px solid #a97c413d;border-radius:23px;
-  box-shadow:0 22px 75px #0008,inset 0 1px #fff2;
-  display:grid;place-items:center;
-}
-.sp-wrap.sp-original-schalter .sp-rechts .red-mgt-area>.red-mgt-wrap{
-  width:auto;position:relative;top:auto;left:auto;
-  padding:22px 8px;transform:none;transform-origin:center;
-}
-@media(hover:hover){
- .sp-wrap.sp-original-schalter .sp-rechts .red-mgt-area>.red-mgt-wrap:hover{transform:translateY(4px) scale(.99)}
-}
-.sp-wrap.sp-original-schalter .sp-rechts .red-mgt-area .red-mgt-input{inset:0;width:100%;height:100%}
-.sp-wrap.sp-original-schalter .sp-original-toggle{background:color-mix(in srgb,var(--accent) 16%,var(--bg))}
 
 .sp-wrap .sp-sim-status{padding:6px 10px;border:1px solid var(--line);border-radius:999px;font:750 11px/1.3 system-ui,sans-serif;color:var(--text-dim);background:var(--bg);white-space:normal}
 .sp-wrap .sp-sim-status.fliesst{background:color-mix(in srgb,var(--sp-strom) 14%,var(--bg));border-color:color-mix(in srgb,var(--sp-strom) 70%,var(--text));color:var(--text)}
@@ -653,7 +527,6 @@
  .sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-schliessen{width:29px;height:29px;min-width:29px}
  .sp-wrap .sp-palette.sp-pal-kompakt .sp-zeichenkarte .sp-sym{min-height:85px}
  .sp-wrap .sp-quick-help{display:none}
- .sp-wrap.sp-original-schalter .sp-rechts .red-mgt-area.sp-start{bottom:66px;right:6px;max-width:calc(100vw - 12px)}
 }
 
 
@@ -771,21 +644,18 @@
 }
 
 /* ── Weniger Bewegung: System ODER „Ruhige Darstellung" (E528) ──
-   Die Lichtnaht des Schalters läuft endlos — aber nur, wo Bewegung
-   erwünscht ist. Hier steht sie still, und jeder Übergang wird gesetzt. */
+   Der Stromfluss läuft endlos — aber nur, wo Bewegung erwünscht ist.
+   Hier steht er still, und jeder Übergang wird gesetzt. */
 @media (prefers-reduced-motion:reduce){
-  .sp-wrap .red-mgt-line, .sp-wrap .red-mgt-reflex, .sp-wrap .sp-fluss,
+  .sp-wrap .sp-fluss,
   .sp-wrap .sp-flaeche .sp-frisch-eingesetzt,
   .sp-wrap > :is(.sp-batterie-fach,.sp-relais-fach,.sp-pruef-fach),
   .sp-wrap :is(.sp-studio,.sp-schnellkarte,.sp-kontextleiste,.sp-werkzeuge,.sp-palette){animation:none}
-  .sp-wrap :is(.red-mgt-wrap,.red-mgt-case,.red-mgt-state,.red-mgt-filament,.red-mgt-filament path,.red-mgt-glass,.red-mgt-screw,.red-mgt-mask,
+  .sp-wrap :is(
     .sp-zeichenkarte,.sp-zeichenkarte .sp-sym,.sp-pal-chip,.sp-favorit,.sp-netz,.sp-start,.sp-labor-aktion){transition:none}
-  .sp-wrap .sp-rechts .red-mgt-area > .red-mgt-wrap:hover{transform:translateY(-50%) scale(var(--red-mgt-toolbar-scale))}
 }
-body[data-bewegung="ruhig"] .sp-wrap .red-mgt-line, body[data-bewegung="ruhig"] .sp-wrap .red-mgt-reflex,
 body[data-bewegung="ruhig"] .sp-wrap .sp-fluss, body[data-bewegung="ruhig"] .sp-wrap .sp-flaeche .sp-frisch-eingesetzt,
 body[data-bewegung="ruhig"] .sp-wrap > :is(.sp-batterie-fach,.sp-relais-fach,.sp-pruef-fach),
 body[data-bewegung="ruhig"] .sp-wrap :is(.sp-studio,.sp-schnellkarte,.sp-kontextleiste,.sp-werkzeuge,.sp-palette){animation:none}
-body[data-bewegung="ruhig"] .sp-wrap :is(.red-mgt-wrap,.red-mgt-case,.red-mgt-state,.red-mgt-filament,.red-mgt-filament path,.red-mgt-glass,.red-mgt-screw,.red-mgt-mask,
+body[data-bewegung="ruhig"] .sp-wrap :is(
   .sp-zeichenkarte,.sp-zeichenkarte .sp-sym,.sp-pal-chip,.sp-favorit,.sp-netz,.sp-start,.sp-labor-aktion){transition:none}
-body[data-bewegung="ruhig"] .sp-wrap .sp-rechts .red-mgt-area > .red-mgt-wrap:hover{transform:translateY(-50%) scale(var(--red-mgt-toolbar-scale))}

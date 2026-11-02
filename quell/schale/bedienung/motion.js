@@ -75,8 +75,6 @@ const RedionMotion = (() => {
         return element.hasAttribute('disabled') ? 'inaktiv' : 'bereit';
     };
     const decorateElement = (element) => {
-        if (element.classList.contains('red-mgt-area'))
-            return;
         const ids = effects.filter(effect => element.matches(effect.selector)).map(effect => effect.id);
         set(element, 'data-rmo', ids.join(' '));
         set(element, 'data-rmo-state', state(element));

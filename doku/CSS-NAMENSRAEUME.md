@@ -23,7 +23,7 @@ L90 hält seither fest, dass das nicht die Lücke ist:
 > ins Leere, und der Fehler sieht wieder nicht wie ein Fehler aus — er sieht
 > aus wie ein Stil, den man nicht bestellt hat.
 
-Es sind nicht vierzig. Es sind **165** — gezählt, nicht fortgeschrieben (1. November 2026, mit `red-`).
+Es sind nicht vierzig. Es sind **164** — gezählt, nicht fortgeschrieben (2. November 2026; `red-` kam am 1. November und ging am 2. wieder, E773).
 
 *Hier stand 144, und das war schon vor diesem Durchgang falsch: das
 Verzeichnis trug 158 Einträge. Die Zahl im Fliesstext prüft `test290`
@@ -48,11 +48,11 @@ anderes benutzt — das ist der Fall der Dateifläche und `bs-` von oben.
 
 `sp-` ist der Schaltplan. Mit **E770** (Redurs ZIP vom 1. November 2026,
 „Alle Funktionen 1:1") kamen Palette, Studio, Schnellkarte, Kontextleiste,
-das Labor und der Glasschalter in ein eigenes Blatt, `schaltatelier.css`:
+und das Labor in ein eigenes Blatt, `schaltatelier.css`:
 gezählt 763 Vorkommen dort, 214 in `bausteine.css`, 40 in `motion.css` —
-die Hauptdatei hat gewechselt. Im selben Blatt steht `red-`, der
-RED-MGT-Glasschalter (Redurs eigener Entwurf, FREMDCODE.md); `red-` ist
-kein Bereich, sondern ein Bauteil, und es gibt kein zweites.
+die Hauptdatei hat gewechselt. Einen Tag lang stand dort auch `red-`,
+der RED-MGT-Glasschalter; Redur hat ihn am 2. November zurückgenommen
+(E773), und mit ihm ging das Präfix.
 
 ## Zwei Sorten Präfix, und die zweite sieht nicht danach aus
 
@@ -287,7 +287,6 @@ pp        5  ansichten.css
 pr       12  bausteine.css
 pv        8  bausteine.css
 rg       46  bausteine.css
-red     115  schaltatelier.css
 rgn      13  bausteine.css
 rm       16  bausteine.css
 rmo     561  motion.css

@@ -361,7 +361,6 @@ const Planflaeche = (() => {
     let paletteGruppe = 'alle';
     let paletteSuche = '';
     let paletteKompakt = window.matchMedia('(max-width: 850px)').matches;
-    let volleSchalterAnsicht = false;
     let merkwahl: { werkzeug: Werkzeug; zeichen: string } | null = null;
     let planFokus = false;
     let studioTab: 'einsetzen' | 'eigenschaften' | 'status' = 'eigenschaften';
@@ -563,7 +562,6 @@ const Planflaeche = (() => {
     const kopfMalen = (): void => {
       const art = Schaltplan.artVon(z.plan.art);
       fachStatus();
-      wurzel.classList.toggle('sp-original-schalter', volleSchalterAnsicht);
       kopf.innerHTML =
         `<select class="sp-art" aria-label="Planart">` +
         (Schaltplan.ARTEN as any[]).map(a =>
@@ -592,33 +590,21 @@ const Planflaeche = (() => {
             `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
           : '') +
         `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" aria-haspopup="menu">✦ Bereiche ▾</button>` +
-        /* DER RED-MGT-GLASSCHALTER (E772) — Redurs eigener Entwurf in seinem
-           Original-Aussehen, an Stelle von „▶ Strom". Eine echte Checkbox mit
-           role="switch": Leertaste und Vorleser kennen sie. `data-a` bleibt
-           „simulation", also landet der Klick im selben `simulationUmschalten`
-           wie vorher. Die Wörter sind deutsch: „AUS" und „EIN" (§3). */
-        `<div class="sp-start red-mgt-area${z.simulation ? ' an' : ''}${z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ? ' sp-strom-ungeprueft' : ''}" ` +
+        /* EIN UND AUS (E773): wieder der Knopf „▶ Strom" / „◼ Strom", wie vor
+           E772. Redur am 2. November 2026: „Für ein-aus sollte wie früher
+           sein, damals war besser." Hebel und Glühfaden setzt motion.ts
+           (E535) an `.sp-start`; der Text bleibt echter Text. Was E772 dazu
+           gebracht hat, bleibt: ein ungeprüfter Relais-Import sperrt den
+           Strom und sagt im Titel, warum; eingeschaltet geht das Labor auf. */
+        `<button type="button" class="sp-start${z.simulation ? ' an' : ''}${z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ? ' sp-strom-ungeprueft' : ''}" ` +
+        `data-a="simulation" ${z.plan.batterieUebung ? 'disabled ' : ''}` +
         `title="${z.plan.batterieUebung ? 'Batterieanlage im Batterie-Fach messen' :
           z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ?
           'Original-Verdrahtung ungeprüft: in der Relais-Werkstatt zuerst prüfen und freigeben.' :
-          z.simulation ? 'Stromfluss und Animation anhalten' : 'Strom geben: animierte Leitungen und Lampen anzeigen'}">` +
-        `<label class="red-mgt-wrap"><input class="red-mgt-input" type="checkbox" role="switch" aria-checked="${z.simulation}" ` +
-        `data-a="simulation" ${z.simulation ? 'checked ' : ''}${z.plan.batterieUebung ? 'disabled ' : ''}` +
-        `aria-label="${z.simulation ? 'Stromsimulation ausschalten' : 'Strom geben und animieren'}" />` +
-        `<span class="red-mgt-control"><span class="red-mgt-left">` +
-        `<span class="red-mgt-case"><span class="red-mgt-mask"></span></span>` +
-        `<span class="red-mgt-line"></span>` +
-        `<span class="red-mgt-screw red-mgt-screw-a"></span>` +
-        `<span class="red-mgt-screw red-mgt-screw-b"></span></span>` +
-        `<span class="red-mgt-right"><span class="red-mgt-glass"><span class="red-mgt-reflex"></span></span>` +
-        `<svg class="red-mgt-filament red-mgt-filament-blur" viewBox="0 0 120 30" aria-hidden="true">` +
-        `<path d="M4 15 C22 2 34 28 52 15 S82 2 98 15 S112 26 116 15" fill="none" stroke="currentColor" /></svg>` +
-        `<svg class="red-mgt-filament" viewBox="0 0 120 30" aria-hidden="true">` +
-        `<path d="M4 15 C22 2 34 28 52 15 S82 2 98 15 S112 26 116 15" fill="none" stroke="currentColor" /></svg>` +
-        `<span class="red-mgt-state red-mgt-state-off">AUS</span>` +
-        `<span class="red-mgt-state red-mgt-state-on">EIN</span>` +
-        `</span></span></label></div>` +
-        `<button type="button" class="sp-original-toggle" data-a="original-schalter" aria-pressed="${volleSchalterAnsicht}" aria-label="Original-Stromschalter in voller Größe anzeigen" title="Originalschalter 1:1 vergrößern">${volleSchalterAnsicht ? '✕' : '⤢'}</button>` +
+          z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
+        `aria-pressed="${z.simulation}" ` +
+        `aria-label="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}">` +
+        `${z.simulation ? '◼' : '▶'} Strom</button>` +
         `<button data-a="zurueck" title="Rückgängig" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>↶</button>` +
         `<button data-a="vorwaerts" title="Wiederholen" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>↷</button>` +
         `<button data-a="mehr" title="Mehr" aria-label="Mehr">…</button>` +
@@ -825,7 +811,7 @@ const Planflaeche = (() => {
         '<div class="sp-pal-kopf"><div><span class="sp-pal-eyebrow">ELEKTRO • BIBLIOTHEK</span>' +
         '<h3>Schaltzeichen <span class="sp-pal-kopf-punkt" aria-hidden="true">✦</span></h3>' +
         '<p>Finden. Anfassen. Platzieren.</p></div>' +
-        '<div class="sp-pal-header-actions"><button type="button" data-p-original title="Original RED-MGT-Stromschalter in voller Größe anzeigen" aria-label="RED-MGT-Schalter in Originalgröße umschalten" aria-pressed="' + String(volleSchalterAnsicht) + '">⤢ 1:1</button><button type="button" data-p-compact aria-pressed="' + String(paletteKompakt) + '" aria-label="Kompakte Schaltzeichenpalette umschalten" title="Kompakte Ansicht umschalten">' + (paletteKompakt ? '▣ Groß' : '▤ Klein') + '</button>' +
+        '<div class="sp-pal-header-actions"><button type="button" data-p-compact aria-pressed="' + String(paletteKompakt) + '" aria-label="Kompakte Schaltzeichenpalette umschalten" title="Kompakte Ansicht umschalten">' + (paletteKompakt ? '▣ Groß' : '▤ Klein') + '</button>' +
         '<button type="button" data-p-close class="sp-pal-schliessen" aria-label="Schaltzeichen-Bibliothek schliessen" title="Schliessen">×</button></div></div>' +
         `<label class="sp-suche"><span class="sp-suche-titel">Symbol finden</span>` +
         `<input type="search" placeholder="z. B. Schliesser, Relais, Lampe …" ` +
@@ -3023,11 +3009,6 @@ const Planflaeche = (() => {
         palette.hidden = !paletteOffen;
         kopfMalen(); return;
       }
-      if (b.dataset.a === 'original-schalter') {
-        volleSchalterAnsicht = !volleSchalterAnsicht; kopfMalen();
-        kopf.querySelector<HTMLElement>('[data-a="original-schalter"]')?.focus({ preventScroll: true });
-        return;
-      }
       if (b.dataset.a === 'zoom-alles') return allesZeigen();
       if (b.dataset.a === 'bereiche') return bereicheMenue(b);
       if (b.dataset.a === 'plan-fokus') {
@@ -3056,14 +3037,11 @@ const Planflaeche = (() => {
       }
       if (b.dataset.a === 'heft') return heftUmschalten();
       if (b.dataset.a === 'simulation') {
-        /* Die Checkbox zeigt `z.simulation`. Sperrt ein ungeprüfter Relais-
-           Import den Strom, darf der Browser sie nicht allein umlegen. */
-        if (z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert && !z.simulation) e.preventDefault();
         const hadFocus = document.activeElement === b;
         simulationUmschalten();
-        /* Das Neuzeichnen des Kopfs ersetzt die Checkbox; der Fokus kehrt
-           zurück, damit die Leertaste ein zweites Mal wirkt. */
-        if (hadFocus) kopf.querySelector<HTMLInputElement>('.red-mgt-input')?.focus();
+        /* Das Neuzeichnen des Kopfs ersetzt den Knopf; der Fokus kehrt
+           zurück, damit Enter oder Leertaste ein zweites Mal wirkt. */
+        if (hadFocus) kopf.querySelector<HTMLElement>('[data-a="simulation"]')?.focus();
         return;
       }
       if (b.dataset.a === 'zurueck') return zurueck();
@@ -3116,13 +3094,6 @@ const Planflaeche = (() => {
         wurzel.classList.remove('sp-palette-offen');
         kopfMalen();
         kopf.querySelector<HTMLElement>('[data-a="palette-toggle"]')?.focus({ preventScroll: true });
-        return;
-      }
-      const original = ziel.closest<HTMLButtonElement>('[data-p-original]');
-      if (original) {
-        volleSchalterAnsicht = !volleSchalterAnsicht;
-        kopfMalen();
-        original.setAttribute('aria-pressed', String(volleSchalterAnsicht));
         return;
       }
       const kompakt = ziel.closest<HTMLButtonElement>('[data-p-compact]');
@@ -3233,11 +3204,6 @@ const Planflaeche = (() => {
          (`preventDefault`), aber `aendere` tut während eines Zugs nichts
          (E746, zweite Durchsicht — die Wahl und ihr Preis stehen dort). */
       if (e.key === 'Escape' && z.zieht) return;
-      if (e.key === 'Escape' && volleSchalterAnsicht) {
-        e.preventDefault(); volleSchalterAnsicht = false; kopfMalen();
-        kopf.querySelector<HTMLElement>('[data-a="original-schalter"]')?.focus({ preventScroll: true });
-        return;
-      }
       if (!e.ctrlKey && !e.metaKey && e.altKey && e.shiftKey && e.key.toLowerCase() === 'e') {
         // Alt+Umschalt+E: der Inspektor ersetzt die Bauteilpalette, statt sie zu duplizieren.
         e.preventDefault(); studioOffen = !studioOffen; studioPanel.hidden = !studioOffen;

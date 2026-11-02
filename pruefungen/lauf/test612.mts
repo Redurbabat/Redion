@@ -245,11 +245,10 @@ await seite.evaluate(async () => {
     .forEach(el => el.remove());
 });
 await seite.waitForSelector('.sp-wrap .sp-teil[data-id="M1"]');
-/* E772 (Redurs Entscheid vom 1. November 2026, „Alle Funktionen 1:1"): der
-   Strom-Knopf ist jetzt der RED-MGT-Glasschalter, eine Checkbox mit
-   role="switch" und data-a="simulation" — nicht mehr ein <button>. Der
-   Wähler ist darum ohne „button"; was geprüft wird, bleibt gleich. */
-const start = seite.locator('.sp-wrap [data-a="simulation"]').first();
+/* E773 (Redur, 2. November 2026: „Für ein-aus sollte wie früher sein"):
+   der Strom-Knopf ist wieder der <button> „▶ Strom" — E772 hatte ihn kurz
+   durch den RED-MGT-Glasschalter (eine Checkbox) ersetzt. */
+const start = seite.locator('.sp-wrap button[data-a="simulation"]').first();
 await start.scrollIntoViewIfNeeded();
 await start.click();
 await seite.waitForTimeout(250);
@@ -309,7 +308,7 @@ await seite.evaluate(async () => {
 await seite.waitForFunction(() => !!document.querySelector('.sp-wrap .sp-teil[data-id="M1"]')
   && !!document.querySelector('.sp-wrap .sp-leitung[data-id="w2"]')
   && !document.querySelector('.sp-wrap .sp-leitung[data-id="w1"]'), null, { timeout: 10000 });
-const start2 = seite.locator('.sp-wrap [data-a="simulation"]').first();
+const start2 = seite.locator('.sp-wrap button[data-a="simulation"]').first();
 await start2.scrollIntoViewIfNeeded();
 await start2.click();
 await seite.waitForTimeout(250);

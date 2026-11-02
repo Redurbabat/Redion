@@ -1,5 +1,15 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## Ein und Aus wieder „▶ Strom" — 2. November 2026
+
+**Fund.** Redur nach den Bildern von E772: „Für ein-aus sollte wie früher
+sein, damals war besser."
+**Bau.** E773: der Knopf „▶ Strom" / „◼ Strom" mit Hebel und Glühfaden ist
+zurück, so hoch wie „Bereiche"; Glasschalter, 1:1-Ansicht und ihre
+Ausnahmen sind weg, das Labor bleibt.
+**Prüfung.** `test634` neu gefasst, rot gegen 5901e351f, jetzt grün;
+`test612`, `630`, `631` suchen wieder den Knopf.
+
 ## Redurs ZIP 1:1 in der Schaltplanfläche — 1. November 2026
 
 **Fund.** Redur entschied „Alle Funktionen 1:1, sauber gebaut" und ersetzte
