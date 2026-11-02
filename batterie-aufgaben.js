@@ -260,6 +260,11 @@
     });
     plan.leitungen=[];
     if(schienenMuster(plan,a))return plan;
+    if(['p6c','b58-48'].includes(a.id)) {
+      plan.breite=2200;plan.hoehe=1800;
+      zellen.forEach((t,i)=>{t.x=150+(i%2)*350;t.y=230+Math.floor(i/2)*240;});
+      plus.x=2020;plus.y=120;minus.x=2020;minus.y=1660;
+    }
     const links=gruppenFuer(a);
     for(const [von,nach] of links){
       const x=endpoints.get(von),y=endpoints.get(nach);
