@@ -225,6 +225,13 @@
       return fehler('Keine Batterieübung in diesem Schaltplan.');
     const teile = Array.isArray(plan.teile) ? plan.teile : [];
     const nachId = new Map(teile.map(t => [String(t.id), t]));
+    /* Beim freien Zeichnen gelten auch per normaler Bauteilpalette
+       eingesetzte Batterien. Lehrmittel-Aufgaben bleiben dagegen strikt. */
+    const eigene = uebung.id === 'selbst';
+    const zellIds = eigene ? teile.filter(t => t.zeichen === 'batterie').map(t => t.id)
+                           : uebung.teile;
+    if (!zellIds.length || zellIds.length > 64)
+      return fehler('Setze 1 bis 64 Batterien auf den Plan.');
     const mehr=Array.isArray(uebung.ausgaenge) && uebung.ausgaenge.length>0;
     const index=Number.isInteger(ausgangIndex)?ausgangIndex:0;
     const plusId=mehr && uebung.ausgaenge[index]
@@ -242,8 +249,8 @@
       { id: AUS_PLUS, klemme: 'k:' + plusId + ':1' },
       { id: AUS_PLUS, klemme: 'k:' + plusId + ':2' }
     ];
-    for (let i = 0; i < uebung.teile.length; i++) {
-      const t = nachId.get(uebung.teile[i]);
+    for (let i = 0; i < zellIds.length; i++) {
+      const t = nachId.get(zellIds[i]);
       if (!t || t.zeichen !== 'batterie')
         return fehler('Eine Zelle der Aufgabe wurde entfernt oder ersetzt.');
       const w = t.werte || {};
@@ -275,7 +282,62 @@
     return pruefen(zellen, leitungen, {nurAusgang:mehr});
   }
 
-  const api = { pruefen, ausPlan, reiheParallel, idMinus, idPlus, AUS_MINUS, AUS_PLUS };
+  /* Widerstände, die tatsächlich im gezeichneten Stromkreis zwischen
+   * X+ und X− liegen, bestimmen die Last. Mit einem 1-A-Probestrom wird
+   * der Ersatzwiderstand eines beliebigen ohmschen Netzwerks ermittelt.
+   * Unverbundene Bauteile zählen nicht. Kein stillschweigender Kurzschluss. */
+  function lastAusPlan(plan, netze, ausgangIndex) {
+    const m = plan && plan.batterieUebung;
+    if (!m || !netze || !(netze.netzVon instanceof Map))
+      return {ok:false, grund:'Kein gültiger Batterieplan.'};
+    const pos = m.ausgaenge && m.ausgaenge[ausgangIndex || 0]
+      ? m.ausgaenge[ausgangIndex || 0].id : m.plus;
+    const von = netze.netzVon.get('k:' + m.minus + ':1');
+    const nach = netze.netzVon.get('k:' + pos + ':1');
+    if (von === undefined || nach === undefined || von === nach)
+      return {ok:false, grund:'Die Ausgangsklemmen sind kurzgeschlossen oder fehlen.'};
+    const kanten = [];
+    for (const t of (plan.teile || [])) {
+      if (t.zeichen !== 'widerstand') continue;
+      const a = netze.netzVon.get('k:' + t.id + ':1');
+      const b = netze.netzVon.get('k:' + t.id + ':2');
+      if (a === undefined || b === undefined) continue;
+      const standard = (typeof Stromfluss !== 'undefined' && Stromfluss.verhalten)
+        ? Stromfluss.verhalten('widerstand') : null;
+      const ohm = t.werte && t.werte.R != null ? Number(t.werte.R)
+        : (standard && Number.isFinite(standard.wert) ? standard.wert : 100);
+      if (!Number.isFinite(ohm) || ohm <= 0)
+        return {ok:false, grund:'Ein gezeichneter Widerstand hat keinen gültigen R-Wert.'};
+      if (a !== b) kanten.push({a,b,ohm});
+    }
+    if (!kanten.length) return null;
+    const gesehen = new Set([nach]), offen = [nach];
+    while (offen.length) {
+      const n = offen.shift();
+      for (const k of kanten) {
+        const zu = k.a === n ? k.b : k.b === n ? k.a : null;
+        if (zu !== null && !gesehen.has(zu)) { gesehen.add(zu); offen.push(zu); }
+      }
+    }
+    if (!gesehen.has(von)) return null; // Noch kein vollständiger Lastpfad
+    const aktiv = kanten.filter(k => gesehen.has(k.a) && gesehen.has(k.b));
+    const orte = [...gesehen].filter(n => n !== von);
+    const ix = new Map(orte.map((n,i) => [n,i]));
+    const mat = orte.map(() => orte.map(() => 0));
+    const rechts = orte.map(n => n === nach ? 1 : 0);
+    for (const k of aktiv) {
+      const g = 1 / k.ohm, a = ix.get(k.a), b = ix.get(k.b);
+      if (a !== undefined) mat[a][a] += g;
+      if (b !== undefined) mat[b][b] += g;
+      if (a !== undefined && b !== undefined) {mat[a][b] -= g; mat[b][a] -= g;}
+    }
+    const v = gleichung(mat, rechts);
+    if (!v || !Number.isFinite(v[ix.get(nach)]) || v[ix.get(nach)] <= 0)
+      return {ok:false, grund:'Der gezeichnete Lastwiderstand ist nicht berechenbar.'};
+    return {ok:true, ohm:v[ix.get(nach)], anzahl:aktiv.length};
+  }
+
+  const api = { pruefen, ausPlan, lastAusPlan, reiheParallel, idMinus, idPlus, AUS_MINUS, AUS_PLUS };
   wurzel.BatterieKern = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
