@@ -63,11 +63,12 @@ test('Ungleiche Parallelausgänge werden wegen Ausgleichsstrom abgelehnt',()=>{
 });
 test('Gemischte Akkupakete: Nennstrom nach Engpassregel',()=>{
   const s=[{u:12,maxA:2,ri:null,ah:null},{u:12,maxA:4,ri:null,ah:null},
-           {u:6,maxA:2,ri:null,ah:null},{u:6,maxA:2,ri:null,ah:null}];
-  const links=[['aus-','n0'],['p0','n2'],['p2','n3'],['p3','aus+'],
-               ['aus-','n1'],['p1','aus+']];
+           {u:12,maxA:4,ri:null,ah:null},{u:6,maxA:2,ri:null,ah:null},
+           {u:6,maxA:2,ri:null,ah:null}];
+  const links=[['aus-','n0'],['p0','n3'],['p3','n4'],['p4','aus+'],
+               ['aus-','n1'],['p1','n2'],['p2','aus+']];
   const r=b.pruefen(s,links);
-  assert.equal(r.ok,true);fast(r.u,24);fast(r.maxA,2);
+  assert.equal(r.ok,true);fast(r.u,24);fast(r.maxA,6);
 });
 
 
