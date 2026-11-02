@@ -292,10 +292,18 @@
       return {ok:false, grund:'Kein gültiger Batterieplan.'};
     const pos = m.ausgaenge && m.ausgaenge[ausgangIndex || 0]
       ? m.ausgaenge[ausgangIndex || 0].id : m.plus;
-    const von = netze.netzVon.get('k:' + m.minus + ':1');
-    const nach = netze.netzVon.get('k:' + pos + ':1');
-    if (von === undefined || nach === undefined || von === nach)
+    /* X+ und X− sind im Plan je eine zweipolige Reihenklemme.
+       In der Batterieübung gehören beide Anschlussseiten zum selben
+       Ausgang (auch wenn Stromfluss.netze sie einzeln nummeriert). */
+    const plusNetze=[1,2].map(n=>netze.netzVon.get('k:'+pos+':'+n))
+      .filter(n=>n!==undefined);
+    const minusNetze=[1,2].map(n=>netze.netzVon.get('k:'+m.minus+':'+n))
+      .filter(n=>n!==undefined);
+    if(!plusNetze.length||!minusNetze.length||
+       plusNetze.some(n=>minusNetze.includes(n)))
       return {ok:false, grund:'Die Ausgangsklemmen sind kurzgeschlossen oder fehlen.'};
+    const von='Xminus',nach='Xplus';
+    const zuAusgang=n=>plusNetze.includes(n)?nach:minusNetze.includes(n)?von:n;
     const kanten = [];
     for (const t of (plan.teile || [])) {
       if (t.zeichen !== 'widerstand') continue;
@@ -308,7 +316,8 @@
         : (standard && Number.isFinite(standard.wert) ? standard.wert : 100);
       if (!Number.isFinite(ohm) || ohm <= 0)
         return {ok:false, grund:'Ein gezeichneter Widerstand hat keinen gültigen R-Wert.'};
-      if (a !== b) kanten.push({a,b,ohm});
+      const x=zuAusgang(a),y=zuAusgang(b);
+      if (x !== y) kanten.push({a:x,b:y,ohm});
     }
     if (!kanten.length) return null;
     const gesehen = new Set([nach]), offen = [nach];
