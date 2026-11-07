@@ -2291,6 +2291,36 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   }
   #handy-oben #ho-pille.faehrt::before{ opacity:.72 }
 
+  /* BBT-Bit-Video vom 07.11.: farbige, gleitende Auswahl-Linse.
+     Bestehende SelectionFlow-Feder und Trefferflaechen bleiben unveraendert.
+     Die Akzentfarbe kommt aus Redions Theme, nicht aus einer Musik-Route. */
+  #handy-oben #ho-pille{
+    background:color-mix(in srgb,var(--accent) 24%,transparent);
+    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 55%,transparent),
+               0 0 13px color-mix(in srgb,var(--accent) 20%,transparent);
+  }
+  #handy-oben #ho-pille.faehrt{
+    background:color-mix(in srgb,var(--accent) 31%,transparent);
+    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 65%,transparent),
+               0 0 19px color-mix(in srgb,var(--accent) 32%,transparent);
+  }
+  /* Das Symbol faerbt sich synchron zur gleitenden Linse; nur der aktive
+     Reiter wird eingefärbt, damit die anderen Ziele eindeutig bleiben. */
+  #handy-oben > button[aria-selected="true"] .ho-z{
+    color:var(--accent-text,var(--accent));
+  }
+  @media(prefers-reduced-motion:reduce){
+    #handy-oben #ho-pille.faehrt{
+      background:color-mix(in srgb,var(--accent) 24%,transparent);
+      box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 55%,transparent)
+    }
+  }
+  body[data-bewegung="ruhig"] #handy-oben #ho-pille.faehrt{
+    background:color-mix(in srgb,var(--accent) 24%,transparent);
+    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 55%,transparent)
+  }
+
+
   /* OHNE BEWEGUNG STEHT SIE STILL — UND BLEIBT SICHTBAR. Das ist genau die
      Falle, vor der §55.2 warnt: eine Linse, die bei `reduce` einfach
      verschwindet, hätte den aktiven Reiter unmarkiert gelassen, und
