@@ -34,3 +34,7 @@ Kanonische Skill-Dateien liegen unter `.agents/skills/<name>/SKILL.md`. Claude-E
 ## Plattformziel
 
 Redion soll als eigenstaendige Windows- und macOS-Desktop-App sowie als iPhone-App nutzbar sein. Der aktuelle Plattformstatus und die noch fehlenden Nachweise stehen in `doku/PLATTFORM-STRATEGIE-MAC-WINDOWS-IPHONE.md`. Die zehn unveraenderten BBT-Bit-Skills liegen nur als Referenz in `doku/bbt-bit-skill-referenz/`; sie sind nicht automatisch fuer Redion anwendbar.
+
+## RED-Morph-Skills als Zusatzreferenz
+
+Die statische RED-Morph-Skill-Bibliothek ist unter `.agents/skills/` verfügbar: `red-morph`, `web-design`, `touch-kit` und vier `swiftui-*`-Skills. Für ihre Anwendung in Redion zuerst `.agents/skills/redion-red-morph/SKILL.md` lesen. Inhalt, Herkunft, Pfadübersetzungen und Grenzen: `doku/RED-MORPH-SKILL-IMPORT.md`. Redions bestehende Regeln und Skills haben Vorrang; keine RED-Morph-Runtime automatisch übernehmen.

@@ -15,3 +15,7 @@ Kanonisch: `.agents/skills/`; Claude: `.claude/skills/`. Siehe `AI_START_HERE.md
 ## Workspace-Review
 
 `doku/WORKSPACE-REVIEW-2026-11.md` ist der aktuelle Massnahmenplan, keine Bestaetigung eines UI-Tests.
+
+## RED Morph als optionale Skill-Referenz
+
+Bei Design-, Touch-, Web- oder SwiftUI-Aufgaben `.agents/skills/redion-red-morph/SKILL.md` lesen. Importdetails: `doku/RED-MORPH-SKILL-IMPORT.md`. Keine Runtime-Übernahme ohne eigene Prüfung und Freigabe.
