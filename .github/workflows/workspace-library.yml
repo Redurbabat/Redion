@@ -1,6 +1,14 @@
 name: Workspace-Bibliothek
 
 on:
+  push:
+    branches:
+      - 'chatgpt/redion-workspace-skills-audit-20261107'
+    paths:
+      - '.github/workflows/workspace-library.yml'
+      - 'src/bereiche/wissen/bibliothek.ts'
+      - 'quell/bereiche/wissen/bibliothek.js'
+      - 'pruefungen/workspace-library.mts'
   pull_request:
     paths:
       - 'src/bereiche/wissen/bibliothek.ts'
