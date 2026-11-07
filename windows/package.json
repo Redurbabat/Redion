@@ -96,6 +96,20 @@
             "arm64"
           ]
         }
+      ],
+      "fileAssociations": [
+        {
+          "ext": "redion",
+          "name": "Redion-Dokument",
+          "role": "Editor",
+          "rank": "Owner"
+        },
+        {
+          "ext": "pdf",
+          "name": "PDF-Dokument",
+          "role": "Viewer",
+          "rank": "Alternate"
+        }
       ]
     }
   },
