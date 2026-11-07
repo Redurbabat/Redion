@@ -209,7 +209,7 @@ if (!lock) {
       ? info.aenderungen.filter(x => typeof x === 'string').slice(0, 9) : [];
     dialog.showMessageBox(mainWindow, {
       type: 'info', title: 'Redion – Version und Änderungen',
-      message: 'Redion Windows ' + app.getVersion() + (LOCAL_SOURCE ? ' (lokaler Code)' : ''),
+      message: 'Redion ' + (process.platform === 'darwin' ? 'macOS ' : 'Windows ') + app.getVersion() + (LOCAL_SOURCE ? ' (lokaler Code)' : ''),
       detail: 'Webstand: ' + version + (info?.status ? ' · ' + info.status : '') +
         '\n\n' + changes.map(x => '• ' + x).join('\n') +
         (LOCAL_SOURCE ? '\n\nLokaler Ordner: ' + LOCAL_SOURCE : '') +
@@ -218,11 +218,13 @@ if (!lock) {
   }
 
   function appMenu() {
-    Menu.setApplicationMenu(Menu.buildFromTemplate([
+    const items = [
       { label: 'Datei', submenu: [
         { label: 'Öffnen …', accelerator: 'CmdOrCtrl+O', click: () => { void chooseFiles(); } },
-        { type: 'separator' },
-        { role: 'quit', label: 'Redion beenden' }
+        ...(process.platform === 'darwin' ? [] : [
+          { type: 'separator' },
+          { role: 'quit', label: 'Redion beenden' }
+        ])
       ] },
       { label: 'Bearbeiten', submenu: [
         { role: 'undo', label: 'Rückgängig' },
@@ -249,7 +251,20 @@ if (!lock) {
       { label: 'Hilfe', submenu: [
         { label: 'Version und Änderungen …', click: showVersion }
       ] }
-    ]));
+    ];
+    // macOS keeps its application menu and survives closing its last window.
+    if (process.platform === 'darwin') items.unshift({ label: 'Redion', submenu: [
+      { role: 'about', label: 'Über Redion' },
+      { type: 'separator' },
+      { role: 'services' },
+      { type: 'separator' },
+      { role: 'hide', label: 'Redion ausblenden' },
+      { role: 'hideOthers', label: 'Andere ausblenden' },
+      { role: 'unhide', label: 'Alle einblenden' },
+      { type: 'separator' },
+      { role: 'quit', label: 'Redion beenden' }
+    ] });
+    Menu.setApplicationMenu(Menu.buildFromTemplate(items));
   }
 
   function launchWindow() {
@@ -375,5 +390,7 @@ if (!lock) {
       if (BrowserWindow.getAllWindows().length === 0) launchWindow();
     });
   });
-  app.on('window-all-closed', () => app.quit());
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit();
+  });
 }
