@@ -665,7 +665,6 @@ const SelectionFlow = (() => {
         z.ort = ziel;
         z.tempo = 0;
         z.zieht = false;
-        z.versatz = z.finger - (z.ort + z.breite / 2);
       } else if (z.zieht) {
         /* Zum Finger gezogen, auf der Feder: jedes Bild eine neue Bahn. */
         const s = bahnVon(FEDERN.knapp, z.ort - ziel, z.tempo)(dt);
