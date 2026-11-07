@@ -74,6 +74,23 @@ try {
       await page.screenshot({path:path.join(output,`${width}-${dark?'dunkel':'hell'}.png`)});
     } else {
       assert.equal(await page.locator('.bib-gitter .bib-deckel').count(),6,'Nur echte direkte Kinder');
+      // Gegenprobe zur Ablageordnung: Ein Dokument ist neuer als die anderen.
+      // Die Karten müssen trotzdem Ordner zuerst, danach Namen zeigen.
+      // In der Tabellenansicht darf weiterhin eine Spaltensortierung gelten.
+      await page.evaluate(id => {
+        Store.updateBlock(id, { edited: '2026-11-06T08:00:00.000Z' });
+        App.zeichneSeite();
+      }, ids.long);
+      const order = await page.locator('.bib-gitter .bib-deckel').evaluateAll(cards =>
+        cards.map(card => ({
+          id: (card as HTMLElement).dataset.id || '',
+          name: card.querySelector('.bib-deckel-name b')?.textContent?.trim() || ''
+        })));
+      assert.equal(order[0].id, ids.sub, 'Ein Ordner bleibt vor den neueren Dokumenten');
+      const names = order.slice(1).map(card => card.name);
+      assert.deepEqual(names, names.slice().sort((a,b) =>
+        a.localeCompare(b, 'de', { sensitivity: 'base', numeric: true })),
+        'Dokumentkarten bleiben alphabetisch statt nach Bearbeitungsdatum sortiert');
       assert.equal(await page.locator('.bib-workspace-intro').count(),1,'Ein gemeinsamer neuer Kopf');
       const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);
       assert.equal(overflow,false,`${width}: kein horizontaler Überlauf`);

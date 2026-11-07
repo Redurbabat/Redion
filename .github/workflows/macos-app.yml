@@ -1,0 +1,42 @@
+name: Redion macOS Offline-App (Vorschau)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  macos:
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      # Preview only; no automatic signing, notarization, release, or deployment.
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.20.0'
+          cache: npm
+      - name: Gemeinsamen Offline-Web-Code pruefen
+        run: |
+          npm ci --no-audit --no-fund
+          npm run bauen:ts
+          npm run typecheck
+          npm run stand
+      - name: Mac-Desktop-Tests und Electron-Werkzeuge
+        run: |
+          node node_modules/typescript/bin/tsc -p windows/tsconfig.json
+          npm install --prefix windows --no-package-lock --no-audit --no-fund
+          npm --prefix windows run test:mac
+          npm --prefix windows test
+      - name: macOS DMG und ZIP (nicht signiert)
+        run: npm --prefix windows run dist:mac
+      - name: macOS-Vorschau bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: Redion-macOS-unsigned-preview
+          path: |
+            build/macos-dist/*.dmg
+            build/macos-dist/*.zip
+          if-no-files-found: error
+          retention-days: 7
+# Absichtlich nur manuell. Unsigned ist keine Freigabe und nicht notarisiert.

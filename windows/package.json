@@ -11,7 +11,9 @@
     "test": "node --test windows-desktop.test.cjs auto-update.test.cjs live.test.mts local-source.test.mts version.test.mts",
     "dist": "npm run prepare:app && electron-builder --win nsis portable --x64",
     "release:signed": "npm run prepare:app && node release-signed.mjs",
-    "start:once": "npm run prepare:app && electron ."
+    "start:once": "npm run prepare:app && electron .",
+    "dist:mac": "npm run prepare:app && electron-builder --mac dmg zip --arm64 --config.directories.output=../build/macos-dist --publish never",
+    "test:mac": "node --test macos-desktop.test.cjs"
   },
   "devDependencies": {
     "electron": "45.1.0",
@@ -76,6 +78,39 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
+    },
+    "mac": {
+      "appId": "ch.redurbabat.redion.macos",
+      "category": "public.app-category.productivity",
+      "icon": "../oeffentlich/icons/icon-512.png",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "fileAssociations": [
+        {
+          "ext": "redion",
+          "name": "Redion-Dokument",
+          "role": "Editor",
+          "rank": "Owner"
+        },
+        {
+          "ext": "pdf",
+          "name": "PDF-Dokument",
+          "role": "Viewer",
+          "rank": "Alternate"
+        }
+      ]
     }
   },
   "dependencies": {

@@ -49,6 +49,8 @@ if (!lock) {
   let localController = null;
   let servedAssets = null;
   let protocolReady = false;
+  let rendererReady = false;
+  const macOpenQueue = [];
   const files = new NativeFiles();
   let operations = Promise.resolve();
   const serial = fn => {
@@ -66,6 +68,18 @@ if (!lock) {
     mainWindow?.webContents.send('redion:files:available');
   });
   const argumentsFiles = args => args.filter(value => path.isAbsolute(value) && /\.(redion|pdf)$/i.test(value));
+  // macOS Finder opens documents using open-file, sometimes before app.ready.
+  // Keep paths in memory until the existing read-only import bridge is ready.
+  app.on('open-file', (event, filename) => {
+    event.preventDefault();
+    if (process.platform !== 'darwin' || typeof filename !== 'string' ||
+        !path.isAbsolute(filename) || !/\.(redion|pdf)$/i.test(filename)) return;
+    if (macOpenQueue.length >= 16) return;
+    macOpenQueue.push(filename);
+    if (rendererReady && mainWindow && !mainWindow.isDestroyed()) {
+      void offerFiles(macOpenQueue.splice(0));
+    }
+  });
   const chooseFiles = async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
       title: 'In Redion öffnen', properties: ['openFile', 'multiSelections'],
@@ -209,7 +223,7 @@ if (!lock) {
       ? info.aenderungen.filter(x => typeof x === 'string').slice(0, 9) : [];
     dialog.showMessageBox(mainWindow, {
       type: 'info', title: 'Redion – Version und Änderungen',
-      message: 'Redion Windows ' + app.getVersion() + (LOCAL_SOURCE ? ' (lokaler Code)' : ''),
+      message: 'Redion ' + (process.platform === 'darwin' ? 'macOS ' : 'Windows ') + app.getVersion() + (LOCAL_SOURCE ? ' (lokaler Code)' : ''),
       detail: 'Webstand: ' + version + (info?.status ? ' · ' + info.status : '') +
         '\n\n' + changes.map(x => '• ' + x).join('\n') +
         (LOCAL_SOURCE ? '\n\nLokaler Ordner: ' + LOCAL_SOURCE : '') +
@@ -218,11 +232,13 @@ if (!lock) {
   }
 
   function appMenu() {
-    Menu.setApplicationMenu(Menu.buildFromTemplate([
+    const items = [
       { label: 'Datei', submenu: [
         { label: 'Öffnen …', accelerator: 'CmdOrCtrl+O', click: () => { void chooseFiles(); } },
-        { type: 'separator' },
-        { role: 'quit', label: 'Redion beenden' }
+        ...(process.platform === 'darwin' ? [] : [
+          { type: 'separator' },
+          { role: 'quit', label: 'Redion beenden' }
+        ])
       ] },
       { label: 'Bearbeiten', submenu: [
         { role: 'undo', label: 'Rückgängig' },
@@ -249,7 +265,20 @@ if (!lock) {
       { label: 'Hilfe', submenu: [
         { label: 'Version und Änderungen …', click: showVersion }
       ] }
-    ]));
+    ];
+    // macOS keeps its application menu and survives closing its last window.
+    if (process.platform === 'darwin') items.unshift({ label: 'Redion', submenu: [
+      { role: 'about', label: 'Über Redion' },
+      { type: 'separator' },
+      { role: 'services' },
+      { type: 'separator' },
+      { role: 'hide', label: 'Redion ausblenden' },
+      { role: 'hideOthers', label: 'Andere ausblenden' },
+      { role: 'unhide', label: 'Alle einblenden' },
+      { type: 'separator' },
+      { role: 'quit', label: 'Redion beenden' }
+    ] });
+    Menu.setApplicationMenu(Menu.buildFromTemplate(items));
   }
 
   function launchWindow() {
@@ -340,7 +369,15 @@ if (!lock) {
     mainWindow.on('closed', () => {
       liveReload?.stop(); liveReload = null;
       localController?.stop(); localController = null;
-      mainWindow = null; void serial(() => files.close());
+      mainWindow = null; rendererReady = false; void serial(() => files.close());
+    });
+    // New renderer after a reopen or reload: announce Finder files only
+    // once the web app can receive the same IPC as Windows drag/drop.
+    rendererReady = false;
+    mainWindow.webContents.on('did-start-navigation', () => { rendererReady = false; });
+    mainWindow.webContents.on('did-finish-load', () => {
+      rendererReady = true;
+      if (macOpenQueue.length) void offerFiles(macOpenQueue.splice(0));
     });
     mainWindow.loadURL(START_URL).catch(error => {
       dialog.showErrorBox('Redion konnte nicht starten', String(error));
@@ -375,5 +412,7 @@ if (!lock) {
       if (BrowserWindow.getAllWindows().length === 0) launchWindow();
     });
   });
-  app.on('window-all-closed', () => app.quit());
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit();
+  });
 }
