@@ -49,6 +49,8 @@ if (!lock) {
   let localController = null;
   let servedAssets = null;
   let protocolReady = false;
+  let rendererReady = false;
+  const macOpenQueue = [];
   const files = new NativeFiles();
   let operations = Promise.resolve();
   const serial = fn => {
@@ -66,6 +68,18 @@ if (!lock) {
     mainWindow?.webContents.send('redion:files:available');
   });
   const argumentsFiles = args => args.filter(value => path.isAbsolute(value) && /\.(redion|pdf)$/i.test(value));
+  // macOS Finder opens documents using open-file, sometimes before app.ready.
+  // Keep paths in memory until the existing read-only import bridge is ready.
+  app.on('open-file', (event, filename) => {
+    event.preventDefault();
+    if (process.platform !== 'darwin' || typeof filename !== 'string' ||
+        !path.isAbsolute(filename) || !/\.(redion|pdf)$/i.test(filename)) return;
+    if (macOpenQueue.length >= 16) return;
+    macOpenQueue.push(filename);
+    if (rendererReady && mainWindow && !mainWindow.isDestroyed()) {
+      void offerFiles(macOpenQueue.splice(0));
+    }
+  });
   const chooseFiles = async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
       title: 'In Redion öffnen', properties: ['openFile', 'multiSelections'],
@@ -355,7 +369,15 @@ if (!lock) {
     mainWindow.on('closed', () => {
       liveReload?.stop(); liveReload = null;
       localController?.stop(); localController = null;
-      mainWindow = null; void serial(() => files.close());
+      mainWindow = null; rendererReady = false; void serial(() => files.close());
+    });
+    // New renderer after a reopen or reload: announce Finder files only
+    // once the web app can receive the same IPC as Windows drag/drop.
+    rendererReady = false;
+    mainWindow.webContents.on('did-start-navigation', () => { rendererReady = false; });
+    mainWindow.webContents.on('did-finish-load', () => {
+      rendererReady = true;
+      if (macOpenQueue.length) void offerFiles(macOpenQueue.splice(0));
     });
     mainWindow.loadURL(START_URL).catch(error => {
       dialog.showErrorBox('Redion konnte nicht starten', String(error));
