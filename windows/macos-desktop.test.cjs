@@ -48,3 +48,14 @@ test('unsigned macOS preview cannot enable Windows NSIS auto-updater', () => {
   assert.match(main, /startRedionAutoUpdates/);
   assert.doesNotMatch(pkg.scripts['dist:mac'], /publish|deploy|notarize/);
 });
+
+test('Finder open-file is buffered until the existing renderer import bridge is ready', () => {
+  assert.match(main, /app\.on\('open-file'/);
+  assert.match(main, /macOpenQueue\.push\(filename\)/);
+  assert.match(main, /if \(macOpenQueue\.length >= 16\) return/);
+  assert.match(main, /rendererReady && mainWindow/);
+  assert.match(main, /webContents\.on\('did-finish-load'/);
+  assert.match(main, /offerFiles\(macOpenQueue\.splice\(0\)\)/);
+  assert.deepEqual(pkg.build.mac.fileAssociations.map(x => x.ext), ['redion', 'pdf']);
+  assert.equal(pkg.build.mac.fileAssociations[1].rank, 'Alternate');
+});
