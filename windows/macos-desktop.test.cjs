@@ -46,7 +46,8 @@ test('macOS window lifecycle and menu use native conventions', () => {
 test('unsigned macOS preview cannot enable Windows NSIS auto-updater', () => {
   assert.match(updater, /platform === 'win32'/);
   assert.match(main, /startRedionAutoUpdates/);
-  assert.doesNotMatch(pkg.scripts['dist:mac'], /publish|deploy|notarize/);
+  assert.match(pkg.scripts['dist:mac'], /--publish never/);
+  assert.doesNotMatch(pkg.scripts['dist:mac'], /deploy|notarize/);
 });
 
 test('Finder open-file is buffered until the existing renderer import bridge is ready', () => {
