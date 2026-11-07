@@ -328,7 +328,6 @@ const SelectionFlow = (() => {
         z.ort = ziel;
         z.tempo = 0;
         z.zieht = false;
-        z.versatz = z.finger - (z.ort + z.breite / 2);
       } else if (z.zieht) {
                 const s = bahnVon(FEDERN.knapp, z.ort - ziel, z.tempo)(dt);
                 z.ort = ziel + s.x;
