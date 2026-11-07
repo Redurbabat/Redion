@@ -22,6 +22,7 @@ Stand: 2026-11-07. Einstieg fuer Codex, Claude und ChatGPT. **Vor jedem Auftrag 
 - `redion-local-ai`: KI-Funktionen datenschutzbewusst in die bestehende Redion-Oberflaeche integrieren.
 - `redion-platform-testing`: Regressionen, Browserpruefungen und echte Geraeteabnahmen koordinieren.
 - `redion-release`: Sichere Web-, Windows- und iOS-Releases vorbereiten.
+- `redion-macos-desktop`: macOS-App, Signierung, Notarisierung und gemeinsame Desktop-Shell
 - `redion-animationen`: bestehendes Motion-System, Federn und Reduzierte-Bewegung-Regeln
 
 Kanonische Skill-Dateien liegen unter `.agents/skills/<name>/SKILL.md`. Claude-Einstiege unter `.claude/skills/<name>/SKILL.md` verweisen auf sie. Bestehender Skill `redion-animationen` wird vorerst nicht verschoben oder ersetzt.
@@ -29,3 +30,7 @@ Kanonische Skill-Dateien liegen unter `.agents/skills/<name>/SKILL.md`. Claude-E
 ## Wichtige bestehende Workspace-Arbeiten
 
 `doku/WORKSPACE-2-BIBLIOTHEK.md`, `doku/WORKSPACE-2-EDITOR.md`, `doku/WORKSPACE-2-DOKUMENTKOMPASS.md`, `doku/WORKSPACE-2-MOBILE-NAVIGATION.md`, `doku/DESIGN-REDION-PREMIUM.md` und `doku/PREMIUM-SHELL-MATRIX.md`. Dokumentierte historische Testresultate sind keine aktuellen Testergebnisse.
+
+## Plattformziel
+
+Redion soll als eigenstaendige Windows- und macOS-Desktop-App sowie als iPhone-App nutzbar sein. Der aktuelle Plattformstatus und die noch fehlenden Nachweise stehen in `doku/PLATTFORM-STRATEGIE-MAC-WINDOWS-IPHONE.md`. Die zehn unveraenderten BBT-Bit-Skills liegen nur als Referenz in `doku/bbt-bit-skill-referenz/`; sie sind nicht automatisch fuer Redion anwendbar.
