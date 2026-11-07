@@ -652,12 +652,20 @@ const SelectionFlow = (() => {
     const takt = (jetzt: number): void => {
       const z = zug;
       if (!z || !z.amZiehen) return;
+      /* Reduce Motion gilt auch waehrend eines bereits laufenden Fingerzugs.
+         Ohne diesen Pfad wuerde die zuvor gestartete Feder weiterlaufen,
+         obwohl die Systemeinstellung inzwischen auf ruhig gewechselt ist. */
+      const bewegungReduziert = ruhig();
       const dt = Math.min(48, Math.max(0, jetzt - z.zuletzt));
       z.zuletzt = jetzt;
       const erste = z.mitten[0] ?? 0, letzte = z.mitten[z.mitten.length - 1] ?? 0;
       const ziel = gummiband(z.finger - z.versatz, Math.min(erste, letzte),
                              Math.max(erste, letzte), z.breite * 0.5) - z.breite / 2;
-      if (z.zieht) {
+      if (bewegungReduziert) {
+        z.ort = ziel;
+        z.tempo = 0;
+        z.zieht = false;
+      } else if (z.zieht) {
         /* Zum Finger gezogen, auf der Feder: jedes Bild eine neue Bahn. */
         const s = bahnVon(FEDERN.knapp, z.ort - ziel, z.tempo)(dt);
         z.ort = ziel + s.x; z.tempo = s.v;
@@ -670,10 +678,12 @@ const SelectionFlow = (() => {
         z.tempo = z.messer.tempo(jetzt);
       }
       /* Dehnung folgt dem Tempo und löst sich, wenn der Finger ruht (Kit). */
-      const soll = ruhig() ? 1 : dehnungAus(z.tempo);
+      const soll = bewegungReduziert ? 1 : dehnungAus(z.tempo);
       z.dehnung = soll > z.dehnung ? soll : 1 + (z.dehnung - 1) * Math.pow(0.5, dt / 40);
-      const hubSoll = ruhig() ? 1 : HUB;
-      z.hub += (hubSoll - z.hub) * (1 - Math.pow(0.5, dt / 30));
+      if (bewegungReduziert) z.dehnung = 1;
+      const hubSoll = bewegungReduziert ? 1 : HUB;
+      z.hub = bewegungReduziert ? 1
+        : z.hub + (hubSoll - z.hub) * (1 - Math.pow(0.5, dt / 30));
       malen(z);
       vorleuchten(z);
       z.bild = requestAnimationFrame(takt);

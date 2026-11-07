@@ -2033,6 +2033,36 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     display:block; font-size:10.5px; font-weight:500; letter-spacing:-.01em;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;
   }
+  /* BBT-Bit Infinity-Dock, an Redions bestehende Fuenf-Wege-Leiste angepasst.
+     Die zweite Ebene bleibt dieselbe Register-Zielleiste, keine neuen Routen.
+     Nur Compositor-Effekte: weder Groesse noch Touch-Hitbox veraendern. */
+  #handy-oben > button .ho-z,
+  #ho-ziele > button .ho-z{
+    will-change:auto;
+    transition:transform var(--feder-knapp-dauer) var(--feder-knapp),
+               color var(--motion-fast) var(--ease-standard)
+  }
+  #handy-oben > button:is(:focus-visible,:active) .ho-z{
+    transform:translateY(-2px) scale(1.08)
+  }
+  #handy-oben > button:focus-visible,
+  #ho-ziele > button:focus-visible{
+    outline:2px solid var(--accent-text,var(--accent));
+    outline-offset:-2px
+  }
+  #ho-ziele > button:active .ho-z{transform:scale(1.08)}
+  /* Lesbarkeit statt reinem Farbwechsel: aktives Ziel ist auch fetter. */
+  #handy-oben > button[aria-selected="true"] b{font-weight:700}
+  @media(prefers-reduced-motion:reduce){
+    #handy-oben > button .ho-z,
+    #ho-ziele > button .ho-z{transition:none}
+    #handy-oben > button:is(:focus-visible,:active) .ho-z,
+    #ho-ziele > button:active .ho-z{transform:none}
+  }
+  body[data-bewegung="ruhig"] #handy-oben > button .ho-z,
+  body[data-bewegung="ruhig"] #ho-ziele > button .ho-z{transition:none}
+  body[data-bewegung="ruhig"] #handy-oben > button:is(:focus-visible,:active) .ho-z,
+  body[data-bewegung="ruhig"] #ho-ziele > button:active .ho-z{transform:none}
   #ho-ziele > button:is([data-anvisiert],[aria-current="page"]){ color:var(--accent-text,var(--accent)) }
   #ho-ziele > button[aria-current="page"] b{ font-weight:650 }
   #ho-ziele .ho-z{ display:flex; align-items:center; justify-content:center;
@@ -2260,6 +2290,36 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     transition:opacity var(--motion-normal) var(--ease-standard);
   }
   #handy-oben #ho-pille.faehrt::before{ opacity:.72 }
+
+  /* BBT-Bit-Video vom 07.11.: farbige, gleitende Auswahl-Linse.
+     Bestehende SelectionFlow-Feder und Trefferflaechen bleiben unveraendert.
+     Die Akzentfarbe kommt aus Redions Theme, nicht aus einer Musik-Route. */
+  #handy-oben #ho-pille{
+    background:color-mix(in srgb,var(--accent) 24%,transparent);
+    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 55%,transparent),
+               0 0 13px color-mix(in srgb,var(--accent) 20%,transparent);
+  }
+  #handy-oben #ho-pille.faehrt{
+    background:color-mix(in srgb,var(--accent) 31%,transparent);
+    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 65%,transparent),
+               0 0 19px color-mix(in srgb,var(--accent) 32%,transparent);
+  }
+  /* Das Symbol faerbt sich synchron zur gleitenden Linse; nur der aktive
+     Reiter wird eingefärbt, damit die anderen Ziele eindeutig bleiben. */
+  #handy-oben > button[aria-selected="true"] .ho-z{
+    color:var(--accent-text,var(--accent));
+  }
+  @media(prefers-reduced-motion:reduce){
+    #handy-oben #ho-pille.faehrt{
+      background:color-mix(in srgb,var(--accent) 24%,transparent);
+      box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 55%,transparent)
+    }
+  }
+  body[data-bewegung="ruhig"] #handy-oben #ho-pille.faehrt{
+    background:color-mix(in srgb,var(--accent) 24%,transparent);
+    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 55%,transparent)
+  }
+
 
   /* OHNE BEWEGUNG STEHT SIE STILL — UND BLEIBT SICHTBAR. Das ist genau die
      Falle, vor der §55.2 warnt: eine Linse, die bei `reduce` einfach
