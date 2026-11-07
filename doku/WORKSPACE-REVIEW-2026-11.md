@@ -25,7 +25,8 @@ Stand: 2026-11-07. **Dokumenten-/Repository-Pruefung, keine visuelle Live-Abnahm
 - [ ] Bestehende Workspace-2.0-PRs/Commits und offene Issues auf bereits implementierte Funktionen abgleichen.
 
 ### C. Produktverbesserungen (nur nach konkretem Befund)
-- [ ] Bibliothek: klare Informationshierarchie und Auffindbarkeit, bestehende Such- und Favoritenlogik erhalten.
+- [x] Erste konkrete Bibliothekskorrektur: In der Ablage behalten Dokumentkarten/Regal die Sortierung **Ordner zuerst, dann Namen**, anstatt durch die standardmaessige Datumssortierung ueberschrieben zu werden. Die Tabelle behaelt ihre Spaltensortierung. Aenderung in `src/bereiche/wissen/bibliothek.ts` und `quell/bereiche/wissen/bibliothek.js`.
+- [ ] Weitere Bibliotheksverbesserungen: erst nach echten Bildschirmfotos und Nutzerwegpruefung; Such- und Favoritenlogik erhalten.
 - [ ] Editor: kontextabhaengige Werkzeuge und konsistente Tastaturwege; keine zweite Toolbar oder Undo-Implementierung.
 - [ ] PDF: Lesemodus und Ink-Werkzeuge entflechten, bestehende Export-/Annotierungsdaten unveraendert lassen.
 - [ ] Mobil: bestehende Fuenf-Wege-Leiste beibehalten; Zielleiste nur beim Hochziehen, nie beim normalen Tippen oder langen Halten.
@@ -33,10 +34,16 @@ Stand: 2026-11-07. **Dokumenten-/Repository-Pruefung, keine visuelle Live-Abnahm
 
 ### D. Verifikation (NICHT GETESTET)
 - [ ] `npm run typecheck`, `npm run bauen:ts`, `npm run stand`, `node bauen.mts`.
-- [ ] `node pruefungen/workspace-library.mts --states` und `--webkit --states`.
+- [ ] `node pruefungen/workspace-library.mts --states` und `--webkit --states`. Regressionstest fuer Ordner-/Namensreihenfolge wurde auf dem Branch ergaenzt, **nicht ausgefuehrt**.
 - [ ] `node pruefungen/workspace-editor.mts`, `workspace-document.mts`, `node pruefungen/lauf/test614.mts`.
 - [ ] Vollstaendige Regression und Gegenproben; iPhone-Echtgeraet, Windows und signierte IPA separat.
 
 ## Sicherheitsregeln
 
 Keine Nutzerdaten loeschen oder umbenennen, keine IndexedDB-/Backup-Migration fuer reine Designarbeit. Keine fremden Branches aendern, kein Merge/Deployment ohne Freigabe. Historische Testergebnisse niemals als aktuelle ausgeben.
+
+## Code-Pruefung vom 7. November 2026
+
+Beim Lesen von `auswahl()` wurde eine reale logische Ueberschneidung sichtbar: Der `ablage`-Zweig sortierte erst Ordner vor Dokumenten und nach Name, die folgende allgemeine Sortierung verwendete aber standardmaessig `sortier: 'wann'` und `richtung: 'ab'` und ueberschrieb diese Reihenfolge. Jetzt bleibt die Ablageordnung fuer Deckel und Regal erhalten. Im Tabellenmodus bleibt die bisherige frei waehbare Spaltensortierung aktiv. Der synthetische Regressionstest veraendert absichtlich das Bearbeitungsdatum einer Karte und prueft die sichtbare Reihenfolge.
+
+**Nicht getestet:** Browser-/WebKit-Lauf, TypeScript-Build, gesamte Testsuite, Mac-/Windows-/iPhone-Geraete und visuelle Vorher-/Nachher-Abnahme. Syntaxparser fuer die aktualisierte generierte JavaScript-Datei hat erfolgreich geparst; das ist kein Laufzeittest. Vor einem Merge die gespeicherte `.js`-Datei gegen `npm run bauen:ts` und `test105` pruefen.
