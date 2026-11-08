@@ -76,6 +76,23 @@ if /I not "%LOKALSHA%"=="%REMOTESHA%" (
   goto fehlgeschlagen
 )
 
+REM Die SHA allein genuegt nicht: ungespeicherte Aenderungen an
+REM getrackten Dateien wuerden trotz richtiger Commit-ID andere UI zeigen.
+REM holen.bat sollte sie vorher gesichert haben. Ein fehlgeschlagenes
+REM Sichern darf nicht unbemerkt mit einem modifizierten Build starten.
+git diff --quiet
+if errorlevel 1 (
+  echo [FEHLER] Lokale Datei-Aenderungen sind noch vorhanden.
+  echo         Erst mit holen.bat sichern und den PR-Stand neu holen.
+  goto fehlgeschlagen
+)
+git diff --cached --quiet
+if errorlevel 1 (
+  echo [FEHLER] Lokale vorgemerkte Aenderungen sind noch vorhanden.
+  echo         Die App wird nicht als unveraenderter PR-Stand gestartet.
+  goto fehlgeschlagen
+)
+
 echo.
 echo [OK] Zweig und GitHub-Commit stimmen ueberein:
 echo      %LOKALSHA%
