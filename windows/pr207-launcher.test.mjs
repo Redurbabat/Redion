@@ -13,6 +13,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const launcher = fs.readFileSync(path.join(root, 'Redion-PR207-Live.bat'), 'utf8');
 const live = fs.readFileSync(path.join(root, 'Redion-Live.bat'), 'utf8');
 const check = fs.readFileSync(path.join(root, 'Redion-Schaltplan-Pruefen.bat'), 'utf8');
+const pull = fs.readFileSync(path.join(root, 'holen.bat'), 'utf8');
 
 test('PR207-Live verwendet den einzigen sicheren Hol-Ablauf', () => {
   assert.match(launcher, /set "ZIEL=ux\/windows-schaltplan-dock-20261108"/);
@@ -49,4 +50,11 @@ test('Windows-Prueflauf zeigt Protokollhinweise statt sie auszufuehren', () => {
   assert.match(check, /^echo\s+Das vollstaendige Pruefprotokoll liegt/m);
   assert.doesNotMatch(check, /^\s+Das vollstaendige Pruefprotokoll liegt/m);
   assert.match(check, /schaltplan-protokoll\.mjs --where/);
+});
+
+test('Holskript meldet bei privatem Repo Zugriffsprobleme statt oeffentlichen Zugriff zu behaupten', () => {
+  assert.match(pull, /Redion ist ein PRIVATES Repository/);
+  assert.match(pull, /Git Credential Manager/);
+  assert.match(pull, /Keine Testfreigabe/i);
+  assert.doesNotMatch(pull, /Das Verzeichnis ist oeffentlich lesbar/);
 });
