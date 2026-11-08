@@ -136,6 +136,38 @@ try {
   const undo = await plan();
   pruefe('Eine Einfuegung ist genau ein Undo-Schritt',
     undo.teile.length === 3 && undo.leitungen.length === 2);
+  /* Leitungen ausserhalb des Bauteilrahmens muessen auch in den
+     Platzvergleich einfliessen. Sonst kann eine gueltige Vorlage ihre
+     Leitungen ausserhalb des sichtbaren Schaltplans ablegen. */
+  const setzeVorlageMitDraht = async (links: number): Promise<void> => {
+    await page.evaluate((drahtX: number) => {
+      Store.setMeta('elektro:planvorlagen', [{
+        id: 'draht-vorlage', name: 'Draht-Randprobe', art: 'stromlauf-aufgeloest',
+        teile: [{ id: 'altR', zeichen: 'spule', x: 0, y: 0, drehung: 0,
+          gespiegelt: false, bmk: 'K3', nummern: {}, gruppe: '', ebene: 'plan' }],
+        leitungen: [{ id: 'altW', ebene: 'plan', vonTeil: 'altR', vonNr: 'A1',
+          punkte: [{ x: drahtX, y: 20 }, { x: 30, y: 20 }] }]
+      }]);
+    }, links);
+  };
+  await setzeVorlageMitDraht(-80);
+  const vorRand = await plan();
+  await einsetzen();
+  const nachRand = await plan();
+  pruefe('Vorlage mit Leitungsueberhang findet eine gueltige Position',
+    nachRand.teile.length === vorRand.teile.length + 1 &&
+    nachRand.leitungen.length === vorRand.leitungen.length + 1);
+  const letzteLeitung = nachRand.leitungen[nachRand.leitungen.length - 1];
+  pruefe('Alle Punkte der eingefuegten Leitung bleiben innerhalb des Blatts',
+    letzteLeitung?.punkte.every((p: any) => Number.isFinite(p.x) && Number.isFinite(p.y) &&
+      p.x >= 10 && p.y >= 10 && p.x <= 790 && p.y <= 590));
+
+  await setzeVorlageMitDraht(-900);
+  const vorUnmoeglich = JSON.stringify(await plan());
+  await einsetzen();
+  pruefe('Zu lange Leitung wird ohne Planveraenderung abgelehnt',
+    JSON.stringify(await plan()) === vorUnmoeglich);
+
   pruefe('Keine JavaScript-Seitenfehler', pageErrors.length === 0, pageErrors.join(' | '));
   await context.close();
 } finally {
