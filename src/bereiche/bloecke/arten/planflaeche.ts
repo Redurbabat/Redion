@@ -1357,6 +1357,8 @@ const Planflaeche = (() => {
           r: Number(t.x) + dx + m.w, u: Number(t.y) + dy + m.h };
       };
       const belegt = (z.plan.teile as any[]).map(t => rahmen(t));
+      const vorhandeneLeitungen = z.plan.leitungen as Array<{ punkte: Punkt[] }>;
+      const abstand = Math.min(6, rand);
       /* Leitungsstrecken duerfen nicht quer durch fremde Bauteile laufen.
          Liang-Barsky prueft die echte Strecke gegen ein Rechteck; nur
          Begrenzungskaesten der Leitung zu vergleichen wuerde insbesondere
@@ -1384,7 +1386,16 @@ const Planflaeche = (() => {
             a.l >= rand && a.o >= rand &&
             a.r <= z.plan.breite - rand && a.u <= z.plan.hoehe - rand &&
             belegt.every(b => a.r + rand <= b.l || b.r + rand <= a.l ||
-                              a.u + rand <= b.o || b.u + rand <= a.o);
+                              a.u + rand <= b.o || b.u + rand <= a.o) &&
+            /* Auch die andere Richtung zaehlt: ein neues Bauteil darf nicht
+               auf eine bereits vorhandene Leitung gesetzt werden. Sonst
+               koennte die bestehende Leitung dessen Klemme ungewollt fangen. */
+            vorhandeneLeitungen.every(l => {
+              const feld = { l: a.l - abstand, o: a.o - abstand,
+                r: a.r + abstand, u: a.u + abstand };
+              return (l.punkte || []).every((p: Punkt, i: number) =>
+                i === 0 || !streckeTrifft(l.punkte[i - 1]!, p, feld));
+            });
         });
         /* Auch die Leitungen muessen auf das Blatt passen. Bei teilweise
            gespeicherten Vorlagen liegen deren Punkte oft ausserhalb des
@@ -1398,7 +1409,6 @@ const Planflaeche = (() => {
               p.x <= z.plan.breite - rand && p.y <= z.plan.hoehe - rand)) return false;
           /* Ein kleiner Abstand verhindert, dass die Simulation fremde
              Anschlussklemmen beim Einsetzen unbeabsichtigt anzapft. */
-          const abstand = Math.min(6, rand);
           for (let i = 1; i < punkte.length; i++)
             for (const b of belegt) {
               const feld = { l: b.l - abstand, o: b.o - abstand,
