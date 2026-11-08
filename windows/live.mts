@@ -6,6 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import type { ChildProcess } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
@@ -16,7 +17,7 @@ const build = path.join(root, 'build');
 const marker = path.join(build, 'windows-live-stand.json');
 const isWindows = process.platform === 'win32';
 
-export function classifyChange(folder, filename, compiling = false) {
+export function classifyChange(folder: string, filename: string | null | undefined, compiling = false): 'compile' | 'native' | 'stage' | null {
   // Some Windows file systems omit the filename; rebuild conservatively.
   if (typeof filename !== 'string' || !filename) {
     return folder === 'windows' ? 'native' : (folder === 'src' || folder === 'root' ? 'compile' : 'stage');
@@ -42,7 +43,7 @@ export function classifyChange(folder, filename, compiling = false) {
   return 'stage'; // all public assets (including images / fonts / JSON)
 }
 
-function run(program, args, cwd, shell = false) {
+function run(program: string, args: string[], cwd: string, shell = false): Promise<boolean> {
   return new Promise((resolve, reject) => {
     const child = spawn(program, args, { cwd, shell, stdio: 'inherit', windowsHide: false });
     child.once('error', reject);
@@ -50,7 +51,7 @@ function run(program, args, cwd, shell = false) {
   });
 }
 
-function writeReady(number) {
+function writeReady(number: number) {
   fs.mkdirSync(build, { recursive: true });
   const temp = marker + '.' + process.pid + '.tmp';
   fs.writeFileSync(temp, JSON.stringify({ revision: number, status: 'ready' }) + '\n');
@@ -58,16 +59,17 @@ function writeReady(number) {
 }
 
 export async function runLive() {
-  let electronExecutable;
-  try { electronExecutable = require('electron'); }
+  let electronExecutable: string;
+  try { electronExecutable = require('electron') as string; }
   catch {
     throw new Error('Electron fehlt. Zuerst "npm install --prefix windows" ausführen.');
   }
   const npm = isWindows ? 'npm.cmd' : 'npm';
-  let child = null;
-  const watchers = [];
+  let child: ChildProcess | null = null;
+  const watchers: fs.FSWatcher[] = [];
   let compiling = false, running = false, closing = false;
-  let revision = 0, timer = null;
+  let revision = 0;
+  let timer: ReturnType<typeof setTimeout> | null = null;
   let requested = { compile: false, native: false, stage: false };
 
   function launchElectron() {
@@ -78,7 +80,7 @@ export async function runLive() {
     child.on('error', error => {
       console.error('Redion-Live konnte nicht starten:', error.message);
     });
-    child.on('exit', (code, signal) => {
+    child.on('exit', code => {
       child = null;
       if (!closing && !running) console.log(
         'Redion-Live-Fenster geschlossen. Dateibeobachtung beenden.');
@@ -86,7 +88,7 @@ export async function runLive() {
     });
   }
 
-  const buildOnce = async (compile, native, stage) => {
+  const buildOnce = async (compile: boolean, native: boolean, stage: boolean): Promise<boolean> => {
     compiling = compile;
     try {
       if (compile) {
@@ -106,7 +108,7 @@ export async function runLive() {
     } finally { compiling = false; }
   };
 
-  function enqueue(kind) {
+  function enqueue(kind: 'compile' | 'native' | 'stage' | null) {
     if (closing || !kind) return;
     requested.stage = true;
     if (kind === 'compile') requested.compile = true;
@@ -131,10 +133,10 @@ export async function runLive() {
         if (next.native && child && !closing) {
           console.log('[Redion-Live] Native Windows-Dateien geändert: Fenster neu starten.');
           restarting = true;
-          await new Promise(resolve => {
+          await new Promise<void>(resolve => {
             const old = child;
             if (!old || old.exitCode !== null) return resolve();
-            old.once('exit', resolve);
+            old.once('exit', () => resolve());
             old.kill();
           });
           restarting = false;
@@ -151,7 +153,7 @@ export async function runLive() {
   }
 
   let ignoredQuellUntil = 0, restarting = false;
-  function watch(name, dir, recursive) {
+  function watch(name: string, dir: string, recursive: boolean) {
     if (!fs.existsSync(dir)) return;
     const watcher = fs.watch(dir, { recursive }, (_event, filename) => {
       if (name === 'quell' && (compiling || Date.now() < ignoredQuellUntil)) return;
