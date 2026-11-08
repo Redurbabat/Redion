@@ -217,6 +217,49 @@ try {
   }, kollisionsBlock);
   pruefe('Eingefuegte Leitung beruehrt kein bestehendes Bauteil', kollisionsFrei);
 
+  /* Eine Vorlage darf keine bestehende Leitung deckungsgleich ueberlagern.
+     Eine geometrische Kreuzung ohne Knoten bleibt dagegen erlaubt. */
+  const leiterBlock = await page.evaluate(async () => {
+    Store.setMeta('elektro:planvorlagen', [{
+      id: 'draht-ueberlagerung', name: 'Leitungsueberlagerung',
+      art: 'stromlauf-aufgeloest',
+      teile: [{ id: 't', zeichen: 'spule', x: 0, y: 0, drehung: 0,
+        gespiegelt: false, bmk: 'K2', nummern: {}, gruppe: '', ebene: 'plan' }],
+      leitungen: [{ id: 'l', ebene: 'plan',
+        punkte: [{ x: 20, y: 30 }, { x: 350, y: 30 }] }]
+    }]);
+    const seite = Store.addPage(null, { text: 'Leiter 636', icon: '⚡' });
+    const block = Store.addBlock(seite.id, 'schaltplan', { text: 'Plan', plan: {
+      art: 'stromlauf-aufgeloest', breite: 800, hoehe: 600,
+      teile: [{ id: 'weitweg', zeichen: 'spule', x: 600, y: 400,
+        drehung: 0, gespiegelt: false, bmk: 'K1', nummern: {},
+        gruppe: '', ebene: 'plan' }],
+      leitungen: [{ id: 'vorher', ebene: 'plan',
+        punkte: [{ x: 300, y: 110 }, { x: 500, y: 110 }] }],
+      texte: [],
+      ebenen: [{ id: 'plan', name: 'Plan', farbe: 'var(--text)', sichtbar: true }]
+    } });
+    await Store.flush(); App.zeichneBaum(); App.oeffne(seite.id);
+    await new Promise(resolve => setTimeout(resolve, 700));
+    document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung')
+      .forEach(el => el.remove());
+    return block.id as string;
+  });
+  await einsetzen();
+  const leiterPlan = await page.evaluate((id: string) =>
+    JSON.parse(JSON.stringify(Store.getBlock(id).plan)), leiterBlock);
+  pruefe('Vorlage mit Leitungsueberlagerung findet anderen Platz',
+    leiterPlan.leitungen.length === 2 && leiterPlan.teile.length === 2);
+  const neueLeitung = leiterPlan.leitungen.find((l: any) => l.id !== 'vorher');
+  const alteLeitung = leiterPlan.leitungen.find((l: any) => l.id === 'vorher');
+  const schaltplan = (await page.evaluate(() =>
+    typeof (window as any).Schaltplan?.ueberlappt === 'function'));
+  pruefe('Eingefuegte Leitung ueberdeckt keine bestehende Strecke',
+    !!schaltplan && !!neueLeitung && !!alteLeitung &&
+      !(await page.evaluate((args: any) =>
+        (window as any).Schaltplan.ueberlappt(args.punkte, [args.alt]),
+        { punkte: neueLeitung?.punkte, alt: alteLeitung })));
+
   pruefe('Keine JavaScript-Seitenfehler', pageErrors.length === 0, pageErrors.join(' | '));
   await context.close();
 } finally {
