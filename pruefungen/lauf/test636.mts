@@ -461,6 +461,52 @@ try {
     nebenVersteckterLeitung.leitungen.length === 1 &&
     nebenVersteckterLeitung.leitungen[0].id === 'versteckterDraht');
 
+  /* Eine gespeicherte Vorlage kann nach dem Entfernen eines benutzer-
+     definierten Symbols unvollstaendig sein. Nicht nur das fehlende
+     Symbol, sondern die gesamte Einfuegung muss dann entfallen:
+     keinerlei geisterhafte 0x0-Bauteile und kein partieller Undo-Schritt. */
+  const unbekanntBlock = await page.evaluate(async () => {
+    Store.setMeta('elektro:planvorlagen', [{
+      id: 'unbekannt636', name: 'Fehlendes Zeichen',
+      art: 'stromlauf-aufgeloest',
+      teile: [
+        { id: 'altOK', zeichen: 'spule', x: 0, y: 0, drehung: 0,
+          gespiegelt: false, bmk: 'K1', nummern: {}, gruppe: '', ebene: 'plan' },
+        { id: 'altFehlt', zeichen: 'nicht-registriert-636', x: 120, y: 0,
+          drehung: 0, gespiegelt: false, bmk: 'X1', nummern: {}, gruppe: '', ebene: 'plan' }
+      ],
+      leitungen: [{ id: 'altDraht', punkte: [
+        { x: 30, y: 60 }, { x: 150, y: 60 }
+      ], ebene: 'plan' }]
+    }]);
+    const sp = Store.addPage(null, { text: 'Ungültige Vorlage 636', icon: '⚡' });
+    const block = Store.addBlock(sp.id, 'schaltplan', { text: 'Plan', plan: {
+      art: 'stromlauf-aufgeloest', breite: 800, hoehe: 600,
+      teile: [{ id: 'bestand', zeichen: 'spule', x: 300, y: 200,
+        drehung: 0, gespiegelt: false, bmk: 'K3',
+        nummern: {}, gruppe: '', ebene: 'plan' }],
+      leitungen: [], texte: [],
+      ebenen: [{ id: 'plan', name: 'Plan', farbe: 'var(--text)', sichtbar: true }]
+    } });
+    await Store.flush(); App.zeichneBaum(); App.oeffne(sp.id);
+    await new Promise(resolve => setTimeout(resolve, 700));
+    document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung')
+      .forEach(el => el.remove());
+    return block.id as string;
+  });
+  const vorUnbekannt = await page.evaluate((id: string) =>
+    JSON.stringify(Store.getBlock(id).plan), unbekanntBlock);
+  await einsetzen();
+  const nachUnbekannt = await page.evaluate((id: string) =>
+    JSON.stringify(Store.getBlock(id).plan), unbekanntBlock);
+  pruefe('Vorlage mit unbekanntem Fachzeichen wird komplett abgelehnt',
+    nachUnbekannt === vorUnbekannt);
+  const uPlan = await page.evaluate((id: string) =>
+    JSON.parse(JSON.stringify(Store.getBlock(id).plan)), unbekanntBlock);
+  pruefe('Weder Ghost-Symbol noch teilweise kopierte Leitung entsteht',
+    uPlan.teile.length === 1 && uPlan.teile[0].id === 'bestand' &&
+    uPlan.leitungen.length === 0);
+
   pruefe('Keine JavaScript-Seitenfehler', pageErrors.length === 0, pageErrors.join(' | '));
   await context.close();
 } finally {
