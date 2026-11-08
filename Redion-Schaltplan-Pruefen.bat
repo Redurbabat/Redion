@@ -50,8 +50,8 @@ if errorlevel 1 goto fehlgeschlagen
 set "PROTOKOLL_BEGONNEN=1"
 
 echo.
-echo [Vorbereitung] Pruefprotokollierung mit echten Kindprozessen testen ...
-node windows\schaltplan-protokoll.mjs -- node --test windows\schaltplan-protokoll.test.mjs
+echo [Vorbereitung] Pruefprotokollierung und PR-Live-Starter testen ...
+node windows\schaltplan-protokoll.mjs -- node --test windows\schaltplan-protokoll.test.mjs windows\pr207-launcher.test.mjs
 if errorlevel 1 goto fehlgeschlagen
 
 set "PAKETE_FEHLEN="
