@@ -1870,9 +1870,17 @@ const Planflaeche = (() => {
      *  niemand gezeigt hat, verfällt. Ist die Fläche nicht mehr im Dokument
      *  (die Seite wurde neu gezeichnet), wird nichts mehr gespeichert — sie
      *  zeigt dann, was die Ablage hält. */
-    const zugUnterbrechen = (): void => {
+    const zugUnterbrechen = (e: PointerEvent): void => {
       const zug = z.zieht;
       if (!zug) return;
+      /* Ein zweiter Finger beginnt eine Navigationsgeste. Ein laufender
+         Zeichen- oder Teilzug darf dabei NICHT still gespeichert werden:
+         Zwischenpositionen und billige Vorschau-Routen sind noch unfertig.
+         Mouse-/Pen-Unterbrechungen behalten das bisherige Verhalten. */
+      if (e.pointerType === 'touch' && e.pointerId !== zug.zeiger) {
+        zugAbbrechen();
+        return;
+      }
       zugLoesen();
       if (!wurzel.isConnected) return;
       if (zug.art === 'teil') teilzugSichern(zug);
@@ -1888,6 +1896,7 @@ const Planflaeche = (() => {
       const zug = z.zieht;
       if (!zug) return;
       zugLoesen();
+      teilKlickStart = null;
       if (zug.art === 'teil' || zug.art === 'strecke') {
         zug.ausgang.forEach((a, id) => {
           const t = teilVon(id);
