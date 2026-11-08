@@ -123,7 +123,7 @@ echo ==============================================================
 echo   ERFOLG: Alle neun Schritte sind lokal bestanden.
 echo   Aenderungen an generierten Dateien mit git status pruefen.
 echo   Es wurde nichts auf GitHub gepusht oder gemergt.
-  Das vollstaendige Pruefprotokoll liegt in deinem Benutzerordner.
+echo   Das vollstaendige Pruefprotokoll liegt in deinem Benutzerordner.
 echo ==============================================================
 git status --short
 echo.
