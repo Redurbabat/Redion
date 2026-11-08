@@ -77,8 +77,21 @@ try {
         }
         assert.ok(mass.bar.left >= -1 && mass.bar.right <= breite + 1,
           `Kontextleiste muss im ${breite}px-Viewport bleiben`);
-        assert.ok(mass.bar.scroll > mass.bar.client && mass.bar.overflow === 'auto',
-          'Zu breite Kontextleiste muss horizontal scrollbar sein');
+        assert.equal(mass.bar.overflow, 'auto',
+          'Touch-Kontextleiste muss bei Bedarf horizontal scrollen koennen');
+        /* 320 px erzwingen Ueberlauf; bei 390 px passen die Aktionen
+           je nach Schriftmetrik bereits hinein. Nicht Scroll-Ueberlauf
+           verlangen, wenn keiner notwendig ist. */
+        if (breite === 320) assert.ok(mass.bar.scroll > mass.bar.client,
+          'Bei 320 px muss die letzte Aktion durch Scrollen erreichbar sein');
+        const letzteAktion = await page.evaluate(() => {
+          const bar = document.querySelector<HTMLElement>('.sp-kontextleiste')!;
+          bar.scrollLeft = bar.scrollWidth;
+          const ende = bar.querySelector('button:last-child')!.getBoundingClientRect();
+          const rand = bar.getBoundingClientRect();
+          return ende.left >= rand.left - 1 && ende.right <= rand.right + 1;
+        });
+        assert.ok(letzteAktion, 'Die letzte Kontextaktion muss erreichbar sein');
         // Auch die normale (nicht kompakte) Palette braucht grosse Ziele.
         await page.locator('.sp-palette').evaluate(el => el.classList.remove('sp-pal-kompakt'));
         const normal = await page.locator('[data-p-compact]').boundingBox();
