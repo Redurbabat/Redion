@@ -1341,20 +1341,70 @@ const Planflaeche = (() => {
      *  wurde; zweimal eingesetzt wären es doppelte, und die Auswahl fasste
      *  beide zugleich an. */
     const vorlageEinsetzen = (v: any): void => {
+      if (z.zieht) return; // keine Einfuegung in einen noch offenen Mauszug
+      const teile = (Array.isArray(v?.teile) ? v.teile : []) as any[];
+      const leitungen = (Array.isArray(v?.leitungen) ? v.leitungen : []) as any[];
+      if (!teile.length) { UI.toast('Diese Vorlage enthaelt keine Bauteile.'); return; }
+
+      /* Der Versatz 120/80 setzte jede Kopie auf die vorige. Suche stattdessen
+         die erste freie Rasterposition, ohne vorhandene Zeichen zu ueberdecken.
+         Die Symbolmasse stammen aus demselben Register wie der Auswahlrahmen. */
+      const r = Register.fachzeichen.RASTER;
+      const rand = r;
+      const rahmen = (t: any, dx = 0, dy = 0) => {
+        const m = Register.fachzeichen.masse(t.zeichen, Number(t.drehung) || 0);
+        return { l: Number(t.x) + dx, o: Number(t.y) + dy,
+          r: Number(t.x) + dx + m.w, u: Number(t.y) + dy + m.h };
+      };
+      const belegt = (z.plan.teile as any[]).map(t => rahmen(t));
+      const passt = (dx: number, dy: number): boolean => teile.every(t => {
+        const a = rahmen(t, dx, dy);
+        return a.l >= rand && a.o >= rand &&
+          a.r <= z.plan.breite - rand && a.u <= z.plan.hoehe - rand &&
+          belegt.every(b => a.r + rand <= b.l || b.r + rand <= a.l ||
+                            a.u + rand <= b.o || b.u + rand <= a.o);
+      });
+      const schritt = Math.max(r * 4, 40);
+      let versatz: { x: number; y: number } | null = null;
+      /* Erster Einsatz behaelt seine bisherige Lage; weitere suchen ein
+         freies Feld. Der zweite Durchlauf erlaubt auch die linke Blatthaelfte. */
+      if (passt(120, 80)) versatz = { x: 120, y: 80 };
+      for (let y = r * 2; !versatz && y < z.plan.hoehe; y += schritt)
+        for (let x = r * 2; !versatz && x < z.plan.breite; x += schritt)
+          if (passt(x, y)) versatz = { x, y };
+      if (!versatz) {
+        UI.toast('Kein freier Platz fuer diese Vorlage. Bitte erst Platz schaffen.');
+        return;
+      }
+      const { x: dx, y: dy } = versatz;
+      const ebene = aktiveEbene();
       aendere(() => {
         const neuId = new Map<string, string>();
-        ((v.teile || []) as any[]).forEach(t => {
+        const gruppen = new Map<string, string>();
+        teile.forEach(t => {
           const id = Schaltplan.uid();
-          neuId.set(t.id, id);
-          z.plan.teile.push({ ...t, id, x: t.x + 120, y: t.y + 80,
-            bmk: Schaltplan.naechstesBmk(z.plan, t.zeichen) });
+          neuId.set(String(t.id), id);
+          const gruppe = String(t.gruppe || '');
+          if (gruppe && !gruppen.has(gruppe)) gruppen.set(gruppe, Schaltplan.uid());
+          z.plan.teile.push({ ...t, id, x: Number(t.x) + dx, y: Number(t.y) + dy,
+            bmk: Schaltplan.naechstesBmk(z.plan, t.zeichen),
+            gruppe: gruppe ? gruppen.get(gruppe) : '', ebene,
+            nummern: { ...(t.nummern || {}) } });
         });
-        ((v.leitungen || []) as any[]).forEach(l => {
-          const neu: any = { ...l, id: Schaltplan.uid(),
-            punkte: ((l.punkte || []) as any[]).map(p => ({ x: p.x + 120, y: p.y + 80 })) };
-          if (l.vonTeil) neu.vonTeil = neuId.get(l.vonTeil) || l.vonTeil;
-          if (l.nachTeil) neu.nachTeil = neuId.get(l.nachTeil) || l.nachTeil;
-          z.plan.leitungen.push(neu);
+        leitungen.forEach(l => {
+          const neu: any = { ...l, id: Schaltplan.uid(), ebene,
+            punkte: (Array.isArray(l.punkte) ? l.punkte : [])
+              .map((p: any) => ({ x: Number(p.x) + dx, y: Number(p.y) + dy })) };
+          /* Nur Anschluesse an mitkopierte Bauteile duerfen ueberleben.
+             Der alte Fallback auf l.vonTeil/l.nachTeil schuf baumelnde
+             Referenzen auf Teile des Ursprungsplans. */
+          delete neu.vonTeil; delete neu.vonNr;
+          delete neu.nachTeil; delete neu.nachNr;
+          const von = neuId.get(String(l.vonTeil));
+          const nach = neuId.get(String(l.nachTeil));
+          if (von) { neu.vonTeil = von; neu.vonNr = l.vonNr; }
+          if (nach) { neu.nachTeil = nach; neu.nachNr = l.nachNr; }
+          if (neu.punkte.length >= 2) z.plan.leitungen.push(neu);
         });
       });
     };
