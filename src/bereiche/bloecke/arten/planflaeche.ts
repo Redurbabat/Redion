@@ -1345,6 +1345,16 @@ const Planflaeche = (() => {
       const teile = (Array.isArray(v?.teile) ? v.teile : []) as any[];
       const leitungen = (Array.isArray(v?.leitungen) ? v.leitungen : []) as any[];
       if (!teile.length) { UI.toast('Diese Vorlage enthaelt keine Bauteile.'); return; }
+      /* Vorlagen koennen aus aelteren Sicherungen oder importierten Dateien
+         stammen. Fehlt ein Schaltzeichen im heutigen Register, liefert
+         masse() einen 0x0-Rahmen: die Platzsuche erkannte ihn als frei
+         und speicherte ein unsichtbares, nicht bedienbares Bauteil.
+         Deshalb vor jeder Planaenderung die gesamte Vorlage pruefen. */
+      if (teile.some(t => !t || typeof t.zeichen !== 'string' ||
+          !Register.fachzeichen.holen(t.zeichen))) {
+        UI.toast('Vorlage enthaelt nicht verfuegbare Schaltzeichen.');
+        return;
+      }
 
       /* Der Versatz 120/80 setzte jede Kopie auf die vorige. Suche stattdessen
          die erste freie Rasterposition, ohne vorhandene Zeichen zu ueberdecken.
