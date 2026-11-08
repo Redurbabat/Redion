@@ -20,9 +20,10 @@ const TEXTARTEN = new Set([
 ]);
 type Fund = { datei: string; zeile: number; ziel: string; archiviertUnter: string };
 type Nennung = { datei: string; zeile: number; name: string };
+type VerschobenerLink = { datei: string; zeile: number; ziel: string; vorherZiel: string };
 export type Archivbericht = {
   archiv: string; archivDateien: string[]; gescannteDateien: number;
-  kaputteLinks: Fund[]; erwaehnungen: Nennung[];
+  kaputteLinks: Fund[]; erwaehnungen: Nennung[]; verschobeneQuellLinks: VerschobenerLink[];
 };
 const LINK = /!?\[[^\]]*\]\((<[^>]*>|[^\s)]+)(?:\s+["'][^)]*["'])?\)/g;
 
@@ -34,7 +35,7 @@ async function* textdateien(wurzel: string, ordner = ''): AsyncGenerator<string>
     if (e.isSymbolicLink()) continue;
     const relativ = path.join(ordner, e.name);
     if (e.isDirectory()) {
-      if (!AUSLASSEN.has(e.name) && relativ.replaceAll('\\', '/') !== ARCHIV) {
+      if (!AUSLASSEN.has(e.name)) {
         yield* textdateien(wurzel, relativ);
       }
     } else if (e.isFile() && TEXTARTEN.has(path.extname(e.name).toLowerCase())) {
@@ -59,36 +60,51 @@ export async function pruefeArchivreferenzen(wurzel: string): Promise<Archivberi
     .filter(e => e.isFile() && e.name.endsWith('.md') && !/^(README|INDEX|\d\d-)/i.test(e.name))
     .map(e => e.name).sort();
   const kaputteLinks: Fund[] = [];
+  const verschobeneQuellLinks: VerschobenerLink[] = [];
   const erwaehnungen: Nennung[] = [];
   let gescannt = 0;
   if (archivDateien.length) {
     for await (const relativ of textdateien(wurzel)) {
+      const datei = relativ.replaceAll('\\', '/');
+      const ausArchiv = datei.startsWith(`${ARCHIV}/`);
+      const originalVerschoben = ausArchiv && archivDateien.includes(path.basename(relativ));
+      // README, INDEX und Pruefprotokolle sind keine verschobenen Originale.
+      if (ausArchiv && !originalVerschoben) continue;
       gescannt++;
       const daten = await readFile(path.join(wurzel, relativ), 'utf8');
-      if (!archivDateien.some(name => daten.includes(name))) continue;
+      if (!originalVerschoben && !archivDateien.some(name => daten.includes(name))) continue;
       const zeilen = daten.split(/\r?\n/);
       for (let i = 0; i < zeilen.length; i++) {
         const zeile = zeilen[i] ?? '';
         const vorkommen = archivDateien.filter(name => zeile.includes(name));
-        if (!vorkommen.length) continue;
+        if (!vorkommen.length && !originalVerschoben) continue;
         for (const name of vorkommen) {
-          erwaehnungen.push({ datei: relativ.replaceAll('\\', '/'), zeile: i + 1, name });
+          erwaehnungen.push({ datei, zeile: i + 1, name });
         }
         for (const link of zeile.matchAll(LINK)) {
           const ziel = linkziel(link[1] ?? '');
           if (!ziel || /^(?:[a-z][a-z\d+.-]*:|\/\/|#)/i.test(ziel)) continue;
           const aufgeloest = path.resolve(wurzel, path.dirname(relativ), ziel);
+          if (existsSync(aufgeloest)) continue;
           const name = path.basename(aufgeloest);
-          if (!archivDateien.includes(name) || existsSync(aufgeloest)) continue;
-          kaputteLinks.push({
-            datei: relativ.replaceAll('\\', '/'), zeile: i + 1,
-            ziel, archiviertUnter: `${ARCHIV}/${name}`,
-          });
+          if (archivDateien.includes(name) &&
+              path.relative(wurzel, aufgeloest).replaceAll('\\', '/') === `doku/${name}`) {
+            kaputteLinks.push({ datei, zeile: i + 1,
+              ziel, archiviertUnter: `${ARCHIV}/${name}` });
+          }
+          if (originalVerschoben) {
+            const vorher = path.resolve(wurzel, 'doku', ziel);
+            if (existsSync(vorher)) {
+              verschobeneQuellLinks.push({ datei, zeile: i + 1, ziel,
+                vorherZiel: path.relative(wurzel, vorher).replaceAll('\\', '/') });
+            }
+          }
         }
       }
     }
   }
-  return { archiv: ARCHIV, archivDateien, gescannteDateien: gescannt, kaputteLinks, erwaehnungen };
+  return { archiv: ARCHIV, archivDateien, gescannteDateien: gescannt,
+    kaputteLinks, erwaehnungen, verschobeneQuellLinks };
 }
 
 const selbst = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
@@ -103,9 +119,12 @@ if (selbst) {
       for (const l of bericht.kaputteLinks) {
         console.log(`[LINK OFFEN] ${l.datei}:${l.zeile} -> ${l.ziel} (liegt jetzt: ${l.archiviertUnter})`);
       }
-      console.log(`${bericht.kaputteLinks.length} mutmasslich kaputte Markdown-Links; ${bericht.erwaehnungen.length} Textnennungen zur manuellen Pruefung.`);
+      for (const l of bericht.verschobeneQuellLinks) {
+        console.log(`[LINK DURCH UMZUG OFFEN] ${l.datei}:${l.zeile} -> ${l.ziel} (frueher: ${l.vorherZiel})`);
+      }
+      console.log(`${bericht.kaputteLinks.length} Verweise auf archivierte Pfade; ${bericht.verschobeneQuellLinks.length} durch Umzug ungueltige Original-Links; ${bericht.erwaehnungen.length} Textnennungen zur manuellen Pruefung.`);
       if (!bericht.archivDateien.length) console.log('Noch keine Archivdokumente im aktuellen Branch.');
     }
-    if (flags.has('--strict') && bericht.kaputteLinks.length) process.exitCode = 1;
+    if (flags.has('--strict') && (bericht.kaputteLinks.length || bericht.verschobeneQuellLinks.length)) process.exitCode = 1;
   } catch (e) { console.error(e); process.exitCode = 2; }
 }

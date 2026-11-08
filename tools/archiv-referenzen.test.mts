@@ -64,3 +64,35 @@ test('Dateien bleiben nach Pruefung bytegleich', () => mitProjekt(async wurzel =
   await pruefeArchivreferenzen(wurzel);
   assert.deepEqual(await readFile(path.join(wurzel, 'doku/PLAN.md')), vorher);
 }));
+
+test('Verschobene Originaldatei meldet eigenen durch Umzug defekten Link', () => mitProjekt(async wurzel => {
+  await datei(wurzel, 'doku/NACHBAR.md', '# Nachbar');
+  await datei(wurzel, 'doku/mehr nicht nutzbar/ALT.md', '[nachbar](NACHBAR.md)');
+  const ergebnis = await pruefeArchivreferenzen(wurzel);
+  assert.equal(ergebnis.verschobeneQuellLinks.length, 1);
+  assert.deepEqual(ergebnis.verschobeneQuellLinks[0], {
+    datei: 'doku/mehr nicht nutzbar/ALT.md', zeile: 1,
+    ziel: 'NACHBAR.md', vorherZiel: 'doku/NACHBAR.md',
+  });
+}));
+
+test('Angepasster Link im archivierten Original bleibt gueltig', () => mitProjekt(async wurzel => {
+  await datei(wurzel, 'doku/NACHBAR.md', '# Nachbar');
+  await datei(wurzel, 'doku/mehr nicht nutzbar/ALT.md', '[nachbar](../NACHBAR.md)');
+  const ergebnis = await pruefeArchivreferenzen(wurzel);
+  assert.equal(ergebnis.verschobeneQuellLinks.length, 0);
+}));
+
+test('Alte Originaldateien im gemeinsamen Archiv bleiben untereinander verlinkt', () => mitProjekt(async wurzel => {
+  await datei(wurzel, 'doku/mehr nicht nutzbar/ALT.md', '[nachbar](ANDERE.md)');
+  await datei(wurzel, 'doku/mehr nicht nutzbar/ANDERE.md', '# andere');
+  const ergebnis = await pruefeArchivreferenzen(wurzel);
+  assert.equal(ergebnis.kaputteLinks.length, 0);
+  assert.equal(ergebnis.verschobeneQuellLinks.length, 0);
+}));
+
+test('Schon vor der Verschiebung ungueltige Links melden keinen neuen Fehler', () => mitProjekt(async wurzel => {
+  await datei(wurzel, 'doku/mehr nicht nutzbar/ALT.md', '[fehlend](GAB-ES-NIE.md)');
+  const ergebnis = await pruefeArchivreferenzen(wurzel);
+  assert.equal(ergebnis.verschobeneQuellLinks.length, 0);
+}));
