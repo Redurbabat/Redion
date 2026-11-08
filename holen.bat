@@ -51,6 +51,10 @@ cd /d "%~dp0"
 REM --- Welcher Zweig? --------------------------------------------------------
 REM  Ohne Angabe:  main . Das ist Absicht und keine Bequemlichkeit - wer
 REM  doppelklickt, soll den geprueften Stand bekommen, nicht den letzten.
+REM Erfolgssignal fuer aufrufende Starter: NUR nach einem bewusst
+REM erlaubten und erfolgreichen Holen setzen. Bei "N" zur roten CI-Warnung
+REM darf auch ein schon passender lokaler SHA nicht als Freigabe gelten.
+set "REDION_HOLEN_ERFOLG="
 set "ZIEL=%~1"
 if "%ZIEL%"=="" set "ZIEL=main"
 
@@ -215,6 +219,7 @@ for /f "delims=" %%d in ('git ls-files -o --exclude-standard 2^>nul') do set "SC
 
 if "%HIER%"=="%DORT%" if "%ZWEIG%"=="%ZIEL%" if not defined SCHMUTZ (
   echo   [OK] Dieser Ordner ist schon genau auf dem Stand von GitHub.
+  set "REDION_HOLEN_ERFOLG=1"
   goto ende
 )
 
@@ -342,6 +347,7 @@ echo    enthaelt das Programm - ausser du haettest die automatische
 echo    Sicherung auf genau diesen Ordner gestellt. Das solltest du
 echo    nicht; nimm einen Ordner in iCloud oder OneDrive.
 echo   ------------------------------------------------------------
+set "REDION_HOLEN_ERFOLG=1"
 goto ende
 
 :sicherngeht_nicht
