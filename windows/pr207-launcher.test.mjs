@@ -38,6 +38,32 @@ test('PR207-Live kontrolliert Branch und GitHub-Commit vor dem Start', () => {
     'Der Starter darf auch bei ungesicherten getrackten Aenderungen nicht oeffnen');
 });
 
+test('Abgelehnte rote CI-Warnung stoppt Live selbst bei gleichem SHA', () => {
+  const call = launcher.indexOf('call "%~dp0holen.bat" "%ZIEL%"');
+  const reset = launcher.indexOf('set "REDION_HOLEN_ERFOLG="');
+  const consent = launcher.indexOf('if not "%REDION_HOLEN_ERFOLG%"=="1"');
+  const hash = launcher.indexOf('if /I not "%LOKALSHA%"=="%REMOTESHA%"');
+  const start = launcher.indexOf('call "%~dp0Redion-Live.bat"');
+  assert.ok(reset >= 0 && reset < call && consent > call &&
+    consent < hash && hash < start,
+    'Ein abgebrochener Holvorgang muss vor den SHA-Pruefungen stoppen');
+  assert.match(launcher, /Hol[e]?n abgebrochen oder fehlgeschlagen|Holen abgebrochen oder fehlgeschlagen/);
+  // holen.bat hat kein setlocal: das Erfolgssignal ist fuer call() sichtbar.
+  // Es steht am Anfang leer, wird aber nur an den ZWEI normalen
+  // Erfolgsenden gesetzt (bereits synchron / erfolgreich eingecheckt).
+  const resetInPull = pull.indexOf('set "REDION_HOLEN_ERFOLG="');
+  const choices = [...pull.matchAll(/choice \/c JN[^\n]*\n\s*if errorlevel 2 goto ende/g)];
+  const successes = [...pull.matchAll(/set "REDION_HOLEN_ERFOLG=1"/g)];
+  assert.ok(resetInPull >= 0, 'Holen setzt das alte Signal bei jedem Aufruf zurueck');
+  assert.equal(choices.length, 2, 'Beide CI-Warnungen muessen N als Abbruch behandeln');
+  assert.equal(successes.length, 2, 'Erfolgssignal nur bei bereits synchron und nach Checkout');
+  const alreadyCurrent = pull.indexOf('Dieser Ordner ist schon genau auf dem Stand von GitHub');
+  const checkedOut = pull.indexOf('Der Ordner hat jetzt genau den Stand von GitHub');
+  assert.ok(successes[0].index > alreadyCurrent &&
+    successes[1].index > checkedOut,
+    'Kein Erfolgssignal vor Zustimmung oder Abschluss der Aktualisierung');
+});
+
 test('Redion-Live prueft Node >=22.18 vor npm ci', () => {
   const version = live.indexOf('major===22&&minor>=18');
   const install = live.indexOf('call npm ci');
