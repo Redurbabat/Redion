@@ -31,6 +31,10 @@ test('PR207-Live kontrolliert Branch und GitHub-Commit vor dem Start', () => {
     hash > remote && launch > hash, 'Hol- und SHA-Pruefung muss vor Electron liegen');
   assert.match(launcher, /if not defined REMOTESHA \(/);
   assert.match(launcher, /if errorlevel 1 goto fehlgeschlagen/);
+  const diff = launcher.indexOf('git diff --quiet');
+  const staged = launcher.indexOf('git diff --cached --quiet');
+  assert.ok(diff > hash && staged > diff && launch > staged,
+    'Der Starter darf auch bei ungesicherten getrackten Aenderungen nicht oeffnen');
 });
 
 test('Redion-Live prueft Node >=22.18 vor npm ci', () => {
