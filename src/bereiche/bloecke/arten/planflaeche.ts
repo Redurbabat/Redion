@@ -1357,13 +1357,28 @@ const Planflaeche = (() => {
           r: Number(t.x) + dx + m.w, u: Number(t.y) + dy + m.h };
       };
       const belegt = (z.plan.teile as any[]).map(t => rahmen(t));
-      const passt = (dx: number, dy: number): boolean => teile.every(t => {
-        const a = rahmen(t, dx, dy);
-        return a.l >= rand && a.o >= rand &&
-          a.r <= z.plan.breite - rand && a.u <= z.plan.hoehe - rand &&
-          belegt.every(b => a.r + rand <= b.l || b.r + rand <= a.l ||
-                            a.u + rand <= b.o || b.u + rand <= a.o);
-      });
+      const passt = (dx: number, dy: number): boolean => {
+        const teilePassen = teile.every(t => {
+          const a = rahmen(t, dx, dy);
+          return Number.isFinite(a.l) && Number.isFinite(a.o) &&
+            Number.isFinite(a.r) && Number.isFinite(a.u) &&
+            a.l >= rand && a.o >= rand &&
+            a.r <= z.plan.breite - rand && a.u <= z.plan.hoehe - rand &&
+            belegt.every(b => a.r + rand <= b.l || b.r + rand <= a.l ||
+                              a.u + rand <= b.o || b.u + rand <= a.o);
+        });
+        /* Auch die Leitungen muessen auf das Blatt passen. Bei teilweise
+           gespeicherten Vorlagen liegen deren Punkte oft ausserhalb des
+           Bauteilrahmens. Nur die Bauteile zu pruefen reicht nicht: eine
+           eingeklebte Leitung koennte sonst ausserhalb des SVG enden. */
+        return teilePassen && leitungen.every(l =>
+          (Array.isArray(l.punkte) ? l.punkte : []).every((p: any) => {
+            const x = Number(p.x) + dx, y = Number(p.y) + dy;
+            return Number.isFinite(x) && Number.isFinite(y) &&
+              x >= rand && y >= rand &&
+              x <= z.plan.breite - rand && y <= z.plan.hoehe - rand;
+          }));
+      };
       const schritt = Math.max(r * 4, 40);
       let versatz: { x: number; y: number } | null = null;
       /* Erster Einsatz behaelt seine bisherige Lage; weitere suchen ein
