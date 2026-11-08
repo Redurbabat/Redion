@@ -2,6 +2,10 @@
 
 **Status: zwei getrennte Fehlerbilder.** Die heutigen Läufe scheitern ohne dokumentierte Testschritte; **ihre unmittelbare Ursache ist unbekannt**. Ältere, tatsächlich ausgeführte Läufe zeigen dagegen **konkrete TypeScript- und Artefakt-Konsistenzfehler**. Kein grüner Teststatus, kein Anlass, Prüfungen abzuschalten.
 
+## Aktueller Review-Stand
+
+Der Eigentümer bündelt alle zuvor unabhängig geprüften Aufräum- und Windows-Typkorrekturen in **einem** [gemeinsamen Draft-PR #206](https://github.com/Redurbabat/Redion/pull/206) auf Branch `review/redion-live-gesamt-20261108`. Die früheren Einzel-PRs **#192–#205** werden geschlossen, **nicht gemergt**; ihre Verweise dienen nur noch der Herkunftsnachverfolgung. **Der CI-Ausführungsblocker und der aktuelle Einzeldatei-Abgleich sind weiterhin offen.** Windows-Live kann lokal nur auf eigene Verantwortung als ungeprüfter Entwicklungsstand gestartet werden; kein zusätzlicher UI-Funktionsumfang.
+
 ## Beobachtete Fakten
 
 Der bestehende Workflow `.github/workflows/pruefen.yml` hat zwei definierte Jobs mit `runs-on: ubuntu-latest` und regulären Schritten beginnend mit `actions/checkout@v4` und `actions/setup-node@v4`. Der Workflow wurde **nicht geändert**.

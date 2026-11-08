@@ -2,6 +2,12 @@
 
 **Stand:** 8. November 2026. Geprüfter GitHub-Ausgangsstand: `main` bei `371fcf7e50719793db5b58eec2d29ae7fe82bde4`. **Dies ist ein Vorschlags- und Kontrollindex, keine Freigabe zum Löschen.**
 
+## Ein gemeinsamer Review-PR für den lokalen Windows-Stand
+
+**Aktueller einziger offener Aufräum-PR:** [#206 – Redion Live: gesamter Arbeitsstand](https://github.com/Redurbabat/Redion/pull/206). Alle früheren Einzel-PRs **#192–#205 werden durch #206 ersetzt und geschlossen, ohne Merge oder Branch-Löschung**. Ihre historischen Beschreibungen bleiben als Prüfherkunft nachvollziehbar. Der gemeinsame Branch heißt `review/redion-live-gesamt-20261108` und basiert direkt auf `main`.
+
+**Lokaler Windows-Ablauf:** Im bestehenden Git-Projektordner `holen-zweig.bat` doppelklicken, Branch `review/redion-live-gesamt-20261108` eingeben, den **noch nicht grün getesteten** Stand bei der Warnung bewusst bestätigen; danach `Redion-Live.bat` doppelklicken. Alternativ im CMD `holen.bat review/redion-live-gesamt-20261108`. Redion Live baut die vorhandene Anwendung aus den lokalen Quellen; hier wurden **keine neuen sichtbaren UI-Funktionen** entwickelt, sondern Historie archiviert, Prüfwerkzeuge ergänzt und Windows-Typen korrigiert. Keine Freigabe für produktiven Einsatz oder Merge.
+
 ## Bestand, gezählt im Git-Baum
 
 | Teil | Dateien (Git-Blobs) | Einordnung |
@@ -15,9 +21,9 @@
 | `windows/` | 22 | Electron-Dateien und Tests: **nicht archivieren** |
 | `.agents/` und `.claude/` | jeweils 12 | Agenten-/Skillsteuerung: **nur nach Eigentümerfreigabe** |
 
-## Zur Kontrolle vorbereitete unabhängige Draft-PRs
+## Herkunft: ursprüngliche Dokumentgruppen (nun in PR #206)
 
-Jeder PR basiert unmittelbar auf `main`. Die verschobenen Dateien behalten ihre **identischen Git-Blob-SHAs**. Die angegebene Anzahl ist nicht die Zahl der neu erzeugten Dateien, sondern der rein umbenannten Originale.
+Die hier referenzierten Einzel-PRs wurden ursprünglich direkt von `main` erstellt und anschließend im gemeinsamen PR #206 inhaltlich zusammengeführt. Sie sind **keine separat zur Zusammenführung vorgesehenen PRs mehr**. Die verschobenen Dateien behalten ihre **identischen Git-Blob-SHAs**. Die angegebene Anzahl bezeichnet nur die umbenannten Originale.
 
 | PR | Thema | Anzahl | Pfad |
 | --- | --- | ---: | --- |
@@ -29,7 +35,7 @@ Jeder PR basiert unmittelbar auf `main`. Die verschobenen Dateien behalten ihre 
 | [#200](https://github.com/Redurbabat/Redion/pull/200) | ältere iOS-Lifecycle-/Exportberichte | 2 | derselbe Sammelordner |
 | [#201](https://github.com/Redurbabat/Redion/pull/201) | ältere iOS-Gesten-/Statusleistenberichte | 2 | derselbe Sammelordner |
 | [#202](https://github.com/Redurbabat/Redion/pull/202) | ältere Safari-/Homescreen-Integrationsberichte | 2 | derselbe Sammelordner |
-| **Summe** | **acht voneinander unabhängige Archiv-PRs** | **17** | **kein Merge** |
+| **Summe** | **acht archivierte Herkunftsgruppen in PR #206** | **17** | **kein Merge** |
 
 Jeder Archiv-PR ergänzt sein eigenes Herkunfts-/Risiko-Protokoll. Die Änderungen in diesen PRs sind **nur Umbenennungen der Dokumente** und das zugehörige Prüfprotokoll. Ein gitbasierter SHA-Vergleich bestätigte die Inhaltstreue.
 
