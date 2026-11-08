@@ -1769,12 +1769,11 @@ const Planflaeche = (() => {
        neuen Bild verloren (`buehneMalen` ersetzt das SVG), und losgelassen
        über der Palette kam das `pointerup` nie an. Der Zug blieb liegen, sein
        Zwischenbild in `z.plan`, und die nächste Handlung speicherte es
-       (test611 §13). Und er endet, sobald irgendein Zeiger irgendwo
-       aufsetzt: ein zweiter Finger fing bisher einen NEUEN Zug an, nahm das
-       Zwischenbild des ersten als „vorher" und liess den ersten liegen.
-       Beendet wird ein Zug mit Teilen immer richtig — mit der vollen Suche
-       (`teilzugSichern`), nie mit einem Zwischenbild. Die Horcher am
-       Dokument hängen nur, solange ein Zug läuft. */
+       (test611 §13). Bei einem neuen Maus-/Stift-Druck endet der erste Zug
+       wie bisher mit der vollen Suche; ein zweiter Finger bricht dagegen
+       die unfertige Verschiebung ab, bevor die Zwei-Finger-Geste navigiert.
+       Keine Zwischenbilder werden gespeichert. Die Horcher am Dokument
+       hängen nur, solange ein Zug läuft. */
     type Zug = NonNullable<Zustand['zieht']>;
     const zugBeginnen = (zug: Zug): void => {
       z.zieht = zug;
@@ -1864,12 +1863,11 @@ const Planflaeche = (() => {
       melde('Ziehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
     };
 
-    /** Ein Zeiger setzt auf, während ein Zug läuft — ein zweiter Finger, oder
-     *  derselbe, dessen Loslassen nie ankam. Der Zug endet hier: mit Teilen
-     *  gesichert wie beim Loslassen; ein Rahmen oder eine Leitung, deren Ende
-     *  niemand gezeigt hat, verfällt. Ist die Fläche nicht mehr im Dokument
-     *  (die Seite wurde neu gezeichnet), wird nichts mehr gespeichert — sie
-     *  zeigt dann, was die Ablage hält. */
+    /** Ein Zeiger setzt auf, während ein Zug läuft. Ein zweiter Touch
+     *  verwirft den unfertigen Zug vor der Zoomgeste; Maus-/Stift-Drucke
+     *  sichern Teil-/Streckenzüge weiterhin wie beim Loslassen. Rahmen
+     *  und Leitungen ohne Ende verfallen. Ist die Fläche nicht mehr
+     *  verbunden, wird nichts gespeichert. */
     const zugUnterbrechen = (e: PointerEvent): void => {
       const zug = z.zieht;
       if (!zug) return;
@@ -2009,8 +2007,9 @@ const Planflaeche = (() => {
 
     /* --- Zwei Finger: zoomen und verschieben (E762) ------------------------
      * Ein Finger zeichnet, zwei Finger bewegen die Ansicht — wie in jeder
-     * Karte. Setzt der zweite auf, endet der Zug des ersten (`zugUnterbrechen`,
-     * wie seit E746), und bis der letzte Finger loslässt, zeichnet keiner. */
+     * Karte. Setzt der zweite auf, wird der unfertige Zug des ersten
+     * abgebrochen (`zugUnterbrechen`), und bis der letzte Finger loslässt,
+     * zeichnet keiner. */
     const finger = new Map<number, Punkt>();
     let geste: null | { d0: number; P0: Punkt; zoom0: number } = null;
     const fingerMitte = (): Punkt => {
