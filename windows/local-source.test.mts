@@ -10,7 +10,9 @@ const {
   snapshot, shouldRestage, startSourceUpdates
 } = require('./local-source.cts');
 
-function fixture(run) {
+type FixturePaths = { root: string; appData: string; base: string };
+
+function fixture<T>(run: (paths: FixturePaths) => T): T {
   const base=fs.mkdtempSync(path.join(os.tmpdir(), 'redion-local-updates-'));
   const root=path.join(base,'checkout'), appData=path.join(base,'config');
   fs.mkdirSync(root); fs.mkdirSync(appData);
@@ -64,19 +66,20 @@ test('GitHub-Änderung übernimmt neuen Stand; unvollständige Dateien bewahren 
   const base=fs.mkdtempSync(path.join(os.tmpdir(),'redion-watcher-'));
   const root=path.join(base,'checkout'), appData=path.join(base,'config');
   fs.mkdirSync(root);fs.mkdirSync(appData);fs.mkdirSync(path.join(root,'quell'));
-  const put=(f,v)=>fs.writeFileSync(path.join(root,f),v);
+  const put=(f: string,v: string)=>fs.writeFileSync(path.join(root,f),v);
   put('package.json','{"name":"redion"}');
   put('index.html','<script src="quell/start.js" defer></script>');
   put('quell/start.js','version1');
   put('sw.js','');put('version.json','{}');put('version.md','');
-  const received=[];let handle;
+  const received: string[]=[];
+  const watcher: { handle?: (event: string, filename: string) => void } = {};
   try {
     const controller=startSourceUpdates({
       source:root, appData, previewBase:path.join(base,'preview'),
       markerDir:path.join(base,'marker'),debounceMs:10,
-      onReady:directory=>received.push(directory),
-      io:{watch:(_root,_options,callback)=>{
-        handle=callback;
+      onReady:(directory: string)=>received.push(directory),
+      io:{watch:(_root: string,_options: { recursive: boolean },callback: (event: string, filename: string) => void)=>{
+        watcher.handle=callback;
         return {on(){},close(){}};
       }},
       logger:{warn(){},info(){}}
@@ -84,16 +87,17 @@ test('GitHub-Änderung übernimmt neuen Stand; unvollständige Dateien bewahren 
     assert.equal(controller.revision,1);
     assert.equal(received.length,1);
     put('quell/start.js','version2');
-    handle('change','quell/start.js');
+    assert.ok(watcher.handle, 'Ordnerbeobachtung registriert');
+    watcher.handle('change','quell/start.js');
     await new Promise(resolve=>setTimeout(resolve,40));
     assert.equal(controller.revision,2);
     assert.equal(fs.readFileSync(path.join(controller.active,'quell/start.js'),'utf8'),'version2');
     fs.unlinkSync(path.join(root,'index.html'));
-    handle('rename','index.html');
+    watcher.handle('rename','index.html');
     await new Promise(resolve=>setTimeout(resolve,40));
     assert.equal(controller.revision,2);
     assert.equal(received.length,2);
-    assert.equal(JSON.parse(fs.readFileSync(path.join(base,'marker/windows-live-stand.json'))).revision,2);
+    assert.equal(JSON.parse(fs.readFileSync(path.join(base,'marker/windows-live-stand.json'),'utf8')).revision,2);
     controller.stop();
   } finally {fs.rmSync(base,{recursive:true,force:true});}
 });
