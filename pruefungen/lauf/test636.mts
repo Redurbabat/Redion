@@ -349,6 +349,58 @@ try {
     lueckenPlan.leitungen[0].punkte[0].x === 20 &&
     lueckenPlan.leitungen[1].punkte[0].x === 100);
 
+  /* 90-Grad-Symbole rotieren um ihre eigene Mitte. Eine 160x80-
+     Drehstromquelle belegt rotiert 80x160, also NICHT den Rahmen
+     [x,x+80] × [y,y+160]. Frueher wurde sie bei (120,80) eingefuegt
+     und ueberschneidete trotz vermeintlich freier Lage den Schliesser. */
+  const gedrehtBlock = await page.evaluate(async () => {
+    Store.setMeta('elektro:planvorlagen', [{
+      id: 'rotationsrahmen636', name: 'Gedrehte Vorlage',
+      art: 'stromlauf-aufgeloest',
+      teile: [{ id: 'altD', zeichen: 'drehstromquelle', x: 0, y: 0,
+        drehung: 90, gespiegelt: false, bmk: 'G1', nummern: {},
+        gruppe: '', ebene: 'plan' }],
+      leitungen: []
+    }]);
+    const sp = Store.addPage(null, { text: 'Rotation 636', icon: '⚡' });
+    const block = Store.addBlock(sp.id, 'schaltplan', { text: 'Plan', plan: {
+      art: 'stromlauf-aufgeloest', breite: 800, hoehe: 600,
+      teile: [{ id: 'bestand', zeichen: 'schliesser', x: 180, y: 10,
+        drehung: 0, gespiegelt: false, bmk: 'S1', nummern: {},
+        gruppe: '', ebene: 'plan' }],
+      leitungen: [], texte: [],
+      ebenen: [{ id: 'plan', name: 'Plan', farbe: 'var(--text)', sichtbar: true }]
+    } });
+    await Store.flush(); App.zeichneBaum(); App.oeffne(sp.id);
+    await new Promise(resolve => setTimeout(resolve, 700));
+    document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung')
+      .forEach(el => el.remove());
+    return block.id as string;
+  });
+  await einsetzen();
+  const rotationsErgebnis = await page.evaluate((id: string) => {
+    const plan = Store.getBlock(id).plan;
+    const kopie = plan.teile.find((t: any) => t.zeichen === 'drehstromquelle');
+    const bestand = plan.teile.find((t: any) => t.id === 'bestand');
+    if (!kopie || !bestand) return { eingefuegt: false, frei: false, aufBlatt: false };
+    const rahmen = (t: any) => {
+      const zc = Register.fachzeichen.holen(t.zeichen);
+      const m = Register.fachzeichen.masse(t.zeichen, t.drehung);
+      const cx = t.x + zc.w / 2, cy = t.y + zc.h / 2;
+      return { l: cx - m.w / 2, r: cx + m.w / 2,
+        o: cy - m.h / 2, u: cy + m.h / 2 };
+    };
+    const a = rahmen(kopie), b = rahmen(bestand);
+    const kollidiert = a.l < b.r && b.l < a.r && a.o < b.u && b.o < a.u;
+    return { eingefuegt: plan.teile.length === 2 && kopie.drehung === 90,
+      frei: !kollidiert, aufBlatt: a.l >= 10 && a.o >= 10 &&
+        a.r <= plan.breite - 10 && a.u <= plan.hoehe - 10 };
+  }, gedrehtBlock);
+  pruefe('Gedrehtes Symbol wird als Vorlage eingesetzt',
+    rotationsErgebnis.eingefuegt);
+  pruefe('Gedrehter Originalmittelpunkt-Rahmen kollidiert nicht und bleibt im Plan',
+    rotationsErgebnis.frei && rotationsErgebnis.aufBlatt);
+
   pruefe('Keine JavaScript-Seitenfehler', pageErrors.length === 0, pageErrors.join(' | '));
   await context.close();
 } finally {
