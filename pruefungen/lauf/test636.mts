@@ -168,6 +168,55 @@ try {
   pruefe('Zu lange Leitung wird ohne Planveraenderung abgelehnt',
     JSON.stringify(await plan()) === vorUnmoeglich);
 
+  /* Eine Leitungsstrecke darf beim Vorlageneinsatz weder sichtbar noch
+     elektrisch unbeabsichtigt durch ein fremdes Bauteil laufen. Im
+     ersten Suchfeld (120/80) wuerde die lange Leitung das vorhandene K1
+     quer schneiden, obwohl das neue Symbol selbst nicht auf K1 liegt. */
+  const kollisionsBlock = await page.evaluate(async () => {
+    Store.setMeta('elektro:planvorlagen', [{
+      id: 'kollision636', name: 'Kollisionsprobe', art: 'stromlauf-aufgeloest',
+      teile: [{ id: 't', zeichen: 'spule', x: 0, y: 0,
+        drehung: 0, gespiegelt: false, bmk: 'K2', nummern: {},
+        gruppe: '', ebene: 'plan' }],
+      leitungen: [{ id: 'w', punkte: [{ x: 20, y: 30 }, { x: 350, y: 30 }],
+        ebene: 'plan', vonTeil: 't', vonNr: 'A1' }]
+    }]);
+    const sp = Store.addPage(null, { text: 'Kollision 636', icon: '⚡' });
+    const block = Store.addBlock(sp.id, 'schaltplan', { text: 'Plan', plan: {
+      art: 'stromlauf-aufgeloest', breite: 800, hoehe: 600,
+      teile: [{ id: 'bestehend', zeichen: 'spule', x: 320, y: 80,
+        drehung: 0, gespiegelt: false, bmk: 'K1', nummern: {},
+        gruppe: '', ebene: 'plan' }],
+      leitungen: [], texte: [],
+      ebenen: [{ id: 'plan', name: 'Plan', farbe: 'var(--text)', sichtbar: true }]
+    } });
+    await Store.flush();
+    App.zeichneBaum();
+    App.oeffne(sp.id);
+    await new Promise(resolve => setTimeout(resolve, 700));
+    document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung')
+      .forEach(el => el.remove());
+    return block.id as string;
+  });
+  await einsetzen();
+  const kollisionsPlan = await page.evaluate((id: string) =>
+    JSON.parse(JSON.stringify(Store.getBlock(id).plan)), kollisionsBlock);
+  pruefe('Vorlage mit langer Leitung wird trotz Hindernis eingesetzt',
+    kollisionsPlan.teile.length === 2 && kollisionsPlan.leitungen.length === 1);
+  const kollisionsFrei = await page.evaluate((id: string) => {
+    const p = Store.getBlock(id).plan;
+    const bestand = p.teile.find((t: any) => t.id === 'bestehend');
+    const leitung = p.leitungen[0];
+    if (!bestand || !leitung) return false;
+    const m = Register.fachzeichen.masse(bestand.zeichen, bestand.drehung);
+    const a = leitung.punkte[0], b = leitung.punkte[1];
+    /* Diese Testvorlage hat genau eine horizontale Strecke. */
+    return !(a.y >= bestand.y - 6 && a.y <= bestand.y + m.h + 6 &&
+      Math.max(a.x, b.x) >= bestand.x - 6 &&
+      Math.min(a.x, b.x) <= bestand.x + m.w + 6);
+  }, kollisionsBlock);
+  pruefe('Eingefuegte Leitung beruehrt kein bestehendes Bauteil', kollisionsFrei);
+
   pruefe('Keine JavaScript-Seitenfehler', pageErrors.length === 0, pageErrors.join(' | '));
   await context.close();
 } finally {
