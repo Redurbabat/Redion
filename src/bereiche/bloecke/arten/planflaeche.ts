@@ -325,6 +325,18 @@ const Planflaeche = (() => {
     return ohneRaster ? { x, y } : { x: Schaltplan.rasten(x), y: Schaltplan.rasten(y) };
   };
 
+  /** Anschlussfang in Bildschirm-Pixeln statt festen Plankoordinaten.
+   * Dadurch bleibt die Trefferzone beim Zoomen und auf Retina-Displays
+   * ungefähr gleich gross. Bei ungültiger Matrix gilt der alte Radius. */
+  const anschlussFangRadius = (svg: SVGSVGElement, pointerType?: string): number => {
+    const matrix = svg.getScreenCTM();
+    if (!matrix) return 14;
+    const scale = Math.hypot(matrix.a, matrix.b);
+    if (!Number.isFinite(scale) || scale <= 0) return 14;
+    const pixel = pointerType === 'touch' ? 24 : 12;
+    return Math.min(42, Math.max(3, pixel / scale));
+  };
+
   /* Der Radierer gehört dem Menschen, nicht dem Plan — wie die Favoriten
      (oben) und wie der Radierer im PDF (`zeichnen:radierer`, E352/E576). */
   const RADIERER = 'elektro:radierer';
@@ -2383,7 +2395,7 @@ const Planflaeche = (() => {
          den Plan zu ändern, damit ein abgebrochener Zug nichts hinterlässt,
          und ohne das SVG neu zu bauen (E762). */
       if (zug.art === 'leitung' && zug.von) {
-        const fang = Schaltplan.fangeAnschluss(z.plan, p);
+        const fang = Schaltplan.fangeAnschluss(z.plan, ortAus(svg, e, z.plan, true), anschlussFangRadius(svg, e.pointerType));
         const bis = fang ? { x: fang.x, y: fang.y } : p;
         const schluessel = bis.x + ',' + bis.y;
         if (schluessel === zug.vorschauEnde) return;
@@ -2476,7 +2488,7 @@ const Planflaeche = (() => {
       }
 
       if (zug.art === 'leitung' && zug.von) {
-        const fang = Schaltplan.fangeAnschluss(z.plan, p);
+        const fang = Schaltplan.fangeAnschluss(z.plan, ortAus(svg, e, z.plan, true), anschlussFangRadius(svg, e.pointerType));
         const bis = fang ? { x: fang.x, y: fang.y } : p;
         if (bis.x === zug.von.x && bis.y === zug.von.y) { male(); return; }
         /* Geführt, nicht nur gewinkelt (E762): der Weg berührt nur, was an
