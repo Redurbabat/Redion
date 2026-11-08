@@ -759,6 +759,7 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
     min-height: 44px;
     flex-shrink: 0;
   }
+  .sp-wrap .sp-pal-header-actions [data-p-compact],
   .sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-header-actions [data-p-compact] {
     min-width: 44px;
     min-height: 44px;
