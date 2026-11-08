@@ -1405,6 +1405,12 @@ const Planflaeche = (() => {
                 r: b.r + abstand, u: b.u + abstand };
               if (streckeTrifft(punkte[i - 1]!, punkte[i]!, feld)) return false;
             }
+          /* Auch schon gezeichnete Leitungen duerfen nicht deckungsgleich
+             ueberlagert werden: optisch waere es ein Draht, elektrisch
+             aber eine unbeabsichtigte Verbindung. Nur echte Ueberlappung
+             blockiert; eine Kreuzung ohne Knoten darf bestehen bleiben. */
+          if (punkte.length >= 2 && Schaltplan.ueberlappt(punkte, z.plan.leitungen))
+            return false;
           return true;
         });
       };
