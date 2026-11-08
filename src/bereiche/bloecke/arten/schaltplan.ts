@@ -389,10 +389,10 @@ const Schaltplan = (() => {
    * als wäre sie angeschlossen.
    */
   const FANG = 14;
-  const fangeAnschluss = (plan: Plan, p: Punkt):
+  const fangeAnschluss = (plan: Plan, p: Punkt, radius = FANG):
       { teil: string; nr: string; x: number; y: number } | null => {
     let beste: { teil: string; nr: string; x: number; y: number } | null = null;
-    let weite = FANG * FANG;
+    let weite = Math.max(0, radius) ** 2;
     plan.teile.forEach(t => anschluesseVon(t).forEach(a => {
       const d = (a.x - p.x) * (a.x - p.x) + (a.y - p.y) * (a.y - p.y);
       if (d <= weite) { weite = d; beste = { teil: t.id, nr: a.nr, x: a.x, y: a.y }; }
