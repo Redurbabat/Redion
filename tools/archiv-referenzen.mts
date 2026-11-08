@@ -50,6 +50,55 @@ function linkziel(raw: string): string {
   catch { return ohneKlammern.split(/[?#]/, 1)[0] ?? ''; }
 }
 
+/**
+ * Markdown-Referenzdefinitionen wie [ziel]: ALT.md gelten nur, wenn sie im
+ * selben Dokument mit [Text][ziel] oder [ziel][] verwendet werden. Ein
+ * Codeblock oder eine unbenutzte Definition ist kein aktiver Dateilink.
+ * Bewusst keine allgemeine Markdown-Parser-Simulation.
+ */
+function markdownVerweise(zeilen: string[]): {
+  aktiv: boolean[]; referenzZiele: Map<number, string>;
+} {
+  const aktiv: boolean[] = [];
+  let codeblock: { zeichen: string; laenge: number } | null = null;
+  for (const zeile of zeilen) {
+    const grenze = /^ {0,3}(`{3,}|~{3,})/.exec(zeile)?.[1];
+    if (codeblock) {
+      aktiv.push(false);
+      if (grenze && grenze[0] === codeblock.zeichen && grenze.length >= codeblock.laenge) {
+        codeblock = null;
+      }
+    } else if (grenze) {
+      codeblock = { zeichen: grenze[0] ?? '', laenge: grenze.length };
+      aktiv.push(false);
+    } else {
+      aktiv.push(true);
+    }
+  }
+  const norm = (id: string): string => id.trim().replace(/\s+/g, ' ').toLowerCase();
+  const verwendet = new Set<string>();
+  const definiert = new Map<number, { id: string; ziel: string }>();
+  const DEF = /^ {0,3}\[([^\]]+)\]:[ \t]*(<[^>]+>|[^\s]+)(?:[ \t]+(?:"[^"]*"|'[^']*'|\([^)]*\)))?[ \t]*$/;
+  const VERWENDUNG = /!?\[([^\]\r\n]+)\][ \t]*\[([^\]\r\n]*)\]/g;
+  for (let i = 0; i < zeilen.length; i++) {
+    if (!aktiv[i]) continue;
+    const zeile = zeilen[i] ?? '';
+    const definition = DEF.exec(zeile);
+    if (definition) {
+      definiert.set(i, { id: norm(definition[1] ?? ''), ziel: definition[2] ?? '' });
+      continue;
+    }
+    for (const match of zeile.matchAll(VERWENDUNG)) {
+      verwendet.add(norm((match[2] || match[1]) ?? ''));
+    }
+  }
+  const referenzZiele = new Map<number, string>();
+  for (const [i, def] of definiert) {
+    if (verwendet.has(def.id)) referenzZiele.set(i, def.ziel);
+  }
+  return { aktiv, referenzZiele };
+}
+
 /** Liefert nur Berichtsdaten; keine Datei wird geschrieben oder umbenannt. */
 export async function pruefeArchivreferenzen(wurzel: string): Promise<Archivbericht> {
   const archivPfad = path.join(wurzel, ARCHIV);
@@ -74,15 +123,21 @@ export async function pruefeArchivreferenzen(wurzel: string): Promise<Archivberi
       const daten = await readFile(path.join(wurzel, relativ), 'utf8');
       if (!originalVerschoben && !archivDateien.some(name => daten.includes(name))) continue;
       const zeilen = daten.split(/\r?\n/);
+      const istMarkdown = /\.mdx?$/i.test(relativ);
+      const markdown = istMarkdown ? markdownVerweise(zeilen) : null;
       for (let i = 0; i < zeilen.length; i++) {
+        if (markdown && !markdown.aktiv[i]) continue;
         const zeile = zeilen[i] ?? '';
         const vorkommen = archivDateien.filter(name => zeile.includes(name));
         if (!vorkommen.length && !originalVerschoben) continue;
         for (const name of vorkommen) {
           erwaehnungen.push({ datei, zeile: i + 1, name });
         }
-        for (const link of zeile.matchAll(LINK)) {
-          const ziel = linkziel(link[1] ?? '');
+        const verweise = [...zeile.matchAll(LINK)].map(link => link[1] ?? '');
+        const referenz = markdown?.referenzZiele.get(i);
+        if (referenz) verweise.push(referenz);
+        for (const rohZiel of verweise) {
+          const ziel = linkziel(rohZiel);
           if (!ziel || /^(?:[a-z][a-z\d+.-]*:|\/\/|#)/i.test(ziel)) continue;
           const aufgeloest = path.resolve(wurzel, path.dirname(relativ), ziel);
           if (existsSync(aufgeloest)) continue;

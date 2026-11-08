@@ -96,3 +96,36 @@ test('Schon vor der Verschiebung ungueltige Links melden keinen neuen Fehler', (
   const ergebnis = await pruefeArchivreferenzen(wurzel);
   assert.equal(ergebnis.verschobeneQuellLinks.length, 0);
 }));
+
+
+test('Referenzstil in aktiver Dokumentation erkennt alten Archivpfad', () => mitProjekt(async wurzel => {
+  await datei(wurzel, 'doku/mehr nicht nutzbar/ALT.md', '# Alt');
+  await datei(wurzel, 'doku/PLAN.md', '[historie][archiv]\n\n[archiv]: ALT.md "Alte Fassung"\n');
+  const ergebnis = await pruefeArchivreferenzen(wurzel);
+  assert.equal(ergebnis.kaputteLinks.length, 1);
+  assert.equal(ergebnis.kaputteLinks[0]?.zeile, 3);
+  assert.equal(ergebnis.kaputteLinks[0]?.archiviertUnter, 'doku/mehr nicht nutzbar/ALT.md');
+}));
+
+test('Referenzstil in archiviertem Original erkennt durch Umzug kaputten Link', () => mitProjekt(async wurzel => {
+  await datei(wurzel, 'doku/NACHBAR.md', '# Nachbar');
+  await datei(wurzel, 'doku/mehr nicht nutzbar/ALT.md', '[details][bezug]\n\n[bezug]: <NACHBAR.md>\n');
+  const ergebnis = await pruefeArchivreferenzen(wurzel);
+  assert.equal(ergebnis.verschobeneQuellLinks.length, 1);
+  assert.equal(ergebnis.verschobeneQuellLinks[0]?.zeile, 3);
+  assert.equal(ergebnis.verschobeneQuellLinks[0]?.vorherZiel, 'doku/NACHBAR.md');
+}));
+
+test('Gueltiger kollabierter Referenzlink wird nicht beanstandet', () => mitProjekt(async wurzel => {
+  await datei(wurzel, 'doku/NACHBAR.md', '# Nachbar');
+  await datei(wurzel, 'doku/mehr nicht nutzbar/ALT.md', '[ziel][]\n\n[ziel]: ../NACHBAR.md\n');
+  const ergebnis = await pruefeArchivreferenzen(wurzel);
+  assert.equal(ergebnis.verschobeneQuellLinks.length, 0);
+}));
+
+test('Unbenutzte Referenzdefinition und Codeblock sind keine aktiven Links', () => mitProjekt(async wurzel => {
+  await datei(wurzel, 'doku/mehr nicht nutzbar/ALT.md', '# Alt');
+  await datei(wurzel, 'doku/PLAN.md', '```md\n[falsch][r]\n[r]: ALT.md\n[falsch](ALT.md)\n```\n\n[ungenutzt]: ALT.md\n');
+  const ergebnis = await pruefeArchivreferenzen(wurzel);
+  assert.equal(ergebnis.kaputteLinks.length, 0);
+}));
