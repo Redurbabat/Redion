@@ -45,7 +45,10 @@ if errorlevel 1 (
   goto fehlgeschlagen
 )
 
-if not exist "node_modules\typescript\bin\tsc" (
+set "PAKETE_FEHLEN="
+if not exist "node_modules\typescript\bin\tsc" set "PAKETE_FEHLEN=1"
+if not exist "node_modules\playwright\package.json" set "PAKETE_FEHLEN=1"
+if defined PAKETE_FEHLEN (
   echo.
   echo [Vorbereitung] Redion-Abhaengigkeiten installieren ...
   call npm ci --no-audit --no-fund
