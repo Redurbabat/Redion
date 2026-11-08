@@ -33,8 +33,19 @@ Am selben **2. November** war außerdem ein **anderer Workflow** ([„Kapitel-12
 ### Getrennte Arbeitspakete, jeweils eigener PR
 
 1. **Runner-/Ausführungsblocker zuerst:** GitHub-Joboberfläche/Systemmeldungen und Repository-Actions-Zugriff prüfen; ein nächster echter Lauf muss wieder `checkout`, `setup-node` und die übrigen Schritte protokollieren. Das ist weiterhin ohne bekannte technische Ursache. Keine Statusschönung.
-2. **Windows-Typecheck-Fehler separat beheben:** Bestehende strenge TypeScript-Regeln erhalten und die fünf Dateien mit echten Compilerdiagnosen in einem *eigenen*, noch zu erstellenden, überprüfbaren PR korrigieren. Keine stillen Laufzeit-/Build-/App-Änderungen im Aufräum-PR.
+2. **Windows-Typecheck-Fehler separat prüfen und freigeben:** Die fünf zuvor fehlerhaften Dateien wurden in **drei separaten Draft-PRs #203, #204 und #205** typisiert; die strengen Compilerregeln sind unverändert. Der isolierte gemeinsame TypeScript-Lauf für diese fünf korrigierten Dateien war lokal grün, ebenso die drei Live-Reload-Tests. Erneuter Repository-Typecheck unter der geforderten Projekt-Node-/TypeScript-Version und Windows-Echtlauf fehlen weiter. Kein Edit dieser Dateien in diesem reinen Diagnose-PR.
 3. **Einzeldatei-Bau separat untersuchen:** Nach Behebung der Testumgebung `node bauen.mts` auf dem dann aktuellen Stand ausführen und `redion-einzeldatei.html` gegen den **aktuellen** Bau vergleichen. Persönliche Daten/Backups nicht anrühren; nicht blind ein 10-MB-Artefakt aus einem historischen Lauf übernehmen.
+
+### Stand der Typkorrekturen (8. November 2026, separate Draft-PRs)
+
+| PR | Geänderte Windows-Dateien | Historisch protokollierte Diagnosen | Isolierte Typprüfung |
+| --- | --- | ---: | --- |
+| [#203](https://github.com/Redurbabat/Redion/pull/203) | `version.test.mts`, `web-files.mts` | 7 | 0 verbleibende Diagnosen |
+| [#204](https://github.com/Redurbabat/Redion/pull/204) | `local-source.test.mts` | 15 | 0 verbleibende Diagnosen |
+| [#205](https://github.com/Redurbabat/Redion/pull/205) | `live.mts`, `live.test.mts` | 41 | 0 verbleibende Diagnosen |
+| **Summe** | **fünf Dateien in drei getrennten Draft-PRs** | **63** | **alle fünf gemeinsam isoliert typgeprüft** |
+
+Für die gemeinsame Gegenprüfung wurden die Fassungen aus #203–#205 **lokal zusammengeführt, ohne GitHub-`main` oder PR-Basen zu ändern**. `tsc --noEmit` mit den strengen Projekt-Compileroptionen unter dem verfügbaren **TypeScript 5.8.3** und `@types/node` meldete **0 Diagnosen (Exit 0)**. Die 3 vorhandenen `windows/live.test.mts`-Node-Tests bestanden mit Node 22.16 und `--experimental-strip-types`; dabei wurde die `live-reload.cts` per Git-Blob-SHA als unverändert bestätigt. GitHub-Blobs der fünf korrigierten Dateien stimmten mit den lokal geprüften Fassungen überein. **Dies ersetzt weder das vollständige `npm run typecheck` mit Projekt-TypeScript 5.9.3, noch den echten Windows-/Electron-Test.** Kein PR ist gemergt. Die historische Einzeldatei-Abweichung ist noch offen.
 
 ## Was das nicht beweist
 
