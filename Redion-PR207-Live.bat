@@ -40,8 +40,18 @@ if errorlevel 1 (
 REM Verwende den EINEN vorhandenen sicheren Hol-Ablauf. Er sichert
 REM lokale Aenderungen und warnt vor rotem CI. Kein eigenes git reset,
 REM checkout, stash oder merge in dieser Datei.
+set "REDION_HOLEN_ERFOLG="
 call "%~dp0holen.bat" "%ZIEL%"
+if not "%REDION_HOLEN_ERFOLG%"=="1" (
+  echo.
+  echo [FEHLER] Holen abgebrochen oder fehlgeschlagen.
+  echo         Die CI-Warnung wurde moeglicherweise mit N abgelehnt.
+  echo         Deshalb wird Redion nicht gestartet - selbst wenn der
+  echo         lokale Commit bereits zu GitHub passt.
+  goto fehlgeschlagen
+)
 
+REM Erst nach ausdruecklich erfolgreichem Holen weitere Prüfungen.
 REM holen.bat darf bei Warnungen oder Fehlern ohne Fehlercode enden.
 REM Deshalb nach der Rueckkehr die BRANCH- UND REMOTE-SHA pruefen.
 REM Eine alte lokale Version darf nie als der neue PR-Stand erscheinen.
