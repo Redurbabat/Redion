@@ -144,8 +144,9 @@ if "%LAUFSTATUS%"=="completed" (
   goto lauf_geklaert
 )
 if "%LAUFSTATUS%"=="unbekannt" (
-  echo   [!] GitHub hat nicht gesagt, ob der Stand geprueft ist ^(kein Netz
-  echo       oder keine Antwort^). Geholt wird trotzdem - nur wissen sollst du es.
+  echo   [!] GitHub hat den Pruefstatus nicht gemeldet ^(z. B. privates
+  echo       Repository ohne API-Anmeldung oder keine Netzverbindung^).
+  echo       Es wird weitergeholt - das ist KEINE Testfreigabe.
   goto lauf_geklaert
 )
 if "%LAUFSTATUS%"=="keiner" (
@@ -167,11 +168,13 @@ echo   Frage GitHub ...
 git fetch origin %ZIEL%
 if errorlevel 1 (
   echo.
-  echo   [X] GitHub war nicht erreichbar.
+  echo   [X] Der GitHub-Download ist fehlgeschlagen.
   echo.
-  echo       Das Verzeichnis ist oeffentlich lesbar - zum HOLEN braucht es
-  echo       also keine Anmeldung. Bleibt nur: keine Netzverbindung.
-  echo       Spaeter noch einmal versuchen.
+  echo       Redion ist ein PRIVATES Repository. Pruefe deshalb:
+  echo       1. Deine Internetverbindung.
+  echo       2. Die GitHub-Anmeldung in Git Credential Manager.
+  echo       3. Ob dein GitHub-Konto Zugriff auf Redurbabat/Redion hat.
+  echo       Git-Fehlerdetails stehen direkt oberhalb dieser Meldung.
   echo.
   echo       Dein Ordner ist unveraendert, und deine Notizen sind nicht
   echo       betroffen - die liegen im Browser.
