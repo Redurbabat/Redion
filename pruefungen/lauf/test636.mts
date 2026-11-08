@@ -260,6 +260,53 @@ try {
         (window as any).Schaltplan.ueberlappt(args.punkte, [args.alt]),
         { punkte: neueLeitung?.punkte, alt: alteLeitung })));
 
+  /* Regressionsfall: eine bereits vorhandene Leitung verläuft dort, wo
+     das Symbol der Vorlage bei festem Versatz sitzen würde. Auch OHNE
+     kopierte Leitung muss die Platzsuche das bestehende Kabel schützen. */
+  const bauteilAufLeitungBlock = await page.evaluate(async () => {
+    Store.setMeta('elektro:planvorlagen', [{
+      id: 'symbol-kabel-636', name: 'Symbol auf Kabel',
+      art: 'stromlauf-aufgeloest',
+      teile: [{ id: 'old', zeichen: 'spule', x: 0, y: 0,
+        drehung: 0, gespiegelt: false, bmk: 'K2',
+        nummern: {}, gruppe: '', ebene: 'plan' }],
+      leitungen: []
+    }]);
+    const sp = Store.addPage(null, { text: 'Bauteil-auf-Leitung 636', icon: '⚡' });
+    const block = Store.addBlock(sp.id, 'schaltplan', { text: 'Plan', plan: {
+      art: 'stromlauf-aufgeloest', breite: 800, hoehe: 600, teile: [],
+      leitungen: [{ id: 'bestehenderDraht', ebene: 'plan',
+        punkte: [{ x: 140, y: 110 }, { x: 200, y: 110 }] }],
+      texte: [],
+      ebenen: [{ id: 'plan', name: 'Plan', farbe: 'var(--text)', sichtbar: true }]
+    } });
+    await Store.flush(); App.zeichneBaum(); App.oeffne(sp.id);
+    await new Promise(resolve => setTimeout(resolve, 700));
+    document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung')
+      .forEach(el => el.remove());
+    return block.id as string;
+  });
+  await einsetzen();
+  const symbolAufDraht = await page.evaluate((id: string) => {
+    const plan = Store.getBlock(id).plan;
+    const t = plan.teile[0];
+    const draht = plan.leitungen[0];
+    if (!t || !draht) return { eingefuegt: false, frei: false };
+    const m = Register.fachzeichen.masse(t.zeichen, t.drehung);
+    const y = draht.punkte[0].y;
+    const x1 = Math.min(draht.punkte[0].x, draht.punkte[1].x);
+    const x2 = Math.max(draht.punkte[0].x, draht.punkte[1].x);
+    const abstand = 6;
+    const trifft = y >= t.y - abstand && y <= t.y + m.h + abstand &&
+      x2 >= t.x - abstand && x1 <= t.x + m.w + abstand;
+    return { eingefuegt: plan.teile.length === 1 && plan.leitungen.length === 1,
+      frei: !trifft };
+  }, bauteilAufLeitungBlock);
+  pruefe('Vorlage mit einem Symbol wird neben vorhandener Leitung eingesetzt',
+    symbolAufDraht.eingefuegt);
+  pruefe('Kopiertes Symbol schneidet vorhandene Leitung nicht',
+    symbolAufDraht.frei);
+
   pruefe('Keine JavaScript-Seitenfehler', pageErrors.length === 0, pageErrors.join(' | '));
   await context.close();
 } finally {
