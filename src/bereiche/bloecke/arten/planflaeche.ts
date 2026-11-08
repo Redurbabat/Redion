@@ -1363,8 +1363,16 @@ const Planflaeche = (() => {
         return { l: cx - m.w / 2, o: cy - m.h / 2,
           r: cx + m.w / 2, u: cy + m.h / 2 };
       };
-      const belegt = (z.plan.teile as any[]).map(t => rahmen(t));
-      const vorhandeneLeitungen = z.plan.leitungen as Array<{ punkte: Punkt[] }>;
+      /* Ausgeblendete Ebenen werden in alsSvg() nicht gezeichnet und
+         beim Anschlussfang nicht angeboten. Sie duerfen deshalb auch
+         keinen Platz auf der gerade sichtbaren Zeichenflaeche belegen.
+         Unbekannte Ebenen bleiben wie in alsSvg() sichtbar. */
+      const versteckt = new Set(
+        z.plan.ebenen.filter(e => e.sichtbar === false).map(e => e.id));
+      const belegt = (z.plan.teile as any[])
+        .filter(t => !versteckt.has(t.ebene)).map(t => rahmen(t));
+      const vorhandeneLeitungen = z.plan.leitungen
+        .filter(l => !versteckt.has(l.ebene));
       const abstand = Math.min(6, rand);
       /* Leitungsstrecken duerfen nicht quer durch fremde Bauteile laufen.
          Liang-Barsky prueft die echte Strecke gegen ein Rechteck; nur
@@ -1426,7 +1434,7 @@ const Planflaeche = (() => {
              ueberlagert werden: optisch waere es ein Draht, elektrisch
              aber eine unbeabsichtigte Verbindung. Nur echte Ueberlappung
              blockiert; eine Kreuzung ohne Knoten darf bestehen bleiben. */
-          if (punkte.length >= 2 && Schaltplan.ueberlappt(punkte, z.plan.leitungen))
+          if (punkte.length >= 2 && Schaltplan.ueberlappt(punkte, vorhandeneLeitungen))
             return false;
           return true;
         });
