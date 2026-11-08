@@ -84,6 +84,27 @@ test('Nicht registrierte Fachzeichen werden sicher ignoriert', () => {
   assert.equal(fange({ x: 100, y: 100 }, 24, leer), null);
 });
 
+test('Ausgeblendete Bauteile duerfen keine Leitungsanschluesse fangen', () => {
+  const verstecktes = { ...teil('X1', 100, 100), ebene: 'loesung' };
+  const schichten: any = plan(verstecktes);
+  schichten.ebenen = [
+    { id: 'plan', name: 'Plan', farbe: '#000', sichtbar: true },
+    { id: 'loesung', name: 'Loesung', farbe: '#0a0', sichtbar: false }
+  ];
+  assert.equal(fange({ x: 100, y: 100 }, 24, schichten), null);
+  schichten.ebenen[1].sichtbar = true;
+  assert.equal(fange({ x: 100, y: 100 }, 24, schichten)?.teil, 'X1');
+});
+
+test('Sichtbare Anschlussklemme gewinnt gegen naehere unsichtbare Klemme', () => {
+  const schichten: any = plan(
+    teil('S1', 100, 100),
+    { ...teil('X1', 108, 100), ebene: 'loesung' }
+  );
+  schichten.ebenen = [{ id: 'loesung', name: 'Loesung', farbe: '#0a0', sichtbar: false }];
+  assert.equal(fange({ x: 108, y: 100 }, 12, schichten)?.teil, 'S1');
+});
+
 test('Planflaeche benutzt denselben Radius bei Start, Vorschau und Ende', () => {
   const verwendungen = editor.match(/anschlussFangRadius\(svg, e\.pointerType\)/g) || [];
   assert.equal(verwendungen.length, 3);
