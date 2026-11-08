@@ -67,6 +67,14 @@ Besonders wichtig: Die zufällig identischen Dateien `AGENTS.md` und `AI_START_H
 
 **Teststatus dieses Berichts:** Lesende GitHub-Baum- und Referenzprüfung. **Keine** neuen Windows-, WebKit-, Xcode-, iPhone-Geräte-, Build- oder Laufzeittests. `main` wurde nicht verändert.
 
+## GitHub-Actions-Befund am 8. November 2026
+
+Die neu angelegten Archiv- und Prüfer-PRs werden durch den Workflow **Prüfläufe** als fehlgeschlagen gemeldet. Bei den tatsächlich gelesenen Jobs von [PR #198](https://github.com/Redurbabat/Redion/actions/runs/42429344392), [PR #197](https://github.com/Redurbabat/Redion/actions/runs/42428884620) und [PR #196](https://github.com/Redurbabat/Redion/actions/runs/42428778558) hatten jeweils **beide Jobs null dokumentierte Schritte**. Schon die beim Anlegen des Branches ausgelösten Workflows auf dem unveränderten `main`-Commit meldeten einen Fehlschlag. Das spricht für einen **Blocker vor der regulären Testausführung**, beweist aber ohne Runner-Logs die Ursache nicht.
+
+Deshalb gilt für **alle** Aufräum-PRs: `CI NICHT BESTANDEN / Ausführung unklar`; keine automatische Freigabe. Der isolierte, noch nicht gemergte Prüf-PR #198 hat **6/6 lokale Tests** unter Node 22.16 mit experimentellem Type-Stripping bestanden; das ersetzt **nicht** den verlangten Repository-Typecheck unter Node >=22.18 oder die GitHub-CI.
+
+Vor einem Merge Runner-Zuweisung und fehlende Schritte prüfen, danach normale Tests vollständig ausführen. Keine bestehenden Prüfungen abschwächen, um einen grünen Status zu erzwingen.
+
 ## Noch offen zur Eigentümerentscheidung
 
 Die früheren Arbeitszweige `feat/red-morph-skills-20261107` und `chore/mehr-nicht-nutzbar-review-20261107` existieren weiterhin. Der zweite enthält teilweise dieselbe Archivarbeit wie PR #192; **nicht löschen**, bevor der Besitzer entschieden hat, welchen Reviewpfad er behalten möchte. Der Skill-Branch enthält Änderungen an Projektanweisungen und wird **nicht ohne gesonderte Freigabe** in diesen Aufräumprozess aufgenommen.
