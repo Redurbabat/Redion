@@ -45,29 +45,33 @@ if errorlevel 1 (
   goto fehlgeschlagen
 )
 
+node windows\schaltplan-protokoll.mjs --start
+if errorlevel 1 goto fehlgeschlagen
+set "PROTOKOLL_BEGONNEN=1"
+
 set "PAKETE_FEHLEN="
 if not exist "node_modules\typescript\bin\tsc" set "PAKETE_FEHLEN=1"
 if not exist "node_modules\playwright\package.json" set "PAKETE_FEHLEN=1"
 if defined PAKETE_FEHLEN (
   echo.
   echo [Vorbereitung] Redion-Abhaengigkeiten installieren ...
-  call npm ci --no-audit --no-fund
+  node windows\schaltplan-protokoll.mjs -- npm ci --no-audit --no-fund
   if errorlevel 1 goto fehlgeschlagen
 )
 
 echo.
 echo [1/9] Vollstaendiger TypeScript-Typecheck ...
-call npm run typecheck
+node windows\schaltplan-protokoll.mjs -- npm run typecheck
 if errorlevel 1 goto fehlgeschlagen
 
 echo.
 echo [2/9] Web/TypeScript-Dateien aus den Quellen bauen ...
-call npm run bauen:ts
+node windows\schaltplan-protokoll.mjs -- npm run bauen:ts
 if errorlevel 1 goto fehlgeschlagen
 
 echo.
 echo [3/9] Redion-Einzeldatei bauen ...
-call npm run bauen
+node windows\schaltplan-protokoll.mjs -- npm run bauen
 if errorlevel 1 goto fehlgeschlagen
 
 echo.
@@ -75,38 +79,38 @@ echo [Vorbereitung] Chromium fuer Playwright pruefen ...
 node -e "const fs=require('node:fs');const p=require('playwright').chromium.executablePath();process.exit(fs.existsSync(p)?0:1)" >nul 2>&1
 if errorlevel 1 (
   echo Chromium fehlt. Browser einmalig installieren ...
-  call npx --no-install playwright install chromium
+  node windows\schaltplan-protokoll.mjs -- npx --no-install playwright install chromium
   if errorlevel 1 goto fehlgeschlagen
 )
 
 echo.
 echo [4/9] Anschlussfang-Test (ohne Browser) ...
-node pruefungen\lauf\test635.mts
+node windows\schaltplan-protokoll.mjs -- node pruefungen\lauf\test635.mts
 if errorlevel 1 goto fehlgeschlagen
 
 echo.
 echo [5/9] Gespeicherte Vorlagen: Chromium ...
-node pruefungen\lauf\test636.mts
+node windows\schaltplan-protokoll.mjs -- node pruefungen\lauf\test636.mts
 if errorlevel 1 goto fehlgeschlagen
 
 echo.
 echo [6/9] Mobile Touch-Flaechen: Chromium ...
-node pruefungen\lauf\test638.mts
+node windows\schaltplan-protokoll.mjs -- node pruefungen\lauf\test638.mts
 if errorlevel 1 goto fehlgeschlagen
 
 echo.
 echo [7/9] Netztreue und Gestenwechsel: Chromium ...
-node pruefungen\lauf\test611.mts
+node windows\schaltplan-protokoll.mjs -- node pruefungen\lauf\test611.mts
 if errorlevel 1 goto fehlgeschlagen
 
 echo.
 echo [8/9] Zeichenflaeche, Zoom und Stift: Chromium ...
-node pruefungen\lauf\test625.mts
+node windows\schaltplan-protokoll.mjs -- node pruefungen\lauf\test625.mts
 if errorlevel 1 goto fehlgeschlagen
 
 echo.
 echo [9/9] Erzeugtes JavaScript gegen TypeScript pruefen ...
-node pruefungen\lauf\test105.mts
+node windows\schaltplan-protokoll.mjs -- node pruefungen\lauf\test105.mts
 if errorlevel 1 goto fehlgeschlagen
 
 echo.
@@ -114,9 +118,11 @@ echo ==============================================================
 echo   ERFOLG: Alle neun Schritte sind lokal bestanden.
 echo   Aenderungen an generierten Dateien mit git status pruefen.
 echo   Es wurde nichts auf GitHub gepusht oder gemergt.
+  Das vollstaendige Pruefprotokoll liegt in deinem Benutzerordner.
 echo ==============================================================
 git status --short
 echo.
+node windows\schaltplan-protokoll.mjs --where
 pause
 exit /b 0
 
@@ -127,5 +133,9 @@ echo   NICHT BESTANDEN. Die Fehlermeldung oben nennt den Blocker.
 echo   Keine Freigabe zum Merge auf main.
 echo ==============================================================
 echo.
+if defined PROTOKOLL_BEGONNEN (
+  echo Das vollstaendige Fehlerprotokoll liegt hier:
+  node windows\schaltplan-protokoll.mjs --where
+)
 pause
 exit /b 1
