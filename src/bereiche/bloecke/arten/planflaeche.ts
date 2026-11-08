@@ -2229,7 +2229,7 @@ const Planflaeche = (() => {
       }
 
       if (z.werkzeug === 'leitung') {
-        const fang = Schaltplan.fangeAnschluss(z.plan, roh);
+        const fang = Schaltplan.fangeAnschluss(z.plan, roh, anschlussFangRadius(svg, e.pointerType));
         zugBeginnen({ art: 'leitung', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang: new Map(),
                       von: fang ? { x: fang.x, y: fang.y, teil: fang.teil, nr: fang.nr }
                                 : { x: p.x, y: p.y } });
@@ -2488,6 +2488,8 @@ const Planflaeche = (() => {
       }
 
       if (zug.art === 'leitung' && zug.von) {
+        // Kein SVG mehr: einen beendeten Zug nicht als neue Leitung speichern.
+        if (!svg) { male(); return; }
         const fang = Schaltplan.fangeAnschluss(z.plan, ortAus(svg, e, z.plan, true), anschlussFangRadius(svg, e.pointerType));
         const bis = fang ? { x: fang.x, y: fang.y } : p;
         if (bis.x === zug.von.x && bis.y === zug.von.y) { male(); return; }
