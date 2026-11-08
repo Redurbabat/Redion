@@ -1357,6 +1357,25 @@ const Planflaeche = (() => {
           r: Number(t.x) + dx + m.w, u: Number(t.y) + dy + m.h };
       };
       const belegt = (z.plan.teile as any[]).map(t => rahmen(t));
+      /* Leitungsstrecken duerfen nicht quer durch fremde Bauteile laufen.
+         Liang-Barsky prueft die echte Strecke gegen ein Rechteck; nur
+         Begrenzungskaesten der Leitung zu vergleichen wuerde insbesondere
+         bei diagonalen Alt-Vorlagen falsche Treffer erzeugen. */
+      const streckeTrifft = (a: Punkt, b: Punkt, f: ReturnType<typeof rahmen>): boolean => {
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const p = [-dx, dx, -dy, dy];
+        const q = [a.x - f.l, f.r - a.x, a.y - f.o, f.u - a.y];
+        let ein = 0, aus = 1;
+        for (let i = 0; i < 4; i++) {
+          const pi = p[i]!, qi = q[i]!;
+          if (pi === 0) { if (qi < 0) return false; continue; }
+          const t = qi / pi;
+          if (pi < 0) ein = Math.max(ein, t);
+          else aus = Math.min(aus, t);
+          if (ein > aus) return false;
+        }
+        return true;
+      };
       const passt = (dx: number, dy: number): boolean => {
         const teilePassen = teile.every(t => {
           const a = rahmen(t, dx, dy);
@@ -1371,13 +1390,23 @@ const Planflaeche = (() => {
            gespeicherten Vorlagen liegen deren Punkte oft ausserhalb des
            Bauteilrahmens. Nur die Bauteile zu pruefen reicht nicht: eine
            eingeklebte Leitung koennte sonst ausserhalb des SVG enden. */
-        return teilePassen && leitungen.every(l =>
-          (Array.isArray(l.punkte) ? l.punkte : []).every((p: any) => {
-            const x = Number(p.x) + dx, y = Number(p.y) + dy;
-            return Number.isFinite(x) && Number.isFinite(y) &&
-              x >= rand && y >= rand &&
-              x <= z.plan.breite - rand && y <= z.plan.hoehe - rand;
-          }));
+        return teilePassen && leitungen.every(l => {
+          const punkte: Punkt[] = (Array.isArray(l.punkte) ? l.punkte : [])
+            .map((p: any) => ({ x: Number(p.x) + dx, y: Number(p.y) + dy }));
+          if (!punkte.every(p => Number.isFinite(p.x) && Number.isFinite(p.y) &&
+              p.x >= rand && p.y >= rand &&
+              p.x <= z.plan.breite - rand && p.y <= z.plan.hoehe - rand)) return false;
+          /* Ein kleiner Abstand verhindert, dass die Simulation fremde
+             Anschlussklemmen beim Einsetzen unbeabsichtigt anzapft. */
+          const abstand = Math.min(6, rand);
+          for (let i = 1; i < punkte.length; i++)
+            for (const b of belegt) {
+              const feld = { l: b.l - abstand, o: b.o - abstand,
+                r: b.r + abstand, u: b.u + abstand };
+              if (streckeTrifft(punkte[i - 1]!, punkte[i]!, feld)) return false;
+            }
+          return true;
+        });
       };
       const schritt = Math.max(r * 4, 40);
       let versatz: { x: number; y: number } | null = null;
