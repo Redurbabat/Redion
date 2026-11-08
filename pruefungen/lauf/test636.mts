@@ -307,6 +307,48 @@ try {
   pruefe('Kopiertes Symbol schneidet vorhandene Leitung nicht',
     symbolAufDraht.frei);
 
+  /* Die grobe Raster-Suche (40 Schritte) verpasst schmale freie Plaetze.
+     Zwischen zwei bestehenden Leitungen bleibt ein 10er-Rasterplatz
+     frei: eine Vorlage muss dort eingesetzt werden statt "Kein Platz". */
+  const schmaleLueckeId = await page.evaluate(async () => {
+    Store.setMeta('elektro:planvorlagen', [{
+      id: 'schmale-luecke-636', name: 'Schmale Luecke',
+      art: 'stromlauf-aufgeloest',
+      teile: [{ id: 'old', zeichen: 'spule', x: 0, y: 0,
+        drehung: 0, gespiegelt: false, bmk: 'K1',
+        nummern: {}, gruppe: '', ebene: 'plan' }],
+      leitungen: []
+    }]);
+    const sp = Store.addPage(null, { text: 'Schmale Luecke 636', icon: '⚡' });
+    const block = Store.addBlock(sp.id, 'schaltplan', { text: 'Plan', plan: {
+      art: 'stromlauf-aufgeloest', breite: 120, hoehe: 100,
+      teile: [],
+      leitungen: [
+        { id: 'links', ebene: 'plan',
+          punkte: [{ x: 20, y: 20 }, { x: 20, y: 80 }] },
+        { id: 'rechts', ebene: 'plan',
+          punkte: [{ x: 100, y: 20 }, { x: 100, y: 80 }] }
+      ],
+      texte: [],
+      ebenen: [{ id: 'plan', name: 'Plan', farbe: 'var(--text)', sichtbar: true }]
+    } });
+    await Store.flush(); App.zeichneBaum(); App.oeffne(sp.id);
+    await new Promise(resolve => setTimeout(resolve, 700));
+    document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung')
+      .forEach(el => el.remove());
+    return block.id as string;
+  });
+  await einsetzen();
+  const lueckenPlan = await page.evaluate((id: string) =>
+    JSON.parse(JSON.stringify(Store.getBlock(id).plan)), schmaleLueckeId);
+  pruefe('Auch schmale 10er-Rasterluecke wird fuer Vorlage gefunden',
+    lueckenPlan.teile.length === 1 &&
+    lueckenPlan.teile[0].x === 30 && lueckenPlan.teile[0].y === 10);
+  pruefe('Bestehende Leitungen bleiben bei der Einfuegung unveraendert',
+    lueckenPlan.leitungen.length === 2 &&
+    lueckenPlan.leitungen[0].punkte[0].x === 20 &&
+    lueckenPlan.leitungen[1].punkte[0].x === 100);
+
   pruefe('Keine JavaScript-Seitenfehler', pageErrors.length === 0, pageErrors.join(' | '));
   await context.close();
 } finally {
