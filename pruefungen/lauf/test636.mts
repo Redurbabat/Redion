@@ -401,6 +401,66 @@ try {
   pruefe('Gedrehter Originalmittelpunkt-Rahmen kollidiert nicht und bleibt im Plan',
     rotationsErgebnis.frei && rotationsErgebnis.aufBlatt);
 
+  /* Versteckte Aufgaben-/Loesungsebenen duerfen keine Einfuegeposition
+     blockieren. alsSvg() und Anschlussfang blenden sie bereits aus;
+     die Platzsuche muss dieselbe Sichtbarkeit verwenden. Die beiden
+     Varianten pruefen alte Bauteile und alte Leitungen unabhaengig. */
+  const versteckteEbene = async (art: 'teil' | 'leitung'): Promise<any> => {
+    const id = await page.evaluate(async (welche: 'teil' | 'leitung') => {
+      Store.setMeta('elektro:planvorlagen', [{
+        id: 'sichtbarkeit636', name: 'Sichtbarkeit',
+        art: 'stromlauf-aufgeloest',
+        teile: [{ id: 'neu-alt', zeichen: 'spule', x: 0, y: 0,
+          drehung: 0, gespiegelt: false, bmk: 'K2',
+          nummern: {}, gruppe: '', ebene: 'plan' }],
+        leitungen: []
+      }]);
+      const sp = Store.addPage(null, { text: 'Unsichtbar 636 ' + welche, icon: '⚡' });
+      const block = Store.addBlock(sp.id, 'schaltplan', { text: 'Plan', plan: {
+        art: 'stromlauf-aufgeloest', breite: 800, hoehe: 600,
+        teile: welche === 'teil'
+          ? [{ id: 'verstecktesTeil', zeichen: 'spule', x: 120, y: 80,
+              drehung: 0, gespiegelt: false, bmk: 'K1',
+              nummern: {}, gruppe: '', ebene: 'loesung' }]
+          : [],
+        leitungen: welche === 'leitung'
+          ? [{ id: 'versteckterDraht', ebene: 'loesung',
+              punkte: [{ x: 140, y: 110 }, { x: 200, y: 110 }] }]
+          : [],
+        texte: [],
+        ebenen: [
+          { id: 'plan', name: 'Plan', farbe: 'var(--text)', sichtbar: true },
+          { id: 'loesung', name: 'Loesung', farbe: '#0a0', sichtbar: false }
+        ]
+      } });
+      await Store.flush(); App.zeichneBaum(); App.oeffne(sp.id);
+      await new Promise(resolve => setTimeout(resolve, 700));
+      document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung')
+        .forEach(el => el.remove());
+      return block.id as string;
+    }, art);
+    await einsetzen();
+    return page.evaluate((bid: string) =>
+      JSON.parse(JSON.stringify(Store.getBlock(bid).plan)), id);
+  };
+
+  const nebenVerstecktemTeil = await versteckteEbene('teil');
+  const sichtbaresTeil = nebenVerstecktemTeil.teile.find((t: any) =>
+    t.ebene === 'plan' && t.id !== 'verstecktesTeil');
+  pruefe('Verstecktes Bauteil blockiert freie Vorlagenposition nicht',
+    nebenVerstecktemTeil.teile.length === 2 &&
+    sichtbaresTeil?.x === 120 && sichtbaresTeil?.y === 80 &&
+    nebenVerstecktemTeil.teile.find((t: any) =>
+      t.id === 'verstecktesTeil')?.ebene === 'loesung');
+
+  const nebenVersteckterLeitung = await versteckteEbene('leitung');
+  pruefe('Versteckte Leitung blockiert freie Vorlagenposition nicht',
+    nebenVersteckterLeitung.teile.length === 1 &&
+    nebenVersteckterLeitung.teile[0].x === 120 &&
+    nebenVersteckterLeitung.teile[0].y === 80 &&
+    nebenVersteckterLeitung.leitungen.length === 1 &&
+    nebenVersteckterLeitung.leitungen[0].id === 'versteckterDraht');
+
   pruefe('Keine JavaScript-Seitenfehler', pageErrors.length === 0, pageErrors.join(' | '));
   await context.close();
 } finally {
