@@ -26,7 +26,8 @@ Jeder PR basiert unmittelbar auf `main`. Die verschobenen Dateien behalten ihre 
 | [#194](https://github.com/Redurbabat/Redion/pull/194) | Codemagic-Fehleranalysen | 2 | derselbe Sammelordner |
 | [#195](https://github.com/Redurbabat/Redion/pull/195) | Capacitor-Pfad-/SPM-Buildberichte | 2 | derselbe Sammelordner |
 | [#196](https://github.com/Redurbabat/Redion/pull/196) | iPhone-Viewport-/PDF-Querformatberichte | 2 | derselbe Sammelordner |
-| **Summe** | **fünf voneinander unabhängige Archiv-PRs** | **11** | **kein Merge** |
+| [#200](https://github.com/Redurbabat/Redion/pull/200) | ältere iOS-Lifecycle-/Exportberichte | 2 | derselbe Sammelordner |
+| **Summe** | **sechs voneinander unabhängige Archiv-PRs** | **13** | **kein Merge** |
 
 Jeder Archiv-PR ergänzt sein eigenes Herkunfts-/Risiko-Protokoll. Die Änderungen in diesen PRs sind **nur Umbenennungen der Dokumente** und das zugehörige Prüfprotokoll. Ein gitbasierter SHA-Vergleich bestätigte die Inhaltstreue.
 
@@ -68,6 +69,8 @@ Besonders wichtig: Die zufällig identischen Dateien `AGENTS.md` und `AI_START_H
 **Teststatus dieses Berichts:** Lesende GitHub-Baum- und Referenzprüfung. **Keine** neuen Windows-, WebKit-, Xcode-, iPhone-Geräte-, Build- oder Laufzeittests. `main` wurde nicht verändert.
 
 ## GitHub-Actions-Befund am 8. November 2026
+
+Eine gesonderte, nachweisbasierte Diagnose mit GitHub-Lauf-Links und Prüfplan liegt als [Entwurfs-PR #199](https://github.com/Redurbabat/Redion/pull/199) vor.
 
 Die neu angelegten Archiv- und Prüfer-PRs werden durch den Workflow **Prüfläufe** als fehlgeschlagen gemeldet. Bei den tatsächlich gelesenen Jobs von [PR #198](https://github.com/Redurbabat/Redion/actions/runs/42429344392), [PR #197](https://github.com/Redurbabat/Redion/actions/runs/42428884620) und [PR #196](https://github.com/Redurbabat/Redion/actions/runs/42428778558) hatten jeweils **beide Jobs null dokumentierte Schritte**. Schon die beim Anlegen des Branches ausgelösten Workflows auf dem unveränderten `main`-Commit meldeten einen Fehlschlag. Das spricht für einen **Blocker vor der regulären Testausführung**, beweist aber ohne Runner-Logs die Ursache nicht.
 
