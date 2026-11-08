@@ -82,7 +82,7 @@ export async function pruefeArchivreferenzen(wurzel: string): Promise<Archivberi
           if (!archivDateien.includes(name) || existsSync(aufgeloest)) continue;
           kaputteLinks.push({
             datei: relativ.replaceAll('\\', '/'), zeile: i + 1,
-            ziel, archiviertUnter: ${ARCHIV}/${name}`,
+            ziel, archiviertUnter: `${ARCHIV}/${name}`,
           });
         }
       }
