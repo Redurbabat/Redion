@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
-import * as ts from 'typescript';
+import ts from 'typescript';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
 const enginePath = path.join(ROOT, 'src/bereiche/bloecke/arten/schaltplan.ts');
