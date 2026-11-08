@@ -49,6 +49,11 @@ node windows\schaltplan-protokoll.mjs --start
 if errorlevel 1 goto fehlgeschlagen
 set "PROTOKOLL_BEGONNEN=1"
 
+echo.
+echo [Vorbereitung] Pruefprotokollierung mit echten Kindprozessen testen ...
+node windows\schaltplan-protokoll.mjs -- node --test windows\schaltplan-protokoll.test.mjs
+if errorlevel 1 goto fehlgeschlagen
+
 set "PAKETE_FEHLEN="
 if not exist "node_modules\typescript\bin\tsc" set "PAKETE_FEHLEN=1"
 if not exist "node_modules\playwright\package.json" set "PAKETE_FEHLEN=1"
