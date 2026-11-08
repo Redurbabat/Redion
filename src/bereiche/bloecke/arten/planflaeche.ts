@@ -1432,6 +1432,13 @@ const Planflaeche = (() => {
       for (let y = r * 2; !versatz && y < z.plan.hoehe; y += schritt)
         for (let x = r * 2; !versatz && x < z.plan.breite; x += schritt)
           if (passt(x, y)) versatz = { x, y };
+      /* Das grobe 40er-Raster kann eine schmale, trotzdem gueltige Luecke
+         uebersehen und faelschlich "Kein freier Platz" melden. Nur wenn
+         die schnelle Suche nichts findet, das echte Fachzeichenraster
+         vollstaendig durchlaufen. So bleibt der Normalfall schnell. */
+      for (let y = r; !versatz && y < z.plan.hoehe; y += r)
+        for (let x = r; !versatz && x < z.plan.breite; x += r)
+          if (passt(x, y)) versatz = { x, y };
       if (!versatz) {
         UI.toast('Kein freier Platz fuer diese Vorlage. Bitte erst Platz schaffen.');
         return;
