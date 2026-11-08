@@ -1353,8 +1353,15 @@ const Planflaeche = (() => {
       const rand = r;
       const rahmen = (t: any, dx = 0, dy = 0) => {
         const m = Register.fachzeichen.masse(t.zeichen, Number(t.drehung) || 0);
-        return { l: Number(t.x) + dx, o: Number(t.y) + dy,
-          r: Number(t.x) + dx + m.w, u: Number(t.y) + dy + m.h };
+        const zc = Register.fachzeichen.holen(t.zeichen);
+        /* Rotierte Symbole drehen um ihre Originalmitte, nicht um (x,y).
+           Darum verschiebt sich bei 90/270 Grad auch der tatsaechliche
+           Aussenrahmen. Mit dem gleichen Mittelpunkt wie teilKasten()
+           rechnen, sonst erkennt die Vorlagenplatzierung Kollisionen nicht. */
+        const cx = Number(t.x) + dx + (zc ? zc.w : 0) / 2;
+        const cy = Number(t.y) + dy + (zc ? zc.h : 0) / 2;
+        return { l: cx - m.w / 2, o: cy - m.h / 2,
+          r: cx + m.w / 2, u: cy + m.h / 2 };
       };
       const belegt = (z.plan.teile as any[]).map(t => rahmen(t));
       const vorhandeneLeitungen = z.plan.leitungen as Array<{ punkte: Punkt[] }>;
