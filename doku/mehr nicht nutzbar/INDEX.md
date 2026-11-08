@@ -27,7 +27,9 @@ Jeder PR basiert unmittelbar auf `main`. Die verschobenen Dateien behalten ihre 
 | [#195](https://github.com/Redurbabat/Redion/pull/195) | Capacitor-Pfad-/SPM-Buildberichte | 2 | derselbe Sammelordner |
 | [#196](https://github.com/Redurbabat/Redion/pull/196) | iPhone-Viewport-/PDF-Querformatberichte | 2 | derselbe Sammelordner |
 | [#200](https://github.com/Redurbabat/Redion/pull/200) | ältere iOS-Lifecycle-/Exportberichte | 2 | derselbe Sammelordner |
-| **Summe** | **sechs voneinander unabhängige Archiv-PRs** | **13** | **kein Merge** |
+| [#201](https://github.com/Redurbabat/Redion/pull/201) | ältere iOS-Gesten-/Statusleistenberichte | 2 | derselbe Sammelordner |
+| [#202](https://github.com/Redurbabat/Redion/pull/202) | ältere Safari-/Homescreen-Integrationsberichte | 2 | derselbe Sammelordner |
+| **Summe** | **acht voneinander unabhängige Archiv-PRs** | **17** | **kein Merge** |
 
 Jeder Archiv-PR ergänzt sein eigenes Herkunfts-/Risiko-Protokoll. Die Änderungen in diesen PRs sind **nur Umbenennungen der Dokumente** und das zugehörige Prüfprotokoll. Ein gitbasierter SHA-Vergleich bestätigte die Inhaltstreue.
 
