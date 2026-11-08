@@ -76,9 +76,15 @@ Eine gesonderte, nachweisbasierte Diagnose mit GitHub-Lauf-Links und Prüfplan l
 
 Die neu angelegten Archiv- und Prüfer-PRs werden durch den Workflow **Prüfläufe** als fehlgeschlagen gemeldet. Bei den tatsächlich gelesenen Jobs von [PR #198](https://github.com/Redurbabat/Redion/actions/runs/42429344392), [PR #197](https://github.com/Redurbabat/Redion/actions/runs/42428884620) und [PR #196](https://github.com/Redurbabat/Redion/actions/runs/42428778558) hatten jeweils **beide Jobs null dokumentierte Schritte**. Schon die beim Anlegen des Branches ausgelösten Workflows auf dem unveränderten `main`-Commit meldeten einen Fehlschlag. Das spricht für einen **Blocker vor der regulären Testausführung**, beweist aber ohne Runner-Logs die Ursache nicht.
 
-Deshalb gilt für **alle** Aufräum-PRs: `CI NICHT BESTANDEN / Ausführung unklar`; keine automatische Freigabe. Der isolierte, noch nicht gemergte Prüf-PR #198 hat **6/6 lokale Tests** unter Node 22.16 mit experimentellem Type-Stripping bestanden; das ersetzt **nicht** den verlangten Repository-Typecheck unter Node >=22.18 oder die GitHub-CI.
+Deshalb gilt für **alle** Aufräum-PRs: `CI NICHT BESTANDEN / Ausführung unklar`; keine automatische Freigabe. Der isolierte, noch nicht gemergte Prüf-PR #198 hat **10/10 lokale Tests** unter Node 22.16 mit experimentellem Type-Stripping bestanden; das ersetzt **nicht** den verlangten Repository-Typecheck unter Node >=22.18 oder die GitHub-CI.
 
 Vor einem Merge Runner-Zuweisung und fehlende Schritte prüfen, danach normale Tests vollständig ausführen. Keine bestehenden Prüfungen abschwächen, um einen grünen Status zu erzwingen.
+
+## Ergänzende Archiv-Linkprüfung (8. November 2026)
+
+Alle **17 Originaldokumente** der acht noch nicht gemergten Archiv-PRs #192–#196 und #200–#202 wurden nochmals gegen ihren jeweils unveränderten Pfad auf `main` geprüft. Für **17/17** stimmen die Git-Blobs mit dem geprüften Ausgangsbestand überein. Die direkte Inline-Markdown-Linkprüfung in diesen Dokumenten fand **keinen durch die geplanten Verschiebungen nachweisbar beschädigten Link**. Die Auswertung prüfte linkspezifisch, ob das alte Linkziel existierte und nach dem geplanten Umzug fehlen würde; sie ist **kein vollständiger Linkparser** und deckt nicht sämtliche dynamischen Verweise anderer Dateien ab.
+
+Der bereits vorhandene [Prüf-PR #198](https://github.com/Redurbabat/Redion/pull/198) wurde gezielt erweitert: Er erkennt nun auch Links **innerhalb** verschobener Originale, die durch ihre neue relative Position ungültig würden, und unterscheidet sie von schon zuvor falschen Links. Die **10/10 isolierten Tests** bestanden lokal mit Node 22.16 (`--experimental-strip-types`); die zwei GitHub-Dateien sind byteidentisch mit den getesteten lokalen Dateien. Wegen der weiterhin ohne sichtbare Schritte fehlgeschlagenen GitHub Actions ([Diagnose-PR #199](https://github.com/Redurbabat/Redion/pull/199)) ist **keine CI- oder Gerätefreigabe** erfolgt.
 
 ## Noch offen zur Eigentümerentscheidung
 
