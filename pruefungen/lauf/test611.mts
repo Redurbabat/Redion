@@ -44,8 +44,9 @@
  *       die Enden neben ihrer Klemme — und keine geheilte zapft an (Fund 3)
  *   §13 Während eines Zugs wird nichts gespeichert: keine Taste, kein Knopf,
  *       Strg+Z nicht, die Schreibpause nicht, losgelassen ausserhalb und ein
- *       zweiter Finger beenden den Zug richtig, Escape bricht ab; eine
- *       Leitung über der Palette verfällt, eine Fläche, die nicht mehr im
+ *       zweiter Finger bricht einen unfertigen Zug vor dem Pinch-Zoom ab,
+ *       Escape bricht ebenfalls ab; eine Leitung über der Palette verfällt,
+ *       eine Fläche, die nicht mehr im
  *       Dokument steht, speichert nichts (zweite Durchsicht, Fund 1)
  *   §14 Echte Maus, echte Tasten: Escape bricht einen Zug mit Teilen, einen
  *       Rahmen und eine Leitung ab; Rückgängig und Wiederholen tun im Zug
