@@ -55,7 +55,7 @@ test('Abgelehnte rote CI-Warnung stoppt Live selbst bei gleichem SHA', () => {
   const choices = [...pull.matchAll(/choice \/c JN[^\n]*\n\s*if errorlevel 2 goto ende/g)];
   const successes = [...pull.matchAll(/set "REDION_HOLEN_ERFOLG=1"/g)];
   assert.ok(resetInPull >= 0, 'Holen setzt das alte Signal bei jedem Aufruf zurueck');
-  assert.equal(choices.length, 2, 'Beide CI-Warnungen muessen N als Abbruch behandeln');
+  assert.equal(choices.length, 3, 'Rote, laufende und unbekannte CI-Warnung muessen N als Abbruch behandeln');
   assert.equal(successes.length, 2, 'Erfolgssignal nur bei bereits synchron und nach Checkout');
   const alreadyCurrent = pull.indexOf('Dieser Ordner ist schon genau auf dem Stand von GitHub');
   const checkedOut = pull.indexOf('Der Ordner hat jetzt genau den Stand von GitHub');
@@ -83,4 +83,18 @@ test('Holskript meldet bei privatem Repo Zugriffsprobleme statt oeffentlichen Zu
   assert.match(pull, /Git Credential Manager/);
   assert.match(pull, /Keine Testfreigabe/i);
   assert.doesNotMatch(pull, /Das Verzeichnis ist oeffentlich lesbar/);
+});
+
+test('Privater PR fragt bei unbekanntem CI-Status nach Zustimmung', () => {
+  const start = pull.indexOf('if "%LAUFSTATUS%"=="unbekannt" (');
+  const end = pull.indexOf('if "%LAUFSTATUS%"=="keiner" (');
+  assert.ok(start >= 0 && end > start, 'Unbekannt-Zweig muss eigenstaendig sein');
+  const block = pull.slice(start, end);
+  assert.match(block, /if \/I "%ZIEL%"=="ux\/windows-schaltplan-dock-20261108" \(/);
+  assert.match(block, /choice \/c JN \/t 30 \/d N/);
+  assert.match(block, /if errorlevel 2 goto ende/);
+  assert.ok(block.indexOf('if errorlevel 2 goto ende') <
+    block.lastIndexOf('goto lauf_geklaert'),
+    'Abgelehntes CI darf nie zum erlaubten Holen durchfallen');
+  assert.match(block, /Fuer normale Zweige einschliesslich main bleibt/);
 });
