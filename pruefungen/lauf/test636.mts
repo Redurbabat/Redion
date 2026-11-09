@@ -574,6 +574,45 @@ try {
       davor === danach);
   }
 
+  /* Eine Vorlage mit intern ueberlappenden Bauteilen kann durch
+     Verschieben niemals kollisionsfrei werden. Sie muss abgelehnt werden;
+     aneinanderliegende, aber nicht ueberlappende Bauteile bleiben gueltig. */
+  const vorlageMitAbstand = async (abstand: number): Promise<void> => {
+    await page.evaluate((dx: number) => {
+      Store.setMeta('elektro:planvorlagen', [{
+        id: 'innenkollision636', name: 'Vorlage mit zwei Symbolen',
+        art: 'stromlauf-aufgeloest',
+        teile: [
+          { id: 'innenA', zeichen: 'spule', x: 0, y: 0,
+            drehung: 0, gespiegelt: false, bmk: 'K1',
+            nummern: {}, gruppe: '', ebene: 'plan' },
+          { id: 'innenB', zeichen: 'spule', x: dx, y: 0,
+            drehung: 0, gespiegelt: false, bmk: 'K2',
+            nummern: {}, gruppe: '', ebene: 'plan' }
+        ],
+        leitungen: []
+      }]);
+    }, abstand);
+    await einsetzen();
+  };
+
+  const vorInnenkollision = await page.evaluate((id: string) =>
+    JSON.stringify(Store.getBlock(id).plan), unbekanntBlock);
+  await vorlageMitAbstand(20);
+  const nachInnenkollision = await page.evaluate((id: string) =>
+    JSON.stringify(Store.getBlock(id).plan), unbekanntBlock);
+  pruefe('Vorlage mit zwei ueberlappenden Bauteilen wird atomar abgelehnt',
+    vorInnenkollision === nachInnenkollision);
+
+  await vorlageMitAbstand(40);
+  const beruehrendeBauteile = await page.evaluate((id: string) =>
+    JSON.parse(JSON.stringify(Store.getBlock(id).plan)), unbekanntBlock);
+  pruefe('Vorlage mit nur aneinanderliegenden Bauteilen bleibt nutzbar',
+    beruehrendeBauteile.teile.length === 3 &&
+    beruehrendeBauteile.leitungen.length === 0 &&
+    beruehrendeBauteile.teile[1].x + 40 === beruehrendeBauteile.teile[2].x &&
+    beruehrendeBauteile.teile[1].y === beruehrendeBauteile.teile[2].y);
+
   pruefe('Keine JavaScript-Seitenfehler', pageErrors.length === 0, pageErrors.join(' | '));
   await context.close();
 } finally {
