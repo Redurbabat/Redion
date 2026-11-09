@@ -8835,6 +8835,16 @@ Live-Stromlabor). Den Glasschalter hat Redur am 2. November zurückgenommen
 5. Der Datei-Wähler der Werkstatt zeigt die Wörter des Browsers
    („Choose File"), nicht deutsche.
 
+
+## L266 · Ein breiter Schaltplan bleibt am Telefon hochkant schmal — 9. November 2026
+
+Seit E776 passt der Schaltplan den belegten Bereich in die Fläche ein. Ein
+Plan, der breiter als hoch ist (drei Teile in einer Reihe), wird am Telefon
+hochkant von der BREITE begrenzt: er füllt die Breite, und über und unter
+ihm liegt Tisch mit Raster. Quer gehalten füllt er den Schirm. Offen: ob die
+Blockhöhe in der Seite am Telefon dem Plan folgen soll (sie bliebe dann
+nicht gleich hoch), oder ob der Tisch genügt. Frage an Redur.
+
 ## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — GESCHLOSSEN (E745) — 11. Oktober 2026
 
 **Gemessen** über die Schnittstelle von GitHub, nicht vermutet: die zwei
@@ -11193,7 +11203,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 1. November 2026 (mit L264), nachgezählt statt fortgeschrieben:** die
-Datei führt 159 Lücken, 101 offene und 58 geschlossene. Der Befehl dazu ist
+Datei führt 160 Lücken, 102 offene und 58 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt

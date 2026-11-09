@@ -376,48 +376,109 @@ const Planflaeche = (() => {
             fachSchliessen.hidden = !(batterieOffen || relaisOffen || pruefungOffen);
             wurzel.classList.toggle('sp-fach-offen', !fachSchliessen.hidden);
         };
+        const WERKZEUGE = [
+            { id: 'zeigen', name: 'Auswahl', sym: 'inkPointer', taste: '1', titel: 'Auswählen und verschieben' },
+            { id: 'leitung', name: 'Leitung', sym: 'inkConnector', taste: '2', titel: 'Leitung ziehen' },
+            { id: 'text', name: 'Text', sym: 'inkText', taste: '3', titel: 'Beschriftung setzen' },
+            { id: 'schiene', name: 'Schiene', sym: 'busbar', taste: '4', titel: 'Schiene zeichnen — L1, L2, L3, N, PE' },
+            { id: 'radieren', name: 'Radierer', sym: 'inkEraser', taste: '5', titel: 'Radieren — über die Fläche wischen' }
+        ];
+        const symbol = (id, gr = 20) => (typeof Register !== 'undefined' && Register.symbole) ? Register.symbole.alsSvg(id, gr) : '';
+        const kopfLinks = document.createElement('span');
+        kopfLinks.className = 'sp-links';
+        const dock = document.createElement('span');
+        dock.className = 'sp-werkzeuge sp-mit-marke';
+        dock.setAttribute('role', 'toolbar');
+        dock.setAttribute('aria-label', 'Zeichenwerkzeuge');
+        dock.innerHTML =
+            `<span class="sp-wz-marke" aria-hidden="true"></span>` +
+                WERKZEUGE.map(w => `<button type="button" class="sp-wz" data-wz="${w.id}" title="${esc(w.titel)} (${w.taste})" ` +
+                    `aria-label="${esc(w.titel)}" aria-keyshortcuts="${w.taste}" aria-pressed="false">` +
+                    `<span class="sp-wz-zeichen" aria-hidden="true">${symbol(w.sym)}</span>` +
+                    `<span class="sp-wz-name" aria-hidden="true">${esc(w.name)}</span></button>`).join('') +
+                `<span class="sp-dock-trenner" aria-hidden="true"></span>` +
+                `<button type="button" class="sp-palette-knopf" data-a="palette-toggle" aria-label="Bauteilpalette öffnen oder schliessen" ` +
+                `aria-keyshortcuts="B" aria-expanded="false" title="Bauteile ausklappen und direkt auf die Zeichnung ziehen (B)">` +
+                `<span class="sp-wz-zeichen" aria-hidden="true">${symbol('plus')}</span><span class="sp-wz-name">Bauteile</span></button>` +
+                `<button type="button" class="sp-dock-fit" data-a="zoom-alles" title="Einpassen: den ganzen Schaltplan zeigen (0)" ` +
+                `aria-label="Einpassen — den ganzen Schaltplan zeigen" aria-keyshortcuts="0">` +
+                `<span class="sp-wz-zeichen" aria-hidden="true">${symbol('maximize')}</span><span class="sp-wz-name" aria-hidden="true">Einpassen</span></button>`;
+        const kopfRechts = document.createElement('span');
+        kopfRechts.className = 'sp-rechts';
+        kopf.append(kopfLinks, dock, kopfRechts);
+        let markeGesetzt = false;
+        const markeSetzen = () => {
+            const marke = dock.querySelector('.sp-wz-marke');
+            const an = dock.querySelector('.sp-wz.an');
+            if (!marke)
+                return;
+            if (!an || !an.offsetWidth) {
+                marke.style.opacity = '0';
+                return;
+            }
+            const x = an.offsetLeft, y = an.offsetTop;
+            marke.style.width = an.offsetWidth + 'px';
+            marke.style.height = an.offsetHeight + 'px';
+            if (!markeGesetzt)
+                marke.style.transition = 'none';
+            marke.style.transform = `translate(${x}px, ${y}px)`;
+            marke.style.opacity = '1';
+            if (!markeGesetzt) {
+                void marke.offsetWidth;
+                marke.style.transition = '';
+                markeGesetzt = true;
+            }
+        };
+        const dockAktualisieren = () => {
+            dock.querySelectorAll('.sp-wz').forEach(b => {
+                const an = b.dataset.wz === z.werkzeug;
+                b.classList.toggle('an', an);
+                b.setAttribute('aria-pressed', String(an));
+            });
+            const pk = dock.querySelector('.sp-palette-knopf');
+            if (pk) {
+                pk.classList.toggle('an', paletteOffen);
+                pk.setAttribute('aria-expanded', String(paletteOffen));
+            }
+            markeSetzen();
+        };
+        if (typeof ResizeObserver === 'function')
+            new ResizeObserver(() => {
+                if (!wurzel.isConnected)
+                    return;
+                markeSetzen();
+            }).observe(dock);
         const kopfMalen = () => {
-            const art = Schaltplan.artVon(z.plan.art);
             fachStatus();
-            kopf.innerHTML =
-                `<select class="sp-art" aria-label="Planart">` +
-                    Schaltplan.ARTEN.map(a => `<option value="${esc(a.id)}"${a.id === z.plan.art ? ' selected' : ''}>` +
-                        `${esc(a.name)}</option>`).join('') + '</select>' +
-                    `<span class="sp-arterkl">${esc(art.erklaerung)}</span>` +
-                    `<span class="sp-werkzeuge">` +
-                    [['zeigen', '↖', 'Auswählen und verschieben'],
-                        ['leitung', '⌐', 'Leitung ziehen'],
-                        ['text', 'T', 'Beschriftung setzen'],
-                        ['schiene', '☰', 'Schiene zeichnen — L1, L2, L3, N, PE'],
-                        ['radieren', '⌫', 'Radieren — über die Fläche wischen']].map(([id, ic, t]) => `<button class="sp-wz${z.werkzeug === id ? ' an' : ''}" data-wz="${id}" ` +
-                        `title="${esc(t)}" aria-label="${esc(t)}" aria-pressed="${z.werkzeug === id}">${ic}</button>`).join('') +
-                    `<span class="sp-dock-trenner" aria-hidden="true"></span>` +
-                    `<button type="button" class="sp-palette-knopf${paletteOffen ? ' an' : ''}" data-a="palette-toggle" aria-label="Bauteilpalette öffnen oder schliessen" aria-expanded="${paletteOffen}" title="Bauteile ausklappen und direkt auf die Zeichnung ziehen">▦ <span>Bauteile</span></button>` +
-                    `<button type="button" class="sp-dock-fit" data-a="zoom-alles" title="Gesamten Schaltplan anzeigen (0)" aria-label="Gesamten Schaltplan anzeigen">⤢</button>` +
-                    `</span>` +
-                    `<span class="sp-rechts">` +
-                    (z.plan.art.startsWith('stromlauf')
-                        ? `<button class="sp-netz" data-a="netz" ` +
-                            `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
-                            `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
-                        : '') +
-                    `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" aria-haspopup="menu">✦ Bereiche ▾</button>` +
-                    `<button type="button" class="sp-start${z.simulation || (z.plan.batterieUebung && batterie?.stromAn()) ? ' an' : ''}${z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ? ' sp-strom-ungeprueft' : ''}" ` +
-                    `data-a="simulation" ` +
+            dockAktualisieren();
+            const stromAn = !!(z.simulation || (z.plan.batterieUebung && batterie?.stromAn()));
+            kopfLinks.innerHTML =
+                `<button type="button" class="sp-start${stromAn ? ' an' : ''}${z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ? ' sp-strom-ungeprueft' : ''}" ` +
+                    `data-a="simulation" aria-keyshortcuts="P" ` +
                     `title="${z.plan.batterieUebung ? (batterie?.stromAn() ? 'Batteriestrom ausschalten' : 'Batterieschaltung einschalten und U, R, I messen') :
                         z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ?
                             'Original-Verdrahtung ungeprüft: in der Relais-Werkstatt zuerst prüfen und freigeben.' :
-                            z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
-                    `aria-pressed="${!!(z.simulation || (z.plan.batterieUebung && batterie?.stromAn()))}" ` +
-                    `aria-label="${z.simulation || (z.plan.batterieUebung && batterie?.stromAn()) ? 'Strom ausschalten' : 'Strom einschalten'}">` +
-                    `${z.simulation || (z.plan.batterieUebung && batterie?.stromAn()) ? '◼' : '▶'} Strom</button>` +
-                    `<button data-a="zurueck" title="Rückgängig" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>↶</button>` +
-                    `<button data-a="vorwaerts" title="Wiederholen" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>↷</button>` +
-                    `<button data-a="mehr" title="Mehr" aria-label="Mehr">…</button>` +
+                            z.simulation ? 'Simulation anhalten (P)' : 'Strom fliessen lassen (P)'}" ` +
+                    `aria-pressed="${stromAn}" ` +
+                    `aria-label="${stromAn ? 'Strom ausschalten' : 'Strom einschalten'}">` +
+                    `${stromAn ? '◼' : '▶'} Strom</button>` +
+                    (z.plan.art.startsWith('stromlauf')
+                        ? `<button type="button" class="sp-netz" data-a="netz" ` +
+                            `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
+                            `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
+                        : '');
+            kopfRechts.innerHTML =
+                `<select class="sp-art" aria-label="Planart" title="Planart: ${esc(Schaltplan.artVon(z.plan.art).name)}">` +
+                    Schaltplan.ARTEN.map(a => `<option value="${esc(a.id)}"${a.id === z.plan.art ? ' selected' : ''}>` +
+                        `${esc(a.name)}</option>`).join('') + '</select>' +
+                    `<button type="button" class="sp-kopf-knopf" data-a="zurueck" title="Rückgängig (Strg+Z)" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>${symbol('undo', 18)}</button>` +
+                    `<button type="button" class="sp-kopf-knopf" data-a="vorwaerts" title="Wiederholen (Strg+Y)" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>${symbol('redo', 18)}</button>` +
+                    `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" ` +
+                    `aria-label="Bereiche" aria-haspopup="menu">✦<span class="sp-bereiche-wort"> Bereiche</span> ▾</button>` +
+                    `<button type="button" class="sp-kopf-knopf" data-a="mehr" title="Mehr: Planart, Ansicht, Ausgabe" aria-label="Mehr" aria-haspopup="menu">${symbol('dots', 18)}</button>` +
                     (z.voll
-                        ? `<button class="sp-vollzu" data-a="vollbild-zu" title="Vollbild beenden (Esc)" aria-label="Vollbild beenden">✕</button>`
-                        : `<button data-a="vollbild" title="Vollbild (F)" aria-label="Vollbild">⛶</button>`) +
-                    `</span>`;
+                        ? `<button type="button" class="sp-vollzu" data-a="vollbild-zu" title="Vollbild beenden (Esc)" aria-label="Vollbild beenden">✕</button>`
+                        : `<button type="button" class="sp-kopf-knopf" data-a="vollbild" title="Vollbild (F)" aria-label="Vollbild" aria-keyshortcuts="F">⛶</button>`);
         };
         const meldungHtml = () => {
             const e = z.ergebnis;
@@ -715,6 +776,7 @@ const Planflaeche = (() => {
                     werte: e.werte, teilwerte: e.teilwerte, maxStrom: e.maxStrom
                 };
             leinwand.innerHTML = Schaltplan.alsSvg(z.plan, opt);
+            tischLegen();
             ansichtAnwenden();
             buehne.classList.toggle('sp-laeuft', z.simulation);
             if (!z.simulation)
@@ -809,6 +871,54 @@ const Planflaeche = (() => {
             const wert = zoomleiste.querySelector('.sp-zoomwert');
             if (wert)
                 wert.textContent = Math.round(zoom * 100) + ' %';
+            tischZiehen();
+        };
+        const SVG_NS = 'http://www.w3.org/2000/svg';
+        const tischLegen = () => {
+            const svg = svgJetzt();
+            if (!svg)
+                return;
+            const B = Number(z.plan.breite) || 800, H = Number(z.plan.hoehe) || 700;
+            const blattRaster = svg.querySelector('rect[fill="url(#sp-raster)"]');
+            const rand = document.createElementNS(SVG_NS, 'rect');
+            rand.setAttribute('class', 'sp-blattrand');
+            rand.setAttribute('x', '0');
+            rand.setAttribute('y', '0');
+            rand.setAttribute('width', String(B));
+            rand.setAttribute('height', String(H));
+            rand.setAttribute('fill', 'none');
+            rand.setAttribute('pointer-events', 'none');
+            if (blattRaster) {
+                const tisch = document.createElementNS(SVG_NS, 'rect');
+                tisch.setAttribute('class', 'sp-tisch');
+                tisch.setAttribute('fill', 'url(#sp-raster)');
+                tisch.setAttribute('pointer-events', 'none');
+                blattRaster.before(tisch);
+                blattRaster.after(rand);
+            }
+            else {
+                const defs = svg.querySelector(':scope > defs:last-of-type');
+                if (defs)
+                    defs.after(rand);
+                else
+                    svg.prepend(rand);
+            }
+        };
+        const tischZiehen = () => {
+            const svg = svgJetzt();
+            const tisch = svg?.querySelector('.sp-tisch');
+            if (!svg || !tisch)
+                return;
+            const r = svg.getBoundingClientRect();
+            if (r.width < 1 || r.height < 1)
+                return;
+            const a = planAm(r.left, r.top), b = planAm(r.right, r.bottom);
+            const R = Register.fachzeichen.RASTER || 10;
+            const x = Math.floor(a.x / R) * R - R, y = Math.floor(a.y / R) * R - R;
+            tisch.setAttribute('x', String(x));
+            tisch.setAttribute('y', String(y));
+            tisch.setAttribute('width', String(Math.ceil((b.x - x) / R) * R + R));
+            tisch.setAttribute('height', String(Math.ceil((b.y - y) / R) * R + R));
         };
         const schirm = () => {
             const svg = svgJetzt();
@@ -824,6 +934,7 @@ const Planflaeche = (() => {
             return { x: z.ansicht.x + (sx - g.cx) / k, y: z.ansicht.y + (sy - g.cy) / k };
         };
         const zoomSetzen = (zoom, P, sx, sy) => {
+            ansichtVomNutzer = true;
             const zz = Math.round(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom)) * 1000) / 1000;
             const g = schirm(), k = g.s1 * zz;
             z.ansicht = { zoom: zz, x: P.x - (sx - g.cx) / k, y: P.y - (sy - g.cy) / k };
@@ -842,12 +953,75 @@ const Planflaeche = (() => {
             }
             zoomSetzen(z.ansicht.zoom * faktor, planAm(sx, sy), sx, sy);
         };
-        const allesZeigen = () => { z.ansicht = { zoom: 1, x: 0, y: 0 }; ansichtAnwenden(); };
+        let ansichtVomNutzer = false;
+        const EINPASSEN_MAX = 1.75;
+        const belegt = () => {
+            let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+            const nimm = (ax, ay, bx, by) => {
+                if (![ax, ay, bx, by].every(Number.isFinite))
+                    return;
+                x1 = Math.min(x1, ax);
+                y1 = Math.min(y1, ay);
+                x2 = Math.max(x2, bx);
+                y2 = Math.max(y2, by);
+            };
+            z.plan.teile.forEach(t => {
+                const m = Schaltplan.teilMasse(t);
+                const text = Math.max(String(t.bmk || '').length * 7.5, Math.min(38, String(t.beschriftung || '').length) * 6.5);
+                nimm(t.x - 4, t.y - 4, t.x + m.w + (text ? 8 + text : 4), t.y + Math.max(m.h, t.beschriftung ? 30 : 0) + 4);
+            });
+            z.plan.leitungen.forEach(l => (l.punkte || []).forEach((q) => nimm(q.x, q.y, q.x, q.y)));
+            z.plan.texte.forEach(x => nimm(x.x, x.y - 13, x.x + String(x.t || '').length * 7.5, x.y + 4));
+            return Number.isFinite(x1) ? { x1, y1, x2, y2 } : null;
+        };
+        const einpassen = () => {
+            ansichtVomNutzer = false;
+            const svg = svgJetzt();
+            const r = svg ? svg.getBoundingClientRect() : null;
+            const kasten = belegt();
+            if (!svg || !r || r.width < 40 || r.height < 40 || !kasten) {
+                z.ansicht = { zoom: 1, x: 0, y: 0 };
+                ansichtAnwenden();
+                return;
+            }
+            const g = schirm();
+            const rand = Math.max(24, 0.04 * Math.max(kasten.x2 - kasten.x1, kasten.y2 - kasten.y1));
+            const bw = kasten.x2 - kasten.x1 + 2 * rand, bh = kasten.y2 - kasten.y1 + 2 * rand;
+            const k = Math.min(r.width / bw, r.height / bh, EINPASSEN_MAX);
+            const zoom = Math.round(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, k / g.s1)) * 1000) / 1000;
+            const kk = g.s1 * zoom;
+            const mx = (kasten.x1 + kasten.x2) / 2, my = (kasten.y1 + kasten.y2) / 2;
+            const ansicht = { zoom, x: mx - (r.left + r.width / 2 - g.cx) / kk, y: my - (r.top + r.height / 2 - g.cy) / kk };
+            const B = Number(z.plan.breite) || 800, H = Number(z.plan.hoehe) || 700;
+            z.ansicht = (Math.abs(zoom - 1) < 0.03 && Math.abs(ansicht.x) < 0.03 * B && Math.abs(ansicht.y) < 0.03 * H)
+                ? { zoom: 1, x: 0, y: 0 } : ansicht;
+            ansichtAnwenden();
+        };
+        const allesZeigen = () => einpassen();
         const schwenken = (dx, dy) => {
+            ansichtVomNutzer = true;
             const g = schirm(), k = g.s1 * z.ansicht.zoom;
             z.ansicht = { zoom: z.ansicht.zoom, x: z.ansicht.x - dx / k, y: z.ansicht.y - dy / k };
             ansichtAnwenden();
         };
+        let buehnenMass = '';
+        const buehnenBeobachter = typeof ResizeObserver === 'function' ? new ResizeObserver(() => {
+            const r = buehne.getBoundingClientRect();
+            if (!wurzel.isConnected || r.width < 1 || r.height < 1) {
+                if (!wurzel.isConnected && !platzhalter)
+                    buehnenBeobachter?.disconnect();
+                return;
+            }
+            const mass = `${Math.round(r.width)}×${Math.round(r.height)}`;
+            if (mass === buehnenMass)
+                return;
+            buehnenMass = mass;
+            if (ansichtVomNutzer)
+                ansichtAnwenden();
+            else
+                einpassen();
+        }) : null;
+        buehnenBeobachter?.observe(buehne);
         zoomleiste.addEventListener('click', e => {
             const b = e.target.closest('[data-a]');
             if (!b)
@@ -958,6 +1132,7 @@ const Planflaeche = (() => {
             z.werkzeug = 'zeigen';
             z.gewaehltesZeichen = '';
             const zoom = Math.max(1.5, z.ansicht.zoom);
+            ansichtVomNutzer = true;
             z.ansicht = { zoom: Math.min(3, zoom),
                 x: p.x - z.plan.breite / (2 * Math.min(3, zoom)),
                 y: p.y - z.plan.hoehe / (2 * Math.min(3, zoom)) };
@@ -979,6 +1154,7 @@ const Planflaeche = (() => {
                 const links = Math.min(...punkte.map(p => p.x)), rechts = Math.max(...punkte.map(p => p.x));
                 const oben = Math.min(...punkte.map(p => p.y)), unten = Math.max(...punkte.map(p => p.y));
                 const zoom = Math.max(.25, Math.min(3, z.plan.breite / (rechts - links + 120), z.plan.hoehe / (unten - oben + 120)));
+                ansichtVomNutzer = true;
                 z.ansicht = { zoom, x: (links + rechts) / 2 - z.plan.breite / (2 * zoom),
                     y: (oben + unten) / 2 - z.plan.hoehe / (2 * zoom) };
             }
@@ -1438,11 +1614,15 @@ const Planflaeche = (() => {
             const r = Schaltplan.gruppeUmformen(z.plan, z.auswahl, art);
             melde(art === 'drehen' ? 'Drehen' : 'Spiegeln', r.bericht, Schaltplan.veraendert(z.plan, r.vorher), r.vorher);
         });
-        const planDrehen = () => aendere(() => {
-            const r = Schaltplan.planDrehen(z.plan);
-            z.ansicht = { zoom: 1, x: 0, y: 0 };
-            melde('Drehen', r.bericht, Schaltplan.veraendert(z.plan, r.vorher), r.vorher);
-        });
+        const planDrehen = () => {
+            aendere(() => {
+                const r = Schaltplan.planDrehen(z.plan);
+                z.ansicht = { zoom: 1, x: 0, y: 0 };
+                melde('Drehen', r.bericht, Schaltplan.veraendert(z.plan, r.vorher), r.vorher);
+            });
+            if (!z.zieht)
+                einpassen();
+        };
         const drehen = () => alsGruppe() ? gruppeUmformen('drehen') : aendere(() => {
             const vorher = Schaltplan.vorherMerken(z.plan);
             const teile = auswahlTeile();
@@ -2363,8 +2543,7 @@ const Planflaeche = (() => {
                 zoomUm(Math.exp(-e.deltaY * schritt * 0.0015), e.clientX, e.clientY);
                 return;
             }
-            const a = z.ansicht;
-            if (!z.voll && a.zoom === 1 && !a.x && !a.y)
+            if (!z.voll && !ansichtVomNutzer)
                 return;
             e.preventDefault();
             const quer = e.shiftKey && !e.deltaX;
@@ -2845,12 +3024,17 @@ const Planflaeche = (() => {
             male();
             paletteMalen();
         };
+        const artSetzen = (art) => {
+            if (!Schaltplan.ARTEN.some(a => a.id === art) || art === z.plan.art)
+                return;
+            aendere(() => { z.plan.art = art; });
+            paletteMalen();
+        };
         kopf.addEventListener('change', e => {
             const s = e.target.closest('.sp-art');
             if (!s)
                 return;
-            aendere(() => { z.plan.art = s.value; });
-            paletteMalen();
+            artSetzen(s.value);
         });
         kopf.addEventListener('click', e => {
             const b = e.target.closest('[data-wz],[data-a]');
@@ -3343,7 +3527,13 @@ const Planflaeche = (() => {
         };
         const mehrMenue = (anker) => {
             const r = anker.getBoundingClientRect();
-            const m = UI.menu(`<button data-m="raster">${z.zeigeRaster ? '✓ ' : ''}Raster zeigen</button>` +
+            const m = UI.menu(`<div class="grp">Planart</div>` +
+                Schaltplan.ARTEN.map(a => `<button data-m="art" data-art="${esc(a.id)}" role="menuitemradio" aria-checked="${a.id === z.plan.art}">` +
+                    `${a.id === z.plan.art ? '✓ ' : ''}${esc(a.name)}</button>`).join('') +
+                '<hr>' +
+                (z.plan.art.startsWith('stromlauf')
+                    ? '<button data-m="schaltung">⚡ Netz oder Beispielschaltung einfügen</button><hr>' : '') +
+                `<button data-m="raster">${z.zeigeRaster ? '✓ ' : ''}Raster zeigen</button>` +
                 `<button data-m="anschluesse">${z.zeigeAnschluesse ? '✓ ' : ''}Anschlusspunkte zeigen</button>` +
                 `<button data-m="nummern">${z.zeigeNummern ? '✓ ' : ''}Anschlussnummern zeigen</button>` +
                 '<hr>' +
@@ -3361,6 +3551,10 @@ const Planflaeche = (() => {
                     return;
                 m.remove();
                 const was = b.dataset.m;
+                if (was === 'art')
+                    return artSetzen(b.dataset.art || '');
+                if (was === 'schaltung')
+                    return schaltungMenue(anker);
                 if (was === 'pruefzentrum') {
                     pruefungOffen = true;
                     pruefPanel.hidden = false;

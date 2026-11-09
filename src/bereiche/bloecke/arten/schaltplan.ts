@@ -1326,6 +1326,31 @@ const Schaltplan = (() => {
     maxStrom: number;
   };
 
+  /** So gross steht ein Teil mit unbekanntem Zeichen im Plan (E775). */
+  const UNBEKANNT_MASS = { w: 40, h: 40 } as const;
+  /**
+   * Der Platzhalter für ein Zeichen, das diese Fassung nicht kennt: ein
+   * gestrichelter Kasten mit „?" und dem Namen des Zeichens, dazu ein Titel,
+   * der sagt, dass das Teil erhalten bleibt. Gezeichnet in der Farbe der
+   * Ebene (`stroke` der Gruppe), nur der Kasten ist gestrichelt.
+   */
+  const unbekanntesZeichen = (zeichen: string, farbe: string): string => {
+    const name = zeichen.length > 14 ? zeichen.slice(0, 13) + '…' : zeichen;
+    return `<title>Unbekanntes Bauteil „${esc(zeichen)}" — diese Redion-Fassung kennt das Zeichen nicht. ` +
+      `Das Teil bleibt mit allen Angaben im Plan erhalten.</title>` +
+      `<rect class="sp-unbekannt-kasten" x="0" y="0" width="${UNBEKANNT_MASS.w}" height="${UNBEKANNT_MASS.h}" ` +
+      `rx="6" stroke-dasharray="4 3" stroke-width="1.5"/>` +
+      `<text x="${UNBEKANNT_MASS.w / 2}" y="27" text-anchor="middle" font-size="20" font-weight="700" ` +
+      `fill="${farbe}" stroke="none">?</text>` +
+      `<text class="sp-unbekannt-name" x="${UNBEKANNT_MASS.w / 2}" y="${UNBEKANNT_MASS.h + 12}" text-anchor="middle" ` +
+      `font-size="9" fill="${farbe}" stroke="none" opacity=".75">${esc(name)}</text>`;
+  };
+
+  /** Die Aussenmasse eines Teils, auch wenn sein Zeichen unbekannt ist (E775). */
+  const teilMasse = (t: Teil): { w: number; h: number } =>
+    (typeof Register !== 'undefined' && Register.fachzeichen && Register.fachzeichen.holen(t.zeichen))
+      ? Register.fachzeichen.masse(t.zeichen, t.drehung) : { ...UNBEKANNT_MASS };
+
   const alsSvg = (plan: Plan, opt: {
     raster?: boolean; anschluesse?: boolean; bmk?: boolean; nummern?: boolean;
     auswahl?: Set<string>; nurEbenen?: string[];
@@ -1487,10 +1512,19 @@ const Schaltplan = (() => {
         ? Register.fachzeichen.alsSvg(t.zeichen, {
             farbe, drehung: t.drehung, gespiegelt: t.gespiegelt })
         : '';
-      if (!svg) return;
-      const innen = svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
+      /* EIN UNBEKANNTES ZEICHEN BLEIBT SICHTBAR (E775, §18 [hart]).
+         Bis hierher stand hier `if (!svg) return;` — ein Teil, dessen
+         Zeichen diese Fassung nicht kennt (ein Plan aus einer neueren
+         Fassung, eine Vorlage, ein Import), war im Plan, wurde gezählt
+         („3 Teile") und nicht gezeichnet: nichts zum Antippen, Verschieben
+         oder Löschen. Jetzt steht ein Platzhalter da, so gross wie ein
+         kleines Zeichen, mit „?" und dem Namen des Zeichens; die Daten des
+         Teils bleiben unberührt (test639). */
+      const unbekannt = !svg;
+      const innen = unbekannt ? unbekanntesZeichen(t.zeichen, farbe)
+        : svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
       const gewaehlt = opt.auswahl && opt.auswahl.has(t.id);
-      const mass = Register.fachzeichen.masse(t.zeichen, 0);
+      const mass = unbekannt ? { ...UNBEKANNT_MASS } : Register.fachzeichen.masse(t.zeichen, 0);
 
       /* Was die Simulation über dieses Bauteil weiss. */
       const w = opt.strom ? opt.strom.werte[t.id] : undefined;
@@ -1640,7 +1674,7 @@ const Schaltplan = (() => {
       }
 
       teile.push(
-        `<g class="sp-teil${gewaehlt ? ' sp-gewaehlt' : ''}` +
+        `<g class="sp-teil${unbekannt ? ' sp-unbekannt' : ''}${gewaehlt ? ' sp-gewaehlt' : ''}` +
         `${w && w.fliesst ? ' sp-fuehrt' : ''}` +
         `${opt.hervor === t.id ? ' sp-gesucht' : ''}" data-id="${esc(t.id)}" ` +
         `transform="translate(${t.x} ${t.y})" fill="none" stroke="${farbe}" ` +
@@ -1813,7 +1847,7 @@ const Schaltplan = (() => {
   };
 
   return {
-    ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, rasten,
+    ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, teilMasse, rasten,
     naechstesBmk, anschlussOrt, anschluesseVon, klemmeFuer, fangeAnschluss, rechtwinklig,
     kontakte, vorherMerken, nachziehen, veraendert, verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
     netzBauen, BEISPIELE, beispielBauen, uid, esc,

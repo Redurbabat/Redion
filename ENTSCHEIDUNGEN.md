@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-752 Entscheidungen, E1 bis E774 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+756 Entscheidungen, E1 bis E778 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -837,6 +837,93 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E772** — Der RED-MGT-Glasschalter im Original-Aussehen an Stelle von „▶ Strom", und das Live-Stromlabor (1. November 2026, Redur: „1:1"; ERSETZT „RED-MGT angepasst"): Checkbox mit role="switch" und `data-a="simulation"`, „AUS"/„EIN" statt STANDBY/POWER ON (§3), 187 × 50 in der Leiste, 1:1-Ansicht 330 × 180; Redurs Kurven und Orange bleiben (test584 führt `.red-mgt-` mit Grund), die Endlos-Lichtnaht steht bei weniger Bewegung; RedionMotion schmückt ihn nicht; Labor mit Uhr, Tempo 0,25–4×, Pause, Reset und Zeitrelais-Balken auf dem Takt aus E768 — ohne Zeitrelais kein Takt (E528); test612/630/631 neu ausgerichtet — `test634`
 * **E773** — Ein und Aus ist wieder „▶ Strom" (2. November 2026, Redur: „Für ein-aus sollte wie früher sein, damals war besser"; nimmt den Schalter aus E772 zurück, das Labor bleibt): `<button>` mit `aria-pressed`, Hebel und Glühfaden aus E535, so hoch wie „Bereiche"; der Glasschalter, die 1:1-Ansicht, `.red-mgt-` in `test584` und der Sprung in `motion.ts` sind weg — `test634`
 * **E774** — Ein eigener Skill „redion-animationen" statt der SwiftUI-Beispiele (2. November 2026, Redur: Skills aus `open-swiftui-animations` installieren, vorhandene löschen; dann „Eigenen Skill schreiben", „Nichts löschen"): das Projekt hat keine Skills und keine Lizenz, also nur Ideen, kein Code (§57); der Skill liegt in `.claude/skills/redion-animationen/` und übersetzt sechzehn Ideen in Redions Federn und Regeln
+* **E775** — Ein Bauteil mit unbekanntem Zeichen wird als Platzhalter gezeichnet statt still weggelassen (9. November 2026, Redur: „die schaltplan teil ist die erstel prioieritet"; §18): gestrichelter Kasten mit „?" und dem Namen des Zeichens, wählbar, verschiebbar, Daten unberührt. Für diesen Bogen hat Redur „erst bauen, am Ende prüfen" entschieden („ich will das du einfach baust und ohne kontloier uoder test erst am ende") — Abweichung von §30/§50 — `test639`
+* **E776** — Der Schaltplan passt den belegten Bereich ein (9. November 2026): beim Öffnen, bei jeder Grössenänderung und auf „Einpassen"; eigener Zoom bleibt; das SVG füllt die Bühne, ausserhalb des Blatts liegt ein blasses Raster („Tisch") mit Blattrand; das Rad gehört eingepasst der Seite — `test640`
+* **E777** — Der Kopf des Schaltplans in einer Zeile (9. November 2026): links „▶ Strom" (E773 unverändert) und „⚡ Schaltung", rechts Planart als ruhiger Chip, ↶ ↷, „Bereiche", „…", ⛶; am Telefon wandern Planart und Schaltung ins „…"; Breite nach der Fläche (`@container`), ↶ ↷ … nicht mehr unter 1220 px versteckt
+* **E778** — Das Werkzeug-Dock mit Zeichen UND Namen (9. November 2026): Auswahl, Leitung, Text, Schiene (neues Zeichen `busbar`), Radierer, Bauteile, Einpassen; Kürzel im Tooltip und `aria-keyshortcuts`; das Dock wird nicht mehr bei jeder Änderung neu gebaut (es hüpfte bei jedem Strich)
+
+## E775 — Ein unbekanntes Bauteil bleibt sichtbar
+
+**Wer.** Redur, 9. November 2026: „ich will das du redion auf eine andere
+levell bringst … die schaltplan teil ist die erstel prioieritet". Gefunden
+auf dem Bild des Treppenhaus-Plans: „3 Teile" in der Fusszeile, gezeichnet
+zwei. Das dritte trug `zeichen: 'quelle'`, das diese Fassung nicht kennt.
+
+**Wie geprüft wird — Redurs Entscheidung für diesen Bogen.** Mitten in der
+Arbeit: „ich will das du einfach baust und ohne kontloier uoder test erst
+am ende". Für E775–E780 gilt deshalb: erst bauen, am Ende die bestehenden
+Schaltplan-Läufe fahren und einen Satz Bilder machen — eine bewusste
+Abweichung von §30 („zuerst ein Prüflauf") und §50 („er ist rot gewesen").
+Die zwei Wächter, die vor der Anweisung schon geschrieben waren
+(`test639`, `test640`), bleiben.
+
+**Entschieden.** `Schaltplan.alsSvg` zeichnet für ein unbekanntes Zeichen
+einen gestrichelten Kasten 40 × 40 mit „?" und dem Namen des Zeichens, dazu
+einen Titel („… bleibt mit allen Angaben im Plan erhalten"). Das Teil ist
+wählbar, verschiebbar und löschbar wie jedes andere; Zeichen, Nummern und
+Werte bleiben unberührt (§18 [hart]: unbekannte Typen nie still verlieren).
+`Schaltplan.teilMasse` gibt dafür auch ohne Registereintrag ein Mass.
+
+**Alternative.** Das Teil weiter weglassen und nur warnen — dann bleibt es
+unsichtbar und unlöschbar.
+
+**Kosten.** Ein gespeichertes Bild (SVG) zeigt den Platzhalter mit.
+
+## E776 — Der Plan füllt die Fläche
+
+**Was.** Bis hierher zeigte die Ansicht beim Öffnen immer das ganze Blatt.
+Am Telefon im Vollbild stand ein 800 × 500-Plan winzig in der Mitte (eine
+Lampe 19 px), darüber und darunter je ein Drittel leere Fläche ohne Raster.
+
+**Entschieden.** `einpassen` in `planflaeche.ts`: der belegte Bereich
+(Teile mit BMK und Beschriftung, Leitungen, Texte) plus Rand wird in die
+Bühne gepasst, höchstens 1,75 Bildpunkte je Planeinheit. Es läuft beim
+Öffnen und bei jeder Grössenänderung der Bühne (ResizeObserver: Fenster,
+Vollbild, Drehen) — ausser der Mensch hat selbst gezoomt oder verschoben;
+dann bleibt seine Ansicht, bis er „Einpassen" (⤢, 0) drückt. Ein leerer
+oder voller Plan steht wie vorher bei „ganzes Blatt, 100 %". Das SVG füllt
+die ganze Bühne; ausserhalb des Blatts liegt dasselbe Raster blasser (der
+„Tisch"), ein gestrichelter Rand zeigt das Blatt. `alsSvg` bleibt Zeichen
+für Zeichen gleich (test625 §0). Eingepasst gehört das Rad der Seite, wie
+vorher bei 100 %.
+
+**Alternative.** Die Höhe des Blocks an den Plan anpassen — im Vollbild
+nutzlos, und der Block spränge beim Öffnen.
+
+**Kosten.** Die Prozentzahl steht beim Öffnen selten auf 100 % (100 % heisst
+weiter „ganzes Blatt"). Ein breiter Plan bleibt am Telefon hochkant
+schmal — quer gehalten füllt er den Schirm (L266).
+
+## E777 — Der Kopf in einer Zeile
+
+**Was.** Am Rechner stand die Planart als grösstes Element vorn, „▶ Strom"
+klein daneben; unter 1220 px fehlten ↶ ↷ und „…"; am Telefon brauchte der
+Kopf zwei Zeilen.
+
+**Entschieden.** Links „▶ Strom" — derselbe Knopf aus E773, nur vorn — und
+„⚡ Schaltung"; rechts die Planart als ruhiger Chip (`select.sp-art`,
+32 px), ↶ ↷ als Zeichen, „✦ Bereiche ▾", „…", ⛶. Wird die FLÄCHE
+schmaler als 640 px (`@container`, nicht das Fenster: die Windows-App hat
+eine Seitenleiste), wandern Planart und Schaltung ins „…" (Planart als
+Liste mit Häkchen, `artSetzen` für beide Wege), „Bereiche" zeigt nur ✦;
+jedes Ziel 44 px (§37).
+
+**Alternative.** Planart in „Bereiche" — dort stehen Module, keine
+Eigenschaften des Plans.
+
+## E778 — Werkzeuge mit Namen
+
+**Was.** Das Dock trug ↖ ⌐ T ☰ ⌫ ohne Wort; ☰ sah aus wie ein Menü, ⌐ wie
+nichts. Und es wurde bei jeder Änderung neu gebaut und spielte dabei seine
+Ankunft von vorn — jeder Strich liess die Leiste hüpfen.
+
+**Entschieden.** Jedes Werkzeug mit Zeichen aus `Register.symbole` UND
+Namen darunter (Auswahl, Leitung, Text, Schiene, Radierer), am Rechner und
+am Telefon; „Bauteile" hervorgehoben, „Einpassen" benannt. Titel mit
+Kürzel („Leitung ziehen (2)"), `aria-keyshortcuts`, `aria-pressed`. Neues
+Zeichen `busbar` für die Schiene. Das Dock steht einmal und ändert nur
+seinen Zustand (`dockAktualisieren`).
+
 
 ## Grundregel
 

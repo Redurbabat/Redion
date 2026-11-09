@@ -890,6 +890,20 @@ const Schaltplan = (() => {
         }
         return teile.join(' ');
     };
+    const UNBEKANNT_MASS = { w: 40, h: 40 };
+    const unbekanntesZeichen = (zeichen, farbe) => {
+        const name = zeichen.length > 14 ? zeichen.slice(0, 13) + '…' : zeichen;
+        return `<title>Unbekanntes Bauteil „${esc(zeichen)}" — diese Redion-Fassung kennt das Zeichen nicht. ` +
+            `Das Teil bleibt mit allen Angaben im Plan erhalten.</title>` +
+            `<rect class="sp-unbekannt-kasten" x="0" y="0" width="${UNBEKANNT_MASS.w}" height="${UNBEKANNT_MASS.h}" ` +
+            `rx="6" stroke-dasharray="4 3" stroke-width="1.5"/>` +
+            `<text x="${UNBEKANNT_MASS.w / 2}" y="27" text-anchor="middle" font-size="20" font-weight="700" ` +
+            `fill="${farbe}" stroke="none">?</text>` +
+            `<text class="sp-unbekannt-name" x="${UNBEKANNT_MASS.w / 2}" y="${UNBEKANNT_MASS.h + 12}" text-anchor="middle" ` +
+            `font-size="9" fill="${farbe}" stroke="none" opacity=".75">${esc(name)}</text>`;
+    };
+    const teilMasse = (t) => (typeof Register !== 'undefined' && Register.fachzeichen && Register.fachzeichen.holen(t.zeichen))
+        ? Register.fachzeichen.masse(t.zeichen, t.drehung) : { ...UNBEKANNT_MASS };
     const alsSvg = (plan, opt = {}) => {
         const sichtbar = (ebene) => {
             if (opt.nurEbenen)
@@ -991,11 +1005,11 @@ const Schaltplan = (() => {
                     farbe, drehung: t.drehung, gespiegelt: t.gespiegelt
                 })
                 : '';
-            if (!svg)
-                return;
-            const innen = svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
+            const unbekannt = !svg;
+            const innen = unbekannt ? unbekanntesZeichen(t.zeichen, farbe)
+                : svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
             const gewaehlt = opt.auswahl && opt.auswahl.has(t.id);
-            const mass = Register.fachzeichen.masse(t.zeichen, 0);
+            const mass = unbekannt ? { ...UNBEKANNT_MASS } : Register.fachzeichen.masse(t.zeichen, 0);
             const w = opt.strom ? opt.strom.werte[t.id] : undefined;
             const vh = (typeof Stromfluss !== 'undefined' && Stromfluss.verhalten)
                 ? Stromfluss.verhalten(t.zeichen) : null;
@@ -1065,7 +1079,7 @@ const Schaltplan = (() => {
                     }
                 }
             }
-            teile.push(`<g class="sp-teil${gewaehlt ? ' sp-gewaehlt' : ''}` +
+            teile.push(`<g class="sp-teil${unbekannt ? ' sp-unbekannt' : ''}${gewaehlt ? ' sp-gewaehlt' : ''}` +
                 `${w && w.fliesst ? ' sp-fuehrt' : ''}` +
                 `${opt.hervor === t.id ? ' sp-gesucht' : ''}" data-id="${esc(t.id)}" ` +
                 `transform="translate(${t.x} ${t.y})" fill="none" stroke="${farbe}" ` +
@@ -1200,7 +1214,7 @@ const Schaltplan = (() => {
         return false;
     };
     return {
-        ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, rasten,
+        ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, teilMasse, rasten,
         naechstesBmk, anschlussOrt, anschluesseVon, klemmeFuer, fangeAnschluss, rechtwinklig,
         kontakte, vorherMerken, nachziehen, veraendert, verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
         netzBauen, BEISPIELE, beispielBauen, uid, esc,

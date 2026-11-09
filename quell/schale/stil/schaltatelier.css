@@ -295,8 +295,9 @@
 }
 @media(max-width:1220px) {
   .sp-wrap .sp-art {max-width:155px;flex-basis:155px}
-  .sp-wrap .sp-palette-knopf span {display:none}
-  .sp-wrap .sp-rechts > button:not(.sp-start):not(.sp-bereiche):not([data-a="vollbild"]):not([data-a="vollbild-zu"]) {display:none}
+  /* E777: Rückgängig, Wiederholen und „…" bleiben sichtbar — hier wurden
+     sie unter 1220 px ausgeblendet, und die Windows-App bei 1100 px hatte
+     kein ↶ mehr im Kopf. Die Breite regelt jetzt der Kopf selbst. */
 }
 @media(max-width:850px){
   .sp-wrap .sp-kopf {flex-wrap:wrap;min-height:0}
@@ -401,7 +402,6 @@
   .sp-wrap .sp-werkzeuge {bottom:62px;padding:5px;gap:2px;border-radius:15px}
   .sp-wrap .sp-werkzeuge .sp-wz,.sp-wrap .sp-werkzeuge .sp-dock-fit {width:44px;min-width:44px;height:44px}
   .sp-wrap .sp-werkzeuge .sp-palette-knopf {height:44px;min-width:44px;padding:0 9px}
-  .sp-wrap .sp-werkzeuge .sp-palette-knopf span {display:none}
   .sp-wrap .sp-kontextleiste {top:8px;gap:1px;padding:4px}
   .sp-wrap .sp-kontext-titel {max-width:85px}
   .sp-wrap .sp-kontextleiste button {min-width:35px;min-height:37px}
@@ -798,4 +798,91 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
     scrollbar-width: none;
   }
   .sp-wrap .sp-kontextleiste::-webkit-scrollbar { display: none; }
+}
+
+/* ══ Der Schaltplan auf einer anderen Stufe (9. November 2026, E775–E780) ══
+   Redur: „ich will das du redion auf eine andere levell bringst … die
+   schaltplan teil ist die erstel prioieritet". Jeder Block hier hat seinen
+   Wächter (test639–test644). */
+
+/* E776: Das SVG füllt die ganze Bühne; die Ansicht passt den belegten
+   Bereich ein (planflaeche.ts `einpassen`). Ausserhalb des Blatts liegt der
+   „Tisch" mit blasserem Raster, ein feiner Rand zeigt das Blatt. */
+.sp-wrap .sp-buehne > .sp-leinwand{height:100%}
+.sp-wrap .sp-buehne .sp-flaeche{display:block;width:100%;height:100%;max-width:none;max-height:none}
+.sp-wrap .sp-flaeche .sp-tisch{opacity:.42}
+.sp-wrap .sp-flaeche .sp-blattrand{stroke:var(--line);stroke-width:1.25;vector-effect:non-scaling-stroke;stroke-dasharray:6 5}
+
+/* E775: ein Teil mit unbekanntem Zeichen steht als Platzhalter da. */
+.sp-flaeche .sp-unbekannt-kasten{fill:color-mix(in srgb,var(--warnung) 12%,transparent)}
+
+/* E777: Der Kopf in EINER Zeile. Links die Handlung („▶ Strom", E773 — der
+   Knopf bleibt, wie Redur ihn zurückwollte, „⚡ Schaltung"), rechts die
+   Planart als ruhiger Chip, ↶ ↷, „Bereiche", „…", ⛶. Die Breite fragt die
+   FLÄCHE, nicht das Fenster (`@container`): in der Windows-App mit
+   Seitenleiste ist die Fläche schmaler als das Fenster. */
+.sp-wrap{container-type:inline-size;container-name:sp}
+.sp-wrap .sp-kopf{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;min-height:60px;
+  padding:8px clamp(10px,1.4vw,16px)}
+.sp-wrap .sp-links{display:flex;align-items:center;gap:6px;flex:0 0 auto;min-width:0}
+.sp-wrap .sp-kopf .sp-rechts{display:flex;align-items:center;gap:4px;flex:0 1 auto;flex-wrap:nowrap;
+  margin-left:auto;min-width:0;order:0;justify-content:flex-end}
+.sp-wrap .sp-kopf :is(.sp-start,.sp-netz){height:40px;min-height:40px;border-radius:12px;font-size:13.5px;
+  font-weight:650;cursor:pointer}
+.sp-wrap .sp-kopf .sp-start{padding:0 16px 0 12px;color:var(--text);
+  border:1px solid color-mix(in srgb,var(--accent) 50%,var(--line));
+  background:color-mix(in srgb,var(--accent) 13%,var(--bg-card))}
+.sp-wrap .sp-kopf .sp-start.an{background:var(--sp-strom);color:#231000;border-color:var(--sp-strom)}
+.sp-wrap .sp-kopf .sp-netz:not(.sp-bereiche){padding:0 12px;border:1px solid var(--line);background:var(--bg-card);color:var(--text)}
+.sp-wrap .sp-kopf .sp-bereiche{padding:0 12px;border:1px solid transparent;background:transparent;color:var(--text);font-weight:600}
+.sp-wrap .sp-kopf .sp-netz:hover:not(:disabled){background:var(--bg-hover)}
+.sp-wrap .sp-kopf .sp-kopf-knopf{display:inline-grid;place-items:center;width:38px;height:38px;min-width:38px;padding:0;
+  border:0;border-radius:11px;background:transparent;color:var(--text-dim);font-size:17px;cursor:pointer}
+.sp-wrap .sp-kopf .sp-kopf-knopf:hover:not(:disabled){background:var(--bg-hover);color:var(--text)}
+.sp-wrap .sp-kopf .sp-kopf-knopf:disabled{opacity:.32;cursor:default}
+.sp-wrap .sp-kopf .sp-art{flex:0 1 auto;width:auto;min-width:0;max-width:220px;height:32px;margin-right:6px;
+  padding:0 8px 0 11px;border:1px solid var(--line);border-radius:999px;background-color:transparent;
+  color:var(--text-dim);font-size:12.5px;font-weight:500;text-overflow:ellipsis;cursor:pointer}
+.sp-wrap .sp-kopf .sp-art:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));color:var(--text)}
+@container sp (max-width:640px){
+  .sp-wrap .sp-kopf{gap:4px;padding:6px 8px;min-height:56px}
+  .sp-wrap .sp-kopf .sp-art,.sp-wrap .sp-kopf .sp-netz[data-a="netz"]{display:none}
+  .sp-wrap .sp-kopf .sp-bereiche-wort{display:none}
+  .sp-wrap .sp-kopf .sp-rechts{gap:2px}
+  .sp-wrap .sp-kopf :is(.sp-start,.sp-bereiche,.sp-kopf-knopf){height:44px;min-height:44px;min-width:44px}
+  .sp-wrap .sp-kopf .sp-bereiche{padding:0 8px}
+  .sp-wrap .sp-kopf .sp-start{padding:0 13px 0 10px}
+}
+
+/* E778: Das Dock — jedes Werkzeug mit Zeichen UND Namen (vorher ↖ ⌐ T ☰ ⌫
+   ohne Wort), das aktive unverwechselbar unter einer Marke in Akzentfarbe,
+   „Bauteile" als die Handlung, mit der ein Plan beginnt, hervorgehoben. */
+.sp-wrap .sp-werkzeuge{gap:2px;padding:5px;border-radius:19px}
+.sp-wrap .sp-werkzeuge > :is(button){position:relative;z-index:1}
+.sp-wrap .sp-werkzeuge :is(.sp-wz,.sp-dock-fit,.sp-palette-knopf){
+  display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  width:auto;min-width:58px;height:54px;padding:4px 7px;border-radius:14px;
+  border:1px solid transparent;background:transparent;color:var(--text-dim);
+  font:600 10.5px/1 system-ui,sans-serif;cursor:pointer}
+.sp-wrap .sp-werkzeuge .sp-wz-zeichen{display:block;width:21px;height:21px}
+.sp-wrap .sp-werkzeuge .sp-wz-zeichen svg{display:block;width:21px;height:21px}
+.sp-wrap .sp-werkzeuge .sp-wz-name{display:block;white-space:nowrap;letter-spacing:.01em}
+.sp-wrap .sp-werkzeuge :is(.sp-wz,.sp-dock-fit):hover:not(.an){background:var(--bg-hover);color:var(--text)}
+.sp-wrap .sp-werkzeuge .sp-wz.an{color:var(--auf-accent);background:var(--accent)}
+.sp-wrap .sp-werkzeuge.sp-mit-marke .sp-wz.an{background:transparent}
+.sp-wrap .sp-werkzeuge .sp-palette-knopf{color:var(--text);
+  background:color-mix(in srgb,var(--accent) 13%,var(--bg-card));
+  border-color:color-mix(in srgb,var(--accent) 42%,var(--line))}
+.sp-wrap .sp-werkzeuge .sp-palette-knopf:hover,.sp-wrap .sp-werkzeuge .sp-palette-knopf.an{
+  background:color-mix(in srgb,var(--accent) 24%,var(--bg-card));border-color:var(--accent)}
+.sp-wrap .sp-wz-marke{position:absolute;left:0;top:0;z-index:0;width:0;height:0;opacity:0;pointer-events:none;
+  border-radius:14px;background:var(--accent);
+  box-shadow:0 5px 16px color-mix(in srgb,var(--accent) 34%,transparent);
+  transition:transform var(--feder-knapp-dauer) var(--feder-knapp),opacity var(--motion-fast) ease}
+.sp-wrap .sp-dock-trenner{height:32px;margin:0 3px}
+@container sp (max-width:640px){
+  .sp-wrap .sp-werkzeuge{gap:1px;padding:4px;border-radius:17px}
+  .sp-wrap .sp-werkzeuge :is(.sp-wz,.sp-dock-fit,.sp-palette-knopf){min-width:46px;height:50px;padding:3px 3px;font-size:10px}
+  .sp-wrap .sp-werkzeuge .sp-palette-knopf{min-width:52px}
+  .sp-wrap .sp-dock-trenner{margin:0 2px}
 }
