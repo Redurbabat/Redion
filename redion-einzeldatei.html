@@ -14252,6 +14252,50 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
   .sp-wrap .sp-dock-trenner{margin:0 2px}
 }
 
+/* E779: Der Einstieg in einen leeren Plan — mitten auf der Fläche. */
+.sp-wrap .sp-einstieg{position:absolute;inset:0;z-index:4;display:grid;place-items:center;padding:16px;pointer-events:none}
+.sp-wrap .sp-einstieg[hidden]{display:none}
+.sp-wrap .sp-einstieg-karte{pointer-events:auto;display:grid;justify-items:center;gap:8px;max-width:340px;
+  padding:22px 22px 18px;text-align:center;border:1px solid var(--line);border-radius:20px;
+  background:color-mix(in srgb,var(--bg-card) 94%,transparent);color:var(--text);
+  box-shadow:0 18px 50px rgb(0 0 0 / .18);
+  animation:sp-einstieg-ein var(--feder-sanft-dauer) var(--feder-sanft) both}
+.sp-wrap .sp-einstieg-zeichen{display:grid;place-items:center;width:48px;height:48px;border-radius:15px;
+  color:var(--accent-text);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.sp-wrap .sp-einstieg-karte strong{font-size:16px;font-weight:700}
+.sp-wrap .sp-einstieg-karte p{margin:0 0 6px;font-size:13px;line-height:1.45;color:var(--text-dim)}
+.sp-wrap .sp-einstieg-knoepfe{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.sp-wrap .sp-einstieg-knoepfe button{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;
+  border:1px solid var(--line);border-radius:13px;background:var(--bg);color:var(--text);font:inherit;font-size:13.5px;
+  font-weight:600;cursor:pointer}
+.sp-wrap .sp-einstieg-knoepfe button:hover{background:var(--bg-hover)}
+.sp-wrap .sp-einstieg-knoepfe .sp-einstieg-haupt{background:var(--accent);color:var(--auf-accent);border-color:transparent}
+.sp-wrap .sp-einstieg-knoepfe .sp-einstieg-haupt:hover{background:color-mix(in srgb,var(--accent) 88%,var(--text))}
+@keyframes sp-einstieg-ein{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+
+/* E780: Bewegung mit den Federn aus grund.css. Dock und Kontextleiste kommen
+   mit der knappen Feder; während die Leinwand gleitet (Einpassen, + −),
+   zeigt die Bühne keine Rollbalken. */
+.sp-wrap .sp-werkzeuge{animation:sp-dock-ein var(--feder-knapp-dauer) var(--feder-knapp) both}
+.sp-wrap .sp-kontextleiste{animation:sp-kontext-ein var(--feder-knapp-dauer) var(--feder-knapp) both}
+.sp-wrap .sp-buehne.sp-gleitet{overflow:hidden}
+
+/* Der Geist beim Ziehen aus der Palette hing ungestaltet am Ende des
+   `body` (keine Regel ausserhalb von `.sp-wrap`). Jetzt folgt er dem Zeiger. */
+.sp-platziergeist{position:fixed;z-index:700;pointer-events:none;transform:translate(-50%,-50%);
+  display:grid;justify-items:center;gap:2px;padding:6px 8px;border-radius:12px;color:var(--text);
+  background:color-mix(in srgb,var(--bg-card) 90%,transparent);border:1px dashed var(--line);
+  font:600 11px/1.2 system-ui,sans-serif;opacity:.7}
+.sp-platziergeist-gueltig{border:1px solid var(--accent);opacity:1;box-shadow:0 8px 24px rgb(0 0 0 / .2)}
+.sp-platziergeist-bild svg{display:block;max-width:56px;max-height:48px;width:auto;height:auto}
+
+@media (prefers-reduced-motion:reduce){
+  .sp-wrap :is(.sp-einstieg-karte,.sp-werkzeuge,.sp-kontextleiste){animation:none}
+  .sp-wrap .sp-wz-marke{transition:none}
+}
+body[data-bewegung="ruhig"] .sp-wrap :is(.sp-einstieg-karte,.sp-werkzeuge,.sp-kontextleiste){animation:none}
+body[data-bewegung="ruhig"] .sp-wrap .sp-wz-marke{transition:none}
+
 </style>
 <style>
 /* ===== quell/schale/stil/bausteine.css ===== */
@@ -29677,7 +29721,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1578, inhalt: '63979c1caec23694', gebaut: '2026-11-09T22:13:24.767Z' };
+const Stand = { fassung: 1579, inhalt: '8da2cfb9dd03e867', gebaut: '2026-11-09T22:16:49.708Z' };
 window.Stand = Stand;
 
 </script>
@@ -72125,6 +72169,40 @@ const Planflaeche = (() => {
         schnellkarte.setAttribute('aria-label', 'Bauteil direkt bearbeiten');
         schnellkarte.hidden = true;
         buehne.appendChild(schnellkarte);
+        const einstieg = document.createElement('div');
+        einstieg.className = 'sp-einstieg';
+        einstieg.hidden = true;
+        buehne.appendChild(einstieg);
+        const einstiegMalen = () => {
+            const leer = !z.plan.teile.length && !z.plan.leitungen.length && !z.plan.texte.length;
+            const zeigen = leer && !z.simulation && !paletteOffen && !studioOffen && !z.gewaehltesZeichen && z.werkzeug === 'zeigen';
+            if (einstieg.hidden === !zeigen && (!zeigen || einstieg.dataset.art === z.plan.art))
+                return;
+            einstieg.hidden = !zeigen;
+            if (!zeigen)
+                return;
+            einstieg.dataset.art = z.plan.art;
+            einstieg.innerHTML =
+                `<div class="sp-einstieg-karte" role="group" aria-label="Leerer Schaltplan">` +
+                    `<span class="sp-einstieg-zeichen" aria-hidden="true">${symbol('bolt', 26)}</span>` +
+                    `<strong>Ein leerer Schaltplan</strong>` +
+                    `<p>Zieh Bauteile aus der Palette auf die Fläche${z.plan.art.startsWith('stromlauf') ? ' oder beginne mit einer fertigen Schaltung' : ''}.</p>` +
+                    `<div class="sp-einstieg-knoepfe">` +
+                    `<button type="button" class="sp-einstieg-haupt" data-einstieg="palette">${symbol('plus', 18)} Bauteil hinzufügen</button>` +
+                    (z.plan.art.startsWith('stromlauf')
+                        ? `<button type="button" data-einstieg="schaltung">⚡ Beispielschaltung</button>` : '') +
+                    `</div></div>`;
+        };
+        einstieg.addEventListener('click', e => {
+            const b = e.target.closest('[data-einstieg]');
+            if (!b)
+                return;
+            if (b.dataset.einstieg === 'schaltung')
+                return schaltungMenue(b);
+            if (!paletteOffen)
+                dock.querySelector('[data-a="palette-toggle"]')?.click();
+            palette.querySelector('.sp-suche input')?.focus({ preventScroll: true });
+        });
         const kontextleiste = document.createElement('div');
         kontextleiste.className = 'sp-kontextleiste';
         kontextleiste.setAttribute('role', 'toolbar');
@@ -72252,6 +72330,7 @@ const Planflaeche = (() => {
         const kopfMalen = () => {
             fachStatus();
             dockAktualisieren();
+            einstiegMalen();
             const stromAn = !!(z.simulation || (z.plan.batterieUebung && batterie?.stromAn()));
             kopfLinks.innerHTML =
                 `<button type="button" class="sp-start${stromAn ? ' an' : ''}${z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ? ' sp-strom-ungeprueft' : ''}" ` +
@@ -72798,7 +72877,28 @@ const Planflaeche = (() => {
                 ? { zoom: 1, x: 0, y: 0 } : ansicht;
             ansichtAnwenden();
         };
-        const allesZeigen = () => einpassen();
+        const ruhig = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.dataset.bewegung === 'ruhig';
+        const gleitend = (setzen) => {
+            const svg = svgJetzt();
+            const vor = svg && !ruhig() ? svg.getScreenCTM() : null;
+            setzen();
+            const nach = vor ? svgJetzt()?.getScreenCTM() : null;
+            if (!vor || !nach || !nach.a || typeof leinwand.animate !== 'function')
+                return;
+            const r = vor.a / nach.a;
+            if (Math.abs(r - 1) < 0.002 && Math.abs(vor.e - nach.e) < 0.5 && Math.abs(vor.f - nach.f) < 0.5)
+                return;
+            const L = leinwand.getBoundingClientRect();
+            const tx = vor.e - L.left - r * (nach.e - L.left), ty = vor.f - L.top - r * (nach.f - L.top);
+            const kurve = getComputedStyle(document.documentElement).getPropertyValue('--ease-enter').trim() || 'ease-out';
+            buehne.classList.add('sp-gleitet');
+            const a = leinwand.animate([{ transformOrigin: '0 0', transform: `translate(${tx}px, ${ty}px) scale(${r})` },
+                { transformOrigin: '0 0', transform: 'none' }], { duration: 200, easing: kurve });
+            const fertig = () => buehne.classList.remove('sp-gleitet');
+            a.onfinish = fertig;
+            a.oncancel = fertig;
+        };
+        const allesZeigen = () => gleitend(einpassen);
         const schwenken = (dx, dy) => {
             ansichtVomNutzer = true;
             const g = schirm(), k = g.s1 * z.ansicht.zoom;
@@ -72828,9 +72928,9 @@ const Planflaeche = (() => {
             if (!b)
                 return;
             if (b.dataset.a === 'zoom-plus')
-                zoomUm(1.25);
+                gleitend(() => zoomUm(1.25));
             else if (b.dataset.a === 'zoom-minus')
-                zoomUm(0.8);
+                gleitend(() => zoomUm(0.8));
             else if (b.dataset.a === 'zoom-alles')
                 allesZeigen();
         });

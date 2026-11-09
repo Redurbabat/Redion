@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-756 Entscheidungen, E1 bis E778 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+758 Entscheidungen, E1 bis E780 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -841,6 +841,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E776** — Der Schaltplan passt den belegten Bereich ein (9. November 2026): beim Öffnen, bei jeder Grössenänderung und auf „Einpassen"; eigener Zoom bleibt; das SVG füllt die Bühne, ausserhalb des Blatts liegt ein blasses Raster („Tisch") mit Blattrand; das Rad gehört eingepasst der Seite — `test640`
 * **E777** — Der Kopf des Schaltplans in einer Zeile (9. November 2026): links „▶ Strom" (E773 unverändert) und „⚡ Schaltung", rechts Planart als ruhiger Chip, ↶ ↷, „Bereiche", „…", ⛶; am Telefon wandern Planart und Schaltung ins „…"; Breite nach der Fläche (`@container`), ↶ ↷ … nicht mehr unter 1220 px versteckt
 * **E778** — Das Werkzeug-Dock mit Zeichen UND Namen (9. November 2026): Auswahl, Leitung, Text, Schiene (neues Zeichen `busbar`), Radierer, Bauteile, Einpassen; Kürzel im Tooltip und `aria-keyshortcuts`; das Dock wird nicht mehr bei jeder Änderung neu gebaut (es hüpfte bei jedem Strich)
+* **E779** — Ein leerer Schaltplan zeigt in der Mitte einen Einstieg (9. November 2026): „Bauteil hinzufügen" öffnet die Palette, „Beispielschaltung" das vorhandene Schaltung-Menü; weg beim ersten Bauteil, bei offener Palette und bei einem anderen Werkzeug
+* **E780** — Bewegung im Schaltplan nach `redion-animationen` (9. November 2026): die Marke des aktiven Werkzeugs gleitet mit `--feder-knapp`, Einpassen und + − gleiten per FLIP (200 ms, `--ease-enter`, nur transform), Dock, Kontextleiste und Einstieg kommen mit den Federn; alles steht bei weniger Bewegung (System und „Ruhige Darstellung"); der Ziehgeist der Palette ist endlich gestaltet
 
 ## E775 — Ein unbekanntes Bauteil bleibt sichtbar
 
@@ -923,6 +925,37 @@ am Telefon; „Bauteile" hervorgehoben, „Einpassen" benannt. Titel mit
 Kürzel („Leitung ziehen (2)"), `aria-keyshortcuts`, `aria-pressed`. Neues
 Zeichen `busbar` für die Schiene. Das Dock steht einmal und ändert nur
 seinen Zustand (`dockAktualisieren`).
+
+
+## E779 — Der Einstieg in einen leeren Plan
+
+**Was.** Eine leere Fläche zeigte nur das Raster; wie es losgeht, stand
+klein in der Fusszeile.
+
+**Entschieden.** Mitten auf der Bühne eine Karte „Ein leerer Schaltplan"
+mit zwei Knöpfen: „Bauteil hinzufügen" (öffnet die Palette und setzt den
+Fokus in ihre Suche — derselbe Weg wie „Bauteile" im Dock) und
+„⚡ Beispielschaltung" (das vorhandene Menü `schaltungMenue`, nur im
+Stromlaufplan). Die Karte geht, sobald etwas auf dem Plan steht, und steht
+nicht im Weg, solange die Palette oder das Studio offen, ein Zeichen zum
+Setzen gewählt oder ein anderes Werkzeug als „Auswahl" aktiv ist. Kein
+neuer Zustand im Plan.
+
+## E780 — Bewegung im Schaltplan
+
+**Entschieden** (Skill `redion-animationen`): die Marke unter dem aktiven
+Werkzeug ist eine eigene Fläche und gleitet mit `--feder-knapp`, die Knöpfe
+bleiben stehen; „Einpassen", + und − setzen die viewBox sofort und lassen
+die Leinwand per FLIP vom alten ins neue Bild gleiten — 200 ms mit
+`--ease-enter`, kurz genug, dass ein Zug gleich danach trifft; Rad und
+Finger gleiten nie. Dock, Kontextleiste und Einstieg kommen mit den Federn
+aus `grund.css`. Bei `prefers-reduced-motion` und
+`body[data-bewegung="ruhig"]` wird alles gesetzt. Nebenbei: der Geist beim
+Ziehen aus der Palette hatte keine Regel und hing ungestaltet am Ende der
+Seite — jetzt folgt er dem Zeiger als kleine Karte.
+
+**Alternative.** Die viewBox Bild für Bild animieren — das ist kein
+transform, und jeder Treffer während der Fahrt läge daneben.
 
 
 ## Grundregel

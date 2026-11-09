@@ -324,6 +324,40 @@ const Planflaeche = (() => {
         schnellkarte.setAttribute('aria-label', 'Bauteil direkt bearbeiten');
         schnellkarte.hidden = true;
         buehne.appendChild(schnellkarte);
+        const einstieg = document.createElement('div');
+        einstieg.className = 'sp-einstieg';
+        einstieg.hidden = true;
+        buehne.appendChild(einstieg);
+        const einstiegMalen = () => {
+            const leer = !z.plan.teile.length && !z.plan.leitungen.length && !z.plan.texte.length;
+            const zeigen = leer && !z.simulation && !paletteOffen && !studioOffen && !z.gewaehltesZeichen && z.werkzeug === 'zeigen';
+            if (einstieg.hidden === !zeigen && (!zeigen || einstieg.dataset.art === z.plan.art))
+                return;
+            einstieg.hidden = !zeigen;
+            if (!zeigen)
+                return;
+            einstieg.dataset.art = z.plan.art;
+            einstieg.innerHTML =
+                `<div class="sp-einstieg-karte" role="group" aria-label="Leerer Schaltplan">` +
+                    `<span class="sp-einstieg-zeichen" aria-hidden="true">${symbol('bolt', 26)}</span>` +
+                    `<strong>Ein leerer Schaltplan</strong>` +
+                    `<p>Zieh Bauteile aus der Palette auf die Fläche${z.plan.art.startsWith('stromlauf') ? ' oder beginne mit einer fertigen Schaltung' : ''}.</p>` +
+                    `<div class="sp-einstieg-knoepfe">` +
+                    `<button type="button" class="sp-einstieg-haupt" data-einstieg="palette">${symbol('plus', 18)} Bauteil hinzufügen</button>` +
+                    (z.plan.art.startsWith('stromlauf')
+                        ? `<button type="button" data-einstieg="schaltung">⚡ Beispielschaltung</button>` : '') +
+                    `</div></div>`;
+        };
+        einstieg.addEventListener('click', e => {
+            const b = e.target.closest('[data-einstieg]');
+            if (!b)
+                return;
+            if (b.dataset.einstieg === 'schaltung')
+                return schaltungMenue(b);
+            if (!paletteOffen)
+                dock.querySelector('[data-a="palette-toggle"]')?.click();
+            palette.querySelector('.sp-suche input')?.focus({ preventScroll: true });
+        });
         const kontextleiste = document.createElement('div');
         kontextleiste.className = 'sp-kontextleiste';
         kontextleiste.setAttribute('role', 'toolbar');
@@ -451,6 +485,7 @@ const Planflaeche = (() => {
         const kopfMalen = () => {
             fachStatus();
             dockAktualisieren();
+            einstiegMalen();
             const stromAn = !!(z.simulation || (z.plan.batterieUebung && batterie?.stromAn()));
             kopfLinks.innerHTML =
                 `<button type="button" class="sp-start${stromAn ? ' an' : ''}${z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ? ' sp-strom-ungeprueft' : ''}" ` +
@@ -997,7 +1032,28 @@ const Planflaeche = (() => {
                 ? { zoom: 1, x: 0, y: 0 } : ansicht;
             ansichtAnwenden();
         };
-        const allesZeigen = () => einpassen();
+        const ruhig = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.dataset.bewegung === 'ruhig';
+        const gleitend = (setzen) => {
+            const svg = svgJetzt();
+            const vor = svg && !ruhig() ? svg.getScreenCTM() : null;
+            setzen();
+            const nach = vor ? svgJetzt()?.getScreenCTM() : null;
+            if (!vor || !nach || !nach.a || typeof leinwand.animate !== 'function')
+                return;
+            const r = vor.a / nach.a;
+            if (Math.abs(r - 1) < 0.002 && Math.abs(vor.e - nach.e) < 0.5 && Math.abs(vor.f - nach.f) < 0.5)
+                return;
+            const L = leinwand.getBoundingClientRect();
+            const tx = vor.e - L.left - r * (nach.e - L.left), ty = vor.f - L.top - r * (nach.f - L.top);
+            const kurve = getComputedStyle(document.documentElement).getPropertyValue('--ease-enter').trim() || 'ease-out';
+            buehne.classList.add('sp-gleitet');
+            const a = leinwand.animate([{ transformOrigin: '0 0', transform: `translate(${tx}px, ${ty}px) scale(${r})` },
+                { transformOrigin: '0 0', transform: 'none' }], { duration: 200, easing: kurve });
+            const fertig = () => buehne.classList.remove('sp-gleitet');
+            a.onfinish = fertig;
+            a.oncancel = fertig;
+        };
+        const allesZeigen = () => gleitend(einpassen);
         const schwenken = (dx, dy) => {
             ansichtVomNutzer = true;
             const g = schirm(), k = g.s1 * z.ansicht.zoom;
@@ -1027,9 +1083,9 @@ const Planflaeche = (() => {
             if (!b)
                 return;
             if (b.dataset.a === 'zoom-plus')
-                zoomUm(1.25);
+                gleitend(() => zoomUm(1.25));
             else if (b.dataset.a === 'zoom-minus')
-                zoomUm(0.8);
+                gleitend(() => zoomUm(0.8));
             else if (b.dataset.a === 'zoom-alles')
                 allesZeigen();
         });

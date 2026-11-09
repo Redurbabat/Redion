@@ -519,6 +519,41 @@ const Planflaeche = (() => {
     /* Die Kontextleiste bleibt ausserhalb der ersetzten SVG-Leinwand.
      * Aktionen verwenden dieselben vorhandenen aendere-/Undo-Funktionen wie der
      * Fuss. Sie ist kein zweiter Editor und speichert keinen zusätzlichen Zustand. */
+    /* DER EINSTIEG IN EINEN LEEREN PLAN (E779). Bis hierher stand auf einer
+       leeren Fläche nur das Raster; der Hinweis, wie es losgeht, stand klein
+       in der Fusszeile. Jetzt steht in der Mitte eine Karte mit den zwei
+       Wegen: ein Bauteil aus der Palette, oder eine fertige Schaltung. Sie
+       geht beim ersten Bauteil, und während die Palette offen ist oder ein
+       anderes Werkzeug als „Auswahl" gewählt ist, steht sie nicht im Weg. */
+    const einstieg = document.createElement('div');
+    einstieg.className = 'sp-einstieg';
+    einstieg.hidden = true;
+    buehne.appendChild(einstieg);
+    const einstiegMalen = (): void => {
+      const leer = !z.plan.teile.length && !z.plan.leitungen.length && !z.plan.texte.length;
+      const zeigen = leer && !z.simulation && !paletteOffen && !studioOffen && !z.gewaehltesZeichen && z.werkzeug === 'zeigen';
+      if (einstieg.hidden === !zeigen && (!zeigen || einstieg.dataset.art === z.plan.art)) return;
+      einstieg.hidden = !zeigen;
+      if (!zeigen) return;
+      einstieg.dataset.art = z.plan.art;
+      einstieg.innerHTML =
+        `<div class="sp-einstieg-karte" role="group" aria-label="Leerer Schaltplan">` +
+        `<span class="sp-einstieg-zeichen" aria-hidden="true">${symbol('bolt', 26)}</span>` +
+        `<strong>Ein leerer Schaltplan</strong>` +
+        `<p>Zieh Bauteile aus der Palette auf die Fläche${z.plan.art.startsWith('stromlauf') ? ' oder beginne mit einer fertigen Schaltung' : ''}.</p>` +
+        `<div class="sp-einstieg-knoepfe">` +
+        `<button type="button" class="sp-einstieg-haupt" data-einstieg="palette">${symbol('plus', 18)} Bauteil hinzufügen</button>` +
+        (z.plan.art.startsWith('stromlauf')
+          ? `<button type="button" data-einstieg="schaltung">⚡ Beispielschaltung</button>` : '') +
+        `</div></div>`;
+    };
+    einstieg.addEventListener('click', e => {
+      const b = (e.target as Element).closest<HTMLElement>('[data-einstieg]');
+      if (!b) return;
+      if (b.dataset.einstieg === 'schaltung') return schaltungMenue(b);
+      if (!paletteOffen) dock.querySelector<HTMLElement>('[data-a="palette-toggle"]')?.click();
+      palette.querySelector<HTMLInputElement>('.sp-suche input')?.focus({ preventScroll: true });
+    });
     const kontextleiste = document.createElement('div');
     kontextleiste.className = 'sp-kontextleiste';
     kontextleiste.setAttribute('role', 'toolbar');
@@ -662,6 +697,7 @@ const Planflaeche = (() => {
     const kopfMalen = (): void => {
       fachStatus();
       dockAktualisieren();
+      einstiegMalen();
       const stromAn = !!(z.simulation || (z.plan.batterieUebung && batterie?.stromAn()));
       kopfLinks.innerHTML =
         /* EIN UND AUS (E773): wieder der Knopf „▶ Strom" / „◼ Strom", wie vor
@@ -1247,7 +1283,34 @@ const Planflaeche = (() => {
         ? { zoom: 1, x: 0, y: 0 } : ansicht;
       ansichtAnwenden();
     };
-    const allesZeigen = (): void => einpassen();
+    /* GLEITEN STATT SPRINGEN (E780). Ein Knopfdruck auf Einpassen, + oder −
+       setzt die viewBox sofort — Treffer und Messungen stimmen ab dem
+       ersten Bild —, und die Leinwand gleitet mit einem `transform` vom
+       alten Bild ins neue (FLIP). Nur transform; bei weniger Bewegung
+       (System oder „Ruhige Darstellung") wird gesetzt. Rad und Finger
+       gleiten nie: sie folgen der Hand. */
+    const ruhig = (): boolean =>
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.dataset.bewegung === 'ruhig';
+    const gleitend = (setzen: () => void): void => {
+      const svg = svgJetzt();
+      const vor = svg && !ruhig() ? svg.getScreenCTM() : null;
+      setzen();
+      const nach = vor ? svgJetzt()?.getScreenCTM() : null;
+      if (!vor || !nach || !nach.a || typeof leinwand.animate !== 'function') return;
+      const r = vor.a / nach.a;
+      if (Math.abs(r - 1) < 0.002 && Math.abs(vor.e - nach.e) < 0.5 && Math.abs(vor.f - nach.f) < 0.5) return;
+      const L = leinwand.getBoundingClientRect();
+      const tx = vor.e - L.left - r * (nach.e - L.left), ty = vor.f - L.top - r * (nach.f - L.top);
+      const kurve = getComputedStyle(document.documentElement).getPropertyValue('--ease-enter').trim() || 'ease-out';
+      buehne.classList.add('sp-gleitet');
+      const a = leinwand.animate(
+        [{ transformOrigin: '0 0', transform: `translate(${tx}px, ${ty}px) scale(${r})` },
+         { transformOrigin: '0 0', transform: 'none' }],
+        { duration: 200, easing: kurve });
+      const fertig = (): void => buehne.classList.remove('sp-gleitet');
+      a.onfinish = fertig; a.oncancel = fertig;
+    };
+    const allesZeigen = (): void => gleitend(einpassen);
     const schwenken = (dx: number, dy: number): void => {
       ansichtVomNutzer = true;
       const g = schirm(), k = g.s1 * z.ansicht.zoom;
@@ -1274,8 +1337,8 @@ const Planflaeche = (() => {
     zoomleiste.addEventListener('click', e => {
       const b = (e.target as Element).closest<HTMLElement>('[data-a]');
       if (!b) return;
-      if (b.dataset.a === 'zoom-plus') zoomUm(1.25);
-      else if (b.dataset.a === 'zoom-minus') zoomUm(0.8);
+      if (b.dataset.a === 'zoom-plus') gleitend(() => zoomUm(1.25));
+      else if (b.dataset.a === 'zoom-minus') gleitend(() => zoomUm(0.8));
       else if (b.dataset.a === 'zoom-alles') allesZeigen();
     });
 
