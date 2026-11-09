@@ -1,4 +1,4 @@
-/* Suite 638 – Touch-Flaechen fuer Schaltplan-Palette und Kontextleiste.
+/* Suite 638 – Touch-Flaechen fuer Palette, Kontextleiste und schwebendes Dock.
  *
  * Dieser Test laedt das echte Stilblatt, nicht kopierte CSS-Regeln.
  * Browser-Emulation: 320 und 390 px, coarse touch und Desktop-Pointer.
@@ -29,6 +29,16 @@ const html = `<!doctype html>
       <button>1</button><button>2</button><button>3</button>
       <button>4</button><button>5</button><button>6</button>
     </div>
+    <span class="sp-werkzeuge" role="toolbar" aria-label="Schaltplan-Werkzeuge">
+      <button class="sp-wz" aria-label="Auswahl">↖</button>
+      <button class="sp-wz" aria-label="Leitung">⌐</button>
+      <button class="sp-wz" aria-label="Text">T</button>
+      <button class="sp-wz" aria-label="Schiene">☰</button>
+      <button class="sp-wz" aria-label="Radieren">⌫</button>
+      <span class="sp-dock-trenner" aria-hidden="true"></span>
+      <button class="sp-palette-knopf" aria-label="Bauteile">▦ <span>Bauteile</span></button>
+      <button class="sp-dock-fit" aria-label="Gesamtansicht">⤢</button>
+    </span>
   </main>
 </body></html>`;
 
@@ -51,6 +61,8 @@ try {
           };
           const bar = q('.sp-kontextleiste');
           const b = bar.getBoundingClientRect();
+          const dock = q('.sp-werkzeuge');
+          const d = dock.getBoundingClientRect();
           return {
             coarse: matchMedia('(hover: none) and (pointer: coarse)').matches,
             close: m('.sp-pal-schliessen'),
@@ -63,6 +75,14 @@ try {
               left: b.left, right: b.right, client: bar.clientWidth,
               scroll: bar.scrollWidth,
               overflow: getComputedStyle(bar).overflowX
+            },
+            dock: {
+              left: d.left, right: d.right, client: dock.clientWidth,
+              scroll: dock.scrollWidth, overflow: getComputedStyle(dock).overflowX,
+              buttons: [...dock.querySelectorAll('button')].map(el => {
+                const r = el.getBoundingClientRect();
+                return { width: r.width, height: r.height };
+              })
             }
           };
         });
@@ -92,6 +112,29 @@ try {
           return ende.left >= rand.left - 1 && ende.right <= rand.right + 1;
         });
         assert.ok(letzteAktion, 'Die letzte Kontextaktion muss erreichbar sein');
+        // Das schwebende Haupt-Dock darf auf 320px nicht rechts
+        // hinausragen; alle 7 Buttons bleiben mindestens 44px gross.
+        assert.ok(mass.dock.left >= -1 && mass.dock.right <= breite + 1,
+          `Werkzeug-Dock muss im ${breite}px-Viewport bleiben`);
+        assert.equal(mass.dock.overflow, 'auto',
+          'Mobile Werkzeugleiste muss bei Platzmangel horizontal scrollbar sein');
+        assert.equal(mass.dock.buttons.length, 7,
+          'Fuenf Werkzeuge, Palette und Gesamtansicht muessen vorhanden sein');
+        for (const [i, value] of mass.dock.buttons.entries()) {
+          assert.ok(value.width >= 44 && value.height >= 44,
+            `Dock-Button ${i + 1}: ${value.width}x${value.height}px`);
+        }
+        if (breite === 320) assert.ok(mass.dock.scroll > mass.dock.client,
+          'Bei 320px muss das Werkzeug-Dock einen Scrollbereich haben');
+        const dockLetzterButton = await page.evaluate(() => {
+          const dock = document.querySelector<HTMLElement>('.sp-werkzeuge')!;
+          dock.scrollLeft = dock.scrollWidth;
+          const r = dock.querySelector('button:last-child')!.getBoundingClientRect();
+          const b = dock.getBoundingClientRect();
+          return r.left >= b.left - 1 && r.right <= b.right + 1;
+        });
+        assert.ok(dockLetzterButton,
+          'Auch die Gesamtansicht am Dock-Ende muss durch Scrollen erreichbar sein');
         // Auch die normale (nicht kompakte) Palette braucht grosse Ziele.
         await page.locator('.sp-palette').evaluate(el => el.classList.remove('sp-pal-kompakt'));
         const normal = await page.locator('[data-p-compact]').boundingBox();
