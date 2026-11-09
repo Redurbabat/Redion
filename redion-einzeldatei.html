@@ -14088,6 +14088,83 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
  .sp-wrap .sp-batterie-fach .sp-bat-birne{flex-basis:42px;width:42px;height:42px;font-size:30px}
 }
 
+/* Windows/Desktop: Werkzeug-Dock bei schmalen Fenstern erreichbar halten.
+ * Nur Darstellung; keine Änderung an Schaltplan-Daten oder Interaktionen. */
+@media (min-width: 851px) {
+  .sp-wrap .sp-werkzeuge {
+    max-width: calc(100% - 32px);
+    box-sizing: border-box;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+  }
+  .sp-wrap .sp-werkzeuge > * {
+    flex-shrink: 0;
+  }
+}
+/* Tastatur-Navigation: sichtbarer Fokus auf den Zeichenwerkzeugen. */
+.sp-wrap .sp-werkzeuge :is(button, [role="button"]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+
+/* Der schwebende Werkzeug-Dock muss auch auf 320px-Bildschirmen
+ * bedienbar bleiben. Sieben Schaltflaechen mit 44px Mindestmass passen
+ * nicht nebeneinander. Ohne eigenen Scrollbereich ragte der letzte Button
+ * rechts aus dem Viewport (Chromium-Reproduktion). Die Box selbst bleibt
+ * innerhalb des Plans; ihre Kinder behalten ihre Fingergroesse. */
+@media (max-width: 800px) {
+  .sp-wrap .sp-werkzeuge {
+    box-sizing: border-box;
+    max-width: calc(100% - 24px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .sp-wrap .sp-werkzeuge > * { flex-shrink: 0; }
+  .sp-wrap .sp-werkzeuge::-webkit-scrollbar { display: none; }
+}
+
+/* Touch-Ziele fuer den Schaltplan (P2): 44 CSS-Pixel bei Fingerbedienung.
+ * Die kompakte Palette bleibt optisch schlank, aber Schliessen/Umschalten
+ * und Kontextaktionen sind auf 320–430 px breiten Displays erreichbar.
+ * Maus-/Trackpad-Dichte und Desktop-Werkzeugleiste bleiben unveraendert. */
+@media (hover: none) and (pointer: coarse) {
+  .sp-wrap .sp-pal-schliessen,
+  .sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-schliessen {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    flex-shrink: 0;
+  }
+  .sp-wrap .sp-pal-header-actions [data-p-compact],
+  .sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-header-actions [data-p-compact] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .sp-wrap .sp-kontextleiste button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  /* Mehrere 44er-Aktionen passen nicht nebeneinander auf 320 px.
+     Die Leiste scrollt innerhalb des sichtbaren Bildschirms, statt
+     Aktionen abzuschneiden oder den Schaltplan seitlich zu vergroessern. */
+  .sp-wrap .sp-kontextleiste {
+    box-sizing: border-box;
+    max-width: calc(100% - 16px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .sp-wrap .sp-kontextleiste::-webkit-scrollbar { display: none; }
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/bausteine.css ===== */
@@ -16126,6 +16203,36 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     display:block; font-size:10.5px; font-weight:500; letter-spacing:-.01em;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;
   }
+  /* BBT-Bit Infinity-Dock, an Redions bestehende Fuenf-Wege-Leiste angepasst.
+     Die zweite Ebene bleibt dieselbe Register-Zielleiste, keine neuen Routen.
+     Nur Compositor-Effekte: weder Groesse noch Touch-Hitbox veraendern. */
+  #handy-oben > button .ho-z,
+  #ho-ziele > button .ho-z{
+    will-change:auto;
+    transition:transform var(--feder-knapp-dauer) var(--feder-knapp),
+               color var(--motion-fast) var(--ease-standard)
+  }
+  #handy-oben > button:is(:focus-visible,:active) .ho-z{
+    transform:translateY(-2px) scale(1.08)
+  }
+  #handy-oben > button:focus-visible,
+  #ho-ziele > button:focus-visible{
+    outline:2px solid var(--accent-text,var(--accent));
+    outline-offset:-2px
+  }
+  #ho-ziele > button:active .ho-z{transform:scale(1.08)}
+  /* Lesbarkeit statt reinem Farbwechsel: aktives Ziel ist auch fetter. */
+  #handy-oben > button[aria-selected="true"] b{font-weight:700}
+  @media(prefers-reduced-motion:reduce){
+    #handy-oben > button .ho-z,
+    #ho-ziele > button .ho-z{transition:none}
+    #handy-oben > button:is(:focus-visible,:active) .ho-z,
+    #ho-ziele > button:active .ho-z{transform:none}
+  }
+  body[data-bewegung="ruhig"] #handy-oben > button .ho-z,
+  body[data-bewegung="ruhig"] #ho-ziele > button .ho-z{transition:none}
+  body[data-bewegung="ruhig"] #handy-oben > button:is(:focus-visible,:active) .ho-z,
+  body[data-bewegung="ruhig"] #ho-ziele > button:active .ho-z{transform:none}
   #ho-ziele > button:is([data-anvisiert],[aria-current="page"]){ color:var(--accent-text,var(--accent)) }
   #ho-ziele > button[aria-current="page"] b{ font-weight:650 }
   #ho-ziele .ho-z{ display:flex; align-items:center; justify-content:center;
@@ -16353,6 +16460,36 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     transition:opacity var(--motion-normal) var(--ease-standard);
   }
   #handy-oben #ho-pille.faehrt::before{ opacity:.72 }
+
+  /* BBT-Bit-Video vom 07.11.: farbige, gleitende Auswahl-Linse.
+     Bestehende SelectionFlow-Feder und Trefferflaechen bleiben unveraendert.
+     Die Akzentfarbe kommt aus Redions Theme, nicht aus einer Musik-Route. */
+  #handy-oben #ho-pille{
+    background:color-mix(in srgb,var(--accent) 24%,transparent);
+    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 55%,transparent),
+               0 0 13px color-mix(in srgb,var(--accent) 20%,transparent);
+  }
+  #handy-oben #ho-pille.faehrt{
+    background:color-mix(in srgb,var(--accent) 31%,transparent);
+    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 65%,transparent),
+               0 0 19px color-mix(in srgb,var(--accent) 32%,transparent);
+  }
+  /* Das Symbol faerbt sich synchron zur gleitenden Linse; nur der aktive
+     Reiter wird eingefärbt, damit die anderen Ziele eindeutig bleiben. */
+  #handy-oben > button[aria-selected="true"] .ho-z{
+    color:var(--accent-text,var(--accent));
+  }
+  @media(prefers-reduced-motion:reduce){
+    #handy-oben #ho-pille.faehrt{
+      background:color-mix(in srgb,var(--accent) 24%,transparent);
+      box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 55%,transparent)
+    }
+  }
+  body[data-bewegung="ruhig"] #handy-oben #ho-pille.faehrt{
+    background:color-mix(in srgb,var(--accent) 24%,transparent);
+    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 55%,transparent)
+  }
+
 
   /* OHNE BEWEGUNG STEHT SIE STILL — UND BLEIBT SICHTBAR. Das ist genau die
      Falle, vor der §55.2 warnt: eine Linse, die bei `reduce` einfach
@@ -29453,7 +29590,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1574, inhalt: 'c4687a62dfbd527f', gebaut: '2026-11-02T22:28:59.293Z' };
+const Stand = { fassung: 1575, inhalt: 'c7abe7f70b3881f6', gebaut: '2026-11-09T21:53:47.049Z' };
 window.Stand = Stand;
 
 </script>
@@ -49912,11 +50049,17 @@ const SelectionFlow = (() => {
             const z = zug;
             if (!z || !z.amZiehen)
                 return;
+            const bewegungReduziert = ruhig();
             const dt = Math.min(48, Math.max(0, jetzt - z.zuletzt));
             z.zuletzt = jetzt;
             const erste = z.mitten[0] ?? 0, letzte = z.mitten[z.mitten.length - 1] ?? 0;
             const ziel = gummiband(z.finger - z.versatz, Math.min(erste, letzte), Math.max(erste, letzte), z.breite * 0.5) - z.breite / 2;
-            if (z.zieht) {
+            if (bewegungReduziert) {
+                z.ort = ziel;
+                z.tempo = 0;
+                z.zieht = false;
+            }
+            else if (z.zieht) {
                 const s = bahnVon(FEDERN.knapp, z.ort - ziel, z.tempo)(dt);
                 z.ort = ziel + s.x;
                 z.tempo = s.v;
@@ -49929,10 +50072,13 @@ const SelectionFlow = (() => {
                 z.ort = ziel;
                 z.tempo = z.messer.tempo(jetzt);
             }
-            const soll = ruhig() ? 1 : dehnungAus(z.tempo);
+            const soll = bewegungReduziert ? 1 : dehnungAus(z.tempo);
             z.dehnung = soll > z.dehnung ? soll : 1 + (z.dehnung - 1) * Math.pow(0.5, dt / 40);
-            const hubSoll = ruhig() ? 1 : HUB;
-            z.hub += (hubSoll - z.hub) * (1 - Math.pow(0.5, dt / 30));
+            if (bewegungReduziert)
+                z.dehnung = 1;
+            const hubSoll = bewegungReduziert ? 1 : HUB;
+            z.hub = bewegungReduziert ? 1
+                : z.hub + (hubSoll - z.hub) * (1 - Math.pow(0.5, dt / 30));
             malen(z);
             vorleuchten(z);
             z.bild = requestAnimationFrame(takt);
@@ -69562,16 +69708,21 @@ const Schaltplan = (() => {
         });
     };
     const FANG = 14;
-    const fangeAnschluss = (plan, p) => {
+    const fangeAnschluss = (plan, p, radius = FANG) => {
         let beste = null;
-        let weite = FANG * FANG;
-        plan.teile.forEach(t => anschluesseVon(t).forEach(a => {
-            const d = (a.x - p.x) * (a.x - p.x) + (a.y - p.y) * (a.y - p.y);
-            if (d <= weite) {
-                weite = d;
-                beste = { teil: t.id, nr: a.nr, x: a.x, y: a.y };
-            }
-        }));
+        let weite = Math.max(0, radius) ** 2;
+        const versteckt = new Set(plan.ebenen.filter(e => e.sichtbar === false).map(e => e.id));
+        plan.teile.forEach(t => {
+            if (versteckt.has(t.ebene))
+                return;
+            anschluesseVon(t).forEach(a => {
+                const d = (a.x - p.x) * (a.x - p.x) + (a.y - p.y) * (a.y - p.y);
+                if (d <= weite) {
+                    weite = d;
+                    beste = { teil: t.id, nr: a.nr, x: a.x, y: a.y };
+                }
+            });
+        });
         return beste;
     };
     const rechtwinklig = (a, b) => {
@@ -70800,10 +70951,17 @@ window.Schaltplan = Schaltplan;
   function ausPlan(plan, netze, ausgangIndex) {
     const uebung = plan && plan.batterieUebung;
     if (!uebung || !Array.isArray(uebung.teile) ||
-        !uebung.teile.length || uebung.teile.length > 64)
+        (uebung.id !== 'selbst' && !uebung.teile.length) || uebung.teile.length > 64)
       return fehler('Keine Batterieübung in diesem Schaltplan.');
     const teile = Array.isArray(plan.teile) ? plan.teile : [];
     const nachId = new Map(teile.map(t => [String(t.id), t]));
+    /* Beim freien Zeichnen gelten auch per normaler Bauteilpalette
+       eingesetzte Batterien. Lehrmittel-Aufgaben bleiben dagegen strikt. */
+    const eigene = uebung.id === 'selbst';
+    const zellIds = eigene ? teile.filter(t => t.zeichen === 'batterie').map(t => t.id)
+                           : uebung.teile;
+    if (!zellIds.length || zellIds.length > 64)
+      return fehler('Setze 1 bis 64 Batterien auf den Plan.');
     const mehr=Array.isArray(uebung.ausgaenge) && uebung.ausgaenge.length>0;
     const index=Number.isInteger(ausgangIndex)?ausgangIndex:0;
     const plusId=mehr && uebung.ausgaenge[index]
@@ -70821,8 +70979,8 @@ window.Schaltplan = Schaltplan;
       { id: AUS_PLUS, klemme: 'k:' + plusId + ':1' },
       { id: AUS_PLUS, klemme: 'k:' + plusId + ':2' }
     ];
-    for (let i = 0; i < uebung.teile.length; i++) {
-      const t = nachId.get(uebung.teile[i]);
+    for (let i = 0; i < zellIds.length; i++) {
+      const t = nachId.get(zellIds[i]);
       if (!t || t.zeichen !== 'batterie')
         return fehler('Eine Zelle der Aufgabe wurde entfernt oder ersetzt.');
       const w = t.werte || {};
@@ -70854,7 +71012,71 @@ window.Schaltplan = Schaltplan;
     return pruefen(zellen, leitungen, {nurAusgang:mehr});
   }
 
-  const api = { pruefen, ausPlan, reiheParallel, idMinus, idPlus, AUS_MINUS, AUS_PLUS };
+  /* Widerstände, die tatsächlich im gezeichneten Stromkreis zwischen
+   * X+ und X− liegen, bestimmen die Last. Mit einem 1-A-Probestrom wird
+   * der Ersatzwiderstand eines beliebigen ohmschen Netzwerks ermittelt.
+   * Unverbundene Bauteile zählen nicht. Kein stillschweigender Kurzschluss. */
+  function lastAusPlan(plan, netze, ausgangIndex) {
+    const m = plan && plan.batterieUebung;
+    if (!m || !netze || !(netze.netzVon instanceof Map))
+      return {ok:false, grund:'Kein gültiger Batterieplan.'};
+    const pos = m.ausgaenge && m.ausgaenge[ausgangIndex || 0]
+      ? m.ausgaenge[ausgangIndex || 0].id : m.plus;
+    /* X+ und X− sind im Plan je eine zweipolige Reihenklemme.
+       In der Batterieübung gehören beide Anschlussseiten zum selben
+       Ausgang (auch wenn Stromfluss.netze sie einzeln nummeriert). */
+    const plusNetze=[1,2].map(n=>netze.netzVon.get('k:'+pos+':'+n))
+      .filter(n=>n!==undefined);
+    const minusNetze=[1,2].map(n=>netze.netzVon.get('k:'+m.minus+':'+n))
+      .filter(n=>n!==undefined);
+    if(!plusNetze.length||!minusNetze.length||
+       plusNetze.some(n=>minusNetze.includes(n)))
+      return {ok:false, grund:'Die Ausgangsklemmen sind kurzgeschlossen oder fehlen.'};
+    const von='Xminus',nach='Xplus';
+    const zuAusgang=n=>plusNetze.includes(n)?nach:minusNetze.includes(n)?von:n;
+    const kanten = [];
+    for (const t of (plan.teile || [])) {
+      if (t.zeichen !== 'widerstand') continue;
+      const a = netze.netzVon.get('k:' + t.id + ':1');
+      const b = netze.netzVon.get('k:' + t.id + ':2');
+      if (a === undefined || b === undefined) continue;
+      const standard = (typeof Stromfluss !== 'undefined' && Stromfluss.verhalten)
+        ? Stromfluss.verhalten('widerstand') : null;
+      const ohm = t.werte && t.werte.R != null ? Number(t.werte.R)
+        : (standard && Number.isFinite(standard.wert) ? standard.wert : 100);
+      if (!Number.isFinite(ohm) || ohm <= 0)
+        return {ok:false, grund:'Ein gezeichneter Widerstand hat keinen gültigen R-Wert.'};
+      const x=zuAusgang(a),y=zuAusgang(b);
+      if (x !== y) kanten.push({a:x,b:y,ohm});
+    }
+    if (!kanten.length) return null;
+    const gesehen = new Set([nach]), offen = [nach];
+    while (offen.length) {
+      const n = offen.shift();
+      for (const k of kanten) {
+        const zu = k.a === n ? k.b : k.b === n ? k.a : null;
+        if (zu !== null && !gesehen.has(zu)) { gesehen.add(zu); offen.push(zu); }
+      }
+    }
+    if (!gesehen.has(von)) return null; // Noch kein vollständiger Lastpfad
+    const aktiv = kanten.filter(k => gesehen.has(k.a) && gesehen.has(k.b));
+    const orte = [...gesehen].filter(n => n !== von);
+    const ix = new Map(orte.map((n,i) => [n,i]));
+    const mat = orte.map(() => orte.map(() => 0));
+    const rechts = orte.map(n => n === nach ? 1 : 0);
+    for (const k of aktiv) {
+      const g = 1 / k.ohm, a = ix.get(k.a), b = ix.get(k.b);
+      if (a !== undefined) mat[a][a] += g;
+      if (b !== undefined) mat[b][b] += g;
+      if (a !== undefined && b !== undefined) {mat[a][b] -= g; mat[b][a] -= g;}
+    }
+    const v = gleichung(mat, rechts);
+    if (!v || !Number.isFinite(v[ix.get(nach)]) || v[ix.get(nach)] <= 0)
+      return {ok:false, grund:'Der gezeichnete Lastwiderstand ist nicht berechenbar.'};
+    return {ok:true, ohm:v[ix.get(nach)], anzahl:aktiv.length};
+  }
+
+  const api = { pruefen, ausPlan, lastAusPlan, reiheParallel, idMinus, idPlus, AUS_MINUS, AUS_PLUS };
   wurzel.BatterieKern = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -70939,7 +71161,13 @@ window.Schaltplan = Schaltplan;
   })[c]);
   const zeige=(v,e)=>v==null||!Number.isFinite(v)?'nicht angegeben':
     new Intl.NumberFormat('de-CH',{maximumFractionDigits:4}).format(v)+(e?' '+e:'');
-  const get=id=>AUFGABEN.find(a=>a.id===id)||AUFGABEN[0];
+  /* Keine vorgezeichneten Akkus: alles mit der normalen Palette selbst einsetzen. */
+  const SELBST={id:'selbst',name:'Eigene Zeichnung · Batterien frei platzieren',
+    art:'frei',zellen:[],
+    info:'Batterien aus „Bauteile“ auf den Plan ziehen und mit Taste 2 verbinden. '+
+      'Auch nachträglich platzierte Zellen werden automatisch mitgemessen. '+
+      'Eine Batterie erhält ihre tatsächlichen Werte über „Akku einstellen“.'};
+  const get=id=>id==='selbst'?SELBST:AUFGABEN.find(a=>a.id===id)||AUFGABEN[0];
   const soll=a=>a.zellen.length;
   const werteVon=p=>({
     ...(p.u==null?{}:{U:p.u}),
@@ -70959,7 +71187,7 @@ window.Schaltplan = Schaltplan;
     const mehr=!!a.ausgaenge;
     const einzeln=a.zellen.length===6 && a.zielU===a.zellen[0].u;
     const z=mehr?Math.min(a.anfang||soll(a),soll(a)):Math.min(a.anfang||soll(a),soll(a));
-    const cols=mehr?6:einzeln?6:z>10?4:z>6?4:Math.min(3,z);
+    const cols=mehr?6:einzeln?6:z>10?4:z>6?4:Math.max(1,Math.min(3,z));
     const dx=mehr?170:einzeln?145:175,dy=mehr?120:180;
     plan.breite=mehr?1660:Math.max(1150,160+cols*dx+300);
     plan.hoehe=mehr?1150:Math.max(720,200+Math.ceil(z/cols)*dy+150);
@@ -71106,6 +71334,7 @@ window.Schaltplan = Schaltplan;
     const meta=plan&&plan.batterieUebung;
     if(!meta)throw Error('Keine Batterieaufgabe.');
     const a=get(meta.id);
+    if(a.id==='selbst')throw Error('Für frei gezeichnete Schaltungen gibt es kein festes Muster.');
     const nachId=()=>new Map(plan.teile.map(t=>[t.id,t]));
     if(meta.teile.length>soll(a) && a.id!=='frei')
       throw Error('Für dieses Muster sind zusätzliche Zellen vorhanden.');
@@ -71177,6 +71406,27 @@ window.Schaltplan = Schaltplan;
       'akku-6': {u:6,i:12,ri:null,q:null},
       'akku-8': {u:8,i:6,ri:null,q:null}
     };
+    function eigeneAusZeichnung() {
+      const plan=optionen.holePlan();
+      if(plan.batterieUebung)return true;
+      const akkus=plan.teile.filter(t=>t.zeichen==='batterie');
+      if(!akkus.length)return false;
+      const x=Math.max(960,...plan.teile.map(t=>Number(t.x)||0))+160;
+      const y=Math.max(260,...plan.teile.map(t=>Number(t.y)||0))+150;
+      optionen.aendere(()=>{
+        const plus={id:Schaltplan.uid(),zeichen:'klemme',bmk:'X+',
+          x,y:180,drehung:0,gespiegelt:false,nummern:{},gruppe:'',ebene:'plan'};
+        const minus={...plus,id:Schaltplan.uid(),bmk:'X−',y};
+        plan.teile.push(plus,minus);
+        plan.texte.push({id:Schaltplan.uid(),x:x+52,y:170,t:'X+ · PLUS',ebene:'plan'});
+        plan.texte.push({id:Schaltplan.uid(),x:x+52,y:y-9,t:'− MINUS',ebene:'plan'});
+        plan.batterieUebung={id:'selbst',plus:plus.id,minus:minus.id,
+          teile:akkus.slice(0,64).map(t=>t.id)};
+        plan.breite=Math.max(Number(plan.breite)||0,x+250);
+        plan.hoehe=Math.max(Number(plan.hoehe)||0,y+160);
+      });
+      wahl='selbst';schalter=false;lastart='ohne';return true;
+    }
     function messung(i) {
       const plan=optionen.holePlan();
       if(!plan.batterieUebung)return null;
@@ -71193,22 +71443,44 @@ window.Schaltplan = Schaltplan;
       [['U (Leerlauf)',zeige(r.u,'V')],['Ri (gesamt)',zeige(r.ri,'Ω')],
        ['Imax',zeige(r.maxA,'A')],['Q (gesamt)',zeige(r.ah,'Ah')]].map(
         ([x,y])=>'<span><b>'+esc(x)+'</b> '+esc(y)+'</span>').join('')+'</div>';
+    function wirksameLast() {
+      const plan=optionen.holePlan();
+      if(plan.batterieUebung&&wurzel.BatterieKern&&typeof Stromfluss!=='undefined'){
+        try {
+          const gezeichnet=wurzel.BatterieKern.lastAusPlan(
+            plan,Stromfluss.netze(plan),ausgang);
+          if(gezeichnet)return {...gezeichnet,gezeichnet:true};
+        }catch(_e){/* Die Netzliste wird bei der eigentlichen Messung geprüft. */}
+      }
+      /* Eine offene selbst gezeichnete Last darf keine erfundene
+         Stromstärke durch den Testwiderstand anzeigen. */
+      if(plan.teile.some(t=>t.zeichen==='widerstand'))
+        return {ok:false,gezeichnet:true,grund:'Gezeichneter Verbraucher offen: Widerstand mit X+ und X− verbinden.'};
+      if(plan.batterieUebung&&plan.batterieUebung.id==='selbst'&&lastart==='ohne')
+        return {ok:false,gezeichnet:false,grund:'Leerlauf: I = 0 A. Zeichne einen Widerstand oder wähle eine Testlast.'};
+      const ohm=Number(widerstand);
+      return {ok:Number.isFinite(ohm)&&ohm>0&&ohm<=1000000,
+        ohm,gezeichnet:false,grund:'Gib einen positiven Testlastwiderstand in Ω ein.'};
+    }
     function lastAnzeige(r) {
-      const R=Number(widerstand);
-      const hatR=Number.isFinite(R)&&R>0&&R<=1000000;
-      const strom=r&&r.ok&&schalter&&hatR?r.u/(R+(r.ri||0)):0;
-      const spannung=r&&r.ok&&hatR?strom*R:0;
+      const last=wirksameLast(),R=last.ohm;
+      const strom=r&&r.ok&&schalter&&last.ok?r.u/(R+(r.ri||0)):0;
+      const spannung=strom*R;
       const leuchtet=strom>1e-8;
       let txt='';
-      if(!r||!r.ok)txt='Erst die Batterie korrekt verdrahten.';
-      else if(!schalter)txt='Schalter AUS · 0 A · Lampe dunkel.';
-      else if(!hatR)txt='Gib einen positiven Lastwiderstand in Ω ein.';
-      else txt='Strom '+zeige(strom,'A')+' · Spannung an der Last '+
-        zeige(spannung,'V')+' · Leistung '+zeige(strom*spannung,'W')+
-        (r.ri===null?' · Idealmodell ohne unbekannten Innenwiderstand':'')+
+      if(!r||!r.ok)txt='Kein Strom: '+(r&&r.grund?r.grund:'Erst die Batterien verdrahten.');
+      else if(!schalter)txt='Strom AUS · I = 0 A. '+(last.ok?'R der Last = '+zeige(R,'Ω'):'');
+      else if(!last.ok)txt=last.grund;
+      else txt='Strom I = '+zeige(strom,'A')+' · Last R = '+zeige(R,'Ω')+
+        (last.gezeichnet?' (aus deiner Zeichnung)':' (einstellbare Testlast)')+
+        ' · Gesamtwiderstand Ri + R = '+(r.ri===null?'nicht vollständig bekannt':
+          zeige(R+r.ri,'Ω'))+
+        ' · Lastspannung = '+zeige(spannung,'V')+
+        ' · Leistung = '+zeige(strom*spannung,'W')+
+        (r.ri===null?' · Idealmodell, da Innenwiderstand unbekannt':'')+
         (strom>r.maxA+1e-8?' · ACHTUNG: Nennstrom überschritten!':'');
       return '<div class="sp-bat-strombild"><span class="sp-bat-birne '+
-        (leuchtet?'an':'')+'" role="img" aria-label="'+(leuchtet?'Lampe leuchtet':'Lampe dunkel')+
+        (leuchtet?'an':'')+'" role="img" aria-label="'+(leuchtet?'Verbraucher eingeschaltet':'Kein Stromfluss')+
         '">◉</span><span class="sp-bat-stromtext">'+esc(txt)+'</span></div>';
     }
     function ergebnis(r,ziel,plan,a) {
@@ -71233,6 +71505,8 @@ window.Schaltplan = Schaltplan;
       const a=meta?get(meta.id):get(wahl),ids=optionen.holeAuswahl();
       const t=meta&&ids.length===1?plan.teile.find(x=>
         x.id===ids[0]&&x.zeichen==='batterie'):null;
+      const eigene=meta&&meta.id==='selbst';
+      const gezeichnete=plan.teile.filter(x=>x.zeichen==='batterie').length;
       const w=t?t.werte||{}:{};
       const ziel=a.ausgaenge?a.ausgaenge[Math.min(ausgang,a.ausgaenge.length-1)]:a;
       let html='<div class="sp-bat-kopf"><strong>Kapitel 12 · Batterien live üben</strong>'+
@@ -71240,20 +71514,32 @@ window.Schaltplan = Schaltplan;
         '<div class="sp-bat-bedienung"><label>Lehrmittel-Aufgabe <select data-bat="wahl">'+
         AUFGABEN.map(e=>'<option value="'+esc(e.id)+'"'+
           (e.id===wahl?' selected':'')+'>'+esc(e.name)+'</option>').join('')+
-        '</select></label><button type="button" data-bat="einsetzen">Aufgabe einsetzen</button></div>';
+        '</select></label><button type="button" data-bat="einsetzen">Aufgabe einsetzen</button>'+
+        '<button type="button" data-bat="leer">Leere Batteriezeichnung starten</button></div>';
       if(!meta){
-        html+='<p class="sp-bat-hinweis">Aufgabe auswählen, dann auf die vorhandene Zeichenfläche setzen. '+
-          'Anschliessend Akkus selber verdrahten und Strom einschalten.</p>';
+        html+='<p class="sp-bat-hinweis">Batterien komplett selbst zeichnen? „Leere Batteriezeichnung starten“ '+
+          'wählen oder mit der normalen Bauteilpalette Akkus platzieren und dann „Vorhandene Zeichnung messen“ anklicken.</p>'+
+          '<button type="button" data-bat="uebernehmen">Vorhandene Zeichnung messen ('+
+          gezeichnete+' Batterien)</button>';
       }else{
-        html+='<p class="sp-bat-hinweis"><b>'+esc(a.name)+'</b> · '+meta.teile.length+
-          ' von '+soll(a)+' geplanten '+esc(a.art)+'-Zellen/Paketen'+
+        html+='<p class="sp-bat-hinweis"><b>'+esc(a.name)+'</b> · '+
+          (eigene?gezeichnete+' selbst gezeichnete Batterien':
+            meta.teile.length+' von '+soll(a)+' geplanten '+esc(a.art)+'-Zellen/Paketen')+
           (a.zielU?' · Ziel '+zeige(a.zielU,'V'):'')+
           (a.zielI?' / '+zeige(a.zielI,'A'):'')+'.</p>';
         if(a.annahme)html+='<p class="sp-bat-hinweis">Annahme: '+esc(a.annahme)+'</p>';
         if(a.info)html+='<p class="sp-bat-hinweis">'+esc(a.info)+'</p>';
+        html+='<details class="sp-bat-lernhilfe"><summary>So übst du die Schaltung Schritt für Schritt</summary>'+
+          '<p><b>1. Batterien einsetzen:</b> Die Zellen erscheinen direkt in der Zeichenfläche. Zusätzliche Akkus mit „Weiteren Akku hinzufügen“ platzieren; eine Zelle anklicken, um U, Ri, Imax und Q zu bearbeiten.</p>'+
+          '<p><b>2. Reihenschaltung:</b> Plus (+) mit dem Minus (−) der nächsten Batterie verbinden. Die Spannungen addieren sich, der zulässige Strom wird durch das schwächste Glied begrenzt.</p>'+
+          '<p><b>3. Parallelschaltung:</b> Alle Pluspole miteinander und alle Minuspole miteinander verbinden. Nur Zweige mit gleicher Spannung parallel verbinden. Die zulässigen Ströme addieren sich im vereinfachten Schulmodell.</p>'+
+          '<p><b>4. Leitungen ziehen:</b> Mit dem vorhandenen Werkzeug „Leitung ziehen“ (Taste 2) die Anschlüsse verbinden. Am Ende die Schaltung an die Klemmen X+ und X− anschliessen.</p>'+
+          '<p><b>5. Testen:</b> „Jetzt prüfen“ anklicken, dann eine Last wählen und „Strom einschalten“ aktivieren. Angezeigt werden Spannung, Strom, Leistung und mögliche Fehler.</p>'+
+          '<p><b>6. Lösung vergleichen:</b> „Musterverdrahtung zeigen“ verwenden; danach mit Rückgängig wieder selbst probieren.</p>'+
+          '<p><b>Achtung:</b> Die Stromanzeige ist eine Lernsimulation, keine echte Stromversorgung. Bei unbekanntem Innenwiderstand wird die ideale Näherung verwendet.</p></details>';
         html+='<p class="sp-bat-hinweis">'+esc(anschlussHilfe)+'</p>'+
           '<div class="sp-bat-bedienung">'+
-          '<button type="button" data-bat="muster">Musterverdrahtung zeigen</button>'+
+          (eigene?'':'<button type="button" data-bat="muster">Musterverdrahtung zeigen</button>')+
           '<button type="button" data-bat="pruefen">Jetzt prüfen</button></div>';
         html+='<div class="sp-bat-ergaenzen"><label>Weiteren Akku hinzufügen <select data-bat="neuArt">'+
           [['leclanche','1,5 V / 1 A · Leclanché'],['bleiak','2 V / 10 A · Bleiakku'],
@@ -71285,8 +71571,11 @@ window.Schaltplan = Schaltplan;
         }
         const r=messung(ausgang);
         html+='<div class="sp-bat-messung" aria-live="polite">'+ergebnis(r,ziel,plan,a)+'</div>'+
-          '<div class="sp-bat-last"><label>Last aus Widerständen <select data-bat="lastart">'+
-          [['eigen','Eigener Widerstand'],['einzeln','Ein Widerstand 2 Ω'],
+          '<div class="sp-bat-last"><p class="sp-bat-hinweis">Ist ein gezeichneter Widerstands-Stromkreis '+
+          'zwischen X+ und X− geschlossen, wird dessen Ersatzwiderstand automatisch verwendet. '+
+          'Sonst gilt die hier eingestellte Testlast.</p>'+
+          '<label>Testlast aus Widerständen <select data-bat="lastart">'+
+          [['ohne','Kein Verbraucher (Leerlauf)'],['eigen','Eigener Widerstand'],['einzeln','Ein Widerstand 2 Ω'],
            ['vierparallel','4 × 2 Ω parallel = 0,5 Ω'],
            ['vierreihe','4 × 2 Ω in Reihe = 8 Ω'],
            ['viergemischt','2+2 Ω parallel zu 2+2 Ω = 2 Ω']].map(([v,n])=>
@@ -71304,7 +71593,10 @@ window.Schaltplan = Schaltplan;
       if(t.dataset.bat==='ausgang')ausgang=Number(t.value)||0;
       if(t.dataset.bat==='neuArt')neuArt=t.value;
       if(t.dataset.bat==='anzahl')anzahl=Math.min(16,Math.max(1,Number(t.value)||1));
-      if(t.dataset.bat==='schalter')schalter=t.checked;
+      if(t.dataset.bat==='schalter'){
+        schalter=t.checked;
+        if(optionen.nachStromwechsel)optionen.nachStromwechsel();
+      }
       if(t.dataset.bat==='last')widerstand=t.value.replace(',','.');
       if(t.dataset.bat==='lastart'){
         lastart=t.value;
@@ -71315,13 +71607,24 @@ window.Schaltplan = Schaltplan;
     });
     el.addEventListener('click',e=>{
       const b=e.target.closest('[data-bat]');
-      if(!b||!['einsetzen','muster','pruefen','hinzu','werte','loeschen'].includes(b.dataset.bat))
+      if(!b||!['einsetzen','leer','uebernehmen','muster','pruefen','hinzu','werte','loeschen'].includes(b.dataset.bat))
         return;
       const action=b.dataset.bat,plan=optionen.holePlan();
+      if(action==='uebernehmen'){
+        if(!eigeneAusZeichnung())window.alert('Platziere zuerst mindestens eine Batterie aus der Bauteilpalette.');
+        aktualisiere();return;
+      }
+      if(action==='leer'){
+        if((plan.teile.length||plan.leitungen.length||plan.texte.length)&&
+          !window.confirm('Aktuellen Plan durch eine leere Batteriezeichnung ersetzen?'))return;
+        const neu=planFuer('selbst');wahl='selbst';ausgang=0;schalter=false;lastart='ohne';
+        optionen.aendere(()=>optionen.setzePlan(neu));
+        optionen.nachPlanwechsel();aktualisiere();return;
+      }
       if(action==='einsetzen'){
         if((plan.teile.length||plan.leitungen.length||plan.texte.length)&&
           !window.confirm('Aktuellen Plan durch diese Aufgabe ersetzen? Rückgängig bleibt möglich.'))return;
-        const neu=planFuer(wahl);ausgang=0;schalter=false;
+        const neu=planFuer(wahl);ausgang=0;schalter=false;lastart='eigen';
         optionen.aendere(()=>optionen.setzePlan(neu));
         optionen.nachPlanwechsel();aktualisiere();return;
       }
@@ -71381,7 +71684,9 @@ window.Schaltplan = Schaltplan;
       });
       aktualisiere();
     });
-    return {aktualisiere};
+    return {aktualisiere,stromAn:()=>schalter,
+      stromSetzen:(an)=>{schalter=!!an;if(optionen.nachStromwechsel)optionen.nachStromwechsel();aktualisiere();},
+      ausZeichnung:eigeneAusZeichnung};
   }
   wurzel.BatterieAufgaben={erstelle,planFuer,musterFuer,aufgaben:AUFGABEN};
   if(typeof module!=='undefined'&&module.exports)
@@ -71574,6 +71879,16 @@ const Planflaeche = (() => {
             y = (e.clientY - r.top) * plan.hoehe / (r.height || 1);
         }
         return ohneRaster ? { x, y } : { x: Schaltplan.rasten(x), y: Schaltplan.rasten(y) };
+    };
+    const anschlussFangRadius = (svg, pointerType) => {
+        const matrix = svg.getScreenCTM();
+        if (!matrix)
+            return 14;
+        const scale = Math.hypot(matrix.a, matrix.b);
+        if (!Number.isFinite(scale) || scale <= 0)
+            return 14;
+        const pixel = pointerType === 'touch' ? 24 : 12;
+        return Math.min(42, Math.max(3, pixel / scale));
     };
     const RADIERER = 'elektro:radierer';
     const RADIER_GROESSEN = [[8, 'klein'], [16, 'mittel'], [28, 'gross']];
@@ -71785,15 +72100,15 @@ const Planflaeche = (() => {
                             `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
                         : '') +
                     `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" aria-haspopup="menu">✦ Bereiche ▾</button>` +
-                    `<button type="button" class="sp-start${z.simulation ? ' an' : ''}${z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ? ' sp-strom-ungeprueft' : ''}" ` +
-                    `data-a="simulation" ${z.plan.batterieUebung ? 'disabled ' : ''}` +
-                    `title="${z.plan.batterieUebung ? 'Batterieanlage im Batterie-Fach messen' :
+                    `<button type="button" class="sp-start${z.simulation || (z.plan.batterieUebung && batterie?.stromAn()) ? ' an' : ''}${z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ? ' sp-strom-ungeprueft' : ''}" ` +
+                    `data-a="simulation" ` +
+                    `title="${z.plan.batterieUebung ? (batterie?.stromAn() ? 'Batteriestrom ausschalten' : 'Batterieschaltung einschalten und U, R, I messen') :
                         z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ?
                             'Original-Verdrahtung ungeprüft: in der Relais-Werkstatt zuerst prüfen und freigeben.' :
                             z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
-                    `aria-pressed="${z.simulation}" ` +
-                    `aria-label="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}">` +
-                    `${z.simulation ? '◼' : '▶'} Strom</button>` +
+                    `aria-pressed="${!!(z.simulation || (z.plan.batterieUebung && batterie?.stromAn()))}" ` +
+                    `aria-label="${z.simulation || (z.plan.batterieUebung && batterie?.stromAn()) ? 'Strom ausschalten' : 'Strom einschalten'}">` +
+                    `${z.simulation || (z.plan.batterieUebung && batterie?.stromAn()) ? '◼' : '▶'} Strom</button>` +
                     `<button data-a="zurueck" title="Rückgängig" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>↶</button>` +
                     `<button data-a="vorwaerts" title="Wiederholen" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>↷</button>` +
                     `<button data-a="mehr" title="Mehr" aria-label="Mehr">…</button>` +
@@ -72521,22 +72836,164 @@ const Planflaeche = (() => {
                 UI.toast(beispiel.hinweis);
         };
         const vorlageEinsetzen = (v) => {
+            if (z.zieht)
+                return;
+            const teile = (Array.isArray(v?.teile) ? v.teile : []);
+            const leitungen = (Array.isArray(v?.leitungen) ? v.leitungen : []);
+            if (!teile.length) {
+                UI.toast('Diese Vorlage enthaelt keine Bauteile.');
+                return;
+            }
+            if (teile.some(t => !t || typeof t.zeichen !== 'string' ||
+                !Register.fachzeichen.holen(t.zeichen))) {
+                UI.toast('Vorlage enthaelt nicht verfuegbare Schaltzeichen.');
+                return;
+            }
+            const vorlagenIds = teile.map(t => t.id);
+            if (vorlagenIds.some(id => typeof id !== 'string' || !id.trim()) ||
+                new Set(vorlagenIds).size !== vorlagenIds.length) {
+                UI.toast('Vorlage enthaelt fehlende oder doppelte Bauteil-IDs.');
+                return;
+            }
+            if (leitungen.some(l => !l || !Array.isArray(l.punkte) ||
+                l.punkte.length < 2 || l.punkte.some((p) => !p || p.x == null || p.y == null ||
+                !Number.isFinite(Number(p.x)) || !Number.isFinite(Number(p.y))))) {
+                UI.toast('Vorlage enthaelt ungueltige Leitungen.');
+                return;
+            }
+            const r = Register.fachzeichen.RASTER;
+            const rand = r;
+            const rahmen = (t, dx = 0, dy = 0) => {
+                const m = Register.fachzeichen.masse(t.zeichen, Number(t.drehung) || 0);
+                const zc = Register.fachzeichen.holen(t.zeichen);
+                const cx = Number(t.x) + dx + (zc ? zc.w : 0) / 2;
+                const cy = Number(t.y) + dy + (zc ? zc.h : 0) / 2;
+                return { l: cx - m.w / 2, o: cy - m.h / 2,
+                    r: cx + m.w / 2, u: cy + m.h / 2 };
+            };
+            const vorlagenRahmen = teile.map(t => rahmen(t));
+            const internUeberlappt = vorlagenRahmen.some((a, i) => vorlagenRahmen.some((b, j) => j > i &&
+                a.l < b.r && b.l < a.r && a.o < b.u && b.o < a.u));
+            if (internUeberlappt) {
+                UI.toast('Vorlage enthaelt ueberlappende Bauteile.');
+                return;
+            }
+            const versteckt = new Set(z.plan.ebenen
+                .filter(e => e.sichtbar === false).map(e => e.id));
+            const belegt = z.plan.teile
+                .filter(t => !versteckt.has(t.ebene)).map(t => rahmen(t));
+            const vorhandeneLeitungen = z.plan.leitungen
+                .filter(l => !versteckt.has(l.ebene ?? ''));
+            const abstand = Math.min(6, rand);
+            const streckeTrifft = (a, b, f) => {
+                const dx = b.x - a.x, dy = b.y - a.y;
+                const p = [-dx, dx, -dy, dy];
+                const q = [a.x - f.l, f.r - a.x, a.y - f.o, f.u - a.y];
+                let ein = 0, aus = 1;
+                for (let i = 0; i < 4; i++) {
+                    const pi = p[i], qi = q[i];
+                    if (pi === 0) {
+                        if (qi < 0)
+                            return false;
+                        continue;
+                    }
+                    const t = qi / pi;
+                    if (pi < 0)
+                        ein = Math.max(ein, t);
+                    else
+                        aus = Math.min(aus, t);
+                    if (ein > aus)
+                        return false;
+                }
+                return true;
+            };
+            const passt = (dx, dy) => {
+                const teilePassen = teile.every(t => {
+                    const a = rahmen(t, dx, dy);
+                    return Number.isFinite(a.l) && Number.isFinite(a.o) &&
+                        Number.isFinite(a.r) && Number.isFinite(a.u) &&
+                        a.l >= rand && a.o >= rand &&
+                        a.r <= z.plan.breite - rand && a.u <= z.plan.hoehe - rand &&
+                        belegt.every(b => a.r + rand <= b.l || b.r + rand <= a.l ||
+                            a.u + rand <= b.o || b.u + rand <= a.o) &&
+                        vorhandeneLeitungen.every(l => {
+                            const feld = { l: a.l - abstand, o: a.o - abstand,
+                                r: a.r + abstand, u: a.u + abstand };
+                            const pkt = l.punkte || [];
+                            return pkt.every((p, i) => i === 0 || !streckeTrifft(pkt[i - 1], p, feld));
+                        });
+                });
+                return teilePassen && leitungen.every(l => {
+                    const punkte = (Array.isArray(l.punkte) ? l.punkte : [])
+                        .map((p) => ({ x: Number(p.x) + dx, y: Number(p.y) + dy }));
+                    if (!punkte.every(p => Number.isFinite(p.x) && Number.isFinite(p.y) &&
+                        p.x >= rand && p.y >= rand &&
+                        p.x <= z.plan.breite - rand && p.y <= z.plan.hoehe - rand))
+                        return false;
+                    for (let i = 1; i < punkte.length; i++)
+                        for (const b of belegt) {
+                            const feld = { l: b.l - abstand, o: b.o - abstand,
+                                r: b.r + abstand, u: b.u + abstand };
+                            if (streckeTrifft(punkte[i - 1], punkte[i], feld))
+                                return false;
+                        }
+                    if (punkte.length >= 2 && Schaltplan.ueberlappt(punkte, vorhandeneLeitungen))
+                        return false;
+                    return true;
+                });
+            };
+            const schritt = Math.max(r * 4, 40);
+            let versatz = null;
+            if (passt(120, 80))
+                versatz = { x: 120, y: 80 };
+            for (let y = r * 2; !versatz && y < z.plan.hoehe; y += schritt)
+                for (let x = r * 2; !versatz && x < z.plan.breite; x += schritt)
+                    if (passt(x, y))
+                        versatz = { x, y };
+            for (let y = r; !versatz && y < z.plan.hoehe; y += r)
+                for (let x = r; !versatz && x < z.plan.breite; x += r)
+                    if (passt(x, y))
+                        versatz = { x, y };
+            if (!versatz) {
+                UI.toast('Kein freier Platz fuer diese Vorlage. Bitte erst Platz schaffen.');
+                return;
+            }
+            const { x: dx, y: dy } = versatz;
+            const ebene = aktiveEbene();
             aendere(() => {
                 const neuId = new Map();
-                (v.teile || []).forEach(t => {
+                const gruppen = new Map();
+                teile.forEach(t => {
                     const id = Schaltplan.uid();
-                    neuId.set(t.id, id);
-                    z.plan.teile.push({ ...t, id, x: t.x + 120, y: t.y + 80,
-                        bmk: Schaltplan.naechstesBmk(z.plan, t.zeichen) });
+                    neuId.set(String(t.id), id);
+                    const gruppe = String(t.gruppe || '');
+                    if (gruppe && !gruppen.has(gruppe))
+                        gruppen.set(gruppe, Schaltplan.uid());
+                    z.plan.teile.push({ ...t, id, x: Number(t.x) + dx, y: Number(t.y) + dy,
+                        bmk: Schaltplan.naechstesBmk(z.plan, t.zeichen),
+                        gruppe: gruppe ? gruppen.get(gruppe) : '', ebene,
+                        nummern: { ...(t.nummern || {}) } });
                 });
-                (v.leitungen || []).forEach(l => {
-                    const neu = { ...l, id: Schaltplan.uid(),
-                        punkte: (l.punkte || []).map(p => ({ x: p.x + 120, y: p.y + 80 })) };
-                    if (l.vonTeil)
-                        neu.vonTeil = neuId.get(l.vonTeil) || l.vonTeil;
-                    if (l.nachTeil)
-                        neu.nachTeil = neuId.get(l.nachTeil) || l.nachTeil;
-                    z.plan.leitungen.push(neu);
+                leitungen.forEach(l => {
+                    const neu = { ...l, id: Schaltplan.uid(), ebene,
+                        punkte: (Array.isArray(l.punkte) ? l.punkte : [])
+                            .map((p) => ({ x: Number(p.x) + dx, y: Number(p.y) + dy })) };
+                    delete neu.vonTeil;
+                    delete neu.vonNr;
+                    delete neu.nachTeil;
+                    delete neu.nachNr;
+                    const von = neuId.get(String(l.vonTeil));
+                    const nach = neuId.get(String(l.nachTeil));
+                    if (von) {
+                        neu.vonTeil = von;
+                        neu.vonNr = l.vonNr;
+                    }
+                    if (nach) {
+                        neu.nachTeil = nach;
+                        neu.nachNr = l.nachNr;
+                    }
+                    if (neu.punkte.length >= 2)
+                        z.plan.leitungen.push(neu);
                 });
             });
         };
@@ -72811,10 +73268,14 @@ const Planflaeche = (() => {
             aendere(() => { });
             melde('Ziehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
         };
-        const zugUnterbrechen = () => {
+        const zugUnterbrechen = (e) => {
             const zug = z.zieht;
             if (!zug)
                 return;
+            if (e.pointerType === 'touch' && e.pointerId !== zug.zeiger) {
+                zugAbbrechen();
+                return;
+            }
             zugLoesen();
             if (!wurzel.isConnected)
                 return;
@@ -72832,6 +73293,7 @@ const Planflaeche = (() => {
             if (!zug)
                 return;
             zugLoesen();
+            teilKlickStart = null;
             if (zug.art === 'teil' || zug.art === 'strecke') {
                 zug.ausgang.forEach((a, id) => {
                     const t = teilVon(id);
@@ -73325,7 +73787,7 @@ const Planflaeche = (() => {
                 return;
             }
             if (z.werkzeug === 'leitung') {
-                const fang = Schaltplan.fangeAnschluss(z.plan, roh);
+                const fang = Schaltplan.fangeAnschluss(z.plan, roh, anschlussFangRadius(svg, e.pointerType));
                 zugBeginnen({ art: 'leitung', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang: new Map(),
                     von: fang ? { x: fang.x, y: fang.y, teil: fang.teil, nr: fang.nr }
                         : { x: p.x, y: p.y } });
@@ -73478,7 +73940,7 @@ const Planflaeche = (() => {
                 return;
             }
             if (zug.art === 'leitung' && zug.von) {
-                const fang = Schaltplan.fangeAnschluss(z.plan, p);
+                const fang = Schaltplan.fangeAnschluss(z.plan, ortAus(svg, e, z.plan, true), anschlussFangRadius(svg, e.pointerType));
                 const bis = fang ? { x: fang.x, y: fang.y } : p;
                 const schluessel = bis.x + ',' + bis.y;
                 if (schluessel === zug.vorschauEnde)
@@ -73566,7 +74028,11 @@ const Planflaeche = (() => {
                 return;
             }
             if (zug.art === 'leitung' && zug.von) {
-                const fang = Schaltplan.fangeAnschluss(z.plan, p);
+                if (!svg) {
+                    male();
+                    return;
+                }
+                const fang = Schaltplan.fangeAnschluss(z.plan, ortAus(svg, e, z.plan, true), anschlussFangRadius(svg, e.pointerType));
                 const bis = fang ? { x: fang.x, y: fang.y } : p;
                 if (bis.x === zug.von.x && bis.y === zug.von.y) {
                     male();
@@ -74043,13 +74509,16 @@ const Planflaeche = (() => {
                 UI.toast('Die Verdrahtung dieser alten Relais-Datei ist nicht geprüft. Prüfe die Leitungen und gib sie in der Relais-Werkstatt frei.');
                 return;
             }
+            if (!z.plan.batterieUebung && z.plan.teile.some((t) => t.zeichen === 'batterie')) {
+                if (!batterie?.ausZeichnung())
+                    return;
+            }
             if (z.plan.batterieUebung) {
                 batterieOffen = true;
                 batteriePanel.hidden = false;
-                kopfMalen();
                 if (batterie)
-                    batterie.aktualisiere();
-                UI.toast('Batterieanlagen im Fach „Batterien“ messen: ideale Parallelquellen werden hier nicht simuliert.');
+                    batterie.stromSetzen(!batterie.stromAn());
+                kopfMalen();
                 return;
             }
             if (!z.simulation)
@@ -74678,6 +75147,7 @@ const Planflaeche = (() => {
         };
         batterie = window.BatterieAufgaben ? window.BatterieAufgaben.erstelle({
             element: batteriePanel,
+            nachStromwechsel: () => kopfMalen(),
             holePlan: () => z.plan,
             holeAuswahl: () => [...z.auswahl],
             aendere: (was) => aendere(was),
@@ -142533,7 +143003,8 @@ const Bibliothek = (() => {
         const gesamt = liste.length;
         if (zustand.reiter === 'kuerzlich' && liste.length > DECKE_KUERZLICH)
             liste = liste.slice(0, DECKE_KUERZLICH);
-        if (zustand.reiter !== 'kuerzlich' || zustand.sortier !== 'wann') {
+        const tabellenSortierung = zustand.reiter !== 'ablage' || form() === 'liste';
+        if (tabellenSortierung && (zustand.reiter !== 'kuerzlich' || zustand.sortier !== 'wann')) {
             const wert = (p) => zustand.sortier === 'name' ? (p.text || '').toLowerCase()
                 : zustand.sortier === 'von' ? (p.erstelltVon || '').toLowerCase()
                     : zustand.sortier === 'quelle' ? quelleVon(p).text.toLowerCase()

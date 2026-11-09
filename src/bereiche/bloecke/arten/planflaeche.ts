@@ -1416,11 +1416,12 @@ const Planflaeche = (() => {
          keinen Platz auf der gerade sichtbaren Zeichenflaeche belegen.
          Unbekannte Ebenen bleiben wie in alsSvg() sichtbar. */
       const versteckt = new Set(
-        z.plan.ebenen.filter(e => e.sichtbar === false).map(e => e.id));
+        (z.plan.ebenen as { id: string; sichtbar?: boolean }[])
+          .filter(e => e.sichtbar === false).map(e => e.id));
       const belegt = (z.plan.teile as any[])
         .filter(t => !versteckt.has(t.ebene)).map(t => rahmen(t));
-      const vorhandeneLeitungen = z.plan.leitungen
-        .filter(l => !versteckt.has(l.ebene));
+      const vorhandeneLeitungen = (z.plan.leitungen as Parameters<typeof Schaltplan.ueberlappt>[1])
+        .filter(l => !versteckt.has(l.ebene ?? ''));
       const abstand = Math.min(6, rand);
       /* Leitungsstrecken duerfen nicht quer durch fremde Bauteile laufen.
          Liang-Barsky prueft die echte Strecke gegen ein Rechteck; nur
@@ -1456,8 +1457,9 @@ const Planflaeche = (() => {
             vorhandeneLeitungen.every(l => {
               const feld = { l: a.l - abstand, o: a.o - abstand,
                 r: a.r + abstand, u: a.u + abstand };
-              return (l.punkte || []).every((p: Punkt, i: number) =>
-                i === 0 || !streckeTrifft(l.punkte[i - 1]!, p, feld));
+              const pkt = l.punkte || [];
+              return pkt.every((p: Punkt, i: number) =>
+                i === 0 || !streckeTrifft(pkt[i - 1]!, p, feld));
             });
         });
         /* Auch die Leitungen muessen auf das Blatt passen. Bei teilweise

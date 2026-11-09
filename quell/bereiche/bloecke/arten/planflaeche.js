@@ -182,6 +182,16 @@ const Planflaeche = (() => {
         }
         return ohneRaster ? { x, y } : { x: Schaltplan.rasten(x), y: Schaltplan.rasten(y) };
     };
+    const anschlussFangRadius = (svg, pointerType) => {
+        const matrix = svg.getScreenCTM();
+        if (!matrix)
+            return 14;
+        const scale = Math.hypot(matrix.a, matrix.b);
+        if (!Number.isFinite(scale) || scale <= 0)
+            return 14;
+        const pixel = pointerType === 'touch' ? 24 : 12;
+        return Math.min(42, Math.max(3, pixel / scale));
+    };
     const RADIERER = 'elektro:radierer';
     const RADIER_GROESSEN = [[8, 'klein'], [16, 'mittel'], [28, 'gross']];
     const radiererLesen = () => {
@@ -395,9 +405,9 @@ const Planflaeche = (() => {
                     `<button type="button" class="sp-start${z.simulation || (z.plan.batterieUebung && batterie?.stromAn()) ? ' an' : ''}${z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ? ' sp-strom-ungeprueft' : ''}" ` +
                     `data-a="simulation" ` +
                     `title="${z.plan.batterieUebung ? (batterie?.stromAn() ? 'Batteriestrom ausschalten' : 'Batterieschaltung einschalten und U, R, I messen') :
-                      z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ?
-                      'Original-Verdrahtung ungeprüft: in der Relais-Werkstatt zuerst prüfen und freigeben.' :
-                      z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
+                        z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ?
+                            'Original-Verdrahtung ungeprüft: in der Relais-Werkstatt zuerst prüfen und freigeben.' :
+                            z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
                     `aria-pressed="${!!(z.simulation || (z.plan.batterieUebung && batterie?.stromAn()))}" ` +
                     `aria-label="${z.simulation || (z.plan.batterieUebung && batterie?.stromAn()) ? 'Strom ausschalten' : 'Strom einschalten'}">` +
                     `${z.simulation || (z.plan.batterieUebung && batterie?.stromAn()) ? '◼' : '▶'} Strom</button>` +
@@ -1128,22 +1138,164 @@ const Planflaeche = (() => {
                 UI.toast(beispiel.hinweis);
         };
         const vorlageEinsetzen = (v) => {
+            if (z.zieht)
+                return;
+            const teile = (Array.isArray(v?.teile) ? v.teile : []);
+            const leitungen = (Array.isArray(v?.leitungen) ? v.leitungen : []);
+            if (!teile.length) {
+                UI.toast('Diese Vorlage enthaelt keine Bauteile.');
+                return;
+            }
+            if (teile.some(t => !t || typeof t.zeichen !== 'string' ||
+                !Register.fachzeichen.holen(t.zeichen))) {
+                UI.toast('Vorlage enthaelt nicht verfuegbare Schaltzeichen.');
+                return;
+            }
+            const vorlagenIds = teile.map(t => t.id);
+            if (vorlagenIds.some(id => typeof id !== 'string' || !id.trim()) ||
+                new Set(vorlagenIds).size !== vorlagenIds.length) {
+                UI.toast('Vorlage enthaelt fehlende oder doppelte Bauteil-IDs.');
+                return;
+            }
+            if (leitungen.some(l => !l || !Array.isArray(l.punkte) ||
+                l.punkte.length < 2 || l.punkte.some((p) => !p || p.x == null || p.y == null ||
+                !Number.isFinite(Number(p.x)) || !Number.isFinite(Number(p.y))))) {
+                UI.toast('Vorlage enthaelt ungueltige Leitungen.');
+                return;
+            }
+            const r = Register.fachzeichen.RASTER;
+            const rand = r;
+            const rahmen = (t, dx = 0, dy = 0) => {
+                const m = Register.fachzeichen.masse(t.zeichen, Number(t.drehung) || 0);
+                const zc = Register.fachzeichen.holen(t.zeichen);
+                const cx = Number(t.x) + dx + (zc ? zc.w : 0) / 2;
+                const cy = Number(t.y) + dy + (zc ? zc.h : 0) / 2;
+                return { l: cx - m.w / 2, o: cy - m.h / 2,
+                    r: cx + m.w / 2, u: cy + m.h / 2 };
+            };
+            const vorlagenRahmen = teile.map(t => rahmen(t));
+            const internUeberlappt = vorlagenRahmen.some((a, i) => vorlagenRahmen.some((b, j) => j > i &&
+                a.l < b.r && b.l < a.r && a.o < b.u && b.o < a.u));
+            if (internUeberlappt) {
+                UI.toast('Vorlage enthaelt ueberlappende Bauteile.');
+                return;
+            }
+            const versteckt = new Set(z.plan.ebenen
+                .filter(e => e.sichtbar === false).map(e => e.id));
+            const belegt = z.plan.teile
+                .filter(t => !versteckt.has(t.ebene)).map(t => rahmen(t));
+            const vorhandeneLeitungen = z.plan.leitungen
+                .filter(l => !versteckt.has(l.ebene ?? ''));
+            const abstand = Math.min(6, rand);
+            const streckeTrifft = (a, b, f) => {
+                const dx = b.x - a.x, dy = b.y - a.y;
+                const p = [-dx, dx, -dy, dy];
+                const q = [a.x - f.l, f.r - a.x, a.y - f.o, f.u - a.y];
+                let ein = 0, aus = 1;
+                for (let i = 0; i < 4; i++) {
+                    const pi = p[i], qi = q[i];
+                    if (pi === 0) {
+                        if (qi < 0)
+                            return false;
+                        continue;
+                    }
+                    const t = qi / pi;
+                    if (pi < 0)
+                        ein = Math.max(ein, t);
+                    else
+                        aus = Math.min(aus, t);
+                    if (ein > aus)
+                        return false;
+                }
+                return true;
+            };
+            const passt = (dx, dy) => {
+                const teilePassen = teile.every(t => {
+                    const a = rahmen(t, dx, dy);
+                    return Number.isFinite(a.l) && Number.isFinite(a.o) &&
+                        Number.isFinite(a.r) && Number.isFinite(a.u) &&
+                        a.l >= rand && a.o >= rand &&
+                        a.r <= z.plan.breite - rand && a.u <= z.plan.hoehe - rand &&
+                        belegt.every(b => a.r + rand <= b.l || b.r + rand <= a.l ||
+                            a.u + rand <= b.o || b.u + rand <= a.o) &&
+                        vorhandeneLeitungen.every(l => {
+                            const feld = { l: a.l - abstand, o: a.o - abstand,
+                                r: a.r + abstand, u: a.u + abstand };
+                            const pkt = l.punkte || [];
+                            return pkt.every((p, i) => i === 0 || !streckeTrifft(pkt[i - 1], p, feld));
+                        });
+                });
+                return teilePassen && leitungen.every(l => {
+                    const punkte = (Array.isArray(l.punkte) ? l.punkte : [])
+                        .map((p) => ({ x: Number(p.x) + dx, y: Number(p.y) + dy }));
+                    if (!punkte.every(p => Number.isFinite(p.x) && Number.isFinite(p.y) &&
+                        p.x >= rand && p.y >= rand &&
+                        p.x <= z.plan.breite - rand && p.y <= z.plan.hoehe - rand))
+                        return false;
+                    for (let i = 1; i < punkte.length; i++)
+                        for (const b of belegt) {
+                            const feld = { l: b.l - abstand, o: b.o - abstand,
+                                r: b.r + abstand, u: b.u + abstand };
+                            if (streckeTrifft(punkte[i - 1], punkte[i], feld))
+                                return false;
+                        }
+                    if (punkte.length >= 2 && Schaltplan.ueberlappt(punkte, vorhandeneLeitungen))
+                        return false;
+                    return true;
+                });
+            };
+            const schritt = Math.max(r * 4, 40);
+            let versatz = null;
+            if (passt(120, 80))
+                versatz = { x: 120, y: 80 };
+            for (let y = r * 2; !versatz && y < z.plan.hoehe; y += schritt)
+                for (let x = r * 2; !versatz && x < z.plan.breite; x += schritt)
+                    if (passt(x, y))
+                        versatz = { x, y };
+            for (let y = r; !versatz && y < z.plan.hoehe; y += r)
+                for (let x = r; !versatz && x < z.plan.breite; x += r)
+                    if (passt(x, y))
+                        versatz = { x, y };
+            if (!versatz) {
+                UI.toast('Kein freier Platz fuer diese Vorlage. Bitte erst Platz schaffen.');
+                return;
+            }
+            const { x: dx, y: dy } = versatz;
+            const ebene = aktiveEbene();
             aendere(() => {
                 const neuId = new Map();
-                (v.teile || []).forEach(t => {
+                const gruppen = new Map();
+                teile.forEach(t => {
                     const id = Schaltplan.uid();
-                    neuId.set(t.id, id);
-                    z.plan.teile.push({ ...t, id, x: t.x + 120, y: t.y + 80,
-                        bmk: Schaltplan.naechstesBmk(z.plan, t.zeichen) });
+                    neuId.set(String(t.id), id);
+                    const gruppe = String(t.gruppe || '');
+                    if (gruppe && !gruppen.has(gruppe))
+                        gruppen.set(gruppe, Schaltplan.uid());
+                    z.plan.teile.push({ ...t, id, x: Number(t.x) + dx, y: Number(t.y) + dy,
+                        bmk: Schaltplan.naechstesBmk(z.plan, t.zeichen),
+                        gruppe: gruppe ? gruppen.get(gruppe) : '', ebene,
+                        nummern: { ...(t.nummern || {}) } });
                 });
-                (v.leitungen || []).forEach(l => {
-                    const neu = { ...l, id: Schaltplan.uid(),
-                        punkte: (l.punkte || []).map(p => ({ x: p.x + 120, y: p.y + 80 })) };
-                    if (l.vonTeil)
-                        neu.vonTeil = neuId.get(l.vonTeil) || l.vonTeil;
-                    if (l.nachTeil)
-                        neu.nachTeil = neuId.get(l.nachTeil) || l.nachTeil;
-                    z.plan.leitungen.push(neu);
+                leitungen.forEach(l => {
+                    const neu = { ...l, id: Schaltplan.uid(), ebene,
+                        punkte: (Array.isArray(l.punkte) ? l.punkte : [])
+                            .map((p) => ({ x: Number(p.x) + dx, y: Number(p.y) + dy })) };
+                    delete neu.vonTeil;
+                    delete neu.vonNr;
+                    delete neu.nachTeil;
+                    delete neu.nachNr;
+                    const von = neuId.get(String(l.vonTeil));
+                    const nach = neuId.get(String(l.nachTeil));
+                    if (von) {
+                        neu.vonTeil = von;
+                        neu.vonNr = l.vonNr;
+                    }
+                    if (nach) {
+                        neu.nachTeil = nach;
+                        neu.nachNr = l.nachNr;
+                    }
+                    if (neu.punkte.length >= 2)
+                        z.plan.leitungen.push(neu);
                 });
             });
         };
@@ -1418,10 +1570,14 @@ const Planflaeche = (() => {
             aendere(() => { });
             melde('Ziehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
         };
-        const zugUnterbrechen = () => {
+        const zugUnterbrechen = (e) => {
             const zug = z.zieht;
             if (!zug)
                 return;
+            if (e.pointerType === 'touch' && e.pointerId !== zug.zeiger) {
+                zugAbbrechen();
+                return;
+            }
             zugLoesen();
             if (!wurzel.isConnected)
                 return;
@@ -1439,6 +1595,7 @@ const Planflaeche = (() => {
             if (!zug)
                 return;
             zugLoesen();
+            teilKlickStart = null;
             if (zug.art === 'teil' || zug.art === 'strecke') {
                 zug.ausgang.forEach((a, id) => {
                     const t = teilVon(id);
@@ -1932,7 +2089,7 @@ const Planflaeche = (() => {
                 return;
             }
             if (z.werkzeug === 'leitung') {
-                const fang = Schaltplan.fangeAnschluss(z.plan, roh);
+                const fang = Schaltplan.fangeAnschluss(z.plan, roh, anschlussFangRadius(svg, e.pointerType));
                 zugBeginnen({ art: 'leitung', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang: new Map(),
                     von: fang ? { x: fang.x, y: fang.y, teil: fang.teil, nr: fang.nr }
                         : { x: p.x, y: p.y } });
@@ -2085,7 +2242,7 @@ const Planflaeche = (() => {
                 return;
             }
             if (zug.art === 'leitung' && zug.von) {
-                const fang = Schaltplan.fangeAnschluss(z.plan, p);
+                const fang = Schaltplan.fangeAnschluss(z.plan, ortAus(svg, e, z.plan, true), anschlussFangRadius(svg, e.pointerType));
                 const bis = fang ? { x: fang.x, y: fang.y } : p;
                 const schluessel = bis.x + ',' + bis.y;
                 if (schluessel === zug.vorschauEnde)
@@ -2173,7 +2330,11 @@ const Planflaeche = (() => {
                 return;
             }
             if (zug.art === 'leitung' && zug.von) {
-                const fang = Schaltplan.fangeAnschluss(z.plan, p);
+                if (!svg) {
+                    male();
+                    return;
+                }
+                const fang = Schaltplan.fangeAnschluss(z.plan, ortAus(svg, e, z.plan, true), anschlussFangRadius(svg, e.pointerType));
                 const bis = fang ? { x: fang.x, y: fang.y } : p;
                 if (bis.x === zug.von.x && bis.y === zug.von.y) {
                     male();
