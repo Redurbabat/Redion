@@ -105,6 +105,42 @@ test('Sichtbare Anschlussklemme gewinnt gegen naehere unsichtbare Klemme', () =>
   assert.equal(fange({ x: 108, y: 100 }, 12, schichten)?.teil, 'S1');
 });
 
+test('Ausgeliefertes Schaltplan-JavaScript faengt die gleichen sichtbaren Klemmen', () => {
+  /* Anders als der transpilierten TS-Test prueft dieser Lauf die tatsaechlich
+     von index.html geladene Datei. Ein vergessenes npm run bauen:ts darf
+     den Anschlussfang nicht unbemerkt in der alten Fassung lassen. */
+  const jsPfad = path.join(ROOT, 'quell/bereiche/bloecke/arten/schaltplan.js');
+  const liveGlobals: any = { window: {}, Register: globals.Register };
+  vm.runInNewContext(fs.readFileSync(jsPfad, 'utf8'), liveGlobals, {
+    filename: 'schaltplan.ausgeliefert.js', timeout: 4000
+  });
+  const live = liveGlobals.window.Schaltplan;
+  assert.equal(typeof live?.fangeAnschluss, 'function');
+
+  const mehrere: any = plan(
+    teil('sichtbar', 100, 100),
+    { ...teil('unsichtbar', 108, 100), ebene: 'loesung' }
+  );
+  mehrere.ebenen = [{ id: 'loesung', sichtbar: false }];
+  for (const [punkt, radius] of [
+    [{ x: 108, y: 100 }, 12],
+    [{ x: 100, y: 100 }, 0],
+    [{ x: 113, y: 100 }, 14],
+    [{ x: 125, y: 100 }, 24],
+    [{ x: 100, y: 100 }, -5]
+  ] as const) {
+    const erwartet = schaltplan.fangeAnschluss(mehrere, punkt, radius);
+    const gefunden = live.fangeAnschluss(mehrere, punkt, radius);
+    assert.equal(gefunden?.teil ?? null, erwartet?.teil ?? null,
+      'Generiertes JS muss dieselben Bauteil-IDs wie TypeScript fangen');
+    assert.equal(gefunden?.nr ?? null, erwartet?.nr ?? null,
+      'Generiertes JS muss dieselben Klemmennummern wie TypeScript fangen');
+  }
+  const nurVersteckt: any = plan({ ...teil('X1', 100, 100), ebene: 'loesung' });
+  nurVersteckt.ebenen = [{ id: 'loesung', sichtbar: false }];
+  assert.equal(live.fangeAnschluss(nurVersteckt, { x: 100, y: 100 }, 24), null);
+});
+
 test('Planflaeche benutzt denselben Radius bei Start, Vorschau und Ende', () => {
   const verwendungen = editor.match(/anschlussFangRadius\(svg, e\.pointerType\)/g) || [];
   assert.equal(verwendungen.length, 3);
