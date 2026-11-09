@@ -14,6 +14,16 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
+REM Der Live-Bau nutzt .mts-Dateien mit Node-Type-Stripping (>=22.18).
+REM Ohne diese Schranke waere beim Start ein schwer lesbarer Syntaxfehler
+REM statt einer klaren Versionsmeldung zu sehen.
+node -e "const [major,minor]=process.versions.node.split('.').map(Number);process.exit(major>22||(major===22&&minor>=18)?0:1)"
+if errorlevel 1 (
+  echo [FEHLER] Node.js ist zu alt. Redion-Live braucht mindestens 22.18.
+  node --version
+  pause
+  exit /b 1
+)
 if not exist "node_modules\typescript\bin\tsc" (
   echo [Redion-Live] Projekt-Abhaengigkeiten einmalig installieren...
   call npm ci

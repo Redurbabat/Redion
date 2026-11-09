@@ -722,3 +722,80 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
  .sp-wrap .sp-batterie-fach .sp-bat-bedienung>*{flex:1 1 100%}
  .sp-wrap .sp-batterie-fach .sp-bat-birne{flex-basis:42px;width:42px;height:42px;font-size:30px}
 }
+
+/* Windows/Desktop: Werkzeug-Dock bei schmalen Fenstern erreichbar halten.
+ * Nur Darstellung; keine Änderung an Schaltplan-Daten oder Interaktionen. */
+@media (min-width: 851px) {
+  .sp-wrap .sp-werkzeuge {
+    max-width: calc(100% - 32px);
+    box-sizing: border-box;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+  }
+  .sp-wrap .sp-werkzeuge > * {
+    flex-shrink: 0;
+  }
+}
+/* Tastatur-Navigation: sichtbarer Fokus auf den Zeichenwerkzeugen. */
+.sp-wrap .sp-werkzeuge :is(button, [role="button"]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+
+/* Der schwebende Werkzeug-Dock muss auch auf 320px-Bildschirmen
+ * bedienbar bleiben. Sieben Schaltflaechen mit 44px Mindestmass passen
+ * nicht nebeneinander. Ohne eigenen Scrollbereich ragte der letzte Button
+ * rechts aus dem Viewport (Chromium-Reproduktion). Die Box selbst bleibt
+ * innerhalb des Plans; ihre Kinder behalten ihre Fingergroesse. */
+@media (max-width: 800px) {
+  .sp-wrap .sp-werkzeuge {
+    box-sizing: border-box;
+    max-width: calc(100% - 24px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .sp-wrap .sp-werkzeuge > * { flex-shrink: 0; }
+  .sp-wrap .sp-werkzeuge::-webkit-scrollbar { display: none; }
+}
+
+/* Touch-Ziele fuer den Schaltplan (P2): 44 CSS-Pixel bei Fingerbedienung.
+ * Die kompakte Palette bleibt optisch schlank, aber Schliessen/Umschalten
+ * und Kontextaktionen sind auf 320–430 px breiten Displays erreichbar.
+ * Maus-/Trackpad-Dichte und Desktop-Werkzeugleiste bleiben unveraendert. */
+@media (hover: none) and (pointer: coarse) {
+  .sp-wrap .sp-pal-schliessen,
+  .sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-schliessen {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    flex-shrink: 0;
+  }
+  .sp-wrap .sp-pal-header-actions [data-p-compact],
+  .sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-header-actions [data-p-compact] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .sp-wrap .sp-kontextleiste button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  /* Mehrere 44er-Aktionen passen nicht nebeneinander auf 320 px.
+     Die Leiste scrollt innerhalb des sichtbaren Bildschirms, statt
+     Aktionen abzuschneiden oder den Schaltplan seitlich zu vergroessern. */
+  .sp-wrap .sp-kontextleiste {
+    box-sizing: border-box;
+    max-width: calc(100% - 16px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .sp-wrap .sp-kontextleiste::-webkit-scrollbar { display: none; }
+}

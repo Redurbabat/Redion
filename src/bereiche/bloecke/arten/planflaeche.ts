@@ -325,6 +325,18 @@ const Planflaeche = (() => {
     return ohneRaster ? { x, y } : { x: Schaltplan.rasten(x), y: Schaltplan.rasten(y) };
   };
 
+  /** Anschlussfang in Bildschirm-Pixeln statt festen Plankoordinaten.
+   * Dadurch bleibt die Trefferzone beim Zoomen und auf Retina-Displays
+   * ungefähr gleich gross. Bei ungültiger Matrix gilt der alte Radius. */
+  const anschlussFangRadius = (svg: SVGSVGElement, pointerType?: string): number => {
+    const matrix = svg.getScreenCTM();
+    if (!matrix) return 14;
+    const scale = Math.hypot(matrix.a, matrix.b);
+    if (!Number.isFinite(scale) || scale <= 0) return 14;
+    const pixel = pointerType === 'touch' ? 24 : 12;
+    return Math.min(42, Math.max(3, pixel / scale));
+  };
+
   /* Der Radierer gehört dem Menschen, nicht dem Plan — wie die Favoriten
      (oben) und wie der Radierer im PDF (`zeichnen:radierer`, E352/E576). */
   const RADIERER = 'elektro:radierer';
@@ -1329,20 +1341,200 @@ const Planflaeche = (() => {
      *  wurde; zweimal eingesetzt wären es doppelte, und die Auswahl fasste
      *  beide zugleich an. */
     const vorlageEinsetzen = (v: any): void => {
+      if (z.zieht) return; // keine Einfuegung in einen noch offenen Mauszug
+      const teile = (Array.isArray(v?.teile) ? v.teile : []) as any[];
+      const leitungen = (Array.isArray(v?.leitungen) ? v.leitungen : []) as any[];
+      if (!teile.length) { UI.toast('Diese Vorlage enthaelt keine Bauteile.'); return; }
+      /* Vorlagen koennen aus aelteren Sicherungen oder importierten Dateien
+         stammen. Fehlt ein Schaltzeichen im heutigen Register, liefert
+         masse() einen 0x0-Rahmen: die Platzsuche erkannte ihn als frei
+         und speicherte ein unsichtbares, nicht bedienbares Bauteil.
+         Deshalb vor jeder Planaenderung die gesamte Vorlage pruefen. */
+      if (teile.some(t => !t || typeof t.zeichen !== 'string' ||
+          !Register.fachzeichen.holen(t.zeichen))) {
+        UI.toast('Vorlage enthaelt nicht verfuegbare Schaltzeichen.');
+        return;
+      }
+      /* Jede gespeicherte Bauteil-ID muss eindeutig sein. Das Neuzuordnen
+         der Leitungsenden verwendet eine Map von alter zu neuer ID;
+         doppelte IDs wuerden den ersten Eintrag ueberschreiben und ein
+         Leitungsende still an das falsche Bauteil haengen. Darum die
+         gesamte Vorlage vor aendere() ablehnen, statt den Plan zu
+         verfaelschen oder einen Teil der Vorlage zu uebernehmen. */
+      const vorlagenIds = teile.map(t => t.id);
+      if (vorlagenIds.some(id => typeof id !== 'string' || !id.trim()) ||
+          new Set(vorlagenIds).size !== vorlagenIds.length) {
+        UI.toast('Vorlage enthaelt fehlende oder doppelte Bauteil-IDs.');
+        return;
+      }
+      /* Eine alte oder importierte Vorlage kann beschaedigte Leitungen
+         enthalten. Ohne diese Pruefung wirft die Platzsuche bei null oder
+         fehlenden Punkten einen TypeError, oder die Kopie laesst eine
+         ungueltige Leitung still weg. Keine teilweise Einfuegung. */
+      if (leitungen.some(l => !l || !Array.isArray(l.punkte) ||
+          l.punkte.length < 2 || l.punkte.some((p: any) =>
+            !p || p.x == null || p.y == null ||
+            !Number.isFinite(Number(p.x)) || !Number.isFinite(Number(p.y))))) {
+        UI.toast('Vorlage enthaelt ungueltige Leitungen.');
+        return;
+      }
+
+      /* Der Versatz 120/80 setzte jede Kopie auf die vorige. Suche stattdessen
+         die erste freie Rasterposition, ohne vorhandene Zeichen zu ueberdecken.
+         Die Symbolmasse stammen aus demselben Register wie der Auswahlrahmen. */
+      const r = Register.fachzeichen.RASTER;
+      const rand = r;
+      const rahmen = (t: any, dx = 0, dy = 0) => {
+        const m = Register.fachzeichen.masse(t.zeichen, Number(t.drehung) || 0);
+        const zc = Register.fachzeichen.holen(t.zeichen);
+        /* Rotierte Symbole drehen um ihre Originalmitte, nicht um (x,y).
+           Darum verschiebt sich bei 90/270 Grad auch der tatsaechliche
+           Aussenrahmen. Mit dem gleichen Mittelpunkt wie teilKasten()
+           rechnen, sonst erkennt die Vorlagenplatzierung Kollisionen nicht. */
+        const cx = Number(t.x) + dx + (zc ? zc.w : 0) / 2;
+        const cy = Number(t.y) + dy + (zc ? zc.h : 0) / 2;
+        return { l: cx - m.w / 2, o: cy - m.h / 2,
+          r: cx + m.w / 2, u: cy + m.h / 2 };
+      };
+      /* Die Platzsuche verglich bisher nur Vorlagenbauteile mit dem
+         bestehenden Plan. Ueberlappen zwei Bauteile BEREITS innerhalb
+         derselben Vorlage, verschiebt jeder Suchversatz beide zusammen;
+         keine freie Position kann diese Kollision beheben. Darum eine
+         beschaedigte Vorlage vor dem ersten aendere() ablehnen.
+         Blosse Beruehrung an einer Kante ist kein Ueberlappen. */
+      const vorlagenRahmen = teile.map(t => rahmen(t));
+      const internUeberlappt = vorlagenRahmen.some((a, i) =>
+        vorlagenRahmen.some((b, j) => j > i &&
+          a.l < b.r && b.l < a.r && a.o < b.u && b.o < a.u));
+      if (internUeberlappt) {
+        UI.toast('Vorlage enthaelt ueberlappende Bauteile.');
+        return;
+      }
+
+      /* Ausgeblendete Ebenen werden in alsSvg() nicht gezeichnet und
+         beim Anschlussfang nicht angeboten. Sie duerfen deshalb auch
+         keinen Platz auf der gerade sichtbaren Zeichenflaeche belegen.
+         Unbekannte Ebenen bleiben wie in alsSvg() sichtbar. */
+      const versteckt = new Set(
+        z.plan.ebenen.filter(e => e.sichtbar === false).map(e => e.id));
+      const belegt = (z.plan.teile as any[])
+        .filter(t => !versteckt.has(t.ebene)).map(t => rahmen(t));
+      const vorhandeneLeitungen = z.plan.leitungen
+        .filter(l => !versteckt.has(l.ebene));
+      const abstand = Math.min(6, rand);
+      /* Leitungsstrecken duerfen nicht quer durch fremde Bauteile laufen.
+         Liang-Barsky prueft die echte Strecke gegen ein Rechteck; nur
+         Begrenzungskaesten der Leitung zu vergleichen wuerde insbesondere
+         bei diagonalen Alt-Vorlagen falsche Treffer erzeugen. */
+      const streckeTrifft = (a: Punkt, b: Punkt, f: ReturnType<typeof rahmen>): boolean => {
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const p = [-dx, dx, -dy, dy];
+        const q = [a.x - f.l, f.r - a.x, a.y - f.o, f.u - a.y];
+        let ein = 0, aus = 1;
+        for (let i = 0; i < 4; i++) {
+          const pi = p[i]!, qi = q[i]!;
+          if (pi === 0) { if (qi < 0) return false; continue; }
+          const t = qi / pi;
+          if (pi < 0) ein = Math.max(ein, t);
+          else aus = Math.min(aus, t);
+          if (ein > aus) return false;
+        }
+        return true;
+      };
+      const passt = (dx: number, dy: number): boolean => {
+        const teilePassen = teile.every(t => {
+          const a = rahmen(t, dx, dy);
+          return Number.isFinite(a.l) && Number.isFinite(a.o) &&
+            Number.isFinite(a.r) && Number.isFinite(a.u) &&
+            a.l >= rand && a.o >= rand &&
+            a.r <= z.plan.breite - rand && a.u <= z.plan.hoehe - rand &&
+            belegt.every(b => a.r + rand <= b.l || b.r + rand <= a.l ||
+                              a.u + rand <= b.o || b.u + rand <= a.o) &&
+            /* Auch die andere Richtung zaehlt: ein neues Bauteil darf nicht
+               auf eine bereits vorhandene Leitung gesetzt werden. Sonst
+               koennte die bestehende Leitung dessen Klemme ungewollt fangen. */
+            vorhandeneLeitungen.every(l => {
+              const feld = { l: a.l - abstand, o: a.o - abstand,
+                r: a.r + abstand, u: a.u + abstand };
+              return (l.punkte || []).every((p: Punkt, i: number) =>
+                i === 0 || !streckeTrifft(l.punkte[i - 1]!, p, feld));
+            });
+        });
+        /* Auch die Leitungen muessen auf das Blatt passen. Bei teilweise
+           gespeicherten Vorlagen liegen deren Punkte oft ausserhalb des
+           Bauteilrahmens. Nur die Bauteile zu pruefen reicht nicht: eine
+           eingeklebte Leitung koennte sonst ausserhalb des SVG enden. */
+        return teilePassen && leitungen.every(l => {
+          const punkte: Punkt[] = (Array.isArray(l.punkte) ? l.punkte : [])
+            .map((p: any) => ({ x: Number(p.x) + dx, y: Number(p.y) + dy }));
+          if (!punkte.every(p => Number.isFinite(p.x) && Number.isFinite(p.y) &&
+              p.x >= rand && p.y >= rand &&
+              p.x <= z.plan.breite - rand && p.y <= z.plan.hoehe - rand)) return false;
+          /* Ein kleiner Abstand verhindert, dass die Simulation fremde
+             Anschlussklemmen beim Einsetzen unbeabsichtigt anzapft. */
+          for (let i = 1; i < punkte.length; i++)
+            for (const b of belegt) {
+              const feld = { l: b.l - abstand, o: b.o - abstand,
+                r: b.r + abstand, u: b.u + abstand };
+              if (streckeTrifft(punkte[i - 1]!, punkte[i]!, feld)) return false;
+            }
+          /* Auch schon gezeichnete Leitungen duerfen nicht deckungsgleich
+             ueberlagert werden: optisch waere es ein Draht, elektrisch
+             aber eine unbeabsichtigte Verbindung. Nur echte Ueberlappung
+             blockiert; eine Kreuzung ohne Knoten darf bestehen bleiben. */
+          if (punkte.length >= 2 && Schaltplan.ueberlappt(punkte, vorhandeneLeitungen))
+            return false;
+          return true;
+        });
+      };
+      const schritt = Math.max(r * 4, 40);
+      let versatz: { x: number; y: number } | null = null;
+      /* Erster Einsatz behaelt seine bisherige Lage; weitere suchen ein
+         freies Feld. Der zweite Durchlauf erlaubt auch die linke Blatthaelfte. */
+      if (passt(120, 80)) versatz = { x: 120, y: 80 };
+      for (let y = r * 2; !versatz && y < z.plan.hoehe; y += schritt)
+        for (let x = r * 2; !versatz && x < z.plan.breite; x += schritt)
+          if (passt(x, y)) versatz = { x, y };
+      /* Das grobe 40er-Raster kann eine schmale, trotzdem gueltige Luecke
+         uebersehen und faelschlich "Kein freier Platz" melden. Nur wenn
+         die schnelle Suche nichts findet, das echte Fachzeichenraster
+         vollstaendig durchlaufen. So bleibt der Normalfall schnell. */
+      for (let y = r; !versatz && y < z.plan.hoehe; y += r)
+        for (let x = r; !versatz && x < z.plan.breite; x += r)
+          if (passt(x, y)) versatz = { x, y };
+      if (!versatz) {
+        UI.toast('Kein freier Platz fuer diese Vorlage. Bitte erst Platz schaffen.');
+        return;
+      }
+      const { x: dx, y: dy } = versatz;
+      const ebene = aktiveEbene();
       aendere(() => {
         const neuId = new Map<string, string>();
-        ((v.teile || []) as any[]).forEach(t => {
+        const gruppen = new Map<string, string>();
+        teile.forEach(t => {
           const id = Schaltplan.uid();
-          neuId.set(t.id, id);
-          z.plan.teile.push({ ...t, id, x: t.x + 120, y: t.y + 80,
-            bmk: Schaltplan.naechstesBmk(z.plan, t.zeichen) });
+          neuId.set(String(t.id), id);
+          const gruppe = String(t.gruppe || '');
+          if (gruppe && !gruppen.has(gruppe)) gruppen.set(gruppe, Schaltplan.uid());
+          z.plan.teile.push({ ...t, id, x: Number(t.x) + dx, y: Number(t.y) + dy,
+            bmk: Schaltplan.naechstesBmk(z.plan, t.zeichen),
+            gruppe: gruppe ? gruppen.get(gruppe) : '', ebene,
+            nummern: { ...(t.nummern || {}) } });
         });
-        ((v.leitungen || []) as any[]).forEach(l => {
-          const neu: any = { ...l, id: Schaltplan.uid(),
-            punkte: ((l.punkte || []) as any[]).map(p => ({ x: p.x + 120, y: p.y + 80 })) };
-          if (l.vonTeil) neu.vonTeil = neuId.get(l.vonTeil) || l.vonTeil;
-          if (l.nachTeil) neu.nachTeil = neuId.get(l.nachTeil) || l.nachTeil;
-          z.plan.leitungen.push(neu);
+        leitungen.forEach(l => {
+          const neu: any = { ...l, id: Schaltplan.uid(), ebene,
+            punkte: (Array.isArray(l.punkte) ? l.punkte : [])
+              .map((p: any) => ({ x: Number(p.x) + dx, y: Number(p.y) + dy })) };
+          /* Nur Anschluesse an mitkopierte Bauteile duerfen ueberleben.
+             Der alte Fallback auf l.vonTeil/l.nachTeil schuf baumelnde
+             Referenzen auf Teile des Ursprungsplans. */
+          delete neu.vonTeil; delete neu.vonNr;
+          delete neu.nachTeil; delete neu.nachNr;
+          const von = neuId.get(String(l.vonTeil));
+          const nach = neuId.get(String(l.nachTeil));
+          if (von) { neu.vonTeil = von; neu.vonNr = l.vonNr; }
+          if (nach) { neu.nachTeil = nach; neu.nachNr = l.nachNr; }
+          if (neu.punkte.length >= 2) z.plan.leitungen.push(neu);
         });
       });
     };
@@ -1640,12 +1832,11 @@ const Planflaeche = (() => {
        neuen Bild verloren (`buehneMalen` ersetzt das SVG), und losgelassen
        über der Palette kam das `pointerup` nie an. Der Zug blieb liegen, sein
        Zwischenbild in `z.plan`, und die nächste Handlung speicherte es
-       (test611 §13). Und er endet, sobald irgendein Zeiger irgendwo
-       aufsetzt: ein zweiter Finger fing bisher einen NEUEN Zug an, nahm das
-       Zwischenbild des ersten als „vorher" und liess den ersten liegen.
-       Beendet wird ein Zug mit Teilen immer richtig — mit der vollen Suche
-       (`teilzugSichern`), nie mit einem Zwischenbild. Die Horcher am
-       Dokument hängen nur, solange ein Zug läuft. */
+       (test611 §13). Bei einem neuen Maus-/Stift-Druck endet der erste Zug
+       wie bisher mit der vollen Suche; ein zweiter Finger bricht dagegen
+       die unfertige Verschiebung ab, bevor die Zwei-Finger-Geste navigiert.
+       Keine Zwischenbilder werden gespeichert. Die Horcher am Dokument
+       hängen nur, solange ein Zug läuft. */
     type Zug = NonNullable<Zustand['zieht']>;
     const zugBeginnen = (zug: Zug): void => {
       z.zieht = zug;
@@ -1735,15 +1926,22 @@ const Planflaeche = (() => {
       melde('Ziehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
     };
 
-    /** Ein Zeiger setzt auf, während ein Zug läuft — ein zweiter Finger, oder
-     *  derselbe, dessen Loslassen nie ankam. Der Zug endet hier: mit Teilen
-     *  gesichert wie beim Loslassen; ein Rahmen oder eine Leitung, deren Ende
-     *  niemand gezeigt hat, verfällt. Ist die Fläche nicht mehr im Dokument
-     *  (die Seite wurde neu gezeichnet), wird nichts mehr gespeichert — sie
-     *  zeigt dann, was die Ablage hält. */
-    const zugUnterbrechen = (): void => {
+    /** Ein Zeiger setzt auf, während ein Zug läuft. Ein zweiter Touch
+     *  verwirft den unfertigen Zug vor der Zoomgeste; Maus-/Stift-Drucke
+     *  sichern Teil-/Streckenzüge weiterhin wie beim Loslassen. Rahmen
+     *  und Leitungen ohne Ende verfallen. Ist die Fläche nicht mehr
+     *  verbunden, wird nichts gespeichert. */
+    const zugUnterbrechen = (e: PointerEvent): void => {
       const zug = z.zieht;
       if (!zug) return;
+      /* Ein zweiter Finger beginnt eine Navigationsgeste. Ein laufender
+         Zeichen- oder Teilzug darf dabei NICHT still gespeichert werden:
+         Zwischenpositionen und billige Vorschau-Routen sind noch unfertig.
+         Mouse-/Pen-Unterbrechungen behalten das bisherige Verhalten. */
+      if (e.pointerType === 'touch' && e.pointerId !== zug.zeiger) {
+        zugAbbrechen();
+        return;
+      }
       zugLoesen();
       if (!wurzel.isConnected) return;
       if (zug.art === 'teil') teilzugSichern(zug);
@@ -1759,6 +1957,7 @@ const Planflaeche = (() => {
       const zug = z.zieht;
       if (!zug) return;
       zugLoesen();
+      teilKlickStart = null;
       if (zug.art === 'teil' || zug.art === 'strecke') {
         zug.ausgang.forEach((a, id) => {
           const t = teilVon(id);
@@ -1871,8 +2070,9 @@ const Planflaeche = (() => {
 
     /* --- Zwei Finger: zoomen und verschieben (E762) ------------------------
      * Ein Finger zeichnet, zwei Finger bewegen die Ansicht — wie in jeder
-     * Karte. Setzt der zweite auf, endet der Zug des ersten (`zugUnterbrechen`,
-     * wie seit E746), und bis der letzte Finger loslässt, zeichnet keiner. */
+     * Karte. Setzt der zweite auf, wird der unfertige Zug des ersten
+     * abgebrochen (`zugUnterbrechen`), und bis der letzte Finger loslässt,
+     * zeichnet keiner. */
     const finger = new Map<number, Punkt>();
     let geste: null | { d0: number; P0: Punkt; zoom0: number } = null;
     const fingerMitte = (): Punkt => {
@@ -2217,7 +2417,7 @@ const Planflaeche = (() => {
       }
 
       if (z.werkzeug === 'leitung') {
-        const fang = Schaltplan.fangeAnschluss(z.plan, roh);
+        const fang = Schaltplan.fangeAnschluss(z.plan, roh, anschlussFangRadius(svg, e.pointerType));
         zugBeginnen({ art: 'leitung', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang: new Map(),
                       von: fang ? { x: fang.x, y: fang.y, teil: fang.teil, nr: fang.nr }
                                 : { x: p.x, y: p.y } });
@@ -2383,7 +2583,7 @@ const Planflaeche = (() => {
          den Plan zu ändern, damit ein abgebrochener Zug nichts hinterlässt,
          und ohne das SVG neu zu bauen (E762). */
       if (zug.art === 'leitung' && zug.von) {
-        const fang = Schaltplan.fangeAnschluss(z.plan, p);
+        const fang = Schaltplan.fangeAnschluss(z.plan, ortAus(svg, e, z.plan, true), anschlussFangRadius(svg, e.pointerType));
         const bis = fang ? { x: fang.x, y: fang.y } : p;
         const schluessel = bis.x + ',' + bis.y;
         if (schluessel === zug.vorschauEnde) return;
@@ -2476,7 +2676,9 @@ const Planflaeche = (() => {
       }
 
       if (zug.art === 'leitung' && zug.von) {
-        const fang = Schaltplan.fangeAnschluss(z.plan, p);
+        // Kein SVG mehr: einen beendeten Zug nicht als neue Leitung speichern.
+        if (!svg) { male(); return; }
+        const fang = Schaltplan.fangeAnschluss(z.plan, ortAus(svg, e, z.plan, true), anschlussFangRadius(svg, e.pointerType));
         const bis = fang ? { x: fang.x, y: fang.y } : p;
         if (bis.x === zug.von.x && bis.y === zug.von.y) { male(); return; }
         /* Geführt, nicht nur gewinkelt (E762): der Weg berührt nur, was an

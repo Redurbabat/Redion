@@ -192,16 +192,21 @@ const Schaltplan = (() => {
         });
     };
     const FANG = 14;
-    const fangeAnschluss = (plan, p) => {
+    const fangeAnschluss = (plan, p, radius = FANG) => {
         let beste = null;
-        let weite = FANG * FANG;
-        plan.teile.forEach(t => anschluesseVon(t).forEach(a => {
-            const d = (a.x - p.x) * (a.x - p.x) + (a.y - p.y) * (a.y - p.y);
-            if (d <= weite) {
-                weite = d;
-                beste = { teil: t.id, nr: a.nr, x: a.x, y: a.y };
-            }
-        }));
+        let weite = Math.max(0, radius) ** 2;
+        const versteckt = new Set(plan.ebenen.filter(e => e.sichtbar === false).map(e => e.id));
+        plan.teile.forEach(t => {
+            if (versteckt.has(t.ebene))
+                return;
+            anschluesseVon(t).forEach(a => {
+                const d = (a.x - p.x) * (a.x - p.x) + (a.y - p.y) * (a.y - p.y);
+                if (d <= weite) {
+                    weite = d;
+                    beste = { teil: t.id, nr: a.nr, x: a.x, y: a.y };
+                }
+            });
+        });
         return beste;
     };
     const rechtwinklig = (a, b) => {
