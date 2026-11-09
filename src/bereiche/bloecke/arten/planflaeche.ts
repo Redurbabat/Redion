@@ -1396,6 +1396,21 @@ const Planflaeche = (() => {
         return { l: cx - m.w / 2, o: cy - m.h / 2,
           r: cx + m.w / 2, u: cy + m.h / 2 };
       };
+      /* Die Platzsuche verglich bisher nur Vorlagenbauteile mit dem
+         bestehenden Plan. Ueberlappen zwei Bauteile BEREITS innerhalb
+         derselben Vorlage, verschiebt jeder Suchversatz beide zusammen;
+         keine freie Position kann diese Kollision beheben. Darum eine
+         beschaedigte Vorlage vor dem ersten aendere() ablehnen.
+         Blosse Beruehrung an einer Kante ist kein Ueberlappen. */
+      const vorlagenRahmen = teile.map(t => rahmen(t));
+      const internUeberlappt = vorlagenRahmen.some((a, i) =>
+        vorlagenRahmen.some((b, j) => j > i &&
+          a.l < b.r && b.l < a.r && a.o < b.u && b.o < a.u));
+      if (internUeberlappt) {
+        UI.toast('Vorlage enthaelt ueberlappende Bauteile.');
+        return;
+      }
+
       /* Ausgeblendete Ebenen werden in alsSvg() nicht gezeichnet und
          beim Anschlussfang nicht angeboten. Sie duerfen deshalb auch
          keinen Platz auf der gerade sichtbaren Zeichenflaeche belegen.
