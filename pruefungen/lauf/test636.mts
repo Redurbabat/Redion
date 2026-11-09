@@ -507,6 +507,38 @@ try {
     uPlan.teile.length === 1 && uPlan.teile[0].id === 'bestand' &&
     uPlan.leitungen.length === 0);
 
+  /* Unvollstaendige oder doppelte Bauteil-IDs duerfen nicht in die
+     Zuordnung alter zu neuer Leitungsenden gelangen: eine Map wuerde
+     bei doppelten IDs den ersten Anschluss still zum zweiten umbiegen.
+     Beide Faelle muessen den Plan vollstaendig unveraendert lassen. */
+  for (const [art, ids] of [
+    ['doppelt', ['duplikat', 'duplikat']],
+    ['fehlend', ['richtig', '']]
+  ] as const) {
+    await page.evaluate((vorlage: { ids: readonly string[] }) => {
+      Store.setMeta('elektro:planvorlagen', [{
+        id: 'kaputte-ids-636', name: 'Ungueltige Kennungen',
+        art: 'stromlauf-aufgeloest',
+        teile: vorlage.ids.map((id, i) => ({
+          id, zeichen: 'spule', x: i * 160, y: 0, drehung: 0,
+          gespiegelt: false, bmk: 'K' + (i + 1),
+          nummern: {}, gruppe: '', ebene: 'plan'
+        })),
+        leitungen: [{ id: 'zugeordnet', ebene: 'plan',
+          vonTeil: vorlage.ids[0], vonNr: 'A2',
+          nachTeil: vorlage.ids[1], nachNr: 'A1',
+          punkte: [{ x: 30, y: 60 }, { x: 190, y: 0 }] }]
+      }]);
+    }, { ids });
+    const davor = await page.evaluate((id: string) =>
+      JSON.stringify(Store.getBlock(id).plan), unbekanntBlock);
+    await einsetzen();
+    const danach = await page.evaluate((id: string) =>
+      JSON.stringify(Store.getBlock(id).plan), unbekanntBlock);
+    pruefe('Vorlage mit ' + art + 'en Bauteil-IDs wird ohne Teilkopie abgelehnt',
+      davor === danach);
+  }
+
   pruefe('Keine JavaScript-Seitenfehler', pageErrors.length === 0, pageErrors.join(' | '));
   await context.close();
 } finally {
