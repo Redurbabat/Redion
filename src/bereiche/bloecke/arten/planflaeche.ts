@@ -1367,6 +1367,17 @@ const Planflaeche = (() => {
         UI.toast('Vorlage enthaelt fehlende oder doppelte Bauteil-IDs.');
         return;
       }
+      /* Eine alte oder importierte Vorlage kann beschaedigte Leitungen
+         enthalten. Ohne diese Pruefung wirft die Platzsuche bei null oder
+         fehlenden Punkten einen TypeError, oder die Kopie laesst eine
+         ungueltige Leitung still weg. Keine teilweise Einfuegung. */
+      if (leitungen.some(l => !l || !Array.isArray(l.punkte) ||
+          l.punkte.length < 2 || l.punkte.some((p: any) =>
+            !p || p.x == null || p.y == null ||
+            !Number.isFinite(Number(p.x)) || !Number.isFinite(Number(p.y))))) {
+        UI.toast('Vorlage enthaelt ungueltige Leitungen.');
+        return;
+      }
 
       /* Der Versatz 120/80 setzte jede Kopie auf die vorige. Suche stattdessen
          die erste freie Rasterposition, ohne vorhandene Zeichen zu ueberdecken.
