@@ -746,6 +746,24 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
 }
 
 
+/* Der schwebende Werkzeug-Dock muss auch auf 320px-Bildschirmen
+ * bedienbar bleiben. Sieben Schaltflaechen mit 44px Mindestmass passen
+ * nicht nebeneinander. Ohne eigenen Scrollbereich ragte der letzte Button
+ * rechts aus dem Viewport (Chromium-Reproduktion). Die Box selbst bleibt
+ * innerhalb des Plans; ihre Kinder behalten ihre Fingergroesse. */
+@media (max-width: 800px) {
+  .sp-wrap .sp-werkzeuge {
+    box-sizing: border-box;
+    max-width: calc(100% - 24px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .sp-wrap .sp-werkzeuge > * { flex-shrink: 0; }
+  .sp-wrap .sp-werkzeuge::-webkit-scrollbar { display: none; }
+}
+
 /* Touch-Ziele fuer den Schaltplan (P2): 44 CSS-Pixel bei Fingerbedienung.
  * Die kompakte Palette bleibt optisch schlank, aber Schliessen/Umschalten
  * und Kontextaktionen sind auf 320–430 px breiten Displays erreichbar.
