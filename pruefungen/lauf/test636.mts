@@ -539,6 +539,41 @@ try {
       davor === danach);
   }
 
+  /* Beschaedigte Vorlagen duerfen weder TypeErrors ausloesen noch
+     Leitungen still weglassen. Einfuegung bleibt bei allen Faellen
+     atomar, bestehende Bauteile und Verbindungen unveraendert. */
+  const falscheLeitungen: Array<{ name: string; leitungen: any[] }> = [
+    { name: 'null-Leitung', leitungen: [null] },
+    { name: 'fehlender Punkt', leitungen: [{
+      id: 'schlecht', punkte: [{ x: 30, y: 60 }, null]
+    }] },
+    { name: 'nur ein Punkt', leitungen: [{
+      id: 'schlecht', punkte: [{ x: 30, y: 60 }]
+    }] },
+    { name: 'ungueltige Koordinate', leitungen: [{
+      id: 'schlecht', punkte: [{ x: 30, y: 60 }, { x: 'NaN', y: 60 }]
+    }] }
+  ];
+  for (const fall of falscheLeitungen) {
+    await page.evaluate((leitungen: any[]) => {
+      Store.setMeta('elektro:planvorlagen', [{
+        id: 'ungueltige-leitungen-636', name: 'Kaputte Leitung',
+        art: 'stromlauf-aufgeloest',
+        teile: [{ id: 'teil636', zeichen: 'spule', x: 0, y: 0,
+          drehung: 0, gespiegelt: false, bmk: 'K1',
+          nummern: {}, gruppe: '', ebene: 'plan' }],
+        leitungen
+      }]);
+    }, fall.leitungen);
+    const davor = await page.evaluate((id: string) =>
+      JSON.stringify(Store.getBlock(id).plan), unbekanntBlock);
+    await einsetzen();
+    const danach = await page.evaluate((id: string) =>
+      JSON.stringify(Store.getBlock(id).plan), unbekanntBlock);
+    pruefe('Beschaedigte Vorlage (' + fall.name + ') wird ohne Planverlust abgelehnt',
+      davor === danach);
+  }
+
   pruefe('Keine JavaScript-Seitenfehler', pageErrors.length === 0, pageErrors.join(' | '));
   await context.close();
 } finally {
