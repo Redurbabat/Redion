@@ -150,7 +150,16 @@ if "%LAUFSTATUS%"=="completed" (
 if "%LAUFSTATUS%"=="unbekannt" (
   echo   [!] GitHub hat den Pruefstatus nicht gemeldet ^(z. B. privates
   echo       Repository ohne API-Anmeldung oder keine Netzverbindung^).
-  echo       Es wird weitergeholt - das ist KEINE Testfreigabe.
+  echo       Das ist KEINE Testfreigabe.
+  REM Der PR-207-Live-Starter darf bei nicht abrufbarem CI-Status
+  REM nicht stillschweigend eine ungepruefte Entwicklungsversion holen.
+  REM Fuer normale Zweige einschliesslich main bleibt das alte
+  REM Warnen-ohne-Abbrechen-Verhalten erhalten.
+  if /I "%ZIEL%"=="ux/windows-schaltplan-dock-20261108" (
+    echo.
+    choice /c JN /t 30 /d N /m "      PR #207 trotz unbekanntem CI-Status holen? (J/N, nach 30 s: N)"
+    if errorlevel 2 goto ende
+  )
   goto lauf_geklaert
 )
 if "%LAUFSTATUS%"=="keiner" (
