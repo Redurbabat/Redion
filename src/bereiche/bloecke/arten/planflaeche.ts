@@ -1355,6 +1355,18 @@ const Planflaeche = (() => {
         UI.toast('Vorlage enthaelt nicht verfuegbare Schaltzeichen.');
         return;
       }
+      /* Jede gespeicherte Bauteil-ID muss eindeutig sein. Das Neuzuordnen
+         der Leitungsenden verwendet eine Map von alter zu neuer ID;
+         doppelte IDs wuerden den ersten Eintrag ueberschreiben und ein
+         Leitungsende still an das falsche Bauteil haengen. Darum die
+         gesamte Vorlage vor aendere() ablehnen, statt den Plan zu
+         verfaelschen oder einen Teil der Vorlage zu uebernehmen. */
+      const vorlagenIds = teile.map(t => t.id);
+      if (vorlagenIds.some(id => typeof id !== 'string' || !id.trim()) ||
+          new Set(vorlagenIds).size !== vorlagenIds.length) {
+        UI.toast('Vorlage enthaelt fehlende oder doppelte Bauteil-IDs.');
+        return;
+      }
 
       /* Der Versatz 120/80 setzte jede Kopie auf die vorige. Suche stattdessen
          die erste freie Rasterposition, ohne vorhandene Zeichen zu ueberdecken.
