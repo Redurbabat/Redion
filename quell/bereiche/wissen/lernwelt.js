@@ -1402,7 +1402,7 @@ const Lernwelt = (() => {
         const ktx = kennzahlKontext({ queue, stats });
         return '<div class="lw-learning">' +
             '<header class="lw-page-head"><div><p>Lernzentrale</p><h2>' +
-            (fokus ? esc(fokus.label) : zustand.themaId ? esc(aktivesFach()?.name || '') : 'Dein erklärbarer Lernplan') + '</h2><span>SM-2 bleibt der fachliche Plan. Es gibt keine stille Migration.</span></div>' +
+            (fokus ? esc(fokus.label) : zustand.themaId ? esc(aktivesFach()?.name || '') : 'Dein erklärbarer Lernplan') + '</h2><span>Zuerst die Fehler, dann was fällig ist, dann Neues.</span></div>' +
             '<button type="button" data-lw-action="learning-classic">Klassische Lernansicht</button></header>' +
             '<section class="lw-metrics">' +
             merkbar('faellige-fehler', ktx) + merkbar('faellige-karten', ktx) + merkbar('neue-karten', ktx) +

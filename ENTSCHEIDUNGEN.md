@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-758 Entscheidungen, E1 bis E780 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+763 Entscheidungen, E1 bis E786 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -843,6 +843,11 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E778** — Das Werkzeug-Dock mit Zeichen UND Namen (9. November 2026): Auswahl, Leitung, Text, Schiene (neues Zeichen `busbar`), Radierer, Bauteile, Einpassen; Kürzel im Tooltip und `aria-keyshortcuts`; das Dock wird nicht mehr bei jeder Änderung neu gebaut (es hüpfte bei jedem Strich)
 * **E779** — Ein leerer Schaltplan zeigt in der Mitte einen Einstieg (9. November 2026): „Bauteil hinzufügen" öffnet die Palette, „Beispielschaltung" das vorhandene Schaltung-Menü; weg beim ersten Bauteil, bei offener Palette und bei einem anderen Werkzeug
 * **E780** — Bewegung im Schaltplan nach `redion-animationen` (9. November 2026): die Marke des aktiven Werkzeugs gleitet mit `--feder-knapp`, Einpassen und + − gleiten per FLIP (200 ms, `--ease-enter`, nur transform), Dock, Kontextleiste und Einstieg kommen mit den Federn; alles steht bei weniger Bewegung (System und „Ruhige Darstellung"); der Ziehgeist der Palette ist endlich gestaltet
+* **E782** — Redion 2, Bogen 1 „Mass und Ruhe" (9. November 2026, Redur: „ich will wenn ich morgen aufseteh eine komplet andere redion sehen"): eine neue, zuletzt geladene Stilschicht `redion2.css` mit EINER Schriftskala, vier Gewichten, Radien, drei Ebenen und einer neutralen Grauleiter; nur Aussehen, kein Griff weniger; das Glass Wheel ausgenommen. Redur hat „erst bauen, am Ende prüfen" entschieden
+* **E783** — Die Seitenwerkzeuge sind eine stille Zeile unter dem Titel (9. November 2026): kein Kasten, keine Rubrik; am Rechner bei Zeiger auf der Seite oder Fokus in der Zeile, am Telefon immer
+* **E784** — Ein Ding wird einmal markiert (9. November 2026): die Auswahl in der Kante ist eine neutrale Fläche mit stärkerer Schrift, ohne Balken und violette Schrift; Karten tragen Haarlinie statt Rahmen; ☆ und ⋯ der Bibliothekskarten erscheinen am Rechner bei Zeiger oder Fokus
+* **E785** — Die 44 px im Kopf bleiben (9. November 2026): der Plan wollte 28-px-Kopfknöpfe wie macOS; §37 ist hart und `test603` §7 hält 44 × 44 — gebaut ist 44 + 44 statt 60 + 55, die Ruhe kommt aus Fläche und Schrift. Offene Frage an Redur
+* **E786** — Das Lernzentrum spricht mit dem Nutzer, nicht mit dem Entwickler (9. November 2026): „SM-2 bleibt der fachliche Plan. Es gibt keine stille Migration." wird „Zuerst die Fehler, dann was fällig ist, dann Neues."; das doppelte „Präsentieren" im ⋯ bleibt (zwei Griffe, `test580`)
 
 ## E775 — Ein unbekanntes Bauteil bleibt sichtbar
 
@@ -957,6 +962,125 @@ Seite — jetzt folgt er dem Zeiger als kleine Karte.
 **Alternative.** Die viewBox Bild für Bild animieren — das ist kein
 transform, und jeder Treffer während der Fahrt läge daneben.
 
+## E782 — Redion 2: eine Schicht für Mass und Ruhe
+
+**Wer.** Redur, 9. November 2026: „ich will das du redion auf eine andere
+levell bringst die aktuele webseite gefällt mir gar nicht wie die ausieht
+wie man berabeitet … ich will wenn ich morgen aufseteh eine komplet andere
+redion sehen". Der Plan (Bögen 1–9) stammt aus der Durchsicht von 50
+Bildern; dies ist Bogen 1.
+
+**Wie geprüft wird — Redurs Entscheidung für diesen Bogen.** „ich will das
+du einfach baust und ohne kontloier uoder test erst am ende". Also: bauen,
+committen, pushen; die bestehenden Wächter und die Bilder vorher/nachher
+EINMAL am Ende. Eine bewusste Abweichung von §30 („zuerst ein Prüflauf")
+und §50 („er ist rot gewesen") — wie bei E775. Ein neuer Wächter „Mass"
+(höchstens sieben Schriftgrössen je Ort, Inhalt beginnt oben) ist geplant,
+aber nicht gebaut.
+
+**Entschieden.** Eine neue Stildatei `quell/schale/stil/redion2.css`, als
+LETZTE verlinkt (nach `glasswheel.css`, Stufe 6 in `test87`), im GRUNDSTOCK
+(§28). Sie setzt:
+
+- eine Schriftskala (Rechner 11 · 12 · 13 · 15 · 16 · 19 · 23 · 30, Telefon
+  eine Stufe grösser), vier Gewichte, `--radius-xs`, drei Ebenen
+  `--e-1/2/3` mit Haarlinie (nur wo diese Datei sie nennt — `--shadow-1…4`
+  bleiben, die untere Leiste liest sie, `test623`);
+- eine fast neutrale Grauleiter wie macOS für „Standard" (`#1c1d20`, eine
+  Stufe heller als `#121417`, im kühlen Ton 271–275° aus E705, `test584`
+  §10) und „Hell" (`#1d1d1f` auf Weiss statt Notions
+  Braun-Grau). Die anderen acht Schemata setzen ihre Werte inline an
+  `<html>` und gewinnen weiter; der Akzent bleibt, was E199 gerechnet hat;
+- den Kopf am Rechner: Studio-Kopf und Kopfzeile auf demselben Grund,
+  EINE Haarlinie, 44 + 44 statt 60 + 55 px, die Marke in einer Zeile ohne
+  „STUDIO", die Suche als flache Kapsel;
+- Titel, Text und Überschriften der Seite auf der Skala (30 / 15 · 1,6 /
+  23 / 19 / 16 statt 40 / 16 / 30 / 24 / 20), Ortstitel in Bibliothek und
+  Lernzentrum gleich, Überzeilen ohne Akzent-Versalien;
+- Knöpfe der Hauptorte mit einem Radius und einer Schrift — nur in Ruhe;
+  Fläche und Schein unter Zeiger, Druck und Fokus bleiben den Regeln, die
+  `test596` hält (§38).
+
+Jede Flächenregel hängt an `body:not([data-ui-shell="glass-wheel"])`; das
+Glass Wheel (E755) und die Bewegungen (E757) bleiben unberührt.
+
+**Warum eine eigene Datei (§39).** 1657 Schriftgrössen-Angaben in 27
+Dateien lassen sich nicht in einer Nacht einzeln umstellen, und jede Regel
+„mittendrin" verliert gegen eine spätere — `#topbar` wird an 43 Stellen in
+sechs Dateien gestylt. Eine zuletzt geladene Schicht mit DENSELBEN
+Marken-Namen ist kein neues Designsystem: dasselbe DOM, dieselben Marken,
+dieselben Schemata. Bogen 8 zieht die Werte in die Grundblätter zurück und
+löscht dort, was hier überstimmt wird.
+
+**Alternative.** Die Werte direkt in `grund.css`, `studio.css`,
+`premium.css` und `bausteine.css` ändern — richtig auf Dauer, aber mit
+Hunderten Stellen und dem Risiko, dass eine spätere Regel jede einzelne
+wieder überstimmt.
+
+**Kosten.** Eine Datei mehr im Start (rund 15 KB), eine Schicht mehr, die
+man kennen muss, bis Bogen 8 aufräumt. Eine Stildatei auf demselben DOM ist
+keine zweite Oberfläche (§2, §6).
+
+## E783 — Die Seitenwerkzeuge als stille Zeile
+
+**Entschieden.** Der Kasten „SEITENWERKZEUGE" („Workspace 2.0") wird eine
+Textzeile unter dem Titel: dieselben fünf `button[data-a]`, ohne Rahmen,
+ohne Rubrik, in der stillen Schrift. Am Rechner mit Maus erscheint sie,
+solange der Zeiger auf der Seite steht ODER der Fokus in ihr ist
+(`:focus-within` — das war der Grund, aus dem „Workspace 2.0" sie dauerhaft
+zeigte). Am Telefon und mit grobem Zeiger bleibt sie immer stehen (§37).
+Am Rechner misst ein Knopf 32 px: ein Nebenweg (§37), denn alle fünf
+stehen auch im ⋯ der Seite.
+
+**Alternative.** Den Kasten lassen — 90 px Bedienung über jedem Text.
+
+**Kosten.** Wer die Werkzeuge sucht, muss die Maus über die Seite bewegen —
+so wie vor „Workspace 2.0".
+
+## E784 — Ein Ding wird einmal markiert
+
+**Entschieden.** Der Ort in der Kante: neutrale Fläche `--bg-active`,
+volle Schrift, stärkeres Gewicht, Zeichen im Akzent — ohne Balken links,
+ohne violette Schrift (vorher dreifach). Nicht nur Farbe (§38): das Gewicht
+und `aria-current` bleiben. Die Zeilen der Kante messen 36 px statt 42;
+die Kante gibt es nur ab 761 px, und mit grobem Zeiger heben sie auf
+`--touch-min` (§37). Karten in Bibliothek und Lernzentrum: Haarlinie und
+flacher Schatten statt Rahmen und Schatten, Radius 12. ☆ und ⋯ der
+Bibliothekskarten sind mit Maus erst bei Zeiger oder Fokus auf der Karte
+zu sehen; ein gemerkter Stern bleibt stehen; Ort, Trefferfläche und Name
+bleiben immer.
+
+**Alternative.** Alles laut lassen — 24 Bedienelemente auf acht Karten.
+
+**Kosten.** Mit der Maus sind ☆ und ⋯ erst beim Zeigen sichtbar.
+
+## E785 — Die 44 px im Kopf bleiben
+
+**Entschieden.** Der Plan schlug 28-px-Kopfknöpfe und 28-px-Zeilen wie
+macOS vor. §37 ist [hart] („44 px auf den Hauptwegen … ohne Ausnahme"), und
+`test603` §7 hält 44 × 44 für jeden Kopfknopf. Gebaut ist deshalb: zwei
+Zeilen von je 44 px, Knöpfe ohne Fläche in Ruhe, die Suche 32 px hoch in
+der 44-px-Zeile. Die Ruhe kommt aus Fläche, Schrift und Linie.
+
+**Offene Frage an Redur.** Soll §37 am Rechner mit feinem Zeiger 28–32 px
+erlauben (wie macOS), oder bleibt 44 überall? Erst mit seiner Antwort kann
+Bogen 2 den Kopf auf eine Leiste von 52 px bringen.
+
+**Kosten.** Der Kopf ist 27 px niedriger statt 31.
+
+## E786 — Das Lernzentrum spricht mit dem Nutzer
+
+**Entschieden.** Unter „Dein erklärbarer Lernplan" stand „SM-2 bleibt der
+fachliche Plan. Es gibt keine stille Migration." — ein Satz für Entwickler.
+Jetzt steht dort, was die Tagesrunde wirklich tut: „Zuerst die Fehler, dann
+was fällig ist, dann Neues." Das doppelte „Präsentieren" im ⋯ der Seite
+bleibt: es sind zwei Griffe, und `test580` hält die Liste der 47 Zeilen.
+Ob einer davon gehen darf, entscheidet Redur.
+
+**Alternative.** Den Satz ausblenden — dann fehlt die Unterzeile, die jeder
+Ortstitel hat.
+
+**Kosten.** Keine.
 
 ## Grundregel
 

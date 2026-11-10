@@ -28252,6 +28252,293 @@ body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.gw-rim,#handy-oben)
 :root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){-webkit-backdrop-filter:none;backdrop-filter:none}
 
 </style>
+<!-- REDION 2 (E782): die Marken EINER Skala und die ruhigen Hauptflächen.
+     Steht nach allem, weil sie ordnet, was die Blätter darüber gebaut haben;
+     das Glass Wheel nimmt sie über `body:not([data-ui-shell])` aus. -->
+<style>
+/* ===== quell/schale/stil/redion2.css ===== */
+/* ==========================================================================
+ * REDION 2 · BOGEN 1 „MASS UND RUHE" (E782)
+ * --------------------------------------------------------------------------
+ * Redur, 9. November 2026: „ich will das du redion auf eine andere levell
+ * bringst die aktuele webseite gefällt mir gar nicht … ich will wenn ich
+ * morgen aufseteh eine komplet andere redion sehen".
+ *
+ * WARUM EINE NEUE, ZULETZT GELADENE DATEI (§39, E782). Die Stilblätter
+ * führen 50 Schriftgrössen, 26 Gewichte, 29 Radien und 247 Schatten; der
+ * Kopf allein wird in sechs Dateien an 43 Stellen gestylt. Eine Regel
+ * „mittendrin" verliert gegen eine spätere — deshalb wirkte bisher jede
+ * Überarbeitung nur halb. Diese Datei steht ganz am Ende, setzt die Marken
+ * EINER Skala und überschreibt gezielt die sichtbaren Hauptflächen. Sie ist
+ * eine bewusste Schicht, kein zweites Designsystem: dieselben Marken-Namen
+ * (`--bg`, `--text`, `--radius-*`, `--shadow-*`), dasselbe DOM, kein Knopf
+ * weniger. Bogen 8 (Aufräumen) zieht die Werte später in die Grundblätter
+ * zurück und löscht die überstimmten Zeilen dort.
+ *
+ * DIE GRENZEN, die hier gelten:
+ *   · Nur Aussehen. Kein Element verschwindet; was am Rechner still wird,
+ *     erscheint bei Zeiger ODER Tastenfokus, am Telefon bleibt es stehen.
+ *   · Die zehn Farbschemata setzen ihre Werte inline an <html> und gewinnen
+ *     damit über jede Regel hier — „Standard" und „Hell" bekommen die neue
+ *     Grauleiter, alle anderen behalten ihre eigene.
+ *   · Das Glass Wheel (E755) bleibt unberührt: jede Flächenregel hängt an
+ *     `body:not([data-ui-shell="glass-wheel"])`.
+ *   · 44 px auf den Hauptwegen bleiben (§37 ist hart). Die Ruhe kommt aus
+ *     Fläche, Schrift und Linie, nicht aus kleineren Trefferflächen.
+ *   · Rohe 16/22/28/44/46/56 px stehen nicht hier (test362, marken-decke).
+ * ======================================================================== */
+
+/* ── 1 · Die Marken: eine Schriftskala, vier Gewichte, Radien, drei Ebenen ── */
+:root{
+  --t-caption:11px; --t-small:12px; --t-ui:13px; --t-body:15px;
+  --t-h3:calc(var(--t-body) + 1px); --t-h2:19px; --t-h1:23px; --t-title:30px;
+  --lh-ui:1.35; --lh-body:1.6;
+  --w-regular:400; --w-medium:500; --w-semibold:600; --w-bold:700;
+  --radius-xs:4px;
+  /* Drei Ebenen mit Haarlinie statt Rahmen: Karte, Menü, Dialog. Sie gelten nur,
+     wo diese Datei sie nennt; `--shadow-1…4` bleiben (die untere Leiste und
+     die klassischen Bewegungen lesen sie, test623). */
+  --e-1:0 0 0 .5px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+  --e-2:0 0 0 .5px rgba(0,0,0,.10), 0 6px 18px rgba(0,0,0,.10);
+  --e-3:0 0 0 .5px rgba(0,0,0,.12), 0 20px 50px rgba(0,0,0,.22);
+  --studio-highlight:0 0 0 transparent;
+  --studio-bar-height:var(--touch-min);
+}
+@media (max-width:760px){
+  :root{
+    --t-caption:12px; --t-small:13px; --t-ui:15px; --t-body:17px;
+    --t-h3:17px; --t-h2:21px; --t-h1:25px; --t-title:32px;
+  }
+}
+
+/* DUNKEL — fast neutral wie macOS, eine Stufe heller als #121417 (das
+   wirkte wie ein Loch), aber im kühlen Ton aus E705 (OKLCH 271–275°,
+   Sättigung 0,006–0,0075 — test584 §10). Nur „Standard": die anderen dunklen Schemata setzen ihre
+   Werte inline und gewinnen. Gemessen (WCAG): Text 15,6 : 1 auf dem Grund,
+   Nebenschrift 7,5 auf dem Grund und 6,7 auf der Karte (hell genug auch über Glas, test576), Beiwerk 3,9. */
+:root:not([data-theme="light"]){
+  --bg:#1c1d20; --bg-side:#212225; --bg-card:#27282c;
+  --bg-hover:#2e2f33; --bg-input:#27282c; --bg-press:#37383c;
+  --bg-active:rgba(255,255,255,.08);
+  --line:rgba(255,255,255,.10); --line-soft:rgba(255,255,255,.06);
+  --text:#f5f5f7; --text-dim:#aeaeb3; --text-faint:#7c7c81;
+  --e-1:0 0 0 .5px rgba(255,255,255,.07), 0 1px 2px rgba(0,0,0,.30);
+  --e-2:0 0 0 .5px rgba(255,255,255,.09), 0 8px 24px rgba(0,0,0,.40);
+  --e-3:0 0 0 .5px rgba(255,255,255,.10), 0 24px 60px rgba(0,0,0,.55);
+}
+/* HELL — neutral-kühl statt Notions Braun-Grau. Text 16,8 : 1, Nebenschrift
+   6,0 auf Weiss und 5,1 auf der Überfahr-Fläche, Beiwerk 3,9. Der Akzent
+   bleibt, was E199 gerechnet hat (#7c3aed). */
+html[data-theme="light"]{
+  --bg:#ffffff; --bg-side:#f6f6f8; --bg-card:#fbfbfc;
+  --bg-hover:#ededf0; --bg-input:#f2f2f5; --bg-press:#e4e4e8;
+  --bg-active:rgba(0,0,0,.06); --bg-tief:#f2f2f5;
+  --line:#e2e2e6; --line-soft:#ececef;
+  --text:#1d1d1f; --text-dim:#636366; --text-faint:#808084;
+}
+
+/* ── 2 · Der Kopf am Rechner: eine Fläche, eine Haarlinie, 44 + 44 ─────── */
+@media (min-width:761px){
+  body:not([data-ui-shell="glass-wheel"]) #studio-bar{
+    min-height:var(--touch-min); padding:0 var(--space-3);
+    gap:var(--space-1); background:var(--bg); border-bottom:0;
+  }
+  /* Die Marke klein und ruhig: das Bild bleibt (test483), die Zeile
+     „STUDIO" darunter fällt fort, der Name steht in einer Zeile. */
+  body:not([data-ui-shell="glass-wheel"]) .studio-brand{
+    font-size:15px; font-weight:var(--w-semibold); letter-spacing:-.2px;
+    gap:var(--space-2); padding-right:var(--space-2);
+  }
+  body:not([data-ui-shell="glass-wheel"]) .studio-wordmark{display:none}
+  body:not([data-ui-shell="glass-wheel"]) .studio-monogram{
+    width:26px; height:26px; filter:none; transform:none;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .studio-brand:hover .studio-monogram{transform:none}
+  /* Alle Kopfknöpfe sind Geister: keine Fläche in Ruhe, keine Rahmen. */
+  body:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-icon{
+    border-radius:var(--radius-md); border-color:transparent;
+  }
+  body:not([data-ui-shell="glass-wheel"]) #studio-bar svg{width:17px; height:17px}
+  /* Die Suche: eine flache Kapsel, GEZEICHNET 32 px hoch in der 44-px-
+     Zeile. Der Knopf selbst misst weiter 44 (§37, test603 §7): oben und
+     unten liegt ein durchsichtiger Rand von 6 px, und die Fläche wird nur
+     innerhalb des Randes gemalt (`background-clip:padding-box`) — die
+     Trefferfläche bleibt die ganze Höhe. */
+  body:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search{
+    border:solid transparent; border-width:6px 0; border-radius:14px;
+    background-clip:padding-box; background-color:var(--bg-input);
+    font-size:var(--t-ui); color:var(--text-dim);
+  }
+  body:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search:hover{background-color:var(--bg-hover); border-color:transparent; background-clip:padding-box}
+  body:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search kbd{font-size:var(--t-caption); opacity:.6}
+
+  /* Die Kopfzeile der Seite: derselbe Grund, darunter die EINE Haarlinie. */
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] #main > #topbar{
+    min-height:var(--touch-min); background:var(--bg);
+    border-bottom:1px solid var(--line-soft); box-shadow:none;
+  }
+  body:not([data-ui-shell="glass-wheel"]) #topbar .top-btn{
+    border-radius:var(--radius-md); font-size:var(--t-ui); font-weight:var(--w-medium);
+  }
+  body:not([data-ui-shell="glass-wheel"]) #topbar .crumb{font-size:var(--t-ui); color:var(--text-dim)}
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] #main > #reiterleiste{background:var(--bg)}
+
+  /* ── 3 · Die Kante: Zeilen ruhig, die Auswahl EINMAL markiert ───────── */
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] #main > #kante{
+    background:var(--bg-side); border-right:1px solid var(--line-soft);
+  }
+  /* 36 px statt 42 (§37, Nebenweg-Grund an Ort und Stelle): die Kante gibt
+     es nur ab 761 px, also nur mit Zeiger — die 44-px-Regel gilt Fingern,
+     und dafür hebt `pointer:coarse` unten auf --touch-min. Derselbe Grund,
+     mit dem premium.css die 42 begründet. */
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] .k-knopf{
+    height:36px; min-height:36px; border-radius:var(--radius-md);
+    font-size:var(--t-ui); font-weight:var(--w-medium); color:var(--text-dim);
+    gap:var(--space-3);
+  }
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] .k-knopf svg{width:17px; height:17px}
+  /* Die Auswahl: neutrale Fläche, volle Schrift, Zeichen im Akzent —
+     ohne Balken, ohne violette Schrift. Nicht nur Farbe (§38): die Zeile
+     trägt das stärkere Gewicht und `aria-current`. */
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] .k-knopf.k-ort.ist-hier,
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] .k-knopf.ist-an{
+    background:var(--bg-active); color:var(--text); box-shadow:none;
+    font-weight:var(--w-semibold);
+  }
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] .k-knopf.k-ort.ist-hier svg{color:var(--accent-text)}
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] .k-knopf:hover{background:var(--bg-hover); color:var(--text)}
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] .k-knopf:focus-visible{outline:2px solid var(--accent-text); outline-offset:-2px}
+  body:not([data-ui-shell="glass-wheel"]) .k-orte{border-bottom-color:var(--line-soft)}
+  body:not([data-ui-shell="glass-wheel"]) .k-unten{border-top-color:var(--line-soft)}
+}
+@media (min-width:761px) and (pointer:coarse){
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] .k-knopf{height:var(--touch-min); min-height:var(--touch-min)}
+}
+
+/* ── 4 · Die Seite: Titel, Text, Überschriften auf EINER Skala ─────────── */
+body:not([data-ui-shell="glass-wheel"]) #title{
+  font-size:var(--t-title); font-weight:var(--w-bold); letter-spacing:-.4px;
+  line-height:1.2; margin:var(--space-1) 0 var(--space-2);
+}
+body:not([data-ui-shell="glass-wheel"]) #page > .pg-icon{font-size:48px; margin-top:var(--space-7)}
+body:not([data-ui-shell="glass-wheel"]) #page .b-text .ct{font-size:var(--t-body); line-height:var(--lh-body)}
+body:not([data-ui-shell="glass-wheel"]) #page :is(.b-bullet,.b-number,.b-todo,.b-toggle,.b-quote) .ct{font-size:var(--t-body); line-height:var(--lh-body)}
+body:not([data-ui-shell="glass-wheel"]) #page .b-h1 .ct{font-size:var(--t-h1); font-weight:var(--w-bold); letter-spacing:-.25px; padding-top:var(--space-6)}
+body:not([data-ui-shell="glass-wheel"]) #page .b-h2 .ct{font-size:var(--t-h2); font-weight:var(--w-semibold); letter-spacing:-.15px; padding-top:var(--space-5)}
+body:not([data-ui-shell="glass-wheel"]) #page .b-h3 .ct{font-size:var(--t-h3); font-weight:var(--w-semibold); padding-top:var(--space-4)}
+
+/* DIE SEITENWERKZEUGE (E783): kein Kasten, keine Rubrik „SEITENWERKZEUGE"
+   — dieselben fünf `button[data-a]` als EINE stille Textzeile unter dem
+   Titel. Am Rechner sichtbar, solange der Zeiger auf der Seite steht ODER
+   der Fokus in der Zeile ist (die Regel aus aufbau.css:158, die „Workspace
+   2.0" überstimmt hatte — jetzt mit `:focus-within`, damit die Tastatur
+   sie nicht unsichtbar trifft). Am Telefon bleibt die Zeile stehen. */
+body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools{
+  background:none; border:0; box-shadow:none; padding:0;
+  margin:0 0 var(--space-5) calc(var(--space-2) * -1); gap:2px;
+}
+body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > .pg-tools-caption{display:none}
+body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button{
+  background:transparent; border:1px solid transparent; color:var(--text-faint);
+  font-size:var(--t-small); font-weight:var(--w-medium);
+  border-radius:var(--radius-sm); padding:var(--space-1) var(--space-3);
+}
+body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button svg{opacity:.85}
+body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button:is(:hover,:focus-visible){
+  background:var(--bg-hover); color:var(--text); border-color:transparent;
+}
+body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button:focus-visible{outline:2px solid var(--accent-text); outline-offset:1px}
+@media (min-width:761px) and (hover:hover){
+  /* 32 px (§37 Nebenweg): Cover, Breite, Schrift, Vorlage und KI stehen
+     alle auch im ⋯ der Seite; die Zeile ist der kurze Weg für die Maus. */
+  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button{min-height:32px}
+  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools{opacity:0; transition:opacity var(--motion-fast) var(--ease)}
+  body:not([data-ui-shell="glass-wheel"]) #page:hover > .pg-tools,
+  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools:focus-within{opacity:1}
+}
+@media (max-width:760px){
+  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools{margin-left:0}
+  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button{color:var(--text-dim); font-size:var(--t-small)}
+  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools::before{background:linear-gradient(to right,var(--bg),transparent)}
+  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools::after{background:linear-gradient(to left,var(--bg),transparent)}
+}
+
+/* Die Ansichtswahl Seite · Fläche · Redion: eine kleine Segmentsteuerung
+   statt eines Rahmenkastens (E690 bleibt: dieselbe Radiogruppe). */
+body:not([data-ui-shell="glass-wheel"]) .pg-ansichten{margin-top:var(--space-4)}
+body:not([data-ui-shell="glass-wheel"]) .pg-ansichten .ru-seg{
+  background:var(--bg-input); border:0; box-shadow:none;
+  border-radius:var(--radius-md); padding:2px; font-size:var(--t-small);
+}
+body:not([data-ui-shell="glass-wheel"]) .pg-ansichten .ru-seg button{
+  border-radius:var(--radius-sm); font-size:var(--t-small); font-weight:var(--w-medium);
+}
+
+/* ── 5 · Ortstitel: überall dieselbe Art ───────────────────────────────── */
+body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-dkopf h1,
+body:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-page-head h2{
+  font-size:var(--t-title); font-weight:var(--w-bold); line-height:1.15;
+  letter-spacing:-.4px;
+}
+body:not([data-ui-shell="glass-wheel"]) .bib-workspace-eyebrow,
+body:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-page-head p{
+  color:var(--text-dim); font-size:var(--t-small); font-weight:var(--w-medium);
+  letter-spacing:0; text-transform:none;
+}
+body:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-page-head>div:first-child>span{
+  font-size:var(--t-ui); color:var(--text-dim);
+}
+
+/* ── 6 · Knöpfe: ein Mass, ein Radius, kein Glanz ──────────────────────── */
+/* Nur Form, Schrift und Rand in Ruhe — Fläche und Schein unter Zeiger,
+   Druck und Fokus gehören weiter den Regeln, die test596 hält (§38). */
+body:not([data-ui-shell="glass-wheel"]) :is(.bib-dkopf .bib-neu,.bib-studio-import,.bib-workspace-actions .bib-search,
+  .lernwelt .lw-page-head>button,.lernwelt .lw-page-head>.lw-actions button,.lernwelt .lw-study-actions button){
+  border-radius:var(--radius-md); font-size:var(--t-ui); font-weight:var(--w-semibold);
+  letter-spacing:0;
+}
+body:not([data-ui-shell="glass-wheel"]) .bib-dkopf .bib-neu{box-shadow:none}
+
+/* ── 7 · Karten: Haarlinie und flacher Schatten statt Rahmen ───────────── */
+body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel{
+  border-color:var(--line-soft); border-radius:var(--radius-lg);
+  box-shadow:var(--e-1);
+}
+body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel:is(:hover,:focus-visible){
+  border-color:var(--line); box-shadow:var(--e-2);
+}
+body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel-blatt{
+  border-radius:var(--radius-md); background:var(--bg-side);
+}
+body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel-name b{
+  font-size:var(--t-body); font-weight:var(--w-semibold);
+}
+body:not([data-ui-shell="glass-wheel"]) .bib-card-kind{font-size:var(--t-caption); font-weight:var(--w-medium); color:var(--text-faint)}
+/* ☆ und ⋯ am Rechner erst bei Zeiger oder Fokus auf der Karte (E784).
+   Gedrückt (☆ gemerkt) bleibt der Stern stehen; am Telefon und mit grobem
+   Zeiger bleiben beide immer sichtbar (§37, test597 §1). Unsichtbar heisst
+   hier nur durchsichtig: Ort, Trefferfläche und Name bleiben. */
+@media (hover:hover) and (pointer:fine){
+  body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-zelle > :is(.bib-favorite:not([aria-pressed="true"]),.bib-deckel-mehr){
+    opacity:0; transition:opacity var(--motion-fast) var(--ease);
+  }
+  body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-zelle:is(:hover,:focus-within) > :is(.bib-favorite,.bib-deckel-mehr){opacity:1}
+}
+body:not([data-ui-shell="glass-wheel"]) .lernwelt :is(.lw-metrik,.lw-study-actions article){
+  border-color:var(--line-soft); border-radius:var(--radius-lg); box-shadow:var(--e-1);
+}
+
+/* ── 8 · Bewegung und Kontrast: die bestehenden Schalter gelten weiter ─── */
+@media (prefers-reduced-motion:reduce){
+  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools,
+  body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-zelle > *{transition:none}
+}
+body[data-bewegung="ruhig"]:not([data-ui-shell="glass-wheel"]) #page > .pg-tools{transition:none}
+@media (forced-colors:active),(prefers-contrast:more){
+  body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel{border-color:var(--text); box-shadow:none}
+}
+
+</style>
 
 <!-- =========================================================================
      ANMELDE-FENSTER
@@ -29733,7 +30020,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1583, inhalt: 'dc3fc68537be889b', gebaut: '2026-11-10T03:32:33.965Z' };
+const Stand = { fassung: 1583, inhalt: 'ff18da6b0838a3d6', gebaut: '2026-11-10T03:34:43.932Z' };
 window.Stand = Stand;
 
 </script>
@@ -129418,8 +129705,8 @@ const Aussehen = (() => {
         return alsText(ev).toLowerCase() === soll.toLowerCase();
     };
     const STILBLATT = {
-        dark: { '--bg': '#121417', '--bg-side': '#181a1d', '--text': '#f1f2f4', '--accent': '#6d4aff' },
-        light: { '--bg': '#ffffff', '--bg-side': '#fbfbfa', '--text': '#37352f', '--accent': '#7c3aed' },
+        dark: { '--bg': '#1c1d20', '--bg-side': '#212225', '--text': '#f5f5f7', '--accent': '#6d4aff' },
+        light: { '--bg': '#ffffff', '--bg-side': '#f6f6f8', '--text': '#1d1d1f', '--accent': '#7c3aed' },
     };
     const stilblatt = (grund) => STILBLATT[grund === 'light' ? 'light' : 'dark'] ?? {};
     const akzentWahl = (s) => {
@@ -148946,7 +149233,7 @@ const Lernwelt = (() => {
         const ktx = kennzahlKontext({ queue, stats });
         return '<div class="lw-learning">' +
             '<header class="lw-page-head"><div><p>Lernzentrale</p><h2>' +
-            (fokus ? esc(fokus.label) : zustand.themaId ? esc(aktivesFach()?.name || '') : 'Dein erklärbarer Lernplan') + '</h2><span>SM-2 bleibt der fachliche Plan. Es gibt keine stille Migration.</span></div>' +
+            (fokus ? esc(fokus.label) : zustand.themaId ? esc(aktivesFach()?.name || '') : 'Dein erklärbarer Lernplan') + '</h2><span>Zuerst die Fehler, dann was fällig ist, dann Neues.</span></div>' +
             '<button type="button" data-lw-action="learning-classic">Klassische Lernansicht</button></header>' +
             '<section class="lw-metrics">' +
             merkbar('faellige-fehler', ktx) + merkbar('faellige-karten', ktx) + merkbar('neue-karten', ktx) +
