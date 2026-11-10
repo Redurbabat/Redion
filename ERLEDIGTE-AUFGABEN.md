@@ -1,5 +1,26 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## Redion 2, Bogen 1 „Mass und Ruhe" — 9./10. November 2026
+
+**Fund.** Redur: „die aktuele webseite gefällt mir gar nicht … ich will wenn
+ich morgen aufseteh eine komplet andere redion sehen". 50 Bilder: 56 % des
+Fensters Bedienung vor dem ersten Wort, 50 Schriftgrössen, dreifach
+markierte Auswahl, ein Entwicklersatz im Lernzentrum.
+**Bau.** E782–E786: `quell/schale/stil/redion2.css` als letzte Schicht
+(Skala, neutrale Grauleiter für Standard und Hell, Kopf 44 + 44 statt
+60 + 55, Kante mit einfacher Auswahl, Seitenwerkzeuge als stille Zeile,
+Karten mit Haarlinie, ☆/⋯ bei Zeiger, Ortstitel gleich); `index.html`,
+GRUNDSTOCK, `test87` (Stufe 6), Karten „Standard"/„Hell" in `aussehen.ts`,
+ein Satz in `lernwelt.ts`. Erste Textzeile der Notizseite am Rechner bei
+y ≈ 362 statt 482.
+**Prüfung.** Auf Redurs Wunsch erst am Ende (E782): 87, 105, 290, 387,
+549, 596, 597 grün; 362, 402, 550, 576, 580, 584, 603, 623 rot — jede rote
+Zeile ist auf dem Grundstand 563a8488f gleich rot (576 hell sogar 4,03 →
+4,13). Selbst gefunden und repariert: Suchkapsel 32 statt 44 px hoch
+(603 §7), Standard dunkel ausserhalb des kühlen Tons und alte Werte auf den
+Schemakarten (584), Schatten der unteren Leiste (623), Ecke des Bandes
+(580 §6), stille Schrift über Glas (576). Kein neuer Wächter „Mass" (offen).
+
 ## Ein und Aus wieder „▶ Strom" — 2. November 2026
 
 **Fund.** Redur nach den Bildern von E772: „Für ein-aus sollte wie früher

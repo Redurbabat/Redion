@@ -952,9 +952,11 @@ LETZTE verlinkt (nach `glasswheel.css`, Stufe 6 in `test87`), im GRUNDSTOCK
 
 - eine Schriftskala (Rechner 11 · 12 · 13 · 15 · 16 · 19 · 23 · 30, Telefon
   eine Stufe grösser), vier Gewichte, `--radius-xs`, drei Ebenen
-  `--e-1/2/3` mit Haarlinie, auf die `--shadow-1/2/3` jetzt zeigen;
-- eine neutrale Grauleiter wie macOS für „Standard" (`#1c1c1e`, eine Stufe
-  heller als `#121417`) und „Hell" (`#1d1d1f` auf Weiss statt Notions
+  `--e-1/2/3` mit Haarlinie (nur wo diese Datei sie nennt — `--shadow-1…4`
+  bleiben, die untere Leiste liest sie, `test623`);
+- eine fast neutrale Grauleiter wie macOS für „Standard" (`#1c1d20`, eine
+  Stufe heller als `#121417`, im kühlen Ton 271–275° aus E705, `test584`
+  §10) und „Hell" (`#1d1d1f` auf Weiss statt Notions
   Braun-Grau). Die anderen acht Schemata setzen ihre Werte inline an
   `<html>` und gewinnen weiter; der Akzent bleibt, was E199 gerechnet hat;
 - den Kopf am Rechner: Studio-Kopf und Kopfzeile auf demselben Grund,

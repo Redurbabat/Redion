@@ -28239,12 +28239,12 @@ body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.gw-rim,#handy-oben)
   --lh-ui:1.35; --lh-body:1.6;
   --w-regular:400; --w-medium:500; --w-semibold:600; --w-bold:700;
   --radius-xs:4px;
-  /* Drei Ebenen mit Haarlinie statt Rahmen: Karte, Menü, Dialog. */
+  /* Drei Ebenen mit Haarlinie statt Rahmen: Karte, Menü, Dialog. Sie gelten nur,
+     wo diese Datei sie nennt; `--shadow-1…4` bleiben (die untere Leiste und
+     die klassischen Bewegungen lesen sie, test623). */
   --e-1:0 0 0 .5px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
   --e-2:0 0 0 .5px rgba(0,0,0,.10), 0 6px 18px rgba(0,0,0,.10);
   --e-3:0 0 0 .5px rgba(0,0,0,.12), 0 20px 50px rgba(0,0,0,.22);
-  --shadow-1:var(--e-1); --shadow-2:var(--e-2); --shadow-3:var(--e-3);
-  --studio-elevation:var(--e-2);
   --studio-highlight:0 0 0 transparent;
   --studio-bar-height:var(--touch-min);
 }
@@ -28255,16 +28255,17 @@ body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.gw-rim,#handy-oben)
   }
 }
 
-/* DUNKEL — neutral wie macOS, eine Stufe heller als #121417 (das wirkte
-   wie ein Loch). Nur „Standard": die anderen dunklen Schemata setzen ihre
+/* DUNKEL — fast neutral wie macOS, eine Stufe heller als #121417 (das
+   wirkte wie ein Loch), aber im kühlen Ton aus E705 (OKLCH 271–275°,
+   Sättigung 0,006–0,0075 — test584 §10). Nur „Standard": die anderen dunklen Schemata setzen ihre
    Werte inline und gewinnen. Gemessen (WCAG): Text 15,6 : 1 auf dem Grund,
-   Nebenschrift 6,6 auf dem Grund und 5,9 auf der Karte, Beiwerk 3,9. */
+   Nebenschrift 7,5 auf dem Grund und 6,7 auf der Karte (hell genug auch über Glas, test576), Beiwerk 3,9. */
 :root:not([data-theme="light"]){
-  --bg:#1c1c1e; --bg-side:#202022; --bg-card:#262628;
-  --bg-hover:#2f2f32; --bg-input:#262628; --bg-press:#38383b;
+  --bg:#1c1d20; --bg-side:#212225; --bg-card:#27282c;
+  --bg-hover:#2e2f33; --bg-input:#27282c; --bg-press:#37383c;
   --bg-active:rgba(255,255,255,.08);
   --line:rgba(255,255,255,.10); --line-soft:rgba(255,255,255,.06);
-  --text:#f5f5f7; --text-dim:#a1a1a6; --text-faint:#7c7c81;
+  --text:#f5f5f7; --text-dim:#aeaeb3; --text-faint:#7c7c81;
   --e-1:0 0 0 .5px rgba(255,255,255,.07), 0 1px 2px rgba(0,0,0,.30);
   --e-2:0 0 0 .5px rgba(255,255,255,.09), 0 8px 24px rgba(0,0,0,.40);
   --e-3:0 0 0 .5px rgba(255,255,255,.10), 0 24px 60px rgba(0,0,0,.55);
@@ -28302,14 +28303,16 @@ html[data-theme="light"]{
     border-radius:var(--radius-md); border-color:transparent;
   }
   body:not([data-ui-shell="glass-wheel"]) #studio-bar svg{width:17px; height:17px}
-  /* Die Suche: eine flache Kapsel, 32 px hoch in der 44-px-Zeile; die
-     Trefferfläche bleibt die ganze Höhe über den Innenabstand der Leiste. */
+  /* Die Suche: eine flache Kapsel, GEZEICHNET 32 px hoch in der 44-px-
+     Zeile. Der Knopf selbst misst weiter 44 (§37, test603 §7): die Fläche
+     wird nur im Inhaltskasten gemalt (`background-clip`), 6 px oben und
+     unten bleiben durchsichtige Trefferfläche. */
   body:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search{
-    min-height:32px; height:32px; border-radius:var(--radius-md);
-    border-color:transparent; background:var(--bg-input);
+    padding-block:6px; border-radius:14px; background-clip:content-box;
+    border-color:transparent; background-color:var(--bg-input);
     font-size:var(--t-ui); color:var(--text-dim);
   }
-  body:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search:hover{background:var(--bg-hover); border-color:transparent}
+  body:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search:hover{background-color:var(--bg-hover); border-color:transparent}
   body:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search kbd{font-size:var(--t-caption); opacity:.6}
 
   /* Die Kopfzeile der Seite: derselbe Grund, darunter die EINE Haarlinie. */
@@ -28321,7 +28324,6 @@ html[data-theme="light"]{
     border-radius:var(--radius-md); font-size:var(--t-ui); font-weight:var(--w-medium);
   }
   body:not([data-ui-shell="glass-wheel"]) #topbar .crumb{font-size:var(--t-ui); color:var(--text-dim)}
-  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] #main > #menueband{background:var(--bg)}
   body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] #main > #reiterleiste{background:var(--bg)}
 
   /* ── 3 · Die Kante: Zeilen ruhig, die Auswahl EINMAL markiert ───────── */
@@ -29961,7 +29963,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1579, inhalt: '9b4f719cf416a98f', gebaut: '2026-11-09T22:23:37.753Z' };
+const Stand = { fassung: 1581, inhalt: '6fa04e144e4c83e9', gebaut: '2026-11-10T03:06:05.283Z' };
 window.Stand = Stand;
 
 </script>
@@ -129581,8 +129583,8 @@ const Aussehen = (() => {
         return alsText(ev).toLowerCase() === soll.toLowerCase();
     };
     const STILBLATT = {
-        dark: { '--bg': '#121417', '--bg-side': '#181a1d', '--text': '#f1f2f4', '--accent': '#6d4aff' },
-        light: { '--bg': '#ffffff', '--bg-side': '#fbfbfa', '--text': '#37352f', '--accent': '#7c3aed' },
+        dark: { '--bg': '#1c1d20', '--bg-side': '#212225', '--text': '#f5f5f7', '--accent': '#6d4aff' },
+        light: { '--bg': '#ffffff', '--bg-side': '#f6f6f8', '--text': '#1d1d1f', '--accent': '#7c3aed' },
     };
     const stilblatt = (grund) => STILBLATT[grund === 'light' ? 'light' : 'dark'] ?? {};
     const akzentWahl = (s) => {
