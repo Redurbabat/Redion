@@ -101,15 +101,16 @@ html[data-theme="light"]{
   }
   body:not([data-ui-shell="glass-wheel"]) #studio-bar svg{width:17px; height:17px}
   /* Die Suche: eine flache Kapsel, GEZEICHNET 32 px hoch in der 44-px-
-     Zeile. Der Knopf selbst misst weiter 44 (§37, test603 §7): die Fläche
-     wird nur im Inhaltskasten gemalt (`background-clip`), 6 px oben und
-     unten bleiben durchsichtige Trefferfläche. */
+     Zeile. Der Knopf selbst misst weiter 44 (§37, test603 §7): oben und
+     unten liegt ein durchsichtiger Rand von 6 px, und die Fläche wird nur
+     innerhalb des Randes gemalt (`background-clip:padding-box`) — die
+     Trefferfläche bleibt die ganze Höhe. */
   body:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search{
-    padding-block:6px; border-radius:14px; background-clip:content-box;
-    border-color:transparent; background-color:var(--bg-input);
+    border:solid transparent; border-width:6px 0; border-radius:14px;
+    background-clip:padding-box; background-color:var(--bg-input);
     font-size:var(--t-ui); color:var(--text-dim);
   }
-  body:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search:hover{background-color:var(--bg-hover); border-color:transparent}
+  body:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search:hover{background-color:var(--bg-hover); border-color:transparent; background-clip:padding-box}
   body:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search kbd{font-size:var(--t-caption); opacity:.6}
 
   /* Die Kopfzeile der Seite: derselbe Grund, darunter die EINE Haarlinie. */
