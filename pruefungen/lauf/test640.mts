@@ -160,7 +160,11 @@ console.log('\n§5 Vollbild');
 await A.locator('.sp-wrap [data-a="vollbild"]').last().click();
 await A.waitForTimeout(600);
 const a6 = await messe(A);
-p('Im Vollbild passt die Ansicht neu ein (≥ 75 %, Mitte)', fuellung(a6) >= 0.75 && mitte(a6) <= 0.08, kurz(a6));
+/* Im Vollbild am Rechner ist die Fläche so gross, dass die Obergrenze
+   (1,75 px je Planeinheit) greift — dann zählt, dass sie erreicht ist. */
+const massstab6 = await A.evaluate(() => [...document.querySelectorAll<SVGSVGElement>('.sp-wrap svg.sp-flaeche')].pop()!.getScreenCTM()!.a);
+p('Im Vollbild passt die Ansicht neu ein (≥ 75 % oder Obergrenze 1,75, Mitte)',
+  (fuellung(a6) >= 0.75 || Math.abs(massstab6 - 1.75) < 0.02) && mitte(a6) <= 0.08, kurz(a6) + ' · ' + massstab6.toFixed(3));
 p('… und die Fläche ist grösser als in der Seite', a6.stufe.w * a6.stufe.h > a5.stufe.w * a5.stufe.h, kurz(a6));
 await A.keyboard.press('Escape');
 await A.waitForTimeout(500);

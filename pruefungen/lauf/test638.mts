@@ -138,7 +138,10 @@ try {
         // Auch die normale (nicht kompakte) Palette braucht grosse Ziele.
         await page.locator('.sp-palette').evaluate(el => el.classList.remove('sp-pal-kompakt'));
         const normal = await page.locator('[data-p-compact]').boundingBox();
-        assert.ok(normal && normal.width >= 44 && normal.height >= 44,
+        /* Auf Bruchteile gerundet: der Knopf steht auf einem Teilpixel und
+           misst dann 43,99999 statt 44 (gemessen am 10. November 2026, E777) —
+           das ist Rundung, keine kleinere Fläche. */
+        assert.ok(normal && normal.width >= 43.99 && normal.height >= 43.99,
           'Umschalter in normaler Palette ebenfalls mindestens 44px');
       } finally {
         await context.close();

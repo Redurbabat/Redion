@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 569 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 574 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2210,6 +2210,15 @@ Pause; ohne Zeitrelais „—". Seine Gegenprobe ohne Tempo war rot („4×:
 Redions allgemeine Bewegungsregel die Lichtnaht schon anhält (L265).
 Gezählt am 1. November: der Befehl sagt 569.*
 
+*570 bis 572 sind `test635`, `test636` und `test638`; sie kamen mit den
+Entwürfen #206/#207 und tragen hier keinen eigenen Absatz.*
+
+*Und 573 und 574: `test639` (ein unbekanntes Bauteil bleibt sichtbar,
+E775) und `test640` (der Plan füllt die Fläche, E776). Beide standen, bevor
+Redur am 9. November für diesen Bogen „erst bauen, am Ende prüfen"
+entschied; gefahren wurden sie am Ende. Gezählt am 9. November: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 574.*
+
 ### Die Befehle
 
 ```txt
@@ -2231,7 +2240,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 569 Läufe
+npm run pruefen                      alle 574 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2328,7 +2337,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 569 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 574 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

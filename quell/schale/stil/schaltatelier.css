@@ -809,7 +809,8 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
    Bereich ein (planflaeche.ts `einpassen`). Ausserhalb des Blatts liegt der
    „Tisch" mit blasserem Raster, ein feiner Rand zeigt das Blatt. */
 .sp-wrap .sp-buehne > .sp-leinwand{height:100%}
-.sp-wrap .sp-buehne .sp-flaeche{display:block;width:100%;height:100%;max-width:none;max-height:none}
+.sp-wrap .sp-buehne .sp-flaeche{display:block;width:100%;height:100%;max-width:none;max-height:none;
+  -webkit-user-select:none;user-select:none}
 .sp-wrap .sp-flaeche .sp-tisch{opacity:.42}
 .sp-wrap .sp-flaeche .sp-blattrand{stroke:var(--line);stroke-width:1.25;vector-effect:non-scaling-stroke;stroke-dasharray:6 5}
 
@@ -821,7 +822,10 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
    Planart als ruhiger Chip, ↶ ↷, „Bereiche", „…", ⛶. Die Breite fragt die
    FLÄCHE, nicht das Fenster (`@container`): in der Windows-App mit
    Seitenleiste ist die Fläche schmaler als das Fenster. */
-.sp-wrap{container-type:inline-size;container-name:sp}
+/* `container-type` misst die Breite VON AUSSEN: steht die Fläche in einem
+   Kasten, der sich nach seinem Inhalt richtet (am Telefon), fiele sie ohne
+   eigene Breite auf 2 px zusammen (gemessen, test625 §1k). */
+.sp-wrap{container-type:inline-size;container-name:sp;width:100%;box-sizing:border-box}
 .sp-wrap .sp-kopf{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;min-height:60px;
   padding:8px clamp(10px,1.4vw,16px)}
 .sp-wrap .sp-links{display:flex;align-items:center;gap:6px;flex:0 0 auto;min-width:0}
@@ -851,6 +855,7 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
   .sp-wrap .sp-kopf .sp-rechts{gap:2px}
   .sp-wrap .sp-kopf :is(.sp-start,.sp-bereiche,.sp-kopf-knopf){height:44px;min-height:44px;min-width:44px}
   .sp-wrap .sp-kopf .sp-bereiche{padding:0 8px}
+  .sp-wrap .sp-kopf .sp-bereiche-pfeil{display:none}
   .sp-wrap .sp-kopf .sp-start{padding:0 13px 0 10px}
 }
 
@@ -930,3 +935,10 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
 }
 body[data-bewegung="ruhig"] .sp-wrap :is(.sp-einstieg-karte,.sp-werkzeuge,.sp-kontextleiste){animation:none}
 body[data-bewegung="ruhig"] .sp-wrap .sp-wz-marke{transition:none}
+/* In der Seite am Telefon ist die Fläche nur rund 334 px breit: dort passt
+   ↷ nicht mehr neben „▶ Strom" (gesehen im Bild, der Knopf lag auf ↶).
+   Wiederholen steht dann im „…". */
+@container sp (max-width:380px){
+  .sp-wrap .sp-kopf [data-a="vorwaerts"]{display:none}
+  .sp-wrap .sp-kopf .sp-start{padding:0 10px 0 8px}
+}

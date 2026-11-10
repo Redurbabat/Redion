@@ -374,6 +374,11 @@ const zustand = (bid: string): Promise<any> => seite.evaluate((b: string) => (wi
 
 /** Ein Teil anklicken (wählt es aus) — Mitte seines Kastens. */
 const waehle = async (tid: string): Promise<void> => {
+  /* Seit E776 füllt der eingepasste Plan die ganze Fläche; ein Teil am
+     unteren Rand kann dann unter dem Fensterrand liegen. Erst ins Bild. */
+  await seite.evaluate((t: string) => document.querySelector(`.sp-wrap svg .sp-teil[data-id="${t}"]`)
+    ?.scrollIntoView({ block: 'center', inline: 'nearest' }), tid);
+  await seite.waitForTimeout(150);
   const box = await seite.locator(`.sp-wrap svg .sp-teil[data-id="${tid}"]`).boundingBox();
   if (!box) throw new Error('Teil nicht gefunden: ' + tid);
   await seite.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
@@ -673,12 +678,15 @@ p('… und sie sagt, WAS: E2:X1 berührt jetzt die Leitung an E1:X2',
 /** Bildschirmpunkt zu einem Planpunkt — die Umkehrung von `ortAus`. */
 const bildpunkt = async (bid: string): Promise<(x: number, y: number) => [number, number]> => {
   await seite.locator('.sp-wrap svg.sp-flaeche').last().scrollIntoViewIfNeeded();
-  const r = await seite.evaluate((b: string) => {
-    const s = [...document.querySelectorAll('.sp-wrap svg.sp-flaeche')].pop()!.getBoundingClientRect();
-    const plan = Store.getBlock(b).plan;
-    return { l: s.left, t: s.top, sx: s.width / plan.breite, sy: s.height / plan.hoehe };
-  }, bid);
-  return (x: number, y: number) => [r.l + x * r.sx, r.t + y * r.sy];
+  /* Über die Matrix des SVG, nicht über seinen Kasten (E776): seit die
+     Fläche den belegten Bereich einpasst und die ganze Bühne füllt, ist der
+     Kasten nicht mehr das Blatt. `b` bleibt als Name des Plans stehen. */
+  void bid;
+  const r = await seite.evaluate(() => {
+    const m = [...document.querySelectorAll<SVGSVGElement>('.sp-wrap svg.sp-flaeche')].pop()!.getScreenCTM()!;
+    return { a: m.a, d: m.d, e: m.e, f: m.f };
+  });
+  return (x: number, y: number) => [r.e + x * r.a, r.f + y * r.d];
 };
 /**
  * Zieht von Planpunkt `von` um `d` Planeinheiten, in `schritte` Bewegungen.
@@ -1684,9 +1692,10 @@ seite.on('download', d => { downloads.push(d); });
     folge.length === 0, folge.join(' | '));
   const seitenMeld = (await meldungenJetzt()).slice(m0).filter(t => /rückgängig|wiederhol/i.test(t));
   p('… und der Seitenverlauf hat nichts gemeldet', seitenMeld.length === 0, seitenMeld.join(' | '));
-  /* Und wer mit der Tastatur kommt, sieht den Ring (§38): vom Auswahlfeld der
-     Planart mit Umschalt+Tab zurück auf die Fläche. */
-  await seite.evaluate(() => (document.querySelector('.sp-wrap .sp-art') as HTMLElement).focus());
+  /* Und wer mit der Tastatur kommt, sieht den Ring (§38): vom ersten Knopf
+     des Kopfs mit Umschalt+Tab zurück auf die Fläche. Bis E777 war das das
+     Auswahlfeld der Planart; seither steht „▶ Strom" vorn. */
+  await seite.evaluate(() => (document.querySelector('.sp-wrap .sp-kopf button') as HTMLElement).focus());
   await seite.keyboard.press('Shift+Tab');
   await seite.waitForTimeout(200);
   const fokusTab = await fokusJetzt();

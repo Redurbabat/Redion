@@ -734,7 +734,7 @@ const Planflaeche = (() => {
         `<button type="button" class="sp-kopf-knopf" data-a="zurueck" title="Rückgängig (Strg+Z)" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>${symbol('undo', 18)}</button>` +
         `<button type="button" class="sp-kopf-knopf" data-a="vorwaerts" title="Wiederholen (Strg+Y)" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>${symbol('redo', 18)}</button>` +
         `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" ` +
-        `aria-label="Bereiche" aria-haspopup="menu">✦<span class="sp-bereiche-wort"> Bereiche</span> ▾</button>` +
+        `aria-label="Bereiche" aria-haspopup="menu">✦<span class="sp-bereiche-wort"> Bereiche</span><span class="sp-bereiche-pfeil"> ▾</span></button>` +
         `<button type="button" class="sp-kopf-knopf" data-a="mehr" title="Mehr: Planart, Ansicht, Ausgabe" aria-label="Mehr" aria-haspopup="menu">${symbol('dots', 18)}</button>` +
         /* Vollbild (E762): im Vollbild steht an derselben Stelle ein
            Schliessknopf mit 44 px, auch am Rechner — er ist der sichtbare
@@ -1266,15 +1266,22 @@ const Planflaeche = (() => {
         z.ansicht = { zoom: 1, x: 0, y: 0 }; ansichtAnwenden(); return;
       }
       const g = schirm();
+      /* Oben bleibt ein Streifen frei: dort erscheint die Kontextleiste,
+         sobald etwas gewählt ist — sonst läge sie auf dem obersten Teil, und
+         der zweite Tipp eines Doppeltipps träfe sie statt des Teils
+         (test630 §5). */
+      const oben = r.height > 300 ? 64 : 0;
+      const r0 = r;
+      const r1 = { left: r0.left, top: r0.top + oben, width: r0.width, height: r0.height - oben };
       /* Der Rand: ein Raster mehr als das Nötigste, auf grossen Plänen ein
          wenig mehr — damit ein Teil am Rand noch zu greifen ist. */
       const rand = Math.max(24, 0.04 * Math.max(kasten.x2 - kasten.x1, kasten.y2 - kasten.y1));
       const bw = kasten.x2 - kasten.x1 + 2 * rand, bh = kasten.y2 - kasten.y1 + 2 * rand;
-      const k = Math.min(r.width / bw, r.height / bh, EINPASSEN_MAX);
+      const k = Math.min(r1.width / bw, r1.height / bh, EINPASSEN_MAX);
       const zoom = Math.round(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, k / g.s1)) * 1000) / 1000;
       const kk = g.s1 * zoom;
       const mx = (kasten.x1 + kasten.x2) / 2, my = (kasten.y1 + kasten.y2) / 2;
-      const ansicht = { zoom, x: mx - (r.left + r.width / 2 - g.cx) / kk, y: my - (r.top + r.height / 2 - g.cy) / kk };
+      const ansicht = { zoom, x: mx - (r1.left + r1.width / 2 - g.cx) / kk, y: my - (r1.top + r1.height / 2 - g.cy) / kk };
       /* Füllt der Inhalt ohnehin das Blatt, bleibt es bei der alten
          Grundstellung „ganzes Blatt, 100 %" — Zeichen für Zeichen dieselbe
          viewBox wie vor E776. */
@@ -3847,6 +3854,10 @@ const Planflaeche = (() => {
         '<hr>' +
         (z.plan.art.startsWith('stromlauf')
           ? '<button data-m="schaltung">⚡ Netz oder Beispielschaltung einfügen</button><hr>' : '') +
+        /* Das ganze Blatt (E776): Einpassen zeigt den belegten Bereich;
+           wer am Rand des Blatts zeichnen will, holt hier das Ganze. */
+        (z.verlauf.kannVor() ? '<button data-m="vor">↷ Wiederholen</button>' : '') +
+        '<button data-m="blatt">Ganzes Blatt zeigen</button>' +
         `<button data-m="raster">${z.zeigeRaster ? '✓ ' : ''}Raster zeigen</button>` +
         `<button data-m="anschluesse">${z.zeigeAnschluesse ? '✓ ' : ''}Anschlusspunkte zeigen</button>` +
         `<button data-m="nummern">${z.zeigeNummern ? '✓ ' : ''}Anschlussnummern zeigen</button>` +
@@ -3866,6 +3877,8 @@ const Planflaeche = (() => {
         m.remove();
         const was = b.dataset.m;
         if (was === 'art') return artSetzen(b.dataset.art || '');
+        if (was === 'vor') return vorwaerts();
+        if (was === 'blatt') return gleitend(() => { z.ansicht = { zoom: 1, x: 0, y: 0 }; ansichtVomNutzer = true; ansichtAnwenden(); });
         if (was === 'schaltung') return schaltungMenue(anker);
         if (was === 'pruefzentrum') { pruefungOffen = true; pruefPanel.hidden = false; kopfMalen(); pruefMalen(); return; }
         if (was === 'raster') { z.zeigeRaster = !z.zeigeRaster; return male(); }

@@ -14174,7 +14174,8 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
    Bereich ein (planflaeche.ts `einpassen`). Ausserhalb des Blatts liegt der
    „Tisch" mit blasserem Raster, ein feiner Rand zeigt das Blatt. */
 .sp-wrap .sp-buehne > .sp-leinwand{height:100%}
-.sp-wrap .sp-buehne .sp-flaeche{display:block;width:100%;height:100%;max-width:none;max-height:none}
+.sp-wrap .sp-buehne .sp-flaeche{display:block;width:100%;height:100%;max-width:none;max-height:none;
+  -webkit-user-select:none;user-select:none}
 .sp-wrap .sp-flaeche .sp-tisch{opacity:.42}
 .sp-wrap .sp-flaeche .sp-blattrand{stroke:var(--line);stroke-width:1.25;vector-effect:non-scaling-stroke;stroke-dasharray:6 5}
 
@@ -14186,7 +14187,10 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
    Planart als ruhiger Chip, ↶ ↷, „Bereiche", „…", ⛶. Die Breite fragt die
    FLÄCHE, nicht das Fenster (`@container`): in der Windows-App mit
    Seitenleiste ist die Fläche schmaler als das Fenster. */
-.sp-wrap{container-type:inline-size;container-name:sp}
+/* `container-type` misst die Breite VON AUSSEN: steht die Fläche in einem
+   Kasten, der sich nach seinem Inhalt richtet (am Telefon), fiele sie ohne
+   eigene Breite auf 2 px zusammen (gemessen, test625 §1k). */
+.sp-wrap{container-type:inline-size;container-name:sp;width:100%;box-sizing:border-box}
 .sp-wrap .sp-kopf{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;min-height:60px;
   padding:8px clamp(10px,1.4vw,16px)}
 .sp-wrap .sp-links{display:flex;align-items:center;gap:6px;flex:0 0 auto;min-width:0}
@@ -14216,6 +14220,7 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
   .sp-wrap .sp-kopf .sp-rechts{gap:2px}
   .sp-wrap .sp-kopf :is(.sp-start,.sp-bereiche,.sp-kopf-knopf){height:44px;min-height:44px;min-width:44px}
   .sp-wrap .sp-kopf .sp-bereiche{padding:0 8px}
+  .sp-wrap .sp-kopf .sp-bereiche-pfeil{display:none}
   .sp-wrap .sp-kopf .sp-start{padding:0 13px 0 10px}
 }
 
@@ -14295,6 +14300,13 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
 }
 body[data-bewegung="ruhig"] .sp-wrap :is(.sp-einstieg-karte,.sp-werkzeuge,.sp-kontextleiste){animation:none}
 body[data-bewegung="ruhig"] .sp-wrap .sp-wz-marke{transition:none}
+/* In der Seite am Telefon ist die Fläche nur rund 334 px breit: dort passt
+   ↷ nicht mehr neben „▶ Strom" (gesehen im Bild, der Knopf lag auf ↶).
+   Wiederholen steht dann im „…". */
+@container sp (max-width:380px){
+  .sp-wrap .sp-kopf [data-a="vorwaerts"]{display:none}
+  .sp-wrap .sp-kopf .sp-start{padding:0 10px 0 8px}
+}
 
 </style>
 <style>
@@ -29721,7 +29733,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1579, inhalt: '8da2cfb9dd03e867', gebaut: '2026-11-09T22:16:49.708Z' };
+const Stand = { fassung: 1583, inhalt: 'dc3fc68537be889b', gebaut: '2026-11-10T03:32:33.965Z' };
 window.Stand = Stand;
 
 </script>
@@ -72354,7 +72366,7 @@ const Planflaeche = (() => {
                     `<button type="button" class="sp-kopf-knopf" data-a="zurueck" title="Rückgängig (Strg+Z)" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>${symbol('undo', 18)}</button>` +
                     `<button type="button" class="sp-kopf-knopf" data-a="vorwaerts" title="Wiederholen (Strg+Y)" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>${symbol('redo', 18)}</button>` +
                     `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" ` +
-                    `aria-label="Bereiche" aria-haspopup="menu">✦<span class="sp-bereiche-wort"> Bereiche</span> ▾</button>` +
+                    `aria-label="Bereiche" aria-haspopup="menu">✦<span class="sp-bereiche-wort"> Bereiche</span><span class="sp-bereiche-pfeil"> ▾</span></button>` +
                     `<button type="button" class="sp-kopf-knopf" data-a="mehr" title="Mehr: Planart, Ansicht, Ausgabe" aria-label="Mehr" aria-haspopup="menu">${symbol('dots', 18)}</button>` +
                     (z.voll
                         ? `<button type="button" class="sp-vollzu" data-a="vollbild-zu" title="Vollbild beenden (Esc)" aria-label="Vollbild beenden">✕</button>`
@@ -72865,13 +72877,16 @@ const Planflaeche = (() => {
                 return;
             }
             const g = schirm();
+            const oben = r.height > 300 ? 64 : 0;
+            const r0 = r;
+            const r1 = { left: r0.left, top: r0.top + oben, width: r0.width, height: r0.height - oben };
             const rand = Math.max(24, 0.04 * Math.max(kasten.x2 - kasten.x1, kasten.y2 - kasten.y1));
             const bw = kasten.x2 - kasten.x1 + 2 * rand, bh = kasten.y2 - kasten.y1 + 2 * rand;
-            const k = Math.min(r.width / bw, r.height / bh, EINPASSEN_MAX);
+            const k = Math.min(r1.width / bw, r1.height / bh, EINPASSEN_MAX);
             const zoom = Math.round(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, k / g.s1)) * 1000) / 1000;
             const kk = g.s1 * zoom;
             const mx = (kasten.x1 + kasten.x2) / 2, my = (kasten.y1 + kasten.y2) / 2;
-            const ansicht = { zoom, x: mx - (r.left + r.width / 2 - g.cx) / kk, y: my - (r.top + r.height / 2 - g.cy) / kk };
+            const ansicht = { zoom, x: mx - (r1.left + r1.width / 2 - g.cx) / kk, y: my - (r1.top + r1.height / 2 - g.cy) / kk };
             const B = Number(z.plan.breite) || 800, H = Number(z.plan.hoehe) || 700;
             z.ansicht = (Math.abs(zoom - 1) < 0.03 && Math.abs(ansicht.x) < 0.03 * B && Math.abs(ansicht.y) < 0.03 * H)
                 ? { zoom: 1, x: 0, y: 0 } : ansicht;
@@ -75434,6 +75449,8 @@ const Planflaeche = (() => {
                 '<hr>' +
                 (z.plan.art.startsWith('stromlauf')
                     ? '<button data-m="schaltung">⚡ Netz oder Beispielschaltung einfügen</button><hr>' : '') +
+                (z.verlauf.kannVor() ? '<button data-m="vor">↷ Wiederholen</button>' : '') +
+                '<button data-m="blatt">Ganzes Blatt zeigen</button>' +
                 `<button data-m="raster">${z.zeigeRaster ? '✓ ' : ''}Raster zeigen</button>` +
                 `<button data-m="anschluesse">${z.zeigeAnschluesse ? '✓ ' : ''}Anschlusspunkte zeigen</button>` +
                 `<button data-m="nummern">${z.zeigeNummern ? '✓ ' : ''}Anschlussnummern zeigen</button>` +
@@ -75454,6 +75471,10 @@ const Planflaeche = (() => {
                 const was = b.dataset.m;
                 if (was === 'art')
                     return artSetzen(b.dataset.art || '');
+                if (was === 'vor')
+                    return vorwaerts();
+                if (was === 'blatt')
+                    return gleitend(() => { z.ansicht = { zoom: 1, x: 0, y: 0 }; ansichtVomNutzer = true; ansichtAnwenden(); });
                 if (was === 'schaltung')
                     return schaltungMenue(anker);
                 if (was === 'pruefzentrum') {

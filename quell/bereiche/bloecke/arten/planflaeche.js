@@ -509,7 +509,7 @@ const Planflaeche = (() => {
                     `<button type="button" class="sp-kopf-knopf" data-a="zurueck" title="Rückgängig (Strg+Z)" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>${symbol('undo', 18)}</button>` +
                     `<button type="button" class="sp-kopf-knopf" data-a="vorwaerts" title="Wiederholen (Strg+Y)" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>${symbol('redo', 18)}</button>` +
                     `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" ` +
-                    `aria-label="Bereiche" aria-haspopup="menu">✦<span class="sp-bereiche-wort"> Bereiche</span> ▾</button>` +
+                    `aria-label="Bereiche" aria-haspopup="menu">✦<span class="sp-bereiche-wort"> Bereiche</span><span class="sp-bereiche-pfeil"> ▾</span></button>` +
                     `<button type="button" class="sp-kopf-knopf" data-a="mehr" title="Mehr: Planart, Ansicht, Ausgabe" aria-label="Mehr" aria-haspopup="menu">${symbol('dots', 18)}</button>` +
                     (z.voll
                         ? `<button type="button" class="sp-vollzu" data-a="vollbild-zu" title="Vollbild beenden (Esc)" aria-label="Vollbild beenden">✕</button>`
@@ -1020,13 +1020,16 @@ const Planflaeche = (() => {
                 return;
             }
             const g = schirm();
+            const oben = r.height > 300 ? 64 : 0;
+            const r0 = r;
+            const r1 = { left: r0.left, top: r0.top + oben, width: r0.width, height: r0.height - oben };
             const rand = Math.max(24, 0.04 * Math.max(kasten.x2 - kasten.x1, kasten.y2 - kasten.y1));
             const bw = kasten.x2 - kasten.x1 + 2 * rand, bh = kasten.y2 - kasten.y1 + 2 * rand;
-            const k = Math.min(r.width / bw, r.height / bh, EINPASSEN_MAX);
+            const k = Math.min(r1.width / bw, r1.height / bh, EINPASSEN_MAX);
             const zoom = Math.round(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, k / g.s1)) * 1000) / 1000;
             const kk = g.s1 * zoom;
             const mx = (kasten.x1 + kasten.x2) / 2, my = (kasten.y1 + kasten.y2) / 2;
-            const ansicht = { zoom, x: mx - (r.left + r.width / 2 - g.cx) / kk, y: my - (r.top + r.height / 2 - g.cy) / kk };
+            const ansicht = { zoom, x: mx - (r1.left + r1.width / 2 - g.cx) / kk, y: my - (r1.top + r1.height / 2 - g.cy) / kk };
             const B = Number(z.plan.breite) || 800, H = Number(z.plan.hoehe) || 700;
             z.ansicht = (Math.abs(zoom - 1) < 0.03 && Math.abs(ansicht.x) < 0.03 * B && Math.abs(ansicht.y) < 0.03 * H)
                 ? { zoom: 1, x: 0, y: 0 } : ansicht;
@@ -3589,6 +3592,8 @@ const Planflaeche = (() => {
                 '<hr>' +
                 (z.plan.art.startsWith('stromlauf')
                     ? '<button data-m="schaltung">⚡ Netz oder Beispielschaltung einfügen</button><hr>' : '') +
+                (z.verlauf.kannVor() ? '<button data-m="vor">↷ Wiederholen</button>' : '') +
+                '<button data-m="blatt">Ganzes Blatt zeigen</button>' +
                 `<button data-m="raster">${z.zeigeRaster ? '✓ ' : ''}Raster zeigen</button>` +
                 `<button data-m="anschluesse">${z.zeigeAnschluesse ? '✓ ' : ''}Anschlusspunkte zeigen</button>` +
                 `<button data-m="nummern">${z.zeigeNummern ? '✓ ' : ''}Anschlussnummern zeigen</button>` +
@@ -3609,6 +3614,10 @@ const Planflaeche = (() => {
                 const was = b.dataset.m;
                 if (was === 'art')
                     return artSetzen(b.dataset.art || '');
+                if (was === 'vor')
+                    return vorwaerts();
+                if (was === 'blatt')
+                    return gleitend(() => { z.ansicht = { zoom: 1, x: 0, y: 0 }; ansichtVomNutzer = true; ansichtAnwenden(); });
                 if (was === 'schaltung')
                     return schaltungMenue(anker);
                 if (was === 'pruefzentrum') {

@@ -9479,3 +9479,31 @@ zwei Trefflächen unter 44 px ohne geschriebenen Grund —
 `werkzeuge.css .gk-leiste button` (26 px, aus E607). Beide sind älter als
 dieser Zweig und liegen schon auf `main`. §46 sagt „rot zuerst": das ist der
 nächste Bogen.
+
+## Der Schaltplan auf einer neuen Stufe — 9./10. November 2026 (E775–E780)
+
+Redur: „ich will das du redion auf eine andere levell bringst … die
+schaltplan teil ist die erstel prioieritet". Für diesen Bogen hat er „erst
+bauen, am Ende prüfen" entschieden (E775).
+
+**Gebaut.** Einpassen des belegten Bereichs beim Öffnen und bei jeder
+Grössenänderung, eigener Zoom bleibt, „Ganzes Blatt zeigen" im „…" (E776);
+der Kopf in einer Zeile mit „▶ Strom" vorn und der Planart als Chip, am
+Telefon im „…" (E777); Werkzeuge mit Zeichen und Namen, das Dock wird nicht
+mehr bei jeder Änderung neu gebaut (E778); ein Einstieg in leere Pläne
+(E779); gleitende Werkzeugmarke, Einpassen/Zoom per FLIP, Federn für
+Leisten (E780); ein unbekanntes Bauteil als Platzhalter (E775).
+
+**Beim Prüfen am Ende gefunden und behoben:** `container-type` liess die
+Fläche am Telefon auf 2 px zusammenfallen (eigene Breite); der zweite Zug
+mit dem Schienenwerkzeug wurde abgebrochen, weil der Browser Text im SVG
+markieren wollte (`user-select:none`); die Kontextleiste lag nach dem
+Einpassen auf dem obersten Teil (64 px oben frei); am Telefon lag „▶ Strom"
+auf ↶ (↷ wandert unter 380 px ins „…"). Angepasst mit Grund im Lauf:
+`test611` (Matrix statt Kasten, erster Knopf des Kopfs, Teil ins Bild),
+`test625` (§2a/§2e eingepasste Zahl, §6 „Ganzes Blatt"), `test638`
+(Teilpixel 43,99999).
+
+**Gefahren** (10. November): 611, 612, 625, 629–636, 638, 639, 640, 87,
+105, 290, 537, 549, 550 grün. Bilder: `bilder/schaltplan-neu/` (Rechner und
+Telefon, dunkel).
