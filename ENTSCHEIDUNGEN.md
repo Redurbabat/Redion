@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-765 Entscheidungen, E1 bis E788 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+766 Entscheidungen, E1 bis E789 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -850,6 +850,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E786** — Das Lernzentrum spricht mit dem Nutzer, nicht mit dem Entwickler (9. November 2026): „SM-2 bleibt der fachliche Plan. Es gibt keine stille Migration." wird „Zuerst die Fehler, dann was fällig ist, dann Neues."; das doppelte „Präsentieren" im ⋯ bleibt (zwei Griffe, `test580`)
 * **E787** — Die Klinge liegt, wie der Schalter steht (15. November 2026, Redur: „wenn ich eine schalter klicke sollte sich ändern"): in der Simulation zeichnet jeder Schalter und jeder Kontakt seine Stellung — die Klinge zu, ab oder auf dem geschlossenen Weg, der Name der Stellung darunter, in der Farbe des Stroms, wenn er führt; die Bilder stehen im Register (`STELLUNGSBILD`), die Stellung kommt aus `Stromfluss.rechne` (`Ergebnis.stellungen`), ausserhalb der Simulation zeichnet jedes Zeichen wie vorher
 * **E788** — Leitung aus der Klemme (15. November 2026, Redur: „verbessere alles damit ich schneller zeichne können"): im Zeigen-Werkzeug zieht ein Ansatz genau auf einer Klemme (7 px, Finger 10) eine Leitung, ohne Werkzeugwechsel; am Körper gefasst wandert das Teil wie bisher; Ring und Fadenkreuz zeigen die Klemme vorher
+* **E789** — Die Bauplan-Zeichen nach dem Lehrmittel (15. November 2026, Redur: „schau … für schweiz wie muss es sein und baue es direkt im redion", Quelle: „Fachzeichnen Teil 1", Seite 14.1): Schalter als offener Kreis mit Armen und Fahnen, Steckdose mit Hörnern, Deckenleuchte als Kreuz, Einbauleuchte als Kreuz im Kreis, Abzweigdose als Quadrat mit Punkt; 21 neue Zeichen (UP/AP, Zug, Nachlauf, Lichtregler, Taster, Storen, vier Kombis, T13 3-fach und 3/1, T25, Bodendose, Lampendübel, Wandleuchte, PIR, Store, Ventilator, Direktanschluss); alte Kennungen, Grössen und Anschlüsse bleiben; die Schema-3-Klemmen 1-2-4 bleiben offen (L267)
 
 ## E775 — Ein unbekanntes Bauteil bleibt sichtbar
 
@@ -1154,6 +1155,39 @@ beim Verschieben zur Leitung.
 
 **Kosten.** Wer ein Teil genau an seiner Klemme packt, zieht jetzt eine
 Leitung statt es zu verschieben; Verschieben geht am Körper.
+
+## E789 — Die Bauplan-Zeichen nach dem Lehrmittel
+
+**Redur, 15. November 2026:** „schau mal im github für schaltplan zeichnen
+und im internet für schweiz wie muss es sein und baue es direkt im redion",
+danach der Hinweis auf sein Lehrmittel „Fachzeichnen Teil 1" (Seite 14.1,
+„Schaltzeichen für Installationspläne", Grundlage: Electrosuisse „Symbole
+für die Elektrotechnik").
+
+**Entschieden.** Die Gruppe „Bauplan CH" zeichnet nach dieser Seite: ein
+Schalter ist ein OFFENER Kreis, jeder Arm mit Fahne ein Weg (Sch 0 einer,
+Sch 1 zwei nach oben, Sch 3 einer oben und einer unten, Sch 6 vier); die
+Steckdose sind zwei Hörner auf einem Querstrich; die Deckenleuchte ein
+Kreuz, die Einbauleuchte ein Kreuz im Kreis; die Abzweigdose ein Quadrat mit
+Punkt; die Unterverteilung ein Rechteck mit gefülltem Dreieck. Dazu kommen
+21 Zeichen, die es nicht gab — darunter die Kombis Gr. 1 und Gr. 1+1, die
+T13 3-fach und 3-fach mit einer geschalteten (3/1) und T25. Ein Arm wird
+an EINER Stelle gerechnet (`arm`, fachzeichen.ts), gefüllte Flächen haben
+ein eigenes Feld (`flaechen`). `test642` hält Namen, Form und — §3 — dass
+jedes alte Bauplan-Zeichen Kennung, Grösse und Anschlüsse behält.
+
+Aus dem Lehrmittel ist nichts kopiert: die Zeichen sind Normsymbole und neu
+gezeichnet, übernommen sind Namen und Formregeln. Die Seiten selbst gehen
+nicht ins Verzeichnis.
+
+**Alternative.** Die Zeichen aus einer offenen Bibliothek nehmen (KiCad,
+Inkscape-Sammlungen) — sie folgen IEC 60617 allgemein, nicht den Schweizer
+Schemas und Kombis; oder auch die Klemmen des Schema-3-Schalters jetzt auf
+1-2-4 umstellen — das ist eine Datenmigration (L267 Punkt 1).
+
+**Kosten.** Gespeicherte Baupläne sehen anders aus als vorher (richtiger);
+Steckdosen tragen ihren Anschluss weiter oben, stehen also im Buch-Bild auf
+dem Kopf, bis man sie an die Wand dreht.
 
 ## Grundregel
 

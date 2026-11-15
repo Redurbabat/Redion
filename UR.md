@@ -3744,17 +3744,40 @@ Besser als drei Fachprogramme zugleich.
 **Besserer Prompt:** Was dauert dir beim Zeichnen am längsten? Zeig es an einem Plan.
 
 
+**2 · nicht protokolliert**
+
+> schua mal im github für schaltplan zeicheneund im interne für schweiz wie muss es sitn und baue es idrek im redion
+
+**Gemeint:** Die Schweizer Schaltzeichen nachschlagen und Redions Zeichen danach richtigstellen.
+
+**Besser geschrieben:** „Zeichne die Bauplan-Zeichen wie in meinem Lehrmittel, Seite 14.1.“
+
+**Besserer Prompt:** Die Seite mit den Zeichen gleich mitgeben — die Suche im Netz fand nur Textlisten.
+
+
+**3 · nicht protokolliert**
+
+> https://github.com/Redurbabat/Redion/releases/tag/lehrmittel  schu mal hier an es ist hier
+
+**Gemeint:** Das Lehrmittel als PDF liegt in einem Release des Repositorys.
+
+**Besser geschrieben:** —
+
+**Besserer Prompt:** —
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
 |---|---|---|---|---|
 | Zweig claude/redion2-gesamt (PR #208): E787 (Klinge je Stellung im Register, Ergebnis.stellungen), E788 (Leitung aus der Klemme), test641 — gegen den Stand davor rot mit 12 von 15. | `` → `` |  | — | — |
+| E789: Bauplan-Zeichen nach „Fachzeichnen Teil 1“ 14.1 (offener Kreis mit Armen, Hörner-Steckdose, Kreuz-Leuchte, Quadrat-Dose), 21 neue Zeichen, `flaechen` und `arm` im Register; test642 gegen den Stand davor rot mit 29 von 33; L267 hält, was offen bleibt (Schema-3-Klemmen 1-2-4). | `` → `` |  | — | — |
 
 #### Zahlen des Tages
 
-- **commits:** 1
-- **entscheidungen:** 2
-- **neuePruefungen:** 1
+- **commits:** 2
+- **entscheidungen:** 3
+- **neuePruefungen:** 2
 
 #### Das grösste Problem
 

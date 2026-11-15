@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 575 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 576 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2231,6 +2231,14 @@ Zeigen-Werkzeug von Klemme zu Klemme (eine Leitung, das Teil bleibt) und am
 Körper (das Teil wandert). Gegen den Stand davor rot mit 12 von 15. Gezählt
 am 15. November: `ls pruefungen/lauf/test*.mts | wc -l` sagt 575.*
 
+*Und 576: `test642` — die Bauplan-Zeichen so, wie sie im Lehrmittel stehen
+(E789). Gegen den Stand davor rot mit 29 von 33: der Schalter ein voller
+Punkt, die Deckenleuchte mit dem Kreis der Einbauleuchte, die Steckdose ein
+geschlossener Halbkreis, 21 Zeichen gar nicht da. Sein §3 hält, dass alte
+Pläne bleiben: jedes Bauplan-Zeichen von vorher mit derselben Grösse und
+denselben Anschlüssen. Gezählt am 15. November: `ls pruefungen/lauf/test*.mts
+| wc -l` sagt 576.*
+
 ### Die Befehle
 
 ```txt
@@ -2252,7 +2260,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 575 Läufe
+npm run pruefen                      alle 576 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2349,7 +2357,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 575 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 576 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

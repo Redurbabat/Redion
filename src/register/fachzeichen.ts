@@ -59,6 +59,9 @@ Register.fachzeichen = (() => {
     beschriftung?: Array<{ x: number; y: number; t: string; gross?: boolean }>;
     /** Kreise, die sich als Pfad schlecht schreiben lassen. */
     kreise?: Array<{ cx: number; cy: number; r: number; voll?: boolean }>;
+    /** Gefüllte Flächen (E789): der halbe Kreis des AP-Schalters, das
+        Dreieck der Unterverteilung. Pfade, die nicht nur Strich sind. */
+    flaechen?: string[];
     /** Ein Satz für den Lernmodus — was das Bauteil tut. */
     erklaerung: string;
     /**
@@ -98,6 +101,23 @@ Register.fachzeichen = (() => {
   /* Kurzschreibweisen, damit die Liste unten lesbar bleibt. */
   const senkrecht = (x: number, von: number, bis: number) => `M${x},${von} V${bis}`;
   const waagrecht = (y: number, von: number, bis: number) => `M${von},${y} H${bis}`;
+
+  /* Ein Schalterarm im Bauplan (E789): vom Rand des Kreises um (cx, cy, r)
+     unter dem Winkel `grad` (0 = rechts, −45 = rechts oben, SVG-y nach
+     unten) `lang` hinaus, am Ende die Fahne quer dazu. Die Fahne steht im
+     Uhrzeigersinn; `gegen` legt sie auf die andere Seite — so werden die
+     beiden Arme von Sch 1 spiegelgleich und die von Sch 3 punktgleich, wie
+     im Lehrmittel (Fachzeichnen Teil 1, 14.1). */
+  const auf1 = (n: number): number => Math.round(n * 10) / 10;
+  const arm = (cx: number, cy: number, r: number, grad: number,
+               lang = 10, fahne = 5, gegen = false): string => {
+    const a = grad * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a);
+    const x1 = cx + dx * r, y1 = cy + dy * r;
+    const x2 = cx + dx * (r + lang), y2 = cy + dy * (r + lang);
+    const fx = gegen ? dy : -dy, fy = gegen ? -dx : dx;
+    return `M${auf1(x1)},${auf1(y1)} L${auf1(x2)},${auf1(y2)}` +
+      (fahne ? ` l${auf1(fx * fahne)},${auf1(fy * fahne)}` : '');
+  };
 
   const EINGEBAUT: Zeichen[] = [
 
@@ -1051,104 +1071,294 @@ Register.fachzeichen = (() => {
     },
 
     /* ---- Bauplan (Installationsplan) -------------------------------------
-     * Im Bauplan wird gezeichnet, WO im Raum etwas sitzt. Die Symbole sind
-     * andere als im Stromlaufschema: ein Schalter ist hier ein Punkt an der
-     * Wand mit Strichen, die das Schema angeben.
+     * Im Bauplan wird gezeichnet, WO im Raum etwas sitzt. Die Zeichen sind
+     * andere als im Stromlaufschema. Sie folgen dem Lehrmittel „Fachzeichnen
+     * Teil 1", Seite 14.1, das sich auf das Electrosuisse-Handbuch „Symbole
+     * für die Elektrotechnik" stützt (E789):
+     *
+     *   Schalter     ein OFFENER Kreis; jeder Arm mit Fahne ist ein Weg —
+     *                Sch 0 einer, Sch 1 zwei nach oben, Sch 3 einer nach
+     *                oben und einer nach unten, Sch 6 vier.
+     *   Steckdose    zwei Hörner auf einem Querstrich, der Strich zur Leitung.
+     *   Leuchte      ein Kreuz; im Kreis ist es die EINBAU-Leuchte.
+     *   Dose         ein Quadrat mit Punkt.
+     *
+     * Bis E789 war der Schalter ein voller Punkt mit senkrechtem Strich, die
+     * Deckenleuchte trug den Kreis der Einbauleuchte und die Einbauleuchte
+     * zwei Kreise. Kennung, Grösse und Anschlüsse der alten Zeichen sind
+     * geblieben (test642 §3) — gespeicherte Pläne zeichnen nur neu.
+     *
+     * Steckdosen tragen ihren Anschluss OBEN wie bisher; im Buch steht das
+     * Zeichen mit dem Strich nach unten, im Plan dreht man es an die Wand
+     * (das Buch zeichnet es selbst so, Seite 4.4). Ein Druck auf R dreht.
      * ------------------------------------------------------------------- */
     {
-      id: 'bp-schalter0', name: 'Bauplan: Schalter Schema 0', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+      id: 'bp-schalter-up', name: 'Bauplan: UP-Schalter (allgemein)', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
       w: 40, h: 40,
-      kreise: [{ cx: 20, cy: 30, r: 5, voll: true }],
-      pfad: [senkrecht(20, 6, 25)],
+      kreise: [{ cx: 20, cy: 22, r: 5 }],
+      pfad: [senkrecht(20, 27, 40)],
       anschluesse: [{ nr: '3', x: 20, y: 40 }],
-      erklaerung: 'Ein Strich am Punkt: Ausschalter. Der Punkt sitzt an der Wand.'
+      erklaerung: 'Allgemeines Zeichen für einen Unterputz-Schalter: nur der Kreis.'
     },
     {
-      id: 'bp-schalter1', name: 'Bauplan: Schalter Schema 1', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+      id: 'bp-schalter-ap', name: 'Bauplan: AP-Schalter (allgemein)', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
       w: 40, h: 40,
-      kreise: [{ cx: 20, cy: 30, r: 5, voll: true }],
-      pfad: [senkrecht(20, 6, 25), 'M12,10 L28,10'],
+      kreise: [{ cx: 20, cy: 22, r: 5 }],
+      flaechen: ['M20,17 A5,5 0 0 1 20,27 Z'],
+      pfad: [senkrecht(20, 27, 40)],
       anschluesse: [{ nr: '3', x: 20, y: 40 }],
-      erklaerung: 'Ein Querstrich: Serienschalter, zwei Gruppen getrennt.'
+      erklaerung: 'Aufputz: der Kreis ist halb gefüllt — Keller, Garage, Werkstatt.'
     },
     {
-      id: 'bp-schalter3', name: 'Bauplan: Schalter Schema 3', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+      id: 'bp-schalter0', name: 'Bauplan: Schalter Sch 0', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
       w: 40, h: 40,
-      kreise: [{ cx: 20, cy: 30, r: 5, voll: true }],
-      pfad: [senkrecht(20, 6, 25), 'M14,12 L20,6 L26,12'],
+      kreise: [{ cx: 20, cy: 22, r: 5 }],
+      pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -45)],
       anschluesse: [{ nr: '3', x: 20, y: 40 }],
-      erklaerung: 'Pfeil nach oben: Wechselschalter — es gibt einen zweiten dazu.'
+      erklaerung: 'Ein Arm mit Fahne: Ausschalter, eine Leuchte von einer Stelle.'
     },
     {
-      id: 'bp-schalter6', name: 'Bauplan: Schalter Schema 6', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+      id: 'bp-schalter1', name: 'Bauplan: Schalter Sch 1', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
       w: 40, h: 40,
-      kreise: [{ cx: 20, cy: 30, r: 5, voll: true }],
-      pfad: [senkrecht(20, 6, 25), 'M13,9 L27,17', 'M27,9 L13,17'],
+      kreise: [{ cx: 20, cy: 22, r: 5 }],
+      pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -135, 10, 5, true), arm(20, 22, 5, -45)],
+      anschluesse: [{ nr: '3', x: 20, y: 40 }],
+      erklaerung: 'Zwei Arme nach oben: Serienschalter, zwei Gruppen getrennt.'
+    },
+    {
+      id: 'bp-schalter3', name: 'Bauplan: Schalter Sch 3', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+      w: 40, h: 40,
+      kreise: [{ cx: 20, cy: 22, r: 5 }],
+      pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -45), arm(20, 22, 5, 135)],
+      anschluesse: [{ nr: '3', x: 20, y: 40 }],
+      erklaerung: 'Ein Arm nach oben, einer nach unten: Wechselschalter — es gibt einen zweiten dazu.'
+    },
+    {
+      id: 'bp-schalter6', name: 'Bauplan: Schalter Sch 6', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+      w: 40, h: 40,
+      kreise: [{ cx: 20, cy: 22, r: 5 }],
+      pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -135, 9, 4, true), arm(20, 22, 5, -45, 9, 4),
+             arm(20, 22, 5, 135, 9, 4), arm(20, 22, 5, 45, 9, 4, true)],
       anschluesse: [{ nr: '1', x: 20, y: 40 }],
-      erklaerung: 'Kreuz: Kreuzschalter, zwischen zwei Wechselschaltern.'
+      erklaerung: 'Vier Arme: Kreuzschalter, zwischen zwei Wechselschaltern.'
     },
     {
-      id: 'bp-leuchtstelle', name: 'Bauplan: Leuchtstelle', gruppe: 'ch-bauplan', kennbuchstabe: 'E',
+      id: 'bp-zugschalter', name: 'Bauplan: Zugschalter', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
       w: 40, h: 40,
-      kreise: [{ cx: 20, cy: 20, r: 11 }],
-      pfad: ['M12,12 L28,28', 'M28,12 L12,28'],
-      anschluesse: [{ nr: 'X1', x: 20, y: 0 }],
-      erklaerung: 'Eine Lampenstelle an Decke oder Wand.'
+      kreise: [{ cx: 20, cy: 22, r: 5 }],
+      pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -45, 10, 0), 'M30.6,17 V4 M28,7 L30.6,4 L33.2,7'],
+      anschluesse: [{ nr: '3', x: 20, y: 40 }],
+      erklaerung: 'Der Arm trägt einen Pfeil: man zieht an einer Schnur — im Bad.'
     },
     {
-      id: 'bp-leuchte', name: 'Bauplan: Leuchte', gruppe: 'ch-bauplan', kennbuchstabe: 'E',
+      id: 'bp-nachlauf', name: 'Bauplan: Schalter mit Nachlauf', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+      w: 40, h: 40,
+      kreise: [{ cx: 20, cy: 22, r: 5 }],
+      pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -45)],
+      beschriftung: [{ x: 33, y: 31, t: 't' }],
+      anschluesse: [{ nr: '3', x: 20, y: 40 }],
+      erklaerung: 'Schaltet aus, läuft aber eine Zeit nach — der Ventilator im WC.'
+    },
+    {
+      id: 'bp-lichtregler', name: 'Bauplan: Lichtregler (Dimmer)', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+      w: 40, h: 40,
+      kreise: [{ cx: 20, cy: 22, r: 5 }],
+      pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -45, 10, 0), 'M24.5,18 L35,9 V18 Z'],
+      anschluesse: [{ nr: '3', x: 20, y: 40 }],
+      erklaerung: 'Ein Keil am Arm: die Helligkeit wird stufenlos eingestellt.'
+    },
+    {
+      id: 'bp-taster', name: 'Bauplan: Taster', gruppe: 'ch-bauplan', kennbuchstabe: 'S',
+      w: 40, h: 40,
+      kreise: [{ cx: 20, cy: 22, r: 5 }],
+      pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -45, 10, 0), 'M27.8,8.6 L33.4,14.2'],
+      anschluesse: [{ nr: '3', x: 20, y: 40 }],
+      erklaerung: 'Ein Querbalken am Arm: der Kontakt schliesst nur, solange man drückt.'
+    },
+    {
+      id: 'bp-storenschalter', name: 'Bauplan: Storenschalter', gruppe: 'ch-bauplan', kennbuchstabe: 'S',
+      w: 40, h: 40,
+      kreise: [{ cx: 20, cy: 22, r: 5 }],
+      pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -45, 10, 0),
+             'M25.2,11.8 L30.8,17.4 M27.8,9.2 L33.4,14.8'],
+      anschluesse: [{ nr: '3', x: 20, y: 40 }],
+      erklaerung: 'Zwei Querbalken: zwei Tasten, auf und ab — für die Lamellenstore.'
+    },
+    {
+      id: 'bp-kombi-0', name: 'Bauplan: Kombi Gr.1 Sch 0 / Steckdose', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+      w: 50, h: 50,
+      kreise: [{ cx: 20, cy: 30, r: 5 }],
+      pfad: [senkrecht(20, 35, 50), 'M14,24 H26', 'M13,14 Q20,34 27,14', 'M25,30 H40 V24'],
+      anschluesse: [{ nr: '3', x: 20, y: 50 }],
+      erklaerung: 'Schalter Schema 0 und Steckdose in einem Einlasskasten Gr. 1.'
+    },
+    {
+      id: 'bp-kombi-3', name: 'Bauplan: Kombi Gr.1 Sch 3 / Steckdose', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+      w: 50, h: 50,
+      kreise: [{ cx: 20, cy: 30, r: 5 }],
+      pfad: [senkrecht(20, 35, 50), 'M14,24 H26', 'M13,14 Q20,34 27,14', 'M25,30 H40 V24', 'M15,30 H4 V36'],
+      anschluesse: [{ nr: '3', x: 20, y: 50 }],
+      erklaerung: 'Wechselschalter Schema 3 und Steckdose T13 in einem Gehäuse Gr. 1.'
+    },
+    {
+      id: 'bp-kombi-taster', name: 'Bauplan: Kombi Gr.1 Taster / Steckdose', gruppe: 'ch-bauplan', kennbuchstabe: 'S',
+      w: 50, h: 50,
+      kreise: [{ cx: 20, cy: 30, r: 5 }],
+      pfad: [senkrecht(20, 35, 50), 'M14,24 H26', 'M13,14 Q20,34 27,14', 'M25,30 H40', 'M40,25 V35'],
+      anschluesse: [{ nr: '3', x: 20, y: 50 }],
+      erklaerung: 'Taster und Steckdose in einem Gehäuse Gr. 1 — etwa für eine Minuterie.'
+    },
+    {
+      id: 'bp-kombi-3-gr11', name: 'Bauplan: Kombi Gr.1+1 Sch 3 / Steckdose', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+      w: 50, h: 50,
+      kreise: [{ cx: 20, cy: 30, r: 5 }],
+      pfad: [senkrecht(20, 35, 50), 'M14,24 H26', 'M13,14 Q20,34 27,14',
+             arm(20, 30, 5, -135, 9, 4, true), arm(20, 30, 5, 45, 9, 4, true)],
+      anschluesse: [{ nr: '3', x: 20, y: 50 }],
+      erklaerung: 'Schalter Schema 3 und Steckdose übereinander in zwei Gr.-1-Einsätzen.'
+    },
+    {
+      id: 'bp-t13', name: 'Bauplan: Steckdose Typ 13', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+      w: 40, h: 40,
+      pfad: [senkrecht(20, 0, 14), 'M11,14 H29', 'M9,28 Q20,0 31,28'],
+      anschluesse: [{ nr: 'L', x: 20, y: 0 }],
+      erklaerung: 'Die übliche Schweizer Steckdose T13, 10 A, mit Schutzkontakt.'
+    },
+    {
+      id: 'bp-t13-3fach', name: 'Bauplan: Steckdose Typ 13 3-fach', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+      w: 40, h: 40,
+      pfad: [senkrecht(20, 0, 14), 'M11,14 H29', 'M9,28 Q20,0 31,28', 'M23,25 L31,19'],
+      beschriftung: [{ x: 35, y: 34, t: '3' }],
+      anschluesse: [{ nr: 'L', x: 20, y: 0 }],
+      erklaerung: 'Drei T13 in einem Gehäuse — beim Fernseher, beim Schreibtisch.'
+    },
+    {
+      id: 'bp-t13-3fach-s', name: 'Bauplan: Steckdose Typ 13 3-fach, 1 geschaltet', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+      w: 40, h: 40,
+      pfad: [senkrecht(20, 0, 14), 'M11,14 H29', 'M9,28 Q20,0 31,28', 'M23,25 L31,19'],
+      beschriftung: [{ x: 35, y: 34, t: '3' }, { x: 7, y: 36, t: 'S' }],
+      anschluesse: [{ nr: 'L', x: 20, y: 0 }],
+      erklaerung: 'Drei T13, eine davon über einen Schalter — für die Stehlampe („3/1").'
+    },
+    {
+      id: 'bp-t23', name: 'Bauplan: Steckdose Typ 23', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+      w: 40, h: 40,
+      pfad: [senkrecht(20, 0, 14), 'M11,14 H29', 'M9,28 Q20,0 31,28'],
+      beschriftung: [{ x: 20, y: 39, t: 'T23' }],
+      anschluesse: [{ nr: 'L', x: 20, y: 0 }],
+      erklaerung: '16 A statt 10 A — für Geräte mit mehr Leistung, etwa den Geschirrspüler.'
+    },
+    {
+      id: 'bp-t23-3fach', name: 'Bauplan: Steckdose Typ 23 3-fach', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+      w: 60, h: 40,
+      pfad: [senkrecht(30, 0, 14), 'M21,14 H39', 'M19,28 Q30,0 41,28', 'M33,25 L41,19'],
+      beschriftung: [{ x: 45, y: 34, t: '3' }, { x: 30, y: 39, t: 'T23' }],
+      anschluesse: [{ nr: 'L', x: 30, y: 0 }],
+      erklaerung: 'Drei T23 in einem Gehäuse.'
+    },
+    {
+      id: 'bp-t25', name: 'Bauplan: Steckdose Typ 25', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+      w: 40, h: 40,
+      pfad: [senkrecht(20, 0, 14), 'M11,14 H29', 'M9,28 Q20,0 31,28'],
+      beschriftung: [{ x: 20, y: 39, t: 'T25' }],
+      anschluesse: [{ nr: 'L', x: 20, y: 0 }],
+      erklaerung: 'Drehstrom-Steckdose 3 × 400 V, 16 A — Werkstatt, Waschküche.'
+    },
+    {
+      id: 'bp-abzweigdose', name: 'Bauplan: Abzweigdose', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+      w: 40, h: 40,
+      kreise: [{ cx: 20, cy: 20, r: 2.5, voll: true }],
+      pfad: ['M12,12 H28 V28 H12 Z', senkrecht(20, 0, 12), senkrecht(20, 28, 40),
+             waagrecht(20, 0, 12), waagrecht(20, 28, 40)],
+      anschluesse: [{ nr: '1', x: 20, y: 0 }, { nr: '2', x: 20, y: 40 },
+                    { nr: '3', x: 0, y: 20 }, { nr: '4', x: 40, y: 20 }],
+      erklaerung: 'Hier werden die Leitungen verbunden — ein Quadrat mit Punkt, Gruppennummer daneben.'
+    },
+    {
+      id: 'bp-bodendose', name: 'Bauplan: Bodendose', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+      w: 40, h: 40,
+      pfad: [senkrecht(20, 0, 10), 'M10,14 V10 H14', 'M26,10 H30 V14', 'M30,26 V30 H26',
+             'M14,30 H10 V26', 'M18,10 H22', 'M18,30 H22', 'M10,18 V22', 'M30,18 V22'],
+      anschluesse: [{ nr: '1', x: 20, y: 0 }],
+      erklaerung: 'Eine Dose im Boden — gestrichelt, weil man sie von oben nicht sieht.'
+    },
+    {
+      id: 'bp-lampenduebel', name: 'Bauplan: Lampendübel', gruppe: 'ch-bauplan', kennbuchstabe: 'E',
+      w: 40, h: 40,
+      kreise: [{ cx: 20, cy: 20, r: 6 }],
+      flaechen: ['M15.8,24.2 A6,6 0 0 1 24.2,15.8 Z'],
+      pfad: [senkrecht(20, 0, 14)],
+      anschluesse: [{ nr: 'X1', x: 20, y: 0 }],
+      erklaerung: 'Ein Deckenanschluss ohne Leuchte — die Leuchte kommt später.'
+    },
+    {
+      id: 'bp-leuchtstelle', name: 'Bauplan: Deckenleuchte', gruppe: 'ch-bauplan', kennbuchstabe: 'E',
+      w: 40, h: 40,
+      pfad: [senkrecht(20, 0, 20), 'M10,10 L30,30', 'M30,10 L10,30'],
+      anschluesse: [{ nr: 'X1', x: 20, y: 0 }],
+      erklaerung: 'Ein Kreuz: eine Leuchte an der Decke. (Im Kreis wäre es eine Einbauleuchte.)'
+    },
+    {
+      id: 'bp-leuchte', name: 'Bauplan: Leuchte länglich', gruppe: 'ch-bauplan', kennbuchstabe: 'E',
       w: 60, h: 40,
       pfad: ['M10,14 H50 V26 H10 Z', waagrecht(20, 0, 10), waagrecht(20, 50, 60)],
       anschluesse: [{ nr: 'X1', x: 0, y: 20 }, { nr: 'X2', x: 60, y: 20 }],
       erklaerung: 'Eine längliche Leuchte — Leuchtstoff oder LED-Band.'
     },
     {
-      id: 'bp-einbauleuchte', name: 'Bauplan: Einbauleuchte', gruppe: 'ch-bauplan', kennbuchstabe: 'E',
+      id: 'bp-einbauleuchte', name: 'Bauplan: Decken-Einbauleuchte', gruppe: 'ch-bauplan', kennbuchstabe: 'E',
       w: 40, h: 40,
-      kreise: [{ cx: 20, cy: 20, r: 11 }, { cx: 20, cy: 20, r: 5 }],
-      pfad: [senkrecht(20, 0, 9)],
+      kreise: [{ cx: 20, cy: 20, r: 11 }],
+      pfad: [senkrecht(20, 0, 9), 'M12.2,12.2 L27.8,27.8', 'M27.8,12.2 L12.2,27.8'],
       anschluesse: [{ nr: 'X1', x: 20, y: 0 }],
-      erklaerung: 'In die Decke eingelassen — Spot oder Downlight.'
+      erklaerung: 'Ein Kreuz im Kreis: in die Decke eingelassen — Spot oder Downlight.'
     },
     {
-      id: 'bp-t13', name: 'Bauplan: Steckdose T13', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+      id: 'bp-wandleuchte', name: 'Bauplan: Wandleuchte', gruppe: 'ch-bauplan', kennbuchstabe: 'E',
       w: 40, h: 40,
-      pfad: [senkrecht(20, 0, 14), 'M6,28 a14,14 0 0,1 28,0 Z', waagrecht(28, 6, 34)],
-      anschluesse: [{ nr: 'L', x: 20, y: 0 }],
-      erklaerung: 'Die übliche Schweizer Steckdose, 10 A, mit Schutzkontakt.'
+      pfad: [senkrecht(20, 0, 20), 'M12,12 L28,28', 'M28,12 L12,28', 'M30,10 V30'],
+      anschluesse: [{ nr: 'X1', x: 20, y: 0 }],
+      erklaerung: 'Ein Kreuz mit Strich: der Strich ist die Wand, an der sie hängt.'
     },
     {
-      id: 'bp-t23', name: 'Bauplan: Steckdose T23', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
-      w: 40, h: 40,
-      pfad: [senkrecht(20, 0, 14), 'M6,28 a14,14 0 0,1 28,0 Z', waagrecht(28, 6, 34),
-             senkrecht(20, 18, 28)],
-      anschluesse: [{ nr: 'L', x: 20, y: 0 }],
-      erklaerung: '16 A statt 10 A — für Geräte mit mehr Leistung.'
-    },
-    {
-      id: 'bp-t23-3fach', name: 'Bauplan: Steckdose T23 3-fach', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+      id: 'bp-pir', name: 'Bauplan: PIR-Melder', gruppe: 'ch-bauplan', kennbuchstabe: 'B',
       w: 60, h: 40,
-      pfad: [senkrecht(30, 0, 14), 'M6,28 a24,14 0 0,1 48,0 Z', waagrecht(28, 6, 54),
-             senkrecht(18, 18, 28), senkrecht(30, 18, 28), senkrecht(42, 18, 28)],
-      anschluesse: [{ nr: 'L', x: 30, y: 0 }],
-      erklaerung: 'Drei Steckdosen in einem Gehäuse.'
+      kreise: [{ cx: 14, cy: 20, r: 8 }],
+      pfad: ['M13,15 A6,6 0 0 0 13,25', 'M16,17 A3.5,3.5 0 0 0 16,23',
+             waagrecht(20, 22, 60), 'M28,16 L22,20 L28,24'],
+      anschluesse: [{ nr: 'L', x: 60, y: 20 }],
+      erklaerung: 'Bewegungsmelder: schaltet ein, wenn sich eine warme Person bewegt.'
     },
     {
-      id: 'bp-abzweigdose', name: 'Bauplan: Abzweigdose', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+      id: 'bp-store', name: 'Bauplan: Lamellenstore', gruppe: 'ch-bauplan', kennbuchstabe: 'M',
       w: 40, h: 40,
-      kreise: [{ cx: 20, cy: 20, r: 9, voll: true }],
-      pfad: [senkrecht(20, 0, 11), senkrecht(20, 29, 40),
-             waagrecht(20, 0, 11), waagrecht(20, 29, 40)],
-      anschluesse: [{ nr: '1', x: 20, y: 0 }, { nr: '2', x: 20, y: 40 },
-                    { nr: '3', x: 0, y: 20 }, { nr: '4', x: 40, y: 20 }],
-      erklaerung: 'Hier werden die Leitungen verbunden — ein voller Punkt im Bauplan.'
+      pfad: ['M20,0 L26,10 L14,20 L26,24 L16,36', 'M16,36 L17,31 M16,36 L21,34'],
+      anschluesse: [{ nr: 'M', x: 20, y: 0 }],
+      erklaerung: 'Der Motor der Lamellenstore am Fenster.'
     },
     {
-      id: 'bp-verteiler', name: 'Bauplan: Verteiler', gruppe: 'ch-bauplan', kennbuchstabe: 'F',
+      id: 'bp-ventilator', name: 'Bauplan: Abluftventilator', gruppe: 'ch-bauplan', kennbuchstabe: 'M',
+      w: 40, h: 40,
+      pfad: [senkrecht(20, 0, 10), 'M10,10 H30 V30 H10 Z',
+             'M20,20 C16,14 12,15 12,20 C12,25 16,26 20,20 C24,14 28,15 28,20 C28,25 24,26 20,20'],
+      anschluesse: [{ nr: 'M', x: 20, y: 0 }],
+      erklaerung: 'Der Ventilator im fensterlosen Bad oder WC.'
+    },
+    {
+      id: 'bp-direktanschluss', name: 'Bauplan: Direktanschluss', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+      w: 20, h: 20,
+      kreise: [{ cx: 10, cy: 13, r: 3 }],
+      pfad: [senkrecht(10, 0, 10)],
+      anschluesse: [{ nr: 'L', x: 10, y: 0 }],
+      erklaerung: 'Ein Gerät ohne Stecker: Kochherd, Boiler, Storenmotor.'
+    },
+    {
+      id: 'bp-verteiler', name: 'Bauplan: Unterverteilung', gruppe: 'ch-bauplan', kennbuchstabe: 'W',
       w: 60, h: 40,
-      pfad: ['M6,8 H54 V32 H6 Z', 'M6,20 H54', waagrecht(20, 0, 6)],
+      pfad: ['M6,10 H54 V30 H6 Z', waagrecht(20, 0, 6)],
+      flaechen: ['M6,30 L54,10 L54,30 Z'],
       anschluesse: [{ nr: 'L', x: 0, y: 20 }],
-      erklaerung: 'Der Sicherungskasten der Wohnung.'
+      erklaerung: 'Der Wohnungsverteiler (UV). Nicht in die Wand zum Wohn- oder Schlafzimmer.'
     },
     {
       id: 'bp-minuterie', name: 'Minuterie (Treppenhausautomat)', gruppe: 'ch-bauplan', kennbuchstabe: 'K',
@@ -1168,7 +1378,7 @@ Register.fachzeichen = (() => {
       erklaerung: 'Schaltet ein, wenn es dunkel wird — Aussenbeleuchtung.'
     },
     {
-      id: 'bp-sonnerie', name: 'Sonnerie', gruppe: 'ch-bauplan', kennbuchstabe: 'P',
+      id: 'bp-sonnerie', name: 'Bauplan: Sonnerieglocke', gruppe: 'ch-bauplan', kennbuchstabe: 'P',
       w: 60, h: 60,
       pfad: [senkrecht(30, 0, 14), senkrecht(30, 46, 60),
              'M10,46 a20,20 0 0,1 40,0 Z', waagrecht(46, 6, 54), senkrecht(30, 26, 34)],
@@ -1176,12 +1386,12 @@ Register.fachzeichen = (() => {
       erklaerung: 'Die Türklingel. In der Schweiz meist mit 12 V Schwachstrom.'
     },
     {
-      id: 'bp-sonneriedruck', name: 'Sonneriedrucktaster', gruppe: 'ch-bauplan', kennbuchstabe: 'S',
+      id: 'bp-sonneriedruck', name: 'Bauplan: Sonnerietaster', gruppe: 'ch-bauplan', kennbuchstabe: 'S',
       w: 40, h: 40,
-      kreise: [{ cx: 20, cy: 26, r: 5, voll: true }],
-      pfad: [senkrecht(20, 8, 21), waagrecht(8, 12, 28)],
+      kreise: [{ cx: 20, cy: 22, r: 7 }, { cx: 20, cy: 22, r: 3.5 }],
+      pfad: [senkrecht(20, 29, 40)],
       anschluesse: [{ nr: '3', x: 20, y: 40 }],
-      erklaerung: 'Der Klingelknopf an der Tür.'
+      erklaerung: 'Der Klingelknopf an der Tür — zwei Kreise ineinander.'
     }
   ];
 
@@ -1319,6 +1529,8 @@ Register.fachzeichen = (() => {
         ? `<path class="sp-klinge" pathLength="1" d="${att(neu)}"/>`
         : `<path d="${att(p)}"/>`);
     });
+    (z.flaechen || []).forEach(f => teile.push(
+      `<path d="${att(f)}" fill="${farbe}" stroke="none"/>`));
     (z.kreise || []).forEach(k => teile.push(
       `<circle cx="${k.cx}" cy="${k.cy}" r="${k.r}"${k.voll ? ' fill="' + farbe + '"' : ''}/>`));
     if (text) (z.beschriftung || []).forEach(b => teile.push(

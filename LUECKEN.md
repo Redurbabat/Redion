@@ -8845,6 +8845,35 @@ ihm liegt Tisch mit Raster. Quer gehalten füllt er den Schirm. Offen: ob die
 Blockhöhe in der Seite am Telefon dem Plan folgen soll (sie bliebe dann
 nicht gleich hoch), oder ob der Tisch genügt. Frage an Redur.
 
+## L267 · Was nach dem Lehrmittel an den Schweizer Zeichen noch fehlt — 15. November 2026
+
+Seit E789 zeichnet der Bauplan nach dem Lehrmittel („Fachzeichnen Teil 1",
+Seite 14.1, Grundlage Electrosuisse „Symbole für die Elektrotechnik").
+Offen, gefunden beim Lesen derselben Seiten:
+
+1. **Klemmen des Schema-3-Schalters.** Das Lehrmittel nummeriert den
+   Wechsler 1 (gemeinsam), 2 und 4 (Seite 2.2 und 4.4); `ch-schema3` heisst
+   3, 1, 2. Umbenennen heisst: die alten Namen 1 und 2 bekommen eine neue
+   Bedeutung. Über den Ort (`frueher`, E738) lösen gespeicherte Leitungen
+   richtig auf — aber ein Plan, der nur Namen kennt (Aufgaben, `test239`,
+   eine Leitung, deren Ende neben der Klemme liegt), fiele auf die neue
+   Bedeutung. Das ist eine Datenmigration mit Planfassung, kein Zeichnen
+   (§9, §51) — eigener Bogen, eigene Entscheidung.
+2. **Schema 1 und 2 im Stromlauf** haben im Lehrmittel zwei Kontakte 13–14
+   und 23–24; Redion zeichnet einen gemeinsamen Eingang 3 mit 4 und 5. Wie
+   Punkt 1: neue Klemmen an einem bestehenden Zeichen.
+3. **Die Leitungsarten des Bauplans** (Decke durchgezogen, Boden
+   gestrichelt, Wand strichpunktiert; Licht blau, Kraft rot, Telefon grün,
+   Sonnerie braun, TV violett; von/nach oben, unten, durchgehend, nach UV)
+   sind Eigenschaften der LEITUNG, nicht Zeichen — sie brauchen eine Wahl
+   an der Leitung.
+4. **Nicht gezeichnet** von Seite 14.1: AP-Steckdose, LED-Anbauleuchte,
+   Spiegelschrank, Spiegelleuchte, Sonnerietrafo, Wechselsprechanlage,
+   Multimedia (Verteiler, Dose), Telefon-, IT- und TV-Steckdose und die
+   Prinzipschema-Zeichen (LS, FI-LS, FI, Schrittschalter, Fernschalter,
+   Dose plombierbar). Das Bild der AP-Steckdose war im Scan nicht sicher zu
+   lesen; geraten wird nicht.
+
 ## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — GESCHLOSSEN (E745) — 11. Oktober 2026
 
 **Gemessen** über die Schnittstelle von GitHub, nicht vermutet: die zwei
@@ -11203,7 +11232,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 1. November 2026 (mit L264), nachgezählt statt fortgeschrieben:** die
-Datei führt 160 Lücken, 102 offene und 58 geschlossene. Der Befehl dazu ist
+Datei führt 161 Lücken, 103 offene und 58 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt
