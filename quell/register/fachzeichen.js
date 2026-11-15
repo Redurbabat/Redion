@@ -1003,6 +1003,41 @@ Register.fachzeichen = (() => {
             erklaerung: 'Der Klingelknopf an der Tür.'
         }
     ];
+    const KL_ZU = 'M20,44 L20,16';
+    const KL_AB = 'M20,44 L34,26';
+    const L_ZU = 'M30,44 L14,16', R_ZU = 'M30,44 L46,16';
+    const L_AUF = 'M30,44 L17,27', R_AUF = 'M30,44 L43,27';
+    const GERADE = { 4: 'M10,18 Q30,30 50,18', 5: 'M10,42 Q30,30 50,42' };
+    const KREUZ = { 4: 'M10,42 L50,18', 5: 'M50,42 L10,18' };
+    const STELLUNGSBILD = {
+        ausschalter: [{ 2: 'M20,44 L32,14' }, { 2: KL_ZU }],
+        'ch-schema0': [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+        schliesser: [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+        endschalter: [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+        'schuetz-schliesser': [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+        'schuetz-hauptkontakt': [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+        'taster-schliesser': [{ 3: 'M20,44 L32,14' },
+            { 3: KL_ZU, 4: 'M32,10 V18', 5: 'M26,10 H38' }],
+        'taster-oeffner': [{ 2: 'M20,44 L32,14' },
+            { 2: KL_AB, 4: 'M32,8 V14', 5: 'M26,8 H38' }],
+        oeffner: [{ 2: 'M20,44 L32,14' }, { 2: KL_AB }],
+        'schuetz-oeffner': [{ 2: 'M20,44 L32,14' }, { 2: KL_AB }],
+        notaus: [{ 2: 'M20,44 L32,14' }, { 2: KL_AB }],
+        hauptschalter: [{ 6: 'M10,44 L20,14', 7: 'M30,44 L40,14', 8: 'M50,44 L60,14', 9: 'M18,20 L54,32' },
+            { 6: 'M10,44 V16', 7: 'M30,44 V16', 8: 'M50,44 V16', 9: 'M4,30 H56' }],
+        wechselschalter: [{ 3: L_ZU }, { 3: R_ZU }],
+        'ch-schema3': [{ 3: L_ZU }, { 3: R_ZU }],
+        wechsler: [{ 5: L_ZU }, { 5: R_ZU }],
+        serienschalter: [{ 3: L_AUF, 4: R_AUF }, { 3: L_ZU, 4: R_AUF },
+            { 3: L_AUF, 4: R_ZU }, { 3: L_ZU, 4: R_ZU }],
+        'ch-schema1': [{ 5: L_AUF, 6: R_AUF }, { 5: L_ZU, 6: R_AUF },
+            { 5: L_AUF, 6: R_ZU }, { 5: L_ZU, 6: R_ZU }],
+        'ch-schema2': [{ 5: L_AUF, 6: R_AUF }, { 5: L_ZU, 6: R_AUF },
+            { 5: L_ZU, 6: R_ZU }, { 5: L_AUF, 6: R_ZU }],
+        kreuzschalter: [GERADE, KREUZ],
+        'ch-schema6': [GERADE, KREUZ]
+    };
+    const hatStellungsbild = (id) => !!STELLUNGSBILD[id];
     const LISTE = EINGEBAUT.slice();
     const melde = (z) => {
         if (!z || !z.id || LISTE.some(x => x.id === z.id))
@@ -1040,7 +1075,14 @@ Register.fachzeichen = (() => {
         const att = (w) => typeof Sanitize !== 'undefined'
             ? Sanitize.escapeAttribute(w) : String(w ?? '').replace(/[<>"'&]/g, '');
         const teile = [];
-        z.pfad.forEach(p => teile.push(`<path d="${att(p)}"/>`));
+        const bilder = typeof opt.stellung === 'number' ? STELLUNGSBILD[id] : undefined;
+        const bild = bilder ? bilder[Math.max(0, Math.min(bilder.length - 1, Math.floor(opt.stellung)))] : undefined;
+        z.pfad.forEach((p, i) => {
+            const neu = bild ? bild[i] : undefined;
+            teile.push(neu !== undefined
+                ? `<path class="sp-klinge" pathLength="1" d="${att(neu)}"/>`
+                : `<path d="${att(p)}"/>`);
+        });
         (z.kreise || []).forEach(k => teile.push(`<circle cx="${k.cx}" cy="${k.cy}" r="${k.r}"${k.voll ? ' fill="' + farbe + '"' : ''}/>`));
         if (text)
             (z.beschriftung || []).forEach(b => teile.push(`<text x="${att(b.x)}" y="${att(b.y)}" text-anchor="middle" fill="${farbe}" stroke="none" ` +
@@ -1113,5 +1155,5 @@ Register.fachzeichen = (() => {
         return (grad === 90 || grad === 270) ? { w: z.h, h: z.w } : { w: z.w, h: z.h };
     };
     return { RASTER, NAH, alle, holen, inGruppe, gruppen, gruppenName,
-        alsSvg, anschlussLage, klemmeFuer, masse, melde, vergiss };
+        alsSvg, anschlussLage, klemmeFuer, masse, melde, vergiss, hatStellungsbild };
 })();

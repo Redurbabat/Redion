@@ -1186,6 +1186,62 @@ Register.fachzeichen = (() => {
   ];
 
   /* ------------------------------------------------------------------------
+   * DAS BILD JE STELLUNG (E787)
+   * ------------------------------------------------------------------------
+   * Redur, 15. November 2026: „wenn ich eine schalter klicke sollte sich
+   * ändern". Bis hierher stand jeder Schalter in der Simulation in seiner
+   * Ruhelage, egal wie er geschaltet war — geschlossen sah aus wie offen,
+   * und nur der laufende Strich auf der Leitung verriet die Stellung.
+   *
+   * Hier steht, welcher Strich des Zeichens die bewegliche KLINGE ist und wo
+   * sie in jeder Stellung liegt: Stellung (Nummer wie in `Stromfluss`,
+   * simulation.ts) → Index in `pfad` → neuer Pfad. Die Reihenfolge der
+   * Stellungen ist dieselbe wie dort; ein Zeichen, das hier fehlt, bleibt
+   * wie bisher. In Ruhe und ausserhalb der Simulation zeichnet jedes
+   * Zeichen genau wie vorher — die Norm zeigt die Ruhelage (E128).
+   *
+   * Beim Serien-, Gruppen- und Kreuzschalter zeigt das Normzeichen KEINE
+   * Stellung (beide Klingen zu, das Kreuz). Dort gilt das Bild auch für
+   * Stellung 0, sonst sähe „aus" aus wie „beide".
+   * ----------------------------------------------------------------------*/
+  const KL_ZU = 'M20,44 L20,16';          /* Schliesser, geschlossen */
+  const KL_AB = 'M20,44 L34,26';          /* Öffner, geöffnet: unter dem Gegenkontakt */
+  const L_ZU = 'M30,44 L14,16', R_ZU = 'M30,44 L46,16';
+  const L_AUF = 'M30,44 L17,27', R_AUF = 'M30,44 L43,27';
+  const GERADE = { 4: 'M10,18 Q30,30 50,18', 5: 'M10,42 Q30,30 50,42' };
+  const KREUZ = { 4: 'M10,42 L50,18', 5: 'M50,42 L10,18' };
+  const STELLUNGSBILD: Record<string, Array<Record<number, string>>> = {
+    ausschalter:            [{ 2: 'M20,44 L32,14' }, { 2: KL_ZU }],
+    'ch-schema0':           [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+    schliesser:             [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+    endschalter:            [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+    'schuetz-schliesser':   [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+    'schuetz-hauptkontakt': [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+    'taster-schliesser':    [{ 3: 'M20,44 L32,14' },
+                             { 3: KL_ZU, 4: 'M32,10 V18', 5: 'M26,10 H38' }],
+    'taster-oeffner':       [{ 2: 'M20,44 L32,14' },
+                             { 2: KL_AB, 4: 'M32,8 V14', 5: 'M26,8 H38' }],
+    oeffner:                [{ 2: 'M20,44 L32,14' }, { 2: KL_AB }],
+    'schuetz-oeffner':      [{ 2: 'M20,44 L32,14' }, { 2: KL_AB }],
+    notaus:                 [{ 2: 'M20,44 L32,14' }, { 2: KL_AB }],
+    hauptschalter:          [{ 6: 'M10,44 L20,14', 7: 'M30,44 L40,14', 8: 'M50,44 L60,14', 9: 'M18,20 L54,32' },
+                             { 6: 'M10,44 V16', 7: 'M30,44 V16', 8: 'M50,44 V16', 9: 'M4,30 H56' }],
+    wechselschalter:        [{ 3: L_ZU }, { 3: R_ZU }],
+    'ch-schema3':           [{ 3: L_ZU }, { 3: R_ZU }],
+    wechsler:               [{ 5: L_ZU }, { 5: R_ZU }],
+    serienschalter:         [{ 3: L_AUF, 4: R_AUF }, { 3: L_ZU, 4: R_AUF },
+                             { 3: L_AUF, 4: R_ZU }, { 3: L_ZU, 4: R_ZU }],
+    'ch-schema1':           [{ 5: L_AUF, 6: R_AUF }, { 5: L_ZU, 6: R_AUF },
+                             { 5: L_AUF, 6: R_ZU }, { 5: L_ZU, 6: R_ZU }],
+    'ch-schema2':           [{ 5: L_AUF, 6: R_AUF }, { 5: L_ZU, 6: R_AUF },
+                             { 5: L_ZU, 6: R_ZU }, { 5: L_AUF, 6: R_ZU }],
+    kreuzschalter:          [GERADE, KREUZ],
+    'ch-schema6':           [GERADE, KREUZ]
+  };
+  /** Hat dieses Zeichen ein Bild je Stellung? */
+  const hatStellungsbild = (id: string): boolean => !!STELLUNGSBILD[id];
+
+  /* ------------------------------------------------------------------------
    * DIE LISTE, UND IMMER DIESELBE — wie in register/bloecke.js. Eigene
    * Sammlungen (Punkt 7) tragen sich hier ein, statt eine zweite Liste
    * daneben zu stellen.
@@ -1225,6 +1281,8 @@ Register.fachzeichen = (() => {
   const alsSvg = (id: string, opt: {
     zeigeText?: boolean; zeigeAnschluesse?: boolean; farbe?: string;
     strich?: number; drehung?: number; gespiegelt?: boolean;
+    /** Die Stellung des Schalters (E787) — nur in der Simulation gesetzt. */
+    stellung?: number;
   } = {}): string => {
     const z = holen(id);
     if (!z) return '';
@@ -1251,7 +1309,16 @@ Register.fachzeichen = (() => {
     const att = (w: unknown): string => typeof Sanitize !== 'undefined'
       ? Sanitize.escapeAttribute(w) : String(w ?? '').replace(/[<>"'&]/g, '');
     const teile: string[] = [];
-    z.pfad.forEach(p => teile.push(`<path d="${att(p)}"/>`));
+    const bilder = typeof opt.stellung === 'number' ? STELLUNGSBILD[id] : undefined;
+    const bild = bilder ? bilder[Math.max(0, Math.min(bilder.length - 1, Math.floor(opt.stellung!)))] : undefined;
+    z.pfad.forEach((p, i) => {
+      const neu = bild ? bild[i] : undefined;
+      /* Die Klinge trägt `pathLength`, damit das Bild sie beim Umlegen von
+         der Drehachse aus nachziehen kann (CSS, schaltatelier.css). */
+      teile.push(neu !== undefined
+        ? `<path class="sp-klinge" pathLength="1" d="${att(neu)}"/>`
+        : `<path d="${att(p)}"/>`);
+    });
     (z.kreise || []).forEach(k => teile.push(
       `<circle cx="${k.cx}" cy="${k.cy}" r="${k.r}"${k.voll ? ' fill="' + farbe + '"' : ''}/>`));
     if (text) (z.beschriftung || []).forEach(b => teile.push(
@@ -1371,5 +1438,5 @@ Register.fachzeichen = (() => {
   };
 
   return { RASTER, NAH, alle, holen, inGruppe, gruppen, gruppenName,
-           alsSvg, anschlussLage, klemmeFuer, masse, melde, vergiss };
+           alsSvg, anschlussLage, klemmeFuer, masse, melde, vergiss, hatStellungsbild };
 })();

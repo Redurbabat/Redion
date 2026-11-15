@@ -942,3 +942,24 @@ body[data-bewegung="ruhig"] .sp-wrap .sp-wz-marke{transition:none}
   .sp-wrap .sp-kopf [data-a="vorwaerts"]{display:none}
   .sp-wrap .sp-kopf .sp-start{padding:0 10px 0 8px}
 }
+
+/* ── Die Klinge liegt, wie der Schalter steht (E787) ──
+   In der Simulation zeichnet jeder Schalter seine Stellung: geschlossen ist
+   die Klinge zu, offen ab, beim Wechsel- und Kreuzschalter auf dem Weg, den
+   er gerade schliesst. Führt der Schalter Strom, trägt die Klinge die Farbe
+   des Stroms — zusätzlich zur Form, nie statt ihr (§38). Beim Umlegen zieht
+   sie sich von der Drehachse aus nach (nur `stroke-dashoffset`, 160 ms);
+   bei weniger Bewegung steht sie sofort. */
+.sp-wrap .sp-flaeche .sp-klinge{stroke-width:2.4}
+.sp-wrap .sp-flaeche .sp-fuehrt .sp-klinge{stroke:var(--sp-strom)}
+.sp-wrap .sp-flaeche .sp-stellung{font-weight:600; opacity:.82; pointer-events:none}
+.sp-wrap .sp-flaeche .sp-umgelegt .sp-klinge{stroke-dasharray:1; animation:sp-klinge-legen .16s cubic-bezier(.2,.8,.2,1) both}
+@keyframes sp-klinge-legen{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){.sp-wrap .sp-flaeche .sp-umgelegt .sp-klinge{animation:none}}
+body[data-bewegung="ruhig"] .sp-wrap .sp-flaeche .sp-umgelegt .sp-klinge{animation:none}
+
+/* ── Leitung aus der Klemme (E788) ──
+   Im Zeigen-Werkzeug: liegt der Zeiger auf einer Klemme, zeigt ein Ring,
+   dass hier eine Leitung beginnt, und der Zeiger wird zum Fadenkreuz. */
+.sp-wrap .sp-klemme-nah .sp-flaeche{cursor:crosshair}
+.sp-wrap .sp-flaeche .sp-klemme-ring{pointer-events:none; color:var(--accent)}

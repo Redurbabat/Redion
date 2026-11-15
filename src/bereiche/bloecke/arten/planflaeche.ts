@@ -1034,6 +1034,8 @@ const Planflaeche = (() => {
       }
     };
 
+    /** Die Stellungen im letzten Bild (E787) — daraus „was wurde umgelegt". */
+    let zuletztGemalt: Record<string, number> = {};
     const buehneMalen = (): void => {
       const e = z.ergebnis;
       const opt: any = {
@@ -1054,6 +1056,30 @@ const Planflaeche = (() => {
       /* `werte` bringt die Richtung schon mit — sie steht an jedem Messwert
          (E731). Hier ist deshalb nichts weiterzureichen ausser dem, was
          ohnehin durchgeht. */
+      /* E787: die Klinge jedes Schalters liegt so, wie er steht — auch wenn
+         die Rechnung scheitert (ein Kurzschluss hat eine Stellung, die ihn
+         auslöst, und genau die soll man sehen). Was seit dem letzten Bild
+         umgelegt wurde, von Hand oder von einer Spule, zieht seine Klinge
+         nach. */
+      if (z.simulation) {
+        const jetzt: Record<string, number> = Object.assign({}, z.stellungen, e && e.stellungen ? e.stellungen : {});
+        const umgelegt = new Set<string>();
+        (z.plan.teile as any[]).forEach(t => {
+          const id = String(t.id);
+          if ((jetzt[id] || 0) !== (zuletztGemalt[id] || 0)) umgelegt.add(id);
+        });
+        opt.stellungen = jetzt;
+        const namen: Record<string, string> = {};
+        (z.plan.teile as any[]).forEach(t => {
+          const { st } = schaltart(t.zeichen);
+          if (st.length < 2) return;
+          const s = st[Math.max(0, Math.min(st.length - 1, jetzt[t.id] || 0))];
+          if (s && s.name) namen[t.id] = s.name;
+        });
+        opt.stellungsnamen = namen;
+        if (umgelegt.size) opt.umgelegt = umgelegt;
+        zuletztGemalt = jetzt;
+      } else zuletztGemalt = {};
       leinwand.innerHTML = Schaltplan.alsSvg(z.plan, opt);
       tischLegen();
       ansichtAnwenden();
@@ -1558,6 +1584,27 @@ const Planflaeche = (() => {
       let g = svg.querySelector('g.sp-vorschau');
       if (!g) { svg.insertAdjacentHTML('beforeend', '<g class="sp-vorschau"></g>'); g = svg.querySelector('g.sp-vorschau'); }
       if (g) g.innerHTML = html;
+    };
+
+    /* --- Leitung aus der Klemme (E788) ------------------------------------- */
+    /** Die Klemme genau unter dem Zeiger — enger gefasst als der Fang. */
+    const klemmeUnterZeiger = (svg: SVGSVGElement, roh: { x: number; y: number }, art?: string):
+        { x: number; y: number; teil: string; nr: string } | null => {
+      const m = svg.getScreenCTM();
+      const massstab = m ? Math.hypot(m.a, m.b) : 1;
+      const radius = Math.min(14, Math.max(2, (art === 'touch' ? 10 : 7) / (massstab > 0 ? massstab : 1)));
+      const f = Schaltplan.fangeAnschluss(z.plan, roh, radius);
+      return f && f.teil ? { x: f.x, y: f.y, teil: String(f.teil), nr: String(f.nr ?? '') } : null;
+    };
+    let klemmeGezeigt = '';
+    const klemmeHinweis = (k: { x: number; y: number } | null): void => {
+      const schluessel = k ? k.x + ',' + k.y : '';
+      /* Nach einem Neuzeichnen ist der Ring weg, auch wenn der Ort gleich blieb. */
+      if (schluessel === klemmeGezeigt && (!k || svgJetzt()?.querySelector('.sp-klemme-ring'))) return;
+      klemmeGezeigt = schluessel;
+      buehne.classList.toggle('sp-klemme-nah', !!k);
+      vorschau(k ? `<circle class="sp-klemme-ring" cx="${k.x}" cy="${k.y}" r="7" fill="none" ` +
+        `stroke="currentColor" stroke-width="2" opacity=".8"><title>Leitung ziehen</title></circle>` : '');
     };
 
     /* --- Symbol setzen (Punkt 12) ---------------------------------------- */
@@ -2711,6 +2758,22 @@ const Planflaeche = (() => {
       }
 
       /* Werkzeug „zeigen" */
+      /* LEITUNG AUS DER KLEMME (E788): wer im Zeigen-Werkzeug genau auf
+         einer Klemme ansetzt, zieht eine Leitung — ohne vorher „Leitung"
+         zu wählen und ohne danach zurückzuschalten. Der Griff ist mit
+         7 px (Finger 10) bewusst enger als der Fang beim Leitungzeichnen:
+         wer ein Teil am Körper fasst, verschiebt es weiter. Mit Umschalt
+         oder einem gewählten Bauteil gilt der Griff nicht. */
+      if (!z.gewaehltesZeichen && !e.shiftKey) {
+        const klemme = klemmeUnterZeiger(svg, roh, e.pointerType);
+        if (klemme) {
+          klemmeHinweis(null);
+          zugBeginnen({ art: 'leitung', zeiger: e.pointerId, startX: klemme.x, startY: klemme.y, ausgang: new Map(),
+                        von: { x: klemme.x, y: klemme.y, teil: klemme.teil, nr: klemme.nr } });
+          svg.setPointerCapture(e.pointerId);
+          return;
+        }
+      }
       const g = teilAm(ziel);
       if (!g || !g.dataset.id) {
         /* Auf leere Fläche: Symbol setzen, oder Rahmen aufziehen. */
@@ -2792,6 +2855,13 @@ const Planflaeche = (() => {
             !z.simulation && z.werkzeug === 'zeigen' && z.gewaehltesZeichen)
           platzGeistZeigen(z.gewaehltesZeichen, e.clientX, e.clientY);
         else if (!platzZug) geistEntfernen();
+        /* E788: liegt der Zeiger auf einer Klemme, sagt die Fläche, dass man
+           hier eine Leitung ziehen kann — ein Ring und das Fadenkreuz. */
+        if (!platzZug && e.pointerType !== 'touch' && !e.buttons && !z.simulation
+            && z.werkzeug === 'zeigen' && !z.gewaehltesZeichen) {
+          const svg = svgJetzt();
+          klemmeHinweis(svg ? klemmeUnterZeiger(svg, ortAus(svg, e, z.plan, true), e.pointerType) : null);
+        } else klemmeHinweis(null);
         return;
       }
       if (e.pointerId !== z.zieht.zeiger) return;

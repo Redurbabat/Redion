@@ -14308,6 +14308,27 @@ body[data-bewegung="ruhig"] .sp-wrap .sp-wz-marke{transition:none}
   .sp-wrap .sp-kopf .sp-start{padding:0 10px 0 8px}
 }
 
+/* ── Die Klinge liegt, wie der Schalter steht (E787) ──
+   In der Simulation zeichnet jeder Schalter seine Stellung: geschlossen ist
+   die Klinge zu, offen ab, beim Wechsel- und Kreuzschalter auf dem Weg, den
+   er gerade schliesst. Führt der Schalter Strom, trägt die Klinge die Farbe
+   des Stroms — zusätzlich zur Form, nie statt ihr (§38). Beim Umlegen zieht
+   sie sich von der Drehachse aus nach (nur `stroke-dashoffset`, 160 ms);
+   bei weniger Bewegung steht sie sofort. */
+.sp-wrap .sp-flaeche .sp-klinge{stroke-width:2.4}
+.sp-wrap .sp-flaeche .sp-fuehrt .sp-klinge{stroke:var(--sp-strom)}
+.sp-wrap .sp-flaeche .sp-stellung{font-weight:600; opacity:.82; pointer-events:none}
+.sp-wrap .sp-flaeche .sp-umgelegt .sp-klinge{stroke-dasharray:1; animation:sp-klinge-legen .16s cubic-bezier(.2,.8,.2,1) both}
+@keyframes sp-klinge-legen{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){.sp-wrap .sp-flaeche .sp-umgelegt .sp-klinge{animation:none}}
+body[data-bewegung="ruhig"] .sp-wrap .sp-flaeche .sp-umgelegt .sp-klinge{animation:none}
+
+/* ── Leitung aus der Klemme (E788) ──
+   Im Zeigen-Werkzeug: liegt der Zeiger auf einer Klemme, zeigt ein Ring,
+   dass hier eine Leitung beginnt, und der Zeiger wird zum Fadenkreuz. */
+.sp-wrap .sp-klemme-nah .sp-flaeche{cursor:crosshair}
+.sp-wrap .sp-flaeche .sp-klemme-ring{pointer-events:none; color:var(--accent)}
+
 </style>
 <style>
 /* ===== quell/schale/stil/bausteine.css ===== */
@@ -30020,7 +30041,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1583, inhalt: 'ff18da6b0838a3d6', gebaut: '2026-11-10T03:34:43.932Z' };
+const Stand = { fassung: 1585, inhalt: 'd702b8e785581bde', gebaut: '2026-11-15T15:14:48.127Z' };
 window.Stand = Stand;
 
 </script>
@@ -41717,6 +41738,41 @@ Register.fachzeichen = (() => {
             erklaerung: 'Der Klingelknopf an der Tür.'
         }
     ];
+    const KL_ZU = 'M20,44 L20,16';
+    const KL_AB = 'M20,44 L34,26';
+    const L_ZU = 'M30,44 L14,16', R_ZU = 'M30,44 L46,16';
+    const L_AUF = 'M30,44 L17,27', R_AUF = 'M30,44 L43,27';
+    const GERADE = { 4: 'M10,18 Q30,30 50,18', 5: 'M10,42 Q30,30 50,42' };
+    const KREUZ = { 4: 'M10,42 L50,18', 5: 'M50,42 L10,18' };
+    const STELLUNGSBILD = {
+        ausschalter: [{ 2: 'M20,44 L32,14' }, { 2: KL_ZU }],
+        'ch-schema0': [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+        schliesser: [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+        endschalter: [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+        'schuetz-schliesser': [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+        'schuetz-hauptkontakt': [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+        'taster-schliesser': [{ 3: 'M20,44 L32,14' },
+            { 3: KL_ZU, 4: 'M32,10 V18', 5: 'M26,10 H38' }],
+        'taster-oeffner': [{ 2: 'M20,44 L32,14' },
+            { 2: KL_AB, 4: 'M32,8 V14', 5: 'M26,8 H38' }],
+        oeffner: [{ 2: 'M20,44 L32,14' }, { 2: KL_AB }],
+        'schuetz-oeffner': [{ 2: 'M20,44 L32,14' }, { 2: KL_AB }],
+        notaus: [{ 2: 'M20,44 L32,14' }, { 2: KL_AB }],
+        hauptschalter: [{ 6: 'M10,44 L20,14', 7: 'M30,44 L40,14', 8: 'M50,44 L60,14', 9: 'M18,20 L54,32' },
+            { 6: 'M10,44 V16', 7: 'M30,44 V16', 8: 'M50,44 V16', 9: 'M4,30 H56' }],
+        wechselschalter: [{ 3: L_ZU }, { 3: R_ZU }],
+        'ch-schema3': [{ 3: L_ZU }, { 3: R_ZU }],
+        wechsler: [{ 5: L_ZU }, { 5: R_ZU }],
+        serienschalter: [{ 3: L_AUF, 4: R_AUF }, { 3: L_ZU, 4: R_AUF },
+            { 3: L_AUF, 4: R_ZU }, { 3: L_ZU, 4: R_ZU }],
+        'ch-schema1': [{ 5: L_AUF, 6: R_AUF }, { 5: L_ZU, 6: R_AUF },
+            { 5: L_AUF, 6: R_ZU }, { 5: L_ZU, 6: R_ZU }],
+        'ch-schema2': [{ 5: L_AUF, 6: R_AUF }, { 5: L_ZU, 6: R_AUF },
+            { 5: L_ZU, 6: R_ZU }, { 5: L_AUF, 6: R_ZU }],
+        kreuzschalter: [GERADE, KREUZ],
+        'ch-schema6': [GERADE, KREUZ]
+    };
+    const hatStellungsbild = (id) => !!STELLUNGSBILD[id];
     const LISTE = EINGEBAUT.slice();
     const melde = (z) => {
         if (!z || !z.id || LISTE.some(x => x.id === z.id))
@@ -41754,7 +41810,14 @@ Register.fachzeichen = (() => {
         const att = (w) => typeof Sanitize !== 'undefined'
             ? Sanitize.escapeAttribute(w) : String(w ?? '').replace(/[<>"'&]/g, '');
         const teile = [];
-        z.pfad.forEach(p => teile.push(`<path d="${att(p)}"/>`));
+        const bilder = typeof opt.stellung === 'number' ? STELLUNGSBILD[id] : undefined;
+        const bild = bilder ? bilder[Math.max(0, Math.min(bilder.length - 1, Math.floor(opt.stellung)))] : undefined;
+        z.pfad.forEach((p, i) => {
+            const neu = bild ? bild[i] : undefined;
+            teile.push(neu !== undefined
+                ? `<path class="sp-klinge" pathLength="1" d="${att(neu)}"/>`
+                : `<path d="${att(p)}"/>`);
+        });
         (z.kreise || []).forEach(k => teile.push(`<circle cx="${k.cx}" cy="${k.cy}" r="${k.r}"${k.voll ? ' fill="' + farbe + '"' : ''}/>`));
         if (text)
             (z.beschriftung || []).forEach(b => teile.push(`<text x="${att(b.x)}" y="${att(b.y)}" text-anchor="middle" fill="${farbe}" stroke="none" ` +
@@ -41827,7 +41890,7 @@ Register.fachzeichen = (() => {
         return (grad === 90 || grad === 270) ? { w: z.h, h: z.w } : { w: z.w, h: z.h };
     };
     return { RASTER, NAH, alle, holen, inGruppe, gruppen, gruppenName,
-        alsSvg, anschlussLage, klemmeFuer, masse, melde, vergiss };
+        alsSvg, anschlussLage, klemmeFuer, masse, melde, vergiss, hatStellungsbild };
 })();
 
 </script>
@@ -69149,7 +69212,7 @@ const Stromfluss = (() => {
         ok: false, fehler, spannung: [], spannungWinkel: [], wechsel: false, komplex: false,
         werte: {}, teilwerte: {}, stromNetze: [], netzStrom: [],
         spulen: {}, annahmen: [], warnungen, durchgaenge: 0, leitungNetz: {}, maxStrom: 0,
-        verbindungen: [], anschlussfehler: []
+        verbindungen: [], anschlussfehler: [], stellungen: {}
     });
     const KONTAKT = 1e-3;
     const SCHWELLE = 1e-9;
@@ -69531,7 +69594,8 @@ const Stromfluss = (() => {
             verbindungen: eintraege
                 .filter(e => !(e.art === 'U' && e.wert !== 0))
                 .map(e => [e.a, e.b]),
-            anschlussfehler: []
+            anschlussfehler: [],
+            stellungen: Object.assign({}, stellung)
         };
     };
     const rechne = (plan, stellung = {}, vorher, zeitAusgaenge) => {
@@ -69554,6 +69618,7 @@ const Stromfluss = (() => {
                     stand[t.id] = 1;
             });
         const mitFehlern = (e) => {
+            e.stellungen = Object.assign({}, stand);
             e.anschlussfehler = anschlussfehler(plan, netzInfo, e);
             e.anschlussfehler.forEach(f => e.warnungen.push(`${f.was} ${f.warum}`));
             return e;
@@ -70948,10 +71013,14 @@ const Schaltplan = (() => {
             if (!sichtbar(t.ebene))
                 return;
             const farbe = farbeVon(t.ebene);
+            const mitStellung = !!opt.stellungen && typeof Register !== 'undefined' && Register.fachzeichen
+                && typeof Register.fachzeichen.hatStellungsbild === 'function'
+                && Register.fachzeichen.hatStellungsbild(t.zeichen);
+            const stellungNr = mitStellung ? Number(opt.stellungen[t.id]) || 0 : 0;
             const svg = (typeof Register !== 'undefined' && Register.fachzeichen)
-                ? Register.fachzeichen.alsSvg(t.zeichen, {
-                    farbe, drehung: t.drehung, gespiegelt: t.gespiegelt
-                })
+                ? Register.fachzeichen.alsSvg(t.zeichen, mitStellung
+                    ? { farbe, drehung: t.drehung, gespiegelt: t.gespiegelt, stellung: stellungNr }
+                    : { farbe, drehung: t.drehung, gespiegelt: t.gespiegelt })
                 : '';
             const unbekannt = !svg;
             const innen = unbekannt ? unbekanntesZeichen(t.zeichen, farbe)
@@ -71027,13 +71096,20 @@ const Schaltplan = (() => {
                     }
                 }
             }
+            let stellungText = '';
+            const stellungName = mitStellung && opt.stellungsnamen ? opt.stellungsnamen[t.id] || '' : '';
+            if (stellungName)
+                stellungText = `<text class="sp-stellung" x="${mass.w / 2}" y="${mass.h + 14}" ` +
+                    `text-anchor="middle" font-size="10" stroke="none" fill="${farbe}">${esc(stellungName)}</text>`;
             teile.push(`<g class="sp-teil${unbekannt ? ' sp-unbekannt' : ''}${gewaehlt ? ' sp-gewaehlt' : ''}` +
+                `${mitStellung ? ' sp-stellbar' : ''}${opt.umgelegt && opt.umgelegt.has(t.id) ? ' sp-umgelegt' : ''}` +
                 `${w && w.fliesst ? ' sp-fuehrt' : ''}` +
                 `${opt.hervor === t.id ? ' sp-gesucht' : ''}" data-id="${esc(t.id)}" ` +
+                (mitStellung ? `data-stellung="${stellungNr}" ` : '') +
                 `transform="translate(${t.x} ${t.y})" fill="none" stroke="${farbe}" ` +
                 `stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
                 `<rect x="-4" y="-4" width="${mass.w + 8}" height="${mass.h + 8}" ` +
-                `fill="transparent" stroke="none"/>` + schein + innen + anzeige + pfeil +
+                `fill="transparent" stroke="none"/>` + schein + innen + anzeige + stellungText + pfeil +
                 (opt.anschluesse ? anschluesseVon(t).map(a => `<circle class="sp-punkt" data-teil="${esc(t.id)}" data-nr="${esc(a.nr)}" ` +
                     `cx="${a.x - t.x}" cy="${a.y - t.y}" r="4" fill="${farbe}" stroke="none" opacity=".5"/>`).join('') : '') +
                 (opt.nummern ? anschluesseVon(t).map(a => `<text x="${a.x - t.x + 6}" y="${a.y - t.y - 4}" font-size="9" fill="${farbe}" ` +
@@ -72941,6 +73017,7 @@ const Planflaeche = (() => {
                     break;
             }
         };
+        let zuletztGemalt = {};
         const buehneMalen = () => {
             const e = z.ergebnis;
             const opt = {
@@ -72954,6 +73031,31 @@ const Planflaeche = (() => {
                     netzStrom: e.netzStrom, leitungNetz: e.leitungNetz,
                     werte: e.werte, teilwerte: e.teilwerte, maxStrom: e.maxStrom
                 };
+            if (z.simulation) {
+                const jetzt = Object.assign({}, z.stellungen, e && e.stellungen ? e.stellungen : {});
+                const umgelegt = new Set();
+                z.plan.teile.forEach(t => {
+                    const id = String(t.id);
+                    if ((jetzt[id] || 0) !== (zuletztGemalt[id] || 0))
+                        umgelegt.add(id);
+                });
+                opt.stellungen = jetzt;
+                const namen = {};
+                z.plan.teile.forEach(t => {
+                    const { st } = schaltart(t.zeichen);
+                    if (st.length < 2)
+                        return;
+                    const s = st[Math.max(0, Math.min(st.length - 1, jetzt[t.id] || 0))];
+                    if (s && s.name)
+                        namen[t.id] = s.name;
+                });
+                opt.stellungsnamen = namen;
+                if (umgelegt.size)
+                    opt.umgelegt = umgelegt;
+                zuletztGemalt = jetzt;
+            }
+            else
+                zuletztGemalt = {};
             leinwand.innerHTML = Schaltplan.alsSvg(z.plan, opt);
             tischLegen();
             ansichtAnwenden();
@@ -73480,6 +73582,23 @@ const Planflaeche = (() => {
             }
             if (g)
                 g.innerHTML = html;
+        };
+        const klemmeUnterZeiger = (svg, roh, art) => {
+            const m = svg.getScreenCTM();
+            const massstab = m ? Math.hypot(m.a, m.b) : 1;
+            const radius = Math.min(14, Math.max(2, (art === 'touch' ? 10 : 7) / (massstab > 0 ? massstab : 1)));
+            const f = Schaltplan.fangeAnschluss(z.plan, roh, radius);
+            return f && f.teil ? { x: f.x, y: f.y, teil: String(f.teil), nr: String(f.nr ?? '') } : null;
+        };
+        let klemmeGezeigt = '';
+        const klemmeHinweis = (k) => {
+            const schluessel = k ? k.x + ',' + k.y : '';
+            if (schluessel === klemmeGezeigt && (!k || svgJetzt()?.querySelector('.sp-klemme-ring')))
+                return;
+            klemmeGezeigt = schluessel;
+            buehne.classList.toggle('sp-klemme-nah', !!k);
+            vorschau(k ? `<circle class="sp-klemme-ring" cx="${k.x}" cy="${k.y}" r="7" fill="none" ` +
+                `stroke="currentColor" stroke-width="2" opacity=".8"><title>Leitung ziehen</title></circle>` : '');
         };
         const setzeSymbol = (id, x, y) => {
             if (!id || z.simulation || z.zieht || !Register.fachzeichen.holen(id))
@@ -74479,6 +74598,16 @@ const Planflaeche = (() => {
                 svg.setPointerCapture(e.pointerId);
                 return;
             }
+            if (!z.gewaehltesZeichen && !e.shiftKey) {
+                const klemme = klemmeUnterZeiger(svg, roh, e.pointerType);
+                if (klemme) {
+                    klemmeHinweis(null);
+                    zugBeginnen({ art: 'leitung', zeiger: e.pointerId, startX: klemme.x, startY: klemme.y, ausgang: new Map(),
+                        von: { x: klemme.x, y: klemme.y, teil: klemme.teil, nr: klemme.nr } });
+                    svg.setPointerCapture(e.pointerId);
+                    return;
+                }
+            }
             const g = teilAm(ziel);
             if (!g || !g.dataset.id) {
                 if (z.gewaehltesZeichen) {
@@ -74560,6 +74689,13 @@ const Planflaeche = (() => {
                     platzGeistZeigen(z.gewaehltesZeichen, e.clientX, e.clientY);
                 else if (!platzZug)
                     geistEntfernen();
+                if (!platzZug && e.pointerType !== 'touch' && !e.buttons && !z.simulation
+                    && z.werkzeug === 'zeigen' && !z.gewaehltesZeichen) {
+                    const svg = svgJetzt();
+                    klemmeHinweis(svg ? klemmeUnterZeiger(svg, ortAus(svg, e, z.plan, true), e.pointerType) : null);
+                }
+                else
+                    klemmeHinweis(null);
                 return;
             }
             if (e.pointerId !== z.zieht.zeiger)
@@ -85050,6 +85186,35 @@ const ChronikDaten = {
             },
             "groesstesProblem": "Der Auftrag lässt sich in einem Bogen nicht erfüllen; die offene Liste steht deshalb als L259 da.",
             "interessantesteAnfrage": "Besser als drei Fachprogramme zugleich.",
+            "massnahmen": []
+        },
+        {
+            "datum": "2026-11-15",
+            "wochentag": "Sonntag",
+            "titel": "Der Schalter zeigt, wie er steht",
+            "wasIchWeiss": "Pull Request #208 (Zweig claude/redion2-gesamt) war offen: Schaltplan neu (E775–E780) und Redion 2 Bogen 1. Vorher hatte ich für Redurs Vertiefungsarbeit eine Offline-Simulation gebaut, in der ein Klick die Klinge eines Schalters umlegt.",
+            "nachrichten": [
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "schjuau mal die github repo und ich will das du die schalterzeichnen verbessers also wenn ich eine schalter klicke sollte sich ändern wie du mir die htmml gemacht hast und verbessere alles damit ich schneller zeichne können und pusche alles auf pr 208",
+                    "woher": "Aktueller Dialog",
+                    "gemeint": "In der Simulation soll ein Schalter beim Klicken sein Bild ändern wie in der VA-Simulation; das Zeichnen von Plänen soll schneller gehen; alles auf den Zweig von PR 208.",
+                    "besser": "„Schalter zeigen ihre Stellung beim Klicken; Leitungen ohne Werkzeugwechsel; auf PR 208.“",
+                    "besserePrompt": "Was dauert dir beim Zeichnen am längsten? Zeig es an einem Plan."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "Zweig claude/redion2-gesamt (PR #208): E787 (Klinge je Stellung im Register, Ergebnis.stellungen), E788 (Leitung aus der Klemme), test641 — gegen den Stand davor rot mit 12 von 15."
+                }
+            ],
+            "zahlen": {
+                "commits": 1,
+                "entscheidungen": 2,
+                "neuePruefungen": 1
+            },
+            "groesstesProblem": "Die Norm zeigt die Ruhelage, die Simulation braucht die Stellung: gelöst, indem die Stellung nur in der Simulation gezeichnet wird.",
+            "interessantesteAnfrage": "Ein Schalter, der aussieht wie in der eigenen VA-Simulation.",
             "massnahmen": []
         }
     ],

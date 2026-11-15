@@ -797,6 +797,7 @@ const Planflaeche = (() => {
                     break;
             }
         };
+        let zuletztGemalt = {};
         const buehneMalen = () => {
             const e = z.ergebnis;
             const opt = {
@@ -810,6 +811,31 @@ const Planflaeche = (() => {
                     netzStrom: e.netzStrom, leitungNetz: e.leitungNetz,
                     werte: e.werte, teilwerte: e.teilwerte, maxStrom: e.maxStrom
                 };
+            if (z.simulation) {
+                const jetzt = Object.assign({}, z.stellungen, e && e.stellungen ? e.stellungen : {});
+                const umgelegt = new Set();
+                z.plan.teile.forEach(t => {
+                    const id = String(t.id);
+                    if ((jetzt[id] || 0) !== (zuletztGemalt[id] || 0))
+                        umgelegt.add(id);
+                });
+                opt.stellungen = jetzt;
+                const namen = {};
+                z.plan.teile.forEach(t => {
+                    const { st } = schaltart(t.zeichen);
+                    if (st.length < 2)
+                        return;
+                    const s = st[Math.max(0, Math.min(st.length - 1, jetzt[t.id] || 0))];
+                    if (s && s.name)
+                        namen[t.id] = s.name;
+                });
+                opt.stellungsnamen = namen;
+                if (umgelegt.size)
+                    opt.umgelegt = umgelegt;
+                zuletztGemalt = jetzt;
+            }
+            else
+                zuletztGemalt = {};
             leinwand.innerHTML = Schaltplan.alsSvg(z.plan, opt);
             tischLegen();
             ansichtAnwenden();
@@ -1336,6 +1362,23 @@ const Planflaeche = (() => {
             }
             if (g)
                 g.innerHTML = html;
+        };
+        const klemmeUnterZeiger = (svg, roh, art) => {
+            const m = svg.getScreenCTM();
+            const massstab = m ? Math.hypot(m.a, m.b) : 1;
+            const radius = Math.min(14, Math.max(2, (art === 'touch' ? 10 : 7) / (massstab > 0 ? massstab : 1)));
+            const f = Schaltplan.fangeAnschluss(z.plan, roh, radius);
+            return f && f.teil ? { x: f.x, y: f.y, teil: String(f.teil), nr: String(f.nr ?? '') } : null;
+        };
+        let klemmeGezeigt = '';
+        const klemmeHinweis = (k) => {
+            const schluessel = k ? k.x + ',' + k.y : '';
+            if (schluessel === klemmeGezeigt && (!k || svgJetzt()?.querySelector('.sp-klemme-ring')))
+                return;
+            klemmeGezeigt = schluessel;
+            buehne.classList.toggle('sp-klemme-nah', !!k);
+            vorschau(k ? `<circle class="sp-klemme-ring" cx="${k.x}" cy="${k.y}" r="7" fill="none" ` +
+                `stroke="currentColor" stroke-width="2" opacity=".8"><title>Leitung ziehen</title></circle>` : '');
         };
         const setzeSymbol = (id, x, y) => {
             if (!id || z.simulation || z.zieht || !Register.fachzeichen.holen(id))
@@ -2335,6 +2378,16 @@ const Planflaeche = (() => {
                 svg.setPointerCapture(e.pointerId);
                 return;
             }
+            if (!z.gewaehltesZeichen && !e.shiftKey) {
+                const klemme = klemmeUnterZeiger(svg, roh, e.pointerType);
+                if (klemme) {
+                    klemmeHinweis(null);
+                    zugBeginnen({ art: 'leitung', zeiger: e.pointerId, startX: klemme.x, startY: klemme.y, ausgang: new Map(),
+                        von: { x: klemme.x, y: klemme.y, teil: klemme.teil, nr: klemme.nr } });
+                    svg.setPointerCapture(e.pointerId);
+                    return;
+                }
+            }
             const g = teilAm(ziel);
             if (!g || !g.dataset.id) {
                 if (z.gewaehltesZeichen) {
@@ -2416,6 +2469,13 @@ const Planflaeche = (() => {
                     platzGeistZeigen(z.gewaehltesZeichen, e.clientX, e.clientY);
                 else if (!platzZug)
                     geistEntfernen();
+                if (!platzZug && e.pointerType !== 'touch' && !e.buttons && !z.simulation
+                    && z.werkzeug === 'zeigen' && !z.gewaehltesZeichen) {
+                    const svg = svgJetzt();
+                    klemmeHinweis(svg ? klemmeUnterZeiger(svg, ortAus(svg, e, z.plan, true), e.pointerType) : null);
+                }
+                else
+                    klemmeHinweis(null);
                 return;
             }
             if (e.pointerId !== z.zieht.zeiger)

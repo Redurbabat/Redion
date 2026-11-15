@@ -949,13 +949,17 @@ const Stromfluss = (() => {
     verbindungen: Array<[number, number]>;
     /** Was am Anschluss falsch ist. Leer heisst: nichts gefunden. */
     anschlussfehler: Anschlussfehler[];
+    /** Die Stellung, in der gerechnet wurde (E787): die Hand des Menschen
+        und dazu jeder Kontakt, den eine Spule bewegt hat. Das Bild legt
+        danach die Klinge um — es rechnet sie nicht selbst nach. */
+    stellungen: Record<string, number>;
   };
 
   const leer = (fehler: string, warnungen: string[] = []): Ergebnis => ({
     ok: false, fehler, spannung: [], spannungWinkel: [], wechsel: false, komplex: false,
     werte: {}, teilwerte: {}, stromNetze: [], netzStrom: [],
     spulen: {}, annahmen: [], warnungen, durchgaenge: 0, leitungNetz: {}, maxStrom: 0,
-    verbindungen: [], anschlussfehler: []
+    verbindungen: [], anschlussfehler: [], stellungen: {}
   });
 
   /**
@@ -1491,7 +1495,8 @@ const Stromfluss = (() => {
       verbindungen: eintraege
         .filter(e => !(e.art === 'U' && e.wert !== 0))
         .map(e => [e.a, e.b] as [number, number]),
-      anschlussfehler: []
+      anschlussfehler: [],
+      stellungen: Object.assign({}, stellung)
     };
   };
 
@@ -1554,6 +1559,7 @@ const Stromfluss = (() => {
      * beim Fehler, der wirklich passiert ist.
      */
     const mitFehlern = (e: Ergebnis): Ergebnis => {
+      e.stellungen = Object.assign({}, stand);
       e.anschlussfehler = anschlussfehler(plan, netzInfo, e);
       /* Auch in die Warnungen, damit alles, was heute schon Warnungen
          anzeigt, den Fund ohne Änderung mitbekommt. */

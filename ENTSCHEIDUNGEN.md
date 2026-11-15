@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-763 Entscheidungen, E1 bis E786 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+765 Entscheidungen, E1 bis E788 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -848,6 +848,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E784** — Ein Ding wird einmal markiert (9. November 2026): die Auswahl in der Kante ist eine neutrale Fläche mit stärkerer Schrift, ohne Balken und violette Schrift; Karten tragen Haarlinie statt Rahmen; ☆ und ⋯ der Bibliothekskarten erscheinen am Rechner bei Zeiger oder Fokus
 * **E785** — Die 44 px im Kopf bleiben (9. November 2026): der Plan wollte 28-px-Kopfknöpfe wie macOS; §37 ist hart und `test603` §7 hält 44 × 44 — gebaut ist 44 + 44 statt 60 + 55, die Ruhe kommt aus Fläche und Schrift. Offene Frage an Redur
 * **E786** — Das Lernzentrum spricht mit dem Nutzer, nicht mit dem Entwickler (9. November 2026): „SM-2 bleibt der fachliche Plan. Es gibt keine stille Migration." wird „Zuerst die Fehler, dann was fällig ist, dann Neues."; das doppelte „Präsentieren" im ⋯ bleibt (zwei Griffe, `test580`)
+* **E787** — Die Klinge liegt, wie der Schalter steht (15. November 2026, Redur: „wenn ich eine schalter klicke sollte sich ändern"): in der Simulation zeichnet jeder Schalter und jeder Kontakt seine Stellung — die Klinge zu, ab oder auf dem geschlossenen Weg, der Name der Stellung darunter, in der Farbe des Stroms, wenn er führt; die Bilder stehen im Register (`STELLUNGSBILD`), die Stellung kommt aus `Stromfluss.rechne` (`Ergebnis.stellungen`), ausserhalb der Simulation zeichnet jedes Zeichen wie vorher
+* **E788** — Leitung aus der Klemme (15. November 2026, Redur: „verbessere alles damit ich schneller zeichne können"): im Zeigen-Werkzeug zieht ein Ansatz genau auf einer Klemme (7 px, Finger 10) eine Leitung, ohne Werkzeugwechsel; am Körper gefasst wandert das Teil wie bisher; Ring und Fadenkreuz zeigen die Klemme vorher
 
 ## E775 — Ein unbekanntes Bauteil bleibt sichtbar
 
@@ -1081,6 +1083,77 @@ Ob einer davon gehen darf, entscheidet Redur.
 Ortstitel hat.
 
 **Kosten.** Keine.
+
+## E787 — Die Klinge liegt, wie der Schalter steht
+
+**Redur, 15. November 2026:** „ich will das du die schalterzeichnen
+verbessers also wenn ich eine schalter klicke sollte sich ändern wie du mir
+die htmml gemacht hast".
+
+**Entschieden.** Bis hierher stand jeder Schalter in der Simulation in seiner
+Ruhelage. Ein geschlossener Ausschalter sah aus wie ein offener, ein
+Wechselschalter zeigte immer auf 1, und das einzige Zeichen der Stellung war
+der laufende Strich auf der Leitung — und der fehlt, wenn kein Strom fliesst.
+
+Jetzt zeichnet jedes der 18 schaltbaren Zeichen (Handschalter, Taster,
+Schweizer Schemas 0/1/2/3/6, Kontakte und Schützkontakte) seine Stellung:
+
+- **Wo die Klinge liegt, steht im Register** (`Register.fachzeichen`,
+  `STELLUNGSBILD`): Stellung → Index in `pfad` → neuer Pfad. Das Bild gehört
+  zum Zeichen, nicht zur Fläche (§8); die Reihenfolge der Stellungen ist die
+  aus `Stromfluss` (simulation.ts), und `test641` §1 hält beide Listen gleich
+  lang.
+- **Welche Stellung gilt, rechnet die Simulation**, nicht das Bild:
+  `Ergebnis.stellungen` ist der Stand, in dem gerechnet wurde — die Hand des
+  Menschen und jeder Kontakt, den eine Spule bewegt hat. Auch eine
+  gescheiterte Rechnung (Kurzschluss) trägt ihn, damit man die Stellung
+  sieht, die den Fehler auslöst.
+- **Darunter steht der Name der Stellung** („geschlossen", „3–2",
+  „gekreuzt") — in Worten, nicht nur über die Lage der Klinge (§38). Führt der
+  Schalter Strom, trägt die Klinge die Farbe des Stroms, zusätzlich zur Form.
+- **Beim Umlegen zieht sich die Klinge nach** (160 ms, nur
+  `stroke-dashoffset`), nur am umgelegten Teil; bei weniger Bewegung steht sie
+  sofort.
+- **Ausserhalb der Simulation zeichnet jedes Zeichen genau wie vorher.** Die
+  Norm zeigt die Ruhelage (E128). Wo das Normzeichen keine Stellung zeigt
+  (Serien-, Gruppen-, Kreuzschalter: beide Klingen zu, das Kreuz), gilt das
+  Bild in der Simulation auch für Stellung 0 — sonst sähe „aus" aus wie
+  „beide". Der Kreuzschalter „gerade" verbindet 1–2 und 3–4; er wird als zwei
+  Bögen gezeichnet, nicht als zwei senkrechte Striche, die 1–3 und 2–4
+  behaupten würden.
+
+**Alternative.** Die Gruppe nur einfärben (an/aus) — das sagt nicht, WOHIN ein
+Wechselschalter steht, und es wäre Information nur über Farbe (§38). Oder die
+Klinge in der Fläche berechnen statt im Register — dann stünde die Geometrie
+eines Zeichens an zwei Stellen.
+
+**Kosten.** Ein neues Feld im Ergebnis der Simulation (nur gelesen, nirgends
+gespeichert — keine Daten, keine Migration). Ein Register-Eintrag je neuem
+schaltbarem Zeichen; fehlt er, zeichnet das Zeichen wie bisher.
+
+## E788 — Leitung aus der Klemme
+
+**Redur, 15. November 2026:** „verbessere alles damit ich schneller zeichne
+können".
+
+**Entschieden.** Eine Leitung verlangte bisher drei Handgriffe: „Leitung"
+wählen (2), ziehen, zurück auf „Zeigen" (1). Jetzt zieht im Zeigen-Werkzeug
+ein Ansatz GENAU auf einer Klemme eine Leitung — derselbe Zug wie im
+Leitungswerkzeug (`leitungFuehren`, Fang am Ziel), und das Werkzeug bleibt
+„Zeigen". Liegt der Zeiger auf einer Klemme, zeigen ein Ring und das
+Fadenkreuz, dass hier eine Leitung beginnt.
+
+Der Griff ist mit 7 px (Finger 10) bewusst enger als der Fang beim
+Leitungzeichnen (12 / 24 px): wer ein Teil am Körper fasst, verschiebt es
+weiter. Mit Umschalt (Auswahl erweitern) oder einem gewählten Bauteil gilt
+er nicht. `test641` §5 zieht von Klemme zu Klemme und am Körper.
+
+**Alternative.** Ein eigenes Kürzel für „Leitung von hier" — wieder ein
+Handgriff mehr; oder den vollen Fangradius — dann wird jedes kleine Teil
+beim Verschieben zur Leitung.
+
+**Kosten.** Wer ein Teil genau an seiner Klemme packt, zieht jetzt eine
+Leitung statt es zu verschieben; Verschieben geht am Körper.
 
 ## Grundregel
 

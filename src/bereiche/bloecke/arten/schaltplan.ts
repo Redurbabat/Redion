@@ -1356,6 +1356,20 @@ const Schaltplan = (() => {
     auswahl?: Set<string>; nurEbenen?: string[];
     /** Ist gesetzt, wenn die Simulation läuft. */
     strom?: Strombild;
+    /**
+     * Die Schalterstellungen der laufenden Simulation (E787): Teil-Kennung →
+     * Nummer der Stellung, wie `Stromfluss.rechne` sie zuletzt benutzt hat.
+     * Ist sie gesetzt, liegt die Klinge jedes Schalters so, wie er steht, und
+     * darunter steht der Name der Stellung. Ohne sie zeichnet jedes Zeichen
+     * seine Ruhelage — wie vorher.
+     */
+    stellungen?: Record<string, number>;
+    /** Der Name der Stellung je Teil („geschlossen", „3–2"), von der Fläche
+        aus der Simulation gelesen — der Plan fragt die Simulation nicht
+        selbst (§5 Regel 1, `test537`). */
+    stellungsnamen?: Record<string, string>;
+    /** Diese Teile wurden eben umgelegt: ihre Klinge zieht sich nach (E787). */
+    umgelegt?: Set<string>;
     /** Messwerte als Text an die Bauteile schreiben. */
     messwerte?: boolean;
     /**
@@ -1508,9 +1522,15 @@ const Schaltplan = (() => {
     plan.teile.forEach(t => {
       if (!sichtbar(t.ebene)) return;
       const farbe = farbeVon(t.ebene);
+      /* E787: in der Simulation liegt die Klinge so, wie der Schalter steht. */
+      const mitStellung = !!opt.stellungen && typeof Register !== 'undefined' && Register.fachzeichen
+        && typeof Register.fachzeichen.hatStellungsbild === 'function'
+        && Register.fachzeichen.hatStellungsbild(t.zeichen);
+      const stellungNr = mitStellung ? Number(opt.stellungen![t.id]) || 0 : 0;
       const svg = (typeof Register !== 'undefined' && Register.fachzeichen)
-        ? Register.fachzeichen.alsSvg(t.zeichen, {
-            farbe, drehung: t.drehung, gespiegelt: t.gespiegelt })
+        ? Register.fachzeichen.alsSvg(t.zeichen, mitStellung
+            ? { farbe, drehung: t.drehung, gespiegelt: t.gespiegelt, stellung: stellungNr }
+            : { farbe, drehung: t.drehung, gespiegelt: t.gespiegelt })
         : '';
       /* EIN UNBEKANNTES ZEICHEN BLEIBT SICHTBAR (E775, §18 [hart]).
          Bis hierher stand hier `if (!svg) return;` — ein Teil, dessen
@@ -1673,17 +1693,25 @@ const Schaltplan = (() => {
         }
       }
 
+      /* Der Name der Stellung unter dem Schalter (E787) — in Worten, nicht
+         nur in der Lage der Klinge (§38: nie nur über die Form allein). */
+      let stellungText = '';
+      const stellungName = mitStellung && opt.stellungsnamen ? opt.stellungsnamen[t.id] || '' : '';
+      if (stellungName) stellungText = `<text class="sp-stellung" x="${mass.w / 2}" y="${mass.h + 14}" ` +
+        `text-anchor="middle" font-size="10" stroke="none" fill="${farbe}">${esc(stellungName)}</text>`;
       teile.push(
         `<g class="sp-teil${unbekannt ? ' sp-unbekannt' : ''}${gewaehlt ? ' sp-gewaehlt' : ''}` +
+        `${mitStellung ? ' sp-stellbar' : ''}${opt.umgelegt && opt.umgelegt.has(t.id) ? ' sp-umgelegt' : ''}` +
         `${w && w.fliesst ? ' sp-fuehrt' : ''}` +
         `${opt.hervor === t.id ? ' sp-gesucht' : ''}" data-id="${esc(t.id)}" ` +
+        (mitStellung ? `data-stellung="${stellungNr}" ` : '') +
         `transform="translate(${t.x} ${t.y})" fill="none" stroke="${farbe}" ` +
         `stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
         /* Eine unsichtbare Fläche, damit auch die Lücken im Symbol greifbar
            sind — ein Kontakt besteht fast nur aus Linien, und Linien trifft
            man mit dem Finger nicht. */
         `<rect x="-4" y="-4" width="${mass.w + 8}" height="${mass.h + 8}" ` +
-        `fill="transparent" stroke="none"/>` + schein + innen + anzeige + pfeil +
+        `fill="transparent" stroke="none"/>` + schein + innen + anzeige + stellungText + pfeil +
         (opt.anschluesse ? anschluesseVon(t).map(a =>
           `<circle class="sp-punkt" data-teil="${esc(t.id)}" data-nr="${esc(a.nr)}" ` +
           `cx="${a.x - t.x}" cy="${a.y - t.y}" r="4" fill="${farbe}" stroke="none" opacity=".5"/>`).join('') : '') +
