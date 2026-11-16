@@ -98,8 +98,8 @@ Bilder, Videos und Messungen liegen ignoriert unter `bilder/windows-ink/`.
 - Automatischer Electron-Dauerlauf: 1.800.215 ms, 3.315 abgeschlossene
   Schreibzüge mit Rückgängig, keine Abbrüche. Verborgenes Testfenster,
   synthetische Mausereignisse, keine Messung menschlicher Stifteingabe.
-- Strichvorschau im Windows-Funktionslauf: 86 gemessene Bild-Callbacks,
-  95. Perzentil 0,4 ms, Maximum 0,6 ms. Szene: Wechselschaltung mit Maus-
+- Strichvorschau im abschliessenden Windows-Funktionslauf: 88 gemessene
+  Bild-Callbacks, 95. Perzentil 0,5 ms, Maximum 2,2 ms. Szene: Wechselschaltung mit Maus-
   und emulierten Stiftstrichen; die vorhandene PDF-Stiftprüfung deckt
   zusätzlich ihre Szene mit 200 Marken ab.
 - Bestandsfehler: 332, 362, 401, 402, 541, 576, 581, 584 und 623 sind
@@ -110,7 +110,13 @@ Bilder, Videos und Messungen liegen ignoriert unter `bilder/windows-ink/`.
   neue, undefinierte Schriftgrössentoken wurde entfernt; die Tokenprüfung
   meldet danach ausschliesslich die beiden bestehenden Farbtoken.
 - Gemeinsamer Neigungskanal: bestehender PDF-Lauf 475 mit 22/22 grün.
-- Paketbau: Abschlusswerte werden nach dem Lauf ergänzt.
+- Lokaler x64-Paketbau aus `b052c8153` erfolgreich: `Redion Setup 2026.8.4.exe`
+  (126.469.521 Bytes) und `Redion 2026.8.4.exe` (Portable, 114.775.687 Bytes)
+  unter `build/windows-ink-dist/`. Die 497 Webdateien der gepackten App sind
+  bytegleich mit dem geprüften Quellstand. Beide Pakete sind **unsigniert**;
+  der Bau lief ausdrücklich mit `--publish never`. SHA-256-Werte und
+  Quellcommit stehen im lokalen `windows-ink-build.json` daneben.
+- Kurzes synthetisches Bedienvideo: `bilder/windows-ink/bedienung.mp4`.
 - **NICHT GETESTET:** physischer Windows-Stift und Handballen, echtes iPhone,
   Installation/Update einer bestehenden Nutzerinstallation, Codesignierung
   und veröffentlichter Updatekanal. Die Vorschau veröffentlicht nichts.
