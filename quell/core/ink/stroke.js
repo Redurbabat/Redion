@@ -343,7 +343,44 @@ const InkStroke = (() => {
             return zeit ? r2(weg / zeit) : 0;
         };
     };
-    return { Feder, glaetter, druckGlaetter, vorhersage, deckeln, bremse, tempoFaktor, tempoMesser,
+    const samples = (event) => {
+        const list = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
+        const last = list[list.length - 1];
+        return !last || last.clientX !== event.clientX || last.clientY !== event.clientY ||
+            last.timeStamp !== event.timeStamp || last.pressure !== event.pressure ? [...list, event] : list;
+    };
+    const inkColor = (value) => typeof value === 'string' && /^#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})$/i.test(value) ? value : '#529cca';
+    const tiltOf = (event) => {
+        if (event.pointerType !== 'pen')
+            return -1;
+        const tx = Number(event.tiltX) || 0, ty = Number(event.tiltY) || 0;
+        if (!tx && !ty)
+            return -1;
+        const radians = Math.PI / 180;
+        const angle = Math.atan(Math.hypot(Math.tan(tx * radians), Math.tan(ty * radians))) / radians;
+        return Math.round(Math.max(0, Math.min(1, angle / 90)) * 100) / 100;
+    };
+    const readAnnotation = (raw) => {
+        if (!raw || typeof raw !== 'object')
+            return null;
+        const r = raw;
+        if (typeof r.id !== 'string' || !r.id || !Array.isArray(r.pts) || !r.pts.length ||
+            r.pts.some(p => !Array.isArray(p) || p.length !== 2 || !p.every(v => typeof v === 'number' && Number.isFinite(v))))
+            return null;
+        const pts = r.pts.map(p => [p[0], p[1]]);
+        const mark = { id: r.id, art: 'stift', pts, farbe: inkColor(r.farbe),
+            breite: typeof r.breite === 'number' && Number.isFinite(r.breite) ? Math.max(.3, Math.min(24, r.breite)) : 2.4,
+            ebene: typeof r.ebene === 'string' ? r.ebene : 'plan' };
+        for (const key of ['pressure', 'neigung']) {
+            const values = r[key];
+            if (Array.isArray(values) && values.length === pts.length && values.every(v => typeof v === 'number' && Number.isFinite(v)))
+                mark[key] = values.map(v => key === 'pressure' ? Math.max(0, Math.min(1, v)) : v);
+        }
+        return mark;
+    };
+    const inkHalfWidth = (mark, pressure = .5) => Math.max(.15, mark.breite * (.35 + Math.max(0, Math.min(1, pressure)) * .9) / 2);
+    return { samples, tiltOf, inkColor, readAnnotation, inkHalfWidth,
+        Feder, glaetter, druckGlaetter, vorhersage, deckeln, bremse, tempoFaktor, tempoMesser,
         ALPHA_LANGSAM, ALPHA_SCHNELL, TEMPO_VOLL,
         VORHER_MS, VORHER_PX, KEHRE, TEMPO_AB, TEMPO_BIS, TEMPO_FENSTER };
 })();

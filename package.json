@@ -15,7 +15,9 @@
     "veroeffentlichen": "npx wrangler deploy",
     "sync:check": "node tools/sync-readiness.mjs",
     "test:sync-readiness": "node --test tools/sync-readiness.test.mjs",
-    "version:pruefen": "node --test windows/version.test.mts"
+    "version:pruefen": "node --test windows/version.test.mts",
+    "test:ink": "node --test pruefungen/windows-ink-model.mts",
+    "test:windows-ink": "npm --prefix windows run prepare:app && node pruefungen/windows-ink-studio.mts"
   },
   "keywords": [
     "notizen",

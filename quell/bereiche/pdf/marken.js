@@ -1574,13 +1574,8 @@ const Marken = (() => {
         const neigungAus = (event) => {
             if (event.pointerType !== 'pen')
                 return -1;
-            const tx = Number(event.tiltX) || 0;
-            const ty = Number(event.tiltY) || 0;
-            if (!tx && !ty)
-                return -1;
-            const r = Math.PI / 180;
-            const w = Math.atan(Math.hypot(Math.tan(tx * r), Math.tan(ty * r))) / r;
-            return Math.round(Math.max(0, Math.min(1, w / 90)) * 100) / 100;
+            const { tiltX, tiltY, pointerType } = event;
+            return InkStroke.tiltOf({ tiltX, tiltY, pointerType });
         };
         const pressureOf = (event) => {
             const pressure = Number(event.pressure);
@@ -3067,8 +3062,7 @@ const Marken = (() => {
             if (!radierStrich && !selectDrag && running
                 && (running.art === 'stift' || running.art === 'marker')) {
                 const um = R.umrechner(flaeche);
-                const coalesced = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
-                (coalesced.length ? coalesced : [event]).forEach(e => addSample(e, um));
+                InkStroke.samples(event).forEach(e => addSample(e, um));
                 nassenSchwanz(event, um);
                 bildAnfordern();
                 return;

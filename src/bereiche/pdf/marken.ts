@@ -2616,15 +2616,8 @@ const Marken = (() => {
      */
     const neigungAus = (event: PointerEvent): number => {
       if (event.pointerType !== 'pen') return -1;
-      const tx = Number((event as any).tiltX) || 0;
-      const ty = Number((event as any).tiltY) || 0;
-      if (!tx && !ty) return -1;
-      /* Der Winkel gegen die Senkrechte aus beiden Achsen. `tan` addiert
-         sich in der Ebene, nicht die Winkel selbst — deshalb über den
-         Tangens und nicht über `hypot(tx, ty)`. */
-      const r = Math.PI / 180;
-      const w = Math.atan(Math.hypot(Math.tan(tx * r), Math.tan(ty * r))) / r;
-      return Math.round(Math.max(0, Math.min(1, w / 90)) * 100) / 100;
+      const { tiltX, tiltY, pointerType } = event;
+      return InkStroke.tiltOf({ tiltX, tiltY, pointerType });
     };
 
     const pressureOf = (event: PointerEvent): number => {
@@ -4520,8 +4513,7 @@ const Marken = (() => {
       if (!radierStrich && !selectDrag && running
           && (running.art === 'stift' || running.art === 'marker')) {
         const um = R.umrechner(flaeche);
-        const coalesced = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
-        (coalesced.length ? coalesced : [event]).forEach(e => addSample(e, um));
+        InkStroke.samples(event).forEach(e => addSample(e, um));
         nassenSchwanz(event, um);
         bildAnfordern();
         return;

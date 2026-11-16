@@ -5,6 +5,23 @@ Dieses Dokument hält **ab jetzt jede neue Redion-Version** mit Versionsnummer, 
 ## 2026.8.4 – 31. Oktober 2026
 **Status:** In Entwicklung (noch nicht als Installer veröffentlicht)
 
+**Windows-Stiftvorschau · 16. November 2026 (E790)**
+- Im Schaltplan mit **6 → Stift** frei schreiben, auch bei laufender
+  Simulation. Farbe und Breite stehen direkt über der Fläche. **Tinte
+  radieren** entfernt ausschliesslich Annotationen. **1 → Auswahl**
+  verschiebt sie; Strg+Z/Strg+Y nimmt sie zurück und wiederholt sie.
+- Freihand reist mit SVG, Druck und `.redion` mit. Alte Pläne bleiben
+  lesbar; ältere App-Versionen können neue Freihand beim Speichern
+  verlieren. Details: `doku/WINDOWS-INK-STUDIO.md`.
+- Gemeinsame Stiftpunkte berücksichtigen die letzte Treibermeldung.
+  Zeichenflächen berechnen eine Bildschirmmatrix je Meldung und hören das
+  Absetzen auch ausserhalb der Fläche.
+- Das optionale Glass Wheel erhält gläserne Werkzeuge und klappt sein
+  Bereichsrad beim Aktivieren in einem Dokument ein. Klassisch bleibt Standard.
+- Lokale Vorschau, keine veröffentlichte oder signierte Version. Die neue
+  Weboberfläche benötigt im installierten Paket eine neu gebaute EXE oder
+  den bestehenden ausdrücklich verbundenen lokalen Entwicklungsordner.
+
 **Neu**
 - Die normale Redion-Windows-App kann über **Entwicklung → Lokalen Redion-Ordner verbinden …** einmalig einen vertrauenswürdigen, auf dem PC gespeicherten GitHub-Projektordner auswählen.
 - Sobald GitHub Desktop neue **fertige Webdateien** in diesem Ordner speichert, erstellt Redion automatisch eine isolierte, vollständige Momentaufnahme und aktualisiert die laufende Oberfläche. Kein manueller Neubau und kein erneutes Installieren der EXE bei reinen Webänderungen.

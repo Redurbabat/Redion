@@ -547,8 +547,8 @@ const Zusatz = (() => {
     /* DER STIFT DER TAFEL SCHREIBT WIE DER DES BLATTS (E704): alle
        gesammelten Ereignisse, `InkStroke.glaetter`, zwei Stellen, ein Bild je
        Bild nur für den wachsenden Strich, beim Absetzen RDP. */
-    const punktFein = (e: any): [number, number] => {
-      const ueberMatrix = (typeof SheetSpace !== 'undefined' && SheetSpace.umrechner)
+    const punktFein = (e: any, convert?: (event: any) => [number, number] | null): [number, number] => {
+      const ueberMatrix = convert ? convert(e) : (typeof SheetSpace !== 'undefined' && SheetSpace.umrechner)
         ? SheetSpace.umrechner(flaeche as SVGSVGElement)(e) : null;
       const r2 = (v: number): number => Math.round(v * 100) / 100;
       if (ueberMatrix) return [r2(ueberMatrix[0]), r2(ueberMatrix[1])];
@@ -559,6 +559,8 @@ const Zusatz = (() => {
     let stiftDruck: ((p: number) => number) | null = null;
     let stiftZeit = 0;
     let stiftBildGeplant = false;
+    let stiftZeiger: number | null = null;
+    let stiftArt = '';
     /** Nur den wachsenden Strich neu setzen — einmal je Bild. */
     const stiftNachziehen = (): void => {
       stiftBildGeplant = false;
@@ -651,6 +653,10 @@ const Zusatz = (() => {
     });
 
     flaeche.addEventListener('pointerdown', (e: any) => {
+      if (stiftZeiger !== null) {
+        if (stiftArt === 'pen' && e.pointerType === 'touch') { e.preventDefault(); return; }
+        fertig();
+      }
       w.focus({ preventScroll: true });
       flaeche.setPointerCapture(e.pointerId);
       finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -770,10 +776,17 @@ const Zusatz = (() => {
         aktiv.pressure = [Math.round(e.pressure * 1000) / 1000];
       }
       stiftZeit = Number(e.timeStamp) || 0;
+      if (werkzeug === 'stift') {
+        stiftZeiger = e.pointerId; stiftArt = e.pointerType;
+        window.addEventListener('pointerup', fertig, true);
+        window.addEventListener('pointercancel', fertig, true);
+        window.addEventListener('blur', stiftAbsetzen);
+      }
       daten.push(aktiv);
     });
 
     flaeche.addEventListener('pointermove', (e: any) => {
+      if (stiftZeiger !== null && e.pointerId !== stiftZeiger) return;
       if (finger.has(e.pointerId)) finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (kneifen && finger.size >= 2) {
         const zwei = [...finger.values()];
@@ -814,9 +827,9 @@ const Zusatz = (() => {
       if (!aktiv) return;
       if (aktiv.art === 'stift') {
         /* ALLE gesammelten Ereignisse, nicht nur das letzte (E704). */
-        const gesammelt = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : [];
-        for (const ereignis of (gesammelt.length ? gesammelt : [e])) {
-          const roh = punktFein(ereignis);
+        const convert = SheetSpace.umrechner(flaeche as SVGSVGElement);
+        for (const ereignis of InkStroke.samples(e as PointerEvent)) {
+          const roh = punktFein(ereignis, convert);
           const jetzt = Number(ereignis.timeStamp) || stiftZeit + 16;
           const dt = Math.max(1, jetzt - stiftZeit);
           stiftZeit = jetzt;
@@ -837,6 +850,11 @@ const Zusatz = (() => {
     });
 
     const fertig = (e?: any) => {
+      if (stiftZeiger !== null && typeof e?.pointerId === 'number' && e.pointerId !== stiftZeiger) return;
+      stiftZeiger = null; stiftArt = '';
+      window.removeEventListener('pointerup', fertig, true);
+      window.removeEventListener('pointercancel', fertig, true);
+      window.removeEventListener('blur', stiftAbsetzen);
       if (e && typeof e.pointerId === 'number') finger.delete(e.pointerId);
       if (finger.size < 2) kneifen = null;
       if (schiebt) { schiebt = null; sichtSichern(); }
@@ -878,7 +896,9 @@ const Zusatz = (() => {
     };
     flaeche.addEventListener('pointerup', fertig);
     flaeche.addEventListener('pointercancel', fertig);
-    flaeche.addEventListener('pointerleave', fertig);
+    const stiftAbsetzen = (): void => { if (stiftZeiger !== null) fertig(); };
+    flaeche.addEventListener('lostpointercapture', stiftAbsetzen);
+    flaeche.addEventListener('pointerleave', e => { if (!flaeche.hasPointerCapture(e.pointerId)) fertig(e); });
 
     /* ZWEIMAL TIPPEN ÄNDERT DEN TEXT. Bisher gab es keinen Weg dazu: eine
        vertippte Haftnotiz musste man radieren und neu schreiben. */

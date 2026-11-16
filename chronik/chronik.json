@@ -5127,6 +5127,46 @@
       "groesstesProblem": "Die Norm zeigt die Ruhelage, die Simulation braucht die Stellung: gelöst, indem die Stellung nur in der Simulation gezeichnet wird.",
       "interessantesteAnfrage": "Ein Schalter, der aussieht wie in der eigenen VA-Simulation.",
       "massnahmen": []
+    },
+    {
+      "datum": "2026-11-16",
+      "wochentag": "Montag",
+      "titel": "Windows-Stiftstudio und Freihand im Stromkreis",
+      "wasIchWeiss": "Umfang und Präferenzen aus dem aktuellen Chat; Nachrichtenzeiten nicht erfasst.",
+      "nachrichten": [
+        {
+          "zeit": "nicht erfasst",
+          "wortlaut": "es sollte sich wie eine macbook app fühlen die auf windows läuft",
+          "woher": "Wörtlicher Auszug aus dem Redion-Auftrag dieses Chats.",
+          "gemeint": "Windows zuerst abnehmen, direkte Stifteingabe und hochwertige optionale Glaswerkzeuge.",
+          "besser": "Redion soll unter Windows ein flüssiges Schreib- und Zeichenerlebnis mit optionalem Liquid Glass bieten.",
+          "besserePrompt": "Baue auf der vorhandenen Windows-App auf; verbessere die gemeinsamen Stiftgrundlagen und ergänze Freihand über laufenden Installationsschaltungen."
+        }
+      ],
+      "arbeit": [
+        {
+          "was": "Windows-Stiftstudio E790 auf eigenem Branch: Freihand im Plan, gemeinsame Stiftmeldungen, optionale Glaswerkzeuge und isolierte native Prüfungen.",
+          "vonCommit": "eff7e4cdd",
+          "bisCommit": "",
+          "zeitraum": "16. November 2026; genaue Startzeit nicht erfasst",
+          "pruefungen": "6 Modellverträge, 21 Windows-Verträge, 3 Paritätsverträge, zehn Ink-/Elektro-Läufe und 22 Neigungszusagen grün. Archiv-Roundtrip, Chromium-Layouts und Skalierung 1/1,5/2 geprüft. Automatisierter Electron-Dauerlauf: 1800215 ms, 3315 Schreibzüge, 0 Abbrüche. Schneller Gesamtlauf 42/49; die sieben roten Läufe sind am Ausgangscommit ebenfalls rot. WebKit und reale Geräte bleiben gesondert offen."
+        }
+      ],
+      "zahlen": {
+        "commits": "Lokaler Arbeitsbranch; kein Push",
+        "entscheidungen": "E790",
+        "neuePruefungen": 3
+      },
+      "groesstesProblem": "Der Hintergrundfilter änderte den Bezug des Werkzeugdocks (P139).",
+      "interessantesteAnfrage": "Mit einem normalen Stift direkt über einer laufenden Stromsimulation schreiben, ohne die Schaltung zu verändern.",
+      "massnahmen": [
+        {
+          "zeit": "nicht erfasst",
+          "was": "Nur synthetische Dokumente, Archive und frische isolierte App-Profile verwendet.",
+          "warum": "Die normale Windows-Ablage muss unverändert bleiben.",
+          "risiko": "Ältere App-Versionen können neue Freihanddaten beim Speichern verwerfen; vor einem Rückwechsel sichern."
+        }
+      ]
     }
   ],
   "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
@@ -6958,6 +6998,20 @@
       "loesung": "Die ganze Karte und vollständige 44-Pixel-Trefferflächen prüfen, Überdeckung von Vorschau/Titel ausschliessen, Textraum reservieren und den tatsächlichen Abstand korrigieren. Eine isolierte Gegenprobe verschiebt den Favoriten absichtlich in den Inhalt.",
       "beweis": "Erstlauf 85/91; strengere Messung danach 92/93 und nach der Abstandskorrektur 93/93, einschliesslich zweier erkannter Gegenproben.",
       "lehre": "Beim Umbau den ursprünglichen Bedienvertrag erhalten und den Messpunkt nachsehen. Eine echte Gegenprobe schützt davor, nur den Test an eine hübsche Oberfläche anzupassen."
+    },
+    {
+      "nr": "P139",
+      "datum": "2026-11-16",
+      "titel": "Ein Glasfilter versetzt das Werkzeugdock",
+      "schwere": "mittel",
+      "entscheidung": "E790",
+      "symptom": "Beim Aktivieren des optionalen Glasmodus waren die Stiftwerkzeuge hinter anderen Seitenwerkzeugen nicht mehr erreichbar.",
+      "falscheVermutung": "Das aufgeklappte Bereichsrad verdeckt die Fläche; Einklappen allein genügt.",
+      "wieGefunden": "Der echte Electron-Nutzerweg scheiterte auch nach dem Einklappen. Bildschirmbilder, überdeckendes Element und die CSS-Regeln des absolut gesetzten Docks wurden verglichen.",
+      "ursache": "Ein neuer Hintergrundfilter am Plan-Kopf änderte den Positionierungsbezug seines absolut gesetzten Werkzeugdocks. Das Dock lag dadurch über dem Kopf statt im reservierten Streifen unter der Zeichnung.",
+      "loesung": "Den Filter am schwebenden Dock selbst anwenden und den Kopf ohne Filter lassen. Beim Wechsel in einem offenen Dokument bleibt das Bereichsrad eingeklappt.",
+      "beweis": "Der ursprüngliche native Klickweg scheiterte; nach der Korrektur besteht der komplette Windows-Nutzerweg. 16 Chromium-Darstellungen prüfen erreichbare Werkzeuge, Mindestgrössen und deckendes Papier.",
+      "lehre": "Materialeffekte können die Geometrie von Kindern verändern. Eine gläserne Fläche deshalb mit echten Eingaben prüfen, nicht nur anhand eines Bildes."
     }
   ]
 }

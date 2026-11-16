@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-766 Entscheidungen, E1 bis E789 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+767 Entscheidungen, E1 bis E790 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -851,6 +851,46 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E787** — Die Klinge liegt, wie der Schalter steht (15. November 2026, Redur: „wenn ich eine schalter klicke sollte sich ändern"): in der Simulation zeichnet jeder Schalter und jeder Kontakt seine Stellung — die Klinge zu, ab oder auf dem geschlossenen Weg, der Name der Stellung darunter, in der Farbe des Stroms, wenn er führt; die Bilder stehen im Register (`STELLUNGSBILD`), die Stellung kommt aus `Stromfluss.rechne` (`Ergebnis.stellungen`), ausserhalb der Simulation zeichnet jedes Zeichen wie vorher
 * **E788** — Leitung aus der Klemme (15. November 2026, Redur: „verbessere alles damit ich schneller zeichne können"): im Zeigen-Werkzeug zieht ein Ansatz genau auf einer Klemme (7 px, Finger 10) eine Leitung, ohne Werkzeugwechsel; am Körper gefasst wandert das Teil wie bisher; Ring und Fadenkreuz zeigen die Klemme vorher
 * **E789** — Die Bauplan-Zeichen nach dem Lehrmittel (15. November 2026, Redur: „schau … für schweiz wie muss es sein und baue es direkt im redion", Quelle: „Fachzeichnen Teil 1", Seite 14.1): Schalter als offener Kreis mit Armen und Fahnen, Steckdose mit Hörnern, Deckenleuchte als Kreuz, Einbauleuchte als Kreuz im Kreis, Abzweigdose als Quadrat mit Punkt; 21 neue Zeichen (UP/AP, Zug, Nachlauf, Lichtregler, Taster, Storen, vier Kombis, T13 3-fach und 3/1, T25, Bodendose, Lampendübel, Wandleuchte, PIR, Store, Ventilator, Direktanschluss); alte Kennungen, Grössen und Anschlüsse bleiben; die Schema-3-Klemmen 1-2-4 bleiben offen (L267)
+
+* **E790** — Windows-Stiftstudio: gemeinsame Stiftpunkte, optionale Freihand im Schaltplan und Glass-Wheel-Arbeitswerkzeuge; Windows ist die erste Abnahmeplattform dieses Bogens.
+
+## E790 — Windows-Stiftstudio mit eigener Freihandebene
+
+**Wer.** Redur, 16. November 2026: Redion zuerst für Windows bauen,
+flüssiger schreiben und zeichnen, Stromkreise verbinden und direkt im
+Simulator Notizen zeichnen. Im anschliessenden Plan bestätigt: Maus und
+digitaler Stift; Installationsschaltungen; alle Zeichenbereiche gemeinsam;
+starkes Liquid Glass optional; Freihand auch während laufendem Strom.
+
+**Entschieden.** Die vorhandene Electron-Shell und die neueren E775–E789
+bleiben. Kein Plattform-Neubau. Die gemeinsame Punktverarbeitung nimmt
+auch die letzte Treibermeldung mit. Eine optionale Freihandliste im Plan
+benutzt gemeinsame Strichdaten in Planeinheiten. Vorschau und gespeicherte
+Daten bleiben getrennt; erst der abgeschlossene Zug schreibt eine Kopie
+über den bestehenden Block- und Verlaufspfad. Alte Pläne erhalten beim
+Öffnen kein neues Feld.
+
+Freihand wirkt nicht elektrisch. Schreiben, Tinte radieren und Verschieben
+von Annotationen sind bei laufender Simulation möglich; elektrische
+Bearbeitung verlangt eine gestoppte Simulation. Schalter bedienen bleibt
+im Auswahlwerkzeug. SVG, Druck und Sicherung enthalten Freihand.
+
+Das bestehende optionale Glass Wheel erhält gläserne Arbeitswerkzeuge;
+Klassisch bleibt Standard. Beim Aktivieren in einem offenen Dokument
+klappt das Rad ein. Das Papier bleibt deckend. Der Glasfilter sitzt am
+schwebenden Dock: am Kopf hätte er dessen absoluten Positionierungsbezug
+verändert und das Werkzeug unbedienbar gemacht.
+
+**Abnahme.** Modell-, Electron-, Browser- und Formatprüfungen mit
+synthetischen Daten; echte Stifthardware, iPhone, Installation/Update und
+Signierung getrennt nachweisen. Ergebnisse, Befehle und Bestandsfehler:
+`doku/WINDOWS-INK-STUDIO.md`. Ein Testfenster ist kein Hardwarestift und
+ein lokales Paket keine veröffentlichte Version.
+
+**Kosten und Kompatibilität.** Ältere App-Versionen können unbekannte
+Freihand beim Speichern verwerfen. Vor einem Rückwechsel sichern und
+Freihandpläne nur mit E790 oder neuer bearbeiten. Der erste Ausbau
+erweitert keinen Elektronik-Zeitlöser und keine Cloud-Funktion.
 
 ## E775 — Ein unbekanntes Bauteil bleibt sichtbar
 

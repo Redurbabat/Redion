@@ -30,6 +30,10 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           npm --prefix windows test
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          node --test pruefungen/windows-ink-model.mts pruefungen/native-build-parity.mts
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          npm run test:windows-ink
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
           npm --prefix windows run dist
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           node windows/compare-web.mts
@@ -40,6 +44,8 @@ jobs:
           path: |
             build/windows-dist/*.exe
             build/windows-dist/windows-web-paritaet.json
+            bilder/windows-ink/nachher/*.png
+            bilder/windows-ink/nachher/messung.json
           if-no-files-found: error
           retention-days: 7
 # Nur manuell, keine Installation, kein GitHub-Release und kein Deployment.

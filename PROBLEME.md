@@ -152,6 +152,7 @@ sind der teuerste Teil und der lehrreichste.
 | P136 | 2026-10-11 | „--schnell“ war nicht schnell | niedrig | — |
 | P137 | 2026-10-12 | Ein Wächter, der nicht auf der Nachbarliste stand | niedrig | — |
 | P138 | 2026-10-24 | Die neue Karte wurde am alten Blatt gemessen | 🟡 klein | — |
+| P139 | 2026-11-16 | Ein Glasfilter versetzt das Werkzeugdock | 🟠 mittel | E790 |
 
 ---
 
@@ -2991,4 +2992,25 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Erstlauf 85/91; strengere Messung danach 92/93 und nach der Abstandskorrektur 93/93, einschliesslich zweier erkannter Gegenproben.
 
 **Die Lehre.** Beim Umbau den ursprünglichen Bedienvertrag erhalten und den Messpunkt nachsehen. Eine echte Gegenprobe schützt davor, nur den Test an eine hübsche Oberfläche anzupassen.
+
+
+---
+
+## P139 · Ein Glasfilter versetzt das Werkzeugdock
+
+*2026-11-16 · 🟠 mittel · E790*
+
+**Das Bild.** Beim Aktivieren des optionalen Glasmodus waren die Stiftwerkzeuge hinter anderen Seitenwerkzeugen nicht mehr erreichbar.
+
+**Die falsche Vermutung.** Das aufgeklappte Bereichsrad verdeckt die Fläche; Einklappen allein genügt.
+
+**Wie es gefunden wurde.** Der echte Electron-Nutzerweg scheiterte auch nach dem Einklappen. Bildschirmbilder, überdeckendes Element und die CSS-Regeln des absolut gesetzten Docks wurden verglichen.
+
+**Die Ursache.** Ein neuer Hintergrundfilter am Plan-Kopf änderte den Positionierungsbezug seines absolut gesetzten Werkzeugdocks. Das Dock lag dadurch über dem Kopf statt im reservierten Streifen unter der Zeichnung.
+
+**Die Lösung.** Den Filter am schwebenden Dock selbst anwenden und den Kopf ohne Filter lassen. Beim Wechsel in einem offenen Dokument bleibt das Bereichsrad eingeklappt.
+
+**Der Beweis.** Der ursprüngliche native Klickweg scheiterte; nach der Korrektur besteht der komplette Windows-Nutzerweg. 16 Chromium-Darstellungen prüfen erreichbare Werkzeuge, Mindestgrössen und deckendes Papier.
+
+**Die Lehre.** Materialeffekte können die Geometrie von Kindern verändern. Eine gläserne Fläche deshalb mit echten Eingaben prüfen, nicht nur anhand eines Bildes.
 

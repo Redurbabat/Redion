@@ -7,6 +7,7 @@ node_modules/
 # Generierte Offline-Dateien und EXE-Installer für Windows (keine Nutzerdateien).
 /build/windows-app/
 /build/windows-dist/
+/build/windows-ink-dist/
 /windows/generated/
 /www/
 .wrangler/

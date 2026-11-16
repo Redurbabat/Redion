@@ -42,6 +42,22 @@ mehr gibt.
 
 ## Was jetzt offen ist
 
+### Windows-Stiftstudio E790 · reale Geräte und Freigabe
+
+- **Ziel:** den geprüften Windows-Arbeitsstand mit physischem Stift und
+  realer Installation abnehmen. **Warum:** emulierte Druck-/Neigungswerte
+  und ein isolierter Electron-Lauf beweisen keine Handballenerkennung am
+  Gerät und kein Update einer Nutzerinstallation.
+- **Dateien und Befehle:** `doku/WINDOWS-INK-STUDIO.md`, die bestehenden
+  Windows-Paket-/Updatewege und die neuen Ink-Prüfungen.
+- **Fertig wenn:** Geräte-/Commitbericht für Druck, Neigung, Handballen,
+  Offline, Sicherungs-Roundtrip, Installation/Update sowie Signierung und
+  vertrauenswürdigen Updatekanal vorliegt. Vorher externe Sicherung.
+- **WebKit/iPhone:** der Windows-WebKit-Kontrastlauf ist nicht zuverlässig
+  abgenommen; auf geeignetem WebKit-/Mac-Runner und echtem iPhone prüfen.
+  Chromium- und Windows-Nachweise stehen getrennt im Bericht.
+- **Priorität:** vor Veröffentlichung; kein automatischer Merge oder Deploy.
+
 ### Alltag nach E758 (31. Oktober 2026)
 
 - **Voller Lauf nach E760:** `node pruefungen/volllauf.mts --neu` auf dem neuen main, in

@@ -247,9 +247,12 @@ const Planflaeche = (() => {
             ergebnis: null
         };
         const abzug = () => JSON.stringify(z.plan);
-        const aendere = (was, merken = true, vorherAbzug) => {
-            if (z.zieht)
+        const electricalState = (p) => JSON.stringify({ art: p.art, breite: p.breite,
+            hoehe: p.hoehe, teile: p.teile, leitungen: p.leitungen, texte: p.texte, ebenen: p.ebenen });
+        const aendere = (was, merken = true, vorherAbzug, inkOnly = false) => {
+            if (z.zieht || (z.simulation && !inkOnly))
                 return;
+            connectionStatus.textContent = '';
             const vorher = merken ? (vorherAbzug ?? abzug()) : '';
             was();
             if (z.plan.relaisLegacy && vorher &&
@@ -268,7 +271,7 @@ const Planflaeche = (() => {
                 block.plan = kopie;
             if (merken)
                 z.verlauf.merken(vorher);
-            male();
+            male(inkOnly);
         };
         const zurueck = () => {
             if (z.zieht)
@@ -276,8 +279,13 @@ const Planflaeche = (() => {
             const vorher = z.verlauf.zurueck(abzug());
             if (vorher === null)
                 return;
+            if (z.simulation && electricalState(JSON.parse(vorher)) !== electricalState(z.plan)) {
+                z.verlauf.vor(vorher);
+                UI.toast('Simulation anhalten, um die Schaltung zu ändern.');
+                return;
+            }
             z.plan = JSON.parse(vorher);
-            aendere(() => { }, false);
+            aendere(() => { }, false, undefined, true);
         };
         const vorwaerts = () => {
             if (z.zieht)
@@ -285,8 +293,13 @@ const Planflaeche = (() => {
             const naechster = z.verlauf.vor(abzug());
             if (naechster === null)
                 return;
+            if (z.simulation && electricalState(JSON.parse(naechster)) !== electricalState(z.plan)) {
+                z.verlauf.zurueck(naechster);
+                UI.toast('Simulation anhalten, um die Schaltung zu ändern.');
+                return;
+            }
             z.plan = JSON.parse(naechster);
-            aendere(() => { }, false);
+            aendere(() => { }, false, undefined, true);
         };
         const kopf = document.createElement('div');
         kopf.className = 'sp-kopf';
@@ -329,7 +342,7 @@ const Planflaeche = (() => {
         einstieg.hidden = true;
         buehne.appendChild(einstieg);
         const einstiegMalen = () => {
-            const leer = !z.plan.teile.length && !z.plan.leitungen.length && !z.plan.texte.length;
+            const leer = !z.plan.teile.length && !z.plan.leitungen.length && !z.plan.texte.length && !z.plan.ink?.length;
             const zeigen = leer && !z.simulation && !paletteOffen && !studioOffen && !z.gewaehltesZeichen && z.werkzeug === 'zeigen';
             if (einstieg.hidden === !zeigen && (!zeigen || einstieg.dataset.art === z.plan.art))
                 return;
@@ -381,6 +394,11 @@ const Planflaeche = (() => {
         const fussInhalt = document.createElement('div');
         fussInhalt.className = 'sp-fuss-inhalt';
         fuss.appendChild(fussInhalt);
+        const connectionStatus = document.createElement('span');
+        connectionStatus.className = 'sp-connection-status';
+        connectionStatus.setAttribute('role', 'status');
+        connectionStatus.setAttribute('aria-live', 'polite');
+        fuss.appendChild(connectionStatus);
         fuss.appendChild(zoomleiste);
         wurzel.appendChild(kopf);
         wurzel.appendChild(labor);
@@ -415,7 +433,8 @@ const Planflaeche = (() => {
             { id: 'leitung', name: 'Leitung', sym: 'inkConnector', taste: '2', titel: 'Leitung ziehen' },
             { id: 'text', name: 'Text', sym: 'inkText', taste: '3', titel: 'Beschriftung setzen' },
             { id: 'schiene', name: 'Schiene', sym: 'busbar', taste: '4', titel: 'Schiene zeichnen — L1, L2, L3, N, PE' },
-            { id: 'radieren', name: 'Radierer', sym: 'inkEraser', taste: '5', titel: 'Radieren — über die Fläche wischen' }
+            { id: 'radieren', name: 'Radierer', sym: 'inkEraser', taste: '5', titel: 'Radieren — über die Fläche wischen' },
+            { id: 'stift', name: 'Stift', sym: 'inkPen', taste: '6', titel: 'Freihand schreiben und skizzieren' }
         ];
         const symbol = (id, gr = 20) => (typeof Register !== 'undefined' && Register.symbole) ? Register.symbole.alsSvg(id, gr) : '';
         const kopfLinks = document.createElement('span');
@@ -468,7 +487,10 @@ const Planflaeche = (() => {
                 const an = b.dataset.wz === z.werkzeug;
                 b.classList.toggle('an', an);
                 b.setAttribute('aria-pressed', String(an));
+                b.disabled = z.simulation && !['zeigen', 'stift'].includes(b.dataset.wz || '');
             });
+            inkTools.hidden = z.werkzeug !== 'stift';
+            buehne.classList.toggle('sp-schreibt', z.werkzeug === 'stift');
             const pk = dock.querySelector('.sp-palette-knopf');
             if (pk) {
                 pk.classList.toggle('an', paletteOffen);
@@ -671,7 +693,7 @@ const Planflaeche = (() => {
                                 (Register.fachzeichen.holen(z.gewaehltesZeichen) || { name: '?' }).name + '" zu setzen'
                             : 'Bauteil mit Maus, Finger oder Stift direkt aus der Palette ziehen')}</span>`) +
                     `<span class="sp-zahlen">${z.plan.teile.length} Teile · ${z.plan.leitungen.length} Leitungen</span>` +
-                    `<span class="sp-quick-help">B: Palette · /: Suche · P: Stromtest · 1–5: Werkzeuge</span>`;
+                    `<span class="sp-quick-help">B: Palette · /: Suche · P: Stromtest · 1–6: Werkzeuge</span>`;
         };
         const paletteInfokarte = (id = z.gewaehltesZeichen) => {
             const kasten = palette.querySelector('.sp-pal-inspektor');
@@ -799,12 +821,14 @@ const Planflaeche = (() => {
         };
         let zuletztGemalt = {};
         const buehneMalen = () => {
+            if (inkSession)
+                return;
             const e = z.ergebnis;
             const opt = {
                 raster: z.zeigeRaster,
                 anschluesse: z.simulation ? false : z.zeigeAnschluesse,
                 nummern: z.zeigeNummern,
-                auswahl: z.simulation ? new Set() : z.auswahl
+                auswahl: z.simulation ? new Set([...z.auswahl].filter(id => inkVon(id))) : z.auswahl
             };
             if (e && e.ok)
                 opt.strom = {
@@ -901,10 +925,11 @@ const Planflaeche = (() => {
                     `<button type="button" data-kontext="loeschen" title="Löschen (Entf)" aria-label="Löschen">✕</button>` +
                     `<button type="button" data-kontext="abwahl" title="Auswahl aufheben" aria-label="Auswahl aufheben">×</button>`;
         };
-        const male = () => {
+        const male = (inkOnly = false) => {
             if (z.simulation && karteId)
                 karteSchliessen();
-            rechnen();
+            if (!inkOnly)
+                rechnen();
             kopfMalen();
             buehneMalen();
             fussMalen();
@@ -1033,9 +1058,12 @@ const Planflaeche = (() => {
             });
             z.plan.leitungen.forEach(l => (l.punkte || []).forEach((q) => nimm(q.x, q.y, q.x, q.y)));
             z.plan.texte.forEach(x => nimm(x.x, x.y - 13, x.x + String(x.t || '').length * 7.5, x.y + 4));
+            (z.plan.ink || []).forEach((m) => { const b = Schaltplan.inkBounds(m); nimm(b.x1, b.y1, b.x2, b.y2); });
             return Number.isFinite(x1) ? { x1, y1, x2, y2 } : null;
         };
         const einpassen = () => {
+            if (z.zieht)
+                return;
             ansichtVomNutzer = false;
             const svg = svgJetzt();
             const r = svg ? svg.getBoundingClientRect() : null;
@@ -1093,8 +1121,13 @@ const Planflaeche = (() => {
         const buehnenBeobachter = typeof ResizeObserver === 'function' ? new ResizeObserver(() => {
             const r = buehne.getBoundingClientRect();
             if (!wurzel.isConnected || r.width < 1 || r.height < 1) {
-                if (!wurzel.isConnected && !platzhalter)
+                if (!wurzel.isConnected && !platzhalter) {
+                    if (inkSession) {
+                        zugLoesen();
+                        inkClear();
+                    }
                     buehnenBeobachter?.disconnect();
+                }
                 return;
             }
             const mass = `${Math.round(r.width)}×${Math.round(r.height)}`;
@@ -1621,6 +1654,11 @@ const Planflaeche = (() => {
                 if (t.x >= x1 && t.x <= x2 && t.y >= y1 && t.y <= y2)
                     raus.push(t.id);
             });
+            (z.plan.ink || []).forEach((m) => {
+                const b = Schaltplan.inkBounds(m);
+                if (sichtbarAuf(m.ebene) && b.x1 >= x1 && b.y1 >= y1 && b.x2 <= x2 && b.y2 <= y2)
+                    raus.push(m.id);
+            });
             return raus;
         };
         const teilVon = (id) => z.plan.teile.find(t => t.id === id);
@@ -1673,6 +1711,11 @@ const Planflaeche = (() => {
             const teile = [];
             const eigene = new Set();
             z.auswahl.forEach(id => {
+                const ink = inkVon(id);
+                if (ink) {
+                    ink.pts = ink.pts.map(p => [+(p[0] + dx).toFixed(2), +(p[1] + dy).toFixed(2)]);
+                    return;
+                }
                 const t = teilVon(id);
                 if (t) {
                     t.x = Schaltplan.rasten(t.x + dx);
@@ -1709,7 +1752,7 @@ const Planflaeche = (() => {
         const leitungVon = (id) => z.plan.leitungen.find(l => l.id === id);
         const textVon = (id) => z.plan.texte.find(x => x.id === id);
         const alsGruppe = () => {
-            const ids = [...z.auswahl].filter(id => teilVon(id) || leitungVon(id) || textVon(id));
+            const ids = [...z.auswahl].filter(id => teilVon(id) || leitungVon(id) || textVon(id) || inkVon(id));
             return ids.length > 1 || (ids.length === 1 && !teilVon(ids[0]));
         };
         const gruppeUmformen = (art) => aendere(() => {
@@ -1747,6 +1790,15 @@ const Planflaeche = (() => {
             const neu = [];
             const versatz = Register.fachzeichen.RASTER * 2;
             z.auswahl.forEach(id => {
+                const ink = inkVon(id);
+                if (ink) {
+                    const copy = JSON.parse(JSON.stringify(ink));
+                    copy.id = Schaltplan.uid();
+                    copy.pts = copy.pts.map(p => [p[0] + versatz, p[1] + versatz]);
+                    z.plan.ink.push(copy);
+                    neu.push(copy.id);
+                    return;
+                }
                 const t = teilVon(id);
                 if (!t)
                     return;
@@ -1767,12 +1819,17 @@ const Planflaeche = (() => {
             const g = zusammen ? '' : Schaltplan.uid();
             teile.forEach((t) => { t.gruppe = g; });
         });
-        const loeschen = () => aendere(() => {
-            z.plan.teile = z.plan.teile.filter(t => !z.auswahl.has(t.id));
-            z.plan.leitungen = z.plan.leitungen.filter(l => !z.auswahl.has(l.id));
-            z.plan.texte = z.plan.texte.filter(x => !z.auswahl.has(x.id));
-            z.auswahl.clear();
-        });
+        const loeschen = () => {
+            const inkOnly = [...z.auswahl].every(id => inkVon(id));
+            aendere(() => {
+                z.plan.teile = z.plan.teile.filter(t => !z.auswahl.has(t.id));
+                z.plan.leitungen = z.plan.leitungen.filter(l => !z.auswahl.has(l.id));
+                z.plan.texte = z.plan.texte.filter(x => !z.auswahl.has(x.id));
+                if (z.plan.ink)
+                    z.plan.ink = z.plan.ink.filter((m) => !z.auswahl.has(m.id));
+                z.auswahl.clear();
+            }, true, undefined, inkOnly);
+        };
         const mitGruppe = (id) => {
             const t = teilVon(id);
             if (!t || !t.gruppe)
@@ -1856,6 +1913,12 @@ const Planflaeche = (() => {
             const zug = z.zieht;
             if (!zug)
                 return;
+            if (zug.art === 'ink') {
+                if (e.pointerType === 'touch' && inkSession?.pointerType === 'pen')
+                    return;
+                zugAbbrechen();
+                return;
+            }
             if (e.pointerType === 'touch' && e.pointerId !== zug.zeiger) {
                 zugAbbrechen();
                 return;
@@ -1877,6 +1940,7 @@ const Planflaeche = (() => {
             if (!zug)
                 return;
             zugLoesen();
+            inkClear();
             teilKlickStart = null;
             if (zug.art === 'teil' || zug.art === 'strecke') {
                 zug.ausgang.forEach((a, id) => {
@@ -1896,7 +1960,7 @@ const Planflaeche = (() => {
             }
             if (zug.art === 'schwenk')
                 return;
-            male();
+            male(zug.art === 'ink');
         };
         const streckeSichern = (zug) => {
             if (zug.abzugStart === undefined || zug.abzugStart === abzug()) {
@@ -2289,6 +2353,236 @@ const Planflaeche = (() => {
             }
             ({ drehen, spiegeln, doppeln, loeschen }[aktion || '']?.());
         });
+        let inkSession = null;
+        let inkColor = GfxShapes.PALETTE[0][0], inkWidth = 2.4, inkErase = false;
+        const inkVon = (id) => z.plan.ink?.find(m => m.id === id);
+        const inkTools = document.createElement('div');
+        inkTools.className = 'sp-ink-tools';
+        inkTools.hidden = true;
+        inkTools.setAttribute('role', 'group');
+        inkTools.setAttribute('aria-label', 'Freihandwerkzeuge');
+        inkTools.innerHTML = `<label>Farbe <input type="color" data-ink-color value="${inkColor}" aria-label="Stiftfarbe"></label>` +
+            `<label>Breite <input type="range" data-ink-width min="0.6" max="8" step="0.2" value="2.4" aria-label="Strichbreite"></label>` +
+            `<button type="button" data-ink-mode="draw" aria-pressed="true">Schreiben</button>` +
+            `<button type="button" data-ink-mode="erase" aria-pressed="false">Tinte radieren</button>` +
+            `<span class="sp-ink-hilfe">Freie Notizen · auch während Strom läuft</span>`;
+        wurzel.insertBefore(inkTools, koerper);
+        inkTools.addEventListener('input', e => {
+            const input = e.target;
+            if (input.matches('[data-ink-color]'))
+                inkColor = InkStroke.inkColor(input.value);
+            if (input.matches('[data-ink-width]'))
+                inkWidth = Number(input.value);
+        });
+        inkTools.addEventListener('click', e => {
+            const button = e.target.closest('[data-ink-mode]');
+            if (!button)
+                return;
+            inkErase = button.dataset.inkMode === 'erase';
+            inkTools.querySelectorAll('[data-ink-mode]').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.inkMode === 'erase') === inkErase)));
+        });
+        const inkClear = () => {
+            if (inkSession?.frame)
+                cancelAnimationFrame(inkSession.frame);
+            inkSession = null;
+            wurzel.classList.remove('sp-ink-aktiv');
+            window.removeEventListener('blur', inkBlur);
+            window.removeEventListener('resize', inkBlur);
+            document.removeEventListener('visibilitychange', inkVisibility);
+        };
+        const inkBlur = () => { if (inkSession)
+            zugAbbrechen(); };
+        const inkVisibility = () => { if (document.hidden)
+            inkBlur(); };
+        const inkPaint = () => {
+            const s = inkSession;
+            if (!s)
+                return;
+            s.frame = 0;
+            if (!wurzel.isConnected) {
+                zugLoesen();
+                inkClear();
+                return;
+            }
+            if (s.kind === 'draw') {
+                const half = InkStroke.inkHalfWidth(s.mark, s.mark.pressure?.at(-1));
+                const predicted = InkStroke.vorhersage(s.raw, undefined, s.dt);
+                const tip = s.raw.at(-1);
+                const wet = [tip, ...predicted];
+                s.feder.nass(wet, wet.map(() => half));
+                if (!s.node?.isConnected) {
+                    vorschau('<path class="sp-ink-nass" stroke="none"/>');
+                    s.node = svgJetzt()?.querySelector('.sp-ink-nass') ?? null;
+                }
+                s.node?.setAttribute('fill', s.mark.farbe);
+                s.node?.setAttribute('d', s.feder.d());
+            }
+            else if (s.kind === 'move') {
+                const dx = s.end[0] - s.start[0], dy = s.end[1] - s.start[1];
+                svgJetzt()?.querySelector(`[data-ink="${CSS.escape(s.mark.id)}"]`)?.setAttribute('transform', `translate(${dx} ${dy})`);
+            }
+            else {
+                for (const id of s.removed)
+                    svgJetzt()?.querySelector(`[data-ink="${CSS.escape(id)}"]`)?.classList.add('sp-weg');
+            }
+        };
+        const inkRequest = () => { if (inkSession && !inkSession.frame)
+            inkSession.frame = requestAnimationFrame(inkPaint); };
+        const inkSamples = (event) => {
+            const s = inkSession, svg = svgJetzt();
+            if (!s || !svg)
+                return;
+            const matrix = s.matrix;
+            for (const sample of InkStroke.samples(event)) {
+                const q = new DOMPoint(sample.clientX, sample.clientY).matrixTransform(matrix);
+                const p = [+q.x.toFixed(2), +q.y.toFixed(2)];
+                s.end = p;
+                if (s.kind === 'move')
+                    continue;
+                if (s.kind === 'erase') {
+                    const from = s.raw.at(-1) ?? p;
+                    for (const m of (z.plan.ink || [])) {
+                        if (!sichtbarAuf(m.ebene) || s.removed.has(m.id))
+                            continue;
+                        const points = m.pts;
+                        const radius = Math.max(5, 10 * Math.hypot(matrix.a, matrix.b)) + m.breite / 2;
+                        const steps = Math.max(1, Math.ceil(Math.hypot(p[0] - from[0], p[1] - from[1]) / (radius / 2)));
+                        for (let j = 0; j <= steps; j++) {
+                            const hit = { x: from[0] + (p[0] - from[0]) * j / steps, y: from[1] + (p[1] - from[1]) * j / steps };
+                            if (points.some((v, i) => abstandZuStrecke(hit, { x: v[0], y: v[1] }, { x: (points[i - 1] || v)[0], y: (points[i - 1] || v)[1] }) <= radius)) {
+                                s.removed.add(m.id);
+                                break;
+                            }
+                        }
+                    }
+                    s.raw = [p];
+                    continue;
+                }
+                s.dt = Math.max(1, sample.timeStamp - s.time);
+                s.time = sample.timeStamp;
+                const lastRaw = s.raw.at(-1);
+                if (p[0] === lastRaw[0] && p[1] === lastRaw[1])
+                    continue;
+                s.raw.push(p);
+                if (s.raw.length > 3)
+                    s.raw.shift();
+                const point = s.smooth(p, s.dt), last = s.mark.pts.at(-1);
+                if (Math.hypot(point[0] - last[0], point[1] - last[1]) < .15)
+                    continue;
+                const pressure = sample.pressure > 0 ? s.pressure(sample.pressure) : s.mark.pressure?.at(-1) ?? .5;
+                const beforePoints = s.mark.pts.length;
+                s.mark.pts.push(point);
+                s.mark.pressure?.push(pressure);
+                const tilt = InkStroke.tiltOf(sample);
+                if (tilt >= 0 && !s.mark.neigung)
+                    s.mark.neigung = Array(beforePoints).fill(-1);
+                s.mark.neigung?.push(tilt);
+                s.feder.punkt(point, InkStroke.inkHalfWidth(s.mark, pressure));
+            }
+            inkRequest();
+        };
+        const inkFinish = (event) => {
+            const s = inkSession;
+            if (!s)
+                return;
+            if (event.type === 'pointerup')
+                inkSamples(event);
+            inkClear();
+            if (event.type !== 'pointerup') {
+                male(true);
+                return;
+            }
+            if (s.kind === 'draw') {
+                const last = s.mark.pts.at(-1);
+                if (Math.hypot(last[0] - s.end[0], last[1] - s.end[1]) > .01) {
+                    s.mark.pts.push(s.end);
+                    s.mark.pressure?.push(s.mark.pressure.at(-1) ?? .5);
+                    s.mark.neigung?.push(s.mark.neigung.at(-1) ?? 0);
+                }
+                aendere(() => { (z.plan.ink ??= []).push(s.mark); }, true, undefined, true);
+            }
+            else if (s.kind === 'move') {
+                const dx = s.end[0] - s.start[0], dy = s.end[1] - s.start[1];
+                if (!dx && !dy) {
+                    male(true);
+                    return;
+                }
+                aendere(() => { const mark = inkVon(s.mark.id); if (mark)
+                    mark.pts = mark.pts.map(p => [+(p[0] + dx).toFixed(2), +(p[1] + dy).toFixed(2)]); }, true, undefined, true);
+            }
+            else if (s.removed.size)
+                aendere(() => {
+                    z.plan.ink = z.plan.ink.filter((m) => !s.removed.has(m.id));
+                    s.removed.forEach(id => z.auswahl.delete(id));
+                }, true, undefined, true);
+            else
+                male(true);
+        };
+        buehne.addEventListener('pointerdown', event => {
+            if (inkSession?.pointerType === 'pen' && event.pointerType === 'touch') {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                return;
+            }
+            const hit = event.target.closest('[data-ink]');
+            const erasePen = event.pointerType === 'pen' && (event.button === 5 || (event.buttons & 32) !== 0);
+            if ((event.button !== 0 && !erasePen) || z.leertaste ||
+                (z.werkzeug !== 'stift' && !(z.werkzeug === 'zeigen' && hit) && !erasePen))
+                return;
+            if (z.zieht || geste || event.pointerType === 'touch')
+                return;
+            const svg = svgJetzt();
+            if (!svg)
+                return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            wurzel.focus({ preventScroll: true });
+            leinwand.getAnimations().forEach(animation => animation.finish());
+            const matrix = svg.getScreenCTM()?.inverse();
+            if (!matrix)
+                return;
+            const p = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix);
+            const start = [+p.x.toFixed(2), +p.y.toFixed(2)];
+            const kind = (z.werkzeug === 'stift' && inkErase) || erasePen ? 'erase' : z.werkzeug === 'zeigen' && hit ? 'move' : 'draw';
+            const mark = kind === 'move' ? JSON.parse(JSON.stringify(inkVon(hit.dataset.ink))) :
+                { id: Schaltplan.uid(), art: 'stift', pts: [start], farbe: inkColor, breite: inkWidth, ebene: aktiveEbene() };
+            if (kind === 'draw' && event.pointerType === 'pen') {
+                mark.pressure = [event.pressure > 0 ? event.pressure : .5];
+                const tilt = InkStroke.tiltOf(event);
+                if (tilt >= 0)
+                    mark.neigung = [tilt];
+            }
+            const feder = new InkStroke.Feder();
+            feder.punkt(start, InkStroke.inkHalfWidth(mark, mark.pressure?.[0]));
+            if (kind === 'move')
+                z.auswahl = new Set([mark.id]);
+            else
+                z.auswahl.clear();
+            inkSession = { kind, pointerType: event.pointerType, matrix, mark, start, end: start, raw: [start], time: event.timeStamp,
+                dt: 16, frame: 0, removed: new Set(), smooth: InkStroke.glaetter(start), feder,
+                pressure: InkStroke.druckGlaetter(event.pressure > 0 ? event.pressure : .5), node: null };
+            zugBeginnen({ art: 'ink', zeiger: event.pointerId, startX: event.clientX, startY: event.clientY, ausgang: new Map() });
+            svg.setPointerCapture(event.pointerId);
+            wurzel.classList.add('sp-ink-aktiv');
+            window.addEventListener('blur', inkBlur);
+            window.addEventListener('resize', inkBlur);
+            document.addEventListener('visibilitychange', inkVisibility);
+            if (kind === 'erase')
+                inkSamples(event);
+            else
+                inkRequest();
+        }, true);
+        buehne.addEventListener('pointermove', e => {
+            if (!inkSession)
+                return;
+            if (e.pointerId === z.zieht?.zeiger)
+                inkSamples(e);
+            e.stopImmediatePropagation();
+        }, true);
+        buehne.addEventListener('lostpointercapture', event => {
+            if (inkSession && z.zieht?.zeiger === event.pointerId)
+                zugAbbrechen();
+        }, true);
         buehne.addEventListener('pointerdown', e => {
             if (e.target.closest('.sp-schnellkarte,.sp-kontextleiste'))
                 return;
@@ -2314,6 +2608,13 @@ const Planflaeche = (() => {
             const roh = ortAus(svg, e, z.plan, true);
             const p = ortAus(svg, e, z.plan);
             if (e.button === 1 || (z.leertaste && e.button === 0)) {
+                e.preventDefault();
+                zugBeginnen({ art: 'schwenk', zeiger: e.pointerId, startX: 0, startY: 0, ausgang: new Map(),
+                    schirm: { x: e.clientX, y: e.clientY } });
+                svg.setPointerCapture(e.pointerId);
+                return;
+            }
+            if (z.werkzeug === 'stift' && e.pointerType === 'touch') {
                 e.preventDefault();
                 zugBeginnen({ art: 'schwenk', zeiger: e.pointerId, startX: 0, startY: 0, ausgang: new Map(),
                     schirm: { x: e.clientX, y: e.clientY } });
@@ -2579,6 +2880,10 @@ const Planflaeche = (() => {
             zugLoesen();
             if (!wurzel.isConnected)
                 return;
+            if (zug.art === 'ink') {
+                inkFinish(e);
+                return;
+            }
             const svg = svgJetzt();
             const p = svg ? ortAus(svg, e, z.plan) : { x: 0, y: 0 };
             if (zug.art === 'schwenk')
@@ -2647,6 +2952,9 @@ const Planflaeche = (() => {
                     vonTeil: zug.von.teil, vonNr: zug.von.nr,
                     nachTeil: fang ? fang.teil : undefined, nachNr: fang ? fang.nr : undefined
                 }));
+                connectionStatus.textContent = zug.von.teil && fang?.teil
+                    ? `Verbunden: ${teilVon(zug.von.teil)?.bmk || 'Bauteil'} ${zug.von.nr || ''} ↔ ${teilVon(fang.teil)?.bmk || 'Bauteil'} ${fang.nr}`
+                    : 'Leitung gezeichnet · offenes Ende';
             }
         };
         const radGesehen = new WeakSet();
@@ -2654,6 +2962,10 @@ const Planflaeche = (() => {
             if (radGesehen.has(e) || !buehne.contains(e.target))
                 return;
             radGesehen.add(e);
+            if (inkSession) {
+                e.preventDefault();
+                return;
+            }
             if (!svgJetzt())
                 return;
             const schritt = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
@@ -3102,6 +3414,8 @@ const Planflaeche = (() => {
             });
         };
         const simulationUmschalten = () => {
+            if (z.zieht)
+                return;
             if (!z.simulation && z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert) {
                 relaisOffen = true;
                 relaisZeigen();
@@ -3160,9 +3474,12 @@ const Planflaeche = (() => {
             if (!b)
                 return;
             if (b.dataset.wz) {
+                if (z.zieht || (z.simulation && !['zeigen', 'stift'].includes(b.dataset.wz)))
+                    return;
                 z.werkzeug = b.dataset.wz;
+                z.gewaehltesZeichen = '';
                 z.auswahl.clear();
-                male();
+                male(true);
                 return;
             }
             if (b.dataset.a === 'palette-toggle') {
@@ -3444,9 +3761,12 @@ const Planflaeche = (() => {
                 studioPanel.querySelector('[data-st-suche]')?.focus();
                 return;
             }
-            if (!z.simulation && !e.altKey && !e.ctrlKey && !e.metaKey && /^[1-5]$/.test(e.key)) {
+            if (!e.altKey && !e.ctrlKey && !e.metaKey && /^[1-6]$/.test(e.key) &&
+                (!z.simulation || e.key === '1' || e.key === '6')) {
                 e.preventDefault();
-                z.werkzeug = { '1': 'zeigen', '2': 'leitung', '3': 'text', '4': 'schiene', '5': 'radieren' }[e.key];
+                if (z.zieht)
+                    return;
+                z.werkzeug = { '1': 'zeigen', '2': 'leitung', '3': 'text', '4': 'schiene', '5': 'radieren', '6': 'stift' }[e.key];
                 z.gewaehltesZeichen = '';
                 z.auswahl.clear();
                 paletteMalen(palette.querySelector('input')?.value || '');
@@ -3505,7 +3825,7 @@ const Planflaeche = (() => {
                 e.preventDefault();
                 const [dx, dy] = pfeile[e.key];
                 let folge;
-                aendere(() => { folge = verschiebe(dx, dy); });
+                aendere(() => { folge = verschiebe(dx, dy); }, true, undefined, [...z.auswahl].every(id => inkVon(id)));
                 if (folge)
                     melde('Schieben', folge.bericht, folge.aenderungen, folge.vorher);
                 return;
@@ -3555,7 +3875,8 @@ const Planflaeche = (() => {
                 e.preventDefault();
                 z.auswahl = new Set([...z.plan.teile.map(t => t.id),
                     ...z.plan.leitungen.map(l => l.id),
-                    ...z.plan.texte.map(x => x.id)]);
+                    ...z.plan.texte.map(x => x.id),
+                    ...(z.plan.ink || []).map((m) => m.id)]);
                 male();
                 return;
             }

@@ -3787,9 +3787,54 @@ Die Norm zeigt die Ruhelage, die Simulation braucht die Stellung: gelöst, indem
 
 Ein Schalter, der aussieht wie in der eigenen VA-Simulation.
 
+### 2026-11-16 · Montag — Windows-Stiftstudio und Freihand im Stromkreis
+
+> Umfang und Präferenzen aus dem aktuellen Chat; Nachrichtenzeiten nicht erfasst.
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · nicht erfasst**
+
+> es sollte sich wie eine macbook app fühlen die auf windows läuft
+
+**Gemeint:** Windows zuerst abnehmen, direkte Stifteingabe und hochwertige optionale Glaswerkzeuge.
+
+**Besser geschrieben:** Redion soll unter Windows ein flüssiges Schreib- und Zeichenerlebnis mit optionalem Liquid Glass bieten.
+
+**Besserer Prompt:** Baue auf der vorhandenen Windows-App auf; verbessere die gemeinsamen Stiftgrundlagen und ergänze Freihand über laufenden Installationsschaltungen.
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| Windows-Stiftstudio E790 auf eigenem Branch: Freihand im Plan, gemeinsame Stiftmeldungen, optionale Glaswerkzeuge und isolierte native Prüfungen. | `eff7e4cdd` → `` | 16. November 2026; genaue Startzeit nicht erfasst | — | 6 Modellverträge, 21 Windows-Verträge, 3 Paritätsverträge, zehn Ink-/Elektro-Läufe und 22 Neigungszusagen grün. Archiv-Roundtrip, Chromium-Layouts und Skalierung 1/1,5/2 geprüft. Automatisierter Electron-Dauerlauf: 1800215 ms, 3315 Schreibzüge, 0 Abbrüche. Schneller Gesamtlauf 42/49; die sieben roten Läufe sind am Ausgangscommit ebenfalls rot. WebKit und reale Geräte bleiben gesondert offen. |
+
+#### Zahlen des Tages
+
+- **commits:** Lokaler Arbeitsbranch; kein Push
+- **entscheidungen:** E790
+- **neuePruefungen:** 3
+
+#### Das grösste Problem
+
+Der Hintergrundfilter änderte den Bezug des Werkzeugdocks (P139).
+
+#### Das Interessanteste, das Redur wollte
+
+Mit einem normalen Stift direkt über einer laufenden Stromsimulation schreiben, ohne die Schaltung zu verändern.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| nicht erfasst | Nur synthetische Dokumente, Archive und frische isolierte App-Profile verwendet. | Die normale Windows-Ablage muss unverändert bleiben. | Ältere App-Versionen können neue Freihanddaten beim Speichern verwerfen; vor einem Rückwechsel sichern. |
+
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 138 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 139 Einträge.
 

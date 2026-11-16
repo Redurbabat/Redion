@@ -348,8 +348,8 @@ const Zusatz = (() => {
             return [Math.round(sicht.x + (e.clientX - r.left) / sicht.z),
                 Math.round(sicht.y + (e.clientY - r.top) / sicht.z)];
         };
-        const punktFein = (e) => {
-            const ueberMatrix = (typeof SheetSpace !== 'undefined' && SheetSpace.umrechner)
+        const punktFein = (e, convert) => {
+            const ueberMatrix = convert ? convert(e) : (typeof SheetSpace !== 'undefined' && SheetSpace.umrechner)
                 ? SheetSpace.umrechner(flaeche)(e) : null;
             const r2 = (v) => Math.round(v * 100) / 100;
             if (ueberMatrix)
@@ -361,6 +361,8 @@ const Zusatz = (() => {
         let stiftDruck = null;
         let stiftZeit = 0;
         let stiftBildGeplant = false;
+        let stiftZeiger = null;
+        let stiftArt = '';
         const stiftNachziehen = () => {
             stiftBildGeplant = false;
             if (!aktiv || aktiv.art !== 'stift')
@@ -450,6 +452,13 @@ const Zusatz = (() => {
             }
         });
         flaeche.addEventListener('pointerdown', (e) => {
+            if (stiftZeiger !== null) {
+                if (stiftArt === 'pen' && e.pointerType === 'touch') {
+                    e.preventDefault();
+                    return;
+                }
+                fertig();
+            }
             w.focus({ preventScroll: true });
             flaeche.setPointerCapture(e.pointerId);
             finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -564,9 +573,18 @@ const Zusatz = (() => {
                 aktiv.pressure = [Math.round(e.pressure * 1000) / 1000];
             }
             stiftZeit = Number(e.timeStamp) || 0;
+            if (werkzeug === 'stift') {
+                stiftZeiger = e.pointerId;
+                stiftArt = e.pointerType;
+                window.addEventListener('pointerup', fertig, true);
+                window.addEventListener('pointercancel', fertig, true);
+                window.addEventListener('blur', stiftAbsetzen);
+            }
             daten.push(aktiv);
         });
         flaeche.addEventListener('pointermove', (e) => {
+            if (stiftZeiger !== null && e.pointerId !== stiftZeiger)
+                return;
             if (finger.has(e.pointerId))
                 finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (kneifen && finger.size >= 2) {
@@ -612,9 +630,9 @@ const Zusatz = (() => {
             if (!aktiv)
                 return;
             if (aktiv.art === 'stift') {
-                const gesammelt = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : [];
-                for (const ereignis of (gesammelt.length ? gesammelt : [e])) {
-                    const roh = punktFein(ereignis);
+                const convert = SheetSpace.umrechner(flaeche);
+                for (const ereignis of InkStroke.samples(e)) {
+                    const roh = punktFein(ereignis, convert);
                     const jetzt = Number(ereignis.timeStamp) || stiftZeit + 16;
                     const dt = Math.max(1, jetzt - stiftZeit);
                     stiftZeit = jetzt;
@@ -638,6 +656,13 @@ const Zusatz = (() => {
             male();
         });
         const fertig = (e) => {
+            if (stiftZeiger !== null && typeof e?.pointerId === 'number' && e.pointerId !== stiftZeiger)
+                return;
+            stiftZeiger = null;
+            stiftArt = '';
+            window.removeEventListener('pointerup', fertig, true);
+            window.removeEventListener('pointercancel', fertig, true);
+            window.removeEventListener('blur', stiftAbsetzen);
             if (e && typeof e.pointerId === 'number')
                 finger.delete(e.pointerId);
             if (finger.size < 2)
@@ -690,7 +715,11 @@ const Zusatz = (() => {
         };
         flaeche.addEventListener('pointerup', fertig);
         flaeche.addEventListener('pointercancel', fertig);
-        flaeche.addEventListener('pointerleave', fertig);
+        const stiftAbsetzen = () => { if (stiftZeiger !== null)
+            fertig(); };
+        flaeche.addEventListener('lostpointercapture', stiftAbsetzen);
+        flaeche.addEventListener('pointerleave', e => { if (!flaeche.hasPointerCapture(e.pointerId))
+            fertig(e); });
         flaeche.addEventListener('dblclick', (e) => {
             const sid = e.target?.dataset?.sid;
             const s = daten.find((q) => q.id === sid);
