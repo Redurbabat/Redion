@@ -30099,7 +30099,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1604, inhalt: '224686959c536d66', gebaut: '2026-11-18T09:04:56.746Z' };
+const Stand = { fassung: 1605, inhalt: '1d3784783ea21654', gebaut: '2026-11-18T09:08:38.558Z' };
 window.Stand = Stand;
 
 </script>
@@ -87893,6 +87893,20 @@ const ChronikDaten = {
             "loesung": "Alle neun neuen Adapter im erzeugten Service-Worker-Grundstock ergänzen und den Dienststand regulär neu bauen.",
             "beweis": "Erstlauf test87 meldete fehlende Adapter; nach der Korrektur besteht derselbe Lauf mit 197/197 Prüfpunkten. Die Register-Inventur ist ebenfalls nachgetragen; test86 meldet nur noch den bestehenden Unterschied 15 statt 14 Werkzeuggruppen.",
             "lehre": "Ein Desktop-Ausbau kann gemeinsame Web-Dateien ergänzen. Deren Offline-Vertrag bleibt verbindlich."
+        },
+        {
+            "nr": "P144",
+            "datum": "2026-11-18",
+            "titel": "Eine alte Startfreigabe überlebte das Abschalten der Verbindung",
+            "schwere": "mittel",
+            "entscheidung": "E791",
+            "symptom": "Der geschlossene App-Start prüfte eine frühere Startfreigabe, aber noch nicht die aktuell ausgeschaltete Verbindung oder entzogene App-Funktionsgruppe.",
+            "falscheVermutung": "Der ausdrücklich freigegebene App-Pfad allein reiche auch für den Verbindungszustand nach dem Beenden der App.",
+            "wieGefunden": "Ein echter SDK-Client erhielt künstliche Metadaten mit fehlender Test-EXE. Der Widerruftest verlangte eine Ablehnung, bevor überhaupt auf die EXE zugegriffen wird.",
+            "ursache": "Die Startsonderroute für eine geschlossene App umging die gewöhnliche native Sitzungsprüfung und kontrollierte nur allowLaunch.",
+            "loesung": "Zusätzlich enabled gleich true und die App-Funktionsgruppe verlangen; alle Prüfungen erfolgen vor Hashprüfung oder Prozessstart.",
+            "beweis": "Gegenprobe zuerst rot mit ENOENT statt LAUNCH_DISABLED; danach beide Widerrufsvarianten grün. Insgesamt 3/3 Windows-Skript-/SDK-Tests bestanden. Keine Test-EXE und keine Nutzer-App wurden gestartet.",
+            "lehre": "Jede Sonderroute ohne laufende App muss dieselben aktuellen Freigaben beachten wie der normale Kanal."
         }
     ]
 };

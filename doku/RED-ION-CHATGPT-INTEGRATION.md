@@ -78,10 +78,12 @@ im synthetischen Test automatisch beantwortet; im Produkt gibt es keinen Bypass.
 - Windows-Verträge 21/21, Ink-/Paketparität 9/9.
 - Offizieller Windows-Tunnel-Client v0.0.21: Archiv/EXE gegen SHA-256 geprüft;
   Versionsausgabe und `help quickstart` tatsächlich ausgeführt.
-- PowerShell-Skripte 2/2: tatsächliche Paketinstallation unter Windows
+- PowerShell-/SDK-Skripte 3/3: tatsächliche Paketinstallation unter Windows
   PowerShell 5.1 mit Leerzeichen/Umlaut im Zielpfad, identisches Serverbundle,
   UTF-8-BOM, Diagnose, abgewiesenes Junction-Update ohne fremde Änderungen;
   echter SDK-Handshake durch das gelieferte Startskript mit 46 Werkzeugen.
+  Geschlossener App-Start respektiert Abschalten und entzogene App-Freigabe;
+  Gegenprobe zuerst rot, nach Korrektur beide Widerrufsvarianten grün (P144).
 - Offizieller Client erzeugt ein ausdrücklich synthetisches lokales Profil
   unter PowerShell 5.1 und 7. Keine echten Zugangsdaten und kein Live-Tunnel.
 - Offline-Regression test87 nach Korrektur 197/197; Register-Inventur

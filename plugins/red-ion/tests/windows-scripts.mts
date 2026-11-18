@@ -45,3 +45,21 @@ test('Echter SDK-Client erreicht 46 Werkzeuge über das gelieferte PowerShell-St
     assert.equal(result.data?.running,false,'Kein echtes Nutzerprofil lesen oder starten');
   }finally{await client.close();}
 });
+
+test('Geschlossene App respektiert ausgeschaltete Verbindung und entzogene App-Freigabe', {skip:process.platform!=='win32'},async()=>{
+  const directory=path.join(scratch,'Startfreigabe');fs.mkdirSync(directory,{recursive:true});
+  fs.writeFileSync(path.join(directory,'launcher.json'),JSON.stringify({protocol:1,allowed:true,executable:path.join(directory,'nicht-vorhanden.exe'),sha256:'synthetisch'}));
+  const env=Object.fromEntries(Object.entries(process.env).filter((item):item is [string,string]=>item[1]!==undefined));
+  env.REDION_MCP_DISCOVERY=path.join(directory,'connection.json');
+  const transport=new StdioClientTransport({command:process.execPath,args:[path.join(packaged,'server/dist/index.mjs')],env,stderr:'pipe'});
+  const client=new Client({name:'RED Ion Widerrufprüfung',version:'0.1.0'});
+  try {
+    await client.connect(transport);
+    for(const policy of [{enabled:false,allowLaunch:true,scopes:['app']},{enabled:true,allowLaunch:true,scopes:['documents']}]) {
+      fs.writeFileSync(path.join(directory,'policy.json'),JSON.stringify(policy));
+      const response=await client.callTool({name:'redion_launch_app',arguments:{allowLaunch:true}});
+      const result=response.structuredContent as {ok?:boolean;error?:{code:string}};
+      assert.equal(result.ok,false);assert.equal(result.error?.code,'LAUNCH_DISABLED','Widerruf muss vor Zugriff auf die EXE wirken');
+    }
+  } finally {await client.close();}
+});

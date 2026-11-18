@@ -102,7 +102,7 @@ export class BridgeClient {
     if(input.allowLaunch!==true)throw fault('CONSENT_REQUIRED','App-Start muss ausdrücklich erlaubt sein.');
     const record=readRecord(path.join(path.dirname(this.file),'launcher.json'));
     const policy=readRecord(path.join(path.dirname(this.file),'policy.json'));
-    if(!policy.allowLaunch||record.allowed!==true||record.protocol!==1||typeof record.executable!=='string'||typeof record.sha256!=='string')throw fault('LAUNCH_DISABLED','App-Start ist in Redion nicht freigegeben.');
+    if(policy.enabled!==true||policy.allowLaunch!==true||!Array.isArray(policy.scopes)||!policy.scopes.includes('app')||record.allowed!==true||record.protocol!==1||typeof record.executable!=='string'||typeof record.sha256!=='string')throw fault('LAUNCH_DISABLED','App-Start ist in Redion nicht freigegeben.');
     const executable=fs.realpathSync(record.executable);
     if(!path.isAbsolute(executable)||!executable.toLowerCase().endsWith('.exe'))throw fault('UNTRUSTED_EXECUTABLE','Ungültiger App-Pfad.');
     const hash=crypto.createHash('sha256').update(fs.readFileSync(executable)).digest('hex');

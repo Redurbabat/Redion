@@ -157,6 +157,7 @@ sind der teuerste Teil und der lehrreichste.
 | P141 | 2026-11-18 | Eine verknüpfte Bridge-Ablage wurde zu früh bereinigt | hoch | E791 |
 | P142 | 2026-11-18 | PowerShell veränderte den Tunnel-Startbefehl | 🟠 mittel | E791 |
 | P143 | 2026-11-18 | Neue Desktop-Adapter fehlten im Offline-Grundstock | 🟠 mittel | E791 |
+| P144 | 2026-11-18 | Eine alte Startfreigabe überlebte das Abschalten der Verbindung | 🟠 mittel | E791 |
 
 ---
 
@@ -3101,4 +3102,25 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Erstlauf test87 meldete fehlende Adapter; nach der Korrektur besteht derselbe Lauf mit 197/197 Prüfpunkten. Die Register-Inventur ist ebenfalls nachgetragen; test86 meldet nur noch den bestehenden Unterschied 15 statt 14 Werkzeuggruppen.
 
 **Die Lehre.** Ein Desktop-Ausbau kann gemeinsame Web-Dateien ergänzen. Deren Offline-Vertrag bleibt verbindlich.
+
+
+---
+
+## P144 · Eine alte Startfreigabe überlebte das Abschalten der Verbindung
+
+*2026-11-18 · 🟠 mittel · E791*
+
+**Das Bild.** Der geschlossene App-Start prüfte eine frühere Startfreigabe, aber noch nicht die aktuell ausgeschaltete Verbindung oder entzogene App-Funktionsgruppe.
+
+**Die falsche Vermutung.** Der ausdrücklich freigegebene App-Pfad allein reiche auch für den Verbindungszustand nach dem Beenden der App.
+
+**Wie es gefunden wurde.** Ein echter SDK-Client erhielt künstliche Metadaten mit fehlender Test-EXE. Der Widerruftest verlangte eine Ablehnung, bevor überhaupt auf die EXE zugegriffen wird.
+
+**Die Ursache.** Die Startsonderroute für eine geschlossene App umging die gewöhnliche native Sitzungsprüfung und kontrollierte nur allowLaunch.
+
+**Die Lösung.** Zusätzlich enabled gleich true und die App-Funktionsgruppe verlangen; alle Prüfungen erfolgen vor Hashprüfung oder Prozessstart.
+
+**Der Beweis.** Gegenprobe zuerst rot mit ENOENT statt LAUNCH_DISABLED; danach beide Widerrufsvarianten grün. Insgesamt 3/3 Windows-Skript-/SDK-Tests bestanden. Keine Test-EXE und keine Nutzer-App wurden gestartet.
+
+**Die Lehre.** Jede Sonderroute ohne laufende App muss dieselben aktuellen Freigaben beachten wie der normale Kanal.
 
