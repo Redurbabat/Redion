@@ -110,7 +110,7 @@ try {
             textToken:getComputedStyle(document.documentElement).getPropertyValue('--text')};
         });
       });
-      for (const {selector,ratio} of contrast) assert.ok(ratio>=4.5,`${selector}: Textkontrast ${ratio.toFixed(2)}`);
+      for (const item of contrast) assert.ok(item.ratio>=4.5,`${width}/${dark?'dark':'light'}: ${item.selector}: Textkontrast ${item.ratio.toFixed(2)}; color=${item.color}, Hintergrund=${item.cardBackground}, --text=${item.textToken}`);
       for (const selector of ['[data-bib-search]','[data-neu-auf]','[data-form-wahl]',`[data-bib-favorite="${ids.notes}"]`]) {
         const r=await page.locator('.bib '+selector).first().boundingBox();
         assert.ok(r && r.width>=44 && r.height>=44,selector+' mindestens 44 × 44');
