@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-773 Entscheidungen, E1 bis E796 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+774 Entscheidungen, E1 bis E797 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -856,6 +856,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E791** — RED Ion Windows-MCP: semantische Live-Steuerung mit freigegebenen Aktionen und Sicherheitsbestätigungen.
 * **E792** — Visual MCP, sichere Mehrschritt-Aufträge und dauerhafte widerrufbare Freigaben (Verbesserungsplan 2026, Phasen 1–2).
 * **E793** — Zugriff ohne Laptop ausschliesslich kostenlos.
+* **E797** — Fehlt nach einem Neustart der einmal gesetzte Schlüssel, verlässt nichts das Gerät; der zweite Vorfall vom 19. November.
 * **E796** — Der Abgleich verspricht keine Verschlüsselung ohne Schlüssel und schickt Pakete höchstens 4 MB gross; der Vorfall vom 18. November.
 * **E795** — Abgleich der Windows-App mit der Cloud: Access-Anmeldung der Website, öffentliches Abgleich-Tor am MCP-Worker, R2 mit 5-GB-Deckel, Klartext nur für freigegebene Seiten.
 * **E794** — Cloud-MCP veröffentlicht: D1 `redion` im Gratis-Tarif, Worker `red-ion-mcp` öffentlich, Anmeldung hinter dem Access-Tor der Website.
@@ -71192,3 +71193,36 @@ erreichen sie erst mit einem neuen Windows-Paket. Bis dahin wird der Schlüssel
 
 Nachweis: `test643` (16 Zusagen, drei Gegenproben rot), dazu 76, 77, 78, 113,
 118, 96, 100, 105 grün.
+
+
+## E797 · Ohne den einmal gesetzten Schlüssel verlässt nichts das Gerät
+
+**Was geschah, am 19. November 2026, kurz nach Mitternacht.** Mit der neuen EXE
+(E796) und Redurs Schlüssel lief der Abgleich verschlüsselt an: 2 832 Sätze.
+Dann lud die App neu — die Ansicht sprang von der PDF zur Bibliothek. Der
+Schlüssel lebt absichtlich nur im Arbeitsspeicher und war weg; der Abgleich
+blieb eingeschaltet, und der Takt schickte die nächsten **4 646 Sätze im
+Klartext**, darunter Redurs Schulseiten. Claude schaltete auf „Nur lokal“;
+lokal war alles da (11 016 Blöcke, 10 Datenbanken, 10 Ansichten). Auf Redurs
+„alles im cloud“ wurden alle 7 836 Sätze aus der D1 gelöscht und die App
+abgemeldet.
+
+**Entschieden.** `schluesselFehlt()`: steht die Probe `wolkeProbe` (einmal wurde
+ein Schlüssel gesetzt) und fehlt der Schlüssel, dann
+- beginnt `abgleichen` gar nicht — auch das Holen nicht — und meldet „Der
+  Schlüssel fehlt — nach einem Neustart im Wolke-Fenster ‚Schlüssel setzen‘“;
+- brechen `hoch`, `bloeckeWeg` und `dateienHoch` ab, auch wenn sie direkt
+  gerufen werden.
+Wer nie einen Schlüssel gesetzt hat, gleicht weiter so ab, wie er es nach E796
+ausdrücklich gewählt hat.
+
+**Alternative.** Den Schlüssel auf dem Gerät speichern (Windows-Anmeldedaten,
+`safeStorage`), damit er einen Neustart übersteht. Bequemer, aber §19 sagt
+„Schlüssel nur im Speicher halten, wenn möglich“; das bleibt Redurs Entscheidung
+für später. Bis dahin heisst Neustart: Schlüssel neu eingeben.
+
+**Was offen ist.** Warum die App neu lud, ist nicht geklärt (Kandidat: der
+Dienst-Arbeiter nach dem Update auf v1617).
+
+Nachweis: `test643` §4 (7 Zusagen); die Gegenprobe ohne Sperre druckt den
+Vorfall wörtlich: „Der neue Block ging NICHT hinaus — verschluesselt=0“.

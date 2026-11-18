@@ -116,6 +116,11 @@ const Wolke = (() => {
         return true;
     };
     const hatSchluessel = () => !!schluessel;
+    const schluesselFehlt = () => !!Store.getMeta('wolkeProbe', '') && !schluessel;
+    const SCHLUESSEL_FEHLT = 'Der Schlüssel fehlt — nach einem Neustart im Wolke-Fenster ' +
+        '„Schlüssel setzen“. Bis dahin verlässt nichts dieses Gerät.';
+    const wacheSchluessel = () => { if (schluesselFehlt())
+        throw new Error(SCHLUESSEL_FEHLT); };
     const verschluessele = async (text) => {
         if (!schluessel)
             throw new Error('Es ist kein Schlüssel gesetzt.');
@@ -337,6 +342,7 @@ const Wolke = (() => {
     const EINZEL_MAX = 12 * 1024 * 1024;
     const zuGrossIds = new Set();
     const hoch = async () => {
+        wacheSchluessel();
         let angenommen = 0;
         const abgelehnt = [], angepasst = [];
         for (let runde = 0; runde < 40; runde++) {
@@ -464,6 +470,7 @@ const Wolke = (() => {
             mehr: false };
     };
     const bloeckeWeg = async () => {
+        wacheSchluessel();
         const offen = Store.getMeta('wolkeBloeckeWeg', []) || [];
         if (!offen.length)
             return { bloeckeWeggemeldet: 0 };
@@ -631,6 +638,11 @@ const Wolke = (() => {
     const abgleichen = async () => {
         if (!angemeldet() || !bereich() || zustand.laeuft || !abgleichErlaubt())
             return null;
+        if (schluesselFehlt()) {
+            zustand.fehler = SCHLUESSEL_FEHLT;
+            melden();
+            return null;
+        }
         zustand.laeuft = true;
         zustand.fehler = '';
         melden();
@@ -813,6 +825,7 @@ const Wolke = (() => {
         return { dateienGeholt: geholt, dateienEntfernt: entfernt, dateienUnlesbar: unlesbar };
     };
     const dateienHoch = async () => {
+        wacheSchluessel();
         const oben = new Set(Store.getMeta('wolkeDateienOben', []) || []);
         const alle = await Store.dateiAlle();
         let rauf = 0;
@@ -922,7 +935,7 @@ const Wolke = (() => {
         anmeldenMit, accessMoeglich, anmeldenMitAccess, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
         abgleichErlaubt, abgleichSetzen, kontoLoeschen,
         neuAbgleichOffen, neuAbgleichAntwort,
-        schluesselSetzen, hatSchluessel, verschluessele, entschluessele,
+        schluesselSetzen, hatSchluessel, schluesselFehlt, verschluessele, entschluessele,
         hoch, runter, abgleichen, dateienAbgleichen, takt, taktSetzen, zuSchicken, seiteVon,
         geteiltSetzen, istGeteilt, freigeben, freigaben,
         veroeffentlichen, zurueckziehen,

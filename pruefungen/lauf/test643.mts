@@ -177,6 +177,47 @@ try {
   pruef('§3 … er bleibt auf dem Gerät', lokal.riese);
   pruef('§3 … und wird gezählt', lokal.gezaehlt >= 1, String(lokal.gezaehlt));
   pruef('Die Nachtrag-Liste ist danach leer', lokal.nachtrag === 0, String(lokal.nachtrag));
+  /* ====================================================================
+   * §4 · Nach einem Neuladen fehlt der Schlüssel — dann geht NICHTS hinaus
+   *      (E797, 19. November 2026: 4 646 Sätze im Klartext)
+   * ==================================================================*/
+  console.log('\n§4 Neuladen ohne Schlüssel');
+  const p4 = await geraet();
+  const tok4 = await token();
+  await p4.evaluate(async ([t, ber]: [string, string]) => {
+    Store.setMeta('wolkeBereich', ber);
+    await Wolke.tokenUebernehmen(t);
+    await Wolke.schluesselSetzen('ein langer geheimer satz zum pruefen');
+    Wolke.abgleichSetzen(true);
+    await Wolke.abgleichen();
+  }, [tok4, BEREICH]);
+  await p4.reload();
+  await p4.waitForTimeout(1800);
+  const nachLaden = await p4.evaluate(async () => {
+    const zeit = new Date().toISOString();
+    Store.rohSetzen('blocks', { id: 'b643_neu', type: 'text', text: 'GEHEIM nach Neustart', content: [], parentId: 'p643',
+      parentTable: 'block', color: '', created: zeit, edited: zeit, alive: true, erstelltVon: '' });
+    const erlaubt = Wolke.abgleichErlaubt(), schluessel = Wolke.hatSchluessel(), fehlt = Wolke.schluesselFehlt();
+    const ab = await Wolke.abgleichen().then(() => 'ok', (e: Error) => 'fehler: ' + e.message);
+    const direkt = await Wolke.hoch().then(() => 'ok', (e: Error) => 'fehler: ' + e.message);
+    return { erlaubt, schluessel, fehlt, ab, direkt, fehlerText: Wolke.zustand.fehler || '' };
+  });
+  pruef('§4 Nach dem Neuladen ist der Abgleich noch erlaubt (der gefährliche Fall)', nachLaden.erlaubt);
+  pruef('§4 … und der Schlüssel ist weg', !nachLaden.schluessel && nachLaden.fehlt);
+  const neu = (await serverSaetze()).find(s => String(s.id) === 'b643_neu');
+  pruef('§4 Der neue Block ging NICHT hinaus', !neu, neu ? 'verschluesselt=' + neu.verschluesselt : '');
+  pruef('§4 Kein einziger Klartext-Satz am Server', (await serverSaetze()).every(s => Number(s.verschluesselt) === 1 || String(s.id).startsWith('pruef')),
+    String((await serverSaetze()).filter(s => Number(s.verschluesselt) !== 1).length));
+  pruef('§4 Auch ein direkter hoch() bricht ab', /Schlüssel fehlt/.test(nachLaden.direkt), nachLaden.direkt);
+  pruef('§4 Das Fenster sagt, was zu tun ist', /Schlüssel setzen/.test(nachLaden.fehlerText), nachLaden.fehlerText);
+  await p4.evaluate(async () => {
+    await Wolke.schluesselSetzen('ein langer geheimer satz zum pruefen');
+    await Wolke.abgleichen();
+  });
+  const danach = (await serverSaetze()).find(s => String(s.id) === 'b643_neu');
+  pruef('§4 Mit dem Schlüssel geht er hinaus — verschlüsselt', !!danach && Number(danach.verschluesselt) === 1,
+    danach ? 'verschluesselt=' + danach.verschluesselt : 'fehlt');
+
   pruef('Keine Seitenfehler', fehler.length === 0, fehler.join(' | '));
 } finally {
   await browser.close();

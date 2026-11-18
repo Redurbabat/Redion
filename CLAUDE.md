@@ -2248,7 +2248,9 @@ Paket riss der Abgleich mit „Server nicht erreichbar“ ab. Seine drei
 Gegenproben treffen je andere Zeilen: ohne Bytegrenze „11.65 MB, 7 Pakete“,
 ohne Nachtrag fehlen b643_10 bis b643_29 (der Rest einer zerschnittenen
 Millisekunde fiel hinter die Marke), mit der alten Frage steht wieder
-„verschlüsselt — zum Server“ da. Gezählt am 18. November, im selben Bogen:
+„verschlüsselt — zum Server“ da. Sein §4 kam einen Tag später (E797): nach einem
+Neuladen fehlte der Schlüssel, und der Takt schickte 4 646 Sätze im Klartext —
+die Gegenprobe ohne Sperre druckt „verschluesselt=0“. Gezählt am 18. November, im selben Bogen:
 `ls pruefungen/lauf/test*.mts | wc -l` sagt 577.*
 
 ### Die Befehle

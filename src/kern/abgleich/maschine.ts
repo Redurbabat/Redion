@@ -187,6 +187,20 @@ const Wolke = (() => {
 
   const hatSchluessel = () => !!schluessel;
 
+  /* DER SCHLÜSSEL, DER NACH EINEM NEUSTART FEHLT (E797). Der Schlüssel lebt
+     absichtlich nur im Arbeitsspeicher. Am 19. November 2026 lud die Windows-
+     App mitten im ersten Abgleich neu; der Schlüssel war weg, der Abgleich
+     blieb eingeschaltet — und der Takt schickte 4 646 private Sätze im
+     Klartext. Die Probe `wolkeProbe` sagt, dass auf diesem Gerät einmal ein
+     Schlüssel gesetzt wurde. Steht sie da und fehlt der Schlüssel, verlässt
+     NICHTS das Gerät — weder Sätze noch Grabsteine noch Anhänge —, bis er
+     wieder eingegeben ist. Wer nie einen gesetzt hat, gleicht weiter so ab,
+     wie er es ausdrücklich gewählt hat (E796). */
+  const schluesselFehlt = () => !!Store.getMeta('wolkeProbe', '') && !schluessel;
+  const SCHLUESSEL_FEHLT = 'Der Schlüssel fehlt — nach einem Neustart im Wolke-Fenster ' +
+    '„Schlüssel setzen“. Bis dahin verlässt nichts dieses Gerät.';
+  const wacheSchluessel = () => { if (schluesselFehlt()) throw new Error(SCHLUESSEL_FEHLT); };
+
   const verschluessele = async (text: string) => {
     if (!schluessel) throw new Error('Es ist kein Schlüssel gesetzt.');
     const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -497,6 +511,7 @@ const Wolke = (() => {
    * man merkt es erst am anderen Gerät, und dann sucht man beim Falschen.
    */
   const hoch = async () => {
+    wacheSchluessel();
     let angenommen = 0;
     const abgelehnt = [], angepasst = [];
 
@@ -687,6 +702,7 @@ const Wolke = (() => {
    *  der Server hat den Satz nie gesehen — offline Angelegtes-und-
    *  Gelöschtes wird still ausgetragen statt gemeldet. */
   const bloeckeWeg = async () => {
+    wacheSchluessel();
     const offen: any[] = Store.getMeta('wolkeBloeckeWeg', []) || [];
     if (!offen.length) return { bloeckeWeggemeldet: 0 };
     let gemeldet = 0;
@@ -895,6 +911,10 @@ const Wolke = (() => {
   /** Beide Richtungen. Läuft nie zweimal gleichzeitig. */
   const abgleichen = async () => {
     if (!angemeldet() || !bereich() || zustand.laeuft || !abgleichErlaubt()) return null;
+    /* Vor allem anderen: ohne den einmal gesetzten Schlüssel gar nicht erst
+       anfangen — auch das Holen nicht, denn es legt den Stand fest, gegen den
+       danach hochgeladen würde. */
+    if (schluesselFehlt()) { zustand.fehler = SCHLUESSEL_FEHLT; melden(); return null; }
     zustand.laeuft = true; zustand.fehler = ''; melden();
     try {
       /* Grabsteine VOR dem Holen (E254) — wer erst holt, belebt das eben
@@ -1119,6 +1139,7 @@ const Wolke = (() => {
 
   /** Schicken, was hier fertig liegt und dem Server noch fehlt. */
   const dateienHoch = async () => {
+    wacheSchluessel();
     const oben = new Set<string>(Store.getMeta('wolkeDateienOben', []) || []);
     const alle = await Store.dateiAlle();
     let rauf = 0;
@@ -1257,7 +1278,7 @@ const Wolke = (() => {
            anmeldenMit, accessMoeglich, anmeldenMitAccess, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
            abgleichErlaubt, abgleichSetzen, kontoLoeschen,
            neuAbgleichOffen, neuAbgleichAntwort,
-           schluesselSetzen, hatSchluessel, verschluessele, entschluessele,
+           schluesselSetzen, hatSchluessel, schluesselFehlt, verschluessele, entschluessele,
            hoch, runter, abgleichen, dateienAbgleichen, takt, taktSetzen, zuSchicken, seiteVon,
            geteiltSetzen, istGeteilt, freigeben, freigaben,
            veroeffentlichen, zurueckziehen,
