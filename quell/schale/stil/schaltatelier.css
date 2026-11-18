@@ -118,7 +118,7 @@
   background:var(--bg-hover);
   border:1px solid var(--line);
   font-weight:600;
-  min-height:38px;
+  min-height:44px;
 }
 /* „▶ Strom" (E773) steht neben „Bereiche" und trägt wie er Text: dieselbe
    Höhe, sonst springt die Leiste um 3 px (test634 §1). */
