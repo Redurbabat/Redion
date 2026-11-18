@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-769 Entscheidungen, E1 bis E792 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+770 Entscheidungen, E1 bis E793 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -71049,3 +71049,16 @@ Der gewünschte ChatGPT-Weg ist ein privater benutzerdefinierter MCP-Server
 MCP-/Electron-Prüfung und tatsächliche ChatGPT-Verbindung bleiben getrennte
 Nachweise. Keine Schlüssel oder erfundene Tunnel-ID. Umfang, Sicherheitsgrenzen,
 Installation und aktuelle Nachweise: doku/RED-ION-CHATGPT-INTEGRATION.md.
+
+
+## E793 · Zugriff ohne Laptop ausschliesslich kostenlos
+
+Redur stoppt kostenpflichtige Cloud-Einrichtung: „also wird es etwas kosten wenn ja stope es“. Der Wunsch aus E792 bleibt: MCP soll auch bei ausgeschaltetem Laptop funktionieren und einmal bestätigte Rechte behalten. Die Umsetzung darf nur einen nachweislich aktiven Gratis-Tarif verwenden, keine kostenpflichtigen Ersatzdienste, keinen neuen R2-Bucket und keinen Tarifwechsel auslösen. Bei unklaren Kosten oder ausgeschöpftem Gratis-Kontingent bleibt der Dienst geschlossen.
+
+Der vorhandene Workers-Tarif wurde tatsächlich im Dashboard als Free, $0, Current plan gelesen. Die vor dem Kostenstopp erstellte D1-Datenbank war leer und wurde wieder entfernt; danach war die D1-Liste leer. Kein neuer Cloud-MCP-Worker oder R2-Bucket wurde bereitgestellt. Vor einer späteren Bereitstellung Tarif und konkrete Ressourcen erneut prüfen.
+
+Der Cloud-Dienst verwendet bestehende Redion-Konten, saetze und Versions-/Rechtepfade. Nur Anmelde- und Freigabemetadaten liegen in mcp_state. Keine Entschlüsselung oder Übertragung privater lokaler Dokumente ohne Freigabe; keine grossen Datei-Bytes in D1 als R2-Ersatz. Geräteunabhängiger Zugriff gilt für freigegebene synchronisierte Daten, nicht für neue Aufnahmen eines ausgeschalteten Geräts.
+
+OAuth-Freigaben sind an Client, Ressource, Konto, Bereiche und Rechte gebunden. Gemerkte Zustimmung bleibt bis Widerruf erhalten; zusätzliche Rechte verlangen erneut Zustimmung. Zugangstokens sind kurzlebig, Refresh-Tokens rotieren und verlängern sich bei Nutzung; nach 30 Tagen ohne Refresh ist eine neue Anmeldung nötig. Tokens und Geheimnisse werden nur gehasht gespeichert. Die bestehende Website behält ihr Access-Tor.
+
+Stand und Grenzen: doku/RED-ION-CLOUD-MCP.md. Lokale Modell-, SDK-OAuth- und Browserprüfungen sind keine öffentliche MCP-Verbindung, kein Cloud-Deployment und kein Beleg für abgeglichene persönliche Dokumente. E792 und die ersten beiden Phasen bleiben vollständig beauftragt.

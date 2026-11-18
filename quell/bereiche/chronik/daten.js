@@ -5223,12 +5223,19 @@ const ChronikDaten = {
                     "bisCommit": "",
                     "zeitraum": "18. November 2026; genaue Startzeit nicht erfasst",
                     "pruefungen": "10/10 Bridge-/Sicherheits-/Binärprüfungen; echter SDK-/Electron-Lauf mit 47 Werkzeugen, ImageContent, maskiertem und sichtbarem Kontrollbereich, Zuschnitt, Schaltplanbild, Verweigerung, Neustart, Widerruf, HTTP-Schutz und cleanExit bestanden. 10/10 Windows-/Dateiverträge grün. Ein regulärer Web-Bau meldete Schreibfehler auf einzelnen erzeugten Dateien; getrennte TypeScript-Ausgabe wurde bytegleich mit den Ziel-Dateien abgeglichen. Tatsächliche ChatGPT-Bilddarstellung, sichtbare Nutzer-Issues, atomare Batches, Cloud-Endpunkt und neue Windows-Pakete noch offen."
+                },
+                {
+                    "was": "E793: Kostenloser Cloud-MCP-Ausbau. Aktiven Workers-Free-Tarif gelesen; leere D1 nach Kostenstopp entfernt. OAuth-Zustand und HTTP-Router mit gespeicherten Bereichsfreigaben, Widerruf, PKCE, Code-Einmalverbrauch und rotierendem Refresh gebaut. Noch nicht an echte Konten, Daten oder Worker angeschlossen.",
+                    "vonCommit": "cf306ed09",
+                    "bisCommit": "",
+                    "zeitraum": "18. November 2026; genaue Startzeit nicht erfasst",
+                    "pruefungen": "15 SQLite-/OAuth-/HTTP-Fälle bestanden, darunter echter MCP-SDK-OAuth-Client; synthetischer Chromium-Ablauf mit echtem lokalen HTTPS, Arbeitsbereichswahl, gemerkter Zustimmung und Widerruf bestanden. Hell/Dunkel am Desktop und mobile Darstellung angesehen. Browser fand P150. Cloud-Deployment, ChatGPT-Verbindung und Laptop-Aus-Abgleich NICHT GETESTET."
                 }
             ],
             "zahlen": {
                 "commits": "Eigener Arbeitsbranch; PR #207 ist ausdrücklich beauftragtes Fast-Forward-Ziel.",
-                "entscheidungen": "E791, E792",
-                "neuePruefungen": 3
+                "entscheidungen": "E791, E792, E793",
+                "neuePruefungen": 7
             },
             "groesstesProblem": "Interne Hash-Navigation brach zuerst einen MCP-Aufruf wie einen Renderer-Neustart ab (P140).",
             "interessantesteAnfrage": "ChatGPT soll eine echte geöffnete Windows-App mit vorhandenen Notizen, Tabellen, Lernkarten und Schaltplänen steuern.",
@@ -7225,6 +7232,20 @@ const ChronikDaten = {
             "loesung": "Nachrichtenkennung für die Zuordnung prüfen, dann vor Rückgabe an den MCP-Server entfernen. Unbekannte Kopfzeilenfelder einschliesslich vorgetäuschter Bildbytes abweisen.",
             "beweis": "Zuerst -32602: data must NOT have additional properties. Danach vollständiger echter SDK-/Electron-Lauf mit 47 Werkzeugen, maskiertem Bild, Schaltplanbild und sauberem Neustart bestanden.",
             "lehre": "Ein interner Transportvertrag ist nicht der öffentliche Werkzeugvertrag. Beide am echten validierenden Client prüfen."
+        },
+        {
+            "nr": "P150",
+            "datum": "2026-11-18",
+            "titel": "Sichere Header blockieren den eigenen OAuth-Rückweg im echten Browser",
+            "schwere": "mittel",
+            "entscheidung": "E793",
+            "symptom": "Der synthetische Freigabe-POST wurde zunächst wegen Origin null abgewiesen. Danach blockierte Chromium den registrierten Rückweg mit einer CSP-Verletzung.",
+            "falscheVermutung": "Ein erfolgreicher Request/Response- und SDK-OAuth-Lauf belege schon, dass der Formular-Rückweg im Browser funktioniert.",
+            "wieGefunden": "Tatsächliche Formulare und Redirects im Chromium-Lauf; zuerst Origin-Assertion rot, danach konkrete form-action-Verletzung in der Browserkonsole.",
+            "ursache": "no-referrer setzt beim Formular den Origin auf null. form-action self wird in Chromium auch auf den anschliessenden 303-Redirect angewendet und sperrt die registrierte KI-Adresse.",
+            "loesung": "Auf Auth-Seiten same-origin verwenden und zusätzlich nur den Ursprung der zuvor exakt validierten registrierten Rückgabeadresse in form-action erlauben. Fremde Origins weiterhin zurückweisen; CSRF-Nachweis bleibt an Konto und einmalige Anfrage gebunden.",
+            "beweis": "Roter Browserlauf vor der Korrektur, danach realer lokaler HTTPS-Prüfserver und Chromium: Zustimmung, Callback, gemerkte erneute Verbindung, Widerruf; Hell/Dunkel und mobile Darstellung bestanden.",
+            "lehre": "Protokolltests ersetzen den Browser nicht. Schutzheader zusammen mit ihrem tatsächlichen Formular- und Redirect-Verhalten prüfen."
         }
     ]
 };

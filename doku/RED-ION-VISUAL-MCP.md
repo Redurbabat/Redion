@@ -80,8 +80,9 @@ in `REDION-2026-ISSUES.json` und `.md`.
 
 **NICHT GETESTET:** tatsächliche Bildanzeige im ChatGPT-Plugin, vollständige
 Bearbeitung im persönlichen Profil nach Installation, vollständige Regressionen, physischer
-Windows-Stift, iPhone/macOS und signierte Pakete. Die vorher gebaute EXE basiert
-weiterhin auf `543e253a9`; sie enthält diese neuen Funktionen noch nicht.
+Windows-Stift, iPhone/macOS und signierte Pakete. Die unten dokumentierte neue
+EXE basiert auf `1ee8e624a`; ältere Pakete aus `543e253a9` enthalten den
+Visual-MCP-Ausbau nicht.
 Keine Cloud-URL oder Tunnel-ID wurde erstellt oder erfunden.
 
 ## Neue lokale Windows-Testpakete
@@ -123,3 +124,7 @@ Die tatsächliche verbundene Plugin-Route antwortete auch nach dem Start
 das ist kein erfolgreicher ChatGPT-Nachweis. ChatGPTs plugin-spezifische
 Einstellung wurde gelesen und steht bereits auf **Alle Aktionen erlauben**.
 Globale Einstellungen und Rechte anderer Plugins wurden nicht geändert.
+
+Kostenloser Cloud-Zugriff hat auf Redurs Wunsch Vorrang. Aktueller Tarifnachweis,
+lokal geprüfte OAuth-Freigaben und die noch fehlende Konto-/Datenanbindung
+stehen in `RED-ION-CLOUD-MCP.md`. Kein Cloud-Deployment erfolgt.

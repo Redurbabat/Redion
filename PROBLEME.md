@@ -163,6 +163,7 @@ sind der teuerste Teil und der lehrreichste.
 | P147 | 2026-11-18 | Abgebrochene Kopplung hält spätere Clients fest | 🟠 mittel | E792 |
 | P148 | 2026-11-18 | Automatische Profilsuche verschluckt eine mehrdeutige Auswahl | 🟠 mittel | E792 |
 | P149 | 2026-11-18 | Interne Nachrichtenkennung bricht das MCP-Ausgabeschema | 🟠 mittel | E792 |
+| P150 | 2026-11-18 | Sichere Header blockieren den eigenen OAuth-Rückweg im echten Browser | 🟠 mittel | E793 |
 
 ---
 
@@ -3233,4 +3234,25 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Zuerst -32602: data must NOT have additional properties. Danach vollständiger echter SDK-/Electron-Lauf mit 47 Werkzeugen, maskiertem Bild, Schaltplanbild und sauberem Neustart bestanden.
 
 **Die Lehre.** Ein interner Transportvertrag ist nicht der öffentliche Werkzeugvertrag. Beide am echten validierenden Client prüfen.
+
+
+---
+
+## P150 · Sichere Header blockieren den eigenen OAuth-Rückweg im echten Browser
+
+*2026-11-18 · 🟠 mittel · E793*
+
+**Das Bild.** Der synthetische Freigabe-POST wurde zunächst wegen Origin null abgewiesen. Danach blockierte Chromium den registrierten Rückweg mit einer CSP-Verletzung.
+
+**Die falsche Vermutung.** Ein erfolgreicher Request/Response- und SDK-OAuth-Lauf belege schon, dass der Formular-Rückweg im Browser funktioniert.
+
+**Wie es gefunden wurde.** Tatsächliche Formulare und Redirects im Chromium-Lauf; zuerst Origin-Assertion rot, danach konkrete form-action-Verletzung in der Browserkonsole.
+
+**Die Ursache.** no-referrer setzt beim Formular den Origin auf null. form-action self wird in Chromium auch auf den anschliessenden 303-Redirect angewendet und sperrt die registrierte KI-Adresse.
+
+**Die Lösung.** Auf Auth-Seiten same-origin verwenden und zusätzlich nur den Ursprung der zuvor exakt validierten registrierten Rückgabeadresse in form-action erlauben. Fremde Origins weiterhin zurückweisen; CSRF-Nachweis bleibt an Konto und einmalige Anfrage gebunden.
+
+**Der Beweis.** Roter Browserlauf vor der Korrektur, danach realer lokaler HTTPS-Prüfserver und Chromium: Zustimmung, Callback, gemerkte erneute Verbindung, Widerruf; Hell/Dunkel und mobile Darstellung bestanden.
+
+**Die Lehre.** Protokolltests ersetzen den Browser nicht. Schutzheader zusammen mit ihrem tatsächlichen Formular- und Redirect-Verhalten prüfen.
 

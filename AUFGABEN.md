@@ -60,13 +60,19 @@ mehr gibt.
   geprüft; freigegebene Cloud-Daten bei ausgeschaltetem Gerät erreichbar und
   anschliessend ohne Datenverlust abgeglichen; aktuelle Windows-Pakete gebaut.
 - **Stand:** Adapterfreigabe nach Neustart, Widerruf und automatische
-  Profilauswahl sind im isolierten Client-/Electron-Lauf geprüft. Binärbilder
-  und Aufnahmen sind in Umsetzung. Nicht mit der alten EXE gleichsetzen.
+  Profilauswahl sowie maskierte Binärbilder sind mit 47 Werkzeugen an der
+  gebauten EXE geprüft. Neues Testpaket installiert und gestartet; die echte
+  Plugin-Verbindung meldete weiterhin „Session terminated“. Cloud-OAuth samt
+  gemerkter Freigabe und Widerruf lokal am SDK und Browser geprüft; noch nicht
+  an Konto/Datensync angeschlossen oder bereitgestellt. Prüfstand:
+  `doku/RED-ION-CLOUD-MCP.md`.
 - **Tests:** gezielte echte SDK-/Electron-/Binär-/Berechtigungstests,
   Mehrschritt-Fehler beim 25. Bauteil, Import/Export und Konflikte; Gesamtlauf
   zur abschliessenden Abnahme. Keine historischen Resultate als neue ausgeben.
-- **Priorität:** laufender Auftrag. Cloud-Bereitstellung erst mit geklärtem
-  Account, Host, Kosten und konkretem Deployment; kein main-Merge.
+- **Priorität:** laufender Auftrag, kostenloser Cloud-Zugriff zuerst.
+  E793: Kostenpflichtige Einrichtung gestoppt, nur bestätigter Gratis-Tarif,
+  kein neuer R2-Bucket. Cloud-Bereitstellung erst nach erneutem Tarifnachweis
+  und geprüftem konkretem Dienst; kein main-Merge.
 
 ### RED Ion ChatGPT-Live-Steuerung E791 · echte Kontoverbindung
 

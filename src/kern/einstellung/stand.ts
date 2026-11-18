@@ -7,6 +7,6 @@
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 1613, inhalt: '3620a2c15858e573', gebaut: '2026-11-18T17:55:20.038Z' } as const;
+const Stand = { fassung: 1614, inhalt: '04aba50885d45b35', gebaut: '2026-11-18T19:43:58.842Z' } as const;
 
 (window as any).Stand = Stand;
