@@ -89,6 +89,17 @@ test('Abgleich-Tor im öffentlichen Worker: nur die Abgleichwege des Kerns',asyn
     const code=await call('/konto/code',{method:'POST',body:JSON.stringify({geraet:'Prüfgerät'}),headers:{'Content-Type':'application/json'}});
     assert.equal(code.status,200);const c=(await code.json() as {code:string}).code;
     assert.equal((await call('/konto/code-holen',{method:'POST',body:JSON.stringify({code:c}),headers:{'Content-Type':'application/json'}})).status,202,'Code wartet auf Freigabe');
+    /* Die Windows-App fragt von redion-local://app (P: am 18.11. „Server nicht
+       erreichbar“, weil die Antwort kein Allow-Origin trug). Genau dieser
+       Ursprung bekommt ihn, ein fremder nicht, und nie ein Stern. */
+    const vorab=(origin:string)=>call('/konto/code',{method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Method':'POST',
+      'Access-Control-Request-Headers':'content-type,redion-geraet'}});
+    assert.equal((await vorab('redion-local://app')).headers.get('Access-Control-Allow-Origin'),'redion-local://app','App-Vorabfrage');
+    const appPost=await call('/konto/code',{method:'POST',body:'{}',headers:{'Content-Type':'application/json',Origin:'redion-local://app'}});
+    assert.equal(appPost.headers.get('Access-Control-Allow-Origin'),'redion-local://app','App-Antwort lesbar');
+    for(const fremd of ['https://evil.test','null','redion-local://evil'])
+      assert.notEqual((await vorab(fremd)).headers.get('Access-Control-Allow-Origin'),fremd,'kein Allow-Origin für '+fremd);
+    assert.notEqual((await vorab('https://evil.test')).headers.get('Access-Control-Allow-Origin'),'*','nie ein Stern');
     /* Draussen: der Kern bekommt diese Wege gar nicht zu sehen. */
     for(const p of ['/konto/oauth/github','/v1/users/me','/marken','/konto/code-freigeben'])
       assert.equal((await call(p,{method:'POST',body:'{}'})).status,404,'nicht über das Tor: '+p);

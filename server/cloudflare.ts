@@ -61,7 +61,10 @@ export const alsAnfrage = async (request: Request): Promise<Anfrage | { zuGross:
 };
 
 /** Die Antwort des Kerns → Cloudflare-Response. */
-export const alsAntwort = (a: Antwort) => new Response(a.koerper, { status: a.status, headers: a.kopf });
+/* 101/204/205/304 tragen nach der Norm keinen Körper; Node wirft sonst, und
+   eine Vorabfrage (204) der Windows-App fiel so in den Fehlerzweig (E795). */
+export const alsAntwort = (a: Antwort) => new Response(
+  [101, 204, 205, 304].includes(a.status) ? null : a.koerper, { status: a.status, headers: a.kopf });
 
 /** Sagt, was zu tun ist, statt einfach umzufallen. */
 const ohneDatenbank = () => new Response(JSON.stringify({

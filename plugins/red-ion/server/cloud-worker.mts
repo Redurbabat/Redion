@@ -11,6 +11,19 @@ import {bedienen} from '../../../server/cloudflare.ts';
  * verlangt ein Redion-Token, ausser dem Gerätecode (zehn Minuten, 40 Bit,
  * je Herkunft gebremst). Kein OAuth-Anbieter, keine Freigaben, keine
  * Veröffentlichung, keine Marken, keine Schnittstelle v1/mcp. */
+/** Die Ursprünge der installierten Apps — als EXAKTER Text verglichen. URL.origin
+ * macht aus einem eigenen Schema 'null', und 'null' senden auch Sandbox-Rahmen
+ * und file:// — also kein Vergleich über URL, und kein Stern. Die Antworten
+ * verlangen ohnehin ein Bearer-Token; Cookies gibt es hier nicht. */
+export const APP_URSPRUENGE:ReadonlySet<string>=new Set(['redion-local://app']);
+const mitAppUrsprung=(request:Request,response:Response):Response=>{
+  const origin=request.headers.get('origin');
+  if(!origin||!APP_URSPRUENGE.has(origin))return response;
+  /* 101/204/205/304 dürfen keinen Körper tragen — die Vorabfrage ist 204. */
+  const neu=new Response([101,204,205,304].includes(response.status)?null:response.body,response);
+  neu.headers.set('Access-Control-Allow-Origin',origin);neu.headers.append('Vary','Origin');
+  return neu;
+};
 export const SYNC_TOR=/^\/(api\/stand|konto\/(code|code-holen|ich|abmelden|geraete)|sync\/(hoch|runter)|datei\/(melden|stueck|runter|stand|weg))\/?$/;
 
 /** Bindungen des Workers, strukturell statt aus den erzeugten Wrangler-Typen:
@@ -29,8 +42,8 @@ export default {
       const auth=new URL(env.MCP_AUTHORIZATION_ENDPOINT),issuer=new URL(env.MCP_ISSUER);
       if(auth.origin===issuer.origin)return unavailable();
       const url=new URL(request.url);if(url.origin!==issuer.origin)return new Response(null,{status:403});
-      if(SYNC_TOR.test(url.pathname)||request.method==='OPTIONS'&&SYNC_TOR.test(url.pathname))
-        return await bedienen(request,{DB:env.DB,R2:env.R2} as never)??new Response(null,{status:404});
+      if(SYNC_TOR.test(url.pathname))
+        return mitAppUrsprung(request,await bedienen(request,{DB:env.DB,R2:env.R2} as never)??new Response(null,{status:404}));
       const state=mcpStateD1(env.DB),oauth=createMcpOAuth({state,issuer:env.MCP_ISSUER,resource:env.MCP_ISSUER+'/mcp',
         authorizationEndpoint:env.MCP_AUTHORIZATION_ENDPOINT});
       if(url.pathname==='/mcp')return await createCloudMcpHttp({oauth,database:env.DB})(request)??new Response(null,{status:404,headers:{'Cache-Control':'no-store'}});
