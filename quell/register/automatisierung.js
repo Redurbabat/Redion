@@ -16,6 +16,14 @@ const RegisterAutomatisierung = (() => {
         context.check();
         return handler(input, context);
     };
-    return { melde, ausfuehren, namen: () => [...handlers.keys()] };
+    let ansichtsDienst = null;
+    const meldeAnsicht = (dienst) => {
+        if (ansichtsDienst)
+            throw new Error('MCP-Ansicht doppelt angemeldet');
+        ansichtsDienst = dienst;
+    };
+    const ansicht = () => ansichtsDienst?.html() ?? '';
+    const montiereAnsicht = (container) => { ansichtsDienst?.mount(container); };
+    return { melde, ausfuehren, namen: () => [...handlers.keys()], meldeAnsicht, ansicht, montiereAnsicht };
 })();
 Register.automatisierung = RegisterAutomatisierung;
