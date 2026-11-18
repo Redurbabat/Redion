@@ -3851,16 +3851,50 @@ Mit einem normalen Stift direkt über einer laufenden Stromsimulation schreiben,
 **Besserer Prompt:** Baue und prüfe die lokale MCP-/Electron-Verbindung, dokumentiere die echte Tunnel-Erstellung getrennt und behaupte keine bereits verbundene ChatGPT-App.
 
 
+**2 · nicht erfasst**
+
+> füge das im redion als issus also damit ich sehe was ist noch offen
+
+**Gemeint:** Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen.
+
+**Besser geschrieben:** Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen.
+
+**Besserer Prompt:** Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen.
+
+
+**3 · nicht erfasst**
+
+> es sollte so auch sein das ich nur die link kompiere und auch bei der anderecn ai einfügen kann direk und
+
+**Gemeint:** Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten.
+
+**Besser geschrieben:** Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten.
+
+**Besserer Prompt:** Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen.
+
+
+**4 · nicht erfasst**
+
+> und ich muss nicht jedesmal erlauben nur bei erste mal oder beim einstelungen das ändern und dann machen wir so es sollte nicht nur wenn die laptop auf ist das redion zugreifen kann auch wenn die laptop offonline ist ,
+
+**Gemeint:** Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop.
+
+**Besser geschrieben:** Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop.
+
+**Besserer Prompt:** Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen.
+
+
 #### Was gearbeitet wurde
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
 |---|---|---|---|---|
 | E791: endlicher MCP-Vertrag mit 46 Werkzeugen, geschützte Windows-Bridge, native Sitzungsfreigabe, bestehende App-Aktionen und sichtbare Einstellungen; eigenständiges Plugin-Paket mit Start-/Installationsskripten. | `30d0a1ece` → `` | 18. November 2026; Startzeit nicht erfasst | — | Echter SDK-Client und isolierte Electron-App: stdio- und HTTP-Handshake, Lesen/Schreiben, sichtbare Änderungen, fünf Überschriften, 20 Lernkarten, Aufgabe, Tabellenzeile, Schaltplan/Klemmen, Neustart und Widerruf bestanden. Vertrags-/Kanalprüfung, 21 Windows-Verträge und 9 Ink-/Paritätsverträge grün. Echter ChatGPT-Tunnel, Kontoberechtigung, Installation/Signierung und physische Geräte NICHT GETESTET. Anschliessend P145/P146 mit echten roten Gegenproben behoben: Rohtext/Markdown und Sonderzeichen im Store, Anzeige und nach Neustart erhalten; beide nativen Prozessenden jetzt vor Erfolgsprotokoll auf Exitcode 0 geprüft. |
+| E792: Vollständiger Anforderungskatalog, gemerkte widerrufbare Adapter, eigene Bildfreigabe, konfigurierbare Bestätigungen, aktive Profilerkennung; begrenzter Binärbildkanal und echte maskierte Fenster-/Editor-/Schaltplanbilder mit Vorschau. Mehrschritt- und Cloud-Ausbau bleiben offen. | `c76959ce7` → `` | 18. November 2026; genaue Startzeit nicht erfasst | — | 10/10 Bridge-/Sicherheits-/Binärprüfungen; echter SDK-/Electron-Lauf mit 47 Werkzeugen, ImageContent, maskiertem und sichtbarem Kontrollbereich, Zuschnitt, Schaltplanbild, Verweigerung, Neustart, Widerruf, HTTP-Schutz und cleanExit bestanden. 10/10 Windows-/Dateiverträge grün. Ein regulärer Web-Bau meldete Schreibfehler auf einzelnen erzeugten Dateien; getrennte TypeScript-Ausgabe wurde bytegleich mit den Ziel-Dateien abgeglichen. Tatsächliche ChatGPT-Bilddarstellung, sichtbare Nutzer-Issues, atomare Batches, Cloud-Endpunkt und neue Windows-Pakete noch offen. |
 
 #### Zahlen des Tages
 
 - **commits:** Eigener Arbeitsbranch; PR #207 ist ausdrücklich beauftragtes Fast-Forward-Ziel.
-- **entscheidungen:** E791
+- **entscheidungen:** E791, E792
 - **neuePruefungen:** 3
 
 #### Das grösste Problem
@@ -3881,5 +3915,5 @@ ChatGPT soll eine echte geöffnete Windows-App mit vorhandenen Notizen, Tabellen
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 146 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 149 Einträge.
 

@@ -160,6 +160,9 @@ sind der teuerste Teil und der lehrreichste.
 | P144 | 2026-11-18 | Eine alte Startfreigabe überlebte das Abschalten der Verbindung | 🟠 mittel | E791 |
 | P145 | 2026-11-18 | Der Textadapter verwechselte Markdown mit HTML | hoch | E791 |
 | P146 | 2026-11-18 | Beim Beenden wurde an ein zerstörtes Fenster gesendet | hoch | E791 |
+| P147 | 2026-11-18 | Abgebrochene Kopplung hält spätere Clients fest | 🟠 mittel | E792 |
+| P148 | 2026-11-18 | Automatische Profilsuche verschluckt eine mehrdeutige Auswahl | 🟠 mittel | E792 |
+| P149 | 2026-11-18 | Interne Nachrichtenkennung bricht das MCP-Ausgabeschema | 🟠 mittel | E792 |
 
 ---
 
@@ -3167,4 +3170,67 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Gegenprobe zuerst rot: Object has been destroyed in cancelAutomation, Exitcode 91. Danach derselbe vollständige echte MCP-/Electron-Test mit zwei sauberen Prozessenden, cleanExit true und Exitcode 0 bestanden.
 
 **Die Lehre.** Erfolg erst nach abgeschlossenem Aufräumen melden. Native Fehlerdialoge müssen einen automatisierten Test rot machen.
+
+
+---
+
+## P147 · Abgebrochene Kopplung hält spätere Clients fest
+
+*2026-11-18 · 🟠 mittel · E792*
+
+**Das Bild.** Nach Abbruch einer Verbindungsanfrage meldete der nächste Client dauerhaft PAIRING_BUSY.
+
+**Die falsche Vermutung.** Das Schliessen des Clients beende automatisch auch den offenen nativen Freigabedialog.
+
+**Wie es gefunden wurde.** Eine isolierte echte Named-Pipe-Prüfung liess die erste künstliche Bestätigung offen, trennte den Client und verband danach einen neuen Client.
+
+**Die Ursache.** Der offene Dialog hatte weder socketgebundene Abbruchsteuerung noch ein eigenes Zeitlimit; der Pairing-Zustand blieb belegt.
+
+**Die Lösung.** Dialoge mit AbortSignal, Zeitlimit und Socket-Eigentümer binden. Beim Trennen abbrechen und ausschliesslich den Zustand dieser Anfrage freigeben.
+
+**Der Beweis.** Gegenprobe zuerst PAIRING_BUSY; danach neue Kopplung erfolgreich. Neun gezielte MCP-/Binärprüfungen bestehen, einschliesslich dieser Gegenprobe.
+
+**Die Lehre.** Verbindungsabbruch muss auch wartende menschliche Freigaben beenden, nicht nur Datenanforderungen.
+
+
+---
+
+## P148 · Automatische Profilsuche verschluckt eine mehrdeutige Auswahl
+
+*2026-11-18 · 🟠 mittel · E792*
+
+**Das Bild.** Zwei aktive synthetische Windows-Profile erschienen fälschlich als APP_NOT_RUNNING.
+
+**Die falsche Vermutung.** Eine fehlgeschlagene Discovery bedeute stets, dass keine App laufe.
+
+**Wie es gefunden wurde.** Der Diagnose-CLI-Test setzte beide bekannten Profilmarker mit einem tatsächlich lebenden Testprozess und verlangte eine ausdrückliche Auswahl.
+
+**Die Ursache.** Ein allgemeiner catch-Block überschrieb den bereits erkannten Status AMBIGUOUS_PROFILE.
+
+**Die Lösung.** Mehrdeutigkeit sichtbar zurückgeben; nur ein eindeutig aktives Profil automatisch wählen. Keine Profile verschieben oder zusammenführen.
+
+**Der Beweis.** Zuerst APP_NOT_RUNNING statt AMBIGUOUS_PROFILE; danach alle vier Skript-/Discovery-Prüfungen grün.
+
+**Die Lehre.** Ein aus Sicherheitsgründen verweigerter Automatismus braucht eine eigene verständliche Ursache.
+
+
+---
+
+## P149 · Interne Nachrichtenkennung bricht das MCP-Ausgabeschema
+
+*2026-11-18 · 🟠 mittel · E792*
+
+**Das Bild.** Der echte SDK-Client lehnte den App-Status nach Umstellung des Antwortlesers mit InvalidParams ab.
+
+**Die falsche Vermutung.** Der bisherige Ergebnisumschlag könne unverändert vom neuen Binärrahmenleser bis zum SDK weitergegeben werden.
+
+**Wie es gefunden wurde.** Der echte stdio-Client validierte structuredContent gegen den geschlossenen Tool-Vertrag und meldete ein zusätzliches Feld.
+
+**Die Ursache.** Das interne Zuordnungsfeld id wurde nach der Prüfung der passenden Antwort nicht aus dem Transportumschlag entfernt.
+
+**Die Lösung.** Nachrichtenkennung für die Zuordnung prüfen, dann vor Rückgabe an den MCP-Server entfernen. Unbekannte Kopfzeilenfelder einschliesslich vorgetäuschter Bildbytes abweisen.
+
+**Der Beweis.** Zuerst -32602: data must NOT have additional properties. Danach vollständiger echter SDK-/Electron-Lauf mit 47 Werkzeugen, maskiertem Bild, Schaltplanbild und sauberem Neustart bestanden.
+
+**Die Lehre.** Ein interner Transportvertrag ist nicht der öffentliche Werkzeugvertrag. Beide am echten validierenden Client prüfen.
 

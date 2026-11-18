@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-768 Entscheidungen, E1 bis E791 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+769 Entscheidungen, E1 bis E792 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -70988,6 +70988,46 @@ kein Verhalten.
 
 
 
+## E792 · Visual MCP, sichere Mehrschritt-Aufträge und dauerhafte widerrufbare Freigaben
+
+Redur übernimmt den vollständigen Verbesserungsplan 2026 als langfristige
+Roadmap. Der ausdrücklich festgelegte erste Ausbau umfasst die ersten beiden
+Phasen vollständig: Visual MCP und sichere Mehrschritt-Automatisierung. Die
+bisherigen 46 Werkzeuge, der bestehende Store, PR #207 und Offline-Betrieb bleiben.
+Die 168 Anforderungen und Abnahmekriterien stehen in
+`doku/REDION-2026-ISSUES.json` und der lesbaren Begleitdatei. Sie müssen zusätzlich
+in Redion sichtbar angelegt werden; eine Repo-Datei allein erfüllt das nicht.
+
+Redurs Ergänzungen: „es sollte so auch sein das ich nur die link kompiere und
+auch bei der anderecn ai einfügen kann direk und“ sowie „und ich muss nicht
+jedesmal erlauben nur bei erste mal oder beim einstelungen das ändern und dann
+machen wir so es sollte nicht nur wenn die laptop auf ist das redion zugreifen
+kann auch wenn die laptop offonline ist ,“.
+
+E791 wird entsprechend ergänzt: Einmal bestätigte lokale Adapter dürfen mit
+ausdrücklich gewählter Einstellung nach App-Neustart weiterarbeiten. Alte
+Konfigurationen erweitern ihre Rechte nicht automatisch. Rechteänderung und
+Widerruf beenden Sitzungen. Einzelbestätigungen für kritische Aktionen und
+Bilder bleiben getrennt einstellbar; keine MCP-Aktion darf ihre eigenen
+Freigaben verändern. Bilder haben eine eigene Funktionsfreigabe, eine Vorschau,
+Maskierung, Grössenbegrenzung und kurze Lebensdauer. Binärbytes laufen separat
+von JSON-Steuernachrichten. Nur die eigene App wird aufgenommen.
+
+Ein kopierbarer universeller HTTPS-Endpunkt muss kompatible MCP-Clients sicher
+authentifizieren; der Link enthält kein Zugangstoken. Ein lokaler Tunnel
+arbeitet nur bei laufendem Gerät. Zugriff bei ausgeschaltetem Laptop braucht
+einen dauerhaft betriebenen Cloud-Dienst auf Basis des vorhandenen Syncs und
+der ausdrücklich freigegebenen Daten. Aktueller Fensterinhalt ist dann nicht
+verfügbar; Alter und Herkunft gespeicherter Daten müssen erkennbar bleiben.
+Kein zweiter Dokumentdatenspeicher und keine erfundene fertige Cloud-Verbindung.
+Account, Host, Kosten und Deployment werden vor der echten Bereitstellung
+konkret geprüft; alte D1-IDs werden nicht blind aktiviert.
+
+Abnahme: echte MCP-Bildblöcke bis zum ChatGPT-Plugin, atomare Aufträge samt
+Vorschau und vollständigem Rollback, sicherer Mehrdokumentbetrieb, Widerruf,
+Windows-Paket und getrennte Cloud-/Gerätenachweise. Bestandene lokale
+synthetische Tests beweisen weder eine ChatGPT-Verbindung noch eine Installation.
+
 ## E791 · RED Ion steuert die laufende Windows-App über freigegebene semantische MCP-Aktionen
 
 Redur beauftragt die echte Live-Steuerung und die Fortsetzung in PR #207.
@@ -70997,7 +71037,8 @@ den PR-Branch, kein neuer PR, kein Force-Push und kein main-Merge.
 
 Die neue Bridge ist standardmässig aus, benutzt eine benutzergeschützte Named
 Pipe, native Sitzungsfreigaben, endliche Verträge und Rechte je Funktion.
-Kritische Aktionen brauchen eine argumentgebundene Einmalbestätigung.
+Kritische Aktionen brauchen zunächst eine argumentgebundene Einmalbestätigung;
+E792 ergänzt ausdrücklich einstellbare, widerrufbare Delegation.
 Vorhandene Bereiche melden Aktionen im Register an; derselbe Store, Fassungen,
 Verlauf und Flush werden benutzt. Kein zweiter Speicher und kein universelles
 JavaScript-/Shellwerkzeug. Das offizielle MCP-SDK ist ausdrücklich beauftragt.

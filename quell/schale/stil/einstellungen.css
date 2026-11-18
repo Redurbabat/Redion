@@ -1,6 +1,7 @@
 /* Die lokale Desktop-Freigabe bleibt im vorhandenen MCP-Einstellungsbereich. */
 .desktop-automation { padding-block: 12px 24px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
 .desktop-automation > label, .desktop-automation fieldset label { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.desktop-automation [hidden] { display: none !important; }
 .desktop-automation fieldset { border: 1px solid var(--line); border-radius: 12px; padding: 8px 16px; margin-block: 16px; }
 .desktop-automation-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .desktop-automation-actions button { min-height: 44px; }

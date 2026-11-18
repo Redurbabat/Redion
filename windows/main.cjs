@@ -15,6 +15,7 @@ const { configuredSource, saveConfiguredSource, startSourceUpdates, validateSour
 const { destinationFromArgs, jumpTasks, readWindowState, windowStateToSave } = require('./generated/desktop-shell.cjs');
 const { NativeFiles, trustedSender, safeExportName } = require('./generated/files.cjs');
 const { AutomationBridge, secureDirectory } = require('./generated/automation-bridge.cjs');
+const { VisualCapture } = require('./generated/visual-capture.cjs');
 const { actionErrorMessage } = require('./generated/automation-contract.cjs');
 const { randomUUID } = require('node:crypto');
 
@@ -72,6 +73,7 @@ if (!lock) {
     mainWindow.webContents.send(channel, ...args);
   };
   const cancelAutomation = () => {
+    visual.cancel();
     sendAutomation('redion:automation:cancel');
     for (const pending of automationPending.values()) {
       clearTimeout(pending.timer);
@@ -79,10 +81,7 @@ if (!lock) {
     }
     automationPending.clear();
   };
-  const automation = process.platform === 'win32' ? new AutomationBridge({
-    userData: app.getPath('userData'), profile: TEST_PROFILE ? 'test' : LIVE || LOCAL_SOURCE ? 'development' : 'production',
-    ...(app.isPackaged && !TEST_PROFILE ? { executable: process.env.PORTABLE_EXECUTABLE_FILE || process.execPath } : {}),
-    invoke: (tool, input) => new Promise((resolve, reject) => {
+  const invokeAutomation = (tool, input) => new Promise((resolve, reject) => {
       if (!mainWindow || !automationReady || mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) {
         reject(Object.assign(new Error('Die Redion-Arbeitsfläche ist noch nicht bereit.'), { code: 'APP_NOT_READY' })); return;
       }
@@ -94,14 +93,21 @@ if (!lock) {
       }, 25000);
       automationPending.set(id, { resolve, reject, timer });
       sendAutomation('redion:automation:request', { id, tool, arguments: input });
-    }),
+    });
+  const visual = new VisualCapture(() => mainWindow, input => invokeAutomation('redion_capture_view', input));
+  const automation = process.platform === 'win32' ? new AutomationBridge({
+    userData: app.getPath('userData'), profile: TEST_PROFILE ? 'test' : LIVE || LOCAL_SOURCE ? 'development' : 'production',
+    ...(app.isPackaged && !TEST_PROFILE ? { executable: process.env.PORTABLE_EXECUTABLE_FILE || process.execPath } : {}),
+    invoke: invokeAutomation,
+    capture: (input, check, confirm, confirmImage) => visual.capture(input, check, confirm, confirmImage),
     cancel: cancelAutomation,
-    confirm: async (title, detail) => {
-      if (!mainWindow || mainWindow.isDestroyed()) return false;
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
-      const result = await dialog.showMessageBox(mainWindow, { type: 'warning', title,
-        message: title, detail, buttons: ['Abbrechen', 'Erlauben'], defaultId: 0, cancelId: 0, noLink: true });
+    confirm: async (title, detail, signal, previewId) => {
+      const owner = previewId === undefined ? mainWindow : visual.preview(previewId);
+      if (!owner || owner.isDestroyed()) return false;
+      if (owner.isMinimized()) owner.restore();
+      owner.focus();
+      const result = await dialog.showMessageBox(owner, { type: 'warning', title,
+        message: title, detail, ...(signal ? { signal } : {}), buttons: ['Abbrechen', 'Erlauben'], defaultId: 0, cancelId: 0, noLink: true });
       return result.response === 1;
     },
     focus: () => { if (mainWindow?.isMinimized()) mainWindow.restore(); mainWindow?.show(); mainWindow?.focus(); },
@@ -175,7 +181,8 @@ if (!lock) {
     return { opened: true };
   });
   ipcMain.handle('redion:automation:configure', (event, policy) => serial(() => automationSender(event).configure(policy)));
-  ipcMain.handle('redion:automation:disconnect', event => { automationSender(event).disconnect(); return automation.state(); });
+  ipcMain.handle('redion:automation:disconnect', event => { automationSender(event).revokeClient(); return automation.state(); });
+  ipcMain.handle('redion:automation:revoke', (event, id) => { automationSender(event).revokeClient(id); return automation.state(); });
   ipcMain.handle('redion:automation:ready', event => { automationSender(event); automationReady = true; });
   ipcMain.handle('redion:automation:reply', (event, reply) => {
     automationSender(event);

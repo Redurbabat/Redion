@@ -4871,6 +4871,7 @@ html[data-theme="light"] .banner{color:#37352f}
 /* Die lokale Desktop-Freigabe bleibt im vorhandenen MCP-Einstellungsbereich. */
 .desktop-automation { padding-block: 12px 24px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
 .desktop-automation > label, .desktop-automation fieldset label { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.desktop-automation [hidden] { display: none !important; }
 .desktop-automation fieldset { border: 1px solid var(--line); border-radius: 12px; padding: 8px 16px; margin-block: 16px; }
 .desktop-automation-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .desktop-automation-actions button { min-height: 44px; }
@@ -30099,7 +30100,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1608, inhalt: '83e875031dad1684', gebaut: '2026-11-18T09:30:14.834Z' };
+const Stand = { fassung: 1612, inhalt: '7d7efefdfc894b23', gebaut: '2026-11-18T17:50:28.943Z' };
 window.Stand = Stand;
 
 </script>
@@ -85966,6 +85967,30 @@ const ChronikDaten = {
                     "gemeint": "Der lokale Adapter kann fertig getestet werden; die echte Kontoverbindung muss erst eingerichtet werden.",
                     "besser": "Ich habe noch keinen Secure MCP Tunnel. Bereite die lokale Integration und die Einrichtungsschritte vor.",
                     "besserePrompt": "Baue und prüfe die lokale MCP-/Electron-Verbindung, dokumentiere die echte Tunnel-Erstellung getrennt und behaupte keine bereits verbundene ChatGPT-App."
+                },
+                {
+                    "zeit": "nicht erfasst",
+                    "wortlaut": "füge das im redion als issus also damit ich sehe was ist noch offen",
+                    "woher": "Nachricht in diesem Chat; Datum der Aufzeichnung, genaue Nachrichtenzeit nicht erfasst.",
+                    "gemeint": "Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen.",
+                    "besser": "Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen.",
+                    "besserePrompt": "Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen."
+                },
+                {
+                    "zeit": "nicht erfasst",
+                    "wortlaut": "es sollte so auch sein das ich nur die link kompiere und auch bei der anderecn ai einfügen kann direk und",
+                    "woher": "Nachricht in diesem Chat; Datum der Aufzeichnung, genaue Nachrichtenzeit nicht erfasst.",
+                    "gemeint": "Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten.",
+                    "besser": "Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten.",
+                    "besserePrompt": "Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen."
+                },
+                {
+                    "zeit": "nicht erfasst",
+                    "wortlaut": "und ich muss nicht jedesmal erlauben nur bei erste mal oder beim einstelungen das ändern und dann machen wir so es sollte nicht nur wenn die laptop auf ist das redion zugreifen kann auch wenn die laptop offonline ist ,",
+                    "woher": "Nachricht in diesem Chat; Datum der Aufzeichnung, genaue Nachrichtenzeit nicht erfasst.",
+                    "gemeint": "Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop.",
+                    "besser": "Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop.",
+                    "besserePrompt": "Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen."
                 }
             ],
             "arbeit": [
@@ -85975,11 +86000,18 @@ const ChronikDaten = {
                     "bisCommit": "",
                     "zeitraum": "18. November 2026; Startzeit nicht erfasst",
                     "pruefungen": "Echter SDK-Client und isolierte Electron-App: stdio- und HTTP-Handshake, Lesen/Schreiben, sichtbare Änderungen, fünf Überschriften, 20 Lernkarten, Aufgabe, Tabellenzeile, Schaltplan/Klemmen, Neustart und Widerruf bestanden. Vertrags-/Kanalprüfung, 21 Windows-Verträge und 9 Ink-/Paritätsverträge grün. Echter ChatGPT-Tunnel, Kontoberechtigung, Installation/Signierung und physische Geräte NICHT GETESTET. Anschliessend P145/P146 mit echten roten Gegenproben behoben: Rohtext/Markdown und Sonderzeichen im Store, Anzeige und nach Neustart erhalten; beide nativen Prozessenden jetzt vor Erfolgsprotokoll auf Exitcode 0 geprüft."
+                },
+                {
+                    "was": "E792: Vollständiger Anforderungskatalog, gemerkte widerrufbare Adapter, eigene Bildfreigabe, konfigurierbare Bestätigungen, aktive Profilerkennung; begrenzter Binärbildkanal und echte maskierte Fenster-/Editor-/Schaltplanbilder mit Vorschau. Mehrschritt- und Cloud-Ausbau bleiben offen.",
+                    "vonCommit": "c76959ce7",
+                    "bisCommit": "",
+                    "zeitraum": "18. November 2026; genaue Startzeit nicht erfasst",
+                    "pruefungen": "10/10 Bridge-/Sicherheits-/Binärprüfungen; echter SDK-/Electron-Lauf mit 47 Werkzeugen, ImageContent, maskiertem und sichtbarem Kontrollbereich, Zuschnitt, Schaltplanbild, Verweigerung, Neustart, Widerruf, HTTP-Schutz und cleanExit bestanden. 10/10 Windows-/Dateiverträge grün. Ein regulärer Web-Bau meldete Schreibfehler auf einzelnen erzeugten Dateien; getrennte TypeScript-Ausgabe wurde bytegleich mit den Ziel-Dateien abgeglichen. Tatsächliche ChatGPT-Bilddarstellung, sichtbare Nutzer-Issues, atomare Batches, Cloud-Endpunkt und neue Windows-Pakete noch offen."
                 }
             ],
             "zahlen": {
                 "commits": "Eigener Arbeitsbranch; PR #207 ist ausdrücklich beauftragtes Fast-Forward-Ziel.",
-                "entscheidungen": "E791",
+                "entscheidungen": "E791, E792",
                 "neuePruefungen": 3
             },
             "groesstesProblem": "Interne Hash-Navigation brach zuerst einen MCP-Aufruf wie einen Renderer-Neustart ab (P140).",
@@ -87935,6 +87967,48 @@ const ChronikDaten = {
             "loesung": "Alle neuen Automatisierungsmeldungen nur an ein bestehendes Fenster mit lebenden webContents senden. Offene Aktionen weiterhin abbrechen und aufräumen.",
             "beweis": "Gegenprobe zuerst rot: Object has been destroyed in cancelAutomation, Exitcode 91. Danach derselbe vollständige echte MCP-/Electron-Test mit zwei sauberen Prozessenden, cleanExit true und Exitcode 0 bestanden.",
             "lehre": "Erfolg erst nach abgeschlossenem Aufräumen melden. Native Fehlerdialoge müssen einen automatisierten Test rot machen."
+        },
+        {
+            "nr": "P147",
+            "datum": "2026-11-18",
+            "titel": "Abgebrochene Kopplung hält spätere Clients fest",
+            "schwere": "mittel",
+            "entscheidung": "E792",
+            "symptom": "Nach Abbruch einer Verbindungsanfrage meldete der nächste Client dauerhaft PAIRING_BUSY.",
+            "falscheVermutung": "Das Schliessen des Clients beende automatisch auch den offenen nativen Freigabedialog.",
+            "wieGefunden": "Eine isolierte echte Named-Pipe-Prüfung liess die erste künstliche Bestätigung offen, trennte den Client und verband danach einen neuen Client.",
+            "ursache": "Der offene Dialog hatte weder socketgebundene Abbruchsteuerung noch ein eigenes Zeitlimit; der Pairing-Zustand blieb belegt.",
+            "loesung": "Dialoge mit AbortSignal, Zeitlimit und Socket-Eigentümer binden. Beim Trennen abbrechen und ausschliesslich den Zustand dieser Anfrage freigeben.",
+            "beweis": "Gegenprobe zuerst PAIRING_BUSY; danach neue Kopplung erfolgreich. Neun gezielte MCP-/Binärprüfungen bestehen, einschliesslich dieser Gegenprobe.",
+            "lehre": "Verbindungsabbruch muss auch wartende menschliche Freigaben beenden, nicht nur Datenanforderungen."
+        },
+        {
+            "nr": "P148",
+            "datum": "2026-11-18",
+            "titel": "Automatische Profilsuche verschluckt eine mehrdeutige Auswahl",
+            "schwere": "mittel",
+            "entscheidung": "E792",
+            "symptom": "Zwei aktive synthetische Windows-Profile erschienen fälschlich als APP_NOT_RUNNING.",
+            "falscheVermutung": "Eine fehlgeschlagene Discovery bedeute stets, dass keine App laufe.",
+            "wieGefunden": "Der Diagnose-CLI-Test setzte beide bekannten Profilmarker mit einem tatsächlich lebenden Testprozess und verlangte eine ausdrückliche Auswahl.",
+            "ursache": "Ein allgemeiner catch-Block überschrieb den bereits erkannten Status AMBIGUOUS_PROFILE.",
+            "loesung": "Mehrdeutigkeit sichtbar zurückgeben; nur ein eindeutig aktives Profil automatisch wählen. Keine Profile verschieben oder zusammenführen.",
+            "beweis": "Zuerst APP_NOT_RUNNING statt AMBIGUOUS_PROFILE; danach alle vier Skript-/Discovery-Prüfungen grün.",
+            "lehre": "Ein aus Sicherheitsgründen verweigerter Automatismus braucht eine eigene verständliche Ursache."
+        },
+        {
+            "nr": "P149",
+            "datum": "2026-11-18",
+            "titel": "Interne Nachrichtenkennung bricht das MCP-Ausgabeschema",
+            "schwere": "mittel",
+            "entscheidung": "E792",
+            "symptom": "Der echte SDK-Client lehnte den App-Status nach Umstellung des Antwortlesers mit InvalidParams ab.",
+            "falscheVermutung": "Der bisherige Ergebnisumschlag könne unverändert vom neuen Binärrahmenleser bis zum SDK weitergegeben werden.",
+            "wieGefunden": "Der echte stdio-Client validierte structuredContent gegen den geschlossenen Tool-Vertrag und meldete ein zusätzliches Feld.",
+            "ursache": "Das interne Zuordnungsfeld id wurde nach der Prüfung der passenden Antwort nicht aus dem Transportumschlag entfernt.",
+            "loesung": "Nachrichtenkennung für die Zuordnung prüfen, dann vor Rückgabe an den MCP-Server entfernen. Unbekannte Kopfzeilenfelder einschliesslich vorgetäuschter Bildbytes abweisen.",
+            "beweis": "Zuerst -32602: data must NOT have additional properties. Danach vollständiger echter SDK-/Electron-Lauf mit 47 Werkzeugen, maskiertem Bild, Schaltplanbild und sauberem Neustart bestanden.",
+            "lehre": "Ein interner Transportvertrag ist nicht der öffentliche Werkzeugvertrag. Beide am echten validierenden Client prüfen."
         }
     ]
 };
@@ -124782,7 +124856,7 @@ window.MCP = MCP;
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/ki/desktop.ts (npm run bauen:ts). */
 const DesktopMCP = (() => {
-    const names = { app: 'Navigation', documents: 'Notizen', databases: 'Datenbanken', learning: 'Lernkarten und Aufgaben', pdf: 'PDF öffnen', schematics: 'Schaltpläne', settings: 'Darstellung' };
+    const names = { app: 'Navigation', documents: 'Notizen', databases: 'Datenbanken', learning: 'Lernkarten und Aufgaben', pdf: 'PDF öffnen', schematics: 'Schaltpläne', settings: 'Darstellung', visual: 'Bilder aus Redion übertragen' };
     const html = () => {
         if (!window.RedionDesktop?.automationState || window.RedionDesktop.automationSupported === false)
             return '<section class="desktop-automation"><h3>ChatGPT &amp; Automatisierung</h3><p>Die lokale Live-Steuerung benötigt die neue Redion-Windows-App. Auf diesem Gerät bleibt sie ausgeschaltet.</p></section>';
@@ -124792,16 +124866,19 @@ const DesktopMCP = (() => {
             '<label><input type="checkbox" data-automation-policy="enabled"> Verbindung aktivieren</label>' +
             '<label><input type="checkbox" data-automation-policy="write"> Schreibzugriffe erlauben</label>' +
             '<label><input type="checkbox" data-automation-policy="allowLaunch"> Start der installierten App erlauben</label>' +
-            '<fieldset><legend>Freigegebene Funktionen</legend>' + Object.entries(names).map(([key, value]) => `<label><input type="checkbox" data-automation-scope="${key}"> ${value}</label>`).join('') + '</fieldset>' +
-            '<p>Kritische Aktionen werden zusätzlich einzeln im Windows-Fenster bestätigt. Entwicklerzugriff auf Repository oder Shell ist nicht enthalten.</p>' +
-            '<div class="desktop-automation-actions"><button type="button" class="ez-knopf" data-automation-apply>Übernehmen</button><button type="button" class="ez-knopf" data-automation-test>Verbindung testen</button><button type="button" class="ez-knopf" data-automation-disconnect>Sitzung trennen</button><button type="button" class="ez-knopf" data-automation-package>MCP-Paket öffnen</button></div>' +
-            '<p data-automation-sessions></p><details><summary>Verbindungsprotokoll</summary><pre data-automation-log></pre></details></section>';
+            '<label data-automation-modern hidden><input type="checkbox" data-automation-policy="rememberClients"> Adapter nach der ersten Freigabe bis zum Widerruf erlauben</label>' +
+            '<label data-automation-modern hidden><input type="checkbox" data-automation-policy="confirmCritical"> Kritische Aktionen zusätzlich einzeln bestätigen</label>' +
+            '<label data-automation-visual hidden><input type="checkbox" data-automation-policy="confirmImages"> Bilder nach der Vorschau zusätzlich einzeln bestätigen</label>' +
+            '<fieldset><legend>Freigegebene Funktionen</legend>' + Object.entries(names).map(([key, value]) => `<label${key === 'visual' ? ' data-automation-visual hidden' : ''}><input type="checkbox" data-automation-scope="${key}"> ${value}</label>`).join('') + '</fieldset>' +
+            '<p data-automation-modern hidden>Gespeicherte Freigaben gelten auch nach einem Neustart. Änderst du diese Rechte, ist eine neue Freigabe nötig.</p><p>Entwicklerzugriff auf Repository oder Shell ist nicht enthalten.</p>' +
+            '<div class="desktop-automation-actions"><button type="button" class="ez-knopf" data-automation-apply>Übernehmen</button><button type="button" class="ez-knopf" data-automation-test>Status aktualisieren</button><button type="button" class="ez-knopf" data-automation-disconnect>Alle Freigaben widerrufen</button><button type="button" class="ez-knopf" data-automation-package>MCP-Paket öffnen</button></div>' +
+            '<p data-automation-sessions></p><div data-automation-clients></div><details><summary>Verbindungsprotokoll</summary><pre data-automation-log></pre></details></section>';
     };
     const mount = (container) => {
         const root = container.querySelector('.desktop-automation'), desktop = window.RedionDesktop;
         if (!root || !desktop?.automationState)
             return;
-        let dirty = false;
+        let dirty = false, supportsSavedClients = false, supportsVisual = false;
         const status = root.querySelector('[data-automation-status]');
         const refresh = async () => {
             if (!root.isConnected)
@@ -124810,12 +124887,28 @@ const DesktopMCP = (() => {
                 const state = await desktop.automationState();
                 if (!root.isConnected)
                     return;
-                status.textContent = state.enabled ? (state.connected ? 'Verbunden · ' + state.profile : 'Aktiviert · wartet auf einen freigegebenen MCP-Client') : 'Verbindung ausgeschaltet';
+                supportsSavedClients = typeof state.rememberClients === 'boolean' && typeof state.confirmCritical === 'boolean';
+                supportsVisual = typeof state.confirmImages === 'boolean';
+                root.querySelectorAll('[data-automation-modern]').forEach(el => el.hidden = !supportsSavedClients);
+                root.querySelectorAll('[data-automation-visual]').forEach(el => el.hidden = !supportsVisual);
+                status.textContent = state.enabled ? (state.connected ? 'Verbunden · ' + state.profile : state.pairing ? 'Einmalige Freigabe im Redion-Fenster bestätigen · ' + state.profile : 'Aktiviert · wartet auf einen freigegebenen MCP-Client · ' + state.profile) : 'Verbindung ausgeschaltet';
                 if (!dirty) {
                     root.querySelectorAll('[data-automation-policy]').forEach(el => el.checked = !!state[el.dataset.automationPolicy]);
                     root.querySelectorAll('[data-automation-scope]').forEach(el => el.checked = state.scopes.includes(el.dataset.automationScope));
                 }
                 root.querySelector('[data-automation-sessions]').textContent = (state.sessions || []).map((s) => 'Programm: ' + s.client + ' · Sitzung: ' + s.id + ' · bis ' + new Date(s.expires).toLocaleTimeString()).join('\n') || 'Keine aktive Sitzung';
+                const clients = root.querySelector('[data-automation-clients]');
+                clients.replaceChildren();
+                for (const client of state.trustedClients || []) {
+                    const row = document.createElement('p'), label = document.createElement('span'), button = document.createElement('button');
+                    label.textContent = client.client + ' · freigegeben am ' + new Date(client.approvedAt).toLocaleDateString() + ' ';
+                    button.type = 'button';
+                    button.className = 'ez-knopf';
+                    button.textContent = 'Freigabe widerrufen';
+                    button.addEventListener('click', async () => { await desktop.automationRevokeClient(client.id); await refresh(); });
+                    row.append(label, button);
+                    clients.append(row);
+                }
                 root.querySelector('[data-automation-log]').textContent = (state.activity || []).map((a) => a.time + ' ' + a.tool + ' ' + a.status + (a.code ? ' ' + a.code : '')).join('\n') || 'Noch keine Aktionen';
             }
             catch {
@@ -124827,6 +124920,8 @@ const DesktopMCP = (() => {
             const read = (key) => root.querySelector(`[data-automation-policy="${key}"]`).checked;
             try {
                 await desktop.automationConfigure({ enabled: read('enabled'), write: read('write'), allowLaunch: read('allowLaunch'),
+                    ...(supportsSavedClients ? { rememberClients: read('rememberClients'), confirmCritical: read('confirmCritical') } : {}),
+                    ...(supportsVisual ? { confirmImages: read('confirmImages') } : {}),
                     scopes: [...root.querySelectorAll('[data-automation-scope]:checked')].map(el => el.dataset.automationScope) });
                 dirty = false;
                 await refresh();
@@ -166615,7 +166710,7 @@ const RedionAutomation = (() => {
         if (started || !desktop?.onAutomationRequest || desktop.automationSupported === false)
             return;
         started = true;
-        desktop.onAutomationCancel((id) => { if (id)
+        desktop.onAutomationCancel((id) => { document.getElementById('redion-mcp-mask')?.remove(); if (id)
             pending.delete(id);
         else
             pending.clear(); });
@@ -166675,6 +166770,48 @@ RegisterAutomatisierung.melde('redion_get_active_document', (_a, c) => {
     const id = App.aktuelleSeite();
     const p = id ? c.block(id) : null;
     return { document: p ? { id: p.id, title: p.text || '', type: p.type } : null };
+});
+RegisterAutomatisierung.melde('redion_capture_view', async (a, c) => {
+    if (a.phase === 'release') {
+        document.getElementById('redion-mcp-mask')?.remove();
+        return { released: true };
+    }
+    const active = App.aktuelleSeite(), p = active ? c.block(active) : null;
+    if (a.documentId && a.documentId !== p?.id)
+        c.error('STALE_DOCUMENT');
+    if (a.blockId) {
+        const b = c.block(a.blockId);
+        if (a.target !== 'schematic' || b.type !== 'schaltplan' || c.pageOf(b.id).id !== p?.id)
+            c.error('INVALID_SCHEMATIC');
+    }
+    const element = a.target === 'window' ? document.documentElement : a.target === 'schematic' ?
+        document.querySelector(a.blockId ? `.blk[data-bid="${CSS.escape(a.blockId)}"] .sp-buehne` : '.sp-wrap .sp-buehne') : document.querySelector('#page');
+    if (!element || a.target !== 'window' && !p)
+        c.error('INVALID_DOCUMENT');
+    const r = element.getBoundingClientRect(), width = window.innerWidth, height = window.innerHeight;
+    const visible = (box) => ({ x: Math.max(0, Math.floor(box.x)), y: Math.max(0, Math.floor(box.y)),
+        width: Math.max(0, Math.min(width, Math.ceil(box.right)) - Math.max(0, Math.floor(box.x))),
+        height: Math.max(0, Math.min(height, Math.ceil(box.bottom)) - Math.max(0, Math.floor(box.y))) });
+    const region = a.target === 'window' ? { x: 0, y: 0, width, height } : visible(r);
+    if (region.width < 1 || region.height < 1)
+        c.error('INVALID_REGION');
+    const masks = [...document.querySelectorAll('input,textarea,iframe,webview,[data-sensitive],[data-private],[data-mcp-private]')]
+        .map(el => visible(el.getBoundingClientRect())).filter(box => box.width > 0 && box.height > 0);
+    if (masks.length > 500)
+        c.error('ACTION_TOO_LARGE');
+    let style = document.getElementById('redion-mcp-mask');
+    if (!style) {
+        style = document.createElement('style');
+        style.id = 'redion-mcp-mask';
+        document.head.append(style);
+    }
+    style.textContent = 'input,textarea,iframe,webview,[data-sensitive],[data-private],[data-mcp-private]{visibility:hidden!important}';
+    await new Promise(resolve => {
+        const timer = setTimeout(resolve, 150);
+        requestAnimationFrame(() => requestAnimationFrame(() => { clearTimeout(timer); resolve(); }));
+    });
+    c.check();
+    return { rect: region, viewport: { x: 0, y: 0, width, height }, masks, ...(p ? { documentId: p.id } : {}), ...(a.blockId ? { blockId: a.blockId } : {}) };
 });
 
 </script>
@@ -166990,7 +167127,17 @@ RegisterAutomatisierung.melde('redion_get_active_document', (_a, c) => {
             return false; const b = Schaltplan.teilRahmen(t); return a.l < b.r && b.l < a.r && a.o < b.u && b.o < a.u; }))
             c.error('COMPONENT_OVERLAP');
     };
-    R.melde('redion_open_schematic', (a, c) => { const item = read(a.blockId, c); App.oeffne(item.page.id); return { blockId: item.b.id, documentId: item.page.id }; });
+    R.melde('redion_open_schematic', async (a, c) => {
+        const item = read(a.blockId, c);
+        App.oeffne(item.page.id);
+        await new Promise(resolve => requestAnimationFrame(() => resolve()));
+        c.check();
+        const surface = document.querySelector(`.blk[data-bid="${CSS.escape(item.b.id)}"] .sp-buehne`);
+        if (!surface)
+            c.error('INVALID_SCHEMATIC');
+        surface.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+        return { blockId: item.b.id, documentId: item.page.id };
+    });
     R.melde('redion_create_schematic', async (a, c) => {
         const p = c.block(a.documentId, true);
         if (p.type !== 'page')

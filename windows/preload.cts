@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('RedionDesktop', Object.freeze({
   automationOpenPackage: () => ipcRenderer.invoke('redion:automation:package'),
   automationConfigure: (policy: unknown) => ipcRenderer.invoke('redion:automation:configure', policy),
   automationDisconnect: () => ipcRenderer.invoke('redion:automation:disconnect'),
+  automationRevokeClient: (id: string) => ipcRenderer.invoke('redion:automation:revoke', id),
   automationReady: () => ipcRenderer.invoke('redion:automation:ready'),
   onAutomationRequest: (callback: (request: { id: string; tool: string; arguments: Record<string, unknown> }) => Promise<unknown>) => {
     const listener = (_event: unknown, request: { id: string; tool: string; arguments: Record<string, unknown> }) => {

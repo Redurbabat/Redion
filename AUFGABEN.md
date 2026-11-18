@@ -42,11 +42,39 @@ mehr gibt.
 
 ## Was jetzt offen ist
 
+### RED Ion 2026 E792 · Visual MCP, Mehrschritt-Aufträge und Cloud-Zugriff
+
+- **Ziel:** erste zwei Phasen des übernommenen Plans vollständig umsetzen;
+  übrige Phasen als Roadmap erhalten. Kopierbarer universeller MCP-Link,
+  gespeicherte widerrufbare Freigaben und Zugriff ohne laufenden Laptop gehören
+  als ausdrücklich ergänzter Auftrag dazu.
+- **Warum:** ChatGPT muss echte Bilder empfangen, Änderungen prüfen und mehrere
+  Aktionen konsistent ausführen können. Ein lokaler Tunnel erfüllt keinen
+  Zugriff bei ausgeschaltetem Gerät.
+- **Dateien:** `doku/REDION-2026-ISSUES.json` und `.md` führen alle 168 Anforderungen;
+  `windows/automation-*`, `windows/visual-*`, `plugins/red-ion/`, bestehende
+  Bereichsadapter, Store/Verlauf und Cloudflare-Sync. Kein zweiter Datenbestand.
+- **Fertig wenn:** Bilder tatsächlich im ChatGPT-Plugin sichtbar; alle
+  Mehrschritt-Aktionen mit Vorschau, Validierung und atomarem Rollback;
+  Issues im Nutzer-Redion sichtbar; HTTPS-Link mit zwei kompatiblen Clients
+  geprüft; freigegebene Cloud-Daten bei ausgeschaltetem Gerät erreichbar und
+  anschliessend ohne Datenverlust abgeglichen; aktuelle Windows-Pakete gebaut.
+- **Stand:** Adapterfreigabe nach Neustart, Widerruf und automatische
+  Profilauswahl sind im isolierten Client-/Electron-Lauf geprüft. Binärbilder
+  und Aufnahmen sind in Umsetzung. Nicht mit der alten EXE gleichsetzen.
+- **Tests:** gezielte echte SDK-/Electron-/Binär-/Berechtigungstests,
+  Mehrschritt-Fehler beim 25. Bauteil, Import/Export und Konflikte; Gesamtlauf
+  zur abschliessenden Abnahme. Keine historischen Resultate als neue ausgeben.
+- **Priorität:** laufender Auftrag. Cloud-Bereitstellung erst mit geklärtem
+  Account, Host, Kosten und konkretem Deployment; kein main-Merge.
+
 ### RED Ion ChatGPT-Live-Steuerung E791 · echte Kontoverbindung
 
 - **Ziel:** den lokal geprüften MCP-/Electron-Adapter im gewünschten privaten
   ChatGPT-MCP-Dialog verbinden. **Warum offen:** Redur hat noch keinen Tunnel;
-  die Browsersteuerung konnte die Kontoseite nicht öffnen. Keine ID erfinden.
+  die Kontoseite ist inzwischen erreichbar, aber kein echter Tunnel wurde
+  erstellt. Die vorhandene Plugin-Verbindung antwortete zuletzt nicht mit
+  erfolgreich freigegebenen Dokumentdaten. Keine ID erfinden.
 - **Dateien:** `doku/RED-ION-MCP-INSTALLATION.md`, `plugins/red-ion/`.
 - **Fertig wenn:** echter Tunnel korrekt zugeordnet, eingeschränkter Schlüssel
   lokal eingegeben, Doctor/Readiness und tatsächliche ChatGPT-Lese-/Schreibaktion

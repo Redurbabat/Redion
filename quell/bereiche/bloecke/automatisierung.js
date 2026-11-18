@@ -28,7 +28,17 @@
             return false; const b = Schaltplan.teilRahmen(t); return a.l < b.r && b.l < a.r && a.o < b.u && b.o < a.u; }))
             c.error('COMPONENT_OVERLAP');
     };
-    R.melde('redion_open_schematic', (a, c) => { const item = read(a.blockId, c); App.oeffne(item.page.id); return { blockId: item.b.id, documentId: item.page.id }; });
+    R.melde('redion_open_schematic', async (a, c) => {
+        const item = read(a.blockId, c);
+        App.oeffne(item.page.id);
+        await new Promise(resolve => requestAnimationFrame(() => resolve()));
+        c.check();
+        const surface = document.querySelector(`.blk[data-bid="${CSS.escape(item.b.id)}"] .sp-buehne`);
+        if (!surface)
+            c.error('INVALID_SCHEMATIC');
+        surface.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+        return { blockId: item.b.id, documentId: item.page.id };
+    });
     R.melde('redion_create_schematic', async (a, c) => {
         const p = c.block(a.documentId, true);
         if (p.type !== 'page')

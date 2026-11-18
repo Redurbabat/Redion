@@ -1,6 +1,6 @@
 {
   "name": "red-ion-desktop-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Lokaler MCP-Adapter für die freigegebene Redion-Windows-App",

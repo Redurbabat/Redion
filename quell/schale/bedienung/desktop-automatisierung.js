@@ -37,7 +37,7 @@ const RedionAutomation = (() => {
         if (started || !desktop?.onAutomationRequest || desktop.automationSupported === false)
             return;
         started = true;
-        desktop.onAutomationCancel((id) => { if (id)
+        desktop.onAutomationCancel((id) => { document.getElementById('redion-mcp-mask')?.remove(); if (id)
             pending.delete(id);
         else
             pending.clear(); });
@@ -97,4 +97,46 @@ RegisterAutomatisierung.melde('redion_get_active_document', (_a, c) => {
     const id = App.aktuelleSeite();
     const p = id ? c.block(id) : null;
     return { document: p ? { id: p.id, title: p.text || '', type: p.type } : null };
+});
+RegisterAutomatisierung.melde('redion_capture_view', async (a, c) => {
+    if (a.phase === 'release') {
+        document.getElementById('redion-mcp-mask')?.remove();
+        return { released: true };
+    }
+    const active = App.aktuelleSeite(), p = active ? c.block(active) : null;
+    if (a.documentId && a.documentId !== p?.id)
+        c.error('STALE_DOCUMENT');
+    if (a.blockId) {
+        const b = c.block(a.blockId);
+        if (a.target !== 'schematic' || b.type !== 'schaltplan' || c.pageOf(b.id).id !== p?.id)
+            c.error('INVALID_SCHEMATIC');
+    }
+    const element = a.target === 'window' ? document.documentElement : a.target === 'schematic' ?
+        document.querySelector(a.blockId ? `.blk[data-bid="${CSS.escape(a.blockId)}"] .sp-buehne` : '.sp-wrap .sp-buehne') : document.querySelector('#page');
+    if (!element || a.target !== 'window' && !p)
+        c.error('INVALID_DOCUMENT');
+    const r = element.getBoundingClientRect(), width = window.innerWidth, height = window.innerHeight;
+    const visible = (box) => ({ x: Math.max(0, Math.floor(box.x)), y: Math.max(0, Math.floor(box.y)),
+        width: Math.max(0, Math.min(width, Math.ceil(box.right)) - Math.max(0, Math.floor(box.x))),
+        height: Math.max(0, Math.min(height, Math.ceil(box.bottom)) - Math.max(0, Math.floor(box.y))) });
+    const region = a.target === 'window' ? { x: 0, y: 0, width, height } : visible(r);
+    if (region.width < 1 || region.height < 1)
+        c.error('INVALID_REGION');
+    const masks = [...document.querySelectorAll('input,textarea,iframe,webview,[data-sensitive],[data-private],[data-mcp-private]')]
+        .map(el => visible(el.getBoundingClientRect())).filter(box => box.width > 0 && box.height > 0);
+    if (masks.length > 500)
+        c.error('ACTION_TOO_LARGE');
+    let style = document.getElementById('redion-mcp-mask');
+    if (!style) {
+        style = document.createElement('style');
+        style.id = 'redion-mcp-mask';
+        document.head.append(style);
+    }
+    style.textContent = 'input,textarea,iframe,webview,[data-sensitive],[data-private],[data-mcp-private]{visibility:hidden!important}';
+    await new Promise(resolve => {
+        const timer = setTimeout(resolve, 150);
+        requestAnimationFrame(() => requestAnimationFrame(() => { clearTimeout(timer); resolve(); }));
+    });
+    c.check();
+    return { rect: region, viewport: { x: 0, y: 0, width, height }, masks, ...(p ? { documentId: p.id } : {}), ...(a.blockId ? { blockId: a.blockId } : {}) };
 });

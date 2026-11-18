@@ -18,6 +18,20 @@
 
 ## Neuer Secure MCP Tunnel
 
+Der neue Quellstand erkennt standardmässig ein einzelnes aktives Windows-Profil
+automatisch. Bei zwei aktiven Profilen `-RedionProfile production` oder
+`-RedionProfile development` ausdrücklich wählen. Daten werden nicht verschoben.
+Die aktuelle installierte EXE kann noch einen älteren Bridge-Stand enthalten.
+
+Adapterfreigaben können unter Einstellungen → MCP nach der ersten Bestätigung
+gespeichert und einzeln oder insgesamt widerrufen werden. Kritische Aktionen
+und Bildübertragungen haben eigene einstellbare Einzelbestätigungen. Bildzugriff
+muss separat freigegeben sein. Nach einer Rechteänderung erneut verbinden.
+
+Für einen wiederverwendbaren HTTPS-Link in anderen KI-Clients und Zugriff bei
+ausgeschaltetem Laptop folgt E792 dem vorhandenen Cloud-Sync. Der lokale Tunnel
+allein kann das nicht. Noch keine solche Cloud-URL bereitgestellt.
+
 Es gibt derzeit **keine echte Tunnel-ID und keine öffentliche RED-Ion-MCP-URL**.
 Der Nutzer hat bestätigt, noch keinen Tunnel eingerichtet zu haben.
 
@@ -51,7 +65,9 @@ Der Nutzer hat bestätigt, noch keinen Tunnel eingerichtet zu haben.
 4. Authentifizierung muss zur Tunnelkonfiguration passen. Die stdio-Route hat
    keinen zusätzlichen Redion-OAuth-Server: OpenAI prüft Tunnelberechtigungen,
    Redion fragt die App-Sitzung nativ ab. Keine OAuth-Adresse oder GitHub-URL erfinden.
-5. Risikowarnung prüfen, als privates Plugin erstellen, 46 Werkzeuge scannen.
+5. Risikowarnung prüfen, als privates Plugin erstellen, den tatsächlichen
+   Werkzeugkatalog neu scannen. Die bisherigen 46 Werkzeuge bleiben erhalten;
+   neue Bildwerkzeuge erscheinen erst mit passendem App-/Adapterstand.
 6. Neue Unterhaltung: `@RED Ion Frage den App-Status ab.` Danach eine künstliche
    Testseite mit fünf Überschriften erstellen, Anzeige/Neustart prüfen. Erst
    dann ist die tatsächliche ChatGPT-Verbindung nachgewiesen.

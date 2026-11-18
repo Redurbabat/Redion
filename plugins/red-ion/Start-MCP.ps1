@@ -1,4 +1,4 @@
-param([ValidateSet('stdio','http')][string]$Transport='stdio', [Alias('Profile')][ValidateSet('production','development')][string]$RedionProfile='production')
+param([ValidateSet('stdio','http')][string]$Transport='stdio', [Alias('Profile')][ValidateSet('auto','production','development')][string]$RedionProfile='auto')
 $ErrorActionPreference='Stop'
 $node=Get-Command node -ErrorAction Stop
 $env:REDION_MCP_PROFILE=$RedionProfile

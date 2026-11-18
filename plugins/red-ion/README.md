@@ -52,13 +52,28 @@ unterschiedliche Freigabewege. Keine Installation in ChatGPT wird behauptet.
 Der tatsächliche Werkzeugkatalog enthält nur implementierte Aktionen.
 Schreibzugriffe werden pro Funktionsgruppe und Sitzung geprüft. Lesen ist
 begrenzt; es findet kein automatischer Upload aller Dokumente statt.
-Kritische Werkzeuge benötigen zuerst `redion_request_confirmation` mit
+Bei aktivierter Einzelbestätigung benötigen kritische Werkzeuge zuerst `redion_request_confirmation` mit
 dem exakten Werkzeugnamen und seinen Argumenten. Die Bestätigung ist
 60 Sekunden gültig, an Sitzung und Argumente gebunden und einmal verwendbar.
 
-Die Bridge ist standardmässig aus. Ausschalten oder „Sitzung trennen“
-widerruft die Verbindung. Nach App-Neustart wird die neue Bridge automatisch
-gefunden; die neue Sitzung muss erneut im App-Fenster freigegeben werden.
+Die Bridge ist standardmässig aus. Nach der ersten nativen Freigabe kann
+Redion den lokalen Adapter bis zum Widerruf merken. Einstellungen → MCP
+verwaltet Adapter und getrennte Einzelbestätigungen für kritische Aktionen
+und Bilder. „Alle Freigaben widerrufen“ beendet Sitzungen und löscht gespeicherte
+Freigaben. Rechteänderungen verlangen eine neue Freigabe. Ältere Konfigurationen
+werden nicht still auf dauerhafte Rechte umgestellt.
+
+Ohne explizite Profilwahl erkennen Start und Diagnose genau ein aktives
+Windows-Profil automatisch. Sind beide Profile aktiv, muss eines gewählt
+werden; persönliche Daten werden nicht zwischen Profilen verschoben.
+
+`redion_capture_view` benötigt die separate Gruppe „Bilder aus Redion
+übertragen“. Es erfasst ausschliesslich das eigene Fenster, den sichtbaren
+Editor oder Schaltplan. Vorschau und Maskierung erfolgen vor der Übertragung.
+Ein Bild ist maximal 4 MiB gross, höchstens 4096 Pixel je Kante und verfällt
+nach 60 Sekunden. Maximal acht Bilder bzw. 16 MiB liegen kurzzeitig im Speicher.
+Nur MCP-Bildergebnisse enthalten Base64; die lokale Bridge verwendet Binärbytes.
+Die tatsächliche Bilddarstellung im ChatGPT-Plugin ist noch NICHT GETESTET.
 Bei `RESULT_UNKNOWN` zuerst in Redion nachsehen, nicht blind erneut schreiben.
 Bei `EDITOR_BUSY` die laufende eigene Texteingabe abschliessen.
 

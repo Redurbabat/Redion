@@ -11,7 +11,8 @@ const root=path.resolve(import.meta.dirname,'../../..');
 const packaged=path.join(root,'build/red-ion-plugin');
 const powershell=path.join(process.env.SystemRoot||'C:/Windows','System32/WindowsPowerShell/v1.0/powershell.exe');
 const scratch=path.join(root,'build/mcp-install-test',crypto.randomBytes(16).toString('hex'));
-const run=(script:string,args:string[]=[])=>spawnSync(powershell,['-NoProfile','-ExecutionPolicy','Bypass','-File',script,...args],{encoding:'utf8',timeout:30000});
+const run=(script:string,args:string[]=[])=>spawnSync(powershell,['-NoProfile','-ExecutionPolicy','Bypass','-File',script,...args],{
+  env:{...process.env,REDION_MCP_DISCOVERY:path.join(scratch,'nicht-vorhanden/connection.json')},encoding:'utf8',timeout:30000});
 
 test('Geliefertes Paket unter Windows PowerShell 5.1 installieren; verknüpftes Update ablehnen', {skip:process.platform!=='win32'},()=>{
   const destination=path.join(scratch,'MCP Ä mit Leerzeichen');
@@ -32,13 +33,14 @@ test('Geliefertes Paket unter Windows PowerShell 5.1 installieren; verknüpftes 
   assert.equal(fs.existsSync(path.join(hostile,'plugin.json')),false);
 });
 
-test('Echter SDK-Client erreicht 46 Werkzeuge über das gelieferte PowerShell-Startskript', {skip:process.platform!=='win32'},async()=>{
+test('Echter SDK-Client erreicht alle Werkzeuge über das gelieferte PowerShell-Startskript', {skip:process.platform!=='win32'},async()=>{
   const env=Object.fromEntries(Object.entries(process.env).filter((item):item is [string,string]=>item[1]!==undefined));
   env.REDION_MCP_DISCOVERY=path.join(scratch,'nicht vorhandenes Testprofil/automation/connection.json');
   const transport=new StdioClientTransport({command:powershell,args:['-NoProfile','-ExecutionPolicy','Bypass','-File',path.join(packaged,'Start-MCP.ps1')],env,stderr:'pipe'});
   const client=new Client({name:'RED Ion Windows-Skriptprüfung',version:'0.1.0'});
   try {
-    await client.connect(transport);assert.equal((await client.listTools()).tools.length,46);
+    await client.connect(transport);const names=(await client.listTools()).tools.map(tool=>tool.name);
+    assert.equal(names.length,47);assert.equal(new Set(names).size,names.length);assert.ok(names.includes('redion_capture_view'));
     const response=await client.callTool({name:'redion_get_status',arguments:{}});
     const result=response.structuredContent as {ok?:boolean;data?:Record<string,unknown>};
     assert.equal(result?.ok,true);

@@ -1,5 +1,5 @@
 param([Parameter(Mandatory=$true)][ValidatePattern('^tunnel_[a-z0-9]{32}$')][string]$TunnelId,
-  [string]$TunnelClient='tunnel-client', [switch]$Initialize, [Alias('Profile')][ValidateSet('production','development')][string]$RedionProfile='production')
+  [string]$TunnelClient='tunnel-client', [switch]$Initialize, [Alias('Profile')][ValidateSet('auto','production','development')][string]$RedionProfile='auto')
 $ErrorActionPreference='Stop'
 if($TunnelClient -eq 'tunnel-client' -and (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'tools\tunnel-client.exe'))) {
   $TunnelClient=Join-Path $PSScriptRoot 'tools\tunnel-client.exe'

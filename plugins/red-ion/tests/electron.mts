@@ -41,7 +41,13 @@ async function openApp():Promise<void>{
   // Nur der menschliche native Dialog wird für synthetische Testdaten beantwortet.
   // Alle IPC-, Berechtigungs-, Named-Pipe-, MCP- und Speicherwege sind echt.
   native.process().stderr?.on('data',chunk=>{const text=String(chunk);if(text.includes('MCP_NATIVE_ERROR:'))nativeErrors.push(text);});
-  await native.evaluate(({dialog,app})=>{(globalThis as any).__mcpConsent=0;dialog.showMessageBox=async()=>{(globalThis as any).__mcpConsent++;return {response:1,checkboxChecked:false};};
+  await native.evaluate(({dialog,app})=>{(globalThis as any).__mcpConsent=0;(globalThis as any).__mcpPreviewOwned=false;
+    dialog.showMessageBox=async(...args:any[])=>{(globalThis as any).__mcpConsent++;
+      if(args[1]?.title==='Dieses Redion-Bild übertragen?'){
+        if(args[0]?.getTitle()!=='RED Ion · Bildfreigabe')throw new Error('Bildfreigabe gehört nicht zur Vorschau');
+        (globalThis as any).__mcpPreviewOwned=true;
+      }
+      return {response:1,checkboxChecked:false};};
     // Unerwartete native Fehler dürfen weder durch einen modalen Dialog hängen
     // bleiben noch einen funktional erfolgreichen Lauf fälschlich grün machen.
     dialog.showErrorBox=(title:string,detail:string)=>{process.stderr.write('MCP_NATIVE_ERROR:'+title+':'+detail+'\n');app.exit(91);};
@@ -95,6 +101,35 @@ try {
   await call('redion_open_workspace',{workspaceId:'workspace'});await call('redion_open_home');
   const created=await call('redion_create_page',{title:'MCP · Live-Test',blocks:Array.from({length:5},(_,i)=>({type:'h2',text:'Überschrift '+(i+1)}))});
   const documentId=created.document.id;report.documentId=documentId;
+  await page!.evaluate(()=>{
+    const publicBox=document.createElement('div');publicBox.id='synthetic-mcp-public';
+    publicBox.style.cssText='position:fixed;left:300px;top:230px;width:220px;height:120px;background:rgb(0,255,0);z-index:2147483646';document.body.append(publicBox);
+    const box=document.createElement('div');box.id='synthetic-mcp-private';box.dataset.mcpPrivate='';
+    box.textContent='NUR KÜNSTLICHER GEHEIMNIS-TEST';box.style.cssText='position:fixed;left:320px;top:250px;width:160px;height:80px;background:rgb(255,0,0);z-index:2147483647';document.body.append(box);
+  });
+  const visual=await client.callTool({name:'redion_capture_view',arguments:{target:'window',documentId,crop:{x:300,y:230,width:220,height:120},maxEdge:320}});
+  const picture=(visual.content as any[]).find((part:any)=>part.type==='image') as {type:'image';data:string;mimeType:string}|undefined;
+  assert.ok(picture,'Der echte SDK-Client erhält einen MCP-Bildblock, keinen JSON-Bildtext');
+  assert.equal(picture.mimeType,'image/png');
+  assert.equal(await native!.evaluate(()=>(globalThis as any).__mcpPreviewOwned),true,'Die Bestätigung steht im tatsächlichen Vorschaufenster');
+  fs.writeFileSync(path.join(output,'04-mcp-bild-maskiert.png'),Buffer.from(picture.data,'base64'));
+  const decoded=await native!.evaluate(({nativeImage},base64)=>{
+    const image=nativeImage.createFromBuffer(Buffer.from(base64,'base64')),size=image.getSize(),bitmap=image.toBitmap();
+    const pixel=(x:number,y:number)=>{const offset=(Math.floor(y*size.height/120)*size.width+Math.floor(x*size.width/220))*4;return [...bitmap.subarray(offset,offset+4)];};
+    return {size,pixel:pixel(30,30),publicPixel:pixel(5,5)};
+  },picture.data);
+  assert.ok(decoded.size.width<=320&&decoded.size.height<=320);assert.ok(Math.abs(decoded.size.width/decoded.size.height-220/120)<0.02,'Ausschnitt behält bei Windows-Skalierung sein Seitenverhältnis');
+  assert.deepEqual(decoded.pixel,[255,255,255,255],'Vertraulicher Bereich wurde vor der Übertragung überschrieben');
+  assert.deepEqual(decoded.publicPixel,[0,255,0,255],'Der übrige sichtbare Inhalt wird tatsächlich übertragen');
+  assert.equal((visual.structuredContent as Result).data?.image.documentId,documentId);
+  await page!.evaluate(()=>{document.getElementById('synthetic-mcp-private')!.remove();document.getElementById('synthetic-mcp-public')!.remove();});
+  assert.equal(await page!.locator('#redion-mcp-mask').count(),0,'Die Maskierung bleibt nicht in der Arbeitsfläche hängen');
+  assert.equal((await raw('redion_capture_view',{target:'editor',documentId:'wrong-document'})).error?.code,'STALE_DOCUMENT');
+  await native!.evaluate(({dialog})=>{dialog.showMessageBox=async()=>({response:0,checkboxChecked:false});});
+  assert.equal((await raw('redion_capture_view',{target:'editor',documentId})).error?.code,'CONSENT_DENIED');
+  assert.equal(await page!.locator('#redion-mcp-mask').count(),0,'Auch die verweigerte Aufnahme räumt ihre Maske auf');
+  await native!.evaluate(({dialog})=>{dialog.showMessageBox=async()=>{(globalThis as any).__mcpConsent++;return {response:1,checkboxChecked:false};};});
+  report.visual={mcpImage:true,mask:true,crop:true,documentBinding:true,refusal:true,source:'own-window-only',chatGPT:'NICHT GETESTET'};
   assert.equal((await call('redion_get_active_document')).document.id,documentId);
   assert.equal((await call('redion_get_current_view')).documentId,documentId);
   assert.equal((await call('redion_get_capabilities')).tools.length,tools.length);
@@ -159,6 +194,10 @@ try {
   await raw('redion_read_page',{documentId:'missing-again'});assert.ok((await call('redion_get_recent_errors')).entries.some((e:any)=>e.code==='INVALID_DOCUMENT'));
   await call('redion_launch_app',{allowLaunch:true});
   await call('redion_open_schematic',{blockId:schematic.blockId});await page!.screenshot({path:path.join(output,'02-live-inhalte.png')});
+  const schematicImage=await client.callTool({name:'redion_capture_view',arguments:{target:'schematic',documentId,blockId:schematic.blockId,maxEdge:1200}});
+  const planImage=(schematicImage.content as any[]).find((part:any)=>part.type==='image') as {data:string}|undefined;
+  assert.ok(planImage,'Der tatsächliche Schaltplan wird als Bild übertragen: '+JSON.stringify(schematicImage.structuredContent));
+  fs.writeFileSync(path.join(output,'05-mcp-schaltplan.png'),Buffer.from(planImage.data,'base64'));
   const log=JSON.stringify(await call('redion_get_activity_log'));assert.ok(!log.includes('Eine echte Notiz'));assert.ok(!log.includes('Schaltung 19'));
   const stateBefore=await page!.evaluate(id=>({id:Store.getBlock(id).id,text:Store.getBlock(id).text,
     content:Store.getBlock(id).content,children:Store.childrenOf(id).map((b:any)=>({id:b.id,type:b.type,text:b.text,checked:b.checked,plan:b.plan,collectionId:b.collectionId}))}),documentId);
@@ -167,6 +206,7 @@ try {
   assert.equal((await call('redion_get_status')).running,false);
   await openApp();
   assert.equal((await call('redion_read_page',{documentId})).document.id,documentId);
+  assert.equal(await native!.evaluate(()=>(globalThis as any).__mcpConsent),0,'Der bestätigte Adapter benötigt nach App-Neustart keine neue Freigabe');
   assert.equal((await call('redion_read_page',{documentId:characters.document.id})).blocks.find((b:any)=>b.id===literal.block.id).text,literalText.replace('<Klemme>',()=>'$& <Anschluss>'));
   assert.deepEqual(await page!.evaluate(id=>({id:Store.getBlock(id).id,text:Store.getBlock(id).text,
     content:Store.getBlock(id).content,children:Store.childrenOf(id).map((b:any)=>({id:b.id,type:b.type,text:b.text,checked:b.checked,plan:b.plan,collectionId:b.collectionId}))}),documentId),stateBefore,'IDs und Inhalte bleiben nach echtem Prozessneustart erhalten');
@@ -190,7 +230,9 @@ try {
   // Die zweite echte Sitzung wartet die native Begrenzung neuer Freigabedialoge ab.
   await new Promise(resolve=>setTimeout(resolve,2100));
   const httpRead=await httpClient.callTool({name:'redion_read_page',arguments:{documentId}});assert.equal((httpRead.structuredContent as Result).ok,true,JSON.stringify(httpRead.structuredContent));
-  await httpClient.close();report.http={handshake:true,read:true,unauthorized401:true,origin403:true};
+  const httpImage=await httpClient.callTool({name:'redion_capture_view',arguments:{target:'editor',documentId,maxEdge:800}});
+  assert.ok((httpImage.content as any[]).some(part=>part.type==='image'&&part.data.length>100),'Auch HTTP liefert einen echten Bildblock');
+  await httpClient.close();report.http={handshake:true,read:true,image:true,unauthorized401:true,origin403:true};
   await page!.evaluate(async()=>{await (window as any).RedionDesktop.automationConfigure({enabled:false,write:false,allowLaunch:false,scopes:['app','documents']});});
   assert.equal((await raw('redion_create_page',{title:'Muss abgewiesen werden'})).ok,false);
   const count=await page!.evaluate(()=>Object.keys(Store.cache.blocks).length);
@@ -200,6 +242,6 @@ try {
   assert.equal(stdioErrors.includes('Eine echte Notiz'),false);
   const finalProcess=native!.process();await native!.close();native=null;
   assert.equal(finalProcess.exitCode,0,JSON.stringify(nativeErrors));assert.deepEqual(nativeErrors,[]);
-  assert.deepEqual(messages,[]);report.electron=true;report.restart=true;report.revocation=true;report.offline=true;report.stdio=true;report.cleanExit=true;
+  assert.deepEqual(messages,[]);report.electron=true;report.restart=true;report.revocation=true;report.offline=true;report.stdio=true;report.cleanExit=true;report.rememberedConsent=true;
   fs.writeFileSync(path.join(output,'nachweis.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));
 } finally {await httpClient?.close().catch(()=>{});await client.close().catch(()=>{});httpProcess?.kill();await (native as ElectronApplication|null)?.close().catch(()=>{});}

@@ -5183,6 +5183,30 @@ const ChronikDaten = {
                     "gemeint": "Der lokale Adapter kann fertig getestet werden; die echte Kontoverbindung muss erst eingerichtet werden.",
                     "besser": "Ich habe noch keinen Secure MCP Tunnel. Bereite die lokale Integration und die Einrichtungsschritte vor.",
                     "besserePrompt": "Baue und prüfe die lokale MCP-/Electron-Verbindung, dokumentiere die echte Tunnel-Erstellung getrennt und behaupte keine bereits verbundene ChatGPT-App."
+                },
+                {
+                    "zeit": "nicht erfasst",
+                    "wortlaut": "füge das im redion als issus also damit ich sehe was ist noch offen",
+                    "woher": "Nachricht in diesem Chat; Datum der Aufzeichnung, genaue Nachrichtenzeit nicht erfasst.",
+                    "gemeint": "Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen.",
+                    "besser": "Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen.",
+                    "besserePrompt": "Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen."
+                },
+                {
+                    "zeit": "nicht erfasst",
+                    "wortlaut": "es sollte so auch sein das ich nur die link kompiere und auch bei der anderecn ai einfügen kann direk und",
+                    "woher": "Nachricht in diesem Chat; Datum der Aufzeichnung, genaue Nachrichtenzeit nicht erfasst.",
+                    "gemeint": "Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten.",
+                    "besser": "Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten.",
+                    "besserePrompt": "Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen."
+                },
+                {
+                    "zeit": "nicht erfasst",
+                    "wortlaut": "und ich muss nicht jedesmal erlauben nur bei erste mal oder beim einstelungen das ändern und dann machen wir so es sollte nicht nur wenn die laptop auf ist das redion zugreifen kann auch wenn die laptop offonline ist ,",
+                    "woher": "Nachricht in diesem Chat; Datum der Aufzeichnung, genaue Nachrichtenzeit nicht erfasst.",
+                    "gemeint": "Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop.",
+                    "besser": "Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop.",
+                    "besserePrompt": "Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen."
                 }
             ],
             "arbeit": [
@@ -5192,11 +5216,18 @@ const ChronikDaten = {
                     "bisCommit": "",
                     "zeitraum": "18. November 2026; Startzeit nicht erfasst",
                     "pruefungen": "Echter SDK-Client und isolierte Electron-App: stdio- und HTTP-Handshake, Lesen/Schreiben, sichtbare Änderungen, fünf Überschriften, 20 Lernkarten, Aufgabe, Tabellenzeile, Schaltplan/Klemmen, Neustart und Widerruf bestanden. Vertrags-/Kanalprüfung, 21 Windows-Verträge und 9 Ink-/Paritätsverträge grün. Echter ChatGPT-Tunnel, Kontoberechtigung, Installation/Signierung und physische Geräte NICHT GETESTET. Anschliessend P145/P146 mit echten roten Gegenproben behoben: Rohtext/Markdown und Sonderzeichen im Store, Anzeige und nach Neustart erhalten; beide nativen Prozessenden jetzt vor Erfolgsprotokoll auf Exitcode 0 geprüft."
+                },
+                {
+                    "was": "E792: Vollständiger Anforderungskatalog, gemerkte widerrufbare Adapter, eigene Bildfreigabe, konfigurierbare Bestätigungen, aktive Profilerkennung; begrenzter Binärbildkanal und echte maskierte Fenster-/Editor-/Schaltplanbilder mit Vorschau. Mehrschritt- und Cloud-Ausbau bleiben offen.",
+                    "vonCommit": "c76959ce7",
+                    "bisCommit": "",
+                    "zeitraum": "18. November 2026; genaue Startzeit nicht erfasst",
+                    "pruefungen": "10/10 Bridge-/Sicherheits-/Binärprüfungen; echter SDK-/Electron-Lauf mit 47 Werkzeugen, ImageContent, maskiertem und sichtbarem Kontrollbereich, Zuschnitt, Schaltplanbild, Verweigerung, Neustart, Widerruf, HTTP-Schutz und cleanExit bestanden. 10/10 Windows-/Dateiverträge grün. Ein regulärer Web-Bau meldete Schreibfehler auf einzelnen erzeugten Dateien; getrennte TypeScript-Ausgabe wurde bytegleich mit den Ziel-Dateien abgeglichen. Tatsächliche ChatGPT-Bilddarstellung, sichtbare Nutzer-Issues, atomare Batches, Cloud-Endpunkt und neue Windows-Pakete noch offen."
                 }
             ],
             "zahlen": {
                 "commits": "Eigener Arbeitsbranch; PR #207 ist ausdrücklich beauftragtes Fast-Forward-Ziel.",
-                "entscheidungen": "E791",
+                "entscheidungen": "E791, E792",
                 "neuePruefungen": 3
             },
             "groesstesProblem": "Interne Hash-Navigation brach zuerst einen MCP-Aufruf wie einen Renderer-Neustart ab (P140).",
@@ -7152,6 +7183,48 @@ const ChronikDaten = {
             "loesung": "Alle neuen Automatisierungsmeldungen nur an ein bestehendes Fenster mit lebenden webContents senden. Offene Aktionen weiterhin abbrechen und aufräumen.",
             "beweis": "Gegenprobe zuerst rot: Object has been destroyed in cancelAutomation, Exitcode 91. Danach derselbe vollständige echte MCP-/Electron-Test mit zwei sauberen Prozessenden, cleanExit true und Exitcode 0 bestanden.",
             "lehre": "Erfolg erst nach abgeschlossenem Aufräumen melden. Native Fehlerdialoge müssen einen automatisierten Test rot machen."
+        },
+        {
+            "nr": "P147",
+            "datum": "2026-11-18",
+            "titel": "Abgebrochene Kopplung hält spätere Clients fest",
+            "schwere": "mittel",
+            "entscheidung": "E792",
+            "symptom": "Nach Abbruch einer Verbindungsanfrage meldete der nächste Client dauerhaft PAIRING_BUSY.",
+            "falscheVermutung": "Das Schliessen des Clients beende automatisch auch den offenen nativen Freigabedialog.",
+            "wieGefunden": "Eine isolierte echte Named-Pipe-Prüfung liess die erste künstliche Bestätigung offen, trennte den Client und verband danach einen neuen Client.",
+            "ursache": "Der offene Dialog hatte weder socketgebundene Abbruchsteuerung noch ein eigenes Zeitlimit; der Pairing-Zustand blieb belegt.",
+            "loesung": "Dialoge mit AbortSignal, Zeitlimit und Socket-Eigentümer binden. Beim Trennen abbrechen und ausschliesslich den Zustand dieser Anfrage freigeben.",
+            "beweis": "Gegenprobe zuerst PAIRING_BUSY; danach neue Kopplung erfolgreich. Neun gezielte MCP-/Binärprüfungen bestehen, einschliesslich dieser Gegenprobe.",
+            "lehre": "Verbindungsabbruch muss auch wartende menschliche Freigaben beenden, nicht nur Datenanforderungen."
+        },
+        {
+            "nr": "P148",
+            "datum": "2026-11-18",
+            "titel": "Automatische Profilsuche verschluckt eine mehrdeutige Auswahl",
+            "schwere": "mittel",
+            "entscheidung": "E792",
+            "symptom": "Zwei aktive synthetische Windows-Profile erschienen fälschlich als APP_NOT_RUNNING.",
+            "falscheVermutung": "Eine fehlgeschlagene Discovery bedeute stets, dass keine App laufe.",
+            "wieGefunden": "Der Diagnose-CLI-Test setzte beide bekannten Profilmarker mit einem tatsächlich lebenden Testprozess und verlangte eine ausdrückliche Auswahl.",
+            "ursache": "Ein allgemeiner catch-Block überschrieb den bereits erkannten Status AMBIGUOUS_PROFILE.",
+            "loesung": "Mehrdeutigkeit sichtbar zurückgeben; nur ein eindeutig aktives Profil automatisch wählen. Keine Profile verschieben oder zusammenführen.",
+            "beweis": "Zuerst APP_NOT_RUNNING statt AMBIGUOUS_PROFILE; danach alle vier Skript-/Discovery-Prüfungen grün.",
+            "lehre": "Ein aus Sicherheitsgründen verweigerter Automatismus braucht eine eigene verständliche Ursache."
+        },
+        {
+            "nr": "P149",
+            "datum": "2026-11-18",
+            "titel": "Interne Nachrichtenkennung bricht das MCP-Ausgabeschema",
+            "schwere": "mittel",
+            "entscheidung": "E792",
+            "symptom": "Der echte SDK-Client lehnte den App-Status nach Umstellung des Antwortlesers mit InvalidParams ab.",
+            "falscheVermutung": "Der bisherige Ergebnisumschlag könne unverändert vom neuen Binärrahmenleser bis zum SDK weitergegeben werden.",
+            "wieGefunden": "Der echte stdio-Client validierte structuredContent gegen den geschlossenen Tool-Vertrag und meldete ein zusätzliches Feld.",
+            "ursache": "Das interne Zuordnungsfeld id wurde nach der Prüfung der passenden Antwort nicht aus dem Transportumschlag entfernt.",
+            "loesung": "Nachrichtenkennung für die Zuordnung prüfen, dann vor Rückgabe an den MCP-Server entfernen. Unbekannte Kopfzeilenfelder einschliesslich vorgetäuschter Bildbytes abweisen.",
+            "beweis": "Zuerst -32602: data must NOT have additional properties. Danach vollständiger echter SDK-/Electron-Lauf mit 47 Werkzeugen, maskiertem Bild, Schaltplanbild und sauberem Neustart bestanden.",
+            "lehre": "Ein interner Transportvertrag ist nicht der öffentliche Werkzeugvertrag. Beide am echten validierenden Client prüfen."
         }
     ]
 };

@@ -1,0 +1,85 @@
+# RED Ion · Visual MCP im Windows-Quellstand
+
+Stand: 18. November 2026. Arbeit auf `codex/redion-visual-cloud-mcp`, Grundlage
+PR #207 / `c76959ce7`. Dies ist ein geprüfter erster Teil von E792, keine
+Abnahme der gesamten ersten beiden Phasen und kein neues veröffentlichtes Paket.
+
+## Implementiert
+
+Die bisherigen 46 Werkzeuge bleiben erhalten. `redion_capture_view` ergänzt ein
+echtes MCP-Bildergebnis für das eigene Redion-Fenster, den sichtbaren Editor
+oder die sichtbare Schaltplanfläche. Optionale Dokument-/Blockkennung bindet
+den Ausschnitt an den gelesenen Bestand. Ein Rechteck in CSS-Pixeln schneidet
+den gewählten Bereich zu; `maxEdge` begrenzt die Ausgabe auf 320–4096 Pixel.
+Windows-Bildschirmskalierung darf das Seitenverhältnis nicht verändern.
+Eine geänderte sichtbare Dokumentkennung oder Geometrie verwirft die Aufnahme.
+`open_schematic` bringt jetzt den verlangten Plan tatsächlich in die sichtbare
+Fläche, statt nur dessen übergeordnete Seite zu öffnen.
+
+Unter Einstellungen → MCP wird **Bilder aus Redion übertragen** separat
+freigegeben. Formularfelder, eingebettete fremde Flächen und mit
+`data-sensitive`, `data-private` oder `data-mcp-private` markierte Bereiche
+werden vor der Aufnahme verborgen und im nativen Bitmap zusätzlich übermalt.
+Die maskierte Vorschau erscheint in einem eigenen Fenster ohne Node-Rechte,
+Navigation oder fremde Inhalte. Standardmässig folgt eine native Bestätigung.
+Wer die zusätzliche Bildbestätigung ausdrücklich abschaltet, erhält die
+Vorschau ohne erneute Freigabeaufforderung. Neue Vorschauen ersetzen die alte;
+sie werden nach sieben Sekunden geschlossen. Widerruf schliesst sie sofort.
+
+Bilddaten liegen höchstens 60 Sekunden im Arbeitsspeicher, maximal acht Bilder
+oder 16 MiB insgesamt. Einzelbild maximal 4 MiB, höchstens zwölf Aufnahmen je
+Minute und Sitzung. Kein Bildschirmfoto auf Platte und kein Zugriff auf andere
+Windows-Programme. Nur die ausdrücklich synthetischen Tests speichern Belege
+im ignorierten Ordner `bilder/`.
+
+Die Named Pipe transportiert eine kleine JSON-Kopfzeile und getrennte rohe
+Bildbytes mit Länge und SHA-256. UTF-8-Decodierung erfolgt ausschliesslich für
+Kopfzeilen. Bildbesitz wird an die authentifizierte Sitzung gebunden; Widerruf,
+Verbindungsende und Ablauf entfernen die Bytes. Erst das offizielle MCP-
+Bildergebnis verwendet das vom Protokoll verlangte Base64. Metadaten bleiben
+klein und enthalten keine eingebetteten Bilder. Das Aktivitätsprotokoll führt
+Bildziel, Pixelmasse und übertragenes Volumen, keine Bildinhalte.
+
+Lokale Adapter können nach erster Freigabe bis zum Widerruf bestätigt bleiben.
+Neue Rechte, die Abschaltung zusätzlicher Bestätigungen und Widerruf werden
+nativ geprüft. Alte Konfigurationen erweitern ihre Freigabe nicht automatisch.
+Die automatische Profilauswahl akzeptiert genau ein laufendes bekanntes Profil;
+bei zwei laufenden Profilen ist eine ausdrückliche Auswahl erforderlich.
+
+## Gezielter Nachweis
+
+- Vertrags-/Berechtigungs-/Binärprüfungen: zehn Fälle, einschliesslich kaputter
+  Bildrahmen, UTF-8-Grenzen, Eigentümer, Ablauf, Widerruf, Aufnahmelimit und
+  alten Freigaben. Gegenproben fanden P147–P149.
+- Echter SDK-Client gegen isolierte Electron-App: 47 Werkzeuge, echtes
+  `ImageContent`, sichtbarer künstlicher Inhalt und weiss maskierter privater
+  Kontrollbereich. Ausschnitt und Seitenverhältnis unter der lokalen
+  Windows-Skalierung geprüft; Dokumentwechsel und verweigerte Bildfreigabe
+  werden abgewiesen. Schaltplanbild tatsächlich übertragen und angesehen.
+- Bestehende Schreib-/Leseaktionen, stdio, authentifiziertes lokales HTTP,
+  Neustart mit erhaltenen Daten und gemerktem Adapter, Widerruf, Offline-Nutzung
+  und beide sauberen Prozessenden weiterhin geprüft.
+- Zehn Windows-/Dateivertragsprüfungen bestanden. Typen, Stand und Bau werden
+  separat bei der jeweiligen Lieferung protokolliert.
+
+Die Bildprüfung deckte zwei Fehler auf: ein internes Nachrichtenfeld verletzte
+das MCP-Ausgabeschema; eine sofortige Aufnahme konnte vor dem aktuellen Paint
+liegen. Die Kennung wird jetzt vor der MCP-Antwort entfernt; der Renderer
+wartet vor der Aufnahme auf den Bildaufbau, und private Felder werden bereits
+vorher verborgen. Der Test prüft sowohl den maskierten als auch einen sichtbaren
+farbigen Bereich, damit ein leeres Bild nicht als Erfolg durchgeht.
+
+## Weiter offen
+
+PDF-Originalseiten und Notizbilder als eigene Bildquellen, mehrere PDF-Seiten,
+Vorher/Nachher-Vergleich, automatische visuelle Prüfung sowie alle atomaren
+Mehrschritt-Werkzeuge sind noch nicht vollständig umgesetzt. Ebenso offen:
+sichtbare Issues im persönlichen Redion-Datenbestand, universeller Cloud-Link
+und Synchronisierung bei ausgeschaltetem Laptop. Die vollständige Liste steht
+in `REDION-2026-ISSUES.json` und `.md`.
+
+**NICHT GETESTET:** tatsächliche Bildanzeige im ChatGPT-Plugin, echte
+Nutzerinstallation dieses neuen Standes, vollständige Regressionen, physischer
+Windows-Stift, iPhone/macOS und signierte Pakete. Die vorher gebaute EXE basiert
+weiterhin auf `543e253a9`; sie enthält diese neuen Funktionen noch nicht.
+Keine Cloud-URL oder Tunnel-ID wurde erstellt oder erfunden.

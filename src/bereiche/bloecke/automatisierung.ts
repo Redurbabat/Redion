@@ -18,7 +18,14 @@
     if(a.l<0||a.o<0||a.r>plan.breite||a.u>plan.hoehe)c.error('PLACEMENT_OUTSIDE_PAGE');
     if(plan.teile.some((t:any)=>{if(t.id===part.id||t.ebene!==part.ebene)return false;const b=Schaltplan.teilRahmen(t);return a.l<b.r&&b.l<a.r&&a.o<b.u&&b.o<a.u;}))c.error('COMPONENT_OVERLAP');
   };
-  R.melde('redion_open_schematic',(a,c)=>{const item=read(a.blockId,c);App.oeffne(item.page.id);return {blockId:item.b.id,documentId:item.page.id};});
+  R.melde('redion_open_schematic',async(a,c)=>{
+    const item=read(a.blockId,c);App.oeffne(item.page.id);
+    await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));c.check();
+    const surface=document.querySelector(`.blk[data-bid="${CSS.escape(item.b.id)}"] .sp-buehne`);
+    if(!surface)c.error('INVALID_SCHEMATIC');
+    surface!.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});
+    return {blockId:item.b.id,documentId:item.page.id};
+  });
   R.melde('redion_create_schematic',async(a,c)=>{
     const p=c.block(a.documentId,true);if(p.type!=='page')c.error('INVALID_DOCUMENT');await c.prepare(p.id);
     const b=Store.addBlock(p.id,'schaltplan',{text:a.title||'Schaltplan',plan:Schaltplan.neuerPlan(),herkunft:'ki'});await c.finish(p.id);return {blockId:b.id,documentId:p.id};

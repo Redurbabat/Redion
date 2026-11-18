@@ -40,7 +40,7 @@ add('create_page','documents','write','Erstellt eine echte Seite mit optionalen 
 add('update_page','documents','write','Benennt eine Seite um; sichert vor der Änderung eine Fassung.',{documentId:id,title:{...str(300),minLength:1}},['documentId','title']);
 add('insert_block','documents','write','Fügt einen validierten Text-, Überschrifts-, Listen- oder Checklistenblock ein.',{documentId:id,block,index:{type:'integer',minimum:0,maximum:10000}},['documentId','block']);
 add('update_block','documents','write','Ersetzt den gesamten gespeicherten Text, optional mit Haken. Text und expectedText enthalten dieselben Markdown-Markierungen wie read_page. Für einzelne Korrekturen replace_text nutzen. expectedText verhindert veraltete Änderungen.',{blockId:id,text:str(),expectedText:str(),checked:bool},['blockId','text','expectedText']);
-add('delete_block','documents','critical','Verschiebt einen einzelnen Textblock in den Papierkorb. Erfordert eine frische Bestätigung in Redion.',{blockId:id},['blockId']);
+add('delete_block','documents','critical','Verschiebt einen einzelnen Textblock in den Papierkorb. Befolgt die in Redion gewählte Einzelbestätigung oder ausdrücklich gespeicherte Delegation.',{blockId:id},['blockId']);
 add('move_page','documents','write','Verschiebt eine Seite über den vorhandenen Speicherpfad; verhindert Kreise.',{documentId:id,parentId:id},['documentId','parentId']);
 add('duplicate_page','documents','write','Dupliziert eine Seite über Redions vorhandene Duplizierfunktion.',{documentId:id},['documentId']);
 add('replace_text','documents','write','Ersetzt genau eine eindeutige wörtliche Stelle im gespeicherten Text einschliesslich Markdown. Bei mehreren Treffern bleibt der Bestand unverändert. replacement wird wörtlich übernommen.',{documentId:id,find:{...str(),minLength:1},replacement:str()},['documentId','find','replacement']);
@@ -67,12 +67,15 @@ add('get_settings','settings','read','Liest ausschliesslich die freigegebenen Da
 add('update_setting','settings','write','Ändert genau eine freigegebene Darstellungsoption.',{key:enumeration('theme','bewegung','kontrast','dichte'),value:{}},['key','value']);
 add('undo','documents','write','Nimmt den letzten vorhandenen Verlaufsschritt der geöffneten Seite zurück.');
 add('redo','documents','write','Wiederholt den vorhandenen Verlaufsschritt der geöffneten Seite.');
-add('request_confirmation','app','read','Fragt den Menschen in Redion nach einer bestimmten kritischen Aktion. Führt sie noch nicht aus.',{tool:str(100),arguments:fields},['tool','arguments']);
+add('request_confirmation','app','read','Prüft die Freigabe einer bestimmten kritischen Aktion. Bei aktivierter Einzelbestätigung fragt Redion den Menschen; bei ausdrücklicher Delegation gilt die gespeicherte Freigabe. Führt die Aktion noch nicht aus.',{tool:str(100),arguments:fields},['tool','arguments']);
 add('get_operation_status','app','read','Liest den tatsächlichen Status einer Operation dieser Verbindungssitzung.',{operationId:id},['operationId']);
 add('get_recent_errors','app','read','Liest Fehlercodes dieser Sitzung, ohne Dokumentinhalte oder Zugangsdaten.');
 add('get_activity_log','app','read','Liest Werkzeugnamen, Zeiten und Ergebnisse dieser Sitzung, ohne Inhalte.');
+add('capture_view','visual','read','Überträgt nach separater Bildfreigabe ein echtes Bild des eigenen Redion-Fensters oder seines sichtbaren Editors/Schaltplans. Geheimnisfelder werden maskiert. Keine Aufnahme anderer Programme. Bilddaten verfallen nach 60 Sekunden.',
+  {target:enumeration('window','editor','schematic'),documentId:id,blockId:id,maxEdge:{type:'integer',minimum:320,maximum:4096},
+    crop:obj({x:{type:'number',minimum:0,maximum:16384},y:{type:'number',minimum:0,maximum:16384},width:{type:'number',minimum:1,maximum:16384},height:{type:'number',minimum:1,maximum:16384}},['x','y','width','height'])},['target']);
 export const TOOLS: readonly ToolDefinition[] = defs;
-export const SCOPES = ['app','documents','databases','learning','pdf','schematics','settings'] as const;
+export const SCOPES = ['app','documents','databases','learning','pdf','schematics','settings','visual'] as const;
 export function actionErrorMessage(code:string):string {
   const messages:Record<string,string>={
     INVALID_DOCUMENT:'Diese lebende Dokument- oder Block-ID existiert nicht.',PERMISSION_DENIED:'Das aktuelle Redion-Konto darf diese Inhalte nicht bearbeiten oder lesen.',
