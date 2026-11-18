@@ -105,7 +105,9 @@ try {
         return ['.bib-card-kind','.bib-card-meta','.bib-deckel-name b'].map(selector=>{
           const element=card.querySelector(selector)!;
           const foreground=luminance(getComputedStyle(element).color);
-          return {selector,ratio:(Math.max(foreground,background)+.05)/(Math.min(foreground,background)+.05)};
+          return {selector,ratio:(Math.max(foreground,background)+.05)/(Math.min(foreground,background)+.05),
+            color:getComputedStyle(element).color,cardBackground:getComputedStyle(card).backgroundColor,
+            textToken:getComputedStyle(document.documentElement).getPropertyValue('--text')};
         });
       });
       for (const {selector,ratio} of contrast) assert.ok(ratio>=4.5,`${selector}: Textkontrast ${ratio.toFixed(2)}`);
