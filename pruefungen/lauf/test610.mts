@@ -488,7 +488,7 @@ const istOrchestrator = (b: string): boolean => {
 const istVoll = (befehl: string): boolean => {
   const b = wieDieShell(befehl);
   const treffer = AUFRUFE.map(m => m.exec(b)).find(t => t !== null) ?? null;
-  if (!treffer) return false;
+  if (!treffer || !istOrchestrator(befehl)) return false;
   if (/volllauf\.mts\b/.test(b)) return true;
   const rest = b.slice(treffer.index + treffer[0].length);
   return !/--schnell\b|--liste\b|\bserver\b|(^|\s)\d+(\s|$)/.test(rest);
