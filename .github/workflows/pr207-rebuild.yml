@@ -1,0 +1,48 @@
+# Einmaliger Bauabgleich fuer PR #207. Wird nach erfolgreicher Pruefung geloescht.
+name: PR207 generierte Dateien abgleichen
+on:
+  push:
+    branches:
+      - ux/windows-schaltplan-dock-20261108
+    paths:
+      - .github/workflows/pr207-rebuild.yml
+permissions:
+  contents: write
+jobs:
+  rebuild:
+    if: github.ref == 'refs/heads/ux/windows-schaltplan-dock-20261108'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Branch auschecken
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Node installieren
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Pakete installieren
+        run: npm ci --no-audit --no-fund
+      - name: TypeScript- und Einzeldatei-Bau
+        run: |
+          npm run bauen:ts
+          node bauen.mts
+          npm run typecheck
+          npm run stand
+      - name: Nur generierte Ausgaben in denselben PR-Branch uebernehmen
+        shell: bash
+        run: |
+          set -euo pipefail
+          git status --short
+          git add --update
+          if git diff --cached --quiet; then
+            echo 'Keine Bauausgaben zu aktualisieren.'
+            exit 0
+          fi
+          git diff --cached --stat
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore(build): synchronise generated Redion assets for PR207'
+          git push origin HEAD:refs/heads/ux/windows-schaltplan-dock-20261108
