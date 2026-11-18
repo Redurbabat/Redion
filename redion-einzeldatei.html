@@ -30090,7 +30090,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1610, inhalt: 'b2dffa3fb7287eba', gebaut: '2026-11-18T17:20:32.491Z' };
+const Stand = { fassung: 1611, inhalt: '554194eeac5466af', gebaut: '2026-11-18T17:25:49.621Z' };
 window.Stand = Stand;
 
 </script>
@@ -89738,6 +89738,7 @@ const DocumentMode = (() => {
         position.dataset.documentAction = 'page-jump';
         position.textContent = wortEins(page) + ' ' + (state.index + 1) + '/' + documents.length;
         position.title = 'Direkt zu einer ' + wortEins(page).toLowerCase() + ' springen';
+        position.setAttribute('aria-label', position.title);
         position.disabled = documents.length < 2;
         position.setAttribute('aria-live', 'polite');
         position.setAttribute('aria-atomic', 'true');
