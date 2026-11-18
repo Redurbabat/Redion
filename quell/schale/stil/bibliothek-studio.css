@@ -132,7 +132,7 @@
 .bib[data-bib-bereich] .bib-zelle>.bib-deckel:not([data-art="ordner"]) .bib-deckel-blatt::before{display:none}
 .bib[data-bib-bereich] .bib-deckel-name{padding-top:0;gap:6px}
 .bib[data-bib-bereich] .bib-deckel-name b{font-size:15px;line-height:1.4;min-height:42px;font-weight:620;overflow-wrap:anywhere}
-.bib[data-bib-bereich] .bib-card-meta{font-size:11px;line-height:1.6;margin-top:6px;color:var(--text-dim)}
+.bib[data-bib-bereich] .bib-card-meta{font-size:11px;line-height:1.6;margin-top:6px;color:var(--text)}
 .bib[data-bib-bereich] .bib-deckel-bild{object-fit:contain;background:var(--bg-side)}
 .bib[data-bib-bereich] .bib-zelle>.bib-deckel-mehr{top:0;right:0}
 .bib[data-bib-bereich] .bib-zelle>.bib-deckel-mehr i{box-shadow:none;background:transparent}
