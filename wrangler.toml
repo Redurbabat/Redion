@@ -114,10 +114,23 @@ run_worker_first = true
 #  Schema kommt mit
 #      npx wrangler d1 execute redion --remote --file=server/schema.sql
 #
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "redion"
-# database_id = "HIER-DIE-ECHTE-KENNUNG-EINTRAGEN"
+#  AM 18. NOVEMBER 2026 ANGELEGT — IM RICHTIGEN KONTO (E794).
+#  Konto 56cd8e4d… (das von red-ion), Tarif vorher im Dashboard gelesen:
+#  Workers Free · $0 · Current plan. `npx wrangler d1 create redion`, Region
+#  WEUR, danach server/schema.sql und server/mcp/schema.sql eingespielt.
+#  Dieselbe Datenbank nutzt der Cloud-MCP-Worker red-ion-mcp
+#  (plugins/red-ion/cloud/wrangler.jsonc).
+[[d1_databases]]
+binding = "DB"
+database_name = "redion"
+database_id = "18b0f926-e522-4b77-8063-ca3399c478ae"
+
+# Der Cloud-MCP (E792/E794): die Website bietet nur /mcp/authorize und
+# /mcp/settings hinter dem Access-Tor an; Token und /mcp liefert der
+# getrennte Worker red-ion-mcp. Adressen, keine Geheimnisse (§42).
+[vars]
+MCP_ISSUER = "https://red-ion-mcp.redurbabat7.workers.dev"
+MCP_AUTHORIZATION_ENDPOINT = "https://red-ion.redurbabat7.workers.dev/mcp/authorize"
 
 # ===========================================================================
 #  R2 — die Ablage fuer Anhaenge (Bilder, PDFs, Videos)

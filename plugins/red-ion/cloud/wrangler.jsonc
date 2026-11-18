@@ -6,14 +6,14 @@
   "compatibility_date": "2026-11-18",
   "send_metrics": false,
   "vars": {
-    "MCP_ISSUER": "",
-    "MCP_AUTHORIZATION_ENDPOINT": "",
+    "MCP_ISSUER": "https://red-ion-mcp.redurbabat7.workers.dev",
+    "MCP_AUTHORIZATION_ENDPOINT": "https://red-ion.redurbabat7.workers.dev/mcp/authorize",
     "MCP_FREE_ONLY": "1"
   },
   "d1_databases": [{
     "binding": "DB",
     "database_name": "redion",
-    "remote": false
+    "database_id": "18b0f926-e522-4b77-8063-ca3399c478ae"
   }],
   "observability": {
     "enabled": true,

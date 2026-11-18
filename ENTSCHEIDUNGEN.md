@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-770 Entscheidungen, E1 bis E793 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+771 Entscheidungen, E1 bis E794 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -854,6 +854,9 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 
 * **E790** — Windows-Stiftstudio: gemeinsame Stiftpunkte, optionale Freihand im Schaltplan und Glass-Wheel-Arbeitswerkzeuge; Windows ist die erste Abnahmeplattform dieses Bogens.
 * **E791** — RED Ion Windows-MCP: semantische Live-Steuerung mit freigegebenen Aktionen und Sicherheitsbestätigungen.
+* **E792** — Visual MCP, sichere Mehrschritt-Aufträge und dauerhafte widerrufbare Freigaben (Verbesserungsplan 2026, Phasen 1–2).
+* **E793** — Zugriff ohne Laptop ausschliesslich kostenlos.
+* **E794** — Cloud-MCP veröffentlicht: D1 `redion` im Gratis-Tarif, Worker `red-ion-mcp` öffentlich, Anmeldung hinter dem Access-Tor der Website.
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71062,3 +71065,44 @@ Der Cloud-Dienst verwendet bestehende Redion-Konten, saetze und Versions-/Rechte
 OAuth-Freigaben sind an Client, Ressource, Konto, Bereiche und Rechte gebunden. Gemerkte Zustimmung bleibt bis Widerruf erhalten; zusätzliche Rechte verlangen erneut Zustimmung. Zugangstokens sind kurzlebig, Refresh-Tokens rotieren und verlängern sich bei Nutzung; nach 30 Tagen ohne Refresh ist eine neue Anmeldung nötig. Tokens und Geheimnisse werden nur gehasht gespeichert. Die bestehende Website behält ihr Access-Tor.
 
 Stand und Grenzen: doku/RED-ION-CLOUD-MCP.md. Lokale Modell-, SDK-OAuth- und Browserprüfungen sind keine öffentliche MCP-Verbindung, kein Cloud-Deployment und kein Beleg für abgeglichene persönliche Dokumente. E792 und die ersten beiden Phasen bleiben vollständig beauftragt.
+
+
+## E794 · Cloud-MCP-Link im Gratis-Tarif veröffentlicht
+
+Redur, 18. November 2026: „zuerst mache die pulsing teil fertig“ — gemeint war
+das Veröffentlichen der MCP-Verbindung „für chatgpt und die andere ki“. Im
+Fragebogen gewählt: **Cloud-Link**, D1 **„Ja, nur Gratis“**.
+
+**Was entschieden und getan wurde.** Vorher und nachher im Dashboard gelesen:
+Workers **Free · $0 · Current plan**. Im Konto von `red-ion` (56cd8e4d…) die
+D1 `redion` angelegt (`18b0f926-e522-4b77-8063-ca3399c478ae`, WEUR — eine
+Adresse, kein Geheimnis, §23/§42), `server/schema.sql` und
+`server/mcp/schema.sql` eingespielt. Zwei Worker teilen sie:
+
+- `red-ion-mcp` (`https://red-ion-mcp.redurbabat7.workers.dev`) — öffentlich,
+  NICHT hinter Access: OAuth-Discovery, Registrierung, Token, `/mcp`. Das ist
+  der Link für ChatGPT und jede andere KI mit MCP-OAuth.
+- `red-ion` (Website) — bekommt `DB` und die zwei Adressen als `vars`;
+  `/mcp/authorize` liegt hinter dem bestehenden Access-Tor und meldet nur einen
+  Access-geprüften Menschen an.
+
+**Warum zwei Worker.** Ein MCP-Client kann Access nicht durchlaufen; die
+Website soll ihr Tor aber behalten. So bleibt die Website zu, und der öffentliche
+Teil verlangt für alles ausser Discovery ein Token, das nur über die Access-Seite
+entsteht.
+
+**Alternative.** Secure MCP Tunnel von OpenAI: nur mit laufendem Laptop und nur
+für ChatGPT. Bleibt als lokaler Weg (Fensterbilder gibt es nur dort).
+
+**Was es kostet.** Gratisgrenzen (100 000 Anfragen/Tag, 10 ms CPU, D1 5 GB,
+100 000 geschriebene Zeilen/Tag); darüber setzt der Dienst aus, kein Wechsel.
+Die Website wurde von Hand aus `codex/redion-visual-cloud-mcp` bereitgestellt
+(wie am 7. November); `main` ist nicht bewegt. Mit `DB` sind Konto, Abgleich
+und Rechte der Website jetzt eingeschaltet — hinter Access.
+
+**Nachweis.** Öffentlich gemessen: Discovery (Ressource und Autorisierungsserver
+korrekt), `/mcp` ohne Token 401 mit `WWW-Authenticate`, fremder Origin 403,
+`/mcp/authorize` auf der Website 302 zu Access. **NICHT GETESTET:** Anmeldung
+und Zustimmung durch Redur, Verbindung aus ChatGPT oder einer anderen KI,
+Abgleich der Windows-App mit dieser D1 (die Cloud sieht bis dahin nur, was dort
+angelegt wird).

@@ -83,6 +83,19 @@ nur den Ursprung des validierten registrierten Rückwegs. Fremde Origins
 und unbekannte Rückgabeadressen bleiben gesperrt. Der echte Browser wurde
 anschliessend gegen HTTPS und einen lokalen Callback erfolgreich geprüft.
 
+## Bereitgestellt am 18. November 2026 (E794)
+
+- MCP-Link: **`https://red-ion-mcp.redurbabat7.workers.dev/mcp`**
+  (öffentlich, OAuth; Discovery unter `/.well-known/oauth-protected-resource/mcp`).
+- Anmeldung: `https://red-ion.redurbabat7.workers.dev/mcp/authorize` hinter Access;
+  Freigaben verwalten/widerrufen: `…/mcp/settings`.
+- D1 `redion` (`18b0f926-e522-4b77-8063-ca3399c478ae`), Tarif vorher und nachher
+  als Free · $0 gelesen. Öffentlich gemessen: 401 ohne Token, 403 bei fremdem
+  Origin, 302 zu Access auf der Anmeldeseite.
+- `cloud-runtime.mts` läuft im echten workerd (Miniflare 4 und 5) und verlangt
+  null Anfragen nach aussen; `REDION_WRANGLER_ENTRY` zeigt auf eine vorhandene
+  wrangler-Installation, wenn keine im Projekt liegt.
+
 ## Weiter offen · nicht als verbunden ausgeben
 
 1. Vorhandenes Access-/Redion-Konto sicher an den Router anschliessen;
@@ -91,8 +104,7 @@ anschliessend gegen HTTPS und einen lokalen Callback erfolgreich geprüft.
    Datenablage mit Versions-/Rollenprüfung anschliessen.
 3. Optionalen Windows-Abgleich mit gesicherter Anmeldung und automatischer
    Wiederverbindung fertigstellen; Offline-/Konflikt-/Neustart-Roundtrip.
-4. Ausschliesslich im erneut bestätigten Gratis-Tarif bereitstellen;
-   tatsächliche HTTPS-Adresse erst nach Bereitstellung und Prüfung nennen.
+4. ERLEDIGT (E794): im erneut bestätigten Gratis-Tarif bereitgestellt, Adresse oben.
 5. Echtes ChatGPT-Plugin und einen weiteren kompatiblen MCP-Client verbinden;
    Zugriff mit beendetem Windows-Prozess sowie spätere Zusammenführung prüfen.
 

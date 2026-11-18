@@ -47,6 +47,19 @@ Es ersetzt die Registrierung im gewünschten ChatGPT-Dialog nicht. Lokale
 Directory-Plugins und private benutzerdefinierte MCP-Verbindungen haben
 unterschiedliche Freigabewege. Keine Installation in ChatGPT wird behauptet.
 
+## Cloud-Link ohne laufenden Laptop (E794)
+
+Für ChatGPT und andere KIs mit MCP-OAuth genügt dieser Link, kein Tunnel:
+
+    https://red-ion-mcp.redurbabat7.workers.dev/mcp
+
+In ChatGPT: Einstellungen → Apps & Connectors → eigenen MCP-Server hinzufügen,
+Authentifizierung **OAuth**. Die Anmeldung öffnet die Redion-Website hinter
+Cloudflare Access; dort Arbeitsbereich wählen und Rechte bestätigen. Freigaben
+widerrufen unter https://red-ion.redurbabat7.workers.dev/mcp/settings.
+Der Link sieht nur synchronisierte Daten der Cloud, keine Fensterbilder.
+Gratis-Tarif; ist das Kontingent erschöpft, setzt der Dienst aus.
+
 ## Bedienung und Grenzen
 
 Der tatsächliche Werkzeugkatalog enthält nur implementierte Aktionen.
