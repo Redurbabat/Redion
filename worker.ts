@@ -20,7 +20,7 @@
 import { torPruefen } from './server/sicherheit/tor.ts';
 import { onRequest as bruecke } from './functions/api/bruecke.ts';
 import { bedienen, istServerWeg, geplant } from './server/cloudflare.ts';
-import { createCloudAuthorization } from './server/mcp/account.ts';
+import { createCloudAuthorization, createAccessSession } from './server/mcp/account.ts';
 
 export default {
   async fetch(request: any, env: any, ctx: any) {
@@ -30,6 +30,13 @@ export default {
     if (verweigert) return verweigert;
 
     const url = new URL(request.url);
+
+    /* Redion-Sitzung aus Access (E795) — vor dem Kern, der /konto sonst nimmt. */
+    if (url.pathname === '/konto/access') {
+      if (!env.DB) return new Response('Die Datenbank ist noch nicht eingerichtet.', { status: 503, headers: { 'Cache-Control': 'no-store' } });
+      try { return await createAccessSession({ database: env.DB, env })(request); }
+      catch { return new Response('Die Anmeldung ist gerade nicht verfügbar.', { status: 503, headers: { 'Cache-Control': 'no-store' } }); }
+    }
 
     /* OAuth-Zustimmung für den getrennten Cloud-MCP-Endpunkt. Das vorhandene
        Access-Tor oben bleibt davor; hier niemals TOR=offen als Identität nutzen. */

@@ -62,6 +62,8 @@ export type Ablage = {
   weg(tabelle: string, wo: Wo): Promise<boolean>;
   finde(tabelle: string, wo?: Wo, opt?: FindeOpt): Promise<Satz[]>;
   zaehle(tabelle: string, wo?: Wo): Promise<number>;
+  /** Summe einer Zahlenspalte; die Spalte steht im Kern fest, nie von aussen. */
+  summe(tabelle: string, spalte: string, wo?: Wo): Promise<number>;
   leeren?(): Promise<void>;
 };
 

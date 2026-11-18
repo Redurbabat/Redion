@@ -40,6 +40,15 @@ const MB = 1024 * 1024;
  *  eigener Entscheidung. Die Zahl steht in E33 — hier nur der Riegel. */
 export const DATEI_GRENZE = 100 * MB;
 
+/* DER DECKEL (E795). R2 hat keine harte Grenze: was über das Gratiskontingent
+   des Kontos geht (10 GB, davon belegt der fremde Bucket „stran“ am
+   18. November 2026 4,15 GB), wird berechnet. Redur: „Bucket mit Deckel“.
+   Redion bekommt deshalb einen festen Anteil von 5 GB über ALLE Konten und
+   Bereiche — gemessen an der eigenen Tabelle `dateien`, nicht durch Auflisten
+   des Buckets (das kostete selbst Class-A-Operationen). Darüber nimmt der
+   Server keine neue Datei an; die Datei bleibt auf dem Gerät. */
+export const WOLKE_ANTEIL = 5 * 1024 * MB;
+
 /** Höchstgrösse eines Stücks in rohen Bytes. Das Gerät schneidet bei 1 MB
  *  (`KONSTANTEN.STUECK`); die doppelte Grenze lässt Luft, ohne dass ein
  *  einzelner Aufruf den Arbeitsspeicher eines Workers füllt. */
@@ -111,6 +120,11 @@ export const dateiWeg = async (_a: unknown, ablage: Ablage, umwelt: Umwelt,
       return fehler(403, 'restricted_resource', 'Kein Schreibrecht auf dieser Seite.');
 
     const alt = await ablage.hole('dateien', { bereich: bereichId, id });
+    const belegt = await ablage.summe('dateien', 'groesse', { geloescht: 0 });
+    const bisher = alt && !Number(alt.geloescht) ? Number(alt.groesse) || 0 : 0;
+    if (belegt - bisher + groesse > WOLKE_ANTEIL) return fehler(507, 'speicher_voll',
+      'Der Wolkenspeicher für Anhänge ist voll (' + Math.round(WOLKE_ANTEIL / 1024 / MB) +
+      ' GB, damit es kostenlos bleibt). Diese Datei bleibt auf dem Gerät und geht nicht verloren.');
     await ablage.setze('dateien', {
       id, bereich: bereichId,
       name: feldText(d.name, 'dateiName'),

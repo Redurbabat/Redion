@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-771 Entscheidungen, E1 bis E794 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+772 Entscheidungen, E1 bis E795 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -856,6 +856,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E791** — RED Ion Windows-MCP: semantische Live-Steuerung mit freigegebenen Aktionen und Sicherheitsbestätigungen.
 * **E792** — Visual MCP, sichere Mehrschritt-Aufträge und dauerhafte widerrufbare Freigaben (Verbesserungsplan 2026, Phasen 1–2).
 * **E793** — Zugriff ohne Laptop ausschliesslich kostenlos.
+* **E795** — Abgleich der Windows-App mit der Cloud: Access-Anmeldung der Website, öffentliches Abgleich-Tor am MCP-Worker, R2 mit 5-GB-Deckel, Klartext nur für freigegebene Seiten.
 * **E794** — Cloud-MCP veröffentlicht: D1 `redion` im Gratis-Tarif, Worker `red-ion-mcp` öffentlich, Anmeldung hinter dem Access-Tor der Website.
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
@@ -71106,3 +71107,51 @@ korrekt), `/mcp` ohne Token 401 mit `WWW-Authenticate`, fremder Origin 403,
 und Zustimmung durch Redur, Verbindung aus ChatGPT oder einer anderen KI,
 Abgleich der Windows-App mit dieser D1 (die Cloud sieht bis dahin nur, was dort
 angelegt wird).
+
+
+## E795 · Die Windows-App gleicht mit der Cloud ab — durch ein schmales Tor
+
+Redur, 18. November 2026: „Ja, Abgleich bauen“. Im Fragebogen: **„Schlüssel +
+Seiten für KI“** und für Anhänge **„Bucket mit Deckel“**.
+
+**Das Problem.** Abgleich, Grabsteine, Drei-Wege-Konflikte und Gerätecode gab es
+schon (`src/kern/abgleich/maschine.ts`, `server/kern.ts`). Es fehlten zwei
+Brücken: die Website (hinter Cloudflare Access) kannte keine Anmeldung über
+Access — GitHub/Google sind nicht eingerichtet —, und eine installierte App kommt
+nicht durch Access. Dazu musste der Abgleich auf DASSELBE Konto zielen wie die
+MCP-Anmeldung, sonst sieht die KI einen leeren Bereich.
+
+**Entschieden.**
+- `POST /konto/access` auf der Website (`server/mcp/account.ts`,
+  `createAccessSession`): nur POST, nur vom eigenen Ursprung; Access-Nachweis
+  wie bei der MCP-Anmeldung geprüft; die Sitzung gilt dem Konto `cf_<Abdruck>`
+  und seinem Bereich „Mein Redion“ — dieselben wie bei RED Ion. In der Wolke-
+  Ansicht steht dafür „Mit Cloudflare Access anmelden“, nur auf der Website.
+- Das **Abgleich-Tor** am öffentlichen Worker `red-ion-mcp`
+  (`SYNC_TOR` in `plugins/red-ion/server/cloud-worker.mts`): derselbe Kern,
+  aber nur `/api/stand`, `/konto/(code|code-holen|ich|abmelden|geraete)`,
+  `/sync/(hoch|runter)`, `/datei/(melden|stueck|runter|stand|weg)`. Kein
+  OAuth-Anbieter, keine Code-Freigabe, keine Freigaben, Marken, Veröffentlichung,
+  v1 oder mcp. Die App meldet sich per Gerätecode an; freigegeben wird er auf der
+  Website.
+- **Verschlüsselung:** mit Schlüssel bleibt jede Seite verschlüsselt; nur Seiten
+  mit „Für Freigabe und KI lesbar machen“ (der vorhandene Schalter im Teilen-
+  Fenster) gehen im Klartext und sind für die KI lesbar.
+- **R2 `redion-dateien`** im Konto 56cd8e4d… (R2 war dort schon aktiv: „stran“,
+  4,15 GB, $0). **Deckel 5 GB** über alle Redion-Anhänge (`WOLKE_ANTEIL`,
+  gemessen an der Tabelle `dateien`, nicht durch Auflisten des Buckets — das
+  kostete selbst Operationen). Darüber 507, die Datei bleibt auf dem Gerät.
+
+**Alternativen.** Service-Token für Access in die App einbauen — verboten
+(`doku/SYNC-ERSTEINRICHTUNG.md`: keine globalen Geheimnisse in der EXE).
+Access für die App abschalten (`TOR=offen`) — verboten. Den Kern ganz
+öffentlich machen — mehr Angriffsfläche als nötig.
+
+**Was es kostet.** Bleibt stran unter 5 GB, bleibt das Konto unter 10 GB R2.
+Wächst stran selbst, hilft der Deckel nicht — dann vorher melden. Beim Abgleich
+gilt die CPU-Grenze des Gratis-Tarifs (10 ms je Anfrage); sehr grosse
+Hochlade-Pakete sind ungemessen.
+
+**Nachweis.** `pruefungen/redion-mcp-cloud-sync.mts`, 4 Läufe, vier Gegenproben je
+rot (Ursprung, Torliste, Deckel, Doppelzählung). **NICHT GETESTET:** Anmeldung
+der echten Windows-App, echter Abgleich mit Redurs Bestand, Anhänge über R2.

@@ -15,6 +15,8 @@
     "database_name": "redion",
     "database_id": "18b0f926-e522-4b77-8063-ca3399c478ae"
   }],
+  // Anhänge über das Abgleich-Tor (E795): derselbe private Bucket wie die Website.
+  "r2_buckets": [{ "binding": "R2", "bucket_name": "redion-dateien" }],
   "observability": {
     "enabled": true,
     "head_sampling_rate": 0.1,

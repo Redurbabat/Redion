@@ -637,6 +637,12 @@ const oauthProfil = async (anbieter: any, code: any, ziel: any, umwelt: any) => 
   }
 };
 
+/** Eine Sitzung für ein Konto, dessen Identität der AUFRUFER schon geprüft hat
+ * (E795: die Access-Anmeldung der Website in server/mcp/account.ts). Der Kern
+ * prüft hier nichts — wer das ruft, steht für die Identität ein. */
+export const sitzungFuerKonto = (ablage: Ablage, kontoId: string, geraet: string) =>
+  sitzungGeben(ablage, kontoId, geraet);
+
 /** Eine Sitzung anlegen und zurückgeben — als JSON oder als Weiterleitung. */
 /* `weiterZu` gibt nur der OAuth-Weg an: dort geht es nach dem Anmelden zurück
    zu der Seite, von der jemand gekommen ist. Der Gerätecode-Weg kennt kein

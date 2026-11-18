@@ -160,9 +160,13 @@ MCP_AUTHORIZATION_ENDPOINT = "https://red-ion.redurbabat7.workers.dev/mcp/author
 #      npx wrangler r2 bucket list
 #  dort. Deshalb bleibt auch diese Bindung aus, bis das feststeht.
 #
-# [[r2_buckets]]
-# binding = "R2"
-# bucket_name = "redion-dateien"
+#  AM 18. NOVEMBER 2026 IM RICHTIGEN KONTO ANGELEGT (E795): 56cd8e4d…, R2
+#  war dort schon aktiv (Bucket „stran“, 4,15 GB, $0). Gratis sind 10 GB fürs
+#  ganze Konto; Redion nimmt höchstens 5 GB an (WOLKE_ANTEIL in
+#  server/dateien.ts), damit es kostenlos bleibt. Privat, keine öffentliche Adresse.
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "redion-dateien"
 
 # ===========================================================================
 #  WECKRUFE — Web Push

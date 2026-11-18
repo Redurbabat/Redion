@@ -11,7 +11,10 @@ export const cloudDatabase=(sqlite:DatabaseSync)=>{
     const bound=()=>Object.fromEntries(values.map((value,index)=>['?'+(index+1),value]));
     const statement:CloudStatement={bind(...next){values=next;return this;},async first<T>(){
       const prepared=sqlite.prepare(sql);return ((/\?\d+/.test(sql)?prepared.get(bound()):prepared.get(...values)) as T|undefined)??null;},
-      async all<T>(){const prepared=sqlite.prepare(sql);return {results:(/\?\d+/.test(sql)?prepared.all(bound()):prepared.all(...values)) as T[]};}};
+      async all<T>(){const prepared=sqlite.prepare(sql);return {results:(/\?\d+/.test(sql)?prepared.all(bound()):prepared.all(...values)) as T[]};},
+      /* Der Redion-Kern (server/ablage.ts) schreibt mit run() — wie echtes D1. */
+      async run(){const prepared=sqlite.prepare(sql);const r=/\?\d+/.test(sql)?prepared.run(bound()):prepared.run(...values);
+        return {success:true,meta:{changes:Number(r.changes)}};}} as CloudStatement;
     sqlOf.set(statement,sql);return statement;
   },async batch(statements:CloudStatement[]){
     const hook=beforeBatch;beforeBatch=null;hook?.();

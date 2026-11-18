@@ -1,9 +1,10 @@
 import {torPruefen,torModus,nachweisAusAnfrage,zerlegeNachweis,type Torumwelt} from '../sicherheit/tor.ts';
 import {ablageD1} from '../ablage.ts';
-import {rolleAuf,darf} from '../kern.ts';
+import {rolleAuf,darf,sitzungFuerKonto} from '../kern.ts';
 import {createMcpOAuth} from './oauth.ts';
 import {createMcpOAuthHttp,type CloudUser} from './oauth-http.ts';
 import {mcpStateD1} from './state.ts';
+import {alsAntwort} from '../cloudflare.ts';
 import type {CloudDatabase} from './repository.ts';
 
 const hash=async(value:string):Promise<string>=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),b=>b.toString(16).padStart(2,'0')).join('');
@@ -54,4 +55,24 @@ export const createCloudAuthorization=({database,env,issuer,authorizationEndpoin
   return createMcpOAuthHttp({state,oauth,now,
     identify:request=>cloudUserFromAccess(request,database,env,{now,fetchKeys,create:true}),
     rateKey:request=>request.headers.get('CF-Connecting-IP')??'unknown-source'});
+};
+
+/** POST /konto/access auf der Website (E795). Gibt dem Menschen, den Access
+ * gerade geprüft hat, eine gewöhnliche Redion-Sitzung — für DASSELBE Konto,
+ * das auch die Cloud-MCP-Anmeldung benutzt (cf_<Abdruck>). Damit sieht die KI
+ * genau den Bestand, den dieses Konto abgleicht.
+ * Nur POST und nur vom eigenen Ursprung: eine fremde Seite kann den Aufruf
+ * nicht auslösen, und die Antwort liest ohnehin nur derselbe Ursprung. */
+export const createAccessSession=({database,env,now=Date.now,fetchKeys=fetch}:{database:CloudDatabase;
+  env:Torumwelt;now?:()=>number;fetchKeys?:typeof fetch})=>async(request:Request):Promise<Response>=>{
+  const kopf={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
+  const nein=(status:number,code:string,message:string)=>new Response(JSON.stringify({object:'error',status,code,message}),{status,headers:kopf});
+  if(request.method!=='POST')return nein(405,'methode','Nur POST.');
+  const eigen=new URL(request.url).origin,herkunft=request.headers.get('origin');
+  if(herkunft!==eigen)return nein(403,'herkunft','Diese Anmeldung geht nur von der Redion-Website selbst.');
+  const user=await cloudUserFromAccess(request,database,env,{now,fetchKeys,create:true});
+  if(!user)return nein(401,'unauthorized','Cloudflare Access hat keinen gültigen Menschen bestätigt.');
+  const antwort=alsAntwort(await sitzungFuerKonto(ablageD1(database),user.id,'Website (Cloudflare Access)'));
+  antwort.headers.set('Cache-Control','no-store');
+  return antwort;
 };

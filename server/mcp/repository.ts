@@ -60,7 +60,8 @@ export const openCloudRepository=async(db:CloudDatabase,principal:McpPrincipal,n
     async finde(table:string,where:Wo={},_options:FindeOpt={}){
       const snapshot=snapshots.find(s=>s.table===table);if(!snapshot)return cloudError('PERMISSION_DENIED');
       return clone(snapshot.rows.filter(row=>matches(row,where)));
-    },async zaehle(table:string,where:Wo={}){return (await this.finde(table,where)).length;}};
+    },async zaehle(table:string,where:Wo={}){return (await this.finde(table,where)).length;},
+    summe:noWrite};
   const role=async(workspaceId:string,pageId:string):Promise<string>=>String(await rolleAuf(access,workspaceId,pageId,principal.userId));
   const rowData=(row:CloudRecord):Record<string,unknown>=>{
     if(row.geloescht)return cloudError('INVALID_DOCUMENT');if(row.verschluesselt)return cloudError('ENCRYPTED_DOCUMENT');

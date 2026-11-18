@@ -289,6 +289,22 @@ const Wolke = (() => {
   });
 
   /** Für das Telefon: der Rechner zeigt einen Code, das Telefon tippt ihn. */
+  /** Auf der Website selbst: Cloudflare Access hat den Menschen schon geprüft,
+   *  der Server macht daraus eine Redion-Sitzung (E795). Nur, wenn diese Seite
+   *  ihr eigener Server ist — eine App mit fremder Adresse hat kein Access. */
+  const accessMoeglich = () =>
+    location.protocol === 'https:' && adresse() === location.origin;
+  const anmeldenMitAccess = async () => {
+    if (!accessMoeglich()) throw new Error('Die Access-Anmeldung geht nur auf der Redion-Website selbst.');
+    const a = await fetch(location.origin + '/konto/access', {
+      method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    let b: any = null;
+    try { b = await a.json(); } catch { /* unten gemeldet */ }
+    if (!a.ok || !b || typeof b.token !== 'string')
+      throw new Error((b && b.message) || 'Die Anmeldung über Cloudflare Access hat nicht geklappt.');
+    return tokenUebernehmen(b.token);
+  };
+
   const codeHolen = async () => ruf('/konto/code', { m: 'POST', k: { geraet: geraeteName() } });
 
   const codeWarten = async (code: any, beiSchritt?: any) => {
@@ -1185,7 +1201,7 @@ const Wolke = (() => {
   };
 
   return { adresse, serverAdressePruefen, token, bereich, angemeldet, geraeteName, zustand, beiAenderung,
-           anmeldenMit, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
+           anmeldenMit, accessMoeglich, anmeldenMitAccess, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
            abgleichErlaubt, abgleichSetzen, kontoLoeschen,
            neuAbgleichOffen, neuAbgleichAntwort,
            schluesselSetzen, hatSchluessel, verschluessele, entschluessele,

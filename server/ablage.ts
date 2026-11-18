@@ -265,6 +265,10 @@ export const ablageSpeicher = (): Ablage => {
       return (await this.finde(tabelle, wo)).length;
     },
 
+    async summe(tabelle: string, spalte: string, wo: Wo = {}) {
+      return (await this.finde(tabelle, wo)).reduce((n, s) => n + (Number(s[spalte]) || 0), 0);
+    },
+
     /** Nur für Prüfungen: alles wegwerfen. */
     async leeren() { TABELLEN.forEach(t => tabellen[t]?.clear()); }
   };
@@ -353,6 +357,16 @@ export const ablageD1 = (db: any): Ablage => {
       const r = await db.prepare(`SELECT COUNT(*) AS n FROM ${tabelle}${w.text}`)
         .bind(...w.werte).first();
       return (r && r.n) || 0;
+    },
+
+    async summe(tabelle: string, spalte: string, wo: Wo = {}) {
+      pruefe(tabelle);
+      /* Der Spaltenname kommt nie von aussen; trotzdem nur einfache Namen. */
+      if (!/^[a-z_]+$/.test(spalte)) throw new Error('Unbekannte Spalte: ' + spalte);
+      const w = woTeil(wo);
+      const r = await db.prepare(`SELECT COALESCE(SUM(${spalte}),0) AS n FROM ${tabelle}${w.text}`)
+        .bind(...w.werte).first();
+      return Number(r && r.n) || 0;
     }
   };
 };

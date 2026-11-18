@@ -96,14 +96,27 @@ anschliessend gegen HTTPS und einen lokalen Callback erfolgreich geprüft.
   null Anfragen nach aussen; `REDION_WRANGLER_ENTRY` zeigt auf eine vorhandene
   wrangler-Installation, wenn keine im Projekt liegt.
 
+## Abgleich der Windows-App (E795)
+
+1. Auf der **Website** `https://red-ion.redurbabat7.workers.dev` → ☁ Wolke →
+   **Mit Cloudflare Access anmelden**.
+2. In der **Windows-App** → ☁ Wolke → Server: ändern →
+   `https://red-ion-mcp.redurbabat7.workers.dev` → **Mit einem Code von einem
+   anderen Gerät**. Den Code auf der Website unter „Gerät freigeben“ eingeben.
+3. In der App einen Schlüssel setzen und den Abgleich ausdrücklich einschalten.
+4. Seiten, die die KI lesen soll: Teilen → **Für Freigabe und KI lesbar machen**.
+
+Anhänge: R2 `redion-dateien`, höchstens 5 GB zusammen; darüber bleiben sie
+lokal (507). Siehe E795.
+
 ## Weiter offen · nicht als verbunden ausgeben
 
 1. Vorhandenes Access-/Redion-Konto sicher an den Router anschliessen;
    kein `TOR=offen`, kein Abschalten des Schutzes der bestehenden Website.
 2. Cloud-MCP-Transport und vorhandene App-Aktionen an die bestehende
    Datenablage mit Versions-/Rollenprüfung anschliessen.
-3. Optionalen Windows-Abgleich mit gesicherter Anmeldung und automatischer
-   Wiederverbindung fertigstellen; Offline-/Konflikt-/Neustart-Roundtrip.
+3. TEILWEISE (E795): Anmeldung und Tor gebaut und geprüft; echte Runde mit der
+   Windows-App (Offline/Konflikt/Neustart) steht aus.
 4. ERLEDIGT (E794): im erneut bestätigten Gratis-Tarif bereitgestellt, Adresse oben.
 5. Echtes ChatGPT-Plugin und einen weiteren kompatiblen MCP-Client verbinden;
    Zugriff mit beendetem Windows-Prozess sowie spätere Zusammenführung prüfen.

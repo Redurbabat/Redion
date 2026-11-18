@@ -190,6 +190,22 @@ const Wolke = (() => {
         };
         window.addEventListener('message', beiPost);
     });
+    const accessMoeglich = () => location.protocol === 'https:' && adresse() === location.origin;
+    const anmeldenMitAccess = async () => {
+        if (!accessMoeglich())
+            throw new Error('Die Access-Anmeldung geht nur auf der Redion-Website selbst.');
+        const a = await fetch(location.origin + '/konto/access', {
+            method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}'
+        });
+        let b = null;
+        try {
+            b = await a.json();
+        }
+        catch { }
+        if (!a.ok || !b || typeof b.token !== 'string')
+            throw new Error((b && b.message) || 'Die Anmeldung über Cloudflare Access hat nicht geklappt.');
+        return tokenUebernehmen(b.token);
+    };
     const codeHolen = async () => ruf('/konto/code', { m: 'POST', k: { geraet: geraeteName() } });
     const codeWarten = async (code, beiSchritt) => {
         const bis = Date.now() + 10 * 60000;
@@ -860,7 +876,7 @@ const Wolke = (() => {
             });
     };
     return { adresse, serverAdressePruefen, token, bereich, angemeldet, geraeteName, zustand, beiAenderung,
-        anmeldenMit, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
+        anmeldenMit, accessMoeglich, anmeldenMitAccess, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
         abgleichErlaubt, abgleichSetzen, kontoLoeschen,
         neuAbgleichOffen, neuAbgleichAntwort,
         schluesselSetzen, hatSchluessel, verschluessele, entschluessele,
