@@ -50,7 +50,7 @@ jobs:
   # ---------------------------------------------------------------------------
   schnell:
     name: Quelltext und Logik (ohne Browser)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
@@ -167,7 +167,7 @@ jobs:
   # ---------------------------------------------------------------------------
   pruefen:
     name: Schneller Lauf (ohne Browser, dazu die Sicherung)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
 
     steps:

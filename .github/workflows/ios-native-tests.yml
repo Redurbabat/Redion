@@ -19,7 +19,8 @@ permissions:
 
 jobs:
   ios-native-unit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
     steps:
       - name: Checkout Redion
         uses: actions/checkout@v4

@@ -853,6 +853,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E789** — Die Bauplan-Zeichen nach dem Lehrmittel (15. November 2026, Redur: „schau … für schweiz wie muss es sein und baue es direkt im redion", Quelle: „Fachzeichnen Teil 1", Seite 14.1): Schalter als offener Kreis mit Armen und Fahnen, Steckdose mit Hörnern, Deckenleuchte als Kreuz, Einbauleuchte als Kreuz im Kreis, Abzweigdose als Quadrat mit Punkt; 21 neue Zeichen (UP/AP, Zug, Nachlauf, Lichtregler, Taster, Storen, vier Kombis, T13 3-fach und 3/1, T25, Bodendose, Lampendübel, Wandleuchte, PIR, Store, Ventilator, Direktanschluss); alte Kennungen, Grössen und Anschlüsse bleiben; die Schema-3-Klemmen 1-2-4 bleiben offen (L267)
 
 * **E790** — Windows-Stiftstudio: gemeinsame Stiftpunkte, optionale Freihand im Schaltplan und Glass-Wheel-Arbeitswerkzeuge; Windows ist die erste Abnahmeplattform dieses Bogens.
+* **E791** — RED Ion Windows-MCP: semantische Live-Steuerung mit freigegebenen Aktionen und Sicherheitsbestätigungen.
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 

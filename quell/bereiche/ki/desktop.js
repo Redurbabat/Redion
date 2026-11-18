@@ -98,3 +98,4 @@ const DesktopMCP = (() => {
     };
     return { html, mount };
 })();
+RegisterAutomatisierung.meldeAnsicht(DesktopMCP);

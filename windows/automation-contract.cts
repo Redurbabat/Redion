@@ -92,6 +92,7 @@ export function actionErrorMessage(code:string):string {
     INVALID_TERMINAL:'Diese Klemme existiert nicht oder ist im aktuellen Plan nicht anschliessbar.',WIRE_OVERLAP:'Die Leitung würde unzulässig überlappen.',
     COMPONENT_OVERLAP:'Das Bauteil überlappt ein vorhandenes Bauteil.',PLACEMENT_OUTSIDE_PAGE:'Das Bauteil liegt ausserhalb des Blatts.',
     SIMULATION_RUNNING:'Die Simulation muss vor elektrischen Änderungen angehalten werden.',INVALID_PDF:'Die Kennung bezeichnet keine importierte PDF-Seite.',
+    INVALID_REGION:'Der angeforderte Bereich ist im aktuellen Redion-Fenster nicht sichtbar. Dokument öffnen und den gewünschten Ausschnitt erneut wählen.',
     PERSISTENCE_UNAVAILABLE:'Der lokale Speicher ist nicht zuverlässig verfügbar. Ergebnis in Redion prüfen.',
     MOVE_REJECTED:'Redion hat das Verschieben abgewiesen, etwa wegen einer Kreisreferenz.',INVALID_CARD_SEPARATOR:'Frage und Antwort dürfen den internen Trenner :: nicht enthalten.'};
   return messages[code]||'Die Aktion wurde von Redion abgewiesen.';

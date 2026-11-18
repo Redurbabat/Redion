@@ -143,7 +143,7 @@ const Einstellungen = (() => {
             o.querySelectorAll('.einst-nav button').forEach(b => b.classList.toggle('on', b.dataset.b === offenerBereich));
             binde(o);
             if (ziel && offenerBereich === 'mcp')
-                DesktopMCP.mount(ziel);
+                RegisterAutomatisierung.montiereAnsicht(ziel);
         };
         zeichne();
         const navEl = o.querySelector('.einst-nav');
@@ -594,7 +594,7 @@ const Einstellungen = (() => {
         mcp: () => {
             const server = Store.getMeta('mcp:server', []) || [];
             const aus = Store.getMeta('mcp:eigenAus', []) || [];
-            return DesktopMCP.html() + kopf('MCP', 'Ein offenes Protokoll, mit dem Programme fremde Werkzeuge ' +
+            return RegisterAutomatisierung.ansicht() + kopf('MCP', 'Ein offenes Protokoll, mit dem Programme fremde Werkzeuge ' +
                 'benutzen und eigene anbieten. Diese App kann beides — mit einer Einschränkung, ' +
                 'die unten steht.') +
                 zeile('Fremde Server', 'Werkzeuge, die dein Agent benutzen darf', `<span class="ez-grau">${server.length} eingetragen</span> ` +

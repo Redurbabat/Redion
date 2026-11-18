@@ -98,7 +98,10 @@ const hatAbschnitt = (quelle: string, nummer: number): boolean =>
 
      Das Leerzeichen hinter der Zahl ist keine Zierde: ohne es würde ein
      Verweis auf §1 auch von einem gedruckten `§12` erfüllt. */
-  new RegExp('\\\\n§' + nummer + '[ \\t]').test(quelle);
+  new RegExp('\\\\n§' + nummer + '[ \\t]').test(quelle) ||
+  /* Die Schaltplan-Suite 625 kennzeichnet §0 als Kommentar mit Doppelpunkt.
+     Es ist eine echte Abschnittsüberschrift, kein blosser Verweis. */
+  new RegExp('^\\s*\\/\\*\\s*§' + nummer + '(?:[:·—-]|[ \\t])', 'm').test(quelle);
 
 /** Alle „testNNN"-Nennungen einer Datei, mit ihrer Abschnittsangabe. */
 type Verweis = { datei: string; name: string; abschnitte: number[]; roh: string };
