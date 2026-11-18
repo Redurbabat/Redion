@@ -20,6 +20,15 @@ const RegisterAutomatisierung = (() => {
     const handler=handlers.get(name); if(!handler) context.error('UNSUPPORTED_ACTION');
     context.check(); return handler!(input,context);
   };
-  return {melde,ausfuehren,namen:()=>[...handlers.keys()]};
+  /* Gemeinsame Schnittstelle für optionale Desktop-MCP-Einstellungen.
+   * Bereiche rufen nur das Register auf, niemals den KI-Bereich direkt. */
+  let ansichtsDienst: {html:()=>string;mount:(container:HTMLElement)=>void}|null=null;
+  const meldeAnsicht=(dienst:{html:()=>string;mount:(container:HTMLElement)=>void}):void=>{
+    if(ansichtsDienst) throw new Error('MCP-Ansicht doppelt angemeldet');
+    ansichtsDienst=dienst;
+  };
+  const ansicht=():string=>ansichtsDienst?.html()??'';
+  const montiereAnsicht=(container:HTMLElement):void=>{ansichtsDienst?.mount(container);};
+  return {melde,ausfuehren,namen:()=>[...handlers.keys()],meldeAnsicht,ansicht,montiereAnsicht};
 })();
 (Register as any).automatisierung=RegisterAutomatisierung;
