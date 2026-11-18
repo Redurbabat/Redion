@@ -472,7 +472,15 @@ const wieDieShell = (b: string): string =>
   b.replace(/\$(?=['"])/g, '').replace(/\\([\s\S])/g, '$1').replace(/['"]/g, '');
 
 /** Prosa (`nurAusgabe`) ist schon beim Lesen aus den Befehlen gefallen. */
-const istOrchestrator = (b: string): boolean => AUFRUFE.some(m => m.test(wieDieShell(b)));
+/* Ein Test in einem eigenen Unterpaket und ein benanntes test:* Skript
+ * starten nicht den Redion-Gesamt-Orchestrator. Sie muessen in der CI
+ * weiterhin laufen duerfen; `npm test` im Wurzelpaket bleibt geprueft. */
+const istOrchestrator = (b: string): boolean => {
+  const cmd = wieDieShell(b);
+  if (/\bnpm\s+--prefix(?:=|\s+)windows\b/.test(cmd)) return false;
+  if (/\bnpm\s+run\s+test:[\w-]+\b/.test(cmd)) return false;
+  return AUFRUFE.some(m => m.test(cmd));
+};
 
 /** Fährt dieser Befehl den VOLLEN Lauf? Der Lauf in Stücken immer; sonst
  *  ein Aufruf ohne Auswahl (keine Nummer, kein `--schnell`, kein `server`,
