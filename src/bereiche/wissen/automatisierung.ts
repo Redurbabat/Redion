@@ -23,12 +23,12 @@
   R.melde('redion_create_flashcards',async(a,c)=>{
     const p=c.block(a.documentId,true);if(p.type!=='page')c.error('INVALID_DOCUMENT');
     if(a.cards.some((k:any)=>k.question.includes('::')||k.answer.includes('::')))c.error('INVALID_CARD_SEPARATOR');
-    await c.prepare(p.id);const ids=a.cards.map((k:any)=>Store.addBlock(p.id,'flashcard',{text:c.text(k.question)+' :: '+c.text(k.answer),herkunft:'ki'}).id);
+    await c.prepare(p.id);const ids=a.cards.map((k:any)=>Store.addBlock(p.id,'flashcard',{text:k.question+' :: '+k.answer,herkunft:'ki'}).id);
     await c.finish(p.id);return {documentId:p.id,cardIds:ids,count:ids.length};
   });
   R.melde('redion_create_task',async(a,c)=>{
     const p=c.block(a.documentId,true);if(p.type!=='page')c.error('INVALID_DOCUMENT');await c.prepare(p.id);
-    const b=Store.addBlock(p.id,'todo',{text:c.text(a.text),checked:false,herkunft:'ki'});await c.finish(p.id);return {blockId:b.id,documentId:p.id};
+    const b=Store.addBlock(p.id,'todo',{text:a.text,checked:false,herkunft:'ki'});await c.finish(p.id);return {blockId:b.id,documentId:p.id};
   });
   R.melde('redion_update_task',async(a,c)=>{
     const b=c.block(a.blockId,true);if(b.type!=='todo')c.error('UNSUPPORTED_BLOCK_TYPE');

@@ -158,6 +158,8 @@ sind der teuerste Teil und der lehrreichste.
 | P142 | 2026-11-18 | PowerShell veränderte den Tunnel-Startbefehl | 🟠 mittel | E791 |
 | P143 | 2026-11-18 | Neue Desktop-Adapter fehlten im Offline-Grundstock | 🟠 mittel | E791 |
 | P144 | 2026-11-18 | Eine alte Startfreigabe überlebte das Abschalten der Verbindung | 🟠 mittel | E791 |
+| P145 | 2026-11-18 | Der Textadapter verwechselte Markdown mit HTML | hoch | E791 |
+| P146 | 2026-11-18 | Beim Beenden wurde an ein zerstörtes Fenster gesendet | hoch | E791 |
 
 ---
 
@@ -3123,4 +3125,46 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Gegenprobe zuerst rot mit ENOENT statt LAUNCH_DISABLED; danach beide Widerrufsvarianten grün. Insgesamt 3/3 Windows-Skript-/SDK-Tests bestanden. Keine Test-EXE und keine Nutzer-App wurden gestartet.
 
 **Die Lehre.** Jede Sonderroute ohne laufende App muss dieselben aktuellen Freigaben beachten wie der normale Kanal.
+
+
+---
+
+## P145 · Der Textadapter verwechselte Markdown mit HTML
+
+*2026-11-18 · hoch · E791*
+
+**Das Bild.** Ein Kontrollbild zeigte Formatierungstags als wörtlichen Text. Einfügen und Lesen konnten Sonderzeichen vorab maskieren oder als HTML interpretieren.
+
+**Die falsche Vermutung.** Textblöcke enthielten gespeichertes HTML, dessen Textknoten bearbeitet werden müssten.
+
+**Wie es gefunden wurde.** Das echte Bildschirmbild wurde mit Blocks.inline und dem Eingabehandler verglichen. Diese speichern rohe Zeichen mit Markdown-Markierungen. Danach wurde der Fehler mit einem echten SDK-Client reproduziert.
+
+**Die Ursache.** Der neue Adapter maskierte Zeichen vor Store.addBlock und las bestehenden Rohtext durch einen HTML-Parser; der bestehende Editor maskiert erst bei der Anzeige.
+
+**Die Lösung.** Dieselben rohen Zeichen wie der Editor lesen und speichern. Eindeutige Ersetzungen im gespeicherten Wortlaut durchführen, Dollarzeichen wörtlich übernehmen und bestehende Markdown-Markierungen erhalten.
+
+**Der Beweis.** Zuerst roter Roundtrip mit vorab maskierten Entities. Danach echter MCP-/Electron-Lauf mit sichtbarer Fettschrift, unveränderten Sonderzeichen, HTML als sichtbarem Text ohne Bildknoten, Aufgaben/Lernkarten und dauerhaftem Neustart grün.
+
+**Die Lehre.** Den bestehenden Speichervertrag am echten Eingabe- und Anzeigepfad lesen. Ein Test mit künstlich erfundenem Datenformat beweist das falsche Modell.
+
+
+---
+
+## P146 · Beim Beenden wurde an ein zerstörtes Fenster gesendet
+
+*2026-11-18 · hoch · E791*
+
+**Das Bild.** Ein funktional abgeschlossener MCP-Test blieb beim Beenden an einem nativen Fehlerdialog hängen.
+
+**Die falsche Vermutung.** Ein geschriebenes Erfolgsprotokoll nach Lesen/Schreiben und Neustart beweise auch einen sauberen vollständigen Testabschluss.
+
+**Wie es gefunden wurde.** Der eigene Testprozess zeigte den Fenstertitel Error. Eine neue Testprüfung bricht bei unerwarteten nativen Fehlerdialogen mit Fehlercode ab und kontrolliert beide Prozessenden vor dem Erfolgsprotokoll.
+
+**Die Ursache.** cancelAutomation sendete im closed-Ereignis an die bereits zerstörten webContents. Auch Statusmeldungen und Zeitlimit-Abbrüche hatten diese fehlende Lebenszyklusprüfung.
+
+**Die Lösung.** Alle neuen Automatisierungsmeldungen nur an ein bestehendes Fenster mit lebenden webContents senden. Offene Aktionen weiterhin abbrechen und aufräumen.
+
+**Der Beweis.** Gegenprobe zuerst rot: Object has been destroyed in cancelAutomation, Exitcode 91. Danach derselbe vollständige echte MCP-/Electron-Test mit zwei sauberen Prozessenden, cleanExit true und Exitcode 0 bestanden.
+
+**Die Lehre.** Erfolg erst nach abgeschlossenem Aufräumen melden. Native Fehlerdialoge müssen einen automatisierten Test rot machen.
 

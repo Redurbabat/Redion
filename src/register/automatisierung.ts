@@ -6,7 +6,6 @@ interface AutomationContext {
   pageOf: (id: string) => any;
   prepare: (documentId: string) => Promise<void>;
   finish: (documentId?: string) => Promise<void>;
-  text: (value: string) => string;
   error: (code: string) => never;
 }
 type AutomationHandler = (input: Record<string, any>, context: AutomationContext) => Record<string, unknown> | Promise<Record<string, unknown>>;

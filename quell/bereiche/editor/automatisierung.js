@@ -4,33 +4,16 @@
     const R = RegisterAutomatisierung;
     const kinds = new Set(['text', 'h1', 'h2', 'h3', 'bullet', 'number', 'todo', 'quote', 'callout', 'divider', 'code']);
     const summary = (b) => ({ id: b.id, title: b.text || '', parentId: b.parentId || null, type: b.type });
-    const plain = (text) => new DOMParser().parseFromString(text, 'text/html').body.textContent || '';
-    const replacePlain = (html, find, replacement) => {
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        const start = (doc.body.textContent || '').indexOf(find), end = start + find.length;
-        if (start < 0)
-            return html;
-        const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
-        let at = 0, inserted = false;
-        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-            const value = node.textContent || '', next = at + value.length;
-            if (next > start && at < end) {
-                node.textContent = value.slice(0, Math.max(0, start - at)) + (inserted ? '' : replacement) + value.slice(Math.min(value.length, end - at));
-                inserted = true;
-            }
-            at = next;
-        }
-        return doc.body.innerHTML;
-    };
+    const raw = (text) => String(text ?? '');
     const pages = () => Object.values(Store.cache.blocks).filter(b => b.alive && b.type === 'page' && b.parentTable !== 'collection' && Konten.darf('lesen', b.id));
     const page = (id, c, write = false) => { const b = c.block(id, write); if (b.type !== 'page')
         c.error('INVALID_DOCUMENT'); return b; };
     const contents = (p, _c, limit = 100) => Store.childrenOf(p.id).filter((b) => b.alive && Konten.darf('lesen', b.id)).slice(0, limit)
-        .map((b) => ({ id: b.id, type: b.type, text: b.type === 'code' ? String(b.text || '') : plain(String(b.text || '')), ...(b.type === 'todo' ? { checked: !!b.checked } : {}) }));
+        .map((b) => ({ id: b.id, type: b.type, text: raw(b.text), ...(b.type === 'todo' ? { checked: !!b.checked } : {}) }));
     R.melde('redion_list_documents', a => ({ documents: pages().slice(0, a.limit || 50).map(summary) }));
     R.melde('redion_search', a => {
         const query = String(a.query).toLocaleLowerCase();
-        return { documents: pages().filter(p => String(p.text || '').toLocaleLowerCase().includes(query) || Store.childrenOf(p.id).some((b) => b.alive && Konten.darf('lesen', b.id) && plain(String(b.text || '')).toLocaleLowerCase().includes(query))).slice(0, a.limit || 20).map(summary) };
+        return { documents: pages().filter(p => String(p.text || '').toLocaleLowerCase().includes(query) || Store.childrenOf(p.id).some((b) => b.alive && Konten.darf('lesen', b.id) && raw(b.text).toLocaleLowerCase().includes(query))).slice(0, a.limit || 20).map(summary) };
     });
     R.melde('redion_open_document', (a, c) => { const p = page(a.documentId, c); App.oeffne(p.id); return { document: summary(p) }; });
     R.melde('redion_read_page', (a, c) => { const p = page(a.documentId, c); return { document: summary(p), blocks: contents(p, c, a.limit || 100) }; });
@@ -42,7 +25,7 @@
         c.check();
         const p = Store.addPage(a.parentId || null, { text: a.title, herkunft: 'ki' });
         for (const b of a.blocks || [])
-            Store.addBlock(p.id, b.type, { text: b.type === 'code' ? b.text : c.text(b.text), checked: !!b.checked, herkunft: 'ki' });
+            Store.addBlock(p.id, b.type, { text: b.text, checked: !!b.checked, herkunft: 'ki' });
         if (a.open !== false)
             App.oeffne(p.id);
         await c.finish(p.id);
@@ -52,21 +35,21 @@
     R.melde('redion_insert_block', async (a, c) => {
         const p = page(a.documentId, c, true);
         await c.prepare(p.id);
-        const b = Store.addBlock(p.id, a.block.type, { text: a.block.type === 'code' ? a.block.text : c.text(a.block.text), checked: !!a.block.checked, herkunft: 'ki' }, a.index ?? -1);
+        const b = Store.addBlock(p.id, a.block.type, { text: a.block.text, checked: !!a.block.checked, herkunft: 'ki' }, a.index ?? -1);
         await c.finish(p.id);
-        return { block: { id: b.id, type: b.type, text: plain(b.text) } };
+        return { block: { id: b.id, type: b.type, text: raw(b.text) } };
     });
     R.melde('redion_update_block', async (a, c) => {
         const b = c.block(a.blockId, true);
         if (!kinds.has(b.type))
             c.error('UNSUPPORTED_BLOCK_TYPE');
-        if ((b.type === 'code' ? String(b.text || '') : plain(String(b.text || ''))) !== a.expectedText)
+        if (raw(b.text) !== a.expectedText)
             c.error('STALE_DOCUMENT');
         const p = c.pageOf(b.id);
         await c.prepare(p.id);
-        if ((b.type === 'code' ? String(b.text || '') : plain(String(b.text || ''))) !== a.expectedText)
+        if (raw(b.text) !== a.expectedText)
             c.error('STALE_DOCUMENT');
-        Store.updateBlock(b.id, { text: b.type === 'code' ? a.text : c.text(a.text), herkunft: 'ki', ...(a.checked !== undefined && b.type === 'todo' ? { checked: a.checked } : {}) });
+        Store.updateBlock(b.id, { text: a.text, herkunft: 'ki', ...(a.checked !== undefined && b.type === 'todo' ? { checked: a.checked } : {}) });
         await c.finish(p.id);
         return { blockId: b.id, documentId: p.id };
     });
@@ -82,18 +65,27 @@
     });
     R.melde('redion_replace_text', async (a, c) => {
         const p = page(a.documentId, c, true);
-        const matches = Store.childrenOf(p.id).filter((b) => b.alive && kinds.has(b.type)).flatMap((b) => {
-            const value = b.type === 'code' ? String(b.text || '') : plain(String(b.text || ''));
-            return value.split(a.find).slice(1).map(() => ({ b, value }));
-        });
-        if (matches.length !== 1)
-            c.error(matches.length ? 'AMBIGUOUS_TEXT' : 'TEXT_NOT_FOUND');
-        const hit = matches[0];
+        const unique = () => {
+            let found;
+            for (const b of Store.childrenOf(p.id)) {
+                if (!b.alive || !kinds.has(b.type) || !Konten.darf('lesen', b.id))
+                    continue;
+                const value = raw(b.text), at = value.indexOf(a.find);
+                if (at < 0)
+                    continue;
+                if (found || value.indexOf(a.find, at + a.find.length) >= 0)
+                    c.error('AMBIGUOUS_TEXT');
+                found = { b, value };
+            }
+            return found || c.error('TEXT_NOT_FOUND');
+        };
+        const hit = unique();
         c.block(hit.b.id, true);
         await c.prepare(p.id);
-        if ((hit.b.type === 'code' ? String(hit.b.text || '') : plain(String(hit.b.text || ''))) !== hit.value)
+        const current = unique();
+        if (current.b.id !== hit.b.id || current.value !== hit.value)
             c.error('STALE_DOCUMENT');
-        Store.updateBlock(hit.b.id, { text: hit.b.type === 'code' ? hit.value.replace(a.find, a.replacement) : replacePlain(String(hit.b.text || ''), a.find, a.replacement), herkunft: 'ki' });
+        Store.updateBlock(hit.b.id, { text: hit.value.replace(a.find, () => a.replacement), herkunft: 'ki' });
         await c.finish(p.id);
         return { blockId: hit.b.id, replacements: 1 };
     });

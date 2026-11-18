@@ -33,14 +33,19 @@ fs.writeFileSync(bootstrap,`const {app}=require('electron');app.setPath('appData
 const entry=packaged?path.join(path.dirname(packaged),'resources/redion-mcp/server/dist/index.mjs'):path.join(root,'plugins/red-ion/server/dist/index.mjs');
 const env=Object.fromEntries(Object.entries(process.env).filter(([k,v])=>k!=='ELECTRON_RUN_AS_NODE'&&v!==undefined)) as Record<string,string>;
 env.REDION_MCP_DISCOVERY=path.join(appData,'Redion/automation/connection.json');
-const messages:string[]=[];let native:ElectronApplication|null=null;let page:Page;
+const messages:string[]=[];const nativeErrors:string[]=[];let native:ElectronApplication|null=null;let page:Page;
 async function openApp():Promise<void>{
   native=await electron.launch({executablePath:packaged||require(path.join(root,'windows/node_modules/electron')),
     args:packaged?['--redion-test-profile='+profileToken]:[bootstrap],env});
   if(packaged)assert.equal(await native.evaluate(({app})=>app.getPath('userData')),path.join(appData,'Redion'),'Die EXE muss vor Zugriff auf Daten isoliert sein');
   // Nur der menschliche native Dialog wird für synthetische Testdaten beantwortet.
   // Alle IPC-, Berechtigungs-, Named-Pipe-, MCP- und Speicherwege sind echt.
-  await native.evaluate(({dialog})=>{(globalThis as any).__mcpConsent=0;dialog.showMessageBox=async()=>{(globalThis as any).__mcpConsent++;return {response:1,checkboxChecked:false};};});
+  native.process().stderr?.on('data',chunk=>{const text=String(chunk);if(text.includes('MCP_NATIVE_ERROR:'))nativeErrors.push(text);});
+  await native.evaluate(({dialog,app})=>{(globalThis as any).__mcpConsent=0;dialog.showMessageBox=async()=>{(globalThis as any).__mcpConsent++;return {response:1,checkboxChecked:false};};
+    // Unerwartete native Fehler dürfen weder durch einen modalen Dialog hängen
+    // bleiben noch einen funktional erfolgreichen Lauf fälschlich grün machen.
+    dialog.showErrorBox=(title:string,detail:string)=>{process.stderr.write('MCP_NATIVE_ERROR:'+title+':'+detail+'\n');app.exit(91);};
+  });
   page=await native.firstWindow();page.setDefaultTimeout(20000);page.on('pageerror',e=>messages.push(e.message));
   await page.waitForFunction(()=>typeof App!=='undefined'&&typeof Store!=='undefined'&&!!document.querySelector('#page')?.firstElementChild);
   await page.waitForFunction(()=>document.getElementById('ru-vorhang')?.hidden===true);
@@ -97,22 +102,37 @@ try {
   assert.ok((await call('redion_search',{query:'MCP · Live-Test'})).documents.some((d:any)=>d.id===documentId));
   assert.equal(await page!.locator('#page').getByText('Überschrift 5',{exact:true}).count(),1,'Änderung steht im echten Renderer');
   assert.equal((await call('redion_read_page',{documentId})).blocks.length,5);
+  assert.equal((await raw('redion_replace_text',{documentId,find:'Überschrift',replacement:'Doppeldeutig'})).error?.code,'AMBIGUOUS_TEXT');
   assert.equal((await raw('redion_read_page',{documentId:'missing-document'})).error?.code,'INVALID_DOCUMENT');
   const inserted=await call('redion_insert_block',{documentId,block:{type:'text',text:'Eine echte Notiz · äöü ⚡'}});
   await call('redion_update_block',{blockId:inserted.block.id,text:'Eine korrigierte Notiz',expectedText:'Eine echte Notiz · äöü ⚡'});
   assert.equal((await raw('redion_update_block',{blockId:inserted.block.id,text:'Veraltet',expectedText:'Alt'})).error?.code,'STALE_DOCUMENT');
   await call('redion_undo');assert.ok((await call('redion_read_page',{documentId})).blocks.some((b:any)=>b.text==='Eine echte Notiz · äöü ⚡'));
   await call('redion_redo');await call('redion_replace_text',{documentId,find:'korrigierte',replacement:'verbundene'});
-  const richId=await page!.evaluate(async id=>{const b=Store.addBlock(id,'text',{text:'Eine <strong>formatierte</strong> Notiz'});await Store.flush();return b.id;},documentId);
-  await call('redion_replace_text',{documentId,find:'formatierte Notiz',replacement:'formatierte Erklärung'});
-  assert.match(await page!.evaluate(id=>Store.getBlock(id).text,richId),/<strong>formatierte Erklärung<\/strong>/,'Eine Korrektur über Textknoten erhält Formatierung');
+  const rich=await call('redion_insert_block',{documentId,block:{type:'text',text:'Eine **formatierte** Notiz'}});
+  await call('redion_replace_text',{documentId,find:'formatierte',replacement:'formatierte Erklärung'});
+  assert.equal(await page!.evaluate(id=>Store.getBlock(id).text,rich.block.id),'Eine **formatierte Erklärung** Notiz');
+  assert.equal(await page!.locator('#page .ct b').filter({hasText:'formatierte Erklärung'}).count(),1,'Bestehendes Markdown bleibt wirklich sichtbar formatiert');
+  const literalText='<Klemme> &amp; <img src=x onerror="window.__mcpInjected=true">';
+  const characters=await call('redion_create_page',{title:'MCP · Zeichenprüfung',blocks:[{type:'text',text:'Start <L> &amp;'}],open:false});
+  assert.equal(characters.blocks[0].text,'Start <L> &amp;');
+  const literal=await call('redion_insert_block',{documentId:characters.document.id,block:{type:'text',text:literalText}});
+  assert.equal(await page!.evaluate(id=>Store.getBlock(id).text,literal.block.id),literalText,'Store erhält rohe Zeichen, keine vorab maskierten HTML-Entities');
+  assert.equal((await call('redion_read_page',{documentId:characters.document.id})).blocks.find((b:any)=>b.id===literal.block.id).text,literalText);
+  assert.equal(await page!.locator('[data-bid="'+literal.block.id+'"] .ct').textContent(),literalText);
+  assert.equal(await page!.locator('[data-bid="'+literal.block.id+'"] .ct img').count(),0,'HTML bleibt sichtbarer Text');
+  assert.equal(await page!.evaluate(()=>Boolean((window as any).__mcpInjected)),false,'Darstellung maskiert HTML selbst');
+  await call('redion_replace_text',{documentId:characters.document.id,find:'<Klemme>',replacement:'$& <Anschluss>'});
+  assert.equal(await page!.evaluate(id=>Store.getBlock(id).text,literal.block.id),literalText.replace('<Klemme>',()=>'$& <Anschluss>'),'Ersetzung übernimmt auch Dollarzeichen wörtlich');
   const small=await call('redion_create_page',{title:'MCP · Kopiervorlage',blocks:[{type:'text',text:'Kopie prüfen'}]});
   const copy=await call('redion_duplicate_page',{documentId:small.document.id});assert.notEqual(copy.documentId,small.document.id);
   await call('redion_move_page',{documentId:copy.documentId,parentId:documentId});
   await call('redion_update_page',{documentId:copy.documentId,title:'MCP · Kopie verschoben'});
   await call('redion_open_document',{documentId});
-  const task=await call('redion_create_task',{documentId,text:'Testaufgabe'});await call('redion_update_task',{blockId:task.blockId,checked:true});
-  const cards=await call('redion_create_flashcards',{documentId,cards:Array.from({length:20},(_,i)=>({question:'Schaltung '+i,answer:'Antwort '+i}))});assert.equal(cards.count,20);
+  const task=await call('redion_create_task',{documentId,text:'Testaufgabe <N> &amp;'});await call('redion_update_task',{blockId:task.blockId,checked:true});
+  assert.equal(await page!.evaluate(id=>Store.getBlock(id).text,task.blockId),'Testaufgabe <N> &amp;');
+  const cards=await call('redion_create_flashcards',{documentId,cards:Array.from({length:20},(_,i)=>({question:'Schaltung '+i+(i===0?' <L> &amp;':''),answer:'Antwort '+i}))});assert.equal(cards.count,20);
+  assert.equal(await page!.evaluate(id=>Store.getBlock(id).text,cards.cardIds[0]),'Schaltung 0 <L> &amp; :: Antwort 0');
   const db=await call('redion_create_database',{documentId,name:'MCP-Testtabelle'});
   const row=await call('redion_add_database_row',{databaseId:db.databaseId,properties:{title:'Zeile 1'}});
   await call('redion_update_database_row',{rowId:row.rowId,properties:{title:'Zeile geändert'}});
@@ -142,10 +162,12 @@ try {
   const log=JSON.stringify(await call('redion_get_activity_log'));assert.ok(!log.includes('Eine echte Notiz'));assert.ok(!log.includes('Schaltung 19'));
   const stateBefore=await page!.evaluate(id=>({id:Store.getBlock(id).id,text:Store.getBlock(id).text,
     content:Store.getBlock(id).content,children:Store.childrenOf(id).map((b:any)=>({id:b.id,type:b.type,text:b.text,checked:b.checked,plan:b.plan,collectionId:b.collectionId}))}),documentId);
-  await native!.close();native=null;
+  const firstProcess=native!.process();await native!.close();native=null;
+  assert.equal(firstProcess.exitCode,0,JSON.stringify(nativeErrors));
   assert.equal((await call('redion_get_status')).running,false);
   await openApp();
   assert.equal((await call('redion_read_page',{documentId})).document.id,documentId);
+  assert.equal((await call('redion_read_page',{documentId:characters.document.id})).blocks.find((b:any)=>b.id===literal.block.id).text,literalText.replace('<Klemme>',()=>'$& <Anschluss>'));
   assert.deepEqual(await page!.evaluate(id=>({id:Store.getBlock(id).id,text:Store.getBlock(id).text,
     content:Store.getBlock(id).content,children:Store.childrenOf(id).map((b:any)=>({id:b.id,type:b.type,text:b.text,checked:b.checked,plan:b.plan,collectionId:b.collectionId}))}),documentId),stateBefore,'IDs und Inhalte bleiben nach echtem Prozessneustart erhalten');
   await call('redion_open_document',{documentId});
@@ -176,6 +198,8 @@ try {
   const offline=await page!.evaluate(()=>Store.addPage(null,{text:'Offline bleibt nutzbar'}).id);await page!.evaluate(async()=>Store.flush());
   assert.equal(await page!.evaluate(()=>Object.keys(Store.cache.blocks).length),count+1);assert.ok(offline);
   assert.equal(stdioErrors.includes('Eine echte Notiz'),false);
-  assert.deepEqual(messages,[]);report.electron=true;report.restart=true;report.revocation=true;report.offline=true;report.stdio=true;
+  const finalProcess=native!.process();await native!.close();native=null;
+  assert.equal(finalProcess.exitCode,0,JSON.stringify(nativeErrors));assert.deepEqual(nativeErrors,[]);
+  assert.deepEqual(messages,[]);report.electron=true;report.restart=true;report.revocation=true;report.offline=true;report.stdio=true;report.cleanExit=true;
   fs.writeFileSync(path.join(output,'nachweis.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));
 } finally {await httpClient?.close().catch(()=>{});await client.close().catch(()=>{});httpProcess?.kill();await (native as ElectronApplication|null)?.close().catch(()=>{});}

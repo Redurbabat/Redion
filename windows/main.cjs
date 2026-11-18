@@ -67,8 +67,12 @@ if (!lock) {
   let rendererReady = false;
   let automationReady = false;
   const automationPending = new Map();
+  const sendAutomation = (channel, ...args) => {
+    if (!mainWindow || mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) return;
+    mainWindow.webContents.send(channel, ...args);
+  };
   const cancelAutomation = () => {
-    mainWindow?.webContents.send('redion:automation:cancel');
+    sendAutomation('redion:automation:cancel');
     for (const pending of automationPending.values()) {
       clearTimeout(pending.timer);
       pending.reject(Object.assign(new Error('Die App-Verbindung wurde unterbrochen.'), { code: 'APP_DISCONNECTED' }));
@@ -79,17 +83,17 @@ if (!lock) {
     userData: app.getPath('userData'), profile: TEST_PROFILE ? 'test' : LIVE || LOCAL_SOURCE ? 'development' : 'production',
     ...(app.isPackaged && !TEST_PROFILE ? { executable: process.env.PORTABLE_EXECUTABLE_FILE || process.execPath } : {}),
     invoke: (tool, input) => new Promise((resolve, reject) => {
-      if (!mainWindow || !automationReady || mainWindow.isDestroyed()) {
+      if (!mainWindow || !automationReady || mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) {
         reject(Object.assign(new Error('Die Redion-Arbeitsfläche ist noch nicht bereit.'), { code: 'APP_NOT_READY' })); return;
       }
       const id = randomUUID();
       const timer = setTimeout(() => {
         automationPending.delete(id);
-        mainWindow?.webContents.send('redion:automation:cancel', id);
+        sendAutomation('redion:automation:cancel', id);
         reject(Object.assign(new Error('Die App hat nicht rechtzeitig geantwortet. Ergebnis in Redion prüfen; nicht blind wiederholen.'), { code: 'RESULT_UNKNOWN' }));
       }, 25000);
       automationPending.set(id, { resolve, reject, timer });
-      mainWindow.webContents.send('redion:automation:request', { id, tool, arguments: input });
+      sendAutomation('redion:automation:request', { id, tool, arguments: input });
     }),
     cancel: cancelAutomation,
     confirm: async (title, detail) => {
@@ -101,7 +105,7 @@ if (!lock) {
       return result.response === 1;
     },
     focus: () => { if (mainWindow?.isMinimized()) mainWindow.restore(); mainWindow?.show(); mainWindow?.focus(); },
-    changed: () => mainWindow?.webContents.send('redion:automation:state')
+    changed: () => sendAutomation('redion:automation:state')
   }) : null;
   const macOpenQueue = [];
   const files = new NativeFiles();

@@ -30099,7 +30099,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1605, inhalt: '1d3784783ea21654', gebaut: '2026-11-18T09:08:38.558Z' };
+const Stand = { fassung: 1608, inhalt: '83e875031dad1684', gebaut: '2026-11-18T09:30:14.834Z' };
 window.Stand = Stand;
 
 </script>
@@ -85974,7 +85974,7 @@ const ChronikDaten = {
                     "vonCommit": "30d0a1ece",
                     "bisCommit": "",
                     "zeitraum": "18. November 2026; Startzeit nicht erfasst",
-                    "pruefungen": "Echter SDK-Client und isolierte Electron-App: stdio- und HTTP-Handshake, Lesen/Schreiben, sichtbare Änderungen, fünf Überschriften, 20 Lernkarten, Aufgabe, Tabellenzeile, Schaltplan/Klemmen, Neustart und Widerruf bestanden. Vertrags-/Kanalprüfung, 21 Windows-Verträge und 9 Ink-/Paritätsverträge grün. Echter ChatGPT-Tunnel, Kontoberechtigung, Installation/Signierung und physische Geräte NICHT GETESTET."
+                    "pruefungen": "Echter SDK-Client und isolierte Electron-App: stdio- und HTTP-Handshake, Lesen/Schreiben, sichtbare Änderungen, fünf Überschriften, 20 Lernkarten, Aufgabe, Tabellenzeile, Schaltplan/Klemmen, Neustart und Widerruf bestanden. Vertrags-/Kanalprüfung, 21 Windows-Verträge und 9 Ink-/Paritätsverträge grün. Echter ChatGPT-Tunnel, Kontoberechtigung, Installation/Signierung und physische Geräte NICHT GETESTET. Anschliessend P145/P146 mit echten roten Gegenproben behoben: Rohtext/Markdown und Sonderzeichen im Store, Anzeige und nach Neustart erhalten; beide nativen Prozessenden jetzt vor Erfolgsprotokoll auf Exitcode 0 geprüft."
                 }
             ],
             "zahlen": {
@@ -87907,6 +87907,34 @@ const ChronikDaten = {
             "loesung": "Zusätzlich enabled gleich true und die App-Funktionsgruppe verlangen; alle Prüfungen erfolgen vor Hashprüfung oder Prozessstart.",
             "beweis": "Gegenprobe zuerst rot mit ENOENT statt LAUNCH_DISABLED; danach beide Widerrufsvarianten grün. Insgesamt 3/3 Windows-Skript-/SDK-Tests bestanden. Keine Test-EXE und keine Nutzer-App wurden gestartet.",
             "lehre": "Jede Sonderroute ohne laufende App muss dieselben aktuellen Freigaben beachten wie der normale Kanal."
+        },
+        {
+            "nr": "P145",
+            "datum": "2026-11-18",
+            "titel": "Der Textadapter verwechselte Markdown mit HTML",
+            "schwere": "hoch",
+            "entscheidung": "E791",
+            "symptom": "Ein Kontrollbild zeigte Formatierungstags als wörtlichen Text. Einfügen und Lesen konnten Sonderzeichen vorab maskieren oder als HTML interpretieren.",
+            "falscheVermutung": "Textblöcke enthielten gespeichertes HTML, dessen Textknoten bearbeitet werden müssten.",
+            "wieGefunden": "Das echte Bildschirmbild wurde mit Blocks.inline und dem Eingabehandler verglichen. Diese speichern rohe Zeichen mit Markdown-Markierungen. Danach wurde der Fehler mit einem echten SDK-Client reproduziert.",
+            "ursache": "Der neue Adapter maskierte Zeichen vor Store.addBlock und las bestehenden Rohtext durch einen HTML-Parser; der bestehende Editor maskiert erst bei der Anzeige.",
+            "loesung": "Dieselben rohen Zeichen wie der Editor lesen und speichern. Eindeutige Ersetzungen im gespeicherten Wortlaut durchführen, Dollarzeichen wörtlich übernehmen und bestehende Markdown-Markierungen erhalten.",
+            "beweis": "Zuerst roter Roundtrip mit vorab maskierten Entities. Danach echter MCP-/Electron-Lauf mit sichtbarer Fettschrift, unveränderten Sonderzeichen, HTML als sichtbarem Text ohne Bildknoten, Aufgaben/Lernkarten und dauerhaftem Neustart grün.",
+            "lehre": "Den bestehenden Speichervertrag am echten Eingabe- und Anzeigepfad lesen. Ein Test mit künstlich erfundenem Datenformat beweist das falsche Modell."
+        },
+        {
+            "nr": "P146",
+            "datum": "2026-11-18",
+            "titel": "Beim Beenden wurde an ein zerstörtes Fenster gesendet",
+            "schwere": "hoch",
+            "entscheidung": "E791",
+            "symptom": "Ein funktional abgeschlossener MCP-Test blieb beim Beenden an einem nativen Fehlerdialog hängen.",
+            "falscheVermutung": "Ein geschriebenes Erfolgsprotokoll nach Lesen/Schreiben und Neustart beweise auch einen sauberen vollständigen Testabschluss.",
+            "wieGefunden": "Der eigene Testprozess zeigte den Fenstertitel Error. Eine neue Testprüfung bricht bei unerwarteten nativen Fehlerdialogen mit Fehlercode ab und kontrolliert beide Prozessenden vor dem Erfolgsprotokoll.",
+            "ursache": "cancelAutomation sendete im closed-Ereignis an die bereits zerstörten webContents. Auch Statusmeldungen und Zeitlimit-Abbrüche hatten diese fehlende Lebenszyklusprüfung.",
+            "loesung": "Alle neuen Automatisierungsmeldungen nur an ein bestehendes Fenster mit lebenden webContents senden. Offene Aktionen weiterhin abbrechen und aufräumen.",
+            "beweis": "Gegenprobe zuerst rot: Object has been destroyed in cancelAutomation, Exitcode 91. Danach derselbe vollständige echte MCP-/Electron-Test mit zwei sauberen Prozessenden, cleanExit true und Exitcode 0 bestanden.",
+            "lehre": "Erfolg erst nach abgeschlossenem Aufräumen melden. Native Fehlerdialoge müssen einen automatisierten Test rot machen."
         }
     ]
 };
@@ -166578,11 +166606,6 @@ const RedionAutomation = (() => {
             error('DOCUMENT_LOCKED');
         return b;
     };
-    const text = (value) => {
-        const el = document.createElement('span');
-        el.textContent = value;
-        return el.innerHTML;
-    };
     const editing = () => {
         const el = document.activeElement;
         return el instanceof HTMLElement && el.isContentEditable && !!document.getElementById('page')?.contains(el);
@@ -166600,7 +166623,7 @@ const RedionAutomation = (() => {
             pending.add(request.id);
             const check = () => { if (!pending.has(request.id))
                 error('ACTION_CANCELLED'); };
-            const context = { check, block, pageOf, text, error,
+            const context = { check, block, pageOf, error,
                 prepare: async (documentId) => {
                     if (editing())
                         error('EDITOR_BUSY');
@@ -166663,33 +166686,16 @@ RegisterAutomatisierung.melde('redion_get_active_document', (_a, c) => {
     const R = RegisterAutomatisierung;
     const kinds = new Set(['text', 'h1', 'h2', 'h3', 'bullet', 'number', 'todo', 'quote', 'callout', 'divider', 'code']);
     const summary = (b) => ({ id: b.id, title: b.text || '', parentId: b.parentId || null, type: b.type });
-    const plain = (text) => new DOMParser().parseFromString(text, 'text/html').body.textContent || '';
-    const replacePlain = (html, find, replacement) => {
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        const start = (doc.body.textContent || '').indexOf(find), end = start + find.length;
-        if (start < 0)
-            return html;
-        const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
-        let at = 0, inserted = false;
-        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-            const value = node.textContent || '', next = at + value.length;
-            if (next > start && at < end) {
-                node.textContent = value.slice(0, Math.max(0, start - at)) + (inserted ? '' : replacement) + value.slice(Math.min(value.length, end - at));
-                inserted = true;
-            }
-            at = next;
-        }
-        return doc.body.innerHTML;
-    };
+    const raw = (text) => String(text ?? '');
     const pages = () => Object.values(Store.cache.blocks).filter(b => b.alive && b.type === 'page' && b.parentTable !== 'collection' && Konten.darf('lesen', b.id));
     const page = (id, c, write = false) => { const b = c.block(id, write); if (b.type !== 'page')
         c.error('INVALID_DOCUMENT'); return b; };
     const contents = (p, _c, limit = 100) => Store.childrenOf(p.id).filter((b) => b.alive && Konten.darf('lesen', b.id)).slice(0, limit)
-        .map((b) => ({ id: b.id, type: b.type, text: b.type === 'code' ? String(b.text || '') : plain(String(b.text || '')), ...(b.type === 'todo' ? { checked: !!b.checked } : {}) }));
+        .map((b) => ({ id: b.id, type: b.type, text: raw(b.text), ...(b.type === 'todo' ? { checked: !!b.checked } : {}) }));
     R.melde('redion_list_documents', a => ({ documents: pages().slice(0, a.limit || 50).map(summary) }));
     R.melde('redion_search', a => {
         const query = String(a.query).toLocaleLowerCase();
-        return { documents: pages().filter(p => String(p.text || '').toLocaleLowerCase().includes(query) || Store.childrenOf(p.id).some((b) => b.alive && Konten.darf('lesen', b.id) && plain(String(b.text || '')).toLocaleLowerCase().includes(query))).slice(0, a.limit || 20).map(summary) };
+        return { documents: pages().filter(p => String(p.text || '').toLocaleLowerCase().includes(query) || Store.childrenOf(p.id).some((b) => b.alive && Konten.darf('lesen', b.id) && raw(b.text).toLocaleLowerCase().includes(query))).slice(0, a.limit || 20).map(summary) };
     });
     R.melde('redion_open_document', (a, c) => { const p = page(a.documentId, c); App.oeffne(p.id); return { document: summary(p) }; });
     R.melde('redion_read_page', (a, c) => { const p = page(a.documentId, c); return { document: summary(p), blocks: contents(p, c, a.limit || 100) }; });
@@ -166701,7 +166707,7 @@ RegisterAutomatisierung.melde('redion_get_active_document', (_a, c) => {
         c.check();
         const p = Store.addPage(a.parentId || null, { text: a.title, herkunft: 'ki' });
         for (const b of a.blocks || [])
-            Store.addBlock(p.id, b.type, { text: b.type === 'code' ? b.text : c.text(b.text), checked: !!b.checked, herkunft: 'ki' });
+            Store.addBlock(p.id, b.type, { text: b.text, checked: !!b.checked, herkunft: 'ki' });
         if (a.open !== false)
             App.oeffne(p.id);
         await c.finish(p.id);
@@ -166711,21 +166717,21 @@ RegisterAutomatisierung.melde('redion_get_active_document', (_a, c) => {
     R.melde('redion_insert_block', async (a, c) => {
         const p = page(a.documentId, c, true);
         await c.prepare(p.id);
-        const b = Store.addBlock(p.id, a.block.type, { text: a.block.type === 'code' ? a.block.text : c.text(a.block.text), checked: !!a.block.checked, herkunft: 'ki' }, a.index ?? -1);
+        const b = Store.addBlock(p.id, a.block.type, { text: a.block.text, checked: !!a.block.checked, herkunft: 'ki' }, a.index ?? -1);
         await c.finish(p.id);
-        return { block: { id: b.id, type: b.type, text: plain(b.text) } };
+        return { block: { id: b.id, type: b.type, text: raw(b.text) } };
     });
     R.melde('redion_update_block', async (a, c) => {
         const b = c.block(a.blockId, true);
         if (!kinds.has(b.type))
             c.error('UNSUPPORTED_BLOCK_TYPE');
-        if ((b.type === 'code' ? String(b.text || '') : plain(String(b.text || ''))) !== a.expectedText)
+        if (raw(b.text) !== a.expectedText)
             c.error('STALE_DOCUMENT');
         const p = c.pageOf(b.id);
         await c.prepare(p.id);
-        if ((b.type === 'code' ? String(b.text || '') : plain(String(b.text || ''))) !== a.expectedText)
+        if (raw(b.text) !== a.expectedText)
             c.error('STALE_DOCUMENT');
-        Store.updateBlock(b.id, { text: b.type === 'code' ? a.text : c.text(a.text), herkunft: 'ki', ...(a.checked !== undefined && b.type === 'todo' ? { checked: a.checked } : {}) });
+        Store.updateBlock(b.id, { text: a.text, herkunft: 'ki', ...(a.checked !== undefined && b.type === 'todo' ? { checked: a.checked } : {}) });
         await c.finish(p.id);
         return { blockId: b.id, documentId: p.id };
     });
@@ -166741,18 +166747,27 @@ RegisterAutomatisierung.melde('redion_get_active_document', (_a, c) => {
     });
     R.melde('redion_replace_text', async (a, c) => {
         const p = page(a.documentId, c, true);
-        const matches = Store.childrenOf(p.id).filter((b) => b.alive && kinds.has(b.type)).flatMap((b) => {
-            const value = b.type === 'code' ? String(b.text || '') : plain(String(b.text || ''));
-            return value.split(a.find).slice(1).map(() => ({ b, value }));
-        });
-        if (matches.length !== 1)
-            c.error(matches.length ? 'AMBIGUOUS_TEXT' : 'TEXT_NOT_FOUND');
-        const hit = matches[0];
+        const unique = () => {
+            let found;
+            for (const b of Store.childrenOf(p.id)) {
+                if (!b.alive || !kinds.has(b.type) || !Konten.darf('lesen', b.id))
+                    continue;
+                const value = raw(b.text), at = value.indexOf(a.find);
+                if (at < 0)
+                    continue;
+                if (found || value.indexOf(a.find, at + a.find.length) >= 0)
+                    c.error('AMBIGUOUS_TEXT');
+                found = { b, value };
+            }
+            return found || c.error('TEXT_NOT_FOUND');
+        };
+        const hit = unique();
         c.block(hit.b.id, true);
         await c.prepare(p.id);
-        if ((hit.b.type === 'code' ? String(hit.b.text || '') : plain(String(hit.b.text || ''))) !== hit.value)
+        const current = unique();
+        if (current.b.id !== hit.b.id || current.value !== hit.value)
             c.error('STALE_DOCUMENT');
-        Store.updateBlock(hit.b.id, { text: hit.b.type === 'code' ? hit.value.replace(a.find, a.replacement) : replacePlain(String(hit.b.text || ''), a.find, a.replacement), herkunft: 'ki' });
+        Store.updateBlock(hit.b.id, { text: hit.value.replace(a.find, () => a.replacement), herkunft: 'ki' });
         await c.finish(p.id);
         return { blockId: hit.b.id, replacements: 1 };
     });
@@ -166826,7 +166841,7 @@ RegisterAutomatisierung.melde('redion_get_active_document', (_a, c) => {
         if (a.cards.some((k) => k.question.includes('::') || k.answer.includes('::')))
             c.error('INVALID_CARD_SEPARATOR');
         await c.prepare(p.id);
-        const ids = a.cards.map((k) => Store.addBlock(p.id, 'flashcard', { text: c.text(k.question) + ' :: ' + c.text(k.answer), herkunft: 'ki' }).id);
+        const ids = a.cards.map((k) => Store.addBlock(p.id, 'flashcard', { text: k.question + ' :: ' + k.answer, herkunft: 'ki' }).id);
         await c.finish(p.id);
         return { documentId: p.id, cardIds: ids, count: ids.length };
     });
@@ -166835,7 +166850,7 @@ RegisterAutomatisierung.melde('redion_get_active_document', (_a, c) => {
         if (p.type !== 'page')
             c.error('INVALID_DOCUMENT');
         await c.prepare(p.id);
-        const b = Store.addBlock(p.id, 'todo', { text: c.text(a.text), checked: false, herkunft: 'ki' });
+        const b = Store.addBlock(p.id, 'todo', { text: a.text, checked: false, herkunft: 'ki' });
         await c.finish(p.id);
         return { blockId: b.id, documentId: p.id };
     });

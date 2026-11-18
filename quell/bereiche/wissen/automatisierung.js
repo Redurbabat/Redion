@@ -42,7 +42,7 @@
         if (a.cards.some((k) => k.question.includes('::') || k.answer.includes('::')))
             c.error('INVALID_CARD_SEPARATOR');
         await c.prepare(p.id);
-        const ids = a.cards.map((k) => Store.addBlock(p.id, 'flashcard', { text: c.text(k.question) + ' :: ' + c.text(k.answer), herkunft: 'ki' }).id);
+        const ids = a.cards.map((k) => Store.addBlock(p.id, 'flashcard', { text: k.question + ' :: ' + k.answer, herkunft: 'ki' }).id);
         await c.finish(p.id);
         return { documentId: p.id, cardIds: ids, count: ids.length };
     });
@@ -51,7 +51,7 @@
         if (p.type !== 'page')
             c.error('INVALID_DOCUMENT');
         await c.prepare(p.id);
-        const b = Store.addBlock(p.id, 'todo', { text: c.text(a.text), checked: false, herkunft: 'ki' });
+        const b = Store.addBlock(p.id, 'todo', { text: a.text, checked: false, herkunft: 'ki' });
         await c.finish(p.id);
         return { blockId: b.id, documentId: p.id };
     });

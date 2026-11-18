@@ -5189,7 +5189,7 @@
           "vonCommit": "30d0a1ece",
           "bisCommit": "",
           "zeitraum": "18. November 2026; Startzeit nicht erfasst",
-          "pruefungen": "Echter SDK-Client und isolierte Electron-App: stdio- und HTTP-Handshake, Lesen/Schreiben, sichtbare Änderungen, fünf Überschriften, 20 Lernkarten, Aufgabe, Tabellenzeile, Schaltplan/Klemmen, Neustart und Widerruf bestanden. Vertrags-/Kanalprüfung, 21 Windows-Verträge und 9 Ink-/Paritätsverträge grün. Echter ChatGPT-Tunnel, Kontoberechtigung, Installation/Signierung und physische Geräte NICHT GETESTET."
+          "pruefungen": "Echter SDK-Client und isolierte Electron-App: stdio- und HTTP-Handshake, Lesen/Schreiben, sichtbare Änderungen, fünf Überschriften, 20 Lernkarten, Aufgabe, Tabellenzeile, Schaltplan/Klemmen, Neustart und Widerruf bestanden. Vertrags-/Kanalprüfung, 21 Windows-Verträge und 9 Ink-/Paritätsverträge grün. Echter ChatGPT-Tunnel, Kontoberechtigung, Installation/Signierung und physische Geräte NICHT GETESTET. Anschliessend P145/P146 mit echten roten Gegenproben behoben: Rohtext/Markdown und Sonderzeichen im Store, Anzeige und nach Neustart erhalten; beide nativen Prozessenden jetzt vor Erfolgsprotokoll auf Exitcode 0 geprüft."
         }
       ],
       "zahlen": {
@@ -7122,6 +7122,34 @@
       "loesung": "Zusätzlich enabled gleich true und die App-Funktionsgruppe verlangen; alle Prüfungen erfolgen vor Hashprüfung oder Prozessstart.",
       "beweis": "Gegenprobe zuerst rot mit ENOENT statt LAUNCH_DISABLED; danach beide Widerrufsvarianten grün. Insgesamt 3/3 Windows-Skript-/SDK-Tests bestanden. Keine Test-EXE und keine Nutzer-App wurden gestartet.",
       "lehre": "Jede Sonderroute ohne laufende App muss dieselben aktuellen Freigaben beachten wie der normale Kanal."
+    },
+    {
+      "nr": "P145",
+      "datum": "2026-11-18",
+      "titel": "Der Textadapter verwechselte Markdown mit HTML",
+      "schwere": "hoch",
+      "entscheidung": "E791",
+      "symptom": "Ein Kontrollbild zeigte Formatierungstags als wörtlichen Text. Einfügen und Lesen konnten Sonderzeichen vorab maskieren oder als HTML interpretieren.",
+      "falscheVermutung": "Textblöcke enthielten gespeichertes HTML, dessen Textknoten bearbeitet werden müssten.",
+      "wieGefunden": "Das echte Bildschirmbild wurde mit Blocks.inline und dem Eingabehandler verglichen. Diese speichern rohe Zeichen mit Markdown-Markierungen. Danach wurde der Fehler mit einem echten SDK-Client reproduziert.",
+      "ursache": "Der neue Adapter maskierte Zeichen vor Store.addBlock und las bestehenden Rohtext durch einen HTML-Parser; der bestehende Editor maskiert erst bei der Anzeige.",
+      "loesung": "Dieselben rohen Zeichen wie der Editor lesen und speichern. Eindeutige Ersetzungen im gespeicherten Wortlaut durchführen, Dollarzeichen wörtlich übernehmen und bestehende Markdown-Markierungen erhalten.",
+      "beweis": "Zuerst roter Roundtrip mit vorab maskierten Entities. Danach echter MCP-/Electron-Lauf mit sichtbarer Fettschrift, unveränderten Sonderzeichen, HTML als sichtbarem Text ohne Bildknoten, Aufgaben/Lernkarten und dauerhaftem Neustart grün.",
+      "lehre": "Den bestehenden Speichervertrag am echten Eingabe- und Anzeigepfad lesen. Ein Test mit künstlich erfundenem Datenformat beweist das falsche Modell."
+    },
+    {
+      "nr": "P146",
+      "datum": "2026-11-18",
+      "titel": "Beim Beenden wurde an ein zerstörtes Fenster gesendet",
+      "schwere": "hoch",
+      "entscheidung": "E791",
+      "symptom": "Ein funktional abgeschlossener MCP-Test blieb beim Beenden an einem nativen Fehlerdialog hängen.",
+      "falscheVermutung": "Ein geschriebenes Erfolgsprotokoll nach Lesen/Schreiben und Neustart beweise auch einen sauberen vollständigen Testabschluss.",
+      "wieGefunden": "Der eigene Testprozess zeigte den Fenstertitel Error. Eine neue Testprüfung bricht bei unerwarteten nativen Fehlerdialogen mit Fehlercode ab und kontrolliert beide Prozessenden vor dem Erfolgsprotokoll.",
+      "ursache": "cancelAutomation sendete im closed-Ereignis an die bereits zerstörten webContents. Auch Statusmeldungen und Zeitlimit-Abbrüche hatten diese fehlende Lebenszyklusprüfung.",
+      "loesung": "Alle neuen Automatisierungsmeldungen nur an ein bestehendes Fenster mit lebenden webContents senden. Offene Aktionen weiterhin abbrechen und aufräumen.",
+      "beweis": "Gegenprobe zuerst rot: Object has been destroyed in cancelAutomation, Exitcode 91. Danach derselbe vollständige echte MCP-/Electron-Test mit zwei sauberen Prozessenden, cleanExit true und Exitcode 0 bestanden.",
+      "lehre": "Erfolg erst nach abgeschlossenem Aufräumen melden. Native Fehlerdialoge müssen einen automatisierten Test rot machen."
     }
   ]
 }

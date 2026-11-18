@@ -75,6 +75,14 @@ im synthetischen Test automatisch beantwortet; im Produkt gibt es keinen Bypass.
 - Zweiter echter MCP-Client über HTTP: Handshake/Seitenlesen bestanden;
   fehlendes Token 401, fremder Browser-Origin 403. Widerruf und anschliessende
   normale Offline-Nutzung bestanden.
+- Rohtext/Markdown-Roundtrip: Sonderzeichen, wörtliche Dollar-Ersetzung,
+  sichtbare Fettschrift und unveränderte Aufgaben/Lernkarten nach Neustart.
+  Die vorhandene Editor-Anzeige übernimmt das HTML-Maskieren; der Adapter
+  speichert keine HTML-Entities vorab (P145).
+- Native Fehlerdialoge machen den Test rot. Neustart und abschliessendes
+  Beenden müssen jeweils Exitcode 0 liefern; `cleanExit` wird erst danach
+  gespeichert. Eine tatsächlich rote Gegenprobe fand den Zugriff auf ein
+  zerstörtes Fenster, der anschliessende komplette Lauf bestand (P146).
 - Windows-Verträge 21/21, Ink-/Paketparität 9/9.
 - Offizieller Windows-Tunnel-Client v0.0.21: Archiv/EXE gegen SHA-256 geprüft;
   Versionsausgabe und `help quickstart` tatsächlich ausgeführt.

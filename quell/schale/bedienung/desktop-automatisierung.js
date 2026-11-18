@@ -28,11 +28,6 @@ const RedionAutomation = (() => {
             error('DOCUMENT_LOCKED');
         return b;
     };
-    const text = (value) => {
-        const el = document.createElement('span');
-        el.textContent = value;
-        return el.innerHTML;
-    };
     const editing = () => {
         const el = document.activeElement;
         return el instanceof HTMLElement && el.isContentEditable && !!document.getElementById('page')?.contains(el);
@@ -50,7 +45,7 @@ const RedionAutomation = (() => {
             pending.add(request.id);
             const check = () => { if (!pending.has(request.id))
                 error('ACTION_CANCELLED'); };
-            const context = { check, block, pageOf, text, error,
+            const context = { check, block, pageOf, error,
                 prepare: async (documentId) => {
                     if (editing())
                         error('EDITOR_BUSY');

@@ -19,9 +19,6 @@ const RedionAutomation = (() => {
     if(write&&(b.locked||p.locked))error('DOCUMENT_LOCKED');
     return b;
   };
-  const text=(value:string):string=>{
-    const el=document.createElement('span');el.textContent=value;return el.innerHTML;
-  };
   const editing=():boolean=>{
     const el=document.activeElement;
     return el instanceof HTMLElement && el.isContentEditable && !!document.getElementById('page')?.contains(el);
@@ -33,7 +30,7 @@ const RedionAutomation = (() => {
     desktop.onAutomationRequest(async(request:{id:string;tool:string;arguments:Record<string,unknown>})=>{
       pending.add(request.id);
       const check=():void=>{if(!pending.has(request.id))error('ACTION_CANCELLED');};
-      const context:AutomationContext={check,block,pageOf,text,error,
+      const context:AutomationContext={check,block,pageOf,error,
         prepare:async(documentId:string)=>{
           if(editing())error('EDITOR_BUSY');
           const p=block(documentId,true);if(p.type!=='page')error('INVALID_DOCUMENT');

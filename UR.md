@@ -3855,7 +3855,7 @@ Mit einem normalen Stift direkt über einer laufenden Stromsimulation schreiben,
 
 | Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
 |---|---|---|---|---|
-| E791: endlicher MCP-Vertrag mit 46 Werkzeugen, geschützte Windows-Bridge, native Sitzungsfreigabe, bestehende App-Aktionen und sichtbare Einstellungen; eigenständiges Plugin-Paket mit Start-/Installationsskripten. | `30d0a1ece` → `` | 18. November 2026; Startzeit nicht erfasst | — | Echter SDK-Client und isolierte Electron-App: stdio- und HTTP-Handshake, Lesen/Schreiben, sichtbare Änderungen, fünf Überschriften, 20 Lernkarten, Aufgabe, Tabellenzeile, Schaltplan/Klemmen, Neustart und Widerruf bestanden. Vertrags-/Kanalprüfung, 21 Windows-Verträge und 9 Ink-/Paritätsverträge grün. Echter ChatGPT-Tunnel, Kontoberechtigung, Installation/Signierung und physische Geräte NICHT GETESTET. |
+| E791: endlicher MCP-Vertrag mit 46 Werkzeugen, geschützte Windows-Bridge, native Sitzungsfreigabe, bestehende App-Aktionen und sichtbare Einstellungen; eigenständiges Plugin-Paket mit Start-/Installationsskripten. | `30d0a1ece` → `` | 18. November 2026; Startzeit nicht erfasst | — | Echter SDK-Client und isolierte Electron-App: stdio- und HTTP-Handshake, Lesen/Schreiben, sichtbare Änderungen, fünf Überschriften, 20 Lernkarten, Aufgabe, Tabellenzeile, Schaltplan/Klemmen, Neustart und Widerruf bestanden. Vertrags-/Kanalprüfung, 21 Windows-Verträge und 9 Ink-/Paritätsverträge grün. Echter ChatGPT-Tunnel, Kontoberechtigung, Installation/Signierung und physische Geräte NICHT GETESTET. Anschliessend P145/P146 mit echten roten Gegenproben behoben: Rohtext/Markdown und Sonderzeichen im Store, Anzeige und nach Neustart erhalten; beide nativen Prozessenden jetzt vor Erfolgsprotokoll auf Exitcode 0 geprüft. |
 
 #### Zahlen des Tages
 
@@ -3881,5 +3881,5 @@ ChatGPT soll eine echte geöffnete Windows-App mit vorhandenen Notizen, Tabellen
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 144 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 146 Einträge.
 
