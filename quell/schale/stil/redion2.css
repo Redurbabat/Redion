@@ -254,7 +254,7 @@ body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel-blatt
 body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel-name b{
   font-size:var(--t-body); font-weight:var(--w-semibold);
 }
-body:not([data-ui-shell="glass-wheel"]) .bib-card-kind{font-size:var(--t-caption); font-weight:var(--w-medium); color:var(--text-faint)}
+body:not([data-ui-shell="glass-wheel"]) .bib-card-kind{font-size:var(--t-caption); font-weight:var(--w-medium); color:var(--text-dim)}
 /* ☆ und ⋯ am Rechner erst bei Zeiger oder Fokus auf der Karte (E784).
    Gedrückt (☆ gemerkt) bleibt der Stern stehen; am Telefon und mit grobem
    Zeiger bleiben beide immer sichtbar (§37, test597 §1). Unsichtbar heisst
