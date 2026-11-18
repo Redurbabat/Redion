@@ -694,7 +694,7 @@ if (!kenntListe) {
     'Status ' + r.status + (r.error ? ' · ' + r.error.message : ''));
   p('… und startet dabei keinen einzigen Lauf', !/^──── \[/m.test(aus));
   kopfZahl = Number(/Prüfläufe: (\d+) Läufe/.exec(aus)?.[1] ?? NaN);
-  zeilen = [...aus.matchAll(/^(test\d+|servercheck)\s+(ohne Browser|Browser)(?:\s+—\s+(.*?))?\s*$/gm)]
+  zeilen = [...aus.matchAll(/^([A-Za-z][\w.-]*)\s+(ohne Browser|Browser)(?:\s+—\s+(.*?))?\s*$/gm)]
     .map(m => ({ name: m[1] ?? '', browser: m[2] === 'Browser', grund: (m[3] ?? '').trim() }));
 }
 const inListe = new Set(zeilen.map(z => z.name));
