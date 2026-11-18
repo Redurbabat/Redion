@@ -40,7 +40,13 @@ pruef('Feder-Kurven werden aus dem etablierten Designsystem gelesen',
   s.includes('--feder-sanft-dauer') && s.includes('--feder-knapp'));
 pruef('CSS-Namensraum ho- ist registriert',
   /^ho\s+\d+\s+bausteine\.css$/m.test(cssNamen));
-pruef('Schrift, Eingaben und Touch-Klickflächen werden nicht verkleinert',
-  !/REDION MOTION \/ FEINSCHLIFF[\s\S]*?font-size\s*:\s*[0-9]+px/.test(s));
+/* Der Motion-Abschnitt endet am naechsten klar benannten Arbeitsbereich.
+ * Die Workspace-Werkzeugleiste danach ist ein eigenstaendiger CSS-Bereich;
+ * ihre Schriftgroessen gehoeren nicht zum Motion-Feinschliff. */
+const motionAbschnitt = s.split('REDION MOTION / FEINSCHLIFF')[1]
+  ?.split('WORKSPACE 2.0 · SICHTBARE SEITENWERKZEUGE')[0] ?? '';
+pruef('Motion-Feinschliff veraendert keine Schriftgroessen oder Touch-Klickflaechen',
+  motionAbschnitt.length > 100 &&
+  !/font-size\s*:|(?:min-)?height\s*:\s*(?:[1-3]?\d)px/.test(motionAbschnitt));
 console.log('Suite 621: ' + gut + ' grün, ' + schlecht + ' rot');
 if(schlecht) process.exitCode = 1;
