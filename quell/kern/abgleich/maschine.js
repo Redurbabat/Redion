@@ -333,6 +333,9 @@ const Wolke = (() => {
     };
     const istGeteilt = (seiteId) => (Store.getMeta('wolkeGeteilt', []) || []).includes(seiteId);
     const RUNDE = 300;
+    const PAKET_BYTES = 4 * 1024 * 1024;
+    const EINZEL_MAX = 12 * 1024 * 1024;
+    const zuGrossIds = new Set();
     const hoch = async () => {
         let angenommen = 0;
         const abgelehnt = [], angepasst = [];
@@ -362,21 +365,61 @@ const Wolke = (() => {
                     geloescht: e.geloescht
                 });
             }
-            const a = await ruf('/sync/hoch', { m: 'POST', k: { bereich: bereich(), saetze: paket } });
+            const gesendet = [], gesendetDran = [], zuGross = [];
+            let bytes = 0, schnitt = paket.length;
+            for (let i = 0; i < paket.length; i++) {
+                const p = paket[i], e = dran[i];
+                if (!p || !e)
+                    continue;
+                const g = String(p.daten).length + 400;
+                if (g > EINZEL_MAX) {
+                    zuGross.push(String(p.id));
+                    continue;
+                }
+                if (gesendet.length && bytes + g > PAKET_BYTES) {
+                    schnitt = i;
+                    break;
+                }
+                bytes += g;
+                gesendet.push(p);
+                gesendetDran.push(e);
+            }
+            if (zuGross.length) {
+                for (const id of zuGross)
+                    zuGrossIds.add(id);
+                zustand.zuGrossLokal = zuGrossIds.size;
+                nachtragStreichen(zuGross);
+                if (typeof Protokoll !== 'undefined')
+                    Protokoll.notieren('wolke', zuGross.length + ' Satz/Sätze zu gross für die Wolke — bleiben auf diesem Gerät');
+            }
+            const letzteZeit = String((gesendet[gesendet.length - 1] ?? paket[paket.length - 1])?.geaendert ?? '');
+            const nachtragen = dran.slice(schnitt)
+                .filter(e => zeitVon(e) <= letzteZeit && !zuGross.includes(String(e.id)))
+                .map(e => String(e.id));
+            if (nachtragen.length)
+                Store.metaListeAendern('wolkeNachtrag', (alt) => [...new Set([...(Array.isArray(alt) ? alt.map(String) : []), ...nachtragen])]);
+            if (!gesendet.length) {
+                if (letzteZeit)
+                    Store.setMeta('wolkeMarkeHoch', letzteZeit);
+                if (liste.length <= dran.length)
+                    break;
+                continue;
+            }
+            const a = await ruf('/sync/hoch', { m: 'POST', k: { bereich: bereich(), saetze: gesendet } });
             angenommen += a.angenommen;
             if (Array.isArray(a.abgelehnt))
                 abgelehnt.push(...a.abgelehnt);
             const nein = new Set([...(a.abgelehnt || []), ...(a.angepasst || [])]
                 .map(x => (x && x.id) || x));
-            for (const e of dran)
+            for (const e of gesendetDran)
                 if (!nein.has(e.id))
                     await Store.basisPut(e.id, e.satz);
             if (Array.isArray(a.angepasst) && a.angepasst.length)
                 angepasst.push(...a.angepasst);
-            const letzte = paket[paket.length - 1];
+            const letzte = gesendet[gesendet.length - 1];
             Store.setMeta('wolkeMarkeHoch', letzte ? letzte.geaendert : Store.now());
-            nachtragStreichen(dran.filter(e => !nein.has(e.id)).map(e => String(e.id)));
-            if (liste.length <= dran.length)
+            nachtragStreichen(gesendetDran.filter(e => !nein.has(e.id)).map(e => String(e.id)));
+            if (schnitt === paket.length && liste.length <= dran.length)
                 break;
         }
         if (Store.getMeta('wolkeNachtragAlles', false) === true)

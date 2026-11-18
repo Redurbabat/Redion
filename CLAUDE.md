@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 576 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 577 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2239,6 +2239,18 @@ Pläne bleiben: jedes Bauplan-Zeichen von vorher mit derselben Grösse und
 denselben Anschlüssen. Gezählt am 15. November: `ls pruefungen/lauf/test*.mts
 | wc -l` sagt 576.*
 
+*Und 577: `test643` — der Abgleich schickt keine Riesenpakete und verspricht
+keine Verschlüsselung, die es nicht gibt (E796). Er hält den ersten echten
+Abgleich der Windows-App vom 18. November fest, bei dem zwei Dinge schiefgingen:
+ein zu kurzer Schlüsselsatz wurde abgewiesen, die Frage danach sagte trotzdem
+„verschlüsselt“, und 961 Sätze gingen im Klartext hinaus; und nach dem ersten
+Paket riss der Abgleich mit „Server nicht erreichbar“ ab. Seine drei
+Gegenproben treffen je andere Zeilen: ohne Bytegrenze „11.65 MB, 7 Pakete“,
+ohne Nachtrag fehlen b643_10 bis b643_29 (der Rest einer zerschnittenen
+Millisekunde fiel hinter die Marke), mit der alten Frage steht wieder
+„verschlüsselt — zum Server“ da. Gezählt am 18. November, im selben Bogen:
+`ls pruefungen/lauf/test*.mts | wc -l` sagt 577.*
+
 ### Die Befehle
 
 ```txt
@@ -2260,7 +2272,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 576 Läufe
+npm run pruefen                      alle 577 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2357,7 +2369,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 576 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 577 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

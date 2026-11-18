@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-772 Entscheidungen, E1 bis E795 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+773 Entscheidungen, E1 bis E796 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -856,6 +856,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E791** — RED Ion Windows-MCP: semantische Live-Steuerung mit freigegebenen Aktionen und Sicherheitsbestätigungen.
 * **E792** — Visual MCP, sichere Mehrschritt-Aufträge und dauerhafte widerrufbare Freigaben (Verbesserungsplan 2026, Phasen 1–2).
 * **E793** — Zugriff ohne Laptop ausschliesslich kostenlos.
+* **E796** — Der Abgleich verspricht keine Verschlüsselung ohne Schlüssel und schickt Pakete höchstens 4 MB gross; der Vorfall vom 18. November.
 * **E795** — Abgleich der Windows-App mit der Cloud: Access-Anmeldung der Website, öffentliches Abgleich-Tor am MCP-Worker, R2 mit 5-GB-Deckel, Klartext nur für freigegebene Seiten.
 * **E794** — Cloud-MCP veröffentlicht: D1 `redion` im Gratis-Tarif, Worker `red-ion-mcp` öffentlich, Anmeldung hinter dem Access-Tor der Website.
 
@@ -71155,3 +71156,39 @@ Hochlade-Pakete sind ungemessen.
 **Nachweis.** `pruefungen/redion-mcp-cloud-sync.mts`, 4 Läufe, vier Gegenproben je
 rot (Ursprung, Torliste, Deckel, Doppelzählung). **NICHT GETESTET:** Anmeldung
 der echten Windows-App, echter Abgleich mit Redurs Bestand, Anhänge über R2.
+
+
+## E796 · Kein Versprechen ohne Schlüssel, keine Riesenpakete
+
+**Was geschah, am 18. November 2026.** Beim ersten echten Abgleich der
+Windows-App (1,1 GB, 11 016 Blöcke) wurde der Schlüsselsatz abgewiesen oder
+abgebrochen — `schluesselFragen` meldet einen Satz unter acht Zeichen nur mit
+einem Hinweis. Die Frage danach sagte trotzdem: „Deine bisherigen Notizen gehen
+dann — verschlüsselt — zum Server“, und mit OK lief der Abgleich im Klartext.
+961 Sätze kamen an — nur Redions mitgelieferte Hilfeseiten und die Beispiel-
+Datenbank „Meine Aufgaben“, alle aus derselben Millisekunde. Danach brach er mit
+„Server nicht erreichbar“ ab. Claude schaltete auf „Nur lokal“, zeigte Redur den
+Inhalt und löschte die 961 Zeilen auf sein „Löschen, sauber neu“; die App wurde
+abgemeldet, damit Marken und gemeinsamer Stand neu beginnen.
+
+**Entschieden.**
+- Ohne Schlüssel fragt `abgleichFragen` zuerst noch einmal nach ihm. Bleibt er
+  aus, nennt die Frage „KEIN Schlüssel … IM KLARTEXT“, und „Abbrechen“ lässt
+  nichts hinaus. „Verschlüsselt“ steht nur noch da, wenn es stimmt.
+- `hoch` schneidet Pakete bei 4 MB (`PAKET_BYTES`). Fällt der Schnitt in eine
+  Millisekunde, reist der Rest über die Nachtrag-Liste (L100/E314) statt über
+  die Marke — sonst käme er nie an. Ein Satz über 12 MB (`EINZEL_MAX`) bleibt
+  auf dem Gerät, wird gezählt (`zustand.zuGrossLokal`) und hält den Rest nicht auf.
+
+**Nicht gemessen.** Warum das zweite Paket scheiterte, ist nicht bewiesen: der
+Worker meldete 0 Fehler bei 1,4 ms CPU, was zu einer Abweisung an der Kante
+passt (zu grosses Paket), aber eine Messung mit einem Prüfkonto in der echten
+D1 wurde nicht freigegeben. Der nächste echte Abgleich wird mit `wrangler tail`
+beobachtet.
+
+**Und:** die installierte EXE trägt den alten Code; beide Reparaturen
+erreichen sie erst mit einem neuen Windows-Paket. Bis dahin wird der Schlüssel
+über „Schlüssel setzen“ im Wolke-Fenster gesetzt, BEVOR der Abgleich angeht.
+
+Nachweis: `test643` (16 Zusagen, drei Gegenproben rot), dazu 76, 77, 78, 113,
+118, 96, 100, 105 grün.

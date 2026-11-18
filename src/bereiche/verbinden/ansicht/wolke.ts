@@ -460,6 +460,25 @@ const WolkeFenster = (() => {
                'ersetzt diese Frage.');
       return;
     }
+    /* HIER STAND „verschlüsselt“ — auch wenn gar kein Schlüssel gesetzt war.
+       Am 18. November 2026 brach ein zu kurzer Satz den Schlüssel ab, die
+       Frage danach versprach trotzdem Verschlüsselung, und 961 Sätze gingen im
+       Klartext hinaus (E796). Jetzt: ohne Schlüssel zuerst noch einmal nach
+       ihm fragen; bleibt er aus, sagt die Frage „Klartext“, und „Abbrechen“
+       ist der Weg, auf dem nichts das Gerät verlässt. */
+    if (!Wolke.hatSchluessel() && !(await schluesselFragen())) {
+      const klar = confirm(
+        'Es ist KEIN Schlüssel gesetzt.\n\n' +
+        'Wenn du jetzt abgleichst, gehen deine Notizen IM KLARTEXT zum Server.\n\n' +
+        '„OK“ heisst: trotzdem im Klartext abgleichen.\n' +
+        '„Abbrechen“ heisst: angemeldet bleiben, aber nichts verlässt dieses Gerät. ' +
+        'Den Schlüssel kannst du im Wolke-Fenster setzen.');
+      Wolke.abgleichSetzen(klar);
+      if (!klar) { UI.toast('Nur lokal: nichts verlässt dieses Gerät.'); return; }
+      UI.toast('Abgleich im Klartext läuft …');
+      try { await Wolke.abgleichen(); } catch { /* steht danach im Fenster */ }
+      return;
+    }
     const ja = confirm(
       'Dieses Gerät ab jetzt mit der Wolke abgleichen?\n\n' +
       'Deine bisherigen Notizen gehen dann — verschlüsselt — zum Server ' +

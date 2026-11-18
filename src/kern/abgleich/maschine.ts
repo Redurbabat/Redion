@@ -227,6 +227,8 @@ const Wolke = (() => {
     /* Anhänge haben ihren eigenen Fehlerplatz: ein hakender Upload darf
        nicht so aussehen, als wäre der Satz-Abgleich gescheitert. */
     fehlerDateien?: string;
+    /* Sätze über EINZEL_MAX, die auf dem Gerät geblieben sind (E796). */
+    zuGrossLokal?: number;
     /* Wartet eine Entscheidung aus L76? Der Punkt oben rechts zeigte sonst
        „Letzter Abgleich 14:03" und damit einen Stand, den es nicht mehr
        gibt — der Abgleich steht ja. */
@@ -473,6 +475,19 @@ const Wolke = (() => {
      grosse Seiten, ohne dass die Anfrage zu lang wird. */
   const RUNDE = 300;
 
+  /* UND EINE BYTEGRENZE (E796). Dreihundert Sätze sind bei Textnotizen ein paar
+     hundert Kilobyte — bei Seiten mit eingebetteten Bildern oder PDF-Text
+     schnell weit mehr, als ein Aufruf verträgt. Am 18. November 2026 brach der
+     erste echte Abgleich (1,1 GB, 11 000 Blöcke) nach dem ersten Paket mit
+     „Server nicht erreichbar“ ab. Der Server nimmt für /sync 16 MB; ein Paket
+     bleibt deutlich darunter. Ein einzelner Satz über EINZEL_MAX geht gar nicht
+     hinaus — er bleibt auf dem Gerät und wird gezählt, statt jeden Abgleich
+     abreissen zu lassen. */
+  const PAKET_BYTES = 4 * 1024 * 1024;
+  const EINZEL_MAX = 12 * 1024 * 1024;
+  /** Welche Sätze zu gross waren — je Sitzung, nicht je Runde gezählt. */
+  const zuGrossIds = new Set<string>();
+
   /**
    * Alles Wartende hochschicken — in Runden, bis nichts mehr da ist.
    *
@@ -533,7 +548,44 @@ const Wolke = (() => {
         });
       }
 
-      const a = await ruf('/sync/hoch', { m: 'POST', k: { bereich: bereich(), saetze: paket } });
+      /* Nach Bytes schneiden. Der erste Satz geht immer mit (sonst stünde die
+         Schleife), ausser er ist allein schon zu gross. */
+      const gesendet: any[] = [], gesendetDran: any[] = [], zuGross: string[] = [];
+      let bytes = 0, schnitt = paket.length;
+      for (let i = 0; i < paket.length; i++) {
+        const p = paket[i], e = dran[i];
+        if (!p || !e) continue;
+        const g = String(p.daten).length + 400;
+        if (g > EINZEL_MAX) { zuGross.push(String(p.id)); continue; }
+        if (gesendet.length && bytes + g > PAKET_BYTES) { schnitt = i; break; }
+        bytes += g; gesendet.push(p); gesendetDran.push(e);
+      }
+      if (zuGross.length) {
+        /* Eindeutig zählen, und aus dem Nachtrag streichen — sonst kehrte der
+           Riese in jeder Runde zurück und hielte die Liste für immer offen. */
+        for (const id of zuGross) zuGrossIds.add(id);
+        zustand.zuGrossLokal = zuGrossIds.size;
+        nachtragStreichen(zuGross);
+        if (typeof Protokoll !== 'undefined')
+          Protokoll.notieren('wolke', zuGross.length + ' Satz/Sätze zu gross für die Wolke — bleiben auf diesem Gerät');
+      }
+      /* Was hinter dem Schnitt liegt, aber in DERSELBEN Millisekunde wie der
+         letzte gesendete Satz, fiele hinter die Marke — es kommt auf die
+         Nachtrag-Liste (L100/E314), die unabhängig von der Marke mitnimmt. */
+      const letzteZeit = String((gesendet[gesendet.length - 1] ?? paket[paket.length - 1])?.geaendert ?? '');
+      const nachtragen = dran.slice(schnitt)
+        .filter(e => zeitVon(e) <= letzteZeit && !zuGross.includes(String(e.id)))
+        .map(e => String(e.id));
+      if (nachtragen.length) Store.metaListeAendern('wolkeNachtrag', (alt: any[]) =>
+        [...new Set([...(Array.isArray(alt) ? alt.map(String) : []), ...nachtragen])]);
+
+      if (!gesendet.length) {
+        /* Nur Übergrosses in dieser Runde: Marke weiter, nichts schicken. */
+        if (letzteZeit) Store.setMeta('wolkeMarkeHoch', letzteZeit);
+        if (liste.length <= dran.length) break;
+        continue;
+      }
+      const a = await ruf('/sync/hoch', { m: 'POST', k: { bereich: bereich(), saetze: gesendet } });
       angenommen += a.angenommen;
       if (Array.isArray(a.abgelehnt)) abgelehnt.push(...a.abgelehnt);
 
@@ -545,18 +597,19 @@ const Wolke = (() => {
          und der nächste Vergleich muss das merken. */
       const nein = new Set([...(a.abgelehnt || []), ...(a.angepasst || [])]
         .map(x => (x && x.id) || x));
-      for (const e of dran) if (!nein.has(e.id)) await Store.basisPut(e.id, e.satz);
+      for (const e of gesendetDran) if (!nein.has(e.id)) await Store.basisPut(e.id, e.satz);
       if (Array.isArray(a.angepasst) && a.angepasst.length) angepasst.push(...a.angepasst);
 
       /* Die Marke wandert bis zum letzten Satz dieser Runde — nicht auf
          „jetzt", sonst fielen alle Änderungen dazwischen unter den Tisch. */
-      const letzte = paket[paket.length - 1];
+      const letzte = gesendet[gesendet.length - 1];
       Store.setMeta('wolkeMarkeHoch', letzte ? letzte.geaendert : Store.now());
       /* Und die Nachgetragenen dieser Runde von der Liste streichen — sonst
          reisen sie bei jedem Abgleich wieder mit (L100, E314). */
-      nachtragStreichen(dran.filter(e => !nein.has(e.id)).map(e => String(e.id)));
+      nachtragStreichen(gesendetDran.filter(e => !nein.has(e.id)).map(e => String(e.id)));
 
-      if (liste.length <= dran.length) break;
+      /* Geschnitten? Dann gibt es sicher noch etwas — die nächste Runde holt es. */
+      if (schnitt === paket.length && liste.length <= dran.length) break;
     }
 
     /* --- DIE MERKLISTE AUFRÄUMEN (L100, E314) --------------------------

@@ -30091,7 +30091,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1615, inhalt: 'b13811be8ec9cc0a', gebaut: '2026-11-18T21:24:43.688Z' };
+const Stand = { fassung: 1617, inhalt: '5251c92427a73521', gebaut: '2026-11-18T22:22:52.717Z' };
 window.Stand = Stand;
 
 </script>
@@ -143313,6 +143313,9 @@ const Wolke = (() => {
     };
     const istGeteilt = (seiteId) => (Store.getMeta('wolkeGeteilt', []) || []).includes(seiteId);
     const RUNDE = 300;
+    const PAKET_BYTES = 4 * 1024 * 1024;
+    const EINZEL_MAX = 12 * 1024 * 1024;
+    const zuGrossIds = new Set();
     const hoch = async () => {
         let angenommen = 0;
         const abgelehnt = [], angepasst = [];
@@ -143342,21 +143345,61 @@ const Wolke = (() => {
                     geloescht: e.geloescht
                 });
             }
-            const a = await ruf('/sync/hoch', { m: 'POST', k: { bereich: bereich(), saetze: paket } });
+            const gesendet = [], gesendetDran = [], zuGross = [];
+            let bytes = 0, schnitt = paket.length;
+            for (let i = 0; i < paket.length; i++) {
+                const p = paket[i], e = dran[i];
+                if (!p || !e)
+                    continue;
+                const g = String(p.daten).length + 400;
+                if (g > EINZEL_MAX) {
+                    zuGross.push(String(p.id));
+                    continue;
+                }
+                if (gesendet.length && bytes + g > PAKET_BYTES) {
+                    schnitt = i;
+                    break;
+                }
+                bytes += g;
+                gesendet.push(p);
+                gesendetDran.push(e);
+            }
+            if (zuGross.length) {
+                for (const id of zuGross)
+                    zuGrossIds.add(id);
+                zustand.zuGrossLokal = zuGrossIds.size;
+                nachtragStreichen(zuGross);
+                if (typeof Protokoll !== 'undefined')
+                    Protokoll.notieren('wolke', zuGross.length + ' Satz/Sätze zu gross für die Wolke — bleiben auf diesem Gerät');
+            }
+            const letzteZeit = String((gesendet[gesendet.length - 1] ?? paket[paket.length - 1])?.geaendert ?? '');
+            const nachtragen = dran.slice(schnitt)
+                .filter(e => zeitVon(e) <= letzteZeit && !zuGross.includes(String(e.id)))
+                .map(e => String(e.id));
+            if (nachtragen.length)
+                Store.metaListeAendern('wolkeNachtrag', (alt) => [...new Set([...(Array.isArray(alt) ? alt.map(String) : []), ...nachtragen])]);
+            if (!gesendet.length) {
+                if (letzteZeit)
+                    Store.setMeta('wolkeMarkeHoch', letzteZeit);
+                if (liste.length <= dran.length)
+                    break;
+                continue;
+            }
+            const a = await ruf('/sync/hoch', { m: 'POST', k: { bereich: bereich(), saetze: gesendet } });
             angenommen += a.angenommen;
             if (Array.isArray(a.abgelehnt))
                 abgelehnt.push(...a.abgelehnt);
             const nein = new Set([...(a.abgelehnt || []), ...(a.angepasst || [])]
                 .map(x => (x && x.id) || x));
-            for (const e of dran)
+            for (const e of gesendetDran)
                 if (!nein.has(e.id))
                     await Store.basisPut(e.id, e.satz);
             if (Array.isArray(a.angepasst) && a.angepasst.length)
                 angepasst.push(...a.angepasst);
-            const letzte = paket[paket.length - 1];
+            const letzte = gesendet[gesendet.length - 1];
             Store.setMeta('wolkeMarkeHoch', letzte ? letzte.geaendert : Store.now());
-            nachtragStreichen(dran.filter(e => !nein.has(e.id)).map(e => String(e.id)));
-            if (liste.length <= dran.length)
+            nachtragStreichen(gesendetDran.filter(e => !nein.has(e.id)).map(e => String(e.id)));
+            if (schnitt === paket.length && liste.length <= dran.length)
                 break;
         }
         if (Store.getMeta('wolkeNachtragAlles', false) === true)
@@ -144233,6 +144276,24 @@ const WolkeFenster = (() => {
         if (Wolke.neuAbgleichOffen()) {
             UI.toast('Nach dem Einspielen steht oben eine Entscheidung — sie ' +
                 'ersetzt diese Frage.');
+            return;
+        }
+        if (!Wolke.hatSchluessel() && !(await schluesselFragen())) {
+            const klar = confirm('Es ist KEIN Schlüssel gesetzt.\n\n' +
+                'Wenn du jetzt abgleichst, gehen deine Notizen IM KLARTEXT zum Server.\n\n' +
+                '„OK“ heisst: trotzdem im Klartext abgleichen.\n' +
+                '„Abbrechen“ heisst: angemeldet bleiben, aber nichts verlässt dieses Gerät. ' +
+                'Den Schlüssel kannst du im Wolke-Fenster setzen.');
+            Wolke.abgleichSetzen(klar);
+            if (!klar) {
+                UI.toast('Nur lokal: nichts verlässt dieses Gerät.');
+                return;
+            }
+            UI.toast('Abgleich im Klartext läuft …');
+            try {
+                await Wolke.abgleichen();
+            }
+            catch { }
             return;
         }
         const ja = confirm('Dieses Gerät ab jetzt mit der Wolke abgleichen?\n\n' +
