@@ -78,8 +78,8 @@ sichtbare Issues im persönlichen Redion-Datenbestand, universeller Cloud-Link
 und Synchronisierung bei ausgeschaltetem Laptop. Die vollständige Liste steht
 in `REDION-2026-ISSUES.json` und `.md`.
 
-**NICHT GETESTET:** tatsächliche Bildanzeige im ChatGPT-Plugin, echte
-Nutzerinstallation dieses neuen Standes, vollständige Regressionen, physischer
+**NICHT GETESTET:** tatsächliche Bildanzeige im ChatGPT-Plugin, vollständige
+Bearbeitung im persönlichen Profil nach Installation, vollständige Regressionen, physischer
 Windows-Stift, iPhone/macOS und signierte Pakete. Die vorher gebaute EXE basiert
 weiterhin auf `543e253a9`; sie enthält diese neuen Funktionen noch nicht.
 Keine Cloud-URL oder Tunnel-ID wurde erstellt oder erfunden.
@@ -109,8 +109,17 @@ Ein erneuter regulärer Web-Bau nach Ende der alten App besteht ebenfalls,
 Offline-Stand v1613 bleibt unverändert. Die vorigen Schreibfehler sind damit
 kein aktuell reproduzierter Baufehler; ihre genaue Systemursache ist unbewiesen.
 
-Installation und Test im persönlichen Profil sind noch nicht erfolgt. Die
-tatsächliche verbundene Plugin-Route antwortete zuletzt **Session terminated**;
+Installation und Start wurden anschliessend ausdrücklich freigegeben und
+ausgeführt. Vorher wurden beide geschlossenen vorhandenen Profile lokal
+ausserhalb des Repositories gesichert. Benutzerinstallation unter
+`%LOCALAPPDATA%/Programs/Redion/`; installierte EXE und app.asar stimmen mit
+dem geprüften Paket überein. Der gestartete Prozess hat ein Hauptfenster.
+Der lokale Adapter meldet Version 0.2.0, Bridge 0.2.0, aktives Entwicklungsprofil
+und AVAILABLE, aber noch keine aktive MCP-Sitzung. Testschreiben im persönlichen
+Profil ist damit nicht nachgewiesen.
+
+Die tatsächliche verbundene Plugin-Route antwortete auch nach dem Start
+**Session terminated**;
 das ist kein erfolgreicher ChatGPT-Nachweis. ChatGPTs plugin-spezifische
 Einstellung wurde gelesen und steht bereits auf **Alle Aktionen erlauben**.
 Globale Einstellungen und Rechte anderer Plugins wurden nicht geändert.
