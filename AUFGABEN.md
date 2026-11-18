@@ -42,6 +42,19 @@ mehr gibt.
 
 ## Was jetzt offen ist
 
+### RED Ion ChatGPT-Live-Steuerung E791 · echte Kontoverbindung
+
+- **Ziel:** den lokal geprüften MCP-/Electron-Adapter im gewünschten privaten
+  ChatGPT-MCP-Dialog verbinden. **Warum offen:** Redur hat noch keinen Tunnel;
+  die Browsersteuerung konnte die Kontoseite nicht öffnen. Keine ID erfinden.
+- **Dateien:** `doku/RED-ION-MCP-INSTALLATION.md`, `plugins/red-ion/`.
+- **Fertig wenn:** echter Tunnel korrekt zugeordnet, eingeschränkter Schlüssel
+  lokal eingegeben, Doctor/Readiness und tatsächliche ChatGPT-Lese-/Schreibaktion
+  mit sichtbarer dauerhafter App-Änderung nachgewiesen.
+- **Rest:** noch fehlende App-Aktionen und reale Nutzerinstallation/Signierung
+  getrennt abnehmen. Umfang und Grenzen in `RED-ION-CHATGPT-INTEGRATION.md`.
+  Keine unaufgeforderte öffentliche Freigabe. Priorität: hoch.
+
 ### Windows-Stiftstudio E790 · reale Geräte und Freigabe
 
 - **Ziel:** den geprüften Windows-Arbeitsstand mit physischem Stift und

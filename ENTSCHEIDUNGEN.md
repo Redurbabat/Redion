@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-767 Entscheidungen, E1 bis E790 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+768 Entscheidungen, E1 bis E791 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -70986,3 +70986,24 @@ verboten, und SwiftUI hätte keinen Ort in Redion.
 `.assetsignore`) und nicht in die Einzeldatei. Kein Wächter: es ist Doku,
 kein Verhalten.
 
+
+
+## E791 · RED Ion steuert die laufende Windows-App über freigegebene semantische MCP-Aktionen
+
+Redur beauftragt die echte Live-Steuerung und die Fortsetzung in PR #207.
+Die bestehende App, IDs, lokalen Daten und Windows-Ink-Arbeiten bleiben erhalten.
+Eigener codex-Branch; anschliessend ausdrücklich beauftragter Fast-Forward auf
+den PR-Branch, kein neuer PR, kein Force-Push und kein main-Merge.
+
+Die neue Bridge ist standardmässig aus, benutzt eine benutzergeschützte Named
+Pipe, native Sitzungsfreigaben, endliche Verträge und Rechte je Funktion.
+Kritische Aktionen brauchen eine argumentgebundene Einmalbestätigung.
+Vorhandene Bereiche melden Aktionen im Register an; derselbe Store, Fassungen,
+Verlauf und Flush werden benutzt. Kein zweiter Speicher und kein universelles
+JavaScript-/Shellwerkzeug. Das offizielle MCP-SDK ist ausdrücklich beauftragt.
+
+Der gewünschte ChatGPT-Weg ist ein privater benutzerdefinierter MCP-Server
+über Secure MCP Tunnel. Redur bestätigt, noch keinen Tunnel zu haben. Lokale
+MCP-/Electron-Prüfung und tatsächliche ChatGPT-Verbindung bleiben getrennte
+Nachweise. Keine Schlüssel oder erfundene Tunnel-ID. Umfang, Sicherheitsgrenzen,
+Installation und aktuelle Nachweise: doku/RED-ION-CHATGPT-INTEGRATION.md.

@@ -153,6 +153,22 @@ täte, kommt nicht herein, egal wie viel es verbessert.
 
 ---
 
+## RED Ion Desktop-MCP (18. November 2026)
+
+Ausdrücklich beauftragt im Auftrag „RED Ion – ChatGPT Live Control & MCP
+Integration“: offizielles MCP-TypeScript-SDK. Keine OpenAI-API und kein
+Dokumentupload beim Start. Der Adapter läuft nur lokal über stdio.
+
+| Stück | Fassung / Herkunft | Lizenz | Zweck / Änderung | Nachweis |
+| --- | --- | --- | --- | --- |
+| MCP TypeScript SDK | `@modelcontextprotocol/sdk` 1.32.2, github.com/modelcontextprotocol/typescript-sdk, gepflegte v1-Linie | MIT | Protokoll, stdio-Handshake und Clienttests; unverändert | Lockdatei; MCP-/Electron-Integrationstest |
+| Zod | 4.6.7, github.com/colinhacks/zod | MIT | Schema-Abhängigkeit des SDK; unverändert | Lockdatei; MCP-/Electron-Integrationstest |
+| OpenAI tunnel-client | v0.0.21, github.com/openai/tunnel-client | Apache-2.0, zusätzliche Hinweise im offiziellen Archiv | Optionaler, ausdrücklich gewünschter Secure-MCP-Tunnel; unverändert, kein Bestandteil der Web-App | Windows-Archiv vor Ausführung gegen den SHA-256-Wert der offiziellen Release-API prüfen; CLI-/Doctor-Nachweis getrennt vom Live-Tunnel |
+
+Die v1-Linie wird laut offiziellem SDK-Repository noch gepflegt. Die
+Bibliotheken bleiben im Desktop-Plugin; sie werden weder in den Web- noch
+den iPhone-Start geladen. Das Paket enthält ihre Lizenzhinweise.
+
 ## 5. So wird etwas Fremdes genommen
 
 ```txt

@@ -9,7 +9,7 @@
     "prepare:app": "node ../node_modules/typescript/bin/tsc -p tsconfig.json && node prepare.mjs",
     "start": "node live.mts",
     "test": "node --test windows-desktop.test.cjs auto-update.test.cjs live.test.mts local-source.test.mts version.test.mts",
-    "dist": "npm run prepare:app && electron-builder --win nsis portable --x64",
+    "dist": "npm run prepare:app && npm --prefix ../plugins/red-ion run build && electron-builder --win nsis portable --x64",
     "release:signed": "npm run prepare:app && node release-signed.mjs",
     "start:once": "npm run prepare:app && electron .",
     "dist:mac": "npm run prepare:app && electron-builder --mac dmg zip --arm64 --config.directories.output=../build/macos-dist --publish never",
@@ -44,6 +44,7 @@
       "output": "../build/windows-dist"
     },
     "win": {
+      "extraResources": [{ "from": "../build/red-ion-plugin", "to": "redion-mcp", "filter": ["**/*"] }],
       "fileAssociations": [
         {
           "ext": "redion",

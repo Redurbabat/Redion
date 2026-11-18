@@ -14,10 +14,25 @@ const { configuredSource, saveConfiguredSource, startSourceUpdates, validateSour
   require('./generated/local-source.cjs');
 const { destinationFromArgs, jumpTasks, readWindowState, windowStateToSave } = require('./generated/desktop-shell.cjs');
 const { NativeFiles, trustedSender, safeExportName } = require('./generated/files.cjs');
+const { AutomationBridge, secureDirectory } = require('./generated/automation-bridge.cjs');
+const { actionErrorMessage } = require('./generated/automation-contract.cjs');
+const { randomUUID } = require('node:crypto');
 
 const SCHEME = 'redion-local';
 const START_URL = 'redion-local://app/index.html';
 const APP_ID = 'ch.redurbabat.redion.windows';
+// Bewusst getrennte Abnahme einer GEBAUTEN EXE. Keine freien Profilpfade,
+// keine Änderung der normalen Ablage und keine Abschwächung der MCP-Rechte.
+const testFlag = process.argv.find(value => value.startsWith('--redion-test-profile='));
+const TEST_PROFILE = testFlag ? testFlag.slice('--redion-test-profile='.length) : null;
+if (TEST_PROFILE !== null) {
+  if (process.platform !== 'win32' || !/^[a-f0-9]{32}$/.test(TEST_PROFILE)) throw new Error('Ungültiges isoliertes Windows-Testprofil.');
+  const base = path.join(app.getPath('temp'), 'Redion-Testprofile');
+  secureDirectory(base);
+  const directory = path.join(base, TEST_PROFILE);
+  secureDirectory(directory);
+  app.setPath('appData', directory);
+}
 
 protocol.registerSchemesAsPrivileged([{
   scheme: SCHEME,
@@ -50,6 +65,44 @@ if (!lock) {
   let servedAssets = null;
   let protocolReady = false;
   let rendererReady = false;
+  let automationReady = false;
+  const automationPending = new Map();
+  const cancelAutomation = () => {
+    mainWindow?.webContents.send('redion:automation:cancel');
+    for (const pending of automationPending.values()) {
+      clearTimeout(pending.timer);
+      pending.reject(Object.assign(new Error('Die App-Verbindung wurde unterbrochen.'), { code: 'APP_DISCONNECTED' }));
+    }
+    automationPending.clear();
+  };
+  const automation = process.platform === 'win32' ? new AutomationBridge({
+    userData: app.getPath('userData'), profile: TEST_PROFILE ? 'test' : LIVE || LOCAL_SOURCE ? 'development' : 'production',
+    ...(app.isPackaged && !TEST_PROFILE ? { executable: process.env.PORTABLE_EXECUTABLE_FILE || process.execPath } : {}),
+    invoke: (tool, input) => new Promise((resolve, reject) => {
+      if (!mainWindow || !automationReady || mainWindow.isDestroyed()) {
+        reject(Object.assign(new Error('Die Redion-Arbeitsfläche ist noch nicht bereit.'), { code: 'APP_NOT_READY' })); return;
+      }
+      const id = randomUUID();
+      const timer = setTimeout(() => {
+        automationPending.delete(id);
+        mainWindow?.webContents.send('redion:automation:cancel', id);
+        reject(Object.assign(new Error('Die App hat nicht rechtzeitig geantwortet. Ergebnis in Redion prüfen; nicht blind wiederholen.'), { code: 'RESULT_UNKNOWN' }));
+      }, 25000);
+      automationPending.set(id, { resolve, reject, timer });
+      mainWindow.webContents.send('redion:automation:request', { id, tool, arguments: input });
+    }),
+    cancel: cancelAutomation,
+    confirm: async (title, detail) => {
+      if (!mainWindow || mainWindow.isDestroyed()) return false;
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+      const result = await dialog.showMessageBox(mainWindow, { type: 'warning', title,
+        message: title, detail, buttons: ['Abbrechen', 'Erlauben'], defaultId: 0, cancelId: 0, noLink: true });
+      return result.response === 1;
+    },
+    focus: () => { if (mainWindow?.isMinimized()) mainWindow.restore(); mainWindow?.show(); mainWindow?.focus(); },
+    changed: () => mainWindow?.webContents.send('redion:automation:state')
+  }) : null;
   const macOpenQueue = [];
   const files = new NativeFiles();
   let operations = Promise.resolve();
@@ -102,6 +155,39 @@ if (!lock) {
     const ziel = pendingDestination;
     pendingDestination = null;
     return ziel;
+  });
+  const automationSender = event => {
+    if (!trustedSender(event, mainWindow?.webContents)) throw new Error('Automatisierungszugriff nicht erlaubt.');
+    if (!automation) throw new Error('Desktop-Automatisierung wird hier nicht unterstützt.');
+    return automation;
+  };
+  ipcMain.handle('redion:automation:state', event => automationSender(event).state());
+  ipcMain.handle('redion:automation:package', async event => {
+    automationSender(event);
+    const directory = app.isPackaged ? path.join(process.resourcesPath, 'redion-mcp') : path.resolve(__dirname, '../build/red-ion-plugin');
+    if (!fs.existsSync(path.join(directory, 'mcp.json'))) throw new Error('Vorbereitetes MCP-Paket fehlt.');
+    const error = await shell.openPath(directory);
+    if (error) throw new Error('MCP-Paket konnte nicht geöffnet werden.');
+    return { opened: true };
+  });
+  ipcMain.handle('redion:automation:configure', (event, policy) => serial(() => automationSender(event).configure(policy)));
+  ipcMain.handle('redion:automation:disconnect', event => { automationSender(event).disconnect(); return automation.state(); });
+  ipcMain.handle('redion:automation:ready', event => { automationSender(event); automationReady = true; });
+  ipcMain.handle('redion:automation:reply', (event, reply) => {
+    automationSender(event);
+    if (!reply || typeof reply.id !== 'string' || typeof reply.ok !== 'boolean') return;
+    const pending = automationPending.get(reply.id);
+    if (!pending) return;
+    if (JSON.stringify(reply).length > 2 * 1024 * 1024) {
+      clearTimeout(pending.timer); automationPending.delete(reply.id);
+      pending.reject(Object.assign(new Error('Die Ausgabe ist zu gross.'), { code: 'RESULT_TOO_LARGE' })); return;
+    }
+    clearTimeout(pending.timer); automationPending.delete(reply.id);
+    if (reply.ok && reply.data && typeof reply.data === 'object' && !Array.isArray(reply.data)) pending.resolve(reply.data);
+    else {
+      const code = typeof reply.error?.code === 'string' && /^[A-Z_]{1,60}$/.test(reply.error.code) ? reply.error.code : 'ACTION_FAILED';
+      pending.reject(Object.assign(new Error(actionErrorMessage(code)), { code }));
+    }
   });
   handle('redion:files:list', () => files.pending());
   // pick() läuft außerhalb der serial-Kette, offerFiles reiht selbst ein.
@@ -320,7 +406,7 @@ if (!lock) {
     const remembered = readWindowState(() => fs.readFileSync(stateFile, 'utf8'),
       screen.getAllDisplays().map(display => display.workArea));
     mainWindow = new BrowserWindow({
-      title: LOCAL_SOURCE ? 'Redion · Lokaler Entwicklungsstand' : 'Redion',
+      title: TEST_PROFILE ? 'Redion · Isoliertes Testprofil' : LOCAL_SOURCE ? 'Redion · Lokaler Entwicklungsstand' : 'Redion',
       width: remembered?.width ?? 1300,
       height: remembered?.height ?? 860,
       ...(remembered ? { x: remembered.x, y: remembered.y } : {}),
@@ -367,6 +453,7 @@ if (!lock) {
       } catch { /* Fensterlage ist Komfort; sie darf das Schliessen nie aufhalten */ }
     });
     mainWindow.on('closed', () => {
+      automationReady = false; cancelAutomation(); automation?.disconnect();
       liveReload?.stop(); liveReload = null;
       localController?.stop(); localController = null;
       mainWindow = null; rendererReady = false; void serial(() => files.close());
@@ -374,7 +461,10 @@ if (!lock) {
     // New renderer after a reopen or reload: announce Finder files only
     // once the web app can receive the same IPC as Windows drag/drop.
     rendererReady = false;
-    mainWindow.webContents.on('did-start-navigation', () => { rendererReady = false; });
+    mainWindow.webContents.on('did-start-navigation', (_event, _url, inPlace, isMainFrame) => {
+      if (!isMainFrame || inPlace) return;
+      rendererReady = false; automationReady = false; cancelAutomation();
+    });
     mainWindow.webContents.on('did-finish-load', () => {
       rendererReady = true;
       if (macOpenQueue.length) void offerFiles(macOpenQueue.splice(0));
@@ -395,14 +485,15 @@ if (!lock) {
   }
 
   app.whenReady().then(() => {
+    automation?.start().catch(() => { dialog.showErrorBox('Automatisierung nicht verfügbar', 'Die lokale MCP-Verbindung konnte nicht sicher gestartet werden. Redion bleibt offline benutzbar.'); });
     appMenu();
-    if (process.platform === 'win32' && app.isPackaged) {
+    if (process.platform === 'win32' && app.isPackaged && !TEST_PROFILE) {
       app.setUserTasks(jumpTasks(process.execPath));
     }
     launchWindow();
     // Silent background checks ONLY in a signed NSIS release with a verified
     // HTTPS feed. An ordinary local/unsigned build remains fully offline.
-    updateController = startRedionAutoUpdates({
+    if (!TEST_PROFILE) updateController = startRedionAutoUpdates({
       app,
       updater: require('electron-updater').autoUpdater,
       yaml: require('js-yaml')
@@ -412,6 +503,7 @@ if (!lock) {
       if (BrowserWindow.getAllWindows().length === 0) launchWindow();
     });
   });
+  app.on('before-quit', () => { void automation?.shutdown(); });
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
   });

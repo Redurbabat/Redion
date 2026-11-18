@@ -1,0 +1,9 @@
+{
+  "name": "red-ion-desktop-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Lokaler MCP-Adapter für die freigegebene Redion-Windows-App",
+  "scripts": { "build": "node build.mts", "start": "node server/dist/index.mjs", "typecheck": "tsc -p tsconfig.json" },
+  "dependencies": { "@modelcontextprotocol/sdk": "1.32.2", "zod": "4.6.7" }
+}

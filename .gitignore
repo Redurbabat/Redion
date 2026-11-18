@@ -9,6 +9,10 @@ node_modules/
 /build/windows-dist/
 /build/windows-ink-dist/
 /windows/generated/
+/plugins/red-ion/server/dist/
+/build/red-ion-plugin/
+/build/red-ion-plugin.zip
+/build/windows-mcp-dist/
 /www/
 .wrangler/
 .DS_Store

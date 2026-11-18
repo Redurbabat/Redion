@@ -8,6 +8,7 @@
     "bauen": "node bauen.mts",
     "pruefen": "node pruefungen/alle.mts",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.islands.json",
+    "typecheck:mcp": "tsc -p windows/tsconfig.json --noEmit && tsc -p plugins/red-ion/tsconfig.json",
     "bauen:inseln": "node bauen-inseln.mts",
     "bauen:ts": "node bauen-inseln.mts && tsc -p tsconfig.bauen.json && node dienststand.mts && tsc -p tsconfig.stand.json && tsc -p tsconfig.sw.json",
     "stand": "node dienststand.mts --pruefen",
@@ -17,6 +18,8 @@
     "test:sync-readiness": "node --test tools/sync-readiness.test.mjs",
     "version:pruefen": "node --test windows/version.test.mts",
     "test:ink": "node --test pruefungen/windows-ink-model.mts",
+    "test:mcp": "node node_modules/typescript/bin/tsc -p windows/tsconfig.json && node --test pruefungen/redion-mcp-model.mts",
+    "test:windows-mcp": "npm --prefix windows run prepare:app && npm --prefix plugins/red-ion run build && node plugins/red-ion/tests/electron.mts",
     "test:windows-ink": "npm --prefix windows run prepare:app && node pruefungen/windows-ink-studio.mts"
   },
   "keywords": [

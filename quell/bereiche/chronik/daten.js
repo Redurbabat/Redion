@@ -5169,6 +5169,46 @@ const ChronikDaten = {
                     "risiko": "Ältere App-Versionen können neue Freihanddaten beim Speichern verwerfen; vor einem Rückwechsel sichern."
                 }
             ]
+        },
+        {
+            "datum": "2026-11-18",
+            "wochentag": "Mittwoch",
+            "titel": "RED Ion als freigegebene ChatGPT-Live-Steuerung",
+            "wasIchWeiss": "Auftrag und Ergänzung aus diesem Chat; genaue Nachrichtenzeiten nicht erfasst.",
+            "nachrichten": [
+                {
+                    "zeit": "nicht erfasst",
+                    "wortlaut": "Noch keinen Tunnel eingerichtet",
+                    "woher": "Antwort auf die Rückfrage nach einer echten Secure-MCP-Tunnel-ID.",
+                    "gemeint": "Der lokale Adapter kann fertig getestet werden; die echte Kontoverbindung muss erst eingerichtet werden.",
+                    "besser": "Ich habe noch keinen Secure MCP Tunnel. Bereite die lokale Integration und die Einrichtungsschritte vor.",
+                    "besserePrompt": "Baue und prüfe die lokale MCP-/Electron-Verbindung, dokumentiere die echte Tunnel-Erstellung getrennt und behaupte keine bereits verbundene ChatGPT-App."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E791: endlicher MCP-Vertrag mit 46 Werkzeugen, geschützte Windows-Bridge, native Sitzungsfreigabe, bestehende App-Aktionen und sichtbare Einstellungen; eigenständiges Plugin-Paket mit Start-/Installationsskripten.",
+                    "vonCommit": "30d0a1ece",
+                    "bisCommit": "",
+                    "zeitraum": "18. November 2026; Startzeit nicht erfasst",
+                    "pruefungen": "Echter SDK-Client und isolierte Electron-App: stdio- und HTTP-Handshake, Lesen/Schreiben, sichtbare Änderungen, fünf Überschriften, 20 Lernkarten, Aufgabe, Tabellenzeile, Schaltplan/Klemmen, Neustart und Widerruf bestanden. Vertrags-/Kanalprüfung, 21 Windows-Verträge und 9 Ink-/Paritätsverträge grün. Echter ChatGPT-Tunnel, Kontoberechtigung, Installation/Signierung und physische Geräte NICHT GETESTET."
+                }
+            ],
+            "zahlen": {
+                "commits": "Eigener Arbeitsbranch; PR #207 ist ausdrücklich beauftragtes Fast-Forward-Ziel.",
+                "entscheidungen": "E791",
+                "neuePruefungen": 2
+            },
+            "groesstesProblem": "Interne Hash-Navigation brach zuerst einen MCP-Aufruf wie einen Renderer-Neustart ab (P140).",
+            "interessantesteAnfrage": "ChatGPT soll eine echte geöffnete Windows-App mit vorhandenen Notizen, Tabellen, Lernkarten und Schaltplänen steuern.",
+            "massnahmen": [
+                {
+                    "zeit": "nicht erfasst",
+                    "was": "Nur synthetische Dokumente und getrennte Testprofile; keine Schlüssel im Chat oder Repository.",
+                    "warum": "Die bestehende persönliche Ablage muss erhalten bleiben.",
+                    "risiko": "Ein lokal bestandener Test beweist weder eine ChatGPT-Kontofreigabe noch eine funktionierende Tunnel-ID."
+                }
+            ]
         }
     ],
     "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
@@ -7014,6 +7054,20 @@ const ChronikDaten = {
             "loesung": "Den Filter am schwebenden Dock selbst anwenden und den Kopf ohne Filter lassen. Beim Wechsel in einem offenen Dokument bleibt das Bereichsrad eingeklappt.",
             "beweis": "Der ursprüngliche native Klickweg scheiterte; nach der Korrektur besteht der komplette Windows-Nutzerweg. 16 Chromium-Darstellungen prüfen erreichbare Werkzeuge, Mindestgrössen und deckendes Papier.",
             "lehre": "Materialeffekte können die Geometrie von Kindern verändern. Eine gläserne Fläche deshalb mit echten Eingaben prüfen, nicht nur anhand eines Bildes."
+        },
+        {
+            "nr": "P140",
+            "datum": "2026-11-18",
+            "titel": "Ein Ansichtswechsel beendete den MCP-Auftrag",
+            "schwere": "mittel",
+            "entscheidung": "E791",
+            "symptom": "Der echte MCP-Client konnte Status lesen, aber der Wechsel in eine Arbeitswelt endete mit APP_DISCONNECTED.",
+            "falscheVermutung": "Der neue Kanal oder sein Ausgabeformat sei noch nicht korrekt verbunden.",
+            "wieGefunden": "Der SDK-Test führte bereits echte Handshakes aus. Erst der semantische Ansichtswechsel löste die native Navigationsbehandlung aus.",
+            "ursache": "did-start-navigation behandelte auch einen internen Hash-Wechsel als vollständigen Renderer-Neustart und widerrief die eigene laufende Aktion.",
+            "loesung": "Nur echte Hauptframe-Navigation unterbricht den Adapter. Interne Ansichtswechsel behalten die Sitzung. Der Test prüft Arbeitswelt, Seitenöffnung, echte Änderungen und Neustart.",
+            "beweis": "Zuerst APP_DISCONNECTED beim Öffnen der Arbeitswelt; danach derselbe End-to-End-Weg bis zur dauerhaften Speicherung und HTTP-Leseaktion bestanden.",
+            "lehre": "Die bestehende App-Navigation gehört zum Verbindungslebenszyklus. Ein erfolgreicher Handshake allein prüft keine Live-Steuerung."
         }
     ]
 };

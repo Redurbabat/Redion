@@ -3,6 +3,7 @@
   "datum": "2026-10-31",
   "status": "In Entwicklung – noch nicht veröffentlicht",
   "aenderungen": [
+    "Windows-Vorschau E791: optionale ChatGPT-Live-Steuerung über 46 begrenzte MCP-Werkzeuge; lokale Bridge geprüft, echter ChatGPT-Tunnel noch einzurichten.",
     "Windows-Vorschau: Freihand im Schaltplan, auch bei laufender Simulation; Stift mit Taste 6.",
     "Tintenradierer, Auswahl, Verschieben und Rückgängig erhalten elektrische Verbindungen.",
     "PDF und Zeichenflächen: vollständige Stiftmeldungen; Zeichenflächen hören das Absetzen auch ausserhalb.",

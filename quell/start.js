@@ -5,7 +5,7 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
     if (typeof Ereignisse !== 'undefined')
         Ereignisse.melde(ARTEN.appStartet);
-    App.start();
+    void Promise.resolve(App.start()).then(() => RedionAutomation.start());
     RedionMotion.start();
     RedionPress.start();
     RedionDelete.start();

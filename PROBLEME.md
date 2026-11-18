@@ -153,6 +153,7 @@ sind der teuerste Teil und der lehrreichste.
 | P137 | 2026-10-12 | Ein Wächter, der nicht auf der Nachbarliste stand | niedrig | — |
 | P138 | 2026-10-24 | Die neue Karte wurde am alten Blatt gemessen | 🟡 klein | — |
 | P139 | 2026-11-16 | Ein Glasfilter versetzt das Werkzeugdock | 🟠 mittel | E790 |
+| P140 | 2026-11-18 | Ein Ansichtswechsel beendete den MCP-Auftrag | 🟠 mittel | E791 |
 
 ---
 
@@ -3013,4 +3014,25 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Der ursprüngliche native Klickweg scheiterte; nach der Korrektur besteht der komplette Windows-Nutzerweg. 16 Chromium-Darstellungen prüfen erreichbare Werkzeuge, Mindestgrössen und deckendes Papier.
 
 **Die Lehre.** Materialeffekte können die Geometrie von Kindern verändern. Eine gläserne Fläche deshalb mit echten Eingaben prüfen, nicht nur anhand eines Bildes.
+
+
+---
+
+## P140 · Ein Ansichtswechsel beendete den MCP-Auftrag
+
+*2026-11-18 · 🟠 mittel · E791*
+
+**Das Bild.** Der echte MCP-Client konnte Status lesen, aber der Wechsel in eine Arbeitswelt endete mit APP_DISCONNECTED.
+
+**Die falsche Vermutung.** Der neue Kanal oder sein Ausgabeformat sei noch nicht korrekt verbunden.
+
+**Wie es gefunden wurde.** Der SDK-Test führte bereits echte Handshakes aus. Erst der semantische Ansichtswechsel löste die native Navigationsbehandlung aus.
+
+**Die Ursache.** did-start-navigation behandelte auch einen internen Hash-Wechsel als vollständigen Renderer-Neustart und widerrief die eigene laufende Aktion.
+
+**Die Lösung.** Nur echte Hauptframe-Navigation unterbricht den Adapter. Interne Ansichtswechsel behalten die Sitzung. Der Test prüft Arbeitswelt, Seitenöffnung, echte Änderungen und Neustart.
+
+**Der Beweis.** Zuerst APP_DISCONNECTED beim Öffnen der Arbeitswelt; danach derselbe End-to-End-Weg bis zur dauerhaften Speicherung und HTTP-Leseaktion bestanden.
+
+**Die Lehre.** Die bestehende App-Navigation gehört zum Verbindungslebenszyklus. Ein erfolgreicher Handshake allein prüft keine Live-Steuerung.
 

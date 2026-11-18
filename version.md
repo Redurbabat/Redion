@@ -5,6 +5,16 @@ Dieses Dokument hält **ab jetzt jede neue Redion-Version** mit Versionsnummer, 
 ## 2026.8.4 – 31. Oktober 2026
 **Status:** In Entwicklung (noch nicht als Installer veröffentlicht)
 
+**ChatGPT-Live-Steuerung · 18. November 2026 (E791)**
+- Optionale native Freigabe unter MCP → ChatGPT & Automatisierung. 46 begrenzte
+  Werkzeuge verwenden vorhandene Aktionen, IDs, Fassungen und Speicherpfade.
+- Eigenständiges lokales MCP-Paket, stdio und geschützter lokaler HTTP-Modus;
+  Startskript für den offiziellen Secure MCP Tunnel.
+- Lokaler MCP-/Electron-Nachweis ist keine tatsächlich verbundene ChatGPT-App.
+  Echter Tunnel, Kontoberechtigung und Registrierung bleiben einzurichten.
+- Kein Release, keine Signierung, kein neuer Cloud-Zwang. Details:
+  doku/RED-ION-CHATGPT-INTEGRATION.md.
+
 **Windows-Stiftvorschau · 16. November 2026 (E790)**
 - Im Schaltplan mit **6 → Stift** frei schreiben, auch bei laufender
   Simulation. Farbe und Breite stehen direkt über der Fläche. **Tinte

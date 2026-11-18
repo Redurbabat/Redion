@@ -1358,6 +1358,13 @@ const Schaltplan = (() => {
     (typeof Register !== 'undefined' && Register.fachzeichen && Register.fachzeichen.holen(t.zeichen))
       ? Register.fachzeichen.masse(t.zeichen, t.drehung) : { ...UNBEKANNT_MASS };
 
+  /** Derselbe reale Aussenrahmen für Vorlagenplatzierung und Desktop-Aktionen. */
+  const teilRahmen = (t: Teil, dx = 0, dy = 0) => {
+    const m = teilMasse(t), zc = Register.fachzeichen.holen(t.zeichen);
+    const cx = Number(t.x) + dx + (zc ? zc.w : UNBEKANNT_MASS.w) / 2;
+    const cy = Number(t.y) + dy + (zc ? zc.h : UNBEKANNT_MASS.h) / 2;
+    return { l: cx - m.w / 2, o: cy - m.h / 2, r: cx + m.w / 2, u: cy + m.h / 2 };
+  };
   const inkBounds = (mark: InkAnnotation): { x1: number; y1: number; x2: number; y2: number } => {
     let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
     for (const p of mark.pts) { x1 = Math.min(x1, p[0]); y1 = Math.min(y1, p[1]);
@@ -1903,7 +1910,7 @@ const Schaltplan = (() => {
   };
 
   return {
-    ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, inkSvg, inkBounds, teilMasse, rasten,
+    ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, inkSvg, inkBounds, teilMasse, teilRahmen, rasten,
     naechstesBmk, anschlussOrt, anschluesseVon, klemmeFuer, fangeAnschluss, rechtwinklig,
     kontakte, vorherMerken, nachziehen, veraendert, verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
     netzBauen, BEISPIELE, beispielBauen, uid, esc,

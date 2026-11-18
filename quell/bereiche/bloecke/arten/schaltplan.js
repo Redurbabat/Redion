@@ -909,6 +909,12 @@ const Schaltplan = (() => {
     };
     const teilMasse = (t) => (typeof Register !== 'undefined' && Register.fachzeichen && Register.fachzeichen.holen(t.zeichen))
         ? Register.fachzeichen.masse(t.zeichen, t.drehung) : { ...UNBEKANNT_MASS };
+    const teilRahmen = (t, dx = 0, dy = 0) => {
+        const m = teilMasse(t), zc = Register.fachzeichen.holen(t.zeichen);
+        const cx = Number(t.x) + dx + (zc ? zc.w : UNBEKANNT_MASS.w) / 2;
+        const cy = Number(t.y) + dy + (zc ? zc.h : UNBEKANNT_MASS.h) / 2;
+        return { l: cx - m.w / 2, o: cy - m.h / 2, r: cx + m.w / 2, u: cy + m.h / 2 };
+    };
     const inkBounds = (mark) => {
         let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
         for (const p of mark.pts) {
@@ -1256,7 +1262,7 @@ const Schaltplan = (() => {
         return false;
     };
     return {
-        ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, inkSvg, inkBounds, teilMasse, rasten,
+        ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, inkSvg, inkBounds, teilMasse, teilRahmen, rasten,
         naechstesBmk, anschlussOrt, anschluesseVon, klemmeFuer, fangeAnschluss, rechtwinklig,
         kontakte, vorherMerken, nachziehen, veraendert, verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
         netzBauen, BEISPIELE, beispielBauen, uid, esc,

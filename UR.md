@@ -3832,9 +3832,54 @@ Mit einem normalen Stift direkt über einer laufenden Stromsimulation schreiben,
 |---|---|---|---|
 | nicht erfasst | Nur synthetische Dokumente, Archive und frische isolierte App-Profile verwendet. | Die normale Windows-Ablage muss unverändert bleiben. | Ältere App-Versionen können neue Freihanddaten beim Speichern verwerfen; vor einem Rückwechsel sichern. |
 
+### 2026-11-18 · Mittwoch — RED Ion als freigegebene ChatGPT-Live-Steuerung
+
+> Auftrag und Ergänzung aus diesem Chat; genaue Nachrichtenzeiten nicht erfasst.
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · nicht erfasst**
+
+> Noch keinen Tunnel eingerichtet
+
+**Gemeint:** Der lokale Adapter kann fertig getestet werden; die echte Kontoverbindung muss erst eingerichtet werden.
+
+**Besser geschrieben:** Ich habe noch keinen Secure MCP Tunnel. Bereite die lokale Integration und die Einrichtungsschritte vor.
+
+**Besserer Prompt:** Baue und prüfe die lokale MCP-/Electron-Verbindung, dokumentiere die echte Tunnel-Erstellung getrennt und behaupte keine bereits verbundene ChatGPT-App.
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| E791: endlicher MCP-Vertrag mit 46 Werkzeugen, geschützte Windows-Bridge, native Sitzungsfreigabe, bestehende App-Aktionen und sichtbare Einstellungen; eigenständiges Plugin-Paket mit Start-/Installationsskripten. | `30d0a1ece` → `` | 18. November 2026; Startzeit nicht erfasst | — | Echter SDK-Client und isolierte Electron-App: stdio- und HTTP-Handshake, Lesen/Schreiben, sichtbare Änderungen, fünf Überschriften, 20 Lernkarten, Aufgabe, Tabellenzeile, Schaltplan/Klemmen, Neustart und Widerruf bestanden. Vertrags-/Kanalprüfung, 21 Windows-Verträge und 9 Ink-/Paritätsverträge grün. Echter ChatGPT-Tunnel, Kontoberechtigung, Installation/Signierung und physische Geräte NICHT GETESTET. |
+
+#### Zahlen des Tages
+
+- **commits:** Eigener Arbeitsbranch; PR #207 ist ausdrücklich beauftragtes Fast-Forward-Ziel.
+- **entscheidungen:** E791
+- **neuePruefungen:** 2
+
+#### Das grösste Problem
+
+Interne Hash-Navigation brach zuerst einen MCP-Aufruf wie einen Renderer-Neustart ab (P140).
+
+#### Das Interessanteste, das Redur wollte
+
+ChatGPT soll eine echte geöffnete Windows-App mit vorhandenen Notizen, Tabellen, Lernkarten und Schaltplänen steuern.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| nicht erfasst | Nur synthetische Dokumente und getrennte Testprofile; keine Schlüssel im Chat oder Repository. | Die bestehende persönliche Ablage muss erhalten bleiben. | Ein lokal bestandener Test beweist weder eine ChatGPT-Kontofreigabe noch eine funktionierende Tunnel-ID. |
+
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 139 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 140 Einträge.
 

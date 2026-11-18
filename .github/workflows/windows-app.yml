@@ -18,15 +18,19 @@ jobs:
         run: |
           npm ci --no-audit --no-fund
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          npm ci --prefix windows --no-audit --no-fund
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          npm ci --prefix plugins/red-ion --ignore-scripts --no-audit --no-fund
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
           npm run bauen:ts
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           npm run typecheck
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          npm run typecheck:mcp
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
           node node_modules/typescript/bin/tsc -p windows/tsconfig.json
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           node --test windows/windows-desktop.test.cjs pruefungen/native-windows-files.mts
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          npm install --prefix windows --no-package-lock --no-audit --no-fund
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           npm --prefix windows test
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
@@ -34,7 +38,13 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           npm run test:windows-ink
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          npm run test:mcp
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          npm run test:windows-mcp
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
           npm --prefix windows run dist
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          node plugins/red-ion/tests/electron.mts --packaged=build/windows-dist/win-unpacked/Redion.exe
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           node windows/compare-web.mts
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
@@ -46,6 +56,10 @@ jobs:
             build/windows-dist/windows-web-paritaet.json
             bilder/windows-ink/nachher/*.png
             bilder/windows-ink/nachher/messung.json
+            bilder/redion-mcp/*.png
+            bilder/redion-mcp/nachweis.json
+            bilder/redion-mcp/paket/*.png
+            bilder/redion-mcp/paket/nachweis.json
           if-no-files-found: error
           retention-days: 7
 # Nur manuell, keine Installation, kein GitHub-Release und kein Deployment.
