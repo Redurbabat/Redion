@@ -168,19 +168,16 @@ body:not([data-ui-shell="glass-wheel"]) #page .b-h1 .ct{font-size:var(--t-h1); f
 body:not([data-ui-shell="glass-wheel"]) #page .b-h2 .ct{font-size:var(--t-h2); font-weight:var(--w-semibold); letter-spacing:-.15px; padding-top:var(--space-5)}
 body:not([data-ui-shell="glass-wheel"]) #page .b-h3 .ct{font-size:var(--t-h3); font-weight:var(--w-semibold); padding-top:var(--space-4)}
 
-/* DIE SEITENWERKZEUGE (E783): kein Kasten, keine Rubrik „SEITENWERKZEUGE"
-   — dieselben fünf `button[data-a]` als EINE stille Textzeile unter dem
-   Titel. Am Rechner sichtbar, solange der Zeiger auf der Seite steht ODER
-   der Fokus in der Zeile ist (die Regel aus aufbau.css:158, die „Workspace
-   2.0" überstimmt hatte — jetzt mit `:focus-within`, damit die Tastatur
-   sie nicht unsichtbar trifft). Am Telefon bleibt die Zeile stehen. */
+/* DIE SEITENWERKZEUGE (E783): eine ruhige Zeile mit sichtbaren Funktionen.
+   Auf Desktop und Mobilgeräten bleibt sie ohne Hover dauerhaft erreichbar.
+   Die Gruppenbeschriftung ist auf Desktop sichtbar, auf Mobilgeräten nur
+   aus Platzgründen ausgeblendet. Tastatur und Berührung bleiben erhalten. */
 body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools{
   background:none; border:0; box-shadow:none; padding:0;
   margin:0 0 var(--space-5) calc(var(--space-2) * -1); gap:2px;
 }
-body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > .pg-tools-caption{display:none}
 body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button{
-  background:transparent; border:1px solid transparent; color:var(--text-faint);
+  background:transparent; border:1px solid transparent; color:var(--text-dim);
   font-size:var(--t-small); font-weight:var(--w-medium);
   border-radius:var(--radius-sm); padding:var(--space-1) var(--space-3);
 }
@@ -189,14 +186,8 @@ body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button:is(:hover,:fo
   background:var(--bg-hover); color:var(--text); border-color:transparent;
 }
 body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button:focus-visible{outline:2px solid var(--accent-text); outline-offset:1px}
-@media (min-width:761px) and (hover:hover){
-  /* 32 px (§37 Nebenweg): Cover, Breite, Schrift, Vorlage und KI stehen
-     alle auch im ⋯ der Seite; die Zeile ist der kurze Weg für die Maus. */
-  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button{min-height:32px}
-  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools{opacity:0; transition:opacity var(--motion-fast) var(--ease)}
-  body:not([data-ui-shell="glass-wheel"]) #page:hover > .pg-tools,
-  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools:focus-within{opacity:1}
-}
+/* Die Schaltflächen behalten die 44-px-Trefffläche aus studio.css (§37).
+   Keine unsichtbare Toolbar bis zum ersten Hover. */
 @media (max-width:760px){
   body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools{margin-left:0}
   body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button{color:var(--text-dim); font-size:var(--t-small)}
