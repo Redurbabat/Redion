@@ -55,6 +55,7 @@ npm run bauen
 npm run stand
 npm run test:mcp
 npm run test:windows-mcp
+npm run test:mcp-scripts
 npm --prefix windows test
 npm --prefix windows run prepare:app
 ```
@@ -77,6 +78,15 @@ im synthetischen Test automatisch beantwortet; im Produkt gibt es keinen Bypass.
 - Windows-Verträge 21/21, Ink-/Paketparität 9/9.
 - Offizieller Windows-Tunnel-Client v0.0.21: Archiv/EXE gegen SHA-256 geprüft;
   Versionsausgabe und `help quickstart` tatsächlich ausgeführt.
+- PowerShell-Skripte 2/2: tatsächliche Paketinstallation unter Windows
+  PowerShell 5.1 mit Leerzeichen/Umlaut im Zielpfad, identisches Serverbundle,
+  UTF-8-BOM, Diagnose, abgewiesenes Junction-Update ohne fremde Änderungen;
+  echter SDK-Handshake durch das gelieferte Startskript mit 46 Werkzeugen.
+- Offizieller Client erzeugt ein ausdrücklich synthetisches lokales Profil
+  unter PowerShell 5.1 und 7. Keine echten Zugangsdaten und kein Live-Tunnel.
+- Offline-Regression test87 nach Korrektur 197/197; Register-Inventur
+  nachgetragen. test86 bleibt wegen der bestehenden Werkzeuggruppen-Zahl
+  15 statt 14 rot. Details zu den gefundenen Fehlern: P140–P143.
 
 Aktuelle Bilder und JSON-Nachweis: `bilder/redion-mcp/`; Logs:
 `bilder/windows-ink/mcp-*.log` (ignoriert). Weitere Paket-/Regressionsergebnisse

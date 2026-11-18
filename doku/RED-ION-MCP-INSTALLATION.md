@@ -11,6 +11,10 @@
    ist Voraussetzung. `Install.ps1` kopiert nur dieses Paket nach
    `%LOCALAPPDATA%/Redion-MCP`. Updates ausdrücklich mit `-Update`.
    Es registriert kein Konto und aktiviert keinen Windows-Autostart.
+   Wenn Windows unsignierte Skripte blockiert:
+   `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Install.ps1`.
+   Die Ausnahme gilt nur für diesen Prozess. Für die übrigen Skripte gilt
+   dieselbe Aufrufweise; keine globale Richtlinie wird geändert.
 
 ## Neuer Secure MCP Tunnel
 

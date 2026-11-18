@@ -10,7 +10,8 @@ void result;
 const target=path.join(root,'build/red-ion-plugin');fs.mkdirSync(path.join(target,'server/dist'),{recursive:true});
 for(const file of ['plugin.json','mcp.json','README.md','Install.ps1','Start-MCP.ps1','Start-Tunnel.ps1','Diagnose.ps1']) {
   if(!fs.existsSync(path.join(plugin,file)))throw new Error('Plugin-Datei fehlt: '+file);
-  fs.copyFileSync(path.join(plugin,file),path.join(target,file));
+  if(file.endsWith('.ps1'))fs.writeFileSync(path.join(target,file),'\uFEFF'+fs.readFileSync(path.join(plugin,file),'utf8').replace(/^\uFEFF/,''));
+  else fs.copyFileSync(path.join(plugin,file),path.join(target,file));
 }
 fs.copyFileSync(path.join(plugin,'server/dist/index.mjs'),path.join(target,'server/dist/index.mjs'));
 // Optionaler offizieller Windows-Client: nur die zuvor geprüfte feste Version.

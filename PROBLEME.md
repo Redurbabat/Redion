@@ -154,6 +154,9 @@ sind der teuerste Teil und der lehrreichste.
 | P138 | 2026-10-24 | Die neue Karte wurde am alten Blatt gemessen | 🟡 klein | — |
 | P139 | 2026-11-16 | Ein Glasfilter versetzt das Werkzeugdock | 🟠 mittel | E790 |
 | P140 | 2026-11-18 | Ein Ansichtswechsel beendete den MCP-Auftrag | 🟠 mittel | E791 |
+| P141 | 2026-11-18 | Eine verknüpfte Bridge-Ablage wurde zu früh bereinigt | hoch | E791 |
+| P142 | 2026-11-18 | PowerShell veränderte den Tunnel-Startbefehl | 🟠 mittel | E791 |
+| P143 | 2026-11-18 | Neue Desktop-Adapter fehlten im Offline-Grundstock | 🟠 mittel | E791 |
 
 ---
 
@@ -3035,4 +3038,67 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Zuerst APP_DISCONNECTED beim Öffnen der Arbeitswelt; danach derselbe End-to-End-Weg bis zur dauerhaften Speicherung und HTTP-Leseaktion bestanden.
 
 **Die Lehre.** Die bestehende App-Navigation gehört zum Verbindungslebenszyklus. Ein erfolgreicher Handshake allein prüft keine Live-Steuerung.
+
+
+---
+
+## P141 · Eine verknüpfte Bridge-Ablage wurde zu früh bereinigt
+
+*2026-11-18 · hoch · E791*
+
+**Das Bild.** Der synthetische Windows-Junction-Test verlor seine fremde Testdatei connection.json, bevor die Bridge aktiviert war.
+
+**Die falsche Vermutung.** Die Prüfung des privaten Ordners beim Aktivieren reiche für alle Dateizugriffe aus.
+
+**Wie es gefunden wurde.** Ein echter Junction-Test verknüpfte ausschliesslich zwei neu angelegte Testordner und prüfte die unveränderten Fremddateien vor und nach Start/Stop.
+
+**Die Ursache.** Die frühe Bereinigung folgte dem verknüpften automation-Ordner, bevor dessen Pfad geprüft wurde.
+
+**Die Lösung.** Jeden lokalen Lese-, Schreib- und Bereinigungspfad separat prüfen; Links und verknüpfte Vorfahren abweisen. Auch der Paketinstaller prüft seine vorgesehenen Zielpfade vor dem Kopieren.
+
+**Der Beweis.** Zuerst ENOENT für die synthetische fremde connection.json; nach der Korrektur alle drei Vertrags-/Kanaltests grün. Keine persönliche Ablage wurde zum Test verwendet.
+
+**Die Lehre.** Eine sichere Aktivierung schützt nicht automatisch vorherige Aufräumarbeiten. Den gesamten Dateilebenszyklus mit einem echten Gegenbeispiel prüfen.
+
+
+---
+
+## P142 · PowerShell veränderte den Tunnel-Startbefehl
+
+*2026-11-18 · 🟠 mittel · E791*
+
+**Das Bild.** Der offizielle Windows-Tunnel-Client konnte bei der lokalen Initialisierung den Node-Pfad nicht finden.
+
+**Die falsche Vermutung.** Ein in PowerShell zusammengesetzter zitierter Befehl komme unverändert bei einer nativen EXE an.
+
+**Wie es gefunden wurde.** Installationsskript und echte lokale Client-Initialisierung unter dem mit Windows gelieferten PowerShell 5.1 ausgeführt; keine echten Zugangsdaten oder Netzwerkverbindung verwendet.
+
+**Die Ursache.** Die ältere native Argumentübergabe entfernte Anführungszeichen; die Shell-Wortzerlegung des Clients behandelte Windows-Backslashes als Escape-Zeichen.
+
+**Die Lösung.** Slash-Pfade verwenden, Anführungszeichen für die ältere native Übergabe maskieren, gelieferte PowerShell-Skripte mit UTF-8-BOM schreiben. Die automatische Variable Profile wird nicht mehr als eigene Skriptvariable benutzt.
+
+**Der Beweis.** Unveränderter Client meldete zuerst C:nvm4wnodejsnode.exe nicht gefunden. Danach erzeugte er unter PowerShell 5.1 und 7 das korrekte synthetische stdio-Profil; Installation und Diagnose unter 5.1 bestanden.
+
+**Die Lehre.** Syntaxprüfung genügt nicht für native Befehle. Den tatsächlichen Client mit der Windows-Standard-Shell prüfen.
+
+
+---
+
+## P143 · Neue Desktop-Adapter fehlten im Offline-Grundstock
+
+*2026-11-18 · 🟠 mittel · E791*
+
+**Das Bild.** test87 meldete neue index.html-Skripte, die nicht im Service-Worker-Grundstock standen.
+
+**Die falsche Vermutung.** Weil die Windows-App Dateien lokal lädt, sei die Offline-Dateiliste für ihre neuen Adapter nicht betroffen.
+
+**Wie es gefunden wurde.** Die vollständige bestehende Prüfsuite verglich die index.html-Skripte mit sw.js.
+
+**Die Ursache.** Die gemeinsam eingebundenen Adapter waren in der Startdatei registriert, aber noch nicht vollständig im Web-Cache-Grundstock.
+
+**Die Lösung.** Alle neun neuen Adapter im erzeugten Service-Worker-Grundstock ergänzen und den Dienststand regulär neu bauen.
+
+**Der Beweis.** Erstlauf test87 meldete fehlende Adapter; nach der Korrektur besteht derselbe Lauf mit 197/197 Prüfpunkten. Die Register-Inventur ist ebenfalls nachgetragen; test86 meldet nur noch den bestehenden Unterschied 15 statt 14 Werkzeuggruppen.
+
+**Die Lehre.** Ein Desktop-Ausbau kann gemeinsame Web-Dateien ergänzen. Deren Offline-Vertrag bleibt verbindlich.
 

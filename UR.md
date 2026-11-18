@@ -3861,7 +3861,7 @@ Mit einem normalen Stift direkt über einer laufenden Stromsimulation schreiben,
 
 - **commits:** Eigener Arbeitsbranch; PR #207 ist ausdrücklich beauftragtes Fast-Forward-Ziel.
 - **entscheidungen:** E791
-- **neuePruefungen:** 2
+- **neuePruefungen:** 3
 
 #### Das grösste Problem
 
@@ -3881,5 +3881,5 @@ ChatGPT soll eine echte geöffnete Windows-App mit vorhandenen Notizen, Tabellen
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 140 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 143 Einträge.
 

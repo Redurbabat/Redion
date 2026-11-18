@@ -5204,7 +5204,7 @@ const ChronikDaten = {
    "zahlen": {
     "commits": "Eigener Arbeitsbranch; PR #207 ist ausdrücklich beauftragtes Fast-Forward-Ziel.",
     "entscheidungen": "E791",
-    "neuePruefungen": 2
+    "neuePruefungen": 3
    },
    "groesstesProblem": "Interne Hash-Navigation brach zuerst einen MCP-Aufruf wie einen Renderer-Neustart ab (P140).",
    "interessantesteAnfrage": "ChatGPT soll eine echte geöffnete Windows-App mit vorhandenen Notizen, Tabellen, Lernkarten und Schaltplänen steuern.",
@@ -7075,6 +7075,48 @@ const ChronikDaten = {
    "loesung": "Nur echte Hauptframe-Navigation unterbricht den Adapter. Interne Ansichtswechsel behalten die Sitzung. Der Test prüft Arbeitswelt, Seitenöffnung, echte Änderungen und Neustart.",
    "beweis": "Zuerst APP_DISCONNECTED beim Öffnen der Arbeitswelt; danach derselbe End-to-End-Weg bis zur dauerhaften Speicherung und HTTP-Leseaktion bestanden.",
    "lehre": "Die bestehende App-Navigation gehört zum Verbindungslebenszyklus. Ein erfolgreicher Handshake allein prüft keine Live-Steuerung."
+  },
+  {
+   "nr": "P141",
+   "datum": "2026-11-18",
+   "titel": "Eine verknüpfte Bridge-Ablage wurde zu früh bereinigt",
+   "schwere": "hoch",
+   "entscheidung": "E791",
+   "symptom": "Der synthetische Windows-Junction-Test verlor seine fremde Testdatei connection.json, bevor die Bridge aktiviert war.",
+   "falscheVermutung": "Die Prüfung des privaten Ordners beim Aktivieren reiche für alle Dateizugriffe aus.",
+   "wieGefunden": "Ein echter Junction-Test verknüpfte ausschliesslich zwei neu angelegte Testordner und prüfte die unveränderten Fremddateien vor und nach Start/Stop.",
+   "ursache": "Die frühe Bereinigung folgte dem verknüpften automation-Ordner, bevor dessen Pfad geprüft wurde.",
+   "loesung": "Jeden lokalen Lese-, Schreib- und Bereinigungspfad separat prüfen; Links und verknüpfte Vorfahren abweisen. Auch der Paketinstaller prüft seine vorgesehenen Zielpfade vor dem Kopieren.",
+   "beweis": "Zuerst ENOENT für die synthetische fremde connection.json; nach der Korrektur alle drei Vertrags-/Kanaltests grün. Keine persönliche Ablage wurde zum Test verwendet.",
+   "lehre": "Eine sichere Aktivierung schützt nicht automatisch vorherige Aufräumarbeiten. Den gesamten Dateilebenszyklus mit einem echten Gegenbeispiel prüfen."
+  },
+  {
+   "nr": "P142",
+   "datum": "2026-11-18",
+   "titel": "PowerShell veränderte den Tunnel-Startbefehl",
+   "schwere": "mittel",
+   "entscheidung": "E791",
+   "symptom": "Der offizielle Windows-Tunnel-Client konnte bei der lokalen Initialisierung den Node-Pfad nicht finden.",
+   "falscheVermutung": "Ein in PowerShell zusammengesetzter zitierter Befehl komme unverändert bei einer nativen EXE an.",
+   "wieGefunden": "Installationsskript und echte lokale Client-Initialisierung unter dem mit Windows gelieferten PowerShell 5.1 ausgeführt; keine echten Zugangsdaten oder Netzwerkverbindung verwendet.",
+   "ursache": "Die ältere native Argumentübergabe entfernte Anführungszeichen; die Shell-Wortzerlegung des Clients behandelte Windows-Backslashes als Escape-Zeichen.",
+   "loesung": "Slash-Pfade verwenden, Anführungszeichen für die ältere native Übergabe maskieren, gelieferte PowerShell-Skripte mit UTF-8-BOM schreiben. Die automatische Variable Profile wird nicht mehr als eigene Skriptvariable benutzt.",
+   "beweis": "Unveränderter Client meldete zuerst C:nvm4wnodejsnode.exe nicht gefunden. Danach erzeugte er unter PowerShell 5.1 und 7 das korrekte synthetische stdio-Profil; Installation und Diagnose unter 5.1 bestanden.",
+   "lehre": "Syntaxprüfung genügt nicht für native Befehle. Den tatsächlichen Client mit der Windows-Standard-Shell prüfen."
+  },
+  {
+   "nr": "P143",
+   "datum": "2026-11-18",
+   "titel": "Neue Desktop-Adapter fehlten im Offline-Grundstock",
+   "schwere": "mittel",
+   "entscheidung": "E791",
+   "symptom": "test87 meldete neue index.html-Skripte, die nicht im Service-Worker-Grundstock standen.",
+   "falscheVermutung": "Weil die Windows-App Dateien lokal lädt, sei die Offline-Dateiliste für ihre neuen Adapter nicht betroffen.",
+   "wieGefunden": "Die vollständige bestehende Prüfsuite verglich die index.html-Skripte mit sw.js.",
+   "ursache": "Die gemeinsam eingebundenen Adapter waren in der Startdatei registriert, aber noch nicht vollständig im Web-Cache-Grundstock.",
+   "loesung": "Alle neun neuen Adapter im erzeugten Service-Worker-Grundstock ergänzen und den Dienststand regulär neu bauen.",
+   "beweis": "Erstlauf test87 meldete fehlende Adapter; nach der Korrektur besteht derselbe Lauf mit 197/197 Prüfpunkten. Die Register-Inventur ist ebenfalls nachgetragen; test86 meldet nur noch den bestehenden Unterschied 15 statt 14 Werkzeuggruppen.",
+   "lehre": "Ein Desktop-Ausbau kann gemeinsame Web-Dateien ergänzen. Deren Offline-Vertrag bleibt verbindlich."
   }
  ]
 } as const;

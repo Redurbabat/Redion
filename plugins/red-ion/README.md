@@ -10,6 +10,10 @@ seinen eigenen OpenAI-Laufzeitschlüssel und passende Kontoberechtigungen.
    Funktionen und bei Bedarf Schreibzugriff aktivieren; **Übernehmen**.
 2. Dieses vollständige Paket in PowerShell mit `./Install.ps1` installieren.
    Es kopiert nur Plugin-Dateien nach `%LOCALAPPDATA%\Redion-MCP`.
+   Blockiert Windows unsignierte Skripte, für diesen Aufruf
+   `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Install.ps1`
+   verwenden. Das ändert keine dauerhafte Ausführungsrichtlinie. Dieselbe
+   Aufrufweise ist für `Start-Tunnel.ps1` und `Diagnose.ps1` möglich.
 3. Für den gewünschten ChatGPT-Dialog einen Secure MCP Tunnel unter
    https://platform.openai.com/settings/organization/tunnels erstellen oder
    einen passenden vorhandenen wählen. Die Zuordnung zum gewünschten

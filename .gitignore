@@ -13,6 +13,8 @@ node_modules/
 /build/red-ion-plugin/
 /build/red-ion-plugin.zip
 /build/windows-mcp-dist/
+/build/mcp-install-test/
+/build/redion-mcp-tools/
 /www/
 .wrangler/
 .DS_Store

@@ -42,6 +42,8 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           npm run test:windows-mcp
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          npm run test:mcp-scripts
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
           npm --prefix windows run dist
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           node plugins/red-ion/tests/electron.mts --packaged=build/windows-dist/win-unpacked/Redion.exe

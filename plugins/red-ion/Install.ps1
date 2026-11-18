@@ -1,15 +1,29 @@
 param([string]$Target = (Join-Path $env:LOCALAPPDATA 'Redion-MCP'), [switch]$Update)
 $ErrorActionPreference = 'Stop'
 $node = Get-Command node -ErrorAction Stop
-if ([int](& $node.Source -p 'process.versions.node.split(".")[0]') -lt 22) { throw 'Node.js 22 oder neuer erforderlich.' }
+$redionNodeVersion=& $node.Source --version
+if ($LASTEXITCODE -ne 0 -or [int]($redionNodeVersion.TrimStart('v').Split('.')[0]) -lt 22) { throw 'Node.js 22 oder neuer erforderlich.' }
 $source = [IO.Path]::GetFullPath($PSScriptRoot)
 $destination = [IO.Path]::GetFullPath($Target)
 if ($source -eq $destination) { throw 'Quell- und Installationsordner müssen verschieden sein.' }
 if ((Test-Path -LiteralPath $destination) -and -not $Update) { throw 'Ziel existiert bereits. Für ein bewusstes Update -Update verwenden.' }
-if ((Test-Path -LiteralPath $destination) -and ((Get-Item -LiteralPath $destination).Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'Verknüpftes Installationsziel wird abgelehnt.' }
-New-Item -ItemType Directory -Path $destination -Force | Out-Null
 # Ausschliesslich das vorbereitete Plugin-Paket kopieren; keine App-Profile und keine Zugangsdaten.
 $allowed = @('plugin.json','mcp.json','README.md','Install.ps1','Start-MCP.ps1','Start-Tunnel.ps1','Diagnose.ps1','THIRD-PARTY-LICENSES.txt')
+function Assert-RedionInstallPath([string]$Path) {
+  $candidate=[IO.Path]::GetFullPath($Path)
+  while ($candidate) {
+    $item=Get-Item -LiteralPath $candidate -Force -ErrorAction SilentlyContinue
+    if ($item -and ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'Verknüpftes Installationsziel wird abgelehnt.' }
+    $parent=Split-Path -Path $candidate -Parent
+    if ($parent -eq $candidate) { break }
+    $candidate=$parent
+  }
+}
+Assert-RedionInstallPath $destination
+foreach ($name in ($allowed + @('server\dist\index.mjs','tools\tunnel-client.exe','tools\LICENSE','tools\NOTICE','tools\tunnel-client-v0.0.21-windows-amd64-licenses.txt','tools\sha256.txt'))) {
+  Assert-RedionInstallPath (Join-Path $destination $name)
+}
+New-Item -ItemType Directory -Path $destination -Force | Out-Null
 foreach ($name in $allowed) {
   $file = Join-Path $source $name
   if (-not (Test-Path -LiteralPath $file -PathType Leaf)) { throw "Paketdatei fehlt: $name" }

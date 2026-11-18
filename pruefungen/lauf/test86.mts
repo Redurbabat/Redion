@@ -30,7 +30,7 @@ await seite.waitForTimeout(1200);
    neues fällt nicht mehr rot aus, muss aber unten eingetragen werden, und
    dabei sieht man, dass man eines angelegt hat. */
 console.log('\n— Die Register sind vollzählig —');
-const PFLICHT = ['aktionen', 'ansichten', 'befehle', 'bloecke', 'eigenschaften', 'einstellungen',
+const PFLICHT = ['aktionen', 'ansichten', 'automatisierung', 'befehle', 'bloecke', 'eigenschaften', 'einstellungen',
                  'elektroformeln', 'fachzeichen', 'formeln', 'ki', 'kontext', 'menueband',
                  'module', 'navigation', 'seitenansichten', 'symbole', 'tasten', 'verbindungen',
                  'vorlagen', 'werkzeuge'];
@@ -46,7 +46,8 @@ const PFLICHT = ['aktionen', 'ansichten', 'befehle', 'bloecke', 'eigenschaften',
    Flächen) und `seitenansichten` (E690, die drei Ansichten einer Seite)
    standen seit September unangekündigt da — der Punkt hat es gemeldet;
    `aktionen` (E721, ein Menü je Ding) und `ki` (E724, die KI am Ort) kamen
-   mit der dritten Welle. */
+   mit der dritten Welle. `automatisierung` (E791) ist der geschlossene
+   Desktop-Aktionskatalog; ohne native Windows-Brücke bleibt er leer. */
 let r = await seite.evaluate(() => Object.keys(Register).sort());
 const fehlend = PFLICHT.filter(x => !(r ?? []).includes(x));
 const zusaetzlich = (r ?? []).filter((x: string) => !PFLICHT.includes(x));
