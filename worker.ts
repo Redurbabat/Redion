@@ -20,6 +20,7 @@
 import { torPruefen } from './server/sicherheit/tor.ts';
 import { onRequest as bruecke } from './functions/api/bruecke.ts';
 import { bedienen, istServerWeg, geplant } from './server/cloudflare.ts';
+import { createCloudAuthorization } from './server/mcp/account.ts';
 
 export default {
   async fetch(request: any, env: any, ctx: any) {
@@ -29,6 +30,17 @@ export default {
     if (verweigert) return verweigert;
 
     const url = new URL(request.url);
+
+    /* OAuth-Zustimmung für den getrennten Cloud-MCP-Endpunkt. Das vorhandene
+       Access-Tor oben bleibt davor; hier niemals TOR=offen als Identität nutzen. */
+    if (url.pathname === '/mcp/authorize' || url.pathname === '/mcp/settings') {
+      if (!env.DB || !env.MCP_ISSUER || !env.MCP_AUTHORIZATION_ENDPOINT)
+        return new Response('Die Cloud-Verbindung ist noch nicht eingerichtet.', { status: 503, headers: { 'Cache-Control': 'no-store' } });
+      try {
+        const authorize = createCloudAuthorization({ database: env.DB, env, issuer: env.MCP_ISSUER, authorizationEndpoint: env.MCP_AUTHORIZATION_ENDPOINT });
+        return await authorize(request) ?? new Response('Unbekannte Anmeldeadresse.', { status: 404 });
+      } catch { return new Response('Die Cloud-Verbindung ist gerade nicht verfügbar.', { status: 503, headers: { 'Cache-Control': 'no-store' } }); }
+    }
 
     /* --- Die Brücke ---------------------------------------------------- */
     if (url.pathname === '/api/bruecke' || url.pathname === '/api/bruecke/') {

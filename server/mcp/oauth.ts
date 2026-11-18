@@ -14,7 +14,8 @@ type Pending={userId:string;clientId:string;redirect:string;scope:Scope[];challe
 type Code={grantKey:string;epoch:string;clientId:string;redirect:string;challenge:string;scopes:Scope[]};
 type Family={grantKey:string;epoch:string;clientId:string;active:boolean;accessHash:string;refreshHash:string;accessUntil:number;scopes:Scope[]};
 type TokenIndex={familyKey:string};
-export type McpPrincipal={userId:string;clientId:string;grantId:string;scopes:Scope[];workspaceIds:string[]};
+export type McpAuthCheck={key:string;revision:number;expires:number};
+export type McpPrincipal={userId:string;clientId:string;grantId:string;scopes:Scope[];workspaceIds:string[];checks:McpAuthCheck[]};
 export type ConsentDecision={allow:boolean;remember:boolean;workspaceIds:string[]};
 export type AuthorizationStart={kind:'redirect';redirect:string}|{kind:'consent';requestId:string;csrf:string;
   clientName:string;redirectUri:string;scopes:Scope[]};
@@ -191,7 +192,8 @@ export const createMcpOAuth=({state,issuer,resource,authorizationEndpoint=issuer
       if(!family?.data.active||family.data.accessUntil<=now()||!equal(fingerprint,family.data.accessHash))return null;
       const grant=await activeGrant(family.data.grantKey,family.data.epoch);
       if(!grant||!await state.read<Client>('client:'+family.data.clientId))return null;
-      return {userId:grant.data.userId,clientId:grant.data.clientId,grantId:grant.key,scopes:[...family.data.scopes],workspaceIds:[...grant.data.workspaceIds]};
+      return {userId:grant.data.userId,clientId:grant.data.clientId,grantId:grant.key,scopes:[...family.data.scopes],workspaceIds:[...grant.data.workspaceIds],
+        checks:[grant,family,index!].map(row=>({key:row.key,revision:row.revision,expires:row.expires}))};
     },
     async listGrants(userId:string){
       const rows=await state.list<Grant>('grant');

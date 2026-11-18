@@ -1,0 +1,23 @@
+{
+  // Kein Deployment ohne erneut geprüften Free-Tarif und echte Bindung.
+  // Leere Adressen halten den Dienst geschlossen. Keine alten Datenbank-IDs.
+  "name": "red-ion-mcp",
+  "main": "../server/cloud-worker.mts",
+  "compatibility_date": "2026-11-18",
+  "send_metrics": false,
+  "vars": {
+    "MCP_ISSUER": "",
+    "MCP_AUTHORIZATION_ENDPOINT": "",
+    "MCP_FREE_ONLY": "1"
+  },
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "redion",
+    "remote": false
+  }],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 0.1,
+    "traces": { "enabled": true, "head_sampling_rate": 0.1 }
+  }
+}
