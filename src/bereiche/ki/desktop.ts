@@ -52,3 +52,6 @@ const DesktopMCP = (() => {
   };
   return {html,mount};
 })();
+/* Die Einstellungsseite spricht mit dem gemeinsamen Register und muss
+ * keine Funktion aus dem KI-Bereich direkt kennen. */
+RegisterAutomatisierung.meldeAnsicht(DesktopMCP);
