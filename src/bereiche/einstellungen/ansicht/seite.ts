@@ -227,7 +227,7 @@ const Einstellungen = (() => {
       o.querySelectorAll<HTMLElement>('.einst-nav button').forEach(b =>
         b.classList.toggle('on', b.dataset.b === offenerBereich));
       binde(o);
-      if (ziel && offenerBereich === 'mcp') DesktopMCP.mount(ziel);
+      if (ziel && offenerBereich === 'mcp') RegisterAutomatisierung.montiereAnsicht(ziel);
     };
     zeichne();
 
