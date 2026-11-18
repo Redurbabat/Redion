@@ -129,6 +129,20 @@ try {
   assert.equal((await raw('redion_capture_view',{target:'editor',documentId})).error?.code,'CONSENT_DENIED');
   assert.equal(await page!.locator('#redion-mcp-mask').count(),0,'Auch die verweigerte Aufnahme räumt ihre Maske auf');
   await native!.evaluate(({dialog})=>{dialog.showMessageBox=async()=>{(globalThis as any).__mcpConsent++;return {response:1,checkboxChecked:false};};});
+  await page!.evaluate(async()=>{
+    const desktop=(window as any).RedionDesktop,p=await desktop.automationState();
+    await desktop.automationConfigure({enabled:p.enabled,write:p.write,allowLaunch:p.allowLaunch,scopes:p.scopes,
+      rememberClients:p.rememberClients,confirmCritical:p.confirmCritical,confirmImages:false});
+  });
+  // Testdialoge antworten sofort. Die echte Bridge begrenzt neue Kopplungen
+  // auch nach einer Rechteänderung auf höchstens eine Anfrage je zwei Sekunden.
+  await new Promise(resolve=>setTimeout(resolve,2100));
+  await call('redion_get_status');
+  const approvalsBefore=await native!.evaluate(()=>(globalThis as any).__mcpConsent);
+  const delegated=await client.callTool({name:'redion_capture_view',arguments:{target:'editor',documentId,maxEdge:800}});
+  assert.ok((delegated.content as any[]).some(part=>part.type==='image'));
+  assert.equal(await native!.evaluate(()=>(globalThis as any).__mcpConsent),approvalsBefore,'Explizite Bilddelegation fragt nicht bei jeder Aufnahme erneut');
+  assert.equal(await native!.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows().filter((w:any)=>w.getTitle()==='RED Ion · Bildfreigabe').length),1,'Die Vorschau erscheint auch ohne erneute Bestätigung');
   report.visual={mcpImage:true,mask:true,crop:true,documentBinding:true,refusal:true,source:'own-window-only',chatGPT:'NICHT GETESTET'};
   assert.equal((await call('redion_get_active_document')).document.id,documentId);
   assert.equal((await call('redion_get_current_view')).documentId,documentId);

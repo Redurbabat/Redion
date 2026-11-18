@@ -83,3 +83,34 @@ Nutzerinstallation dieses neuen Standes, vollständige Regressionen, physischer
 Windows-Stift, iPhone/macOS und signierte Pakete. Die vorher gebaute EXE basiert
 weiterhin auf `543e253a9`; sie enthält diese neuen Funktionen noch nicht.
 Keine Cloud-URL oder Tunnel-ID wurde erstellt oder erfunden.
+
+## Neue lokale Windows-Testpakete
+
+Runtime-Quellstand: `1ee8e624a652aa3c5392edf89fcbfb866c2a1b1e`.
+Ausgabe: `build/windows-visual-mcp-dist/`, jeweils Windows x64, **NotSigned**.
+Version 2026.8.4 bleibt eine lokale Entwicklungsvorschau, kein Release.
+
+| Paket | Bytes | SHA-256 |
+| --- | ---: | --- |
+| Redion Setup 2026.8.4.exe | 133874458 | `cfd1d7c3c7c9d7f904cb60ebed0768d2ba7fa0c0f8249416ec0723fd20dcf829` |
+| Redion 2026.8.4.exe (Portable) | 121962944 | `72b466b3c6dfb92cbfeb0c93b00ed92e4b0a1ae0b8db6dc2c83ada0d76e762b5` |
+
+Echter SDK-Client gegen die **gebaute EXE** mit getrenntem Testprofil:
+47 Werkzeuge, Bildblock über stdio und HTTP, sichtbarer und maskierter
+Kontrollbereich, Schaltplanbild, verweigerte Bildfreigabe, ausdrücklich
+delegierte Bildübertragung ohne wiederholten Dialog, weiterhin sichtbare
+Vorschau, Neustart mit gemerktem Adapter, erhaltene Inhalte, Widerruf,
+Offline-Nutzung und beide Prozessenden mit Exitcode 0 bestanden.
+
+Paketparität: **13 native CJS-Dateien, 506 Webdateien und 14 MCP-Dateien**
+bytegleich. Electron-Builder entfernt Bau-/Entwicklungsfelder aus package.json;
+Name, Version und Einstieg wurden deshalb gesondert verglichen und stimmen.
+Ein erneuter regulärer Web-Bau nach Ende der alten App besteht ebenfalls,
+Offline-Stand v1613 bleibt unverändert. Die vorigen Schreibfehler sind damit
+kein aktuell reproduzierter Baufehler; ihre genaue Systemursache ist unbewiesen.
+
+Installation und Test im persönlichen Profil sind noch nicht erfolgt. Die
+tatsächliche verbundene Plugin-Route antwortete zuletzt **Session terminated**;
+das ist kein erfolgreicher ChatGPT-Nachweis. ChatGPTs plugin-spezifische
+Einstellung wurde gelesen und steht bereits auf **Alle Aktionen erlauben**.
+Globale Einstellungen und Rechte anderer Plugins wurden nicht geändert.
