@@ -243,6 +243,7 @@ workflows:
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
             -derivedDataPath "$CM_BUILD_DIR/build/ios-derived-data" \
+            IPHONEOS_DEPLOYMENT_TARGET=16.0 \
             CODE_SIGNING_ALLOWED=NO \
             build 2>&1 | tee "$CM_BUILD_DIR/build/ios-xcodebuild.log"
           APP="$CM_BUILD_DIR/build/ios-derived-data/Build/Products/Release-iphoneos/App.app"
