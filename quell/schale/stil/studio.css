@@ -1293,7 +1293,8 @@ body[data-bewegung="ruhig"] #page > .pg-tools > button{
     background:linear-gradient(160deg,#ffffff1c,transparent 37%,#ffffff06 75%);
     pointer-events:none;z-index:0;
   }
-  body #handy-oben > button {position:relative;z-index:1;min-width:0;touch-action:manipulation}
+  /* Do not override the swipe-up navigation's touch-action:none contract. */
+  body #handy-oben > button {position:relative;z-index:1;min-width:0}
   /* The existing dock icon transform/transition remains authoritative. */
   body:not([data-kontrast="hoch"]) #handy-oben #ho-pille {
     border-radius:999px;
