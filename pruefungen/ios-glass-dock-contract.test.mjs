@@ -20,7 +20,8 @@ test('dock keeps the swipe-up handle and separate optical highlight', () => {
 test('iPhone polish does not replace navigation touch-action', () => {
   const polish = studio.slice(studio.indexOf('/* iPhone UI polish (2026-11)'));
   assert.ok(polish.length > 200);
-  assert.doesNotMatch(polish, /touch-action\s*:/);
+  const cssWithoutComments = polish.replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.doesNotMatch(cssWithoutComments, /touch-action\s*:/);
   assert.match(base, /#handy-oben/);
 });
 
