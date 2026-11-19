@@ -10,7 +10,8 @@ type Db={prepare(sql:string):{bind(...values:(string|number)[]):{first<T>():Prom
 type Args=Record<string,unknown>;
 type ToolDef={name:string;description:string;inputSchema:{type:'object';properties:Record<string,unknown>;required?:string[];additionalProperties:boolean}};
 export class CloudMcpToolError extends Error {
-  constructor(readonly reason:string, message:string){super(message);}
+  readonly reason:string;
+  constructor(reason:string, message:string){super(message);this.reason=reason;}
 }
 const err=(reason:string,message:string):never=>{throw new CloudMcpToolError(reason,message);};
 const text=(value:unknown,max:number):string=>typeof value==='string'&&value.length<=max?value:'';
