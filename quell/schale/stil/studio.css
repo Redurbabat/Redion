@@ -1303,11 +1303,8 @@ body[data-bewegung="ruhig"] #page > .pg-tools > button{
     -webkit-backdrop-filter:blur(18px) saturate(145%);
     backdrop-filter:blur(18px) saturate(145%);
   }
-  /* Prevent bottom controls from obscuring page content on iPhone. */
-  body #page.produkt-welt,
-  body .produkt-welt {
-    padding-bottom:max(136px,calc(112px + env(safe-area-inset-bottom,0px)));
-  }
+  /* Do not override page-level bottom spacing: the existing mobile
+     layout owns dock clearance for editors, sheets and scroll containers. */
   /* Settings: let the native-width panel scroll without hiding its footer. */
   body .overlay:has(.einst-fenster) {padding:0;align-items:stretch}
   body .einst-fenster {height:100dvh;max-height:100dvh;border-radius:0;border:0}
