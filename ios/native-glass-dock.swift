@@ -1,90 +1,23 @@
 /*
- * RED ION - echtes SwiftUI-Dock nur im nativen iPhone-Build.
- * Erst nach Capacitor sync an AppDelegate.swift angehaengt.
- * Web/PWA, MCP, Dokumente und gespeicherte Daten bleiben unberuehrt.
+ * RED ION iOS - Apple's real system tab bar, not a CSS or custom glass capsule.
+ * A standalone UITabBar is a supported UIKit control (Apple Developer: UITabBar).
+ * The iOS 26 SDK gives this system component its adaptive Liquid Glass design.
+ *
+ * The existing Capacitor WKWebView stays the only content/navigation owner.
+ * No changes to Redion data, web/PWA, workspace or MCP.
  */
 import UIKit
-import SwiftUI
 import WebKit
 
-private final class RedionDockState: ObservableObject {
-    @Published var selectedIndex = 0
-    @Published var active = false
-    @Published var darkTheme = true
-    let labels = ["Dokumente", "Heute", "Lernen", "Termine", "Mehr"]
-    let symbols = ["book.closed", "house", "graduationcap", "calendar", "ellipsis"]
-    var select: ((Int) -> Void)?
-    var openTargets: ((Int) -> Void)?
-}
-
-private struct RedionSwiftDock: View {
-    @ObservedObject var state: RedionDockState
-
-    private var tabs: some View {
-        HStack(spacing: 2) {
-            ForEach(0..<state.labels.count, id: \.self) { index in
-                Button {
-                    state.select?(index)
-                } label: {
-                    VStack(spacing: 3) {
-                        Image(systemName: state.symbols[index])
-                            .font(.system(size: 21, weight: .regular))
-                            .frame(height: 26)
-                        Text(state.labels[index])
-                            .font(.system(size: 10, weight: state.selectedIndex == index ? .semibold : .regular))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                    .foregroundStyle(state.selectedIndex == index ? Color.primary : Color.secondary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 57)
-                    .background {
-                        if state.selectedIndex == index {
-                            Capsule()
-                                .fill(Color.primary.opacity(0.10))
-                                .overlay {
-                                    Capsule().strokeBorder(Color.primary.opacity(0.09), lineWidth: 0.7)
-                                }
-                        }
-                    }
-                    .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(state.labels[index])
-                .accessibilityAddTraits(state.selectedIndex == index ? [.isSelected] : [])
-                .simultaneousGesture(DragGesture(minimumDistance: 22)
-                    .onEnded { gesture in
-                        if gesture.translation.height < -32 {
-                            state.openTargets?(index)
-                        }
-                    })
-            }
-        }
-        .padding(6)
-    }
-
-    var body: some View {
-        Group {
-            if #available(iOS 26.0, *) {
-                tabs.glassEffect(.regular, in: Capsule())
-            } else {
-                tabs.background(.ultraThinMaterial, in: Capsule())
-                    .overlay { Capsule().strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.5) }
-            }
-        }
-        .environment(\.colorScheme, state.darkTheme ? .dark : .light)
-        .opacity(state.active ? 1 : 0)
-        .allowsHitTesting(state.active)
-        .accessibilityHidden(!state.active)
-    }
-}
-
-private final class RedionNativeDock: NSObject, WKScriptMessageHandler {
+private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
+                                      UITabBarDelegate, UIGestureRecognizerDelegate {
     static let shared = RedionNativeDock()
     private static var started = false
-    private let state = RedionDockState()
+
+    private let labels = ["Dokumente", "Heute", "Lernen", "Termine", "Mehr"]
+    private let symbols = ["book.closed", "house", "graduationcap", "calendar", "ellipsis"]
     private weak var webView: WKWebView?
-    private var host: UIHostingController<RedionSwiftDock>?
+    private var systemBar: UITabBar?
     private var attempt = 0
     private var registered = false
 
@@ -119,33 +52,39 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler {
             guard let root = window.rootViewController,
                   let web = findWebView(root.view) else { continue }
             webView = web
-            if host == nil {
-                let viewController = UIHostingController(rootView: RedionSwiftDock(state: state))
-                viewController.view.backgroundColor = .clear
-                viewController.view.isOpaque = false
-                viewController.view.translatesAutoresizingMaskIntoConstraints = false
-                root.addChild(viewController)
-                root.view.addSubview(viewController.view)
+
+            if systemBar == nil {
+                // No visual imitation, custom blur, capsule background or
+                // UITabBarAppearance override. UIKit chooses the OS material.
+                let bar = UITabBar(frame: .zero)
+                bar.delegate = self
+                bar.translatesAutoresizingMaskIntoConstraints = false
+                bar.isTranslucent = true
+                bar.tintColor = .label
+                bar.unselectedItemTintColor = .secondaryLabel
+                let items = zip(labels, symbols).enumerated().map { index, value in
+                    UITabBarItem(title: value.0,
+                                 image: UIImage(systemName: value.1),
+                                 tag: index)
+                }
+                bar.setItems(items, animated: false)
+                bar.selectedItem = items.first
+                bar.isHidden = true // Wait for WebView to report its real tab state.
+                bar.accessibilityIdentifier = "redion-native-system-tab-bar"
+                root.view.addSubview(bar)
                 NSLayoutConstraint.activate([
-                    viewController.view.leadingAnchor.constraint(equalTo: root.view.leadingAnchor, constant: 12),
-                    viewController.view.trailingAnchor.constraint(equalTo: root.view.trailingAnchor, constant: -12),
-                    viewController.view.bottomAnchor.constraint(equalTo: root.view.safeAreaLayoutGuide.bottomAnchor, constant: -8),
-                    viewController.view.heightAnchor.constraint(equalToConstant: 72)
+                    bar.leadingAnchor.constraint(equalTo: root.view.leadingAnchor, constant: 12),
+                    bar.trailingAnchor.constraint(equalTo: root.view.trailingAnchor, constant: -12),
+                    bar.bottomAnchor.constraint(equalTo: root.view.safeAreaLayoutGuide.bottomAnchor, constant: -8),
+                    bar.heightAnchor.constraint(equalToConstant: 68)
                 ])
-                viewController.didMove(toParent: root)
-                host = viewController
+                let swipe = UIPanGestureRecognizer(target: self, action: #selector(onSwipeUp(_:)))
+                swipe.delegate = self
+                swipe.maximumNumberOfTouches = 1
+                bar.addGestureRecognizer(swipe)
+                systemBar = bar
             }
-            state.select = { [weak self] index in
-                self?.webView?.evaluateJavaScript(
-                    "window.__redionNativeDockSelect?.(" + String(index) + ");",
-                    completionHandler: nil)
-                UISelectionFeedbackGenerator().selectionChanged()
-            }
-            state.openTargets = { [weak self] index in
-                self?.webView?.evaluateJavaScript(
-                    "window.__redionNativeDockTargets?.(" + String(index) + ");",
-                    completionHandler: nil)
-            }
+
             if !registered {
                 let controller = web.configuration.userContentController
                 controller.add(self, name: "redionDock")
@@ -156,6 +95,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler {
             web.evaluateJavaScript(Self.bridgeJavaScript, completionHandler: nil)
             return
         }
+
         attempt += 1
         if attempt < 80 {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
@@ -172,19 +112,50 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler {
         return nil
     }
 
+    // Native UITabBar handles pointer tracking, highlighted states, VoiceOver,
+    // rendering and material. Only the route is delegated to the old Redion app.
+    func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
+        guard (0..<labels.count).contains(item.tag) else { return }
+        webView?.evaluateJavaScript(
+            "window.__redionNativeDockSelect?.(\(item.tag));",
+            completionHandler: nil)
+        UISelectionFeedbackGenerator().selectionChanged()
+    }
+
+    @objc private func onSwipeUp(_ gesture: UIPanGestureRecognizer) {
+        guard gesture.state == .ended, let bar = systemBar else { return }
+        let vector = gesture.translation(in: bar)
+        guard vector.y < -32, abs(vector.y) > abs(vector.x) else { return }
+        let x = gesture.location(in: bar).x
+        let index = max(0, min(labels.count - 1,
+                               Int(x / max(1, bar.bounds.width) * CGFloat(labels.count))))
+        webView?.evaluateJavaScript(
+            "window.__redionNativeDockTargets?.(\(index));",
+            completionHandler: nil)
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                           shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        true
+    }
+
     func userContentController(_ controller: WKUserContentController,
                                didReceive message: WKScriptMessage) {
         guard message.name == "redionDock",
               let data = message.body as? [String: Any],
               let selected = data["selected"] as? Int,
-              (0..<state.labels.count).contains(selected) else { return }
+              (0..<labels.count).contains(selected) else { return }
         DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            self.state.selectedIndex = selected
-            self.state.darkTheme = (data["theme"] as? String) != "light"
-            self.state.active = (data["visible"] as? Bool) ?? true
-            // Erst die native Leiste bereitstellen, dann das HTML-Dock
-            // transparent machen; Geometrie und bisherige .click()-Route bleiben.
+            guard let self, let bar = self.systemBar else { return }
+            bar.selectedItem = bar.items?[selected]
+            bar.overrideUserInterfaceStyle =
+                (data["theme"] as? String) == "light" ? .light : .dark
+            let visible = (data["visible"] as? Bool) ?? true
+            bar.isHidden = !visible
+
+            // Hide the legacy web bar only AFTER the real system bar exists.
+            // It keeps its DOM geometry so Redion's existing content clearance
+            // and navigation state still work without data migration.
             self.webView?.evaluateJavaScript(
                 "document.documentElement.classList.add('redion-ios-native-dock')",
                 completionHandler: nil)
