@@ -220,6 +220,18 @@ einzigen Worker-Ziel genau sieben `overrides` (`behavior: "public"`, exakte
 | `/`, `/index.html`, `/mcp/authorize`, `/mcp/settings`, `/sync/runter`, `/api/stand`, `/konto/ich`, `/mcp` | 302 zu Access |
 | Unterpfade `/register/x`, `/mcp/cloud/x`, `/tokenx` | 302 zu Access |
 
+**ChatGPT bestätigt (19.11., abends).** Redur verband die private App
+„Redion v05“ neu mit `/mcp/cloud`. Im Worker-Protokoll (`wrangler tail`):
+Discovery 200, `/mcp/authorize` (Access, Zustimmung nur `redion:read`, gemerkt),
+`/token` 200, danach 12 × `POST /mcp/cloud` 200 und eine Notification 202.
+Eine Anfrage erhielt 400: ChatGPT (`openai-mcp/1.0.0`) versucht zuerst
+`mcp-protocol-version: 2026-07-28` mit `server/discover` und fällt danach auf
+`initialize` mit einer unterstützten Fassung zurück — harmlos. ChatGPT las
+Arbeitsbereiche (1, „Mein Redion“), Dokumentliste und Suche (je 0 Treffer, weil
+die Cloud-D1 seit E797 leer ist) und erhielt für fremde Arbeitsbereiche und
+unbekannte Seiten die erwarteten Abweisungen. Schreibwerkzeuge: keine, wie
+vorgesehen. Lesen eines echten Dokuments: noch nicht möglich (keine Daten).
+
 **Rückfall:** die sieben `overrides` wieder entfernen (Sicherung der Anwendung
 liegt privat bei Redur), dann schliesst Access den MCP-Weg wieder.
 
