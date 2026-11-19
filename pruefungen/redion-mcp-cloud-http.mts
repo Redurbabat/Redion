@@ -30,6 +30,7 @@ test('OAuth HTTP: fehlende Anmeldung, CSRF und fremde Arbeitsbereiche sperren',a
     const consent=await f.fetcher('https://app.example.test/mcp/authorize?'+args);const html=await consent.text();assert.equal(consent.status,200);
     assert.ok(consent.headers.get('Content-Security-Policy')?.includes("frame-ancestors 'none'"));assert.equal(consent.headers.get('Referrer-Policy'),'same-origin');
     assert.equal(html.includes('<script>evil()'),false);assert.ok(html.includes('&lt;script&gt;evil()'));
+    assert.equal(html.includes('name="write"'),false); // Nur ein angefordertes Schreibrecht wird angeboten.
     const form=new URLSearchParams({requestId:hidden(html,'requestId'),csrf:hidden(html,'csrf'),decision:'allow',remember:'yes',workspace:'workspace-one'});
     assert.equal((await f.fetcher('https://app.example.test/mcp/authorize',{method:'POST',headers:{Origin:'https://evil.test'},body:form})).status,403);
     form.set('workspace','someone-elses-workspace');
