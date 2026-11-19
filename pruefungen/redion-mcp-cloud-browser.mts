@@ -35,11 +35,12 @@ test('Synthetischer HTTPS-Browser: Freigabe, Arbeitsbereichswahl, gemerkte Zusti
   const origin='https://127.0.0.1:'+(server.address() as AddressInfo).port;
   const callbackOrigin='http://127.0.0.1:'+(callbackServer.address() as AddressInfo).port;
   const f=cloudFixture({issuer:origin,authorizationEndpoint:origin+'/mcp/authorize'});fixture=f;
-  const browser=await chromium.launch({headless:true});
+  let browser:Awaited<ReturnType<typeof chromium.launch>>|undefined;
   try{
+    browser=await chromium.launch({headless:true});
     const client=await f.oauth.register({client_name:'Künstlicher KI-Testclient',redirect_uris:[callbackOrigin+'/callback']});
     const auth=new URL(origin+'/mcp/authorize');
-    auth.search=new URLSearchParams({client_id:client.client_id,redirect_uri:client.redirect_uris[0]!,response_type:'code',scope:'redion:read redion:write',
+    auth.search=new URLSearchParams({client_id:client.client_id,redirect_uri:client.redirect_uris[0]!,response_type:'code',scope:'redion:read',
       resource:origin+'/mcp',code_challenge:await pkceChallenge('x'.repeat(64)),code_challenge_method:'S256',state:'synthetic-state'}).toString();
     for(const [name,width,height,theme] of [['desktop-light',1100,1080,'light'],['desktop-dark',1100,1080,'dark'],['mobile-light',390,1000,'light']] as const){
       /* Nur dieser isolierte Testkontext vertraut seinem flüchtigen Zertifikat. */
@@ -49,6 +50,7 @@ test('Synthetischer HTTPS-Browser: Freigabe, Arbeitsbereichswahl, gemerkte Zusti
       await page.goto(auth.href);
       await page.getByRole('heading',{name:'KI mit RED Ion verbinden'}).waitFor();
       assert.equal(await page.locator('input[name=workspace]:checked').count(),0);
+      assert.equal(await page.locator('input[name=write]').count(),0);
       assert.ok(await page.getByText('Diese Freigabe bis zum Widerruf merken').isVisible());
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
       await page.screenshot({path:path.join(output,name+'.png'),fullPage:true});
@@ -59,6 +61,12 @@ test('Synthetischer HTTPS-Browser: Freigabe, Arbeitsbereichswahl, gemerkte Zusti
         assert.deepEqual(violations,[],'Browser-CSP darf den registrierten OAuth-Rückweg nicht blockieren.');
         assert.ok(new URL(page.url()).searchParams.get('code'));
         await page.goto(auth.href);await page.waitForURL(url=>url.origin===callbackOrigin&&url.pathname==='/callback');
+        assert.deepEqual((await f.oauth.listGrants('owner'))[0]?.scopes,['redion:read']);
+        const upgrade=new URL(auth);upgrade.searchParams.set('scope','redion:read redion:write');
+        await page.goto(upgrade.href);
+        await page.getByRole('heading',{name:'KI mit RED Ion verbinden'}).waitFor();
+        assert.equal(await page.locator('input[name=write]').isChecked(),false);
+        await page.screenshot({path:path.join(output,'schreibfreigabe-aus.png'),fullPage:true});
         await page.goto(origin+'/mcp/settings');
         await page.getByRole('heading',{name:'Freigegebene KI-Verbindungen'}).waitFor();
         await page.screenshot({path:path.join(output,'freigaben-light.png'),fullPage:true});
@@ -69,7 +77,7 @@ test('Synthetischer HTTPS-Browser: Freigabe, Arbeitsbereichswahl, gemerkte Zusti
       await context.close();
     }
   }finally{
-    await browser.close();
+    await browser?.close();
     await Promise.all([server,callbackServer].map(listener=>new Promise<void>((resolve,reject)=>listener.close(error=>error?reject(error):resolve()))));
     f.close();
   }

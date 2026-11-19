@@ -4,6 +4,40 @@ import {cloudFixture,hidden} from './helfer/mcp-cloud.mts';
 import {pkceChallenge} from '../server/mcp/oauth.ts';
 import {createMcpOAuthHttp} from '../server/mcp/oauth-http.ts';
 
+test('DCR RFC 7591: öffentlicher Client ohne optionalen Namen erhält dauerhaft HTTP 201',async()=>{
+  const f=cloudFixture();try{
+    const response=await f.fetcher('https://mcp.example.test/register',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        redirect_uris:['https://chatgpt.com/connector_platform/oauth/callback'],token_endpoint_auth_method:'none'})});
+    assert.equal(response.status,201);
+    const client=await response.json();
+    assert.match(client.client_id,/^mcp_/);
+    assert.equal(client.client_secret,undefined);
+    assert.deepEqual(client.grant_types,['authorization_code']);
+    assert.deepEqual(client.response_types,['code']);
+    const row=await f.state.read<{redirects:string[]}>('client:'+client.client_id);
+    assert.deepEqual(row?.data.redirects,client.redirect_uris);
+    assert.equal(response.headers.get('Cache-Control'),'no-store');
+  }finally{f.close();}
+});
+
+test('DCR: leere oder widersprüchliche Metadaten und unsichere Rückwege werden normgerecht abgelehnt',async()=>{
+  for(const [change,error] of [
+    [{grant_types:[]},'invalid_client_metadata'],[{grant_types:['refresh_token']},'invalid_client_metadata'],
+    [{grant_types:null},'invalid_client_metadata'],[{token_endpoint_auth_method:null},'invalid_client_metadata'],
+    [{response_types:[]},'invalid_client_metadata'],[{client_name:42},'invalid_client_metadata'],
+    [{redirect_uris:['http://public.example.test/cb']},'invalid_redirect_uri'],
+    [{redirect_uris:['https://ai.example.test/cb\n']},'invalid_redirect_uri']
+  ] as const){
+    const f=cloudFixture();try{
+      const r=await f.fetcher('https://mcp.example.test/register',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({client_name:'Synthetic',redirect_uris:['https://ai.example.test/cb'],...change})});
+      assert.equal(r.status,400);assert.equal((await r.json()).error,error);
+      assert.equal((await f.state.list('client')).length,0);
+    }finally{f.close();}
+  }
+});
+
 test('OAuth HTTP: Discovery, korrekte Methoden und begrenzte Eingaben',async()=>{
   const f=cloudFixture();try{
     const meta=await f.fetcher('https://mcp.example.test/.well-known/oauth-authorization-server');assert.equal(meta.status,200);
