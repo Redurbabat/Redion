@@ -83,6 +83,38 @@ nur den Ursprung des validierten registrierten Rückwegs. Fremde Origins
 und unbekannte Rückgabeadressen bleiben gesperrt. Der echte Browser wurde
 anschliessend gegen HTTPS und einen lokalen Callback erfolgreich geprüft.
 
+## ChatGPT-Schreibrechte ausdrücklich freigeben
+
+In RED ION (Web/Windows/iOS) zeigt **Einstellungen → MCP → ChatGPT & KI-Freigaben**
+den Link **Freigaben verwalten**, sobald ein angemeldeter HTTPS-Wolkenserver
+konfiguriert ist. Der Link führt zu `/mcp/settings` des eingetragenen Servers.
+Diese Seite ist nur erreichbar, wenn der OAuth-Dienst dort tatsächlich
+bereitgestellt und die Anmeldung angebunden wurde; der Link allein schaltet
+**keine** Rechte frei.
+
+Der KI-Client muss beim erneuten Verbinden `redion:read redion:write`
+anfordern. Erst dann erscheint im OAuth-Zustimmungsformular die Checkbox
+**Schreiben erlauben**; sie ist **standardmässig ausgeschaltet**.
+Ohne Haken wird ausschliesslich das angeforderte Leserecht (und ggf.
+separat angeforderte Bildrechte) erteilt, niemals `redion:write`.
+Schreiben setzt ausserdem voraus, dass das angemeldete Konto in **jedem**
+ausgewählten Arbeitsbereich Bearbeitungsrechte hat. Die Cloud prüft das auf
+dem Server, nicht im Browser.
+
+Der ausgestellte OAuth-Code und die Token enthalten nur die tatsächlich
+freigegebenen Scopes; spätere Token-Aktualisierungen dürfen sie nicht
+erweitern. Die Verwaltung listet echte Freigaben und erlaubt Widerruf.
+Ein bestehender Lese-Client bekommt durch die Oberfläche **nicht**
+automatisch Schreibrechte. Er muss den OAuth-Ablauf erneut mit
+`redion:write` starten; das ChatGPT-Plugin muss diesen Scope ebenfalls
+anfordern und dessen Werkzeuge serverseitig korrekt durchsetzen.
+
+**Grenze:** Diese Änderung implementiert die Zustimmung im vorhandenen
+Cloud-MCP-Entwurf. Sie aktiviert nicht das bereits extern angeschlossene,
+nur lesende ChatGPT-Plugin und stellt keinen Cloud-Worker bereit. Die
+wirkliche Verbindung, Speicherung, Konto-Identität, Gerätesynchronisation
+und die Schreibwerkzeuge müssen separat geprüft werden.
+
 ## Weiter offen · nicht als verbunden ausgeben
 
 1. Vorhandenes Access-/Redion-Konto sicher an den Router anschliessen;
