@@ -337,7 +337,7 @@ private final class RedionNativeMoreCoordinator {
         // versions of cloud sync, import, backup or account operations.
         allowNativeMore = false
         host?.view.isHidden = true
-        let javaScript = "document.querySelector('#page .home [data-a=\\"\(action)\\"]')?.click();"
+        let javaScript = "document.querySelector('#page .home [data-a=\(action)]')?.click();"
         web.evaluateJavaScript(javaScript, completionHandler: nil)
     }
 }
