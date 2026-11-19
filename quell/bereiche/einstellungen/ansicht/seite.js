@@ -596,7 +596,7 @@ const Einstellungen = (() => {
             const aus = Store.getMeta('mcp:eigenAus', []) || [];
       /* Kein lokaler Pseudoschalter: gültige Rechte liegen beim Cloud-Server.
        * Der Login über OAuth muss eine Schreibfreigabe tatsächlich erteilen. */
-      const wolke = globalThis.Wolke;
+      const wolke = typeof Wolke === 'undefined' ? null : Wolke;
       let freigaben = '<span class="ez-grau">Wolke-Anmeldung erforderlich</span>';
       try {
         const basis = new URL(wolke?.angemeldet?.() ? String(wolke.adresse?.() || '') : '');
