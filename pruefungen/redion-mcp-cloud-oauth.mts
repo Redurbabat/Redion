@@ -116,7 +116,7 @@ test('OAuth: Ablehnung, Ablauf, ungültige Registrierung und Protokoll-Downgrade
 test('OAuth: Kleinere Anfrage erbt keine weiteren Rechte einer gemerkten Freigabe',async()=>{
   const f=fixture();try{
     const s=await setup(f,'redion:read redion:write');const b=await f.oauth.begin('owner',s.args);if(b.kind!=='consent')throw 0;
-    await f.oauth.approve('owner',b.requestId,b.csrf,{allow:true,remember:true,workspaceIds:['workspace-one']});
+    await f.oauth.approve('owner',b.requestId,b.csrf,{allow:true,remember:true,workspaceIds:['workspace-one'],allowWrite:true});
     const smaller=await f.oauth.begin('owner',{...s.args,scope:'redion:read'});if(smaller.kind!=='redirect')throw 0;
     const tokens=await f.oauth.exchange({grant_type:'authorization_code',client_id:s.client.client_id,code:new URL(smaller.redirect).searchParams.get('code')!,
       code_verifier:verifier,resource:s.args.resource,redirect_uri:s.args.redirect_uri});
@@ -134,5 +134,38 @@ test('Gemerkte Zustimmung bleibt bis Widerruf erhalten; aktive Refresh-Sitzung v
     assert.equal((await f.oauth.authenticate(renewed.access_token))?.userId,'owner');
     f.tick(400*86400000);assert.equal((await f.oauth.begin('owner',s.args)).kind,'redirect');
     assert.equal(await f.oauth.authenticate(renewed.access_token),null);
+  }finally{f.close();}
+});
+
+test('OAuth: Schreiben nur mit aktivem Haken, kein stilles Upgrade durch Refresh oder Neuanfrage',async()=>{
+  const f=fixture();try{
+    const s=await setup(f,'redion:read redion:write');
+    const begin=await f.oauth.begin('owner',s.args);
+    assert.equal(begin.kind,'consent');if(begin.kind!=='consent')throw new Error('consent expected');
+    await assert.rejects(()=>f.oauth.approve('owner',begin.requestId,begin.csrf,
+      {allow:true,remember:true,workspaceIds:['workspace-one'],allowWrite:'yes' as unknown as boolean}),isError('invalid_request'));
+    const read=await f.oauth.approve('owner',begin.requestId,begin.csrf,
+      {allow:true,remember:true,workspaceIds:['workspace-one']});
+    const readTokens=await f.oauth.exchange({grant_type:'authorization_code',client_id:s.client.client_id,
+      code:new URL(read.redirect).searchParams.get('code')!,code_verifier:verifier,
+      redirect_uri:s.args.redirect_uri,resource:s.args.resource});
+    assert.equal(readTokens.scope,'redion:read');
+    assert.deepEqual((await f.oauth.authenticate(readTokens.access_token))?.scopes,['redion:read']);
+    await assert.rejects(()=>f.oauth.exchange({grant_type:'refresh_token',client_id:s.client.client_id,
+      refresh_token:readTokens.refresh_token,resource:s.args.resource,scope:'redion:read redion:write'}),isError('invalid_scope'));
+    const next=await f.oauth.begin('owner',s.args);
+    assert.equal(next.kind,'consent');if(next.kind!=='consent')throw new Error('consent expected');
+    const allowed=await f.oauth.approve('owner',next.requestId,next.csrf,
+      {allow:true,remember:true,workspaceIds:['workspace-one'],allowWrite:true});
+    const tokens=await f.oauth.exchange({grant_type:'authorization_code',client_id:s.client.client_id,
+      code:new URL(allowed.redirect).searchParams.get('code')!,code_verifier:verifier,
+      redirect_uri:s.args.redirect_uri,resource:s.args.resource});
+    assert.equal(tokens.scope,'redion:read redion:write');
+    assert.deepEqual((await f.oauth.authenticate(tokens.access_token))?.scopes,['redion:read','redion:write']);
+    assert.equal(await f.oauth.authenticate(readTokens.access_token),null);
+    const readOnly=await f.oauth.begin('owner',{...s.args,scope:'redion:read',prompt:'consent'});
+    assert.equal(readOnly.kind,'consent');if(readOnly.kind!=='consent')throw new Error('consent expected');
+    await assert.rejects(()=>f.oauth.approve('owner',readOnly.requestId,readOnly.csrf,
+      {allow:true,remember:true,workspaceIds:['workspace-one'],allowWrite:true}),isError('invalid_scope'));
   }finally{f.close();}
 });
