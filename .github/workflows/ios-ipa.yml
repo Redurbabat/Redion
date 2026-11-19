@@ -2,6 +2,11 @@ name: Redion iPhone IPA
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - 'build/ios-native-more-min16-20261119'
+    paths:
+      - '.github/workflows/ios-ipa.yml'
 
 permissions:
   contents: read
