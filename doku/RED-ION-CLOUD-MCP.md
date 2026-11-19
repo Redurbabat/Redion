@@ -115,6 +115,73 @@ nur lesende ChatGPT-Plugin und stellt keinen Cloud-Worker bereit. Die
 wirkliche Verbindung, Speicherung, Konto-Identität, Gerätesynchronisation
 und die Schreibwerkzeuge müssen separat geprüft werden.
 
+## Cloud-Transport auf dem Worker (PR #211, 19.11.2026)
+
+Der Worker enthält jetzt einen getrennten HTTPS-MCP-Endpunkt
+**/mcp/cloud** mit OAuth-Schutz und begrenztem JSON-RPC. Er bietet
+Arbeitsbereichsliste, Suche, Seiten lesen, Seiten erstellen, Titel
+ändern und Text ersetzen. Alle Werkzeuge verwenden die vorhandene
+Tabelle **saetze** und prüfen Berechtigungen für die ausgewählten
+Arbeitsbereiche. Verschlüsselte private Daten bleiben unlesbar.
+Erstellung benötigt eine requestId gegen Doppelanlage; Änderungen
+benötigen expectedVersion und einen atomaren Versionsvergleich.
+
+### Zwei Zugriffswege – nicht vermischen
+
+**OAuth-Protokollwege (separater Schutz, explizit begrenzt):**
+/mcp/cloud, /register, /token, /revoke und die beiden
+OAuth-Discovery-Adressen im .well-known-Pfad.
+Der MCP-Werkzeugserver verlangt für jede Anfrage einen gültigen
+widerrufbaren OAuth-Bearer-Token.
+
+**Menschliche Zustimmung (Cloudflare Access zwingend):**
+/mcp/authorize und /mcp/settings. Hier wird ein vorher
+verifiziertes Cloudflare-Access-JWT mit der E-Mail-Adresse
+eines bestehenden Redion-Kontos verknüpft. Ohne übereinstimmendes,
+nicht gesperrtes Konto gibt es keinen Zugriff. Der Modus
+TOR=offen darf keine Schreibfreigaben erzeugen.
+
+Cloudflare Access kann Anfragen schon vor dem Worker sperren.
+Damit ChatGPT überhaupt Discovery, Registrierung und /mcp/cloud
+erreichen kann, muss der Betreiber **nur für die aufgeführten
+Protokollwege** passende Access-Pfadausnahmen konfigurieren.
+Die gesamte Webseite und die Zustimmungsseiten bleiben geschützt.
+Der Worker allein kann die Edge-Policy nicht ändern.
+
+### Aktuelle Einrichtungsgrenze
+
+Im bestehenden wrangler.toml ist derzeit **keine aktive
+D1-Bindung DB** eingetragen. Deshalb antwortet der neue Endpunkt
+bis zur Einrichtung bewusst mit HTTP 503. Es wird **keine**
+Datenbank, kein R2-Bucket und kein kostenpflichtiger Dienst
+automatisch angelegt.
+
+Vor der Aktivierung im richtigen Cloudflare-Konto:
+
+1. Bereits existierende D1-Datenbank und deren UUID sowie
+   Eigentümerkonto prüfen; eine Datenbank aus einem fremden
+   Konto darf nicht verwendet werden.
+2. Nur eine vorhandene und geprüfte Datenbank als **DB** binden.
+   Das bestehende server/schema.sql muss bereits vorhanden
+   sein; danach server/mcp/schema.sql mit den MCP-Metadaten
+   (mcp_state) in derselben D1 ausführen.
+3. Cloudflare-Free-Kontingente erneut prüfen, keine Tarife ändern.
+4. Cloudflare-Access-Pfade wie oben einstellen und mit einem
+   nicht eingeloggten MCP-Client sowie einer menschlichen
+   Access-Anmeldung testen.
+5. Die genaue öffentliche URL des Worker-Projekts prüfen
+   (nicht aus einem Repositorynamen raten), und in ChatGPT
+   einen **neuen** MCP-Connector auf dessen /mcp/cloud-Pfad
+   mit den Scopes redion:read redion:write verbinden.
+6. Auf der OAuth-Zustimmungsseite den Arbeitsbereich und
+   den anfangs ausgeschalteten Schalter „Schreiben erlauben“
+   ausdrücklich bestätigen. Mit einer **Testseite** lesen,
+   bearbeiten, widerrufen, Sync und Laptop-Aus prüfen.
+
+Die bereits eingerichtete, separate ChatGPT-App meldet noch
+**redion:read**. Ein GitHub-Merge oder Cloudflare-Build schaltet
+ihre Rechte nicht automatisch um.
+
 ## Weiter offen · nicht als verbunden ausgeben
 
 1. Vorhandenes Access-/Redion-Konto sicher an den Router anschliessen;
