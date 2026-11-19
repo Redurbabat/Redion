@@ -15,7 +15,7 @@ type Code={grantKey:string;epoch:string;clientId:string;redirect:string;challeng
 type Family={grantKey:string;epoch:string;clientId:string;active:boolean;accessHash:string;refreshHash:string;accessUntil:number;scopes:Scope[]};
 type TokenIndex={familyKey:string};
 export type McpPrincipal={userId:string;clientId:string;grantId:string;scopes:Scope[];workspaceIds:string[]};
-export type ConsentDecision={allow:boolean;remember:boolean;workspaceIds:string[]};
+export type ConsentDecision={allow:boolean;remember:boolean;workspaceIds:string[];allowWrite?:boolean};
 export type AuthorizationStart={kind:'redirect';redirect:string}|{kind:'consent';requestId:string;csrf:string;
   clientName:string;redirectUri:string;scopes:Scope[]};
 
@@ -149,14 +149,20 @@ export const createMcpOAuth=({state,issuer,resource,authorizationEndpoint=issuer
       const workspaces=[...new Set(decision.workspaceIds)];
       if(typeof decision.allow!=='boolean'||typeof decision.remember!=='boolean'||workspaces.length>20||
         workspaces.some(id=>!validId(id))||decision.allow&&!workspaces.length)return fail('invalid_request');
+      /* Schreiben bleibt AUS, bis der Mensch genau dieses Recht bei
+       * der Verbindung ausdrücklich gewählt hat. Ein Client kann es weder
+       * über eine Leseanfrage noch beim Refresh nachfordern. */
+      if(decision.allowWrite!==undefined&&typeof decision.allowWrite!=='boolean')return fail('invalid_request');
+      if(decision.allowWrite===true&&!pending.data.scope.includes('redion:write'))return fail('invalid_scope');
+      const approvedScopes=pending.data.scope.filter(s=>s!=='redion:write'||decision.allowWrite===true);
       if(!await state.consume(pending))return fail('invalid_request');
       if(!decision.allow)return {redirect:redirect(pending.data.redirect,pending.data.state,{error:'access_denied'})};
       const key=await grantKey(userId,pending.data.clientId),previous=await state.read<Grant>(key),epoch=random();
       const grant:Grant={userId,clientId:pending.data.clientId,epoch,active:true,remember:decision.remember,
-        scopes:pending.data.scope,workspaceIds:workspaces};
+        scopes:approvedScopes,workspaceIds:workspaces};
       const expires=decision.remember?PERSISTENT:now()+30*DAY;
       if(previous?!await state.replace(previous,grant,expires):!await state.create(key,'grant',grant,expires))return fail('temporarily_unavailable');
-      return {redirect:await codeFor(pending.data,key,epoch)};
+      return {redirect:await codeFor({...pending.data,scope:approvedScopes},key,epoch)};
     },
     async exchange(input:Input){
       requireResource(input);const client=await requireClient(input);

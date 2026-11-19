@@ -111,27 +111,37 @@ export const createMcpOAuthHttp=({oauth,state,identify,rateKey,now=Date.now}:{oa
         }
         const csrf=nonce();await state.create('manage:'+await hash(csrf),'manage',{userId:user.id},now()+600000);
         const grants=await oauth.listGrants(user.id);
-        return page('Freigegebene KI-Verbindungen',grants.length?grants.map(grant=>'<article><h2>'+escape(grant.clientName)+'</h2><p>'+grant.scopes.map(s=>escape(labels[s]!)).join(' · ')+
+        return page('Freigegebene KI-Verbindungen','<p>Hier kannst du bestehende Zugriffe widerrufen. Um Schreiben zu erlauben, muss der KI-Client die Verbindung mit redion:write erneut anfordern. Dann erscheint eine eigene, zunächst ausgeschaltete Schreibfreigabe.</p>'+(grants.length?grants.map(grant=>'<article><h2>'+escape(grant.clientName)+'</h2><p>'+grant.scopes.map(s=>escape(labels[s]!)).join(' · ')+
           '</p><small>Client: <code>'+escape(grant.clientId)+'</code></small><form method="post" action="'+escape(settingsUrl)+'"><input type="hidden" name="csrf" value="'+csrf+'">'+
-          '<input type="hidden" name="grantId" value="'+escape(grant.id)+'"><button>Freigabe widerrufen</button></form></article>').join(''):'<p>Keine KI-Verbindung ist freigegeben.</p>');
+          '<input type="hidden" name="grantId" value="'+escape(grant.id)+'"><button>Freigabe widerrufen</button></form></article>').join(''):'<p>Keine KI-Verbindung ist freigegeben.</p>'));
       }
       if(request.method==='POST'){
         const form=await readForm(request),selected=form.getAll('workspace');
         const input=params(new URLSearchParams([...form].filter(([key])=>key!=='workspace')));
         if(selected.some(id=>!user.workspaces.some(w=>w.id===id)))throw new OAuthError('access_denied');
-        if(!['allow','deny'].includes(input.decision??''))throw new OAuthError('invalid_request');
+        if(!['allow','deny'].includes(input.decision??'')||input.write!==undefined&&input.write!=='yes')
+          throw new OAuthError('invalid_request');
+        /* Das Checkbox-Feld ist nicht vertrauenswürdig. Bei Schreibfreigabe
+         * MUSS jede ausgewählte Arbeitswelt serverseitig editierbar sein. */
+        const allowWrite=input.write==='yes'&&input.decision==='allow';
+        if(allowWrite&&selected.some(id=>!user.workspaces.some(w=>w.id===id&&w.canWrite)))
+          throw new OAuthError('access_denied');
         const result=await oauth.approve(user.id,input.requestId??'',input.csrf??'',{
-          allow:input.decision==='allow',remember:input.remember==='yes',workspaceIds:selected});
+          allow:input.decision==='allow',remember:input.remember==='yes',workspaceIds:selected,allowWrite});
         return redirect(result.redirect);
       }
       const start=await oauth.begin(user.id,params(url.searchParams));
       if(start.kind==='redirect')return redirect(start.redirect);
       return page('KI mit RED Ion verbinden','<p><strong>'+escape(start.clientName)+'</strong> möchte auf deine synchronisierten Inhalte zugreifen.</p>'+
         '<p>Der Clientname ist selbst angegeben. Prüfe, ob du diese Verbindung gestartet hast.</p><small>Rückgabeadresse: <code>'+escape(start.redirectUri)+'</code></small>'+
-        '<ul>'+start.scopes.map(s=>'<li>'+escape(labels[s]!)+'</li>').join('')+'</ul><form method="post" action="'+escape(authUrl.href)+'">'+
+        '<ul>'+start.scopes.filter(s=>s!=='redion:write').map(s=>'<li>'+escape(labels[s]!)+'</li>').join('')+'</ul><form method="post" action="'+escape(authUrl.href)+'">'+
         '<input type="hidden" name="requestId" value="'+start.requestId+'"><input type="hidden" name="csrf" value="'+start.csrf+'">'+
         '<fieldset><legend>Zugängliche Arbeitsbereiche auswählen</legend>'+user.workspaces.slice(0,20).map(w=>'<label><input type="checkbox" name="workspace" value="'+escape(w.id)+'">'+escape(w.name)+
           (w.canWrite?'':' (nur lesen)')+'</label>').join('')+(user.workspaces.length?'':'<p>Du hast noch keinen synchronisierten Arbeitsbereich. Richte zuerst den Abgleich in Redion ein.</p>')+'</fieldset>'+
+        (start.scopes.includes('redion:write')
+          ? '<label><input type="checkbox" name="write" value="yes"><span><strong>Schreiben erlauben</strong> (standardmässig aus). Die KI darf dann Dokumente in den ausgewählten Arbeitsbereichen ändern.</span></label>'+
+            '<small>Schreibzugriff ist nur für Bereiche mit Bearbeitungsrecht möglich. Ohne Haken erhält diese Verbindung ausschliesslich Leserechte und allenfalls separat angeforderte Bildrechte.</small>'
+          : '<small>Diese Verbindung fragt nur Leserechte an. Für Schreiben muss der KI-Client beim erneuten Verbinden redion:write anfordern.</small>')+
         '<label><input type="checkbox" name="remember" value="yes" checked>Diese Freigabe bis zum Widerruf merken</label><small>Weitere Rechte verlangen erneut deine Zustimmung. Verbindungen kannst du unter '+
         '<a href="'+escape(settingsUrl)+'">Freigaben</a> widerrufen. Verschlüsselte private Inhalte bleiben für den Cloud-Dienst unlesbar.</small><div class="actions">'+
         '<button name="decision" value="allow">Verbindung erlauben</button><button name="decision" value="deny">Ablehnen</button></div></form>',200,new URL(start.redirectUri).origin);
