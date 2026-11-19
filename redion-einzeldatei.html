@@ -4868,6 +4868,15 @@ html[data-theme="light"] .banner{color:#37352f}
 </style>
 <style>
 /* ===== quell/schale/stil/einstellungen.css ===== */
+/* Die lokale Desktop-Freigabe bleibt im vorhandenen MCP-Einstellungsbereich. */
+.desktop-automation { padding-block: 12px 24px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+.desktop-automation > label, .desktop-automation fieldset label { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.desktop-automation [hidden] { display: none !important; }
+.desktop-automation fieldset { border: 1px solid var(--line); border-radius: 12px; padding: 8px 16px; margin-block: 16px; }
+.desktop-automation-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.desktop-automation-actions button { min-height: 44px; }
+.desktop-automation pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 220px; overflow: auto; }
+.desktop-automation [data-automation-sessions] { overflow-wrap: anywhere; white-space: pre-line; }
 /* ============================================================================
  * einstellungen.css — Einstellungen, Verbindungen, Konten, Kalender
  * ----------------------------------------------------------------------------
@@ -13478,16 +13487,16 @@ body[data-bewegung="ruhig"] .dev-actions button:active{transform:none}
   margin-left:auto;
   min-width:0;
 }
-.sp-wrap .sp-rechts > button {min-width:32px;min-height:35px;border-radius:10px}
+.sp-wrap .sp-rechts > button {min-width:44px;min-height:44px;border-radius:10px}
 .sp-wrap .sp-rechts .sp-bereiche {
   background:var(--bg-hover);
   border:1px solid var(--line);
   font-weight:600;
-  min-height:38px;
+  min-height:44px;
 }
 /* „▶ Strom" (E773) steht neben „Bereiche" und trägt wie er Text: dieselbe
    Höhe, sonst springt die Leiste um 3 px (test634 §1). */
-.sp-wrap .sp-rechts .sp-start {min-height:38px}
+.sp-wrap .sp-rechts .sp-start {min-height:44px}
 .sp-wrap .sp-palette-knopf {
   flex:0 0 auto;
   height:37px;
@@ -13751,7 +13760,7 @@ body[data-bewegung="ruhig"] .dev-actions button:active{transform:none}
 .sp-wrap .sp-kontext-titel {display:block;font-size:12px;font-weight:650;
   max-width:140px;min-width:42px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   border-right:1px solid var(--line);margin-right:5px;padding-right:10px}
-.sp-wrap .sp-kontextleiste button {flex:0 0 auto;min-width:37px;min-height:38px;
+.sp-wrap .sp-kontextleiste button {flex:0 0 auto;min-width:44px;min-height:44px;
   background:transparent;color:inherit;border:0;border-radius:10px;cursor:pointer;
   transition:transform 140ms ease,background-color 160ms ease}
 .sp-wrap .sp-kontextleiste button:hover {background:var(--bg-hover)}.sp-wrap .sp-kontextleiste button[data-kontext="loeschen"]:hover {color:var(--gefahr)}
@@ -13769,7 +13778,7 @@ body[data-bewegung="ruhig"] .dev-actions button:active{transform:none}
   .sp-wrap .sp-werkzeuge .sp-palette-knopf {height:44px;min-width:44px;padding:0 9px}
   .sp-wrap .sp-kontextleiste {top:8px;gap:1px;padding:4px}
   .sp-wrap .sp-kontext-titel {max-width:85px}
-  .sp-wrap .sp-kontextleiste button {min-width:35px;min-height:37px}
+  .sp-wrap .sp-kontextleiste button {min-width:44px;min-height:44px}
   .sp-wrap .sp-kontextleiste button span{display:none}
 }
 
@@ -13975,7 +13984,7 @@ body[data-bewegung="ruhig"] .dev-actions button:active{transform:none}
 .sp-wrap .sp-studio-kopf small,.sp-wrap .sp-pruef-titel p{display:block;margin:2px 0 0;color:var(--text-dim);font-size:12px}
 .sp-wrap .sp-studio-kopf button,.sp-wrap .sp-pruef-titel button{min-width:44px;min-height:44px;border:0;border-radius:12px;background:transparent;color:inherit;cursor:pointer}
 .sp-wrap :is(.sp-studio-tabs,.sp-pruef-tabs){display:flex;gap:4px;padding:3px;border-radius:12px;background:var(--bg-hover)}
-.sp-wrap :is(.sp-studio-tabs,.sp-pruef-tabs) button{flex:1 1 0;min-height:40px;border:0;border-radius:10px;background:transparent;color:var(--text-dim);font:inherit;font-size:13px;cursor:pointer}
+.sp-wrap :is(.sp-studio-tabs,.sp-pruef-tabs) button{flex:1 1 0;min-height:44px;border:0;border-radius:10px;background:transparent;color:var(--text-dim);font:inherit;font-size:13px;cursor:pointer}
 .sp-wrap :is(.sp-studio-tabs,.sp-pruef-tabs) button.an{background:var(--bg-card);color:var(--text);box-shadow:0 1px 3px rgb(0 0 0 / .18)}
 .sp-wrap .sp-studio-suchfeld,.sp-wrap .sp-pruef-werkzeuge label{display:grid;gap:4px;font-size:12px;color:var(--text-dim)}
 .sp-wrap .sp-studio :is(input,select),.sp-wrap .sp-pruef-suche{min-height:40px;box-sizing:border-box;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
@@ -14043,7 +14052,7 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
   color:var(--text);font:inherit
 }
 .sp-wrap .sp-batterie-fach button{
-  min-height:38px;padding:6px 11px;border:1px solid var(--line);
+  min-height:44px;padding:6px 11px;border:1px solid var(--line);
   border-radius:10px;background:var(--bg-hover);color:var(--text);cursor:pointer
 }
 .sp-wrap .sp-batterie-fach button:hover{border-color:var(--accent)}
@@ -14328,6 +14337,22 @@ body[data-bewegung="ruhig"] .sp-wrap .sp-flaeche .sp-umgelegt .sp-klinge{animati
    dass hier eine Leitung beginnt, und der Zeiger wird zum Fadenkreuz. */
 .sp-wrap .sp-klemme-nah .sp-flaeche{cursor:crosshair}
 .sp-wrap .sp-flaeche .sp-klemme-ring{pointer-events:none; color:var(--accent)}
+.sp-ink-tools{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;padding:.5rem .75rem;border-bottom:1px solid var(--line);background:var(--bg-card);color:var(--text)}
+.sp-ink-tools[hidden]{display:none}
+.sp-ink-tools label{display:flex;align-items:center;gap:.5rem;font-size:.8125rem}
+.sp-ink-tools input[type="color"]{width:var(--touch-min);height:var(--touch-min);border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--bg-card);cursor:pointer}
+.sp-ink-tools input[type="range"]{width:6rem;min-height:var(--touch-min);accent-color:var(--accent)}
+.sp-ink-tools button{min-height:var(--touch-min);padding:.5rem .75rem;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font:inherit;cursor:pointer}
+.sp-ink-tools button[aria-pressed="true"]{background:var(--bg-hover);border-color:var(--accent);font-weight:600}
+.sp-ink-tools :is(button,input):focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
+.sp-ink-hilfe{color:var(--text-dim);font-size:.8125rem}
+.sp-schreibt .sp-flaeche{cursor:crosshair}
+.sp-ink-aktiv .sp-flaeche{touch-action:none}
+.sp-ink-auswahl{pointer-events:none;vector-effect:non-scaling-stroke}
+.sp-ink-nass{pointer-events:none}
+.sp-connection-status{font-size:.8125rem;color:var(--text)}
+.sp-connection-status:empty{display:none}
+@media(max-width:760px){.sp-ink-hilfe{display:none}.sp-ink-tools{gap:.25rem;padding:.25rem .5rem}.sp-ink-tools input[type="range"]{width:4rem}}
 
 </style>
 <style>
@@ -22156,7 +22181,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .sp-fuss-inhalt{display:contents}
 .sp-zoom{display:flex; align-items:center; gap:2px; padding:2px; border-radius:9px;
   border:1px solid var(--line); background:var(--bg)}
-.sp-zoom button{width:32px; height:32px; border:0; border-radius:7px; background:transparent;
+.sp-zoom button{width:44px; height:44px; border:0; border-radius:7px; background:transparent;
   color:var(--text-dim); font-size:17px; line-height:1; cursor:pointer}
 .sp-zoom button:hover{background:var(--bg-hover); color:var(--text)}
 .sp-zoom button:active, .sp-zoom button[data-gedrueckt]{background:var(--bg-input)}
@@ -22188,7 +22213,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   vector-effect:non-scaling-stroke; pointer-events:none}
 .sp-vorschau{pointer-events:none}
 .sp-wahl{display:flex; align-items:center; gap:4px; flex-wrap:wrap}
-.sp-wahl button{min-height:32px; padding:4px 11px; border:1px solid var(--line); border-radius:20px;
+.sp-wahl button{min-height:44px; padding:4px 11px; border:1px solid var(--line); border-radius:20px;
   background:var(--bg); color:var(--text-dim); font-size:12px; cursor:pointer; position:relative}
 .sp-wahl button:hover{background:var(--bg-hover); color:var(--text)}
 .sp-wahl button.an{background:var(--accent); color:var(--auf-accent); border-color:var(--accent)}
@@ -24862,7 +24887,7 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
   width:100%; min-width:0; min-height:38px; padding:6px 9px;
   border:1px solid var(--line); border-radius:7px; font-size:14px;
   color:var(--text); background:var(--bg)}
-.sp-batterie-fach button{padding:8px 12px; min-height:38px;
+.sp-batterie-fach button{padding:8px 12px; min-height:44px;
   background:var(--bg-hover); color:var(--text); border:1px solid var(--line);
   border-radius:7px; cursor:pointer}
 .sp-batterie-fach button:hover{border-color:var(--accent)}
@@ -24886,8 +24911,8 @@ body[data-dokument="an"] .blatt-werk > .blatt-tafel > label.blatt-staerke.auf{
 .sp-bat-messung{background:var(--bg); border:1px solid var(--line);
   padding:10px; border-radius:9px; display:grid; gap:8px}
 .sp-bat-messung p{margin:0; line-height:1.45}
-.sp-bat-fehler{color:var(--danger,#c87164); font-weight:650}
-.sp-bat-gut{color:var(--success,#45996b); font-weight:650}
+.sp-bat-fehler{color:var(--gefahr); font-weight:650}
+.sp-bat-gut{color:var(--erfolg); font-weight:650}
 .sp-bat-werte{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px}
 .sp-bat-werte span{border:1px solid var(--line); border-radius:6px;
   padding:6px; min-width:0; overflow-wrap:anywhere}
@@ -27131,13 +27156,13 @@ body[data-bewegung="ruhig"] #page > .pg-tools > button{
 .bib[data-bib-bereich] .bib-gitter{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px;align-items:stretch}
 .bib[data-bib-bereich] .bib-zelle{min-width:0;isolation:isolate}
 .bib[data-bib-bereich] .bib-deckel{height:100%;padding:0 14px 16px;border:1px solid var(--line);border-radius:18px;background:var(--bg-card);box-shadow:0 2px 5px #00000006;transition:border-color var(--motion-fast) var(--ease),box-shadow var(--motion-fast) var(--ease)}
-.bib-card-kind{display:block;min-height:44px;line-height:44px;padding-right:78px;font-size:11px;font-weight:600;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bib-card-kind{display:block;min-height:44px;line-height:44px;padding-right:78px;font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bib[data-bib-bereich] .bib-deckel-blatt{aspect-ratio:4/3;margin:0 0 12px;border-radius:8px;box-shadow:none;background:var(--bg-side);font-size:10px;line-height:1.65;padding:14px 12px 0;transform-origin:50% 90%}
 .bib[data-bib-bereich] .bib-deckel-blatt::after{background:linear-gradient(transparent,var(--bg-side))}
 .bib[data-bib-bereich] .bib-zelle>.bib-deckel:not([data-art="ordner"]) .bib-deckel-blatt::before{display:none}
 .bib[data-bib-bereich] .bib-deckel-name{padding-top:0;gap:6px}
 .bib[data-bib-bereich] .bib-deckel-name b{font-size:15px;line-height:1.4;min-height:42px;font-weight:620;overflow-wrap:anywhere}
-.bib[data-bib-bereich] .bib-card-meta{font-size:11px;line-height:1.6;margin-top:6px;color:var(--text-dim)}
+.bib[data-bib-bereich] .bib-card-meta{font-size:11px;line-height:1.6;margin-top:6px;color:var(--text)}
 .bib[data-bib-bereich] .bib-deckel-bild{object-fit:contain;background:var(--bg-side)}
 .bib[data-bib-bereich] .bib-zelle>.bib-deckel-mehr{top:0;right:0}
 .bib[data-bib-bereich] .bib-zelle>.bib-deckel-mehr i{box-shadow:none;background:transparent}
@@ -28262,6 +28287,7 @@ body[data-ui-shell="glass-wheel"] .gw-announcement{position:absolute;width:1px;h
 @media(prefers-reduced-motion:reduce){body[data-ui-shell="glass-wheel"] .gw-area{transition:none}}
 body[data-ui-shell="glass-wheel"][data-bewegung="ruhig"] .gw-area{transition:none}
 @media(prefers-reduced-transparency:reduce),(prefers-contrast:more),(forced-colors:active){
+  body[data-ui-shell="glass-wheel"]{--glas-blur:none}
   body[data-ui-shell="glass-wheel"]{--gw-surface:var(--bg-side);--gw-edge:var(--text);--gw-blur:0px;--gw-shadow:none}
   body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){-webkit-backdrop-filter:none;backdrop-filter:none}
   body[data-ui-shell="glass-wheel"]{background:var(--bg)}
@@ -28271,6 +28297,39 @@ body[data-ui-shell="glass-wheel"][data-kontrast="hoch"]{--gw-surface:var(--bg-si
 body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.gw-rim,#handy-oben){-webkit-backdrop-filter:none;backdrop-filter:none}
 :root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"]{--gw-surface:var(--bg-side);--gw-edge:var(--text);--gw-shadow:none;background:var(--bg)}
 :root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){-webkit-backdrop-filter:none;backdrop-filter:none}
+/* E790: Arbeitswerkzeuge auf Windows und im gemeinsamen Dokumentraum.
+   Eine Glasfläche je Werkzeuggruppe; Papier und Zeichnung bleiben deckend. */
+body[data-ui-shell="glass-wheel"] :is(.sp-kopf,.sp-werkzeuge,.sp-ink-tools,.sp-kontextleiste,.sp-palette,.sp-studio,.document-toolbar,.document-drawingbar,.menu){
+  border-color:var(--gw-edge);background:var(--bg-card);
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--text) 9%,transparent),var(--gw-shadow);
+}
+body[data-ui-shell="glass-wheel"] :is(.sp-wrap,.document-sheet,.sp-buehne){background:var(--bg-card)}
+body[data-ui-shell="glass-wheel"] .sp-wrap{border-color:var(--gw-edge);border-radius:var(--radius-lg);overflow:clip}
+body[data-ui-shell="glass-wheel"] .sp-kontextleiste{border-radius:var(--radius-lg)}
+@media(min-width:761px){
+  body[data-ui-shell="glass-wheel"]:has(#title,.document-workspace,.sp-wrap) .gw-shell[data-expanded="false"] .gw-tray{display:none}
+}
+@supports((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  /* Kein Filter am Kopf: er würde den Bezug des absolut gesetzten Docks ändern. */
+  body[data-ui-shell="glass-wheel"] :is(.sp-werkzeuge,.sp-ink-tools,.sp-kontextleiste,.sp-palette,.sp-studio,.document-toolbar,.document-drawingbar,.menu){
+    background:color-mix(in srgb,var(--bg-card) 86%,transparent);
+    -webkit-backdrop-filter:var(--glas-blur);backdrop-filter:var(--glas-blur);
+  }
+  body[data-ui-shell="glass-wheel"] .sp-ink-aktiv :is(.sp-werkzeuge,.sp-ink-tools,.sp-kontextleiste){
+    background:var(--bg-card);-webkit-backdrop-filter:none;backdrop-filter:none;
+  }
+}
+@media(prefers-reduced-transparency:reduce),(prefers-contrast:more),(forced-colors:active){
+  body[data-ui-shell="glass-wheel"] :is(.sp-kopf,.sp-werkzeuge,.sp-ink-tools,.sp-kontextleiste,.sp-palette,.sp-studio,.document-toolbar,.document-drawingbar,.menu){
+    background:var(--bg-card);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;
+  }
+}
+body[data-ui-shell="glass-wheel"][data-kontrast="hoch"],
+:root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"]{--glas-blur:none}
+body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.sp-kopf,.sp-werkzeuge,.sp-ink-tools,.sp-kontextleiste,.sp-palette,.sp-studio,.document-toolbar,.document-drawingbar,.menu),
+:root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"] :is(.sp-kopf,.sp-werkzeuge,.sp-ink-tools,.sp-kontextleiste,.sp-palette,.sp-studio,.document-toolbar,.document-drawingbar,.menu){
+  background:var(--bg-card);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;
+}
 
 </style>
 <!-- REDION 2 (E782): die Marken EINER Skala und die ruhigen Hauptflächen.
@@ -28448,19 +28507,16 @@ body:not([data-ui-shell="glass-wheel"]) #page .b-h1 .ct{font-size:var(--t-h1); f
 body:not([data-ui-shell="glass-wheel"]) #page .b-h2 .ct{font-size:var(--t-h2); font-weight:var(--w-semibold); letter-spacing:-.15px; padding-top:var(--space-5)}
 body:not([data-ui-shell="glass-wheel"]) #page .b-h3 .ct{font-size:var(--t-h3); font-weight:var(--w-semibold); padding-top:var(--space-4)}
 
-/* DIE SEITENWERKZEUGE (E783): kein Kasten, keine Rubrik „SEITENWERKZEUGE"
-   — dieselben fünf `button[data-a]` als EINE stille Textzeile unter dem
-   Titel. Am Rechner sichtbar, solange der Zeiger auf der Seite steht ODER
-   der Fokus in der Zeile ist (die Regel aus aufbau.css:158, die „Workspace
-   2.0" überstimmt hatte — jetzt mit `:focus-within`, damit die Tastatur
-   sie nicht unsichtbar trifft). Am Telefon bleibt die Zeile stehen. */
+/* DIE SEITENWERKZEUGE (E783): eine ruhige Zeile mit sichtbaren Funktionen.
+   Auf Desktop und Mobilgeräten bleibt sie ohne Hover dauerhaft erreichbar.
+   Die Gruppenbeschriftung ist auf Desktop sichtbar, auf Mobilgeräten nur
+   aus Platzgründen ausgeblendet. Tastatur und Berührung bleiben erhalten. */
 body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools{
   background:none; border:0; box-shadow:none; padding:0;
   margin:0 0 var(--space-5) calc(var(--space-2) * -1); gap:2px;
 }
-body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > .pg-tools-caption{display:none}
 body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button{
-  background:transparent; border:1px solid transparent; color:var(--text-faint);
+  background:transparent; border:1px solid transparent; color:var(--text-dim);
   font-size:var(--t-small); font-weight:var(--w-medium);
   border-radius:var(--radius-sm); padding:var(--space-1) var(--space-3);
 }
@@ -28469,14 +28525,8 @@ body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button:is(:hover,:fo
   background:var(--bg-hover); color:var(--text); border-color:transparent;
 }
 body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button:focus-visible{outline:2px solid var(--accent-text); outline-offset:1px}
-@media (min-width:761px) and (hover:hover){
-  /* 32 px (§37 Nebenweg): Cover, Breite, Schrift, Vorlage und KI stehen
-     alle auch im ⋯ der Seite; die Zeile ist der kurze Weg für die Maus. */
-  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button{min-height:32px}
-  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools{opacity:0; transition:opacity var(--motion-fast) var(--ease)}
-  body:not([data-ui-shell="glass-wheel"]) #page:hover > .pg-tools,
-  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools:focus-within{opacity:1}
-}
+/* Die Schaltflächen behalten die 44-px-Trefffläche aus studio.css (§37).
+   Keine unsichtbare Toolbar bis zum ersten Hover. */
 @media (max-width:760px){
   body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools{margin-left:0}
   body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button{color:var(--text-dim); font-size:var(--t-small)}
@@ -28534,7 +28584,7 @@ body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel-blatt
 body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel-name b{
   font-size:var(--t-body); font-weight:var(--w-semibold);
 }
-body:not([data-ui-shell="glass-wheel"]) .bib-card-kind{font-size:var(--t-caption); font-weight:var(--w-medium); color:var(--text-faint)}
+body:not([data-ui-shell="glass-wheel"]) .bib-card-kind{font-size:var(--t-caption); font-weight:var(--w-medium); color:var(--text-dim)}
 /* ☆ und ⋯ am Rechner erst bei Zeiger oder Fokus auf der Karte (E784).
    Gedrückt (☆ gemerkt) bleibt der Stern stehen; am Telefon und mit grobem
    Zeiger bleiben beide immer sichtbar (§37, test597 §1). Unsichtbar heisst
@@ -30041,7 +30091,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1588, inhalt: '9f9d3173663f29d0', gebaut: '2026-11-15T16:14:21.713Z' };
+const Stand = { fassung: 1614, inhalt: '04aba50885d45b35', gebaut: '2026-11-18T19:43:58.842Z' };
 window.Stand = Stand;
 
 </script>
@@ -32625,7 +32675,44 @@ const InkStroke = (() => {
             return zeit ? r2(weg / zeit) : 0;
         };
     };
-    return { Feder, glaetter, druckGlaetter, vorhersage, deckeln, bremse, tempoFaktor, tempoMesser,
+    const samples = (event) => {
+        const list = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
+        const last = list[list.length - 1];
+        return !last || last.clientX !== event.clientX || last.clientY !== event.clientY ||
+            last.timeStamp !== event.timeStamp || last.pressure !== event.pressure ? [...list, event] : list;
+    };
+    const inkColor = (value) => typeof value === 'string' && /^#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})$/i.test(value) ? value : '#529cca';
+    const tiltOf = (event) => {
+        if (event.pointerType !== 'pen')
+            return -1;
+        const tx = Number(event.tiltX) || 0, ty = Number(event.tiltY) || 0;
+        if (!tx && !ty)
+            return -1;
+        const radians = Math.PI / 180;
+        const angle = Math.atan(Math.hypot(Math.tan(tx * radians), Math.tan(ty * radians))) / radians;
+        return Math.round(Math.max(0, Math.min(1, angle / 90)) * 100) / 100;
+    };
+    const readAnnotation = (raw) => {
+        if (!raw || typeof raw !== 'object')
+            return null;
+        const r = raw;
+        if (typeof r.id !== 'string' || !r.id || !Array.isArray(r.pts) || !r.pts.length ||
+            r.pts.some(p => !Array.isArray(p) || p.length !== 2 || !p.every(v => typeof v === 'number' && Number.isFinite(v))))
+            return null;
+        const pts = r.pts.map(p => [p[0], p[1]]);
+        const mark = { id: r.id, art: 'stift', pts, farbe: inkColor(r.farbe),
+            breite: typeof r.breite === 'number' && Number.isFinite(r.breite) ? Math.max(.3, Math.min(24, r.breite)) : 2.4,
+            ebene: typeof r.ebene === 'string' ? r.ebene : 'plan' };
+        for (const key of ['pressure', 'neigung']) {
+            const values = r[key];
+            if (Array.isArray(values) && values.length === pts.length && values.every(v => typeof v === 'number' && Number.isFinite(v)))
+                mark[key] = values.map(v => key === 'pressure' ? Math.max(0, Math.min(1, v)) : v);
+        }
+        return mark;
+    };
+    const inkHalfWidth = (mark, pressure = .5) => Math.max(.15, mark.breite * (.35 + Math.max(0, Math.min(1, pressure)) * .9) / 2);
+    return { samples, tiltOf, inkColor, readAnnotation, inkHalfWidth,
+        Feder, glaetter, druckGlaetter, vorhersage, deckeln, bremse, tempoFaktor, tempoMesser,
         ALPHA_LANGSAM, ALPHA_SCHNELL, TEMPO_VOLL,
         VORHER_MS, VORHER_PX, KEHRE, TEMPO_AB, TEMPO_BIS, TEMPO_FENSTER };
 })();
@@ -40729,6 +40816,39 @@ const RegisterAktionen = (() => {
     return { melde, fuer, tun, taste, alle, GRUPPEN };
 })();
 window.Register.aktionen = RegisterAktionen;
+
+</script>
+<script>
+/* ===== quell/register/automatisierung.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/automatisierung.ts (npm run bauen:ts). */
+const RegisterAutomatisierung = (() => {
+    const handlers = new Map();
+    const melde = (name, handler) => {
+        if (!window.RedionDesktop?.onAutomationRequest || window.RedionDesktop.automationSupported === false)
+            return;
+        if (handlers.has(name))
+            throw new Error('Automatisierungsaktion doppelt: ' + name);
+        handlers.set(name, handler);
+    };
+    const ausfuehren = async (name, input, context) => {
+        const handler = handlers.get(name);
+        if (!handler)
+            context.error('UNSUPPORTED_ACTION');
+        context.check();
+        return handler(input, context);
+    };
+    let ansichtsDienst = null;
+    const meldeAnsicht = (dienst) => {
+        if (ansichtsDienst)
+            throw new Error('MCP-Ansicht doppelt angemeldet');
+        ansichtsDienst = dienst;
+    };
+    const ansicht = () => ansichtsDienst?.html() ?? '';
+    const montiereAnsicht = (container) => { ansichtsDienst?.mount(container); };
+    return { melde, ausfuehren, namen: () => [...handlers.keys()], meldeAnsicht, ansicht, montiereAnsicht };
+})();
+Register.automatisierung = RegisterAutomatisierung;
 
 </script>
 <script>
@@ -59349,8 +59469,8 @@ const Zusatz = (() => {
             return [Math.round(sicht.x + (e.clientX - r.left) / sicht.z),
                 Math.round(sicht.y + (e.clientY - r.top) / sicht.z)];
         };
-        const punktFein = (e) => {
-            const ueberMatrix = (typeof SheetSpace !== 'undefined' && SheetSpace.umrechner)
+        const punktFein = (e, convert) => {
+            const ueberMatrix = convert ? convert(e) : (typeof SheetSpace !== 'undefined' && SheetSpace.umrechner)
                 ? SheetSpace.umrechner(flaeche)(e) : null;
             const r2 = (v) => Math.round(v * 100) / 100;
             if (ueberMatrix)
@@ -59362,6 +59482,8 @@ const Zusatz = (() => {
         let stiftDruck = null;
         let stiftZeit = 0;
         let stiftBildGeplant = false;
+        let stiftZeiger = null;
+        let stiftArt = '';
         const stiftNachziehen = () => {
             stiftBildGeplant = false;
             if (!aktiv || aktiv.art !== 'stift')
@@ -59451,6 +59573,13 @@ const Zusatz = (() => {
             }
         });
         flaeche.addEventListener('pointerdown', (e) => {
+            if (stiftZeiger !== null) {
+                if (stiftArt === 'pen' && e.pointerType === 'touch') {
+                    e.preventDefault();
+                    return;
+                }
+                fertig();
+            }
             w.focus({ preventScroll: true });
             flaeche.setPointerCapture(e.pointerId);
             finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -59565,9 +59694,18 @@ const Zusatz = (() => {
                 aktiv.pressure = [Math.round(e.pressure * 1000) / 1000];
             }
             stiftZeit = Number(e.timeStamp) || 0;
+            if (werkzeug === 'stift') {
+                stiftZeiger = e.pointerId;
+                stiftArt = e.pointerType;
+                window.addEventListener('pointerup', fertig, true);
+                window.addEventListener('pointercancel', fertig, true);
+                window.addEventListener('blur', stiftAbsetzen);
+            }
             daten.push(aktiv);
         });
         flaeche.addEventListener('pointermove', (e) => {
+            if (stiftZeiger !== null && e.pointerId !== stiftZeiger)
+                return;
             if (finger.has(e.pointerId))
                 finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (kneifen && finger.size >= 2) {
@@ -59613,9 +59751,9 @@ const Zusatz = (() => {
             if (!aktiv)
                 return;
             if (aktiv.art === 'stift') {
-                const gesammelt = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : [];
-                for (const ereignis of (gesammelt.length ? gesammelt : [e])) {
-                    const roh = punktFein(ereignis);
+                const convert = SheetSpace.umrechner(flaeche);
+                for (const ereignis of InkStroke.samples(e)) {
+                    const roh = punktFein(ereignis, convert);
                     const jetzt = Number(ereignis.timeStamp) || stiftZeit + 16;
                     const dt = Math.max(1, jetzt - stiftZeit);
                     stiftZeit = jetzt;
@@ -59639,6 +59777,13 @@ const Zusatz = (() => {
             male();
         });
         const fertig = (e) => {
+            if (stiftZeiger !== null && typeof e?.pointerId === 'number' && e.pointerId !== stiftZeiger)
+                return;
+            stiftZeiger = null;
+            stiftArt = '';
+            window.removeEventListener('pointerup', fertig, true);
+            window.removeEventListener('pointercancel', fertig, true);
+            window.removeEventListener('blur', stiftAbsetzen);
             if (e && typeof e.pointerId === 'number')
                 finger.delete(e.pointerId);
             if (finger.size < 2)
@@ -59691,7 +59836,11 @@ const Zusatz = (() => {
         };
         flaeche.addEventListener('pointerup', fertig);
         flaeche.addEventListener('pointercancel', fertig);
-        flaeche.addEventListener('pointerleave', fertig);
+        const stiftAbsetzen = () => { if (stiftZeiger !== null)
+            fertig(); };
+        flaeche.addEventListener('lostpointercapture', stiftAbsetzen);
+        flaeche.addEventListener('pointerleave', e => { if (!flaeche.hasPointerCapture(e.pointerId))
+            fertig(e); });
         flaeche.addEventListener('dblclick', (e) => {
             const sid = e.target?.dataset?.sid;
             const s = daten.find((q) => q.id === sid);
@@ -63642,13 +63791,8 @@ const Marken = (() => {
         const neigungAus = (event) => {
             if (event.pointerType !== 'pen')
                 return -1;
-            const tx = Number(event.tiltX) || 0;
-            const ty = Number(event.tiltY) || 0;
-            if (!tx && !ty)
-                return -1;
-            const r = Math.PI / 180;
-            const w = Math.atan(Math.hypot(Math.tan(tx * r), Math.tan(ty * r))) / r;
-            return Math.round(Math.max(0, Math.min(1, w / 90)) * 100) / 100;
+            const { tiltX, tiltY, pointerType } = event;
+            return InkStroke.tiltOf({ tiltX, tiltY, pointerType });
         };
         const pressureOf = (event) => {
             const pressure = Number(event.pressure);
@@ -65135,8 +65279,7 @@ const Marken = (() => {
             if (!radierStrich && !selectDrag && running
                 && (running.art === 'stift' || running.art === 'marker')) {
                 const um = R.umrechner(flaeche);
-                const coalesced = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
-                (coalesced.length ? coalesced : [event]).forEach(e => addSample(e, um));
+                InkStroke.samples(event).forEach(e => addSample(e, um));
                 nassenSchwanz(event, um);
                 bildAnfordern();
                 return;
@@ -70288,6 +70431,8 @@ const Schaltplan = (() => {
             art: a.id,
             breite: Number(roh.breite) || (a.quer ? 1000 : 800),
             hoehe: Number(roh.hoehe) || (a.quer ? 600 : 700),
+            ...(Array.isArray(roh.ink) ? { ink: roh.ink.map(InkStroke.readAnnotation)
+                    .filter((m) => m !== null) } : {}),
             teile: (Array.isArray(roh.teile) ? roh.teile : []).map((t) => ({
                 id: String(t.id || uid()),
                 zeichen: String(t.zeichen || ''),
@@ -70945,6 +71090,7 @@ const Schaltplan = (() => {
         const teile = plan.teile.filter(t => ids.has(t.id));
         const leitungen = plan.leitungen.filter(l => ids.has(l.id));
         const texte = plan.texte.filter(x => ids.has(x.id));
+        const ink = (plan.ink || []).filter(m => ids.has(m.id));
         let abb = T;
         if (!abb) {
             const xs = [], ys = [];
@@ -70957,6 +71103,7 @@ const Schaltplan = (() => {
             });
             leitungen.forEach(l => l.punkte.forEach(p => { xs.push(p.x); ys.push(p.y); }));
             texte.forEach(x => { xs.push(x.x); ys.push(x.y); });
+            ink.forEach(m => m.pts.forEach(p => { xs.push(p[0]); ys.push(p[1]); }));
             if (!xs.length)
                 return { teile: [], bericht: [], vorher };
             const g = { x: rasten((Math.min(...xs) + Math.max(...xs)) / 2), y: rasten((Math.min(...ys) + Math.max(...ys)) / 2) };
@@ -70980,13 +71127,14 @@ const Schaltplan = (() => {
         });
         leitungen.forEach(l => { l.punkte = l.punkte.map(p => { const q = abb(p); return { x: rasten(q.x), y: rasten(q.y) }; }); });
         texte.forEach(x => { const q = abb(x); x.x = rasten(q.x); x.y = rasten(q.y); });
+        ink.forEach(m => { m.pts = m.pts.map(p => { const q = abb({ x: p[0], y: p[1] }); return [+q.x.toFixed(2), +q.y.toFixed(2)]; }); });
         const ids2 = teile.map(t => t.id);
         const bericht = ids2.length ? nachziehen(plan, vorher, ids2, { heilen: true }) : [];
         return { teile: ids2, bericht, vorher };
     };
     const planDrehen = (plan) => {
         const H = Number(plan.hoehe) || 700, W = Number(plan.breite) || 800;
-        const alle = new Set([...plan.teile.map(t => t.id), ...plan.leitungen.map(l => l.id), ...plan.texte.map(x => x.id)]);
+        const alle = new Set([...plan.teile.map(t => t.id), ...plan.leitungen.map(l => l.id), ...plan.texte.map(x => x.id), ...(plan.ink || []).map(m => m.id)]);
         const r = gruppeUmformen(plan, alle, 'drehen', p => ({ x: H - p.y, y: p.x }));
         plan.breite = H;
         plan.hoehe = W;
@@ -71100,6 +71248,35 @@ const Schaltplan = (() => {
     };
     const teilMasse = (t) => (typeof Register !== 'undefined' && Register.fachzeichen && Register.fachzeichen.holen(t.zeichen))
         ? Register.fachzeichen.masse(t.zeichen, t.drehung) : { ...UNBEKANNT_MASS };
+    const teilRahmen = (t, dx = 0, dy = 0) => {
+        const m = teilMasse(t), zc = Register.fachzeichen.holen(t.zeichen);
+        const cx = Number(t.x) + dx + (zc ? zc.w : UNBEKANNT_MASS.w) / 2;
+        const cy = Number(t.y) + dy + (zc ? zc.h : UNBEKANNT_MASS.h) / 2;
+        return { l: cx - m.w / 2, o: cy - m.h / 2, r: cx + m.w / 2, u: cy + m.h / 2 };
+    };
+    const inkBounds = (mark) => {
+        let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+        for (const p of mark.pts) {
+            x1 = Math.min(x1, p[0]);
+            y1 = Math.min(y1, p[1]);
+            x2 = Math.max(x2, p[0]);
+            y2 = Math.max(y2, p[1]);
+        }
+        const r = mark.breite / 2;
+        return { x1: x1 - r, y1: y1 - r, x2: x2 + r, y2: y2 + r };
+    };
+    const inkSvg = (mark, selected = false) => {
+        const halves = mark.pts.map((_p, i) => InkStroke.inkHalfWidth(mark, mark.pressure?.[i]));
+        const p = mark.pts[0];
+        if (!p)
+            return '';
+        const shape = mark.pts.length === 1
+            ? `<circle cx="${p[0]}" cy="${p[1]}" r="${halves[0]}"/>`
+            : `<path d="${InkGeometry.outline(mark.pts, halves)}"/>`;
+        const b = selected ? inkBounds(mark) : null;
+        return `<g class="sp-ink" data-id="${esc(mark.id)}" data-ink="${esc(mark.id)}" fill="${InkStroke.inkColor(mark.farbe)}">` + shape +
+            (b ? `<rect class="sp-ink-auswahl" x="${b.x1 - 3}" y="${b.y1 - 3}" width="${b.x2 - b.x1 + 6}" height="${b.y2 - b.y1 + 6}" fill="none" stroke="currentColor" stroke-dasharray="4 3"/>` : '') + '</g>';
+    };
     const alsSvg = (plan, opt = {}) => {
         const sichtbar = (ebene) => {
             if (opt.nurEbenen)
@@ -71313,6 +71490,9 @@ const Schaltplan = (() => {
             teile.push(`<text class="sp-text${gewaehlt ? ' sp-gewaehlt' : ''}" data-id="${esc(x.id)}" x="${x.x}" y="${x.y}" ` +
                 `font-size="13" fill="${farbeVon(x.ebene)}" stroke="none">${tief(x.t)}</text>`);
         });
+        for (const mark of plan.ink || [])
+            if (sichtbar(mark.ebene))
+                teile.push(inkSvg(mark, opt.auswahl?.has(mark.id)));
         return `<svg class="sp-flaeche" viewBox="0 0 ${plan.breite} ${plan.hoehe}" ` +
             `width="${plan.breite}" height="${plan.hoehe}">` + teile.join('') + '</svg>';
     };
@@ -71421,7 +71601,7 @@ const Schaltplan = (() => {
         return false;
     };
     return {
-        ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, teilMasse, rasten,
+        ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, inkSvg, inkBounds, teilMasse, teilRahmen, rasten,
         naechstesBmk, anschlussOrt, anschluesseVon, klemmeFuer, fangeAnschluss, rechtwinklig,
         kontakte, vorherMerken, nachziehen, veraendert, verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
         netzBauen, BEISPIELE, beispielBauen, uid, esc,
@@ -72650,9 +72830,12 @@ const Planflaeche = (() => {
             ergebnis: null
         };
         const abzug = () => JSON.stringify(z.plan);
-        const aendere = (was, merken = true, vorherAbzug) => {
-            if (z.zieht)
+        const electricalState = (p) => JSON.stringify({ art: p.art, breite: p.breite,
+            hoehe: p.hoehe, teile: p.teile, leitungen: p.leitungen, texte: p.texte, ebenen: p.ebenen });
+        const aendere = (was, merken = true, vorherAbzug, inkOnly = false) => {
+            if (z.zieht || (z.simulation && !inkOnly))
                 return;
+            connectionStatus.textContent = '';
             const vorher = merken ? (vorherAbzug ?? abzug()) : '';
             was();
             if (z.plan.relaisLegacy && vorher &&
@@ -72671,7 +72854,7 @@ const Planflaeche = (() => {
                 block.plan = kopie;
             if (merken)
                 z.verlauf.merken(vorher);
-            male();
+            male(inkOnly);
         };
         const zurueck = () => {
             if (z.zieht)
@@ -72679,8 +72862,13 @@ const Planflaeche = (() => {
             const vorher = z.verlauf.zurueck(abzug());
             if (vorher === null)
                 return;
+            if (z.simulation && electricalState(JSON.parse(vorher)) !== electricalState(z.plan)) {
+                z.verlauf.vor(vorher);
+                UI.toast('Simulation anhalten, um die Schaltung zu ändern.');
+                return;
+            }
             z.plan = JSON.parse(vorher);
-            aendere(() => { }, false);
+            aendere(() => { }, false, undefined, true);
         };
         const vorwaerts = () => {
             if (z.zieht)
@@ -72688,8 +72876,13 @@ const Planflaeche = (() => {
             const naechster = z.verlauf.vor(abzug());
             if (naechster === null)
                 return;
+            if (z.simulation && electricalState(JSON.parse(naechster)) !== electricalState(z.plan)) {
+                z.verlauf.zurueck(naechster);
+                UI.toast('Simulation anhalten, um die Schaltung zu ändern.');
+                return;
+            }
             z.plan = JSON.parse(naechster);
-            aendere(() => { }, false);
+            aendere(() => { }, false, undefined, true);
         };
         const kopf = document.createElement('div');
         kopf.className = 'sp-kopf';
@@ -72732,7 +72925,7 @@ const Planflaeche = (() => {
         einstieg.hidden = true;
         buehne.appendChild(einstieg);
         const einstiegMalen = () => {
-            const leer = !z.plan.teile.length && !z.plan.leitungen.length && !z.plan.texte.length;
+            const leer = !z.plan.teile.length && !z.plan.leitungen.length && !z.plan.texte.length && !z.plan.ink?.length;
             const zeigen = leer && !z.simulation && !paletteOffen && !studioOffen && !z.gewaehltesZeichen && z.werkzeug === 'zeigen';
             if (einstieg.hidden === !zeigen && (!zeigen || einstieg.dataset.art === z.plan.art))
                 return;
@@ -72784,6 +72977,11 @@ const Planflaeche = (() => {
         const fussInhalt = document.createElement('div');
         fussInhalt.className = 'sp-fuss-inhalt';
         fuss.appendChild(fussInhalt);
+        const connectionStatus = document.createElement('span');
+        connectionStatus.className = 'sp-connection-status';
+        connectionStatus.setAttribute('role', 'status');
+        connectionStatus.setAttribute('aria-live', 'polite');
+        fuss.appendChild(connectionStatus);
         fuss.appendChild(zoomleiste);
         wurzel.appendChild(kopf);
         wurzel.appendChild(labor);
@@ -72818,7 +73016,8 @@ const Planflaeche = (() => {
             { id: 'leitung', name: 'Leitung', sym: 'inkConnector', taste: '2', titel: 'Leitung ziehen' },
             { id: 'text', name: 'Text', sym: 'inkText', taste: '3', titel: 'Beschriftung setzen' },
             { id: 'schiene', name: 'Schiene', sym: 'busbar', taste: '4', titel: 'Schiene zeichnen — L1, L2, L3, N, PE' },
-            { id: 'radieren', name: 'Radierer', sym: 'inkEraser', taste: '5', titel: 'Radieren — über die Fläche wischen' }
+            { id: 'radieren', name: 'Radierer', sym: 'inkEraser', taste: '5', titel: 'Radieren — über die Fläche wischen' },
+            { id: 'stift', name: 'Stift', sym: 'inkPen', taste: '6', titel: 'Freihand schreiben und skizzieren' }
         ];
         const symbol = (id, gr = 20) => (typeof Register !== 'undefined' && Register.symbole) ? Register.symbole.alsSvg(id, gr) : '';
         const kopfLinks = document.createElement('span');
@@ -72871,7 +73070,10 @@ const Planflaeche = (() => {
                 const an = b.dataset.wz === z.werkzeug;
                 b.classList.toggle('an', an);
                 b.setAttribute('aria-pressed', String(an));
+                b.disabled = z.simulation && !['zeigen', 'stift'].includes(b.dataset.wz || '');
             });
+            inkTools.hidden = z.werkzeug !== 'stift';
+            buehne.classList.toggle('sp-schreibt', z.werkzeug === 'stift');
             const pk = dock.querySelector('.sp-palette-knopf');
             if (pk) {
                 pk.classList.toggle('an', paletteOffen);
@@ -73074,7 +73276,7 @@ const Planflaeche = (() => {
                                 (Register.fachzeichen.holen(z.gewaehltesZeichen) || { name: '?' }).name + '" zu setzen'
                             : 'Bauteil mit Maus, Finger oder Stift direkt aus der Palette ziehen')}</span>`) +
                     `<span class="sp-zahlen">${z.plan.teile.length} Teile · ${z.plan.leitungen.length} Leitungen</span>` +
-                    `<span class="sp-quick-help">B: Palette · /: Suche · P: Stromtest · 1–5: Werkzeuge</span>`;
+                    `<span class="sp-quick-help">B: Palette · /: Suche · P: Stromtest · 1–6: Werkzeuge</span>`;
         };
         const paletteInfokarte = (id = z.gewaehltesZeichen) => {
             const kasten = palette.querySelector('.sp-pal-inspektor');
@@ -73202,12 +73404,14 @@ const Planflaeche = (() => {
         };
         let zuletztGemalt = {};
         const buehneMalen = () => {
+            if (inkSession)
+                return;
             const e = z.ergebnis;
             const opt = {
                 raster: z.zeigeRaster,
                 anschluesse: z.simulation ? false : z.zeigeAnschluesse,
                 nummern: z.zeigeNummern,
-                auswahl: z.simulation ? new Set() : z.auswahl
+                auswahl: z.simulation ? new Set([...z.auswahl].filter(id => inkVon(id))) : z.auswahl
             };
             if (e && e.ok)
                 opt.strom = {
@@ -73304,10 +73508,11 @@ const Planflaeche = (() => {
                     `<button type="button" data-kontext="loeschen" title="Löschen (Entf)" aria-label="Löschen">✕</button>` +
                     `<button type="button" data-kontext="abwahl" title="Auswahl aufheben" aria-label="Auswahl aufheben">×</button>`;
         };
-        const male = () => {
+        const male = (inkOnly = false) => {
             if (z.simulation && karteId)
                 karteSchliessen();
-            rechnen();
+            if (!inkOnly)
+                rechnen();
             kopfMalen();
             buehneMalen();
             fussMalen();
@@ -73436,9 +73641,12 @@ const Planflaeche = (() => {
             });
             z.plan.leitungen.forEach(l => (l.punkte || []).forEach((q) => nimm(q.x, q.y, q.x, q.y)));
             z.plan.texte.forEach(x => nimm(x.x, x.y - 13, x.x + String(x.t || '').length * 7.5, x.y + 4));
+            (z.plan.ink || []).forEach((m) => { const b = Schaltplan.inkBounds(m); nimm(b.x1, b.y1, b.x2, b.y2); });
             return Number.isFinite(x1) ? { x1, y1, x2, y2 } : null;
         };
         const einpassen = () => {
+            if (z.zieht)
+                return;
             ansichtVomNutzer = false;
             const svg = svgJetzt();
             const r = svg ? svg.getBoundingClientRect() : null;
@@ -73496,8 +73704,13 @@ const Planflaeche = (() => {
         const buehnenBeobachter = typeof ResizeObserver === 'function' ? new ResizeObserver(() => {
             const r = buehne.getBoundingClientRect();
             if (!wurzel.isConnected || r.width < 1 || r.height < 1) {
-                if (!wurzel.isConnected && !platzhalter)
+                if (!wurzel.isConnected && !platzhalter) {
+                    if (inkSession) {
+                        zugLoesen();
+                        inkClear();
+                    }
                     buehnenBeobachter?.disconnect();
+                }
                 return;
             }
             const mass = `${Math.round(r.width)}×${Math.round(r.height)}`;
@@ -73846,14 +74059,7 @@ const Planflaeche = (() => {
             }
             const r = Register.fachzeichen.RASTER;
             const rand = r;
-            const rahmen = (t, dx = 0, dy = 0) => {
-                const m = Register.fachzeichen.masse(t.zeichen, Number(t.drehung) || 0);
-                const zc = Register.fachzeichen.holen(t.zeichen);
-                const cx = Number(t.x) + dx + (zc ? zc.w : 0) / 2;
-                const cy = Number(t.y) + dy + (zc ? zc.h : 0) / 2;
-                return { l: cx - m.w / 2, o: cy - m.h / 2,
-                    r: cx + m.w / 2, u: cy + m.h / 2 };
-            };
+            const rahmen = Schaltplan.teilRahmen;
             const vorlagenRahmen = teile.map(t => rahmen(t));
             const internUeberlappt = vorlagenRahmen.some((a, i) => vorlagenRahmen.some((b, j) => j > i &&
                 a.l < b.r && b.l < a.r && a.o < b.u && b.o < a.u));
@@ -74024,6 +74230,11 @@ const Planflaeche = (() => {
                 if (t.x >= x1 && t.x <= x2 && t.y >= y1 && t.y <= y2)
                     raus.push(t.id);
             });
+            (z.plan.ink || []).forEach((m) => {
+                const b = Schaltplan.inkBounds(m);
+                if (sichtbarAuf(m.ebene) && b.x1 >= x1 && b.y1 >= y1 && b.x2 <= x2 && b.y2 <= y2)
+                    raus.push(m.id);
+            });
             return raus;
         };
         const teilVon = (id) => z.plan.teile.find(t => t.id === id);
@@ -74076,6 +74287,11 @@ const Planflaeche = (() => {
             const teile = [];
             const eigene = new Set();
             z.auswahl.forEach(id => {
+                const ink = inkVon(id);
+                if (ink) {
+                    ink.pts = ink.pts.map(p => [+(p[0] + dx).toFixed(2), +(p[1] + dy).toFixed(2)]);
+                    return;
+                }
                 const t = teilVon(id);
                 if (t) {
                     t.x = Schaltplan.rasten(t.x + dx);
@@ -74112,7 +74328,7 @@ const Planflaeche = (() => {
         const leitungVon = (id) => z.plan.leitungen.find(l => l.id === id);
         const textVon = (id) => z.plan.texte.find(x => x.id === id);
         const alsGruppe = () => {
-            const ids = [...z.auswahl].filter(id => teilVon(id) || leitungVon(id) || textVon(id));
+            const ids = [...z.auswahl].filter(id => teilVon(id) || leitungVon(id) || textVon(id) || inkVon(id));
             return ids.length > 1 || (ids.length === 1 && !teilVon(ids[0]));
         };
         const gruppeUmformen = (art) => aendere(() => {
@@ -74150,6 +74366,15 @@ const Planflaeche = (() => {
             const neu = [];
             const versatz = Register.fachzeichen.RASTER * 2;
             z.auswahl.forEach(id => {
+                const ink = inkVon(id);
+                if (ink) {
+                    const copy = JSON.parse(JSON.stringify(ink));
+                    copy.id = Schaltplan.uid();
+                    copy.pts = copy.pts.map(p => [p[0] + versatz, p[1] + versatz]);
+                    z.plan.ink.push(copy);
+                    neu.push(copy.id);
+                    return;
+                }
                 const t = teilVon(id);
                 if (!t)
                     return;
@@ -74170,12 +74395,17 @@ const Planflaeche = (() => {
             const g = zusammen ? '' : Schaltplan.uid();
             teile.forEach((t) => { t.gruppe = g; });
         });
-        const loeschen = () => aendere(() => {
-            z.plan.teile = z.plan.teile.filter(t => !z.auswahl.has(t.id));
-            z.plan.leitungen = z.plan.leitungen.filter(l => !z.auswahl.has(l.id));
-            z.plan.texte = z.plan.texte.filter(x => !z.auswahl.has(x.id));
-            z.auswahl.clear();
-        });
+        const loeschen = () => {
+            const inkOnly = [...z.auswahl].every(id => inkVon(id));
+            aendere(() => {
+                z.plan.teile = z.plan.teile.filter(t => !z.auswahl.has(t.id));
+                z.plan.leitungen = z.plan.leitungen.filter(l => !z.auswahl.has(l.id));
+                z.plan.texte = z.plan.texte.filter(x => !z.auswahl.has(x.id));
+                if (z.plan.ink)
+                    z.plan.ink = z.plan.ink.filter((m) => !z.auswahl.has(m.id));
+                z.auswahl.clear();
+            }, true, undefined, inkOnly);
+        };
         const mitGruppe = (id) => {
             const t = teilVon(id);
             if (!t || !t.gruppe)
@@ -74259,6 +74489,12 @@ const Planflaeche = (() => {
             const zug = z.zieht;
             if (!zug)
                 return;
+            if (zug.art === 'ink') {
+                if (e.pointerType === 'touch' && inkSession?.pointerType === 'pen')
+                    return;
+                zugAbbrechen();
+                return;
+            }
             if (e.pointerType === 'touch' && e.pointerId !== zug.zeiger) {
                 zugAbbrechen();
                 return;
@@ -74280,6 +74516,7 @@ const Planflaeche = (() => {
             if (!zug)
                 return;
             zugLoesen();
+            inkClear();
             teilKlickStart = null;
             if (zug.art === 'teil' || zug.art === 'strecke') {
                 zug.ausgang.forEach((a, id) => {
@@ -74299,7 +74536,7 @@ const Planflaeche = (() => {
             }
             if (zug.art === 'schwenk')
                 return;
-            male();
+            male(zug.art === 'ink');
         };
         const streckeSichern = (zug) => {
             if (zug.abzugStart === undefined || zug.abzugStart === abzug()) {
@@ -74692,6 +74929,236 @@ const Planflaeche = (() => {
             }
             ({ drehen, spiegeln, doppeln, loeschen }[aktion || '']?.());
         });
+        let inkSession = null;
+        let inkColor = GfxShapes.PALETTE[0][0], inkWidth = 2.4, inkErase = false;
+        const inkVon = (id) => z.plan.ink?.find(m => m.id === id);
+        const inkTools = document.createElement('div');
+        inkTools.className = 'sp-ink-tools';
+        inkTools.hidden = true;
+        inkTools.setAttribute('role', 'group');
+        inkTools.setAttribute('aria-label', 'Freihandwerkzeuge');
+        inkTools.innerHTML = `<label>Farbe <input type="color" data-ink-color value="${inkColor}" aria-label="Stiftfarbe"></label>` +
+            `<label>Breite <input type="range" data-ink-width min="0.6" max="8" step="0.2" value="2.4" aria-label="Strichbreite"></label>` +
+            `<button type="button" data-ink-mode="draw" aria-pressed="true">Schreiben</button>` +
+            `<button type="button" data-ink-mode="erase" aria-pressed="false">Tinte radieren</button>` +
+            `<span class="sp-ink-hilfe">Freie Notizen · auch während Strom läuft</span>`;
+        wurzel.insertBefore(inkTools, koerper);
+        inkTools.addEventListener('input', e => {
+            const input = e.target;
+            if (input.matches('[data-ink-color]'))
+                inkColor = InkStroke.inkColor(input.value);
+            if (input.matches('[data-ink-width]'))
+                inkWidth = Number(input.value);
+        });
+        inkTools.addEventListener('click', e => {
+            const button = e.target.closest('[data-ink-mode]');
+            if (!button)
+                return;
+            inkErase = button.dataset.inkMode === 'erase';
+            inkTools.querySelectorAll('[data-ink-mode]').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.inkMode === 'erase') === inkErase)));
+        });
+        const inkClear = () => {
+            if (inkSession?.frame)
+                cancelAnimationFrame(inkSession.frame);
+            inkSession = null;
+            wurzel.classList.remove('sp-ink-aktiv');
+            window.removeEventListener('blur', inkBlur);
+            window.removeEventListener('resize', inkBlur);
+            document.removeEventListener('visibilitychange', inkVisibility);
+        };
+        const inkBlur = () => { if (inkSession)
+            zugAbbrechen(); };
+        const inkVisibility = () => { if (document.hidden)
+            inkBlur(); };
+        const inkPaint = () => {
+            const s = inkSession;
+            if (!s)
+                return;
+            s.frame = 0;
+            if (!wurzel.isConnected) {
+                zugLoesen();
+                inkClear();
+                return;
+            }
+            if (s.kind === 'draw') {
+                const half = InkStroke.inkHalfWidth(s.mark, s.mark.pressure?.at(-1));
+                const predicted = InkStroke.vorhersage(s.raw, undefined, s.dt);
+                const tip = s.raw.at(-1);
+                const wet = [tip, ...predicted];
+                s.feder.nass(wet, wet.map(() => half));
+                if (!s.node?.isConnected) {
+                    vorschau('<path class="sp-ink-nass" stroke="none"/>');
+                    s.node = svgJetzt()?.querySelector('.sp-ink-nass') ?? null;
+                }
+                s.node?.setAttribute('fill', s.mark.farbe);
+                s.node?.setAttribute('d', s.feder.d());
+            }
+            else if (s.kind === 'move') {
+                const dx = s.end[0] - s.start[0], dy = s.end[1] - s.start[1];
+                svgJetzt()?.querySelector(`[data-ink="${CSS.escape(s.mark.id)}"]`)?.setAttribute('transform', `translate(${dx} ${dy})`);
+            }
+            else {
+                for (const id of s.removed)
+                    svgJetzt()?.querySelector(`[data-ink="${CSS.escape(id)}"]`)?.classList.add('sp-weg');
+            }
+        };
+        const inkRequest = () => { if (inkSession && !inkSession.frame)
+            inkSession.frame = requestAnimationFrame(inkPaint); };
+        const inkSamples = (event) => {
+            const s = inkSession, svg = svgJetzt();
+            if (!s || !svg)
+                return;
+            const matrix = s.matrix;
+            for (const sample of InkStroke.samples(event)) {
+                const q = new DOMPoint(sample.clientX, sample.clientY).matrixTransform(matrix);
+                const p = [+q.x.toFixed(2), +q.y.toFixed(2)];
+                s.end = p;
+                if (s.kind === 'move')
+                    continue;
+                if (s.kind === 'erase') {
+                    const from = s.raw.at(-1) ?? p;
+                    for (const m of (z.plan.ink || [])) {
+                        if (!sichtbarAuf(m.ebene) || s.removed.has(m.id))
+                            continue;
+                        const points = m.pts;
+                        const radius = Math.max(5, 10 * Math.hypot(matrix.a, matrix.b)) + m.breite / 2;
+                        const steps = Math.max(1, Math.ceil(Math.hypot(p[0] - from[0], p[1] - from[1]) / (radius / 2)));
+                        for (let j = 0; j <= steps; j++) {
+                            const hit = { x: from[0] + (p[0] - from[0]) * j / steps, y: from[1] + (p[1] - from[1]) * j / steps };
+                            if (points.some((v, i) => abstandZuStrecke(hit, { x: v[0], y: v[1] }, { x: (points[i - 1] || v)[0], y: (points[i - 1] || v)[1] }) <= radius)) {
+                                s.removed.add(m.id);
+                                break;
+                            }
+                        }
+                    }
+                    s.raw = [p];
+                    continue;
+                }
+                s.dt = Math.max(1, sample.timeStamp - s.time);
+                s.time = sample.timeStamp;
+                const lastRaw = s.raw.at(-1);
+                if (p[0] === lastRaw[0] && p[1] === lastRaw[1])
+                    continue;
+                s.raw.push(p);
+                if (s.raw.length > 3)
+                    s.raw.shift();
+                const point = s.smooth(p, s.dt), last = s.mark.pts.at(-1);
+                if (Math.hypot(point[0] - last[0], point[1] - last[1]) < .15)
+                    continue;
+                const pressure = sample.pressure > 0 ? s.pressure(sample.pressure) : s.mark.pressure?.at(-1) ?? .5;
+                const beforePoints = s.mark.pts.length;
+                s.mark.pts.push(point);
+                s.mark.pressure?.push(pressure);
+                const tilt = InkStroke.tiltOf(sample);
+                if (tilt >= 0 && !s.mark.neigung)
+                    s.mark.neigung = Array(beforePoints).fill(-1);
+                s.mark.neigung?.push(tilt);
+                s.feder.punkt(point, InkStroke.inkHalfWidth(s.mark, pressure));
+            }
+            inkRequest();
+        };
+        const inkFinish = (event) => {
+            const s = inkSession;
+            if (!s)
+                return;
+            if (event.type === 'pointerup')
+                inkSamples(event);
+            inkClear();
+            if (event.type !== 'pointerup') {
+                male(true);
+                return;
+            }
+            if (s.kind === 'draw') {
+                const last = s.mark.pts.at(-1);
+                if (Math.hypot(last[0] - s.end[0], last[1] - s.end[1]) > .01) {
+                    s.mark.pts.push(s.end);
+                    s.mark.pressure?.push(s.mark.pressure.at(-1) ?? .5);
+                    s.mark.neigung?.push(s.mark.neigung.at(-1) ?? 0);
+                }
+                aendere(() => { (z.plan.ink ??= []).push(s.mark); }, true, undefined, true);
+            }
+            else if (s.kind === 'move') {
+                const dx = s.end[0] - s.start[0], dy = s.end[1] - s.start[1];
+                if (!dx && !dy) {
+                    male(true);
+                    return;
+                }
+                aendere(() => { const mark = inkVon(s.mark.id); if (mark)
+                    mark.pts = mark.pts.map(p => [+(p[0] + dx).toFixed(2), +(p[1] + dy).toFixed(2)]); }, true, undefined, true);
+            }
+            else if (s.removed.size)
+                aendere(() => {
+                    z.plan.ink = z.plan.ink.filter((m) => !s.removed.has(m.id));
+                    s.removed.forEach(id => z.auswahl.delete(id));
+                }, true, undefined, true);
+            else
+                male(true);
+        };
+        buehne.addEventListener('pointerdown', event => {
+            if (inkSession?.pointerType === 'pen' && event.pointerType === 'touch') {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                return;
+            }
+            const hit = event.target.closest('[data-ink]');
+            const erasePen = event.pointerType === 'pen' && (event.button === 5 || (event.buttons & 32) !== 0);
+            if ((event.button !== 0 && !erasePen) || z.leertaste ||
+                (z.werkzeug !== 'stift' && !(z.werkzeug === 'zeigen' && hit) && !erasePen))
+                return;
+            if (z.zieht || geste || event.pointerType === 'touch')
+                return;
+            const svg = svgJetzt();
+            if (!svg)
+                return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            wurzel.focus({ preventScroll: true });
+            leinwand.getAnimations().forEach(animation => animation.finish());
+            const matrix = svg.getScreenCTM()?.inverse();
+            if (!matrix)
+                return;
+            const p = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix);
+            const start = [+p.x.toFixed(2), +p.y.toFixed(2)];
+            const kind = (z.werkzeug === 'stift' && inkErase) || erasePen ? 'erase' : z.werkzeug === 'zeigen' && hit ? 'move' : 'draw';
+            const mark = kind === 'move' ? JSON.parse(JSON.stringify(inkVon(hit.dataset.ink))) :
+                { id: Schaltplan.uid(), art: 'stift', pts: [start], farbe: inkColor, breite: inkWidth, ebene: aktiveEbene() };
+            if (kind === 'draw' && event.pointerType === 'pen') {
+                mark.pressure = [event.pressure > 0 ? event.pressure : .5];
+                const tilt = InkStroke.tiltOf(event);
+                if (tilt >= 0)
+                    mark.neigung = [tilt];
+            }
+            const feder = new InkStroke.Feder();
+            feder.punkt(start, InkStroke.inkHalfWidth(mark, mark.pressure?.[0]));
+            if (kind === 'move')
+                z.auswahl = new Set([mark.id]);
+            else
+                z.auswahl.clear();
+            inkSession = { kind, pointerType: event.pointerType, matrix, mark, start, end: start, raw: [start], time: event.timeStamp,
+                dt: 16, frame: 0, removed: new Set(), smooth: InkStroke.glaetter(start), feder,
+                pressure: InkStroke.druckGlaetter(event.pressure > 0 ? event.pressure : .5), node: null };
+            zugBeginnen({ art: 'ink', zeiger: event.pointerId, startX: event.clientX, startY: event.clientY, ausgang: new Map() });
+            svg.setPointerCapture(event.pointerId);
+            wurzel.classList.add('sp-ink-aktiv');
+            window.addEventListener('blur', inkBlur);
+            window.addEventListener('resize', inkBlur);
+            document.addEventListener('visibilitychange', inkVisibility);
+            if (kind === 'erase')
+                inkSamples(event);
+            else
+                inkRequest();
+        }, true);
+        buehne.addEventListener('pointermove', e => {
+            if (!inkSession)
+                return;
+            if (e.pointerId === z.zieht?.zeiger)
+                inkSamples(e);
+            e.stopImmediatePropagation();
+        }, true);
+        buehne.addEventListener('lostpointercapture', event => {
+            if (inkSession && z.zieht?.zeiger === event.pointerId)
+                zugAbbrechen();
+        }, true);
         buehne.addEventListener('pointerdown', e => {
             if (e.target.closest('.sp-schnellkarte,.sp-kontextleiste'))
                 return;
@@ -74717,6 +75184,13 @@ const Planflaeche = (() => {
             const roh = ortAus(svg, e, z.plan, true);
             const p = ortAus(svg, e, z.plan);
             if (e.button === 1 || (z.leertaste && e.button === 0)) {
+                e.preventDefault();
+                zugBeginnen({ art: 'schwenk', zeiger: e.pointerId, startX: 0, startY: 0, ausgang: new Map(),
+                    schirm: { x: e.clientX, y: e.clientY } });
+                svg.setPointerCapture(e.pointerId);
+                return;
+            }
+            if (z.werkzeug === 'stift' && e.pointerType === 'touch') {
                 e.preventDefault();
                 zugBeginnen({ art: 'schwenk', zeiger: e.pointerId, startX: 0, startY: 0, ausgang: new Map(),
                     schirm: { x: e.clientX, y: e.clientY } });
@@ -74982,6 +75456,10 @@ const Planflaeche = (() => {
             zugLoesen();
             if (!wurzel.isConnected)
                 return;
+            if (zug.art === 'ink') {
+                inkFinish(e);
+                return;
+            }
             const svg = svgJetzt();
             const p = svg ? ortAus(svg, e, z.plan) : { x: 0, y: 0 };
             if (zug.art === 'schwenk')
@@ -75050,6 +75528,9 @@ const Planflaeche = (() => {
                     vonTeil: zug.von.teil, vonNr: zug.von.nr,
                     nachTeil: fang ? fang.teil : undefined, nachNr: fang ? fang.nr : undefined
                 }));
+                connectionStatus.textContent = zug.von.teil && fang?.teil
+                    ? `Verbunden: ${teilVon(zug.von.teil)?.bmk || 'Bauteil'} ${zug.von.nr || ''} ↔ ${teilVon(fang.teil)?.bmk || 'Bauteil'} ${fang.nr}`
+                    : 'Leitung gezeichnet · offenes Ende';
             }
         };
         const radGesehen = new WeakSet();
@@ -75057,6 +75538,10 @@ const Planflaeche = (() => {
             if (radGesehen.has(e) || !buehne.contains(e.target))
                 return;
             radGesehen.add(e);
+            if (inkSession) {
+                e.preventDefault();
+                return;
+            }
             if (!svgJetzt())
                 return;
             const schritt = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
@@ -75505,6 +75990,8 @@ const Planflaeche = (() => {
             });
         };
         const simulationUmschalten = () => {
+            if (z.zieht)
+                return;
             if (!z.simulation && z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert) {
                 relaisOffen = true;
                 relaisZeigen();
@@ -75563,9 +76050,12 @@ const Planflaeche = (() => {
             if (!b)
                 return;
             if (b.dataset.wz) {
+                if (z.zieht || (z.simulation && !['zeigen', 'stift'].includes(b.dataset.wz)))
+                    return;
                 z.werkzeug = b.dataset.wz;
+                z.gewaehltesZeichen = '';
                 z.auswahl.clear();
-                male();
+                male(true);
                 return;
             }
             if (b.dataset.a === 'palette-toggle') {
@@ -75847,9 +76337,12 @@ const Planflaeche = (() => {
                 studioPanel.querySelector('[data-st-suche]')?.focus();
                 return;
             }
-            if (!z.simulation && !e.altKey && !e.ctrlKey && !e.metaKey && /^[1-5]$/.test(e.key)) {
+            if (!e.altKey && !e.ctrlKey && !e.metaKey && /^[1-6]$/.test(e.key) &&
+                (!z.simulation || e.key === '1' || e.key === '6')) {
                 e.preventDefault();
-                z.werkzeug = { '1': 'zeigen', '2': 'leitung', '3': 'text', '4': 'schiene', '5': 'radieren' }[e.key];
+                if (z.zieht)
+                    return;
+                z.werkzeug = { '1': 'zeigen', '2': 'leitung', '3': 'text', '4': 'schiene', '5': 'radieren', '6': 'stift' }[e.key];
                 z.gewaehltesZeichen = '';
                 z.auswahl.clear();
                 paletteMalen(palette.querySelector('input')?.value || '');
@@ -75908,7 +76401,7 @@ const Planflaeche = (() => {
                 e.preventDefault();
                 const [dx, dy] = pfeile[e.key];
                 let folge;
-                aendere(() => { folge = verschiebe(dx, dy); });
+                aendere(() => { folge = verschiebe(dx, dy); }, true, undefined, [...z.auswahl].every(id => inkVon(id)));
                 if (folge)
                     melde('Schieben', folge.bericht, folge.aenderungen, folge.vorher);
                 return;
@@ -75958,7 +76451,8 @@ const Planflaeche = (() => {
                 e.preventDefault();
                 z.auswahl = new Set([...z.plan.teile.map(t => t.id),
                     ...z.plan.leitungen.map(l => l.id),
-                    ...z.plan.texte.map(x => x.id)]);
+                    ...z.plan.texte.map(x => x.id),
+                    ...(z.plan.ink || []).map((m) => m.id)]);
                 male();
                 return;
             }
@@ -85418,6 +85912,124 @@ const ChronikDaten = {
             "groesstesProblem": "Die Norm zeigt die Ruhelage, die Simulation braucht die Stellung: gelöst, indem die Stellung nur in der Simulation gezeichnet wird.",
             "interessantesteAnfrage": "Ein Schalter, der aussieht wie in der eigenen VA-Simulation.",
             "massnahmen": []
+        },
+        {
+            "datum": "2026-11-16",
+            "wochentag": "Montag",
+            "titel": "Windows-Stiftstudio und Freihand im Stromkreis",
+            "wasIchWeiss": "Umfang und Präferenzen aus dem aktuellen Chat; Nachrichtenzeiten nicht erfasst.",
+            "nachrichten": [
+                {
+                    "zeit": "nicht erfasst",
+                    "wortlaut": "es sollte sich wie eine macbook app fühlen die auf windows läuft",
+                    "woher": "Wörtlicher Auszug aus dem Redion-Auftrag dieses Chats.",
+                    "gemeint": "Windows zuerst abnehmen, direkte Stifteingabe und hochwertige optionale Glaswerkzeuge.",
+                    "besser": "Redion soll unter Windows ein flüssiges Schreib- und Zeichenerlebnis mit optionalem Liquid Glass bieten.",
+                    "besserePrompt": "Baue auf der vorhandenen Windows-App auf; verbessere die gemeinsamen Stiftgrundlagen und ergänze Freihand über laufenden Installationsschaltungen."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "Windows-Stiftstudio E790 auf eigenem Branch: Freihand im Plan, gemeinsame Stiftmeldungen, optionale Glaswerkzeuge und isolierte native Prüfungen.",
+                    "vonCommit": "eff7e4cdd",
+                    "bisCommit": "",
+                    "zeitraum": "16. November 2026; genaue Startzeit nicht erfasst",
+                    "pruefungen": "6 Modellverträge, 21 Windows-Verträge, 3 Paritätsverträge, zehn Ink-/Elektro-Läufe und 22 Neigungszusagen grün. Archiv-Roundtrip, Chromium-Layouts und Skalierung 1/1,5/2 geprüft. Automatisierter Electron-Dauerlauf: 1800215 ms, 3315 Schreibzüge, 0 Abbrüche. Schneller Gesamtlauf 42/49; die sieben roten Läufe sind am Ausgangscommit ebenfalls rot. WebKit und reale Geräte bleiben gesondert offen."
+                }
+            ],
+            "zahlen": {
+                "commits": "Lokaler Arbeitsbranch; kein Push",
+                "entscheidungen": "E790",
+                "neuePruefungen": 3
+            },
+            "groesstesProblem": "Der Hintergrundfilter änderte den Bezug des Werkzeugdocks (P139).",
+            "interessantesteAnfrage": "Mit einem normalen Stift direkt über einer laufenden Stromsimulation schreiben, ohne die Schaltung zu verändern.",
+            "massnahmen": [
+                {
+                    "zeit": "nicht erfasst",
+                    "was": "Nur synthetische Dokumente, Archive und frische isolierte App-Profile verwendet.",
+                    "warum": "Die normale Windows-Ablage muss unverändert bleiben.",
+                    "risiko": "Ältere App-Versionen können neue Freihanddaten beim Speichern verwerfen; vor einem Rückwechsel sichern."
+                }
+            ]
+        },
+        {
+            "datum": "2026-11-18",
+            "wochentag": "Mittwoch",
+            "titel": "RED Ion als freigegebene ChatGPT-Live-Steuerung",
+            "wasIchWeiss": "Auftrag und Ergänzung aus diesem Chat; genaue Nachrichtenzeiten nicht erfasst.",
+            "nachrichten": [
+                {
+                    "zeit": "nicht erfasst",
+                    "wortlaut": "Noch keinen Tunnel eingerichtet",
+                    "woher": "Antwort auf die Rückfrage nach einer echten Secure-MCP-Tunnel-ID.",
+                    "gemeint": "Der lokale Adapter kann fertig getestet werden; die echte Kontoverbindung muss erst eingerichtet werden.",
+                    "besser": "Ich habe noch keinen Secure MCP Tunnel. Bereite die lokale Integration und die Einrichtungsschritte vor.",
+                    "besserePrompt": "Baue und prüfe die lokale MCP-/Electron-Verbindung, dokumentiere die echte Tunnel-Erstellung getrennt und behaupte keine bereits verbundene ChatGPT-App."
+                },
+                {
+                    "zeit": "nicht erfasst",
+                    "wortlaut": "füge das im redion als issus also damit ich sehe was ist noch offen",
+                    "woher": "Nachricht in diesem Chat; Datum der Aufzeichnung, genaue Nachrichtenzeit nicht erfasst.",
+                    "gemeint": "Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen.",
+                    "besser": "Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen.",
+                    "besserePrompt": "Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen."
+                },
+                {
+                    "zeit": "nicht erfasst",
+                    "wortlaut": "es sollte so auch sein das ich nur die link kompiere und auch bei der anderecn ai einfügen kann direk und",
+                    "woher": "Nachricht in diesem Chat; Datum der Aufzeichnung, genaue Nachrichtenzeit nicht erfasst.",
+                    "gemeint": "Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten.",
+                    "besser": "Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten.",
+                    "besserePrompt": "Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen."
+                },
+                {
+                    "zeit": "nicht erfasst",
+                    "wortlaut": "und ich muss nicht jedesmal erlauben nur bei erste mal oder beim einstelungen das ändern und dann machen wir so es sollte nicht nur wenn die laptop auf ist das redion zugreifen kann auch wenn die laptop offonline ist ,",
+                    "woher": "Nachricht in diesem Chat; Datum der Aufzeichnung, genaue Nachrichtenzeit nicht erfasst.",
+                    "gemeint": "Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop.",
+                    "besser": "Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop.",
+                    "besserePrompt": "Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen."
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "E791: endlicher MCP-Vertrag mit 46 Werkzeugen, geschützte Windows-Bridge, native Sitzungsfreigabe, bestehende App-Aktionen und sichtbare Einstellungen; eigenständiges Plugin-Paket mit Start-/Installationsskripten.",
+                    "vonCommit": "30d0a1ece",
+                    "bisCommit": "",
+                    "zeitraum": "18. November 2026; Startzeit nicht erfasst",
+                    "pruefungen": "Echter SDK-Client und isolierte Electron-App: stdio- und HTTP-Handshake, Lesen/Schreiben, sichtbare Änderungen, fünf Überschriften, 20 Lernkarten, Aufgabe, Tabellenzeile, Schaltplan/Klemmen, Neustart und Widerruf bestanden. Vertrags-/Kanalprüfung, 21 Windows-Verträge und 9 Ink-/Paritätsverträge grün. Echter ChatGPT-Tunnel, Kontoberechtigung, Installation/Signierung und physische Geräte NICHT GETESTET. Anschliessend P145/P146 mit echten roten Gegenproben behoben: Rohtext/Markdown und Sonderzeichen im Store, Anzeige und nach Neustart erhalten; beide nativen Prozessenden jetzt vor Erfolgsprotokoll auf Exitcode 0 geprüft."
+                },
+                {
+                    "was": "E792: Vollständiger Anforderungskatalog, gemerkte widerrufbare Adapter, eigene Bildfreigabe, konfigurierbare Bestätigungen, aktive Profilerkennung; begrenzter Binärbildkanal und echte maskierte Fenster-/Editor-/Schaltplanbilder mit Vorschau. Mehrschritt- und Cloud-Ausbau bleiben offen.",
+                    "vonCommit": "c76959ce7",
+                    "bisCommit": "",
+                    "zeitraum": "18. November 2026; genaue Startzeit nicht erfasst",
+                    "pruefungen": "10/10 Bridge-/Sicherheits-/Binärprüfungen; echter SDK-/Electron-Lauf mit 47 Werkzeugen, ImageContent, maskiertem und sichtbarem Kontrollbereich, Zuschnitt, Schaltplanbild, Verweigerung, Neustart, Widerruf, HTTP-Schutz und cleanExit bestanden. 10/10 Windows-/Dateiverträge grün. Ein regulärer Web-Bau meldete Schreibfehler auf einzelnen erzeugten Dateien; getrennte TypeScript-Ausgabe wurde bytegleich mit den Ziel-Dateien abgeglichen. Tatsächliche ChatGPT-Bilddarstellung, sichtbare Nutzer-Issues, atomare Batches, Cloud-Endpunkt und neue Windows-Pakete noch offen."
+                },
+                {
+                    "was": "E793: Kostenloser Cloud-MCP-Ausbau. Aktiven Workers-Free-Tarif gelesen; leere D1 nach Kostenstopp entfernt. OAuth-Zustand und HTTP-Router mit gespeicherten Bereichsfreigaben, Widerruf, PKCE, Code-Einmalverbrauch und rotierendem Refresh gebaut. Noch nicht an echte Konten, Daten oder Worker angeschlossen.",
+                    "vonCommit": "cf306ed09",
+                    "bisCommit": "",
+                    "zeitraum": "18. November 2026; genaue Startzeit nicht erfasst",
+                    "pruefungen": "15 SQLite-/OAuth-/HTTP-Fälle bestanden, darunter echter MCP-SDK-OAuth-Client; synthetischer Chromium-Ablauf mit echtem lokalen HTTPS, Arbeitsbereichswahl, gemerkter Zustimmung und Widerruf bestanden. Hell/Dunkel am Desktop und mobile Darstellung angesehen. Browser fand P150. Cloud-Deployment, ChatGPT-Verbindung und Laptop-Aus-Abgleich NICHT GETESTET."
+                }
+            ],
+            "zahlen": {
+                "commits": "Eigener Arbeitsbranch; PR #207 ist ausdrücklich beauftragtes Fast-Forward-Ziel.",
+                "entscheidungen": "E791, E792, E793",
+                "neuePruefungen": 7
+            },
+            "groesstesProblem": "Interne Hash-Navigation brach zuerst einen MCP-Aufruf wie einen Renderer-Neustart ab (P140).",
+            "interessantesteAnfrage": "ChatGPT soll eine echte geöffnete Windows-App mit vorhandenen Notizen, Tabellen, Lernkarten und Schaltplänen steuern.",
+            "massnahmen": [
+                {
+                    "zeit": "nicht erfasst",
+                    "was": "Nur synthetische Dokumente und getrennte Testprofile; keine Schlüssel im Chat oder Repository.",
+                    "warum": "Die bestehende persönliche Ablage muss erhalten bleiben.",
+                    "risiko": "Ein lokal bestandener Test beweist weder eine ChatGPT-Kontofreigabe noch eine funktionierende Tunnel-ID."
+                }
+            ]
         }
     ],
     "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
@@ -87249,6 +87861,174 @@ const ChronikDaten = {
             "loesung": "Die ganze Karte und vollständige 44-Pixel-Trefferflächen prüfen, Überdeckung von Vorschau/Titel ausschliessen, Textraum reservieren und den tatsächlichen Abstand korrigieren. Eine isolierte Gegenprobe verschiebt den Favoriten absichtlich in den Inhalt.",
             "beweis": "Erstlauf 85/91; strengere Messung danach 92/93 und nach der Abstandskorrektur 93/93, einschliesslich zweier erkannter Gegenproben.",
             "lehre": "Beim Umbau den ursprünglichen Bedienvertrag erhalten und den Messpunkt nachsehen. Eine echte Gegenprobe schützt davor, nur den Test an eine hübsche Oberfläche anzupassen."
+        },
+        {
+            "nr": "P139",
+            "datum": "2026-11-16",
+            "titel": "Ein Glasfilter versetzt das Werkzeugdock",
+            "schwere": "mittel",
+            "entscheidung": "E790",
+            "symptom": "Beim Aktivieren des optionalen Glasmodus waren die Stiftwerkzeuge hinter anderen Seitenwerkzeugen nicht mehr erreichbar.",
+            "falscheVermutung": "Das aufgeklappte Bereichsrad verdeckt die Fläche; Einklappen allein genügt.",
+            "wieGefunden": "Der echte Electron-Nutzerweg scheiterte auch nach dem Einklappen. Bildschirmbilder, überdeckendes Element und die CSS-Regeln des absolut gesetzten Docks wurden verglichen.",
+            "ursache": "Ein neuer Hintergrundfilter am Plan-Kopf änderte den Positionierungsbezug seines absolut gesetzten Werkzeugdocks. Das Dock lag dadurch über dem Kopf statt im reservierten Streifen unter der Zeichnung.",
+            "loesung": "Den Filter am schwebenden Dock selbst anwenden und den Kopf ohne Filter lassen. Beim Wechsel in einem offenen Dokument bleibt das Bereichsrad eingeklappt.",
+            "beweis": "Der ursprüngliche native Klickweg scheiterte; nach der Korrektur besteht der komplette Windows-Nutzerweg. 16 Chromium-Darstellungen prüfen erreichbare Werkzeuge, Mindestgrössen und deckendes Papier.",
+            "lehre": "Materialeffekte können die Geometrie von Kindern verändern. Eine gläserne Fläche deshalb mit echten Eingaben prüfen, nicht nur anhand eines Bildes."
+        },
+        {
+            "nr": "P140",
+            "datum": "2026-11-18",
+            "titel": "Ein Ansichtswechsel beendete den MCP-Auftrag",
+            "schwere": "mittel",
+            "entscheidung": "E791",
+            "symptom": "Der echte MCP-Client konnte Status lesen, aber der Wechsel in eine Arbeitswelt endete mit APP_DISCONNECTED.",
+            "falscheVermutung": "Der neue Kanal oder sein Ausgabeformat sei noch nicht korrekt verbunden.",
+            "wieGefunden": "Der SDK-Test führte bereits echte Handshakes aus. Erst der semantische Ansichtswechsel löste die native Navigationsbehandlung aus.",
+            "ursache": "did-start-navigation behandelte auch einen internen Hash-Wechsel als vollständigen Renderer-Neustart und widerrief die eigene laufende Aktion.",
+            "loesung": "Nur echte Hauptframe-Navigation unterbricht den Adapter. Interne Ansichtswechsel behalten die Sitzung. Der Test prüft Arbeitswelt, Seitenöffnung, echte Änderungen und Neustart.",
+            "beweis": "Zuerst APP_DISCONNECTED beim Öffnen der Arbeitswelt; danach derselbe End-to-End-Weg bis zur dauerhaften Speicherung und HTTP-Leseaktion bestanden.",
+            "lehre": "Die bestehende App-Navigation gehört zum Verbindungslebenszyklus. Ein erfolgreicher Handshake allein prüft keine Live-Steuerung."
+        },
+        {
+            "nr": "P141",
+            "datum": "2026-11-18",
+            "titel": "Eine verknüpfte Bridge-Ablage wurde zu früh bereinigt",
+            "schwere": "hoch",
+            "entscheidung": "E791",
+            "symptom": "Der synthetische Windows-Junction-Test verlor seine fremde Testdatei connection.json, bevor die Bridge aktiviert war.",
+            "falscheVermutung": "Die Prüfung des privaten Ordners beim Aktivieren reiche für alle Dateizugriffe aus.",
+            "wieGefunden": "Ein echter Junction-Test verknüpfte ausschliesslich zwei neu angelegte Testordner und prüfte die unveränderten Fremddateien vor und nach Start/Stop.",
+            "ursache": "Die frühe Bereinigung folgte dem verknüpften automation-Ordner, bevor dessen Pfad geprüft wurde.",
+            "loesung": "Jeden lokalen Lese-, Schreib- und Bereinigungspfad separat prüfen; Links und verknüpfte Vorfahren abweisen. Auch der Paketinstaller prüft seine vorgesehenen Zielpfade vor dem Kopieren.",
+            "beweis": "Zuerst ENOENT für die synthetische fremde connection.json; nach der Korrektur alle drei Vertrags-/Kanaltests grün. Keine persönliche Ablage wurde zum Test verwendet.",
+            "lehre": "Eine sichere Aktivierung schützt nicht automatisch vorherige Aufräumarbeiten. Den gesamten Dateilebenszyklus mit einem echten Gegenbeispiel prüfen."
+        },
+        {
+            "nr": "P142",
+            "datum": "2026-11-18",
+            "titel": "PowerShell veränderte den Tunnel-Startbefehl",
+            "schwere": "mittel",
+            "entscheidung": "E791",
+            "symptom": "Der offizielle Windows-Tunnel-Client konnte bei der lokalen Initialisierung den Node-Pfad nicht finden.",
+            "falscheVermutung": "Ein in PowerShell zusammengesetzter zitierter Befehl komme unverändert bei einer nativen EXE an.",
+            "wieGefunden": "Installationsskript und echte lokale Client-Initialisierung unter dem mit Windows gelieferten PowerShell 5.1 ausgeführt; keine echten Zugangsdaten oder Netzwerkverbindung verwendet.",
+            "ursache": "Die ältere native Argumentübergabe entfernte Anführungszeichen; die Shell-Wortzerlegung des Clients behandelte Windows-Backslashes als Escape-Zeichen.",
+            "loesung": "Slash-Pfade verwenden, Anführungszeichen für die ältere native Übergabe maskieren, gelieferte PowerShell-Skripte mit UTF-8-BOM schreiben. Die automatische Variable Profile wird nicht mehr als eigene Skriptvariable benutzt.",
+            "beweis": "Unveränderter Client meldete zuerst C:nvm4wnodejsnode.exe nicht gefunden. Danach erzeugte er unter PowerShell 5.1 und 7 das korrekte synthetische stdio-Profil; Installation und Diagnose unter 5.1 bestanden.",
+            "lehre": "Syntaxprüfung genügt nicht für native Befehle. Den tatsächlichen Client mit der Windows-Standard-Shell prüfen."
+        },
+        {
+            "nr": "P143",
+            "datum": "2026-11-18",
+            "titel": "Neue Desktop-Adapter fehlten im Offline-Grundstock",
+            "schwere": "mittel",
+            "entscheidung": "E791",
+            "symptom": "test87 meldete neue index.html-Skripte, die nicht im Service-Worker-Grundstock standen.",
+            "falscheVermutung": "Weil die Windows-App Dateien lokal lädt, sei die Offline-Dateiliste für ihre neuen Adapter nicht betroffen.",
+            "wieGefunden": "Die vollständige bestehende Prüfsuite verglich die index.html-Skripte mit sw.js.",
+            "ursache": "Die gemeinsam eingebundenen Adapter waren in der Startdatei registriert, aber noch nicht vollständig im Web-Cache-Grundstock.",
+            "loesung": "Alle neun neuen Adapter im erzeugten Service-Worker-Grundstock ergänzen und den Dienststand regulär neu bauen.",
+            "beweis": "Erstlauf test87 meldete fehlende Adapter; nach der Korrektur besteht derselbe Lauf mit 197/197 Prüfpunkten. Die Register-Inventur ist ebenfalls nachgetragen; test86 meldet nur noch den bestehenden Unterschied 15 statt 14 Werkzeuggruppen.",
+            "lehre": "Ein Desktop-Ausbau kann gemeinsame Web-Dateien ergänzen. Deren Offline-Vertrag bleibt verbindlich."
+        },
+        {
+            "nr": "P144",
+            "datum": "2026-11-18",
+            "titel": "Eine alte Startfreigabe überlebte das Abschalten der Verbindung",
+            "schwere": "mittel",
+            "entscheidung": "E791",
+            "symptom": "Der geschlossene App-Start prüfte eine frühere Startfreigabe, aber noch nicht die aktuell ausgeschaltete Verbindung oder entzogene App-Funktionsgruppe.",
+            "falscheVermutung": "Der ausdrücklich freigegebene App-Pfad allein reiche auch für den Verbindungszustand nach dem Beenden der App.",
+            "wieGefunden": "Ein echter SDK-Client erhielt künstliche Metadaten mit fehlender Test-EXE. Der Widerruftest verlangte eine Ablehnung, bevor überhaupt auf die EXE zugegriffen wird.",
+            "ursache": "Die Startsonderroute für eine geschlossene App umging die gewöhnliche native Sitzungsprüfung und kontrollierte nur allowLaunch.",
+            "loesung": "Zusätzlich enabled gleich true und die App-Funktionsgruppe verlangen; alle Prüfungen erfolgen vor Hashprüfung oder Prozessstart.",
+            "beweis": "Gegenprobe zuerst rot mit ENOENT statt LAUNCH_DISABLED; danach beide Widerrufsvarianten grün. Insgesamt 3/3 Windows-Skript-/SDK-Tests bestanden. Keine Test-EXE und keine Nutzer-App wurden gestartet.",
+            "lehre": "Jede Sonderroute ohne laufende App muss dieselben aktuellen Freigaben beachten wie der normale Kanal."
+        },
+        {
+            "nr": "P145",
+            "datum": "2026-11-18",
+            "titel": "Der Textadapter verwechselte Markdown mit HTML",
+            "schwere": "hoch",
+            "entscheidung": "E791",
+            "symptom": "Ein Kontrollbild zeigte Formatierungstags als wörtlichen Text. Einfügen und Lesen konnten Sonderzeichen vorab maskieren oder als HTML interpretieren.",
+            "falscheVermutung": "Textblöcke enthielten gespeichertes HTML, dessen Textknoten bearbeitet werden müssten.",
+            "wieGefunden": "Das echte Bildschirmbild wurde mit Blocks.inline und dem Eingabehandler verglichen. Diese speichern rohe Zeichen mit Markdown-Markierungen. Danach wurde der Fehler mit einem echten SDK-Client reproduziert.",
+            "ursache": "Der neue Adapter maskierte Zeichen vor Store.addBlock und las bestehenden Rohtext durch einen HTML-Parser; der bestehende Editor maskiert erst bei der Anzeige.",
+            "loesung": "Dieselben rohen Zeichen wie der Editor lesen und speichern. Eindeutige Ersetzungen im gespeicherten Wortlaut durchführen, Dollarzeichen wörtlich übernehmen und bestehende Markdown-Markierungen erhalten.",
+            "beweis": "Zuerst roter Roundtrip mit vorab maskierten Entities. Danach echter MCP-/Electron-Lauf mit sichtbarer Fettschrift, unveränderten Sonderzeichen, HTML als sichtbarem Text ohne Bildknoten, Aufgaben/Lernkarten und dauerhaftem Neustart grün.",
+            "lehre": "Den bestehenden Speichervertrag am echten Eingabe- und Anzeigepfad lesen. Ein Test mit künstlich erfundenem Datenformat beweist das falsche Modell."
+        },
+        {
+            "nr": "P146",
+            "datum": "2026-11-18",
+            "titel": "Beim Beenden wurde an ein zerstörtes Fenster gesendet",
+            "schwere": "hoch",
+            "entscheidung": "E791",
+            "symptom": "Ein funktional abgeschlossener MCP-Test blieb beim Beenden an einem nativen Fehlerdialog hängen.",
+            "falscheVermutung": "Ein geschriebenes Erfolgsprotokoll nach Lesen/Schreiben und Neustart beweise auch einen sauberen vollständigen Testabschluss.",
+            "wieGefunden": "Der eigene Testprozess zeigte den Fenstertitel Error. Eine neue Testprüfung bricht bei unerwarteten nativen Fehlerdialogen mit Fehlercode ab und kontrolliert beide Prozessenden vor dem Erfolgsprotokoll.",
+            "ursache": "cancelAutomation sendete im closed-Ereignis an die bereits zerstörten webContents. Auch Statusmeldungen und Zeitlimit-Abbrüche hatten diese fehlende Lebenszyklusprüfung.",
+            "loesung": "Alle neuen Automatisierungsmeldungen nur an ein bestehendes Fenster mit lebenden webContents senden. Offene Aktionen weiterhin abbrechen und aufräumen.",
+            "beweis": "Gegenprobe zuerst rot: Object has been destroyed in cancelAutomation, Exitcode 91. Danach derselbe vollständige echte MCP-/Electron-Test mit zwei sauberen Prozessenden, cleanExit true und Exitcode 0 bestanden.",
+            "lehre": "Erfolg erst nach abgeschlossenem Aufräumen melden. Native Fehlerdialoge müssen einen automatisierten Test rot machen."
+        },
+        {
+            "nr": "P147",
+            "datum": "2026-11-18",
+            "titel": "Abgebrochene Kopplung hält spätere Clients fest",
+            "schwere": "mittel",
+            "entscheidung": "E792",
+            "symptom": "Nach Abbruch einer Verbindungsanfrage meldete der nächste Client dauerhaft PAIRING_BUSY.",
+            "falscheVermutung": "Das Schliessen des Clients beende automatisch auch den offenen nativen Freigabedialog.",
+            "wieGefunden": "Eine isolierte echte Named-Pipe-Prüfung liess die erste künstliche Bestätigung offen, trennte den Client und verband danach einen neuen Client.",
+            "ursache": "Der offene Dialog hatte weder socketgebundene Abbruchsteuerung noch ein eigenes Zeitlimit; der Pairing-Zustand blieb belegt.",
+            "loesung": "Dialoge mit AbortSignal, Zeitlimit und Socket-Eigentümer binden. Beim Trennen abbrechen und ausschliesslich den Zustand dieser Anfrage freigeben.",
+            "beweis": "Gegenprobe zuerst PAIRING_BUSY; danach neue Kopplung erfolgreich. Neun gezielte MCP-/Binärprüfungen bestehen, einschliesslich dieser Gegenprobe.",
+            "lehre": "Verbindungsabbruch muss auch wartende menschliche Freigaben beenden, nicht nur Datenanforderungen."
+        },
+        {
+            "nr": "P148",
+            "datum": "2026-11-18",
+            "titel": "Automatische Profilsuche verschluckt eine mehrdeutige Auswahl",
+            "schwere": "mittel",
+            "entscheidung": "E792",
+            "symptom": "Zwei aktive synthetische Windows-Profile erschienen fälschlich als APP_NOT_RUNNING.",
+            "falscheVermutung": "Eine fehlgeschlagene Discovery bedeute stets, dass keine App laufe.",
+            "wieGefunden": "Der Diagnose-CLI-Test setzte beide bekannten Profilmarker mit einem tatsächlich lebenden Testprozess und verlangte eine ausdrückliche Auswahl.",
+            "ursache": "Ein allgemeiner catch-Block überschrieb den bereits erkannten Status AMBIGUOUS_PROFILE.",
+            "loesung": "Mehrdeutigkeit sichtbar zurückgeben; nur ein eindeutig aktives Profil automatisch wählen. Keine Profile verschieben oder zusammenführen.",
+            "beweis": "Zuerst APP_NOT_RUNNING statt AMBIGUOUS_PROFILE; danach alle vier Skript-/Discovery-Prüfungen grün.",
+            "lehre": "Ein aus Sicherheitsgründen verweigerter Automatismus braucht eine eigene verständliche Ursache."
+        },
+        {
+            "nr": "P149",
+            "datum": "2026-11-18",
+            "titel": "Interne Nachrichtenkennung bricht das MCP-Ausgabeschema",
+            "schwere": "mittel",
+            "entscheidung": "E792",
+            "symptom": "Der echte SDK-Client lehnte den App-Status nach Umstellung des Antwortlesers mit InvalidParams ab.",
+            "falscheVermutung": "Der bisherige Ergebnisumschlag könne unverändert vom neuen Binärrahmenleser bis zum SDK weitergegeben werden.",
+            "wieGefunden": "Der echte stdio-Client validierte structuredContent gegen den geschlossenen Tool-Vertrag und meldete ein zusätzliches Feld.",
+            "ursache": "Das interne Zuordnungsfeld id wurde nach der Prüfung der passenden Antwort nicht aus dem Transportumschlag entfernt.",
+            "loesung": "Nachrichtenkennung für die Zuordnung prüfen, dann vor Rückgabe an den MCP-Server entfernen. Unbekannte Kopfzeilenfelder einschliesslich vorgetäuschter Bildbytes abweisen.",
+            "beweis": "Zuerst -32602: data must NOT have additional properties. Danach vollständiger echter SDK-/Electron-Lauf mit 47 Werkzeugen, maskiertem Bild, Schaltplanbild und sauberem Neustart bestanden.",
+            "lehre": "Ein interner Transportvertrag ist nicht der öffentliche Werkzeugvertrag. Beide am echten validierenden Client prüfen."
+        },
+        {
+            "nr": "P150",
+            "datum": "2026-11-18",
+            "titel": "Sichere Header blockieren den eigenen OAuth-Rückweg im echten Browser",
+            "schwere": "mittel",
+            "entscheidung": "E793",
+            "symptom": "Der synthetische Freigabe-POST wurde zunächst wegen Origin null abgewiesen. Danach blockierte Chromium den registrierten Rückweg mit einer CSP-Verletzung.",
+            "falscheVermutung": "Ein erfolgreicher Request/Response- und SDK-OAuth-Lauf belege schon, dass der Formular-Rückweg im Browser funktioniert.",
+            "wieGefunden": "Tatsächliche Formulare und Redirects im Chromium-Lauf; zuerst Origin-Assertion rot, danach konkrete form-action-Verletzung in der Browserkonsole.",
+            "ursache": "no-referrer setzt beim Formular den Origin auf null. form-action self wird in Chromium auch auf den anschliessenden 303-Redirect angewendet und sperrt die registrierte KI-Adresse.",
+            "loesung": "Auf Auth-Seiten same-origin verwenden und zusätzlich nur den Ursprung der zuvor exakt validierten registrierten Rückgabeadresse in form-action erlauben. Fremde Origins weiterhin zurückweisen; CSRF-Nachweis bleibt an Konto und einmalige Anfrage gebunden.",
+            "beweis": "Roter Browserlauf vor der Korrektur, danach realer lokaler HTTPS-Prüfserver und Chromium: Zustimmung, Callback, gemerkte erneute Verbindung, Widerruf; Hell/Dunkel und mobile Darstellung bestanden.",
+            "lehre": "Protokolltests ersetzen den Browser nicht. Schutzheader zusammen mit ihrem tatsächlichen Formular- und Redirect-Verhalten prüfen."
         }
     ]
 };
@@ -89053,6 +89833,7 @@ const DocumentMode = (() => {
         position.dataset.documentAction = 'page-jump';
         position.textContent = wortEins(page) + ' ' + (state.index + 1) + '/' + documents.length;
         position.title = 'Direkt zu einer ' + wortEins(page).toLowerCase() + ' springen';
+        position.setAttribute('aria-label', position.title);
         position.disabled = documents.length < 2;
         position.setAttribute('aria-live', 'polite');
         position.setAttribute('aria-atomic', 'true');
@@ -111873,6 +112654,8 @@ const Verlauf = (() => {
     };
     return {
         start, merke, zurueck, vor,
+        status: () => ({ undoPageId: zurueckStapel.at(-1)?.pageId || null,
+            redoPageId: vorStapel.at(-1)?.pageId || null }),
         leeren: () => { zurueckStapel.length = 0; vorStapel.length = 0; }
     };
 })();
@@ -113860,6 +114643,8 @@ const Einstellungen = (() => {
                 Schnellkacheln.einsetzen(ziel, { nach: ziel.querySelector(':scope > h2'), rolle: ziel });
             o.querySelectorAll('.einst-nav button').forEach(b => b.classList.toggle('on', b.dataset.b === offenerBereich));
             binde(o);
+            if (ziel && offenerBereich === 'mcp')
+                RegisterAutomatisierung.montiereAnsicht(ziel);
         };
         zeichne();
         const navEl = o.querySelector('.einst-nav');
@@ -114310,7 +115095,7 @@ const Einstellungen = (() => {
         mcp: () => {
             const server = Store.getMeta('mcp:server', []) || [];
             const aus = Store.getMeta('mcp:eigenAus', []) || [];
-            return kopf('MCP', 'Ein offenes Protokoll, mit dem Programme fremde Werkzeuge ' +
+            return RegisterAutomatisierung.ansicht() + kopf('MCP', 'Ein offenes Protokoll, mit dem Programme fremde Werkzeuge ' +
                 'benutzen und eigene anbieten. Diese App kann beides — mit einer Einschränkung, ' +
                 'die unten steht.') +
                 zeile('Fremde Server', 'Werkzeuge, die dein Agent benutzen darf', `<span class="ez-grau">${server.length} eingetragen</span> ` +
@@ -124085,6 +124870,111 @@ const MCP = (() => {
         freigegeben, istFrei, dialog, start };
 })();
 window.MCP = MCP;
+
+</script>
+<script>
+/* ===== quell/bereiche/ki/desktop.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/ki/desktop.ts (npm run bauen:ts). */
+const DesktopMCP = (() => {
+    const names = { app: 'Navigation', documents: 'Notizen', databases: 'Datenbanken', learning: 'Lernkarten und Aufgaben', pdf: 'PDF öffnen', schematics: 'Schaltpläne', settings: 'Darstellung', visual: 'Bilder aus Redion übertragen' };
+    const html = () => {
+        if (!window.RedionDesktop?.automationState || window.RedionDesktop.automationSupported === false)
+            return '<section class="desktop-automation"><h3>ChatGPT &amp; Automatisierung</h3><p>Die lokale Live-Steuerung benötigt die neue Redion-Windows-App. Auf diesem Gerät bleibt sie ausgeschaltet.</p></section>';
+        return '<section class="desktop-automation" aria-labelledby="desktop-automation-title"><h3 id="desktop-automation-title">ChatGPT &amp; Automatisierung</h3>' +
+            '<p>Nur nach deiner Freigabe. Angeforderte Inhalte können an ChatGPT gehen. Redion funktioniert auch ohne diese Verbindung.</p>' +
+            '<p data-automation-status role="status">Verbindungsstatus wird gelesen …</p>' +
+            '<label><input type="checkbox" data-automation-policy="enabled"> Verbindung aktivieren</label>' +
+            '<label><input type="checkbox" data-automation-policy="write"> Schreibzugriffe erlauben</label>' +
+            '<label><input type="checkbox" data-automation-policy="allowLaunch"> Start der installierten App erlauben</label>' +
+            '<label data-automation-modern hidden><input type="checkbox" data-automation-policy="rememberClients"> Adapter nach der ersten Freigabe bis zum Widerruf erlauben</label>' +
+            '<label data-automation-modern hidden><input type="checkbox" data-automation-policy="confirmCritical"> Kritische Aktionen zusätzlich einzeln bestätigen</label>' +
+            '<label data-automation-visual hidden><input type="checkbox" data-automation-policy="confirmImages"> Bilder nach der Vorschau zusätzlich einzeln bestätigen</label>' +
+            '<fieldset><legend>Freigegebene Funktionen</legend>' + Object.entries(names).map(([key, value]) => `<label${key === 'visual' ? ' data-automation-visual hidden' : ''}><input type="checkbox" data-automation-scope="${key}"> ${value}</label>`).join('') + '</fieldset>' +
+            '<p data-automation-modern hidden>Gespeicherte Freigaben gelten auch nach einem Neustart. Änderst du diese Rechte, ist eine neue Freigabe nötig.</p><p>Entwicklerzugriff auf Repository oder Shell ist nicht enthalten.</p>' +
+            '<div class="desktop-automation-actions"><button type="button" class="ez-knopf" data-automation-apply>Übernehmen</button><button type="button" class="ez-knopf" data-automation-test>Status aktualisieren</button><button type="button" class="ez-knopf" data-automation-disconnect>Alle Freigaben widerrufen</button><button type="button" class="ez-knopf" data-automation-package>MCP-Paket öffnen</button></div>' +
+            '<p data-automation-sessions></p><div data-automation-clients></div><details><summary>Verbindungsprotokoll</summary><pre data-automation-log></pre></details></section>';
+    };
+    const mount = (container) => {
+        const root = container.querySelector('.desktop-automation'), desktop = window.RedionDesktop;
+        if (!root || !desktop?.automationState)
+            return;
+        let dirty = false, supportsSavedClients = false, supportsVisual = false;
+        const status = root.querySelector('[data-automation-status]');
+        const refresh = async () => {
+            if (!root.isConnected)
+                return;
+            try {
+                const state = await desktop.automationState();
+                if (!root.isConnected)
+                    return;
+                supportsSavedClients = typeof state.rememberClients === 'boolean' && typeof state.confirmCritical === 'boolean';
+                supportsVisual = typeof state.confirmImages === 'boolean';
+                root.querySelectorAll('[data-automation-modern]').forEach(el => el.hidden = !supportsSavedClients);
+                root.querySelectorAll('[data-automation-visual]').forEach(el => el.hidden = !supportsVisual);
+                status.textContent = state.enabled ? (state.connected ? 'Verbunden · ' + state.profile : state.pairing ? 'Einmalige Freigabe im Redion-Fenster bestätigen · ' + state.profile : 'Aktiviert · wartet auf einen freigegebenen MCP-Client · ' + state.profile) : 'Verbindung ausgeschaltet';
+                if (!dirty) {
+                    root.querySelectorAll('[data-automation-policy]').forEach(el => el.checked = !!state[el.dataset.automationPolicy]);
+                    root.querySelectorAll('[data-automation-scope]').forEach(el => el.checked = state.scopes.includes(el.dataset.automationScope));
+                }
+                root.querySelector('[data-automation-sessions]').textContent = (state.sessions || []).map((s) => 'Programm: ' + s.client + ' · Sitzung: ' + s.id + ' · bis ' + new Date(s.expires).toLocaleTimeString()).join('\n') || 'Keine aktive Sitzung';
+                const clients = root.querySelector('[data-automation-clients]');
+                clients.replaceChildren();
+                for (const client of state.trustedClients || []) {
+                    const row = document.createElement('p'), label = document.createElement('span'), button = document.createElement('button');
+                    label.textContent = client.client + ' · freigegeben am ' + new Date(client.approvedAt).toLocaleDateString() + ' ';
+                    button.type = 'button';
+                    button.className = 'ez-knopf';
+                    button.textContent = 'Freigabe widerrufen';
+                    button.addEventListener('click', async () => { await desktop.automationRevokeClient(client.id); await refresh(); });
+                    row.append(label, button);
+                    clients.append(row);
+                }
+                root.querySelector('[data-automation-log]').textContent = (state.activity || []).map((a) => a.time + ' ' + a.tool + ' ' + a.status + (a.code ? ' ' + a.code : '')).join('\n') || 'Noch keine Aktionen';
+            }
+            catch {
+                status.textContent = 'Die native Verbindung ist hier nicht verfügbar.';
+            }
+        };
+        root.addEventListener('change', () => { dirty = true; });
+        root.querySelector('[data-automation-apply]').addEventListener('click', async () => {
+            const read = (key) => root.querySelector(`[data-automation-policy="${key}"]`).checked;
+            try {
+                await desktop.automationConfigure({ enabled: read('enabled'), write: read('write'), allowLaunch: read('allowLaunch'),
+                    ...(supportsSavedClients ? { rememberClients: read('rememberClients'), confirmCritical: read('confirmCritical') } : {}),
+                    ...(supportsVisual ? { confirmImages: read('confirmImages') } : {}),
+                    scopes: [...root.querySelectorAll('[data-automation-scope]:checked')].map(el => el.dataset.automationScope) });
+                dirty = false;
+                await refresh();
+            }
+            catch {
+                status.textContent = 'Freigabe abgebrochen oder nicht sicher möglich. Bitte Einstellungen erneut prüfen.';
+            }
+        });
+        root.querySelector('[data-automation-test]').addEventListener('click', () => { void refresh(); });
+        root.querySelector('[data-automation-package]').addEventListener('click', async () => {
+            try {
+                await desktop.automationOpenPackage();
+            }
+            catch {
+                status.textContent = 'MCP-Paket fehlt. Die neue Windows-Version oder das vorbereitete Plugin-Paket verwenden.';
+            }
+        });
+        root.querySelector('[data-automation-disconnect]').addEventListener('click', async () => { await desktop.automationDisconnect(); await refresh(); });
+        const off = desktop.onAutomationState(() => { if (root.isConnected)
+            void refresh();
+        else
+            off(); });
+        const observer = new MutationObserver(() => { if (!root.isConnected) {
+            off();
+            observer.disconnect();
+        } });
+        observer.observe(document.body, { childList: true, subtree: true });
+        void refresh();
+    };
+    return { html, mount };
+})();
+RegisterAutomatisierung.meldeAnsicht(DesktopMCP);
 
 </script>
 <script>
@@ -165520,6 +166410,8 @@ const GlassWheel = (() => {
             try {
                 document.body.dataset['uiShell'] = value;
                 mount();
+                if (document.querySelector('#title,.document-workspace,.sp-wrap'))
+                    setExpanded(false);
             }
             catch (error) {
                 fail(error);
@@ -165790,13 +166682,587 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
     if (typeof Ereignisse !== 'undefined')
         Ereignisse.melde(ARTEN.appStartet);
-    App.start();
+    void Promise.resolve(App.start()).then(() => RedionAutomation.start());
     RedionMotion.start();
     RedionPress.start();
     RedionDelete.start();
     if (typeof Ereignisse !== 'undefined')
         Ereignisse.melde(ARTEN.appSteht);
 });
+
+</script>
+<script>
+/* ===== quell/schale/bedienung/desktop-automatisierung.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/bedienung/desktop-automatisierung.ts (npm run bauen:ts). */
+const RedionAutomation = (() => {
+    const pending = new Set();
+    let started = false;
+    const error = (code) => { throw Object.assign(new Error('Redion-Aktion abgewiesen.'), { code }); };
+    const pageOf = (id) => {
+        let b = Store.getBlock(id);
+        const seen = new Set();
+        while (b && b.type !== 'page') {
+            if (seen.has(b.id) || seen.size > 100)
+                error('INVALID_DOCUMENT');
+            seen.add(b.id);
+            b = b.parentTable === 'collection' ? Object.values(Store.cache.blocks).find(x => x.alive && x.type === 'database' && x.collectionId === b.parentId) : Store.getBlock(b.parentId);
+        }
+        if (!b || b.alive === false)
+            error('INVALID_DOCUMENT');
+        return b;
+    };
+    const block = (id, write = false) => {
+        const b = Store.getBlock(id);
+        if (!b || b.alive === false)
+            error('INVALID_DOCUMENT');
+        const p = pageOf(id);
+        if (!Konten.darf(write ? 'bearbeiten' : 'lesen', id) || !Konten.darf(write ? 'bearbeiten' : 'lesen', p.id))
+            error('PERMISSION_DENIED');
+        if (write && (b.locked || p.locked))
+            error('DOCUMENT_LOCKED');
+        return b;
+    };
+    const editing = () => {
+        const el = document.activeElement;
+        return el instanceof HTMLElement && el.isContentEditable && !!document.getElementById('page')?.contains(el);
+    };
+    const start = () => {
+        const desktop = window.RedionDesktop;
+        if (started || !desktop?.onAutomationRequest || desktop.automationSupported === false)
+            return;
+        started = true;
+        desktop.onAutomationCancel((id) => { document.getElementById('redion-mcp-mask')?.remove(); if (id)
+            pending.delete(id);
+        else
+            pending.clear(); });
+        desktop.onAutomationRequest(async (request) => {
+            pending.add(request.id);
+            const check = () => { if (!pending.has(request.id))
+                error('ACTION_CANCELLED'); };
+            const context = { check, block, pageOf, error,
+                prepare: async (documentId) => {
+                    if (editing())
+                        error('EDITOR_BUSY');
+                    const p = block(documentId, true);
+                    if (p.type !== 'page')
+                        error('INVALID_DOCUMENT');
+                    if (App.aktuelleSeite() !== p.id)
+                        App.oeffne(p.id);
+                    await Store.versionSpeichern(p.id, 'vor ChatGPT-Änderung');
+                    check();
+                    block(documentId, true);
+                    if (editing())
+                        error('EDITOR_BUSY');
+                    Verlauf.merke(true);
+                },
+                finish: async (documentId) => {
+                    await Store.flush();
+                    check();
+                    if (Store.speichertNicht())
+                        error('PERSISTENCE_UNAVAILABLE');
+                    App.zeichneBaum();
+                    if (documentId && App.aktuelleSeite() === documentId && !editing())
+                        App.zeichneSeite();
+                    if (documentId)
+                        UI.toast('ChatGPT: Änderung gespeichert');
+                } };
+            try {
+                const data = await RegisterAutomatisierung.ausfuehren(request.tool, request.arguments, context);
+                check();
+                await desktop.automationReply({ id: request.id, ok: true, data });
+            }
+            catch (e) {
+                await desktop.automationReply({ id: request.id, ok: false, error: { code: e.code || 'ACTION_FAILED' } });
+            }
+            finally {
+                pending.delete(request.id);
+            }
+        });
+        void desktop.automationReady().catch(() => { });
+    };
+    return { start };
+})();
+RegisterAutomatisierung.melde('redion_get_current_view', (_a, c) => {
+    const id = App.aktuelleSeite(), p = id ? c.block(id) : null;
+    return { documentId: p?.id || null, view: location.hash.slice(0, 160), workspaceId: Store.getMeta('produkt:welt', 'lernen'),
+        editor: p ? (document.querySelector('.sp-wrap') ? 'schematic' : document.querySelector('.pdf-document-mode') ? 'pdf' : 'page') : null };
+});
+RegisterAutomatisierung.melde('redion_get_active_document', (_a, c) => {
+    const id = App.aktuelleSeite();
+    const p = id ? c.block(id) : null;
+    return { document: p ? { id: p.id, title: p.text || '', type: p.type } : null };
+});
+RegisterAutomatisierung.melde('redion_capture_view', async (a, c) => {
+    if (a.phase === 'release') {
+        document.getElementById('redion-mcp-mask')?.remove();
+        return { released: true };
+    }
+    const active = App.aktuelleSeite(), p = active ? c.block(active) : null;
+    if (a.documentId && a.documentId !== p?.id)
+        c.error('STALE_DOCUMENT');
+    if (a.blockId) {
+        const b = c.block(a.blockId);
+        if (a.target !== 'schematic' || b.type !== 'schaltplan' || c.pageOf(b.id).id !== p?.id)
+            c.error('INVALID_SCHEMATIC');
+    }
+    const element = a.target === 'window' ? document.documentElement : a.target === 'schematic' ?
+        document.querySelector(a.blockId ? `.blk[data-bid="${CSS.escape(a.blockId)}"] .sp-buehne` : '.sp-wrap .sp-buehne') : document.querySelector('#page');
+    if (!element || a.target !== 'window' && !p)
+        c.error('INVALID_DOCUMENT');
+    const r = element.getBoundingClientRect(), width = window.innerWidth, height = window.innerHeight;
+    const visible = (box) => ({ x: Math.max(0, Math.floor(box.x)), y: Math.max(0, Math.floor(box.y)),
+        width: Math.max(0, Math.min(width, Math.ceil(box.right)) - Math.max(0, Math.floor(box.x))),
+        height: Math.max(0, Math.min(height, Math.ceil(box.bottom)) - Math.max(0, Math.floor(box.y))) });
+    const region = a.target === 'window' ? { x: 0, y: 0, width, height } : visible(r);
+    if (region.width < 1 || region.height < 1)
+        c.error('INVALID_REGION');
+    const masks = [...document.querySelectorAll('input,textarea,iframe,webview,[data-sensitive],[data-private],[data-mcp-private]')]
+        .map(el => visible(el.getBoundingClientRect())).filter(box => box.width > 0 && box.height > 0);
+    if (masks.length > 500)
+        c.error('ACTION_TOO_LARGE');
+    let style = document.getElementById('redion-mcp-mask');
+    if (!style) {
+        style = document.createElement('style');
+        style.id = 'redion-mcp-mask';
+        document.head.append(style);
+    }
+    style.textContent = 'input,textarea,iframe,webview,[data-sensitive],[data-private],[data-mcp-private]{visibility:hidden!important}';
+    await new Promise(resolve => {
+        const timer = setTimeout(resolve, 150);
+        requestAnimationFrame(() => requestAnimationFrame(() => { clearTimeout(timer); resolve(); }));
+    });
+    c.check();
+    return { rect: region, viewport: { x: 0, y: 0, width, height }, masks, ...(p ? { documentId: p.id } : {}), ...(a.blockId ? { blockId: a.blockId } : {}) };
+});
+
+</script>
+<script>
+/* ===== quell/bereiche/editor/automatisierung.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/editor/automatisierung.ts (npm run bauen:ts). */
+(() => {
+    const R = RegisterAutomatisierung;
+    const kinds = new Set(['text', 'h1', 'h2', 'h3', 'bullet', 'number', 'todo', 'quote', 'callout', 'divider', 'code']);
+    const summary = (b) => ({ id: b.id, title: b.text || '', parentId: b.parentId || null, type: b.type });
+    const raw = (text) => String(text ?? '');
+    const pages = () => Object.values(Store.cache.blocks).filter(b => b.alive && b.type === 'page' && b.parentTable !== 'collection' && Konten.darf('lesen', b.id));
+    const page = (id, c, write = false) => { const b = c.block(id, write); if (b.type !== 'page')
+        c.error('INVALID_DOCUMENT'); return b; };
+    const contents = (p, _c, limit = 100) => Store.childrenOf(p.id).filter((b) => b.alive && Konten.darf('lesen', b.id)).slice(0, limit)
+        .map((b) => ({ id: b.id, type: b.type, text: raw(b.text), ...(b.type === 'todo' ? { checked: !!b.checked } : {}) }));
+    R.melde('redion_list_documents', a => ({ documents: pages().slice(0, a.limit || 50).map(summary) }));
+    R.melde('redion_search', a => {
+        const query = String(a.query).toLocaleLowerCase();
+        return { documents: pages().filter(p => String(p.text || '').toLocaleLowerCase().includes(query) || Store.childrenOf(p.id).some((b) => b.alive && Konten.darf('lesen', b.id) && raw(b.text).toLocaleLowerCase().includes(query))).slice(0, a.limit || 20).map(summary) };
+    });
+    R.melde('redion_open_document', (a, c) => { const p = page(a.documentId, c); App.oeffne(p.id); return { document: summary(p) }; });
+    R.melde('redion_read_page', (a, c) => { const p = page(a.documentId, c); return { document: summary(p), blocks: contents(p, c, a.limit || 100) }; });
+    R.melde('redion_create_page', async (a, c) => {
+        if (a.parentId)
+            page(a.parentId, c, true);
+        else if (!Konten.darf('bearbeiten'))
+            c.error('PERMISSION_DENIED');
+        c.check();
+        const p = Store.addPage(a.parentId || null, { text: a.title, herkunft: 'ki' });
+        for (const b of a.blocks || [])
+            Store.addBlock(p.id, b.type, { text: b.text, checked: !!b.checked, herkunft: 'ki' });
+        if (a.open !== false)
+            App.oeffne(p.id);
+        await c.finish(p.id);
+        return { document: summary(p), blocks: contents(p, c) };
+    });
+    R.melde('redion_update_page', async (a, c) => { page(a.documentId, c, true); await c.prepare(a.documentId); Store.updateBlock(a.documentId, { text: a.title, herkunft: 'ki' }); await c.finish(a.documentId); return { document: summary(Store.getBlock(a.documentId)) }; });
+    R.melde('redion_insert_block', async (a, c) => {
+        const p = page(a.documentId, c, true);
+        await c.prepare(p.id);
+        const b = Store.addBlock(p.id, a.block.type, { text: a.block.text, checked: !!a.block.checked, herkunft: 'ki' }, a.index ?? -1);
+        await c.finish(p.id);
+        return { block: { id: b.id, type: b.type, text: raw(b.text) } };
+    });
+    R.melde('redion_update_block', async (a, c) => {
+        const b = c.block(a.blockId, true);
+        if (!kinds.has(b.type))
+            c.error('UNSUPPORTED_BLOCK_TYPE');
+        if (raw(b.text) !== a.expectedText)
+            c.error('STALE_DOCUMENT');
+        const p = c.pageOf(b.id);
+        await c.prepare(p.id);
+        if (raw(b.text) !== a.expectedText)
+            c.error('STALE_DOCUMENT');
+        Store.updateBlock(b.id, { text: a.text, herkunft: 'ki', ...(a.checked !== undefined && b.type === 'todo' ? { checked: a.checked } : {}) });
+        await c.finish(p.id);
+        return { blockId: b.id, documentId: p.id };
+    });
+    R.melde('redion_delete_block', async (a, c) => {
+        const b = c.block(a.blockId, true);
+        if (!kinds.has(b.type) || Store.childrenOf(b.id).length)
+            c.error('UNSUPPORTED_BLOCK_TYPE');
+        const p = c.pageOf(b.id);
+        await c.prepare(p.id);
+        Store.trashBlock(b.id);
+        await c.finish(p.id);
+        return { blockId: b.id, trashed: true };
+    });
+    R.melde('redion_replace_text', async (a, c) => {
+        const p = page(a.documentId, c, true);
+        const unique = () => {
+            let found;
+            for (const b of Store.childrenOf(p.id)) {
+                if (!b.alive || !kinds.has(b.type) || !Konten.darf('lesen', b.id))
+                    continue;
+                const value = raw(b.text), at = value.indexOf(a.find);
+                if (at < 0)
+                    continue;
+                if (found || value.indexOf(a.find, at + a.find.length) >= 0)
+                    c.error('AMBIGUOUS_TEXT');
+                found = { b, value };
+            }
+            return found || c.error('TEXT_NOT_FOUND');
+        };
+        const hit = unique();
+        c.block(hit.b.id, true);
+        await c.prepare(p.id);
+        const current = unique();
+        if (current.b.id !== hit.b.id || current.value !== hit.value)
+            c.error('STALE_DOCUMENT');
+        Store.updateBlock(hit.b.id, { text: hit.value.replace(a.find, () => a.replacement), herkunft: 'ki' });
+        await c.finish(p.id);
+        return { blockId: hit.b.id, replacements: 1 };
+    });
+    R.melde('redion_export_page', (a, c) => { const p = page(a.documentId, c); const blocks = contents(p, c); return { documentId: p.id, format: 'text/plain', text: p.text + '\n\n' + blocks.map((b) => b.text).join('\n\n'), limitedToDirectBlocks: 100 }; });
+    const history = async (forward, c) => {
+        const key = forward ? 'redoPageId' : 'undoPageId';
+        const id = Verlauf.status()[key];
+        if (!id)
+            return c.error('NO_HISTORY');
+        page(id, c, true);
+        await Store.versionSpeichern(id, 'vor ChatGPT-Verlaufsschritt');
+        c.check();
+        page(id, c, true);
+        if (Verlauf.status()[key] !== id)
+            return c.error('STALE_HISTORY');
+        if (forward)
+            Verlauf.vor();
+        else
+            Verlauf.zurueck();
+        await c.finish(id);
+        return { documentId: id };
+    };
+    R.melde('redion_undo', (_a, c) => history(false, c));
+    R.melde('redion_redo', (_a, c) => history(true, c));
+})();
+
+</script>
+<script>
+/* ===== quell/bereiche/wissen/automatisierung.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/wissen/automatisierung.ts (npm run bauen:ts). */
+(() => {
+    const R = RegisterAutomatisierung;
+    R.melde('redion_list_workspaces', () => ({ workspaces: [{ id: 'lernen', name: 'Lernen' }, { id: 'workspace', name: 'Arbeitsbereich' }], activeId: Produktwelten.aktiv() }));
+    R.melde('redion_open_workspace', a => { Produktwelten.wechseln(a.workspaceId); Produktwelten.zurAktivenWelt(); return { workspaceId: Produktwelten.aktiv() }; });
+    R.melde('redion_open_home', () => { Produktwelten.zurAktivenWelt(); return { workspaceId: Produktwelten.aktiv() }; });
+    R.melde('redion_move_page', async (a, c) => {
+        const p = c.block(a.documentId, true), target = c.block(a.parentId, true);
+        if (p.type !== 'page' || target.type !== 'page')
+            c.error('INVALID_DOCUMENT');
+        await c.prepare(p.id);
+        if (!Werkzeuge.verschiebe(p, target.id, true))
+            c.error('MOVE_REJECTED');
+        await c.finish(p.id);
+        return { documentId: p.id, parentId: Store.getBlock(p.id).parentId };
+    });
+    R.melde('redion_duplicate_page', async (a, c) => {
+        const p = c.block(a.documentId);
+        if (p.type !== 'page')
+            c.error('INVALID_DOCUMENT');
+        if (p.parentId)
+            c.block(p.parentId, true);
+        else if (!Konten.darf('bearbeiten'))
+            c.error('PERMISSION_DENIED');
+        const tree = Store.baum(p.id);
+        const count = (node) => node ? 1 + (node.kinder || []).reduce((n, k) => n + count(k), 0) + (node.rows || []).length : 0;
+        if (count(tree) > 25)
+            c.error('ACTION_TOO_LARGE');
+        c.check();
+        const created = App.dupliziereSeite(p.id, p.parentId);
+        if (!created)
+            return c.error('ACTION_FAILED');
+        App.oeffne(created.id);
+        await c.finish(created.id);
+        return { documentId: created.id, title: created.text };
+    });
+    R.melde('redion_create_flashcards', async (a, c) => {
+        const p = c.block(a.documentId, true);
+        if (p.type !== 'page')
+            c.error('INVALID_DOCUMENT');
+        if (a.cards.some((k) => k.question.includes('::') || k.answer.includes('::')))
+            c.error('INVALID_CARD_SEPARATOR');
+        await c.prepare(p.id);
+        const ids = a.cards.map((k) => Store.addBlock(p.id, 'flashcard', { text: k.question + ' :: ' + k.answer, herkunft: 'ki' }).id);
+        await c.finish(p.id);
+        return { documentId: p.id, cardIds: ids, count: ids.length };
+    });
+    R.melde('redion_create_task', async (a, c) => {
+        const p = c.block(a.documentId, true);
+        if (p.type !== 'page')
+            c.error('INVALID_DOCUMENT');
+        await c.prepare(p.id);
+        const b = Store.addBlock(p.id, 'todo', { text: a.text, checked: false, herkunft: 'ki' });
+        await c.finish(p.id);
+        return { blockId: b.id, documentId: p.id };
+    });
+    R.melde('redion_update_task', async (a, c) => {
+        const b = c.block(a.blockId, true);
+        if (b.type !== 'todo')
+            c.error('UNSUPPORTED_BLOCK_TYPE');
+        const p = c.pageOf(b.id);
+        await c.prepare(p.id);
+        Store.updateBlock(b.id, { checked: a.checked });
+        await c.finish(p.id);
+        return { blockId: b.id, checked: !!Store.getBlock(b.id).checked };
+    });
+})();
+
+</script>
+<script>
+/* ===== quell/bereiche/datenbanken/automatisierung.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/datenbanken/automatisierung.ts (npm run bauen:ts). */
+(() => {
+    const R = RegisterAutomatisierung;
+    const collection = (id, c, write = false) => {
+        const coll = Store.getCollection(id);
+        if (!coll || Konten.darfAnSammlung(write ? 'bearbeiten' : 'lesen', id) !== true)
+            c.error('PERMISSION_DENIED');
+        const block = Object.values(Store.cache.blocks).find(b => b.alive && b.type === 'database' && b.collectionId === id);
+        if (!block)
+            c.error('INVALID_DATABASE');
+        c.block(block.id, write);
+        return { coll, page: c.pageOf(block.id) };
+    };
+    const properties = (coll, values, c) => {
+        if (Object.keys(values).length > 25)
+            c.error('ACTION_TOO_LARGE');
+        for (const [key, value] of Object.entries(values)) {
+            const def = coll.schema[key];
+            if (!def)
+                c.error('INVALID_PROPERTY');
+            if (!Feldrechte.darfSchreiben(coll.id, key))
+                c.error('PERMISSION_DENIED');
+            const kind = String(def.type);
+            if (!['title', 'text', 'number', 'checkbox', 'date', 'select', 'multi-select', 'url', 'email', 'phone'].includes(kind))
+                c.error('UNSUPPORTED_PROPERTY_TYPE');
+            if (kind === 'number' && value !== null && (typeof value !== 'number' || !Number.isFinite(value)))
+                c.error('INVALID_PROPERTY_VALUE');
+            if (kind === 'checkbox' && typeof value !== 'boolean')
+                c.error('INVALID_PROPERTY_VALUE');
+            if (!['number', 'checkbox', 'multi-select'].includes(kind) && value !== null && typeof value !== 'string')
+                c.error('INVALID_PROPERTY_VALUE');
+            if (kind === 'multi-select' && (!Array.isArray(value) || value.length > 30 || value.some(v => typeof v !== 'string')))
+                c.error('INVALID_PROPERTY_VALUE');
+            if (typeof value === 'string' && value.length > 12000)
+                c.error('INVALID_PROPERTY_VALUE');
+            if ((kind === 'select' || kind === 'multi-select') && value) {
+                const options = new Set((def.options || []).map((x) => typeof x === 'string' ? x : x.name));
+                const list = Array.isArray(value) ? value : [value];
+                if (list.some(v => !options.has(v)))
+                    c.error('INVALID_PROPERTY_VALUE');
+            }
+            if (!Pruefen.feld(def, value).ok)
+                c.error('INVALID_PROPERTY_VALUE');
+        }
+        return values;
+    };
+    R.melde('redion_create_database', async (a, c) => {
+        const p = c.block(a.documentId, true);
+        if (p.type !== 'page')
+            c.error('INVALID_DOCUMENT');
+        await c.prepare(p.id);
+        const result = Store.addDatabase(p.id, a.name);
+        await c.finish(p.id);
+        return { databaseId: result.collectionId, blockId: result.block.id, viewId: result.viewId };
+    });
+    R.melde('redion_list_database_rows', (a, c) => {
+        const { coll } = collection(a.databaseId, c);
+        const keys = Object.keys(coll.schema).filter(k => Feldrechte.darfSehen(coll.id, k));
+        return { databaseId: coll.id, schema: Object.fromEntries(keys.map(k => [k, coll.schema[k]])),
+            rows: Store.rowsOf(coll.id).filter((r) => Konten.darf('lesen', r.id)).slice(0, a.limit || 50).map((r) => ({ id: r.id, properties: Object.fromEntries(keys.map(k => [k, r.props?.[k] ?? null])) })) };
+    });
+    R.melde('redion_add_database_row', async (a, c) => {
+        const { coll, page } = collection(a.databaseId, c, true);
+        properties(coll, a.properties, c);
+        await c.prepare(page.id);
+        collection(coll.id, c, true);
+        properties(coll, a.properties, c);
+        const row = Store.addRow(coll.id, a.properties);
+        await c.finish(page.id);
+        return { rowId: row.id, databaseId: coll.id };
+    });
+    R.melde('redion_update_database_row', async (a, c) => {
+        const row = c.block(a.rowId, true);
+        if (row.parentTable !== 'collection')
+            c.error('INVALID_DATABASE_ROW');
+        const { coll, page } = collection(row.parentId, c, true);
+        properties(coll, a.properties, c);
+        await c.prepare(page.id);
+        c.block(row.id, true);
+        properties(coll, a.properties, c);
+        for (const [k, v] of Object.entries(a.properties))
+            Store.setProp(row.id, k, v);
+        await c.finish(page.id);
+        return { rowId: row.id, databaseId: coll.id };
+    });
+})();
+
+</script>
+<script>
+/* ===== quell/bereiche/bloecke/automatisierung.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/bloecke/automatisierung.ts (npm run bauen:ts). */
+(() => {
+    const R = RegisterAutomatisierung;
+    const read = (id, c, write = false) => {
+        const b = c.block(id, write);
+        if (b.type !== 'schaltplan')
+            c.error('INVALID_SCHEMATIC');
+        if (write && document.querySelector('.sp-laeuft'))
+            c.error('SIMULATION_RUNNING');
+        return { b, plan: Schaltplan.lesen(b), page: c.pageOf(id), before: JSON.stringify(b.plan) };
+    };
+    const save = async (item, c) => {
+        await c.prepare(item.page.id);
+        c.block(item.b.id, true);
+        if (document.querySelector('.sp-laeuft'))
+            c.error('SIMULATION_RUNNING');
+        if (JSON.stringify(Store.getBlock(item.b.id).plan) !== item.before)
+            c.error('STALE_DOCUMENT');
+        Store.updateBlock(item.b.id, { plan: item.plan, herkunft: 'ki' });
+        await c.finish(item.page.id);
+    };
+    const fit = (plan, part, c) => {
+        const a = Schaltplan.teilRahmen(part);
+        if (a.l < 0 || a.o < 0 || a.r > plan.breite || a.u > plan.hoehe)
+            c.error('PLACEMENT_OUTSIDE_PAGE');
+        if (plan.teile.some((t) => { if (t.id === part.id || t.ebene !== part.ebene)
+            return false; const b = Schaltplan.teilRahmen(t); return a.l < b.r && b.l < a.r && a.o < b.u && b.o < a.u; }))
+            c.error('COMPONENT_OVERLAP');
+    };
+    R.melde('redion_open_schematic', async (a, c) => {
+        const item = read(a.blockId, c);
+        App.oeffne(item.page.id);
+        await new Promise(resolve => requestAnimationFrame(() => resolve()));
+        c.check();
+        const surface = document.querySelector(`.blk[data-bid="${CSS.escape(item.b.id)}"] .sp-buehne`);
+        if (!surface)
+            c.error('INVALID_SCHEMATIC');
+        surface.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+        return { blockId: item.b.id, documentId: item.page.id };
+    });
+    R.melde('redion_create_schematic', async (a, c) => {
+        const p = c.block(a.documentId, true);
+        if (p.type !== 'page')
+            c.error('INVALID_DOCUMENT');
+        await c.prepare(p.id);
+        const b = Store.addBlock(p.id, 'schaltplan', { text: a.title || 'Schaltplan', plan: Schaltplan.neuerPlan(), herkunft: 'ki' });
+        await c.finish(p.id);
+        return { blockId: b.id, documentId: p.id };
+    });
+    R.melde('redion_read_schematic', (a, c) => { const item = read(a.blockId, c); return { blockId: item.b.id, plan: item.plan }; });
+    R.melde('redion_list_schematic_components', () => ({ components: Register.fachzeichen.alle().map((x) => ({ id: x.id, name: x.name, width: x.w, height: x.h, terminals: x.anschluesse })) }));
+    R.melde('redion_add_schematic_component', async (a, c) => {
+        const item = read(a.blockId, c, true);
+        if (!Register.fachzeichen.holen(a.componentType))
+            c.error('UNKNOWN_COMPONENT');
+        const part = { id: Schaltplan.uid(), zeichen: a.componentType, x: Schaltplan.rasten(a.x), y: Schaltplan.rasten(a.y), drehung: 0, gespiegelt: false,
+            bmk: Schaltplan.naechstesBmk(item.plan, a.componentType), nummern: {}, gruppe: '', ebene: 'plan', ...(a.label ? { beschriftung: a.label } : {}) };
+        fit(item.plan, part, c);
+        item.plan.teile.push(part);
+        await save(item, c);
+        return { blockId: item.b.id, component: part };
+    });
+    R.melde('redion_move_schematic_component', async (a, c) => {
+        const item = read(a.blockId, c, true), part = item.plan.teile.find(t => t.id === a.componentId);
+        if (!part)
+            c.error('UNKNOWN_COMPONENT');
+        const before = Schaltplan.vorherMerken(item.plan);
+        part.x = Schaltplan.rasten(a.x);
+        part.y = Schaltplan.rasten(a.y);
+        fit(item.plan, part, c);
+        const report = Schaltplan.nachziehen(item.plan, before, [part.id], { heilen: true });
+        if (Schaltplan.ueberlappungen(item.plan))
+            c.error('WIRE_OVERLAP');
+        await save(item, c);
+        return { componentId: part.id, report };
+    });
+    R.melde('redion_connect_schematic_components', async (a, c) => {
+        const item = read(a.blockId, c, true);
+        const terminal = (arg) => {
+            const part = item.plan.teile.find(t => t.id === arg.componentId);
+            if (!part)
+                c.error('UNKNOWN_COMPONENT');
+            const nr = Schaltplan.klemmeFuer(part, arg.terminalId);
+            const point = Schaltplan.anschlussOrt(part, nr || '');
+            if (!nr || !point)
+                c.error('INVALID_TERMINAL');
+            const snap = Schaltplan.fangeAnschluss(item.plan, point, 1);
+            if (!snap || snap.teil !== part.id)
+                c.error('INVALID_TERMINAL');
+            return { part: part, nr: nr, point: point };
+        };
+        const from = terminal(a.from), to = terminal(a.to);
+        if (from.part.id === to.part.id && from.nr === to.nr)
+            c.error('INVALID_TERMINAL');
+        const points = Schaltplan.leitungFuehren(item.plan, from.point, to.point, { teil: from.part.id, nr: from.nr }, { teil: to.part.id, nr: to.nr });
+        if (points.length < 2 || Schaltplan.ueberlappt(points, item.plan.leitungen))
+            c.error('WIRE_OVERLAP');
+        const wire = { id: Schaltplan.uid(), punkte: points, ebene: 'plan', vonTeil: from.part.id, vonNr: from.nr, nachTeil: to.part.id, nachNr: to.nr };
+        item.plan.leitungen.push(wire);
+        await save(item, c);
+        return { wireId: wire.id, from: { componentId: from.part.id, terminalId: from.nr }, to: { componentId: to.part.id, terminalId: to.nr } };
+    });
+    R.melde('redion_export_schematic', (a, c) => { const item = read(a.blockId, c); return { blockId: item.b.id, mimeType: 'image/svg+xml', svg: Schaltplan.alsSvg(item.plan) }; });
+})();
+
+</script>
+<script>
+/* ===== quell/bereiche/pdf/automatisierung.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/pdf/automatisierung.ts (npm run bauen:ts). */
+RegisterAutomatisierung.melde('redion_open_pdf', (a, c) => {
+    const b = c.block(a.blockId);
+    if (b.type !== 'pdfseite' || !b.quelleId)
+        c.error('INVALID_PDF');
+    const p = c.pageOf(b.id);
+    App.oeffne(p.id);
+    if (DocumentMode.available(p))
+        DocumentMode.select(p, b.id);
+    return { documentId: p.id, blockId: b.id };
+});
+
+</script>
+<script>
+/* ===== quell/bereiche/einstellungen/automatisierung.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/einstellungen/automatisierung.ts (npm run bauen:ts). */
+(() => {
+    const choices = { theme: ['dark', 'light'], bewegung: ['normal', 'ruhig'], kontrast: [false, true], dichte: ['normal', 'kompakt'] };
+    RegisterAutomatisierung.melde('redion_get_settings', () => ({ settings: Object.fromEntries(Object.keys(choices).map(k => [k, Store.getMeta(k, k === 'kontrast' ? false : k === 'theme' ? 'dark' : 'normal')])) }));
+    RegisterAutomatisierung.melde('redion_update_setting', async (a, c) => {
+        if (!choices[a.key]?.includes(a.value))
+            c.error('INVALID_SETTING');
+        if (!Konten.darf('bearbeiten'))
+            c.error('PERMISSION_DENIED');
+        c.check();
+        if (a.key === 'theme')
+            Aussehen.grundWechseln(a.value);
+        else
+            Einstellungen.S(a.key, a.value);
+        await c.finish();
+        return { key: a.key, value: Store.getMeta(a.key) };
+    });
+})();
 
 </script>
 <!-- Notnagel: Wenn die Skripte fehlen (z. B. weil nur index.html kopiert

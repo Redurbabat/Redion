@@ -417,11 +417,28 @@ let api: any = null;
  * ======================================================================== */
 console.log('\n§6 · Keine zweite Oberfläche (E80, als Regeln aus E699)');
 
-/* Regel 1 — ein Einstieg. */
+/* Regel 1 — genau ein Einstieg, danach ausschliesslich die sieben
+ * freigegebenen MCP-Adapter. Defer-Skripte werden in Dokumentreihenfolge
+ * geladen; diese Adapter registrieren ihre Handler fuer die Desktop-Bridge
+ * und sind KEIN zweiter App-Einstieg (P140–P146). Ein fremdes Skript danach
+ * oder ein doppelter App-Start bleibt ein harter Testfehler. */
 const skripte = [...html.matchAll(/<script src="([^"]+)"/g)].map(m => m[1] ?? '');
-p('Regel 1: quell/start.js ist das letzte Skript und steht genau einmal da',
-  skripte[skripte.length - 1] === 'quell/start.js' && skripte.filter(s => s === 'quell/start.js').length === 1,
-  String(skripte[skripte.length - 1]));
+const startIndex = skripte.indexOf('quell/start.js');
+const mcpAdapterNachStart = [
+  'quell/schale/bedienung/desktop-automatisierung.js',
+  'quell/bereiche/editor/automatisierung.js',
+  'quell/bereiche/wissen/automatisierung.js',
+  'quell/bereiche/datenbanken/automatisierung.js',
+  'quell/bereiche/bloecke/automatisierung.js',
+  'quell/bereiche/pdf/automatisierung.js',
+  'quell/bereiche/einstellungen/automatisierung.js'
+];
+const tatsaechlichNachStart = startIndex < 0 ? [] : skripte.slice(startIndex + 1);
+p('Regel 1: genau ein App-Einstieg; danach nur die erlaubten MCP-Adapter',
+  startIndex >= 0 &&
+  skripte.filter(s => s === 'quell/start.js').length === 1 &&
+  JSON.stringify(tatsaechlichNachStart) === JSON.stringify(mcpAdapterNachStart),
+  JSON.stringify(tatsaechlichNachStart));
 gleich('… und es gibt keinen zweiten Einstieg (main.js, app.js unter quell/ als Start)',
   skripte.filter(s => /(^|\/)main\.js$/.test(s) || s === 'quell/app.js'), []);
 p('… und keine Datei der Inseln ruft App.start oder hängt beim Laden etwas ein',

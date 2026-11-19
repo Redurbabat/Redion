@@ -544,3 +544,19 @@ Zoom, Lage, Vollbild und die Wahl des Radierers stehen NICHT im Plan: die
 Ansicht gehört dem Bildschirm, der Radierer dem Menschen (`Store.meta`,
 `elektro:radierer`).
 
+**Seit E790: optionale Freihand im Schaltplan.** `plan.ink` enthält
+Striche `{ id, art: 'stift', pts: [[x,y], …], farbe, breite, ebene,
+pressure?, neigung? }`. Punkte und Breite liegen in Planeinheiten,
+unabhängig von Zoom und Windows-Skalierung. Die beiden optionalen
+Sensorkanäle haben dieselbe Länge wie die Punktfolge.
+Neigung verwendet den gemeinsamen PDF-Kanal: Winkel gegen die Senkrechte
+geteilt durch 90, `-1` für eine nicht gemeldete Probe. Vorschau und
+Vorhersagen werden nicht gespeichert. Freihand verändert keine Netzliste.
+SVG, Druck und Sicherung nehmen sichtbare Freihand mit; Sicherungen
+enthalten zusätzlich die ausgeblendeten Ebenen vollständig.
+
+Ein alter Plan erhält beim Öffnen kein leeres Freihandfeld. Ältere
+Redion-Versionen vor E790 können das neue Feld beim Bearbeiten verwerfen.
+Pläne mit Freihand deshalb mit dieser oder einer neueren Fassung
+bearbeiten und vor einem Rückwechsel eine `.redion`-Sicherung behalten.
+

@@ -29,7 +29,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   if (typeof Ereignisse !== 'undefined') Ereignisse.melde(ARTEN.appStartet);
 
-  App.start();
+  void Promise.resolve(App.start()).then(() => RedionAutomation.start());
   RedionMotion.start();
   /* die Druckfeder (E702): ein Zuhörer für jeden Knopf */
   RedionPress.start();

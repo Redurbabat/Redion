@@ -142,6 +142,8 @@ const Einstellungen = (() => {
                 Schnellkacheln.einsetzen(ziel, { nach: ziel.querySelector(':scope > h2'), rolle: ziel });
             o.querySelectorAll('.einst-nav button').forEach(b => b.classList.toggle('on', b.dataset.b === offenerBereich));
             binde(o);
+            if (ziel && offenerBereich === 'mcp')
+                RegisterAutomatisierung.montiereAnsicht(ziel);
         };
         zeichne();
         const navEl = o.querySelector('.einst-nav');
@@ -592,10 +594,27 @@ const Einstellungen = (() => {
         mcp: () => {
             const server = Store.getMeta('mcp:server', []) || [];
             const aus = Store.getMeta('mcp:eigenAus', []) || [];
-            return kopf('MCP', 'Ein offenes Protokoll, mit dem Programme fremde Werkzeuge ' +
+      /* Kein lokaler Pseudoschalter: gültige Rechte liegen beim Cloud-Server.
+       * Der Login über OAuth muss eine Schreibfreigabe tatsächlich erteilen. */
+      const wolke = typeof Wolke === 'undefined' ? null : Wolke;
+      let freigaben = '<span class="ez-grau">Wolke-Anmeldung erforderlich</span>';
+      try {
+        const basis = new URL(wolke?.angemeldet?.() ? String(wolke.adresse?.() || '') : '');
+        if (basis.protocol === 'https:' && !basis.username && !basis.password &&
+            (basis.pathname === '/' || basis.pathname === '') && !basis.search && !basis.hash) {
+          const ziel = new URL('/mcp/settings', basis);
+          freigaben = `<a class="ez-knopf" href="${esc(ziel.href)}" target="_blank" rel="noopener noreferrer">Freigaben verwalten</a>`;
+        }
+      } catch { /* Ohne eingerichtete Cloud bleibt die Funktion lokal. */ }
+            return RegisterAutomatisierung.ansicht() + kopf('MCP', 'Ein offenes Protokoll, mit dem Programme fremde Werkzeuge ' +
                 'benutzen und eigene anbieten. Diese App kann beides — mit einer Einschränkung, ' +
                 'die unten steht.') +
-                zeile('Fremde Server', 'Werkzeuge, die dein Agent benutzen darf', `<span class="ez-grau">${server.length} eingetragen</span> ` +
+                zeile('ChatGPT & KI-Freigaben',
+            'Beim Verbinden der KI-Anwendung kannst du Schreiben ausdrücklich erlauben. ' +
+            'Ein bestehender Lesezugang wird dadurch nicht automatisch erweitert. ' +
+            'Die Freigabe verlangt den Cloud-MCP-Dienst und eine erneute Schreibanfrage des KI-Clients.',
+            freigaben) +
+      zeile('Fremde Server', 'Werkzeuge, die dein Agent benutzen darf', `<span class="ez-grau">${server.length} eingetragen</span> ` +
                     knopf('mcp-verb', 'Verwalten')) +
                 zeile('Eigene Werkzeuge', 'Der Katalog dieser App im MCP-Format', `<span class="ez-grau">${MCP.eigenerKatalog().length} freigegeben, ` +
                     `${aus.length} abgeschaltet</span> ` + knopf('mcp-verb', 'Ansehen')) +

@@ -3787,9 +3787,134 @@ Die Norm zeigt die Ruhelage, die Simulation braucht die Stellung: gelöst, indem
 
 Ein Schalter, der aussieht wie in der eigenen VA-Simulation.
 
+### 2026-11-16 · Montag — Windows-Stiftstudio und Freihand im Stromkreis
+
+> Umfang und Präferenzen aus dem aktuellen Chat; Nachrichtenzeiten nicht erfasst.
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · nicht erfasst**
+
+> es sollte sich wie eine macbook app fühlen die auf windows läuft
+
+**Gemeint:** Windows zuerst abnehmen, direkte Stifteingabe und hochwertige optionale Glaswerkzeuge.
+
+**Besser geschrieben:** Redion soll unter Windows ein flüssiges Schreib- und Zeichenerlebnis mit optionalem Liquid Glass bieten.
+
+**Besserer Prompt:** Baue auf der vorhandenen Windows-App auf; verbessere die gemeinsamen Stiftgrundlagen und ergänze Freihand über laufenden Installationsschaltungen.
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| Windows-Stiftstudio E790 auf eigenem Branch: Freihand im Plan, gemeinsame Stiftmeldungen, optionale Glaswerkzeuge und isolierte native Prüfungen. | `eff7e4cdd` → `` | 16. November 2026; genaue Startzeit nicht erfasst | — | 6 Modellverträge, 21 Windows-Verträge, 3 Paritätsverträge, zehn Ink-/Elektro-Läufe und 22 Neigungszusagen grün. Archiv-Roundtrip, Chromium-Layouts und Skalierung 1/1,5/2 geprüft. Automatisierter Electron-Dauerlauf: 1800215 ms, 3315 Schreibzüge, 0 Abbrüche. Schneller Gesamtlauf 42/49; die sieben roten Läufe sind am Ausgangscommit ebenfalls rot. WebKit und reale Geräte bleiben gesondert offen. |
+
+#### Zahlen des Tages
+
+- **commits:** Lokaler Arbeitsbranch; kein Push
+- **entscheidungen:** E790
+- **neuePruefungen:** 3
+
+#### Das grösste Problem
+
+Der Hintergrundfilter änderte den Bezug des Werkzeugdocks (P139).
+
+#### Das Interessanteste, das Redur wollte
+
+Mit einem normalen Stift direkt über einer laufenden Stromsimulation schreiben, ohne die Schaltung zu verändern.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| nicht erfasst | Nur synthetische Dokumente, Archive und frische isolierte App-Profile verwendet. | Die normale Windows-Ablage muss unverändert bleiben. | Ältere App-Versionen können neue Freihanddaten beim Speichern verwerfen; vor einem Rückwechsel sichern. |
+
+### 2026-11-18 · Mittwoch — RED Ion als freigegebene ChatGPT-Live-Steuerung
+
+> Auftrag und Ergänzung aus diesem Chat; genaue Nachrichtenzeiten nicht erfasst.
+
+
+#### Was Redur geschrieben hat
+
+
+**1 · nicht erfasst**
+
+> Noch keinen Tunnel eingerichtet
+
+**Gemeint:** Der lokale Adapter kann fertig getestet werden; die echte Kontoverbindung muss erst eingerichtet werden.
+
+**Besser geschrieben:** Ich habe noch keinen Secure MCP Tunnel. Bereite die lokale Integration und die Einrichtungsschritte vor.
+
+**Besserer Prompt:** Baue und prüfe die lokale MCP-/Electron-Verbindung, dokumentiere die echte Tunnel-Erstellung getrennt und behaupte keine bereits verbundene ChatGPT-App.
+
+
+**2 · nicht erfasst**
+
+> füge das im redion als issus also damit ich sehe was ist noch offen
+
+**Gemeint:** Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen.
+
+**Besser geschrieben:** Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen.
+
+**Besserer Prompt:** Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen.
+
+
+**3 · nicht erfasst**
+
+> es sollte so auch sein das ich nur die link kompiere und auch bei der anderecn ai einfügen kann direk und
+
+**Gemeint:** Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten.
+
+**Besser geschrieben:** Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten.
+
+**Besserer Prompt:** Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen.
+
+
+**4 · nicht erfasst**
+
+> und ich muss nicht jedesmal erlauben nur bei erste mal oder beim einstelungen das ändern und dann machen wir so es sollte nicht nur wenn die laptop auf ist das redion zugreifen kann auch wenn die laptop offonline ist ,
+
+**Gemeint:** Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop.
+
+**Besser geschrieben:** Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop.
+
+**Besserer Prompt:** Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen.
+
+
+#### Was gearbeitet wurde
+
+| Arbeit | von → bis | Zeitraum | Dauer | Prüfungen |
+|---|---|---|---|---|
+| E791: endlicher MCP-Vertrag mit 46 Werkzeugen, geschützte Windows-Bridge, native Sitzungsfreigabe, bestehende App-Aktionen und sichtbare Einstellungen; eigenständiges Plugin-Paket mit Start-/Installationsskripten. | `30d0a1ece` → `` | 18. November 2026; Startzeit nicht erfasst | — | Echter SDK-Client und isolierte Electron-App: stdio- und HTTP-Handshake, Lesen/Schreiben, sichtbare Änderungen, fünf Überschriften, 20 Lernkarten, Aufgabe, Tabellenzeile, Schaltplan/Klemmen, Neustart und Widerruf bestanden. Vertrags-/Kanalprüfung, 21 Windows-Verträge und 9 Ink-/Paritätsverträge grün. Echter ChatGPT-Tunnel, Kontoberechtigung, Installation/Signierung und physische Geräte NICHT GETESTET. Anschliessend P145/P146 mit echten roten Gegenproben behoben: Rohtext/Markdown und Sonderzeichen im Store, Anzeige und nach Neustart erhalten; beide nativen Prozessenden jetzt vor Erfolgsprotokoll auf Exitcode 0 geprüft. |
+| E792: Vollständiger Anforderungskatalog, gemerkte widerrufbare Adapter, eigene Bildfreigabe, konfigurierbare Bestätigungen, aktive Profilerkennung; begrenzter Binärbildkanal und echte maskierte Fenster-/Editor-/Schaltplanbilder mit Vorschau. Mehrschritt- und Cloud-Ausbau bleiben offen. | `c76959ce7` → `` | 18. November 2026; genaue Startzeit nicht erfasst | — | 10/10 Bridge-/Sicherheits-/Binärprüfungen; echter SDK-/Electron-Lauf mit 47 Werkzeugen, ImageContent, maskiertem und sichtbarem Kontrollbereich, Zuschnitt, Schaltplanbild, Verweigerung, Neustart, Widerruf, HTTP-Schutz und cleanExit bestanden. 10/10 Windows-/Dateiverträge grün. Ein regulärer Web-Bau meldete Schreibfehler auf einzelnen erzeugten Dateien; getrennte TypeScript-Ausgabe wurde bytegleich mit den Ziel-Dateien abgeglichen. Tatsächliche ChatGPT-Bilddarstellung, sichtbare Nutzer-Issues, atomare Batches, Cloud-Endpunkt und neue Windows-Pakete noch offen. |
+| E793: Kostenloser Cloud-MCP-Ausbau. Aktiven Workers-Free-Tarif gelesen; leere D1 nach Kostenstopp entfernt. OAuth-Zustand und HTTP-Router mit gespeicherten Bereichsfreigaben, Widerruf, PKCE, Code-Einmalverbrauch und rotierendem Refresh gebaut. Noch nicht an echte Konten, Daten oder Worker angeschlossen. | `cf306ed09` → `` | 18. November 2026; genaue Startzeit nicht erfasst | — | 15 SQLite-/OAuth-/HTTP-Fälle bestanden, darunter echter MCP-SDK-OAuth-Client; synthetischer Chromium-Ablauf mit echtem lokalen HTTPS, Arbeitsbereichswahl, gemerkter Zustimmung und Widerruf bestanden. Hell/Dunkel am Desktop und mobile Darstellung angesehen. Browser fand P150. Cloud-Deployment, ChatGPT-Verbindung und Laptop-Aus-Abgleich NICHT GETESTET. |
+
+#### Zahlen des Tages
+
+- **commits:** Eigener Arbeitsbranch; PR #207 ist ausdrücklich beauftragtes Fast-Forward-Ziel.
+- **entscheidungen:** E791, E792, E793
+- **neuePruefungen:** 7
+
+#### Das grösste Problem
+
+Interne Hash-Navigation brach zuerst einen MCP-Aufruf wie einen Renderer-Neustart ab (P140).
+
+#### Das Interessanteste, das Redur wollte
+
+ChatGPT soll eine echte geöffnete Windows-App mit vorhandenen Notizen, Tabellen, Lernkarten und Schaltplänen steuern.
+
+#### Massnahmen an den Daten
+
+| Zeit | Was | Warum | Risiko |
+|---|---|---|---|
+| nicht erfasst | Nur synthetische Dokumente und getrennte Testprofile; keine Schlüssel im Chat oder Repository. | Die bestehende persönliche Ablage muss erhalten bleiben. | Ein lokal bestandener Test beweist weder eine ChatGPT-Kontofreigabe noch eine funktionierende Tunnel-ID. |
+
 ---
 
 ## Teil IV — Wo die Probleme stehen
 
-In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 138 Einträge.
+In `PROBLEME.md`, aus derselben Quelle erzeugt. Zurzeit 150 Einträge.
 

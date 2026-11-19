@@ -1,0 +1,6 @@
+{
+  "compilerOptions": {"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","noEmit":true,
+    "allowImportingTsExtensions":true,"strict":true,"noUncheckedIndexedAccess":true,"exactOptionalPropertyTypes":true,
+    "noUnusedLocals":true,"noUnusedParameters":true,"skipLibCheck":true,"types":["node"]},
+  "include":["*.mts","server/*.mts","tests/*.mts"]
+}

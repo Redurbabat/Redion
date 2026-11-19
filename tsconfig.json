@@ -80,5 +80,5 @@
   ],
   "include": ["src/**/*.ts", "pruefungen/**/*.mts", "**/*.mts",
               "server/**/*.ts", "functions/**/*.ts", "worker.ts"],
-  "exclude": ["node_modules", "quell", "src/dienst"]
+  "exclude": ["node_modules", "quell", "src/dienst", "plugins/red-ion"]
 }

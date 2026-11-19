@@ -247,7 +247,10 @@ const GlassWheel = (() => {
     if(current===value)return true;
     generation++;current=value;write(MODE_KEY,value);
     if(value==='glass-wheel'){
-      try {document.body.dataset['uiShell']=value;mount();}
+      try {document.body.dataset['uiShell']=value;mount();
+        // Beim Wechsel im Dokument bleibt die Arbeit sichtbar und erreichbar.
+        if(document.querySelector('#title,.document-workspace,.sp-wrap'))setExpanded(false);
+      }
       catch(error){fail(error);return false;}
     }else{
       hostEvents?.abort();hostEvents=null;clearTimeout(wheelTimer);cancelDrag();

@@ -93,7 +93,7 @@ try {
         labelCount: el.querySelectorAll('button[data-a]').length
       };
     });
-    check(label + ': dauerhaft sichtbare, echte Werkzeugleiste', state.visible);
+    check(label + ': dauerhaft sichtbare, echte Werkzeugleiste; ' + JSON.stringify(state), state.visible);
     check(label + ': vorhandene Befehle + Gruppenname', state.labelCount >= 5 &&
       state.role === 'group' && state.label === 'Seitenwerkzeuge');
     check(label + ': visuelle Rubrik auf Desktop / Platzgewinn auf Handy',

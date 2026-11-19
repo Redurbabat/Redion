@@ -472,7 +472,15 @@ const wieDieShell = (b: string): string =>
   b.replace(/\$(?=['"])/g, '').replace(/\\([\s\S])/g, '$1').replace(/['"]/g, '');
 
 /** Prosa (`nurAusgabe`) ist schon beim Lesen aus den Befehlen gefallen. */
-const istOrchestrator = (b: string): boolean => AUFRUFE.some(m => m.test(wieDieShell(b)));
+/* Ein Test in einem eigenen Unterpaket und ein benanntes test:* Skript
+ * starten nicht den Redion-Gesamt-Orchestrator. Sie muessen in der CI
+ * weiterhin laufen duerfen; `npm test` im Wurzelpaket bleibt geprueft. */
+const istOrchestrator = (b: string): boolean => {
+  const cmd = wieDieShell(b);
+  if (/\bnpm\s+--prefix(?:=|\s+)windows\b/.test(cmd)) return false;
+  if (/\bnpm\s+run\s+test:[\w-]+\b/.test(cmd)) return false;
+  return AUFRUFE.some(m => m.test(cmd));
+};
 
 /** Fährt dieser Befehl den VOLLEN Lauf? Der Lauf in Stücken immer; sonst
  *  ein Aufruf ohne Auswahl (keine Nummer, kein `--schnell`, kein `server`,
@@ -480,7 +488,7 @@ const istOrchestrator = (b: string): boolean => AUFRUFE.some(m => m.test(wieDieS
 const istVoll = (befehl: string): boolean => {
   const b = wieDieShell(befehl);
   const treffer = AUFRUFE.map(m => m.exec(b)).find(t => t !== null) ?? null;
-  if (!treffer) return false;
+  if (!treffer || !istOrchestrator(befehl)) return false;
   if (/volllauf\.mts\b/.test(b)) return true;
   const rest = b.slice(treffer.index + treffer[0].length);
   return !/--schnell\b|--liste\b|\bserver\b|(^|\s)\d+(\s|$)/.test(rest);
@@ -686,7 +694,7 @@ if (!kenntListe) {
     'Status ' + r.status + (r.error ? ' · ' + r.error.message : ''));
   p('… und startet dabei keinen einzigen Lauf', !/^──── \[/m.test(aus));
   kopfZahl = Number(/Prüfläufe: (\d+) Läufe/.exec(aus)?.[1] ?? NaN);
-  zeilen = [...aus.matchAll(/^(test\d+|servercheck)\s+(ohne Browser|Browser)(?:\s+—\s+(.*?))?\s*$/gm)]
+  zeilen = [...aus.matchAll(/^([A-Za-z][\w.-]*)\s+(ohne Browser|Browser)(?:\s+—\s+(.*?))?\s*$/gm)]
     .map(m => ({ name: m[1] ?? '', browser: m[2] === 'Browser', grund: (m[3] ?? '').trim() }));
 }
 const inListe = new Set(zeilen.map(z => z.name));

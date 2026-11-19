@@ -5136,6 +5136,124 @@ const ChronikDaten = {
    "groesstesProblem": "Die Norm zeigt die Ruhelage, die Simulation braucht die Stellung: gelöst, indem die Stellung nur in der Simulation gezeichnet wird.",
    "interessantesteAnfrage": "Ein Schalter, der aussieht wie in der eigenen VA-Simulation.",
    "massnahmen": []
+  },
+  {
+   "datum": "2026-11-16",
+   "wochentag": "Montag",
+   "titel": "Windows-Stiftstudio und Freihand im Stromkreis",
+   "wasIchWeiss": "Umfang und Präferenzen aus dem aktuellen Chat; Nachrichtenzeiten nicht erfasst.",
+   "nachrichten": [
+    {
+     "zeit": "nicht erfasst",
+     "wortlaut": "es sollte sich wie eine macbook app fühlen die auf windows läuft",
+     "woher": "Wörtlicher Auszug aus dem Redion-Auftrag dieses Chats.",
+     "gemeint": "Windows zuerst abnehmen, direkte Stifteingabe und hochwertige optionale Glaswerkzeuge.",
+     "besser": "Redion soll unter Windows ein flüssiges Schreib- und Zeichenerlebnis mit optionalem Liquid Glass bieten.",
+     "besserePrompt": "Baue auf der vorhandenen Windows-App auf; verbessere die gemeinsamen Stiftgrundlagen und ergänze Freihand über laufenden Installationsschaltungen."
+    }
+   ],
+   "arbeit": [
+    {
+     "was": "Windows-Stiftstudio E790 auf eigenem Branch: Freihand im Plan, gemeinsame Stiftmeldungen, optionale Glaswerkzeuge und isolierte native Prüfungen.",
+     "vonCommit": "eff7e4cdd",
+     "bisCommit": "",
+     "zeitraum": "16. November 2026; genaue Startzeit nicht erfasst",
+     "pruefungen": "6 Modellverträge, 21 Windows-Verträge, 3 Paritätsverträge, zehn Ink-/Elektro-Läufe und 22 Neigungszusagen grün. Archiv-Roundtrip, Chromium-Layouts und Skalierung 1/1,5/2 geprüft. Automatisierter Electron-Dauerlauf: 1800215 ms, 3315 Schreibzüge, 0 Abbrüche. Schneller Gesamtlauf 42/49; die sieben roten Läufe sind am Ausgangscommit ebenfalls rot. WebKit und reale Geräte bleiben gesondert offen."
+    }
+   ],
+   "zahlen": {
+    "commits": "Lokaler Arbeitsbranch; kein Push",
+    "entscheidungen": "E790",
+    "neuePruefungen": 3
+   },
+   "groesstesProblem": "Der Hintergrundfilter änderte den Bezug des Werkzeugdocks (P139).",
+   "interessantesteAnfrage": "Mit einem normalen Stift direkt über einer laufenden Stromsimulation schreiben, ohne die Schaltung zu verändern.",
+   "massnahmen": [
+    {
+     "zeit": "nicht erfasst",
+     "was": "Nur synthetische Dokumente, Archive und frische isolierte App-Profile verwendet.",
+     "warum": "Die normale Windows-Ablage muss unverändert bleiben.",
+     "risiko": "Ältere App-Versionen können neue Freihanddaten beim Speichern verwerfen; vor einem Rückwechsel sichern."
+    }
+   ]
+  },
+  {
+   "datum": "2026-11-18",
+   "wochentag": "Mittwoch",
+   "titel": "RED Ion als freigegebene ChatGPT-Live-Steuerung",
+   "wasIchWeiss": "Auftrag und Ergänzung aus diesem Chat; genaue Nachrichtenzeiten nicht erfasst.",
+   "nachrichten": [
+    {
+     "zeit": "nicht erfasst",
+     "wortlaut": "Noch keinen Tunnel eingerichtet",
+     "woher": "Antwort auf die Rückfrage nach einer echten Secure-MCP-Tunnel-ID.",
+     "gemeint": "Der lokale Adapter kann fertig getestet werden; die echte Kontoverbindung muss erst eingerichtet werden.",
+     "besser": "Ich habe noch keinen Secure MCP Tunnel. Bereite die lokale Integration und die Einrichtungsschritte vor.",
+     "besserePrompt": "Baue und prüfe die lokale MCP-/Electron-Verbindung, dokumentiere die echte Tunnel-Erstellung getrennt und behaupte keine bereits verbundene ChatGPT-App."
+    },
+    {
+     "zeit": "nicht erfasst",
+     "wortlaut": "füge das im redion als issus also damit ich sehe was ist noch offen",
+     "woher": "Nachricht in diesem Chat; Datum der Aufzeichnung, genaue Nachrichtenzeit nicht erfasst.",
+     "gemeint": "Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen.",
+     "besser": "Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen.",
+     "besserePrompt": "Die offenen Anforderungen zusätzlich im eigenen Redion-Datenbestand als sichtbare Issues anlegen. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen."
+    },
+    {
+     "zeit": "nicht erfasst",
+     "wortlaut": "es sollte so auch sein das ich nur die link kompiere und auch bei der anderecn ai einfügen kann direk und",
+     "woher": "Nachricht in diesem Chat; Datum der Aufzeichnung, genaue Nachrichtenzeit nicht erfasst.",
+     "gemeint": "Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten.",
+     "besser": "Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten.",
+     "besserePrompt": "Einen wiederverwendbaren authentifizierten HTTPS-MCP-Endpunkt für kompatible KI-Clients anbieten. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen."
+    },
+    {
+     "zeit": "nicht erfasst",
+     "wortlaut": "und ich muss nicht jedesmal erlauben nur bei erste mal oder beim einstelungen das ändern und dann machen wir so es sollte nicht nur wenn die laptop auf ist das redion zugreifen kann auch wenn die laptop offonline ist ,",
+     "woher": "Nachricht in diesem Chat; Datum der Aufzeichnung, genaue Nachrichtenzeit nicht erfasst.",
+     "gemeint": "Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop.",
+     "besser": "Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop.",
+     "besserePrompt": "Einmal freigeben, in Einstellungen ändern/widerrufen; Cloud-Zugriff auf freigegebene synchronisierte Daten bei ausgeschaltetem Laptop. Vorhandene Datenarchitektur erhalten und echten Funktionsnachweis getrennt ausweisen."
+    }
+   ],
+   "arbeit": [
+    {
+     "was": "E791: endlicher MCP-Vertrag mit 46 Werkzeugen, geschützte Windows-Bridge, native Sitzungsfreigabe, bestehende App-Aktionen und sichtbare Einstellungen; eigenständiges Plugin-Paket mit Start-/Installationsskripten.",
+     "vonCommit": "30d0a1ece",
+     "bisCommit": "",
+     "zeitraum": "18. November 2026; Startzeit nicht erfasst",
+     "pruefungen": "Echter SDK-Client und isolierte Electron-App: stdio- und HTTP-Handshake, Lesen/Schreiben, sichtbare Änderungen, fünf Überschriften, 20 Lernkarten, Aufgabe, Tabellenzeile, Schaltplan/Klemmen, Neustart und Widerruf bestanden. Vertrags-/Kanalprüfung, 21 Windows-Verträge und 9 Ink-/Paritätsverträge grün. Echter ChatGPT-Tunnel, Kontoberechtigung, Installation/Signierung und physische Geräte NICHT GETESTET. Anschliessend P145/P146 mit echten roten Gegenproben behoben: Rohtext/Markdown und Sonderzeichen im Store, Anzeige und nach Neustart erhalten; beide nativen Prozessenden jetzt vor Erfolgsprotokoll auf Exitcode 0 geprüft."
+    },
+    {
+     "was": "E792: Vollständiger Anforderungskatalog, gemerkte widerrufbare Adapter, eigene Bildfreigabe, konfigurierbare Bestätigungen, aktive Profilerkennung; begrenzter Binärbildkanal und echte maskierte Fenster-/Editor-/Schaltplanbilder mit Vorschau. Mehrschritt- und Cloud-Ausbau bleiben offen.",
+     "vonCommit": "c76959ce7",
+     "bisCommit": "",
+     "zeitraum": "18. November 2026; genaue Startzeit nicht erfasst",
+     "pruefungen": "10/10 Bridge-/Sicherheits-/Binärprüfungen; echter SDK-/Electron-Lauf mit 47 Werkzeugen, ImageContent, maskiertem und sichtbarem Kontrollbereich, Zuschnitt, Schaltplanbild, Verweigerung, Neustart, Widerruf, HTTP-Schutz und cleanExit bestanden. 10/10 Windows-/Dateiverträge grün. Ein regulärer Web-Bau meldete Schreibfehler auf einzelnen erzeugten Dateien; getrennte TypeScript-Ausgabe wurde bytegleich mit den Ziel-Dateien abgeglichen. Tatsächliche ChatGPT-Bilddarstellung, sichtbare Nutzer-Issues, atomare Batches, Cloud-Endpunkt und neue Windows-Pakete noch offen."
+    },
+    {
+     "was": "E793: Kostenloser Cloud-MCP-Ausbau. Aktiven Workers-Free-Tarif gelesen; leere D1 nach Kostenstopp entfernt. OAuth-Zustand und HTTP-Router mit gespeicherten Bereichsfreigaben, Widerruf, PKCE, Code-Einmalverbrauch und rotierendem Refresh gebaut. Noch nicht an echte Konten, Daten oder Worker angeschlossen.",
+     "vonCommit": "cf306ed09",
+     "bisCommit": "",
+     "zeitraum": "18. November 2026; genaue Startzeit nicht erfasst",
+     "pruefungen": "15 SQLite-/OAuth-/HTTP-Fälle bestanden, darunter echter MCP-SDK-OAuth-Client; synthetischer Chromium-Ablauf mit echtem lokalen HTTPS, Arbeitsbereichswahl, gemerkter Zustimmung und Widerruf bestanden. Hell/Dunkel am Desktop und mobile Darstellung angesehen. Browser fand P150. Cloud-Deployment, ChatGPT-Verbindung und Laptop-Aus-Abgleich NICHT GETESTET."
+    }
+   ],
+   "zahlen": {
+    "commits": "Eigener Arbeitsbranch; PR #207 ist ausdrücklich beauftragtes Fast-Forward-Ziel.",
+    "entscheidungen": "E791, E792, E793",
+    "neuePruefungen": 7
+   },
+   "groesstesProblem": "Interne Hash-Navigation brach zuerst einen MCP-Aufruf wie einen Renderer-Neustart ab (P140).",
+   "interessantesteAnfrage": "ChatGPT soll eine echte geöffnete Windows-App mit vorhandenen Notizen, Tabellen, Lernkarten und Schaltplänen steuern.",
+   "massnahmen": [
+    {
+     "zeit": "nicht erfasst",
+     "was": "Nur synthetische Dokumente und getrennte Testprofile; keine Schlüssel im Chat oder Repository.",
+     "warum": "Die bestehende persönliche Ablage muss erhalten bleiben.",
+     "risiko": "Ein lokal bestandener Test beweist weder eine ChatGPT-Kontofreigabe noch eine funktionierende Tunnel-ID."
+    }
+   ]
   }
  ],
  "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",
@@ -6967,6 +7085,174 @@ const ChronikDaten = {
    "loesung": "Die ganze Karte und vollständige 44-Pixel-Trefferflächen prüfen, Überdeckung von Vorschau/Titel ausschliessen, Textraum reservieren und den tatsächlichen Abstand korrigieren. Eine isolierte Gegenprobe verschiebt den Favoriten absichtlich in den Inhalt.",
    "beweis": "Erstlauf 85/91; strengere Messung danach 92/93 und nach der Abstandskorrektur 93/93, einschliesslich zweier erkannter Gegenproben.",
    "lehre": "Beim Umbau den ursprünglichen Bedienvertrag erhalten und den Messpunkt nachsehen. Eine echte Gegenprobe schützt davor, nur den Test an eine hübsche Oberfläche anzupassen."
+  },
+  {
+   "nr": "P139",
+   "datum": "2026-11-16",
+   "titel": "Ein Glasfilter versetzt das Werkzeugdock",
+   "schwere": "mittel",
+   "entscheidung": "E790",
+   "symptom": "Beim Aktivieren des optionalen Glasmodus waren die Stiftwerkzeuge hinter anderen Seitenwerkzeugen nicht mehr erreichbar.",
+   "falscheVermutung": "Das aufgeklappte Bereichsrad verdeckt die Fläche; Einklappen allein genügt.",
+   "wieGefunden": "Der echte Electron-Nutzerweg scheiterte auch nach dem Einklappen. Bildschirmbilder, überdeckendes Element und die CSS-Regeln des absolut gesetzten Docks wurden verglichen.",
+   "ursache": "Ein neuer Hintergrundfilter am Plan-Kopf änderte den Positionierungsbezug seines absolut gesetzten Werkzeugdocks. Das Dock lag dadurch über dem Kopf statt im reservierten Streifen unter der Zeichnung.",
+   "loesung": "Den Filter am schwebenden Dock selbst anwenden und den Kopf ohne Filter lassen. Beim Wechsel in einem offenen Dokument bleibt das Bereichsrad eingeklappt.",
+   "beweis": "Der ursprüngliche native Klickweg scheiterte; nach der Korrektur besteht der komplette Windows-Nutzerweg. 16 Chromium-Darstellungen prüfen erreichbare Werkzeuge, Mindestgrössen und deckendes Papier.",
+   "lehre": "Materialeffekte können die Geometrie von Kindern verändern. Eine gläserne Fläche deshalb mit echten Eingaben prüfen, nicht nur anhand eines Bildes."
+  },
+  {
+   "nr": "P140",
+   "datum": "2026-11-18",
+   "titel": "Ein Ansichtswechsel beendete den MCP-Auftrag",
+   "schwere": "mittel",
+   "entscheidung": "E791",
+   "symptom": "Der echte MCP-Client konnte Status lesen, aber der Wechsel in eine Arbeitswelt endete mit APP_DISCONNECTED.",
+   "falscheVermutung": "Der neue Kanal oder sein Ausgabeformat sei noch nicht korrekt verbunden.",
+   "wieGefunden": "Der SDK-Test führte bereits echte Handshakes aus. Erst der semantische Ansichtswechsel löste die native Navigationsbehandlung aus.",
+   "ursache": "did-start-navigation behandelte auch einen internen Hash-Wechsel als vollständigen Renderer-Neustart und widerrief die eigene laufende Aktion.",
+   "loesung": "Nur echte Hauptframe-Navigation unterbricht den Adapter. Interne Ansichtswechsel behalten die Sitzung. Der Test prüft Arbeitswelt, Seitenöffnung, echte Änderungen und Neustart.",
+   "beweis": "Zuerst APP_DISCONNECTED beim Öffnen der Arbeitswelt; danach derselbe End-to-End-Weg bis zur dauerhaften Speicherung und HTTP-Leseaktion bestanden.",
+   "lehre": "Die bestehende App-Navigation gehört zum Verbindungslebenszyklus. Ein erfolgreicher Handshake allein prüft keine Live-Steuerung."
+  },
+  {
+   "nr": "P141",
+   "datum": "2026-11-18",
+   "titel": "Eine verknüpfte Bridge-Ablage wurde zu früh bereinigt",
+   "schwere": "hoch",
+   "entscheidung": "E791",
+   "symptom": "Der synthetische Windows-Junction-Test verlor seine fremde Testdatei connection.json, bevor die Bridge aktiviert war.",
+   "falscheVermutung": "Die Prüfung des privaten Ordners beim Aktivieren reiche für alle Dateizugriffe aus.",
+   "wieGefunden": "Ein echter Junction-Test verknüpfte ausschliesslich zwei neu angelegte Testordner und prüfte die unveränderten Fremddateien vor und nach Start/Stop.",
+   "ursache": "Die frühe Bereinigung folgte dem verknüpften automation-Ordner, bevor dessen Pfad geprüft wurde.",
+   "loesung": "Jeden lokalen Lese-, Schreib- und Bereinigungspfad separat prüfen; Links und verknüpfte Vorfahren abweisen. Auch der Paketinstaller prüft seine vorgesehenen Zielpfade vor dem Kopieren.",
+   "beweis": "Zuerst ENOENT für die synthetische fremde connection.json; nach der Korrektur alle drei Vertrags-/Kanaltests grün. Keine persönliche Ablage wurde zum Test verwendet.",
+   "lehre": "Eine sichere Aktivierung schützt nicht automatisch vorherige Aufräumarbeiten. Den gesamten Dateilebenszyklus mit einem echten Gegenbeispiel prüfen."
+  },
+  {
+   "nr": "P142",
+   "datum": "2026-11-18",
+   "titel": "PowerShell veränderte den Tunnel-Startbefehl",
+   "schwere": "mittel",
+   "entscheidung": "E791",
+   "symptom": "Der offizielle Windows-Tunnel-Client konnte bei der lokalen Initialisierung den Node-Pfad nicht finden.",
+   "falscheVermutung": "Ein in PowerShell zusammengesetzter zitierter Befehl komme unverändert bei einer nativen EXE an.",
+   "wieGefunden": "Installationsskript und echte lokale Client-Initialisierung unter dem mit Windows gelieferten PowerShell 5.1 ausgeführt; keine echten Zugangsdaten oder Netzwerkverbindung verwendet.",
+   "ursache": "Die ältere native Argumentübergabe entfernte Anführungszeichen; die Shell-Wortzerlegung des Clients behandelte Windows-Backslashes als Escape-Zeichen.",
+   "loesung": "Slash-Pfade verwenden, Anführungszeichen für die ältere native Übergabe maskieren, gelieferte PowerShell-Skripte mit UTF-8-BOM schreiben. Die automatische Variable Profile wird nicht mehr als eigene Skriptvariable benutzt.",
+   "beweis": "Unveränderter Client meldete zuerst C:nvm4wnodejsnode.exe nicht gefunden. Danach erzeugte er unter PowerShell 5.1 und 7 das korrekte synthetische stdio-Profil; Installation und Diagnose unter 5.1 bestanden.",
+   "lehre": "Syntaxprüfung genügt nicht für native Befehle. Den tatsächlichen Client mit der Windows-Standard-Shell prüfen."
+  },
+  {
+   "nr": "P143",
+   "datum": "2026-11-18",
+   "titel": "Neue Desktop-Adapter fehlten im Offline-Grundstock",
+   "schwere": "mittel",
+   "entscheidung": "E791",
+   "symptom": "test87 meldete neue index.html-Skripte, die nicht im Service-Worker-Grundstock standen.",
+   "falscheVermutung": "Weil die Windows-App Dateien lokal lädt, sei die Offline-Dateiliste für ihre neuen Adapter nicht betroffen.",
+   "wieGefunden": "Die vollständige bestehende Prüfsuite verglich die index.html-Skripte mit sw.js.",
+   "ursache": "Die gemeinsam eingebundenen Adapter waren in der Startdatei registriert, aber noch nicht vollständig im Web-Cache-Grundstock.",
+   "loesung": "Alle neun neuen Adapter im erzeugten Service-Worker-Grundstock ergänzen und den Dienststand regulär neu bauen.",
+   "beweis": "Erstlauf test87 meldete fehlende Adapter; nach der Korrektur besteht derselbe Lauf mit 197/197 Prüfpunkten. Die Register-Inventur ist ebenfalls nachgetragen; test86 meldet nur noch den bestehenden Unterschied 15 statt 14 Werkzeuggruppen.",
+   "lehre": "Ein Desktop-Ausbau kann gemeinsame Web-Dateien ergänzen. Deren Offline-Vertrag bleibt verbindlich."
+  },
+  {
+   "nr": "P144",
+   "datum": "2026-11-18",
+   "titel": "Eine alte Startfreigabe überlebte das Abschalten der Verbindung",
+   "schwere": "mittel",
+   "entscheidung": "E791",
+   "symptom": "Der geschlossene App-Start prüfte eine frühere Startfreigabe, aber noch nicht die aktuell ausgeschaltete Verbindung oder entzogene App-Funktionsgruppe.",
+   "falscheVermutung": "Der ausdrücklich freigegebene App-Pfad allein reiche auch für den Verbindungszustand nach dem Beenden der App.",
+   "wieGefunden": "Ein echter SDK-Client erhielt künstliche Metadaten mit fehlender Test-EXE. Der Widerruftest verlangte eine Ablehnung, bevor überhaupt auf die EXE zugegriffen wird.",
+   "ursache": "Die Startsonderroute für eine geschlossene App umging die gewöhnliche native Sitzungsprüfung und kontrollierte nur allowLaunch.",
+   "loesung": "Zusätzlich enabled gleich true und die App-Funktionsgruppe verlangen; alle Prüfungen erfolgen vor Hashprüfung oder Prozessstart.",
+   "beweis": "Gegenprobe zuerst rot mit ENOENT statt LAUNCH_DISABLED; danach beide Widerrufsvarianten grün. Insgesamt 3/3 Windows-Skript-/SDK-Tests bestanden. Keine Test-EXE und keine Nutzer-App wurden gestartet.",
+   "lehre": "Jede Sonderroute ohne laufende App muss dieselben aktuellen Freigaben beachten wie der normale Kanal."
+  },
+  {
+   "nr": "P145",
+   "datum": "2026-11-18",
+   "titel": "Der Textadapter verwechselte Markdown mit HTML",
+   "schwere": "hoch",
+   "entscheidung": "E791",
+   "symptom": "Ein Kontrollbild zeigte Formatierungstags als wörtlichen Text. Einfügen und Lesen konnten Sonderzeichen vorab maskieren oder als HTML interpretieren.",
+   "falscheVermutung": "Textblöcke enthielten gespeichertes HTML, dessen Textknoten bearbeitet werden müssten.",
+   "wieGefunden": "Das echte Bildschirmbild wurde mit Blocks.inline und dem Eingabehandler verglichen. Diese speichern rohe Zeichen mit Markdown-Markierungen. Danach wurde der Fehler mit einem echten SDK-Client reproduziert.",
+   "ursache": "Der neue Adapter maskierte Zeichen vor Store.addBlock und las bestehenden Rohtext durch einen HTML-Parser; der bestehende Editor maskiert erst bei der Anzeige.",
+   "loesung": "Dieselben rohen Zeichen wie der Editor lesen und speichern. Eindeutige Ersetzungen im gespeicherten Wortlaut durchführen, Dollarzeichen wörtlich übernehmen und bestehende Markdown-Markierungen erhalten.",
+   "beweis": "Zuerst roter Roundtrip mit vorab maskierten Entities. Danach echter MCP-/Electron-Lauf mit sichtbarer Fettschrift, unveränderten Sonderzeichen, HTML als sichtbarem Text ohne Bildknoten, Aufgaben/Lernkarten und dauerhaftem Neustart grün.",
+   "lehre": "Den bestehenden Speichervertrag am echten Eingabe- und Anzeigepfad lesen. Ein Test mit künstlich erfundenem Datenformat beweist das falsche Modell."
+  },
+  {
+   "nr": "P146",
+   "datum": "2026-11-18",
+   "titel": "Beim Beenden wurde an ein zerstörtes Fenster gesendet",
+   "schwere": "hoch",
+   "entscheidung": "E791",
+   "symptom": "Ein funktional abgeschlossener MCP-Test blieb beim Beenden an einem nativen Fehlerdialog hängen.",
+   "falscheVermutung": "Ein geschriebenes Erfolgsprotokoll nach Lesen/Schreiben und Neustart beweise auch einen sauberen vollständigen Testabschluss.",
+   "wieGefunden": "Der eigene Testprozess zeigte den Fenstertitel Error. Eine neue Testprüfung bricht bei unerwarteten nativen Fehlerdialogen mit Fehlercode ab und kontrolliert beide Prozessenden vor dem Erfolgsprotokoll.",
+   "ursache": "cancelAutomation sendete im closed-Ereignis an die bereits zerstörten webContents. Auch Statusmeldungen und Zeitlimit-Abbrüche hatten diese fehlende Lebenszyklusprüfung.",
+   "loesung": "Alle neuen Automatisierungsmeldungen nur an ein bestehendes Fenster mit lebenden webContents senden. Offene Aktionen weiterhin abbrechen und aufräumen.",
+   "beweis": "Gegenprobe zuerst rot: Object has been destroyed in cancelAutomation, Exitcode 91. Danach derselbe vollständige echte MCP-/Electron-Test mit zwei sauberen Prozessenden, cleanExit true und Exitcode 0 bestanden.",
+   "lehre": "Erfolg erst nach abgeschlossenem Aufräumen melden. Native Fehlerdialoge müssen einen automatisierten Test rot machen."
+  },
+  {
+   "nr": "P147",
+   "datum": "2026-11-18",
+   "titel": "Abgebrochene Kopplung hält spätere Clients fest",
+   "schwere": "mittel",
+   "entscheidung": "E792",
+   "symptom": "Nach Abbruch einer Verbindungsanfrage meldete der nächste Client dauerhaft PAIRING_BUSY.",
+   "falscheVermutung": "Das Schliessen des Clients beende automatisch auch den offenen nativen Freigabedialog.",
+   "wieGefunden": "Eine isolierte echte Named-Pipe-Prüfung liess die erste künstliche Bestätigung offen, trennte den Client und verband danach einen neuen Client.",
+   "ursache": "Der offene Dialog hatte weder socketgebundene Abbruchsteuerung noch ein eigenes Zeitlimit; der Pairing-Zustand blieb belegt.",
+   "loesung": "Dialoge mit AbortSignal, Zeitlimit und Socket-Eigentümer binden. Beim Trennen abbrechen und ausschliesslich den Zustand dieser Anfrage freigeben.",
+   "beweis": "Gegenprobe zuerst PAIRING_BUSY; danach neue Kopplung erfolgreich. Neun gezielte MCP-/Binärprüfungen bestehen, einschliesslich dieser Gegenprobe.",
+   "lehre": "Verbindungsabbruch muss auch wartende menschliche Freigaben beenden, nicht nur Datenanforderungen."
+  },
+  {
+   "nr": "P148",
+   "datum": "2026-11-18",
+   "titel": "Automatische Profilsuche verschluckt eine mehrdeutige Auswahl",
+   "schwere": "mittel",
+   "entscheidung": "E792",
+   "symptom": "Zwei aktive synthetische Windows-Profile erschienen fälschlich als APP_NOT_RUNNING.",
+   "falscheVermutung": "Eine fehlgeschlagene Discovery bedeute stets, dass keine App laufe.",
+   "wieGefunden": "Der Diagnose-CLI-Test setzte beide bekannten Profilmarker mit einem tatsächlich lebenden Testprozess und verlangte eine ausdrückliche Auswahl.",
+   "ursache": "Ein allgemeiner catch-Block überschrieb den bereits erkannten Status AMBIGUOUS_PROFILE.",
+   "loesung": "Mehrdeutigkeit sichtbar zurückgeben; nur ein eindeutig aktives Profil automatisch wählen. Keine Profile verschieben oder zusammenführen.",
+   "beweis": "Zuerst APP_NOT_RUNNING statt AMBIGUOUS_PROFILE; danach alle vier Skript-/Discovery-Prüfungen grün.",
+   "lehre": "Ein aus Sicherheitsgründen verweigerter Automatismus braucht eine eigene verständliche Ursache."
+  },
+  {
+   "nr": "P149",
+   "datum": "2026-11-18",
+   "titel": "Interne Nachrichtenkennung bricht das MCP-Ausgabeschema",
+   "schwere": "mittel",
+   "entscheidung": "E792",
+   "symptom": "Der echte SDK-Client lehnte den App-Status nach Umstellung des Antwortlesers mit InvalidParams ab.",
+   "falscheVermutung": "Der bisherige Ergebnisumschlag könne unverändert vom neuen Binärrahmenleser bis zum SDK weitergegeben werden.",
+   "wieGefunden": "Der echte stdio-Client validierte structuredContent gegen den geschlossenen Tool-Vertrag und meldete ein zusätzliches Feld.",
+   "ursache": "Das interne Zuordnungsfeld id wurde nach der Prüfung der passenden Antwort nicht aus dem Transportumschlag entfernt.",
+   "loesung": "Nachrichtenkennung für die Zuordnung prüfen, dann vor Rückgabe an den MCP-Server entfernen. Unbekannte Kopfzeilenfelder einschliesslich vorgetäuschter Bildbytes abweisen.",
+   "beweis": "Zuerst -32602: data must NOT have additional properties. Danach vollständiger echter SDK-/Electron-Lauf mit 47 Werkzeugen, maskiertem Bild, Schaltplanbild und sauberem Neustart bestanden.",
+   "lehre": "Ein interner Transportvertrag ist nicht der öffentliche Werkzeugvertrag. Beide am echten validierenden Client prüfen."
+  },
+  {
+   "nr": "P150",
+   "datum": "2026-11-18",
+   "titel": "Sichere Header blockieren den eigenen OAuth-Rückweg im echten Browser",
+   "schwere": "mittel",
+   "entscheidung": "E793",
+   "symptom": "Der synthetische Freigabe-POST wurde zunächst wegen Origin null abgewiesen. Danach blockierte Chromium den registrierten Rückweg mit einer CSP-Verletzung.",
+   "falscheVermutung": "Ein erfolgreicher Request/Response- und SDK-OAuth-Lauf belege schon, dass der Formular-Rückweg im Browser funktioniert.",
+   "wieGefunden": "Tatsächliche Formulare und Redirects im Chromium-Lauf; zuerst Origin-Assertion rot, danach konkrete form-action-Verletzung in der Browserkonsole.",
+   "ursache": "no-referrer setzt beim Formular den Origin auf null. form-action self wird in Chromium auch auf den anschliessenden 303-Redirect angewendet und sperrt die registrierte KI-Adresse.",
+   "loesung": "Auf Auth-Seiten same-origin verwenden und zusätzlich nur den Ursprung der zuvor exakt validierten registrierten Rückgabeadresse in form-action erlauben. Fremde Origins weiterhin zurückweisen; CSRF-Nachweis bleibt an Konto und einmalige Anfrage gebunden.",
+   "beweis": "Roter Browserlauf vor der Korrektur, danach realer lokaler HTTPS-Prüfserver und Chromium: Zustimmung, Callback, gemerkte erneute Verbindung, Widerruf; Hell/Dunkel und mobile Darstellung bestanden.",
+   "lehre": "Protokolltests ersetzen den Browser nicht. Schutzheader zusammen mit ihrem tatsächlichen Formular- und Redirect-Verhalten prüfen."
   }
  ]
 } as const;

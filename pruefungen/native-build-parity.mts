@@ -14,9 +14,14 @@ test('Windows packaging fails on missing, altered and stale Web assets', () => {
     fs.mkdirSync(path.join(source, 'quell'), { recursive: true });
     fs.writeFileSync(path.join(source, 'index.html'), 'REDION');
     fs.writeFileSync(path.join(source, 'sw.js'), 'OFFLINE');
+    fs.writeFileSync(path.join(source, 'version.json'), '{"version":"test"}');
+    fs.writeFileSync(path.join(source, 'version.md'), 'Nur synthetische Testversion');
     fs.writeFileSync(path.join(source, 'quell/start.js'), 'START');
     fs.cpSync(source, target, { recursive: true });
-    assert.equal(compareWindowsWeb(source, target).files.length, 3);
+    assert.equal(compareWindowsWeb(source, target).files.length, 5);
+    fs.unlinkSync(path.join(target, 'version.json'));
+    assert.throws(() => compareWindowsWeb(source, target), /fehlende/);
+    fs.writeFileSync(path.join(target, 'version.json'), '{"version":"test"}');
     fs.writeFileSync(path.join(target, 'quell/stale.js'), 'OLD');
     assert.throws(() => compareWindowsWeb(source, target), /veraltete/);
     fs.unlinkSync(path.join(target, 'quell/stale.js'));

@@ -2006,6 +2006,7 @@ const DocumentMode = (() => {
     position.dataset.documentAction = 'page-jump';
     position.textContent = wortEins(page) + ' ' + (state.index + 1) + '/' + documents.length;
     position.title = 'Direkt zu einer ' + wortEins(page).toLowerCase() + ' springen';
+    position.setAttribute('aria-label', position.title);
     position.disabled = documents.length < 2;
     position.setAttribute('aria-live', 'polite');
     position.setAttribute('aria-atomic', 'true');

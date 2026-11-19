@@ -152,6 +152,18 @@ sind der teuerste Teil und der lehrreichste.
 | P136 | 2026-10-11 | „--schnell“ war nicht schnell | niedrig | — |
 | P137 | 2026-10-12 | Ein Wächter, der nicht auf der Nachbarliste stand | niedrig | — |
 | P138 | 2026-10-24 | Die neue Karte wurde am alten Blatt gemessen | 🟡 klein | — |
+| P139 | 2026-11-16 | Ein Glasfilter versetzt das Werkzeugdock | 🟠 mittel | E790 |
+| P140 | 2026-11-18 | Ein Ansichtswechsel beendete den MCP-Auftrag | 🟠 mittel | E791 |
+| P141 | 2026-11-18 | Eine verknüpfte Bridge-Ablage wurde zu früh bereinigt | hoch | E791 |
+| P142 | 2026-11-18 | PowerShell veränderte den Tunnel-Startbefehl | 🟠 mittel | E791 |
+| P143 | 2026-11-18 | Neue Desktop-Adapter fehlten im Offline-Grundstock | 🟠 mittel | E791 |
+| P144 | 2026-11-18 | Eine alte Startfreigabe überlebte das Abschalten der Verbindung | 🟠 mittel | E791 |
+| P145 | 2026-11-18 | Der Textadapter verwechselte Markdown mit HTML | hoch | E791 |
+| P146 | 2026-11-18 | Beim Beenden wurde an ein zerstörtes Fenster gesendet | hoch | E791 |
+| P147 | 2026-11-18 | Abgebrochene Kopplung hält spätere Clients fest | 🟠 mittel | E792 |
+| P148 | 2026-11-18 | Automatische Profilsuche verschluckt eine mehrdeutige Auswahl | 🟠 mittel | E792 |
+| P149 | 2026-11-18 | Interne Nachrichtenkennung bricht das MCP-Ausgabeschema | 🟠 mittel | E792 |
+| P150 | 2026-11-18 | Sichere Header blockieren den eigenen OAuth-Rückweg im echten Browser | 🟠 mittel | E793 |
 
 ---
 
@@ -2991,4 +3003,256 @@ sind der teuerste Teil und der lehrreichste.
 **Der Beweis.** Erstlauf 85/91; strengere Messung danach 92/93 und nach der Abstandskorrektur 93/93, einschliesslich zweier erkannter Gegenproben.
 
 **Die Lehre.** Beim Umbau den ursprünglichen Bedienvertrag erhalten und den Messpunkt nachsehen. Eine echte Gegenprobe schützt davor, nur den Test an eine hübsche Oberfläche anzupassen.
+
+
+---
+
+## P139 · Ein Glasfilter versetzt das Werkzeugdock
+
+*2026-11-16 · 🟠 mittel · E790*
+
+**Das Bild.** Beim Aktivieren des optionalen Glasmodus waren die Stiftwerkzeuge hinter anderen Seitenwerkzeugen nicht mehr erreichbar.
+
+**Die falsche Vermutung.** Das aufgeklappte Bereichsrad verdeckt die Fläche; Einklappen allein genügt.
+
+**Wie es gefunden wurde.** Der echte Electron-Nutzerweg scheiterte auch nach dem Einklappen. Bildschirmbilder, überdeckendes Element und die CSS-Regeln des absolut gesetzten Docks wurden verglichen.
+
+**Die Ursache.** Ein neuer Hintergrundfilter am Plan-Kopf änderte den Positionierungsbezug seines absolut gesetzten Werkzeugdocks. Das Dock lag dadurch über dem Kopf statt im reservierten Streifen unter der Zeichnung.
+
+**Die Lösung.** Den Filter am schwebenden Dock selbst anwenden und den Kopf ohne Filter lassen. Beim Wechsel in einem offenen Dokument bleibt das Bereichsrad eingeklappt.
+
+**Der Beweis.** Der ursprüngliche native Klickweg scheiterte; nach der Korrektur besteht der komplette Windows-Nutzerweg. 16 Chromium-Darstellungen prüfen erreichbare Werkzeuge, Mindestgrössen und deckendes Papier.
+
+**Die Lehre.** Materialeffekte können die Geometrie von Kindern verändern. Eine gläserne Fläche deshalb mit echten Eingaben prüfen, nicht nur anhand eines Bildes.
+
+
+---
+
+## P140 · Ein Ansichtswechsel beendete den MCP-Auftrag
+
+*2026-11-18 · 🟠 mittel · E791*
+
+**Das Bild.** Der echte MCP-Client konnte Status lesen, aber der Wechsel in eine Arbeitswelt endete mit APP_DISCONNECTED.
+
+**Die falsche Vermutung.** Der neue Kanal oder sein Ausgabeformat sei noch nicht korrekt verbunden.
+
+**Wie es gefunden wurde.** Der SDK-Test führte bereits echte Handshakes aus. Erst der semantische Ansichtswechsel löste die native Navigationsbehandlung aus.
+
+**Die Ursache.** did-start-navigation behandelte auch einen internen Hash-Wechsel als vollständigen Renderer-Neustart und widerrief die eigene laufende Aktion.
+
+**Die Lösung.** Nur echte Hauptframe-Navigation unterbricht den Adapter. Interne Ansichtswechsel behalten die Sitzung. Der Test prüft Arbeitswelt, Seitenöffnung, echte Änderungen und Neustart.
+
+**Der Beweis.** Zuerst APP_DISCONNECTED beim Öffnen der Arbeitswelt; danach derselbe End-to-End-Weg bis zur dauerhaften Speicherung und HTTP-Leseaktion bestanden.
+
+**Die Lehre.** Die bestehende App-Navigation gehört zum Verbindungslebenszyklus. Ein erfolgreicher Handshake allein prüft keine Live-Steuerung.
+
+
+---
+
+## P141 · Eine verknüpfte Bridge-Ablage wurde zu früh bereinigt
+
+*2026-11-18 · hoch · E791*
+
+**Das Bild.** Der synthetische Windows-Junction-Test verlor seine fremde Testdatei connection.json, bevor die Bridge aktiviert war.
+
+**Die falsche Vermutung.** Die Prüfung des privaten Ordners beim Aktivieren reiche für alle Dateizugriffe aus.
+
+**Wie es gefunden wurde.** Ein echter Junction-Test verknüpfte ausschliesslich zwei neu angelegte Testordner und prüfte die unveränderten Fremddateien vor und nach Start/Stop.
+
+**Die Ursache.** Die frühe Bereinigung folgte dem verknüpften automation-Ordner, bevor dessen Pfad geprüft wurde.
+
+**Die Lösung.** Jeden lokalen Lese-, Schreib- und Bereinigungspfad separat prüfen; Links und verknüpfte Vorfahren abweisen. Auch der Paketinstaller prüft seine vorgesehenen Zielpfade vor dem Kopieren.
+
+**Der Beweis.** Zuerst ENOENT für die synthetische fremde connection.json; nach der Korrektur alle drei Vertrags-/Kanaltests grün. Keine persönliche Ablage wurde zum Test verwendet.
+
+**Die Lehre.** Eine sichere Aktivierung schützt nicht automatisch vorherige Aufräumarbeiten. Den gesamten Dateilebenszyklus mit einem echten Gegenbeispiel prüfen.
+
+
+---
+
+## P142 · PowerShell veränderte den Tunnel-Startbefehl
+
+*2026-11-18 · 🟠 mittel · E791*
+
+**Das Bild.** Der offizielle Windows-Tunnel-Client konnte bei der lokalen Initialisierung den Node-Pfad nicht finden.
+
+**Die falsche Vermutung.** Ein in PowerShell zusammengesetzter zitierter Befehl komme unverändert bei einer nativen EXE an.
+
+**Wie es gefunden wurde.** Installationsskript und echte lokale Client-Initialisierung unter dem mit Windows gelieferten PowerShell 5.1 ausgeführt; keine echten Zugangsdaten oder Netzwerkverbindung verwendet.
+
+**Die Ursache.** Die ältere native Argumentübergabe entfernte Anführungszeichen; die Shell-Wortzerlegung des Clients behandelte Windows-Backslashes als Escape-Zeichen.
+
+**Die Lösung.** Slash-Pfade verwenden, Anführungszeichen für die ältere native Übergabe maskieren, gelieferte PowerShell-Skripte mit UTF-8-BOM schreiben. Die automatische Variable Profile wird nicht mehr als eigene Skriptvariable benutzt.
+
+**Der Beweis.** Unveränderter Client meldete zuerst C:nvm4wnodejsnode.exe nicht gefunden. Danach erzeugte er unter PowerShell 5.1 und 7 das korrekte synthetische stdio-Profil; Installation und Diagnose unter 5.1 bestanden.
+
+**Die Lehre.** Syntaxprüfung genügt nicht für native Befehle. Den tatsächlichen Client mit der Windows-Standard-Shell prüfen.
+
+
+---
+
+## P143 · Neue Desktop-Adapter fehlten im Offline-Grundstock
+
+*2026-11-18 · 🟠 mittel · E791*
+
+**Das Bild.** test87 meldete neue index.html-Skripte, die nicht im Service-Worker-Grundstock standen.
+
+**Die falsche Vermutung.** Weil die Windows-App Dateien lokal lädt, sei die Offline-Dateiliste für ihre neuen Adapter nicht betroffen.
+
+**Wie es gefunden wurde.** Die vollständige bestehende Prüfsuite verglich die index.html-Skripte mit sw.js.
+
+**Die Ursache.** Die gemeinsam eingebundenen Adapter waren in der Startdatei registriert, aber noch nicht vollständig im Web-Cache-Grundstock.
+
+**Die Lösung.** Alle neun neuen Adapter im erzeugten Service-Worker-Grundstock ergänzen und den Dienststand regulär neu bauen.
+
+**Der Beweis.** Erstlauf test87 meldete fehlende Adapter; nach der Korrektur besteht derselbe Lauf mit 197/197 Prüfpunkten. Die Register-Inventur ist ebenfalls nachgetragen; test86 meldet nur noch den bestehenden Unterschied 15 statt 14 Werkzeuggruppen.
+
+**Die Lehre.** Ein Desktop-Ausbau kann gemeinsame Web-Dateien ergänzen. Deren Offline-Vertrag bleibt verbindlich.
+
+
+---
+
+## P144 · Eine alte Startfreigabe überlebte das Abschalten der Verbindung
+
+*2026-11-18 · 🟠 mittel · E791*
+
+**Das Bild.** Der geschlossene App-Start prüfte eine frühere Startfreigabe, aber noch nicht die aktuell ausgeschaltete Verbindung oder entzogene App-Funktionsgruppe.
+
+**Die falsche Vermutung.** Der ausdrücklich freigegebene App-Pfad allein reiche auch für den Verbindungszustand nach dem Beenden der App.
+
+**Wie es gefunden wurde.** Ein echter SDK-Client erhielt künstliche Metadaten mit fehlender Test-EXE. Der Widerruftest verlangte eine Ablehnung, bevor überhaupt auf die EXE zugegriffen wird.
+
+**Die Ursache.** Die Startsonderroute für eine geschlossene App umging die gewöhnliche native Sitzungsprüfung und kontrollierte nur allowLaunch.
+
+**Die Lösung.** Zusätzlich enabled gleich true und die App-Funktionsgruppe verlangen; alle Prüfungen erfolgen vor Hashprüfung oder Prozessstart.
+
+**Der Beweis.** Gegenprobe zuerst rot mit ENOENT statt LAUNCH_DISABLED; danach beide Widerrufsvarianten grün. Insgesamt 3/3 Windows-Skript-/SDK-Tests bestanden. Keine Test-EXE und keine Nutzer-App wurden gestartet.
+
+**Die Lehre.** Jede Sonderroute ohne laufende App muss dieselben aktuellen Freigaben beachten wie der normale Kanal.
+
+
+---
+
+## P145 · Der Textadapter verwechselte Markdown mit HTML
+
+*2026-11-18 · hoch · E791*
+
+**Das Bild.** Ein Kontrollbild zeigte Formatierungstags als wörtlichen Text. Einfügen und Lesen konnten Sonderzeichen vorab maskieren oder als HTML interpretieren.
+
+**Die falsche Vermutung.** Textblöcke enthielten gespeichertes HTML, dessen Textknoten bearbeitet werden müssten.
+
+**Wie es gefunden wurde.** Das echte Bildschirmbild wurde mit Blocks.inline und dem Eingabehandler verglichen. Diese speichern rohe Zeichen mit Markdown-Markierungen. Danach wurde der Fehler mit einem echten SDK-Client reproduziert.
+
+**Die Ursache.** Der neue Adapter maskierte Zeichen vor Store.addBlock und las bestehenden Rohtext durch einen HTML-Parser; der bestehende Editor maskiert erst bei der Anzeige.
+
+**Die Lösung.** Dieselben rohen Zeichen wie der Editor lesen und speichern. Eindeutige Ersetzungen im gespeicherten Wortlaut durchführen, Dollarzeichen wörtlich übernehmen und bestehende Markdown-Markierungen erhalten.
+
+**Der Beweis.** Zuerst roter Roundtrip mit vorab maskierten Entities. Danach echter MCP-/Electron-Lauf mit sichtbarer Fettschrift, unveränderten Sonderzeichen, HTML als sichtbarem Text ohne Bildknoten, Aufgaben/Lernkarten und dauerhaftem Neustart grün.
+
+**Die Lehre.** Den bestehenden Speichervertrag am echten Eingabe- und Anzeigepfad lesen. Ein Test mit künstlich erfundenem Datenformat beweist das falsche Modell.
+
+
+---
+
+## P146 · Beim Beenden wurde an ein zerstörtes Fenster gesendet
+
+*2026-11-18 · hoch · E791*
+
+**Das Bild.** Ein funktional abgeschlossener MCP-Test blieb beim Beenden an einem nativen Fehlerdialog hängen.
+
+**Die falsche Vermutung.** Ein geschriebenes Erfolgsprotokoll nach Lesen/Schreiben und Neustart beweise auch einen sauberen vollständigen Testabschluss.
+
+**Wie es gefunden wurde.** Der eigene Testprozess zeigte den Fenstertitel Error. Eine neue Testprüfung bricht bei unerwarteten nativen Fehlerdialogen mit Fehlercode ab und kontrolliert beide Prozessenden vor dem Erfolgsprotokoll.
+
+**Die Ursache.** cancelAutomation sendete im closed-Ereignis an die bereits zerstörten webContents. Auch Statusmeldungen und Zeitlimit-Abbrüche hatten diese fehlende Lebenszyklusprüfung.
+
+**Die Lösung.** Alle neuen Automatisierungsmeldungen nur an ein bestehendes Fenster mit lebenden webContents senden. Offene Aktionen weiterhin abbrechen und aufräumen.
+
+**Der Beweis.** Gegenprobe zuerst rot: Object has been destroyed in cancelAutomation, Exitcode 91. Danach derselbe vollständige echte MCP-/Electron-Test mit zwei sauberen Prozessenden, cleanExit true und Exitcode 0 bestanden.
+
+**Die Lehre.** Erfolg erst nach abgeschlossenem Aufräumen melden. Native Fehlerdialoge müssen einen automatisierten Test rot machen.
+
+
+---
+
+## P147 · Abgebrochene Kopplung hält spätere Clients fest
+
+*2026-11-18 · 🟠 mittel · E792*
+
+**Das Bild.** Nach Abbruch einer Verbindungsanfrage meldete der nächste Client dauerhaft PAIRING_BUSY.
+
+**Die falsche Vermutung.** Das Schliessen des Clients beende automatisch auch den offenen nativen Freigabedialog.
+
+**Wie es gefunden wurde.** Eine isolierte echte Named-Pipe-Prüfung liess die erste künstliche Bestätigung offen, trennte den Client und verband danach einen neuen Client.
+
+**Die Ursache.** Der offene Dialog hatte weder socketgebundene Abbruchsteuerung noch ein eigenes Zeitlimit; der Pairing-Zustand blieb belegt.
+
+**Die Lösung.** Dialoge mit AbortSignal, Zeitlimit und Socket-Eigentümer binden. Beim Trennen abbrechen und ausschliesslich den Zustand dieser Anfrage freigeben.
+
+**Der Beweis.** Gegenprobe zuerst PAIRING_BUSY; danach neue Kopplung erfolgreich. Neun gezielte MCP-/Binärprüfungen bestehen, einschliesslich dieser Gegenprobe.
+
+**Die Lehre.** Verbindungsabbruch muss auch wartende menschliche Freigaben beenden, nicht nur Datenanforderungen.
+
+
+---
+
+## P148 · Automatische Profilsuche verschluckt eine mehrdeutige Auswahl
+
+*2026-11-18 · 🟠 mittel · E792*
+
+**Das Bild.** Zwei aktive synthetische Windows-Profile erschienen fälschlich als APP_NOT_RUNNING.
+
+**Die falsche Vermutung.** Eine fehlgeschlagene Discovery bedeute stets, dass keine App laufe.
+
+**Wie es gefunden wurde.** Der Diagnose-CLI-Test setzte beide bekannten Profilmarker mit einem tatsächlich lebenden Testprozess und verlangte eine ausdrückliche Auswahl.
+
+**Die Ursache.** Ein allgemeiner catch-Block überschrieb den bereits erkannten Status AMBIGUOUS_PROFILE.
+
+**Die Lösung.** Mehrdeutigkeit sichtbar zurückgeben; nur ein eindeutig aktives Profil automatisch wählen. Keine Profile verschieben oder zusammenführen.
+
+**Der Beweis.** Zuerst APP_NOT_RUNNING statt AMBIGUOUS_PROFILE; danach alle vier Skript-/Discovery-Prüfungen grün.
+
+**Die Lehre.** Ein aus Sicherheitsgründen verweigerter Automatismus braucht eine eigene verständliche Ursache.
+
+
+---
+
+## P149 · Interne Nachrichtenkennung bricht das MCP-Ausgabeschema
+
+*2026-11-18 · 🟠 mittel · E792*
+
+**Das Bild.** Der echte SDK-Client lehnte den App-Status nach Umstellung des Antwortlesers mit InvalidParams ab.
+
+**Die falsche Vermutung.** Der bisherige Ergebnisumschlag könne unverändert vom neuen Binärrahmenleser bis zum SDK weitergegeben werden.
+
+**Wie es gefunden wurde.** Der echte stdio-Client validierte structuredContent gegen den geschlossenen Tool-Vertrag und meldete ein zusätzliches Feld.
+
+**Die Ursache.** Das interne Zuordnungsfeld id wurde nach der Prüfung der passenden Antwort nicht aus dem Transportumschlag entfernt.
+
+**Die Lösung.** Nachrichtenkennung für die Zuordnung prüfen, dann vor Rückgabe an den MCP-Server entfernen. Unbekannte Kopfzeilenfelder einschliesslich vorgetäuschter Bildbytes abweisen.
+
+**Der Beweis.** Zuerst -32602: data must NOT have additional properties. Danach vollständiger echter SDK-/Electron-Lauf mit 47 Werkzeugen, maskiertem Bild, Schaltplanbild und sauberem Neustart bestanden.
+
+**Die Lehre.** Ein interner Transportvertrag ist nicht der öffentliche Werkzeugvertrag. Beide am echten validierenden Client prüfen.
+
+
+---
+
+## P150 · Sichere Header blockieren den eigenen OAuth-Rückweg im echten Browser
+
+*2026-11-18 · 🟠 mittel · E793*
+
+**Das Bild.** Der synthetische Freigabe-POST wurde zunächst wegen Origin null abgewiesen. Danach blockierte Chromium den registrierten Rückweg mit einer CSP-Verletzung.
+
+**Die falsche Vermutung.** Ein erfolgreicher Request/Response- und SDK-OAuth-Lauf belege schon, dass der Formular-Rückweg im Browser funktioniert.
+
+**Wie es gefunden wurde.** Tatsächliche Formulare und Redirects im Chromium-Lauf; zuerst Origin-Assertion rot, danach konkrete form-action-Verletzung in der Browserkonsole.
+
+**Die Ursache.** no-referrer setzt beim Formular den Origin auf null. form-action self wird in Chromium auch auf den anschliessenden 303-Redirect angewendet und sperrt die registrierte KI-Adresse.
+
+**Die Lösung.** Auf Auth-Seiten same-origin verwenden und zusätzlich nur den Ursprung der zuvor exakt validierten registrierten Rückgabeadresse in form-action erlauben. Fremde Origins weiterhin zurückweisen; CSRF-Nachweis bleibt an Konto und einmalige Anfrage gebunden.
+
+**Der Beweis.** Roter Browserlauf vor der Korrektur, danach realer lokaler HTTPS-Prüfserver und Chromium: Zustimmung, Callback, gemerkte erneute Verbindung, Widerruf; Hell/Dunkel und mobile Darstellung bestanden.
+
+**Die Lehre.** Protokolltests ersetzen den Browser nicht. Schutzheader zusammen mit ihrem tatsächlichen Formular- und Redirect-Verhalten prüfen.
 

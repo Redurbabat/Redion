@@ -54,7 +54,9 @@ const p = (n: string, b: boolean, extra: string = ''): void => {
 const UEBERGANGEN = ['.git', 'node_modules', '.wrangler'];
 // Native Paketkopien sind keine neuen handgeschriebenen Quellen. Nur diese
 // expliziten, ignorierten Bauausgaben auslassen, nicht pauschal build/.
-const NATIVE_AUSGABEN = new Set(['build/windows-app', 'build/windows-dist', 'build/ios-capacitor', 'windows/generated', 'www']);
+const NATIVE_AUSGABEN = new Set(['build/windows-app', 'build/windows-dist', 'build/windows-ink-dist',
+  'build/windows-mcp-dist', 'build/red-ion-plugin', 'build/mcp-install-test',
+  'plugins/red-ion/server/dist', 'build/ios-capacitor', 'windows/generated', 'www']);
 
 const alleDateien = (ordner: string, gesammelt: string[] = []): string[] => {
   for (const eintrag of liesOrdner(ordner)) {

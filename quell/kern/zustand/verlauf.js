@@ -87,6 +87,8 @@ const Verlauf = (() => {
     };
     return {
         start, merke, zurueck, vor,
+        status: () => ({ undoPageId: zurueckStapel.at(-1)?.pageId || null,
+            redoPageId: vorStapel.at(-1)?.pageId || null }),
         leeren: () => { zurueckStapel.length = 0; vorStapel.length = 0; }
     };
 })();

@@ -1,0 +1,1427 @@
+{
+  "version": 1,
+  "source": "Redurs Verbesserungsplan und Ergänzungen vom 18. November 2026",
+  "scope": "Zuerst Visual MCP und sichere Mehrschritt-Automatisierung vollständig; zusätzlich universeller Link, gespeicherte Freigaben und Cloud-Zugriff ohne laufenden Laptop. Übrige Phasen als Roadmap.",
+  "issues": [
+    {
+      "id": "CLOUD-006",
+      "title": "Issues mit Status und Abnahmen in Redion sichtbar verwalten",
+      "priority": "P0",
+      "phase": 0,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "CLOUD-005",
+      "title": "Offline-Gerätestatus und Alter gespeicherter Bilder ausdrücklich anzeigen",
+      "priority": "P0",
+      "phase": 0,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "CLOUD-004",
+      "title": "Freigegebene Daten und Änderungen über vorhandenen Sync sicher abgleichen; Konflikte prüfen",
+      "priority": "P0",
+      "phase": 0,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "CLOUD-003",
+      "title": "Cloud-MCP bei ausgeschaltetem oder offlineem Laptop bereitstellen",
+      "priority": "P0",
+      "phase": 0,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "CLOUD-002",
+      "title": "Anmeldung und Freigabe einmalig speichern; Rechte in Einstellungen ändern oder widerrufen",
+      "priority": "P0",
+      "phase": 0,
+      "status": "In Umsetzung; isolierte Vertragsprüfungen bestanden, App-Abnahme offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "CLOUD-001",
+      "title": "Eine HTTPS-MCP-Adresse für kompatible KI-Clients kopieren",
+      "priority": "P0",
+      "phase": 0,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "VIS-001",
+      "sourceNumber": 1,
+      "title": "Screenshot des aktuellen RED-Ion-Fensters",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "VIS-002",
+      "sourceNumber": 2,
+      "title": "Nur den geöffneten Editor erfassen",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "VIS-003",
+      "sourceNumber": 3,
+      "title": "Schaltplan als Bild an ChatGPT übertragen",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "VIS-004",
+      "sourceNumber": 4,
+      "title": "PDF-Seiten als Bilder übertragen",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "VIS-005",
+      "sourceNumber": 5,
+      "title": "Bilder innerhalb einer Notiz lesen",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "VIS-006",
+      "sourceNumber": 6,
+      "title": "Screenshot direkt nach einer Änderung",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "VIS-007",
+      "sourceNumber": 7,
+      "title": "Einzelne Bereiche vergrössert erfassen",
+      "priority": "P1",
+      "phase": 1,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "VIS-008",
+      "sourceNumber": 8,
+      "title": "Vorher-Nachher-Bilder vergleichen",
+      "priority": "P1",
+      "phase": 1,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "VIS-009",
+      "sourceNumber": 9,
+      "title": "Mehrere PDF-Seiten gleichzeitig analysieren",
+      "priority": "P1",
+      "phase": 1,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "VIS-010",
+      "sourceNumber": 10,
+      "title": "Vergrösserung automatisch anpassen",
+      "priority": "P1",
+      "phase": 1,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "VIS-011",
+      "sourceNumber": 11,
+      "title": "Bildqualität automatisch optimieren",
+      "priority": "P1",
+      "phase": 1,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "VIS-012",
+      "sourceNumber": 12,
+      "title": "Screenshots mit Dokument-ID verknüpfen",
+      "priority": "P1",
+      "phase": 1,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "VIS-013",
+      "sourceNumber": 13,
+      "title": "Bildausschnitte für die KI auswählen",
+      "priority": "P1",
+      "phase": 1,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "VIS-014",
+      "sourceNumber": 14,
+      "title": "Visuelle Fehler automatisch erkennen",
+      "priority": "P2",
+      "phase": 1,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "VIS-015",
+      "sourceNumber": 15,
+      "title": "Wiederkehrende visuelle Prüfungen",
+      "priority": "P2",
+      "phase": 1,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "AUTO-016",
+      "sourceNumber": 16,
+      "title": "Mehrere Aktionen in einem Auftrag ausführen",
+      "priority": "P0",
+      "phase": 2,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "AUTO-017",
+      "sourceNumber": 17,
+      "title": "Kompletten Schaltplan in einer Aktion erstellen",
+      "priority": "P0",
+      "phase": 2,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "AUTO-018",
+      "sourceNumber": 18,
+      "title": "Dokument mit mehreren Inhaltsblöcken erweitern",
+      "priority": "P0",
+      "phase": 2,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "AUTO-019",
+      "sourceNumber": 19,
+      "title": "Mehrere Bauteile gleichzeitig hinzufügen",
+      "priority": "P0",
+      "phase": 2,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "AUTO-020",
+      "sourceNumber": 20,
+      "title": "Mehrere Leitungen gleichzeitig verbinden",
+      "priority": "P0",
+      "phase": 2,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "AUTO-021",
+      "sourceNumber": 21,
+      "title": "Änderungen vor dem Speichern prüfen",
+      "priority": "P0",
+      "phase": 2,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "AUTO-022",
+      "sourceNumber": 22,
+      "title": "Bei Fehlern die gesamte Aktion zurücksetzen",
+      "priority": "P0",
+      "phase": 2,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "AUTO-023",
+      "sourceNumber": 23,
+      "title": "Automatische Korrektur von Leitungsüberschneidungen",
+      "priority": "P1",
+      "phase": 2,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "AUTO-024",
+      "sourceNumber": 24,
+      "title": "Bauteile automatisch ordentlich anordnen",
+      "priority": "P1",
+      "phase": 2,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "AUTO-025",
+      "sourceNumber": 25,
+      "title": "Änderungen als Vorschau anzeigen",
+      "priority": "P1",
+      "phase": 2,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "AUTO-026",
+      "sourceNumber": 26,
+      "title": "Aktionen vor dem Ausführen zusammenfassen",
+      "priority": "P1",
+      "phase": 2,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "AUTO-027",
+      "sourceNumber": 27,
+      "title": "Arbeitsabläufe als Vorlagen speichern",
+      "priority": "P1",
+      "phase": 2,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "AUTO-028",
+      "sourceNumber": 28,
+      "title": "Mehrere Dokumente kontrolliert bearbeiten",
+      "priority": "P2",
+      "phase": 2,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "AUTO-029",
+      "sourceNumber": 29,
+      "title": "Aufgaben mit Abhängigkeiten automatisch ausführen",
+      "priority": "P2",
+      "phase": 2,
+      "status": "offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "ELEKTRO-030",
+      "sourceNumber": 30,
+      "title": "Automatische Leitungsführung",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-031",
+      "sourceNumber": 31,
+      "title": "Klemmen automatisch erkennen",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-032",
+      "sourceNumber": 32,
+      "title": "Bauteile intelligent ausrichten",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-033",
+      "sourceNumber": 33,
+      "title": "Automatische Betriebsmittelkennzeichen",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-034",
+      "sourceNumber": 34,
+      "title": "Kollisionen vor dem Verbinden anzeigen",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-035",
+      "sourceNumber": 35,
+      "title": "Bauteile gruppieren",
+      "priority": "P1",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-036",
+      "sourceNumber": 36,
+      "title": "Ganze Schaltungsteile verschieben",
+      "priority": "P1",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-037",
+      "sourceNumber": 37,
+      "title": "Leitungen automatisch nachführen",
+      "priority": "P1",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-038",
+      "sourceNumber": 38,
+      "title": "Gleiche Schaltungen duplizieren",
+      "priority": "P1",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-039",
+      "sourceNumber": 39,
+      "title": "Automatische Verteilungs- und Stromlaufpläne",
+      "priority": "P2",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-040",
+      "sourceNumber": 40,
+      "title": "Vollständige Gebäudeschaltungen darstellen",
+      "priority": "P2",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-041",
+      "sourceNumber": 41,
+      "title": "Verdrahtungslisten erzeugen",
+      "priority": "P2",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-042",
+      "sourceNumber": 42,
+      "title": "Klemmenpläne automatisch erzeugen",
+      "priority": "P2",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-043",
+      "sourceNumber": 43,
+      "title": "Stücklisten aus Schaltplänen erstellen",
+      "priority": "P2",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-044",
+      "sourceNumber": 44,
+      "title": "Simulation über MCP starten",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-045",
+      "sourceNumber": 45,
+      "title": "Simulation über MCP beenden",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-046",
+      "sourceNumber": 46,
+      "title": "Schalter über ChatGPT betätigen",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-047",
+      "sourceNumber": 47,
+      "title": "Taster kurzzeitig drücken und loslassen",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-048",
+      "sourceNumber": 48,
+      "title": "Simulationszustand direkt auslesen",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-049",
+      "sourceNumber": 49,
+      "title": "Spannungen und Ströme pro Bauteil abrufen",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-050",
+      "sourceNumber": 50,
+      "title": "Relaiskontakte automatisch zuordnen",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-051",
+      "sourceNumber": 51,
+      "title": "Transformatorwerte über MCP einstellen",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-052",
+      "sourceNumber": 52,
+      "title": "Zeitrelais konfigurieren",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-053",
+      "sourceNumber": 53,
+      "title": "Simulationszeit kontrollieren",
+      "priority": "P1",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-054",
+      "sourceNumber": 54,
+      "title": "Simulationsgeschwindigkeit ändern",
+      "priority": "P1",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-055",
+      "sourceNumber": 55,
+      "title": "Fehlerzustände gezielt auslösen",
+      "priority": "P1",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-056",
+      "sourceNumber": 56,
+      "title": "Spannung und Strom grafisch darstellen",
+      "priority": "P1",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-057",
+      "sourceNumber": 57,
+      "title": "Virtuelle Messgeräte verwenden",
+      "priority": "P1",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-058",
+      "sourceNumber": 58,
+      "title": "Unterschiedliche Betriebszustände vergleichen",
+      "priority": "P1",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-059",
+      "sourceNumber": 59,
+      "title": "Simulationsabläufe speichern",
+      "priority": "P2",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-060",
+      "sourceNumber": 60,
+      "title": "Automatische Simulationstests",
+      "priority": "P2",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "ELEKTRO-061",
+      "sourceNumber": 61,
+      "title": "Simulationsergebnisse als Prüfprotokoll exportieren",
+      "priority": "P2",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "PDF-062",
+      "sourceNumber": 62,
+      "title": "PDF-Seiten direkt über MCP lesen",
+      "priority": "P0",
+      "phase": 4,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "PDF-063",
+      "sourceNumber": 63,
+      "title": "Bilder in Dokumenten analysieren",
+      "priority": "P0",
+      "phase": 4,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "PDF-064",
+      "sourceNumber": 64,
+      "title": "PDF-Text und Bild gemeinsam auswerten",
+      "priority": "P0",
+      "phase": 4,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "PDF-065",
+      "sourceNumber": 65,
+      "title": "Aufgaben automatisch erkennen",
+      "priority": "P1",
+      "phase": 4,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "PDF-066",
+      "sourceNumber": 66,
+      "title": "Schaltzeichen in PDFs erkennen",
+      "priority": "P1",
+      "phase": 4,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "PDF-067",
+      "sourceNumber": 67,
+      "title": "Leitungsverbindungen aus Bildern erkennen",
+      "priority": "P1",
+      "phase": 4,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "PDF-068",
+      "sourceNumber": 68,
+      "title": "PDF-Schaltplan in bearbeitbaren Schaltplan umwandeln",
+      "priority": "P1",
+      "phase": 4,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "PDF-069",
+      "sourceNumber": 69,
+      "title": "Erkannte Bauteile vor dem Import bestätigen",
+      "priority": "P1",
+      "phase": 4,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "PDF-070",
+      "sourceNumber": 70,
+      "title": "Original und nachgebauten Plan vergleichen",
+      "priority": "P1",
+      "phase": 4,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "PDF-071",
+      "sourceNumber": 71,
+      "title": "Lösungen auf getrennten Ebenen speichern",
+      "priority": "P1",
+      "phase": 4,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "PDF-072",
+      "sourceNumber": 72,
+      "title": "Fehler direkt auf der PDF-Seite markieren",
+      "priority": "P1",
+      "phase": 4,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "PDF-073",
+      "sourceNumber": 73,
+      "title": "Aus einer PDF Lernkarten erstellen",
+      "priority": "P1",
+      "phase": 4,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "PDF-074",
+      "sourceNumber": 74,
+      "title": "Mehrere Aufgaben als Projekt importieren",
+      "priority": "P2",
+      "phase": 4,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "PDF-075",
+      "sourceNumber": 75,
+      "title": "PDF-Aufgaben automatisch mit Lösungen vergleichen",
+      "priority": "P2",
+      "phase": 4,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "PDF-076",
+      "sourceNumber": 76,
+      "title": "Bearbeiteten Schaltplan wieder als PDF exportieren",
+      "priority": "P2",
+      "phase": 4,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "AI-001",
+      "title": "Aktuelle Seite verstehen",
+      "priority": "P0",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "AI-002",
+      "title": "Dokumente durchsuchen",
+      "priority": "P0",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "AI-003",
+      "title": "Änderungen vorschlagen",
+      "priority": "P0",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "AI-004",
+      "title": "Aktuellen Schaltplan analysieren",
+      "priority": "P0",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "AI-005",
+      "title": "Sichtbare Änderungen erklären",
+      "priority": "P0",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "AI-006",
+      "title": "Ausgewählten Bereich bearbeiten",
+      "priority": "P1",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "AI-007",
+      "title": "Mehrere Werkzeuge kombinieren",
+      "priority": "P1",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "AI-008",
+      "title": "Eigene Agentenprofile erstellen",
+      "priority": "P1",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "AI-009",
+      "title": "Wiederkehrende Arbeitsabläufe speichern",
+      "priority": "P1",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "AI-010",
+      "title": "Zwischen lokalen und externen Modellen wechseln",
+      "priority": "P1",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "AI-011",
+      "title": "Mehrere spezialisierte Agenten koordinieren",
+      "priority": "P2",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "AI-012",
+      "title": "Aufgaben automatisch mit Qualitätsprüfungen abschliessen",
+      "priority": "P2",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "SETUP-001",
+      "title": "Automatisch aktives Windows-Profil erkennen",
+      "priority": "P0",
+      "phase": 1,
+      "status": "In Umsetzung; isolierte Vertragsprüfungen bestanden, App-Abnahme offen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SETUP-002",
+      "title": "MCP-Server automatisch starten",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SETUP-003",
+      "title": "Verbindungsstatus in Echtzeit anzeigen",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SETUP-004",
+      "title": "Tunnel-Fehler verständlich erklären",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SETUP-005",
+      "title": "Verbindung mit einem Klick testen",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SETUP-006",
+      "title": "Fehlende lokale Komponenten erkennen",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SETUP-007",
+      "title": "Verbindung nach App-Neustart wiederherstellen",
+      "priority": "P1",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SETUP-008",
+      "title": "Tunnel kontrolliert neu starten",
+      "priority": "P1",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SETUP-009",
+      "title": "Version von App und MCP-Server vergleichen",
+      "priority": "P1",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SETUP-010",
+      "title": "MCP-Diagnose als Bericht exportieren",
+      "priority": "P1",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SETUP-011",
+      "title": "Verbindungsprobleme gezielt reparieren",
+      "priority": "P1",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SETUP-012",
+      "title": "Mehrere freigegebene MCP-Clients verwalten",
+      "priority": "P2",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SEC-001",
+      "title": "Bildzugriff separat freigeben",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SEC-002",
+      "title": "Nur das RED-Ion-Fenster erfassen",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SEC-003",
+      "title": "Keine anderen Windows-Programme fotografieren",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SEC-004",
+      "title": "Passwörter und Tokenfelder automatisch ausblenden",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SEC-005",
+      "title": "Screenshot vor Übermittlung anzeigen",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SEC-006",
+      "title": "Sitzungsbezogene Freigaben",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SEC-007",
+      "title": "Leserechte und Schreibrechte trennen",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SEC-008",
+      "title": "Kritische Aktionen weiterhin bestätigen",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SEC-009",
+      "title": "Maximale Bildgrösse begrenzen",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SEC-010",
+      "title": "Bilddaten nur so lange wie nötig speichern",
+      "priority": "P0",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SEC-011",
+      "title": "Übertragene Daten im Aktivitätsprotokoll anzeigen",
+      "priority": "P1",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SEC-012",
+      "title": "Alle Freigaben sofort widerrufen können",
+      "priority": "P1",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SEC-013",
+      "title": "Zugriff pro Dokument oder Arbeitsbereich einschränken",
+      "priority": "P1",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SEC-014",
+      "title": "Automatische Bildaufnahmen begrenzen",
+      "priority": "P1",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "SEC-015",
+      "title": "Vertrauliche Bereiche vor der Aufnahme maskieren",
+      "priority": "P1",
+      "phase": 1,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": true
+    },
+    {
+      "id": "UX-001",
+      "title": "Einheitliches RED-Morph-Design",
+      "priority": "P1",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "UX-002",
+      "title": "Konsistente Glasmaterialien",
+      "priority": "P1",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "UX-003",
+      "title": "Bessere Abstände und Ausrichtung",
+      "priority": "P1",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "UX-004",
+      "title": "Ruhige Animationen",
+      "priority": "P1",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "UX-005",
+      "title": "Native Windows-Fensterbedienung",
+      "priority": "P1",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "UX-006",
+      "title": "Bessere Dark- und Light-Mode-Abstimmung",
+      "priority": "P1",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "UX-007",
+      "title": "Einheitliche Kontextmenüs",
+      "priority": "P1",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "UX-008",
+      "title": "Adaptive Seitenleisten",
+      "priority": "P1",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "UX-009",
+      "title": "Verbesserte Tastaturkürzel",
+      "priority": "P1",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "UX-010",
+      "title": "Flüssige Dokumentwechsel",
+      "priority": "P1",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "UX-011",
+      "title": "Bessere Bedienung auf Touchscreens",
+      "priority": "P2",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "UX-012",
+      "title": "Optimierung für Stiftbedienung",
+      "priority": "P2",
+      "phase": 5,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "WIN-001",
+      "title": "GPU-Cache-Fehler untersuchen und beheben",
+      "priority": "P0",
+      "phase": 6,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "WIN-002",
+      "title": "Sauberen Windows-Installer erstellen",
+      "priority": "P0",
+      "phase": 6,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "WIN-003",
+      "title": "Produktions- und Entwicklungsprofil klar unterscheiden",
+      "priority": "P0",
+      "phase": 6,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "WIN-004",
+      "title": "MCP-Komponenten automatisch mitinstallieren",
+      "priority": "P0",
+      "phase": 6,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "WIN-005",
+      "title": "Sichere Updates ohne Datenverlust",
+      "priority": "P0",
+      "phase": 6,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "WIN-006",
+      "title": "App nach Absturz zuverlässig wiederherstellen",
+      "priority": "P1",
+      "phase": 6,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "WIN-007",
+      "title": "Fehlerdiagnose direkt in den Einstellungen",
+      "priority": "P1",
+      "phase": 6,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "WIN-008",
+      "title": "Digitale Signierung des Installers",
+      "priority": "P1",
+      "phase": 6,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "WIN-009",
+      "title": "Hintergrundprozesse sauber beenden",
+      "priority": "P1",
+      "phase": 6,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "WIN-010",
+      "title": "RAM-Verbrauch messen und optimieren",
+      "priority": "P1",
+      "phase": 6,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "WIN-011",
+      "title": "Startzeit verbessern",
+      "priority": "P1",
+      "phase": 6,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "WIN-012",
+      "title": "Automatische Backups",
+      "priority": "P1",
+      "phase": 6,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "WIN-013",
+      "title": "Wiederherstellung früherer Dokumentversionen",
+      "priority": "P1",
+      "phase": 6,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "WIN-014",
+      "title": "Portable und installierte Version eindeutig kennzeichnen",
+      "priority": "P1",
+      "phase": 6,
+      "status": "offen / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "CHECK-001",
+      "title": "Fehlende elektrische Verbindungen",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "CHECK-002",
+      "title": "Nicht angeschlossene Klemmen",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "CHECK-003",
+      "title": "Falsche Anschlussnummern",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "CHECK-004",
+      "title": "Unbeabsichtigte Kurzschlüsse",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "CHECK-005",
+      "title": "Falsche Versorgungsspannungen",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "CHECK-006",
+      "title": "Nicht zugeordnete Relaiskontakte",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "CHECK-007",
+      "title": "Unvollständige Stromkreise",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "CHECK-008",
+      "title": "Fehlende Schutzleiterverbindungen",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "CHECK-009",
+      "title": "Unzulässige oder widersprüchliche Betriebsmittelkennzeichen",
+      "priority": "P0",
+      "phase": 3,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "DIAG-001",
+      "title": "Anwendung startet korrekt",
+      "priority": "P1",
+      "phase": 6,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "DIAG-002",
+      "title": "Dokumente werden gespeichert",
+      "priority": "P1",
+      "phase": 6,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "DIAG-003",
+      "title": "Dokumente bleiben nach Neustart erhalten",
+      "priority": "P1",
+      "phase": 6,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "DIAG-004",
+      "title": "MCP-Verbindung funktioniert",
+      "priority": "P1",
+      "phase": 6,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "DIAG-005",
+      "title": "Screenshot wird korrekt übertragen",
+      "priority": "P1",
+      "phase": 6,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "DIAG-006",
+      "title": "PDF-Seite wird korrekt dargestellt",
+      "priority": "P1",
+      "phase": 6,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "DIAG-007",
+      "title": "Schaltplan wird korrekt gespeichert",
+      "priority": "P1",
+      "phase": 6,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "DIAG-008",
+      "title": "Simulation läuft",
+      "priority": "P1",
+      "phase": 6,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "DIAG-009",
+      "title": "Undo/Redo funktioniert",
+      "priority": "P1",
+      "phase": 6,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "DIAG-010",
+      "title": "Berechtigungen werden eingehalten",
+      "priority": "P1",
+      "phase": 6,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "DIAG-011",
+      "title": "Fehler werden richtig gemeldet",
+      "priority": "P1",
+      "phase": 6,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    },
+    {
+      "id": "DIAG-012",
+      "title": "Kritische Aktionen folgen der eingestellten Freigabe",
+      "priority": "P1",
+      "phase": 6,
+      "status": "Roadmap / Bestand prüfen",
+      "firstDelivery": false
+    }
+  ]
+}

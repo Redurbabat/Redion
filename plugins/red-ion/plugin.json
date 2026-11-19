@@ -1,0 +1,12 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "red-ion",
+  "version": "0.2.0",
+  "description": "Steuere RED Ion direkt aus ChatGPT. Öffne Arbeitsbereiche, erstelle und bearbeite Notizen, verwalte Dateien, Tabellen, Lernkarten, PDFs und Schaltpläne und sieh Änderungen live in deiner Windows-App.",
+  "author": {"name": "Redurbabat"},
+  "extensions": {"com.openai": {"requires_local_executor": true, "interface": {
+    "displayName": "RED Ion", "shortDescription": "Redion live steuern", "developerName": "Redurbabat",
+    "category": "Productivity", "capabilities": [],
+    "longDescription": "Lokale, freigegebene Steuerung der Redion-Windows-App. Der tatsächliche Werkzeugkatalog beschreibt die implementierten Funktionen; PDF-Bearbeitung, freie Dateiverwaltung und Entwicklerzugriff sind noch nicht enthalten. Für ChatGPTs benutzerdefinierten MCP-Dialog kann derselbe Server über Secure MCP Tunnel verbunden werden."
+  }}}
+}

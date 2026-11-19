@@ -7,7 +7,14 @@ node_modules/
 # Generierte Offline-Dateien und EXE-Installer für Windows (keine Nutzerdateien).
 /build/windows-app/
 /build/windows-dist/
+/build/windows-ink-dist/
 /windows/generated/
+/plugins/red-ion/server/dist/
+/build/red-ion-plugin/
+/build/red-ion-plugin.zip
+/build/windows-mcp-dist/
+/build/mcp-install-test/
+/build/redion-mcp-tools/
 /www/
 .wrangler/
 .DS_Store

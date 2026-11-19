@@ -128,6 +128,8 @@ const Schaltplan = (() => {
   type Plan = {
     art: string; breite: number; hoehe: number;
     teile: Teil[]; leitungen: Leitung[]; texte: Text[]; ebenen: Ebene[];
+    /** E790: Freihand ist keine Leitung. Alte Pläne behalten ihr Format. */
+    ink?: InkAnnotation[];
     batterieUebung?: { id: string; plus: string; minus: string; teile: string[] };
     /** Die Originalbytes einer alten Relais-.sch (Base64, genau 4320 Byte =
         5760 Zeichen) samt Spaltentiteln und dem, was NICHT gesichert ist —
@@ -256,6 +258,8 @@ const Schaltplan = (() => {
       art: a.id,
       breite: Number(roh.breite) || (a.quer ? 1000 : 800),
       hoehe: Number(roh.hoehe) || (a.quer ? 600 : 700),
+      ...(Array.isArray(roh.ink) ? { ink: roh.ink.map(InkStroke.readAnnotation)
+        .filter((m: InkAnnotation | null): m is InkAnnotation => m !== null) } : {}),
       teile: (Array.isArray(roh.teile) ? roh.teile : []).map((t: any) => ({
         id: String(t.id || uid()),
         zeichen: String(t.zeichen || ''),
@@ -1149,6 +1153,7 @@ const Schaltplan = (() => {
     const teile = plan.teile.filter(t => ids.has(t.id));
     const leitungen = plan.leitungen.filter(l => ids.has(l.id));
     const texte = plan.texte.filter(x => ids.has(x.id));
+    const ink = (plan.ink || []).filter(m => ids.has(m.id));
     let abb = T;
     if (!abb) {
       /* Die Mitte der Auswahl, auf dem Raster — so landet jeder Rasterpunkt
@@ -1162,6 +1167,7 @@ const Schaltplan = (() => {
       });
       leitungen.forEach(l => l.punkte.forEach(p => { xs.push(p.x); ys.push(p.y); }));
       texte.forEach(x => { xs.push(x.x); ys.push(x.y); });
+      ink.forEach(m => m.pts.forEach(p => { xs.push(p[0]); ys.push(p[1]); }));
       if (!xs.length) return { teile: [], bericht: [], vorher };
       const g = { x: rasten((Math.min(...xs) + Math.max(...xs)) / 2), y: rasten((Math.min(...ys) + Math.max(...ys)) / 2) };
       abb = art === 'drehen'
@@ -1179,6 +1185,7 @@ const Schaltplan = (() => {
     });
     leitungen.forEach(l => { l.punkte = l.punkte.map(p => { const q = abb!(p); return { x: rasten(q.x), y: rasten(q.y) }; }); });
     texte.forEach(x => { const q = abb!(x); x.x = rasten(q.x); x.y = rasten(q.y); });
+    ink.forEach(m => { m.pts = m.pts.map(p => { const q = abb!({ x: p[0], y: p[1] }); return [+q.x.toFixed(2), +q.y.toFixed(2)]; }); });
     const ids2 = teile.map(t => t.id);
     const bericht = ids2.length ? nachziehen(plan, vorher, ids2, { heilen: true }) : [];
     return { teile: ids2, bericht, vorher };
@@ -1187,7 +1194,7 @@ const Schaltplan = (() => {
   /** Den ganzen Plan um 90° drehen: Breite und Höhe tauschen, alles mit. */
   const planDrehen = (plan: Plan): { bericht: Bericht; vorher: Vorher } => {
     const H = Number(plan.hoehe) || 700, W = Number(plan.breite) || 800;
-    const alle = new Set<string>([...plan.teile.map(t => t.id), ...plan.leitungen.map(l => l.id), ...plan.texte.map(x => x.id)]);
+    const alle = new Set<string>([...plan.teile.map(t => t.id), ...plan.leitungen.map(l => l.id), ...plan.texte.map(x => x.id), ...(plan.ink || []).map(m => m.id)]);
     const r = gruppeUmformen(plan, alle, 'drehen', p => ({ x: H - p.y, y: p.x }));
     plan.breite = H; plan.hoehe = W;
     return { bericht: r.bericht, vorher: r.vorher };
@@ -1350,6 +1357,32 @@ const Schaltplan = (() => {
   const teilMasse = (t: Teil): { w: number; h: number } =>
     (typeof Register !== 'undefined' && Register.fachzeichen && Register.fachzeichen.holen(t.zeichen))
       ? Register.fachzeichen.masse(t.zeichen, t.drehung) : { ...UNBEKANNT_MASS };
+
+  /** Derselbe reale Aussenrahmen für Vorlagenplatzierung und Desktop-Aktionen. */
+  const teilRahmen = (t: Teil, dx = 0, dy = 0) => {
+    const m = teilMasse(t), zc = Register.fachzeichen.holen(t.zeichen);
+    const cx = Number(t.x) + dx + (zc ? zc.w : UNBEKANNT_MASS.w) / 2;
+    const cy = Number(t.y) + dy + (zc ? zc.h : UNBEKANNT_MASS.h) / 2;
+    return { l: cx - m.w / 2, o: cy - m.h / 2, r: cx + m.w / 2, u: cy + m.h / 2 };
+  };
+  const inkBounds = (mark: InkAnnotation): { x1: number; y1: number; x2: number; y2: number } => {
+    let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+    for (const p of mark.pts) { x1 = Math.min(x1, p[0]); y1 = Math.min(y1, p[1]);
+      x2 = Math.max(x2, p[0]); y2 = Math.max(y2, p[1]); }
+    const r = mark.breite / 2;
+    return { x1: x1 - r, y1: y1 - r, x2: x2 + r, y2: y2 + r };
+  };
+  const inkSvg = (mark: InkAnnotation, selected = false): string => {
+    const halves = mark.pts.map((_p, i) => InkStroke.inkHalfWidth(mark, mark.pressure?.[i]));
+    const p = mark.pts[0];
+    if (!p) return '';
+    const shape = mark.pts.length === 1
+      ? `<circle cx="${p[0]}" cy="${p[1]}" r="${halves[0]}"/>`
+      : `<path d="${InkGeometry.outline(mark.pts, halves)}"/>`;
+    const b = selected ? inkBounds(mark) : null;
+    return `<g class="sp-ink" data-id="${esc(mark.id)}" data-ink="${esc(mark.id)}" fill="${InkStroke.inkColor(mark.farbe)}">` + shape +
+      (b ? `<rect class="sp-ink-auswahl" x="${b.x1 - 3}" y="${b.y1 - 3}" width="${b.x2 - b.x1 + 6}" height="${b.y2 - b.y1 + 6}" fill="none" stroke="currentColor" stroke-dasharray="4 3"/>` : '') + '</g>';
+  };
 
   const alsSvg = (plan: Plan, opt: {
     raster?: boolean; anschluesse?: boolean; bmk?: boolean; nummern?: boolean;
@@ -1740,6 +1773,8 @@ const Schaltplan = (() => {
         `font-size="13" fill="${farbeVon(x.ebene)}" stroke="none">${tief(x.t)}</text>`);
     });
 
+    for (const mark of plan.ink || []) if (sichtbar(mark.ebene)) teile.push(inkSvg(mark, opt.auswahl?.has(mark.id)));
+
     return `<svg class="sp-flaeche" viewBox="0 0 ${plan.breite} ${plan.hoehe}" ` +
       `width="${plan.breite}" height="${plan.hoehe}">` + teile.join('') + '</svg>';
   };
@@ -1875,7 +1910,7 @@ const Schaltplan = (() => {
   };
 
   return {
-    ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, teilMasse, rasten,
+    ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, inkSvg, inkBounds, teilMasse, teilRahmen, rasten,
     naechstesBmk, anschlussOrt, anschluesseVon, klemmeFuer, fangeAnschluss, rechtwinklig,
     kontakte, vorherMerken, nachziehen, veraendert, verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
     netzBauen, BEISPIELE, beispielBauen, uid, esc,

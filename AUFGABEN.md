@@ -42,6 +42,69 @@ mehr gibt.
 
 ## Was jetzt offen ist
 
+### RED Ion 2026 E792 · Visual MCP, Mehrschritt-Aufträge und Cloud-Zugriff
+
+- **Ziel:** erste zwei Phasen des übernommenen Plans vollständig umsetzen;
+  übrige Phasen als Roadmap erhalten. Kopierbarer universeller MCP-Link,
+  gespeicherte widerrufbare Freigaben und Zugriff ohne laufenden Laptop gehören
+  als ausdrücklich ergänzter Auftrag dazu.
+- **Warum:** ChatGPT muss echte Bilder empfangen, Änderungen prüfen und mehrere
+  Aktionen konsistent ausführen können. Ein lokaler Tunnel erfüllt keinen
+  Zugriff bei ausgeschaltetem Gerät.
+- **Dateien:** `doku/REDION-2026-ISSUES.json` und `.md` führen alle 168 Anforderungen;
+  `windows/automation-*`, `windows/visual-*`, `plugins/red-ion/`, bestehende
+  Bereichsadapter, Store/Verlauf und Cloudflare-Sync. Kein zweiter Datenbestand.
+- **Fertig wenn:** Bilder tatsächlich im ChatGPT-Plugin sichtbar; alle
+  Mehrschritt-Aktionen mit Vorschau, Validierung und atomarem Rollback;
+  Issues im Nutzer-Redion sichtbar; HTTPS-Link mit zwei kompatiblen Clients
+  geprüft; freigegebene Cloud-Daten bei ausgeschaltetem Gerät erreichbar und
+  anschliessend ohne Datenverlust abgeglichen; aktuelle Windows-Pakete gebaut.
+- **Stand:** Adapterfreigabe nach Neustart, Widerruf und automatische
+  Profilauswahl sowie maskierte Binärbilder sind mit 47 Werkzeugen an der
+  gebauten EXE geprüft. Neues Testpaket installiert und gestartet; die echte
+  Plugin-Verbindung meldete weiterhin „Session terminated“. Cloud-OAuth samt
+  gemerkter Freigabe und Widerruf lokal am SDK und Browser geprüft; noch nicht
+  an Konto/Datensync angeschlossen oder bereitgestellt. Prüfstand:
+  `doku/RED-ION-CLOUD-MCP.md`.
+- **Tests:** gezielte echte SDK-/Electron-/Binär-/Berechtigungstests,
+  Mehrschritt-Fehler beim 25. Bauteil, Import/Export und Konflikte; Gesamtlauf
+  zur abschliessenden Abnahme. Keine historischen Resultate als neue ausgeben.
+- **Priorität:** laufender Auftrag, kostenloser Cloud-Zugriff zuerst.
+  E793: Kostenpflichtige Einrichtung gestoppt, nur bestätigter Gratis-Tarif,
+  kein neuer R2-Bucket. Cloud-Bereitstellung erst nach erneutem Tarifnachweis
+  und geprüftem konkretem Dienst; kein main-Merge.
+
+### RED Ion ChatGPT-Live-Steuerung E791 · echte Kontoverbindung
+
+- **Ziel:** den lokal geprüften MCP-/Electron-Adapter im gewünschten privaten
+  ChatGPT-MCP-Dialog verbinden. **Warum offen:** Redur hat noch keinen Tunnel;
+  die Kontoseite ist inzwischen erreichbar, aber kein echter Tunnel wurde
+  erstellt. Die vorhandene Plugin-Verbindung antwortete zuletzt nicht mit
+  erfolgreich freigegebenen Dokumentdaten. Keine ID erfinden.
+- **Dateien:** `doku/RED-ION-MCP-INSTALLATION.md`, `plugins/red-ion/`.
+- **Fertig wenn:** echter Tunnel korrekt zugeordnet, eingeschränkter Schlüssel
+  lokal eingegeben, Doctor/Readiness und tatsächliche ChatGPT-Lese-/Schreibaktion
+  mit sichtbarer dauerhafter App-Änderung nachgewiesen.
+- **Rest:** noch fehlende App-Aktionen und reale Nutzerinstallation/Signierung
+  getrennt abnehmen. Umfang und Grenzen in `RED-ION-CHATGPT-INTEGRATION.md`.
+  Keine unaufgeforderte öffentliche Freigabe. Priorität: hoch.
+
+### Windows-Stiftstudio E790 · reale Geräte und Freigabe
+
+- **Ziel:** den geprüften Windows-Arbeitsstand mit physischem Stift und
+  realer Installation abnehmen. **Warum:** emulierte Druck-/Neigungswerte
+  und ein isolierter Electron-Lauf beweisen keine Handballenerkennung am
+  Gerät und kein Update einer Nutzerinstallation.
+- **Dateien und Befehle:** `doku/WINDOWS-INK-STUDIO.md`, die bestehenden
+  Windows-Paket-/Updatewege und die neuen Ink-Prüfungen.
+- **Fertig wenn:** Geräte-/Commitbericht für Druck, Neigung, Handballen,
+  Offline, Sicherungs-Roundtrip, Installation/Update sowie Signierung und
+  vertrauenswürdigen Updatekanal vorliegt. Vorher externe Sicherung.
+- **WebKit/iPhone:** der Windows-WebKit-Kontrastlauf ist nicht zuverlässig
+  abgenommen; auf geeignetem WebKit-/Mac-Runner und echtem iPhone prüfen.
+  Chromium- und Windows-Nachweise stehen getrennt im Bericht.
+- **Priorität:** vor Veröffentlichung; kein automatischer Merge oder Deploy.
+
 ### Alltag nach E758 (31. Oktober 2026)
 
 - **Voller Lauf nach E760:** `node pruefungen/volllauf.mts --neu` auf dem neuen main, in

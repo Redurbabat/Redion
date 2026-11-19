@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-766 Entscheidungen, E1 bis E789 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+770 Entscheidungen, E1 bis E793 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -851,6 +851,47 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E787** — Die Klinge liegt, wie der Schalter steht (15. November 2026, Redur: „wenn ich eine schalter klicke sollte sich ändern"): in der Simulation zeichnet jeder Schalter und jeder Kontakt seine Stellung — die Klinge zu, ab oder auf dem geschlossenen Weg, der Name der Stellung darunter, in der Farbe des Stroms, wenn er führt; die Bilder stehen im Register (`STELLUNGSBILD`), die Stellung kommt aus `Stromfluss.rechne` (`Ergebnis.stellungen`), ausserhalb der Simulation zeichnet jedes Zeichen wie vorher
 * **E788** — Leitung aus der Klemme (15. November 2026, Redur: „verbessere alles damit ich schneller zeichne können"): im Zeigen-Werkzeug zieht ein Ansatz genau auf einer Klemme (7 px, Finger 10) eine Leitung, ohne Werkzeugwechsel; am Körper gefasst wandert das Teil wie bisher; Ring und Fadenkreuz zeigen die Klemme vorher
 * **E789** — Die Bauplan-Zeichen nach dem Lehrmittel (15. November 2026, Redur: „schau … für schweiz wie muss es sein und baue es direkt im redion", Quelle: „Fachzeichnen Teil 1", Seite 14.1): Schalter als offener Kreis mit Armen und Fahnen, Steckdose mit Hörnern, Deckenleuchte als Kreuz, Einbauleuchte als Kreuz im Kreis, Abzweigdose als Quadrat mit Punkt; 21 neue Zeichen (UP/AP, Zug, Nachlauf, Lichtregler, Taster, Storen, vier Kombis, T13 3-fach und 3/1, T25, Bodendose, Lampendübel, Wandleuchte, PIR, Store, Ventilator, Direktanschluss); alte Kennungen, Grössen und Anschlüsse bleiben; die Schema-3-Klemmen 1-2-4 bleiben offen (L267)
+
+* **E790** — Windows-Stiftstudio: gemeinsame Stiftpunkte, optionale Freihand im Schaltplan und Glass-Wheel-Arbeitswerkzeuge; Windows ist die erste Abnahmeplattform dieses Bogens.
+* **E791** — RED Ion Windows-MCP: semantische Live-Steuerung mit freigegebenen Aktionen und Sicherheitsbestätigungen.
+
+## E790 — Windows-Stiftstudio mit eigener Freihandebene
+
+**Wer.** Redur, 16. November 2026: Redion zuerst für Windows bauen,
+flüssiger schreiben und zeichnen, Stromkreise verbinden und direkt im
+Simulator Notizen zeichnen. Im anschliessenden Plan bestätigt: Maus und
+digitaler Stift; Installationsschaltungen; alle Zeichenbereiche gemeinsam;
+starkes Liquid Glass optional; Freihand auch während laufendem Strom.
+
+**Entschieden.** Die vorhandene Electron-Shell und die neueren E775–E789
+bleiben. Kein Plattform-Neubau. Die gemeinsame Punktverarbeitung nimmt
+auch die letzte Treibermeldung mit. Eine optionale Freihandliste im Plan
+benutzt gemeinsame Strichdaten in Planeinheiten. Vorschau und gespeicherte
+Daten bleiben getrennt; erst der abgeschlossene Zug schreibt eine Kopie
+über den bestehenden Block- und Verlaufspfad. Alte Pläne erhalten beim
+Öffnen kein neues Feld.
+
+Freihand wirkt nicht elektrisch. Schreiben, Tinte radieren und Verschieben
+von Annotationen sind bei laufender Simulation möglich; elektrische
+Bearbeitung verlangt eine gestoppte Simulation. Schalter bedienen bleibt
+im Auswahlwerkzeug. SVG, Druck und Sicherung enthalten Freihand.
+
+Das bestehende optionale Glass Wheel erhält gläserne Arbeitswerkzeuge;
+Klassisch bleibt Standard. Beim Aktivieren in einem offenen Dokument
+klappt das Rad ein. Das Papier bleibt deckend. Der Glasfilter sitzt am
+schwebenden Dock: am Kopf hätte er dessen absoluten Positionierungsbezug
+verändert und das Werkzeug unbedienbar gemacht.
+
+**Abnahme.** Modell-, Electron-, Browser- und Formatprüfungen mit
+synthetischen Daten; echte Stifthardware, iPhone, Installation/Update und
+Signierung getrennt nachweisen. Ergebnisse, Befehle und Bestandsfehler:
+`doku/WINDOWS-INK-STUDIO.md`. Ein Testfenster ist kein Hardwarestift und
+ein lokales Paket keine veröffentlichte Version.
+
+**Kosten und Kompatibilität.** Ältere App-Versionen können unbekannte
+Freihand beim Speichern verwerfen. Vor einem Rückwechsel sichern und
+Freihandpläne nur mit E790 oder neuer bearbeiten. Der erste Ausbau
+erweitert keinen Elektronik-Zeitlöser und keine Cloud-Funktion.
 
 ## E775 — Ein unbekanntes Bauteil bleibt sichtbar
 
@@ -70946,3 +70987,78 @@ verboten, und SwiftUI hätte keinen Ort in Redion.
 `.assetsignore`) und nicht in die Einzeldatei. Kein Wächter: es ist Doku,
 kein Verhalten.
 
+
+
+## E792 · Visual MCP, sichere Mehrschritt-Aufträge und dauerhafte widerrufbare Freigaben
+
+Redur übernimmt den vollständigen Verbesserungsplan 2026 als langfristige
+Roadmap. Der ausdrücklich festgelegte erste Ausbau umfasst die ersten beiden
+Phasen vollständig: Visual MCP und sichere Mehrschritt-Automatisierung. Die
+bisherigen 46 Werkzeuge, der bestehende Store, PR #207 und Offline-Betrieb bleiben.
+Die 168 Anforderungen und Abnahmekriterien stehen in
+`doku/REDION-2026-ISSUES.json` und der lesbaren Begleitdatei. Sie müssen zusätzlich
+in Redion sichtbar angelegt werden; eine Repo-Datei allein erfüllt das nicht.
+
+Redurs Ergänzungen: „es sollte so auch sein das ich nur die link kompiere und
+auch bei der anderecn ai einfügen kann direk und“ sowie „und ich muss nicht
+jedesmal erlauben nur bei erste mal oder beim einstelungen das ändern und dann
+machen wir so es sollte nicht nur wenn die laptop auf ist das redion zugreifen
+kann auch wenn die laptop offonline ist ,“.
+
+E791 wird entsprechend ergänzt: Einmal bestätigte lokale Adapter dürfen mit
+ausdrücklich gewählter Einstellung nach App-Neustart weiterarbeiten. Alte
+Konfigurationen erweitern ihre Rechte nicht automatisch. Rechteänderung und
+Widerruf beenden Sitzungen. Einzelbestätigungen für kritische Aktionen und
+Bilder bleiben getrennt einstellbar; keine MCP-Aktion darf ihre eigenen
+Freigaben verändern. Bilder haben eine eigene Funktionsfreigabe, eine Vorschau,
+Maskierung, Grössenbegrenzung und kurze Lebensdauer. Binärbytes laufen separat
+von JSON-Steuernachrichten. Nur die eigene App wird aufgenommen.
+
+Ein kopierbarer universeller HTTPS-Endpunkt muss kompatible MCP-Clients sicher
+authentifizieren; der Link enthält kein Zugangstoken. Ein lokaler Tunnel
+arbeitet nur bei laufendem Gerät. Zugriff bei ausgeschaltetem Laptop braucht
+einen dauerhaft betriebenen Cloud-Dienst auf Basis des vorhandenen Syncs und
+der ausdrücklich freigegebenen Daten. Aktueller Fensterinhalt ist dann nicht
+verfügbar; Alter und Herkunft gespeicherter Daten müssen erkennbar bleiben.
+Kein zweiter Dokumentdatenspeicher und keine erfundene fertige Cloud-Verbindung.
+Account, Host, Kosten und Deployment werden vor der echten Bereitstellung
+konkret geprüft; alte D1-IDs werden nicht blind aktiviert.
+
+Abnahme: echte MCP-Bildblöcke bis zum ChatGPT-Plugin, atomare Aufträge samt
+Vorschau und vollständigem Rollback, sicherer Mehrdokumentbetrieb, Widerruf,
+Windows-Paket und getrennte Cloud-/Gerätenachweise. Bestandene lokale
+synthetische Tests beweisen weder eine ChatGPT-Verbindung noch eine Installation.
+
+## E791 · RED Ion steuert die laufende Windows-App über freigegebene semantische MCP-Aktionen
+
+Redur beauftragt die echte Live-Steuerung und die Fortsetzung in PR #207.
+Die bestehende App, IDs, lokalen Daten und Windows-Ink-Arbeiten bleiben erhalten.
+Eigener codex-Branch; anschliessend ausdrücklich beauftragter Fast-Forward auf
+den PR-Branch, kein neuer PR, kein Force-Push und kein main-Merge.
+
+Die neue Bridge ist standardmässig aus, benutzt eine benutzergeschützte Named
+Pipe, native Sitzungsfreigaben, endliche Verträge und Rechte je Funktion.
+Kritische Aktionen brauchen zunächst eine argumentgebundene Einmalbestätigung;
+E792 ergänzt ausdrücklich einstellbare, widerrufbare Delegation.
+Vorhandene Bereiche melden Aktionen im Register an; derselbe Store, Fassungen,
+Verlauf und Flush werden benutzt. Kein zweiter Speicher und kein universelles
+JavaScript-/Shellwerkzeug. Das offizielle MCP-SDK ist ausdrücklich beauftragt.
+
+Der gewünschte ChatGPT-Weg ist ein privater benutzerdefinierter MCP-Server
+über Secure MCP Tunnel. Redur bestätigt, noch keinen Tunnel zu haben. Lokale
+MCP-/Electron-Prüfung und tatsächliche ChatGPT-Verbindung bleiben getrennte
+Nachweise. Keine Schlüssel oder erfundene Tunnel-ID. Umfang, Sicherheitsgrenzen,
+Installation und aktuelle Nachweise: doku/RED-ION-CHATGPT-INTEGRATION.md.
+
+
+## E793 · Zugriff ohne Laptop ausschliesslich kostenlos
+
+Redur stoppt kostenpflichtige Cloud-Einrichtung: „also wird es etwas kosten wenn ja stope es“. Der Wunsch aus E792 bleibt: MCP soll auch bei ausgeschaltetem Laptop funktionieren und einmal bestätigte Rechte behalten. Die Umsetzung darf nur einen nachweislich aktiven Gratis-Tarif verwenden, keine kostenpflichtigen Ersatzdienste, keinen neuen R2-Bucket und keinen Tarifwechsel auslösen. Bei unklaren Kosten oder ausgeschöpftem Gratis-Kontingent bleibt der Dienst geschlossen.
+
+Der vorhandene Workers-Tarif wurde tatsächlich im Dashboard als Free, $0, Current plan gelesen. Die vor dem Kostenstopp erstellte D1-Datenbank war leer und wurde wieder entfernt; danach war die D1-Liste leer. Kein neuer Cloud-MCP-Worker oder R2-Bucket wurde bereitgestellt. Vor einer späteren Bereitstellung Tarif und konkrete Ressourcen erneut prüfen.
+
+Der Cloud-Dienst verwendet bestehende Redion-Konten, saetze und Versions-/Rechtepfade. Nur Anmelde- und Freigabemetadaten liegen in mcp_state. Keine Entschlüsselung oder Übertragung privater lokaler Dokumente ohne Freigabe; keine grossen Datei-Bytes in D1 als R2-Ersatz. Geräteunabhängiger Zugriff gilt für freigegebene synchronisierte Daten, nicht für neue Aufnahmen eines ausgeschalteten Geräts.
+
+OAuth-Freigaben sind an Client, Ressource, Konto, Bereiche und Rechte gebunden. Gemerkte Zustimmung bleibt bis Widerruf erhalten; zusätzliche Rechte verlangen erneut Zustimmung. Zugangstokens sind kurzlebig, Refresh-Tokens rotieren und verlängern sich bei Nutzung; nach 30 Tagen ohne Refresh ist eine neue Anmeldung nötig. Tokens und Geheimnisse werden nur gehasht gespeichert. Die bestehende Website behält ihr Access-Tor.
+
+Stand und Grenzen: doku/RED-ION-CLOUD-MCP.md. Lokale Modell-, SDK-OAuth- und Browserprüfungen sind keine öffentliche MCP-Verbindung, kein Cloud-Deployment und kein Beleg für abgeglichene persönliche Dokumente. E792 und die ersten beiden Phasen bleiben vollständig beauftragt.

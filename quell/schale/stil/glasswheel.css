@@ -109,6 +109,7 @@ body[data-ui-shell="glass-wheel"] .gw-announcement{position:absolute;width:1px;h
 @media(prefers-reduced-motion:reduce){body[data-ui-shell="glass-wheel"] .gw-area{transition:none}}
 body[data-ui-shell="glass-wheel"][data-bewegung="ruhig"] .gw-area{transition:none}
 @media(prefers-reduced-transparency:reduce),(prefers-contrast:more),(forced-colors:active){
+  body[data-ui-shell="glass-wheel"]{--glas-blur:none}
   body[data-ui-shell="glass-wheel"]{--gw-surface:var(--bg-side);--gw-edge:var(--text);--gw-blur:0px;--gw-shadow:none}
   body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){-webkit-backdrop-filter:none;backdrop-filter:none}
   body[data-ui-shell="glass-wheel"]{background:var(--bg)}
@@ -118,3 +119,36 @@ body[data-ui-shell="glass-wheel"][data-kontrast="hoch"]{--gw-surface:var(--bg-si
 body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.gw-rim,#handy-oben){-webkit-backdrop-filter:none;backdrop-filter:none}
 :root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"]{--gw-surface:var(--bg-side);--gw-edge:var(--text);--gw-shadow:none;background:var(--bg)}
 :root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){-webkit-backdrop-filter:none;backdrop-filter:none}
+/* E790: Arbeitswerkzeuge auf Windows und im gemeinsamen Dokumentraum.
+   Eine Glasfläche je Werkzeuggruppe; Papier und Zeichnung bleiben deckend. */
+body[data-ui-shell="glass-wheel"] :is(.sp-kopf,.sp-werkzeuge,.sp-ink-tools,.sp-kontextleiste,.sp-palette,.sp-studio,.document-toolbar,.document-drawingbar,.menu){
+  border-color:var(--gw-edge);background:var(--bg-card);
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--text) 9%,transparent),var(--gw-shadow);
+}
+body[data-ui-shell="glass-wheel"] :is(.sp-wrap,.document-sheet,.sp-buehne){background:var(--bg-card)}
+body[data-ui-shell="glass-wheel"] .sp-wrap{border-color:var(--gw-edge);border-radius:var(--radius-lg);overflow:clip}
+body[data-ui-shell="glass-wheel"] .sp-kontextleiste{border-radius:var(--radius-lg)}
+@media(min-width:761px){
+  body[data-ui-shell="glass-wheel"]:has(#title,.document-workspace,.sp-wrap) .gw-shell[data-expanded="false"] .gw-tray{display:none}
+}
+@supports((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  /* Kein Filter am Kopf: er würde den Bezug des absolut gesetzten Docks ändern. */
+  body[data-ui-shell="glass-wheel"] :is(.sp-werkzeuge,.sp-ink-tools,.sp-kontextleiste,.sp-palette,.sp-studio,.document-toolbar,.document-drawingbar,.menu){
+    background:color-mix(in srgb,var(--bg-card) 86%,transparent);
+    -webkit-backdrop-filter:var(--glas-blur);backdrop-filter:var(--glas-blur);
+  }
+  body[data-ui-shell="glass-wheel"] .sp-ink-aktiv :is(.sp-werkzeuge,.sp-ink-tools,.sp-kontextleiste){
+    background:var(--bg-card);-webkit-backdrop-filter:none;backdrop-filter:none;
+  }
+}
+@media(prefers-reduced-transparency:reduce),(prefers-contrast:more),(forced-colors:active){
+  body[data-ui-shell="glass-wheel"] :is(.sp-kopf,.sp-werkzeuge,.sp-ink-tools,.sp-kontextleiste,.sp-palette,.sp-studio,.document-toolbar,.document-drawingbar,.menu){
+    background:var(--bg-card);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;
+  }
+}
+body[data-ui-shell="glass-wheel"][data-kontrast="hoch"],
+:root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"]{--glas-blur:none}
+body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.sp-kopf,.sp-werkzeuge,.sp-ink-tools,.sp-kontextleiste,.sp-palette,.sp-studio,.document-toolbar,.document-drawingbar,.menu),
+:root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"] :is(.sp-kopf,.sp-werkzeuge,.sp-ink-tools,.sp-kontextleiste,.sp-palette,.sp-studio,.document-toolbar,.document-drawingbar,.menu){
+  background:var(--bg-card);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;
+}

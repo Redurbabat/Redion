@@ -382,6 +382,8 @@ const GlassWheel = (() => {
             try {
                 document.body.dataset['uiShell'] = value;
                 mount();
+                if (document.querySelector('#title,.document-workspace,.sp-wrap'))
+                    setExpanded(false);
             }
             catch (error) {
                 fail(error);

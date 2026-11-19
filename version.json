@@ -3,6 +3,11 @@
   "datum": "2026-10-31",
   "status": "In Entwicklung – noch nicht veröffentlicht",
   "aenderungen": [
+    "Windows-Vorschau E791: optionale ChatGPT-Live-Steuerung über 46 begrenzte MCP-Werkzeuge; lokale Bridge geprüft, echter ChatGPT-Tunnel noch einzurichten.",
+    "Windows-Vorschau: Freihand im Schaltplan, auch bei laufender Simulation; Stift mit Taste 6.",
+    "Tintenradierer, Auswahl, Verschieben und Rückgängig erhalten elektrische Verbindungen.",
+    "PDF und Zeichenflächen: vollständige Stiftmeldungen; Zeichenflächen hören das Absetzen auch ausserhalb.",
+    "Optionales Glass Wheel: gläserne Arbeitswerkzeuge; Dokumente starten mit eingeklapptem Rad.",
     "Lokalen Redion-GitHub-Ordner einmalig in der Windows-App verbinden.",
     "Nach GitHub-Desktop-Synchronisierung neue Webdateien automatisch übernehmen.",
     "Separates Entwicklungsprofil schützt die normalen Redion-Notizen.",
