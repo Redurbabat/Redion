@@ -1271,3 +1271,63 @@ body[data-bewegung="ruhig"] #page > .pg-tools > button{
   #page > .pg-tools{box-shadow:none}
   #page > .pg-tools > button{border-color:var(--line)}
 }
+
+
+/* iPhone UI polish (2026-11): floating optical dock and readable settings.
+   Visual-only: existing navigation handlers, state and data remain unchanged.
+   Scope to touch-width layouts; do not affect Windows/macOS or desktop. */
+@media (max-width:760px) and (pointer:coarse) {
+  body:not([data-kontrast="hoch"]) #handy-oben {
+    background:color-mix(in srgb,var(--bg-side) 48%,transparent);
+    border:1px solid color-mix(in srgb,var(--text) 15%,transparent);
+    border-radius:999px;
+    box-shadow:inset 0 1px 0 #ffffff38,
+               inset 0 -1px 0 #ffffff0b,
+               0 12px 30px #00000030,0 2px 8px #00000017;
+    -webkit-backdrop-filter:blur(28px) saturate(175%);
+    backdrop-filter:blur(28px) saturate(175%);
+    isolation:isolate;
+  }
+  body:not([data-kontrast="hoch"]) #handy-oben::before {
+    content:"";position:absolute;inset:1px;border-radius:inherit;
+    background:linear-gradient(160deg,#ffffff1c,transparent 37%,#ffffff06 75%);
+    pointer-events:none;z-index:0;
+  }
+  body #handy-oben > button {position:relative;z-index:1;min-width:0;touch-action:manipulation}
+  body #handy-oben > button .ho-z {transition:scale var(--motion-fast) ease}
+  body #handy-oben > button:active .ho-z {scale:.91}
+  body:not([data-kontrast="hoch"]) #handy-oben #ho-pille {
+    border-radius:999px;
+    background:color-mix(in srgb,var(--accent) 24%,#ffffff13);
+    box-shadow:inset 0 1px 1px #ffffff38,inset 0 -1px 1px #00000014,
+               0 3px 12px #00000014;
+    -webkit-backdrop-filter:blur(18px) saturate(145%);
+    backdrop-filter:blur(18px) saturate(145%);
+  }
+  /* Prevent bottom controls from obscuring page content on iPhone. */
+  body #page.produkt-welt,
+  body .produkt-welt {
+    padding-bottom:max(136px,calc(112px + env(safe-area-inset-bottom,0px)));
+  }
+  /* Settings: let the native-width panel scroll without hiding its footer. */
+  body .overlay:has(.einst-fenster) {padding:0;align-items:stretch}
+  body .einst-fenster {height:100dvh;max-height:100dvh;border-radius:0;border:0}
+  body .einst-nav {overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  body .einst-nav button {min-height:48px;border-radius:12px}
+  body .einst-inhalt {overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+    padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))}
+  body .einst-zu {min-width:44px;min-height:44px}
+}
+@media (max-width:760px) and (pointer:coarse) and (prefers-reduced-transparency:reduce),
+       (max-width:760px) and (pointer:coarse) and (prefers-contrast:more),
+       (max-width:760px) and (pointer:coarse) and (forced-colors:active) {
+  body #handy-oben,body #handy-oben #ho-pille {
+    background:var(--bg-card);-webkit-backdrop-filter:none;backdrop-filter:none;
+    box-shadow:inset 0 0 0 1px var(--line);
+  }
+  body #handy-oben::before {display:none}
+}
+@media (max-width:760px) and (pointer:coarse) and (prefers-reduced-motion:reduce) {
+  body #handy-oben > button .ho-z {transition:none}
+  body #handy-oben > button:active .ho-z {scale:1}
+}
