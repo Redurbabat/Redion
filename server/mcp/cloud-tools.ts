@@ -114,8 +114,8 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       }
       return {documents:found};
     }
-    const id=required(args.documentId,128);
     if(name==='redion_read_page'){
+      const id=required(args.documentId,128);
       const result=await page(w,id,'lesen');
       return {documentId:id,workspaceId:w,title:String(result.data.text||''),
         content:String(result.data.inhalt||''),version:Number(result.s.version)||1};
@@ -148,6 +148,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',text:'Neue Seite über Cloud-MCP',objekt:documentId});
       return {documentId,version:1,alreadyExists:false};
     }
+    const id=required(args.documentId,128);
     const current=await page(w,id,'bearbeiten');
     const ver=expected(args.expectedVersion);
     if(ver!==Number(current.s.version||1))err('conflict','Seite wurde zwischenzeitlich geändert. Bitte erneut lesen.');
