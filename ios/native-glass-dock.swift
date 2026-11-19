@@ -221,11 +221,14 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler {
         const settings = document.querySelector('.einst-fenster');
         const modal = !!(settings && settings.getClientRects().length);
         const input = document.activeElement;
-        const editing = !!(input && /^(INPUT|TEXTAREA)$/.test(input.tagName) && input !== document.body);
+        const editing = !!(input && (/^(INPUT|TEXTAREA)$/.test(input.tagName) || input.isContentEditable));
+        const bar = buttons[0].parentElement;
+        const dockShown = !!(bar && bar.getClientRects().length && getComputedStyle(bar).display !== 'none');
+        const keyboard = !!(window.visualViewport && window.visualViewport.height < window.innerHeight - 140);
         window.webkit?.messageHandlers?.redionDock?.postMessage({
           selected: current < 0 ? 0 : current,
           theme: document.documentElement.dataset.theme || 'dark',
-          visible: !modal && !editing
+          visible: dockShown && !modal && !editing && !keyboard
         });
       }
       function queue() {
@@ -247,10 +250,12 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler {
       });
       document.addEventListener('focusin', queue);
       document.addEventListener('focusout', queue);
+      window.visualViewport?.addEventListener('resize', queue);
       document.addEventListener('DOMContentLoaded', queue, {once:true});
       if (document.body) {
         new MutationObserver(queue).observe(document.body, {
-          childList:true, subtree:true
+          childList:true, subtree:true, attributes:true,
+          attributeFilter:['class', 'style', 'hidden', 'aria-hidden', 'data-dokument']
         });
       }
       queue();
