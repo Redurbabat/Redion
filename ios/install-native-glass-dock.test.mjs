@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { injectNativeGlassDock } from './install-native-glass-dock.mjs';
+import { injectNativeGlassDock, injectNativeIosShell } from './install-native-glass-dock.mjs';
 
 const swift = fs.readFileSync(new URL('./native-glass-dock.swift', import.meta.url), 'utf8');
+const more = fs.readFileSync(new URL('./native-more.swift', import.meta.url), 'utf8');
 const original = [
   'import UIKit',
   'func application(_ application: UIApplication) -> Bool {',
@@ -46,4 +47,32 @@ test('native dock remains isolated from PWA and saved data', () => {
   assert.match(swift, /UITabBarDelegate/);
   assert.match(swift, /UITabBarItem/);
   assert.doesNotMatch(swift, /glassEffect\(/);
+});
+
+test('native More, Settings, Files and About screens compile as part of the iOS shell', () => {
+  const generated = injectNativeIosShell(original, swift, more);
+  for (const name of [
+    'RedionNativeMoreView', 'RedionNativeSettingsView',
+    'RedionNativeFilesView', 'RedionNativeAboutView',
+    'RedionNativeMoreCoordinator'
+  ]) {
+    assert.ok(generated.includes(name), 'Missing native SwiftUI screen: ' + name);
+  }
+  assert.match(generated, /UIHostingController/);
+  assert.match(generated, /ShareLink\(item: file\.url\)/);
+  assert.match(generated, /quickLookPreview/);
+  assert.match(generated, /\.isRegularFileKey/);
+  assert.match(generated, /\.isSymbolicLinkKey/);
+  assert.match(generated, /nativeMore\.sync\(selected: selected, dockVisible: visible\)/);
+  assert.throws(() => injectNativeIosShell(original, swift, 'bad file'), /fehlen/);
+  assert.throws(() => injectNativeIosShell(generated, swift, more), /bereits eingebaut/);
+});
+
+test('native screens never access RED ION stored notes or MCP', () => {
+  assert.doesNotMatch(more, /(?:indexedDB|localStorage|deleteDatabase|removeItem|\.deleteItem\()/);
+  assert.doesNotMatch(more, /(?:MCP\.connect|store\.clear|Store\.cache)/);
+  assert.match(more, /file\.url/);
+  for (const action of ['workspace', 'schublade', 'sichern', 'import', 'wolke', 'einstellungen']) {
+    assert.ok(more.includes('"' + action + '"'), 'Missing existing RED ION action: ' + action);
+  }
 });
