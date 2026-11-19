@@ -21,7 +21,7 @@
     "test:mcp": "node node_modules/typescript/bin/tsc -p windows/tsconfig.json && node --test pruefungen/redion-mcp-model.mts plugins/red-ion/tests/visual-frames.mts",
     "test:windows-mcp": "npm --prefix windows run prepare:app && npm --prefix plugins/red-ion run build && node plugins/red-ion/tests/electron.mts",
     "test:mcp-scripts": "npm --prefix plugins/red-ion run build && node --test plugins/red-ion/tests/windows-scripts.mts plugins/red-ion/tests/discovery.mts",
-    "test:mcp-cloud": "node --test pruefungen/redion-mcp-cloud-state.mts pruefungen/redion-mcp-cloud-oauth.mts pruefungen/redion-mcp-cloud-http.mts",
+    "test:mcp-cloud": "node --test pruefungen/redion-mcp-cloud-state.mts pruefungen/redion-mcp-cloud-oauth.mts pruefungen/redion-mcp-cloud-http.mts pruefungen/redion-mcp-cloud-route.mts",
     "test:mcp-cloud-browser": "node --test pruefungen/redion-mcp-cloud-browser.mts",
     "test:windows-ink": "npm --prefix windows run prepare:app && node pruefungen/windows-ink-studio.mts"
   },
