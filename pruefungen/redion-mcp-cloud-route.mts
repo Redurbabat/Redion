@@ -15,11 +15,12 @@ const fixture=async()=>{
   const db:McpDatabase={prepare(sql){
     let values:(string|number)[]=[];
     const params=()=>Object.fromEntries(values.map((v,i)=>['?'+(i+1),v]));
+    const bound=():any[]=>/\\?[0-9]+/.test(sql)?[params()]:values;
     return {
       bind(...next){values=next;return this;},
-      async first<T>(){return (sqlite.prepare(sql).get(params()) as T|undefined)??null;},
-      async all<T>(){return {results:sqlite.prepare(sql).all(params()) as T[]};},
-      async run(){return sqlite.prepare(sql).run(params());}
+      async first<T>(){return (sqlite.prepare(sql).get(...bound()) as T|undefined)??null;},
+      async all<T>(){return {results:sqlite.prepare(sql).all(...bound()) as T[]};},
+      async run(){return sqlite.prepare(sql).run(...bound());}
     };
   }};
   const store=ablageD1(db);
