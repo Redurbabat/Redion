@@ -55,6 +55,8 @@ jobs:
           node-version: '22'
       - name: Pakete holen (ohne Browser)
         run: npm install --no-audit --no-fund --ignore-scripts
+      - name: MCP-SDK fuer Client-End-to-End-Test installieren
+        run: npm install --prefix plugins/red-ion --no-audit --no-fund --ignore-scripts
       - name: Cloud-MCP OAuth, Schreibfreigabe und Rechte pruefen
         run: npm run test:mcp-cloud
 
