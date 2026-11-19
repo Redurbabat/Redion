@@ -1,5 +1,5 @@
 /*
- * Native SwiftUI Liquid Glass dock installer.
+ * Native Apple UIKit system tab bar installer.
  * Only extends the GENERATED Capacitor AppDelegate after the privacy shield.
  * Does not touch PWA/index.html, the WKWebView store or Xcode project entries.
  */
@@ -16,7 +16,7 @@ export function injectNativeGlassDock(delegate, source) {
       !delegate.includes('import UIKit') || !delegate.includes(SIGNATURE) ||
       !source.includes('private final class RedionNativeDock: NSObject, WKScriptMessageHandler') ||
       !source.includes('UITabBar(frame: .zero)')) {
-    throw new Error('Native SwiftUI-Quelle oder Capacitor-Datenschutz-Hook fehlt.');
+    throw new Error('Native UITabBar-Quelle oder Capacitor-Datenschutz-Hook fehlt.');
   }
   if (delegate.includes(HOOK) || delegate.includes(MARKER) ||
       delegate.includes('class RedionNativeDock')) {
