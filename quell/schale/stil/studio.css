@@ -1313,7 +1313,8 @@ body[data-bewegung="ruhig"] #page > .pg-tools > button{
   body .overlay:has(.einst-fenster) {padding:0;align-items:stretch}
   body .einst-fenster {height:100dvh;max-height:100dvh;border-radius:0;border:0}
   body .einst-nav {overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
-  body .einst-nav button {min-height:48px;border-radius:12px}
+  /* Keep the existing 52px mobile settings rows and two-page navigation. */
+  body .einst-nav button {border-radius:12px}
   body .einst-inhalt {overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
     padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))}
   body .einst-zu {min-width:44px;min-height:44px}
