@@ -30,6 +30,17 @@ export function injectNativeGlassDock(delegate, source) {
   return result.trimEnd() + '\n\n' + source.trim() + '\n';
 }
 
+export function injectNativeIosShell(delegate, dockSource, moreSource) {
+  if (typeof moreSource !== 'string' ||
+      !moreSource.includes('private final class RedionNativeMoreCoordinator') ||
+      !moreSource.includes('private struct RedionNativeMoreView: View') ||
+      !moreSource.includes('private struct RedionNativeFilesView: View') ||
+      !moreSource.includes('ShareLink(item: file.url)')) {
+    throw new Error('Native iPhone-Ansichten fehlen oder sind unvollstaendig.');
+  }
+  return injectNativeGlassDock(delegate, dockSource + '\n\n' + moreSource);
+}
+
 export function installNativeGlassDock(root = process.cwd()) {
   const config = JSON.parse(fs.readFileSync(path.join(root, 'capacitor.config.json'), 'utf8'));
   if (config.appId !== 'ch.redurbabat.redion' ||
@@ -40,14 +51,15 @@ export function installNativeGlassDock(root = process.cwd()) {
   const sourcePath = path.join(root, 'ios', 'native-glass-dock.swift');
   const delegate = fs.readFileSync(dest, 'utf8');
   const source = fs.readFileSync(sourcePath, 'utf8');
-  const modified = injectNativeGlassDock(delegate, source);
+  const moreSource = fs.readFileSync(path.join(root, 'ios', 'native-more.swift'), 'utf8');
+  const modified = injectNativeIosShell(delegate, source, moreSource);
   fs.writeFileSync(dest, modified);
   return dest;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
-    console.log('RED ION iOS: Native SwiftUI-Glasleiste installiert:',
+    console.log('RED ION iOS: Native iOS-Ansichten installiert:',
       installNativeGlassDock());
   } catch (error) {
     console.error('RED ION iOS: Native Leiste NICHT installiert:', error.message);
