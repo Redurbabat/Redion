@@ -83,3 +83,39 @@ test('Echter MCP-SDK-OAuth-Client: Discovery, Registrierung, Zustimmung, Token u
     assert.equal(await f.oauth.authenticate(String(tokens!.access_token)),null);
   }finally{f.close();}
 });
+
+test('OAuth HTTP: Schreibschalter AUS, Lesezugriff bleibt, schreibgeschützter Bereich gesperrt',async()=>{
+  const f=cloudFixture();try{
+    const client=await f.oauth.register({client_name:'ChatGPT-Testclient',redirect_uris:['https://ai.example.test/cb']});
+    f.user({id:'owner',workspaces:[
+      {id:'workspace-edit',name:'Bearbeitbar',canWrite:true},
+      {id:'workspace-read',name:'Nur lesbar',canWrite:false}]});
+    const args=new URLSearchParams({client_id:client.client_id,redirect_uri:client.redirect_uris[0]!,
+      response_type:'code',resource:'https://mcp.example.test/mcp',scope:'redion:read redion:write',
+      code_challenge:await pkceChallenge('v'.repeat(64)),code_challenge_method:'S256'});
+    const auth='https://app.example.test/mcp/authorize';
+    const headers={Origin:'https://app.example.test'};
+    const first=await f.fetcher(auth+'?'+args);
+    const html=await first.text();
+    assert.equal(first.status,200);
+    assert.match(html,/name="write" value="yes"/);
+    assert.match(html,/standardmässig aus/);
+    const form=new URLSearchParams({requestId:hidden(html,'requestId'),csrf:hidden(html,'csrf'),
+      decision:'allow',remember:'yes',workspace:'workspace-read',write:'yes'});
+    assert.equal((await f.fetcher(auth,{method:'POST',headers,body:form})).status,401);
+    assert.deepEqual(await f.oauth.listGrants('owner'),[]);
+    form.delete('write');
+    assert.equal((await f.fetcher(auth,{method:'POST',headers,body:form})).status,303);
+    const grants=await f.oauth.listGrants('owner');
+    assert.deepEqual(grants[0]?.scopes,['redion:read']);
+    const retry=await f.fetcher(auth+'?'+args);
+    const retryHtml=await retry.text();
+    assert.equal(retry.status,200);
+    const writeForm=new URLSearchParams({requestId:hidden(retryHtml,'requestId'),csrf:hidden(retryHtml,'csrf'),
+      decision:'allow',remember:'yes',workspace:'workspace-edit',write:'yes'});
+    assert.equal((await f.fetcher(auth,{method:'POST',headers,body:writeForm})).status,303);
+    const granted=await f.oauth.listGrants('owner');
+    assert.deepEqual(granted[0]?.scopes,['redion:read','redion:write']);
+    assert.deepEqual(granted[0]?.workspaceIds,['workspace-edit']);
+  }finally{f.close();}
+});
