@@ -123,6 +123,13 @@ jobs:
         run: node pruefungen/lauf/test92.mts
       - name: Die Bremse und die Kopfzeilen prüfen
         run: node pruefungen/lauf/test93.mts
+      # Die Cloud-MCP-Rechte sind sicherheitskritisch: Lesen darf weder beim
+      # ersten OAuth-Consent noch durch Refresh still zu Schreiben werden.
+      # Ohne diesen Schritt koennte eine geaenderte Scope-Regel unbemerkt
+      # auf main gelangen. Ein D1-Konto ist nicht erforderlich; die Tests
+      # nutzen eine isolierte SQLite-Ablage.
+      - name: Cloud-MCP OAuth, Schreibfreigabe und Rechte pruefen
+        run: npm run test:mcp-cloud
 
   # ---------------------------------------------------------------------------
   # Der schnelle Lauf (E745). Bis zum 11. Oktober 2026 stand hier „Alle
