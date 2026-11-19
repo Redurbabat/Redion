@@ -18,17 +18,33 @@
  * ==========================================================================*/
 
 import { torPruefen } from './server/sicherheit/tor.ts';
+import {handleCloudMcp,isCloudMcpPublicPath,isCloudMcpPrivatePath} from './server/mcp/cloud-router.ts';
 import { onRequest as bruecke } from './functions/api/bruecke.ts';
 import { bedienen, istServerWeg, geplant } from './server/cloudflare.ts';
 
 export default {
   async fetch(request: any, env: any, ctx: any) {
-    // Jede Anfrage vor dem Routing prüfen, auch statische Dateien und /api/bruecke.
+    const url = new URL(request.url);
+
+    /* NUR diese expliziten Protokollpfade haben ihre EIGENE Authentifizierung:
+     * Metadaten und Clientregistrierung bleiben öffentlich, /mcp/cloud
+     * verlangt immer einen gültigen, widerrufbaren OAuth-Bearer-Token.
+     * Das Access-Tor aller anderen Wege bleibt unverändert. Falls die
+     * Cloudflare-Access-Anwendung bereits am Edge sperrt, müssen diese
+     * Protokollpfade dort separat freigegeben werden; das macht der
+     * Worker absichtlich nicht heimlich. */
+    if (isCloudMcpPublicPath(url.pathname))
+      return handleCloudMcp(request,env,false);
+
+    // Jede sonstige Anfrage vor dem Routing prüfen, auch statische Dateien.
     // Voraussetzung: assets.run_worker_first = true in wrangler.toml.
     const verweigert = await torPruefen(request, env || {});
     if (verweigert) return verweigert;
 
-    const url = new URL(request.url);
+    /* Menschliche OAuth-Zustimmung und Widerruf nur NACH dem Access-Tor.
+     * Die Cloud prüft die Konto-ID nochmals; ein Client-Header genügt nie. */
+    if (isCloudMcpPrivatePath(url.pathname))
+      return handleCloudMcp(request,env,true);
 
     /* --- Die Brücke ---------------------------------------------------- */
     if (url.pathname === '/api/bruecke' || url.pathname === '/api/bruecke/') {
