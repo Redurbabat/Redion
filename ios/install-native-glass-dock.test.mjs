@@ -16,8 +16,8 @@ const original = [
 test('injects native glass dock exactly once after privacy hook', () => {
   const result = injectNativeGlassDock(original, swift);
   assert.match(result, /RedionPrivacyShield\.start\(\)\n\s*\/\/ REDION_IOS_NATIVE_GLASS_DOCK\n\s*RedionNativeDock\.start\(\)/);
-  assert.match(result, /import SwiftUI/);
-  assert.match(result, /glassEffect\(\.regular, in: Capsule\(\)\)/);
+  assert.match(result, /import UIKit/);
+  assert.match(result, /UITabBar\(frame: \.zero\)/);
   assert.throws(() => injectNativeGlassDock(result, swift), /bereits eingebaut/);
 });
 
@@ -43,5 +43,7 @@ test('native dock remains isolated from PWA and saved data', () => {
   const app = fs.readFileSync(new URL('./native-sicherung.ts', import.meta.url), 'utf8');
   assert.doesNotMatch(app, /native-glass-dock\.swift/);
   assert.doesNotMatch(swift, /(?:localStorage|indexedDB|removeItem|deleteDatabase)/);
-  assert.match(swift, /#available\(iOS 26\.0, \*\)/);
+  assert.match(swift, /UITabBarDelegate/);
+  assert.match(swift, /UITabBarItem/);
+  assert.doesNotMatch(swift, /glassEffect\(/);
 });
