@@ -1,0 +1,24 @@
+name: iOS Glass Dock Contract
+
+on:
+  pull_request:
+    paths:
+      - 'quell/schale/stil/studio.css'
+      - 'quell/schale/stil/glasswheel.css'
+      - 'quell/schale/stil/bausteine.css'
+      - 'index.html'
+      - 'pruefungen/ios-glass-dock-contract.test.mjs'
+      - '.github/workflows/ios-glass-dock-contract.yml'
+  workflow_dispatch:
+
+jobs:
+  ios-dock-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify iPhone dock gesture, lens and safe-area contracts
+        run: node --test pruefungen/ios-glass-dock-contract.test.mjs
