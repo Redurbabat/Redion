@@ -1294,8 +1294,7 @@ body[data-bewegung="ruhig"] #page > .pg-tools > button{
     pointer-events:none;z-index:0;
   }
   body #handy-oben > button {position:relative;z-index:1;min-width:0;touch-action:manipulation}
-  body #handy-oben > button .ho-z {transition:scale var(--motion-fast) ease}
-  body #handy-oben > button:active .ho-z {scale:.91}
+  /* The existing dock icon transform/transition remains authoritative. */
   body:not([data-kontrast="hoch"]) #handy-oben #ho-pille {
     border-radius:999px;
     background:color-mix(in srgb,var(--accent) 24%,#ffffff13);
@@ -1329,6 +1328,5 @@ body[data-bewegung="ruhig"] #page > .pg-tools > button{
   body #handy-oben::after {display:none}
 }
 @media (max-width:760px) and (pointer:coarse) and (prefers-reduced-motion:reduce) {
-  body #handy-oben > button .ho-z {transition:none}
-  body #handy-oben > button:active .ho-z {scale:1}
+  /* Reduced-motion icon behavior is already handled by bausteine.css. */
 }
