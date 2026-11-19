@@ -17,6 +17,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
     private let labels = ["Dokumente", "Heute", "Lernen", "Termine", "Mehr"]
     private let symbols = ["book.closed", "house", "graduationcap", "calendar", "ellipsis"]
     private weak var webView: WKWebView?
+    private let nativeMore = RedionNativeMoreCoordinator()
     private var systemBar: UITabBar?
     private var attempt = 0
     private var registered = false
@@ -83,6 +84,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
                 swipe.maximumNumberOfTouches = 1
                 bar.addGestureRecognizer(swipe)
                 systemBar = bar
+                nativeMore.install(root: root, web: web, below: bar)
             }
 
             if !registered {
@@ -116,6 +118,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
     // rendering and material. Only the route is delegated to the old Redion app.
     func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
         guard (0..<labels.count).contains(item.tag) else { return }
+        if item.tag == 4 { nativeMore.resetForMoreTab() }
         webView?.evaluateJavaScript(
             "window.__redionNativeDockSelect?.(\(item.tag));",
             completionHandler: nil)
@@ -152,6 +155,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
                 (data["theme"] as? String) == "light" ? .light : .dark
             let visible = (data["visible"] as? Bool) ?? true
             bar.isHidden = !visible
+            self.nativeMore.sync(selected: selected, dockVisible: visible)
 
             // Hide the legacy web bar only AFTER the real system bar exists.
             // It keeps its DOM geometry so Redion's existing content clearance
