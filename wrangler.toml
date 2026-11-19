@@ -114,10 +114,15 @@ run_worker_first = true
 #  Schema kommt mit
 #      npx wrangler d1 execute redion --remote --file=server/schema.sql
 #
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "redion"
-# database_id = "HIER-DIE-ECHTE-KENNUNG-EINTRAGEN"
+# 19. NOVEMBER 2026: Im Cloudflare-Konto des produktiven red-ion Workers
+# unter Settings > Bindings die bereits bestehende D1-Datenbank redion
+# manuell als DB gebunden. Die ID stammt aus der Cloudflare-Oberflaeche
+# desselben Worker-Projekts. Kein neues Konto und keine neue DB erstellt.
+# Diesen Eintrag bei jedem kuenftigen git-basierten Deployment beibehalten.
+[[d1_databases]]
+binding = "DB"
+database_name = "redion"
+database_id = "18b0f926-e522-4b77-8063-ca3399c478ae"
 
 # ===========================================================================
 #  R2 — die Ablage fuer Anhaenge (Bilder, PDFs, Videos)
