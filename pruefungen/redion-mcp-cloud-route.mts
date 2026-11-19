@@ -15,7 +15,7 @@ const fixture=async()=>{
   const db:McpDatabase={prepare(sql){
     let values:(string|number)[]=[];
     const params=()=>Object.fromEntries(values.map((v,i)=>['?'+(i+1),v]));
-    const bound=():any[]=>/\\?[0-9]+/.test(sql)?[params()]:values;
+    const bound=():any[]=>sql.includes('?1')?[params()]:values;
     return {
       bind(...next){values=next;return this;},
       async first<T>(){return (sqlite.prepare(sql).get(...bound()) as T|undefined)??null;},
