@@ -160,7 +160,8 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const find=required(args.find,2000),replacement=text(args.replacement,4000);
       if(typeof args.replacement!=='string'||args.replacement.length>4000)err('invalid_arguments','Ungültiger Ersatztext.');
       const old=current.data.inhalt;
-      if(typeof old!=='string'||!old.includes(find))err('not_found','Text nicht im Seiteninhalt gefunden.');
+      if(typeof old!=='string')return err('not_found','Seite hat keinen Textinhalt.');
+      if(!old.includes(find))return err('not_found','Text nicht im Seiteninhalt gefunden.');
       return update(w,id,ver,{...current.data,inhalt:old.replaceAll(find,replacement)});
     }
     return err('not_found','Unbekanntes Werkzeug.');
