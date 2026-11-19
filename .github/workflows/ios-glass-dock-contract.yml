@@ -7,6 +7,10 @@ on:
       - 'quell/schale/stil/glasswheel.css'
       - 'quell/schale/stil/bausteine.css'
       - 'index.html'
+      - 'ios/native-glass-dock.swift'
+      - 'ios/install-native-glass-dock.mjs'
+      - 'ios/install-native-glass-dock.test.mjs'
+      - 'codemagic.yaml'
       - 'pruefungen/ios-glass-dock-contract.test.mjs'
       - '.github/workflows/ios-glass-dock-contract.yml'
   workflow_dispatch:
@@ -22,6 +26,8 @@ jobs:
           node-version: '22'
       - name: Verify iPhone dock gesture, lens and safe-area contracts
         run: node --test pruefungen/ios-glass-dock-contract.test.mjs
+      - name: Verify native SwiftUI dock integration
+        run: node --test ios/install-native-glass-dock.test.mjs
 
   generated-stand-diagnostics:
     runs-on: ubuntu-latest
