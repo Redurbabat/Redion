@@ -1,0 +1,103 @@
+# Redion – Aufräuminventar und Prüfschritte
+
+**Stand:** 8. November 2026. Geprüfter GitHub-Ausgangsstand: `main` bei `371fcf7e50719793db5b58eec2d29ae7fe82bde4`. **Dies ist ein Vorschlags- und Kontrollindex, keine Freigabe zum Löschen.**
+
+## Ein gemeinsamer Review-PR für den lokalen Windows-Stand
+
+**Aktueller einziger offener Aufräum-PR:** [#206 – Redion Live: gesamter Arbeitsstand](https://github.com/Redurbabat/Redion/pull/206). Alle früheren Einzel-PRs **#192–#205 werden durch #206 ersetzt und geschlossen, ohne Merge oder Branch-Löschung**. Ihre historischen Beschreibungen bleiben als Prüfherkunft nachvollziehbar. Der gemeinsame Branch heißt `review/redion-live-gesamt-20261108` und basiert direkt auf `main`.
+
+**Lokaler Windows-Ablauf:** Im bestehenden Git-Projektordner `holen-zweig.bat` doppelklicken, Branch `review/redion-live-gesamt-20261108` eingeben, den **noch nicht grün getesteten** Stand bei der Warnung bewusst bestätigen; danach `Redion-Live.bat` doppelklicken. Alternativ im CMD `holen.bat review/redion-live-gesamt-20261108`. Redion Live baut die vorhandene Anwendung aus den lokalen Quellen; hier wurden **keine neuen sichtbaren UI-Funktionen** entwickelt, sondern Historie archiviert, Prüfwerkzeuge ergänzt und Windows-Typen korrigiert. Keine Freigabe für produktiven Einsatz oder Merge.
+
+## Bestand, gezählt im Git-Baum
+
+| Teil | Dateien (Git-Blobs) | Einordnung |
+| --- | ---: | --- |
+| Gesamtbestand | **1.723** | Kein Beleg, dass eine Datei davon entbehrlich ist |
+| `src/` | 259 | TypeScript-/React-Quellen: **nicht archivieren** |
+| `quell/` | 352 | gemeinsame Web-/generierte Dateien: **nicht archivieren** |
+| `pruefungen/` | 605 | Verträge/Tests/Fixtures: **nicht nach Namen aussortieren** |
+| `doku/` | 170 | davon 119 Markdown-Dateien, Prüfkandidaten nur nach Referenzsuche |
+| `ios/` | 56 | native iPhone-Adapter und Regressionstests: **nicht archivieren** |
+| `windows/` | 22 | Electron-Dateien und Tests: **nicht archivieren** |
+| `.agents/` und `.claude/` | jeweils 12 | Agenten-/Skillsteuerung: **nur nach Eigentümerfreigabe** |
+
+## Herkunft: ursprüngliche Dokumentgruppen (nun in PR #206)
+
+Die hier referenzierten Einzel-PRs wurden ursprünglich direkt von `main` erstellt und anschließend im gemeinsamen PR #206 inhaltlich zusammengeführt. Sie sind **keine separat zur Zusammenführung vorgesehenen PRs mehr**. Die verschobenen Dateien behalten ihre **identischen Git-Blob-SHAs**. Die angegebene Anzahl bezeichnet nur die umbenannten Originale.
+
+| PR | Thema | Anzahl | Pfad |
+| --- | --- | ---: | --- |
+| [#192](https://github.com/Redurbabat/Redion/pull/192) | historische Übergaben und Migrationen | 3 | `doku/mehr nicht nutzbar/` |
+| [#193](https://github.com/Redurbabat/Redion/pull/193) | frühere Windows-Testberichte | 2 | derselbe Sammelordner |
+| [#194](https://github.com/Redurbabat/Redion/pull/194) | Codemagic-Fehleranalysen | 2 | derselbe Sammelordner |
+| [#195](https://github.com/Redurbabat/Redion/pull/195) | Capacitor-Pfad-/SPM-Buildberichte | 2 | derselbe Sammelordner |
+| [#196](https://github.com/Redurbabat/Redion/pull/196) | iPhone-Viewport-/PDF-Querformatberichte | 2 | derselbe Sammelordner |
+| [#200](https://github.com/Redurbabat/Redion/pull/200) | ältere iOS-Lifecycle-/Exportberichte | 2 | derselbe Sammelordner |
+| [#201](https://github.com/Redurbabat/Redion/pull/201) | ältere iOS-Gesten-/Statusleistenberichte | 2 | derselbe Sammelordner |
+| [#202](https://github.com/Redurbabat/Redion/pull/202) | ältere Safari-/Homescreen-Integrationsberichte | 2 | derselbe Sammelordner |
+| **Summe** | **acht archivierte Herkunftsgruppen in PR #206** | **17** | **kein Merge** |
+
+Jeder Archiv-PR ergänzt sein eigenes Herkunfts-/Risiko-Protokoll. Die Änderungen in diesen PRs sind **nur Umbenennungen der Dokumente** und das zugehörige Prüfprotokoll. Ein gitbasierter SHA-Vergleich bestätigte die Inhaltstreue.
+
+## Schutzliste – wurde bewusst NICHT verschoben
+
+| Datei / Bereich | Warum behalten? |
+| --- | --- |
+| `CLAUDE.md`, `AGENTS.md`, `AI_START_HERE.md`, `START-MIT-CLAUDE-CODE.md` | Aktive oder historisch referenzierte Arbeitsanweisungen. Eigentümer möchte **vor jeder Änderung gefragt werden** |
+| `.agents/`, `.claude/` | Skill- und Agenten-Integrationen, auch wenn Dateinamen sich wiederholen |
+| `doku/ARCHITEKTUR.md`, `AUFGABEN.md`, `ENTSCHEIDUNGEN.md`, `LUECKEN.md` | Architektur, Planung, Entscheidungen, offene Produktlücken |
+| `doku/ALTE-PRUEFLAEUFE.md` | In `pruefungen/LIESMICH.md` direkt referenziert |
+| `doku/AUFTRAG-01-ruhiges-band.md` | In mehreren `pruefungen/lauf/test*.mts` referenziert |
+| `doku/AUFTRAG-STAND.md` | In Prüfläufen und `doku/ELEKTRO-STAND.md` referenziert |
+| `doku/OBERFLAECHE-PC-UND-HANDY.md` | Historische Abschnitte, aber auch aktuelle Verweise aus UX-Skill und Hilfedokumentation |
+| `quell/entwicklung/ui-reserve/` | Bewusst nicht produktive Originalgalerie, aber durch `test426` und Reserve-Bauablauf geschützt |
+| `src/islands/probe.tsx` | Testinsel zur Validierung von `test579`, keine tote Produktionskomponente |
+| `UR.md`, `PROBLEME.md` | Erzeugte Chronik-Dokumente mit eigener Quelle und Historie |
+| `unbenutzt.mts`, `Redion-Live.bat` | Tatsächliche Entwicklungs- bzw. Windows-Startwerkzeuge |
+| Persönliche Dokumente im Repository-Wurzelverzeichnis | Ohne Einzelfreigabe nicht verschieben oder veröffentlichen; in `.assetsignore` ausgeschlossen, Vorhandensein wird von `test270` geprüft |
+
+Besonders wichtig: Die zufällig identischen Dateien `AGENTS.md` und `AI_START_HERE.md` werden **nicht** dedupliziert. Ebenso bleiben Swift-/iOS-Entitlements und alle anderen identischen Sicherheitsdateien unberührt.
+
+## Warum keine Dateinamen-Heuristik genügt
+
+- `backup` bezeichnet oft eine **wichtige Datenrettungsfunktion** statt eine alte Sicherung.
+- `probe` kennzeichnet häufig eine **aktive Testkomponente**.
+- `alt` kann ein **gewolltes Historienprotokoll** sein.
+- `quell/` enthält generierte Webdateien. Entfernen würde Web, iPhone und Windows auseinandertreiben.
+- Eine exakte GitHub-Textsuche nach Dateinamen ist **kein vollständiger Beweis** dafür, dass dynamische Referenzen und relative Markdown-Links fehlen.
+
+## Abnahme- und Merge-Kriterien
+
+1. Jede PR einzeln auf unerwartete Referenzen und relative Links überprüfen, insbesondere Dateien in `doku/`.
+2. Verschobene Dateiinhalte per Git-Blob-SHA gegen `main` vergleichen; nur reine Renames zulassen.
+3. GitHub-Actions-Checks und mindestens die betroffenen Dokument-/Linkverträge wirklich ausführen; aktuelle Läufe nicht durch historische Testberichte ersetzen.
+4. Den Sammelordner vom Web-Deployment ausschliessen – er liegt im bereits ausgeklammerten `doku/`.
+5. Erst nach Besitzerfreigabe mergen. Keine Zweige löschen, keine produktiven Dateien, Nutzerdaten oder App-IDs anrühren.
+
+**Teststatus dieses Berichts:** Lesende GitHub-Baum- und Referenzprüfung. **Keine** neuen Windows-, WebKit-, Xcode-, iPhone-Geräte-, Build- oder Laufzeittests. `main` wurde nicht verändert.
+
+## GitHub-Actions-Befund am 8. November 2026
+
+Eine gesonderte, nachweisbasierte Diagnose mit GitHub-Lauf-Links und Prüfplan liegt als [Entwurfs-PR #199](https://github.com/Redurbabat/Redion/pull/199) vor.
+
+Die neu angelegten Archiv- und Prüfer-PRs werden durch den Workflow **Prüfläufe** als fehlgeschlagen gemeldet. Bei den tatsächlich gelesenen Jobs von [PR #198](https://github.com/Redurbabat/Redion/actions/runs/42429344392), [PR #197](https://github.com/Redurbabat/Redion/actions/runs/42428884620) und [PR #196](https://github.com/Redurbabat/Redion/actions/runs/42428778558) hatten jeweils **beide Jobs null dokumentierte Schritte**. Schon die beim Anlegen des Branches ausgelösten Workflows auf dem unveränderten `main`-Commit meldeten einen Fehlschlag. Das spricht für einen **Blocker vor der regulären Testausführung**, beweist aber ohne Runner-Logs die Ursache nicht.
+
+Deshalb gilt für **alle** Aufräum-PRs: `CI NICHT BESTANDEN / Ausführung unklar`; keine automatische Freigabe. Der isolierte, noch nicht gemergte Prüf-PR #198 hat **14/14 lokale Tests** unter Node 22.16 mit experimentellem Type-Stripping bestanden; das ersetzt **nicht** den verlangten Repository-Typecheck unter Node >=22.18 oder die GitHub-CI.
+
+Vor einem Merge Runner-Zuweisung und fehlende Schritte prüfen, danach normale Tests vollständig ausführen. Keine bestehenden Prüfungen abschwächen, um einen grünen Status zu erzwingen.
+
+## Ergänzende Archiv-Linkprüfung (8. November 2026)
+
+Alle **17 Originaldokumente** der acht noch nicht gemergten Archiv-PRs #192–#196 und #200–#202 wurden nochmals gegen ihren jeweils unveränderten Pfad auf `main` geprüft. Für **17/17** stimmen die Git-Blobs mit dem geprüften Ausgangsbestand überein. Die direkte Inline-Markdown-Linkprüfung in diesen Dokumenten fand **keinen durch die geplanten Verschiebungen nachweisbar beschädigten Link**. Die Auswertung prüfte linkspezifisch, ob das alte Linkziel existierte und nach dem geplanten Umzug fehlen würde; sie ist **kein vollständiger Linkparser** und deckt nicht sämtliche dynamischen Verweise anderer Dateien ab.
+
+Der bereits vorhandene [Prüf-PR #198](https://github.com/Redurbabat/Redion/pull/198) wurde gezielt erweitert: Er erkennt nun auch Links **innerhalb** verschobener Originale, die durch ihre neue relative Position ungültig würden, und unterscheidet sie von schon zuvor falschen Links. Die **14/14 isolierten Tests** bestanden lokal mit Node 22.16 (`--experimental-strip-types`); die zwei GitHub-Dateien sind byteidentisch mit den getesteten lokalen Dateien. Wegen der weiterhin ohne sichtbare Schritte fehlgeschlagenen GitHub Actions ([Diagnose-PR #199](https://github.com/Redurbabat/Redion/pull/199)) ist **keine CI- oder Gerätefreigabe** erfolgt.
+
+## Neue Prüfung von Referenzstil-Markdown (8. November 2026)
+
+[PR #198](https://github.com/Redurbabat/Redion/pull/198) deckt zusätzlich aktive Markdown-Referenzdefinitionen wie `[notiz][quelle]` mit `[quelle]: ALTE-DATEI.md` ab. Dies gilt für sowohl noch aktive Dokumente als auch verschobene Archivoriginale; verwendete kollabierte Referenzen (`[notiz][]`) werden berücksichtigt. Fenced-Codeblöcke und **unbenutzte** Definitionen werden nicht als gültige Dateiverweise interpretiert. Die zugehörigen zwei Fehlerfälle schlugen **vor** der Reparatur erwartungsgemäß fehl und danach zusammen mit zwölf weiteren Prüfungen nicht mehr: **14/14 isolierte lokale Tests bestanden** (Node 22.16, experimentelles Type-Stripping). Die GitHub-Blobs beider Dateien stimmen mit den lokal getesteten überein.
+
+Der nachgeholte **Referenzdefinitions-Abgleich aller 17 zur Archivierung vorgesehenen Originale** ergab **0 Referenzdefinitionen**; für diese konkrete Gruppe entsteht dadurch kein zusätzlicher Linkschaden. Die verbesserte Prüfung dient der Absicherung gegen künftige Dokumentverschiebungen. Shortcut-Referenzen ohne zweites Klammerpaar, reine HTML-Links und dynamisch aufgebaute Pfade erfordern weiterhin separate Kontrolle. **GitHub-CI bleibt fehlgeschlagen; kein Merge.**
+
+## Noch offen zur Eigentümerentscheidung
+
+Die früheren Arbeitszweige `feat/red-morph-skills-20261107` und `chore/mehr-nicht-nutzbar-review-20261107` existieren weiterhin. Der zweite enthält teilweise dieselbe Archivarbeit wie PR #192; **nicht löschen**, bevor der Besitzer entschieden hat, welchen Reviewpfad er behalten möchte. Der Skill-Branch enthält Änderungen an Projektanweisungen und wird **nicht ohne gesonderte Freigabe** in diesen Aufräumprozess aufgenommen.

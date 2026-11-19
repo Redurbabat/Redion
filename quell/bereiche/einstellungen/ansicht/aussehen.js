@@ -224,8 +224,8 @@ const Aussehen = (() => {
         return alsText(ev).toLowerCase() === soll.toLowerCase();
     };
     const STILBLATT = {
-        dark: { '--bg': '#121417', '--bg-side': '#181a1d', '--text': '#f1f2f4', '--accent': '#6d4aff' },
-        light: { '--bg': '#ffffff', '--bg-side': '#fbfbfa', '--text': '#37352f', '--accent': '#7c3aed' },
+        dark: { '--bg': '#1c1d20', '--bg-side': '#212225', '--text': '#f5f5f7', '--accent': '#6d4aff' },
+        light: { '--bg': '#ffffff', '--bg-side': '#f6f6f8', '--text': '#1d1d1f', '--accent': '#7c3aed' },
     };
     const stilblatt = (grund) => STILBLATT[grund === 'light' ? 'light' : 'dark'] ?? {};
     const akzentWahl = (s) => {

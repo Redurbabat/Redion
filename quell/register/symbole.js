@@ -44,6 +44,8 @@ Register.symbole = (() => {
         inkPointer: '<path d="M5.6 3.4 18 11.2l-5.4 1.3-2.6 5.1z"/><path d="m12.4 12.6 5.4 6"/>',
         inkConnector: '<circle cx="5.4" cy="18.6" r="2.3"/><circle cx="18.6" cy="5.4" r="2.3"/>' +
             '<path d="M7.4 16.6C9 11 11 9 16.6 7.4" stroke-dasharray="3 2.6"/>',
+        busbar: '<path d="M3.2 7h17.6" stroke-width="2.6"/><path d="M7 7v8.6M12 7v8.6M17 7v8.6"/>' +
+            '<circle cx="7" cy="17.4" r="1.6"/><circle cx="12" cy="17.4" r="1.6"/><circle cx="17" cy="17.4" r="1.6"/>',
         inkMarker: '<path d="m13 3 7 7-8 8-7-7zM5 11l-2 7 3 3 6-3M3 21h7"/>',
         inkEraser: '<path d="m14 3 7 7-10 11H6l-4-4zM8 11l8 8M11 21h10"/>',
         inkText: '<path d="M3.8 7V4.4h16.4V7"/><path d="M12 4.4v15.2"/><path d="M8.4 19.6h7.2"/>',

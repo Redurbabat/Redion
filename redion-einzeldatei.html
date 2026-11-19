@@ -13660,8 +13660,9 @@ body[data-bewegung="ruhig"] .dev-actions button:active{transform:none}
 }
 @media(max-width:1220px) {
   .sp-wrap .sp-art {max-width:155px;flex-basis:155px}
-  .sp-wrap .sp-palette-knopf span {display:none}
-  .sp-wrap .sp-rechts > button:not(.sp-start):not(.sp-bereiche):not([data-a="vollbild"]):not([data-a="vollbild-zu"]) {display:none}
+  /* E777: Rückgängig, Wiederholen und „…" bleiben sichtbar — hier wurden
+     sie unter 1220 px ausgeblendet, und die Windows-App bei 1100 px hatte
+     kein ↶ mehr im Kopf. Die Breite regelt jetzt der Kopf selbst. */
 }
 @media(max-width:850px){
   .sp-wrap .sp-kopf {flex-wrap:wrap;min-height:0}
@@ -13766,7 +13767,6 @@ body[data-bewegung="ruhig"] .dev-actions button:active{transform:none}
   .sp-wrap .sp-werkzeuge {bottom:62px;padding:5px;gap:2px;border-radius:15px}
   .sp-wrap .sp-werkzeuge .sp-wz,.sp-wrap .sp-werkzeuge .sp-dock-fit {width:44px;min-width:44px;height:44px}
   .sp-wrap .sp-werkzeuge .sp-palette-knopf {height:44px;min-width:44px;padding:0 9px}
-  .sp-wrap .sp-werkzeuge .sp-palette-knopf span {display:none}
   .sp-wrap .sp-kontextleiste {top:8px;gap:1px;padding:4px}
   .sp-wrap .sp-kontext-titel {max-width:85px}
   .sp-wrap .sp-kontextleiste button {min-width:35px;min-height:37px}
@@ -14087,6 +14087,247 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
  .sp-wrap .sp-batterie-fach .sp-bat-bedienung>*{flex:1 1 100%}
  .sp-wrap .sp-batterie-fach .sp-bat-birne{flex-basis:42px;width:42px;height:42px;font-size:30px}
 }
+
+/* Windows/Desktop: Werkzeug-Dock bei schmalen Fenstern erreichbar halten.
+ * Nur Darstellung; keine Änderung an Schaltplan-Daten oder Interaktionen. */
+@media (min-width: 851px) {
+  .sp-wrap .sp-werkzeuge {
+    max-width: calc(100% - 32px);
+    box-sizing: border-box;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+  }
+  .sp-wrap .sp-werkzeuge > * {
+    flex-shrink: 0;
+  }
+}
+/* Tastatur-Navigation: sichtbarer Fokus auf den Zeichenwerkzeugen. */
+.sp-wrap .sp-werkzeuge :is(button, [role="button"]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+
+/* Der schwebende Werkzeug-Dock muss auch auf 320px-Bildschirmen
+ * bedienbar bleiben. Sieben Schaltflaechen mit 44px Mindestmass passen
+ * nicht nebeneinander. Ohne eigenen Scrollbereich ragte der letzte Button
+ * rechts aus dem Viewport (Chromium-Reproduktion). Die Box selbst bleibt
+ * innerhalb des Plans; ihre Kinder behalten ihre Fingergroesse. */
+@media (max-width: 800px) {
+  .sp-wrap .sp-werkzeuge {
+    box-sizing: border-box;
+    max-width: calc(100% - 24px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .sp-wrap .sp-werkzeuge > * { flex-shrink: 0; }
+  .sp-wrap .sp-werkzeuge::-webkit-scrollbar { display: none; }
+}
+
+/* Touch-Ziele fuer den Schaltplan (P2): 44 CSS-Pixel bei Fingerbedienung.
+ * Die kompakte Palette bleibt optisch schlank, aber Schliessen/Umschalten
+ * und Kontextaktionen sind auf 320–430 px breiten Displays erreichbar.
+ * Maus-/Trackpad-Dichte und Desktop-Werkzeugleiste bleiben unveraendert. */
+@media (hover: none) and (pointer: coarse) {
+  .sp-wrap .sp-pal-schliessen,
+  .sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-schliessen {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    flex-shrink: 0;
+  }
+  .sp-wrap .sp-pal-header-actions [data-p-compact],
+  .sp-wrap .sp-palette.sp-pal-kompakt .sp-pal-header-actions [data-p-compact] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .sp-wrap .sp-kontextleiste button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  /* Mehrere 44er-Aktionen passen nicht nebeneinander auf 320 px.
+     Die Leiste scrollt innerhalb des sichtbaren Bildschirms, statt
+     Aktionen abzuschneiden oder den Schaltplan seitlich zu vergroessern. */
+  .sp-wrap .sp-kontextleiste {
+    box-sizing: border-box;
+    max-width: calc(100% - 16px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .sp-wrap .sp-kontextleiste::-webkit-scrollbar { display: none; }
+}
+
+/* ══ Der Schaltplan auf einer anderen Stufe (9. November 2026, E775–E780) ══
+   Redur: „ich will das du redion auf eine andere levell bringst … die
+   schaltplan teil ist die erstel prioieritet". Jeder Block hier hat seinen
+   Wächter (test639–test644). */
+
+/* E776: Das SVG füllt die ganze Bühne; die Ansicht passt den belegten
+   Bereich ein (planflaeche.ts `einpassen`). Ausserhalb des Blatts liegt der
+   „Tisch" mit blasserem Raster, ein feiner Rand zeigt das Blatt. */
+.sp-wrap .sp-buehne > .sp-leinwand{height:100%}
+.sp-wrap .sp-buehne .sp-flaeche{display:block;width:100%;height:100%;max-width:none;max-height:none;
+  -webkit-user-select:none;user-select:none}
+.sp-wrap .sp-flaeche .sp-tisch{opacity:.42}
+.sp-wrap .sp-flaeche .sp-blattrand{stroke:var(--line);stroke-width:1.25;vector-effect:non-scaling-stroke;stroke-dasharray:6 5}
+
+/* E775: ein Teil mit unbekanntem Zeichen steht als Platzhalter da. */
+.sp-flaeche .sp-unbekannt-kasten{fill:color-mix(in srgb,var(--warnung) 12%,transparent)}
+
+/* E777: Der Kopf in EINER Zeile. Links die Handlung („▶ Strom", E773 — der
+   Knopf bleibt, wie Redur ihn zurückwollte, „⚡ Schaltung"), rechts die
+   Planart als ruhiger Chip, ↶ ↷, „Bereiche", „…", ⛶. Die Breite fragt die
+   FLÄCHE, nicht das Fenster (`@container`): in der Windows-App mit
+   Seitenleiste ist die Fläche schmaler als das Fenster. */
+/* `container-type` misst die Breite VON AUSSEN: steht die Fläche in einem
+   Kasten, der sich nach seinem Inhalt richtet (am Telefon), fiele sie ohne
+   eigene Breite auf 2 px zusammen (gemessen, test625 §1k). */
+.sp-wrap{container-type:inline-size;container-name:sp;width:100%;box-sizing:border-box}
+.sp-wrap .sp-kopf{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;min-height:60px;
+  padding:8px clamp(10px,1.4vw,16px)}
+.sp-wrap .sp-links{display:flex;align-items:center;gap:6px;flex:0 0 auto;min-width:0}
+.sp-wrap .sp-kopf .sp-rechts{display:flex;align-items:center;gap:4px;flex:0 1 auto;flex-wrap:nowrap;
+  margin-left:auto;min-width:0;order:0;justify-content:flex-end}
+.sp-wrap .sp-kopf :is(.sp-start,.sp-netz){height:40px;min-height:40px;border-radius:12px;font-size:13.5px;
+  font-weight:650;cursor:pointer}
+.sp-wrap .sp-kopf .sp-start{padding:0 16px 0 12px;color:var(--text);
+  border:1px solid color-mix(in srgb,var(--accent) 50%,var(--line));
+  background:color-mix(in srgb,var(--accent) 13%,var(--bg-card))}
+.sp-wrap .sp-kopf .sp-start.an{background:var(--sp-strom);color:#231000;border-color:var(--sp-strom)}
+.sp-wrap .sp-kopf .sp-netz:not(.sp-bereiche){padding:0 12px;border:1px solid var(--line);background:var(--bg-card);color:var(--text)}
+.sp-wrap .sp-kopf .sp-bereiche{padding:0 12px;border:1px solid transparent;background:transparent;color:var(--text);font-weight:600}
+.sp-wrap .sp-kopf .sp-netz:hover:not(:disabled){background:var(--bg-hover)}
+.sp-wrap .sp-kopf .sp-kopf-knopf{display:inline-grid;place-items:center;width:38px;height:38px;min-width:38px;padding:0;
+  border:0;border-radius:11px;background:transparent;color:var(--text-dim);font-size:17px;cursor:pointer}
+.sp-wrap .sp-kopf .sp-kopf-knopf:hover:not(:disabled){background:var(--bg-hover);color:var(--text)}
+.sp-wrap .sp-kopf .sp-kopf-knopf:disabled{opacity:.32;cursor:default}
+.sp-wrap .sp-kopf .sp-art{flex:0 1 auto;width:auto;min-width:0;max-width:220px;height:32px;margin-right:6px;
+  padding:0 8px 0 11px;border:1px solid var(--line);border-radius:999px;background-color:transparent;
+  color:var(--text-dim);font-size:12.5px;font-weight:500;text-overflow:ellipsis;cursor:pointer}
+.sp-wrap .sp-kopf .sp-art:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));color:var(--text)}
+@container sp (max-width:640px){
+  .sp-wrap .sp-kopf{gap:4px;padding:6px 8px;min-height:56px}
+  .sp-wrap .sp-kopf .sp-art,.sp-wrap .sp-kopf .sp-netz[data-a="netz"]{display:none}
+  .sp-wrap .sp-kopf .sp-bereiche-wort{display:none}
+  .sp-wrap .sp-kopf .sp-rechts{gap:2px}
+  .sp-wrap .sp-kopf :is(.sp-start,.sp-bereiche,.sp-kopf-knopf){height:44px;min-height:44px;min-width:44px}
+  .sp-wrap .sp-kopf .sp-bereiche{padding:0 8px}
+  .sp-wrap .sp-kopf .sp-bereiche-pfeil{display:none}
+  .sp-wrap .sp-kopf .sp-start{padding:0 13px 0 10px}
+}
+
+/* E778: Das Dock — jedes Werkzeug mit Zeichen UND Namen (vorher ↖ ⌐ T ☰ ⌫
+   ohne Wort), das aktive unverwechselbar unter einer Marke in Akzentfarbe,
+   „Bauteile" als die Handlung, mit der ein Plan beginnt, hervorgehoben. */
+.sp-wrap .sp-werkzeuge{gap:2px;padding:5px;border-radius:19px}
+.sp-wrap .sp-werkzeuge > :is(button){position:relative;z-index:1}
+.sp-wrap .sp-werkzeuge :is(.sp-wz,.sp-dock-fit,.sp-palette-knopf){
+  display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  width:auto;min-width:58px;height:54px;padding:4px 7px;border-radius:14px;
+  border:1px solid transparent;background:transparent;color:var(--text-dim);
+  font:600 10.5px/1 system-ui,sans-serif;cursor:pointer}
+.sp-wrap .sp-werkzeuge .sp-wz-zeichen{display:block;width:21px;height:21px}
+.sp-wrap .sp-werkzeuge .sp-wz-zeichen svg{display:block;width:21px;height:21px}
+.sp-wrap .sp-werkzeuge .sp-wz-name{display:block;white-space:nowrap;letter-spacing:.01em}
+.sp-wrap .sp-werkzeuge :is(.sp-wz,.sp-dock-fit):hover:not(.an){background:var(--bg-hover);color:var(--text)}
+.sp-wrap .sp-werkzeuge .sp-wz.an{color:var(--auf-accent);background:var(--accent)}
+.sp-wrap .sp-werkzeuge.sp-mit-marke .sp-wz.an{background:transparent}
+.sp-wrap .sp-werkzeuge .sp-palette-knopf{color:var(--text);
+  background:color-mix(in srgb,var(--accent) 13%,var(--bg-card));
+  border-color:color-mix(in srgb,var(--accent) 42%,var(--line))}
+.sp-wrap .sp-werkzeuge .sp-palette-knopf:hover,.sp-wrap .sp-werkzeuge .sp-palette-knopf.an{
+  background:color-mix(in srgb,var(--accent) 24%,var(--bg-card));border-color:var(--accent)}
+.sp-wrap .sp-wz-marke{position:absolute;left:0;top:0;z-index:0;width:0;height:0;opacity:0;pointer-events:none;
+  border-radius:14px;background:var(--accent);
+  box-shadow:0 5px 16px color-mix(in srgb,var(--accent) 34%,transparent);
+  transition:transform var(--feder-knapp-dauer) var(--feder-knapp),opacity var(--motion-fast) ease}
+.sp-wrap .sp-dock-trenner{height:32px;margin:0 3px}
+@container sp (max-width:640px){
+  .sp-wrap .sp-werkzeuge{gap:1px;padding:4px;border-radius:17px}
+  .sp-wrap .sp-werkzeuge :is(.sp-wz,.sp-dock-fit,.sp-palette-knopf){min-width:46px;height:50px;padding:3px 3px;font-size:10px}
+  .sp-wrap .sp-werkzeuge .sp-palette-knopf{min-width:52px}
+  .sp-wrap .sp-dock-trenner{margin:0 2px}
+}
+
+/* E779: Der Einstieg in einen leeren Plan — mitten auf der Fläche. */
+.sp-wrap .sp-einstieg{position:absolute;inset:0;z-index:4;display:grid;place-items:center;padding:16px;pointer-events:none}
+.sp-wrap .sp-einstieg[hidden]{display:none}
+.sp-wrap .sp-einstieg-karte{pointer-events:auto;display:grid;justify-items:center;gap:8px;max-width:340px;
+  padding:22px 22px 18px;text-align:center;border:1px solid var(--line);border-radius:20px;
+  background:color-mix(in srgb,var(--bg-card) 94%,transparent);color:var(--text);
+  box-shadow:0 18px 50px rgb(0 0 0 / .18);
+  animation:sp-einstieg-ein var(--feder-sanft-dauer) var(--feder-sanft) both}
+.sp-wrap .sp-einstieg-zeichen{display:grid;place-items:center;width:48px;height:48px;border-radius:15px;
+  color:var(--accent-text);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.sp-wrap .sp-einstieg-karte strong{font-size:16px;font-weight:700}
+.sp-wrap .sp-einstieg-karte p{margin:0 0 6px;font-size:13px;line-height:1.45;color:var(--text-dim)}
+.sp-wrap .sp-einstieg-knoepfe{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.sp-wrap .sp-einstieg-knoepfe button{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;
+  border:1px solid var(--line);border-radius:13px;background:var(--bg);color:var(--text);font:inherit;font-size:13.5px;
+  font-weight:600;cursor:pointer}
+.sp-wrap .sp-einstieg-knoepfe button:hover{background:var(--bg-hover)}
+.sp-wrap .sp-einstieg-knoepfe .sp-einstieg-haupt{background:var(--accent);color:var(--auf-accent);border-color:transparent}
+.sp-wrap .sp-einstieg-knoepfe .sp-einstieg-haupt:hover{background:color-mix(in srgb,var(--accent) 88%,var(--text))}
+@keyframes sp-einstieg-ein{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+
+/* E780: Bewegung mit den Federn aus grund.css. Dock und Kontextleiste kommen
+   mit der knappen Feder; während die Leinwand gleitet (Einpassen, + −),
+   zeigt die Bühne keine Rollbalken. */
+.sp-wrap .sp-werkzeuge{animation:sp-dock-ein var(--feder-knapp-dauer) var(--feder-knapp) both}
+.sp-wrap .sp-kontextleiste{animation:sp-kontext-ein var(--feder-knapp-dauer) var(--feder-knapp) both}
+.sp-wrap .sp-buehne.sp-gleitet{overflow:hidden}
+
+/* Der Geist beim Ziehen aus der Palette hing ungestaltet am Ende des
+   `body` (keine Regel ausserhalb von `.sp-wrap`). Jetzt folgt er dem Zeiger. */
+.sp-platziergeist{position:fixed;z-index:700;pointer-events:none;transform:translate(-50%,-50%);
+  display:grid;justify-items:center;gap:2px;padding:6px 8px;border-radius:12px;color:var(--text);
+  background:color-mix(in srgb,var(--bg-card) 90%,transparent);border:1px dashed var(--line);
+  font:600 11px/1.2 system-ui,sans-serif;opacity:.7}
+.sp-platziergeist-gueltig{border:1px solid var(--accent);opacity:1;box-shadow:0 8px 24px rgb(0 0 0 / .2)}
+.sp-platziergeist-bild svg{display:block;max-width:56px;max-height:48px;width:auto;height:auto}
+
+@media (prefers-reduced-motion:reduce){
+  .sp-wrap :is(.sp-einstieg-karte,.sp-werkzeuge,.sp-kontextleiste){animation:none}
+  .sp-wrap .sp-wz-marke{transition:none}
+}
+body[data-bewegung="ruhig"] .sp-wrap :is(.sp-einstieg-karte,.sp-werkzeuge,.sp-kontextleiste){animation:none}
+body[data-bewegung="ruhig"] .sp-wrap .sp-wz-marke{transition:none}
+/* In der Seite am Telefon ist die Fläche nur rund 334 px breit: dort passt
+   ↷ nicht mehr neben „▶ Strom" (gesehen im Bild, der Knopf lag auf ↶).
+   Wiederholen steht dann im „…". */
+@container sp (max-width:380px){
+  .sp-wrap .sp-kopf [data-a="vorwaerts"]{display:none}
+  .sp-wrap .sp-kopf .sp-start{padding:0 10px 0 8px}
+}
+
+/* ── Die Klinge liegt, wie der Schalter steht (E787) ──
+   In der Simulation zeichnet jeder Schalter seine Stellung: geschlossen ist
+   die Klinge zu, offen ab, beim Wechsel- und Kreuzschalter auf dem Weg, den
+   er gerade schliesst. Führt der Schalter Strom, trägt die Klinge die Farbe
+   des Stroms — zusätzlich zur Form, nie statt ihr (§38). Beim Umlegen zieht
+   sie sich von der Drehachse aus nach (nur `stroke-dashoffset`, 160 ms);
+   bei weniger Bewegung steht sie sofort. */
+.sp-wrap .sp-flaeche .sp-klinge{stroke-width:2.4}
+.sp-wrap .sp-flaeche .sp-fuehrt .sp-klinge{stroke:var(--sp-strom)}
+.sp-wrap .sp-flaeche .sp-stellung{font-weight:600; opacity:.82; pointer-events:none}
+.sp-wrap .sp-flaeche .sp-umgelegt .sp-klinge{stroke-dasharray:1; animation:sp-klinge-legen .16s cubic-bezier(.2,.8,.2,1) both}
+@keyframes sp-klinge-legen{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){.sp-wrap .sp-flaeche .sp-umgelegt .sp-klinge{animation:none}}
+body[data-bewegung="ruhig"] .sp-wrap .sp-flaeche .sp-umgelegt .sp-klinge{animation:none}
+
+/* ── Leitung aus der Klemme (E788) ──
+   Im Zeigen-Werkzeug: liegt der Zeiger auf einer Klemme, zeigt ein Ring,
+   dass hier eine Leitung beginnt, und der Zeiger wird zum Fadenkreuz. */
+.sp-wrap .sp-klemme-nah .sp-flaeche{cursor:crosshair}
+.sp-wrap .sp-flaeche .sp-klemme-ring{pointer-events:none; color:var(--accent)}
 
 </style>
 <style>
@@ -16126,6 +16367,36 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     display:block; font-size:10.5px; font-weight:500; letter-spacing:-.01em;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;
   }
+  /* BBT-Bit Infinity-Dock, an Redions bestehende Fuenf-Wege-Leiste angepasst.
+     Die zweite Ebene bleibt dieselbe Register-Zielleiste, keine neuen Routen.
+     Nur Compositor-Effekte: weder Groesse noch Touch-Hitbox veraendern. */
+  #handy-oben > button .ho-z,
+  #ho-ziele > button .ho-z{
+    will-change:auto;
+    transition:transform var(--feder-knapp-dauer) var(--feder-knapp),
+               color var(--motion-fast) var(--ease-standard)
+  }
+  #handy-oben > button:is(:focus-visible,:active) .ho-z{
+    transform:translateY(-2px) scale(1.08)
+  }
+  #handy-oben > button:focus-visible,
+  #ho-ziele > button:focus-visible{
+    outline:2px solid var(--accent-text,var(--accent));
+    outline-offset:-2px
+  }
+  #ho-ziele > button:active .ho-z{transform:scale(1.08)}
+  /* Lesbarkeit statt reinem Farbwechsel: aktives Ziel ist auch fetter. */
+  #handy-oben > button[aria-selected="true"] b{font-weight:700}
+  @media(prefers-reduced-motion:reduce){
+    #handy-oben > button .ho-z,
+    #ho-ziele > button .ho-z{transition:none}
+    #handy-oben > button:is(:focus-visible,:active) .ho-z,
+    #ho-ziele > button:active .ho-z{transform:none}
+  }
+  body[data-bewegung="ruhig"] #handy-oben > button .ho-z,
+  body[data-bewegung="ruhig"] #ho-ziele > button .ho-z{transition:none}
+  body[data-bewegung="ruhig"] #handy-oben > button:is(:focus-visible,:active) .ho-z,
+  body[data-bewegung="ruhig"] #ho-ziele > button:active .ho-z{transform:none}
   #ho-ziele > button:is([data-anvisiert],[aria-current="page"]){ color:var(--accent-text,var(--accent)) }
   #ho-ziele > button[aria-current="page"] b{ font-weight:650 }
   #ho-ziele .ho-z{ display:flex; align-items:center; justify-content:center;
@@ -16353,6 +16624,36 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     transition:opacity var(--motion-normal) var(--ease-standard);
   }
   #handy-oben #ho-pille.faehrt::before{ opacity:.72 }
+
+  /* BBT-Bit-Video vom 07.11.: farbige, gleitende Auswahl-Linse.
+     Bestehende SelectionFlow-Feder und Trefferflaechen bleiben unveraendert.
+     Die Akzentfarbe kommt aus Redions Theme, nicht aus einer Musik-Route. */
+  #handy-oben #ho-pille{
+    background:color-mix(in srgb,var(--accent) 24%,transparent);
+    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 55%,transparent),
+               0 0 13px color-mix(in srgb,var(--accent) 20%,transparent);
+  }
+  #handy-oben #ho-pille.faehrt{
+    background:color-mix(in srgb,var(--accent) 31%,transparent);
+    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 65%,transparent),
+               0 0 19px color-mix(in srgb,var(--accent) 32%,transparent);
+  }
+  /* Das Symbol faerbt sich synchron zur gleitenden Linse; nur der aktive
+     Reiter wird eingefärbt, damit die anderen Ziele eindeutig bleiben. */
+  #handy-oben > button[aria-selected="true"] .ho-z{
+    color:var(--accent-text,var(--accent));
+  }
+  @media(prefers-reduced-motion:reduce){
+    #handy-oben #ho-pille.faehrt{
+      background:color-mix(in srgb,var(--accent) 24%,transparent);
+      box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 55%,transparent)
+    }
+  }
+  body[data-bewegung="ruhig"] #handy-oben #ho-pille.faehrt{
+    background:color-mix(in srgb,var(--accent) 24%,transparent);
+    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 55%,transparent)
+  }
+
 
   /* OHNE BEWEGUNG STEHT SIE STILL — UND BLEIBT SICHTBAR. Das ist genau die
      Falle, vor der §55.2 warnt: eine Linse, die bei `reduce` einfach
@@ -27972,6 +28273,293 @@ body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.gw-rim,#handy-oben)
 :root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"] :is(.gw-rim,#handy-oben){-webkit-backdrop-filter:none;backdrop-filter:none}
 
 </style>
+<!-- REDION 2 (E782): die Marken EINER Skala und die ruhigen Hauptflächen.
+     Steht nach allem, weil sie ordnet, was die Blätter darüber gebaut haben;
+     das Glass Wheel nimmt sie über `body:not([data-ui-shell])` aus. -->
+<style>
+/* ===== quell/schale/stil/redion2.css ===== */
+/* ==========================================================================
+ * REDION 2 · BOGEN 1 „MASS UND RUHE" (E782)
+ * --------------------------------------------------------------------------
+ * Redur, 9. November 2026: „ich will das du redion auf eine andere levell
+ * bringst die aktuele webseite gefällt mir gar nicht … ich will wenn ich
+ * morgen aufseteh eine komplet andere redion sehen".
+ *
+ * WARUM EINE NEUE, ZULETZT GELADENE DATEI (§39, E782). Die Stilblätter
+ * führen 50 Schriftgrössen, 26 Gewichte, 29 Radien und 247 Schatten; der
+ * Kopf allein wird in sechs Dateien an 43 Stellen gestylt. Eine Regel
+ * „mittendrin" verliert gegen eine spätere — deshalb wirkte bisher jede
+ * Überarbeitung nur halb. Diese Datei steht ganz am Ende, setzt die Marken
+ * EINER Skala und überschreibt gezielt die sichtbaren Hauptflächen. Sie ist
+ * eine bewusste Schicht, kein zweites Designsystem: dieselben Marken-Namen
+ * (`--bg`, `--text`, `--radius-*`, `--shadow-*`), dasselbe DOM, kein Knopf
+ * weniger. Bogen 8 (Aufräumen) zieht die Werte später in die Grundblätter
+ * zurück und löscht die überstimmten Zeilen dort.
+ *
+ * DIE GRENZEN, die hier gelten:
+ *   · Nur Aussehen. Kein Element verschwindet; was am Rechner still wird,
+ *     erscheint bei Zeiger ODER Tastenfokus, am Telefon bleibt es stehen.
+ *   · Die zehn Farbschemata setzen ihre Werte inline an <html> und gewinnen
+ *     damit über jede Regel hier — „Standard" und „Hell" bekommen die neue
+ *     Grauleiter, alle anderen behalten ihre eigene.
+ *   · Das Glass Wheel (E755) bleibt unberührt: jede Flächenregel hängt an
+ *     `body:not([data-ui-shell="glass-wheel"])`.
+ *   · 44 px auf den Hauptwegen bleiben (§37 ist hart). Die Ruhe kommt aus
+ *     Fläche, Schrift und Linie, nicht aus kleineren Trefferflächen.
+ *   · Rohe 16/22/28/44/46/56 px stehen nicht hier (test362, marken-decke).
+ * ======================================================================== */
+
+/* ── 1 · Die Marken: eine Schriftskala, vier Gewichte, Radien, drei Ebenen ── */
+:root{
+  --t-caption:11px; --t-small:12px; --t-ui:13px; --t-body:15px;
+  --t-h3:calc(var(--t-body) + 1px); --t-h2:19px; --t-h1:23px; --t-title:30px;
+  --lh-ui:1.35; --lh-body:1.6;
+  --w-regular:400; --w-medium:500; --w-semibold:600; --w-bold:700;
+  --radius-xs:4px;
+  /* Drei Ebenen mit Haarlinie statt Rahmen: Karte, Menü, Dialog. Sie gelten nur,
+     wo diese Datei sie nennt; `--shadow-1…4` bleiben (die untere Leiste und
+     die klassischen Bewegungen lesen sie, test623). */
+  --e-1:0 0 0 .5px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+  --e-2:0 0 0 .5px rgba(0,0,0,.10), 0 6px 18px rgba(0,0,0,.10);
+  --e-3:0 0 0 .5px rgba(0,0,0,.12), 0 20px 50px rgba(0,0,0,.22);
+  --studio-highlight:0 0 0 transparent;
+  --studio-bar-height:var(--touch-min);
+}
+@media (max-width:760px){
+  :root{
+    --t-caption:12px; --t-small:13px; --t-ui:15px; --t-body:17px;
+    --t-h3:17px; --t-h2:21px; --t-h1:25px; --t-title:32px;
+  }
+}
+
+/* DUNKEL — fast neutral wie macOS, eine Stufe heller als #121417 (das
+   wirkte wie ein Loch), aber im kühlen Ton aus E705 (OKLCH 271–275°,
+   Sättigung 0,006–0,0075 — test584 §10). Nur „Standard": die anderen dunklen Schemata setzen ihre
+   Werte inline und gewinnen. Gemessen (WCAG): Text 15,6 : 1 auf dem Grund,
+   Nebenschrift 7,5 auf dem Grund und 6,7 auf der Karte (hell genug auch über Glas, test576), Beiwerk 3,9. */
+:root:not([data-theme="light"]){
+  --bg:#1c1d20; --bg-side:#212225; --bg-card:#27282c;
+  --bg-hover:#2e2f33; --bg-input:#27282c; --bg-press:#37383c;
+  --bg-active:rgba(255,255,255,.08);
+  --line:rgba(255,255,255,.10); --line-soft:rgba(255,255,255,.06);
+  --text:#f5f5f7; --text-dim:#aeaeb3; --text-faint:#7c7c81;
+  --e-1:0 0 0 .5px rgba(255,255,255,.07), 0 1px 2px rgba(0,0,0,.30);
+  --e-2:0 0 0 .5px rgba(255,255,255,.09), 0 8px 24px rgba(0,0,0,.40);
+  --e-3:0 0 0 .5px rgba(255,255,255,.10), 0 24px 60px rgba(0,0,0,.55);
+}
+/* HELL — neutral-kühl statt Notions Braun-Grau. Text 16,8 : 1, Nebenschrift
+   6,0 auf Weiss und 5,1 auf der Überfahr-Fläche, Beiwerk 3,9. Der Akzent
+   bleibt, was E199 gerechnet hat (#7c3aed). */
+html[data-theme="light"]{
+  --bg:#ffffff; --bg-side:#f6f6f8; --bg-card:#fbfbfc;
+  --bg-hover:#ededf0; --bg-input:#f2f2f5; --bg-press:#e4e4e8;
+  --bg-active:rgba(0,0,0,.06); --bg-tief:#f2f2f5;
+  --line:#e2e2e6; --line-soft:#ececef;
+  --text:#1d1d1f; --text-dim:#636366; --text-faint:#808084;
+}
+
+/* ── 2 · Der Kopf am Rechner: eine Fläche, eine Haarlinie, 44 + 44 ─────── */
+@media (min-width:761px){
+  body:not([data-ui-shell="glass-wheel"]) #studio-bar{
+    min-height:var(--touch-min); padding:0 var(--space-3);
+    gap:var(--space-1); background:var(--bg); border-bottom:0;
+  }
+  /* Die Marke klein und ruhig: das Bild bleibt (test483), die Zeile
+     „STUDIO" darunter fällt fort, der Name steht in einer Zeile. */
+  body:not([data-ui-shell="glass-wheel"]) .studio-brand{
+    font-size:15px; font-weight:var(--w-semibold); letter-spacing:-.2px;
+    gap:var(--space-2); padding-right:var(--space-2);
+  }
+  body:not([data-ui-shell="glass-wheel"]) .studio-wordmark{display:none}
+  body:not([data-ui-shell="glass-wheel"]) .studio-monogram{
+    width:26px; height:26px; filter:none; transform:none;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .studio-brand:hover .studio-monogram{transform:none}
+  /* Alle Kopfknöpfe sind Geister: keine Fläche in Ruhe, keine Rahmen. */
+  body:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-icon{
+    border-radius:var(--radius-md); border-color:transparent;
+  }
+  body:not([data-ui-shell="glass-wheel"]) #studio-bar svg{width:17px; height:17px}
+  /* Die Suche: eine flache Kapsel, GEZEICHNET 32 px hoch in der 44-px-
+     Zeile. Der Knopf selbst misst weiter 44 (§37, test603 §7): oben und
+     unten liegt ein durchsichtiger Rand von 6 px, und die Fläche wird nur
+     innerhalb des Randes gemalt (`background-clip:padding-box`) — die
+     Trefferfläche bleibt die ganze Höhe. */
+  body:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search{
+    border:solid transparent; border-width:6px 0; border-radius:14px;
+    background-clip:padding-box; background-color:var(--bg-input);
+    font-size:var(--t-ui); color:var(--text-dim);
+  }
+  body:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search:hover{background-color:var(--bg-hover); border-color:transparent; background-clip:padding-box}
+  body:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search kbd{font-size:var(--t-caption); opacity:.6}
+
+  /* Die Kopfzeile der Seite: derselbe Grund, darunter die EINE Haarlinie. */
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] #main > #topbar{
+    min-height:var(--touch-min); background:var(--bg);
+    border-bottom:1px solid var(--line-soft); box-shadow:none;
+  }
+  body:not([data-ui-shell="glass-wheel"]) #topbar .top-btn{
+    border-radius:var(--radius-md); font-size:var(--t-ui); font-weight:var(--w-medium);
+  }
+  body:not([data-ui-shell="glass-wheel"]) #topbar .crumb{font-size:var(--t-ui); color:var(--text-dim)}
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] #main > #reiterleiste{background:var(--bg)}
+
+  /* ── 3 · Die Kante: Zeilen ruhig, die Auswahl EINMAL markiert ───────── */
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] #main > #kante{
+    background:var(--bg-side); border-right:1px solid var(--line-soft);
+  }
+  /* 36 px statt 42 (§37, Nebenweg-Grund an Ort und Stelle): die Kante gibt
+     es nur ab 761 px, also nur mit Zeiger — die 44-px-Regel gilt Fingern,
+     und dafür hebt `pointer:coarse` unten auf --touch-min. Derselbe Grund,
+     mit dem premium.css die 42 begründet. */
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] .k-knopf{
+    height:36px; min-height:36px; border-radius:var(--radius-md);
+    font-size:var(--t-ui); font-weight:var(--w-medium); color:var(--text-dim);
+    gap:var(--space-3);
+  }
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] .k-knopf svg{width:17px; height:17px}
+  /* Die Auswahl: neutrale Fläche, volle Schrift, Zeichen im Akzent —
+     ohne Balken, ohne violette Schrift. Nicht nur Farbe (§38): die Zeile
+     trägt das stärkere Gewicht und `aria-current`. */
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] .k-knopf.k-ort.ist-hier,
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] .k-knopf.ist-an{
+    background:var(--bg-active); color:var(--text); box-shadow:none;
+    font-weight:var(--w-semibold);
+  }
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] .k-knopf.k-ort.ist-hier svg{color:var(--accent-text)}
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] .k-knopf:hover{background:var(--bg-hover); color:var(--text)}
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] .k-knopf:focus-visible{outline:2px solid var(--accent-text); outline-offset:-2px}
+  body:not([data-ui-shell="glass-wheel"]) .k-orte{border-bottom-color:var(--line-soft)}
+  body:not([data-ui-shell="glass-wheel"]) .k-unten{border-top-color:var(--line-soft)}
+}
+@media (min-width:761px) and (pointer:coarse){
+  body:not([data-ui-shell="glass-wheel"])[data-schale="premium"] .k-knopf{height:var(--touch-min); min-height:var(--touch-min)}
+}
+
+/* ── 4 · Die Seite: Titel, Text, Überschriften auf EINER Skala ─────────── */
+body:not([data-ui-shell="glass-wheel"]) #title{
+  font-size:var(--t-title); font-weight:var(--w-bold); letter-spacing:-.4px;
+  line-height:1.2; margin:var(--space-1) 0 var(--space-2);
+}
+body:not([data-ui-shell="glass-wheel"]) #page > .pg-icon{font-size:48px; margin-top:var(--space-7)}
+body:not([data-ui-shell="glass-wheel"]) #page .b-text .ct{font-size:var(--t-body); line-height:var(--lh-body)}
+body:not([data-ui-shell="glass-wheel"]) #page :is(.b-bullet,.b-number,.b-todo,.b-toggle,.b-quote) .ct{font-size:var(--t-body); line-height:var(--lh-body)}
+body:not([data-ui-shell="glass-wheel"]) #page .b-h1 .ct{font-size:var(--t-h1); font-weight:var(--w-bold); letter-spacing:-.25px; padding-top:var(--space-6)}
+body:not([data-ui-shell="glass-wheel"]) #page .b-h2 .ct{font-size:var(--t-h2); font-weight:var(--w-semibold); letter-spacing:-.15px; padding-top:var(--space-5)}
+body:not([data-ui-shell="glass-wheel"]) #page .b-h3 .ct{font-size:var(--t-h3); font-weight:var(--w-semibold); padding-top:var(--space-4)}
+
+/* DIE SEITENWERKZEUGE (E783): kein Kasten, keine Rubrik „SEITENWERKZEUGE"
+   — dieselben fünf `button[data-a]` als EINE stille Textzeile unter dem
+   Titel. Am Rechner sichtbar, solange der Zeiger auf der Seite steht ODER
+   der Fokus in der Zeile ist (die Regel aus aufbau.css:158, die „Workspace
+   2.0" überstimmt hatte — jetzt mit `:focus-within`, damit die Tastatur
+   sie nicht unsichtbar trifft). Am Telefon bleibt die Zeile stehen. */
+body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools{
+  background:none; border:0; box-shadow:none; padding:0;
+  margin:0 0 var(--space-5) calc(var(--space-2) * -1); gap:2px;
+}
+body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > .pg-tools-caption{display:none}
+body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button{
+  background:transparent; border:1px solid transparent; color:var(--text-faint);
+  font-size:var(--t-small); font-weight:var(--w-medium);
+  border-radius:var(--radius-sm); padding:var(--space-1) var(--space-3);
+}
+body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button svg{opacity:.85}
+body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button:is(:hover,:focus-visible){
+  background:var(--bg-hover); color:var(--text); border-color:transparent;
+}
+body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button:focus-visible{outline:2px solid var(--accent-text); outline-offset:1px}
+@media (min-width:761px) and (hover:hover){
+  /* 32 px (§37 Nebenweg): Cover, Breite, Schrift, Vorlage und KI stehen
+     alle auch im ⋯ der Seite; die Zeile ist der kurze Weg für die Maus. */
+  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button{min-height:32px}
+  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools{opacity:0; transition:opacity var(--motion-fast) var(--ease)}
+  body:not([data-ui-shell="glass-wheel"]) #page:hover > .pg-tools,
+  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools:focus-within{opacity:1}
+}
+@media (max-width:760px){
+  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools{margin-left:0}
+  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools > button{color:var(--text-dim); font-size:var(--t-small)}
+  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools::before{background:linear-gradient(to right,var(--bg),transparent)}
+  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools::after{background:linear-gradient(to left,var(--bg),transparent)}
+}
+
+/* Die Ansichtswahl Seite · Fläche · Redion: eine kleine Segmentsteuerung
+   statt eines Rahmenkastens (E690 bleibt: dieselbe Radiogruppe). */
+body:not([data-ui-shell="glass-wheel"]) .pg-ansichten{margin-top:var(--space-4)}
+body:not([data-ui-shell="glass-wheel"]) .pg-ansichten .ru-seg{
+  background:var(--bg-input); border:0; box-shadow:none;
+  border-radius:var(--radius-md); padding:2px; font-size:var(--t-small);
+}
+body:not([data-ui-shell="glass-wheel"]) .pg-ansichten .ru-seg button{
+  border-radius:var(--radius-sm); font-size:var(--t-small); font-weight:var(--w-medium);
+}
+
+/* ── 5 · Ortstitel: überall dieselbe Art ───────────────────────────────── */
+body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-dkopf h1,
+body:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-page-head h2{
+  font-size:var(--t-title); font-weight:var(--w-bold); line-height:1.15;
+  letter-spacing:-.4px;
+}
+body:not([data-ui-shell="glass-wheel"]) .bib-workspace-eyebrow,
+body:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-page-head p{
+  color:var(--text-dim); font-size:var(--t-small); font-weight:var(--w-medium);
+  letter-spacing:0; text-transform:none;
+}
+body:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-page-head>div:first-child>span{
+  font-size:var(--t-ui); color:var(--text-dim);
+}
+
+/* ── 6 · Knöpfe: ein Mass, ein Radius, kein Glanz ──────────────────────── */
+/* Nur Form, Schrift und Rand in Ruhe — Fläche und Schein unter Zeiger,
+   Druck und Fokus gehören weiter den Regeln, die test596 hält (§38). */
+body:not([data-ui-shell="glass-wheel"]) :is(.bib-dkopf .bib-neu,.bib-studio-import,.bib-workspace-actions .bib-search,
+  .lernwelt .lw-page-head>button,.lernwelt .lw-page-head>.lw-actions button,.lernwelt .lw-study-actions button){
+  border-radius:var(--radius-md); font-size:var(--t-ui); font-weight:var(--w-semibold);
+  letter-spacing:0;
+}
+body:not([data-ui-shell="glass-wheel"]) .bib-dkopf .bib-neu{box-shadow:none}
+
+/* ── 7 · Karten: Haarlinie und flacher Schatten statt Rahmen ───────────── */
+body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel{
+  border-color:var(--line-soft); border-radius:var(--radius-lg);
+  box-shadow:var(--e-1);
+}
+body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel:is(:hover,:focus-visible){
+  border-color:var(--line); box-shadow:var(--e-2);
+}
+body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel-blatt{
+  border-radius:var(--radius-md); background:var(--bg-side);
+}
+body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel-name b{
+  font-size:var(--t-body); font-weight:var(--w-semibold);
+}
+body:not([data-ui-shell="glass-wheel"]) .bib-card-kind{font-size:var(--t-caption); font-weight:var(--w-medium); color:var(--text-faint)}
+/* ☆ und ⋯ am Rechner erst bei Zeiger oder Fokus auf der Karte (E784).
+   Gedrückt (☆ gemerkt) bleibt der Stern stehen; am Telefon und mit grobem
+   Zeiger bleiben beide immer sichtbar (§37, test597 §1). Unsichtbar heisst
+   hier nur durchsichtig: Ort, Trefferfläche und Name bleiben. */
+@media (hover:hover) and (pointer:fine){
+  body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-zelle > :is(.bib-favorite:not([aria-pressed="true"]),.bib-deckel-mehr){
+    opacity:0; transition:opacity var(--motion-fast) var(--ease);
+  }
+  body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-zelle:is(:hover,:focus-within) > :is(.bib-favorite,.bib-deckel-mehr){opacity:1}
+}
+body:not([data-ui-shell="glass-wheel"]) .lernwelt :is(.lw-metrik,.lw-study-actions article){
+  border-color:var(--line-soft); border-radius:var(--radius-lg); box-shadow:var(--e-1);
+}
+
+/* ── 8 · Bewegung und Kontrast: die bestehenden Schalter gelten weiter ─── */
+@media (prefers-reduced-motion:reduce){
+  body:not([data-ui-shell="glass-wheel"]) #page > .pg-tools,
+  body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-zelle > *{transition:none}
+}
+body[data-bewegung="ruhig"]:not([data-ui-shell="glass-wheel"]) #page > .pg-tools{transition:none}
+@media (forced-colors:active),(prefers-contrast:more){
+  body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel{border-color:var(--text); box-shadow:none}
+}
+
+</style>
 
 <!-- =========================================================================
      ANMELDE-FENSTER
@@ -29453,7 +30041,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1574, inhalt: 'c4687a62dfbd527f', gebaut: '2026-11-02T22:28:59.293Z' };
+const Stand = { fassung: 1588, inhalt: '9f9d3173663f29d0', gebaut: '2026-11-15T16:14:21.713Z' };
 window.Stand = Stand;
 
 </script>
@@ -37011,6 +37599,8 @@ Register.symbole = (() => {
         inkPointer: '<path d="M5.6 3.4 18 11.2l-5.4 1.3-2.6 5.1z"/><path d="m12.4 12.6 5.4 6"/>',
         inkConnector: '<circle cx="5.4" cy="18.6" r="2.3"/><circle cx="18.6" cy="5.4" r="2.3"/>' +
             '<path d="M7.4 16.6C9 11 11 9 16.6 7.4" stroke-dasharray="3 2.6"/>',
+        busbar: '<path d="M3.2 7h17.6" stroke-width="2.6"/><path d="M7 7v8.6M12 7v8.6M17 7v8.6"/>' +
+            '<circle cx="7" cy="17.4" r="1.6"/><circle cx="12" cy="17.4" r="1.6"/><circle cx="17" cy="17.4" r="1.6"/>',
         inkMarker: '<path d="m13 3 7 7-8 8-7-7zM5 11l-2 7 3 3 6-3M3 21h7"/>',
         inkEraser: '<path d="m14 3 7 7-10 11H6l-4-4zM8 11l8 8M11 21h10"/>',
         inkText: '<path d="M3.8 7V4.4h16.4V7"/><path d="M12 4.4v15.2"/><path d="M8.4 19.6h7.2"/>',
@@ -40167,6 +40757,15 @@ Register.fachzeichen = (() => {
     ];
     const senkrecht = (x, von, bis) => `M${x},${von} V${bis}`;
     const waagrecht = (y, von, bis) => `M${von},${y} H${bis}`;
+    const auf1 = (n) => Math.round(n * 10) / 10;
+    const arm = (cx, cy, r, grad, lang = 10, fahne = 5, gegen = false) => {
+        const a = grad * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a);
+        const x1 = cx + dx * r, y1 = cy + dy * r;
+        const x2 = cx + dx * (r + lang), y2 = cy + dy * (r + lang);
+        const fx = gegen ? dy : -dy, fy = gegen ? -dx : dx;
+        return `M${auf1(x1)},${auf1(y1)} L${auf1(x2)},${auf1(y2)}` +
+            (fahne ? ` l${auf1(fx * fahne)},${auf1(fy * fahne)}` : '');
+    };
     const EINGEBAUT = [
         {
             id: 'schliesser', name: 'Schliesser', gruppe: 'kontakte', kennbuchstabe: 'S',
@@ -41020,99 +41619,272 @@ Register.fachzeichen = (() => {
             erklaerung: 'Schlüsselschalter — wo nicht jeder schalten soll.'
         },
         {
-            id: 'bp-schalter0', name: 'Bauplan: Schalter Schema 0', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+            id: 'bp-schalter-up', name: 'Bauplan: UP-Schalter (allgemein)', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
             w: 40, h: 40,
-            kreise: [{ cx: 20, cy: 30, r: 5, voll: true }],
-            pfad: [senkrecht(20, 6, 25)],
+            kreise: [{ cx: 20, cy: 22, r: 5 }],
+            pfad: [senkrecht(20, 27, 40)],
             anschluesse: [{ nr: '3', x: 20, y: 40 }],
-            erklaerung: 'Ein Strich am Punkt: Ausschalter. Der Punkt sitzt an der Wand.'
+            erklaerung: 'Allgemeines Zeichen für einen Unterputz-Schalter: nur der Kreis.'
         },
         {
-            id: 'bp-schalter1', name: 'Bauplan: Schalter Schema 1', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+            id: 'bp-schalter-ap', name: 'Bauplan: AP-Schalter (allgemein)', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
             w: 40, h: 40,
-            kreise: [{ cx: 20, cy: 30, r: 5, voll: true }],
-            pfad: [senkrecht(20, 6, 25), 'M12,10 L28,10'],
+            kreise: [{ cx: 20, cy: 22, r: 5 }],
+            flaechen: ['M20,17 A5,5 0 0 1 20,27 Z'],
+            pfad: [senkrecht(20, 27, 40)],
             anschluesse: [{ nr: '3', x: 20, y: 40 }],
-            erklaerung: 'Ein Querstrich: Serienschalter, zwei Gruppen getrennt.'
+            erklaerung: 'Aufputz: der Kreis ist halb gefüllt — Keller, Garage, Werkstatt.'
         },
         {
-            id: 'bp-schalter3', name: 'Bauplan: Schalter Schema 3', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+            id: 'bp-schalter0', name: 'Bauplan: Schalter Sch 0', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
             w: 40, h: 40,
-            kreise: [{ cx: 20, cy: 30, r: 5, voll: true }],
-            pfad: [senkrecht(20, 6, 25), 'M14,12 L20,6 L26,12'],
+            kreise: [{ cx: 20, cy: 22, r: 5 }],
+            pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -45)],
             anschluesse: [{ nr: '3', x: 20, y: 40 }],
-            erklaerung: 'Pfeil nach oben: Wechselschalter — es gibt einen zweiten dazu.'
+            erklaerung: 'Ein Arm mit Fahne: Ausschalter, eine Leuchte von einer Stelle.'
         },
         {
-            id: 'bp-schalter6', name: 'Bauplan: Schalter Schema 6', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+            id: 'bp-schalter1', name: 'Bauplan: Schalter Sch 1', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
             w: 40, h: 40,
-            kreise: [{ cx: 20, cy: 30, r: 5, voll: true }],
-            pfad: [senkrecht(20, 6, 25), 'M13,9 L27,17', 'M27,9 L13,17'],
+            kreise: [{ cx: 20, cy: 22, r: 5 }],
+            pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -135, 10, 5, true), arm(20, 22, 5, -45)],
+            anschluesse: [{ nr: '3', x: 20, y: 40 }],
+            erklaerung: 'Zwei Arme nach oben: Serienschalter, zwei Gruppen getrennt.'
+        },
+        {
+            id: 'bp-schalter3', name: 'Bauplan: Schalter Sch 3', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+            w: 40, h: 40,
+            kreise: [{ cx: 20, cy: 22, r: 5 }],
+            pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -45), arm(20, 22, 5, 135)],
+            anschluesse: [{ nr: '3', x: 20, y: 40 }],
+            erklaerung: 'Ein Arm nach oben, einer nach unten: Wechselschalter — es gibt einen zweiten dazu.'
+        },
+        {
+            id: 'bp-schalter6', name: 'Bauplan: Schalter Sch 6', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+            w: 40, h: 40,
+            kreise: [{ cx: 20, cy: 22, r: 5 }],
+            pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -135, 9, 4, true), arm(20, 22, 5, -45, 9, 4),
+                arm(20, 22, 5, 135, 9, 4), arm(20, 22, 5, 45, 9, 4, true)],
             anschluesse: [{ nr: '1', x: 20, y: 40 }],
-            erklaerung: 'Kreuz: Kreuzschalter, zwischen zwei Wechselschaltern.'
+            erklaerung: 'Vier Arme: Kreuzschalter, zwischen zwei Wechselschaltern.'
         },
         {
-            id: 'bp-leuchtstelle', name: 'Bauplan: Leuchtstelle', gruppe: 'ch-bauplan', kennbuchstabe: 'E',
+            id: 'bp-zugschalter', name: 'Bauplan: Zugschalter', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
             w: 40, h: 40,
-            kreise: [{ cx: 20, cy: 20, r: 11 }],
-            pfad: ['M12,12 L28,28', 'M28,12 L12,28'],
-            anschluesse: [{ nr: 'X1', x: 20, y: 0 }],
-            erklaerung: 'Eine Lampenstelle an Decke oder Wand.'
+            kreise: [{ cx: 20, cy: 22, r: 5 }],
+            pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -45, 10, 0), 'M30.6,17 V4 M28,7 L30.6,4 L33.2,7'],
+            anschluesse: [{ nr: '3', x: 20, y: 40 }],
+            erklaerung: 'Der Arm trägt einen Pfeil: man zieht an einer Schnur — im Bad.'
         },
         {
-            id: 'bp-leuchte', name: 'Bauplan: Leuchte', gruppe: 'ch-bauplan', kennbuchstabe: 'E',
+            id: 'bp-nachlauf', name: 'Bauplan: Schalter mit Nachlauf', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+            w: 40, h: 40,
+            kreise: [{ cx: 20, cy: 22, r: 5 }],
+            pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -45)],
+            beschriftung: [{ x: 33, y: 31, t: 't' }],
+            anschluesse: [{ nr: '3', x: 20, y: 40 }],
+            erklaerung: 'Schaltet aus, läuft aber eine Zeit nach — der Ventilator im WC.'
+        },
+        {
+            id: 'bp-lichtregler', name: 'Bauplan: Lichtregler (Dimmer)', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+            w: 40, h: 40,
+            kreise: [{ cx: 20, cy: 22, r: 5 }],
+            pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -45, 10, 0), 'M24.5,18 L35,9 V18 Z'],
+            anschluesse: [{ nr: '3', x: 20, y: 40 }],
+            erklaerung: 'Ein Keil am Arm: die Helligkeit wird stufenlos eingestellt.'
+        },
+        {
+            id: 'bp-taster', name: 'Bauplan: Taster', gruppe: 'ch-bauplan', kennbuchstabe: 'S',
+            w: 40, h: 40,
+            kreise: [{ cx: 20, cy: 22, r: 5 }],
+            pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -45, 10, 0), 'M27.8,8.6 L33.4,14.2'],
+            anschluesse: [{ nr: '3', x: 20, y: 40 }],
+            erklaerung: 'Ein Querbalken am Arm: der Kontakt schliesst nur, solange man drückt.'
+        },
+        {
+            id: 'bp-storenschalter', name: 'Bauplan: Storenschalter', gruppe: 'ch-bauplan', kennbuchstabe: 'S',
+            w: 40, h: 40,
+            kreise: [{ cx: 20, cy: 22, r: 5 }],
+            pfad: [senkrecht(20, 27, 40), arm(20, 22, 5, -45, 10, 0),
+                'M25.2,11.8 L30.8,17.4 M27.8,9.2 L33.4,14.8'],
+            anschluesse: [{ nr: '3', x: 20, y: 40 }],
+            erklaerung: 'Zwei Querbalken: zwei Tasten, auf und ab — für die Lamellenstore.'
+        },
+        {
+            id: 'bp-kombi-0', name: 'Bauplan: Kombi Gr.1 Sch 0 / Steckdose', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+            w: 50, h: 50,
+            kreise: [{ cx: 20, cy: 30, r: 5 }],
+            pfad: [senkrecht(20, 35, 50), 'M14,24 H26', 'M13,14 Q20,34 27,14', 'M25,30 H40 V24'],
+            anschluesse: [{ nr: '3', x: 20, y: 50 }],
+            erklaerung: 'Schalter Schema 0 und Steckdose in einem Einlasskasten Gr. 1.'
+        },
+        {
+            id: 'bp-kombi-3', name: 'Bauplan: Kombi Gr.1 Sch 3 / Steckdose', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+            w: 50, h: 50,
+            kreise: [{ cx: 20, cy: 30, r: 5 }],
+            pfad: [senkrecht(20, 35, 50), 'M14,24 H26', 'M13,14 Q20,34 27,14', 'M25,30 H40 V24', 'M15,30 H4 V36'],
+            anschluesse: [{ nr: '3', x: 20, y: 50 }],
+            erklaerung: 'Wechselschalter Schema 3 und Steckdose T13 in einem Gehäuse Gr. 1.'
+        },
+        {
+            id: 'bp-kombi-taster', name: 'Bauplan: Kombi Gr.1 Taster / Steckdose', gruppe: 'ch-bauplan', kennbuchstabe: 'S',
+            w: 50, h: 50,
+            kreise: [{ cx: 20, cy: 30, r: 5 }],
+            pfad: [senkrecht(20, 35, 50), 'M14,24 H26', 'M13,14 Q20,34 27,14', 'M25,30 H40', 'M40,25 V35'],
+            anschluesse: [{ nr: '3', x: 20, y: 50 }],
+            erklaerung: 'Taster und Steckdose in einem Gehäuse Gr. 1 — etwa für eine Minuterie.'
+        },
+        {
+            id: 'bp-kombi-3-gr11', name: 'Bauplan: Kombi Gr.1+1 Sch 3 / Steckdose', gruppe: 'ch-bauplan', kennbuchstabe: 'Q',
+            w: 50, h: 50,
+            kreise: [{ cx: 20, cy: 30, r: 5 }],
+            pfad: [senkrecht(20, 35, 50), 'M14,24 H26', 'M13,14 Q20,34 27,14',
+                arm(20, 30, 5, -135, 9, 4, true), arm(20, 30, 5, 45, 9, 4, true)],
+            anschluesse: [{ nr: '3', x: 20, y: 50 }],
+            erklaerung: 'Schalter Schema 3 und Steckdose übereinander in zwei Gr.-1-Einsätzen.'
+        },
+        {
+            id: 'bp-t13', name: 'Bauplan: Steckdose Typ 13', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+            w: 40, h: 40,
+            pfad: [senkrecht(20, 0, 14), 'M11,14 H29', 'M9,28 Q20,0 31,28'],
+            anschluesse: [{ nr: 'L', x: 20, y: 0 }],
+            erklaerung: 'Die übliche Schweizer Steckdose T13, 10 A, mit Schutzkontakt.'
+        },
+        {
+            id: 'bp-t13-3fach', name: 'Bauplan: Steckdose Typ 13 3-fach', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+            w: 40, h: 40,
+            pfad: [senkrecht(20, 0, 14), 'M11,14 H29', 'M9,28 Q20,0 31,28', 'M23,25 L31,19'],
+            beschriftung: [{ x: 35, y: 34, t: '3' }],
+            anschluesse: [{ nr: 'L', x: 20, y: 0 }],
+            erklaerung: 'Drei T13 in einem Gehäuse — beim Fernseher, beim Schreibtisch.'
+        },
+        {
+            id: 'bp-t13-3fach-s', name: 'Bauplan: Steckdose Typ 13 3-fach, 1 geschaltet', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+            w: 40, h: 40,
+            pfad: [senkrecht(20, 0, 14), 'M11,14 H29', 'M9,28 Q20,0 31,28', 'M23,25 L31,19'],
+            beschriftung: [{ x: 35, y: 34, t: '3' }, { x: 7, y: 36, t: 'S' }],
+            anschluesse: [{ nr: 'L', x: 20, y: 0 }],
+            erklaerung: 'Drei T13, eine davon über einen Schalter — für die Stehlampe („3/1").'
+        },
+        {
+            id: 'bp-t23', name: 'Bauplan: Steckdose Typ 23', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+            w: 40, h: 40,
+            pfad: [senkrecht(20, 0, 14), 'M11,14 H29', 'M9,28 Q20,0 31,28'],
+            beschriftung: [{ x: 20, y: 39, t: 'T23' }],
+            anschluesse: [{ nr: 'L', x: 20, y: 0 }],
+            erklaerung: '16 A statt 10 A — für Geräte mit mehr Leistung, etwa den Geschirrspüler.'
+        },
+        {
+            id: 'bp-t23-3fach', name: 'Bauplan: Steckdose Typ 23 3-fach', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+            w: 60, h: 40,
+            pfad: [senkrecht(30, 0, 14), 'M21,14 H39', 'M19,28 Q30,0 41,28', 'M33,25 L41,19'],
+            beschriftung: [{ x: 45, y: 34, t: '3' }, { x: 30, y: 39, t: 'T23' }],
+            anschluesse: [{ nr: 'L', x: 30, y: 0 }],
+            erklaerung: 'Drei T23 in einem Gehäuse.'
+        },
+        {
+            id: 'bp-t25', name: 'Bauplan: Steckdose Typ 25', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+            w: 40, h: 40,
+            pfad: [senkrecht(20, 0, 14), 'M11,14 H29', 'M9,28 Q20,0 31,28'],
+            beschriftung: [{ x: 20, y: 39, t: 'T25' }],
+            anschluesse: [{ nr: 'L', x: 20, y: 0 }],
+            erklaerung: 'Drehstrom-Steckdose 3 × 400 V, 16 A — Werkstatt, Waschküche.'
+        },
+        {
+            id: 'bp-abzweigdose', name: 'Bauplan: Abzweigdose', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+            w: 40, h: 40,
+            kreise: [{ cx: 20, cy: 20, r: 2.5, voll: true }],
+            pfad: ['M12,12 H28 V28 H12 Z', senkrecht(20, 0, 12), senkrecht(20, 28, 40),
+                waagrecht(20, 0, 12), waagrecht(20, 28, 40)],
+            anschluesse: [{ nr: '1', x: 20, y: 0 }, { nr: '2', x: 20, y: 40 },
+                { nr: '3', x: 0, y: 20 }, { nr: '4', x: 40, y: 20 }],
+            erklaerung: 'Hier werden die Leitungen verbunden — ein Quadrat mit Punkt, Gruppennummer daneben.'
+        },
+        {
+            id: 'bp-bodendose', name: 'Bauplan: Bodendose', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+            w: 40, h: 40,
+            pfad: [senkrecht(20, 0, 10), 'M10,14 V10 H14', 'M26,10 H30 V14', 'M30,26 V30 H26',
+                'M14,30 H10 V26', 'M18,10 H22', 'M18,30 H22', 'M10,18 V22', 'M30,18 V22'],
+            anschluesse: [{ nr: '1', x: 20, y: 0 }],
+            erklaerung: 'Eine Dose im Boden — gestrichelt, weil man sie von oben nicht sieht.'
+        },
+        {
+            id: 'bp-lampenduebel', name: 'Bauplan: Lampendübel', gruppe: 'ch-bauplan', kennbuchstabe: 'E',
+            w: 40, h: 40,
+            kreise: [{ cx: 20, cy: 20, r: 6 }],
+            flaechen: ['M15.8,24.2 A6,6 0 0 1 24.2,15.8 Z'],
+            pfad: [senkrecht(20, 0, 14)],
+            anschluesse: [{ nr: 'X1', x: 20, y: 0 }],
+            erklaerung: 'Ein Deckenanschluss ohne Leuchte — die Leuchte kommt später.'
+        },
+        {
+            id: 'bp-leuchtstelle', name: 'Bauplan: Deckenleuchte', gruppe: 'ch-bauplan', kennbuchstabe: 'E',
+            w: 40, h: 40,
+            pfad: [senkrecht(20, 0, 20), 'M10,10 L30,30', 'M30,10 L10,30'],
+            anschluesse: [{ nr: 'X1', x: 20, y: 0 }],
+            erklaerung: 'Ein Kreuz: eine Leuchte an der Decke. (Im Kreis wäre es eine Einbauleuchte.)'
+        },
+        {
+            id: 'bp-leuchte', name: 'Bauplan: Leuchte länglich', gruppe: 'ch-bauplan', kennbuchstabe: 'E',
             w: 60, h: 40,
             pfad: ['M10,14 H50 V26 H10 Z', waagrecht(20, 0, 10), waagrecht(20, 50, 60)],
             anschluesse: [{ nr: 'X1', x: 0, y: 20 }, { nr: 'X2', x: 60, y: 20 }],
             erklaerung: 'Eine längliche Leuchte — Leuchtstoff oder LED-Band.'
         },
         {
-            id: 'bp-einbauleuchte', name: 'Bauplan: Einbauleuchte', gruppe: 'ch-bauplan', kennbuchstabe: 'E',
+            id: 'bp-einbauleuchte', name: 'Bauplan: Decken-Einbauleuchte', gruppe: 'ch-bauplan', kennbuchstabe: 'E',
             w: 40, h: 40,
-            kreise: [{ cx: 20, cy: 20, r: 11 }, { cx: 20, cy: 20, r: 5 }],
-            pfad: [senkrecht(20, 0, 9)],
+            kreise: [{ cx: 20, cy: 20, r: 11 }],
+            pfad: [senkrecht(20, 0, 9), 'M12.2,12.2 L27.8,27.8', 'M27.8,12.2 L12.2,27.8'],
             anschluesse: [{ nr: 'X1', x: 20, y: 0 }],
-            erklaerung: 'In die Decke eingelassen — Spot oder Downlight.'
+            erklaerung: 'Ein Kreuz im Kreis: in die Decke eingelassen — Spot oder Downlight.'
         },
         {
-            id: 'bp-t13', name: 'Bauplan: Steckdose T13', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+            id: 'bp-wandleuchte', name: 'Bauplan: Wandleuchte', gruppe: 'ch-bauplan', kennbuchstabe: 'E',
             w: 40, h: 40,
-            pfad: [senkrecht(20, 0, 14), 'M6,28 a14,14 0 0,1 28,0 Z', waagrecht(28, 6, 34)],
-            anschluesse: [{ nr: 'L', x: 20, y: 0 }],
-            erklaerung: 'Die übliche Schweizer Steckdose, 10 A, mit Schutzkontakt.'
+            pfad: [senkrecht(20, 0, 20), 'M12,12 L28,28', 'M28,12 L12,28', 'M30,10 V30'],
+            anschluesse: [{ nr: 'X1', x: 20, y: 0 }],
+            erklaerung: 'Ein Kreuz mit Strich: der Strich ist die Wand, an der sie hängt.'
         },
         {
-            id: 'bp-t23', name: 'Bauplan: Steckdose T23', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
-            w: 40, h: 40,
-            pfad: [senkrecht(20, 0, 14), 'M6,28 a14,14 0 0,1 28,0 Z', waagrecht(28, 6, 34),
-                senkrecht(20, 18, 28)],
-            anschluesse: [{ nr: 'L', x: 20, y: 0 }],
-            erklaerung: '16 A statt 10 A — für Geräte mit mehr Leistung.'
-        },
-        {
-            id: 'bp-t23-3fach', name: 'Bauplan: Steckdose T23 3-fach', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+            id: 'bp-pir', name: 'Bauplan: PIR-Melder', gruppe: 'ch-bauplan', kennbuchstabe: 'B',
             w: 60, h: 40,
-            pfad: [senkrecht(30, 0, 14), 'M6,28 a24,14 0 0,1 48,0 Z', waagrecht(28, 6, 54),
-                senkrecht(18, 18, 28), senkrecht(30, 18, 28), senkrecht(42, 18, 28)],
-            anschluesse: [{ nr: 'L', x: 30, y: 0 }],
-            erklaerung: 'Drei Steckdosen in einem Gehäuse.'
+            kreise: [{ cx: 14, cy: 20, r: 8 }],
+            pfad: ['M13,15 A6,6 0 0 0 13,25', 'M16,17 A3.5,3.5 0 0 0 16,23',
+                waagrecht(20, 22, 60), 'M28,16 L22,20 L28,24'],
+            anschluesse: [{ nr: 'L', x: 60, y: 20 }],
+            erklaerung: 'Bewegungsmelder: schaltet ein, wenn sich eine warme Person bewegt.'
         },
         {
-            id: 'bp-abzweigdose', name: 'Bauplan: Abzweigdose', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+            id: 'bp-store', name: 'Bauplan: Lamellenstore', gruppe: 'ch-bauplan', kennbuchstabe: 'M',
             w: 40, h: 40,
-            kreise: [{ cx: 20, cy: 20, r: 9, voll: true }],
-            pfad: [senkrecht(20, 0, 11), senkrecht(20, 29, 40),
-                waagrecht(20, 0, 11), waagrecht(20, 29, 40)],
-            anschluesse: [{ nr: '1', x: 20, y: 0 }, { nr: '2', x: 20, y: 40 },
-                { nr: '3', x: 0, y: 20 }, { nr: '4', x: 40, y: 20 }],
-            erklaerung: 'Hier werden die Leitungen verbunden — ein voller Punkt im Bauplan.'
+            pfad: ['M20,0 L26,10 L14,20 L26,24 L16,36', 'M16,36 L17,31 M16,36 L21,34'],
+            anschluesse: [{ nr: 'M', x: 20, y: 0 }],
+            erklaerung: 'Der Motor der Lamellenstore am Fenster.'
         },
         {
-            id: 'bp-verteiler', name: 'Bauplan: Verteiler', gruppe: 'ch-bauplan', kennbuchstabe: 'F',
+            id: 'bp-ventilator', name: 'Bauplan: Abluftventilator', gruppe: 'ch-bauplan', kennbuchstabe: 'M',
+            w: 40, h: 40,
+            pfad: [senkrecht(20, 0, 10), 'M10,10 H30 V30 H10 Z',
+                'M20,20 C16,14 12,15 12,20 C12,25 16,26 20,20 C24,14 28,15 28,20 C28,25 24,26 20,20'],
+            anschluesse: [{ nr: 'M', x: 20, y: 0 }],
+            erklaerung: 'Der Ventilator im fensterlosen Bad oder WC.'
+        },
+        {
+            id: 'bp-direktanschluss', name: 'Bauplan: Direktanschluss', gruppe: 'ch-bauplan', kennbuchstabe: 'X',
+            w: 20, h: 20,
+            kreise: [{ cx: 10, cy: 13, r: 3 }],
+            pfad: [senkrecht(10, 0, 10)],
+            anschluesse: [{ nr: 'L', x: 10, y: 0 }],
+            erklaerung: 'Ein Gerät ohne Stecker: Kochherd, Boiler, Storenmotor.'
+        },
+        {
+            id: 'bp-verteiler', name: 'Bauplan: Unterverteilung', gruppe: 'ch-bauplan', kennbuchstabe: 'W',
             w: 60, h: 40,
-            pfad: ['M6,8 H54 V32 H6 Z', 'M6,20 H54', waagrecht(20, 0, 6)],
+            pfad: ['M6,10 H54 V30 H6 Z', waagrecht(20, 0, 6)],
+            flaechen: ['M6,30 L54,10 L54,30 Z'],
             anschluesse: [{ nr: 'L', x: 0, y: 20 }],
-            erklaerung: 'Der Sicherungskasten der Wohnung.'
+            erklaerung: 'Der Wohnungsverteiler (UV). Nicht in die Wand zum Wohn- oder Schlafzimmer.'
         },
         {
             id: 'bp-minuterie', name: 'Minuterie (Treppenhausautomat)', gruppe: 'ch-bauplan', kennbuchstabe: 'K',
@@ -41132,7 +41904,7 @@ Register.fachzeichen = (() => {
             erklaerung: 'Schaltet ein, wenn es dunkel wird — Aussenbeleuchtung.'
         },
         {
-            id: 'bp-sonnerie', name: 'Sonnerie', gruppe: 'ch-bauplan', kennbuchstabe: 'P',
+            id: 'bp-sonnerie', name: 'Bauplan: Sonnerieglocke', gruppe: 'ch-bauplan', kennbuchstabe: 'P',
             w: 60, h: 60,
             pfad: [senkrecht(30, 0, 14), senkrecht(30, 46, 60),
                 'M10,46 a20,20 0 0,1 40,0 Z', waagrecht(46, 6, 54), senkrecht(30, 26, 34)],
@@ -41140,14 +41912,49 @@ Register.fachzeichen = (() => {
             erklaerung: 'Die Türklingel. In der Schweiz meist mit 12 V Schwachstrom.'
         },
         {
-            id: 'bp-sonneriedruck', name: 'Sonneriedrucktaster', gruppe: 'ch-bauplan', kennbuchstabe: 'S',
+            id: 'bp-sonneriedruck', name: 'Bauplan: Sonnerietaster', gruppe: 'ch-bauplan', kennbuchstabe: 'S',
             w: 40, h: 40,
-            kreise: [{ cx: 20, cy: 26, r: 5, voll: true }],
-            pfad: [senkrecht(20, 8, 21), waagrecht(8, 12, 28)],
+            kreise: [{ cx: 20, cy: 22, r: 7 }, { cx: 20, cy: 22, r: 3.5 }],
+            pfad: [senkrecht(20, 29, 40)],
             anschluesse: [{ nr: '3', x: 20, y: 40 }],
-            erklaerung: 'Der Klingelknopf an der Tür.'
+            erklaerung: 'Der Klingelknopf an der Tür — zwei Kreise ineinander.'
         }
     ];
+    const KL_ZU = 'M20,44 L20,16';
+    const KL_AB = 'M20,44 L34,26';
+    const L_ZU = 'M30,44 L14,16', R_ZU = 'M30,44 L46,16';
+    const L_AUF = 'M30,44 L17,27', R_AUF = 'M30,44 L43,27';
+    const GERADE = { 4: 'M10,18 Q30,30 50,18', 5: 'M10,42 Q30,30 50,42' };
+    const KREUZ = { 4: 'M10,42 L50,18', 5: 'M50,42 L10,18' };
+    const STELLUNGSBILD = {
+        ausschalter: [{ 2: 'M20,44 L32,14' }, { 2: KL_ZU }],
+        'ch-schema0': [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+        schliesser: [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+        endschalter: [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+        'schuetz-schliesser': [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+        'schuetz-hauptkontakt': [{ 3: 'M20,44 L32,14' }, { 3: KL_ZU }],
+        'taster-schliesser': [{ 3: 'M20,44 L32,14' },
+            { 3: KL_ZU, 4: 'M32,10 V18', 5: 'M26,10 H38' }],
+        'taster-oeffner': [{ 2: 'M20,44 L32,14' },
+            { 2: KL_AB, 4: 'M32,8 V14', 5: 'M26,8 H38' }],
+        oeffner: [{ 2: 'M20,44 L32,14' }, { 2: KL_AB }],
+        'schuetz-oeffner': [{ 2: 'M20,44 L32,14' }, { 2: KL_AB }],
+        notaus: [{ 2: 'M20,44 L32,14' }, { 2: KL_AB }],
+        hauptschalter: [{ 6: 'M10,44 L20,14', 7: 'M30,44 L40,14', 8: 'M50,44 L60,14', 9: 'M18,20 L54,32' },
+            { 6: 'M10,44 V16', 7: 'M30,44 V16', 8: 'M50,44 V16', 9: 'M4,30 H56' }],
+        wechselschalter: [{ 3: L_ZU }, { 3: R_ZU }],
+        'ch-schema3': [{ 3: L_ZU }, { 3: R_ZU }],
+        wechsler: [{ 5: L_ZU }, { 5: R_ZU }],
+        serienschalter: [{ 3: L_AUF, 4: R_AUF }, { 3: L_ZU, 4: R_AUF },
+            { 3: L_AUF, 4: R_ZU }, { 3: L_ZU, 4: R_ZU }],
+        'ch-schema1': [{ 5: L_AUF, 6: R_AUF }, { 5: L_ZU, 6: R_AUF },
+            { 5: L_AUF, 6: R_ZU }, { 5: L_ZU, 6: R_ZU }],
+        'ch-schema2': [{ 5: L_AUF, 6: R_AUF }, { 5: L_ZU, 6: R_AUF },
+            { 5: L_ZU, 6: R_ZU }, { 5: L_AUF, 6: R_ZU }],
+        kreuzschalter: [GERADE, KREUZ],
+        'ch-schema6': [GERADE, KREUZ]
+    };
+    const hatStellungsbild = (id) => !!STELLUNGSBILD[id];
     const LISTE = EINGEBAUT.slice();
     const melde = (z) => {
         if (!z || !z.id || LISTE.some(x => x.id === z.id))
@@ -41185,7 +41992,15 @@ Register.fachzeichen = (() => {
         const att = (w) => typeof Sanitize !== 'undefined'
             ? Sanitize.escapeAttribute(w) : String(w ?? '').replace(/[<>"'&]/g, '');
         const teile = [];
-        z.pfad.forEach(p => teile.push(`<path d="${att(p)}"/>`));
+        const bilder = typeof opt.stellung === 'number' ? STELLUNGSBILD[id] : undefined;
+        const bild = bilder ? bilder[Math.max(0, Math.min(bilder.length - 1, Math.floor(opt.stellung)))] : undefined;
+        z.pfad.forEach((p, i) => {
+            const neu = bild ? bild[i] : undefined;
+            teile.push(neu !== undefined
+                ? `<path class="sp-klinge" pathLength="1" d="${att(neu)}"/>`
+                : `<path d="${att(p)}"/>`);
+        });
+        (z.flaechen || []).forEach(f => teile.push(`<path d="${att(f)}" fill="${farbe}" stroke="none"/>`));
         (z.kreise || []).forEach(k => teile.push(`<circle cx="${k.cx}" cy="${k.cy}" r="${k.r}"${k.voll ? ' fill="' + farbe + '"' : ''}/>`));
         if (text)
             (z.beschriftung || []).forEach(b => teile.push(`<text x="${att(b.x)}" y="${att(b.y)}" text-anchor="middle" fill="${farbe}" stroke="none" ` +
@@ -41258,7 +42073,7 @@ Register.fachzeichen = (() => {
         return (grad === 90 || grad === 270) ? { w: z.h, h: z.w } : { w: z.w, h: z.h };
     };
     return { RASTER, NAH, alle, holen, inGruppe, gruppen, gruppenName,
-        alsSvg, anschlussLage, klemmeFuer, masse, melde, vergiss };
+        alsSvg, anschlussLage, klemmeFuer, masse, melde, vergiss, hatStellungsbild };
 })();
 
 </script>
@@ -49912,11 +50727,17 @@ const SelectionFlow = (() => {
             const z = zug;
             if (!z || !z.amZiehen)
                 return;
+            const bewegungReduziert = ruhig();
             const dt = Math.min(48, Math.max(0, jetzt - z.zuletzt));
             z.zuletzt = jetzt;
             const erste = z.mitten[0] ?? 0, letzte = z.mitten[z.mitten.length - 1] ?? 0;
             const ziel = gummiband(z.finger - z.versatz, Math.min(erste, letzte), Math.max(erste, letzte), z.breite * 0.5) - z.breite / 2;
-            if (z.zieht) {
+            if (bewegungReduziert) {
+                z.ort = ziel;
+                z.tempo = 0;
+                z.zieht = false;
+            }
+            else if (z.zieht) {
                 const s = bahnVon(FEDERN.knapp, z.ort - ziel, z.tempo)(dt);
                 z.ort = ziel + s.x;
                 z.tempo = s.v;
@@ -49929,10 +50750,13 @@ const SelectionFlow = (() => {
                 z.ort = ziel;
                 z.tempo = z.messer.tempo(jetzt);
             }
-            const soll = ruhig() ? 1 : dehnungAus(z.tempo);
+            const soll = bewegungReduziert ? 1 : dehnungAus(z.tempo);
             z.dehnung = soll > z.dehnung ? soll : 1 + (z.dehnung - 1) * Math.pow(0.5, dt / 40);
-            const hubSoll = ruhig() ? 1 : HUB;
-            z.hub += (hubSoll - z.hub) * (1 - Math.pow(0.5, dt / 30));
+            if (bewegungReduziert)
+                z.dehnung = 1;
+            const hubSoll = bewegungReduziert ? 1 : HUB;
+            z.hub = bewegungReduziert ? 1
+                : z.hub + (hubSoll - z.hub) * (1 - Math.pow(0.5, dt / 30));
             malen(z);
             vorleuchten(z);
             z.bild = requestAnimationFrame(takt);
@@ -68571,7 +69395,7 @@ const Stromfluss = (() => {
         ok: false, fehler, spannung: [], spannungWinkel: [], wechsel: false, komplex: false,
         werte: {}, teilwerte: {}, stromNetze: [], netzStrom: [],
         spulen: {}, annahmen: [], warnungen, durchgaenge: 0, leitungNetz: {}, maxStrom: 0,
-        verbindungen: [], anschlussfehler: []
+        verbindungen: [], anschlussfehler: [], stellungen: {}
     });
     const KONTAKT = 1e-3;
     const SCHWELLE = 1e-9;
@@ -68953,7 +69777,8 @@ const Stromfluss = (() => {
             verbindungen: eintraege
                 .filter(e => !(e.art === 'U' && e.wert !== 0))
                 .map(e => [e.a, e.b]),
-            anschlussfehler: []
+            anschlussfehler: [],
+            stellungen: Object.assign({}, stellung)
         };
     };
     const rechne = (plan, stellung = {}, vorher, zeitAusgaenge) => {
@@ -68976,6 +69801,7 @@ const Stromfluss = (() => {
                     stand[t.id] = 1;
             });
         const mitFehlern = (e) => {
+            e.stellungen = Object.assign({}, stand);
             e.anschlussfehler = anschlussfehler(plan, netzInfo, e);
             e.anschlussfehler.forEach(f => e.warnungen.push(`${f.was} ${f.warum}`));
             return e;
@@ -69562,16 +70388,21 @@ const Schaltplan = (() => {
         });
     };
     const FANG = 14;
-    const fangeAnschluss = (plan, p) => {
+    const fangeAnschluss = (plan, p, radius = FANG) => {
         let beste = null;
-        let weite = FANG * FANG;
-        plan.teile.forEach(t => anschluesseVon(t).forEach(a => {
-            const d = (a.x - p.x) * (a.x - p.x) + (a.y - p.y) * (a.y - p.y);
-            if (d <= weite) {
-                weite = d;
-                beste = { teil: t.id, nr: a.nr, x: a.x, y: a.y };
-            }
-        }));
+        let weite = Math.max(0, radius) ** 2;
+        const versteckt = new Set(plan.ebenen.filter(e => e.sichtbar === false).map(e => e.id));
+        plan.teile.forEach(t => {
+            if (versteckt.has(t.ebene))
+                return;
+            anschluesseVon(t).forEach(a => {
+                const d = (a.x - p.x) * (a.x - p.x) + (a.y - p.y) * (a.y - p.y);
+                if (d <= weite) {
+                    weite = d;
+                    beste = { teil: t.id, nr: a.nr, x: a.x, y: a.y };
+                }
+            });
+        });
         return beste;
     };
     const rechtwinklig = (a, b) => {
@@ -70255,6 +71086,20 @@ const Schaltplan = (() => {
         }
         return teile.join(' ');
     };
+    const UNBEKANNT_MASS = { w: 40, h: 40 };
+    const unbekanntesZeichen = (zeichen, farbe) => {
+        const name = zeichen.length > 14 ? zeichen.slice(0, 13) + '…' : zeichen;
+        return `<title>Unbekanntes Bauteil „${esc(zeichen)}" — diese Redion-Fassung kennt das Zeichen nicht. ` +
+            `Das Teil bleibt mit allen Angaben im Plan erhalten.</title>` +
+            `<rect class="sp-unbekannt-kasten" x="0" y="0" width="${UNBEKANNT_MASS.w}" height="${UNBEKANNT_MASS.h}" ` +
+            `rx="6" stroke-dasharray="4 3" stroke-width="1.5"/>` +
+            `<text x="${UNBEKANNT_MASS.w / 2}" y="27" text-anchor="middle" font-size="20" font-weight="700" ` +
+            `fill="${farbe}" stroke="none">?</text>` +
+            `<text class="sp-unbekannt-name" x="${UNBEKANNT_MASS.w / 2}" y="${UNBEKANNT_MASS.h + 12}" text-anchor="middle" ` +
+            `font-size="9" fill="${farbe}" stroke="none" opacity=".75">${esc(name)}</text>`;
+    };
+    const teilMasse = (t) => (typeof Register !== 'undefined' && Register.fachzeichen && Register.fachzeichen.holen(t.zeichen))
+        ? Register.fachzeichen.masse(t.zeichen, t.drehung) : { ...UNBEKANNT_MASS };
     const alsSvg = (plan, opt = {}) => {
         const sichtbar = (ebene) => {
             if (opt.nurEbenen)
@@ -70351,16 +71196,20 @@ const Schaltplan = (() => {
             if (!sichtbar(t.ebene))
                 return;
             const farbe = farbeVon(t.ebene);
+            const mitStellung = !!opt.stellungen && typeof Register !== 'undefined' && Register.fachzeichen
+                && typeof Register.fachzeichen.hatStellungsbild === 'function'
+                && Register.fachzeichen.hatStellungsbild(t.zeichen);
+            const stellungNr = mitStellung ? Number(opt.stellungen[t.id]) || 0 : 0;
             const svg = (typeof Register !== 'undefined' && Register.fachzeichen)
-                ? Register.fachzeichen.alsSvg(t.zeichen, {
-                    farbe, drehung: t.drehung, gespiegelt: t.gespiegelt
-                })
+                ? Register.fachzeichen.alsSvg(t.zeichen, mitStellung
+                    ? { farbe, drehung: t.drehung, gespiegelt: t.gespiegelt, stellung: stellungNr }
+                    : { farbe, drehung: t.drehung, gespiegelt: t.gespiegelt })
                 : '';
-            if (!svg)
-                return;
-            const innen = svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
+            const unbekannt = !svg;
+            const innen = unbekannt ? unbekanntesZeichen(t.zeichen, farbe)
+                : svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
             const gewaehlt = opt.auswahl && opt.auswahl.has(t.id);
-            const mass = Register.fachzeichen.masse(t.zeichen, 0);
+            const mass = unbekannt ? { ...UNBEKANNT_MASS } : Register.fachzeichen.masse(t.zeichen, 0);
             const w = opt.strom ? opt.strom.werte[t.id] : undefined;
             const vh = (typeof Stromfluss !== 'undefined' && Stromfluss.verhalten)
                 ? Stromfluss.verhalten(t.zeichen) : null;
@@ -70430,13 +71279,20 @@ const Schaltplan = (() => {
                     }
                 }
             }
-            teile.push(`<g class="sp-teil${gewaehlt ? ' sp-gewaehlt' : ''}` +
+            let stellungText = '';
+            const stellungName = mitStellung && opt.stellungsnamen ? opt.stellungsnamen[t.id] || '' : '';
+            if (stellungName)
+                stellungText = `<text class="sp-stellung" x="${mass.w / 2}" y="${mass.h + 14}" ` +
+                    `text-anchor="middle" font-size="10" stroke="none" fill="${farbe}">${esc(stellungName)}</text>`;
+            teile.push(`<g class="sp-teil${unbekannt ? ' sp-unbekannt' : ''}${gewaehlt ? ' sp-gewaehlt' : ''}` +
+                `${mitStellung ? ' sp-stellbar' : ''}${opt.umgelegt && opt.umgelegt.has(t.id) ? ' sp-umgelegt' : ''}` +
                 `${w && w.fliesst ? ' sp-fuehrt' : ''}` +
                 `${opt.hervor === t.id ? ' sp-gesucht' : ''}" data-id="${esc(t.id)}" ` +
+                (mitStellung ? `data-stellung="${stellungNr}" ` : '') +
                 `transform="translate(${t.x} ${t.y})" fill="none" stroke="${farbe}" ` +
                 `stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
                 `<rect x="-4" y="-4" width="${mass.w + 8}" height="${mass.h + 8}" ` +
-                `fill="transparent" stroke="none"/>` + schein + innen + anzeige + pfeil +
+                `fill="transparent" stroke="none"/>` + schein + innen + anzeige + stellungText + pfeil +
                 (opt.anschluesse ? anschluesseVon(t).map(a => `<circle class="sp-punkt" data-teil="${esc(t.id)}" data-nr="${esc(a.nr)}" ` +
                     `cx="${a.x - t.x}" cy="${a.y - t.y}" r="4" fill="${farbe}" stroke="none" opacity=".5"/>`).join('') : '') +
                 (opt.nummern ? anschluesseVon(t).map(a => `<text x="${a.x - t.x + 6}" y="${a.y - t.y - 4}" font-size="9" fill="${farbe}" ` +
@@ -70565,7 +71421,7 @@ const Schaltplan = (() => {
         return false;
     };
     return {
-        ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, rasten,
+        ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, teilMasse, rasten,
         naechstesBmk, anschlussOrt, anschluesseVon, klemmeFuer, fangeAnschluss, rechtwinklig,
         kontakte, vorherMerken, nachziehen, veraendert, verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
         netzBauen, BEISPIELE, beispielBauen, uid, esc,
@@ -70800,10 +71656,17 @@ window.Schaltplan = Schaltplan;
   function ausPlan(plan, netze, ausgangIndex) {
     const uebung = plan && plan.batterieUebung;
     if (!uebung || !Array.isArray(uebung.teile) ||
-        !uebung.teile.length || uebung.teile.length > 64)
+        (uebung.id !== 'selbst' && !uebung.teile.length) || uebung.teile.length > 64)
       return fehler('Keine Batterieübung in diesem Schaltplan.');
     const teile = Array.isArray(plan.teile) ? plan.teile : [];
     const nachId = new Map(teile.map(t => [String(t.id), t]));
+    /* Beim freien Zeichnen gelten auch per normaler Bauteilpalette
+       eingesetzte Batterien. Lehrmittel-Aufgaben bleiben dagegen strikt. */
+    const eigene = uebung.id === 'selbst';
+    const zellIds = eigene ? teile.filter(t => t.zeichen === 'batterie').map(t => t.id)
+                           : uebung.teile;
+    if (!zellIds.length || zellIds.length > 64)
+      return fehler('Setze 1 bis 64 Batterien auf den Plan.');
     const mehr=Array.isArray(uebung.ausgaenge) && uebung.ausgaenge.length>0;
     const index=Number.isInteger(ausgangIndex)?ausgangIndex:0;
     const plusId=mehr && uebung.ausgaenge[index]
@@ -70821,8 +71684,8 @@ window.Schaltplan = Schaltplan;
       { id: AUS_PLUS, klemme: 'k:' + plusId + ':1' },
       { id: AUS_PLUS, klemme: 'k:' + plusId + ':2' }
     ];
-    for (let i = 0; i < uebung.teile.length; i++) {
-      const t = nachId.get(uebung.teile[i]);
+    for (let i = 0; i < zellIds.length; i++) {
+      const t = nachId.get(zellIds[i]);
       if (!t || t.zeichen !== 'batterie')
         return fehler('Eine Zelle der Aufgabe wurde entfernt oder ersetzt.');
       const w = t.werte || {};
@@ -70854,7 +71717,71 @@ window.Schaltplan = Schaltplan;
     return pruefen(zellen, leitungen, {nurAusgang:mehr});
   }
 
-  const api = { pruefen, ausPlan, reiheParallel, idMinus, idPlus, AUS_MINUS, AUS_PLUS };
+  /* Widerstände, die tatsächlich im gezeichneten Stromkreis zwischen
+   * X+ und X− liegen, bestimmen die Last. Mit einem 1-A-Probestrom wird
+   * der Ersatzwiderstand eines beliebigen ohmschen Netzwerks ermittelt.
+   * Unverbundene Bauteile zählen nicht. Kein stillschweigender Kurzschluss. */
+  function lastAusPlan(plan, netze, ausgangIndex) {
+    const m = plan && plan.batterieUebung;
+    if (!m || !netze || !(netze.netzVon instanceof Map))
+      return {ok:false, grund:'Kein gültiger Batterieplan.'};
+    const pos = m.ausgaenge && m.ausgaenge[ausgangIndex || 0]
+      ? m.ausgaenge[ausgangIndex || 0].id : m.plus;
+    /* X+ und X− sind im Plan je eine zweipolige Reihenklemme.
+       In der Batterieübung gehören beide Anschlussseiten zum selben
+       Ausgang (auch wenn Stromfluss.netze sie einzeln nummeriert). */
+    const plusNetze=[1,2].map(n=>netze.netzVon.get('k:'+pos+':'+n))
+      .filter(n=>n!==undefined);
+    const minusNetze=[1,2].map(n=>netze.netzVon.get('k:'+m.minus+':'+n))
+      .filter(n=>n!==undefined);
+    if(!plusNetze.length||!minusNetze.length||
+       plusNetze.some(n=>minusNetze.includes(n)))
+      return {ok:false, grund:'Die Ausgangsklemmen sind kurzgeschlossen oder fehlen.'};
+    const von='Xminus',nach='Xplus';
+    const zuAusgang=n=>plusNetze.includes(n)?nach:minusNetze.includes(n)?von:n;
+    const kanten = [];
+    for (const t of (plan.teile || [])) {
+      if (t.zeichen !== 'widerstand') continue;
+      const a = netze.netzVon.get('k:' + t.id + ':1');
+      const b = netze.netzVon.get('k:' + t.id + ':2');
+      if (a === undefined || b === undefined) continue;
+      const standard = (typeof Stromfluss !== 'undefined' && Stromfluss.verhalten)
+        ? Stromfluss.verhalten('widerstand') : null;
+      const ohm = t.werte && t.werte.R != null ? Number(t.werte.R)
+        : (standard && Number.isFinite(standard.wert) ? standard.wert : 100);
+      if (!Number.isFinite(ohm) || ohm <= 0)
+        return {ok:false, grund:'Ein gezeichneter Widerstand hat keinen gültigen R-Wert.'};
+      const x=zuAusgang(a),y=zuAusgang(b);
+      if (x !== y) kanten.push({a:x,b:y,ohm});
+    }
+    if (!kanten.length) return null;
+    const gesehen = new Set([nach]), offen = [nach];
+    while (offen.length) {
+      const n = offen.shift();
+      for (const k of kanten) {
+        const zu = k.a === n ? k.b : k.b === n ? k.a : null;
+        if (zu !== null && !gesehen.has(zu)) { gesehen.add(zu); offen.push(zu); }
+      }
+    }
+    if (!gesehen.has(von)) return null; // Noch kein vollständiger Lastpfad
+    const aktiv = kanten.filter(k => gesehen.has(k.a) && gesehen.has(k.b));
+    const orte = [...gesehen].filter(n => n !== von);
+    const ix = new Map(orte.map((n,i) => [n,i]));
+    const mat = orte.map(() => orte.map(() => 0));
+    const rechts = orte.map(n => n === nach ? 1 : 0);
+    for (const k of aktiv) {
+      const g = 1 / k.ohm, a = ix.get(k.a), b = ix.get(k.b);
+      if (a !== undefined) mat[a][a] += g;
+      if (b !== undefined) mat[b][b] += g;
+      if (a !== undefined && b !== undefined) {mat[a][b] -= g; mat[b][a] -= g;}
+    }
+    const v = gleichung(mat, rechts);
+    if (!v || !Number.isFinite(v[ix.get(nach)]) || v[ix.get(nach)] <= 0)
+      return {ok:false, grund:'Der gezeichnete Lastwiderstand ist nicht berechenbar.'};
+    return {ok:true, ohm:v[ix.get(nach)], anzahl:aktiv.length};
+  }
+
+  const api = { pruefen, ausPlan, lastAusPlan, reiheParallel, idMinus, idPlus, AUS_MINUS, AUS_PLUS };
   wurzel.BatterieKern = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -70939,7 +71866,13 @@ window.Schaltplan = Schaltplan;
   })[c]);
   const zeige=(v,e)=>v==null||!Number.isFinite(v)?'nicht angegeben':
     new Intl.NumberFormat('de-CH',{maximumFractionDigits:4}).format(v)+(e?' '+e:'');
-  const get=id=>AUFGABEN.find(a=>a.id===id)||AUFGABEN[0];
+  /* Keine vorgezeichneten Akkus: alles mit der normalen Palette selbst einsetzen. */
+  const SELBST={id:'selbst',name:'Eigene Zeichnung · Batterien frei platzieren',
+    art:'frei',zellen:[],
+    info:'Batterien aus „Bauteile“ auf den Plan ziehen und mit Taste 2 verbinden. '+
+      'Auch nachträglich platzierte Zellen werden automatisch mitgemessen. '+
+      'Eine Batterie erhält ihre tatsächlichen Werte über „Akku einstellen“.'};
+  const get=id=>id==='selbst'?SELBST:AUFGABEN.find(a=>a.id===id)||AUFGABEN[0];
   const soll=a=>a.zellen.length;
   const werteVon=p=>({
     ...(p.u==null?{}:{U:p.u}),
@@ -70959,7 +71892,7 @@ window.Schaltplan = Schaltplan;
     const mehr=!!a.ausgaenge;
     const einzeln=a.zellen.length===6 && a.zielU===a.zellen[0].u;
     const z=mehr?Math.min(a.anfang||soll(a),soll(a)):Math.min(a.anfang||soll(a),soll(a));
-    const cols=mehr?6:einzeln?6:z>10?4:z>6?4:Math.min(3,z);
+    const cols=mehr?6:einzeln?6:z>10?4:z>6?4:Math.max(1,Math.min(3,z));
     const dx=mehr?170:einzeln?145:175,dy=mehr?120:180;
     plan.breite=mehr?1660:Math.max(1150,160+cols*dx+300);
     plan.hoehe=mehr?1150:Math.max(720,200+Math.ceil(z/cols)*dy+150);
@@ -71106,6 +72039,7 @@ window.Schaltplan = Schaltplan;
     const meta=plan&&plan.batterieUebung;
     if(!meta)throw Error('Keine Batterieaufgabe.');
     const a=get(meta.id);
+    if(a.id==='selbst')throw Error('Für frei gezeichnete Schaltungen gibt es kein festes Muster.');
     const nachId=()=>new Map(plan.teile.map(t=>[t.id,t]));
     if(meta.teile.length>soll(a) && a.id!=='frei')
       throw Error('Für dieses Muster sind zusätzliche Zellen vorhanden.');
@@ -71177,6 +72111,27 @@ window.Schaltplan = Schaltplan;
       'akku-6': {u:6,i:12,ri:null,q:null},
       'akku-8': {u:8,i:6,ri:null,q:null}
     };
+    function eigeneAusZeichnung() {
+      const plan=optionen.holePlan();
+      if(plan.batterieUebung)return true;
+      const akkus=plan.teile.filter(t=>t.zeichen==='batterie');
+      if(!akkus.length)return false;
+      const x=Math.max(960,...plan.teile.map(t=>Number(t.x)||0))+160;
+      const y=Math.max(260,...plan.teile.map(t=>Number(t.y)||0))+150;
+      optionen.aendere(()=>{
+        const plus={id:Schaltplan.uid(),zeichen:'klemme',bmk:'X+',
+          x,y:180,drehung:0,gespiegelt:false,nummern:{},gruppe:'',ebene:'plan'};
+        const minus={...plus,id:Schaltplan.uid(),bmk:'X−',y};
+        plan.teile.push(plus,minus);
+        plan.texte.push({id:Schaltplan.uid(),x:x+52,y:170,t:'X+ · PLUS',ebene:'plan'});
+        plan.texte.push({id:Schaltplan.uid(),x:x+52,y:y-9,t:'− MINUS',ebene:'plan'});
+        plan.batterieUebung={id:'selbst',plus:plus.id,minus:minus.id,
+          teile:akkus.slice(0,64).map(t=>t.id)};
+        plan.breite=Math.max(Number(plan.breite)||0,x+250);
+        plan.hoehe=Math.max(Number(plan.hoehe)||0,y+160);
+      });
+      wahl='selbst';schalter=false;lastart='ohne';return true;
+    }
     function messung(i) {
       const plan=optionen.holePlan();
       if(!plan.batterieUebung)return null;
@@ -71193,22 +72148,44 @@ window.Schaltplan = Schaltplan;
       [['U (Leerlauf)',zeige(r.u,'V')],['Ri (gesamt)',zeige(r.ri,'Ω')],
        ['Imax',zeige(r.maxA,'A')],['Q (gesamt)',zeige(r.ah,'Ah')]].map(
         ([x,y])=>'<span><b>'+esc(x)+'</b> '+esc(y)+'</span>').join('')+'</div>';
+    function wirksameLast() {
+      const plan=optionen.holePlan();
+      if(plan.batterieUebung&&wurzel.BatterieKern&&typeof Stromfluss!=='undefined'){
+        try {
+          const gezeichnet=wurzel.BatterieKern.lastAusPlan(
+            plan,Stromfluss.netze(plan),ausgang);
+          if(gezeichnet)return {...gezeichnet,gezeichnet:true};
+        }catch(_e){/* Die Netzliste wird bei der eigentlichen Messung geprüft. */}
+      }
+      /* Eine offene selbst gezeichnete Last darf keine erfundene
+         Stromstärke durch den Testwiderstand anzeigen. */
+      if(plan.teile.some(t=>t.zeichen==='widerstand'))
+        return {ok:false,gezeichnet:true,grund:'Gezeichneter Verbraucher offen: Widerstand mit X+ und X− verbinden.'};
+      if(plan.batterieUebung&&plan.batterieUebung.id==='selbst'&&lastart==='ohne')
+        return {ok:false,gezeichnet:false,grund:'Leerlauf: I = 0 A. Zeichne einen Widerstand oder wähle eine Testlast.'};
+      const ohm=Number(widerstand);
+      return {ok:Number.isFinite(ohm)&&ohm>0&&ohm<=1000000,
+        ohm,gezeichnet:false,grund:'Gib einen positiven Testlastwiderstand in Ω ein.'};
+    }
     function lastAnzeige(r) {
-      const R=Number(widerstand);
-      const hatR=Number.isFinite(R)&&R>0&&R<=1000000;
-      const strom=r&&r.ok&&schalter&&hatR?r.u/(R+(r.ri||0)):0;
-      const spannung=r&&r.ok&&hatR?strom*R:0;
+      const last=wirksameLast(),R=last.ohm;
+      const strom=r&&r.ok&&schalter&&last.ok?r.u/(R+(r.ri||0)):0;
+      const spannung=strom*R;
       const leuchtet=strom>1e-8;
       let txt='';
-      if(!r||!r.ok)txt='Erst die Batterie korrekt verdrahten.';
-      else if(!schalter)txt='Schalter AUS · 0 A · Lampe dunkel.';
-      else if(!hatR)txt='Gib einen positiven Lastwiderstand in Ω ein.';
-      else txt='Strom '+zeige(strom,'A')+' · Spannung an der Last '+
-        zeige(spannung,'V')+' · Leistung '+zeige(strom*spannung,'W')+
-        (r.ri===null?' · Idealmodell ohne unbekannten Innenwiderstand':'')+
+      if(!r||!r.ok)txt='Kein Strom: '+(r&&r.grund?r.grund:'Erst die Batterien verdrahten.');
+      else if(!schalter)txt='Strom AUS · I = 0 A. '+(last.ok?'R der Last = '+zeige(R,'Ω'):'');
+      else if(!last.ok)txt=last.grund;
+      else txt='Strom I = '+zeige(strom,'A')+' · Last R = '+zeige(R,'Ω')+
+        (last.gezeichnet?' (aus deiner Zeichnung)':' (einstellbare Testlast)')+
+        ' · Gesamtwiderstand Ri + R = '+(r.ri===null?'nicht vollständig bekannt':
+          zeige(R+r.ri,'Ω'))+
+        ' · Lastspannung = '+zeige(spannung,'V')+
+        ' · Leistung = '+zeige(strom*spannung,'W')+
+        (r.ri===null?' · Idealmodell, da Innenwiderstand unbekannt':'')+
         (strom>r.maxA+1e-8?' · ACHTUNG: Nennstrom überschritten!':'');
       return '<div class="sp-bat-strombild"><span class="sp-bat-birne '+
-        (leuchtet?'an':'')+'" role="img" aria-label="'+(leuchtet?'Lampe leuchtet':'Lampe dunkel')+
+        (leuchtet?'an':'')+'" role="img" aria-label="'+(leuchtet?'Verbraucher eingeschaltet':'Kein Stromfluss')+
         '">◉</span><span class="sp-bat-stromtext">'+esc(txt)+'</span></div>';
     }
     function ergebnis(r,ziel,plan,a) {
@@ -71233,6 +72210,8 @@ window.Schaltplan = Schaltplan;
       const a=meta?get(meta.id):get(wahl),ids=optionen.holeAuswahl();
       const t=meta&&ids.length===1?plan.teile.find(x=>
         x.id===ids[0]&&x.zeichen==='batterie'):null;
+      const eigene=meta&&meta.id==='selbst';
+      const gezeichnete=plan.teile.filter(x=>x.zeichen==='batterie').length;
       const w=t?t.werte||{}:{};
       const ziel=a.ausgaenge?a.ausgaenge[Math.min(ausgang,a.ausgaenge.length-1)]:a;
       let html='<div class="sp-bat-kopf"><strong>Kapitel 12 · Batterien live üben</strong>'+
@@ -71240,20 +72219,32 @@ window.Schaltplan = Schaltplan;
         '<div class="sp-bat-bedienung"><label>Lehrmittel-Aufgabe <select data-bat="wahl">'+
         AUFGABEN.map(e=>'<option value="'+esc(e.id)+'"'+
           (e.id===wahl?' selected':'')+'>'+esc(e.name)+'</option>').join('')+
-        '</select></label><button type="button" data-bat="einsetzen">Aufgabe einsetzen</button></div>';
+        '</select></label><button type="button" data-bat="einsetzen">Aufgabe einsetzen</button>'+
+        '<button type="button" data-bat="leer">Leere Batteriezeichnung starten</button></div>';
       if(!meta){
-        html+='<p class="sp-bat-hinweis">Aufgabe auswählen, dann auf die vorhandene Zeichenfläche setzen. '+
-          'Anschliessend Akkus selber verdrahten und Strom einschalten.</p>';
+        html+='<p class="sp-bat-hinweis">Batterien komplett selbst zeichnen? „Leere Batteriezeichnung starten“ '+
+          'wählen oder mit der normalen Bauteilpalette Akkus platzieren und dann „Vorhandene Zeichnung messen“ anklicken.</p>'+
+          '<button type="button" data-bat="uebernehmen">Vorhandene Zeichnung messen ('+
+          gezeichnete+' Batterien)</button>';
       }else{
-        html+='<p class="sp-bat-hinweis"><b>'+esc(a.name)+'</b> · '+meta.teile.length+
-          ' von '+soll(a)+' geplanten '+esc(a.art)+'-Zellen/Paketen'+
+        html+='<p class="sp-bat-hinweis"><b>'+esc(a.name)+'</b> · '+
+          (eigene?gezeichnete+' selbst gezeichnete Batterien':
+            meta.teile.length+' von '+soll(a)+' geplanten '+esc(a.art)+'-Zellen/Paketen')+
           (a.zielU?' · Ziel '+zeige(a.zielU,'V'):'')+
           (a.zielI?' / '+zeige(a.zielI,'A'):'')+'.</p>';
         if(a.annahme)html+='<p class="sp-bat-hinweis">Annahme: '+esc(a.annahme)+'</p>';
         if(a.info)html+='<p class="sp-bat-hinweis">'+esc(a.info)+'</p>';
+        html+='<details class="sp-bat-lernhilfe"><summary>So übst du die Schaltung Schritt für Schritt</summary>'+
+          '<p><b>1. Batterien einsetzen:</b> Die Zellen erscheinen direkt in der Zeichenfläche. Zusätzliche Akkus mit „Weiteren Akku hinzufügen“ platzieren; eine Zelle anklicken, um U, Ri, Imax und Q zu bearbeiten.</p>'+
+          '<p><b>2. Reihenschaltung:</b> Plus (+) mit dem Minus (−) der nächsten Batterie verbinden. Die Spannungen addieren sich, der zulässige Strom wird durch das schwächste Glied begrenzt.</p>'+
+          '<p><b>3. Parallelschaltung:</b> Alle Pluspole miteinander und alle Minuspole miteinander verbinden. Nur Zweige mit gleicher Spannung parallel verbinden. Die zulässigen Ströme addieren sich im vereinfachten Schulmodell.</p>'+
+          '<p><b>4. Leitungen ziehen:</b> Mit dem vorhandenen Werkzeug „Leitung ziehen“ (Taste 2) die Anschlüsse verbinden. Am Ende die Schaltung an die Klemmen X+ und X− anschliessen.</p>'+
+          '<p><b>5. Testen:</b> „Jetzt prüfen“ anklicken, dann eine Last wählen und „Strom einschalten“ aktivieren. Angezeigt werden Spannung, Strom, Leistung und mögliche Fehler.</p>'+
+          '<p><b>6. Lösung vergleichen:</b> „Musterverdrahtung zeigen“ verwenden; danach mit Rückgängig wieder selbst probieren.</p>'+
+          '<p><b>Achtung:</b> Die Stromanzeige ist eine Lernsimulation, keine echte Stromversorgung. Bei unbekanntem Innenwiderstand wird die ideale Näherung verwendet.</p></details>';
         html+='<p class="sp-bat-hinweis">'+esc(anschlussHilfe)+'</p>'+
           '<div class="sp-bat-bedienung">'+
-          '<button type="button" data-bat="muster">Musterverdrahtung zeigen</button>'+
+          (eigene?'':'<button type="button" data-bat="muster">Musterverdrahtung zeigen</button>')+
           '<button type="button" data-bat="pruefen">Jetzt prüfen</button></div>';
         html+='<div class="sp-bat-ergaenzen"><label>Weiteren Akku hinzufügen <select data-bat="neuArt">'+
           [['leclanche','1,5 V / 1 A · Leclanché'],['bleiak','2 V / 10 A · Bleiakku'],
@@ -71285,8 +72276,11 @@ window.Schaltplan = Schaltplan;
         }
         const r=messung(ausgang);
         html+='<div class="sp-bat-messung" aria-live="polite">'+ergebnis(r,ziel,plan,a)+'</div>'+
-          '<div class="sp-bat-last"><label>Last aus Widerständen <select data-bat="lastart">'+
-          [['eigen','Eigener Widerstand'],['einzeln','Ein Widerstand 2 Ω'],
+          '<div class="sp-bat-last"><p class="sp-bat-hinweis">Ist ein gezeichneter Widerstands-Stromkreis '+
+          'zwischen X+ und X− geschlossen, wird dessen Ersatzwiderstand automatisch verwendet. '+
+          'Sonst gilt die hier eingestellte Testlast.</p>'+
+          '<label>Testlast aus Widerständen <select data-bat="lastart">'+
+          [['ohne','Kein Verbraucher (Leerlauf)'],['eigen','Eigener Widerstand'],['einzeln','Ein Widerstand 2 Ω'],
            ['vierparallel','4 × 2 Ω parallel = 0,5 Ω'],
            ['vierreihe','4 × 2 Ω in Reihe = 8 Ω'],
            ['viergemischt','2+2 Ω parallel zu 2+2 Ω = 2 Ω']].map(([v,n])=>
@@ -71304,7 +72298,10 @@ window.Schaltplan = Schaltplan;
       if(t.dataset.bat==='ausgang')ausgang=Number(t.value)||0;
       if(t.dataset.bat==='neuArt')neuArt=t.value;
       if(t.dataset.bat==='anzahl')anzahl=Math.min(16,Math.max(1,Number(t.value)||1));
-      if(t.dataset.bat==='schalter')schalter=t.checked;
+      if(t.dataset.bat==='schalter'){
+        schalter=t.checked;
+        if(optionen.nachStromwechsel)optionen.nachStromwechsel();
+      }
       if(t.dataset.bat==='last')widerstand=t.value.replace(',','.');
       if(t.dataset.bat==='lastart'){
         lastart=t.value;
@@ -71315,13 +72312,24 @@ window.Schaltplan = Schaltplan;
     });
     el.addEventListener('click',e=>{
       const b=e.target.closest('[data-bat]');
-      if(!b||!['einsetzen','muster','pruefen','hinzu','werte','loeschen'].includes(b.dataset.bat))
+      if(!b||!['einsetzen','leer','uebernehmen','muster','pruefen','hinzu','werte','loeschen'].includes(b.dataset.bat))
         return;
       const action=b.dataset.bat,plan=optionen.holePlan();
+      if(action==='uebernehmen'){
+        if(!eigeneAusZeichnung())window.alert('Platziere zuerst mindestens eine Batterie aus der Bauteilpalette.');
+        aktualisiere();return;
+      }
+      if(action==='leer'){
+        if((plan.teile.length||plan.leitungen.length||plan.texte.length)&&
+          !window.confirm('Aktuellen Plan durch eine leere Batteriezeichnung ersetzen?'))return;
+        const neu=planFuer('selbst');wahl='selbst';ausgang=0;schalter=false;lastart='ohne';
+        optionen.aendere(()=>optionen.setzePlan(neu));
+        optionen.nachPlanwechsel();aktualisiere();return;
+      }
       if(action==='einsetzen'){
         if((plan.teile.length||plan.leitungen.length||plan.texte.length)&&
           !window.confirm('Aktuellen Plan durch diese Aufgabe ersetzen? Rückgängig bleibt möglich.'))return;
-        const neu=planFuer(wahl);ausgang=0;schalter=false;
+        const neu=planFuer(wahl);ausgang=0;schalter=false;lastart='eigen';
         optionen.aendere(()=>optionen.setzePlan(neu));
         optionen.nachPlanwechsel();aktualisiere();return;
       }
@@ -71381,7 +72389,9 @@ window.Schaltplan = Schaltplan;
       });
       aktualisiere();
     });
-    return {aktualisiere};
+    return {aktualisiere,stromAn:()=>schalter,
+      stromSetzen:(an)=>{schalter=!!an;if(optionen.nachStromwechsel)optionen.nachStromwechsel();aktualisiere();},
+      ausZeichnung:eigeneAusZeichnung};
   }
   wurzel.BatterieAufgaben={erstelle,planFuer,musterFuer,aufgaben:AUFGABEN};
   if(typeof module!=='undefined'&&module.exports)
@@ -71575,6 +72585,16 @@ const Planflaeche = (() => {
         }
         return ohneRaster ? { x, y } : { x: Schaltplan.rasten(x), y: Schaltplan.rasten(y) };
     };
+    const anschlussFangRadius = (svg, pointerType) => {
+        const matrix = svg.getScreenCTM();
+        if (!matrix)
+            return 14;
+        const scale = Math.hypot(matrix.a, matrix.b);
+        if (!Number.isFinite(scale) || scale <= 0)
+            return 14;
+        const pixel = pointerType === 'touch' ? 24 : 12;
+        return Math.min(42, Math.max(3, pixel / scale));
+    };
     const RADIERER = 'elektro:radierer';
     const RADIER_GROESSEN = [[8, 'klein'], [16, 'mittel'], [28, 'gross']];
     const radiererLesen = () => {
@@ -71707,6 +72727,40 @@ const Planflaeche = (() => {
         schnellkarte.setAttribute('aria-label', 'Bauteil direkt bearbeiten');
         schnellkarte.hidden = true;
         buehne.appendChild(schnellkarte);
+        const einstieg = document.createElement('div');
+        einstieg.className = 'sp-einstieg';
+        einstieg.hidden = true;
+        buehne.appendChild(einstieg);
+        const einstiegMalen = () => {
+            const leer = !z.plan.teile.length && !z.plan.leitungen.length && !z.plan.texte.length;
+            const zeigen = leer && !z.simulation && !paletteOffen && !studioOffen && !z.gewaehltesZeichen && z.werkzeug === 'zeigen';
+            if (einstieg.hidden === !zeigen && (!zeigen || einstieg.dataset.art === z.plan.art))
+                return;
+            einstieg.hidden = !zeigen;
+            if (!zeigen)
+                return;
+            einstieg.dataset.art = z.plan.art;
+            einstieg.innerHTML =
+                `<div class="sp-einstieg-karte" role="group" aria-label="Leerer Schaltplan">` +
+                    `<span class="sp-einstieg-zeichen" aria-hidden="true">${symbol('bolt', 26)}</span>` +
+                    `<strong>Ein leerer Schaltplan</strong>` +
+                    `<p>Zieh Bauteile aus der Palette auf die Fläche${z.plan.art.startsWith('stromlauf') ? ' oder beginne mit einer fertigen Schaltung' : ''}.</p>` +
+                    `<div class="sp-einstieg-knoepfe">` +
+                    `<button type="button" class="sp-einstieg-haupt" data-einstieg="palette">${symbol('plus', 18)} Bauteil hinzufügen</button>` +
+                    (z.plan.art.startsWith('stromlauf')
+                        ? `<button type="button" data-einstieg="schaltung">⚡ Beispielschaltung</button>` : '') +
+                    `</div></div>`;
+        };
+        einstieg.addEventListener('click', e => {
+            const b = e.target.closest('[data-einstieg]');
+            if (!b)
+                return;
+            if (b.dataset.einstieg === 'schaltung')
+                return schaltungMenue(b);
+            if (!paletteOffen)
+                dock.querySelector('[data-a="palette-toggle"]')?.click();
+            palette.querySelector('.sp-suche input')?.focus({ preventScroll: true });
+        });
         const kontextleiste = document.createElement('div');
         kontextleiste.className = 'sp-kontextleiste';
         kontextleiste.setAttribute('role', 'toolbar');
@@ -71759,48 +72813,110 @@ const Planflaeche = (() => {
             fachSchliessen.hidden = !(batterieOffen || relaisOffen || pruefungOffen);
             wurzel.classList.toggle('sp-fach-offen', !fachSchliessen.hidden);
         };
+        const WERKZEUGE = [
+            { id: 'zeigen', name: 'Auswahl', sym: 'inkPointer', taste: '1', titel: 'Auswählen und verschieben' },
+            { id: 'leitung', name: 'Leitung', sym: 'inkConnector', taste: '2', titel: 'Leitung ziehen' },
+            { id: 'text', name: 'Text', sym: 'inkText', taste: '3', titel: 'Beschriftung setzen' },
+            { id: 'schiene', name: 'Schiene', sym: 'busbar', taste: '4', titel: 'Schiene zeichnen — L1, L2, L3, N, PE' },
+            { id: 'radieren', name: 'Radierer', sym: 'inkEraser', taste: '5', titel: 'Radieren — über die Fläche wischen' }
+        ];
+        const symbol = (id, gr = 20) => (typeof Register !== 'undefined' && Register.symbole) ? Register.symbole.alsSvg(id, gr) : '';
+        const kopfLinks = document.createElement('span');
+        kopfLinks.className = 'sp-links';
+        const dock = document.createElement('span');
+        dock.className = 'sp-werkzeuge sp-mit-marke';
+        dock.setAttribute('role', 'toolbar');
+        dock.setAttribute('aria-label', 'Zeichenwerkzeuge');
+        dock.innerHTML =
+            `<span class="sp-wz-marke" aria-hidden="true"></span>` +
+                WERKZEUGE.map(w => `<button type="button" class="sp-wz" data-wz="${w.id}" title="${esc(w.titel)} (${w.taste})" ` +
+                    `aria-label="${esc(w.titel)}" aria-keyshortcuts="${w.taste}" aria-pressed="false">` +
+                    `<span class="sp-wz-zeichen" aria-hidden="true">${symbol(w.sym)}</span>` +
+                    `<span class="sp-wz-name" aria-hidden="true">${esc(w.name)}</span></button>`).join('') +
+                `<span class="sp-dock-trenner" aria-hidden="true"></span>` +
+                `<button type="button" class="sp-palette-knopf" data-a="palette-toggle" aria-label="Bauteilpalette öffnen oder schliessen" ` +
+                `aria-keyshortcuts="B" aria-expanded="false" title="Bauteile ausklappen und direkt auf die Zeichnung ziehen (B)">` +
+                `<span class="sp-wz-zeichen" aria-hidden="true">${symbol('plus')}</span><span class="sp-wz-name">Bauteile</span></button>` +
+                `<button type="button" class="sp-dock-fit" data-a="zoom-alles" title="Einpassen: den ganzen Schaltplan zeigen (0)" ` +
+                `aria-label="Einpassen — den ganzen Schaltplan zeigen" aria-keyshortcuts="0">` +
+                `<span class="sp-wz-zeichen" aria-hidden="true">${symbol('maximize')}</span><span class="sp-wz-name" aria-hidden="true">Einpassen</span></button>`;
+        const kopfRechts = document.createElement('span');
+        kopfRechts.className = 'sp-rechts';
+        kopf.append(kopfLinks, dock, kopfRechts);
+        let markeGesetzt = false;
+        const markeSetzen = () => {
+            const marke = dock.querySelector('.sp-wz-marke');
+            const an = dock.querySelector('.sp-wz.an');
+            if (!marke)
+                return;
+            if (!an || !an.offsetWidth) {
+                marke.style.opacity = '0';
+                return;
+            }
+            const x = an.offsetLeft, y = an.offsetTop;
+            marke.style.width = an.offsetWidth + 'px';
+            marke.style.height = an.offsetHeight + 'px';
+            if (!markeGesetzt)
+                marke.style.transition = 'none';
+            marke.style.transform = `translate(${x}px, ${y}px)`;
+            marke.style.opacity = '1';
+            if (!markeGesetzt) {
+                void marke.offsetWidth;
+                marke.style.transition = '';
+                markeGesetzt = true;
+            }
+        };
+        const dockAktualisieren = () => {
+            dock.querySelectorAll('.sp-wz').forEach(b => {
+                const an = b.dataset.wz === z.werkzeug;
+                b.classList.toggle('an', an);
+                b.setAttribute('aria-pressed', String(an));
+            });
+            const pk = dock.querySelector('.sp-palette-knopf');
+            if (pk) {
+                pk.classList.toggle('an', paletteOffen);
+                pk.setAttribute('aria-expanded', String(paletteOffen));
+            }
+            markeSetzen();
+        };
+        if (typeof ResizeObserver === 'function')
+            new ResizeObserver(() => {
+                if (!wurzel.isConnected)
+                    return;
+                markeSetzen();
+            }).observe(dock);
         const kopfMalen = () => {
-            const art = Schaltplan.artVon(z.plan.art);
             fachStatus();
-            kopf.innerHTML =
-                `<select class="sp-art" aria-label="Planart">` +
-                    Schaltplan.ARTEN.map(a => `<option value="${esc(a.id)}"${a.id === z.plan.art ? ' selected' : ''}>` +
-                        `${esc(a.name)}</option>`).join('') + '</select>' +
-                    `<span class="sp-arterkl">${esc(art.erklaerung)}</span>` +
-                    `<span class="sp-werkzeuge">` +
-                    [['zeigen', '↖', 'Auswählen und verschieben'],
-                        ['leitung', '⌐', 'Leitung ziehen'],
-                        ['text', 'T', 'Beschriftung setzen'],
-                        ['schiene', '☰', 'Schiene zeichnen — L1, L2, L3, N, PE'],
-                        ['radieren', '⌫', 'Radieren — über die Fläche wischen']].map(([id, ic, t]) => `<button class="sp-wz${z.werkzeug === id ? ' an' : ''}" data-wz="${id}" ` +
-                        `title="${esc(t)}" aria-label="${esc(t)}" aria-pressed="${z.werkzeug === id}">${ic}</button>`).join('') +
-                    `<span class="sp-dock-trenner" aria-hidden="true"></span>` +
-                    `<button type="button" class="sp-palette-knopf${paletteOffen ? ' an' : ''}" data-a="palette-toggle" aria-label="Bauteilpalette öffnen oder schliessen" aria-expanded="${paletteOffen}" title="Bauteile ausklappen und direkt auf die Zeichnung ziehen">▦ <span>Bauteile</span></button>` +
-                    `<button type="button" class="sp-dock-fit" data-a="zoom-alles" title="Gesamten Schaltplan anzeigen (0)" aria-label="Gesamten Schaltplan anzeigen">⤢</button>` +
-                    `</span>` +
-                    `<span class="sp-rechts">` +
-                    (z.plan.art.startsWith('stromlauf')
-                        ? `<button class="sp-netz" data-a="netz" ` +
-                            `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
-                            `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
-                        : '') +
-                    `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" aria-haspopup="menu">✦ Bereiche ▾</button>` +
-                    `<button type="button" class="sp-start${z.simulation ? ' an' : ''}${z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ? ' sp-strom-ungeprueft' : ''}" ` +
-                    `data-a="simulation" ${z.plan.batterieUebung ? 'disabled ' : ''}` +
-                    `title="${z.plan.batterieUebung ? 'Batterieanlage im Batterie-Fach messen' :
+            dockAktualisieren();
+            einstiegMalen();
+            const stromAn = !!(z.simulation || (z.plan.batterieUebung && batterie?.stromAn()));
+            kopfLinks.innerHTML =
+                `<button type="button" class="sp-start${stromAn ? ' an' : ''}${z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ? ' sp-strom-ungeprueft' : ''}" ` +
+                    `data-a="simulation" aria-keyshortcuts="P" ` +
+                    `title="${z.plan.batterieUebung ? (batterie?.stromAn() ? 'Batteriestrom ausschalten' : 'Batterieschaltung einschalten und U, R, I messen') :
                         z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ?
                             'Original-Verdrahtung ungeprüft: in der Relais-Werkstatt zuerst prüfen und freigeben.' :
-                            z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
-                    `aria-pressed="${z.simulation}" ` +
-                    `aria-label="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}">` +
-                    `${z.simulation ? '◼' : '▶'} Strom</button>` +
-                    `<button data-a="zurueck" title="Rückgängig" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>↶</button>` +
-                    `<button data-a="vorwaerts" title="Wiederholen" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>↷</button>` +
-                    `<button data-a="mehr" title="Mehr" aria-label="Mehr">…</button>` +
+                            z.simulation ? 'Simulation anhalten (P)' : 'Strom fliessen lassen (P)'}" ` +
+                    `aria-pressed="${stromAn}" ` +
+                    `aria-label="${stromAn ? 'Strom ausschalten' : 'Strom einschalten'}">` +
+                    `${stromAn ? '◼' : '▶'} Strom</button>` +
+                    (z.plan.art.startsWith('stromlauf')
+                        ? `<button type="button" class="sp-netz" data-a="netz" ` +
+                            `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
+                            `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
+                        : '');
+            kopfRechts.innerHTML =
+                `<select class="sp-art" aria-label="Planart" title="Planart: ${esc(Schaltplan.artVon(z.plan.art).name)}">` +
+                    Schaltplan.ARTEN.map(a => `<option value="${esc(a.id)}"${a.id === z.plan.art ? ' selected' : ''}>` +
+                        `${esc(a.name)}</option>`).join('') + '</select>' +
+                    `<button type="button" class="sp-kopf-knopf" data-a="zurueck" title="Rückgängig (Strg+Z)" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>${symbol('undo', 18)}</button>` +
+                    `<button type="button" class="sp-kopf-knopf" data-a="vorwaerts" title="Wiederholen (Strg+Y)" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>${symbol('redo', 18)}</button>` +
+                    `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" ` +
+                    `aria-label="Bereiche" aria-haspopup="menu">✦<span class="sp-bereiche-wort"> Bereiche</span><span class="sp-bereiche-pfeil"> ▾</span></button>` +
+                    `<button type="button" class="sp-kopf-knopf" data-a="mehr" title="Mehr: Planart, Ansicht, Ausgabe" aria-label="Mehr" aria-haspopup="menu">${symbol('dots', 18)}</button>` +
                     (z.voll
-                        ? `<button class="sp-vollzu" data-a="vollbild-zu" title="Vollbild beenden (Esc)" aria-label="Vollbild beenden">✕</button>`
-                        : `<button data-a="vollbild" title="Vollbild (F)" aria-label="Vollbild">⛶</button>`) +
-                    `</span>`;
+                        ? `<button type="button" class="sp-vollzu" data-a="vollbild-zu" title="Vollbild beenden (Esc)" aria-label="Vollbild beenden">✕</button>`
+                        : `<button type="button" class="sp-kopf-knopf" data-a="vollbild" title="Vollbild (F)" aria-label="Vollbild" aria-keyshortcuts="F">⛶</button>`);
         };
         const meldungHtml = () => {
             const e = z.ergebnis;
@@ -72084,6 +73200,7 @@ const Planflaeche = (() => {
                     break;
             }
         };
+        let zuletztGemalt = {};
         const buehneMalen = () => {
             const e = z.ergebnis;
             const opt = {
@@ -72097,7 +73214,33 @@ const Planflaeche = (() => {
                     netzStrom: e.netzStrom, leitungNetz: e.leitungNetz,
                     werte: e.werte, teilwerte: e.teilwerte, maxStrom: e.maxStrom
                 };
+            if (z.simulation) {
+                const jetzt = Object.assign({}, z.stellungen, e && e.stellungen ? e.stellungen : {});
+                const umgelegt = new Set();
+                z.plan.teile.forEach(t => {
+                    const id = String(t.id);
+                    if ((jetzt[id] || 0) !== (zuletztGemalt[id] || 0))
+                        umgelegt.add(id);
+                });
+                opt.stellungen = jetzt;
+                const namen = {};
+                z.plan.teile.forEach(t => {
+                    const { st } = schaltart(t.zeichen);
+                    if (st.length < 2)
+                        return;
+                    const s = st[Math.max(0, Math.min(st.length - 1, jetzt[t.id] || 0))];
+                    if (s && s.name)
+                        namen[t.id] = s.name;
+                });
+                opt.stellungsnamen = namen;
+                if (umgelegt.size)
+                    opt.umgelegt = umgelegt;
+                zuletztGemalt = jetzt;
+            }
+            else
+                zuletztGemalt = {};
             leinwand.innerHTML = Schaltplan.alsSvg(z.plan, opt);
+            tischLegen();
             ansichtAnwenden();
             buehne.classList.toggle('sp-laeuft', z.simulation);
             if (!z.simulation)
@@ -72192,6 +73335,54 @@ const Planflaeche = (() => {
             const wert = zoomleiste.querySelector('.sp-zoomwert');
             if (wert)
                 wert.textContent = Math.round(zoom * 100) + ' %';
+            tischZiehen();
+        };
+        const SVG_NS = 'http://www.w3.org/2000/svg';
+        const tischLegen = () => {
+            const svg = svgJetzt();
+            if (!svg)
+                return;
+            const B = Number(z.plan.breite) || 800, H = Number(z.plan.hoehe) || 700;
+            const blattRaster = svg.querySelector('rect[fill="url(#sp-raster)"]');
+            const rand = document.createElementNS(SVG_NS, 'rect');
+            rand.setAttribute('class', 'sp-blattrand');
+            rand.setAttribute('x', '0');
+            rand.setAttribute('y', '0');
+            rand.setAttribute('width', String(B));
+            rand.setAttribute('height', String(H));
+            rand.setAttribute('fill', 'none');
+            rand.setAttribute('pointer-events', 'none');
+            if (blattRaster) {
+                const tisch = document.createElementNS(SVG_NS, 'rect');
+                tisch.setAttribute('class', 'sp-tisch');
+                tisch.setAttribute('fill', 'url(#sp-raster)');
+                tisch.setAttribute('pointer-events', 'none');
+                blattRaster.before(tisch);
+                blattRaster.after(rand);
+            }
+            else {
+                const defs = svg.querySelector(':scope > defs:last-of-type');
+                if (defs)
+                    defs.after(rand);
+                else
+                    svg.prepend(rand);
+            }
+        };
+        const tischZiehen = () => {
+            const svg = svgJetzt();
+            const tisch = svg?.querySelector('.sp-tisch');
+            if (!svg || !tisch)
+                return;
+            const r = svg.getBoundingClientRect();
+            if (r.width < 1 || r.height < 1)
+                return;
+            const a = planAm(r.left, r.top), b = planAm(r.right, r.bottom);
+            const R = Register.fachzeichen.RASTER || 10;
+            const x = Math.floor(a.x / R) * R - R, y = Math.floor(a.y / R) * R - R;
+            tisch.setAttribute('x', String(x));
+            tisch.setAttribute('y', String(y));
+            tisch.setAttribute('width', String(Math.ceil((b.x - x) / R) * R + R));
+            tisch.setAttribute('height', String(Math.ceil((b.y - y) / R) * R + R));
         };
         const schirm = () => {
             const svg = svgJetzt();
@@ -72207,6 +73398,7 @@ const Planflaeche = (() => {
             return { x: z.ansicht.x + (sx - g.cx) / k, y: z.ansicht.y + (sy - g.cy) / k };
         };
         const zoomSetzen = (zoom, P, sx, sy) => {
+            ansichtVomNutzer = true;
             const zz = Math.round(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom)) * 1000) / 1000;
             const g = schirm(), k = g.s1 * zz;
             z.ansicht = { zoom: zz, x: P.x - (sx - g.cx) / k, y: P.y - (sy - g.cy) / k };
@@ -72225,20 +73417,107 @@ const Planflaeche = (() => {
             }
             zoomSetzen(z.ansicht.zoom * faktor, planAm(sx, sy), sx, sy);
         };
-        const allesZeigen = () => { z.ansicht = { zoom: 1, x: 0, y: 0 }; ansichtAnwenden(); };
+        let ansichtVomNutzer = false;
+        const EINPASSEN_MAX = 1.75;
+        const belegt = () => {
+            let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+            const nimm = (ax, ay, bx, by) => {
+                if (![ax, ay, bx, by].every(Number.isFinite))
+                    return;
+                x1 = Math.min(x1, ax);
+                y1 = Math.min(y1, ay);
+                x2 = Math.max(x2, bx);
+                y2 = Math.max(y2, by);
+            };
+            z.plan.teile.forEach(t => {
+                const m = Schaltplan.teilMasse(t);
+                const text = Math.max(String(t.bmk || '').length * 7.5, Math.min(38, String(t.beschriftung || '').length) * 6.5);
+                nimm(t.x - 4, t.y - 4, t.x + m.w + (text ? 8 + text : 4), t.y + Math.max(m.h, t.beschriftung ? 30 : 0) + 4);
+            });
+            z.plan.leitungen.forEach(l => (l.punkte || []).forEach((q) => nimm(q.x, q.y, q.x, q.y)));
+            z.plan.texte.forEach(x => nimm(x.x, x.y - 13, x.x + String(x.t || '').length * 7.5, x.y + 4));
+            return Number.isFinite(x1) ? { x1, y1, x2, y2 } : null;
+        };
+        const einpassen = () => {
+            ansichtVomNutzer = false;
+            const svg = svgJetzt();
+            const r = svg ? svg.getBoundingClientRect() : null;
+            const kasten = belegt();
+            if (!svg || !r || r.width < 40 || r.height < 40 || !kasten) {
+                z.ansicht = { zoom: 1, x: 0, y: 0 };
+                ansichtAnwenden();
+                return;
+            }
+            const g = schirm();
+            const oben = r.height > 300 ? 64 : 0;
+            const r0 = r;
+            const r1 = { left: r0.left, top: r0.top + oben, width: r0.width, height: r0.height - oben };
+            const rand = Math.max(24, 0.04 * Math.max(kasten.x2 - kasten.x1, kasten.y2 - kasten.y1));
+            const bw = kasten.x2 - kasten.x1 + 2 * rand, bh = kasten.y2 - kasten.y1 + 2 * rand;
+            const k = Math.min(r1.width / bw, r1.height / bh, EINPASSEN_MAX);
+            const zoom = Math.round(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, k / g.s1)) * 1000) / 1000;
+            const kk = g.s1 * zoom;
+            const mx = (kasten.x1 + kasten.x2) / 2, my = (kasten.y1 + kasten.y2) / 2;
+            const ansicht = { zoom, x: mx - (r1.left + r1.width / 2 - g.cx) / kk, y: my - (r1.top + r1.height / 2 - g.cy) / kk };
+            const B = Number(z.plan.breite) || 800, H = Number(z.plan.hoehe) || 700;
+            z.ansicht = (Math.abs(zoom - 1) < 0.03 && Math.abs(ansicht.x) < 0.03 * B && Math.abs(ansicht.y) < 0.03 * H)
+                ? { zoom: 1, x: 0, y: 0 } : ansicht;
+            ansichtAnwenden();
+        };
+        const ruhig = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.dataset.bewegung === 'ruhig';
+        const gleitend = (setzen) => {
+            const svg = svgJetzt();
+            const vor = svg && !ruhig() ? svg.getScreenCTM() : null;
+            setzen();
+            const nach = vor ? svgJetzt()?.getScreenCTM() : null;
+            if (!vor || !nach || !nach.a || typeof leinwand.animate !== 'function')
+                return;
+            const r = vor.a / nach.a;
+            if (Math.abs(r - 1) < 0.002 && Math.abs(vor.e - nach.e) < 0.5 && Math.abs(vor.f - nach.f) < 0.5)
+                return;
+            const L = leinwand.getBoundingClientRect();
+            const tx = vor.e - L.left - r * (nach.e - L.left), ty = vor.f - L.top - r * (nach.f - L.top);
+            const kurve = getComputedStyle(document.documentElement).getPropertyValue('--ease-enter').trim() || 'ease-out';
+            buehne.classList.add('sp-gleitet');
+            const a = leinwand.animate([{ transformOrigin: '0 0', transform: `translate(${tx}px, ${ty}px) scale(${r})` },
+                { transformOrigin: '0 0', transform: 'none' }], { duration: 200, easing: kurve });
+            const fertig = () => buehne.classList.remove('sp-gleitet');
+            a.onfinish = fertig;
+            a.oncancel = fertig;
+        };
+        const allesZeigen = () => gleitend(einpassen);
         const schwenken = (dx, dy) => {
+            ansichtVomNutzer = true;
             const g = schirm(), k = g.s1 * z.ansicht.zoom;
             z.ansicht = { zoom: z.ansicht.zoom, x: z.ansicht.x - dx / k, y: z.ansicht.y - dy / k };
             ansichtAnwenden();
         };
+        let buehnenMass = '';
+        const buehnenBeobachter = typeof ResizeObserver === 'function' ? new ResizeObserver(() => {
+            const r = buehne.getBoundingClientRect();
+            if (!wurzel.isConnected || r.width < 1 || r.height < 1) {
+                if (!wurzel.isConnected && !platzhalter)
+                    buehnenBeobachter?.disconnect();
+                return;
+            }
+            const mass = `${Math.round(r.width)}×${Math.round(r.height)}`;
+            if (mass === buehnenMass)
+                return;
+            buehnenMass = mass;
+            if (ansichtVomNutzer)
+                ansichtAnwenden();
+            else
+                einpassen();
+        }) : null;
+        buehnenBeobachter?.observe(buehne);
         zoomleiste.addEventListener('click', e => {
             const b = e.target.closest('[data-a]');
             if (!b)
                 return;
             if (b.dataset.a === 'zoom-plus')
-                zoomUm(1.25);
+                gleitend(() => zoomUm(1.25));
             else if (b.dataset.a === 'zoom-minus')
-                zoomUm(0.8);
+                gleitend(() => zoomUm(0.8));
             else if (b.dataset.a === 'zoom-alles')
                 allesZeigen();
         });
@@ -72341,6 +73620,7 @@ const Planflaeche = (() => {
             z.werkzeug = 'zeigen';
             z.gewaehltesZeichen = '';
             const zoom = Math.max(1.5, z.ansicht.zoom);
+            ansichtVomNutzer = true;
             z.ansicht = { zoom: Math.min(3, zoom),
                 x: p.x - z.plan.breite / (2 * Math.min(3, zoom)),
                 y: p.y - z.plan.hoehe / (2 * Math.min(3, zoom)) };
@@ -72362,6 +73642,7 @@ const Planflaeche = (() => {
                 const links = Math.min(...punkte.map(p => p.x)), rechts = Math.max(...punkte.map(p => p.x));
                 const oben = Math.min(...punkte.map(p => p.y)), unten = Math.max(...punkte.map(p => p.y));
                 const zoom = Math.max(.25, Math.min(3, z.plan.breite / (rechts - links + 120), z.plan.hoehe / (unten - oben + 120)));
+                ansichtVomNutzer = true;
                 z.ansicht = { zoom, x: (links + rechts) / 2 - z.plan.breite / (2 * zoom),
                     y: (oben + unten) / 2 - z.plan.hoehe / (2 * zoom) };
             }
@@ -72485,6 +73766,23 @@ const Planflaeche = (() => {
             if (g)
                 g.innerHTML = html;
         };
+        const klemmeUnterZeiger = (svg, roh, art) => {
+            const m = svg.getScreenCTM();
+            const massstab = m ? Math.hypot(m.a, m.b) : 1;
+            const radius = Math.min(14, Math.max(2, (art === 'touch' ? 10 : 7) / (massstab > 0 ? massstab : 1)));
+            const f = Schaltplan.fangeAnschluss(z.plan, roh, radius);
+            return f && f.teil ? { x: f.x, y: f.y, teil: String(f.teil), nr: String(f.nr ?? '') } : null;
+        };
+        let klemmeGezeigt = '';
+        const klemmeHinweis = (k) => {
+            const schluessel = k ? k.x + ',' + k.y : '';
+            if (schluessel === klemmeGezeigt && (!k || svgJetzt()?.querySelector('.sp-klemme-ring')))
+                return;
+            klemmeGezeigt = schluessel;
+            buehne.classList.toggle('sp-klemme-nah', !!k);
+            vorschau(k ? `<circle class="sp-klemme-ring" cx="${k.x}" cy="${k.y}" r="7" fill="none" ` +
+                `stroke="currentColor" stroke-width="2" opacity=".8"><title>Leitung ziehen</title></circle>` : '');
+        };
         const setzeSymbol = (id, x, y) => {
             if (!id || z.simulation || z.zieht || !Register.fachzeichen.holen(id))
                 return null;
@@ -72521,22 +73819,164 @@ const Planflaeche = (() => {
                 UI.toast(beispiel.hinweis);
         };
         const vorlageEinsetzen = (v) => {
+            if (z.zieht)
+                return;
+            const teile = (Array.isArray(v?.teile) ? v.teile : []);
+            const leitungen = (Array.isArray(v?.leitungen) ? v.leitungen : []);
+            if (!teile.length) {
+                UI.toast('Diese Vorlage enthaelt keine Bauteile.');
+                return;
+            }
+            if (teile.some(t => !t || typeof t.zeichen !== 'string' ||
+                !Register.fachzeichen.holen(t.zeichen))) {
+                UI.toast('Vorlage enthaelt nicht verfuegbare Schaltzeichen.');
+                return;
+            }
+            const vorlagenIds = teile.map(t => t.id);
+            if (vorlagenIds.some(id => typeof id !== 'string' || !id.trim()) ||
+                new Set(vorlagenIds).size !== vorlagenIds.length) {
+                UI.toast('Vorlage enthaelt fehlende oder doppelte Bauteil-IDs.');
+                return;
+            }
+            if (leitungen.some(l => !l || !Array.isArray(l.punkte) ||
+                l.punkte.length < 2 || l.punkte.some((p) => !p || p.x == null || p.y == null ||
+                !Number.isFinite(Number(p.x)) || !Number.isFinite(Number(p.y))))) {
+                UI.toast('Vorlage enthaelt ungueltige Leitungen.');
+                return;
+            }
+            const r = Register.fachzeichen.RASTER;
+            const rand = r;
+            const rahmen = (t, dx = 0, dy = 0) => {
+                const m = Register.fachzeichen.masse(t.zeichen, Number(t.drehung) || 0);
+                const zc = Register.fachzeichen.holen(t.zeichen);
+                const cx = Number(t.x) + dx + (zc ? zc.w : 0) / 2;
+                const cy = Number(t.y) + dy + (zc ? zc.h : 0) / 2;
+                return { l: cx - m.w / 2, o: cy - m.h / 2,
+                    r: cx + m.w / 2, u: cy + m.h / 2 };
+            };
+            const vorlagenRahmen = teile.map(t => rahmen(t));
+            const internUeberlappt = vorlagenRahmen.some((a, i) => vorlagenRahmen.some((b, j) => j > i &&
+                a.l < b.r && b.l < a.r && a.o < b.u && b.o < a.u));
+            if (internUeberlappt) {
+                UI.toast('Vorlage enthaelt ueberlappende Bauteile.');
+                return;
+            }
+            const versteckt = new Set(z.plan.ebenen
+                .filter(e => e.sichtbar === false).map(e => e.id));
+            const belegt = z.plan.teile
+                .filter(t => !versteckt.has(t.ebene)).map(t => rahmen(t));
+            const vorhandeneLeitungen = z.plan.leitungen
+                .filter(l => !versteckt.has(l.ebene ?? ''));
+            const abstand = Math.min(6, rand);
+            const streckeTrifft = (a, b, f) => {
+                const dx = b.x - a.x, dy = b.y - a.y;
+                const p = [-dx, dx, -dy, dy];
+                const q = [a.x - f.l, f.r - a.x, a.y - f.o, f.u - a.y];
+                let ein = 0, aus = 1;
+                for (let i = 0; i < 4; i++) {
+                    const pi = p[i], qi = q[i];
+                    if (pi === 0) {
+                        if (qi < 0)
+                            return false;
+                        continue;
+                    }
+                    const t = qi / pi;
+                    if (pi < 0)
+                        ein = Math.max(ein, t);
+                    else
+                        aus = Math.min(aus, t);
+                    if (ein > aus)
+                        return false;
+                }
+                return true;
+            };
+            const passt = (dx, dy) => {
+                const teilePassen = teile.every(t => {
+                    const a = rahmen(t, dx, dy);
+                    return Number.isFinite(a.l) && Number.isFinite(a.o) &&
+                        Number.isFinite(a.r) && Number.isFinite(a.u) &&
+                        a.l >= rand && a.o >= rand &&
+                        a.r <= z.plan.breite - rand && a.u <= z.plan.hoehe - rand &&
+                        belegt.every(b => a.r + rand <= b.l || b.r + rand <= a.l ||
+                            a.u + rand <= b.o || b.u + rand <= a.o) &&
+                        vorhandeneLeitungen.every(l => {
+                            const feld = { l: a.l - abstand, o: a.o - abstand,
+                                r: a.r + abstand, u: a.u + abstand };
+                            const pkt = l.punkte || [];
+                            return pkt.every((p, i) => i === 0 || !streckeTrifft(pkt[i - 1], p, feld));
+                        });
+                });
+                return teilePassen && leitungen.every(l => {
+                    const punkte = (Array.isArray(l.punkte) ? l.punkte : [])
+                        .map((p) => ({ x: Number(p.x) + dx, y: Number(p.y) + dy }));
+                    if (!punkte.every(p => Number.isFinite(p.x) && Number.isFinite(p.y) &&
+                        p.x >= rand && p.y >= rand &&
+                        p.x <= z.plan.breite - rand && p.y <= z.plan.hoehe - rand))
+                        return false;
+                    for (let i = 1; i < punkte.length; i++)
+                        for (const b of belegt) {
+                            const feld = { l: b.l - abstand, o: b.o - abstand,
+                                r: b.r + abstand, u: b.u + abstand };
+                            if (streckeTrifft(punkte[i - 1], punkte[i], feld))
+                                return false;
+                        }
+                    if (punkte.length >= 2 && Schaltplan.ueberlappt(punkte, vorhandeneLeitungen))
+                        return false;
+                    return true;
+                });
+            };
+            const schritt = Math.max(r * 4, 40);
+            let versatz = null;
+            if (passt(120, 80))
+                versatz = { x: 120, y: 80 };
+            for (let y = r * 2; !versatz && y < z.plan.hoehe; y += schritt)
+                for (let x = r * 2; !versatz && x < z.plan.breite; x += schritt)
+                    if (passt(x, y))
+                        versatz = { x, y };
+            for (let y = r; !versatz && y < z.plan.hoehe; y += r)
+                for (let x = r; !versatz && x < z.plan.breite; x += r)
+                    if (passt(x, y))
+                        versatz = { x, y };
+            if (!versatz) {
+                UI.toast('Kein freier Platz fuer diese Vorlage. Bitte erst Platz schaffen.');
+                return;
+            }
+            const { x: dx, y: dy } = versatz;
+            const ebene = aktiveEbene();
             aendere(() => {
                 const neuId = new Map();
-                (v.teile || []).forEach(t => {
+                const gruppen = new Map();
+                teile.forEach(t => {
                     const id = Schaltplan.uid();
-                    neuId.set(t.id, id);
-                    z.plan.teile.push({ ...t, id, x: t.x + 120, y: t.y + 80,
-                        bmk: Schaltplan.naechstesBmk(z.plan, t.zeichen) });
+                    neuId.set(String(t.id), id);
+                    const gruppe = String(t.gruppe || '');
+                    if (gruppe && !gruppen.has(gruppe))
+                        gruppen.set(gruppe, Schaltplan.uid());
+                    z.plan.teile.push({ ...t, id, x: Number(t.x) + dx, y: Number(t.y) + dy,
+                        bmk: Schaltplan.naechstesBmk(z.plan, t.zeichen),
+                        gruppe: gruppe ? gruppen.get(gruppe) : '', ebene,
+                        nummern: { ...(t.nummern || {}) } });
                 });
-                (v.leitungen || []).forEach(l => {
-                    const neu = { ...l, id: Schaltplan.uid(),
-                        punkte: (l.punkte || []).map(p => ({ x: p.x + 120, y: p.y + 80 })) };
-                    if (l.vonTeil)
-                        neu.vonTeil = neuId.get(l.vonTeil) || l.vonTeil;
-                    if (l.nachTeil)
-                        neu.nachTeil = neuId.get(l.nachTeil) || l.nachTeil;
-                    z.plan.leitungen.push(neu);
+                leitungen.forEach(l => {
+                    const neu = { ...l, id: Schaltplan.uid(), ebene,
+                        punkte: (Array.isArray(l.punkte) ? l.punkte : [])
+                            .map((p) => ({ x: Number(p.x) + dx, y: Number(p.y) + dy })) };
+                    delete neu.vonTeil;
+                    delete neu.vonNr;
+                    delete neu.nachTeil;
+                    delete neu.nachNr;
+                    const von = neuId.get(String(l.vonTeil));
+                    const nach = neuId.get(String(l.nachTeil));
+                    if (von) {
+                        neu.vonTeil = von;
+                        neu.vonNr = l.vonNr;
+                    }
+                    if (nach) {
+                        neu.nachTeil = nach;
+                        neu.nachNr = l.nachNr;
+                    }
+                    if (neu.punkte.length >= 2)
+                        z.plan.leitungen.push(neu);
                 });
             });
         };
@@ -72679,11 +74119,15 @@ const Planflaeche = (() => {
             const r = Schaltplan.gruppeUmformen(z.plan, z.auswahl, art);
             melde(art === 'drehen' ? 'Drehen' : 'Spiegeln', r.bericht, Schaltplan.veraendert(z.plan, r.vorher), r.vorher);
         });
-        const planDrehen = () => aendere(() => {
-            const r = Schaltplan.planDrehen(z.plan);
-            z.ansicht = { zoom: 1, x: 0, y: 0 };
-            melde('Drehen', r.bericht, Schaltplan.veraendert(z.plan, r.vorher), r.vorher);
-        });
+        const planDrehen = () => {
+            aendere(() => {
+                const r = Schaltplan.planDrehen(z.plan);
+                z.ansicht = { zoom: 1, x: 0, y: 0 };
+                melde('Drehen', r.bericht, Schaltplan.veraendert(z.plan, r.vorher), r.vorher);
+            });
+            if (!z.zieht)
+                einpassen();
+        };
         const drehen = () => alsGruppe() ? gruppeUmformen('drehen') : aendere(() => {
             const vorher = Schaltplan.vorherMerken(z.plan);
             const teile = auswahlTeile();
@@ -72811,10 +74255,14 @@ const Planflaeche = (() => {
             aendere(() => { });
             melde('Ziehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
         };
-        const zugUnterbrechen = () => {
+        const zugUnterbrechen = (e) => {
             const zug = z.zieht;
             if (!zug)
                 return;
+            if (e.pointerType === 'touch' && e.pointerId !== zug.zeiger) {
+                zugAbbrechen();
+                return;
+            }
             zugLoesen();
             if (!wurzel.isConnected)
                 return;
@@ -72832,6 +74280,7 @@ const Planflaeche = (() => {
             if (!zug)
                 return;
             zugLoesen();
+            teilKlickStart = null;
             if (zug.art === 'teil' || zug.art === 'strecke') {
                 zug.ausgang.forEach((a, id) => {
                     const t = teilVon(id);
@@ -73325,12 +74774,22 @@ const Planflaeche = (() => {
                 return;
             }
             if (z.werkzeug === 'leitung') {
-                const fang = Schaltplan.fangeAnschluss(z.plan, roh);
+                const fang = Schaltplan.fangeAnschluss(z.plan, roh, anschlussFangRadius(svg, e.pointerType));
                 zugBeginnen({ art: 'leitung', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang: new Map(),
                     von: fang ? { x: fang.x, y: fang.y, teil: fang.teil, nr: fang.nr }
                         : { x: p.x, y: p.y } });
                 svg.setPointerCapture(e.pointerId);
                 return;
+            }
+            if (!z.gewaehltesZeichen && !e.shiftKey) {
+                const klemme = klemmeUnterZeiger(svg, roh, e.pointerType);
+                if (klemme) {
+                    klemmeHinweis(null);
+                    zugBeginnen({ art: 'leitung', zeiger: e.pointerId, startX: klemme.x, startY: klemme.y, ausgang: new Map(),
+                        von: { x: klemme.x, y: klemme.y, teil: klemme.teil, nr: klemme.nr } });
+                    svg.setPointerCapture(e.pointerId);
+                    return;
+                }
             }
             const g = teilAm(ziel);
             if (!g || !g.dataset.id) {
@@ -73413,6 +74872,13 @@ const Planflaeche = (() => {
                     platzGeistZeigen(z.gewaehltesZeichen, e.clientX, e.clientY);
                 else if (!platzZug)
                     geistEntfernen();
+                if (!platzZug && e.pointerType !== 'touch' && !e.buttons && !z.simulation
+                    && z.werkzeug === 'zeigen' && !z.gewaehltesZeichen) {
+                    const svg = svgJetzt();
+                    klemmeHinweis(svg ? klemmeUnterZeiger(svg, ortAus(svg, e, z.plan, true), e.pointerType) : null);
+                }
+                else
+                    klemmeHinweis(null);
                 return;
             }
             if (e.pointerId !== z.zieht.zeiger)
@@ -73478,7 +74944,7 @@ const Planflaeche = (() => {
                 return;
             }
             if (zug.art === 'leitung' && zug.von) {
-                const fang = Schaltplan.fangeAnschluss(z.plan, p);
+                const fang = Schaltplan.fangeAnschluss(z.plan, ortAus(svg, e, z.plan, true), anschlussFangRadius(svg, e.pointerType));
                 const bis = fang ? { x: fang.x, y: fang.y } : p;
                 const schluessel = bis.x + ',' + bis.y;
                 if (schluessel === zug.vorschauEnde)
@@ -73566,7 +75032,11 @@ const Planflaeche = (() => {
                 return;
             }
             if (zug.art === 'leitung' && zug.von) {
-                const fang = Schaltplan.fangeAnschluss(z.plan, p);
+                if (!svg) {
+                    male();
+                    return;
+                }
+                const fang = Schaltplan.fangeAnschluss(z.plan, ortAus(svg, e, z.plan, true), anschlussFangRadius(svg, e.pointerType));
                 const bis = fang ? { x: fang.x, y: fang.y } : p;
                 if (bis.x === zug.von.x && bis.y === zug.von.y) {
                     male();
@@ -73595,8 +75065,7 @@ const Planflaeche = (() => {
                 zoomUm(Math.exp(-e.deltaY * schritt * 0.0015), e.clientX, e.clientY);
                 return;
             }
-            const a = z.ansicht;
-            if (!z.voll && a.zoom === 1 && !a.x && !a.y)
+            if (!z.voll && !ansichtVomNutzer)
                 return;
             e.preventDefault();
             const quer = e.shiftKey && !e.deltaX;
@@ -74043,13 +75512,16 @@ const Planflaeche = (() => {
                 UI.toast('Die Verdrahtung dieser alten Relais-Datei ist nicht geprüft. Prüfe die Leitungen und gib sie in der Relais-Werkstatt frei.');
                 return;
             }
+            if (!z.plan.batterieUebung && z.plan.teile.some((t) => t.zeichen === 'batterie')) {
+                if (!batterie?.ausZeichnung())
+                    return;
+            }
             if (z.plan.batterieUebung) {
                 batterieOffen = true;
                 batteriePanel.hidden = false;
-                kopfMalen();
                 if (batterie)
-                    batterie.aktualisiere();
-                UI.toast('Batterieanlagen im Fach „Batterien“ messen: ideale Parallelquellen werden hier nicht simuliert.');
+                    batterie.stromSetzen(!batterie.stromAn());
+                kopfMalen();
                 return;
             }
             if (!z.simulation)
@@ -74074,12 +75546,17 @@ const Planflaeche = (() => {
             male();
             paletteMalen();
         };
+        const artSetzen = (art) => {
+            if (!Schaltplan.ARTEN.some(a => a.id === art) || art === z.plan.art)
+                return;
+            aendere(() => { z.plan.art = art; });
+            paletteMalen();
+        };
         kopf.addEventListener('change', e => {
             const s = e.target.closest('.sp-art');
             if (!s)
                 return;
-            aendere(() => { z.plan.art = s.value; });
-            paletteMalen();
+            artSetzen(s.value);
         });
         kopf.addEventListener('click', e => {
             const b = e.target.closest('[data-wz],[data-a]');
@@ -74572,7 +76049,15 @@ const Planflaeche = (() => {
         };
         const mehrMenue = (anker) => {
             const r = anker.getBoundingClientRect();
-            const m = UI.menu(`<button data-m="raster">${z.zeigeRaster ? '✓ ' : ''}Raster zeigen</button>` +
+            const m = UI.menu(`<div class="grp">Planart</div>` +
+                Schaltplan.ARTEN.map(a => `<button data-m="art" data-art="${esc(a.id)}" role="menuitemradio" aria-checked="${a.id === z.plan.art}">` +
+                    `${a.id === z.plan.art ? '✓ ' : ''}${esc(a.name)}</button>`).join('') +
+                '<hr>' +
+                (z.plan.art.startsWith('stromlauf')
+                    ? '<button data-m="schaltung">⚡ Netz oder Beispielschaltung einfügen</button><hr>' : '') +
+                (z.verlauf.kannVor() ? '<button data-m="vor">↷ Wiederholen</button>' : '') +
+                '<button data-m="blatt">Ganzes Blatt zeigen</button>' +
+                `<button data-m="raster">${z.zeigeRaster ? '✓ ' : ''}Raster zeigen</button>` +
                 `<button data-m="anschluesse">${z.zeigeAnschluesse ? '✓ ' : ''}Anschlusspunkte zeigen</button>` +
                 `<button data-m="nummern">${z.zeigeNummern ? '✓ ' : ''}Anschlussnummern zeigen</button>` +
                 '<hr>' +
@@ -74590,6 +76075,14 @@ const Planflaeche = (() => {
                     return;
                 m.remove();
                 const was = b.dataset.m;
+                if (was === 'art')
+                    return artSetzen(b.dataset.art || '');
+                if (was === 'vor')
+                    return vorwaerts();
+                if (was === 'blatt')
+                    return gleitend(() => { z.ansicht = { zoom: 1, x: 0, y: 0 }; ansichtVomNutzer = true; ansichtAnwenden(); });
+                if (was === 'schaltung')
+                    return schaltungMenue(anker);
                 if (was === 'pruefzentrum') {
                     pruefungOffen = true;
                     pruefPanel.hidden = false;
@@ -74678,6 +76171,7 @@ const Planflaeche = (() => {
         };
         batterie = window.BatterieAufgaben ? window.BatterieAufgaben.erstelle({
             element: batteriePanel,
+            nachStromwechsel: () => kopfMalen(),
             holePlan: () => z.plan,
             holeAuswahl: () => [...z.auswahl],
             aendere: (was) => aendere(was),
@@ -83875,6 +85369,54 @@ const ChronikDaten = {
             },
             "groesstesProblem": "Der Auftrag lässt sich in einem Bogen nicht erfüllen; die offene Liste steht deshalb als L259 da.",
             "interessantesteAnfrage": "Besser als drei Fachprogramme zugleich.",
+            "massnahmen": []
+        },
+        {
+            "datum": "2026-11-15",
+            "wochentag": "Sonntag",
+            "titel": "Der Schalter zeigt, wie er steht",
+            "wasIchWeiss": "Pull Request #208 (Zweig claude/redion2-gesamt) war offen: Schaltplan neu (E775–E780) und Redion 2 Bogen 1. Vorher hatte ich für Redurs Vertiefungsarbeit eine Offline-Simulation gebaut, in der ein Klick die Klinge eines Schalters umlegt.",
+            "nachrichten": [
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "schjuau mal die github repo und ich will das du die schalterzeichnen verbessers also wenn ich eine schalter klicke sollte sich ändern wie du mir die htmml gemacht hast und verbessere alles damit ich schneller zeichne können und pusche alles auf pr 208",
+                    "woher": "Aktueller Dialog",
+                    "gemeint": "In der Simulation soll ein Schalter beim Klicken sein Bild ändern wie in der VA-Simulation; das Zeichnen von Plänen soll schneller gehen; alles auf den Zweig von PR 208.",
+                    "besser": "„Schalter zeigen ihre Stellung beim Klicken; Leitungen ohne Werkzeugwechsel; auf PR 208.“",
+                    "besserePrompt": "Was dauert dir beim Zeichnen am längsten? Zeig es an einem Plan."
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "schua mal im github für schaltplan zeicheneund im interne für schweiz wie muss es sitn und baue es idrek im redion",
+                    "woher": "Aktueller Dialog",
+                    "gemeint": "Die Schweizer Schaltzeichen nachschlagen und Redions Zeichen danach richtigstellen.",
+                    "besser": "„Zeichne die Bauplan-Zeichen wie in meinem Lehrmittel, Seite 14.1.“",
+                    "besserePrompt": "Die Seite mit den Zeichen gleich mitgeben — die Suche im Netz fand nur Textlisten."
+                },
+                {
+                    "zeit": "nicht protokolliert",
+                    "wortlaut": "https://github.com/Redurbabat/Redion/releases/tag/lehrmittel  schu mal hier an es ist hier",
+                    "woher": "Aktueller Dialog",
+                    "gemeint": "Das Lehrmittel als PDF liegt in einem Release des Repositorys.",
+                    "besser": "—",
+                    "besserePrompt": "—"
+                }
+            ],
+            "arbeit": [
+                {
+                    "was": "Zweig claude/redion2-gesamt (PR #208): E787 (Klinge je Stellung im Register, Ergebnis.stellungen), E788 (Leitung aus der Klemme), test641 — gegen den Stand davor rot mit 12 von 15."
+                },
+                {
+                    "was": "E789: Bauplan-Zeichen nach „Fachzeichnen Teil 1“ 14.1 (offener Kreis mit Armen, Hörner-Steckdose, Kreuz-Leuchte, Quadrat-Dose), 21 neue Zeichen, `flaechen` und `arm` im Register; test642 gegen den Stand davor rot mit 29 von 33; L267 hält, was offen bleibt (Schema-3-Klemmen 1-2-4)."
+                }
+            ],
+            "zahlen": {
+                "commits": 2,
+                "entscheidungen": 3,
+                "neuePruefungen": 2
+            },
+            "groesstesProblem": "Die Norm zeigt die Ruhelage, die Simulation braucht die Stellung: gelöst, indem die Stellung nur in der Simulation gezeichnet wird.",
+            "interessantesteAnfrage": "Ein Schalter, der aussieht wie in der eigenen VA-Simulation.",
             "massnahmen": []
         }
     ],
@@ -128530,8 +130072,8 @@ const Aussehen = (() => {
         return alsText(ev).toLowerCase() === soll.toLowerCase();
     };
     const STILBLATT = {
-        dark: { '--bg': '#121417', '--bg-side': '#181a1d', '--text': '#f1f2f4', '--accent': '#6d4aff' },
-        light: { '--bg': '#ffffff', '--bg-side': '#fbfbfa', '--text': '#37352f', '--accent': '#7c3aed' },
+        dark: { '--bg': '#1c1d20', '--bg-side': '#212225', '--text': '#f5f5f7', '--accent': '#6d4aff' },
+        light: { '--bg': '#ffffff', '--bg-side': '#f6f6f8', '--text': '#1d1d1f', '--accent': '#7c3aed' },
     };
     const stilblatt = (grund) => STILBLATT[grund === 'light' ? 'light' : 'dark'] ?? {};
     const akzentWahl = (s) => {
@@ -142533,7 +144075,8 @@ const Bibliothek = (() => {
         const gesamt = liste.length;
         if (zustand.reiter === 'kuerzlich' && liste.length > DECKE_KUERZLICH)
             liste = liste.slice(0, DECKE_KUERZLICH);
-        if (zustand.reiter !== 'kuerzlich' || zustand.sortier !== 'wann') {
+        const tabellenSortierung = zustand.reiter !== 'ablage' || form() === 'liste';
+        if (tabellenSortierung && (zustand.reiter !== 'kuerzlich' || zustand.sortier !== 'wann')) {
             const wert = (p) => zustand.sortier === 'name' ? (p.text || '').toLowerCase()
                 : zustand.sortier === 'von' ? (p.erstelltVon || '').toLowerCase()
                     : zustand.sortier === 'quelle' ? quelleVon(p).text.toLowerCase()
@@ -148057,7 +149600,7 @@ const Lernwelt = (() => {
         const ktx = kennzahlKontext({ queue, stats });
         return '<div class="lw-learning">' +
             '<header class="lw-page-head"><div><p>Lernzentrale</p><h2>' +
-            (fokus ? esc(fokus.label) : zustand.themaId ? esc(aktivesFach()?.name || '') : 'Dein erklärbarer Lernplan') + '</h2><span>SM-2 bleibt der fachliche Plan. Es gibt keine stille Migration.</span></div>' +
+            (fokus ? esc(fokus.label) : zustand.themaId ? esc(aktivesFach()?.name || '') : 'Dein erklärbarer Lernplan') + '</h2><span>Zuerst die Fehler, dann was fällig ist, dann Neues.</span></div>' +
             '<button type="button" data-lw-action="learning-classic">Klassische Lernansicht</button></header>' +
             '<section class="lw-metrics">' +
             merkbar('faellige-fehler', ktx) + merkbar('faellige-karten', ktx) + merkbar('neue-karten', ktx) +

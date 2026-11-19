@@ -280,12 +280,8 @@ const Bibliothek = (() => {
         const gesamt = liste.length;
         if (zustand.reiter === 'kuerzlich' && liste.length > DECKE_KUERZLICH)
             liste = liste.slice(0, DECKE_KUERZLICH);
-        /* In der Ablage sind Ordner und Namen die verlässliche Ordnung (E380).
-       Die frei sortierbare Tabelle behält die gewählte Spaltensortierung;
-       für Dokumentkarten/Regal darf das Standardfeld „wann“ die
-       Ordner-zuerst-Reihenfolge nicht nachträglich überschreiben. */
-    const tabellenSortierung = zustand.reiter !== 'ablage' || form() === 'liste';
-    if (tabellenSortierung && (zustand.reiter !== 'kuerzlich' || zustand.sortier !== 'wann')) {
+        const tabellenSortierung = zustand.reiter !== 'ablage' || form() === 'liste';
+        if (tabellenSortierung && (zustand.reiter !== 'kuerzlich' || zustand.sortier !== 'wann')) {
             const wert = (p) => zustand.sortier === 'name' ? (p.text || '').toLowerCase()
                 : zustand.sortier === 'von' ? (p.erstelltVon || '').toLowerCase()
                     : zustand.sortier === 'quelle' ? quelleVon(p).text.toLowerCase()

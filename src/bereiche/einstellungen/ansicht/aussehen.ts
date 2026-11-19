@@ -373,8 +373,10 @@ const Aussehen = (() => {
      dem Stilblatt; `cssRules` ist unter file:// gesperrt, also stehen sie
      hier, und `test584` §6 vergleicht die Karte mit dem gerechneten Stil. */
   const STILBLATT: Record<string, Record<string, string>> = {
-    dark:  { '--bg': '#121417', '--bg-side': '#181a1d', '--text': '#f1f2f4', '--accent': '#6d4aff' },
-    light: { '--bg': '#ffffff', '--bg-side': '#fbfbfa', '--text': '#37352f', '--accent': '#7c3aed' },
+    /* Seit Redion 2 (E782) kommen die Werte aus `redion2.css`, nicht mehr aus
+       dunkel.css/hell.css — die Schicht steht zuletzt und gewinnt. */
+    dark:  { '--bg': '#1c1d20', '--bg-side': '#212225', '--text': '#f5f5f7', '--accent': '#6d4aff' },
+    light: { '--bg': '#ffffff', '--bg-side': '#f6f6f8', '--text': '#1d1d1f', '--accent': '#7c3aed' },
   };
   const stilblatt = (grund: string): Record<string, string> =>
     STILBLATT[grund === 'light' ? 'light' : 'dark'] ?? {};

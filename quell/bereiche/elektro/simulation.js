@@ -431,7 +431,7 @@ const Stromfluss = (() => {
         ok: false, fehler, spannung: [], spannungWinkel: [], wechsel: false, komplex: false,
         werte: {}, teilwerte: {}, stromNetze: [], netzStrom: [],
         spulen: {}, annahmen: [], warnungen, durchgaenge: 0, leitungNetz: {}, maxStrom: 0,
-        verbindungen: [], anschlussfehler: []
+        verbindungen: [], anschlussfehler: [], stellungen: {}
     });
     const KONTAKT = 1e-3;
     const SCHWELLE = 1e-9;
@@ -813,7 +813,8 @@ const Stromfluss = (() => {
             verbindungen: eintraege
                 .filter(e => !(e.art === 'U' && e.wert !== 0))
                 .map(e => [e.a, e.b]),
-            anschlussfehler: []
+            anschlussfehler: [],
+            stellungen: Object.assign({}, stellung)
         };
     };
     const rechne = (plan, stellung = {}, vorher, zeitAusgaenge) => {
@@ -836,6 +837,7 @@ const Stromfluss = (() => {
                     stand[t.id] = 1;
             });
         const mitFehlern = (e) => {
+            e.stellungen = Object.assign({}, stand);
             e.anschlussfehler = anschlussfehler(plan, netzInfo, e);
             e.anschlussfehler.forEach(f => e.warnungen.push(`${f.was} ${f.warum}`));
             return e;

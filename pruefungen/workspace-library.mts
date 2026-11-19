@@ -86,7 +86,7 @@ try {
           id: (card as HTMLElement).dataset.id || '',
           name: card.querySelector('.bib-deckel-name b')?.textContent?.trim() || ''
         })));
-      assert.equal(order[0].id, ids.sub, 'Ein Ordner bleibt vor den neueren Dokumenten');
+      assert.equal(order[0]?.id, ids.sub, 'Ein Ordner bleibt vor den neueren Dokumenten');
       const names = order.slice(1).map(card => card.name);
       assert.deepEqual(names, names.slice().sort((a,b) =>
         a.localeCompare(b, 'de', { sensitivity: 'base', numeric: true })),

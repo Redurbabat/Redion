@@ -325,6 +325,18 @@ const Planflaeche = (() => {
     return ohneRaster ? { x, y } : { x: Schaltplan.rasten(x), y: Schaltplan.rasten(y) };
   };
 
+  /** Anschlussfang in Bildschirm-Pixeln statt festen Plankoordinaten.
+   * Dadurch bleibt die Trefferzone beim Zoomen und auf Retina-Displays
+   * ungefähr gleich gross. Bei ungültiger Matrix gilt der alte Radius. */
+  const anschlussFangRadius = (svg: SVGSVGElement, pointerType?: string): number => {
+    const matrix = svg.getScreenCTM();
+    if (!matrix) return 14;
+    const scale = Math.hypot(matrix.a, matrix.b);
+    if (!Number.isFinite(scale) || scale <= 0) return 14;
+    const pixel = pointerType === 'touch' ? 24 : 12;
+    return Math.min(42, Math.max(3, pixel / scale));
+  };
+
   /* Der Radierer gehört dem Menschen, nicht dem Plan — wie die Favoriten
      (oben) und wie der Radierer im PDF (`zeichnen:radierer`, E352/E576). */
   const RADIERER = 'elektro:radierer';
@@ -507,6 +519,41 @@ const Planflaeche = (() => {
     /* Die Kontextleiste bleibt ausserhalb der ersetzten SVG-Leinwand.
      * Aktionen verwenden dieselben vorhandenen aendere-/Undo-Funktionen wie der
      * Fuss. Sie ist kein zweiter Editor und speichert keinen zusätzlichen Zustand. */
+    /* DER EINSTIEG IN EINEN LEEREN PLAN (E779). Bis hierher stand auf einer
+       leeren Fläche nur das Raster; der Hinweis, wie es losgeht, stand klein
+       in der Fusszeile. Jetzt steht in der Mitte eine Karte mit den zwei
+       Wegen: ein Bauteil aus der Palette, oder eine fertige Schaltung. Sie
+       geht beim ersten Bauteil, und während die Palette offen ist oder ein
+       anderes Werkzeug als „Auswahl" gewählt ist, steht sie nicht im Weg. */
+    const einstieg = document.createElement('div');
+    einstieg.className = 'sp-einstieg';
+    einstieg.hidden = true;
+    buehne.appendChild(einstieg);
+    const einstiegMalen = (): void => {
+      const leer = !z.plan.teile.length && !z.plan.leitungen.length && !z.plan.texte.length;
+      const zeigen = leer && !z.simulation && !paletteOffen && !studioOffen && !z.gewaehltesZeichen && z.werkzeug === 'zeigen';
+      if (einstieg.hidden === !zeigen && (!zeigen || einstieg.dataset.art === z.plan.art)) return;
+      einstieg.hidden = !zeigen;
+      if (!zeigen) return;
+      einstieg.dataset.art = z.plan.art;
+      einstieg.innerHTML =
+        `<div class="sp-einstieg-karte" role="group" aria-label="Leerer Schaltplan">` +
+        `<span class="sp-einstieg-zeichen" aria-hidden="true">${symbol('bolt', 26)}</span>` +
+        `<strong>Ein leerer Schaltplan</strong>` +
+        `<p>Zieh Bauteile aus der Palette auf die Fläche${z.plan.art.startsWith('stromlauf') ? ' oder beginne mit einer fertigen Schaltung' : ''}.</p>` +
+        `<div class="sp-einstieg-knoepfe">` +
+        `<button type="button" class="sp-einstieg-haupt" data-einstieg="palette">${symbol('plus', 18)} Bauteil hinzufügen</button>` +
+        (z.plan.art.startsWith('stromlauf')
+          ? `<button type="button" data-einstieg="schaltung">⚡ Beispielschaltung</button>` : '') +
+        `</div></div>`;
+    };
+    einstieg.addEventListener('click', e => {
+      const b = (e.target as Element).closest<HTMLElement>('[data-einstieg]');
+      if (!b) return;
+      if (b.dataset.einstieg === 'schaltung') return schaltungMenue(b);
+      if (!paletteOffen) dock.querySelector<HTMLElement>('[data-a="palette-toggle"]')?.click();
+      palette.querySelector<HTMLInputElement>('.sp-suche input')?.focus({ preventScroll: true });
+    });
     const kontextleiste = document.createElement('div');
     kontextleiste.className = 'sp-kontextleiste';
     kontextleiste.setAttribute('role', 'toolbar');
@@ -559,63 +606,142 @@ const Planflaeche = (() => {
       wurzel.classList.toggle('sp-fach-offen', !fachSchliessen.hidden);
     };
 
-    /* --- Der Kopf: Planart, Werkzeuge, Ansicht --------------------------- */
+    /* --- Der Kopf (E777) und das Werkzeug-Dock (E778) ----------------------
+     * Redur, 9. November 2026: „die aktuele webseite gefällt mir gar nicht
+     * wie die ausieht wie man berabeitet". Am Rechner stand die seltenste
+     * Einstellung — die Planart, ein grosses Auswahlfeld — als erstes und
+     * grösstes Element im Kopf, „▶ Strom" klein rechts daneben; am Telefon
+     * brauchte der Kopf zwei Zeilen. Jetzt:
+     *
+     *   links   „▶ Strom" (E773, unverändert der Knopf, den Redur wollte)
+     *           und „⚡ Schaltung"
+     *   rechts  die Planart als ruhiger Chip, ↶ ↷, „✦ Bereiche ▾", „…", ⛶
+     *
+     * Am Telefon (Fläche schmaler als 640 px) bleibt EINE Zeile: Chip und
+     * „Schaltung" wandern ins „…" (dort mit der jetzigen Planart als
+     * Häkchen), „Bereiche" zeigt nur sein Zeichen.
+     *
+     * DAS DOCK WIRD NICHT MEHR NEU GEBAUT. Bis hierher schrieb `kopfMalen`
+     * bei jeder Änderung den ganzen Kopf samt Dock neu — und das Dock spielte
+     * dabei jedes Mal seine Ankunft (`sp-dock-ein`) von vorn: jeder Strich,
+     * jedes Verschieben liess die Werkzeugleiste kurz hüpfen. Jetzt steht es
+     * einmal und ändert nur seinen Zustand; die Marke des aktiven Werkzeugs
+     * gleitet von Knopf zu Knopf (E780). */
+    const WERKZEUGE: ReadonlyArray<{ id: Werkzeug; name: string; sym: string; taste: string; titel: string }> = [
+      { id: 'zeigen', name: 'Auswahl', sym: 'inkPointer', taste: '1', titel: 'Auswählen und verschieben' },
+      { id: 'leitung', name: 'Leitung', sym: 'inkConnector', taste: '2', titel: 'Leitung ziehen' },
+      { id: 'text', name: 'Text', sym: 'inkText', taste: '3', titel: 'Beschriftung setzen' },
+      /* E762: L1, L2, L3, N und PE selbst zeichnen. */
+      { id: 'schiene', name: 'Schiene', sym: 'busbar', taste: '4', titel: 'Schiene zeichnen — L1, L2, L3, N, PE' },
+      { id: 'radieren', name: 'Radierer', sym: 'inkEraser', taste: '5', titel: 'Radieren — über die Fläche wischen' }
+    ];
+    const symbol = (id: string, gr = 20): string =>
+      (typeof Register !== 'undefined' && Register.symbole) ? Register.symbole.alsSvg(id, gr) : '';
+    const kopfLinks = document.createElement('span');
+    kopfLinks.className = 'sp-links';
+    const dock = document.createElement('span');
+    dock.className = 'sp-werkzeuge sp-mit-marke';
+    dock.setAttribute('role', 'toolbar');
+    dock.setAttribute('aria-label', 'Zeichenwerkzeuge');
+    dock.innerHTML =
+      `<span class="sp-wz-marke" aria-hidden="true"></span>` +
+      WERKZEUGE.map(w =>
+        `<button type="button" class="sp-wz" data-wz="${w.id}" title="${esc(w.titel)} (${w.taste})" ` +
+        `aria-label="${esc(w.titel)}" aria-keyshortcuts="${w.taste}" aria-pressed="false">` +
+        `<span class="sp-wz-zeichen" aria-hidden="true">${symbol(w.sym)}</span>` +
+        `<span class="sp-wz-name" aria-hidden="true">${esc(w.name)}</span></button>`).join('') +
+      `<span class="sp-dock-trenner" aria-hidden="true"></span>` +
+      `<button type="button" class="sp-palette-knopf" data-a="palette-toggle" aria-label="Bauteilpalette öffnen oder schliessen" ` +
+      `aria-keyshortcuts="B" aria-expanded="false" title="Bauteile ausklappen und direkt auf die Zeichnung ziehen (B)">` +
+      `<span class="sp-wz-zeichen" aria-hidden="true">${symbol('plus')}</span><span class="sp-wz-name">Bauteile</span></button>` +
+      `<button type="button" class="sp-dock-fit" data-a="zoom-alles" title="Einpassen: den ganzen Schaltplan zeigen (0)" ` +
+      `aria-label="Einpassen — den ganzen Schaltplan zeigen" aria-keyshortcuts="0">` +
+      `<span class="sp-wz-zeichen" aria-hidden="true">${symbol('maximize')}</span><span class="sp-wz-name" aria-hidden="true">Einpassen</span></button>`;
+    const kopfRechts = document.createElement('span');
+    kopfRechts.className = 'sp-rechts';
+    kopf.append(kopfLinks, dock, kopfRechts);
+    /** Die Marke unter dem aktiven Werkzeug: sie wandert mit `transform`,
+     *  die Knöpfe bleiben, wo sie sind (E780, test541 „kein Hit-Target
+     *  bewegt sich"). Gemessen wird an den Knöpfen selbst. */
+    let markeGesetzt = false;
+    const markeSetzen = (): void => {
+      const marke = dock.querySelector<HTMLElement>('.sp-wz-marke');
+      const an = dock.querySelector<HTMLElement>('.sp-wz.an');
+      if (!marke) return;
+      if (!an || !an.offsetWidth) { marke.style.opacity = '0'; return; }
+      const x = an.offsetLeft, y = an.offsetTop;
+      /* Die Grösse springt (sie ändert sich höchstens, wenn ein Name länger
+         ist), der Ort gleitet. Beim ersten Setzen gleitet nichts. */
+      marke.style.width = an.offsetWidth + 'px';
+      marke.style.height = an.offsetHeight + 'px';
+      if (!markeGesetzt) marke.style.transition = 'none';
+      marke.style.transform = `translate(${x}px, ${y}px)`;
+      marke.style.opacity = '1';
+      if (!markeGesetzt) { void marke.offsetWidth; marke.style.transition = ''; markeGesetzt = true; }
+    };
+    const dockAktualisieren = (): void => {
+      dock.querySelectorAll<HTMLElement>('.sp-wz').forEach(b => {
+        const an = b.dataset.wz === z.werkzeug;
+        b.classList.toggle('an', an);
+        b.setAttribute('aria-pressed', String(an));
+      });
+      const pk = dock.querySelector<HTMLElement>('.sp-palette-knopf');
+      if (pk) { pk.classList.toggle('an', paletteOffen); pk.setAttribute('aria-expanded', String(paletteOffen)); }
+      markeSetzen();
+    };
+    if (typeof ResizeObserver === 'function') new ResizeObserver(() => {
+      if (!wurzel.isConnected) return;
+      markeSetzen();
+    }).observe(dock);
+
     const kopfMalen = (): void => {
-      const art = Schaltplan.artVon(z.plan.art);
       fachStatus();
-      kopf.innerHTML =
-        `<select class="sp-art" aria-label="Planart">` +
-        (Schaltplan.ARTEN as any[]).map(a =>
-          `<option value="${esc(a.id)}"${a.id === z.plan.art ? ' selected' : ''}>` +
-          `${esc(a.name)}</option>`).join('') + '</select>' +
-        `<span class="sp-arterkl">${esc(art.erklaerung)}</span>` +
-        `<span class="sp-werkzeuge">` +
-        ([['zeigen', '↖', 'Auswählen und verschieben'],
-          ['leitung', '⌐', 'Leitung ziehen'],
-          ['text', 'T', 'Beschriftung setzen'],
-          /* E762: L1, L2, L3, N und PE selbst zeichnen. */
-          ['schiene', '☰', 'Schiene zeichnen — L1, L2, L3, N, PE'],
-          ['radieren', '⌫', 'Radieren — über die Fläche wischen']] as Array<[Werkzeug, string, string]>).map(([id, ic, t]) =>
-          `<button class="sp-wz${z.werkzeug === id ? ' an' : ''}" data-wz="${id}" ` +
-          `title="${esc(t)}" aria-label="${esc(t)}" aria-pressed="${z.werkzeug === id}">${ic}</button>`).join('') +
-        `<span class="sp-dock-trenner" aria-hidden="true"></span>` +
-        `<button type="button" class="sp-palette-knopf${paletteOffen ? ' an' : ''}" data-a="palette-toggle" aria-label="Bauteilpalette öffnen oder schliessen" aria-expanded="${paletteOffen}" title="Bauteile ausklappen und direkt auf die Zeichnung ziehen">▦ <span>Bauteile</span></button>` +
-        `<button type="button" class="sp-dock-fit" data-a="zoom-alles" title="Gesamten Schaltplan anzeigen (0)" aria-label="Gesamten Schaltplan anzeigen">⤢</button>` +
-        `</span>` +
-        `<span class="sp-rechts">` +
-        /* Nur im Stromlaufplan: im Installationsplan (Grundriss) gibt es
-           keine Sammelschienen. */
-        (z.plan.art.startsWith('stromlauf')
-          ? `<button class="sp-netz" data-a="netz" ` +
-            `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
-            `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
-          : '') +
-        `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" aria-haspopup="menu">✦ Bereiche ▾</button>` +
+      dockAktualisieren();
+      einstiegMalen();
+      const stromAn = !!(z.simulation || (z.plan.batterieUebung && batterie?.stromAn()));
+      kopfLinks.innerHTML =
         /* EIN UND AUS (E773): wieder der Knopf „▶ Strom" / „◼ Strom", wie vor
            E772. Redur am 2. November 2026: „Für ein-aus sollte wie früher
            sein, damals war besser." Hebel und Glühfaden setzt motion.ts
            (E535) an `.sp-start`; der Text bleibt echter Text. Was E772 dazu
            gebracht hat, bleibt: ein ungeprüfter Relais-Import sperrt den
-           Strom und sagt im Titel, warum; eingeschaltet geht das Labor auf. */
-        `<button type="button" class="sp-start${z.simulation || (z.plan.batterieUebung && batterie?.stromAn()) ? ' an' : ''}${z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ? ' sp-strom-ungeprueft' : ''}" ` +
-        `data-a="simulation" ` +
+           Strom und sagt im Titel, warum; eingeschaltet geht das Labor auf.
+           Seit E777 steht er als erstes im Kopf — er ist die Handlung, für
+           die man einen Schaltplan zeichnet. */
+        `<button type="button" class="sp-start${stromAn ? ' an' : ''}${z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ? ' sp-strom-ungeprueft' : ''}" ` +
+        `data-a="simulation" aria-keyshortcuts="P" ` +
         `title="${z.plan.batterieUebung ? (batterie?.stromAn() ? 'Batteriestrom ausschalten' : 'Batterieschaltung einschalten und U, R, I messen') :
           z.plan.relaisLegacy && !z.plan.relaisLegacy.verifiziert ?
           'Original-Verdrahtung ungeprüft: in der Relais-Werkstatt zuerst prüfen und freigeben.' :
-          z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
-        `aria-pressed="${!!(z.simulation || (z.plan.batterieUebung && batterie?.stromAn()))}" ` +
-        `aria-label="${z.simulation || (z.plan.batterieUebung && batterie?.stromAn()) ? 'Strom ausschalten' : 'Strom einschalten'}">` +
-        `${z.simulation || (z.plan.batterieUebung && batterie?.stromAn()) ? '◼' : '▶'} Strom</button>` +
-        `<button data-a="zurueck" title="Rückgängig" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>↶</button>` +
-        `<button data-a="vorwaerts" title="Wiederholen" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>↷</button>` +
-        `<button data-a="mehr" title="Mehr" aria-label="Mehr">…</button>` +
+          z.simulation ? 'Simulation anhalten (P)' : 'Strom fliessen lassen (P)'}" ` +
+        `aria-pressed="${stromAn}" ` +
+        `aria-label="${stromAn ? 'Strom ausschalten' : 'Strom einschalten'}">` +
+        `${stromAn ? '◼' : '▶'} Strom</button>` +
+        /* Nur im Stromlaufplan: im Installationsplan (Grundriss) gibt es
+           keine Sammelschienen. */
+        (z.plan.art.startsWith('stromlauf')
+          ? `<button type="button" class="sp-netz" data-a="netz" ` +
+            `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
+            `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
+          : '');
+      kopfRechts.innerHTML =
+        /* Die Planart: ein ruhiger Chip. Sie wird einmal gewählt und selten
+           geändert; am Telefon steht sie im „…" (E777). */
+        `<select class="sp-art" aria-label="Planart" title="Planart: ${esc(Schaltplan.artVon(z.plan.art).name)}">` +
+        (Schaltplan.ARTEN as any[]).map(a =>
+          `<option value="${esc(a.id)}"${a.id === z.plan.art ? ' selected' : ''}>` +
+          `${esc(a.name)}</option>`).join('') + '</select>' +
+        `<button type="button" class="sp-kopf-knopf" data-a="zurueck" title="Rückgängig (Strg+Z)" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>${symbol('undo', 18)}</button>` +
+        `<button type="button" class="sp-kopf-knopf" data-a="vorwaerts" title="Wiederholen (Strg+Y)" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>${symbol('redo', 18)}</button>` +
+        `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" ` +
+        `aria-label="Bereiche" aria-haspopup="menu">✦<span class="sp-bereiche-wort"> Bereiche</span><span class="sp-bereiche-pfeil"> ▾</span></button>` +
+        `<button type="button" class="sp-kopf-knopf" data-a="mehr" title="Mehr: Planart, Ansicht, Ausgabe" aria-label="Mehr" aria-haspopup="menu">${symbol('dots', 18)}</button>` +
         /* Vollbild (E762): im Vollbild steht an derselben Stelle ein
            Schliessknopf mit 44 px, auch am Rechner — er ist der sichtbare
            Rückweg neben Escape. */
         (z.voll
-          ? `<button class="sp-vollzu" data-a="vollbild-zu" title="Vollbild beenden (Esc)" aria-label="Vollbild beenden">✕</button>`
-          : `<button data-a="vollbild" title="Vollbild (F)" aria-label="Vollbild">⛶</button>`) +
-        `</span>`;
+          ? `<button type="button" class="sp-vollzu" data-a="vollbild-zu" title="Vollbild beenden (Esc)" aria-label="Vollbild beenden">✕</button>`
+          : `<button type="button" class="sp-kopf-knopf" data-a="vollbild" title="Vollbild (F)" aria-label="Vollbild" aria-keyshortcuts="F">⛶</button>`);
     };
 
     /* --- Der Fuss: Ebenen und Auswahl ------------------------------------ */
@@ -908,6 +1034,8 @@ const Planflaeche = (() => {
       }
     };
 
+    /** Die Stellungen im letzten Bild (E787) — daraus „was wurde umgelegt". */
+    let zuletztGemalt: Record<string, number> = {};
     const buehneMalen = (): void => {
       const e = z.ergebnis;
       const opt: any = {
@@ -928,7 +1056,32 @@ const Planflaeche = (() => {
       /* `werte` bringt die Richtung schon mit — sie steht an jedem Messwert
          (E731). Hier ist deshalb nichts weiterzureichen ausser dem, was
          ohnehin durchgeht. */
+      /* E787: die Klinge jedes Schalters liegt so, wie er steht — auch wenn
+         die Rechnung scheitert (ein Kurzschluss hat eine Stellung, die ihn
+         auslöst, und genau die soll man sehen). Was seit dem letzten Bild
+         umgelegt wurde, von Hand oder von einer Spule, zieht seine Klinge
+         nach. */
+      if (z.simulation) {
+        const jetzt: Record<string, number> = Object.assign({}, z.stellungen, e && e.stellungen ? e.stellungen : {});
+        const umgelegt = new Set<string>();
+        (z.plan.teile as any[]).forEach(t => {
+          const id = String(t.id);
+          if ((jetzt[id] || 0) !== (zuletztGemalt[id] || 0)) umgelegt.add(id);
+        });
+        opt.stellungen = jetzt;
+        const namen: Record<string, string> = {};
+        (z.plan.teile as any[]).forEach(t => {
+          const { st } = schaltart(t.zeichen);
+          if (st.length < 2) return;
+          const s = st[Math.max(0, Math.min(st.length - 1, jetzt[t.id] || 0))];
+          if (s && s.name) namen[t.id] = s.name;
+        });
+        opt.stellungsnamen = namen;
+        if (umgelegt.size) opt.umgelegt = umgelegt;
+        zuletztGemalt = jetzt;
+      } else zuletztGemalt = {};
       leinwand.innerHTML = Schaltplan.alsSvg(z.plan, opt);
+      tischLegen();
       ansichtAnwenden();
       buehne.classList.toggle('sp-laeuft', z.simulation);
       if (!z.simulation) return;
@@ -1015,6 +1168,51 @@ const Planflaeche = (() => {
         : `${+x.toFixed(3)} ${+y.toFixed(3)} ${+(B / zoom).toFixed(3)} ${+(H / zoom).toFixed(3)}`);
       const wert = zoomleiste.querySelector('.sp-zoomwert');
       if (wert) wert.textContent = Math.round(zoom * 100) + ' %';
+      tischZiehen();
+    };
+    /* --- Der Tisch unter dem Blatt (E776) -----------------------------------
+     * Das SVG füllt seit E776 die ganze Bühne; was ausserhalb des Blatts zu
+     * sehen ist, war bis hierher leer — am Telefon zwei Bänder ohne Raster,
+     * die aussahen wie ein Fehler. Jetzt liegt dort dasselbe Raster, nur
+     * blasser (der „Tisch"), und ein feiner Rand zeigt, wo das Blatt endet
+     * (dort endet auch, wo die Palette ein Teil absetzt). Beides gehört nur
+     * der Fläche: `alsSvg` — und damit das gespeicherte Bild — bleibt Zeichen
+     * für Zeichen, wie es war (test625 §0). */
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const tischLegen = (): void => {
+      const svg = svgJetzt();
+      if (!svg) return;
+      const B = Number(z.plan.breite) || 800, H = Number(z.plan.hoehe) || 700;
+      const blattRaster = svg.querySelector('rect[fill="url(#sp-raster)"]');
+      const rand = document.createElementNS(SVG_NS, 'rect');
+      rand.setAttribute('class', 'sp-blattrand');
+      rand.setAttribute('x', '0'); rand.setAttribute('y', '0');
+      rand.setAttribute('width', String(B)); rand.setAttribute('height', String(H));
+      rand.setAttribute('fill', 'none'); rand.setAttribute('pointer-events', 'none');
+      if (blattRaster) {
+        const tisch = document.createElementNS(SVG_NS, 'rect');
+        tisch.setAttribute('class', 'sp-tisch');
+        tisch.setAttribute('fill', 'url(#sp-raster)');
+        tisch.setAttribute('pointer-events', 'none');
+        blattRaster.before(tisch);
+        blattRaster.after(rand);
+      } else {
+        const defs = svg.querySelector(':scope > defs:last-of-type');
+        if (defs) defs.after(rand); else svg.prepend(rand);
+      }
+    };
+    const tischZiehen = (): void => {
+      const svg = svgJetzt();
+      const tisch = svg?.querySelector('.sp-tisch');
+      if (!svg || !tisch) return;
+      const r = svg.getBoundingClientRect();
+      if (r.width < 1 || r.height < 1) return;
+      const a = planAm(r.left, r.top), b = planAm(r.right, r.bottom);
+      const R = Register.fachzeichen.RASTER || 10;
+      const x = Math.floor(a.x / R) * R - R, y = Math.floor(a.y / R) * R - R;
+      tisch.setAttribute('x', String(x)); tisch.setAttribute('y', String(y));
+      tisch.setAttribute('width', String(Math.ceil((b.x - x) / R) * R + R));
+      tisch.setAttribute('height', String(Math.ceil((b.y - y) / R) * R + R));
     };
     /** Wie das Blatt bei Zoom 1 im Kasten des SVG steht: Massstab und linke obere Ecke. */
     const schirm = (): { s1: number; cx: number; cy: number } => {
@@ -1031,6 +1229,7 @@ const Planflaeche = (() => {
     };
     /** Zoom setzen, sodass der Planpunkt `P` am Bildschirmpunkt (sx, sy) steht. */
     const zoomSetzen = (zoom: number, P: Punkt, sx: number, sy: number): void => {
+      ansichtVomNutzer = true;
       const zz = Math.round(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom)) * 1000) / 1000;
       const g = schirm(), k = g.s1 * zz;
       z.ansicht = { zoom: zz, x: P.x - (sx - g.cx) / k, y: P.y - (sy - g.cy) / k };
@@ -1046,17 +1245,133 @@ const Planflaeche = (() => {
       }
       zoomSetzen(z.ansicht.zoom * faktor, planAm(sx, sy), sx, sy);
     };
-    const allesZeigen = (): void => { z.ansicht = { zoom: 1, x: 0, y: 0 }; ansichtAnwenden(); };
+    /* --- Einpassen (E776) ----------------------------------------------------
+     * Redur, 9. November 2026: der Plan war am Telefon winzig. Die Ansicht
+     * zeigte beim Öffnen immer das ganze BLATT (800 × 500), auch wenn darauf
+     * drei Teile in einer Reihe standen — ein Bauteil mass 19 px, darüber
+     * und darunter je ein Drittel leere Fläche. Jetzt zeigt sie beim Öffnen,
+     * bei jeder Grössenänderung (Fenster, Vollbild, Drehen) und auf
+     * „Einpassen" den BELEGTEN Bereich mit einem Rand. Ein leerer Plan zeigt
+     * weiter das ganze Blatt bei 100 %.
+     *
+     * Wer selbst zoomt oder verschiebt, behält seine Ansicht
+     * (`ansichtVomNutzer`), bis er „Einpassen" (⤢ oder 0) drückt — sonst
+     * nähme ihm jedes Drehen des Telefons die Stelle weg, an der er war.
+     * Gezoomt wird weiter über die viewBox: Einpassen baut nichts neu. */
+    let ansichtVomNutzer = false;
+    /** Höchstens so viele Bildpunkte je Planeinheit beim Einpassen: drei
+     *  Teile auf einem breiten Bildschirm sollen gross, aber nicht riesig
+     *  werden (ein Zeichen von 40 Einheiten misst dann höchstens 70 px). */
+    const EINPASSEN_MAX = 1.75;
+    /** Der belegte Bereich des Plans in Planeinheiten — Teile mit BMK und
+     *  Beschriftung, Leitungen, Texte. `null`, wenn nichts darauf steht. */
+    const belegt = (): { x1: number; y1: number; x2: number; y2: number } | null => {
+      let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+      const nimm = (ax: number, ay: number, bx: number, by: number): void => {
+        if (![ax, ay, bx, by].every(Number.isFinite)) return;
+        x1 = Math.min(x1, ax); y1 = Math.min(y1, ay); x2 = Math.max(x2, bx); y2 = Math.max(y2, by);
+      };
+      (z.plan.teile as any[]).forEach(t => {
+        const m = Schaltplan.teilMasse(t);
+        /* Das BMK steht rechts neben dem Zeichen (alsSvg: x = w + 6,
+           12 px Schrift); die Beschriftung darunter. Grob gemessen,
+           7 Einheiten je Zeichen — genug, damit nichts am Rand klebt. */
+        const text = Math.max(String(t.bmk || '').length * 7.5, Math.min(38, String(t.beschriftung || '').length) * 6.5);
+        nimm(t.x - 4, t.y - 4, t.x + m.w + (text ? 8 + text : 4), t.y + Math.max(m.h, t.beschriftung ? 30 : 0) + 4);
+      });
+      (z.plan.leitungen as any[]).forEach(l => (l.punkte || []).forEach((q: Punkt) => nimm(q.x, q.y, q.x, q.y)));
+      (z.plan.texte as any[]).forEach(x => nimm(x.x, x.y - 13, x.x + String(x.t || '').length * 7.5, x.y + 4));
+      return Number.isFinite(x1) ? { x1, y1, x2, y2 } : null;
+    };
+    const einpassen = (): void => {
+      ansichtVomNutzer = false;
+      const svg = svgJetzt();
+      const r = svg ? svg.getBoundingClientRect() : null;
+      const kasten = belegt();
+      if (!svg || !r || r.width < 40 || r.height < 40 || !kasten) {
+        z.ansicht = { zoom: 1, x: 0, y: 0 }; ansichtAnwenden(); return;
+      }
+      const g = schirm();
+      /* Oben bleibt ein Streifen frei: dort erscheint die Kontextleiste,
+         sobald etwas gewählt ist — sonst läge sie auf dem obersten Teil, und
+         der zweite Tipp eines Doppeltipps träfe sie statt des Teils
+         (test630 §5). */
+      const oben = r.height > 300 ? 64 : 0;
+      const r0 = r;
+      const r1 = { left: r0.left, top: r0.top + oben, width: r0.width, height: r0.height - oben };
+      /* Der Rand: ein Raster mehr als das Nötigste, auf grossen Plänen ein
+         wenig mehr — damit ein Teil am Rand noch zu greifen ist. */
+      const rand = Math.max(24, 0.04 * Math.max(kasten.x2 - kasten.x1, kasten.y2 - kasten.y1));
+      const bw = kasten.x2 - kasten.x1 + 2 * rand, bh = kasten.y2 - kasten.y1 + 2 * rand;
+      const k = Math.min(r1.width / bw, r1.height / bh, EINPASSEN_MAX);
+      const zoom = Math.round(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, k / g.s1)) * 1000) / 1000;
+      const kk = g.s1 * zoom;
+      const mx = (kasten.x1 + kasten.x2) / 2, my = (kasten.y1 + kasten.y2) / 2;
+      const ansicht = { zoom, x: mx - (r1.left + r1.width / 2 - g.cx) / kk, y: my - (r1.top + r1.height / 2 - g.cy) / kk };
+      /* Füllt der Inhalt ohnehin das Blatt, bleibt es bei der alten
+         Grundstellung „ganzes Blatt, 100 %" — Zeichen für Zeichen dieselbe
+         viewBox wie vor E776. */
+      const B = Number(z.plan.breite) || 800, H = Number(z.plan.hoehe) || 700;
+      z.ansicht = (Math.abs(zoom - 1) < 0.03 && Math.abs(ansicht.x) < 0.03 * B && Math.abs(ansicht.y) < 0.03 * H)
+        ? { zoom: 1, x: 0, y: 0 } : ansicht;
+      ansichtAnwenden();
+    };
+    /* GLEITEN STATT SPRINGEN (E780). Ein Knopfdruck auf Einpassen, + oder −
+       setzt die viewBox sofort — Treffer und Messungen stimmen ab dem
+       ersten Bild —, und die Leinwand gleitet mit einem `transform` vom
+       alten Bild ins neue (FLIP). Nur transform; bei weniger Bewegung
+       (System oder „Ruhige Darstellung") wird gesetzt. Rad und Finger
+       gleiten nie: sie folgen der Hand. */
+    const ruhig = (): boolean =>
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.body.dataset.bewegung === 'ruhig';
+    const gleitend = (setzen: () => void): void => {
+      const svg = svgJetzt();
+      const vor = svg && !ruhig() ? svg.getScreenCTM() : null;
+      setzen();
+      const nach = vor ? svgJetzt()?.getScreenCTM() : null;
+      if (!vor || !nach || !nach.a || typeof leinwand.animate !== 'function') return;
+      const r = vor.a / nach.a;
+      if (Math.abs(r - 1) < 0.002 && Math.abs(vor.e - nach.e) < 0.5 && Math.abs(vor.f - nach.f) < 0.5) return;
+      const L = leinwand.getBoundingClientRect();
+      const tx = vor.e - L.left - r * (nach.e - L.left), ty = vor.f - L.top - r * (nach.f - L.top);
+      const kurve = getComputedStyle(document.documentElement).getPropertyValue('--ease-enter').trim() || 'ease-out';
+      buehne.classList.add('sp-gleitet');
+      const a = leinwand.animate(
+        [{ transformOrigin: '0 0', transform: `translate(${tx}px, ${ty}px) scale(${r})` },
+         { transformOrigin: '0 0', transform: 'none' }],
+        { duration: 200, easing: kurve });
+      const fertig = (): void => buehne.classList.remove('sp-gleitet');
+      a.onfinish = fertig; a.oncancel = fertig;
+    };
+    const allesZeigen = (): void => gleitend(einpassen);
     const schwenken = (dx: number, dy: number): void => {
+      ansichtVomNutzer = true;
       const g = schirm(), k = g.s1 * z.ansicht.zoom;
       z.ansicht = { zoom: z.ansicht.zoom, x: z.ansicht.x - dx / k, y: z.ansicht.y - dy / k };
       ansichtAnwenden();
     };
+    /* Beim Öffnen und bei jeder Grössenänderung der Bühne. Der erste Aufruf
+       kommt, sobald die Fläche im Dokument steht und gemessen ist — vor dem
+       ersten Bild, also ohne Sprung. Eine Fläche, die aus dem Dokument
+       genommen wird (die Seite zeichnet neu), meldet 0 × 0 und hört auf. */
+    let buehnenMass = '';
+    const buehnenBeobachter = typeof ResizeObserver === 'function' ? new ResizeObserver(() => {
+      const r = buehne.getBoundingClientRect();
+      if (!wurzel.isConnected || r.width < 1 || r.height < 1) {
+        if (!wurzel.isConnected && !platzhalter) buehnenBeobachter?.disconnect();
+        return;
+      }
+      const mass = `${Math.round(r.width)}×${Math.round(r.height)}`;
+      if (mass === buehnenMass) return;
+      buehnenMass = mass;
+      if (ansichtVomNutzer) ansichtAnwenden(); else einpassen();
+    }) : null;
+    buehnenBeobachter?.observe(buehne);
     zoomleiste.addEventListener('click', e => {
       const b = (e.target as Element).closest<HTMLElement>('[data-a]');
       if (!b) return;
-      if (b.dataset.a === 'zoom-plus') zoomUm(1.25);
-      else if (b.dataset.a === 'zoom-minus') zoomUm(0.8);
+      if (b.dataset.a === 'zoom-plus') gleitend(() => zoomUm(1.25));
+      else if (b.dataset.a === 'zoom-minus') gleitend(() => zoomUm(0.8));
       else if (b.dataset.a === 'zoom-alles') allesZeigen();
     });
 
@@ -1158,6 +1473,7 @@ const Planflaeche = (() => {
       z.auswahl.clear(); z.auswahl.add(eintrag.id);
       z.werkzeug = 'zeigen'; z.gewaehltesZeichen = '';
       const zoom = Math.max(1.5, z.ansicht.zoom);
+      ansichtVomNutzer = true;
       z.ansicht = {zoom: Math.min(3, zoom),
         x: p.x - z.plan.breite / (2 * Math.min(3, zoom)),
         y: p.y - z.plan.hoehe / (2 * Math.min(3, zoom))};
@@ -1174,6 +1490,7 @@ const Planflaeche = (() => {
         const links=Math.min(...punkte.map(p=>p.x)), rechts=Math.max(...punkte.map(p=>p.x));
         const oben=Math.min(...punkte.map(p=>p.y)), unten=Math.max(...punkte.map(p=>p.y));
         const zoom=Math.max(.25,Math.min(3,z.plan.breite / (rechts-links+120),z.plan.hoehe/(unten-oben+120)));
+        ansichtVomNutzer = true;
         z.ansicht={zoom,x:(links+rechts)/2-z.plan.breite/(2*zoom),
                         y:(oben+unten)/2-z.plan.hoehe/(2*zoom)};
       }
@@ -1269,6 +1586,27 @@ const Planflaeche = (() => {
       if (g) g.innerHTML = html;
     };
 
+    /* --- Leitung aus der Klemme (E788) ------------------------------------- */
+    /** Die Klemme genau unter dem Zeiger — enger gefasst als der Fang. */
+    const klemmeUnterZeiger = (svg: SVGSVGElement, roh: { x: number; y: number }, art?: string):
+        { x: number; y: number; teil: string; nr: string } | null => {
+      const m = svg.getScreenCTM();
+      const massstab = m ? Math.hypot(m.a, m.b) : 1;
+      const radius = Math.min(14, Math.max(2, (art === 'touch' ? 10 : 7) / (massstab > 0 ? massstab : 1)));
+      const f = Schaltplan.fangeAnschluss(z.plan, roh, radius);
+      return f && f.teil ? { x: f.x, y: f.y, teil: String(f.teil), nr: String(f.nr ?? '') } : null;
+    };
+    let klemmeGezeigt = '';
+    const klemmeHinweis = (k: { x: number; y: number } | null): void => {
+      const schluessel = k ? k.x + ',' + k.y : '';
+      /* Nach einem Neuzeichnen ist der Ring weg, auch wenn der Ort gleich blieb. */
+      if (schluessel === klemmeGezeigt && (!k || svgJetzt()?.querySelector('.sp-klemme-ring'))) return;
+      klemmeGezeigt = schluessel;
+      buehne.classList.toggle('sp-klemme-nah', !!k);
+      vorschau(k ? `<circle class="sp-klemme-ring" cx="${k.x}" cy="${k.y}" r="7" fill="none" ` +
+        `stroke="currentColor" stroke-width="2" opacity=".8"><title>Leitung ziehen</title></circle>` : '');
+    };
+
     /* --- Symbol setzen (Punkt 12) ---------------------------------------- */
     const setzeSymbol = (id: string, x: number, y: number): string | null => {
       if (!id || z.simulation || z.zieht || !Register.fachzeichen.holen(id)) return null;
@@ -1329,20 +1667,202 @@ const Planflaeche = (() => {
      *  wurde; zweimal eingesetzt wären es doppelte, und die Auswahl fasste
      *  beide zugleich an. */
     const vorlageEinsetzen = (v: any): void => {
+      if (z.zieht) return; // keine Einfuegung in einen noch offenen Mauszug
+      const teile = (Array.isArray(v?.teile) ? v.teile : []) as any[];
+      const leitungen = (Array.isArray(v?.leitungen) ? v.leitungen : []) as any[];
+      if (!teile.length) { UI.toast('Diese Vorlage enthaelt keine Bauteile.'); return; }
+      /* Vorlagen koennen aus aelteren Sicherungen oder importierten Dateien
+         stammen. Fehlt ein Schaltzeichen im heutigen Register, liefert
+         masse() einen 0x0-Rahmen: die Platzsuche erkannte ihn als frei
+         und speicherte ein unsichtbares, nicht bedienbares Bauteil.
+         Deshalb vor jeder Planaenderung die gesamte Vorlage pruefen. */
+      if (teile.some(t => !t || typeof t.zeichen !== 'string' ||
+          !Register.fachzeichen.holen(t.zeichen))) {
+        UI.toast('Vorlage enthaelt nicht verfuegbare Schaltzeichen.');
+        return;
+      }
+      /* Jede gespeicherte Bauteil-ID muss eindeutig sein. Das Neuzuordnen
+         der Leitungsenden verwendet eine Map von alter zu neuer ID;
+         doppelte IDs wuerden den ersten Eintrag ueberschreiben und ein
+         Leitungsende still an das falsche Bauteil haengen. Darum die
+         gesamte Vorlage vor aendere() ablehnen, statt den Plan zu
+         verfaelschen oder einen Teil der Vorlage zu uebernehmen. */
+      const vorlagenIds = teile.map(t => t.id);
+      if (vorlagenIds.some(id => typeof id !== 'string' || !id.trim()) ||
+          new Set(vorlagenIds).size !== vorlagenIds.length) {
+        UI.toast('Vorlage enthaelt fehlende oder doppelte Bauteil-IDs.');
+        return;
+      }
+      /* Eine alte oder importierte Vorlage kann beschaedigte Leitungen
+         enthalten. Ohne diese Pruefung wirft die Platzsuche bei null oder
+         fehlenden Punkten einen TypeError, oder die Kopie laesst eine
+         ungueltige Leitung still weg. Keine teilweise Einfuegung. */
+      if (leitungen.some(l => !l || !Array.isArray(l.punkte) ||
+          l.punkte.length < 2 || l.punkte.some((p: any) =>
+            !p || p.x == null || p.y == null ||
+            !Number.isFinite(Number(p.x)) || !Number.isFinite(Number(p.y))))) {
+        UI.toast('Vorlage enthaelt ungueltige Leitungen.');
+        return;
+      }
+
+      /* Der Versatz 120/80 setzte jede Kopie auf die vorige. Suche stattdessen
+         die erste freie Rasterposition, ohne vorhandene Zeichen zu ueberdecken.
+         Die Symbolmasse stammen aus demselben Register wie der Auswahlrahmen. */
+      const r = Register.fachzeichen.RASTER;
+      const rand = r;
+      const rahmen = (t: any, dx = 0, dy = 0) => {
+        const m = Register.fachzeichen.masse(t.zeichen, Number(t.drehung) || 0);
+        const zc = Register.fachzeichen.holen(t.zeichen);
+        /* Rotierte Symbole drehen um ihre Originalmitte, nicht um (x,y).
+           Darum verschiebt sich bei 90/270 Grad auch der tatsaechliche
+           Aussenrahmen. Mit dem gleichen Mittelpunkt wie teilKasten()
+           rechnen, sonst erkennt die Vorlagenplatzierung Kollisionen nicht. */
+        const cx = Number(t.x) + dx + (zc ? zc.w : 0) / 2;
+        const cy = Number(t.y) + dy + (zc ? zc.h : 0) / 2;
+        return { l: cx - m.w / 2, o: cy - m.h / 2,
+          r: cx + m.w / 2, u: cy + m.h / 2 };
+      };
+      /* Die Platzsuche verglich bisher nur Vorlagenbauteile mit dem
+         bestehenden Plan. Ueberlappen zwei Bauteile BEREITS innerhalb
+         derselben Vorlage, verschiebt jeder Suchversatz beide zusammen;
+         keine freie Position kann diese Kollision beheben. Darum eine
+         beschaedigte Vorlage vor dem ersten aendere() ablehnen.
+         Blosse Beruehrung an einer Kante ist kein Ueberlappen. */
+      const vorlagenRahmen = teile.map(t => rahmen(t));
+      const internUeberlappt = vorlagenRahmen.some((a, i) =>
+        vorlagenRahmen.some((b, j) => j > i &&
+          a.l < b.r && b.l < a.r && a.o < b.u && b.o < a.u));
+      if (internUeberlappt) {
+        UI.toast('Vorlage enthaelt ueberlappende Bauteile.');
+        return;
+      }
+
+      /* Ausgeblendete Ebenen werden in alsSvg() nicht gezeichnet und
+         beim Anschlussfang nicht angeboten. Sie duerfen deshalb auch
+         keinen Platz auf der gerade sichtbaren Zeichenflaeche belegen.
+         Unbekannte Ebenen bleiben wie in alsSvg() sichtbar. */
+      const versteckt = new Set(
+        (z.plan.ebenen as { id: string; sichtbar?: boolean }[])
+          .filter(e => e.sichtbar === false).map(e => e.id));
+      const belegt = (z.plan.teile as any[])
+        .filter(t => !versteckt.has(t.ebene)).map(t => rahmen(t));
+      const vorhandeneLeitungen = (z.plan.leitungen as Parameters<typeof Schaltplan.ueberlappt>[1])
+        .filter(l => !versteckt.has(l.ebene ?? ''));
+      const abstand = Math.min(6, rand);
+      /* Leitungsstrecken duerfen nicht quer durch fremde Bauteile laufen.
+         Liang-Barsky prueft die echte Strecke gegen ein Rechteck; nur
+         Begrenzungskaesten der Leitung zu vergleichen wuerde insbesondere
+         bei diagonalen Alt-Vorlagen falsche Treffer erzeugen. */
+      const streckeTrifft = (a: Punkt, b: Punkt, f: ReturnType<typeof rahmen>): boolean => {
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const p = [-dx, dx, -dy, dy];
+        const q = [a.x - f.l, f.r - a.x, a.y - f.o, f.u - a.y];
+        let ein = 0, aus = 1;
+        for (let i = 0; i < 4; i++) {
+          const pi = p[i]!, qi = q[i]!;
+          if (pi === 0) { if (qi < 0) return false; continue; }
+          const t = qi / pi;
+          if (pi < 0) ein = Math.max(ein, t);
+          else aus = Math.min(aus, t);
+          if (ein > aus) return false;
+        }
+        return true;
+      };
+      const passt = (dx: number, dy: number): boolean => {
+        const teilePassen = teile.every(t => {
+          const a = rahmen(t, dx, dy);
+          return Number.isFinite(a.l) && Number.isFinite(a.o) &&
+            Number.isFinite(a.r) && Number.isFinite(a.u) &&
+            a.l >= rand && a.o >= rand &&
+            a.r <= z.plan.breite - rand && a.u <= z.plan.hoehe - rand &&
+            belegt.every(b => a.r + rand <= b.l || b.r + rand <= a.l ||
+                              a.u + rand <= b.o || b.u + rand <= a.o) &&
+            /* Auch die andere Richtung zaehlt: ein neues Bauteil darf nicht
+               auf eine bereits vorhandene Leitung gesetzt werden. Sonst
+               koennte die bestehende Leitung dessen Klemme ungewollt fangen. */
+            vorhandeneLeitungen.every(l => {
+              const feld = { l: a.l - abstand, o: a.o - abstand,
+                r: a.r + abstand, u: a.u + abstand };
+              const pkt = l.punkte || [];
+              return pkt.every((p: Punkt, i: number) =>
+                i === 0 || !streckeTrifft(pkt[i - 1]!, p, feld));
+            });
+        });
+        /* Auch die Leitungen muessen auf das Blatt passen. Bei teilweise
+           gespeicherten Vorlagen liegen deren Punkte oft ausserhalb des
+           Bauteilrahmens. Nur die Bauteile zu pruefen reicht nicht: eine
+           eingeklebte Leitung koennte sonst ausserhalb des SVG enden. */
+        return teilePassen && leitungen.every(l => {
+          const punkte: Punkt[] = (Array.isArray(l.punkte) ? l.punkte : [])
+            .map((p: any) => ({ x: Number(p.x) + dx, y: Number(p.y) + dy }));
+          if (!punkte.every(p => Number.isFinite(p.x) && Number.isFinite(p.y) &&
+              p.x >= rand && p.y >= rand &&
+              p.x <= z.plan.breite - rand && p.y <= z.plan.hoehe - rand)) return false;
+          /* Ein kleiner Abstand verhindert, dass die Simulation fremde
+             Anschlussklemmen beim Einsetzen unbeabsichtigt anzapft. */
+          for (let i = 1; i < punkte.length; i++)
+            for (const b of belegt) {
+              const feld = { l: b.l - abstand, o: b.o - abstand,
+                r: b.r + abstand, u: b.u + abstand };
+              if (streckeTrifft(punkte[i - 1]!, punkte[i]!, feld)) return false;
+            }
+          /* Auch schon gezeichnete Leitungen duerfen nicht deckungsgleich
+             ueberlagert werden: optisch waere es ein Draht, elektrisch
+             aber eine unbeabsichtigte Verbindung. Nur echte Ueberlappung
+             blockiert; eine Kreuzung ohne Knoten darf bestehen bleiben. */
+          if (punkte.length >= 2 && Schaltplan.ueberlappt(punkte, vorhandeneLeitungen))
+            return false;
+          return true;
+        });
+      };
+      const schritt = Math.max(r * 4, 40);
+      let versatz: { x: number; y: number } | null = null;
+      /* Erster Einsatz behaelt seine bisherige Lage; weitere suchen ein
+         freies Feld. Der zweite Durchlauf erlaubt auch die linke Blatthaelfte. */
+      if (passt(120, 80)) versatz = { x: 120, y: 80 };
+      for (let y = r * 2; !versatz && y < z.plan.hoehe; y += schritt)
+        for (let x = r * 2; !versatz && x < z.plan.breite; x += schritt)
+          if (passt(x, y)) versatz = { x, y };
+      /* Das grobe 40er-Raster kann eine schmale, trotzdem gueltige Luecke
+         uebersehen und faelschlich "Kein freier Platz" melden. Nur wenn
+         die schnelle Suche nichts findet, das echte Fachzeichenraster
+         vollstaendig durchlaufen. So bleibt der Normalfall schnell. */
+      for (let y = r; !versatz && y < z.plan.hoehe; y += r)
+        for (let x = r; !versatz && x < z.plan.breite; x += r)
+          if (passt(x, y)) versatz = { x, y };
+      if (!versatz) {
+        UI.toast('Kein freier Platz fuer diese Vorlage. Bitte erst Platz schaffen.');
+        return;
+      }
+      const { x: dx, y: dy } = versatz;
+      const ebene = aktiveEbene();
       aendere(() => {
         const neuId = new Map<string, string>();
-        ((v.teile || []) as any[]).forEach(t => {
+        const gruppen = new Map<string, string>();
+        teile.forEach(t => {
           const id = Schaltplan.uid();
-          neuId.set(t.id, id);
-          z.plan.teile.push({ ...t, id, x: t.x + 120, y: t.y + 80,
-            bmk: Schaltplan.naechstesBmk(z.plan, t.zeichen) });
+          neuId.set(String(t.id), id);
+          const gruppe = String(t.gruppe || '');
+          if (gruppe && !gruppen.has(gruppe)) gruppen.set(gruppe, Schaltplan.uid());
+          z.plan.teile.push({ ...t, id, x: Number(t.x) + dx, y: Number(t.y) + dy,
+            bmk: Schaltplan.naechstesBmk(z.plan, t.zeichen),
+            gruppe: gruppe ? gruppen.get(gruppe) : '', ebene,
+            nummern: { ...(t.nummern || {}) } });
         });
-        ((v.leitungen || []) as any[]).forEach(l => {
-          const neu: any = { ...l, id: Schaltplan.uid(),
-            punkte: ((l.punkte || []) as any[]).map(p => ({ x: p.x + 120, y: p.y + 80 })) };
-          if (l.vonTeil) neu.vonTeil = neuId.get(l.vonTeil) || l.vonTeil;
-          if (l.nachTeil) neu.nachTeil = neuId.get(l.nachTeil) || l.nachTeil;
-          z.plan.leitungen.push(neu);
+        leitungen.forEach(l => {
+          const neu: any = { ...l, id: Schaltplan.uid(), ebene,
+            punkte: (Array.isArray(l.punkte) ? l.punkte : [])
+              .map((p: any) => ({ x: Number(p.x) + dx, y: Number(p.y) + dy })) };
+          /* Nur Anschluesse an mitkopierte Bauteile duerfen ueberleben.
+             Der alte Fallback auf l.vonTeil/l.nachTeil schuf baumelnde
+             Referenzen auf Teile des Ursprungsplans. */
+          delete neu.vonTeil; delete neu.vonNr;
+          delete neu.nachTeil; delete neu.nachNr;
+          const von = neuId.get(String(l.vonTeil));
+          const nach = neuId.get(String(l.nachTeil));
+          if (von) { neu.vonTeil = von; neu.vonNr = l.vonNr; }
+          if (nach) { neu.nachTeil = nach; neu.nachNr = l.nachNr; }
+          if (neu.punkte.length >= 2) z.plan.leitungen.push(neu);
         });
       });
     };
@@ -1532,11 +2052,15 @@ const Planflaeche = (() => {
       const r = Schaltplan.gruppeUmformen(z.plan, z.auswahl, art);
       melde(art === 'drehen' ? 'Drehen' : 'Spiegeln', r.bericht, Schaltplan.veraendert(z.plan, r.vorher), r.vorher);
     });
-    const planDrehen = (): void => aendere(() => {
-      const r = Schaltplan.planDrehen(z.plan);
-      z.ansicht = { zoom: 1, x: 0, y: 0 };
-      melde('Drehen', r.bericht, Schaltplan.veraendert(z.plan, r.vorher), r.vorher);
-    });
+    const planDrehen = (): void => {
+      aendere(() => {
+        const r = Schaltplan.planDrehen(z.plan);
+        z.ansicht = { zoom: 1, x: 0, y: 0 };
+        melde('Drehen', r.bericht, Schaltplan.veraendert(z.plan, r.vorher), r.vorher);
+      });
+      /* Das Blatt hat jetzt eine andere Form: neu einpassen (E776). */
+      if (!z.zieht) einpassen();
+    };
     const drehen = (): void => alsGruppe() ? gruppeUmformen('drehen') : aendere(() => {
       const vorher = Schaltplan.vorherMerken(z.plan);
       const teile = auswahlTeile();
@@ -1640,12 +2164,11 @@ const Planflaeche = (() => {
        neuen Bild verloren (`buehneMalen` ersetzt das SVG), und losgelassen
        über der Palette kam das `pointerup` nie an. Der Zug blieb liegen, sein
        Zwischenbild in `z.plan`, und die nächste Handlung speicherte es
-       (test611 §13). Und er endet, sobald irgendein Zeiger irgendwo
-       aufsetzt: ein zweiter Finger fing bisher einen NEUEN Zug an, nahm das
-       Zwischenbild des ersten als „vorher" und liess den ersten liegen.
-       Beendet wird ein Zug mit Teilen immer richtig — mit der vollen Suche
-       (`teilzugSichern`), nie mit einem Zwischenbild. Die Horcher am
-       Dokument hängen nur, solange ein Zug läuft. */
+       (test611 §13). Bei einem neuen Maus-/Stift-Druck endet der erste Zug
+       wie bisher mit der vollen Suche; ein zweiter Finger bricht dagegen
+       die unfertige Verschiebung ab, bevor die Zwei-Finger-Geste navigiert.
+       Keine Zwischenbilder werden gespeichert. Die Horcher am Dokument
+       hängen nur, solange ein Zug läuft. */
     type Zug = NonNullable<Zustand['zieht']>;
     const zugBeginnen = (zug: Zug): void => {
       z.zieht = zug;
@@ -1735,15 +2258,22 @@ const Planflaeche = (() => {
       melde('Ziehen', bericht, Schaltplan.veraendert(z.plan, vorher), vorher);
     };
 
-    /** Ein Zeiger setzt auf, während ein Zug läuft — ein zweiter Finger, oder
-     *  derselbe, dessen Loslassen nie ankam. Der Zug endet hier: mit Teilen
-     *  gesichert wie beim Loslassen; ein Rahmen oder eine Leitung, deren Ende
-     *  niemand gezeigt hat, verfällt. Ist die Fläche nicht mehr im Dokument
-     *  (die Seite wurde neu gezeichnet), wird nichts mehr gespeichert — sie
-     *  zeigt dann, was die Ablage hält. */
-    const zugUnterbrechen = (): void => {
+    /** Ein Zeiger setzt auf, während ein Zug läuft. Ein zweiter Touch
+     *  verwirft den unfertigen Zug vor der Zoomgeste; Maus-/Stift-Drucke
+     *  sichern Teil-/Streckenzüge weiterhin wie beim Loslassen. Rahmen
+     *  und Leitungen ohne Ende verfallen. Ist die Fläche nicht mehr
+     *  verbunden, wird nichts gespeichert. */
+    const zugUnterbrechen = (e: PointerEvent): void => {
       const zug = z.zieht;
       if (!zug) return;
+      /* Ein zweiter Finger beginnt eine Navigationsgeste. Ein laufender
+         Zeichen- oder Teilzug darf dabei NICHT still gespeichert werden:
+         Zwischenpositionen und billige Vorschau-Routen sind noch unfertig.
+         Mouse-/Pen-Unterbrechungen behalten das bisherige Verhalten. */
+      if (e.pointerType === 'touch' && e.pointerId !== zug.zeiger) {
+        zugAbbrechen();
+        return;
+      }
       zugLoesen();
       if (!wurzel.isConnected) return;
       if (zug.art === 'teil') teilzugSichern(zug);
@@ -1759,6 +2289,7 @@ const Planflaeche = (() => {
       const zug = z.zieht;
       if (!zug) return;
       zugLoesen();
+      teilKlickStart = null;
       if (zug.art === 'teil' || zug.art === 'strecke') {
         zug.ausgang.forEach((a, id) => {
           const t = teilVon(id);
@@ -1871,8 +2402,9 @@ const Planflaeche = (() => {
 
     /* --- Zwei Finger: zoomen und verschieben (E762) ------------------------
      * Ein Finger zeichnet, zwei Finger bewegen die Ansicht — wie in jeder
-     * Karte. Setzt der zweite auf, endet der Zug des ersten (`zugUnterbrechen`,
-     * wie seit E746), und bis der letzte Finger loslässt, zeichnet keiner. */
+     * Karte. Setzt der zweite auf, wird der unfertige Zug des ersten
+     * abgebrochen (`zugUnterbrechen`), und bis der letzte Finger loslässt,
+     * zeichnet keiner. */
     const finger = new Map<number, Punkt>();
     let geste: null | { d0: number; P0: Punkt; zoom0: number } = null;
     const fingerMitte = (): Punkt => {
@@ -2217,7 +2749,7 @@ const Planflaeche = (() => {
       }
 
       if (z.werkzeug === 'leitung') {
-        const fang = Schaltplan.fangeAnschluss(z.plan, roh);
+        const fang = Schaltplan.fangeAnschluss(z.plan, roh, anschlussFangRadius(svg, e.pointerType));
         zugBeginnen({ art: 'leitung', zeiger: e.pointerId, startX: p.x, startY: p.y, ausgang: new Map(),
                       von: fang ? { x: fang.x, y: fang.y, teil: fang.teil, nr: fang.nr }
                                 : { x: p.x, y: p.y } });
@@ -2226,6 +2758,22 @@ const Planflaeche = (() => {
       }
 
       /* Werkzeug „zeigen" */
+      /* LEITUNG AUS DER KLEMME (E788): wer im Zeigen-Werkzeug genau auf
+         einer Klemme ansetzt, zieht eine Leitung — ohne vorher „Leitung"
+         zu wählen und ohne danach zurückzuschalten. Der Griff ist mit
+         7 px (Finger 10) bewusst enger als der Fang beim Leitungzeichnen:
+         wer ein Teil am Körper fasst, verschiebt es weiter. Mit Umschalt
+         oder einem gewählten Bauteil gilt der Griff nicht. */
+      if (!z.gewaehltesZeichen && !e.shiftKey) {
+        const klemme = klemmeUnterZeiger(svg, roh, e.pointerType);
+        if (klemme) {
+          klemmeHinweis(null);
+          zugBeginnen({ art: 'leitung', zeiger: e.pointerId, startX: klemme.x, startY: klemme.y, ausgang: new Map(),
+                        von: { x: klemme.x, y: klemme.y, teil: klemme.teil, nr: klemme.nr } });
+          svg.setPointerCapture(e.pointerId);
+          return;
+        }
+      }
       const g = teilAm(ziel);
       if (!g || !g.dataset.id) {
         /* Auf leere Fläche: Symbol setzen, oder Rahmen aufziehen. */
@@ -2307,6 +2855,13 @@ const Planflaeche = (() => {
             !z.simulation && z.werkzeug === 'zeigen' && z.gewaehltesZeichen)
           platzGeistZeigen(z.gewaehltesZeichen, e.clientX, e.clientY);
         else if (!platzZug) geistEntfernen();
+        /* E788: liegt der Zeiger auf einer Klemme, sagt die Fläche, dass man
+           hier eine Leitung ziehen kann — ein Ring und das Fadenkreuz. */
+        if (!platzZug && e.pointerType !== 'touch' && !e.buttons && !z.simulation
+            && z.werkzeug === 'zeigen' && !z.gewaehltesZeichen) {
+          const svg = svgJetzt();
+          klemmeHinweis(svg ? klemmeUnterZeiger(svg, ortAus(svg, e, z.plan, true), e.pointerType) : null);
+        } else klemmeHinweis(null);
         return;
       }
       if (e.pointerId !== z.zieht.zeiger) return;
@@ -2383,7 +2938,7 @@ const Planflaeche = (() => {
          den Plan zu ändern, damit ein abgebrochener Zug nichts hinterlässt,
          und ohne das SVG neu zu bauen (E762). */
       if (zug.art === 'leitung' && zug.von) {
-        const fang = Schaltplan.fangeAnschluss(z.plan, p);
+        const fang = Schaltplan.fangeAnschluss(z.plan, ortAus(svg, e, z.plan, true), anschlussFangRadius(svg, e.pointerType));
         const bis = fang ? { x: fang.x, y: fang.y } : p;
         const schluessel = bis.x + ',' + bis.y;
         if (schluessel === zug.vorschauEnde) return;
@@ -2476,7 +3031,9 @@ const Planflaeche = (() => {
       }
 
       if (zug.art === 'leitung' && zug.von) {
-        const fang = Schaltplan.fangeAnschluss(z.plan, p);
+        // Kein SVG mehr: einen beendeten Zug nicht als neue Leitung speichern.
+        if (!svg) { male(); return; }
+        const fang = Schaltplan.fangeAnschluss(z.plan, ortAus(svg, e, z.plan, true), anschlussFangRadius(svg, e.pointerType));
         const bis = fang ? { x: fang.x, y: fang.y } : p;
         if (bis.x === zug.von.x && bis.y === zug.von.y) { male(); return; }
         /* Geführt, nicht nur gewinkelt (E762): der Weg berührt nur, was an
@@ -2510,8 +3067,9 @@ const Planflaeche = (() => {
         zoomUm(Math.exp(-e.deltaY * schritt * 0.0015), e.clientX, e.clientY);
         return;
       }
-      const a = z.ansicht;
-      if (!z.voll && a.zoom === 1 && !a.x && !a.y) return;
+      /* Eingepasst (E776) gehört das Rad der Seite, wie vorher bei 100 %:
+         erst wer selbst gezoomt oder verschoben hat, verschiebt mit ihm. */
+      if (!z.voll && !ansichtVomNutzer) return;
       e.preventDefault();
       const quer = e.shiftKey && !e.deltaX;
       schwenken(-(quer ? e.deltaY : e.deltaX) * schritt, -(quer ? 0 : e.deltaY) * schritt);
@@ -2998,11 +3556,16 @@ const Planflaeche = (() => {
     };
 
     /* --- Kopf und Fuss bedienen ------------------------------------------ */
+    /** Die Planart wechseln — vom Chip im Kopf und aus dem „…" (E777). */
+    const artSetzen = (art: string): void => {
+      if (!(Schaltplan.ARTEN as any[]).some(a => a.id === art) || art === z.plan.art) return;
+      aendere(() => { z.plan.art = art; });
+      paletteMalen();
+    };
     kopf.addEventListener('change', e => {
       const s = (e.target as HTMLElement).closest('.sp-art') as HTMLSelectElement | null;
       if (!s) return;
-      aendere(() => { z.plan.art = s.value; });
-      paletteMalen();
+      artSetzen(s.value);
     });
     kopf.addEventListener('click', e => {
       const b = (e.target as Element).closest<HTMLElement>('[data-wz],[data-a]');
@@ -3352,6 +3915,19 @@ const Planflaeche = (() => {
     const mehrMenue = (anker: HTMLElement): void => {
       const r = anker.getBoundingClientRect();
       const m = UI.menu(
+        /* Die Planart (E777): am Telefon steht sie nur hier, am Rechner
+           zusätzlich als Chip im Kopf. Beide gehen durch `artSetzen`. */
+        `<div class="grp">Planart</div>` +
+        (Schaltplan.ARTEN as any[]).map(a =>
+          `<button data-m="art" data-art="${esc(a.id)}" role="menuitemradio" aria-checked="${a.id === z.plan.art}">` +
+          `${a.id === z.plan.art ? '✓ ' : ''}${esc(a.name)}</button>`).join('') +
+        '<hr>' +
+        (z.plan.art.startsWith('stromlauf')
+          ? '<button data-m="schaltung">⚡ Netz oder Beispielschaltung einfügen</button><hr>' : '') +
+        /* Das ganze Blatt (E776): Einpassen zeigt den belegten Bereich;
+           wer am Rand des Blatts zeichnen will, holt hier das Ganze. */
+        (z.verlauf.kannVor() ? '<button data-m="vor">↷ Wiederholen</button>' : '') +
+        '<button data-m="blatt">Ganzes Blatt zeigen</button>' +
         `<button data-m="raster">${z.zeigeRaster ? '✓ ' : ''}Raster zeigen</button>` +
         `<button data-m="anschluesse">${z.zeigeAnschluesse ? '✓ ' : ''}Anschlusspunkte zeigen</button>` +
         `<button data-m="nummern">${z.zeigeNummern ? '✓ ' : ''}Anschlussnummern zeigen</button>` +
@@ -3370,6 +3946,10 @@ const Planflaeche = (() => {
         if (!b) return;
         m.remove();
         const was = b.dataset.m;
+        if (was === 'art') return artSetzen(b.dataset.art || '');
+        if (was === 'vor') return vorwaerts();
+        if (was === 'blatt') return gleitend(() => { z.ansicht = { zoom: 1, x: 0, y: 0 }; ansichtVomNutzer = true; ansichtAnwenden(); });
+        if (was === 'schaltung') return schaltungMenue(anker);
         if (was === 'pruefzentrum') { pruefungOffen = true; pruefPanel.hidden = false; kopfMalen(); pruefMalen(); return; }
         if (was === 'raster') { z.zeigeRaster = !z.zeigeRaster; return male(); }
         if (was === 'anschluesse') { z.zeigeAnschluesse = !z.zeigeAnschluesse; return male(); }

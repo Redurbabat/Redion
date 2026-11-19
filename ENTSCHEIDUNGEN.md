@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-752 Entscheidungen, E1 bis E774 (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+766 Entscheidungen, E1 bis E789 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -837,6 +837,357 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E772** — Der RED-MGT-Glasschalter im Original-Aussehen an Stelle von „▶ Strom", und das Live-Stromlabor (1. November 2026, Redur: „1:1"; ERSETZT „RED-MGT angepasst"): Checkbox mit role="switch" und `data-a="simulation"`, „AUS"/„EIN" statt STANDBY/POWER ON (§3), 187 × 50 in der Leiste, 1:1-Ansicht 330 × 180; Redurs Kurven und Orange bleiben (test584 führt `.red-mgt-` mit Grund), die Endlos-Lichtnaht steht bei weniger Bewegung; RedionMotion schmückt ihn nicht; Labor mit Uhr, Tempo 0,25–4×, Pause, Reset und Zeitrelais-Balken auf dem Takt aus E768 — ohne Zeitrelais kein Takt (E528); test612/630/631 neu ausgerichtet — `test634`
 * **E773** — Ein und Aus ist wieder „▶ Strom" (2. November 2026, Redur: „Für ein-aus sollte wie früher sein, damals war besser"; nimmt den Schalter aus E772 zurück, das Labor bleibt): `<button>` mit `aria-pressed`, Hebel und Glühfaden aus E535, so hoch wie „Bereiche"; der Glasschalter, die 1:1-Ansicht, `.red-mgt-` in `test584` und der Sprung in `motion.ts` sind weg — `test634`
 * **E774** — Ein eigener Skill „redion-animationen" statt der SwiftUI-Beispiele (2. November 2026, Redur: Skills aus `open-swiftui-animations` installieren, vorhandene löschen; dann „Eigenen Skill schreiben", „Nichts löschen"): das Projekt hat keine Skills und keine Lizenz, also nur Ideen, kein Code (§57); der Skill liegt in `.claude/skills/redion-animationen/` und übersetzt sechzehn Ideen in Redions Federn und Regeln
+* **E775** — Ein Bauteil mit unbekanntem Zeichen wird als Platzhalter gezeichnet statt still weggelassen (9. November 2026, Redur: „die schaltplan teil ist die erstel prioieritet"; §18): gestrichelter Kasten mit „?" und dem Namen des Zeichens, wählbar, verschiebbar, Daten unberührt. Für diesen Bogen hat Redur „erst bauen, am Ende prüfen" entschieden („ich will das du einfach baust und ohne kontloier uoder test erst am ende") — Abweichung von §30/§50 — `test639`
+* **E776** — Der Schaltplan passt den belegten Bereich ein (9. November 2026): beim Öffnen, bei jeder Grössenänderung und auf „Einpassen"; eigener Zoom bleibt; das SVG füllt die Bühne, ausserhalb des Blatts liegt ein blasses Raster („Tisch") mit Blattrand; das Rad gehört eingepasst der Seite — `test640`
+* **E777** — Der Kopf des Schaltplans in einer Zeile (9. November 2026): links „▶ Strom" (E773 unverändert) und „⚡ Schaltung", rechts Planart als ruhiger Chip, ↶ ↷, „Bereiche", „…", ⛶; am Telefon wandern Planart und Schaltung ins „…"; Breite nach der Fläche (`@container`), ↶ ↷ … nicht mehr unter 1220 px versteckt
+* **E778** — Das Werkzeug-Dock mit Zeichen UND Namen (9. November 2026): Auswahl, Leitung, Text, Schiene (neues Zeichen `busbar`), Radierer, Bauteile, Einpassen; Kürzel im Tooltip und `aria-keyshortcuts`; das Dock wird nicht mehr bei jeder Änderung neu gebaut (es hüpfte bei jedem Strich)
+* **E779** — Ein leerer Schaltplan zeigt in der Mitte einen Einstieg (9. November 2026): „Bauteil hinzufügen" öffnet die Palette, „Beispielschaltung" das vorhandene Schaltung-Menü; weg beim ersten Bauteil, bei offener Palette und bei einem anderen Werkzeug
+* **E780** — Bewegung im Schaltplan nach `redion-animationen` (9. November 2026): die Marke des aktiven Werkzeugs gleitet mit `--feder-knapp`, Einpassen und + − gleiten per FLIP (200 ms, `--ease-enter`, nur transform), Dock, Kontextleiste und Einstieg kommen mit den Federn; alles steht bei weniger Bewegung (System und „Ruhige Darstellung"); der Ziehgeist der Palette ist endlich gestaltet
+* **E782** — Redion 2, Bogen 1 „Mass und Ruhe" (9. November 2026, Redur: „ich will wenn ich morgen aufseteh eine komplet andere redion sehen"): eine neue, zuletzt geladene Stilschicht `redion2.css` mit EINER Schriftskala, vier Gewichten, Radien, drei Ebenen und einer neutralen Grauleiter; nur Aussehen, kein Griff weniger; das Glass Wheel ausgenommen. Redur hat „erst bauen, am Ende prüfen" entschieden
+* **E783** — Die Seitenwerkzeuge sind eine stille Zeile unter dem Titel (9. November 2026): kein Kasten, keine Rubrik; am Rechner bei Zeiger auf der Seite oder Fokus in der Zeile, am Telefon immer
+* **E784** — Ein Ding wird einmal markiert (9. November 2026): die Auswahl in der Kante ist eine neutrale Fläche mit stärkerer Schrift, ohne Balken und violette Schrift; Karten tragen Haarlinie statt Rahmen; ☆ und ⋯ der Bibliothekskarten erscheinen am Rechner bei Zeiger oder Fokus
+* **E785** — Die 44 px im Kopf bleiben (9. November 2026): der Plan wollte 28-px-Kopfknöpfe wie macOS; §37 ist hart und `test603` §7 hält 44 × 44 — gebaut ist 44 + 44 statt 60 + 55, die Ruhe kommt aus Fläche und Schrift. Offene Frage an Redur
+* **E786** — Das Lernzentrum spricht mit dem Nutzer, nicht mit dem Entwickler (9. November 2026): „SM-2 bleibt der fachliche Plan. Es gibt keine stille Migration." wird „Zuerst die Fehler, dann was fällig ist, dann Neues."; das doppelte „Präsentieren" im ⋯ bleibt (zwei Griffe, `test580`)
+* **E787** — Die Klinge liegt, wie der Schalter steht (15. November 2026, Redur: „wenn ich eine schalter klicke sollte sich ändern"): in der Simulation zeichnet jeder Schalter und jeder Kontakt seine Stellung — die Klinge zu, ab oder auf dem geschlossenen Weg, der Name der Stellung darunter, in der Farbe des Stroms, wenn er führt; die Bilder stehen im Register (`STELLUNGSBILD`), die Stellung kommt aus `Stromfluss.rechne` (`Ergebnis.stellungen`), ausserhalb der Simulation zeichnet jedes Zeichen wie vorher
+* **E788** — Leitung aus der Klemme (15. November 2026, Redur: „verbessere alles damit ich schneller zeichne können"): im Zeigen-Werkzeug zieht ein Ansatz genau auf einer Klemme (7 px, Finger 10) eine Leitung, ohne Werkzeugwechsel; am Körper gefasst wandert das Teil wie bisher; Ring und Fadenkreuz zeigen die Klemme vorher
+* **E789** — Die Bauplan-Zeichen nach dem Lehrmittel (15. November 2026, Redur: „schau … für schweiz wie muss es sein und baue es direkt im redion", Quelle: „Fachzeichnen Teil 1", Seite 14.1): Schalter als offener Kreis mit Armen und Fahnen, Steckdose mit Hörnern, Deckenleuchte als Kreuz, Einbauleuchte als Kreuz im Kreis, Abzweigdose als Quadrat mit Punkt; 21 neue Zeichen (UP/AP, Zug, Nachlauf, Lichtregler, Taster, Storen, vier Kombis, T13 3-fach und 3/1, T25, Bodendose, Lampendübel, Wandleuchte, PIR, Store, Ventilator, Direktanschluss); alte Kennungen, Grössen und Anschlüsse bleiben; die Schema-3-Klemmen 1-2-4 bleiben offen (L267)
+
+## E775 — Ein unbekanntes Bauteil bleibt sichtbar
+
+**Wer.** Redur, 9. November 2026: „ich will das du redion auf eine andere
+levell bringst … die schaltplan teil ist die erstel prioieritet". Gefunden
+auf dem Bild des Treppenhaus-Plans: „3 Teile" in der Fusszeile, gezeichnet
+zwei. Das dritte trug `zeichen: 'quelle'`, das diese Fassung nicht kennt.
+
+**Wie geprüft wird — Redurs Entscheidung für diesen Bogen.** Mitten in der
+Arbeit: „ich will das du einfach baust und ohne kontloier uoder test erst
+am ende". Für E775–E780 gilt deshalb: erst bauen, am Ende die bestehenden
+Schaltplan-Läufe fahren und einen Satz Bilder machen — eine bewusste
+Abweichung von §30 („zuerst ein Prüflauf") und §50 („er ist rot gewesen").
+Die zwei Wächter, die vor der Anweisung schon geschrieben waren
+(`test639`, `test640`), bleiben.
+
+**Entschieden.** `Schaltplan.alsSvg` zeichnet für ein unbekanntes Zeichen
+einen gestrichelten Kasten 40 × 40 mit „?" und dem Namen des Zeichens, dazu
+einen Titel („… bleibt mit allen Angaben im Plan erhalten"). Das Teil ist
+wählbar, verschiebbar und löschbar wie jedes andere; Zeichen, Nummern und
+Werte bleiben unberührt (§18 [hart]: unbekannte Typen nie still verlieren).
+`Schaltplan.teilMasse` gibt dafür auch ohne Registereintrag ein Mass.
+
+**Alternative.** Das Teil weiter weglassen und nur warnen — dann bleibt es
+unsichtbar und unlöschbar.
+
+**Kosten.** Ein gespeichertes Bild (SVG) zeigt den Platzhalter mit.
+
+## E776 — Der Plan füllt die Fläche
+
+**Was.** Bis hierher zeigte die Ansicht beim Öffnen immer das ganze Blatt.
+Am Telefon im Vollbild stand ein 800 × 500-Plan winzig in der Mitte (eine
+Lampe 19 px), darüber und darunter je ein Drittel leere Fläche ohne Raster.
+
+**Entschieden.** `einpassen` in `planflaeche.ts`: der belegte Bereich
+(Teile mit BMK und Beschriftung, Leitungen, Texte) plus Rand wird in die
+Bühne gepasst, höchstens 1,75 Bildpunkte je Planeinheit. Es läuft beim
+Öffnen und bei jeder Grössenänderung der Bühne (ResizeObserver: Fenster,
+Vollbild, Drehen) — ausser der Mensch hat selbst gezoomt oder verschoben;
+dann bleibt seine Ansicht, bis er „Einpassen" (⤢, 0) drückt. Ein leerer
+oder voller Plan steht wie vorher bei „ganzes Blatt, 100 %". Das SVG füllt
+die ganze Bühne; ausserhalb des Blatts liegt dasselbe Raster blasser (der
+„Tisch"), ein gestrichelter Rand zeigt das Blatt. `alsSvg` bleibt Zeichen
+für Zeichen gleich (test625 §0). Eingepasst gehört das Rad der Seite, wie
+vorher bei 100 %.
+
+**Alternative.** Die Höhe des Blocks an den Plan anpassen — im Vollbild
+nutzlos, und der Block spränge beim Öffnen.
+
+**Kosten.** Die Prozentzahl steht beim Öffnen selten auf 100 % (100 % heisst
+weiter „ganzes Blatt"). Ein breiter Plan bleibt am Telefon hochkant
+schmal — quer gehalten füllt er den Schirm (L266).
+
+## E777 — Der Kopf in einer Zeile
+
+**Was.** Am Rechner stand die Planart als grösstes Element vorn, „▶ Strom"
+klein daneben; unter 1220 px fehlten ↶ ↷ und „…"; am Telefon brauchte der
+Kopf zwei Zeilen.
+
+**Entschieden.** Links „▶ Strom" — derselbe Knopf aus E773, nur vorn — und
+„⚡ Schaltung"; rechts die Planart als ruhiger Chip (`select.sp-art`,
+32 px), ↶ ↷ als Zeichen, „✦ Bereiche ▾", „…", ⛶. Wird die FLÄCHE
+schmaler als 640 px (`@container`, nicht das Fenster: die Windows-App hat
+eine Seitenleiste), wandern Planart und Schaltung ins „…" (Planart als
+Liste mit Häkchen, `artSetzen` für beide Wege), „Bereiche" zeigt nur ✦;
+jedes Ziel 44 px (§37).
+
+**Alternative.** Planart in „Bereiche" — dort stehen Module, keine
+Eigenschaften des Plans.
+
+## E778 — Werkzeuge mit Namen
+
+**Was.** Das Dock trug ↖ ⌐ T ☰ ⌫ ohne Wort; ☰ sah aus wie ein Menü, ⌐ wie
+nichts. Und es wurde bei jeder Änderung neu gebaut und spielte dabei seine
+Ankunft von vorn — jeder Strich liess die Leiste hüpfen.
+
+**Entschieden.** Jedes Werkzeug mit Zeichen aus `Register.symbole` UND
+Namen darunter (Auswahl, Leitung, Text, Schiene, Radierer), am Rechner und
+am Telefon; „Bauteile" hervorgehoben, „Einpassen" benannt. Titel mit
+Kürzel („Leitung ziehen (2)"), `aria-keyshortcuts`, `aria-pressed`. Neues
+Zeichen `busbar` für die Schiene. Das Dock steht einmal und ändert nur
+seinen Zustand (`dockAktualisieren`).
+
+
+## E779 — Der Einstieg in einen leeren Plan
+
+**Was.** Eine leere Fläche zeigte nur das Raster; wie es losgeht, stand
+klein in der Fusszeile.
+
+**Entschieden.** Mitten auf der Bühne eine Karte „Ein leerer Schaltplan"
+mit zwei Knöpfen: „Bauteil hinzufügen" (öffnet die Palette und setzt den
+Fokus in ihre Suche — derselbe Weg wie „Bauteile" im Dock) und
+„⚡ Beispielschaltung" (das vorhandene Menü `schaltungMenue`, nur im
+Stromlaufplan). Die Karte geht, sobald etwas auf dem Plan steht, und steht
+nicht im Weg, solange die Palette oder das Studio offen, ein Zeichen zum
+Setzen gewählt oder ein anderes Werkzeug als „Auswahl" aktiv ist. Kein
+neuer Zustand im Plan.
+
+## E780 — Bewegung im Schaltplan
+
+**Entschieden** (Skill `redion-animationen`): die Marke unter dem aktiven
+Werkzeug ist eine eigene Fläche und gleitet mit `--feder-knapp`, die Knöpfe
+bleiben stehen; „Einpassen", + und − setzen die viewBox sofort und lassen
+die Leinwand per FLIP vom alten ins neue Bild gleiten — 200 ms mit
+`--ease-enter`, kurz genug, dass ein Zug gleich danach trifft; Rad und
+Finger gleiten nie. Dock, Kontextleiste und Einstieg kommen mit den Federn
+aus `grund.css`. Bei `prefers-reduced-motion` und
+`body[data-bewegung="ruhig"]` wird alles gesetzt. Nebenbei: der Geist beim
+Ziehen aus der Palette hatte keine Regel und hing ungestaltet am Ende der
+Seite — jetzt folgt er dem Zeiger als kleine Karte.
+
+**Alternative.** Die viewBox Bild für Bild animieren — das ist kein
+transform, und jeder Treffer während der Fahrt läge daneben.
+
+## E782 — Redion 2: eine Schicht für Mass und Ruhe
+
+**Wer.** Redur, 9. November 2026: „ich will das du redion auf eine andere
+levell bringst die aktuele webseite gefällt mir gar nicht wie die ausieht
+wie man berabeitet … ich will wenn ich morgen aufseteh eine komplet andere
+redion sehen". Der Plan (Bögen 1–9) stammt aus der Durchsicht von 50
+Bildern; dies ist Bogen 1.
+
+**Wie geprüft wird — Redurs Entscheidung für diesen Bogen.** „ich will das
+du einfach baust und ohne kontloier uoder test erst am ende". Also: bauen,
+committen, pushen; die bestehenden Wächter und die Bilder vorher/nachher
+EINMAL am Ende. Eine bewusste Abweichung von §30 („zuerst ein Prüflauf")
+und §50 („er ist rot gewesen") — wie bei E775. Ein neuer Wächter „Mass"
+(höchstens sieben Schriftgrössen je Ort, Inhalt beginnt oben) ist geplant,
+aber nicht gebaut.
+
+**Entschieden.** Eine neue Stildatei `quell/schale/stil/redion2.css`, als
+LETZTE verlinkt (nach `glasswheel.css`, Stufe 6 in `test87`), im GRUNDSTOCK
+(§28). Sie setzt:
+
+- eine Schriftskala (Rechner 11 · 12 · 13 · 15 · 16 · 19 · 23 · 30, Telefon
+  eine Stufe grösser), vier Gewichte, `--radius-xs`, drei Ebenen
+  `--e-1/2/3` mit Haarlinie (nur wo diese Datei sie nennt — `--shadow-1…4`
+  bleiben, die untere Leiste liest sie, `test623`);
+- eine fast neutrale Grauleiter wie macOS für „Standard" (`#1c1d20`, eine
+  Stufe heller als `#121417`, im kühlen Ton 271–275° aus E705, `test584`
+  §10) und „Hell" (`#1d1d1f` auf Weiss statt Notions
+  Braun-Grau). Die anderen acht Schemata setzen ihre Werte inline an
+  `<html>` und gewinnen weiter; der Akzent bleibt, was E199 gerechnet hat;
+- den Kopf am Rechner: Studio-Kopf und Kopfzeile auf demselben Grund,
+  EINE Haarlinie, 44 + 44 statt 60 + 55 px, die Marke in einer Zeile ohne
+  „STUDIO", die Suche als flache Kapsel;
+- Titel, Text und Überschriften der Seite auf der Skala (30 / 15 · 1,6 /
+  23 / 19 / 16 statt 40 / 16 / 30 / 24 / 20), Ortstitel in Bibliothek und
+  Lernzentrum gleich, Überzeilen ohne Akzent-Versalien;
+- Knöpfe der Hauptorte mit einem Radius und einer Schrift — nur in Ruhe;
+  Fläche und Schein unter Zeiger, Druck und Fokus bleiben den Regeln, die
+  `test596` hält (§38).
+
+Jede Flächenregel hängt an `body:not([data-ui-shell="glass-wheel"])`; das
+Glass Wheel (E755) und die Bewegungen (E757) bleiben unberührt.
+
+**Warum eine eigene Datei (§39).** 1657 Schriftgrössen-Angaben in 27
+Dateien lassen sich nicht in einer Nacht einzeln umstellen, und jede Regel
+„mittendrin" verliert gegen eine spätere — `#topbar` wird an 43 Stellen in
+sechs Dateien gestylt. Eine zuletzt geladene Schicht mit DENSELBEN
+Marken-Namen ist kein neues Designsystem: dasselbe DOM, dieselben Marken,
+dieselben Schemata. Bogen 8 zieht die Werte in die Grundblätter zurück und
+löscht dort, was hier überstimmt wird.
+
+**Alternative.** Die Werte direkt in `grund.css`, `studio.css`,
+`premium.css` und `bausteine.css` ändern — richtig auf Dauer, aber mit
+Hunderten Stellen und dem Risiko, dass eine spätere Regel jede einzelne
+wieder überstimmt.
+
+**Kosten.** Eine Datei mehr im Start (rund 15 KB), eine Schicht mehr, die
+man kennen muss, bis Bogen 8 aufräumt. Eine Stildatei auf demselben DOM ist
+keine zweite Oberfläche (§2, §6).
+
+## E783 — Die Seitenwerkzeuge als stille Zeile
+
+**Entschieden.** Der Kasten „SEITENWERKZEUGE" („Workspace 2.0") wird eine
+Textzeile unter dem Titel: dieselben fünf `button[data-a]`, ohne Rahmen,
+ohne Rubrik, in der stillen Schrift. Am Rechner mit Maus erscheint sie,
+solange der Zeiger auf der Seite steht ODER der Fokus in ihr ist
+(`:focus-within` — das war der Grund, aus dem „Workspace 2.0" sie dauerhaft
+zeigte). Am Telefon und mit grobem Zeiger bleibt sie immer stehen (§37).
+Am Rechner misst ein Knopf 32 px: ein Nebenweg (§37), denn alle fünf
+stehen auch im ⋯ der Seite.
+
+**Alternative.** Den Kasten lassen — 90 px Bedienung über jedem Text.
+
+**Kosten.** Wer die Werkzeuge sucht, muss die Maus über die Seite bewegen —
+so wie vor „Workspace 2.0".
+
+## E784 — Ein Ding wird einmal markiert
+
+**Entschieden.** Der Ort in der Kante: neutrale Fläche `--bg-active`,
+volle Schrift, stärkeres Gewicht, Zeichen im Akzent — ohne Balken links,
+ohne violette Schrift (vorher dreifach). Nicht nur Farbe (§38): das Gewicht
+und `aria-current` bleiben. Die Zeilen der Kante messen 36 px statt 42;
+die Kante gibt es nur ab 761 px, und mit grobem Zeiger heben sie auf
+`--touch-min` (§37). Karten in Bibliothek und Lernzentrum: Haarlinie und
+flacher Schatten statt Rahmen und Schatten, Radius 12. ☆ und ⋯ der
+Bibliothekskarten sind mit Maus erst bei Zeiger oder Fokus auf der Karte
+zu sehen; ein gemerkter Stern bleibt stehen; Ort, Trefferfläche und Name
+bleiben immer.
+
+**Alternative.** Alles laut lassen — 24 Bedienelemente auf acht Karten.
+
+**Kosten.** Mit der Maus sind ☆ und ⋯ erst beim Zeigen sichtbar.
+
+## E785 — Die 44 px im Kopf bleiben
+
+**Entschieden.** Der Plan schlug 28-px-Kopfknöpfe und 28-px-Zeilen wie
+macOS vor. §37 ist [hart] („44 px auf den Hauptwegen … ohne Ausnahme"), und
+`test603` §7 hält 44 × 44 für jeden Kopfknopf. Gebaut ist deshalb: zwei
+Zeilen von je 44 px, Knöpfe ohne Fläche in Ruhe, die Suche 32 px hoch in
+der 44-px-Zeile. Die Ruhe kommt aus Fläche, Schrift und Linie.
+
+**Offene Frage an Redur.** Soll §37 am Rechner mit feinem Zeiger 28–32 px
+erlauben (wie macOS), oder bleibt 44 überall? Erst mit seiner Antwort kann
+Bogen 2 den Kopf auf eine Leiste von 52 px bringen.
+
+**Kosten.** Der Kopf ist 27 px niedriger statt 31.
+
+## E786 — Das Lernzentrum spricht mit dem Nutzer
+
+**Entschieden.** Unter „Dein erklärbarer Lernplan" stand „SM-2 bleibt der
+fachliche Plan. Es gibt keine stille Migration." — ein Satz für Entwickler.
+Jetzt steht dort, was die Tagesrunde wirklich tut: „Zuerst die Fehler, dann
+was fällig ist, dann Neues." Das doppelte „Präsentieren" im ⋯ der Seite
+bleibt: es sind zwei Griffe, und `test580` hält die Liste der 47 Zeilen.
+Ob einer davon gehen darf, entscheidet Redur.
+
+**Alternative.** Den Satz ausblenden — dann fehlt die Unterzeile, die jeder
+Ortstitel hat.
+
+**Kosten.** Keine.
+
+## E787 — Die Klinge liegt, wie der Schalter steht
+
+**Redur, 15. November 2026:** „ich will das du die schalterzeichnen
+verbessers also wenn ich eine schalter klicke sollte sich ändern wie du mir
+die htmml gemacht hast".
+
+**Entschieden.** Bis hierher stand jeder Schalter in der Simulation in seiner
+Ruhelage. Ein geschlossener Ausschalter sah aus wie ein offener, ein
+Wechselschalter zeigte immer auf 1, und das einzige Zeichen der Stellung war
+der laufende Strich auf der Leitung — und der fehlt, wenn kein Strom fliesst.
+
+Jetzt zeichnet jedes der 18 schaltbaren Zeichen (Handschalter, Taster,
+Schweizer Schemas 0/1/2/3/6, Kontakte und Schützkontakte) seine Stellung:
+
+- **Wo die Klinge liegt, steht im Register** (`Register.fachzeichen`,
+  `STELLUNGSBILD`): Stellung → Index in `pfad` → neuer Pfad. Das Bild gehört
+  zum Zeichen, nicht zur Fläche (§8); die Reihenfolge der Stellungen ist die
+  aus `Stromfluss` (simulation.ts), und `test641` §1 hält beide Listen gleich
+  lang.
+- **Welche Stellung gilt, rechnet die Simulation**, nicht das Bild:
+  `Ergebnis.stellungen` ist der Stand, in dem gerechnet wurde — die Hand des
+  Menschen und jeder Kontakt, den eine Spule bewegt hat. Auch eine
+  gescheiterte Rechnung (Kurzschluss) trägt ihn, damit man die Stellung
+  sieht, die den Fehler auslöst.
+- **Darunter steht der Name der Stellung** („geschlossen", „3–2",
+  „gekreuzt") — in Worten, nicht nur über die Lage der Klinge (§38). Führt der
+  Schalter Strom, trägt die Klinge die Farbe des Stroms, zusätzlich zur Form.
+- **Beim Umlegen zieht sich die Klinge nach** (160 ms, nur
+  `stroke-dashoffset`), nur am umgelegten Teil; bei weniger Bewegung steht sie
+  sofort.
+- **Ausserhalb der Simulation zeichnet jedes Zeichen genau wie vorher.** Die
+  Norm zeigt die Ruhelage (E128). Wo das Normzeichen keine Stellung zeigt
+  (Serien-, Gruppen-, Kreuzschalter: beide Klingen zu, das Kreuz), gilt das
+  Bild in der Simulation auch für Stellung 0 — sonst sähe „aus" aus wie
+  „beide". Der Kreuzschalter „gerade" verbindet 1–2 und 3–4; er wird als zwei
+  Bögen gezeichnet, nicht als zwei senkrechte Striche, die 1–3 und 2–4
+  behaupten würden.
+
+**Alternative.** Die Gruppe nur einfärben (an/aus) — das sagt nicht, WOHIN ein
+Wechselschalter steht, und es wäre Information nur über Farbe (§38). Oder die
+Klinge in der Fläche berechnen statt im Register — dann stünde die Geometrie
+eines Zeichens an zwei Stellen.
+
+**Kosten.** Ein neues Feld im Ergebnis der Simulation (nur gelesen, nirgends
+gespeichert — keine Daten, keine Migration). Ein Register-Eintrag je neuem
+schaltbarem Zeichen; fehlt er, zeichnet das Zeichen wie bisher.
+
+## E788 — Leitung aus der Klemme
+
+**Redur, 15. November 2026:** „verbessere alles damit ich schneller zeichne
+können".
+
+**Entschieden.** Eine Leitung verlangte bisher drei Handgriffe: „Leitung"
+wählen (2), ziehen, zurück auf „Zeigen" (1). Jetzt zieht im Zeigen-Werkzeug
+ein Ansatz GENAU auf einer Klemme eine Leitung — derselbe Zug wie im
+Leitungswerkzeug (`leitungFuehren`, Fang am Ziel), und das Werkzeug bleibt
+„Zeigen". Liegt der Zeiger auf einer Klemme, zeigen ein Ring und das
+Fadenkreuz, dass hier eine Leitung beginnt.
+
+Der Griff ist mit 7 px (Finger 10) bewusst enger als der Fang beim
+Leitungzeichnen (12 / 24 px): wer ein Teil am Körper fasst, verschiebt es
+weiter. Mit Umschalt (Auswahl erweitern) oder einem gewählten Bauteil gilt
+er nicht. `test641` §5 zieht von Klemme zu Klemme und am Körper.
+
+**Alternative.** Ein eigenes Kürzel für „Leitung von hier" — wieder ein
+Handgriff mehr; oder den vollen Fangradius — dann wird jedes kleine Teil
+beim Verschieben zur Leitung.
+
+**Kosten.** Wer ein Teil genau an seiner Klemme packt, zieht jetzt eine
+Leitung statt es zu verschieben; Verschieben geht am Körper.
+
+## E789 — Die Bauplan-Zeichen nach dem Lehrmittel
+
+**Redur, 15. November 2026:** „schau mal im github für schaltplan zeichnen
+und im internet für schweiz wie muss es sein und baue es direkt im redion",
+danach der Hinweis auf sein Lehrmittel „Fachzeichnen Teil 1" (Seite 14.1,
+„Schaltzeichen für Installationspläne", Grundlage: Electrosuisse „Symbole
+für die Elektrotechnik").
+
+**Entschieden.** Die Gruppe „Bauplan CH" zeichnet nach dieser Seite: ein
+Schalter ist ein OFFENER Kreis, jeder Arm mit Fahne ein Weg (Sch 0 einer,
+Sch 1 zwei nach oben, Sch 3 einer oben und einer unten, Sch 6 vier); die
+Steckdose sind zwei Hörner auf einem Querstrich; die Deckenleuchte ein
+Kreuz, die Einbauleuchte ein Kreuz im Kreis; die Abzweigdose ein Quadrat mit
+Punkt; die Unterverteilung ein Rechteck mit gefülltem Dreieck. Dazu kommen
+21 Zeichen, die es nicht gab — darunter die Kombis Gr. 1 und Gr. 1+1, die
+T13 3-fach und 3-fach mit einer geschalteten (3/1) und T25. Ein Arm wird
+an EINER Stelle gerechnet (`arm`, fachzeichen.ts), gefüllte Flächen haben
+ein eigenes Feld (`flaechen`). `test642` hält Namen, Form und — §3 — dass
+jedes alte Bauplan-Zeichen Kennung, Grösse und Anschlüsse behält.
+
+Aus dem Lehrmittel ist nichts kopiert: die Zeichen sind Normsymbole und neu
+gezeichnet, übernommen sind Namen und Formregeln. Die Seiten selbst gehen
+nicht ins Verzeichnis.
+
+**Alternative.** Die Zeichen aus einer offenen Bibliothek nehmen (KiCad,
+Inkscape-Sammlungen) — sie folgen IEC 60617 allgemein, nicht den Schweizer
+Schemas und Kombis; oder auch die Klemmen des Schema-3-Schalters jetzt auf
+1-2-4 umstellen — das ist eine Datenmigration (L267 Punkt 1).
+
+**Kosten.** Gespeicherte Baupläne sehen anders aus als vorher (richtiger);
+Steckdosen tragen ihren Anschluss weiter oben, stehen also im Buch-Bild auf
+dem Kopf, bis man sie an die Wand dreht.
 
 ## Grundregel
 

@@ -5088,6 +5088,54 @@ const ChronikDaten = {
    "groesstesProblem": "Der Auftrag lässt sich in einem Bogen nicht erfüllen; die offene Liste steht deshalb als L259 da.",
    "interessantesteAnfrage": "Besser als drei Fachprogramme zugleich.",
    "massnahmen": []
+  },
+  {
+   "datum": "2026-11-15",
+   "wochentag": "Sonntag",
+   "titel": "Der Schalter zeigt, wie er steht",
+   "wasIchWeiss": "Pull Request #208 (Zweig claude/redion2-gesamt) war offen: Schaltplan neu (E775–E780) und Redion 2 Bogen 1. Vorher hatte ich für Redurs Vertiefungsarbeit eine Offline-Simulation gebaut, in der ein Klick die Klinge eines Schalters umlegt.",
+   "nachrichten": [
+    {
+     "zeit": "nicht protokolliert",
+     "wortlaut": "schjuau mal die github repo und ich will das du die schalterzeichnen verbessers also wenn ich eine schalter klicke sollte sich ändern wie du mir die htmml gemacht hast und verbessere alles damit ich schneller zeichne können und pusche alles auf pr 208",
+     "woher": "Aktueller Dialog",
+     "gemeint": "In der Simulation soll ein Schalter beim Klicken sein Bild ändern wie in der VA-Simulation; das Zeichnen von Plänen soll schneller gehen; alles auf den Zweig von PR 208.",
+     "besser": "„Schalter zeigen ihre Stellung beim Klicken; Leitungen ohne Werkzeugwechsel; auf PR 208.“",
+     "besserePrompt": "Was dauert dir beim Zeichnen am längsten? Zeig es an einem Plan."
+    },
+    {
+     "zeit": "nicht protokolliert",
+     "wortlaut": "schua mal im github für schaltplan zeicheneund im interne für schweiz wie muss es sitn und baue es idrek im redion",
+     "woher": "Aktueller Dialog",
+     "gemeint": "Die Schweizer Schaltzeichen nachschlagen und Redions Zeichen danach richtigstellen.",
+     "besser": "„Zeichne die Bauplan-Zeichen wie in meinem Lehrmittel, Seite 14.1.“",
+     "besserePrompt": "Die Seite mit den Zeichen gleich mitgeben — die Suche im Netz fand nur Textlisten."
+    },
+    {
+     "zeit": "nicht protokolliert",
+     "wortlaut": "https://github.com/Redurbabat/Redion/releases/tag/lehrmittel  schu mal hier an es ist hier",
+     "woher": "Aktueller Dialog",
+     "gemeint": "Das Lehrmittel als PDF liegt in einem Release des Repositorys.",
+     "besser": "—",
+     "besserePrompt": "—"
+    }
+   ],
+   "arbeit": [
+    {
+     "was": "Zweig claude/redion2-gesamt (PR #208): E787 (Klinge je Stellung im Register, Ergebnis.stellungen), E788 (Leitung aus der Klemme), test641 — gegen den Stand davor rot mit 12 von 15."
+    },
+    {
+     "was": "E789: Bauplan-Zeichen nach „Fachzeichnen Teil 1“ 14.1 (offener Kreis mit Armen, Hörner-Steckdose, Kreuz-Leuchte, Quadrat-Dose), 21 neue Zeichen, `flaechen` und `arm` im Register; test642 gegen den Stand davor rot mit 29 von 33; L267 hält, was offen bleibt (Schema-3-Klemmen 1-2-4)."
+    }
+   ],
+   "zahlen": {
+    "commits": 2,
+    "entscheidungen": 3,
+    "neuePruefungen": 2
+   },
+   "groesstesProblem": "Die Norm zeigt die Ruhelage, die Simulation braucht die Stellung: gelöst, indem die Stellung nur in der Simulation gezeichnet wird.",
+   "interessantesteAnfrage": "Ein Schalter, der aussieht wie in der eigenen VA-Simulation.",
+   "massnahmen": []
   }
  ],
  "zeitangaben": "EHRLICH ÜBER DIE UHR: genau sind nur die Commit-Zeiten — die stehen in git und sind hier unverändert übernommen. Die Uhrzeiten der Nachrichten sind ABGELEITET: aus ihrer Reihenfolge und den Commits davor und danach. Sie stehen mit „ca.\" da. Eine erfundene Minute wäre schlimmer als eine fehlende (§35).",

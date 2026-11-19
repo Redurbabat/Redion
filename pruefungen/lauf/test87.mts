@@ -233,7 +233,10 @@ const STUFE: Record<string, number> = { 'marken.css': 0, 'dunkel.css': 0, 'hell.
                 'bibliothek-studio.css': 4, 'pdf-studio.css': 4,
                 // Optionale Gesamtschale, kein Bauteil: nur mit data-ui-shell.
                 // Nach allen vier klassischen Schalenblättern, nie dazwischen.
-                'glasswheel.css': 5 };
+                'glasswheel.css': 5,
+                // Redion 2 (E782): die Marken einer Skala und die ruhigen
+                // Hauptflächen — ordnet ALLES davor, also ganz zuletzt.
+                'redion2.css': 6 };
 const stufeVon = (d: string) => STUFE[d] ?? 2;
 
 const html = _lies(_dazu(WURZEL, 'index.html'), 'utf8');

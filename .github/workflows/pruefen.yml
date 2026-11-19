@@ -67,6 +67,14 @@ jobs:
       # Prüft Typen, baut nichts (`noEmit`). Die App startet weiterhin per
       # Doppelklick — siehe doku/TYPESCRIPT-MIGRATION.md. Der Schritt steht
       # hier vorne, weil er in Sekunden fertig ist.
+      # Die Windows-Pruefung protokolliert TypeScript- und Browser-Fehler.
+      # Auch ohne Windows-Rechner kann ihr Node-Helfer mit ECHTEN
+      # Unterprozessen und isoliertem Benutzerordner getestet werden.
+      # Der Test steht nicht unter pruefungen/lauf/ und wird vom
+      # allgemeinen Orchestrator deshalb nicht automatisch entdeckt.
+      - name: Windows-Pruefprotokoll und sicheren PR-Live-Starter testen
+        run: node --test windows/schaltplan-protokoll.test.mjs windows/pr207-launcher.test.mjs
+
       - name: Typen prüfen
         run: npm run typecheck
 

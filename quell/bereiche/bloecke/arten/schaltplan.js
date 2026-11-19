@@ -139,12 +139,12 @@ const Schaltplan = (() => {
                         plus: String(roh.batterieUebung.plus || ''),
                         minus: String(roh.batterieUebung.minus || ''),
                         teile: roh.batterieUebung.teile.map(String).slice(0, 64),
-            ...(Array.isArray(roh.batterieUebung.ausgaenge) ? {
-              ausgaenge: roh.batterieUebung.ausgaenge.slice(0, 8).map((x) => ({
-                id: String(x.id || ''), name: String(x.name || ''),
-                zielU: Number(x.zielU) || 0, zielI: Number(x.zielI) || 0
-              }))
-            } : {})
+                        ...(Array.isArray(roh.batterieUebung.ausgaenge) ? {
+                            ausgaenge: roh.batterieUebung.ausgaenge.slice(0, 8).map((x) => ({
+                                id: String(x.id || ''), name: String(x.name || ''),
+                                zielU: Number(x.zielU) || 0, zielI: Number(x.zielI) || 0
+                            }))
+                        } : {})
                     } } : {})
         };
     };
@@ -192,16 +192,21 @@ const Schaltplan = (() => {
         });
     };
     const FANG = 14;
-    const fangeAnschluss = (plan, p) => {
+    const fangeAnschluss = (plan, p, radius = FANG) => {
         let beste = null;
-        let weite = FANG * FANG;
-        plan.teile.forEach(t => anschluesseVon(t).forEach(a => {
-            const d = (a.x - p.x) * (a.x - p.x) + (a.y - p.y) * (a.y - p.y);
-            if (d <= weite) {
-                weite = d;
-                beste = { teil: t.id, nr: a.nr, x: a.x, y: a.y };
-            }
-        }));
+        let weite = Math.max(0, radius) ** 2;
+        const versteckt = new Set(plan.ebenen.filter(e => e.sichtbar === false).map(e => e.id));
+        plan.teile.forEach(t => {
+            if (versteckt.has(t.ebene))
+                return;
+            anschluesseVon(t).forEach(a => {
+                const d = (a.x - p.x) * (a.x - p.x) + (a.y - p.y) * (a.y - p.y);
+                if (d <= weite) {
+                    weite = d;
+                    beste = { teil: t.id, nr: a.nr, x: a.x, y: a.y };
+                }
+            });
+        });
         return beste;
     };
     const rechtwinklig = (a, b) => {
@@ -885,6 +890,20 @@ const Schaltplan = (() => {
         }
         return teile.join(' ');
     };
+    const UNBEKANNT_MASS = { w: 40, h: 40 };
+    const unbekanntesZeichen = (zeichen, farbe) => {
+        const name = zeichen.length > 14 ? zeichen.slice(0, 13) + '…' : zeichen;
+        return `<title>Unbekanntes Bauteil „${esc(zeichen)}" — diese Redion-Fassung kennt das Zeichen nicht. ` +
+            `Das Teil bleibt mit allen Angaben im Plan erhalten.</title>` +
+            `<rect class="sp-unbekannt-kasten" x="0" y="0" width="${UNBEKANNT_MASS.w}" height="${UNBEKANNT_MASS.h}" ` +
+            `rx="6" stroke-dasharray="4 3" stroke-width="1.5"/>` +
+            `<text x="${UNBEKANNT_MASS.w / 2}" y="27" text-anchor="middle" font-size="20" font-weight="700" ` +
+            `fill="${farbe}" stroke="none">?</text>` +
+            `<text class="sp-unbekannt-name" x="${UNBEKANNT_MASS.w / 2}" y="${UNBEKANNT_MASS.h + 12}" text-anchor="middle" ` +
+            `font-size="9" fill="${farbe}" stroke="none" opacity=".75">${esc(name)}</text>`;
+    };
+    const teilMasse = (t) => (typeof Register !== 'undefined' && Register.fachzeichen && Register.fachzeichen.holen(t.zeichen))
+        ? Register.fachzeichen.masse(t.zeichen, t.drehung) : { ...UNBEKANNT_MASS };
     const alsSvg = (plan, opt = {}) => {
         const sichtbar = (ebene) => {
             if (opt.nurEbenen)
@@ -981,16 +1000,20 @@ const Schaltplan = (() => {
             if (!sichtbar(t.ebene))
                 return;
             const farbe = farbeVon(t.ebene);
+            const mitStellung = !!opt.stellungen && typeof Register !== 'undefined' && Register.fachzeichen
+                && typeof Register.fachzeichen.hatStellungsbild === 'function'
+                && Register.fachzeichen.hatStellungsbild(t.zeichen);
+            const stellungNr = mitStellung ? Number(opt.stellungen[t.id]) || 0 : 0;
             const svg = (typeof Register !== 'undefined' && Register.fachzeichen)
-                ? Register.fachzeichen.alsSvg(t.zeichen, {
-                    farbe, drehung: t.drehung, gespiegelt: t.gespiegelt
-                })
+                ? Register.fachzeichen.alsSvg(t.zeichen, mitStellung
+                    ? { farbe, drehung: t.drehung, gespiegelt: t.gespiegelt, stellung: stellungNr }
+                    : { farbe, drehung: t.drehung, gespiegelt: t.gespiegelt })
                 : '';
-            if (!svg)
-                return;
-            const innen = svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
+            const unbekannt = !svg;
+            const innen = unbekannt ? unbekanntesZeichen(t.zeichen, farbe)
+                : svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
             const gewaehlt = opt.auswahl && opt.auswahl.has(t.id);
-            const mass = Register.fachzeichen.masse(t.zeichen, 0);
+            const mass = unbekannt ? { ...UNBEKANNT_MASS } : Register.fachzeichen.masse(t.zeichen, 0);
             const w = opt.strom ? opt.strom.werte[t.id] : undefined;
             const vh = (typeof Stromfluss !== 'undefined' && Stromfluss.verhalten)
                 ? Stromfluss.verhalten(t.zeichen) : null;
@@ -1060,13 +1083,20 @@ const Schaltplan = (() => {
                     }
                 }
             }
-            teile.push(`<g class="sp-teil${gewaehlt ? ' sp-gewaehlt' : ''}` +
+            let stellungText = '';
+            const stellungName = mitStellung && opt.stellungsnamen ? opt.stellungsnamen[t.id] || '' : '';
+            if (stellungName)
+                stellungText = `<text class="sp-stellung" x="${mass.w / 2}" y="${mass.h + 14}" ` +
+                    `text-anchor="middle" font-size="10" stroke="none" fill="${farbe}">${esc(stellungName)}</text>`;
+            teile.push(`<g class="sp-teil${unbekannt ? ' sp-unbekannt' : ''}${gewaehlt ? ' sp-gewaehlt' : ''}` +
+                `${mitStellung ? ' sp-stellbar' : ''}${opt.umgelegt && opt.umgelegt.has(t.id) ? ' sp-umgelegt' : ''}` +
                 `${w && w.fliesst ? ' sp-fuehrt' : ''}` +
                 `${opt.hervor === t.id ? ' sp-gesucht' : ''}" data-id="${esc(t.id)}" ` +
+                (mitStellung ? `data-stellung="${stellungNr}" ` : '') +
                 `transform="translate(${t.x} ${t.y})" fill="none" stroke="${farbe}" ` +
                 `stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
                 `<rect x="-4" y="-4" width="${mass.w + 8}" height="${mass.h + 8}" ` +
-                `fill="transparent" stroke="none"/>` + schein + innen + anzeige + pfeil +
+                `fill="transparent" stroke="none"/>` + schein + innen + anzeige + stellungText + pfeil +
                 (opt.anschluesse ? anschluesseVon(t).map(a => `<circle class="sp-punkt" data-teil="${esc(t.id)}" data-nr="${esc(a.nr)}" ` +
                     `cx="${a.x - t.x}" cy="${a.y - t.y}" r="4" fill="${farbe}" stroke="none" opacity=".5"/>`).join('') : '') +
                 (opt.nummern ? anschluesseVon(t).map(a => `<text x="${a.x - t.x + 6}" y="${a.y - t.y - 4}" font-size="9" fill="${farbe}" ` +
@@ -1195,7 +1225,7 @@ const Schaltplan = (() => {
         return false;
     };
     return {
-        ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, rasten,
+        ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, teilMasse, rasten,
         naechstesBmk, anschlussOrt, anschluesseVon, klemmeFuer, fangeAnschluss, rechtwinklig,
         kontakte, vorherMerken, nachziehen, veraendert, verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
         netzBauen, BEISPIELE, beispielBauen, uid, esc,

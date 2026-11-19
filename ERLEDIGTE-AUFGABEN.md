@@ -1,5 +1,26 @@
 # ERLEDIGTE-AUFGABEN.md
 
+## Redion 2, Bogen 1 „Mass und Ruhe" — 9./10. November 2026
+
+**Fund.** Redur: „die aktuele webseite gefällt mir gar nicht … ich will wenn
+ich morgen aufseteh eine komplet andere redion sehen". 50 Bilder: 56 % des
+Fensters Bedienung vor dem ersten Wort, 50 Schriftgrössen, dreifach
+markierte Auswahl, ein Entwicklersatz im Lernzentrum.
+**Bau.** E782–E786: `quell/schale/stil/redion2.css` als letzte Schicht
+(Skala, neutrale Grauleiter für Standard und Hell, Kopf 44 + 44 statt
+60 + 55, Kante mit einfacher Auswahl, Seitenwerkzeuge als stille Zeile,
+Karten mit Haarlinie, ☆/⋯ bei Zeiger, Ortstitel gleich); `index.html`,
+GRUNDSTOCK, `test87` (Stufe 6), Karten „Standard"/„Hell" in `aussehen.ts`,
+ein Satz in `lernwelt.ts`. Erste Textzeile der Notizseite am Rechner bei
+y ≈ 362 statt 482.
+**Prüfung.** Auf Redurs Wunsch erst am Ende (E782): 87, 105, 290, 387,
+549, 596, 597 grün; 362, 402, 550, 576, 580, 584, 603, 623 rot — jede rote
+Zeile ist auf dem Grundstand 563a8488f gleich rot (576 hell sogar 4,03 →
+4,13). Selbst gefunden und repariert: Suchkapsel 32 statt 44 px hoch
+(603 §7), Standard dunkel ausserhalb des kühlen Tons und alte Werte auf den
+Schemakarten (584), Schatten der unteren Leiste (623), Ecke des Bandes
+(580 §6), stille Schrift über Glas (576). Kein neuer Wächter „Mass" (offen).
+
 ## Ein und Aus wieder „▶ Strom" — 2. November 2026
 
 **Fund.** Redur nach den Bildern von E772: „Für ein-aus sollte wie früher
@@ -9479,3 +9500,31 @@ zwei Trefflächen unter 44 px ohne geschriebenen Grund —
 `werkzeuge.css .gk-leiste button` (26 px, aus E607). Beide sind älter als
 dieser Zweig und liegen schon auf `main`. §46 sagt „rot zuerst": das ist der
 nächste Bogen.
+
+## Der Schaltplan auf einer neuen Stufe — 9./10. November 2026 (E775–E780)
+
+Redur: „ich will das du redion auf eine andere levell bringst … die
+schaltplan teil ist die erstel prioieritet". Für diesen Bogen hat er „erst
+bauen, am Ende prüfen" entschieden (E775).
+
+**Gebaut.** Einpassen des belegten Bereichs beim Öffnen und bei jeder
+Grössenänderung, eigener Zoom bleibt, „Ganzes Blatt zeigen" im „…" (E776);
+der Kopf in einer Zeile mit „▶ Strom" vorn und der Planart als Chip, am
+Telefon im „…" (E777); Werkzeuge mit Zeichen und Namen, das Dock wird nicht
+mehr bei jeder Änderung neu gebaut (E778); ein Einstieg in leere Pläne
+(E779); gleitende Werkzeugmarke, Einpassen/Zoom per FLIP, Federn für
+Leisten (E780); ein unbekanntes Bauteil als Platzhalter (E775).
+
+**Beim Prüfen am Ende gefunden und behoben:** `container-type` liess die
+Fläche am Telefon auf 2 px zusammenfallen (eigene Breite); der zweite Zug
+mit dem Schienenwerkzeug wurde abgebrochen, weil der Browser Text im SVG
+markieren wollte (`user-select:none`); die Kontextleiste lag nach dem
+Einpassen auf dem obersten Teil (64 px oben frei); am Telefon lag „▶ Strom"
+auf ↶ (↷ wandert unter 380 px ins „…"). Angepasst mit Grund im Lauf:
+`test611` (Matrix statt Kasten, erster Knopf des Kopfs, Teil ins Bild),
+`test625` (§2a/§2e eingepasste Zahl, §6 „Ganzes Blatt"), `test638`
+(Teilpixel 43,99999).
+
+**Gefahren** (10. November): 611, 612, 625, 629–636, 638, 639, 640, 87,
+105, 290, 537, 549, 550 grün. Bilder: `bilder/schaltplan-neu/` (Rechner und
+Telefon, dunkel).

@@ -44,8 +44,9 @@
  *       die Enden neben ihrer Klemme — und keine geheilte zapft an (Fund 3)
  *   §13 Während eines Zugs wird nichts gespeichert: keine Taste, kein Knopf,
  *       Strg+Z nicht, die Schreibpause nicht, losgelassen ausserhalb und ein
- *       zweiter Finger beenden den Zug richtig, Escape bricht ab; eine
- *       Leitung über der Palette verfällt, eine Fläche, die nicht mehr im
+ *       zweiter Finger bricht einen unfertigen Zug vor dem Pinch-Zoom ab,
+ *       Escape bricht ebenfalls ab; eine Leitung über der Palette verfällt,
+ *       eine Fläche, die nicht mehr im
  *       Dokument steht, speichert nichts (zweite Durchsicht, Fund 1)
  *   §14 Echte Maus, echte Tasten: Escape bricht einen Zug mit Teilen, einen
  *       Rahmen und eine Leitung ab; Rückgängig und Wiederholen tun im Zug
@@ -373,6 +374,11 @@ const zustand = (bid: string): Promise<any> => seite.evaluate((b: string) => (wi
 
 /** Ein Teil anklicken (wählt es aus) — Mitte seines Kastens. */
 const waehle = async (tid: string): Promise<void> => {
+  /* Seit E776 füllt der eingepasste Plan die ganze Fläche; ein Teil am
+     unteren Rand kann dann unter dem Fensterrand liegen. Erst ins Bild. */
+  await seite.evaluate((t: string) => document.querySelector(`.sp-wrap svg .sp-teil[data-id="${t}"]`)
+    ?.scrollIntoView({ block: 'center', inline: 'nearest' }), tid);
+  await seite.waitForTimeout(150);
   const box = await seite.locator(`.sp-wrap svg .sp-teil[data-id="${tid}"]`).boundingBox();
   if (!box) throw new Error('Teil nicht gefunden: ' + tid);
   await seite.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
@@ -672,12 +678,15 @@ p('… und sie sagt, WAS: E2:X1 berührt jetzt die Leitung an E1:X2',
 /** Bildschirmpunkt zu einem Planpunkt — die Umkehrung von `ortAus`. */
 const bildpunkt = async (bid: string): Promise<(x: number, y: number) => [number, number]> => {
   await seite.locator('.sp-wrap svg.sp-flaeche').last().scrollIntoViewIfNeeded();
-  const r = await seite.evaluate((b: string) => {
-    const s = [...document.querySelectorAll('.sp-wrap svg.sp-flaeche')].pop()!.getBoundingClientRect();
-    const plan = Store.getBlock(b).plan;
-    return { l: s.left, t: s.top, sx: s.width / plan.breite, sy: s.height / plan.hoehe };
-  }, bid);
-  return (x: number, y: number) => [r.l + x * r.sx, r.t + y * r.sy];
+  /* Über die Matrix des SVG, nicht über seinen Kasten (E776): seit die
+     Fläche den belegten Bereich einpasst und die ganze Bühne füllt, ist der
+     Kasten nicht mehr das Blatt. `b` bleibt als Name des Plans stehen. */
+  void bid;
+  const r = await seite.evaluate(() => {
+    const m = [...document.querySelectorAll<SVGSVGElement>('.sp-wrap svg.sp-flaeche')].pop()!.getScreenCTM()!;
+    return { a: m.a, d: m.d, e: m.e, f: m.f };
+  });
+  return (x: number, y: number) => [r.e + x * r.a, r.f + y * r.d];
 };
 /**
  * Zieht von Planpunkt `von` um `d` Planeinheiten, in `schritte` Bewegungen.
@@ -1105,35 +1114,63 @@ await zugMit('Losgelassen ausserhalb', {
   },
   danach: async () => { await waehle('T1'); await taste('r'); }
 });
-/* Ein zweiter Finger: der erste zieht F1 an die Stelle, der zweite tippt T1.
-   Der Zug des ersten endet richtig (volle Suche), bevor der zweite zählt. */
+/* Ein zweiter Finger wechselt zur Zoom-/Schwenkgeste. Seit E746 wurde
+   der angefangene Teilzug dabei gespeichert. Das war eine unbeabsichtigte
+   Lageänderung: der Finger wollte navigieren, nicht den Draht festlegen.
+   Jetzt wird beim zweiten Touch der noch nicht beendete Zug ABGEBROCHEN.
+   Die alte Netzliste und die Lage des Bauteils müssen erhalten bleiben. */
 const cdp = await ktx.newCDPSession(seite);
 let fingerBei: [number, number] = [0, 0];
-await zugMit('Zweiter Finger im Zug', {
-  ziehen: async (bid) => {
-    const bild = await bildpunkt(bid);
-    const [x0, y0] = bild(430, 92);
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x0, y: y0, id: 1 }] });
-    for (let i = 1; i <= SCHRITTE; i++) {
-      fingerBei = bild(430 + 30 * i / SCHRITTE, 92 + 40 * i / SCHRITTE);
-      await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: fingerBei[0], y: fingerBei[1], id: 1 }] });
-    }
-    await seite.waitForTimeout(150);
-  },
-  waehrend: async () => {},
-  loslassen: async () => {
-    const box = await seite.locator('.sp-wrap svg .sp-teil[data-id="T1"]').boundingBox();
-    if (!box) throw new Error('T1 nicht gefunden');
-    const t1: [number, number] = [box.x + box.width / 2, box.y + box.height / 2];
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart',
-      touchPoints: [{ x: fingerBei[0], y: fingerBei[1], id: 1 }, { x: t1[0], y: t1[1], id: 2 }] });
-    await seite.waitForTimeout(60);
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [{ x: t1[0], y: t1[1], id: 2 }] });
-    await seite.waitForTimeout(150);
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [{ x: fingerBei[0], y: fingerBei[1], id: 1 }] });
-  },
-  danach: async () => { await waehle('T1'); await taste('r'); }
-});
+{
+  const bid = await oeffne('W');
+  await seite.waitForTimeout(300);
+  await waehle('F1');
+  const start = await zustand(bid);
+  const bild = await bildpunkt(bid);
+  const [x0, y0] = bild(430, 92);
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchStart', touchPoints: [{ x: x0, y: y0, id: 1 }]
+  });
+  for (let i = 1; i <= SCHRITTE; i++) {
+    fingerBei = bild(430 + 30 * i / SCHRITTE, 92 + 40 * i / SCHRITTE);
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchMove', touchPoints: [{ x: fingerBei[0], y: fingerBei[1], id: 1 }]
+    });
+  }
+  await seite.waitForTimeout(150);
+  const mitte = await zustand(bid);
+  p('Zwei Finger: während des ersten Zugs bleibt die gespeicherte Ablage unverändert',
+    mitte.json === start.json);
+  const box = await seite.locator('.sp-wrap svg .sp-teil[data-id="T1"]').boundingBox();
+  if (!box) throw new Error('T1 für zweite Fingergeste nicht gefunden');
+  const t1: [number, number] = [box.x + box.width / 2, box.y + box.height / 2];
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [
+      { x: fingerBei[0], y: fingerBei[1], id: 1 },
+      { x: t1[0], y: t1[1], id: 2 }
+    ]
+  });
+  await seite.waitForTimeout(150);
+  const nachZweitem = await zustand(bid);
+  p('Zwei Finger: begonnene Verschiebung wird NICHT gespeichert',
+    nachZweitem.json === start.json);
+  const f1Bild = await seite.evaluate(() =>
+    document.querySelector('.sp-wrap svg .sp-teil[data-id="F1"]')?.getAttribute('transform') || '');
+  const f1 = start.teile.F1;
+  p('Zwei Finger: F1 im SVG an der ursprünglichen Lage',
+    !!f1 && f1Bild.includes(`translate(${f1.x} ${f1.y})`), f1Bild);
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchEnd', touchPoints: [{ x: t1[0], y: t1[1], id: 2 }]
+  });
+  await cdp.send('Input.dispatchTouchEvent', {
+    type: 'touchEnd', touchPoints: [{ x: fingerBei[0], y: fingerBei[1], id: 1 }]
+  });
+  await seite.waitForTimeout(250);
+  const nachEnde = await zustand(bid);
+  p('Zwei Finger: beide Finger losgelassen, Plan bleibt unverändert',
+    nachEnde.json === start.json);
+}
 /* Der Browser bricht den Finger ab (`pointercancel`, etwa wenn eine Geste des
    Systems übernimmt): der Zug endet wie beim Loslassen, mit der vollen Suche.
    Das ist keine Lücke von 478791f5f — dort horchte die Bühne auf
@@ -1655,9 +1692,10 @@ seite.on('download', d => { downloads.push(d); });
     folge.length === 0, folge.join(' | '));
   const seitenMeld = (await meldungenJetzt()).slice(m0).filter(t => /rückgängig|wiederhol/i.test(t));
   p('… und der Seitenverlauf hat nichts gemeldet', seitenMeld.length === 0, seitenMeld.join(' | '));
-  /* Und wer mit der Tastatur kommt, sieht den Ring (§38): vom Auswahlfeld der
-     Planart mit Umschalt+Tab zurück auf die Fläche. */
-  await seite.evaluate(() => (document.querySelector('.sp-wrap .sp-art') as HTMLElement).focus());
+  /* Und wer mit der Tastatur kommt, sieht den Ring (§38): vom ersten Knopf
+     des Kopfs mit Umschalt+Tab zurück auf die Fläche. Bis E777 war das das
+     Auswahlfeld der Planart; seither steht „▶ Strom" vorn. */
+  await seite.evaluate(() => (document.querySelector('.sp-wrap .sp-kopf button') as HTMLElement).focus());
   await seite.keyboard.press('Shift+Tab');
   await seite.waitForTimeout(200);
   const fokusTab = await fokusJetzt();

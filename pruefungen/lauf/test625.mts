@@ -493,7 +493,10 @@ const T = await aufmachen({ touch: true });
   const bid = await oeffne(s, 'L');
   const m0 = await massstab(s);
   const wert = async () => (await s.locator('.sp-zoomwert').last().textContent().catch(() => '')) || '';
-  p('§2a die Prozentzahl steht da und sagt 100 %', /100\s*%/.test(await wert()), await wert());
+  /* Seit E776 passt die Fläche beim Öffnen den belegten Bereich ein; die
+     Zahl ist dann die eingepasste, nicht mehr immer 100 %. */
+  const wert0 = await wert();
+  p('§2a die Prozentzahl steht da', /^\d+\s*%$/.test(wert0.trim()), wert0);
   await klick(s, '.sp-wrap [data-a="zoom-plus"]');
   const m1 = await massstab(s);
   p('§2b + zoomt hinein', m1 > m0 * 1.1, `${m0} → ${m1}`);
@@ -502,7 +505,7 @@ const T = await aufmachen({ touch: true });
   await klick(s, '.sp-wrap [data-a="zoom-minus"]');
   p('§2d − zoomt hinaus', (await massstab(s)) < m0 * 0.95, String(await massstab(s)));
   await klick(s, '.sp-wrap [data-a="zoom-alles"]');
-  p('§2e „Alles zeigen" kehrt zum ganzen Plan zurück', nahe(await massstab(s), m0, m0 * 0.02) && /100\s*%/.test(await wert()), await wert());
+  p('§2e „Einpassen" kehrt zur Ansicht vom Öffnen zurück', nahe(await massstab(s), m0, m0 * 0.02) && (await wert()) === wert0, await wert());
 
   /* Strg+Rad um den Zeiger. */
   const [cx, cy] = await bild(s, 300, 200);
@@ -780,6 +783,11 @@ const T = await aufmachen({ touch: true });
   const bid = await oeffne(s, 'R');
   p('§6a das Werkzeug „Schiene" steht im Kopf', await klick(s, '.sp-kopf [data-wz="schiene"]'));
   p('§6b im Fuss steht die Wahl L1 … PE', await s.locator('.sp-fuss [data-schiene]').count() >= 5);
+  /* Gezeichnet wird bis an den Rand des Blatts: dafür das ganze Blatt
+     holen (seit E776 passt die Fläche nur den belegten Bereich ein). */
+  await klick(s, '.sp-kopf [data-a="mehr"]');
+  await klick(s, '.menu [data-m="blatt"]');
+  await s.waitForTimeout(300);
   await klick(s, '.sp-fuss [data-schiene="L1"]');
   await zieheMaus(s, [40, 100], [700, 104], 10);
   await klick(s, '.sp-fuss [data-schiene="N"]');

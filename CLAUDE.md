@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 569 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 576 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2210,6 +2210,35 @@ Pause; ohne Zeitrelais „—". Seine Gegenprobe ohne Tempo war rot („4×:
 Redions allgemeine Bewegungsregel die Lichtnaht schon anhält (L265).
 Gezählt am 1. November: der Befehl sagt 569.*
 
+*570 bis 572 sind `test635`, `test636` und `test638`; sie kamen mit den
+Entwürfen #206/#207 und tragen hier keinen eigenen Absatz.*
+
+*Und 573 und 574: `test639` (ein unbekanntes Bauteil bleibt sichtbar,
+E775) und `test640` (der Plan füllt die Fläche, E776). Beide standen, bevor
+Redur am 9. November für diesen Bogen „erst bauen, am Ende prüfen"
+entschied; gefahren wurden sie am Ende. Gezählt am 9. November: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 574.*
+
+*Und 575: `test641` — der Schalter zeigt, wie er steht, und die Leitung
+kommt aus der Klemme (E787, E788). Redur am 15. November: „wenn ich eine
+schalter klicke sollte sich ändern … damit ich schneller zeichne können".
+Er hält im Register, dass jedes der 18 schaltbaren Zeichen genau so viele
+Bilder hat, wie die Simulation Stellungen kennt, und dass zwei Stellungen
+nie gleich aussehen; dann klickt er in der Wechselschaltung mit echter Maus
+auf S1 und verlangt eine andere Klinge, einen anderen Namen darunter und
+eine Lampe, die folgt — und ohne Simulation keine Klinge. Er zieht im
+Zeigen-Werkzeug von Klemme zu Klemme (eine Leitung, das Teil bleibt) und am
+Körper (das Teil wandert). Gegen den Stand davor rot mit 12 von 15. Gezählt
+am 15. November: `ls pruefungen/lauf/test*.mts | wc -l` sagt 575.*
+
+*Und 576: `test642` — die Bauplan-Zeichen so, wie sie im Lehrmittel stehen
+(E789). Gegen den Stand davor rot mit 29 von 33: der Schalter ein voller
+Punkt, die Deckenleuchte mit dem Kreis der Einbauleuchte, die Steckdose ein
+geschlossener Halbkreis, 21 Zeichen gar nicht da. Sein §3 hält, dass alte
+Pläne bleiben: jedes Bauplan-Zeichen von vorher mit derselben Grösse und
+denselben Anschlüssen. Gezählt am 15. November: `ls pruefungen/lauf/test*.mts
+| wc -l` sagt 576.*
+
 ### Die Befehle
 
 ```txt
@@ -2231,7 +2260,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 569 Läufe
+npm run pruefen                      alle 576 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2328,7 +2357,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 569 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 576 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
