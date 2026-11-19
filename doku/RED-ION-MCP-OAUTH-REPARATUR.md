@@ -204,6 +204,25 @@ Funktionsänderung. „Workers Builds: red-ion“ scheitert an `wrangler preview
 hinge jede Vorschau an die Produktions-D1 — **nicht** übernommen; eine eigene
 Vorschau-D1 wäre eine neue Datenbank. Entscheidung offen.
 
+**Access-Ausnahmen gesetzt (19.11., 19:18 UTC).** Mit Redurs eigenem, eng
+begrenztem API-Token („Access: Apps and Policies Edit“, nur lokal ausserhalb
+des Repositories) zuerst die Anwendung gelesen und privat gesichert, dann am
+einzigen Worker-Ziel genau sieben `overrides` (`behavior: "public"`, exakte
+`path_pattern` ohne `*`) ergänzt. Richtlinie, Identitätsanbieter und alle
+übrigen Felder unverändert. Produktiv ohne Cookie gemessen:
+
+| Weg | Ergebnis |
+|---|---|
+| drei Discovery-Wege | 200, `application/json` |
+| `/register` gültig ohne Namen / fremde Redirect-URI | 201 / 400 |
+| `/mcp/cloud` ohne Token / ungültiger Token | 401 mit `Bearer resource_metadata=…, scope="redion:read"` / 401 |
+| `/token` ohne gültigen Code, `/revoke` ohne Client | 400 / 401 |
+| `/`, `/index.html`, `/mcp/authorize`, `/mcp/settings`, `/sync/runter`, `/api/stand`, `/konto/ich`, `/mcp` | 302 zu Access |
+| Unterpfade `/register/x`, `/mcp/cloud/x`, `/tokenx` | 302 zu Access |
+
+**Rückfall:** die sieben `overrides` wieder entfernen (Sicherung der Anwendung
+liegt privat bei Redur), dann schliesst Access den MCP-Weg wieder.
+
 **Weitere Befunde.** `test550` ist auf diesem Zweig rot (E792/E793 im
 Verzeichnis ohne Text), `test109` wie bekannt. Der alte separate Host
 `red-ion-mcp.redurbabat7.workers.dev` antwortet noch mit 200 und teilt dieselbe
