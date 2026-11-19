@@ -15,7 +15,7 @@ export function injectNativeGlassDock(delegate, source) {
   if (typeof delegate !== 'string' || typeof source !== 'string' ||
       !delegate.includes('import UIKit') || !delegate.includes(SIGNATURE) ||
       !source.includes('private final class RedionNativeDock: NSObject, WKScriptMessageHandler') ||
-      !source.includes('glassEffect(.regular, in: Capsule())')) {
+      !source.includes('UITabBar(frame: .zero)')) {
     throw new Error('Native SwiftUI-Quelle oder Capacitor-Datenschutz-Hook fehlt.');
   }
   if (delegate.includes(HOOK) || delegate.includes(MARKER) ||
