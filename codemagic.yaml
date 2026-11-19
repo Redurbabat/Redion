@@ -123,6 +123,9 @@ workflows:
           SWIFT="build/ios-capacitor/App/App/AppDelegate.swift"
           grep -q 'RedionNativeDock.start()' "$SWIFT"
           grep -q 'UITabBar(frame: .zero)' "$SWIFT"
+          grep -q 'RedionNativeMoreView' "$SWIFT"
+          grep -q 'RedionNativeSettingsView' "$SWIFT"
+          grep -q 'RedionNativeFilesView' "$SWIFT"
           xcrun swiftc -frontend -parse "$SWIFT"
 
       - name: iPhone-Startbildschirm mit echtem Redion-Symbol
