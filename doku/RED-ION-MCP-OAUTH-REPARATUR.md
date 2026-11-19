@@ -166,6 +166,49 @@ Eine alte ungebundene OAuth-Version nicht bei weiter geöffneten Protokollwegen
 als Sicherheits-Rollback verwenden. Eine Bookmark-Wiederherstellung würde
 auch neuere Daten zurücksetzen und benötigt eine eigene Freigabe.
 
+## Geprüfter Stand am 19. November 2026, abends
+
+Gelesen, nicht verändert: Worker `red-ion`, letzte Bereitstellung 17:56 UTC;
+D1 `DB` = `redion` (`18b0f926-e522-4b77-8063-ca3399c478ae`). Access-Anwendung
+„red-ion - Cloudflare Workers“ (`77ddd13f-…`), ein Ziel vom Typ Worker
+(`red-ion`, Produktions- und Vorschauadressen), eine Richtlinie „Cloudflare
+account members“ (Allow), keine Overrides.
+
+Ohne Access-Cookie liefern **alle** sieben Protokollwege 302 zur Access-Anmeldung,
+ebenso Webseite, `/mcp/authorize`, `/mcp/settings`, `/sync/runter` und
+`/api/stand`. Die Pfadausnahmen sind also **noch nicht** gesetzt.
+
+**Warum noch nicht:** `overrides` lassen sich nur über die API setzen
+(`PUT …/access/apps/{id}`, Berechtigung **„Access: Apps and Policies Write“**).
+Die Dashboard-Oberfläche bietet sie für Worker-Ziele nicht an, und die
+wrangler-Anmeldung hat keinen Access-Scope (`wrangler login --scopes-list`
+nennt keinen). Ohne ein von Redur erteiltes Recht wird nichts geändert.
+
+| Prüfung | Ergebnis |
+|---|---|
+| `npm run typecheck` | bestanden |
+| `npm run typecheck:mcp` | bestanden |
+| `npm run test:mcp-cloud` | bestanden, 29/29 |
+| `npm run test:mcp-cloud-browser` | nicht ausführbar: `pwsh.exe` (PowerShell 7) fehlt auf diesem Rechner |
+| `npm run test:mcp-cloud-runtime` | bestanden, 1/1 (wrangler 4.164 aus dem npx-Cache) |
+| `node pruefungen/alle.mts server` | bestanden, 9/9 |
+| `node pruefungen/lauf/test620.mts` | bestanden, 15/15 |
+| `node pruefungen/lauf/test102.mts` | bestanden |
+
+**CI.** „Quelltext und Logik“ und „Schneller Lauf“ brachen ab, weil
+`493cba74c`/`126737404` die ERZEUGTE `quell/…/einstellungen/ansicht/seite.js`
+von Hand änderten (die Quelle `seite.ts` hatte die Änderung schon). Dienststand
+und Einzeldatei waren dadurch veraltet. Neu gebaut (`85e712742`), v1615, ohne
+Funktionsänderung. „Workers Builds: red-ion“ scheitert an `wrangler preview`
+(Beta): es verlangt `[[previews.d1_databases]]`. Der vorgeschlagene Block
+hinge jede Vorschau an die Produktions-D1 — **nicht** übernommen; eine eigene
+Vorschau-D1 wäre eine neue Datenbank. Entscheidung offen.
+
+**Weitere Befunde.** `test550` ist auf diesem Zweig rot (E792/E793 im
+Verzeichnis ohne Text), `test109` wie bekannt. Der alte separate Host
+`red-ion-mcp.redurbabat7.workers.dev` antwortet noch mit 200 und teilt dieselbe
+D1; er sollte nach der Umstellung stillgelegt werden (eigene Freigabe).
+
 ## ChatGPT nach der Freigabe verbinden
 
 In der Verwaltung des vorhandenen privaten Plugins die MCP-Verbindung
