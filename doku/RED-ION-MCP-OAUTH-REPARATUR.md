@@ -240,6 +240,31 @@ Verzeichnis ohne Text), `test109` wie bekannt. Der alte separate Host
 `red-ion-mcp.redurbabat7.workers.dev` antwortet noch mit 200 und teilt dieselbe
 D1; er sollte nach der Umstellung stillgelegt werden (eigene Freigabe).
 
+## Abgleich der Windows-App (vorbereitet, standardmässig AUS)
+
+Damit ChatGPT ohne Laptop etwas zu lesen hat, muss die Windows-App in dieselbe
+D1 abgleichen — in das Konto, das `/mcp/cloud` über die E-Mail des
+Access-Nachweises findet. In PR #213 übernommen:
+
+- **App (`src/kern/abgleich/maschine.ts`, `…/verbinden/ansicht/wolke.ts`):**
+  E796 — ohne Schlüssel sagt die Frage „IM KLARTEXT“, Pakete höchstens 4 MB,
+  Übergrosses bleibt lokal; E797 — fehlt nach einem Neustart der einmal
+  gesetzte Schlüssel, verlässt nichts das Gerät. `test643`.
+- **Website:** `POST /konto/access` (`server/mcp/access-sitzung.ts`) gibt dem
+  von Access geprüften Menschen eine Redion-Sitzung für genau dieses Konto;
+  Knopf „Mit Cloudflare Access anmelden“. Kein Konto wird angelegt.
+- **Abgleich-Tor (`server/sicherheit/abgleich-tor.ts`):** elf exakte Wege
+  (Gerätecode, ich/abmelden, sync, datei) am Worker-Tor vorbei, jeweils durch
+  Redion-Tokens geschützt; Allow-Origin nur für `redion-local://app`.
+  **Standardmässig AUS** (`ABGLEICH_TOR` nicht gesetzt): Redurs Vorgabe
+  „Keine Freigabe von Sync“ gilt, `redion-mcp-cloud-runtime.mts` bleibt grün.
+  `pruefungen/redion-abgleich-tor.mts`: 5 Läufe, fünf Gegenproben rot.
+
+Einschalten verlangt Redurs ausdrückliche Freigabe für ZWEI Dinge: die Variable
+`ABGLEICH_TOR = "an"` am Worker und dieselben elf Wege als exakte `overrides`
+in der Access-Anwendung. Anhänge: ohne R2-Bindung antwortet `/datei/*` mit 503,
+die App lässt sie lokal.
+
 ## ChatGPT nach der Freigabe verbinden
 
 In der Verwaltung des vorhandenen privaten Plugins die MCP-Verbindung

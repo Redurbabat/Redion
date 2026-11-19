@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 576 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 577 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2239,6 +2239,15 @@ Pläne bleiben: jedes Bauplan-Zeichen von vorher mit derselben Grösse und
 denselben Anschlüssen. Gezählt am 15. November: `ls pruefungen/lauf/test*.mts
 | wc -l` sagt 576.*
 
+*Und 577: `test643` — der Abgleich schickt keine Riesenpakete und verspricht
+keine Verschlüsselung, die es nicht gibt (E796), und ohne den einmal gesetzten
+Schlüssel verlässt nach einem Neustart nichts das Gerät (E797). Er hält zwei
+echte Vorfälle vom 18./19. November fest: 961 und 4 646 Sätze gingen im
+Klartext in die Cloud. Seine Gegenproben druckten „11.65 MB, 7 Pakete“, fehlende
+Blöcke b643_10 bis b643_29 und „verschluesselt=0“. Aus
+`codex/redion-visual-cloud-mcp` in PR #213 übernommen. Gezählt am
+19. November: `ls pruefungen/lauf/test*.mts | wc -l` sagt 577.*
+
 ### Die Befehle
 
 ```txt
@@ -2260,7 +2269,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 576 Läufe
+npm run pruefen                      alle 577 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2357,7 +2366,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 576 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 577 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

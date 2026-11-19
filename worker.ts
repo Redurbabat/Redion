@@ -20,6 +20,8 @@
 import { torPruefen } from './server/sicherheit/tor.ts';
 import {handleCloudMcp,isCloudMcpPublicPath,isCloudMcpPrivatePath} from './server/mcp/cloud-router.ts';
 import { onRequest as bruecke } from './functions/api/bruecke.ts';
+import { istAbgleichWeg, abgleichTorAn, mitAppUrsprung } from './server/sicherheit/abgleich-tor.ts';
+import { accessSitzung } from './server/mcp/access-sitzung.ts';
 import { bedienen, istServerWeg, geplant } from './server/cloudflare.ts';
 
 export default {
@@ -35,6 +37,15 @@ export default {
      * Worker absichtlich nicht heimlich. */
     if (isCloudMcpPublicPath(url.pathname))
       return handleCloudMcp(request,env,false);
+    /* Der Abgleich der installierten App (E795): dieselbe Ausnahme für eine
+     * feste Liste exakter Wege, die der Redion-Kern selbst mit Sitzungstokens
+     * schützt. Am Edge wirkt das erst, wenn die Access-Anwendung genau diese
+     * Wege als Ausnahme trägt — das ist eine eigene, ausdrückliche Freigabe.
+     * Ohne ABGLEICH_TOR = "an" bleibt alles beim Access-Tor (Standard). */
+    if (abgleichTorAn(env) && istAbgleichWeg(url.pathname)) {
+      const a = await bedienen(request, env, ctx);
+      return mitAppUrsprung(request, a ?? new Response(null, { status: 404 }));
+    }
 
     // Jede sonstige Anfrage vor dem Routing prüfen, auch statische Dateien.
     // Voraussetzung: assets.run_worker_first = true in wrangler.toml.
@@ -45,6 +56,8 @@ export default {
      * Die Cloud prüft die Konto-ID nochmals; ein Client-Header genügt nie. */
     if (isCloudMcpPrivatePath(url.pathname))
       return handleCloudMcp(request,env,true);
+    /* Redion-Sitzung für den eben von Access geprüften Menschen (E795). */
+    if (url.pathname === '/konto/access') return accessSitzung(request, env || {});
 
     /* --- Die Brücke ---------------------------------------------------- */
     if (url.pathname === '/api/bruecke' || url.pathname === '/api/bruecke/') {

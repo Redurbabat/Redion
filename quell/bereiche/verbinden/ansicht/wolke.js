@@ -45,6 +45,14 @@ const WolkeFenster = (() => {
                     await abgleichFragen();
                     await zeichne();
                 }
+                if (was === 'access') {
+                    a.disabled = true;
+                    a.textContent = 'Melde an …';
+                    await Wolke.anmeldenMitAccess();
+                    await schluesselFragen();
+                    await abgleichFragen();
+                    await zeichne();
+                }
                 if (was === 'code') {
                     o.remove();
                     codeFenster();
@@ -222,7 +230,12 @@ const WolkeFenster = (() => {
             '</div>' +
             (wurzel
                 ? '<div style="display:flex; flex-direction:column; gap:9px">' +
-                    '<button data-a="github" class="prim" style="justify-content:center">' +
+                    (Wolke.accessMoeglich()
+                        ? '<button data-a="access" class="prim" style="justify-content:center">' +
+                            'Mit Cloudflare Access anmelden</button>'
+                        : '') +
+                    '<button data-a="github"' + (Wolke.accessMoeglich() ? '' : ' class="prim"') +
+                    ' style="justify-content:center">' +
                     'Mit GitHub anmelden</button>' +
                     '<button data-a="google" style="justify-content:center">' +
                     'Mit Google anmelden</button>' +
@@ -347,6 +360,24 @@ const WolkeFenster = (() => {
         if (Wolke.neuAbgleichOffen()) {
             UI.toast('Nach dem Einspielen steht oben eine Entscheidung — sie ' +
                 'ersetzt diese Frage.');
+            return;
+        }
+        if (!Wolke.hatSchluessel() && !(await schluesselFragen())) {
+            const klar = confirm('Es ist KEIN Schlüssel gesetzt.\n\n' +
+                'Wenn du jetzt abgleichst, gehen deine Notizen IM KLARTEXT zum Server.\n\n' +
+                '„OK“ heisst: trotzdem im Klartext abgleichen.\n' +
+                '„Abbrechen“ heisst: angemeldet bleiben, aber nichts verlässt dieses Gerät. ' +
+                'Den Schlüssel kannst du im Wolke-Fenster setzen.');
+            Wolke.abgleichSetzen(klar);
+            if (!klar) {
+                UI.toast('Nur lokal: nichts verlässt dieses Gerät.');
+                return;
+            }
+            UI.toast('Abgleich im Klartext läuft …');
+            try {
+                await Wolke.abgleichen();
+            }
+            catch { }
             return;
         }
         const ja = confirm('Dieses Gerät ab jetzt mit der Wolke abgleichen?\n\n' +
@@ -541,13 +572,14 @@ const WolkeFenster = (() => {
                     'font-size:12.5px; line-height:1.65; margin-bottom:16px">' +
                     (offen
                         ? '🔓 Diese Seite geht <b>im Klartext</b> auf den Server. Anders könnte er ' +
-                            'weder Rechte prüfen noch sie an jemanden ausliefern. Alle anderen Seiten ' +
-                            'bleiben verschlüsselt.'
+                            'weder Rechte prüfen noch sie an jemanden ausliefern — und nur so kann ' +
+                            'eine verbundene KI (RED Ion über den Cloud-Link) sie lesen. Alle anderen ' +
+                            'Seiten bleiben verschlüsselt.'
                         : '🔒 Diese Seite ist verschlüsselt. Zum Teilen muss sie lesbar werden — ' +
                             'das ist eine bewusste Entscheidung, deshalb dieser Schalter.') +
                     '<div style="margin-top:10px"><label style="display:flex;gap:8px;align-items:center">' +
                     '<input type="checkbox" id="wo-offen"' + (offen ? ' checked' : '') + '> ' +
-                    'Für die Freigabe lesbar machen</label></div>' +
+                    'Für Freigabe und KI lesbar machen</label></div>' +
                     '</div>' +
                     '<div style="display:flex; gap:7px; margin-bottom:14px">' +
                     '<input id="wo-mail" placeholder="Adresse der Person" style="flex:1">' +
