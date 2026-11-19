@@ -51,6 +51,8 @@ workflows:
           node --test ios/install-privacy-shield.test.mjs
           # Die iOS-Quellen im Repo und das neue Xcode-Ziel muessen getrennt bleiben.
           node --test ios/native-project-layout.test.mjs
+          # Echtes SwiftUI-Dock nur im iOS-Build, mit bestehender Web-Navigation.
+          node --test ios/install-native-glass-dock.test.mjs
           # Native Startansicht nur im iPhone-Xcode-Projekt, mit echten Farben.
           node --test ios/install-launch-screen.test.mjs
           # Pruefe reale Capacitor-8-SPM-Templates auf Swift/Storyboard-Kompatibilitaet.
@@ -112,6 +114,16 @@ workflows:
           node ios/install-privacy-shield.mjs
           grep -q 'RedionPrivacyShield.start()' build/ios-capacitor/App/App/AppDelegate.swift
           grep -q 'redion-snapshot-privacy-cover' build/ios-capacitor/App/App/AppDelegate.swift
+
+      - name: Originales iOS-26-SwiftUI-Glas-Dock einbauen
+        script: |
+          set -euo pipefail
+          # Nur die generierte iOS-AppDelegate erweitern; die Website bleibt bytegleich.
+          node ios/install-native-glass-dock.mjs
+          SWIFT="build/ios-capacitor/App/App/AppDelegate.swift"
+          grep -q 'RedionNativeDock.start()' "$SWIFT"
+          grep -q 'glassEffect(.regular, in: Capsule())' "$SWIFT"
+          xcrun swiftc -frontend -parse "$SWIFT"
 
       - name: iPhone-Startbildschirm mit echtem Redion-Symbol
         script: |
