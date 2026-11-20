@@ -99,6 +99,10 @@ test('native Documents screen reads existing pages only and checks permissions',
   assert.match(swift, /nativeLibrary\.sync\(selected: selected, dockVisible: visible\)/);
   assert.match(swift, /nativeLibrary\.restoreForDocumentsTab\(\)/);
   assert.match(library, /Store\.cache\.blocks/);
+  assert.match(library, /ablage\.geladen/);
+  assert.match(library, /nachreichen:true/);
+  assert.match(library, /__redionNativeLibraryLoaded/);
+  assert.match(library, /getElementById\('sperrschirm'\)/);
   assert.match(library, /Konten\.darf\('lesen', p\.id\)/);
   assert.match(library, /typeof App\.oeffne/);
   assert.match(library, /callAsyncJavaScript\(Self\.openJavaScript/);
