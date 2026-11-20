@@ -226,6 +226,23 @@ private final class RedionNativeLibraryCoordinator {
     // Do not read page blocks, user text, file contents or cloud credentials.
     private static let listJavaScript = #"""
     (() => {
+      // The store exists before IndexedDB has finished loading. Use the
+      // replayable startup event instead of treating an empty cache as proof
+      // that the user has no pages. Respect RED ION's password lock.
+      if (!window.__redionNativeLibrarySubscribed &&
+          typeof Ereignisse !== 'undefined' &&
+          typeof Ereignisse.horche === 'function') {
+        Ereignisse.horche('ablage.geladen', () => {
+          window.__redionNativeLibraryLoaded = true;
+        }, {nachreichen:true});
+        window.__redionNativeLibrarySubscribed = true;
+      }
+      const splash = document.getElementById('ru-vorhang');
+      if (window.__redionNativeLibraryLoaded !== true ||
+          document.getElementById('sperrschirm') ||
+          (splash && !splash.hidden && !splash.classList.contains('ru-vorhang-weg'))) {
+        return {ready:false, documents:[]};
+      }
       if (typeof Store === 'undefined' || typeof Konten === 'undefined' ||
           typeof Konten.darf !== 'function' ||
           !Store.cache?.blocks || typeof App === 'undefined' ||
