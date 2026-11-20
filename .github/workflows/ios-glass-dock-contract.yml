@@ -11,6 +11,7 @@ on:
       - 'ios/native-more.swift'
       - 'ios/native-library.swift'
       - 'ios/native-editor.swift'
+      - 'ios/native-editor-bridge.test.mjs'
       - 'ios/install-native-glass-dock.mjs'
       - 'ios/install-native-glass-dock.test.mjs'
       - 'codemagic.yaml'
