@@ -215,6 +215,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         const current = buttons.findIndex(b => b.getAttribute('aria-selected') === 'true');
         const settings = document.querySelector('.einst-fenster');
         const modal = !!(settings && settings.getClientRects().length);
+        const locked = !!document.getElementById('sperrschirm');
         const input = document.activeElement;
         const editing = !!(input && (/^(INPUT|TEXTAREA)$/.test(input.tagName) || input.isContentEditable));
         const bar = buttons[0].parentElement;
@@ -223,7 +224,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         window.webkit?.messageHandlers?.redionDock?.postMessage({
           selected: current < 0 ? 0 : current,
           theme: document.documentElement.dataset.theme || 'dark',
-          visible: dockShown && !modal && !editing && !keyboard
+          visible: dockShown && !modal && !locked && !editing && !keyboard
         });
       }
       function queue() {
