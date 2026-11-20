@@ -45,8 +45,10 @@ private final class RedionNativeLibraryModel: ObservableObject {
 
 private struct RedionNativeLibraryView: View {
     @ObservedObject var model: RedionNativeLibraryModel
+    @ObservedObject var editor: RedionNativeEditorModel
     let refresh: () -> Void
     let open: (String) -> Void
+    let openClassic: (String) -> Void
     @State private var query = ""
 
     private var filtered: [RedionNativePage] {
@@ -141,6 +143,9 @@ private struct RedionNativeLibraryView: View {
             .refreshable { refresh() }
         }
         .onAppear(perform: refresh)
+        .sheet(isPresented: $editor.presented, onDismiss: refresh) {
+            RedionNativeEditorView(model: editor, openClassic: openClassic)
+        }
         .accessibilityIdentifier("redion-native-document-library")
     }
 }
@@ -149,6 +154,7 @@ private final class RedionNativeLibraryCoordinator {
     private weak var webView: WKWebView?
     private var host: UIHostingController<RedionNativeLibraryView>?
     private let model = RedionNativeLibraryModel()
+    private var editor: RedionNativeEditorModel?
     private var allowLibrary = true
     private var fetching = false
     private var tries = 0
@@ -156,10 +162,13 @@ private final class RedionNativeLibraryCoordinator {
     func install(root: UIViewController, web: WKWebView, below bar: UITabBar) {
         webView = web
         guard host == nil else { return }
+        let editor = RedionNativeEditorModel(web: web)
+        self.editor = editor
         let controller = UIHostingController(rootView:
-            RedionNativeLibraryView(model: model,
+            RedionNativeLibraryView(model: model, editor: editor,
                 refresh: { [weak self] in self?.refresh() },
-                open: { [weak self] id in self?.openPage(id) }))
+                open: { [weak self] id in self?.openNativePage(id) },
+                openClassic: { [weak self] id in self?.openClassicPage(id) }))
         controller.view.translatesAutoresizingMaskIntoConstraints = false
         controller.view.backgroundColor = .systemBackground
         controller.view.isHidden = true
@@ -208,13 +217,19 @@ private final class RedionNativeLibraryCoordinator {
         }
     }
 
-    private func openPage(_ id: String) {
+    private func openNativePage(_ id: String) {
+        guard allowLibrary else { return }
+        editor?.open(id)
+    }
+
+    private func openClassicPage(_ id: String) {
         guard !id.isEmpty, let web = webView else { return }
         web.callAsyncJavaScript(Self.openJavaScript,
             arguments: ["pageId": id], in: nil, in: .page) { [weak self] response in
             guard let self else { return }
             if case .success(let value) = response, let accepted = value as? Bool, accepted {
                 self.allowLibrary = false
+                self.editor?.close()
                 self.host?.view.isHidden = true
             } else {
                 self.model.warning = "Diese Seite konnte nicht geöffnet werden. Deine Daten bleiben erhalten."
