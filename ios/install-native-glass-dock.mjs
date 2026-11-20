@@ -30,15 +30,19 @@ export function injectNativeGlassDock(delegate, source) {
   return result.trimEnd() + '\n\n' + source.trim() + '\n';
 }
 
-export function injectNativeIosShell(delegate, dockSource, moreSource) {
+export function injectNativeIosShell(delegate, dockSource, moreSource, librarySource) {
   if (typeof moreSource !== 'string' ||
       !moreSource.includes('private final class RedionNativeMoreCoordinator') ||
       !moreSource.includes('private struct RedionNativeMoreView: View') ||
       !moreSource.includes('private struct RedionNativeFilesView: View') ||
-      !moreSource.includes('ShareLink(item: file.url)')) {
+      !moreSource.includes('ShareLink(item: file.url)') ||
+      typeof librarySource !== 'string' ||
+      !librarySource.includes('private final class RedionNativeLibraryCoordinator') ||
+      !librarySource.includes('private struct RedionNativeLibraryView: View') ||
+      !librarySource.includes('Konten.darf(\'lesen\', p.id)')) {
     throw new Error('Native iPhone-Ansichten fehlen oder sind unvollstaendig.');
   }
-  return injectNativeGlassDock(delegate, dockSource + '\n\n' + moreSource);
+  return injectNativeGlassDock(delegate, dockSource + '\n\n' + moreSource + '\n\n' + librarySource);
 }
 
 export function installNativeGlassDock(root = process.cwd()) {
@@ -52,7 +56,8 @@ export function installNativeGlassDock(root = process.cwd()) {
   const delegate = fs.readFileSync(dest, 'utf8');
   const source = fs.readFileSync(sourcePath, 'utf8');
   const moreSource = fs.readFileSync(path.join(root, 'ios', 'native-more.swift'), 'utf8');
-  const modified = injectNativeIosShell(delegate, source, moreSource);
+  const librarySource = fs.readFileSync(path.join(root, 'ios', 'native-library.swift'), 'utf8');
+  const modified = injectNativeIosShell(delegate, source, moreSource, librarySource);
   fs.writeFileSync(dest, modified);
   return dest;
 }
