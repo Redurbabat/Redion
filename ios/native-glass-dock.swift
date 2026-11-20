@@ -157,9 +157,10 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
             bar.overrideUserInterfaceStyle =
                 (data["theme"] as? String) == "light" ? .light : .dark
             let visible = (data["visible"] as? Bool) ?? true
+            let locked = (data["locked"] as? Bool) ?? false
             bar.isHidden = !visible
             self.nativeMore.sync(selected: selected, dockVisible: visible)
-            self.nativeLibrary.sync(selected: selected, dockVisible: visible)
+            self.nativeLibrary.sync(selected: selected, dockVisible: visible, locked: locked)
 
             // Hide the legacy web bar only AFTER the real system bar exists.
             // It keeps its DOM geometry so Redion's existing content clearance
@@ -223,6 +224,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         const keyboard = !!(window.visualViewport && window.visualViewport.height < window.innerHeight - 140);
         window.webkit?.messageHandlers?.redionDock?.postMessage({
           selected: current < 0 ? 0 : current,
+          locked,
           theme: document.documentElement.dataset.theme || 'dark',
           visible: dockShown && !modal && !locked && !editing && !keyboard
         });
