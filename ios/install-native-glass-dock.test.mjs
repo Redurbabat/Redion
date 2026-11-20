@@ -5,6 +5,7 @@ import { injectNativeGlassDock, injectNativeIosShell } from './install-native-gl
 
 const swift = fs.readFileSync(new URL('./native-glass-dock.swift', import.meta.url), 'utf8');
 const more = fs.readFileSync(new URL('./native-more.swift', import.meta.url), 'utf8');
+const library = fs.readFileSync(new URL('./native-library.swift', import.meta.url), 'utf8');
 const original = [
   'import UIKit',
   'func application(_ application: UIApplication) -> Bool {',
@@ -50,7 +51,7 @@ test('native dock remains isolated from PWA and saved data', () => {
 });
 
 test('native More, Settings, Files and About screens compile as part of the iOS shell', () => {
-  const generated = injectNativeIosShell(original, swift, more);
+  const generated = injectNativeIosShell(original, swift, more, library);
   for (const name of [
     'RedionNativeMoreView', 'RedionNativeSettingsView',
     'RedionNativeFilesView', 'RedionNativeAboutView',
@@ -64,8 +65,8 @@ test('native More, Settings, Files and About screens compile as part of the iOS 
   assert.match(generated, /\.isRegularFileKey/);
   assert.match(generated, /\.isSymbolicLinkKey/);
   assert.match(generated, /nativeMore\.sync\(selected: selected, dockVisible: visible\)/);
-  assert.throws(() => injectNativeIosShell(original, swift, 'bad file'), /fehlen/);
-  assert.throws(() => injectNativeIosShell(generated, swift, more), /bereits eingebaut/);
+  assert.throws(() => injectNativeIosShell(original, swift, 'bad file', library), /fehlen/);
+  assert.throws(() => injectNativeIosShell(generated, swift, more, library), /bereits eingebaut/);
 });
 
 test('native screens never access RED ION stored notes or MCP', () => {
@@ -89,4 +90,20 @@ test('native iPhone uses exactly one painted and accessible dock', () => {
   // until the corresponding feature is fully migrated to native Swift.
   assert.doesNotMatch(swift, /legacyBar\?\.remove\(/);
   assert.doesNotMatch(swift, /display:none!important/);
+});
+
+test('native Documents screen reads existing pages only and checks permissions', () => {
+  const generated = injectNativeIosShell(original, swift, more, library);
+  assert.match(generated, /RedionNativeLibraryCoordinator/);
+  assert.match(generated, /RedionNativeLibraryView/);
+  assert.match(swift, /nativeLibrary\.sync\(selected: selected, dockVisible: visible\)/);
+  assert.match(swift, /nativeLibrary\.restoreForDocumentsTab\(\)/);
+  assert.match(library, /Store\.cache\.blocks/);
+  assert.match(library, /Konten\.darf\('lesen', p\.id\)/);
+  assert.match(library, /typeof App\.oeffne/);
+  assert.match(library, /callAsyncJavaScript\(Self\.openJavaScript/);
+  assert.match(library, /arguments: \["pageId": id\]/);
+  assert.match(library, /Store\.getBlock\(pageId\)/);
+  assert.doesNotMatch(library, /(?:indexedDB\.open|Store\.addPage|Store\.updateBlock|Store\.wipe|deleteDatabase)/);
+  assert.throws(() => injectNativeIosShell(original, swift, more, ''), /fehlen/);
 });
