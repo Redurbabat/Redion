@@ -97,7 +97,7 @@ test('native Documents screen reads existing pages only and checks permissions',
   const generated = injectNativeIosShell(original, swift, more, library, editor);
   assert.match(generated, /RedionNativeLibraryCoordinator/);
   assert.match(generated, /RedionNativeLibraryView/);
-  assert.match(swift, /nativeLibrary\.sync\(selected: selected, dockVisible: visible\)/);
+  assert.match(swift, /nativeLibrary\.sync\(selected: selected, dockVisible: visible, locked: locked\)/);
   assert.match(swift, /const locked = !!document\.getElementById\('sperrschirm'\)/);
   assert.match(swift, /visible: dockShown && !modal && !locked && !editing && !keyboard/);
   assert.match(swift, /nativeLibrary\.restoreForDocumentsTab\(\)/);
@@ -138,4 +138,14 @@ test('native text editor reads direct blocks and saves only versioned, authorize
   assert.match(editor, /return \{ok:false,reason:'unsupported'\}/);
   assert.doesNotMatch(editor, /(?:indexedDB\.open|deleteDatabase|Store\.wipe|Store\.importAll|Store\.addBlock)/);
   assert.throws(() => injectNativeIosShell(original, swift, more, library, ''), /fehlen/);
+});
+
+test('native text editor privacy and keyboard contracts', () => {
+  assert.match(library, /func sync\(selected: Int, dockVisible: Bool, locked: Bool\)/);
+  assert.match(library, /let hasNativeSheet = editor\?\.presented == true/);
+  assert.match(library, /editor\?\.hideForPrivacy\(\)/);
+  assert.match(swift, /locked,\s*\n\s*theme:/);
+  assert.match(swift, /let locked = \(data\["locked"\] as\? Bool\) \?\? false/);
+  assert.match(editor, /interactiveDismissDisabled\(model\.saving \|\| model\.editingId != nil\)/);
+  assert.match(editor, /func hideForPrivacy\(\)/);
 });
