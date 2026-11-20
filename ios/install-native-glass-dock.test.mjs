@@ -148,4 +148,8 @@ test('native text editor privacy and keyboard contracts', () => {
   assert.match(swift, /let locked = \(data\["locked"\] as\? Bool\) \?\? false/);
   assert.match(editor, /interactiveDismissDisabled\(model\.saving \|\| model\.editingId != nil\)/);
   assert.match(editor, /func hideForPrivacy\(\)/);
+  assert.match(editor, /private var privacySuspended = false/);
+  assert.match(editor, /if privacySuspended && editingId != nil/);
+  assert.match(editor, /guard !saving, !privacySuspended else/);
+  assert.match(editor, /if !self\.privacySuspended/);
 });
