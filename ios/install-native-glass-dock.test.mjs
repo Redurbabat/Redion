@@ -97,6 +97,8 @@ test('native Documents screen reads existing pages only and checks permissions',
   assert.match(generated, /RedionNativeLibraryCoordinator/);
   assert.match(generated, /RedionNativeLibraryView/);
   assert.match(swift, /nativeLibrary\.sync\(selected: selected, dockVisible: visible\)/);
+  assert.match(swift, /const locked = !!document\.getElementById\('sperrschirm'\)/);
+  assert.match(swift, /visible: dockShown && !modal && !locked && !editing && !keyboard/);
   assert.match(swift, /nativeLibrary\.restoreForDocumentsTab\(\)/);
   assert.match(library, /Store\.cache\.blocks/);
   assert.match(library, /ablage\.geladen/);
