@@ -128,6 +128,8 @@ workflows:
           grep -q 'RedionNativeFilesView' "$SWIFT"
           grep -q 'RedionNativeLibraryView' "$SWIFT"
           grep -q 'RedionNativeLibraryCoordinator' "$SWIFT"
+          grep -q 'RedionNativeEditorModel' "$SWIFT"
+          grep -q 'RedionNativeEditorView' "$SWIFT"
           xcrun swiftc -frontend -parse "$SWIFT"
 
       - name: iPhone-Startbildschirm mit echtem Redion-Symbol
