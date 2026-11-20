@@ -152,3 +152,46 @@ body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.sp-kopf,.sp-werkzeu
 :root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"] :is(.sp-kopf,.sp-werkzeuge,.sp-ink-tools,.sp-kontextleiste,.sp-palette,.sp-studio,.document-toolbar,.document-drawingbar,.menu){
   background:var(--bg-card);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;
 }
+
+
+/* iPhone: reconcile the Glass Wheel shell with the shared floating dock.
+   This file loads after studio.css and previously replaced the dock material,
+   pushed the home-indicator inset INSIDE the capsule and set z-index to 100.
+   Keep the established navigation geometry and gesture hit targets. */
+@media (max-width:760px) and (pointer:coarse) {
+  body[data-ui-shell="glass-wheel"]:not([data-kontrast="hoch"]) #handy-oben {
+    bottom:calc(9px + env(safe-area-inset-bottom,0px));
+    padding:5px 6px;
+    border-radius:999px;
+    border-color:color-mix(in srgb,var(--text) 15%,transparent);
+    background:color-mix(in srgb,var(--bg-side) 48%,transparent);
+    box-shadow:inset 0 1px 0 #ffffff38,inset 0 -1px 0 #ffffff0b,
+               0 12px 30px #00000030,0 2px 8px #00000017;
+    -webkit-backdrop-filter:blur(28px) saturate(175%);
+    backdrop-filter:blur(28px) saturate(175%);
+  }
+  body[data-ui-shell="glass-wheel"] #handy-oben {
+    z-index:401;
+    bottom:calc(9px + env(safe-area-inset-bottom,0px));
+    padding-bottom:5px;
+  }
+  body[data-ui-shell="glass-wheel"] #handy-oben > button {
+    min-height:48px;
+    padding:5px 2px 4px;
+  }
+  body[data-ui-shell="glass-wheel"]:not([data-kontrast="hoch"]) #ho-pille {
+    background:color-mix(in srgb,var(--accent) 24%,#ffffff13);
+    border-radius:999px;
+  }
+}
+@media (max-width:760px) and (pointer:coarse) and (prefers-reduced-transparency:reduce),
+       (max-width:760px) and (pointer:coarse) and (prefers-contrast:more),
+       (max-width:760px) and (pointer:coarse) and (forced-colors:active) {
+  body[data-ui-shell="glass-wheel"] #handy-oben,
+  body[data-ui-shell="glass-wheel"] #ho-pille {
+    background:var(--bg-card);
+    -webkit-backdrop-filter:none;
+    backdrop-filter:none;
+    box-shadow:inset 0 0 0 1px var(--line);
+  }
+}
