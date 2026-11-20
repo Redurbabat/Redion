@@ -189,11 +189,21 @@ private final class RedionNativeLibraryCoordinator {
         tries = 0
     }
 
-    func sync(selected: Int, dockVisible: Bool) {
-        let show = selected == 0 && dockVisible && allowLibrary
+    func sync(selected: Int, dockVisible: Bool, locked: Bool) {
+        // UIKit sheets can remain presented when the underlying WebView
+        // is locked. Explicitly conceal them before hiding the host view.
+        if locked {
+            editor?.hideForPrivacy()
+            host?.view.isHidden = true
+            return
+        }
+        // The iOS keyboard may hide the TAB BAR while SwiftUI TextEditor
+        // is active. Keep the document sheet's hosting view alive.
+        let hasNativeSheet = editor?.presented == true
+        let show = selected == 0 && allowLibrary && (dockVisible || hasNativeSheet)
         let wasHidden = host?.view.isHidden ?? true
         host?.view.isHidden = !show
-        if show && wasHidden { refresh() }
+        if show && wasHidden && !hasNativeSheet { refresh() }
     }
 
     private func refresh() {
