@@ -31,7 +31,7 @@ jobs:
       - name: Verify iPhone dock gesture, lens and safe-area contracts
         run: node --test pruefungen/ios-glass-dock-contract.test.mjs
       - name: Verify native SwiftUI dock integration
-        run: node --test ios/install-native-glass-dock.test.mjs
+        run: node --test ios/install-native-glass-dock.test.mjs ios/native-editor-bridge.test.mjs
 
   generated-stand-diagnostics:
     runs-on: ubuntu-latest
