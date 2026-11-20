@@ -30,7 +30,7 @@ export function injectNativeGlassDock(delegate, source) {
   return result.trimEnd() + '\n\n' + source.trim() + '\n';
 }
 
-export function injectNativeIosShell(delegate, dockSource, moreSource, librarySource) {
+export function injectNativeIosShell(delegate, dockSource, moreSource, librarySource, editorSource) {
   if (typeof moreSource !== 'string' ||
       !moreSource.includes('private final class RedionNativeMoreCoordinator') ||
       !moreSource.includes('private struct RedionNativeMoreView: View') ||
@@ -39,10 +39,14 @@ export function injectNativeIosShell(delegate, dockSource, moreSource, librarySo
       typeof librarySource !== 'string' ||
       !librarySource.includes('private final class RedionNativeLibraryCoordinator') ||
       !librarySource.includes('private struct RedionNativeLibraryView: View') ||
-      !librarySource.includes('Konten.darf(\'lesen\', p.id)')) {
+      !librarySource.includes('Konten.darf(\'lesen\', p.id)') ||
+      typeof editorSource !== 'string' ||
+      !editorSource.includes('private final class RedionNativeEditorModel') ||
+      !editorSource.includes('private struct RedionNativeEditorView: View') ||
+      !editorSource.includes('Store.versionSpeichern(')) {
     throw new Error('Native iPhone-Ansichten fehlen oder sind unvollstaendig.');
   }
-  return injectNativeGlassDock(delegate, dockSource + '\n\n' + moreSource + '\n\n' + librarySource);
+  return injectNativeGlassDock(delegate, dockSource + '\n\n' + moreSource + '\n\n' + librarySource + '\n\n' + editorSource);
 }
 
 export function installNativeGlassDock(root = process.cwd()) {
@@ -57,7 +61,8 @@ export function installNativeGlassDock(root = process.cwd()) {
   const source = fs.readFileSync(sourcePath, 'utf8');
   const moreSource = fs.readFileSync(path.join(root, 'ios', 'native-more.swift'), 'utf8');
   const librarySource = fs.readFileSync(path.join(root, 'ios', 'native-library.swift'), 'utf8');
-  const modified = injectNativeIosShell(delegate, source, moreSource, librarySource);
+  const editorSource = fs.readFileSync(path.join(root, 'ios', 'native-editor.swift'), 'utf8');
+  const modified = injectNativeIosShell(delegate, source, moreSource, librarySource, editorSource);
   fs.writeFileSync(dest, modified);
   return dest;
 }
