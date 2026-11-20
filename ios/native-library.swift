@@ -73,16 +73,27 @@ private struct RedionNativeLibraryView: View {
                             .foregroundStyle(.secondary)
                     }
                 } else if let warning = model.warning {
-                    ContentUnavailableView("Dokumente nicht verfügbar",
-                        systemImage: "exclamationmark.triangle",
-                        description: Text(warning))
+                    Label {
+                        Text(warning)
+                            .foregroundStyle(.secondary)
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle")
+                    }
                 } else if filtered.isEmpty {
-                    ContentUnavailableView(
-                        query.isEmpty ? "Noch keine Seiten" : "Keine Treffer",
-                        systemImage: "doc.text.magnifyingglass",
-                        description: Text(query.isEmpty
+                    VStack(spacing: 10) {
+                        Image(systemName: "doc.text.magnifyingglass")
+                            .font(.largeTitle)
+                            .foregroundStyle(.secondary)
+                        Text(query.isEmpty ? "Noch keine Seiten" : "Keine Treffer")
+                            .font(.headline)
+                        Text(query.isEmpty
                             ? "Deine vorhandenen RED ION Seiten erscheinen hier, sobald sie geladen sind."
-                            : "Suche nach einem anderen Seitentitel."))
+                            : "Suche nach einem anderen Seitentitel.")
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 36)
                 } else {
                     ForEach(filtered) { page in
                         Button {
@@ -119,7 +130,7 @@ private struct RedionNativeLibraryView: View {
             .listStyle(.insetGrouped)
             .navigationTitle("Dokumente")
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: refresh) {
                         Image(systemName: "arrow.clockwise")
                     }
