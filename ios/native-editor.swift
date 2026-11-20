@@ -43,6 +43,7 @@ private final class RedionNativeEditorModel: ObservableObject {
     private var originalText = ""
     private var originalEdited = ""
     private var generation = 0
+    private var privacySuspended = false
 
     init(web: WKWebView) {
         self.web = web
@@ -50,6 +51,15 @@ private final class RedionNativeEditorModel: ObservableObject {
 
     func open(_ id: String) {
         guard !id.isEmpty, !saving, let web else { return }
+        if privacySuspended && editingId != nil {
+            // Recover the unsaved draft after unlocking, even if another
+            // document was selected; never silently replace its text.
+            privacySuspended = false
+            presented = true
+            warning = "Ungespeicherter Entwurf wiederhergestellt. Bitte sichern oder abbrechen."
+            return
+        }
+        privacySuspended = false
         generation += 1
         let request = generation
         openingId = id
@@ -110,7 +120,7 @@ private final class RedionNativeEditorModel: ObservableObject {
     }
 
     func discardEdit() {
-        guard !saving else { return }
+        guard !saving, !privacySuspended else { return }
         editingId = nil
         proposedText = ""
     }
@@ -151,6 +161,7 @@ private final class RedionNativeEditorModel: ObservableObject {
 
     func close() {
         guard !saving, editingId == nil else { return }
+        privacySuspended = false
         presented = false
         generation += 1
     }
@@ -160,6 +171,7 @@ private final class RedionNativeEditorModel: ObservableObject {
         // private text from remaining on screen behind the web lock view.
         // The text remains in memory until the user actively discards it
         // or the process exits; no silent write occurs.
+        privacySuspended = true
         presented = false
         generation += 1
     }
