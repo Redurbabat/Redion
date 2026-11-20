@@ -76,3 +76,17 @@ test('native screens never access RED ION stored notes or MCP', () => {
     assert.ok(more.includes('"' + action + '"'), 'Missing existing RED ION action: ' + action);
   }
 });
+
+test('native iPhone uses exactly one painted and accessible dock', () => {
+  assert.match(swift, /redion-native-only-tabbar-style/);
+  assert.match(swift, /html\.redion-ios-native-dock #handy-oben \*/);
+  assert.match(swift, /visibility:hidden!important;opacity:0!important/);
+  assert.match(swift, /pointer-events:none!important/);
+  assert.match(swift, /legacyBar\?\.setAttribute\('aria-hidden', 'true'\)/);
+  assert.match(swift, /document\.documentElement\.classList\.add\('redion-ios-native-dock'\)/);
+  assert.match(swift, /UITabBar\(frame: \.zero\)/);
+  // Only presentation is hidden. The original route/gesture DOM is retained
+  // until the corresponding feature is fully migrated to native Swift.
+  assert.doesNotMatch(swift, /legacyBar\?\.remove\(/);
+  assert.doesNotMatch(swift, /display:none!important/);
+});
