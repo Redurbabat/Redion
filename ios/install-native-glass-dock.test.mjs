@@ -6,6 +6,7 @@ import { injectNativeGlassDock, injectNativeIosShell } from './install-native-gl
 const swift = fs.readFileSync(new URL('./native-glass-dock.swift', import.meta.url), 'utf8');
 const more = fs.readFileSync(new URL('./native-more.swift', import.meta.url), 'utf8');
 const library = fs.readFileSync(new URL('./native-library.swift', import.meta.url), 'utf8');
+const editor = fs.readFileSync(new URL('./native-editor.swift', import.meta.url), 'utf8');
 const original = [
   'import UIKit',
   'func application(_ application: UIApplication) -> Bool {',
@@ -51,7 +52,7 @@ test('native dock remains isolated from PWA and saved data', () => {
 });
 
 test('native More, Settings, Files and About screens compile as part of the iOS shell', () => {
-  const generated = injectNativeIosShell(original, swift, more, library);
+  const generated = injectNativeIosShell(original, swift, more, library, editor);
   for (const name of [
     'RedionNativeMoreView', 'RedionNativeSettingsView',
     'RedionNativeFilesView', 'RedionNativeAboutView',
@@ -65,8 +66,8 @@ test('native More, Settings, Files and About screens compile as part of the iOS 
   assert.match(generated, /\.isRegularFileKey/);
   assert.match(generated, /\.isSymbolicLinkKey/);
   assert.match(generated, /nativeMore\.sync\(selected: selected, dockVisible: visible\)/);
-  assert.throws(() => injectNativeIosShell(original, swift, 'bad file', library), /fehlen/);
-  assert.throws(() => injectNativeIosShell(generated, swift, more, library), /bereits eingebaut/);
+  assert.throws(() => injectNativeIosShell(original, swift, 'bad file', library, editor), /fehlen/);
+  assert.throws(() => injectNativeIosShell(generated, swift, more, library, editor), /bereits eingebaut/);
 });
 
 test('native screens never access RED ION stored notes or MCP', () => {
@@ -93,7 +94,7 @@ test('native iPhone uses exactly one painted and accessible dock', () => {
 });
 
 test('native Documents screen reads existing pages only and checks permissions', () => {
-  const generated = injectNativeIosShell(original, swift, more, library);
+  const generated = injectNativeIosShell(original, swift, more, library, editor);
   assert.match(generated, /RedionNativeLibraryCoordinator/);
   assert.match(generated, /RedionNativeLibraryView/);
   assert.match(swift, /nativeLibrary\.sync\(selected: selected, dockVisible: visible\)/);
@@ -111,5 +112,30 @@ test('native Documents screen reads existing pages only and checks permissions',
   assert.match(library, /arguments: \["pageId": id\]/);
   assert.match(library, /Store\.getBlock\(pageId\)/);
   assert.doesNotMatch(library, /(?:indexedDB\.open|Store\.addPage|Store\.updateBlock|Store\.wipe|deleteDatabase)/);
-  assert.throws(() => injectNativeIosShell(original, swift, more, ''), /fehlen/);
+  assert.throws(() => injectNativeIosShell(original, swift, more, '', editor), /fehlen/);
+});
+
+test('native text editor reads direct blocks and saves only versioned, authorized changes', () => {
+  const generated = injectNativeIosShell(original, swift, more, library, editor);
+  for (const name of ['RedionNativeEditorModel','RedionNativeEditorView']) {
+    assert.match(generated, new RegExp(name));
+  }
+  assert.match(library, /RedionNativeEditorModel\(web: web\)/);
+  assert.match(library, /openNativePage\(id\)/);
+  assert.match(library, /RedionNativeEditorView\(model: editor, openClassic: openClassic\)/);
+  assert.match(editor, /TextEditor\(text: \$model\.proposedText\)/);
+  assert.match(editor, /arguments: \[/);
+  assert.match(editor, /Store\.versionSpeichern\(/);
+  assert.match(editor, /Store\.updateBlock\(block\.id,\{text:replacement\}\)/);
+  assert.match(editor, /await Store\.flush\(\)/);
+  assert.match(editor, /await Store\.settled\(\)/);
+  assert.match(editor, /String\(block\.edited \|\| ''\) !== expectedEdited/);
+  assert.match(editor, /Konten\.darf\('bearbeiten',block\.id\)/);
+  assert.match(editor, /document\.getElementById\('sperrschirm'\)/);
+  assert.match(editor, /Store\.speichertNicht\(\)/);
+  assert.match(editor, /typeof replacement !== 'string'/);
+  assert.match(editor, /const isChild = Store\.childrenOf\(page\.id\)\.some/);
+  assert.match(editor, /return \{ok:false,reason:'unsupported'\}/);
+  assert.doesNotMatch(editor, /(?:indexedDB\.open|deleteDatabase|Store\.wipe|Store\.importAll|Store\.addBlock)/);
+  assert.throws(() => injectNativeIosShell(original, swift, more, library, ''), /fehlen/);
 });
