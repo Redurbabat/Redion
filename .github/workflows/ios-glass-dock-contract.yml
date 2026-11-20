@@ -9,6 +9,7 @@ on:
       - 'index.html'
       - 'ios/native-glass-dock.swift'
       - 'ios/native-more.swift'
+      - 'ios/native-library.swift'
       - 'ios/install-native-glass-dock.mjs'
       - 'ios/install-native-glass-dock.test.mjs'
       - 'codemagic.yaml'
