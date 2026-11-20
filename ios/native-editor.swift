@@ -155,6 +155,15 @@ private final class RedionNativeEditorModel: ObservableObject {
         generation += 1
     }
 
+    func hideForPrivacy() {
+        // Do not discard an unsaved draft. Closing the visible sheet stops
+        // private text from remaining on screen behind the web lock view.
+        // The text remains in memory until the user actively discards it
+        // or the process exits; no silent write occurs.
+        presented = false
+        generation += 1
+    }
+
     private static let readScript = #"""
     const p = typeof Store !== 'undefined' &&
        typeof Store.getBlock === 'function' ? Store.getBlock(pageId) : null;
@@ -369,6 +378,7 @@ private struct RedionNativeEditorView: View {
                 .interactiveDismissDisabled(model.saving)
             }
         }
+        .interactiveDismissDisabled(model.saving || model.editingId != nil)
         .accessibilityIdentifier("redion-native-document-editor")
     }
 }
