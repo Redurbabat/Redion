@@ -173,11 +173,27 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         return;
       }
       window.__redionNativeDockBridgeInstalled = true;
+      // Install native-only suppression BEFORE reporting selection to UIKit.
+      // Visibility rather than display:none preserves the hidden 5-tab DOM
+      // geometry, which Redion's existing route/gesture logic still reads.
+      // The old bar, its moving pill, labels and decorative layers must not
+      // paint or accept touches under the real system UITabBar.
       const sheet = document.createElement('style');
+      sheet.id = 'redion-native-only-tabbar-style';
       sheet.textContent =
-        "html.redion-ios-native-dock #handy-oben{" +
-        "opacity:0!important;pointer-events:none!important}";
+        "html.redion-ios-native-dock #handy-oben," +
+        "html.redion-ios-native-dock #handy-oben *," +
+        "html.redion-ios-native-dock #handy-oben::before," +
+        "html.redion-ios-native-dock #handy-oben::after{" +
+        "visibility:hidden!important;opacity:0!important;" +
+        "pointer-events:none!important;" +
+        "}";
       (document.head || document.documentElement).appendChild(sheet);
+      document.documentElement.classList.add('redion-ios-native-dock');
+      // Keep the old DOM as a private click target, not a second accessible
+      // toolbar. Programmatic .click() continues to use Redion's one router.
+      const legacyBar = document.getElementById('handy-oben');
+      legacyBar?.setAttribute('aria-hidden', 'true');
       const selector = '#handy-oben > button[role="tab"]';
       let barObserver, bodyObserver;
       let frame = false;
