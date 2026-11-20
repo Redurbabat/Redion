@@ -150,7 +150,11 @@ private final class RedionNativeEditorModel: ObservableObject {
                     payload["ok"] as? Bool == true {
                     self.editingId = nil
                     self.proposedText = ""
-                    self.open(doc.id) // Reload truth from Store, not an optimistic mirror.
+                    // A save may finish after the user has locked RED ION.
+                    // Never present the document again over the lock screen.
+                    if !self.privacySuspended {
+                        self.open(doc.id) // Re-read the committed Store value.
+                    }
                 } else {
                     // Keep unsaved text in the sheet; never overwrite silently.
                     self.warning = "Nicht gespeichert. Die Seite wurde möglicherweise anderswo geändert oder der Speicher ist nicht bereit. Dein Entwurf bleibt hier erhalten."
