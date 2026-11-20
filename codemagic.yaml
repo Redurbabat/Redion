@@ -53,6 +53,7 @@ workflows:
           node --test ios/native-project-layout.test.mjs
           # Echtes SwiftUI-Dock nur im iOS-Build, mit bestehender Web-Navigation.
           node --test ios/install-native-glass-dock.test.mjs
+          node --test ios/native-editor-bridge.test.mjs
           # Native Startansicht nur im iPhone-Xcode-Projekt, mit echten Farben.
           node --test ios/install-launch-screen.test.mjs
           # Pruefe reale Capacitor-8-SPM-Templates auf Swift/Storyboard-Kompatibilitaet.
