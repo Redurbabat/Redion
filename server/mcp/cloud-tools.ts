@@ -5,7 +5,7 @@
 import type {Ablage} from '../typen.ts';
 import type {McpPrincipal} from './oauth.ts';
 import {rolleAuf,darf,notieren} from '../kern.ts';
-import {textToBlocks,appBlock,appPage,blockToLine,stampAfter,MAX_BLOCKS} from './page-blocks.ts';
+import {textToBlocks,countBlocks,appBlock,appPage,blockToLine,stampAfter,MAX_BLOCKS,type MdNode} from './page-blocks.ts';
 import {buildPlan,describePlan,listSymbols,symbolGroups,PLAN_ARTEN,LIMITS,SchematicError} from './schematic.ts';
 import {buildSchema,rowProps,describeRow,describeSchema,databaseRecords,rowRecord,DatabaseError,LAYOUTS,WRITABLE_TYPES,LIMITS as DB_LIMITS,type Schema} from './databases.ts';
 /* Fehler der Eingabe eines Schaltplans werden zu Werkzeugfehlern mit Satz. */
@@ -56,6 +56,9 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_trash_page',description:'Legt eine Klartext-Seite in den Papierkorb der App (wiederherstellbar, nicht endgültig gelöscht).',
     inputSchema:{type:'object',properties:{...workspace,...documentId,expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId','expectedVersion'],additionalProperties:false}},
+  {name:'redion_move_page',description:'Verschiebt eine Klartext-Seite unter eine andere Klartext-Seite (newParentId) oder auf die oberste Ebene (newParentId leer). Alte und neue Elternseite müssen lesbar sein.',
+    inputSchema:{type:'object',properties:{...workspace,...documentId,newParentId:{type:'string',maxLength:128},expectedVersion:{type:'integer',minimum:1}},
+      required:['workspaceId','documentId','expectedVersion'],additionalProperties:false}},
   /* --- Schaltpläne (schematic.ts) ------------------------------------- */
   {name:'redion_list_symbols',description:'Listet die Schaltzeichen der Redion-Schaltpläne mit Kennung, Gruppe, Kennbuchstabe, Grösse (Raster 10) und Anschlussnummern. Vor redion_add_schematic aufrufen.',
     inputSchema:{type:'object',properties:{gruppe:{type:'string',maxLength:40},suche:{type:'string',maxLength:80}},additionalProperties:false}},
@@ -96,7 +99,7 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{...workspace,rowId:idField,expectedVersion:{type:'integer',minimum:1},werte:{type:'object'},papierkorb:{type:'boolean'}},
       required:['workspaceId','rowId','expectedVersion'],additionalProperties:false}}
 ];
-const writeNames=new Set(['redion_create_page','redion_append_content','redion_update_page','redion_replace_text','redion_trash_page',
+const writeNames=new Set(['redion_create_page','redion_append_content','redion_update_page','redion_replace_text','redion_trash_page','redion_move_page',
   'redion_add_schematic','redion_update_schematic','redion_create_database','redion_add_rows','redion_update_row']);
 export const visibleCloudTools=(p:McpPrincipal)=>CLOUD_TOOLS.filter(t=>!writeNames.has(t.name)||p.scopes.includes('redion:write'));
 
@@ -214,14 +217,30 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
   /* Neue Kindblöcke anlegen; liefert ihre Kennungen. Deterministisch aus der
      Seite und dem Zähler, damit eine Wiederholung nichts doppelt anlegt. */
   const addChildren=async(w:string,pageId:string,seite:string,content:string,start:number,at:string)=>{
-    const ids:string[]=[];
     let n=start;
-    for(const b of textToBlocks(content)){
-      const id=(pageId+'b'+(n++).toString(36)).slice(0,64);
-      await insertRow(w,appBlock(id,b.type,b.text,pageId,at,b.checked===undefined?{}:{checked:b.checked}),seite,at);
-      ids.push(id);
+    /* Kinder zuerst, dann der Block, der auf sie zeigt — wie bei der Seite. */
+    const lege=async(nodes:MdNode[],parentId:string):Promise<string[]>=>{
+      const ids:string[]=[];
+      for(const b of nodes){
+        const id=(pageId+'b'+(n++).toString(36)).slice(0,64);
+        const kinder=await lege(b.kinder,id);
+        await insertRow(w,appBlock(id,b.type,b.text,parentId,at,{content:kinder,
+          ...(b.checked===undefined?{}:{checked:b.checked}),...(b.lang?{lang:b.lang}:{})}),seite,at);
+        ids.push(id);
+      }
+      return ids;
+    };
+    return lege(textToBlocks(content),pageId);
+  };
+  /* Kindblöcke rekursiv als eingerückte Markdown-Zeilen (höchstens 3 Stufen). */
+  const contentLines=async(w:string,data:Record<string,unknown>,tiefe=0):Promise<string[]>=>{
+    const out:string[]=[];
+    for(const c of await children(w,data)){
+      out.push(blockToLine(c.data).split('\n').map(z=>'    '.repeat(tiefe)+z).join('\n'));
+      if(tiefe<3&&c.data.type!=='page'&&Array.isArray(c.data.content)&&c.data.content.length)
+        out.push(...await contentLines(w,c.data,tiefe+1));
     }
-    return ids;
+    return out;
   };
   return async(name:string,args:Args):Promise<unknown>=>{
     if(!visibleCloudTools(principal).some(t=>t.name===name))
@@ -262,7 +281,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       /* Alte Cloud-Seiten trugen `inhalt`; Seiten der App tragen Kindblöcke. */
       const content=typeof result.data.inhalt==='string'&&!Array.isArray(result.data.content)
         ?result.data.inhalt
-        :(await children(w,result.data)).map(c=>blockToLine(c.data)).join('\n');
+        :(await contentLines(w,result.data)).join('\n');
       return {documentId:id,workspaceId:w,title:String(result.data.text||''),
         content,version:Number(result.s.version)||1,inTrash:result.data.alive===false};
     }
@@ -387,6 +406,33 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const at=await stamp(w);
       return update(w,id,ver,{...current.data,alive:false,trashedAt:at});
     }
+    if(name==='redion_move_page'){
+      const neuId=args.newParentId===undefined?'':text(args.newParentId,128).trim();
+      const altId=current.data.parentId?String(current.data.parentId):'';
+      if(current.data.parentTable==='collection')err('invalid_arguments','Eine Datenbankzeile wird nicht verschoben.');
+      if(neuId===altId)return {documentId:id,version:ver,unveraendert:true};
+      if(neuId===id)err('invalid_arguments','Eine Seite kann nicht in sich selbst liegen.');
+      const neu=neuId?await page(w,neuId,'bearbeiten'):null;
+      /* Kein Ring: die neue Elternseite darf nicht unter dieser liegen. */
+      let blick=neu?.data.parentId?String(neu.data.parentId):'';
+      for(let i=0;blick&&i<40;i++){
+        if(blick===id)err('invalid_arguments','Die neue Elternseite liegt unter dieser Seite.');
+        const r=await ablage.hole('saetze',{bereich:w,id:blick});
+        if(!r||r.verschluesselt)break;
+        try{blick=String(JSON.parse(String(r.daten)).parentId||'');}catch{break;}
+      }
+      const alt=altId?await page(w,altId,'bearbeiten'):null;
+      const at=await stamp(w);
+      if(alt){
+        const liste=Array.isArray(alt.data.content)?alt.data.content.map(String):[];
+        await updateRow(w,altId,Number(alt.s.version)||1,{...alt.data,content:liste.filter((x:string)=>x!==id),edited:at},at);
+      }
+      if(neu){
+        const liste=Array.isArray(neu.data.content)?neu.data.content.map(String):[];
+        await updateRow(w,neuId,Number(neu.s.version)||1,{...neu.data,content:[...liste.filter((x:string)=>x!==id),id],edited:at},at);
+      }
+      return update(w,id,ver,{...current.data,parentId:neuId||null,parentTable:'block'});
+    }
     if(name==='redion_create_database'){
       const content=current.data.content;
       if(!Array.isArray(content))return err('invalid_arguments','Diese Seite hat noch das alte Format. Bitte eine neue Seite anlegen.');
@@ -424,7 +470,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const list=Array.isArray(current.data.content)?current.data.content.map(String):[];
       if(!Array.isArray(current.data.content)&&typeof current.data.inhalt==='string')
         return update(w,id,ver,{...current.data,inhalt:current.data.inhalt+'\n'+content});
-      if(list.length+textToBlocks(content).length>MAX_BLOCKS*2)err('invalid_arguments','Seite hat zu viele Blöcke.');
+      if(list.length+countBlocks(textToBlocks(content))>MAX_BLOCKS*2)err('invalid_arguments','Seite hat zu viele Blöcke.');
       const at=await stamp(w);
       const added=await addChildren(w,id,String(current.s.seite||id),content,list.length+Date.now()%100000,at);
       return {...await update(w,id,ver,{...current.data,content:[...list,...added]}),blocks:added.length};

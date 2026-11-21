@@ -13,36 +13,68 @@
 
 export type BlockData = Record<string, unknown> & { id: string; type: string; text: string };
 
-/** Was ein Markdown-Zeilenanfang in der App ist (register/bloecke.ts). */
-const LINE_TYPES: Array<[RegExp, string, Record<string, unknown>?]> = [
-  [/^###\s+/, 'h3'],
-  [/^##\s+/, 'h2'],
-  [/^#\s+/, 'h1'],
-  [/^[-*+]\s+\[[xX]\]\s+/, 'todo', { checked: true }],
-  [/^[-*+]\s+\[\s?\]\s+/, 'todo', { checked: false }],
-  [/^[-*+]\s+/, 'bullet'],
-  [/^\d+[.)]\s+/, 'number'],
-  [/^>\s?/, 'quote'],
-];
-
 export const MAX_BLOCKS = 200;
 
-/** Zerlegt Text in Blöcke: eine Zeile je Block, Leerzeilen trennen nur. */
-export const textToBlocks = (content: string): Array<{ type: string; text: string; checked?: boolean }> => {
-  const out: Array<{ type: string; text: string; checked?: boolean }> = [];
-  for (const raw of content.replace(/\r\n?/g, '\n').split('\n')) {
-    const line = raw.trimEnd();
-    if (!line.trim()) continue;
-    if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) { out.push({ type: 'divider', text: '' }); continue; }
-    let block: { type: string; text: string; checked?: boolean } = { type: 'text', text: line };
-    for (const [re, type, extra] of LINE_TYPES) {
-      if (re.test(line)) { block = { type, text: line.replace(re, ''), ...(extra || {}) }; break; }
+/** Ein gelesener Block; `kinder` sind die eingerückten Zeilen darunter. */
+export type MdNode = { type: string; text: string; checked?: boolean; lang?: string; kinder: MdNode[] };
+
+/**
+ * Markdown in Blöcke — nach den Regeln von `mdLesen` in der App
+ * (src/bereiche/editor/ansicht/editor.ts), damit ChatGPT und Einfügen
+ * dasselbe ergeben: eine Zeile ein Block, Leerzeilen trennen nur, ```lang
+ * wird ein Codeblock, „> 💡" ein Callout, „> " ein Zitat, vier Leerzeichen
+ * oder ein Tab eine Stufe tiefer (der Block wird Kind des vorigen). Eine
+ * Markdown-Tabelle bleibt hier Text: in der App ist sie ein ganzer
+ * Tabellenblock mit Formelkern, und den baut der Server nicht nach.
+ */
+export const textToBlocks = (content: string): MdNode[] => {
+  const zeilen = content.replace(/\r\n?/g, '\n').split('\n');
+  const wurzel: MdNode[] = [];
+  const stapel: MdNode[] = [];   // stapel[t] = letzter Block der Tiefe t
+  let anzahl = 0;
+  const tiefeVon = (z: string) => {
+    let n = 0;
+    for (const c of /^[\t ]*/.exec(z)?.[0] ?? '') n += c === '\t' ? 4 : 1;
+    return Math.min(3, Math.floor(n / 4));
+  };
+  const setze = (node: MdNode, tiefe: number) => {
+    const t = Math.min(tiefe, stapel.length);
+    const eltern = t > 0 ? stapel[t - 1] : undefined;
+    (eltern ? eltern.kinder : wurzel).push(node);
+    stapel.length = t;
+    stapel.push(node);
+    anzahl++;
+  };
+  for (let i = 0; i < zeilen.length && anzahl < MAX_BLOCKS; i++) {
+    const zeile = zeilen[i] ?? '';
+    const tiefe = tiefeVon(zeile);
+    const t = zeile.trim();
+    const auf = /^```([a-zA-Z0-9+#.-]{0,20})\s*$/.exec(t);
+    if (auf) {
+      const inhalt: string[] = [];
+      while (++i < zeilen.length && !/^\s*```\s*$/.test(zeilen[i] ?? '')) inhalt.push(zeilen[i] ?? '');
+      setze({ type: 'code', text: inhalt.join('\n'), lang: (auf[1] ?? '').toLowerCase(), kinder: [] }, tiefe);
+      continue;
     }
-    out.push(block);
-    if (out.length >= MAX_BLOCKS) break;
+    if (!t) continue;
+    let m: RegExpExecArray | null;
+    if (t.startsWith('>')) {
+      const rest = t.replace(/^(>\s?)+/, '');
+      setze(/^💡\s*/.test(rest) ? { type: 'callout', text: rest.replace(/^💡\s*/, ''), kinder: [] }
+                               : { type: 'quote', text: rest, kinder: [] }, tiefe);
+    } else if (/^(-{3,}|\*{3,}|_{3,})$/.test(t)) setze({ type: 'divider', text: '', kinder: [] }, tiefe);
+    else if ((m = /^(#{1,3})\s+(.*)$/.exec(t))) setze({ type: 'h' + m[1]!.length, text: m[2] ?? '', kinder: [] }, tiefe);
+    else if ((m = /^[-*+]\s+\[([ xX])\]\s*(.*)$/.exec(t)) || (m = /^\[([ xX])\]\s+(.*)$/.exec(t)))
+      setze({ type: 'todo', text: m[2] ?? '', checked: m[1] !== ' ', kinder: [] }, tiefe);
+    else if ((m = /^[-*+]\s+(.*)$/.exec(t))) setze({ type: 'bullet', text: m[1] ?? '', kinder: [] }, tiefe);
+    else if ((m = /^(?:\d{1,9}|[a-zA-Z]|[ivxIVX]{1,6})[.)]\s+(.*)$/.exec(t))) setze({ type: 'number', text: m[1] ?? '', kinder: [] }, tiefe);
+    else setze({ type: 'text', text: t, kinder: [] }, tiefe);
   }
-  return out;
+  return wurzel;
 };
+
+/** Wie viele Blöcke ein Baum hat. */
+export const countBlocks = (nodes: MdNode[]): number => nodes.reduce((n, b) => n + 1 + countBlocks(b.kinder), 0);
 
 /** Ein Block, wie `Store.addBlock` ihn schreibt. */
 export const appBlock = (id: string, type: string, text: string, parentId: string | null,
@@ -68,7 +100,11 @@ export const blockToLine = (b: Record<string, unknown>): string => {
     case 'bullet': return '- ' + t;
     case 'number': return '1. ' + t;
     case 'quote': return '> ' + t;
+    case 'callout': return '> 💡 ' + t;
+    case 'toggle': return '> ' + t;
+    case 'code': return '```' + String(b.lang ?? '') + '\n' + t + '\n```';
     case 'divider': return '---';
+    case 'database': return '🗂️ Datenbank „' + t + '“ (databaseId ' + String(b.collectionId ?? '') + ')';
     case 'page': return '📄 ' + t;
     case 'schaltplan': return '⚡ Schaltplan' + (t ? ' „' + t + '“' : '') + ' (blockId ' + String(b.id ?? '') + ')';
     default: return t;

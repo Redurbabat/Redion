@@ -253,6 +253,29 @@ test('Cloud-MCP: nur Lesen, danach Schreiben mit Rollen- und Versionskontrolle',
     assert.equal(falsch.fehler,true);
     assert.match(String(falsch.daten),/Unbekanntes Schaltzeichen/);
 
+    /* Seiten komplett: Code, Callout, Einrückung, Verschieben. */
+    const md='## Plan\n- Oben\n    - Unten\n        - [ ] Ganz unten\n> 💡 Merke\n```ts\nconst a = 1;\n\n# kein Titel\n```\nEnde';
+    const reich=await call('redion_create_page',{title:'Reich',content:md,requestId:'request_00004'});
+    assert.equal(reich.daten.blocks,5,'oberste Ebene: Plan, Oben, Merke, Code, Ende');
+    const reichGelesen=await call('redion_read_page',{documentId:reich.daten.documentId});
+    assert.equal(reichGelesen.daten.content,'## Plan\n- Oben\n    - Unten\n        - [ ] Ganz unten\n> 💡 Merke\n```ts\nconst a = 1;\n\n# kein Titel\n```\nEnde');
+    const reichDaten=JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:reich.daten.documentId}))!.daten);
+    const oben=JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:reichDaten.content[1]}))!.daten);
+    assert.deepEqual([oben.text,oben.content.length],['Oben',1],'Unten ist Kind von Oben');
+    const code=JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:reichDaten.content[3]}))!.daten);
+    assert.deepEqual([code.type,code.lang],['code','ts']);
+    const ziel=await call('redion_create_page',{title:'Ordner',requestId:'request_00005'});
+    const mv=await call('redion_move_page',{documentId:reich.daten.documentId,newParentId:ziel.daten.documentId,expectedVersion:1});
+    assert.equal(mv.fehler,false,String(mv.daten));
+    const zielDaten=JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:ziel.daten.documentId}))!.daten);
+    assert.deepEqual(zielDaten.content,[reich.daten.documentId]);
+    const ring=await call('redion_move_page',{documentId:ziel.daten.documentId,newParentId:reich.daten.documentId,expectedVersion:2});
+    assert.equal(ring.fehler,true);assert.match(String(ring.daten),/liegt unter dieser Seite/);
+    const zurueck=await call('redion_move_page',{documentId:reich.daten.documentId,newParentId:'',expectedVersion:mv.daten.version});
+    assert.equal(zurueck.fehler,false,String(zurueck.daten));
+    assert.deepEqual(JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:ziel.daten.documentId}))!.daten).content,[]);
+    assert.equal(JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:reich.daten.documentId}))!.daten).parentId,null);
+
     /* Datenbanken über MCP (databases.ts). */
     const seite2=await call('redion_read_page',{documentId:sp.daten.documentId});
     const neuDb=await call('redion_create_database',{documentId:sp.daten.documentId,expectedVersion:seite2.daten.version,
