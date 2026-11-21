@@ -7,13 +7,14 @@ import type {McpPrincipal} from './oauth.ts';
 import {rolleAuf,darf,notieren} from '../kern.ts';
 import {textToBlocks,appBlock,appPage,blockToLine,stampAfter,MAX_BLOCKS} from './page-blocks.ts';
 import {buildPlan,describePlan,listSymbols,symbolGroups,PLAN_ARTEN,LIMITS,SchematicError} from './schematic.ts';
+import {buildSchema,rowProps,describeRow,describeSchema,databaseRecords,rowRecord,DatabaseError,LAYOUTS,WRITABLE_TYPES,LIMITS as DB_LIMITS,type Schema} from './databases.ts';
 /* Fehler der Eingabe eines Schaltplans werden zu Werkzeugfehlern mit Satz. */
 const plan=(input:Args,prefix:string)=>{
   try{return buildPlan(input,prefix);}
   catch(e){if(e instanceof SchematicError)return err('invalid_arguments',e.message);throw e;}
 };
 
-type Db={prepare(sql:string):{bind(...values:(string|number)[]):{first<T>():Promise<T|null>}}};
+type Db={prepare(sql:string):{bind(...values:(string|number)[]):{first<T>():Promise<T|null>;all<T>():Promise<{results:T[]}>}}};
 type Args=Record<string,unknown>;
 type ToolDef={name:string;description:string;inputSchema:{type:'object';properties:Record<string,unknown>;required?:string[];additionalProperties:boolean}};
 export class CloudMcpToolError extends Error {
@@ -75,10 +76,28 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},titel:{type:'string',maxLength:160},
       art:{type:'string',enum:[...PLAN_ARTEN]},teile:{type:'array',maxItems:LIMITS.teile,items:{type:'object'}},
       verbindungen:{type:'array',maxItems:LIMITS.verbindungen,items:{type:'object'}},texte:{type:'array',maxItems:LIMITS.texte,items:{type:'object'}}},
-      required:['workspaceId','blockId','expectedVersion','teile'],additionalProperties:false}}
+      required:['workspaceId','blockId','expectedVersion','teile'],additionalProperties:false}},
+  /* --- Datenbanken (databases.ts) ------------------------------------- */
+  {name:'redion_list_databases',description:'Listet die Klartext-Datenbanken eines Bereichs mit Kennung, Name und Spalten.',
+    inputSchema:{type:'object',properties:{...workspace},required:['workspaceId'],additionalProperties:false}},
+  {name:'redion_read_database',description:'Liest eine Datenbank: Spalten (Name, Typ, Optionen) und Zeilen als Spaltenname → Wert, mit rowId und Version.',
+    inputSchema:{type:'object',properties:{...workspace,databaseId:idField,limit:{type:'integer',minimum:1,maximum:500}},required:['workspaceId','databaseId'],additionalProperties:false}},
+  {name:'redion_create_database',description:'Legt auf einer Klartext-Seite eine Datenbank an, die in der App erscheint. spalten: name und typ ('+WRITABLE_TYPES.join(', ')+'), bei select/multi/status optionen. Ohne title-Spalte kommt „Name“ dazu. zeilen: Objekte Spaltenname → Wert (Datum JJJJ-MM-TT, Spanne „a → b“).',
+    inputSchema:{type:'object',properties:{...workspace,...documentId,expectedVersion:{type:'integer',minimum:1},name:nameField,
+      ansicht:{type:'string',enum:[...LAYOUTS]},
+      spalten:{type:'array',minItems:1,maxItems:DB_LIMITS.spalten,items:{type:'object',properties:{name:{type:'string',maxLength:80},
+        typ:{type:'string',enum:[...WRITABLE_TYPES]},optionen:{type:'array',maxItems:DB_LIMITS.optionen,items:{type:'string',maxLength:80}}},required:['name','typ'],additionalProperties:false}},
+      zeilen:{type:'array',maxItems:DB_LIMITS.zeilen,items:{type:'object'}}},
+      required:['workspaceId','documentId','expectedVersion','name','spalten'],additionalProperties:false}},
+  {name:'redion_add_rows',description:'Fügt einer Klartext-Datenbank Zeilen hinzu (Spaltenname → Wert). Neue Auswahl-Optionen werden ergänzt.',
+    inputSchema:{type:'object',properties:{...workspace,databaseId:idField,zeilen:{type:'array',minItems:1,maxItems:DB_LIMITS.zeilen,items:{type:'object'}}},
+      required:['workspaceId','databaseId','zeilen'],additionalProperties:false}},
+  {name:'redion_update_row',description:'Ändert Werte einer Zeile (Spaltenname → Wert) bei passender expectedVersion; papierkorb:true legt sie in den Papierkorb.',
+    inputSchema:{type:'object',properties:{...workspace,rowId:idField,expectedVersion:{type:'integer',minimum:1},werte:{type:'object'},papierkorb:{type:'boolean'}},
+      required:['workspaceId','rowId','expectedVersion'],additionalProperties:false}}
 ];
 const writeNames=new Set(['redion_create_page','redion_append_content','redion_update_page','redion_replace_text','redion_trash_page',
-  'redion_add_schematic','redion_update_schematic']);
+  'redion_add_schematic','redion_update_schematic','redion_create_database','redion_add_rows','redion_update_row']);
 export const visibleCloudTools=(p:McpPrincipal)=>CLOUD_TOOLS.filter(t=>!writeNames.has(t.name)||p.scopes.includes('redion:write'));
 
 export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
@@ -113,13 +132,57 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     const r=await db.prepare('SELECT MAX(geaendert) AS m FROM saetze WHERE bereich=?1').bind(w).first<{m:string|null}>();
     return stampAfter(r?.m);
   };
-  const insertRow=async(w:string,satz:Record<string,unknown>&{id:string},seite:string,at:string)=>{
+  const insertRow=async(w:string,satz:Record<string,unknown>&{id:string},seite:string,at:string,
+                        tabelle:'blocks'|'collections'|'views'='blocks')=>{
     const payload=JSON.stringify(satz);
-    if(payload.length>64000)return err('invalid_arguments','Ein Block ist zu gross.');
+    if(payload.length>64000)return err('invalid_arguments','Ein Eintrag ist zu gross.');
     return db.prepare(
       'INSERT OR IGNORE INTO saetze (id,bereich,tabelle,daten,verschluesselt,seite,version,geaendert,geloescht,vonGeraet) '+
-      "VALUES (?1,?2,'blocks',?3,0,?4,1,?5,0,'Cloud-MCP') RETURNING version"
-    ).bind(satz.id,w,payload,seite,at).first<{version:number}>();
+      "VALUES (?1,?2,?6,?3,0,?4,1,?5,0,'Cloud-MCP') RETURNING version"
+    ).bind(satz.id,w,payload,seite,at,tabelle).first<{version:number}>();
+  };
+  /* Eine Sammlung (Datenbank) im Klartext, mit Recht auf ihr. */
+  const collection=async(w:string,id:string,permission:'lesen'|'bearbeiten')=>{
+    const s=await ablage.hole('saetze',{bereich:w,id});
+    if(!s||s.geloescht||s.tabelle!=='collections')return err('not_found','Datenbank nicht gefunden.');
+    await role(w,id,permission);
+    if(s.verschluesselt)return err('encrypted','Diese Datenbank ist verschlüsselt und für die Cloud nicht lesbar.');
+    let data:Record<string,any>;
+    try{data=JSON.parse(String(s.daten||'{}'));}catch{return err('invalid_data','Unlesbare Datenbank.');}
+    if(!data||typeof data.schema!=='object')return err('invalid_data','Datenbank ohne Schema.');
+    return {s,data};
+  };
+  /* Die Klartext-Zeilen einer Sammlung — über json_extract, nicht über den
+     ganzen Bestand (CPU-Grenze des Gratis-Tarifs). Verschlüsselte Sätze sind
+     kein JSON; das CASE fragt sie gar nicht erst. */
+  const rowsOf=async(w:string,colId:string,limit:number)=>(await db.prepare(
+    "SELECT id,daten,version FROM saetze WHERE bereich=?1 AND tabelle='blocks' AND geloescht=0 AND "+
+    "(CASE WHEN verschluesselt=0 AND json_valid(daten) THEN json_extract(daten,'$.parentId') END)=?2 "+
+    "ORDER BY geaendert LIMIT ?3").bind(w,colId,limit).all<{id:string;daten:string;version:number}>()).results
+    .map(r=>{try{return {id:r.id,version:Number(r.version)||1,data:JSON.parse(r.daten)};}catch{return null;}})
+    .filter((r):r is {id:string;version:number;data:any}=>!!r&&r.data.alive!==false&&r.data.parentTable==='collection');
+  /* Die Sammlung samt neuen Optionen zurückschreiben (Version geprüft). */
+  const saveCollection=async(w:string,c:{s:any;data:any},schema:Schema,at:string)=>{
+    if(JSON.stringify(schema)===JSON.stringify(c.data.schema))return Number(c.s.version)||1;
+    const changed=await db.prepare(
+      "UPDATE saetze SET daten=?1,version=version+1,geaendert=?2,vonGeraet='Cloud-MCP' "+
+      "WHERE bereich=?3 AND id=?4 AND version=?5 AND verschluesselt=0 AND tabelle='collections' RETURNING version"
+    ).bind(JSON.stringify({...c.data,schema,edited:at}),at,w,String(c.s.id),Number(c.s.version)||1).first<{version:number}>();
+    if(!changed)return err('conflict','Die Datenbank wurde zwischenzeitlich geändert. Bitte erneut versuchen.');
+    return changed.version;
+  };
+  const dbErr=<T>(f:()=>T):T=>{try{return f();}catch(e){if(e instanceof DatabaseError)return err('invalid_arguments',e.message);throw e;}};
+  const newRows=async(w:string,colId:string,schema:Schema,zeilen:unknown,at:string,seed:string)=>{
+    const liste=Array.isArray(zeilen)?zeilen:[];
+    if(liste.length>DB_LIMITS.zeilen)err('invalid_arguments','Höchstens '+DB_LIMITS.zeilen+' Zeilen auf einmal.');
+    const ids:string[]=[];
+    for(const [i,werte] of liste.entries()){
+      const {props,title}=dbErr(()=>rowProps(schema,werte));
+      const id=(seed+'r'+i.toString(36)).slice(0,64);
+      await insertRow(w,rowRecord(id,colId,props,title,at,i+1),id,at);
+      ids.push(id);
+    }
+    return ids;
   };
   const updateRow=async(w:string,id:string,old:number,updated:Record<string,unknown>,at:string)=>{
     const payload=JSON.stringify(updated);
@@ -219,8 +282,54 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const b=await block(id,'lesen','schaltplan');
       return {blockId:id,titel:String(b.data.text||''),version:Number(b.s.version)||1,...describePlan(b.data.plan)};
     }
+    if(name==='redion_list_databases'){
+      await role(w,'*','lesen');
+      const rows=(await db.prepare("SELECT id,daten FROM saetze WHERE bereich=?1 AND tabelle='collections' AND verschluesselt=0 AND geloescht=0 LIMIT 200")
+        .bind(w).all<{id:string;daten:string}>()).results;
+      const out=[];
+      for(const r of rows){
+        try{const d=JSON.parse(r.daten);if(darf(await rolleAuf(ablage,w,r.id,userId),'lesen'))
+          out.push({databaseId:r.id,name:String(d.name||''),spalten:Object.values(d.schema||{}).map((c:any)=>c.name)});}catch{}
+      }
+      return {databases:out};
+    }
+    if(name==='redion_read_database'){
+      const id=required(args.databaseId,128);
+      const c=await collection(w,id,'lesen');
+      const rows=await rowsOf(w,id,limit(args.limit,200,500));
+      return {databaseId:id,name:String(c.data.name||''),version:Number(c.s.version)||1,spalten:describeSchema(c.data.schema),
+        zeilen:rows.map(r=>({rowId:r.id,version:r.version,werte:describeRow(c.data.schema,r.data)}))};
+    }
     if(!principal.scopes.includes('redion:write'))
       return err('forbidden','Schreibrechte sind nicht freigegeben.');
+    if(name==='redion_add_rows'){
+      const id=required(args.databaseId,128);
+      const c=await collection(w,id,'bearbeiten');
+      const schema:Schema=structuredClone(c.data.schema);
+      const at=await stamp(w);
+      const ids=await newRows(w,id,schema,args.zeilen,at,id.slice(-8)+Date.now().toString(36));
+      await saveCollection(w,c,schema,at);
+      await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',text:ids.length+' Zeilen über Cloud-MCP',objekt:id});
+      return {databaseId:id,rowIds:ids};
+    }
+    if(name==='redion_update_row'){
+      const id=required(args.rowId,128);
+      const r=await block(id,'bearbeiten','page');
+      if(r.data.parentTable!=='collection')err('not_found','Das ist keine Datenbankzeile.');
+      const ver=expected(args.expectedVersion);
+      if(ver!==Number(r.s.version||1))err('conflict','Zeile wurde zwischenzeitlich geändert. Bitte erneut lesen.');
+      const c=await collection(w,String(r.data.parentId),'bearbeiten');
+      const schema:Schema=structuredClone(c.data.schema);
+      const neu:{props:Record<string,unknown>}=args.werte===undefined?{props:{}}:dbErr(()=>rowProps(schema,args.werte));
+      const at=await stamp(w);
+      const props={...(r.data.props||{}),...neu.props};
+      const satz:Record<string,unknown>={...r.data,props,edited:at,
+        ...(neu.props.title!==undefined?{text:String(neu.props.title)}:{}),
+        ...(args.papierkorb===true?{alive:false,trashedAt:at}:{})};
+      const version=await updateRow(w,id,ver,satz,at);
+      await saveCollection(w,c,schema,at);
+      return {rowId:id,version,werte:describeRow(schema,satz),inPapierkorb:satz.alive===false};
+    }
     if(name==='redion_update_schematic'){
       const id=required(args.blockId,128);
       const b=await block(id,'bearbeiten','schaltplan');
@@ -277,6 +386,27 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     if(name==='redion_trash_page'){
       const at=await stamp(w);
       return update(w,id,ver,{...current.data,alive:false,trashedAt:at});
+    }
+    if(name==='redion_create_database'){
+      const content=current.data.content;
+      if(!Array.isArray(content))return err('invalid_arguments','Diese Seite hat noch das alte Format. Bitte eine neue Seite anlegen.');
+      const dbName=required(args.name,160);
+      const seed=(id.slice(-6)+Date.now().toString(36)).slice(-10);
+      const schema=dbErr(()=>buildSchema(args.spalten,seed));
+      const layout=args.ansicht===undefined?'table':String(args.ansicht);
+      if(!(LAYOUTS as readonly string[]).includes(layout))err('invalid_arguments','Unbekannte Ansicht.');
+      const at=await stamp(w);
+      const rec=databaseRecords({name:dbName,schema,layout,pageId:id,seed,at});
+      const {colId,blockId}=rec;
+      /* Erst die Zeilen, dann die Sammlung (mit den dabei ergänzten Optionen),
+         Ansicht und Block — der Block zuletzt, damit nie etwas ins Leere zeigt. */
+      const rowIds=await newRows(w,colId,schema,args.zeilen,at,colId);
+      await insertRow(w,{...rec.collection,schema},colId,at,'collections');
+      await insertRow(w,rec.view,colId,at,'views');
+      await insertRow(w,rec.block,String(current.s.seite||id),at);
+      const r=await update(w,id,ver,{...current.data,content:[...content.map(String),blockId]});
+      await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',text:'Datenbank über Cloud-MCP angelegt',objekt:colId});
+      return {...r,databaseId:colId,blockId,rowIds,spalten:describeSchema(schema)};
     }
     if(name==='redion_add_schematic'){
       const content=current.data.content;

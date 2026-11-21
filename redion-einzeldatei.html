@@ -30091,7 +30091,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1618, inhalt: '5e495554aa342d67', gebaut: '2026-11-21T19:04:37.309Z' };
+const Stand = { fassung: 1619, inhalt: '2642a81383b9251a', gebaut: '2026-11-21T19:57:55.683Z' };
 window.Stand = Stand;
 
 </script>
@@ -143581,9 +143581,14 @@ const Wolke = (() => {
                 continue;
             }
             satz.wolkeVersion = s.version;
-            if (!s.verschluesselt && !s.geloescht && hatSchluessel() && s.tabelle === 'blocks' &&
-                satz && satz.type === 'page' && satz.parentTable !== 'collection')
-                klarSeiten.push(String(s.id));
+            if (!s.verschluesselt && !s.geloescht && hatSchluessel() && satz) {
+                if (s.tabelle === 'collections')
+                    klarSeiten.push(String(s.id));
+                else if (s.tabelle === 'views' && satz.collectionId)
+                    klarSeiten.push(String(satz.collectionId));
+                else if (s.tabelle === 'blocks' && satz.type === 'page')
+                    klarSeiten.push(String(s.id));
+            }
             const hier = s.tabelle === 'blocks' ? Store.cache.blocks[s.id]
                 : s.tabelle === 'collections' ? Store.cache.collections[s.id]
                     : Store.cache.views[s.id];

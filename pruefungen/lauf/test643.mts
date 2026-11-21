@@ -28,6 +28,7 @@ import type { AddressInfo } from 'node:net';
 import { starte } from '../../server/pruefserver.ts';
 import { kennung, abdruck } from '../../server/kern.ts';
 import { appBlock, appPage, stampAfter } from '../../server/mcp/page-blocks.ts';
+import { buildSchema, databaseRecords, rowProps, rowRecord } from '../../server/mcp/databases.ts';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const require = createRequire(import.meta.url);
@@ -261,6 +262,50 @@ try {
   pruef('§6 Alles andere bleibt verschlüsselt', (await serverSaetze()).every(s =>
     Number(s.verschluesselt) === 1 || String(s.id).startsWith('gpt643') || String(s.id).startsWith('pruef')),
     (await serverSaetze()).filter(s => Number(s.verschluesselt) !== 1).map(s => s.id).join(','));
+  /* §6b · Eine Datenbank von ChatGPT — Sammlung, Ansicht, Block, Zeilen, so
+     wie server/mcp/databases.ts sie für redion_create_database baut. */
+  const at6 = stampAfter((await serverSaetze()).map(s => String(s.geaendert || '')).sort().pop());
+  const schema6 = buildSchema([{ name: 'Thema', typ: 'title' }, { name: 'Status', typ: 'status' }, { name: 'Bis', typ: 'date' }], 'gpt6');
+  const rec6 = databaseRecords({ name: 'Lernplan', schema: schema6, layout: 'table', pageId: 'gpt643', seed: 'gpt6', at: at6 });
+  const z6 = rowProps(schema6, { Thema: 'Schütze', Status: 'Offen', Bis: '2026-12-01' });
+  const zeile6 = rowRecord('gpt6r0', rec6.colId, z6.props, z6.title, at6, 1);
+  const neuSeite6 = { ...gptSeite, content: ['gpt643b0', rec6.blockId], edited: at6 };
+  for (const [tabelle, satz, seite] of [['collections', rec6.collection, rec6.colId], ['views', rec6.view, rec6.colId],
+      ['blocks', rec6.block, 'gpt643'], ['blocks', zeile6, 'gpt6r0'], ['blocks', neuSeite6, 'gpt643']] as const)
+    await kern.ablage.setze('saetze', { id: satz.id, bereich: BEREICH, tabelle, daten: JSON.stringify(satz),
+      verschluesselt: 0, seite, version: satz === neuSeite6 ? 2 : 1, geaendert: at6, geloescht: 0, vonGeraet: 'Cloud-MCP' });
+  let db6: any = null;
+  const t6 = Date.now();
+  while (Date.now() - t6 < 12000) {
+    await p4.waitForTimeout(500);
+    db6 = await p4.evaluate((col: string) => {
+      const c = Store.getCollection(col);
+      if (!c) return null;
+      const rows = Store.rowsOf(col);
+      return { name: c.name, rows: rows.map((r: any) => [r.text, r.props[Object.keys(c.schema).find(k => c.schema[k].name === 'Status')!]]),
+        imSeitenbaum: (Store.getBlock('gpt643')?.content || []).includes('dgpt6'),
+        geteilt: ['cgpt6', 'gpt6r0'].map(id => (Store.getMeta('wolkeGeteilt', []) || []).includes(id)) };
+    }, rec6.colId);
+    if (db6 && db6.rows.length) break;
+  }
+  pruef('§6b Die Datenbank von ChatGPT kommt ohne Zutun an', !!db6 && db6.name === 'Lernplan' &&
+    JSON.stringify(db6.rows) === '[["Schütze","Offen"]]', JSON.stringify(db6));
+  pruef('§6b … steht auf der Seite', !!db6?.imSeitenbaum, JSON.stringify(db6));
+  pruef('§6b … und bleibt für die KI lesbar (Sammlung und Zeile)', JSON.stringify(db6?.geteilt) === '[true,true]', JSON.stringify(db6?.geteilt));
+  await p4.evaluate(async () => {
+    const c = Store.getCollection('cgpt6');
+    const key = Object.keys(c.schema).find((k: string) => c.schema[k].name === 'Status')!;
+    Store.setProp('gpt6r0', key, 'Erledigt');
+    await Wolke.abgleichen();
+  });
+  const zurueck6 = (await serverSaetze()).find(s => String(s.id) === 'gpt6r0');
+  pruef('§6b Eine Änderung an der Zeile geht im Klartext zurück',
+    !!zurueck6 && Number(zurueck6.verschluesselt) === 0 && /Erledigt/.test(String(zurueck6.daten)),
+    zurueck6 ? 'verschluesselt=' + zurueck6.verschluesselt : 'fehlt');
+  const klar6 = (await serverSaetze()).filter(s => Number(s.verschluesselt) !== 1).map(s => String(s.id))
+    .filter(id => !/^(gpt643|gpt6r|[cvd]gpt6|pruef)/.test(id));
+  pruef('§6b Ausser den Sätzen von ChatGPT bleibt alles verschlüsselt', klar6.length === 0, klar6.join(','));
+
   /* „Nur von Hand" heisst auch: kein Live-Holen. */
   const handAus = await p4.evaluate(() => { Store.setMeta('wolkeTakt', '0'); Wolke.takt(); return Wolke.liveStellen(); });
   pruef('§6 Mit „nur von Hand" läuft kein Live-Holen', handAus === 0, String(handAus));

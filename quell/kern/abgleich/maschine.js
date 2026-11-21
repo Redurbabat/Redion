@@ -587,9 +587,14 @@ const Wolke = (() => {
                 continue;
             }
             satz.wolkeVersion = s.version;
-            if (!s.verschluesselt && !s.geloescht && hatSchluessel() && s.tabelle === 'blocks' &&
-                satz && satz.type === 'page' && satz.parentTable !== 'collection')
-                klarSeiten.push(String(s.id));
+            if (!s.verschluesselt && !s.geloescht && hatSchluessel() && satz) {
+                if (s.tabelle === 'collections')
+                    klarSeiten.push(String(s.id));
+                else if (s.tabelle === 'views' && satz.collectionId)
+                    klarSeiten.push(String(satz.collectionId));
+                else if (s.tabelle === 'blocks' && satz.type === 'page')
+                    klarSeiten.push(String(s.id));
+            }
             const hier = s.tabelle === 'blocks' ? Store.cache.blocks[s.id]
                 : s.tabelle === 'collections' ? Store.cache.collections[s.id]
                     : Store.cache.views[s.id];

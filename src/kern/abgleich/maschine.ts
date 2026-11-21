@@ -817,8 +817,14 @@ const Wolke = (() => {
       let satz;
       try { satz = JSON.parse(klar); } catch { continue; }
       satz.wolkeVersion = s.version;
-      if (!s.verschluesselt && !s.geloescht && hatSchluessel() && s.tabelle === 'blocks' &&
-          satz && satz.type === 'page' && satz.parentTable !== 'collection') klarSeiten.push(String(s.id));
+      /* Die Seite, unter der `zuSchicken` den Satz später verschickt: eine
+         Seite selbst, die Sammlung für Sammlung und Ansicht, und eine
+         Datenbankzeile für sich (seiteVon gibt bei ihr die eigene Kennung). */
+      if (!s.verschluesselt && !s.geloescht && hatSchluessel() && satz) {
+        if (s.tabelle === 'collections') klarSeiten.push(String(s.id));
+        else if (s.tabelle === 'views' && satz.collectionId) klarSeiten.push(String(satz.collectionId));
+        else if (s.tabelle === 'blocks' && satz.type === 'page') klarSeiten.push(String(s.id));
+      }
 
       const hier = s.tabelle === 'blocks' ? Store.cache.blocks[s.id]
                  : s.tabelle === 'collections' ? Store.cache.collections[s.id]

@@ -138,10 +138,10 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       const transport=new StreamableHTTPClientTransport(new URL(origin+'/mcp/cloud'),{authProvider:provider,fetch:fetcher});
       await client.connect(transport);
       assert.equal(transport.sessionId,undefined);
-      /* Nur Lesewerkzeuge: Bereiche, Suche, Seite, Schaltzeichen, Schaltplan. */
+      /* Nur Lesewerkzeuge: Bereiche, Suche, Seite, Schaltzeichen, Schaltplan, Datenbanken. */
       const list=await client.listTools();
-      assert.deepEqual(list.tools.map((t:{name:string})=>t.name).sort(),['redion_list_symbols','redion_list_workspaces',
-        'redion_read_page','redion_read_schematic','redion_search']);
+      assert.deepEqual(list.tools.map((t:{name:string})=>t.name).sort(),['redion_list_databases','redion_list_symbols',
+        'redion_list_workspaces','redion_read_database','redion_read_page','redion_read_schematic','redion_search']);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
       assert.equal(JSON.parse(result.content[0].text).content,'Nur Testdaten');
       const denied=await client.callTool({name:'redion_create_page',arguments:{workspaceId:'ws_test',title:'Gesperrt',requestId:'sdk_request_01'}});
@@ -252,6 +252,44 @@ test('Cloud-MCP: nur Lesen, danach Schreiben mit Rollen- und Versionskontrolle',
       teile:[{zeichen:'gibtsnicht',x:0,y:0}]});
     assert.equal(falsch.fehler,true);
     assert.match(String(falsch.daten),/Unbekanntes Schaltzeichen/);
+
+    /* Datenbanken über MCP (databases.ts). */
+    const seite2=await call('redion_read_page',{documentId:sp.daten.documentId});
+    const neuDb=await call('redion_create_database',{documentId:sp.daten.documentId,expectedVersion:seite2.daten.version,
+      name:'Lernplan',ansicht:'board',spalten:[{name:'Thema',typ:'title'},{name:'Status',typ:'status'},
+        {name:'Fach',typ:'select',optionen:['Elektro']},{name:'Bis',typ:'date'},{name:'Stunden',typ:'number'},{name:'Tags',typ:'multi'}],
+      zeilen:[{Thema:'Schütze',Status:'Offen',Fach:'Elektro',Bis:'2026-12-01',Stunden:2,Tags:'Prüfung, Praxis'},
+        {Thema:'FI',Status:'In Arbeit',Fach:'Mathe',Bis:'2026-12-03T10:00:00Z'}]});
+    assert.equal(neuDb.fehler,false,String(neuDb.daten));
+    assert.equal(neuDb.daten.rowIds.length,2);
+    const col=JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:neuDb.daten.databaseId}))!.daten);
+    assert.equal(col.schema.title.name,'Thema');
+    assert.deepEqual((Object.values(col.schema) as any[]).find((c:any)=>c.name==='Fach')!.options.map((o:any)=>o.name),['Elektro','Mathe'],
+      'eine neue Auswahl kommt als Option dazu');
+    const view=(await f.store.finde('saetze',{bereich:'ws_test'})).find((s:any)=>s.tabelle==='views');
+    assert.equal(JSON.parse(view!.daten).layout,'board');
+    const dbBlock=JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:neuDb.daten.blockId}))!.daten);
+    assert.deepEqual([dbBlock.type,dbBlock.collectionId,dbBlock.alive],['database',neuDb.daten.databaseId,true]);
+    const liste=await call('redion_list_databases',{});
+    assert.ok(liste.daten.databases.some((d:any)=>d.databaseId===neuDb.daten.databaseId&&d.name==='Lernplan'));
+    const gelesenDb=await call('redion_read_database',{databaseId:neuDb.daten.databaseId});
+    assert.deepEqual(gelesenDb.daten.zeilen.map((z:any)=>z.werte),[
+      {Thema:'Schütze',Status:'Offen',Fach:'Elektro',Bis:'2026-12-01',Stunden:2,Tags:['Prüfung','Praxis']},
+      {Thema:'FI',Status:'In Arbeit',Fach:'Mathe',Bis:'2026-12-03'}]);
+    const mehr=await call('redion_add_rows',{databaseId:neuDb.daten.databaseId,zeilen:[{Thema:'Motor',Stunden:'1,5'}]});
+    assert.equal(mehr.daten.rowIds.length,1);
+    const zeile=gelesenDb.daten.zeilen[0];
+    const upd=await call('redion_update_row',{rowId:zeile.rowId,expectedVersion:zeile.version,werte:{Status:'Erledigt'}});
+    assert.equal(upd.daten.werte.Status,'Erledigt');
+    const weg=await call('redion_update_row',{rowId:zeile.rowId,expectedVersion:upd.daten.version,papierkorb:true});
+    assert.equal(weg.daten.inPapierkorb,true);
+    const danach=await call('redion_read_database',{databaseId:neuDb.daten.databaseId});
+    assert.deepEqual(danach.daten.zeilen.map((z:any)=>z.werte.Thema),['FI','Motor']);
+    for(const [a,muster] of [[{zeilen:[{Unbekannt:1}]},/Keine Spalte „Unbekannt“/],[{zeilen:[{Stunden:'viel'}]},/braucht eine Zahl/],
+      [{zeilen:[{Bis:'morgen'}]},/JJJJ-MM-TT/]] as const){
+      const r=await call('redion_add_rows',{databaseId:neuDb.daten.databaseId,...a});
+      assert.equal(r.fehler,true);assert.match(String(r.daten),muster);
+    }
 
     const stale=await f.rpc(write.access_token,'tools/call',{name:'redion_update_page',arguments:{
       workspaceId:'ws_test',documentId:first.documentId,title:'Alt',expectedVersion:1}});
