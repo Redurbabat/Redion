@@ -30,6 +30,7 @@ workflows:
           node --test ios/native-file-export.test.mjs
           node --test ios/native-feel.test.mjs
           node --test ios/native-layout.test.mts
+          node --test ios/install-native-glass-dock.test.mjs ios/native-editor-bridge.test.mjs
           # Foreground-Rueckkehr, Unicode-Dateinamen und sichere Temp-Dateien.
           node --test ios/native-lifecycle-export.test.mjs
           # Simulierte verzögerte UIKit-Antworten und App-Wechsel.
@@ -113,6 +114,18 @@ workflows:
           node ios/install-privacy-shield.mjs
           grep -q 'RedionPrivacyShield.start()' build/ios-capacitor/App/App/AppDelegate.swift
           grep -q 'redion-snapshot-privacy-cover' build/ios-capacitor/App/App/AppDelegate.swift
+
+      - name: Native UIKit-Tab-Bar und SwiftUI-Ansichten integrieren
+        script: |
+          set -euo pipefail
+          node ios/install-native-glass-dock.mjs
+          SWIFT="build/ios-capacitor/App/App/AppDelegate.swift"
+          grep -q 'RedionNativeDock.start()' "$SWIFT"
+          grep -q 'UITabBar(frame: .zero)' "$SWIFT"
+          grep -q 'RedionNativeMoreView' "$SWIFT"
+          grep -q 'RedionNativeLibraryCoordinator' "$SWIFT"
+          grep -q 'RedionNativeEditorModel' "$SWIFT"
+          xcrun swiftc -frontend -parse "$SWIFT"
 
       - name: iPhone-Startbildschirm mit echtem Redion-Symbol
         script: |
@@ -229,6 +242,7 @@ workflows:
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
             -derivedDataPath "$CM_BUILD_DIR/build/ios-derived-data" \
+            IPHONEOS_DEPLOYMENT_TARGET=16.0 \
             CODE_SIGNING_ALLOWED=NO \
             build 2>&1 | tee "$CM_BUILD_DIR/build/ios-xcodebuild.log"
           APP="$CM_BUILD_DIR/build/ios-derived-data/Build/Products/Release-iphoneos/App.app"
