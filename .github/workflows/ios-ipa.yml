@@ -2,9 +2,6 @@ name: Redion iPhone IPA
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - 'fix/ios-native-layout-audit-20261121'
 
 permissions:
   contents: read
