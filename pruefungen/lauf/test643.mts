@@ -265,6 +265,58 @@ try {
   const handAus = await p4.evaluate(() => { Store.setMeta('wolkeTakt', '0'); Wolke.takt(); return Wolke.liveStellen(); });
   pruef('§6 Mit „nur von Hand" läuft kein Live-Holen', handAus === 0, String(handAus));
 
+  /* ====================================================================
+   * §7 · Die Windows-App merkt sich den Schlüssel (E799)
+   * Redur, 21. November 2026: „Ja, merken". Die Brücke `RedionDesktop`
+   * wird hier nachgebildet; ihr Speicher lebt in Node, damit er ein
+   * Neuladen überlebt — wie die DPAPI-Datei der Windows-App.
+   * ==================================================================*/
+  console.log('\n§7 Gemerkter Schlüssel');
+  const tresor: { satz: string | null; holen: number; vergessen: number } = { satz: null, holen: 0, vergessen: 0 };
+  const ctx7 = await browser.newContext({ viewport: { width: 1300, height: 900 } });
+  await ctx7.exposeFunction('__tresor', (was: string, satz?: string) => {
+    if (was === 'holen') { tresor.holen++; return tresor.satz; }
+    if (was === 'merken') { tresor.satz = String(satz); return true; }
+    tresor.vergessen++; tresor.satz = null; return true;
+  });
+  await ctx7.addInitScript(() => {
+    const t = (window as any).__tresor;
+    (window as any).RedionDesktop = Object.freeze({ platform: 'windows',
+      schluesselHolen: () => t('holen'), schluesselMerken: (s: string) => t('merken', s),
+      schluesselVergessen: () => t('vergessen') });
+  });
+  const p7 = await ctx7.newPage();
+  p7.on('pageerror', (e: Error) => fehler.push(e.message));
+  await p7.goto(WURZEL + '/index.html');
+  await p7.waitForTimeout(1800);
+  const tok7 = await token();
+  await p7.evaluate(async ([t, ber]: [string, string]) => {
+    Store.setMeta('wolkeBereich', ber);
+    await Wolke.tokenUebernehmen(t);
+    await Wolke.schluesselSetzen('ein langer geheimer satz zum pruefen');
+    Wolke.abgleichSetzen(true);
+    await Wolke.abgleichen();
+  }, [tok7, BEREICH]);
+  pruef('§7 Ein bestandener Satz wird gemerkt', tresor.satz === 'ein langer geheimer satz zum pruefen');
+  await p7.reload();
+  await p7.waitForFunction(() => !!(window as any).Wolke?.zustand?.letzter, null, { timeout: 20000 }).catch(() => {});
+  const nach7 = await p7.evaluate(() => ({ hat: Wolke.hatSchluessel(), fehlt: Wolke.schluesselFehlt(),
+    fehler: Wolke.zustand.fehler || '', letzter: Wolke.zustand.letzter || '' }));
+  pruef('§7 Nach dem Neustart ist der Schlüssel ohne Eingabe wieder da', nach7.hat && !nach7.fehlt, JSON.stringify(nach7));
+  pruef('§7 … und der Abgleich ist gelaufen', !!nach7.letzter && !/Schlüssel fehlt/.test(nach7.fehler), JSON.stringify(nach7));
+  tresor.satz = 'ein ganz anderer falscher satz';
+  await p7.reload();
+  await p7.waitForTimeout(5500);
+  const falsch7 = await p7.evaluate(() => ({ hat: Wolke.hatSchluessel(), fehlt: Wolke.schluesselFehlt() }));
+  pruef('§7 Ein falscher gemerkter Satz öffnet nichts', !falsch7.hat && falsch7.fehlt, JSON.stringify(falsch7));
+  pruef('§7 … und wird vergessen', tresor.satz === null && tresor.vergessen >= 1, JSON.stringify(tresor));
+  await p7.evaluate(async () => { await Wolke.schluesselSetzen('ein langer geheimer satz zum pruefen'); });
+  await p7.evaluate(async () => { await Wolke.abmelden(); });
+  pruef('§7 Abmelden vergisst den gemerkten Satz', tresor.satz === null, JSON.stringify(tresor));
+  const imSpeicher = await p7.evaluate(() => JSON.stringify(localStorage).includes('geheimer'));
+  pruef('§7 Der Satz steht nicht im Browser-Speicher', !imSpeicher);
+  await ctx7.close();
+
   pruef('Keine Seitenfehler', fehler.length === 0, fehler.join(' | '));
 } finally {
   await browser.close();

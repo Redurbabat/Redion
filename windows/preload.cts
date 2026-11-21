@@ -36,6 +36,10 @@ contextBridge.exposeInMainWorld('RedionDesktop', Object.freeze({
   saveCommit: (id: string) => ipcRenderer.invoke('redion:save:commit', id),
   saveCancel: (id: string) => ipcRenderer.invoke('redion:save:cancel', id),
   takeDestination: () => ipcRenderer.invoke('redion:ziel:holen'),
+  // Der Schlüsselsatz des Wolke-Abgleichs, durch Windows geschützt (E799).
+  schluesselHolen: () => ipcRenderer.invoke('redion:schluessel:holen'),
+  schluesselMerken: (satz: string) => ipcRenderer.invoke('redion:schluessel:merken', satz),
+  schluesselVergessen: () => ipcRenderer.invoke('redion:schluessel:vergessen'),
   onDestination: (callback: () => void) => {
     const listener = () => callback();
     ipcRenderer.on('redion:ziel:bereit', listener);

@@ -113,7 +113,36 @@ const Wolke = (() => {
         else {
             Store.setMeta('wolkeProbe', await verschluessele('redion'));
         }
+        void desktopSchluessel()?.schluesselMerken?.(String(satz)).catch(() => { });
         return true;
+    };
+    const desktopSchluessel = () => {
+        const d = globalThis.RedionDesktop;
+        return d && typeof d.schluesselHolen === 'function' ? d : null;
+    };
+    const gemerktenSchluesselSetzen = async () => {
+        const d = desktopSchluessel();
+        if (!d || schluessel || !Store.getMeta('wolkeProbe', ''))
+            return false;
+        let satz = null;
+        try {
+            satz = await d.schluesselHolen();
+        }
+        catch {
+            return false;
+        }
+        if (typeof satz !== 'string' || !satz)
+            return false;
+        const ok = await schluesselSetzen(satz);
+        if (!ok) {
+            try {
+                await d.schluesselVergessen();
+            }
+            catch { }
+        }
+        else
+            melden();
+        return ok;
     };
     const hatSchluessel = () => !!schluessel;
     const schluesselFehlt = () => !!Store.getMeta('wolkeProbe', '') && !schluessel;
@@ -268,6 +297,10 @@ const Wolke = (() => {
         zustand.angemeldet = false;
         zustand.konto = null;
         schluessel = null;
+        try {
+            await desktopSchluessel()?.schluesselVergessen?.();
+        }
+        catch { }
         try {
             await Store.basisLeeren();
         }
@@ -958,7 +991,11 @@ const Wolke = (() => {
         zustand.konto = Store.getMeta('wolkeKonto', null);
         zustand.angemeldet = true;
         melden();
-        setTimeout(() => {
+        setTimeout(async () => {
+            try {
+                await gemerktenSchluesselSetzen();
+            }
+            catch { }
             abgleichen().catch(() => { });
             takt();
         }, 3000);

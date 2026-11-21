@@ -182,7 +182,34 @@ const Wolke = (() => {
     } else {
       Store.setMeta('wolkeProbe', await verschluessele('redion'));
     }
+    /* Nur ein Satz, der die Probe bestanden hat, wird gemerkt (E799). */
+    void desktopSchluessel()?.schluesselMerken?.(String(satz)).catch(() => {});
     return true;
+  };
+
+  /* DER GEMERKTE SCHLÜSSEL DER WINDOWS-APP (E799, Redur am 21. November 2026:
+     „Ja, merken"). Ohne ihn stand der Abgleich nach jedem Neustart still,
+     bis jemand den Satz wieder eintippte — und Seiten von ChatGPT kamen nie
+     „von selbst". Die Windows-App legt den Satz mit `safeStorage` (DPAPI)
+     ab: lesbar nur für dieses Windows-Konto auf diesem Rechner, nie im
+     Browser, nie in IndexedDB, nie in einer Sicherung. Im Browser gibt es
+     die Brücke nicht — dort bleibt alles wie in E797. */
+  const desktopSchluessel = (): any => {
+    const d = (globalThis as any).RedionDesktop;
+    return d && typeof d.schluesselHolen === 'function' ? d : null;
+  };
+  const gemerktenSchluesselSetzen = async (): Promise<boolean> => {
+    const d = desktopSchluessel();
+    if (!d || schluessel || !Store.getMeta('wolkeProbe', '')) return false;
+    let satz: unknown = null;
+    try { satz = await d.schluesselHolen(); } catch { return false; }
+    if (typeof satz !== 'string' || !satz) return false;
+    const ok = await schluesselSetzen(satz);
+    /* Passt er nicht mehr (anderer Satz auf einem anderen Gerät gewählt),
+       wird er vergessen statt bei jedem Start erneut probiert. */
+    if (!ok) { try { await d.schluesselVergessen(); } catch {} }
+    else melden();
+    return ok;
   };
 
   const hatSchluessel = () => !!schluessel;
@@ -378,6 +405,8 @@ const Wolke = (() => {
     zustand.angemeldet = false;
     zustand.konto = null;
     schluessel = null;
+    /* Abmelden vergisst auch den gemerkten Satz (E799). */
+    try { await desktopSchluessel()?.schluesselVergessen?.(); } catch {}
     /* Der gemeinsame Stand gehört zum Konto. Bleibt er liegen, vergleicht
        der nächste Abgleich gegen einen Stand, den es dort nie gab. */
     try { await Store.basisLeeren(); } catch {}
@@ -1312,7 +1341,10 @@ const Wolke = (() => {
     zustand.angemeldet = true;
     melden();
     /* Nicht sofort losrennen: erst soll die App stehen. */
-    setTimeout(() => {
+    setTimeout(async () => {
+      /* Erst den gemerkten Schlüssel (E799), dann abgleichen — sonst hielte
+         die Sperre aus E797 den ersten Lauf an. */
+      try { await gemerktenSchluesselSetzen(); } catch {}
       abgleichen().catch(() => {});
       takt();
     }, 3000);

@@ -4,7 +4,7 @@
  * Start-menu entry and installer. The renderer uses the existing Redion UI.
  * No Node APIs reach notes or the editor; all app files are read-only.
  */
-const { app, BrowserWindow, Menu, protocol, net, shell, dialog, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, Menu, protocol, net, shell, dialog, ipcMain, screen, safeStorage } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
@@ -165,6 +165,31 @@ if (!lock) {
     const ziel = pendingDestination;
     pendingDestination = null;
     return ziel;
+  });
+  // Der Schlüsselsatz des Wolke-Abgleichs (E799, Redur 21.11.2026: „Ja,
+  // merken"). safeStorage = Windows-DPAPI: nur dieses Windows-Konto auf
+  // diesem Rechner kann ihn lesen. Ohne DPAPI wird nichts gespeichert —
+  // nie im Klartext auf die Platte.
+  const keyFile = () => path.join(app.getPath('userData'), 'wolke-schluessel.bin');
+  const keySender = event => {
+    if (!trustedSender(event, mainWindow?.webContents)) throw new Error('Zugriff nicht erlaubt.');
+  };
+  ipcMain.handle('redion:schluessel:holen', event => {
+    keySender(event);
+    if (!safeStorage.isEncryptionAvailable()) return null;
+    try { return safeStorage.decryptString(fs.readFileSync(keyFile())); } catch { return null; }
+  });
+  ipcMain.handle('redion:schluessel:merken', (event, satz) => {
+    keySender(event);
+    if (typeof satz !== 'string' || satz.length < 1 || satz.length > 1024) return false;
+    if (!safeStorage.isEncryptionAvailable()) return false;
+    fs.writeFileSync(keyFile(), safeStorage.encryptString(satz), { mode: 0o600 });
+    return true;
+  });
+  ipcMain.handle('redion:schluessel:vergessen', event => {
+    keySender(event);
+    fs.rmSync(keyFile(), { force: true });
+    return true;
   });
   const automationSender = event => {
     if (!trustedSender(event, mainWindow?.webContents)) throw new Error('Automatisierungszugriff nicht erlaubt.');
