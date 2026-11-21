@@ -99,7 +99,20 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{...workspace,rowId:idField,expectedVersion:{type:'integer',minimum:1},werte:{type:'object'},papierkorb:{type:'boolean'}},
       required:['workspaceId','rowId','expectedVersion'],additionalProperties:false}}
 ];
-const writeNames=new Set(['redion_create_page','redion_append_content','redion_update_page','redion_replace_text','redion_trash_page','redion_move_page',
+/* --- Aufgaben und Termine: Abkürzungen über Datenbanken ------------------
+   In der App SIND Aufgaben Zeilen mit Status/Kästchen (Bibliothek.moegliche)
+   und Termine Zeilen mit Datum (Kalender). Diese Werkzeuge legen beim ersten
+   Gebrauch eine Seite „ChatGPT" mit je einer Datenbank an und schreiben dort. */
+CLOUD_TOOLS.push(
+  {name:'redion_add_task',description:'Legt eine Aufgabe an (erscheint in der App unter Aufgaben). faellig als JJJJ-MM-TT.',
+    inputSchema:{type:'object',properties:{...workspace,titel:nameField,faellig:{type:'string',maxLength:40},
+      status:{type:'string',enum:['Offen','In Arbeit','Erledigt']},notiz:{type:'string',maxLength:2000}},required:['workspaceId','titel'],additionalProperties:false}},
+  {name:'redion_add_event',description:'Legt einen Termin an (erscheint im Kalender der App). datum als JJJJ-MM-TT oder Spanne „JJJJ-MM-TT → JJJJ-MM-TT“.',
+    inputSchema:{type:'object',properties:{...workspace,titel:nameField,datum:{type:'string',maxLength:60},ort:{type:'string',maxLength:200},
+      notiz:{type:'string',maxLength:2000}},required:['workspaceId','titel','datum'],additionalProperties:false}},
+  {name:'redion_list_tasks',description:'Listet Aufgaben aus allen lesbaren Datenbanken mit Status oder Kästchen.',
+    inputSchema:{type:'object',properties:{...workspace,nurOffen:{type:'boolean'}},required:['workspaceId'],additionalProperties:false}});
+const writeNames=new Set(['redion_add_task','redion_add_event','redion_create_page','redion_append_content','redion_update_page','redion_replace_text','redion_trash_page','redion_move_page',
   'redion_add_schematic','redion_update_schematic','redion_create_database','redion_add_rows','redion_update_row']);
 export const visibleCloudTools=(p:McpPrincipal)=>CLOUD_TOOLS.filter(t=>!writeNames.has(t.name)||p.scopes.includes('redion:write'));
 
@@ -319,8 +332,68 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       return {databaseId:id,name:String(c.data.name||''),version:Number(c.s.version)||1,spalten:describeSchema(c.data.schema),
         zeilen:rows.map(r=>({rowId:r.id,version:r.version,werte:describeRow(c.data.schema,r.data)}))};
     }
+    if(name==='redion_list_tasks'){
+      await role(w,'*','lesen');
+      const cols=(await db.prepare("SELECT id,daten FROM saetze WHERE bereich=?1 AND tabelle='collections' AND verschluesselt=0 AND geloescht=0 LIMIT 200")
+        .bind(w).all<{id:string;daten:string}>()).results;
+      const aufgaben=[];
+      for(const c of cols){
+        let d:any;try{d=JSON.parse(c.daten);}catch{continue;}
+        const schema:Schema=d.schema||{};
+        const statusKey=Object.keys(schema).find(k=>schema[k]!.type==='status');
+        const hakenKey=Object.keys(schema).find(k=>schema[k]!.type==='checkbox');
+        if(!statusKey&&!hakenKey&&!d.istAufgaben)continue;
+        if(!darf(await rolleAuf(ablage,w,c.id,userId),'lesen'))continue;
+        const datumKey=Object.keys(schema).find(k=>schema[k]!.type==='date');
+        for(const r of await rowsOf(w,c.id,300)){
+          const p=r.data.props||{};
+          const erledigt=hakenKey?p[hakenKey]===true:/^(erledigt|fertig|done)$/i.test(String(statusKey?p[statusKey]??'':''));
+          if(args.nurOffen===true&&erledigt)continue;
+          aufgaben.push({rowId:r.id,version:r.version,databaseId:c.id,datenbank:String(d.name||''),titel:String(p.title??r.data.text??''),
+            ...(statusKey?{status:p[statusKey]??''}:{}),erledigt,...(datumKey&&p[datumKey]?{faellig:p[datumKey]}:{})});
+          if(aufgaben.length>=300)break;
+        }
+      }
+      return {aufgaben};
+    }
     if(!principal.scopes.includes('redion:write'))
       return err('forbidden','Schreibrechte sind nicht freigegeben.');
+    if(name==='redion_add_task'||name==='redion_add_event'){
+      await role(w,'*','bearbeiten');
+      const aufgabe=name==='redion_add_task';
+      /* Feste Kennungen je Bereich: ein zweiter Aufruf findet dieselbe Seite
+         und dieselbe Datenbank wieder (INSERT OR IGNORE). */
+      const hash=async(s:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s))),
+        b=>b.toString(16).padStart(2,'0')).join('').slice(0,20);
+      const homeId='gpt'+await hash('chatgpt-home\0'+w);
+      const seed=(aufgabe?'auf':'ter')+await hash((aufgabe?'aufgaben':'termine')+'\0'+w);
+      const colId=('c'+seed).slice(0,64);
+      let at=await stamp(w);
+      if(!(await ablage.hole('saetze',{bereich:w,id:homeId})))
+        await insertRow(w,appPage(homeId,'ChatGPT',null,[],at),homeId,at);
+      if(!(await ablage.hole('saetze',{bereich:w,id:colId}))){
+        const schema=dbErr(()=>buildSchema(aufgabe
+          ?[{name:'Aufgabe',typ:'title'},{name:'Status',typ:'status'},{name:'Fällig',typ:'date'},{name:'Notiz',typ:'text'}]
+          :[{name:'Termin',typ:'title'},{name:'Datum',typ:'date'},{name:'Ort',typ:'place'},{name:'Notiz',typ:'text'}],seed));
+        const rec=databaseRecords({name:aufgabe?'Aufgaben':'Termine',schema,layout:aufgabe?'board':'calendar',pageId:homeId,seed,at});
+        await insertRow(w,{...rec.collection,...(aufgabe?{istAufgaben:true}:{})},colId,at,'collections');
+        await insertRow(w,rec.view,colId,at,'views');
+        await insertRow(w,rec.block,homeId,at);
+        const home=await page(w,homeId,'bearbeiten');
+        const liste=Array.isArray(home.data.content)?home.data.content.map(String):[];
+        await updateRow(w,homeId,Number(home.s.version)||1,{...home.data,content:[...liste,rec.blockId],edited:at},at);
+        at=await stamp(w);
+      }
+      const c=await collection(w,colId,'bearbeiten');
+      const schema:Schema=structuredClone(c.data.schema);
+      const werte:Record<string,unknown>=aufgabe
+        ?{Aufgabe:required(args.titel,160),Status:args.status??'Offen',...(args.faellig?{Fällig:args.faellig}:{}),...(args.notiz?{Notiz:args.notiz}:{})}
+        :{Termin:required(args.titel,160),Datum:required(args.datum,60),...(args.ort?{Ort:args.ort}:{}),...(args.notiz?{Notiz:args.notiz}:{})};
+      const ids=await newRows(w,colId,schema,[werte],at,colId.slice(-6)+Date.now().toString(36));
+      await saveCollection(w,c,schema,at);
+      await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',text:(aufgabe?'Aufgabe':'Termin')+' über Cloud-MCP',objekt:ids[0]??colId});
+      return {rowId:ids[0],databaseId:colId,seite:homeId};
+    }
     if(name==='redion_add_rows'){
       const id=required(args.databaseId,128);
       const c=await collection(w,id,'bearbeiten');

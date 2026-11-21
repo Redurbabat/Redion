@@ -141,7 +141,7 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       /* Nur Lesewerkzeuge: Bereiche, Suche, Seite, Schaltzeichen, Schaltplan, Datenbanken. */
       const list=await client.listTools();
       assert.deepEqual(list.tools.map((t:{name:string})=>t.name).sort(),['redion_list_databases','redion_list_symbols',
-        'redion_list_workspaces','redion_read_database','redion_read_page','redion_read_schematic','redion_search']);
+        'redion_list_tasks','redion_list_workspaces','redion_read_database','redion_read_page','redion_read_schematic','redion_search']);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
       assert.equal(JSON.parse(result.content[0].text).content,'Nur Testdaten');
       const denied=await client.callTool({name:'redion_create_page',arguments:{workspaceId:'ws_test',title:'Gesperrt',requestId:'sdk_request_01'}});
@@ -252,6 +252,27 @@ test('Cloud-MCP: nur Lesen, danach Schreiben mit Rollen- und Versionskontrolle',
       teile:[{zeichen:'gibtsnicht',x:0,y:0}]});
     assert.equal(falsch.fehler,true);
     assert.match(String(falsch.daten),/Unbekanntes Schaltzeichen/);
+
+    /* Aufgaben und Termine: eine Seite „ChatGPT", je eine Datenbank, beim
+       zweiten Aufruf wiedergefunden statt doppelt angelegt. */
+    const a1=await call('redion_add_task',{titel:'Schütz prüfen',faellig:'2026-12-02'});
+    const a2=await call('redion_add_task',{titel:'Bericht',status:'Erledigt'});
+    assert.equal(a1.fehler,false,String(a1.daten));
+    assert.equal(a1.daten.databaseId,a2.daten.databaseId);
+    const t1=await call('redion_add_event',{titel:'Prüfung',datum:'2026-12-10',ort:'Zürich'});
+    assert.equal(t1.fehler,false,String(t1.daten));
+    assert.equal(t1.daten.seite,a1.daten.seite,'Termine und Aufgaben liegen auf derselben Seite');
+    const home=JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:a1.daten.seite}))!.daten);
+    assert.deepEqual([home.text,home.content.length,home.alive],['ChatGPT',2,true]);
+    const aufCol=JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:a1.daten.databaseId}))!.daten);
+    assert.equal(aufCol.istAufgaben,true);
+    const offen=await call('redion_list_tasks',{nurOffen:true});
+    assert.deepEqual(offen.daten.aufgaben.map((x:any)=>[x.titel,x.status,x.faellig]),[['Schütz prüfen','Offen','2026-12-02']]);
+    const termine=await call('redion_read_database',{databaseId:t1.daten.databaseId});
+    assert.deepEqual(termine.daten.zeilen[0].werte,{Termin:'Prüfung',Datum:'2026-12-10',Ort:'Zürich'});
+    const viewT=(await f.store.finde('saetze',{bereich:'ws_test'})).map((s:any)=>s.tabelle==='views'?JSON.parse(s.daten):null)
+      .find((v:any)=>v&&v.collectionId===t1.daten.databaseId);
+    assert.equal(viewT.layout,'calendar');
 
     /* Seiten komplett: Code, Callout, Einrückung, Verschieben. */
     const md='## Plan\n- Oben\n    - Unten\n        - [ ] Ganz unten\n> 💡 Merke\n```ts\nconst a = 1;\n\n# kein Titel\n```\nEnde';
