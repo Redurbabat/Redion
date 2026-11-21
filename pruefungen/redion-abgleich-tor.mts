@@ -105,8 +105,11 @@ test('Allow-Origin nur für den exakten App-Ursprung, Vorabfrage ohne Körper',a
     const vorab=(origin:string)=>f.rufe('/konto/code',{method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Method':'POST'}});
     const ok=await vorab(APP);
     assert.equal(ok.status,204);assert.equal(ok.headers.get('Access-Control-Allow-Origin'),APP);
-    for(const fremd of ['https://evil.test','null','redion-local://evil'])
+    for(const fremd of ['https://evil.test','null','redion-local://evil','capacitor://evil'])
       assert.notEqual((await vorab(fremd)).headers.get('Access-Control-Allow-Origin'),fremd,fremd);
+    /* Die iOS-App (Capacitor) gleicht ebenso ab — 21. November 2026. */
+    const ios=await vorab('capacitor://localhost');
+    assert.equal(ios.headers.get('Access-Control-Allow-Origin'),'capacitor://localhost');
     const post=await f.rufe('/konto/code',{method:'POST',headers:json({Origin:APP}),body:JSON.stringify({geraet:'Windows'})});
     assert.equal(post.status,200);assert.equal(post.headers.get('Access-Control-Allow-Origin'),APP);
   }finally{f.close();}
