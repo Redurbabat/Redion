@@ -6,6 +6,12 @@ import type {Ablage} from '../typen.ts';
 import type {McpPrincipal} from './oauth.ts';
 import {rolleAuf,darf,notieren} from '../kern.ts';
 import {textToBlocks,appBlock,appPage,blockToLine,stampAfter,MAX_BLOCKS} from './page-blocks.ts';
+import {buildPlan,describePlan,listSymbols,symbolGroups,PLAN_ARTEN,LIMITS,SchematicError} from './schematic.ts';
+/* Fehler der Eingabe eines Schaltplans werden zu Werkzeugfehlern mit Satz. */
+const plan=(input:Args,prefix:string)=>{
+  try{return buildPlan(input,prefix);}
+  catch(e){if(e instanceof SchematicError)return err('invalid_arguments',e.message);throw e;}
+};
 
 type Db={prepare(sql:string):{bind(...values:(string|number)[]):{first<T>():Promise<T|null>}}};
 type Args=Record<string,unknown>;
@@ -48,9 +54,31 @@ export const CLOUD_TOOLS:ToolDef[]=[
       required:['workspaceId','documentId','find','replacement','expectedVersion'],additionalProperties:false}},
   {name:'redion_trash_page',description:'Legt eine Klartext-Seite in den Papierkorb der App (wiederherstellbar, nicht endgültig gelöscht).',
     inputSchema:{type:'object',properties:{...workspace,...documentId,expectedVersion:{type:'integer',minimum:1}},
-      required:['workspaceId','documentId','expectedVersion'],additionalProperties:false}}
+      required:['workspaceId','documentId','expectedVersion'],additionalProperties:false}},
+  /* --- Schaltpläne (schematic.ts) ------------------------------------- */
+  {name:'redion_list_symbols',description:'Listet die Schaltzeichen der Redion-Schaltpläne mit Kennung, Gruppe, Kennbuchstabe, Grösse (Raster 10) und Anschlussnummern. Vor redion_add_schematic aufrufen.',
+    inputSchema:{type:'object',properties:{gruppe:{type:'string',maxLength:40},suche:{type:'string',maxLength:80}},additionalProperties:false}},
+  {name:'redion_add_schematic',description:'Fügt einer Klartext-Seite einen Schaltplan hinzu, der in der App wie selbst gezeichnet erscheint. teile: Schaltzeichen mit x/y (Raster 10, y nach unten), drehung 0/90/180/270, optional bmk (sonst K1, S1 … automatisch). verbindungen: von/nach als Klemme „BMK:Anschluss“ (z. B. „K1:A1“ → „S1:14“); die Leitung wird rechtwinklig auf die Anschlüsse gelegt, optional mit punkte als Zwischenpunkten und schiene L1/L2/L3/N/PE.',
+    inputSchema:{type:'object',properties:{...workspace,...documentId,expectedVersion:{type:'integer',minimum:1},titel:{type:'string',maxLength:160},
+      art:{type:'string',enum:[...PLAN_ARTEN]},
+      teile:{type:'array',maxItems:LIMITS.teile,items:{type:'object',properties:{zeichen:{type:'string'},x:{type:'number'},y:{type:'number'},
+        drehung:{type:'integer',enum:[0,90,180,270]},gespiegelt:{type:'boolean'},bmk:{type:'string',maxLength:20},ref:{type:'string',maxLength:40},
+        beschriftung:{type:'string',maxLength:120},werte:{type:'object',additionalProperties:{type:'number'}}},required:['zeichen','x','y'],additionalProperties:false}},
+      verbindungen:{type:'array',maxItems:LIMITS.verbindungen,items:{type:'object',properties:{von:{type:'string'},nach:{type:'string'},
+        schiene:{type:'string',enum:['L1','L2','L3','N','PE']},punkte:{type:'array',maxItems:50,items:{type:'object',properties:{x:{type:'number'},y:{type:'number'}},required:['x','y'],additionalProperties:false}}},
+        required:['von','nach'],additionalProperties:false}},
+      texte:{type:'array',maxItems:LIMITS.texte,items:{type:'object',properties:{x:{type:'number'},y:{type:'number'},t:{type:'string',maxLength:200}},required:['x','y','t'],additionalProperties:false}}},
+      required:['workspaceId','documentId','expectedVersion','teile'],additionalProperties:false}},
+  {name:'redion_read_schematic',description:'Liest einen Schaltplan-Block: Bauteile mit BMK und Lage, Verbindungen als Klemmen.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField},required:['workspaceId','blockId'],additionalProperties:false}},
+  {name:'redion_update_schematic',description:'Ersetzt den Inhalt eines Schaltplan-Blocks (gleiche Felder wie redion_add_schematic) bei passender expectedVersion des Blocks.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},titel:{type:'string',maxLength:160},
+      art:{type:'string',enum:[...PLAN_ARTEN]},teile:{type:'array',maxItems:LIMITS.teile,items:{type:'object'}},
+      verbindungen:{type:'array',maxItems:LIMITS.verbindungen,items:{type:'object'}},texte:{type:'array',maxItems:LIMITS.texte,items:{type:'object'}}},
+      required:['workspaceId','blockId','expectedVersion','teile'],additionalProperties:false}}
 ];
-const writeNames=new Set(['redion_create_page','redion_append_content','redion_update_page','redion_replace_text','redion_trash_page']);
+const writeNames=new Set(['redion_create_page','redion_append_content','redion_update_page','redion_replace_text','redion_trash_page',
+  'redion_add_schematic','redion_update_schematic']);
 export const visibleCloudTools=(p:McpPrincipal)=>CLOUD_TOOLS.filter(t=>!writeNames.has(t.name)||p.scopes.includes('redion:write'));
 
 export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
@@ -145,6 +173,8 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       }
       return {workspaces:visible};
     }
+    if(name==='redion_list_symbols')
+      return {raster:10,gruppen:symbolGroups(),symbole:listSymbols(text(args.gruppe,40),text(args.suche,80))};
     const w=required(args.workspaceId,128);
     await inScope(w);
     if(name==='redion_search'){
@@ -173,8 +203,36 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       return {documentId:id,workspaceId:w,title:String(result.data.text||''),
         content,version:Number(result.s.version)||1,inTrash:result.data.alive===false};
     }
+    /* Ein einzelner Block (nicht die Seite), mit Recht auf seiner Seite. */
+    const block=async(id:string,permission:'lesen'|'bearbeiten',type:string)=>{
+      const s=await ablage.hole('saetze',{bereich:w,id});
+      if(!s||s.geloescht||s.tabelle!=='blocks')return err('not_found','Block nicht gefunden.');
+      await role(w,String(s.seite||id),permission);
+      if(s.verschluesselt)return err('encrypted','Verschlüsselte Inhalte sind für die Cloud nicht lesbar.');
+      let data:Record<string,any>;
+      try{data=JSON.parse(String(s.daten||'{}'));}catch{return err('invalid_data','Unlesbarer Block.');}
+      if(!data||data.type!==type)return err('not_found','Kein Block der Art „'+type+'“.');
+      return {s,data};
+    };
+    if(name==='redion_read_schematic'){
+      const id=required(args.blockId,128);
+      const b=await block(id,'lesen','schaltplan');
+      return {blockId:id,titel:String(b.data.text||''),version:Number(b.s.version)||1,...describePlan(b.data.plan)};
+    }
     if(!principal.scopes.includes('redion:write'))
       return err('forbidden','Schreibrechte sind nicht freigegeben.');
+    if(name==='redion_update_schematic'){
+      const id=required(args.blockId,128);
+      const b=await block(id,'bearbeiten','schaltplan');
+      const ver=expected(args.expectedVersion);
+      if(ver!==Number(b.s.version||1))err('conflict','Schaltplan wurde zwischenzeitlich geändert. Bitte erneut lesen.');
+      const built=plan(args,id.slice(-6)+'u'+Date.now().toString(36).slice(-4));
+      const at=await stamp(w);
+      const titel=args.titel===undefined?b.data.text:text(args.titel,160);
+      const version=await updateRow(w,id,ver,{...b.data,text:titel,plan:built.plan,edited:at},at);
+      await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',text:'Schaltplan über Cloud-MCP geändert',objekt:id});
+      return {blockId:id,version,teile:built.plan.teile.length,leitungen:built.plan.leitungen.length,warnungen:built.warnungen};
+    }
     if(name==='redion_create_page'){
       const title=required(args.title,160);
       const content=text(args.content??'',12000);
@@ -219,6 +277,17 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     if(name==='redion_trash_page'){
       const at=await stamp(w);
       return update(w,id,ver,{...current.data,alive:false,trashedAt:at});
+    }
+    if(name==='redion_add_schematic'){
+      const content=current.data.content;
+      if(!Array.isArray(content))return err('invalid_arguments','Diese Seite hat noch das alte Format. Bitte eine neue Seite anlegen.');
+      const list=content.map(String);
+      const blockId=(id+'s'+Date.now().toString(36)).slice(0,64);
+      const built=plan(args,blockId.slice(-6));
+      const at=await stamp(w);
+      await insertRow(w,appBlock(blockId,'schaltplan',text(args.titel,160),id,at,{plan:built.plan}),String(current.s.seite||id),at);
+      const r=await update(w,id,ver,{...current.data,content:[...list,blockId]});
+      return {...r,blockId,teile:built.plan.teile.length,leitungen:built.plan.leitungen.length,warnungen:built.warnungen};
     }
     if(name==='redion_append_content'){
       const content=required(args.content,12000);

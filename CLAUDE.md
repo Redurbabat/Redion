@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 577 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 578 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2246,7 +2246,19 @@ echte Vorfälle vom 18./19. November fest: 961 und 4 646 Sätze gingen im
 Klartext in die Cloud. Seine Gegenproben druckten „11.65 MB, 7 Pakete“, fehlende
 Blöcke b643_10 bis b643_29 und „verschluesselt=0“. Aus
 `codex/redion-visual-cloud-mcp` in PR #213 übernommen. Gezählt am
-19. November: `ls pruefungen/lauf/test*.mts | wc -l` sagt 577.*
+19. November: `ls pruefungen/lauf/test*.mts | wc -l` sagt 577. Am
+21. November kamen §6 (was ChatGPT anlegt, erscheint ohne Zutun und bleibt
+lesbar) und §7 (die Windows-App merkt sich den Schlüssel, E799) dazu.*
+
+*Und 578: `test644` — ChatGPT zeichnet Schaltpläne über den Cloud-MCP, und
+die App sieht sie wie selbst gezeichnet. Der Server kennt die Schaltzeichen
+aus einem Katalog, den `server/mcp/fachzeichen-katalog.mts` aus dem GEBAUTEN
+Register erzeugt — keine zweite Drehmatrix (§8). Seine erste Fassung war
+blind: `Schaltplan.kontakte` nimmt die gespeicherte Bindung auch dann, wenn
+die Leitung daneben endet, und die Gegenprobe (Drehung ignoriert) blieb grün.
+Seither misst er den ORT gegen `Schaltplan.anschlussOrt` — und fand dabei
+gedrehte Zeichen mit Klemmen zwischen den Rasterpunkten (65 statt 70).
+Gezählt am 21. November: `ls pruefungen/lauf/test*.mts | wc -l` sagt 578.*
 
 ### Die Befehle
 
@@ -2269,7 +2281,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 577 Läufe
+npm run pruefen                      alle 578 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2366,7 +2378,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 577 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 578 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

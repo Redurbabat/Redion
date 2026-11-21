@@ -70,6 +70,7 @@ export const blockToLine = (b: Record<string, unknown>): string => {
     case 'quote': return '> ' + t;
     case 'divider': return '---';
     case 'page': return '📄 ' + t;
+    case 'schaltplan': return '⚡ Schaltplan' + (t ? ' „' + t + '“' : '') + ' (blockId ' + String(b.id ?? '') + ')';
     default: return t;
   }
 };

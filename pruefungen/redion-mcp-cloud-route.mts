@@ -138,7 +138,10 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       const transport=new StreamableHTTPClientTransport(new URL(origin+'/mcp/cloud'),{authProvider:provider,fetch:fetcher});
       await client.connect(transport);
       assert.equal(transport.sessionId,undefined);
-      const list=await client.listTools();assert.equal(list.tools.length,3);
+      /* Nur Lesewerkzeuge: Bereiche, Suche, Seite, Schaltzeichen, Schaltplan. */
+      const list=await client.listTools();
+      assert.deepEqual(list.tools.map((t:{name:string})=>t.name).sort(),['redion_list_symbols','redion_list_workspaces',
+        'redion_read_page','redion_read_schematic','redion_search']);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
       assert.equal(JSON.parse(result.content[0].text).content,'Nur Testdaten');
       const denied=await client.callTool({name:'redion_create_page',arguments:{workspaceId:'ws_test',title:'Gesperrt',requestId:'sdk_request_01'}});
@@ -221,6 +224,34 @@ test('Cloud-MCP: nur Lesen, danach Schreiben mit Rollen- und Versionskontrolle',
     assert.equal(trashed.version,3);
     const trashedData=JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:plan.documentId}))!.daten);
     assert.deepEqual([trashedData.alive,trashedData.content.length],[false,8]);
+
+    /* Schaltpläne über MCP (schematic.ts, test644 prüft die Geometrie in der App). */
+    const call=async(name:string,a:Record<string,unknown>)=>{
+      const r=(await f.rpc(write.access_token,'tools/call',{name,arguments:{workspaceId:'ws_test',...a}})).data.result;
+      return {fehler:r.isError===true,daten:r.isError?r.content[0].text:JSON.parse(r.content[0].text)};
+    };
+    const symbole=await call('redion_list_symbols',{suche:'spule'});
+    assert.ok(symbole.daten.symbole.some((s:any)=>s.id==='spule'&&s.anschluesse.includes('A1')));
+    const sp=await call('redion_create_page',{title:'Steuerung',requestId:'request_00003'});
+    const added=await call('redion_add_schematic',{documentId:sp.daten.documentId,expectedVersion:1,titel:'Selbsthaltung',
+      teile:[{zeichen:'taster-schliesser',x:100,y:100,bmk:'S1'},{zeichen:'spule',x:100,y:260}],
+      verbindungen:[{von:'S1:4',nach:'K1:A1'}]});
+    assert.equal(added.fehler,false,String(added.daten));
+    assert.deepEqual([added.daten.teile,added.daten.leitungen,added.daten.version],[2,1,2]);
+    const gelesen=await call('redion_read_schematic',{blockId:added.daten.blockId});
+    assert.deepEqual(gelesen.daten.verbindungen,[{von:'S1:4',nach:'K1:A1'}]);
+    assert.equal(gelesen.daten.titel,'Selbsthaltung');
+    const seite=await call('redion_read_page',{documentId:sp.daten.documentId});
+    assert.match(seite.daten.content,/⚡ Schaltplan „Selbsthaltung“ \(blockId /);
+    const blockSatz=JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:added.daten.blockId}))!.daten);
+    assert.deepEqual([blockSatz.type,blockSatz.alive,blockSatz.parentId],['schaltplan',true,sp.daten.documentId]);
+    const geaendert=await call('redion_update_schematic',{blockId:added.daten.blockId,expectedVersion:1,
+      teile:[{zeichen:'spule',x:100,y:100,bmk:'K1'}]});
+    assert.equal(geaendert.daten.version,2);
+    const falsch=await call('redion_add_schematic',{documentId:sp.daten.documentId,expectedVersion:2,
+      teile:[{zeichen:'gibtsnicht',x:0,y:0}]});
+    assert.equal(falsch.fehler,true);
+    assert.match(String(falsch.daten),/Unbekanntes Schaltzeichen/);
 
     const stale=await f.rpc(write.access_token,'tools/call',{name:'redion_update_page',arguments:{
       workspaceId:'ws_test',documentId:first.documentId,title:'Alt',expectedVersion:1}});
