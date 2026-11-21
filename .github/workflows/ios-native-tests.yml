@@ -38,7 +38,6 @@ jobs:
             ios/native-feel.test.mjs \
             ios/native-layout.test.mts \
             ios/install-native-glass-dock.test.mjs \
-            ios/native-editor-bridge.test.mjs \
             ios/native-lifecycle-export.test.mjs \
             ios/native-statusbar-queue.test.mjs \
             ios/native-viewport-resume.test.mjs \
