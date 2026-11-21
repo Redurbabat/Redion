@@ -5,18 +5,25 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { IOS_LAYOUT_CSS, IOS_LAYOUT_STYLE_ID, installIosNativeLayout } from './native-layout.mts';
 
+type TestStyle = {
+  id: string;
+  textContent: string;
+  attrs: Record<string, string>;
+  setAttribute(name: string, value: string): void;
+  remove(): void;
+};
 function harness() {
-  const nodes = [];
+  const nodes: TestStyle[] = [];
   const doc = {
-    head: { appendChild(node) { nodes.push(node); } },
-    createElement(tag) {
+    head: { appendChild(node: TestStyle) { nodes.push(node); } },
+    createElement(tag: string): TestStyle {
       assert.equal(tag, 'style');
-      return { id: '', textContent: '', attrs: {},
-        setAttribute(name, value) { this.attrs[name] = value; },
+      return { id: '', textContent: '', attrs: {} as Record<string, string>,
+        setAttribute(name: string, value: string) { this.attrs[name] = value; },
         remove() { const i=nodes.indexOf(this); if(i>=0)nodes.splice(i,1); }
       };
     },
-    getElementById(id) { return nodes.find(n => n.id === id) || null; }
+    getElementById(id: string) { return nodes.find(n => n.id === id) || null; }
   };
   return { doc, nodes };
 }
