@@ -60,9 +60,9 @@ for (const width of [390, 428]) {
       );
       assert.equal(cards.length, 3);
       assert.ok(cards.every(c=>c.width>260), 'Die Kartentexte bleiben lesbar.');
-      assert.ok(cards[1].y>=cards[0].y+cards[0].height-1,
+      assert.ok(cards[1]!.y>=cards[0]!.y+cards[0]!.height-1,
         'Terminkarten muessen untereinander stehen.');
-      assert.ok(cards[2].y>=cards[1].y+cards[1].height-1);
+      assert.ok(cards[2]!.y>=cards[1]!.y+cards[1]!.height-1);
       await context.close();
     } finally { await browser.close(); }
   });
