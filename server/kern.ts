@@ -641,6 +641,12 @@ const oauthProfil = async (anbieter: any, code: any, ziel: any, umwelt: any) => 
 /* `weiterZu` gibt nur der OAuth-Weg an: dort geht es nach dem Anmelden zurück
    zu der Seite, von der jemand gekommen ist. Der Gerätecode-Weg kennt kein
    Ziel und liess den Wert bisher stillschweigend weg — jetzt steht es da. */
+/** Eine Sitzung für ein Konto, dessen Identität der AUFRUFER schon geprüft hat
+ * (E795: POST /konto/access in server/mcp/access-sitzung.ts, nach Access).
+ * Der Kern prüft hier nichts — wer das ruft, steht für die Identität ein. */
+export const sitzungFuerKonto = (ablage: Ablage, kontoId: string, geraet: string) =>
+  sitzungGeben(ablage, kontoId, geraet);
+
 const sitzungGeben = async (ablage: Ablage, kontoId: string, geraet: string,
                             weiterZu?: string) => {
   const roh = 'sit_' + kennung() + kennung();

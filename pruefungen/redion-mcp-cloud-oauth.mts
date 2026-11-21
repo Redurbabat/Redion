@@ -14,11 +14,12 @@ const fixture=()=>{
       async all<T>(){return {results:sqlite.prepare(sql).all(params()) as T[]};}};}};
   let time=Date.parse('2026-11-18T12:00:00Z');const state=mcpStateD1(database,()=>time);
   return {state,oauth:createMcpOAuth({state,issuer:'https://mcp.example.test',resource:'https://mcp.example.test/mcp',now:()=>time}),
-    tick:(ms:number)=>{time+=ms;},sql:sqlite,close:()=>sqlite.close()};
+    now:()=>time,tick:(ms:number)=>{time+=ms;},sql:sqlite,close:()=>sqlite.close()};
 };
 const verifier='a'.repeat(64);
 const setup=async(f:ReturnType<typeof fixture>,scope='redion:read',method:'none'|'client_secret_post'='none')=>{
-  const client=await f.oauth.register({client_name:'Synthetic AI',redirect_uris:['https://ai.example.test/callback'],token_endpoint_auth_method:method});
+  const client=await f.oauth.register({client_name:'Synthetic AI',redirect_uris:['https://ai.example.test/callback'],token_endpoint_auth_method:method,
+    grant_types:['authorization_code','refresh_token']});
   const args={client_id:client.client_id,redirect_uri:client.redirect_uris[0]!,response_type:'code',scope,
     resource:'https://mcp.example.test/mcp',code_challenge:await pkceChallenge(verifier),code_challenge_method:'S256',state:'client-state'};
   return {client,args};
@@ -33,6 +34,18 @@ const login=async(f:ReturnType<typeof fixture>,userId='owner')=>{
   return {...s,tokens,approval};
 };
 const isError=(code:string)=>(e:unknown)=>e instanceof OAuthError&&e.error===code;
+
+test('OAuth: Tokens und registrierte Clients sind auch bei gemeinsamer D1 an die Ressource gebunden',async()=>{
+  const f=fixture();try{
+    const s=await login(f);
+    const other=createMcpOAuth({state:f.state,issuer:'https://mcp.example.test',resource:'https://mcp.example.test/other',now:f.now});
+    assert.equal(await other.authenticate(s.tokens.access_token),null);
+    await assert.rejects(()=>other.begin('owner',{...s.args,resource:'https://mcp.example.test/other'}),isError('invalid_client'));
+    await assert.rejects(()=>other.exchange({grant_type:'refresh_token',client_id:s.client.client_id,
+      refresh_token:s.tokens.refresh_token,resource:'https://mcp.example.test/other'}),isError('invalid_client'));
+    assert.ok(await f.oauth.authenticate(s.tokens.access_token));
+  }finally{f.close();}
+});
 
 test('OAuth: S256, Resource-Bindung, echte Zustimmung und einmaliger Code',async()=>{
   const f=fixture();try{
@@ -93,13 +106,14 @@ test('OAuth: Client-Geheimnis, Redirect, PKCE und Rechte können nicht ausgewech
       refresh_token:tokens.refresh_token,resource:s.args.resource,scope:'redion:read redion:write'}),isError('invalid_scope'));
     assert.equal((await f.oauth.begin('owner',s.args)).kind,'consent');
     const stored=f.sql.prepare('SELECT data FROM mcp_state').all().map(r=>String(r.data)).join('');
+    assert.ok(tokens.refresh_token);
     for(const secret of [tokens.access_token,tokens.refresh_token,input.code,s.client.client_secret!,b.csrf])assert.equal(stored.includes(secret),false);
   }finally{f.close();}
 });
 test('OAuth: Ablehnung, Ablauf, ungültige Registrierung und Protokoll-Downgrade',async()=>{
   const f=fixture();try{
     for(const redirect of ['http://example.test/cb','https://a.test/cb#fragment','https://u:p@a.test/cb','javascript:alert(1)'])
-      await assert.rejects(()=>f.oauth.register({client_name:'bad',redirect_uris:[redirect]}),isError('invalid_client_metadata'));
+      await assert.rejects(()=>f.oauth.register({client_name:'bad',redirect_uris:[redirect]}),isError('invalid_redirect_uri'));
     const s=await setup(f);
     for(const change of [{code_challenge_method:'plain'},{response_type:'token'},{scope:'admin'},
       {resource:'https://other.test/mcp'},{redirect_uri:'https://ai.example.test/callback?surprise=1'}])
@@ -111,6 +125,43 @@ test('OAuth: Ablehnung, Ablauf, ungültige Registrierung und Protokoll-Downgrade
     const l=await login(f);f.tick(15*60*1000+1);assert.equal(await f.oauth.authenticate(l.tokens.access_token),null);
     f.tick(31*86400000);await assert.rejects(()=>f.oauth.exchange({grant_type:'refresh_token',client_id:l.client.client_id,
       refresh_token:l.tokens.refresh_token,resource:l.args.resource}),isError('invalid_grant'));
+  }finally{f.close();}
+});
+
+test('OAuth: registrierte Grant-Typen gelten auch am Token-Endpunkt; Standard erhält keinen Refresh-Token',async()=>{
+  const f=fixture();try{
+    const client=await f.oauth.register({redirect_uris:['https://ai.example.test/cb'],token_endpoint_auth_method:'none'});
+    const begin=await f.oauth.begin('owner',{client_id:client.client_id,redirect_uri:client.redirect_uris[0],response_type:'code',
+      resource:'https://mcp.example.test/mcp',code_challenge:await pkceChallenge(verifier),code_challenge_method:'S256'});
+    if(begin.kind!=='consent')throw new Error('consent expected');
+    assert.deepEqual(begin.scopes,['redion:read']);
+    const approved=await f.oauth.approve('owner',begin.requestId,begin.csrf,{allow:true,remember:true,workspaceIds:['workspace-one']});
+    const token=await f.oauth.exchange({client_id:client.client_id,grant_type:'authorization_code',redirect_uri:client.redirect_uris[0],
+      resource:'https://mcp.example.test/mcp',code:new URL(approved.redirect).searchParams.get('code'),code_verifier:verifier});
+    assert.equal(token.refresh_token,undefined);assert.ok(await f.oauth.authenticate(token.access_token));
+    await assert.rejects(()=>f.oauth.exchange({client_id:client.client_id,grant_type:'refresh_token',refresh_token:'rim_rt_'+'a'.repeat(43),
+      resource:'https://mcp.example.test/mcp'}),isError('unauthorized_client'));
+  }finally{f.close();}
+});
+
+test('OAuth: Ablauf von Zustimmung und Code, fremder Client und Tokenwiderruf',async()=>{
+  const f=fixture();try{
+    const s=await setup(f);const b=await f.oauth.begin('owner',s.args);if(b.kind!=='consent')throw new Error('consent expected');
+    f.tick(600001);
+    await assert.rejects(()=>f.oauth.approve('owner',b.requestId,b.csrf,{allow:true,remember:true,workspaceIds:['workspace-one']}),isError('invalid_request'));
+    const fresh=await f.oauth.begin('owner',s.args);if(fresh.kind!=='consent')throw new Error('consent expected');
+    const approved=await f.oauth.approve('owner',fresh.requestId,fresh.csrf,{allow:true,remember:true,workspaceIds:['workspace-one']});
+    f.tick(300001);
+    await assert.rejects(()=>f.oauth.exchange({client_id:s.client.client_id,grant_type:'authorization_code',redirect_uri:s.args.redirect_uri,
+      resource:s.args.resource,code:new URL(approved.redirect).searchParams.get('code'),code_verifier:verifier}),isError('invalid_grant'));
+    const one=await login(f),two=await setup(f);
+    await assert.rejects(()=>f.oauth.exchange({client_id:two.client.client_id,grant_type:'refresh_token',refresh_token:one.tokens.refresh_token,
+      resource:one.args.resource}),isError('invalid_grant'));
+    await f.oauth.revokeToken({client_id:two.client.client_id,token:one.tokens.access_token});
+    assert.ok(await f.oauth.authenticate(one.tokens.access_token));
+    await f.oauth.revokeToken({client_id:one.client.client_id,token:one.tokens.refresh_token});
+    assert.equal(await f.oauth.authenticate(one.tokens.access_token),null);
+    await f.oauth.revokeToken({client_id:one.client.client_id,token:one.tokens.refresh_token});
   }finally{f.close();}
 });
 test('OAuth: Kleinere Anfrage erbt keine weiteren Rechte einer gemerkten Freigabe',async()=>{

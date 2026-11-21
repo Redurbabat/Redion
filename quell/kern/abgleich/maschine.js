@@ -116,6 +116,11 @@ const Wolke = (() => {
         return true;
     };
     const hatSchluessel = () => !!schluessel;
+    const schluesselFehlt = () => !!Store.getMeta('wolkeProbe', '') && !schluessel;
+    const SCHLUESSEL_FEHLT = 'Der Schlüssel fehlt — nach einem Neustart im Wolke-Fenster ' +
+        '„Schlüssel setzen“. Bis dahin verlässt nichts dieses Gerät.';
+    const wacheSchluessel = () => { if (schluesselFehlt())
+        throw new Error(SCHLUESSEL_FEHLT); };
     const verschluessele = async (text) => {
         if (!schluessel)
             throw new Error('Es ist kein Schlüssel gesetzt.');
@@ -190,6 +195,22 @@ const Wolke = (() => {
         };
         window.addEventListener('message', beiPost);
     });
+    const accessMoeglich = () => location.protocol === 'https:' && adresse() === location.origin;
+    const anmeldenMitAccess = async () => {
+        if (!accessMoeglich())
+            throw new Error('Die Access-Anmeldung geht nur auf der Redion-Website selbst.');
+        const a = await fetch(location.origin + '/konto/access', {
+            method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}'
+        });
+        let b = null;
+        try {
+            b = await a.json();
+        }
+        catch { }
+        if (!a.ok || !b || typeof b.token !== 'string')
+            throw new Error((b && b.message) || 'Die Anmeldung über Cloudflare Access hat nicht geklappt.');
+        return tokenUebernehmen(b.token);
+    };
     const codeHolen = async () => ruf('/konto/code', { m: 'POST', k: { geraet: geraeteName() } });
     const codeWarten = async (code, beiSchritt) => {
         const bis = Date.now() + 10 * 60000;
@@ -317,7 +338,11 @@ const Wolke = (() => {
     };
     const istGeteilt = (seiteId) => (Store.getMeta('wolkeGeteilt', []) || []).includes(seiteId);
     const RUNDE = 300;
+    const PAKET_BYTES = 4 * 1024 * 1024;
+    const EINZEL_MAX = 12 * 1024 * 1024;
+    const zuGrossIds = new Set();
     const hoch = async () => {
+        wacheSchluessel();
         let angenommen = 0;
         const abgelehnt = [], angepasst = [];
         for (let runde = 0; runde < 40; runde++) {
@@ -346,21 +371,61 @@ const Wolke = (() => {
                     geloescht: e.geloescht
                 });
             }
-            const a = await ruf('/sync/hoch', { m: 'POST', k: { bereich: bereich(), saetze: paket } });
+            const gesendet = [], gesendetDran = [], zuGross = [];
+            let bytes = 0, schnitt = paket.length;
+            for (let i = 0; i < paket.length; i++) {
+                const p = paket[i], e = dran[i];
+                if (!p || !e)
+                    continue;
+                const g = String(p.daten).length + 400;
+                if (g > EINZEL_MAX) {
+                    zuGross.push(String(p.id));
+                    continue;
+                }
+                if (gesendet.length && bytes + g > PAKET_BYTES) {
+                    schnitt = i;
+                    break;
+                }
+                bytes += g;
+                gesendet.push(p);
+                gesendetDran.push(e);
+            }
+            if (zuGross.length) {
+                for (const id of zuGross)
+                    zuGrossIds.add(id);
+                zustand.zuGrossLokal = zuGrossIds.size;
+                nachtragStreichen(zuGross);
+                if (typeof Protokoll !== 'undefined')
+                    Protokoll.notieren('wolke', zuGross.length + ' Satz/Sätze zu gross für die Wolke — bleiben auf diesem Gerät');
+            }
+            const letzteZeit = String((gesendet[gesendet.length - 1] ?? paket[paket.length - 1])?.geaendert ?? '');
+            const nachtragen = dran.slice(schnitt)
+                .filter(e => zeitVon(e) <= letzteZeit && !zuGross.includes(String(e.id)))
+                .map(e => String(e.id));
+            if (nachtragen.length)
+                Store.metaListeAendern('wolkeNachtrag', (alt) => [...new Set([...(Array.isArray(alt) ? alt.map(String) : []), ...nachtragen])]);
+            if (!gesendet.length) {
+                if (letzteZeit)
+                    Store.setMeta('wolkeMarkeHoch', letzteZeit);
+                if (liste.length <= dran.length)
+                    break;
+                continue;
+            }
+            const a = await ruf('/sync/hoch', { m: 'POST', k: { bereich: bereich(), saetze: gesendet } });
             angenommen += a.angenommen;
             if (Array.isArray(a.abgelehnt))
                 abgelehnt.push(...a.abgelehnt);
             const nein = new Set([...(a.abgelehnt || []), ...(a.angepasst || [])]
                 .map(x => (x && x.id) || x));
-            for (const e of dran)
+            for (const e of gesendetDran)
                 if (!nein.has(e.id))
                     await Store.basisPut(e.id, e.satz);
             if (Array.isArray(a.angepasst) && a.angepasst.length)
                 angepasst.push(...a.angepasst);
-            const letzte = paket[paket.length - 1];
+            const letzte = gesendet[gesendet.length - 1];
             Store.setMeta('wolkeMarkeHoch', letzte ? letzte.geaendert : Store.now());
-            nachtragStreichen(dran.filter(e => !nein.has(e.id)).map(e => String(e.id)));
-            if (liste.length <= dran.length)
+            nachtragStreichen(gesendetDran.filter(e => !nein.has(e.id)).map(e => String(e.id)));
+            if (schnitt === paket.length && liste.length <= dran.length)
                 break;
         }
         if (Store.getMeta('wolkeNachtragAlles', false) === true)
@@ -405,6 +470,7 @@ const Wolke = (() => {
             mehr: false };
     };
     const bloeckeWeg = async () => {
+        wacheSchluessel();
         const offen = Store.getMeta('wolkeBloeckeWeg', []) || [];
         if (!offen.length)
             return { bloeckeWeggemeldet: 0 };
@@ -572,6 +638,11 @@ const Wolke = (() => {
     const abgleichen = async () => {
         if (!angemeldet() || !bereich() || zustand.laeuft || !abgleichErlaubt())
             return null;
+        if (schluesselFehlt()) {
+            zustand.fehler = SCHLUESSEL_FEHLT;
+            melden();
+            return null;
+        }
         zustand.laeuft = true;
         zustand.fehler = '';
         melden();
@@ -754,6 +825,7 @@ const Wolke = (() => {
         return { dateienGeholt: geholt, dateienEntfernt: entfernt, dateienUnlesbar: unlesbar };
     };
     const dateienHoch = async () => {
+        wacheSchluessel();
         const oben = new Set(Store.getMeta('wolkeDateienOben', []) || []);
         const alle = await Store.dateiAlle();
         let rauf = 0;
@@ -860,10 +932,10 @@ const Wolke = (() => {
             });
     };
     return { adresse, serverAdressePruefen, token, bereich, angemeldet, geraeteName, zustand, beiAenderung,
-        anmeldenMit, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
+        anmeldenMit, accessMoeglich, anmeldenMitAccess, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
         abgleichErlaubt, abgleichSetzen, kontoLoeschen,
         neuAbgleichOffen, neuAbgleichAntwort,
-        schluesselSetzen, hatSchluessel, verschluessele, entschluessele,
+        schluesselSetzen, hatSchluessel, schluesselFehlt, verschluessele, entschluessele,
         hoch, runter, abgleichen, dateienAbgleichen, takt, taktSetzen, zuSchicken, seiteVon,
         geteiltSetzen, istGeteilt, freigeben, freigaben,
         veroeffentlichen, zurueckziehen,

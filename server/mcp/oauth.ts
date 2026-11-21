@@ -8,7 +8,7 @@ import type {McpState,StateRow} from './state.ts';
 export const MCP_SCOPES=['redion:read','redion:write','redion:images'] as const;
 type Scope=typeof MCP_SCOPES[number];
 type Input=Record<string,unknown>;
-type Client={id:string;name:string;redirects:string[];method:'none'|'client_secret_post';secretHash:string|null};
+type Client={id:string;name:string;redirects:string[];method:'none'|'client_secret_post';secretHash:string|null;resource:string;grants:string[]};
 type Grant={userId:string;clientId:string;epoch:string;active:boolean;remember:boolean;scopes:Scope[];workspaceIds:string[]};
 type Pending={userId:string;clientId:string;redirect:string;scope:Scope[];challenge:string;state:string;csrfHash:string};
 type Code={grantKey:string;epoch:string;clientId:string;redirect:string;challenge:string;scopes:Scope[]};
@@ -40,24 +40,30 @@ const scopeOf=(value:unknown):Scope[]=>{
 };
 const validId=(id:string):boolean=>/^[A-Za-z0-9_-]{1,128}$/.test(id);
 const redirectOf=(value:unknown):string=>{
-  const raw=text(value);let url:URL;try{url=new URL(raw);}catch{return fail('invalid_client_metadata');}
+  const raw=text(value);let url:URL;try{url=new URL(raw);}catch{return fail('invalid_redirect_uri');}
   const loopback=url.protocol==='http:'&&['127.0.0.1','[::1]'].includes(url.hostname);
-  if((url.protocol!=='https:'&&!loopback)||url.username||url.password||url.hash||!url.hostname)return fail('invalid_client_metadata');
+  if((url.protocol!=='https:'&&!loopback)||url.username||url.password||url.hash||!url.hostname||
+    /[\x00-\x20\x7f]/.test(raw)||raw.includes('*'))return fail('invalid_redirect_uri');
   /* Exakte Zeichenfolge speichern und vergleichen, auch Query und Slash. */
   return raw;
 };
 const publicToken=(prefix:string):string=>prefix+random();
 
-export const createMcpOAuth=({state,issuer,resource,authorizationEndpoint=issuer+'/authorize',now=Date.now}:{state:McpState;issuer:string;resource:string;authorizationEndpoint?:string;now?:()=>number})=>{
+export const createMcpOAuth=({state,issuer,resource,authorizationEndpoint=issuer+'/authorize',now=Date.now,isUserActive=async()=>true}:{state:McpState;issuer:string;resource:string;authorizationEndpoint?:string;now?:()=>number;isUserActive?:(userId:string)=>Promise<boolean>})=>{
   const issuerUrl=new URL(issuer),resourceUrl=new URL(resource);
   if(issuerUrl.protocol!=='https:'||resourceUrl.protocol!=='https:'||issuerUrl.origin!==issuer||issuerUrl.search||issuerUrl.hash||
     resourceUrl.origin!==issuer||resourceUrl.search||resourceUrl.hash)throw new Error('Ungültige Cloud-MCP-Adresse.');
   const authUrl=new URL(authorizationEndpoint);
   if(authUrl.protocol!=='https:'||authUrl.search||authUrl.hash||authUrl.username||authUrl.password)throw new Error('Ungültige Anmeldeadresse.');
-  const grantKey=async(userId:string,clientId:string):Promise<string>=>'grant:'+await hash(userId+'\0'+clientId);
+  /* Auch verschiedene MCP-Ressourcen auf derselben D1 dürfen Tokens nicht
+   * gegenseitig annehmen. Der Fingerabdruck enthält die vollständige Audience.
+   * Alte ungebundene Anmeldungen verlangen eine neue Registrierung. */
+  const fingerprint=(value:string):Promise<string>=>hash(resource+'\0'+value);
+  const grantKey=async(userId:string,clientId:string):Promise<string>=>'grant:'+await fingerprint(userId+'\0'+clientId);
   const clientFor=async(id:string):Promise<Client>=>{
     if(!validId(id))return fail('invalid_client');
-    const row=await state.read<Client>('client:'+id);return row?.data??fail('invalid_client');
+    const row=await state.read<Client>('client:'+id);
+    return row?.data.resource===resource?row.data:fail('invalid_client');
   };
   const requireResource=(input:Input):void=>{if(input.resource!==resource)fail('invalid_target');};
   const requireClient=async(input:Input):Promise<Client>=>{
@@ -73,11 +79,12 @@ export const createMcpOAuth=({state,issuer,resource,authorizationEndpoint=issuer
     if(clientState)url.searchParams.set('state',clientState);url.searchParams.set('iss',issuer);return url.href;
   };
   const activeGrant=async(key:string,epoch:string):Promise<StateRow<Grant>|null>=>{
-    const row=await state.read<Grant>(key);return row?.data.active&&row.data.epoch===epoch?row:null;
+    const row=await state.read<Grant>(key);
+    return row?.data.active&&row.data.epoch===epoch&&await isUserActive(row.data.userId)?row:null;
   };
   const codeFor=async(pending:Pending,key:string,epoch:string):Promise<string>=>{
     const code=publicToken('rim_ac_');
-    if(!await state.create('code:'+await hash(code),'code',{grantKey:key,epoch,clientId:pending.clientId,
+    if(!await state.create('code:'+await fingerprint(code),'code',{grantKey:key,epoch,clientId:pending.clientId,
       redirect:pending.redirect,challenge:pending.challenge,scopes:pending.scope} satisfies Code,now()+5*MINUTE))throw new Error('Code konnte nicht angelegt werden.');
     return redirect(pending.redirect,pending.state,{code});
   };
@@ -88,40 +95,43 @@ export const createMcpOAuth=({state,issuer,resource,authorizationEndpoint=issuer
     }
     throw new Error('Sitzung konnte nicht widerrufen werden.');
   };
-  const tokenPair=async(family:StateRow<Family>|null,code:Code):Promise<{access_token:string;refresh_token:string;token_type:'Bearer';expires_in:number;scope:string}>=>{
+  const tokenPair=async(family:StateRow<Family>|null,code:Code,allowRefresh:boolean):Promise<{access_token:string;refresh_token?:string;token_type:'Bearer';expires_in:number;scope:string}>=>{
     const grant=await activeGrant(code.grantKey,code.epoch);if(!grant||code.scopes.some(s=>!grant.data.scopes.includes(s)))return fail('invalid_grant');
-    const access=publicToken('rim_at_'),refresh=publicToken('rim_rt_');
-    const accessHash=await hash(access),refreshHash=await hash(refresh),accessUntil=now()+15*MINUTE;
+    const access=publicToken('rim_at_'),refresh=allowRefresh?publicToken('rim_rt_'):null;
+    const accessHash=await fingerprint(access),refreshHash=refresh?await fingerprint(refresh):'',accessUntil=now()+15*MINUTE;
     const data:Family={grantKey:code.grantKey,epoch:code.epoch,clientId:code.clientId,active:true,accessHash,refreshHash,accessUntil,scopes:code.scopes};
-    const key=family?.key??'family:'+random();const until=now()+30*DAY;
+    const key=family?.key??'family:'+random();const until=allowRefresh?now()+30*DAY:accessUntil;
     if(family){if(!await state.replace(family,data,until)){await revokeFamily(key);return fail('invalid_grant');}}
     else if(!await state.create(key,'family',data,until))throw new Error('Sitzung konnte nicht angelegt werden.');
     try{
       if(!await state.create('access:'+accessHash,'access',{familyKey:key} satisfies TokenIndex,Math.min(accessUntil,until))||
-        !await state.create('refresh:'+refreshHash,'refresh',{familyKey:key} satisfies TokenIndex,until))throw new Error('Token konnte nicht angelegt werden.');
+        refresh&&!await state.create('refresh:'+refreshHash,'refresh',{familyKey:key} satisfies TokenIndex,until))throw new Error('Token konnte nicht angelegt werden.');
     }catch(error){await revokeFamily(key);throw error;}
-    return {access_token:access,refresh_token:refresh,token_type:'Bearer',expires_in:Math.floor(Math.min(15*MINUTE,until-now())/1000),scope:code.scopes.join(' ')};
+    return {access_token:access,...(refresh?{refresh_token:refresh}:{}),token_type:'Bearer',expires_in:Math.floor(Math.min(15*MINUTE,until-now())/1000),scope:code.scopes.join(' ')};
   };
   return {
     metadata(){return {issuer,authorization_endpoint:authorizationEndpoint,token_endpoint:issuer+'/token',registration_endpoint:issuer+'/register',
-      revocation_endpoint:issuer+'/revoke',response_types_supported:['code'],grant_types_supported:['authorization_code','refresh_token'],
+      revocation_endpoint:issuer+'/revoke',revocation_endpoint_auth_methods_supported:['none','client_secret_post'],response_types_supported:['code'],grant_types_supported:['authorization_code','refresh_token'],
       token_endpoint_auth_methods_supported:['none','client_secret_post'],code_challenge_methods_supported:['S256'],
       scopes_supported:[...MCP_SCOPES],authorization_response_iss_parameter_supported:true};},
     resourceMetadata(){return {resource,authorization_servers:[issuer],scopes_supported:[...MCP_SCOPES],bearer_methods_supported:['header'],resource_name:'RED Ion'};},
     async register(input:Input){
-      const name=text(input.client_name,100).trim();
-      if(!name||/[\x00-\x1f\x7f]/.test(name)||!Array.isArray(input.redirect_uris)||!input.redirect_uris.length||input.redirect_uris.length>5)return fail('invalid_client_metadata');
+      if(input.client_name!==undefined&&(typeof input.client_name!=='string'||input.client_name.length>100||/[\x00-\x1f\x7f]/.test(input.client_name)))return fail('invalid_client_metadata');
+      const name=text(input.client_name,100).trim()||'KI-Client (nicht benannt)';
+      if(!Array.isArray(input.redirect_uris)||!input.redirect_uris.length||input.redirect_uris.length>5)return fail('invalid_client_metadata');
       const redirects=[...new Set(input.redirect_uris.map(redirectOf))];
-      const method=input.token_endpoint_auth_method??'none';
+      const method=input.token_endpoint_auth_method===undefined?'none':input.token_endpoint_auth_method;
       if(method!=='none'&&method!=='client_secret_post')return fail('invalid_client_metadata');
-      if(input.grant_types!==undefined&&(!Array.isArray(input.grant_types)||input.grant_types.some(g=>!['authorization_code','refresh_token'].includes(g))))return fail('invalid_client_metadata');
-      if(input.response_types!==undefined&&(!Array.isArray(input.response_types)||input.response_types.some(r=>r!=='code')))return fail('invalid_client_metadata');
+      const requested=input.grant_types===undefined?['authorization_code']:input.grant_types;
+      if(!Array.isArray(requested)||!requested.includes('authorization_code')||requested.some(g=>!['authorization_code','refresh_token'].includes(g)))return fail('invalid_client_metadata');
+      const grants=[...new Set(requested)] as string[];
+      if(input.response_types!==undefined&&(!Array.isArray(input.response_types)||!input.response_types.length||input.response_types.some(r=>r!=='code')))return fail('invalid_client_metadata');
       if((await state.list<Client>('client')).length>=1000)return fail('temporarily_unavailable');
       const id='mcp_'+random(),secret=method==='client_secret_post'?publicToken('rim_cs_'):null;
-      const client:Client={id,name,redirects,method,secretHash:secret?await hash(secret):null};
+      const client:Client={id,name,redirects,method,secretHash:secret?await hash(secret):null,resource,grants};
       if(!await state.create('client:'+id,'client',client,PERSISTENT))throw new Error('Client konnte nicht angelegt werden.');
       return {client_id:id,client_name:name,redirect_uris:redirects,token_endpoint_auth_method:method,
-        grant_types:['authorization_code','refresh_token'],response_types:['code'],client_id_issued_at:Math.floor(now()/1000),
+        grant_types:grants,response_types:['code'],client_id_issued_at:Math.floor(now()/1000),
         ...(secret?{client_secret:secret,client_secret_expires_at:0}:{})};
     },
     async begin(userId:string,input:Input):Promise<AuthorizationStart>{
@@ -166,37 +176,39 @@ export const createMcpOAuth=({state,issuer,resource,authorizationEndpoint=issuer
     },
     async exchange(input:Input){
       requireResource(input);const client=await requireClient(input);
+      if(!['authorization_code','refresh_token'].includes(String(input.grant_type)))return fail('unsupported_grant_type');
+      if(!client.grants.includes(String(input.grant_type)))return fail('unauthorized_client');
       if(input.grant_type==='authorization_code'){
         const raw=text(input.code,100);if(!/^rim_ac_[A-Za-z0-9_-]{43}$/.test(raw))return fail('invalid_grant');
-        const code=await state.read<Code>('code:'+await hash(raw));
+        const code=await state.read<Code>('code:'+await fingerprint(raw));
         if(!code||code.data.clientId!==client.id||code.data.redirect!==input.redirect_uri)return fail('invalid_grant');
         const verifier=text(input.code_verifier,128);if(!/^[A-Za-z0-9._~-]{43,128}$/.test(verifier)||
           !equal(await pkceChallenge(verifier),code.data.challenge))return fail('invalid_grant');
         if(!await state.consume(code))return fail('invalid_grant');
-        return tokenPair(null,code.data);
+        return tokenPair(null,code.data,client.grants.includes('refresh_token'));
       }
       if(input.grant_type==='refresh_token'){
         const raw=text(input.refresh_token,100);if(!/^rim_rt_[A-Za-z0-9_-]{43}$/.test(raw))return fail('invalid_grant');
-        const fingerprint=await hash(raw),index=await state.read<TokenIndex>('refresh:'+fingerprint);
+        const tokenHash=await fingerprint(raw),index=await state.read<TokenIndex>('refresh:'+tokenHash);
         const family=index?await state.read<Family>(index.data.familyKey):null;
         if(!family||!family.data.active||family.data.clientId!==client.id)return fail('invalid_grant');
-        if(!equal(fingerprint,family.data.refreshHash)){await revokeFamily(family.key);return fail('invalid_grant');}
+        if(!equal(tokenHash,family.data.refreshHash)){await revokeFamily(family.key);return fail('invalid_grant');}
         const grant=await activeGrant(family.data.grantKey,family.data.epoch);if(!grant)return fail('invalid_grant');
         /* Refresh darf Rechte verringern, die gespeicherte Freigabe aber
          * weder erweitern noch eine Verringerung wieder rückgängig machen. */
         const scopes=input.scope===undefined?family.data.scopes:scopeOf(input.scope);
         if(scopes.some(s=>!family.data.scopes.includes(s)))return fail('invalid_scope');
-        return tokenPair(family,{grantKey:family.data.grantKey,epoch:family.data.epoch,clientId:client.id,redirect:'',challenge:'',scopes});
+        return tokenPair(family,{grantKey:family.data.grantKey,epoch:family.data.epoch,clientId:client.id,redirect:'',challenge:'',scopes},true);
       }
       return fail('unsupported_grant_type');
     },
     async authenticate(accessToken:string):Promise<McpPrincipal|null>{
       if(!/^rim_at_[A-Za-z0-9_-]{43}$/.test(accessToken))return null;
-      const fingerprint=await hash(accessToken),index=await state.read<TokenIndex>('access:'+fingerprint);
+      const tokenHash=await fingerprint(accessToken),index=await state.read<TokenIndex>('access:'+tokenHash);
       const family=index?await state.read<Family>(index.data.familyKey):null;
-      if(!family?.data.active||family.data.accessUntil<=now()||!equal(fingerprint,family.data.accessHash))return null;
+      if(!family?.data.active||family.data.accessUntil<=now()||!equal(tokenHash,family.data.accessHash))return null;
       const grant=await activeGrant(family.data.grantKey,family.data.epoch);
-      if(!grant||!await state.read<Client>('client:'+family.data.clientId))return null;
+      if(!grant||(await state.read<Client>('client:'+family.data.clientId))?.data.resource!==resource)return null;
       return {userId:grant.data.userId,clientId:grant.data.clientId,grantId:grant.key,scopes:[...family.data.scopes],workspaceIds:[...grant.data.workspaceIds]};
     },
     async listGrants(userId:string){
@@ -217,7 +229,7 @@ export const createMcpOAuth=({state,issuer,resource,authorizationEndpoint=issuer
     async revokeToken(input:Input){
       const client=await requireClient(input),raw=text(input.token,100);
       const kind=raw.startsWith('rim_rt_')?'refresh':raw.startsWith('rim_at_')?'access':null;
-      if(!kind)return;const index=await state.read<TokenIndex>(kind+':'+await hash(raw));
+      if(!kind)return;const index=await state.read<TokenIndex>(kind+':'+await fingerprint(raw));
       const family=index?await state.read<Family>(index.data.familyKey):null;
       if(family?.data.clientId===client.id)await revokeFamily(family.key);
     }

@@ -187,6 +187,20 @@ const Wolke = (() => {
 
   const hatSchluessel = () => !!schluessel;
 
+  /* DER SCHLÜSSEL, DER NACH EINEM NEUSTART FEHLT (E797). Der Schlüssel lebt
+     absichtlich nur im Arbeitsspeicher. Am 19. November 2026 lud die Windows-
+     App mitten im ersten Abgleich neu; der Schlüssel war weg, der Abgleich
+     blieb eingeschaltet — und der Takt schickte 4 646 private Sätze im
+     Klartext. Die Probe `wolkeProbe` sagt, dass auf diesem Gerät einmal ein
+     Schlüssel gesetzt wurde. Steht sie da und fehlt der Schlüssel, verlässt
+     NICHTS das Gerät — weder Sätze noch Grabsteine noch Anhänge —, bis er
+     wieder eingegeben ist. Wer nie einen gesetzt hat, gleicht weiter so ab,
+     wie er es ausdrücklich gewählt hat (E796). */
+  const schluesselFehlt = () => !!Store.getMeta('wolkeProbe', '') && !schluessel;
+  const SCHLUESSEL_FEHLT = 'Der Schlüssel fehlt — nach einem Neustart im Wolke-Fenster ' +
+    '„Schlüssel setzen“. Bis dahin verlässt nichts dieses Gerät.';
+  const wacheSchluessel = () => { if (schluesselFehlt()) throw new Error(SCHLUESSEL_FEHLT); };
+
   const verschluessele = async (text: string) => {
     if (!schluessel) throw new Error('Es ist kein Schlüssel gesetzt.');
     const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -227,6 +241,8 @@ const Wolke = (() => {
     /* Anhänge haben ihren eigenen Fehlerplatz: ein hakender Upload darf
        nicht so aussehen, als wäre der Satz-Abgleich gescheitert. */
     fehlerDateien?: string;
+    /* Sätze über EINZEL_MAX, die auf dem Gerät geblieben sind (E796). */
+    zuGrossLokal?: number;
     /* Wartet eine Entscheidung aus L76? Der Punkt oben rechts zeigte sonst
        „Letzter Abgleich 14:03" und damit einen Stand, den es nicht mehr
        gibt — der Abgleich steht ja. */
@@ -289,6 +305,22 @@ const Wolke = (() => {
   });
 
   /** Für das Telefon: der Rechner zeigt einen Code, das Telefon tippt ihn. */
+  /** Auf der Website selbst: Cloudflare Access hat den Menschen schon geprüft,
+   *  der Server macht daraus eine Redion-Sitzung (E795). Nur, wenn diese Seite
+   *  ihr eigener Server ist — eine App mit fremder Adresse hat kein Access. */
+  const accessMoeglich = () =>
+    location.protocol === 'https:' && adresse() === location.origin;
+  const anmeldenMitAccess = async () => {
+    if (!accessMoeglich()) throw new Error('Die Access-Anmeldung geht nur auf der Redion-Website selbst.');
+    const a = await fetch(location.origin + '/konto/access', {
+      method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    let b: any = null;
+    try { b = await a.json(); } catch { /* unten gemeldet */ }
+    if (!a.ok || !b || typeof b.token !== 'string')
+      throw new Error((b && b.message) || 'Die Anmeldung über Cloudflare Access hat nicht geklappt.');
+    return tokenUebernehmen(b.token);
+  };
+
   const codeHolen = async () => ruf('/konto/code', { m: 'POST', k: { geraet: geraeteName() } });
 
   const codeWarten = async (code: any, beiSchritt?: any) => {
@@ -457,6 +489,19 @@ const Wolke = (() => {
      grosse Seiten, ohne dass die Anfrage zu lang wird. */
   const RUNDE = 300;
 
+  /* UND EINE BYTEGRENZE (E796). Dreihundert Sätze sind bei Textnotizen ein paar
+     hundert Kilobyte — bei Seiten mit eingebetteten Bildern oder PDF-Text
+     schnell weit mehr, als ein Aufruf verträgt. Am 18. November 2026 brach der
+     erste echte Abgleich (1,1 GB, 11 000 Blöcke) nach dem ersten Paket mit
+     „Server nicht erreichbar“ ab. Der Server nimmt für /sync 16 MB; ein Paket
+     bleibt deutlich darunter. Ein einzelner Satz über EINZEL_MAX geht gar nicht
+     hinaus — er bleibt auf dem Gerät und wird gezählt, statt jeden Abgleich
+     abreissen zu lassen. */
+  const PAKET_BYTES = 4 * 1024 * 1024;
+  const EINZEL_MAX = 12 * 1024 * 1024;
+  /** Welche Sätze zu gross waren — je Sitzung, nicht je Runde gezählt. */
+  const zuGrossIds = new Set<string>();
+
   /**
    * Alles Wartende hochschicken — in Runden, bis nichts mehr da ist.
    *
@@ -466,6 +511,7 @@ const Wolke = (() => {
    * man merkt es erst am anderen Gerät, und dann sucht man beim Falschen.
    */
   const hoch = async () => {
+    wacheSchluessel();
     let angenommen = 0;
     const abgelehnt = [], angepasst = [];
 
@@ -517,7 +563,44 @@ const Wolke = (() => {
         });
       }
 
-      const a = await ruf('/sync/hoch', { m: 'POST', k: { bereich: bereich(), saetze: paket } });
+      /* Nach Bytes schneiden. Der erste Satz geht immer mit (sonst stünde die
+         Schleife), ausser er ist allein schon zu gross. */
+      const gesendet: any[] = [], gesendetDran: any[] = [], zuGross: string[] = [];
+      let bytes = 0, schnitt = paket.length;
+      for (let i = 0; i < paket.length; i++) {
+        const p = paket[i], e = dran[i];
+        if (!p || !e) continue;
+        const g = String(p.daten).length + 400;
+        if (g > EINZEL_MAX) { zuGross.push(String(p.id)); continue; }
+        if (gesendet.length && bytes + g > PAKET_BYTES) { schnitt = i; break; }
+        bytes += g; gesendet.push(p); gesendetDran.push(e);
+      }
+      if (zuGross.length) {
+        /* Eindeutig zählen, und aus dem Nachtrag streichen — sonst kehrte der
+           Riese in jeder Runde zurück und hielte die Liste für immer offen. */
+        for (const id of zuGross) zuGrossIds.add(id);
+        zustand.zuGrossLokal = zuGrossIds.size;
+        nachtragStreichen(zuGross);
+        if (typeof Protokoll !== 'undefined')
+          Protokoll.notieren('wolke', zuGross.length + ' Satz/Sätze zu gross für die Wolke — bleiben auf diesem Gerät');
+      }
+      /* Was hinter dem Schnitt liegt, aber in DERSELBEN Millisekunde wie der
+         letzte gesendete Satz, fiele hinter die Marke — es kommt auf die
+         Nachtrag-Liste (L100/E314), die unabhängig von der Marke mitnimmt. */
+      const letzteZeit = String((gesendet[gesendet.length - 1] ?? paket[paket.length - 1])?.geaendert ?? '');
+      const nachtragen = dran.slice(schnitt)
+        .filter(e => zeitVon(e) <= letzteZeit && !zuGross.includes(String(e.id)))
+        .map(e => String(e.id));
+      if (nachtragen.length) Store.metaListeAendern('wolkeNachtrag', (alt: any[]) =>
+        [...new Set([...(Array.isArray(alt) ? alt.map(String) : []), ...nachtragen])]);
+
+      if (!gesendet.length) {
+        /* Nur Übergrosses in dieser Runde: Marke weiter, nichts schicken. */
+        if (letzteZeit) Store.setMeta('wolkeMarkeHoch', letzteZeit);
+        if (liste.length <= dran.length) break;
+        continue;
+      }
+      const a = await ruf('/sync/hoch', { m: 'POST', k: { bereich: bereich(), saetze: gesendet } });
       angenommen += a.angenommen;
       if (Array.isArray(a.abgelehnt)) abgelehnt.push(...a.abgelehnt);
 
@@ -529,18 +612,19 @@ const Wolke = (() => {
          und der nächste Vergleich muss das merken. */
       const nein = new Set([...(a.abgelehnt || []), ...(a.angepasst || [])]
         .map(x => (x && x.id) || x));
-      for (const e of dran) if (!nein.has(e.id)) await Store.basisPut(e.id, e.satz);
+      for (const e of gesendetDran) if (!nein.has(e.id)) await Store.basisPut(e.id, e.satz);
       if (Array.isArray(a.angepasst) && a.angepasst.length) angepasst.push(...a.angepasst);
 
       /* Die Marke wandert bis zum letzten Satz dieser Runde — nicht auf
          „jetzt", sonst fielen alle Änderungen dazwischen unter den Tisch. */
-      const letzte = paket[paket.length - 1];
+      const letzte = gesendet[gesendet.length - 1];
       Store.setMeta('wolkeMarkeHoch', letzte ? letzte.geaendert : Store.now());
       /* Und die Nachgetragenen dieser Runde von der Liste streichen — sonst
          reisen sie bei jedem Abgleich wieder mit (L100, E314). */
-      nachtragStreichen(dran.filter(e => !nein.has(e.id)).map(e => String(e.id)));
+      nachtragStreichen(gesendetDran.filter(e => !nein.has(e.id)).map(e => String(e.id)));
 
-      if (liste.length <= dran.length) break;
+      /* Geschnitten? Dann gibt es sicher noch etwas — die nächste Runde holt es. */
+      if (schnitt === paket.length && liste.length <= dran.length) break;
     }
 
     /* --- DIE MERKLISTE AUFRÄUMEN (L100, E314) --------------------------
@@ -618,6 +702,7 @@ const Wolke = (() => {
    *  der Server hat den Satz nie gesehen — offline Angelegtes-und-
    *  Gelöschtes wird still ausgetragen statt gemeldet. */
   const bloeckeWeg = async () => {
+    wacheSchluessel();
     const offen: any[] = Store.getMeta('wolkeBloeckeWeg', []) || [];
     if (!offen.length) return { bloeckeWeggemeldet: 0 };
     let gemeldet = 0;
@@ -826,6 +911,10 @@ const Wolke = (() => {
   /** Beide Richtungen. Läuft nie zweimal gleichzeitig. */
   const abgleichen = async () => {
     if (!angemeldet() || !bereich() || zustand.laeuft || !abgleichErlaubt()) return null;
+    /* Vor allem anderen: ohne den einmal gesetzten Schlüssel gar nicht erst
+       anfangen — auch das Holen nicht, denn es legt den Stand fest, gegen den
+       danach hochgeladen würde. */
+    if (schluesselFehlt()) { zustand.fehler = SCHLUESSEL_FEHLT; melden(); return null; }
     zustand.laeuft = true; zustand.fehler = ''; melden();
     try {
       /* Grabsteine VOR dem Holen (E254) — wer erst holt, belebt das eben
@@ -1050,6 +1139,7 @@ const Wolke = (() => {
 
   /** Schicken, was hier fertig liegt und dem Server noch fehlt. */
   const dateienHoch = async () => {
+    wacheSchluessel();
     const oben = new Set<string>(Store.getMeta('wolkeDateienOben', []) || []);
     const alle = await Store.dateiAlle();
     let rauf = 0;
@@ -1185,10 +1275,10 @@ const Wolke = (() => {
   };
 
   return { adresse, serverAdressePruefen, token, bereich, angemeldet, geraeteName, zustand, beiAenderung,
-           anmeldenMit, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
+           anmeldenMit, accessMoeglich, anmeldenMitAccess, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
            abgleichErlaubt, abgleichSetzen, kontoLoeschen,
            neuAbgleichOffen, neuAbgleichAntwort,
-           schluesselSetzen, hatSchluessel, verschluessele, entschluessele,
+           schluesselSetzen, hatSchluessel, schluesselFehlt, verschluessele, entschluessele,
            hoch, runter, abgleichen, dateienAbgleichen, takt, taktSetzen, zuSchicken, seiteVon,
            geteiltSetzen, istGeteilt, freigeben, freigaben,
            veroeffentlichen, zurueckziehen,

@@ -31,6 +31,7 @@ const missing=()=>json({error:'cloud_mcp_unavailable',
 const rpc=(id:string|number|null,result:unknown)=>json({jsonrpc:'2.0',id,result});
 const rpcError=(id:string|number|null,code:number,message:string)=>json({jsonrpc:'2.0',id,error:{code,message}});
 const bodyLimit=32768;
+const protocolVersions=['2025-11-25','2025-06-18','2025-03-26'];
 
 export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,accessVerified=false):Promise<Response>=>{
   const url=new URL(request.url);
@@ -44,7 +45,8 @@ export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,access
   const state=mcpStateD1(db);
   const issuer=url.origin;
   const resource=issuer+'/mcp/cloud';
-  const oauth=createMcpOAuth({state,issuer,resource,authorizationEndpoint:issuer+'/mcp/authorize'});
+  const oauth=createMcpOAuth({state,issuer,resource,authorizationEndpoint:issuer+'/mcp/authorize',
+    isUserActive:async id=>{const user=await ablage.hole('konten',{id});return !!user&&!user.gesperrt;}});
 
   const identify=async(_request:Request)=>{
     /* The caller is the Worker AFTER torPruefen returned null under access
@@ -78,6 +80,8 @@ export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,access
         oauth,state,identify,rateKey:req=>req.headers.get('cf-connecting-ip')||'unbekannt'});
       return await oauthHttp(request)??json({error:'not_found'},404);
     }
+    if(request.headers.has('origin')&&request.headers.get('origin')!==issuer)
+      return json({error:'invalid_origin'},403);
     if(!['GET','POST'].includes(request.method))
       return json({error:'method_not_allowed'},405,{Allow:'GET, POST'});
     const header=request.headers.get('authorization')||'';
@@ -85,9 +89,16 @@ export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,access
     const principal=match?await oauth.authenticate(match[1]!):null;
     if(!principal||!principal.scopes.includes('redion:read'))
       return json({error:'unauthorized',message:'Erneute OAuth-Anmeldung erforderlich.'},401,{
-        'WWW-Authenticate':'Bearer resource_metadata="'+issuer+'/.well-known/oauth-protected-resource/mcp/cloud"'});
+        'WWW-Authenticate':'Bearer resource_metadata="'+issuer+'/.well-known/oauth-protected-resource/mcp/cloud", scope="redion:read"'});
     /* A stateless MCP server does not provide a separate SSE GET stream. */
     if(request.method==='GET')return json({error:'method_not_allowed'},405,{Allow:'POST'});
+    if(request.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase()!=='application/json')
+      return json({error:'unsupported_media_type'},415);
+    const accepted=(request.headers.get('accept')??'').split(',').map(v=>v.split(';')[0]!.trim());
+    if(!accepted.includes('application/json')&&!accepted.includes('*/*'))
+      return json({error:'not_acceptable'},406);
+    const version=request.headers.get('mcp-protocol-version');
+    if(version!==null&&!protocolVersions.includes(version))return json({error:'unsupported_protocol_version'},400);
     const bytes=await leseBegrenzt(request.body,bodyLimit);
     if(!bytes)return json({error:'request_too_large'},413);
     let payload:unknown;
@@ -97,13 +108,21 @@ export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,access
       return rpcError(null,-32600,'Ungültige JSON-RPC-Anfrage.');
     const p=payload as Record<string,unknown>;
     const method=typeof p.method==='string'?p.method:'';
-    const id=typeof p.id==='string'||typeof p.id==='number'?p.id:null;
+    const id=typeof p.id==='string'||typeof p.id==='number'&&Number.isSafeInteger(p.id)?p.id:null;
     if(p.jsonrpc!=='2.0'||!method)return rpcError(id,-32600,'Ungültige JSON-RPC-Anfrage.');
-    if(method==='notifications/initialized'&&p.id===undefined)
+    if(method.startsWith('notifications/')&&p.id===undefined)
       return new Response(null,{status:202,headers:{'Cache-Control':'no-store'}});
-    if(method==='initialize')return rpc(id,{
-      protocolVersion:'2025-06-18',capabilities:{tools:{listChanged:false}},
-      serverInfo:{name:'RED ION Cloud MCP',version:'1.0.0'}});
+    if(id===null)return rpcError(null,-32600,'Anfragekennung fehlt oder ist ungültig.');
+    if(method==='initialize'){
+      const params=p.params as Record<string,unknown>|undefined;
+      if(!params||typeof params!=='object'||Array.isArray(params)||typeof params.protocolVersion!=='string'||
+        !params.capabilities||typeof params.capabilities!=='object'||Array.isArray(params.capabilities)||
+        !params.clientInfo||typeof params.clientInfo!=='object'||Array.isArray(params.clientInfo))
+        return rpcError(id,-32602,'Initialisierungsparameter fehlen.');
+      return rpc(id,{
+        protocolVersion:protocolVersions.includes(params.protocolVersion)?params.protocolVersion:protocolVersions[0],
+        capabilities:{tools:{listChanged:false}},serverInfo:{name:'RED ION Cloud MCP',version:'1.0.1'}});
+    }
     if(method==='ping')return rpc(id,{});
     if(method==='tools/list')return rpc(id,{tools:visibleCloudTools(principal)});
     if(method==='tools/call'){

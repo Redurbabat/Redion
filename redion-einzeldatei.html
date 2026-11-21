@@ -30091,7 +30091,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1614, inhalt: '04aba50885d45b35', gebaut: '2026-11-18T19:43:58.842Z' };
+const Stand = { fassung: 1616, inhalt: '0565e8adb0c7109d', gebaut: '2026-11-19T19:50:45.470Z' };
 window.Stand = Stand;
 
 </script>
@@ -115095,9 +115095,23 @@ const Einstellungen = (() => {
         mcp: () => {
             const server = Store.getMeta('mcp:server', []) || [];
             const aus = Store.getMeta('mcp:eigenAus', []) || [];
+            const wolke = typeof Wolke === 'undefined' ? null : Wolke;
+            let freigaben = '<span class="ez-grau">Wolke-Anmeldung erforderlich</span>';
+            try {
+                const basis = new URL(wolke?.angemeldet?.() ? String(wolke.adresse?.() || '') : '');
+                if (basis.protocol === 'https:' && !basis.username && !basis.password &&
+                    (basis.pathname === '/' || basis.pathname === '') && !basis.search && !basis.hash) {
+                    const ziel = new URL('/mcp/settings', basis);
+                    freigaben = `<a class="ez-knopf" href="${esc(ziel.href)}" target="_blank" rel="noopener noreferrer">Freigaben verwalten</a>`;
+                }
+            }
+            catch { }
             return RegisterAutomatisierung.ansicht() + kopf('MCP', 'Ein offenes Protokoll, mit dem Programme fremde Werkzeuge ' +
                 'benutzen und eigene anbieten. Diese App kann beides — mit einer Einschränkung, ' +
                 'die unten steht.') +
+                zeile('ChatGPT & KI-Freigaben', 'Beim Verbinden der KI-Anwendung kannst du Schreiben ausdrücklich erlauben. ' +
+                    'Ein bestehender Lesezugang wird dadurch nicht automatisch erweitert. ' +
+                    'Die Freigabe verlangt den Cloud-MCP-Dienst und eine erneute Schreibanfrage des KI-Clients.', freigaben) +
                 zeile('Fremde Server', 'Werkzeuge, die dein Agent benutzen darf', `<span class="ez-grau">${server.length} eingetragen</span> ` +
                     knopf('mcp-verb', 'Verwalten')) +
                 zeile('Eigene Werkzeuge', 'Der Katalog dieser App im MCP-Format', `<span class="ez-grau">${MCP.eigenerKatalog().length} freigegeben, ` +
@@ -143096,6 +143110,11 @@ const Wolke = (() => {
         return true;
     };
     const hatSchluessel = () => !!schluessel;
+    const schluesselFehlt = () => !!Store.getMeta('wolkeProbe', '') && !schluessel;
+    const SCHLUESSEL_FEHLT = 'Der Schlüssel fehlt — nach einem Neustart im Wolke-Fenster ' +
+        '„Schlüssel setzen“. Bis dahin verlässt nichts dieses Gerät.';
+    const wacheSchluessel = () => { if (schluesselFehlt())
+        throw new Error(SCHLUESSEL_FEHLT); };
     const verschluessele = async (text) => {
         if (!schluessel)
             throw new Error('Es ist kein Schlüssel gesetzt.');
@@ -143170,6 +143189,22 @@ const Wolke = (() => {
         };
         window.addEventListener('message', beiPost);
     });
+    const accessMoeglich = () => location.protocol === 'https:' && adresse() === location.origin;
+    const anmeldenMitAccess = async () => {
+        if (!accessMoeglich())
+            throw new Error('Die Access-Anmeldung geht nur auf der Redion-Website selbst.');
+        const a = await fetch(location.origin + '/konto/access', {
+            method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}'
+        });
+        let b = null;
+        try {
+            b = await a.json();
+        }
+        catch { }
+        if (!a.ok || !b || typeof b.token !== 'string')
+            throw new Error((b && b.message) || 'Die Anmeldung über Cloudflare Access hat nicht geklappt.');
+        return tokenUebernehmen(b.token);
+    };
     const codeHolen = async () => ruf('/konto/code', { m: 'POST', k: { geraet: geraeteName() } });
     const codeWarten = async (code, beiSchritt) => {
         const bis = Date.now() + 10 * 60000;
@@ -143297,7 +143332,11 @@ const Wolke = (() => {
     };
     const istGeteilt = (seiteId) => (Store.getMeta('wolkeGeteilt', []) || []).includes(seiteId);
     const RUNDE = 300;
+    const PAKET_BYTES = 4 * 1024 * 1024;
+    const EINZEL_MAX = 12 * 1024 * 1024;
+    const zuGrossIds = new Set();
     const hoch = async () => {
+        wacheSchluessel();
         let angenommen = 0;
         const abgelehnt = [], angepasst = [];
         for (let runde = 0; runde < 40; runde++) {
@@ -143326,21 +143365,61 @@ const Wolke = (() => {
                     geloescht: e.geloescht
                 });
             }
-            const a = await ruf('/sync/hoch', { m: 'POST', k: { bereich: bereich(), saetze: paket } });
+            const gesendet = [], gesendetDran = [], zuGross = [];
+            let bytes = 0, schnitt = paket.length;
+            for (let i = 0; i < paket.length; i++) {
+                const p = paket[i], e = dran[i];
+                if (!p || !e)
+                    continue;
+                const g = String(p.daten).length + 400;
+                if (g > EINZEL_MAX) {
+                    zuGross.push(String(p.id));
+                    continue;
+                }
+                if (gesendet.length && bytes + g > PAKET_BYTES) {
+                    schnitt = i;
+                    break;
+                }
+                bytes += g;
+                gesendet.push(p);
+                gesendetDran.push(e);
+            }
+            if (zuGross.length) {
+                for (const id of zuGross)
+                    zuGrossIds.add(id);
+                zustand.zuGrossLokal = zuGrossIds.size;
+                nachtragStreichen(zuGross);
+                if (typeof Protokoll !== 'undefined')
+                    Protokoll.notieren('wolke', zuGross.length + ' Satz/Sätze zu gross für die Wolke — bleiben auf diesem Gerät');
+            }
+            const letzteZeit = String((gesendet[gesendet.length - 1] ?? paket[paket.length - 1])?.geaendert ?? '');
+            const nachtragen = dran.slice(schnitt)
+                .filter(e => zeitVon(e) <= letzteZeit && !zuGross.includes(String(e.id)))
+                .map(e => String(e.id));
+            if (nachtragen.length)
+                Store.metaListeAendern('wolkeNachtrag', (alt) => [...new Set([...(Array.isArray(alt) ? alt.map(String) : []), ...nachtragen])]);
+            if (!gesendet.length) {
+                if (letzteZeit)
+                    Store.setMeta('wolkeMarkeHoch', letzteZeit);
+                if (liste.length <= dran.length)
+                    break;
+                continue;
+            }
+            const a = await ruf('/sync/hoch', { m: 'POST', k: { bereich: bereich(), saetze: gesendet } });
             angenommen += a.angenommen;
             if (Array.isArray(a.abgelehnt))
                 abgelehnt.push(...a.abgelehnt);
             const nein = new Set([...(a.abgelehnt || []), ...(a.angepasst || [])]
                 .map(x => (x && x.id) || x));
-            for (const e of dran)
+            for (const e of gesendetDran)
                 if (!nein.has(e.id))
                     await Store.basisPut(e.id, e.satz);
             if (Array.isArray(a.angepasst) && a.angepasst.length)
                 angepasst.push(...a.angepasst);
-            const letzte = paket[paket.length - 1];
+            const letzte = gesendet[gesendet.length - 1];
             Store.setMeta('wolkeMarkeHoch', letzte ? letzte.geaendert : Store.now());
-            nachtragStreichen(dran.filter(e => !nein.has(e.id)).map(e => String(e.id)));
-            if (liste.length <= dran.length)
+            nachtragStreichen(gesendetDran.filter(e => !nein.has(e.id)).map(e => String(e.id)));
+            if (schnitt === paket.length && liste.length <= dran.length)
                 break;
         }
         if (Store.getMeta('wolkeNachtragAlles', false) === true)
@@ -143385,6 +143464,7 @@ const Wolke = (() => {
             mehr: false };
     };
     const bloeckeWeg = async () => {
+        wacheSchluessel();
         const offen = Store.getMeta('wolkeBloeckeWeg', []) || [];
         if (!offen.length)
             return { bloeckeWeggemeldet: 0 };
@@ -143552,6 +143632,11 @@ const Wolke = (() => {
     const abgleichen = async () => {
         if (!angemeldet() || !bereich() || zustand.laeuft || !abgleichErlaubt())
             return null;
+        if (schluesselFehlt()) {
+            zustand.fehler = SCHLUESSEL_FEHLT;
+            melden();
+            return null;
+        }
         zustand.laeuft = true;
         zustand.fehler = '';
         melden();
@@ -143734,6 +143819,7 @@ const Wolke = (() => {
         return { dateienGeholt: geholt, dateienEntfernt: entfernt, dateienUnlesbar: unlesbar };
     };
     const dateienHoch = async () => {
+        wacheSchluessel();
         const oben = new Set(Store.getMeta('wolkeDateienOben', []) || []);
         const alle = await Store.dateiAlle();
         let rauf = 0;
@@ -143840,10 +143926,10 @@ const Wolke = (() => {
             });
     };
     return { adresse, serverAdressePruefen, token, bereich, angemeldet, geraeteName, zustand, beiAenderung,
-        anmeldenMit, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
+        anmeldenMit, accessMoeglich, anmeldenMitAccess, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
         abgleichErlaubt, abgleichSetzen, kontoLoeschen,
         neuAbgleichOffen, neuAbgleichAntwort,
-        schluesselSetzen, hatSchluessel, verschluessele, entschluessele,
+        schluesselSetzen, hatSchluessel, schluesselFehlt, verschluessele, entschluessele,
         hoch, runter, abgleichen, dateienAbgleichen, takt, taktSetzen, zuSchicken, seiteVon,
         geteiltSetzen, istGeteilt, freigeben, freigaben,
         veroeffentlichen, zurueckziehen,
@@ -143898,6 +143984,14 @@ const WolkeFenster = (() => {
                     a.disabled = true;
                     a.textContent = 'Fenster geöffnet …';
                     await Wolke.anmeldenMit(was);
+                    await schluesselFragen();
+                    await abgleichFragen();
+                    await zeichne();
+                }
+                if (was === 'access') {
+                    a.disabled = true;
+                    a.textContent = 'Melde an …';
+                    await Wolke.anmeldenMitAccess();
                     await schluesselFragen();
                     await abgleichFragen();
                     await zeichne();
@@ -144079,7 +144173,12 @@ const WolkeFenster = (() => {
             '</div>' +
             (wurzel
                 ? '<div style="display:flex; flex-direction:column; gap:9px">' +
-                    '<button data-a="github" class="prim" style="justify-content:center">' +
+                    (Wolke.accessMoeglich()
+                        ? '<button data-a="access" class="prim" style="justify-content:center">' +
+                            'Mit Cloudflare Access anmelden</button>'
+                        : '') +
+                    '<button data-a="github"' + (Wolke.accessMoeglich() ? '' : ' class="prim"') +
+                    ' style="justify-content:center">' +
                     'Mit GitHub anmelden</button>' +
                     '<button data-a="google" style="justify-content:center">' +
                     'Mit Google anmelden</button>' +
@@ -144204,6 +144303,24 @@ const WolkeFenster = (() => {
         if (Wolke.neuAbgleichOffen()) {
             UI.toast('Nach dem Einspielen steht oben eine Entscheidung — sie ' +
                 'ersetzt diese Frage.');
+            return;
+        }
+        if (!Wolke.hatSchluessel() && !(await schluesselFragen())) {
+            const klar = confirm('Es ist KEIN Schlüssel gesetzt.\n\n' +
+                'Wenn du jetzt abgleichst, gehen deine Notizen IM KLARTEXT zum Server.\n\n' +
+                '„OK“ heisst: trotzdem im Klartext abgleichen.\n' +
+                '„Abbrechen“ heisst: angemeldet bleiben, aber nichts verlässt dieses Gerät. ' +
+                'Den Schlüssel kannst du im Wolke-Fenster setzen.');
+            Wolke.abgleichSetzen(klar);
+            if (!klar) {
+                UI.toast('Nur lokal: nichts verlässt dieses Gerät.');
+                return;
+            }
+            UI.toast('Abgleich im Klartext läuft …');
+            try {
+                await Wolke.abgleichen();
+            }
+            catch { }
             return;
         }
         const ja = confirm('Dieses Gerät ab jetzt mit der Wolke abgleichen?\n\n' +
@@ -144398,13 +144515,14 @@ const WolkeFenster = (() => {
                     'font-size:12.5px; line-height:1.65; margin-bottom:16px">' +
                     (offen
                         ? '🔓 Diese Seite geht <b>im Klartext</b> auf den Server. Anders könnte er ' +
-                            'weder Rechte prüfen noch sie an jemanden ausliefern. Alle anderen Seiten ' +
-                            'bleiben verschlüsselt.'
+                            'weder Rechte prüfen noch sie an jemanden ausliefern — und nur so kann ' +
+                            'eine verbundene KI (RED Ion über den Cloud-Link) sie lesen. Alle anderen ' +
+                            'Seiten bleiben verschlüsselt.'
                         : '🔒 Diese Seite ist verschlüsselt. Zum Teilen muss sie lesbar werden — ' +
                             'das ist eine bewusste Entscheidung, deshalb dieser Schalter.') +
                     '<div style="margin-top:10px"><label style="display:flex;gap:8px;align-items:center">' +
                     '<input type="checkbox" id="wo-offen"' + (offen ? ' checked' : '') + '> ' +
-                    'Für die Freigabe lesbar machen</label></div>' +
+                    'Für Freigabe und KI lesbar machen</label></div>' +
                     '</div>' +
                     '<div style="display:flex; gap:7px; margin-bottom:14px">' +
                     '<input id="wo-mail" placeholder="Adresse der Person" style="flex:1">' +

@@ -124,6 +124,15 @@ binding = "DB"
 database_name = "redion"
 database_id = "18b0f926-e522-4b77-8063-ca3399c478ae"
 
+# DAS ABGLEICH-TOR DER INSTALLIERTEN APP (E795, PR #213). Redur am
+# 19. November 2026: „Ja, einschalten“. Elf exakte Abgleichwege laufen am
+# Worker-Tor vorbei (server/sicherheit/abgleich-tor.ts) und sind in der
+# Access-Anwendung als exakte Ausnahmen eingetragen; jeder verlangt ein
+# Redion-Sitzungstoken. Ohne diese Zeile bleibt alles hinter Access.
+# Kein Geheimnis (§42).
+[vars]
+ABGLEICH_TOR = "an"
+
 # ===========================================================================
 #  R2 — die Ablage fuer Anhaenge (Bilder, PDFs, Videos)
 # ---------------------------------------------------------------------------

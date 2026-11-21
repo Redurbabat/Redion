@@ -34,3 +34,11 @@ Kanonische Skill-Dateien liegen unter `.agents/skills/<name>/SKILL.md`. Claude-E
 ## Plattformziel
 
 Redion soll als eigenstaendige Windows- und macOS-Desktop-App sowie als iPhone-App nutzbar sein. Der aktuelle Plattformstatus und die noch fehlenden Nachweise stehen in `doku/PLATTFORM-STRATEGIE-MAC-WINDOWS-IPHONE.md`. Die zehn unveraenderten BBT-Bit-Skills liegen nur als Referenz in `doku/bbt-bit-skill-referenz/`; sie sind nicht automatisch fuer Redion anwendbar.
+
+## Graphify Wissensgraph
+
+Vor Architektur- und Codeaenderungen zuerst graphify-out/GRAPH_REPORT.md lesen.
+Fuer detaillierte Abhaengigkeiten graphify-out/graph.json verwenden.
+Wenn Graphify installiert ist, gezielte graphify query-, path- oder explain-Abfragen verwenden.
+Bestehende Projektregeln haben weiterhin Vorrang.
+Nach Codeaenderungen den Wissensgraphen mit graphify update . aktualisieren.
