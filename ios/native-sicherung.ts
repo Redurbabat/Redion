@@ -19,7 +19,7 @@ import { Browser } from '@capacitor/browser';
 import { createNativeFileExporter } from './native-file-export.mjs';
 import { withNativeExportFeedback } from './native-export-feedback.mjs';
 import { startIosNativeFeel } from './native-feel.mjs';
-import { installIosNativeLayout } from './native-layout.mjs';
+import { installIosNativeLayout } from './native-layout.mts';
 import { createHomeShortcutRouter } from './home-shortcuts.mjs';
 import { enableIosSafariLinks } from './native-safari-links.mjs';
 import { createIosShareInbox } from './incoming-share.mjs';

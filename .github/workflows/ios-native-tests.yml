@@ -36,7 +36,7 @@ jobs:
             ios/codemagic-dependency-versions.test.mjs \
             ios/native-file-export.test.mjs \
             ios/native-feel.test.mjs \
-            ios/native-layout.test.mjs \
+            ios/native-layout.test.mts \
             ios/native-lifecycle-export.test.mjs \
             ios/native-statusbar-queue.test.mjs \
             ios/native-viewport-resume.test.mjs \

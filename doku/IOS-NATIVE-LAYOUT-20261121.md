@@ -10,7 +10,7 @@
 
 ## Umsetzung
 
-Die CSS-Korrekturen in ios/native-layout.mjs werden nur aus ios/native-sicherung.ts im nativen Capacitor-iPhone-Container installiert. Deshalb bleiben Website, PWA und Windows unberuehrt.
+Die CSS-Korrekturen in ios/native-layout.mts werden nur aus ios/native-sicherung.ts im nativen Capacitor-iPhone-Container installiert. Deshalb bleiben Website, PWA und Windows unberuehrt.
 
 Die vorhandene Fuenf-Wege-Navigation, SelectionFlow-Hochziehgeste, lokale Speicherformate, Editor, Cloud-Sync und App-ID bleiben unveraendert. Kein zweites Dock und keine neuen Laufzeitabhaengigkeiten. Farben folgen dem Theme, kein dauernder Glow, Reduced Motion ist beruecksichtigt.
 
@@ -20,9 +20,13 @@ PR #214 enthaelt bereits die native Liquid-Glass-Dock- und SwiftUI-Arbeit. Diese
 
 ## Abnahme
 
-* node --test ios/native-layout.test.mjs
+* node --test ios/native-layout.test.mts
 * node --test ios/native-feel.test.mjs
 * GitHub CI: ios-native-tests
 * Codemagic: bestehende iOS-Testfolge
 
 Vor einer Freigabe fehlen noch echte iPhone-Tests mit 390/428 pt, Hell/Dunkel, grossen Systemschriften, VoiceOver, Tastatur, Dokumentenbearbeitung, Cloud-Sync, Offline und Datensicherung. Ohne diese Tests keine Aussage wie 'native App fertig', keine Signierung, kein Deployment.
+
+## Quellenregel E28
+
+Die neue iOS-Layout-Schicht und ihr Regressionstest sind TypeScript-Module (MTS), keine neuen handgeschriebenen JavaScript-Dateien. Das Projektinventar pruefungen/js-bestand.json bleibt unveraendert und wird nicht aufgeweicht. Die unter main bereits roten Schnelltests test109, test550 und test610 sind gesondert zu behandeln.

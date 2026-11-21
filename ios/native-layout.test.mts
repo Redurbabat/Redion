@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { IOS_LAYOUT_CSS, IOS_LAYOUT_STYLE_ID, installIosNativeLayout } from './native-layout.mjs';
+import { IOS_LAYOUT_CSS, IOS_LAYOUT_STYLE_ID, installIosNativeLayout } from './native-layout.mts';
 
 function harness() {
   const nodes = [];
@@ -57,8 +57,8 @@ test('Native Bruecke aktiviert die Korrektur, Web-App nicht', () => {
   const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
   const native=fs.readFileSync(path.join(root,'ios/native-sicherung.ts'),'utf8');
   const web=fs.readFileSync(path.join(root,'index.html'),'utf8');
-  assert.match(native,/from '\.\/native-layout\.mjs'/);
+  assert.match(native,/from '\.\/native-layout\.mts'/);
   assert.match(native,/installIosNativeLayout\(document\)/);
   assert.match(native,/Capacitor\.getPlatform\(\) === 'ios'/);
-  assert.doesNotMatch(web,/native-layout\.mjs|redion-ios-layout-fixes/);
+  assert.doesNotMatch(web,/native-layout\.mts|redion-ios-layout-fixes/);
 });
