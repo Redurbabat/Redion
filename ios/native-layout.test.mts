@@ -32,9 +32,9 @@ test('Native CSS wird genau einmal eingefuegt und entfernt', () => {
   const stop=installIosNativeLayout(doc);
   const second=installIosNativeLayout(doc);
   assert.equal(nodes.length,1);
-  assert.equal(nodes[0].id,IOS_LAYOUT_STYLE_ID);
-  assert.equal(nodes[0].attrs['data-redion-native'],'layout');
-  assert.equal(nodes[0].textContent,IOS_LAYOUT_CSS);
+  assert.equal(nodes[0]!.id,IOS_LAYOUT_STYLE_ID);
+  assert.equal(nodes[0]!.attrs['data-redion-native'],'layout');
+  assert.equal(nodes[0]!.textContent,IOS_LAYOUT_CSS);
   second();assert.equal(nodes.length,1);
   stop();assert.equal(nodes.length,0);
   assert.equal(typeof installIosNativeLayout({}), 'function');
