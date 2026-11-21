@@ -42,6 +42,8 @@ doku/
 /ios/
 /build/
 /www/
+# Code-Analyse (Graphify) — Arbeitsmaterial, nie ausliefern
+/graphify-out/
 *.cts
 *.swift
 *.exe
