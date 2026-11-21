@@ -581,7 +581,7 @@ const Wolke = (() => {
       const paket = [];
       for (const e of dran) {
         const klar = JSON.stringify(e.satz);
-        const offen = istGeteilt(e.seite);
+        const offen = istGeteilt(e.seite) || istGeteilt(String(e.id));
         paket.push({
           id: e.id, tabelle: e.tabelle, seite: e.seite,
           daten: (offen || !hatSchluessel()) ? klar : await verschluessele(klar),
@@ -747,7 +747,7 @@ const Wolke = (() => {
       const paket = [];
       for (const e of teil) {
         const klar = JSON.stringify(e.satz);
-        const geteilt = istGeteilt(e.seite);
+        const geteilt = istGeteilt(e.seite) || istGeteilt(String(e.id));
         paket.push({
           id: e.id, tabelle: e.tabelle || 'blocks', seite: e.seite,
           daten: (geteilt || !hatSchluessel()) ? klar : await verschluessele(klar),
@@ -823,7 +823,11 @@ const Wolke = (() => {
       if (!s.verschluesselt && !s.geloescht && hatSchluessel() && satz) {
         if (s.tabelle === 'collections') klarSeiten.push(String(s.id));
         else if (s.tabelle === 'views' && satz.collectionId) klarSeiten.push(String(satz.collectionId));
-        else if (s.tabelle === 'blocks' && satz.type === 'page') klarSeiten.push(String(s.id));
+        /* JEDER Block, nicht nur Seiten (21. November 2026): kam ein Block
+           an, bevor die App seine Seite kannte, gehörte er zu keiner
+           geteilten Seite — und ging verschlüsselt zurück. Was im Klartext
+           kam, bleibt Klartext, über seine eigene Kennung. */
+        else if (s.tabelle === 'blocks') klarSeiten.push(String(s.id));
       }
 
       const hier = s.tabelle === 'blocks' ? Store.cache.blocks[s.id]

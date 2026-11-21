@@ -394,7 +394,7 @@ const Wolke = (() => {
             const paket = [];
             for (const e of dran) {
                 const klar = JSON.stringify(e.satz);
-                const offen = istGeteilt(e.seite);
+                const offen = istGeteilt(e.seite) || istGeteilt(String(e.id));
                 paket.push({
                     id: e.id, tabelle: e.tabelle, seite: e.seite,
                     daten: (offen || !hatSchluessel()) ? klar : await verschluessele(klar),
@@ -527,7 +527,7 @@ const Wolke = (() => {
             const paket = [];
             for (const e of teil) {
                 const klar = JSON.stringify(e.satz);
-                const geteilt = istGeteilt(e.seite);
+                const geteilt = istGeteilt(e.seite) || istGeteilt(String(e.id));
                 paket.push({
                     id: e.id, tabelle: e.tabelle || 'blocks', seite: e.seite,
                     daten: (geteilt || !hatSchluessel()) ? klar : await verschluessele(klar),
@@ -592,7 +592,7 @@ const Wolke = (() => {
                     klarSeiten.push(String(s.id));
                 else if (s.tabelle === 'views' && satz.collectionId)
                     klarSeiten.push(String(satz.collectionId));
-                else if (s.tabelle === 'blocks' && satz.type === 'page')
+                else if (s.tabelle === 'blocks')
                     klarSeiten.push(String(s.id));
             }
             const hier = s.tabelle === 'blocks' ? Store.cache.blocks[s.id]

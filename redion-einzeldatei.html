@@ -30091,7 +30091,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1620, inhalt: '4f80aed9160db7b5', gebaut: '2026-11-21T21:08:57.962Z' };
+const Stand = { fassung: 1621, inhalt: '3671c8ee5f35d131', gebaut: '2026-11-21T21:56:01.637Z' };
 window.Stand = Stand;
 
 </script>
@@ -143390,7 +143390,7 @@ const Wolke = (() => {
             const paket = [];
             for (const e of dran) {
                 const klar = JSON.stringify(e.satz);
-                const offen = istGeteilt(e.seite);
+                const offen = istGeteilt(e.seite) || istGeteilt(String(e.id));
                 paket.push({
                     id: e.id, tabelle: e.tabelle, seite: e.seite,
                     daten: (offen || !hatSchluessel()) ? klar : await verschluessele(klar),
@@ -143523,7 +143523,7 @@ const Wolke = (() => {
             const paket = [];
             for (const e of teil) {
                 const klar = JSON.stringify(e.satz);
-                const geteilt = istGeteilt(e.seite);
+                const geteilt = istGeteilt(e.seite) || istGeteilt(String(e.id));
                 paket.push({
                     id: e.id, tabelle: e.tabelle || 'blocks', seite: e.seite,
                     daten: (geteilt || !hatSchluessel()) ? klar : await verschluessele(klar),
@@ -143588,7 +143588,7 @@ const Wolke = (() => {
                     klarSeiten.push(String(s.id));
                 else if (s.tabelle === 'views' && satz.collectionId)
                     klarSeiten.push(String(satz.collectionId));
-                else if (s.tabelle === 'blocks' && satz.type === 'page')
+                else if (s.tabelle === 'blocks')
                     klarSeiten.push(String(s.id));
             }
             const hier = s.tabelle === 'blocks' ? Store.cache.blocks[s.id]

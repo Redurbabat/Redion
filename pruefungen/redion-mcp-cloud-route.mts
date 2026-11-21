@@ -307,6 +307,13 @@ test('Cloud-MCP: nur Lesen, danach Schreiben mit Rollen- und Versionskontrolle',
     assert.equal(reich.daten.blocks,5,'oberste Ebene: Plan, Oben, Merke, Code, Ende');
     const reichGelesen=await call('redion_read_page',{documentId:reich.daten.documentId});
     assert.equal(reichGelesen.daten.content,'## Plan\n- Oben\n    - Unten\n        - [ ] Ganz unten\n> 💡 Merke\n```ts\nconst a = 1;\n\n# kein Titel\n```\nEnde');
+    /* Jeder Satz seine eigene, steigende Zeit — und die Seite zuerst
+       (das Rennen vom 21. November: gleiche Zeiten liessen die App Blöcke
+       überspringen). */
+    const zeiten=(await f.store.finde('saetze',{bereich:'ws_test'})).filter((s:any)=>String(s.id).startsWith(reich.daten.documentId))
+      .sort((a:any,b:any)=>String(a.geaendert).localeCompare(String(b.geaendert)));
+    assert.equal(new Set(zeiten.map((s:any)=>s.geaendert)).size,zeiten.length,'keine zwei Sätze mit derselben Zeit');
+    assert.equal(zeiten[0]?.id,reich.daten.documentId,'die Seite kommt vor ihren Blöcken');
     const reichDaten=JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:reich.daten.documentId}))!.daten);
     const oben=JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:reichDaten.content[1]}))!.daten);
     assert.deepEqual([oben.text,oben.content.length],['Oben',1],'Unten ist Kind von Oben');

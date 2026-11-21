@@ -5,7 +5,7 @@
 import type {Ablage} from '../typen.ts';
 import type {McpPrincipal} from './oauth.ts';
 import {rolleAuf,darf,notieren} from '../kern.ts';
-import {textToBlocks,countBlocks,appBlock,appPage,blockToLine,stampAfter,MAX_BLOCKS,type MdNode} from './page-blocks.ts';
+import {textToBlocks,countBlocks,appBlock,appPage,blockToLine,stampAfter,MAX_BLOCKS,type MdNode,type BlockData} from './page-blocks.ts';
 import {BLOCKARTEN} from './blockarten-katalog.ts';
 import {buildPlan,describePlan,listSymbols,symbolGroups,PLAN_ARTEN,LIMITS,SchematicError} from './schematic.ts';
 import {buildSchema,rowProps,describeRow,describeSchema,databaseRecords,rowRecord,DatabaseError,LAYOUTS,WRITABLE_TYPES,LIMITS as DB_LIMITS,type Schema} from './databases.ts';
@@ -182,14 +182,25 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     const r=await db.prepare('SELECT MAX(geaendert) AS m FROM saetze WHERE bereich=?1').bind(w).first<{m:string|null}>();
     return stampAfter(r?.m);
   };
-  const insertRow=async(w:string,satz:Record<string,unknown>&{id:string},seite:string,at:string,
+  /* JEDER SATZ SEINE EIGENE ZEIT (21. November 2026). Die App holt mit
+     `geaendertNach: marke` — strikt grösser. Trugen mehrere Sätze eines
+     Aufrufs dieselbe Zeit und fragte die App mitten im Schreiben ab, setzte
+     sie ihre Marke auf diese Zeit, und der Rest kam nie an: in der App
+     fehlten Punkt 4, „Merke" und zwei Aufgaben einer neuen Seite. Jetzt
+     steigt die Zeit mit jedem Schreiben, und nichts liegt hinter der Marke. */
+  let zuletzt:string|null=null;
+  const naechsteZeit=async(w:string)=>{
+    zuletzt=zuletzt===null?await stamp(w):stampAfter(zuletzt);
+    return zuletzt;
+  };
+  const insertRow=async(w:string,satz:Record<string,unknown>&{id:string},seite:string,_at:string,
                         tabelle:'blocks'|'collections'|'views'='blocks')=>{
     const payload=JSON.stringify(satz);
     if(payload.length>64000)return err('invalid_arguments','Ein Eintrag ist zu gross.');
     return db.prepare(
       'INSERT OR IGNORE INTO saetze (id,bereich,tabelle,daten,verschluesselt,seite,version,geaendert,geloescht,vonGeraet) '+
       "VALUES (?1,?2,?6,?3,0,?4,1,?5,0,'Cloud-MCP') RETURNING version"
-    ).bind(satz.id,w,payload,seite,at,tabelle).first<{version:number}>();
+    ).bind(satz.id,w,payload,seite,await naechsteZeit(w),tabelle).first<{version:number}>();
   };
   /* Eine Sammlung (Datenbank) im Klartext, mit Recht auf ihr. */
   const collection=async(w:string,id:string,permission:'lesen'|'bearbeiten')=>{
@@ -217,7 +228,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     const changed=await db.prepare(
       "UPDATE saetze SET daten=?1,version=version+1,geaendert=?2,vonGeraet='Cloud-MCP' "+
       "WHERE bereich=?3 AND id=?4 AND version=?5 AND verschluesselt=0 AND tabelle='collections' RETURNING version"
-    ).bind(JSON.stringify({...c.data,schema,edited:at}),at,w,String(c.s.id),Number(c.s.version)||1).first<{version:number}>();
+    ).bind(JSON.stringify({...c.data,schema,edited:at}),await naechsteZeit(w),w,String(c.s.id),Number(c.s.version)||1).first<{version:number}>();
     if(!changed)return err('conflict','Die Datenbank wurde zwischenzeitlich geändert. Bitte erneut versuchen.');
     return changed.version;
   };
@@ -234,13 +245,13 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     }
     return ids;
   };
-  const updateRow=async(w:string,id:string,old:number,updated:Record<string,unknown>,at:string)=>{
+  const updateRow=async(w:string,id:string,old:number,updated:Record<string,unknown>,_at:string)=>{
     const payload=JSON.stringify(updated);
     if(payload.length>64000)return err('invalid_arguments','Seite ist für diese Änderung zu gross.');
     const changed=await db.prepare(
       "UPDATE saetze SET daten=?1,version=version+1,geaendert=?2,vonGeraet='Cloud-MCP' "+
       "WHERE bereich=?3 AND id=?4 AND version=?5 AND geloescht=0 AND verschluesselt=0 AND tabelle='blocks' RETURNING version"
-    ).bind(payload,at,w,id,old).first<{version:number}>();
+    ).bind(payload,await naechsteZeit(w),w,id,old).first<{version:number}>();
     if(!changed)return err('conflict','Seite wurde zwischenzeitlich geändert. Bitte erneut lesen.');
     return changed.version;
   };
@@ -263,21 +274,29 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
   };
   /* Neue Kindblöcke anlegen; liefert ihre Kennungen. Deterministisch aus der
      Seite und dem Zähler, damit eine Wiederholung nichts doppelt anlegt. */
-  const addChildren=async(w:string,pageId:string,seite:string,content:string,start:number,at:string)=>{
+  /* Erst planen (Kennungen und Sätze), dann schreiben — so kann eine neue
+     Seite VOR ihren Blöcken geschrieben werden und kennt doch schon deren
+     Kennungen. Die Reihenfolge der Sätze: Eltern vor Kindern. */
+  const planChildren=(pageId:string,content:string,start:number,at:string)=>{
     let n=start;
-    /* Kinder zuerst, dann der Block, der auf sie zeigt — wie bei der Seite. */
-    const lege=async(nodes:MdNode[],parentId:string):Promise<string[]>=>{
-      const ids:string[]=[];
-      for(const b of nodes){
-        const id=(pageId+'b'+(n++).toString(36)).slice(0,64);
-        const kinder=await lege(b.kinder,id);
-        await insertRow(w,appBlock(id,b.type,b.text,parentId,at,{content:kinder,
-          ...(b.checked===undefined?{}:{checked:b.checked}),...(b.lang?{lang:b.lang}:{})}),seite,at);
-        ids.push(id);
-      }
-      return ids;
-    };
-    return lege(textToBlocks(content),pageId);
+    const saetze:BlockData[]=[];
+    const lege=(nodes:MdNode[],parentId:string):string[]=>nodes.map(b=>{
+      const id=(pageId+'b'+(n++).toString(36)).slice(0,64);
+      const satz=appBlock(id,b.type,b.text,parentId,at,{content:[] as string[],
+        ...(b.checked===undefined?{}:{checked:b.checked}),...(b.lang?{lang:b.lang}:{})});
+      saetze.push(satz);
+      satz.content=lege(b.kinder,id);
+      return id;
+    });
+    return {ids:lege(textToBlocks(content),pageId),saetze};
+  };
+  const writeChildren=async(w:string,seite:string,saetze:BlockData[],at:string)=>{
+    for(const s of saetze)await insertRow(w,s,seite,at);
+  };
+  const addChildren=async(w:string,pageId:string,seite:string,content:string,start:number,at:string)=>{
+    const plan=planChildren(pageId,content,start,at);
+    await writeChildren(w,seite,plan.saetze,at);
+    return plan.ids;
   };
   /* Kindblöcke rekursiv als eingerückte Markdown-Zeilen (höchstens 3 Stufen). */
   const contentLines=async(w:string,data:Record<string,unknown>,tiefe=0):Promise<string[]>=>{
@@ -525,12 +544,15 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         return {documentId,version:Number(again.s.version)||1,alreadyExists:true};
       }
       const at=await stamp(w);
-      /* Erst die Kinder, dann die Seite, dann der Eintrag beim Elternteil:
-         bricht etwas ab, bleibt höchstens ein unsichtbarer Kindblock — nie
-         eine Seite, die auf Fehlendes zeigt. */
-      const childIds=await addChildren(w,documentId,documentId,content,0,at);
+      /* Erst die Seite, dann ihre Blöcke (21. November 2026). Umgekehrt kamen
+         Blöcke in der App an, bevor sie ihre Seite kannte — die App hielt sie
+         für privat und schickte sie verschlüsselt zurück. Fehlende Kinder
+         zeigt die App einfach noch nicht (childrenOf filtert), bis sie da sind. */
+      const plan=planChildren(documentId,content,0,at);
+      const childIds=plan.ids;
       const row=await insertRow(w,appPage(documentId,title,parentId||null,childIds,at),documentId,at);
       if(!row)return err('conflict','Seite konnte nicht angelegt werden. Bitte erneut versuchen.');
+      await writeChildren(w,documentId,plan.saetze,at);
       if(parent){
         const list=Array.isArray(parent.data.content)?parent.data.content.map(String):[];
         await updateRow(w,parentId,Number(parent.s.version)||1,{...parent.data,content:[...list,documentId],edited:at},at);

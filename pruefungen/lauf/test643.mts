@@ -303,8 +303,34 @@ try {
     !!zurueck6 && Number(zurueck6.verschluesselt) === 0 && /Erledigt/.test(String(zurueck6.daten)),
     zurueck6 ? 'verschluesselt=' + zurueck6.verschluesselt : 'fehlt');
   const klar6 = (await serverSaetze()).filter(s => Number(s.verschluesselt) !== 1).map(s => String(s.id))
-    .filter(id => !/^(gpt643|gpt6r|[cvd]gpt6|pruef)/.test(id));
+    .filter(id => !/^(gpt643|gpt6r|gpt6c|[cvd]gpt6|pruef)/.test(id));
   pruef('§6b Ausser den Sätzen von ChatGPT bleibt alles verschlüsselt', klar6.length === 0, klar6.join(','));
+
+  /* §6c · Das Rennen vom 21. November: Blöcke kommen an, BEVOR die App ihre
+     Seite kennt (der Server schrieb erst die Kinder, die App fragte mitten
+     hinein). Werden sie hier geändert, müssen sie im Klartext zurückgehen —
+     vorher galten sie als privat und gingen verschlüsselt. */
+  const l6c = (await serverSaetze()).map(s => String(s.geaendert || '')).sort().pop();
+  const t1 = stampAfter(l6c), t2 = stampAfter(t1);
+  for (const [satz, zeit] of [[appBlock('gpt6c_b0', 'text', 'Erster Block', 'gpt6c', t1), t1],
+                              [appBlock('gpt6c_b1', 'text', 'Zweiter Block', 'gpt6c', t2), t2]] as const)
+    await kern.ablage.setze('saetze', { id: satz.id, bereich: BEREICH, tabelle: 'blocks', daten: JSON.stringify(satz),
+      verschluesselt: 0, seite: 'gpt6c', version: 1, geaendert: zeit, geloescht: 0, vonGeraet: 'Cloud-MCP' });
+  const t6c = Date.now();
+  let kinder6c = false;
+  while (!kinder6c && Date.now() - t6c < 12000) {
+    await p4.waitForTimeout(500);
+    kinder6c = await p4.evaluate(() => !!Store.getBlock('gpt6c_b0') && !!Store.getBlock('gpt6c_b1') && !Store.getBlock('gpt6c'));
+  }
+  pruef('§6c Die Blöcke sind da, ihre Seite noch nicht (der Fall des Rennens)', kinder6c);
+  await p4.evaluate(async () => {
+    Store.updateBlock('gpt6c_b0', { text: 'Erster Block, hier geändert' });
+    await Wolke.abgleichen();
+  });
+  const b6c = (await serverSaetze()).find(s => String(s.id) === 'gpt6c_b0');
+  pruef('§6c Ein Block ohne bekannte Seite geht im Klartext zurück',
+    !!b6c && Number(b6c.verschluesselt) === 0 && /hier geändert/.test(String(b6c.daten)),
+    b6c ? 'verschluesselt=' + b6c.verschluesselt : 'fehlt');
 
   /* „Nur von Hand" heisst auch: kein Live-Holen. */
   const handAus = await p4.evaluate(() => { Store.setMeta('wolkeTakt', '0'); Wolke.takt(); return Wolke.liveStellen(); });
