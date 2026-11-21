@@ -51,3 +51,16 @@ PR #216 uebernommen, **ohne** den veralteten CSS-Stand aus PR #214 zu kopieren:
 VoiceOver, Hochziehgesten, Wechsel zwischen nativer und klassischer Ansicht,
 Tastatur, Bearbeitungskonflikte, Offline und Backups. Ein erfolgreicher
 unsignierter Xcode-Build ersetzt keine Installation/Signierung auf dem iPhone.
+
+## Korrektur nach iPhone-Test: NUR originale iOS-Tab-Bar (21.11.2026)
+
+Der Nutzer moechte ausschliesslich die echte Apple-Tab-Bar unten haben. Die zusaetzlichen SwiftUI-Seiten aus dem vorigen Versuch erzeugten ueberlagerte Oberflaechen und werden aus dem PR wieder entfernt.
+
+- **Behalten:** `UITabBar` mit 5 Symbolen aus SF Symbols, nativen Auswahlzustaenden, Systemmaterial und Haptik.
+- **Behalten:** Die urspruengliche RED-ION-WebView fuer Dokumente, Heute, Lernen, Termine und Mehr; keine zweite Render-Ebene ueber dem Inhalt.
+- **Entfernt:** Native SwiftUI-Ansichten fuer Mehr, Dokumente, Einstellungen und den Editor sowie ihre Bridge-Tests und Einbauanweisungen.
+- **Einzelne Tab-Bar:** Die alte Web-Tab-Bar bleibt nur unsichtbarer Klick-/Navigationsanker, nicht als zweites sichtbares Dock. UIKit rendert ausschliesslich das Apple-Systemelement.
+- **Keine Datenmigration:** Das bestehende lokale Datenmodell bleibt unveraendert.
+- Diese Aenderung ist absichtlich **kein** vollstaendiger nativer SwiftUI-Umbau der Inhalte.
+
+Noch zu testen: exakte native iOS-26-Darstellung auf dem Geraet, alle Tab-Wechsel, Schnellziele per Hochziehgeste, Tastatur- und Modal-Ausblendung, Fokus/VoiceOver sowie Offline-Verhalten.
