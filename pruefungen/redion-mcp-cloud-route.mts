@@ -140,8 +140,8 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       assert.equal(transport.sessionId,undefined);
       /* Nur Lesewerkzeuge: Bereiche, Suche, Seite, Schaltzeichen, Schaltplan, Datenbanken. */
       const list=await client.listTools();
-      assert.deepEqual(list.tools.map((t:{name:string})=>t.name).sort(),['redion_list_databases','redion_list_symbols',
-        'redion_list_tasks','redion_list_workspaces','redion_read_database','redion_read_page','redion_read_schematic','redion_search']);
+      assert.deepEqual(list.tools.map((t:{name:string})=>t.name).sort(),['redion_list_block_types','redion_list_databases','redion_list_symbols',
+        'redion_list_tasks','redion_list_workspaces','redion_read_block','redion_read_database','redion_read_page','redion_read_schematic','redion_search']);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
       assert.equal(JSON.parse(result.content[0].text).content,'Nur Testdaten');
       const denied=await client.callTool({name:'redion_create_page',arguments:{workspaceId:'ws_test',title:'Gesperrt',requestId:'sdk_request_01'}});
@@ -252,6 +252,33 @@ test('Cloud-MCP: nur Lesen, danach Schreiben mit Rollen- und Versionskontrolle',
       teile:[{zeichen:'gibtsnicht',x:0,y:0}]});
     assert.equal(falsch.fehler,true);
     assert.match(String(falsch.daten),/Unbekanntes Schaltzeichen/);
+
+    /* Jede Blockart: anlegen, als Kind, lesen, ändern, weglegen. */
+    const arten=await call('redion_list_block_types',{});
+    assert.ok(arten.daten.arten.some((a:any)=>a.id==='flashcard'));
+    assert.ok(!arten.daten.arten.some((a:any)=>/^(a-|ai-|db-)/.test(a.id)||a.id==='page'),'Aktionen und Seiten gehen über eigene Wege');
+    const bs=await call('redion_create_page',{title:'Bausteine',requestId:'request_00006'});
+    const tg=await call('redion_add_block',{documentId:bs.daten.documentId,expectedVersion:1,typ:'toggle',text:'Mehr'});
+    assert.equal(tg.fehler,false,String(tg.daten));
+    const fc=await call('redion_add_block',{documentId:bs.daten.documentId,expectedVersion:2,typ:'flashcard',text:'Was ist ein FI?',
+      inBlockId:tg.daten.blockId,daten:{antwort:'Fehlerstromschutzschalter',alive:false,parentId:'fremd',id:'fremd'}});
+    assert.equal(fc.fehler,false,String(fc.daten));
+    const fcGelesen=await call('redion_read_block',{blockId:fc.daten.blockId});
+    assert.deepEqual([fcGelesen.daten.typ,fcGelesen.daten.text,fcGelesen.daten.parentId,fcGelesen.daten.daten.antwort,fcGelesen.daten.daten.alive],
+      ['flashcard','Was ist ein FI?',tg.daten.blockId,'Fehlerstromschutzschalter',true],'reservierte Felder setzt nur der Server');
+    const tgGelesen=await call('redion_read_block',{blockId:tg.daten.blockId});
+    assert.deepEqual(tgGelesen.daten.kinder,[fc.daten.blockId]);
+    const bsSeite=await call('redion_read_page',{documentId:bs.daten.documentId});
+    assert.equal(bsSeite.daten.content,'> Mehr\n    Was ist ein FI?');
+    const fcNeu=await call('redion_update_block',{blockId:fc.daten.blockId,expectedVersion:1,daten:{antwort:'FI-Schutzschalter'}});
+    assert.equal(fcNeu.daten.version,2);
+    assert.equal((await call('redion_read_block',{blockId:fc.daten.blockId})).daten.daten.antwort,'FI-Schutzschalter');
+    const fcWeg=await call('redion_update_block',{blockId:fc.daten.blockId,expectedVersion:2,papierkorb:true});
+    assert.equal(fcWeg.daten.inPapierkorb,true);
+    for(const typ of ['a-del','page','db-table','gibtsnicht']){
+      const r=await call('redion_add_block',{documentId:bs.daten.documentId,expectedVersion:2,typ});
+      assert.equal(r.fehler,true,typ);assert.match(String(r.daten),/nicht anlegbare Blockart/);
+    }
 
     /* Aufgaben und Termine: eine Seite „ChatGPT", je eine Datenbank, beim
        zweiten Aufruf wiedergefunden statt doppelt angelegt. */

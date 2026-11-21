@@ -30091,7 +30091,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1619, inhalt: '2642a81383b9251a', gebaut: '2026-11-21T19:57:55.683Z' };
+const Stand = { fassung: 1620, inhalt: '4f80aed9160db7b5', gebaut: '2026-11-21T21:08:57.962Z' };
 window.Stand = Stand;
 
 </script>
@@ -59161,7 +59161,9 @@ const Zusatz = (() => {
         reihenWache.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     };
     const whiteboard = (block) => {
-        const daten = block.shapes ? JSON.parse(JSON.stringify(block.shapes)) : [];
+        const daten = Array.isArray(block.shapes)
+            ? JSON.parse(JSON.stringify(block.shapes)).filter((s) => s && typeof s === 'object' && !Array.isArray(s))
+            : [];
         const RAUM_VERSION = 1;
         let werkzeug = 'stift';
         let farbe = PALETTE[0]?.[0] ?? '#529cca';

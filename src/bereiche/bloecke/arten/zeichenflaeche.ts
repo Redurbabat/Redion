@@ -101,7 +101,14 @@ const Zusatz = (() => {
    * 1. WHITEBOARD
    * ======================================================================*/
   const whiteboard = (block: any) => {
-    const daten = block.shapes ? JSON.parse(JSON.stringify(block.shapes)) : [];
+    /* Nur eine LISTE von Formen (test645 §3). Hier stand `block.shapes ? …`,
+       und ein Text oder eine Zahl in `shapes` — aus einem Import, aus einer
+       KI über den Cloud-MCP — liess die ganze Seite abstürzen
+       („daten.filter is not a function"). Was keine Form ist, fällt weg;
+       gespeichert wird erst beim nächsten Zeichnen. */
+    const daten = Array.isArray(block.shapes)
+      ? JSON.parse(JSON.stringify(block.shapes)).filter((s: any) => s && typeof s === 'object' && !Array.isArray(s))
+      : [];
 
     /* DIE RAUMFASSUNG (E686). Die Zahlen in `shapes` sind Flächenpunkte:
        CSS-Pixel bei Massstab 1, Ursprung links oben der ungeschobenen Fläche.

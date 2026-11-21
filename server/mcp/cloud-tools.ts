@@ -6,6 +6,7 @@ import type {Ablage} from '../typen.ts';
 import type {McpPrincipal} from './oauth.ts';
 import {rolleAuf,darf,notieren} from '../kern.ts';
 import {textToBlocks,countBlocks,appBlock,appPage,blockToLine,stampAfter,MAX_BLOCKS,type MdNode} from './page-blocks.ts';
+import {BLOCKARTEN} from './blockarten-katalog.ts';
 import {buildPlan,describePlan,listSymbols,symbolGroups,PLAN_ARTEN,LIMITS,SchematicError} from './schematic.ts';
 import {buildSchema,rowProps,describeRow,describeSchema,databaseRecords,rowRecord,DatabaseError,LAYOUTS,WRITABLE_TYPES,LIMITS as DB_LIMITS,type Schema} from './databases.ts';
 /* Fehler der Eingabe eines Schaltplans werden zu Werkzeugfehlern mit Satz. */
@@ -112,7 +113,40 @@ CLOUD_TOOLS.push(
       notiz:{type:'string',maxLength:2000}},required:['workspaceId','titel','datum'],additionalProperties:false}},
   {name:'redion_list_tasks',description:'Listet Aufgaben aus allen lesbaren Datenbanken mit Status oder Kästchen.',
     inputSchema:{type:'object',properties:{...workspace,nurOffen:{type:'boolean'}},required:['workspaceId'],additionalProperties:false}});
-const writeNames=new Set(['redion_add_task','redion_add_event','redion_create_page','redion_append_content','redion_update_page','redion_replace_text','redion_trash_page','redion_move_page',
+/* --- Jede Blockart der App (blockarten-katalog.ts, aus Register.bloecke) --
+   Redur, 21. November 2026: „es sollte alles machen kann wirklich alles".
+   Nicht jede Art bekommt ein eigenes Werkzeug; die KI legt jede Art an,
+   die die App kennt, und lernt das Datenformat aus redion_read_block an
+   einem lesbaren Beispiel. Die Felder, die den Baum zusammenhalten (Kennung,
+   Eltern, Kinder, alive, Zeitstempel), setzt nur der Server. */
+const ANLEGBAR=BLOCKARTEN.filter(b=>!/^(a-|ai-|db-)/.test(b.id)&&b.id!=='page');
+const RESERVIERT=new Set(['id','type','parentId','parentTable','alive','content','created','edited','erstelltVon',
+  'wolkeVersion','trashedAt','folge','__proto__','constructor','prototype']);
+const blockDaten=(roh:unknown):Record<string,unknown>=>{
+  if(roh===undefined)return {};
+  if(!roh||typeof roh!=='object'||Array.isArray(roh))return err('invalid_arguments','daten muss ein Objekt sein.');
+  const out:Record<string,unknown>={};
+  for(const [k,v] of Object.entries(roh as Record<string,unknown>)){
+    if(RESERVIERT.has(k))continue;
+    if(k.length>60)return err('invalid_arguments','Feldname zu lang: '+k.slice(0,60));
+    out[k]=v;
+  }
+  if(JSON.stringify(out).length>60000)return err('invalid_arguments','daten sind zu gross (höchstens 60 KB).');
+  return out;
+};
+CLOUD_TOOLS.push(
+  {name:'redion_list_block_types',description:'Listet alle Blockarten der Redion-App (Text, Toggle, Callout, Code, Gleichung, Lernkarte, Whiteboard, Gedankenkarte, Diagramm, Spalten, Lesezeichen, Einbettung …) mit Kennung, Name und Gruppe.',
+    inputSchema:{type:'object',properties:{},additionalProperties:false}},
+  {name:'redion_read_block',description:'Liest einen Block roh: Art, Text, alle Datenfelder, Kinder und Version. So lässt sich das Format einer Blockart an einem Beispiel ablesen.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField},required:['workspaceId','blockId'],additionalProperties:false}},
+  {name:'redion_add_block',description:'Fügt einer Klartext-Seite einen Block JEDER Art an (typ aus redion_list_block_types), mit text und beliebigen Datenfeldern in daten. Optional inBlockId: als Kind eines Blocks derselben Seite (Toggle, Spalten).',
+    inputSchema:{type:'object',properties:{...workspace,...documentId,expectedVersion:{type:'integer',minimum:1},typ:{type:'string',maxLength:40},
+      text:{type:'string',maxLength:12000},daten:{type:'object'},inBlockId:idField},
+      required:['workspaceId','documentId','expectedVersion','typ'],additionalProperties:false}},
+  {name:'redion_update_block',description:'Ändert einen Block: text, daten (zusammengeführt, mit ersetzen:true ganz ersetzt), papierkorb:true legt ihn weg. Nur bei passender expectedVersion des Blocks.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},text:{type:'string',maxLength:12000},
+      daten:{type:'object'},ersetzen:{type:'boolean'},papierkorb:{type:'boolean'}},required:['workspaceId','blockId','expectedVersion'],additionalProperties:false}});
+const writeNames=new Set(['redion_add_block','redion_update_block','redion_add_task','redion_add_event','redion_create_page','redion_append_content','redion_update_page','redion_replace_text','redion_trash_page','redion_move_page',
   'redion_add_schematic','redion_update_schematic','redion_create_database','redion_add_rows','redion_update_row']);
 export const visibleCloudTools=(p:McpPrincipal)=>CLOUD_TOOLS.filter(t=>!writeNames.has(t.name)||p.scopes.includes('redion:write'));
 
@@ -268,6 +302,8 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       }
       return {workspaces:visible};
     }
+    if(name==='redion_list_block_types')
+      return {arten:ANLEGBAR,hinweis:'Seiten: redion_create_page · Datenbanken: redion_create_database · Schaltpläne: redion_add_schematic (rechnet die Leitungen). Das Format einer Art zeigt redion_read_block an einem Beispiel.'};
     if(name==='redion_list_symbols')
       return {raster:10,gruppen:symbolGroups(),symbole:listSymbols(text(args.gruppe,40),text(args.suche,80))};
     const w=required(args.workspaceId,128);
@@ -309,6 +345,23 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       if(!data||data.type!==type)return err('not_found','Kein Block der Art „'+type+'“.');
       return {s,data};
     };
+    /* Ein Block beliebiger Art. */
+    const anyBlock=async(id:string,permission:'lesen'|'bearbeiten')=>{
+      const s=await ablage.hole('saetze',{bereich:w,id});
+      if(!s||s.geloescht||s.tabelle!=='blocks')return err('not_found','Block nicht gefunden.');
+      await role(w,String(s.seite||id),permission);
+      if(s.verschluesselt)return err('encrypted','Verschlüsselte Inhalte sind für die Cloud nicht lesbar.');
+      let data:Record<string,any>;
+      try{data=JSON.parse(String(s.daten||'{}'));}catch{return err('invalid_data','Unlesbarer Block.');}
+      return {s,data};
+    };
+    if(name==='redion_read_block'){
+      const id=required(args.blockId,128);
+      const b=await anyBlock(id,'lesen');
+      const {id:_i,type,text:t,content,parentId,...daten}=b.data;
+      return {blockId:id,typ:type,text:t??'',version:Number(b.s.version)||1,parentId:parentId??null,
+        kinder:Array.isArray(content)?content:[],daten};
+    }
     if(name==='redion_read_schematic'){
       const id=required(args.blockId,128);
       const b=await block(id,'lesen','schaltplan');
@@ -422,6 +475,23 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       await saveCollection(w,c,schema,at);
       return {rowId:id,version,werte:describeRow(schema,satz),inPapierkorb:satz.alive===false};
     }
+    if(name==='redion_update_block'){
+      const id=required(args.blockId,128);
+      const b=await anyBlock(id,'bearbeiten');
+      const ver=expected(args.expectedVersion);
+      if(ver!==Number(b.s.version||1))err('conflict','Block wurde zwischenzeitlich geändert. Bitte erneut lesen.');
+      if(b.data.type==='page'&&b.data.parentTable!=='collection'&&args.daten!==undefined&&args.ersetzen===true)
+        err('invalid_arguments','Eine Seite wird nicht ersetzt — dafür gibt es redion_update_page.');
+      const daten=blockDaten(args.daten);
+      const at=await stamp(w);
+      const fest=Object.fromEntries(Object.entries(b.data).filter(([k])=>RESERVIERT.has(k)));
+      const satz:Record<string,unknown>={...(args.ersetzen===true?fest:b.data),...daten,
+        ...(args.text!==undefined?{text:text(args.text,12000)}:{}),edited:at,
+        ...(args.papierkorb===true?{alive:false,trashedAt:at}:{})};
+      const version=await updateRow(w,id,ver,satz,at);
+      await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',text:'Block über Cloud-MCP geändert',objekt:id});
+      return {blockId:id,version,inPapierkorb:satz.alive===false};
+    }
     if(name==='redion_update_schematic'){
       const id=required(args.blockId,128);
       const b=await block(id,'bearbeiten','schaltplan');
@@ -478,6 +548,25 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     if(name==='redion_trash_page'){
       const at=await stamp(w);
       return update(w,id,ver,{...current.data,alive:false,trashedAt:at});
+    }
+    if(name==='redion_add_block'){
+      const typ=required(args.typ,40);
+      if(!ANLEGBAR.some(a=>a.id===typ))err('invalid_arguments','Unbekannte oder hier nicht anlegbare Blockart „'+typ+'“. redion_list_block_types zeigt alle.');
+      const content=current.data.content;
+      if(!Array.isArray(content))return err('invalid_arguments','Diese Seite hat noch das alte Format. Bitte eine neue Seite anlegen.');
+      const daten=blockDaten(args.daten);
+      const at=await stamp(w);
+      const blockId=(id+'x'+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36)).slice(0,64);
+      const inId=args.inBlockId===undefined?'':required(args.inBlockId,128);
+      const eltern=inId?await anyBlock(inId,'bearbeiten'):null;
+      if(eltern&&String(eltern.s.seite||'')!==String(current.s.seite||id))err('invalid_arguments','inBlockId liegt nicht auf dieser Seite.');
+      await insertRow(w,appBlock(blockId,typ,text(args.text??'',12000),inId||id,at,daten),String(current.s.seite||id),at);
+      if(eltern){
+        const liste=Array.isArray(eltern.data.content)?eltern.data.content.map(String):[];
+        await updateRow(w,inId,Number(eltern.s.version)||1,{...eltern.data,content:[...liste,blockId],edited:at},at);
+        return {blockId,documentId:id,version:ver};
+      }
+      return {...await update(w,id,ver,{...current.data,content:[...content.map(String),blockId]}),blockId};
     }
     if(name==='redion_move_page'){
       const neuId=args.newParentId===undefined?'':text(args.newParentId,128).trim();

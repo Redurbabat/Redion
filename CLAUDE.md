@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 578 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 579 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2260,6 +2260,13 @@ Seither misst er den ORT gegen `Schaltplan.anschlussOrt` — und fand dabei
 gedrehte Zeichen mit Klemmen zwischen den Rasterpunkten (65 statt 70).
 Gezählt am 21. November: `ls pruefungen/lauf/test*.mts | wc -l` sagt 578.*
 
+*Und 579: `test645` — jede Blockart, die eine KI über `redion_add_block`
+anlegen darf, bringt die Seite nicht zum Absturz: leer und mit falschen Daten
+(Text statt Liste, Zahl statt Objekt). Sein erster Lauf fand das Whiteboard:
+ein Text in `shapes` liess die ganze Seite stehen („daten.filter is not a
+function") — das hätte auch ein kaputter Import getan (§18). Gezählt am
+21. November: `ls pruefungen/lauf/test*.mts | wc -l` sagt 579.*
+
 ### Die Befehle
 
 ```txt
@@ -2281,7 +2288,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 578 Läufe
+npm run pruefen                      alle 579 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2378,7 +2385,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 578 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 579 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

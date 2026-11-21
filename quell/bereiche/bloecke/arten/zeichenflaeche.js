@@ -40,7 +40,9 @@ const Zusatz = (() => {
         reihenWache.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     };
     const whiteboard = (block) => {
-        const daten = block.shapes ? JSON.parse(JSON.stringify(block.shapes)) : [];
+        const daten = Array.isArray(block.shapes)
+            ? JSON.parse(JSON.stringify(block.shapes)).filter((s) => s && typeof s === 'object' && !Array.isArray(s))
+            : [];
         const RAUM_VERSION = 1;
         let werkzeug = 'stift';
         let farbe = PALETTE[0]?.[0] ?? '#529cca';
