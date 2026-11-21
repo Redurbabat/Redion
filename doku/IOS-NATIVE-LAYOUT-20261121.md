@@ -34,3 +34,20 @@ Die neue iOS-Layout-Schicht und ihr Regressionstest sind TypeScript-Module (MTS)
 ## Mobiler Browser-Vertrag
 
 CI startet Chromium bei 390 und 428 pt mit Touch-Modus und reduzierter Bewegung sowie bei 820 pt als Negativprobe. Der Test laedt die reale index.html und alle vorhandenen Redion-Stylesheets, ergaenzt nur das iOS-Layoutmodul und prueft Kopfzeile, Mindestgroesse der Touch-Ziele, keine horizontale Ueberbreite und untereinander liegende Terminkarten. Kein Screenshot echter Nutzerinhalte. WebKit/iPhone selbst ist weiterhin NICHT GETESTET.
+
+## Native System-Tab-Bar aus PR #214 (integriert in PR #216)
+
+Das bereits entwickelte native Dock und die SwiftUI-Ansichten wurden als Quellcode in
+PR #216 uebernommen, **ohne** den veralteten CSS-Stand aus PR #214 zu kopieren:
+
+- Apples `UITabBar` mit den bestehenden fuenf Bereichen, systemeigener Darstellung auf iOS 26.
+- SwiftUI-Ansichten fuer Mehr/Einstellungen, Dokumentenbrowser und einfache Textbearbeitung.
+- Die bestehenden Redion-Routen, Kontrollen und IndexedDB-Daten bleiben die einzige Quelle.
+- `ios/install-native-glass-dock.mjs` modifiziert nur die generierte Capacitor-AppDelegate beim IPA-Build.
+- Tests fuer die Bridge, UIKit-Dock-Installation und Texteditor wurden in den iOS-CI-Lauf aufgenommen.
+- Kein zweiter Speicher, keine ungepruefte Cloud-Migration, keine Aenderung an der Web/PWA-Ansicht.
+
+**Offen vor Merge:** Echtes iPhone/Simulator-Abnahmeprotokoll, iOS-26-Optik,
+VoiceOver, Hochziehgesten, Wechsel zwischen nativer und klassischer Ansicht,
+Tastatur, Bearbeitungskonflikte, Offline und Backups. Ein erfolgreicher
+unsignierter Xcode-Build ersetzt keine Installation/Signierung auf dem iPhone.
