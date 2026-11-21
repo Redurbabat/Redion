@@ -60,3 +60,22 @@ jobs:
 
 # Deliberately no IPA packaging, Apple signing, deployment, or merge.
 # Real Xcode/iPhone checks remain manual in Codemagic.
+
+  ios-mobile-layout-browser:
+    name: Native CSS an iPhone-Viewports im Chromium pruefen
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Redion
+        uses: actions/checkout@v4
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.20.0'
+      - name: Install dependencies and Chromium
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Mobile HTML and computed CSS at 390, 428 and 820pt
+        run: node --test ios/native-layout.browser.test.mts
+

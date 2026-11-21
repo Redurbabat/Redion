@@ -30,3 +30,7 @@ Vor einer Freigabe fehlen noch echte iPhone-Tests mit 390/428 pt, Hell/Dunkel, g
 ## Quellenregel E28
 
 Die neue iOS-Layout-Schicht und ihr Regressionstest sind TypeScript-Module (MTS), keine neuen handgeschriebenen JavaScript-Dateien. Das Projektinventar pruefungen/js-bestand.json bleibt unveraendert und wird nicht aufgeweicht. Die unter main bereits roten Schnelltests test109, test550 und test610 sind gesondert zu behandeln.
+
+## Mobiler Browser-Vertrag
+
+CI startet Chromium bei 390 und 428 pt mit Touch-Modus und reduzierter Bewegung sowie bei 820 pt als Negativprobe. Der Test laedt die reale index.html und alle vorhandenen Redion-Stylesheets, ergaenzt nur das iOS-Layoutmodul und prueft Kopfzeile, Mindestgroesse der Touch-Ziele, keine horizontale Ueberbreite und untereinander liegende Terminkarten. Kein Screenshot echter Nutzerinhalte. WebKit/iPhone selbst ist weiterhin NICHT GETESTET.
