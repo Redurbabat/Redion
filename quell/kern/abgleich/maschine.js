@@ -534,6 +534,7 @@ const Wolke = (() => {
         zustand.rolle = a.rolle || '';
         const wegOffen = new Set((Store.getMeta('wolkeBloeckeWeg', []) || []).map((e) => e && e.id).filter(Boolean));
         let uebernommen = 0, unlesbar = 0, gemischt = 0, strittig = 0;
+        const klarSeiten = [];
         for (const s of a.saetze) {
             if (wegOffen.has(s.id))
                 continue;
@@ -553,6 +554,9 @@ const Wolke = (() => {
                 continue;
             }
             satz.wolkeVersion = s.version;
+            if (!s.verschluesselt && !s.geloescht && hatSchluessel() && s.tabelle === 'blocks' &&
+                satz && satz.type === 'page' && satz.parentTable !== 'collection')
+                klarSeiten.push(String(s.id));
             const hier = s.tabelle === 'blocks' ? Store.cache.blocks[s.id]
                 : s.tabelle === 'collections' ? Store.cache.collections[s.id]
                     : Store.cache.views[s.id];
@@ -586,6 +590,12 @@ const Wolke = (() => {
             else if (r.zusammengefuehrt)
                 gemischt++;
             uebernommen++;
+        }
+        if (klarSeiten.length) {
+            const liste = Store.getMeta('wolkeGeteilt', []) || [];
+            const fehlt = klarSeiten.filter(id => !liste.includes(id));
+            if (fehlt.length)
+                Store.setMeta('wolkeGeteilt', [...liste, ...fehlt]);
         }
         if (a.marke)
             Store.setMeta('wolkeMarkeRunter', a.marke);
@@ -683,6 +693,7 @@ const Wolke = (() => {
     const takt = () => {
         clearInterval(uhr);
         uhr = null;
+        liveStellen();
         if (!angemeldet())
             return 0;
         const sek = Number(Store.getMeta('wolkeTakt', '120'));
@@ -691,6 +702,37 @@ const Wolke = (() => {
         const ms = sek * 1000;
         uhr = setInterval(() => { abgleichen().catch(() => { }); }, ms);
         return ms;
+    };
+    const LIVE_MS = 5000;
+    let liveUhr = null;
+    const liveHolen = async () => {
+        if (document.hidden || !angemeldet() || !bereich() || zustand.laeuft || !abgleichErlaubt())
+            return 0;
+        if (schluesselFehlt() || neuAbgleichOffen())
+            return 0;
+        zustand.laeuft = true;
+        try {
+            const r = await runter();
+            if (r.uebernommen) {
+                zustand.letzter = Store.now();
+                melden();
+            }
+            return r.uebernommen;
+        }
+        catch {
+            return 0;
+        }
+        finally {
+            zustand.laeuft = false;
+        }
+    };
+    const liveStellen = () => {
+        clearInterval(liveUhr);
+        liveUhr = null;
+        if (!angemeldet() || Number(Store.getMeta('wolkeTakt', '120')) <= 0)
+            return 0;
+        liveUhr = setInterval(() => { liveHolen().catch(() => { }); }, LIVE_MS);
+        return LIVE_MS;
     };
     const taktSetzen = (wert) => {
         const text = String(wert);
@@ -936,7 +978,7 @@ const Wolke = (() => {
         abgleichErlaubt, abgleichSetzen, kontoLoeschen,
         neuAbgleichOffen, neuAbgleichAntwort,
         schluesselSetzen, hatSchluessel, schluesselFehlt, verschluessele, entschluessele,
-        hoch, runter, abgleichen, dateienAbgleichen, takt, taktSetzen, zuSchicken, seiteVon,
+        hoch, runter, abgleichen, dateienAbgleichen, takt, taktSetzen, liveHolen, liveStellen, zuSchicken, seiteVon,
         geteiltSetzen, istGeteilt, freigeben, freigaben,
         veroeffentlichen, zurueckziehen,
         markeAnlegen, markenListe, markeWeg, geraeteListe, geraetWeg,

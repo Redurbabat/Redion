@@ -188,6 +188,40 @@ test('Cloud-MCP: nur Lesen, danach Schreiben mit Rollen- und Versionskontrolle',
     const edited=await f.rpc(write.access_token,'tools/call',{name:'redion_replace_text',arguments:{
       workspaceId:'ws_test',documentId:first.documentId,find:'Testtext',replacement:'geprüfter Inhalt',expectedVersion:1}});
     assert.equal(JSON.parse(edited.data.result.content[0].text).version,2);
+
+    /* Die Seite steht im Format der App (page-blocks.ts): sichtbar (`alive`),
+       mit `created` und Kindblöcken — sonst läge sie dort im Papierkorb. */
+    const row=await f.store.hole('saetze',{bereich:'ws_test',id:first.documentId});
+    const pageData=JSON.parse(row!.daten);
+    assert.equal(pageData.alive,true,'Seite muss in der App sichtbar sein');
+    assert.equal(pageData.type,'page');
+    assert.equal(pageData.parentTable,'block');
+    assert.ok(pageData.created&&pageData.edited,'created/edited fehlen');
+    assert.equal(pageData.inhalt,undefined,'kein Feld, das die App nicht kennt');
+    assert.equal(pageData.content.length,1);
+    const child=JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:pageData.content[0]}))!.daten);
+    assert.deepEqual([child.type,child.text,child.parentId,child.alive],['text','Ein geprüfter Inhalt',first.documentId,true]);
+
+    const rich=await f.rpc(write.access_token,'tools/call',{name:'redion_create_page',arguments:{workspaceId:'ws_test',
+      title:'Plan',content:'# Ziel\n\n- Punkt\n- [x] Erledigt\n1. Eins\n> Satz\n---\nText',requestId:'request_00002'}});
+    const plan=JSON.parse(rich.data.result.content[0].text);
+    const planData=JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:plan.documentId}))!.daten);
+    const kinds=[];
+    for(const cid of planData.content)kinds.push(JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:cid}))!.daten));
+    assert.deepEqual(kinds.map(k=>k.type),['h1','bullet','todo','number','quote','divider','text']);
+    assert.equal(kinds[2].checked,true);
+    const planRead=JSON.parse((await f.rpc(write.access_token,'tools/call',{name:'redion_read_page',arguments:{
+      workspaceId:'ws_test',documentId:plan.documentId}})).data.result.content[0].text);
+    assert.equal(planRead.content,'# Ziel\n- Punkt\n- [x] Erledigt\n1. Eins\n> Satz\n---\nText');
+    const appended=JSON.parse((await f.rpc(write.access_token,'tools/call',{name:'redion_append_content',arguments:{
+      workspaceId:'ws_test',documentId:plan.documentId,content:'## Neu',expectedVersion:1}})).data.result.content[0].text);
+    assert.equal(appended.version,2);
+    const trashed=JSON.parse((await f.rpc(write.access_token,'tools/call',{name:'redion_trash_page',arguments:{
+      workspaceId:'ws_test',documentId:plan.documentId,expectedVersion:2}})).data.result.content[0].text);
+    assert.equal(trashed.version,3);
+    const trashedData=JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:plan.documentId}))!.daten);
+    assert.deepEqual([trashedData.alive,trashedData.content.length],[false,8]);
+
     const stale=await f.rpc(write.access_token,'tools/call',{name:'redion_update_page',arguments:{
       workspaceId:'ws_test',documentId:first.documentId,title:'Alt',expectedVersion:1}});
     assert.equal(stale.data.result.isError,true);

@@ -770,6 +770,14 @@ const Wolke = (() => {
       (Store.getMeta('wolkeBloeckeWeg', []) || []).map((e: any) => e && e.id).filter(Boolean));
 
     let uebernommen = 0, unlesbar = 0, gemischt = 0, strittig = 0;
+    /* Seiten, die im KLARTEXT ankommen, obwohl dieses Gerät verschlüsselt —
+       das sind Seiten, die eine KI über den Cloud-Link angelegt hat, oder
+       die ein anderes Gerät für KI lesbar gemacht hat. Sie bleiben lesbar:
+       sonst ginge die erste Änderung hier verschlüsselt zurück, und ChatGPT
+       verlöre die Seite, die es eben geschrieben hat (Redur, 21. November
+       2026). Bewusst NICHT über `geteiltSetzen`: das setzt die Marke zurück
+       und schickte den ganzen Bestand noch einmal. */
+    const klarSeiten: string[] = [];
     for (const s of a.saetze) {
       if (wegOffen.has(s.id)) continue;
       let klar = s.daten;
@@ -780,6 +788,8 @@ const Wolke = (() => {
       let satz;
       try { satz = JSON.parse(klar); } catch { continue; }
       satz.wolkeVersion = s.version;
+      if (!s.verschluesselt && !s.geloescht && hatSchluessel() && s.tabelle === 'blocks' &&
+          satz && satz.type === 'page' && satz.parentTable !== 'collection') klarSeiten.push(String(s.id));
 
       const hier = s.tabelle === 'blocks' ? Store.cache.blocks[s.id]
                  : s.tabelle === 'collections' ? Store.cache.collections[s.id]
@@ -826,6 +836,11 @@ const Wolke = (() => {
       uebernommen++;
     }
 
+    if (klarSeiten.length) {
+      const liste: string[] = Store.getMeta('wolkeGeteilt', []) || [];
+      const fehlt = klarSeiten.filter(id => !liste.includes(id));
+      if (fehlt.length) Store.setMeta('wolkeGeteilt', [...liste, ...fehlt]);
+    }
     if (a.marke) Store.setMeta('wolkeMarkeRunter', a.marke);
     zustand.runter += uebernommen;
     zustand.unlesbar = unlesbar;
@@ -959,6 +974,8 @@ const Wolke = (() => {
   const takt = (): number => {
     clearInterval(uhr);
     uhr = null;
+    /* Das Live-Holen hängt am selben Takt-Schalter (unten). */
+    liveStellen();
     if (!angemeldet()) return 0;
     const sek = Number(Store.getMeta('wolkeTakt', '120'));
     /* `0` heisst „nur beim Öffnen und von Hand" — der Weg über
@@ -970,6 +987,42 @@ const Wolke = (() => {
     const ms = sek * 1000;
     uhr = setInterval(() => { abgleichen().catch(() => {}); }, ms);
     return ms;
+  };
+
+  /* ------------------------------------------------------------------------
+   * LIVE HOLEN — was eine KI oder ein anderes Gerät schreibt, erscheint
+   * hier innerhalb weniger Sekunden (Redur, 21. November 2026: „wenn chat
+   * gpt etwas erstelle das ich über windows app und ios app direk alles
+   * sofort sehen kann ohne selber etwas mache").
+   * ------------------------------------------------------------------------
+   * Nur HOLEN, nur solange das Fenster sichtbar ist, und nur wenn nichts
+   * anderes läuft. Ein Ruf auf /sync/runter mit der Marke liest über den
+   * Index (bereich, geaendert) und liefert leer zurück, wenn nichts Neues
+   * da ist — ein Ruf alle fünf Sekunden ist im Gratis-Tarif tragbar
+   * (100 000 Rufe am Tag, gemessen am 21. November: ein Gerät, das zwölf
+   * Stunden offen ist, braucht 8 640). Hochladen bleibt beim Takt: wer
+   * tippt, soll nicht alle fünf Sekunden ein Paket verschicken.
+   *
+   * „Nur von Hand" (wolkeTakt 0) heisst auch hier: kein Live-Holen. */
+  const LIVE_MS = 5000;
+  let liveUhr: any = null;
+  const liveHolen = async () => {
+    if (document.hidden || !angemeldet() || !bereich() || zustand.laeuft || !abgleichErlaubt()) return 0;
+    if (schluesselFehlt() || neuAbgleichOffen()) return 0;
+    zustand.laeuft = true;
+    try {
+      const r = await runter();
+      if (r.uebernommen) { zustand.letzter = Store.now(); melden(); }
+      return r.uebernommen;
+    } catch { return 0; }
+    finally { zustand.laeuft = false; }
+  };
+  const liveStellen = () => {
+    clearInterval(liveUhr);
+    liveUhr = null;
+    if (!angemeldet() || Number(Store.getMeta('wolkeTakt', '120')) <= 0) return 0;
+    liveUhr = setInterval(() => { liveHolen().catch(() => {}); }, LIVE_MS);
+    return LIVE_MS;
   };
 
   /**
@@ -1279,7 +1332,7 @@ const Wolke = (() => {
            abgleichErlaubt, abgleichSetzen, kontoLoeschen,
            neuAbgleichOffen, neuAbgleichAntwort,
            schluesselSetzen, hatSchluessel, schluesselFehlt, verschluessele, entschluessele,
-           hoch, runter, abgleichen, dateienAbgleichen, takt, taktSetzen, zuSchicken, seiteVon,
+           hoch, runter, abgleichen, dateienAbgleichen, takt, taktSetzen, liveHolen, liveStellen, zuSchicken, seiteVon,
            geteiltSetzen, istGeteilt, freigeben, freigaben,
            veroeffentlichen, zurueckziehen,
            markeAnlegen, markenListe, markeWeg, geraeteListe, geraetWeg,

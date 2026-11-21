@@ -27,6 +27,7 @@ import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { starte } from '../../server/pruefserver.ts';
 import { kennung, abdruck } from '../../server/kern.ts';
+import { appBlock, appPage, stampAfter } from '../../server/mcp/page-blocks.ts';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const require = createRequire(import.meta.url);
@@ -217,6 +218,52 @@ try {
   const danach = (await serverSaetze()).find(s => String(s.id) === 'b643_neu');
   pruef('§4 Mit dem Schlüssel geht er hinaus — verschlüsselt', !!danach && Number(danach.verschluesselt) === 1,
     danach ? 'verschluesselt=' + danach.verschluesselt : 'fehlt');
+
+  /* ====================================================================
+   * §6 · Was ChatGPT anlegt, erscheint von selbst — und bleibt lesbar
+   * Redur, 21. November 2026: „wenn chat gpt etwas erstelle das ich über
+   * windows app und ios app direk alles sofort sehen kann ohne selber
+   * etwas mache". Die Seite wird so geschrieben, wie der Cloud-MCP sie
+   * schreibt (server/mcp/page-blocks.ts) — die App wird NICHT angestossen.
+   * ==================================================================*/
+  console.log('\n§6 Live holen');
+  const latest = (await serverSaetze()).map(s => String(s.geaendert || '')).sort().pop();
+  const at = stampAfter(latest);
+  const kind = appBlock('gpt643b0', 'h1', 'Von ChatGPT', 'gpt643', at);
+  const gptSeite = appPage('gpt643', 'ChatGPT-Seite', null, ['gpt643b0'], at);
+  for (const [satz, seite] of [[kind, 'gpt643'], [gptSeite, 'gpt643']] as const)
+    await kern.ablage.setze('saetze', { id: satz.id, bereich: BEREICH, tabelle: 'blocks', daten: JSON.stringify(satz),
+      verschluesselt: 0, seite, version: 1, geaendert: at, geloescht: 0, vonGeraet: 'Cloud-MCP' });
+  const t0 = Date.now();
+  let da = false;
+  while (!da && Date.now() - t0 < 12000) {
+    await p4.waitForTimeout(500);
+    da = await p4.evaluate(() => !!Store.getBlock('gpt643') && !!Store.getBlock('gpt643b0'));
+  }
+  const dauer = Date.now() - t0;
+  pruef('§6 Die Seite kommt ohne Zutun an — in weniger als 8 s', da && dauer < 8000, da ? dauer + ' ms' : 'nach 12 s nicht da');
+  const imBaum = await p4.evaluate(() => ({
+    wurzel: Store.rootPages().some((p: any) => p.id === 'gpt643'),
+    kinder: Store.childrenOf('gpt643').map((b: any) => b.type + ':' + b.text),
+    geteilt: (Store.getMeta('wolkeGeteilt', []) || []).includes('gpt643')
+  }));
+  pruef('§6 Sie steht in der Seitenliste, nicht im Papierkorb', imBaum.wurzel);
+  pruef('§6 … mit ihrem Inhalt', JSON.stringify(imBaum.kinder) === '["h1:Von ChatGPT"]', JSON.stringify(imBaum.kinder));
+  pruef('§6 Sie bleibt für die KI lesbar (wolkeGeteilt)', imBaum.geteilt);
+  await p4.evaluate(async () => {
+    Store.updateBlock('gpt643b0', { text: 'Von ChatGPT, ergänzt hier' });
+    await Wolke.abgleichen();
+  });
+  const zurueck = (await serverSaetze()).find(s => String(s.id) === 'gpt643b0');
+  pruef('§6 Eine Änderung hier geht im Klartext zurück — ChatGPT kann sie lesen',
+    !!zurueck && Number(zurueck.verschluesselt) === 0 && /ergänzt hier/.test(String(zurueck.daten)),
+    zurueck ? 'verschluesselt=' + zurueck.verschluesselt : 'fehlt');
+  pruef('§6 Alles andere bleibt verschlüsselt', (await serverSaetze()).every(s =>
+    Number(s.verschluesselt) === 1 || String(s.id).startsWith('gpt643') || String(s.id).startsWith('pruef')),
+    (await serverSaetze()).filter(s => Number(s.verschluesselt) !== 1).map(s => s.id).join(','));
+  /* „Nur von Hand" heisst auch: kein Live-Holen. */
+  const handAus = await p4.evaluate(() => { Store.setMeta('wolkeTakt', '0'); Wolke.takt(); return Wolke.liveStellen(); });
+  pruef('§6 Mit „nur von Hand" läuft kein Live-Holen', handAus === 0, String(handAus));
 
   pruef('Keine Seitenfehler', fehler.length === 0, fehler.join(' | '));
 } finally {
