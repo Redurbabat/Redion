@@ -160,7 +160,7 @@ test('Cloud-Router: keine Datenbank, keine OAuth-Tokens, kein Zugang',async()=>{
     const unauth=await handleCloudMcp(new Request(origin+'/mcp/cloud',{method:'POST',
       body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/list'})}),f.env);
     assert.equal(unauth.status,401);
-    assert.match(unauth.headers.get('www-authenticate')!,/scope="redion:read"/);
+    assert.match(unauth.headers.get('www-authenticate')!,/scope="redion:read redion:write"/);
   }finally{f.close();}
 });
 test('Cloud-MCP: nur Lesen, danach Schreiben mit Rollen- und Versionskontrolle',async()=>{

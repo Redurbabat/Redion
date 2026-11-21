@@ -87,9 +87,14 @@ export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,access
     const header=request.headers.get('authorization')||'';
     const match=/^Bearer (rim_at_[A-Za-z0-9_-]{43})$/.exec(header);
     const principal=match?await oauth.authenticate(match[1]!):null;
+    /* Die Herausforderung fragt Lesen UND Schreiben an (Redur, 21. November
+       2026: ChatGPT bekam mit scope="redion:read" nie Schreibwerkzeuge). Das
+       erteilt kein Schreibrecht: auf der Zustimmungsseite ist „Schreiben
+       erlauben" ausgeschaltet, bis der Mensch den Haken selbst setzt
+       (oauth.ts, allowWrite). */
     if(!principal||!principal.scopes.includes('redion:read'))
       return json({error:'unauthorized',message:'Erneute OAuth-Anmeldung erforderlich.'},401,{
-        'WWW-Authenticate':'Bearer resource_metadata="'+issuer+'/.well-known/oauth-protected-resource/mcp/cloud", scope="redion:read"'});
+        'WWW-Authenticate':'Bearer resource_metadata="'+issuer+'/.well-known/oauth-protected-resource/mcp/cloud", scope="redion:read redion:write"'});
     /* A stateless MCP server does not provide a separate SSE GET stream. */
     if(request.method==='GET')return json({error:'method_not_allowed'},405,{Allow:'POST'});
     if(request.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase()!=='application/json')
