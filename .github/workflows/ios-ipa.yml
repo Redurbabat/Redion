@@ -2,6 +2,9 @@ name: Redion iPhone IPA
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - build/ios-ipa-main-20261122
