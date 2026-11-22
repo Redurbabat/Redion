@@ -1,4 +1,5 @@
 name: Redion iPhone IPA
+# TEMPORARY BUILD-ONLY BRANCH: do not merge this workflow trigger.
 
 on:
   workflow_dispatch:
