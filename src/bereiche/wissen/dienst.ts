@@ -118,25 +118,14 @@ const WissenDienst = (() => {
    *   `ease` UND `wdh` BLEIBEN STEHEN, solange FSRS läuft. Wer zurückschaltet,
    *   landet auf seinem letzten SM-2-Stand statt auf der Vorgabe.
    */
-  const planen = (k: any, note: number): any => {
+  const berechnePlan = (k: any, note: number, jetzt: Date, art: 'sm2' | 'fsrs') => {
     const sr = Object.assign({ ease: 2.5, intervall: 0, wdh: 0 }, k.sr || {});
-    /* Der Verlauf ist additiv. Die Rechnung darunter bleibt absichtlich
-       dieselbe SM-2-Rechnung wie bisher; insbesondere verändert ein Fehler
-       die Leichtigkeit nicht. Statistik und Fehlertraining lesen nur dieses
-       objektbasierte Protokoll und verschieben keinen Termin von selbst. */
-    const vorher = {
-      due: String(sr.faellig || ''),
-      interval: Number(sr.intervall) || 0,
-      ease: Number(sr.ease) || 2.5,
-      repetitions: Number(sr.wdh) || 0
-    };
-    const art = verfahren();
     let uebergang = false;
     if (art === 'fsrs') {
       /* Wie viele Tage sind seit der letzten Antwort vergangen? Ohne letzte
          Antwort ist es die erste — dann kennt der Kern den Fall selbst. */
       const zuletzt = sr.zuletzt ? new Date(String(sr.zuletzt)).getTime() : 0;
-      const tage = zuletzt ? Math.max(0, (Date.now() - zuletzt) / 86400000) : 0;
+      const tage = zuletzt ? Math.max(0, (jetzt.getTime() - zuletzt) / 86400000) : 0;
       let stand = (sr.fsrs && typeof sr.fsrs === 'object' &&
                    Number(sr.fsrs.stabilitaet) > 0)
         ? { stabilitaet: Number(sr.fsrs.stabilitaet),
@@ -162,10 +151,28 @@ const WissenDienst = (() => {
       sr.intervall = sr.wdh === 1 ? 1 : sr.wdh === 2 ? 6 : Math.round(sr.intervall * sr.ease);
       sr.ease = Math.max(1.3, sr.ease + (0.1 - (4 - note) * (0.08 + (4 - note) * 0.02)));
     }
-    const d = new Date();
+    const d = new Date(jetzt);
     if (sr.intervall === 0) d.setMinutes(d.getMinutes() + 10);
     else d.setDate(d.getDate() + sr.intervall);
     sr.faellig = d.toISOString();
+    return { sr, uebergang };
+  };
+
+  const planVorschau = (k: any, jetzt = new Date()): number[] => {
+    const art = verfahren();
+    return [1, 2, 3, 4].map(note => berechnePlan(k, note, jetzt, art).sr.intervall);
+  };
+
+  const planen = (k: any, note: number): any => {
+    const art = verfahren();
+    const { sr, uebergang } = berechnePlan(k, note, new Date(), art);
+    const altSr = k.sr || {};
+    const vorher = {
+      due: String(altSr.faellig || ''),
+      interval: Number(altSr.intervall) || 0,
+      ease: Number(altSr.ease) || 2.5,
+      repetitions: Number(altSr.wdh) || 0
+    };
     sr.zuletzt = Store.now();
     const alt: Record<string, any> = Array.isArray(k.reviewVerlauf)
       ? Object.fromEntries(k.reviewVerlauf
@@ -681,7 +688,7 @@ const WissenDienst = (() => {
     return false;
   };
 
-  return { esc, heute, WOCHENTAG, MONAT, datumLang, unscharf, zeitKurz, planen,
+  return { esc, heute, WOCHENTAG, MONAT, datumLang, unscharf, zeitKurz, planen, planVorschau,
            alsMarkdown, ausMarkdown, statistikZahlen, sauber, istUnter };
 })();
 

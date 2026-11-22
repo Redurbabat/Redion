@@ -1477,6 +1477,7 @@ const Planflaeche = (() => {
       pruefPanel.innerHTML = kopf + `<div class="sp-pruef-werkzeuge">` +
         `<label>Filtern<input type="search" class="sp-pruef-suche" value="${esc(pruefSuche)}" placeholder="Kennzeichen, Typ, Fundstelle …" /></label>` +
         `<button type="button" data-p-a="export">${pruefAnsicht === 'diagnose' ? 'Bericht TXT' : 'Export CSV'}</button>` +
+        `<button type="button" data-p-a="json">Prüfbericht JSON</button>` +
         `<button type="button" data-p-a="aufraeumen" title="Redundante Zwischenpunkte entfernen – Anschlusspunkte bleiben erhalten">Leitungen aufräumen</button>` +
         `</div><div class="sp-pruef-liste">${liste}</div>`;
       pruefFiltern();
@@ -1524,10 +1525,8 @@ const Planflaeche = (() => {
     };
     const pruefHerunterladen = (text: string, datei: string, mime: string): void => {
       if (z.zieht) { UI.toast('Erst den laufenden Zug beenden.'); return; }
-      const blob = new Blob([text], {type:mime});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href=url; a.download=datei; a.click();
-      setTimeout(()=>URL.revokeObjectURL(url),4000);
+      const blob = new Blob([text], { type: mime });
+      void Ereignisse.frageAsync(ARTEN.frageDateiExport, { blob, name: datei });
     };
     pruefPanel.addEventListener('input', e => {
       const el = e.target as HTMLInputElement;
@@ -1554,6 +1553,11 @@ const Planflaeche = (() => {
         return;
       }
       if (b.dataset.pA === 'schliessen') { pruefungOffen = false; pruefPanel.hidden = true; kopfMalen(); return; }
+      if (b.dataset.pA === 'json') {
+        pruefHerunterladen((window as any).Planpruefung.berichtJson(pruefDaten()),
+          'Redion-Schaltplan-Pruefbericht.json', 'application/json;charset=utf-8');
+        return;
+      }
       if (b.dataset.pA === 'export') {
         const r=pruefDaten(), P=(window as any).Planpruefung;
         const daten=pruefAnsicht==='diagnose' ? P.berichtText(r) :

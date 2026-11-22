@@ -184,6 +184,84 @@ const Gedankenkarte = (() => {
     sicht: { x: 0, y: 0, z: 1 },
   });
 
+  const MARKDOWN_GROESSE = 256 * 1024;
+  const MARKDOWN_MAX_KNOTEN = 250;
+  const MARKDOWN_MAX_TIEFE = 20;
+
+  const ausMarkdown = (markdown: string, dateiname = 'Zentrales Thema'): GkKarte => {
+    if (markdown.length > MARKDOWN_GROESSE) throw new Error('Die Markdown-Datei ist zu gross.');
+    const karte = neueKarte(dateiname);
+    const abschnitte: Array<{ ebene: number; id: string }> = [];
+    const liste: Array<{ einzug: number; id: string }> = [];
+    const text = (s: string): string => s.trim().replace(/\\([\\`*_[\]#<>!&{}~+.\-()|])/g, '$1');
+    const fuegeHinzu = (titel: string, eltern: string): string => {
+      if (karte.knoten.length >= MARKDOWN_MAX_KNOTEN)
+        throw new Error('Eine Markdown-Datei darf höchstens 250 Themen enthalten.');
+      const id = 'md-' + karte.knoten.length;
+      karte.knoten.push({ id, text: titel, eltern });
+      return id;
+    };
+    let titelGelesen = false;
+    let frontmatter = false;
+    let codeZaun = '';
+    for (const [nummer, zeile] of markdown.replace(/^\uFEFF/, '').split(/\r\n?|\n/).entries()) {
+      if (nummer === 0 && zeile.trim() === '---') { frontmatter = true; continue; }
+      if (frontmatter) { if (/^(---|\.\.\.)\s*$/.test(zeile)) frontmatter = false; continue; }
+      const zaun = /^\s*(`{3,}|~{3,})/.exec(zeile)?.[1];
+      if (codeZaun) {
+        if (zaun && zaun[0] === codeZaun[0] && zaun.length >= codeZaun.length &&
+            zeile.trim() === zaun) codeZaun = '';
+        continue;
+      }
+      if (zaun) { codeZaun = zaun; continue; }
+      const ueberschrift = /^ {0,3}(#{1,6})[ \t]+(.+?)\s*$/.exec(zeile);
+      if (ueberschrift && ueberschrift[1] && ueberschrift[2]?.trim()) {
+        const ebene = ueberschrift[1].length;
+        const titel = text(ueberschrift[2].replace(/[ \t]+#+$/, ''));
+        liste.length = 0;
+        if (!titelGelesen && karte.knoten.length === 1 && ebene === 1) {
+          const wurzel = karte.knoten[0];
+          if (wurzel) wurzel.text = titel;
+          titelGelesen = true;
+          continue;
+        }
+        while ((abschnitte.at(-1)?.ebene ?? 0) >= ebene) abschnitte.pop();
+        const id = fuegeHinzu(titel, abschnitte.at(-1)?.id ?? 'w');
+        abschnitte.push({ ebene, id });
+        continue;
+      }
+      const punkt = /^([ \t]*)(?:[-+*]|\d+[.)])[ \t]+(\S.*)$/.exec(zeile);
+      if (!punkt || punkt[1] === undefined || !punkt[2]) continue;
+      const einzug = punkt[1].replace(/\t/g, '    ').length;
+      while ((liste.at(-1)?.einzug ?? -1) >= einzug) liste.pop();
+      if (abschnitte.length + liste.length >= MARKDOWN_MAX_TIEFE)
+        throw new Error('Die Markdown-Gliederung ist zu tief.');
+      const id = fuegeHinzu(text(punkt[2]), liste.at(-1)?.id ?? abschnitte.at(-1)?.id ?? 'w');
+      liste.push({ einzug, id });
+    }
+    if (!titelGelesen && karte.knoten.length === 1)
+      throw new Error('Die Datei enthält keine Markdown-Überschriften oder Listen.');
+    return karte;
+  };
+
+  // Markdown enthält auch Themen, deren Äste gerade eingeklappt sind.
+  const alsMarkdown = (karte: GkKarte): string => {
+    const { wurzel, kinder } = baum(karte);
+    if (!wurzel) return '';
+    const knoten = new Map(karte.knoten.map(k => [k.id, k]));
+    const zeile = (id: string): string => (knoten.get(id)?.text ?? '').replace(/\s+/g, ' ').trim()
+      .replace(/[\\`*_[\]#<>!&{}~+.\-()|]/g, '\\$&') || 'Ohne Titel';
+    const ausgabe = ['# ' + zeile(wurzel), ''];
+    const stapel = (kinder[wurzel] ?? []).slice().reverse().map(id => ({ id, tiefe: 0 }));
+    while (stapel.length) {
+      const k = stapel.pop();
+      if (!k) break;
+      ausgabe.push('  '.repeat(k.tiefe) + '- ' + zeile(k.id));
+      for (const id of (kinder[k.id] ?? []).slice().reverse()) stapel.push({ id, tiefe: k.tiefe + 1 });
+    }
+    return ausgabe.join('\n') + '\n';
+  };
+
   /* ══ FERTIGE VORLAGEN (E628) ════════════════════════════════════════════
      Redur: „fertige Vorlagen usw." — sechs Karten, die man kennt, statt
      eines leeren Blatts.
@@ -616,6 +694,8 @@ const Gedankenkarte = (() => {
            steht dort, und sie fragt nach, wenn die Karte nicht leer ist. */
         '<button data-a="vorlage" title="Fertige Vorlage einsetzen" ' +
           'aria-label="Fertige Vorlage einsetzen" aria-haspopup="menu">▤</button>' +
+        '<button data-a="markdown" title="Markdown-Gliederung importieren oder exportieren" ' +
+          'aria-label="Markdown-Gliederung" aria-haspopup="menu">MD</button>' +
         '<span class="gk-trenn"></span>' +
         /* Die vier Zoomknöpfe bleiben beieinander — am Telefon bricht die
            Leiste sonst zwischen „−" und „＋" um, und ein Regler in zwei
@@ -1344,6 +1424,73 @@ const Gedankenkarte = (() => {
       });
     };
 
+    const markdownEinfuegen = (text: string, titel?: string): void => {
+      if (!w.isConnected) return;
+      try {
+        const importiert = ausMarkdown(text, titel);
+        let fokus = 'w';
+        aendere(() => {
+          if (karteLeer()) { karte = importiert; return; }
+          const wurzel = baum(karte).wurzel;
+          const neueIds = new Map(importiert.knoten.map(k => [k.id, uid()]));
+          fokus = neueIds.get('w') ?? 'w';
+          for (const k of importiert.knoten) {
+            karte.knoten.push({
+              ...k,
+              id: neueIds.get(k.id) ?? k.id,
+              eltern: k.eltern ? (neueIds.get(k.eltern) ?? wurzel) : wurzel,
+            });
+          }
+        });
+        gewaehlteVerb = null;
+        waehle(fokus);
+        einpassen(1, true);
+        UI.toast(importiert.knoten.length + ' Markdown-Themen importiert');
+      } catch (fehler) {
+        UI.toast(fehler instanceof Error ? fehler.message : 'Markdown konnte nicht gelesen werden.');
+      }
+    };
+
+    const markdownEinlesen = (): void => {
+      const eingang = document.createElement('input');
+      eingang.type = 'file';
+      eingang.accept = '.md,.markdown,.txt,text/markdown,text/plain';
+      eingang.addEventListener('change', async () => {
+        const datei = eingang.files?.[0];
+        if (!datei) return;
+        try {
+          if (datei.size > MARKDOWN_GROESSE) throw new Error('Die Markdown-Datei ist zu gross.');
+          markdownEinfuegen(await datei.text(), datei.name.replace(/\.[^.]+$/, '') || undefined);
+        } catch (fehler) {
+          UI.toast(fehler instanceof Error ? fehler.message : 'Markdown konnte nicht gelesen werden.');
+        }
+      }, { once: true });
+      eingang.click();
+    };
+
+    const markdownMenue = (anker: HTMLElement): void => {
+      const r = anker.getBoundingClientRect();
+      const m = UI.menu(
+        '<button data-md="import">Markdown-Datei öffnen</button>' +
+        '<button data-md="paste">Markdown-Text einfügen</button>' +
+        '<button data-md="export">Gliederung als Markdown speichern</button>',
+        r.left, r.bottom + 6, { titel: 'Markdown-Gliederung' });
+      m.addEventListener('click', e => {
+        const aktion = (e.target as Element).closest<HTMLElement>('[data-md]')?.dataset.md;
+        if (!aktion) return;
+        m.remove();
+        if (aktion === 'import') { markdownEinlesen(); return; }
+        if (aktion === 'paste') {
+          void Dialog.mehrzeilig('Markdown-Gliederung einfügen').then(text => {
+            if (text) markdownEinfuegen(text, 'Markdown-Gliederung');
+          });
+          return;
+        }
+        const blob = new Blob([alsMarkdown(karte)], { type: 'text/markdown;charset=utf-8' });
+        void Ereignisse.frageAsync(ARTEN.frageDateiExport, { blob, name: 'Redion-Gedankenkarte.md' });
+      });
+    };
+
     /* --- Ereignisse ------------------------------------------------------- */
     const elVon = (e: Event): Element | null => e.target instanceof Element ? e.target : null;
 
@@ -1364,6 +1511,7 @@ const Gedankenkarte = (() => {
         case 'groesser': zoomen(1.25); break;
         case 'passend':  einpassen(4, true); break;
         case 'vorlage':  vorlagenMenue(b); break;
+        case 'markdown': markdownMenue(b); break;
         case 'zurueck': {
           const roh = verlauf.zurueck(abbild());
           if (roh === null) return;
@@ -1599,7 +1747,7 @@ const Gedankenkarte = (() => {
     return w;
   };
 
-  return { zeichne, leseKarte, neueKarte, aufbauen, baum, PALETTE, farbeVon };
+  return { zeichne, leseKarte, neueKarte, aufbauen, baum, ausMarkdown, alsMarkdown, PALETTE, farbeVon };
 })();
 
 (window as any).Gedankenkarte = Gedankenkarte;

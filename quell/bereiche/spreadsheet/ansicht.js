@@ -859,6 +859,44 @@ const SpreadsheetView = (() => {
                     feld.scrollTop = unten - feld.clientHeight;
             }
         };
+        const formelFehlerZeigen = async () => {
+            const ergebnis = K.rechneMappe(block.mappe);
+            zirkel = ergebnis.zirkel || [];
+            alles();
+            const fehler = [];
+            for (const b of block.mappe.blaetter) {
+                for (const [adresse, zelle] of Object.entries(b.zellen || {})) {
+                    const z = zelle;
+                    if (z?.formel && typeof z.wert === 'string' && erklaere(z.wert) && R.gueltig(adresse)) {
+                        fehler.push({ blattId: b.id, name: b.name, adresse, wert: z.wert });
+                    }
+                }
+            }
+            if (!fehler.length) {
+                UI.toast('Keine Formelfehler in dieser Arbeitsmappe.');
+                return;
+            }
+            const anzeige = fehler.slice(0, 30);
+            const antwort = await Dialog.wahl({
+                titel: fehler.length + ' Formelfehler',
+                text: 'Wähle eine Zelle aus.' + (fehler.length > anzeige.length
+                    ? ' Angezeigt werden die ersten ' + anzeige.length + ' Fehler.' : ''),
+                knoepfe: [
+                    ...anzeige.map((e, i) => ({
+                        id: String(i), text: e.name + ' · ' + e.adresse + ' · ' + e.wert, hinweis: erklaere(e.wert),
+                    })),
+                    { id: '', text: 'Schliessen' },
+                ],
+            });
+            if (!antwort || !w.isConnected)
+                return;
+            const ziel = anzeige[Number(antwort)];
+            if (!ziel)
+                return;
+            zuBlatt(ziel.blattId);
+            waehle(ziel.adresse);
+            feld.querySelector('[data-a="' + ziel.adresse + '"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        };
         const waehleBereich = (vonZ, vonS, bisZ, bisS) => {
             anker = R.schreibe(vonZ, vonS);
             gewaehlt = R.schreibe(bisZ, bisS);
@@ -1555,6 +1593,7 @@ const SpreadsheetView = (() => {
                     '<button data-a="xlsx"><span class="mi">📊</span>Als Excel speichern</button>' +
                     '<button data-a="csv"><span class="mi">📄</span>Als CSV speichern</button>' +
                     '<button data-a="ods"><span class="mi">📙</span>Als OpenDocument (.ods) speichern</button><hr>' +
+                    '<button data-a="formel-fehler">Formelfehler finden</button>' +
                     '<button data-a="regeln"><span class="mi">🎨</span>Bedingte Formatierung' +
                     ((blatt.regeln || []).length
                         ? '<span class="ms">' + (blatt.regeln || []).length + '</span>' : '') +
@@ -1576,6 +1615,10 @@ const SpreadsheetView = (() => {
                         return gibAus('csv');
                     if (t.dataset.a === 'ods')
                         return gibAus('ods');
+                    if (t.dataset.a === 'formel-fehler') {
+                        void formelFehlerZeigen();
+                        return;
+                    }
                     if (t.dataset.a === 'regeln')
                         return regelFenster();
                     if (t.dataset.a === 'zeilen')

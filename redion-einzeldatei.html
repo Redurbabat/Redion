@@ -27025,6 +27025,63 @@ body[data-bewegung="ruhig"] #page > .pg-tools > button{
   #page > .pg-tools > button{border-color:var(--line)}
 }
 
+
+/* iPhone UI polish (2026-11): floating optical dock and readable settings.
+   Visual-only: existing navigation handlers, state and data remain unchanged.
+   Scope to touch-width layouts; do not affect Windows/macOS or desktop. */
+@media (max-width:760px) and (pointer:coarse) {
+  body:not([data-kontrast="hoch"]) #handy-oben {
+    background:color-mix(in srgb,var(--bg-side) 48%,transparent);
+    border:1px solid color-mix(in srgb,var(--text) 15%,transparent);
+    border-radius:999px;
+    box-shadow:inset 0 1px 0 #ffffff38,
+               inset 0 -1px 0 #ffffff0b,
+               0 12px 30px #00000030,0 2px 8px #00000017;
+    -webkit-backdrop-filter:blur(28px) saturate(175%);
+    backdrop-filter:blur(28px) saturate(175%);
+    isolation:isolate;
+  }
+  body:not([data-kontrast="hoch"]) #handy-oben::after {
+    content:"";position:absolute;inset:1px;border-radius:inherit;
+    background:linear-gradient(160deg,#ffffff1c,transparent 37%,#ffffff06 75%);
+    pointer-events:none;z-index:0;
+  }
+  /* Do not override the swipe-up navigation's touch-action:none contract. */
+  body #handy-oben > button {position:relative;z-index:1;min-width:0}
+  /* The existing dock icon transform/transition remains authoritative. */
+  body:not([data-kontrast="hoch"]) #handy-oben #ho-pille {
+    border-radius:999px;
+    background:color-mix(in srgb,var(--accent) 24%,#ffffff13);
+    box-shadow:inset 0 1px 1px #ffffff38,inset 0 -1px 1px #00000014,
+               0 3px 12px #00000014;
+    -webkit-backdrop-filter:blur(18px) saturate(145%);
+    backdrop-filter:blur(18px) saturate(145%);
+  }
+  /* Do not override page-level bottom spacing: the existing mobile
+     layout owns dock clearance for editors, sheets and scroll containers. */
+  /* Settings: let the native-width panel scroll without hiding its footer. */
+  body .overlay:has(.einst-fenster) {padding:0;align-items:stretch}
+  body .einst-fenster {height:100dvh;max-height:100dvh;border-radius:0;border:0}
+  body .einst-nav {overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  /* Keep the existing 52px mobile settings rows and two-page navigation. */
+  body .einst-nav button {border-radius:12px}
+  body .einst-inhalt {overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+    padding-bottom:calc(32px + env(safe-area-inset-bottom,0px))}
+  body .einst-zu {min-width:44px;min-height:44px}
+}
+@media (max-width:760px) and (pointer:coarse) and (prefers-reduced-transparency:reduce),
+       (max-width:760px) and (pointer:coarse) and (prefers-contrast:more),
+       (max-width:760px) and (pointer:coarse) and (forced-colors:active) {
+  body #handy-oben,body #handy-oben #ho-pille {
+    background:var(--bg-card);-webkit-backdrop-filter:none;backdrop-filter:none;
+    box-shadow:inset 0 0 0 1px var(--line);
+  }
+  body #handy-oben::after {display:none}
+}
+@media (max-width:760px) and (pointer:coarse) and (prefers-reduced-motion:reduce) {
+  /* Reduced-motion icon behavior is already handled by bausteine.css. */
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/bibliothek-studio.css ===== */
@@ -28329,6 +28386,49 @@ body[data-ui-shell="glass-wheel"][data-kontrast="hoch"],
 body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.sp-kopf,.sp-werkzeuge,.sp-ink-tools,.sp-kontextleiste,.sp-palette,.sp-studio,.document-toolbar,.document-drawingbar,.menu),
 :root[data-schema="kontrast"] body[data-ui-shell="glass-wheel"] :is(.sp-kopf,.sp-werkzeuge,.sp-ink-tools,.sp-kontextleiste,.sp-palette,.sp-studio,.document-toolbar,.document-drawingbar,.menu){
   background:var(--bg-card);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;
+}
+
+
+/* iPhone: reconcile the Glass Wheel shell with the shared floating dock.
+   This file loads after studio.css and previously replaced the dock material,
+   pushed the home-indicator inset INSIDE the capsule and set z-index to 100.
+   Keep the established navigation geometry and gesture hit targets. */
+@media (max-width:760px) and (pointer:coarse) {
+  body[data-ui-shell="glass-wheel"]:not([data-kontrast="hoch"]) #handy-oben {
+    bottom:calc(9px + env(safe-area-inset-bottom,0px));
+    padding:5px 6px;
+    border-radius:999px;
+    border-color:color-mix(in srgb,var(--text) 15%,transparent);
+    background:color-mix(in srgb,var(--bg-side) 48%,transparent);
+    box-shadow:inset 0 1px 0 #ffffff38,inset 0 -1px 0 #ffffff0b,
+               0 12px 30px #00000030,0 2px 8px #00000017;
+    -webkit-backdrop-filter:blur(28px) saturate(175%);
+    backdrop-filter:blur(28px) saturate(175%);
+  }
+  body[data-ui-shell="glass-wheel"] #handy-oben {
+    z-index:401;
+    bottom:calc(9px + env(safe-area-inset-bottom,0px));
+    padding-bottom:5px;
+  }
+  body[data-ui-shell="glass-wheel"] #handy-oben > button {
+    min-height:48px;
+    padding:5px 2px 4px;
+  }
+  body[data-ui-shell="glass-wheel"]:not([data-kontrast="hoch"]) #ho-pille {
+    background:color-mix(in srgb,var(--accent) 24%,#ffffff13);
+    border-radius:999px;
+  }
+}
+@media (max-width:760px) and (pointer:coarse) and (prefers-reduced-transparency:reduce),
+       (max-width:760px) and (pointer:coarse) and (prefers-contrast:more),
+       (max-width:760px) and (pointer:coarse) and (forced-colors:active) {
+  body[data-ui-shell="glass-wheel"] #handy-oben,
+  body[data-ui-shell="glass-wheel"] #ho-pille {
+    background:var(--bg-card);
+    -webkit-backdrop-filter:none;
+    backdrop-filter:none;
+    box-shadow:inset 0 0 0 1px var(--line);
+  }
 }
 
 </style>
@@ -30073,6 +30173,7 @@ const ARTEN = Object.freeze({
     frageBefehle: 'frage.befehle',
     frageSeitenMenue: 'frage.seitenmenue',
     frageZeilenMenue: 'frage.zeilenmenue',
+    frageDateiExport: 'frage.datei-export',
     frageBefund: 'frage.befund',
     auftragAngelegt: 'auftrag.angelegt',
     auftragBeginnt: 'auftrag.beginnt',
@@ -30091,7 +30192,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1616, inhalt: '0565e8adb0c7109d', gebaut: '2026-11-19T19:50:45.470Z' };
+const Stand = { fassung: 1617, inhalt: '4dc0960f7db4be52', gebaut: '2026-11-22T15:36:07.525Z' };
 window.Stand = Stand;
 
 </script>
@@ -60561,6 +60662,99 @@ const Gedankenkarte = (() => {
         aufbau: 'karte',
         sicht: { x: 0, y: 0, z: 1 },
     });
+    const MARKDOWN_GROESSE = 256 * 1024;
+    const MARKDOWN_MAX_KNOTEN = 250;
+    const MARKDOWN_MAX_TIEFE = 20;
+    const ausMarkdown = (markdown, dateiname = 'Zentrales Thema') => {
+        if (markdown.length > MARKDOWN_GROESSE)
+            throw new Error('Die Markdown-Datei ist zu gross.');
+        const karte = neueKarte(dateiname);
+        const abschnitte = [];
+        const liste = [];
+        const text = (s) => s.trim().replace(/\\([\\`*_[\]#<>!&{}~+.\-()|])/g, '$1');
+        const fuegeHinzu = (titel, eltern) => {
+            if (karte.knoten.length >= MARKDOWN_MAX_KNOTEN)
+                throw new Error('Eine Markdown-Datei darf höchstens 250 Themen enthalten.');
+            const id = 'md-' + karte.knoten.length;
+            karte.knoten.push({ id, text: titel, eltern });
+            return id;
+        };
+        let titelGelesen = false;
+        let frontmatter = false;
+        let codeZaun = '';
+        for (const [nummer, zeile] of markdown.replace(/^\uFEFF/, '').split(/\r\n?|\n/).entries()) {
+            if (nummer === 0 && zeile.trim() === '---') {
+                frontmatter = true;
+                continue;
+            }
+            if (frontmatter) {
+                if (/^(---|\.\.\.)\s*$/.test(zeile))
+                    frontmatter = false;
+                continue;
+            }
+            const zaun = /^\s*(`{3,}|~{3,})/.exec(zeile)?.[1];
+            if (codeZaun) {
+                if (zaun && zaun[0] === codeZaun[0] && zaun.length >= codeZaun.length &&
+                    zeile.trim() === zaun)
+                    codeZaun = '';
+                continue;
+            }
+            if (zaun) {
+                codeZaun = zaun;
+                continue;
+            }
+            const ueberschrift = /^ {0,3}(#{1,6})[ \t]+(.+?)\s*$/.exec(zeile);
+            if (ueberschrift && ueberschrift[1] && ueberschrift[2]?.trim()) {
+                const ebene = ueberschrift[1].length;
+                const titel = text(ueberschrift[2].replace(/[ \t]+#+$/, ''));
+                liste.length = 0;
+                if (!titelGelesen && karte.knoten.length === 1 && ebene === 1) {
+                    const wurzel = karte.knoten[0];
+                    if (wurzel)
+                        wurzel.text = titel;
+                    titelGelesen = true;
+                    continue;
+                }
+                while ((abschnitte.at(-1)?.ebene ?? 0) >= ebene)
+                    abschnitte.pop();
+                const id = fuegeHinzu(titel, abschnitte.at(-1)?.id ?? 'w');
+                abschnitte.push({ ebene, id });
+                continue;
+            }
+            const punkt = /^([ \t]*)(?:[-+*]|\d+[.)])[ \t]+(\S.*)$/.exec(zeile);
+            if (!punkt || punkt[1] === undefined || !punkt[2])
+                continue;
+            const einzug = punkt[1].replace(/\t/g, '    ').length;
+            while ((liste.at(-1)?.einzug ?? -1) >= einzug)
+                liste.pop();
+            if (abschnitte.length + liste.length >= MARKDOWN_MAX_TIEFE)
+                throw new Error('Die Markdown-Gliederung ist zu tief.');
+            const id = fuegeHinzu(text(punkt[2]), liste.at(-1)?.id ?? abschnitte.at(-1)?.id ?? 'w');
+            liste.push({ einzug, id });
+        }
+        if (!titelGelesen && karte.knoten.length === 1)
+            throw new Error('Die Datei enthält keine Markdown-Überschriften oder Listen.');
+        return karte;
+    };
+    const alsMarkdown = (karte) => {
+        const { wurzel, kinder } = baum(karte);
+        if (!wurzel)
+            return '';
+        const knoten = new Map(karte.knoten.map(k => [k.id, k]));
+        const zeile = (id) => (knoten.get(id)?.text ?? '').replace(/\s+/g, ' ').trim()
+            .replace(/[\\`*_[\]#<>!&{}~+.\-()|]/g, '\\$&') || 'Ohne Titel';
+        const ausgabe = ['# ' + zeile(wurzel), ''];
+        const stapel = (kinder[wurzel] ?? []).slice().reverse().map(id => ({ id, tiefe: 0 }));
+        while (stapel.length) {
+            const k = stapel.pop();
+            if (!k)
+                break;
+            ausgabe.push('  '.repeat(k.tiefe) + '- ' + zeile(k.id));
+            for (const id of (kinder[k.id] ?? []).slice().reverse())
+                stapel.push({ id, tiefe: k.tiefe + 1 });
+        }
+        return ausgabe.join('\n') + '\n';
+    };
     const VORLAGEN = [
         {
             id: 'projekt', name: 'Projekt', hinweis: 'Ziel · Aufgaben · Termine · Beteiligte · Risiken',
@@ -60855,6 +61049,8 @@ const Gedankenkarte = (() => {
                 '<span class="gk-trenn"></span>' +
                 '<button data-a="vorlage" title="Fertige Vorlage einsetzen" ' +
                 'aria-label="Fertige Vorlage einsetzen" aria-haspopup="menu">▤</button>' +
+                '<button data-a="markdown" title="Markdown-Gliederung importieren oder exportieren" ' +
+                'aria-label="Markdown-Gliederung" aria-haspopup="menu">MD</button>' +
                 '<span class="gk-trenn"></span>' +
                 '<span class="gk-zoom">' +
                 '<button data-a="kleiner" title="Verkleinern" aria-label="Verkleinern">−</button>' +
@@ -61461,6 +61657,81 @@ const Gedankenkarte = (() => {
                     vorlageEinsetzen(v);
             });
         };
+        const markdownEinfuegen = (text, titel) => {
+            if (!w.isConnected)
+                return;
+            try {
+                const importiert = ausMarkdown(text, titel);
+                let fokus = 'w';
+                aendere(() => {
+                    if (karteLeer()) {
+                        karte = importiert;
+                        return;
+                    }
+                    const wurzel = baum(karte).wurzel;
+                    const neueIds = new Map(importiert.knoten.map(k => [k.id, uid()]));
+                    fokus = neueIds.get('w') ?? 'w';
+                    for (const k of importiert.knoten) {
+                        karte.knoten.push({
+                            ...k,
+                            id: neueIds.get(k.id) ?? k.id,
+                            eltern: k.eltern ? (neueIds.get(k.eltern) ?? wurzel) : wurzel,
+                        });
+                    }
+                });
+                gewaehlteVerb = null;
+                waehle(fokus);
+                einpassen(1, true);
+                UI.toast(importiert.knoten.length + ' Markdown-Themen importiert');
+            }
+            catch (fehler) {
+                UI.toast(fehler instanceof Error ? fehler.message : 'Markdown konnte nicht gelesen werden.');
+            }
+        };
+        const markdownEinlesen = () => {
+            const eingang = document.createElement('input');
+            eingang.type = 'file';
+            eingang.accept = '.md,.markdown,.txt,text/markdown,text/plain';
+            eingang.addEventListener('change', async () => {
+                const datei = eingang.files?.[0];
+                if (!datei)
+                    return;
+                try {
+                    if (datei.size > MARKDOWN_GROESSE)
+                        throw new Error('Die Markdown-Datei ist zu gross.');
+                    markdownEinfuegen(await datei.text(), datei.name.replace(/\.[^.]+$/, '') || undefined);
+                }
+                catch (fehler) {
+                    UI.toast(fehler instanceof Error ? fehler.message : 'Markdown konnte nicht gelesen werden.');
+                }
+            }, { once: true });
+            eingang.click();
+        };
+        const markdownMenue = (anker) => {
+            const r = anker.getBoundingClientRect();
+            const m = UI.menu('<button data-md="import">Markdown-Datei öffnen</button>' +
+                '<button data-md="paste">Markdown-Text einfügen</button>' +
+                '<button data-md="export">Gliederung als Markdown speichern</button>', r.left, r.bottom + 6, { titel: 'Markdown-Gliederung' });
+            m.addEventListener('click', e => {
+                const aktion = e.target.closest('[data-md]')?.dataset.md;
+                if (!aktion)
+                    return;
+                m.remove();
+                if (aktion === 'import') {
+                    markdownEinlesen();
+                    return;
+                }
+                if (aktion === 'paste') {
+                    void Dialog.mehrzeilig('Markdown-Gliederung einfügen').then(text => {
+                        if (text)
+                            markdownEinfuegen(text, 'Markdown-Gliederung');
+                    });
+                    return;
+                }
+                const blob = new Blob([alsMarkdown(karte)], { type: 'text/markdown;charset=utf-8' });
+                void Ereignisse.frageAsync(ARTEN.frageDateiExport, { blob, name: 'Redion-Gedankenkarte.md' });
+            });
+        };
         const elVon = (e) => e.target instanceof Element ? e.target : null;
         w.querySelector('.gk-leiste')?.addEventListener('click', e => {
             const farbKnopf = elVon(e)?.closest('.gk-farbe');
@@ -61503,6 +61774,9 @@ const Gedankenkarte = (() => {
                     break;
                 case 'vorlage':
                     vorlagenMenue(b);
+                    break;
+                case 'markdown':
+                    markdownMenue(b);
                     break;
                 case 'zurueck': {
                     const roh = verlauf.zurueck(abbild());
@@ -61770,7 +62044,7 @@ const Gedankenkarte = (() => {
         standZeigen();
         return w;
     };
-    return { zeichne, leseKarte, neueKarte, aufbauen, baum, PALETTE, farbeVon };
+    return { zeichne, leseKarte, neueKarte, aufbauen, baum, ausMarkdown, alsMarkdown, PALETTE, farbeVon };
 })();
 window.Gedankenkarte = Gedankenkarte;
 
@@ -73807,6 +74081,7 @@ const Planflaeche = (() => {
             pruefPanel.innerHTML = kopf + `<div class="sp-pruef-werkzeuge">` +
                 `<label>Filtern<input type="search" class="sp-pruef-suche" value="${esc(pruefSuche)}" placeholder="Kennzeichen, Typ, Fundstelle …" /></label>` +
                 `<button type="button" data-p-a="export">${pruefAnsicht === 'diagnose' ? 'Bericht TXT' : 'Export CSV'}</button>` +
+                `<button type="button" data-p-a="json">Prüfbericht JSON</button>` +
                 `<button type="button" data-p-a="aufraeumen" title="Redundante Zwischenpunkte entfernen – Anschlusspunkte bleiben erhalten">Leitungen aufräumen</button>` +
                 `</div><div class="sp-pruef-liste">${liste}</div>`;
             pruefFiltern();
@@ -73868,12 +74143,7 @@ const Planflaeche = (() => {
                 return;
             }
             const blob = new Blob([text], { type: mime });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = datei;
-            a.click();
-            setTimeout(() => URL.revokeObjectURL(url), 4000);
+            void Ereignisse.frageAsync(ARTEN.frageDateiExport, { blob, name: datei });
         };
         pruefPanel.addEventListener('input', e => {
             const el = e.target;
@@ -73913,6 +74183,10 @@ const Planflaeche = (() => {
                 pruefungOffen = false;
                 pruefPanel.hidden = true;
                 kopfMalen();
+                return;
+            }
+            if (b.dataset.pA === 'json') {
+                pruefHerunterladen(window.Planpruefung.berichtJson(pruefDaten()), 'Redion-Schaltplan-Pruefbericht.json', 'application/json;charset=utf-8');
                 return;
             }
             if (b.dataset.pA === 'export') {
@@ -77201,6 +77475,26 @@ const Planpruefung = (() => {
             if (t.x < 0 || t.y < 0 || t.x > Number(plan.breite) || t.y > Number(plan.hoehe))
                 melden('hinweis', 'ausserhalb', `${t.bmk || t.zeichen || 'Bauteil'} liegt ausserhalb des Planblatts.`, t.id, t);
         }
+        const teileNachId = new Map(teile.filter(t => t?.id).map(t => [t.id, t]));
+        const pruefeKlemmenbezug = (l, p, teilId, nr) => {
+            if (!hilfen.anschluesseVon || (!teilId && !nr))
+                return;
+            const teil = teileNachId.get(teilId);
+            let anschluss;
+            try {
+                anschluss = teil && feld(anschluesseVon(teil)).find(a => a?.nr === nr);
+            }
+            catch {
+            }
+            if (!nr || !anschluss || !pos(anschluss)) {
+                melden('fehler', 'klemmenbezug-fehlt', 'Leitungsende verweist auf eine fehlende Klemme (' + String(teil?.bmk || teilId || 'ohne Bauteil') +
+                    ', ' + String(nr || 'ohne Nummer') + ').', l.id, p);
+            }
+            else if (!gleich(p, anschluss)) {
+                melden('fehler', 'klemmenbezug-versetzt', 'Leitungsende trifft die zugeordnete Klemme ' +
+                    String(teil.bmk || teil.id) + ':' + String(nr) + ' nicht.', l.id, p);
+            }
+        };
         const schuetzen = schutzpunkte(plan, anschluesseVon);
         const verbindungAmEnde = (l, p) => {
             for (const t of teile) {
@@ -77239,9 +77533,14 @@ const Planpruefung = (() => {
                 }
             }
             const erster = ps[0], letzter = ps[ps.length - 1];
-            for (const p of [erster, letzter]) {
-                if (!verbindungAmEnde(l, p) && !(l.vonTeil && gleich(p, erster)) && !(l.nachTeil && gleich(p, letzter)))
-                    melden('hinweis', 'offenes-ende', `Offenes Leitungsende bei ${ort(p)} (gegebenenfalls beabsichtigt).`, l.id, p);
+            pruefeKlemmenbezug(l, erster, l.vonTeil, l.vonNr);
+            pruefeKlemmenbezug(l, letzter, l.nachTeil, l.nachNr);
+            const enden = [
+                [erster, l.vonTeil || l.vonNr], [letzter, l.nachTeil || l.nachNr],
+            ];
+            for (const [p, bezug] of enden) {
+                if (!bezug && !verbindungAmEnde(l, p))
+                    melden('hinweis', 'offenes-ende', 'Offenes Leitungsende bei ' + ort(p) + ' (gegebenenfalls beabsichtigt).', l.id, p);
             }
         }
         if (typeof hilfen.offeneKlemmen === 'function') {
@@ -77327,7 +77626,8 @@ const Planpruefung = (() => {
         '',
         ...r.punkte.map(p => `[${STUFE[p.stufe]}] ${p.text}${p.id ? ` (${p.id})` : ''}`)
     ].join('\n') + '\n';
-    return { analysieren, vereinfachen, bauteileCsv, netzeCsv, berichtText };
+    const berichtJson = (ergebnis) => JSON.stringify({ format: 'redion-schaltplan-pruefbericht', version: 1, ...ergebnis }, null, 2) + '\n';
+    return { analysieren, vereinfachen, bauteileCsv, netzeCsv, berichtText, berichtJson };
 })();
 window.Planpruefung = Planpruefung;
 
@@ -93203,6 +93503,44 @@ const SpreadsheetView = (() => {
                     feld.scrollTop = unten - feld.clientHeight;
             }
         };
+        const formelFehlerZeigen = async () => {
+            const ergebnis = K.rechneMappe(block.mappe);
+            zirkel = ergebnis.zirkel || [];
+            alles();
+            const fehler = [];
+            for (const b of block.mappe.blaetter) {
+                for (const [adresse, zelle] of Object.entries(b.zellen || {})) {
+                    const z = zelle;
+                    if (z?.formel && typeof z.wert === 'string' && erklaere(z.wert) && R.gueltig(adresse)) {
+                        fehler.push({ blattId: b.id, name: b.name, adresse, wert: z.wert });
+                    }
+                }
+            }
+            if (!fehler.length) {
+                UI.toast('Keine Formelfehler in dieser Arbeitsmappe.');
+                return;
+            }
+            const anzeige = fehler.slice(0, 30);
+            const antwort = await Dialog.wahl({
+                titel: fehler.length + ' Formelfehler',
+                text: 'Wähle eine Zelle aus.' + (fehler.length > anzeige.length
+                    ? ' Angezeigt werden die ersten ' + anzeige.length + ' Fehler.' : ''),
+                knoepfe: [
+                    ...anzeige.map((e, i) => ({
+                        id: String(i), text: e.name + ' · ' + e.adresse + ' · ' + e.wert, hinweis: erklaere(e.wert),
+                    })),
+                    { id: '', text: 'Schliessen' },
+                ],
+            });
+            if (!antwort || !w.isConnected)
+                return;
+            const ziel = anzeige[Number(antwort)];
+            if (!ziel)
+                return;
+            zuBlatt(ziel.blattId);
+            waehle(ziel.adresse);
+            feld.querySelector('[data-a="' + ziel.adresse + '"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        };
         const waehleBereich = (vonZ, vonS, bisZ, bisS) => {
             anker = R.schreibe(vonZ, vonS);
             gewaehlt = R.schreibe(bisZ, bisS);
@@ -93899,6 +94237,7 @@ const SpreadsheetView = (() => {
                     '<button data-a="xlsx"><span class="mi">📊</span>Als Excel speichern</button>' +
                     '<button data-a="csv"><span class="mi">📄</span>Als CSV speichern</button>' +
                     '<button data-a="ods"><span class="mi">📙</span>Als OpenDocument (.ods) speichern</button><hr>' +
+                    '<button data-a="formel-fehler">Formelfehler finden</button>' +
                     '<button data-a="regeln"><span class="mi">🎨</span>Bedingte Formatierung' +
                     ((blatt.regeln || []).length
                         ? '<span class="ms">' + (blatt.regeln || []).length + '</span>' : '') +
@@ -93920,6 +94259,10 @@ const SpreadsheetView = (() => {
                         return gibAus('csv');
                     if (t.dataset.a === 'ods')
                         return gibAus('ods');
+                    if (t.dataset.a === 'formel-fehler') {
+                        void formelFehlerZeigen();
+                        return;
+                    }
                     if (t.dataset.a === 'regeln')
                         return regelFenster();
                     if (t.dataset.a === 'zeilen')
@@ -108171,19 +108514,12 @@ const WissenDienst = (() => {
     };
     const verfahren = () => (typeof Fsrs !== 'undefined' && Store.getMeta('lernVerfahren', 'sm2') === 'fsrs')
         ? 'fsrs' : 'sm2';
-    const planen = (k, note) => {
+    const berechnePlan = (k, note, jetzt, art) => {
         const sr = Object.assign({ ease: 2.5, intervall: 0, wdh: 0 }, k.sr || {});
-        const vorher = {
-            due: String(sr.faellig || ''),
-            interval: Number(sr.intervall) || 0,
-            ease: Number(sr.ease) || 2.5,
-            repetitions: Number(sr.wdh) || 0
-        };
-        const art = verfahren();
         let uebergang = false;
         if (art === 'fsrs') {
             const zuletzt = sr.zuletzt ? new Date(String(sr.zuletzt)).getTime() : 0;
-            const tage = zuletzt ? Math.max(0, (Date.now() - zuletzt) / 86400000) : 0;
+            const tage = zuletzt ? Math.max(0, (jetzt.getTime() - zuletzt) / 86400000) : 0;
             let stand = (sr.fsrs && typeof sr.fsrs === 'object' &&
                 Number(sr.fsrs.stabilitaet) > 0)
                 ? { stabilitaet: Number(sr.fsrs.stabilitaet),
@@ -108208,12 +108544,28 @@ const WissenDienst = (() => {
             sr.intervall = sr.wdh === 1 ? 1 : sr.wdh === 2 ? 6 : Math.round(sr.intervall * sr.ease);
             sr.ease = Math.max(1.3, sr.ease + (0.1 - (4 - note) * (0.08 + (4 - note) * 0.02)));
         }
-        const d = new Date();
+        const d = new Date(jetzt);
         if (sr.intervall === 0)
             d.setMinutes(d.getMinutes() + 10);
         else
             d.setDate(d.getDate() + sr.intervall);
         sr.faellig = d.toISOString();
+        return { sr, uebergang };
+    };
+    const planVorschau = (k, jetzt = new Date()) => {
+        const art = verfahren();
+        return [1, 2, 3, 4].map(note => berechnePlan(k, note, jetzt, art).sr.intervall);
+    };
+    const planen = (k, note) => {
+        const art = verfahren();
+        const { sr, uebergang } = berechnePlan(k, note, new Date(), art);
+        const altSr = k.sr || {};
+        const vorher = {
+            due: String(altSr.faellig || ''),
+            interval: Number(altSr.intervall) || 0,
+            ease: Number(altSr.ease) || 2.5,
+            repetitions: Number(altSr.wdh) || 0
+        };
         sr.zuletzt = Store.now();
         const alt = Array.isArray(k.reviewVerlauf)
             ? Object.fromEntries(k.reviewVerlauf
@@ -108586,7 +108938,7 @@ const WissenDienst = (() => {
         }
         return false;
     };
-    return { esc, heute, WOCHENTAG, MONAT, datumLang, unscharf, zeitKurz, planen,
+    return { esc, heute, WOCHENTAG, MONAT, datumLang, unscharf, zeitKurz, planen, planVorschau,
         alsMarkdown, ausMarkdown, statistikZahlen, sauber, istUnter };
 })();
 if (typeof window !== 'undefined')
@@ -112451,9 +112803,12 @@ const Learning = (() => {
             if (!answerOpen)
                 actions.append(button('Antwort zeigen', 'reveal', true));
             else if (editable) {
+                const intervalle = WissenDienst.planVorschau(current);
                 [['1', 'Nochmal'], ['2', 'Schwer'], ['3', 'Gut'], ['4', 'Leicht']]
                     .forEach(([rating, label]) => {
-                    const item = button(label, 'rate-' + rating, rating === '3');
+                    const tage = intervalle[Number(rating) - 1] ?? 0;
+                    const abstand = tage === 0 ? '10 Min.' : tage === 1 ? '1 Tag' : tage + ' Tage';
+                    const item = button(label + ' · ' + abstand, 'rate-' + rating, rating === '3');
                     item.dataset.rating = rating;
                     actions.appendChild(item);
                 });
@@ -134139,6 +134494,14 @@ const Austausch = (() => {
         grenzen };
 })();
 window.Austausch = Austausch;
+if (typeof Ereignisse !== 'undefined' && typeof Ereignisse.horche === 'function' && typeof ARTEN !== 'undefined') {
+    Ereignisse.horche(ARTEN.frageDateiExport, (daten) => {
+        const exportDatei = daten;
+        if (exportDatei?.blob instanceof Blob && typeof exportDatei.name === 'string')
+            return Austausch.laden(exportDatei.blob, exportDatei.name);
+        return undefined;
+    });
+}
 
 </script>
 <script>
