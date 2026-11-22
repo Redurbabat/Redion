@@ -30,25 +30,6 @@ export function injectNativeGlassDock(delegate, source) {
   return result.trimEnd() + '\n\n' + source.trim() + '\n';
 }
 
-export function injectNativeIosShell(delegate, dockSource, moreSource, librarySource, editorSource) {
-  if (typeof moreSource !== 'string' ||
-      !moreSource.includes('private final class RedionNativeMoreCoordinator') ||
-      !moreSource.includes('private struct RedionNativeMoreView: View') ||
-      !moreSource.includes('private struct RedionNativeFilesView: View') ||
-      !moreSource.includes('ShareLink(item: file.url)') ||
-      typeof librarySource !== 'string' ||
-      !librarySource.includes('private final class RedionNativeLibraryCoordinator') ||
-      !librarySource.includes('private struct RedionNativeLibraryView: View') ||
-      !librarySource.includes('Konten.darf(\'lesen\', p.id)') ||
-      typeof editorSource !== 'string' ||
-      !editorSource.includes('private final class RedionNativeEditorModel') ||
-      !editorSource.includes('private struct RedionNativeEditorView: View') ||
-      !editorSource.includes('Store.versionSpeichern(')) {
-    throw new Error('Native iPhone-Ansichten fehlen oder sind unvollstaendig.');
-  }
-  return injectNativeGlassDock(delegate, dockSource + '\n\n' + moreSource + '\n\n' + librarySource + '\n\n' + editorSource);
-}
-
 export function installNativeGlassDock(root = process.cwd()) {
   const config = JSON.parse(fs.readFileSync(path.join(root, 'capacitor.config.json'), 'utf8'));
   if (config.appId !== 'ch.redurbabat.redion' ||
@@ -59,17 +40,15 @@ export function installNativeGlassDock(root = process.cwd()) {
   const sourcePath = path.join(root, 'ios', 'native-glass-dock.swift');
   const delegate = fs.readFileSync(dest, 'utf8');
   const source = fs.readFileSync(sourcePath, 'utf8');
-  const moreSource = fs.readFileSync(path.join(root, 'ios', 'native-more.swift'), 'utf8');
-  const librarySource = fs.readFileSync(path.join(root, 'ios', 'native-library.swift'), 'utf8');
-  const editorSource = fs.readFileSync(path.join(root, 'ios', 'native-editor.swift'), 'utf8');
-  const modified = injectNativeIosShell(delegate, source, moreSource, librarySource, editorSource);
+  // Only native UIKit tab bar. All five pages remain the original Redion WebView.
+  const modified = injectNativeGlassDock(delegate, source);
   fs.writeFileSync(dest, modified);
   return dest;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
-    console.log('RED ION iOS: Native iOS-Ansichten installiert:',
+    console.log('RED ION iOS: Originale UIKit-Tab-Bar installiert:',
       installNativeGlassDock());
   } catch (error) {
     console.error('RED ION iOS: Native Leiste NICHT installiert:', error.message);
