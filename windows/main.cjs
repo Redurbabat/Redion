@@ -423,7 +423,7 @@ if (!lock) {
       ...(remembered ? { x: remembered.x, y: remembered.y } : {}),
       minWidth: 860,
       minHeight: 580,
-      backgroundColor: '#191a1e',
+      backgroundColor: '#211218',
       autoHideMenuBar: false,
       show: false,
       icon,

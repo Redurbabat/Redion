@@ -306,6 +306,11 @@ const oeffnen = async (handy: boolean, weniger = false): Promise<{ ctx: BrowserC
   return { ctx, s };
 };
 
+const heuteMitLinse = (): void => {
+  (window as any).GlassWheel.setMode('glass-wheel');
+  Produktwelten.lernen('heute');
+};
+
 const aufraeumen = (s: Page) => s.evaluate(() =>
   document.querySelectorAll('.overlay, .menu, .menu-grund, #r-blatt').forEach(x => x.remove()));
 
@@ -628,7 +633,7 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
   console.log('\n§8 · Die Linse gleitet einmal über „Aufmachen. / Weiterdenken."');
   const { ctx, s } = await oeffnen(false);
   await s.evaluate(MESSEN);
-  await s.evaluate(() => Produktwelten.lernen('heute'));
+  await s.evaluate(heuteMitLinse);
   await s.waitForSelector('.lw-desk h2', { timeout: 8000 });
   await warte(s, 150);
   const frueh = await s.evaluate(() => {
@@ -773,6 +778,7 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
       } else if (jetzt - t0 > 4000) fertig({ da: false, t: -1, schrift: '' });
       else requestAnimationFrame(tick);
     };
+    (window as any).GlassWheel.setMode('glass-wheel');
     Produktwelten.lernen('heute');
     requestAnimationFrame(tick);
   }), MITTE);
@@ -855,7 +861,7 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
   await s.setViewportSize({ width: 1440, height: 900 });
   await warte(s, 400);
   await s.evaluate(() => Einstellungen.S('bewegung', 'ruhig'));
-  await s.evaluate(() => Produktwelten.lernen('heute'));
+  await s.evaluate(heuteMitLinse);
   await warte(s, 400);
   const still = await s.evaluate(() => {
     const held = document.querySelector('.lw-desk');
@@ -873,7 +879,7 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
 {
   /* Dasselbe mit „weniger Bewegung" im System — die zweite Quelle. */
   const { ctx, s } = await oeffnen(false, true);
-  await s.evaluate(() => Produktwelten.lernen('heute'));
+  await s.evaluate(heuteMitLinse);
   await s.waitForSelector('.lw-desk h2', { timeout: 8000 });
   const proben: number[] = [];
   for (let i = 0; i < 4; i++) {
@@ -913,7 +919,7 @@ for (const [name, weniger] of [['„Ruhige Darstellung"', false], ['prefers-redu
       if (w === 'einstellung') Einstellungen.S('kontrast', true);
       if (w === 'schema') (window as any).Aussehen.setzen({ schema: 'kontrast' });
     }, weg);
-    await s.evaluate(() => Produktwelten.lernen('heute'));
+    await s.evaluate(heuteMitLinse);
     await s.waitForSelector('.lw-desk h2', { timeout: 8000 });
     await warte(s, 2200);
     const r = await s.evaluate(() => {
@@ -1347,7 +1353,11 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
      Gegenprobe: dieselbe Linse zu 35 % gedeckt (der Stand vor dem Nachtrag)
      macht diese Zeile rot. */
   for (const thema of ['dark', 'light'] as const) {
-    await s.evaluate((t: string) => { App.theme(t); Produktwelten.lernen('heute'); }, thema);
+    await s.evaluate((t: string) => {
+      App.theme(t);
+      (window as any).GlassWheel.setMode('glass-wheel');
+      Produktwelten.lernen('heute');
+    }, thema);
     await s.waitForSelector('.lw-desk .ru-held-linse', { timeout: 8000 });
     const kreis = await s.evaluate(() => {
       const held = document.querySelector('.lw-desk')!;
@@ -1780,6 +1790,7 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
       aus.push([Math.round(t), Math.round(o * 1000) / 1000, Math.round(Number(document.timeline.currentTime ?? 0) * 10) / 10]);
       if (t < 3200) requestAnimationFrame(tick); else fertig(aus);
     };
+    (window as any).GlassWheel.setMode('glass-wheel');
     Produktwelten.lernen('heute');
     requestAnimationFrame(tick);
   });
@@ -1843,7 +1854,7 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
   for (const [name, handy, thema, weniger] of faelle) {
     const { ctx, s } = await oeffnen(handy, weniger);
     await s.evaluate((t: string) => App.theme(t), thema);
-    await s.evaluate(() => Produktwelten.lernen('heute'));
+    await s.evaluate(heuteMitLinse);
     await s.waitForSelector('.lw-desk h2', { timeout: 8000 });
     let mitte: number[] | null = null;
     if (!weniger) {
@@ -1913,6 +1924,7 @@ const NAMEN = ['Dunkel', 'Fokus-Modus', 'Ruhige Darstellung', 'Hoher Kontrast', 
     await s.evaluate(() => {
       Store.setMeta('rundgangGesehen', true);
       document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung').forEach(el => el.remove());
+      (window as any).GlassWheel.setMode('glass-wheel');
       Produktwelten.lernen('heute');
     });
     await s.waitForSelector('.lw-desk h2', { timeout: 8000 });

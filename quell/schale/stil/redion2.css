@@ -269,3 +269,417 @@ body[data-bewegung="ruhig"]:not([data-ui-shell="glass-wheel"]) #page > .pg-tools
 @media (forced-colors:active),(prefers-contrast:more){
   body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel{border-color:var(--text); box-shadow:none}
 }
+
+/* Atelier. Gemeinsame Oberfläche für Desktop und Mobilgeräte. Die
+   Alternativschale behält ihre Navigation und ihr eigenes Erscheinungsbild. */
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) {
+  --atelier-rail: #2d1820;
+  --atelier-rail-ink: #fff2ed;
+  --atelier-rail-dim: #e3cbd2;
+  --atelier-rail-active: #73334a;
+  --atelier-wine: #762d48;
+  --atelier-paper: #f9f3ed;
+  --atelier-sheet: #fffaf5;
+  --atelier-tint: #efe1db;
+  --atelier-edge: #dfcdc5;
+  --atelier-display: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --atelier-on-wine: #fff9f6;
+}
+
+:where(html:not([data-theme="light"], [data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) {
+  --atelier-rail: #211218;
+  --atelier-rail-active: #73334a;
+  --atelier-wine: #f1adbf;
+  --atelier-paper: #211b1e;
+  --atelier-sheet: #2a2226;
+  --atelier-tint: #3a2b32;
+  --atelier-edge: #58434d;
+  --atelier-on-wine: #311821;
+}
+
+:where(html:not([data-gesetzt~="--accent"], [data-schema="kontrast"]))
+  body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) {
+  --accent: var(--atelier-wine);
+  --accent-text: var(--atelier-wine);
+  --accent-hover: color-mix(in srgb, var(--atelier-wine) 85%, var(--atelier-on-wine));
+  --accent-schwach: color-mix(in srgb, var(--atelier-wine) 14%, var(--atelier-sheet));
+  --auf-accent: var(--atelier-on-wine);
+  --haupt-flaeche: var(--atelier-wine);
+  --haupt-schein: none;
+}
+
+@media (min-width: 761px) {
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"], [data-dokument="an"]) #main > #studio-bar {
+    min-height: calc(var(--touch-min) + var(--space-3));
+    padding-inline: var(--space-4);
+    gap: var(--space-2);
+    background: var(--atelier-rail);
+    color: var(--atelier-rail-ink);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-brand {
+    color: inherit;
+    font-size: 15px;
+    font-weight: 730;
+    letter-spacing: .085em;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-icon {
+    color: var(--atelier-rail-ink);
+    border-color: transparent;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #studio-bar :is(.studio-icon,.studio-brand):hover {
+    background: var(--atelier-rail-active);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-import {
+    background: var(--atelier-rail-active);
+    color: var(--atelier-rail-ink);
+    box-shadow: none;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search {
+    color: var(--atelier-rail-ink);
+    background-color: color-mix(in srgb, var(--atelier-rail-ink) 12%, var(--atelier-rail));
+    border-radius: var(--radius-lg);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search:hover {
+    background-color: var(--atelier-rail-active);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #studio-bar :is(button,a):focus-visible {
+    outline-color: var(--atelier-rail-ink);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #main > #kante {
+    color: var(--atelier-rail-ink);
+    background: var(--atelier-rail);
+    border-right-color: var(--atelier-rail);
+    padding-top: var(--space-4);
+    --line-soft: color-mix(in srgb, var(--atelier-rail-ink) 24%, transparent);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #kante .k-knopf {
+    color: var(--atelier-rail-dim);
+    border-radius: var(--radius-sm);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #kante .k-knopf:is(:hover, .ist-hier, .ist-an) {
+    color: var(--atelier-rail-ink);
+    background: var(--atelier-rail-active);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #kante .k-knopf.ist-hier svg {
+    color: var(--atelier-rail-ink);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #kante .k-knopf:focus-visible {
+    outline-color: var(--atelier-rail-ink);
+  }
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"], [data-dokument="an"]) #main > :is(#topbar,#reiterleiste) {
+  background: var(--atelier-sheet);
+  border-color: var(--atelier-edge);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"], [data-dokument="an"]) #scroll:has(
+  #page.lernwelt, #page > :is(.bib,.home)
+) {
+  background: var(--atelier-paper);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) :is(#title,.bib-dkopf h1,.lernwelt .lw-page-head h2,.home h1) {
+  font-family: var(--atelier-display);
+  font-weight: 600;
+  letter-spacing: -.04em;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #title {
+  font-size: clamp(32px, 4.5vw, 50px);
+}
+
+/* Bibliothek: Titel und Dateibefehle als eigene Arbeitsfläche.
+   Die Filter behalten ihre bestehende Reihenfolge und ihre Beschriftungen. */
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] {
+  padding-top: clamp(var(--space-4), 3vw, var(--space-8));
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-dkopf {
+  background: var(--atelier-sheet);
+  border: 1px solid var(--atelier-edge);
+  border-top: 4px solid var(--atelier-wine);
+  border-radius: var(--radius-lg);
+  padding: clamp(var(--space-4), 3vw, var(--space-8));
+  box-shadow: none;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-dkopf h1 {
+  font-size: clamp(32px, 5vw, 56px);
+  line-height: 1.05;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib-workspace-eyebrow {
+  color: var(--atelier-wine);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-wahl {
+  border-color: var(--atelier-edge);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] :is(.bib-pille,.bib-form-knopf) {
+  background: var(--atelier-paper);
+  border-color: var(--atelier-edge);
+  border-radius: var(--radius-sm);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] :is(.bib-search,.bib-neu) {
+  background: var(--atelier-sheet);
+  border-color: var(--atelier-edge);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-studio-import {
+  background: var(--atelier-wine);
+  color: var(--atelier-on-wine);
+  box-shadow: none;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel {
+  background: var(--atelier-sheet);
+  border-color: var(--atelier-edge);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel-blatt {
+  background: var(--atelier-tint);
+  border-radius: var(--radius-sm);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-card-kind {
+  color: var(--atelier-wine);
+  font-weight: 650;
+}
+
+/* Tagesübersicht: Lernrunde und Dokumente bilden beim breiten Layout
+   zwei gleichrangige Spalten. Die DOM-Reihenfolge folgt dem schmalen Layout. */
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today {
+  display: grid;
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today > * {
+  order: 0;
+  margin-block: 0;
+  min-width: 0;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact {
+  align-items: center;
+  background: var(--atelier-rail);
+  color: var(--atelier-rail-ink);
+  border: 0;
+  border-radius: var(--radius-lg);
+  padding: clamp(var(--space-4), 3vw, var(--space-8));
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact h2 {
+  font: 600 clamp(25px, 5vw, 48px)/1.08 var(--atelier-display);
+  letter-spacing: -.035em;
+  overflow-wrap: anywhere;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact :is(p, .lw-goal button small) {
+  color: var(--atelier-rail-dim);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact .lw-goal {
+  background: var(--atelier-rail-active);
+  border: 0;
+  box-shadow: none;
+  color: var(--atelier-rail-ink);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact .lw-goal button {
+  color: inherit;
+  background: transparent;
+  box-shadow: none;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact .lw-goal button span {
+  color: var(--atelier-rail-ink);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact .lw-goal button:focus-visible {
+  outline-color: var(--atelier-rail-ink);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today :is(.lw-next-step, .lw-desk) {
+  align-items: start;
+  align-content: start;
+  padding: clamp(var(--space-4), 3vw, var(--space-6));
+  gap: var(--space-3);
+  background: var(--atelier-sheet);
+  border: 1px solid var(--atelier-edge);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today .lw-next-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today .lw-next-step .lw-actions {
+  grid-column: 1 / -1;
+  justify-content: start;
+  margin: 0;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today .lw-next-step .lw-actions button.is-primary {
+  background: var(--atelier-wine);
+  color: var(--atelier-on-wine);
+  border: 1px solid var(--atelier-wine);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-desk {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-desk h2 {
+  font: 600 clamp(24px, 3vw, 34px)/1.17 var(--atelier-display);
+  margin-bottom: var(--space-2);
+  letter-spacing: -.035em;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-paper-stack {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  transform: none;
+  background: transparent;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-paper-sheet {
+  min-height: 0;
+  transform: none;
+  box-shadow: none;
+  background: var(--atelier-paper);
+  color: var(--text);
+  border: 1px solid var(--atelier-edge);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-paper-sheet :is(.lw-paper-cap,.lw-paper-preview,.lw-paper-foot) {
+  margin-block: var(--space-2);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-paper-sheet :is(.lw-paper-cap,.lw-paper-foot,.lw-paper-message) {
+  color: var(--text-dim);
+}
+
+@media (min-width: 1024px) {
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today > :not(.lw-next-step,.lw-desk) {
+    grid-column: 1 / -1;
+  }
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) :is(.home-karten .hk, .lernwelt .lw-study-actions article, .einst-fenster) {
+  background: var(--atelier-sheet);
+  border-color: var(--atelier-edge);
+  box-shadow: none;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .home-karten .hk {
+  border-inline-start: 3px solid var(--atelier-wine);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .einst-nav {
+  background: var(--atelier-paper);
+  border-color: var(--atelier-edge);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .einst-nav button.on {
+  color: var(--atelier-wine);
+  background: var(--atelier-tint);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .einst-inhalt h2 {
+  font-family: var(--atelier-display);
+  font-size: clamp(22px,3vw,34px);
+}
+
+@media (max-width: 760px) {
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"], [data-dokument="an"]) #main > #menueband {
+    background: var(--atelier-rail);
+    color: var(--atelier-rail-ink);
+    border-color: var(--atelier-rail);
+    --bg-side: var(--atelier-rail);
+    --bg-card: var(--atelier-rail);
+    --bg-hover: var(--atelier-rail-active);
+    --bg-input: var(--atelier-rail);
+    --text: var(--atelier-rail-ink);
+    --text-dim: var(--atelier-rail-dim);
+    --text-faint: var(--atelier-rail-dim);
+    --accent-text: var(--atelier-rail-ink);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #menueband :is(.mb-rechts,.mb-klapp) {
+    background: var(--atelier-rail);
+    box-shadow: none;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact {
+    gap: var(--space-2);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact .lw-goal {
+    width: 100%;
+    grid-template-columns: 1fr;
+    align-self: stretch;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact .lw-goal button {
+    min-height: var(--touch-min);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-workspace-intro {
+    flex-basis: 100%;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-workspace-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 92px), 1fr));
+    width: 100%;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-workspace-actions button {
+    min-width: 0;
+    padding-inline: var(--space-2);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today .lw-goal {
+    align-self: center;
+    flex: 0 0 auto;
+    padding: var(--space-2);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today .lw-next-step .lw-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today .lw-next-step .lw-actions button {
+    flex: 1 1 auto;
+  }
+}
