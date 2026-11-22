@@ -19,6 +19,7 @@ import { Browser } from '@capacitor/browser';
 import { createNativeFileExporter } from './native-file-export.mjs';
 import { withNativeExportFeedback } from './native-export-feedback.mjs';
 import { startIosNativeFeel } from './native-feel.mjs';
+import { installIosNativeLayout } from './native-layout.mts';
 import { createHomeShortcutRouter } from './home-shortcuts.mjs';
 import { enableIosSafariLinks } from './native-safari-links.mjs';
 import { createIosShareInbox } from './incoming-share.mjs';
@@ -62,14 +63,17 @@ if (Capacitor.getPlatform() === 'ios' && Capacitor.isNativePlatform()) {
   // The web/PWA never loads this module. Do not alter Redion's routes,
   // TabShelf gestures, documents or CSS: only tell native UIKit when
   // touch selection and the existing theme change.
-  const prepare = () => startIosNativeFeel({
+  const prepare = () => {
+    installIosNativeLayout(document);
+    return startIosNativeFeel({
     document,
     haptics: Haptics,
     bars: SystemBars,
     styles: SystemBarsStyle,
     statusBar: SystemBarType.StatusBar,
     quiet: () => document.body?.dataset?.bewegung === 'ruhig'
-  });
+    });
+  };
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', prepare, { once: true });
   } else {

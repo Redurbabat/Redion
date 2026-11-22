@@ -8,10 +8,6 @@ on:
       - 'quell/schale/stil/bausteine.css'
       - 'index.html'
       - 'ios/native-glass-dock.swift'
-      - 'ios/native-more.swift'
-      - 'ios/native-library.swift'
-      - 'ios/native-editor.swift'
-      - 'ios/native-editor-bridge.test.mjs'
       - 'ios/install-native-glass-dock.mjs'
       - 'ios/install-native-glass-dock.test.mjs'
       - 'codemagic.yaml'
@@ -30,8 +26,8 @@ jobs:
           node-version: '22'
       - name: Verify iPhone dock gesture, lens and safe-area contracts
         run: node --test pruefungen/ios-glass-dock-contract.test.mjs
-      - name: Verify native SwiftUI dock integration
-        run: node --test ios/install-native-glass-dock.test.mjs ios/native-editor-bridge.test.mjs
+      - name: Verify Apple's original UIKit tab bar only
+        run: node --test ios/install-native-glass-dock.test.mjs
 
   generated-stand-diagnostics:
     runs-on: ubuntu-latest

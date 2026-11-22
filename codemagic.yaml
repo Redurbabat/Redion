@@ -29,6 +29,8 @@ workflows:
           node --test pruefungen/ocr-test-stub.test.mjs
           node --test ios/native-file-export.test.mjs
           node --test ios/native-feel.test.mjs
+          node --test ios/native-layout.test.mts
+          node --test ios/install-native-glass-dock.test.mjs
           # Foreground-Rueckkehr, Unicode-Dateinamen und sichere Temp-Dateien.
           node --test ios/native-lifecycle-export.test.mjs
           # Simulierte verzögerte UIKit-Antworten und App-Wechsel.
@@ -51,9 +53,6 @@ workflows:
           node --test ios/install-privacy-shield.test.mjs
           # Die iOS-Quellen im Repo und das neue Xcode-Ziel muessen getrennt bleiben.
           node --test ios/native-project-layout.test.mjs
-          # Echtes SwiftUI-Dock nur im iOS-Build, mit bestehender Web-Navigation.
-          node --test ios/install-native-glass-dock.test.mjs
-          node --test ios/native-editor-bridge.test.mjs
           # Native Startansicht nur im iPhone-Xcode-Projekt, mit echten Farben.
           node --test ios/install-launch-screen.test.mjs
           # Pruefe reale Capacitor-8-SPM-Templates auf Swift/Storyboard-Kompatibilitaet.
@@ -116,21 +115,18 @@ workflows:
           grep -q 'RedionPrivacyShield.start()' build/ios-capacitor/App/App/AppDelegate.swift
           grep -q 'redion-snapshot-privacy-cover' build/ios-capacitor/App/App/AppDelegate.swift
 
-      - name: Apples originale iOS-26-System-Tab-Bar einbauen
+      - name: Originale Apple UITabBar einbauen (ohne native Seiten)
         script: |
           set -euo pipefail
-          # Nur die generierte iOS-AppDelegate erweitern; die Website bleibt bytegleich.
           node ios/install-native-glass-dock.mjs
           SWIFT="build/ios-capacitor/App/App/AppDelegate.swift"
           grep -q 'RedionNativeDock.start()' "$SWIFT"
           grep -q 'UITabBar(frame: .zero)' "$SWIFT"
-          grep -q 'RedionNativeMoreView' "$SWIFT"
-          grep -q 'RedionNativeSettingsView' "$SWIFT"
-          grep -q 'RedionNativeFilesView' "$SWIFT"
-          grep -q 'RedionNativeLibraryView' "$SWIFT"
-          grep -q 'RedionNativeLibraryCoordinator' "$SWIFT"
-          grep -q 'RedionNativeEditorModel' "$SWIFT"
-          grep -q 'RedionNativeEditorView' "$SWIFT"
+          # No SwiftUI overlay views: the five existing web screens remain visible.
+          if grep -Eq 'RedionNativeMoreView|RedionNativeLibraryCoordinator|RedionNativeEditorModel' "$SWIFT"; then
+            echo "Unexpected native page overlay in dock-only build" >&2
+            exit 1
+          fi
           xcrun swiftc -frontend -parse "$SWIFT"
 
       - name: iPhone-Startbildschirm mit echtem Redion-Symbol
