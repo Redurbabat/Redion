@@ -136,6 +136,75 @@ const Gedankenkarte = (() => {
         }
         return ausgabe.join('\n') + '\n';
     };
+    const alsMermaid = (karte) => {
+        const ids = new Map(karte.knoten.map((k, index) => [k.id, 'n' + index]));
+        const zeilen = ['flowchart TD'];
+        for (const knoten of karte.knoten) {
+            const beschriftung = (knoten.text.replace(/\s+/g, ' ').trim() || 'Ohne Titel')
+                .replace(/["#\x60<>&\\%]/g, zeichen => '#' + zeichen.charCodeAt(0) + ';');
+            zeilen.push('  ' + ids.get(knoten.id) + '["' + beschriftung + '"]');
+            const eltern = knoten.eltern ? ids.get(knoten.eltern) : undefined;
+            if (eltern)
+                zeilen.push('  ' + eltern + ' --> ' + ids.get(knoten.id));
+        }
+        for (const { von, zu } of karte.verbindungen) {
+            const start = ids.get(von), ziel = ids.get(zu);
+            if (start && ziel && start !== ziel)
+                zeilen.push('  ' + start + ' -.-> ' + ziel);
+        }
+        return zeilen.join('\n') + '\n';
+    };
+    const EXCALIDRAW_GROESSE = 2 * 1024 * 1024;
+    const ausExcalidraw = (text, titel) => {
+        if (text.length > EXCALIDRAW_GROESSE)
+            throw new Error('Die Excalidraw-Datei ist zu gross.');
+        const datei = JSON.parse(text.replace(/^\uFEFF/, ''));
+        const objekt = (wert) => wert && typeof wert === 'object' && !Array.isArray(wert) ? wert : {};
+        const root = objekt(datei);
+        if (root.type !== 'excalidraw' || !Array.isArray(root.elements) || root.elements.length > 5000)
+            throw new Error('Diese Datei enthält keine unterstützte Excalidraw-Zeichnung.');
+        const elemente = root.elements.map(objekt).filter(e => e.isDeleted !== true);
+        const karte = neueKarte(titel.trim().slice(0, 120) || 'Excalidraw');
+        const beschriftungen = new Map();
+        for (const e of elemente) {
+            if (e.type !== 'text' || typeof e.id !== 'string')
+                continue;
+            const label = (typeof e.originalText === 'string' ? e.originalText : typeof e.text === 'string' ? e.text : '').trim();
+            if (!label)
+                continue;
+            const quelle = typeof e.containerId === 'string' ? e.containerId : e.id;
+            const schon = beschriftungen.get(quelle);
+            if (schon) {
+                schon.text = (schon.text + '\n' + label).slice(0, 500);
+                beschriftungen.set(e.id, schon);
+                continue;
+            }
+            if (karte.knoten.length >= MARKDOWN_MAX_KNOTEN)
+                throw new Error('Die Zeichnung hat zu viele beschriftete Elemente.');
+            const k = { id: 'x' + karte.knoten.length, text: label.slice(0, 500), eltern: 'w' };
+            karte.knoten.push(k);
+            beschriftungen.set(quelle, k);
+            beschriftungen.set(e.id, k);
+        }
+        if (karte.knoten.length < 2)
+            throw new Error('Die Zeichnung enthält keine beschrifteten Elemente.');
+        const verbindungen = new Set();
+        for (const e of elemente) {
+            if (e.type !== 'arrow' && e.type !== 'line')
+                continue;
+            const start = objekt(e.startBinding).elementId, ziel = objekt(e.endBinding).elementId;
+            const von = typeof start === 'string' ? beschriftungen.get(start)?.id : undefined;
+            const zu = typeof ziel === 'string' ? beschriftungen.get(ziel)?.id : undefined;
+            if (!von || !zu || von === zu)
+                continue;
+            const verbindung = [von, zu].sort().join('/');
+            if (!verbindungen.has(verbindung)) {
+                verbindungen.add(verbindung);
+                karte.verbindungen.push({ id: 'v' + karte.verbindungen.length, von, zu });
+            }
+        }
+        return karte;
+    };
     const VORLAGEN = [
         {
             id: 'projekt', name: 'Projekt', hinweis: 'Ziel · Aufgaben · Termine · Beteiligte · Risiken',
@@ -1038,36 +1107,62 @@ const Gedankenkarte = (() => {
                     vorlageEinsetzen(v);
             });
         };
-        const markdownEinfuegen = (text, titel) => {
+        const karteEinfuegen = (importiert, format) => {
             if (!w.isConnected)
                 return;
+            let fokus = 'w';
+            aendere(() => {
+                if (karteLeer()) {
+                    karte = importiert;
+                    return;
+                }
+                const wurzel = baum(karte).wurzel;
+                const neueIds = new Map(importiert.knoten.map(k => [k.id, uid()]));
+                fokus = neueIds.get('w') ?? 'w';
+                for (const k of importiert.knoten) {
+                    karte.knoten.push({
+                        ...k,
+                        id: neueIds.get(k.id) ?? k.id,
+                        eltern: k.eltern ? (neueIds.get(k.eltern) ?? wurzel) : wurzel,
+                    });
+                }
+                for (const { von, zu } of importiert.verbindungen) {
+                    const start = neueIds.get(von), ziel = neueIds.get(zu);
+                    if (start && ziel)
+                        karte.verbindungen.push({ id: uid(), von: start, zu: ziel });
+                }
+            });
+            gewaehlteVerb = null;
+            waehle(fokus);
+            einpassen(1, true);
+            UI.toast(importiert.knoten.length + ' Themen aus ' + format + ' importiert');
+        };
+        const markdownEinfuegen = (text, titel) => {
             try {
-                const importiert = ausMarkdown(text, titel);
-                let fokus = 'w';
-                aendere(() => {
-                    if (karteLeer()) {
-                        karte = importiert;
-                        return;
-                    }
-                    const wurzel = baum(karte).wurzel;
-                    const neueIds = new Map(importiert.knoten.map(k => [k.id, uid()]));
-                    fokus = neueIds.get('w') ?? 'w';
-                    for (const k of importiert.knoten) {
-                        karte.knoten.push({
-                            ...k,
-                            id: neueIds.get(k.id) ?? k.id,
-                            eltern: k.eltern ? (neueIds.get(k.eltern) ?? wurzel) : wurzel,
-                        });
-                    }
-                });
-                gewaehlteVerb = null;
-                waehle(fokus);
-                einpassen(1, true);
-                UI.toast(importiert.knoten.length + ' Markdown-Themen importiert');
+                karteEinfuegen(ausMarkdown(text, titel), 'Markdown');
             }
             catch (fehler) {
                 UI.toast(fehler instanceof Error ? fehler.message : 'Markdown konnte nicht gelesen werden.');
             }
+        };
+        const excalidrawEinlesen = () => {
+            const eingang = document.createElement('input');
+            eingang.type = 'file';
+            eingang.accept = '.excalidraw,.json,application/json';
+            eingang.addEventListener('change', async () => {
+                const datei = eingang.files?.[0];
+                if (!datei)
+                    return;
+                try {
+                    if (datei.size > EXCALIDRAW_GROESSE)
+                        throw new Error('Die Excalidraw-Datei ist zu gross.');
+                    karteEinfuegen(ausExcalidraw(await datei.text(), datei.name.replace(/\.[^.]+$/, '')), 'Excalidraw');
+                }
+                catch (fehler) {
+                    UI.toast(fehler instanceof Error ? fehler.message : 'Excalidraw konnte nicht gelesen werden.');
+                }
+            }, { once: true });
+            eingang.click();
         };
         const markdownEinlesen = () => {
             const eingang = document.createElement('input');
@@ -1092,7 +1187,9 @@ const Gedankenkarte = (() => {
             const r = anker.getBoundingClientRect();
             const m = UI.menu('<button data-md="import">Markdown-Datei öffnen</button>' +
                 '<button data-md="paste">Markdown-Text einfügen</button>' +
-                '<button data-md="export">Gliederung als Markdown speichern</button>', r.left, r.bottom + 6, { titel: 'Markdown-Gliederung' });
+                '<button data-md="excalidraw">Beschriftungen aus Excalidraw öffnen</button>' +
+                '<button data-md="export">Gliederung als Markdown speichern</button>' +
+                '<button data-md="mermaid">Als Mermaid-Diagramm speichern</button>', r.left, r.bottom + 6, { titel: 'Markdown-Gliederung' });
             m.addEventListener('click', e => {
                 const aktion = e.target.closest('[data-md]')?.dataset.md;
                 if (!aktion)
@@ -1102,6 +1199,10 @@ const Gedankenkarte = (() => {
                     markdownEinlesen();
                     return;
                 }
+                if (aktion === 'excalidraw') {
+                    excalidrawEinlesen();
+                    return;
+                }
                 if (aktion === 'paste') {
                     void Dialog.mehrzeilig('Markdown-Gliederung einfügen').then(text => {
                         if (text)
@@ -1109,8 +1210,9 @@ const Gedankenkarte = (() => {
                     });
                     return;
                 }
-                const blob = new Blob([alsMarkdown(karte)], { type: 'text/markdown;charset=utf-8' });
-                void Ereignisse.frageAsync(ARTEN.frageDateiExport, { blob, name: 'Redion-Gedankenkarte.md' });
+                const mermaid = aktion === 'mermaid';
+                const blob = new Blob([mermaid ? alsMermaid(karte) : alsMarkdown(karte)], { type: mermaid ? 'text/plain;charset=utf-8' : 'text/markdown;charset=utf-8' });
+                void Ereignisse.frageAsync(ARTEN.frageDateiExport, { blob, name: 'Redion-Gedankenkarte.' + (mermaid ? 'mmd' : 'md') });
             });
         };
         const elVon = (e) => e.target instanceof Element ? e.target : null;
@@ -1425,6 +1527,6 @@ const Gedankenkarte = (() => {
         standZeigen();
         return w;
     };
-    return { zeichne, leseKarte, neueKarte, aufbauen, baum, ausMarkdown, alsMarkdown, PALETTE, farbeVon };
+    return { zeichne, leseKarte, neueKarte, aufbauen, baum, ausMarkdown, alsMarkdown, ausExcalidraw, alsMermaid, PALETTE, farbeVon };
 })();
 window.Gedankenkarte = Gedankenkarte;

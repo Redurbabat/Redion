@@ -1,6 +1,7 @@
 
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { createHash } from 'node:crypto';
 import test from 'node:test';
 import vm from 'node:vm';
 
@@ -96,4 +97,114 @@ test('Lernintervalle zeigen dieselbe Planung wie die Bewertung und schreiben ers
   assert.equal(lernen.planen(karte, 3).intervall, intervall);
   assert.equal(geschrieben.length, 1);
   assert.equal((geschrieben[0] as any).reviewVerlauf['review-1'].algorithm, 'fsrs');
+});
+
+test('Vendored PDF and ink code matches the audited licenses and hashes', () => {
+  const bestand = JSON.parse(fs.readFileSync(new URL('./fremd-bestand.json', import.meta.url), 'utf8'));
+  const eintraege = bestand.eintraege.filter((e: { paket: string }) => ['pdf-lib', 'perfect-freehand'].includes(e.paket));
+  assert.equal(eintraege.length, 2);
+  for (const e of eintraege) {
+    const bytes = fs.readFileSync(new URL('../' + e.pfad, import.meta.url));
+    const lizenz = fs.readFileSync(new URL('../' + e.lizenzdatei, import.meta.url));
+    assert.equal(bytes.length, e.datei.bytes);
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), e.datei.sha256);
+    assert.equal(createHash('sha256').update(lizenz).digest('hex'), e.lizenzSha256);
+    assert.match(lizenz.toString('utf8'), /MIT License/i);
+    for (const notice of e.hinweise ?? []) {
+      const code = fs.readFileSync(new URL('../' + notice.pfad, import.meta.url));
+      assert.equal(createHash('sha256').update(code).digest('hex'), notice.sha256);
+    }
+  }
+});
+
+test('PDF-Seitenkopie übernimmt Seiten in Wunschreihenfolge und mit relativer Drehung', async () => {
+  const vmContext = laden(['fremd/pdf-lib/library.js', 'fremd/pdf-lib/laden.js'], { Blob, ArrayBuffer, Uint8Array });
+  const { PDFLib: lib, PdfOriginal: original } = vm.runInContext('({ PDFLib, PdfOriginal })', vmContext);
+  const source = await lib.PDFDocument.create();
+  const erste = source.addPage();
+  erste.setSize(280, 160);
+  erste.drawText('REDION TEST');
+  const zweite = source.addPage();
+  zweite.setSize(320, 180);
+  zweite.setRotation(lib.degrees(270));
+  const sourceBlob = new Blob([await source.save({ useObjectStreams: false })], { type: 'application/pdf' });
+  const additional = await lib.PDFDocument.create();
+  additional.addPage().setSize(400, 200);
+  const additionalBlob = new Blob([await additional.save()], { type: 'application/pdf' });
+  assert.deepEqual(normal(original.seitenleser('3–1, 2', 3)), [2, 1, 0, 1]);
+  assert.throws(() => original.seitenleser('1,0', 3), /Seiten mit Kommas/);
+  assert.throws(() => original.seitenleser('1-4', 3), /3 Seiten/);
+  await assert.rejects(() => original.zusammenstellen([{ datei: sourceBlob, auswahl: '*' }], 45), /ungültig/);
+  const blob = await original.zusammenstellen([
+    { datei: sourceBlob, auswahl: '2,1' }, { datei: additionalBlob, auswahl: '*' }
+  ], 90);
+  assert.equal(blob.type, 'application/pdf');
+  const copied = await lib.PDFDocument.load(await blob.arrayBuffer());
+  assert.deepEqual(normal(copied.getPages().map((p: { getWidth(): number; getRotation(): { angle: number } }) =>
+    [p.getWidth(), p.getRotation().angle])), [[320, 0], [280, 90], [400, 90]]);
+  assert.equal((await lib.PDFDocument.load(await sourceBlob.arrayBuffer())).getPageCount(), 2);
+});
+
+test('Weiche Druckkonturen behalten ihre Einstellung und ältere Striche behalten die bestehende Kontur', () => {
+  const context = laden(['fremd/perfect-freehand/ink.js', 'core/ink/stroke.js']);
+  const ink: typeof InkStroke = vm.runInContext('InkStroke', context);
+  const basis = { id: 'probe', art: 'stift', pts: [[0, 0], [5, 1], [10, 3], [20, 3]], breite: 3, farbe: '#334455', ebene: 'plan' };
+  const alt = ink.readAnnotation(basis);
+  const neu = ink.readAnnotation({ ...basis, kontur: 'weich', pressure: [.2, .5, .8, .9] });
+  assert.ok(alt && neu);
+  assert.equal(alt.kontur, undefined);
+  assert.equal(neu.kontur, 'weich');
+  assert.equal(ink.weichUmriss(alt).length, 0);
+  const umriss = ink.weichUmriss(neu);
+  assert.ok(umriss.length > 5);
+  assert.ok(umriss.every(p => p.every(Number.isFinite)));
+});
+
+test('Excalidraw-Labels werden Themen und ihre gebundenen Pfeile werden Mermaid-Querverbindungen', () => {
+  const { Gedankenkarte: karte } = laden(['bereiche/bloecke/arten/gedankenkarte.js']).window;
+  const datei = JSON.stringify({ type: 'excalidraw', version: 2, elements: [
+    { id: 't1', type: 'text', text: 'Klemme "L"', containerId: 'box1' },
+    { id: 't2', type: 'text', text: '<Geprüft>', containerId: 'box2' },
+    { id: 'a', type: 'arrow', startBinding: { elementId: 'box1' }, endBinding: { elementId: 'box2' } },
+    { id: 'x', type: 'text', text: 'Gelöscht', isDeleted: true },
+    { id: 'bild', type: 'image', status: 'saved' }
+  ]});
+  const importiert = karte.ausExcalidraw(datei, 'Unterverteilung');
+  assert.equal(importiert.knoten.length, 3);
+  assert.deepEqual(normal(importiert.verbindungen), [{ id: 'v0', von: 'x1', zu: 'x2' }]);
+  const diagramm = karte.alsMermaid(importiert);
+  assert.match(diagramm, /^flowchart TD\n/);
+  assert.match(diagramm, /n1\["Klemme #34;L#34;"\]/);
+  assert.match(diagramm, /n1 -\.-> n2/);
+  assert.doesNotMatch(diagramm, /<Geprüft>|Gelöscht/);
+  assert.throws(() => karte.ausExcalidraw('{"type":"excalidraw","elements":[]}', 'Leer'), /keine beschrifteten/);
+});
+
+test('Schematico übernimmt explizite IEC-Klemmen und weist geänderte Netze oder unbekannte Symbole ab', () => {
+  let next = 0;
+  const context = laden([
+    'register/fachzeichen.js', 'bereiche/bloecke/arten/schaltplan.js',
+    'bereiche/elektro/simulation.js', 'bereiche/bloecke/arten/schematico-import.js'
+  ], { Register: {}, Ids: { short: () => String(++next) }, performance: { now: () => 1 } });
+  const { SchematicoImport: adapter, Stromfluss: strom } = vm.runInContext('({ SchematicoImport, Stromfluss })', context);
+  const probe = { type: 'ems', page: {
+    title: 'Steuerstrom', pageType: 'schematic', connectionMode: 'explicit',
+    components: [
+      { id: 's', symbolId: 'contact_no', bmk: '-S1', x: 50, y: 50, rotation: 0 },
+      { id: 'p', symbolId: 'pilot_lamp', bmk: '-P1', x: 200, y: 200, rotation: 0 }
+    ],
+    wires: [{ id: 'w1', from: { componentId: 's', pinId: '14' }, to: { componentId: 'p', pinId: 'X1' } }],
+    texts: [{ id: 'text1', text: 'Beispiel', x: 70, y: 25 }]
+  }};
+  const { blaetter, logischeLeitungen } = adapter.lesen(JSON.stringify(probe));
+  const plan = adapter.importieren(blaetter[0], logischeLeitungen, strom.netze);
+  assert.deepEqual(normal(plan.teile.map((t: { bmk: string }) => t.bmk)), ['-S1', '-P1']);
+  assert.equal(plan.teile[0].nummern['4'], '14');
+  assert.equal(plan.leitungen[0].vonNr, '4');
+  assert.equal(plan.leitungen[0].nachNr, 'X1');
+  assert.equal(plan.texte[0].t, 'Beispiel');
+  assert.throws(() => adapter.importieren(blaetter[0], [], () => ({ netzVon: new Map() })), /elektrische Verbindungen/);
+  probe.page.components[0]!.symbolId = 'unbekannt';
+  const andere = adapter.lesen(JSON.stringify(probe));
+  assert.throws(() => adapter.importieren(andere.blaetter[0], [], strom.netze), /nicht eindeutig/);
 });

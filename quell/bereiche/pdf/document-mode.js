@@ -208,6 +208,7 @@ const DocumentMode = (() => {
             melden(seiten.length, seiten.length);
         return schreiber.schliessen();
     };
+    const dateiBlob = (id) => Dateien.alsBlob(id);
     const herunterladen = async (blob, name) => {
         const nativeDateien = globalThis.RedionNativeDateien;
         if (nativeDateien && typeof nativeDateien.speichern === 'function') {
@@ -1117,6 +1118,16 @@ const DocumentMode = (() => {
         const datenZeile = document.createElement('div');
         datenZeile.className = 'document-inspector-daten';
         datenZeile.append(pdfKnopf, importButton);
+        const originalId = original?.dataset.documentOriginal;
+        if (originalId) {
+            const kopie = makeAction('pdf-original-kopie', 'Originalseiten als PDF kopieren');
+            kopie.className = 'document-import';
+            kopie.dataset.pdfQuelle = originalId;
+            const kombinieren = makeAction('pdf-original-kombinieren', 'PDF-Dateien zusammenführen');
+            kombinieren.className = 'document-import';
+            kombinieren.dataset.pdfQuelle = originalId;
+            datenZeile.append(kopie, kombinieren);
+        }
         const pdfHinweis = document.createElement('p');
         pdfHinweis.className = 'document-export-hinweis';
         pdfHinweis.textContent = 'Deine Handschrift wird eine echte Anmerkung — in jedem '
@@ -2422,7 +2433,7 @@ const DocumentMode = (() => {
                 const alt = String(block.bildDateiId);
                 void (async () => {
                     try {
-                        const [blob, satz] = await Promise.all([Dateien.alsBlob(alt), Store.dateiHolen(alt)]);
+                        const [blob, satz] = await Promise.all([dateiBlob(alt), Store.dateiHolen(alt)]);
                         if (!blob)
                             return;
                         const kopie = await Dateien.ablegen(new File([blob], String(satz?.name || 'seite.webp'), { type: blob.type || 'image/webp' }), { blockId: zielId, abgeleitet: satz ? !!satz.abgeleitet : block.herkunft !== 'bild' });
@@ -3249,6 +3260,62 @@ const DocumentMode = (() => {
                 Store.updateBlock(block.id, { marken: neu });
                 UI.toast(offen === 1 ? 'Entsperrt' : offen + ' Marken entsperrt');
                 neuMit(block.id);
+                return;
+            }
+            if (action === 'pdf-original-kopie' || action === 'pdf-original-kombinieren') {
+                const knopf = tatKnopf;
+                const quelle = knopf.dataset.pdfQuelle;
+                if (!quelle || knopf.disabled)
+                    return;
+                const sichern = async (auswahl, drehung, weitere) => {
+                    const datei = await dateiBlob(quelle);
+                    if (!datei)
+                        throw new Error('Die Originaldatei fehlt auf diesem Gerät.');
+                    const blob = await PdfOriginal.zusammenstellen([{ datei, auswahl }, ...weitere.map(datei => ({ datei, auswahl: '*' }))], drehung);
+                    const name = String(page.text || 'Dokument').replace(/[\\/:*?"<>|]+/g, ' ').trim();
+                    if (await herunterladen(blob, (name || 'Dokument') + ' – Originalseiten.pdf'))
+                        UI.toast('PDF-Kopie gesichert');
+                };
+                const ausfuehren = (auftrag) => {
+                    knopf.disabled = true;
+                    void auftrag().catch(error => UI.toast(error instanceof Error ? error.message : 'Die PDF-Kopie ist fehlgeschlagen.'))
+                        .finally(() => { knopf.disabled = false; });
+                };
+                if (action === 'pdf-original-kopie') {
+                    ausfuehren(async () => {
+                        const auswahl = await Dialog.frage('Originalseiten wählen. * für alle oder z. B. 1–3, 7, 5–4.', '*');
+                        if (auswahl === null || !workspace.isConnected)
+                            return;
+                        const drehung = await Dialog.wahl({
+                            titel: 'Originalseiten kopieren',
+                            text: 'Die PDF-Kopie behält den Originaltext. Redion-Markierungen sind im separaten PDF-Export enthalten.',
+                            knoepfe: [{ id: '0', text: 'Kopie speichern' }, { id: '90', text: '90° nach rechts drehen' },
+                                { id: '180', text: '180° drehen' }, { id: '270', text: '90° nach links drehen' }]
+                        });
+                        if (drehung && workspace.isConnected)
+                            await sichern(auswahl, Number(drehung), []);
+                    });
+                }
+                else {
+                    const auswahl = document.createElement('input');
+                    auswahl.type = 'file';
+                    auswahl.accept = '.pdf,application/pdf';
+                    auswahl.multiple = true;
+                    auswahl.addEventListener('change', () => {
+                        const weitere = Array.from(auswahl.files ?? []);
+                        if (weitere.length && workspace.isConnected)
+                            ausfuehren(async () => {
+                                const bestaetigt = await Dialog.bestaetigen({
+                                    titel: 'PDF-Dateien zusammenführen',
+                                    text: 'Reihenfolge: das Original, danach ' + weitere.map(datei => datei.name).join(', ') + '.',
+                                    ja: 'PDF speichern'
+                                });
+                                if (bestaetigt && workspace.isConnected)
+                                    await sichern('*', 0, weitere);
+                            });
+                    }, { once: true });
+                    auswahl.click();
+                }
                 return;
             }
             if (action === 'export-pdf') {

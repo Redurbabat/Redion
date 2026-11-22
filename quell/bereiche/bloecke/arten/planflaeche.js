@@ -1168,10 +1168,11 @@ const Planflaeche = (() => {
             v.catch(() => { w.__pruefLaden = null; });
             return v;
         };
+        const planNetze = (plan) => Stromfluss.netze(plan);
         const pruefDaten = () => window.Planpruefung.analysieren(z.plan, {
             anschluesseVon: (t) => Schaltplan.anschluesseVon(t),
             holeSymbol: (id) => Register.fachzeichen.holen(id),
-            netze: (plan) => Stromfluss.netze(plan),
+            netze: planNetze,
             offeneKlemmen: (plan) => {
                 const r = stromRechnung(plan, {}, {});
                 return ((r && r.warnungen) || []).filter((w) => / hängt an keiner Leitung\.$/.test(w));
@@ -2347,7 +2348,7 @@ const Planflaeche = (() => {
             ({ drehen, spiegeln, doppeln, loeschen }[aktion || '']?.());
         });
         let inkSession = null;
-        let inkColor = GfxShapes.PALETTE[0][0], inkWidth = 2.4, inkErase = false;
+        let inkColor = GfxShapes.PALETTE[0][0], inkWidth = 2.4, inkErase = false, inkWeich = true;
         const inkVon = (id) => z.plan.ink?.find(m => m.id === id);
         const inkTools = document.createElement('div');
         inkTools.className = 'sp-ink-tools';
@@ -2357,6 +2358,7 @@ const Planflaeche = (() => {
         inkTools.innerHTML = `<label>Farbe <input type="color" data-ink-color value="${inkColor}" aria-label="Stiftfarbe"></label>` +
             `<label>Breite <input type="range" data-ink-width min="0.6" max="8" step="0.2" value="2.4" aria-label="Strichbreite"></label>` +
             `<button type="button" data-ink-mode="draw" aria-pressed="true">Schreiben</button>` +
+            `<button type="button" data-ink-kontur aria-pressed="true">Weiche Kontur</button>` +
             `<button type="button" data-ink-mode="erase" aria-pressed="false">Tinte radieren</button>` +
             `<span class="sp-ink-hilfe">Freie Notizen · auch während Strom läuft</span>`;
         wurzel.insertBefore(inkTools, koerper);
@@ -2368,6 +2370,12 @@ const Planflaeche = (() => {
                 inkWidth = Number(input.value);
         });
         inkTools.addEventListener('click', e => {
+            const stil = e.target.closest('[data-ink-kontur]');
+            if (stil) {
+                inkWeich = !inkWeich;
+                stil.setAttribute('aria-pressed', String(inkWeich));
+                return;
+            }
             const button = e.target.closest('[data-ink-mode]');
             if (!button)
                 return;
@@ -2539,6 +2547,8 @@ const Planflaeche = (() => {
             const kind = (z.werkzeug === 'stift' && inkErase) || erasePen ? 'erase' : z.werkzeug === 'zeigen' && hit ? 'move' : 'draw';
             const mark = kind === 'move' ? JSON.parse(JSON.stringify(inkVon(hit.dataset.ink))) :
                 { id: Schaltplan.uid(), art: 'stift', pts: [start], farbe: inkColor, breite: inkWidth, ebene: aktiveEbene() };
+            if (kind === 'draw' && inkWeich)
+                mark.kontur = 'weich';
             if (kind === 'draw' && event.pointerType === 'pen') {
                 mark.pressure = [event.pressure > 0 ? event.pressure : .5];
                 const tilt = InkStroke.tiltOf(event);
@@ -3979,6 +3989,7 @@ const Planflaeche = (() => {
                 '<button data-m="pruefzentrum">Prüfzentrum / Stückliste (Alt+Umschalt+P)</button>' +
                 '<button data-m="vorlage">Als Vorlage speichern</button>' +
                 '<button data-m="svg">Als Bild speichern (SVG)</button>' +
+                '<button data-m="schematico-import">Schematico-Schaltplan öffnen</button>' +
                 '<button data-m="leeren" data-gefahr>Plan leeren</button>', r.left - 180, r.bottom + 6);
             m.addEventListener('click', e => {
                 const b = e.target.closest('[data-m]');
@@ -4033,7 +4044,62 @@ const Planflaeche = (() => {
                     return vorlageSpeichern();
                 if (was === 'svg')
                     return alsBildSpeichern();
+                if (was === 'schematico-import')
+                    return schematischEinlesen();
             });
+        };
+        const schematischEinlesen = () => {
+            if (z.simulation || z.zieht) {
+                UI.toast('Vor dem Import die Simulation und laufende Eingaben beenden.');
+                return;
+            }
+            const eingang = document.createElement('input');
+            eingang.type = 'file';
+            eingang.accept = '.json,.ems,application/json';
+            eingang.addEventListener('change', async () => {
+                const datei = eingang.files?.[0];
+                if (!datei)
+                    return;
+                const vorher = abzug();
+                try {
+                    if (datei.size > SchematicoImport.MAX_BYTES)
+                        throw new Error('Die Schematico-Datei ist zu gross.');
+                    const { blaetter, logischeLeitungen } = SchematicoImport.lesen(await datei.text());
+                    const id = blaetter.length === 1 ? blaetter[0].id : await Dialog.wahl({
+                        titel: 'Schematico-Stromlaufblatt wählen',
+                        text: 'Redion importiert ein Stromlaufblatt in diesen Block.',
+                        knoepfe: blaetter.map(blatt => ({ id: blatt.id, text: blatt.titel }))
+                    });
+                    const blatt = blaetter.find(blatt => blatt.id === id);
+                    if (!blatt || !wurzel.isConnected)
+                        return;
+                    const plan = SchematicoImport.importieren(blatt, logischeLeitungen, planNetze);
+                    const bestaetigt = await Dialog.bestaetigen({
+                        titel: 'Schematico-Blatt übernehmen?',
+                        text: 'Der aktuelle Schaltplan wird durch „' + blatt.titel + '“ ersetzt. Redion führt die Leitungen neu. ' +
+                            'Enthalten sind unterstützte Bauteile, explizite Verbindungen und Blatttexte. Rückgängig stellt den bisherigen Plan wieder her.',
+                        ja: 'Blatt übernehmen'
+                    });
+                    if (!bestaetigt || !wurzel.isConnected)
+                        return;
+                    if (z.simulation || z.zieht || abzug() !== vorher) {
+                        UI.toast('Der Plan wurde inzwischen geändert. Import bitte erneut öffnen.');
+                        return;
+                    }
+                    aendere(() => {
+                        z.plan = plan;
+                        z.auswahl.clear();
+                        z.stellungen = {};
+                        z.spulenStand = {};
+                    });
+                    UI.toast(plan.teile.length + ' Bauteile und ' + plan.leitungen.length + ' Leitungen übernommen');
+                }
+                catch (error) {
+                    UI.toast(error instanceof SyntaxError ? 'Nur Schematico-JSON und JSON-Seitenmakros werden unterstützt.' :
+                        error instanceof Error ? error.message : 'Die Schematico-Datei konnte nicht gelesen werden.');
+                }
+            }, { once: true });
+            eingang.click();
         };
         const VORLAGEN = 'elektro:planvorlagen';
         const vorlageSpeichern = () => {
