@@ -2,8 +2,7 @@ import SwiftUI
 import UIKit
 import Capacitor
 
-// Opt-in native iOS 26 shell. Do not replace the existing SceneDelegate
-// until web-to-native navigation and existing Capacitor plugins are tested.
+// Prototype only: this shell is not installed into SceneDelegate yet.
 @available(iOS 26.0, *)
 enum RedIonSection: String, CaseIterable, Hashable {
     case home, learn, workspace, projects, settings
@@ -29,8 +28,8 @@ enum RedIonSection: String, CaseIterable, Hashable {
     }
 }
 
-// A single CAPBridgeViewController is hosted to preserve the web app's
-// session and plugin lifecycle while native tabs change.
+// Host the Capacitor controller ONCE, outside individual tab contents.
+// Moving one UIViewController between five tab hosts is unsafe.
 @available(iOS 26.0, *)
 struct RedIonCapacitorHost: UIViewControllerRepresentable {
     let controller: CAPBridgeViewController
@@ -39,7 +38,7 @@ struct RedIonCapacitorHost: UIViewControllerRepresentable {
         controller
     }
 
-    func updateUIViewController(_ controller: CAPBridgeViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: CAPBridgeViewController, context: Context) {}
 }
 
 @available(iOS 26.0, *)
@@ -48,22 +47,21 @@ struct RedIonNativeShell: View {
     @State private var selected: RedIonSection = .home
 
     var body: some View {
-        TabView(selection: $selected) {
-            ForEach(RedIonSection.allCases, id: \.self) { section in
-                Tab(section.title, systemImage: section.symbol, value: section) {
-                    Group {
-                        if selected == section {
-                            RedIonCapacitorHost(controller: bridgeController)
-                                .ignoresSafeArea(edges: [])
-                        } else {
-                            Color.clear
-                        }
+        ZStack {
+            // A stable single Capacitor instance owns the entire content area.
+            RedIonCapacitorHost(controller: bridgeController)
+
+            // System-owned native tab bar. Tabs intentionally have no second
+            // web view; the router handshake must be completed before enabling.
+            TabView(selection: $selected) {
+                ForEach(RedIonSection.allCases, id: \.self) { section in
+                    Tab(section.title, systemImage: section.symbol, value: section) {
+                        Color.clear
+                            .allowsHitTesting(false)
                     }
                 }
             }
+            .tabBarMinimizeBehavior(.never)
         }
-        .tabBarMinimizeBehavior(.never)
-        // NOTE: Selection-to-web routing must be wired to the actual
-        // application router before enabling this shell in production.
     }
 }
