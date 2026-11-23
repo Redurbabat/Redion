@@ -138,7 +138,7 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       const transport=new StreamableHTTPClientTransport(new URL(origin+'/mcp/cloud'),{authProvider:provider,fetch:fetcher});
       await client.connect(transport);
       assert.equal(transport.sessionId,undefined);
-      const list=await client.listTools();assert.equal(list.tools.length,8);
+      const list=await client.listTools();assert.equal(list.tools.length,9);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
       assert.equal(JSON.parse(result.content[0]!.text).content,'Nur Testdaten');
       const denied=await client.callTool({name:'redion_create_page',arguments:{workspaceId:'ws_test',title:'Gesperrt',requestId:'sdk_request_01'}});
@@ -887,5 +887,88 @@ test('Cloud-MCP: Datenbankliste zeigt nur lesbare eingebettete Klartext-Sammlung
     const wrongWorkspace=await f.rpc(reader.access_token,'tools/call',{
       name:'redion_list_databases',arguments:{workspaceId:'not_granted'}});
     assert.equal(wrongWorkspace.data.result.isError,true);
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: Tabellenzeilen und Schema beachten Seiten-, Zeilen- und Spaltenrechte',async()=>{
+  const f=await fixture();
+  try{
+    await f.store.setze('konten',{id:'table_reader',mail:'table_reader@example.test',
+      name:'table_reader',herkunft:'github',angelegt:'',gesperrt:0});
+    const put=async(id:string,tabelle:string,daten:Record<string,unknown>,geaendert='2030-01-01',encrypted=0)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle,
+        daten:JSON.stringify(daten),verschluesselt:encrypted,seite:id,version:3,
+        geaendert,geloescht:0,vonGeraet:'Test'});
+    };
+    await put('db_access_page','blocks',{type:'page',text:'Kundenliste',inhalt:''});
+    await put('db_restricted_page','blocks',{type:'page',text:'Privat',inhalt:''});
+    await put('db_access_block','blocks',{type:'database',collectionId:'db_readable',
+      parentId:'db_access_page'});
+    const link=await f.store.hole('saetze',{bereich:'ws_test',id:'db_access_block'});
+    assert.ok(link);
+    await f.store.setze('saetze',{...link,seite:'db_access_page'});
+    await put('db_restricted_block','blocks',{type:'database',collectionId:'db_secret',
+      parentId:'db_restricted_page'});
+    const secretLink=await f.store.hole('saetze',{bereich:'ws_test',id:'db_restricted_block'});
+    assert.ok(secretLink);
+    await f.store.setze('saetze',{...secretLink,seite:'db_restricted_page'});
+    const schema={title:{name:'Name',type:'title'},amount:{name:'Betrag',type:'number'},
+      private:{name:'Privates Gehalt',type:'number'}};
+    await put('db_readable','collections',{id:'db_readable',name:'Kunden',schema},'2040-01-01');
+    await put('db_secret','collections',{id:'db_secret',name:'Nicht freigegeben',schema},'2039-01-01');
+    const row=async(id:string,time:string,props:Record<string,unknown>,encrypted=0)=>{
+      await put(id,'blocks',{type:'page',parentTable:'collection',
+        parentId:'db_readable',text:id,props},time,encrypted);
+    };
+    await row('row_visible_1','2042-01-01',
+      {title:'A',amount:10,private:12345,note:'Feld nicht im Schema'});
+    await row('row_private','2041-01-01',{title:'Versteckt',amount:999,private:99999});
+    await row('row_visible_2','2040-01-01',{title:'B',amount:20,private:54321});
+    await row('row_encrypted','2039-01-01',{title:'Geheim',amount:77},1);
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'table_reader',
+      rolle:'lesen',von:'owner',wann:'2026-11-23'});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'row_private',
+      kontoId:'table_reader',rolle:'kein',von:'owner',wann:'2026-11-23'});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'db_restricted_page',
+      kontoId:'table_reader',rolle:'kein',von:'owner',wann:'2026-11-23'});
+    await f.store.setze('feldrechte',{bereich:'ws_test',sammlung:'db_readable',
+      feld:'private',kontoId:'table_reader',rolle:'kein',von:'owner',wann:'2026-11-23'});
+    const reader=await f.authorize(false,'table_reader');
+    const owner=await f.authorize(false);
+    const call=async(token:string,params:Record<string,unknown>)=>{
+      const r=await f.rpc(token,'tools/call',{name:'redion_read_database',
+        arguments:{workspaceId:'ws_test',databaseId:'db_readable',limit:1,...params}});
+      assert.equal(r.status,200);
+      return r.data.result as {isError?:boolean;content:{text:string}[]};
+    };
+    const first=await call(reader.access_token,{offset:0});
+    assert.notEqual(first.isError,true,JSON.stringify(first));
+    const firstData=JSON.parse(first.content[0]!.text);
+    assert.equal(firstData.databaseId,'db_readable');
+    assert.deepEqual(firstData.columns.map((x:any)=>x.key),['title','amount']);
+    assert.equal(firstData.rows.length,1);
+    assert.equal(firstData.rows[0].rowId,'row_visible_1');
+    assert.deepEqual(firstData.rows[0].values,{title:'A',amount:10});
+    assert.equal(firstData.rows[0].version,3);
+    assert.equal(firstData.nextOffset,1);
+    const second=JSON.parse((await call(reader.access_token,{offset:1})).content[0]!.text);
+    assert.equal(second.rows[0].rowId,'row_visible_2');
+    assert.equal(second.nextOffset,null);
+    const third=JSON.parse((await call(reader.access_token,{offset:2})).content[0]!.text);
+    assert.deepEqual(third.rows,[]);
+    assert.equal(third.nextOffset,null);
+    const ownerData=JSON.parse((await call(owner.access_token,{limit:10})).content[0]!.text);
+    assert.deepEqual(ownerData.columns.map((x:any)=>x.key),['title','amount','private']);
+    assert.deepEqual(ownerData.rows.map((x:any)=>x.rowId),
+      ['row_visible_1','row_private','row_visible_2']);
+    const noPage=await call(reader.access_token,{databaseId:'db_secret'});
+    assert.equal(noPage.isError,true);
+    assert.equal(JSON.parse(noPage.content[0]!.text).code,'not_found');
+    const invalid=await call(reader.access_token,{offset:1001});
+    assert.equal(invalid.isError,true);
+    const noWorkspace=await f.rpc(reader.access_token,'tools/call',{
+      name:'redion_read_database',arguments:{workspaceId:'not_granted',databaseId:'db_readable'}});
+    assert.equal(noWorkspace.data.result.isError,true);
   }finally{f.close();}
 });
