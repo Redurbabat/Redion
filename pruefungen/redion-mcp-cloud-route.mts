@@ -138,7 +138,7 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       const transport=new StreamableHTTPClientTransport(new URL(origin+'/mcp/cloud'),{authProvider:provider,fetch:fetcher});
       await client.connect(transport);
       assert.equal(transport.sessionId,undefined);
-      const list=await client.listTools();assert.equal(list.tools.length,11);
+      const list=await client.listTools();assert.equal(list.tools.length,12);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
       assert.equal(JSON.parse(result.content[0]!.text).markdown,'Nur Testdaten');
        assert.equal((result.structuredContent as any)?.markdown,'Nur Testdaten');
@@ -1095,5 +1095,85 @@ test('Cloud-MCP: Blockkatalog ist lesend, enthält interne Arten und keine Menü
     // already verifies read-only access without any write scope.
     const again=await f.rpc(token.access_token,'tools/call',{name:'redion_list_block_types',arguments:{}});
     assert.equal(again.data.result.isError,undefined);
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: Block lesen schützt Seiten, geheime Kinder und Datenbankzeilen',async()=>{
+  const f=await fixture();
+  try{
+    await f.store.setze('konten',{id:'block_reader',mail:'block_reader@example.test',
+      name:'Block Reader',herkunft:'github',angelegt:'',gesperrt:0});
+    const put=async(id:string,data:Record<string,unknown>,seite=id,encrypted=0,deleted=0)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify(data),verschluesselt:encrypted,seite,
+        version:4,geaendert:'2030-01-01',geloescht:deleted,vonGeraet:'Test'});
+    };
+    await put('block_page_public',{type:'page',text:'Frei',inhalt:'Seiteninhalt'});
+    await put('block_page_private',{type:'page',text:'Geheim',inhalt:'Nicht lesen'});
+    await put('block_page_encrypted',{type:'page',text:'Unsichtbar'},'block_page_encrypted',1);
+    await put('block_parent',{type:'toggle',text:'Lesbarer Block',parentId:'block_page_public',
+      content:['block_child','block_secret_child','block_deleted_child',
+        'block_foreign_child','block_unrelated_child','missing_child'],
+      children:['raw_unchecked_child']},'block_page_public');
+    await put('block_child',{type:'text',text:'Kind',parentId:'block_parent'},'block_page_public');
+    await put('block_secret_child',{type:'text',text:'Verschlüsselt',parentId:'block_parent'},
+      'block_page_public',1);
+    await put('block_deleted_child',{type:'text',text:'Papierkorb',parentId:'block_parent'},
+      'block_page_public',0,1);
+    await put('block_foreign_child',{type:'text',text:'Andere Seite',parentId:'block_parent'},
+      'block_page_private');
+    await put('block_unrelated_child',{type:'text',text:'Falsche Eltern',parentId:'block_page_public'},
+      'block_page_public');
+    await put('block_private',{type:'text',text:'Vertraulicher Inhalt',parentId:'block_page_private'},
+      'block_page_private');
+    await put('block_encrypted_parent',{type:'text',text:'Klartext aber Eltern verschlüsselt',
+      parentId:'block_page_encrypted'},'block_page_encrypted');
+    await put('block_row',{type:'page',parentTable:'collection',parentId:'db_secret',
+      text:'Geheime Zeile',props:{salary:1000}},'block_row');
+    await put('block_orphan',{type:'text',text:'Ohne Seite'},'block_orphan');
+    await put('block_oversized',{type:'code',text:'x'.repeat(12500),parentId:'block_page_public'},
+      'block_page_public');
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'block_reader',
+      rolle:'lesen',von:'owner',wann:'2026-11-23'});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'block_page_private',
+      kontoId:'block_reader',rolle:'kein',von:'owner',wann:'2026-11-23'});
+    const reader=await f.authorize(false,'block_reader');
+    const tool=async(id:string,w='ws_test')=>{
+      const response=await f.rpc(reader.access_token,'tools/call',{
+        name:'redion_read_block',arguments:{workspaceId:w,blockId:id}});
+      assert.equal(response.status,200);
+      return response.data.result as {isError?:boolean;content:{text:string}[];structuredContent?:unknown};
+    };
+    const ok=await tool('block_parent');
+    assert.notEqual(ok.isError,true,JSON.stringify(ok));
+    const data=JSON.parse(ok.content[0]!.text);
+    assert.equal(data.type,'toggle');
+    assert.equal(data.documentId,'block_page_public');
+    assert.equal(data.version,4);
+    assert.equal(data.text,'Lesbarer Block');
+    assert.deepEqual(data.children,['block_child']);
+    assert.deepEqual(data.data.content,['block_child']);
+    assert.equal('children' in data.data,false);
+    assert.deepEqual(ok.structuredContent,data);
+    const page=JSON.parse((await tool('block_page_public')).content[0]!.text);
+    assert.equal(page.type,'page');
+    assert.equal(page.data.inhalt,'Seiteninhalt');
+    for(const id of ['block_private','block_encrypted_parent','block_row','block_orphan']){
+      const rejected=await tool(id);
+      assert.equal(rejected.isError,true,id);
+      const err=JSON.parse(rejected.content[0]!.text);
+      assert.ok(['not_found','encrypted','forbidden'].includes(err.code),id+': '+JSON.stringify(err));
+    }
+    const tooLarge=await tool('block_oversized');
+    assert.equal(tooLarge.isError,true);
+    assert.equal(JSON.parse(tooLarge.content[0]!.text).code,'too_large');
+    const invalidWorkspace=await tool('block_parent','not_granted');
+    assert.equal(invalidWorkspace.isError,true);
+    assert.equal(JSON.parse(invalidWorkspace.content[0]!.text).code,'forbidden');
+    const owner=await f.authorize(false);
+    const owned=await f.rpc(owner.access_token,'tools/call',{
+      name:'redion_read_block',arguments:{workspaceId:'ws_test',blockId:'block_private'}});
+    assert.equal(owned.data.result.isError,undefined);
   }finally{f.close();}
 });
