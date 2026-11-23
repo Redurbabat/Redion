@@ -5,6 +5,7 @@ import {SCHEMA,ablageD1} from '../server/ablage.ts';
 import {mcpStateD1,type McpDatabase} from '../server/mcp/state.ts';
 import {createMcpOAuth,pkceChallenge} from '../server/mcp/oauth.ts';
 import {handleCloudMcp,isCloudMcpPublicPath,isCloudMcpPrivatePath} from '../server/mcp/cloud-router.ts';
+import {createCloudActions} from '../server/mcp/cloud-tools.ts';
 import fs from 'node:fs';
 import {createMcpOAuthHttp} from '../server/mcp/oauth-http.ts';
 import {hidden} from './helfer/mcp-cloud.mts';
@@ -14,17 +15,36 @@ const fixture=async()=>{
   const sqlite=new DatabaseSync(':memory:');
   sqlite.exec(SCHEMA);
   sqlite.exec(fs.readFileSync(new URL('../server/mcp/schema.sql',import.meta.url),'utf8'));
-  const db:McpDatabase={prepare(sql){
-    let values:(string|number)[]=[];
-    const params=()=>Object.fromEntries(values.map((v,i)=>['?'+(i+1),v]));
-    const bound=():any[]=>sql.includes('?1')?[params()]:values;
-    return {
-      bind(...next){values=next;return this;},
-      async first<T>(){return (sqlite.prepare(sql).get(...bound()) as T|undefined)??null;},
-      async all<T>(){return {results:sqlite.prepare(sql).all(...bound()) as T[]};},
-      async run(){return sqlite.prepare(sql).run(...bound());}
-    };
-  }};
+  const prepared=new WeakMap<object,{sql:string;bound:()=>any[]}>();
+  const db:McpDatabase={
+    prepare(sql){
+      let values:(string|number)[]=[];
+      const params=()=>Object.fromEntries(values.map((v,i)=>['?'+(i+1),v]));
+      const bound=():any[]=>sql.includes('?1')?[params()]:values;
+      const statement={
+        bind(...next:(string|number)[]){values=next;return this;},
+        async first<T>(){return (sqlite.prepare(sql).get(...bound()) as T|undefined)??null;},
+        async all<T>(){return {results:sqlite.prepare(sql).all(...bound()) as T[]};},
+        async run(){return sqlite.prepare(sql).run(...bound());}
+      };
+      prepared.set(statement,{sql,bound});
+      return statement;
+    },
+    async batch(statements){
+      // D1.batch uses a real transaction. Model it with the synchronous
+      // SQLite engine, including rollback when any statement fails.
+      sqlite.exec('BEGIN IMMEDIATE');
+      try{
+        const outcome=statements.map(statement=>{
+          const p=prepared.get(statement);
+          if(!p)throw new Error('Unbekanntes PreparedStatement im Batch');
+          return {success:true,results:sqlite.prepare(p.sql).all(...p.bound())};
+        });
+        sqlite.exec('COMMIT');
+        return outcome;
+      }catch(error){sqlite.exec('ROLLBACK');throw error;}
+    }
+  };
   const store=ablageD1(db);
   await store.setze('konten',{id:'owner',mail:'owner@example.test',name:'owner',herkunft:'github',angelegt:'',gesperrt:0});
   await store.setze('bereiche',{id:'ws_test',name:'Tests',besitzer:'owner',angelegt:''});
@@ -1198,5 +1218,202 @@ test('Cloud-MCP: Block lesen schützt Seiten, geheime Kinder und Datenbankzeilen
     const owned=await f.rpc(owner.access_token,'tools/call',{
       name:'redion_read_block',arguments:{workspaceId:'ws_test',blockId:'block_private'}});
     assert.equal(owned.data.result.isError,undefined);
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: atomare Block- und Aufgabenerstellung ist sichtbar, versioniert und idempotent',async()=>{
+  const f=await fixture();
+  try{
+    await f.store.setze('saetze',{id:'task_page',bereich:'ws_test',tabelle:'blocks',
+      daten:JSON.stringify({type:'page',text:'Lernaufgaben',inhalt:'Unveränderter Markdown-Inhalt'}),
+      verschluesselt:0,seite:'task_page',version:1,geaendert:'2026-11-23',
+      geloescht:0,vonGeraet:'Test'});
+    const reader=await f.authorize(false,'owner');
+    const denied=await f.rpc(reader.access_token,'tools/call',{name:'redion_add_block',
+      arguments:{workspaceId:'ws_test',documentId:'task_page',typ:'todo',
+        text:'Lernkarte wiederholen',expectedVersion:1}});
+    assert.equal(denied.data.result.isError,true);
+    assert.equal(JSON.parse(denied.data.result.content[0]!.text).code,'forbidden');
+    const writer=await f.authorize(true);
+    const token=writer.access_token;
+    const call=async(p:Record<string,unknown>)=>{
+      const result=await f.rpc(token,'tools/call',{name:'redion_add_block',
+        arguments:{workspaceId:'ws_test',documentId:'task_page',...p}});
+      assert.equal(result.status,200);
+      return result.data.result as {isError?:boolean;content:{text:string}[]};
+    };
+    const args={typ:'todo',text:'Lernkarte wiederholen',expectedVersion:1,
+      daten:{faellig:'2026-12-12',notiz:'Im ÜK nochmals kontrollieren'},
+      requestId:'unique_task_001'};
+    const first=await call(args);
+    assert.notEqual(first.isError,true,JSON.stringify(first));
+    const a=JSON.parse(first.content[0]!.text);
+    assert.equal(a.documentId,'task_page');
+    assert.equal(a.version,1);
+    assert.equal(a.parentVersion,2);
+    assert.equal(a.alreadyExists,false);
+    assert.match(a.blockId,/^[a-f0-9]{32}$/);
+    const row=await f.store.hole('saetze',{bereich:'ws_test',id:a.blockId});
+    assert.ok(row);
+    assert.equal(row.verschluesselt,0);
+    assert.equal(row.tabelle,'blocks');
+    assert.equal(row.seite,'task_page');
+    const payload=JSON.parse(row.daten);
+    assert.equal(payload.type,'todo');
+    assert.equal(payload.checked,false);
+    assert.equal(payload.parentId,'task_page');
+    assert.equal(payload.parentTable,'block');
+    assert.equal(payload.faellig,'2026-12-12');
+    assert.equal(payload.notiz,'Im ÜK nochmals kontrollieren');
+    const page=await f.store.hole('saetze',{bereich:'ws_test',id:'task_page'});
+    assert.ok(page);
+    const pageData=JSON.parse(page.daten);
+    assert.equal(page.version,2);
+    assert.deepEqual(pageData.content,[a.blockId]);
+    assert.equal(pageData.inhalt,'Unveränderter Markdown-Inhalt');
+    const read=await f.rpc(token,'tools/call',{
+      name:'redion_read_block',arguments:{workspaceId:'ws_test',blockId:a.blockId}});
+    assert.equal(JSON.parse(read.data.result.content[0]!.text).type,'todo');
+    const list=await f.rpc(token,'tools/call',{name:'redion_list_tasks',
+      arguments:{workspaceId:'ws_test',nurOffen:true}});
+    const tasks=JSON.parse(list.data.result.content[0]!.text).tasks;
+    assert.ok(tasks.some((x:any)=>x.taskId===a.blockId));
+    const retry=await call(args);
+    assert.notEqual(retry.isError,true);
+    const same=JSON.parse(retry.content[0]!.text);
+    assert.equal(same.alreadyExists,true);
+    assert.equal(same.blockId,a.blockId);
+    assert.equal(same.parentVersion,2);
+    assert.equal((await f.store.hole('saetze',{bereich:'ws_test',id:'task_page'}))!.version,2);
+    const reusingKey=await call({...args,text:'Andere Aufgabe'});
+    assert.equal(reusingKey.isError,true);
+    assert.equal(JSON.parse(reusingKey.content[0]!.text).code,'conflict');
+    const stale=await call({typ:'text',text:'Neue Überschrift',expectedVersion:1,
+      requestId:'different_task_001'});
+    assert.equal(stale.isError,true);
+    assert.equal(JSON.parse(stale.content[0]!.text).code,'conflict');
+    // No detached orphan block is created by a stale request.
+    const all=await f.store.finde('saetze',{bereich:'ws_test',tabelle:'blocks'});
+    assert.equal(all.length,2);
+    const second=await call({typ:'h2',text:'Kapitel 2',expectedVersion:2});
+    assert.notEqual(second.isError,true);
+    const b=JSON.parse(second.content[0]!.text);
+    assert.equal(b.parentVersion,3);
+    const secondRetry=JSON.parse((await call({typ:'h2',text:'Kapitel 2',
+      expectedVersion:2})).content[0]!.text);
+    assert.equal(secondRetry.alreadyExists,true);
+    assert.equal(secondRetry.blockId,b.blockId);
+    const finalPage=await f.store.hole('saetze',{bereich:'ws_test',id:'task_page'});
+    assert.deepEqual(JSON.parse(finalPage!.daten).content,[a.blockId,b.blockId]);
+  }finally{f.close();}
+});
+
+test('Cloud-MCP: Blockerstellung lehnt verbotene Typen, Fremdseiten, Geheimdaten und ungültige Angaben ab',async()=>{
+  const f=await fixture();
+  try{
+    await f.store.setze('konten',{id:'block_collab',mail:'block_collab@example.test',
+      name:'Block collaborator',herkunft:'github',angelegt:'',gesperrt:0});
+    const put=async(id:string,version=1,encrypted=0)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify({type:'page',text:id,content:[]}),
+        verschluesselt:encrypted,seite:id,version,geaendert:'2026-11-23',
+        geloescht:0,vonGeraet:'Test'});
+    };
+    await put('open_page');
+    await put('private_page');
+    await put('encrypted_page',1,1);
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'block_collab',
+      rolle:'edit',von:'owner',wann:'2026-11-23'});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'private_page',
+      kontoId:'block_collab',rolle:'kein',von:'owner',wann:'2026-11-23'});
+    const writer=await f.authorize(true,'block_collab');
+    const invoke=async(arguments_:Record<string,unknown>)=>{
+      const result=await f.rpc(writer.access_token,'tools/call',{
+        name:'redion_add_block',arguments:{workspaceId:'ws_test',documentId:'open_page',
+          typ:'text',text:'Hallo',expectedVersion:1,...arguments_}});
+      assert.equal(result.status,200);
+      return result.data.result as {isError?:boolean;content:{text:string}[]};
+    };
+    const badCases=[
+      {typ:'schaltplan',text:'a'},
+      {typ:'database'},
+      {typ:'todo',text:'  '},
+      {typ:'todo',daten:{checked:true}},
+      {typ:'todo',daten:{faellig:'2026-02-30'}},
+      {typ:'todo',daten:{notiz:'x'.repeat(2001)}},
+      {typ:'h2',daten:{parentId:'private_page'}},
+      {inBlockId:'some_nested_parent'},
+      {requestId:'bad'},
+      {expectedVersion:0}
+    ];
+    for(const item of badCases){
+      const result=await invoke(item);
+      assert.equal(result.isError,true,JSON.stringify(item));
+      assert.equal(JSON.parse(result.content[0]!.text).code,'invalid_arguments',JSON.stringify(item));
+    }
+    const privatePage=await invoke({documentId:'private_page'});
+    assert.equal(privatePage.isError,true);
+    assert.equal(JSON.parse(privatePage.content[0]!.text).code,'forbidden');
+    const encryptedPage=await invoke({documentId:'encrypted_page'});
+    assert.equal(encryptedPage.isError,true);
+    assert.equal(JSON.parse(encryptedPage.content[0]!.text).code,'encrypted');
+    const outside=await invoke({workspaceId:'foreign_workspace'});
+    assert.equal(outside.isError,true);
+    const first=await invoke({typ:'todo',text:'Nur im offenen Projekt'});
+    assert.notEqual(first.isError,true,JSON.stringify(first));
+    const item=JSON.parse(first.content[0]!.text);
+    const siblings=await f.store.finde('saetze',{bereich:'ws_test',tabelle:'blocks'});
+    assert.equal(siblings.length,4);
+    assert.equal(JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:'open_page'}))!.daten).content[0],item.blockId);
+    // At most one of two same-version competing writes is accepted.
+    const competitors=await Promise.all([
+      invoke({typ:'h2',text:'First',expectedVersion:2,requestId:'concurrent_first'}),
+      invoke({typ:'h2',text:'Second',expectedVersion:2,requestId:'concurrent_second'})
+    ]);
+    assert.equal(competitors.filter(x=>x.isError!==true).length,1);
+    assert.equal(competitors.filter(x=>x.isError===true).length,1);
+    const updated=await f.store.hole('saetze',{bereich:'ws_test',id:'open_page'});
+    const ids=JSON.parse(updated!.daten).content as string[];
+    assert.equal(ids.length,2);
+    const all=await f.store.finde('saetze',{bereich:'ws_test',tabelle:'blocks'});
+    assert.equal(all.length,5);
+    assert.equal(new Set(ids).size,ids.length);
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: ohne atomare D1-Batch-Funktion wird kein Block erstellt',async()=>{
+  const f=await fixture();
+  try{
+    await f.store.setze('saetze',{id:'batch_guard_page',bereich:'ws_test',tabelle:'blocks',
+      daten:JSON.stringify({type:'page',text:'Sicherungsseite',content:[]}),
+      verschluesselt:0,seite:'batch_guard_page',version:1,geaendert:'2026-11-23',
+      geloescht:0,vonGeraet:'Test'});
+    const noBatch={prepare:f.db.prepare.bind(f.db)};
+    const action=createCloudActions(f.store,noBatch,{
+      userId:'owner',clientId:'test-client',grantId:'guard-test',
+      workspaceIds:['ws_test'],scopes:['redion:read','redion:write']
+    });
+    await assert.rejects(
+      action('redion_add_block',{workspaceId:'ws_test',documentId:'batch_guard_page',
+        expectedVersion:1,typ:'todo',text:'Darf nicht gespeichert werden'}),
+      (error:any)=>error?.reason==='unavailable');
+    assert.equal((await f.store.finde('saetze',{bereich:'ws_test',tabelle:'blocks'})).length,1);
+    assert.deepEqual(JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:'batch_guard_page'}))!.daten).content,[]);
+  }finally{f.close();}
+});
+
+test('Cloud-MCP: Test-Datenbank rollt vollständige Batch-Schreibfehler zurück',async()=>{
+  const f=await fixture();
+  try{
+    assert.ok(f.db.batch);
+    await assert.rejects(f.db.batch!([
+      f.db.prepare("INSERT INTO saetze(id,bereich,tabelle,daten,seite,version,geaendert) "+
+        "VALUES(?1,?2,'blocks',?3,?4,1,?5) RETURNING id")
+        .bind('rolled_back','ws_test','{"type":"todo"}','rolled_back','2030-01-01'),
+      f.db.prepare("INSERT INTO a_table_that_does_not_exist(id) VALUES('bad') RETURNING id")
+    ]));
+    assert.equal(await f.store.hole('saetze',{bereich:'ws_test',id:'rolled_back'}),null);
   }finally{f.close();}
 });

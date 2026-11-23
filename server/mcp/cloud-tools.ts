@@ -39,6 +39,12 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_read_pages',description:'Liest bis zu 10 Seiten auf einmal, maximal 2.000 Zeichen pro Seite. Unzugängliche IDs werden einheitlich als nicht verfügbar markiert.',
     inputSchema:{type:'object',properties:{...workspace,documentIds:{type:'array',items:{type:'string',minLength:1,maxLength:128},minItems:1,maxItems:10},maxChars:{type:'integer',minimum:1,maximum:2000}},
       required:['workspaceId','documentIds'],additionalProperties:false}},
+  {name:'redion_add_block',description:'Erstellt einen sicheren Text- oder Todo-Block auf einer freigegebenen Seite; neue Blockzeile und Elternliste werden in einer D1-Transaktion gespeichert. requestId optional, Wiederholung mit derselben Seitenversion idempotent. Verschachtelte Blöcke noch nicht unterstützt.',
+    inputSchema:{type:'object',properties:{...workspace,...documentId,expectedVersion:{type:'integer',minimum:1},
+      typ:{type:'string',enum:['text','h1','h2','h3','todo','bullet','number','quote','code','divider']},text:{type:'string',maxLength:12000},
+      daten:{type:'object',additionalProperties:true},inBlockId:idField,
+      requestId:{type:'string',minLength:8,maxLength:100}},
+      required:['workspaceId','documentId','expectedVersion','typ'],additionalProperties:false}},
   {name:'redion_create_page',description:'Legt eine Seite an. requestId verhindert doppelte Erstellung bei Wiederholung.',
     inputSchema:{type:'object',properties:{...workspace,title:nameField,content:{type:'string',maxLength:12000},parentId:idField,requestId:{type:'string',minLength:8,maxLength:100}},
       required:['workspaceId','title','requestId'],additionalProperties:false}},
@@ -72,7 +78,7 @@ export const CLOUD_TOOLS:ToolDef[]=[
       replacement:{type:'string',maxLength:4000},expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId','find','replacement','expectedVersion'],additionalProperties:false}}
 ];
-const writeNames=new Set(['redion_create_page','redion_update_page','redion_replace_text','redion_append_content','redion_move_page']);
+const writeNames=new Set(['redion_create_page','redion_update_page','redion_replace_text','redion_append_content','redion_move_page','redion_add_block']);
 // MCP annotations tell AI clients which tools are read-only, additive or
 // modifying. They are advisory; server-side OAuth and ACL checks still govern.
 const toolTitles:Record<string,string>={
@@ -82,6 +88,7 @@ const toolTitles:Record<string,string>={
   redion_get_page_path:'Seitenpfad anzeigen',
   redion_read_pages:'Mehrere Seiten lesen',
   redion_create_page:'Seite erstellen',
+  redion_add_block:'Block oder Aufgabe erstellen',
   redion_update_page:'Seitentitel ändern',
   redion_list_databases:'Datenbanken auflisten',
   redion_read_database:'Datenbank lesen',
@@ -103,7 +110,7 @@ export const visibleCloudTools=(p:McpPrincipal):ToolDef[]=>
       return {...t,annotations:{
         title:toolTitles[t.name]||t.name,readOnlyHint:readOnly,
         destructiveHint:destructiveNames.has(t.name),
-        idempotentHint:t.name==='redion_create_page',
+        idempotentHint:t.name==='redion_create_page'||t.name==='redion_add_block',
         openWorldHint:false
       }};
     });
@@ -666,6 +673,132 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     }
     if(!principal.scopes.includes('redion:write'))
       return err('forbidden','Schreibrechte sind nicht freigegeben.');
+    if(name==='redion_add_block'){
+      const id=required(args.documentId,128);
+      const ver=expected(args.expectedVersion);
+      const current=await page(w,id,'bearbeiten');
+      const typ=required(args.typ,40);
+      const allowedTypes=new Set(['text','h1','h2','h3','todo','bullet','number','quote','code','divider']);
+      if(!allowedTypes.has(typ))
+        return err('invalid_arguments','Diese Blockart erfordert eine eigene geprüfte Schreibfunktion.');
+      if(args.inBlockId!==undefined)
+        return err('invalid_arguments','Verschachtelte Blockerstellung ist noch nicht freigegeben.');
+      const content=args.text===undefined?'':text(args.text,12000);
+      if(args.text!==undefined&&(typeof args.text!=='string'||args.text.length>12000))
+        return err('invalid_arguments','Blocktext muss ein Text mit höchstens 12.000 Zeichen sein.');
+      if(typ==='todo'&&!content.trim())return err('invalid_arguments','Eine Aufgabe benötigt einen Titel.');
+      if(args.daten!==undefined&&(!args.daten||typeof args.daten!=='object'||Array.isArray(args.daten)))
+        return err('invalid_arguments','Blockdaten müssen ein Objekt sein.');
+      const input=args.daten as Record<string,unknown>|undefined;
+      const meta:Record<string,unknown>={};
+      if(input){
+        if(typ!=='todo'||Object.keys(input).some(k=>!['faellig','notiz'].includes(k)))
+          return err('invalid_arguments','Nur geprüfte Aufgabenfelder faellig und notiz sind erlaubt.');
+        if(input.faellig!==undefined){
+          if(typeof input.faellig!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(input.faellig)||
+             !Number.isFinite(Date.parse(input.faellig+'T00:00:00Z'))||
+             new Date(input.faellig+'T00:00:00Z').toISOString().slice(0,10)!==input.faellig)
+            return err('invalid_arguments','faellig muss ein gültiges Datum JJJJ-MM-TT sein.');
+          meta.faellig=input.faellig;
+        }
+        if(input.notiz!==undefined){
+          if(typeof input.notiz!=='string'||input.notiz.length>2000)
+            return err('invalid_arguments','Notiz darf maximal 2.000 Zeichen haben.');
+          meta.notiz=input.notiz;
+        }
+      }
+      // Keep stale expectedVersion for SQL's conditional INSERT. A genuine
+      // retry must still find the existing block after page version advanced.
+      if(current.data.content!==undefined&&(!Array.isArray(current.data.content)||
+        current.data.content.some(k=>typeof k!=='string'||!k||k.length>128)))
+        return err('invalid_data','Die Elternseite enthält eine ungültige Blockliste.');
+      if(JSON.stringify(current.data).length>63000)
+        return err('too_large','Die Elternseite hat nicht genug Platz für einen weiteren Block.');
+      if(!db.batch)
+        return err('unavailable','Die D1-Transaktion für Blockerstellung steht nicht zur Verfügung.');
+      let requestId='';
+      if(args.requestId!==undefined){
+        requestId=required(args.requestId,100);
+        if(requestId.length<8||!/^[A-Za-z0-9_-]+$/.test(requestId))
+          return err('invalid_arguments','requestId muss aus 8–100 Buchstaben, Zahlen, _ oder - bestehen.');
+      }
+      const canonical=JSON.stringify({w,id,typ,content,meta});
+      const hash=async(value:string)=>Array.from(new Uint8Array(
+        await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),
+        b=>b.toString(16).padStart(2,'0')).join('');
+      const fingerprint=await hash(canonical);
+      const key=requestId||'version-'+ver+'-'+fingerprint;
+      const blockId=(await hash('cloud-mcp-block\0'+principal.grantId+'\0'+w+'\0'+id+'\0'+key)).slice(0,32);
+      const now=new Date().toISOString();
+      const data={id:blockId,type:typ,text:content,content:[],parentId:id,
+        parentTable:'block',alive:true,created:now,edited:now,
+        herkunft:'ki',...(typ==='todo'?{checked:false}:{}),...meta,
+        mcpRequestHash:fingerprint};
+      const payload=JSON.stringify(data);
+      if(payload.length>28000)return err('too_large','Blockdaten sind zu gross.');
+      // Both statements execute in one D1 transaction. The INSERT is
+      // conditional on the same parent version and shape as the UPDATE;
+      // neither can leave a detached child on stale-version conflicts.
+      const insert=db.prepare(
+        "INSERT OR IGNORE INTO saetze (id,bereich,tabelle,daten,verschluesselt,seite,version,geaendert,geloescht,vonGeraet) "+
+        "SELECT ?1,?2,'blocks',?3,0,?4,1,?5,0,'Cloud-MCP' FROM saetze p "+
+        "WHERE p.bereich=?2 AND p.id=?4 AND p.tabelle='blocks' AND p.version=?6 "+
+        "AND p.verschluesselt=0 AND p.geloescht=0 AND p.seite=?4 "+
+        "AND json_valid(p.daten) AND json_extract(p.daten,'$.type')='page' "+
+        "AND (json_type(p.daten,'$.content') IS NULL OR json_type(p.daten,'$.content')='array') "+
+        "AND COALESCE(json_array_length(p.daten,'$.content'),0)<200 "+
+        "AND NOT EXISTS (SELECT 1 FROM json_each(CASE "+
+        "WHEN json_type(p.daten,'$.content')='array' "+
+        "THEN json_extract(p.daten,'$.content') ELSE '[]' END) WHERE value=?1) "+
+        "RETURNING id"
+      ).bind(blockId,w,payload,id,now,ver);
+      const updateParent=db.prepare(
+        "UPDATE saetze SET daten=json_set("+
+        "CASE WHEN json_type(daten,'$.content')='array' "+
+        "THEN json_insert(daten,'$.content[#]',?1) "+
+        "ELSE json_set(daten,'$.content',json_array(?1)) END,"+
+        "'$.edited',?2),version=version+1,geaendert=?2,vonGeraet='Cloud-MCP' "+
+        "WHERE bereich=?3 AND id=?4 AND tabelle='blocks' AND version=?5 "+
+        "AND verschluesselt=0 AND geloescht=0 AND json_valid(daten) "+
+        "AND json_extract(daten,'$.type')='page' "+
+        "AND (json_type(daten,'$.content') IS NULL OR json_type(daten,'$.content')='array') "+
+        "AND COALESCE(json_array_length(daten,'$.content'),0)<200 "+
+        "AND EXISTS (SELECT 1 FROM saetze child WHERE child.bereich=?3 AND child.id=?1 "+
+        "AND child.tabelle='blocks' AND child.verschluesselt=0 AND child.geloescht=0 "+
+        "AND json_valid(child.daten) AND json_extract(child.daten,'$.mcpRequestHash')=?6 "+
+        "AND json_extract(child.daten,'$.parentId')=?4) "+
+        "AND NOT EXISTS (SELECT 1 FROM json_each(CASE WHEN json_type(daten,'$.content')='array' "+
+        "THEN json_extract(daten,'$.content') ELSE '[]' END) WHERE value=?1) "+
+        "RETURNING version"
+      ).bind(blockId,now,w,id,ver,fingerprint);
+      const outcome=await db.batch([insert,updateParent]);
+      const inserted=Array.isArray(outcome[0]?.results)&&outcome[0].results.length>0;
+      const attached=Array.isArray(outcome[1]?.results)&&outcome[1].results.length>0;
+      if(inserted&&attached){
+        const version=(outcome[1]!.results![0] as {version:number}).version;
+        await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',
+          text:'Block über Cloud-MCP erstellt',objekt:blockId});
+        return {workspaceId:w,documentId:id,blockId,version:1,
+          parentVersion:version,alreadyExists:false};
+      }
+      if(inserted!==attached)
+        return err('conflict','Die Blocktransaktion konnte nicht vollständig bestätigt werden.');
+      const existing=await ablage.hole('saetze',{bereich:w,id:blockId});
+      if(existing&&!existing.geloescht&&!existing.verschluesselt&&existing.tabelle==='blocks'){
+        try{
+          const stored=JSON.parse(String(existing.daten)) as Record<string,unknown>;
+          const fresh=await page(w,id,'lesen');
+          if(stored.mcpRequestHash===fingerprint&&stored.parentId===id&&
+            Array.isArray(fresh.data.content)&&fresh.data.content.includes(blockId))
+            return {workspaceId:w,documentId:id,blockId,
+              version:Number(existing.version)||1,parentVersion:Number(fresh.s.version)||1,
+              alreadyExists:true};
+        }catch(error){if(!(error instanceof CloudMcpToolError))throw error;}
+      }
+      if(Array.isArray(current.data.content)&&current.data.content.length>=200)
+        return err('too_large','Diese Seite hat zu viele Blöcke für einen Cloud-MCP-Aufruf.');
+      return err('conflict','Seitenversion oder requestId stimmt nicht mehr. Bitte neu lesen.');
+    }
     if(name==='redion_create_page'){
       const title=required(args.title,160);
       if(args.content!==undefined&&(typeof args.content!=='string'||args.content.length>12000))

@@ -50,6 +50,16 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
   assert.ok(names(read).includes('redion_read_schematic'));
   assert.deepEqual(schematic?.inputSchema.required,['workspaceId','blockId']);
   assert.equal(schematic?.annotations?.readOnlyHint,true);
+  const addBlock=write.find(x=>x.name==='redion_add_block');
+  assert.equal(names(read).includes('redion_add_block'),false);
+  assert.equal(names(write).includes('redion_add_block'),true);
+  assert.deepEqual(addBlock?.inputSchema.required,['workspaceId','documentId','expectedVersion','typ']);
+  assert.equal(addBlock?.inputSchema.properties.requestId&&
+    (addBlock.inputSchema.properties.requestId as {minLength:number}).minLength,8);
+  assert.equal(addBlock?.annotations?.readOnlyHint,false);
+  assert.equal(addBlock?.annotations?.idempotentHint,true);
+  assert.deepEqual((addBlock?.inputSchema.properties.typ as {enum:string[]})?.enum,
+    ['text','h1','h2','h3','todo','bullet','number','quote','code','divider']);
   const readBlock=write.find(x=>x.name==='redion_read_block');
   assert.ok(names(read).includes('redion_read_block'));
   assert.ok(names(write).includes('redion_read_block'));
