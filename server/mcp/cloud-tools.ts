@@ -40,8 +40,8 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{},additionalProperties:false}},
   {name:'redion_search',description:'Sucht nach freigegebenen, nicht verschlüsselten Seiten.',
     inputSchema:{type:'object',properties:{...workspace,query:{type:'string',maxLength:200},limit:{type:'integer',minimum:1,maximum:30},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
-  {name:'redion_read_page',description:'Liest eine Klartext-Seite abschnittsweise. Der Seiteninhalt kommt standardmässig in markdown (nicht im MCP-Transportfeld content). Für alte Clients kann responseFormat=legacy die bisherige content-Antwort zurückgeben. expectedVersion schützt gegen gemischte Versionen.',
-    inputSchema:{type:'object',properties:{...workspace,...documentId,offset:{type:'integer',minimum:0},limit:{type:'integer',minimum:1,maximum:12000},expectedVersion:{type:'integer',minimum:1},responseFormat:{type:'string',enum:['portable','legacy']}},required:['workspaceId','documentId'],additionalProperties:false}},
+  {name:'redion_read_page',description:'Liest Markdown und (bei blockbasierten Seiten) eine rechtegefilterte Blockvorschau. blockOffset und blockLimit paginieren sichtbare direkte Kinder unabhängig von Markdown. Bei älteren Clients steht bereits die erste Vorschau ohne Zusatzparameter bereit.',
+    inputSchema:{type:'object',properties:{...workspace,...documentId,offset:{type:'integer',minimum:0},limit:{type:'integer',minimum:1,maximum:12000},blockOffset:{type:'integer',minimum:0,maximum:100000},blockLimit:{type:'integer',minimum:1,maximum:20},expectedVersion:{type:'integer',minimum:1},responseFormat:{type:'string',enum:['portable','legacy']}},required:['workspaceId','documentId'],additionalProperties:false}},
   {name:'redion_get_page_path',description:'Zeigt den Pfad einer lesbaren Seite von der Hauptseite bis zum Dokument. Wenn ein Vorfahr nicht lesbar ist, werden keine Pfadteile offengelegt.',
     inputSchema:{type:'object',properties:{...workspace,...documentId},required:['workspaceId','documentId'],additionalProperties:false}},
   {name:'redion_read_pages',description:'Liest bis zu 10 Seiten auf einmal, maximal 2.000 Zeichen pro Seite. Unzugängliche IDs werden einheitlich als nicht verfügbar markiert.',
@@ -91,8 +91,10 @@ export const CLOUD_TOOLS:ToolDef[]=[
       limit:{type:'integer',minimum:1,maximum:20},offset:{type:'integer',minimum:0,maximum:100000},
       expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId'],additionalProperties:false}},
-  {name:'redion_read_block',description:'Liest einen unverschlüsselten RED-ION-Block mit Seitenberechtigungen und sichtbaren Kindblöcken. Datenbankzeilen nur über redion_read_database lesen.',
-    inputSchema:{type:'object',properties:{...workspace,blockId:idField},required:['workspaceId','blockId'],additionalProperties:false}},
+  {name:'redion_read_block',description:'Liest einen Klartextblock mit begrenzter, paginierter sichtbarer Kinderliste. Bei grossen Blöcken erscheint childrenTruncated samt nextChildOffset, kein Fehler wegen mehr als 40 Kindern. Datenbankzeilen nicht direkt lesen.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField,
+      childOffset:{type:'integer',minimum:0,maximum:100000},
+      childLimit:{type:'integer',minimum:1,maximum:40}},required:['workspaceId','blockId'],additionalProperties:false}},
   {name:'redion_read_schematic',description:'Liest einen vorhandenen Schaltplan-Block mit geprüften Seitenrechten. Bauteile, Leitungen, Beschriftungen und Planversion sind enthalten.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField},required:['workspaceId','blockId'],additionalProperties:false}},
   {name:'redion_list_symbols',description:'Listet die 131 eingebauten elektrotechnischen Fachzeichen mit Nummern und Positionen der Anschlüsse. Keine auf Geräten nachinstallierten Symbole; nicht als zertifizierte Normbibliothek verwenden.',
@@ -102,8 +104,8 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_list_tasks',description:'Listet lesbare Aufgaben aus Todo-Blöcken und aus Datenbankzeilen mit sichtbaren Status- oder Checkbox-Spalten. Nur sichtbare Treffer zählen bei der Paginierung.',
     inputSchema:{type:'object',properties:{...workspace,nurOffen:{type:'boolean'},
       limit:{type:'integer',minimum:1,maximum:40},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
-  {name:'redion_read_database',description:'Liest freigegebene Datenbankspalten und paginierte Zeilen. Spaltenrechte werden auf Schema und Werte angewendet.',
-    inputSchema:{type:'object',properties:{...workspace,databaseId:idField,limit:{type:'integer',minimum:1,maximum:10},
+  {name:'redion_read_database',description:'Liest freigegebene Datenbankspalten und sichtbare Zeilen. Kompatibilität mit älteren Clients: limit bis 500 wird akzeptiert, aber pro Antwort sicher auf maximal 10 sichtbare Zeilen begrenzt. effectiveLimit und limitCapped zeigen das an; für weitere Zeilen nextOffset verwenden.',
+    inputSchema:{type:'object',properties:{...workspace,databaseId:idField,limit:{type:'integer',minimum:1,maximum:500},
       offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId','databaseId'],additionalProperties:false}},
   {name:'redion_list_databases',description:'Listet lesbare Klartext-Datenbanken auf Seiten, die der Benutzer lesen darf. Keine versteckten Seiten oder Spaltenwerte.',
     inputSchema:{type:'object',properties:{...workspace,limit:{type:'integer',minimum:1,maximum:30},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
@@ -210,6 +212,33 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     if(!changed)return err('conflict','Seite wurde zwischenzeitlich geändert oder der Zielordner wurde verschoben. Bitte erneut lesen.');
     await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',text:'Seite über Cloud-MCP bearbeitet',objekt:id});
     return {documentId:id,version:changed.version};
+  };
+  /** Fetch only embedded, visible children and paginate AFTER filtering.
+   * No raw-reference count or hidden child IDs leave the server.
+   * Used by read_page previews and read_block for old connector versions.
+   */
+  const visibleChildren=async(w:string,pageId:string,parentId:string,raw:unknown,
+    offset:number,max:number)=>{
+    if(raw!==undefined&&!Array.isArray(raw))
+      return err('invalid_data','Blockliste ist kein Array.');
+    const ids=Array.isArray(raw)?raw:[];
+    if(ids.length>5000)return err('too_large','Blockliste überschreitet das sichere Leselimit.');
+    if(ids.length===0)return {rows:[],nextOffset:null};
+    const result=await db.prepare(
+      "SELECT s.id,s.daten,s.version FROM json_each(?1) ref "+
+      "JOIN saetze s ON s.bereich=?2 AND s.id=ref.value "+
+      "WHERE ref.type='text' AND length(ref.value) BETWEEN 1 AND 128 "+
+      "AND s.tabelle='blocks' AND s.geloescht=0 AND s.verschluesselt=0 "+
+      "AND s.seite=?3 AND CASE WHEN json_valid(s.daten) THEN "+
+      "(json_extract(s.daten,'$.parentId')=?4 AND "+
+      "COALESCE(json_extract(s.daten,'$.parentTable'),'')<>'collection' AND "+
+      "COALESCE(json_extract(s.daten,'$.alive'),1)<>0 AND "+
+      "json_type(s.daten,'$.type')='text') ELSE 0 END "+
+      "GROUP BY s.id ORDER BY MIN(CAST(ref.key AS INTEGER)) ASC LIMIT ?5 OFFSET ?6"
+    ).bind(JSON.stringify(ids),w,pageId,parentId,max+1,offset)
+      .all<{id:string;daten:string;version:number}>();
+    return {rows:result.results.slice(0,max),
+      nextOffset:result.results.length>max?offset+max:null};
   };
   return async(name:string,args:Args):Promise<unknown>=>{
     // Nicht vorhandene Werkzeugnamen sind keine verweigerte OAuth-Freigabe.
@@ -320,25 +349,18 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const pageId=String(s.seite||'');
       if(!pageId)return err('not_found','Block nicht verfügbar.');
       await page(w,pageId,'lesen');
-      // Only direct, readable children may appear, never a raw list of
-      // encrypted, removed or unrelated child IDs. Limit work and response.
-      const childIds=Array.isArray(data.content)?data.content:[];
-      if(childIds.length>40)return err('too_large','Block hat zu viele Kinder für einen Aufruf.');
-      const visibleChildren:string[]=[];
-      for(const childId of childIds){
-        if(typeof childId!=='string'||!childId||childId.length>128)continue;
-        if(visibleChildren.includes(childId))continue;
-        const child=await ablage.hole('saetze',{bereich:w,id:childId});
-        if(!child||child.tabelle!=='blocks'||child.geloescht||child.verschluesselt||
-           child.seite!==pageId)continue;
-        try{
-          const nested=JSON.parse(String(child.daten||'')) as Record<string,unknown>;
-          if(nested&&nested.alive!==false&&nested.parentId===id&&nested.parentTable!=='collection')
-            visibleChildren.push(childId);
-        }catch{/* Beschädigte oder unlesbare Kinder nicht preisgeben. */}
-      }
+      // Do not fail on a page with >40 children: return a bounded visible
+      // window and a continuation cursor. Older clients can read page 1.
+      const childOffset=args.childOffset===undefined?0:args.childOffset;
+      if(!Number.isSafeInteger(childOffset)||Number(childOffset)<0||
+        Number(childOffset)>100000)
+        return err('invalid_arguments','Ungültiger Kindblockversatz.');
+      const childLimit=limit(args.childLimit,40,40);
+      const selection=await visibleChildren(w,pageId,id,data.content,
+        Number(childOffset),childLimit);
+      const visibleChildrenIds=selection.rows.map(child=>child.id);
       // No unfiltered nested IDs, including non-standard "children" arrays.
-      const sanitized={...data,content:visibleChildren};
+      const sanitized={...data,content:visibleChildrenIds};
       if('children' in sanitized)delete sanitized.children;
       if(name==='redion_read_schematic'){
         if(data.type!=='schaltplan'||!data.plan||typeof data.plan!=='object'||Array.isArray(data.plan))
@@ -356,7 +378,8 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       if(payload.length>12000)return err('too_large','Blockdaten sind zu gross.');
       return {workspaceId:w,blockId:id,documentId:pageId,
         version:Number(s.version)||1,type:data.type,text:String(data.text||'').slice(0,12000),
-        data:sanitized,children:visibleChildren};
+        data:sanitized,children:visibleChildrenIds,
+        childrenTruncated:selection.nextOffset!==null,nextChildOffset:selection.nextOffset};
     }
     if(name==='redion_list_tasks'){
       if(args.nurOffen!==undefined&&typeof args.nurOffen!=='boolean')
@@ -578,7 +601,8 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     }
     if(name==='redion_read_database'){
       const databaseId=required(args.databaseId,128);
-      const max=limit(args.limit,10,10);
+      const requestedLimit=limit(args.limit,10,500);
+      const max=Math.min(10,requestedLimit);
       const offset=args.offset===undefined?0:args.offset;
       if(!Number.isSafeInteger(offset)||Number(offset)<0||Number(offset)>1000)
         return err('invalid_arguments','Ungültiger Datenbankversatz.');
@@ -651,6 +675,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       }
       return {workspaceId:w,databaseId,name:String(data.name||'').slice(0,160),
         version:Number(database.version)||1,columns:cols,rows:rows.slice(0,max),
+        requestedLimit,effectiveLimit:max,limitCapped:requestedLimit>max,
         nextOffset:rows.length>max?Number(offset)+max:null};
     }
     if(name==='redion_list_databases'){
@@ -781,13 +806,33 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         // Structural hint only: do not reveal the number or IDs of hidden children.
         blockStorage:Array.isArray(result.data.content)?'referenced':'none'};
       const part=full.slice(start,end);
+      const blockOffset=args.blockOffset===undefined?0:args.blockOffset;
+      if(!Number.isSafeInteger(blockOffset)||Number(blockOffset)<0||
+        Number(blockOffset)>100000)
+        return err('invalid_arguments','Ungültiger Blockversatz.');
+      const blockLimit=limit(args.blockLimit,20,20);
+      // This is a preview, not a conversion into Markdown. A page may have
+      // an empty Markdown field and still contain hundreds of valid blocks.
+      const preview=base.blockStorage==='referenced'?
+        await visibleChildren(w,id,id,result.data.content,Number(blockOffset),blockLimit):
+        {rows:[],nextOffset:null};
+      const blockPreview=preview.rows.map(row=>{
+        const info=JSON.parse(row.daten) as Record<string,unknown>;
+        const fullText=typeof info.text==='string'?info.text:'';
+        return {blockId:row.id,type:info.type,text:fullText.slice(0,500),
+          textTruncated:fullText.length>500,version:Number(row.version)||1};
+      });
+      const previewFields={blockPreview,nextBlockOffset:preview.nextOffset,
+        blockPreviewTruncated:preview.nextOffset!==null};
+
       // Some ChatGPT app adapters interpret a top-level "content" property
       // as the MCP transport envelope and silently drop the tool result.
       // Use an unambiguous field name by default; keep an explicit legacy
       // response for existing consumers that expect .content.
       if(args.responseFormat!==undefined&&args.responseFormat!=='portable'&&args.responseFormat!=='legacy')
         return err('invalid_arguments','Unbekanntes Seiten-Antwortformat.');
-      return args.responseFormat==='legacy'?{...base,content:part}:{...base,markdown:part};
+      return args.responseFormat==='legacy'?{...base,...previewFields,content:part}:
+        {...base,...previewFields,markdown:part};
     }
     if(name==='redion_list_child_pages'||name==='redion_list_root_pages'){
       const root=name==='redion_list_root_pages';
