@@ -138,11 +138,15 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       const transport=new StreamableHTTPClientTransport(new URL(origin+'/mcp/cloud'),{authProvider:provider,fetch:fetcher});
       await client.connect(transport);
       assert.equal(transport.sessionId,undefined);
-      const list=await client.listTools();assert.equal(list.tools.length,9);
+      const list=await client.listTools();assert.equal(list.tools.length,11);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
       assert.equal(JSON.parse(result.content[0]!.text).markdown,'Nur Testdaten');
        assert.equal((result.structuredContent as any)?.markdown,'Nur Testdaten');
-      const unknown=await client.callTool({name:'redion_list_tasks',arguments:{workspaceId:'ws_test'}});
+      const tasks=await client.callTool({name:'redion_list_tasks',arguments:{workspaceId:'ws_test'}});
+      assert.deepEqual(JSON.parse(tasks.content[0]!.text).tasks,[]);
+      const catalog=await client.callTool({name:'redion_list_block_types',arguments:{}});
+      assert.ok(JSON.parse(catalog.content[0]!.text).blockTypes.some((x:any)=>x.id==='schaltplan'));
+      const unknown=await client.callTool({name:'redion_trash_page',arguments:{workspaceId:'ws_test'}});
        assert.equal(unknown.isError,true);
        assert.equal(JSON.parse(unknown.content[0]!.text).code,'unknown_tool');
     const denied=await client.callTool({name:'redion_create_page',arguments:{workspaceId:'ws_test',title:'Gesperrt',requestId:'sdk_request_01'}});
@@ -981,5 +985,114 @@ test('Cloud-MCP: Tabellenzeilen und Schema beachten Seiten-, Zeilen- und Spalten
     const noWorkspace=await f.rpc(reader.access_token,'tools/call',{
       name:'redion_read_database',arguments:{workspaceId:'not_granted',databaseId:'db_readable'}});
     assert.equal(noWorkspace.data.result.isError,true);
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: Aufgabenlisten prüfen Seitenrechte, Statusspalten, Verschlüsselung und sichtbare Offsets',async()=>{
+  const f=await fixture();
+  try{
+    await f.store.setze('konten',{id:'task_reader',mail:'task_reader@example.test',
+      name:'Task reader',herkunft:'github',angelegt:'',gesperrt:0});
+    const put=async(id:string,table:string,data:Record<string,unknown>,seite=id,time='2030-01-01',encrypted=0)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:table,daten:JSON.stringify(data),
+        verschluesselt:encrypted,seite,version:2,geaendert:time,geloescht:0,vonGeraet:'Test'});
+    };
+    await put('page_public','blocks',{type:'page',text:'Offene Seite',inhalt:''});
+    await put('page_private','blocks',{type:'page',text:'Vertrauliche Seite',inhalt:''});
+    await put('page_encrypted','blocks',{type:'page',text:'Verschlüsselt',inhalt:''},'page_encrypted','2030-01-01',1);
+    await put('todo_open','blocks',{type:'todo',text:'Öffentliche Aufgabe',checked:false},
+      'page_public','2045-01-01');
+    await put('todo_done','blocks',{type:'todo',text:'Erledigte Aufgabe',checked:true},
+      'page_public','2044-01-01');
+    await put('todo_private','blocks',{type:'todo',text:'Geheime Aufgabe',checked:false},
+      'page_private','2043-01-01');
+    await put('todo_encrypted_parent','blocks',{type:'todo',text:'Verschlüsselter Elternblock',checked:false},
+      'page_encrypted','2042-01-01');
+    await put('todo_encrypted','blocks',{type:'todo',text:'Verschlüsselter Block',checked:false},
+      'page_public','2042-01-01',1);
+    await put('todo_no_text','blocks',{type:'todo',text:'   ',checked:false},
+      'page_public','2041-01-01');
+    const schema={title:{name:'Titel',type:'title'},status:{
+      name:'Stand',type:'status',options:[{name:'Offen'},{name:'Erledigt'}]},due:{name:'Fällig',type:'date'}};
+    const blockedSchema={title:{name:'Titel',type:'title'},
+      status:{name:'Privater Stand',type:'status'}};
+    await put('coll_public','collections',{id:'coll_public',name:'Aufgabenbank',schema},
+      'coll_public','2040-01-01');
+    await put('coll_hidden_status','collections',{id:'coll_hidden_status',name:'Versteckt',schema:blockedSchema},
+      'coll_hidden_status','2039-01-01');
+    await put('coll_private','collections',{id:'coll_private',name:'Privat',schema},
+      'coll_private','2038-01-01');
+    await put('link_public','blocks',{type:'database',collectionId:'coll_public',parentId:'page_public'},
+      'page_public');
+    await put('link_hidden_status','blocks',{type:'database',collectionId:'coll_hidden_status',
+      parentId:'page_public'},'page_public');
+    await put('link_private','blocks',{type:'database',collectionId:'coll_private',parentId:'page_private'},
+      'page_private');
+    const row=async(id:string,collection:string,props:Record<string,unknown>,time:string,encrypted=0)=>{
+      await put(id,'blocks',{type:'page',text:'Zeile '+id,parentId:collection,
+        parentTable:'collection',props},id,time,encrypted);
+    };
+    await row('row_open','coll_public',{title:'Aufgabe',status:'Offen',due:'2026-12-01'},'2038-01-01');
+    await row('row_done','coll_public',{title:'Aufgabe',status:{name:'Erledigt'}},'2037-01-01');
+    await row('row_forbidden','coll_public',{title:'Geheim',status:'Offen'},'2036-01-01');
+    await row('row_encrypted','coll_public',{title:'Geheim',status:'Offen'},'2035-01-01',1);
+    await row('row_hidden_field','coll_hidden_status',{status:'Offen'},'2034-01-01');
+    await row('row_private_collection','coll_private',{status:'Offen'},'2033-01-01');
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'task_reader',
+      rolle:'lesen',von:'owner',wann:'2026-11-23'});
+    for(const pageId of ['page_private','row_forbidden']){
+      await f.store.setze('freigaben',{bereich:'ws_test',seite:pageId,kontoId:'task_reader',
+        rolle:'kein',von:'owner',wann:'2026-11-23'});
+    }
+    await f.store.setze('feldrechte',{bereich:'ws_test',sammlung:'coll_hidden_status',
+      feld:'status',kontoId:'task_reader',rolle:'kein',von:'owner',wann:'2026-11-23'});
+    const token=await f.authorize(false,'task_reader');
+    const invoke=async(args:Record<string,unknown>)=>{
+      const reply=await f.rpc(token.access_token,'tools/call',{name:'redion_list_tasks',
+        arguments:{workspaceId:'ws_test',...args}});
+      assert.equal(reply.status,200);
+      return reply.data.result as {isError?:boolean;content:{text:string}[]};
+    };
+    const all=await invoke({nurOffen:false,limit:40});
+    assert.notEqual(all.isError,true,JSON.stringify(all));
+    const payload=JSON.parse(all.content[0]!.text);
+    assert.deepEqual(payload.tasks.map((t:any)=>t.taskId),['todo_open','todo_done','row_open','row_done']);
+    assert.equal(payload.tasks.some((t:any)=>String(t.title).includes('Geheim')),false);
+    assert.equal(payload.tasks.find((t:any)=>t.taskId==='row_open').faellig,'2026-12-01');
+    assert.equal(payload.tasks.find((t:any)=>t.taskId==='row_done').fertig,true);
+    assert.equal(payload.nextOffset,null);
+    const onlyOpen=JSON.parse((await invoke({nurOffen:true,limit:1})).content[0]!.text);
+    assert.deepEqual(onlyOpen.tasks.map((t:any)=>t.taskId),['todo_open']);
+    assert.equal(onlyOpen.nextOffset,1);
+    const next=JSON.parse((await invoke({nurOffen:true,limit:1,offset:1})).content[0]!.text);
+    assert.deepEqual(next.tasks.map((t:any)=>t.taskId),['row_open']);
+    assert.equal(next.nextOffset,null);
+    const badOffset=await invoke({offset:1001});
+    assert.equal(badOffset.isError,true);
+    const badOpen=await invoke({nurOffen:'nein'});
+    assert.equal(badOpen.isError,true);
+    const noWorkspace=await f.rpc(token.access_token,'tools/call',{name:'redion_list_tasks',
+      arguments:{workspaceId:'not_granted'}});
+    assert.equal(noWorkspace.data.result.isError,true);
+  }finally{f.close();}
+});
+
+test('Cloud-MCP: Blockkatalog ist lesend, enthält interne Arten und keine Menüaktionen',async()=>{
+  const f=await fixture();
+  try{
+    const token=await f.authorize(false);
+    const list=await f.rpc(token.access_token,'tools/call',{name:'redion_list_block_types',arguments:{}});
+    assert.equal(list.status,200);
+    const result=JSON.parse(list.data.result.content[0]!.text);
+    assert.equal(result.total,56);
+    assert.equal(result.externalExtensionsIncluded,false);
+    assert.ok(result.blockTypes.some((x:any)=>x.id==='todo'&&x.insertable===true));
+    assert.ok(result.blockTypes.some((x:any)=>x.id==='schaltplan'&&x.gruppe==='Wissen'));
+    assert.ok(result.blockTypes.some((x:any)=>x.id==='pdfseite'&&x.insertable===false));
+    assert.equal(result.blockTypes.some((x:any)=>x.id==='a-del'),false);
+    const other=await f.authorize(false,'owner');
+    const withRead=await f.rpc(other.access_token,'tools/call',{name:'redion_list_block_types',arguments:{}});
+    assert.equal(withRead.data.result.isError,undefined);
   }finally{f.close();}
 });
