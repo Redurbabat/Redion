@@ -1619,7 +1619,12 @@ test('Cloud-MCP: ein nativer Schaltplan wird atomar, sicher und wiederholbar ers
 test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und atomare Versionen',async()=>{
   const f=await fixture();
   try{
-    const readOnly=await f.authorize(false);
+    // Separate users avoid OAuth grant replacement when switching scope.
+    await f.store.setze('konten',{id:'schematic_reader',mail:'schematic_reader@example.test',
+      name:'Schematic Reader',herkunft:'github',angelegt:'',gesperrt:0});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'schematic_reader',
+      rolle:'lesen',von:'owner',wann:'2026-11-23'});
+    const readOnly=await f.authorize(false,'schematic_reader');
     const writer=await f.authorize(true);
     await f.store.setze('saetze',{id:'edit_schematic_page',bereich:'ws_test',tabelle:'blocks',
       daten:JSON.stringify({type:'page',text:'Elektro',inhalt:'',content:[]}),
