@@ -342,8 +342,8 @@ const WolkeFenster = (() => {
             '<select id="wo-takt" style="font-size:12px; padding:4px 8px">' +
             ['0', '15', '120', '600'].map(v => `<option value="${v}"${String(Store.getMeta('wolkeTakt', '120')) === v ? ' selected' : ''}>` +
                 (v === '0' ? 'nur beim Öffnen und von Hand'
-                 : v === '15' ? 'nahezu live (15 Sekunden)'
-                    : v === '120' ? 'alle 2 Minuten' : 'alle 10 Minuten') + '</option>').join('') +
+                    : v === '15' ? 'nahezu live (15 Sekunden)'
+                        : v === '120' ? 'alle 2 Minuten' : 'alle 10 Minuten') + '</option>').join('') +
             '</select>' +
             '</div>' +
             '<hr style="border:none;border-top:1px solid var(--line); margin:16px 0 12px">' +
