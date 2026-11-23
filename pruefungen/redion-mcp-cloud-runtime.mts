@@ -123,6 +123,42 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
       workspaceId:'runtime-workspace',query:'nichtvorhandenerbegriff'
     });
     assert.deepEqual(miss.payload.documents,[]);
+    // Genuine D1 44-visible-child page, plus an encrypted reference.
+    // The legacy read_block call must no longer fail above 40 children.
+    const many=Array.from({length:43},(_,i)=>'runtime_large_child_'+i);
+    for(let i=0;i<many.length;i++){
+      await putRuntimeBlock(many[i]!,{
+        type:'text',text:'Sichtbarer Testblock '+i,parentId:'runtime-page',
+        content:[],alive:true
+      });
+    }
+    await putRuntimeBlock('runtime_large_hidden',{
+      type:'text',text:'VERTRAULICH',parentId:'runtime-page',content:[],alive:true
+    },1);
+    await db.prepare('UPDATE saetze SET daten=?1 WHERE bereich=?2 AND id=?3')
+      .bind(JSON.stringify({type:'page',text:'Test',inhalt:'Isolierte Testdaten',
+        content:['runtime_search_parent',...many,'runtime_large_hidden']}),
+        'runtime-workspace','runtime-page').run();
+    const largePreview=await invoke('redion_read_page',{
+      workspaceId:'runtime-workspace',documentId:'runtime-page'
+    });
+    assert.equal(largePreview.res.isError,undefined);
+    assert.equal(largePreview.payload.blockPreview.length,20);
+    assert.equal(largePreview.payload.nextBlockOffset,20);
+    assert.ok(!JSON.stringify(largePreview.payload).includes('VERTRAULICH'));
+    const bigBlock=await invoke('redion_read_block',{
+      workspaceId:'runtime-workspace',blockId:'runtime-page'
+    });
+    assert.equal(bigBlock.res.isError,undefined);
+    assert.equal(bigBlock.payload.children.length,40);
+    assert.equal(bigBlock.payload.nextChildOffset,40);
+    const bigTail=await invoke('redion_read_block',{
+      workspaceId:'runtime-workspace',blockId:'runtime-page',childOffset:40
+    });
+    assert.equal(bigTail.res.isError,undefined);
+    assert.equal(bigTail.payload.children.length,4);
+    assert.equal(bigTail.payload.nextChildOffset,null);
+    assert.ok(!JSON.stringify(bigTail.payload).includes('runtime_large_hidden'));
     const create=async(title:string,requestId:string,parentId?:string)=>{
       const {res,payload}=await invoke('redion_create_page',{
         workspaceId:'runtime-workspace',title,content:'Ausgang',requestId,...(parentId?{parentId}:{})
@@ -297,7 +333,7 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
     assert.ok(!openTasks.payload.tasks.some((x:any)=>x.taskId===task.payload.blockId));
     await oauth.revokeGrant('runtime-owner',(await oauth.listGrants('runtime-owner'))[0]!.id);
     assert.equal((await fetcher(resource,{headers:{Authorization:'Bearer '+tokens.access_token}})).status,401);
-    assert.equal((await db.prepare('SELECT COUNT(*) n FROM saetze').first()).n,8);
+    assert.equal((await db.prepare('SELECT COUNT(*) n FROM saetze').first()).n,52);
     assert.deepEqual(outbound,[],'Keine ausgehenden Netzaufrufe');
   }finally{await Promise.allSettled([client?.close(),writer?.close()]);await mf.dispose();}
 });
