@@ -43,6 +43,10 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
   assert.deepEqual(readPage?.inputSchema.properties.limit,{type:'integer',minimum:1,maximum:12000});
   assert.deepEqual(readPage?.inputSchema.properties.offset,{type:'integer',minimum:0});
   assert.deepEqual(readPage?.inputSchema.properties.expectedVersion,{type:'integer',minimum:1});
+  assert.deepEqual(readPage?.inputSchema.properties.blockLimit,
+    {type:'integer',minimum:1,maximum:20});
+  assert.deepEqual(readPage?.inputSchema.properties.blockOffset,
+    {type:'integer',minimum:0,maximum:100000});
   assert.deepEqual(readPage?.inputSchema.properties.responseFormat,{
     type:'string',enum:['portable','legacy']
   });
@@ -111,6 +115,10 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
   assert.ok(names(read).includes('redion_read_block'));
   assert.ok(names(write).includes('redion_read_block'));
   assert.deepEqual(readBlock?.inputSchema.required,['workspaceId','blockId']);
+  assert.deepEqual(readBlock?.inputSchema.properties.childLimit,
+    {type:'integer',minimum:1,maximum:40});
+  assert.deepEqual(readBlock?.inputSchema.properties.childOffset,
+    {type:'integer',minimum:0,maximum:100000});
   assert.equal(readBlock?.annotations?.readOnlyHint,true);
   const tasks=write.find(x=>x.name==='redion_list_tasks');
   assert.ok(names(read).includes('redion_list_tasks'));
@@ -133,7 +141,7 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
   assert.ok(names(read).includes('redion_read_database'));
   assert.ok(names(write).includes('redion_read_database'));
   assert.deepEqual(readDatabase?.inputSchema.required,['workspaceId','databaseId']);
-  assert.deepEqual(readDatabase?.inputSchema.properties.limit,{type:'integer',minimum:1,maximum:10});
+  assert.deepEqual(readDatabase?.inputSchema.properties.limit,{type:'integer',minimum:1,maximum:500});
   assert.equal(readDatabase?.annotations?.readOnlyHint,true);
   const databases=write.find(x=>x.name==='redion_list_databases');
   assert.ok(names(read).includes('redion_list_databases'));
