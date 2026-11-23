@@ -13,15 +13,24 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
   const names=(items:typeof write)=>items.map(x=>x.name);
   assert.ok(names(read).includes('redion_list_child_pages'));
   assert.ok(names(read).includes('redion_list_root_pages'));
+  assert.ok(names(read).includes('redion_read_pages'));
   assert.ok(!names(read).includes('redion_append_content'));
   assert.ok(!names(read).includes('redion_move_page'));
   assert.ok(names(write).includes('redion_list_child_pages'));
   assert.ok(names(write).includes('redion_list_root_pages'));
+  assert.ok(names(write).includes('redion_read_pages'));
   assert.ok(names(write).includes('redion_append_content'));
   assert.ok(names(write).includes('redion_move_page'));
   for(const item of write){
     assert.equal(item.inputSchema.additionalProperties,false,item.name);
   }
+  const readPages=write.find(x=>x.name==='redion_read_pages');
+  assert.deepEqual(readPages?.inputSchema.required,['workspaceId','documentIds']);
+  assert.deepEqual(readPages?.inputSchema.properties.documentIds,{
+    type:'array',items:{type:'string',minLength:1,maxLength:128},minItems:1,maxItems:10
+  });
+  assert.deepEqual(readPages?.inputSchema.properties.maxChars,{type:'integer',minimum:1,maximum:2000});
+  assert.equal(readPages?.annotations?.readOnlyHint,true);
   const readPage=write.find(x=>x.name==='redion_read_page');
   assert.deepEqual(readPage?.inputSchema.properties.limit,{type:'integer',minimum:1,maximum:12000});
   assert.deepEqual(readPage?.inputSchema.properties.offset,{type:'integer',minimum:0});
