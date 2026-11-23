@@ -213,3 +213,35 @@ Für den Browserlauf müssen die bereits vorhandenen Playwright-Browser
 auffindbar sein. Er braucht Zugriff auf seine kurzlebigen Loopback-Server
 und PowerShell 7 für ein nur im Test erzeugtes Zertifikat. Kein Cloud-Konto
 und keine persönlichen Daten erforderlich. Kein Dienst wird dabei bereitgestellt.
+
+
+## Blockbasierte Seiten über MCP lesen (Erweiterung 23.11.2026)
+
+'redion_read_page' liest nur den Markdown-Text in 'inhalt'. Seiten, deren
+Inhalt als referenzierte Blöcke unter 'content' gespeichert ist, benötigen
+zusätzlich 'redion_list_page_blocks'. Ein leeres Markdown bedeutet bei
+solchen Seiten **nicht**, dass keine Inhalte vorhanden sind.
+
+Das neue reine Lese-Werkzeug nimmt 'workspaceId', 'documentId' sowie
+optional 'parentBlockId', 'limit' (1–20), 'offset' und 'expectedVersion'.
+Die Antwort enthält 'blocks' in Dokumentreihenfolge, 'parentVersion'
+und 'nextOffset'. Nur tatsächlich lesbare direkte Kindblöcke zählen
+bei der Paginierung; verschlüsselte, gelöschte, fremde und falsch
+zugeordnete Datensätze werden ausgelassen. Für den nächsten Seitenaufruf
+'expectedVersion' auf die zuvor gelieferte 'parentVersion' setzen.
+Ein Versionskonflikt muss mit einem frischen Abruf ab Offset 0
+behandelt werden. Verschachtelte Blöcke werden durch 'parentBlockId'
+gesondert abgefragt.
+
+Die Rückgabe enthält pro Block einen Textausschnitt von höchstens 2000
+Zeichen und 'textTruncated'. Bei Bedarf kann ein zulässiger einzelner
+Block über 'redion_read_block' vollständig gelesen werden. Komplexe
+Blöcke wie Schaltpläne werden nicht ungeprüft als Rohdaten ausgeliefert;
+dafür ist 'redion_read_schematic' vorgesehen. Der bisherige
+'redion_read_block'-Abruf eines Elternblocks mit mehr als 40 direkten
+Kindreferenzen kann noch 'too_large' melden; dafür das paginierte
+Werkzeug verwenden.
+
+**Freigabe:** Neue Worker-Tools stehen im ChatGPT-Connector nicht automatisch
+nach GitHub-Merge oder Cloudflare-Build bereit. Erst nach Deployment,
+aktualisierter Toolliste und Live-Prüfung sind sie produktiv nutzbar.
