@@ -9,8 +9,12 @@ export interface McpState {
   prune(limit?:number):Promise<number>;
 }
 type SqlRow={key:string;kind:string;data:string;expires:number;revision:number};
-type Statement={bind(...values:(string|number)[]):Statement;first<T>():Promise<T|null>;all<T>():Promise<{results:T[]}>};
-export type McpDatabase={prepare(sql:string):Statement};
+export type McpStatement={bind(...values:(string|number)[]):McpStatement;first<T>():Promise<T|null>;all<T>():Promise<{results:T[]}>};
+/** D1.batch runs all prepared statements atomically. If a test database lacks
+ * batch support, write tools must fail closed rather than creating orphan rows.
+ * The optional method allows older read-only tests to use simple adapters. */
+export type McpDatabase={prepare(sql:string):McpStatement;
+  batch?:(statements:McpStatement[])=>Promise<Array<{results?:unknown[];success?:boolean}>>};
 const valid=(key:string,kind?:string):void=>{
   if(!/^[a-z_]{1,30}:[A-Za-z0-9_-]{1,128}$/.test(key)||kind!==undefined&&!/^[a-z_]{1,30}$/.test(kind))throw new Error('Ungültige interne MCP-Kennung.');
 };
