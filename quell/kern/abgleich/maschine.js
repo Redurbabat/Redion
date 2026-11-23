@@ -249,6 +249,7 @@ const Wolke = (() => {
         if (!bereich() && ich.bereiche.length)
             Store.setMeta('wolkeBereich', ich.bereiche[0].id);
         Store.setMeta('wolkeKonto', ich.konto);
+        takt();
         melden();
         if (typeof Protokoll !== 'undefined')
             Protokoll.notieren('konto', 'Bei der Wolke angemeldet als ' + ich.konto.name);
@@ -280,6 +281,7 @@ const Wolke = (() => {
         Store.setMeta('wolkeBloeckeWeg', []);
         Store.setMeta('wolkeAbgleich', null);
         Store.setMeta('wolkeNeuAbgleich', '');
+        takt();
         melden();
         if (typeof Protokoll !== 'undefined')
             Protokoll.notieren('konto', 'Von der Wolke abgemeldet');
@@ -680,6 +682,11 @@ const Wolke = (() => {
         }
     };
     let uhr = null;
+    const autoAbgleichen = () => {
+        if (document.hidden || (typeof navigator !== 'undefined' && navigator.onLine === false))
+            return;
+        abgleichen().catch(() => { });
+    };
     const takt = () => {
         clearInterval(uhr);
         uhr = null;
@@ -689,7 +696,7 @@ const Wolke = (() => {
         if (!Number.isFinite(sek) || sek <= 0)
             return 0;
         const ms = sek * 1000;
-        uhr = setInterval(() => { abgleichen().catch(() => { }); }, ms);
+        uhr = setInterval(autoAbgleichen, ms);
         return ms;
     };
     const taktSetzen = (wert) => {
@@ -911,19 +918,14 @@ const Wolke = (() => {
         if (typeof Store.on === 'function')
             Store.on((was) => { if (was === 'import')
                 melden(); });
-        if (!token())
-            return;
-        zustand.konto = Store.getMeta('wolkeKonto', null);
-        zustand.angemeldet = true;
-        melden();
-        setTimeout(() => {
-            abgleichen().catch(() => { });
-            takt();
-        }, 3000);
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && angemeldet())
-                abgleichen().catch(() => { });
-        });
+        if (token()) {
+            zustand.konto = Store.getMeta('wolkeKonto', null);
+            zustand.angemeldet = true;
+            melden();
+            setTimeout(() => { autoAbgleichen(); takt(); }, 3000);
+        }
+        document.addEventListener('visibilitychange', autoAbgleichen);
+        window.addEventListener('online', autoAbgleichen);
         const ev = globalThis.Ereignisse;
         if (ev?.horche)
             ev.horche(ARTEN.einstellungGeaendert, (d) => {
