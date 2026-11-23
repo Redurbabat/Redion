@@ -678,7 +678,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const ver=expected(args.expectedVersion);
       const current=await page(w,id,'bearbeiten');
       const typ=required(args.typ,40);
-      const allowedTypes=new Set(['text','h1','h2','h3','todo','bullet','numbered','quote','code','divider']);
+      const allowedTypes=new Set(['text','h1','h2','h3','todo','bullet','number','quote','code','divider']);
       if(!allowedTypes.has(typ))
         return err('invalid_arguments','Diese Blockart erfordert eine eigene geprüfte Schreibfunktion.');
       if(args.inBlockId!==undefined)
