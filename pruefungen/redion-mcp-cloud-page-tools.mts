@@ -41,6 +41,12 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
   assert.deepEqual(readPage?.inputSchema.properties.expectedVersion,{type:'integer',minimum:1});
   const search=write.find(x=>x.name==='redion_search');
   assert.deepEqual(search?.inputSchema.properties.offset,{type:'integer',minimum:0,maximum:1000});
+  const databases=write.find(x=>x.name==='redion_list_databases');
+  assert.ok(names(read).includes('redion_list_databases'));
+  assert.ok(names(write).includes('redion_list_databases'));
+  assert.deepEqual(databases?.inputSchema.required,['workspaceId']);
+  assert.deepEqual(databases?.inputSchema.properties.offset,{type:'integer',minimum:0,maximum:1000});
+  assert.equal(databases?.annotations?.readOnlyHint,true);
   const rootList=write.find(x=>x.name==='redion_list_root_pages');
   assert.deepEqual(rootList?.inputSchema.required,['workspaceId']);
   assert.deepEqual(rootList?.inputSchema.properties.offset,{type:'integer',minimum:0,maximum:100000});
