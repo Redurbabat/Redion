@@ -84,8 +84,32 @@ const pinsFor=(component:Item):Array<{nr:string;at:Pos}>=>{
   return symbol.anschluesse.map(p=>({nr:p.nr,at:terminalPos(component,p.nr)}));
 };
 const sameLayer=(item:Item,ebene:string)=>item.ebene===ebene;
+/** The native Register rotates around the symbol centre, not its top-left
+ * corner. Swapping width/height alone does not describe its actual envelope. */
+const rotatedEnvelope=(part:Item):{minX:number;maxX:number;minY:number;maxY:number}=>{
+  const symbol=BUILTIN_SYMBOLS.find(s=>s.id===part.zeichen);
+  if(!symbol)fail('Unbekanntes Fachzeichen kann nicht platziert werden.');
+  const angle=rotation(part.drehung)*Math.PI/180;
+  const mirrored=mirror(part.gespiegelt);
+  const x=Number(part.x),y=Number(part.y);
+  const corners:Pos[]=[];
+  for(const px of [0,symbol.w])for(const py of [0,symbol.h]){
+    const xx=mirrored?symbol.w-px:px;
+    const dx=xx-symbol.w/2,dy=py-symbol.h/2;
+    corners.push({
+      x:x+Math.round(symbol.w/2+dx*Math.cos(angle)-dy*Math.sin(angle)),
+      y:y+Math.round(symbol.h/2+dx*Math.sin(angle)+dy*Math.cos(angle))
+    });
+  }
+  return {minX:Math.min(...corners.map(p=>p.x)),maxX:Math.max(...corners.map(p=>p.x)),
+    minY:Math.min(...corners.map(p=>p.y)),maxY:Math.max(...corners.map(p=>p.y))};
+};
 const checkFreeComponent=(part:Item,components:unknown[],wires:unknown[],
   maxWidth:number,maxHeight:number):void=>{
+  const envelope=rotatedEnvelope(part);
+  if(envelope.minX<0||envelope.minY<0||
+    envelope.maxX>maxWidth||envelope.maxY>maxHeight)
+    fail('Das gedrehte Fachzeichen liegt ausserhalb des Planblatts.');
   const newPins=pinsFor(part);
   for(const pin of newPins)
     if(pin.at.x<0||pin.at.y<0||pin.at.x>maxWidth||pin.at.y>maxHeight)
@@ -150,10 +174,6 @@ export const editSchematic=(raw:unknown,args:Item):{plan:Item;elementId:string;k
     if(!symbol)fail('Nur eingebaute Fachzeichen sind über Cloud-MCP erlaubt.');
     const drehung=rotation(args.rotation),gespiegelt=mirror(args.mirrored);
     const x=grid(args.x,'X-Koordinate',width),y=grid(args.y,'Y-Koordinate',height);
-    const elementWidth=drehung%180===0?symbol.w:symbol.h;
-    const elementHeight=drehung%180===0?symbol.h:symbol.w;
-    if(x+elementWidth>width||y+elementHeight>height)
-      fail('Das Fachzeichen liegt ausserhalb des Planblatts.');
     const ebene=layer(args.layer);
     if(!raw.ebenen.some(e=>isRecord(e)&&e.id===ebene))fail('Diese Ebene fehlt im Plan.');
     const prefix=symbol.kennbuchstabe||'Z';
@@ -226,10 +246,6 @@ export const editSchematic=(raw:unknown,args:Item):{plan:Item;elementId:string;k
     if(!symbol)fail('Unbekanntes Bauteil kann nicht über Cloud-MCP verschoben werden.');
     const rotated=Number(old.drehung||0);
     if(![0,90,180,270].includes(rotated))fail('Bauteildrehung ist ungültig.');
-    const sizeWidth=rotated%180===0?symbol.w:symbol.h;
-    const sizeHeight=rotated%180===0?symbol.h:symbol.w;
-    if(x+sizeWidth>width||y+sizeHeight>height)
-      fail('Verschobenes Bauteil liegt ausserhalb des Planblatts.');
     const moved={...old,x,y};
     checkFreeComponent(moved,components,wires,width,height);
     return {plan:{...raw,teile:components.map(c=>c===old?moved:c)},
