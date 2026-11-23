@@ -1,0 +1,42 @@
+# Temporary build repair for PR #221; remove after generated assets are committed.
+name: PR221 generated assets refresh
+on:
+  push:
+    branches:
+      - 'agent/cloud-mcp-safe-page-tools-20261123'
+
+jobs:
+  regenerate:
+    if: github.repository == 'Redurbabat/Redion' && github.ref == 'refs/heads/agent/cloud-mcp-safe-page-tools-20261123'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/cloud-mcp-safe-page-tools-20261123
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Regenerate TypeScript, service assets and islands
+        run: npm run bauen:ts
+      - name: Regenerate standalone HTML
+        run: node bauen.mts
+      - name: Commit regenerated tracked artifacts on PR branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -u
+          git diff --cached --stat
+          if git diff --cached --quiet; then
+            echo "No generated files changed."
+            exit 0
+          fi
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit -m 'build: synchronize generated files for PR 221'
+          git push origin HEAD:refs/heads/agent/cloud-mcp-safe-page-tools-20261123
