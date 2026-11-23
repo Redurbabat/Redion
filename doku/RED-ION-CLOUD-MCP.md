@@ -294,3 +294,40 @@ werden.
 Wichtig: 'redion_update_schematic' (Bauteile und Leitungen bearbeiten)
 wird dadurch **nicht** implementiert. Vor produktiver Nutzung sind
 Deployment, Connector-Aktualisierung und ein Live-Test notwendig.
+
+
+## Schaltpläne mit MCP erweitern (23.11.2026)
+
+'redion_update_schematic' erweitert einen bereits gespeicherten
+Schaltplan-Block, ohne beliebige Fremd-JSON-Daten zu akzeptieren.
+Erforderlich sind 'workspaceId', 'blockId', 'expectedVersion' (die
+Version aus 'redion_read_schematic') und 'operation'.
+
+Die drei unterstützten Operationen:
+
+- 'add_component': 'componentId', 'symbolId', 'x', 'y' sowie optional
+  'rotation' (0/90/180/270), 'mirrored', 'layer' und 'bmk'.
+  'symbolId' muss aus dem eingebauten Fachzeichenkatalog stammen;
+  Koordinaten liegen im 10-Pixel-Raster.
+- 'connect_terminals': 'wireId', 'fromComponentId', 'fromTerminal',
+  'toComponentId', 'toTerminal' sowie optional 'layer'. Die Anschlussnamen
+  werden gegen die wirklichen Klemmen des gespeicherten Symboltyps geprüft.
+  Die Endpunkte berücksichtigen Drehung und Spiegelung. Zwischenpunkte
+  werden rechtwinklig gelegt. Automatische Kollisions- und elektrische
+  Prüfung ist **nicht** enthalten.
+- 'add_label': 'labelId', 'labelText', 'x', 'y', optional 'layer'.
+
+Jeder Aufruf schreibt genau einen vorhandenen Schaltplanblock und benötigt
+'redion:write' sowie Seitenbearbeitungsrecht. Die SQLite-Änderung ist an
+die alte Blockversion gebunden, damit gleichzeitige Schreibvorgänge
+nicht die Änderungen des jeweils anderen überschreiben. Zu alte Versionen
+ergeben 'conflict'; der Client muss neu lesen. Mehrfache Aufrufe mit
+denselben Daten und alter Version sind nicht automatisch idempotent.
+Bei Erfolg werden 'elementId', 'elementType' und die neue Blockversion
+zurückgegeben. Für das nächste Schreiben ist diese neue Version zu nutzen.
+
+Die Funktionen sind für Zeichnungen und Lernpläne gedacht.
+Die Antwort enthält deshalb explizit 'electricalValidation:false' und
+'routingVerified:false'. Vor praktischer Verdrahtung ist eine unabhängige
+fachliche Prüfung notwendig. Schaltplanänderungen sind erst nach Worker-
+Deployment, Connector-Aktualisierung und Live-Test produktiv nutzbar.
