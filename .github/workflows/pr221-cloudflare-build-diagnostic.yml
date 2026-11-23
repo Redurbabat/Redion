@@ -1,0 +1,22 @@
+name: PR221 local Cloudflare build diagnostics
+on:
+  push:
+    branches: ['agent/cloud-mcp-safe-page-tools-20261123']
+jobs:
+  dry-run:
+    if: github.repository == 'Redurbabat/Redion' && github.ref == 'refs/heads/agent/cloud-mcp-safe-page-tools-20261123'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies for reproducible Worker bundling
+        run: npm install --no-audit --no-fund --ignore-scripts
+      - name: Wrangler dry-run only, no authentication and no deployment
+        env:
+          CI: 'true'
+        run: npx --yes wrangler@4 deploy --dry-run --outdir=/tmp/redion-worker-dry-run
