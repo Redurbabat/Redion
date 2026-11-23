@@ -31,8 +31,10 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{},additionalProperties:false}},
   {name:'redion_search',description:'Sucht nach freigegebenen, nicht verschlüsselten Seiten.',
     inputSchema:{type:'object',properties:{...workspace,query:{type:'string',maxLength:200},limit:{type:'integer',minimum:1,maximum:30},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
-  {name:'redion_read_page',description:'Liest maximal 12.000 Zeichen einer freigegebenen Klartext-Seite. Bei nextOffset weitere Abschnitte nachladen; Offset zählt UTF-16-Codeeinheiten.',
-    inputSchema:{type:'object',properties:{...workspace,...documentId,offset:{type:'integer',minimum:0},limit:{type:'integer',minimum:1,maximum:12000}},required:['workspaceId','documentId'],additionalProperties:false}},
+  {name:'redion_read_page',description:'Liest maximal 12.000 Zeichen einer freigegebenen Klartext-Seite. expectedVersion aus der ersten Antwort beim Nachladen mitsenden, damit Abschnitte nicht aus unterschiedlichen Versionen stammen.',
+    inputSchema:{type:'object',properties:{...workspace,...documentId,offset:{type:'integer',minimum:0},limit:{type:'integer',minimum:1,maximum:12000},expectedVersion:{type:'integer',minimum:1}},required:['workspaceId','documentId'],additionalProperties:false}},
+  {name:'redion_get_page_path',description:'Zeigt den Pfad einer lesbaren Seite von der Hauptseite bis zum Dokument. Wenn ein Vorfahr nicht lesbar ist, werden keine Pfadteile offengelegt.',
+    inputSchema:{type:'object',properties:{...workspace,...documentId},required:['workspaceId','documentId'],additionalProperties:false}},
   {name:'redion_read_pages',description:'Liest bis zu 10 Seiten auf einmal, maximal 2.000 Zeichen pro Seite. Unzugängliche IDs werden einheitlich als nicht verfügbar markiert.',
     inputSchema:{type:'object',properties:{...workspace,documentIds:{type:'array',items:{type:'string',minLength:1,maxLength:128},minItems:1,maxItems:10},maxChars:{type:'integer',minimum:1,maximum:2000}},
       required:['workspaceId','documentIds'],additionalProperties:false}},
@@ -62,6 +64,7 @@ const toolTitles:Record<string,string>={
   redion_list_workspaces:'Bereiche auflisten',
   redion_search:'Seiten und Inhalte suchen',
   redion_read_page:'Seite lesen',
+  redion_get_page_path:'Seitenpfad anzeigen',
   redion_read_pages:'Mehrere Seiten lesen',
   redion_create_page:'Seite erstellen',
   redion_update_page:'Seitentitel ändern',
@@ -224,9 +227,39 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       }
       return {workspaceId:w,documents};
     }
+    if(name==='redion_get_page_path'){
+      const id=required(args.documentId,128);
+      const path:{documentId:string;title:string;version:number}[]=[];
+      const visited=new Set<string>();
+      let cursor=id,complete=false;
+      for(let depth=0;depth<40;depth++){
+        if(visited.has(cursor))return err('invalid_data','Zyklischer Seitenpfad.');
+        visited.add(cursor);
+        let item:Awaited<ReturnType<typeof page>>;
+        try{item=await page(w,cursor,'lesen');}
+        catch(error){
+          // Never expose any ancestor ID, title, depth or denial reason
+          // if a directly shared child has an unreadable parent.
+          if(error instanceof CloudMcpToolError&&cursor!==id)
+            return {workspaceId:w,documentId:id,unavailable:true};
+          throw error;
+        }
+        path.push({documentId:cursor,title:String(item.data.text||'').slice(0,160),
+          version:Number(item.s.version)||1});
+        const parent=item.data.parentId;
+        if(parent===null||parent===undefined||parent===''){complete=true;break;}
+        if(typeof parent!=='string'||parent.length>128||!parent.trim())
+          return err('invalid_data','Ungültiger Seitenpfad.');
+        cursor=parent;
+      }
+      if(!complete)return err('invalid_data','Seitenpfad ist zu tief.');
+      return {workspaceId:w,documentId:id,path:path.reverse()};
+    }
     if(name==='redion_read_page'){
       const id=required(args.documentId,128);
       const result=await page(w,id,'lesen');
+      if(args.expectedVersion!==undefined&&expected(args.expectedVersion)!==Number(result.s.version||1))
+        return err('conflict','Seite hat sich seit dem letzten Leseabschnitt geändert. Bitte neu beginnen.');
       const offset=args.offset===undefined?0:args.offset;
       if(!Number.isSafeInteger(offset)||Number(offset)<0)
         return err('invalid_arguments','Ungültiger Leseversatz.');
