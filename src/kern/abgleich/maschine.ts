@@ -783,7 +783,14 @@ const Wolke = (() => {
         if (klar === null) { unlesbar++; continue; }
       }
       let satz;
-      try { satz = JSON.parse(klar); } catch { continue; }
+      try { satz = JSON.parse(klar); } catch { unlesbar++; continue; }
+      /* Die D1-Hülle bestimmt die Kennung, nicht JSON aus einem fremden
+         Schreibzugriff. Fehlende IDs (z.B. neue MCP-Seiten) sind erlaubt
+         und werden kanonisiert; abweichende IDs dürfen niemals einen
+         anderen lokalen Block überschreiben oder Grabsteine aufheben. */
+      if (!satz || typeof satz !== 'object' || Array.isArray(satz) ||
+          (satz.id !== undefined && satz.id !== s.id)) { unlesbar++; continue; }
+      satz.id = s.id;
       satz.wolkeVersion = s.version;
 
       const hier = s.tabelle === 'blocks' ? Store.cache.blocks[s.id]
