@@ -138,7 +138,7 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       const transport=new StreamableHTTPClientTransport(new URL(origin+'/mcp/cloud'),{authProvider:provider,fetch:fetcher});
       await client.connect(transport);
       assert.equal(transport.sessionId,undefined);
-      const list=await client.listTools();assert.equal(list.tools.length,7);
+      const list=await client.listTools();assert.equal(list.tools.length,8);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
       assert.equal(JSON.parse(result.content[0]!.text).content,'Nur Testdaten');
       const denied=await client.callTool({name:'redion_create_page',arguments:{workspaceId:'ws_test',title:'Gesperrt',requestId:'sdk_request_01'}});
@@ -799,5 +799,93 @@ test('Cloud-MCP: sichere Seitenpfade ohne Metadaten verborgener Vorfahren',async
     assert.notEqual(encrypted.isError,true);
     assert.deepEqual(JSON.parse(encrypted.content[0]!.text),
       {workspaceId:'ws_test',documentId:'path_leaf',unavailable:true});
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: Datenbankliste zeigt nur lesbare eingebettete Klartext-Sammlungen',async()=>{
+  const f=await fixture();
+  try{
+    await f.store.setze('konten',{id:'db_reader',mail:'db_reader@example.test',
+      name:'db_reader',herkunft:'github',angelegt:'',gesperrt:0});
+    const page=async(id:string)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify({type:'page',text:'Seite '+id,inhalt:''}),
+        verschluesselt:0,seite:id,version:1,geaendert:'2030-01-01',
+        geloescht:0,vonGeraet:'Test'});
+    };
+    for(const id of ['db_public_page','db_private_page','db_override_page'])
+      await page(id);
+    const collection=async(id:string,name:string,time:string,encrypted=0,valid=true)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'collections',
+        daten:valid?JSON.stringify({id,name,schema:{secret:{name:'Gehalt',type:'number'}}}):'{broken',
+        verschluesselt:encrypted,seite:id,version:2,geaendert:time,
+        geloescht:0,vonGeraet:'Test'});
+    };
+    const link=async(id:string,collectionId:string,pageId:string)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify({type:'database',collectionId,parentId:pageId}),
+        verschluesselt:0,seite:pageId,version:1,geaendert:'2026-11-23',
+        geloescht:0,vonGeraet:'Test'});
+    };
+    await collection('db_secret','Verborgener Name','2048-01-01');
+    await collection('db_visible_a','Sichtbare Eins','2047-01-01');
+    await collection('db_visible_b','Sichtbare Zwei','2046-01-01');
+    await collection('db_override','Individuelle Freigabe','2045-01-01');
+    await collection('db_unlinked','Nicht verbunden','2044-01-01');
+    await collection('db_encrypted','Verschlüsselte DB','2043-01-01',1);
+    await collection('db_corrupt','Ungültiges JSON','2042-01-01',0,false);
+    await link('link_secret','db_secret','db_private_page');
+    await link('link_visible_a','db_visible_a','db_public_page');
+    // One hidden and one visible database embedding: never choose the hidden
+    // first link as the only source of rights.
+    await link('link_visible_b_private','db_visible_b','db_private_page');
+    await link('link_visible_b_public','db_visible_b','db_public_page');
+    await link('link_override','db_override','db_override_page');
+    await link('link_encrypted','db_encrypted','db_public_page');
+    await link('link_corrupt','db_corrupt','db_public_page');
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'db_reader',
+      rolle:'lesen',von:'owner',wann:'2026-11-23'});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'db_private_page',
+      kontoId:'db_reader',rolle:'kein',von:'owner',wann:'2026-11-23'});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'db_override_page',
+      kontoId:'*',rolle:'kein',von:'owner',wann:'2026-11-23'});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'db_override_page',
+      kontoId:'db_reader',rolle:'lesen',von:'owner',wann:'2026-11-23'});
+    const reader=await f.authorize(false,'db_reader');
+    const owner=await f.authorize(false);
+    const list=async(token:string,args:Record<string,unknown>={})=>{
+      const response=await f.rpc(token,'tools/call',{name:'redion_list_databases',
+        arguments:{workspaceId:'ws_test',limit:1,...args}});
+      assert.equal(response.status,200);
+      return response.data.result as {isError?:boolean;content:{text:string}[]};
+    };
+    const expected=['db_visible_a','db_visible_b','db_override'];
+    for(let offset=0;offset<expected.length;offset++){
+      const result=await list(reader.access_token,{offset});
+      assert.notEqual(result.isError,true,JSON.stringify(result));
+      const data=JSON.parse(result.content[0]!.text);
+      assert.equal(data.workspaceId,'ws_test');
+      assert.deepEqual(data.databases.map((x:any)=>x.databaseId),[expected[offset]]);
+      assert.equal(data.nextOffset,offset<expected.length-1?offset+1:null);
+      assert.equal(data.databases[0].name,[
+        'Sichtbare Eins','Sichtbare Zwei','Individuelle Freigabe'][offset]);
+      assert.equal(data.databases[0].version,2);
+      assert.equal('schema' in data.databases[0],false);
+    }
+    const exhausted=JSON.parse((await list(reader.access_token,{offset:3})).content[0]!.text);
+    assert.deepEqual(exhausted.databases,[]);
+    assert.equal(exhausted.nextOffset,null);
+    const ownerResult=JSON.parse((await list(owner.access_token,{limit:30})).content[0]!.text);
+    assert.deepEqual(ownerResult.databases.map((x:any)=>x.databaseId),
+      ['db_secret','db_visible_a','db_visible_b','db_override']);
+    const invalidOffset=await list(reader.access_token,{offset:1001});
+    assert.equal(invalidOffset.isError,true);
+    assert.equal(JSON.parse(invalidOffset.content[0]!.text).code,'invalid_arguments');
+    const invalidLimit=await list(reader.access_token,{limit:31});
+    assert.equal(invalidLimit.isError,true);
+    const wrongWorkspace=await f.rpc(reader.access_token,'tools/call',{
+      name:'redion_list_databases',arguments:{workspaceId:'not_granted'}});
+    assert.equal(wrongWorkspace.data.result.isError,true);
   }finally{f.close();}
 });
