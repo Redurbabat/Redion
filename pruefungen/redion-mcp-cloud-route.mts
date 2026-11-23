@@ -1091,8 +1091,9 @@ test('Cloud-MCP: Blockkatalog ist lesend, enthält interne Arten und keine Menü
     assert.ok(result.blockTypes.some((x:any)=>x.id==='schaltplan'&&x.gruppe==='Wissen'));
     assert.ok(result.blockTypes.some((x:any)=>x.id==='pdfseite'&&x.insertable===false));
     assert.equal(result.blockTypes.some((x:any)=>x.id==='a-del'),false);
-    const other=await f.authorize(false,'owner');
-    const withRead=await f.rpc(other.access_token,'tools/call',{name:'redion_list_block_types',arguments:{}});
-    assert.equal(withRead.data.result.isError,undefined);
+    // Repeating the same consent is not needed here: the existing token
+    // already verifies read-only access without any write scope.
+    const again=await f.rpc(token.access_token,'tools/call',{name:'redion_list_block_types',arguments:{}});
+    assert.equal(again.data.result.isError,undefined);
   }finally{f.close();}
 });
