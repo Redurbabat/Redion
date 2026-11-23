@@ -1,0 +1,47 @@
+name: RED ION Live Sync – Native
+
+on:
+  pull_request:
+    paths:
+      - 'src/kern/abgleich/maschine.ts'
+      - 'quell/kern/abgleich/maschine.js'
+      - 'src/register/einstellungen.ts'
+      - 'quell/register/einstellungen.js'
+      - 'src/bereiche/verbinden/ansicht/wolke.ts'
+      - 'quell/bereiche/verbinden/ansicht/wolke.js'
+      - 'server/sicherheit/abgleich-tor.ts'
+      - 'pruefungen/live-sync-iphone-windows.test.mts'
+      - 'pruefungen/redion-abgleich-tor.mts'
+      - 'package.json'
+      - '.github/workflows/live-sync-native.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/kern/abgleich/maschine.ts'
+      - 'quell/kern/abgleich/maschine.js'
+      - 'server/sicherheit/abgleich-tor.ts'
+      - 'pruefungen/live-sync-iphone-windows.test.mts'
+      - 'package.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-sync:
+    name: Live Sync – native Sicherheits- und Taktprüfung
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Offline- und Live-Sync-Prüfung
+        run: npm run test:live-sync
+      - name: Compiler- und Build-Abgleich
+        run: |
+          npm install --no-audit --no-fund --ignore-scripts
+          npm run bauen:ts
+          git diff --exit-code -- quell/kern/abgleich/maschine.js quell/register/einstellungen.js quell/bereiche/verbinden/ansicht/wolke.js
+          npm run typecheck
