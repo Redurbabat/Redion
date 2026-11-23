@@ -219,7 +219,10 @@ und keine persönlichen Daten erforderlich. Kein Dienst wird dabei bereitgestell
 
 'redion_read_page' liest nur den Markdown-Text in 'inhalt'. Seiten, deren
 Inhalt als referenzierte Blöcke unter 'content' gespeichert ist, benötigen
-zusätzlich 'redion_list_page_blocks'. Ein leeres Markdown bedeutet bei
+zusätzlich 'redion_list_page_blocks'. Die Antwort meldet im Feld
+'blockStorage' entweder 'referenced' (eine Blockliste ist gespeichert) oder
+'none' (keine Blockliste); aus Datenschutzgründen wird keine Anzahl
+unlesbarer Blöcke angegeben. Ein leeres Markdown bedeutet bei
 solchen Seiten **nicht**, dass keine Inhalte vorhanden sind.
 
 Das neue reine Lese-Werkzeug nimmt 'workspaceId', 'documentId' sowie
