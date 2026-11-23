@@ -138,7 +138,7 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       const transport=new StreamableHTTPClientTransport(new URL(origin+'/mcp/cloud'),{authProvider:provider,fetch:fetcher});
       await client.connect(transport);
       assert.equal(transport.sessionId,undefined);
-      const list=await client.listTools();assert.equal(list.tools.length,12);
+      const list=await client.listTools();assert.equal(list.tools.length,13);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
       assert.equal(JSON.parse(result.content[0]!.text).markdown,'Nur Testdaten');
        assert.equal((result.structuredContent as any)?.markdown,'Nur Testdaten');
@@ -1134,6 +1134,14 @@ test('Cloud-MCP: Block lesen schützt Seiten, geheime Kinder und Datenbankzeilen
     await put('block_orphan',{type:'text',text:'Ohne Seite'},'block_orphan');
     await put('block_oversized',{type:'code',text:'x'.repeat(12500),parentId:'block_page_public'},
       'block_page_public');
+    const schematic={art:'stromlauf',teile:[{id:'t1',zeichen:'schliesser',bmk:'S1',x:20,y:20}],
+      leitungen:[{id:'l1',punkte:[{x:20,y:20},{x:30,y:20}]}],
+      texte:[{id:'caption',text:'Steuerkreis'}]};
+    await put('block_schematic',{type:'schaltplan',text:'Schaltplan',parentId:'block_page_public',plan:schematic},
+      'block_page_public');
+    await put('block_secret_schematic',{type:'schaltplan',parentId:'block_page_private',plan:schematic},
+      'block_page_private');
+
     await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'block_reader',
       rolle:'lesen',von:'owner',wann:'2026-11-23'});
     await f.store.setze('freigaben',{bereich:'ws_test',seite:'block_page_private',
@@ -1156,6 +1164,21 @@ test('Cloud-MCP: Block lesen schützt Seiten, geheime Kinder und Datenbankzeilen
     assert.deepEqual(data.data.content,['block_child']);
     assert.equal('children' in data.data,false);
     assert.deepEqual(ok.structuredContent,data);
+    const schematicReply=await f.rpc(reader.access_token,'tools/call',{
+      name:'redion_read_schematic',
+      arguments:{workspaceId:'ws_test',blockId:'block_schematic'}});
+    assert.equal(schematicReply.status,200);
+    assert.equal(schematicReply.data.result.isError,undefined);
+    const schematicData=JSON.parse(schematicReply.data.result.content[0]!.text);
+    assert.deepEqual(schematicData.plan,schematic);
+    assert.deepEqual(schematicData.teile,schematic.teile);
+    assert.deepEqual(schematicData.leitungen,schematic.leitungen);
+    assert.equal(schematicData.version,4);
+    for(const id of ['block_private','block_secret_schematic','block_row','block_parent']){
+      const bad=await f.rpc(reader.access_token,'tools/call',{
+        name:'redion_read_schematic',arguments:{workspaceId:'ws_test',blockId:id}});
+      assert.equal(bad.data.result.isError,true,id);
+    }
     const page=JSON.parse((await tool('block_page_public')).content[0]!.text);
     assert.equal(page.type,'page');
     assert.equal(page.data.inhalt,'Seiteninhalt');
