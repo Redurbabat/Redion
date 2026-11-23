@@ -152,7 +152,7 @@ if (nurListe) {
     `${auswahl.length - mitBrowser} ohne Browser, ${mitBrowser} mit Browser`];
   for (const l of auswahl) {
     const grund = l.nr !== null ? SCHNELL_MIT_BROWSER[l.nr] : undefined;
-    zeilen.push(l.name.padEnd(13) +
+    zeilen.push(l.name.padEnd(13) + ' ' +
       (l.browser ? 'Browser' + (grund ? ' — ' + grund : '') : 'ohne Browser'));
   }
   /* ERST WARTEN, DANN GEHEN. Die erste Fassung schrieb Zeile für Zeile mit
