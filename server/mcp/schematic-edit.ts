@@ -10,7 +10,7 @@ const isRecord=(v:unknown):v is Item=>!!v&&typeof v==='object'&&!Array.isArray(v
 const ID=/^[A-Za-z0-9_-]{1,64}$/;
 const LAYERS=['plan','aufgabe','loesung'] as const;
 
-const fail=(message:string):never=>{throw new Error(message);};
+function fail(message:string):never {throw new Error(message);}
 const ident=(v:unknown,what:string):string=>
   typeof v==='string'&&ID.test(v)?v:fail(what+' hat keine gültige Kennung.');
 const nonempty=(v:unknown,what:string,max:number):string=>
