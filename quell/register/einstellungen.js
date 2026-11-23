@@ -47,10 +47,11 @@ Register.einstellungen = (() => {
                 'Kontext heisst genauere Antwort.' },
         { id: 'wolkeTakt', gruppe: 'Wolke', name: 'Abgleich alle', art: 'auswahl',
             werte: [['0', 'nur beim Öffnen und von Hand'],
+                ['15', 'Nahezu live (15 Sekunden, nur bei offener App)'],
                 ['120', '2 Minuten'], ['600', '10 Minuten']],
             vorgabe: '120',
-            was: 'Bei zwei Geräten sind zwei Minuten rund 1500 Anfragen am Tag — ein ' +
-                'Sechzigstel der kostenlosen Grenze. Seltener heisst: das andere ' +
+            was: 'Die schnelle Option prüft alle 15 Sekunden, solange die App offen ist. ' +
+                'Das verbraucht zusätzliche Anfragen und ist kein echter Sofort-Push. ' +
                 'Gerät sieht deine Änderung später.' }
     ];
     const LISTE = EINGEBAUT.slice();
