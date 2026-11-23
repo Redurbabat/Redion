@@ -97,7 +97,7 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
       const {res,payload}=await invoke('redion_create_page',{
         workspaceId:'runtime-workspace',title,content:'Ausgang',requestId,...(parentId?{parentId}:{})
       });
-      assert.notEqual(res.isError,true,name);
+      assert.notEqual(res.isError,true,title);
       return payload.documentId as string;
     };
     const rootA=await create('Ordner A','runtime_root_a_001');
