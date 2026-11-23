@@ -33,6 +33,9 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{...workspace,query:{type:'string',maxLength:200},limit:{type:'integer',minimum:1,maximum:30},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
   {name:'redion_read_page',description:'Liest maximal 12.000 Zeichen einer freigegebenen Klartext-Seite. Bei nextOffset weitere Abschnitte nachladen; Offset zählt UTF-16-Codeeinheiten.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,offset:{type:'integer',minimum:0},limit:{type:'integer',minimum:1,maximum:12000}},required:['workspaceId','documentId'],additionalProperties:false}},
+  {name:'redion_read_pages',description:'Liest bis zu 10 Seiten auf einmal, maximal 2.000 Zeichen pro Seite. Unzugängliche IDs werden einheitlich als nicht verfügbar markiert.',
+    inputSchema:{type:'object',properties:{...workspace,documentIds:{type:'array',items:{type:'string',minLength:1,maxLength:128},minItems:1,maxItems:10},maxChars:{type:'integer',minimum:1,maximum:2000}},
+      required:['workspaceId','documentIds'],additionalProperties:false}},
   {name:'redion_create_page',description:'Legt eine Seite an. requestId verhindert doppelte Erstellung bei Wiederholung.',
     inputSchema:{type:'object',properties:{...workspace,title:nameField,content:{type:'string',maxLength:12000},parentId:idField,requestId:{type:'string',minLength:8,maxLength:100}},
       required:['workspaceId','title','requestId'],additionalProperties:false}},
@@ -59,6 +62,7 @@ const toolTitles:Record<string,string>={
   redion_list_workspaces:'Bereiche auflisten',
   redion_search:'Seiten und Inhalte suchen',
   redion_read_page:'Seite lesen',
+  redion_read_pages:'Mehrere Seiten lesen',
   redion_create_page:'Seite erstellen',
   redion_update_page:'Seitentitel ändern',
   redion_list_root_pages:'Hauptseiten auflisten',
@@ -191,6 +195,34 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       // No raw-row truncation marker: that could disclose the existence of
       // content that the caller is explicitly forbidden to read.
       return {documents:found.slice(0,max),nextOffset:found.length>max?Number(offset)+max:null};
+    }
+    if(name==='redion_read_pages'){
+      const raw=args.documentIds;
+      if(!Array.isArray(raw)||raw.length<1||raw.length>10)
+        return err('invalid_arguments','Es sind 1 bis 10 Seitenkennungen erforderlich.');
+      const ids=raw.map(id=>required(id,128));
+      if(new Set(ids).size!==ids.length)
+        return err('invalid_arguments','Seitenkennungen dürfen nicht doppelt vorkommen.');
+      const max=limit(args.maxChars,2000,2000);
+      const documents=[];
+      for(const id of ids){
+        try{
+          const result=await page(w,id,'lesen');
+          const content=String(result.data.inhalt||'');
+          let end=Math.min(max,content.length);
+          const last=content.charCodeAt(end-1),next=content.charCodeAt(end);
+          if(end<content.length&&last>=0xD800&&last<=0xDBFF&&next>=0xDC00&&next<=0xDFFF)end++;
+          documents.push({documentId:id,title:String(result.data.text||'').slice(0,160),
+            content:content.slice(0,end),version:Number(result.s.version)||1,
+            totalLength:content.length,nextOffset:end<content.length?end:null});
+        }catch(error){
+          // Missing, forbidden, encrypted and invalid page records must look
+          // identical; otherwise the batch would disclose hidden page IDs.
+          if(!(error instanceof CloudMcpToolError))throw error;
+          documents.push({documentId:id,unavailable:true});
+        }
+      }
+      return {workspaceId:w,documents};
     }
     if(name==='redion_read_page'){
       const id=required(args.documentId,128);
