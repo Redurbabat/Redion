@@ -60,7 +60,7 @@ const WolkeFenster = (() => {
       /* `-1` heisst: nicht genommen. Dann darf hier nicht „jetzt alle X
          Minuten" stehen — das wäre ein Erfolg, den es nicht gab. */
       UI.toast(ms < 0 ? 'Diesen Takt gibt es nicht — es bleibt beim bisherigen.'
-             : ms ? 'Abgleich jetzt alle ' + Math.round(ms / 60000) + ' Minuten.'
+             : ms ? (ms < 60000 ? 'Nahezu live: alle ' + Math.round(ms / 1000) + ' Sekunden bei geöffneter App.' : 'Abgleich jetzt alle ' + Math.round(ms / 60000) + ' Minuten.')
                   : 'Abgleich nur noch beim Öffnen und von Hand.');
     });
 
@@ -429,9 +429,10 @@ const WolkeFenster = (() => {
         'display:flex; gap:9px; align-items:center; flex-wrap:wrap">' +
         '<label for="wo-takt">Von selbst abgleichen:</label>' +
         '<select id="wo-takt" style="font-size:12px; padding:4px 8px">' +
-          ['0', '120', '600'].map(v =>
+          ['0', '15', '120', '600'].map(v =>
             `<option value="${v}"${String(Store.getMeta('wolkeTakt', '120')) === v ? ' selected' : ''}>` +
             (v === '0' ? 'nur beim Öffnen und von Hand'
+             : v === '15' ? 'nahezu live (15 Sekunden)'
              : v === '120' ? 'alle 2 Minuten' : 'alle 10 Minuten') + '</option>').join('') +
         '</select>' +
       '</div>' +
