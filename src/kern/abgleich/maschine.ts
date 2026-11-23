@@ -1223,19 +1223,23 @@ const Wolke = (() => {
    *  Gelöschte wieder, bevor der Server je davon erfuhr. */
   const dateienAbgleichen = async () => {
     if (dateienGehenNicht) return null;
-    try {
-      const w = await dateienWeg();
-      const r = await dateienRunter();
-      const h = await dateienHoch();
-      zustand.fehlerDateien = '';
-      return { ...w, ...r, ...h };
-    } catch (e) {
-      const satz = e instanceof Error ? e.message : String(e);
-      if (/Dateispeicher/.test(satz)) { dateienGehenNicht = true; return null; }
-      zustand.fehlerDateien = satz;
-      melden();
-      return null;
-    }
+    const ergebnis: Record<string, unknown> = {};
+    const fehler: string[] = [];
+    const schritt = async (fn: () => Promise<any>) => {
+      try { Object.assign(ergebnis, await fn()); }
+      catch (e) {
+        const satz = e instanceof Error ? e.message : String(e);
+        if (/Dateispeicher/.test(satz)) dateienGehenNicht = true;
+        else fehler.push(satz);
+      }
+    };
+    await schritt(dateienWeg);
+    if (!dateienGehenNicht) await schritt(dateienRunter);
+    /* Ein kaputter fremder Download darf eigene Anhänge nicht zurückhalten. */
+    if (!dateienGehenNicht) await schritt(dateienHoch);
+    zustand.fehlerDateien = fehler.join(' · ');
+    if (fehler.length) melden();
+    return Object.keys(ergebnis).length ? ergebnis : null;
   };
 
   /* ========================================================================
