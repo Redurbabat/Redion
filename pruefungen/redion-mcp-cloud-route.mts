@@ -1742,3 +1742,95 @@ test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und at
     assert.equal(blocked.data.code,'forbidden');
   }finally{f.close();}
 });
+
+
+test('Cloud-MCP: Suche findet direkte lesbare Blöcke ohne Geheimdaten oder verwaiste Kinder',async()=>{
+  const f=await fixture();
+  try{
+    const putPage=async(id:string,ids:string[],time:string)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify({type:'page',text:'Übersicht',inhalt:'',content:ids}),
+        verschluesselt:0,seite:id,version:1,geaendert:time,geloescht:0,vonGeraet:'Test'});
+    };
+    const putBlock=async(id:string,page:string,parent:string,content:string,
+      encrypted=0,parentTable='block')=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify({type:'text',text:content,parentId:parent,
+          parentTable,alive:true}),
+        verschluesselt:encrypted,seite:page,version:1,
+        geaendert:'2026-11-23',geloescht:0,vonGeraet:'Test'});
+    };
+    await putPage('block_visible_a',['a_text','a_unicode'],
+      '2035-01-01T00:00:00Z');
+    await putBlock('a_text','block_visible_a','block_visible_a',
+      'BLOCKTREFFER Steckdose Typ 13');
+    await putBlock('a_unicode','block_visible_a','block_visible_a',
+      'BrÜCke und Öfen');
+    await putPage('block_secret_page',['secret_child'],
+      '2034-01-01T00:00:00Z');
+    await putBlock('secret_child','block_secret_page','block_secret_page',
+      'blocktreffer vertraulich');
+    await putPage('block_hidden_child',['encrypted_child'],
+      '2033-01-01T00:00:00Z');
+    await putBlock('encrypted_child','block_hidden_child','block_hidden_child',
+      'blocktreffer geheim',1);
+    await putPage('block_wrong_parent',['wrong_parent_child','wrong_page_child',
+      'collection_child','missing_reference'],
+      '2032-01-01T00:00:00Z');
+    await putBlock('wrong_parent_child','block_wrong_parent','other_page',
+      'blocktreffer falscher Vater');
+    await putBlock('wrong_page_child','foreign_page','block_wrong_parent',
+      'blocktreffer fremde Seite');
+    await putBlock('collection_child','block_wrong_parent','block_wrong_parent',
+      'blocktreffer Datenbankspalte',0,'collection');
+    await putPage('block_visible_b',['b_text'],
+      '2031-01-01T00:00:00Z');
+    await putBlock('b_text','block_visible_b','block_visible_b',
+      'Weitere blocktreffer Angaben');
+    await putPage('block_orphan_page',[], '2030-01-01T00:00:00Z');
+    await putBlock('orphan_child','block_orphan_page','block_orphan_page',
+      'blocktreffer ohne Elternreferenz');
+    await putPage('block_nested_page',['nested_parent'],
+      '2029-01-01T00:00:00Z');
+    await putBlock('nested_parent','block_nested_page','block_nested_page',
+      'Elternblock');
+    await putBlock('nested_child','block_nested_page','nested_parent',
+      'blocktreffer tief verschachtelt');
+
+    await f.store.setze('konten',{id:'search_visible_guest',
+      mail:'search_visible@example.test',name:'Search Guest',
+      herkunft:'github',angelegt:'',gesperrt:0});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',
+      kontoId:'search_visible_guest',rolle:'lesen',von:'owner',wann:'2026-11-23'});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'block_secret_page',
+      kontoId:'search_visible_guest',rolle:'kein',von:'owner',wann:'2026-11-23'});
+    const guest=await f.authorize(false,'search_visible_guest');
+    const query=async(q:string,offset=0,limit=10)=>{
+      const result=await f.rpc(guest.access_token,'tools/call',{
+        name:'redion_search',arguments:{workspaceId:'ws_test',query:q,offset,limit}});
+      assert.equal(result.status,200);
+      assert.equal(result.data.result.isError,undefined);
+      return JSON.parse(result.data.result.content[0]!.text) as {
+        documents:{documentId:string}[];nextOffset:number|null;
+      };
+    };
+    const all=await query('blocktreffer');
+    assert.deepEqual(all.documents.map(x=>x.documentId),['block_visible_a','block_visible_b']);
+    const first=await query('BLOCKTREFFER',0,1);
+    assert.deepEqual(first.documents.map(x=>x.documentId),['block_visible_a']);
+    assert.equal(first.nextOffset,1);
+    const second=await query('blocktreffer',1,1);
+    assert.deepEqual(second.documents.map(x=>x.documentId),['block_visible_b']);
+    assert.equal(second.nextOffset,null);
+    assert.deepEqual((await query('brücke')).documents.map(x=>x.documentId),
+      ['block_visible_a'],'Unicode-Suche muss direkte Blocktexte berücksichtigen');
+    assert.deepEqual((await query('GEHEIM')).documents,[],
+      'Verschlüsselte Blocktexte dürfen nicht durch Suche sichtbar werden.');
+    assert.deepEqual((await query('falscher Vater')).documents,[]);
+    assert.deepEqual((await query('fremde Seite')).documents,[]);
+    assert.deepEqual((await query('Datenbankspalte')).documents,[]);
+    assert.deepEqual((await query('ohne Elternreferenz')).documents,[]);
+    // Nested search will be a separate hierarchy-aware feature.
+    assert.deepEqual((await query('tief verschachtelt')).documents,[]);
+  }finally{f.close();}
+});
