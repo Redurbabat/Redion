@@ -238,29 +238,31 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const offset=args.offset===undefined?0:args.offset;
       if(!Number.isSafeInteger(offset)||Number(offset)<0||Number(offset)>100000)
         return err('invalid_arguments','Ungültiger Blockversatz.');
-      const blocks:{blockId:string;type:string;text:string;textTruncated:boolean;version:number}[]=[];
-      const seen=new Set<string>();
-      let visible=0;
-      for(const id of ids){
-        if(typeof id!=='string'||!id||id.length>128||seen.has(id))continue;
-        seen.add(id);
-        const s=await ablage.hole('saetze',{bereich:w,id});
-        if(!s||s.tabelle!=='blocks'||s.geloescht||s.verschluesselt||s.seite!==documentId)continue;
-        let data:Record<string,unknown>;
-        try{data=JSON.parse(String(s.daten||'')) as Record<string,unknown>;}
-        catch{continue;}
-        if(!data||typeof data!=='object'||Array.isArray(data)||data.alive===false||
-          typeof data.type!=='string'||data.parentId!==parentId||
-          data.parentTable==='collection')continue;
-        if(visible++<Number(offset))continue;
+      // A single D1 query preserves source order while filtering visibility
+      // before LIMIT/OFFSET. Avoid per-child D1 reads (expensive on 200-block
+      // pages and potentially over Cloudflare subrequest limits).
+      const sql="SELECT s.id,s.daten,s.version FROM json_each(?1) AS ref "+
+        "JOIN saetze AS s ON s.id=ref.value AND s.bereich=?2 "+
+        "WHERE ref.type='text' AND length(ref.value) BETWEEN 1 AND 128 "+
+        "AND s.tabelle='blocks' AND s.geloescht=0 AND s.verschluesselt=0 "+
+        "AND s.seite=?3 AND CASE WHEN json_valid(s.daten) THEN "+
+        "(json_type(s.daten,'$.type')='text' AND "+
+        "json_extract(s.daten,'$.parentId')=?4 AND "+
+        "COALESCE(json_extract(s.daten,'$.parentTable'),'')<>'collection' AND "+
+        "COALESCE(json_extract(s.daten,'$.alive'),1)<>0) ELSE 0 END "+
+        "GROUP BY s.id ORDER BY MIN(CAST(ref.key AS INTEGER)) ASC "+
+        "LIMIT ?5 OFFSET ?6";
+      const rows=await db.prepare(sql).bind(JSON.stringify(ids),w,documentId,
+        parentId,max+1,Number(offset)).all<{id:string;daten:string;version:number}>();
+      const blocks=rows.results.slice(0,max).map(s=>{
+        const data=JSON.parse(s.daten) as Record<string,unknown>;
         const full=typeof data.text==='string'?data.text:'';
-        blocks.push({blockId:id,type:data.type.slice(0,40),text:full.slice(0,2000),
-          textTruncated:full.length>2000,version:Number(s.version)||1});
-        if(blocks.length>max)break;
-      }
+        return {blockId:s.id,type:String(data.type).slice(0,40),text:full.slice(0,2000),
+          textTruncated:full.length>2000,version:Number(s.version)||1};
+      });
       return {workspaceId:w,documentId,parentBlockId:parentId===documentId?null:parentId,
         parentVersion,blocks:blocks.slice(0,max),
-        nextOffset:blocks.length>max?Number(offset)+max:null};
+        nextOffset:rows.results.length>max?Number(offset)+max:null};
     }
     if(name==='redion_read_block'||name==='redion_read_schematic'){
       const id=required(args.blockId,128);
