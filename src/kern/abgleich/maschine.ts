@@ -1100,13 +1100,25 @@ const Wolke = (() => {
        auch dann nicht, wenn der Versand eben gescheitert ist. */
     const wegOffen = new Set<string>(Store.getMeta('wolkeDateienWeg', []) || []);
     let geholt = 0, entfernt = 0, unlesbar = 0;
+    /* Fehlende Stücke nicht vergessen, wenn die Seitenmarke weitergeht:
+       sonst bliebe eine später fertig hochgeladene Datei unsichtbar. */
+    const wartend = new Map<string, any>((Store.getMeta('wolkeDateienWartend', []) || [])
+      .filter((d: any) => d && typeof d.id === 'string' && d.id)
+      .map((d: any) => [d.id, d]));
     for (let runde = 0; runde < 20; runde++) {
       const a = await ruf('/datei/stand', { m: 'POST',
         k: { bereich: bereich(), seit: marke, grenze: 200 } });
-      for (const d of (a.dateien || [])) {
-        if (wegOffen.has(d.id)) continue;
+      /* Server-Paginierung nicht durch kaputte Dateien aufhalten.
+         In Runde 0 zusätzlich alte Fehlversuche mit Backoff wiederholen. */
+      const daten = [...(a.dateien || []), ...(runde === 0 ? [...wartend.values()] : [])];
+      const gesehen = new Set<string>();
+      for (const d of daten) {
+        if (!d || typeof d.id !== 'string' || gesehen.has(d.id)) continue;
+        gesehen.add(d.id);
+        if (wegOffen.has(d.id)) { wartend.delete(d.id); continue; }
         const lokal = await Store.dateiHolen(d.id);
         if (d.geloescht) {
+          wartend.delete(d.id);
           if (lokal) {
             for (const st of await Store.stueckeVon(d.id)) await Store.stueckWeg(st.id);
             await Store.dateiWeg(d.id);
@@ -1115,12 +1127,17 @@ const Wolke = (() => {
           oben.delete(d.id);
           continue;
         }
-        if (lokal) { if (lokal.zustand === 'fertig') oben.add(d.id); continue; }
+        if (lokal && lokal.zustand === 'fertig') {
+          wartend.delete(d.id); oben.add(d.id); continue;
+        }
+        const ausstehend = wartend.get(d.id);
+        if (ausstehend && Number(ausstehend.erstWieder || 0) > Date.now()) continue;
 
         /* Stück für Stück holen; eine Datei, die nicht ganz ankommt oder
            sich nicht entschlüsseln lässt, wird NICHT halb angelegt. */
         const teile = Math.max(1, Number(d.teile) || 1);
         let ganz = true;
+        try {
         for (let nr = 0; nr < teile; nr++) {
           const r = await ruf('/datei/runter', { m: 'POST',
             k: { bereich: bereich(), dateiId: d.id, nr } });
@@ -1130,10 +1147,20 @@ const Wolke = (() => {
           await Store.stueckPut({ id: d.id + ':' + nr, dateiId: d.id, nr,
             blob: new Blob([bytes as any], { type: String(d.typ || '') }) });
         }
+        } catch {
+          /* Ein fehlendes Stück (z.B. noch laufender Upload) betrifft
+             nur diese Datei, nicht die restlichen Downloads/Uploads. */
+          ganz = false; unlesbar++;
+        }
         if (!ganz) {
-          for (const st of await Store.stueckeVon(d.id)) await Store.stueckWeg(st.id);
+          try { for (const st of await Store.stueckeVon(d.id))
+            await Store.stueckWeg(st.id); } catch {}
+          const versuche = Math.min(20, (Number(ausstehend?.versuche) || 0) + 1);
+          wartend.set(d.id, { ...d, versuche,
+            erstWieder: Date.now() + Math.min(30 * 60000, 15000 * 2 ** Math.min(6, versuche)) });
           continue;
         }
+        wartend.delete(d.id);
         /* Den Block wiederfinden, der auf die Datei zeigt — die Sätze sind
            vor den Anhängen abgeglichen, er ist also schon da, wenn es ihn
            gibt. Der Server kennt nur die Seite, nicht den Block. */
@@ -1146,6 +1173,7 @@ const Wolke = (() => {
         oben.add(d.id);
         geholt++;
       }
+      Store.setMeta('wolkeDateienWartend', [...wartend.values()].slice(-80));
       if (a.marke && String(a.marke) !== marke) {
         marke = String(a.marke);
         Store.setMeta('wolkeMarkeDateien', marke);
