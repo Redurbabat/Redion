@@ -67,9 +67,9 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
     assert.equal(tokenResponse.status,200);const tokens=await tokenResponse.json();
     client=new Client({name:'synthetic-workerd-client',version:'1'});
     await client.connect(new StreamableHTTPClientTransport(new URL(resource),{fetch:fetcher,requestInit:{headers:{Authorization:'Bearer '+tokens.access_token}}}));
-    assert.equal((await client.listTools()).tools.length,9);
+    assert.equal((await client.listTools()).tools.length,11);
     const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'runtime-workspace',documentId:'runtime-page'}});
-    assert.equal(JSON.parse(result.content[0].text).content,'Isolierte Testdaten');
+    assert.equal(JSON.parse(result.content[0].text).markdown,'Isolierte Testdaten');
     const denied=await client.callTool({name:'redion_create_page',arguments:{workspaceId:'runtime-workspace',title:'Gesperrt',requestId:'runtime_request'}});
     assert.equal(denied.isError,true);
     // Real workerd/D1 integration: exercise the new write tools, not only read.
@@ -129,7 +129,7 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
     assert.equal(cyclic.res.isError,true);
     assert.equal(cyclic.payload.code,'invalid_arguments');
     const readAfter=await invoke('redion_read_page',{workspaceId:'runtime-workspace',documentId:child});
-    assert.equal(readAfter.payload.content,'Ausgang\nNachtrag');
+    assert.equal(readAfter.payload.markdown,'Ausgang\nNachtrag');
     await oauth.revokeGrant('runtime-owner',(await oauth.listGrants('runtime-owner'))[0]!.id);
     assert.equal((await fetcher(resource,{headers:{Authorization:'Bearer '+tokens.access_token}})).status,401);
     assert.equal((await db.prepare('SELECT COUNT(*) n FROM saetze').first()).n,4);
