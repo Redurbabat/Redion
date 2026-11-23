@@ -1,0 +1,53 @@
+name: PR221 document index repair
+on:
+  push:
+    branches: ['agent/cloud-mcp-safe-page-tools-20261123']
+jobs:
+  fix-index:
+    if: github.repository == 'Redurbabat/Redion' && github.ref == 'refs/heads/agent/cloud-mcp-safe-page-tools-20261123'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/cloud-mcp-safe-page-tools-20261123
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Restore missing decision index entries using existing headings
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const file='ENTSCHEIDUNGEN.md';
+          let text=fs.readFileSync(file,'utf8');
+          const lines=text.split('\n');
+          const first=lines.findIndex(l=>/^\* \*\*E791\*\*/.test(l));
+          if(first<0)throw Error('Could not find E791 index entry');
+          const other=lines.findIndex((l,i)=>i!==first && /^\* \*\*E791\*\*/.test(l));
+          if(other>=0)throw Error('Duplicate E791 index entry');
+          const additions=[];
+          for(const n of [792,793]){
+            if(lines.some(l=>new RegExp('^\\* \\*\\*E'+n+'\\*\\*').test(l)))throw Error('E'+n+' already indexed');
+            const title=lines.find(l=>new RegExp('^(?:#{1,4}\\s*)?E'+n+'\\s*(?:—|–|-|·|:)').test(l));
+            if(!title)throw Error('Cannot find section E'+n);
+            let summary=title.replace(new RegExp('^(?:#{1,4}\\s*)?E'+n+'\\s*(?:—|–|-|·|:)\\s*'),'').trim();
+            summary=summary.slice(0,190).replace(/[|]/g,'');
+            if(!summary)throw Error('Empty heading E'+n);
+            additions.push('* **E'+n+'** — '+summary);
+          }
+          lines.splice(first+1,0,...additions);
+          text=lines.join('\n');
+          fs.writeFileSync(file,text);
+          console.log('Restored index lines:',...additions);
+          NODE
+      - name: Verify decision index
+        run: node pruefungen/lauf/test550.mts
+      - name: Commit documentation repair
+        run: |
+          set -euo pipefail
+          git add ENTSCHEIDUNGEN.md
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit -m 'docs: restore decision index entries E792 and E793'
+          git push origin HEAD:refs/heads/agent/cloud-mcp-safe-page-tools-20261123
