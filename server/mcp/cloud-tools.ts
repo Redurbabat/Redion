@@ -4,9 +4,10 @@
  */
 import type {Ablage} from '../typen.ts';
 import type {McpPrincipal} from './oauth.ts';
+import type {McpDatabase} from './state.ts';
 import {rolleAuf,darf,notieren} from '../kern.ts';
 
-type Db={prepare(sql:string):{bind(...values:(string|number)[]):{first<T>():Promise<T|null>}}};
+type Db=McpDatabase;
 type Args=Record<string,unknown>;
 type ToolDef={name:string;description:string;inputSchema:{type:'object';properties:Record<string,unknown>;required?:string[];additionalProperties:boolean}};
 export class CloudMcpToolError extends Error {
@@ -39,7 +40,7 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{...workspace,...documentId,title:nameField,expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId','title','expectedVersion'],additionalProperties:false}},
   {name:'redion_list_child_pages',description:'Listet lesbare, unverschlüsselte Unterseiten einer Seite auf.',
-    inputSchema:{type:'object',properties:{...workspace,parentId:idField,limit:{type:'integer',minimum:1,maximum:100}},required:['workspaceId','parentId'],additionalProperties:false}},
+    inputSchema:{type:'object',properties:{...workspace,parentId:idField,limit:{type:'integer',minimum:1,maximum:100},offset:{type:'integer',minimum:0,maximum:100000}},required:['workspaceId','parentId'],additionalProperties:false}},
   {name:'redion_append_content',description:'Hängt Markdown an eine Klartext-Seite an; benötigt Schreibrecht und passende Version.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,content:{type:'string',minLength:1,maxLength:4000},expectedVersion:{type:'integer',minimum:1}},required:['workspaceId','documentId','content','expectedVersion'],additionalProperties:false}},
   {name:'redion_move_page',description:'Verschiebt eine Klartext-Seite unter eine andere Seite oder auf die oberste Ebene. Prüft Schreibrechte, Zyklen und Version.',
@@ -79,14 +80,25 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     if(!Number.isSafeInteger(v)||Number(v)<1)return err('invalid_arguments','expectedVersion muss eine positive ganze Zahl sein.');
     return Number(v);
   };
-  const update=async(w:string,id:string,old:number,updated:Record<string,unknown>)=>{
+  const update=async(w:string,id:string,old:number,updated:Record<string,unknown>,guardParent?:string)=>{
     const payload=JSON.stringify(updated);
     if(payload.length>64000)return err('invalid_arguments','Seite ist für diese Änderung zu gross.');
-    const changed=await db.prepare(
-      "UPDATE saetze SET daten=?1,version=version+1,geaendert=?2,vonGeraet='Cloud-MCP' "+
-      "WHERE bereich=?3 AND id=?4 AND version=?5 AND geloescht=0 AND verschluesselt=0 AND tabelle='blocks' RETURNING version"
-    ).bind(payload,new Date().toISOString(),w,id,old).first<{version:number}>();
-    if(!changed)return err('conflict','Seite wurde zwischenzeitlich geändert. Bitte erneut lesen.');
+    // The ancestry check runs in the same SQLite UPDATE as the write.
+    // Concurrent moves cannot both validate an old tree and create a cycle.
+    const guard=guardParent?
+      " AND NOT EXISTS (WITH RECURSIVE ancestors(id,depth) AS ("+
+      "SELECT ?6,0 UNION ALL "+
+      "SELECT CASE WHEN json_valid(s.daten) THEN json_extract(s.daten,'$.parentId') ELSE NULL END,a.depth+1 "+
+      "FROM ancestors a JOIN saetze s ON s.bereich=?3 AND s.id=a.id "+
+      "WHERE a.id IS NOT NULL AND a.depth<40"+
+      ") SELECT 1 FROM ancestors WHERE id=?4 OR depth>=40)":"";
+    const sql="UPDATE saetze SET daten=?1,version=version+1,geaendert=?2,vonGeraet='Cloud-MCP' "+
+      "WHERE bereich=?3 AND id=?4 AND version=?5 AND geloescht=0 AND verschluesselt=0 AND tabelle='blocks'"+
+      guard+" RETURNING version";
+    const values:(string|number)[]=[payload,new Date().toISOString(),w,id,old];
+    if(guardParent)values.push(guardParent);
+    const changed=await db.prepare(sql).bind(...values).first<{version:number}>();
+    if(!changed)return err('conflict','Seite wurde zwischenzeitlich geändert oder der Zielordner wurde verschoben. Bitte erneut lesen.');
     await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',text:'Seite über Cloud-MCP bearbeitet',objekt:id});
     return {documentId:id,version:changed.version};
   };
@@ -131,17 +143,26 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const parentId=required(args.parentId,128);
       await page(w,parentId,'lesen');
       const max=limit(args.limit,50,100);
-      const rows=await ablage.finde('saetze',{bereich:w},{sortiere:'geaendert',absteigend:true,grenze:1000});
+      const offset=args.offset===undefined?0:args.offset;
+      if(!Number.isSafeInteger(offset)||Number(offset)<0||Number(offset)>100000)
+        return err('invalid_arguments','Ungültiger Seitenversatz.');
+      // Query only this parent's cleartext pages. Scanning the most recent
+      // 1,000 workspace records silently omitted older children.
+      const rows=await db.prepare(
+        "SELECT id,seite,daten,version FROM saetze WHERE bereich=?1 AND tabelle='blocks' "+
+        "AND geloescht=0 AND verschluesselt=0 AND "+
+        "CASE WHEN json_valid(daten) THEN "+
+        "(json_extract(daten,'$.type')='page' AND json_extract(daten,'$.parentId')=?2) "+
+        "ELSE 0 END ORDER BY geaendert DESC,id DESC LIMIT ?3 OFFSET ?4"
+      ).bind(w,parentId,max+1,Number(offset)).all<{id:string;seite:string|null;daten:string;version:number}>();
       const children=[];
-      for(const s of rows){
-        if(s.tabelle!=='blocks'||s.geloescht||s.verschluesselt||children.length>=max)continue;
-        let data:Record<string,unknown>;
-        try{data=JSON.parse(String(s.daten||'{}'));}catch{continue;}
-        if(data.type!=='page'||data.parentId!==parentId)continue;
+      for(const s of rows.results.slice(0,max)){
         const r=await rolleAuf(ablage,w,String(s.seite||s.id),userId);
-        if(darf(r,'lesen'))children.push({documentId:s.id,title:String(data.text||'').slice(0,160),version:Number(s.version)||1});
+        if(!darf(r,'lesen'))continue;
+        const data=JSON.parse(s.daten) as Record<string,unknown>;
+        children.push({documentId:s.id,title:String(data.text||'').slice(0,160),version:Number(s.version)||1});
       }
-      return {parentId,documents:children};
+      return {parentId,documents:children,nextOffset:rows.results.length>max?Number(offset)+max:null};
     }
     if(!principal.scopes.includes('redion:write'))
       return err('forbidden','Schreibrechte sind nicht freigegeben.');
@@ -201,7 +222,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
           if(depth===39)return err('invalid_arguments','Seitenhierarchie ist zu tief.');
         }
       }else await role(w,'*','bearbeiten');
-      return update(w,id,ver,{...current.data,parentId:target||null});
+      return update(w,id,ver,{...current.data,parentId:target||null},target||undefined);
     }
     if(name==='redion_update_page'){
       return update(w,id,ver,{...current.data,text:required(args.title,160)});
