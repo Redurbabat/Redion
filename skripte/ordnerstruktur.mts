@@ -9,7 +9,7 @@
  * verfolgen. Nur --bericht legt build/struktur/PROJEKTBAUM.txt neu an.
  */
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { resolve, join, dirname, basename } from 'node:path';
+import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const WURZEL = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -41,7 +41,8 @@ const vertraulich = (name: string): boolean =>
   /^\.dev\.vars(?:\.|$)/i.test(name) ||
   /^redion-sicherung-/i.test(name) ||
   /\.(?:redion|pem|key|p12|pfx|mobileprovision|log)$/i.test(name) ||
-  /^id_(?:rsa|ed25519)(?:\.pub)?$/i.test(name);
+  /^id_(?:rsa|ed25519)(?:\.pub)?$/i.test(name) ||
+  name === 'PROJEKTBAUM.txt';
 
 const istOrdner = (pfad: string): boolean => {
   try {
