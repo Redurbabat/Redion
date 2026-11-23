@@ -255,9 +255,49 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
 
 
 
+    const task=await invoke('redion_add_block',{
+      workspaceId:'runtime-workspace',documentId:rootA,
+      expectedVersion:2,typ:'todo',text:'ÜK-Auftrag wiederholen',
+      requestId:'runtime_task_edit_01'
+    });
+    assert.equal(task.res.isError,undefined);
+    const checkedTask=await invoke('redion_update_block',{
+      workspaceId:'runtime-workspace',blockId:task.payload.blockId,
+      expectedVersion:1,operation:'set_checked',checked:true
+    });
+    assert.equal(checkedTask.res.isError,undefined);
+    assert.equal(checkedTask.payload.version,2);
+    const dueTask=await invoke('redion_update_block',{
+      workspaceId:'runtime-workspace',blockId:task.payload.blockId,
+      expectedVersion:2,operation:'set_due_date',dueDate:'2026-12-12'
+    });
+    assert.equal(dueTask.res.isError,undefined);
+    assert.equal(dueTask.payload.version,3);
+    const textTask=await invoke('redion_update_block',{
+      workspaceId:'runtime-workspace',blockId:task.payload.blockId,
+      expectedVersion:3,operation:'set_text',text:'Praktischen Auftrag prüfen'
+    });
+    assert.equal(textTask.payload.version,4);
+    const staleTask=await invoke('redion_update_block',{
+      workspaceId:'runtime-workspace',blockId:task.payload.blockId,
+      expectedVersion:2,operation:'set_checked',checked:false
+    });
+    assert.equal(staleTask.res.isError,true);
+    assert.equal(staleTask.payload.code,'conflict');
+    const readTask=await invoke('redion_read_block',{
+      workspaceId:'runtime-workspace',blockId:task.payload.blockId
+    });
+    assert.equal(readTask.payload.version,4);
+    assert.equal(readTask.payload.text,'Praktischen Auftrag prüfen');
+    assert.equal(readTask.payload.data.checked,true);
+    assert.equal(readTask.payload.data.faellig,'2026-12-12');
+    const openTasks=await invoke('redion_list_tasks',{
+      workspaceId:'runtime-workspace',nurOffen:true
+    });
+    assert.ok(!openTasks.payload.tasks.some((x:any)=>x.taskId===task.payload.blockId));
     await oauth.revokeGrant('runtime-owner',(await oauth.listGrants('runtime-owner'))[0]!.id);
     assert.equal((await fetcher(resource,{headers:{Authorization:'Bearer '+tokens.access_token}})).status,401);
-    assert.equal((await db.prepare('SELECT COUNT(*) n FROM saetze').first()).n,7);
+    assert.equal((await db.prepare('SELECT COUNT(*) n FROM saetze').first()).n,8);
     assert.deepEqual(outbound,[],'Keine ausgehenden Netzaufrufe');
   }finally{await Promise.allSettled([client?.close(),writer?.close()]);await mf.dispose();}
 });
