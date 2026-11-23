@@ -51,6 +51,11 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_update_page',description:'Ändert den Seitentitel nur bei passender expectedVersion.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,title:nameField,expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId','title','expectedVersion'],additionalProperties:false}},
+  {name:'redion_list_page_blocks',description:'Liest sichtbare Seitenblöcke und verschachtelte Kindblöcke in stabiler Reihenfolge und kleinen Seiten. Offset zählt nur tatsächlich lesbare Blöcke; expectedVersion verhindert das Vermischen veränderter Listen.',
+    inputSchema:{type:'object',properties:{...workspace,...documentId,parentBlockId:idField,
+      limit:{type:'integer',minimum:1,maximum:20},offset:{type:'integer',minimum:0,maximum:100000},
+      expectedVersion:{type:'integer',minimum:1}},
+      required:['workspaceId','documentId'],additionalProperties:false}},
   {name:'redion_read_block',description:'Liest einen unverschlüsselten RED-ION-Block mit Seitenberechtigungen und sichtbaren Kindblöcken. Datenbankzeilen nur über redion_read_database lesen.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField},required:['workspaceId','blockId'],additionalProperties:false}},
   {name:'redion_read_schematic',description:'Liest einen vorhandenen Schaltplan-Block mit geprüften Seitenrechten. Bauteile, Leitungen, Beschriftungen und Planversion sind enthalten.',
@@ -94,6 +99,7 @@ const toolTitles:Record<string,string>={
   redion_read_database:'Datenbank lesen',
   redion_list_tasks:'Aufgaben auflisten',
   redion_list_block_types:'Blockarten auflisten',
+  redion_list_page_blocks:'Seitenblöcke auflisten',
   redion_read_block:'Block lesen',
   redion_read_schematic:'Schaltplan lesen',
   redion_list_root_pages:'Hauptseiten auflisten',
@@ -187,6 +193,59 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     }
     const w=required(args.workspaceId,128);
     const area=await inScope(w);
+    if(name==='redion_list_page_blocks'){
+      const documentId=required(args.documentId,128);
+      const ownPage=await page(w,documentId,'lesen');
+      const parentId=args.parentBlockId===undefined?documentId:required(args.parentBlockId,128);
+      let parent=ownPage;
+      if(parentId!==documentId){
+        const s=await ablage.hole('saetze',{bereich:w,id:parentId});
+        if(!s||s.tabelle!=='blocks'||s.geloescht||s.verschluesselt||s.seite!==documentId)
+          return err('not_found','Block nicht verfügbar.');
+        let data:Record<string,unknown>;
+        try{data=JSON.parse(String(s.daten||'')) as Record<string,unknown>;}
+        catch{return err('not_found','Block nicht verfügbar.');}
+        if(!data||typeof data!=='object'||Array.isArray(data)||data.alive===false||
+          typeof data.type!=='string'||data.type==='page'||data.parentTable==='collection')
+          return err('not_found','Block nicht verfügbar.');
+        parent={s,data};
+      }
+      const parentVersion=Number(parent.s.version)||1;
+      if(args.expectedVersion!==undefined&&expected(args.expectedVersion)!==parentVersion)
+        return err('conflict','Blockliste wurde zwischenzeitlich geändert. Bitte erneut beginnen.');
+      const raw=parent.data.content;
+      if(raw!==undefined&&!Array.isArray(raw))
+        return err('invalid_data','Blockliste ist kein Array.');
+      const ids=Array.isArray(raw)?raw:[];
+      if(ids.length>5000)return err('too_large','Blockliste überschreitet das sichere Leselimit.');
+      const max=limit(args.limit,10,20);
+      const offset=args.offset===undefined?0:args.offset;
+      if(!Number.isSafeInteger(offset)||Number(offset)<0||Number(offset)>100000)
+        return err('invalid_arguments','Ungültiger Blockversatz.');
+      const blocks:{blockId:string;type:string;text:string;textTruncated:boolean;version:number}[]=[];
+      const seen=new Set<string>();
+      let visible=0;
+      for(const id of ids){
+        if(typeof id!=='string'||!id||id.length>128||seen.has(id))continue;
+        seen.add(id);
+        const s=await ablage.hole('saetze',{bereich:w,id});
+        if(!s||s.tabelle!=='blocks'||s.geloescht||s.verschluesselt||s.seite!==documentId)continue;
+        let data:Record<string,unknown>;
+        try{data=JSON.parse(String(s.daten||'')) as Record<string,unknown>;}
+        catch{continue;}
+        if(!data||typeof data!=='object'||Array.isArray(data)||data.alive===false||
+          typeof data.type!=='string'||data.parentId!==parentId||
+          data.parentTable==='collection')continue;
+        if(visible++<Number(offset))continue;
+        const full=typeof data.text==='string'?data.text:'';
+        blocks.push({blockId:id,type:data.type.slice(0,40),text:full.slice(0,2000),
+          textTruncated:full.length>2000,version:Number(s.version)||1});
+        if(blocks.length>max)break;
+      }
+      return {workspaceId:w,documentId,parentBlockId:parentId===documentId?null:parentId,
+        parentVersion,blocks:blocks.slice(0,max),
+        nextOffset:blocks.length>max?Number(offset)+max:null};
+    }
     if(name==='redion_read_block'||name==='redion_read_schematic'){
       const id=required(args.blockId,128);
       const s=await ablage.hole('saetze',{bereich:w,id});
