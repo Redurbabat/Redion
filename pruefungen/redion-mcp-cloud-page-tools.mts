@@ -258,3 +258,37 @@ test('Cloud MCP: native Schaltpläne verschieben nur unverbundene Bauteile ohne 
   assert.throws(()=>invoke(labelMoved,'move_label',{
     labelId:'missing',x:150,y:330}),/existiert nicht/);
 });
+
+
+test('Cloud MCP: gedrehte Fachzeichen bleiben mit allen vier Ecken auf dem Blatt',()=>{
+  const plan={art:'stromlauf-aufgeloest',breite:800,hoehe:700,
+    teile:[] as any[],leitungen:[] as any[],texte:[] as any[],
+    ebenen:[{id:'plan',name:'Plan',farbe:'var(--text)',sichtbar:true}]};
+  const edit=(raw:unknown,params:Record<string,unknown>)=>editSchematic(raw,{
+    workspaceId:'ws_test',blockId:'rotated_guard',expectedVersion:1,
+    operation:'add_component',symbolId:'schliesser',...params
+  }).plan as typeof plan;
+  // Symbol is 40 × 60; rotating 90° about its centre extends 10 px
+  // left of its saved origin, even though a naive 60 × 40 check fits.
+  assert.throws(()=>edit(plan,{componentId:'rot90_edge',x:0,y:20,rotation:90}),
+    /ausserhalb des Planblatts/);
+  assert.throws(()=>edit(plan,{componentId:'rot270_edge',x:0,y:20,rotation:270}),
+    /ausserhalb des Planblatts/);
+  assert.throws(()=>edit(plan,{componentId:'rot90_right',x:760,y:20,rotation:90}),
+    /ausserhalb des Planblatts/);
+  assert.throws(()=>edit(plan,{componentId:'rot0_bottom',x:20,y:650,rotation:0}),
+    /ausserhalb des Planblatts/);
+  const placed=edit(plan,{componentId:'rot90_inside',x:10,y:20,rotation:90});
+  assert.equal(placed.teile[0].drehung,90);
+  assert.equal(placed.teile[0].x,10);
+  assert.deepEqual(plan.teile,[],'Ungültige Platzierung darf den bestehenden Plan nicht verändern.');
+  const changed=editSchematic(placed,{
+    workspaceId:'ws_test',blockId:'rotated_guard',expectedVersion:2,
+    operation:'move_component',componentId:'rot90_inside',x:20,y:20
+  }).plan as typeof plan;
+  assert.equal(changed.teile[0].x,20);
+  assert.throws(()=>editSchematic(changed,{
+    workspaceId:'ws_test',blockId:'rotated_guard',expectedVersion:3,
+    operation:'move_component',componentId:'rot90_inside',x:0,y:20
+  }),/ausserhalb des Planblatts/);
+});
