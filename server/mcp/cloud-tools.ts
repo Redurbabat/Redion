@@ -261,7 +261,9 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     const ver=expected(args.expectedVersion);
     if(ver!==Number(current.s.version||1))err('conflict','Seite wurde zwischenzeitlich geändert. Bitte erneut lesen.');
     if(name==='redion_append_content'){
-      const addition=required(args.content,4000);
+      if(typeof args.content!=='string'||args.content.length>4000||!args.content.trim())
+        return err('invalid_arguments','Anhang muss einen nichtleeren Text mit höchstens 4.000 Zeichen enthalten.');
+      const addition=args.content;
       const old=current.data.inhalt;
       if(typeof old!=='string')return err('not_found','Seite hat keinen Textinhalt.');
       const next=old?old+'\n'+addition:addition;
@@ -292,7 +294,9 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       return update(w,id,ver,{...current.data,text:required(args.title,160)});
     }
     if(name==='redion_replace_text'){
-      const find=required(args.find,2000),replacement=text(args.replacement,4000);
+      if(typeof args.find!=='string'||!args.find.length||args.find.length>2000)
+        return err('invalid_arguments','Suchtext muss 1 bis 2.000 Zeichen enthalten.');
+      const find=args.find,replacement=text(args.replacement,4000);
       if(typeof args.replacement!=='string'||args.replacement.length>4000)err('invalid_arguments','Ungültiger Ersatztext.');
       const old=current.data.inhalt;
       if(typeof old!=='string')return err('not_found','Seite hat keinen Textinhalt.');
