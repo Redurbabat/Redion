@@ -51,6 +51,18 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
   assert.ok(names(read).includes('redion_read_schematic'));
   assert.deepEqual(schematic?.inputSchema.required,['workspaceId','blockId']);
   assert.equal(schematic?.annotations?.readOnlyHint,true);
+  const addSchematic=write.find(x=>x.name==='redion_add_schematic');
+  assert.equal(names(read).includes('redion_add_schematic'),false);
+  assert.ok(names(write).includes('redion_add_schematic'));
+  assert.deepEqual(addSchematic?.inputSchema.required,
+    ['workspaceId','documentId','expectedVersion','art']);
+  assert.equal(addSchematic?.annotations?.readOnlyHint,false);
+  assert.equal(addSchematic?.annotations?.idempotentHint,true);
+  assert.deepEqual((addSchematic?.inputSchema.properties.art as {enum:string[]}).enum,[
+    'stromlauf-aufgeloest','stromlauf-zusammenhaengend','hauptstromkreis',
+    'installationsplan','uebersichtsplan','klemmenplan','verdrahtungsplan',
+    'anschlussplan','blockschaltbild','funktionsplan','aufbauplan'
+  ]);
   const addBlock=write.find(x=>x.name==='redion_add_block');
   assert.equal(names(read).includes('redion_add_block'),false);
   assert.equal(names(write).includes('redion_add_block'),true);
