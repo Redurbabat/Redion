@@ -30,7 +30,7 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_list_workspaces',description:'Zeigt nur die für diese KI-Verbindung freigegebenen Bereiche.',
     inputSchema:{type:'object',properties:{},additionalProperties:false}},
   {name:'redion_search',description:'Sucht nach freigegebenen, nicht verschlüsselten Seiten.',
-    inputSchema:{type:'object',properties:{...workspace,query:{type:'string',maxLength:200},limit:{type:'integer',minimum:1,maximum:30}},required:['workspaceId'],additionalProperties:false}},
+    inputSchema:{type:'object',properties:{...workspace,query:{type:'string',maxLength:200},limit:{type:'integer',minimum:1,maximum:30},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
   {name:'redion_read_page',description:'Liest eine freigegebene Klartext-Seite mit Versionsnummer.',
     inputSchema:{type:'object',properties:{...workspace,...documentId},required:['workspaceId','documentId'],additionalProperties:false}},
   {name:'redion_create_page',description:'Legt eine Seite an. requestId verhindert doppelte Erstellung bei Wiederholung.',
@@ -119,19 +119,42 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     const area=await inScope(w);
     if(name==='redion_search'){
       await role(w,'*','lesen');
-      const query=text(args.query,200).toLocaleLowerCase();
+      if(args.query!==undefined&&(typeof args.query!=='string'||args.query.length>200))
+        return err('invalid_arguments','Suchtext muss ein Text mit höchstens 200 Zeichen sein.');
+      const query=typeof args.query==='string'?args.query.trim():'';
       const max=limit(args.limit,20,30);
-      const rows=await ablage.finde('saetze',{bereich:w},{sortiere:'geaendert',absteigend:true,grenze:300});
-      const found=[];
-      for(const s of rows){
-        if(s.tabelle!=='blocks'||s.geloescht||s.verschluesselt||found.length>=max)continue;
-        let data:Record<string,unknown>;
-        try{data=JSON.parse(String(s.daten||'{}'));}catch{continue;}
-        if(data.type!=='page'||query&&!String(data.text||'').toLocaleLowerCase().includes(query))continue;
-        const r=await rolleAuf(ablage,w,String(s.seite||s.id),userId);
-        if(darf(r,'lesen'))found.push({documentId:s.id,title:String(data.text||'').slice(0,160),version:Number(s.version)||1});
+      const offset=args.offset===undefined?0:args.offset;
+      if(!Number.isSafeInteger(offset)||Number(offset)<0||Number(offset)>1000)
+        return err('invalid_arguments','Ungültiger Suchversatz.');
+      // Search title AND content in the full D1 page index, not merely the
+      // 300 newest records. instr() treats %, _ and \ as literal characters.
+      // CASE protects against malformed or encrypted JSON in the store.
+      const sql="SELECT id,seite,daten,version FROM saetze "+
+        "WHERE bereich=?1 AND tabelle='blocks' AND geloescht=0 AND verschluesselt=0 "+
+        "AND CASE WHEN json_valid(daten) THEN "+
+        "(json_extract(daten,'$.type')='page' AND ("+
+        "?2='' OR instr(lower(COALESCE(json_extract(daten,'$.text'),'')),lower(?2))>0 "+
+        "OR instr(lower(COALESCE(json_extract(daten,'$.inhalt'),'')),lower(?2))>0)) "+
+        "ELSE 0 END ORDER BY geaendert DESC,id DESC LIMIT ?3 OFFSET ?4";
+      const found:{documentId:string;title:string;version:number}[]=[];
+      const batch=100,maxScanned=2000;
+      let scanned=0,visible=0,exhausted=false;
+      while(scanned<maxScanned&&found.length<=max){
+        const result=await db.prepare(sql).bind(w,query,batch,scanned)
+          .all<{id:string;seite:string|null;daten:string;version:number}>();
+        for(const s of result.results){
+          const r=await rolleAuf(ablage,w,String(s.seite||s.id),userId);
+          if(!darf(r,'lesen'))continue;
+          if(visible++<Number(offset))continue;
+          const data=JSON.parse(s.daten) as Record<string,unknown>;
+          found.push({documentId:s.id,title:String(data.text||'').slice(0,160),version:Number(s.version)||1});
+          if(found.length>max)break;
+        }
+        scanned+=result.results.length;
+        if(result.results.length<batch){exhausted=true;break;}
       }
-      return {documents:found};
+      return {documents:found.slice(0,max),nextOffset:found.length>max?Number(offset)+max:null,
+        ...(scanned>=maxScanned&&!exhausted&&found.length<=max?{limited:true}:{})};
     }
     if(name==='redion_read_page'){
       const id=required(args.documentId,128);
@@ -183,8 +206,9 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       return err('forbidden','Schreibrechte sind nicht freigegeben.');
     if(name==='redion_create_page'){
       const title=required(args.title,160);
-      const content=text(args.content??'',12000);
-      if(args.content!==undefined&&typeof args.content!=='string')err('invalid_arguments','Ungültiger Seiteninhalt.');
+      if(args.content!==undefined&&(typeof args.content!=='string'||args.content.length>12000))
+        err('invalid_arguments','Seiteninhalt muss ein Text mit höchstens 12.000 Zeichen sein.');
+      const content=typeof args.content==='string'?args.content:'';
       const parentId=args.parentId===undefined?'':text(args.parentId,128);
       if(args.parentId!==undefined&&!parentId)err('invalid_arguments','Ungültige Elternseite.');
       if(parentId)await page(w,parentId,'bearbeiten');else await role(w,'*','bearbeiten');
