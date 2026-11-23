@@ -480,3 +480,44 @@ test('Cloud-MCP: Suche im gesamten Seiteninhalt und nur über sichtbare Resultat
     assert.equal(JSON.parse(oversized.data.result.content[0].text).code,'invalid_arguments');
   }finally{f.close();}
 });
+
+
+test('Cloud-MCP: Markdown-Einrückung und Zeilenumbrüche exakt erhalten',async()=>{
+  const f=await fixture();
+  try{
+    const token=await f.authorize(true);
+    const invoke=async(name:string,args:Record<string,unknown>)=>{
+      const response=await f.rpc(token.access_token,'tools/call',{name,arguments:{workspaceId:'ws_test',...args}});
+      assert.equal(response.status,200);
+      return response.data.result as {isError?:boolean;content:{text:string}[]};
+    };
+    const created=await invoke('redion_create_page',{
+      title:'Markdown-Formatierung',content:'Beginn',requestId:'mcp_markdown_format_001'
+    });
+    assert.notEqual(created.isError,true);
+    const id=JSON.parse(created.content[0]!.text).documentId as string;
+    const addition='\n    Code\n\n';
+    const appended=await invoke('redion_append_content',{
+      documentId:id,content:addition,expectedVersion:1
+    });
+    assert.notEqual(appended.isError,true);
+    const read=await invoke('redion_read_page',{documentId:id});
+    assert.equal(JSON.parse(read.content[0]!.text).content,'Beginn\n\n    Code\n\n');
+    const replaced=await invoke('redion_replace_text',{
+      documentId:id,find:'    Code',replacement:'  Block',expectedVersion:2
+    });
+    assert.notEqual(replaced.isError,true);
+    const finalRead=await invoke('redion_read_page',{documentId:id});
+    assert.equal(JSON.parse(finalRead.content[0]!.text).content,'Beginn\n\n  Block\n\n');
+    const blank=await invoke('redion_append_content',{
+      documentId:id,content:'   ',expectedVersion:3
+    });
+    assert.equal(blank.isError,true);
+    assert.equal(JSON.parse(blank.content[0]!.text).code,'invalid_arguments');
+    const empty=await invoke('redion_replace_text',{
+      documentId:id,find:'',replacement:'Z',expectedVersion:3
+    });
+    assert.equal(empty.isError,true);
+    assert.equal(JSON.parse(empty.content[0]!.text).code,'invalid_arguments');
+  }finally{f.close();}
+});
