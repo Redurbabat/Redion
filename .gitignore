@@ -5,6 +5,12 @@ node_modules/
 /build/ios-capacitor/
 /build/ios-web-paritaet.json
 # Generierte Offline-Dateien und EXE-Installer für Windows (keine Nutzerdateien).
+# Optionale, lokal erzeugte Visual- und MCP-Paketkopien (nicht auf GitHub).
+# Kein globales /build/: die Prüfung test109 überspringt nur bekannte Ausgaben.
+/build/visual-web-emission/
+/build/visual-web-merged/
+/build/windows-visual-mcp-dist/
+/build/struktur/
 /build/windows-app/
 /build/windows-dist/
 /build/windows-ink-dist/
