@@ -1,5 +1,7 @@
 # Redion
 
+**Projekt- und Build-Struktur:** [Ordnerübersicht und lokale Build-Ausgaben](doku/ORDNER-UND-BUILD-STRUKTUR.md). Für einen aktuellen Baum: `npm run struktur:bericht`.
+
 Redion ist eine Notiz-, Datenbank- und Wissens-App, die direkt im Browser läuft.
 
 Sie war einmal als Alternative zu Notion gedacht und ist darüber hinausgewachsen: das Schreibstudio für PDFs mit echtem Stift, Fachzeichen und Schutzleiter, die Lernwelt, die Prüfungsplanung, lokale KI, das vollständige `.redion`-Paket. Das gibt es dort nicht.
