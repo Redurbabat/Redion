@@ -24,8 +24,20 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
   assert.deepEqual(search?.inputSchema.properties.offset,{type:'integer',minimum:0,maximum:1000});
   const childList=write.find(x=>x.name==='redion_list_child_pages');
   assert.deepEqual(childList?.inputSchema.properties.offset,{type:'integer',minimum:0,maximum:100000});
+  for(const item of read){
+    assert.equal(item.annotations?.readOnlyHint,true,item.name);
+    assert.equal(item.annotations?.openWorldHint,false,item.name);
+    assert.ok(item.annotations?.title,item.name);
+  }
+  const create=write.find(x=>x.name==='redion_create_page');
+  assert.equal(create?.annotations?.destructiveHint,false);
+  assert.equal(create?.annotations?.idempotentHint,true);
   const append=write.find(x=>x.name==='redion_append_content');
   const move=write.find(x=>x.name==='redion_move_page');
   assert.deepEqual(append?.inputSchema.required,['workspaceId','documentId','content','expectedVersion']);
   assert.deepEqual(move?.inputSchema.required,['workspaceId','documentId','expectedVersion']);
+  assert.equal(append?.annotations?.readOnlyHint,false);
+  assert.equal(append?.annotations?.destructiveHint,false);
+  assert.equal(move?.annotations?.readOnlyHint,false);
+  assert.equal(move?.annotations?.destructiveHint,true);
 });
