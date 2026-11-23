@@ -179,7 +179,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const addition=required(args.content,4000);
       const old=current.data.inhalt;
       if(typeof old!=='string')return err('not_found','Seite hat keinen Textinhalt.');
-      const next=old?old+'\\n'+addition:addition;
+      const next=old?old+'\n'+addition:addition;
       if(next.length>12000)return err('invalid_arguments','Seiteninhalt ist zu gross.');
       return update(w,id,ver,{...current.data,inhalt:next});
     }
