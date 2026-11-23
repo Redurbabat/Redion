@@ -138,7 +138,7 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       const transport=new StreamableHTTPClientTransport(new URL(origin+'/mcp/cloud'),{authProvider:provider,fetch:fetcher});
       await client.connect(transport);
       assert.equal(transport.sessionId,undefined);
-      const list=await client.listTools();assert.equal(list.tools.length,6);
+      const list=await client.listTools();assert.equal(list.tools.length,7);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
       assert.equal(JSON.parse(result.content[0]!.text).content,'Nur Testdaten');
       const denied=await client.callTool({name:'redion_create_page',arguments:{workspaceId:'ws_test',title:'Gesperrt',requestId:'sdk_request_01'}});
@@ -701,5 +701,103 @@ test('Cloud-MCP: mehrere Seiten mit neutralen Fehlern und begrenzter Antwort les
     const noAccess=await f.rpc(token.access_token,'tools/call',{name:'redion_read_pages',
       arguments:{workspaceId:'another_workspace',documentIds:['long_batch']}});
     assert.equal(noAccess.data.result.isError,true);
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: Leseabschnitte mit Versionsnummer gegen Datenänderungen absichern',async()=>{
+  const f=await fixture();
+  try{
+    const docId='pinned_read_page';
+    const put=async(version:number,content:string)=>{
+      await f.store.setze('saetze',{id:docId,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify({type:'page',text:'Versionskontrolle',inhalt:content}),
+        verschluesselt:0,seite:docId,version,geaendert:'2026-11-23',
+        geloescht:0,vonGeraet:'Test'});
+    };
+    await put(2,'Alter Inhalt 123456789');
+    const token=await f.authorize(false);
+    const read=async(args:Record<string,unknown>)=>{
+      const response=await f.rpc(token.access_token,'tools/call',{name:'redion_read_page',
+        arguments:{workspaceId:'ws_test',documentId:docId,...args}});
+      assert.equal(response.status,200);
+      return response.data.result as {isError?:boolean;content:{text:string}[]};
+    };
+    const first=await read({offset:0,limit:6});
+    assert.notEqual(first.isError,true);
+    const previous=JSON.parse(first.content[0]!.text);
+    assert.equal(previous.content,'Alter ');
+    assert.equal(previous.version,2);
+    assert.equal(previous.nextOffset,6);
+    const second=await read({offset:6,limit:8,expectedVersion:2});
+    assert.equal(JSON.parse(second.content[0]!.text).content,'Inhalt 1');
+    await put(3,'Neuer Inhalt 987654321');
+    const stale=await read({offset:6,limit:8,expectedVersion:2});
+    assert.equal(stale.isError,true);
+    assert.equal(JSON.parse(stale.content[0]!.text).code,'conflict');
+    const refreshed=await read({offset:6,limit:8,expectedVersion:3});
+    assert.notEqual(refreshed.isError,true);
+    assert.equal(JSON.parse(refreshed.content[0]!.text).content,'Inhalt 9');
+    const invalid=await read({offset:6,expectedVersion:0});
+    assert.equal(invalid.isError,true);
+    assert.equal(JSON.parse(invalid.content[0]!.text).code,'invalid_arguments');
+  }finally{f.close();}
+});
+
+test('Cloud-MCP: sichere Seitenpfade ohne Metadaten verborgener Vorfahren',async()=>{
+  const f=await fixture();
+  try{
+    await f.store.setze('konten',{id:'path_reader',mail:'path_reader@example.test',
+      name:'Path Reader',herkunft:'github',angelegt:'',gesperrt:0});
+    const put=async(id:string,parentId:string|null)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify({type:'page',text:'Titel '+id,inhalt:'',parentId}),
+        verschluesselt:0,seite:id,version:1,geaendert:'2026-11-23',
+        geloescht:0,vonGeraet:'Test'});
+    };
+    const grant=async(id:string,rolle:string)=>
+      f.store.setze('freigaben',{bereich:'ws_test',seite:id,kontoId:'path_reader',
+        rolle,von:'owner',wann:'2026-11-23'});
+    await put('path_root',null);
+    await put('path_middle','path_root');
+    await put('path_leaf','path_middle');
+    const owner=await f.authorize(false);
+    const reader=await f.authorize(false,'path_reader');
+    const path=async(token:string,documentId='path_leaf')=>{
+      const reply=await f.rpc(token,'tools/call',{name:'redion_get_page_path',
+        arguments:{workspaceId:'ws_test',documentId}});
+      assert.equal(reply.status,200);
+      return reply.data.result as {isError?:boolean;content:{text:string}[]};
+    };
+    const full=await path(owner.access_token);
+    assert.notEqual(full.isError,true);
+    assert.deepEqual(JSON.parse(full.content[0]!.text).path.map((p:any)=>p.documentId),
+      ['path_root','path_middle','path_leaf']);
+    await grant('path_leaf','lesen');
+    const hidden=await path(reader.access_token);
+    assert.notEqual(hidden.isError,true);
+    assert.deepEqual(JSON.parse(hidden.content[0]!.text),
+      {workspaceId:'ws_test',documentId:'path_leaf',unavailable:true});
+    await grant('*','lesen');
+    await grant('path_middle','kein');
+    const stillHidden=await path(reader.access_token);
+    assert.deepEqual(JSON.parse(stillHidden.content[0]!.text),
+      {workspaceId:'ws_test',documentId:'path_leaf',unavailable:true});
+    await grant('path_middle','lesen');
+    const allowed=await path(reader.access_token);
+    assert.deepEqual(JSON.parse(allowed.content[0]!.text).path.map((p:any)=>p.documentId),
+      ['path_root','path_middle','path_leaf']);
+    await put('path_root','path_leaf');
+    const cycle=await path(owner.access_token);
+    assert.equal(cycle.isError,true);
+    assert.equal(JSON.parse(cycle.content[0]!.text).code,'invalid_data');
+    await put('path_root',null);
+    const row=await f.store.hole('saetze',{bereich:'ws_test',id:'path_middle'});
+    assert.ok(row);
+    await f.store.setze('saetze',{...row,verschluesselt:1});
+    const encrypted=await path(owner.access_token);
+    assert.notEqual(encrypted.isError,true);
+    assert.deepEqual(JSON.parse(encrypted.content[0]!.text),
+      {workspaceId:'ws_test',documentId:'path_leaf',unavailable:true});
   }finally{f.close();}
 });
