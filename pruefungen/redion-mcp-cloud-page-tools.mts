@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {visibleCloudTools} from '../server/mcp/cloud-tools.ts';
 import type {McpPrincipal} from '../server/mcp/oauth.ts';
+import {readFileSync} from 'node:fs';
+import {BUILTIN_BLOCK_TYPES} from '../server/mcp/block-catalog.ts';
 
 const principal=(scopes:('redion:read'|'redion:write'|'redion:images')[]):McpPrincipal=>({
   userId:'test-user',clientId:'test-client',grantId:'test-grant',workspaceIds:['test-workspace'],scopes
@@ -89,4 +91,32 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
   assert.equal(append?.annotations?.destructiveHint,false);
   assert.equal(move?.annotations?.readOnlyHint,false);
   assert.equal(move?.annotations?.destructiveHint,true);
+});
+
+
+test('Cloud MCP: der statische Blockkatalog stimmt mit dem Redion-Register überein',()=>{
+  // src/register/bloecke.ts is the only authoring source for built-in types.
+  // Catch UI/server drift without importing browser globals in the Worker.
+  const source=readFileSync(new URL('../src/register/bloecke.ts',import.meta.url),'utf8');
+  const list=(start:string)=>{
+    const i=source.indexOf(start);
+    assert.ok(i>=0,start);
+    const j=source.indexOf('\n  ];',i);
+    assert.ok(j>i,start);
+    return source.slice(i,j+5);
+  };
+  const parse=(body:string,insertable:boolean)=>[...body.matchAll(
+    /\{\s*id:\s*'([^']+)'[\s\S]*?name:\s*'([^']+)'[\s\S]*?(?=\},|\}\s*\]|\}\s*;)/g
+  )].filter(match=>!/\baktion:\s*'/.test(match[0]))
+    .map(match=>({
+      id:match[1],name:match[2],
+      gruppe:match[0].match(/\bgruppe:\s*'([^']+)'/)?.[1]??'Intern',
+      insertable
+    }));
+  const expected=[...parse(list('const EINGEBAUT = ['),true),
+    ...parse(list('const NUR_NAME:'),false)];
+  assert.equal(expected.length,56);
+  assert.deepEqual(BUILTIN_BLOCK_TYPES,expected);
+  assert.equal(BUILTIN_BLOCK_TYPES.some(x=>x.id==='a-del'),false);
+  assert.ok(BUILTIN_BLOCK_TYPES.some(x=>x.id==='schaltplan'));
 });
