@@ -12,9 +12,11 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
   const write=visibleCloudTools(principal(['redion:read','redion:write']));
   const names=(items:typeof write)=>items.map(x=>x.name);
   assert.ok(names(read).includes('redion_list_child_pages'));
+  assert.ok(names(read).includes('redion_list_root_pages'));
   assert.ok(!names(read).includes('redion_append_content'));
   assert.ok(!names(read).includes('redion_move_page'));
   assert.ok(names(write).includes('redion_list_child_pages'));
+  assert.ok(names(write).includes('redion_list_root_pages'));
   assert.ok(names(write).includes('redion_append_content'));
   assert.ok(names(write).includes('redion_move_page'));
   for(const item of write){
@@ -25,6 +27,10 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
   assert.deepEqual(readPage?.inputSchema.properties.offset,{type:'integer',minimum:0});
   const search=write.find(x=>x.name==='redion_search');
   assert.deepEqual(search?.inputSchema.properties.offset,{type:'integer',minimum:0,maximum:1000});
+  const rootList=write.find(x=>x.name==='redion_list_root_pages');
+  assert.deepEqual(rootList?.inputSchema.required,['workspaceId']);
+  assert.deepEqual(rootList?.inputSchema.properties.offset,{type:'integer',minimum:0,maximum:100000});
+  assert.equal(rootList?.annotations?.readOnlyHint,true);
   const childList=write.find(x=>x.name==='redion_list_child_pages');
   assert.deepEqual(childList?.inputSchema.properties.offset,{type:'integer',minimum:0,maximum:100000});
   for(const item of read){
