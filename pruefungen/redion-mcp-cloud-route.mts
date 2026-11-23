@@ -14,17 +14,35 @@ const fixture=async()=>{
   const sqlite=new DatabaseSync(':memory:');
   sqlite.exec(SCHEMA);
   sqlite.exec(fs.readFileSync(new URL('../server/mcp/schema.sql',import.meta.url),'utf8'));
-  const db:McpDatabase={prepare(sql){
-    let values:(string|number)[]=[];
-    const params=()=>Object.fromEntries(values.map((v,i)=>['?'+(i+1),v]));
-    const bound=():any[]=>sql.includes('?1')?[params()]:values;
-    return {
-      bind(...next){values=next;return this;},
-      async first<T>(){return (sqlite.prepare(sql).get(...bound()) as T|undefined)??null;},
-      async all<T>(){return {results:sqlite.prepare(sql).all(...bound()) as T[]};},
-      async run(){return sqlite.prepare(sql).run(...bound());}
-    };
-  }};
+  const prepared=new WeakMap<object,{sql:string;bound:()=>any[]}>();
+  const db:McpDatabase={
+    prepare(sql){
+      let values:(string|number)[]=[];
+      const params=()=>Object.fromEntries(values.map((v,i)=>['?'+(i+1),v]));
+      const bound=():any[]=>sql.includes('?1')?[params()]:values;
+      const statement={
+        bind(...next:(string|number)[]){values=next;return this;},
+        async first<T>(){return (sqlite.prepare(sql).get(...bound()) as T|undefined)??null;},
+        async all<T>(){return {results:sqlite.prepare(sql).all(...bound()) as T[]};}
+      };
+      prepared.set(statement,{sql,bound});
+      return statement;
+    },
+    async batch(statements){
+      // D1.batch uses a real transaction. Model it with the synchronous
+      // SQLite engine, including rollback when any statement fails.
+      sqlite.exec('BEGIN IMMEDIATE');
+      try{
+        const outcome=statements.map(statement=>{
+          const p=prepared.get(statement);
+          if(!p)throw new Error('Unbekanntes PreparedStatement im Batch');
+          return {success:true,results:sqlite.prepare(p.sql).all(...p.bound())};
+        });
+        sqlite.exec('COMMIT');
+        return outcome;
+      }catch(error){sqlite.exec('ROLLBACK');throw error;}
+    }
+  };
   const store=ablageD1(db);
   await store.setze('konten',{id:'owner',mail:'owner@example.test',name:'owner',herkunft:'github',angelegt:'',gesperrt:0});
   await store.setze('bereiche',{id:'ws_test',name:'Tests',besitzer:'owner',angelegt:''});
