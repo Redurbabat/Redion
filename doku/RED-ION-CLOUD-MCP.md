@@ -339,3 +339,21 @@ Die Antwort enthält deshalb explizit 'electricalValidation:false' und
 'routingVerified:false'. Vor praktischer Verdrahtung ist eine unabhängige
 fachliche Prüfung notwendig. Schaltplanänderungen sind erst nach Worker-
 Deployment, Connector-Aktualisierung und Live-Test produktiv nutzbar.
+
+
+## Durchsuchbare Blockinhalte (23.11.2026)
+
+Die bestehende Funktion 'redion_search' berücksichtigt nun zusätzlich zu
+Seitentitel und Markdown auch den **Text direkt eingebetteter Klartextblöcke**.
+Ein Block ist nur durchsuchbar, wenn sein Eigentümer die Seite ist, seine ID
+in deren 'content'-Liste steht und der Datensatz lesbar, nicht gelöscht,
+nicht verschlüsselt und kein Datenbankeintrag ist. Das Ergebnis bleibt
+eine Liste von Seiten-IDs; einzelne Block-IDs und nicht sichtbare
+Suchtreffer werden nicht offengelegt. Paginierung zählt weiterhin nur
+für den Benutzer lesbare Seiten. Auch bei nicht-ASCII-Begriffen wird
+der Blocktext nach der Seitenberechtigungsprüfung mit Unicode-Casefold
+verglichen.
+
+**Begrenzung:** Weitere Verschachtelungsebenen unter einem Text- oder
+Listenblock werden noch nicht global indiziert. Auch Inhalte verschlüsselter
+Blöcke werden niemals in die Cloud-Suche übernommen.
