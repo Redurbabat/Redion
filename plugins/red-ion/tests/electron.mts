@@ -1,3 +1,4 @@
+declare const App:any;
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -130,7 +131,7 @@ try {
   // statt auf einen eventuell veralteten Editor-Fokus zu vertrauen.
   await call('redion_open_document',{documentId});
   await page!.waitForFunction(id=>
-    (window as any).App.aktuelleSeite()===id &&
+    App.aktuelleSeite()===id &&
     Boolean(document.querySelector('#page')?.getBoundingClientRect().width),documentId);
   assert.equal((await call('redion_get_active_document')).document.id,documentId);
   await native!.evaluate(({dialog})=>{dialog.showMessageBox=async()=>({response:0,checkboxChecked:false});});
