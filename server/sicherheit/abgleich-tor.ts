@@ -35,7 +35,7 @@ export const abgleichTorAn = (env: { ABGLEICH_TOR?: unknown } | null | undefined
  *  URL.origin macht aus einem eigenen Schema 'null', und 'null' senden auch
  *  Sandbox-Rahmen und file:// — also kein Vergleich über URL und kein Stern.
  *  Cookies gibt es auf diesen Wegen nicht, nur Bearer-Tokens. */
-export const APP_URSPRUENGE: ReadonlySet<string> = new Set(['redion-local://app']);
+export const APP_URSPRUENGE: ReadonlySet<string> = new Set(['redion-local://app', 'capacitor://localhost']);
 
 const OHNE_KOERPER = [101, 204, 205, 304];
 

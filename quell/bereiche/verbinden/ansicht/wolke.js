@@ -24,7 +24,7 @@ const WolkeFenster = (() => {
                 return;
             const ms = Wolke.taktSetzen(feld.value);
             UI.toast(ms < 0 ? 'Diesen Takt gibt es nicht — es bleibt beim bisherigen.'
-                : ms ? 'Abgleich jetzt alle ' + Math.round(ms / 60000) + ' Minuten.'
+                : ms ? (ms < 60000 ? 'Nahezu live: alle ' + Math.round(ms / 1000) + ' Sekunden bei geöffneter App.' : 'Abgleich jetzt alle ' + Math.round(ms / 60000) + ' Minuten.')
                     : 'Abgleich nur noch beim Öffnen und von Hand.');
         });
         o.addEventListener('click', async (e) => {
@@ -340,9 +340,10 @@ const WolkeFenster = (() => {
             'display:flex; gap:9px; align-items:center; flex-wrap:wrap">' +
             '<label for="wo-takt">Von selbst abgleichen:</label>' +
             '<select id="wo-takt" style="font-size:12px; padding:4px 8px">' +
-            ['0', '120', '600'].map(v => `<option value="${v}"${String(Store.getMeta('wolkeTakt', '120')) === v ? ' selected' : ''}>` +
+            ['0', '15', '120', '600'].map(v => `<option value="${v}"${String(Store.getMeta('wolkeTakt', '120')) === v ? ' selected' : ''}>` +
                 (v === '0' ? 'nur beim Öffnen und von Hand'
-                    : v === '120' ? 'alle 2 Minuten' : 'alle 10 Minuten') + '</option>').join('') +
+                    : v === '15' ? 'nahezu live (15 Sekunden)'
+                        : v === '120' ? 'alle 2 Minuten' : 'alle 10 Minuten') + '</option>').join('') +
             '</select>' +
             '</div>' +
             '<hr style="border:none;border-top:1px solid var(--line); margin:16px 0 12px">' +

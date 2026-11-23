@@ -357,6 +357,9 @@ const Wolke = (() => {
     zustand.konto = ich.konto;
     if (!bereich() && ich.bereiche.length) Store.setMeta('wolkeBereich', ich.bereiche[0].id);
     Store.setMeta('wolkeKonto', ich.konto);
+    /* Login kann nach dem App-Start erfolgen: den Takt jetzt aktivieren,
+       statt erst beim nächsten Neustart. Der Abgleich selbst bleibt Opt-in. */
+    takt();
     melden();
     if (typeof Protokoll !== 'undefined')
       Protokoll.notieren('konto', 'Bei der Wolke angemeldet als ' + ich.konto.name);
@@ -398,6 +401,8 @@ const Wolke = (() => {
        zu verstehen warum. */
     Store.setMeta('wolkeAbgleich', null);
     Store.setMeta('wolkeNeuAbgleich', '');
+    /* Nach dem Abmelden keinen leeren Hintergrund-Timer weiterlaufen lassen. */
+    takt();
     melden();
     if (typeof Protokoll !== 'undefined') Protokoll.notieren('konto', 'Von der Wolke abgemeldet');
   };
@@ -778,7 +783,14 @@ const Wolke = (() => {
         if (klar === null) { unlesbar++; continue; }
       }
       let satz;
-      try { satz = JSON.parse(klar); } catch { continue; }
+      try { satz = JSON.parse(klar); } catch { unlesbar++; continue; }
+      /* Die D1-Hülle bestimmt die Kennung, nicht JSON aus einem fremden
+         Schreibzugriff. Fehlende IDs (z.B. neue MCP-Seiten) sind erlaubt
+         und werden kanonisiert; abweichende IDs dürfen niemals einen
+         anderen lokalen Block überschreiben oder Grabsteine aufheben. */
+      if (!satz || typeof satz !== 'object' || Array.isArray(satz) ||
+          (satz.id !== undefined && satz.id !== s.id)) { unlesbar++; continue; }
+      satz.id = s.id;
       satz.wolkeVersion = s.version;
 
       const hier = s.tabelle === 'blocks' ? Store.cache.blocks[s.id]
@@ -956,6 +968,13 @@ const Wolke = (() => {
      von aussen nicht messen, ob die Wahl ankam — und eine Prüfung, die
      nichts messen kann, ist keine (§55.2). */
   let uhr: any = null;
+  /* Der Live-Takt ist bewusst ein sparsamer Delta-Abgleich, kein ungeprüfter
+     Push-Kanal. Nur bei sichtbarer, online befindlicher App anfragen.
+     abgleichen() prüft zusätzlich Konto, Zustimmung, Schlüssel und Doppelstart. */
+  const autoAbgleichen = (): void => {
+    if (document.hidden || (typeof navigator !== 'undefined' && navigator.onLine === false)) return;
+    abgleichen().catch(() => {});
+  };
   const takt = (): number => {
     clearInterval(uhr);
     uhr = null;
@@ -968,7 +987,7 @@ const Wolke = (() => {
        ist die Frage, für die es diesen Schalter NICHT gibt. */
     if (!Number.isFinite(sek) || sek <= 0) return 0;
     const ms = sek * 1000;
-    uhr = setInterval(() => { abgleichen().catch(() => {}); }, ms);
+    uhr = setInterval(autoAbgleichen, ms);
     return ms;
   };
 
@@ -1081,13 +1100,25 @@ const Wolke = (() => {
        auch dann nicht, wenn der Versand eben gescheitert ist. */
     const wegOffen = new Set<string>(Store.getMeta('wolkeDateienWeg', []) || []);
     let geholt = 0, entfernt = 0, unlesbar = 0;
+    /* Fehlende Stücke nicht vergessen, wenn die Seitenmarke weitergeht:
+       sonst bliebe eine später fertig hochgeladene Datei unsichtbar. */
+    const wartend = new Map<string, any>((Store.getMeta('wolkeDateienWartend', []) || [])
+      .filter((d: any) => d && typeof d.id === 'string' && d.id)
+      .map((d: any) => [d.id, d]));
     for (let runde = 0; runde < 20; runde++) {
       const a = await ruf('/datei/stand', { m: 'POST',
         k: { bereich: bereich(), seit: marke, grenze: 200 } });
-      for (const d of (a.dateien || [])) {
-        if (wegOffen.has(d.id)) continue;
+      /* Server-Paginierung nicht durch kaputte Dateien aufhalten.
+         In Runde 0 zusätzlich alte Fehlversuche mit Backoff wiederholen. */
+      const daten = [...(a.dateien || []), ...(runde === 0 ? [...wartend.values()] : [])];
+      const gesehen = new Set<string>();
+      for (const d of daten) {
+        if (!d || typeof d.id !== 'string' || gesehen.has(d.id)) continue;
+        gesehen.add(d.id);
+        if (wegOffen.has(d.id)) { wartend.delete(d.id); continue; }
         const lokal = await Store.dateiHolen(d.id);
         if (d.geloescht) {
+          wartend.delete(d.id);
           if (lokal) {
             for (const st of await Store.stueckeVon(d.id)) await Store.stueckWeg(st.id);
             await Store.dateiWeg(d.id);
@@ -1096,12 +1127,17 @@ const Wolke = (() => {
           oben.delete(d.id);
           continue;
         }
-        if (lokal) { if (lokal.zustand === 'fertig') oben.add(d.id); continue; }
+        if (lokal && lokal.zustand === 'fertig') {
+          wartend.delete(d.id); oben.add(d.id); continue;
+        }
+        const ausstehend = wartend.get(d.id);
+        if (ausstehend && Number(ausstehend.erstWieder || 0) > Date.now()) continue;
 
         /* Stück für Stück holen; eine Datei, die nicht ganz ankommt oder
            sich nicht entschlüsseln lässt, wird NICHT halb angelegt. */
         const teile = Math.max(1, Number(d.teile) || 1);
         let ganz = true;
+        try {
         for (let nr = 0; nr < teile; nr++) {
           const r = await ruf('/datei/runter', { m: 'POST',
             k: { bereich: bereich(), dateiId: d.id, nr } });
@@ -1111,10 +1147,20 @@ const Wolke = (() => {
           await Store.stueckPut({ id: d.id + ':' + nr, dateiId: d.id, nr,
             blob: new Blob([bytes as any], { type: String(d.typ || '') }) });
         }
+        } catch {
+          /* Ein fehlendes Stück (z.B. noch laufender Upload) betrifft
+             nur diese Datei, nicht die restlichen Downloads/Uploads. */
+          ganz = false; unlesbar++;
+        }
         if (!ganz) {
-          for (const st of await Store.stueckeVon(d.id)) await Store.stueckWeg(st.id);
+          try { for (const st of await Store.stueckeVon(d.id))
+            await Store.stueckWeg(st.id); } catch {}
+          const versuche = Math.min(20, (Number(ausstehend?.versuche) || 0) + 1);
+          wartend.set(d.id, { ...d, versuche,
+            erstWieder: Date.now() + Math.min(30 * 60000, 15000 * 2 ** Math.min(6, versuche)) });
           continue;
         }
+        wartend.delete(d.id);
         /* Den Block wiederfinden, der auf die Datei zeigt — die Sätze sind
            vor den Anhängen abgeglichen, er ist also schon da, wenn es ihn
            gibt. Der Server kennt nur die Seite, nicht den Block. */
@@ -1127,6 +1173,7 @@ const Wolke = (() => {
         oben.add(d.id);
         geholt++;
       }
+      Store.setMeta('wolkeDateienWartend', [...wartend.values()].slice(-80));
       if (a.marke && String(a.marke) !== marke) {
         marke = String(a.marke);
         Store.setMeta('wolkeMarkeDateien', marke);
@@ -1176,19 +1223,23 @@ const Wolke = (() => {
    *  Gelöschte wieder, bevor der Server je davon erfuhr. */
   const dateienAbgleichen = async () => {
     if (dateienGehenNicht) return null;
-    try {
-      const w = await dateienWeg();
-      const r = await dateienRunter();
-      const h = await dateienHoch();
-      zustand.fehlerDateien = '';
-      return { ...w, ...r, ...h };
-    } catch (e) {
-      const satz = e instanceof Error ? e.message : String(e);
-      if (/Dateispeicher/.test(satz)) { dateienGehenNicht = true; return null; }
-      zustand.fehlerDateien = satz;
-      melden();
-      return null;
-    }
+    const ergebnis: Record<string, unknown> = {};
+    const fehler: string[] = [];
+    const schritt = async (fn: () => Promise<any>) => {
+      try { Object.assign(ergebnis, await fn()); }
+      catch (e) {
+        const satz = e instanceof Error ? e.message : String(e);
+        if (/Dateispeicher/.test(satz)) dateienGehenNicht = true;
+        else fehler.push(satz);
+      }
+    };
+    await schritt(dateienWeg);
+    if (!dateienGehenNicht) await schritt(dateienRunter);
+    /* Ein kaputter fremder Download darf eigene Anhänge nicht zurückhalten. */
+    if (!dateienGehenNicht) await schritt(dateienHoch);
+    zustand.fehlerDateien = fehler.join(' · ');
+    if (fehler.length) melden();
+    return Object.keys(ergebnis).length ? ergebnis : null;
   };
 
   /* ========================================================================
@@ -1254,18 +1305,17 @@ const Wolke = (() => {
        gemeldet, wenn dieses Gerät gerade nicht angemeldet ist. */
     if (typeof Store.on === 'function')
       Store.on((was: any) => { if (was === 'import') melden(); });
-    if (!token()) return;
-    zustand.konto = Store.getMeta('wolkeKonto', null);
-    zustand.angemeldet = true;
-    melden();
-    /* Nicht sofort losrennen: erst soll die App stehen. */
-    setTimeout(() => {
-      abgleichen().catch(() => {});
-      takt();
-    }, 3000);
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && angemeldet()) abgleichen().catch(() => {});
-    });
+    if (token()) {
+      zustand.konto = Store.getMeta('wolkeKonto', null);
+      zustand.angemeldet = true;
+      melden();
+      /* Nicht sofort losrennen: erst soll die App stehen. */
+      setTimeout(() => { autoAbgleichen(); takt(); }, 3000);
+    }
+    /* Auch ohne Token beim Start registrieren. Nach späterem Login wird
+       takt() sofort aktiviert; Rückkehr und Netz-Reconnect holen Änderungen. */
+    document.addEventListener('visibilitychange', autoAbgleichen);
+    window.addEventListener('online', autoAbgleichen);
     /* Wird der Takt anderswo geändert — im Wolke-Fenster, über das
        Register —, gilt er sofort und nicht erst nach dem Neuladen. */
     const ev = (globalThis as any).Ereignisse;

@@ -300,12 +300,14 @@ const takte = await seite.evaluate(() => {
   Store.setMeta('wolkeToken', 'attrappe-schluessel');
   const raus: Record<string, number> = {};
   raus['aus'] = Wolke.taktSetzen('0');
+  raus['live'] = Wolke.taktSetzen('15');
   raus['zehn'] = Wolke.taktSetzen('600');
   raus['zwei'] = Wolke.taktSetzen('120');
   raus['unsinn'] = Wolke.taktSetzen('keine Zahl');
   return raus;
 });
 p('„0" heisst kein Zeitgeber — nicht „sofort"', takte['aus'] === 0, JSON.stringify(takte));
+p('„15" startet sparsamen Live-Takt mit 15 000 ms', takte['live'] === 15000, JSON.stringify(takte));
 p('„600" ergibt 600 000 ms', takte['zehn'] === 600000, JSON.stringify(takte));
 p('„120" ergibt 120 000 ms', takte['zwei'] === 120000, JSON.stringify(takte));
 /* Ein unmöglicher Wert darf den Abgleich nicht anhalten — aber er darf

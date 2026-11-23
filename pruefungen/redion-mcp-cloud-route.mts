@@ -6,6 +6,7 @@ import {mcpStateD1,type McpDatabase} from '../server/mcp/state.ts';
 import {createMcpOAuth,pkceChallenge} from '../server/mcp/oauth.ts';
 import {handleCloudMcp,isCloudMcpPublicPath,isCloudMcpPrivatePath} from '../server/mcp/cloud-router.ts';
 import {createCloudActions} from '../server/mcp/cloud-tools.ts';
+import {_intern as redionKern} from '../server/kern.ts';
 import fs from 'node:fs';
 import {createMcpOAuthHttp} from '../server/mcp/oauth-http.ts';
 import {hidden} from './helfer/mcp-cloud.mts';
@@ -2059,5 +2060,35 @@ test('Cloud-MCP: eingebettete Blöcke und Aufgaben versioniert und mit Eltern-AC
     const cleared=await write('edit_task',6,'set_due_date',{dueDate:''});
     assert.equal(cleared.data.version,7);
     assert.equal(JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:'edit_task'}))!.daten).faellig,'');
+  }finally{f.close();}
+});
+
+test('Cloud-MCP und Native-Sync: neu erstellte Seite im selben Delta',async()=>{
+  const f=await fixture();try{
+    const token=await f.authorize(true);
+    const seit=new Date(Date.now()-60000).toISOString();
+    const created=await f.rpc(token.access_token,'tools/call',{name:'redion_create_page',
+      arguments:{workspaceId:'ws_test',title:'Live-Sync Probe',
+        content:'Aus MCP auf dem iPhone sichtbar',requestId:'live_sync_probe_001'}});
+    assert.equal(created.status,200);
+    assert.notEqual(created.data.result.isError,true);
+    const page=JSON.parse(created.data.result.content[0].text);
+    const app=await redionKern.syncWeg({suche:{}},f.store,
+      {konto:{id:'owner'},rechte:['alles']},['sync','runter'],'POST',
+      {bereich:'ws_test',seit},{'redion-geraet':'iPhone'});
+    assert.equal(app.status,200);
+    const delta=JSON.parse(app.koerper);
+    const visible=delta.saetze.find((row:any)=>row.id===page.documentId);
+    assert.ok(visible,'MCP-Seite muss im normalen iPhone-/Windows-Delta erscheinen');
+    assert.equal(visible.tabelle,'blocks');
+    assert.equal(visible.verschluesselt,false);
+    assert.equal(visible.version,1);
+    const payload=JSON.parse(visible.daten);
+    assert.equal(payload.text,'Live-Sync Probe');
+    assert.equal(payload.inhalt,'Aus MCP auf dem iPhone sichtbar');
+    const stranger=await redionKern.syncWeg({suche:{}},f.store,
+      {konto:{id:'fremdes_konto'},rechte:['alles']},['sync','runter'],'POST',
+      {bereich:'ws_test',seit},{'redion-geraet':'Fremdes Gerät'});
+    assert.equal(stranger.status,403,'Ohne Konto-Rechte keine Live-Sync-Daten');
   }finally{f.close();}
 });

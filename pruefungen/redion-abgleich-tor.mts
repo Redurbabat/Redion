@@ -27,7 +27,7 @@ fs.mkdirSync(path.dirname(ausgabe),{recursive:true});
 await build({input:path.resolve('worker.ts'),platform:'neutral',output:{file:ausgabe,format:'esm',codeSplitting:false}});
 const worker=(await import(new URL('file:///'+ausgabe.replace(/\\/g,'/')).href)).default as {fetch(r:Request,e:unknown,c:unknown):Promise<Response>};
 
-const SITE='https://redion.example.test', APP='redion-local://app';
+const SITE='https://redion.example.test', APP='redion-local://app', IOS='capacitor://localhost';
 const TEAM='example.cloudflareaccess.com', AUD='test-audience';
 const b64=(v:unknown)=>Buffer.from(typeof v==='string'?v:JSON.stringify(v)).toString('base64url');
 
@@ -103,12 +103,19 @@ test('Ohne den Schalter ABGLEICH_TOR bleibt jeder Abgleichweg hinter Access (Sta
 test('Allow-Origin nur für den exakten App-Ursprung, Vorabfrage ohne Körper',async()=>{
   const f=await fixture();try{
     const vorab=(origin:string)=>f.rufe('/konto/code',{method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Method':'POST'}});
-    const ok=await vorab(APP);
-    assert.equal(ok.status,204);assert.equal(ok.headers.get('Access-Control-Allow-Origin'),APP);
-    for(const fremd of ['https://evil.test','null','redion-local://evil'])
+    for(const origin of [APP,IOS]){
+      const ok=await vorab(origin);
+      assert.equal(ok.status,204);
+      assert.equal(ok.headers.get('Access-Control-Allow-Origin'),origin);
+    }
+    for(const fremd of ['https://evil.test','null','redion-local://evil',
+      'capacitor://evil','capacitor://localhost.evil.test','ionic://localhost'])
       assert.notEqual((await vorab(fremd)).headers.get('Access-Control-Allow-Origin'),fremd,fremd);
     const post=await f.rufe('/konto/code',{method:'POST',headers:json({Origin:APP}),body:JSON.stringify({geraet:'Windows'})});
     assert.equal(post.status,200);assert.equal(post.headers.get('Access-Control-Allow-Origin'),APP);
+    const ios=await f.rufe('/konto/code',{method:'POST',
+      headers:json({Origin:IOS}),body:JSON.stringify({geraet:'iPhone'})});
+    assert.equal(ios.status,200);assert.equal(ios.headers.get('Access-Control-Allow-Origin'),IOS);
   }finally{f.close();}
 });
 

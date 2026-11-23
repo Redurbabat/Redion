@@ -19,6 +19,7 @@
     "veroeffentlichen": "npx wrangler deploy",
     "sync:check": "node tools/sync-readiness.mjs",
     "test:sync-readiness": "node --test tools/sync-readiness.test.mjs",
+    "test:live-sync": "node --test pruefungen/live-sync-iphone-windows.test.mts",
     "version:pruefen": "node --test windows/version.test.mts",
     "test:ink": "node --test pruefungen/windows-ink-model.mts",
     "test:mcp": "node node_modules/typescript/bin/tsc -p windows/tsconfig.json && node --test pruefungen/redion-mcp-model.mts plugins/red-ion/tests/visual-frames.mts",

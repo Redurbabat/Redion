@@ -249,6 +249,7 @@ const Wolke = (() => {
         if (!bereich() && ich.bereiche.length)
             Store.setMeta('wolkeBereich', ich.bereiche[0].id);
         Store.setMeta('wolkeKonto', ich.konto);
+        takt();
         melden();
         if (typeof Protokoll !== 'undefined')
             Protokoll.notieren('konto', 'Bei der Wolke angemeldet als ' + ich.konto.name);
@@ -280,6 +281,7 @@ const Wolke = (() => {
         Store.setMeta('wolkeBloeckeWeg', []);
         Store.setMeta('wolkeAbgleich', null);
         Store.setMeta('wolkeNeuAbgleich', '');
+        takt();
         melden();
         if (typeof Protokoll !== 'undefined')
             Protokoll.notieren('konto', 'Von der Wolke abgemeldet');
@@ -550,8 +552,15 @@ const Wolke = (() => {
                 satz = JSON.parse(klar);
             }
             catch {
+                unlesbar++;
                 continue;
             }
+            if (!satz || typeof satz !== 'object' || Array.isArray(satz) ||
+                (satz.id !== undefined && satz.id !== s.id)) {
+                unlesbar++;
+                continue;
+            }
+            satz.id = s.id;
             satz.wolkeVersion = s.version;
             const hier = s.tabelle === 'blocks' ? Store.cache.blocks[s.id]
                 : s.tabelle === 'collections' ? Store.cache.collections[s.id]
@@ -680,6 +689,11 @@ const Wolke = (() => {
         }
     };
     let uhr = null;
+    const autoAbgleichen = () => {
+        if (document.hidden || (typeof navigator !== 'undefined' && navigator.onLine === false))
+            return;
+        abgleichen().catch(() => { });
+    };
     const takt = () => {
         clearInterval(uhr);
         uhr = null;
@@ -689,7 +703,7 @@ const Wolke = (() => {
         if (!Number.isFinite(sek) || sek <= 0)
             return 0;
         const ms = sek * 1000;
-        uhr = setInterval(() => { abgleichen().catch(() => { }); }, ms);
+        uhr = setInterval(autoAbgleichen, ms);
         return ms;
     };
     const taktSetzen = (wert) => {
@@ -763,14 +777,25 @@ const Wolke = (() => {
         const oben = new Set(Store.getMeta('wolkeDateienOben', []) || []);
         const wegOffen = new Set(Store.getMeta('wolkeDateienWeg', []) || []);
         let geholt = 0, entfernt = 0, unlesbar = 0;
+        const wartend = new Map((Store.getMeta('wolkeDateienWartend', []) || [])
+            .filter((d) => d && typeof d.id === 'string' && d.id)
+            .map((d) => [d.id, d]));
         for (let runde = 0; runde < 20; runde++) {
             const a = await ruf('/datei/stand', { m: 'POST',
                 k: { bereich: bereich(), seit: marke, grenze: 200 } });
-            for (const d of (a.dateien || [])) {
-                if (wegOffen.has(d.id))
+            const daten = [...(a.dateien || []), ...(runde === 0 ? [...wartend.values()] : [])];
+            const gesehen = new Set();
+            for (const d of daten) {
+                if (!d || typeof d.id !== 'string' || gesehen.has(d.id))
                     continue;
+                gesehen.add(d.id);
+                if (wegOffen.has(d.id)) {
+                    wartend.delete(d.id);
+                    continue;
+                }
                 const lokal = await Store.dateiHolen(d.id);
                 if (d.geloescht) {
+                    wartend.delete(d.id);
                     if (lokal) {
                         for (const st of await Store.stueckeVon(d.id))
                             await Store.stueckWeg(st.id);
@@ -780,31 +805,47 @@ const Wolke = (() => {
                     oben.delete(d.id);
                     continue;
                 }
-                if (lokal) {
-                    if (lokal.zustand === 'fertig')
-                        oben.add(d.id);
+                if (lokal && lokal.zustand === 'fertig') {
+                    wartend.delete(d.id);
+                    oben.add(d.id);
                     continue;
                 }
+                const ausstehend = wartend.get(d.id);
+                if (ausstehend && Number(ausstehend.erstWieder || 0) > Date.now())
+                    continue;
                 const teile = Math.max(1, Number(d.teile) || 1);
                 let ganz = true;
-                for (let nr = 0; nr < teile; nr++) {
-                    const r = await ruf('/datei/runter', { m: 'POST',
-                        k: { bereich: bereich(), dateiId: d.id, nr } });
-                    const roh = Bytes.fromBase64(String(r.base64 || ''));
-                    const bytes = d.verschluesselt ? await entschluesseleBytes(roh) : roh;
-                    if (!bytes) {
-                        ganz = false;
-                        unlesbar++;
-                        break;
+                try {
+                    for (let nr = 0; nr < teile; nr++) {
+                        const r = await ruf('/datei/runter', { m: 'POST',
+                            k: { bereich: bereich(), dateiId: d.id, nr } });
+                        const roh = Bytes.fromBase64(String(r.base64 || ''));
+                        const bytes = d.verschluesselt ? await entschluesseleBytes(roh) : roh;
+                        if (!bytes) {
+                            ganz = false;
+                            unlesbar++;
+                            break;
+                        }
+                        await Store.stueckPut({ id: d.id + ':' + nr, dateiId: d.id, nr,
+                            blob: new Blob([bytes], { type: String(d.typ || '') }) });
                     }
-                    await Store.stueckPut({ id: d.id + ':' + nr, dateiId: d.id, nr,
-                        blob: new Blob([bytes], { type: String(d.typ || '') }) });
+                }
+                catch {
+                    ganz = false;
+                    unlesbar++;
                 }
                 if (!ganz) {
-                    for (const st of await Store.stueckeVon(d.id))
-                        await Store.stueckWeg(st.id);
+                    try {
+                        for (const st of await Store.stueckeVon(d.id))
+                            await Store.stueckWeg(st.id);
+                    }
+                    catch { }
+                    const versuche = Math.min(20, (Number(ausstehend?.versuche) || 0) + 1);
+                    wartend.set(d.id, { ...d, versuche,
+                        erstWieder: Date.now() + Math.min(30 * 60000, 15000 * 2 ** Math.min(6, versuche)) });
                     continue;
                 }
+                wartend.delete(d.id);
                 const block = Object.values(Store.cache.blocks)
                     .find(b => b && b.dateiId === d.id);
                 await Store.dateiPut({ id: d.id, name: String(d.name || ''),
@@ -814,6 +855,7 @@ const Wolke = (() => {
                 oben.add(d.id);
                 geholt++;
             }
+            Store.setMeta('wolkeDateienWartend', [...wartend.values()].slice(-80));
             if (a.marke && String(a.marke) !== marke) {
                 marke = String(a.marke);
                 Store.setMeta('wolkeMarkeDateien', marke);
@@ -860,23 +902,29 @@ const Wolke = (() => {
     const dateienAbgleichen = async () => {
         if (dateienGehenNicht)
             return null;
-        try {
-            const w = await dateienWeg();
-            const r = await dateienRunter();
-            const h = await dateienHoch();
-            zustand.fehlerDateien = '';
-            return { ...w, ...r, ...h };
-        }
-        catch (e) {
-            const satz = e instanceof Error ? e.message : String(e);
-            if (/Dateispeicher/.test(satz)) {
-                dateienGehenNicht = true;
-                return null;
+        const ergebnis = {};
+        const fehler = [];
+        const schritt = async (fn) => {
+            try {
+                Object.assign(ergebnis, await fn());
             }
-            zustand.fehlerDateien = satz;
+            catch (e) {
+                const satz = e instanceof Error ? e.message : String(e);
+                if (/Dateispeicher/.test(satz))
+                    dateienGehenNicht = true;
+                else
+                    fehler.push(satz);
+            }
+        };
+        await schritt(dateienWeg);
+        if (!dateienGehenNicht)
+            await schritt(dateienRunter);
+        if (!dateienGehenNicht)
+            await schritt(dateienHoch);
+        zustand.fehlerDateien = fehler.join(' · ');
+        if (fehler.length)
             melden();
-            return null;
-        }
+        return Object.keys(ergebnis).length ? ergebnis : null;
     };
     const geteiltSetzen = (seiteId, an) => {
         const liste = Store.getMeta('wolkeGeteilt', []) || [];
@@ -911,19 +959,14 @@ const Wolke = (() => {
         if (typeof Store.on === 'function')
             Store.on((was) => { if (was === 'import')
                 melden(); });
-        if (!token())
-            return;
-        zustand.konto = Store.getMeta('wolkeKonto', null);
-        zustand.angemeldet = true;
-        melden();
-        setTimeout(() => {
-            abgleichen().catch(() => { });
-            takt();
-        }, 3000);
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && angemeldet())
-                abgleichen().catch(() => { });
-        });
+        if (token()) {
+            zustand.konto = Store.getMeta('wolkeKonto', null);
+            zustand.angemeldet = true;
+            melden();
+            setTimeout(() => { autoAbgleichen(); takt(); }, 3000);
+        }
+        document.addEventListener('visibilitychange', autoAbgleichen);
+        window.addEventListener('online', autoAbgleichen);
         const ev = globalThis.Ereignisse;
         if (ev?.horche)
             ev.horche(ARTEN.einstellungGeaendert, (d) => {
