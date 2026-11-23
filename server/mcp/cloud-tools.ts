@@ -47,6 +47,13 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_read_pages',description:'Liest bis zu 10 Seiten auf einmal, maximal 2.000 Zeichen pro Seite. Unzugängliche IDs werden einheitlich als nicht verfügbar markiert.',
     inputSchema:{type:'object',properties:{...workspace,documentIds:{type:'array',items:{type:'string',minLength:1,maxLength:128},minItems:1,maxItems:10},maxChars:{type:'integer',minimum:1,maximum:2000}},
       required:['workspaceId','documentIds'],additionalProperties:false}},
+  {name:'redion_update_block',description:'Ändert Text oder geprüfte Aufgabenfelder eines lesbaren, eingebetteten Klartextblocks. Schreibscope, Seitenrechte, vollständige Elternkette und Blockversion werden geprüft.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField,
+      expectedVersion:{type:'integer',minimum:1},
+      operation:{type:'string',enum:['set_text','set_checked','set_note','set_due_date']},
+      text:{type:'string',maxLength:8000},checked:{type:'boolean'},
+      note:{type:'string',maxLength:2000},dueDate:{type:'string',maxLength:10}},
+      required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
   {name:'redion_update_schematic',description:'Bearbeitet einen Klartext-Schaltplan: Bauteil/Beschriftung hinzufügen oder verschieben sowie vorhandene Klemmen verbinden. Verbundene Bauteile können nur im nativen Editor verschoben werden. Alle Aktionen sind versioniert; keine elektrische Sicherheits- oder Normprüfung.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,
       expectedVersion:{type:'integer',minimum:1},
@@ -113,7 +120,7 @@ export const CLOUD_TOOLS:ToolDef[]=[
       replacement:{type:'string',maxLength:4000},expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId','find','replacement','expectedVersion'],additionalProperties:false}}
 ];
-const writeNames=new Set(['redion_create_page','redion_update_page','redion_replace_text','redion_append_content','redion_move_page','redion_add_block','redion_add_schematic','redion_update_schematic']);
+const writeNames=new Set(['redion_create_page','redion_update_page','redion_replace_text','redion_append_content','redion_move_page','redion_add_block','redion_add_schematic','redion_update_schematic','redion_update_block']);
 // MCP annotations tell AI clients which tools are read-only, additive or
 // modifying. They are advisory; server-side OAuth and ACL checks still govern.
 const toolTitles:Record<string,string>={
@@ -126,6 +133,7 @@ const toolTitles:Record<string,string>={
   redion_add_block:'Block oder Aufgabe erstellen',
   redion_add_schematic:'Leeren Schaltplan erstellen',
   redion_update_schematic:'Schaltplan ergänzen',
+  redion_update_block:'Blocktext oder Aufgabe bearbeiten',
   redion_update_page:'Seitentitel ändern',
   redion_list_databases:'Datenbanken auflisten',
   redion_read_database:'Datenbank lesen',
@@ -141,7 +149,7 @@ const toolTitles:Record<string,string>={
   redion_move_page:'Seite verschieben',
   redion_replace_text:'Text ersetzen'
 };
-const destructiveNames=new Set(['redion_update_page','redion_move_page','redion_replace_text']);
+const destructiveNames=new Set(['redion_update_page','redion_move_page','redion_replace_text','redion_update_block']);
 export const visibleCloudTools=(p:McpPrincipal):ToolDef[]=>
   CLOUD_TOOLS.filter(t=>!writeNames.has(t.name)||p.scopes.includes('redion:write'))
     .map(t=>{
@@ -829,6 +837,104 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     }
     if(!principal.scopes.includes('redion:write'))
       return err('forbidden','Schreibrechte sind nicht freigegeben.');
+    if(name==='redion_update_block'){
+      const id=required(args.blockId,128);
+      const ver=expected(args.expectedVersion);
+      const s=await ablage.hole('saetze',{bereich:w,id});
+      if(!s||s.tabelle!=='blocks'||s.geloescht)return err('not_found','Block nicht verfügbar.');
+      const pageId=required(s.seite,128);
+      // Check the owning page BEFORE exposing any of the block's metadata.
+      await page(w,pageId,'bearbeiten');
+      if(s.verschluesselt)return err('encrypted','Verschlüsselte Blöcke nicht in der Cloud bearbeiten.');
+      let data:Record<string,unknown>;
+      try{data=JSON.parse(String(s.daten||'')) as Record<string,unknown>;}
+      catch{return err('not_found','Block nicht verfügbar.');}
+      const blockTypes=new Set(['text','h1','h2','h3','todo','bullet','number','quote','code']);
+      if(!data||typeof data!=='object'||Array.isArray(data)||!blockTypes.has(String(data.type))||
+        data.parentTable==='collection'||data.alive===false||data.archiviert===true)
+        return err('not_found','Block ist für diese Bearbeitung nicht verfügbar.');
+      // A forged/orphaned block ID may still contain an existing page in s.seite.
+      // Walk every ancestor's actual content list and verify its parentId.
+      let childId=id,ancestorId=required(data.parentId,128),valid=false;
+      const seen=new Set<string>([id]);
+      for(let depth=0;depth<40;depth++){
+        if(seen.has(ancestorId))break;
+        seen.add(ancestorId);
+        const ancestor=await ablage.hole('saetze',{bereich:w,id:ancestorId});
+        if(!ancestor||ancestor.tabelle!=='blocks'||ancestor.geloescht||
+          ancestor.verschluesselt||ancestor.seite!==pageId)break;
+        let parentData:Record<string,unknown>;
+        try{parentData=JSON.parse(String(ancestor.daten||'')) as Record<string,unknown>;}
+        catch{break;}
+        if(!parentData||typeof parentData!=='object'||Array.isArray(parentData)||
+          parentData.alive===false||parentData.parentTable==='collection'||
+          !Array.isArray(parentData.content)||!parentData.content.includes(childId))break;
+        if(ancestorId===pageId){valid=parentData.type==='page';break;}
+        if(parentData.type==='page'||typeof parentData.parentId!=='string'||
+          !parentData.parentId||parentData.parentId.length>128)break;
+        childId=ancestorId;
+        ancestorId=parentData.parentId;
+      }
+      if(!valid)return err('not_found','Block ist nicht auf einer lesbaren Seite eingebettet.');
+      if(ver!==Number(s.version))return err('conflict','Block wurde geändert. Bitte neu lesen.');
+      const operation=required(args.operation,20);
+      const allowedFields:Record<string,string[]>={
+        set_text:['text'],set_checked:['checked'],set_note:['note'],set_due_date:['dueDate']
+      };
+      const fields=allowedFields[operation];
+      if(!fields)return err('invalid_arguments','Unbekannte Blockänderung.');
+      if(Object.keys(args).some(k=>!['workspaceId','blockId','expectedVersion','operation',...fields].includes(k)))
+        return err('invalid_arguments','Diese Aktion darf keine anderen Blockfelder ändern.');
+      const next={...data};
+      if(operation==='set_text'){
+        if(typeof args.text!=='string'||args.text.length>8000||
+          (data.type==='todo'&&!args.text.trim()))
+          return err('invalid_arguments','Blocktext ist ungültig (maximal 8.000 Zeichen).');
+        next.text=args.text;
+      }else if(operation==='set_checked'){
+        if(data.type!=='todo'||typeof args.checked!=='boolean')
+          return err('invalid_arguments','Nur Aufgaben lassen sich als erledigt markieren.');
+        next.checked=args.checked;
+      }else if(operation==='set_note'){
+        if(data.type!=='todo'||typeof args.note!=='string'||args.note.length>2000)
+          return err('invalid_arguments','Aufgabennotiz muss ein Text mit maximal 2.000 Zeichen sein.');
+        next.notiz=args.note;
+      }else if(operation==='set_due_date'){
+        if(data.type!=='todo'||typeof args.dueDate!=='string'||args.dueDate.length>10)
+          return err('invalid_arguments','Fälligkeitsdatum muss ein Text sein.');
+        if(args.dueDate!==''&&(!/^\d{4}-\d{2}-\d{2}$/.test(args.dueDate)||
+          !Number.isFinite(Date.parse(args.dueDate+'T00:00:00Z'))||
+          new Date(args.dueDate+'T00:00:00Z').toISOString().slice(0,10)!==args.dueDate))
+          return err('invalid_arguments','Fälligkeitsdatum muss ein gültiges JJJJ-MM-TT-Datum sein.');
+        next.faellig=args.dueDate;
+      }
+      if(JSON.stringify(next)===JSON.stringify(data))
+        return {workspaceId:w,documentId:pageId,blockId:id,version:ver,unchanged:true};
+      const now=new Date().toISOString();
+      const payload=JSON.stringify({...next,edited:now});
+      if(payload.length>12000)return err('too_large','Block ist für die Cloud-Bearbeitung zu gross.');
+      const changed=await db.prepare(
+        "UPDATE saetze SET daten=?1,version=version+1,geaendert=?2,vonGeraet='Cloud-MCP' "+
+        "WHERE bereich=?3 AND id=?4 AND seite=?5 AND tabelle='blocks' "+
+        "AND version=?6 AND geloescht=0 AND verschluesselt=0 "+
+        "AND json_valid(daten) AND json_extract(daten,'$.type')=?7 "+
+        "AND COALESCE(json_extract(daten,'$.parentTable'),'')<>'collection' "+
+        "AND json_extract(daten,'$.parentId')=?8 AND "+
+        "EXISTS (SELECT 1 FROM saetze parent "+
+        "JOIN json_each(CASE WHEN json_valid(parent.daten) AND "+
+        "json_type(parent.daten,'$.content')='array' "+
+        "THEN json_extract(parent.daten,'$.content') ELSE '[]' END) ref "+
+        "ON ref.type='text' AND ref.value=?4 "+
+        "WHERE parent.bereich=?3 AND parent.id=?8 AND parent.seite=?5 "+
+        "AND parent.geloescht=0 AND parent.verschluesselt=0 AND parent.tabelle='blocks') "+
+        "RETURNING version"
+      ).bind(payload,now,w,id,pageId,ver,String(data.type),String(data.parentId))
+        .first<{version:number}>();
+      if(!changed)return err('conflict','Block wurde während der Bearbeitung geändert oder verschoben.');
+      await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',
+        text:'Block über Cloud-MCP bearbeitet',objekt:id});
+      return {workspaceId:w,documentId:pageId,blockId:id,version:changed.version,unchanged:false};
+    }
     if(name==='redion_update_schematic'){
       const id=required(args.blockId,128);
       const ver=expected(args.expectedVersion);
