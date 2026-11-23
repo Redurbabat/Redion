@@ -1528,3 +1528,89 @@ test('Cloud-MCP: Schweizer Fachzeichen sind filterbar und ohne Schreibrechte abr
     assert.equal(invalid.parsed.code,'invalid_arguments');
   }finally{f.close();}
 });
+
+
+test('Cloud-MCP: ein nativer Schaltplan wird atomar, sicher und wiederholbar erstellt',async()=>{
+  const f=await fixture();
+  try{
+    const put=async(id:string,encrypted=0)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify({type:'page',text:id,inhalt:'Bestehende Notizen',content:[]}),
+        verschluesselt:encrypted,seite:id,version:1,geaendert:'2026-11-23',
+        geloescht:0,vonGeraet:'Test'});
+    };
+    await put('schematic_test_page');
+    await put('schematic_secret_page',1);
+    const reader=await f.authorize(false);
+    const args={workspaceId:'ws_test',documentId:'schematic_test_page',
+      art:'installationsplan',titel:'12-V Sonnerie',expectedVersion:1,
+      requestId:'schematic_safe_2026_01'};
+    const call=async(token:string,params:Record<string,unknown>)=>{
+      const response=await f.rpc(token,'tools/call',{
+        name:'redion_add_schematic',arguments:{...args,...params}});
+      assert.equal(response.status,200);
+      const outcome=response.data.result as {isError?:boolean;content:{text:string}[]};
+      return {outcome,data:JSON.parse(outcome.content[0]!.text)};
+    };
+    const denied=await call(reader.access_token,{});
+    assert.equal(denied.outcome.isError,true);
+    assert.equal(denied.data.code,'forbidden');
+    const writer=await f.authorize(true);
+    const token=writer.access_token;
+    const created=await call(token,{});
+    assert.equal(created.outcome.isError,undefined);
+    const id=created.data.blockId;
+    assert.match(id,/^[a-f0-9]{32}$/);
+    assert.equal(created.data.parentVersion,2);
+    assert.equal(created.data.alreadyExists,false);
+    const row=await f.store.hole('saetze',{bereich:'ws_test',id});
+    assert.ok(row);
+    assert.equal(row.tabelle,'blocks');
+    assert.equal(row.verschluesselt,0);
+    assert.equal(row.seite,'schematic_test_page');
+    const data=JSON.parse(row.daten);
+    assert.equal(data.type,'schaltplan');
+    assert.equal(data.text,'12-V Sonnerie');
+    assert.equal(data.parentId,'schematic_test_page');
+    assert.deepEqual(data.content,[]);
+    assert.equal(data.plan.art,'installationsplan');
+    assert.equal(data.plan.breite,1000);
+    assert.equal(data.plan.hoehe,600);
+    assert.deepEqual(data.plan.teile,[]);
+    assert.deepEqual(data.plan.leitungen,[]);
+    assert.deepEqual(data.plan.texte,[]);
+    assert.deepEqual(data.plan.ebenen.map((e:any)=>e.id),['plan','aufgabe','loesung']);
+    const read=await f.rpc(token,'tools/call',{
+      name:'redion_read_schematic',arguments:{workspaceId:'ws_test',blockId:id}});
+    assert.equal(read.data.result.isError,undefined);
+    const schematic=JSON.parse(read.data.result.content[0]!.text);
+    assert.deepEqual(schematic.plan,data.plan);
+    const listed=await f.rpc(token,'tools/call',{name:'redion_list_page_blocks',
+      arguments:{workspaceId:'ws_test',documentId:'schematic_test_page'}});
+    assert.deepEqual(JSON.parse(listed.data.result.content[0]!.text).blocks.map((x:any)=>x.blockId),[id]);
+    const retry=await call(token,{});
+    assert.equal(retry.data.alreadyExists,true);
+    assert.equal(retry.data.blockId,id);
+    assert.equal(retry.data.parentVersion,2);
+    const changed=await call(token,{art:'hauptstromkreis'});
+    assert.equal(changed.outcome.isError,true);
+    assert.equal(changed.data.code,'conflict');
+    const stale=await call(token,{requestId:'schematic_different_2026',art:'klemmenplan'});
+    assert.equal(stale.outcome.isError,true);
+    assert.equal(stale.data.code,'conflict');
+    const bad=await call(token,{art:'stromlauf-ungueltig'});
+    assert.equal(bad.outcome.isError,true);
+    assert.equal(bad.data.code,'invalid_arguments');
+    const title=await call(token,{titel:'   '});
+    assert.equal(title.outcome.isError,true);
+    assert.equal(title.data.code,'invalid_arguments');
+    const encrypted=await call(token,{documentId:'schematic_secret_page'});
+    assert.equal(encrypted.outcome.isError,true);
+    assert.equal(encrypted.data.code,'encrypted');
+    const outside=await call(token,{workspaceId:'foreign_workspace'});
+    assert.equal(outside.outcome.isError,true);
+    assert.equal(outside.data.code,'forbidden');
+    const all=await f.store.finde('saetze',{bereich:'ws_test',tabelle:'blocks'});
+    assert.equal(all.length,3,'Ein Fehler darf keinen verwaisten Schaltplan speichern.');
+  }finally{f.close();}
+});
