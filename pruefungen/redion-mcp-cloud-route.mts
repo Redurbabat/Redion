@@ -158,7 +158,7 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       const transport=new StreamableHTTPClientTransport(new URL(origin+'/mcp/cloud'),{authProvider:provider,fetch:fetcher});
       await client.connect(transport);
       assert.equal(transport.sessionId,undefined);
-      const list=await client.listTools();assert.equal(list.tools.length,14);
+      const list=await client.listTools();assert.equal(list.tools.length,15);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
       assert.equal(JSON.parse(result.content[0]!.text).markdown,'Nur Testdaten');
        assert.equal((result.structuredContent as any)?.markdown,'Nur Testdaten');
@@ -1490,5 +1490,39 @@ test('Cloud-MCP: paginiert mehr als 40 Seitenblöcke ohne geheime IDs oder Reihe
     const denied=await invoke({},deniedReader.access_token);
     assert.equal(denied.result.isError,true);
     assert.equal(denied.value.code,'forbidden');
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: Schweizer Fachzeichen sind filterbar und ohne Schreibrechte abrufbar',async()=>{
+  const f=await fixture();
+  try{
+    const reader=await f.authorize(false);
+    const invoke=async(args:Record<string,unknown>)=>{
+      const result=await f.rpc(reader.access_token,'tools/call',{
+        name:'redion_list_symbols',arguments:args
+      });
+      assert.equal(result.status,200);
+      const payload=result.data.result;
+      const parsed=JSON.parse(payload.content[0].text);
+      if(!payload.isError)assert.deepEqual(payload.structuredContent,parsed);
+      return {payload,parsed};
+    };
+    const all=await invoke({});
+    assert.equal(all.payload.isError,undefined);
+    assert.equal(all.parsed.total,131);
+    assert.equal(all.parsed.raster,10);
+    assert.equal(all.parsed.externalExtensionsIncluded,false);
+    assert.equal(all.parsed.symbols.length,131);
+    const filtered=await invoke({gruppe:'ch-bauplan',suche:'typ 13'});
+    assert.ok(filtered.parsed.total>=1);
+    assert.ok(filtered.parsed.symbols.some((x:any)=>x.id==='bp-t13'));
+    assert.ok(filtered.parsed.symbols.every((x:any)=>x.gruppe==='ch-bauplan'));
+    const plan=await invoke({gruppe:'ch-schema',suche:'schema 6'});
+    assert.ok(plan.parsed.symbols.some((x:any)=>
+      x.id==='ch-schema6'&&x.anschluesse.length===4));
+    const invalid=await invoke({suche:'x'.repeat(81)});
+    assert.equal(invalid.payload.isError,true);
+    assert.equal(invalid.parsed.code,'invalid_arguments');
   }finally{f.close();}
 });
