@@ -440,6 +440,8 @@ test('Cloud-MCP: Suche im gesamten Seiteninhalt und nur über sichtbare Resultat
       '2037-01-01T00:00:00Z');
     await record('literal_wildcard','Ergebnis für %_','Anderer Text',
       '2036-01-01T00:00:00Z');
+    await record('unicode_old_page','Äpfel und Öfen','Ausflug nach MÜNCHEN',
+      '2020-01-01T00:00:00Z');
     await record('encrypted_result','Sperre','verteiltes-suchwort',
       '2035-01-01T00:00:00Z');
     const encrypted=await f.store.hole('saetze',{bereich:'ws_test',id:'encrypted_result'});
@@ -468,6 +470,8 @@ test('Cloud-MCP: Suche im gesamten Seiteninhalt und nur über sichtbare Resultat
     }
     assert.deepEqual((await search('verteiltes-suchwort',3)).documents,[]);
     assert.deepEqual((await search('%_',0,10)).documents.map(x=>x.documentId),['literal_wildcard']);
+    assert.deepEqual((await search('äPFEL',0,10)).documents.map(x=>x.documentId),['unicode_old_page']);
+    assert.deepEqual((await search('münchen',0,10)).documents.map(x=>x.documentId),['unicode_old_page']);
     const long=await call('redion_search',{workspaceId:'ws_test',query:'x'.repeat(201)});
     assert.equal(long.isError,true);
     assert.equal(JSON.parse(long.content[0].text).code,'invalid_arguments');
