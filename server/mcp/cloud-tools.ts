@@ -31,8 +31,8 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{},additionalProperties:false}},
   {name:'redion_search',description:'Sucht nach freigegebenen, nicht verschlüsselten Seiten.',
     inputSchema:{type:'object',properties:{...workspace,query:{type:'string',maxLength:200},limit:{type:'integer',minimum:1,maximum:30},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
-  {name:'redion_read_page',description:'Liest eine freigegebene Klartext-Seite mit Versionsnummer.',
-    inputSchema:{type:'object',properties:{...workspace,...documentId},required:['workspaceId','documentId'],additionalProperties:false}},
+  {name:'redion_read_page',description:'Liest maximal 12.000 Zeichen einer freigegebenen Klartext-Seite. Bei nextOffset weitere Abschnitte nachladen; Offset zählt UTF-16-Codeeinheiten.',
+    inputSchema:{type:'object',properties:{...workspace,...documentId,offset:{type:'integer',minimum:0,maximum:1000000},limit:{type:'integer',minimum:1,maximum:12000}},required:['workspaceId','documentId'],additionalProperties:false}},
   {name:'redion_create_page',description:'Legt eine Seite an. requestId verhindert doppelte Erstellung bei Wiederholung.',
     inputSchema:{type:'object',properties:{...workspace,title:nameField,content:{type:'string',maxLength:12000},parentId:idField,requestId:{type:'string',minLength:8,maxLength:100}},
       required:['workspaceId','title','requestId'],additionalProperties:false}},
@@ -192,8 +192,24 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     if(name==='redion_read_page'){
       const id=required(args.documentId,128);
       const result=await page(w,id,'lesen');
+      const offset=args.offset===undefined?0:args.offset;
+      if(!Number.isSafeInteger(offset)||Number(offset)<0||Number(offset)>1000000)
+        return err('invalid_arguments','Ungültiger Leseversatz.');
+      const max=limit(args.limit,12000,12000);
+      const full=String(result.data.inhalt||'');
+      const start=Number(offset);
+      if(start>full.length)return err('invalid_arguments','Leseversatz liegt hinter dem Seitenende.');
+      // Avoid splitting a surrogate pair, which would corrupt emoji and other
+      // non-BMP Unicode characters when a large document is read in chunks.
+      const previous=full.charCodeAt(start-1),atStart=full.charCodeAt(start);
+      if(start>0&&previous>=0xD800&&previous<=0xDBFF&&atStart>=0xDC00&&atStart<=0xDFFF)
+        return err('invalid_arguments','Leseversatz liegt mitten in einem Unicode-Zeichen.');
+      let end=Math.min(full.length,start+max);
+      const last=full.charCodeAt(end-1),next=full.charCodeAt(end);
+      if(end<full.length&&last>=0xD800&&last<=0xDBFF&&next>=0xDC00&&next<=0xDFFF)end++;
       return {documentId:id,workspaceId:w,title:String(result.data.text||''),
-        content:String(result.data.inhalt||''),version:Number(result.s.version)||1};
+        content:full.slice(start,end),version:Number(result.s.version)||1,
+        offset:start,totalLength:full.length,nextOffset:end<full.length?end:null};
     }
     if(name==='redion_list_child_pages'){
       const parentId=required(args.parentId,128);
