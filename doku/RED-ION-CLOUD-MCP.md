@@ -213,3 +213,186 @@ Für den Browserlauf müssen die bereits vorhandenen Playwright-Browser
 auffindbar sein. Er braucht Zugriff auf seine kurzlebigen Loopback-Server
 und PowerShell 7 für ein nur im Test erzeugtes Zertifikat. Kein Cloud-Konto
 und keine persönlichen Daten erforderlich. Kein Dienst wird dabei bereitgestellt.
+
+
+## Blockbasierte Seiten über MCP lesen (Erweiterung 23.11.2026)
+
+'redion_read_page' liest nur den Markdown-Text in 'inhalt'. Seiten, deren
+Inhalt als referenzierte Blöcke unter 'content' gespeichert ist, benötigen
+zusätzlich 'redion_list_page_blocks'. Die Antwort meldet im Feld
+'blockStorage' entweder 'referenced' (eine Blockliste ist gespeichert) oder
+'none' (keine Blockliste); aus Datenschutzgründen wird keine Anzahl
+unlesbarer Blöcke angegeben. Ein leeres Markdown bedeutet bei
+solchen Seiten **nicht**, dass keine Inhalte vorhanden sind.
+
+Das neue reine Lese-Werkzeug nimmt 'workspaceId', 'documentId' sowie
+optional 'parentBlockId', 'limit' (1–20), 'offset' und 'expectedVersion'.
+Die Antwort enthält 'blocks' in Dokumentreihenfolge, 'parentVersion'
+und 'nextOffset'. Nur tatsächlich lesbare direkte Kindblöcke zählen
+bei der Paginierung; verschlüsselte, gelöschte, fremde und falsch
+zugeordnete Datensätze werden ausgelassen. Für den nächsten Seitenaufruf
+'expectedVersion' auf die zuvor gelieferte 'parentVersion' setzen.
+Ein Versionskonflikt muss mit einem frischen Abruf ab Offset 0
+behandelt werden. Verschachtelte Blöcke werden durch 'parentBlockId'
+gesondert abgefragt.
+
+Die Rückgabe enthält pro Block einen Textausschnitt von höchstens 2000
+Zeichen und 'textTruncated'. Bei Bedarf kann ein zulässiger einzelner
+Block über 'redion_read_block' vollständig gelesen werden. Komplexe
+Blöcke wie Schaltpläne werden nicht ungeprüft als Rohdaten ausgeliefert;
+dafür ist 'redion_read_schematic' vorgesehen. Der bisherige
+'redion_read_block'-Abruf eines Elternblocks mit mehr als 40 direkten
+Kindreferenzen kann noch 'too_large' melden; dafür das paginierte
+Werkzeug verwenden.
+
+**Freigabe:** Neue Worker-Tools stehen im ChatGPT-Connector nicht automatisch
+nach GitHub-Merge oder Cloudflare-Build bereit. Erst nach Deployment,
+aktualisierter Toolliste und Live-Prüfung sind sie produktiv nutzbar.
+
+
+## Fachzeichen über Cloud-MCP (Erweiterung 23.11.2026)
+
+'redion_list_symbols' liefert die 131 eingebauten elektrotechnischen
+Fachzeichen mit ID, Name, Gruppe, Kennbuchstabe, Grösse und Anschlussnummern
+sowie deren Rasterkoordinaten. Die Filter 'gruppe' und 'suche' sind optional;
+ohne Filter wird der gesamte eingebaute Katalog ausgegeben. Die Gruppen
+'ch-schema' und 'ch-bauplan' umfassen die Schweizer Schemas und Bauplanzeichen
+einschliesslich Steckdosen Typ 13/23.
+
+Die Cloud-Liste ist ein read-only Snapshot des Registers
+'src/register/fachzeichen.ts'. Automatische Tests gleichen alle eingebauten
+Symbole samt Anschlusskoordinaten mit dem kanonischen Register ab.
+Gerätebezogene Symbolerweiterungen sind nicht enthalten. Die Zeichen sind
+für die Ausbildung gedacht und ersetzen weder geprüfte Normbibliotheken noch
+die fachliche Prüfung eines Elektroinstallationsplans.
+
+Nach dem Cloudflare-Release muss die ChatGPT-Werkzeugliste aktualisiert werden;
+dieser Commit schaltet die Funktion nicht automatisch in bestehenden
+Connector-Bindungen frei.
+
+
+## Sichere Schaltplanerstellung über Cloud-MCP (Erweiterung 23.11.2026)
+
+'redion_add_schematic' erstellt ausschliesslich einen **leeren** nativen
+Schaltplanblock. Aufrufen mit 'workspaceId', 'documentId', 'expectedVersion'
+und 'art'; optional 'titel' (maximal 120 Zeichen) und 'requestId' (8–100
+Buchstaben/Zahlen, '_' oder '-'). Die zugelassenen Planarten stammen aus
+'src/bereiche/bloecke/arten/schaltplan.ts'. Die Funktion verwendet dieselbe
+atomare D1-Transaktion wie 'redion_add_block': erst wenn Block und
+Elternreferenz gemeinsam gespeichert werden können, ist die Erstellung
+erfolgreich. Ein identischer Wiederholungsaufruf ist idempotent.
+
+Die 'plan'-Daten enthalten die passende Blattgrösse und die drei nativen
+Ebenen 'plan', 'aufgabe', 'loesung'. Bauteile, Leitungen und Texte sind
+initial leer; die Funktion behauptet **keine** geprüfte Verdrahtung.
+Ein anschliessender Aufruf von 'redion_read_schematic' kann den
+Schaltplan auslesen. Schreiben ist nur mit aktivem OAuth-Scope
+'redion:write' und Seitenbearbeitungsrecht möglich. Eine neue Planart
+kann nicht über 'redion_add_block' an dessen Typensperre vorbei erzeugt
+werden.
+
+Wichtig: 'redion_update_schematic' (Bauteile und Leitungen bearbeiten)
+wird dadurch **nicht** implementiert. Vor produktiver Nutzung sind
+Deployment, Connector-Aktualisierung und ein Live-Test notwendig.
+
+
+## Schaltpläne mit MCP erweitern (23.11.2026)
+
+'redion_update_schematic' erweitert einen bereits gespeicherten
+Schaltplan-Block, ohne beliebige Fremd-JSON-Daten zu akzeptieren.
+Erforderlich sind 'workspaceId', 'blockId', 'expectedVersion' (die
+Version aus 'redion_read_schematic') und 'operation'.
+
+Die drei unterstützten Operationen:
+
+- 'add_component': 'componentId', 'symbolId', 'x', 'y' sowie optional
+  'rotation' (0/90/180/270), 'mirrored', 'layer' und 'bmk'.
+  'symbolId' muss aus dem eingebauten Fachzeichenkatalog stammen;
+  Koordinaten liegen im 10-Pixel-Raster.
+- 'connect_terminals': 'wireId', 'fromComponentId', 'fromTerminal',
+  'toComponentId', 'toTerminal' sowie optional 'layer'. Die Anschlussnamen
+  werden gegen die wirklichen Klemmen des gespeicherten Symboltyps geprüft.
+  Die Endpunkte berücksichtigen Drehung und Spiegelung. Zwischenpunkte
+  werden rechtwinklig gelegt. Neue Leitungen, die eine fremde Klemme oder
+  bestehende Leitung im selben Zeichen-Layer berühren, werden abgelehnt.
+  Das ist ein konservativer Schutz vor unbeabsichtigten Verbindungen,
+  **keine** vollständige Netz-, Kollisions- oder elektrische Sicherheitsprüfung.
+- 'add_label': 'labelId', 'labelText', 'x', 'y', optional 'layer'.
+- 'move_component': 'componentId', 'x', 'y'. Verschiebt **nur ein
+  unverbundenes** Bauteil; wenn eine Leitung eine Klemme bereits berührt,
+  wird die Aktion zurückgewiesen. Angeschlossene Bauteile ausschliesslich
+  im nativen Editor mit dessen Netzschutz verschieben.
+- 'move_label': 'labelId', 'x', 'y'. Verschiebt nur den Textanker, nicht
+  andere Zeichnungselemente.
+
+Jeder Aufruf schreibt genau einen vorhandenen Schaltplanblock und benötigt
+'redion:write' sowie Seitenbearbeitungsrecht. Die SQLite-Änderung ist an
+die alte Blockversion gebunden, damit gleichzeitige Schreibvorgänge
+nicht die Änderungen des jeweils anderen überschreiben. Zu alte Versionen
+ergeben 'conflict'; der Client muss neu lesen. Mehrfache Aufrufe mit
+denselben Daten und alter Version sind nicht automatisch idempotent.
+Bei Erfolg werden 'elementId', 'elementType' und die neue Blockversion
+zurückgegeben. Für das nächste Schreiben ist diese neue Version zu nutzen.
+
+Die Funktionen sind für Zeichnungen und Lernpläne gedacht.
+Die Antwort enthält deshalb explizit 'electricalValidation:false' und
+'routingVerified:false'. Vor praktischer Verdrahtung ist eine unabhängige
+fachliche Prüfung notwendig. Schaltplanänderungen sind erst nach Worker-
+Deployment, Connector-Aktualisierung und Live-Test produktiv nutzbar.
+
+
+## Durchsuchbare Blockinhalte (23.11.2026)
+
+Die Funktion 'redion_search' durchsucht neben Seitentitel und Markdown
+jetzt auch **direkte und verschachtelte Klartextblöcke**. Ein Block
+ist nur durchsuchbar, wenn seine ID in der 'content'-Liste seines
+unmittelbaren Elternblocks steht, dessen 'parentId' genau diesen
+Elternblock nennt und alle Vorfahren zur selben unverschlüsselten,
+lesbaren Seite gehören. Gelöschte und verschlüsselte Blöcke sowie
+Datenbankzeilen werden auf **jeder** Hierarchiestufe ausgelassen.
+Zyklische und verwaiste Referenzen sind keine Suchtreffer.
+
+Die rekursive SQL-Suche ist auf **vier Blockebenen** und höchstens
+**1'200 besuchte Knoten je Seite** begrenzt. Treffer jenseits dieser
+Grenzen werden nicht vollständig erfasst. Diese feste Grenze verhindert
+übermässige D1-Rechenlast, ist aber **keine vollständige Indexierung**
+sehr grosser verschachtelter Notizen.
+
+Das Ergebnis enthält weiterhin ausschliesslich Seiten-IDs und Titel,
+keine untergeordneten Block-IDs oder Treffer aus verbotenen Bereichen.
+Paginierung zählt nur lesbare Seiten. Nicht-ASCII-Begriffe werden
+nach Prüfung der Seitenrechte mit Unicode-Casefold verglichen.
+Verschlüsselte Inhalte werden niemals in der Cloud durchsucht.
+
+
+## Text- und Aufgabenblöcke sicher bearbeiten (23.11.2026)
+
+'redion_update_block' ändert **nur** bereits eingebettete, unverschlüsselte
+Text- und Aufgabenblöcke. Voraussetzungen: 'workspaceId', 'blockId',
+'expectedVersion' aus 'redion_read_block' und die gewünschte 'operation'.
+
+- 'set_text' mit 'text' bis 8'000 Zeichen. Unterstützt Text, H1/H2/H3,
+  Aufzählung, Nummerierung, Zitat, Code und Todo. Ein Todo-Titel darf
+  nicht leer sein.
+- 'set_checked' mit 'checked:true/false' ist ausschliesslich für Todo.
+- 'set_note' mit 'note' bis 2'000 Zeichen ist ausschliesslich für Todo.
+- 'set_due_date' mit 'dueDate' (gültiges JJJJ-MM-TT-Datum), leerer Wert
+  entfernt das Datum aus der Aufgabenansicht.
+
+Alle anderen Felder der jeweiligen Operation werden verweigert; ein
+rohes JSON-Update ist **nicht** möglich. Geprüft werden der OAuth-Scope
+'redion:write', die Seitenberechtigung zum Bearbeiten sowie die tatsächlich
+gespeicherte Elternkette. Jeder Vorfahr muss den Kindblock in seiner
+'content'-Liste referenzieren, im selben Arbeitsbereich/auf derselben
+Seite liegen, nicht verschlüsselt oder gelöscht sein und schliesslich
+in der echten Seite enden. Verwaiste bzw. ausgegliederte Blöcke und
+Datenbankzeilen werden nicht direkt bearbeitet.
+
+Ein SQLite-Update erhöht die Blockversion nur, wenn sie mit
+'expectedVersion' übereinstimmt; bei gleichzeitiger Änderung muss
+der Client den Block erneut lesen. Eine unveränderte Operation gibt
+das Feld 'unchanged:true' mit
+unveränderter Version. Die Elternseite wird nicht überschrieben.
+Die Funktion ist **keine** Bearbeitung von Schaltplänen, Tabellenzellen
+oder privaten verschlüsselten Blöcken. Produktionsbereitstellung und
+Connector-Aktualisierung bleiben separate Schritte.

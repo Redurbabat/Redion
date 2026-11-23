@@ -158,7 +158,7 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       const transport=new StreamableHTTPClientTransport(new URL(origin+'/mcp/cloud'),{authProvider:provider,fetch:fetcher});
       await client.connect(transport);
       assert.equal(transport.sessionId,undefined);
-      const list=await client.listTools();assert.equal(list.tools.length,13);
+      const list=await client.listTools();assert.equal(list.tools.length,15);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
       assert.equal(JSON.parse(result.content[0]!.text).markdown,'Nur Testdaten');
        assert.equal((result.structuredContent as any)?.markdown,'Nur Testdaten');
@@ -1415,5 +1415,613 @@ test('Cloud-MCP: Test-Datenbank rollt vollständige Batch-Schreibfehler zurück'
       f.db.prepare("INSERT INTO a_table_that_does_not_exist(id) VALUES('bad') RETURNING id")
     ]));
     assert.equal(await f.store.hole('saetze',{bereich:'ws_test',id:'rolled_back'}),null);
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: paginiert mehr als 40 Seitenblöcke ohne geheime IDs oder Reihenfolgeverlust',async()=>{
+  const f=await fixture();
+  try{
+    const ids=Array.from({length:52},(_,i)=>'paging_child_'+i);
+    const excluded=new Set([7,21,25,31]);
+    const content=[...ids,ids[30],'paging_missing'];
+    const put=async(id:string,data:Record<string,unknown>,seite='paging_page',encrypted=0,deleted=0)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify(data),verschluesselt:encrypted,seite,
+        version:5,geaendert:'2026-11-23',geloescht:deleted,vonGeraet:'Test'});
+    };
+    await put('paging_page',{type:'page',text:'Viele Blöcke',inhalt:'',content},'paging_page');
+    for(let i=0;i<ids.length;i++){
+      await put(ids[i]!,{type:'text',text:'Block '+i,parentId:i===25?'falscher_elternblock':'paging_page',
+        content:i===2?['paging_nested_visible','paging_nested_secret']:[]},
+        i===31?'andere_seite':'paging_page',i===7?1:0,i===21?1:0);
+    }
+    await put('paging_nested_visible',{type:'todo',text:'Verschachtelt',parentId:ids[2]});
+    await put('paging_nested_secret',{type:'text',text:'Geheim',parentId:ids[2]},
+      'paging_page',1);
+    const reader=await f.authorize(false);
+    const invoke=async(args:Record<string,unknown>,token=reader.access_token)=>{
+      const response=await f.rpc(token,'tools/call',{name:'redion_list_page_blocks',
+        arguments:{workspaceId:'ws_test',documentId:'paging_page',...args}});
+      assert.equal(response.status,200);
+      const result=response.data.result as {isError?:boolean;content:{text:string}[];structuredContent?:unknown};
+      const value=JSON.parse(result.content[0]!.text);
+      if(result.isError!==true)assert.deepEqual(result.structuredContent,value);
+      return {result,value};
+    };
+    const page=await f.rpc(reader.access_token,'tools/call',{name:'redion_read_page',
+      arguments:{workspaceId:'ws_test',documentId:'paging_page'}});
+    const parsedPage=JSON.parse(page.data.result.content[0]!.text);
+    assert.equal(parsedPage.markdown,'');
+    assert.equal(parsedPage.blockStorage,'referenced');
+    const legacy=await f.rpc(reader.access_token,'tools/call',{name:'redion_read_block',
+      arguments:{workspaceId:'ws_test',blockId:'paging_page'}});
+    assert.equal(JSON.parse(legacy.data.result.content[0]!.text).code,'too_large');
+
+    const all:string[]=[];
+    let next:number|null=0;
+    for(let pass=0;next!==null&&pass<10;pass++){
+      const {result,value}=await invoke({offset:next,limit:10,expectedVersion:5});
+      assert.notEqual(result.isError,true);
+      assert.equal(value.parentVersion,5);
+      assert.equal(value.blocks.length<=10,true);
+      all.push(...value.blocks.map((x:{blockId:string})=>x.blockId));
+      next=value.nextOffset;
+    }
+    assert.equal(next,null,'Paginierung muss enden');
+    assert.deepEqual(all,ids.filter((_,i)=>!excluded.has(i)));
+    assert.equal(all.length,48);
+    const nested=await invoke({parentBlockId:ids[2],limit:5,expectedVersion:5});
+    assert.deepEqual(nested.value.blocks.map((x:{blockId:string})=>x.blockId),
+      ['paging_nested_visible']);
+    assert.equal(nested.value.parentBlockId,ids[2]);
+    assert.equal(nested.value.nextOffset,null);
+    assert.equal((await invoke({offset:0,limit:100})).value.code,'invalid_arguments');
+    assert.equal((await invoke({expectedVersion:4})).value.code,'conflict');
+    assert.equal((await invoke({parentBlockId:'paging_nested_secret'})).value.code,'not_found');
+    assert.equal((await invoke({parentBlockId:ids[31]})).value.code,'not_found');
+    assert.equal((await invoke({parentBlockId:ids[2],expectedVersion:5})).result.isError,undefined);
+
+    await f.store.setze('konten',{id:'paging_reader',mail:'paging@example.test',
+      name:'Paging Reader',herkunft:'github',angelegt:'',gesperrt:0});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'paging_reader',
+      rolle:'lesen',von:'owner',wann:'2026-11-23'});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'paging_page',kontoId:'paging_reader',
+      rolle:'kein',von:'owner',wann:'2026-11-23'});
+    const deniedReader=await f.authorize(false,'paging_reader');
+    const denied=await invoke({},deniedReader.access_token);
+    assert.equal(denied.result.isError,true);
+    assert.equal(denied.value.code,'forbidden');
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: Schweizer Fachzeichen sind filterbar und ohne Schreibrechte abrufbar',async()=>{
+  const f=await fixture();
+  try{
+    const reader=await f.authorize(false);
+    const invoke=async(args:Record<string,unknown>)=>{
+      const result=await f.rpc(reader.access_token,'tools/call',{
+        name:'redion_list_symbols',arguments:args
+      });
+      assert.equal(result.status,200);
+      const payload=result.data.result;
+      const parsed=JSON.parse(payload.content[0].text);
+      if(!payload.isError)assert.deepEqual(payload.structuredContent,parsed);
+      return {payload,parsed};
+    };
+    const all=await invoke({});
+    assert.equal(all.payload.isError,undefined);
+    assert.equal(all.parsed.total,131);
+    assert.equal(all.parsed.raster,10);
+    assert.equal(all.parsed.externalExtensionsIncluded,false);
+    assert.equal(all.parsed.symbols.length,131);
+    const filtered=await invoke({gruppe:'ch-bauplan',suche:'typ 13'});
+    assert.ok(filtered.parsed.total>=1);
+    assert.ok(filtered.parsed.symbols.some((x:any)=>x.id==='bp-t13'));
+    assert.ok(filtered.parsed.symbols.every((x:any)=>x.gruppe==='ch-bauplan'));
+    const plan=await invoke({gruppe:'ch-schema',suche:'schema 6'});
+    assert.ok(plan.parsed.symbols.some((x:any)=>
+      x.id==='ch-schema6'&&x.anschluesse.length===4));
+    const invalid=await invoke({suche:'x'.repeat(81)});
+    assert.equal(invalid.payload.isError,true);
+    assert.equal(invalid.parsed.code,'invalid_arguments');
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: ein nativer Schaltplan wird atomar, sicher und wiederholbar erstellt',async()=>{
+  const f=await fixture();
+  try{
+    const put=async(id:string,encrypted=0)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify({type:'page',text:id,inhalt:'Bestehende Notizen',content:[]}),
+        verschluesselt:encrypted,seite:id,version:1,geaendert:'2026-11-23',
+        geloescht:0,vonGeraet:'Test'});
+    };
+    await put('schematic_test_page');
+    await put('schematic_secret_page',1);
+    const reader=await f.authorize(false);
+    const args={workspaceId:'ws_test',documentId:'schematic_test_page',
+      art:'installationsplan',titel:'12-V Sonnerie',expectedVersion:1,
+      requestId:'schematic_safe_2026_01'};
+    const call=async(token:string,params:Record<string,unknown>)=>{
+      const response=await f.rpc(token,'tools/call',{
+        name:'redion_add_schematic',arguments:{...args,...params}});
+      assert.equal(response.status,200);
+      const outcome=response.data.result as {isError?:boolean;content:{text:string}[]};
+      return {outcome,data:JSON.parse(outcome.content[0]!.text)};
+    };
+    const denied=await call(reader.access_token,{});
+    assert.equal(denied.outcome.isError,true);
+    assert.equal(denied.data.code,'forbidden');
+    const writer=await f.authorize(true);
+    const token=writer.access_token;
+    const created=await call(token,{});
+    assert.equal(created.outcome.isError,undefined);
+    const id=created.data.blockId;
+    assert.match(id,/^[a-f0-9]{32}$/);
+    assert.equal(created.data.parentVersion,2);
+    assert.equal(created.data.alreadyExists,false);
+    const row=await f.store.hole('saetze',{bereich:'ws_test',id});
+    assert.ok(row);
+    assert.equal(row.tabelle,'blocks');
+    assert.equal(row.verschluesselt,0);
+    assert.equal(row.seite,'schematic_test_page');
+    const data=JSON.parse(row.daten);
+    assert.equal(data.type,'schaltplan');
+    assert.equal(data.text,'12-V Sonnerie');
+    assert.equal(data.parentId,'schematic_test_page');
+    assert.deepEqual(data.content,[]);
+    assert.equal(data.plan.art,'installationsplan');
+    assert.equal(data.plan.breite,1000);
+    assert.equal(data.plan.hoehe,600);
+    assert.deepEqual(data.plan.teile,[]);
+    assert.deepEqual(data.plan.leitungen,[]);
+    assert.deepEqual(data.plan.texte,[]);
+    assert.deepEqual(data.plan.ebenen.map((e:any)=>e.id),['plan','aufgabe','loesung']);
+    const read=await f.rpc(token,'tools/call',{
+      name:'redion_read_schematic',arguments:{workspaceId:'ws_test',blockId:id}});
+    assert.equal(read.data.result.isError,undefined);
+    const schematic=JSON.parse(read.data.result.content[0]!.text);
+    assert.deepEqual(schematic.plan,data.plan);
+    const listed=await f.rpc(token,'tools/call',{name:'redion_list_page_blocks',
+      arguments:{workspaceId:'ws_test',documentId:'schematic_test_page'}});
+    assert.deepEqual(JSON.parse(listed.data.result.content[0]!.text).blocks.map((x:any)=>x.blockId),[id]);
+    const retry=await call(token,{});
+    assert.equal(retry.data.alreadyExists,true);
+    assert.equal(retry.data.blockId,id);
+    assert.equal(retry.data.parentVersion,2);
+    const changed=await call(token,{art:'hauptstromkreis'});
+    assert.equal(changed.outcome.isError,true);
+    assert.equal(changed.data.code,'conflict');
+    const stale=await call(token,{requestId:'schematic_different_2026',art:'klemmenplan'});
+    assert.equal(stale.outcome.isError,true);
+    assert.equal(stale.data.code,'conflict');
+    const bad=await call(token,{art:'stromlauf-ungueltig'});
+    assert.equal(bad.outcome.isError,true);
+    assert.equal(bad.data.code,'invalid_arguments');
+    const title=await call(token,{titel:'   '});
+    assert.equal(title.outcome.isError,true);
+    assert.equal(title.data.code,'invalid_arguments');
+    const encrypted=await call(token,{documentId:'schematic_secret_page'});
+    assert.equal(encrypted.outcome.isError,true);
+    assert.equal(encrypted.data.code,'encrypted');
+    const outside=await call(token,{workspaceId:'foreign_workspace'});
+    assert.equal(outside.outcome.isError,true);
+    assert.equal(outside.data.code,'forbidden');
+    const all=await f.store.finde('saetze',{bereich:'ws_test',tabelle:'blocks'});
+    assert.equal(all.length,3,'Ein Fehler darf keinen verwaisten Schaltplan speichern.');
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und atomare Versionen',async()=>{
+  const f=await fixture();
+  try{
+    // Separate users avoid OAuth grant replacement when switching scope.
+    await f.store.setze('konten',{id:'schematic_reader',mail:'schematic_reader@example.test',
+      name:'Schematic Reader',herkunft:'github',angelegt:'',gesperrt:0});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'schematic_reader',
+      rolle:'lesen',von:'owner',wann:'2026-11-23'});
+    const readOnly=await f.authorize(false,'schematic_reader');
+    const writer=await f.authorize(true);
+    await f.store.setze('saetze',{id:'edit_schematic_page',bereich:'ws_test',tabelle:'blocks',
+      daten:JSON.stringify({type:'page',text:'Elektro',inhalt:'',content:[]}),
+      verschluesselt:0,seite:'edit_schematic_page',version:1,geaendert:'2026-11-23',
+      geloescht:0,vonGeraet:'Test'});
+    const call=async(name:string,params:Record<string,unknown>,token=writer.access_token)=>{
+      const response=await f.rpc(token,'tools/call',{name,
+        arguments:{workspaceId:'ws_test',...params}});
+      assert.equal(response.status,200);
+      const reply=response.data.result as {isError?:boolean;content:{text:string}[]};
+      return {reply,data:JSON.parse(reply.content[0]!.text)};
+    };
+    const created=await call('redion_add_schematic',{documentId:'edit_schematic_page',
+      art:'stromlauf-aufgeloest',expectedVersion:1,requestId:'schematic_edit_0001'});
+    assert.notEqual(created.reply.isError,true);
+    const blockId=created.data.blockId;
+    const update=async(fields:Record<string,unknown>,token?:string)=>
+      call('redion_update_schematic',{blockId,...fields},token);
+    const denied=await update({expectedVersion:1,operation:'add_component',
+      componentId:'S1',symbolId:'taster-schliesser',x:100,y:100},readOnly.access_token);
+    assert.equal(denied.reply.isError,true);
+    assert.equal(denied.data.code,'forbidden');
+
+    const first=await update({expectedVersion:1,operation:'add_component',
+      componentId:'S1',symbolId:'taster-schliesser',x:100,y:100,bmk:'S1'});
+    assert.notEqual(first.reply.isError,true);
+    assert.equal(first.data.version,2);
+    assert.equal(first.data.elementType,'component');
+    assert.equal(first.data.electricalValidation,false);
+    const second=await update({expectedVersion:2,operation:'add_component',
+      componentId:'P1',symbolId:'bp-sonnerie',x:320,y:100,bmk:'P1'});
+    assert.equal(second.data.version,3);
+    const wire=await update({expectedVersion:3,operation:'connect_terminals',
+      wireId:'L1',fromComponentId:'S1',fromTerminal:'3',
+      toComponentId:'P1',toTerminal:'X1'});
+    assert.notEqual(wire.reply.isError,true);
+    assert.equal(wire.data.version,4);
+    assert.equal(wire.data.routingVerified,false);
+    const label=await update({expectedVersion:4,operation:'add_label',
+      labelId:'T1',labelText:'Nur Schulungszwecke',x:100,y:300,layer:'aufgabe'});
+    assert.equal(label.data.version,5);
+    const read=await call('redion_read_schematic',{blockId});
+    assert.equal(read.data.version,5);
+    assert.equal(read.data.plan.teile.length,2);
+    assert.equal(read.data.plan.teile[0].zeichen,'taster-schliesser');
+    assert.equal(read.data.plan.teile[0].drehung,0);
+    assert.equal(read.data.plan.teile[1].zeichen,'bp-sonnerie');
+    assert.deepEqual(read.data.plan.leitungen[0].punkte,[{x:120,y:100},{x:350,y:100}]);
+    assert.equal(read.data.plan.leitungen[0].vonNr,'3');
+    assert.equal(read.data.plan.leitungen[0].nachNr,'X1');
+    assert.equal(read.data.plan.texte[0].t,'Nur Schulungszwecke');
+    assert.equal(read.data.plan.texte[0].ebene,'aufgabe');
+
+    const bad=[
+      {expectedVersion:4,operation:'add_component',componentId:'OLD',symbolId:'schliesser',x:100,y:100,code:'conflict'},
+      {expectedVersion:5,operation:'add_component',componentId:'B1',symbolId:'nicht-vorhanden',x:100,y:100},
+      {expectedVersion:5,operation:'add_component',componentId:'S1',symbolId:'schliesser',x:100,y:100},
+      {expectedVersion:5,operation:'add_component',componentId:'B2',symbolId:'schliesser',x:103,y:100},
+      {expectedVersion:5,operation:'add_component',componentId:'B3',symbolId:'schliesser',x:800,y:700},
+      {expectedVersion:5,operation:'connect_terminals',wireId:'W2',
+        fromComponentId:'S1',fromTerminal:'falsch',toComponentId:'P1',toTerminal:'X1'},
+      {expectedVersion:5,operation:'connect_terminals',wireId:'W3',
+        fromComponentId:'S1',fromTerminal:'3',toComponentId:'P1',toTerminal:'X1'},
+      {expectedVersion:5,operation:'connect_terminals',wireId:'W4',
+        fromComponentId:'S1',fromTerminal:'3',toComponentId:'P1',toTerminal:'X1',bmk:'bad'},
+      {expectedVersion:5,operation:'add_label',labelId:'T2',labelText:'',x:100,y:100},
+      {expectedVersion:5,operation:'add_label',labelId:'T3',labelText:'Test',x:100,y:100,layer:'fremd'}
+    ];
+    for(const params of bad){
+      const failed=await update(params);
+      assert.equal(failed.reply.isError,true,JSON.stringify(params));
+      assert.equal(failed.data.code,params.code??'invalid_arguments',JSON.stringify(params));
+    }
+    assert.equal((await call('redion_read_schematic',{blockId})).data.version,5);
+    const two=await Promise.all([
+      update({expectedVersion:5,operation:'add_label',labelId:'T4',
+        labelText:'Parallel 1',x:100,y:340}),
+      update({expectedVersion:5,operation:'add_label',labelId:'T5',
+        labelText:'Parallel 2',x:100,y:360})
+    ]);
+    assert.equal(two.filter(x=>x.reply.isError!==true).length,1);
+    assert.equal(two.filter(x=>x.data.code==='conflict').length,1);
+    const after=await call('redion_read_schematic',{blockId});
+    assert.equal(after.data.version,6);
+    assert.equal(after.data.plan.texte.length,2);
+    assert.equal(new Set(after.data.plan.texte.map((x:any)=>x.id)).size,2);
+
+    await f.store.setze('saetze',{id:'encrypted_schematic',bereich:'ws_test',tabelle:'blocks',
+      daten:JSON.stringify({type:'schaltplan',plan:after.data.plan}),
+      verschluesselt:1,seite:'edit_schematic_page',version:1,geaendert:'2026-11-23',
+      geloescht:0,vonGeraet:'Test'});
+    const encrypted=await update({blockId:'encrypted_schematic',expectedVersion:1,
+      operation:'add_label',labelId:'H1',labelText:'Geheim',x:100,y:100});
+    assert.equal(encrypted.reply.isError,true);
+    assert.equal(encrypted.data.code,'encrypted');
+    const outside=await update({workspaceId:'not_approved',expectedVersion:6,
+      operation:'add_label',labelId:'H2',labelText:'Fremd',x:100,y:100});
+    assert.equal(outside.reply.isError,true);
+    assert.equal(outside.data.code,'forbidden');
+    const notSchematic=await update({blockId:'edit_schematic_page',expectedVersion:2,
+      operation:'add_label',labelId:'H3',labelText:'Falsch',x:100,y:100});
+    assert.equal(notSchematic.reply.isError,true);
+    assert.equal(notSchematic.data.code,'not_found');
+
+    await f.store.setze('konten',{id:'schematic_guest',mail:'schematic@example.test',
+      name:'Schematic Guest',herkunft:'github',angelegt:'',gesperrt:0});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'schematic_guest',
+      rolle:'edit',von:'owner',wann:'2026-11-23'});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'edit_schematic_page',
+      kontoId:'schematic_guest',rolle:'kein',von:'owner',wann:'2026-11-23'});
+    const guest=await f.authorize(true,'schematic_guest');
+    const blocked=await update({expectedVersion:6,operation:'add_label',
+      labelId:'H4',labelText:'Unberechtigt',x:100,y:100},guest.access_token);
+    assert.equal(blocked.reply.isError,true);
+    assert.equal(blocked.data.code,'forbidden');
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: Suche findet direkte lesbare Blöcke ohne Geheimdaten oder verwaiste Kinder',async()=>{
+  const f=await fixture();
+  try{
+    const putPage=async(id:string,ids:string[],time:string)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify({type:'page',text:'Übersicht',inhalt:'',content:ids}),
+        verschluesselt:0,seite:id,version:1,geaendert:time,geloescht:0,vonGeraet:'Test'});
+    };
+    const putBlock=async(id:string,page:string,parent:string,content:string,
+      encrypted=0,parentTable='block',children:string[]=[])=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify({type:'text',text:content,parentId:parent,
+          parentTable,alive:true,content:children}),
+        verschluesselt:encrypted,seite:page,version:1,
+        geaendert:'2026-11-23',geloescht:0,vonGeraet:'Test'});
+    };
+    await putPage('block_visible_a',['a_text','a_unicode'],
+      '2035-01-01T00:00:00Z');
+    await putBlock('a_text','block_visible_a','block_visible_a',
+      'BLOCKTREFFER Steckdose Typ 13');
+    await putBlock('a_unicode','block_visible_a','block_visible_a',
+      'BrÜCke und Öfen');
+    await putPage('block_secret_page',['secret_child'],
+      '2034-01-01T00:00:00Z');
+    await putBlock('secret_child','block_secret_page','block_secret_page',
+      'blocktreffer vertraulich');
+    await putPage('block_hidden_child',['encrypted_child'],
+      '2033-01-01T00:00:00Z');
+    await putBlock('encrypted_child','block_hidden_child','block_hidden_child',
+      'blocktreffer geheim',1);
+    await putPage('block_wrong_parent',['wrong_parent_child','wrong_page_child',
+      'collection_child','missing_reference'],
+      '2032-01-01T00:00:00Z');
+    await putBlock('wrong_parent_child','block_wrong_parent','other_page',
+      'blocktreffer falscher Vater');
+    await putBlock('wrong_page_child','foreign_page','block_wrong_parent',
+      'blocktreffer fremde Seite');
+    await putBlock('collection_child','block_wrong_parent','block_wrong_parent',
+      'blocktreffer Datenbankspalte',0,'collection');
+    await putPage('block_visible_b',['b_text'],
+      '2031-01-01T00:00:00Z');
+    await putBlock('b_text','block_visible_b','block_visible_b',
+      'Weitere blocktreffer Angaben');
+    await putPage('block_orphan_page',[], '2030-01-01T00:00:00Z');
+    await putBlock('orphan_child','block_orphan_page','block_orphan_page',
+      'blocktreffer ohne Elternreferenz');
+    await putPage('block_nested_page',['nested_parent'],
+      '2029-01-01T00:00:00Z');
+    await putBlock('nested_parent','block_nested_page','block_nested_page',
+      'Elternblock',0,'block',['nested_child','nested_secret','nested_bad_parent','nested_cycle']);
+    await putBlock('nested_child','block_nested_page','nested_parent',
+      'blocktreffer tief verschachtelt',0,'block',['nested_grandchild']);
+    await putBlock('nested_grandchild','block_nested_page','nested_child',
+      'Mehrstufiger Stromkreis',0,'block',['nested_greatgrandchild']);
+    await putBlock('nested_greatgrandchild','block_nested_page','nested_grandchild',
+      'Fehlersuche Schweizer Elektroplan',0,'block',['nested_too_deep']);
+    await putBlock('nested_too_deep','block_nested_page','nested_greatgrandchild',
+      'Hier nicht finden nach Tiefenlimit');
+    await putBlock('nested_secret','block_nested_page','nested_parent',
+      'blocktreffer geheim im Unterblock',1);
+    await putBlock('nested_bad_parent','block_nested_page','other_parent',
+      'blocktreffer falscher Unterblock');
+    await putBlock('nested_cycle','block_nested_page','nested_parent',
+      'Rundweg',0,'block',['nested_parent']);
+    await putBlock('nested_grandchild_private','block_nested_page','nested_child',
+      'Versteckter Vorfahr',1,'block',['nested_private_leaf']);
+    await putBlock('nested_private_leaf','block_nested_page','nested_grandchild_private',
+      'Nicht finden trotz Klartext');
+    await putBlock('nested_crosspage','foreign_nested_page','nested_child',
+      'Nicht finden fremde Wurzel');
+    await putBlock('nested_unicode','block_nested_page','nested_child',
+      'Überprüfung der Lüftungsanlage');
+    await putBlock('nested_deleted','block_nested_page','nested_parent',
+      'Nicht finden gelöschten Block',0,'block',['nested_deleted_leaf']);
+    const deleted=await f.store.hole('saetze',{bereich:'ws_test',id:'nested_deleted'});
+    assert.ok(deleted);
+    await f.store.setze('saetze',{...deleted,geloescht:1});
+    await putBlock('nested_deleted_leaf','block_nested_page','nested_deleted',
+      'Nicht finden hinter Löschung');
+    const root=await f.store.hole('saetze',{bereich:'ws_test',id:'block_nested_page'});
+    assert.ok(root);
+    const parent=await f.store.hole('saetze',{bereich:'ws_test',id:'nested_parent'});
+    assert.ok(parent);
+    const child=await f.store.hole('saetze',{bereich:'ws_test',id:'nested_child'});
+    assert.ok(child);
+    await f.store.setze('saetze',{...root,
+      daten:JSON.stringify({...JSON.parse(root.daten),content:['nested_parent','nested_deleted']})});
+    await f.store.setze('saetze',{...parent,
+      daten:JSON.stringify({...JSON.parse(parent.daten),
+        content:['nested_child','nested_secret','nested_bad_parent','nested_cycle','nested_deleted']})});
+    await f.store.setze('saetze',{...child,
+      daten:JSON.stringify({...JSON.parse(child.daten),
+        content:['nested_grandchild','nested_grandchild_private','nested_crosspage','nested_unicode']})});
+
+    await f.store.setze('konten',{id:'search_visible_guest',
+      mail:'search_visible@example.test',name:'Search Guest',
+      herkunft:'github',angelegt:'',gesperrt:0});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',
+      kontoId:'search_visible_guest',rolle:'lesen',von:'owner',wann:'2026-11-23'});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'block_secret_page',
+      kontoId:'search_visible_guest',rolle:'kein',von:'owner',wann:'2026-11-23'});
+    const guest=await f.authorize(false,'search_visible_guest');
+    const query=async(q:string,offset=0,limit=10)=>{
+      const result=await f.rpc(guest.access_token,'tools/call',{
+        name:'redion_search',arguments:{workspaceId:'ws_test',query:q,offset,limit}});
+      assert.equal(result.status,200);
+      assert.equal(result.data.result.isError,undefined);
+      return JSON.parse(result.data.result.content[0]!.text) as {
+        documents:{documentId:string}[];nextOffset:number|null;
+      };
+    };
+    const all=await query('blocktreffer');
+    assert.deepEqual(all.documents.map(x=>x.documentId),
+      ['block_visible_a','block_visible_b','block_nested_page']);
+    const first=await query('BLOCKTREFFER',0,1);
+    assert.deepEqual(first.documents.map(x=>x.documentId),['block_visible_a']);
+    assert.equal(first.nextOffset,1);
+    const second=await query('blocktreffer',1,1);
+    assert.deepEqual(second.documents.map(x=>x.documentId),['block_visible_b']);
+    assert.equal(second.nextOffset,2);
+    const third=await query('blocktreffer',2,1);
+    assert.deepEqual(third.documents.map(x=>x.documentId),['block_nested_page']);
+    assert.equal(third.nextOffset,null);
+    assert.deepEqual((await query('brücke')).documents.map(x=>x.documentId),
+      ['block_visible_a'],'Unicode-Suche muss direkte Blocktexte berücksichtigen');
+    assert.deepEqual((await query('GEHEIM')).documents,[],
+      'Verschlüsselte Blocktexte dürfen nicht durch Suche sichtbar werden.');
+    assert.deepEqual((await query('falscher Vater')).documents,[]);
+    assert.deepEqual((await query('fremde Seite')).documents,[]);
+    assert.deepEqual((await query('Datenbankspalte')).documents,[]);
+    assert.deepEqual((await query('ohne Elternreferenz')).documents,[]);
+    assert.deepEqual((await query('tief verschachtelt')).documents.map(x=>x.documentId),
+      ['block_nested_page']);
+    assert.deepEqual((await query('Mehrstufiger Stromkreis')).documents.map(x=>x.documentId),
+      ['block_nested_page']);
+    assert.deepEqual((await query('Schweizer Elektroplan')).documents.map(x=>x.documentId),
+      ['block_nested_page']);
+    assert.deepEqual((await query('geheim im Unterblock')).documents,[],
+      'Verschlüsselte verschachtelte Blöcke dürfen nicht durchsucht werden.');
+    assert.deepEqual((await query('falscher Unterblock')).documents,[],
+      'Ungültige Elternzuordnungen dürfen nicht durchsucht werden.');
+    assert.deepEqual((await query('Hier nicht finden nach Tiefenlimit')).documents,[],
+      'Die verschachtelte Suche muss eine feste maximale Tiefe einhalten.');
+    assert.deepEqual((await query('LÜFTUNGSANLAGE')).documents.map(x=>x.documentId),
+      ['block_nested_page'],'Unicode-Casefold muss auch tief verschachtelte Blöcke treffen.');
+    assert.deepEqual((await query('Nicht finden trotz Klartext')).documents,[],
+      'Klartext hinter einem verschlüsselten Elternblock darf nicht durchsuchbar sein.');
+    assert.deepEqual((await query('Nicht finden fremde Wurzel')).documents,[],
+      'Kindblöcke mit abweichender seite dürfen nicht als Treffer erscheinen.');
+    assert.deepEqual((await query('Nicht finden hinter Löschung')).documents,[],
+      'Klartext hinter einem gelöschten Elternblock darf nicht gefunden werden.');
+    assert.deepEqual((await query('Nicht finden gelöschten Block')).documents,[],
+      'Auch der gelöschte Elternblock selbst muss unsichtbar bleiben.');
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: eingebettete Blöcke und Aufgaben versioniert und mit Eltern-ACL bearbeiten',async()=>{
+  const f=await fixture();
+  try{
+    const put=async(id:string,data:Record<string,unknown>,page:string,encrypted=0,deleted=0)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify(data),verschluesselt:encrypted,seite:page,version:1,
+        geaendert:'2026-11-23',geloescht:deleted,vonGeraet:'Test'});
+    };
+    await put('edit_blocks_page',{type:'page',text:'Schule',inhalt:'',
+      content:['edit_task','edit_section']},'edit_blocks_page');
+    await put('edit_task',{type:'todo',text:'ÜK vorbereiten',checked:false,alive:true,
+      faellig:'2026-12-01',parentId:'edit_blocks_page',parentTable:'block',content:[]},
+      'edit_blocks_page');
+    await put('edit_section',{type:'toggle',text:'Unterkapitel',alive:true,
+      parentId:'edit_blocks_page',parentTable:'block',content:['edit_nested']},
+      'edit_blocks_page');
+    await put('edit_nested',{type:'text',text:'Kapitelanfang',alive:true,
+      parentId:'edit_section',parentTable:'block',content:[]},'edit_blocks_page');
+    await put('edit_orphan',{type:'text',text:'Verwaist',alive:true,
+      parentId:'edit_blocks_page',parentTable:'block',content:[]},'edit_blocks_page');
+    await put('edit_hidden_section',{type:'toggle',text:'Gelöschter Vorfahr',
+      parentId:'edit_blocks_page',parentTable:'block',content:['edit_hidden_child']},
+      'edit_blocks_page',1);
+    await put('edit_hidden_child',{type:'text',text:'Nicht erreichbar',
+      parentId:'edit_hidden_section',parentTable:'block',content:[]},
+      'edit_blocks_page');
+    await put('edit_collection_row',{type:'page',text:'Datenbankzeile',
+      parentId:'collection_1',parentTable:'collection'},'edit_collection_row');
+    await put('edit_secret_page',{type:'page',text:'Geheime Seite',content:['edit_secret_block']},
+      'edit_secret_page');
+    await put('edit_secret_block',{type:'text',text:'Privat',
+      parentId:'edit_secret_page',parentTable:'block'},'edit_secret_page');
+    await f.store.setze('konten',{id:'edit_blocks_guest',
+      mail:'edit_blocks_guest@example.test',name:'Editor Guest',herkunft:'github',
+      angelegt:'',gesperrt:0});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',
+      kontoId:'edit_blocks_guest',rolle:'lesen',von:'owner',wann:'2026-11-23'});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'edit_secret_page',
+      kontoId:'edit_blocks_guest',rolle:'kein',von:'owner',wann:'2026-11-23'});
+    const reader=await f.authorize(false,'edit_blocks_guest');
+    const writer=await f.authorize(true);
+    const call=async(token:string,blockId:string,expectedVersion:number,
+      operation:string,params:Record<string,unknown>={})=>{
+      const response=await f.rpc(token,'tools/call',{name:'redion_update_block',
+        arguments:{workspaceId:'ws_test',blockId,expectedVersion,operation,...params}});
+      assert.equal(response.status,200);
+      const reply=response.data.result as {isError?:boolean;content:{text:string}[]};
+      return {reply,data:JSON.parse(reply.content[0]!.text)};
+    };
+    const write=async(id:string,ver:number,op:string,params:Record<string,unknown>={})=>
+      call(writer.access_token,id,ver,op,params);
+    const denied=await call(reader.access_token,'edit_task',1,'set_checked',{checked:true});
+    assert.equal(denied.reply.isError,true);
+    assert.equal(denied.data.code,'forbidden');
+
+    const checked=await write('edit_task',1,'set_checked',{checked:true});
+    assert.equal(checked.reply.isError,undefined);
+    assert.equal(checked.data.version,2);
+    assert.equal(checked.data.unchanged,false);
+    const note=await write('edit_task',2,'set_note',{note:'Mit der Lehrperson prüfen'});
+    assert.equal(note.data.version,3);
+    const due=await write('edit_task',3,'set_due_date',{dueDate:'2026-12-20'});
+    assert.equal(due.data.version,4);
+    const title=await write('edit_task',4,'set_text',{text:'Praktische Prüfung vorbereiten'});
+    assert.equal(title.data.version,5);
+    const same=await write('edit_task',5,'set_text',{text:'Praktische Prüfung vorbereiten'});
+    assert.equal(same.data.unchanged,true);
+    assert.equal(same.data.version,5);
+    const stored=await f.store.hole('saetze',{bereich:'ws_test',id:'edit_task'});
+    assert.equal(stored?.version,5);
+    const saved=JSON.parse(stored!.daten);
+    assert.equal(saved.checked,true);
+    assert.equal(saved.notiz,'Mit der Lehrperson prüfen');
+    assert.equal(saved.faellig,'2026-12-20');
+    assert.equal(saved.text,'Praktische Prüfung vorbereiten');
+    assert.deepEqual(saved.content,[]);
+    assert.equal(saved.parentId,'edit_blocks_page');
+    const openTasks=await f.rpc(writer.access_token,'tools/call',{
+      name:'redion_list_tasks',arguments:{workspaceId:'ws_test',nurOffen:true}});
+    assert.ok(!JSON.parse(openTasks.data.result.content[0]!.text).tasks.some(
+      (t:any)=>t.taskId==='edit_task'));
+
+    const nested=await write('edit_nested',1,'set_text',{text:'Geänderter Unterpunkt'});
+    assert.equal(nested.data.version,2);
+    assert.equal((await f.store.hole('saetze',{bereich:'ws_test',id:'edit_nested'}))?.version,2);
+    const immutableParent=await f.store.hole('saetze',{bereich:'ws_test',id:'edit_section'});
+    assert.equal(immutableParent?.version,1);
+    const bad=[
+      {id:'edit_task',ver:4,op:'set_text',args:{text:'Veralteter Schreibversuch'},code:'conflict'},
+      {id:'edit_task',ver:5,op:'set_text',args:{text:''}},
+      {id:'edit_task',ver:5,op:'set_checked',args:{checked:'true'}},
+      {id:'edit_task',ver:5,op:'set_checked',args:{checked:true,text:'unerlaubt'}},
+      {id:'edit_task',ver:5,op:'set_due_date',args:{dueDate:'2026-02-29'}},
+      {id:'edit_task',ver:5,op:'set_due_date',args:{dueDate:'2026-13-01'}},
+      {id:'edit_task',ver:5,op:'set_note',args:{note:'n'.repeat(2001)}},
+      {id:'edit_nested',ver:2,op:'set_checked',args:{checked:true}},
+      {id:'edit_nested',ver:2,op:'set_due_date',args:{dueDate:'2026-12-01'}},
+      {id:'edit_section',ver:1,op:'set_text',args:{text:'Toggle darf nicht verändert werden'},code:'not_found'},
+      {id:'edit_orphan',ver:1,op:'set_text',args:{text:'Unerlaubt'},code:'not_found'},
+      {id:'edit_hidden_child',ver:1,op:'set_text',args:{text:'Unerlaubt'},code:'not_found'},
+      {id:'edit_collection_row',ver:1,op:'set_text',args:{text:'Unerlaubt'},code:'not_found'}
+    ];
+    for(const t of bad){
+      const result=await write(t.id,t.ver,t.op,t.args);
+      assert.equal(result.reply.isError,true,JSON.stringify(t));
+      assert.equal(result.data.code,t.code??'invalid_arguments',JSON.stringify(t));
+    }
+    const secret=await call(reader.access_token,'edit_secret_block',1,'set_text',{text:'Nein'});
+    assert.equal(secret.reply.isError,true);
+    assert.equal(secret.data.code,'forbidden');
+    assert.equal((await f.store.hole('saetze',{bereich:'ws_test',id:'edit_task'}))?.version,5);
+
+    const parallel=await Promise.all([
+      write('edit_task',5,'set_note',{note:'Parallel A'}),
+      write('edit_task',5,'set_note',{note:'Parallel B'})
+    ]);
+    assert.equal(parallel.filter(x=>x.reply.isError!==true).length,1);
+    assert.equal(parallel.filter(x=>x.data.code==='conflict').length,1);
+    assert.equal((await f.store.hole('saetze',{bereich:'ws_test',id:'edit_task'}))?.version,6);
+    const cleared=await write('edit_task',6,'set_due_date',{dueDate:''});
+    assert.equal(cleared.data.version,7);
+    assert.equal(JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:'edit_task'}))!.daten).faellig,'');
   }finally{f.close();}
 });

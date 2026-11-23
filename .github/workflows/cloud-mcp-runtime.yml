@@ -1,0 +1,42 @@
+# Isolated workerd/D1 integration check for Cloud-MCP changes.
+# No deployment, no production credentials, no outbound network from the worker.
+name: Cloud MCP Runtime
+
+on:
+  pull_request:
+    paths:
+      - 'server/mcp/**'
+      - 'server/ablage.ts'
+      - 'server/kern.ts'
+      - 'server/typen.ts'
+      - 'worker.ts'
+      - 'pruefungen/redion-mcp-cloud-runtime.mts'
+      - 'plugins/red-ion/**'
+      - '.github/workflows/cloud-mcp-runtime.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mcp-runtime-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  d1_runtime:
+    name: Workerd und isoliertes D1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Abhaengigkeiten installieren
+        run: npm install --no-audit --no-fund --ignore-scripts
+      - name: Wrangler fuer synthetische Workerd-Tests installieren
+        run: npm install --no-save --no-audit --no-fund --ignore-scripts wrangler@4
+      - name: MCP-SDK im Plugin installieren
+        run: npm install --prefix plugins/red-ion --no-audit --no-fund --ignore-scripts
+      - name: Realen Worker ohne produktive Bindungen pruefen
+        run: npm run test:mcp-cloud-runtime

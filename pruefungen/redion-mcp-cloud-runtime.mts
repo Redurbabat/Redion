@@ -67,7 +67,7 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
     assert.equal(tokenResponse.status,200);const tokens=await tokenResponse.json();
     client=new Client({name:'synthetic-workerd-client',version:'1'});
     await client.connect(new StreamableHTTPClientTransport(new URL(resource),{fetch:fetcher,requestInit:{headers:{Authorization:'Bearer '+tokens.access_token}}}));
-    assert.equal((await client.listTools()).tools.length,13);
+    assert.equal((await client.listTools()).tools.length,15);
     const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'runtime-workspace',documentId:'runtime-page'}});
     assert.equal(JSON.parse(result.content[0].text).markdown,'Isolierte Testdaten');
     const denied=await client.callTool({name:'redion_create_page',arguments:{workspaceId:'runtime-workspace',title:'Gesperrt',requestId:'runtime_request'}});
@@ -93,6 +93,36 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
       const res=await writer.callTool({name,arguments:arguments_});
       return {res,payload:JSON.parse(res.content[0].text) as any};
     };
+    // Real SQLite-in-workerd recursion: a page has a direct child which
+    // references a Unicode-bearing grandchild. No synthetic JS in-memory
+    // traversal or privileged production storage is used here.
+    const putRuntimeBlock=async(id:string,data:Record<string,unknown>,encrypted=0)=>{
+      await db.prepare(
+        'INSERT INTO saetze(id,bereich,tabelle,daten,verschluesselt,seite,version,geloescht) '+
+        'VALUES(?,?,?,?,?,?,1,0)'
+      ).bind(id,'runtime-workspace','blocks',JSON.stringify(data),encrypted,'runtime-page').run();
+    };
+    await putRuntimeBlock('runtime_search_parent',{
+      type:'text',text:'Sichtbarer Elternblock',parentId:'runtime-page',
+      content:['runtime_search_leaf'],alive:true
+    });
+    await putRuntimeBlock('runtime_search_leaf',{
+      type:'text',text:'LÜFTUNGSANLAGE Werkraum',parentId:'runtime_search_parent',
+      content:[],alive:true
+    });
+    await db.prepare('UPDATE saetze SET daten=?1 WHERE bereich=?2 AND id=?3')
+      .bind(JSON.stringify({type:'page',text:'Test',inhalt:'Isolierte Testdaten',
+        content:['runtime_search_parent']}),'runtime-workspace','runtime-page').run();
+    const deepSearch=await invoke('redion_search',{
+      workspaceId:'runtime-workspace',query:'lüftungsanlage'
+    });
+    assert.equal(deepSearch.res.isError,undefined);
+    assert.deepEqual(deepSearch.payload.documents.map((d:any)=>d.documentId),
+      ['runtime-page']);
+    const miss=await invoke('redion_search',{
+      workspaceId:'runtime-workspace',query:'nichtvorhandenerbegriff'
+    });
+    assert.deepEqual(miss.payload.documents,[]);
     const create=async(title:string,requestId:string,parentId?:string)=>{
       const {res,payload}=await invoke('redion_create_page',{
         workspaceId:'runtime-workspace',title,content:'Ausgang',requestId,...(parentId?{parentId}:{})
@@ -130,9 +160,144 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
     assert.equal(cyclic.payload.code,'invalid_arguments');
     const readAfter=await invoke('redion_read_page',{workspaceId:'runtime-workspace',documentId:child});
     assert.equal(readAfter.payload.markdown,'Ausgang\nNachtrag');
+    const schematic=await invoke('redion_add_schematic',{
+      workspaceId:'runtime-workspace',documentId:rootA,
+      art:'installationsplan',titel:'Runtime Installationsplan',expectedVersion:1,
+      requestId:'runtime_schematic_0001'
+    });
+    assert.equal(schematic.res.isError,undefined);
+    const plan=await invoke('redion_read_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId
+    });
+    assert.equal(plan.res.isError,undefined);
+    assert.equal(plan.payload.plan.art,'installationsplan');
+    assert.deepEqual(plan.payload.plan.teile,[]);
+    const retry=await invoke('redion_add_schematic',{
+      workspaceId:'runtime-workspace',documentId:rootA,
+      art:'installationsplan',titel:'Runtime Installationsplan',expectedVersion:1,
+      requestId:'runtime_schematic_0001'
+    });
+    assert.equal(retry.payload.alreadyExists,true);
+    const partA=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:1,operation:'add_component',
+      componentId:'runtime_P1',symbolId:'bp-sonnerie',x:100,y:100,bmk:'P1'
+    });
+    assert.equal(partA.res.isError,undefined);
+    assert.equal(partA.payload.version,2);
+    const partB=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:2,operation:'add_component',
+      componentId:'runtime_S1',symbolId:'bp-sonneriedruck',x:400,y:100,bmk:'S1'
+    });
+    assert.equal(partB.res.isError,undefined);
+    const connection=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:3,operation:'connect_terminals',wireId:'runtime_wire_1',
+      fromComponentId:'runtime_P1',fromTerminal:'X1',
+      toComponentId:'runtime_S1',toTerminal:'3'
+    });
+    assert.equal(connection.res.isError,undefined);
+    assert.equal(connection.payload.version,4);
+    assert.equal(connection.payload.electricalValidation,false);
+    const updatedPlan=await invoke('redion_read_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId
+    });
+    assert.equal(updatedPlan.payload.version,4);
+    assert.equal(updatedPlan.payload.plan.teile.length,2);
+    assert.equal(updatedPlan.payload.plan.leitungen.length,1);
+    const staleEdit=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:3,operation:'add_label',labelId:'stale_label',
+      labelText:'Darf nicht hinein',x:100,y:100
+    });
+    assert.equal(staleEdit.res.isError,true);
+    assert.equal(staleEdit.payload.code,'conflict');
+    const connectedMove=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:4,operation:'move_component',
+      componentId:'runtime_P1',x:160,y:160
+    });
+    assert.equal(connectedMove.res.isError,true);
+    assert.equal(connectedMove.payload.code,'invalid_arguments');
+    const extraPart=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:4,operation:'add_component',
+      componentId:'runtime_free',symbolId:'bp-sonnerie',x:650,y:300
+    });
+    assert.equal(extraPart.res.isError,undefined);
+    assert.equal(extraPart.payload.version,5);
+    const moved=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:5,operation:'move_component',
+      componentId:'runtime_free',x:700,y:340
+    });
+    assert.equal(moved.res.isError,undefined);
+    assert.equal(moved.payload.version,6);
+    const label=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:6,operation:'add_label',
+      labelId:'runtime_label',labelText:'Schulungsplan',x:700,y:400
+    });
+    assert.equal(label.res.isError,undefined);
+    const movedLabel=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:7,operation:'move_label',labelId:'runtime_label',x:700,y:450
+    });
+    assert.equal(movedLabel.res.isError,undefined);
+    const finalSchematic=await invoke('redion_read_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId
+    });
+    assert.equal(finalSchematic.payload.version,8);
+    assert.equal(finalSchematic.payload.plan.teile.find((p:any)=>p.id==='runtime_free').x,700);
+    assert.equal(finalSchematic.payload.plan.texte.find((p:any)=>p.id==='runtime_label').y,450);
+    assert.deepEqual(finalSchematic.payload.plan.leitungen,updatedPlan.payload.plan.leitungen);
+
+
+
+    const task=await invoke('redion_add_block',{
+      workspaceId:'runtime-workspace',documentId:rootA,
+      expectedVersion:2,typ:'todo',text:'ÜK-Auftrag wiederholen',
+      requestId:'runtime_task_edit_01'
+    });
+    assert.equal(task.res.isError,undefined);
+    const checkedTask=await invoke('redion_update_block',{
+      workspaceId:'runtime-workspace',blockId:task.payload.blockId,
+      expectedVersion:1,operation:'set_checked',checked:true
+    });
+    assert.equal(checkedTask.res.isError,undefined);
+    assert.equal(checkedTask.payload.version,2);
+    const dueTask=await invoke('redion_update_block',{
+      workspaceId:'runtime-workspace',blockId:task.payload.blockId,
+      expectedVersion:2,operation:'set_due_date',dueDate:'2026-12-12'
+    });
+    assert.equal(dueTask.res.isError,undefined);
+    assert.equal(dueTask.payload.version,3);
+    const textTask=await invoke('redion_update_block',{
+      workspaceId:'runtime-workspace',blockId:task.payload.blockId,
+      expectedVersion:3,operation:'set_text',text:'Praktischen Auftrag prüfen'
+    });
+    assert.equal(textTask.payload.version,4);
+    const staleTask=await invoke('redion_update_block',{
+      workspaceId:'runtime-workspace',blockId:task.payload.blockId,
+      expectedVersion:2,operation:'set_checked',checked:false
+    });
+    assert.equal(staleTask.res.isError,true);
+    assert.equal(staleTask.payload.code,'conflict');
+    const readTask=await invoke('redion_read_block',{
+      workspaceId:'runtime-workspace',blockId:task.payload.blockId
+    });
+    assert.equal(readTask.payload.version,4);
+    assert.equal(readTask.payload.text,'Praktischen Auftrag prüfen');
+    assert.equal(readTask.payload.data.checked,true);
+    assert.equal(readTask.payload.data.faellig,'2026-12-12');
+    const openTasks=await invoke('redion_list_tasks',{
+      workspaceId:'runtime-workspace',nurOffen:true
+    });
+    assert.ok(!openTasks.payload.tasks.some((x:any)=>x.taskId===task.payload.blockId));
     await oauth.revokeGrant('runtime-owner',(await oauth.listGrants('runtime-owner'))[0]!.id);
     assert.equal((await fetcher(resource,{headers:{Authorization:'Bearer '+tokens.access_token}})).status,401);
-    assert.equal((await db.prepare('SELECT COUNT(*) n FROM saetze').first()).n,4);
+    assert.equal((await db.prepare('SELECT COUNT(*) n FROM saetze').first()).n,8);
     assert.deepEqual(outbound,[],'Keine ausgehenden Netzaufrufe');
   }finally{await Promise.allSettled([client?.close(),writer?.close()]);await mf.dispose();}
 });
