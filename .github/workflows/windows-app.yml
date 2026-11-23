@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/ios-ipa.yml'
       - '.github/workflows/windows-app.yml'
+      - 'plugins/red-ion/tests/electron.mts'
 permissions:
   contents: read
 jobs:
