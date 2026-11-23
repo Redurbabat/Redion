@@ -30191,7 +30191,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1617, inhalt: 'ce292ff5bd606031', gebaut: '2026-11-23T06:48:29.014Z' };
+const Stand = { fassung: 1618, inhalt: 'ea1c65e7a0a95086', gebaut: '2026-11-23T19:17:15.856Z' };
 window.Stand = Stand;
 
 </script>
@@ -39920,10 +39920,11 @@ Register.einstellungen = (() => {
                 'Kontext heisst genauere Antwort.' },
         { id: 'wolkeTakt', gruppe: 'Wolke', name: 'Abgleich alle', art: 'auswahl',
             werte: [['0', 'nur beim Öffnen und von Hand'],
+                ['15', 'Nahezu live (15 Sekunden, nur bei offener App)'],
                 ['120', '2 Minuten'], ['600', '10 Minuten']],
             vorgabe: '120',
-            was: 'Bei zwei Geräten sind zwei Minuten rund 1500 Anfragen am Tag — ein ' +
-                'Sechzigstel der kostenlosen Grenze. Seltener heisst: das andere ' +
+            was: 'Die schnelle Option prüft alle 15 Sekunden, solange die App offen ist. ' +
+                'Das verbraucht zusätzliche Anfragen und ist kein echter Sofort-Push. ' +
                 'Gerät sieht deine Änderung später.' }
     ];
     const LISTE = EINGEBAUT.slice();
@@ -143343,6 +143344,7 @@ const Wolke = (() => {
         if (!bereich() && ich.bereiche.length)
             Store.setMeta('wolkeBereich', ich.bereiche[0].id);
         Store.setMeta('wolkeKonto', ich.konto);
+        takt();
         melden();
         if (typeof Protokoll !== 'undefined')
             Protokoll.notieren('konto', 'Bei der Wolke angemeldet als ' + ich.konto.name);
@@ -143374,6 +143376,7 @@ const Wolke = (() => {
         Store.setMeta('wolkeBloeckeWeg', []);
         Store.setMeta('wolkeAbgleich', null);
         Store.setMeta('wolkeNeuAbgleich', '');
+        takt();
         melden();
         if (typeof Protokoll !== 'undefined')
             Protokoll.notieren('konto', 'Von der Wolke abgemeldet');
@@ -143774,6 +143777,11 @@ const Wolke = (() => {
         }
     };
     let uhr = null;
+    const autoAbgleichen = () => {
+        if (document.hidden || (typeof navigator !== 'undefined' && navigator.onLine === false))
+            return;
+        abgleichen().catch(() => { });
+    };
     const takt = () => {
         clearInterval(uhr);
         uhr = null;
@@ -143783,7 +143791,7 @@ const Wolke = (() => {
         if (!Number.isFinite(sek) || sek <= 0)
             return 0;
         const ms = sek * 1000;
-        uhr = setInterval(() => { abgleichen().catch(() => { }); }, ms);
+        uhr = setInterval(autoAbgleichen, ms);
         return ms;
     };
     const taktSetzen = (wert) => {
@@ -144005,19 +144013,14 @@ const Wolke = (() => {
         if (typeof Store.on === 'function')
             Store.on((was) => { if (was === 'import')
                 melden(); });
-        if (!token())
-            return;
-        zustand.konto = Store.getMeta('wolkeKonto', null);
-        zustand.angemeldet = true;
-        melden();
-        setTimeout(() => {
-            abgleichen().catch(() => { });
-            takt();
-        }, 3000);
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && angemeldet())
-                abgleichen().catch(() => { });
-        });
+        if (token()) {
+            zustand.konto = Store.getMeta('wolkeKonto', null);
+            zustand.angemeldet = true;
+            melden();
+            setTimeout(() => { autoAbgleichen(); takt(); }, 3000);
+        }
+        document.addEventListener('visibilitychange', autoAbgleichen);
+        window.addEventListener('online', autoAbgleichen);
         const ev = globalThis.Ereignisse;
         if (ev?.horche)
             ev.horche(ARTEN.einstellungGeaendert, (d) => {
@@ -144067,7 +144070,7 @@ const WolkeFenster = (() => {
                 return;
             const ms = Wolke.taktSetzen(feld.value);
             UI.toast(ms < 0 ? 'Diesen Takt gibt es nicht — es bleibt beim bisherigen.'
-                : ms ? 'Abgleich jetzt alle ' + Math.round(ms / 60000) + ' Minuten.'
+                : ms ? (ms < 60000 ? 'Nahezu live: alle ' + Math.round(ms / 1000) + ' Sekunden bei geöffneter App.' : 'Abgleich jetzt alle ' + Math.round(ms / 60000) + ' Minuten.')
                     : 'Abgleich nur noch beim Öffnen und von Hand.');
         });
         o.addEventListener('click', async (e) => {
@@ -144383,9 +144386,10 @@ const WolkeFenster = (() => {
             'display:flex; gap:9px; align-items:center; flex-wrap:wrap">' +
             '<label for="wo-takt">Von selbst abgleichen:</label>' +
             '<select id="wo-takt" style="font-size:12px; padding:4px 8px">' +
-            ['0', '120', '600'].map(v => `<option value="${v}"${String(Store.getMeta('wolkeTakt', '120')) === v ? ' selected' : ''}>` +
+            ['0', '15', '120', '600'].map(v => `<option value="${v}"${String(Store.getMeta('wolkeTakt', '120')) === v ? ' selected' : ''}>` +
                 (v === '0' ? 'nur beim Öffnen und von Hand'
-                    : v === '120' ? 'alle 2 Minuten' : 'alle 10 Minuten') + '</option>').join('') +
+                    : v === '15' ? 'nahezu live (15 Sekunden)'
+                        : v === '120' ? 'alle 2 Minuten' : 'alle 10 Minuten') + '</option>').join('') +
             '</select>' +
             '</div>' +
             '<hr style="border:none;border-top:1px solid var(--line); margin:16px 0 12px">' +
