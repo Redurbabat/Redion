@@ -7,6 +7,9 @@
   "scripts": {
     "bauen": "node bauen.mts",
     "pruefen": "node pruefungen/alle.mts",
+    "struktur:pruefen": "node skripte/ordnerstruktur.mts --pruefen",
+    "struktur:bericht": "node skripte/ordnerstruktur.mts --bericht",
+    "test:struktur": "node --test pruefungen/ordnerstruktur.test.mts",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.islands.json",
     "typecheck:mcp": "tsc -p windows/tsconfig.json --noEmit && tsc -p plugins/red-ion/tsconfig.json",
     "bauen:inseln": "node bauen-inseln.mts",
