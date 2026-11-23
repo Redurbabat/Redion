@@ -38,12 +38,18 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_update_page',description:'Ändert den Seitentitel nur bei passender expectedVersion.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,title:nameField,expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId','title','expectedVersion'],additionalProperties:false}},
+  {name:'redion_list_child_pages',description:'Listet lesbare, unverschlüsselte Unterseiten einer Seite auf.',
+    inputSchema:{type:'object',properties:{...workspace,parentId:idField,limit:{type:'integer',minimum:1,maximum:100}},required:['workspaceId','parentId'],additionalProperties:false}},
+  {name:'redion_append_content',description:'Hängt Markdown an eine Klartext-Seite an; benötigt Schreibrecht und passende Version.',
+    inputSchema:{type:'object',properties:{...workspace,...documentId,content:{type:'string',minLength:1,maxLength:4000},expectedVersion:{type:'integer',minimum:1}},required:['workspaceId','documentId','content','expectedVersion'],additionalProperties:false}},
+  {name:'redion_move_page',description:'Verschiebt eine Klartext-Seite unter eine andere Seite oder auf die oberste Ebene. Prüft Schreibrechte, Zyklen und Version.',
+    inputSchema:{type:'object',properties:{...workspace,...documentId,newParentId:idField,expectedVersion:{type:'integer',minimum:1}},required:['workspaceId','documentId','expectedVersion'],additionalProperties:false}},
   {name:'redion_replace_text',description:'Ersetzt Text im Seiteninhalt mit Versionskontrolle; nicht in verschlüsselten Seiten.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,find:{type:'string',minLength:1,maxLength:2000},
       replacement:{type:'string',maxLength:4000},expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId','find','replacement','expectedVersion'],additionalProperties:false}}
 ];
-const writeNames=new Set(['redion_create_page','redion_update_page','redion_replace_text']);
+const writeNames=new Set(['redion_create_page','redion_update_page','redion_replace_text','redion_append_content','redion_move_page']);
 export const visibleCloudTools=(p:McpPrincipal)=>CLOUD_TOOLS.filter(t=>!writeNames.has(t.name)||p.scopes.includes('redion:write'));
 
 export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
@@ -121,6 +127,22 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       return {documentId:id,workspaceId:w,title:String(result.data.text||''),
         content:String(result.data.inhalt||''),version:Number(result.s.version)||1};
     }
+    if(name==='redion_list_child_pages'){
+      const parentId=required(args.parentId,128);
+      await page(w,parentId,'lesen');
+      const max=limit(args.limit,50,100);
+      const rows=await ablage.finde('saetze',{bereich:w},{sortiere:'geaendert',absteigend:true,grenze:1000});
+      const children=[];
+      for(const s of rows){
+        if(s.tabelle!=='blocks'||s.geloescht||s.verschluesselt||children.length>=max)continue;
+        let data:Record<string,unknown>;
+        try{data=JSON.parse(String(s.daten||'{}'));}catch{continue;}
+        if(data.type!=='page'||data.parentId!==parentId)continue;
+        const r=await rolleAuf(ablage,w,String(s.seite||s.id),userId);
+        if(darf(r,'lesen'))children.push({documentId:s.id,title:String(data.text||'').slice(0,160),version:Number(s.version)||1});
+      }
+      return {parentId,documents:children};
+    }
     if(!principal.scopes.includes('redion:write'))
       return err('forbidden','Schreibrechte sind nicht freigegeben.');
     if(name==='redion_create_page'){
@@ -153,6 +175,34 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     const current=await page(w,id,'bearbeiten');
     const ver=expected(args.expectedVersion);
     if(ver!==Number(current.s.version||1))err('conflict','Seite wurde zwischenzeitlich geändert. Bitte erneut lesen.');
+    if(name==='redion_append_content'){
+      const addition=required(args.content,4000);
+      const old=current.data.inhalt;
+      if(typeof old!=='string')return err('not_found','Seite hat keinen Textinhalt.');
+      const next=old?old+'\\n'+addition:addition;
+      if(next.length>12000)return err('invalid_arguments','Seiteninhalt ist zu gross.');
+      return update(w,id,ver,{...current.data,inhalt:next});
+    }
+    if(name==='redion_move_page'){
+      const target=args.newParentId===undefined?'':text(args.newParentId,128);
+      if(args.newParentId!==undefined&&typeof args.newParentId!=='string')
+        return err('invalid_arguments','Ungültige Elternseite.');
+      if(target===id)return err('invalid_arguments','Eine Seite kann nicht ihr eigener Elternknoten sein.');
+      if(target){
+        await page(w,target,'bearbeiten');
+        const visited=new Set<string>([id]);
+        let cursor=target;
+        for(let depth=0;cursor&&depth<40;depth++){
+          if(visited.has(cursor))return err('invalid_arguments','Zyklische Seitenhierarchie ist nicht erlaubt.');
+          visited.add(cursor);
+          const ancestor=await page(w,cursor,'lesen');
+          cursor=typeof ancestor.data.parentId==='string'?ancestor.data.parentId:'';
+          if(!cursor)break;
+          if(depth===39)return err('invalid_arguments','Seitenhierarchie ist zu tief.');
+        }
+      }else await role(w,'*','bearbeiten');
+      return update(w,id,ver,{...current.data,parentId:target||null});
+    }
     if(name==='redion_update_page'){
       return update(w,id,ver,{...current.data,text:required(args.title,160)});
     }
