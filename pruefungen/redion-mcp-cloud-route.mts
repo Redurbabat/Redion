@@ -997,6 +997,18 @@ test('Cloud-MCP: Tabellenzeilen und Schema beachten Seiten-, Zeilen- und Spalten
     assert.deepEqual(ownerData.columns.map((x:any)=>x.key),['title','amount','private']);
     assert.deepEqual(ownerData.rows.map((x:any)=>x.rowId),
       ['row_visible_1','row_private','row_visible_2']);
+    const legacyLarge=JSON.parse((await call(reader.access_token,{limit:50})).content[0]!.text);
+    assert.equal(legacyLarge.requestedLimit,50);
+    assert.equal(legacyLarge.effectiveLimit,10);
+    assert.equal(legacyLarge.limitCapped,true);
+    assert.deepEqual(legacyLarge.rows.map((x:any)=>x.rowId),
+      ['row_visible_1','row_visible_2']);
+    const legacyMaximum=JSON.parse((await call(reader.access_token,{limit:500})).content[0]!.text);
+    assert.equal(legacyMaximum.limitCapped,true);
+    assert.equal(legacyMaximum.effectiveLimit,10);
+    const rejectAbove=await call(reader.access_token,{limit:501});
+    assert.equal(rejectAbove.isError,true);
+    assert.equal(JSON.parse(rejectAbove.content[0]!.text).code,'invalid_arguments');
     const noPage=await call(reader.access_token,{databaseId:'db_secret'});
     assert.equal(noPage.isError,true);
     assert.equal(JSON.parse(noPage.content[0]!.text).code,'not_found');
@@ -1454,9 +1466,33 @@ test('Cloud-MCP: paginiert mehr als 40 Seitenblöcke ohne geheime IDs oder Reihe
     const parsedPage=JSON.parse(page.data.result.content[0]!.text);
     assert.equal(parsedPage.markdown,'');
     assert.equal(parsedPage.blockStorage,'referenced');
+    assert.equal(parsedPage.blockPreview.length,20);
+    assert.equal(parsedPage.blockPreview[0].text,'Block 0');
+    assert.equal(parsedPage.nextBlockOffset,20);
+    assert.equal(parsedPage.blockPreview.some((x:any)=>excluded.has(
+      Number(x.blockId.replace('paging_child_','')))),false);
+    const pageWindow=await f.rpc(reader.access_token,'tools/call',{name:'redion_read_page',
+      arguments:{workspaceId:'ws_test',documentId:'paging_page',
+        blockOffset:20,blockLimit:10,expectedVersion:5}});
+    assert.equal(pageWindow.status,200);
+    const after=JSON.parse(pageWindow.data.result.content[0]!.text);
+    assert.equal(after.blockPreview.length,10);
+    assert.equal(after.nextBlockOffset,30);
     const legacy=await f.rpc(reader.access_token,'tools/call',{name:'redion_read_block',
       arguments:{workspaceId:'ws_test',blockId:'paging_page'}});
-    assert.equal(JSON.parse(legacy.data.result.content[0]!.text).code,'too_large');
+    assert.notEqual(legacy.data.result.isError,true);
+    const legacyData=JSON.parse(legacy.data.result.content[0]!.text);
+    assert.equal(legacyData.children.length,40);
+    assert.equal(legacyData.childrenTruncated,true);
+    assert.equal(legacyData.nextChildOffset,40);
+    const legacyTail=await f.rpc(reader.access_token,'tools/call',{name:'redion_read_block',
+      arguments:{workspaceId:'ws_test',blockId:'paging_page',childOffset:40}});
+    assert.notEqual(legacyTail.data.result.isError,true);
+    const tail=JSON.parse(legacyTail.data.result.content[0]!.text);
+    assert.equal(tail.children.length,8);
+    assert.equal(tail.nextChildOffset,null);
+    assert.equal(tail.childrenTruncated,false);
+    assert.deepEqual(new Set([...legacyData.children,...tail.children]).size,48);
 
     const all:string[]=[];
     let next:number|null=0;
