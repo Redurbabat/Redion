@@ -343,17 +343,23 @@ Deployment, Connector-Aktualisierung und Live-Test produktiv nutzbar.
 
 ## Durchsuchbare Blockinhalte (23.11.2026)
 
-Die bestehende Funktion 'redion_search' berücksichtigt nun zusätzlich zu
-Seitentitel und Markdown auch den **Text direkt eingebetteter Klartextblöcke**.
-Ein Block ist nur durchsuchbar, wenn sein Eigentümer die Seite ist, seine ID
-in deren 'content'-Liste steht und der Datensatz lesbar, nicht gelöscht,
-nicht verschlüsselt und kein Datenbankeintrag ist. Das Ergebnis bleibt
-eine Liste von Seiten-IDs; einzelne Block-IDs und nicht sichtbare
-Suchtreffer werden nicht offengelegt. Paginierung zählt weiterhin nur
-für den Benutzer lesbare Seiten. Auch bei nicht-ASCII-Begriffen wird
-der Blocktext nach der Seitenberechtigungsprüfung mit Unicode-Casefold
-verglichen.
+Die Funktion 'redion_search' durchsucht neben Seitentitel und Markdown
+jetzt auch **direkte und verschachtelte Klartextblöcke**. Ein Block
+ist nur durchsuchbar, wenn seine ID in der 'content'-Liste seines
+unmittelbaren Elternblocks steht, dessen 'parentId' genau diesen
+Elternblock nennt und alle Vorfahren zur selben unverschlüsselten,
+lesbaren Seite gehören. Gelöschte und verschlüsselte Blöcke sowie
+Datenbankzeilen werden auf **jeder** Hierarchiestufe ausgelassen.
+Zyklische und verwaiste Referenzen sind keine Suchtreffer.
 
-**Begrenzung:** Weitere Verschachtelungsebenen unter einem Text- oder
-Listenblock werden noch nicht global indiziert. Auch Inhalte verschlüsselter
-Blöcke werden niemals in die Cloud-Suche übernommen.
+Die rekursive SQL-Suche ist auf **vier Blockebenen** und höchstens
+**1'200 besuchte Knoten je Seite** begrenzt. Treffer jenseits dieser
+Grenzen werden nicht vollständig erfasst. Diese feste Grenze verhindert
+übermässige D1-Rechenlast, ist aber **keine vollständige Indexierung**
+sehr grosser verschachtelter Notizen.
+
+Das Ergebnis enthält weiterhin ausschliesslich Seiten-IDs und Titel,
+keine untergeordneten Block-IDs oder Treffer aus verbotenen Bereichen.
+Paginierung zählt nur lesbare Seiten. Nicht-ASCII-Begriffe werden
+nach Prüfung der Seitenrechte mit Unicode-Casefold verglichen.
+Verschlüsselte Inhalte werden niemals in der Cloud durchsucht.
