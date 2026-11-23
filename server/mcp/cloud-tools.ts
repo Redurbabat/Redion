@@ -684,7 +684,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       if(args.inBlockId!==undefined)
         return err('invalid_arguments','Verschachtelte Blockerstellung ist noch nicht freigegeben.');
       const content=args.text===undefined?'':text(args.text,12000);
-      if(args.text!==undefined&&typeof args.text!=='string')
+      if(args.text!==undefined&&(typeof args.text!=='string'||args.text.length>12000))
         return err('invalid_arguments','Blocktext muss ein Text mit höchstens 12.000 Zeichen sein.');
       if(typ==='todo'&&!content.trim())return err('invalid_arguments','Eine Aufgabe benötigt einen Titel.');
       if(args.daten!==undefined&&(!args.daten||typeof args.daten!=='object'||Array.isArray(args.daten)))
