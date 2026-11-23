@@ -677,7 +677,7 @@ test('Cloud-MCP: mehrere Seiten mit neutralen Fehlern und begrenzter Antwort les
       'missing_batch','bad_json_batch'];
     const result=await call({documentIds:ids,maxChars:2000});
     assert.notEqual(result.isError,true,JSON.stringify(result));
-    const parsed=JSON.parse(result.content[0].text);
+    const parsed=JSON.parse(result.content[0]!.text);
     assert.equal(parsed.workspaceId,'ws_test');
     assert.deepEqual(parsed.documents.map((d:any)=>d.documentId),ids);
     assert.equal(parsed.documents[0].content,'X'.repeat(1999)+'😀');
