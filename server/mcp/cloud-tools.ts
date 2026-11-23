@@ -28,6 +28,12 @@ const nameField={type:'string',maxLength:160};
 const idField={type:'string',maxLength:128};
 const workspace={workspaceId:idField};
 const documentId={documentId:idField};
+const SCHEMATIC_ARTEN=[
+  'stromlauf-aufgeloest','stromlauf-zusammenhaengend','hauptstromkreis',
+  'installationsplan','uebersichtsplan','klemmenplan','verdrahtungsplan',
+  'anschlussplan','blockschaltbild','funktionsplan','aufbauplan'
+];
+const SCHEMATIC_QUER=new Set(['installationsplan','blockschaltbild','funktionsplan','aufbauplan']);
 export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_list_workspaces',description:'Zeigt nur die für diese KI-Verbindung freigegebenen Bereiche.',
     inputSchema:{type:'object',properties:{},additionalProperties:false}},
@@ -40,6 +46,13 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_read_pages',description:'Liest bis zu 10 Seiten auf einmal, maximal 2.000 Zeichen pro Seite. Unzugängliche IDs werden einheitlich als nicht verfügbar markiert.',
     inputSchema:{type:'object',properties:{...workspace,documentIds:{type:'array',items:{type:'string',minLength:1,maxLength:128},minItems:1,maxItems:10},maxChars:{type:'integer',minimum:1,maximum:2000}},
       required:['workspaceId','documentIds'],additionalProperties:false}},
+  {name:'redion_add_schematic',description:'Erstellt einen leeren Schaltplan mit dem nativen RED-ION-Format auf einer freigegebenen Seite. Kein automatisch gezeichneter Stromkreis und keine Sicherheitsabnahme. Atomar, versioniert, mit requestId wiederholbar.',
+    inputSchema:{type:'object',properties:{...workspace,...documentId,
+      expectedVersion:{type:'integer',minimum:1},
+      art:{type:'string',enum:SCHEMATIC_ARTEN},
+      titel:{type:'string',maxLength:120},
+      requestId:{type:'string',minLength:8,maxLength:100}},
+      required:['workspaceId','documentId','expectedVersion','art'],additionalProperties:false}},
   {name:'redion_add_block',description:'Erstellt einen sicheren Text- oder Todo-Block auf einer freigegebenen Seite; neue Blockzeile und Elternliste werden in einer D1-Transaktion gespeichert. requestId optional, Wiederholung mit derselben Seitenversion idempotent. Verschachtelte Blöcke noch nicht unterstützt.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,expectedVersion:{type:'integer',minimum:1},
       typ:{type:'string',enum:['text','h1','h2','h3','todo','bullet','number','quote','code','divider']},text:{type:'string',maxLength:12000},
@@ -86,7 +99,7 @@ export const CLOUD_TOOLS:ToolDef[]=[
       replacement:{type:'string',maxLength:4000},expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId','find','replacement','expectedVersion'],additionalProperties:false}}
 ];
-const writeNames=new Set(['redion_create_page','redion_update_page','redion_replace_text','redion_append_content','redion_move_page','redion_add_block']);
+const writeNames=new Set(['redion_create_page','redion_update_page','redion_replace_text','redion_append_content','redion_move_page','redion_add_block','redion_add_schematic']);
 // MCP annotations tell AI clients which tools are read-only, additive or
 // modifying. They are advisory; server-side OAuth and ACL checks still govern.
 const toolTitles:Record<string,string>={
@@ -97,6 +110,7 @@ const toolTitles:Record<string,string>={
   redion_read_pages:'Mehrere Seiten lesen',
   redion_create_page:'Seite erstellen',
   redion_add_block:'Block oder Aufgabe erstellen',
+  redion_add_schematic:'Leeren Schaltplan erstellen',
   redion_update_page:'Seitentitel ändern',
   redion_list_databases:'Datenbanken auflisten',
   redion_read_database:'Datenbank lesen',
@@ -120,7 +134,7 @@ export const visibleCloudTools=(p:McpPrincipal):ToolDef[]=>
       return {...t,annotations:{
         title:toolTitles[t.name]||t.name,readOnlyHint:readOnly,
         destructiveHint:destructiveNames.has(t.name),
-        idempotentHint:t.name==='redion_create_page'||t.name==='redion_add_block',
+        idempotentHint:t.name==='redion_create_page'||t.name==='redion_add_block'||t.name==='redion_add_schematic',
         openWorldHint:false
       }};
     });
@@ -752,24 +766,40 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     }
     if(!principal.scopes.includes('redion:write'))
       return err('forbidden','Schreibrechte sind nicht freigegeben.');
-    if(name==='redion_add_block'){
+    if(name==='redion_add_block'||name==='redion_add_schematic'){
+      const createSchematic=name==='redion_add_schematic';
       const id=required(args.documentId,128);
       const ver=expected(args.expectedVersion);
       const current=await page(w,id,'bearbeiten');
-      const typ=required(args.typ,40);
-      const allowedTypes=new Set(['text','h1','h2','h3','todo','bullet','number','quote','code','divider']);
+      const typ=createSchematic?'schaltplan':required(args.typ,40);
+      const allowedTypes=new Set(['text','h1','h2','h3','todo','bullet','number','quote','code','divider','schaltplan']);
       if(!allowedTypes.has(typ))
         return err('invalid_arguments','Diese Blockart erfordert eine eigene geprüfte Schreibfunktion.');
       if(args.inBlockId!==undefined)
         return err('invalid_arguments','Verschachtelte Blockerstellung ist noch nicht freigegeben.');
-      const content=args.text===undefined?'':text(args.text,12000);
-      if(args.text!==undefined&&(typeof args.text!=='string'||args.text.length>12000))
+      const content=createSchematic?
+        (args.titel===undefined?'Schaltplan':required(args.titel,120)):
+        (args.text===undefined?'':text(args.text,12000));
+      if(!createSchematic&&args.text!==undefined&&(typeof args.text!=='string'||args.text.length>12000))
         return err('invalid_arguments','Blocktext muss ein Text mit höchstens 12.000 Zeichen sein.');
       if(typ==='todo'&&!content.trim())return err('invalid_arguments','Eine Aufgabe benötigt einen Titel.');
       if(args.daten!==undefined&&(!args.daten||typeof args.daten!=='object'||Array.isArray(args.daten)))
         return err('invalid_arguments','Blockdaten müssen ein Objekt sein.');
       const input=args.daten as Record<string,unknown>|undefined;
       const meta:Record<string,unknown>={};
+      if(createSchematic){
+        const art=required(args.art,40);
+        if(!SCHEMATIC_ARTEN.includes(art))
+          return err('invalid_arguments','Unbekannte Schaltplanart.');
+        const quer=SCHEMATIC_QUER.has(art);
+        meta.plan={art,breite:quer?1000:800,hoehe:quer?600:700,
+          teile:[],leitungen:[],texte:[],
+          ebenen:[
+            {id:'plan',name:'Plan',farbe:'var(--text)',sichtbar:true},
+            {id:'aufgabe',name:'Aufgabe',farbe:'#c2410c',sichtbar:true},
+            {id:'loesung',name:'Lösung',farbe:'#15803d',sichtbar:true}
+          ]};
+      }
       if(input){
         if(typ!=='todo'||Object.keys(input).some(k=>!['faellig','notiz'].includes(k)))
           return err('invalid_arguments','Nur geprüfte Aufgabenfelder faellig und notiz sind erlaubt.');
