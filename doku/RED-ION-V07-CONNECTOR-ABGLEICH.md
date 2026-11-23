@@ -32,6 +32,16 @@ exportiert 24. 19 Namen stimmen überein.
 - `redion_add_task`
 - `redion_add_event`
 
+**Zusätzliche Einschränkung des alten V07-Connectors:** Seine
+`redion_read_database`-, `redion_read_block`- und
+`redion_read_page`-Definitionen geben jeweils **keinen Offset-Parameter**
+frei. Darum kann dieser alte Connector auch nach der Backend-Korrektur
+zunächst nur die erste paginierte Antwort lesen. Die Rückgabefelder
+`nextOffset`, `nextChildOffset` und `nextBlockOffset` werden erst
+nach der **App-seitigen Schema-Aktualisierung** mit den passenden
+Eingabeparametern voll nutzbar. Das Backend erfindet keine weiteren
+Zeilen und gibt auch nicht heimlich mehr als 10 Datenbankzeilen aus.
+
 **Wichtig:** Kein künstliches Mapping auf andere Funktionen, keine
 Behauptung, dass diese veralteten Aufrufe produktiv funktionieren.
 Aus dem öffentlichen Connector entfernen, bis eine geprüfte
