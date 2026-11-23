@@ -5,6 +5,7 @@ import {SCHEMA,ablageD1} from '../server/ablage.ts';
 import {mcpStateD1,type McpDatabase} from '../server/mcp/state.ts';
 import {createMcpOAuth,pkceChallenge} from '../server/mcp/oauth.ts';
 import {handleCloudMcp,isCloudMcpPublicPath,isCloudMcpPrivatePath} from '../server/mcp/cloud-router.ts';
+import {createCloudActions} from '../server/mcp/cloud-tools.ts';
 import fs from 'node:fs';
 import {createMcpOAuthHttp} from '../server/mcp/oauth-http.ts';
 import {hidden} from './helfer/mcp-cloud.mts';
@@ -1378,5 +1379,41 @@ test('Cloud-MCP: Blockerstellung lehnt verbotene Typen, Fremdseiten, Geheimdaten
     const all=await f.store.finde('saetze',{bereich:'ws_test',tabelle:'blocks'});
     assert.equal(all.length,5);
     assert.equal(new Set(ids).size,ids.length);
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: ohne atomare D1-Batch-Funktion wird kein Block erstellt',async()=>{
+  const f=await fixture();
+  try{
+    await f.store.setze('saetze',{id:'batch_guard_page',bereich:'ws_test',tabelle:'blocks',
+      daten:JSON.stringify({type:'page',text:'Sicherungsseite',content:[]}),
+      verschluesselt:0,seite:'batch_guard_page',version:1,geaendert:'2026-11-23',
+      geloescht:0,vonGeraet:'Test'});
+    const noBatch={prepare:f.db.prepare.bind(f.db)};
+    const action=createCloudActions(f.store,noBatch,{
+      userId:'owner',clientId:'test-client',grantId:'guard-test',
+      workspaceIds:['ws_test'],scopes:['redion:read','redion:write']
+    });
+    await assert.rejects(
+      action('redion_add_block',{workspaceId:'ws_test',documentId:'batch_guard_page',
+        expectedVersion:1,typ:'todo',text:'Darf nicht gespeichert werden'}),
+      (error:any)=>error?.reason==='unavailable');
+    assert.equal((await f.store.finde('saetze',{bereich:'ws_test',tabelle:'blocks'})).length,1);
+    assert.deepEqual(JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:'batch_guard_page'}))!.daten).content,[]);
+  }finally{f.close();}
+});
+
+test('Cloud-MCP: Test-Datenbank rollt vollständige Batch-Schreibfehler zurück',async()=>{
+  const f=await fixture();
+  try{
+    assert.ok(f.db.batch);
+    await assert.rejects(f.db.batch!([
+      f.db.prepare("INSERT INTO saetze(id,bereich,tabelle,daten,seite,version,geaendert) "+
+        "VALUES(?1,?2,'blocks',?3,?4,1,?5) RETURNING id")
+        .bind('rolled_back','ws_test','{"type":"todo"}','rolled_back','2030-01-01'),
+      f.db.prepare("INSERT INTO a_table_that_does_not_exist(id) VALUES('bad') RETURNING id")
+    ]));
+    assert.equal(await f.store.hole('saetze',{bereich:'ws_test',id:'rolled_back'}),null);
   }finally{f.close();}
 });
