@@ -1451,7 +1451,9 @@ test('Cloud-MCP: paginiert mehr als 40 Seitenblöcke ohne geheime IDs oder Reihe
     };
     const page=await f.rpc(reader.access_token,'tools/call',{name:'redion_read_page',
       arguments:{workspaceId:'ws_test',documentId:'paging_page'}});
-    assert.equal(JSON.parse(page.data.result.content[0]!.text).markdown,'');
+    const parsedPage=JSON.parse(page.data.result.content[0]!.text);
+    assert.equal(parsedPage.markdown,'');
+    assert.equal(parsedPage.blockStorage,'referenced');
     const legacy=await f.rpc(reader.access_token,'tools/call',{name:'redion_read_block',
       arguments:{workspaceId:'ws_test',blockId:'paging_page'}});
     assert.equal(JSON.parse(legacy.data.result.content[0]!.text).code,'too_large');
