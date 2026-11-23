@@ -148,6 +148,42 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
       requestId:'runtime_schematic_0001'
     });
     assert.equal(retry.payload.alreadyExists,true);
+    const partA=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:1,operation:'add_component',
+      componentId:'runtime_P1',symbolId:'bp-sonnerie',x:100,y:100,bmk:'P1'
+    });
+    assert.equal(partA.res.isError,undefined);
+    assert.equal(partA.payload.version,2);
+    const partB=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:2,operation:'add_component',
+      componentId:'runtime_S1',symbolId:'bp-sonneriedruck',x:400,y:100,bmk:'S1'
+    });
+    assert.equal(partB.res.isError,undefined);
+    const connection=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:3,operation:'connect_terminals',wireId:'runtime_wire_1',
+      fromComponentId:'runtime_P1',fromTerminal:'X1',
+      toComponentId:'runtime_S1',toTerminal:'3'
+    });
+    assert.equal(connection.res.isError,undefined);
+    assert.equal(connection.payload.version,4);
+    assert.equal(connection.payload.electricalValidation,false);
+    const updatedPlan=await invoke('redion_read_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId
+    });
+    assert.equal(updatedPlan.payload.version,4);
+    assert.equal(updatedPlan.payload.plan.teile.length,2);
+    assert.equal(updatedPlan.payload.plan.leitungen.length,1);
+    const staleEdit=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:3,operation:'add_label',labelId:'stale_label',
+      labelText:'Darf nicht hinein',x:100,y:100
+    });
+    assert.equal(staleEdit.res.isError,true);
+    assert.equal(staleEdit.payload.code,'conflict');
+
 
     await oauth.revokeGrant('runtime-owner',(await oauth.listGrants('runtime-owner'))[0]!.id);
     assert.equal((await fetcher(resource,{headers:{Authorization:'Bearer '+tokens.access_token}})).status,401);
