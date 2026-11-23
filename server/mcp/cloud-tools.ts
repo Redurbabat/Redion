@@ -217,8 +217,8 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       // Collection rows are only tasks when the collection has a readable
       // checkbox/status field and a readable embedding page. The collection's
       // sync "seite" is its own ID, not an authorization to read its rows.
-      type Collection={id:string;name:string;statusKey?:string;checkboxKey?:string;
-        dateKey?:string;titleVisible:boolean};
+      type Collection={id:string;name:string;statusKey?:string|undefined;checkboxKey?:string|undefined;
+        dateKey?:string|undefined;titleVisible:boolean};
       const collections=new Map<string,Collection>();
       const collectionRows=await db.prepare(
         "SELECT id,daten FROM saetze WHERE bereich=?1 AND tabelle='collections' "+
