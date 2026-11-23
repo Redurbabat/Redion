@@ -1899,3 +1899,129 @@ test('Cloud-MCP: Suche findet direkte lesbare Blöcke ohne Geheimdaten oder verw
       'Auch der gelöschte Elternblock selbst muss unsichtbar bleiben.');
   }finally{f.close();}
 });
+
+
+test('Cloud-MCP: eingebettete Blöcke und Aufgaben versioniert und mit Eltern-ACL bearbeiten',async()=>{
+  const f=await fixture();
+  try{
+    const put=async(id:string,data:Record<string,unknown>,page:string,encrypted=0,deleted=0)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify(data),verschluesselt:encrypted,seite:page,version:1,
+        geaendert:'2026-11-23',geloescht:deleted,vonGeraet:'Test'});
+    };
+    await put('edit_blocks_page',{type:'page',text:'Schule',inhalt:'',
+      content:['edit_task','edit_section']},'edit_blocks_page');
+    await put('edit_task',{type:'todo',text:'ÜK vorbereiten',checked:false,alive:true,
+      faellig:'2026-12-01',parentId:'edit_blocks_page',parentTable:'block',content:[]},
+      'edit_blocks_page');
+    await put('edit_section',{type:'toggle',text:'Unterkapitel',alive:true,
+      parentId:'edit_blocks_page',parentTable:'block',content:['edit_nested']},
+      'edit_blocks_page');
+    await put('edit_nested',{type:'text',text:'Kapitelanfang',alive:true,
+      parentId:'edit_section',parentTable:'block',content:[]},'edit_blocks_page');
+    await put('edit_orphan',{type:'text',text:'Verwaist',alive:true,
+      parentId:'edit_blocks_page',parentTable:'block',content:[]},'edit_blocks_page');
+    await put('edit_hidden_section',{type:'toggle',text:'Gelöschter Vorfahr',
+      parentId:'edit_blocks_page',parentTable:'block',content:['edit_hidden_child']},
+      'edit_blocks_page',1);
+    await put('edit_hidden_child',{type:'text',text:'Nicht erreichbar',
+      parentId:'edit_hidden_section',parentTable:'block',content:[]},
+      'edit_blocks_page');
+    await put('edit_collection_row',{type:'page',text:'Datenbankzeile',
+      parentId:'collection_1',parentTable:'collection'},'edit_collection_row');
+    await put('edit_secret_page',{type:'page',text:'Geheime Seite',content:['edit_secret_block']},
+      'edit_secret_page');
+    await put('edit_secret_block',{type:'text',text:'Privat',
+      parentId:'edit_secret_page',parentTable:'block'},'edit_secret_page');
+    await f.store.setze('konten',{id:'edit_blocks_guest',
+      mail:'edit_blocks_guest@example.test',name:'Editor Guest',herkunft:'github',
+      angelegt:'',gesperrt:0});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',
+      kontoId:'edit_blocks_guest',rolle:'lesen',von:'owner',wann:'2026-11-23'});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'edit_secret_page',
+      kontoId:'edit_blocks_guest',rolle:'kein',von:'owner',wann:'2026-11-23'});
+    const reader=await f.authorize(false,'edit_blocks_guest');
+    const writer=await f.authorize(true);
+    const call=async(token:string,blockId:string,expectedVersion:number,
+      operation:string,params:Record<string,unknown>={})=>{
+      const response=await f.rpc(token,'tools/call',{name:'redion_update_block',
+        arguments:{workspaceId:'ws_test',blockId,expectedVersion,operation,...params}});
+      assert.equal(response.status,200);
+      const reply=response.data.result as {isError?:boolean;content:{text:string}[]};
+      return {reply,data:JSON.parse(reply.content[0]!.text)};
+    };
+    const write=async(id:string,ver:number,op:string,params:Record<string,unknown>={})=>
+      call(writer.access_token,id,ver,op,params);
+    const denied=await call(reader.access_token,'edit_task',1,'set_checked',{checked:true});
+    assert.equal(denied.reply.isError,true);
+    assert.equal(denied.data.code,'forbidden');
+
+    const checked=await write('edit_task',1,'set_checked',{checked:true});
+    assert.equal(checked.reply.isError,undefined);
+    assert.equal(checked.data.version,2);
+    assert.equal(checked.data.unchanged,false);
+    const note=await write('edit_task',2,'set_note',{note:'Mit der Lehrperson prüfen'});
+    assert.equal(note.data.version,3);
+    const due=await write('edit_task',3,'set_due_date',{dueDate:'2026-12-20'});
+    assert.equal(due.data.version,4);
+    const title=await write('edit_task',4,'set_text',{text:'Praktische Prüfung vorbereiten'});
+    assert.equal(title.data.version,5);
+    const same=await write('edit_task',5,'set_text',{text:'Praktische Prüfung vorbereiten'});
+    assert.equal(same.data.unchanged,true);
+    assert.equal(same.data.version,5);
+    const stored=await f.store.hole('saetze',{bereich:'ws_test',id:'edit_task'});
+    assert.equal(stored?.version,5);
+    const saved=JSON.parse(stored!.daten);
+    assert.equal(saved.checked,true);
+    assert.equal(saved.notiz,'Mit der Lehrperson prüfen');
+    assert.equal(saved.faellig,'2026-12-20');
+    assert.equal(saved.text,'Praktische Prüfung vorbereiten');
+    assert.deepEqual(saved.content,[]);
+    assert.equal(saved.parentId,'edit_blocks_page');
+    const openTasks=await f.rpc(writer.access_token,'tools/call',{
+      name:'redion_list_tasks',arguments:{workspaceId:'ws_test',nurOffen:true}});
+    assert.ok(!JSON.parse(openTasks.data.result.content[0]!.text).tasks.some(
+      (t:any)=>t.taskId==='edit_task'));
+
+    const nested=await write('edit_nested',1,'set_text',{text:'Geänderter Unterpunkt'});
+    assert.equal(nested.data.version,2);
+    assert.equal((await f.store.hole('saetze',{bereich:'ws_test',id:'edit_nested'}))?.version,2);
+    const immutableParent=await f.store.hole('saetze',{bereich:'ws_test',id:'edit_section'});
+    assert.equal(immutableParent?.version,1);
+    const bad=[
+      {id:'edit_task',ver:4,op:'set_text',args:{text:'Veralteter Schreibversuch'},code:'conflict'},
+      {id:'edit_task',ver:5,op:'set_text',args:{text:''}},
+      {id:'edit_task',ver:5,op:'set_checked',args:{checked:'true'}},
+      {id:'edit_task',ver:5,op:'set_checked',args:{checked:true,text:'unerlaubt'}},
+      {id:'edit_task',ver:5,op:'set_due_date',args:{dueDate:'2026-02-29'}},
+      {id:'edit_task',ver:5,op:'set_due_date',args:{dueDate:'2026-13-01'}},
+      {id:'edit_task',ver:5,op:'set_note',args:{note:'n'.repeat(2001)}},
+      {id:'edit_nested',ver:2,op:'set_checked',args:{checked:true}},
+      {id:'edit_nested',ver:2,op:'set_due_date',args:{dueDate:'2026-12-01'}},
+      {id:'edit_section',ver:1,op:'set_text',args:{text:'Toggle darf nicht verändert werden'},code:'not_found'},
+      {id:'edit_orphan',ver:1,op:'set_text',args:{text:'Unerlaubt'},code:'not_found'},
+      {id:'edit_hidden_child',ver:1,op:'set_text',args:{text:'Unerlaubt'},code:'not_found'},
+      {id:'edit_collection_row',ver:1,op:'set_text',args:{text:'Unerlaubt'},code:'not_found'}
+    ];
+    for(const t of bad){
+      const result=await write(t.id,t.ver,t.op,t.args);
+      assert.equal(result.reply.isError,true,JSON.stringify(t));
+      assert.equal(result.data.code,t.code??'invalid_arguments',JSON.stringify(t));
+    }
+    const secret=await call(reader.access_token,'edit_secret_block',1,'set_text',{text:'Nein'});
+    assert.equal(secret.reply.isError,true);
+    assert.equal(secret.data.code,'forbidden');
+    assert.equal((await f.store.hole('saetze',{bereich:'ws_test',id:'edit_task'}))?.version,5);
+
+    const parallel=await Promise.all([
+      write('edit_task',5,'set_note',{note:'Parallel A'}),
+      write('edit_task',5,'set_note',{note:'Parallel B'})
+    ]);
+    assert.equal(parallel.filter(x=>x.reply.isError!==true).length,1);
+    assert.equal(parallel.filter(x=>x.data.code==='conflict').length,1);
+    assert.equal((await f.store.hole('saetze',{bereich:'ws_test',id:'edit_task'}))?.version,6);
+    const cleared=await write('edit_task',6,'set_due_date',{dueDate:''});
+    assert.equal(cleared.data.version,7);
+    assert.equal(JSON.parse((await f.store.hole('saetze',{bereich:'ws_test',id:'edit_task'}))!.daten).faellig,'');
+  }finally{f.close();}
+});
