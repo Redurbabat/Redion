@@ -32,13 +32,13 @@ const fixture=async()=>{
   const oauth=createMcpOAuth({state,issuer:origin,resource:origin+'/mcp/cloud',authorizationEndpoint:origin+'/mcp/authorize'});
   const client=await oauth.register({client_name:'Synthetic ChatGPT',redirect_uris:['https://client.example.test/callback'],grant_types:['authorization_code','refresh_token']});
   const verifier='v'.repeat(64);
-  const authorize=async(write:boolean)=>{
-    const begin=await oauth.begin('owner',{client_id:client.client_id,redirect_uri:client.redirect_uris[0],
+  const authorize=async(write:boolean,accountId='owner')=>{
+    const begin=await oauth.begin(accountId,{client_id:client.client_id,redirect_uri:client.redirect_uris[0],
       response_type:'code',resource:origin+'/mcp/cloud',scope:write?'redion:read redion:write':'redion:read',
       code_challenge:await pkceChallenge(verifier),code_challenge_method:'S256'});
     assert.equal(begin.kind,'consent');
     if(begin.kind!=='consent')throw new Error('consent expected');
-    const approved=await oauth.approve('owner',begin.requestId,begin.csrf,{
+    const approved=await oauth.approve(accountId,begin.requestId,begin.csrf,{
       allow:true,remember:true,workspaceIds:['ws_test'],allowWrite:write});
     return oauth.exchange({grant_type:'authorization_code',client_id:client.client_id,
       code:new URL(approved.redirect).searchParams.get('code'),
@@ -336,5 +336,76 @@ test('Cloud-MCP: zwei parallele Seitenverschiebungen können keinen Kreis erzeug
     const pa=JSON.parse(rowA.daten).parentId;
     const pb=JSON.parse(rowB.daten).parentId;
     assert.equal(pa===b&&pb===a,false);
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: Unterseiten verbergen Existenz und Reihenfolge unfreigegebener Seiten',async()=>{
+  const f=await fixture();
+  try{
+    await f.store.setze('konten',{id:'collab',mail:'collab@example.test',
+      name:'collab',herkunft:'github',angelegt:'',gesperrt:0});
+    const owner=await f.authorize(true);
+    const create=async(title:string,requestId:string,parentId?:string)=>{
+      const response=await f.rpc(owner.access_token,'tools/call',{name:'redion_create_page',
+        arguments:{workspaceId:'ws_test',title,requestId,...(parentId?{parentId}:{})}});
+      assert.equal(response.status,200);
+      assert.notEqual(response.data.result.isError,true);
+      return JSON.parse(response.data.result.content[0].text).documentId as string;
+    };
+    const root=await create('Gemeinsamer Ordner','acl_parent_root_001');
+    const visA=await create('Sichtbar A','acl_child_vis_a_001',root);
+    const override=await create('Persönlich freigegeben','acl_child_override_001',root);
+    const hidden=await create('Privat','acl_child_hidden_001',root);
+    const visB=await create('Sichtbar B','acl_child_vis_b_001',root);
+    const wildcardDeny=await create('Wildcard gesperrt','acl_child_wildcard_001',root);
+
+    const share=async(pageId:string,accountId:string,rolle:string)=>{
+      await f.store.setze('freigaben',{bereich:'ws_test',seite:pageId,kontoId:accountId,
+        rolle,von:'owner',wann:'2026-11-23'});
+    };
+    await share(root,'collab','lesen');
+    await share(hidden,'collab','kein');
+    await share(wildcardDeny,'*','kein');
+    await share(override,'*','kein');
+    await share(override,'collab','lesen');
+    const dated=[
+      [wildcardDeny,'2035-01-01T00:00:00Z'],
+      [visB,'2034-01-01T00:00:00Z'],
+      [hidden,'2033-01-01T00:00:00Z'],
+      [override,'2032-01-01T00:00:00Z'],
+      [visA,'2031-01-01T00:00:00Z']
+    ];
+    for(const [id,geaendert] of dated){
+      const s=await f.store.hole('saetze',{bereich:'ws_test',id});
+      assert.ok(s);
+      await f.store.setze('saetze',{...s,geaendert});
+    }
+
+    const collab=await f.authorize(false,'collab');
+    const list=async(token:string,offset:number)=>{
+      const response=await f.rpc(token,'tools/call',{name:'redion_list_child_pages',
+        arguments:{workspaceId:'ws_test',parentId:root,limit:1,offset}});
+      assert.equal(response.status,200);
+      assert.notEqual(response.data.result.isError,true,JSON.stringify(response.data.result));
+      return JSON.parse(response.data.result.content[0].text) as {
+        documents:{documentId:string}[];nextOffset:number|null
+      };
+    };
+    const expected=[visB,override,visA];
+    for(let i=0;i<expected.length;i++){
+      const result=await list(collab.access_token,i);
+      assert.deepEqual(result.documents.map(d=>d.documentId),[expected[i]]);
+      assert.equal(result.nextOffset,i<expected.length-1?i+1:null);
+    }
+    const noMore=await list(collab.access_token,3);
+    assert.deepEqual(noMore.documents,[]);
+    assert.equal(noMore.nextOffset,null);
+    // Page counts and rank are only based on accessible children, not the
+    // two hidden entries. The owner retains access to every child.
+    const ownerList=await f.rpc(owner.access_token,'tools/call',{name:'redion_list_child_pages',
+      arguments:{workspaceId:'ws_test',parentId:root,limit:10}});
+    assert.equal(ownerList.status,200);
+    assert.equal(JSON.parse(ownerList.data.result.content[0].text).documents.length,5);
   }finally{f.close();}
 });
