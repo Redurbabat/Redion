@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,mkdirSync,writeFileSync,rmSync,symlinkSync} from 'node:fs';
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync,symlinkSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
-import {pruefeStruktur,erstelleBaum,QUELLORDNER,LOKALE_BAUAUSGABEN} from '../skripte/ordnerstruktur.mts';
+import {pruefeStruktur,erstelleBaum,schreibeBericht,QUELLORDNER,LOKALE_BAUAUSGABEN} from '../skripte/ordnerstruktur.mts';
 
 const repo=resolve(import.meta.dirname,'..');
 
@@ -40,4 +40,24 @@ test('RED ION: Ordnerbaum zeigt Quellen und Ausgaben getrennt und ohne Geheimnis
 test('RED ION: maximal zulässige Baumtiefe wird geprüft',()=>{
   assert.throws(()=>erstelleBaum(repo,0),/Tiefe/);
   assert.throws(()=>erstelleBaum(repo,13),/Tiefe/);
+});
+
+
+test('RED ION: Bericht erzeugt nur eine lokale, wiederholbare Textübersicht',()=>{
+  const basis=mkdtempSync(join(tmpdir(),'redion-struktur-bericht-'));
+  try{
+    for(const teil of QUELLORDNER)mkdirSync(join(basis,teil),{recursive:true});
+    writeFileSync(join(basis,'.gitignore'),
+      LOKALE_BAUAUSGABEN.map(p=>'/'+p+'/').join('\n')+'\n');
+    writeFileSync(join(basis,'src/bereiche','demo.ts'),'const redion=1;\n');
+    assert.deepEqual(pruefeStruktur(basis),[]);
+    const bericht=schreibeBericht(basis,4);
+    assert.equal(bericht,join(basis,'build/struktur/PROJEKTBAUM.txt'));
+    const first=readFileSync(bericht,'utf8');
+    assert.match(first,/src\/ = TypeScript-Quelle/);
+    assert.match(first,/demo\.ts/);
+    assert.match(first,/build\//);
+    assert.equal(readFileSync(schreibeBericht(basis,4),'utf8'),first,
+      'Das eigene Ausgabeprotokoll darf den Ordnerbaum nicht verändern.');
+  }finally{rmSync(basis,{recursive:true,force:true});}
 });
