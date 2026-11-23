@@ -1417,3 +1417,78 @@ test('Cloud-MCP: Test-Datenbank rollt vollständige Batch-Schreibfehler zurück'
     assert.equal(await f.store.hole('saetze',{bereich:'ws_test',id:'rolled_back'}),null);
   }finally{f.close();}
 });
+
+
+test('Cloud-MCP: paginiert mehr als 40 Seitenblöcke ohne geheime IDs oder Reihenfolgeverlust',async()=>{
+  const f=await fixture();
+  try{
+    const ids=Array.from({length:52},(_,i)=>'paging_child_'+i);
+    const excluded=new Set([7,21,25,31]);
+    const content=[...ids,ids[30],'paging_missing'];
+    const put=async(id:string,data:Record<string,unknown>,seite='paging_page',encrypted=0,deleted=0)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify(data),verschluesselt:encrypted,seite,
+        version:5,geaendert:'2026-11-23',geloescht:deleted,vonGeraet:'Test'});
+    };
+    await put('paging_page',{type:'page',text:'Viele Blöcke',inhalt:'',content},'paging_page');
+    for(let i=0;i<ids.length;i++){
+      await put(ids[i]!,{type:'text',text:'Block '+i,parentId:i===25?'falscher_elternblock':'paging_page',
+        content:i===2?['paging_nested_visible','paging_nested_secret']:[]},
+        i===31?'andere_seite':'paging_page',i===7?1:0,i===21?1:0);
+    }
+    await put('paging_nested_visible',{type:'todo',text:'Verschachtelt',parentId:ids[2]});
+    await put('paging_nested_secret',{type:'text',text:'Geheim',parentId:ids[2]},
+      'paging_page',1);
+    const reader=await f.authorize(false);
+    const invoke=async(args:Record<string,unknown>,token=reader.access_token)=>{
+      const response=await f.rpc(token,'tools/call',{name:'redion_list_page_blocks',
+        arguments:{workspaceId:'ws_test',documentId:'paging_page',...args}});
+      assert.equal(response.status,200);
+      const result=response.data.result as {isError?:boolean;content:{text:string}[];structuredContent?:unknown};
+      const value=JSON.parse(result.content[0]!.text);
+      if(result.isError!==true)assert.deepEqual(result.structuredContent,value);
+      return {result,value};
+    };
+    const page=await f.rpc(reader.access_token,'tools/call',{name:'redion_read_page',
+      arguments:{workspaceId:'ws_test',documentId:'paging_page'}});
+    assert.equal(JSON.parse(page.data.result.content[0]!.text).markdown,'');
+    const legacy=await f.rpc(reader.access_token,'tools/call',{name:'redion_read_block',
+      arguments:{workspaceId:'ws_test',blockId:'paging_page'}});
+    assert.equal(JSON.parse(legacy.data.result.content[0]!.text).code,'too_large');
+
+    const all:string[]=[];
+    let next:number|null=0;
+    for(let pass=0;next!==null&&pass<10;pass++){
+      const {result,value}=await invoke({offset:next,limit:10,expectedVersion:5});
+      assert.notEqual(result.isError,true);
+      assert.equal(value.parentVersion,5);
+      assert.equal(value.blocks.length<=10,true);
+      all.push(...value.blocks.map((x:{blockId:string})=>x.blockId));
+      next=value.nextOffset;
+    }
+    assert.equal(next,null,'Paginierung muss enden');
+    assert.deepEqual(all,ids.filter((_,i)=>!excluded.has(i)));
+    assert.equal(all.length,48);
+    const nested=await invoke({parentBlockId:ids[2],limit:5,expectedVersion:5});
+    assert.deepEqual(nested.value.blocks.map((x:{blockId:string})=>x.blockId),
+      ['paging_nested_visible']);
+    assert.equal(nested.value.parentBlockId,ids[2]);
+    assert.equal(nested.value.nextOffset,null);
+    assert.equal((await invoke({offset:0,limit:100})).value.code,'invalid_arguments');
+    assert.equal((await invoke({expectedVersion:4})).value.code,'conflict');
+    assert.equal((await invoke({parentBlockId:'paging_nested_secret'})).value.code,'not_found');
+    assert.equal((await invoke({parentBlockId:ids[31]})).value.code,'not_found');
+    assert.equal((await invoke({parentBlockId:ids[2],expectedVersion:5})).result.isError,undefined);
+
+    await f.store.setze('konten',{id:'paging_reader',mail:'paging@example.test',
+      name:'Paging Reader',herkunft:'github',angelegt:'',gesperrt:0});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'paging_reader',
+      rolle:'lesen',von:'owner',wann:'2026-11-23'});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'paging_page',kontoId:'paging_reader',
+      rolle:'kein',von:'owner',wann:'2026-11-23'});
+    const deniedReader=await f.authorize(false,'paging_reader');
+    const denied=await invoke({},deniedReader.access_token);
+    assert.equal(denied.result.isError,true);
+    assert.equal(denied.value.code,'forbidden');
+  }finally{f.close();}
+});
