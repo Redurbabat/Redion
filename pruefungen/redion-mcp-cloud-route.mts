@@ -1753,10 +1753,10 @@ test('Cloud-MCP: Suche findet direkte lesbare Blöcke ohne Geheimdaten oder verw
         verschluesselt:0,seite:id,version:1,geaendert:time,geloescht:0,vonGeraet:'Test'});
     };
     const putBlock=async(id:string,page:string,parent:string,content:string,
-      encrypted=0,parentTable='block')=>{
+      encrypted=0,parentTable='block',children:string[]=[])=>{
       await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
         daten:JSON.stringify({type:'text',text:content,parentId:parent,
-          parentTable,alive:true}),
+          parentTable,alive:true,content:children}),
         verschluesselt:encrypted,seite:page,version:1,
         geaendert:'2026-11-23',geloescht:0,vonGeraet:'Test'});
     };
@@ -1793,9 +1793,19 @@ test('Cloud-MCP: Suche findet direkte lesbare Blöcke ohne Geheimdaten oder verw
     await putPage('block_nested_page',['nested_parent'],
       '2029-01-01T00:00:00Z');
     await putBlock('nested_parent','block_nested_page','block_nested_page',
-      'Elternblock');
+      'Elternblock',0,'block',['nested_child','nested_secret','nested_bad_parent','nested_cycle']);
     await putBlock('nested_child','block_nested_page','nested_parent',
-      'blocktreffer tief verschachtelt');
+      'blocktreffer tief verschachtelt',0,'block',['nested_grandchild']);
+    await putBlock('nested_grandchild','block_nested_page','nested_child',
+      'Mehrstufiger Stromkreis',0,'block',['nested_greatgrandchild']);
+    await putBlock('nested_greatgrandchild','block_nested_page','nested_grandchild',
+      'Fehlersuche Schweizer Elektroplan');
+    await putBlock('nested_secret','block_nested_page','nested_parent',
+      'blocktreffer geheim im Unterblock',1);
+    await putBlock('nested_bad_parent','block_nested_page','other_parent',
+      'blocktreffer falscher Unterblock');
+    await putBlock('nested_cycle','block_nested_page','nested_parent',
+      'Rundweg',0,'block',['nested_parent']);
 
     await f.store.setze('konten',{id:'search_visible_guest',
       mail:'search_visible@example.test',name:'Search Guest',
@@ -1830,7 +1840,15 @@ test('Cloud-MCP: Suche findet direkte lesbare Blöcke ohne Geheimdaten oder verw
     assert.deepEqual((await query('fremde Seite')).documents,[]);
     assert.deepEqual((await query('Datenbankspalte')).documents,[]);
     assert.deepEqual((await query('ohne Elternreferenz')).documents,[]);
-    // Nested search will be a separate hierarchy-aware feature.
-    assert.deepEqual((await query('tief verschachtelt')).documents,[]);
+    assert.deepEqual((await query('tief verschachtelt')).documents.map(x=>x.documentId),
+      ['block_nested_page']);
+    assert.deepEqual((await query('Mehrstufiger Stromkreis')).documents.map(x=>x.documentId),
+      ['block_nested_page']);
+    assert.deepEqual((await query('Schweizer Elektroplan')).documents.map(x=>x.documentId),
+      ['block_nested_page']);
+    assert.deepEqual((await query('geheim im Unterblock')).documents,[],
+      'Verschlüsselte verschachtelte Blöcke dürfen nicht durchsucht werden.');
+    assert.deepEqual((await query('falscher Unterblock')).documents,[],
+      'Ungültige Elternzuordnungen dürfen nicht durchsucht werden.');
   }finally{f.close();}
 });
