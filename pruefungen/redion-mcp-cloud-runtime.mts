@@ -130,9 +130,28 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
     assert.equal(cyclic.payload.code,'invalid_arguments');
     const readAfter=await invoke('redion_read_page',{workspaceId:'runtime-workspace',documentId:child});
     assert.equal(readAfter.payload.markdown,'Ausgang\nNachtrag');
+    const schematic=await invoke('redion_add_schematic',{
+      workspaceId:'runtime-workspace',documentId:rootA,
+      art:'installationsplan',titel:'Runtime Installationsplan',expectedVersion:1,
+      requestId:'runtime_schematic_0001'
+    });
+    assert.equal(schematic.res.isError,undefined);
+    const plan=await invoke('redion_read_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId
+    });
+    assert.equal(plan.res.isError,undefined);
+    assert.equal(plan.payload.plan.art,'installationsplan');
+    assert.deepEqual(plan.payload.plan.teile,[]);
+    const retry=await invoke('redion_add_schematic',{
+      workspaceId:'runtime-workspace',documentId:rootA,
+      art:'installationsplan',titel:'Runtime Installationsplan',expectedVersion:1,
+      requestId:'runtime_schematic_0001'
+    });
+    assert.equal(retry.payload.alreadyExists,true);
+
     await oauth.revokeGrant('runtime-owner',(await oauth.listGrants('runtime-owner'))[0]!.id);
     assert.equal((await fetcher(resource,{headers:{Authorization:'Bearer '+tokens.access_token}})).status,401);
-    assert.equal((await db.prepare('SELECT COUNT(*) n FROM saetze').first()).n,4);
+    assert.equal((await db.prepare('SELECT COUNT(*) n FROM saetze').first()).n,5);
     assert.deepEqual(outbound,[],'Keine ausgehenden Netzaufrufe');
   }finally{await Promise.allSettled([client?.close(),writer?.close()]);await mf.dispose();}
 });
