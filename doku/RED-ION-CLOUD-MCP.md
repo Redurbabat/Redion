@@ -269,3 +269,28 @@ die fachliche Prüfung eines Elektroinstallationsplans.
 Nach dem Cloudflare-Release muss die ChatGPT-Werkzeugliste aktualisiert werden;
 dieser Commit schaltet die Funktion nicht automatisch in bestehenden
 Connector-Bindungen frei.
+
+
+## Sichere Schaltplanerstellung über Cloud-MCP (Erweiterung 23.11.2026)
+
+'redion_add_schematic' erstellt ausschliesslich einen **leeren** nativen
+Schaltplanblock. Aufrufen mit 'workspaceId', 'documentId', 'expectedVersion'
+und 'art'; optional 'titel' (maximal 120 Zeichen) und 'requestId' (8–100
+Buchstaben/Zahlen, '_' oder '-'). Die zugelassenen Planarten stammen aus
+'src/bereiche/bloecke/arten/schaltplan.ts'. Die Funktion verwendet dieselbe
+atomare D1-Transaktion wie 'redion_add_block': erst wenn Block und
+Elternreferenz gemeinsam gespeichert werden können, ist die Erstellung
+erfolgreich. Ein identischer Wiederholungsaufruf ist idempotent.
+
+Die 'plan'-Daten enthalten die passende Blattgrösse und die drei nativen
+Ebenen 'plan', 'aufgabe', 'loesung'. Bauteile, Leitungen und Texte sind
+initial leer; die Funktion behauptet **keine** geprüfte Verdrahtung.
+Ein anschliessender Aufruf von 'redion_read_schematic' kann den
+Schaltplan auslesen. Schreiben ist nur mit aktivem OAuth-Scope
+'redion:write' und Seitenbearbeitungsrecht möglich. Eine neue Planart
+kann nicht über 'redion_add_block' an dessen Typensperre vorbei erzeugt
+werden.
+
+Wichtig: 'redion_update_schematic' (Bauteile und Leitungen bearbeiten)
+wird dadurch **nicht** implementiert. Vor produktiver Nutzung sind
+Deployment, Connector-Aktualisierung und ein Live-Test notwendig.
