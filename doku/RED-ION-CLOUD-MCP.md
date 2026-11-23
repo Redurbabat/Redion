@@ -245,3 +245,24 @@ Werkzeug verwenden.
 **Freigabe:** Neue Worker-Tools stehen im ChatGPT-Connector nicht automatisch
 nach GitHub-Merge oder Cloudflare-Build bereit. Erst nach Deployment,
 aktualisierter Toolliste und Live-Prüfung sind sie produktiv nutzbar.
+
+
+## Fachzeichen über Cloud-MCP (Erweiterung 23.11.2026)
+
+'redion_list_symbols' liefert die 131 eingebauten elektrotechnischen
+Fachzeichen mit ID, Name, Gruppe, Kennbuchstabe, Grösse und Anschlussnummern
+sowie deren Rasterkoordinaten. Die Filter 'gruppe' und 'suche' sind optional;
+ohne Filter wird der gesamte eingebaute Katalog ausgegeben. Die Gruppen
+'ch-schema' und 'ch-bauplan' umfassen die Schweizer Schemas und Bauplanzeichen
+einschliesslich Steckdosen Typ 13/23.
+
+Die Cloud-Liste ist ein read-only Snapshot des Registers
+'src/register/fachzeichen.ts'. Automatische Tests gleichen alle eingebauten
+Symbole samt Anschlusskoordinaten mit dem kanonischen Register ab.
+Gerätebezogene Symbolerweiterungen sind nicht enthalten. Die Zeichen sind
+für die Ausbildung gedacht und ersetzen weder geprüfte Normbibliotheken noch
+die fachliche Prüfung eines Elektroinstallationsplans.
+
+Nach dem Cloudflare-Release muss die ChatGPT-Werkzeugliste aktualisiert werden;
+dieser Commit schaltet die Funktion nicht automatisch in bestehenden
+Connector-Bindungen frei.
