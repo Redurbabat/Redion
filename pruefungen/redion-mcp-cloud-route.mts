@@ -138,7 +138,7 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       const transport=new StreamableHTTPClientTransport(new URL(origin+'/mcp/cloud'),{authProvider:provider,fetch:fetcher});
       await client.connect(transport);
       assert.equal(transport.sessionId,undefined);
-      const list=await client.listTools();assert.equal(list.tools.length,5);
+      const list=await client.listTools();assert.equal(list.tools.length,6);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
       assert.equal(JSON.parse(result.content[0].text).content,'Nur Testdaten');
       const denied=await client.callTool({name:'redion_create_page',arguments:{workspaceId:'ws_test',title:'Gesperrt',requestId:'sdk_request_01'}});
@@ -640,5 +640,66 @@ test('Cloud-MCP: Hauptseiten nach effektiven Rechten ohne versteckte Metadaten a
       arguments:{workspaceId:'not_granted'}});
     assert.equal(blocked.data.result.isError,true);
     assert.equal(JSON.parse(blocked.data.result.content[0].text).code,'forbidden');
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: mehrere Seiten mit neutralen Fehlern und begrenzter Antwort lesen',async()=>{
+  const f=await fixture();
+  try{
+    await f.store.setze('konten',{id:'batch_reader',mail:'batch@example.test',
+      name:'batch_reader',herkunft:'github',angelegt:'',gesperrt:0});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'batch_reader',
+      rolle:'lesen',von:'owner',wann:'2026-11-23'});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'secret_batch',
+      kontoId:'batch_reader',rolle:'kein',von:'owner',wann:'2026-11-23'});
+    const long='X'.repeat(1999)+'😀'+'END';
+    const record=async(id:string,title:string,body:string,encrypted=0)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify({type:'page',text:title,inhalt:body}),verschluesselt:encrypted,
+        seite:id,version:3,geaendert:'2026-11-23',geloescht:0,vonGeraet:'Test'});
+    };
+    await record('long_batch','Lange Notiz',long);
+    await record('ordinary_batch','Normal','sichtbar');
+    await record('secret_batch','Geheim','nicht zeigen');
+    await record('encrypted_batch','Verschlüsselt','niemals anzeigen',1);
+    await f.store.setze('saetze',{id:'bad_json_batch',bereich:'ws_test',tabelle:'blocks',
+      daten:'{broken',verschluesselt:0,seite:'bad_json_batch',version:1,
+      geaendert:'2026-11-23',geloescht:0,vonGeraet:'Test'});
+    const token=await f.authorize(false,'batch_reader');
+    const call=async(args:Record<string,unknown>)=>{
+      const response=await f.rpc(token.access_token,'tools/call',{name:'redion_read_pages',
+        arguments:{workspaceId:'ws_test',...args}});
+      assert.equal(response.status,200);
+      return response.data.result as {isError?:boolean;content:{text:string}[]};
+    };
+    const ids=['long_batch','ordinary_batch','secret_batch','encrypted_batch',
+      'missing_batch','bad_json_batch'];
+    const result=await call({documentIds:ids,maxChars:2000});
+    assert.notEqual(result.isError,true,JSON.stringify(result));
+    const parsed=JSON.parse(result.content[0].text);
+    assert.equal(parsed.workspaceId,'ws_test');
+    assert.deepEqual(parsed.documents.map((d:any)=>d.documentId),ids);
+    assert.equal(parsed.documents[0].content,'X'.repeat(1999)+'😀');
+    assert.equal(parsed.documents[0].totalLength,long.length);
+    assert.equal(parsed.documents[0].nextOffset,2001);
+    assert.equal(parsed.documents[0].version,3);
+    assert.equal(parsed.documents[1].content,'sichtbar');
+    assert.equal(parsed.documents[1].nextOffset,null);
+    for(const item of parsed.documents.slice(2))
+      assert.deepEqual(item,{documentId:item.documentId,unavailable:true});
+    const follow=await f.rpc(token.access_token,'tools/call',{name:'redion_read_page',
+      arguments:{workspaceId:'ws_test',documentId:'long_batch',offset:2001}});
+    assert.equal(JSON.parse(follow.data.result.content[0].text).content,'END');
+    const duplicates=await call({documentIds:['long_batch','long_batch']});
+    assert.equal(duplicates.isError,true);
+    assert.equal(JSON.parse(duplicates.content[0].text).code,'invalid_arguments');
+    const tooMany=await call({documentIds:Array.from({length:11},(_,i)=>'item_'+i)});
+    assert.equal(tooMany.isError,true);
+    const tooLarge=await call({documentIds:['long_batch'],maxChars:2001});
+    assert.equal(tooLarge.isError,true);
+    const noAccess=await f.rpc(token.access_token,'tools/call',{name:'redion_read_pages',
+      arguments:{workspaceId:'another_workspace',documentIds:['long_batch']}});
+    assert.equal(noAccess.data.result.isError,true);
   }finally{f.close();}
 });
