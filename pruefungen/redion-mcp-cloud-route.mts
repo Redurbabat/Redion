@@ -140,7 +140,7 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       assert.equal(transport.sessionId,undefined);
       const list=await client.listTools();assert.equal(list.tools.length,6);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
-      assert.equal(JSON.parse(result.content[0].text).content,'Nur Testdaten');
+      assert.equal(JSON.parse(result.content[0]!.text).content,'Nur Testdaten');
       const denied=await client.callTool({name:'redion_create_page',arguments:{workspaceId:'ws_test',title:'Gesperrt',requestId:'sdk_request_01'}});
       assert.equal(denied.isError,true);
       await client.close();
@@ -693,7 +693,7 @@ test('Cloud-MCP: mehrere Seiten mit neutralen Fehlern und begrenzter Antwort les
     assert.equal(JSON.parse(follow.data.result.content[0].text).content,'END');
     const duplicates=await call({documentIds:['long_batch','long_batch']});
     assert.equal(duplicates.isError,true);
-    assert.equal(JSON.parse(duplicates.content[0].text).code,'invalid_arguments');
+    assert.equal(JSON.parse(duplicates.content[0]!.text).code,'invalid_arguments');
     const tooMany=await call({documentIds:Array.from({length:11},(_,i)=>'item_'+i)});
     assert.equal(tooMany.isError,true);
     const tooLarge=await call({documentIds:['long_batch'],maxChars:2001});
