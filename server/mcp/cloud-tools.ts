@@ -146,6 +146,11 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       if(args.query!==undefined&&(typeof args.query!=='string'||args.query.length>200))
         return err('invalid_arguments','Suchtext muss ein Text mit höchstens 200 Zeichen sein.');
       const query=typeof args.query==='string'?args.query.trim():'';
+      // SQLite lower() handles ASCII but not general Unicode case folding.
+      // For non-ASCII terms, scan a bounded set and compare in JavaScript.
+      const unicodeTerm=/[^\x00-\x7f]/.test(query);
+      const sqlNeedle=unicodeTerm?'':query;
+      const foldedQuery=unicodeTerm?query.toLocaleLowerCase():'';
       const max=limit(args.limit,20,30);
       const offset=args.offset===undefined?0:args.offset;
       if(!Number.isSafeInteger(offset)||Number(offset)<0||Number(offset)>1000)
@@ -164,13 +169,16 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const batch=100,maxScanned=2000;
       let scanned=0,visible=0;
       while(scanned<maxScanned&&found.length<=max){
-        const result=await db.prepare(sql).bind(w,query,batch,scanned)
+        const result=await db.prepare(sql).bind(w,sqlNeedle,batch,scanned)
           .all<{id:string;seite:string|null;daten:string;version:number}>();
         for(const s of result.results){
           const r=await rolleAuf(ablage,w,String(s.seite||s.id),userId);
           if(!darf(r,'lesen'))continue;
-          if(visible++<Number(offset))continue;
+          // Unicode-aware comparison occurs ONLY after the ACL check.
           const data=JSON.parse(s.daten) as Record<string,unknown>;
+          if(unicodeTerm&&!String(data.text||'').toLocaleLowerCase().includes(foldedQuery)&&
+             !String(data.inhalt||'').toLocaleLowerCase().includes(foldedQuery))continue;
+          if(visible++<Number(offset))continue;
           found.push({documentId:s.id,title:String(data.text||'').slice(0,160),version:Number(s.version)||1});
           if(found.length>max)break;
         }
