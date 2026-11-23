@@ -1827,13 +1827,17 @@ test('Cloud-MCP: Suche findet direkte lesbare Blöcke ohne Geheimdaten oder verw
       };
     };
     const all=await query('blocktreffer');
-    assert.deepEqual(all.documents.map(x=>x.documentId),['block_visible_a','block_visible_b']);
+    assert.deepEqual(all.documents.map(x=>x.documentId),
+      ['block_visible_a','block_visible_b','block_nested_page']);
     const first=await query('BLOCKTREFFER',0,1);
     assert.deepEqual(first.documents.map(x=>x.documentId),['block_visible_a']);
     assert.equal(first.nextOffset,1);
     const second=await query('blocktreffer',1,1);
     assert.deepEqual(second.documents.map(x=>x.documentId),['block_visible_b']);
-    assert.equal(second.nextOffset,null);
+    assert.equal(second.nextOffset,2);
+    const third=await query('blocktreffer',2,1);
+    assert.deepEqual(third.documents.map(x=>x.documentId),['block_nested_page']);
+    assert.equal(third.nextOffset,null);
     assert.deepEqual((await query('brücke')).documents.map(x=>x.documentId),
       ['block_visible_a'],'Unicode-Suche muss direkte Blocktexte berücksichtigen');
     assert.deepEqual((await query('GEHEIM')).documents,[],
