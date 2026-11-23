@@ -313,9 +313,17 @@ Die drei unterstützten Operationen:
   'toComponentId', 'toTerminal' sowie optional 'layer'. Die Anschlussnamen
   werden gegen die wirklichen Klemmen des gespeicherten Symboltyps geprüft.
   Die Endpunkte berücksichtigen Drehung und Spiegelung. Zwischenpunkte
-  werden rechtwinklig gelegt. Automatische Kollisions- und elektrische
-  Prüfung ist **nicht** enthalten.
+  werden rechtwinklig gelegt. Neue Leitungen, die eine fremde Klemme oder
+  bestehende Leitung im selben Zeichen-Layer berühren, werden abgelehnt.
+  Das ist ein konservativer Schutz vor unbeabsichtigten Verbindungen,
+  **keine** vollständige Netz-, Kollisions- oder elektrische Sicherheitsprüfung.
 - 'add_label': 'labelId', 'labelText', 'x', 'y', optional 'layer'.
+- 'move_component': 'componentId', 'x', 'y'. Verschiebt **nur ein
+  unverbundenes** Bauteil; wenn eine Leitung eine Klemme bereits berührt,
+  wird die Aktion zurückgewiesen. Angeschlossene Bauteile ausschliesslich
+  im nativen Editor mit dessen Netzschutz verschieben.
+- 'move_label': 'labelId', 'x', 'y'. Verschiebt nur den Textanker, nicht
+  andere Zeichnungselemente.
 
 Jeder Aufruf schreibt genau einen vorhandenen Schaltplanblock und benötigt
 'redion:write' sowie Seitenbearbeitungsrecht. Die SQLite-Änderung ist an
