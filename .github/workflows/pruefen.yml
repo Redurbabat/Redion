@@ -97,6 +97,12 @@ jobs:
       - name: Typen prüfen
         run: npm run typecheck
 
+      # Quellen nicht umziehen: src/ ist kanonisch, quell/ muss offline
+      # startbar bleiben, und lokale Visual-/MCP-Pakete gehoeren nur nach
+      # build/. Keine privaten Sicherungen oder EXE-Dateien ins Repository.
+      - name: Ordnerstruktur und Bauausgabe-Grenzen prüfen
+        run: npm run test:struktur
+
       - name: Versionsnummer und Änderungsverlauf prüfen
         run: npm run version:pruefen
 

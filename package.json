@@ -7,6 +7,9 @@
   "scripts": {
     "bauen": "node bauen.mts",
     "pruefen": "node pruefungen/alle.mts",
+    "struktur:pruefen": "node skripte/ordnerstruktur.mts --pruefen",
+    "struktur:bericht": "node skripte/ordnerstruktur.mts --bericht",
+    "test:struktur": "node --test pruefungen/ordnerstruktur.test.mts",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.islands.json",
     "typecheck:mcp": "tsc -p windows/tsconfig.json --noEmit && tsc -p plugins/red-ion/tsconfig.json",
     "bauen:inseln": "node bauen-inseln.mts",
@@ -21,7 +24,7 @@
     "test:mcp": "node node_modules/typescript/bin/tsc -p windows/tsconfig.json && node --test pruefungen/redion-mcp-model.mts plugins/red-ion/tests/visual-frames.mts",
     "test:windows-mcp": "npm --prefix windows run prepare:app && npm --prefix plugins/red-ion run build && node plugins/red-ion/tests/electron.mts",
     "test:mcp-scripts": "npm --prefix plugins/red-ion run build && node --test plugins/red-ion/tests/windows-scripts.mts plugins/red-ion/tests/discovery.mts",
-    "test:mcp-cloud": "node --test pruefungen/redion-mcp-cloud-state.mts pruefungen/redion-mcp-cloud-oauth.mts pruefungen/redion-mcp-cloud-http.mts pruefungen/redion-mcp-cloud-route.mts pruefungen/redion-abgleich-tor.mts",
+    "test:mcp-cloud": "node --test pruefungen/redion-mcp-cloud-state.mts pruefungen/redion-mcp-cloud-oauth.mts pruefungen/redion-mcp-cloud-http.mts pruefungen/redion-mcp-cloud-route.mts pruefungen/redion-abgleich-tor.mts pruefungen/redion-mcp-cloud-page-tools.mts",
     "test:mcp-cloud-browser": "node --test pruefungen/redion-mcp-cloud-browser.mts",
     "test:mcp-cloud-runtime": "node --test pruefungen/redion-mcp-cloud-runtime.mts",
     "test:windows-ink": "npm --prefix windows run prepare:app && node pruefungen/windows-ink-studio.mts"

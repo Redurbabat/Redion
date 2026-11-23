@@ -56,6 +56,10 @@ const UEBERGANGEN = ['.git', 'node_modules', '.wrangler'];
 // expliziten, ignorierten Bauausgaben auslassen, nicht pauschal build/.
 const NATIVE_AUSGABEN = new Set(['build/windows-app', 'build/windows-dist', 'build/windows-ink-dist',
   'build/windows-mcp-dist', 'build/red-ion-plugin', 'build/mcp-install-test',
+  // Optionale lokale Ausgabeordner des Visual-Web- und MCP-Desktop-Vergleichs.
+  // Keine pauschale Freistellung von build/: neue JS-Quellen bleiben verboten.
+  'build/visual-web-emission', 'build/visual-web-merged',
+  'build/windows-visual-mcp-dist', 'build/struktur',
   'plugins/red-ion/server/dist', 'build/ios-capacitor', 'windows/generated', 'www']);
 
 const alleDateien = (ordner: string, gesammelt: string[] = []): string[] => {
