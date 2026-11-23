@@ -57,7 +57,7 @@ Redion/
     ├── red-ion-plugin/         # Paketierte lokale MCP-Erweiterung
     ├── visual-web-emission/    # OPTIONAL: Visual-Web-Vergleichsstand
     ├── visual-web-merged/      # OPTIONAL: zusammengeführter Visual-Web-Stand
-    ├── windows-visual-mcp-dist/# OPTIONAL: Windows/Visual-MCP-QA-Paket
+    ├── windows-visual-mcp-dist/ # OPTIONAL: Windows/Visual-MCP-QA-Paket
     └── struktur/               # Automatisch erzeugter Ordnerbaum
         └── PROJEKTBAUM.txt
 ```
