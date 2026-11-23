@@ -363,3 +363,36 @@ keine untergeordneten Block-IDs oder Treffer aus verbotenen Bereichen.
 Paginierung zählt nur lesbare Seiten. Nicht-ASCII-Begriffe werden
 nach Prüfung der Seitenrechte mit Unicode-Casefold verglichen.
 Verschlüsselte Inhalte werden niemals in der Cloud durchsucht.
+
+
+## Text- und Aufgabenblöcke sicher bearbeiten (23.11.2026)
+
+'redion_update_block' ändert **nur** bereits eingebettete, unverschlüsselte
+Text- und Aufgabenblöcke. Voraussetzungen: 'workspaceId', 'blockId',
+'expectedVersion' aus 'redion_read_block' und die gewünschte 'operation'.
+
+- 'set_text' mit 'text' bis 8'000 Zeichen. Unterstützt Text, H1/H2/H3,
+  Aufzählung, Nummerierung, Zitat, Code und Todo. Ein Todo-Titel darf
+  nicht leer sein.
+- 'set_checked' mit 'checked:true/false' ist ausschliesslich für Todo.
+- 'set_note' mit 'note' bis 2'000 Zeichen ist ausschliesslich für Todo.
+- 'set_due_date' mit 'dueDate' (gültiges JJJJ-MM-TT-Datum), leerer Wert
+  entfernt das Datum aus der Aufgabenansicht.
+
+Alle anderen Felder der jeweiligen Operation werden verweigert; ein
+rohes JSON-Update ist **nicht** möglich. Geprüft werden der OAuth-Scope
+'redion:write', die Seitenberechtigung zum Bearbeiten sowie die tatsächlich
+gespeicherte Elternkette. Jeder Vorfahr muss den Kindblock in seiner
+'content'-Liste referenzieren, im selben Arbeitsbereich/auf derselben
+Seite liegen, nicht verschlüsselt oder gelöscht sein und schliesslich
+in der echten Seite enden. Verwaiste bzw. ausgegliederte Blöcke und
+Datenbankzeilen werden nicht direkt bearbeitet.
+
+Ein SQLite-Update erhöht die Blockversion nur, wenn sie mit
+'expectedVersion' übereinstimmt; bei gleichzeitiger Änderung muss
+der Client den Block erneut lesen. Eine unveränderte Operation gibt
+das Feld 'unchanged:true' mit
+unveränderter Version. Die Elternseite wird nicht überschrieben.
+Die Funktion ist **keine** Bearbeitung von Schaltplänen, Tabellenzellen
+oder privaten verschlüsselten Blöcken. Produktionsbereitstellung und
+Connector-Aktualisierung bleiben separate Schritte.
