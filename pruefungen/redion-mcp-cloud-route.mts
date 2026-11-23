@@ -1614,3 +1614,126 @@ test('Cloud-MCP: ein nativer Schaltplan wird atomar, sicher und wiederholbar ers
     assert.equal(all.length,3,'Ein Fehler darf keinen verwaisten Schaltplan speichern.');
   }finally{f.close();}
 });
+
+
+test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und atomare Versionen',async()=>{
+  const f=await fixture();
+  try{
+    const writer=await f.authorize(true);
+    const readOnly=await f.authorize(false);
+    await f.store.setze('saetze',{id:'edit_schematic_page',bereich:'ws_test',tabelle:'blocks',
+      daten:JSON.stringify({type:'page',text:'Elektro',inhalt:'',content:[]}),
+      verschluesselt:0,seite:'edit_schematic_page',version:1,geaendert:'2026-11-23',
+      geloescht:0,vonGeraet:'Test'});
+    const call=async(name:string,params:Record<string,unknown>,token=writer.access_token)=>{
+      const response=await f.rpc(token,'tools/call',{name,
+        arguments:{workspaceId:'ws_test',...params}});
+      assert.equal(response.status,200);
+      const reply=response.data.result as {isError?:boolean;content:{text:string}[]};
+      return {reply,data:JSON.parse(reply.content[0]!.text)};
+    };
+    const created=await call('redion_add_schematic',{documentId:'edit_schematic_page',
+      art:'stromlauf-aufgeloest',expectedVersion:1,requestId:'schematic_edit_0001'});
+    assert.notEqual(created.reply.isError,true);
+    const blockId=created.data.blockId;
+    const update=async(fields:Record<string,unknown>,token?:string)=>
+      call('redion_update_schematic',{blockId,...fields},token);
+    const denied=await update({expectedVersion:1,operation:'add_component',
+      componentId:'S1',symbolId:'taster-schliesser',x:100,y:100},readOnly.access_token);
+    assert.equal(denied.reply.isError,true);
+    assert.equal(denied.data.code,'forbidden');
+
+    const first=await update({expectedVersion:1,operation:'add_component',
+      componentId:'S1',symbolId:'taster-schliesser',x:100,y:100,bmk:'S1'});
+    assert.notEqual(first.reply.isError,true);
+    assert.equal(first.data.version,2);
+    assert.equal(first.data.elementType,'component');
+    assert.equal(first.data.electricalValidation,false);
+    const second=await update({expectedVersion:2,operation:'add_component',
+      componentId:'P1',symbolId:'bp-sonnerie',x:320,y:100,bmk:'P1'});
+    assert.equal(second.data.version,3);
+    const wire=await update({expectedVersion:3,operation:'connect_terminals',
+      wireId:'L1',fromComponentId:'S1',fromTerminal:'3',
+      toComponentId:'P1',toTerminal:'X1'});
+    assert.notEqual(wire.reply.isError,true);
+    assert.equal(wire.data.version,4);
+    assert.equal(wire.data.routingVerified,false);
+    const label=await update({expectedVersion:4,operation:'add_label',
+      labelId:'T1',labelText:'Nur Schulungszwecke',x:100,y:300,layer:'aufgabe'});
+    assert.equal(label.data.version,5);
+    const read=await call('redion_read_schematic',{blockId});
+    assert.equal(read.data.version,5);
+    assert.equal(read.data.plan.teile.length,2);
+    assert.equal(read.data.plan.teile[0].zeichen,'taster-schliesser');
+    assert.equal(read.data.plan.teile[0].drehung,0);
+    assert.equal(read.data.plan.teile[1].zeichen,'bp-sonnerie');
+    assert.deepEqual(read.data.plan.leitungen[0].punkte,[{x:120,y:100},{x:350,y:100}]);
+    assert.equal(read.data.plan.leitungen[0].vonNr,'3');
+    assert.equal(read.data.plan.leitungen[0].nachNr,'X1');
+    assert.equal(read.data.plan.texte[0].t,'Nur Schulungszwecke');
+    assert.equal(read.data.plan.texte[0].ebene,'aufgabe');
+
+    const bad=[
+      {expectedVersion:4,operation:'add_component',componentId:'OLD',symbolId:'schliesser',x:100,y:100,code:'conflict'},
+      {expectedVersion:5,operation:'add_component',componentId:'B1',symbolId:'nicht-vorhanden',x:100,y:100},
+      {expectedVersion:5,operation:'add_component',componentId:'S1',symbolId:'schliesser',x:100,y:100},
+      {expectedVersion:5,operation:'add_component',componentId:'B2',symbolId:'schliesser',x:103,y:100},
+      {expectedVersion:5,operation:'add_component',componentId:'B3',symbolId:'schliesser',x:800,y:700},
+      {expectedVersion:5,operation:'connect_terminals',wireId:'W2',
+        fromComponentId:'S1',fromTerminal:'falsch',toComponentId:'P1',toTerminal:'X1'},
+      {expectedVersion:5,operation:'connect_terminals',wireId:'W3',
+        fromComponentId:'S1',fromTerminal:'3',toComponentId:'P1',toTerminal:'X1'},
+      {expectedVersion:5,operation:'connect_terminals',wireId:'W4',
+        fromComponentId:'S1',fromTerminal:'3',toComponentId:'P1',toTerminal:'X1',bmk:'bad'},
+      {expectedVersion:5,operation:'add_label',labelId:'T2',labelText:'',x:100,y:100},
+      {expectedVersion:5,operation:'add_label',labelId:'T3',labelText:'Test',x:100,y:100,layer:'fremd'}
+    ];
+    for(const params of bad){
+      const failed=await update(params);
+      assert.equal(failed.reply.isError,true,JSON.stringify(params));
+      assert.equal(failed.data.code,params.code??'invalid_arguments',JSON.stringify(params));
+    }
+    assert.equal((await call('redion_read_schematic',{blockId})).data.version,5);
+    const two=await Promise.all([
+      update({expectedVersion:5,operation:'add_label',labelId:'T4',
+        labelText:'Parallel 1',x:100,y:340}),
+      update({expectedVersion:5,operation:'add_label',labelId:'T5',
+        labelText:'Parallel 2',x:100,y:360})
+    ]);
+    assert.equal(two.filter(x=>x.reply.isError!==true).length,1);
+    assert.equal(two.filter(x=>x.data.code==='conflict').length,1);
+    const after=await call('redion_read_schematic',{blockId});
+    assert.equal(after.data.version,6);
+    assert.equal(after.data.plan.texte.length,2);
+    assert.equal(new Set(after.data.plan.texte.map((x:any)=>x.id)).size,2);
+
+    await f.store.setze('saetze',{id:'encrypted_schematic',bereich:'ws_test',tabelle:'blocks',
+      daten:JSON.stringify({type:'schaltplan',plan:after.data.plan}),
+      verschluesselt:1,seite:'edit_schematic_page',version:1,geaendert:'2026-11-23',
+      geloescht:0,vonGeraet:'Test'});
+    const encrypted=await update({blockId:'encrypted_schematic',expectedVersion:1,
+      operation:'add_label',labelId:'H1',labelText:'Geheim',x:100,y:100});
+    assert.equal(encrypted.reply.isError,true);
+    assert.equal(encrypted.data.code,'encrypted');
+    const outside=await update({workspaceId:'not_approved',expectedVersion:6,
+      operation:'add_label',labelId:'H2',labelText:'Fremd',x:100,y:100});
+    assert.equal(outside.reply.isError,true);
+    assert.equal(outside.data.code,'forbidden');
+    const notSchematic=await update({blockId:'edit_schematic_page',expectedVersion:2,
+      operation:'add_label',labelId:'H3',labelText:'Falsch',x:100,y:100});
+    assert.equal(notSchematic.reply.isError,true);
+    assert.equal(notSchematic.data.code,'not_found');
+
+    await f.store.setze('konten',{id:'schematic_guest',mail:'schematic@example.test',
+      name:'Schematic Guest',herkunft:'github',angelegt:'',gesperrt:0});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'schematic_guest',
+      rolle:'edit',von:'owner',wann:'2026-11-23'});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'edit_schematic_page',
+      kontoId:'schematic_guest',rolle:'kein',von:'owner',wann:'2026-11-23'});
+    const guest=await f.authorize(true,'schematic_guest');
+    const blocked=await update({expectedVersion:6,operation:'add_label',
+      labelId:'H4',labelText:'Unberechtigt',x:100,y:100},guest.access_token);
+    assert.equal(blocked.reply.isError,true);
+    assert.equal(blocked.data.code,'forbidden');
+  }finally{f.close();}
+});
