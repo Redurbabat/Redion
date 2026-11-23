@@ -183,6 +183,46 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
     });
     assert.equal(staleEdit.res.isError,true);
     assert.equal(staleEdit.payload.code,'conflict');
+    const connectedMove=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:4,operation:'move_component',
+      componentId:'runtime_P1',x:160,y:160
+    });
+    assert.equal(connectedMove.res.isError,true);
+    assert.equal(connectedMove.payload.code,'invalid_arguments');
+    const extraPart=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:4,operation:'add_component',
+      componentId:'runtime_free',symbolId:'bp-sonnerie',x:650,y:300
+    });
+    assert.equal(extraPart.res.isError,undefined);
+    assert.equal(extraPart.payload.version,5);
+    const moved=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:5,operation:'move_component',
+      componentId:'runtime_free',x:700,y:340
+    });
+    assert.equal(moved.res.isError,undefined);
+    assert.equal(moved.payload.version,6);
+    const label=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:6,operation:'add_label',
+      labelId:'runtime_label',labelText:'Schulungsplan',x:700,y:400
+    });
+    assert.equal(label.res.isError,undefined);
+    const movedLabel=await invoke('redion_update_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId,
+      expectedVersion:7,operation:'move_label',labelId:'runtime_label',x:700,y:450
+    });
+    assert.equal(movedLabel.res.isError,undefined);
+    const finalSchematic=await invoke('redion_read_schematic',{
+      workspaceId:'runtime-workspace',blockId:schematic.payload.blockId
+    });
+    assert.equal(finalSchematic.payload.version,8);
+    assert.equal(finalSchematic.payload.plan.teile.find((p:any)=>p.id==='runtime_free').x,700);
+    assert.equal(finalSchematic.payload.plan.texte.find((p:any)=>p.id==='runtime_label').y,450);
+    assert.deepEqual(finalSchematic.payload.plan.leitungen,updatedPlan.payload.plan.leitungen);
+
 
 
     await oauth.revokeGrant('runtime-owner',(await oauth.listGrants('runtime-owner'))[0]!.id);
