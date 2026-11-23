@@ -4,6 +4,7 @@ import {visibleCloudTools} from '../server/mcp/cloud-tools.ts';
 import type {McpPrincipal} from '../server/mcp/oauth.ts';
 import {readFileSync} from 'node:fs';
 import {BUILTIN_BLOCK_TYPES} from '../server/mcp/block-catalog.ts';
+import {BUILTIN_SYMBOLS} from '../server/mcp/symbol-catalog.ts';
 
 const principal=(scopes:('redion:read'|'redion:write'|'redion:images')[]):McpPrincipal=>({
   userId:'test-user',clientId:'test-client',grantId:'test-grant',workspaceIds:['test-workspace'],scopes
@@ -80,6 +81,12 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
   assert.deepEqual(tasks?.inputSchema.properties.nurOffen,{type:'boolean'});
   assert.deepEqual(tasks?.inputSchema.properties.offset,{type:'integer',minimum:0,maximum:1000});
   assert.equal(tasks?.annotations?.readOnlyHint,true);
+  const symbols=write.find(x=>x.name==='redion_list_symbols');
+  assert.ok(names(read).includes('redion_list_symbols'));
+  assert.equal(symbols?.annotations?.readOnlyHint,true);
+  assert.deepEqual(symbols?.inputSchema.properties,{
+    gruppe:{type:'string',maxLength:40},suche:{type:'string',maxLength:80}
+  });
   const types=write.find(x=>x.name==='redion_list_block_types');
   assert.ok(names(read).includes('redion_list_block_types'));
   assert.deepEqual(types?.inputSchema.properties,{});
@@ -146,4 +153,29 @@ test('Cloud MCP: der statische Blockkatalog stimmt mit dem Redion-Register über
   assert.deepEqual(BUILTIN_BLOCK_TYPES,expected);
   assert.equal(BUILTIN_BLOCK_TYPES.some(x=>x.id==='a-del'),false);
   assert.ok(BUILTIN_BLOCK_TYPES.some(x=>x.id==='schaltplan'));
+});
+
+
+test('Cloud MCP: Fachzeichen-Metadaten stimmen mit dem kanonischen App-Register überein',()=>{
+  const source=readFileSync(new URL('../src/register/fachzeichen.ts',import.meta.url),'utf8');
+  const lines=source.split('\n');
+  const indices:number[]=[];
+  const symbolLine=/^\s*id:\s*'[^']+',\s*name:\s*'[^']+',\s*gruppe:\s*'[^']+',\s*kennbuchstabe:\s*'[^']*'/;
+  for(let i=0;i<lines.length;i++)if(symbolLine.test(lines[i]!))indices.push(i);
+  const expected=indices.map((start,index)=>{
+    const body=lines.slice(start,indices[index+1]??lines.length).join('\n');
+    const m=lines[start]!.match(/id:\s*'([^']+)',\s*name:\s*'([^']+)',\s*gruppe:\s*'([^']+)',\s*kennbuchstabe:\s*'([^']*)'/);
+    const size=body.match(/^\s*w:\s*(\d+),\s*h:\s*(\d+)/m);
+    const terminals=body.match(/^\s*anschluesse:\s*\[([^\]]*)\]/m);
+    assert.ok(m&&size&&terminals,'Metadaten fehlen bei Zeile '+(start+1));
+    const anschluesse=[...terminals[1]!.matchAll(
+      /\{\s*nr:\s*'([^']*)',\s*x:\s*(-?\d+),\s*y:\s*(-?\d+)\s*\}/g
+    )].map(a=>({nr:a[1]!,x:Number(a[2]),y:Number(a[3])}));
+    assert.equal(anschluesse.length,(terminals[1]!.match(/nr:\s*'/g)??[]).length);
+    return {id:m[1]!,name:m[2]!,gruppe:m[3]!,kennbuchstabe:m[4]!,
+      w:Number(size[1]),h:Number(size[2]),anschluesse};
+  });
+  assert.equal(expected.length,131);
+  assert.equal(new Set(expected.map(s=>s.id)).size,expected.length);
+  assert.deepEqual(BUILTIN_SYMBOLS,expected);
 });
