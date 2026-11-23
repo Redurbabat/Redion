@@ -31,8 +31,8 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{},additionalProperties:false}},
   {name:'redion_search',description:'Sucht nach freigegebenen, nicht verschlüsselten Seiten.',
     inputSchema:{type:'object',properties:{...workspace,query:{type:'string',maxLength:200},limit:{type:'integer',minimum:1,maximum:30},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
-  {name:'redion_read_page',description:'Liest maximal 12.000 Zeichen einer freigegebenen Klartext-Seite. expectedVersion aus der ersten Antwort beim Nachladen mitsenden, damit Abschnitte nicht aus unterschiedlichen Versionen stammen.',
-    inputSchema:{type:'object',properties:{...workspace,...documentId,offset:{type:'integer',minimum:0},limit:{type:'integer',minimum:1,maximum:12000},expectedVersion:{type:'integer',minimum:1}},required:['workspaceId','documentId'],additionalProperties:false}},
+  {name:'redion_read_page',description:'Liest eine Klartext-Seite abschnittsweise. Der Seiteninhalt kommt standardmässig in markdown (nicht im MCP-Transportfeld content). Für alte Clients kann responseFormat=legacy die bisherige content-Antwort zurückgeben. expectedVersion schützt gegen gemischte Versionen.',
+    inputSchema:{type:'object',properties:{...workspace,...documentId,offset:{type:'integer',minimum:0},limit:{type:'integer',minimum:1,maximum:12000},expectedVersion:{type:'integer',minimum:1},responseFormat:{type:'string',enum:['portable','legacy']}},required:['workspaceId','documentId'],additionalProperties:false}},
   {name:'redion_get_page_path',description:'Zeigt den Pfad einer lesbaren Seite von der Hauptseite bis zum Dokument. Wenn ein Vorfahr nicht lesbar ist, werden keine Pfadteile offengelegt.',
     inputSchema:{type:'object',properties:{...workspace,...documentId},required:['workspaceId','documentId'],additionalProperties:false}},
   {name:'redion_read_pages',description:'Liest bis zu 10 Seiten auf einmal, maximal 2.000 Zeichen pro Seite. Unzugängliche IDs werden einheitlich als nicht verfügbar markiert.',
@@ -144,8 +144,12 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     return {documentId:id,version:changed.version};
   };
   return async(name:string,args:Args):Promise<unknown>=>{
+    // Nicht vorhandene Werkzeugnamen sind keine verweigerte OAuth-Freigabe.
+    // Ein App-Connector kann eine ältere Tool-Liste zwischenspeichern.
+    if(!CLOUD_TOOLS.some(t=>t.name===name))
+      return err('unknown_tool','Dieses Werkzeug ist im Cloud-MCP nicht implementiert. Bitte die aktuelle Werkzeugliste neu laden.');
     if(!visibleCloudTools(principal).some(t=>t.name===name))
-      return err('forbidden','Dieses Werkzeug ist nicht freigegeben.');
+      return err('forbidden','Für dieses Werkzeug fehlen die erforderlichen OAuth-Rechte.');
     if(name==='redion_list_workspaces'){
       const visible=[];
       for(const id of principal.workspaceIds.slice(0,20)){
@@ -405,9 +409,17 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       let end=Math.min(full.length,start+max);
       const last=full.charCodeAt(end-1),next=full.charCodeAt(end);
       if(end<full.length&&last>=0xD800&&last<=0xDBFF&&next>=0xDC00&&next<=0xDFFF)end++;
-      return {documentId:id,workspaceId:w,title:String(result.data.text||''),
-        content:full.slice(start,end),version:Number(result.s.version)||1,
-        offset:start,totalLength:full.length,nextOffset:end<full.length?end:null};
+      const base={documentId:id,workspaceId:w,title:String(result.data.text||''),
+        version:Number(result.s.version)||1,offset:start,totalLength:full.length,
+        nextOffset:end<full.length?end:null};
+      const part=full.slice(start,end);
+      // Some ChatGPT app adapters interpret a top-level "content" property
+      // as the MCP transport envelope and silently drop the tool result.
+      // Use an unambiguous field name by default; keep an explicit legacy
+      // response for existing consumers that expect .content.
+      if(args.responseFormat!==undefined&&args.responseFormat!=='portable'&&args.responseFormat!=='legacy')
+        return err('invalid_arguments','Unbekanntes Seiten-Antwortformat.');
+      return args.responseFormat==='legacy'?{...base,content:part}:{...base,markdown:part};
     }
     if(name==='redion_list_child_pages'||name==='redion_list_root_pages'){
       const root=name==='redion_list_root_pages';

@@ -136,7 +136,12 @@ export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,access
         return rpcError(id,-32602,'Ungültige Argumente.');
       try{
         const result=await createCloudActions(ablage,db,principal)(name,args as Record<string,unknown>);
-        return rpc(id,{content:[{type:'text',text:JSON.stringify(result)}]});
+        // Keep the classic text content for older MCP clients, and expose a
+        // standard structuredContent object for adapters which consume
+        // structured tool output. Never use the tool's document payload as
+        // the protocol-level content array.
+        return rpc(id,{content:[{type:'text',text:JSON.stringify(result)}],
+          structuredContent:result});
       }catch(error){
         if(error instanceof CloudMcpToolError)
           return rpc(id,{isError:true,content:[{type:'text',text:JSON.stringify({code:error.reason,message:error.message})}]});
