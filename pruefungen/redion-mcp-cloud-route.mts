@@ -188,7 +188,7 @@ test('Cloud-MCP: nur Lesen, danach Schreiben mit Rollen- und Versionskontrolle',
     assert.equal(JSON.parse(retry.data.result.content[0].text).alreadyExists,true);
     const readBack=await f.rpc(write.access_token,'tools/call',{name:'redion_read_page',arguments:{
       workspaceId:'ws_test',documentId:first.documentId}});
-    assert.equal(JSON.parse(readBack.data.result.content[0].text).content,'Ein Testtext');
+    assert.equal(JSON.parse(readBack.data.result.content[0].text).markdown,'Ein Testtext');
     const edited=await f.rpc(write.access_token,'tools/call',{name:'redion_replace_text',arguments:{
       workspaceId:'ws_test',documentId:first.documentId,find:'Testtext',replacement:'geprüfter Inhalt',expectedVersion:1}});
     assert.equal(JSON.parse(edited.data.result.content[0].text).version,2);
@@ -250,7 +250,7 @@ test('Cloud-MCP: Unterseiten, Anhängen, Verschieben und Schutzregeln über HTTP
     const appended=await ok(write.access_token,'redion_append_content',args(child.documentId,{content:'Zweiter Satz',expectedVersion:1}));
     assert.equal(appended.version,2);
     const content=await ok(write.access_token,'redion_read_page',args(child.documentId));
-    assert.equal(content.content,'Erster Satz\nZweiter Satz');
+    assert.equal(content.markdown,'Erster Satz\nZweiter Satz');
     await denied(write.access_token,'redion_append_content',args(child.documentId,{content:'Veraltet',expectedVersion:1}),'conflict');
     await denied(write.access_token,'redion_move_page',args(child.documentId,{newParentId:grandchild.documentId,expectedVersion:2}),'invalid_arguments');
     await denied(write.access_token,'redion_move_page',args(child.documentId,{newParentId:child.documentId,expectedVersion:2}),'invalid_arguments');
