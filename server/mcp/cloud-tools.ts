@@ -9,7 +9,7 @@ import {rolleAuf,darf,notieren} from '../kern.ts';
 
 type Db=McpDatabase;
 type Args=Record<string,unknown>;
-type ToolDef={name:string;description:string;inputSchema:{type:'object';properties:Record<string,unknown>;required?:string[];additionalProperties:boolean}};
+type ToolDef={name:string;description:string;inputSchema:{type:'object';properties:Record<string,unknown>;required?:string[];additionalProperties:boolean};annotations?:{title:string;readOnlyHint:boolean;destructiveHint:boolean;idempotentHint:boolean;openWorldHint:boolean}};
 export class CloudMcpToolError extends Error {
   readonly reason:string;
   constructor(reason:string, message:string){super(message);this.reason=reason;}
@@ -51,7 +51,31 @@ export const CLOUD_TOOLS:ToolDef[]=[
       required:['workspaceId','documentId','find','replacement','expectedVersion'],additionalProperties:false}}
 ];
 const writeNames=new Set(['redion_create_page','redion_update_page','redion_replace_text','redion_append_content','redion_move_page']);
-export const visibleCloudTools=(p:McpPrincipal)=>CLOUD_TOOLS.filter(t=>!writeNames.has(t.name)||p.scopes.includes('redion:write'));
+// MCP annotations tell AI clients which tools are read-only, additive or
+// modifying. They are advisory; server-side OAuth and ACL checks still govern.
+const toolTitles:Record<string,string>={
+  redion_list_workspaces:'Bereiche auflisten',
+  redion_search:'Seiten und Inhalte suchen',
+  redion_read_page:'Seite lesen',
+  redion_create_page:'Seite erstellen',
+  redion_update_page:'Seitentitel ändern',
+  redion_list_child_pages:'Unterseiten auflisten',
+  redion_append_content:'Inhalt anhängen',
+  redion_move_page:'Seite verschieben',
+  redion_replace_text:'Text ersetzen'
+};
+const destructiveNames=new Set(['redion_update_page','redion_move_page','redion_replace_text']);
+export const visibleCloudTools=(p:McpPrincipal):ToolDef[]=>
+  CLOUD_TOOLS.filter(t=>!writeNames.has(t.name)||p.scopes.includes('redion:write'))
+    .map(t=>{
+      const readOnly=!writeNames.has(t.name);
+      return {...t,annotations:{
+        title:toolTitles[t.name]||t.name,readOnlyHint:readOnly,
+        destructiveHint:destructiveNames.has(t.name),
+        idempotentHint:t.name==='redion_create_page',
+        openWorldHint:false
+      }};
+    });
 
 export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
   const userId=principal.userId;
@@ -138,7 +162,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         "ELSE 0 END ORDER BY geaendert DESC,id DESC LIMIT ?3 OFFSET ?4";
       const found:{documentId:string;title:string;version:number}[]=[];
       const batch=100,maxScanned=2000;
-      let scanned=0,visible=0,exhausted=false;
+      let scanned=0,visible=0;
       while(scanned<maxScanned&&found.length<=max){
         const result=await db.prepare(sql).bind(w,query,batch,scanned)
           .all<{id:string;seite:string|null;daten:string;version:number}>();
@@ -151,10 +175,11 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
           if(found.length>max)break;
         }
         scanned+=result.results.length;
-        if(result.results.length<batch){exhausted=true;break;}
+        if(result.results.length<batch)break;
       }
-      return {documents:found.slice(0,max),nextOffset:found.length>max?Number(offset)+max:null,
-        ...(scanned>=maxScanned&&!exhausted&&found.length<=max?{limited:true}:{})};
+      // No raw-row truncation marker: that could disclose the existence of
+      // content that the caller is explicitly forbidden to read.
+      return {documents:found.slice(0,max),nextOffset:found.length>max?Number(offset)+max:null};
     }
     if(name==='redion_read_page'){
       const id=required(args.documentId,128);
