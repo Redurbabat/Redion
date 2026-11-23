@@ -2,6 +2,10 @@
 
 **Stand: 3. August 2026**
 
+**Aktueller Ordnerplan (23. November 2026):** [Quellcode, erzeugtes JavaScript,
+lokale Build-Ausgaben und MCP-Plattformen](ORDNER-UND-BUILD-STRUKTUR.md).
+Die bestehenden Schichten und Offline-Einstiegspfade bleiben erhalten.
+
 Diese Datei beantwortet drei Fragen: **wo liegt was**, **wer darf wen rufen**,
 und **wo trage ich etwas Neues ein**. Wer sie gelesen hat, kann eine
 Blockart, eine Ansicht oder einen ganzen Bereich hinzufügen, ohne zu raten.
