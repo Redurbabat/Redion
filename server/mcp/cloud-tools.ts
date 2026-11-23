@@ -690,7 +690,9 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       if(end<full.length&&last>=0xD800&&last<=0xDBFF&&next>=0xDC00&&next<=0xDFFF)end++;
       const base={documentId:id,workspaceId:w,title:String(result.data.text||''),
         version:Number(result.s.version)||1,offset:start,totalLength:full.length,
-        nextOffset:end<full.length?end:null};
+        nextOffset:end<full.length?end:null,
+        // Structural hint only: do not reveal the number or IDs of hidden children.
+        blockStorage:Array.isArray(result.data.content)?'referenced':'none'};
       const part=full.slice(start,end);
       // Some ChatGPT app adapters interpret a top-level "content" property
       // as the MCP transport envelope and silently drop the tool result.
