@@ -1808,6 +1808,35 @@ test('Cloud-MCP: Suche findet direkte lesbare Blöcke ohne Geheimdaten oder verw
       'blocktreffer falscher Unterblock');
     await putBlock('nested_cycle','block_nested_page','nested_parent',
       'Rundweg',0,'block',['nested_parent']);
+    await putBlock('nested_grandchild_private','block_nested_page','nested_child',
+      'Versteckter Vorfahr',1,'block',['nested_private_leaf']);
+    await putBlock('nested_private_leaf','block_nested_page','nested_grandchild_private',
+      'Nicht finden trotz Klartext');
+    await putBlock('nested_crosspage','foreign_nested_page','nested_child',
+      'Nicht finden fremde Wurzel');
+    await putBlock('nested_unicode','block_nested_page','nested_child',
+      'Überprüfung der Lüftungsanlage');
+    await putBlock('nested_deleted','block_nested_page','nested_parent',
+      'Nicht finden gelöschten Block',0,'block',['nested_deleted_leaf']);
+    const deleted=await f.store.hole('saetze',{bereich:'ws_test',id:'nested_deleted'});
+    assert.ok(deleted);
+    await f.store.setze('saetze',{...deleted,geloescht:1});
+    await putBlock('nested_deleted_leaf','block_nested_page','nested_deleted',
+      'Nicht finden hinter Löschung');
+    const root=await f.store.hole('saetze',{bereich:'ws_test',id:'block_nested_page'});
+    assert.ok(root);
+    const parent=await f.store.hole('saetze',{bereich:'ws_test',id:'nested_parent'});
+    assert.ok(parent);
+    const child=await f.store.hole('saetze',{bereich:'ws_test',id:'nested_child'});
+    assert.ok(child);
+    await f.store.setze('saetze',{...root,
+      daten:JSON.stringify({...JSON.parse(root.daten),content:['nested_parent','nested_deleted']})});
+    await f.store.setze('saetze',{...parent,
+      daten:JSON.stringify({...JSON.parse(parent.daten),
+        content:['nested_child','nested_secret','nested_bad_parent','nested_cycle','nested_deleted']})});
+    await f.store.setze('saetze',{...child,
+      daten:JSON.stringify({...JSON.parse(child.daten),
+        content:['nested_grandchild','nested_grandchild_private','nested_crosspage','nested_unicode']})});
 
     await f.store.setze('konten',{id:'search_visible_guest',
       mail:'search_visible@example.test',name:'Search Guest',
@@ -1858,5 +1887,15 @@ test('Cloud-MCP: Suche findet direkte lesbare Blöcke ohne Geheimdaten oder verw
       'Ungültige Elternzuordnungen dürfen nicht durchsucht werden.');
     assert.deepEqual((await query('Hier nicht finden nach Tiefenlimit')).documents,[],
       'Die verschachtelte Suche muss eine feste maximale Tiefe einhalten.');
+    assert.deepEqual((await query('LÜFTUNGSANLAGE')).documents.map(x=>x.documentId),
+      ['block_nested_page'],'Unicode-Casefold muss auch tief verschachtelte Blöcke treffen.');
+    assert.deepEqual((await query('Nicht finden trotz Klartext')).documents,[],
+      'Klartext hinter einem verschlüsselten Elternblock darf nicht durchsuchbar sein.');
+    assert.deepEqual((await query('Nicht finden fremde Wurzel')).documents,[],
+      'Kindblöcke mit abweichender seite dürfen nicht als Treffer erscheinen.');
+    assert.deepEqual((await query('Nicht finden hinter Löschung')).documents,[],
+      'Klartext hinter einem gelöschten Elternblock darf nicht gefunden werden.');
+    assert.deepEqual((await query('Nicht finden gelöschten Block')).documents,[],
+      'Auch der gelöschte Elternblock selbst muss unsichtbar bleiben.');
   }finally{f.close();}
 });
