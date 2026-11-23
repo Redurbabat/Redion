@@ -5,6 +5,7 @@ import type {McpPrincipal} from '../server/mcp/oauth.ts';
 import {readFileSync} from 'node:fs';
 import {BUILTIN_BLOCK_TYPES} from '../server/mcp/block-catalog.ts';
 import {BUILTIN_SYMBOLS} from '../server/mcp/symbol-catalog.ts';
+import {editSchematic} from '../server/mcp/schematic-edit.ts';
 
 const principal=(scopes:('redion:read'|'redion:write'|'redion:images')[]):McpPrincipal=>({
   userId:'test-user',clientId:'test-client',grantId:'test-grant',workspaceIds:['test-workspace'],scopes
@@ -202,4 +203,58 @@ test('Cloud MCP: Fachzeichen-Metadaten stimmen mit dem kanonischen App-Register 
   assert.equal(expected.length,131);
   assert.equal(new Set(expected.map(s=>s.id)).size,expected.length);
   assert.deepEqual(BUILTIN_SYMBOLS,expected);
+});
+
+
+test('Cloud MCP: native Schaltpläne verschieben nur unverbundene Bauteile ohne Netzänderung',()=>{
+  const base={art:'stromlauf-aufgeloest',breite:800,hoehe:700,
+    teile:[] as any[],leitungen:[] as any[],texte:[] as any[],
+    ebenen:[{id:'plan',name:'Plan',farbe:'var(--text)',sichtbar:true},
+      {id:'aufgabe',name:'Aufgabe',farbe:'#c2410c',sichtbar:true},
+      {id:'loesung',name:'Lösung',farbe:'#15803d',sichtbar:true}]};
+  const invoke=(raw:unknown,operation:string,params:Record<string,unknown>)=>
+    editSchematic(raw,{workspaceId:'ws_test',blockId:'schematic_unit',
+      expectedVersion:1,operation,...params}).plan as typeof base;
+  const add=(raw:unknown,componentId:string,x:number,y:number)=>
+    invoke(raw,'add_component',{componentId,symbolId:'bp-sonnerie',x,y});
+  let plan=add(base,'A',100,100);
+  plan=add(plan,'B',300,100);
+  const wirePlan=invoke(plan,'connect_terminals',{
+    wireId:'wire_a_b',fromComponentId:'A',fromTerminal:'X1',
+    toComponentId:'B',toTerminal:'X1'});
+  assert.deepEqual(wirePlan.leitungen[0].punkte,[{x:130,y:100},{x:330,y:100}]);
+  assert.throws(()=>invoke(wirePlan,'move_component',{componentId:'A',x:160,y:180}),
+    /Leitungsanschlüsse/);
+  const c=add(wirePlan,'C',200,0);
+  const d=add(c,'D',200,240);
+  assert.throws(()=>invoke(d,'connect_terminals',{
+    wireId:'would_cross',fromComponentId:'C',fromTerminal:'X2',
+    toComponentId:'D',toTerminal:'X1'}),/kreuzt oder berührt/);
+  assert.throws(()=>add(d,'on_wire',200,100),/berührt eine vorhandene Leitung/);
+  assert.throws(()=>invoke(d,'move_component',{componentId:'C',x:200,y:100}),
+    /berührt eine vorhandene Leitung/);
+  const moved=invoke(d,'move_component',{componentId:'C',x:240,y:360});
+  assert.equal(moved.teile.find(x=>x.id==='C')?.x,240);
+  assert.equal(moved.teile.find(x=>x.id==='C')?.y,360);
+  assert.deepEqual(moved.leitungen,wirePlan.leitungen,
+    'Bestehende Leitungskoordinaten dürfen beim Verschieben nicht verändert werden.');
+  assert.deepEqual(d.teile.find(x=>x.id==='C')?.y,0,
+    'Alte Planversion darf nicht mutieren.');
+  assert.throws(()=>invoke(moved,'move_component',{componentId:'C',x:240,y:360}),
+    /unverändert/);
+  assert.throws(()=>invoke(moved,'move_component',{componentId:'C',x:791,y:10}),
+    /Raster/);
+  assert.throws(()=>invoke(moved,'move_component',{componentId:'C',x:780,y:650}),
+    /ausserhalb des Planblatts/);
+  const labelled=invoke(moved,'add_label',{
+    labelId:'label_01',labelText:'Vor der Prüfung prüfen',x:100,y:300});
+  const labelMoved=invoke(labelled,'move_label',{labelId:'label_01',x:150,y:330});
+  assert.deepEqual(labelMoved.texte,[{id:'label_01',x:150,y:330,
+    t:'Vor der Prüfung prüfen',ebene:'plan'}]);
+  assert.deepEqual(labelled.texte[0],{id:'label_01',x:100,y:300,
+    t:'Vor der Prüfung prüfen',ebene:'plan'});
+  assert.throws(()=>invoke(labelMoved,'move_label',{
+    labelId:'label_01',x:150,y:330}),/unverändert/);
+  assert.throws(()=>invoke(labelMoved,'move_label',{
+    labelId:'missing',x:150,y:330}),/existiert nicht/);
 });
