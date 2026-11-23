@@ -45,6 +45,14 @@ name = "red-ion"
 main = "worker.ts"
 compatibility_date = "2025-04-01"
 
+# PR-/Branch-Vorschauen nutzen bewusst KEINE produktiven Bindungen.
+# Cloudflare Workers Previews erben weder DB noch Secrets oder vars aus
+# der Produktion. Ohne eigene Test-D1 bleibt Cloud-MCP im Preview bei 503
+# und private Bereiche geschlossen; das ist sicherer als die produktive
+# Datenbank in einem von aussen erreichbaren PR-Preview freizugeben.
+# Keine neuen Datenbanken, R2-Buckets oder kostenpflichtigen Dienste anlegen.
+previews = { }
+
 [assets]
 directory = "./"
 binding = "ASSETS"
