@@ -486,16 +486,37 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const offset=args.offset===undefined?0:args.offset;
       if(!Number.isSafeInteger(offset)||Number(offset)<0||Number(offset)>1000)
         return err('invalid_arguments','Ungültiger Suchversatz.');
-      // Search title AND content in the full D1 page index, not merely the
-      // 300 newest records. instr() treats %, _ and \ as literal characters.
-      // CASE protects against malformed or encrypted JSON in the store.
-      const sql="SELECT id,seite,daten,version FROM saetze "+
-        "WHERE bereich=?1 AND tabelle='blocks' AND geloescht=0 AND verschluesselt=0 "+
-        "AND CASE WHEN json_valid(daten) THEN "+
-        "(json_extract(daten,'$.type')='page' AND ("+
-        "?2='' OR instr(lower(COALESCE(json_extract(daten,'$.text'),'')),lower(?2))>0 "+
-        "OR instr(lower(COALESCE(json_extract(daten,'$.inhalt'),'')),lower(?2))>0)) "+
-        "ELSE 0 END ORDER BY geaendert DESC,id DESC LIMIT ?3 OFFSET ?4";
+      // A block belongs to the page only when it appears in that page's
+      // ordered content list AND its parentId and owning seite match.
+      // Collection rows, encrypted/removed blocks and stray references are
+      // never searchable. This intentionally covers direct page children;
+      // nested block search requires a separate bounded hierarchy walk.
+      const childArray="json_each(CASE WHEN json_valid(p.daten) AND "+
+        "json_type(p.daten,'$.content')='array' THEN "+
+        "json_extract(p.daten,'$.content') ELSE '[]' END) ref";
+      const childJoin=childArray+" JOIN saetze child ON "+
+        "child.bereich=p.bereich AND child.id=ref.value";
+      const childVisible="ref.type='text' AND length(ref.value) BETWEEN 1 AND 128 "+
+        "AND child.tabelle='blocks' AND child.geloescht=0 AND child.verschluesselt=0 "+
+        "AND child.seite=p.id AND CASE WHEN json_valid(child.daten) THEN "+
+        "(json_extract(child.daten,'$.parentId')=p.id AND "+
+        "COALESCE(json_extract(child.daten,'$.parentTable'),'')<>'collection' AND "+
+        "COALESCE(json_extract(child.daten,'$.alive'),1)<>0 AND "+
+        "json_extract(child.daten,'$.type') NOT IN ('page','database')) ELSE 0 END";
+      const childMatches="EXISTS (SELECT 1 FROM "+childJoin+" WHERE "+
+        childVisible+" AND instr(lower(COALESCE(json_extract(child.daten,'$.text'),'')),lower(?2))>0)";
+      // SQLite lower() folds ASCII only. Keep the Unicode JS fallback, but
+      // check child text only AFTER checking the page ACL.
+      const sql="SELECT p.id,p.seite,p.daten,p.version FROM saetze p "+
+        "WHERE p.bereich=?1 AND p.tabelle='blocks' AND p.geloescht=0 AND p.verschluesselt=0 "+
+        "AND CASE WHEN json_valid(p.daten) THEN "+
+        "(json_extract(p.daten,'$.type')='page' AND ("+
+        "?2='' OR instr(lower(COALESCE(json_extract(p.daten,'$.text'),'')),lower(?2))>0 "+
+        "OR instr(lower(COALESCE(json_extract(p.daten,'$.inhalt'),'')),lower(?2))>0 "+
+        "OR "+childMatches+")) ELSE 0 END "+
+        "ORDER BY p.geaendert DESC,p.id DESC LIMIT ?3 OFFSET ?4";
+      const unicodeChildrenSql="SELECT child.daten FROM saetze p CROSS JOIN "+
+        childJoin+" WHERE p.bereich=?1 AND p.id=?2 AND "+childVisible+" LIMIT 5000";
       const found:{documentId:string;title:string;version:number}[]=[];
       const batch=100,maxScanned=2000;
       let scanned=0,visible=0;
@@ -508,7 +529,18 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
           // Unicode-aware comparison occurs ONLY after the ACL check.
           const data=JSON.parse(s.daten) as Record<string,unknown>;
           if(unicodeTerm&&!String(data.text||'').toLocaleLowerCase().includes(foldedQuery)&&
-             !String(data.inhalt||'').toLocaleLowerCase().includes(foldedQuery))continue;
+             !String(data.inhalt||'').toLocaleLowerCase().includes(foldedQuery)){
+            const children=await db.prepare(unicodeChildrenSql).bind(w,s.id)
+              .all<{daten:string}>();
+            const matched=children.results.some(child=>{
+              try{
+                const row=JSON.parse(child.daten) as Record<string,unknown>;
+                return typeof row.text==='string'&&
+                  row.text.toLocaleLowerCase().includes(foldedQuery);
+              }catch{return false;}
+            });
+            if(!matched)continue;
+          }
           if(visible++<Number(offset))continue;
           found.push({documentId:s.id,title:String(data.text||'').slice(0,160),version:Number(s.version)||1});
           if(found.length>max)break;
