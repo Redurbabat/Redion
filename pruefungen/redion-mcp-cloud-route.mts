@@ -1799,7 +1799,9 @@ test('Cloud-MCP: Suche findet direkte lesbare Blöcke ohne Geheimdaten oder verw
     await putBlock('nested_grandchild','block_nested_page','nested_child',
       'Mehrstufiger Stromkreis',0,'block',['nested_greatgrandchild']);
     await putBlock('nested_greatgrandchild','block_nested_page','nested_grandchild',
-      'Fehlersuche Schweizer Elektroplan');
+      'Fehlersuche Schweizer Elektroplan',0,'block',['nested_too_deep']);
+    await putBlock('nested_too_deep','block_nested_page','nested_greatgrandchild',
+      'Hier nicht finden nach Tiefenlimit');
     await putBlock('nested_secret','block_nested_page','nested_parent',
       'blocktreffer geheim im Unterblock',1);
     await putBlock('nested_bad_parent','block_nested_page','other_parent',
@@ -1850,5 +1852,7 @@ test('Cloud-MCP: Suche findet direkte lesbare Blöcke ohne Geheimdaten oder verw
       'Verschlüsselte verschachtelte Blöcke dürfen nicht durchsucht werden.');
     assert.deepEqual((await query('falscher Unterblock')).documents,[],
       'Ungültige Elternzuordnungen dürfen nicht durchsucht werden.');
+    assert.deepEqual((await query('Hier nicht finden nach Tiefenlimit')).documents,[],
+      'Die verschachtelte Suche muss eine feste maximale Tiefe einhalten.');
   }finally{f.close();}
 });
