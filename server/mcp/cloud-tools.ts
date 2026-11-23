@@ -6,6 +6,7 @@ import type {Ablage} from '../typen.ts';
 import type {McpPrincipal} from './oauth.ts';
 import type {McpDatabase} from './state.ts';
 import {rolleAuf,darf,notieren,feldRechte} from '../kern.ts';
+import {BUILTIN_BLOCK_TYPES} from './block-catalog.ts';
 
 type Db=McpDatabase;
 type Args=Record<string,unknown>;
@@ -44,6 +45,11 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_update_page',description:'Ändert den Seitentitel nur bei passender expectedVersion.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,title:nameField,expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId','title','expectedVersion'],additionalProperties:false}},
+  {name:'redion_list_block_types',description:'Listet eingebaute benannte Blockarten der RED-ION-App, inklusive intern gespeicherter Arten. Gerätebezogene Plugins sind nicht enthalten.',
+    inputSchema:{type:'object',properties:{},additionalProperties:false}},
+  {name:'redion_list_tasks',description:'Listet lesbare Aufgaben aus Todo-Blöcken und aus Datenbankzeilen mit sichtbaren Status- oder Checkbox-Spalten. Nur sichtbare Treffer zählen bei der Paginierung.',
+    inputSchema:{type:'object',properties:{...workspace,nurOffen:{type:'boolean'},
+      limit:{type:'integer',minimum:1,maximum:40},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
   {name:'redion_read_database',description:'Liest freigegebene Datenbankspalten und paginierte Zeilen. Spaltenrechte werden auf Schema und Werte angewendet.',
     inputSchema:{type:'object',properties:{...workspace,databaseId:idField,limit:{type:'integer',minimum:1,maximum:10},
       offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId','databaseId'],additionalProperties:false}},
@@ -75,6 +81,8 @@ const toolTitles:Record<string,string>={
   redion_update_page:'Seitentitel ändern',
   redion_list_databases:'Datenbanken auflisten',
   redion_read_database:'Datenbank lesen',
+  redion_list_tasks:'Aufgaben auflisten',
+  redion_list_block_types:'Blockarten auflisten',
   redion_list_root_pages:'Hauptseiten auflisten',
   redion_list_child_pages:'Unterseiten auflisten',
   redion_append_content:'Inhalt anhängen',
@@ -150,6 +158,10 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       return err('unknown_tool','Dieses Werkzeug ist im Cloud-MCP nicht implementiert. Bitte die aktuelle Werkzeugliste neu laden.');
     if(!visibleCloudTools(principal).some(t=>t.name===name))
       return err('forbidden','Für dieses Werkzeug fehlen die erforderlichen OAuth-Rechte.');
+    if(name==='redion_list_block_types'){
+      return {blockTypes:BUILTIN_BLOCK_TYPES,total:BUILTIN_BLOCK_TYPES.length,
+        externalExtensionsIncluded:false};
+    }
     if(name==='redion_list_workspaces'){
       const visible=[];
       for(const id of principal.workspaceIds.slice(0,20)){
@@ -162,6 +174,128 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     }
     const w=required(args.workspaceId,128);
     const area=await inScope(w);
+    if(name==='redion_list_tasks'){
+      if(args.nurOffen!==undefined&&typeof args.nurOffen!=='boolean')
+        return err('invalid_arguments','nurOffen muss true oder false sein.');
+      const max=limit(args.limit,30,40);
+      const offset=args.offset===undefined?0:args.offset;
+      if(!Number.isSafeInteger(offset)||Number(offset)<0||Number(offset)>1000)
+        return err('invalid_arguments','Ungültiger Aufgabenversatz.');
+      type Task={taskId:string;title:string;fertig:boolean;art:'block'|'zeile';
+        pageId?:string;databaseId?:string;databaseName?:string;status?:string;
+        faellig?:string;version:number;sort:string};
+      const tasks:Task[]=[];
+      const isDone=(value:string)=>/erledigt|fertig|done|abgeschlossen|completed/i.test(value);
+      const asValue=(value:unknown):unknown=>{
+        if(value&&typeof value==='object'&&!Array.isArray(value)){
+          const v=value as Record<string,unknown>;
+          return v.name??v.value??v.status??value;
+        }
+        return value;
+      };
+      const isChecked=(value:unknown)=>value===true||value===1||value==='true';
+      // The sync adapter stores the actual containing page in s.seite for
+      // todo blocks. Check the page itself, never infer permission from the
+      // mere existence of a raw block in D1.
+      const todos=await db.prepare(
+        "SELECT id,seite,daten,version,geaendert FROM saetze "+
+        "WHERE bereich=?1 AND tabelle='blocks' AND geloescht=0 AND verschluesselt=0 "+
+        "AND CASE WHEN json_valid(daten) THEN json_extract(daten,'$.type')='todo' ELSE 0 END "+
+        "ORDER BY geaendert DESC,id DESC LIMIT 1500"
+      ).bind(w).all<{id:string;seite:string|null;daten:string;version:number;geaendert:string}>();
+      for(const entry of todos.results){
+        if(!entry.seite)continue;
+        try{await page(w,String(entry.seite),'lesen');}
+        catch(error){if(error instanceof CloudMcpToolError)continue;throw error;}
+        const data=JSON.parse(entry.daten) as Record<string,unknown>;
+        if(data.archiviert===true||data.alive===false||typeof data.text!=='string'||!data.text.trim())continue;
+        const fertig=isChecked(data.checked);
+        if(args.nurOffen===true&&fertig)continue;
+        tasks.push({taskId:entry.id,title:data.text.slice(0,250),fertig,art:'block',
+          pageId:String(entry.seite),version:Number(entry.version)||1,sort:String(entry.geaendert||'')});
+      }
+      // Collection rows are only tasks when the collection has a readable
+      // checkbox/status field and a readable embedding page. The collection's
+      // sync "seite" is its own ID, not an authorization to read its rows.
+      type Collection={id:string;name:string;statusKey?:string|undefined;checkboxKey?:string|undefined;
+        dateKey?:string|undefined;titleVisible:boolean};
+      const collections=new Map<string,Collection>();
+      const collectionRows=await db.prepare(
+        "SELECT id,daten FROM saetze WHERE bereich=?1 AND tabelle='collections' "+
+        "AND geloescht=0 AND verschluesselt=0 AND json_valid(daten) "+
+        "ORDER BY geaendert DESC,id DESC LIMIT 120"
+      ).bind(w).all<{id:string;daten:string}>();
+      for(const entry of collectionRows.results){
+        let info:Record<string,unknown>;
+        try{info=JSON.parse(entry.daten) as Record<string,unknown>;}catch{continue;}
+        if(!info.schema||typeof info.schema!=='object'||Array.isArray(info.schema))continue;
+        const schema=info.schema as Record<string,unknown>;
+        const rights=await feldRechte(ablage,w,entry.id,userId);
+        const columns=Object.entries(schema).map(([key,def])=>{
+          const d=def&&typeof def==='object'&&!Array.isArray(def)?def as Record<string,unknown>:{};
+          return {key,type:String(d.type||''),name:String(d.name||key),options:d.options};
+        });
+        const valid=(key:string)=>rights[key]!=='kein';
+        const status=columns.find(c=>valid(c.key)&&c.type==='status')||
+          columns.find(c=>valid(c.key)&&c.type==='select'&&Array.isArray(c.options)&&
+            c.options.some((o:unknown)=>o&&typeof o==='object'&&
+              isDone(String((o as Record<string,unknown>).name||''))));
+        const checked=columns.find(c=>valid(c.key)&&c.type==='checkbox');
+        if(!status&&!checked)continue;
+        const links=await db.prepare(
+          "SELECT seite FROM saetze WHERE bereich=?1 AND tabelle='blocks' "+
+          "AND geloescht=0 AND verschluesselt=0 AND CASE WHEN json_valid(daten) THEN "+
+          "(json_extract(daten,'$.type')='database' AND "+
+          "json_extract(daten,'$.collectionId')=?2) ELSE 0 END LIMIT 64"
+        ).bind(w,entry.id).all<{seite:string|null}>();
+        let accessible=false;
+        for(const link of links.results){
+          if(!link.seite)continue;
+          try{await page(w,String(link.seite),'lesen');accessible=true;break;}
+          catch(error){if(!(error instanceof CloudMcpToolError))throw error;}
+        }
+        if(!accessible)continue;
+        const titleKey=columns.find(c=>c.type==='title')?.key||'title';
+        collections.set(entry.id,{id:entry.id,name:String(info.name||'Datenbank').slice(0,160),
+          statusKey:status?.key,checkboxKey:checked?.key,
+          dateKey:columns.find(c=>valid(c.key)&&c.type==='date')?.key,
+          titleVisible:rights[titleKey]!=='kein'});
+      }
+      if(collections.size>0){
+        const rows=await db.prepare(
+          "SELECT id,seite,daten,version,geaendert FROM saetze "+
+          "WHERE bereich=?1 AND tabelle='blocks' AND geloescht=0 AND verschluesselt=0 "+
+          "AND CASE WHEN json_valid(daten) THEN "+
+          "(json_extract(daten,'$.type')='page' AND "+
+          "json_extract(daten,'$.parentTable')='collection') ELSE 0 END "+
+          "ORDER BY geaendert DESC,id DESC LIMIT 2000"
+        ).bind(w).all<{id:string;seite:string|null;daten:string;version:number;geaendert:string}>();
+        for(const entry of rows.results){
+          const info=JSON.parse(entry.daten) as Record<string,unknown>;
+          const c=collections.get(String(info.parentId||''));
+          if(!c||info.archiviert===true||info.alive===false)continue;
+          try{await page(w,entry.id,'lesen');}
+          catch(error){if(error instanceof CloudMcpToolError)continue;throw error;}
+          const props=info.props&&typeof info.props==='object'&&!Array.isArray(info.props)?
+            info.props as Record<string,unknown>:{};
+          const statusValue=c.statusKey?asValue(props[c.statusKey]):'';
+          const status=statusValue==null?'':typeof statusValue==='string'||typeof statusValue==='number'?
+            String(statusValue):'';
+          const fertig=c.checkboxKey?isChecked(asValue(props[c.checkboxKey])):isDone(status);
+          if(args.nurOffen===true&&fertig)continue;
+          const due=c.dateKey?asValue(props[c.dateKey]):null;
+          tasks.push({taskId:entry.id,title:c.titleVisible?String(info.text||'').slice(0,250):'',
+            fertig,art:'zeile',databaseId:c.id,databaseName:c.name,
+            ...(c.statusKey?{status:status.slice(0,100)}:{}),
+            ...(typeof due==='string'&&due.length<=40?{faellig:due}:{}),
+            version:Number(entry.version)||1,sort:String(entry.geaendert||'')});
+        }
+      }
+      tasks.sort((a,b)=>b.sort.localeCompare(a.sort)||b.taskId.localeCompare(a.taskId));
+      return {workspaceId:w,tasks:tasks.slice(Number(offset),Number(offset)+max)
+        .map(({sort,...rest})=>rest),
+        nextOffset:tasks.length>Number(offset)+max?Number(offset)+max:null};
+    }
     if(name==='redion_search'){
       await role(w,'*','lesen');
       if(args.query!==undefined&&(typeof args.query!=='string'||args.query.length>200))
