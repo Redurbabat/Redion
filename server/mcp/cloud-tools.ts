@@ -32,7 +32,7 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_search',description:'Sucht nach freigegebenen, nicht verschlüsselten Seiten.',
     inputSchema:{type:'object',properties:{...workspace,query:{type:'string',maxLength:200},limit:{type:'integer',minimum:1,maximum:30},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
   {name:'redion_read_page',description:'Liest maximal 12.000 Zeichen einer freigegebenen Klartext-Seite. Bei nextOffset weitere Abschnitte nachladen; Offset zählt UTF-16-Codeeinheiten.',
-    inputSchema:{type:'object',properties:{...workspace,...documentId,offset:{type:'integer',minimum:0,maximum:1000000},limit:{type:'integer',minimum:1,maximum:12000}},required:['workspaceId','documentId'],additionalProperties:false}},
+    inputSchema:{type:'object',properties:{...workspace,...documentId,offset:{type:'integer',minimum:0},limit:{type:'integer',minimum:1,maximum:12000}},required:['workspaceId','documentId'],additionalProperties:false}},
   {name:'redion_create_page',description:'Legt eine Seite an. requestId verhindert doppelte Erstellung bei Wiederholung.',
     inputSchema:{type:'object',properties:{...workspace,title:nameField,content:{type:'string',maxLength:12000},parentId:idField,requestId:{type:'string',minLength:8,maxLength:100}},
       required:['workspaceId','title','requestId'],additionalProperties:false}},
@@ -193,7 +193,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const id=required(args.documentId,128);
       const result=await page(w,id,'lesen');
       const offset=args.offset===undefined?0:args.offset;
-      if(!Number.isSafeInteger(offset)||Number(offset)<0||Number(offset)>1000000)
+      if(!Number.isSafeInteger(offset)||Number(offset)<0)
         return err('invalid_arguments','Ungültiger Leseversatz.');
       const max=limit(args.limit,12000,12000);
       const full=String(result.data.inhalt||'');
