@@ -1,0 +1,43 @@
+# Einmalige, branchgebundene Regeneration aus den echten TypeScript-Quellen.
+# Keine Cloudflare-Credentials, kein Deployment und keine Produktiondaten.
+name: RED ION Live Sync – Build-Dateien nachziehen
+
+on:
+  push:
+    branches:
+      - feat/live-sync-iphone-windows-20261123
+    paths:
+      - '.github/workflows/live-sync-regenerate.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-generated:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Abhängigkeiten installieren
+        run: npm install --no-audit --no-fund --ignore-scripts
+      - name: TypeScript und Serviceworker neu bauen
+        run: npm run bauen:ts
+      - name: Einzeldatei neu erzeugen
+        run: npm run bauen
+      - name: Nur erzeugte, bereits versionierte App-Dateien übernehmen
+        run: |
+          git add -u -- src/dienst/sw.ts src/kern/einstellung/stand.ts quell/kern/einstellung/stand.js sw.js redion-einzeldatei.html
+          git diff --cached --stat
+          if git diff --cached --quiet; then
+            echo "Keine generierten Unterschiede."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "build(sync): regenerate service worker and standalone app"
+          git push origin HEAD:refs/heads/feat/live-sync-iphone-windows-20261123
