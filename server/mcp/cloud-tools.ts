@@ -47,6 +47,8 @@ export const CLOUD_TOOLS:ToolDef[]=[
       required:['workspaceId','documentId','title','expectedVersion'],additionalProperties:false}},
   {name:'redion_read_block',description:'Liest einen unverschlüsselten RED-ION-Block mit Seitenberechtigungen und sichtbaren Kindblöcken. Datenbankzeilen nur über redion_read_database lesen.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField},required:['workspaceId','blockId'],additionalProperties:false}},
+  {name:'redion_read_schematic',description:'Liest einen vorhandenen Schaltplan-Block mit geprüften Seitenrechten. Bauteile, Leitungen, Beschriftungen und Planversion sind enthalten.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField},required:['workspaceId','blockId'],additionalProperties:false}},
   {name:'redion_list_block_types',description:'Listet eingebaute benannte Blockarten der RED-ION-App, inklusive intern gespeicherter Arten. Gerätebezogene Plugins sind nicht enthalten.',
     inputSchema:{type:'object',properties:{},additionalProperties:false}},
   {name:'redion_list_tasks',description:'Listet lesbare Aufgaben aus Todo-Blöcken und aus Datenbankzeilen mit sichtbaren Status- oder Checkbox-Spalten. Nur sichtbare Treffer zählen bei der Paginierung.',
@@ -86,6 +88,7 @@ const toolTitles:Record<string,string>={
   redion_list_tasks:'Aufgaben auflisten',
   redion_list_block_types:'Blockarten auflisten',
   redion_read_block:'Block lesen',
+  redion_read_schematic:'Schaltplan lesen',
   redion_list_root_pages:'Hauptseiten auflisten',
   redion_list_child_pages:'Unterseiten auflisten',
   redion_append_content:'Inhalt anhängen',
@@ -177,7 +180,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     }
     const w=required(args.workspaceId,128);
     const area=await inScope(w);
-    if(name==='redion_read_block'){
+    if(name==='redion_read_block'||name==='redion_read_schematic'){
       const id=required(args.blockId,128);
       const s=await ablage.hole('saetze',{bereich:w,id});
       if(!s||s.tabelle!=='blocks'||s.geloescht||s.verschluesselt)
@@ -216,6 +219,18 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       // No unfiltered nested IDs, including non-standard "children" arrays.
       const sanitized={...data,content:visibleChildren};
       if('children' in sanitized)delete sanitized.children;
+      if(name==='redion_read_schematic'){
+        if(data.type!=='schaltplan'||!data.plan||typeof data.plan!=='object'||Array.isArray(data.plan))
+          return err('not_found','Schaltplan nicht verfügbar.');
+        const plan=data.plan as Record<string,unknown>;
+        const payload=JSON.stringify(plan);
+        if(payload.length>32000)return err('too_large','Schaltplan ist für einen Aufruf zu gross.');
+        return {workspaceId:w,blockId:id,documentId:pageId,
+          version:Number(s.version)||1,plan,
+          teile:Array.isArray(plan.teile)?plan.teile:[],
+          leitungen:Array.isArray(plan.leitungen)?plan.leitungen:[],
+          texte:Array.isArray(plan.texte)?plan.texte:[]};
+      }
       const payload=JSON.stringify(sanitized);
       if(payload.length>12000)return err('too_large','Blockdaten sind zu gross.');
       return {workspaceId:w,blockId:id,documentId:pageId,
