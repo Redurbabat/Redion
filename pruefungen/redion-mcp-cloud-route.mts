@@ -267,3 +267,74 @@ test('Cloud-MCP: Unterseiten, Anhängen, Verschieben und Schutzregeln über HTTP
     await denied(write.access_token,'redion_list_child_pages',{workspaceId:'ws_test',parentId:'encrypted_child'},'encrypted');
   }finally{f.close();}
 });
+
+
+test('Cloud-MCP: Unterseiten mit Offset über mehr als 1.000 fremde Einträge paginieren',async()=>{
+  const f=await fixture();
+  try{
+    const token=await f.authorize(true);
+    const created=await f.rpc(token.access_token,'tools/call',{name:'redion_create_page',arguments:{
+      workspaceId:'ws_test',title:'Wurzel für Paginierung',requestId:'pagination_root_001'
+    }});
+    assert.equal(created.status,200);
+    const root=JSON.parse(created.data.result.content[0].text).documentId as string;
+    const record=async(id:string,parentId:string|null,geaendert:string,daten?:string,verschluesselt=0)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:daten??JSON.stringify({type:'page',text:id,inhalt:'',parentId}),
+        verschluesselt,seite:id,version:1,geaendert,geloescht:0,vonGeraet:'Test'});
+    };
+    for(let i=0;i<1050;i++)await record('noise_'+i,null,'2099-01-01T00:00:00.000Z');
+    for(let i=0;i<65;i++)await record('child_'+i,root,'2020-01-01T00:00:00.000Z');
+    await record('bad_json',null,'2099-01-01T00:00:00.000Z','not valid JSON');
+    await record('private_child',root,'2020-01-01T00:00:00.000Z',undefined,1);
+    const seen=new Set<string>();
+    let offset=0;
+    for(let page=0;page<4;page++){
+      const reply=await f.rpc(token.access_token,'tools/call',{name:'redion_list_child_pages',arguments:{
+        workspaceId:'ws_test',parentId:root,limit:25,offset
+      }});
+      assert.equal(reply.status,200);
+      assert.notEqual(reply.data.result.isError,true,JSON.stringify(reply.data.result));
+      const data=JSON.parse(reply.data.result.content[0].text);
+      for(const item of data.documents)seen.add(item.documentId);
+      if(data.nextOffset===null){assert.equal(page,2);break;}
+      assert.equal(data.nextOffset,offset+25);
+      offset=data.nextOffset;
+    }
+    assert.equal(seen.size,65);
+    assert.ok(!seen.has('private_child'));
+    const bad=await f.rpc(token.access_token,'tools/call',{name:'redion_list_child_pages',arguments:{
+      workspaceId:'ws_test',parentId:root,offset:100001
+    }});
+    assert.equal(bad.data.result.isError,true);
+    assert.equal(JSON.parse(bad.data.result.content[0].text).code,'invalid_arguments');
+  }finally{f.close();}
+});
+
+test('Cloud-MCP: zwei parallele Seitenverschiebungen können keinen Kreis erzeugen',async()=>{
+  const f=await fixture();
+  try{
+    const token=await f.authorize(true);
+    const create=async(title:string,requestId:string)=>{
+      const response=await f.rpc(token.access_token,'tools/call',{name:'redion_create_page',arguments:{
+        workspaceId:'ws_test',title,requestId
+      }});
+      assert.equal(response.status,200);
+      return JSON.parse(response.data.result.content[0].text).documentId as string;
+    };
+    const a=await create('Seite A','parallel_move_A_001');
+    const b=await create('Seite B','parallel_move_B_001');
+    const move=(documentId:string,newParentId:string)=>f.rpc(token.access_token,'tools/call',{name:'redion_move_page',arguments:{
+      workspaceId:'ws_test',documentId,newParentId,expectedVersion:1
+    }});
+    const results=await Promise.all([move(a,b),move(b,a)]);
+    assert.ok(results.every(r=>r.status===200));
+    assert.equal(results.filter(r=>r.data.result.isError!==true).length,1);
+    const rowA=await f.store.hole('saetze',{bereich:'ws_test',id:a});
+    const rowB=await f.store.hole('saetze',{bereich:'ws_test',id:b});
+    assert.ok(rowA&&rowB);
+    const pa=JSON.parse(rowA.daten).parentId;
+    const pb=JSON.parse(rowB.daten).parentId;
+    assert.equal(pa===b&&pb===a,false);
+  }finally{f.close();}
+});
