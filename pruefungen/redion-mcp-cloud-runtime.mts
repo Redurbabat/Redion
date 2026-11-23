@@ -67,7 +67,7 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
     assert.equal(tokenResponse.status,200);const tokens=await tokenResponse.json();
     client=new Client({name:'synthetic-workerd-client',version:'1'});
     await client.connect(new StreamableHTTPClientTransport(new URL(resource),{fetch:fetcher,requestInit:{headers:{Authorization:'Bearer '+tokens.access_token}}}));
-    assert.equal((await client.listTools()).tools.length,4);
+    assert.equal((await client.listTools()).tools.length,5);
     const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'runtime-workspace',documentId:'runtime-page'}});
     assert.equal(JSON.parse(result.content[0].text).content,'Isolierte Testdaten');
     const denied=await client.callTool({name:'redion_create_page',arguments:{workspaceId:'runtime-workspace',title:'Gesperrt',requestId:'runtime_request'}});
