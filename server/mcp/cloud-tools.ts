@@ -772,8 +772,8 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const ver=expected(args.expectedVersion);
       const current=await page(w,id,'bearbeiten');
       const typ=createSchematic?'schaltplan':required(args.typ,40);
-      const allowedTypes=new Set(['text','h1','h2','h3','todo','bullet','number','quote','code','divider','schaltplan']);
-      if(!allowedTypes.has(typ))
+      const allowedTypes=new Set(['text','h1','h2','h3','todo','bullet','number','quote','code','divider']);
+      if(!createSchematic&&!allowedTypes.has(typ))
         return err('invalid_arguments','Diese Blockart erfordert eine eigene geprüfte Schreibfunktion.');
       if(args.inBlockId!==undefined)
         return err('invalid_arguments','Verschachtelte Blockerstellung ist noch nicht freigegeben.');
