@@ -93,6 +93,36 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
       const res=await writer.callTool({name,arguments:arguments_});
       return {res,payload:JSON.parse(res.content[0].text) as any};
     };
+    // Real SQLite-in-workerd recursion: a page has a direct child which
+    // references a Unicode-bearing grandchild. No synthetic JS in-memory
+    // traversal or privileged production storage is used here.
+    const putRuntimeBlock=async(id:string,data:Record<string,unknown>,encrypted=0)=>{
+      await db.prepare(
+        'INSERT INTO saetze(id,bereich,tabelle,daten,verschluesselt,seite,version,geloescht) '+
+        'VALUES(?,?,?,?,?,?,1,0)'
+      ).bind(id,'runtime-workspace','blocks',JSON.stringify(data),encrypted,'runtime-page').run();
+    };
+    await putRuntimeBlock('runtime_search_parent',{
+      type:'text',text:'Sichtbarer Elternblock',parentId:'runtime-page',
+      content:['runtime_search_leaf'],alive:true
+    });
+    await putRuntimeBlock('runtime_search_leaf',{
+      type:'text',text:'LÜFTUNGSANLAGE Werkraum',parentId:'runtime_search_parent',
+      content:[],alive:true
+    });
+    await db.prepare('UPDATE saetze SET daten=?1 WHERE bereich=?2 AND id=?3')
+      .bind(JSON.stringify({type:'page',text:'Test',inhalt:'Isolierte Testdaten',
+        content:['runtime_search_parent']}),'runtime-workspace','runtime-page').run();
+    const deepSearch=await invoke('redion_search',{
+      workspaceId:'runtime-workspace',query:'lüftungsanlage'
+    });
+    assert.equal(deepSearch.res.isError,undefined);
+    assert.deepEqual(deepSearch.payload.documents.map((d:any)=>d.documentId),
+      ['runtime-page']);
+    const miss=await invoke('redion_search',{
+      workspaceId:'runtime-workspace',query:'nichtvorhandenerbegriff'
+    });
+    assert.deepEqual(miss.payload.documents,[]);
     const create=async(title:string,requestId:string,parentId?:string)=>{
       const {res,payload}=await invoke('redion_create_page',{
         workspaceId:'runtime-workspace',title,content:'Ausgang',requestId,...(parentId?{parentId}:{})
@@ -227,7 +257,7 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
 
     await oauth.revokeGrant('runtime-owner',(await oauth.listGrants('runtime-owner'))[0]!.id);
     assert.equal((await fetcher(resource,{headers:{Authorization:'Bearer '+tokens.access_token}})).status,401);
-    assert.equal((await db.prepare('SELECT COUNT(*) n FROM saetze').first()).n,5);
+    assert.equal((await db.prepare('SELECT COUNT(*) n FROM saetze').first()).n,7);
     assert.deepEqual(outbound,[],'Keine ausgehenden Netzaufrufe');
   }finally{await Promise.allSettled([client?.close(),writer?.close()]);await mf.dispose();}
 });
