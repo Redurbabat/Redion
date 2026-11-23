@@ -707,13 +707,11 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
           meta.notiz=input.notiz;
         }
       }
-      if(ver!==Number(current.s.version||1))
-        return err('conflict','Seite wurde zwischenzeitlich geändert. Bitte neu lesen.');
+      // Keep stale expectedVersion for SQL's conditional INSERT. A genuine
+      // retry must still find the existing block after page version advanced.
       if(current.data.content!==undefined&&(!Array.isArray(current.data.content)||
         current.data.content.some(k=>typeof k!=='string'||!k||k.length>128)))
         return err('invalid_data','Die Elternseite enthält eine ungültige Blockliste.');
-      if(Array.isArray(current.data.content)&&current.data.content.length>=200)
-        return err('too_large','Diese Seite hat zu viele Blöcke für einen Cloud-MCP-Aufruf.');
       if(!db.batch)
         return err('unavailable','Die D1-Transaktion für Blockerstellung steht nicht zur Verfügung.');
       let requestId='';
@@ -792,6 +790,8 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
               alreadyExists:true};
         }catch(error){if(!(error instanceof CloudMcpToolError))throw error;}
       }
+      if(Array.isArray(current.data.content)&&current.data.content.length>=200)
+        return err('too_large','Diese Seite hat zu viele Blöcke für einen Cloud-MCP-Aufruf.');
       return err('conflict','Seitenversion oder requestId stimmt nicht mehr. Bitte neu lesen.');
     }
     if(name==='redion_create_page'){
