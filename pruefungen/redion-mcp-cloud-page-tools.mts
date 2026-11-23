@@ -20,6 +20,8 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
   for(const item of write){
     assert.equal(item.inputSchema.additionalProperties,false,item.name);
   }
+  const search=write.find(x=>x.name==='redion_search');
+  assert.deepEqual(search?.inputSchema.properties.offset,{type:'integer',minimum:0,maximum:1000});
   const childList=write.find(x=>x.name==='redion_list_child_pages');
   assert.deepEqual(childList?.inputSchema.properties.offset,{type:'integer',minimum:0,maximum:100000});
   const append=write.find(x=>x.name==='redion_append_content');
