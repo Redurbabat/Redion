@@ -45,6 +45,10 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_update_page',description:'Ändert den Seitentitel nur bei passender expectedVersion.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,title:nameField,expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId','title','expectedVersion'],additionalProperties:false}},
+  {name:'redion_read_block',description:'Liest einen unverschlüsselten RED-ION-Block mit Seitenberechtigungen und sichtbaren Kindblöcken. Datenbankzeilen nur über redion_read_database lesen.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField},required:['workspaceId','blockId'],additionalProperties:false}},
+  {name:'redion_read_schematic',description:'Liest einen vorhandenen Schaltplan-Block mit geprüften Seitenrechten. Bauteile, Leitungen, Beschriftungen und Planversion sind enthalten.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField},required:['workspaceId','blockId'],additionalProperties:false}},
   {name:'redion_list_block_types',description:'Listet eingebaute benannte Blockarten der RED-ION-App, inklusive intern gespeicherter Arten. Gerätebezogene Plugins sind nicht enthalten.',
     inputSchema:{type:'object',properties:{},additionalProperties:false}},
   {name:'redion_list_tasks',description:'Listet lesbare Aufgaben aus Todo-Blöcken und aus Datenbankzeilen mit sichtbaren Status- oder Checkbox-Spalten. Nur sichtbare Treffer zählen bei der Paginierung.',
@@ -83,6 +87,8 @@ const toolTitles:Record<string,string>={
   redion_read_database:'Datenbank lesen',
   redion_list_tasks:'Aufgaben auflisten',
   redion_list_block_types:'Blockarten auflisten',
+  redion_read_block:'Block lesen',
+  redion_read_schematic:'Schaltplan lesen',
   redion_list_root_pages:'Hauptseiten auflisten',
   redion_list_child_pages:'Unterseiten auflisten',
   redion_append_content:'Inhalt anhängen',
@@ -174,6 +180,63 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     }
     const w=required(args.workspaceId,128);
     const area=await inScope(w);
+    if(name==='redion_read_block'||name==='redion_read_schematic'){
+      const id=required(args.blockId,128);
+      const s=await ablage.hole('saetze',{bereich:w,id});
+      if(!s||s.tabelle!=='blocks'||s.geloescht||s.verschluesselt)
+        return err('not_found','Block nicht verfügbar.');
+      let data:Record<string,unknown>;
+      try{data=JSON.parse(String(s.daten||'')) as Record<string,unknown>;}
+      catch{return err('not_found','Block nicht verfügbar.');}
+      if(!data||typeof data!=='object'||Array.isArray(data)||typeof data.type!=='string'||
+         data.alive===false)
+        return err('not_found','Block nicht verfügbar.');
+      // A collection row is stored as a 'page' with s.seite=its own ID.
+      // Never let it bypass database embedding/field permissions; those
+      // rows must be accessed through redion_read_database.
+      if(data.parentTable==='collection')
+        return err('not_found','Datenbankzeilen bitte über redion_read_database lesen.');
+      const pageId=String(s.seite||'');
+      if(!pageId)return err('not_found','Block nicht verfügbar.');
+      await page(w,pageId,'lesen');
+      // Only direct, readable children may appear, never a raw list of
+      // encrypted, removed or unrelated child IDs. Limit work and response.
+      const childIds=Array.isArray(data.content)?data.content:[];
+      if(childIds.length>40)return err('too_large','Block hat zu viele Kinder für einen Aufruf.');
+      const visibleChildren:string[]=[];
+      for(const childId of childIds){
+        if(typeof childId!=='string'||!childId||childId.length>128)continue;
+        if(visibleChildren.includes(childId))continue;
+        const child=await ablage.hole('saetze',{bereich:w,id:childId});
+        if(!child||child.tabelle!=='blocks'||child.geloescht||child.verschluesselt||
+           child.seite!==pageId)continue;
+        try{
+          const nested=JSON.parse(String(child.daten||'')) as Record<string,unknown>;
+          if(nested&&nested.alive!==false&&nested.parentId===id&&nested.parentTable!=='collection')
+            visibleChildren.push(childId);
+        }catch{/* Beschädigte oder unlesbare Kinder nicht preisgeben. */}
+      }
+      // No unfiltered nested IDs, including non-standard "children" arrays.
+      const sanitized={...data,content:visibleChildren};
+      if('children' in sanitized)delete sanitized.children;
+      if(name==='redion_read_schematic'){
+        if(data.type!=='schaltplan'||!data.plan||typeof data.plan!=='object'||Array.isArray(data.plan))
+          return err('not_found','Schaltplan nicht verfügbar.');
+        const plan=data.plan as Record<string,unknown>;
+        const payload=JSON.stringify(plan);
+        if(payload.length>32000)return err('too_large','Schaltplan ist für einen Aufruf zu gross.');
+        return {workspaceId:w,blockId:id,documentId:pageId,
+          version:Number(s.version)||1,plan,
+          teile:Array.isArray(plan.teile)?plan.teile:[],
+          leitungen:Array.isArray(plan.leitungen)?plan.leitungen:[],
+          texte:Array.isArray(plan.texte)?plan.texte:[]};
+      }
+      const payload=JSON.stringify(sanitized);
+      if(payload.length>12000)return err('too_large','Blockdaten sind zu gross.');
+      return {workspaceId:w,blockId:id,documentId:pageId,
+        version:Number(s.version)||1,type:data.type,text:String(data.text||'').slice(0,12000),
+        data:sanitized,children:visibleChildren};
+    }
     if(name==='redion_list_tasks'){
       if(args.nurOffen!==undefined&&typeof args.nurOffen!=='boolean')
         return err('invalid_arguments','nurOffen muss true oder false sein.');

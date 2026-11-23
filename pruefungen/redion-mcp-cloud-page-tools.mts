@@ -46,6 +46,15 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
   });
   const search=write.find(x=>x.name==='redion_search');
   assert.deepEqual(search?.inputSchema.properties.offset,{type:'integer',minimum:0,maximum:1000});
+  const schematic=write.find(x=>x.name==='redion_read_schematic');
+  assert.ok(names(read).includes('redion_read_schematic'));
+  assert.deepEqual(schematic?.inputSchema.required,['workspaceId','blockId']);
+  assert.equal(schematic?.annotations?.readOnlyHint,true);
+  const readBlock=write.find(x=>x.name==='redion_read_block');
+  assert.ok(names(read).includes('redion_read_block'));
+  assert.ok(names(write).includes('redion_read_block'));
+  assert.deepEqual(readBlock?.inputSchema.required,['workspaceId','blockId']);
+  assert.equal(readBlock?.annotations?.readOnlyHint,true);
   const tasks=write.find(x=>x.name==='redion_list_tasks');
   assert.ok(names(read).includes('redion_list_tasks'));
   assert.ok(names(write).includes('redion_list_tasks'));
