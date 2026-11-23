@@ -138,7 +138,7 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       const transport=new StreamableHTTPClientTransport(new URL(origin+'/mcp/cloud'),{authProvider:provider,fetch:fetcher});
       await client.connect(transport);
       assert.equal(transport.sessionId,undefined);
-      const list=await client.listTools();assert.equal(list.tools.length,4);
+      const list=await client.listTools();assert.equal(list.tools.length,5);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
       assert.equal(JSON.parse(result.content[0].text).content,'Nur Testdaten');
       const denied=await client.callTool({name:'redion_create_page',arguments:{workspaceId:'ws_test',title:'Gesperrt',requestId:'sdk_request_01'}});
@@ -565,5 +565,80 @@ test('Cloud-MCP: grosse Seiten in Unicode-sicheren Abschnitten lesen',async()=>{
     const empty=JSON.parse((await read({offset:full.length})).content[0]!.text);
     assert.equal(empty.content,'');
     assert.equal(empty.nextOffset,null);
+  }finally{f.close();}
+});
+
+
+test('Cloud-MCP: Hauptseiten nach effektiven Rechten ohne versteckte Metadaten auflisten',async()=>{
+  const f=await fixture();
+  try{
+    await f.store.setze('konten',{id:'root_reader',mail:'root_reader@example.test',
+      name:'Root reader',herkunft:'github',angelegt:'',gesperrt:0});
+    await f.store.setze('konten',{id:'direct_only',mail:'direct@example.test',
+      name:'Direct only',herkunft:'github',angelegt:'',gesperrt:0});
+    const share=async(pageId:string,accountId:string,rolle:string)=>
+      f.store.setze('freigaben',{bereich:'ws_test',seite:pageId,kontoId:accountId,
+        rolle,von:'owner',wann:'2026-11-23'});
+    await share('*','root_reader','lesen');
+    const add=async(id:string,time:string,parent:'missing'|null|string=null,type='page',encrypted=0)=>{
+      const data:Record<string,unknown>={type,text:id,inhalt:''};
+      if(parent!=='missing')data.parentId=parent;
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify(data),verschluesselt:encrypted,seite:id,version:1,
+        geaendert:time,geloescht:0,vonGeraet:'Test'});
+    };
+    await add('root_hidden_wild','2040-01-01T00:00:00Z',null);
+    await add('root_visible_a','2039-01-01T00:00:00Z',null);
+    await add('root_hidden_user','2038-01-01T00:00:00Z','missing');
+    await add('root_visible_b','2037-01-01T00:00:00Z','');
+    await add('root_override','2036-01-01T00:00:00Z','missing');
+    await add('nested_not_root','2042-01-01T00:00:00Z','root_visible_a');
+    await add('encrypted_root','2041-01-01T00:00:00Z',null,'page',1);
+    await add('not_a_page','2043-01-01T00:00:00Z',null,'paragraph');
+    await f.store.setze('saetze',{id:'invalid_json_root',bereich:'ws_test',tabelle:'blocks',
+      daten:'{invalid',verschluesselt:0,seite:'invalid_json_root',version:1,
+      geaendert:'2044-01-01T00:00:00Z',geloescht:0,vonGeraet:'Test'});
+    await share('root_hidden_wild','*','kein');
+    await share('root_hidden_user','root_reader','kein');
+    await share('root_override','*','kein');
+    await share('root_override','root_reader','lesen');
+    await share('root_visible_a','direct_only','lesen');
+
+    const read=await f.authorize(false,'root_reader');
+    const direct=await f.authorize(false,'direct_only');
+    const owner=await f.authorize(false);
+    const list=async(token:string,opts:Record<string,unknown>={})=>{
+      const response=await f.rpc(token,'tools/call',{name:'redion_list_root_pages',
+        arguments:{workspaceId:'ws_test',limit:1,...opts}});
+      assert.equal(response.status,200);
+      assert.notEqual(response.data.result.isError,true,JSON.stringify(response.data.result));
+      return JSON.parse(response.data.result.content[0].text) as {
+        documents:{documentId:string}[];nextOffset:number|null;workspaceId:string
+      };
+    };
+    const visible=['root_visible_a','root_visible_b','root_override'];
+    for(let offset=0;offset<visible.length;offset++){
+      const result=await list(read.access_token,{offset});
+      assert.equal(result.workspaceId,'ws_test');
+      assert.deepEqual(result.documents.map(d=>d.documentId),[visible[offset]]);
+      assert.equal(result.nextOffset,offset<visible.length-1?offset+1:null);
+    }
+    assert.deepEqual((await list(read.access_token,{offset:3})).documents,[]);
+    const onlyDirect=await list(direct.access_token,{limit:10});
+    assert.deepEqual(onlyDirect.documents.map(d=>d.documentId),['root_visible_a']);
+    assert.equal(onlyDirect.nextOffset,null);
+    const ownerRows=await list(owner.access_token,{limit:10});
+    assert.deepEqual(ownerRows.documents.map(d=>d.documentId),[
+      'root_hidden_wild','root_visible_a','root_hidden_user','root_visible_b','root_override'
+    ]);
+    const bad=await f.rpc(read.access_token,'tools/call',{name:'redion_list_root_pages',
+      arguments:{workspaceId:'ws_test',offset:100001}});
+    assert.equal(bad.status,200);
+    assert.equal(bad.data.result.isError,true);
+    assert.equal(JSON.parse(bad.data.result.content[0].text).code,'invalid_arguments');
+    const blocked=await f.rpc(read.access_token,'tools/call',{name:'redion_list_root_pages',
+      arguments:{workspaceId:'not_granted'}});
+    assert.equal(blocked.data.result.isError,true);
+    assert.equal(JSON.parse(blocked.data.result.content[0].text).code,'forbidden');
   }finally{f.close();}
 });
