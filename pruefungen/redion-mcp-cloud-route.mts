@@ -525,3 +525,45 @@ test('Cloud-MCP: Markdown-Einrückung und Zeilenumbrüche exakt erhalten',async(
     assert.equal(JSON.parse(empty.content[0]!.text).code,'invalid_arguments');
   }finally{f.close();}
 });
+
+
+test('Cloud-MCP: grosse Seiten in Unicode-sicheren Abschnitten lesen',async()=>{
+  const f=await fixture();
+  try{
+    const full='A'.repeat(11999)+'😀'+'B'.repeat(13);
+    await f.store.setze('saetze',{id:'long_page',bereich:'ws_test',tabelle:'blocks',
+      daten:JSON.stringify({type:'page',text:'Lange Seite',inhalt:full}),verschluesselt:0,
+      seite:'long_page',version:7,geaendert:'2026-11-23',geloescht:0,vonGeraet:'Test'});
+    const token=await f.authorize(false);
+    const read=async(params:Record<string,unknown>={})=>{
+      const reply=await f.rpc(token.access_token,'tools/call',{
+        name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'long_page',...params}
+      });
+      assert.equal(reply.status,200);
+      return reply.data.result as {isError?:boolean;content:{text:string}[]};
+    };
+    const first=await read();
+    assert.notEqual(first.isError,true);
+    const data=JSON.parse(first.content[0]!.text);
+    assert.equal(data.offset,0);
+    assert.equal(data.version,7);
+    assert.equal(data.totalLength,full.length);
+    assert.equal(data.content.length,12001);
+    assert.equal(data.nextOffset,12001);
+    const second=JSON.parse((await read({offset:data.nextOffset})).content[0]!.text);
+    assert.equal(second.nextOffset,null);
+    assert.equal(second.offset,12001);
+    assert.equal(data.content+second.content,full);
+    const split=await read({offset:12000});
+    assert.equal(split.isError,true);
+    assert.equal(JSON.parse(split.content[0]!.text).code,'invalid_arguments');
+    const invalid=await read({offset:1000001});
+    assert.equal(invalid.isError,true);
+    const short=JSON.parse((await read({offset:0,limit:6})).content[0]!.text);
+    assert.equal(short.content,'A'.repeat(6));
+    assert.equal(short.nextOffset,6);
+    const empty=JSON.parse((await read({offset:full.length})).content[0]!.text);
+    assert.equal(empty.content,'');
+    assert.equal(empty.nextOffset,null);
+  }finally{f.close();}
+});
