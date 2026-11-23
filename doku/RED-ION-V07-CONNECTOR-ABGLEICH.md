@@ -101,3 +101,48 @@ OAuth-Tokens oder bestehende Freigaben nicht automatisch ändern.
 GitHub-Merge aktualisiert den Quellstand; er ist **kein Beleg für
 Cloudflare-Deployment** und ändert keine bei ChatGPT gespeicherte
 App-backed-Connector-Werkzeugdefinition automatisch.
+
+
+## Reproduzierbarer Werkzeugvertrag (23. November 2026)
+
+Ein manuell kopierter Werkzeugkatalog kann schnell veralten. Deshalb
+exportiert 'skripte/mcp-connector-vertrag.mts' nun die **exakten**
+Definitionen aus 'visibleCloudTools()' in eine JSON-Datei:
+
+    npm run test:mcp-connector
+    npm run mcp:connector:export
+
+Ergebnis: 'build/mcp/redion-v07-werkzeuge.json' mit 24 Werkzeugen,
+davon 15 nur lesend und 9 mit 'redion:write'. Für jede Funktion enthält
+die Datei den Namen, die tatsächliche Beschreibung, 'inputSchema',
+MCP-Annotations und den erforderlichen OAuth-Scope. Sie enthält **keine**
+Zugangs-Tokens, Workspace-Inhalte, Nutzer-IDs oder Datenbankzeilen.
+
+Die GitHub Action **RED ION MCP Connector Contract** erzeugt dieselbe
+Datei auf jedem einschlägigen PR- oder 'main'-Push. Im erfolgreichen
+Action-Lauf das Artefakt 'redion-v07-mcp-tools' herunterladen.
+
+### In den bestehenden ChatGPT-App-Editor übernehmen
+
+1. Den App-Entwickler-Editor des **bereits vorhandenen** privaten
+   'Redion V07'-Connectors öffnen; keinen neuen Connector anlegen.
+2. Wo der Editor automatische MCP-Erkennung anbietet, den bereits
+   verbundenen '/mcp/cloud'-Endpunkt aktualisieren und 'tools/list'
+   neu einlesen. Sonst die 24 Definitionen aus dem Action-Artefakt
+   exakt übernehmen (jeweils die 'inputSchema'- und Annotation-Felder).
+3. Die sechs im aktuellen Backend nicht vorhandenen Legacy-Werkzeuge
+   entfernen und die fünf fehlenden Lesewerkzeuge ergänzen. Weder
+   künstliche Alias-Namen noch frei akzeptierte 'daten'/'papierkorb'-
+   Parameter für die eingeschränkten Bearbeitungsfunktionen einbauen.
+4. Lesen nur mit 'redion:read' prüfen: **15 Werkzeuge** sichtbar.
+   Schreiben erst mit ausdrücklichem 'redion:write': **24 Werkzeuge**.
+   Anschliessend die neue Toolliste in ChatGPT laden und die grossen
+   Seiten mit 'blockOffset' und 'childOffset' paginieren.
+5. Schreibtests nur mit synthetischen Testseiten und korrekter Version
+   durchführen. Produktionsdaten und bestehende OAuth-Freigaben nicht
+   für einen Connector-Refresh zurücksetzen.
+
+**Grenze:** Eine grüne GitHub Action aktualisiert die App-backed
+Connector-Bindung nicht automatisch. Der App-Entwickler-Editor muss
+den neuen Werkzeugvertrag tatsächlich veröffentlichen; Änderungen an
+'.app.json' oder am Präsentationsmanifest allein reichen dafür nicht.

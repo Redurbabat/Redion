@@ -27,6 +27,8 @@
     "test:mcp-cloud": "node --test pruefungen/redion-mcp-cloud-state.mts pruefungen/redion-mcp-cloud-oauth.mts pruefungen/redion-mcp-cloud-http.mts pruefungen/redion-mcp-cloud-route.mts pruefungen/redion-abgleich-tor.mts pruefungen/redion-mcp-cloud-page-tools.mts",
     "test:mcp-cloud-browser": "node --test pruefungen/redion-mcp-cloud-browser.mts",
     "test:mcp-cloud-runtime": "node --test pruefungen/redion-mcp-cloud-runtime.mts",
+    "mcp:connector:export": "node skripte/mcp-connector-vertrag.mts --output build/mcp/redion-v07-werkzeuge.json",
+    "test:mcp-connector": "node --test pruefungen/redion-mcp-connector-vertrag.mts",
     "test:windows-ink": "npm --prefix windows run prepare:app && node pruefungen/windows-ink-studio.mts"
   },
   "keywords": [

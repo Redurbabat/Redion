@@ -1,0 +1,45 @@
+# Published artifact is generated from the same Cloud-MCP registrations as tools/list.
+# No application credentials, production D1 database or Cloudflare deployment.
+name: RED ION MCP Connector Contract
+
+on:
+  pull_request:
+    paths:
+      - 'server/mcp/**'
+      - 'skripte/mcp-connector-vertrag.mts'
+      - 'pruefungen/redion-mcp-connector-vertrag.mts'
+      - 'package.json'
+      - '.github/workflows/mcp-connector-contract.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'server/mcp/**'
+      - 'skripte/mcp-connector-vertrag.mts'
+      - 'pruefungen/redion-mcp-connector-vertrag.mts'
+      - 'package.json'
+      - '.github/workflows/mcp-connector-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  connector:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Registrierte Werkzeuge und Schreibrechte verifizieren
+        run: npm run test:mcp-connector
+      - name: Vollstaendigen JSON-Vertrag aus dem Backend erzeugen
+        run: npm run mcp:connector:export
+      - name: Versionierten JSON-Vertrag fuer den Connector-Editor bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: redion-v07-mcp-tools
+          path: build/mcp/redion-v07-werkzeuge.json
+          if-no-files-found: error
+          retention-days: 30
