@@ -5,7 +5,7 @@
 import type {Ablage} from '../typen.ts';
 import type {McpPrincipal} from './oauth.ts';
 import type {McpDatabase} from './state.ts';
-import {rolleAuf,darf,notieren} from '../kern.ts';
+import {rolleAuf,darf,notieren,feldRechte} from '../kern.ts';
 
 type Db=McpDatabase;
 type Args=Record<string,unknown>;
@@ -44,6 +44,9 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_update_page',description:'Ändert den Seitentitel nur bei passender expectedVersion.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,title:nameField,expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId','title','expectedVersion'],additionalProperties:false}},
+  {name:'redion_read_database',description:'Liest freigegebene Datenbankspalten und paginierte Zeilen. Spaltenrechte werden auf Schema und Werte angewendet.',
+    inputSchema:{type:'object',properties:{...workspace,databaseId:idField,limit:{type:'integer',minimum:1,maximum:10},
+      offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId','databaseId'],additionalProperties:false}},
   {name:'redion_list_databases',description:'Listet lesbare Klartext-Datenbanken auf Seiten, die der Benutzer lesen darf. Keine versteckten Seiten oder Spaltenwerte.',
     inputSchema:{type:'object',properties:{...workspace,limit:{type:'integer',minimum:1,maximum:30},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
   {name:'redion_list_root_pages',description:'Listet freigegebene Hauptseiten eines Arbeitsbereichs; nur sichtbare Seiten zählen bei limit und offset.',
@@ -71,6 +74,7 @@ const toolTitles:Record<string,string>={
   redion_create_page:'Seite erstellen',
   redion_update_page:'Seitentitel ändern',
   redion_list_databases:'Datenbanken auflisten',
+  redion_read_database:'Datenbank lesen',
   redion_list_root_pages:'Hauptseiten auflisten',
   redion_list_child_pages:'Unterseiten auflisten',
   redion_append_content:'Inhalt anhängen',
@@ -201,6 +205,83 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       // No raw-row truncation marker: that could disclose the existence of
       // content that the caller is explicitly forbidden to read.
       return {documents:found.slice(0,max),nextOffset:found.length>max?Number(offset)+max:null};
+    }
+    if(name==='redion_read_database'){
+      const databaseId=required(args.databaseId,128);
+      const max=limit(args.limit,10,10);
+      const offset=args.offset===undefined?0:args.offset;
+      if(!Number.isSafeInteger(offset)||Number(offset)<0||Number(offset)>1000)
+        return err('invalid_arguments','Ungültiger Datenbankversatz.');
+      const database=await ablage.hole('saetze',{bereich:w,id:databaseId});
+      if(!database||database.tabelle!=='collections'||database.geloescht||database.verschluesselt)
+        return err('not_found','Datenbank nicht verfügbar.');
+      let data:Record<string,unknown>;
+      try{data=JSON.parse(String(database.daten||''));}
+      catch{return err('not_found','Datenbank nicht verfügbar.');}
+      if(!data||!data.schema||typeof data.schema!=='object'||Array.isArray(data.schema))
+        return err('not_found','Datenbank nicht verfügbar.');
+      // A collection's synced "seite" is its own ID, not its owning page.
+      // Only an actual, cleartext database block on a READABLE page permits
+      // access. A direct collection ID is not an authorization token.
+      const links=await db.prepare(
+        "SELECT seite FROM saetze WHERE bereich=?1 AND tabelle='blocks' "+
+        "AND geloescht=0 AND verschluesselt=0 AND CASE WHEN json_valid(daten) THEN "+
+        "(json_extract(daten,'$.type')='database' AND "+
+        "json_extract(daten,'$.collectionId')=?2) ELSE 0 END LIMIT 64"
+      ).bind(w,databaseId).all<{seite:string|null}>();
+      let readable=false;
+      for(const link of links.results){
+        if(!link.seite)continue;
+        try{await page(w,String(link.seite),'lesen');readable=true;break;}
+        catch(e){if(!(e instanceof CloudMcpToolError))throw e;}
+      }
+      if(!readable)return err('not_found','Datenbank nicht verfügbar.');
+      const rights=await feldRechte(ablage,w,databaseId,userId);
+      const cols=Object.entries(data.schema as Record<string,unknown>)
+        .filter(([key])=>rights[key]!=='kein'&&!['__proto__','prototype','constructor'].includes(key))
+        .map(([key,def])=>{
+          const x=def&&typeof def==='object'&&!Array.isArray(def)?def as Record<string,unknown>:{};
+          return {key,name:String(x.name||key).slice(0,120),type:String(x.type||'text').slice(0,40)};
+        });
+      if(cols.length>40)return err('too_large','Diese Datenbank hat mehr als 40 sichtbare Spalten.');
+      const columns=new Set(cols.map(x=>x.key));
+      // Iterate raw candidates but only count rows after ACL checks. Never
+      // expose hidden rows through raw SQL LIMIT/OFFSET.
+      const sql="SELECT id,seite,daten,version FROM saetze "+
+        "WHERE bereich=?1 AND tabelle='blocks' AND geloescht=0 AND verschluesselt=0 "+
+        "AND CASE WHEN json_valid(daten) THEN "+
+        "(json_extract(daten,'$.type')='page' AND "+
+        "json_extract(daten,'$.parentTable')='collection' AND "+
+        "json_extract(daten,'$.parentId')=?2) ELSE 0 END "+
+        "ORDER BY geaendert DESC,id DESC LIMIT ?3 OFFSET ?4";
+      const rows:{rowId:string;title:string;values:Record<string,unknown>;version:number}[]=[];
+      let scanned=0,visible=0;
+      const batch=50,maxScanned=2000;
+      while(scanned<maxScanned&&rows.length<=max){
+        const result=await db.prepare(sql).bind(w,databaseId,batch,scanned)
+          .all<{id:string;seite:string|null;daten:string;version:number}>();
+        for(const s of result.results){
+          const r=await rolleAuf(ablage,w,String(s.seite||s.id),userId);
+          if(!darf(r,'lesen'))continue;
+          if(visible++<Number(offset))continue;
+          const item=JSON.parse(s.daten) as Record<string,unknown>;
+          const raw=item.props&&typeof item.props==='object'&&!Array.isArray(item.props)?
+            item.props as Record<string,unknown>:{};
+          const values=Object.fromEntries(Object.entries(raw).filter(([key])=>columns.has(key))
+            .map(([key,value])=>{
+              const rawValue=JSON.stringify(value);
+              return [key,rawValue&&rawValue.length<=500?value:{truncated:true}];
+            }));
+          rows.push({rowId:s.id,title:rights['title']==='kein'?'':String(item.text||'').slice(0,160),
+            values,version:Number(s.version)||1});
+          if(rows.length>max)break;
+        }
+        scanned+=result.results.length;
+        if(result.results.length<batch)break;
+      }
+      return {workspaceId:w,databaseId,name:String(data.name||'').slice(0,160),
+        version:Number(database.version)||1,columns:cols,rows:rows.slice(0,max),
+        nextOffset:rows.length>max?Number(offset)+max:null};
     }
     if(name==='redion_list_databases'){
       const max=limit(args.limit,20,30);
