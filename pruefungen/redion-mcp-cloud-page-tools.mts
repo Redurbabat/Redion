@@ -52,6 +52,19 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
   assert.ok(names(read).includes('redion_read_schematic'));
   assert.deepEqual(schematic?.inputSchema.required,['workspaceId','blockId']);
   assert.equal(schematic?.annotations?.readOnlyHint,true);
+  const updateBlock=write.find(x=>x.name==='redion_update_block');
+  assert.equal(names(read).includes('redion_update_block'),false);
+  assert.equal(names(write).includes('redion_update_block'),true);
+  assert.deepEqual(updateBlock?.inputSchema.required,
+    ['workspaceId','blockId','expectedVersion','operation']);
+  assert.deepEqual(updateBlock?.inputSchema.properties.operation,
+    {type:'string',enum:['set_text','set_checked','set_note','set_due_date']});
+  assert.deepEqual(updateBlock?.inputSchema.properties.checked,{type:'boolean'});
+  assert.deepEqual(updateBlock?.inputSchema.properties.text,{type:'string',maxLength:8000});
+  assert.deepEqual(updateBlock?.inputSchema.properties.note,{type:'string',maxLength:2000});
+  assert.equal(updateBlock?.annotations?.readOnlyHint,false);
+  assert.equal(updateBlock?.annotations?.destructiveHint,true);
+  assert.equal(updateBlock?.annotations?.idempotentHint,false);
   const updateSchematic=write.find(x=>x.name==='redion_update_schematic');
   assert.equal(names(read).includes('redion_update_schematic'),false);
   assert.ok(names(write).includes('redion_update_schematic'));
