@@ -125,6 +125,14 @@ try {
   await page!.evaluate(()=>{document.getElementById('synthetic-mcp-private')!.remove();document.getElementById('synthetic-mcp-public')!.remove();});
   assert.equal(await page!.locator('#redion-mcp-mask').count(),0,'Die Maskierung bleibt nicht in der Arbeitsfläche hängen');
   assert.equal((await raw('redion_capture_view',{target:'editor',documentId:'wrong-document'})).error?.code,'STALE_DOCUMENT');
+  // Die Bildvorschau ist ein separates nativen Fenster. Für den Test der
+  // ausdrücklichen Ablehnung die gewünschte Seite wieder aktivieren,
+  // statt auf einen eventuell veralteten Editor-Fokus zu vertrauen.
+  await call('redion_open_document',{documentId});
+  await page!.waitForFunction(id=>
+    (window as any).App.aktuelleSeite()===id &&
+    Boolean(document.querySelector('#page')?.getBoundingClientRect().width),documentId);
+  assert.equal((await call('redion_get_active_document')).document.id,documentId);
   await native!.evaluate(({dialog})=>{dialog.showMessageBox=async()=>({response:0,checkboxChecked:false});});
   assert.equal((await raw('redion_capture_view',{target:'editor',documentId})).error?.code,'CONSENT_DENIED');
   assert.equal(await page!.locator('#redion-mcp-mask').count(),0,'Auch die verweigerte Aufnahme räumt ihre Maske auf');
