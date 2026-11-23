@@ -116,7 +116,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       return {workspaces:visible};
     }
     const w=required(args.workspaceId,128);
-    await inScope(w);
+    const area=await inScope(w);
     if(name==='redion_search'){
       await role(w,'*','lesen');
       const query=text(args.query,200).toLocaleLowerCase();
@@ -148,13 +148,25 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         return err('invalid_arguments','Ungültiger Seitenversatz.');
       // Query only this parent's cleartext pages. Scanning the most recent
       // 1,000 workspace records silently omitted older children.
+      // Permission-filtered pagination. An offset over raw database rows leaks
+      // the number and order of children hidden by an explicit page denial.
+      // A child inherits the already-verified parent's read permission unless
+      // its own user or wildcard grant overrides that permission.
       const rows=await db.prepare(
-        "SELECT id,seite,daten,version FROM saetze WHERE bereich=?1 AND tabelle='blocks' "+
-        "AND geloescht=0 AND verschluesselt=0 AND "+
-        "CASE WHEN json_valid(daten) THEN "+
-        "(json_extract(daten,'$.type')='page' AND json_extract(daten,'$.parentId')=?2) "+
-        "ELSE 0 END ORDER BY geaendert DESC,id DESC LIMIT ?3 OFFSET ?4"
-      ).bind(w,parentId,max+1,Number(offset)).all<{id:string;seite:string|null;daten:string;version:number}>();
+        "SELECT s.id,s.seite,s.daten,s.version FROM saetze AS s "+
+        "WHERE s.bereich=?1 AND s.tabelle='blocks' AND s.geloescht=0 AND s.verschluesselt=0 "+
+        "AND CASE WHEN json_valid(s.daten) THEN "+
+        "(json_extract(s.daten,'$.type')='page' AND json_extract(s.daten,'$.parentId')=?2) "+
+        "ELSE 0 END AND (?5=1 OR COALESCE("+
+        "(SELECT CASE WHEN f.rolle IN ('voll','edit','komm','lesen') THEN 1 ELSE 0 END "+
+        "FROM freigaben AS f WHERE f.bereich=s.bereich "+
+        "AND f.seite=COALESCE(NULLIF(s.seite,''),s.id) AND f.kontoId=?6),"+
+        "(SELECT CASE WHEN f.rolle IN ('voll','edit','komm','lesen') THEN 1 ELSE 0 END "+
+        "FROM freigaben AS f WHERE f.bereich=s.bereich "+
+        "AND f.seite=COALESCE(NULLIF(s.seite,''),s.id) AND f.kontoId='*'),"+
+        "1)=1) ORDER BY s.geaendert DESC,s.id DESC LIMIT ?3 OFFSET ?4"
+      ).bind(w,parentId,max+1,Number(offset),area.besitzer===userId?1:0,userId)
+        .all<{id:string;seite:string|null;daten:string;version:number}>();
       const children=[];
       for(const s of rows.results.slice(0,max)){
         const r=await rolleAuf(ablage,w,String(s.seite||s.id),userId);
@@ -162,7 +174,10 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         const data=JSON.parse(s.daten) as Record<string,unknown>;
         children.push({documentId:s.id,title:String(data.text||'').slice(0,160),version:Number(s.version)||1});
       }
-      return {parentId,documents:children,nextOffset:rows.results.length>max?Number(offset)+max:null};
+      // A mismatch is fail-closed: never disclose a cursor across rows that
+      // were excluded by the definitive per-page permission check.
+      const allVisible=children.length===Math.min(rows.results.length,max);
+      return {parentId,documents:children,nextOffset:allVisible&&rows.results.length>max?Number(offset)+max:null};
     }
     if(!principal.scopes.includes('redion:write'))
       return err('forbidden','Schreibrechte sind nicht freigegeben.');
