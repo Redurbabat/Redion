@@ -208,3 +208,62 @@ test('Cloud-MCP: Access-Consent und Kontoverknüpfung versagen ohne verifizierte
     assert.equal(offline.status,401);
   }finally{f.close();}
 });
+
+
+test('Cloud-MCP: Unterseiten, Anhängen, Verschieben und Schutzregeln über HTTP',async()=>{
+  const f=await fixture();
+  try{
+    const read=await f.authorize(false);
+    const args=(documentId:string,extra:Record<string,unknown>={})=>({workspaceId:'ws_test',documentId,...extra});
+    const call=async(token:string,name:string,parameters:Record<string,unknown>)=>{
+      const response=await f.rpc(token,'tools/call',{name,arguments:parameters});
+      assert.equal(response.status,200,name);
+      return response.data.result as {isError?:boolean;content:{text:string}[]};
+    };
+    const ok=async(token:string,name:string,parameters:Record<string,unknown>)=>{
+      const result=await call(token,name,parameters);
+      assert.notEqual(result.isError,true,name);
+      return JSON.parse(result.content[0]!.text) as any;
+    };
+    const denied=async(token:string,name:string,parameters:Record<string,unknown>,code:string)=>{
+      const result=await call(token,name,parameters);
+      assert.equal(result.isError,true,name);
+      assert.equal(JSON.parse(result.content[0]!.text).code,code,name);
+    };
+    await denied(read.access_token,'redion_append_content',args('missing',{content:'x',expectedVersion:1}),'forbidden');
+    await denied(read.access_token,'redion_move_page',args('missing',{expectedVersion:1}),'forbidden');
+    const write=await f.authorize(true);
+    let count=0;
+    const create=async(title:string,parentId?:string)=>{
+      const requestId='cloud_tools_'+String(++count).padStart(5,'0');
+      return ok(write.access_token,'redion_create_page',{workspaceId:'ws_test',title,content:'Erster Satz',requestId,...(parentId?{parentId}:{})});
+    };
+    const root=await create('Wurzel');
+    const child=await create('Kind',root.documentId);
+    const grandchild=await create('Enkel',child.documentId);
+    const children=await ok(write.access_token,'redion_list_child_pages',{workspaceId:'ws_test',parentId:root.documentId});
+    assert.deepEqual(children.documents.map((d:any)=>d.documentId),[child.documentId]);
+    const appended=await ok(write.access_token,'redion_append_content',args(child.documentId,{content:'Zweiter Satz',expectedVersion:1}));
+    assert.equal(appended.version,2);
+    const content=await ok(write.access_token,'redion_read_page',args(child.documentId));
+    assert.equal(content.content,'Erster Satz\nZweiter Satz');
+    await denied(write.access_token,'redion_append_content',args(child.documentId,{content:'Veraltet',expectedVersion:1}),'conflict');
+    await denied(write.access_token,'redion_move_page',args(child.documentId,{newParentId:grandchild.documentId,expectedVersion:2}),'invalid_arguments');
+    await denied(write.access_token,'redion_move_page',args(child.documentId,{newParentId:child.documentId,expectedVersion:2}),'invalid_arguments');
+    const moved=await ok(write.access_token,'redion_move_page',args(grandchild.documentId,{newParentId:root.documentId,expectedVersion:1}));
+    assert.equal(moved.version,2);
+    const newChildren=await ok(write.access_token,'redion_list_child_pages',{workspaceId:'ws_test',parentId:root.documentId});
+    assert.deepEqual(new Set(newChildren.documents.map((d:any)=>d.documentId)),new Set([child.documentId,grandchild.documentId]));
+    const empty=await ok(write.access_token,'redion_list_child_pages',{workspaceId:'ws_test',parentId:child.documentId});
+    assert.equal(empty.documents.length,0);
+    await denied(write.access_token,'redion_move_page',args(grandchild.documentId,{expectedVersion:1}),'conflict');
+    await f.store.setze('saetze',{id:'encrypted_child',bereich:'ws_test',tabelle:'blocks',
+      daten:JSON.stringify({type:'page',text:'Privat',inhalt:'Geheim',parentId:root.documentId}),
+      verschluesselt:1,seite:'encrypted_child',version:1,geaendert:'',geloescht:0,vonGeraet:'Test'});
+    const filtered=await ok(write.access_token,'redion_list_child_pages',{workspaceId:'ws_test',parentId:root.documentId});
+    assert.ok(!filtered.documents.some((d:any)=>d.documentId==='encrypted_child'));
+    await denied(write.access_token,'redion_append_content',args('encrypted_child',{content:'Nicht erlaubt',expectedVersion:1}),'encrypted');
+    await denied(write.access_token,'redion_move_page',args(child.documentId,{newParentId:'encrypted_child',expectedVersion:2}),'encrypted');
+    await denied(write.access_token,'redion_list_child_pages',{workspaceId:'ws_test',parentId:'encrypted_child'},'encrypted');
+  }finally{f.close();}
+});
