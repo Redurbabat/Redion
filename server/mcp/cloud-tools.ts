@@ -7,6 +7,7 @@ import type {McpPrincipal} from './oauth.ts';
 import type {McpDatabase} from './state.ts';
 import {rolleAuf,darf,notieren,feldRechte} from '../kern.ts';
 import {BUILTIN_BLOCK_TYPES} from './block-catalog.ts';
+import {BUILTIN_SYMBOLS} from './symbol-catalog.ts';
 
 type Db=McpDatabase;
 type Args=Record<string,unknown>;
@@ -60,6 +61,8 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{...workspace,blockId:idField},required:['workspaceId','blockId'],additionalProperties:false}},
   {name:'redion_read_schematic',description:'Liest einen vorhandenen Schaltplan-Block mit geprüften Seitenrechten. Bauteile, Leitungen, Beschriftungen und Planversion sind enthalten.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField},required:['workspaceId','blockId'],additionalProperties:false}},
+  {name:'redion_list_symbols',description:'Listet die 131 eingebauten elektrotechnischen Fachzeichen mit Nummern und Positionen der Anschlüsse. Keine auf Geräten nachinstallierten Symbole; nicht als zertifizierte Normbibliothek verwenden.',
+    inputSchema:{type:'object',properties:{gruppe:{type:'string',maxLength:40},suche:{type:'string',maxLength:80}},additionalProperties:false}},
   {name:'redion_list_block_types',description:'Listet eingebaute benannte Blockarten der RED-ION-App, inklusive intern gespeicherter Arten. Gerätebezogene Plugins sind nicht enthalten.',
     inputSchema:{type:'object',properties:{},additionalProperties:false}},
   {name:'redion_list_tasks',description:'Listet lesbare Aufgaben aus Todo-Blöcken und aus Datenbankzeilen mit sichtbaren Status- oder Checkbox-Spalten. Nur sichtbare Treffer zählen bei der Paginierung.',
@@ -99,6 +102,7 @@ const toolTitles:Record<string,string>={
   redion_read_database:'Datenbank lesen',
   redion_list_tasks:'Aufgaben auflisten',
   redion_list_block_types:'Blockarten auflisten',
+  redion_list_symbols:'Schaltzeichen auflisten',
   redion_list_page_blocks:'Seitenblöcke auflisten',
   redion_read_block:'Block lesen',
   redion_read_schematic:'Schaltplan lesen',
@@ -177,6 +181,18 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       return err('unknown_tool','Dieses Werkzeug ist im Cloud-MCP nicht implementiert. Bitte die aktuelle Werkzeugliste neu laden.');
     if(!visibleCloudTools(principal).some(t=>t.name===name))
       return err('forbidden','Für dieses Werkzeug fehlen die erforderlichen OAuth-Rechte.');
+    if(name==='redion_list_symbols'){
+      if(args.gruppe!==undefined&&(typeof args.gruppe!=='string'||args.gruppe.length>40))
+        return err('invalid_arguments','Gruppe muss ein kurzer Text sein.');
+      if(args.suche!==undefined&&(typeof args.suche!=='string'||args.suche.length>80))
+        return err('invalid_arguments','Suchtext muss höchstens 80 Zeichen haben.');
+      const gruppe=typeof args.gruppe==='string'?args.gruppe.trim():'';
+      const suche=typeof args.suche==='string'?args.suche.trim().toLocaleLowerCase():'';
+      const symbols=BUILTIN_SYMBOLS.filter(s=>(!gruppe||s.gruppe===gruppe)&&
+        (!suche||[s.id,s.name,s.gruppe,s.kennbuchstabe].some(t=>t.toLocaleLowerCase().includes(suche))));
+      return {symbols,total:symbols.length,builtinTotal:BUILTIN_SYMBOLS.length,
+        raster:10,externalExtensionsIncluded:false};
+    }
     if(name==='redion_list_block_types'){
       return {blockTypes:BUILTIN_BLOCK_TYPES,total:BUILTIN_BLOCK_TYPES.length,
         externalExtensionsIncluded:false};
