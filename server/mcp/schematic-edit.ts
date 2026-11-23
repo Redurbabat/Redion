@@ -41,6 +41,87 @@ const terminalPos=(part:Item,terminal:string):Pos=>{
     y:Number(part.y)+Math.round(symbol.h/2+dx*Math.sin(angle)+dy*Math.cos(angle))};
 };
 
+/** Nearness rule matches the six-pixel terminal capture used by the
+ * native editor. This deliberately rejects ambiguous contacts rather
+ * than claiming full circuit/network validation. */
+const NEAR=6;
+const distSquared=(p:Pos,a:Pos,b:Pos):number=>{
+  const dx=b.x-a.x,dy=b.y-a.y;
+  const len=dx*dx+dy*dy;
+  if(len===0)return (p.x-a.x)**2+(p.y-a.y)**2;
+  const t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/len));
+  return (p.x-a.x-t*dx)**2+(p.y-a.y-t*dy)**2;
+};
+const nearPath=(p:Pos,points:Pos[]):boolean=>{
+  for(let i=0;i+1<points.length;i++){
+    if(distSquared(p,points[i]!,points[i+1]!)<=NEAR**2)return true;
+  }
+  return false;
+};
+const validPoints=(data:unknown):Pos[]=>{
+  if(!Array.isArray(data)||data.length<2||data.length>60||
+    !data.every(p=>isRecord(p)&&typeof p.x==='number'&&Number.isFinite(p.x)&&
+      typeof p.y==='number'&&Number.isFinite(p.y)))
+    fail('Vorhandene Leitung hat ungültige Koordinaten.');
+  return data as Pos[];
+};
+const orientation=(a:Pos,b:Pos,c:Pos)=>Math.sign((b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x));
+const nearSegments=(a:Pos,b:Pos,c:Pos,d:Pos):boolean=>{
+  if(distSquared(a,c,d)<=NEAR**2||distSquared(b,c,d)<=NEAR**2||
+    distSquared(c,a,b)<=NEAR**2||distSquared(d,a,b)<=NEAR**2)return true;
+  return orientation(a,b,c)!==orientation(a,b,d)&&
+    orientation(c,d,a)!==orientation(c,d,b);
+};
+const nearPolyline=(a:Pos[],b:Pos[]):boolean=>{
+  for(let i=0;i+1<a.length;i++)
+    for(let j=0;j+1<b.length;j++)
+      if(nearSegments(a[i]!,a[i+1]!,b[j]!,b[j+1]!))return true;
+  return false;
+};
+const pinsFor=(component:Item):Array<{nr:string;at:Pos}>=>{
+  const symbol=BUILTIN_SYMBOLS.find(z=>z.id===component.zeichen);
+  if(!symbol)fail('Ein vorhandenes Fachzeichen ist nicht im Cloud-Katalog; Netzschutz ist nicht möglich.');
+  return symbol.anschluesse.map(p=>({nr:p.nr,at:terminalPos(component,p.nr)}));
+};
+const sameLayer=(item:Item,ebene:string)=>item.ebene===ebene;
+const checkFreeComponent=(part:Item,components:unknown[],wires:unknown[],
+  maxWidth:number,maxHeight:number):void=>{
+  const newPins=pinsFor(part);
+  for(const pin of newPins)
+    if(pin.at.x<0||pin.at.y<0||pin.at.x>maxWidth||pin.at.y>maxHeight)
+      fail('Anschluss liegt ausserhalb des Planblatts.');
+  for(const other of components){
+    if(!isRecord(other)||other.id===part.id||!sameLayer(other,String(part.ebene)))continue;
+    const points=pinsFor(other);
+    if(newPins.some(a=>points.some(b=>
+      (a.at.x-b.at.x)**2+(a.at.y-b.at.y)**2<=NEAR**2)))
+      fail('Das Bauteil überlagert eine bereits vorhandene Klemme.');
+  }
+  for(const wire of wires){
+    if(!isRecord(wire)||!sameLayer(wire,String(part.ebene)))continue;
+    const points=validPoints(wire.punkte);
+    if(newPins.some(pin=>nearPath(pin.at,points)))
+      fail('Bauteilklemme berührt eine vorhandene Leitung.');
+  }
+};
+const checkFreeWire=(points:Pos[],fromId:string,fromNr:string,
+  toId:string,toNr:string,ebene:string,components:unknown[],wires:unknown[])=>{
+  for(const component of components){
+    if(!isRecord(component)||!sameLayer(component,ebene))continue;
+    for(const pin of pinsFor(component)){
+      if((component.id===fromId&&pin.nr===fromNr)||
+        (component.id===toId&&pin.nr===toNr))continue;
+      if(nearPath(pin.at,points))
+        fail('Leitung berührt eine andere Klemme; der Netzverlauf ist nicht eindeutig.');
+    }
+  }
+  for(const wire of wires){
+    if(!isRecord(wire)||!sameLayer(wire,ebene))continue;
+    if(nearPolyline(points,validPoints(wire.punkte)))
+      fail('Leitung kreuzt oder berührt eine bestehende Leitung; manuell prüfen.');
+  }
+};
+
 /** A new plan is returned; the input and all unrelated metadata remain unchanged. */
 export const editSchematic=(raw:unknown,args:Item):{plan:Item;elementId:string;kind:string}=>{
   if(!isRecord(raw)||!Array.isArray(raw.teile)||!Array.isArray(raw.leitungen)||
@@ -83,6 +164,7 @@ export const editSchematic=(raw:unknown,args:Item):{plan:Item;elementId:string;k
     if(used.has(bmk))fail('Betriebsmittelkennzeichen ist bereits vergeben.');
     const part={id,zeichen:symbol.id,x,y,drehung,gespiegelt,bmk,nummern:{},
       gruppe:'',ebene};
+    checkFreeComponent(part,components,wires,width,height);
     return {plan:{...raw,teile:[...components,part]},elementId:id,kind:'component'};
   }
   if(kind==='connect_terminals'){
@@ -114,10 +196,55 @@ export const editSchematic=(raw:unknown,args:Item):{plan:Item;elementId:string;k
     if(duplicate)fail('Diese beiden Klemmen sind bereits direkt verbunden.');
     // Orthogonal routing only. Junctions, crossings and electrical behaviour
     // are NOT verified by this helper.
-    const corner={x:end.x,y:start.y};
+    const horizontal=Math.abs(end.x-start.x)>=Math.abs(end.y-start.y);
+    const corner=horizontal?{x:end.x,y:start.y}:{x:start.x,y:end.y};
     const punkte=start.x===end.x||start.y===end.y?[start,end]:[start,corner,end];
+    checkFreeWire(punkte,fromId,fromNr,toId,toNr,ebene,components,wires);
     const wire={id,punkte,ebene,vonTeil:fromId,vonNr:fromNr,nachTeil:toId,nachNr:toNr};
     return {plan:{...raw,leitungen:[...wires,wire]},elementId:id,kind:'wire'};
+  }
+  if(kind==='move_component'){
+    allowedKeys(args,['componentId','x','y']);
+    const id=ident(args.componentId,'Bauteil');
+    const old=components.find(c=>isRecord(c)&&c.id===id);
+    if(!isRecord(old))fail('Bauteil existiert nicht.');
+    const x=grid(args.x,'X-Koordinate',width),y=grid(args.y,'Y-Koordinate',height);
+    if(old.x===x&&old.y===y)fail('Bauteilposition ist bereits unverändert.');
+    const attached=wires.some(w=>isRecord(w)&&
+      (w.vonTeil===id||w.nachTeil===id));
+    if(attached)fail('Bauteil hat Leitungsanschlüsse. Bitte im nativen Editor mit Netzschutz verschieben.');
+    // Even without explicit endpoint IDs, an old plan may have implicit
+    // geometric contacts. Reject movement if any old terminal touches a wire.
+    const oldLayer=typeof old.ebene==='string'?old.ebene:'plan';
+    for(const wire of wires){
+      if(!isRecord(wire)||wire.ebene!==oldLayer)continue;
+      const points=validPoints(wire.punkte);
+      if(pinsFor(old).some(pin=>nearPath(pin.at,points)))
+        fail('Bauteil berührt bereits eine Leitung. Manuell mit Netzschutz verschieben.');
+    }
+    const symbol=BUILTIN_SYMBOLS.find(s=>s.id===old.zeichen);
+    if(!symbol)fail('Unbekanntes Bauteil kann nicht über Cloud-MCP verschoben werden.');
+    const rotated=Number(old.drehung||0);
+    if(![0,90,180,270].includes(rotated))fail('Bauteildrehung ist ungültig.');
+    const sizeWidth=rotated%180===0?symbol.w:symbol.h;
+    const sizeHeight=rotated%180===0?symbol.h:symbol.w;
+    if(x+sizeWidth>width||y+sizeHeight>height)
+      fail('Verschobenes Bauteil liegt ausserhalb des Planblatts.');
+    const moved={...old,x,y};
+    checkFreeComponent(moved,components,wires,width,height);
+    return {plan:{...raw,teile:components.map(c=>c===old?moved:c)},
+      elementId:id,kind:'component'};
+  }
+  if(kind==='move_label'){
+    allowedKeys(args,['labelId','x','y']);
+    const id=ident(args.labelId,'Beschriftung');
+    const old=labels.find(l=>isRecord(l)&&l.id===id);
+    if(!isRecord(old))fail('Beschriftung existiert nicht.');
+    const x=grid(args.x,'X-Koordinate',width),y=grid(args.y,'Y-Koordinate',height);
+    if(old.x===x&&old.y===y)fail('Beschriftungsposition ist bereits unverändert.');
+    const moved={...old,x,y};
+    return {plan:{...raw,texte:labels.map(l=>l===old?moved:l)},
+      elementId:id,kind:'label'};
   }
   if(kind==='add_label'){
     allowedKeys(args,['labelId','labelText','x','y','layer']);
