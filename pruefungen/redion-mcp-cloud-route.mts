@@ -140,8 +140,12 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       assert.equal(transport.sessionId,undefined);
       const list=await client.listTools();assert.equal(list.tools.length,9);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
-      assert.equal(JSON.parse(result.content[0]!.text).content,'Nur Testdaten');
-      const denied=await client.callTool({name:'redion_create_page',arguments:{workspaceId:'ws_test',title:'Gesperrt',requestId:'sdk_request_01'}});
+      assert.equal(JSON.parse(result.content[0]!.text).markdown,'Nur Testdaten');
+       assert.equal((result.structuredContent as any)?.markdown,'Nur Testdaten');
+      const unknown=await client.callTool({name:'redion_list_tasks',arguments:{workspaceId:'ws_test'}});
+       assert.equal(unknown.isError,true);
+       assert.equal(JSON.parse(unknown.content[0]!.text).code,'unknown_tool');
+    const denied=await client.callTool({name:'redion_create_page',arguments:{workspaceId:'ws_test',title:'Gesperrt',requestId:'sdk_request_01'}});
       assert.equal(denied.isError,true);
       await client.close();
       const previous=tokens.access_token;
@@ -506,13 +510,13 @@ test('Cloud-MCP: Markdown-Einrückung und Zeilenumbrüche exakt erhalten',async(
     });
     assert.notEqual(appended.isError,true);
     const read=await invoke('redion_read_page',{documentId:id});
-    assert.equal(JSON.parse(read.content[0]!.text).content,'Beginn\n\n    Code\n\n');
+    assert.equal(JSON.parse(read.content[0]!.text).markdown,'Beginn\n\n    Code\n\n');
     const replaced=await invoke('redion_replace_text',{
       documentId:id,find:'    Code',replacement:'  Block',expectedVersion:2
     });
     assert.notEqual(replaced.isError,true);
     const finalRead=await invoke('redion_read_page',{documentId:id});
-    assert.equal(JSON.parse(finalRead.content[0]!.text).content,'Beginn\n\n  Block\n\n');
+    assert.equal(JSON.parse(finalRead.content[0]!.text).markdown,'Beginn\n\n  Block\n\n');
     const blank=await invoke('redion_append_content',{
       documentId:id,content:'   ',expectedVersion:3
     });
@@ -548,22 +552,29 @@ test('Cloud-MCP: grosse Seiten in Unicode-sicheren Abschnitten lesen',async()=>{
     assert.equal(data.offset,0);
     assert.equal(data.version,7);
     assert.equal(data.totalLength,full.length);
-    assert.equal(data.content.length,12001);
+    assert.equal(data.markdown.length,12001);
+    assert.equal('content' in data,false);
     assert.equal(data.nextOffset,12001);
+    const legacy=JSON.parse((await read({responseFormat:'legacy',limit:6})).content[0]!.text);
+    assert.equal(legacy.content,'A'.repeat(6));
+    assert.equal('markdown' in legacy,false);
+    const invalidFormat=await read({responseFormat:'html'});
+    assert.equal(invalidFormat.isError,true);
+    assert.equal(JSON.parse(invalidFormat.content[0]!.text).code,'invalid_arguments');
     const second=JSON.parse((await read({offset:data.nextOffset})).content[0]!.text);
     assert.equal(second.nextOffset,null);
     assert.equal(second.offset,12001);
-    assert.equal(data.content+second.content,full);
+    assert.equal(data.markdown+second.markdown,full);
     const split=await read({offset:12000});
     assert.equal(split.isError,true);
     assert.equal(JSON.parse(split.content[0]!.text).code,'invalid_arguments');
     const invalid=await read({offset:1000001});
     assert.equal(invalid.isError,true);
     const short=JSON.parse((await read({offset:0,limit:6})).content[0]!.text);
-    assert.equal(short.content,'A'.repeat(6));
+    assert.equal(short.markdown,'A'.repeat(6));
     assert.equal(short.nextOffset,6);
     const empty=JSON.parse((await read({offset:full.length})).content[0]!.text);
-    assert.equal(empty.content,'');
+    assert.equal(empty.markdown,'');
     assert.equal(empty.nextOffset,null);
   }finally{f.close();}
 });
@@ -690,7 +701,7 @@ test('Cloud-MCP: mehrere Seiten mit neutralen Fehlern und begrenzter Antwort les
       assert.deepEqual(item,{documentId:item.documentId,unavailable:true});
     const follow=await f.rpc(token.access_token,'tools/call',{name:'redion_read_page',
       arguments:{workspaceId:'ws_test',documentId:'long_batch',offset:2001}});
-    assert.equal(JSON.parse(follow.data.result.content[0].text).content,'END');
+    assert.equal(JSON.parse(follow.data.result.content[0].text).markdown,'END');
     const duplicates=await call({documentIds:['long_batch','long_batch']});
     assert.equal(duplicates.isError,true);
     assert.equal(JSON.parse(duplicates.content[0]!.text).code,'invalid_arguments');
@@ -726,18 +737,18 @@ test('Cloud-MCP: Leseabschnitte mit Versionsnummer gegen Datenänderungen absich
     const first=await read({offset:0,limit:6});
     assert.notEqual(first.isError,true);
     const previous=JSON.parse(first.content[0]!.text);
-    assert.equal(previous.content,'Alter ');
+    assert.equal(previous.markdown,'Alter ');
     assert.equal(previous.version,2);
     assert.equal(previous.nextOffset,6);
     const second=await read({offset:6,limit:8,expectedVersion:2});
-    assert.equal(JSON.parse(second.content[0]!.text).content,'Inhalt 1');
+    assert.equal(JSON.parse(second.content[0]!.text).markdown,'Inhalt 1');
     await put(3,'Neuer Inhalt 987654321');
     const stale=await read({offset:6,limit:8,expectedVersion:2});
     assert.equal(stale.isError,true);
     assert.equal(JSON.parse(stale.content[0]!.text).code,'conflict');
     const refreshed=await read({offset:6,limit:8,expectedVersion:3});
     assert.notEqual(refreshed.isError,true);
-    assert.equal(JSON.parse(refreshed.content[0]!.text).content,'Inhalt 9');
+    assert.equal(JSON.parse(refreshed.content[0]!.text).markdown,'Inhalt 9');
     const invalid=await read({offset:6,expectedVersion:0});
     assert.equal(invalid.isError,true);
     assert.equal(JSON.parse(invalid.content[0]!.text).code,'invalid_arguments');
