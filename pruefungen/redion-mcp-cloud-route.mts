@@ -409,3 +409,74 @@ test('Cloud-MCP: Unterseiten verbergen Existenz und Reihenfolge unfreigegebener 
     assert.equal(JSON.parse(ownerList.data.result.content[0].text).documents.length,5);
   }finally{f.close();}
 });
+
+
+test('Cloud-MCP: Suche im gesamten Seiteninhalt und nur über sichtbare Resultate paginieren',async()=>{
+  const f=await fixture();
+  try{
+    const owner=await f.authorize(true);
+    await f.store.setze('konten',{id:'search_collab',mail:'search@example.test',
+      name:'search_collab',herkunft:'github',angelegt:'',gesperrt:0});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'search_collab',
+      rolle:'lesen',von:'owner',wann:'2026-11-23'});
+    // More than the old 300-record search boundary.
+    for(let i=0;i<330;i++){
+      await f.store.setze('saetze',{id:'recent_search_'+i,bereich:'ws_test',
+        tabelle:'blocks',daten:JSON.stringify({type:'page',text:'Neu '+i,inhalt:'Alltag'}),
+        verschluesselt:0,seite:'recent_search_'+i,version:1,
+        geaendert:'2099-01-01T00:00:00Z',geloescht:0,vonGeraet:'Test'});
+    }
+    const record=async(id:string,title:string,content:string,time:string)=>{
+      await f.store.setze('saetze',{id,bereich:'ws_test',tabelle:'blocks',
+        daten:JSON.stringify({type:'page',text:title,inhalt:content}),verschluesselt:0,
+        seite:id,version:1,geaendert:time,geloescht:0,vonGeraet:'Test'});
+    };
+    await record('secret_result','Intern','verteiltes-suchwort','2040-01-01T00:00:00Z');
+    await record('visible_result_one','Titel ohne Treffer','Verteiltes-Suchwort',
+      '2039-01-01T00:00:00Z');
+    await record('visible_result_two','verteiltes-suchwort Titel','Sonstiges',
+      '2038-01-01T00:00:00Z');
+    await record('visible_result_three','Dritte Seite','verteiltes-suchwort',
+      '2037-01-01T00:00:00Z');
+    await record('literal_wildcard','Ergebnis für %_','Anderer Text',
+      '2036-01-01T00:00:00Z');
+    await record('encrypted_result','Sperre','verteiltes-suchwort',
+      '2035-01-01T00:00:00Z');
+    const encrypted=await f.store.hole('saetze',{bereich:'ws_test',id:'encrypted_result'});
+    assert.ok(encrypted);
+    await f.store.setze('saetze',{...encrypted,verschluesselt:1});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'secret_result',
+      kontoId:'search_collab',rolle:'kein',von:'owner',wann:'2026-11-23'});
+    const token=await f.authorize(false,'search_collab');
+    const call=async(name:string,parameters:Record<string,unknown>)=>{
+      const response=await f.rpc(token.access_token,'tools/call',{name,arguments:parameters});
+      assert.equal(response.status,200);
+      return response.data.result;
+    };
+    const search=async(query:string,offset=0,limit=1)=>{
+      const result=await call('redion_search',{workspaceId:'ws_test',query,offset,limit});
+      assert.notEqual(result.isError,true,JSON.stringify(result));
+      return JSON.parse(result.content[0].text) as {
+        documents:{documentId:string}[];nextOffset:number|null;limited?:boolean
+      };
+    };
+    for(const [offset,id] of ['visible_result_one','visible_result_two','visible_result_three'].entries()){
+      const page=await search('verteiltes-suchwort',offset);
+      assert.deepEqual(page.documents.map(x=>x.documentId),[id]);
+      assert.equal(page.nextOffset,offset<2?offset+1:null);
+      assert.equal(page.limited,undefined);
+    }
+    assert.deepEqual((await search('verteiltes-suchwort',3)).documents,[]);
+    assert.deepEqual((await search('%_',0,10)).documents.map(x=>x.documentId),['literal_wildcard']);
+    const long=await call('redion_search',{workspaceId:'ws_test',query:'x'.repeat(201)});
+    assert.equal(long.isError,true);
+    assert.equal(JSON.parse(long.content[0].text).code,'invalid_arguments');
+    const offset=await call('redion_search',{workspaceId:'ws_test',query:'x',offset:1001});
+    assert.equal(offset.isError,true);
+    const oversized=await f.rpc(owner.access_token,'tools/call',{name:'redion_create_page',
+      arguments:{workspaceId:'ws_test',title:'Ungültige Seite',
+        content:'X'.repeat(12001),requestId:'search_oversized_page_001'}});
+    assert.equal(oversized.data.result.isError,true);
+    assert.equal(JSON.parse(oversized.data.result.content[0].text).code,'invalid_arguments');
+  }finally{f.close();}
+});
