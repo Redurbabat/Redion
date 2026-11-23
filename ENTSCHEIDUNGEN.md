@@ -854,6 +854,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 
 * **E790** — Windows-Stiftstudio: gemeinsame Stiftpunkte, optionale Freihand im Schaltplan und Glass-Wheel-Arbeitswerkzeuge; Windows ist die erste Abnahmeplattform dieses Bogens.
 * **E791** — RED Ion Windows-MCP: semantische Live-Steuerung mit freigegebenen Aktionen und Sicherheitsbestätigungen.
+* **E792** — Visual MCP, sichere Mehrschritt-Aufträge und dauerhafte widerrufbare Freigaben
+* **E793** — Zugriff ohne Laptop ausschliesslich kostenlos
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
