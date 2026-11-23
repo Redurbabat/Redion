@@ -1,0 +1,25 @@
+name: PR221 independent workerd validation
+on:
+  push:
+    branches:
+      - 'agent/cloud-mcp-safe-page-tools-20261123'
+jobs:
+  actual-worker:
+    if: github.repository == 'Redurbabat/Redion' && github.ref == 'refs/heads/agent/cloud-mcp-safe-page-tools-20261123'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install project dependencies
+        run: npm install --no-audit --no-fund --ignore-scripts
+      - name: Install isolated test runtime only
+        run: npm install --no-save --no-package-lock --no-audit --no-fund --ignore-scripts wrangler rolldown
+      - name: Install MCP SDK client
+        run: npm install --prefix plugins/red-ion --no-audit --no-fund --ignore-scripts
+      - name: Run real workerd and isolated D1 test
+        run: npm run test:mcp-cloud-runtime
