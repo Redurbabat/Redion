@@ -39,6 +39,8 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_update_page',description:'Ändert den Seitentitel nur bei passender expectedVersion.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,title:nameField,expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId','title','expectedVersion'],additionalProperties:false}},
+  {name:'redion_list_root_pages',description:'Listet freigegebene Hauptseiten eines Arbeitsbereichs; nur sichtbare Seiten zählen bei limit und offset.',
+    inputSchema:{type:'object',properties:{...workspace,limit:{type:'integer',minimum:1,maximum:100},offset:{type:'integer',minimum:0,maximum:100000}},required:['workspaceId'],additionalProperties:false}},
   {name:'redion_list_child_pages',description:'Listet lesbare, unverschlüsselte Unterseiten einer Seite auf.',
     inputSchema:{type:'object',properties:{...workspace,parentId:idField,limit:{type:'integer',minimum:1,maximum:100},offset:{type:'integer',minimum:0,maximum:100000}},required:['workspaceId','parentId'],additionalProperties:false}},
   {name:'redion_append_content',description:'Hängt Markdown an eine Klartext-Seite an; benötigt Schreibrecht und passende Version.',
@@ -59,6 +61,7 @@ const toolTitles:Record<string,string>={
   redion_read_page:'Seite lesen',
   redion_create_page:'Seite erstellen',
   redion_update_page:'Seitentitel ändern',
+  redion_list_root_pages:'Hauptseiten auflisten',
   redion_list_child_pages:'Unterseiten auflisten',
   redion_append_content:'Inhalt anhängen',
   redion_move_page:'Seite verschieben',
@@ -211,45 +214,51 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         content:full.slice(start,end),version:Number(result.s.version)||1,
         offset:start,totalLength:full.length,nextOffset:end<full.length?end:null};
     }
-    if(name==='redion_list_child_pages'){
-      const parentId=required(args.parentId,128);
-      await page(w,parentId,'lesen');
+    if(name==='redion_list_child_pages'||name==='redion_list_root_pages'){
+      const root=name==='redion_list_root_pages';
+      const parentId=root?'':required(args.parentId,128);
+      if(!root)await page(w,parentId,'lesen');
       const max=limit(args.limit,50,100);
       const offset=args.offset===undefined?0:args.offset;
       if(!Number.isSafeInteger(offset)||Number(offset)<0||Number(offset)>100000)
         return err('invalid_arguments','Ungültiger Seitenversatz.');
-      // Query only this parent's cleartext pages. Scanning the most recent
-      // 1,000 workspace records silently omitted older children.
-      // Permission-filtered pagination. An offset over raw database rows leaks
-      // the number and order of children hidden by an explicit page denial.
-      // A child inherits the already-verified parent's read permission unless
-      // its own user or wildcard grant overrides that permission.
+      // Every returned page is permission-filtered BEFORE SQL pagination.
+      // The root view has no inherited parent grant: fall back to the
+      // workspace grant. Child pages inherit the verified parent's grant.
+      const parentWhere=root?
+        "COALESCE(json_extract(s.daten,'$.parentId'),'')=?2":
+        "json_extract(s.daten,'$.parentId')=?2";
+      const pageRole=(account:string)=>
+        "(SELECT CASE WHEN f.rolle IN ('voll','edit','komm','lesen') THEN 1 ELSE 0 END "+
+        "FROM freigaben AS f WHERE f.bereich=s.bereich "+
+        "AND f.seite=COALESCE(NULLIF(s.seite,''),s.id) AND f.kontoId="+account+")";
+      const workspaceRole=(account:string)=>
+        "(SELECT CASE WHEN f.rolle IN ('voll','edit','komm','lesen') THEN 1 ELSE 0 END "+
+        "FROM freigaben AS f WHERE f.bereich=s.bereich AND f.seite='*' AND f.kontoId="+account+")";
+      const fallback=root?
+        workspaceRole('?6')+","+workspaceRole("'*'")+",0":"1";
       const rows=await db.prepare(
         "SELECT s.id,s.seite,s.daten,s.version FROM saetze AS s "+
         "WHERE s.bereich=?1 AND s.tabelle='blocks' AND s.geloescht=0 AND s.verschluesselt=0 "+
         "AND CASE WHEN json_valid(s.daten) THEN "+
-        "(json_extract(s.daten,'$.type')='page' AND json_extract(s.daten,'$.parentId')=?2) "+
+        "(json_extract(s.daten,'$.type')='page' AND "+parentWhere+") "+
         "ELSE 0 END AND (?5=1 OR COALESCE("+
-        "(SELECT CASE WHEN f.rolle IN ('voll','edit','komm','lesen') THEN 1 ELSE 0 END "+
-        "FROM freigaben AS f WHERE f.bereich=s.bereich "+
-        "AND f.seite=COALESCE(NULLIF(s.seite,''),s.id) AND f.kontoId=?6),"+
-        "(SELECT CASE WHEN f.rolle IN ('voll','edit','komm','lesen') THEN 1 ELSE 0 END "+
-        "FROM freigaben AS f WHERE f.bereich=s.bereich "+
-        "AND f.seite=COALESCE(NULLIF(s.seite,''),s.id) AND f.kontoId='*'),"+
-        "1)=1) ORDER BY s.geaendert DESC,s.id DESC LIMIT ?3 OFFSET ?4"
+        pageRole('?6')+","+pageRole("'*'")+","+fallback+
+        ")=1) ORDER BY s.geaendert DESC,s.id DESC LIMIT ?3 OFFSET ?4"
       ).bind(w,parentId,max+1,Number(offset),area.besitzer===userId?1:0,userId)
         .all<{id:string;seite:string|null;daten:string;version:number}>();
-      const children=[];
+      const documents=[];
       for(const s of rows.results.slice(0,max)){
         const r=await rolleAuf(ablage,w,String(s.seite||s.id),userId);
         if(!darf(r,'lesen'))continue;
         const data=JSON.parse(s.daten) as Record<string,unknown>;
-        children.push({documentId:s.id,title:String(data.text||'').slice(0,160),version:Number(s.version)||1});
+        documents.push({documentId:s.id,title:String(data.text||'').slice(0,160),version:Number(s.version)||1});
       }
-      // A mismatch is fail-closed: never disclose a cursor across rows that
-      // were excluded by the definitive per-page permission check.
-      const allVisible=children.length===Math.min(rows.results.length,max);
-      return {parentId,documents:children,nextOffset:allVisible&&rows.results.length>max?Number(offset)+max:null};
+      // If the definitive ACL check rejects a row, do not reveal where
+      // additional hidden pages may exist through nextOffset.
+      const allVisible=documents.length===Math.min(rows.results.length,max);
+      const nextOffset=allVisible&&rows.results.length>max?Number(offset)+max:null;
+      return root?{workspaceId:w,documents,nextOffset}:{parentId,documents,nextOffset};
     }
     if(!principal.scopes.includes('redion:write'))
       return err('forbidden','Schreibrechte sind nicht freigegeben.');
