@@ -44,6 +44,8 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_update_page',description:'Ändert den Seitentitel nur bei passender expectedVersion.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,title:nameField,expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId','title','expectedVersion'],additionalProperties:false}},
+  {name:'redion_list_databases',description:'Listet lesbare Klartext-Datenbanken auf Seiten, die der Benutzer lesen darf. Keine versteckten Seiten oder Spaltenwerte.',
+    inputSchema:{type:'object',properties:{...workspace,limit:{type:'integer',minimum:1,maximum:30},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
   {name:'redion_list_root_pages',description:'Listet freigegebene Hauptseiten eines Arbeitsbereichs; nur sichtbare Seiten zählen bei limit und offset.',
     inputSchema:{type:'object',properties:{...workspace,limit:{type:'integer',minimum:1,maximum:100},offset:{type:'integer',minimum:0,maximum:100000}},required:['workspaceId'],additionalProperties:false}},
   {name:'redion_list_child_pages',description:'Listet lesbare, unverschlüsselte Unterseiten einer Seite auf.',
@@ -68,6 +70,7 @@ const toolTitles:Record<string,string>={
   redion_read_pages:'Mehrere Seiten lesen',
   redion_create_page:'Seite erstellen',
   redion_update_page:'Seitentitel ändern',
+  redion_list_databases:'Datenbanken auflisten',
   redion_list_root_pages:'Hauptseiten auflisten',
   redion_list_child_pages:'Unterseiten auflisten',
   redion_append_content:'Inhalt anhängen',
@@ -198,6 +201,52 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       // No raw-row truncation marker: that could disclose the existence of
       // content that the caller is explicitly forbidden to read.
       return {documents:found.slice(0,max),nextOffset:found.length>max?Number(offset)+max:null};
+    }
+    if(name==='redion_list_databases'){
+      const max=limit(args.limit,20,30);
+      const offset=args.offset===undefined?0:args.offset;
+      if(!Number.isSafeInteger(offset)||Number(offset)<0||Number(offset)>1000)
+        return err('invalid_arguments','Ungültiger Datenbankversatz.');
+      // "collections" rows do NOT carry their actual owning page:
+      // the sync adapter stores seite=collectionId. Only a valid database
+      // block points to an actual page, and that page must be readable.
+      // Distinct visible collections count for pagination, never raw rows.
+      const sql="SELECT c.id,c.daten,c.version,b.seite AS pageId "+
+        "FROM saetze c JOIN saetze b ON b.bereich=c.bereich "+
+        "AND b.tabelle='blocks' AND b.geloescht=0 AND b.verschluesselt=0 "+
+        "AND CASE WHEN json_valid(b.daten) THEN "+
+        "(json_extract(b.daten,'$.type')='database' AND "+
+        "json_extract(b.daten,'$.collectionId')=c.id) ELSE 0 END "+
+        "WHERE c.bereich=?1 AND c.tabelle='collections' "+
+        "AND c.geloescht=0 AND c.verschluesselt=0 AND json_valid(c.daten) "+
+        "ORDER BY c.geaendert DESC,c.id DESC,b.id DESC LIMIT ?2 OFFSET ?3";
+      const found:{databaseId:string;name:string;pageId:string;version:number}[]=[];
+      const seen=new Set<string>(),batch=60,maxScanned=2000;
+      let scanned=0,visible=0;
+      while(scanned<maxScanned&&found.length<=max){
+        const result=await db.prepare(sql).bind(w,batch,scanned)
+          .all<{id:string;daten:string;version:number;pageId:string|null}>();
+        for(const s of result.results){
+          if(seen.has(s.id))continue;
+          const pageId=typeof s.pageId==='string'?s.pageId:'';
+          if(!pageId)continue;
+          try{await page(w,pageId,'lesen');}
+          catch(error){
+            if(error instanceof CloudMcpToolError)continue;
+            throw error;
+          }
+          seen.add(s.id);
+          if(visible++<Number(offset))continue;
+          const data=JSON.parse(s.daten) as Record<string,unknown>;
+          found.push({databaseId:s.id,name:String(data.name||'').slice(0,160),
+            pageId,version:Number(s.version)||1});
+          if(found.length>max)break;
+        }
+        scanned+=result.results.length;
+        if(result.results.length<batch)break;
+      }
+      return {workspaceId:w,databases:found.slice(0,max),
+        nextOffset:found.length>max?Number(offset)+max:null};
     }
     if(name==='redion_read_pages'){
       const raw=args.documentIds;
