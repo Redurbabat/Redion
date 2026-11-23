@@ -712,6 +712,8 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       if(current.data.content!==undefined&&(!Array.isArray(current.data.content)||
         current.data.content.some(k=>typeof k!=='string'||!k||k.length>128)))
         return err('invalid_data','Die Elternseite enthält eine ungültige Blockliste.');
+      if(JSON.stringify(current.data).length>63000)
+        return err('too_large','Die Elternseite hat nicht genug Platz für einen weiteren Block.');
       if(!db.batch)
         return err('unavailable','Die D1-Transaktion für Blockerstellung steht nicht zur Verfügung.');
       let requestId='';
@@ -745,6 +747,9 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         "AND json_valid(p.daten) AND json_extract(p.daten,'$.type')='page' "+
         "AND (json_type(p.daten,'$.content') IS NULL OR json_type(p.daten,'$.content')='array') "+
         "AND COALESCE(json_array_length(p.daten,'$.content'),0)<200 "+
+        "AND NOT EXISTS (SELECT 1 FROM json_each(CASE "+
+        "WHEN json_type(p.daten,'$.content')='array' "+
+        "THEN json_extract(p.daten,'$.content') ELSE '[]' END) WHERE value=?1) "+
         "RETURNING id"
       ).bind(blockId,w,payload,id,now,ver);
       const updateParent=db.prepare(
