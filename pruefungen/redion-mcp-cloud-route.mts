@@ -1619,8 +1619,8 @@ test('Cloud-MCP: ein nativer Schaltplan wird atomar, sicher und wiederholbar ers
 test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und atomare Versionen',async()=>{
   const f=await fixture();
   try{
-    const writer=await f.authorize(true);
     const readOnly=await f.authorize(false);
+    const writer=await f.authorize(true);
     await f.store.setze('saetze',{id:'edit_schematic_page',bereich:'ws_test',tabelle:'blocks',
       daten:JSON.stringify({type:'page',text:'Elektro',inhalt:'',content:[]}),
       verschluesselt:0,seite:'edit_schematic_page',version:1,geaendert:'2026-11-23',
