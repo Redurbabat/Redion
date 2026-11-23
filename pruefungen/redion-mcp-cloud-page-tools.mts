@@ -51,6 +51,18 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
   assert.ok(names(read).includes('redion_read_schematic'));
   assert.deepEqual(schematic?.inputSchema.required,['workspaceId','blockId']);
   assert.equal(schematic?.annotations?.readOnlyHint,true);
+  const updateSchematic=write.find(x=>x.name==='redion_update_schematic');
+  assert.equal(names(read).includes('redion_update_schematic'),false);
+  assert.ok(names(write).includes('redion_update_schematic'));
+  assert.deepEqual(updateSchematic?.inputSchema.required,
+    ['workspaceId','blockId','expectedVersion','operation']);
+  assert.deepEqual(updateSchematic?.inputSchema.properties.operation,
+    {type:'string',enum:['add_component','connect_terminals','add_label']});
+  assert.deepEqual(updateSchematic?.inputSchema.properties.rotation,
+    {type:'integer',enum:[0,90,180,270]});
+  assert.equal(updateSchematic?.annotations?.readOnlyHint,false);
+  assert.equal(updateSchematic?.annotations?.idempotentHint,false);
+  assert.equal(updateSchematic?.annotations?.destructiveHint,false);
   const addSchematic=write.find(x=>x.name==='redion_add_schematic');
   assert.equal(names(read).includes('redion_add_schematic'),false);
   assert.ok(names(write).includes('redion_add_schematic'));
