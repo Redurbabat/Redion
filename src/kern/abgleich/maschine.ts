@@ -357,6 +357,9 @@ const Wolke = (() => {
     zustand.konto = ich.konto;
     if (!bereich() && ich.bereiche.length) Store.setMeta('wolkeBereich', ich.bereiche[0].id);
     Store.setMeta('wolkeKonto', ich.konto);
+    /* Login kann nach dem App-Start erfolgen: den Takt jetzt aktivieren,
+       statt erst beim nächsten Neustart. Der Abgleich selbst bleibt Opt-in. */
+    takt();
     melden();
     if (typeof Protokoll !== 'undefined')
       Protokoll.notieren('konto', 'Bei der Wolke angemeldet als ' + ich.konto.name);
@@ -398,6 +401,8 @@ const Wolke = (() => {
        zu verstehen warum. */
     Store.setMeta('wolkeAbgleich', null);
     Store.setMeta('wolkeNeuAbgleich', '');
+    /* Nach dem Abmelden keinen leeren Hintergrund-Timer weiterlaufen lassen. */
+    takt();
     melden();
     if (typeof Protokoll !== 'undefined') Protokoll.notieren('konto', 'Von der Wolke abgemeldet');
   };
@@ -956,6 +961,13 @@ const Wolke = (() => {
      von aussen nicht messen, ob die Wahl ankam — und eine Prüfung, die
      nichts messen kann, ist keine (§55.2). */
   let uhr: any = null;
+  /* Der Live-Takt ist bewusst ein sparsamer Delta-Abgleich, kein ungeprüfter
+     Push-Kanal. Nur bei sichtbarer, online befindlicher App anfragen.
+     abgleichen() prüft zusätzlich Konto, Zustimmung, Schlüssel und Doppelstart. */
+  const autoAbgleichen = (): void => {
+    if (document.hidden || (typeof navigator !== 'undefined' && navigator.onLine === false)) return;
+    abgleichen().catch(() => {});
+  };
   const takt = (): number => {
     clearInterval(uhr);
     uhr = null;
@@ -968,7 +980,7 @@ const Wolke = (() => {
        ist die Frage, für die es diesen Schalter NICHT gibt. */
     if (!Number.isFinite(sek) || sek <= 0) return 0;
     const ms = sek * 1000;
-    uhr = setInterval(() => { abgleichen().catch(() => {}); }, ms);
+    uhr = setInterval(autoAbgleichen, ms);
     return ms;
   };
 
@@ -1254,18 +1266,17 @@ const Wolke = (() => {
        gemeldet, wenn dieses Gerät gerade nicht angemeldet ist. */
     if (typeof Store.on === 'function')
       Store.on((was: any) => { if (was === 'import') melden(); });
-    if (!token()) return;
-    zustand.konto = Store.getMeta('wolkeKonto', null);
-    zustand.angemeldet = true;
-    melden();
-    /* Nicht sofort losrennen: erst soll die App stehen. */
-    setTimeout(() => {
-      abgleichen().catch(() => {});
-      takt();
-    }, 3000);
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && angemeldet()) abgleichen().catch(() => {});
-    });
+    if (token()) {
+      zustand.konto = Store.getMeta('wolkeKonto', null);
+      zustand.angemeldet = true;
+      melden();
+      /* Nicht sofort losrennen: erst soll die App stehen. */
+      setTimeout(() => { autoAbgleichen(); takt(); }, 3000);
+    }
+    /* Auch ohne Token beim Start registrieren. Nach späterem Login wird
+       takt() sofort aktiviert; Rückkehr und Netz-Reconnect holen Änderungen. */
+    document.addEventListener('visibilitychange', autoAbgleichen);
+    window.addEventListener('online', autoAbgleichen);
     /* Wird der Takt anderswo geändert — im Wolke-Fenster, über das
        Register —, gilt er sofort und nicht erst nach dem Neuladen. */
     const ev = (globalThis as any).Ereignisse;
