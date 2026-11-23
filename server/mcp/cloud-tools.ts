@@ -41,7 +41,7 @@ export const CLOUD_TOOLS:ToolDef[]=[
       required:['workspaceId','documentIds'],additionalProperties:false}},
   {name:'redion_add_block',description:'Erstellt einen sicheren Text- oder Todo-Block auf einer freigegebenen Seite; neue Blockzeile und Elternliste werden in einer D1-Transaktion gespeichert. requestId optional, Wiederholung mit derselben Seitenversion idempotent. Verschachtelte Blöcke noch nicht unterstützt.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,expectedVersion:{type:'integer',minimum:1},
-      typ:{type:'string',maxLength:40},text:{type:'string',maxLength:12000},
+      typ:{type:'string',enum:['text','h1','h2','h3','todo','bullet','number','quote','code','divider']},text:{type:'string',maxLength:12000},
       daten:{type:'object',additionalProperties:true},inBlockId:idField,
       requestId:{type:'string',minLength:8,maxLength:100}},
       required:['workspaceId','documentId','expectedVersion','typ'],additionalProperties:false}},
