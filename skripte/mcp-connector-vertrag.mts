@@ -4,6 +4,7 @@
  */
 import {mkdir,writeFile} from 'node:fs/promises';
 import {resolve,dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {CLOUD_TOOLS,visibleCloudTools} from '../server/mcp/cloud-tools.ts';
 import type {McpPrincipal} from '../server/mcp/oauth.ts';
 
@@ -55,5 +56,5 @@ const main=async()=>{
   await writeFile(file,contract,'utf8');
   process.stdout.write('MCP-Vertrag erstellt: '+file+'\n');
 };
-if(process.argv[1]&&resolve(process.argv[1])===resolve(new URL(import.meta.url).pathname))
+if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url))
   await main();
