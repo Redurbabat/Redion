@@ -23,7 +23,8 @@ const fixture=async()=>{
       const statement={
         bind(...next:(string|number)[]){values=next;return this;},
         async first<T>(){return (sqlite.prepare(sql).get(...bound()) as T|undefined)??null;},
-        async all<T>(){return {results:sqlite.prepare(sql).all(...bound()) as T[]};}
+        async all<T>(){return {results:sqlite.prepare(sql).all(...bound()) as T[]};},
+        async run(){return sqlite.prepare(sql).run(...bound());}
       };
       prepared.set(statement,{sql,bound});
       return statement;
