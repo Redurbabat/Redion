@@ -288,9 +288,12 @@ const Store = (() => {
       const [bloecke, sammlungen, ansichten, metadaten] = await Promise.all([
         all('blocks'), all('collections'), all('views'), all('meta')
       ]);
-      bloecke.forEach((b: any)      => cache.blocks[b.id] = b);
-      sammlungen.forEach((c: any)   => cache.collections[c.id] = c);
-      ansichten.forEach((v: any)    => cache.views[v.id] = v);
+      /* Die Versionsnummer `rev` gehört der Platte, nicht dem Satz (E801):
+         sie wird hier abgenommen und gemerkt, damit sie weder in eine
+         Sicherung noch in den Abgleich reist. */
+      bloecke.forEach((b: any)      => { revAbnehmen('blocks', b); cache.blocks[b.id] = b; });
+      sammlungen.forEach((c: any)   => { revAbnehmen('collections', c); cache.collections[c.id] = c; });
+      ansichten.forEach((v: any)    => { revAbnehmen('views', v); cache.views[v.id] = v; });
       metadaten.forEach((m: any)    => cache.meta[m.k] = m.v);
     } catch (err) {
       db = null;
@@ -459,6 +462,7 @@ const Store = (() => {
     if (patch && 'checked' in patch && b.type === 'todo')
       patch = Object.assign({}, patch,
         { erledigtAm: patch.checked ? now() : null });
+    merkeBasis('blocks', b);
     Object.assign(b, patch, { edited: now(), geaendertVon: getMeta('nutzer', '') || 'Ich' });
     save('blocks', b);
     return b;
@@ -1003,6 +1007,7 @@ const Store = (() => {
   const updateCollection = (id: string, patch: any) => {
     const c = cache.collections[id];
     if (!c) return null;
+    merkeBasis('collections', c);
     Object.assign(c, patch);
     if (!('edited' in patch)) c.edited = now();
     save('collections', c);
@@ -1012,6 +1017,7 @@ const Store = (() => {
   const updateView = (id: string, patch: any) => {
     const v = cache.views[id];
     if (!v) return null;
+    merkeBasis('views', v);
     Object.assign(v, patch);
     if (!('edited' in patch)) v.edited = now();
     save('views', v);
@@ -1302,8 +1308,17 @@ const Store = (() => {
       const fach = schluessel.slice(0, trenn);
       const id   = schluessel.slice(trenn + 1);
       if (!['blocks', 'collections', 'views', 'meta'].includes(fach)) continue;
+      /* WARTET HIER SELBST EINE ÄNDERUNG AN DIESEM SATZ, wird das lebende
+         Objekt NICHT ausgetauscht (E801). Vorher geschah genau das: der
+         Zwischenspeicher zeigte den fremden Stand, der Stapel hielt aber
+         das alte Objekt mit der eigenen Änderung und schrieb es später
+         über den fremden — auf der Platte stand dann wieder der eigene,
+         und die Änderung von drüben war weg. Jetzt vergleicht `flush` die
+         Versionsnummer und führt zusammen. */
+      if (fach !== 'meta' && pending.has(schluessel)) continue;
       try {
         const satz = await get(fach, fach === 'meta' ? id : id);
+        if (fach !== 'meta') revAbnehmen(fach, satz);
         if (fach === 'meta') {
           if (satz) cache.meta[satz.k] = satz.v; else delete cache.meta[id];
         } else if (satz) {
@@ -1436,6 +1451,88 @@ const Store = (() => {
    * ----------------------------------------------------------------------*/
   type Posten = { store: any; val: any; schritt: number };
   const pending = new Map<string, Posten>();
+
+  /* ------------------------------------------------------------------------
+   * VERSIONSNUMMER JE SATZ — ZWEI FENSTER ÜBERSCHREIBEN EINANDER NICHT (E801)
+   * ------------------------------------------------------------------------
+   * Jeder Satz in `blocks`, `collections` und `views` trägt AUF DER PLATTE
+   * eine Zahl `rev`, die bei jedem Schreiben um eins steigt. Dieses Fenster
+   * merkt sich, welche Zahl es zuletzt von der Platte gesehen hat
+   * (`plattenRev`). Beim Schreiben liest `flush` in DERSELBEN Transaktion
+   * erst die Platte: steht dort eine andere Zahl, hat ein anderes Fenster
+   * dazwischen geschrieben — dann wird zusammengeführt statt überschrieben.
+   * IndexedDB reiht Schreibtransaktionen auf dasselbe Fach hintereinander,
+   * auch über Fenster hinweg; Lesen und Schreiben in einer Transaktion ist
+   * deshalb ein echtes „vergleichen und setzen".
+   *
+   * WARUM DIE ZAHL NICHT IM SATZ IM SPEICHER STEHT. Die Objekte im
+   * Zwischenspeicher reisen in Sicherungen (`exportAll`) und in den Abgleich
+   * mit anderen Geräten. Eine Zahl, die nur für DIESES Gerät stimmt, wäre
+   * dort ein Feld, in dem sich zwei Geräte immer unterscheiden — ein
+   * Konflikt ohne Inhalt. Also: auf der Platte ja, im Satz nein. Beim Laden
+   * und beim Nachlesen wird sie abgenommen (`revAbnehmen`).
+   *
+   * DIE BASIS. Zum Zusammenführen braucht es den Stand, auf dem die eigene
+   * Änderung beruht. `updateBlock`, `updateCollection` und `updateView`
+   * merken ihn sich VOR der Änderung (`merkeBasis`), aber nur, solange der
+   * Satz sauber ist — dann ist der Zwischenspeicher gleich der Platte.
+   * Gemerkt wird nur, was wartet; nach dem Schreiben wird es vergessen.
+   * Ohne Basis (andere Wege, die direkt ändern) wird feldweise
+   * zusammengeführt: Listen von Kennungen vereint, Zeitstempel nach dem
+   * jüngeren, und wo beide dasselbe Feld verschieden haben, behält dieses
+   * Fenster seins und der andere Wert steht in der Konfliktliste — wie beim
+   * Abgleich zwischen Geräten (`Zusammen`).
+   *
+   * ALTE SÄTZE ohne `rev` werden ohne Vergleich geschrieben, wie bisher, und
+   * bekommen dabei ihre erste Zahl. Ein Fenster mit der alten Fassung der App
+   * schreibt weiter ohne Zahl; das ist kein Rückschritt, nur kein Schutz.
+   * ----------------------------------------------------------------------*/
+  const VERSIONIERT = new Set(['blocks', 'collections', 'views']);
+  const plattenRev = new Map<string, number>();
+  const basisStand = new Map<string, any>();
+
+  const revAbnehmen = (fach: string, satz: any): void => {
+    if (!satz || !VERSIONIERT.has(fach)) return;
+    if (typeof satz.rev === 'number') plattenRev.set(fach + ':' + satz.id, satz.rev);
+    if ('rev' in satz) delete satz.rev;
+  };
+
+  const merkeBasis = (fach: string, satz: any): void => {
+    if (!satz) return;
+    const k = fach + ':' + satz.id;
+    if (pending.has(k) || basisStand.has(k)) return;
+    try { basisStand.set(k, JSON.parse(JSON.stringify(satz))); }
+    catch { /* ein Satz, der sich nicht abbilden lässt, wird ohne Basis zusammengeführt */ }
+  };
+
+  const gleichWert = (a: unknown, b: unknown): boolean =>
+    JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+
+  /** Eigene Fassung (`hier`) und die auf der Platte (`dort`) zu einer. */
+  const zusammenMitFenster = (basis: any, hier: any, dort: any): { satz: any; konflikte: any[] } => {
+    if (basis && typeof Zusammen !== 'undefined' && Zusammen.dreiWege) {
+      const r = Zusammen.dreiWege(basis, hier, dort);
+      return { satz: r.satz, konflikte: r.konflikte || [] };
+    }
+    const satz: Record<string, any> = { ...hier };
+    const konflikte: any[] = [];
+    const namen = new Set([...Object.keys(hier || {}), ...Object.keys(dort || {})]);
+    for (const k of namen) {
+      const H = hier?.[k], D = dort?.[k];
+      if (gleichWert(H, D)) continue;
+      if (H === undefined) { satz[k] = D; continue; }      /* nur drüben: übernehmen */
+      if (D === undefined) continue;                       /* nur hier: behalten */
+      if (k === 'edited' || k === 'created') { satz[k] = String(H) > String(D) ? H : D; continue; }
+      if (Array.isArray(H) && Array.isArray(D) && (k === 'content' || k === 'viewIds')) {
+        /* Kein Zeiger geht verloren: erst die eigene Folge, dann was drüben dazukam. */
+        satz[k] = [...H, ...D.filter((x: unknown) => !H.includes(x))];
+        continue;
+      }
+      konflikte.push({ pfad: [k], feld: k, hier: H, dort: D,
+        grund: 'Zwei Fenster haben dasselbe Feld zugleich geändert — dieses Fenster hat seine Fassung behalten.' });
+    }
+    return { satz, konflikte };
+  };
   let timer: any = null;
   let eilig = false;
 
@@ -1557,32 +1654,90 @@ const Store = (() => {
        Ein Satz, der scheitert (auch ein synchroner Wurf, etwa ein
        DataCloneError), bricht die Transaktion ab — dann ist NICHTS davon
        auf der Platte. `oncomplete` heisst: auf der Platte. */
-    const ganzOderGarNicht = (menge: Posten[]): Promise<void> => new Promise((ok, nein) => {
+    /* Was eine gelungene Transaktion über jeden Satz weiss. */
+    type Geschrieben = { k: string; store: string; id: string; rev: number | null;
+                         zusammengefuehrt: boolean; konflikte: any[] };
+
+    const ganzOderGarNicht = (menge: Posten[]): Promise<Geschrieben[]> => new Promise((ok, nein) => {
       let t: IDBTransaction;
       try {
         t = tx([...new Set(menge.map(x => x.store))], 'readwrite');
       } catch (err) { nein(err); return; }
       let ersterFehler: unknown = null;
-      t.oncomplete = () => ok();
+      const raus: Geschrieben[] = [];
+      t.oncomplete = () => ok(raus);
       t.onerror = t.onabort = () => nein(ersterFehler || (t as any).error ||
         new Error('Das Schreiben wurde abgebrochen — nichts davon ist auf der Platte'));
+      const abbrechen = (eintrag: Posten, err: unknown) => {
+        if (!ersterFehler) ersterFehler = err;
+        melde(eintrag, err);
+        try { t.abort(); } catch { /* schon beendet */ }
+      };
+      const schreibe = (eintrag: Posten, wert: any) => {
+        const r = t.objectStore(eintrag.store).put(wert);
+        r.onerror = () => { if (!ersterFehler) ersterFehler = r.error; melde(eintrag, r.error); };
+      };
       for (const eintrag of menge) {
-        try {
-          const r = t.objectStore(eintrag.store).put(eintrag.val);
-          r.onerror = () => { if (!ersterFehler) ersterFehler = r.error; melde(eintrag, r.error); };
-        } catch (err) {
-          ersterFehler = err;
-          melde(eintrag, err);
-          try { t.abort(); } catch { /* schon beendet */ }
-          return;
+        const id = String(eintrag.val.id);
+        const k = eintrag.store + ':' + id;
+        if (!VERSIONIERT.has(eintrag.store)) {
+          try { schreibe(eintrag, eintrag.val); }
+          catch (err) { abbrechen(eintrag, err); return; }
+          raus.push({ k, store: eintrag.store, id, rev: null, zusammengefuehrt: false, konflikte: [] });
+          continue;
         }
+        /* Erst lesen, dann schreiben — in DIESER Transaktion (E801). */
+        let lesen: IDBRequest;
+        try { lesen = t.objectStore(eintrag.store).get(eintrag.val.id); }
+        catch (err) { abbrechen(eintrag, err); return; }
+        lesen.onsuccess = () => {
+          try {
+            const platte = lesen.result;
+            const plattenNr = platte && typeof platte.rev === 'number' ? platte.rev : undefined;
+            const erwartet = plattenRev.get(k);
+            let zusammengefuehrt = false;
+            let konflikte: any[] = [];
+            if (platte && (plattenNr !== undefined || erwartet !== undefined) && plattenNr !== erwartet) {
+              /* Ein anderes Fenster hat dazwischen geschrieben. */
+              const dort = { ...platte };
+              delete dort.rev;
+              const r = zusammenMitFenster(basisStand.get(k) ?? null, eintrag.val, dort);
+              Object.assign(eintrag.val, r.satz);
+              if ('rev' in eintrag.val) delete eintrag.val.rev;
+              zusammengefuehrt = true;
+              konflikte = r.konflikte;
+            }
+            const neu = (plattenNr ?? 0) + 1;
+            schreibe(eintrag, { ...eintrag.val, rev: neu });
+            raus.push({ k, store: eintrag.store, id, rev: neu, zusammengefuehrt, konflikte });
+          } catch (err) { abbrechen(eintrag, err); }
+        };
       }
     });
+
+    /* Nach einer gelungenen Transaktion: die neue Zahl merken, die Basis
+       vergessen, und was zusammengeführt wurde zeigen. Ein Konflikt, den
+       niemand sieht, ist so gut wie keiner (E801). */
+    const nachSchreiben = (liste: Geschrieben[]): void => {
+      let zeichnen = false;
+      for (const g of liste) {
+        if (g.rev !== null) plattenRev.set(g.k, g.rev);
+        basisStand.delete(g.k);
+        if (g.zusammengefuehrt) zeichnen = true;
+        if (g.konflikte.length && typeof Zusammen !== 'undefined') {
+          try { Zusammen.merke(g.id, g.store, g.konflikte); } catch { /* die Liste ist Zugabe */ }
+        }
+      }
+      if (liste.some(g => g.konflikte.length) && typeof Zusammen !== 'undefined') {
+        try { Zusammen.melde(); Zusammen.hinweisen(); } catch { /* ohne Oberfläche */ }
+      }
+      if (zeichnen) notify('fremd');
+    };
 
     /* Erst alles in einem Zug — der schnelle Weg, und der übliche. Geht das
        schief, ist nichts geschrieben; dann Schritt für Schritt, damit ein
        schlechter Schritt die guten nicht aufhält. */
-    const fertig: Promise<unknown> = ganzOderGarNicht(posten).then(() => undefined, async () => {
+    const fertig: Promise<unknown> = ganzOderGarNicht(posten).then((liste) => { nachSchreiben(liste); return undefined; }, async () => {
       const schritte = new Map<number, Posten[]>();
       posten.forEach(x => {
         const liste = schritte.get(x.schritt);
@@ -1592,7 +1747,7 @@ const Store = (() => {
       const gelandet: string[] = [];
       for (const menge of schritte.values()) {
         try {
-          await ganzOderGarNicht(menge);
+          nachSchreiben(await ganzOderGarNicht(menge));
           menge.forEach(x => gelandet.push(x.store + ':' + x.val.id));
         } catch { gescheitert.push(...menge); }
       }
@@ -1628,9 +1783,11 @@ const Store = (() => {
      nicht mehr zu gebrauchen — das Fenster schliesst; gemeldet hat flush
      selbst schon über den Reporter. */
   window.addEventListener('beforeunload', () => { flush().catch(() => {}); });
-  /* `pagehide` kommt auch dort, wo `beforeunload` ausbleibt — Safari und
-     WKWebView auf dem iPhone beim Wegwischen der App (E800). */
-  window.addEventListener('pagehide', () => { flush().catch(() => {}); });
+  /* KEIN EIGENER `pagehide`-ZUHÖRER (E800, Nachtrag E801). E800 hatte einen
+     gesetzt; `test189` zählt die `pagehide`-Zuhörer und erlaubt einen, und
+     nötig war er nicht: `visibilitychange` mit `document.hidden` kommt in
+     allen heutigen Browsern — auch Safari und WKWebView beim Wegwischen —
+     VOR `pagehide`, und dort wird oben schon geschrieben. */
   window.addEventListener('visibilitychange', () => { if (document.hidden) flush().catch(() => {}); });
 
   /* ========================================================================
@@ -2468,6 +2625,7 @@ const Store = (() => {
     }
 
     /* Erst JETZT, nach dem oncomplete, den Zwischenspeicher umstellen. */
+    plattenRev.clear(); basisStand.clear();
     if (art === 'ersetzen') {
       cache.blocks = neu.blocks; cache.collections = neu.collections;
       cache.views = neu.views;   cache.meta = neu.meta;
@@ -3109,6 +3267,7 @@ const Store = (() => {
     })));
     cache.blocks = {}; cache.collections = {}; cache.views = {}; cache.meta = {};
     cache.suchindex = {};
+    plattenRev.clear(); basisStand.clear();
     datenGeaendert();
     meldeAnAndereFenster('alles', []);
     if (geblieben.length) {

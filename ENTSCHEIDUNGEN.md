@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-771 Entscheidungen, E1 bis E800 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+772 Entscheidungen, E1 bis E801 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -856,7 +856,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E791** — RED Ion Windows-MCP: semantische Live-Steuerung mit freigegebenen Aktionen und Sicherheitsbestätigungen.
 * **E792** — Visual MCP, sichere Mehrschritt-Aufträge und dauerhafte widerrufbare Freigaben
 * **E793** — Zugriff ohne Laptop ausschliesslich kostenlos
-* **E800** — Arbeitsschritte landen ganz oder gar nicht (24. November 2026, Redur: „Mache mit der grosste anderung“, im Fragebogen „Transaktionen“ und „Nur Pflicht-Datentests“): was eine Handlung synchron schreibt, ist ein Schritt; ein Schritt kommt ganz oder gar nicht auf die Platte; Umstellungen werden sofort geschrieben, Tippen behält die Pause; `pagehide` schreibt mit (`test644`)
+* **E800** — Arbeitsschritte landen ganz oder gar nicht (24. November 2026, Redur: „Mache mit der grosste anderung“, im Fragebogen „Transaktionen“ und „Nur Pflicht-Datentests“): was eine Handlung synchron schreibt, ist ein Schritt; ein Schritt kommt ganz oder gar nicht auf die Platte; Umstellungen werden sofort geschrieben, Tippen behält die Pause (`test644`); der zusätzliche `pagehide`-Zuhörer wurde mit E801 wieder entfernt
+* **E801** — Zwei Fenster überschreiben einander nicht (24. November 2026, Redur: „Weiter ohne pause“, nach E800 der nächste Punkt der Roadmap, B2): jeder Satz trägt AUF DER PLATTE eine Versionsnummer `rev`; `flush` liest und schreibt in einer Transaktion und führt zusammen, wenn ein anderes Fenster dazwischen geschrieben hat; eine wartende Änderung wird nicht durch Fremdes ersetzt; die Zahl reist weder in Sicherung noch Abgleich (`test645`)
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71082,7 +71083,12 @@ bisher alles in EINER Transaktion; scheitert darin ein Satz, bricht sie
 ganz ab, und dann wird Schritt für Schritt in eigenen Transaktionen
 geschrieben. Ein Schritt mit mehr als einem Satz (anlegen, verschieben,
 löschen) wartet nicht die 400 ms Schreibpause ab, sondern geht im nächsten
-Takt auf die Platte. Zusätzlich schreibt `pagehide` (Safari, WKWebView).
+Takt auf die Platte. Zusätzlich schrieb ein `pagehide`-Zuhörer (Safari,
+WKWebView) — **Nachtrag (E801):** wieder entfernt. `test189` zählt die
+`pagehide`-Zuhörer und war deshalb rot, und der Zuhörer war überflüssig:
+`visibilitychange` mit `document.hidden` kommt vor `pagehide`, und dort
+schreibt Redion schon. Der Fund kam aus dem breiteren Lauf von E801 — der
+schmale Lauf von E800 hatte `test189` nicht dabei.
 
 **Warum.** Vorher übersprang `flush` einen unschreibbaren Satz mit
 `preventDefault` und schrieb den Rest. Bei `addBlock` stand dann der
@@ -71115,4 +71121,74 @@ Ordnung.
 15), `test96`, `test100`, `test105`, `test109`, `npm run typecheck`. Kein
 voller Lauf, auf Redurs Wunsch — für das Vorspulen von `main` gilt §46
 unverändert.
+
+## E801 · Zwei Fenster überschreiben einander nicht
+
+**Wer und wann.** Redur, 24. November 2026: „Weiter ohne pause" — nach E800
+der nächste Punkt der Roadmap aus der Notion-Analyse (B2, Versionsnummer je
+Datensatz).
+
+**Was vorher geschah.** Zwei Wege führten zu einem stillen Verlust, beide
+in `test645` gegen den Stand von E800 gezeigt (10 von 18):
+
+1. Fenster A schreibt Block X. Fenster B ändert X, bevor es die Nachricht
+   von A verarbeitet hat (`nachbarn.ts` sammelt 120 ms). B schreibt seinen
+   ganzen Satz — mit As altem Text — über As Fassung. Gemessen: der Text
+   stand danach wieder auf „Ein Satz", As „A hat geschrieben" war weg; ein
+   Kind, das A an eine Seite hängte, fiel aus deren `content`.
+2. Wartet in B eine Änderung an X, ersetzte `fremdesEintragen` das lebende
+   Objekt durch As Fassung — der Stapel hielt aber das alte Objekt und
+   schrieb es später über A. Bildschirm und Platte zeigten Verschiedenes.
+
+`nachbarn.ts` sagt den ersten Fall selbst: „wenn zwei Menschen gleichzeitig
+denselben Absatz tippen, gewinnt der spätere Schreibvorgang". §16 verlangt,
+dass Konflikte mindestens erkannt werden.
+
+**Was entschieden wurde.**
+- Jeder Satz in `blocks`, `collections`, `views` trägt auf der Platte eine
+  Zahl `rev`, die bei jedem Schreiben steigt. Das Fenster merkt sich je Satz,
+  welche Zahl es zuletzt gesehen hat.
+- `flush` liest jeden dieser Sätze in DERSELBEN Schreibtransaktion, bevor er
+  schreibt. Stimmt die Zahl nicht, hat ein anderes Fenster dazwischen
+  geschrieben: dann wird zusammengeführt — mit `Zusammen.dreiWege`, wenn die
+  Basis bekannt ist (`updateBlock`, `updateCollection`, `updateView` merken
+  sie VOR der Änderung, solange der Satz sauber ist), sonst feldweise:
+  Kennungslisten vereint, Zeitstempel nach dem jüngeren, und wo beide
+  dasselbe Feld verschieden haben, behält dieses Fenster seins und der
+  andere Wert steht in der bestehenden Konfliktliste (`Zusammen.merke`, mit
+  Hinweis). IndexedDB reiht Schreibtransaktionen auf dasselbe Fach auch über
+  Fenster hinweg hintereinander — das ist ein echtes Vergleichen und Setzen.
+- `fremdesEintragen` ersetzt einen Satz nicht mehr, an dem hier selbst eine
+  Änderung wartet; das Zusammenführen übernimmt `flush`.
+- Die Zahl steht NUR auf der Platte. Beim Laden und Nachlesen wird sie
+  abgenommen; die Sätze im Speicher tragen sie nicht.
+
+**Warum nicht im Satz.** Die Sätze im Speicher reisen in Sicherungen und in
+den Abgleich mit anderen Geräten. Eine Zahl, die nur für dieses Gerät gilt,
+wäre dort ein Feld, in dem sich zwei Geräte immer unterscheiden — ein
+Konflikt ohne Inhalt bei jedem Abgleich.
+
+**Die Alternative.** Eine Kopie jedes Satzes als Basis dauerhaft im
+Speicher halten — das hätte jeden Bestand im Arbeitsspeicher verdoppelt.
+Gemerkt wird die Basis nur für Sätze, die gerade warten.
+
+**Was es kostet.** Jeder Schreibvorgang auf diese drei Fächer liest vorher
+einmal (in derselben Transaktion). Alte Sätze ohne Zahl werden beim ersten
+Schreiben ohne Vergleich geschrieben und bekommen dabei ihre erste. Ein
+Fenster mit einer alten Fassung der App schreibt weiter ohne Zahl — kein
+Rückschritt, nur kein Schutz. Ohne bekannte Basis kann eine Änderung, die
+nur drüben geschah, als Konflikt erscheinen statt still übernommen zu
+werden; sie geht dabei nicht verloren.
+
+**Nebenbefund.** Der breitere Lauf fand, dass E800s zusätzlicher
+`pagehide`-Zuhörer `test189` rot machte (der Wächter erlaubt einen). Er war
+überflüssig (`visibilitychange` kommt vorher) und ist entfernt; E800 trägt
+den Nachtrag. `test412` war schon vor E800 rot (Stilblock in
+`desktop-automatisierung.ts`, Hellwerte in `schaltatelier.css`) —
+unberührt.
+
+**Geprüft.** `test645` (18 Zusagen, zwei echte Tabs über einen Prüfserver;
+gegen E800 rot mit 10 von 18), `test644`, `test96`, `test100`, `test105`,
+`test109`, `test72`, `test87`, `test189`, `test279`, `test316`, `test326`,
+`test333`, `test335`, `test390`, `test643`. Kein voller Lauf.
 

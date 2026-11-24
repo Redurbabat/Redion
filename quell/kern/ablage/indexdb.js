@@ -152,9 +152,9 @@ const Store = (() => {
             const [bloecke, sammlungen, ansichten, metadaten] = await Promise.all([
                 all('blocks'), all('collections'), all('views'), all('meta')
             ]);
-            bloecke.forEach((b) => cache.blocks[b.id] = b);
-            sammlungen.forEach((c) => cache.collections[c.id] = c);
-            ansichten.forEach((v) => cache.views[v.id] = v);
+            bloecke.forEach((b) => { revAbnehmen('blocks', b); cache.blocks[b.id] = b; });
+            sammlungen.forEach((c) => { revAbnehmen('collections', c); cache.collections[c.id] = c; });
+            ansichten.forEach((v) => { revAbnehmen('views', v); cache.views[v.id] = v; });
             metadaten.forEach((m) => cache.meta[m.k] = m.v);
         }
         catch (err) {
@@ -258,6 +258,7 @@ const Store = (() => {
             return null;
         if (patch && 'checked' in patch && b.type === 'todo')
             patch = Object.assign({}, patch, { erledigtAm: patch.checked ? now() : null });
+        merkeBasis('blocks', b);
         Object.assign(b, patch, { edited: now(), geaendertVon: getMeta('nutzer', '') || 'Ich' });
         save('blocks', b);
         return b;
@@ -550,6 +551,7 @@ const Store = (() => {
         const c = cache.collections[id];
         if (!c)
             return null;
+        merkeBasis('collections', c);
         Object.assign(c, patch);
         if (!('edited' in patch))
             c.edited = now();
@@ -560,6 +562,7 @@ const Store = (() => {
         const v = cache.views[id];
         if (!v)
             return null;
+        merkeBasis('views', v);
         Object.assign(v, patch);
         if (!('edited' in patch))
             v.edited = now();
@@ -696,8 +699,12 @@ const Store = (() => {
             const id = schluessel.slice(trenn + 1);
             if (!['blocks', 'collections', 'views', 'meta'].includes(fach))
                 continue;
+            if (fach !== 'meta' && pending.has(schluessel))
+                continue;
             try {
                 const satz = await get(fach, fach === 'meta' ? id : id);
+                if (fach !== 'meta')
+                    revAbnehmen(fach, satz);
                 if (fach === 'meta') {
                     if (satz)
                         cache.meta[satz.k] = satz.v;
@@ -743,6 +750,60 @@ const Store = (() => {
             await Promise.all([...unterwegs].map(p => p.catch(() => { })));
     };
     const pending = new Map();
+    const VERSIONIERT = new Set(['blocks', 'collections', 'views']);
+    const plattenRev = new Map();
+    const basisStand = new Map();
+    const revAbnehmen = (fach, satz) => {
+        if (!satz || !VERSIONIERT.has(fach))
+            return;
+        if (typeof satz.rev === 'number')
+            plattenRev.set(fach + ':' + satz.id, satz.rev);
+        if ('rev' in satz)
+            delete satz.rev;
+    };
+    const merkeBasis = (fach, satz) => {
+        if (!satz)
+            return;
+        const k = fach + ':' + satz.id;
+        if (pending.has(k) || basisStand.has(k))
+            return;
+        try {
+            basisStand.set(k, JSON.parse(JSON.stringify(satz)));
+        }
+        catch { }
+    };
+    const gleichWert = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+    const zusammenMitFenster = (basis, hier, dort) => {
+        if (basis && typeof Zusammen !== 'undefined' && Zusammen.dreiWege) {
+            const r = Zusammen.dreiWege(basis, hier, dort);
+            return { satz: r.satz, konflikte: r.konflikte || [] };
+        }
+        const satz = { ...hier };
+        const konflikte = [];
+        const namen = new Set([...Object.keys(hier || {}), ...Object.keys(dort || {})]);
+        for (const k of namen) {
+            const H = hier?.[k], D = dort?.[k];
+            if (gleichWert(H, D))
+                continue;
+            if (H === undefined) {
+                satz[k] = D;
+                continue;
+            }
+            if (D === undefined)
+                continue;
+            if (k === 'edited' || k === 'created') {
+                satz[k] = String(H) > String(D) ? H : D;
+                continue;
+            }
+            if (Array.isArray(H) && Array.isArray(D) && (k === 'content' || k === 'viewIds')) {
+                satz[k] = [...H, ...D.filter((x) => !H.includes(x))];
+                continue;
+            }
+            konflikte.push({ pfad: [k], feld: k, hier: H, dort: D,
+                grund: 'Zwei Fenster haben dasselbe Feld zugleich geändert — dieses Fenster hat seine Fassung behalten.' });
+        }
+        return { satz, konflikte };
+    };
     let timer = null;
     let eilig = false;
     let naechsterSchritt = 1;
@@ -842,27 +903,99 @@ const Store = (() => {
                 return;
             }
             let ersterFehler = null;
-            t.oncomplete = () => ok();
+            const raus = [];
+            t.oncomplete = () => ok(raus);
             t.onerror = t.onabort = () => nein(ersterFehler || t.error ||
                 new Error('Das Schreiben wurde abgebrochen — nichts davon ist auf der Platte'));
-            for (const eintrag of menge) {
+            const abbrechen = (eintrag, err) => {
+                if (!ersterFehler)
+                    ersterFehler = err;
+                melde(eintrag, err);
                 try {
-                    const r = t.objectStore(eintrag.store).put(eintrag.val);
-                    r.onerror = () => { if (!ersterFehler)
-                        ersterFehler = r.error; melde(eintrag, r.error); };
+                    t.abort();
+                }
+                catch { }
+            };
+            const schreibe = (eintrag, wert) => {
+                const r = t.objectStore(eintrag.store).put(wert);
+                r.onerror = () => { if (!ersterFehler)
+                    ersterFehler = r.error; melde(eintrag, r.error); };
+            };
+            for (const eintrag of menge) {
+                const id = String(eintrag.val.id);
+                const k = eintrag.store + ':' + id;
+                if (!VERSIONIERT.has(eintrag.store)) {
+                    try {
+                        schreibe(eintrag, eintrag.val);
+                    }
+                    catch (err) {
+                        abbrechen(eintrag, err);
+                        return;
+                    }
+                    raus.push({ k, store: eintrag.store, id, rev: null, zusammengefuehrt: false, konflikte: [] });
+                    continue;
+                }
+                let lesen;
+                try {
+                    lesen = t.objectStore(eintrag.store).get(eintrag.val.id);
                 }
                 catch (err) {
-                    ersterFehler = err;
-                    melde(eintrag, err);
-                    try {
-                        t.abort();
-                    }
-                    catch { }
+                    abbrechen(eintrag, err);
                     return;
                 }
+                lesen.onsuccess = () => {
+                    try {
+                        const platte = lesen.result;
+                        const plattenNr = platte && typeof platte.rev === 'number' ? platte.rev : undefined;
+                        const erwartet = plattenRev.get(k);
+                        let zusammengefuehrt = false;
+                        let konflikte = [];
+                        if (platte && (plattenNr !== undefined || erwartet !== undefined) && plattenNr !== erwartet) {
+                            const dort = { ...platte };
+                            delete dort.rev;
+                            const r = zusammenMitFenster(basisStand.get(k) ?? null, eintrag.val, dort);
+                            Object.assign(eintrag.val, r.satz);
+                            if ('rev' in eintrag.val)
+                                delete eintrag.val.rev;
+                            zusammengefuehrt = true;
+                            konflikte = r.konflikte;
+                        }
+                        const neu = (plattenNr ?? 0) + 1;
+                        schreibe(eintrag, { ...eintrag.val, rev: neu });
+                        raus.push({ k, store: eintrag.store, id, rev: neu, zusammengefuehrt, konflikte });
+                    }
+                    catch (err) {
+                        abbrechen(eintrag, err);
+                    }
+                };
             }
         });
-        const fertig = ganzOderGarNicht(posten).then(() => undefined, async () => {
+        const nachSchreiben = (liste) => {
+            let zeichnen = false;
+            for (const g of liste) {
+                if (g.rev !== null)
+                    plattenRev.set(g.k, g.rev);
+                basisStand.delete(g.k);
+                if (g.zusammengefuehrt)
+                    zeichnen = true;
+                if (g.konflikte.length && typeof Zusammen !== 'undefined') {
+                    try {
+                        Zusammen.merke(g.id, g.store, g.konflikte);
+                    }
+                    catch { }
+                }
+            }
+            if (liste.some(g => g.konflikte.length) && typeof Zusammen !== 'undefined') {
+                try {
+                    Zusammen.melde();
+                    Zusammen.hinweisen();
+                }
+                catch { }
+            }
+            if (zeichnen)
+                notify('fremd');
+        };
+        const fertig = ganzOderGarNicht(posten).then((liste) => { nachSchreiben(liste); return undefined; }, async () => {
             const schritte = new Map();
             posten.forEach(x => {
                 const liste = schritte.get(x.schritt);
@@ -875,7 +1008,7 @@ const Store = (() => {
             const gelandet = [];
             for (const menge of schritte.values()) {
                 try {
-                    await ganzOderGarNicht(menge);
+                    nachSchreiben(await ganzOderGarNicht(menge));
                     menge.forEach(x => gelandet.push(x.store + ':' + x.val.id));
                 }
                 catch {
@@ -900,7 +1033,6 @@ const Store = (() => {
         return fertig;
     };
     window.addEventListener('beforeunload', () => { flush().catch(() => { }); });
-    window.addEventListener('pagehide', () => { flush().catch(() => { }); });
     window.addEventListener('visibilitychange', () => { if (document.hidden)
         flush().catch(() => { }); });
     const search = (q, filter = {}) => {
@@ -1289,6 +1421,8 @@ const Store = (() => {
                     'es noch einmal.');
             });
         }
+        plattenRev.clear();
+        basisStand.clear();
         if (art === 'ersetzen') {
             cache.blocks = neu.blocks;
             cache.collections = neu.collections;
@@ -1766,6 +1900,8 @@ const Store = (() => {
         cache.views = {};
         cache.meta = {};
         cache.suchindex = {};
+        plattenRev.clear();
+        basisStand.clear();
         datenGeaendert();
         meldeAnAndereFenster('alles', []);
         if (geblieben.length) {

@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 578 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 579 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2261,6 +2261,17 @@ auf der Platte, und `null.text` warf; seither liest er mit `?.`. Gezählt am
 24. November, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
 578.*
 
+*Und 579: `test645` — zwei Fenster überschreiben einander nicht (E801). Zwei
+echte Tabs über einen Prüfserver auf freiem Port, der Dienst-Arbeiter
+gesperrt, und jeder Wettlauf echt: B schreibt, bevor es As Nachricht
+verarbeitet hat. Gegen E800 rot mit 10 von 18 — „Ein Satz" stand wieder auf
+der Platte statt „A hat geschrieben", und As Kind fiel aus der Seite. Einmal
+war er aus dem FALSCHEN Grund grün: §2 fragte nach „A" im Text, und
+„Anfang" enthält selbst eines (§55.2). Sein breiterer Begleitlauf fand
+nebenbei E800s überzähligen `pagehide`-Zuhörer über `test189`. Gezählt am
+24. November, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+579.*
+
 ### Die Befehle
 
 ```txt
@@ -2282,7 +2293,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 578 Läufe
+npm run pruefen                      alle 579 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2379,7 +2390,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 578 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 579 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|
