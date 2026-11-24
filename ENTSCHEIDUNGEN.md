@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-776 Entscheidungen, E1 bis E805 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+777 Entscheidungen, E1 bis E806 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -862,6 +862,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E803** — Umwandeln verliert nichts (24. November 2026, Redur: Ziel „arbeite ohne pause bis du alles fertig gemacht hast“, B18 der Roadmap, §18 hart): → Datenbank legt den alten Block in den Papierkorb statt ihn endgültig zu löschen und nimmt seinen Text als Namen; → Seite wandelt an Ort und Stelle (Kennung, Platz, Unterblöcke bleiben); → Einbettung und → Spalten leeren den Text nicht mehr (`test647`)
 * **E804** — Unsichtbare Blöcke werden beim Laden wieder eingehängt (24. November 2026, B5 der Roadmap): ein lebender Block, dessen lebender Elternteil ihn nicht in `content` führt, kommt hinten wieder hinein und wird gesichert; Papierkorb und Datenbankzeilen bleiben unberührt (`test648`). Dazu B19 gemessen: unbekannte Blockarten überstehen Zeichnen, Bearbeiten und Sicherung schon heute
 * **E805** — Redion bittet von selbst um dauerhaften Speicher (24. November 2026, B9 der Roadmap): beim ersten gelungenen Schreiben von Blöcken in einer Sitzung, höchstens einmal in 30 Tagen; der Zeitpunkt ist eine Geräteeinstellung in `localStorage` und reist nicht mit (`test649`). Dazu B14 nachgelesen: der `localStorage` des Staatskunde-Trainers gehört nur der eigenständigen Seite `lernen/staatskunde.html`, in Redion bleibt er leer (`test565`)
+* **E806** — Die Bibliothek zeichnet die Deckel in Schritten (24. November 2026, Stufe 0/4 der Roadmap, gemessen): erst 120, dann „Mehr zeigen“ (+120) oder „Alle zeigen“; die Grenze nennt beide Zahlen; mit 10 000 Seiten blockiert der Start 0,8 s statt 6,8 s (`test650`, messungen §116)
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71376,4 +71377,43 @@ Lernkarten, und `test565` hält, dass `localStorage` dort leer bleibt.
 **Geprüft.** `test649` (6 Zusagen; gegen den alten Stand rot mit 3 von 6),
 `test96`, `test100`, `test105`, `test109`, `test644`, `test645`, `test646`,
 `test648`. Kein voller Lauf.
+
+## E806 · Die Bibliothek zeichnet die Deckel in Schritten
+
+**Wer und wann.** 24. November 2026, Redurs Ziel „arbeite ohne pause bis du
+alles fertig gemacht hast" — gefunden mit der Messung aus Stufe 0 der
+Roadmap (B8, messungen §116), gebaut nach §36 („erst messen, dann bauen").
+
+**Was gemessen wurde.** Mit 10 000 Seiten an der Wurzel hielt der Start den
+Hauptfaden 6,8 s fest, in vier bis fünf langen Aufgaben, die grösste 3,5 s
+(PerformanceObserver `longtask`, zweimal gemessen, 6 760 und 6 808 ms). Das
+CPU-Profil über CDP zeigte, wohin: Layout (`getBoundingClientRect` 1,8 s,
+„program" 3,2 s), `wannText` 0,4 s, `zeichneDeckel`, `sortiere` — die
+Bibliothek ist der Startbildschirm, und ihre Ablage zeichnete JEDEN Deckel.
+Nur der Reiter „Kürzlich" war begrenzt (60). Die Ausreisser beim Neustart
+(bis 10 s) zeigte der Stand vor E800 genauso; sie sind keine Folge von
+E800–E805.
+
+**Was entschieden wurde.** Die Deckelansicht zeigt erst 120 Deckel, darunter
+„120 von N Dokumenten · Mehr zeigen · Alle zeigen". „Mehr zeigen" bringt
+120 dazu und lässt den Fokus auf sich; „Alle zeigen" zeigt alles. Gemerkt
+wird je Ort, Ordner und Art, nur für die Sitzung. Die Knöpfe messen 44 px
+(§37 — die Bibliothek ist ein Hauptweg; die Datenbank-Grenze `db-grenze`
+hat kleinere, das bleibt dort, wie es ist).
+
+**Warum eine Grenze mit Ansage und keine Virtualisierung.** Dasselbe Muster
+hat Redion bei Datenbanken (L22, E180): eine Ansicht, die einen Teil zeigt,
+MUSS sagen, dass sie einen Teil zeigt. Virtualisierung (B46) hielte alle
+Deckel erreichbar, aber Strg+F, Tastaturweg, Drucken und die Vorschaubilder
+(`Vorschau.bilderNachtragen`) müssten dafür jede einzeln umgebaut werden —
+ein Umbau statt einer Grenze.
+
+**Was es kostet.** Wer in einer Ablage mit mehr als 120 Dokumenten per
+Strg+F im Browser sucht, findet nur die gezeigten; Redions eigene Suche
+(Strg P) findet alle. Liste und Regal sind unverändert (noch ohne Grenze).
+
+**Geprüft.** `test650` (11 Zusagen; gegen den Stand vor E806 rot mit 2 von
+11, gemessene lange Aufgaben dort 3 579 und 1 451 ms, danach 809 ms), dazu
+alle 54 Läufe, die die Bibliothek berühren, sowie `test105` und `test109`.
+Bilder am Rechner und am Telefon (§55.3). Kein voller Lauf.
 

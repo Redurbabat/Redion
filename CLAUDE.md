@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 583 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 584 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2307,6 +2307,15 @@ Grund rot, der nicht ihn betraf: `test105` fand in ihm eine unbenutzte
 Konstante (`noUnusedLocals`, §52.6). Gezählt am 24. November, im selben
 Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 583.*
 
+*Und 584: `test650` — die Bibliothek zeichnet die Deckel in Schritten
+(E806). Er legt 10 000 Seiten an, startet neu und misst mit
+`PerformanceObserver`, wie lange der Hauptfaden steht: gegen den alten
+Stand 3,6 s und 1,5 s, danach 0,8 s. Einmal war er aus dem FALSCHEN Grund
+rot: er erwartete „120 von 10000", und Redion legt beim Start selbst eine
+Seite an — es waren 10 001. Seither liest er die Gesamtzahl aus der Grenze.
+Gezählt am 24. November, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 584.*
+
 ### Die Befehle
 
 ```txt
@@ -2328,7 +2337,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 583 Läufe
+npm run pruefen                      alle 584 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2425,7 +2434,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 583 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 584 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

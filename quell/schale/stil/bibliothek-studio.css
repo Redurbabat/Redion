@@ -193,3 +193,12 @@ body[data-bewegung="ruhig"] .bib[data-bib-bereich] :is(.bib-gitter,.bib-regal,.b
   .bib[data-bib-bereich] .bib-deckel{box-shadow:none;border-color:var(--text)}
 }
 body[data-kontrast="hoch"] .bib[data-bib-bereich] .bib-deckel{box-shadow:none;border-color:var(--text)}
+
+/* Die Grenze der Deckel (E806): sagt, dass sie abschneidet, und bietet den
+   Weg weiter an. Ein Hauptweg am Telefon — also 44 px (§37). */
+.bib-grenze{ display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:14px 4px 4px; font-size:14px; color:var(--text-faint) }
+.bib-grenze button{ min-height:44px; padding:0 16px; border-radius:10px;
+  font-size:14px; color:var(--text); background:var(--bg-hover) }
+.bib-grenze button:hover{ background:var(--line) }
+.bib-grenze button:focus-visible{ outline:2px solid var(--accent); outline-offset:2px }

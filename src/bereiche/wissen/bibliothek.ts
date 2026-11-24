@@ -1582,10 +1582,27 @@ const Bibliothek = (() => {
       '</section>';
   };
 
+  /* DIE DECKEL KOMMEN IN SCHRITTEN (E806). Gemessen mit 10 000 Seiten an
+     der Wurzel: der Start hielt den Hauptfaden 6,8 s fest, die grösste
+     Aufgabe 3,5 s — die Ablage zeichnete JEDEN Deckel, und das Profil
+     zeigte Layout (`getBoundingClientRect` 1,8 s), `wannText`, `sortiere`
+     und `zeichneDeckel`. Jetzt erst 120, dann auf Wunsch 120 mehr oder
+     alle. Die Grenze SAGT, dass sie abschneidet, mit beiden Zahlen — eine
+     Ansicht, die einen Teil zeigt und aussieht wie das Ganze, ist die
+     gefährlichere Sorte (L22, dasselbe Muster wie `db-grenze`).
+     Gemerkt wird je Ort, Ordner und Art, und nur für diese Sitzung. */
+  const DECKEL_SCHRITT = 120;
+  const deckelGrenzen = new Map<string, number>();
+  const deckelSchluessel = (): string =>
+    zustand.reiter + '|' + (zustand.ordner || '') + '|' + zustand.art;
+
   const zeichneDeckel = (wrap: HTMLElement): void => {
     const { liste: alle, gesamt } = auswahl();
     const liste = zustand.art === 'alle'
       ? alle : alle.filter(p => artVon(p).id === zustand.art);
+    const schluessel = deckelSchluessel();
+    const grenze = deckelGrenzen.get(schluessel) ?? DECKEL_SCHRITT;
+    const gezeigt = liste.length > grenze ? liste.slice(0, grenze) : liste;
 
     wrap.innerHTML =
       '<div class="bib bib-deckel-seite" data-bib-bereich>' +
@@ -1603,7 +1620,14 @@ const Bibliothek = (() => {
           : '') +
         studioWeiter() + recentCarousel() +
         (liste.length
-          ? '<div class="bib-gitter">' + liste.map(deckelKarte).join('') + '</div>'
+          ? '<div class="bib-gitter">' + gezeigt.map(deckelKarte).join('') + '</div>' +
+            (gezeigt.length < liste.length
+              ? '<div class="bib-grenze" role="status">' +
+                  '<span>' + gezeigt.length + ' von ' + liste.length + ' Dokumenten</span>' +
+                  '<button type="button" data-bib-mehr>Mehr zeigen</button>' +
+                  '<button type="button" data-bib-alle>Alle zeigen</button>' +
+                '</div>'
+              : '')
           : emptyLibrary()) +
         /* DIE SICHERUNG UND DER PLATZ GEHÖREN IN JEDE FORM.
            Der erste Entwurf liess beide weg — sie standen nur im
@@ -1622,6 +1646,16 @@ const Bibliothek = (() => {
     if (typeof Register !== 'undefined' && Register.symbole)
       Register.symbole.fuelle(wrap);
     binde(wrap);
+    wrap.querySelector('[data-bib-mehr]')?.addEventListener('click', () => {
+      deckelGrenzen.set(schluessel, grenze + DECKEL_SCHRITT);
+      zeichneDeckel(wrap);
+      /* Der Fokus bleibt auf dem Weg weiter, nicht oben im Dokument. */
+      (wrap.querySelector('[data-bib-mehr]') as HTMLElement | null)?.focus();
+    });
+    wrap.querySelector('[data-bib-alle]')?.addEventListener('click', () => {
+      deckelGrenzen.set(schluessel, Infinity);
+      zeichneDeckel(wrap);
+    });
     bibliothekBaumNachtragen(wrap);
     platzNachtragen(wrap);
     /* Die Adressen der Vorschaubilder kommen aus der Ablage und damit

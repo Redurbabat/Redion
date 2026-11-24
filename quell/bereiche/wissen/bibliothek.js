@@ -1023,10 +1023,16 @@ const Bibliothek = (() => {
                     : '<button type="button" data-neu-auf' + (!permitted('bearbeiten', zustand.ordner || undefined) ? ' disabled' : '') + '>Erste Seite erstellen</button>') +
             '</section>';
     };
+    const DECKEL_SCHRITT = 120;
+    const deckelGrenzen = new Map();
+    const deckelSchluessel = () => zustand.reiter + '|' + (zustand.ordner || '') + '|' + zustand.art;
     const zeichneDeckel = (wrap) => {
         const { liste: alle, gesamt } = auswahl();
         const liste = zustand.art === 'alle'
             ? alle : alle.filter(p => artVon(p).id === zustand.art);
+        const schluessel = deckelSchluessel();
+        const grenze = deckelGrenzen.get(schluessel) ?? DECKEL_SCHRITT;
+        const gezeigt = liste.length > grenze ? liste.slice(0, grenze) : liste;
         wrap.innerHTML =
             '<div class="bib bib-deckel-seite" data-bib-bereich>' +
                 deckelKopf(alle, liste.length, zustand.art === 'alle' ? gesamt : liste.length) +
@@ -1040,7 +1046,14 @@ const Bibliothek = (() => {
                     : '') +
                 studioWeiter() + recentCarousel() +
                 (liste.length
-                    ? '<div class="bib-gitter">' + liste.map(deckelKarte).join('') + '</div>'
+                    ? '<div class="bib-gitter">' + gezeigt.map(deckelKarte).join('') + '</div>' +
+                        (gezeigt.length < liste.length
+                            ? '<div class="bib-grenze" role="status">' +
+                                '<span>' + gezeigt.length + ' von ' + liste.length + ' Dokumenten</span>' +
+                                '<button type="button" data-bib-mehr>Mehr zeigen</button>' +
+                                '<button type="button" data-bib-alle>Alle zeigen</button>' +
+                                '</div>'
+                            : '')
                     : emptyLibrary()) +
                 (zustand.reiter === 'ablage' ? '</div></div>' : '') +
                 sicherungsKarte() +
@@ -1048,6 +1061,15 @@ const Bibliothek = (() => {
         if (typeof Register !== 'undefined' && Register.symbole)
             Register.symbole.fuelle(wrap);
         binde(wrap);
+        wrap.querySelector('[data-bib-mehr]')?.addEventListener('click', () => {
+            deckelGrenzen.set(schluessel, grenze + DECKEL_SCHRITT);
+            zeichneDeckel(wrap);
+            wrap.querySelector('[data-bib-mehr]')?.focus();
+        });
+        wrap.querySelector('[data-bib-alle]')?.addEventListener('click', () => {
+            deckelGrenzen.set(schluessel, Infinity);
+            zeichneDeckel(wrap);
+        });
         bibliothekBaumNachtragen(wrap);
         platzNachtragen(wrap);
         if (Vorschau.bilderNachtragen)

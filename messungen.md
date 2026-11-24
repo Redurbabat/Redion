@@ -9923,3 +9923,53 @@ alten Rot (§3, auch auf a6472d3f7); 388 rot wie vorher, +27 KB.
 Gegenproben: Palette offen → 632 §1 rot; ohne `max-height` → 625 rot
 (102 von 110); ohne Hochkomma und E747 → 633 dreimal rot; ohne Tempo →
 634 §2 rot.
+
+## §116 · Grosse Arbeitsbereiche, Stand nach E800–E805 (24. November 2026)
+
+**Warum.** Stufe 0 der Roadmap aus der Notion-Analyse (B8): erst messen,
+dann bauen (§36). Vor allem für die Frage, ob Redion den Bestand teilweise
+laden muss (B6), statt alles in den Arbeitsspeicher zu lesen.
+
+**Methode.** `node pruefungen/messung-grosse-arbeitsbereiche.mts`, frisches
+Chromium-Profil im Container, je Seite ein Textblock, eine Datenbank mit
+der halben Seitenzahl an Zeilen in einer Ansicht mit `limit: 0` („Alle
+zeigen" — der schlimmste Fall).
+
+```txt
+                         1 000 Seiten     10 000 Seiten
+Import (ersetzen)        325 ms           1 442 ms
+Datenbank öffnen         336 ms           1 874 ms     ← alle Zeilen im DOM
+  Zeilen im DOM          1 003            5 003
+Seitenbaum zeichnen      8,5 ms           36 ms
+Quick Find, kalt         42 ms            205 ms
+Suche, warm (Index)      —                0,5 ms
+Sicherung (exportAll)    10 ms            62 ms
+JS-Heap danach           18 MB            48 MB
+IndexedDB                15 MB            29 MB
+```
+
+**Was daraus folgt.**
+- Der Vollbestand im Arbeitsspeicher kostet bei 10 000 Seiten 48 MB Heap.
+  Auf dem Rechner kein Problem; auf einem iPhone noch keines, aber es wächst
+  linear. B6 (Teil-Laden) ist damit **nicht dringend**; erst messen am
+  echten Gerät.
+- Der teuerste Weg ist „Alle zeigen" in einer grossen Datenbank: 1,9 s und
+  jede Zeile im DOM. Im Normalfall zeigt Redion 50 Zeilen mit „Mehr laden"
+  (L22, E180) — die 1,9 s trifft nur, wer ausdrücklich alle will. Das ist
+  ein Fall für B46 (Virtualisierung), nicht für B6.
+- Quick Find kalt (205 ms) ist der einzige spürbare Wert im Alltag; warm
+  über den Index 0,5 ms.
+
+**Nicht gemessen.** Der Start nach einem Neuladen mit 10 000 Seiten; das
+Werkzeug misst ihn nicht. Und alles am echten iPhone (§55, `ios/`).
+
+**Nachtrag, am selben Tag: der Start mit 10 000 Seiten.** Eine Sonde mass,
+was das Werkzeug nicht misst: lange Aufgaben nach einem Neustart
+(`PerformanceObserver` `longtask`). Vorher 6 760 / 6 808 ms in vier bis fünf
+Aufgaben, die grösste 3 646 / 3 518 ms. Das CPU-Profil (CDP, 1 ms Takt):
+„program" 3,2 s, `getBoundingClientRect` 1,8 s, `wannText` 0,4 s,
+`gruppeBauen` 0,16 s, `zeichneDeckel` 0,15 s — die Bibliothek zeichnete
+jeden Deckel. Nach E806 (erst 120 Deckel): 899 / 842 ms, die grösste
+834 / 842 ms. Die Ausreisser beim reinen Neuladen (bis 10 s bis zur ersten
+Antwort) zeigte der Stand `2d6038e` vor E800 genauso.
+
