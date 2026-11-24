@@ -30191,7 +30191,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1619, inhalt: '5905a57e40ccd138', gebaut: '2026-11-23T19:26:38.782Z' };
+const Stand = { fassung: 1620, inhalt: '3b0560850bdf8373', gebaut: '2026-11-24T06:25:06.404Z' };
 window.Stand = Stand;
 
 </script>
@@ -54691,80 +54691,163 @@ const Store = (() => {
     };
     const pending = new Map();
     let timer = null;
+    let eilig = false;
+    let naechsterSchritt = 1;
+    let offenerSchritt = 0;
+    const schrittEltern = new Map();
+    const schrittWurzel = (s) => {
+        let w = s;
+        while (schrittEltern.has(w) && schrittEltern.get(w) !== w)
+            w = schrittEltern.get(w);
+        let x = s;
+        while (x !== w) {
+            const n = schrittEltern.get(x);
+            schrittEltern.set(x, w);
+            x = n;
+        }
+        return w;
+    };
+    const schritteVereinen = (a, b) => {
+        const wa = schrittWurzel(a), wb = schrittWurzel(b);
+        if (wa !== wb) {
+            schrittEltern.set(wb, wa);
+            schrittGroesse.set(wa, (schrittGroesse.get(wa) || 0) + (schrittGroesse.get(wb) || 0));
+            schrittGroesse.delete(wb);
+        }
+        return wa;
+    };
+    const schrittGroesse = new Map();
+    const aktuellerSchritt = () => {
+        if (!offenerSchritt) {
+            offenerSchritt = naechsterSchritt++;
+            const zu = () => { offenerSchritt = 0; };
+            if (typeof queueMicrotask === 'function')
+                queueMicrotask(zu);
+            else
+                Promise.resolve().then(zu);
+        }
+        return offenerSchritt;
+    };
     const save = (store, val) => {
         if (store === 'blocks' || store === 'collections')
             datenGeaendert();
-        pending.set(store + ':' + val.id, { store, val });
+        const k = store + ':' + val.id;
+        let s = aktuellerSchritt();
+        const vorher = pending.get(k);
+        if (vorher && schrittWurzel(vorher.schritt) !== schrittWurzel(s))
+            s = schritteVereinen(vorher.schritt, s);
+        const w = schrittWurzel(s);
+        if (!vorher || schrittWurzel(vorher.schritt) !== w)
+            schrittGroesse.set(w, (schrittGroesse.get(w) || 0) + 1);
+        pending.set(k, { store, val, schritt: w });
+        if ((schrittGroesse.get(w) || 0) > 1)
+            eilig = true;
         clearTimeout(timer);
-        timer = setTimeout(flush, (typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.SCHREIB_PAUSE_MS : 400);
+        timer = setTimeout(flush, eilig ? 0 :
+            ((typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.SCHREIB_PAUSE_MS : 400));
     };
     const flush = () => {
+        clearTimeout(timer);
+        eilig = false;
         if (!db) {
             pending.clear();
+            schrittEltern.clear();
+            schrittGroesse.clear();
             return Promise.resolve();
         }
         const schluessel = [...pending.keys()];
-        const posten = [...pending.values()];
+        const posten = [...pending.values()].map(x => ({ ...x, schritt: schrittWurzel(x.schritt) }));
         pending.clear();
+        posten.forEach(x => schrittGroesse.delete(x.schritt));
         if (!posten.length)
             return Promise.resolve();
         const zurueckInDenStapel = (welche) => {
             welche.forEach(x => {
                 const k = x.store + ':' + x.val.id;
-                if (!pending.has(k))
+                const da = pending.get(k);
+                if (!da) {
                     pending.set(k, x);
+                    const w = schrittWurzel(x.schritt);
+                    schrittGroesse.set(w, (schrittGroesse.get(w) || 0) + 1);
+                }
+                else {
+                    da.schritt = schritteVereinen(da.schritt, x.schritt);
+                }
             });
         };
-        let fertig;
-        try {
-            const faecher = [...new Set(posten.map(x => x.store))];
-            const t = tx(faecher, 'readwrite');
-            const gescheitert = [];
-            posten.forEach((eintrag) => {
-                const { store, val } = eintrag;
+        const melde = (eintrag, err) => {
+            if (typeof Reporter !== 'undefined')
+                Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store: eintrag.store, id: eintrag.val.id, ...(err ? { err } : {}) });
+        };
+        const ganzOderGarNicht = (menge) => new Promise((ok, nein) => {
+            let t;
+            try {
+                t = tx([...new Set(menge.map(x => x.store))], 'readwrite');
+            }
+            catch (err) {
+                nein(err);
+                return;
+            }
+            let ersterFehler = null;
+            t.oncomplete = () => ok();
+            t.onerror = t.onabort = () => nein(ersterFehler || t.error ||
+                new Error('Das Schreiben wurde abgebrochen — nichts davon ist auf der Platte'));
+            for (const eintrag of menge) {
                 try {
-                    const r = t.objectStore(store).put(val);
-                    r.onerror = (e) => {
-                        e.preventDefault();
-                        gescheitert.push(eintrag);
-                        if (typeof Reporter !== 'undefined')
-                            Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id });
-                    };
+                    const r = t.objectStore(eintrag.store).put(eintrag.val);
+                    r.onerror = () => { if (!ersterFehler)
+                        ersterFehler = r.error; melde(eintrag, r.error); };
                 }
                 catch (err) {
-                    gescheitert.push(eintrag);
-                    if (typeof Reporter !== 'undefined')
-                        Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id, err });
+                    ersterFehler = err;
+                    melde(eintrag, err);
+                    try {
+                        t.abort();
+                    }
+                    catch { }
+                    return;
                 }
+            }
+        });
+        const fertig = ganzOderGarNicht(posten).then(() => undefined, async () => {
+            const schritte = new Map();
+            posten.forEach(x => {
+                const liste = schritte.get(x.schritt);
+                if (liste)
+                    liste.push(x);
+                else
+                    schritte.set(x.schritt, [x]);
             });
-            fertig = new Promise((ok, nein) => {
-                t.oncomplete = () => {
-                    if (!gescheitert.length)
-                        return ok(undefined);
-                    zurueckInDenStapel(gescheitert);
-                    nein(new Error(gescheitert.length + ' von ' + posten.length +
-                        ' Sätzen liessen sich nicht schreiben'));
-                };
-                t.onerror = t.onabort = () => {
-                    zurueckInDenStapel(posten);
-                    nein(t.error ||
-                        new Error('Das Schreiben wurde abgebrochen — nichts davon ist auf der Platte'));
-                };
-            });
-        }
-        catch (err) {
-            fertig = Promise.all(posten.map((eintrag) => put(eintrag.store, eintrag.val).then(() => undefined, () => { zurueckInDenStapel([eintrag]); return 'kaputt'; }))).then(ergebnisse => {
-                const kaputt = ergebnisse.filter(x => x === 'kaputt').length;
-                if (kaputt)
-                    throw new Error(kaputt + ' von ' + posten.length +
-                        ' Sätzen liessen sich nicht schreiben');
-                return undefined;
-            });
-        }
-        fertig.then(() => meldeAnAndereFenster('geaendert', schluessel), () => { });
+            const gescheitert = [];
+            const gelandet = [];
+            for (const menge of schritte.values()) {
+                try {
+                    await ganzOderGarNicht(menge);
+                    menge.forEach(x => gelandet.push(x.store + ':' + x.val.id));
+                }
+                catch {
+                    gescheitert.push(...menge);
+                }
+            }
+            if (gelandet.length)
+                meldeAnAndereFenster('geaendert', gelandet);
+            if (!gescheitert.length)
+                return 'gemeldet';
+            zurueckInDenStapel(gescheitert);
+            throw new Error(gescheitert.length + ' von ' + posten.length +
+                ' Sätzen liessen sich nicht schreiben — ihre Arbeitsschritte bleiben ganz im Stapel');
+        });
+        fertig.then((x) => { if (x !== 'gemeldet')
+            meldeAnAndereFenster('geaendert', schluessel); }, () => { });
+        const aufraeumen = () => { if (!pending.size) {
+            schrittEltern.clear();
+            schrittGroesse.clear();
+        } };
+        fertig.then(aufraeumen, aufraeumen);
         return fertig;
     };
     window.addEventListener('beforeunload', () => { flush().catch(() => { }); });
+    window.addEventListener('pagehide', () => { flush().catch(() => { }); });
     window.addEventListener('visibilitychange', () => { if (document.hidden)
         flush().catch(() => { }); });
     const search = (q, filter = {}) => {

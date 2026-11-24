@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-770 Entscheidungen, E1 bis E793 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+771 Entscheidungen, E1 bis E800 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -856,6 +856,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E791** — RED Ion Windows-MCP: semantische Live-Steuerung mit freigegebenen Aktionen und Sicherheitsbestätigungen.
 * **E792** — Visual MCP, sichere Mehrschritt-Aufträge und dauerhafte widerrufbare Freigaben
 * **E793** — Zugriff ohne Laptop ausschliesslich kostenlos
+* **E800** — Arbeitsschritte landen ganz oder gar nicht (24. November 2026, Redur: „Mache mit der grosste anderung“, im Fragebogen „Transaktionen“ und „Nur Pflicht-Datentests“): was eine Handlung synchron schreibt, ist ein Schritt; ein Schritt kommt ganz oder gar nicht auf die Platte; Umstellungen werden sofort geschrieben, Tippen behält die Pause; `pagehide` schreibt mit (`test644`)
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71064,3 +71065,54 @@ Der Cloud-Dienst verwendet bestehende Redion-Konten, saetze und Versions-/Rechte
 OAuth-Freigaben sind an Client, Ressource, Konto, Bereiche und Rechte gebunden. Gemerkte Zustimmung bleibt bis Widerruf erhalten; zusätzliche Rechte verlangen erneut Zustimmung. Zugangstokens sind kurzlebig, Refresh-Tokens rotieren und verlängern sich bei Nutzung; nach 30 Tagen ohne Refresh ist eine neue Anmeldung nötig. Tokens und Geheimnisse werden nur gehasht gespeichert. Die bestehende Website behält ihr Access-Tor.
 
 Stand und Grenzen: doku/RED-ION-CLOUD-MCP.md. Lokale Modell-, SDK-OAuth- und Browserprüfungen sind keine öffentliche MCP-Verbindung, kein Cloud-Deployment und kein Beleg für abgeglichene persönliche Dokumente. E792 und die ersten beiden Phasen bleiben vollständig beauftragt.
+
+## E800 · Arbeitsschritte landen ganz oder gar nicht
+
+**Wer und wann.** Redur, 24. November 2026, nach der Notion-Analyse: „Mache
+mit der grosste anderung ohen viel test". Im Fragebogen gewählt:
+„Transaktionen" und „Nur Pflicht-Datentests" (`test96`, `test100`, ein
+eigener Lauf; kein voller Lauf).
+
+**Was entschieden wurde.** `Store.save` ordnet jeden Satz einem
+Arbeitsschritt zu. Alles, was eine Handlung SYNCHRON schreibt, ist ein
+Schritt: der erste `save` eines Durchlaufs öffnet ihn, eine Mikroaufgabe
+schliesst ihn. Wird ein wartender Satz in einem späteren Schritt noch
+einmal geschrieben, werden beide Schritte vereint. `flush` schreibt wie
+bisher alles in EINER Transaktion; scheitert darin ein Satz, bricht sie
+ganz ab, und dann wird Schritt für Schritt in eigenen Transaktionen
+geschrieben. Ein Schritt mit mehr als einem Satz (anlegen, verschieben,
+löschen) wartet nicht die 400 ms Schreibpause ab, sondern geht im nächsten
+Takt auf die Platte. Zusätzlich schreibt `pagehide` (Safari, WKWebView).
+
+**Warum.** Vorher übersprang `flush` einen unschreibbaren Satz mit
+`preventDefault` und schrieb den Rest. Bei `addBlock` stand dann der
+Elternteil mit der neuen Kennung in `content` auf der Platte, das Kind
+nicht — ein Zeiger ins Leere nach dem Neuladen, der halbe Zustand, den §13
+verbietet. `test644` hat es gegen den alten Stand wörtlich gezeigt: 9 von 15,
+„Elternteil zeigt auf ein Kind, das auf der Platte fehlt".
+
+**Die Alternative und warum nicht.** Die Notion-Analyse (Liste B, Punkt 3
+und 4) schlug eine dauerhafte Schreibwarteschlange als eigenes Fach vor,
+nach Notions TransactionQueue. Beim Bauen zeigte sich: Notions Warteschlange
+überbrückt den Weg zum Server, Redions Ziel IST IndexedDB. Eine
+Warteschlange davor wäre derselbe Schreibvorgang zweimal und eine
+Datenmigration (Fassung 6) ohne Gewinn. Das Gegenstück für Redion ist,
+zusammengehörige Sätze atomar und sofort zu schreiben — ohne neues Fach und
+ohne Migration. Ausdrückliche Aufrufe wie `Store.transaktion(fn)` wurden
+nicht eingeführt: der automatische Schritt deckt alle bestehenden Aufrufer
+ab, ohne dass einer geändert werden muss.
+
+**Was es kostet.** Ein Schritt, der dauerhaft nicht schreibbar ist, hält
+jetzt auch seine Partner zurück (vorher landeten sie ohne ihn). Das ist
+gewollt — es ist genau der halbe Zustand —, aber es heisst: ein solcher
+Fehler zeigt sich an mehr Sätzen. Umstellungen öffnen öfter eine
+IndexedDB-Transaktion als vorher (eine je Handlung statt eine je 400 ms).
+Was über mehrere Takte hinweg schreibt (`await` dazwischen, etwa der
+Import), ist weiterhin mehrere Schritte; dort sorgt `importAll` selbst für
+Ordnung.
+
+**Geprüft.** `test644` (15 Zusagen; gegen den Stand vor E800 rot mit 9 von
+15), `test96`, `test100`, `test105`, `test109`, `npm run typecheck`. Kein
+voller Lauf, auf Redurs Wunsch — für das Vorspulen von `main` gilt §46
+unverändert.
+

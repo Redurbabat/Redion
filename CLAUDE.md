@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 577 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 578 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2248,6 +2248,19 @@ Blöcke b643_10 bis b643_29 und „verschluesselt=0“. Aus
 `codex/redion-visual-cloud-mcp` in PR #213 übernommen. Gezählt am
 19. November: `ls pruefungen/lauf/test*.mts | wc -l` sagt 577.*
 
+*Und 578: `test644` — Arbeitsschritte landen ganz oder gar nicht (E800).
+Redur am 24. November nach der Notion-Analyse: „Mache mit der grosste
+anderung ohen viel test", im Fragebogen „Transaktionen" und „Nur
+Pflicht-Datentests". Er liest IMMER direkt aus IndexedDB, nie aus
+`Store.cache`, und lässt `addBlock` einen Block mit einer Funktion darin
+schreiben — `put` wirft DataCloneError. Gegen den alten Stand rot mit 9 von
+15 und der Zeile, um die es geht: der Elternteil stand mit der neuen
+Kennung auf der Platte, das Kind nicht. Einmal stürzte er gegen den alten
+Stand ab, statt rot zu melden — der neue Block war nach 120 ms gar nicht
+auf der Platte, und `null.text` warf; seither liest er mit `?.`. Gezählt am
+24. November, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+578.*
+
 ### Die Befehle
 
 ```txt
@@ -2269,7 +2282,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 577 Läufe
+npm run pruefen                      alle 578 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2366,7 +2379,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 577 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 578 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

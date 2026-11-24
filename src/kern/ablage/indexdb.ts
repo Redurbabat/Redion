@@ -1393,15 +1393,101 @@ const Store = (() => {
 
   /* --- Schreiben mit Verzögerung ----------------------------------------- */
   /* Beim Tippen soll nicht jeder Tastendruck eine Transaktion auslösen.     */
-  const pending = new Map();
+
+  /* ------------------------------------------------------------------------
+   * ARBEITSSCHRITTE — GANZ ODER GAR NICHT (E800)
+   * ------------------------------------------------------------------------
+   * Eine Handlung schreibt oft mehrere Sätze: `addBlock` den neuen Block
+   * UND den Elternteil mit der neuen Kennung in `content`, ein Verschieben
+   * den alten Elternteil, den neuen und den Block. Diese Sätze gehören
+   * zusammen. Landet nur ein Teil davon auf der Platte, zeigt nach dem
+   * Neuladen ein `content` auf einen Block, den es nicht gibt, oder ein
+   * Block hängt an keinem Elternteil — der halbe Zustand aus §13.
+   *
+   * Genau das konnte `flush` vorher: ein Satz, der sich nicht schreiben
+   * liess, wurde mit `preventDefault` übergangen, und der Rest der
+   * Transaktion kam an. Der Elternteil stand mit dem neuen Kind auf der
+   * Platte, das Kind nicht.
+   *
+   * DER SCHRITT ENTSTEHT VON SELBST. Alles, was eine Handlung SYNCHRON
+   * schreibt, ist ein Schritt: der erste `save` eines Durchlaufs öffnet
+   * ihn, eine Mikroaufgabe schliesst ihn. Kein Aufrufer muss etwas
+   * Neues lernen — die achtzig Stellen, die heute `addBlock`,
+   * `updateBlock` und Co. rufen, sind ohne Änderung abgedeckt.
+   *
+   * Schreibt ein späterer Schritt einen Satz, der schon in einem früheren
+   * wartet, werden beide EIN Schritt (Vereinigung): der wartende Satz ist
+   * das lebende Objekt aus dem Zwischenspeicher und trägt beide Änderungen,
+   * also dürfen die Partner des früheren Schritts nicht ohne ihn landen.
+   *
+   * WIE GESCHRIEBEN WIRD. Im Normalfall wie bisher: EINE Transaktion für
+   * alles (die zweitausend Sätze beim ersten Start, siehe unten). Scheitert
+   * darin etwas, bricht sie jetzt GANZ ab — nichts landet — und dann wird
+   * Schritt für Schritt in eigenen Transaktionen geschrieben. Die guten
+   * Schritte kommen an, der schlechte bleibt vollständig im Stapel. Der
+   * Grundsatz von vorher („ein schlechter Satz darf den Stapel nicht
+   * mitreissen") bleibt, nur ist die Einheit jetzt der Schritt, nicht der
+   * Satz.
+   *
+   * UND SOFORT, WENN ES ZÄHLT. Ein Schritt mit mehr als einem Satz ist eine
+   * Umstellung (anlegen, verschieben, löschen) — er wird nicht 400 ms lang
+   * nur im Arbeitsspeicher gehalten, sondern im nächsten Takt geschrieben.
+   * Tippen bleibt ein Satz je Schritt und behält die Pause.
+   * ----------------------------------------------------------------------*/
+  type Posten = { store: any; val: any; schritt: number };
+  const pending = new Map<string, Posten>();
   let timer: any = null;
+  let eilig = false;
+
+  let naechsterSchritt = 1;
+  let offenerSchritt = 0;
+  /* Vereinigung der Schritte: Kennung → Vertreter. */
+  const schrittEltern = new Map<number, number>();
+  const schrittWurzel = (s: number): number => {
+    let w = s;
+    while (schrittEltern.has(w) && schrittEltern.get(w) !== w) w = schrittEltern.get(w)!;
+    /* Pfad verkürzen, damit lange Ketten beim Tippen nicht wachsen */
+    let x = s;
+    while (x !== w) { const n = schrittEltern.get(x)!; schrittEltern.set(x, w); x = n; }
+    return w;
+  };
+  const schritteVereinen = (a: number, b: number): number => {
+    const wa = schrittWurzel(a), wb = schrittWurzel(b);
+    if (wa !== wb) {
+      schrittEltern.set(wb, wa);
+      schrittGroesse.set(wa, (schrittGroesse.get(wa) || 0) + (schrittGroesse.get(wb) || 0));
+      schrittGroesse.delete(wb);
+    }
+    return wa;
+  };
+  /* Satzzahl je Schritt (am Vertreter), um Umstellungen zu erkennen. */
+  const schrittGroesse = new Map<number, number>();
+
+  const aktuellerSchritt = (): number => {
+    if (!offenerSchritt) {
+      offenerSchritt = naechsterSchritt++;
+      const zu = () => { offenerSchritt = 0; };
+      if (typeof queueMicrotask === 'function') queueMicrotask(zu);
+      else Promise.resolve().then(zu);
+    }
+    return offenerSchritt;
+  };
 
   const save = (store: any, val: any) => {
     if (store === 'blocks' || store === 'collections') datenGeaendert();
-    pending.set(store + ':' + val.id, { store, val });
+    const k = store + ':' + val.id;
+    let s = aktuellerSchritt();
+    const vorher = pending.get(k);
+    if (vorher && schrittWurzel(vorher.schritt) !== schrittWurzel(s))
+      s = schritteVereinen(vorher.schritt, s);
+    const w = schrittWurzel(s);
+    if (!vorher || schrittWurzel(vorher.schritt) !== w)
+      schrittGroesse.set(w, (schrittGroesse.get(w) || 0) + 1);
+    pending.set(k, { store, val, schritt: w });
+    if ((schrittGroesse.get(w) || 0) > 1) eilig = true;
     clearTimeout(timer);
-    timer = setTimeout(flush,
-      (typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.SCHREIB_PAUSE_MS : 400);
+    timer = setTimeout(flush, eilig ? 0 :
+      ((typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.SCHREIB_PAUSE_MS : 400));
   };
 
   /**
@@ -1428,78 +1514,97 @@ const Store = (() => {
    * Satz geht verloren, die guten kommen an.
    */
   const flush = (): Promise<unknown> => {
-    if (!db) { pending.clear(); return Promise.resolve(); }
+    clearTimeout(timer);
+    eilig = false;
+    if (!db) { pending.clear(); schrittEltern.clear(); schrittGroesse.clear(); return Promise.resolve(); }
     const schluessel = [...pending.keys()];
-    const posten = [...pending.values()];
+    /* Den Vertreter jedes Schritts JETZT festhalten: was danach gespeichert
+       wird, darf die Gruppen dieses Durchgangs nicht mehr verschieben. */
+    const posten: Posten[] = [...pending.values()].map(x => ({ ...x, schritt: schrittWurzel(x.schritt) }));
     pending.clear();
+    posten.forEach(x => schrittGroesse.delete(x.schritt));
     if (!posten.length) return Promise.resolve();
 
     /* Ein Satz, der nicht ankam, kommt zurück in den Stapel — der nächste
        flush versucht es wieder. Aber nur, wenn dort nicht längst ein
        NEUERER Stand desselben Satzes wartet; der ältere darf ihn nie
-       überschreiben. Der Schlüssel ist derselbe wie in `save`. */
-    const zurueckInDenStapel = (welche: { store: any; val: any }[]): void => {
+       überschreiben. Der Schlüssel ist derselbe wie in `save`.
+       Wartet dort schon ein neuerer Stand, wird dessen Schritt mit dem
+       zurückgekehrten vereint: der neuere Satz trägt die Änderung des
+       gescheiterten Schritts mit, also müssen dessen Partner mit ihm
+       landen und nicht ohne ihn (E800). */
+    const zurueckInDenStapel = (welche: Posten[]): void => {
       welche.forEach(x => {
         const k = x.store + ':' + x.val.id;
-        if (!pending.has(k)) pending.set(k, x);
+        const da = pending.get(k);
+        if (!da) {
+          pending.set(k, x);
+          const w = schrittWurzel(x.schritt);
+          schrittGroesse.set(w, (schrittGroesse.get(w) || 0) + 1);
+        } else {
+          da.schritt = schritteVereinen(da.schritt, x.schritt);
+        }
       });
     };
 
-    let fertig: Promise<unknown>;
-    try {
-      const faecher = [...new Set(posten.map(x => x.store))];
-      const t = tx(faecher, 'readwrite');
-      const gescheitert: { store: any; val: any }[] = [];
-      posten.forEach((eintrag) => {
-        const { store, val } = eintrag;
+    const melde = (eintrag: Posten, err?: unknown) => {
+      if (typeof Reporter !== 'undefined')
+        Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben',
+          { store: eintrag.store, id: eintrag.val.id, ...(err ? { err } : {}) });
+    };
+
+    /* Schreibt eine Menge Sätze in EINER Transaktion, ganz oder gar nicht.
+       Ein Satz, der scheitert (auch ein synchroner Wurf, etwa ein
+       DataCloneError), bricht die Transaktion ab — dann ist NICHTS davon
+       auf der Platte. `oncomplete` heisst: auf der Platte. */
+    const ganzOderGarNicht = (menge: Posten[]): Promise<void> => new Promise((ok, nein) => {
+      let t: IDBTransaction;
+      try {
+        t = tx([...new Set(menge.map(x => x.store))], 'readwrite');
+      } catch (err) { nein(err); return; }
+      let ersterFehler: unknown = null;
+      t.oncomplete = () => ok();
+      t.onerror = t.onabort = () => nein(ersterFehler || (t as any).error ||
+        new Error('Das Schreiben wurde abgebrochen — nichts davon ist auf der Platte'));
+      for (const eintrag of menge) {
         try {
-          const r = t.objectStore(store).put(val);
-          r.onerror = (e: any) => {
-            e.preventDefault();          /* nicht den ganzen Stapel abbrechen */
-            gescheitert.push(eintrag);
-            if (typeof Reporter !== 'undefined')
-              Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id });
-          };
+          const r = t.objectStore(eintrag.store).put(eintrag.val);
+          r.onerror = () => { if (!ersterFehler) ersterFehler = r.error; melde(eintrag, r.error); };
         } catch (err) {
-          gescheitert.push(eintrag);
-          if (typeof Reporter !== 'undefined')
-            Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id, err });
+          ersterFehler = err;
+          melde(eintrag, err);
+          try { t.abort(); } catch { /* schon beendet */ }
+          return;
         }
+      }
+    });
+
+    /* Erst alles in einem Zug — der schnelle Weg, und der übliche. Geht das
+       schief, ist nichts geschrieben; dann Schritt für Schritt, damit ein
+       schlechter Schritt die guten nicht aufhält. */
+    const fertig: Promise<unknown> = ganzOderGarNicht(posten).then(() => undefined, async () => {
+      const schritte = new Map<number, Posten[]>();
+      posten.forEach(x => {
+        const liste = schritte.get(x.schritt);
+        if (liste) liste.push(x); else schritte.set(x.schritt, [x]);
       });
-      /* `oncomplete` heisst: auf der Platte. `onerror` und `onabort`
-         zeigten hier jahrelang auf DASSELBE `ok` — ein flush nach vollem
-         Speicher „gelang", und die Meldung unten ging trotzdem hinaus.
-         Jetzt: ein Abbruch rollt alles zurück (so arbeitet eine
-         Transaktion), also wandert alles zurück in den Stapel, und der
-         Aufrufer bekommt ein Nein. Einzelne gescheiterte Sätze in einer
-         sonst gelungenen Transaktion sind auch ein Nein — eines, das die
-         Zahl nennt. */
-      fertig = new Promise((ok, nein) => {
-        t.oncomplete = () => {
-          if (!gescheitert.length) return ok(undefined);
-          zurueckInDenStapel(gescheitert);
-          nein(new Error(gescheitert.length + ' von ' + posten.length +
-                         ' Sätzen liessen sich nicht schreiben'));
-        };
-        t.onerror = t.onabort = () => {
-          zurueckInDenStapel(posten);
-          nein((t as any).error ||
-               new Error('Das Schreiben wurde abgebrochen — nichts davon ist auf der Platte'));
-        };
-      });
-    } catch (err) {
-      /* Geht die Sammeltransaktion gar nicht auf, lieber einzeln als nicht:
-         ein langsamer Weg ist besser als ein verlorener Stapel. */
-      fertig = Promise.all(posten.map((eintrag) =>
-        put(eintrag.store, eintrag.val).then(() => undefined,
-          () => { zurueckInDenStapel([eintrag]); return 'kaputt'; })
-      )).then(ergebnisse => {
-        const kaputt = ergebnisse.filter(x => x === 'kaputt').length;
-        if (kaputt) throw new Error(kaputt + ' von ' + posten.length +
-                                    ' Sätzen liessen sich nicht schreiben');
-        return undefined;
-      });
-    }
+      const gescheitert: Posten[] = [];
+      const gelandet: string[] = [];
+      for (const menge of schritte.values()) {
+        try {
+          await ganzOderGarNicht(menge);
+          menge.forEach(x => gelandet.push(x.store + ':' + x.val.id));
+        } catch { gescheitert.push(...menge); }
+      }
+      /* Was gelandet ist, erfahren die anderen Fenster auch dann, wenn ein
+         anderer Schritt hängen blieb — sonst schreiben sie ihren alten
+         Stand über einen Satz, der längst auf der Platte steht. */
+      if (gelandet.length) meldeAnAndereFenster('geaendert', gelandet);
+      if (!gescheitert.length) return 'gemeldet';
+      zurueckInDenStapel(gescheitert);
+      throw new Error(gescheitert.length + ' von ' + posten.length +
+                      ' Sätzen liessen sich nicht schreiben — ihre Arbeitsschritte bleiben ganz im Stapel');
+    });
 
     /* Und die anderen Fenster wissen es jetzt auch. Siehe `nachbarn.js`:
        ohne diese Zeile hält jedes Fenster seinen eigenen Stand für die
@@ -1511,7 +1616,11 @@ const Store = (() => {
        auch im Fehlerfall: nach einem Abbruch geht KEINE Meldung hinaus —
        drüben gäbe es nichts zu lesen. (Der leere zweite Ast hält nur die
        abgeleitete Kette still; die Ablehnung selbst bekommt der Aufrufer.) */
-    fertig.then(() => meldeAnAndereFenster('geaendert', schluessel), () => {});
+    fertig.then((x) => { if (x !== 'gemeldet') meldeAnAndereFenster('geaendert', schluessel); }, () => {});
+    /* Wartet nichts mehr, braucht es keine Zuordnung der Schritte mehr —
+       sonst wüchse sie beim Tippen mit jedem Tastendruck. */
+    const aufraeumen = () => { if (!pending.size) { schrittEltern.clear(); schrittGroesse.clear(); } };
+    fertig.then(aufraeumen, aufraeumen);
     return fertig;
   };
 
@@ -1519,6 +1628,9 @@ const Store = (() => {
      nicht mehr zu gebrauchen — das Fenster schliesst; gemeldet hat flush
      selbst schon über den Reporter. */
   window.addEventListener('beforeunload', () => { flush().catch(() => {}); });
+  /* `pagehide` kommt auch dort, wo `beforeunload` ausbleibt — Safari und
+     WKWebView auf dem iPhone beim Wegwischen der App (E800). */
+  window.addEventListener('pagehide', () => { flush().catch(() => {}); });
   window.addEventListener('visibilitychange', () => { if (document.hidden) flush().catch(() => {}); });
 
   /* ========================================================================
