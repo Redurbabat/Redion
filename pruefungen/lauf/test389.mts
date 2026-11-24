@@ -27,7 +27,7 @@
  * eigener Streifen — der wieder verschwindet, sobald man unten ist.
  *
  *   §1 Die vier Gruppen gibt es wirklich (die Berichtsbehauptung ist falsch).
- *   §2 Auf einem gewöhnlichen Schirm fehlt kein Eintrag mehr.
+ *   §2 Die Liste rollt; jede Zeile 44 px; jeder Bereich kommt durch Rollen unter den Finger (E812, 24. Nov.).
  *   §3 Rollt die Liste, sagt der Streifen es — und schweigt sonst.
  *   §4 Das Fenster passt ins Bild.
  *   §5 Am Telefon bleibt die Zeile ein Fingerziel (§37).
@@ -98,6 +98,8 @@ const LAGE = `(() => {
   const nr = nav.getBoundingClientRect();
   const kn = [...nav.querySelectorAll('button')];
   return {
+    hoehen: kn.map(b => Math.round(b.getBoundingClientRect().height)),
+    scrollt: getComputedStyle(nav).overflowY,
     gruppen: [...nav.querySelectorAll('.einst-grp')]
       .filter(e => e.getBoundingClientRect().height > 0)
       .map(e => e.textContent.trim()),
@@ -126,6 +128,7 @@ type Lage = {
   gruppen: string[]; gruppenGross: boolean; letzterSichtbar: boolean;
   knoepfe: number; knopfHoehe: number; verdeckt: number;
   unsichtbar: string[]; hatMehr: boolean; mehrSichtbar: boolean;
+  hoehen: number[]; scrollt: string;
   fensterOben: number; fensterUnten: number; fensterHoehe: number; bildHoehe: number;
 };
 
@@ -144,7 +147,7 @@ console.log('\n1 · Die vier Gruppen stehen wirklich da');
   gleich('Drei sichtbare Gruppenüberschriften', l.gruppen,
          ['Funktionen', 'Verwaltung', 'Zugriff und Abrechnung']);
   p('… und sie stehen in Versalien, also als Überschrift', l.gruppenGross);
-  gleich('19 Bereiche', l.knoepfe, 19);
+  gleich('20 Bereiche (E755: geraete „iPhone und Windows" dazu)', l.knoepfe, 20);
   await s.close();
 }
 {
@@ -162,14 +165,73 @@ console.log('\n1 · Die vier Gruppen stehen wirklich da');
  * Einträge ausserhalb; mit `min(920px, 92vh)` keiner. Dreht man die Höhe
  * zurück, wird er rot — nachgeprüft, nicht behauptet.
  * ========================================================================*/
-console.log('\n2 · Bei 1360×900 ist die Liste vollständig');
+/* Wer einen Bereich unter den Finger bekommt: rollen, dann an der Mitte der
+ * Zeile fragen, was dort WIRKLICH liegt. Ein Glas über der Liste, eine
+ * abgeschnittene Zeile oder ein Streifen darüber liefert „nein". Die
+ * Prüfung liegt als Text vor, damit die Gegenprobe dieselbe Funktion ruft. */
+const ERREICHBAR = `(() => {
+  const nav = document.querySelector('.einst-nav');
+  const kn = [...nav.querySelectorAll('button[data-b]')];
+  nav.scrollTop = 0;
+  const obenZuSehen = kn.filter(b => {
+    const r = b.getBoundingClientRect(), n = nav.getBoundingClientRect();
+    return r.top >= n.top && r.bottom <= n.bottom;
+  }).length;
+  const fehlen = [];
+  for (const b of kn) {
+    b.scrollIntoView({ block: 'center' });
+    const r = b.getBoundingClientRect();
+    const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    if (!el || !b.contains(el)) fehlen.push(b.dataset.b);
+  }
+  return { anzahl: kn.length, obenZuSehen, fehlen };
+})()`;
+
+/* ==========================================================================
+ * §2 · Die Liste rollt, jede Zeile ist 44 px, und jeder Bereich kommt unter
+ *      den Finger
+ * --------------------------------------------------------------------------
+ * Zurückgenommen wurde die alte Zusage „die Liste ist vollständig". Mit 20
+ * Bereichen (E755) und 44 px je Zeile passen sie in kein Fenster, das die
+ * Schale zulässt (`min(920px, 92vh)`): 880 px Zeilen, dazu Titel, Suche und
+ * drei Überschriften. Redur, 24. November: „Rollen ok, 44 px bleiben". Also
+ * geprüft wird, was er verlangt hat: die Zeile bleibt ≥ 44 px, die Liste
+ * rollt, und jeder Bereich ist durch Rollen erreichbar.
+ * ========================================================================*/
+console.log('\n2 · Die Liste rollt, jede Zeile ist 44 px, und jeder Bereich kommt unter den Finger');
 {
   const s = await oeffne(1360, 900);
   const l = await s.evaluate(LAGE) as Lage;
-  gleich('Kein Eintrag ausserhalb der Liste', l.unsichtbar, []);
-  gleich('Nichts zu rollen', l.verdeckt, 0);
-  p('„Über diese App" ist der letzte und steht da',
-    !l.unsichtbar.some(t => t.includes('Über diese App')));
+  p('Jede Zeile mindestens 44 px hoch', l.hoehen.length === 20 && l.hoehen.every(h => h >= 44),
+    `${Math.min(...l.hoehen)} px kleinste von ${l.hoehen.length}`);
+  p('Die Liste rollt (Überhang da, Rollbalken-Bereich aktiv)',
+    l.verdeckt > 0 && ['auto', 'scroll'].includes(l.scrollt),
+    `Überhang ${l.verdeckt} px, overflow-y ${l.scrollt}`);
+  const erreich = await s.evaluate(ERREICHBAR) as { anzahl: number; obenZuSehen: number; fehlen: string[] };
+  p('Oben passen nicht alle Bereiche — also muss gerollt werden', erreich.obenZuSehen < erreich.anzahl,
+    `oben ${erreich.obenZuSehen} von ${erreich.anzahl}`);
+  gleich('Jeder der 20 Bereiche kommt durch Rollen unter den Finger', erreich.fehlen, []);
+  /* GEGENPROBE: ein Glas liegt über der ganzen Liste. `scrollIntoView` darf
+   * rollen, wie es will — `elementFromPoint` trifft dann das Glas, und keine
+   * Zeile kommt an. (Ein `overflow:hidden` täuscht nicht: programmatisch
+   * rollt es weiter, das misst die Prüfung also nicht.) */
+  /* Im Fenster selbst, nicht am Körper: das Fenster ist die oberste Ebene des
+   * Dialogs (ein Glas am Körper läge unter ihm — gemessen, nicht geraten). */
+  await s.evaluate(`document.querySelector('.einst-fenster').insertAdjacentHTML('beforeend',
+    '<div id="glas-probe" style="position:absolute;inset:0;z-index:9"></div>')`);
+  const unterGlas = await s.evaluate(ERREICHBAR) as { anzahl: number; fehlen: string[] };
+  p('Gegenprobe: liegt ein Glas darüber, kommt kein Bereich unter den Finger',
+    unterGlas.fehlen.length === unterGlas.anzahl, `${unterGlas.fehlen.length} von ${unterGlas.anzahl} verdeckt`);
+  await s.evaluate(`document.getElementById('glas-probe')?.remove()`);
+  await s.close();
+}
+{
+  /* GEGENPROBE 2: Zeilen von 36 px — die 44-px-Zusage muss rot werden. */
+  const s = await oeffne(1360, 900);
+  await s.addStyleTag({ content: '.einst-fenster .einst-nav button{min-height:36px!important;height:36px!important}' });
+  const duenn = await s.evaluate(LAGE) as Lage;
+  p('Gegenprobe: 36-px-Zeilen wären rot',
+    !duenn.hoehen.every(h => h >= 44), `kleinste ${Math.min(...duenn.hoehen)} px`);
   await s.close();
 }
 
@@ -188,6 +250,14 @@ console.log('\n3 · Der Hinweis kommt und geht');
   p('… und der Streifen steht da', oben.hatMehr && oben.mehrSichtbar,
     `hatMehr ${oben.hatMehr}, sichtbar ${oben.mehrSichtbar}`);
 
+  /* Mitte: noch nicht ganz gerollt — der Streifen sagt es weiter. */
+  await s.evaluate(`(() => { const n = document.querySelector('.einst-nav');
+                             n.scrollTop = Math.round((n.scrollHeight - n.clientHeight) / 2); })()`);
+  await s.waitForTimeout(250);
+  const mitte = await s.evaluate(LAGE) as Lage;
+  p('Mitten im Rollen steht der Streifen (noch nicht ganz gerollt)', mitte.hatMehr && mitte.mehrSichtbar,
+    `hatMehr ${mitte.hatMehr}, sichtbar ${mitte.mehrSichtbar}`);
+
   await s.evaluate(`(() => { const n = document.querySelector('.einst-nav');
                              n.scrollTop = n.scrollHeight; })()`);
   await s.waitForTimeout(250);
@@ -197,13 +267,10 @@ console.log('\n3 · Der Hinweis kommt und geht');
   p('Und der letzte Eintrag ist dann zu sehen', unten.letzterSichtbar);
   await s.close();
 }
-{
-  const s = await oeffne(1360, 900);
-  const l = await s.evaluate(LAGE) as Lage;
-  p('Passt alles, schweigt er von Anfang an', !l.hatMehr && !l.mehrSichtbar,
-    `hatMehr ${l.hatMehr}, sichtbar ${l.mehrSichtbar}`);
-  await s.close();
-}
+/* Die frühere Zusage „passt alles, schweigt er von Anfang an" ist entfallen:
+ * mit 20 Bereichen gibt es kein Fenster, in dem die Liste ganz passt (§2).
+ * Dass der Streifen schweigt, sobald nichts mehr kommt, prüft das „Ganz
+ * unten" oben. */
 
 /* ==========================================================================
  * §4 · Das Fenster passt ins Bild

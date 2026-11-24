@@ -694,7 +694,7 @@ import { chromium } from 'playwright';
 
   const bereiche = await p.evaluate(() => Einstellungen.BEREICHE.map(b2 => b2[0]));
   console.log('   Bereiche:', bereiche.length, JSON.stringify(bereiche));
-  ok('Jetzt 19 Bereiche', bereiche.length === 19);
+  ok('Jetzt 20 Bereiche (E755: geraete dazu)', bereiche.length === 20);
   ok('Analysen, Worker und Verifizierte Seiten dabei',
      ['analysen', 'worker', 'verifiziert'].every(x => (bereiche ?? '').includes(x)));
 

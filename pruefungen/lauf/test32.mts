@@ -346,7 +346,7 @@ import { chromium } from 'playwright';
   ok('MCP als eigener Bereich', einst?.mcp);
   ok('Emoji als eigener Bereich', einst?.emoji);
   ok('Öffentliche Seiten als Bereich', einst?.oeff);
-  ok('19 Bereiche', einst?.bereiche === 19);
+  ok('20 Bereiche (E755: geraete dazu)', einst?.bereiche === 20);
 
   const emojiBereich = await p.evaluate(() => {
     document?.querySelector<HTMLElement>('[data-b="emoji"]')?.click();

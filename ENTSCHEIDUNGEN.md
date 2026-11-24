@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-784 Entscheidungen, E1 bis E813 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+785 Entscheidungen, E1 bis E814 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -870,6 +870,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E811** — Drei alte rote Läufe: was sie wirklich fanden
 * **E812** — Die Einstellungen wie die iPhone-Einstellungen, mit Redions eigenen Mitteln (24. November 2026, Redur: „Die Einstellungen aufräumen, sie sollen wie die iPhone-Einstellungen sein."): Gruppen als Karten, farbige Quadrate mit weissem Zeichen, Titel und Suche; Telefon zwei Seiten, Rechner zwei Spalten. Die Wächter test580 und test389 werden dabei an zwei Zusagen rot — offen für Redur.
 * **E813** — Das untere Dock ist EINE Kapsel, und das Zeichen steht über dem Wort (24. November 2026): zweiter Ring weg, zweite Innenlinie weg, feste Zeichenbox für Safari; `test655`
+* **E814** — Vier alte Zusagen der Einstellungen auf Redurs Antworten umgeschrieben (24. November 2026): ganze Zeile, Rollen mit 44 px, Fahrt auf Verhalten, 20 Bereiche gezählt; `test32` `test34` `test389` `test580` `test581`
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71623,3 +71624,40 @@ Die Vorher- und Nachher-Läufe (13 aus dem Auftrag, dazu die übrigen Einstellun
 - Der Kontrast des aktiven Wortes ist NOCH ZU NIEDRIG. Gemessen an den Bildpunkten (`test585` §2): Standard hell 3,06 : 1, Standard dunkel 3,73 : 1, Glass Wheel hell 3,43 : 1, dunkel 3,58 : 1 (Soll 4,5 : 1). Vorher 2,83 und 3,47. Die Lösung liegt bei der Pille oder der Wortfarbe; das ist eine Gestaltungsfrage und nicht in diesem Bogen entschieden.
 
 **Prüfungen.** `test655` (neu, 89 Zusagen in beiden Schalen, hell und dunkel): vor der Änderung 73 bestanden, 16 rot; danach 87 bestanden, 2 rot (die beiden Kontrast-Zeilen des Glass Wheel, 3,43 und 3,58). Die WebKit-Ersatzprobe (das SVG ohne Grösse und ohne Attribute) ist in Chromium auch vor der Änderung grün gewesen; darum prüft `test655` §3 zusätzlich, ob die Box beschnitten ist (`overflow: hidden`), und das war vorher rot. Sie beweist Safari NICHT; sie beweist, dass das Zeichen nicht mehr über das Wort malen kann. Bestehende Läufe vorher/nachher: `test541` 25/25 und `test614` 124/125 und `test613` gleich; `test585` 89/93 gleich (Kontrast-Zeilen besser, nicht grün); `test623` 52/55 gleich (Schatten, Übergang und Druck bleiben rot wie vorher, der Schatten jetzt mit dem neuen Wert); `test588` 79/79, `test584` 36/37 gleich wie vorher; `test576`, `test581`, `test582` unverändert rot wie vorher (Glas-Werte und Farbe des System-Modus, nicht von dieser Änderung berührt).
+
+## E814 · Vier alte Zusagen der Einstellungen auf Redurs Antworten umgeschrieben
+
+*24. November 2026 · Redur im Fragebogen zu den Einstellungen (E812): drei Antworten gehören zu den Prüfläufen, die vierte („Weg, wie iOS") ist der Strich über der Leiste und gehört einem anderen Bogen.*
+
+**Was entschieden wurde.** Die Zusagen, die E812 rot gemacht hat, werden auf das neue Verhalten umgeschrieben. Der App-Code bleibt, wie er ist; geändert wird nur, was geprüft wird. Keine Zusage wird aufgeweicht: jede neue Prüfung misst dasselbe Merkmal schärfer oder genauer, und jede hat eine Gegenprobe, die gegen einen kaputten Stand rot wird.
+
+- **test580, „der gewählte Bereich trägt den Akzent"** — Redur: „Ganze Zeile, wie iPad (Empfohlen)". *Alt:* die Farbe des Zeichens im gewählten Bereich war Akzent oder Sättigung > 0,3. *Neu (Rechner):* hinter der gewählten Zeile liegt eine gesättigte Akzent-FLÄCHE (Sättigung 0,61 gemessen, Grenze 0,3), der Name darauf hält 4,5 : 1 (10,86 : 1 gemessen, gerechnet gegen den hellen Rand des Glanzverlaufs, 6 % Weiss), und KEINE andere Zeile hat dieselbe Fläche. Die Farbe kommt aus einer 1×1-Leinwand, weil `color-mix()` als `color(srgb …)` ankommt und ein `rgb()`-Regex sie nicht sähe. *Telefon:* die Zusage „Rechner und Telefon" ist hier NICHT wörtlich übernommen. E812 sagt ausdrücklich: „Am Telefon bleibt die Zeile ohne Fläche" (eigene Regel in `einstellungen.css`). Der Lauf prüft am Telefon das Gegenteil: keine Zeile hat eine Fläche. Wer am Telefon eine Fläche will, ändert E812, nicht den Lauf.
+- **test32, test34, test389, test580, „19 Bereiche"** — Zählung, kein Redur-Wort. *Alt:* 19. *Neu:* 20, mit `geraete` („iPhone und Windows"), das E755 dazugebracht hat; test580 führt den Eintrag zwischen `emoji` und `arbeitsplatz` in der Liste, die exakt verglichen wird. Die Zahl wurde gezählt, nicht geschätzt: vor der Änderung rot mit „ist 20, soll 19" in test389 und mit der vollen Liste in test580.
+- **test389, „bei 1360 × 900 ist die Liste vollständig"** — Redur: „Rollen ok, 44 px bleiben (Empfohlen)". *Alt:* kein Eintrag ausserhalb, nichts zu rollen, „Über diese App" steht da, und „passt alles" schweigt. *Neu:* jede Zeile ≥ 44 px (kleinste gemessen 44); die Liste rollt (Überhang gemessen, `overflow-y` auto oder scroll); oben passen nicht alle Bereiche; jeder der 20 Bereiche kommt durch Rollen unter den Finger (rollen, dann `elementFromPoint` an der Mitte der Zeile trifft die Zeile selbst). Der Streifen „es geht weiter" (E392) wird in der Mitte des Rollens geprüft und ganz unten als still. Die Zusage „passt alles" ist entfallen, weil es kein Fenster mehr gibt, in dem alle 20 passen (Fenster ≤ 920 px; 20 × 44 px plus Titel und Überschriften liegen darüber). Ihre Stelle hält das „ganz unten schweigt".
+- **test581, „Bereich schiebt sich von rechts herein" und „Zurück bringt die Liste von links"** — Redur: „Ja, auf Verhalten prüfen (Empfohlen)". *Alt:* der Name der Keyframes `wisch-rein-links` bzw. `wisch-rein-rechts` an `getAnimations()`. Seit E812 ist die Fahrt aber ein Übergang der Eigenschaft `transform` (`data-blick` schaltet ihn), und die Namen gibt es nicht mehr; die Zusage war damit rot, obwohl die App richtig fuhr. *Neu:* Bild für Bild wird die Stellung gelesen (`DOMMatrixReadOnly`, m41). Bei „Tipp auf eine Zeile": die Detailseite liegt in mindestens drei Bildern zwischen Bildbreite und 0, startet rechts, wird nicht rückwärts bewegt und kommt bei 0 an. Bei „Zurück": die Liste startet im Versatz von −30 %, liegt in mindestens drei Bildern dazwischen, wird nicht rückwärts bewegt und kommt bei 0 an. Mit „Ruhige Darstellung" und mit System-Bewegung reduziert ist die Detailseite im ersten Bild da (gemessen: der erste Bild-Wert nach dem Tipp ist 0).
+
+**Gegenproben (im Lauf, rot gemessen).**
+
+| Zusage | Gegenprobe | Ergebnis |
+|---|---|---|
+| test580 Akzent | Zeile grau statt Akzent (`var(--bg-hover)`) | rot (Sättigung unter 0,3) |
+| test580 Akzent | zweite Zeile mit gleicher Fläche (`color-mix` auf `konto`) | rot (gleiche 2) |
+| test389 Rollen | ein Glas über der Liste (`position:absolute`, im Fenster) | rot (0 von 20 erreichbar) |
+| test389 44 px | Zeilen auf 36 px gezwungen | rot |
+| test581 Fahrt | Übergang abgeschaltet (`transition:none`) | rot (kein Zwischenbild) |
+
+Ein Hinweis zur Gegenprobe des Rollens: ein `overflow:hidden` auf der Liste täuscht die Prüfung nicht. `scrollIntoView` rollt programmatisch weiter, auch wenn der Nutzer nicht rollen kann. Die Prüfung misst deshalb, was unter dem Finger liegt, nicht, ob die Liste rollt; die Gegenprobe dazu ist das Glas. Ein Glas am Körper der Seite reichte nicht: das Einstellungsfenster liegt darüber (gemessen).
+
+**Läufe vorher und nachher.** Gleicher Befehl, `node pruefungen/alle.mts 32 34 389 580 581`.
+
+| Lauf | vorher | nachher |
+|---|---|---|
+| test32 | 56 von 57 (19 Bereiche) | 57 von 57 |
+| test34 | 84 von 85 (19 Bereiche) | 85 von 85 |
+| test389 | 14 von 19 | 22 von 22 |
+| test580 | rot in vier Zeilen (zwei Zählungen, zwei Akzente) | 99 ok, 0 offen |
+| test581 | rot in drei Zeilen (zwei Keyframe-Namen, eine §8-Zeile) | rot in einer Zeile (die §8-Zeile, siehe unten) |
+
+**Was bleibt rot, und warum.** test581 §8: „Keine `:active{transform:scale(…)}` mehr ausser den benannten eigenen Druckbildern" — gefunden wird `bausteine.css: #ho-ziele > button:active .ho-z`. Diese Zeile war schon vor E814 rot und gehört nicht zu den Einstellungen; sie wird hier nicht angefasst. Der volle Lauf der Gesamtheit ist nicht gefahren; die Zahlen oben gelten für diese fünf Läufe.
+
+**Offen, bei Redur.** Ob die Telefonzeile eine Fläche bekommt, wie es „Rechner und Telefon" im Auftrag las. E812 sagt nein; der Lauf folgt E812, bis Redur das ändert.
