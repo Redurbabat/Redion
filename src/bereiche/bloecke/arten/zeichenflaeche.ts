@@ -347,17 +347,6 @@ const Zusatz = (() => {
        Seitenflaeche, und zwei Fassungen laufen auseinander (Paragraph 8). */
     const rahmenVon = (s: any) => GfxShapes.rahmenVon(s);
 
-    /* Wo eine Verbindung den Rand ihrer Form trifft. Ohne das steckte die
-       Pfeilspitze mitten in der Haftnotiz. */
-    const randPunkt = (rahmen: any, zielX: number, zielY: number): [number, number] => {
-      const mx = rahmen.x + rahmen.w / 2, my = rahmen.y + rahmen.h / 2;
-      const dx = zielX - mx, dy = zielY - my;
-      if (!dx && !dy) return [mx, my];
-      const halbW = Math.max(1, rahmen.w / 2), halbH = Math.max(1, rahmen.h / 2);
-      const anteil = Math.min(halbW / Math.abs(dx || .0001), halbH / Math.abs(dy || .0001));
-      return [mx + dx * anteil, my + dy * anteil];
-    };
-
     const male = () => {
       flaeche.innerHTML = '';
       const feld = ausschnitt();
@@ -497,15 +486,7 @@ const Zusatz = (() => {
       const a = daten.find((q: any) => q.id === s.von);
       const b = daten.find((q: any) => q.id === s.nach);
       if (!a || !b) return null;
-      const ra = rahmenVon(a), rb = rahmenVon(b);
-      const [x1, y1] = randPunkt(ra, rb.x + rb.w / 2, rb.y + rb.h / 2);
-      const [x2, y2] = randPunkt(rb, ra.x + ra.w / 2, ra.y + ra.h / 2);
-      const p = sv('path', {
-        d: `M${x1} ${y1} L${x2} ${y2}`, stroke: s.farbe, 'stroke-width': 2,
-        fill: 'none', 'stroke-dasharray': '6 4', 'marker-end': `url(#p${block.id.slice(0, 6)})`
-      });
-      p.dataset.sid = s.id;
-      return p;
+      return GfxShapes.verbindungZeichne(s, rahmenVon(a), rahmenVon(b), 'p' + block.id.slice(0, 6));
     };
 
     /* DER ZEICHNER STEHT IM KERN (E693). Hier standen hundertzwanzig

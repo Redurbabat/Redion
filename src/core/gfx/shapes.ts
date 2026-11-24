@@ -105,6 +105,35 @@ const GfxShapes = (() => {
     return { x: Math.min(x, x + w), y: Math.min(y, y + h), w: Math.abs(w), h: Math.abs(h) };
   };
 
+  type Rahmen = ReturnType<typeof rahmenVon>;
+  const randPunkt = (rahmen: Rahmen, zielX: number, zielY: number): [number, number] => {
+    const mx = rahmen.x + rahmen.w / 2, my = rahmen.y + rahmen.h / 2;
+    const dx = zielX - mx, dy = zielY - my;
+    if (!dx && !dy) return [mx, my];
+    const halbW = Math.max(1, rahmen.w / 2), halbH = Math.max(1, rahmen.h / 2);
+    const anteil = Math.min(halbW / Math.abs(dx || .0001), halbH / Math.abs(dy || .0001));
+    return [mx + dx * anteil, my + dy * anteil];
+  };
+
+  const verbindungsStrecke = (a: Rahmen, b: Rahmen): [[number, number], [number, number]] => [
+    randPunkt(a, b.x + b.w / 2, b.y + b.h / 2),
+    randPunkt(b, a.x + a.w / 2, a.y + a.h / 2)
+  ];
+
+  const verbindungsPfad = (a: Rahmen, b: Rahmen): string => {
+    const [[x1, y1], [x2, y2]] = verbindungsStrecke(a, b);
+    return `M${x1} ${y1} L${x2} ${y2}`;
+  };
+
+  const verbindungZeichne = (form: GfxForm, a: Rahmen, b: Rahmen, marke: string): SVGPathElement => {
+    const pfad = sv('path', {
+      d: verbindungsPfad(a, b), stroke: form.farbe || 'currentColor', 'stroke-width': 2,
+      fill: 'none', 'stroke-dasharray': '6 4', 'marker-end': `url(#${marke})`
+    }) as SVGPathElement;
+    pfad.dataset.sid = form.id;
+    return pfad;
+  };
+
   /** Der Text einer Haftnotiz auf Zeilen verteilt. */
   const zeilenUmbruch = (text: string, breite: number): string[] => {
     const proZeile = Math.max(6, Math.floor(breite / 7.4));
@@ -297,7 +326,7 @@ const GfxShapes = (() => {
     return leer;
   };
 
-  return { zeichne, rahmenVon, zeilenUmbruch, pfeilMarke, sv, PALETTE };
+  return { zeichne, rahmenVon, zeilenUmbruch, pfeilMarke, verbindungsStrecke, verbindungsPfad, verbindungZeichne, sv, PALETTE };
 })();
 
 (window as any).GfxShapes = GfxShapes;

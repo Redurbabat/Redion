@@ -510,6 +510,147 @@ p('Kein leeres `shapes` bleibt stehen', leerDanach.hatShapes === false,
 p('Und keine `raumVersion` ohne Formen', leerDanach.hatRaum === false,
   JSON.stringify(leerDanach));
 
+/* ==========================================================================
+ * §12 · Auswahl, Haftnotiz und gekoppelte Pfeile
+ * ======================================================================== */
+console.log('\n12 · Formen auswählen, verbinden und bearbeiten');
+const { pg: plan } = await bauen(1280, 900);
+const planId = await plan.evaluate(async () => {
+  const s = Store.addPage(null, { text: 'Zwei verbundene Formen', seitenAnsicht: 'flaeche', raumVersion: 1, shapes: [
+    { id: 'links', art: 'rechteck', x: 120, y: 300, w: 100, h: 70, farbe: '#529cca' },
+    { id: 'rechts', art: 'rechteck', x: 490, y: 360, w: 105, h: 75, farbe: '#e03e3e' }
+  ] });
+  Store.addBlock(s.id, 'text', { text: 'Seiteninhalt bleibt neben der Zeichnung erhalten.' });
+  await Store.flush();
+  App.zeichneBaum(); App.oeffne(s.id);
+  return s.id;
+});
+const planFlaeche = plan.locator('.pg-flaeche');
+await planFlaeche.locator('[data-sid="links"]').waitFor();
+const planDaten = () => plan.evaluate((id: string) => Store.getBlock(id)?.shapes, planId);
+const mittelpunkt = async (id: string) => {
+  const r = await planFlaeche.locator(`[data-sid="${id}"]`).boundingBox();
+  if (!r) throw Error('Form ohne sichtbaren Rahmen: ' + id);
+  return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+};
+const waehleWerkzeug = (id: string) => planFlaeche.locator(`[data-wz="${id}"]`).click();
+await waehleWerkzeug('verbindung');
+const ln = await mittelpunkt('links'), re = await mittelpunkt('rechts');
+await plan.mouse.click(ln.x, ln.y);
+await plan.mouse.click(re.x, re.y);
+let stand = await planDaten() ?? [];
+const link = stand.find((s: any) => s.art === 'verbindung');
+p('Zwei Klicks speichern eine Verbindung mit den vorhandenen Form-IDs', link?.von === 'links' && link?.nach === 'rechts');
+const wegPfeil = () => planFlaeche.locator(`path[data-sid="${link?.id}"]`).getAttribute('d');
+const vorherPfeil = link ? await wegPfeil() : null;
+
+await waehleWerkzeug('zeiger');
+await plan.mouse.click(ln.x, ln.y);
+await plan.keyboard.down('Shift');
+await plan.mouse.click(re.x, re.y);
+await plan.keyboard.up('Shift');
+gleich('Umschalt-Klick zeichnet zwei Auswahlrahmen', await planFlaeche.locator('.pg-fl-formauswahl rect').count(), 2);
+await plan.mouse.move(ln.x, ln.y);
+await plan.mouse.down();
+await plan.mouse.move(ln.x + 36, ln.y + 18, { steps: 6 });
+await plan.waitForTimeout(50);
+const vorschau = link ? await wegPfeil() : null;
+p('Der Pfeil folgt noch vor dem Loslassen', !!vorschau && vorschau !== vorherPfeil);
+stand = await planDaten() ?? [];
+gleich('Ein laufender Zug bleibt aus der Speicherung', stand.slice(0, 2).map((s: any) => s.x), [120, 490]);
+await plan.mouse.up();
+stand = await planDaten() ?? [];
+gleich('Beim Loslassen wandern beide Formen um denselben Versatz', stand.slice(0, 2).map((s: any) => [s.x, s.y]),
+  [[156, 318], [526, 378]]);
+await planFlaeche.focus();
+await plan.keyboard.press('Control+z');
+stand = await planDaten() ?? [];
+gleich('Ein Rückgängig setzt beide Formen zurück', stand.slice(0, 2).map((s: any) => s.x), [120, 490]);
+await plan.keyboard.press('Control+Shift+z');
+stand = await planDaten() ?? [];
+gleich('Ein Wiederholen verschiebt wieder beide Formen', stand.slice(0, 2).map((s: any) => s.x), [156, 526]);
+
+const bewegtLinks = await mittelpunkt('links');
+await plan.mouse.move(bewegtLinks.x, bewegtLinks.y);
+await plan.mouse.down();
+await plan.mouse.move(bewegtLinks.x + 52, bewegtLinks.y - 14, { steps: 4 });
+await plan.keyboard.press('Escape');
+await plan.mouse.up();
+stand = await planDaten() ?? [];
+gleich('Escape verwirft die Vorschau ohne Positionsänderung', stand.slice(0, 2).map((s: any) => s.x), [156, 526]);
+
+const beschriftetLinks = await mittelpunkt('links');
+await plan.mouse.click(beschriftetLinks.x, beschriftetLinks.y);
+await plan.keyboard.press('ArrowRight');
+stand = await planDaten() ?? [];
+gleich('Die Pfeiltaste verschiebt nur die ausgewählte Form', stand.slice(0, 2).map((s: any) => s.x), [157, 526]);
+await plan.keyboard.press('Control+z');
+await planFlaeche.locator('[data-a="beschriften"]').click();
+const etikett = plan.getByRole('textbox').filter({ visible: true }).last();
+await etikett.fill('Quelle');
+await etikett.press('Enter');
+await plan.waitForFunction((id: string) => Store.getBlock(id)?.shapes?.some((s: any) => s.id === 'links' && s.text === 'Quelle'), planId);
+p('Das Beschriften ändert den vorhandenen Rechteckblock', await planFlaeche.getByText('Quelle', { exact: true }).count() === 1);
+
+await waehleWerkzeug('notiz');
+const brett = await planFlaeche.boundingBox();
+if (!brett) throw Error('Keine sichtbare Fläche');
+await plan.mouse.click(brett.x + 175, brett.y + 470);
+const eingabe = plan.getByRole('textbox').filter({ visible: true }).last();
+await eingabe.fill('Recherche und Rückfragen');
+await eingabe.press('Enter');
+await plan.waitForFunction((id: string) => Store.getBlock(id)?.shapes?.some((s: any) => s.text === 'Recherche und Rückfragen'), planId);
+stand = await planDaten() ?? [];
+p('Eine Haftnotiz liegt mit ihrer Beschriftung in derselben Liste', stand.some((s: any) =>
+  s.art === 'notiz' && s.text === 'Recherche und Rückfragen'));
+
+await plan.evaluate(() => Store.flush());
+await plan.reload();
+await plan.waitForFunction(() => typeof App !== 'undefined' && !!document.querySelector('#page')?.firstElementChild);
+await plan.evaluate((id: string) => App.oeffne(id), planId);
+await planFlaeche.locator('[data-sid="links"]').waitFor();
+stand = await planDaten() ?? [];
+p('Verbindung und Haftnotiz überleben das Neuöffnen', stand.some((s: any) =>
+  s.art === 'verbindung' && s.von === 'links' && s.nach === 'rechts') &&
+  stand.some((s: any) => s.art === 'notiz' && s.text === 'Recherche und Rückfragen'));
+const mobilId = await handy.evaluate(async () => {
+  const s = Store.addPage(null, { text: 'Form auf dem Telefon', seitenAnsicht: 'flaeche', raumVersion: 1, shapes: [
+    { id: 'touchform', art: 'rechteck', x: 60, y: 320, w: 100, h: 72, farbe: '#529cca' }
+  ] });
+  await Store.flush();
+  App.zeichneBaum(); App.oeffne(s.id);
+  return s.id;
+});
+await handy.waitForFunction(() => document.getElementById('ru-vorhang')?.hidden === true);
+const mobilForm = handy.locator('.pg-flaeche [data-sid="touchform"]');
+const mobilBox = await mobilForm.boundingBox();
+if (!mobilBox) throw Error('Keine Form für die Touch-Prüfung');
+const mobilZoom = await handy.locator('.pg-fl-sicht').evaluate(el => new DOMMatrix(getComputedStyle(el).transform).a);
+const touch = await handy.context().newCDPSession(handy);
+const mx = mobilBox.x + mobilBox.width / 2, my = mobilBox.y + mobilBox.height / 2;
+await touch.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{x: mx, y: my}] });
+await touch.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{x: mx + 24, y: my + 12}] });
+await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+await touch.detach();
+const mobilDanach = await handy.evaluate((id: string) => Store.getBlock(id)?.shapes?.[0], mobilId);
+p('Die Form folgt dem Touch-Zug auf dem 390-Pixel-Bildschirm', !!mobilDanach &&
+  Math.abs((mobilDanach.x - 60) * mobilZoom - 24) <= 1 && Math.abs((mobilDanach.y - 320) * mobilZoom - 12) <= 1,
+  JSON.stringify({ mobilZoom, mobilDanach }));
+const bildordner = process.env.REDION_FLAECHE_BILDER;
+if (bildordner) {
+  await plan.waitForFunction(() => document.getElementById('ru-vorhang')?.hidden === true);
+  fs.mkdirSync(bildordner, { recursive: true });
+  await plan.screenshot({ path: path.join(bildordner, 'flaeche-windows.png') });
+  await handy.screenshot({ path: path.join(bildordner, 'flaeche-mobil.png') });
+}
+
+const linksJetzt = await mittelpunkt('links');
+await plan.mouse.click(linksJetzt.x, linksJetzt.y);
+await plan.keyboard.press('Delete');
+stand = await planDaten() ?? [];
+p('Beim Löschen einer Form verschwindet ihre Verbindung mit', !stand.some((s: any) => s.id === 'links' || s.art === 'verbindung'));
+await plan.close();
+
 await handy.close();
 
 await browser.close();

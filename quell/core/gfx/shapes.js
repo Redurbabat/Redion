@@ -41,6 +41,31 @@ const GfxShapes = (() => {
         const x = zahl(s?.x), y = zahl(s?.y), w = zahl(s?.w), h = zahl(s?.h);
         return { x: Math.min(x, x + w), y: Math.min(y, y + h), w: Math.abs(w), h: Math.abs(h) };
     };
+    const randPunkt = (rahmen, zielX, zielY) => {
+        const mx = rahmen.x + rahmen.w / 2, my = rahmen.y + rahmen.h / 2;
+        const dx = zielX - mx, dy = zielY - my;
+        if (!dx && !dy)
+            return [mx, my];
+        const halbW = Math.max(1, rahmen.w / 2), halbH = Math.max(1, rahmen.h / 2);
+        const anteil = Math.min(halbW / Math.abs(dx || .0001), halbH / Math.abs(dy || .0001));
+        return [mx + dx * anteil, my + dy * anteil];
+    };
+    const verbindungsStrecke = (a, b) => [
+        randPunkt(a, b.x + b.w / 2, b.y + b.h / 2),
+        randPunkt(b, a.x + a.w / 2, a.y + a.h / 2)
+    ];
+    const verbindungsPfad = (a, b) => {
+        const [[x1, y1], [x2, y2]] = verbindungsStrecke(a, b);
+        return `M${x1} ${y1} L${x2} ${y2}`;
+    };
+    const verbindungZeichne = (form, a, b, marke) => {
+        const pfad = sv('path', {
+            d: verbindungsPfad(a, b), stroke: form.farbe || 'currentColor', 'stroke-width': 2,
+            fill: 'none', 'stroke-dasharray': '6 4', 'marker-end': `url(#${marke})`
+        });
+        pfad.dataset.sid = form.id;
+        return pfad;
+    };
     const zeilenUmbruch = (text, breite) => {
         const proZeile = Math.max(6, Math.floor(breite / 7.4));
         const worte = String(text).split(/\s+/);
@@ -191,6 +216,6 @@ const GfxShapes = (() => {
         leer.dataset.sid = s.id;
         return leer;
     };
-    return { zeichne, rahmenVon, zeilenUmbruch, pfeilMarke, sv, PALETTE };
+    return { zeichne, rahmenVon, zeilenUmbruch, pfeilMarke, verbindungsStrecke, verbindungsPfad, verbindungZeichne, sv, PALETTE };
 })();
 window.GfxShapes = GfxShapes;

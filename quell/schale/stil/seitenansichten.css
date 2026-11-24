@@ -346,6 +346,14 @@ body:has(.pg-flaeche) #sammelleiste{
   pointer-events:none;
   color:var(--text);
 }
+
+.pg-fl-formauswahl{
+  fill:none;
+  stroke:var(--accent-text);
+  stroke-width:2;
+  stroke-dasharray:5 3;
+  pointer-events:none;
+}
 /* Die Malwerkzeuge zeigen ein Kreuz statt des Greifers. */
 .pg-flaeche[data-wz="stift"], .pg-flaeche[data-wz="linie"],
 .pg-flaeche[data-wz="pfeil"], .pg-flaeche[data-wz="rechteck"],

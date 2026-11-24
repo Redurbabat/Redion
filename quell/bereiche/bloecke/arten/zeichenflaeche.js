@@ -194,15 +194,6 @@ const Zusatz = (() => {
             return { x: sicht.x, y: sicht.y, w: breite / sicht.z, h: hoch / sicht.z };
         };
         const rahmenVon = (s) => GfxShapes.rahmenVon(s);
-        const randPunkt = (rahmen, zielX, zielY) => {
-            const mx = rahmen.x + rahmen.w / 2, my = rahmen.y + rahmen.h / 2;
-            const dx = zielX - mx, dy = zielY - my;
-            if (!dx && !dy)
-                return [mx, my];
-            const halbW = Math.max(1, rahmen.w / 2), halbH = Math.max(1, rahmen.h / 2);
-            const anteil = Math.min(halbW / Math.abs(dx || .0001), halbH / Math.abs(dy || .0001));
-            return [mx + dx * anteil, my + dy * anteil];
-        };
         const male = () => {
             flaeche.innerHTML = '';
             const feld = ausschnitt();
@@ -324,15 +315,7 @@ const Zusatz = (() => {
             const b = daten.find((q) => q.id === s.nach);
             if (!a || !b)
                 return null;
-            const ra = rahmenVon(a), rb = rahmenVon(b);
-            const [x1, y1] = randPunkt(ra, rb.x + rb.w / 2, rb.y + rb.h / 2);
-            const [x2, y2] = randPunkt(rb, ra.x + ra.w / 2, ra.y + ra.h / 2);
-            const p = sv('path', {
-                d: `M${x1} ${y1} L${x2} ${y2}`, stroke: s.farbe, 'stroke-width': 2,
-                fill: 'none', 'stroke-dasharray': '6 4', 'marker-end': `url(#p${block.id.slice(0, 6)})`
-            });
-            p.dataset.sid = s.id;
-            return p;
+            return GfxShapes.verbindungZeichne(s, rahmenVon(a), rahmenVon(b), 'p' + block.id.slice(0, 6));
         };
         const formZeichnen = (s) => GfxShapes.zeichne(s, {
             pfeilMarke: 'p' + block.id.slice(0, 6),

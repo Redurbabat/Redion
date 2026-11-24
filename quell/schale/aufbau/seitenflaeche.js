@@ -135,7 +135,8 @@ const Seitenflaeche = (() => {
         flaeche.appendChild(ebene);
         const tinte = GfxShapes.sv('svg', { width: 1, height: 1, class: 'pg-fl-tinte' });
         const tinteDefs = GfxShapes.sv('defs');
-        GfxShapes.pfeilMarke(tinteDefs, 'pfl' + String(p.id).slice(0, 6));
+        const pfeil = 'pfl' + String(p.id).slice(0, 6);
+        GfxShapes.pfeilMarke(tinteDefs, pfeil);
         tinte.appendChild(tinteDefs);
         ebene.appendChild(tinte);
         const kaesten = [];
@@ -338,11 +339,84 @@ const Seitenflaeche = (() => {
             };
             stellen();
         };
+        const auswahl = new Set();
+        const formKnoten = new Map();
+        const linien = [];
+        let verbindeVon = '';
+        const auswahlRahmen = GfxShapes.sv('g', { class: 'pg-fl-formauswahl', 'aria-hidden': 'true' });
+        const ansage = document.createElement('span');
+        ansage.className = 'nur-vorlesen';
+        ansage.setAttribute('role', 'status');
+        flaeche.appendChild(ansage);
+        const formId = (form) => typeof form?.id === 'string' ? form.id : '';
+        const beweglich = (form) => !!formId(form) && (form.art === 'stift'
+            ? Array.isArray(form.pts) && form.pts.length > 0
+            : Number.isFinite(form.x) && Number.isFinite(form.y));
+        const beschriftbareForm = () => auswahl.size === 1 && formen.find(form => auswahl.has(formId(form)) && ['rechteck', 'notiz', 'text'].includes(form.art));
+        const auswahlZeigen = () => {
+            auswahlRahmen.replaceChildren();
+            for (const form of formen) {
+                if (!auswahl.has(formId(form)))
+                    continue;
+                const r = GfxShapes.rahmenVon(form);
+                auswahlRahmen.appendChild(GfxShapes.sv('rect', {
+                    x: r.x - 4, y: r.y - 4, width: r.w + 8, height: r.h + 8, rx: 3,
+                    'vector-effect': 'non-scaling-stroke'
+                }));
+            }
+            const text = auswahl.size === 1 ? 'Eine Form ausgewählt' : auswahl.size + ' Formen ausgewählt';
+            if (ansage.textContent !== text)
+                ansage.textContent = text;
+            leiste.setzeGesperrt('loeschen', !auswahl.size || werkzeug === 'verbindung');
+            leiste.setzeGesperrt('beschriften', !beschriftbareForm() || werkzeug === 'verbindung');
+            leiste.setzeGesperrt('alleFormen', !formen.some(beweglich));
+        };
+        const auswahlSetzen = (ids) => {
+            auswahl.clear();
+            ids.forEach(id => auswahl.add(id));
+            auswahlZeigen();
+        };
+        const werkzeugWechseln = (id) => {
+            werkzeug = id;
+            flaeche.dataset['wz'] = id;
+            verbindeVon = '';
+            if (id !== 'zeiger')
+                auswahlSetzen([]);
+        };
+        const alleFormenWaehlen = () => {
+            werkzeugWechseln('zeiger');
+            leiste.setzeWerkzeug('zeiger');
+            auswahlSetzen(formen.filter(beweglich).map(formId));
+        };
         const malen = () => {
             [...tinte.childNodes].forEach(k => { if (k !== tinteDefs)
                 tinte.removeChild(k); });
-            for (const form of formen)
-                tinte.appendChild(GfxShapes.zeichne(form, { pfeilMarke: 'pfl' + String(p.id).slice(0, 6) }));
+            formKnoten.clear();
+            linien.length = 0;
+            const nachId = new Map(formen.map(form => [formId(form), form]));
+            for (const form of formen) {
+                if (form.art !== 'verbindung')
+                    continue;
+                const von = nachId.get(form.von), nach = nachId.get(form.nach);
+                if (!von || !nach)
+                    continue;
+                const pfad = GfxShapes.verbindungZeichne(form, GfxShapes.rahmenVon(von), GfxShapes.rahmenVon(nach), pfeil);
+                linien.push({ form, von, nach, pfad });
+                tinte.appendChild(pfad);
+            }
+            for (const form of formen) {
+                if (form.art === 'verbindung')
+                    continue;
+                const el = GfxShapes.zeichne(form, { pfeilMarke: pfeil });
+                if (beweglich(form))
+                    formKnoten.set(formId(form), el);
+                tinte.appendChild(el);
+            }
+            for (const id of auswahl)
+                if (!formKnoten.has(id))
+                    auswahl.delete(id);
+            tinte.appendChild(auswahlRahmen);
+            auswahlZeigen();
         };
         const verlauf = GfxHistory.erstelle();
         const abbild = () => JSON.stringify(formen);
@@ -369,35 +443,108 @@ const Seitenflaeche = (() => {
             sichern();
             standZeigen();
         };
-        const formAn = (fx, fy, radius) => {
+        let beschriftet = false;
+        const textBearbeiten = async (form, punkt) => {
+            if (beschriftet || formenZug)
+                return;
+            beschriftet = true;
+            let text;
+            try {
+                text = await UI.frage(punkt ? 'Haftnotiz' : 'Beschriftung', String(form?.text || ''));
+            }
+            finally {
+                beschriftet = false;
+            }
+            if (text === null || !flaeche.isConnected)
+                return;
+            if (punkt) {
+                if (!text.trim())
+                    return;
+                const id = Store.uid().slice(0, 8);
+                merken();
+                formen.push({ id, art: 'notiz', x: r2(punkt.x), y: r2(punkt.y), w: 170, h: 110, farbe, text });
+                werkzeugWechseln('zeiger');
+                leiste.setzeWerkzeug('zeiger');
+                auswahlSetzen([id]);
+            }
+            else {
+                const aktuell = formen.find(x => formId(x) === formId(form));
+                if (!aktuell || text === String(aktuell.text || ''))
+                    return;
+                merken();
+                formen = formen.map(x => x === aktuell ? { ...x, text } : x);
+            }
+            sichern();
+        };
+        const formenEntfernen = (ids) => {
+            formen = formen.filter(form => !ids.has(formId(form)) &&
+                (form.art !== 'verbindung' || (!ids.has(form.von) && !ids.has(form.nach))));
+        };
+        const auswahlLoeschen = () => {
+            if (!auswahl.size || formenZug || werkzeug === 'verbindung')
+                return;
+            merken();
+            formenEntfernen(auswahl);
+            sichern();
+        };
+        const auswahlVerschieben = (dx, dy) => {
+            if ((!dx && !dy) || !auswahl.size)
+                return;
+            merken();
+            formen = formen.map(form => {
+                if (!auswahl.has(formId(form)))
+                    return form;
+                if (form.art === 'stift')
+                    return { ...form, pts: form.pts.map(([x, y, ...rest]) => [r2(x + dx), r2(y + dy), ...rest]) };
+                return { ...form, x: r2(form.x + dx), y: r2(form.y + dy) };
+            });
+            sichern();
+        };
+        const formAn = (fx, fy, radius, mitVerbindungen = false) => {
+            const nah = (a, b) => {
+                const ax = Number(a?.[0]), ay = Number(a?.[1]), bx = Number(b?.[0]), by = Number(b?.[1]);
+                const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+                const t = l2 > 0 ? Math.max(0, Math.min(1, ((fx - ax) * dx + (fy - ay) * dy) / l2)) : 0;
+                return Math.hypot(ax + t * dx - fx, ay + t * dy - fy) <= radius;
+            };
             for (let i = formen.length - 1; i >= 0; i--) {
                 const form = formen[i];
-                if (form?.art === 'stift') {
-                    const pts = Array.isArray(form.pts) ? form.pts : [];
-                    const nah = (a, b) => {
-                        const ax = Number(a?.[0]), ay = Number(a?.[1]), bx = Number(b?.[0]), by = Number(b?.[1]);
-                        const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
-                        const t = l2 > 0 ? Math.max(0, Math.min(1, ((fx - ax) * dx + (fy - ay) * dy) / l2)) : 0;
-                        return Math.hypot(ax + t * dx - fx, ay + t * dy - fy) <= radius;
-                    };
-                    if (pts.some((q, i) => nah(q, pts[i + 1] ?? q)))
-                        return form;
+                if (!beweglich(form))
                     continue;
+                if (form.art === 'stift') {
+                    const pts = form.pts;
+                    if (pts.some((q, j) => nah(q, pts[j + 1] ?? q)))
+                        return form;
                 }
-                const r = GfxShapes.rahmenVon(form);
-                if (fx >= r.x - radius && fx <= r.x + r.w + radius &&
-                    fy >= r.y - radius && fy <= r.y + r.h + radius)
-                    return form;
+                else if (form.art === 'linie' || form.art === 'pfeil') {
+                    if (nah([form.x, form.y], [form.x + form.w, form.y + form.h]))
+                        return form;
+                }
+                else {
+                    const r = GfxShapes.rahmenVon(form);
+                    if (fx >= r.x - radius && fx <= r.x + r.w + radius &&
+                        fy >= r.y - radius && fy <= r.y + r.h + radius)
+                        return form;
+                }
+            }
+            if (mitVerbindungen) {
+                for (let i = linien.length - 1; i >= 0; i--) {
+                    const link = linien[i];
+                    if (!link)
+                        continue;
+                    const [a, b] = GfxShapes.verbindungsStrecke(GfxShapes.rahmenVon(link.von), GfxShapes.rahmenVon(link.nach));
+                    if (nah(a, b))
+                        return link.form;
+                }
             }
             return null;
         };
         const MALWERKZEUGE = ['stift', 'linie', 'pfeil', 'rechteck', 'ellipse'];
         const maltGerade = () => MALWERKZEUGE.includes(werkzeug) || werkzeug === 'radierer';
-        malen();
         const leiste = GfxToolbar.erstelle({
             klasse: 'pg-fl-tools',
             beschriftung: 'Werkzeuge der Fläche',
-            werkzeuge: Register.werkzeuge.auswahl(['zeiger', 'hand', 'stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'radierer']),
+            werkzeuge: Register.werkzeuge.auswahl(['zeiger', 'hand', 'verbindung', 'stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'notiz', 'radierer']),
             aktiv: 'zeiger',
             aktionen: [
                 { id: 'farbe', name: 'Farbe', titel: 'Farbe der Formen', sym: 'palette',
@@ -407,7 +554,10 @@ const Seitenflaeche = (() => {
                     sym: 'redo', gesperrt: true },
                 { id: 'kleiner', name: 'Kleiner', titel: 'Kleiner (Strg + Rad)', sym: 'minus' },
                 { id: 'groesser', name: 'Grösser', titel: 'Grösser (Strg + Rad)', sym: 'plus' },
-                { id: 'passend', name: 'Ins Bild', titel: 'Alles ins Bild holen', sym: 'maximize' }
+                { id: 'passend', name: 'Ins Bild', titel: 'Alles ins Bild holen', sym: 'maximize' },
+                { id: 'alleFormen', name: 'Alle Formen', titel: 'Alle Formen auswählen (Strg + A)', sym: 'formRect', gesperrt: true },
+                { id: 'beschriften', name: 'Beschriften', titel: 'Ausgewählte Form beschriften', sym: 'inkText', gesperrt: true },
+                { id: 'loeschen', name: 'Löschen', titel: 'Ausgewählte Formen löschen', sym: 'trash', gesperrt: true }
             ],
             zusatz: { groesser: massstabZeigen },
             menue: (id) => {
@@ -429,10 +579,7 @@ const Seitenflaeche = (() => {
                 }
                 return kasten;
             },
-            aufWerkzeug: (id) => {
-                werkzeug = id;
-                flaeche.dataset['wz'] = id;
-            },
+            aufWerkzeug: werkzeugWechseln,
             aufAktion: (id) => {
                 if (id === 'zurueck')
                     schrittZurueck();
@@ -444,12 +591,22 @@ const Seitenflaeche = (() => {
                     massstab(sicht.z * 1.25);
                 if (id === 'passend')
                     passend();
+                if (id === 'alleFormen' && !formenZug)
+                    alleFormenWaehlen();
+                if (id === 'loeschen')
+                    auswahlLoeschen();
+                if (id === 'beschriften') {
+                    const form = beschriftbareForm();
+                    if (form)
+                        void textBearbeiten(form);
+                }
             }
         });
         flaeche.insertBefore(leiste.element, ebene);
         flaeche.dataset['wz'] = werkzeug;
         if (typeof Register !== 'undefined' && Register.symbole)
             Register.symbole.fuelle(leiste.element);
+        malen();
         const gaeste = new Map();
         let imSchacht = leiste.element;
         let gastFlaeche = null;
@@ -572,6 +729,43 @@ const Seitenflaeche = (() => {
         let zug = null;
         const finger = new Map();
         let kneifen = null;
+        let formenZug = null;
+        let formenBild = 0;
+        const formVorschau = () => {
+            formenBild = 0;
+            if (!formenZug)
+                return;
+            const transform = `translate(${formenZug.dx} ${formenZug.dy})`;
+            auswahlRahmen.setAttribute('transform', transform);
+            for (const id of auswahl)
+                formKnoten.get(id)?.setAttribute('transform', transform);
+            verbindungenNachziehen(formenZug.dx, formenZug.dy);
+        };
+        const verbindungenNachziehen = (dx, dy) => {
+            const rahmen = (form) => {
+                const r = GfxShapes.rahmenVon(form);
+                return auswahl.has(formId(form)) ? { ...r, x: r.x + dx, y: r.y + dy } : r;
+            };
+            for (const { von, nach, pfad } of linien) {
+                if (!auswahl.has(formId(von)) && !auswahl.has(formId(nach)))
+                    continue;
+                pfad.setAttribute('d', GfxShapes.verbindungsPfad(rahmen(von), rahmen(nach)));
+            }
+        };
+        const formZugEnde = () => {
+            formenZug = null;
+            if (formenBild)
+                cancelAnimationFrame(formenBild);
+            formenBild = 0;
+            auswahlRahmen.removeAttribute('transform');
+            for (const id of auswahl)
+                formKnoten.get(id)?.removeAttribute('transform');
+            verbindungenNachziehen(0, 0);
+        };
+        const formVersatz = (e, start) => {
+            const dx = e.clientX - start.sx, dy = e.clientY - start.sy;
+            return Math.hypot(dx, dy) < 3 ? { dx: 0, dy: 0 } : { dx: dx / sicht.z, dy: dy / sicht.z };
+        };
         let stiftGlatt = null;
         let stiftZeit = 0;
         let stiftBildGeplant = false;
@@ -598,6 +792,8 @@ const Seitenflaeche = (() => {
                 if (a && b)
                     kneifen = { abstand: Math.hypot(a.x - b.x, a.y - b.y), z: sicht.z };
                 zug = null;
+                if (formenZug)
+                    formZugEnde();
                 return;
             }
             const ziel = e.target instanceof Element ? e.target : null;
@@ -609,9 +805,9 @@ const Seitenflaeche = (() => {
                 catch { }
                 merken();
                 if (werkzeug === 'radierer') {
-                    const treffer = formAn(punkt.x, punkt.y, 12 / sicht.z);
+                    const treffer = formAn(punkt.x, punkt.y, 12 / sicht.z, true);
                     if (treffer) {
-                        formen = formen.filter(x => x !== treffer);
+                        formenEntfernen(new Set([formId(treffer)]));
                         sichern();
                     }
                     else
@@ -628,6 +824,61 @@ const Seitenflaeche = (() => {
                 formen.push(aktiv);
                 malen();
                 return;
+            }
+            if (e.button === 0 && !ziel?.closest('.pg-fl-notiz, .gfx-tb-sockel')) {
+                const punkt = inFlaeche(e.clientX, e.clientY);
+                if (werkzeug === 'notiz') {
+                    finger.delete(e.pointerId);
+                    e.preventDefault();
+                    void textBearbeiten(null, punkt);
+                    return;
+                }
+                if (werkzeug === 'verbindung') {
+                    const id = formId(formAn(punkt.x, punkt.y, 8 / sicht.z));
+                    if (!id || id === verbindeVon) {
+                        verbindeVon = '';
+                        auswahlSetzen([]);
+                    }
+                    else if (!verbindeVon) {
+                        verbindeVon = id;
+                        auswahlSetzen([id]);
+                        UI.toast('Zweite Form auswählen');
+                    }
+                    else {
+                        if (!formen.some(form => form.art === 'verbindung' && form.von === verbindeVon && form.nach === id)) {
+                            merken();
+                            formen.push({ id: Store.uid().slice(0, 8), art: 'verbindung', von: verbindeVon, nach: id, farbe });
+                            sichern();
+                        }
+                        verbindeVon = '';
+                        auswahlSetzen([]);
+                    }
+                    return;
+                }
+            }
+            if (werkzeug === 'zeiger' && e.button === 0 &&
+                !ziel?.closest('.pg-fl-notiz, .gfx-tb-sockel')) {
+                const punkt = inFlaeche(e.clientX, e.clientY);
+                const treffer = formAn(punkt.x, punkt.y, (e.pointerType === 'touch' ? 12 : 5) / sicht.z);
+                if (beweglich(treffer)) {
+                    const id = formId(treffer);
+                    e.preventDefault();
+                    flaeche.focus({ preventScroll: true });
+                    if (e.shiftKey) {
+                        auswahlSetzen(auswahl.has(id) ? [...auswahl].filter(x => x !== id) : [...auswahl, id]);
+                        return;
+                    }
+                    if (!auswahl.has(id))
+                        auswahlSetzen([id]);
+                    formenZug = { pointer: e.pointerId, sx: e.clientX, sy: e.clientY, dx: 0, dy: 0 };
+                    try {
+                        flaeche.setPointerCapture(e.pointerId);
+                    }
+                    catch { }
+                    return;
+                }
+                if (auswahl.size)
+                    auswahlSetzen([]);
             }
             if (ziel?.closest('.pg-fl-menue')) {
                 return;
@@ -654,12 +905,20 @@ const Seitenflaeche = (() => {
         const bewegt = (e) => {
             if (finger.has(e.pointerId))
                 finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (formenZug) {
+                if (formenZug.pointer !== e.pointerId)
+                    return;
+                Object.assign(formenZug, formVersatz(e, formenZug));
+                if (!formenBild)
+                    formenBild = requestAnimationFrame(formVorschau);
+                return;
+            }
             if (aktiv) {
                 const punkt = inFlaeche(e.clientX, e.clientY);
                 if (aktiv.art === 'radieren') {
-                    const treffer = formAn(punkt.x, punkt.y, 12 / sicht.z);
+                    const treffer = formAn(punkt.x, punkt.y, 12 / sicht.z, true);
                     if (treffer) {
-                        formen = formen.filter(x => x !== treffer);
+                        formenEntfernen(new Set([formId(treffer)]));
                         sichern();
                     }
                     return;
@@ -725,6 +984,13 @@ const Seitenflaeche = (() => {
             finger.delete(e.pointerId);
             if (finger.size < 2)
                 kneifen = null;
+            if (formenZug?.pointer === e.pointerId) {
+                const { dx, dy } = formVersatz(e, formenZug);
+                formZugEnde();
+                if (e.type === 'pointerup')
+                    auswahlVerschieben(dx, dy);
+                return;
+            }
             if (aktiv) {
                 const fertig = aktiv;
                 aktiv = null;
@@ -800,9 +1066,42 @@ const Seitenflaeche = (() => {
                     }
                 }
             }
+            if (ziel === flaeche) {
+                if (e.key === 'Escape' && auswahl.size) {
+                    e.preventDefault();
+                    if (formenZug)
+                        formZugEnde();
+                    verbindeVon = '';
+                    auswahlSetzen([]);
+                    return;
+                }
+                if (e.key === 'Delete' && auswahl.size) {
+                    e.preventDefault();
+                    auswahlLoeschen();
+                    return;
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a' && !formenZug) {
+                    e.preventDefault();
+                    alleFormenWaehlen();
+                    return;
+                }
+                const richtung = {
+                    ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1]
+                }[e.key];
+                if (richtung && auswahl.size && werkzeug === 'zeiger' && !formenZug && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                    e.preventDefault();
+                    const schritt = e.shiftKey ? 10 : 1;
+                    auswahlVerschieben(richtung[0] * schritt, richtung[1] * schritt);
+                    return;
+                }
+            }
             if (!(e.ctrlKey || e.metaKey))
                 return;
             const taste = e.key.toLowerCase();
+            if (formenZug && (taste === 'z' || taste === 'y')) {
+                e.preventDefault();
+                return;
+            }
             if (gastFlaeche && ziel && imSchacht.contains(ziel) &&
                 (taste === 'z' || (taste === 'y' && !e.shiftKey))) {
                 const weiter = new KeyboardEvent('keydown', {
@@ -826,6 +1125,10 @@ const Seitenflaeche = (() => {
         flaeche.addEventListener('pointermove', bewegt);
         flaeche.addEventListener('pointerup', endet);
         flaeche.addEventListener('pointercancel', endet);
+        flaeche.addEventListener('lostpointercapture', (e) => {
+            if (formenZug?.pointer === e.pointerId)
+                endet(e);
+        });
         const istBlockZug = (e) => !!e.dataTransfer && [...e.dataTransfer.types].includes('application/x-redion-block');
         flaeche.addEventListener('dragover', (e) => {
             if (!istBlockZug(e))

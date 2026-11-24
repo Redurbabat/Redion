@@ -319,9 +319,10 @@ Seitenblock trägt dann `shapes` und `raumVersion` — **dieselben Felder mit
 derselben Bedeutung wie ein `whiteboard`-Block** (oben). Das ist kein
 zweites Format und keine Ähnlichkeit, sondern dieselbe Liste, gelesen und
 gezeichnet von derselben Stelle (`GfxShapes` in `src/core/gfx/shapes.ts`).
-Auf der Seitenfläche entstehen heute fünf der Arten — `stift`, `linie`,
-`pfeil`, `rechteck`, `ellipse` —; die übrigen (`notiz`, `text`, `bild`,
-`verbindung`) liest sie, weil das Whiteboard sie schreibt.
+Die Seitenfläche speichert auch Haftnotizen (`notiz`) und Verbindungen
+(`verbindung`) mit denselben Feldern. Bei Verbindungen bleiben die Form-IDs
+in `von` und `nach` beim Verschieben erhalten. Auswahlrahmen, Vorschau und
+laufende Zeigerbewegungen sind reine Ansichts-Zustände.
 
 Zwei Dinge dazu:
 
