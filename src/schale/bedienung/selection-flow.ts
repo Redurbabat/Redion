@@ -903,6 +903,16 @@ const SelectionFlow = (() => {
     a.reihe.addEventListener('touchend', (e: TouchEvent) => {
       if (performance.now() - schlucken < 300) e.stopPropagation();
     });
+    /* KEIN SCHWUNG AUS DEM ZUG (E816). Ein schneller Zug über die Oberkante
+       erzeugt im Browser einen Fling (gemessen: 41 Schritte der Schwungbahn
+       nach −400 px, keiner nach −20 px). Der nächste Tipp stoppt dann den
+       Schwung und erzeugt KEINEN Klick — Chromiums Tipp-Unterdrückung
+       (FilteredForFling). Solange ein Zug auf der Leiste liegt, wird die
+       Bewegung nicht gerollt: `touchmove` ist nicht passiv. Der Klick des
+       Zuges bleibt unberührt (test614 §7f). */
+    a.reihe.addEventListener('touchmove', (e: TouchEvent) => {
+      if (zug && e.cancelable) e.preventDefault();
+    }, { passive: false });
     window.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || !(zug?.amZiehen || zug?.ue)) return;
       e.preventDefault();

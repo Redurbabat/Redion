@@ -589,6 +589,10 @@ const SelectionFlow = (() => {
             if (performance.now() - schlucken < 300)
                 e.stopPropagation();
         });
+        a.reihe.addEventListener('touchmove', (e) => {
+            if (zug && e.cancelable)
+                e.preventDefault();
+        }, { passive: false });
         window.addEventListener('keydown', (e) => {
             if (e.key !== 'Escape' || !(zug?.amZiehen || zug?.ue))
                 return;

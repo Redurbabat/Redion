@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-787 Entscheidungen, E1 bis E817 (E816 folgt) (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+788 Entscheidungen, E1 bis E817 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -872,6 +872,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E813** — Das untere Dock ist EINE Kapsel, und das Zeichen steht über dem Wort (24. November 2026): zweiter Ring weg, zweite Innenlinie weg, feste Zeichenbox für Safari; `test655`
 * **E814** — Vier alte Zusagen der Einstellungen auf Redurs Antworten umgeschrieben (24. November 2026): ganze Zeile, Rollen mit 44 px, Fahrt auf Verhalten, 20 Bereiche gezählt; `test32` `test34` `test389` `test580` `test581`
 * **E815** — Das Dock am Telefon: Zeichen farbig, Wort normal, und iOS gilt überall (24. November 2026, Redurs zwei Antworten): das Wort des aktiven Reiters ist Textfarbe und fett (4,5 : 1 gemessen, 13 bis 15 : 1), der aktive Knopf liegt über seiner Linse; `test623` fünf Zeilen auf das JETZT gewollte Verhalten umgeschrieben; `test585` `test623` `test655`
+* **E816** — Der nächste Tipp nach einem schnellen Zug über die Oberkante kommt an: ein Zug auf der Leiste erzeugt einen Schwung des Browsers, und der Tipp stoppt ihn (24. November 2026, Redurs Auftrag: test614 §7f rot, Ursache belegen): `touchmove` auf der unteren Leiste ist nicht passiv und wird verhindert, solange ein Zug liegt (`selection-flow.ts`, `ziehbar`); test614 125/125, test360 34/34, test588 79/79, test541 25/25, test613 68/68, test655 89/89, test590 Lauf grün.
 * **E817** — Die Wahl fliegt auch dann ins Ziel, wenn die Seite neu gezeichnet wird, während sie fliegt (Seite → Fläche, 24. November 2026): der Flug hing an einem Bezugsrahmen, den die Neuzeichnung abreisst, und landete daneben; jetzt fliegt er ab dem letzten stimmenden Bild neu; `test585` 2 rot → 93/93 (`src/schale/bedienung/selection-flow.ts`)
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
@@ -71775,6 +71776,27 @@ Bei allen vier Gegenproben blieben die übrigen umgeschriebenen Zeilen grün, au
 
 **Offen, bei Redur.** Ob der Druck im Standard auf .92 schrumpfen soll (siehe oben). Und ob die Linse im Glass Wheel über dem Wort bleiben soll, wenn sie nicht mehr darüber liegt — heute liegt nur der aktive Knopf darauf, die Linse selbst bleibt unter ihm.
 
+
+
+## E816 · Der nächste Tipp kommt an — der Schwung des Zuges wird nicht gerollt
+
+*24. November 2026 · Auftrag des Koordinators: test614 §7f ist rot („zu hoch losgelassen, 120 ms später ein echter Tipp auf Termine: kein Klick"). Redur hat dazu nichts gesagt; dieser Eintrag folgt aus dem Befund.*
+
+**Falsche Vermutung (zuerst).** Ein Fänger in der App, ein Pointer-Capture-Rest oder die Übergabe an die Zielleiste (`uebergeben`, `setPointerCapture`) schlucken den Klick. Alle drei widerlegt, siehe unten.
+
+**Wie gefunden.** Proben im Browser (Telefon 390 × 844, echte CDP-Berührung). Erst die App-Ebene: `Event.prototype.preventDefault` und `stopImmediatePropagation` protokolliert — während Geste und Tipp kein einziger Aufruf. Dann `TabShelf.nimm` durch `null` bzw. ein leeres Handover ersetzt: der Tipp bleibt aus, also nicht die Übergabe. Pointer Capture leer (`hasPointerCapture` für alle Zeiger). Reduzierte Bewegung, `touch-action` an Wurzel und Leiste, `overflow:hidden` am Körper: alles ohne Wirkung. Ein Inhalts-Flick ohne Leiste schluckt den Tipp nicht. Dann ein CDP-Trace (`input`, `input.scrolling`, `toplevel`): nach einer Geste −400 läuft ein Schwung (`FlingBooster::ObserveProgressFling`, 41 bis 84 Schritte zu je ~16 ms); nach −20 keiner (0 Schritte). Der Tipp danach erzeugt `GestureFlingCancel` und dann `FilteredForFling` bzw. `FilterTapSuppression`: Chromium unterdrückt den Klick, der einen laufenden Schwung stoppt.
+
+**Ursache (belegt).** Der schnelle Zug über die Oberkante wird vom Browser als Rollgeste gelesen, die in einen Schwung übergeht. Ein Tipp, der diesen Schwung stoppt, erzeugt keinen `click`. Die Leiste setzt `touch-action:none` schon auf `#handy-oben` und auf die Reiter; das hindert den Schwung nicht (Trace und Proben: 41 Schritte mit beiden). Verhindert wird der Schwung erst, wenn `touchmove` abgebrochen wird.
+
+**Änderung.** `src/schale/bedienung/selection-flow.ts`, in `ziehbar` nach dem `touchend`-Zuhörer der Reihe: ein `touchmove`-Zuhörer mit `{ passive: false }`, der `preventDefault()` ruft, solange `zug` gesetzt ist. Der Zug selbst (Pointer-Ereignisse, Übergabe, Klick) bleibt unverändert.
+
+**Beweis.**
+- Vorher: test614 124/125 (§7f rot). Nachher: 125/125.
+- Gegenprobe: das gebaute `quell/schale/bedienung/selection-flow.js` aus HEAD in den Baum gelegt → test614 wieder 124/125 mit genau §7f. Zurückgelegt, danach test105 und test109 grün.
+- Trace: Kontrolle −400 hat 41 Schwung-Schritte und keinen Klick; mit `touchmove`-Abbruch 0 Schritte und der Klick kommt an.
+- Gegenregression (Rollen anderswo): test360 34/34, test588 79/79, test541 25/25, test613 68/68, test655 89/89, test590 grün. Nicht vorher-gemessen ohne Reparatur, nur nachher; die Grünheit wird hier nicht als Vorher-Vergleich behauptet.
+
+**Lehre.** Ein Tipp, der nach einer Geste fehlt, ist nicht immer die App: Chromium hat eine eigene Regel, nach der ein Tipp einen laufenden Schwung stoppt und dabei keinen Klick erzeugt. Die Frage „ist der Klick weg?" beantwortet ein Fenster-Zuhörer in der Erfassungsphase; die Frage „warum?" beantwortet der Trace (`input.scrolling`), nicht das Raten an der App.
 
 ## E817 · Die Wahl fliegt auch bei einer Neuzeichnung ins Ziel
 
