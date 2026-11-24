@@ -1679,6 +1679,13 @@ const Store = (() => {
     AppEinstellung.speicherSichern().catch(() => false);
   }
 
+  /* DER LETZTE DURCHGANG, DER NOCH SCHREIBT (E809). Ein `flush`, der nichts
+     mehr vorfindet, weil ein früherer die Sätze schon genommen hat, wartete
+     bisher auf nichts: er meldete „gespeichert", während die Transaktion
+     noch lief. Ein Neuladen dazwischen verlor die Seite (gemessen: auf dem
+     Stand vor E809 blieb nach `flush(); flush(); reload` in 9 von 10 Fällen
+     nichts übrig). Jetzt wartet jeder Aufruf auf den letzten Durchgang. */
+  let laufend: Promise<unknown> = Promise.resolve();
   const flush = (): Promise<unknown> => {
     clearTimeout(timer);
     eilig = false;
@@ -1689,7 +1696,7 @@ const Store = (() => {
     const posten: Posten[] = [...pending.values()].map(x => ({ ...x, schritt: schrittWurzel(x.schritt) }));
     pending.clear();
     posten.forEach(x => schrittGroesse.delete(x.schritt));
-    if (!posten.length) return Promise.resolve();
+    if (!posten.length) return laufend.then(() => undefined, () => undefined);
 
     /* Ein Satz, der nicht ankam, kommt zurück in den Stapel — der nächste
        flush versucht es wieder. Aber nur, wenn dort nicht längst ein
@@ -1850,6 +1857,7 @@ const Store = (() => {
        sonst wüchse sie beim Tippen mit jedem Tastendruck. */
     const aufraeumen = () => { if (!pending.size) { schrittEltern.clear(); schrittGroesse.clear(); } };
     fertig.then(aufraeumen, aufraeumen);
+    laufend = fertig.then(() => undefined, () => undefined);
     return fertig;
   };
 

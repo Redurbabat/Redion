@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-779 Entscheidungen, E1 bis E808 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+780 Entscheidungen, E1 bis E809 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -865,6 +865,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E806** — Die Bibliothek zeichnet die Deckel in Schritten (24. November 2026, Stufe 0/4 der Roadmap, gemessen): erst 120, dann „Mehr zeigen“ (+120) oder „Alle zeigen“; die Grenze nennt beide Zahlen; mit 10 000 Seiten blockiert der Start 0,8 s statt 6,8 s (`test650`, messungen §116)
 * **E807** — Die Suche ordnet nach Passung (24. November 2026, B31): innerhalb gleicher Stufe zählen Titel gleich/beginnt/enthält und eine kleine BM25-Rechnung über den Inhalt, erst danach das Datum; `content-visibility` (B47) gemessen und zurückgestellt (`test651`, messungen §117)
 * **E808** — Die Desktop-App fragt beim Schliessen, wenn der Speicher voll ist (24. November 2026, schliesst L268): `will-prevent-unload` mit „Bleiben" / „Trotzdem schliessen", beim Herunterfahren nicht; `indexdb.ts` fragt ohne Ausnahme
+* **E809** — `flush` wartet auf den Durchgang, der noch schreibt (24. November 2026): ein Aufruf, der nichts mehr vorfindet, meldet nicht „gespeichert", bevor die Transaktion auf der Platte ist; `test652`, messungen §118
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71491,4 +71492,40 @@ geprüft ist der Dialog nur am Quelltext: im Container gibt es kein Electron.
 **Geprüft.** `windows/windows-desktop.test.cjs` „L268" (gegen den Stand davor
 rot: kein `will-prevent-unload`), `test646` (14 von 14), `test105`,
 `test549`. Die Windows-Smoke-Reihe läuft auf Redurs Rechner.
+
+
+## E809 · `flush` wartet auf den Durchgang, der noch schreibt
+
+*24. November 2026 · `src/kern/ablage/indexdb.ts`*
+
+**Was entschieden wurde.** `flush()` merkt sich den letzten Durchgang, der
+noch schreibt (`laufend`). Findet ein Aufruf nichts mehr im Stapel vor, weil
+ein früherer die Sätze genommen hat, wartet er auf genau diesen Durchgang,
+statt sofort „gespeichert" zu melden.
+
+**Warum.** Gefunden hat es die Prüfung eines Neuladens (`test67`), die in
+zwei von drei Läufen die Seite nicht fand. Die Ursache lag tiefer: nach
+`Store.flush()` und einem Neuladen fehlte die Seite auf der Platte, obwohl
+`letzte` schon auf sie zeigte. Zwei Aufrufe hintereinander — der zweite
+meldete sofort — verloren die Seite in 9 von 10 Fällen auf dem Stand vor
+E809 (0 von 10 gespeichert). Der Stand `2d6038e` ist im selben Ablauf in neun
+von zehn Fällen auch verloren gegangen (1 von 10 gespeichert). Die Lücke gab
+es also schon vor E800; auf meinem Stand war sie größer, und warum, habe ich
+nicht ergründet — gemessen ist nur der Unterschied. Der Test147 hatte dasselbe
+behauptet („meldet erst, wenn es auf der Platte steht") und war nur nicht
+auf diesen Ablauf gebaut.
+
+**Was die Alternative war.** Den Aufrufer warten lassen, bis der Stapel
+leer ist. Das hätte die Eingabe bei jedem Tastendruck verlangsamt und einen
+neuen Warteschlange-Weg gebraucht; das Merken des letzten Durchgangs ist ein
+Feld und ein `then`.
+
+**Was es kostet.** Ein `flush` ohne neue Arbeit wartet jetzt auf einen
+Schreibvorgang, der noch läuft — bei einem langsamen Speicher kann das
+spürbar sein. Ein Fehler des früheren Durchgangs wird dort NICHT weitergereicht
+(der Aufrufer des früheren hat ihn schon); der Wartende sieht nur das Ende.
+
+**Geprüft.** `test652` (10 Rundgänge; gegen die gebaute Datei von vor E809
+rot), `test147` (17 von 17), `test646` bis `test650`, `test644`, `test645`,
+`test96`, `test100`, `test105`, `test109`, `test189` — siehe messungen §118.
 

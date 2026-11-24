@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 585 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 586 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2325,6 +2325,14 @@ rot mit 5 von 9: „Netzkabel bestellen" vor „Kabel". Gezählt am
 24. November, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
 585.*
 
+*Und 586: `test652` — ein Speichern, das nicht vor der Platte fertig meldet, ist
+keines (E809). Ein zweiter `flush` fand nichts mehr vor und meldete „gespeichert",
+während der erste noch schrieb; ein Neuladen verlor die Seite — gemessen in
+9 von 10 Fällen, und der Stand davor lag im selben Zustand. Der Lauf zählt
+nach dem Neuladen mit einer eigenen Verbindung. Gegenprobe mit der gebauten
+Datei von vor E809: rot. Gezählt am 24. November: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 586.*
+
 ### Die Befehle
 
 ```txt
@@ -2346,7 +2354,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 585 Läufe
+npm run pruefen                      alle 586 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2443,7 +2451,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 585 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 586 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

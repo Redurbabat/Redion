@@ -910,6 +910,7 @@ const Store = (() => {
         catch { }
         AppEinstellung.speicherSichern().catch(() => false);
     }
+    let laufend = Promise.resolve();
     const flush = () => {
         clearTimeout(timer);
         eilig = false;
@@ -924,7 +925,7 @@ const Store = (() => {
         pending.clear();
         posten.forEach(x => schrittGroesse.delete(x.schritt));
         if (!posten.length)
-            return Promise.resolve();
+            return laufend.then(() => undefined, () => undefined);
         const zurueckInDenStapel = (welche) => {
             welche.forEach(x => {
                 const k = x.store + ':' + x.val.id;
@@ -1089,6 +1090,7 @@ const Store = (() => {
             schrittGroesse.clear();
         } };
         fertig.then(aufraeumen, aufraeumen);
+        laufend = fertig.then(() => undefined, () => undefined);
         return fertig;
     };
     window.addEventListener('beforeunload', (e) => {

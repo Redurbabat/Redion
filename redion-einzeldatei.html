@@ -30200,7 +30200,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1629, inhalt: '6c7e191685055815', gebaut: '2026-11-24T11:20:18.666Z' };
+const Stand = { fassung: 1630, inhalt: '4f163eeae500345b', gebaut: '2026-11-24T14:39:13.578Z' };
 window.Stand = Stand;
 
 </script>
@@ -54889,6 +54889,7 @@ const Store = (() => {
         catch { }
         AppEinstellung.speicherSichern().catch(() => false);
     }
+    let laufend = Promise.resolve();
     const flush = () => {
         clearTimeout(timer);
         eilig = false;
@@ -54903,7 +54904,7 @@ const Store = (() => {
         pending.clear();
         posten.forEach(x => schrittGroesse.delete(x.schritt));
         if (!posten.length)
-            return Promise.resolve();
+            return laufend.then(() => undefined, () => undefined);
         const zurueckInDenStapel = (welche) => {
             welche.forEach(x => {
                 const k = x.store + ':' + x.val.id;
@@ -55068,6 +55069,7 @@ const Store = (() => {
             schrittGroesse.clear();
         } };
         fertig.then(aufraeumen, aufraeumen);
+        laufend = fertig.then(() => undefined, () => undefined);
         return fertig;
     };
     window.addEventListener('beforeunload', (e) => {
