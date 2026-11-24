@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-780 Entscheidungen, E1 bis E809 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+781 Entscheidungen, E1 bis E810 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -866,6 +866,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E807** — Die Suche ordnet nach Passung (24. November 2026, B31): innerhalb gleicher Stufe zählen Titel gleich/beginnt/enthält und eine kleine BM25-Rechnung über den Inhalt, erst danach das Datum; `content-visibility` (B47) gemessen und zurückgestellt (`test651`, messungen §117)
 * **E808** — Die Desktop-App fragt beim Schliessen, wenn der Speicher voll ist (24. November 2026, schliesst L268): `will-prevent-unload` mit „Bleiben" / „Trotzdem schliessen", beim Herunterfahren nicht; `indexdb.ts` fragt ohne Ausnahme
 * **E809** — `flush` wartet auf den Durchgang, der noch schreibt (24. November 2026): ein Aufruf, der nichts mehr vorfindet, meldet nicht „gespeichert", bevor die Transaktion auf der Platte ist; `test652`, messungen §118
+* **E810** — Die freie Zeichenleiste bleibt im sichtbaren Feld (24. November 2026): beim Ziehen, Loslassen und bei jeder Fenstergrösse auf den Rollbereich `#scroll` begrenzt; `test534` §9
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71529,3 +71530,16 @@ spürbar sein. Ein Fehler des früheren Durchgangs wird dort NICHT weitergereich
 rot), `test147` (17 von 17), `test646` bis `test650`, `test644`, `test645`,
 `test96`, `test100`, `test105`, `test109`, `test189` — siehe messungen §118.
 
+## E810 · Die freie Zeichenleiste bleibt im sichtbaren Feld
+
+*24. November 2026 · `src/bereiche/pdf/marken.ts`, `test534` §9 · gebaut von einem Haiku-Agenten, durchgesehen und nachgeprüft im Hauptzweig*
+
+Die Zeichenleiste im Blatt-Modus lässt sich frei in die Mitte ziehen (Lage „frei", E620). Ihre Lage ist ein Punkt in Prozent der Hülle. Rollt die Seite während des Zugs, kann die Hülle mit ihrer Oberkante über dem Fensterrand liegen. Die alte Grenze war die Hülle, nicht das Fenster: Losgelassen oben im Bild stand die Leiste mit ihrem Rand 13 px über dem Fenster, nach dem Verkleinern 58 px darüber. `test534` §9 hält genau das, und gegen den Stand vor E810 ist er rot.
+
+Die Entscheidung: Die Mitte wird beim Ziehen, beim Loslassen und bei jeder Fenstergrösse so begrenzt, dass die ganze Leiste im sichtbaren Feld liegt. Das Feld ist der Rollbereich `#scroll` — unter der Kopfleiste und neben der Seitenleiste. Fehlt er, gilt das Fenster. Ein Punkt, der dabei verschoben wurde, wird neu gemerkt. Das Andocken an die Kanten (E620) und die Lagen oben, unten, links und rechts bleiben unverändert. Am Telefon wird nicht gezogen (§37); eine dort gemerkte freie Lage wird beim Öffnen auf dasselbe Feld begrenzt.
+
+Die Alternative war, die Grenze an der Hülle zu lassen und nur beim Loslassen zu prüfen. Verworfen: Das Verkleinern des Fensters öffnete den Fehler wieder, und eine Grenze am ganzen Fenster schob die Leiste unter die Kopfleiste, wo sie verdeckt ist. Das zeigte das Bild vom Rechner, nicht die Messung allein (§55.1). Kosten: Eine Leiste, die beim Verkleinern aus dem Feld rutscht, wird an dessen Rand gesetzt und nicht an ihre alte Stelle in der Seite.
+
+Ein Fund am Rande: Die Messung in `test534` §4 war mal grün, mal «oben», mal bei `y = -101`. Die Ursache lag am Test: Das Klicken auf den Griff rollte die Seite, der Griff lag oberhalb des Fensters, und der Zug fing daneben an. Dort rollt der Test jetzt vor dem Zug zurück. Der Produktfehler ist davon unabhängig und steht in §9.
+
+Prüfung: `test534` fünfmal hintereinander grün (55 von 55). Die Gegenprobe mit dem alten gebauten Stand macht §9 rot (53 von 55, die beiden Zeilen zur Lage im Feld). `test533` war schon vor diesem Bogen rot (zwei Zeilen zur Zeilenzahl und zu den Wörtern am Telefon); das ist nicht Teil dieses Bogens. Bilder: `bilder/e810-*.png` (nicht mitversioniert).

@@ -228,13 +228,54 @@ const Marken = (() => {
         const oben = Math.max(0, h.getBoundingClientRect().top);
         r.style.setProperty('--reihe-platz', Math.max(220, Math.round(window.innerHeight - oben - 12)) + 'px');
     };
+    const sichtFeld = () => {
+        const b = document.querySelector('#scroll')?.getBoundingClientRect();
+        if (b && b.width > 0 && b.height > 0)
+            return { links: b.left, oben: b.top, rechts: b.right, unten: b.bottom };
+        return { links: 0, oben: 0, rechts: window.innerWidth, unten: window.innerHeight };
+    };
+    const fensterMitte = (mx, my, breit, hoch) => {
+        const f = sichtFeld();
+        const klemm = (wert, halb, von, bis) => 2 * halb >= bis - von ? (von + bis) / 2 : Math.min(bis - halb, Math.max(von + halb, wert));
+        return { x: klemm(mx, breit / 2, f.links, f.rechts), y: klemm(my, hoch / 2, f.oben, f.unten) };
+    };
+    const merkeFrei = (r) => {
+        if (typeof Store === 'undefined')
+            return;
+        try {
+            Store.setMeta(M_FREI, r.style.getPropertyValue('--leiste-x').trim()
+                + ' ' + r.style.getPropertyValue('--leiste-y').trim());
+        }
+        catch { }
+    };
+    const freiImFenster = (r) => {
+        if (r.dataset['lage'] !== 'frei')
+            return;
+        const h = r.parentElement;
+        if (!h)
+            return;
+        const k = h.getBoundingClientRect();
+        const box = r.getBoundingClientRect();
+        if (!k.width || !k.height || !box.width || !box.height)
+            return;
+        const mitte = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+        const ziel = fensterMitte(mitte.x, mitte.y, box.width, box.height);
+        if (Math.abs(ziel.x - mitte.x) < 0.5 && Math.abs(ziel.y - mitte.y) < 0.5)
+            return;
+        r.style.setProperty('--leiste-x', ((ziel.x - k.left) / k.width * 100).toFixed(2) + '%');
+        r.style.setProperty('--leiste-y', ((ziel.y - k.top) / k.height * 100).toFixed(2) + '%');
+        merkeFrei(r);
+    };
     let spalteBild = 0;
     const spaltenNachFenster = () => {
         if (spalteBild)
             return;
         spalteBild = requestAnimationFrame(() => {
             spalteBild = 0;
-            document.querySelectorAll('.blatt-reihe').forEach(spaltePlatz);
+            document.querySelectorAll('.blatt-reihe').forEach(r => {
+                spaltePlatz(r);
+                freiImFenster(r);
+            });
         });
     };
     const M_FREI = 'zeichnen:leistenfrei';
@@ -4402,6 +4443,7 @@ const Marken = (() => {
             else if (h.firstElementChild !== r)
                 h.insertBefore(r, h.firstElementChild);
             spaltePlatz(r);
+            freiImFenster(r);
             window.addEventListener('resize', spaltenNachFenster, { passive: true });
         };
         const lageAnwenden = (id, merken = true) => {
@@ -4460,11 +4502,9 @@ const Marken = (() => {
                 const k = huelle.getBoundingClientRect();
                 if (!k.width || !k.height)
                     return;
-                const halbX = ((row.offsetWidth / 2) / k.width) * 100;
-                const halbY = ((row.offsetHeight / 2) / k.height) * 100;
-                const klemm = (wert, halb) => halb * 2 >= 100 ? 50 : Math.min(100 - halb, Math.max(halb, wert));
-                const x = klemm(((e.clientX - k.x) / k.width) * 100, halbX);
-                const y = klemm(((e.clientY - k.y) / k.height) * 100, halbY);
+                const m = fensterMitte(e.clientX, e.clientY, row.offsetWidth, row.offsetHeight);
+                const x = ((m.x - k.x) / k.width) * 100;
+                const y = ((m.y - k.y) / k.height) * 100;
                 row.dataset.lage = 'frei';
                 row.style.setProperty('--leiste-x', x.toFixed(2) + '%');
                 row.style.setProperty('--leiste-y', y.toFixed(2) + '%');
@@ -4493,13 +4533,7 @@ const Marken = (() => {
                     return;
                 }
                 lageAnwenden('frei');
-                if (typeof Store !== 'undefined') {
-                    try {
-                        Store.setMeta(M_FREI, row.style.getPropertyValue('--leiste-x').trim()
-                            + ' ' + row.style.getPropertyValue('--leiste-y').trim());
-                    }
-                    catch { }
-                }
+                merkeFrei(row);
             };
             window.addEventListener('pointermove', bewegen);
             window.addEventListener('pointerup', beenden);

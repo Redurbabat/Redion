@@ -622,12 +622,64 @@ const Marken = (() => {
     const oben = Math.max(0, h.getBoundingClientRect().top);
     r.style.setProperty('--reihe-platz', Math.max(220, Math.round(window.innerHeight - oben - 12)) + 'px');
   };
+  /* ══ EINE FREIE LEISTE BLEIBT GANZ IM FENSTER (E810) ═══════════════════
+     Die freie Lage ist ein Punkt in Prozent der Hülle. Die Hülle kann aber
+     mit ihrer Oberkante über dem Fensterrand liegen, wenn die Seite gerollt
+     ist — und dann sagte die alte Grenze „innerhalb der Hülle" ja, obwohl
+     die Leiste oben aus dem Bild ragte. Test534 §9 hält das: losgelassen
+     bei y = −13, nach dem Verkleinern bei y = −58.
+
+     Darum wird die MITTE so begrenzt, dass die ganze Leiste ins Fenster
+     passt — beim Ziehen, beim Loslassen und bei jeder Fenstergrösse. Ein
+     Punkt, der dabei verschoben wurde, wird neu gemerkt. Ist die Leiste
+     breiter oder höher als das Fenster, steht sie in der Mitte. */
+  /* Das SICHTBARE Feld ist der Rollbereich der Seite (`#scroll`): darüber
+     liegt die Kopfleiste, links die Seitenleiste. Eine Leiste unter der
+     Kopfleiste ist genauso verloren wie eine über dem Fensterrand — am Bild
+     vom 24. November stand sie unter der Kopfleiste, als die Grenze das
+     ganze Fenster war. Fehlt der Rollbereich, gilt das Fenster. */
+  const sichtFeld = (): { links: number; oben: number; rechts: number; unten: number } => {
+    const b = document.querySelector<HTMLElement>('#scroll')?.getBoundingClientRect();
+    if (b && b.width > 0 && b.height > 0) return { links: b.left, oben: b.top, rechts: b.right, unten: b.bottom };
+    return { links: 0, oben: 0, rechts: window.innerWidth, unten: window.innerHeight };
+  };
+  const fensterMitte = (mx: number, my: number, breit: number, hoch: number): { x: number; y: number } => {
+    const f = sichtFeld();
+    const klemm = (wert: number, halb: number, von: number, bis: number): number =>
+      2 * halb >= bis - von ? (von + bis) / 2 : Math.min(bis - halb, Math.max(von + halb, wert));
+    return { x: klemm(mx, breit / 2, f.links, f.rechts), y: klemm(my, hoch / 2, f.oben, f.unten) };
+  };
+  const merkeFrei = (r: HTMLElement): void => {
+    if (typeof Store === 'undefined') return;
+    try {
+      Store.setMeta(M_FREI, r.style.getPropertyValue('--leiste-x').trim()
+        + ' ' + r.style.getPropertyValue('--leiste-y').trim());
+    } catch { /* nur diese Sitzung */ }
+  };
+  const freiImFenster = (r: HTMLElement): void => {
+    if (r.dataset['lage'] !== 'frei') return;
+    const h = r.parentElement;
+    if (!h) return;
+    const k = h.getBoundingClientRect();
+    const box = r.getBoundingClientRect();
+    if (!k.width || !k.height || !box.width || !box.height) return;
+    const mitte = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+    const ziel = fensterMitte(mitte.x, mitte.y, box.width, box.height);
+    if (Math.abs(ziel.x - mitte.x) < 0.5 && Math.abs(ziel.y - mitte.y) < 0.5) return;
+    r.style.setProperty('--leiste-x', ((ziel.x - k.left) / k.width * 100).toFixed(2) + '%');
+    r.style.setProperty('--leiste-y', ((ziel.y - k.top) / k.height * 100).toFixed(2) + '%');
+    merkeFrei(r);
+  };
+
   let spalteBild = 0;
   const spaltenNachFenster = (): void => {
     if (spalteBild) return;
     spalteBild = requestAnimationFrame(() => {
       spalteBild = 0;
-      document.querySelectorAll<HTMLElement>('.blatt-reihe').forEach(spaltePlatz);
+      document.querySelectorAll<HTMLElement>('.blatt-reihe').forEach(r => {
+        spaltePlatz(r);
+        freiImFenster(r);
+      });
     });
   };
 
@@ -6322,6 +6374,7 @@ const Marken = (() => {
       else if (h.firstElementChild !== r) h.insertBefore(r, h.firstElementChild);
       /* Die Höhe erst NACH dem Einhängen: vorher hat die Hülle keinen Ort (E696). */
       spaltePlatz(r);
+      freiImFenster(r);
       window.addEventListener('resize', spaltenNachFenster, { passive: true });
     };
 
@@ -6381,16 +6434,13 @@ const Marken = (() => {
         }
         const k = huelle.getBoundingClientRect();
         if (!k.width || !k.height) return;
-        /* GANZ IM BILD BLEIBEN. Der gemerkte Punkt ist die MITTE der Leiste
-           (`translate(-50%,-50%)`), also darf er nicht näher an den Rand als
-           ihre halbe Breite — sonst hängt eine Hälfte draussen, und beim
-           Bild vom 19. September tat sie das auch: rechts abgeschnitten. */
-        const halbX = ((row.offsetWidth / 2) / k.width) * 100;
-        const halbY = ((row.offsetHeight / 2) / k.height) * 100;
-        const klemm = (wert: number, halb: number): number =>
-          halb * 2 >= 100 ? 50 : Math.min(100 - halb, Math.max(halb, wert));
-        const x = klemm(((e.clientX - k.x) / k.width) * 100, halbX);
-        const y = klemm(((e.clientY - k.y) / k.height) * 100, halbY);
+        /* GANZ IM BILD BLEIBEN (E810). Der gemerkte Punkt ist die MITTE der
+           Leiste (`translate(-50%,-50%)`); die Grenze ist das Fenster, nicht
+           die Hülle — die kann über dem Rand liegen, wenn die Seite gerollt
+           ist. Gerechnet wird in Bildpunkten, dann in Prozent der Hülle. */
+        const m = fensterMitte(e.clientX, e.clientY, row.offsetWidth, row.offsetHeight);
+        const x = ((m.x - k.x) / k.width) * 100;
+        const y = ((m.y - k.y) / k.height) * 100;
         row.dataset.lage = 'frei';
         row.style.setProperty('--leiste-x', x.toFixed(2) + '%');
         row.style.setProperty('--leiste-y', y.toFixed(2) + '%');
@@ -6422,13 +6472,10 @@ const Marken = (() => {
         /* Frei stehen geblieben: die zwei Zahlen als Prozent merken, nicht
            als Pixel — ein kleineres Fenster schöbe sie sonst hinter den
            Rand. Als Text, weil `meta` Text sicher übersteht (§9). */
+        /* Erst anwenden: dabei rückt `freiImFenster` die Mitte ins Bild, und
+           gemerkt wird der Punkt, der danach steht (E810). */
         lageAnwenden('frei');
-        if (typeof Store !== 'undefined') {
-          try {
-            Store.setMeta(M_FREI, row.style.getPropertyValue('--leiste-x').trim()
-              + ' ' + row.style.getPropertyValue('--leiste-y').trim());
-          } catch { /* nur diese Sitzung */ }
-        }
+        merkeFrei(row);
       };
       window.addEventListener('pointermove', bewegen);
       window.addEventListener('pointerup', beenden);
