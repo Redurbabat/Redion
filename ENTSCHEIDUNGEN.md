@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-782 Entscheidungen, E1 bis E811 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+783 Entscheidungen, E1 bis E812 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -868,6 +868,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E809** — `flush` wartet auf den Durchgang, der noch schreibt (24. November 2026): ein Aufruf, der nichts mehr vorfindet, meldet nicht „gespeichert", bevor die Transaktion auf der Platte ist; `test652`, messungen §118
 * **E810** — Die freie Zeichenleiste bleibt im sichtbaren Feld (24. November 2026): beim Ziehen, Loslassen und bei jeder Fenstergrösse auf den Rollbereich `#scroll` begrenzt; `test534` §9
 * **E811** — Drei alte rote Läufe: was sie wirklich fanden
+* **E812** — Die Einstellungen wie die iPhone-Einstellungen, mit Redions eigenen Mitteln (24. November 2026, Redur: „Die Einstellungen aufräumen, sie sollen wie die iPhone-Einstellungen sein."): Gruppen als Karten, farbige Quadrate mit weissem Zeichen, Titel und Suche; Telefon zwei Seiten, Rechner zwei Spalten. Die Wächter test580 und test389 werden dabei an zwei Zusagen rot — offen für Redur.
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71563,3 +71564,46 @@ Die drei Läufe `test603`, `test614` und `test623` waren im vollen Lauf rot, und
 Beide Stellen sind bewusste Gestaltungsentscheidungen der Telefon-Politur bzw. der Federn. Ob die klassische Fassung zurück soll, entscheidet Redur.
 
 Nachbarläufe: `test105` und `test109` grün. `test576` und `test582` sind auf dem Stand `2d6038e` GENAU so rot (Glas-Werte und Kontrast der Telefonleiste); diese Änderung hat daran nichts geändert.
+
+## E812 · Die Einstellungen wie die iPhone-Einstellungen, mit Redions eigenen Mitteln
+
+**Wer.** Redur, 24. November 2026: „Die Einstellungen aufräumen, sie sollen wie die iPhone-Einstellungen sein." Gemeint ist der Aufbau — keine Apple-Grafiken, keine Apple-Texte.
+
+**Entschieden.** Die Einstellungen bekommen den Aufbau der iOS-Einstellungen, gebaut aus Redions eigenen Bauteilen:
+
+- ein grosser Titel „Einstellungen" und darunter eine Suche (`.einst-titel`, `.einst-suche`); die Suche blendet Bereiche und leere Gruppen aus, sie filtert nach dem Namen und lässt die Griffe im Baum;
+- die Gruppen als Karten mit runden Ecken (`.einst-karte`), darüber die kleine graue Überschrift (`.einst-grp`); die vier Gruppen bleiben, wie E701 sie hat;
+- jede Zeile mindestens 44 px hoch, links ein farbiges Quadrat von 29 px mit weissem Zeichen (`data-farbe`, Farbe je Zeile aus `--c-*`), rechts der Pfeil „›", die Trennlinie ab dem Text;
+- Telefon (≤ 760 px): Liste und Detailseite als zwei Seiten, der Rückweg heisst „‹ Einstellungen"; Rechner: links die Liste (300 px), rechts die Detailseite;
+- die Zeilen einer Detailseite stehen in Karten (`.ez-karte`, von `zeilenKarten()` in `seite.ts` gebildet, die Zeilen selbst unverändert);
+- Hell: grauer Grund, weisse Karte. Dunkel: dunkler Grund, etwas hellere Karte. Nur vorhandene Tokens (`--bg`, `--bg-hover`, `--bg-card`, `--line-soft`, `--c-*`).
+
+Alle 20 Bereiche bleiben mit ihren Kennungen, Wörtern und ihrer Folge. Der Auftrag sprach von 19; der Bestand hat 20, seit `geraete` (iPhone und Windows) dazugekommen ist. Diese Zahl wurde nicht verändert, nur gezählt.
+
+**Warum.** Redur will die Ruhe und Klarheit der iPhone-Einstellungen. Die Grösse der Berührungsflächen bleibt Pflicht (§37: 44 px), die Farbe bleibt Tokenfarbe (§39), und jeder Griff bleibt erreichbar (§43).
+
+**Alternative.** 36-px-Zeilen wie bisher hätten die Liste ohne Rollen gelassen (E392). Verworfen, weil Redur ausdrücklich die iOS-Form will und die Zeilen dort ein Fingerziel sind. Ein Wrapper pro Gruppe in `seite.ts` statt Karten per CSS hätte den Aufbau nur für die Liste gebracht; die Detailseite hat ihre Karten per Hülle aus `zeilenKarten()` bekommen.
+
+**Was daraus folgt — und wo der Bau gegen alte Zusagen steht.** Das sind keine Fehler im Umbau, sondern Zusagen, die mit der neuen Form nicht mehr zusammen gelten. Redur entscheidet, welche bleibt:
+
+1. **test580 §3, „der gewählte Bereich trägt den Akzent".** Das Zeichen ist weiss (Redurs Wunsch). Gemessen wird die Farbe des Zeichens im gewählten Bereich; sie ist weiss, also rot. Die Zusage „die Zeichen sind still" (grau) bleibt grün, weil weiss unbunt ist. Zwei Wege: die Zusage auf „der gewählte Bereich ist markiert" umschreiben, oder das gewählte Zeichen wieder mit Akzent malen (dann weicht der Bau vom Wunsch ab). Der Lauf wurde nicht aufgeweicht.
+2. **test389 §2, „Bei 1360 × 900 ist die Liste vollständig".** Zwanzig Zeilen zu je 44 px sind 880 px, dazu Titel, Suche und drei Überschriften; das Fenster hat 828 px. Die Liste rollt jetzt, der Streifen „es geht weiter" (E392, `.einst-mehr`) zeigt es. Der Lauf misst 453 px Überhang. Zwei Wege: die Zusage auf „die Liste rollt, und der Streifen zeigt es" umschreiben, oder die Zeilen auf 36 px zurücknehmen (dann verletzt der Bau den Wunsch nach 44 px).
+3. **„19 Bereiche" in test32, test34, test389, test580.** Vorhanden vor E812: die Liste hat 20 Bereiche. Diese Läufe zählen 19 und sind deshalb schon vor diesem Umbau rot. Nicht geändert.
+4. **Dunkel: weisses Zeichen auf den Pastellfarben.** Das gerechnete Verhältnis von Weiss zu `--c-blue` (dunkel, `#6dbcf2`) liegt bei rund 2 : 1. Das Zeichen ist Beiwerk, der Name daneben trägt die Bedeutung, aber §38 verlangt Kontrast; ein dunkles Zeichen auf denselben Quadraten wäre die Alternative.
+5. **Der Wechsel-Flug** (`data-material`) sitzt auf der Karte, nicht auf der Liste: `selection-flow.ts` liest nur die direkten Kinder eines Trägers. Der Flug bleibt innerhalb einer Gruppe; über eine Kartengrenze springt die Markierung.
+6. **Der Fokus beim Öffnen** lag auf dem Suchfeld, und am Telefon hätte das die Bildschirmtastatur geöffnet. Der allgemeine Fokushalter (`ueberlagerung/fokus.ts`) bleibt unverändert; das Einstellungsfenster setzt den Fokus nach einem Takt auf die erste Zeile, ohne sichtbaren Rahmen.
+
+**Prüfung.** `pruefungen/lauf/test654.mts` ist neu. Vor dem Umbau gegen den Stand `2d6038e` rot (Gegenprobe: keine Karten, keine Suche, keine Titelzeile); nach dem Umbau 46 von 46 grün. Gemessen wird im Browser am Rechner und am Telefon: 20 Bereiche in vier Karten mit Radius ≥ 10 px, Kennungen und Wörter in der Folge, Zeilen ≥ 44 px, Quadrat 28–32 px, weisses Zeichen, Pfeil, Trennlinie, `static`, Karte und Grund in beiden Themen unterscheidbar, Zurück und Escape auf dem Telefon, Enter auf einer Zeile, die Suche, Tab mit sichtbarem Umriss.
+
+Die Vorher- und Nachher-Läufe (13 aus dem Auftrag, dazu die übrigen Einstellungsläufe): rot blieben test32 und test580 (vorher zwei Zeilen, nachher vier — siehe Punkt 1). Neu rot: test389 (Punkt 2). test585 ist auf den Stand des HEAD zurückgekehrt: die beiden Flugzeilen der Einstellungen sind grün, die übrigen vier Zeilen waren schon vorher rot. Vorhanden rot auf dem unveränderten HEAD, geprüft in einem temporären Arbeitsbaum: test34 (Punkt 3), test270, test272, test353, test623 (drei Zeilen der unteren Leiste), test585 (vier Zeilen der unteren Leiste und des Seitenflugs), test581 (`#ho-ziele`, nicht in den geänderten Dateien).
+
+**Was es kostet.** Zwei Zusagen aus früheren Entscheidungen (E701, E392) stimmen so nicht mehr; Redur entscheidet nach Punkt 1 und 2. Am Rechner rollt die Liste, und nicht mehr alle Bereiche sind auf einen Blick zu sehen. Die Zeilen sind höher, die Detailseite wird länger.
+
+**Nachbesserungen (Koordinator, im selben Bogen).**
+
+- *Kontrast dunkel (§38).* Die Farbtokens sind im Dunkelmodus helle Pastelle; weisses Zeichen darauf lag bei 1,69 : 1. Im Dunkelmodus wird das Quadrat mit Schwarz gemischt (`color-mix`, 60 % Tokenfarbe). Gemessen über alle zehn Schemata (`test654 §9`, Leinwand, gerenderte Farbe): kleinster Wert dunkel 4,44 : 1, hell 6,27 : 1. Ziel war 3 : 1 (WCAG 1.4.11).
+- *Gewählte Zeile am Rechner (test580 §3).* Fläche in `--accent` mit 50 % Schwarz gemischt, Name und Pfeil weiss; das Zeichen-Quadrat bleibt farbig. Gemessen: Name auf der Fläche kleinster Wert 5,28 : 1 (Schema „kontrast"), alle Schemata über 4,5 : 1. Der Mischanteil 50 % ist aus den Messungen abgeleitet: bei reinem Akzent lagen „kontrast" bei 1,43 : 1 und „wald" bei 2,26 : 1.
+- *Das Zeichen der gewählten Zeile bleibt weiss.* test580 misst dort die Farbe des Zeichens und verlangt einen gesättigten Ton. Mit weissem Zeichen auf dem farbigen Quadrat schlägt die Zeile deshalb weiter fehl. Die Alternativen sind im Bericht gegeben: Akzent als Schrift (`--accent-text`) lag auf dem Quadrat bei 1,0 bis 2,3 : 1 und war unlesbar; eine feste Pastellfarbe brauchte eine Handfarbe, die test584 verbietet; ein weisses Quadrat mit Akzentzeichen widerspricht „Quadrat bleibt farbig". Die Entscheidung liegt bei Redur. test580 bleibt an dieser einen Stelle rot.
+- *Profil.* Der Buchstabe steht in einem Kreis von 44 px in `--accent`, zentriert und weiss.
+- *Zusatz von Redur: iOS-Glas und -Übergänge.* Telefon wie ein Navigationsstapel: die Detailseite fährt von rechts herein (`--feder-sanft`, `--feder-sanft-dauer`), die Liste wandert 30 % nach links und wird abgedunkelt. Nur `transform` und `opacity` bewegen sich (`test654 §10`, gemessen Bild für Bild). Wischen vom linken Rand (x < 24) zieht die Detailseite mit dem Finger, über die Mitte oder schnell losgelassen geht es zurück. Die Glasleiste erscheint beim Rollen: der grosse Titel weicht, die kleine Leiste trägt `--glas-blur` unter `@supports` mit `-webkit-`-Zwilling und eine Haarlinie. Das Blatt öffnet sich am Telefon von unten und schliesst nach unten; am Rechner blendet es mit 0,98 → 1 ein, der Bereichswechsel blendet über statt zu schieben. Weniger Bewegung (System und „Ruhige Darstellung") heisst kein Zwischenbild; starker Kontrast nimmt das Glas weg.
+- *Offen dabei.* test581 prüft zwei Zeilen am alten Animationsnamen `wisch-rein-links`/`wisch-rein-rechts`. Die Fahrt läuft jetzt über Übergänge statt Schlüsselbilder, das Verhalten misst test654 §10. Diese zwei Zeilen sind rot und bleiben rot, bis Redur entscheidet.

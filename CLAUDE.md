@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 586 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 587 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2333,6 +2333,16 @@ nach dem Neuladen mit einer eigenen Verbindung. Gegenprobe mit der gebauten
 Datei von vor E809: rot. Gezählt am 24. November: `ls pruefungen/lauf/test*.mts |
 wc -l` sagt 586.*
 
+*Und 587: `test654` — die Einstellungen wie die iPhone-Einstellungen, mit Redions
+eigenen Mitteln (E812): Gruppen als Karten, farbige Quadrate, Titel und Suche;
+am Telefon zwei Seiten mit Schiebefahrt, Wischen vom Rand und Glasleiste beim
+Rollen, am Rechner zwei Spalten. Gebaut von einem Haiku-Agenten, im Hauptzweig
+nachgefahren (65 von 65). Vor dem Umbau rot (Gegenprobe), auch der Kontrast
+der Quadrate (vorher 1,69 : 1). Zwei ältere Zusagen stimmen mit dieser Form
+nicht mehr zusammen — `test580` (Akzent am gewählten Zeichen) und `test581`
+(Name der Wisch-Animation); Redur entscheidet sie. Gezählt am 24. November:
+`ls pruefungen/lauf/test*.mts | wc -l` sagt 587.*
+
 ### Die Befehle
 
 ```txt
@@ -2354,7 +2364,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 586 Läufe
+npm run pruefen                      alle 587 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2451,7 +2461,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 586 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 587 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

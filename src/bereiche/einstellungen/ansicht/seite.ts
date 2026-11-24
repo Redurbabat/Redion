@@ -86,6 +86,66 @@ const Einstellungen = (() => {
 
   const BEREICHE = GRUPPEN.flatMap(([, liste]) => liste);
 
+  /* DIE FARBE DES QUADRATS (E812). Wie bei den iPhone-Einstellungen trägt jede
+     Zeile ein eigenes farbiges Feld mit weissem Zeichen. Die Farbe ist nur
+     ein Erkennungszeichen — der Name steht daneben und trägt die Bedeutung.
+     Die Namen sind Tokens aus `bausteine.css`/`dunkel.css`; eine Kennung ohne
+     Eintrag bekommt das Grau. */
+  const FARBE: Record<string, string> = {
+    konto: 'grau', allgemein: 'grau', benachricht: 'rot', daten: 'blau',
+    ki: 'lila', verbindungen: 'blau', mcp: 'orange', worker: 'grau',
+    verifiziert: 'gruen', oeffentlich: 'blau', emoji: 'gelb',
+    geraete: 'gruen', arbeitsplatz: 'orange', analysen: 'rosa', bereiche: 'lila',
+    sicherheit: 'rot', schluessel: 'gelb', speicher: 'grau', abrechnung: 'gruen', ueber: 'grau'
+  };
+
+  /* Die Kopfleiste der Detailseite (E812, Zusatz): „‹ Einstellungen" links, der
+     Name des Bereichs in der Mitte. Sie ist sticky und trägt den Glas-Zustand. */
+  const kopfLeiste = (): string => {
+    const name = BEREICHE.find(([id]) => id === offenerBereich)?.[2] ?? '';
+    return '<div class="einst-leiste"><button class="einst-zurueck" data-a="liste" ' +
+      'aria-label="Zurück zu den Einstellungen">‹ Einstellungen</button>' +
+      `<span class="einst-leiste-titel">${esc(name)}</span></div>`;
+  };
+
+  /* Die Suche (E812): tippen blendet Bereiche aus, die nicht passen, und
+     Gruppen, in denen nichts mehr steht. `hidden` statt Entfernen — die
+     Griffe bleiben im Baum und ihre Reihenfolge unverändert (§43). */
+  const sucheAnwenden = (o: HTMLElement, wort: string): void => {
+    const w = wort.trim().toLowerCase();
+    o.querySelectorAll<HTMLElement>('.einst-nav .einst-karte').forEach(karte => {
+      let treffer = 0;
+      karte.querySelectorAll<HTMLButtonElement>('button[data-b]').forEach(b => {
+        const passt = !w || (b.textContent ?? '').toLowerCase().includes(w);
+        b.hidden = !passt;
+        if (passt) treffer++;
+      });
+      karte.hidden = treffer === 0;
+      const kopf = karte.previousElementSibling;
+      if (kopf instanceof HTMLElement && kopf.classList.contains('einst-grp')) kopf.hidden = treffer === 0;
+    });
+  };
+
+  /* Die Zeilen der Detailseite in Karten fassen (E812): jede Folge aufeinander
+     folgender `.ez-zeile` bekommt einen Kasten `.ez-karte`. Die Zeilen selbst
+     bleiben unverändert — nur die Hülle kommt dazu, und Listener auf den Zeilen
+     bleiben, weil nur verschoben wird. */
+  const zeilenKarten = (ziel: HTMLElement): void => {
+    let karte: HTMLElement | null = null;
+    [...ziel.children].forEach(kind => {
+      if (kind instanceof HTMLElement && kind.classList.contains('ez-zeile')) {
+        if (!karte) {
+          karte = document.createElement('div');
+          karte.className = 'ez-karte';
+          kind.before(karte);
+        }
+        karte.appendChild(kind);
+      } else {
+        karte = null;
+      }
+    });
+  };
+
   /* ========================================================================
    * ANWENDEN — Einstellungen wirken sofort
    * ======================================================================*/
@@ -188,27 +248,43 @@ const Einstellungen = (() => {
     o.innerHTML =
       '<div class="einst-fenster" data-blick="liste">' +
         /* `data-material` (E706): die gewählte Zeile gleitet zur neuen. */
-        '<div class="einst-nav" data-material="einstellungen">' +
+        '<div class="einst-nav">' +
+          '<div class="einst-leiste einst-leiste-liste" aria-hidden="true"><span class="einst-leiste-titel">Einstellungen</span></div>' +
+          /* Der grosse Titel und die Suche stehen oben, wie bei den
+             iPhone-Einstellungen (E812). Der Titel ist ein Kopf für Menschen
+             und für das Vorlesen; er trägt keine Funktion. */
+          '<div class="einst-titel" role="heading" aria-level="1">Einstellungen</div>' +
+          '<input type="search" class="einst-suche" placeholder="Suchen" ' +
+            'aria-label="Einstellungen durchsuchen" autocomplete="off">' +
           `<div class="einst-konto"><span class="ws-icon">${esc(V('arbeitsIcon', 'N'))}</span>` +
           `<div><b>${esc(V('arbeitsName', 'Redion'))}</b>` +
           `<span>${esc(V('nutzer', 'Ohne Namen'))}</span></div></div>` +
+          /* Jede Gruppe ist eine Karte mit runden Ecken; die Überschrift steht
+             darüber, nicht darin (E812). */
           GRUPPEN.map(([titel, liste]) =>
             (titel ? `<div class="einst-grp">${titel}</div>` : '') +
+            /* `data-material` sitzt auf der KARTE, nicht auf der Liste (E812):
+               der Wechsel-Flug (`schale/bedienung/selection-flow.ts`) liest nur
+               die DIREKTEN Kinder seines Trägers. Liegen die Zeilen in Karten,
+               muss die Karte der Träger sein — sonst fliegt nichts. Der Flug
+               bleibt innerhalb einer Gruppe; über eine Kartengrenze springt die
+               Markierung (dokumentiert in E812). */
+            '<div class="einst-karte" data-material="einstellungen">' +
             liste.map(([id, i, n]) =>
-              `<button data-b="${id}" class="${id === offenerBereich ? 'on' : ''}">` +
-              `<span class="mi">${zeichen(i)}</span>${n}</button>`).join('')).join('') +
+              `<button data-b="${id}" data-farbe="${FARBE[id] ?? 'grau'}" class="${id === offenerBereich ? 'on' : ''}">` +
+              `<span class="mi">${zeichen(i)}</span>${n}</button>`).join('') +
+            '</div>').join('') +
         '</div>' +
         /* Der Hinweis, dass die Liste weitergeht — siehe `mehrPruefen()`
            weiter unten. Er liegt NEBEN der Liste, nicht darin: `.einst-nav`
            rollt, und ein Kind darin würde mitrollen statt unten zu bleiben.
            `.einst-fenster` ist `position:relative`, also genügt das. */
+        '<div class="einst-schleier" aria-hidden="true"></div>' +
         '<div class="einst-mehr" aria-hidden="true">\u2304</div>' +
         /* Der Weg zurück zur Liste — nur am Telefon zu sehen. Ohne ihn
            wäre die zweite Seite eine Sackgasse: das ✕ schliesst alles,
            und dann fängt man von vorn an. */
-        '<div class="einst-inhalt" id="ei">' +
-          '<button class="einst-zurueck" data-a="liste" aria-label="Zurück zur Übersicht">' +
-            '‹ Übersicht</button>' +
+        '<div class="einst-inhalt" id="ei">' + kopfLeiste() +
         '</div>' +
         '<button class="einst-zu" data-a="zu" aria-label="Schliessen">✕</button>' +
       '</div>';
@@ -218,18 +294,40 @@ const Einstellungen = (() => {
 
     const zeichne = (): void => {
       const ziel = o.querySelector<HTMLElement>('#ei');
-      if (ziel) ziel.innerHTML =
-        '<button class="einst-zurueck" data-a="liste" aria-label="Zurück zur Übersicht">' +
-        '‹ Übersicht</button>' + inhalt(offenerBereich);
+      if (ziel) ziel.innerHTML = kopfLeiste() + inhalt(offenerBereich);
+      /* Am Rechner blendet der Bereich kurz über (E812, Zusatz). */
+      if (ziel) { ziel.classList.remove('einst-ueber'); void ziel.offsetWidth; ziel.classList.add('einst-ueber'); }
       /* Glaskacheln unter „Einstellungen" (E712); die Felder bleiben (§43). */
       if (ziel && offenerBereich === 'allgemein' && typeof Schnellkacheln !== 'undefined')
         Schnellkacheln.einsetzen(ziel, { nach: ziel.querySelector(':scope > h2'), rolle: ziel });
+      /* Die Zeilen in Karten fassen (E812) — nach den Glaskacheln, damit sie
+         nicht zwischen einer Zeile und ihrer Karte landen. */
+      if (ziel) zeilenKarten(ziel);
       o.querySelectorAll<HTMLElement>('.einst-nav button').forEach(b =>
         b.classList.toggle('on', b.dataset.b === offenerBereich));
       binde(o);
       if (ziel && offenerBereich === 'mcp') RegisterAutomatisierung.montiereAnsicht(ziel);
     };
     zeichne();
+
+    /* Die Suche: bei jedem Anschlag neu filtern (E812). */
+    o.querySelector<HTMLInputElement>('.einst-suche')?.addEventListener('input', (e) =>
+      sucheAnwenden(o, (e.target as HTMLInputElement).value));
+
+    /* DER FOKUS LANDET NICHT IM SUCHFELD (E812). Der allgemeine Fokushalter
+       (`ueberlagerung/fokus.ts`) nimmt beim Öffnen das erste greifbare Feld —
+       hier wäre das die Suche, und am Telefon ginge die Bildschirmtastatur auf,
+       bevor jemand etwas wollte. Er läuft nach einem Takt; wir stehen danach
+       und setzen den Fokus auf die erste Zeile. Ein Feld, das der Mensch
+       selbst anklickt, bleibt unberührt. */
+    setTimeout(() => {
+      const feld = o.querySelector<HTMLElement>('.einst-suche');
+      /* `focusVisible: false`: der Fokus steht nur bereit, er ist nicht vom
+         Menschen gewählt — ein Rahmen beim Öffnen wäre Lärm. Wer mit Tab
+         kommt, sieht den Rahmen trotzdem (CSS `:focus-visible`). */
+      if (feld && document.activeElement === feld)
+        o.querySelector<HTMLElement>('.einst-nav button[data-b]')?.focus({ focusVisible: false } as FocusOptions);
+    }, 30);
 
     /* ========================================================================
      * „ES GEHT NOCH WEITER" (E392)
@@ -265,30 +363,89 @@ const Einstellungen = (() => {
     }
     mehrPruefen();
 
-    /* Am Telefon: der Bereich kommt von rechts, die Liste beim Zurück von
-       links — dieselbe Ankunft wie unten beim Reiterwechsel (E702). */
+    /* Am Telefon liegen Liste und Detailseite übereinander (E812, Zusatz):
+       die Fahrt macht CSS aus `data-blick`. Die Seite, die gerade nicht dran
+       ist, ist `inert` — sie bekommt keinen Fokus und keinen Klick. */
     const blick = (ziel: 'liste' | 'bereich'): void => {
       if (!fenster) return;
-      const vorher = fenster.getAttribute('data-blick');
       fenster.setAttribute('data-blick', ziel);
-      if (vorher === ziel || !amTelefon() || AppEinstellung.wenigBewegung()) return;
-      const teil = fenster.querySelector<HTMLElement>(ziel === 'bereich' ? '.einst-inhalt' : '.einst-nav');
-      if (!teil) return;
-      const klasse = ziel === 'bereich' ? 'einst-push' : 'einst-pop';
-      teil.classList.remove('einst-push', 'einst-pop');
-      void teil.offsetWidth;
-      teil.classList.add(klasse);
-      const fertig = (ev?: AnimationEvent): void => {
-        if (ev && ev.target !== teil) return;
-        teil.classList.remove(klasse);
-        teil.removeEventListener('animationend', fertig);
-      };
-      teil.addEventListener('animationend', fertig);
-      setTimeout(() => fertig(), 1200);
+      const inh = fenster.querySelector<HTMLElement>('.einst-inhalt');
+      const nv = fenster.querySelector<HTMLElement>('.einst-nav');
+      if (inh) inh.inert = ziel === 'liste';
+      if (nv) nv.inert = ziel === 'bereich';
     };
 
+    /* Schliessen: am Telefon gleitet das Blatt nach unten, am Rechner
+       blendet es aus; bei weniger Bewegung sofort (E812, Zusatz). */
+    const schliesse = (): void => {
+      const wenig = AppEinstellung.wenigBewegung() ||
+        document.body.dataset.bewegung === 'ruhig' ||
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!amTelefon() || wenig || !fenster) { o.remove(); return; }
+      fenster.classList.add('einst-geht');
+      let fertig = false;
+      const weg = (): void => { if (fertig) return; fertig = true; o.remove(); };
+      fenster.addEventListener('animationend', weg, { once: true });
+      setTimeout(weg, 800);
+    };
+
+    /* Die Glasleiste: `einst-gerollt` sobald die Seite gerollt ist (E812, Zusatz). */
+    const rollBeob = (rolle: HTMLElement): void => {
+      const pruefe = (): void => { rolle.classList.toggle('einst-gerollt', rolle.scrollTop > 24); };
+      rolle.addEventListener('scroll', pruefe, { passive: true });
+      pruefe();
+    };
+    const eiEl = o.querySelector<HTMLElement>('#ei');
+    if (eiEl) rollBeob(eiEl);
+    if (navEl) rollBeob(navEl);
+
+    /* Wischen vom linken Rand: die Detailseite folgt dem Finger; über die
+       Mitte oder schnell losgelassen geht es zurück, sonst federt sie zurück
+       (E812, Zusatz). Nur Telefon, nur vom Rand (x < 24). */
+    if (eiEl && navEl && fenster) {
+      const wischen = (fenst: HTMLElement, inh: HTMLElement, nv: HTMLElement): void => {
+        let zug: { x: number; y: number; t: number } | null = null;
+        let zieht = false;
+        let dx = 0;
+        inh.addEventListener('pointerdown', (e: PointerEvent) => {
+          if (!amTelefon() || fenst.getAttribute('data-blick') !== 'bereich' || e.clientX > 24) return;
+          zug = { x: e.clientX, y: e.clientY, t: performance.now() };
+          zieht = false;
+          dx = 0;
+        });
+        inh.addEventListener('pointermove', (e: PointerEvent) => {
+          if (!zug) return;
+          const ddx = e.clientX - zug.x;
+          const ddy = e.clientY - zug.y;
+          if (!zieht) {
+            if (Math.abs(ddy) > Math.abs(ddx)) { zug = null; return; }
+            if (ddx < 6) return;
+            zieht = true;
+            fenst.classList.add('einst-zieht');
+          }
+          dx = Math.max(0, ddx);
+          inh.style.transform = `translateX(${dx}px)`;
+          nv.style.transform = `translateX(calc(-30% + ${dx * 0.3}px))`;
+        });
+        const ende = (): void => {
+          const z = zug;
+          zug = null;
+          if (!z || !zieht) return;
+          const weit = dx > inh.clientWidth / 2;
+          const schnell = dx > 40 && dx / Math.max(1, performance.now() - z.t) > 0.5;
+          fenst.classList.remove('einst-zieht');
+          inh.style.transform = '';
+          nv.style.transform = '';
+          blick(weit || schnell ? 'liste' : 'bereich');
+        };
+        inh.addEventListener('pointerup', ende);
+        inh.addEventListener('pointercancel', ende);
+      };
+      wischen(fenster, eiEl, navEl);
+    }
+
     o.addEventListener('click', e => {
-      if (e.target === o || elVon(e)?.closest<HTMLElement>('[data-a="zu"]')) { o.remove(); return; }
+      if (e.target === o || elVon(e)?.closest<HTMLElement>('[data-a="zu"]')) { schliesse(); return; }
       /* Zurück zur Liste. Am Rechner kommt man hier nie hin — der Knopf
          steht dort auf `display:none`. */
       if (elVon(e)?.closest<HTMLElement>('[data-a="liste"]')) {
@@ -310,6 +467,8 @@ const Einstellungen = (() => {
     /* Wurde das Fenster mit einem Bereich aufgerufen — etwa aus dem
        R-Blatt heraus —, dann ist die Liste nicht gemeint. */
     if (bereich && amTelefon()) fenster?.setAttribute('data-blick', 'bereich');
+    /* Den `inert`-Zustand erst NACH dem gewählten Blick setzen (E812, Zusatz). */
+    blick(fenster?.getAttribute('data-blick') === 'bereich' ? 'bereich' : 'liste');
 
     /* Escape geht eine Stufe zurück, nicht gleich ganz hinaus. Wer in
        „Sicherheit" steht und abbrechen will, meint meistens diesen

@@ -47,13 +47,50 @@
      mit den 810, die die Liste braucht, passt sie ganz hinein — gemessen,
      nicht geschätzt. Auf kleineren Schirmen rollt sie weiterhin, und dafür
      gibt es `.einst-mehr` unten. */
-  width:min(1000px,94vw); height:min(920px,92vh); background:var(--bg-side);
+  width:min(1000px,94vw); height:min(920px,92vh); background:var(--einst-grund);
   border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow);
   display:flex; overflow:hidden; position:relative;
+  /* DER GRUND UND DIE KARTE (E812, wie bei den iPhone-Einstellungen). Der
+     Grund ist eine Stufe gedämpfter als die Karte, auf der die Zeilen stehen.
+     Hell: grauer Grund, weisse Karte. Dunkel: dunkler Grund, etwas hellere
+     Karte — so hebt sich jede Gruppe ab, ohne Rahmen. Nur bestehende Tokens
+     (`bausteine.css`, `hell.css`, `dunkel.css`). */
+  --einst-grund: var(--bg);
+  --einst-karte: var(--bg-card);
 }
-.einst-nav{
-  width:236px; flex:0 0 236px; background:var(--bg); border-right:1px solid var(--line);
-  padding:12px 8px; overflow-y:auto;
+html[data-theme="light"] .einst-fenster{ --einst-grund: var(--bg-hover); --einst-karte: var(--bg) }
+/* `.einst-fenster .einst-nav` statt `.einst-nav`: studio.css lädt später und
+   setzt dieselbe Fläche (`.einst-nav{background:var(--bg-side)}`). Mit mehr
+   Gewicht gewinnt hier der Grund des Fensters (E812, gemessen). */
+.einst-fenster .einst-nav{
+  width:300px; flex:0 0 300px; background:transparent; border-right:1px solid var(--line-soft);
+  padding:16px 14px 24px; overflow-y:auto;
+}
+/* Der grosse Titel „Einstellungen" (E812): fett, mit wenig Luft darunter. */
+.einst-titel{
+  font-size:28px; font-weight:700; letter-spacing:-.01em; line-height:1.15;
+  padding:4px 6px 12px; color:var(--text);
+}
+/* Die Suche — eine Fläche wie die Karten, 44 px hoch (§37). */
+.einst-suche{
+  display:block; width:100%; min-height:44px; box-sizing:border-box; margin:0 0 14px;
+  padding:0 14px; border:1px solid var(--line-soft); border-radius:10px;
+  background:var(--einst-karte); color:var(--text); font-size:16px; outline:none;
+}
+.einst-suche::placeholder{ color:var(--text-faint) }
+.einst-suche:focus-visible{ outline:2px solid var(--accent-text); outline-offset:1px }
+/* Die Suche blendet aus, was nicht passt — `hidden` muss gewinnen, auch gegen
+   `display:flex` der Zeile (E812). */
+.einst-nav [hidden]{ display:none !important }
+/* Eine Gruppe ist eine Karte mit runden Ecken; sie wird nie zerschnitten. */
+.einst-karte{
+  background:var(--einst-karte); border-radius:12px; overflow:hidden; margin:0 0 22px;
+  box-shadow:0 1px 0 var(--line-soft);
+}
+/* Die kleine graue Überschrift über einer Gruppe (E812). */
+.einst-nav .einst-grp{
+  padding:0 16px 6px; font-size:12px; font-weight:500; color:var(--text-faint);
+  text-transform:uppercase; letter-spacing:.04em;
 }
 /* ── „ES GEHT NOCH WEITER" (E392) ────────────────────────────────────────
    Gemessen am 4. September in drei Grössen, VOR der Änderung: die Liste
@@ -73,29 +110,96 @@
    UND DER WIEDER VERSCHWINDET, sobald man unten ist: eine Anzeige, die
    immer etwas anzeigt, wird nicht gelesen. Genau das prüft test392 §3. */
 .einst-mehr{
-  position:absolute; left:0; bottom:0; width:236px; height:36px;
+  position:absolute; left:0; bottom:0; width:300px; height:36px;
   display:none; align-items:flex-end; justify-content:center;
   padding-bottom:4px; font-size:17px; line-height:1; color:var(--text-dim);
-  background:linear-gradient(to top, var(--bg) 48%, transparent);
+  background:linear-gradient(to top, var(--einst-grund) 48%, transparent);
   pointer-events:none;
 }
 .einst-fenster.hat-mehr .einst-mehr{ display:flex }
-.einst-konto{display:flex; gap:10px; align-items:center; padding:8px 10px 14px}
-.einst-konto .ws-icon{width:30px; height:30px; flex:0 0 30px; font-size:14px}
-.einst-konto b{display:block; font-size:13.5px}
-.einst-konto span{font-size:11.5px; color:var(--text-faint)}
-.einst-nav button{
-  /* 6 statt 7 Pixel Polster (E392): 22 Zeilen sparen damit 44 Pixel, und
-     das ist der Rest, der zwischen „passt" und „passt nicht" liegt. Die
-     Zeile bleibt mit 36 px klickbar; §37 misst Finger, und die Navigation
-     dieses Fensters gibt es am Telefon in einer eigenen Form (unten). */
-  display:flex; align-items:center; gap:9px; width:100%; padding:6px 10px;
-  border-radius:6px; font-size:13.5px; color:var(--text-dim); text-align:left;
+/* Das Konto oben als eigene Karte, wie die Kennkarte bei iOS (E812). */
+.einst-konto{
+  display:flex; gap:12px; align-items:center; padding:12px; margin:0 0 22px;
+  background:var(--einst-karte); border-radius:12px;
 }
-.einst-nav button:hover{background:var(--bg-hover); color:var(--text)}
-.einst-nav button.on{background:var(--bg-hover); color:var(--text); font-weight:500}
-.einst-nav .mi{width:20px; text-align:center; flex:0 0 20px}
-.einst-inhalt{flex:1; overflow-y:auto; padding:26px 30px 40px}
+/* Der Avatar: ein Kreis von 44 px in der Akzentfarbe, der Buchstabe zentriert
+   und weiss (wie das Profilbild oben in den iPhone-Einstellungen). */
+.einst-fenster .einst-konto .ws-icon{
+  width:44px; height:44px; flex:0 0 44px; border-radius:50%;
+  display:grid; place-items:center; background:var(--accent); color:#fff;
+  font-size:18px; font-weight:600; line-height:1;
+}
+.einst-konto b{display:block; font-size:15px; font-weight:600}
+.einst-konto span{font-size:13px; color:var(--text-faint)}
+.einst-nav button{
+  /* Eine Zeile wie in den iPhone-Einstellungen (E812): mindestens 44 px
+     hoch (§37), links das farbige Quadrat, dann der Name, rechts der Pfeil.
+     Die Zeile steht in ihrer Karte; nur die Trennlinie ab dem Text ist ihr
+     eigen. */
+  display:flex; align-items:center; gap:12px; width:100%;
+  min-height:44px; box-sizing:border-box; padding:7px 12px;
+  background-color:transparent; border:0; border-radius:0;
+  font-size:16px; color:var(--text); text-align:left;
+}
+/* Die Trennlinie beginnt beim Text, nicht am Rand — wie bei iOS. Sie ist ein
+   HINTERGRUNDBILD der Zeile, keine eigene Lage: die Zeile bleibt `static`
+   (test623 §3a). Das Quadrat (29 px) und der Abstand (12 px) davor bleiben
+   frei. Die Zustände unten setzen nur die FARBE, damit die Linie bleibt. */
+.einst-nav .einst-karte button + button{
+  background-image:linear-gradient(var(--line-soft), var(--line-soft));
+  background-repeat:no-repeat; background-size:calc(100% - 53px) 1px; background-position:53px 0;
+}
+.einst-nav button:hover{background-color:var(--bg-hover); color:var(--text)}
+.einst-nav button:active{background-color:var(--bg-hover)}
+/* Der gewählte Bereich: eine ruhige Fläche in der Karte, kein Farbklecks. */
+.einst-nav button.on{background-color:var(--bg-hover); color:var(--text); font-weight:500}
+/* Am Rechner die gewählte Zeile in der Akzentfarbe, wie in der Seitenleiste
+   des iPad: Fläche in `--accent`, Name und Pfeil weiss. Das Zeichen-Quadrat
+   bleibt farbig. Am Telefon bleibt die Zeile ohne Fläche (eigene Regel). */
+@media (min-width: 761px){
+  /* Die Fläche ist der Akzent, halb mit Schwarz gemischt: der Name ist weiss,
+     und der Akzent allein hält 4,5 : 1 nicht in allen Schemata (gemessen:
+     „kontrast" 1,43 : 1, „wald" 2,26 : 1). Mit 50 % liegt der kleinste Wert
+     über 4,5 : 1 (test654 §9). */
+  .einst-fenster .einst-nav button.on{ background-color:color-mix(in srgb, var(--accent) 50%, #000); color:#fff }
+  .einst-fenster .einst-nav button.on::after{ color:#fff }
+}
+.einst-nav button:focus-visible{ outline:2px solid var(--accent-text); outline-offset:-2px; z-index:1 }
+/* Das farbige Quadrat: 29 px, abgerundet, weisses Zeichen. Die Farbe kommt
+   aus `data-farbe` (seite.ts, FARBE); fehlt sie, bleibt es grau. */
+.einst-nav .mi{
+  --ikon: var(--c-gray);
+  width:29px; height:29px; flex:0 0 29px; border-radius:7px;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--ikon); color:#fff; text-align:center;
+}
+.einst-nav .mi svg{ color:#fff; width:18px; height:18px }
+/* Im Dunkelmodus sind die Farbtokens helle Pastelle; weisses Zeichen darauf
+   läge bei 1,7 : 1 (gemessen, test654 §9). Das Quadrat wird deshalb mit
+   Schwarz gemischt — dieselbe Farbe, nur tiefer. Gemessen: kleinster Wert
+   über alle Schemata 4,44 : 1, hell 6,27 : 1 (WCAG 1.4.11, §38). */
+html[data-theme="dark"] .einst-nav .mi{
+  background:color-mix(in srgb, var(--ikon) 60%, #000);
+}
+.einst-nav button[data-farbe="grau"]   .mi{ --ikon: var(--c-gray) }
+.einst-nav button[data-farbe="rot"]    .mi{ --ikon: var(--c-red) }
+.einst-nav button[data-farbe="blau"]   .mi{ --ikon: var(--c-blue) }
+.einst-nav button[data-farbe="gruen"]  .mi{ --ikon: var(--c-green) }
+.einst-nav button[data-farbe="orange"] .mi{ --ikon: var(--c-orange) }
+.einst-nav button[data-farbe="lila"]   .mi{ --ikon: var(--c-purple) }
+.einst-nav button[data-farbe="rosa"]   .mi{ --ikon: var(--c-pink) }
+.einst-nav button[data-farbe="gelb"]   .mi{ --ikon: var(--c-yellow) }
+/* Der Pfeil rechts („›"). Ein Pseudo-Element, damit er nicht im Namen steht. */
+.einst-nav button::after{
+  content:'›'; margin-left:auto; padding-left:8px; color:var(--text-faint);
+  font-size:22px; line-height:1; font-weight:400;
+}
+@media (prefers-reduced-motion: reduce){
+  .einst-nav button, .einst-zurueck{ transition:none }
+}
+/* Die Detailseite trägt den Grund des Fensters, nicht eine eigene Fläche
+   (E812): `.einst-fenster .einst-inhalt` gewinnt gegen studio.css:193. */
+.einst-fenster .einst-inhalt{flex:1; overflow-y:auto; padding:26px 30px 40px; background:transparent}
 .einst-inhalt h2{font-size:19px; margin-bottom:6px}
 .ez-unter{font-size:13px; color:var(--text-dim); margin-bottom:16px; line-height:1.6; max-width:60ch}
 .einst-zu{position:absolute; top:12px; right:14px; font-size:15px; color:var(--text-faint);
@@ -108,6 +212,22 @@
 .ez-zeile{
   display:flex; align-items:center; gap:20px; padding:13px 0;
   border-bottom:1px solid var(--line-soft);
+}
+/* Die Zeilen einer Detailseite stehen in Karten (E812, `zeilenKarten` in
+   seite.ts). Die Zeile in der Karte hat keine eigene Linie unten; zwischen
+   zwei Zeilen liegt eine Trennlinie, die beim Text beginnt. Mindestens 44 px. */
+.ez-karte{
+  background:var(--einst-karte); border-radius:12px; overflow:hidden; margin:0 0 22px;
+  box-shadow:0 1px 0 var(--line-soft);
+}
+.ez-karte > .ez-zeile{
+  min-height:44px; box-sizing:border-box; margin:0;
+  padding:11px 16px; border-bottom:0;
+}
+/* Die Trennlinie als Hintergrundbild, ab dem Text (16 px) — ohne eigene Lage. */
+.ez-karte > .ez-zeile + .ez-zeile{
+  background-image:linear-gradient(var(--line-soft), var(--line-soft));
+  background-repeat:no-repeat; background-size:calc(100% - 16px) 1px; background-position:16px 0;
 }
 .ez-text{flex:1; min-width:0}
 .ez-text b{font-size:14px; font-weight:500; display:block}
@@ -812,16 +932,13 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
     border-radius:0; border:0;
   }
   /* Beide Teile nehmen die volle Breite; sichtbar ist immer genau einer. */
-  .einst-nav, .einst-inhalt{
+  .einst-fenster .einst-nav, .einst-fenster .einst-inhalt{
     width:100%; flex:1 1 auto; border-right:0;
     padding-top:calc(10px + env(safe-area-inset-top));
     padding-bottom:calc(24px + env(safe-area-inset-bottom));
   }
-  .einst-fenster[data-blick="liste"]   .einst-inhalt{ display:none }
-  .einst-fenster[data-blick="bereich"] .einst-nav{ display:none }
-  /* hinein und zurück gleitet es (E702, `blick()` in seite.ts) */
-  .einst-inhalt.einst-push{ animation:wisch-rein-links  var(--feder-sanft-dauer) var(--feder-sanft) }
-  .einst-nav.einst-pop    { animation:wisch-rein-rechts var(--feder-sanft-dauer) var(--feder-sanft) }
+  /* Die Seiten liegen übereinander und FAHREN (E812, Zusatz): siehe der Block
+     "Telefon: Stapel" am Ende dieser Datei. */
   /* Der Streifen gehört zur Liste. Steht der Bereich vorn, ist die Liste
      weg — und ein Hinweis auf etwas, das gerade nicht dasteht, ist falsch. */
   .einst-mehr{ width:100%; padding-bottom:calc(3px + env(safe-area-inset-bottom)) }
@@ -830,18 +947,17 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   /* Die Bereiche als Zeilen, die ein Finger trifft — und mit dem Pfeil,
      der sagt, dass es weitergeht. Ohne ihn sieht die Liste aus wie eine
      Auswahl, die schon getroffen ist. */
-  .einst-nav button{
-    min-height:52px; font-size:16px; gap:12px; padding:9px 14px;
-    border-radius:10px;
-  }
-  .einst-nav button::after{
-    content:'›'; margin-left:auto; color:var(--text-faint); font-size:17px;
-  }
-  .einst-nav button.on{ background:transparent; font-weight:400 }
-  .einst-nav .mi{ width:24px; flex:0 0 24px; font-size:17px }
-  .einst-konto{ padding:6px 12px 16px }
+  /* Am Telefon: die Liste hat einen Seitenrand und einen grossen Titel (E812).
+     Die Zeilen bleiben 44 px hoch; das Quadrat ist dasselbe wie am Rechner. */
+  .einst-fenster .einst-nav{ padding-left:16px; padding-right:16px }
+  .einst-titel{ font-size:34px; padding:8px 4px 14px }
+  .einst-nav button{ min-height:44px; font-size:16px; gap:12px; padding:7px 12px; border-radius:0 }
+  .einst-nav button.on{ background-color:transparent; font-weight:400 }
+  .einst-nav .mi{ width:29px; height:29px; flex:0 0 29px; font-size:17px }
+  .einst-nav button::after{ font-size:22px }
+  .einst-konto{ padding:12px; margin-bottom:22px }
 
-  .einst-inhalt{ padding-left:16px; padding-right:16px }
+  .einst-fenster .einst-inhalt{ padding-left:16px; padding-right:16px }
   .einst-zurueck{
     display:flex; align-items:center; min-height:var(--touch-min); margin:0 0 6px -6px;
     padding:0 8px; font-size:15px; color:var(--accent-text); border-radius:8px;
@@ -921,3 +1037,116 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .fv-leer{display:grid; place-items:center; width:100%; height:100%; font-size:26px}
 .fv-karte b{font-size:14px}
 .fv-text{font-size:12px; color:var(--text-dim); line-height:1.45}
+
+/* ============================================================================
+ * BEWEGUNG WIE EINE IOS-APP (E812, Zusatz von Redur: „gleich wie eine
+ * iOS-App")
+ * ----------------------------------------------------------------------------
+ * Nur `transform` und `opacity` bewegen sich (test654 §10). Die Federn sind
+ * die vorhandenen Marken `--feder-sanft` und `--feder-sanft-dauer` aus
+ * grund.css; Glas nur über `--glas-blur` unter @supports (E695, test576).
+ * Weniger Bewegung: `prefers-reduced-motion` UND `body[data-bewegung="ruhig"]`
+ * — dann keine Fahrt, sofortiger Wechsel. Starker Kontrast: kein Glas.
+ * ========================================================================== */
+
+@keyframes einst-blatt-hoch   { from { transform:translateY(100%) } to { transform:none } }
+@keyframes einst-blatt-runter { from { transform:none } to { transform:translateY(100%) } }
+@keyframes einst-einblenden   { from { opacity:0; transform:scale(.98) } to { opacity:1; transform:none } }
+@keyframes einst-ueberblenden { from { opacity:.2 } to { opacity:1 } }
+
+/* Rechner: der Bereich blendet kurz über, er schiebt nicht. */
+@media (min-width:761px){
+  .einst-fenster{ animation:einst-einblenden 200ms var(--ease-enter) both }
+  .einst-fenster .einst-inhalt.einst-ueber{ animation:einst-ueberblenden 180ms var(--ease) both }
+}
+
+/* Telefon: Navigationsstapel. Die Liste und die Detailseite liegen
+   übereinander; die Detailseite kommt von rechts, die Liste wandert 30 %
+   nach links und wird abgedunkelt. Feder aus grund.css. */
+@media (max-width:760px){
+  .einst-fenster{ position:relative; overflow:hidden; animation:einst-blatt-hoch var(--feder-sanft-dauer) var(--feder-sanft) both }
+  .einst-fenster.einst-geht{ animation:einst-blatt-runter var(--feder-sanft-dauer) var(--feder-sanft) forwards }
+  .einst-fenster .einst-nav,
+  .einst-fenster .einst-inhalt{
+    position:absolute; top:0; bottom:0; left:0; right:0; width:auto; flex:none;
+    transition:transform var(--feder-sanft-dauer) var(--feder-sanft);
+    will-change:transform;
+  }
+  .einst-fenster .einst-nav{ z-index:1; transform:none }
+  .einst-fenster .einst-inhalt{
+    z-index:2; transform:translateX(100%); background:var(--einst-grund);
+    touch-action:pan-y; overflow-y:auto;
+  }
+  .einst-fenster[data-blick="bereich"] .einst-inhalt{ transform:none }
+  .einst-fenster[data-blick="bereich"] .einst-nav{ transform:translateX(-30%) }
+  .einst-fenster .einst-schleier{
+    position:absolute; top:0; bottom:0; left:0; right:0; z-index:1; background:#000;
+    opacity:0; pointer-events:none;
+    transition:opacity var(--feder-sanft-dauer) var(--feder-sanft);
+  }
+  .einst-fenster[data-blick="bereich"] .einst-schleier{ opacity:.28 }
+  /* Während der Wischgeste folgt die Fläche dem Finger, ohne Feder. */
+  .einst-fenster.einst-zieht .einst-nav,
+  .einst-fenster.einst-zieht .einst-inhalt{ transition:none }
+  .einst-fenster .einst-nav button.on{ background-color:transparent }
+
+  /* Die Glasleiste (E812, Zusatz): oben in jeder Seite, sticky. Der grosse
+     Titel schrumpft weg, die kleine Leiste erscheint beim Rollen. */
+  .einst-leiste{
+    display:flex; align-items:center; gap:8px; position:sticky; top:0; z-index:3;
+    min-height:44px; margin:0 -16px; padding:0 52px 0 12px; box-sizing:border-box;
+  }
+  .einst-leiste .einst-zurueck{ margin:0; flex:0 0 auto }
+  .einst-leiste-titel{
+    flex:1 1 auto; min-width:0; text-align:center; font-size:17px; font-weight:600;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0;
+    transition:opacity var(--feder-sanft-dauer) var(--feder-sanft);
+  }
+  .einst-leiste-liste{ justify-content:center }
+  .einst-leiste::after{
+    content:""; position:absolute; left:0; right:0; bottom:0; height:1px;
+    background:var(--line); opacity:0; transition:opacity var(--feder-sanft-dauer) var(--feder-sanft);
+  }
+  .einst-gerollt > .einst-leiste .einst-leiste-titel{ opacity:1 }
+  .einst-gerollt > .einst-leiste::after{ opacity:1 }
+  .einst-gerollt > .einst-leiste{ background-color:var(--einst-grund) }
+  @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+    .einst-gerollt > .einst-leiste{
+      -webkit-backdrop-filter:var(--glas-blur); backdrop-filter:var(--glas-blur);
+      background-color:color-mix(in srgb, var(--einst-grund) 72%, transparent);
+    }
+  }
+  /* Starker Kontrast: kein Glas, deckend (wie die Zurücksetzung in grund.css). */
+  body.kontrast .einst-fenster .einst-gerollt > .einst-leiste,
+  body[data-kontrast="hoch"] .einst-fenster .einst-gerollt > .einst-leiste{
+    -webkit-backdrop-filter:none; backdrop-filter:none; background-color:var(--einst-grund);
+  }
+  /* Der grosse Titel der Liste weicht beim Rollen. */
+  .einst-fenster .einst-nav .einst-titel{ transition:opacity var(--feder-sanft-dauer) var(--feder-sanft), transform var(--feder-sanft-dauer) var(--feder-sanft) }
+  .einst-fenster .einst-nav.einst-gerollt .einst-titel{ opacity:0; transform:translateY(-6px) }
+}
+@media (max-width:760px){
+  .einst-fenster .einst-leiste{ display:flex }
+}
+@media (min-width:761px){
+  .einst-leiste{ display:none }
+}
+
+/* Weniger Bewegung: keine Fahrt, keine Feder — der Wechsel ist im ersten Bild da.
+   Beide Wege gelten: das System („Bewegung verringern") und „Ruhige Darstellung". */
+@media (prefers-reduced-motion:reduce){
+  .einst-fenster, .einst-fenster .einst-nav, .einst-fenster .einst-inhalt,
+  .einst-fenster .einst-schleier, .einst-leiste-titel, .einst-leiste::after,
+  .einst-fenster .einst-inhalt.einst-ueber, .einst-fenster .einst-nav .einst-titel{
+    animation:none !important; transition:none !important;
+  }
+}
+body[data-bewegung="ruhig"] .einst-fenster,
+body[data-bewegung="ruhig"] .einst-fenster .einst-nav,
+body[data-bewegung="ruhig"] .einst-fenster .einst-inhalt,
+body[data-bewegung="ruhig"] .einst-fenster .einst-schleier,
+body[data-bewegung="ruhig"] .einst-leiste-titel,
+body[data-bewegung="ruhig"] .einst-leiste::after,
+body[data-bewegung="ruhig"] .einst-fenster .einst-inhalt.einst-ueber{
+  animation:none !important; transition:none !important;
+}
