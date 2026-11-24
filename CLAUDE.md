@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 587 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 588 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2343,6 +2343,17 @@ nicht mehr zusammen — `test580` (Akzent am gewählten Zeichen) und `test581`
 (Name der Wisch-Animation); Redur entscheidet sie. Gezählt am 24. November:
 `ls pruefungen/lauf/test*.mts | wc -l` sagt 587.*
 
+*Und 588: `test655` — EINE Kapsel am Telefon, Zeichen über dem Wort (E813).
+Redurs Foto vom 24. November zeigte auf dem echten iPhone die Zeichen über den
+Wörtern („Dok▢ente"); im Chromium des Containers war es sauber. Der Lauf misst
+für jeden Reiter, dass das Zeichen ganz über dem Wort steht, in einer festen
+Box, und dass um die Kapsel nur EINE Lichtkante liegt — Standard und Glass
+Wheel, hell und dunkel. Gegen den Stand davor rot mit 16 Zeilen. Zwei Zeilen
+bleiben beim Einchecken rot und sind ein echter Fund: das aktive Wort liegt im
+Glass Wheel bei 3,4 : 1, nicht 4,5. Gebaut von einem Haiku-Agenten, im
+Hauptzweig nachgefahren. Gezählt am 24. November: `ls pruefungen/lauf/test*.mts
+| wc -l` sagt 588.*
+
 ### Die Befehle
 
 ```txt
@@ -2364,7 +2375,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 587 Läufe
+npm run pruefen                      alle 588 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2461,7 +2472,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 587 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 588 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

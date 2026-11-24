@@ -2428,8 +2428,18 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
                            transition-delay:130ms }
   #handy-oben > button.an b{ font-weight:650 }
 
-  #handy-oben .ho-z{ display:flex; align-items:center; justify-content:center }
-  #handy-oben .ho-z svg{ display:block }
+  /* E813 — das Zeichen über dem Wort, in JEDEM Browser gleich. Safari hat
+     das SVG ohne eigene Höhe in die Zeile gelegt und über das Wort gemalt
+     (Redurs Foto, 24. November). Darum eine feste Box: 24 px hoch, das SVG
+     19 px darin, nichts kann herausragen. Die Masse stehen hier, an EINER
+     Stelle, damit sie nach Redurs Bild in einer Zeile nachstellbar sind.
+     Richtwerte aus Apples Tab-Bar (eigenes Wissen, nicht aus Redurs Bild). */
+  #handy-oben{ --dock-zeichen:19px; --dock-zeichen-box:24px }
+  #handy-oben .ho-z{ display:flex; align-items:center; justify-content:center;
+                     flex:0 0 auto; width:var(--dock-zeichen-box); height:var(--dock-zeichen-box);
+                     overflow:hidden }
+  #handy-oben .ho-z svg{ display:block; width:var(--dock-zeichen); height:var(--dock-zeichen); flex:0 0 auto }
+  #handy-oben > button b{ line-height:1.15 }
 
   /* KEINE ZWEITE KOPFLEISTE. Die Pillen SIND die Kopfleiste; darunter
      stand bisher `#topbar` mit ☰, Suchen und Neu — dreimal dasselbe Ziel

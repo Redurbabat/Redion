@@ -17016,8 +17016,18 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
                            transition-delay:130ms }
   #handy-oben > button.an b{ font-weight:650 }
 
-  #handy-oben .ho-z{ display:flex; align-items:center; justify-content:center }
-  #handy-oben .ho-z svg{ display:block }
+  /* E813 — das Zeichen über dem Wort, in JEDEM Browser gleich. Safari hat
+     das SVG ohne eigene Höhe in die Zeile gelegt und über das Wort gemalt
+     (Redurs Foto, 24. November). Darum eine feste Box: 24 px hoch, das SVG
+     19 px darin, nichts kann herausragen. Die Masse stehen hier, an EINER
+     Stelle, damit sie nach Redurs Bild in einer Zeile nachstellbar sind.
+     Richtwerte aus Apples Tab-Bar (eigenes Wissen, nicht aus Redurs Bild). */
+  #handy-oben{ --dock-zeichen:19px; --dock-zeichen-box:24px }
+  #handy-oben .ho-z{ display:flex; align-items:center; justify-content:center;
+                     flex:0 0 auto; width:var(--dock-zeichen-box); height:var(--dock-zeichen-box);
+                     overflow:hidden }
+  #handy-oben .ho-z svg{ display:block; width:var(--dock-zeichen); height:var(--dock-zeichen); flex:0 0 auto }
+  #handy-oben > button b{ line-height:1.15 }
 
   /* KEINE ZWEITE KOPFLEISTE. Die Pillen SIND die Kopfleiste; darunter
      stand bisher `#topbar` mit ☰, Suchen und Neu — dreimal dasselbe Ziel
@@ -26919,8 +26929,7 @@ body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #kanten-lade:no
    Keine Transformation am Dock selbst: SelectionFlow misst seine Geometrie. */
 @media (max-width: 760px) {
   body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #handy-oben {
-    box-shadow: var(--glas-kante), 0 14px 38px #0000002b,
-                0 3px 9px #00000019;
+    box-shadow: inset 0 1px 0 #ffffff38, 0 14px 38px #0000002b;
   }
   body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #handy-oben > button .ho-z {
     transition: transform var(--liquid-duration) var(--liquid-ease),
@@ -27263,17 +27272,14 @@ body[data-bewegung="ruhig"] #page > .pg-tools > button{
     border:1px solid color-mix(in srgb,var(--text) 15%,transparent);
     border-radius:999px;
     box-shadow:inset 0 1px 0 #ffffff38,
-               inset 0 -1px 0 #ffffff0b,
-               0 12px 30px #00000030,0 2px 8px #00000017;
+               0 12px 30px #00000030;
     -webkit-backdrop-filter:blur(28px) saturate(175%);
     backdrop-filter:blur(28px) saturate(175%);
     isolation:isolate;
   }
-  body:not([data-kontrast="hoch"]) #handy-oben::after {
-    content:"";position:absolute;inset:1px;border-radius:inherit;
-    background:linear-gradient(160deg,#ffffff1c,transparent 37%,#ffffff06 75%);
-    pointer-events:none;z-index:0;
-  }
+  /* E813: der zweite Ring innerhalb des Randes ist weg — die Kapsel hat EINE
+     Lichtkante (oben, im Schatten) und sonst nichts, wie das Original. */
+  body:not([data-kontrast="hoch"]) #handy-oben::after {display:none}
   /* Do not override the swipe-up navigation's touch-action:none contract. */
   body #handy-oben > button {position:relative;z-index:1;min-width:0}
   /* The existing dock icon transform/transition remains authoritative. */
@@ -28637,8 +28643,7 @@ body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.sp-kopf,.sp-werkzeu
     border-radius:999px;
     border-color:color-mix(in srgb,var(--text) 15%,transparent);
     background:color-mix(in srgb,var(--bg-side) 48%,transparent);
-    box-shadow:inset 0 1px 0 #ffffff38,inset 0 -1px 0 #ffffff0b,
-               0 12px 30px #00000030,0 2px 8px #00000017;
+    box-shadow:inset 0 1px 0 #ffffff38, 0 12px 30px #00000030;
     -webkit-backdrop-filter:blur(28px) saturate(175%);
     backdrop-filter:blur(28px) saturate(175%);
   }
@@ -30428,7 +30433,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1633, inhalt: '99cab049417f1ffa', gebaut: '2026-11-24T17:52:29.251Z' };
+const Stand = { fassung: 1634, inhalt: 'efebeaf6e3f3e401', gebaut: '2026-11-24T17:55:37.999Z' };
 window.Stand = Stand;
 
 </script>
