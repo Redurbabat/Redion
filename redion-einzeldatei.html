@@ -30200,7 +30200,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1627, inhalt: '6b2155a166f2881b', gebaut: '2026-11-24T07:47:01.870Z' };
+const Stand = { fassung: 1628, inhalt: '3c875dd277c7110c', gebaut: '2026-11-24T11:16:48.048Z' };
 window.Stand = Stand;
 
 </script>
@@ -56503,6 +56503,50 @@ const QueryLanguage = (() => {
         }
         return score;
     };
+    const K1 = 1.2, B = 0.75;
+    const terms = (query) => query.clauses
+        .filter(clause => clause.field === 'text' || clause.field === 'content' || clause.field === 'title')
+        .map(clause => fold(clause.value))
+        .filter(Boolean);
+    const countIn = (text, term) => {
+        let n = 0, from = 0;
+        for (;;) {
+            const at = text.indexOf(term, from);
+            if (at < 0)
+                return n;
+            n++;
+            from = at + term.length;
+        }
+    };
+    const relevanceFor = (documents, query) => {
+        const wanted = terms(query);
+        const result = new Map();
+        if (!wanted.length)
+            return result;
+        const folded = documents.map(document => ({ document, title: fold(document.title), content: fold(document.content) }));
+        const averageLength = folded.reduce((sum, item) => sum + item.content.length, 0) / Math.max(1, folded.length) || 1;
+        const idf = new Map(wanted.map(term => {
+            const holding = folded.filter(item => item.content.includes(term) || item.title.includes(term)).length;
+            return [term, Math.log(1 + (folded.length - holding + 0.5) / (holding + 0.5))];
+        }));
+        for (const item of folded) {
+            let value = 0;
+            for (const term of wanted) {
+                if (item.title === term)
+                    value += 3;
+                else if (item.title.startsWith(term))
+                    value += 2;
+                else if (item.title.includes(term))
+                    value += 1;
+                const tf = countIn(item.content, term);
+                if (tf)
+                    value += (idf.get(term) ?? 0) * (tf * (K1 + 1)) /
+                        (tf + K1 * (1 - B + B * item.content.length / averageLength));
+            }
+            result.set(item.document, value);
+        }
+        return result;
+    };
     const reasonFor = (document, query) => {
         if (query.clauses.some(clause => clause.field === 'status'))
             return 'Status';
@@ -56518,8 +56562,9 @@ const QueryLanguage = (() => {
     const run = (documents, query, options = {}) => {
         const now = options.now || new Date();
         const limit = Math.max(1, Math.min(500, options.limit || 60));
-        return documents
-            .filter(document => matches(document, query, now))
+        const passing = documents.filter(document => matches(document, query, now));
+        const relevance = relevanceFor(passing, query);
+        return passing
             .map(document => ({
             document,
             score: scoreFor(document, query),
@@ -56527,6 +56572,7 @@ const QueryLanguage = (() => {
             snippet: snippetFor(document, query)
         }))
             .sort((left, right) => right.score - left.score ||
+            (relevance.get(right.document) ?? 0) - (relevance.get(left.document) ?? 0) ||
             String(right.document.changed).localeCompare(String(left.document.changed)) ||
             left.document.title.localeCompare(right.document.title, 'de'))
             .slice(0, limit);

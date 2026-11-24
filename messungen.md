@@ -9973,3 +9973,27 @@ jeden Deckel. Nach E806 (erst 120 Deckel): 899 / 842 ms, die grösste
 834 / 842 ms. Die Ausreisser beim reinen Neuladen (bis 10 s bis zur ersten
 Antwort) zeigte der Stand `2d6038e` vor E800 genauso.
 
+## §117 · Suche nach Passung und `content-visibility` (24. November 2026)
+
+Methode: Node 22, das gebaute `quell/kern/suche/query.js` in einer Sandbox,
+10 000 Dokumente mit je acht Sätzen, fünf Läufe gemittelt nach einem
+Aufwärmlauf; „alt" ist `git show HEAD:quell/kern/suche/query.js` vor E807.
+
+| Abfrage | alt | E807 |
+|---|---|---|
+| „Leitung" (alle 10 000 passen) | 58,2 ms | 83,3 ms |
+| „xyz" (keines passt) | 28,1 ms | 24,0 ms |
+
+`content-visibility` (B47), Chromium 1280 × 800, eine Seite mit 3000
+Absätzen, das Stilblatt per `addStyleTag` (`.blk{content-visibility:auto;
+contain-intrinsic-size:auto 28px}`), zwei Runden:
+
+| | ohne | mit |
+|---|---|---|
+| `App.oeffne` bis zwei Bilder | 466 / 461 ms | 220 / 192 ms |
+| fünfmal Breite ändern und messen | 149 / 119 ms | 17 / 17 ms |
+| zu Block 1500 springen | 6 / 4 ms | 7 / 5 ms |
+
+Nicht gebaut (E807): die Griffe ragen 46 px links aus dem Block und wären
+abgeschnitten.
+

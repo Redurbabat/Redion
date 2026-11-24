@@ -366,6 +366,56 @@ const QueryLanguage = (() => {
     return score;
   };
 
+  /* ══ WIE GUT EIN TREFFER PASST (B31, E807) ═════════════════════════════
+     `scoreFor` sagt nur, WO getroffen wurde (Titel, Status, Inhalt). Bei
+     gleichem Wert entschied bisher allein das Datum: wer „Kabel" suchte,
+     bekam eine Seite, die das Wort einmal am Rand nennt, vor der Seite
+     „Kabel", nur weil sie jünger war.
+
+     Der Wert hier ordnet NUR innerhalb gleicher `score` — die grobe Stufe
+     bleibt, wie sie war. Er folgt dem öffentlichen BM25-Gedanken, klein und
+     ohne Index: ein Wort, das in wenigen Dokumenten steht, zählt mehr (idf);
+     ein Wort, das oft vorkommt, zählt mehr, aber gesättigt (k1); ein langer
+     Text bekommt für dieselbe Zahl weniger (b). Dazu der Titel: gleich dem
+     Suchwort vor „beginnt damit" vor „enthält es".
+
+     Gezählt wird über die Dokumente, die schon passen — `run` filtert
+     zuerst. Das hält die Rechnung bei einem Tastendruck in den Treffern,
+     nicht im ganzen Bestand. */
+  const K1 = 1.2, B = 0.75;
+  const terms = (query: SearchQuery): string[] => query.clauses
+    .filter(clause => clause.field === 'text' || clause.field === 'content' || clause.field === 'title')
+    .map(clause => fold(clause.value))
+    .filter(Boolean);
+  const countIn = (text: string, term: string): number => {
+    let n = 0, from = 0;
+    for (;;) { const at = text.indexOf(term, from); if (at < 0) return n; n++; from = at + term.length; }
+  };
+  const relevanceFor = (documents: SearchDocument[], query: SearchQuery): Map<SearchDocument, number> => {
+    const wanted = terms(query);
+    const result = new Map<SearchDocument, number>();
+    if (!wanted.length) return result;
+    const folded = documents.map(document => ({ document, title: fold(document.title), content: fold(document.content) }));
+    const averageLength = folded.reduce((sum, item) => sum + item.content.length, 0) / Math.max(1, folded.length) || 1;
+    const idf = new Map(wanted.map(term => {
+      const holding = folded.filter(item => item.content.includes(term) || item.title.includes(term)).length;
+      return [term, Math.log(1 + (folded.length - holding + 0.5) / (holding + 0.5))] as const;
+    }));
+    for (const item of folded) {
+      let value = 0;
+      for (const term of wanted) {
+        if (item.title === term) value += 3;
+        else if (item.title.startsWith(term)) value += 2;
+        else if (item.title.includes(term)) value += 1;
+        const tf = countIn(item.content, term);
+        if (tf) value += (idf.get(term) ?? 0) * (tf * (K1 + 1)) /
+          (tf + K1 * (1 - B + B * item.content.length / averageLength));
+      }
+      result.set(item.document, value);
+    }
+    return result;
+  };
+
   const reasonFor = (document: SearchDocument, query: SearchQuery): SearchMatch['reason'] => {
     if (query.clauses.some(clause => clause.field === 'status')) return 'Status';
     if (query.clauses.some(clause => clause.field === 'tag')) return 'Schlagwort';
@@ -379,8 +429,9 @@ const QueryLanguage = (() => {
                options: { now?: Date; limit?: number } = {}): SearchMatch[] => {
     const now = options.now || new Date();
     const limit = Math.max(1, Math.min(500, options.limit || 60));
-    return documents
-      .filter(document => matches(document, query, now))
+    const passing = documents.filter(document => matches(document, query, now));
+    const relevance = relevanceFor(passing, query);
+    return passing
       .map(document => ({
         document,
         score: scoreFor(document, query),
@@ -388,6 +439,7 @@ const QueryLanguage = (() => {
         snippet: snippetFor(document, query)
       }))
       .sort((left, right) => right.score - left.score ||
+        (relevance.get(right.document) ?? 0) - (relevance.get(left.document) ?? 0) ||
         String(right.document.changed).localeCompare(String(left.document.changed)) ||
         left.document.title.localeCompare(right.document.title, 'de'))
       .slice(0, limit);

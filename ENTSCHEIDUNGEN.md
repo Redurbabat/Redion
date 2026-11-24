@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-777 Entscheidungen, E1 bis E806 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+778 Entscheidungen, E1 bis E807 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -863,6 +863,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E804** — Unsichtbare Blöcke werden beim Laden wieder eingehängt (24. November 2026, B5 der Roadmap): ein lebender Block, dessen lebender Elternteil ihn nicht in `content` führt, kommt hinten wieder hinein und wird gesichert; Papierkorb und Datenbankzeilen bleiben unberührt (`test648`). Dazu B19 gemessen: unbekannte Blockarten überstehen Zeichnen, Bearbeiten und Sicherung schon heute
 * **E805** — Redion bittet von selbst um dauerhaften Speicher (24. November 2026, B9 der Roadmap): beim ersten gelungenen Schreiben von Blöcken in einer Sitzung, höchstens einmal in 30 Tagen; der Zeitpunkt ist eine Geräteeinstellung in `localStorage` und reist nicht mit (`test649`). Dazu B14 nachgelesen: der `localStorage` des Staatskunde-Trainers gehört nur der eigenständigen Seite `lernen/staatskunde.html`, in Redion bleibt er leer (`test565`)
 * **E806** — Die Bibliothek zeichnet die Deckel in Schritten (24. November 2026, Stufe 0/4 der Roadmap, gemessen): erst 120, dann „Mehr zeigen“ (+120) oder „Alle zeigen“; die Grenze nennt beide Zahlen; mit 10 000 Seiten blockiert der Start 0,8 s statt 6,8 s (`test650`, messungen §116)
+* **E807** — Die Suche ordnet nach Passung (24. November 2026, B31): innerhalb gleicher Stufe zählen Titel gleich/beginnt/enthält und eine kleine BM25-Rechnung über den Inhalt, erst danach das Datum; `content-visibility` (B47) gemessen und zurückgestellt (`test651`, messungen §117)
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71423,4 +71424,42 @@ genauso rot (34, 238, 272, 341, 351, 388, 493, 560, 581, 585, 603, 623).
 Der dreizehnte, `test67`, ist einzeln grün (65 von 65) und auch zusammen mit
 `test54`; er war im Sammellauf wackelig. E806 hat also keinen roten Lauf
 dazugebracht.
+
+
+## E807 · Die Suche ordnet nach Passung, nicht nur nach Datum
+
+*24. November 2026 · Roadmap Stufe 5, B31 · `src/kern/suche/query.ts`*
+
+**Was entschieden wurde.** `QueryLanguage.run` sortiert wie bisher zuerst
+nach der groben Stufe (`scoreFor`: Titel, Status/Schlagwort, Inhalt). Bei
+gleicher Stufe entscheidet jetzt die Passung und erst danach das Datum:
+Titel gleich dem Wort (3) vor „beginnt damit" (2) vor „enthält es" (1), dazu
+für den Inhalt eine kleine BM25-Rechnung (k1 = 1,2, b = 0,75) über die
+Dokumente, die ohnehin passen.
+
+**Warum.** Wer „Kabel" suchte, bekam „Netzkabel bestellen" vor der Seite
+„Kabel", wenn die erste jünger war, und einen langen Text, der das Wort
+einmal streift, vor dem, der davon handelt. Notion nennt das „Best Matches";
+BM25 ist öffentliches Standardwissen, nichts davon ist übernommen.
+
+**Was die Alternative war.** BM25 über den Dreigramm-Index der KI
+(`bereiche/ki/kontext.ts`) — das hätte die Schalensuche an einen Bereich
+gehängt (§5 Regel 1) und ist B32, ein eigener Schritt. Die Rechnung hier
+braucht keinen Index, weil sie nur über die Treffer läuft.
+
+**Was es kostet.** Gemessen mit 10 000 Seiten, die alle passen: 58 → 83 ms
+je Tastendruck; passt nichts, 28 → 24 ms (messungen §117). Die Reihenfolge
+gleich guter Treffer bleibt beim Datum, und ein reiner Filter (`typ:seite`)
+ordnet wie vorher.
+
+**Und B47 (`content-visibility`).** Gemessen: eine Seite mit 3000 Absätzen
+öffnet in 200 statt 465 ms, ein Umbruch ist achtmal schneller. Gebaut ist
+es NICHT: `content-visibility:auto` schaltet Paint-Containment auch für
+sichtbare Blöcke ein, und die Griffe `⋮⋮` stehen 46 px links ausserhalb des
+Blocks — sie wären abgeschnitten. `overflow-clip-margin` fängt das in
+Chromium auf, in Safari nicht. Zurückgestellt, bis die Griffe im Block
+stehen oder eine Seite mit Tausenden Blöcken ein echtes Problem ist (§51).
+
+**Geprüft.** `test651` (9 Zusagen; gegen den Stand davor rot mit 5 von 9),
+`test229` (die Suche im Fenster, 20 von 20), `test105`, `test109`.
 
