@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-773 Entscheidungen, E1 bis E802 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+774 Entscheidungen, E1 bis E803 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -859,6 +859,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E800** — Arbeitsschritte landen ganz oder gar nicht (24. November 2026, Redur: „Mache mit der grosste anderung“, im Fragebogen „Transaktionen“ und „Nur Pflicht-Datentests“): was eine Handlung synchron schreibt, ist ein Schritt; ein Schritt kommt ganz oder gar nicht auf die Platte; Umstellungen werden sofort geschrieben, Tippen behält die Pause (`test644`); der zusätzliche `pagehide`-Zuhörer wurde mit E801 wieder entfernt
 * **E801** — Zwei Fenster überschreiben einander nicht (24. November 2026, Redur: „Weiter ohne pause“, nach E800 der nächste Punkt der Roadmap, B2): jeder Satz trägt AUF DER PLATTE eine Versionsnummer `rev`; `flush` liest und schreibt in einer Transaktion und führt zusammen, wenn ein anderes Fenster dazwischen geschrieben hat; eine wartende Änderung wird nicht durch Fremdes ersetzt; die Zahl reist weder in Sicherung noch Abgleich (`test645`)
 * **E802** — Speicher voll: nichts geht still verloren (24. November 2026, Redur: „Weiter“, B10 der Roadmap): bei `QuotaExceededError` eine Meldung mit der Zahl ungesicherter Änderungen, ein neuer Versuch alle 15 Sekunden ohne neue Eingabe, im Browser eine Rückfrage beim Schliessen; die Windows-App bekommt keine Rückfrage, weil sie das Fenster dort ohne Dialog festhielte (`test646`)
+* **E803** — Umwandeln verliert nichts (24. November 2026, Redur: Ziel „arbeite ohne pause bis du alles fertig gemacht hast“, B18 der Roadmap, §18 hart): → Datenbank legt den alten Block in den Papierkorb statt ihn endgültig zu löschen und nimmt seinen Text als Namen; → Seite wandelt an Ort und Stelle (Kennung, Platz, Unterblöcke bleiben); → Einbettung und → Spalten leeren den Text nicht mehr (`test647`)
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71245,4 +71246,51 @@ zufällige Zeichen.
 war das Fenster nach §2 schon zu), `test96`, `test100`, `test105`,
 `test109`, `test189`, `test644`, `test645`, `npm run typecheck`. Kein voller
 Lauf.
+
+## E803 · Umwandeln verliert nichts
+
+**Wer und wann.** Redur, 24. November 2026, Ziel „arbeite ohne pause bis du
+alles fertig gemacht hast" — B18 der Roadmap aus der Notion-Analyse: Notion
+ändert beim „Turn into" nur den Typ, und die Felder bleiben, auch die, die
+der neue Typ nicht zeigt. §18 verlangt dasselbe ausdrücklich als hart.
+
+**Was vorher geschah** (`test647` gegen den Stand vor E803, 8 von 19): Der
+gewöhnliche Weg (`Store.updateBlock(id, { type })`) war schon verlustfrei.
+Vier Sonderwege in `Blocks.umwandeln` waren es nicht:
+- **→ Datenbank:** `trashBlock` und gleich danach `purgeBlock` — Text und
+  Unterblöcke ENDGÜLTIG weg, nicht einmal im Papierkorb.
+- **→ Seite:** eine NEUE Seite am Ende der Seite, der alte Block samt
+  Unterblöcken in den Papierkorb, die Kennung gewechselt (Verweise auf den
+  Block zeigten danach in den Papierkorb).
+- **→ Einbettung** und **→ Spalten:** `text: ''`.
+
+**Was entschieden wurde.**
+- → Datenbank: die Datenbank entsteht weiter neu (sie ist ein eigener Satz
+  mit Sammlung und Ansicht), am selben Platz. Der alte Block geht in den
+  Papierkorb und bleibt holbar, samt Unterblöcken; sein Text wird der Name
+  der Datenbank. Nur ein ganz leerer Block (kein Text, keine Unterblöcke)
+  wird gleich weggeräumt — an ihm ist nichts zu verlieren, und er würde den
+  Papierkorb nur füllen.
+- → Seite: an Ort und Stelle. Eine Seite ist ein Block mit `type: 'page'`
+  (§17); Kennung, Platz, Text und Unterblöcke bleiben, die Unterblöcke sind
+  danach der Inhalt der Seite. Die Seitenfelder (`icon`, `aliases`, `cover`,
+  `wide`, `font`, `small`) kommen nur dazu, wo sie fehlen.
+- → Einbettung und → Spalten lassen den Text stehen; sie zeigen ihn nicht,
+  aber wer zurückwandelt, hat ihn wieder.
+
+**Die Alternative.** Für → Datenbank den Block an Ort und Stelle zur
+Datenbank machen — das hiesse, einen Block nachträglich an eine neue
+Sammlung zu binden, ein zweiter Weg neben `addDatabase`. §8: kein zweiter
+Katalog, kein zweiter Weg für dasselbe.
+
+**Was es kostet.** Wer häufig Textblöcke zu Datenbanken macht, findet ihre
+Reste im Papierkorb, bis dessen Frist abläuft. → Seite verhält sich sichtbar
+anders: die Seite steht dort, wo der Block stand, nicht mehr am Ende
+(Bilder am Rechner und am Telefon im Gespräch, §55.3).
+
+**Geprüft.** `test647` (19 Zusagen; gegen den alten Stand rot mit 8 von 19),
+dazu `test39`, `test143`, `test176`, `test191`, `test192`, `test212`,
+`test105`, `test109`. `test65` ist an einer Stelle rot („Vierzehn Gruppen in
+der Übersicht", gezählt 15) — am Stand vor E803 genauso, unberührt. Kein
+voller Lauf.
 
