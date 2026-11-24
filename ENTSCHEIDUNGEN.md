@@ -71625,6 +71625,37 @@ Die Vorher- und Nachher-Läufe (13 aus dem Auftrag, dazu die übrigen Einstellun
 
 **Prüfungen.** `test655` (neu, 89 Zusagen in beiden Schalen, hell und dunkel): vor der Änderung 73 bestanden, 16 rot; danach 87 bestanden, 2 rot (die beiden Kontrast-Zeilen des Glass Wheel, 3,43 und 3,58). Die WebKit-Ersatzprobe (das SVG ohne Grösse und ohne Attribute) ist in Chromium auch vor der Änderung grün gewesen; darum prüft `test655` §3 zusätzlich, ob die Box beschnitten ist (`overflow: hidden`), und das war vorher rot. Sie beweist Safari NICHT; sie beweist, dass das Zeichen nicht mehr über das Wort malen kann. Bestehende Läufe vorher/nachher: `test541` 25/25 und `test614` 124/125 und `test613` gleich; `test585` 89/93 gleich (Kontrast-Zeilen besser, nicht grün); `test623` 52/55 gleich (Schatten, Übergang und Druck bleiben rot wie vorher, der Schatten jetzt mit dem neuen Wert); `test588` 79/79, `test584` 36/37 gleich wie vorher; `test576`, `test581`, `test582` unverändert rot wie vorher (Glas-Werte und Farbe des System-Modus, nicht von dieser Änderung berührt).
 
+### Nachtrag zu E813 (24. November 2026): Griffstrich weg, Wort lesbar
+
+**Was entschieden wurde.** Redur, Fragebogen vom 24. November, wörtlich gewählt: „Weg, wie iOS." Der kurze graue Griffstrich über der unteren Leiste (`#handy-oben::before`) ist in allen drei Fassungen weg (Standard, Glass Wheel, klassisch). Das Hochziehen der Zielleiste bleibt voll erhalten (E749, `test614`): der Zug hängt an der Leiste, nicht an diesem Strich. Der offene Punkt „Griffstrich bleibt" oben ist damit entschieden.
+
+**Kontrast des aktiven Wortes (Dokumente).** Die Ursache war nicht die Schrift, sondern die Pille: `studio.css` und ein späterer Block in `bausteine.css` setzten die Pille in Ruhe auf Akzent 24 %. Der Akzent-Text lag also auf Akzent. Geändert ist nur die Ruhe-Fläche der Pille, auf `color-mix(in srgb, var(--text) 5%, transparent)` (das vorhandene Token, fast klar), in `bausteine.css`, `studio.css` und `glasswheel.css`. Das Akzent-Token `--accent-text` ist unverändert. Die Fahr-Fläche bleibt akzentfarben.
+
+Gemessen mit der Methode von `test655` (Telefon 390 × 844, Gerät mit doppelter Dichte):
+
+| Fassung | vorher | nachher |
+|---|---|---|
+| Standard hell | 4,73 : 1 | 5,57 : 1 |
+| Standard dunkel | 5,37 : 1 | 6,14 : 1 |
+| Glass Wheel hell | 3,43 : 1 | 5,26 : 1 |
+| Glass Wheel dunkel | 3,58 : 1 | 5,16 : 1 |
+
+**Offen bleibt `test585`.** Dieser Lauf misst bei einfacher Dichte, und dort liegt Dokumente weiter unter 4,5 : 1: hell 3,06 → 3,08, dunkel 3,73 → 3,74. Auch eine ganz durchsichtige Pille reicht dort nicht (gemessen 2,81 : 1 hell, 3,47 : 1 dunkel). Die Grenze liegt bei der Schrift selbst (Akzent, 10,5 px, Stärke 650), nicht bei der Fläche. Ob das aktive Wort eine andere Textfarbe braucht (zum Beispiel `--text`) oder eine andere Stärke, entscheidet Redur. Das wurde in diesem Bogen NICHT eigenmächtig gelöst.
+
+**Druck der Zielleiste (`test581` §8).** `#ho-ziele > button:active .ho-z` war eine eigene `:active`-Skalierung. Sie ist jetzt `[data-gedrueckt]`, das Attribut, das `press.ts` setzt. `press.ts` führt `#ho-ziele > button` in `OWN_PRESS` (wie die Reiter der Leiste `#handy-oben`), damit der Knopf selbst nicht zusätzlich einsinkt. Die Erlaubt-Liste in `test581` ist nicht erweitert. Ergebnis: die `:active`-Zeile ist grün (vorher rot, Gegenprobe gegen den Altstand `b996a53` rot). Die zwei Zeilen „Einstellungen schiebt sich herein" (waapi) waren schon auf `b996a53` rot; sie gehören nicht zu diesem Bogen.
+
+**Prüfungen, vorher → nachher.**
+- `test655`: vorher 87 von 89 (zwei Kontrastzeilen des Glass Wheel rot), nachher 89 von 89.
+- `test585`: 89 von 93, unverändert rot in den zwei Kontrastzeilen (siehe oben); die übrigen zwei Zeilen „landet genau auf der neuen Wahl" waren vorher schon rot.
+- `test623`: 50 von 55, unverändert. Die Griffstrich-Zeile ist umgeschrieben zu „über der Leiste steht KEIN Griffstrich (Redur, 24. November, E813-Nachtrag)". Vorher rot, nachher grün. Gegenprobe gegen den Altstand: rot mit Hintergrund `rgb(99, 99, 102)`, Breite 42 px, Deckkraft 0,55. Die fünf roten Zeilen (zwei Einstellungs-Fenster, Schatten, Übergang, Druck) waren schon vorher rot und sind nicht berührt.
+- `test614`: 124 von 125, unverändert. Einzige rote Zeile ist §7f (zu hoch losgelassen), wie vorher.
+- `test581`: 91 von 93, vorher 90 von 93 auf dem Altstand (dieselben zwei Einstellungs-Zeilen rot).
+- `test584`: 36 von 37, unverändert (Glass-Wheel-Vorschaufläche, vorher rot).
+- `test541`: 25 von 25, unverändert.
+- `npm run stand`: Dienststand v1637 unverändert gegen den letzten Bau.
+
+**Bilder.** `bilder/dock-kontrast-standard-hell.png`, `bilder/dock-kontrast-standard-dunkel.png`, `bilder/dock-kontrast-glass-hell.png`, `bilder/dock-kontrast-glass-dunkel.png` (Telefon 390 × 844, doppelte Dichte; im Ordner `/home/user/Redion/bilder/`). Auf allen vier fehlt der Griffstrich über der Leiste; das Wort „Dokumente" ist lesbar.
+
 ## E814 · Vier alte Zusagen der Einstellungen auf Redurs Antworten umgeschrieben
 
 *24. November 2026 · Redur im Fragebogen zu den Einstellungen (E812): drei Antworten gehören zu den Prüfläufen, die vierte („Weg, wie iOS") ist der Strich über der Leiste und gehört einem anderen Bogen.*

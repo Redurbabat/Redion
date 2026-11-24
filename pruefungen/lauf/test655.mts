@@ -9,8 +9,8 @@
  *   §1 EINE KAPSEL. Unter der Leiste liegt genau EINE gemalte Fläche: kein
  *      sichtbares `::after` (der zweite Ring), höchstens EINE Innenlinie im
  *      `box-shadow` der Leiste. Die Linse existiert. Der Griffstrich
- *      `::before` bleibt — `test623` prüft ihn im Code (42 px); Redurs Wunsch
- *      gegen diesen Lauf ist in E813 als offener Punkt benannt.
+ *      `::before` ist seit dem E813-Nachtrag (24. November, Redur „Weg, wie
+ *      iOS") weg; `test623` prüft das.
  *   §2 ZEICHEN ÜBER WORT. Jeder der fünf Reiter: das Zeichen (SVG) liegt
  *      vollständig ÜBER dem Wort (`zeichen.bottom ≤ wort.top + 1`) und ist
  *      17–21 px gross — in Standard und Glass Wheel, hell und dunkel.

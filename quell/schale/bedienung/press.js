@@ -12,7 +12,7 @@ const RedionPress = (() => {
     const OWN_PRESS = [
         '.fbtns button.prim', '[data-rmo~="glass"]', '.rmo-transport button', '#ai .ai-leiste button',
         '#ai-senden', '.rmo-recent-card', '.bib-deckel', '.ru-staff', '.hs-tun', '.ru-funkel',
-        '#handy-oben > button[role="tab"]', '[data-eigener-druck]'
+        '#handy-oben > button[role="tab"]', '#ho-ziele > button', '[data-eigener-druck]'
     ].join(',');
     const STATE_ONLY = '.schalter, [role="switch"]';
     const MIN_HOLD = 80;

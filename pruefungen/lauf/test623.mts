@@ -342,8 +342,19 @@ gleich('Der gewählte Bereich hat keinen Akzentstrich', hk.einst.an?.schatten, A
 
 /* ══ §4 WAS BLEIBT ══════════════════════════════════════════════════════════ */
 console.log('\n§4 Was bleibt: die Zusätze der Zielleiste (Workspace 2.0)');
-const griff = await stil(h.pc, '#handy-oben', '::before');
-p('Der Ziehgriff steht über der Leiste (42 px, ohne Trefferfläche)', griff?.inhalt === '""' && griff?.breite === '42px', JSON.stringify(griff));
+/* E813-Nachtrag (Redur, 24. November 2026: „Weg, wie iOS"): über der Leiste
+   steht KEIN Griffstrich mehr. Gemessen wird, ob `::before` etwas malt —
+   Inhalt, Fläche mit Farbe oder Bild, Breite und Deckkraft. */
+const griff = await h.pc.evaluate(() => {
+  const e = Array.from(document.querySelectorAll<HTMLElement>('#handy-oben')).find(x => x.getClientRects().length > 0);
+  if (!e) return null;
+  const c = getComputedStyle(e, '::before');
+  return { inhalt: c.content, bg: c.backgroundColor, bild: c.backgroundImage, breite: c.width, deckkraft: c.opacity };
+});
+const griffMalt = !!griff && griff.inhalt !== 'none' && griff.inhalt !== 'normal' && parseFloat(griff.deckkraft) > 0
+  && parseFloat(griff.breite) > 0
+  && (griff.bild !== 'none' || (griff.bg !== 'rgba(0, 0, 0, 0)' && griff.bg !== 'transparent'));
+p('Über der Leiste steht KEIN Griffstrich (Redur, 24. November, E813-Nachtrag)', griff !== null && !griffMalt, JSON.stringify(griff));
 p('Die Namensblase der Zielleiste ist gebaut', await h.pc.evaluate(() => !!document.querySelector('#ho-ziele > .ho-ziel-vorschau')));
 
 /* ══ §5b TELEFON, GLASS WHEEL ═══════════════════════════════════════════════ */

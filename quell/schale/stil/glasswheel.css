@@ -179,7 +179,9 @@ body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.sp-kopf,.sp-werkzeu
     padding:5px 2px 4px;
   }
   body[data-ui-shell="glass-wheel"]:not([data-kontrast="hoch"]) #ho-pille {
-    background:color-mix(in srgb,var(--accent) 24%,#ffffff13);
+    /* E813-Nachtrag: neutral und fast klar statt Akzent-Schleier, damit der
+       Akzent-Text darauf lesbar bleibt (test655, Glass Wheel 3,43 : 1 vorher). */
+    background:color-mix(in srgb,var(--text) 5%,transparent);
     border-radius:999px;
   }
 }

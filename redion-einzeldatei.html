@@ -16519,21 +16519,9 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     bottom:calc(var(--hunten) + 8px); height:var(--mobile-nav-height);
     padding:5px 6px; background:var(--bg-card); border:1px solid var(--line);
   }
-  /* Zieh-Griff als dezente Entdeckungshilfe IN der vorhandenen
-     unteren Navigation. Kein Element, keine Trefferfläche, kein Listener.
-     Beim Hochziehen verschwindet er hinter der erscheinenden Zielleiste. */
-  #handy-oben::before{
-    content:'';position:absolute;left:50%;top:-8px;
-    width:42px;height:3px;border-radius:999px;
-    background:var(--text-dim);opacity:.55;
-    transform:translateX(-50%);pointer-events:none;
-    transition:opacity var(--motion-fast) var(--ease)
-  }
-  #handy-oben[data-zielleiste]::before{opacity:0}
-  @media(prefers-reduced-motion:reduce){
-    #handy-oben::before{transition:none}
-  }
-  body[data-bewegung="ruhig"] #handy-oben::before{transition:none}
+  /* KEIN Zieh-Griff über der Leiste (Redur, 24. November 2026, E813-Nachtrag:
+     „Weg, wie iOS"). Hochgezogen wird die Zielleiste trotzdem: der Zug
+     hängt an der Leiste selbst (E749, test614), nicht an diesem Strich. */
   #ho-ziele[hidden]{ display:none }
   #ho-ziele[data-geht]{ pointer-events:none }
   /* WORKSPACE 2.0 — VOLLSTÄNDIGES ZIEL LESBAR BEIM HOCHZIEHEN.
@@ -16637,19 +16625,19 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     outline:2px solid var(--accent-text,var(--accent));
     outline-offset:-2px
   }
-  #ho-ziele > button:active .ho-z{transform:scale(1.08)}
+  #ho-ziele > button[data-gedrueckt] .ho-z{transform:scale(1.08)}
   /* Lesbarkeit statt reinem Farbwechsel: aktives Ziel ist auch fetter. */
   #handy-oben > button[aria-selected="true"] b{font-weight:700}
   @media(prefers-reduced-motion:reduce){
     #handy-oben > button .ho-z,
     #ho-ziele > button .ho-z{transition:none}
     #handy-oben > button:is(:focus-visible,:active) .ho-z,
-    #ho-ziele > button:active .ho-z{transform:none}
+    #ho-ziele > button[data-gedrueckt] .ho-z{transform:none}
   }
   body[data-bewegung="ruhig"] #handy-oben > button .ho-z,
   body[data-bewegung="ruhig"] #ho-ziele > button .ho-z{transition:none}
   body[data-bewegung="ruhig"] #handy-oben > button:is(:focus-visible,:active) .ho-z,
-  body[data-bewegung="ruhig"] #ho-ziele > button:active .ho-z{transform:none}
+  body[data-bewegung="ruhig"] #ho-ziele > button[data-gedrueckt] .ho-z{transform:none}
   #ho-ziele > button:is([data-anvisiert],[aria-current="page"]){ color:var(--accent-text,var(--accent)) }
   #ho-ziele > button[aria-current="page"] b{ font-weight:650 }
   #ho-ziele .ho-z{ display:flex; align-items:center; justify-content:center;
@@ -16752,7 +16740,12 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
        1,83 : 1 (hell) und 2,06 : 1 (dunkel) heraus. Die Aufhellung unten
        bleibt — sie ist die Linse (E639, `test539` §2) und hebt den Grund
        mehr als die Schrift. Glas wird sie beim Fahren und Halten (`::after`). */
-    background:color-mix(in srgb,var(--text) 5%,transparent);
+    /* E813-Nachtrag (24. November): die Fläche ist NEUTRAL, nicht mehr ein
+       Hauch Schrift-Farbe. Hell wird sie etwas heller als die Leiste,
+       dunkel etwas dunkler — der Akzent-Text („Dokumente") liegt dann
+       auf dem Grund, nicht auf einem grauen Schleier. Gemessen: 3,06 : 1
+       (hell) und 3,73 : 1 (dunkel) mit dem alten 5-%-Schleier (test585). */
+    background:color-mix(in srgb,var(--bg) 85%,transparent);
     /* ══ EINE KONTUR, NICHT DREI (E646) ═════════════════════════════════
        Hier lagen VIER Innenschatten und zogen einen hellen Ring rund um
        die Fläche. Zusammen mit dem Rand der Leiste selbst und ihrem
@@ -16881,8 +16874,13 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   /* BBT-Bit-Video vom 07.11.: farbige, gleitende Auswahl-Linse.
      Bestehende SelectionFlow-Feder und Trefferflaechen bleiben unveraendert.
      Die Akzentfarbe kommt aus Redions Theme, nicht aus einer Musik-Route. */
+  /* In Ruhe NEUTRAL und fast klar (E813-Nachtrag): der Akzent-Text
+     („Dokumente") liegt auf dem Grund, nicht auf einem Akzent-Schleier.
+     Gemessen mit test585-Methode: Akzent 24 % 3,06 : 1 · 85 % Grund 1,29 : 1
+     (die Linse deckt das Wort zu) · 5 % Schrift-Farbe 5,57 : 1 hell, 6,14 : 1
+     dunkel. Beim Fahren bleibt die Akzentfläche (sie zieht den Blick zum Ziel). */
   #handy-oben #ho-pille{
-    background:color-mix(in srgb,var(--accent) 24%,transparent);
+    background:color-mix(in srgb,var(--text) 5%,transparent);
     box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 55%,transparent),
                0 0 13px color-mix(in srgb,var(--accent) 20%,transparent);
   }
@@ -27285,7 +27283,7 @@ body[data-bewegung="ruhig"] #page > .pg-tools > button{
   /* The existing dock icon transform/transition remains authoritative. */
   body:not([data-kontrast="hoch"]) #handy-oben #ho-pille {
     border-radius:999px;
-    background:color-mix(in srgb,var(--accent) 24%,#ffffff13);
+    background:color-mix(in srgb,var(--text) 5%,transparent);
     box-shadow:inset 0 1px 1px #ffffff38,inset 0 -1px 1px #00000014,
                0 3px 12px #00000014;
     -webkit-backdrop-filter:blur(18px) saturate(145%);
@@ -28657,7 +28655,9 @@ body[data-ui-shell="glass-wheel"][data-kontrast="hoch"] :is(.sp-kopf,.sp-werkzeu
     padding:5px 2px 4px;
   }
   body[data-ui-shell="glass-wheel"]:not([data-kontrast="hoch"]) #ho-pille {
-    background:color-mix(in srgb,var(--accent) 24%,#ffffff13);
+    /* E813-Nachtrag: neutral und fast klar statt Akzent-Schleier, damit der
+       Akzent-Text darauf lesbar bleibt (test655, Glass Wheel 3,43 : 1 vorher). */
+    background:color-mix(in srgb,var(--text) 5%,transparent);
     border-radius:999px;
   }
 }
@@ -30433,7 +30433,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1634, inhalt: 'efebeaf6e3f3e401', gebaut: '2026-11-24T17:55:37.999Z' };
+const Stand = { fassung: 1637, inhalt: '1b417ab19f029f11', gebaut: '2026-11-24T18:32:54.629Z' };
 window.Stand = Stand;
 
 </script>
@@ -52978,7 +52978,7 @@ const RedionPress = (() => {
     const OWN_PRESS = [
         '.fbtns button.prim', '[data-rmo~="glass"]', '.rmo-transport button', '#ai .ai-leiste button',
         '#ai-senden', '.rmo-recent-card', '.bib-deckel', '.ru-staff', '.hs-tun', '.ru-funkel',
-        '#handy-oben > button[role="tab"]', '[data-eigener-druck]'
+        '#handy-oben > button[role="tab"]', '#ho-ziele > button', '[data-eigener-druck]'
     ].join(',');
     const STATE_ONLY = '.schalter, [role="switch"]';
     const MIN_HOLD = 80;
