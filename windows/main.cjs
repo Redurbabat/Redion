@@ -451,8 +451,28 @@ if (!lock) {
     mainWindow.webContents.session.setPermissionRequestHandler((_wc, _permission, callback) => {
       callback(false);
     });
+    // L268: Redion lehnt das Entladen nur ab, wenn wegen vollen Speichers
+    // Änderungen ungesichert im Arbeitsspeicher liegen (E802). Ohne diesen
+    // Griff hielte Electron das Fenster ohne jeden Dialog fest. Beim
+    // Abmelden oder Herunterfahren wird nicht gefragt: ein Dialog hielte
+    // Windows an, retten könnte er bei vollem Speicher ohnehin nichts.
+    let systemEnding = false;
+    mainWindow.webContents.on('will-prevent-unload', (event) => {
+      if (systemEnding || !mainWindow) { event.preventDefault(); return; }
+      const choice = dialog.showMessageBoxSync(mainWindow, {
+        type: 'warning',
+        buttons: ['Bleiben', 'Trotzdem schliessen'],
+        defaultId: 0,
+        cancelId: 0,
+        noLink: true,
+        title: 'Änderungen nicht gesichert',
+        message: 'Der Speicher dieses Geräts ist voll. Einige Änderungen sind noch nicht gesichert.',
+        detail: 'Wenn du jetzt schliesst, gehen sie verloren. Schaffe Platz auf dem Gerät und bleib in Redion, bis die Meldung „alle Änderungen sind gesichert" erscheint.'
+      });
+      if (choice === 1) event.preventDefault();
+    });
     // Do not run NSIS while Windows is logging off or shutting down.
-    mainWindow.on('session-end', () => updateController?.onSystemShutdown?.());
+    mainWindow.on('session-end', () => { systemEnding = true; updateController?.onSystemShutdown?.(); });
     mainWindow.once('ready-to-show', () => {
       if (remembered?.maximized) mainWindow?.maximize();
       mainWindow?.show();

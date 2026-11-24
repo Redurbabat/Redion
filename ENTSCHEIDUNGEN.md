@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-778 Entscheidungen, E1 bis E807 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+779 Entscheidungen, E1 bis E808 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -864,6 +864,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E805** — Redion bittet von selbst um dauerhaften Speicher (24. November 2026, B9 der Roadmap): beim ersten gelungenen Schreiben von Blöcken in einer Sitzung, höchstens einmal in 30 Tagen; der Zeitpunkt ist eine Geräteeinstellung in `localStorage` und reist nicht mit (`test649`). Dazu B14 nachgelesen: der `localStorage` des Staatskunde-Trainers gehört nur der eigenständigen Seite `lernen/staatskunde.html`, in Redion bleibt er leer (`test565`)
 * **E806** — Die Bibliothek zeichnet die Deckel in Schritten (24. November 2026, Stufe 0/4 der Roadmap, gemessen): erst 120, dann „Mehr zeigen“ (+120) oder „Alle zeigen“; die Grenze nennt beide Zahlen; mit 10 000 Seiten blockiert der Start 0,8 s statt 6,8 s (`test650`, messungen §116)
 * **E807** — Die Suche ordnet nach Passung (24. November 2026, B31): innerhalb gleicher Stufe zählen Titel gleich/beginnt/enthält und eine kleine BM25-Rechnung über den Inhalt, erst danach das Datum; `content-visibility` (B47) gemessen und zurückgestellt (`test651`, messungen §117)
+* **E808** — Die Desktop-App fragt beim Schliessen, wenn der Speicher voll ist (24. November 2026, schliesst L268): `will-prevent-unload` mit „Bleiben" / „Trotzdem schliessen", beim Herunterfahren nicht; `indexdb.ts` fragt ohne Ausnahme
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71462,4 +71463,32 @@ stehen oder eine Seite mit Tausenden Blöcken ein echtes Problem ist (§51).
 
 **Geprüft.** `test651` (9 Zusagen; gegen den Stand davor rot mit 5 von 9),
 `test229` (die Suche im Fenster, 20 von 20), `test105`, `test109`.
+
+## E808 · Die Desktop-App fragt beim Schliessen, wenn der Speicher voll ist
+
+*24. November 2026 · schliesst L268 · `windows/main.cjs`, `src/kern/ablage/indexdb.ts`*
+
+**Was entschieden wurde.** Der Hauptprozess behandelt `will-prevent-unload`:
+lehnt Redion das Entladen ab (E802: der Speicher ist voll, und Änderungen
+liegen nur im Arbeitsspeicher), fragt ein eigener Dialog „Bleiben" oder
+„Trotzdem schliessen". Enter und Escape heissen „Bleiben". Beim Abmelden oder
+Herunterfahren von Windows (`session-end`) wird nicht gefragt. Die Ausnahme
+`RedionDesktop` in `indexdb.ts` fällt weg.
+
+**Warum.** Ohne den Griff hielt Electron ein abgelehntes `beforeunload` ohne
+Dialog fest — das Fenster liesse sich nicht mehr schliessen. Deshalb hatte
+E802 in der Desktop-App gar nicht gefragt, und dort ging beim Schliessen
+still verloren, was der volle Speicher nicht aufnehmen konnte (L268).
+
+**Was die Alternative war.** Beim Schliessen alles in eine Datei neben die
+App schreiben. Bei einem vollen Speicher hat auch die Platte keinen Platz;
+und es wäre ein zweiter Speicherweg (§9).
+
+**Was es kostet.** Wer bei vollem Speicher herunterfährt, verliert, was nicht
+gesichert ist — ein Dialog, der Windows anhält, rettet es auch nicht. Und
+geprüft ist der Dialog nur am Quelltext: im Container gibt es kein Electron.
+
+**Geprüft.** `windows/windows-desktop.test.cjs` „L268" (gegen den Stand davor
+rot: kein `will-prevent-unload`), `test646` (14 von 14), `test105`,
+`test549`. Die Windows-Smoke-Reihe läuft auf Redurs Rechner.
 

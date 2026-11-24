@@ -1859,9 +1859,10 @@ const Store = (() => {
   window.addEventListener('beforeunload', (e: BeforeUnloadEvent) => {
     const ungesichert = speicherVoll && pending.size > 0;
     flush().catch(() => {});
-    /* Rückfrage nur im Browser: in der Windows-App hält ein abgelehntes
-       Entladen das Fenster ohne Dialog fest (kein `will-prevent-unload`). */
-    if (ungesichert && typeof (window as any).RedionDesktop === 'undefined') {
+    /* Rückfrage im Browser UND in der Desktop-App: dort fängt
+       `windows/main.cjs` das abgelehnte Entladen mit `will-prevent-unload`
+       und fragt mit einem eigenen Dialog (L268). */
+    if (ungesichert) {
       e.preventDefault();
       e.returnValue = '';
     }

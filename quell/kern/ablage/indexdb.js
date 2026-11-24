@@ -1094,7 +1094,7 @@ const Store = (() => {
     window.addEventListener('beforeunload', (e) => {
         const ungesichert = speicherVoll && pending.size > 0;
         flush().catch(() => { });
-        if (ungesichert && typeof window.RedionDesktop === 'undefined') {
+        if (ungesichert) {
             e.preventDefault();
             e.returnValue = '';
         }

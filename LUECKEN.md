@@ -8875,7 +8875,7 @@ Offen, gefunden beim Lesen derselben Seiten:
    lesen; geraten wird nicht.
 
 
-## L268 · Windows-App: kein Halt beim Schliessen, wenn der Speicher voll ist — 24. November 2026
+## L268 · Windows-App: kein Halt beim Schliessen, wenn der Speicher voll ist — 24. November 2026, **GESCHLOSSEN am selben Tag durch E808**
 
 Seit E802 fragt Redion im Browser beim Schliessen nach, solange wegen eines
 vollen Speichers Änderungen ungesichert im Arbeitsspeicher liegen. In der
@@ -8889,6 +8889,15 @@ eigenen `dialog.showMessageBoxSync` („Bleiben" / „Trotzdem schliessen") und
 ruft bei „Trotzdem" `event.preventDefault()`. Danach kann `indexdb.ts` die
 Ausnahme für `RedionDesktop` fallen lassen. Prüfen in der Windows-Smoke-Reihe
 (`pruefungen/windows-app-smoke.mts`), nicht im Container.
+
+**Geschlossen (E808).** Genau dieser Weg ist gebaut: `windows/main.cjs`
+fragt mit „Bleiben" (Enter und Escape) / „Trotzdem schliessen", beim
+Abmelden oder Herunterfahren von Windows gar nicht; `indexdb.ts` fragt ohne
+Ausnahme. Der Wächter steht in `windows/windows-desktop.test.cjs` („L268")
+und war gegen den Stand davor rot. **Nicht geprüft:** der Dialog in einer
+echten Electron-App — im Container gibt es kein Electron. Das bleibt für die
+Windows-Smoke-Reihe auf Redurs Rechner.
+
 ## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — GESCHLOSSEN (E745) — 11. Oktober 2026
 
 **Gemessen** über die Schnittstelle von GitHub, nicht vermutet: die zwei
@@ -11247,7 +11256,7 @@ die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
 **Gemessen am 24. November 2026 (mit L268), nachgezählt statt fortgeschrieben:** die
-Datei führt 162 Lücken, 104 offene und 58 geschlossene. Der Befehl dazu ist
+Datei führt 162 Lücken, 103 offene und 59 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt
