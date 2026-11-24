@@ -326,6 +326,41 @@ const Formen = (() => {
     durch('block',    Store.cache.blocks);
     durch('sammlung', Store.cache.collections);
     durch('ansicht',  Store.cache.views);
+
+    /* WAISEN WIEDER EINHÄNGEN (E804). Eine Waise ist ein lebender Block,
+       dessen `parentId` auf einen lebenden Block zeigt, in dessen `content`
+       er NICHT steht. Gezeichnet wird über `content` — sie ist also da und
+       unsichtbar. Diesen Zustand konnte `flush` vor E800 hinterlassen, und
+       ein abgebrochener Import oder Abgleich kann es auch.
+
+       Die Gegenrichtung (ein `content` zeigt ins Leere) ist oben schon
+       abgefangen. Hier wird die Waise HINTEN angehängt: die Folge der
+       übrigen Kinder bleibt, und was unsichtbar war, ist wieder zu sehen.
+       Nicht angefasst wird, was im Papierkorb liegt (`alive: false`), was
+       eine Datenbankzeile ist (`parentTable: 'collection'` — die zeigt die
+       Ansicht, nicht `content`) und was einen toten Elternteil hat.
+
+       Gemessen vor dem Bau: im Startbestand 1970 Blöcke, 0 Waisen — Blöcke
+       auf der Fläche (E691) stehen weiter in `content`. */
+    if (heilen) {
+      const bloecke = Store.cache.blocks as Record<string, Satz>;
+      let eingehaengt = 0;
+      for (const id of Object.keys(bloecke)) {
+        const b = bloecke[id];
+        if (!b || b['alive'] === false || b['parentTable'] === 'collection') continue;
+        const elternId = b['parentId'];
+        if (typeof elternId !== 'string' || !elternId) continue;
+        const eltern = bloecke[elternId];
+        if (!eltern || eltern['alive'] === false || !Array.isArray(eltern['content'])) continue;
+        if ((eltern['content'] as unknown[]).includes(id)) continue;
+        Store.updateBlock(elternId, { content: [...(eltern['content'] as string[]), id] });
+        eingehaengt++;
+      }
+      if (eingehaengt) {
+        bericht.geheilt += eingehaengt;
+        bericht.stellen['Unsichtbare Blöcke wieder eingehängt'] = eingehaengt;
+      }
+    }
     return bericht;
   };
 

@@ -30191,7 +30191,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1624, inhalt: 'f70506d6e2677a6e', gebaut: '2026-11-24T07:24:25.241Z' };
+const Stand = { fassung: 1625, inhalt: '02649e2c00e7210b', gebaut: '2026-11-24T07:32:16.828Z' };
 window.Stand = Stand;
 
 </script>
@@ -37477,6 +37477,29 @@ const Formen = (() => {
         durch('block', Store.cache.blocks);
         durch('sammlung', Store.cache.collections);
         durch('ansicht', Store.cache.views);
+        if (heilen) {
+            const bloecke = Store.cache.blocks;
+            let eingehaengt = 0;
+            for (const id of Object.keys(bloecke)) {
+                const b = bloecke[id];
+                if (!b || b['alive'] === false || b['parentTable'] === 'collection')
+                    continue;
+                const elternId = b['parentId'];
+                if (typeof elternId !== 'string' || !elternId)
+                    continue;
+                const eltern = bloecke[elternId];
+                if (!eltern || eltern['alive'] === false || !Array.isArray(eltern['content']))
+                    continue;
+                if (eltern['content'].includes(id))
+                    continue;
+                Store.updateBlock(elternId, { content: [...eltern['content'], id] });
+                eingehaengt++;
+            }
+            if (eingehaengt) {
+                bericht.geheilt += eingehaengt;
+                bericht.stellen['Unsichtbare Blöcke wieder eingehängt'] = eingehaengt;
+            }
+        }
         return bericht;
     };
     return { FORMEN, passt, maengel, heil, heile, zustand, felderVon };

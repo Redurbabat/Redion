@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 581 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 582 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2290,6 +2290,14 @@ false" — Text und Unterblock waren gelöscht, nicht im Papierkorb. Gezählt am
 24. November, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
 581.*
 
+*Und 582: `test648` — eine Waise wird beim Laden wieder eingehängt (E804).
+Er schreibt einen Block an der App vorbei auf die Platte, der auf eine
+Seite zeigt, ohne in ihrem `content` zu stehen, und lädt neu. Gegen den
+alten Stand rot mit 2 von 7: der Block war da und nirgends zu sehen. Und er
+hält die Gegenseite: ein Block im Papierkorb kommt nicht zurück, und ein
+zweites Laden hängt nichts doppelt ein. Gezählt am 24. November, im selben
+Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 582.*
+
 ### Die Befehle
 
 ```txt
@@ -2311,7 +2319,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 581 Läufe
+npm run pruefen                      alle 582 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2408,7 +2416,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 581 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 582 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

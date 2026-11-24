@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-774 Entscheidungen, E1 bis E803 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+775 Entscheidungen, E1 bis E804 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -860,6 +860,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E801** — Zwei Fenster überschreiben einander nicht (24. November 2026, Redur: „Weiter ohne pause“, nach E800 der nächste Punkt der Roadmap, B2): jeder Satz trägt AUF DER PLATTE eine Versionsnummer `rev`; `flush` liest und schreibt in einer Transaktion und führt zusammen, wenn ein anderes Fenster dazwischen geschrieben hat; eine wartende Änderung wird nicht durch Fremdes ersetzt; die Zahl reist weder in Sicherung noch Abgleich (`test645`)
 * **E802** — Speicher voll: nichts geht still verloren (24. November 2026, Redur: „Weiter“, B10 der Roadmap): bei `QuotaExceededError` eine Meldung mit der Zahl ungesicherter Änderungen, ein neuer Versuch alle 15 Sekunden ohne neue Eingabe, im Browser eine Rückfrage beim Schliessen; die Windows-App bekommt keine Rückfrage, weil sie das Fenster dort ohne Dialog festhielte (`test646`)
 * **E803** — Umwandeln verliert nichts (24. November 2026, Redur: Ziel „arbeite ohne pause bis du alles fertig gemacht hast“, B18 der Roadmap, §18 hart): → Datenbank legt den alten Block in den Papierkorb statt ihn endgültig zu löschen und nimmt seinen Text als Namen; → Seite wandelt an Ort und Stelle (Kennung, Platz, Unterblöcke bleiben); → Einbettung und → Spalten leeren den Text nicht mehr (`test647`)
+* **E804** — Unsichtbare Blöcke werden beim Laden wieder eingehängt (24. November 2026, B5 der Roadmap): ein lebender Block, dessen lebender Elternteil ihn nicht in `content` führt, kommt hinten wieder hinein und wird gesichert; Papierkorb und Datenbankzeilen bleiben unberührt (`test648`). Dazu B19 gemessen: unbekannte Blockarten überstehen Zeichnen, Bearbeiten und Sicherung schon heute
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71293,4 +71294,43 @@ dazu `test39`, `test143`, `test176`, `test191`, `test192`, `test212`,
 `test105`, `test109`. `test65` ist an einer Stelle rot („Vierzehn Gruppen in
 der Übersicht", gezählt 15) — am Stand vor E803 genauso, unberührt. Kein
 voller Lauf.
+
+## E804 · Unsichtbare Blöcke werden beim Laden wieder eingehängt
+
+**Wer und wann.** 24. November 2026, Redurs Ziel „arbeite ohne pause bis du
+alles fertig gemacht hast" — B5 der Roadmap aus der Notion-Analyse. Notion
+hält Abwärts- (`content`) und Aufwärtszeiger (`parent`) gespiegelt und nennt
+Abweichungen selbst „edge cases".
+
+**Was fehlte.** Die Selbstheilung beim Laden (`kern/ablage/formen.ts`) fing
+die eine Richtung schon ab: ein `content`-Eintrag ohne Block wird beiseite
+gelegt (`contentFehlt`). Die andere nicht: ein lebender Block, dessen
+`parentId` auf einen lebenden Block zeigt, der ihn NICHT in `content`
+führt. Gezeichnet wird über `content` — so ein Block ist da und
+unsichtbar. Genau das konnte `flush` vor E800 hinterlassen. `test648`
+schreibt eine solche Waise an der App vorbei auf die Platte und lädt neu:
+vor E804 rot mit 2 von 7.
+
+**Was entschieden wurde.** `Formen.zustand(true)` hängt jede Waise hinten
+an den `content` ihres Elternteils (über `Store.updateBlock`, also auch
+gesichert) und meldet die Zahl im Melder. Unberührt bleibt, was im
+Papierkorb liegt (`alive: false`), was eine Datenbankzeile ist
+(`parentTable: 'collection'`) und was einen toten Elternteil hat.
+
+**Warum hinten.** Die Folge der übrigen Kinder ist die Arbeit des Nutzers;
+wo die Waise einmal stand, weiss niemand mehr. Sichtbar am Ende ist besser
+als unsichtbar irgendwo.
+
+**Gemessen vor dem Bau.** Im Startbestand 1970 Blöcke, 0 Waisen. Blöcke,
+die auf die Fläche gezogen sind (E691), stehen weiter in `content` — es
+gibt also keine gewollte Waise, die jetzt ungewollt zurückkäme.
+
+**B19 im selben Bogen, ohne Bau.** „Unbekannte Blockarten sichtbar rendern"
+ist schon erfüllt; eine Sonde mass einen Block `type: 'zukunftsblock'` mit
+eigenem Feld: er wird als Text gezeichnet, lässt sich bearbeiten, behält
+Typ und Feld und übersteht `exportAll` → `importAll('ersetzen')`.
+
+**Geprüft.** `test648` (7 Zusagen; gegen den alten Stand rot mit 2 von 7),
+`test85`, `test145`, `test209`, `test501`, `test520`, `test575`, `test96`,
+`test100`, `test105`, `test109`, `test644`, `test645`. Kein voller Lauf.
 
