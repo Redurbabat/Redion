@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-786 Entscheidungen, E1 bis E815 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+787 Entscheidungen, E1 bis E817 (E816 folgt) (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -872,6 +872,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E813** — Das untere Dock ist EINE Kapsel, und das Zeichen steht über dem Wort (24. November 2026): zweiter Ring weg, zweite Innenlinie weg, feste Zeichenbox für Safari; `test655`
 * **E814** — Vier alte Zusagen der Einstellungen auf Redurs Antworten umgeschrieben (24. November 2026): ganze Zeile, Rollen mit 44 px, Fahrt auf Verhalten, 20 Bereiche gezählt; `test32` `test34` `test389` `test580` `test581`
 * **E815** — Das Dock am Telefon: Zeichen farbig, Wort normal, und iOS gilt überall (24. November 2026, Redurs zwei Antworten): das Wort des aktiven Reiters ist Textfarbe und fett (4,5 : 1 gemessen, 13 bis 15 : 1), der aktive Knopf liegt über seiner Linse; `test623` fünf Zeilen auf das JETZT gewollte Verhalten umgeschrieben; `test585` `test623` `test655`
+* **E817** — Die Wahl fliegt auch dann ins Ziel, wenn die Seite neu gezeichnet wird, während sie fliegt (Seite → Fläche, 24. November 2026): der Flug hing an einem Bezugsrahmen, den die Neuzeichnung abreisst, und landete daneben; jetzt fliegt er ab dem letzten stimmenden Bild neu; `test585` 2 rot → 93/93 (`src/schale/bedienung/selection-flow.ts`)
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71773,3 +71774,27 @@ Bei allen vier Gegenproben blieben die übrigen umgeschriebenen Zeilen grün, au
 **Bilder** (iPhone-Größe 390 × 844, Pixeldichte 3, hell und dunkel, Standard und Glass Wheel, aktiver Reiter „Dokumente"): `/home/user/Redion/bilder/dock-wort-standard-hell.png`, `dock-wort-standard-dunkel.png`, `dock-wort-glass-hell.png`, `dock-wort-glass-dunkel.png` (Ausschnitt des Docks), dazu je eine Ganzansicht `…-ganz.png`.
 
 **Offen, bei Redur.** Ob der Druck im Standard auf .92 schrumpfen soll (siehe oben). Und ob die Linse im Glass Wheel über dem Wort bleiben soll, wenn sie nicht mehr darüber liegt — heute liegt nur der aktive Knopf darauf, die Linse selbst bleibt unter ihm.
+
+
+## E817 · Die Wahl fliegt auch bei einer Neuzeichnung ins Ziel
+
+**Entschieden am 24. November 2026, Auftrag von Redur (Fehler aus test585).** Die Wahl im Umschalter der Seitenansicht (Seite / Fläche / Redion, E690) fliegt nach dem Klick als gleitende Fläche vom alten zum neuen Knopf (E706). Beim Wechsel auf „Fläche" landete sie nicht: am Rechner bei l=95,7 statt 279,8, t=24 statt 122 (`test585`, Telefon ebenso).
+
+**Ursache (gemessen, nicht geraten).** Ein Bild-für-Bild-Probelauf (Playwright, Rechner 1440 × 900) zeigt: der Umschalter wird nicht ersetzt, er wandert. Die Seite wird nach dem Klick ein zweites Mal gezeichnet; die Reihe bleibt dieselbe, bekommt aber einen anderen Elternknoten (`offsetParent` wechselt von `wide flaeche-page` auf `""`). Der Flug wurde beim Start mit Koordinaten im ALTEN Rahmen angelegt (`lokal()` über `bezug = offsetParent`). Nach der Neuzeichnung liegt er im neuen Rahmen an einer falschen Stelle (oben 24 statt 122) und bleibt dort stehen. `wache()` in `materialFliegen` prüfte nur, ob Flug, Ziel und Reihe noch im Dokument hängen — alles hing noch, also wurde nichts neu begonnen.
+
+**Falsche Vermutung.** Zuerst lag der Verdacht nahe, der Kopf der Seite werde beim Wechsel komplett ersetzt, die Fläche gehöre dem alten Knopf, oder die Messung lese den falschen Wähler. Keines davon stimmt: der Wähler bleibt, und die Messung liest den richtigen. Der Lauf hat gemessen, was er behauptet (§55.2): die zwei roten Zeilen waren echt.
+
+**Änderung.** `src/schale/bedienung/selection-flow.ts`, Funktion `materialFliegen`, in `wache()`: Wechselt der Bezugsrahmen des Fluges (`bezugNoch()` = Flug und Rahmen hängen noch, und `offsetParent` ist noch derselbe), fliegt die Wahl von der zuletzt stimmenden Stelle (`zuletzt`) neu zur gewählten Stelle derselben Reihe, höchstens dreimal (`runde < 3`, wie der Wechsel der Reihe). Der Zustand `rahmenWechsel` wird VOR dem Aufräumen des alten Fluges gemerkt (sonst wäre der Flug schon entfernt). Gebaut: `quell/schale/bedienung/selection-flow.js`, Dienststand v1639 (`sw.js`, `src/dienst/sw.ts`, `quell/kern/einstellung/stand.js`).
+
+**Beweis.**
+
+- `test585` gegen den Grundstand (`2d6038e`): rot mit zwei Zeilen (Telefon `88,13 statt 88,25 · t 22 statt 123`; Rechner `95,71 statt 279,84 · t 24 statt 122`). Nach der Änderung: **93/93**.
+- Nachbarn `node pruefungen/alle.mts 573 574 580 581 589 106`: 98 Zusagen grün in fünf Läufen. `test589` ist ROT — aber auch gegen den Grundstand rot (Zeitmesser-Kachel in den Einstellungen, `.einst-fenster` fängt den Klick ab, Zeile 1464). Nicht durch diese Änderung verursacht; nicht angefasst.
+- Gegenprobe: mit dem alten `selection-flow.js` (Grundstand) wieder rot, mit dem neuen grün — derselbe Lauf, nur die eine Datei getauscht.
+- Bild-Probe: Flug Bild für Bild (`requestAnimationFrame`-Abtastung): vorher 2 Bilder mit `offsetParent` alt, dann Sprung nach 157,24 (ein Bild), dann gleitet er 351 → 280 auf 122 und landet genau auf „Fläche" (280,122).
+
+**Rest, ehrlich.** Das Bild, in dem die zweite Neuzeichnung passiert, wird noch einmal an der alten Stelle gemalt (ein Bild, etwa 16 ms). Die Ursache wird erst im nächsten Bild erkannt, weil `wache()` nach dem Zeichnen läuft. Ein Vorab-Erkennen würde einen Hook auf `App.zeichneSeite` brauchen — zu viel für diesen Fehler, nicht gemacht.
+
+**Bilder** (Ausschnitte in `/home/user/Redion/bilder/`): `e817-rechner-vorher.png`, `e817-rechner-mitte.png`, `e817-rechner-nachher.png`, `e817-telefon-vorher.png`, `e817-telefon-mitte.png`, `e817-telefon-nachher.png`. „Nachher" am Rechner: „Fläche" gewählt, die Linse steht unter „Fläche".
+
+**Gezählt.** `ls pruefungen/lauf/test*.mts | wc -l` sagt 588 (kein neuer Lauf in diesem Bogen; `test585` ist unverändert).

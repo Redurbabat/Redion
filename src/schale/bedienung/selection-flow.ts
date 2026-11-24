@@ -1049,15 +1049,29 @@ const SelectionFlow = (() => {
     const name = reihe.dataset['material'] || '';
     let zuletzt: Rechteck = start;
     let rahmen: Rechteck = reihe.getBoundingClientRect();
+    /* Der Bezugsrahmen des Fluges (`bezug`) ist beim Start gemessen. Zeichnet
+       die Seite NEU, ohne dass die Reihe verschwindet (Seitenansicht Seite →
+       Fläche, test585), hängt der Flug an einem Rahmen, den es nicht mehr gibt:
+       er bleibt an seiner alten Stelle stehen und landet daneben. Dann fliegt
+       er ab dem letzten Bild, das stimmte, neu zur Wahl (E817). */
+    const bezugNoch = (): boolean =>
+      flug.isConnected && bezug.isConnected && (flug.offsetParent ?? traeger) === bezug;
     const wache = (): void => {
       if (reiheFluege.get(traeger) !== eintrag) return;     /* gelandet oder überholt */
-      if (flug.isConnected && neu.isConnected && reihe.isConnected) {
+      if (flug.isConnected && neu.isConnected && reihe.isConnected && bezugNoch()) {
         zuletzt = flug.getBoundingClientRect();
         rahmen = reihe.getBoundingClientRect();
         requestAnimationFrame(wache);
         return;
       }
+      /* Der Rahmen wechselte, die Reihe und das Ziel blieben: von `zuletzt`
+         neu fliegen. Die Prüfung steht VOR dem Aufräumen des Fluges. */
+      const rahmenWechsel = reihe.isConnected && neu.isConnected && flug.isConnected;
       eintrag.fertig();
+      if (rahmenWechsel && runde < 3) {
+        materialFliegen(reihe, zuletzt, neu, gruppe, runde + 1);
+        return;
+      }
       const andere = runde < 3 ? reiheSuchen(name, rahmen) : null;
       const ziel = andere ? gewaehltIn(andere, gruppe) : null;
       if (andere && ziel) materialFliegen(andere, zuletzt, ziel, gruppe, runde + 1);
