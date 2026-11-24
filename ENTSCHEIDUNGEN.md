@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-785 Entscheidungen, E1 bis E814 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+786 Entscheidungen, E1 bis E815 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -871,6 +871,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E812** — Die Einstellungen wie die iPhone-Einstellungen, mit Redions eigenen Mitteln (24. November 2026, Redur: „Die Einstellungen aufräumen, sie sollen wie die iPhone-Einstellungen sein."): Gruppen als Karten, farbige Quadrate mit weissem Zeichen, Titel und Suche; Telefon zwei Seiten, Rechner zwei Spalten. Die Wächter test580 und test389 werden dabei an zwei Zusagen rot — offen für Redur.
 * **E813** — Das untere Dock ist EINE Kapsel, und das Zeichen steht über dem Wort (24. November 2026): zweiter Ring weg, zweite Innenlinie weg, feste Zeichenbox für Safari; `test655`
 * **E814** — Vier alte Zusagen der Einstellungen auf Redurs Antworten umgeschrieben (24. November 2026): ganze Zeile, Rollen mit 44 px, Fahrt auf Verhalten, 20 Bereiche gezählt; `test32` `test34` `test389` `test580` `test581`
+* **E815** — Das Dock am Telefon: Zeichen farbig, Wort normal, und iOS gilt überall (24. November 2026, Redurs zwei Antworten): das Wort des aktiven Reiters ist Textfarbe und fett (4,5 : 1 gemessen, 13 bis 15 : 1), der aktive Knopf liegt über seiner Linse; `test623` fünf Zeilen auf das JETZT gewollte Verhalten umgeschrieben; `test585` `test623` `test655`
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71692,3 +71693,83 @@ Ein Hinweis zur Gegenprobe des Rollens: ein `overflow:hidden` auf der Liste täu
 **Was bleibt rot, und warum.** test581 §8: „Keine `:active{transform:scale(…)}` mehr ausser den benannten eigenen Druckbildern" — gefunden wird `bausteine.css: #ho-ziele > button:active .ho-z`. Diese Zeile war schon vor E814 rot und gehört nicht zu den Einstellungen; sie wird hier nicht angefasst. Der volle Lauf der Gesamtheit ist nicht gefahren; die Zahlen oben gelten für diese fünf Läufe.
 
 **Offen, bei Redur.** Ob die Telefonzeile eine Fläche bekommt, wie es „Rechner und Telefon" im Auftrag las. E812 sagt nein; der Lauf folgt E812, bis Redur das ändert.
+
+---
+
+## E815 · Das Dock am Telefon: Zeichen farbig, Wort normal — und iOS gilt überall
+
+*24. November 2026 · Redur im Fragebogen, wörtlich: „iOS gilt überall (Empfohlen)" (Frage A) und „Zeichen farbig, Wort normal (Empfohlen)" (Frage B). Beide Antworten sind die Empfehlung, die Redur angenommen hat.*
+
+**Was entschieden wurde.**
+
+- **A — „iOS gilt überall".** Die iOS-Übergänge, das Glas und die eine Dock-Kapsel gelten auch im Standard- und klassischen Design. Der Code tut das seit E813/E812 schon; was rot war, war die Prüfung, die den Stand vom 13. Oktober verlangte (E757, `test623`). Die Zusagen dazu sind für die genannten Punkte überholt und umgeschrieben (siehe unten). Nichts am App-Code wurde für A geändert.
+- **B — „Zeichen farbig, Wort normal".** Im Dock am Telefon (`#handy-oben`, aktiver Reiter `button.an` bzw. `aria-selected="true"`) ist das ZEICHEN in Akzentfarbe, das WORT in Textfarbe (`var(--text)`) und fett. Kontrast des Wortes ≥ 4,5 : 1, auch bei einfacher Pixeldichte (`test585` misst dort 3,08 hell und 3,74 dunkel, vorher). Das gilt in Standard und Glass Wheel gleich; klassisch ist Standard.
+
+**Umsetzung von B** (`quell/schale/stil/bausteine.css`, Zeilen 2428–2440; keine neuen Tokens):
+
+- Zeilen 2433–2434: `#handy-oben > button.an b, #handy-oben > button[aria-selected="true"] b { color: var(--text) }`. Das Zeichen bleibt bei seiner bestehenden Regel `#handy-oben > button[aria-selected="true"] .ho-z { color: var(--accent-text, var(--accent)) }` (Zeile 2306). Akzent gemessen: `--accent-text` (Hell `#7c3aed`, Dunkel `#9b87ff`) ist auf der Pille 4,6 bis 5,0 : 1 nach E815 (vorher 3,8 bis 5,0 : 1 — dieselbe Farbe, die das Zeichen schon hatte). `--accent` wird hier nicht gebraucht.
+- Zeile 2440: `#handy-oben > button[aria-selected="true"]{ z-index:3 }`. **Warum eine zweite Regel, und warum sie nicht vergessen werden darf:** Die Farbe allein reichte in der Glass-Fassung nicht. Die Linse (`#ho-pille`, E639, `z-index:2`) liegt über den Knöpfen und ist dort ein Weichzeichner mit hellem Schimmer; sie legte sich über das Wort und hellte es auf. Gemessen bei einfacher Pixeldichte: Farbe allein 2,93 : 1, mit dem aktiven Knopf über der Linse 14,23 : 1. Die Linse bleibt, wo sie war; nur der Knopf des gewählten Reiters liegt darauf. Der Hebe-Versatz des Wortes (`translateY(-1px)`) war NICHT die Ursache (gemessen: ohne ihn bleibt das dunkelste Pixel bei 101, vorher 102; mit der Linse unter dem Knopf wird es 29, die Textfarbe).
+
+**Kontrast des Wortes, gemessen** (`test585`-Methode: dunkelster gegen hellsten Bildpunkt im Kasten des Wortes, 0,5 % und 99,5 %-Perzentil; iPhone-Größe 390 × 844; „vorher" = Wort in Akzentfarbe und Knopf auf `z-index:1`, wie vor E815 — über eine eingespritzte Regel nachgestellt):
+
+| Fassung | Pixeldichte | vorher | nachher | Zeichen (Akzent gegen Pille) vorher → nachher |
+|---|---|---|---|---|
+| Standard hell | 1 | 3,08 | 15,04 | 4,01 → 4,87 |
+| Glass Wheel hell | 1 | 1,92 | 14,23 | 3,97 → 4,82 |
+| Standard dunkel | 1 | 3,74 | 15,45 | 4,01 → 4,96 |
+| Glass Wheel dunkel | 1 | 2,05 | 13,13 | 3,77 → 4,72 |
+| Standard hell | 2 | 5,57 | 15,04 | 4,96 → 4,96 |
+| Glass Wheel hell | 2 | 5,26 | 14,48 | 4,82 → 4,86 |
+| Standard dunkel | 2 | 6,14 | 15,43 | 4,99 → 4,99 |
+| Glass Wheel dunkel | 2 | 5,16 | 12,98 | 4,58 → 4,59 |
+
+Das Zeichen liegt überall über 3 : 1 (Wert gegen den Median des Ausschnitts als Pillenfarbe — ein Näherungswert, kein Pixelmittel der Pille). Das Wort ist fett: 650 im Standard, 600 im Glass Wheel (dort verlangt die Glass-Regel das Gewicht 600, das bleibt).
+
+**test623 — welche Zusagen nicht mehr gelten, und was dafür gilt.** Die fünf roten Zeilen waren genau die aus E757, die A überholt. Umgeschrieben nach dem JETZT gewollten Verhalten; alle übrigen Zeilen unverändert (`test623` 50 von 55 vorher, 62 von 62 nachher; die Zahl steigt, weil drei Einstellungs-Prüfungen und eine Ruhe-Prüfung dazukamen):
+
+| Zeile | alt (13. Oktober, E757) | neu (E815) |
+|---|---|---|
+| §3a Rechner: „Das Fenster fliegt nicht ein" | `none` (kein Einfliegen) | `einst-einblenden`, 200 ms, Skalierung 0,98 → 1 |
+| §3a Rechner: neu | — | „unter Ruhige Darstellung" und „bei reduzierter Bewegung" laufen ohne Animation (`none`) |
+| §3b Telefon: „Das Fenster fliegt nicht ein" | `none` | `einst-blatt-hoch` (Blatt von unten); neu: Ruhe und reduzierte Bewegung `none` |
+| §2 Telefon: „Die untere Leiste trägt ihren alten Schatten" | drei Innenlinien, `0 1px 0 0 inset`, `0 0 0 1px inset`, `0 -1px 0 0 inset` | genau EINE Innenlinie: `rgba(255,255,255,0.22) 0 1px 0 0 inset, rgba(0,0,0,0.19) 0 12px 30px 0` (wie `test655` §1); neu: „genau EINE Innenlinie" |
+| §2 Telefon: „… ohne eigenen Übergang" am Zeichen | `0s` | federt: Übergang 0,542 s (Kit-Feder, E702); neu: unter Ruhige Darstellung `0s` |
+| §2 Telefon: „… schrumpft nicht über transform (scale .92)" | `none` beim Druck | die Kit-Feder: `matrix(1.08, 0, 0, 1.08, 0, -2)` beim Druck (`:active` über `CSS.forcePseudoState`, nur gemessen, wenn der Reiter wirklich `:active` ist) |
+
+**Eine Entscheidung, die nicht in den Fragen stand — bitte bestätigen.** Den Druck hat Redur nicht erwähnt. Die Zeile „schrumpft nicht" wurde so umgeschrieben, dass sie den Wert misst, den der Code heute hat (Kit-Feder, E702, 1,08 und −2 px), statt „kein transform". Die Glass-Regel „Druck auf scale .92" (`studio.css` ~1012) bleibt nur im Glass Wheel. Ob der Druck im Standard auch auf .92 schrumpfen soll, ist offen — es wäre eine neue Zusage, keine Umschreibung.
+
+**Gegenproben (je umgeschriebene Zeile, im Lauf, rot gemessen).** Eingespritzt über `GEGENPROBE_CSS` (neue Umgebungsvariable von `test623`; ohne sie läuft der Lauf wie sonst):
+
+| Zusage | Gegenprobe | Ergebnis |
+|---|---|---|
+| Einstellungen blenden ein (Rechner und Telefon) | `.einst-fenster{animation:none !important}` | rot: „ist none · soll einst-einblenden", „ist 0s · soll 0.2s", „ist none · soll einst-blatt-hoch"; dazu rot „Die Einstellungen fliegen ein" in Glass, weil die Gegenprobe dort ebenfalls alles abschaltet |
+| untere Leiste, eine Innenlinie | Dock mit drei Innenlinien im `box-shadow` | rot: „genau EINE Innenlinie" und „EINE Lichtkante" |
+| Zeichen federt | `#handy-oben > button .ho-z{transition:none !important}` | rot: „ist 0s" |
+| Druck: Kit-Feder | `#handy-oben > button:is(:focus-visible,:active) .ho-z{transform:none !important}` | rot: „ist none" |
+
+Bei allen vier Gegenproben blieben die übrigen umgeschriebenen Zeilen grün, außer wo sie denselben Stil betreffen.
+
+**Läufe vorher und nachher.** Gleicher Befehl, `node pruefungen/alle.mts 623 585 655 614 541 581 580 584`.
+
+| Lauf | vorher | nachher |
+|---|---|---|
+| test623 | 50 von 55 (fünf rot) | 62 von 62 |
+| test585 | 89 von 93 (Kontrast Hell/Dunkel rot, zwei „Seite → Fläche" rot) | 91 von 93 (Kontrast grün; die zwei „Seite → Fläche" bleiben rot) |
+| test655 | grün (89) | grün (89) |
+| test541 | grün (25) | grün (25) |
+| test580 | grün | grün |
+| test581 | grün (98) | grün (98) |
+| test614 | 124 von 125 (§7f rot) | 124 von 125 (§7f rot, unverändert) |
+| test584 | 36 von 37 („Keine bunte Farbe von Hand", `glasswheel.css`) | 36 von 37 (unverändert) |
+
+**Was bleibt rot, und warum.**
+
+- `test585` „Seite → Fläche" (Rechner und Telefon): dieselben zwei Zeilen waren schon vor E815 rot, mit fast gleichen Zahlen. Ihre Ursache ist nicht untersucht; sie hängen nicht an der Wortfarbe. Nicht angefasst.
+- `test614` §7f: ein zu hoch losgelassener Tipp auf „Termine" zählt nicht; schon vor E815 rot.
+- `test584` „Keine bunte Farbe von Hand": `glasswheel.css` (Vorschau und Hintergrund des Glass Wheel). Schon vor E815 rot.
+
+**Gebaut und geprüft.** `npm run typecheck` grün; `npm run bauen:ts` (Grundstock, `sw.ts`, `stand.ts`, `sw.js` neu, weil die CSS im Grundstock liegt); `node bauen.mts` (`redion-einzeldatei.html`, 10 207 KB); `npm run stand` meldet den Dienststand als unverändert (74a145465131d6b5), nachdem der Bau ihn angehoben hat.
+
+**Bilder** (iPhone-Größe 390 × 844, Pixeldichte 3, hell und dunkel, Standard und Glass Wheel, aktiver Reiter „Dokumente"): `/home/user/Redion/bilder/dock-wort-standard-hell.png`, `dock-wort-standard-dunkel.png`, `dock-wort-glass-hell.png`, `dock-wort-glass-dunkel.png` (Ausschnitt des Docks), dazu je eine Ganzansicht `…-ganz.png`.
+
+**Offen, bei Redur.** Ob der Druck im Standard auf .92 schrumpfen soll (siehe oben). Und ob die Linse im Glass Wheel über dem Wort bleiben soll, wenn sie nicht mehr darüber liegt — heute liegt nur der aktive Knopf darauf, die Linse selbst bleibt unter ihm.

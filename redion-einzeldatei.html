@@ -17013,6 +17013,19 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   #handy-oben > button.an{ color:var(--accent-text,var(--accent));
                            transition-delay:130ms }
   #handy-oben > button.an b{ font-weight:650 }
+  /* B (Redur, 24. November 2026, „Zeichen farbig, Wort normal"): im aktiven
+     Reiter ist nur das ZEICHEN in Akzentfarbe (Regel oben, `.ho-z`); das
+     WORT bleibt in Textfarbe und ist fett. Kontrast des Wortes ≥ 4,5 : 1
+     (test585 §2). Gilt in Standard und Glass Wheel gleich — das Glas
+     ändert die Farbe nicht. */
+  #handy-oben > button.an b,
+  #handy-oben > button[aria-selected="true"] b{ color:var(--text) }
+  /* Der aktive Knopf liegt ÜBER seiner Linse (z-index 3 gegen 2). Die Linse
+     ist in der Glass-Fassung ein Weichzeichner mit hellem Schimmer; über dem
+     Wort gelegt hellte sie die Schrift auf 3,0 : 1 auf, bei einfacher
+     Pixeldichte (test585 §2 misst genau das). Die Linse bleibt, wo sie
+     war — nur der Knopf des gewählten Reiters liegt darauf. */
+  #handy-oben > button[aria-selected="true"]{ z-index:3 }
 
   /* E813 — das Zeichen über dem Wort, in JEDEM Browser gleich. Safari hat
      das SVG ohne eigene Höhe in die Zeile gelegt und über das Wort gemalt
@@ -30433,7 +30446,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1637, inhalt: '1b417ab19f029f11', gebaut: '2026-11-24T18:32:54.629Z' };
+const Stand = { fassung: 1638, inhalt: '74a145465131d6b5', gebaut: '2026-11-24T19:21:25.638Z' };
 window.Stand = Stand;
 
 </script>
