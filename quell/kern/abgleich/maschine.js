@@ -210,9 +210,20 @@ const Wolke = (() => {
     const anmeldenMitAccess = async () => {
         if (!accessMoeglich())
             throw new Error('Die Access-Anmeldung geht nur auf der Redion-Website selbst.');
-        const a = await fetch(location.origin + '/konto/access', {
-            method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}'
-        });
+        let a;
+        try {
+            a = await fetch(location.origin + '/konto/access', {
+                method: 'POST', credentials: 'same-origin', redirect: 'manual',
+                headers: { 'Content-Type': 'application/json' }, body: '{}'
+            });
+        }
+        catch {
+            throw new Error('Die Cloudflare-Anmeldung konnte nicht geladen werden. ' +
+                'Öffne Redion direkt im Browser und versuche es erneut.');
+        }
+        if (a.type === 'opaqueredirect')
+            throw new Error('Die Cloudflare-Sitzung muss erneuert werden. ' +
+                'Lade die Redion-Seite im Browser neu und melde dich bei Cloudflare an.');
         let b = null;
         try {
             b = await a.json();

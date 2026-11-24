@@ -30536,7 +30536,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1643, inhalt: '01e443fc081c1766', gebaut: '2026-11-24T20:45:54.764Z' };
+const Stand = { fassung: 1644, inhalt: 'e2934ff5bf018b56', gebaut: '2026-11-24T20:48:46.853Z' };
 window.Stand = Stand;
 
 </script>
@@ -144188,9 +144188,20 @@ const Wolke = (() => {
     const anmeldenMitAccess = async () => {
         if (!accessMoeglich())
             throw new Error('Die Access-Anmeldung geht nur auf der Redion-Website selbst.');
-        const a = await fetch(location.origin + '/konto/access', {
-            method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}'
-        });
+        let a;
+        try {
+            a = await fetch(location.origin + '/konto/access', {
+                method: 'POST', credentials: 'same-origin', redirect: 'manual',
+                headers: { 'Content-Type': 'application/json' }, body: '{}'
+            });
+        }
+        catch {
+            throw new Error('Die Cloudflare-Anmeldung konnte nicht geladen werden. ' +
+                'Öffne Redion direkt im Browser und versuche es erneut.');
+        }
+        if (a.type === 'opaqueredirect')
+            throw new Error('Die Cloudflare-Sitzung muss erneuert werden. ' +
+                'Lade die Redion-Seite im Browser neu und melde dich bei Cloudflare an.');
         let b = null;
         try {
             b = await a.json();
