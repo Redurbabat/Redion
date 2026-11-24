@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-781 Entscheidungen, E1 bis E810 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+782 Entscheidungen, E1 bis E811 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -867,6 +867,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E808** — Die Desktop-App fragt beim Schliessen, wenn der Speicher voll ist (24. November 2026, schliesst L268): `will-prevent-unload` mit „Bleiben" / „Trotzdem schliessen", beim Herunterfahren nicht; `indexdb.ts` fragt ohne Ausnahme
 * **E809** — `flush` wartet auf den Durchgang, der noch schreibt (24. November 2026): ein Aufruf, der nichts mehr vorfindet, meldet nicht „gespeichert", bevor die Transaktion auf der Platte ist; `test652`, messungen §118
 * **E810** — Die freie Zeichenleiste bleibt im sichtbaren Feld (24. November 2026): beim Ziehen, Loslassen und bei jeder Fenstergrösse auf den Rollbereich `#scroll` begrenzt; `test534` §9
+* **E811** — Drei alte rote Läufe: was sie wirklich fanden
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71543,3 +71544,22 @@ Die Alternative war, die Grenze an der Hülle zu lassen und nur beim Loslassen z
 Ein Fund am Rande: Die Messung in `test534` §4 war mal grün, mal «oben», mal bei `y = -101`. Die Ursache lag am Test: Das Klicken auf den Griff rollte die Seite, der Griff lag oberhalb des Fensters, und der Zug fing daneben an. Dort rollt der Test jetzt vor dem Zug zurück. Der Produktfehler ist davon unabhängig und steht in §9.
 
 Prüfung: `test534` fünfmal hintereinander grün (55 von 55). Die Gegenprobe mit dem alten gebauten Stand macht §9 rot (53 von 55, die beiden Zeilen zur Lage im Feld). `test533` war schon vor diesem Bogen rot (zwei Zeilen zur Zeilenzahl und zu den Wörtern am Telefon); das ist nicht Teil dieses Bogens. Bilder: `bilder/e810-*.png` (nicht mitversioniert).
+
+## E811 · Drei alte rote Läufe: was sie wirklich fanden
+
+*24. November 2026 · gebaut von einem Haiku-Agenten, durchgesehen und nachgeprüft im Hauptzweig (test603 74/74, test614 124/125)*
+
+Die drei Läufe `test603`, `test614` und `test623` waren im vollen Lauf rot, und auf dem älteren Stand `2d6038e` genauso. Dieser Eintrag hält fest, was jeder davon tatsächlich gefunden hat — und was ausdrücklich NICHT geändert wurde, weil es eine Gestaltungsentscheidung ist.
+
+**`test603` — grün.** Die Prüfung suchte ausserhalb von `@supports` nach `studio-search` mit `backdrop-filter`. Ihr erster Treffer war der Kommentar „Fallback ohne backdrop-filter“ in `quell/schale/stil/studio.css` (Regel `body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #studio-bar .studio-search`). Der Kommentar ist umformuliert zu „Fallback ohne Glas“; die Werte blieben. Zwei weitere Treffer waren gar kein Glas: `backdrop-filter: none` in den Zurücksetzungen für starken Kontrast und Ruhe. Die Prüfung erkennt jetzt `none` als Abschalten, nicht als Glas (`pruefungen/lauf/test603.mts`). Die erste Fassung dieser Ausnahme war selbst falsch, weil ein Leerzeichen zurückgegeben werden konnte; die Ausnahme sitzt nun direkt hinter dem Doppelpunkt.
+
+**`test614` — teilweise.** §14 war rot, weil die Übergänge von `#handy-oben > button .ho-z` und `#ho-ziele > button .ho-z` neben `transform` auch `color` bewegten. Der Kommentar darüber sagt „Nur Compositor-Effekte“; Farbe ist keiner. `color` ist aus dieser Übergangsliste gestrichen (`quell/schale/stil/bausteine.css`), `transform` bleibt. §14 ist grün. Ein Bild wurde nicht gemacht: die Farbe des aktiven Reiterzeichens wechselt jetzt ohne Ausblendung. Das ist eine kleine sichtbare Änderung; Redur sollte sie am Telefon ansehen.
+
+§7f ist NICHT repariert. Gemessen: nach einer Geste, die hinauf übergeben und dort losgelassen wird (`zu hoch losgelassen`), kommt der nächste echte Tipp nicht an — bei 120 ms, 400 ms und 1000 ms gleichermassen. Der Browser schickt für diesen Tipp `pointerdown` und `pointerup`, aber KEIN `click`. Die Zielleiste ist es nicht (ausgeblendet gemessen, kein Unterschied). `touch-action:none` auf `#handy-oben` schliesst einen Fling aus. Nach einem `touchcancel` tritt der Fehler nicht auf. Vermutet wird der Übergabeweg in `src/schale/bedienung/selection-flow.ts` (`uebergeben`, `setPointerCapture`); bestätigt ist das nicht, daher keine Reparatur.
+
+**`test623` — nur berichtet, nicht geändert.** Drei Abweichungen von der klassischen Fassung vom 13. Oktober:
+- Der Schatten der unteren Leiste ist `0 12px 30px #00000030, 0 2px 8px #00000017` aus dem Block „iPhone UI polish (2026-11)“ in `quell/schale/stil/studio.css` (Zeile 1286), eingebracht mit Commit `48f0b38` (laut `git log -S`).
+- Die Übergangsdauer des Zeichens (0,542 s) und der Druck (`translateY(-2px) scale(1.08)`) kommen aus der Feder-Regel für `.ho-z` in `quell/schale/stil/bausteine.css` (Zeile ~2041), eingebracht in `a105e4a`, dem Commit der Federn des Touch Kits (E702).
+Beide Stellen sind bewusste Gestaltungsentscheidungen der Telefon-Politur bzw. der Federn. Ob die klassische Fassung zurück soll, entscheidet Redur.
+
+Nachbarläufe: `test105` und `test109` grün. `test576` und `test582` sind auf dem Stand `2d6038e` GENAU so rot (Glas-Werte und Kontrast der Telefonleiste); diese Änderung hat daran nichts geändert.
