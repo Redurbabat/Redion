@@ -9997,3 +9997,26 @@ contain-intrinsic-size:auto 28px}`), zwei Runden:
 Nicht gebaut (E807): die Griffe ragen 46 px links aus dem Block und wären
 abgeschnitten.
 
+
+## §118 · Speichern vor dem Neuladen (24. November 2026, E809)
+
+Methode: Chromium, `index.html` über file://, eine Seite mit einem Kind
+angelegt, `App.oeffne`, zweimal `flush` (der zweite wartet nicht auf den
+ersten), sofort neu laden; danach liest eine eigene Verbindung die Datenbank.
+
+| Stand | gespeichert nach dem Neuladen |
+|---|---|
+| `2d6038e` | 1 von 10 |
+| vor E809 (Branch) | 0 von 10 |
+| mit E809 | 10 von 10 |
+
+Im Ablauf von `test67` (Neuladen nach `Store.flush()` und 2,6 s Wartezeit)
+fehlte die Seite vor E809 in 2 von 8 Läufen, mit E809 in keinem von 28.
+
+Speicher- und Sicherungsläufe nach E809: `test96`, `test100`, `test105`,
+`test109`, `test147`, `test189`, `test644` bis `test650`, `test652`, `test67`
+— 15 von 15 grün.
+
+Vollständig gelaufen wurde der Rest des vollen Laufs nicht erneut; siehe
+E809 zu den roten Läufen, die auf `2d6038e` ebenfalls rot sind (`test32`,
+`test34`, … , `test603`, `test614`, `test623`, `test624`).
