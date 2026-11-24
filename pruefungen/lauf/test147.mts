@@ -189,9 +189,13 @@ const flushProbe = await seite.evaluate(async () => {
     if (this.name !== 'blocks') return (echt as any).apply(this, a);
     const anfrage: any = { onsuccess: null, onerror: null,
       error: new DOMException('Absichtlich kaputt', 'UnknownError') };
+    const transaktion = this.transaction;
     setTimeout(() => { if (anfrage.onerror) anfrage.onerror({
       target: anfrage, preventDefault: () => {},
       stopPropagation: () => {} }); }, 0);
+    /* Wie der Browser: ein nicht abgefangener Fehler am Schreibauftrag bricht
+       die ganze Transaktion ab, solange sie noch läuft (IndexedDB-Regel). */
+    try { transaktion.abort(); } catch { /* schon beendet */ }
     return anfrage;
   };
   Store.updateBlock(s.id, { text: 'Ändert sich nicht auf der Platte' });
@@ -212,9 +216,9 @@ gleich('Ein gesunder geht weiterhin durch', (flushProbe as any).danach, 'geht');
 /* Und die Meldung an die Nachbarfenster bleibt an den Erfolg gebunden. */
 const idbQuelle = fs.readFileSync(path.join(WURZEL, 'src/kern/ablage/indexdb.ts'), 'utf8');
 p('„geändert" geht nur nach Erfolg hinaus — die Ablehnung wird eigens stillgelegt',
-  /fertig\.then\(\(\) => meldeAnAndereFenster\('geaendert', schluessel\), \(\) => \{\}\)/.test(idbQuelle));
+  /fertig\.then\(\(x\) => \{ if \(x !== 'gemeldet'\) meldeAnAndereFenster\('geaendert', schluessel\); \}, \(\) => \{\}\)/.test(idbQuelle));
 p('Abbruch legt die Sätze zurück in den Stapel',
-  /zurueckInDenStapel\(posten\);/.test(idbQuelle));
+  /zurueckInDenStapel\(gescheitert\);/.test(idbQuelle));
 
 console.log('\n4 · Die Konsole');
 p('Kein Skriptfehler', fehler.length === 0, fehler.slice(0, 3).join(' | '));
