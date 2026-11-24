@@ -30536,7 +30536,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1642, inhalt: '3340fd91b86fd750', gebaut: '2026-11-24T20:40:45.980Z' };
+const Stand = { fassung: 1643, inhalt: '01e443fc081c1766', gebaut: '2026-11-24T20:45:54.764Z' };
 window.Stand = Stand;
 
 </script>
@@ -144056,6 +144056,17 @@ const Wolke = (() => {
             throw new Error(b.message || b.error || ('Fehler ' + a.status));
         return b;
     };
+    const geraeteZugangErreichbar = async () => {
+        const server = adresse();
+        if (!server)
+            return false;
+        const antwort = await fetch(server + '/konto/ich', {
+            credentials: 'omit', redirect: 'error', cache: 'no-store'
+        });
+        if (antwort.status !== 401)
+            return false;
+        return (await antwort.json())?.code === 'unauthorized';
+    };
     let schluessel = null;
     const schluesselAus = async (satz, salz) => {
         const roh = await crypto.subtle.importKey('raw', new TextEncoder().encode(satz), 'PBKDF2', false, ['deriveKey']);
@@ -144961,7 +144972,7 @@ const Wolke = (() => {
         geteiltSetzen, istGeteilt, freigeben, freigaben,
         veroeffentlichen, zurueckziehen,
         markeAnlegen, markenListe, markeWeg, geraeteListe, geraetWeg,
-        ruf, start };
+        ruf, geraeteZugangErreichbar, start };
 })();
 window.Wolke = Wolke;
 
@@ -145147,6 +145158,19 @@ const WolkeFenster = (() => {
         if (!Wolke.adresse()) {
             ziel.innerHTML = kasten('weg', '<b>Kein sicherer Sync-Server verbunden.</b> Die lokale App bleibt offline nutzbar. ' +
                 'Unter „Server: ändern“ eine HTTPS-Adresse eintragen.');
+            return;
+        }
+        if (location.protocol === 'redion-local:' || location.protocol === 'capacitor:') {
+            let erreichbar = false;
+            try {
+                erreichbar = await Wolke.geraeteZugangErreichbar();
+            }
+            catch { }
+            ziel.innerHTML = erreichbar
+                ? kasten('gut', '<b>Server erreichbar.</b> Die App erreicht die Geräteanmeldung. ' +
+                    (Wolke.angemeldet() ? 'Ob deine Daten ankommen, zeigt „Jetzt abgleichen“.'
+                        : 'Wähle „Mit einem Code von einem anderen Gerät“, um dich anzumelden.'))
+                : kasten('weg', '<b>Geräteanmeldung nicht erreichbar.</b> Prüfe die Serveradresse und die Internetverbindung.');
             return;
         }
         let stand = null;

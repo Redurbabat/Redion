@@ -78,6 +78,17 @@ const Wolke = (() => {
             throw new Error(b.message || b.error || ('Fehler ' + a.status));
         return b;
     };
+    const geraeteZugangErreichbar = async () => {
+        const server = adresse();
+        if (!server)
+            return false;
+        const antwort = await fetch(server + '/konto/ich', {
+            credentials: 'omit', redirect: 'error', cache: 'no-store'
+        });
+        if (antwort.status !== 401)
+            return false;
+        return (await antwort.json())?.code === 'unauthorized';
+    };
     let schluessel = null;
     const schluesselAus = async (satz, salz) => {
         const roh = await crypto.subtle.importKey('raw', new TextEncoder().encode(satz), 'PBKDF2', false, ['deriveKey']);
@@ -983,6 +994,6 @@ const Wolke = (() => {
         geteiltSetzen, istGeteilt, freigeben, freigaben,
         veroeffentlichen, zurueckziehen,
         markeAnlegen, markenListe, markeWeg, geraeteListe, geraetWeg,
-        ruf, start };
+        ruf, geraeteZugangErreichbar, start };
 })();
 window.Wolke = Wolke;

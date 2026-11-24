@@ -179,6 +179,19 @@ const WolkeFenster = (() => {
                 'Unter „Server: ändern“ eine HTTPS-Adresse eintragen.');
             return;
         }
+        if (location.protocol === 'redion-local:' || location.protocol === 'capacitor:') {
+            let erreichbar = false;
+            try {
+                erreichbar = await Wolke.geraeteZugangErreichbar();
+            }
+            catch { }
+            ziel.innerHTML = erreichbar
+                ? kasten('gut', '<b>Server erreichbar.</b> Die App erreicht die Geräteanmeldung. ' +
+                    (Wolke.angemeldet() ? 'Ob deine Daten ankommen, zeigt „Jetzt abgleichen“.'
+                        : 'Wähle „Mit einem Code von einem anderen Gerät“, um dich anzumelden.'))
+                : kasten('weg', '<b>Geräteanmeldung nicht erreichbar.</b> Prüfe die Serveradresse und die Internetverbindung.');
+            return;
+        }
         let stand = null;
         try {
             stand = await Wolke.ruf('/api/stand');

@@ -185,8 +185,8 @@ const WolkeFenster = (() => {
    * trotzdem liegen. Der erste Hinweis darauf war ein 503 tief im
    * Abgleich.
    *
-   * Der Weg ist lesend und braucht kein Token (kern.ts: das Lebenszeichen
-   * steht vor dem Tor). Jedes Ergebnis trägt ein WORT, nicht nur eine
+   * Die Website prüft den Speicher über /api/stand. Bei einer nativen App
+   * prüft der Knopf den App-Zugang zur Geräteanmeldung. Jedes Ergebnis trägt ein WORT, nicht nur eine
    * Farbe (§38), und wo etwas fehlt, steht der Befehl dabei — raten
    * müssen ist die Sorte Sackgasse, gegen die §47 geschrieben ist.
    * ------------------------------------------------------------------ */
@@ -207,6 +207,17 @@ const WolkeFenster = (() => {
       ziel.innerHTML = kasten('weg',
         '<b>Kein sicherer Sync-Server verbunden.</b> Die lokale App bleibt offline nutzbar. ' +
         'Unter „Server: ändern“ eine HTTPS-Adresse eintragen.');
+      return;
+    }
+    if (location.protocol === 'redion-local:' || location.protocol === 'capacitor:') {
+      let erreichbar = false;
+      try { erreichbar = await Wolke.geraeteZugangErreichbar(); }
+      catch { /* Der Weg kann am Netz oder der Serverkonfiguration scheitern. */ }
+      ziel.innerHTML = erreichbar
+        ? kasten('gut', '<b>Server erreichbar.</b> Die App erreicht die Geräteanmeldung. ' +
+          (Wolke.angemeldet() ? 'Ob deine Daten ankommen, zeigt „Jetzt abgleichen“.'
+            : 'Wähle „Mit einem Code von einem anderen Gerät“, um dich anzumelden.'))
+        : kasten('weg', '<b>Geräteanmeldung nicht erreichbar.</b> Prüfe die Serveradresse und die Internetverbindung.');
       return;
     }
     let stand: any = null;

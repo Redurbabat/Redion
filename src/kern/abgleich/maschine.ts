@@ -129,6 +129,18 @@ const Wolke = (() => {
     return b;
   };
 
+  // Die App erreicht den Konto-Endpunkt auch ohne Cloudflare-Websitzung.
+  // 401 ist hier die erwartete Redion-Antwort, weil der Test keine Anmeldung mitsendet.
+  const geraeteZugangErreichbar = async (): Promise<boolean> => {
+    const server = adresse();
+    if (!server) return false;
+    const antwort = await fetch(server + '/konto/ich', {
+      credentials: 'omit', redirect: 'error', cache: 'no-store'
+    });
+    if (antwort.status !== 401) return false;
+    return (await antwort.json())?.code === 'unauthorized';
+  };
+
   /* ========================================================================
    * 3 · DER SCHLÜSSEL — er bleibt hier
    * --------------------------------------------------------------------
@@ -1333,7 +1345,7 @@ const Wolke = (() => {
            geteiltSetzen, istGeteilt, freigeben, freigaben,
            veroeffentlichen, zurueckziehen,
            markeAnlegen, markenListe, markeWeg, geraeteListe, geraetWeg,
-           ruf, start };
+           ruf, geraeteZugangErreichbar, start };
 })();
 
 (window as any).Wolke = Wolke;
