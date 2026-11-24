@@ -806,6 +806,37 @@ const Store = (() => {
     };
     let timer = null;
     let eilig = false;
+    let speicherVoll = false;
+    let wiederholung = null;
+    const WIEDERHOLEN_MS = 15000;
+    const istVoll = (err) => {
+        const e = err;
+        return !!e && (e.speicherVoll === true || e.name === 'QuotaExceededError' ||
+            /quota/i.test(String(e.message ?? '')));
+    };
+    const meldeVoll = () => {
+        speicherVoll = true;
+        const n = pending.size;
+        warne('Der Speicher dieses Geräts ist voll: ' + n + ' Änderung' + (n === 1 ? ' ist' : 'en sind') +
+            ' noch nicht gesichert. Redion versucht es alle 15 Sekunden wieder. ' +
+            'Gib Platz frei oder lege eine Sicherung an — und schliesse dieses Fenster nicht, ' +
+            'solange diese Meldung steht.');
+        if (!wiederholung)
+            wiederholung = setTimeout(() => {
+                wiederholung = null;
+                flush().catch(() => { });
+            }, WIEDERHOLEN_MS);
+    };
+    const vollVorbei = () => {
+        if (!speicherVoll || pending.size)
+            return;
+        speicherVoll = false;
+        if (wiederholung) {
+            clearTimeout(wiederholung);
+            wiederholung = null;
+        }
+        warne('Der Speicher hat wieder Platz — alle Änderungen sind gesichert.');
+    };
     let naechsterSchritt = 1;
     let offenerSchritt = 0;
     const schrittEltern = new Map();
@@ -857,7 +888,10 @@ const Store = (() => {
         if ((schrittGroesse.get(w) || 0) > 1)
             eilig = true;
         clearTimeout(timer);
-        timer = setTimeout(flush, eilig ? 0 :
+        timer = setTimeout(() => {
+            flush().catch((err) => { if (!istVoll(err))
+                throw err; });
+        }, eilig ? 0 :
             ((typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.SCHREIB_PAUSE_MS : 400));
     };
     const flush = () => {
@@ -995,7 +1029,8 @@ const Store = (() => {
             if (zeichnen)
                 notify('fremd');
         };
-        const fertig = ganzOderGarNicht(posten).then((liste) => { nachSchreiben(liste); return undefined; }, async () => {
+        const fertig = ganzOderGarNicht(posten).then((liste) => { nachSchreiben(liste); vollVorbei(); return undefined; }, async (ersterFehler) => {
+            let voll = istVoll(ersterFehler);
             const schritte = new Map();
             posten.forEach(x => {
                 const liste = schritte.get(x.schritt);
@@ -1011,17 +1046,23 @@ const Store = (() => {
                     nachSchreiben(await ganzOderGarNicht(menge));
                     menge.forEach(x => gelandet.push(x.store + ':' + x.val.id));
                 }
-                catch {
+                catch (err) {
                     gescheitert.push(...menge);
+                    if (istVoll(err))
+                        voll = true;
                 }
             }
             if (gelandet.length)
                 meldeAnAndereFenster('geaendert', gelandet);
-            if (!gescheitert.length)
+            if (!gescheitert.length) {
+                vollVorbei();
                 return 'gemeldet';
+            }
             zurueckInDenStapel(gescheitert);
-            throw new Error(gescheitert.length + ' von ' + posten.length +
-                ' Sätzen liessen sich nicht schreiben — ihre Arbeitsschritte bleiben ganz im Stapel');
+            if (voll)
+                meldeVoll();
+            throw Object.assign(new Error(gescheitert.length + ' von ' + posten.length +
+                ' Sätzen liessen sich nicht schreiben — ihre Arbeitsschritte bleiben ganz im Stapel'), { speicherVoll: voll });
         });
         fertig.then((x) => { if (x !== 'gemeldet')
             meldeAnAndereFenster('geaendert', schluessel); }, () => { });
@@ -1032,7 +1073,14 @@ const Store = (() => {
         fertig.then(aufraeumen, aufraeumen);
         return fertig;
     };
-    window.addEventListener('beforeunload', () => { flush().catch(() => { }); });
+    window.addEventListener('beforeunload', (e) => {
+        const ungesichert = speicherVoll && pending.size > 0;
+        flush().catch(() => { });
+        if (ungesichert && typeof window.RedionDesktop === 'undefined') {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
     window.addEventListener('visibilitychange', () => { if (document.hidden)
         flush().catch(() => { }); });
     const search = (q, filter = {}) => {

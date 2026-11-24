@@ -1536,6 +1536,44 @@ const Store = (() => {
   let timer: any = null;
   let eilig = false;
 
+  /* ------------------------------------------------------------------------
+   * SPEICHER VOLL (E802)
+   * ------------------------------------------------------------------------
+   * Ist das Kontingent des Browsers erschöpft, scheitert jedes Schreiben mit
+   * `QuotaExceededError`. Die Sätze bleiben dann im Stapel — aber nur im
+   * Arbeitsspeicher. Vorher erschien dafür eine allgemeine Fehlermeldung,
+   * und wer das Fenster schloss, verlor alles, was noch wartete, ohne
+   * Rückfrage. Jetzt: eine Meldung, die sagt, was los ist und wie viel
+   * wartet; alle 15 Sekunden ein neuer Versuch; und im Browser eine
+   * Rückfrage beim Schliessen, solange etwas ungesichert ist.
+   * ----------------------------------------------------------------------*/
+  let speicherVoll = false;
+  let wiederholung: any = null;
+  const WIEDERHOLEN_MS = 15000;
+  const istVoll = (err: unknown): boolean => {
+    const e = err as { name?: unknown; message?: unknown; speicherVoll?: unknown } | null;
+    return !!e && (e.speicherVoll === true || e.name === 'QuotaExceededError' ||
+                   /quota/i.test(String(e.message ?? '')));
+  };
+  const meldeVoll = (): void => {
+    speicherVoll = true;
+    const n = pending.size;
+    warne('Der Speicher dieses Geräts ist voll: ' + n + ' Änderung' + (n === 1 ? ' ist' : 'en sind') +
+          ' noch nicht gesichert. Redion versucht es alle 15 Sekunden wieder. ' +
+          'Gib Platz frei oder lege eine Sicherung an — und schliesse dieses Fenster nicht, ' +
+          'solange diese Meldung steht.');
+    if (!wiederholung) wiederholung = setTimeout(() => {
+      wiederholung = null;
+      flush().catch(() => { /* meldet sich selbst wieder */ });
+    }, WIEDERHOLEN_MS);
+  };
+  const vollVorbei = (): void => {
+    if (!speicherVoll || pending.size) return;
+    speicherVoll = false;
+    if (wiederholung) { clearTimeout(wiederholung); wiederholung = null; }
+    warne('Der Speicher hat wieder Platz — alle Änderungen sind gesichert.');
+  };
+
   let naechsterSchritt = 1;
   let offenerSchritt = 0;
   /* Vereinigung der Schritte: Kennung → Vertreter. */
@@ -1583,7 +1621,11 @@ const Store = (() => {
     pending.set(k, { store, val, schritt: w });
     if ((schrittGroesse.get(w) || 0) > 1) eilig = true;
     clearTimeout(timer);
-    timer = setTimeout(flush, eilig ? 0 :
+    timer = setTimeout(() => {
+      /* Ein voller Speicher hat seine eigene Meldung (E802); alles andere
+         geht weiter als unbehandelte Ablehnung an die Fehleranzeige. */
+      flush().catch((err: unknown) => { if (!istVoll(err)) throw err; });
+    }, eilig ? 0 :
       ((typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.SCHREIB_PAUSE_MS : 400));
   };
 
@@ -1737,7 +1779,8 @@ const Store = (() => {
     /* Erst alles in einem Zug — der schnelle Weg, und der übliche. Geht das
        schief, ist nichts geschrieben; dann Schritt für Schritt, damit ein
        schlechter Schritt die guten nicht aufhält. */
-    const fertig: Promise<unknown> = ganzOderGarNicht(posten).then((liste) => { nachSchreiben(liste); return undefined; }, async () => {
+    const fertig: Promise<unknown> = ganzOderGarNicht(posten).then((liste) => { nachSchreiben(liste); vollVorbei(); return undefined; }, async (ersterFehler: unknown) => {
+      let voll = istVoll(ersterFehler);
       const schritte = new Map<number, Posten[]>();
       posten.forEach(x => {
         const liste = schritte.get(x.schritt);
@@ -1749,16 +1792,18 @@ const Store = (() => {
         try {
           nachSchreiben(await ganzOderGarNicht(menge));
           menge.forEach(x => gelandet.push(x.store + ':' + x.val.id));
-        } catch { gescheitert.push(...menge); }
+        } catch (err) { gescheitert.push(...menge); if (istVoll(err)) voll = true; }
       }
       /* Was gelandet ist, erfahren die anderen Fenster auch dann, wenn ein
          anderer Schritt hängen blieb — sonst schreiben sie ihren alten
          Stand über einen Satz, der längst auf der Platte steht. */
       if (gelandet.length) meldeAnAndereFenster('geaendert', gelandet);
-      if (!gescheitert.length) return 'gemeldet';
+      if (!gescheitert.length) { vollVorbei(); return 'gemeldet'; }
       zurueckInDenStapel(gescheitert);
-      throw new Error(gescheitert.length + ' von ' + posten.length +
-                      ' Sätzen liessen sich nicht schreiben — ihre Arbeitsschritte bleiben ganz im Stapel');
+      if (voll) meldeVoll();
+      throw Object.assign(new Error(gescheitert.length + ' von ' + posten.length +
+                      ' Sätzen liessen sich nicht schreiben — ihre Arbeitsschritte bleiben ganz im Stapel'),
+                      { speicherVoll: voll });
     });
 
     /* Und die anderen Fenster wissen es jetzt auch. Siehe `nachbarn.js`:
@@ -1782,7 +1827,16 @@ const Store = (() => {
   /* Vor dem Schließen des Tabs alles rausschreiben. Die Ablehnung ist hier
      nicht mehr zu gebrauchen — das Fenster schliesst; gemeldet hat flush
      selbst schon über den Reporter. */
-  window.addEventListener('beforeunload', () => { flush().catch(() => {}); });
+  window.addEventListener('beforeunload', (e: BeforeUnloadEvent) => {
+    const ungesichert = speicherVoll && pending.size > 0;
+    flush().catch(() => {});
+    /* Rückfrage nur im Browser: in der Windows-App hält ein abgelehntes
+       Entladen das Fenster ohne Dialog fest (kein `will-prevent-unload`). */
+    if (ungesichert && typeof (window as any).RedionDesktop === 'undefined') {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
   /* KEIN EIGENER `pagehide`-ZUHÖRER (E800, Nachtrag E801). E800 hatte einen
      gesetzt; `test189` zählt die `pagehide`-Zuhörer und erlaubt einen, und
      nötig war er nicht: `visibilitychange` mit `document.hidden` kommt in

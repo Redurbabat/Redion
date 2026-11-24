@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-772 Entscheidungen, E1 bis E801 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+773 Entscheidungen, E1 bis E802 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -858,6 +858,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E793** — Zugriff ohne Laptop ausschliesslich kostenlos
 * **E800** — Arbeitsschritte landen ganz oder gar nicht (24. November 2026, Redur: „Mache mit der grosste anderung“, im Fragebogen „Transaktionen“ und „Nur Pflicht-Datentests“): was eine Handlung synchron schreibt, ist ein Schritt; ein Schritt kommt ganz oder gar nicht auf die Platte; Umstellungen werden sofort geschrieben, Tippen behält die Pause (`test644`); der zusätzliche `pagehide`-Zuhörer wurde mit E801 wieder entfernt
 * **E801** — Zwei Fenster überschreiben einander nicht (24. November 2026, Redur: „Weiter ohne pause“, nach E800 der nächste Punkt der Roadmap, B2): jeder Satz trägt AUF DER PLATTE eine Versionsnummer `rev`; `flush` liest und schreibt in einer Transaktion und führt zusammen, wenn ein anderes Fenster dazwischen geschrieben hat; eine wartende Änderung wird nicht durch Fremdes ersetzt; die Zahl reist weder in Sicherung noch Abgleich (`test645`)
+* **E802** — Speicher voll: nichts geht still verloren (24. November 2026, Redur: „Weiter“, B10 der Roadmap): bei `QuotaExceededError` eine Meldung mit der Zahl ungesicherter Änderungen, ein neuer Versuch alle 15 Sekunden ohne neue Eingabe, im Browser eine Rückfrage beim Schliessen; die Windows-App bekommt keine Rückfrage, weil sie das Fenster dort ohne Dialog festhielte (`test646`)
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71191,4 +71192,57 @@ unberührt.
 gegen E800 rot mit 10 von 18), `test644`, `test96`, `test100`, `test105`,
 `test109`, `test72`, `test87`, `test189`, `test279`, `test316`, `test326`,
 `test333`, `test335`, `test390`, `test643`. Kein voller Lauf.
+
+## E802 · Speicher voll: nichts geht still verloren
+
+**Wer und wann.** Redur, 24. November 2026: „Weiter" — B10 der Roadmap aus
+der Notion-Analyse. Notion nennt Speicherkontingente als einen Grund, warum
+es IndexedDB auf dem Desktop verlassen hat; Redion bleibt bei IndexedDB
+(§10) und muss deshalb mit einem vollen Kontingent umgehen können.
+
+**Was vorher geschah** (gemessen mit `test646` gegen E801, 4 von 10): Ein
+Schreibvorgang scheiterte mit `QuotaExceededError`, die Sätze blieben im
+Stapel — aber nur im Arbeitsspeicher. Gezeigt wurde eine allgemeine
+Fehlermeldung ohne Angabe, wie viel wartet. Ein neuer Versuch kam erst mit
+der nächsten Eingabe. Und das Fenster liess sich ohne Rückfrage schliessen;
+danach war alles Wartende weg.
+
+**Was entschieden wurde.**
+- `flush` erkennt einen vollen Speicher (`QuotaExceededError`, auch im
+  Rückfall Schritt für Schritt) und ruft `meldeVoll`: über `Store.beiWarnung`
+  erscheint ein Streifen mit der Zahl der ungesicherten Änderungen und der
+  Bitte, das Fenster offen zu lassen.
+- Alle 15 Sekunden ein neuer Versuch, ohne dass der Nutzer etwas tun muss.
+  Gelingt er und wartet nichts mehr, sagt ein Streifen „wieder Platz — alle
+  Änderungen sind gesichert".
+- Im Browser fragt `beforeunload` nach, solange etwas ungesichert ist — und
+  nur dann.
+- Die Ablehnung des Takt-Schreibens geht bei vollem Speicher nicht mehr
+  zusätzlich als allgemeiner Fehler an die Fehleranzeige; jede andere
+  Ablehnung weiterhin.
+
+**Die Alternative und warum nicht.** Ungesichertes in `localStorage`
+retten: §10 und §47 verbieten es, und dessen Kontingent ist meist dasselbe
+oder kleiner. Automatisch eine `.redion`-Sicherung herunterladen: das wäre
+ein Download ohne Auslöser des Nutzers (§21-Geist), und auf dem iPhone
+nicht ohne Rückfrage möglich.
+
+**Was es kostet.** In der Windows-App gibt es KEINE Rückfrage beim
+Schliessen: Electron hält ein abgelehntes Entladen ohne Dialog fest, solange
+der Hauptprozess `will-prevent-unload` nicht behandelt — das Fenster wäre
+nicht mehr zu schliessen. Dort bleibt es beim Streifen. Das steht als
+offene Lücke **L268** da (ein Dialog im Hauptprozess wäre der Weg).
+
+**Ein Fund über das Werkzeug.** `Storage.overrideQuotaForOrigin` (CDP)
+wirkt nur, wenn es VOR dem ersten Besuch einer Herkunft gesetzt ist; ein
+späteres Absenken nahm Chromium in vier Sonden nicht an (3 MB kamen
+durch). Und eine Seite aus lauter „x" passte ins kleine Kontingent, weil
+die Ablage komprimiert. `test646` misst deshalb zuerst in einem
+Wegwerf-Kontext, wie viel der Startbestand braucht, und schreibt
+zufällige Zeichen.
+
+**Geprüft.** `test646` (14 Zusagen; gegen E801 rot mit 4 von 10, und dort
+war das Fenster nach §2 schon zu), `test96`, `test100`, `test105`,
+`test109`, `test189`, `test644`, `test645`, `npm run typecheck`. Kein voller
+Lauf.
 

@@ -8874,6 +8874,21 @@ Offen, gefunden beim Lesen derselben Seiten:
    Dose plombierbar). Das Bild der AP-Steckdose war im Scan nicht sicher zu
    lesen; geraten wird nicht.
 
+
+## L268 · Windows-App: kein Halt beim Schliessen, wenn der Speicher voll ist — 24. November 2026
+
+Seit E802 fragt Redion im Browser beim Schliessen nach, solange wegen eines
+vollen Speichers Änderungen ungesichert im Arbeitsspeicher liegen. In der
+Windows-App fragt es NICHT: Electron hält ein abgelehntes `beforeunload`
+ohne Dialog fest, solange der Hauptprozess `will-prevent-unload` nicht
+behandelt — das Fenster liesse sich dann gar nicht mehr schliessen. Dort
+bleibt es beim Streifen „Der Speicher dieses Geräts ist voll …".
+
+Der Weg: `windows/main.cjs` behandelt `will-prevent-unload` mit einem
+eigenen `dialog.showMessageBoxSync` („Bleiben" / „Trotzdem schliessen") und
+ruft bei „Trotzdem" `event.preventDefault()`. Danach kann `indexdb.ts` die
+Ausnahme für `RedionDesktop` fallen lassen. Prüfen in der Windows-Smoke-Reihe
+(`pruefungen/windows-app-smoke.mts`), nicht im Container.
 ## L254 · „Alle Prüfläufe" in der CI kann nicht fertig werden — GESCHLOSSEN (E745) — 11. Oktober 2026
 
 **Gemessen** über die Schnittstelle von GitHub, nicht vermutet: die zwei
@@ -11231,8 +11246,8 @@ eine Zeile im Stilblatt (L206).
 die sagt, was AUFHÖRT, und nicht, was folgt. Gefolgt sind ihr damals
 siebenundsechzig Einträge.)*
 
-**Gemessen am 1. November 2026 (mit L264), nachgezählt statt fortgeschrieben:** die
-Datei führt 161 Lücken, 103 offene und 58 geschlossene. Der Befehl dazu ist
+**Gemessen am 24. November 2026 (mit L268), nachgezählt statt fortgeschrieben:** die
+Datei führt 162 Lücken, 104 offene und 58 geschlossene. Der Befehl dazu ist
 `node pruefungen/lauf/test549.mts` — er zählt sie und sagt die drei Zahlen.
 
 **Vorher standen 33 offene Lücken unterhalb von „Anhang B · Was erledigt
