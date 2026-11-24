@@ -71417,3 +71417,10 @@ Strg+F im Browser sucht, findet nur die gezeigten; Redions eigene Suche
 alle 54 Läufe, die die Bibliothek berühren, sowie `test105` und `test109`.
 Bilder am Rechner und am Telefon (§55.3). Kein voller Lauf.
 
+**Nachtrag, Ergebnis der Nachbarläufe.** Von den Läufen, die die Bibliothek
+berühren, waren 13 rot. Zwölf davon sind auf dem Grundstand `2d6038e`
+genauso rot (34, 238, 272, 341, 351, 388, 493, 560, 581, 585, 603, 623).
+Der dreizehnte, `test67`, ist einzeln grün (65 von 65) und auch zusammen mit
+`test54`; er war im Sammellauf wackelig. E806 hat also keinen roten Lauf
+dazugebracht.
+
