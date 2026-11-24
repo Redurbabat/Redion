@@ -28964,6 +28964,95 @@ body[data-bewegung="ruhig"]:not([data-ui-shell="glass-wheel"]) #page > .pg-tools
   body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel{border-color:var(--text); box-shadow:none}
 }
 
+#studio-window-menu[hidden] { display: none; }
+
+/* Windows legt die echten Fensterknöpfe über die erste Zeile. Nur diese
+   Zeile belegt die Overlay-Höhe. PDF-Reiter und Papier beginnen darunter. */
+html[data-windows-titelleiste] {
+  --windows-kopf: env(titlebar-area-height, 48px);
+  --windows-kopf-flaeche: #202124;
+  --windows-kopf-text: #f5f4f2;
+}
+html[data-windows-titelleiste][data-theme="light"] {
+  --windows-kopf-flaeche: #f3f1ee;
+  --windows-kopf-text: #252423;
+}
+html[data-windows-titelleiste] body #main > #studio-bar {
+  display: flex;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  box-sizing: border-box;
+  height: var(--windows-kopf);
+  min-height: 0;
+  padding: 0 calc(100% - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100%) + var(--space-2))
+    0 calc(env(titlebar-area-x, 0px) + var(--space-2));
+  gap: var(--space-1);
+  background: var(--windows-kopf-flaeche);
+  color: var(--windows-kopf-text);
+  border-color: var(--line);
+  border-radius: 0;
+  app-region: drag;
+}
+html[data-windows-titelleiste] #studio-bar button {
+  app-region: no-drag;
+  color: inherit;
+  height: min(38px, calc(var(--windows-kopf) - 4px));
+  min-height: 0;
+}
+html[data-windows-titelleiste] #studio-bar button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+html[data-windows-titelleiste] #studio-bar .studio-icon {
+  flex: none;
+  width: 38px;
+  min-width: 0;
+}
+html[data-windows-titelleiste] #studio-bar .studio-monogram {
+  width: 30px;
+  height: min(30px, calc(var(--windows-kopf) - 6px));
+  background-size: contain;
+}
+html[data-windows-titelleiste] #studio-bar .studio-search {
+  flex: 0 1 340px;
+  min-width: 0;
+  margin-inline-end: auto;
+}
+html[data-windows-titelleiste] body[data-dokument="an"] #main {
+  grid-template-rows: var(--windows-kopf) auto minmax(0, 1fr) !important;
+}
+html[data-windows-titelleiste] body[data-dokument="an"] #main > #studio-bar {
+  display: flex !important;
+}
+html[data-windows-titelleiste] body[data-dokument="an"] #main > #reiterleiste {
+  grid-row: 2 !important;
+}
+html[data-windows-titelleiste] body[data-dokument="an"] #main > #scroll {
+  grid-row: 3 !important;
+}
+html[data-windows-titelleiste] body:is(.fokus, [data-dokument="an"]) #studio-bar > :not(#studio-window-menu) {
+  display: none;
+}
+@media (max-width: 760px) {
+  html[data-windows-titelleiste] #studio-bar > :not(#studio-window-menu, #studio-search) {
+    display: none;
+  }
+  html[data-windows-titelleiste] #studio-bar .studio-search > :is(kbd, span:not([data-sym])) {
+    display: none;
+  }
+  html[data-windows-titelleiste] #studio-bar .studio-search {
+    flex-basis: 38px;
+    justify-content: center;
+  }
+}
+@media (forced-colors: active) {
+  html[data-windows-titelleiste] body #main > #studio-bar {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
+}
+
 </style>
 
 <!-- =========================================================================
@@ -29209,7 +29298,8 @@ body[data-bewegung="ruhig"]:not([data-ui-shell="glass-wheel"]) #page > .pg-tools
       <span class="studio-monogram" aria-hidden="true"></span><span>redion<span class="studio-wordmark">STUDIO</span></span>
     </button>
     <button id="studio-nav" class="studio-icon" aria-label="Navigation kompakt anzeigen" aria-pressed="false" title="Navigation kompakt anzeigen"><span data-sym="panelL"></span></button>
-    <button id="studio-search" class="studio-search"><span data-sym="search"></span><span>Suchen &amp; finden</span><kbd>Strg P</kbd></button>
+    <button id="studio-window-menu" class="studio-icon" type="button" hidden aria-haspopup="menu" aria-label="App-Menü öffnen" title="App-Menü öffnen"><span data-sym="dots" aria-hidden="true"></span></button>
+    <button id="studio-search" class="studio-search" aria-label="Suchen &amp; finden"><span data-sym="search"></span><span>Suchen &amp; finden</span><kbd>Strg P</kbd></button>
     <button id="studio-theme" class="studio-icon studio-gestirn" role="switch" aria-checked="true" aria-label="Dunkles Schema" aria-keyshortcuts="Control+Shift+L" title="Zum hellen Schema wechseln (Strg ⇧ L)"><span class="studio-gestirn-fenster" aria-hidden="true"><span class="studio-gestirn-sonne" data-sym="sun"></span><span class="studio-gestirn-mond" data-sym="moon"></span></span></button>
     <button id="studio-import" class="studio-icon studio-import" data-studio-import aria-label="PDF öffnen" aria-describedby="studio-import-wort" title="PDF öffnen"><span data-sym="upload"></span><span class="wort" id="studio-import-wort">PDF öffnen</span></button>
     <button id="studio-create" class="studio-icon" aria-label="Neu erstellen" title="Neu erstellen"><span data-sym="plus"></span></button>
@@ -30446,7 +30536,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1640, inhalt: 'c5a7fb51b432c5ec', gebaut: '2026-11-24T20:04:27.536Z' };
+const Stand = { fassung: 1642, inhalt: '3340fd91b86fd750', gebaut: '2026-11-24T20:40:45.980Z' };
 window.Stand = Stand;
 
 </script>
@@ -162074,10 +162164,36 @@ const StudioSchale = (() => {
         if (knopf)
             knopf.title = name;
     };
+    const fensterkopf = () => {
+        const desktop = globalThis.RedionDesktop;
+        const overlay = navigator.windowControlsOverlay;
+        const menu = document.querySelector('#studio-window-menu');
+        if (!desktop?.windowChrome || !overlay || !menu)
+            return;
+        const wurzel = document.documentElement;
+        const groesse = () => {
+            wurzel.toggleAttribute('data-windows-titelleiste', overlay.visible);
+            menu.hidden = !overlay.visible;
+        };
+        const thema = () => {
+            const farbe = wurzel.dataset.theme === 'light' ? 'light' : 'dark';
+            void desktop.windowTheme?.(farbe).catch(() => { });
+        };
+        overlay.addEventListener('geometrychange', groesse);
+        new MutationObserver(thema).observe(wurzel, { attributeFilter: ['data-theme'] });
+        menu.addEventListener('click', () => {
+            const anker = menu.getBoundingClientRect();
+            void desktop.windowMenu?.(Math.round(anker.left), Math.round(anker.bottom))
+                .catch(() => UI.toast('Das App-Menü konnte nicht geöffnet werden.'));
+        });
+        groesse();
+        thema();
+    };
     const start = () => {
         if (gestartet)
             return;
         gestartet = true;
+        fensterkopf();
         einstellen(Store.getMeta(META, false) === true);
         const gespeichert = Store.getMeta(BREITE, null);
         const zahl = typeof gespeichert === 'number' ? gespeichert

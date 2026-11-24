@@ -3,6 +3,9 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('RedionDesktop', Object.freeze({
   platform: 'windows',
+  windowChrome: process.platform === 'win32',
+  windowTheme: (theme: 'light' | 'dark') => ipcRenderer.invoke('redion:fenster:thema', theme),
+  windowMenu: (x: number, y: number) => ipcRenderer.invoke('redion:fenster:menue', x, y),
   automationSupported: process.platform === 'win32',
   automationState: () => ipcRenderer.invoke('redion:automation:state'),
   automationOpenPackage: () => ipcRenderer.invoke('redion:automation:package'),

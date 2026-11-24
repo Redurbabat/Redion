@@ -4,7 +4,7 @@
  * Start-menu entry and installer. The renderer uses the existing Redion UI.
  * No Node APIs reach notes or the editor; all app files are read-only.
  */
-const { app, BrowserWindow, Menu, protocol, net, shell, dialog, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, Menu, protocol, net, shell, dialog, ipcMain, screen, nativeTheme } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
@@ -157,6 +157,44 @@ if (!lock) {
     if (!trustedSender(event, mainWindow?.webContents)) throw new Error('Dateizugriff nicht erlaubt.');
     return serial(() => fn(...args));
   });
+  // Nur der lokale Hauptframe darf die Darstellung ändern oder das App-Menü öffnen.
+  let chromeTheme = null;
+  const windowOverlay = () => {
+    const forced = nativeTheme.shouldUseHighContrastColors || nativeTheme.inForcedColorsMode;
+    const dark = forced || !chromeTheme ? nativeTheme.shouldUseDarkColors : chromeTheme === 'dark';
+    return {
+      color: forced ? (dark ? '#000000' : '#ffffff') : (dark ? '#202124' : '#f3f1ee'),
+      symbolColor: dark ? '#f5f4f2' : '#252423',
+      height: 48
+    };
+  };
+  if (process.platform === 'win32') {
+    const refreshOverlay = () => {
+      if (mainWindow && !mainWindow.isDestroyed()) mainWindow.setTitleBarOverlay(windowOverlay());
+    };
+    const chromeAction = (channel, action) => ipcMain.handle(channel, (event, ...args) => {
+      if (!trustedSender(event, mainWindow?.webContents)) throw new Error('Fensterzugriff nicht erlaubt.');
+      return action(...args);
+    });
+    nativeTheme.on('updated', refreshOverlay);
+    chromeAction('redion:fenster:thema', thema => {
+      if (thema !== 'light' && thema !== 'dark') throw new Error('Ungültiges Fensterthema.');
+      chromeTheme = thema;
+      refreshOverlay();
+    });
+    chromeAction('redion:fenster:menue', (x, y) => {
+      if (!Number.isSafeInteger(x) || !Number.isSafeInteger(y) || x < 0 || y < 0)
+        throw new Error('Ungültige Menüposition.');
+      const zoom = mainWindow.webContents.getZoomFactor();
+      const { width, height } = mainWindow.getContentBounds();
+      Menu.getApplicationMenu()?.popup({
+        window: mainWindow,
+        x: Math.min(width - 1, Math.round(x * zoom)),
+        y: Math.min(height - 1, Math.round(y * zoom))
+      });
+    });
+  }
+
   // Ziel aus der Sprungliste: der Hauptprozess merkt es, bis die App es abholt.
   // Nur Bezeichner aus der festen Liste, nie eine Adresse oder ein Pfad.
   let pendingDestination = destinationFromArgs(process.argv);
@@ -424,7 +462,11 @@ if (!lock) {
       minWidth: 860,
       minHeight: 580,
       backgroundColor: '#191a1e',
-      autoHideMenuBar: false,
+      ...(process.platform === 'win32' ? {
+        titleBarStyle: 'hidden',
+        titleBarOverlay: windowOverlay(),
+        autoHideMenuBar: true
+      } : { autoHideMenuBar: false }),
       show: false,
       icon,
       webPreferences: {

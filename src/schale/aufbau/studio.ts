@@ -105,9 +105,43 @@ const StudioSchale = (() => {
     knopf?.setAttribute('aria-label', name);
     if (knopf) knopf.title = name;
   };
+  type Fenster = {
+    windowChrome?: boolean;
+    windowTheme?: (theme: 'light' | 'dark') => Promise<void>;
+    windowMenu?: (x: number, y: number) => Promise<void>;
+  };
+  const fensterkopf = (): void => {
+    const desktop = (globalThis as typeof globalThis & { RedionDesktop?: Fenster }).RedionDesktop;
+    const overlay = (navigator as Navigator & {
+      windowControlsOverlay?: EventTarget & { visible: boolean };
+    }).windowControlsOverlay;
+    const menu = document.querySelector<HTMLButtonElement>('#studio-window-menu');
+    if (!desktop?.windowChrome || !overlay || !menu) return;
+
+    const wurzel = document.documentElement;
+    const groesse = (): void => {
+      wurzel.toggleAttribute('data-windows-titelleiste', overlay.visible);
+      menu.hidden = !overlay.visible;
+    };
+    const thema = (): void => {
+      const farbe = wurzel.dataset.theme === 'light' ? 'light' : 'dark';
+      void desktop.windowTheme?.(farbe).catch(() => { /* Die Systemfarbe bleibt verfügbar. */ });
+    };
+    overlay.addEventListener('geometrychange', groesse);
+    new MutationObserver(thema).observe(wurzel, { attributeFilter: ['data-theme'] });
+    menu.addEventListener('click', () => {
+      const anker = menu.getBoundingClientRect();
+      void desktop.windowMenu?.(Math.round(anker.left), Math.round(anker.bottom))
+        .catch(() => UI.toast('Das App-Menü konnte nicht geöffnet werden.'));
+    });
+    groesse();
+    thema();
+  };
+
   const start = (): void => {
     if (gestartet) return;
     gestartet = true;
+    fensterkopf();
     einstellen(Store.getMeta(META, false) === true);
     /* Nur eine wirklich gemerkte Breite wird geschrieben; sonst gilt die
        Vorgabe der CSS (E716). Bis dahin schrieb der Start immer 184 und

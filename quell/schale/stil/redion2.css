@@ -269,3 +269,92 @@ body[data-bewegung="ruhig"]:not([data-ui-shell="glass-wheel"]) #page > .pg-tools
 @media (forced-colors:active),(prefers-contrast:more){
   body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel{border-color:var(--text); box-shadow:none}
 }
+
+#studio-window-menu[hidden] { display: none; }
+
+/* Windows legt die echten Fensterknöpfe über die erste Zeile. Nur diese
+   Zeile belegt die Overlay-Höhe. PDF-Reiter und Papier beginnen darunter. */
+html[data-windows-titelleiste] {
+  --windows-kopf: env(titlebar-area-height, 48px);
+  --windows-kopf-flaeche: #202124;
+  --windows-kopf-text: #f5f4f2;
+}
+html[data-windows-titelleiste][data-theme="light"] {
+  --windows-kopf-flaeche: #f3f1ee;
+  --windows-kopf-text: #252423;
+}
+html[data-windows-titelleiste] body #main > #studio-bar {
+  display: flex;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  box-sizing: border-box;
+  height: var(--windows-kopf);
+  min-height: 0;
+  padding: 0 calc(100% - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100%) + var(--space-2))
+    0 calc(env(titlebar-area-x, 0px) + var(--space-2));
+  gap: var(--space-1);
+  background: var(--windows-kopf-flaeche);
+  color: var(--windows-kopf-text);
+  border-color: var(--line);
+  border-radius: 0;
+  app-region: drag;
+}
+html[data-windows-titelleiste] #studio-bar button {
+  app-region: no-drag;
+  color: inherit;
+  height: min(38px, calc(var(--windows-kopf) - 4px));
+  min-height: 0;
+}
+html[data-windows-titelleiste] #studio-bar button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+html[data-windows-titelleiste] #studio-bar .studio-icon {
+  flex: none;
+  width: 38px;
+  min-width: 0;
+}
+html[data-windows-titelleiste] #studio-bar .studio-monogram {
+  width: 30px;
+  height: min(30px, calc(var(--windows-kopf) - 6px));
+  background-size: contain;
+}
+html[data-windows-titelleiste] #studio-bar .studio-search {
+  flex: 0 1 340px;
+  min-width: 0;
+  margin-inline-end: auto;
+}
+html[data-windows-titelleiste] body[data-dokument="an"] #main {
+  grid-template-rows: var(--windows-kopf) auto minmax(0, 1fr) !important;
+}
+html[data-windows-titelleiste] body[data-dokument="an"] #main > #studio-bar {
+  display: flex !important;
+}
+html[data-windows-titelleiste] body[data-dokument="an"] #main > #reiterleiste {
+  grid-row: 2 !important;
+}
+html[data-windows-titelleiste] body[data-dokument="an"] #main > #scroll {
+  grid-row: 3 !important;
+}
+html[data-windows-titelleiste] body:is(.fokus, [data-dokument="an"]) #studio-bar > :not(#studio-window-menu) {
+  display: none;
+}
+@media (max-width: 760px) {
+  html[data-windows-titelleiste] #studio-bar > :not(#studio-window-menu, #studio-search) {
+    display: none;
+  }
+  html[data-windows-titelleiste] #studio-bar .studio-search > :is(kbd, span:not([data-sym])) {
+    display: none;
+  }
+  html[data-windows-titelleiste] #studio-bar .studio-search {
+    flex-basis: 38px;
+    justify-content: center;
+  }
+}
+@media (forced-colors: active) {
+  html[data-windows-titelleiste] body #main > #studio-bar {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
+}
