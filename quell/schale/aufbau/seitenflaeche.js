@@ -329,7 +329,7 @@ const Seitenflaeche = (() => {
             if (!k.width || !k.height)
                 return;
             const rand = 24;
-            const leisteHoch = 84;
+            const leisteHoch = 116;
             const nutzHoehe = Math.max(120, k.height - leisteHoch - rand);
             const z = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.min(1, (k.width - rand * 2) / w, (nutzHoehe - rand) / h)));
             sicht = {
@@ -541,12 +541,72 @@ const Seitenflaeche = (() => {
         };
         const MALWERKZEUGE = ['stift', 'linie', 'pfeil', 'rechteck', 'ellipse'];
         const maltGerade = () => MALWERKZEUGE.includes(werkzeug) || werkzeug === 'radierer';
+        const blockEinsetzen = (art) => {
+            const block = Store.addBlock(p.id, art, { text: '' });
+            aufFlaeche(block);
+        };
+        const menueEintrag = (liste, name, zeichen, ausfuehren) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            const symbol = document.createElement('span');
+            symbol.dataset.sym = zeichen;
+            symbol.setAttribute('aria-hidden', 'true');
+            b.append(symbol, document.createTextNode(name));
+            b.addEventListener('click', () => {
+                leiste.schliesse();
+                ausfuehren();
+            });
+            liste.append(b);
+        };
+        const aufsatzMenue = (id) => {
+            if (id !== 'elektro' && id !== 'vorlagen')
+                return null;
+            const liste = document.createElement('div');
+            liste.className = 'gfx-tb-liste pg-fl-galerieliste';
+            if (id === 'elektro') {
+                menueEintrag(liste, 'Elektrotechnik öffnen', 'bolt', () => Elektrostart.oeffne());
+                for (const gruppe of Register.menueband.inReiter('elektro')) {
+                    const titel = document.createElement('h3');
+                    titel.textContent = gruppe.gruppe;
+                    liste.append(titel);
+                    for (const e of gruppe.eintraege) {
+                        if (e.zeigen && !e.zeigen())
+                            continue;
+                        const name = e.id === 'e-plan' ? 'Schaltplan und Simulation' : e.name;
+                        menueEintrag(liste, name, e.zeichen, () => e.id === 'e-plan' ? blockEinsetzen('schaltplan') : e.tun());
+                    }
+                }
+            }
+            else {
+                menueEintrag(liste, 'Textblock', 'inkText', () => blockEinsetzen('text'));
+                menueEintrag(liste, 'Gedankenkarte', 'sparkle', () => blockEinsetzen('mindmap'));
+                menueEintrag(liste, 'Whiteboard', 'formRect', () => blockEinsetzen('whiteboard'));
+            }
+            Register.symbole.fuelle(liste);
+            return liste;
+        };
         const leiste = GfxToolbar.erstelle({
             klasse: 'pg-fl-tools',
             beschriftung: 'Werkzeuge der Fläche',
             werkzeuge: Register.werkzeuge.auswahl(['zeiger', 'hand', 'verbindung', 'stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'notiz', 'radierer']),
             aktiv: 'zeiger',
+            galerie: {
+                schnell: ['zeiger', 'hand', 'verbindung', 'elektro'],
+                karten: [
+                    { id: 'notiz', knoepfe: ['notiz'] },
+                    { id: 'stifte', knoepfe: ['stift', 'radierer'] },
+                    { id: 'formen', knoepfe: ['formen'] },
+                    { id: 'diagramme', knoepfe: ['diagramme'] },
+                    { id: 'vorlagen', knoepfe: ['vorlagen'] }
+                ],
+                werkzeugMenues: { formen: ['rechteck', 'ellipse', 'linie', 'pfeil'] }
+            },
             aktionen: [
+                { id: 'elektro', name: 'Elektro', sym: 'bolt', menue: true, kapsel: 'werkzeuge' },
+                { id: 'formen', name: 'Formen', sym: 'formRect', menue: true, kapsel: 'werkzeuge' },
+                { id: 'diagramme', name: 'Gedankenkarte einfügen', sym: 'sparkle', kapsel: 'werkzeuge' },
+                { id: 'vorlagen', name: 'Blockvorlagen', sym: 'table', menue: true, kapsel: 'werkzeuge' },
+                { id: 'seitenlink', name: 'Seitenlink kopieren', sym: 'link' },
                 { id: 'farbe', name: 'Farbe', titel: 'Farbe der Formen', sym: 'palette',
                     menue: true, kapsel: 'werkzeuge' },
                 { id: 'zurueck', name: 'Rückgängig', titel: 'Rückgängig (Strg + Z)', sym: 'undo', gesperrt: true },
@@ -561,8 +621,8 @@ const Seitenflaeche = (() => {
             ],
             zusatz: { groesser: massstabZeigen },
             menue: (id) => {
-                if (id !== 'farbe')
-                    return null;
+                if (id !== 'farbe' && id !== 'formen')
+                    return aufsatzMenue(id);
                 const kasten = document.createElement('div');
                 kasten.className = 'gfx-tb-farben';
                 for (const [wert, name] of GfxShapes.PALETTE) {
@@ -581,6 +641,10 @@ const Seitenflaeche = (() => {
             },
             aufWerkzeug: werkzeugWechseln,
             aufAktion: (id) => {
+                if (id === 'diagramme')
+                    blockEinsetzen('mindmap');
+                if (id === 'seitenlink')
+                    Register.aktionen.tun('link', p, { kontext: 'seite' });
                 if (id === 'zurueck')
                     schrittZurueck();
                 if (id === 'vor')

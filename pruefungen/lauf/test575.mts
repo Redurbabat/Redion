@@ -441,6 +441,7 @@ console.log('\n9 · Am Telefon');
 const { pg: handy, ids: ids2 } = await bauen(390, 844);
 const masse = await handy.evaluate(() =>
   [...document.querySelectorAll<HTMLElement>('.pg-flaeche .gfx-tb-sockel [data-wz]')]
+    .filter(b => b.offsetParent !== null)
     .map(b => { const r = b.getBoundingClientRect();
       return { id: b.dataset['wz'] ?? '?', w: Math.round(r.width), h: Math.round(r.height) }; }));
 p('Die Fläche hat Werkzeuge am Telefon', masse.length >= 6, String(masse.length));
@@ -649,6 +650,36 @@ await plan.mouse.click(linksJetzt.x, linksJetzt.y);
 await plan.keyboard.press('Delete');
 stand = await planDaten() ?? [];
 p('Beim Löschen einer Form verschwindet ihre Verbindung mit', !stand.some((s: any) => s.id === 'links' || s.art === 'verbindung'));
+console.log('\n13 · Werkzeuggalerie und Elektro');
+const st = planFlaeche.locator('.gfx-tb-kartenfenster');
+const zeiger = planFlaeche.getByRole('button', { name: 'Auswählen', exact: true });
+const zeigerVor = await zeiger.boundingBox();
+await planFlaeche.getByRole('button', { name: 'Weitere Werkzeuge', exact: true }).click();
+await st.evaluate(el => new Promise<void>(ok => {
+  if (el.scrollLeft > 2) ok();
+  else el.addEventListener('scroll', () => ok(), { once: true });
+}));
+p('Weiter blättert die grossen Vorschauen', await st.evaluate(el => el.scrollLeft > 1));
+gleich('Die Schnellwerkzeuge bleiben am selben Platz', (await zeiger.boundingBox())?.x, zeigerVor?.x);
+const formenKnopf = planFlaeche.getByRole('button', { name: 'Formen', exact: true });
+await formenKnopf.click();
+const formenMenue = planFlaeche.locator('.gfx-tb-menue');
+p('Formen öffnet eine Palette über der Werkzeugleiste', await formenMenue.isVisible() &&
+  await formenMenue.getByRole('button', { name: 'Ellipse', exact: true }).count() === 1 &&
+  await formenMenue.locator('[data-c]').count() >= 8);
+await formenMenue.getByRole('button', { name: 'Ellipse', exact: true }).click();
+gleich('Die Palette stellt das echte Ellipsenwerkzeug ein', await planFlaeche.getAttribute('data-wz'), 'ellipse');
+const blitz = planFlaeche.getByRole('button', { name: 'Elektro', exact: true });
+await blitz.click();
+const elMenue = planFlaeche.locator('.gfx-tb-menue');
+const elektroNamen = await elMenue.getByRole('button').allTextContents();
+p('Der Blitz enthält die vorhandenen Elektro-Wege', ['Rechner','Formelheft','Formeldreieck','Sinuskurve',
+  'Üben','Prüfung','Arbeitsplatz','Schaltplan und Simulation'].every(name => elektroNamen.includes(name)), elektroNamen.join(', '));
+const bilder = process.env.REDION_FLAECHE_BILDER;
+if (bilder) await plan.screenshot({ path: path.join(bilder, 'flaeche-elektro.png') });
+await elMenue.getByRole('button', { name: 'Schaltplan und Simulation', exact: true }).click();
+p('Elektro legt einen Schaltplan auf der geöffneten Fläche an', await plan.evaluate((id: string) =>
+  Store.childrenOf(id).some((b: any) => b.type === 'schaltplan' && !!b.flaecheOrt), planId));
 await plan.close();
 
 await handy.close();

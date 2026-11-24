@@ -184,3 +184,7 @@ den iPhone-Start geladen. Das Paket enthält ihre Lizenzhinweise.
 6. Was daran geändert wird, steht in der Spalte „Was daran geändert ist" —
    ein geflickter Fremdcode ohne Notiz ist beim nächsten Update weg.
 ```
+
+## AFFiNE-Werkzeugvorschauen
+
+Die Flächengalerie verwendet die statischen SVG-Grafiken für Stift, Radierer, Gedankenkarte und Vorlagen aus [AFFiNE / BlockSuite `81da59d`](https://github.com/toeverything/AFFiNE/tree/81da59d63d535d72ba677a097d9a0cc9a5871ade/blocksuite/affine/gfx). Die MIT-Lizenz liegt in `quell/fremd/affine-toolbar/LICENSE-MIT` und im Kopf der eingebetteten CSS-Datei.
