@@ -894,6 +894,22 @@ const Store = (() => {
         }, eilig ? 0 :
             ((typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.SCHREIB_PAUSE_MS : 400));
     };
+    let dauerhaftGefragt = false;
+    const DAUERHAFT_SCHLUESSEL = 'redion:speicher-dauerhaft:gefragt';
+    const DAUERHAFT_ABSTAND_MS = 30 * 24 * 3600 * 1000;
+    function dauerhaftBitten() {
+        if (dauerhaftGefragt || DEMO || typeof AppEinstellung === 'undefined')
+            return;
+        dauerhaftGefragt = true;
+        try {
+            const zuletzt = Number(localStorage.getItem(DAUERHAFT_SCHLUESSEL) || 0);
+            if (zuletzt && Date.now() - zuletzt < DAUERHAFT_ABSTAND_MS)
+                return;
+            localStorage.setItem(DAUERHAFT_SCHLUESSEL, String(Date.now()));
+        }
+        catch { }
+        AppEinstellung.speicherSichern().catch(() => false);
+    }
     const flush = () => {
         clearTimeout(timer);
         eilig = false;
@@ -1028,6 +1044,8 @@ const Store = (() => {
             }
             if (zeichnen)
                 notify('fremd');
+            if (liste.some(g => g.store === 'blocks'))
+                dauerhaftBitten();
         };
         const fertig = ganzOderGarNicht(posten).then((liste) => { nachSchreiben(liste); vollVorbei(); return undefined; }, async (ersterFehler) => {
             let voll = istVoll(ersterFehler);

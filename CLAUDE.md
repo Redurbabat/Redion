@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 582 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 583 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2298,6 +2298,15 @@ hält die Gegenseite: ein Block im Papierkorb kommt nicht zurück, und ein
 zweites Laden hängt nichts doppelt ein. Gezählt am 24. November, im selben
 Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 582.*
 
+*Und 583: `test649` — Redion bittet von selbst um dauerhaften Speicher
+(E805). Er umwickelt `navigator.storage.persist` mit einem Zähler und
+verlangt genau eine Bitte je Sitzung, keine in der nächsten und wieder
+eine nach 30 Tagen. Gegen den alten Stand rot mit 3 von 6 — null Bitten,
+obwohl der Helfer seit Monaten bereitlag. Und er war einmal aus einem
+Grund rot, der nicht ihn betraf: `test105` fand in ihm eine unbenutzte
+Konstante (`noUnusedLocals`, §52.6). Gezählt am 24. November, im selben
+Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 583.*
+
 ### Die Befehle
 
 ```txt
@@ -2319,7 +2328,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 582 Läufe
+npm run pruefen                      alle 583 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2416,7 +2425,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 582 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 583 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

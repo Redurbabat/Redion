@@ -1652,6 +1652,33 @@ const Store = (() => {
    * Anfrage ihr eigenes `onerror`, das den Abbruch verhindert. Der schlechte
    * Satz geht verloren, die guten kommen an.
    */
+  /* SPEICHER DAUERHAFT ERBITTEN (E805). Ohne `navigator.storage.persist()`
+     darf der Browser die Ablage bei Platznot räumen — still. Den Helfer
+     gab es (`AppEinstellung.speicherSichern`), gerufen wurde er nur von
+     einem Knopf in den Einstellungen. Jetzt: beim ersten gelungenen
+     Schreiben von Blöcken in einer Sitzung, höchstens einmal in 30 Tagen
+     (Firefox fragt dafür mit einem Dialog nach, und eine Bitte, die jeden
+     Start wiederkommt, wäre Drängeln). Ist der Speicher schon dauerhaft,
+     fragt `speicherSichern` gar nicht erst.
+
+     Der Zeitpunkt der letzten Bitte ist eine Einstellung DIESES Geräts,
+     kein Inhalt: er liegt in `localStorage` (wie die Anzeigewahl des
+     Glass Wheel), damit er weder in eine Sicherung noch in den Abgleich
+     reist. Ist `localStorage` gesperrt, wird eben je Sitzung gefragt. */
+  let dauerhaftGefragt = false;
+  const DAUERHAFT_SCHLUESSEL = 'redion:speicher-dauerhaft:gefragt';
+  const DAUERHAFT_ABSTAND_MS = 30 * 24 * 3600 * 1000;
+  function dauerhaftBitten(): void {
+    if (dauerhaftGefragt || DEMO || typeof AppEinstellung === 'undefined') return;
+    dauerhaftGefragt = true;
+    try {
+      const zuletzt = Number(localStorage.getItem(DAUERHAFT_SCHLUESSEL) || 0);
+      if (zuletzt && Date.now() - zuletzt < DAUERHAFT_ABSTAND_MS) return;
+      localStorage.setItem(DAUERHAFT_SCHLUESSEL, String(Date.now()));
+    } catch { /* gesperrt: dann eben je Sitzung */ }
+    AppEinstellung.speicherSichern().catch(() => false);
+  }
+
   const flush = (): Promise<unknown> => {
     clearTimeout(timer);
     eilig = false;
@@ -1774,7 +1801,9 @@ const Store = (() => {
         try { Zusammen.melde(); Zusammen.hinweisen(); } catch { /* ohne Oberfläche */ }
       }
       if (zeichnen) notify('fremd');
+      if (liste.some(g => g.store === 'blocks')) dauerhaftBitten();
     };
+
 
     /* Erst alles in einem Zug — der schnelle Weg, und der übliche. Geht das
        schief, ist nichts geschrieben; dann Schritt für Schritt, damit ein

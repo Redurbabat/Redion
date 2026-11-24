@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-775 Entscheidungen, E1 bis E804 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+776 Entscheidungen, E1 bis E805 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -861,6 +861,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E802** — Speicher voll: nichts geht still verloren (24. November 2026, Redur: „Weiter“, B10 der Roadmap): bei `QuotaExceededError` eine Meldung mit der Zahl ungesicherter Änderungen, ein neuer Versuch alle 15 Sekunden ohne neue Eingabe, im Browser eine Rückfrage beim Schliessen; die Windows-App bekommt keine Rückfrage, weil sie das Fenster dort ohne Dialog festhielte (`test646`)
 * **E803** — Umwandeln verliert nichts (24. November 2026, Redur: Ziel „arbeite ohne pause bis du alles fertig gemacht hast“, B18 der Roadmap, §18 hart): → Datenbank legt den alten Block in den Papierkorb statt ihn endgültig zu löschen und nimmt seinen Text als Namen; → Seite wandelt an Ort und Stelle (Kennung, Platz, Unterblöcke bleiben); → Einbettung und → Spalten leeren den Text nicht mehr (`test647`)
 * **E804** — Unsichtbare Blöcke werden beim Laden wieder eingehängt (24. November 2026, B5 der Roadmap): ein lebender Block, dessen lebender Elternteil ihn nicht in `content` führt, kommt hinten wieder hinein und wird gesichert; Papierkorb und Datenbankzeilen bleiben unberührt (`test648`). Dazu B19 gemessen: unbekannte Blockarten überstehen Zeichnen, Bearbeiten und Sicherung schon heute
+* **E805** — Redion bittet von selbst um dauerhaften Speicher (24. November 2026, B9 der Roadmap): beim ersten gelungenen Schreiben von Blöcken in einer Sitzung, höchstens einmal in 30 Tagen; der Zeitpunkt ist eine Geräteeinstellung in `localStorage` und reist nicht mit (`test649`). Dazu B14 nachgelesen: der `localStorage` des Staatskunde-Trainers gehört nur der eigenständigen Seite `lernen/staatskunde.html`, in Redion bleibt er leer (`test565`)
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71333,4 +71334,46 @@ Typ und Feld und übersteht `exportAll` → `importAll('ersetzen')`.
 **Geprüft.** `test648` (7 Zusagen; gegen den alten Stand rot mit 2 von 7),
 `test85`, `test145`, `test209`, `test501`, `test520`, `test575`, `test96`,
 `test100`, `test105`, `test109`, `test644`, `test645`. Kein voller Lauf.
+
+## E805 · Redion bittet von selbst um dauerhaften Speicher
+
+**Wer und wann.** 24. November 2026, Redurs Ziel „arbeite ohne pause bis du
+alles fertig gemacht hast" — B9 der Roadmap aus der Notion-Analyse.
+
+**Was fehlte.** Ohne `navigator.storage.persist()` darf ein Browser die
+Ablage bei Platznot räumen, ohne zu fragen — für eine App, deren Wahrheit
+auf dem Gerät liegt (Ziel 1), ist das der gefährlichste stille Verlust.
+Der Helfer `AppEinstellung.speicherSichern()` stand seit langem in
+`kern/einstellung/app.ts` — und wurde von NIEMANDEM gerufen. Gefragt wurde
+nur, wenn jemand in den Einstellungen oder im Installationsfenster den Knopf
+„dauerhaft" drückte. `test649` gegen den alten Stand: 3 von 6, null Bitten.
+
+**Was entschieden wurde.** `flush` ruft nach dem ersten gelungenen
+Schreiben von Blöcken einer Sitzung `speicherSichern()` — das fragt nicht,
+wenn der Speicher schon dauerhaft ist. Höchstens einmal in 30 Tagen:
+Firefox zeigt für die Bitte einen Dialog, und eine Bitte bei jedem Start
+wäre Drängeln. Der Zeitpunkt der letzten Bitte liegt in `localStorage`
+unter `redion:speicher-dauerhaft:gefragt`.
+
+**Warum `localStorage` und nicht `meta`.** Der Zeitpunkt ist eine
+Einstellung DIESES Geräts, kein Inhalt — wie die Anzeigewahl des Glass
+Wheel. Im `meta`-Fach reiste er in jede Sicherung und in den Abgleich und
+bräuchte dort eigene Regeln (`GERAETEIGEN`, `NUR_HIER`). §10 bleibt
+gewahrt: IndexedDB bleibt der Speicher der Daten, ersetzt wird nichts. Ist
+`localStorage` gesperrt, wird eben je Sitzung einmal gebeten.
+
+**Was es kostet.** In Firefox erscheint beim ersten Schreiben ein Dialog
+des Browsers. Die Bitte kommt ohne vorherige Erklärung in Redion; wer ablehnt,
+wird 30 Tage nicht wieder gefragt.
+
+**B14 im selben Bogen, ohne Bau.** Die Liste B nannte zwei Schreiber von
+`localStorage`, die REA gefunden hatte. Das Glass Wheel speichert dort
+begründet eine Anzeigewahl des Geräts. Der Staatskunde-Trainer schreibt
+dort nur auf der eigenständigen Seite `lernen/staatskunde.html`, die keine
+Ablage lädt; in Redion selbst lebt der Trainer seit E677 auf gewöhnlichen
+Lernkarten, und `test565` hält, dass `localStorage` dort leer bleibt.
+
+**Geprüft.** `test649` (6 Zusagen; gegen den alten Stand rot mit 3 von 6),
+`test96`, `test100`, `test105`, `test109`, `test644`, `test645`, `test646`,
+`test648`. Kein voller Lauf.
 

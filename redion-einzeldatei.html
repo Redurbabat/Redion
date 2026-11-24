@@ -30191,7 +30191,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1625, inhalt: '02649e2c00e7210b', gebaut: '2026-11-24T07:32:16.828Z' };
+const Stand = { fassung: 1626, inhalt: 'aabf76d28e24a37f', gebaut: '2026-11-24T07:37:30.550Z' };
 window.Stand = Stand;
 
 </script>
@@ -54864,6 +54864,22 @@ const Store = (() => {
         }, eilig ? 0 :
             ((typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.SCHREIB_PAUSE_MS : 400));
     };
+    let dauerhaftGefragt = false;
+    const DAUERHAFT_SCHLUESSEL = 'redion:speicher-dauerhaft:gefragt';
+    const DAUERHAFT_ABSTAND_MS = 30 * 24 * 3600 * 1000;
+    function dauerhaftBitten() {
+        if (dauerhaftGefragt || DEMO || typeof AppEinstellung === 'undefined')
+            return;
+        dauerhaftGefragt = true;
+        try {
+            const zuletzt = Number(localStorage.getItem(DAUERHAFT_SCHLUESSEL) || 0);
+            if (zuletzt && Date.now() - zuletzt < DAUERHAFT_ABSTAND_MS)
+                return;
+            localStorage.setItem(DAUERHAFT_SCHLUESSEL, String(Date.now()));
+        }
+        catch { }
+        AppEinstellung.speicherSichern().catch(() => false);
+    }
     const flush = () => {
         clearTimeout(timer);
         eilig = false;
@@ -54998,6 +55014,8 @@ const Store = (() => {
             }
             if (zeichnen)
                 notify('fremd');
+            if (liste.some(g => g.store === 'blocks'))
+                dauerhaftBitten();
         };
         const fertig = ganzOderGarNicht(posten).then((liste) => { nachSchreiben(liste); vollVorbei(); return undefined; }, async (ersterFehler) => {
             let voll = istVoll(ersterFehler);
