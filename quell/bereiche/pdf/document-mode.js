@@ -1263,7 +1263,10 @@ const DocumentMode = (() => {
         }
         learning.sourceMenu(page, documentBlock, region || null);
     };
+    let werkzeugDockAufraeumen;
+    const dockFreigeben = () => { werkzeugDockAufraeumen?.(); werkzeugDockAufraeumen = undefined; };
     const render = (wrap, page) => {
+        dockFreigeben();
         const documents = documentsIn(page);
         if (!documents.length)
             return false;
@@ -1425,30 +1428,87 @@ const DocumentMode = (() => {
         folienKlappe.setAttribute('aria-haspopup', 'menu');
         folienKlappe.hidden = !istFoliensatz(page);
         commandbar.append(modes, pagination, zoomGroup, findKlappe, zeigenKlappe, folienKlappe);
-        const drawingbar = document.createElement('div');
-        drawingbar.className = 'document-drawingbar';
-        drawingbar.setAttribute('role', 'toolbar');
-        drawingbar.setAttribute('aria-label', 'PDF bearbeiten');
-        const drawingTools = Marken.WERKZEUGE.map(tool => [tool.id, tool.sym, tool.name]);
-        drawingTools.forEach(([tool, icon, label]) => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.dataset.documentTool = tool;
-            button.title = label;
-            button.setAttribute('aria-label', label);
-            const glyph = document.createElement('span');
-            glyph.dataset.sym = icon;
-            glyph.setAttribute('aria-hidden', 'true');
-            button.appendChild(glyph);
-            drawingbar.appendChild(button);
-        });
-        const rulerButton = topButton('ink-ruler', '', 'Lineal ein- oder ausblenden');
-        rulerButton.innerHTML = '<span data-sym="inkRuler" aria-hidden="true"></span>';
+        const galerie = art === 'PDF'
+            ? GfxToolbar.erstelle({
+                klasse: 'document-pdf-dock',
+                beschriftung: 'PDF bearbeiten',
+                werkzeuge: Marken.WERKZEUGE,
+                galerie: {
+                    schnell: ['schreiben', 'select', 'elektro', 'ink-options'],
+                    karten: [
+                        { id: 'notiz', knoepfe: ['zettel'] },
+                        { id: 'stifte', knoepfe: ['stift', 'radierer'] },
+                        { id: 'formen', knoepfe: ['formen'] },
+                        { id: 'pdf-markieren', knoepfe: ['marker', 'abdeck'] },
+                        { id: 'pdf-text', knoepfe: ['text', 'textfix'] },
+                        { id: 'pdf-inhalt', knoepfe: ['elemente', 'bild'] },
+                        { id: 'pdf-hilfen', knoepfe: ['laser', 'ink-ruler'] }
+                    ],
+                    werkzeugMenues: { elektro: ['zeichen'] }
+                },
+                aktionen: [
+                    { id: 'elektro', name: 'Elektro', sym: 'bolt', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'ink-options', name: 'Zeichenoptionen und Leiste einrichten', sym: 'dots', kapsel: 'werkzeuge' },
+                    { id: 'ink-ruler', name: 'Lineal ein- oder ausblenden', sym: 'inkRuler', kapsel: 'werkzeuge' }
+                ],
+                menue: id => {
+                    if (id !== 'elektro')
+                        return null;
+                    return Elektrostart.werkzeugmenue(() => galerie?.schliesse(), () => {
+                        App.neueSeite();
+                        Blocks.einfuegenAmEnde('schaltplan');
+                    });
+                }
+            })
+            : null;
+        const drawingbar = galerie?.element ?? document.createElement('div');
+        drawingbar.classList.add('document-drawingbar');
+        if (galerie) {
+            workspace.dataset.pdfGalerie = 'an';
+            const kurz = {
+                marker: 'Marker', abdeck: 'Abdecken', text: 'Text', textfix: 'Ändern',
+                elemente: 'Elemente', bild: 'Bild', laser: 'Laser', 'ink-ruler': 'Lineal',
+                zeichen: 'Fachzeichen aufs PDF'
+            };
+            for (const knopf of drawingbar.querySelectorAll('[data-wz],[data-a]')) {
+                const id = knopf.dataset.wz ?? knopf.dataset.a ?? '';
+                if (knopf.dataset.wz)
+                    knopf.dataset.documentTool = id;
+                if (id === 'ink-options' || id === 'ink-ruler')
+                    knopf.dataset.documentAction = id;
+                if (kurz[id]) {
+                    const name = document.createElement('span');
+                    name.className = 'document-pdf-werkzeugname';
+                    name.textContent = kurz[id];
+                    knopf.append(name);
+                }
+            }
+            werkzeugDockAufraeumen = galerie.zerstoere;
+        }
+        else {
+            drawingbar.setAttribute('role', 'toolbar');
+            drawingbar.setAttribute('aria-label', 'PDF bearbeiten');
+            for (const { id, sym, name } of Marken.WERKZEUGE) {
+                const knopf = document.createElement('button');
+                knopf.type = 'button';
+                knopf.dataset.documentTool = id;
+                knopf.title = name;
+                knopf.setAttribute('aria-label', name);
+                const symbol = document.createElement('span');
+                symbol.dataset.sym = sym;
+                symbol.setAttribute('aria-hidden', 'true');
+                knopf.append(symbol);
+                drawingbar.append(knopf);
+            }
+        }
+        const rulerButton = drawingbar.querySelector('[data-document-action="ink-ruler"]')
+            ?? topButton('ink-ruler', '', 'Lineal ein- oder ausblenden', 'inkRuler');
         rulerButton.setAttribute('aria-pressed', 'false');
-        drawingbar.append(rulerButton);
-        const moreTools = topButton('ink-options', '···', 'Weitere Zeichenoptionen und Leiste einrichten');
+        const moreTools = drawingbar.querySelector('[data-document-action="ink-options"]')
+            ?? topButton('ink-options', '···', 'Weitere Zeichenoptionen und Leiste einrichten');
         moreTools.setAttribute('aria-expanded', 'false');
-        drawingbar.appendChild(moreTools);
+        if (!galerie)
+            drawingbar.append(rulerButton, moreTools);
         const history = document.createElement('div');
         history.className = 'document-ink-history';
         history.setAttribute('role', 'group');
@@ -1496,7 +1556,7 @@ const DocumentMode = (() => {
             if (!state.toolsOpen || !canAnnotate || !stand.isConnected)
                 return;
             const toolbar = stand.querySelector('.blatt-werk');
-            const key = drawingTools.some(([tool]) => tool === penTool) && penTool !== 'schreiben' ? penTool : 'stift';
+            const key = Marken.WERKZEUGE.some(({ id }) => id === penTool) && penTool !== 'schreiben' ? penTool : 'stift';
             if (toolbar && toolbar.dataset.tool !== key)
                 toolbar.querySelector('[data-wz="' + key + '"]')?.click();
             if (toolbar && !toolbar.dataset.documentPenReady) {
@@ -1751,7 +1811,7 @@ const DocumentMode = (() => {
         findListe.hidden = true;
         findbar.append(findFeld, findZahl, findBereichHuelle, topButton('find-previous', '‹', 'Voriger Treffer'), topButton('find-next', '›', 'Nächster Treffer'), topButton('find-close', '✕', 'Suche schließen'), findListe);
         let folienband = folienbandBauen(page, drawingbar);
-        workspace.append(top, ...(folienband ? [folienband] : []), findbar, ...(folienband ? [] : [drawingbar]), commandbar, body);
+        workspace.append(top, ...(folienband ? [folienband] : []), findbar, ...(folienband || galerie ? [] : [drawingbar]), commandbar, body, ...(galerie ? [drawingbar] : []));
         const folienbandNachziehen = () => {
             const soll = istFoliensatz(page) && innerWidth >= BAND_AB;
             const ist = !!folienband && folienband.isConnected;
@@ -1770,7 +1830,7 @@ const DocumentMode = (() => {
                 top.after(folienband);
         };
         wrap.appendChild(workspace);
-        if (typeof Formelheft !== 'undefined') {
+        if (!galerie && typeof Formelheft !== 'undefined') {
             const heft = document.createElement('button');
             heft.type = 'button';
             heft.dataset.documentAction = 'formelheft';
@@ -1857,13 +1917,16 @@ const DocumentMode = (() => {
                 .filter((button) => !!button);
             const jetzt = Array.from(drawingbar.querySelectorAll(':scope > [data-document-tool]'))
                 .filter(button => wunsch.includes(button));
-            if (wunsch.some((button, index) => button !== jetzt[index])) {
+            if (!galerie && wunsch.some((button, index) => button !== jetzt[index])) {
                 wunsch.forEach(button => drawingbar.insertBefore(button, rulerButton));
             }
             const realRuler = source?.querySelector('[data-act="lineal"]');
             rulerButton.disabled = !canAnnotate || !state.toolsOpen || !realRuler;
             rulerButton.setAttribute('aria-pressed', realRuler?.getAttribute('aria-pressed') || 'false');
-            workspace.dataset.inkTool = source?.dataset.tool || 'schreiben';
+            const werkzeug = source?.dataset.tool || 'schreiben';
+            if (galerie && workspace.dataset.inkTool !== werkzeug)
+                galerie.setzeWerkzeug(werkzeug);
+            workspace.dataset.inkTool = werkzeug;
             drawingbar.querySelectorAll('[data-document-tool]').forEach(button => {
                 const real = source?.querySelector('[data-wz="' + button.dataset.documentTool + '"]');
                 button.disabled = !canAnnotate || !state.toolsOpen || !real || real.disabled;
@@ -2881,6 +2944,11 @@ const DocumentMode = (() => {
             state.toolsOpen = an;
             Store.setMeta('dokWerkzeuge:' + page.id, an);
             workspace.dataset.documentTools = an ? 'open' : 'closed';
+            if (!an && galerie) {
+                galerie.schliesse();
+                workspace.dataset.inkOptions = 'closed';
+                moreTools.setAttribute('aria-expanded', 'false');
+            }
             readButton.setAttribute('aria-pressed', String(!an));
             annotateButton.setAttribute('aria-pressed', String(an));
             center.querySelectorAll('.blatt-papier').forEach(paper => {
@@ -3762,7 +3830,7 @@ const DocumentMode = (() => {
         stelleIn,
         stellenSuchen: (wort) => fremdeTreffer(wort, ''),
         findBereich, findBereichMerken, findenIn,
-        freigeben: () => { griffeSchliessen(); verweisHorchenAus(); } };
+        freigeben: () => { griffeSchliessen(); verweisHorchenAus(); dockFreigeben(); } };
 })();
 window.DocumentMode = DocumentMode;
 if (typeof Register !== 'undefined' && Register.kontext) {

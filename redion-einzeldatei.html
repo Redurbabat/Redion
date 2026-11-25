@@ -3786,9 +3786,9 @@ html[data-theme="light"] .gfx-tb-galerie [data-a="elektro"]{color:#8a5c00}
 .gfx-tb-galerie .gfx-tb-menuewerkzeuge button:is(.on,:hover,:focus-visible){
   background:var(--bg-hover);color:var(--gfx-galerie-aktiv);
 }
-.gfx-tb-galerie .gfx-tb-menuewerkzeuge svg,.pg-fl-galerieliste svg{width:20px;height:20px}
-.pg-fl-galerieliste button{display:flex;align-items:center;gap:9px;min-height:44px}
-.pg-fl-galerieliste h3{font-size:12px;font-weight:650;color:var(--text-dim);margin:7px 12px 0}
+.gfx-tb-galerie .gfx-tb-menuewerkzeuge svg,.gfx-tb-befehlsliste svg{width:20px;height:20px}
+.gfx-tb-befehlsliste button{display:flex;align-items:center;gap:9px;min-height:44px}
+.gfx-tb-befehlsliste h3{font-size:12px;font-weight:650;color:var(--text-dim);margin:7px 12px 0}
 @media(max-width:760px){
   .gfx-tb-galerie{--gfx-kartenhoehe:58px}
   .gfx-tb-galerie .gfx-tb-schnell{padding:0}
@@ -13084,7 +13084,7 @@ body .rmo-liquid::after {
      Grösse und Lage setzt JavaScript, damit es mit Zoom und Schub wandert;
      stünden sie hier, wäre das Raster beim Zoomen stehen geblieben und die
      Fläche hätte sich unter einem festen Muster bewegt. */
-  background-image:radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0);
+  background-image:radial-gradient(circle at 1px 1px, color-mix(in srgb,var(--text) 19%,transparent) 1px, transparent 0);
   background-size:20px 20px;
   touch-action:none;
 }
@@ -27870,9 +27870,9 @@ body[data-dokument="an"] .document-studio .document-topbar{background:var(--pdf-
 body[data-dokument="an"] .document-studio .document-topbar :is(button,.document-title){color:var(--pdf-on-chrome)}
 body[data-dokument="an"] .document-studio .document-topbar button:hover{background:var(--bg-hover)}
 .document-studio .document-drawingbar{display:flex;align-items:center;justify-content:center;gap:8px;flex:none;min-height:58px;padding:5px 12px;background:var(--pdf-tools);color:var(--pdf-on-chrome);border-bottom:1px solid var(--line);overflow-x:auto}
-.document-drawingbar button{display:grid;place-items:center;width:var(--touch-min);min-width:var(--touch-min);height:var(--touch-min);border-radius:12px;color:inherit;background:transparent;border:1px solid transparent;cursor:pointer;transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
-.document-drawingbar svg{width:25px;height:25px}
-.document-drawingbar button:hover{background:var(--bg-hover)}
+.document-drawingbar:where(:not(.document-pdf-dock)) button{display:grid;place-items:center;width:var(--touch-min);min-width:var(--touch-min);height:var(--touch-min);border-radius:12px;color:inherit;background:transparent;border:1px solid transparent;cursor:pointer;transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
+.document-drawingbar:where(:not(.document-pdf-dock)) svg{width:25px;height:25px}
+.document-drawingbar:where(:not(.document-pdf-dock)) button:hover{background:var(--bg-hover)}
 /* ══ „GEWÄHLT" IST EIN UMRISS, KEIN FARBPAAR (E554) ════════════════════════
    Hier stand `background:#d8e4f1;color:#193859` — ein eigenes Blaupaar, und
    zwanzig Zeilen tiefer stand für DENSELBEN Zustand ein zweites
@@ -27892,8 +27892,8 @@ body[data-dokument="an"] .document-studio .document-topbar button:hover{backgrou
    Schrift. §38 ist dabei zweifach erfüllt — die Wahl ist nicht NUR an der
    Farbe zu erkennen, sondern auch am Rahmen, und `aria-pressed` sagt sie
    ohnehin. */
-.document-drawingbar button[aria-pressed="true"],.document-drawingbar button[aria-expanded="true"]{background:var(--bg-hover);color:var(--text);box-shadow:inset 0 0 0 2px var(--accent)}
-/* .document-drawingbar button:active: Einsinken per press.ts (E702) */
+.document-drawingbar:where(:not(.document-pdf-dock)) button[aria-pressed="true"],.document-drawingbar:where(:not(.document-pdf-dock)) button[aria-expanded="true"]{background:var(--bg-hover);color:var(--text);box-shadow:inset 0 0 0 2px var(--accent)}
+/* .document-drawingbar:where(:not(.document-pdf-dock)) button:active: Einsinken per press.ts (E702) */
 /* ZURÜCK UND VOR GANZ LINKS (E490). Der Trennstrich wandert mit auf die
    andere Seite. `margin-right:auto` hier und `margin-left:auto` am „···"
    halten die Werkzeuge dazwischen in der Mitte — ohne einen zweiten Kasten
@@ -28139,7 +28139,7 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
   .document-source-master .do-name{font-size:11px}.document-source-master .do-wort{font-size:10px}
   .document-copy-label{font-size:10px}
 }
-@media(prefers-reduced-motion:reduce){.document-drawingbar button{transition:none}.document-drawingbar button:active:not(:disabled){transform:none}}
+@media(prefers-reduced-motion:reduce){.document-drawingbar:where(:not(.document-pdf-dock)) button{transition:none}.document-drawingbar:where(:not(.document-pdf-dock)) button:active:not(:disabled){transform:none}}
 @media print{.document-drawingbar,.document-source-master,.document-copy-label,.document-studio .blatt-reihe{display:none!important}}
 
 /* §37 · DIE PAPIERAUSWAHL IM SEITENMENÜ (E475, L133)
@@ -28422,15 +28422,15 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
    Seite, wo bis zum 19. September 2026 gar nichts wuchs (W5).
    Hier bleibt, was es nur hier gibt: die obere Leiste des Studios. */
 @media (hover:hover) and (pointer:fine){
-  .document-drawingbar button svg{
+  .document-drawingbar:where(:not(.document-pdf-dock)) button svg{
     transition:transform var(--motion-fast) var(--ease)
   }
-  .document-drawingbar button:hover:not(:disabled) svg{ transform:scale(1.3) }
+  .document-drawingbar:where(:not(.document-pdf-dock)) button:hover:not(:disabled) svg{ transform:scale(1.3) }
   /* Die zwei Nachbarn heben schwächer mit — das ist der Teil, an dem man ein
      Dock erkennt. `:has(+ button:hover)` liest nach LINKS, der Nachbarwähler
      nach rechts; zusammen sind es beide Seiten. */
-  .document-drawingbar button:hover + button svg,
-  .document-drawingbar button:has(+ button:hover) svg{ transform:scale(1.13) }
+  .document-drawingbar:where(:not(.document-pdf-dock)) button:hover + button svg,
+  .document-drawingbar:where(:not(.document-pdf-dock)) button:has(+ button:hover) svg{ transform:scale(1.13) }
 }
 /* Der federnde Wechsel auf die neue Auswahl: EINMAL, nicht in Schleife
    (7 C 4). Er läuft, wenn `aria-pressed` auf `true` springt — und seit E575
@@ -28439,7 +28439,7 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
 @keyframes dock-feder{
   0%{ transform:scale(.86) } 55%{ transform:scale(1.16) } 100%{ transform:scale(1) }
 }
-.document-drawingbar button[aria-pressed="true"] svg,
+.document-drawingbar:where(:not(.document-pdf-dock)) button[aria-pressed="true"] svg,
 .document-studio .blatt-werk > button[aria-pressed="true"] svg,
 .document-studio .blatt-werk > .blatt-tafel > button[aria-pressed="true"] svg{
   animation:dock-feder var(--motion-normal) var(--ease) 1
@@ -28448,10 +28448,10 @@ body[data-foliensatz="an"] .document-studio .document-center.ist-einzeln
    `grund.css` setzt die Dauern auf .001ms — das macht die Bewegung sofort,
    nicht abwesend. Die Vergrösserung selbst muss hier ausdrücklich weg. */
 @media (prefers-reduced-motion:reduce){
-  .document-drawingbar button:hover:not(:disabled) svg,
-  .document-drawingbar button:hover + button svg,
-  .document-drawingbar button:has(+ button:hover) svg{ transform:none }
-  .document-drawingbar button[aria-pressed="true"] svg,
+  .document-drawingbar:where(:not(.document-pdf-dock)) button:hover:not(:disabled) svg,
+  .document-drawingbar:where(:not(.document-pdf-dock)) button:hover + button svg,
+  .document-drawingbar:where(:not(.document-pdf-dock)) button:has(+ button:hover) svg{ transform:none }
+  .document-drawingbar:where(:not(.document-pdf-dock)) button[aria-pressed="true"] svg,
   .document-studio .blatt-werk > button[aria-pressed="true"] svg{ animation:none }
   .document-studio .blatt-werk > .blatt-tafel > button[aria-pressed="true"] svg{ animation:none }
 }
@@ -28651,6 +28651,66 @@ body[data-dokument="an"] .document-studio .blatt-werk{
 }
 @media(prefers-reduced-motion:reduce){
   .document-studio .document-pagination .document-position{transition:none}
+}
+
+/* Die PDF-Galerie benutzt die Werkzeugkarten der Fläche. Das Zubehör des
+   gewählten Werkzeugs bleibt am Blatt und sitzt direkt über der Galerie. */
+.document-studio[data-pdf-galerie]{
+  --pdf-galerie-hoehe:64px;
+  --pdf-dock-unten:calc(var(--visual-bottom,0px) + max(8px,env(safe-area-inset-bottom,0px)));
+}
+.document-studio .document-drawingbar.document-pdf-dock{
+  position:fixed;left:50%;bottom:var(--pdf-dock-unten);transform:translateX(-50%);z-index:81;
+  display:block;width:min(742px,calc(100% - 16px));min-height:0;
+  padding:0;border:0;background:none;color:var(--text);overflow:visible;
+}
+.document-studio[data-document-tools="closed"] .document-drawingbar.document-pdf-dock,
+.document-studio[data-document-zeigen="an"] .document-drawingbar.document-pdf-dock{display:none}
+body[data-dokument="an"] .document-studio[data-pdf-galerie][data-document-tools="open"]:not([data-document-zeigen="an"]) .document-center{
+  padding-bottom:calc(110px + var(--pdf-galerie-hoehe));
+  scroll-padding-bottom:calc(110px + var(--pdf-galerie-hoehe));
+}
+body[data-dokument="an"] .document-studio[data-pdf-galerie] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe{
+  bottom:calc(var(--pdf-dock-unten) + var(--pdf-galerie-hoehe) + 6px);
+  max-width:min(742px,calc(100vw - 16px));
+}
+.document-studio[data-pdf-galerie] .blatt-werk > :is([data-wz],.blatt-zeilenbruch),
+.document-studio[data-pdf-galerie] .blatt-werk > .blatt-tafel > :is([data-act="undo"],[data-act="redo"]){
+  display:none!important;
+}
+.document-studio[data-pdf-galerie]:not([data-ink-options="open"])[data-ink-tool="schreiben"] .blatt-reihe{
+  visibility:hidden;
+}
+.document-pdf-dock .gfx-tb-menue{
+  bottom:calc(100% + 6px);
+  max-height:min(62vh,464px);
+}
+.document-pdf-dock .gfx-tb-menuewerkzeuge [data-wz="zeichen"]{
+  display:flex;width:100%;justify-content:flex-start;gap:9px;padding-inline:10px;
+  font-size:.875rem;white-space:nowrap;
+}
+.document-pdf-dock .gfx-tb-menuewerkzeuge [data-wz="zeichen"] svg{flex:none}
+.document-pdf-dock .gfx-tb-haupt [data-karte^="pdf-"]{width:104px}
+.document-pdf-dock [data-karte^="pdf-"] button{flex-direction:column;justify-content:center;gap:4px}
+.document-pdf-dock [data-karte^="pdf-"] .zeichen{position:static;transform:none}
+.document-pdf-dock [data-karte^="pdf-"] .zeichen svg{visibility:visible}
+.document-pdf-dock [data-karte^="pdf-"] .document-pdf-werkzeugname{font-size:.6875rem}
+.document-pdf-dock .gfx-tb-haupt button:focus-visible{outline-offset:-3px}
+@media(max-width:760px){
+  .document-studio[data-pdf-galerie]{--pdf-galerie-hoehe:58px}
+  .document-studio[data-pdf-galerie] .document-ink-history{
+    bottom:calc(var(--pdf-dock-unten) + var(--pdf-galerie-hoehe) + var(--touch-min) + 24px);
+  }
+}
+
+/* Die Offline-Meldung bleibt erreichbar, ohne die neuen Leisten zu verdecken. */
+body:has(.document-studio[data-pdf-galerie],.pg-flaeche .gfx-tb-galerie) #offline-streifen{
+  top:calc(156px + env(safe-area-inset-top,0px));bottom:auto;
+}
+@media(min-width:761px){
+  body:has(.document-studio[data-pdf-galerie],.pg-flaeche .gfx-tb-galerie) #offline-streifen{
+    left:auto;right:12px;transform:none;
+  }
 }
 
 </style>
@@ -30705,7 +30765,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1649, inhalt: '2abce463499cc43a', gebaut: '2026-11-24T21:54:57.158Z' };
+const Stand = { fassung: 1652, inhalt: '9308c4d653623e54', gebaut: '2026-11-25T06:38:49.518Z' };
 window.Stand = Stand;
 
 </script>
@@ -89608,7 +89668,41 @@ const Elektrostart = (() => {
         catch { }
         App.zeigeSonder('Elektro', zeichnen);
     };
-    return { oeffne, zeichnen, zuletzt, wege };
+    const werkzeugmenue = (schliessen, planOeffnen) => {
+        const liste = document.createElement('div');
+        liste.className = 'gfx-tb-liste gfx-tb-befehlsliste';
+        const eintrag = (name, zeichen, tun) => {
+            const knopf = document.createElement('button');
+            knopf.type = 'button';
+            const symbol = document.createElement('span');
+            symbol.dataset.sym = zeichen;
+            symbol.setAttribute('aria-hidden', 'true');
+            knopf.append(symbol, document.createTextNode(name));
+            knopf.addEventListener('click', () => {
+                schliessen();
+                tun();
+            });
+            liste.append(knopf);
+        };
+        const gruppen = wege();
+        const plan = gruppen.flatMap(g => g.eintraege).find(e => e.id === 'e-plan');
+        if (plan)
+            eintrag('Schaltplan und Simulation', plan.zeichen, planOeffnen);
+        eintrag('Elektrotechnik öffnen', 'bolt', oeffne);
+        for (const gruppe of gruppen) {
+            const werkzeuge = gruppe.eintraege.filter(e => e.id !== 'e-plan');
+            if (!werkzeuge.length)
+                continue;
+            const titel = document.createElement('h3');
+            titel.textContent = gruppe.gruppe;
+            liste.append(titel);
+            for (const e of werkzeuge)
+                eintrag(e.name, e.zeichen, () => e.tun());
+        }
+        Register.symbole.fuelle(liste);
+        return liste;
+    };
+    return { oeffne, zeichnen, zuletzt, wege, werkzeugmenue };
 })();
 window.Elektrostart = Elektrostart;
 if (typeof Register !== 'undefined' && Register.kontext) {
@@ -90903,7 +90997,10 @@ const DocumentMode = (() => {
         }
         learning.sourceMenu(page, documentBlock, region || null);
     };
+    let werkzeugDockAufraeumen;
+    const dockFreigeben = () => { werkzeugDockAufraeumen?.(); werkzeugDockAufraeumen = undefined; };
     const render = (wrap, page) => {
+        dockFreigeben();
         const documents = documentsIn(page);
         if (!documents.length)
             return false;
@@ -91065,30 +91162,87 @@ const DocumentMode = (() => {
         folienKlappe.setAttribute('aria-haspopup', 'menu');
         folienKlappe.hidden = !istFoliensatz(page);
         commandbar.append(modes, pagination, zoomGroup, findKlappe, zeigenKlappe, folienKlappe);
-        const drawingbar = document.createElement('div');
-        drawingbar.className = 'document-drawingbar';
-        drawingbar.setAttribute('role', 'toolbar');
-        drawingbar.setAttribute('aria-label', 'PDF bearbeiten');
-        const drawingTools = Marken.WERKZEUGE.map(tool => [tool.id, tool.sym, tool.name]);
-        drawingTools.forEach(([tool, icon, label]) => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.dataset.documentTool = tool;
-            button.title = label;
-            button.setAttribute('aria-label', label);
-            const glyph = document.createElement('span');
-            glyph.dataset.sym = icon;
-            glyph.setAttribute('aria-hidden', 'true');
-            button.appendChild(glyph);
-            drawingbar.appendChild(button);
-        });
-        const rulerButton = topButton('ink-ruler', '', 'Lineal ein- oder ausblenden');
-        rulerButton.innerHTML = '<span data-sym="inkRuler" aria-hidden="true"></span>';
+        const galerie = art === 'PDF'
+            ? GfxToolbar.erstelle({
+                klasse: 'document-pdf-dock',
+                beschriftung: 'PDF bearbeiten',
+                werkzeuge: Marken.WERKZEUGE,
+                galerie: {
+                    schnell: ['schreiben', 'select', 'elektro', 'ink-options'],
+                    karten: [
+                        { id: 'notiz', knoepfe: ['zettel'] },
+                        { id: 'stifte', knoepfe: ['stift', 'radierer'] },
+                        { id: 'formen', knoepfe: ['formen'] },
+                        { id: 'pdf-markieren', knoepfe: ['marker', 'abdeck'] },
+                        { id: 'pdf-text', knoepfe: ['text', 'textfix'] },
+                        { id: 'pdf-inhalt', knoepfe: ['elemente', 'bild'] },
+                        { id: 'pdf-hilfen', knoepfe: ['laser', 'ink-ruler'] }
+                    ],
+                    werkzeugMenues: { elektro: ['zeichen'] }
+                },
+                aktionen: [
+                    { id: 'elektro', name: 'Elektro', sym: 'bolt', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'ink-options', name: 'Zeichenoptionen und Leiste einrichten', sym: 'dots', kapsel: 'werkzeuge' },
+                    { id: 'ink-ruler', name: 'Lineal ein- oder ausblenden', sym: 'inkRuler', kapsel: 'werkzeuge' }
+                ],
+                menue: id => {
+                    if (id !== 'elektro')
+                        return null;
+                    return Elektrostart.werkzeugmenue(() => galerie?.schliesse(), () => {
+                        App.neueSeite();
+                        Blocks.einfuegenAmEnde('schaltplan');
+                    });
+                }
+            })
+            : null;
+        const drawingbar = galerie?.element ?? document.createElement('div');
+        drawingbar.classList.add('document-drawingbar');
+        if (galerie) {
+            workspace.dataset.pdfGalerie = 'an';
+            const kurz = {
+                marker: 'Marker', abdeck: 'Abdecken', text: 'Text', textfix: 'Ändern',
+                elemente: 'Elemente', bild: 'Bild', laser: 'Laser', 'ink-ruler': 'Lineal',
+                zeichen: 'Fachzeichen aufs PDF'
+            };
+            for (const knopf of drawingbar.querySelectorAll('[data-wz],[data-a]')) {
+                const id = knopf.dataset.wz ?? knopf.dataset.a ?? '';
+                if (knopf.dataset.wz)
+                    knopf.dataset.documentTool = id;
+                if (id === 'ink-options' || id === 'ink-ruler')
+                    knopf.dataset.documentAction = id;
+                if (kurz[id]) {
+                    const name = document.createElement('span');
+                    name.className = 'document-pdf-werkzeugname';
+                    name.textContent = kurz[id];
+                    knopf.append(name);
+                }
+            }
+            werkzeugDockAufraeumen = galerie.zerstoere;
+        }
+        else {
+            drawingbar.setAttribute('role', 'toolbar');
+            drawingbar.setAttribute('aria-label', 'PDF bearbeiten');
+            for (const { id, sym, name } of Marken.WERKZEUGE) {
+                const knopf = document.createElement('button');
+                knopf.type = 'button';
+                knopf.dataset.documentTool = id;
+                knopf.title = name;
+                knopf.setAttribute('aria-label', name);
+                const symbol = document.createElement('span');
+                symbol.dataset.sym = sym;
+                symbol.setAttribute('aria-hidden', 'true');
+                knopf.append(symbol);
+                drawingbar.append(knopf);
+            }
+        }
+        const rulerButton = drawingbar.querySelector('[data-document-action="ink-ruler"]')
+            ?? topButton('ink-ruler', '', 'Lineal ein- oder ausblenden', 'inkRuler');
         rulerButton.setAttribute('aria-pressed', 'false');
-        drawingbar.append(rulerButton);
-        const moreTools = topButton('ink-options', '···', 'Weitere Zeichenoptionen und Leiste einrichten');
+        const moreTools = drawingbar.querySelector('[data-document-action="ink-options"]')
+            ?? topButton('ink-options', '···', 'Weitere Zeichenoptionen und Leiste einrichten');
         moreTools.setAttribute('aria-expanded', 'false');
-        drawingbar.appendChild(moreTools);
+        if (!galerie)
+            drawingbar.append(rulerButton, moreTools);
         const history = document.createElement('div');
         history.className = 'document-ink-history';
         history.setAttribute('role', 'group');
@@ -91136,7 +91290,7 @@ const DocumentMode = (() => {
             if (!state.toolsOpen || !canAnnotate || !stand.isConnected)
                 return;
             const toolbar = stand.querySelector('.blatt-werk');
-            const key = drawingTools.some(([tool]) => tool === penTool) && penTool !== 'schreiben' ? penTool : 'stift';
+            const key = Marken.WERKZEUGE.some(({ id }) => id === penTool) && penTool !== 'schreiben' ? penTool : 'stift';
             if (toolbar && toolbar.dataset.tool !== key)
                 toolbar.querySelector('[data-wz="' + key + '"]')?.click();
             if (toolbar && !toolbar.dataset.documentPenReady) {
@@ -91391,7 +91545,7 @@ const DocumentMode = (() => {
         findListe.hidden = true;
         findbar.append(findFeld, findZahl, findBereichHuelle, topButton('find-previous', '‹', 'Voriger Treffer'), topButton('find-next', '›', 'Nächster Treffer'), topButton('find-close', '✕', 'Suche schließen'), findListe);
         let folienband = folienbandBauen(page, drawingbar);
-        workspace.append(top, ...(folienband ? [folienband] : []), findbar, ...(folienband ? [] : [drawingbar]), commandbar, body);
+        workspace.append(top, ...(folienband ? [folienband] : []), findbar, ...(folienband || galerie ? [] : [drawingbar]), commandbar, body, ...(galerie ? [drawingbar] : []));
         const folienbandNachziehen = () => {
             const soll = istFoliensatz(page) && innerWidth >= BAND_AB;
             const ist = !!folienband && folienband.isConnected;
@@ -91410,7 +91564,7 @@ const DocumentMode = (() => {
                 top.after(folienband);
         };
         wrap.appendChild(workspace);
-        if (typeof Formelheft !== 'undefined') {
+        if (!galerie && typeof Formelheft !== 'undefined') {
             const heft = document.createElement('button');
             heft.type = 'button';
             heft.dataset.documentAction = 'formelheft';
@@ -91497,13 +91651,16 @@ const DocumentMode = (() => {
                 .filter((button) => !!button);
             const jetzt = Array.from(drawingbar.querySelectorAll(':scope > [data-document-tool]'))
                 .filter(button => wunsch.includes(button));
-            if (wunsch.some((button, index) => button !== jetzt[index])) {
+            if (!galerie && wunsch.some((button, index) => button !== jetzt[index])) {
                 wunsch.forEach(button => drawingbar.insertBefore(button, rulerButton));
             }
             const realRuler = source?.querySelector('[data-act="lineal"]');
             rulerButton.disabled = !canAnnotate || !state.toolsOpen || !realRuler;
             rulerButton.setAttribute('aria-pressed', realRuler?.getAttribute('aria-pressed') || 'false');
-            workspace.dataset.inkTool = source?.dataset.tool || 'schreiben';
+            const werkzeug = source?.dataset.tool || 'schreiben';
+            if (galerie && workspace.dataset.inkTool !== werkzeug)
+                galerie.setzeWerkzeug(werkzeug);
+            workspace.dataset.inkTool = werkzeug;
             drawingbar.querySelectorAll('[data-document-tool]').forEach(button => {
                 const real = source?.querySelector('[data-wz="' + button.dataset.documentTool + '"]');
                 button.disabled = !canAnnotate || !state.toolsOpen || !real || real.disabled;
@@ -92521,6 +92678,11 @@ const DocumentMode = (() => {
             state.toolsOpen = an;
             Store.setMeta('dokWerkzeuge:' + page.id, an);
             workspace.dataset.documentTools = an ? 'open' : 'closed';
+            if (!an && galerie) {
+                galerie.schliesse();
+                workspace.dataset.inkOptions = 'closed';
+                moreTools.setAttribute('aria-expanded', 'false');
+            }
             readButton.setAttribute('aria-pressed', String(!an));
             annotateButton.setAttribute('aria-pressed', String(an));
             center.querySelectorAll('.blatt-papier').forEach(paper => {
@@ -93402,7 +93564,7 @@ const DocumentMode = (() => {
         stelleIn,
         stellenSuchen: (wort) => fremdeTreffer(wort, ''),
         findBereich, findBereichMerken, findenIn,
-        freigeben: () => { griffeSchliessen(); verweisHorchenAus(); } };
+        freigeben: () => { griffeSchliessen(); verweisHorchenAus(); dockFreigeben(); } };
 })();
 window.DocumentMode = DocumentMode;
 if (typeof Register !== 'undefined' && Register.kontext) {
@@ -163063,7 +163225,10 @@ const Seitenflaeche = (() => {
         const stellen = (merken = true) => {
             const z = sicht.z;
             ebene.style.transform = `translate(${sicht.x}px, ${sicht.y}px) scale(${z})`;
-            flaeche.style.backgroundSize = `${RASTER * z}px ${RASTER * z}px`;
+            let raster = RASTER * z;
+            while (raster < 16)
+                raster *= 2;
+            flaeche.style.backgroundSize = `${raster}px ${raster}px`;
             flaeche.style.backgroundPosition = `${sicht.x}px ${sicht.y}px`;
             massstabZeigen.textContent = Math.round(z * 100) + ' %';
             if (merken)
@@ -163354,27 +163519,13 @@ const Seitenflaeche = (() => {
         const aufsatzMenue = (id) => {
             if (id !== 'elektro' && id !== 'vorlagen')
                 return null;
+            if (id === 'elektro')
+                return Elektrostart.werkzeugmenue(() => leiste.schliesse(), () => blockEinsetzen('schaltplan'));
             const liste = document.createElement('div');
-            liste.className = 'gfx-tb-liste pg-fl-galerieliste';
-            if (id === 'elektro') {
-                menueEintrag(liste, 'Elektrotechnik öffnen', 'bolt', () => Elektrostart.oeffne());
-                for (const gruppe of Register.menueband.inReiter('elektro')) {
-                    const titel = document.createElement('h3');
-                    titel.textContent = gruppe.gruppe;
-                    liste.append(titel);
-                    for (const e of gruppe.eintraege) {
-                        if (e.zeigen && !e.zeigen())
-                            continue;
-                        const name = e.id === 'e-plan' ? 'Schaltplan und Simulation' : e.name;
-                        menueEintrag(liste, name, e.zeichen, () => e.id === 'e-plan' ? blockEinsetzen('schaltplan') : e.tun());
-                    }
-                }
-            }
-            else {
-                menueEintrag(liste, 'Textblock', 'inkText', () => blockEinsetzen('text'));
-                menueEintrag(liste, 'Gedankenkarte', 'sparkle', () => blockEinsetzen('mindmap'));
-                menueEintrag(liste, 'Whiteboard', 'formRect', () => blockEinsetzen('whiteboard'));
-            }
+            liste.className = 'gfx-tb-liste gfx-tb-befehlsliste';
+            menueEintrag(liste, 'Textblock', 'inkText', () => blockEinsetzen('text'));
+            menueEintrag(liste, 'Gedankenkarte', 'sparkle', () => blockEinsetzen('mindmap'));
+            menueEintrag(liste, 'Whiteboard', 'formRect', () => blockEinsetzen('whiteboard'));
             Register.symbole.fuelle(liste);
             return liste;
         };

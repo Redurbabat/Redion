@@ -270,7 +270,10 @@ const Seitenflaeche = (() => {
         const stellen = (merken = true) => {
             const z = sicht.z;
             ebene.style.transform = `translate(${sicht.x}px, ${sicht.y}px) scale(${z})`;
-            flaeche.style.backgroundSize = `${RASTER * z}px ${RASTER * z}px`;
+            let raster = RASTER * z;
+            while (raster < 16)
+                raster *= 2;
+            flaeche.style.backgroundSize = `${raster}px ${raster}px`;
             flaeche.style.backgroundPosition = `${sicht.x}px ${sicht.y}px`;
             massstabZeigen.textContent = Math.round(z * 100) + ' %';
             if (merken)
@@ -561,27 +564,13 @@ const Seitenflaeche = (() => {
         const aufsatzMenue = (id) => {
             if (id !== 'elektro' && id !== 'vorlagen')
                 return null;
+            if (id === 'elektro')
+                return Elektrostart.werkzeugmenue(() => leiste.schliesse(), () => blockEinsetzen('schaltplan'));
             const liste = document.createElement('div');
-            liste.className = 'gfx-tb-liste pg-fl-galerieliste';
-            if (id === 'elektro') {
-                menueEintrag(liste, 'Elektrotechnik öffnen', 'bolt', () => Elektrostart.oeffne());
-                for (const gruppe of Register.menueband.inReiter('elektro')) {
-                    const titel = document.createElement('h3');
-                    titel.textContent = gruppe.gruppe;
-                    liste.append(titel);
-                    for (const e of gruppe.eintraege) {
-                        if (e.zeigen && !e.zeigen())
-                            continue;
-                        const name = e.id === 'e-plan' ? 'Schaltplan und Simulation' : e.name;
-                        menueEintrag(liste, name, e.zeichen, () => e.id === 'e-plan' ? blockEinsetzen('schaltplan') : e.tun());
-                    }
-                }
-            }
-            else {
-                menueEintrag(liste, 'Textblock', 'inkText', () => blockEinsetzen('text'));
-                menueEintrag(liste, 'Gedankenkarte', 'sparkle', () => blockEinsetzen('mindmap'));
-                menueEintrag(liste, 'Whiteboard', 'formRect', () => blockEinsetzen('whiteboard'));
-            }
+            liste.className = 'gfx-tb-liste gfx-tb-befehlsliste';
+            menueEintrag(liste, 'Textblock', 'inkText', () => blockEinsetzen('text'));
+            menueEintrag(liste, 'Gedankenkarte', 'sparkle', () => blockEinsetzen('mindmap'));
+            menueEintrag(liste, 'Whiteboard', 'formRect', () => blockEinsetzen('whiteboard'));
             Register.symbole.fuelle(liste);
             return liste;
         };

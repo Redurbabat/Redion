@@ -145,7 +145,41 @@ const Elektrostart = (() => {
         catch { }
         App.zeigeSonder('Elektro', zeichnen);
     };
-    return { oeffne, zeichnen, zuletzt, wege };
+    const werkzeugmenue = (schliessen, planOeffnen) => {
+        const liste = document.createElement('div');
+        liste.className = 'gfx-tb-liste gfx-tb-befehlsliste';
+        const eintrag = (name, zeichen, tun) => {
+            const knopf = document.createElement('button');
+            knopf.type = 'button';
+            const symbol = document.createElement('span');
+            symbol.dataset.sym = zeichen;
+            symbol.setAttribute('aria-hidden', 'true');
+            knopf.append(symbol, document.createTextNode(name));
+            knopf.addEventListener('click', () => {
+                schliessen();
+                tun();
+            });
+            liste.append(knopf);
+        };
+        const gruppen = wege();
+        const plan = gruppen.flatMap(g => g.eintraege).find(e => e.id === 'e-plan');
+        if (plan)
+            eintrag('Schaltplan und Simulation', plan.zeichen, planOeffnen);
+        eintrag('Elektrotechnik öffnen', 'bolt', oeffne);
+        for (const gruppe of gruppen) {
+            const werkzeuge = gruppe.eintraege.filter(e => e.id !== 'e-plan');
+            if (!werkzeuge.length)
+                continue;
+            const titel = document.createElement('h3');
+            titel.textContent = gruppe.gruppe;
+            liste.append(titel);
+            for (const e of werkzeuge)
+                eintrag(e.name, e.zeichen, () => e.tun());
+        }
+        Register.symbole.fuelle(liste);
+        return liste;
+    };
+    return { oeffne, zeichnen, zuletzt, wege, werkzeugmenue };
 })();
 window.Elektrostart = Elektrostart;
 if (typeof Register !== 'undefined' && Register.kontext) {
