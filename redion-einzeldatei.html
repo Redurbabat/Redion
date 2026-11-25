@@ -28678,15 +28678,16 @@ body[data-dokument="an"] .document-studio .blatt-werk{
   .document-studio .document-pagination .document-position{transition:none}
 }
 
-/* Die PDF-Galerie benutzt die Werkzeugkarten der Fläche. Das Zubehör des
-   gewählten Werkzeugs bleibt am Blatt und sitzt direkt über der Galerie. */
+/* Edgeless-Geometrie für PDF-Werkzeuge. Die PDF-Bedienelemente behalten den
+   Redion-Dokumentmodus als gemeinsamen Controller. */
 .document-studio[data-pdf-galerie]{
   --pdf-galerie-hoehe:64px;
-  --pdf-dock-unten:calc(var(--visual-bottom,0px) + max(8px,env(safe-area-inset-bottom,0px)));
+  --pdf-dock-breite:614px;
+  --pdf-dock-unten:calc(var(--visual-bottom,0px) + max(16px,env(safe-area-inset-bottom,0px)));
 }
 .document-studio .document-drawingbar.document-pdf-dock{
   position:fixed;left:50%;bottom:var(--pdf-dock-unten);transform:translateX(-50%);z-index:81;
-  display:block;width:min(742px,calc(100% - 16px));min-height:0;
+  display:block;width:min(var(--pdf-dock-breite),calc(100% - 16px));min-height:0;
   padding:0;border:0;background:none;color:var(--text);overflow:visible;
 }
 .document-studio[data-document-tools="closed"] .document-drawingbar.document-pdf-dock,
@@ -28697,25 +28698,70 @@ body[data-dokument="an"] .document-studio[data-pdf-galerie][data-document-tools=
 }
 body[data-dokument="an"] .document-studio[data-pdf-galerie] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe{
   bottom:calc(var(--pdf-dock-unten) + var(--pdf-galerie-hoehe) + 6px);
-  max-width:min(742px,calc(100vw - 16px));
+  max-width:min(var(--pdf-dock-breite),calc(100vw - 16px));
 }
 .document-studio[data-pdf-galerie] .blatt-werk > :is([data-wz],.blatt-zeilenbruch),
 .document-studio[data-pdf-galerie] .blatt-werk > .blatt-tafel > :is([data-act="undo"],[data-act="redo"]){
   display:none!important;
 }
-.document-studio[data-pdf-galerie]:not([data-ink-options="open"])[data-ink-tool="schreiben"] .blatt-reihe{
-  visibility:hidden;
+.document-studio[data-pdf-galerie]:not([data-ink-options="open"]):not([data-pdf-zubehoer="an"])
+.blatt-reihe:not(:has([data-act="verweis"]:not(:disabled))){visibility:hidden}
+.document-pdf-dock .gfx-tb-haupt{padding-inline:12px;box-shadow:var(--shadow-2)}
+.document-pdf-dock .gfx-tb-schnell{gap:2px;padding:0}
+.document-pdf-dock .gfx-tb-schnell button{width:44px;height:44px}
+.document-pdf-dock .gfx-tb-schnell svg{width:24px;height:24px}
+.document-pdf-dock .gfx-tb-schnell [data-a="pdf-schnellmehr"]{display:none}
+.document-studio:is([data-ink-tool="select"],[data-ink-tool="schreiben"]) .document-pdf-dock [data-a="pdf-zeiger"]{
+  color:var(--gfx-galerie-aktiv);background:var(--bg-hover);
+}
+.document-pdf-dock .gfx-tb-trenn{margin-inline:7px}
+.document-pdf-dock .gfx-tb-blatt{width:28px;height:44px}
+.document-pdf-dock .gfx-tb-haupt .gfx-tb-karte{width:96px}
+.document-pdf-dock .gfx-tb-karte[data-karte="notiz"] .zeichen{transform:none}
+.document-pdf-dock .gfx-tb-karte[data-karte="notiz"] .zeichen::before{
+  left:calc(50% - 30px);width:60px;height:72px;bottom:-21px;
+  background:var(--bg-hover);transform:rotate(4deg);transition:transform var(--motion-normal) var(--ease-enter);
+}
+.document-pdf-dock .gfx-tb-karte[data-karte="notiz"] .zeichen::after{content:none}
+.pdf-dock-notizzeichen{
+  --notiz-x:0px;--notiz-y:0px;--notiz-r:4deg;
+  display:grid;place-items:center;position:absolute;left:calc(50% - 13px);bottom:12px;
+  width:26px;height:26px;border-radius:3px;background:var(--bg-card);color:var(--text-dim);
+  box-shadow:var(--shadow-1);font-size:1rem;
+  transform:translate(var(--notiz-x),var(--notiz-y)) rotate(var(--notiz-r));
+  transition:transform var(--motion-normal) var(--ease-enter);
+}
+.pdf-dock-notizzeichen[data-position="0"]{--notiz-x:-22px;--notiz-y:-5px;--notiz-r:-6deg}
+.pdf-dock-notizzeichen[data-position="2"]{--notiz-x:21px;--notiz-y:-7px;--notiz-r:8deg}
+.document-pdf-dock .gfx-tb-karte .pdf-dock-notizzeichen svg{visibility:visible}
+.document-pdf-dock .gfx-tb-karte button:is(:hover,:focus-visible) .pdf-dock-notizzeichen[data-position="0"]{--notiz-x:-25px;--notiz-r:-9deg}
+.document-pdf-dock .gfx-tb-karte button:is(:hover,:focus-visible) .pdf-dock-notizzeichen[data-position="1"]{--notiz-y:-10px}
+.document-pdf-dock .gfx-tb-karte button:is(:hover,:focus-visible) .pdf-dock-notizzeichen[data-position="2"]{--notiz-x:23px;--notiz-r:15deg}
+@media(prefers-reduced-motion:reduce){
+  .document-pdf-dock .gfx-tb-karte[data-karte="notiz"] .zeichen::before,.pdf-dock-notizzeichen{transition:none}
+}
+body[data-bewegung="ruhig"] :is(.pdf-dock-notizzeichen,.document-pdf-dock .gfx-tb-karte[data-karte="notiz"] .zeichen::before){transition:none}
+@media(forced-colors:active){
+  .document-pdf-dock .pdf-dock-notizzeichen{transform:none;box-shadow:none}
+  .document-pdf-dock .pdf-dock-notizzeichen:not([data-position="1"]){display:none}
+}
+@media(max-width:550px){
+  .document-pdf-dock .gfx-tb-haupt{padding-inline:4px}
+  .document-pdf-dock .gfx-tb-schnell :is([data-a="pdf-rahmen"],[data-a="pdf-verbinder"],[data-a="pdf-link"]){display:none}
+  .document-pdf-dock .gfx-tb-schnell [data-a="pdf-schnellmehr"]{display:grid}
+}
+@media(max-width:760px),(pointer:coarse){
+  .document-pdf-dock .gfx-tb-blatt{width:44px}
 }
 .document-pdf-dock .gfx-tb-menue{
   bottom:calc(100% + 6px);
   max-height:min(62vh,464px);
 }
-.document-pdf-dock .gfx-tb-menuewerkzeuge [data-wz="zeichen"]{
+.document-pdf-dock .gfx-tb-menuewerkzeuge :is([data-wz="zeichen"],[data-wz="select"],[data-wz="schreiben"]){
   display:flex;width:100%;justify-content:flex-start;gap:9px;padding-inline:10px;
   font-size:.875rem;white-space:nowrap;
 }
 .document-pdf-dock .gfx-tb-menuewerkzeuge [data-wz="zeichen"] svg{flex:none}
-.document-pdf-dock .gfx-tb-haupt [data-karte^="pdf-"]{width:104px}
 .document-pdf-dock [data-karte^="pdf-"] button{flex-direction:column;justify-content:center;gap:4px}
 .document-pdf-dock [data-karte^="pdf-"] .zeichen{position:static;transform:none}
 .document-pdf-dock [data-karte^="pdf-"] .zeichen svg{visibility:visible}
@@ -30790,7 +30836,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1655, inhalt: 'c3f46fa909193ca5', gebaut: '2026-11-25T06:51:36.214Z' };
+const Stand = { fassung: 1657, inhalt: 'be98356df1f71fcb', gebaut: '2026-11-25T07:27:08.571Z' };
 window.Stand = Stand;
 
 </script>
@@ -91185,13 +91231,63 @@ const DocumentMode = (() => {
         folienKlappe.setAttribute('aria-haspopup', 'menu');
         folienKlappe.hidden = !istFoliensatz(page);
         commandbar.append(modes, pagination, zoomGroup, findKlappe, zeigenKlappe, folienKlappe);
+        let pdfZeigermodus = 'select';
+        const pdfDockMenue = (id) => {
+            if (id === 'elektro')
+                return Elektrostart.werkzeugmenue(() => galerie?.schliesse(), () => {
+                    App.neueSeite();
+                    Blocks.einfuegenAmEnde('schaltplan');
+                });
+            const liste = document.createElement('div');
+            liste.className = 'gfx-tb-liste gfx-tb-befehlsliste';
+            const eintrag = (name, symbol, tun, gesperrt = false) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.disabled = gesperrt;
+                const griff = document.createElement('span');
+                griff.dataset.sym = symbol;
+                griff.setAttribute('aria-hidden', 'true');
+                b.append(griff, document.createTextNode(name));
+                b.addEventListener('click', () => {
+                    galerie?.schliesse();
+                    tun();
+                });
+                liste.append(b);
+            };
+            const form = (kennzeichen, name, symbol) => {
+                eintrag(name, symbol, () => {
+                    inkWerkzeugWaehlen('formen');
+                    inkToolbar()?.querySelector('[data-act="formart"][data-form="' + kennzeichen + '"]')?.click();
+                    inkSync();
+                }, !canAnnotate);
+            };
+            if (id === 'pdf-rahmen' || id === 'pdf-schnellmehr') {
+                form('rectangle', 'Rechteck', 'formRect');
+                form('ellipse', 'Ellipse', 'formEllipse');
+            }
+            if (id === 'pdf-verbinder' || id === 'pdf-schnellmehr') {
+                form('line', 'Linie', 'formLine');
+                form('arrow', 'Pfeil', 'formArrow');
+                form('curve', 'Kurve', 'formCurve');
+            }
+            if (id === 'pdf-link' || id === 'pdf-schnellmehr') {
+                const verweis = inkToolbar()?.querySelector('[data-act="verweis"]');
+                eintrag('Auswahl verlinken', 'link', () => verweis?.click(), !canAnnotate || !verweis || verweis.disabled);
+                eintrag('Dokumentlink kopieren', 'page', () => Register.aktionen.tun('link', page, { kontext: 'seite' }));
+            }
+            if (!liste.childElementCount)
+                return null;
+            Register.symbole.fuelle(liste);
+            return liste;
+        };
         const galerie = art === 'PDF'
             ? GfxToolbar.erstelle({
                 klasse: 'document-pdf-dock',
                 beschriftung: 'PDF bearbeiten',
                 werkzeuge: Marken.WERKZEUGE,
                 galerie: {
-                    schnell: ['schreiben', 'select', 'elektro', 'ink-options'],
+                    schnell: ['pdf-zeiger', 'pdf-rahmen', 'pdf-verbinder', 'pdf-link', 'elektro', 'pdf-schnellmehr'],
+                    ganzeKarten: true,
                     karten: [
                         { id: 'notiz', knoepfe: ['zettel'] },
                         { id: 'stifte', knoepfe: ['stift', 'radierer'] },
@@ -91199,33 +91295,56 @@ const DocumentMode = (() => {
                         { id: 'pdf-markieren', knoepfe: ['marker', 'abdeck'] },
                         { id: 'pdf-text', knoepfe: ['text', 'textfix'] },
                         { id: 'pdf-inhalt', knoepfe: ['elemente', 'bild'] },
-                        { id: 'pdf-hilfen', knoepfe: ['laser', 'ink-ruler'] }
+                        { id: 'pdf-hilfen', knoepfe: ['laser', 'ink-ruler'] },
+                        { id: 'pdf-einrichten', knoepfe: ['ink-options'] }
                     ],
-                    werkzeugMenues: { elektro: ['zeichen'] }
+                    werkzeugMenues: { 'pdf-zeiger': ['select', 'schreiben'], elektro: ['zeichen'] }
                 },
                 aktionen: [
+                    { id: 'pdf-zeiger', name: 'Auswahl und Hand', sym: 'inkPointer', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'pdf-rahmen', name: 'Rahmenformen', sym: 'grid', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'pdf-verbinder', name: 'Linien und Pfeile', sym: 'inkConnector', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'pdf-link', name: 'Links', sym: 'link', menue: true, kapsel: 'werkzeuge' },
                     { id: 'elektro', name: 'Elektro', sym: 'bolt', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'pdf-schnellmehr', name: 'Weitere Schnellwerkzeuge', sym: 'dots', menue: true, kapsel: 'werkzeuge' },
                     { id: 'ink-options', name: 'Zeichenoptionen und Leiste einrichten', sym: 'dots', kapsel: 'werkzeuge' },
                     { id: 'ink-ruler', name: 'Lineal ein- oder ausblenden', sym: 'inkRuler', kapsel: 'werkzeuge' }
                 ],
-                menue: id => {
-                    if (id !== 'elektro')
-                        return null;
-                    return Elektrostart.werkzeugmenue(() => galerie?.schliesse(), () => {
-                        App.neueSeite();
-                        Blocks.einfuegenAmEnde('schaltplan');
-                    });
-                }
+                menue: pdfDockMenue
             })
             : null;
         const drawingbar = galerie?.element ?? document.createElement('div');
         drawingbar.classList.add('document-drawingbar');
         if (galerie) {
             workspace.dataset.pdfGalerie = 'an';
+            const zeiger = drawingbar.querySelector('[data-a="pdf-zeiger"]');
+            zeiger?.addEventListener('click', (e) => {
+                if (e.detail === 0 || !canAnnotate)
+                    return;
+                e.stopPropagation();
+                galerie.schliesse();
+                const aktiv = workspace.dataset.inkTool;
+                inkWerkzeugWaehlen(aktiv === 'select' ? 'schreiben' : aktiv === 'schreiben' ? 'select' : pdfZeigermodus);
+            });
+            const notiz = drawingbar.querySelector('[data-karte="notiz"] .zeichen');
+            if (notiz) {
+                delete notiz.dataset.sym;
+                notiz.replaceChildren(...['link', 'inkText', 'H₁'].map((zeichen, i) => {
+                    const platte = document.createElement('span');
+                    platte.className = 'pdf-dock-notizzeichen';
+                    platte.dataset.position = String(i);
+                    if (i < 2)
+                        platte.dataset.sym = zeichen;
+                    else
+                        platte.textContent = zeichen;
+                    return platte;
+                }));
+                Register.symbole.fuelle(notiz);
+            }
             const kurz = {
                 marker: 'Marker', abdeck: 'Abdecken', text: 'Text', textfix: 'Ändern',
                 elemente: 'Elemente', bild: 'Bild', laser: 'Laser', 'ink-ruler': 'Lineal',
-                zeichen: 'Fachzeichen aufs PDF'
+                'ink-options': 'Einrichten', select: 'Auswahl', schreiben: 'Hand', zeichen: 'Fachzeichen aufs PDF'
             };
             for (const knopf of drawingbar.querySelectorAll('[data-wz],[data-a]')) {
                 const id = knopf.dataset.wz ?? knopf.dataset.a ?? '';
@@ -91640,7 +91759,7 @@ const DocumentMode = (() => {
         const zeichenSpiegeln = (kopie, echt) => {
             if (!echt)
                 return;
-            const glyph = kopie.querySelector('[data-sym]');
+            const glyph = kopie.querySelector(':scope > [data-sym]');
             const sym = echt.querySelector('[data-sym]')?.dataset.sym || '';
             if (!glyph || !sym)
                 return;
@@ -91681,9 +91800,20 @@ const DocumentMode = (() => {
             rulerButton.disabled = !canAnnotate || !state.toolsOpen || !realRuler;
             rulerButton.setAttribute('aria-pressed', realRuler?.getAttribute('aria-pressed') || 'false');
             const werkzeug = source?.dataset.tool || 'schreiben';
-            if (galerie && workspace.dataset.inkTool !== werkzeug)
-                galerie.setzeWerkzeug(werkzeug);
+            if (galerie && workspace.dataset.inkTool !== werkzeug) {
+                const aktiverKnopf = source?.querySelector(':scope > [data-wz].on');
+                galerie.setzeWerkzeug(aktiverKnopf?.dataset.wz ?? werkzeug);
+            }
             workspace.dataset.inkTool = werkzeug;
+            if (galerie && (werkzeug === 'select' || werkzeug === 'schreiben')) {
+                pdfZeigermodus = werkzeug;
+                const symbol = drawingbar.querySelector('[data-a="pdf-zeiger"] .zeichen');
+                const zeichen = werkzeug === 'schreiben' ? 'inkHand' : 'inkPointer';
+                if (symbol && symbol.dataset.sym !== zeichen) {
+                    symbol.dataset.sym = zeichen;
+                    Register.symbole.fuelle(symbol.parentElement);
+                }
+            }
             drawingbar.querySelectorAll('[data-document-tool]').forEach(button => {
                 const real = source?.querySelector('[data-wz="' + button.dataset.documentTool + '"]');
                 button.disabled = !canAnnotate || !state.toolsOpen || !real || real.disabled;
@@ -92703,6 +92833,7 @@ const DocumentMode = (() => {
             workspace.dataset.documentTools = an ? 'open' : 'closed';
             if (!an && galerie) {
                 galerie.schliesse();
+                delete workspace.dataset.pdfZubehoer;
                 workspace.dataset.inkOptions = 'closed';
                 moreTools.setAttribute('aria-expanded', 'false');
             }
@@ -92802,6 +92933,11 @@ const DocumentMode = (() => {
                 event.stopPropagation();
                 return;
             }
+            if (event.key === 'Escape' && workspace.dataset.pdfZubehoer === 'an') {
+                delete workspace.dataset.pdfZubehoer;
+                event.stopPropagation();
+                return;
+            }
             if (event.key === 'Escape' && workspace.dataset.documentView === 'open') {
                 workspace.dataset.documentView = 'closed';
                 viewButton.setAttribute('aria-expanded', 'false');
@@ -92822,6 +92958,35 @@ const DocumentMode = (() => {
                 springe(state.index + (event.key === 'PageDown' ? 1 : -1));
             }
         });
+        const inkWerkzeugWaehlen = (tool, anchor) => {
+            if (!canAnnotate)
+                return;
+            if (galerie) {
+                const zubehoer = !['schreiben', 'bild', 'elemente', 'laser'].includes(tool);
+                const erneut = workspace.dataset.inkTool === tool && workspace.dataset.pdfZubehoer === 'an';
+                if (zubehoer && !erneut)
+                    workspace.dataset.pdfZubehoer = 'an';
+                else
+                    delete workspace.dataset.pdfZubehoer;
+            }
+            if (tool !== 'bild') {
+                penTool = tool;
+                Store.setMeta('dokStift:' + page.id, tool);
+            }
+            toolsSetzen(true);
+            inkToolbar()?.querySelector('[data-wz="' + tool + '"]')?.click();
+            if (tool === 'laser' || tool === 'elemente')
+                inkToolbar()?.dispatchEvent(new CustomEvent('ink-panel', {
+                    detail: { kind: tool, anchor }
+                }));
+            inkSync();
+        };
+        if (galerie)
+            workspace.addEventListener('pointerdown', event => {
+                if (event.target instanceof Element &&
+                    !event.target.closest('.document-pdf-dock, .blatt-reihe'))
+                    delete workspace.dataset.pdfZubehoer;
+            });
         workspace.addEventListener('click', event => {
             const element = event.target instanceof Element ? event.target : null;
             const inkButton = element?.closest('.blatt-werk button');
@@ -92837,19 +93002,10 @@ const DocumentMode = (() => {
                 penTool = inkButton.dataset.wz;
                 Store.setMeta('dokStift:' + page.id, penTool);
             }
-            const tool = element?.closest('[data-document-tool]')?.dataset.documentTool;
-            if (tool && canAnnotate) {
-                if (tool !== 'bild') {
-                    penTool = tool;
-                    Store.setMeta('dokStift:' + page.id, tool);
-                }
-                toolsSetzen(true);
-                inkToolbar()?.querySelector('[data-wz="' + tool + '"]')?.click();
-                if (tool === 'laser' || tool === 'elemente')
-                    inkToolbar()?.dispatchEvent(new CustomEvent('ink-panel', {
-                        detail: { kind: tool, anchor: element?.closest('[data-document-tool]') }
-                    }));
-                inkSync();
+            const werkzeugknopf = element?.closest('[data-document-tool]');
+            const tool = werkzeugknopf?.dataset.documentTool;
+            if (tool) {
+                inkWerkzeugWaehlen(tool, werkzeugknopf);
                 return;
             }
             if (!element?.closest('.document-commandbar,[data-document-action="view"],.blatt-werk')) {

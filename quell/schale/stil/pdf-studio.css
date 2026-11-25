@@ -944,15 +944,16 @@ body[data-dokument="an"] .document-studio .blatt-werk{
   .document-studio .document-pagination .document-position{transition:none}
 }
 
-/* Die PDF-Galerie benutzt die Werkzeugkarten der Fläche. Das Zubehör des
-   gewählten Werkzeugs bleibt am Blatt und sitzt direkt über der Galerie. */
+/* Edgeless-Geometrie für PDF-Werkzeuge. Die PDF-Bedienelemente behalten den
+   Redion-Dokumentmodus als gemeinsamen Controller. */
 .document-studio[data-pdf-galerie]{
   --pdf-galerie-hoehe:64px;
-  --pdf-dock-unten:calc(var(--visual-bottom,0px) + max(8px,env(safe-area-inset-bottom,0px)));
+  --pdf-dock-breite:614px;
+  --pdf-dock-unten:calc(var(--visual-bottom,0px) + max(16px,env(safe-area-inset-bottom,0px)));
 }
 .document-studio .document-drawingbar.document-pdf-dock{
   position:fixed;left:50%;bottom:var(--pdf-dock-unten);transform:translateX(-50%);z-index:81;
-  display:block;width:min(742px,calc(100% - 16px));min-height:0;
+  display:block;width:min(var(--pdf-dock-breite),calc(100% - 16px));min-height:0;
   padding:0;border:0;background:none;color:var(--text);overflow:visible;
 }
 .document-studio[data-document-tools="closed"] .document-drawingbar.document-pdf-dock,
@@ -963,25 +964,70 @@ body[data-dokument="an"] .document-studio[data-pdf-galerie][data-document-tools=
 }
 body[data-dokument="an"] .document-studio[data-pdf-galerie] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe{
   bottom:calc(var(--pdf-dock-unten) + var(--pdf-galerie-hoehe) + 6px);
-  max-width:min(742px,calc(100vw - 16px));
+  max-width:min(var(--pdf-dock-breite),calc(100vw - 16px));
 }
 .document-studio[data-pdf-galerie] .blatt-werk > :is([data-wz],.blatt-zeilenbruch),
 .document-studio[data-pdf-galerie] .blatt-werk > .blatt-tafel > :is([data-act="undo"],[data-act="redo"]){
   display:none!important;
 }
-.document-studio[data-pdf-galerie]:not([data-ink-options="open"])[data-ink-tool="schreiben"] .blatt-reihe{
-  visibility:hidden;
+.document-studio[data-pdf-galerie]:not([data-ink-options="open"]):not([data-pdf-zubehoer="an"])
+.blatt-reihe:not(:has([data-act="verweis"]:not(:disabled))){visibility:hidden}
+.document-pdf-dock .gfx-tb-haupt{padding-inline:12px;box-shadow:var(--shadow-2)}
+.document-pdf-dock .gfx-tb-schnell{gap:2px;padding:0}
+.document-pdf-dock .gfx-tb-schnell button{width:44px;height:44px}
+.document-pdf-dock .gfx-tb-schnell svg{width:24px;height:24px}
+.document-pdf-dock .gfx-tb-schnell [data-a="pdf-schnellmehr"]{display:none}
+.document-studio:is([data-ink-tool="select"],[data-ink-tool="schreiben"]) .document-pdf-dock [data-a="pdf-zeiger"]{
+  color:var(--gfx-galerie-aktiv);background:var(--bg-hover);
+}
+.document-pdf-dock .gfx-tb-trenn{margin-inline:7px}
+.document-pdf-dock .gfx-tb-blatt{width:28px;height:44px}
+.document-pdf-dock .gfx-tb-haupt .gfx-tb-karte{width:96px}
+.document-pdf-dock .gfx-tb-karte[data-karte="notiz"] .zeichen{transform:none}
+.document-pdf-dock .gfx-tb-karte[data-karte="notiz"] .zeichen::before{
+  left:calc(50% - 30px);width:60px;height:72px;bottom:-21px;
+  background:var(--bg-hover);transform:rotate(4deg);transition:transform var(--motion-normal) var(--ease-enter);
+}
+.document-pdf-dock .gfx-tb-karte[data-karte="notiz"] .zeichen::after{content:none}
+.pdf-dock-notizzeichen{
+  --notiz-x:0px;--notiz-y:0px;--notiz-r:4deg;
+  display:grid;place-items:center;position:absolute;left:calc(50% - 13px);bottom:12px;
+  width:26px;height:26px;border-radius:3px;background:var(--bg-card);color:var(--text-dim);
+  box-shadow:var(--shadow-1);font-size:1rem;
+  transform:translate(var(--notiz-x),var(--notiz-y)) rotate(var(--notiz-r));
+  transition:transform var(--motion-normal) var(--ease-enter);
+}
+.pdf-dock-notizzeichen[data-position="0"]{--notiz-x:-22px;--notiz-y:-5px;--notiz-r:-6deg}
+.pdf-dock-notizzeichen[data-position="2"]{--notiz-x:21px;--notiz-y:-7px;--notiz-r:8deg}
+.document-pdf-dock .gfx-tb-karte .pdf-dock-notizzeichen svg{visibility:visible}
+.document-pdf-dock .gfx-tb-karte button:is(:hover,:focus-visible) .pdf-dock-notizzeichen[data-position="0"]{--notiz-x:-25px;--notiz-r:-9deg}
+.document-pdf-dock .gfx-tb-karte button:is(:hover,:focus-visible) .pdf-dock-notizzeichen[data-position="1"]{--notiz-y:-10px}
+.document-pdf-dock .gfx-tb-karte button:is(:hover,:focus-visible) .pdf-dock-notizzeichen[data-position="2"]{--notiz-x:23px;--notiz-r:15deg}
+@media(prefers-reduced-motion:reduce){
+  .document-pdf-dock .gfx-tb-karte[data-karte="notiz"] .zeichen::before,.pdf-dock-notizzeichen{transition:none}
+}
+body[data-bewegung="ruhig"] :is(.pdf-dock-notizzeichen,.document-pdf-dock .gfx-tb-karte[data-karte="notiz"] .zeichen::before){transition:none}
+@media(forced-colors:active){
+  .document-pdf-dock .pdf-dock-notizzeichen{transform:none;box-shadow:none}
+  .document-pdf-dock .pdf-dock-notizzeichen:not([data-position="1"]){display:none}
+}
+@media(max-width:550px){
+  .document-pdf-dock .gfx-tb-haupt{padding-inline:4px}
+  .document-pdf-dock .gfx-tb-schnell :is([data-a="pdf-rahmen"],[data-a="pdf-verbinder"],[data-a="pdf-link"]){display:none}
+  .document-pdf-dock .gfx-tb-schnell [data-a="pdf-schnellmehr"]{display:grid}
+}
+@media(max-width:760px),(pointer:coarse){
+  .document-pdf-dock .gfx-tb-blatt{width:44px}
 }
 .document-pdf-dock .gfx-tb-menue{
   bottom:calc(100% + 6px);
   max-height:min(62vh,464px);
 }
-.document-pdf-dock .gfx-tb-menuewerkzeuge [data-wz="zeichen"]{
+.document-pdf-dock .gfx-tb-menuewerkzeuge :is([data-wz="zeichen"],[data-wz="select"],[data-wz="schreiben"]){
   display:flex;width:100%;justify-content:flex-start;gap:9px;padding-inline:10px;
   font-size:.875rem;white-space:nowrap;
 }
 .document-pdf-dock .gfx-tb-menuewerkzeuge [data-wz="zeichen"] svg{flex:none}
-.document-pdf-dock .gfx-tb-haupt [data-karte^="pdf-"]{width:104px}
 .document-pdf-dock [data-karte^="pdf-"] button{flex-direction:column;justify-content:center;gap:4px}
 .document-pdf-dock [data-karte^="pdf-"] .zeichen{position:static;transform:none}
 .document-pdf-dock [data-karte^="pdf-"] .zeichen svg{visibility:visible}

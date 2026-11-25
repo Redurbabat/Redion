@@ -128,6 +128,25 @@ try {
     const dock = page.locator('.document-pdf-dock');
     const blitz = dock.getByRole('button', { name: 'Elektro', exact: true });
     const dockKasten = await dock.boundingBox();
+    pass(label + ': die PDF-Kopfzeile bleibt die Redion-Dokumentansicht',
+      await page.locator('.document-topbar [data-document-action="exit"]').count() === 1 &&
+      await page.locator('.document-topbar [data-document-action="print"]').count() === 1);
+    const zeiger = dock.getByRole('button', { name: 'Auswahl und Hand', exact: true });
+    await zeiger.click();
+    const ersterModus = await page.locator('.document-studio').getAttribute('data-ink-tool');
+    await zeiger.click();
+    const zweiterModus = await page.locator('.document-studio').getAttribute('data-ink-tool');
+    pass(label + ': der Zeiger wechselt direkt zwischen Auswahl und Hand',
+      [ersterModus, zweiterModus].sort().join(',') === 'schreiben,select');
+    const formMenue = dock.getByRole('button', {
+      name: width > 550 ? 'Linien und Pfeile' : 'Weitere Schnellwerkzeuge', exact: true
+    });
+    await formMenue.click();
+    await dock.locator('.gfx-tb-menue').getByRole('button', { name: 'Pfeil', exact: true }).click();
+    pass(label + ': der Schnellbefehl aktiviert die echte PDF-Pfeilform',
+      await page.locator('.document-stage[data-aktiv] .blatt-marken[data-tool="arrow"]').count() === 1 &&
+      await page.locator('.document-stage[data-aktiv] [data-act="formart"][data-form="arrow"]').getAttribute('aria-pressed') === 'true');
+    await page.keyboard.press('Escape');
     pass(label + ': PDF nutzt eine Werkzeuggalerie am unteren Rand',
       !!dockKasten && dockKasten.y > height * .72 &&
       await page.locator('.document-drawingbar:visible').count() === 1);

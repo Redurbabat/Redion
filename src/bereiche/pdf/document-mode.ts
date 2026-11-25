@@ -2193,13 +2193,62 @@ const DocumentMode = (() => {
     commandbar.append(modes, pagination, zoomGroup, findKlappe, zeigenKlappe,
                       folienKlappe);
 
+    let pdfZeigermodus = 'select';
+    const pdfDockMenue = (id: string): HTMLElement | null => {
+      if (id === 'elektro') return Elektrostart.werkzeugmenue(() => galerie?.schliesse(), () => {
+        App.neueSeite();
+        Blocks.einfuegenAmEnde('schaltplan');
+      });
+      const liste = document.createElement('div');
+      liste.className = 'gfx-tb-liste gfx-tb-befehlsliste';
+      const eintrag = (name: string, symbol: string, tun: () => void, gesperrt = false): void => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.disabled = gesperrt;
+        const griff = document.createElement('span');
+        griff.dataset.sym = symbol;
+        griff.setAttribute('aria-hidden', 'true');
+        b.append(griff, document.createTextNode(name));
+        b.addEventListener('click', () => {
+          galerie?.schliesse();
+          tun();
+        });
+        liste.append(b);
+      };
+      const form = (kennzeichen: string, name: string, symbol: string): void => {
+        eintrag(name, symbol, () => {
+          inkWerkzeugWaehlen('formen');
+          inkToolbar()?.querySelector<HTMLButtonElement>(
+            '[data-act="formart"][data-form="' + kennzeichen + '"]')?.click();
+          inkSync();
+        }, !canAnnotate);
+      };
+      if (id === 'pdf-rahmen' || id === 'pdf-schnellmehr') {
+        form('rectangle', 'Rechteck', 'formRect');
+        form('ellipse', 'Ellipse', 'formEllipse');
+      }
+      if (id === 'pdf-verbinder' || id === 'pdf-schnellmehr') {
+        form('line', 'Linie', 'formLine');
+        form('arrow', 'Pfeil', 'formArrow');
+        form('curve', 'Kurve', 'formCurve');
+      }
+      if (id === 'pdf-link' || id === 'pdf-schnellmehr') {
+        const verweis = inkToolbar()?.querySelector<HTMLButtonElement>('[data-act="verweis"]');
+        eintrag('Auswahl verlinken', 'link', () => verweis?.click(), !canAnnotate || !verweis || verweis.disabled);
+        eintrag('Dokumentlink kopieren', 'page', () => Register.aktionen.tun('link', page, { kontext: 'seite' }));
+      }
+      if (!liste.childElementCount) return null;
+      Register.symbole.fuelle(liste);
+      return liste;
+    };
     const galerie: ReturnType<typeof GfxToolbar.erstelle> | null = art === 'PDF'
       ? GfxToolbar.erstelle({
         klasse: 'document-pdf-dock',
         beschriftung: 'PDF bearbeiten',
         werkzeuge: Marken.WERKZEUGE,
         galerie: {
-          schnell: ['schreiben', 'select', 'elektro', 'ink-options'],
+          schnell: ['pdf-zeiger', 'pdf-rahmen', 'pdf-verbinder', 'pdf-link', 'elektro', 'pdf-schnellmehr'],
+          ganzeKarten: true,
           karten: [
             { id: 'notiz', knoepfe: ['zettel'] },
             { id: 'stifte', knoepfe: ['stift', 'radierer'] },
@@ -2207,33 +2256,54 @@ const DocumentMode = (() => {
             { id: 'pdf-markieren', knoepfe: ['marker', 'abdeck'] },
             { id: 'pdf-text', knoepfe: ['text', 'textfix'] },
             { id: 'pdf-inhalt', knoepfe: ['elemente', 'bild'] },
-            { id: 'pdf-hilfen', knoepfe: ['laser', 'ink-ruler'] }
+            { id: 'pdf-hilfen', knoepfe: ['laser', 'ink-ruler'] },
+            { id: 'pdf-einrichten', knoepfe: ['ink-options'] }
           ],
-          werkzeugMenues: { elektro: ['zeichen'] }
+          werkzeugMenues: { 'pdf-zeiger': ['select', 'schreiben'], elektro: ['zeichen'] }
         },
         aktionen: [
+          { id: 'pdf-zeiger', name: 'Auswahl und Hand', sym: 'inkPointer', menue: true, kapsel: 'werkzeuge' },
+          { id: 'pdf-rahmen', name: 'Rahmenformen', sym: 'grid', menue: true, kapsel: 'werkzeuge' },
+          { id: 'pdf-verbinder', name: 'Linien und Pfeile', sym: 'inkConnector', menue: true, kapsel: 'werkzeuge' },
+          { id: 'pdf-link', name: 'Links', sym: 'link', menue: true, kapsel: 'werkzeuge' },
           { id: 'elektro', name: 'Elektro', sym: 'bolt', menue: true, kapsel: 'werkzeuge' },
+          { id: 'pdf-schnellmehr', name: 'Weitere Schnellwerkzeuge', sym: 'dots', menue: true, kapsel: 'werkzeuge' },
           { id: 'ink-options', name: 'Zeichenoptionen und Leiste einrichten', sym: 'dots', kapsel: 'werkzeuge' },
           { id: 'ink-ruler', name: 'Lineal ein- oder ausblenden', sym: 'inkRuler', kapsel: 'werkzeuge' }
         ],
-        menue: id => {
-          if (id !== 'elektro') return null;
-          return Elektrostart.werkzeugmenue(() => galerie?.schliesse(), () => {
-            App.neueSeite();
-            Blocks.einfuegenAmEnde('schaltplan');
-          });
-        }
+        menue: pdfDockMenue
       })
       : null;
     const drawingbar = galerie?.element ?? document.createElement('div');
     drawingbar.classList.add('document-drawingbar');
     if (galerie) {
       workspace.dataset.pdfGalerie = 'an';
+      const zeiger = drawingbar.querySelector<HTMLButtonElement>('[data-a="pdf-zeiger"]');
+      zeiger?.addEventListener('click', (e: MouseEvent) => {
+        if (e.detail === 0 || !canAnnotate) return;
+        e.stopPropagation();
+        galerie.schliesse();
+        const aktiv = workspace.dataset.inkTool;
+        inkWerkzeugWaehlen(aktiv === 'select' ? 'schreiben' : aktiv === 'schreiben' ? 'select' : pdfZeigermodus);
+      });
+      const notiz = drawingbar.querySelector<HTMLElement>('[data-karte="notiz"] .zeichen');
+      if (notiz) {
+        delete notiz.dataset.sym;
+        notiz.replaceChildren(...['link','inkText','H₁'].map((zeichen, i) => {
+          const platte = document.createElement('span');
+          platte.className = 'pdf-dock-notizzeichen';
+          platte.dataset.position = String(i);
+          if (i < 2) platte.dataset.sym = zeichen;
+          else platte.textContent = zeichen;
+          return platte;
+        }));
+        Register.symbole.fuelle(notiz);
+      }
       // Die Galerieknoepfe benutzen denselben Ereignispfad wie der Foliensatz.
       const kurz: Record<string, string> = {
         marker: 'Marker', abdeck: 'Abdecken', text: 'Text', textfix: 'Ändern',
         elemente: 'Elemente', bild: 'Bild', laser: 'Laser', 'ink-ruler': 'Lineal',
-        zeichen: 'Fachzeichen aufs PDF'
+        'ink-options': 'Einrichten', select: 'Auswahl', schreiben: 'Hand', zeichen: 'Fachzeichen aufs PDF'
       };
       for (const knopf of drawingbar.querySelectorAll<HTMLButtonElement>('[data-wz],[data-a]')) {
         const id = knopf.dataset.wz ?? knopf.dataset.a ?? '';
@@ -2940,7 +3010,7 @@ const DocumentMode = (() => {
        den das Umhängen oben schon gekostet hat. */
     const zeichenSpiegeln = (kopie: HTMLElement, echt: HTMLElement | null | undefined): void => {
       if (!echt) return;
-      const glyph = kopie.querySelector<HTMLElement>('[data-sym]');
+      const glyph = kopie.querySelector<HTMLElement>(':scope > [data-sym]');
       const sym = echt.querySelector<HTMLElement>('[data-sym]')?.dataset.sym || '';
       if (!glyph || !sym) return;
       const form = echt.dataset.form || '';
@@ -3000,8 +3070,20 @@ const DocumentMode = (() => {
       rulerButton.disabled = !canAnnotate || !state.toolsOpen || !realRuler;
       rulerButton.setAttribute('aria-pressed', realRuler?.getAttribute('aria-pressed') || 'false');
       const werkzeug = source?.dataset.tool || 'schreiben';
-      if (galerie && workspace.dataset.inkTool !== werkzeug) galerie.setzeWerkzeug(werkzeug);
+      if (galerie && workspace.dataset.inkTool !== werkzeug) {
+        const aktiverKnopf = source?.querySelector<HTMLElement>(':scope > [data-wz].on');
+        galerie.setzeWerkzeug(aktiverKnopf?.dataset.wz ?? werkzeug);
+      }
       workspace.dataset.inkTool = werkzeug;
+      if (galerie && (werkzeug === 'select' || werkzeug === 'schreiben')) {
+        pdfZeigermodus = werkzeug;
+        const symbol = drawingbar.querySelector<HTMLElement>('[data-a="pdf-zeiger"] .zeichen');
+        const zeichen = werkzeug === 'schreiben' ? 'inkHand' : 'inkPointer';
+        if (symbol && symbol.dataset.sym !== zeichen) {
+          symbol.dataset.sym = zeichen;
+          Register.symbole.fuelle(symbol.parentElement);
+        }
+      }
       drawingbar.querySelectorAll<HTMLButtonElement>('[data-document-tool]').forEach(button => {
         const real = source?.querySelector<HTMLButtonElement>('[data-wz="' + button.dataset.documentTool + '"]');
         button.disabled = !canAnnotate || !state.toolsOpen || !real || real.disabled;
@@ -4332,6 +4414,7 @@ const DocumentMode = (() => {
       workspace.dataset.documentTools = an ? 'open' : 'closed';
       if (!an && galerie) {
         galerie.schliesse();
+        delete workspace.dataset.pdfZubehoer;
         workspace.dataset.inkOptions = 'closed';
         moreTools.setAttribute('aria-expanded', 'false');
       }
@@ -4416,6 +4499,11 @@ const DocumentMode = (() => {
         workspace.dataset.inkOptions = 'closed'; moreTools.setAttribute('aria-expanded', 'false');
         moreTools.focus(); event.stopPropagation(); return;
       }
+      if (event.key === 'Escape' && workspace.dataset.pdfZubehoer === 'an') {
+        delete workspace.dataset.pdfZubehoer;
+        event.stopPropagation();
+        return;
+      }
       if (event.key === 'Escape' && workspace.dataset.documentView === 'open') {
         workspace.dataset.documentView = 'closed';
         viewButton.setAttribute('aria-expanded', 'false');
@@ -4430,6 +4518,27 @@ const DocumentMode = (() => {
         event.preventDefault(); springe(state.index + (event.key === 'PageDown' ? 1 : -1));
       }
     });
+    const inkWerkzeugWaehlen = (tool: string, anchor?: HTMLElement | null): void => {
+      if (!canAnnotate) return;
+      if (galerie) {
+        const zubehoer = !['schreiben', 'bild', 'elemente', 'laser'].includes(tool);
+        const erneut = workspace.dataset.inkTool === tool && workspace.dataset.pdfZubehoer === 'an';
+        if (zubehoer && !erneut) workspace.dataset.pdfZubehoer = 'an';
+        else delete workspace.dataset.pdfZubehoer;
+      }
+      if (tool !== 'bild') { penTool = tool; Store.setMeta('dokStift:' + page.id, tool); }
+      toolsSetzen(true);
+      inkToolbar()?.querySelector<HTMLButtonElement>('[data-wz="' + tool + '"]')?.click();
+      // Das vorhandene Werkzeug öffnet seine eigene Laser- oder Elemente-Auswahl.
+      if (tool === 'laser' || tool === 'elemente') inkToolbar()?.dispatchEvent(new CustomEvent('ink-panel', {
+        detail: { kind: tool, anchor }
+      }));
+      inkSync();
+    };
+    if (galerie) workspace.addEventListener('pointerdown', event => {
+      if (event.target instanceof Element &&
+          !event.target.closest('.document-pdf-dock, .blatt-reihe')) delete workspace.dataset.pdfZubehoer;
+    });
     workspace.addEventListener('click', event => {
       const element = event.target instanceof Element ? event.target : null;
       const inkButton = element?.closest<HTMLElement>('.blatt-werk button');
@@ -4442,16 +4551,11 @@ const DocumentMode = (() => {
       if (inkButton?.dataset.wz && inkButton.dataset.wz !== 'bild') {
         penTool = inkButton.dataset.wz; Store.setMeta('dokStift:' + page.id, penTool);
       }
-      const tool = element?.closest<HTMLElement>('[data-document-tool]')?.dataset.documentTool;
-      if (tool && canAnnotate) {
-        if (tool !== 'bild') { penTool = tool; Store.setMeta('dokStift:' + page.id, tool); }
-        toolsSetzen(true);
-        inkToolbar()?.querySelector<HTMLButtonElement>('[data-wz="' + tool + '"]')?.click();
-        // Eine Auswahlklappe zeigt Möglichkeiten, ohne einen Strich abzulegen.
-        if (tool === 'laser' || tool === 'elemente') inkToolbar()?.dispatchEvent(new CustomEvent('ink-panel', {
-          detail: { kind: tool, anchor: element?.closest<HTMLElement>('[data-document-tool]') }
-        }));
-        inkSync(); return;
+      const werkzeugknopf = element?.closest<HTMLElement>('[data-document-tool]');
+      const tool = werkzeugknopf?.dataset.documentTool;
+      if (tool) {
+        inkWerkzeugWaehlen(tool, werkzeugknopf);
+        return;
       }
       /* Ein Klick in die Zeichenleiste schliesst die Ansichtsklappe nicht
          (E468): „Lesen" stellt die Schicht per Klick auf die Hand, und der
