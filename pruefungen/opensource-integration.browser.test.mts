@@ -132,7 +132,8 @@ for (const profil of [
   { name: 'Windows-Breite', engine: chromium, width: 1280, quelle: '../index.html' },
   { name: 'iPhone-Breite und Offline-Einzeldatei', engine: webkit, width: 390, quelle: '../redion-einzeldatei.html' }
 ]) {
-  test('PDF-Originalseiten bedienen und Text erhalten · ' + profil.name, { timeout: 65_000 }, async () => {
+  // Die Einzeldatei wartet in WebKit auf die Initialisierung der lokalen Ablage.
+  test('PDF-Originalseiten bedienen und Text erhalten · ' + profil.name, { timeout: profil.width < 500 ? 120_000 : 65_000 }, async () => {
     const quelle = await pdfLib.PDFDocument.create();
     const seite1 = quelle.addPage();
     seite1.setSize(400, 310);

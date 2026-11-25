@@ -54,7 +54,8 @@ test('Windows-Ansicht verbindet die neue Leiste mit Bibliothek und Editor', { ti
   }
 });
 
-test('iPhone-WebKit erreicht Dokumente und Lernrunde in schmaler Breite', { timeout: 45_000 }, async () => {
+// WebKit braucht beim ersten Speichern der Beispieldokumente länger als Chromium.
+test('iPhone-WebKit erreicht Dokumente und Lernrunde in schmaler Breite', { timeout: 120_000 }, async () => {
   const browser = await webkit.launch();
   try {
     const page = await browser.newPage({ ...devices['iPhone 13 Pro Max'], viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });

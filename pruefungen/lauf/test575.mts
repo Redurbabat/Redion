@@ -1007,7 +1007,19 @@ const ablaufBox = await ablaufKarte.boundingBox();
 if (!ablaufBox) throw Error('Keine Vorschau für das Ablaufdiagramm');
 await palette.mouse.move(ablaufBox.x + ablaufBox.width / 2, ablaufBox.y + ablaufBox.height / 2);
 await palette.mouse.down();
-await palette.mouse.move(freieBox.x + freieBox.width * 0.75, freieBox.y + freieBox.height * 0.50, { steps: 12 });
+const ablaufZiel = await paletteFlaeche.evaluate(el => {
+  const box = el.getBoundingClientRect();
+  for (const fx of [.75, .83, .62, .52]) {
+    for (const fy of [.50, .62, .56, .66]) {
+      const x = box.left + box.width * fx, y = box.top + box.height * fy;
+      const hit = document.elementFromPoint(x, y);
+      if (hit && el.contains(hit) && !hit.closest('.pg-fl-notiz,.gfx-tb-sockel,.pg-fl-auswahlleiste'))
+        return { x, y };
+    }
+  }
+  throw Error('Kein freier Ablagepunkt für das Ablaufdiagramm');
+});
+await palette.mouse.move(ablaufZiel.x, ablaufZiel.y, { steps: 12 });
 p('Vorlagenzug zeigt das Ablaufdiagramm ohne Schreibzugriff als Vorschau',
   await paletteFlaeche.locator('.pg-fl-dock-vorschau').count() === 1 &&
   JSON.stringify(await paletteDaten()) === JSON.stringify(vorDiagramm));
