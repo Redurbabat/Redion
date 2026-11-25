@@ -1,14 +1,20 @@
 # Redion Agenten-Start
 
-Stand: 2026-11-07. Einstieg fuer Codex, Claude und ChatGPT. **Vor jedem Auftrag den aktuellen GitHub-Stand lesen.**
+Einstieg für alle KI-Assistenten und Agenten, die in Redion arbeiten.
 
-1. Lies `CLAUDE.md` (verbindliche Projektregeln), `doku/ARCHITEKTUR.md`, `AUFGABEN.md`, `ENTSCHEIDUNGEN.md`, `PROBLEME.md` und den aufgabenspezifischen Skill.
-2. Pruefe bestehenden Code und Pruefungen, bevor du neue Komponenten, Navigation oder Datenmodelle erfindest.
-3. Arbeite ausschliesslich auf einem eigenen Feature-/Fix-/Review-Branch; kein direkter Commit oder Merge nach `main`, kein Force-Push und keine Ueberschreibung fremder Branches.
-4. Datenintegritaet, Offline-Betrieb, Import/Export, bestehende Navigation und Rueckwaertskompatibilitaet gehen vor Optik.
-5. Unterscheide **Code gelesen**, **Syntax/Typen geprueft**, **Browser getestet**, **iPhone getestet**, **signierte IPA gebaut** und **Deployment erfolgt**. Fehlende Nachweise als **NICHT GETESTET** kennzeichnen.
-6. Keine privaten Dokumente, Zugangsdaten, Tokens, persoenlichen Screenshots oder Diagnoseberichte committen.
-7. Keine neue Produktfunktion ohne vorherigen Abgleich mit bestehenden Workspace-2.0-Arbeiten und den Entscheidungen.
+## Lesereihenfolge für jeden Auftrag
+
+1. **Graphify zuerst.** Lies den Einstieg und die zum Auftrag passenden Abschnitte des [Graphify-Berichts](graphify-out/GRAPH_REPORT.md). Nutze [graph.json](graphify-out/graph.json) für gezielte Fragen zu Dateien und Abhängigkeiten.
+2. **Danach die Projektregeln.** Lies [CLAUDE.md](CLAUDE.md), den passenden Skill sowie `doku/ARCHITEKTUR.md`, `AUFGABEN.md`, `ENTSCHEIDUNGEN.md` und `PROBLEME.md`. Prüfe anschliessend den aktuellen GitHub-Stand. Der Graph dient der Orientierung. Die Projektregeln bleiben verbindlich.
+
+## Arbeitsregeln
+
+1. Pruefe bestehenden Code und Pruefungen, bevor du neue Komponenten, Navigation oder Datenmodelle erfindest.
+2. Arbeite ausschliesslich auf einem eigenen Feature-/Fix-/Review-Branch; kein direkter Commit oder Merge nach `main`, kein Force-Push und keine Ueberschreibung fremder Branches.
+3. Datenintegritaet, Offline-Betrieb, Import/Export, bestehende Navigation und Rueckwaertskompatibilitaet gehen vor Optik.
+4. Unterscheide **Code gelesen**, **Syntax/Typen geprueft**, **Browser getestet**, **iPhone getestet**, **signierte IPA gebaut** und **Deployment erfolgt**. Fehlende Nachweise als **NICHT GETESTET** kennzeichnen.
+5. Keine privaten Dokumente, Zugangsdaten, Tokens, persoenlichen Screenshots oder Diagnoseberichte committen.
+6. Keine neue Produktfunktion ohne vorherigen Abgleich mit bestehenden Workspace-2.0-Arbeiten und den Entscheidungen.
 
 ## Skill-Verzeichnis
 

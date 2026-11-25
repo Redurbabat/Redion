@@ -1,5 +1,7 @@
 # CLAUDE.md — Regeln für Redion
 
+**Beginne jeden Redion-Auftrag mit dem [Graphify-Bericht](graphify-out/GRAPH_REPORT.md).** Danach lies die Projektregeln in dieser Datei und folge der Reihenfolge in [AGENTS.md](AGENTS.md).
+
 Redion ist eine Notiz-, Datenbank- und Wissens-App im Stil von Notion.
 Sie ist local-first, läuft direkt im Browser, kann ohne Konto benutzt werden
 und lässt sich optional mit einem Server auf Cloudflare erweitern.
