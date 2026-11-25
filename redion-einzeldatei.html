@@ -4612,7 +4612,12 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .gk-welt{ position:absolute; left:0; top:0; transform-origin:0 0; }
 .gk-linien{ position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
 
-.gk-kn{ position:absolute; box-sizing:border-box; max-width:230px;
+/* `width:max-content` (E818): ein absolut gesetzter Knoten schrumpft sonst
+   auf die verfügbare Breite seines Behälters, und `.gk-welt` hat bei einer
+   frischen Karte keine — „Zentrales Thema" stand als „Zentr / ales / Them /
+   a" da. `max-width` bleibt die Decke; darüber bricht er an Wortgrenzen
+   (test656). Die Fläche tat das schon (seitenansichten.css). */
+.gk-kn{ position:absolute; box-sizing:border-box; width:max-content; max-width:230px;
         display:flex; align-items:center; gap:6px;
         padding:6px 11px; border-radius:8px;
         border:2px solid var(--ast-zug, var(--line));
@@ -29922,10 +29927,18 @@ body[data-bewegung="ruhig"]:not([data-ui-shell="glass-wheel"]) #page > .pg-tools
     flex-basis: 100%;
   }
 
+  /* Flex mit Umbruch statt gleich breiter Spalten (E819): drei Drittel von
+     330 px sind 97 px, „+ PDF öffnen" braucht rund 110 — das „n" lag unter
+     dem Rand. Kein Knopf schrumpft unter sein Wort; was nicht passt, geht
+     in eine eigene Zeile (test657). */
   :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-workspace-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 92px), 1fr));
+    display: flex;
+    flex-wrap: wrap;
     width: 100%;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-workspace-actions > button {
+    flex: 1 0 auto;
   }
 
   :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-workspace-actions button {
@@ -31523,7 +31536,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1676, inhalt: '7b69d48ff54ea9c0', gebaut: '2026-11-25T19:46:01.955Z' };
+const Stand = { fassung: 1677, inhalt: '82633a920986552e', gebaut: '2026-11-25T20:20:01.615Z' };
 window.Stand = Stand;
 
 </script>

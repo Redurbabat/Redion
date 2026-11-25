@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-788 Entscheidungen, E1 bis E817 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+790 Entscheidungen, E1 bis E819 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -874,6 +874,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E815** — Das Dock am Telefon: Zeichen farbig, Wort normal, und iOS gilt überall (24. November 2026, Redurs zwei Antworten): das Wort des aktiven Reiters ist Textfarbe und fett (4,5 : 1 gemessen, 13 bis 15 : 1), der aktive Knopf liegt über seiner Linse; `test623` fünf Zeilen auf das JETZT gewollte Verhalten umgeschrieben; `test585` `test623` `test655`
 * **E816** — Der nächste Tipp nach einem schnellen Zug über die Oberkante kommt an: ein Zug auf der Leiste erzeugt einen Schwung des Browsers, und der Tipp stoppt ihn (24. November 2026, Redurs Auftrag: test614 §7f rot, Ursache belegen): `touchmove` auf der unteren Leiste ist nicht passiv und wird verhindert, solange ein Zug liegt (`selection-flow.ts`, `ziehbar`); test614 125/125, test360 34/34, test588 79/79, test541 25/25, test613 68/68, test655 89/89, test590 Lauf grün.
 * **E817** — Die Wahl fliegt auch dann ins Ziel, wenn die Seite neu gezeichnet wird, während sie fliegt (Seite → Fläche, 24. November 2026): der Flug hing an einem Bezugsrahmen, den die Neuzeichnung abreisst, und landete daneben; jetzt fliegt er ab dem letzten stimmenden Bild neu; `test585` 2 rot → 93/93 (`src/schale/bedienung/selection-flow.ts`)
+* **E818** — Ein Knoten der Gedankenkarte ist so breit wie sein Text, bis zur Decke (25. November 2026): `.gk-kn` bekommt `width:max-content`; eine frische Karte zeigte „Zentr / ales / Them / a"; `test656` (`quell/schale/stil/werkzeuge.css`)
+* **E819** — Die Knöpfe im Kopf der Bibliothek schrumpfen nicht unter ihr Wort (25. November 2026): Flex mit Umbruch statt drei gleicher Spalten in der Atelier-Haut am Telefon; `test657` (`quell/schale/stil/redion2.css`)
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71820,3 +71822,61 @@ Bei allen vier Gegenproben blieben die übrigen umgeschriebenen Zeilen grün, au
 **Bilder** (Ausschnitte in `/home/user/Redion/bilder/`): `e817-rechner-vorher.png`, `e817-rechner-mitte.png`, `e817-rechner-nachher.png`, `e817-telefon-vorher.png`, `e817-telefon-mitte.png`, `e817-telefon-nachher.png`. „Nachher" am Rechner: „Fläche" gewählt, die Linse steht unter „Fläche".
 
 **Gezählt.** `ls pruefungen/lauf/test*.mts | wc -l` sagt 588 (kein neuer Lauf in diesem Bogen; `test585` ist unverändert).
+
+
+## E818 · Ein Knoten der Gedankenkarte ist so breit wie sein Text
+
+**Was.** `.gk-kn` trägt `width:max-content` (`quell/schale/stil/werkzeuge.css`).
+`max-width` (230 px, Wurzel 260 px) bleibt die Decke; darüber bricht der
+Text an Wortgrenzen.
+
+**Warum.** Eine frisch angelegte Gedankenkarte (Schrägstrich-Befehl, Weg
+„Mindmap" im Startfenster des Artefakts) zeigte den Mittelknoten 84 px breit
+und vierzeilig: „Zentr / ales / Them / a". Der Knoten ist absolut gesetzt in
+`.gk-welt`, und die ist selbst absolut und hat nur absolut gesetzte Kinder —
+sie hat keine Breite. Ein absolut gesetztes Element ohne Breite schrumpft auf
+die verfügbare Breite, also auf seine kleinste, und `overflow-wrap:anywhere`
+macht die kleinste Breite zu wenigen Buchstaben. Auf der Fläche stand die
+Antwort seit dem Bogen der Fläche schon (`seitenansichten.css`, `.gk-auf-flaeche
+.gk-kn{width:max-content}`); in der Seite fehlte sie. Mit vorgegebener Karte
+(drei Knoten) trat der Fehler nicht auf — darum fiel er keinem Lauf auf.
+
+**Alternative.** `white-space:nowrap` — sprengt bei langen Themen die Decke;
+`test656` §2 hält genau das. Oder `overflow-wrap:break-word` statt
+`anywhere` — ändert die kleinste Breite, aber nicht den Grund, und ein
+einzelnes langes Wort liefe dann über den Rand.
+
+**Kosten.** Keine Datenänderung. Gespeicherte Lagen (`sicht`) bleiben; die
+Knoten werden nach dem Messen neu gesetzt, wie bisher.
+
+**Beweis.** `test656` gegen den Stand davor: rot mit 2 von 13 („4 Zeilen,
+84 px breit", „2 Brüche"); danach 13/13. Bild: `bilder/mindmap-neu.png`
+(nicht eingecheckt, §55.4).
+
+## E819 · Die Knöpfe im Kopf der Bibliothek schrumpfen nicht unter ihr Wort
+
+**Was.** Am Telefon setzt die Atelier-Haut (`redion2.css`) die Zeile
+`.bib-workspace-actions` als Flex mit Umbruch; jeder Knopf `flex:1 0 auto`.
+Vorher: ein Raster `repeat(auto-fit, minmax(min(100%, 92px), 1fr))`.
+
+**Warum.** Drei gleiche Spalten von 330 px sind 97 px; „+ PDF öffnen"
+braucht rund 110. Das „n" lag 13 px hinter dem Innenrand und `overflow:
+hidden` aus `studio.css` (der Lichtstreif) schnitt es ab — gesehen im Bild bei
+390 px. Der erste Reparaturstand gab nur dem PDF-Knopf `flex:1 0 auto` und
+den anderen `1 1 0`; dann wurde „+ Neu" bei 320 und 360 px gequetscht
+(`test657` rot mit 2). Darum gilt die Regel für jeden Knopf: was nicht
+passt, geht in eine eigene Zeile.
+
+**Alternative.** Kleinere Schrift oder ein kürzeres Wort („PDF") — beides
+nimmt dem Hauptweg Lesbarkeit; ein festes Spaltenmass für drei Knöpfe hängt an
+ihrer Zahl.
+
+**Kosten.** Bei 320 px kann der Hauptknopf eine eigene Zeile brauchen; die
+Höhe des Kopfs wächst dann um eine Knopfzeile. Gemessen bei 320, 360, 390
+und 430 px: alles in einer Zeile, jeder Knopf ≥ 44 px (§37).
+
+**Beweis.** `test657` gegen den Stand davor: rot mit 1 von 28 („PDF öffnen —
+13.2 px über dem Innenrand"); danach 28/28. Bilder `bilder/kopf-320.png`,
+`bilder/kopf-390.png` (nicht eingecheckt).
+
+**Gezählt.** `ls pruefungen/lauf/test*.mts | wc -l` sagt 590.

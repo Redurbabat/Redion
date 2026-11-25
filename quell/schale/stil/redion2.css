@@ -656,10 +656,18 @@ body[data-bewegung="ruhig"]:not([data-ui-shell="glass-wheel"]) #page > .pg-tools
     flex-basis: 100%;
   }
 
+  /* Flex mit Umbruch statt gleich breiter Spalten (E819): drei Drittel von
+     330 px sind 97 px, „+ PDF öffnen" braucht rund 110 — das „n" lag unter
+     dem Rand. Kein Knopf schrumpft unter sein Wort; was nicht passt, geht
+     in eine eigene Zeile (test657). */
   :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-workspace-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 92px), 1fr));
+    display: flex;
+    flex-wrap: wrap;
     width: 100%;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-workspace-actions > button {
+    flex: 1 0 auto;
   }
 
   :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-workspace-actions button {

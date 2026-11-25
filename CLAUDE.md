@@ -930,7 +930,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 588 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 590 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2354,6 +2354,22 @@ Glass Wheel bei 3,4 : 1, nicht 4,5. Gebaut von einem Haiku-Agenten, im
 Hauptzweig nachgefahren. Gezählt am 24. November: `ls pruefungen/lauf/test*.mts
 | wc -l` sagt 588.*
 
+*Und 589: `test656` — ein Knoten der Gedankenkarte bricht nicht mitten im Wort
+(E818). Eine frisch angelegte Karte zeigte „Zentrales Thema" 84 px breit als
+„Zentr / ales / Them / a": der Knoten ist absolut gesetzt in einer Welt ohne
+Breite. Gefunden hat es das BILD eines Startfensters, nicht ein Lauf — und
+der erste Anlauf des Laufs war GRÜN, weil er eine Karte mit drei Knoten
+vorgab; erst die frisch angelegte Karte (§0) ist rot (§55.2). Gezählt am
+25. November: `ls pruefungen/lauf/test*.mts | wc -l` sagt 590 (mit test657).*
+
+*Und 590: `test657` — die Knöpfe im Kopf der Bibliothek zeigen ihr ganzes Wort
+(E819). Die Atelier-Haut legte sie am Telefon in drei gleich breite Spalten,
+und „+ PDF öffnen" stand bei 390 px als „PDF öffne" da. Gegen den Stand davor
+rot mit 1 von 28; gegen den ERSTEN Reparaturstand rot mit 2 — „+ Neu" wurde
+nun gequetscht. Ein Lauf, der jeden Knopf der Zeile misst statt den einen
+gemeldeten, fand die Nachbarstelle selbst (§45). Gezählt am 25. November: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 590.*
+
 ### Die Befehle
 
 ```txt
@@ -2375,7 +2391,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 588 Läufe
+npm run pruefen                      alle 590 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2472,7 +2488,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 588 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 590 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

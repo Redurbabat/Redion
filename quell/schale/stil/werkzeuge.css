@@ -1783,7 +1783,12 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .gk-welt{ position:absolute; left:0; top:0; transform-origin:0 0; }
 .gk-linien{ position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
 
-.gk-kn{ position:absolute; box-sizing:border-box; max-width:230px;
+/* `width:max-content` (E818): ein absolut gesetzter Knoten schrumpft sonst
+   auf die verfügbare Breite seines Behälters, und `.gk-welt` hat bei einer
+   frischen Karte keine — „Zentrales Thema" stand als „Zentr / ales / Them /
+   a" da. `max-width` bleibt die Decke; darüber bricht er an Wortgrenzen
+   (test656). Die Fläche tat das schon (seitenansichten.css). */
+.gk-kn{ position:absolute; box-sizing:border-box; width:max-content; max-width:230px;
         display:flex; align-items:center; gap:6px;
         padding:6px 11px; border-radius:8px;
         border:2px solid var(--ast-zug, var(--line));
