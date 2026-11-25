@@ -7,7 +7,7 @@ import ts from 'typescript';
 const source = readFileSync(new URL('../../../src/bereiche/editor/affine-adapter.ts', import.meta.url), 'utf8');
 const compiled = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
 const api = runInNewContext(compiled + '\nRedionAffineEditor;', { structuredClone, JSON, Map, Set, Error }) as typeof RedionAffineEditor;
-function fixture(): RedionAffineEditor.Snapshot {
+function fixture(): RedionAffineSnapshot {
   return { rootId: 'p', blocks: [
     { id: 'p', type: 'page', content: ['a', 'b'], custom: { keep: true } },
     { id: 'a', parentId: 'p', type: 'h1', text: 'Titel', content: ['c'] },
