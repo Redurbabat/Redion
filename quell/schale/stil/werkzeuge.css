@@ -1971,9 +1971,9 @@ body.fokus #kante, body.fokus #kanten-lade, body.fokus #handy-oben,
 body.fokus .pg-ansichten, body.fokus .pg-tools{display:none!important}
 
 /* Die Zeigerwahl auf der Fläche bleibt auch per Tastatur benannt. */
-.pg-fl-tools.gfx-tb-edgeless .gfx-tb-menuewerkzeuge :is([data-wz="zeiger"],[data-wz="hand"]){
+.pg-fl-tools.gfx-tb-edgeless .gfx-tb-menuewerkzeuge :is([data-wz="zeiger"],[data-wz="hand"],[data-wz="rahmenwahl"]){
   width:auto;min-width:44px;display:flex;gap:8px;padding-inline:10px;
 }
-.pg-fl-tools.gfx-tb-edgeless .gfx-tb-menuewerkzeuge :is([data-wz="zeiger"],[data-wz="hand"])::after{
+.pg-fl-tools.gfx-tb-edgeless .gfx-tb-menuewerkzeuge :is([data-wz="zeiger"],[data-wz="hand"],[data-wz="rahmenwahl"])::after{
   content:attr(aria-label);
 }

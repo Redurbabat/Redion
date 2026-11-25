@@ -842,7 +842,7 @@ const Seitenflaeche = (() => {
       return null;
     };
 
-    const MALWERKZEUGE = ['stift', 'linie', 'pfeil', 'rechteck', 'ellipse'];
+    const MALWERKZEUGE = ['stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'dreieck'];
     const maltGerade = () => MALWERKZEUGE.includes(werkzeug) || werkzeug === 'radierer';
 
     /* ======================================================================
@@ -914,7 +914,7 @@ const Seitenflaeche = (() => {
          war die Bedingung aus L219: eine Leiste mit Knoepfen, die nichts
          bewirken, waere ein falsches Versprechen (Paragraph 32). */
       werkzeuge: Register.werkzeuge.auswahl(
-        ['zeiger', 'hand', 'verbindung', 'stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'notiz', 'radierer']),
+        ['zeiger', 'hand', 'rahmenwahl', 'verbindung', 'stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'dreieck', 'notiz', 'radierer']),
       aktiv: 'zeiger',
       galerie: {
         schnell: ['modus', 'rahmen', 'verbindung', 'seitenlink', 'schnellmehr'],
@@ -927,8 +927,8 @@ const Seitenflaeche = (() => {
           { id: 'vorlagen', knoepfe: ['vorlagen'] }
         ],
         werkzeugMenues: {
-          modus: ['zeiger', 'hand'],
-          formen: ['rechteck', 'ellipse', 'linie', 'pfeil']
+          modus: ['zeiger', 'hand', 'rahmenwahl'],
+          formen: ['rechteck', 'ellipse', 'dreieck', 'linie', 'pfeil']
         }
       },
       aktionen: [
@@ -1243,7 +1243,122 @@ const Seitenflaeche = (() => {
       pfade.forEach((pfad: SVGPathElement) => pfad.setAttribute('d', d));
     };
 
+    const dockArten = { rect: 'rechteck', ellipse: 'ellipse', triangle: 'dreieck' } as const;
+    let dockZug: {
+      pointer: number; knopf: HTMLButtonElement; sx: number; sy: number;
+      art: string; w: number; h: number; vorschau: SVGElement | null;
+    } | null = null;
+    let dockKlickUnterdrueckt: HTMLButtonElement | null = null;
+
+    const dockZugStart = (e: PointerEvent, ziel: Element): void => {
+      if (dockZug || e.button !== 0 || !e.isPrimary || aktiv || formenZug) return;
+      const knopf = ziel.closest<HTMLButtonElement>('button');
+      if (!knopf || knopf.disabled) return;
+      const zeichen = ziel.closest<HTMLElement>('[data-vorschau]')?.dataset.vorschau;
+      const art = knopf.dataset.wz === 'notiz' ? 'notiz'
+        : dockArten[zeichen as keyof typeof dockArten];
+      if (!art) return;
+      dockZug = { pointer: e.pointerId, knopf, sx: e.clientX, sy: e.clientY, art,
+        w: art === 'notiz' ? 170 : 120, h: art === 'notiz' ? 110 : 90, vorschau: null };
+      try { knopf.setPointerCapture(e.pointerId); } catch { /* Der Zug kann auf der Fläche enden. */ }
+    };
+
+    const dockZugOrt = (e: PointerEvent, zustand: { w: number; h: number }) => {
+      const p = inFlaeche(e.clientX, e.clientY);
+      return { x: r2(p.x - zustand.w / 2), y: r2(p.y - zustand.h / 2) };
+    };
+
+    const dockZugZeigen = (e: PointerEvent): void => {
+      const d = dockZug;
+      if (!d || d.pointer !== e.pointerId) return;
+      if (!d.vorschau) {
+        if (Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 6) return;
+        const vorschau: SVGElement = GfxShapes.zeichne({ id: '', art: d.art, x: 0, y: 0, w: d.w, h: d.h, farbe });
+        vorschau.classList.add('pg-fl-dock-vorschau');
+        d.vorschau = vorschau;
+        leiste.schliesse();
+        tinte.append(vorschau);
+      }
+      const { x, y } = dockZugOrt(e, d);
+      d.vorschau?.setAttribute('transform', `translate(${x} ${y})`);
+    };
+
+    const dockZugEnde = (e?: PointerEvent): void => {
+      const d = dockZug;
+      if (!d || (e && d.pointer !== e.pointerId)) return;
+      dockZug = null;
+      if (!d.vorschau) return;
+      d.vorschau.remove();
+      dockKlickUnterdrueckt = d.knopf;
+      if (e?.type !== 'pointerup') return;
+      const ziel = document.elementFromPoint(e.clientX, e.clientY);
+      if (!ziel || !flaeche.contains(ziel) || ziel.closest('.gfx-tb-sockel, .pg-fl-notiz')) return;
+      const ort = dockZugOrt(e, d);
+      flaeche.focus({ preventScroll: true });
+      if (d.art === 'notiz') { void textBearbeiten(null, ort); return; }
+      const id = Store.uid().slice(0, 8);
+      merken();
+      formen.push({ id, art: d.art, ...ort, w: d.w, h: d.h, farbe });
+      werkzeugWechseln('zeiger');
+      leiste.setzeWerkzeug('zeiger');
+      auswahlSetzen([id]);
+      sichern();
+    };
+
+    leiste.element.addEventListener('click', (e: MouseEvent) => {
+      if (!e.detail || !dockKlickUnterdrueckt || !(e.target instanceof Element) ||
+          e.target.closest('button') !== dockKlickUnterdrueckt) return;
+      dockKlickUnterdrueckt = null;
+      e.preventDefault(); e.stopImmediatePropagation();
+    }, true);
+
+    let rahmenZug: {
+      pointer: number; x: number; y: number; sx: number; sy: number;
+      element: SVGRectElement; vorhandene: string[];
+    } | null = null;
+
+    const rahmenZugStart = (e: PointerEvent): void => {
+      const ort = inFlaeche(e.clientX, e.clientY);
+      const element = GfxShapes.sv('rect', { class: 'pg-fl-rahmenwahl', x: ort.x, y: ort.y,
+        width: 0, height: 0, 'vector-effect': 'non-scaling-stroke', 'aria-hidden': 'true' }) as SVGRectElement;
+      rahmenZug = { pointer: e.pointerId, ...ort, sx: e.clientX, sy: e.clientY, element,
+        vorhandene: e.shiftKey ? [...auswahl] : [] };
+      tinte.append(element);
+      e.preventDefault();
+      flaeche.focus({ preventScroll: true });
+      try { flaeche.setPointerCapture(e.pointerId); } catch { /* Die Auswahl ist weiter bedienbar. */ }
+    };
+
+    const auswahlRechteck = (e: PointerEvent, start: { x: number; y: number }) => {
+      const ort = inFlaeche(e.clientX, e.clientY);
+      return { x: Math.min(ort.x, start.x), y: Math.min(ort.y, start.y),
+        w: Math.abs(ort.x - start.x), h: Math.abs(ort.y - start.y) };
+    };
+
+    const rahmenZugEnde = (e?: PointerEvent): void => {
+      const r = rahmenZug;
+      if (!r || (e && r.pointer !== e.pointerId)) return;
+      rahmenZug = null;
+      r.element.remove();
+      if (e?.type !== 'pointerup' || Math.hypot(e.clientX - r.sx, e.clientY - r.sy) < 4) return;
+      const box = auswahlRechteck(e, r);
+      const darin = formen.filter(form => {
+        if (!beweglich(form)) return false;
+        const f = GfxShapes.rahmenVon(form);
+        return f.x >= box.x && f.y >= box.y && f.x + f.w <= box.x + box.w && f.y + f.h <= box.y + box.h;
+      });
+      werkzeugWechseln('zeiger');
+      leiste.setzeWerkzeug('zeiger');
+      auswahlSetzen([...r.vorhandene, ...darin.map(formId)]);
+    };
+
     const beginnt = (e: PointerEvent): void => {
+      const ziel = e.target instanceof Element ? e.target : null;
+      if (ziel && leiste.element.contains(ziel)) {
+        dockKlickUnterdrueckt = null;
+        dockZugStart(e, ziel);
+        return;
+      }
       /* EINE ZEICHENFLÄCHE IM KASTEN GEHÖRT SICH SELBST (E722). Vorher lief
          hier zuerst der Zweig für Hand und mittlere Taste und rief
          `setPointerCapture` — gemessen: die Fläche rückte um +80/+50 px
@@ -1258,10 +1373,13 @@ const Seitenflaeche = (() => {
         if (a && b) kneifen = { abstand: Math.hypot(a.x - b.x, a.y - b.y), z: sicht.z };
         zug = null;
         if (formenZug) formZugEnde();
+        if (rahmenZug) rahmenZugEnde();
         return;
       }
-      const ziel = e.target instanceof Element ? e.target : null;
-
+      if (werkzeug === 'rahmenwahl' && e.button === 0 && !ziel?.closest('.pg-fl-notiz, .gfx-tb-sockel')) {
+        rahmenZugStart(e);
+        return;
+      }
       /* MIT EINEM MALWERKZEUG WIRD GEMALT - ausser ueber der Leiste und
          ausser im Kasten, denn dort gehoert der Zug dem Text. Genau
          deshalb liegt die Tinte auch ohne Griffe da: waere sie greifbar,
@@ -1342,6 +1460,7 @@ const Seitenflaeche = (() => {
           try { flaeche.setPointerCapture(e.pointerId); } catch { /* Absetzen auf der Fläche bleibt möglich. */ }
           return;
         }
+        if (e.shiftKey) { rahmenZugStart(e); return; }
         if (auswahl.size) auswahlSetzen([]);
       }
 
@@ -1367,7 +1486,17 @@ const Seitenflaeche = (() => {
     };
 
     const bewegt = (e: PointerEvent): void => {
+      if (dockZug) { dockZugZeigen(e); return; }
       if (finger.has(e.pointerId)) finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (rahmenZug?.pointer === e.pointerId) {
+        const box = auswahlRechteck(e, rahmenZug);
+        const rect = rahmenZug.element;
+        rect.setAttribute('x', String(box.x));
+        rect.setAttribute('y', String(box.y));
+        rect.setAttribute('width', String(box.w));
+        rect.setAttribute('height', String(box.h));
+        return;
+      }
       if (formenZug) {
         if (formenZug.pointer !== e.pointerId) return;
         Object.assign(formenZug, formVersatz(e, formenZug));
@@ -1439,8 +1568,10 @@ const Seitenflaeche = (() => {
     };
 
     const endet = (e: PointerEvent): void => {
+      if (dockZug?.pointer === e.pointerId) { dockZugEnde(e); return; }
       finger.delete(e.pointerId);
       if (finger.size < 2) kneifen = null;
+      if (rahmenZug?.pointer === e.pointerId) { rahmenZugEnde(e); return; }
       if (formenZug?.pointer === e.pointerId) {
         const { dx, dy } = formVersatz(e, formenZug);
         formZugEnde();
@@ -1499,6 +1630,8 @@ const Seitenflaeche = (() => {
        (test568). Im Text gilt das nicht: dort gehoert Strg+Z dem Feld. */
     flaeche.tabIndex = 0;
     flaeche.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && dockZug) { e.preventDefault(); dockZugEnde(); return; }
+      if (e.key === 'Escape' && rahmenZug) { e.preventDefault(); rahmenZugEnde(); return; }
       /* BEHANDELT IST BEHANDELT (E682, hier nachgezogen in E722). Die Regel
          stand in der Schale, nicht in der Fläche — und die Fläche horcht
          eine Ebene ÜBER dem Whiteboard im Kasten: ein Strg+Z nahm dort
@@ -1584,7 +1717,8 @@ const Seitenflaeche = (() => {
     flaeche.addEventListener('pointerup', endet);
     flaeche.addEventListener('pointercancel', endet);
     flaeche.addEventListener('lostpointercapture', (e: PointerEvent) => {
-      if (formenZug?.pointer === e.pointerId) endet(e);
+      if (formenZug?.pointer === e.pointerId || dockZug?.pointer === e.pointerId ||
+          rahmenZug?.pointer === e.pointerId) endet(e);
     });
 
     /* ======================================================================

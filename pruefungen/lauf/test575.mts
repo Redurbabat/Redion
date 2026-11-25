@@ -699,6 +699,111 @@ p('Formen öffnet eine Palette über der Werkzeugleiste', await formenMenue.isVi
   await formenMenue.locator('[data-c]').count() >= 8);
 await formenMenue.getByRole('button', { name: 'Ellipse', exact: true }).click();
 gleich('Die Palette stellt das echte Ellipsenwerkzeug ein', await planFlaeche.getAttribute('data-wz'), 'ellipse');
+console.log('\n14 · Werkzeugvorschauen auf die Fläche ziehen');
+const ablage = await planFlaeche.evaluate(el => {
+  const r = el.getBoundingClientRect();
+  for (const fx of [.76, .86, .65]) {
+    for (const fy of [.30, .42, .55]) {
+      const x = r.left + r.width * fx, y = r.top + r.height * fy;
+      const hit = document.elementFromPoint(x, y);
+      if (hit && el.contains(hit) && !hit.closest('.pg-fl-notiz,.gfx-tb-sockel')) return { x, y };
+    }
+  }
+  throw Error('Kein freier Ablagepunkt für das Werkzeug');
+});
+const dreieckVorschau = planFlaeche.locator('[data-karte="formen"] [data-vorschau="triangle"]');
+const griffpunkt = async () => {
+  await dreieckVorschau.hover();
+  return dreieckVorschau.evaluate(el => {
+    const r = el.getBoundingClientRect();
+    for (let y = r.top + 3; y < r.bottom - 2; y += 4) {
+      for (let x = r.left + 3; x < r.right - 2; x += 5) {
+        if (document.elementFromPoint(x, y) === el) return { x, y };
+      }
+    }
+    throw Error('Der Griff des Dreiecks ist verdeckt');
+  });
+};
+const vorAblage = (await planDaten())?.length || 0;
+const griff = await griffpunkt();
+await plan.mouse.move(griff.x, griff.y);
+await plan.mouse.down();
+await plan.mouse.move(ablage.x, ablage.y, { steps: 8 });
+p('Gezogenes Dreieck zeigt eine Vorschau und speichert vor dem Loslassen nichts',
+  await planFlaeche.locator('.pg-fl-dock-vorschau polygon, polygon.pg-fl-dock-vorschau').count() === 1 &&
+  (await planDaten())?.length === vorAblage);
+await plan.mouse.up();
+const abgelegtDreieck = [...((await planDaten()) || [])].reverse().find((f: any) => f.art === 'dreieck');
+p('Am Ablagepunkt liegt ein echtes, ausgewähltes Dreieck', !!abgelegtDreieck &&
+  await planFlaeche.locator('polygon[data-sid="' + abgelegtDreieck.id + '"]').count() === 1 &&
+  await planFlaeche.locator('.pg-fl-formauswahl rect').count() === 1);
+await plan.keyboard.press('Control+z');
+gleich('Eine Rückgängig-Aktion entfernt die Ablage', (await planDaten())?.length, vorAblage);
+const zweiterGriff = await griffpunkt();
+await plan.mouse.move(zweiterGriff.x, zweiterGriff.y);
+await plan.mouse.down();
+await plan.mouse.move(ablage.x, ablage.y, { steps: 5 });
+await plan.keyboard.press('Escape');
+await plan.mouse.up();
+p('Escape verwirft den Zug samt Vorschau', (await planDaten())?.length === vorAblage &&
+  await planFlaeche.locator('.pg-fl-dock-vorschau').count() === 0);
+
+const haftkarte = planFlaeche.getByRole('button', { name: 'Haftnotiz', exact: true });
+if (!await haftkarte.isVisible()) await planFlaeche.getByRole('button', { name: 'Vorherige Werkzeuge', exact: true }).click();
+const notizAblage = await planFlaeche.evaluate((el, ort) => {
+  for (const dy of [120, -120, 80, -80]) {
+    const punkt = { x: ort.x, y: ort.y + dy };
+    const ziel = document.elementFromPoint(punkt.x, punkt.y);
+    if (ziel && el.contains(ziel) && !ziel.closest('.pg-fl-notiz,.gfx-tb-sockel')) return punkt;
+  }
+  throw Error('Kein freier zweiter Ablagepunkt');
+}, ablage);
+const haftbox = await haftkarte.boundingBox();
+if (!haftbox) throw Error('Keine Haftnotizkarte sichtbar');
+await plan.mouse.move(haftbox.x + haftbox.width / 2, haftbox.y + haftbox.height / 2);
+await plan.mouse.down();
+await plan.mouse.move(notizAblage.x, notizAblage.y, { steps: 8 });
+await plan.mouse.up();
+await plan.locator('#fq').fill('Notiz aus dem Dock');
+await plan.locator('#fq').press('Enter');
+p('Die abgelegte Haftnotiz ist beschriftet und verwendet den vorhandenen Seitenspeicher',
+  (await planDaten())?.some((f: any) => f.art === 'notiz' && f.text === 'Notiz aus dem Dock') === true);
+
+const letzterGriff = await griffpunkt();
+await plan.mouse.move(letzterGriff.x, letzterGriff.y);
+await plan.mouse.down();
+await plan.mouse.move(ablage.x, ablage.y, { steps: 8 });
+await plan.mouse.up();
+const vorRahmen = (await planDaten()) || [];
+const ziele = vorRahmen.filter((f: any) => f.art === 'dreieck' || f.text === 'Notiz aus dem Dock');
+const boxen = await Promise.all(ziele.map((f: any) => planFlaeche.locator('[data-sid="' + f.id + '"]').first().boundingBox()));
+if (boxen.length !== 2 || boxen.some((box: any) => !box)) throw Error('Zwei sichtbare Ziele für die Rahmenauswahl erwartet');
+const sichtbar = boxen.filter((box): box is NonNullable<typeof box> => !!box);
+await zeiger.press('Enter');
+await planFlaeche.getByRole('button', { name: 'Rahmenauswahl', exact: true }).click();
+gleich('Der Zeigermenü-Befehl aktiviert die Rahmenauswahl', await planFlaeche.getAttribute('data-wz'), 'rahmenwahl');
+const ecken = await planFlaeche.evaluate((el, boxen) => {
+  const l = Math.min(...boxen.map(b => b.x)) - 12;
+  const o = Math.min(...boxen.map(b => b.y)) - 12;
+  const r = Math.max(...boxen.map(b => b.x + b.width)) + 12;
+  const u = Math.max(...boxen.map(b => b.y + b.height)) + 12;
+  const punkte = [[l, o], [r, o], [l, u], [r, u]];
+  const index = punkte.findIndex(([x, y]) => {
+    const ziel = document.elementFromPoint(x!, y!);
+    return !!ziel && el.contains(ziel) && !ziel.closest('.pg-fl-notiz,.gfx-tb-sockel');
+  });
+  if (index < 0) throw Error('Kein freier Ansatzpunkt um die beiden Formen');
+  return { start: punkte[index]!, ende: punkte[3 - index]! };
+}, sichtbar);
+await plan.mouse.move(ecken.start[0]!, ecken.start[1]!);
+await plan.mouse.down();
+await plan.mouse.move(ecken.ende[0]!, ecken.ende[1]!, { steps: 6 });
+p('Rahmenauswahl zeigt ein temporäres Auswahlrechteck', await planFlaeche.locator('.pg-fl-rahmenwahl').count() === 1);
+await plan.mouse.up();
+p('Rahmenauswahl erfasst beide Elemente und ändert ihre gespeicherten Daten nicht',
+  await planFlaeche.locator('.pg-fl-formauswahl rect').count() >= 2 &&
+  JSON.stringify(await planDaten()) === JSON.stringify(vorRahmen));
+
 const blitz = planFlaeche.getByRole('button', { name: 'Elektro', exact: true });
 await blitz.click();
 const elMenue = planFlaeche.locator('.gfx-tb-menue');

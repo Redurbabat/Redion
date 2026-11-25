@@ -299,6 +299,17 @@ const GfxShapes = (() => {
       return bild;
     }
 
+    if (s.art === 'dreieck') {
+      const { x, y, w, h } = rahmenVon(s);
+      const e = sv('polygon', {
+        points: `${x + w / 2},${y} ${x + w},${y + h} ${x},${y + h}`,
+        fill: 'none', stroke: farbe, 'stroke-width': 2, 'pointer-events': 'all'
+      });
+      e.dataset.sid = s.id;
+      tinte(e, 'strich', farbe);
+      return e;
+    }
+
     if (s.art === 'ellipse') {
       const e = sv('ellipse', {
         cx: zahl(s.x) + zahl(s.w) / 2, cy: zahl(s.y) + zahl(s.h) / 2,

@@ -362,8 +362,19 @@ body:has(.pg-flaeche) #sammelleiste{
   stroke-dasharray:5 3;
   pointer-events:none;
 }
+.pg-fl-tools [data-karte="formen"] [data-vorschau]{pointer-events:auto;cursor:grab}
+.pg-fl-tools [data-karte="formen"] button,.pg-fl-tools [data-karte="notiz"] button{touch-action:none}
+.pg-fl-tools [data-karte="notiz"] button{cursor:grab}
+.pg-fl-dock-vorschau{opacity:.65}
+.pg-fl-rahmenwahl{
+  fill:color-mix(in srgb,var(--accent) 14%,transparent);
+  stroke:var(--accent-text);stroke-width:1.5;pointer-events:none;
+}
+.pg-flaeche[data-wz="rahmenwahl"]{cursor:crosshair}
+.pg-fl-dock-vorschau,.pg-fl-dock-vorschau *{pointer-events:none}
+
 /* Die Malwerkzeuge zeigen ein Kreuz statt des Greifers. */
 .pg-flaeche[data-wz="stift"], .pg-flaeche[data-wz="linie"],
 .pg-flaeche[data-wz="pfeil"], .pg-flaeche[data-wz="rechteck"],
-.pg-flaeche[data-wz="ellipse"]{cursor:crosshair}
+.pg-flaeche:is([data-wz="ellipse"],[data-wz="dreieck"]){cursor:crosshair}
 .pg-flaeche[data-wz="radierer"]{cursor:cell}
