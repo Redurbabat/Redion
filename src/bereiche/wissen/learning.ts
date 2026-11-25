@@ -1254,9 +1254,12 @@ const Learning = (() => {
       actions.className = 'fbtns lern-btns';
       if (!answerOpen) actions.append(button('Antwort zeigen', 'reveal', true));
       else if (editable) {
+        const intervalle = WissenDienst.planVorschau(current);
         ([['1', 'Nochmal'], ['2', 'Schwer'], ['3', 'Gut'], ['4', 'Leicht']] as Array<[string, string]>)
           .forEach(([rating, label]) => {
-            const item = button(label, 'rate-' + rating, rating === '3');
+            const tage = intervalle[Number(rating) - 1] ?? 0;
+            const abstand = tage === 0 ? '10 Min.' : tage === 1 ? '1 Tag' : tage + ' Tage';
+            const item = button(label + ' · ' + abstand, 'rate-' + rating, rating === '3');
             item.dataset.rating = rating;
             actions.appendChild(item);
           });

@@ -923,7 +923,7 @@ const Schaltplan = (() => {
             x2 = Math.max(x2, p[0]);
             y2 = Math.max(y2, p[1]);
         }
-        const r = mark.breite / 2;
+        const r = mark.breite * (mark.kontur === 'weich' ? .75 : .5);
         return { x1: x1 - r, y1: y1 - r, x2: x2 + r, y2: y2 + r };
     };
     const inkSvg = (mark, selected = false) => {
@@ -931,9 +931,10 @@ const Schaltplan = (() => {
         const p = mark.pts[0];
         if (!p)
             return '';
+        const weich = InkStroke.weichUmriss(mark);
         const shape = mark.pts.length === 1
             ? `<circle cx="${p[0]}" cy="${p[1]}" r="${halves[0]}"/>`
-            : `<path d="${InkGeometry.outline(mark.pts, halves)}"/>`;
+            : `<path d="${InkGeometry.vieleckPfad([weich]) || InkGeometry.outline(mark.pts, halves)}"/>`;
         const b = selected ? inkBounds(mark) : null;
         return `<g class="sp-ink" data-id="${esc(mark.id)}" data-ink="${esc(mark.id)}" fill="${InkStroke.inkColor(mark.farbe)}">` + shape +
             (b ? `<rect class="sp-ink-auswahl" x="${b.x1 - 3}" y="${b.y1 - 3}" width="${b.x2 - b.x1 + 6}" height="${b.y2 - b.y1 + 6}" fill="none" stroke="currentColor" stroke-dasharray="4 3"/>` : '') + '</g>';

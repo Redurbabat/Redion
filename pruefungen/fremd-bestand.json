@@ -112,6 +112,50 @@
         }
       ],
       "lader": "src/islands/main.tsx"
+    },
+    {
+      "pfad": "quell/fremd/perfect-freehand/ink.js",
+      "paket": "perfect-freehand",
+      "fassung": "1.2.3",
+      "lizenz": "MIT",
+      "lizenzdatei": "quell/fremd/perfect-freehand/LIZENZ.txt",
+      "herkunft": "https://www.npmjs.com/package/perfect-freehand/v/1.2.3",
+      "bau": "unveränderter npm-CommonJS-Code mit lokalem exports-Objekt",
+      "begruendung": "Druckempfindliche optionale Schaltplan-Konturen und ihre SVG-Ausgabe.",
+      "lader": "src/core/ink/stroke.ts",
+      "npmDatei": "package/dist/cjs/index.js",
+      "npmSha256": "986865269438ec8fb5f5ab4c17ea743d57206c9da891523c045d88ae1dc5a33e",
+      "npmTarSha512": "bHZSfqDHGNlPpgH2yxXgPHlQSPpEbo+qg7li0M78J9vNAi2yjwLeA4x79BEQhX44lEWpCLSFCeRZwpw0niiXPA==",
+      "datei": {
+        "bytes": 4776,
+        "sha256": "c411ebac6a0383898485f206e90d01a28330efee8978d97f99f0939dd6b79931"
+      },
+      "lizenzSha256": "6a5ac82b42ce0af6a1e5fe39b46f0b52f1368e81e437175e8d9ae21569c8688e"
+    },
+    {
+      "pfad": "quell/fremd/pdf-lib/library.js",
+      "paket": "pdf-lib",
+      "fassung": "1.17.1",
+      "lizenz": "MIT",
+      "lizenzdatei": "quell/fremd/pdf-lib/LIZENZ.txt",
+      "herkunft": "https://www.npmjs.com/package/pdf-lib/v/1.17.1",
+      "bau": "unverändertes npm-UMD-Bündel",
+      "begruendung": "Lokale Seitenkopien, Drehung und Kombination von Original-PDFs.",
+      "lader": "src/fremd/pdf-lib/laden.ts",
+      "npmDatei": "package/dist/pdf-lib.min.js",
+      "npmSha256": "0f9a5cad07941f0826586c94e089d89b918c46e5c17cf2d5a3c6f666e3bc694f",
+      "npmTarSha512": "V/mpyJAoTsN4cnP31vc0wfNA1+p20evqqnap0KLoRUN0Yk/p3wN52DOEsL4oBFcLdb76hlpKPtzJIgo67j/XLw==",
+      "datei": {
+        "bytes": 525099,
+        "sha256": "0f9a5cad07941f0826586c94e089d89b918c46e5c17cf2d5a3c6f666e3bc694f"
+      },
+      "lizenzSha256": "f2c9fc00fdb66eb99ac156ba52d734af66d8d309f65753ae809ad34ee2883bcb",
+      "hinweise": [
+        {
+          "pfad": "quell/fremd/pdf-lib/DRITTANBIETER.txt",
+          "sha256": "d580ccb03f3b3d80977091951e267b5104b415183a8bead523496027aa112efa"
+        }
+      ]
     }
   ]
 }

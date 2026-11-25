@@ -2598,3 +2598,11 @@ const Austausch = (() => {
         grenzen };
 })();
 window.Austausch = Austausch;
+if (typeof Ereignisse !== 'undefined' && typeof Ereignisse.horche === 'function' && typeof ARTEN !== 'undefined') {
+    Ereignisse.horche(ARTEN.frageDateiExport, (daten) => {
+        const exportDatei = daten;
+        if (exportDatei?.blob instanceof Blob && typeof exportDatei.name === 'string')
+            return Austausch.laden(exportDatei.blob, exportDatei.name);
+        return undefined;
+    });
+}

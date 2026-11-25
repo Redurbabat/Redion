@@ -13,8 +13,8 @@
      Danach startet sie ohne Adresszeile, mit eigenem Symbol und offline.
      ========================================================================== -->
 <link rel="manifest" href="oeffentlich/manifest.webmanifest">
-<meta name="theme-color" content="#191a1e" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#211218" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#fffaf5" media="(prefers-color-scheme: light)">
 
 <link rel="icon" type="image/png" sizes="32x32" href="oeffentlich/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="oeffentlich/icons/favicon-16.png">
@@ -333,7 +333,7 @@
 <main id="main" role="main">
   <header id="studio-bar" aria-label="Redion Schnellzugriff">
     <button id="studio-home" class="studio-brand" title="Dokumente öffnen">
-      <span class="studio-monogram" aria-hidden="true"></span><span>redion<span class="studio-wordmark">STUDIO</span></span>
+      <span class="studio-monogram" aria-hidden="true"></span><span>RED ION<span class="studio-wordmark">STUDIO</span></span>
     </button>
     <button id="studio-nav" class="studio-icon" aria-label="Navigation kompakt anzeigen" aria-pressed="false" title="Navigation kompakt anzeigen"><span data-sym="panelL"></span></button>
     <button id="studio-window-menu" class="studio-icon" type="button" hidden aria-haspopup="menu" aria-label="App-Menü öffnen" title="App-Menü öffnen"><span data-sym="dots" aria-hidden="true"></span></button>
@@ -520,6 +520,7 @@
 <script src="quell/core/ink/geometry.js" defer></script>
 <script src="quell/core/export/pdfWriter.js" defer></script>
 <script src="quell/core/ink/shapes.js" defer></script>
+<script src="quell/fremd/perfect-freehand/ink.js" defer></script>
 <script src="quell/core/ink/stroke.js" defer></script>
 <script src="quell/core/ink/thumbnail.js" defer></script>
 <script src="quell/core/electrical/calculations.js" defer></script>
@@ -646,6 +647,7 @@
 <script src="quell/bereiche/bloecke/arten/schaltplan.js" defer></script>
 <script src="batterie-labor-kern.js" defer></script>
 <script src="batterie-aufgaben.js" defer></script>
+<script src="quell/bereiche/bloecke/arten/schematico-import.js" defer></script>
 <script src="quell/bereiche/bloecke/arten/planflaeche.js" defer></script>
 <!-- relais-werkstatt: quell/bereiche/bloecke/arten/relais-kern.js, relais-vorlagen.js,
      relais-werkstatt.js — NICHT hier geladen (E769); ebenso schaltplan-pruefung.js,
@@ -674,6 +676,8 @@
      muss deshalb NACH ihm geladen werden — die Reihenfolge hier ist
      keine Formsache. -->
 <script src="quell/bereiche/elektro/start.js" defer></script>
+<!-- pdf-lib-original: Die Bibliothek wird erst für Originalseiten geladen. -->
+<script src="quell/fremd/pdf-lib/laden.js" defer></script>
 <script src="quell/bereiche/pdf/document-mode.js" defer></script>
 <script src="quell/bereiche/spreadsheet/ansicht.js" defer></script>
 <script src="quell/bereiche/datenbanken/raster.js" defer></script>

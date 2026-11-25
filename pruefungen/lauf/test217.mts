@@ -220,18 +220,11 @@ p('Die Lernübersicht mit den vier Zahlen ist da und aufklappbar',
  * --------------------------------------------------------------------------
  * Der eigentliche Punkt. Ohne ihn könnte alles zufällig gerade so passen.
  * ========================================================================*/
-console.log('\n2 · Und zwar vor Begrüssung und Dokumentenstudio');
-/* DER EIGENTLICHE PUNKT, UNVERÄNDERT SEIT E151 — nur gegen die Kinder
-   gemessen, die es heute gibt. Die Leiter hiess einmal
-   `.lw-metrics · .lw-primary-grid · .lw-setup · .lw-hero`; drei dieser vier
-   Klassen gibt es seit dem 6. September nicht mehr, und übrig blieb
-   `.lw-hero{order:4}` gegen `*{order:5}` — die Begrüssung stand damit wieder
-   ganz oben, genau wie VOR E151, und der Knopf bei y = 1115 in einem
-   844 px hohen Bild. */
-p('Die Handlung steht über dem Dokumentenstudio',
-  (t.fokus?.unten ?? 9999) <= (t.desk?.oben ?? 0), `${t.fokus?.unten} ≤ ${t.desk?.oben}`);
-p('Und über der Begrüssung',
-  (t.fokus?.unten ?? 9999) <= (t.hero?.oben ?? 0), `${t.fokus?.unten} ≤ ${t.hero?.oben}`);
+console.log('\n2 · Tageskopf, Lernrunde und Dokumente');
+p('Der kompakte Tageskopf steht über der Lernrunde',
+  (t.hero?.unten ?? 9999) <= (t.fokus?.oben ?? 0), String(t.hero?.unten) + ' ≤ ' + String(t.fokus?.oben));
+p('Die Lernrunde steht über den Dokumenten',
+  (t.fokus?.unten ?? 9999) <= (t.desk?.oben ?? 0), String(t.fokus?.unten) + ' ≤ ' + String(t.desk?.oben));
 
 /* §31 nennt vier Dinge. Sie stehen seit dem 6. September in der
    Lernübersicht statt auf dem ersten Bild — das ist Redurs Umbau, nicht ein

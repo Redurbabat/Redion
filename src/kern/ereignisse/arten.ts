@@ -96,6 +96,7 @@ const ARTEN = Object.freeze({
   frageBefehle:      'frage.befehle',          /* was gehört in die Befehlspalette? */
   frageSeitenMenue:  'frage.seitenmenue',      /* was gehört ins Menü dieser Seite? */
   frageZeilenMenue:  'frage.zeilenmenue',
+  frageDateiExport:  'frage.datei-export',    /* kann die Datei gespeichert werden? */
   frageBefund:       'frage.befund'            /* was gehört in den Gesundheitsbericht? */,
 
   /* --- Aufträge (E429) ---------------------------------------------------

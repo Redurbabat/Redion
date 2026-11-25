@@ -83,6 +83,11 @@ html = html.replace(PDF_MARKE,
   () => '<script>\n/* ===== quell/fremd/pdfjs/daten.js ===== */\n' +
         lies('quell/fremd/pdfjs/daten.js') + '\n</script>');
 
+const PDF_LIB_MARKE = /<!-- pdf-lib-original:[\s\S]*?-->/;
+if (!PDF_LIB_MARKE.test(html)) throw new Error('Die PDF-Lib-Marke fehlt in index.html.');
+html = html.replace(PDF_LIB_MARKE, () => '<script type="application/octet-stream" id="redion-pdf-lib">' +
+  Buffer.from(lies('quell/fremd/pdf-lib/library.js'), 'utf8').toString('base64') + '</script>');
+
 /* DIE CHRONIK IN DIE EINZELDATEI (E613) — dasselbe aus demselben Grund.
  *
  * `chronik/daten.js` ist seit E613 nicht mehr im Startweg: 182 KB roh, 54 KB
