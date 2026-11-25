@@ -1,10 +1,9 @@
 /* Eigenständiger Adapter; keine Übernahme von AFFiNE-Quellcode.
  * Der Host bleibt für Berechtigungen, Speicherung und Verlauf verantwortlich. */
-namespace RedionAffineEditor {
-  export type Block = { id: string; type: string; text?: string; content?: string[]; parentId?: string; [key: string]: unknown };
-  export type Snapshot = { rootId: string; blocks: Block[] };
-  export type Host = {
-    read: (rootId: string) => Snapshot;
+type RedionAffineBlock = { id: string; type: string; text?: string; content?: string[]; parentId?: string | null; [key: string]: unknown };
+type RedionAffineSnapshot = { rootId: string; blocks: RedionAffineBlock[] };
+type RedionAffineHost = {
+    read: (rootId: string) => RedionAffineSnapshot;
     open: (rootId: string) => void;
     render: (container: HTMLElement, rootId: string, readonly: boolean) => () => void;
     subscribe: (listener: () => void) => () => void;
@@ -13,9 +12,10 @@ namespace RedionAffineEditor {
     undo: () => void;
     redo: () => void;
   };
-  export function validate(snapshot: Snapshot): Snapshot {
+const RedionAffineEditor = (() => {
+  function validate(snapshot: RedionAffineSnapshot): RedionAffineSnapshot {
     const copy = structuredClone(snapshot);
-    const map = new Map<string, Block>();
+    const map = new Map<string, RedionAffineBlock>();
     for (const block of copy.blocks) {
       if (!block.id || !block.type || map.has(block.id)) throw new Error('Ungültige Blockkennung');
       map.set(block.id, block);
@@ -28,7 +28,7 @@ namespace RedionAffineEditor {
       if (visited.has(id)) throw new Error('Mehrfachreferenz oder Blockkreis');
       visited.add(id);
       const block = map.get(id);
-      if (!block) throw new Error('Block fehlt');
+      if (!block) throw new Error('RedionAffineBlock fehlt');
       for (const child of block.content ?? []) {
         const record = map.get(child);
         if (!record || record.parentId !== id) throw new Error('Ungültige Elternkennung');
@@ -38,7 +38,7 @@ namespace RedionAffineEditor {
     if (visited.size !== map.size) throw new Error('Nicht erreichbare Blöcke');
     return copy;
   }
-  export function outline(snapshot: Snapshot) {
+  function outline(snapshot: RedionAffineSnapshot) {
     const data = validate(snapshot);
     const map = new Map(data.blocks.map(block => [block.id, block]));
     const result: { id: string; text: string; level: number }[] = [];
@@ -51,14 +51,14 @@ namespace RedionAffineEditor {
     }
     return result;
   }
-  export function create(host: Host) {
+  function create(host: RedionAffineHost) {
     let rootId: string | null = null;
     let container: HTMLElement | null = null;
     let stopRender: (() => void) | null = null;
     let stopSubscription: (() => void) | null = null;
     let locked = true;
-    const listeners = new Set<(snapshot: Snapshot) => void>();
-    const serializeDocument = (): Snapshot => {
+    const listeners = new Set<(snapshot: RedionAffineSnapshot) => void>();
+    const serializeDocument = (): RedionAffineSnapshot => {
       if (rootId === null) throw new Error('Kein Dokument geöffnet');
       const snapshot = validate(host.read(rootId));
       if (snapshot.rootId !== rootId) throw new Error('Falsches Dokument');
@@ -97,7 +97,7 @@ namespace RedionAffineEditor {
         refresh();
       },
       serializeDocument,
-      onChange(listener: (snapshot: Snapshot) => void) {
+      onChange(listener: (snapshot: RedionAffineSnapshot) => void) {
         listeners.add(listener);
         return () => { listeners.delete(listener); };
       },
@@ -122,7 +122,8 @@ namespace RedionAffineEditor {
       redo() { assertWritable(); host.redo(); },
       outline() { return outline(serializeDocument()); },
       exportJSON() { return JSON.stringify(serializeDocument()); },
-      parseJSON(text: string) { return validate(JSON.parse(text) as Snapshot); }
+      parseJSON(text: string) { return validate(JSON.parse(text) as RedionAffineSnapshot); }
     };
   }
-}
+  return { validate, outline, create };
+})();
