@@ -71880,3 +71880,13 @@ und 430 px: alles in einer Zeile, jeder Knopf ≥ 44 px (§37).
 `bilder/kopf-390.png` (nicht eingecheckt).
 
 **Gezählt.** `ls pruefungen/lauf/test*.mts | wc -l` sagt 590.
+
+**Nachbarn (E818 und E819 zusammen).** `node pruefungen/alle.mts 656 657 529
+538 568 575 584 86 424 430 437 482 540 581 626`: sieben rot. Jeder davon
+einzeln auf `459f5e0` (eigener Arbeitsbaum) und auf diesem Stand gefahren,
+die roten Zeilen verglichen: `test86` (1), `test424` (1), `test584` (2) und
+`test626` (2) haben auf beiden Ständen dieselben roten Zeilen; `test437`
+(„Vierzehn echte Zeichenwerkzeuge") und `test568` (Zeitüberschreitung)
+brechen auf beiden Ständen gleich ab; `test575` ist einzeln auf beiden
+Ständen grün (111/111) und war im Sammellauf rot — ein Wackler, kein Fund.
+Keine rote Zeile ist neu.
