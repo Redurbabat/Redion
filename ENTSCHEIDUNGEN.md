@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-793 Entscheidungen, E1 bis E822 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+794 Entscheidungen, E1 bis E823 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -879,6 +879,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E820** — Drei Skripte aus `index.html` und pdf-lib stehen im Grundstock des Dienstes; pdf-lib und perfect-freehand sind in `FREMDCODE.md` nachgetragen, das Ja dazu ist offen (25. November 2026); `test143` grün, `test87` bis auf die Steuerzeichen der fremden pdf-lib (`src/dienst/sw.ts`, `FREMDCODE.md`)
 * **E821** — Elf Werkstatt-Dinge in der Wurzel gehen nicht mehr ins Netz (`.agents/`, `.claude/`, `graphify-out/`, `plugins/`, `tools/`, Batterie-Skripte, iOS- und Codemagic-Angaben, `version.json`); `test270` 80 → 81/81 (`.assetsignore`)
 * **E822** — `test274` liest `bauen.mts` als dritten Ort, an dem Kennungen entstehen: `redion-pdf-lib` gibt es nur in der Einzeldatei, mit Absicht; 11/12 → 12/12, ohne Ausnahme in `ERLAUBT`
+* **E823** — `test285` und `test292` lesen den Namen des Dokuments aus `.document-title-name`, weil der Kopf seit dem Dokumentkompass auch Art und Umfang trägt; beide grün (53/53, 45/45)
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71972,3 +71973,21 @@ als vorhanden — dasselbe Mass, das der Lauf für `src/` schon anlegt.
 
 **Beweis.** `test274` vorher 11/12, danach 12/12; seine eingebaute Gegenprobe
 (eine erfundene Kennung) bleibt rot.
+
+
+## E823 · Der Name eines Dokuments steht in seinem eigenen Feld
+
+**Was.** `test285` und `test292` lesen den Namen aus `.document-title-name`
+(mit `.document-title` als Rückfall), nicht mehr den ganzen Kopf.
+
+**Warum.** Seit dem Dokumentkompass (Workspace 2.0, `document-mode.ts` um
+Zeile 2049) steht im Kopf neben dem Namen auch „PDF · 4 Seiten" und ein
+Lesefortschritt. Die zwei Läufe lasen `textContent` des ganzen Kastens und
+bekamen „Elektrotechnik – SkriptPDF · 4 Seiten". Das Produkt zeigt den Namen
+richtig, in seinem eigenen `span`; nur die Messung lag daneben.
+
+**Alternative.** Den Zusatz aus dem Kopf nehmen — das hiesse, eine gewollte
+Anzeige zurückzubauen, damit zwei Läufe grün werden.
+
+**Beweis.** Im vollen Lauf vom 25. November beide rot mit genau dieser Zeile;
+danach `test285` 53/53, `test292` 45/45.
