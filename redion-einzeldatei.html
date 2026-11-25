@@ -29428,16 +29428,20 @@ html[data-theme="light"]{
 }
 
 /* ── 4 · Die Seite: Titel, Text, Überschriften auf EINER Skala ─────────── */
+/* E826: die Grösse je Block (`tg-…`, E101) geht vor. Mit `#page` wogen die
+   fünf Regeln unten mehr als `.blk .ct.tg-gross`, und „Gross" blieb 15 px
+   (test175). Die vier Stufen sind darum ausgenommen; ohne Stufe gilt die
+   Schriftrolle wie bisher. */
 body:not([data-ui-shell="glass-wheel"]) #title{
   font-size:var(--t-title); font-weight:var(--w-bold); letter-spacing:-.4px;
   line-height:1.2; margin:var(--space-1) 0 var(--space-2);
 }
 body:not([data-ui-shell="glass-wheel"]) #page > .pg-icon{font-size:48px; margin-top:var(--space-7)}
-body:not([data-ui-shell="glass-wheel"]) #page .b-text .ct{font-size:var(--t-body); line-height:var(--lh-body)}
-body:not([data-ui-shell="glass-wheel"]) #page :is(.b-bullet,.b-number,.b-todo,.b-toggle,.b-quote) .ct{font-size:var(--t-body); line-height:var(--lh-body)}
-body:not([data-ui-shell="glass-wheel"]) #page .b-h1 .ct{font-size:var(--t-h1); font-weight:var(--w-bold); letter-spacing:-.25px; padding-top:var(--space-6)}
-body:not([data-ui-shell="glass-wheel"]) #page .b-h2 .ct{font-size:var(--t-h2); font-weight:var(--w-semibold); letter-spacing:-.15px; padding-top:var(--space-5)}
-body:not([data-ui-shell="glass-wheel"]) #page .b-h3 .ct{font-size:var(--t-h3); font-weight:var(--w-semibold); padding-top:var(--space-4)}
+body:not([data-ui-shell="glass-wheel"]) #page .b-text .ct:not(.tg-klein,.tg-gross,.tg-sehrgross,.tg-riesig){font-size:var(--t-body); line-height:var(--lh-body)}
+body:not([data-ui-shell="glass-wheel"]) #page :is(.b-bullet,.b-number,.b-todo,.b-toggle,.b-quote) .ct:not(.tg-klein,.tg-gross,.tg-sehrgross,.tg-riesig){font-size:var(--t-body); line-height:var(--lh-body)}
+body:not([data-ui-shell="glass-wheel"]) #page .b-h1 .ct:not(.tg-klein,.tg-gross,.tg-sehrgross,.tg-riesig){font-size:var(--t-h1); font-weight:var(--w-bold); letter-spacing:-.25px; padding-top:var(--space-6)}
+body:not([data-ui-shell="glass-wheel"]) #page .b-h2 .ct:not(.tg-klein,.tg-gross,.tg-sehrgross,.tg-riesig){font-size:var(--t-h2); font-weight:var(--w-semibold); letter-spacing:-.15px; padding-top:var(--space-5)}
+body:not([data-ui-shell="glass-wheel"]) #page .b-h3 .ct:not(.tg-klein,.tg-gross,.tg-sehrgross,.tg-riesig){font-size:var(--t-h3); font-weight:var(--w-semibold); padding-top:var(--space-4)}
 
 /* DIE SEITENWERKZEUGE (E783): eine ruhige Zeile mit sichtbaren Funktionen.
    Auf Desktop und Mobilgeräten bleibt sie ohne Hover dauerhaft erreichbar.
@@ -31536,7 +31540,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1678, inhalt: 'e7d758b6b49ac4e5', gebaut: '2026-11-25T21:03:10.719Z' };
+const Stand = { fassung: 1679, inhalt: 'd3977008ac00b43a', gebaut: '2026-11-25T21:30:47.025Z' };
 window.Stand = Stand;
 
 </script>

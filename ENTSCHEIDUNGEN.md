@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-796 Entscheidungen, E1 bis E825 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+797 Entscheidungen, E1 bis E826 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -882,6 +882,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E823** — `test285` und `test292` lesen den Namen des Dokuments aus `.document-title-name`, weil der Kopf seit dem Dokumentkompass auch Art und Umfang trägt; beide grün (53/53, 45/45)
 * **E824** — `test298` nimmt die Stilblätter, die `index.html` aus `quell/fremd/` lädt, als Quelle von Variablen dazu (die Glyphen `--affine-dock-*` des Zeichendocks); fremdes CSS wird nicht auf Redions Regeln geprüft; 8/8
 * **E825** — `test201` prüft das Glätten an einem sanften Bogen und hält die Ecke aus E676 als eigene Zusage; seine drei alten Punkte waren ein Knick; 33/33
+* **E826** — Die Schriftgrösse je Block wirkt wieder: fünf Atelier-Regeln in `redion2.css` wogen mit `#page` mehr als `.blk .ct.tg-gross`; die vier Stufen sind dort ausgenommen; `test175` 16/17 → 17/17
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -72030,3 +72031,28 @@ tat, was E676 verspricht.
 überhaupt geglättet wird.
 
 **Beweis.** Im vollen Lauf rot; danach 33/33, mit beiden Seiten grün.
+
+
+## E826 · „Gross" ist wieder gross
+
+**Was.** In `quell/schale/stil/redion2.css` tragen die fünf Regeln für
+Fliesstext, Listen und Überschriften (`#page … .ct{font-size:…}`) den Zusatz
+`:not(.tg-klein,.tg-gross,.tg-sehrgross,.tg-riesig)`.
+
+**Warum.** Seit `a105e4a` (18. November) setzt die Schale die Schriftgrösse über
+`body:not(…) #page .b-text .ct` — mit der Kennung `#page` wiegt das mehr als
+`.blk .ct.tg-gross` aus E101. Wer in einem Block „Gross" wählte, bekam die
+Klasse und den Eintrag in den Daten, aber keine grössere Schrift: 15 px →
+15 px (`test175`, voller Lauf vom 25. November). Daten gingen dabei nicht
+verloren — nur die Anzeige folgte ihnen nicht.
+
+**Alternative.** `!important` an den vier Stufen — macht sie unüberschreibbar,
+auch für eine spätere Haut. Oder die Stufen mit `#page` beschweren — zwei
+Orte, die gegeneinander aufrüsten.
+
+**Kosten.** Ein Block mit Stufe nimmt deren Zeilenhöhe statt `--lh-body`.
+
+**Beweis.** `test175` vorher 16 ok, 1 offen; danach 17/17. Gemessen im
+Browser: normal 15 px, klein 13,1, gross 21,6, sehr gross 28,8, riesig
+38,4 px; eine Überschrift mit „Gross" 21,6 px. Bild
+`bilder/schriftgroessen.png` (nicht eingecheckt, §55.4). Dienststand v1679.
