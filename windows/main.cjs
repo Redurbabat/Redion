@@ -9,6 +9,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { resolveBundledAsset } = require('./paths.cjs');
+const { NVIDIA_CHAT_PATH, nvidiaChat } = require('./generated/nvidia.cjs');
 const { startRedionAutoUpdates } = require('./auto-update.cjs');
 const { configuredSource, saveConfiguredSource, startSourceUpdates, validateSource } =
   require('./generated/local-source.cjs');
@@ -203,6 +204,12 @@ if (!lock) {
     const ziel = pendingDestination;
     pendingDestination = null;
     return ziel;
+  });
+  const nvidiaTicket = randomUUID();
+  ipcMain.handle('redion:ki:nvidia:ticket', event => {
+    if (process.platform !== 'win32' || !trustedSender(event, mainWindow?.webContents))
+      throw new Error('NVIDIA ist nur im lokalen Redion-Hauptfenster verfügbar.');
+    return nvidiaTicket;
   });
   const automationSender = event => {
     if (!trustedSender(event, mainWindow?.webContents)) throw new Error('Automatisierungszugriff nicht erlaubt.');
@@ -441,6 +448,8 @@ if (!lock) {
     // allowlisted web snapshot is served, never arbitrary paths or source files.
     if (!protocolReady) {
       protocol.handle(SCHEME, request => {
+        if (process.platform === 'win32' && request.url === SCHEME + '://app' + NVIDIA_CHAT_PATH)
+          return nvidiaChat(request, nvidiaTicket);
         const file = resolveBundledAsset(servedAssets || assets, request.url);
         if (!file) return new Response('Nicht gefunden', { status: 404 });
         return net.fetch(pathToFileURL(file).href);

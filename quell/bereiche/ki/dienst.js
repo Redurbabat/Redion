@@ -23,6 +23,8 @@ const KI = (() => {
         { id: 'Phi-3.5-mini-instruct-q4f16_1-MLC', name: 'Phi 3.5 mini', groesse: '~2,2 GB', hinweis: 'Gut beim Strukturieren' },
         { id: 'gemma-2-2b-it-q4f16_1-MLC', name: 'Gemma 2 · 2B', groesse: '~1,6 GB', hinweis: 'Kompakt' }
     ];
+    const NVIDIA_MODELL = 'moonshotai/kimi-k3.1-pro';
+    const nvidiaTicket = globalThis.RedionDesktop?.nvidiaTicket;
     const ANBIETER = [
         { id: 'groq', name: 'Groq', frei: true,
             url: 'https://api.groq.com/openai/v1/chat/completions',
@@ -50,6 +52,12 @@ const KI = (() => {
             modelle: ['claude-3-5-haiku-latest', 'claude-sonnet-4-5'],
             woher: 'console.anthropic.com/settings/keys',
             hinweis: 'Kostenpflichtig · eigenes Nachrichtenformat' },
+        ...(nvidiaTicket ? [{
+                id: 'nvidia', name: 'NVIDIA', frei: true,
+                url: 'redion-local://app/ki/nvidia', modelle: [NVIDIA_MODELL],
+                woher: 'build.nvidia.com',
+                hinweis: 'Kimi K3.1 Pro als NVIDIA-Prototyp. Bei Auswahl geht der Anfragekontext an NVIDIA.'
+            }] : []),
         { id: 'eigen', name: 'Eigener Server', frei: true,
             url: '', modelle: [], woher: '',
             hinweis: 'Jede Adresse, die wie OpenAI antwortet — auch LM Studio oder llama.cpp' }
@@ -150,6 +158,8 @@ const KI = (() => {
     const modelleHolen = async (id) => {
         try {
             const a = anbieter(id);
+            if (a.id === 'nvidia')
+                return a.modelle;
             const key = schluessel(a.id);
             const url = modellAdresse(a.id === 'eigen' ? Store.getMeta('api:eigenUrl', '') : a.url);
             if (!url)
@@ -211,6 +221,11 @@ const KI = (() => {
         }
         else if (key) {
             kopf['Authorization'] = 'Bearer ' + key;
+        }
+        if (a.id === 'nvidia') {
+            if (!nvidiaTicket)
+                throw new Error('NVIDIA braucht die Redion-Windows-App.');
+            kopf['X-Redion-NVIDIA-Ticket'] = await nvidiaTicket();
         }
         const sys = nachrichten.find((m) => m.role === 'system');
         const rest = nachrichten.filter((m) => m.role !== 'system');
@@ -583,7 +598,8 @@ const KI = (() => {
     };
     const start = async () => {
         const gemerkt = Store.getMeta('ki', null);
-        if (gemerkt && gemerkt.quelle === 'wolke' &&
+        if (gemerkt && gemerkt.quelle === 'wolke' && gemerkt.anbieter !== 'nvidia' &&
+            ANBIETER.some(a => a.id === gemerkt.anbieter) &&
             (schluessel(gemerkt.anbieter) || gemerkt.anbieter === 'eigen')) {
             zustand.quelle = 'wolke';
             zustand.anbieter = gemerkt.anbieter;
@@ -717,7 +733,8 @@ const KI = (() => {
             zustand.modell = b.dataset.m ?? zustand.modell;
             if (b.dataset.q === 'wolke')
                 zustand.anbieter = b.dataset.a ?? zustand.anbieter;
-            Store.setMeta('ki', { quelle: zustand.quelle, modell: zustand.modell, anbieter: zustand.anbieter });
+            if (zustand.quelle !== 'wolke' || zustand.anbieter !== 'nvidia')
+                Store.setMeta('ki', { quelle: zustand.quelle, modell: zustand.modell, anbieter: zustand.anbieter });
             if (zustand.quelle === 'wolke') {
                 zustand.bereit = true;
                 status('ok', kurzName(zustand.modell));

@@ -225,10 +225,11 @@ const Einstellungen = (() => {
             fenster.setAttribute('data-blick', ziel);
             const inh = fenster.querySelector('.einst-inhalt');
             const nv = fenster.querySelector('.einst-nav');
+            const amMobilgeraet = amTelefon();
             if (inh)
-                inh.inert = ziel === 'liste';
+                inh.inert = amMobilgeraet && ziel === 'liste';
             if (nv)
-                nv.inert = ziel === 'bereich';
+                nv.inert = amMobilgeraet && ziel === 'bereich';
         };
         const schliesse = () => {
             const wenig = AppEinstellung.wenigBewegung() ||

@@ -103,6 +103,10 @@ const KI = (() => {
    *
    * „frei" heisst: es gibt ein kostenloses Kontingent ohne Kreditkarte.
    * ----------------------------------------------------------------------*/
+  const NVIDIA_MODELL = 'moonshotai/kimi-k3.1-pro';
+  const nvidiaTicket = (globalThis as typeof globalThis & {
+    RedionDesktop?: { nvidiaTicket?: () => Promise<string> }
+  }).RedionDesktop?.nvidiaTicket;
   const ANBIETER = [
     /* DIE MODELLNAMEN HIER SIND EIN RÜCKFALL, KEINE WAHRHEIT (E661).
        Ein Anbieter mustert Modelle aus, ohne dass dieses Programm es
@@ -138,6 +142,12 @@ const KI = (() => {
       modelle:['claude-3-5-haiku-latest','claude-sonnet-4-5'],
       woher:'console.anthropic.com/settings/keys',
       hinweis:'Kostenpflichtig · eigenes Nachrichtenformat' },
+    ...(nvidiaTicket ? [{
+      id: 'nvidia', name: 'NVIDIA', frei: true,
+      url: 'redion-local://app/ki/nvidia', modelle: [NVIDIA_MODELL],
+      woher: 'build.nvidia.com',
+      hinweis: 'Kimi K3.1 Pro als NVIDIA-Prototyp. Bei Auswahl geht der Anfragekontext an NVIDIA.'
+    }] : []),
     { id:'eigen',      name:'Eigener Server', frei:true,
       url:'', modelle:[], woher:'',
       hinweis:'Jede Adresse, die wie OpenAI antwortet — auch LM Studio oder llama.cpp' }
@@ -313,6 +323,7 @@ const KI = (() => {
   const modelleHolen = async (id: string): Promise<string[] | null> => {
     try {
       const a = anbieter(id);
+      if (a.id === 'nvidia') return a.modelle;
       const key = schluessel(a.id);
       const url = modellAdresse(a.id === 'eigen' ? Store.getMeta('api:eigenUrl', '') : a.url);
       if (!url) return null;
@@ -396,6 +407,10 @@ const KI = (() => {
       kopf['anthropic-dangerous-direct-browser-access'] = 'true';
     } else if (key) {
       kopf['Authorization'] = 'Bearer ' + key;
+    }
+    if (a.id === 'nvidia') {
+      if (!nvidiaTicket) throw new Error('NVIDIA braucht die Redion-Windows-App.');
+      kopf['X-Redion-NVIDIA-Ticket'] = await nvidiaTicket();
     }
 
     const sys = nachrichten.find((m: any) => m.role === 'system');
@@ -841,7 +856,8 @@ const KI = (() => {
     const gemerkt = Store.getMeta('ki', null);
 
     /* Zuletzt ein Wolken-Modell benutzt und der Schlüssel liegt noch da? */
-    if (gemerkt && gemerkt.quelle === 'wolke' &&
+    if (gemerkt && gemerkt.quelle === 'wolke' && gemerkt.anbieter !== 'nvidia' &&
+        ANBIETER.some(a => a.id === gemerkt.anbieter) &&
         (schluessel(gemerkt.anbieter) || gemerkt.anbieter === 'eigen')) {
       zustand.quelle = 'wolke';
       zustand.anbieter = gemerkt.anbieter;
@@ -1007,7 +1023,9 @@ const KI = (() => {
       zustand.quelle = b.dataset.q ?? zustand.quelle;
       zustand.modell = b.dataset.m ?? zustand.modell;
       if (b.dataset.q === 'wolke') zustand.anbieter = b.dataset.a ?? zustand.anbieter;
-      Store.setMeta('ki', { quelle: zustand.quelle, modell: zustand.modell, anbieter: zustand.anbieter });
+      // NVIDIA wird im laufenden Fenster gewählt. Der gespeicherte lokale Start bleibt verfügbar.
+      if (zustand.quelle !== 'wolke' || zustand.anbieter !== 'nvidia')
+        Store.setMeta('ki', { quelle: zustand.quelle, modell: zustand.modell, anbieter: zustand.anbieter });
 
       if (zustand.quelle === 'wolke') {
         zustand.bereit = true;

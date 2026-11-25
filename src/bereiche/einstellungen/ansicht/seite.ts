@@ -371,8 +371,9 @@ const Einstellungen = (() => {
       fenster.setAttribute('data-blick', ziel);
       const inh = fenster.querySelector<HTMLElement>('.einst-inhalt');
       const nv = fenster.querySelector<HTMLElement>('.einst-nav');
-      if (inh) inh.inert = ziel === 'liste';
-      if (nv) nv.inert = ziel === 'bereich';
+      const amMobilgeraet = amTelefon();
+      if (inh) inh.inert = amMobilgeraet && ziel === 'liste';
+      if (nv) nv.inert = amMobilgeraet && ziel === 'bereich';
     };
 
     /* Schliessen: am Telefon gleitet das Blatt nach unten, am Rechner

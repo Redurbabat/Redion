@@ -295,6 +295,12 @@ console.log('\n§5 Rechner — links die gruppierte Liste, rechts die Detailseit
   }));
   gleich('Rechner · der gewählte Bereich ist markiert', nachher.an, 'verbindungen');
   p('Rechner · rechts wechselt der Inhalt', nachher.lange !== vorher, `${vorher} → ${nachher.lange}`);
+  await s.click('.einst-nav button[data-b="schluessel"]');
+  const schluessel = s.locator('[data-set="api:groq"]');
+  await schluessel.click({ timeout: 2500 });
+  await schluessel.pressSequentially('pruefschluessel');
+  const gespeichert = await s.evaluate(() => Store.getMeta('api:groq', '') === 'pruefschluessel');
+  p('Rechner · die sichtbare Schlüsselmaske nimmt Eingaben an und speichert', gespeichert);
   await ctx.close();
 }
 
