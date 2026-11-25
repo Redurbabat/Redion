@@ -97,6 +97,9 @@
 
 .pg-flaeche{
   position:relative; flex:1 1 auto; min-height:320px; overflow:hidden;
+  /* Die Kamera gehört der Fläche. Fokus und Kontextmenüs dürfen daneben
+     keinen zweiten, unsichtbaren Scrollversatz im Browser erzeugen. */
+  overflow:clip;
   container:zeichenflaeche / inline-size;
   background-color:var(--bg-side);
   /* DAS PUNKTRASTER — wie AFFiNEs `radial-gradient` (edgeless-root-block).
@@ -294,6 +297,60 @@ body:has(.pg-flaeche) #sammelleiste{
 .pg-fl-notiz[data-fl-block] .blk > .handles{display:none}
 .pg-fl-notiz[data-fl-block] .blk{padding-left:0}
 
+/* Freie Gedankenkarte auf derselben Ebene wie Formen und Tinte. Nur
+   Knoten, Verbindungen und eingeblendete Werkzeuge fangen den Zeiger. */
+.pg-fl-gedankenkarte{
+  width:max-content;background:transparent;border:0;box-shadow:none;pointer-events:none;
+}
+.pg-fl-gedankenkarte[data-fl-block] .pg-fl-koerper,.pg-fl-gedankenkarte .blk{padding:0}
+.pg-fl-gedankenkarte:is(:hover,:focus-within){z-index:2}
+.pg-fl-gedankenkarte .pg-fl-kopf{
+  position:absolute;left:28px;bottom:calc(100% - 18px);z-index:2;
+  transform:scale(var(--fl-gegenzoom,1));transform-origin:bottom left;
+  min-height:32px;padding:2px 4px 2px 8px;white-space:nowrap;
+  border:1px solid var(--line);border-radius:var(--radius-md);
+  visibility:hidden;
+}
+.pg-flaeche[data-wz="zeiger"] .pg-fl-gedankenkarte:is(:hover,:focus-within) .pg-fl-kopf{
+  visibility:visible;pointer-events:auto;
+}
+.pg-fl-gedankenkarte .pg-fl-menue{min-width:36px;min-height:32px}
+.gk.gk-auf-flaeche{
+  width:max-content;margin:0;border:0;background:transparent;overflow:visible;
+}
+.gk-auf-flaeche .gk-buehne{
+  overflow:visible;background:transparent;pointer-events:none;
+}
+.gk-auf-flaeche .gk-buehne:focus-visible{box-shadow:none}
+.gk-auf-flaeche .gk-kn{width:max-content}
+.gk-auf-flaeche .gk-kn.gk-wurzel{
+  background:color-mix(in srgb,var(--ast) 22%,var(--bg-card));
+}
+.gk-auf-flaeche:not(:focus-within) .gk-kn.on{box-shadow:none}
+.gk-auf-flaeche:not(:focus-within) .gk-griffel{visibility:hidden}
+.pg-flaeche[data-wz="zeiger"] .gk-auf-flaeche .gk-kn{pointer-events:auto}
+.pg-flaeche:not([data-wz="zeiger"]) .gk-auf-flaeche .gk-verb,
+.pg-flaeche:not([data-wz="zeiger"]) .gk-auf-flaeche .gk-verb *{pointer-events:none}
+.gk-auf-flaeche .gk-fl-werkzeuge,.gk-auf-flaeche .gk-leiste{
+  position:absolute;right:28px;bottom:calc(100% - 18px);z-index:3;
+  transform:scale(var(--fl-gegenzoom,1));transform-origin:bottom right;
+  background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-md);
+  box-shadow:var(--schatten-schwebend);
+}
+.gk-auf-flaeche .gk-fl-werkzeuge{
+  width:36px;height:36px;visibility:hidden;color:var(--text);
+}
+.pg-flaeche[data-wz="zeiger"] .pg-fl-gedankenkarte:is(:hover,:focus-within) .gk-fl-werkzeuge{
+  visibility:visible;pointer-events:auto;
+}
+.gk-auf-flaeche .gk-leiste{
+  bottom:calc(100% + (22px * var(--fl-gegenzoom,1)));
+  width:max-content;max-width:min(450px,calc(100vw - 32px));
+  pointer-events:auto;
+}
+.gk-auf-flaeche .gk-leiste[hidden],.gk-auf-flaeche .gk-zoom{display:none}
+
+
 /* „nicht auf der Seite" — ein WORT, keine Farbe allein (§38). */
 .pg-fl-versteckt{
   flex:none; padding:2px 7px; border-radius:999px;
@@ -417,6 +474,31 @@ body:has(.pg-flaeche) #sammelleiste{
 @keyframes pg-fl-paletteneintritt{
   from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}
 }
+.pg-fl-auswahlleiste{
+  position:absolute;z-index:5;display:flex;gap:2px;align-items:center;
+  transform:translateX(-50%);padding:3px;
+  background:var(--bg-card);border:1px solid var(--line);
+  border-radius:var(--radius-md);box-shadow:var(--schatten-schwebend);
+}
+.pg-fl-auswahlleiste[hidden]{display:none}
+.pg-fl-auswahlleiste>button{
+  display:grid;place-items:center;width:32px;height:32px;
+  border-radius:var(--radius-md);color:var(--text);
+}
+.pg-fl-auswahlleiste>button:is(:hover,:focus-visible,[aria-expanded="true"]):not(:disabled){
+  color:var(--accent-text);background:var(--bg-hover);
+}
+.pg-fl-auswahlleiste>button:disabled{opacity:.34}
+.pg-fl-auswahlleiste svg{width:17px;height:17px;display:block}
+.pg-fl-auswahlpalette{
+  position:absolute;z-index:1;top:calc(100% + 5px);left:0;
+  width:max-content;max-width:min(320px,calc(100vw - 32px));padding:4px;
+  background:var(--bg-card);border:1px solid var(--line);
+  border-radius:var(--radius-md);box-shadow:var(--schatten-schwebend);
+}
+.pg-fl-auswahlpalette[data-ausrichtung="rechts"]{left:auto;right:0}
+.pg-fl-auswahlpalette[data-hoch="1"]{top:auto;bottom:calc(100% + 5px)}
+@media(pointer:coarse){.pg-fl-auswahlleiste>button{width:44px;height:44px}}
 .pg-fl-griff-treffer{
   fill:transparent;stroke:transparent;stroke-width:12;stroke-dasharray:none;pointer-events:all;
 }

@@ -621,7 +621,7 @@ const Blocks = (() => {
         };
         return { blatt, zeichneFuer, zeichneFuerSuche };
     })();
-    const render = (block, tiefe = 0, nr = 0) => {
+    const render = (block, tiefe = 0, nr = 0, ansicht = {}) => {
         const t = typ(block.type);
         const el = document.createElement('div');
         el.className = 'blk b-' + block.type;
@@ -1018,7 +1018,7 @@ const Blocks = (() => {
                 box.appendChild(Zusatz.whiteboard(block));
                 break;
             case 'mindmap':
-                box.appendChild(Gedankenkarte.zeichne(block));
+                box.appendChild(Gedankenkarte.zeichne(block, ansicht.freieGedankenkarte === true));
                 break;
             case 'schaltplan':
                 box.appendChild(Planflaeche.zeichne(block));

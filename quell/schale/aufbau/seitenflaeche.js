@@ -142,17 +142,23 @@ const Seitenflaeche = (() => {
         const kaesten = [];
         const kastenBauen = (plan) => {
             const b = plan.block;
+            const freieGedankenkarte = plan.art === 'block' && b.type === 'mindmap';
             const kasten = document.createElement('div');
             kasten.className = 'pg-fl-notiz';
+            if (freieGedankenkarte)
+                kasten.classList.add('pg-fl-gedankenkarte');
             if (plan.art === 'seite')
                 kasten.dataset['flSeite'] = '1';
             else
                 kasten.dataset['flBlock'] = String(b.id);
             kasten.style.left = plan.ort.x + 'px';
             kasten.style.top = plan.ort.y + 'px';
-            kasten.style.width = plan.ort.w + 'px';
+            if (!freieGedankenkarte)
+                kasten.style.width = plan.ort.w + 'px';
             const kopf = document.createElement('div');
             kopf.className = 'pg-fl-kopf';
+            if (freieGedankenkarte)
+                kopf.title = 'Gedankenkarte verschieben';
             if (plan.art === 'seite') {
                 const symAlt = wrap.querySelector('.pg-icon');
                 const titelAlt = wrap.querySelector('#title');
@@ -215,7 +221,7 @@ const Seitenflaeche = (() => {
                 }
             }
             else {
-                koerper.appendChild(Blocks.render(b));
+                koerper.appendChild(Blocks.render(b, 0, 0, { freieGedankenkarte }));
             }
             kaesten.push({ el: kasten, plan });
             ebene.appendChild(kasten);
@@ -271,18 +277,21 @@ const Seitenflaeche = (() => {
         const stellen = (merken = true) => {
             const z = sicht.z;
             ebene.style.transform = `translate(${sicht.x}px, ${sicht.y}px) scale(${z})`;
+            ebene.style.setProperty('--fl-gegenzoom', String(1 / z));
             let raster = RASTER * z;
             while (raster < 16)
                 raster *= 2;
             flaeche.style.backgroundSize = `${raster}px ${raster}px`;
             flaeche.style.backgroundPosition = `${sicht.x}px ${sicht.y}px`;
             massstabZeigen.textContent = Math.round(z * 100) + ' %';
+            auswahlLeistePositionieren();
             if (merken)
                 sichtSchreiben(p.id, sicht);
         };
         const inFlaeche = (sx, sy) => {
             const k = flaeche.getBoundingClientRect();
-            return { x: (sx - k.left - sicht.x) / sicht.z, y: (sy - k.top - sicht.y) / sicht.z };
+            return { x: (sx - k.left - sicht.x + flaeche.scrollLeft) / sicht.z,
+                y: (sy - k.top - sicht.y + flaeche.scrollTop) / sicht.z };
         };
         vorschlag = () => {
             const k = flaeche.getBoundingClientRect();
@@ -357,6 +366,12 @@ const Seitenflaeche = (() => {
         };
         let skalierZug = null;
         const auswahl = new Set();
+        const auswahlLeiste = document.createElement('div');
+        auswahlLeiste.className = 'pg-fl-auswahlleiste';
+        auswahlLeiste.setAttribute('role', 'group');
+        auswahlLeiste.setAttribute('aria-label', 'Werkzeuge der Formauswahl');
+        auswahlLeiste.hidden = true;
+        let auswahlPalette = null;
         const formKnoten = new Map();
         const linien = [];
         let verbindeVon = '';
@@ -382,6 +397,28 @@ const Seitenflaeche = (() => {
             const w = Math.max(...boxen.map(b => b.x + b.w)) - x;
             const h = Math.max(...boxen.map(b => b.y + b.h)) - y;
             return w > 0.1 && h > 0.1 ? { x, y, w, h } : null;
+        };
+        const auswahlLeistePositionieren = (rahmen = gruppenRahmen()) => {
+            const b = rahmen && werkzeug === 'zeiger' ? rahmen : null;
+            const breit = flaeche.clientWidth, hoch = flaeche.clientHeight;
+            if (!b || !breit || !hoch) {
+                auswahlLeiste.hidden = true;
+                return;
+            }
+            const links = sicht.x + b.x * sicht.z, oben = sicht.y + b.y * sicht.z;
+            const rechts = links + b.w * sicht.z, unten = oben + b.h * sicht.z;
+            auswahlLeiste.hidden = rechts < 0 || links > breit || unten < 0 || oben > hoch;
+            if (auswahlLeiste.hidden)
+                return;
+            const polster = auswahlLeiste.offsetWidth / 2 + 8;
+            auswahlLeiste.style.left = Math.max(polster, Math.min(breit - polster, (links + rechts) / 2)) + 'px';
+            const platz = auswahlLeiste.offsetHeight + 14;
+            auswahlLeiste.style.top = Math.max(4, Math.min(hoch - platz, oben >= platz ? oben - platz : unten + 12)) + 'px';
+        };
+        const auswahlPaletteSchliessen = () => {
+            auswahlPalette?.remove();
+            auswahlPalette = null;
+            auswahlLeiste.querySelector('[data-a="auswahlfarbe"]')?.setAttribute('aria-expanded', 'false');
         };
         const griffeZeigen = (r) => {
             const fingerziel = matchMedia('(pointer: coarse)').matches ? 42 : 20;
@@ -412,6 +449,10 @@ const Seitenflaeche = (() => {
             const rahmen = gruppenRahmen();
             if (rahmen)
                 griffeZeigen(rahmen);
+            auswahlLeistePositionieren(rahmen);
+            const beschriften = auswahlLeiste.querySelector('[data-a="auswahltext"]');
+            if (beschriften)
+                beschriften.disabled = !beschriftbareForm();
             leiste.setzeGesperrt('skalieren', !rahmen);
             const text = auswahl.size === 1 ? 'Eine Form ausgewählt' : auswahl.size + ' Formen ausgewählt';
             if (ansage.textContent !== text)
@@ -421,6 +462,7 @@ const Seitenflaeche = (() => {
             leiste.setzeGesperrt('alleFormen', !formen.some(beweglich));
         };
         const auswahlSetzen = (ids) => {
+            auswahlPaletteSchliessen();
             auswahl.clear();
             ids.forEach(id => auswahl.add(id));
             auswahlZeigen();
@@ -581,6 +623,36 @@ const Seitenflaeche = (() => {
                 return;
             merken();
             formenEntfernen(auswahl);
+            sichern();
+        };
+        const auswahlDuplizieren = () => {
+            const neu = new Map([...auswahl].map(id => [id, Store.uid().slice(0, 8)]));
+            if (!neu.size)
+                return;
+            const abstand = 22 / sicht.z;
+            const kopien = [];
+            for (const form of formen) {
+                if (form.art === 'verbindung') {
+                    const von = neu.get(form.von), nach = neu.get(form.nach);
+                    if (von && nach)
+                        kopien.push({ ...form, id: Store.uid().slice(0, 8), von, nach });
+                    continue;
+                }
+                const id = neu.get(formId(form));
+                if (!id)
+                    continue;
+                if (form.art === 'stift') {
+                    kopien.push({ ...form, id, pts: form.pts.map(([x, y, ...rest]) => [r2(x + abstand), r2(y + abstand), ...rest]) });
+                }
+                else {
+                    kopien.push({ ...form, id, x: r2(form.x + abstand), y: r2(form.y + abstand) });
+                }
+            }
+            if (!kopien.length)
+                return;
+            merken();
+            formen.push(...kopien);
+            auswahlSetzen([...neu.values()]);
             sichern();
         };
         const auswahlVerschieben = (dx, dy) => {
@@ -1002,7 +1074,55 @@ const Seitenflaeche = (() => {
             leiste.setzeWerkzeug(id);
             werkzeugWechseln(id);
         });
+        for (const [id, name, sym] of [
+            ['auswahlfarbe', 'Farbe und Füllung der Auswahl', 'palette'],
+            ['auswahltext', 'Text der ausgewählten Form bearbeiten', 'inkText'],
+            ['auswahlkopie', 'Auswahl duplizieren', 'copy']
+        ]) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.dataset.a = id;
+            b.title = name;
+            b.setAttribute('aria-label', name);
+            const icon = document.createElement('span');
+            icon.setAttribute('aria-hidden', 'true');
+            icon.dataset.sym = sym;
+            b.append(icon);
+            if (id === 'auswahlfarbe')
+                b.setAttribute('aria-expanded', 'false');
+            b.addEventListener('click', e => {
+                if (id === 'auswahlfarbe') {
+                    const offen = auswahlPalette === null;
+                    auswahlPaletteSchliessen();
+                    if (offen) {
+                        auswahlPalette = werkzeugPalette('farbe');
+                        auswahlPalette.classList.add('pg-fl-auswahlpalette');
+                        auswahlLeiste.append(auswahlPalette);
+                        const platz = flaeche.getBoundingClientRect(), menu = auswahlPalette.getBoundingClientRect();
+                        if (menu.right > platz.right - 6)
+                            auswahlPalette.dataset.ausrichtung = 'rechts';
+                        if (menu.bottom > platz.bottom - 6)
+                            auswahlPalette.dataset.hoch = '1';
+                        b.setAttribute('aria-expanded', 'true');
+                        if (e.detail === 0)
+                            auswahlPalette.querySelector('button')?.focus();
+                    }
+                }
+                else if (id === 'auswahlkopie') {
+                    auswahlDuplizieren();
+                    flaeche.focus({ preventScroll: true });
+                }
+                else {
+                    const form = beschriftbareForm();
+                    if (form)
+                        void textBearbeiten(form);
+                }
+            });
+            auswahlLeiste.append(b);
+        }
+        Register.symbole.fuelle(auswahlLeiste);
         flaeche.insertBefore(leiste.element, ebene);
+        flaeche.insertBefore(auswahlLeiste, ebene);
         flaeche.dataset['wz'] = werkzeug;
         if (typeof Register !== 'undefined' && Register.symbole)
             Register.symbole.fuelle(leiste.element);
@@ -1193,6 +1313,7 @@ const Seitenflaeche = (() => {
                 ecke, vorher: rahmen, nachher: rahmen };
             e.preventDefault();
             flaeche.focus({ preventScroll: true });
+            auswahlLeiste.hidden = true;
             try {
                 flaeche.setPointerCapture(e.pointerId);
             }
@@ -1212,9 +1333,11 @@ const Seitenflaeche = (() => {
             verbindungenNachziehen(0, 0);
             if (e?.type === 'pointerup')
                 skalierungSpeichern(zug.vorher, skalierZiel(e, zug));
+            auswahlLeistePositionieren();
         };
         const formZugEnde = () => {
             formenZug = null;
+            auswahlLeistePositionieren();
             if (formenBild)
                 cancelAnimationFrame(formenBild);
             formenBild = 0;
@@ -1372,6 +1495,11 @@ const Seitenflaeche = (() => {
         };
         const beginnt = (e) => {
             const ziel = e.target instanceof Element ? e.target : null;
+            if (ziel && auswahlLeiste.contains(ziel))
+                return;
+            auswahlPaletteSchliessen();
+            if (ziel?.closest('.gk-auf-flaeche') && auswahl.size)
+                auswahlSetzen([]);
             if (ziel && leiste.element.contains(ziel)) {
                 dockKlickUnterdrueckt = null;
                 dockZugStart(e, ziel);
@@ -1479,6 +1607,7 @@ const Seitenflaeche = (() => {
                     if (!auswahl.has(id))
                         auswahlSetzen([id]);
                     formenZug = { pointer: e.pointerId, sx: e.clientX, sy: e.clientY, dx: 0, dy: 0 };
+                    auswahlLeiste.hidden = true;
                     try {
                         flaeche.setPointerCapture(e.pointerId);
                     }
@@ -1702,6 +1831,12 @@ const Seitenflaeche = (() => {
             }
             if (e.defaultPrevented)
                 return;
+            if (e.key === 'Escape' && auswahlPalette) {
+                auswahlPaletteSchliessen();
+                auswahlLeiste.querySelector('[data-a="auswahlfarbe"]')?.focus();
+                e.preventDefault();
+                return;
+            }
             if (e.key === 'Escape' && leiste.istOffen()) {
                 leiste.schliesse();
                 e.preventDefault();

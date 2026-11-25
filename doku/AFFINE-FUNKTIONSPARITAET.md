@@ -23,6 +23,8 @@ Referenz ist der [AFFiNE-Quellstand 81da59d](https://github.com/toeverything/AFF
 7. Ziehe an einem Eckgriff der Auswahl, um die Formen zu skalieren. Mit Umschalt bleibt das Seitenverhältnis erhalten. Über **Grösse ändern** kannst du Breite und Höhe auch eingeben.
 8. Öffne **Stift** für Freihandstift, Textmarker, Breite und Farbe. Die Palette bleibt beim Zeichnen offen. **Formen** bietet die Kontur, Füllung und Raute in derselben Leiste.
 9. Blättere im Dock nach rechts. Unter **Gedankenkarte einfügen** stehen zwei bearbeitbare Startkarten. **Blockvorlagen** enthält Ablaufdiagramm und Entscheidungsbaum. Ziehe eine Vorschau an die gewünschte Stelle oder füge sie mit einem Klick ein.
+10. Die Themen und Äste einer Gedankenkarte liegen direkt auf der Fläche. Doppelklick auf ein Thema öffnet seinen Text. Wähle ein Thema, um die Werkzeuge der Karte einzublenden.
+11. Über ausgewählten Formen kannst du direkt Farbe und Füllung ändern, Text bearbeiten oder die Auswahl duplizieren. Pfeile zwischen kopierten Formen werden gemeinsam mit ihnen übernommen.
 
 ## Abnahme der bisherigen Grundfunktionen
 
@@ -50,3 +52,10 @@ Referenz ist der [AFFiNE-Quellstand 81da59d](https://github.com/toeverything/AFF
 - In der Windows-x64-EXE wurden gefüllte Raute, Vorlagenzug und Rückgängig offline in einem getrennten Profil geprüft. Die Stiftpalette blieb auch bei 390 px erreichbar.
 - Gespeicherte Rechtecke ohne Füllangabe behalten ihre Kontur. Raute, Füllung und Markerstil benötigen für die vollständige Darstellung eine aktualisierte App.
 - Die Prüfung mit einem echten iPhone und Windows-Stift steht aus.
+
+## Abnahme frei platzierter Gedankenkarten
+
+- In Dienststand 1674 erscheinen die Knoten und Äste frei auf der Fläche. Bestehende Karten behalten ihre Position, Texte und gespeicherten Einstellungen für die Seitenansicht.
+- In der Windows-EXE im getrennten Offline-Profil waren bei 36 % Zoom alle acht Knoten zweier Bestandskarten sichtbar. Ein Doppelklick änderte das Thema im bestehenden Block. Die Leiste für Farbe, Text und Kopieren blieb oberhalb der Formauswahl in Bildschirmgrösse.
+- Die Fläche hält beim Fokussieren einen festen Ausschnitt. Dadurch bleiben Auswahlrahmen und gezeichnete Formen an denselben Bildschirmkoordinaten.
+- Typprüfung, Einzeldatei und Dienststand waren erfolgreich. Der Flächenlauf `test575` bestand mit 111 Prüfungen, der eigenständige Gedankenkarten-Test `test538` mit 53 Prüfungen.

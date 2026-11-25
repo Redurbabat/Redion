@@ -300,7 +300,7 @@ const Gedankenkarte = (() => {
             hoehe: Math.round(maxY - minY + RAND * 2),
         };
     };
-    const zeichne = (block) => {
+    const zeichne = (block, aufFlaeche = false) => {
         let karte = leseKarte(block);
         let gewaehlt = karte.knoten.find(k => !k.eltern)?.id ?? null;
         let schreibt = null;
@@ -308,10 +308,10 @@ const Gedankenkarte = (() => {
         let letzterAufbau = null;
         let letzteMasse = {};
         const hoehe = Math.max(220, zahl(block.hoehe, 420));
-        let mussEinpassen = !(block && block.karte && typeof block.karte.sicht === 'object'
+        let mussEinpassen = !aufFlaeche && !(block && block.karte && typeof block.karte.sicht === 'object'
             && block.karte.sicht);
         const w = document.createElement('div');
-        w.className = 'gk';
+        w.className = aufFlaeche ? 'gk gk-auf-flaeche' : 'gk';
         const LEISTE = [
             ['kind', '＋', 'Unterthema anlegen (Tab)'],
             ['neben', '⏎', 'Thema daneben anlegen (Enter)'],
@@ -348,12 +348,42 @@ const Gedankenkarte = (() => {
                 '<button data-a="zurueck" title="Schritt zurück" aria-label="Schritt zurück" disabled>↶</button>' +
                 '<button data-a="vor" title="Schritt vorwärts" aria-label="Schritt vorwärts" disabled>↷</button>' +
                 '</div>';
+        if (aufFlaeche) {
+            const leiste = w.querySelector('.gk-leiste');
+            leiste.hidden = true;
+            const werkzeuge = document.createElement('button');
+            werkzeuge.type = 'button';
+            werkzeuge.className = 'gk-fl-werkzeuge';
+            werkzeuge.textContent = '⋯';
+            werkzeuge.title = 'Werkzeuge der Gedankenkarte öffnen';
+            werkzeuge.setAttribute('aria-label', 'Werkzeuge der Gedankenkarte');
+            werkzeuge.setAttribute('aria-expanded', 'false');
+            const schalten = (offen) => {
+                leiste.hidden = !offen;
+                werkzeuge.setAttribute('aria-expanded', String(offen));
+            };
+            werkzeuge.addEventListener('click', () => schalten(leiste.hidden));
+            w.addEventListener('keydown', e => {
+                if (e.key !== 'Escape' || leiste.hidden || e.defaultPrevented)
+                    return;
+                schalten(false);
+                werkzeuge.focus({ preventScroll: true });
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            w.addEventListener('focusout', e => {
+                if (!(e.relatedTarget instanceof Node) || !w.contains(e.relatedTarget))
+                    schalten(false);
+            });
+            w.prepend(werkzeuge);
+        }
         const buehne = document.createElement('div');
         buehne.className = 'gk-buehne';
         buehne.tabIndex = 0;
         buehne.setAttribute('role', 'tree');
         buehne.setAttribute('aria-label', 'Gedankenkarte');
-        buehne.style.height = hoehe + 'px';
+        if (!aufFlaeche)
+            buehne.style.height = hoehe + 'px';
         w.appendChild(buehne);
         const welt = document.createElement('div');
         welt.className = 'gk-welt';
@@ -363,7 +393,8 @@ const Gedankenkarte = (() => {
         const griff = document.createElement('div');
         griff.className = 'gk-griff';
         griff.title = 'Höhe ziehen';
-        w.appendChild(griff);
+        if (!aufFlaeche)
+            w.appendChild(griff);
         const SCHRITTE = 40;
         const verlauf = GfxHistory.erstelle(SCHRITTE);
         const abbild = () => JSON.stringify(karte);
@@ -508,6 +539,8 @@ const Gedankenkarte = (() => {
             return g;
         };
         const sichtAnwenden = () => {
+            if (aufFlaeche)
+                return;
             welt.style.transform = `translate(${(-karte.sicht.x).toFixed(1)}px, ` +
                 `${(-karte.sicht.y).toFixed(1)}px) scale(${karte.sicht.z})`;
             const m = w.querySelector('.gk-massstab');
@@ -550,7 +583,7 @@ const Gedankenkarte = (() => {
             letzteMasse = masse;
             const plan = aufbauen(karte, masse);
             const wurzelNachher = plan.orte[wurzel];
-            if (wurzelVorher && wurzelNachher && !mussEinpassen) {
+            if (!aufFlaeche && wurzelVorher && wurzelNachher && !mussEinpassen) {
                 karte.sicht.x += (wurzelNachher.x - wurzelVorher.x) * karte.sicht.z;
                 karte.sicht.y += (wurzelNachher.y - wurzelVorher.y) * karte.sicht.z;
             }
@@ -570,6 +603,10 @@ const Gedankenkarte = (() => {
                 else
                     el.style.removeProperty('--ast-hell');
             });
+            if (aufFlaeche) {
+                buehne.style.width = plan.breite + 'px';
+                buehne.style.height = plan.hoehe + 'px';
+            }
             welt.style.width = plan.breite + 'px';
             welt.style.height = plan.hoehe + 'px';
             linien.setAttribute('width', String(plan.breite));
@@ -845,6 +882,8 @@ const Gedankenkarte = (() => {
                 insBild(el);
         };
         const insBild = (el) => {
+            if (aufFlaeche)
+                return;
             const b = buehne.getBoundingClientRect();
             const k = el.getBoundingClientRect();
             let dx = 0, dy = 0;
@@ -1073,6 +1112,8 @@ const Gedankenkarte = (() => {
                 schreiberSchliessen(null);
                 return;
             }
+            if (aufFlaeche)
+                return;
             const startX = e.clientX, startY = e.clientY;
             const vonX = karte.sicht.x, vonY = karte.sicht.y;
             buehne.classList.add('gk-schiebt');
@@ -1096,7 +1137,7 @@ const Gedankenkarte = (() => {
                 bearbeite(kn.dataset.k);
         });
         buehne.addEventListener('wheel', e => {
-            if (!e.ctrlKey && !e.metaKey)
+            if (aufFlaeche || (!e.ctrlKey && !e.metaKey))
                 return;
             e.preventDefault();
             zoomen(e.deltaY < 0 ? 1.1 : 1 / 1.1);
@@ -1214,7 +1255,7 @@ const Gedankenkarte = (() => {
         welt.addEventListener('drop', e => { if (schreibt)
             e.preventDefault(); });
         welt.addEventListener('focusout', e => {
-            if (!schreibt)
+            if (!schreibt || !elVon(e)?.closest('.gk-txt.gk-schreibt'))
                 return;
             const ziel = e.relatedTarget;
             if (ziel && typeof ziel.closest === 'function' && ziel.closest('.gk-leiste'))

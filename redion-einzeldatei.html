@@ -13261,6 +13261,9 @@ body .rmo-liquid::after {
 
 .pg-flaeche{
   position:relative; flex:1 1 auto; min-height:320px; overflow:hidden;
+  /* Die Kamera gehört der Fläche. Fokus und Kontextmenüs dürfen daneben
+     keinen zweiten, unsichtbaren Scrollversatz im Browser erzeugen. */
+  overflow:clip;
   container:zeichenflaeche / inline-size;
   background-color:var(--bg-side);
   /* DAS PUNKTRASTER — wie AFFiNEs `radial-gradient` (edgeless-root-block).
@@ -13458,6 +13461,60 @@ body:has(.pg-flaeche) #sammelleiste{
 .pg-fl-notiz[data-fl-block] .blk > .handles{display:none}
 .pg-fl-notiz[data-fl-block] .blk{padding-left:0}
 
+/* Freie Gedankenkarte auf derselben Ebene wie Formen und Tinte. Nur
+   Knoten, Verbindungen und eingeblendete Werkzeuge fangen den Zeiger. */
+.pg-fl-gedankenkarte{
+  width:max-content;background:transparent;border:0;box-shadow:none;pointer-events:none;
+}
+.pg-fl-gedankenkarte[data-fl-block] .pg-fl-koerper,.pg-fl-gedankenkarte .blk{padding:0}
+.pg-fl-gedankenkarte:is(:hover,:focus-within){z-index:2}
+.pg-fl-gedankenkarte .pg-fl-kopf{
+  position:absolute;left:28px;bottom:calc(100% - 18px);z-index:2;
+  transform:scale(var(--fl-gegenzoom,1));transform-origin:bottom left;
+  min-height:32px;padding:2px 4px 2px 8px;white-space:nowrap;
+  border:1px solid var(--line);border-radius:var(--radius-md);
+  visibility:hidden;
+}
+.pg-flaeche[data-wz="zeiger"] .pg-fl-gedankenkarte:is(:hover,:focus-within) .pg-fl-kopf{
+  visibility:visible;pointer-events:auto;
+}
+.pg-fl-gedankenkarte .pg-fl-menue{min-width:36px;min-height:32px}
+.gk.gk-auf-flaeche{
+  width:max-content;margin:0;border:0;background:transparent;overflow:visible;
+}
+.gk-auf-flaeche .gk-buehne{
+  overflow:visible;background:transparent;pointer-events:none;
+}
+.gk-auf-flaeche .gk-buehne:focus-visible{box-shadow:none}
+.gk-auf-flaeche .gk-kn{width:max-content}
+.gk-auf-flaeche .gk-kn.gk-wurzel{
+  background:color-mix(in srgb,var(--ast) 22%,var(--bg-card));
+}
+.gk-auf-flaeche:not(:focus-within) .gk-kn.on{box-shadow:none}
+.gk-auf-flaeche:not(:focus-within) .gk-griffel{visibility:hidden}
+.pg-flaeche[data-wz="zeiger"] .gk-auf-flaeche .gk-kn{pointer-events:auto}
+.pg-flaeche:not([data-wz="zeiger"]) .gk-auf-flaeche .gk-verb,
+.pg-flaeche:not([data-wz="zeiger"]) .gk-auf-flaeche .gk-verb *{pointer-events:none}
+.gk-auf-flaeche .gk-fl-werkzeuge,.gk-auf-flaeche .gk-leiste{
+  position:absolute;right:28px;bottom:calc(100% - 18px);z-index:3;
+  transform:scale(var(--fl-gegenzoom,1));transform-origin:bottom right;
+  background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-md);
+  box-shadow:var(--schatten-schwebend);
+}
+.gk-auf-flaeche .gk-fl-werkzeuge{
+  width:36px;height:36px;visibility:hidden;color:var(--text);
+}
+.pg-flaeche[data-wz="zeiger"] .pg-fl-gedankenkarte:is(:hover,:focus-within) .gk-fl-werkzeuge{
+  visibility:visible;pointer-events:auto;
+}
+.gk-auf-flaeche .gk-leiste{
+  bottom:calc(100% + (22px * var(--fl-gegenzoom,1)));
+  width:max-content;max-width:min(450px,calc(100vw - 32px));
+  pointer-events:auto;
+}
+.gk-auf-flaeche .gk-leiste[hidden],.gk-auf-flaeche .gk-zoom{display:none}
+
+
 /* „nicht auf der Seite" — ein WORT, keine Farbe allein (§38). */
 .pg-fl-versteckt{
   flex:none; padding:2px 7px; border-radius:999px;
@@ -13581,6 +13638,31 @@ body:has(.pg-flaeche) #sammelleiste{
 @keyframes pg-fl-paletteneintritt{
   from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}
 }
+.pg-fl-auswahlleiste{
+  position:absolute;z-index:5;display:flex;gap:2px;align-items:center;
+  transform:translateX(-50%);padding:3px;
+  background:var(--bg-card);border:1px solid var(--line);
+  border-radius:var(--radius-md);box-shadow:var(--schatten-schwebend);
+}
+.pg-fl-auswahlleiste[hidden]{display:none}
+.pg-fl-auswahlleiste>button{
+  display:grid;place-items:center;width:32px;height:32px;
+  border-radius:var(--radius-md);color:var(--text);
+}
+.pg-fl-auswahlleiste>button:is(:hover,:focus-visible,[aria-expanded="true"]):not(:disabled){
+  color:var(--accent-text);background:var(--bg-hover);
+}
+.pg-fl-auswahlleiste>button:disabled{opacity:.34}
+.pg-fl-auswahlleiste svg{width:17px;height:17px;display:block}
+.pg-fl-auswahlpalette{
+  position:absolute;z-index:1;top:calc(100% + 5px);left:0;
+  width:max-content;max-width:min(320px,calc(100vw - 32px));padding:4px;
+  background:var(--bg-card);border:1px solid var(--line);
+  border-radius:var(--radius-md);box-shadow:var(--schatten-schwebend);
+}
+.pg-fl-auswahlpalette[data-ausrichtung="rechts"]{left:auto;right:0}
+.pg-fl-auswahlpalette[data-hoch="1"]{top:auto;bottom:calc(100% + 5px)}
+@media(pointer:coarse){.pg-fl-auswahlleiste>button{width:44px;height:44px}}
 .pg-fl-griff-treffer{
   fill:transparent;stroke:transparent;stroke-width:12;stroke-dasharray:none;pointer-events:all;
 }
@@ -31026,7 +31108,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1670, inhalt: '460e072297dca192', gebaut: '2026-11-25T18:50:29.185Z' };
+const Stand = { fassung: 1674, inhalt: 'ba464d3853c30f51', gebaut: '2026-11-25T19:28:58.581Z' };
 window.Stand = Stand;
 
 </script>
@@ -62299,7 +62381,7 @@ const Gedankenkarte = (() => {
             hoehe: Math.round(maxY - minY + RAND * 2),
         };
     };
-    const zeichne = (block) => {
+    const zeichne = (block, aufFlaeche = false) => {
         let karte = leseKarte(block);
         let gewaehlt = karte.knoten.find(k => !k.eltern)?.id ?? null;
         let schreibt = null;
@@ -62307,10 +62389,10 @@ const Gedankenkarte = (() => {
         let letzterAufbau = null;
         let letzteMasse = {};
         const hoehe = Math.max(220, zahl(block.hoehe, 420));
-        let mussEinpassen = !(block && block.karte && typeof block.karte.sicht === 'object'
+        let mussEinpassen = !aufFlaeche && !(block && block.karte && typeof block.karte.sicht === 'object'
             && block.karte.sicht);
         const w = document.createElement('div');
-        w.className = 'gk';
+        w.className = aufFlaeche ? 'gk gk-auf-flaeche' : 'gk';
         const LEISTE = [
             ['kind', '＋', 'Unterthema anlegen (Tab)'],
             ['neben', '⏎', 'Thema daneben anlegen (Enter)'],
@@ -62347,12 +62429,42 @@ const Gedankenkarte = (() => {
                 '<button data-a="zurueck" title="Schritt zurück" aria-label="Schritt zurück" disabled>↶</button>' +
                 '<button data-a="vor" title="Schritt vorwärts" aria-label="Schritt vorwärts" disabled>↷</button>' +
                 '</div>';
+        if (aufFlaeche) {
+            const leiste = w.querySelector('.gk-leiste');
+            leiste.hidden = true;
+            const werkzeuge = document.createElement('button');
+            werkzeuge.type = 'button';
+            werkzeuge.className = 'gk-fl-werkzeuge';
+            werkzeuge.textContent = '⋯';
+            werkzeuge.title = 'Werkzeuge der Gedankenkarte öffnen';
+            werkzeuge.setAttribute('aria-label', 'Werkzeuge der Gedankenkarte');
+            werkzeuge.setAttribute('aria-expanded', 'false');
+            const schalten = (offen) => {
+                leiste.hidden = !offen;
+                werkzeuge.setAttribute('aria-expanded', String(offen));
+            };
+            werkzeuge.addEventListener('click', () => schalten(leiste.hidden));
+            w.addEventListener('keydown', e => {
+                if (e.key !== 'Escape' || leiste.hidden || e.defaultPrevented)
+                    return;
+                schalten(false);
+                werkzeuge.focus({ preventScroll: true });
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            w.addEventListener('focusout', e => {
+                if (!(e.relatedTarget instanceof Node) || !w.contains(e.relatedTarget))
+                    schalten(false);
+            });
+            w.prepend(werkzeuge);
+        }
         const buehne = document.createElement('div');
         buehne.className = 'gk-buehne';
         buehne.tabIndex = 0;
         buehne.setAttribute('role', 'tree');
         buehne.setAttribute('aria-label', 'Gedankenkarte');
-        buehne.style.height = hoehe + 'px';
+        if (!aufFlaeche)
+            buehne.style.height = hoehe + 'px';
         w.appendChild(buehne);
         const welt = document.createElement('div');
         welt.className = 'gk-welt';
@@ -62362,7 +62474,8 @@ const Gedankenkarte = (() => {
         const griff = document.createElement('div');
         griff.className = 'gk-griff';
         griff.title = 'Höhe ziehen';
-        w.appendChild(griff);
+        if (!aufFlaeche)
+            w.appendChild(griff);
         const SCHRITTE = 40;
         const verlauf = GfxHistory.erstelle(SCHRITTE);
         const abbild = () => JSON.stringify(karte);
@@ -62507,6 +62620,8 @@ const Gedankenkarte = (() => {
             return g;
         };
         const sichtAnwenden = () => {
+            if (aufFlaeche)
+                return;
             welt.style.transform = `translate(${(-karte.sicht.x).toFixed(1)}px, ` +
                 `${(-karte.sicht.y).toFixed(1)}px) scale(${karte.sicht.z})`;
             const m = w.querySelector('.gk-massstab');
@@ -62549,7 +62664,7 @@ const Gedankenkarte = (() => {
             letzteMasse = masse;
             const plan = aufbauen(karte, masse);
             const wurzelNachher = plan.orte[wurzel];
-            if (wurzelVorher && wurzelNachher && !mussEinpassen) {
+            if (!aufFlaeche && wurzelVorher && wurzelNachher && !mussEinpassen) {
                 karte.sicht.x += (wurzelNachher.x - wurzelVorher.x) * karte.sicht.z;
                 karte.sicht.y += (wurzelNachher.y - wurzelVorher.y) * karte.sicht.z;
             }
@@ -62569,6 +62684,10 @@ const Gedankenkarte = (() => {
                 else
                     el.style.removeProperty('--ast-hell');
             });
+            if (aufFlaeche) {
+                buehne.style.width = plan.breite + 'px';
+                buehne.style.height = plan.hoehe + 'px';
+            }
             welt.style.width = plan.breite + 'px';
             welt.style.height = plan.hoehe + 'px';
             linien.setAttribute('width', String(plan.breite));
@@ -62844,6 +62963,8 @@ const Gedankenkarte = (() => {
                 insBild(el);
         };
         const insBild = (el) => {
+            if (aufFlaeche)
+                return;
             const b = buehne.getBoundingClientRect();
             const k = el.getBoundingClientRect();
             let dx = 0, dy = 0;
@@ -63072,6 +63193,8 @@ const Gedankenkarte = (() => {
                 schreiberSchliessen(null);
                 return;
             }
+            if (aufFlaeche)
+                return;
             const startX = e.clientX, startY = e.clientY;
             const vonX = karte.sicht.x, vonY = karte.sicht.y;
             buehne.classList.add('gk-schiebt');
@@ -63095,7 +63218,7 @@ const Gedankenkarte = (() => {
                 bearbeite(kn.dataset.k);
         });
         buehne.addEventListener('wheel', e => {
-            if (!e.ctrlKey && !e.metaKey)
+            if (aufFlaeche || (!e.ctrlKey && !e.metaKey))
                 return;
             e.preventDefault();
             zoomen(e.deltaY < 0 ? 1.1 : 1 / 1.1);
@@ -63213,7 +63336,7 @@ const Gedankenkarte = (() => {
         welt.addEventListener('drop', e => { if (schreibt)
             e.preventDefault(); });
         welt.addEventListener('focusout', e => {
-            if (!schreibt)
+            if (!schreibt || !elVon(e)?.closest('.gk-txt.gk-schreibt'))
                 return;
             const ziel = e.relatedTarget;
             if (ziel && typeof ziel.closest === 'function' && ziel.closest('.gk-leiste'))
@@ -97073,7 +97196,7 @@ const Blocks = (() => {
         };
         return { blatt, zeichneFuer, zeichneFuerSuche };
     })();
-    const render = (block, tiefe = 0, nr = 0) => {
+    const render = (block, tiefe = 0, nr = 0, ansicht = {}) => {
         const t = typ(block.type);
         const el = document.createElement('div');
         el.className = 'blk b-' + block.type;
@@ -97470,7 +97593,7 @@ const Blocks = (() => {
                 box.appendChild(Zusatz.whiteboard(block));
                 break;
             case 'mindmap':
-                box.appendChild(Gedankenkarte.zeichne(block));
+                box.appendChild(Gedankenkarte.zeichne(block, ansicht.freieGedankenkarte === true));
                 break;
             case 'schaltplan':
                 box.appendChild(Planflaeche.zeichne(block));
@@ -163560,17 +163683,23 @@ const Seitenflaeche = (() => {
         const kaesten = [];
         const kastenBauen = (plan) => {
             const b = plan.block;
+            const freieGedankenkarte = plan.art === 'block' && b.type === 'mindmap';
             const kasten = document.createElement('div');
             kasten.className = 'pg-fl-notiz';
+            if (freieGedankenkarte)
+                kasten.classList.add('pg-fl-gedankenkarte');
             if (plan.art === 'seite')
                 kasten.dataset['flSeite'] = '1';
             else
                 kasten.dataset['flBlock'] = String(b.id);
             kasten.style.left = plan.ort.x + 'px';
             kasten.style.top = plan.ort.y + 'px';
-            kasten.style.width = plan.ort.w + 'px';
+            if (!freieGedankenkarte)
+                kasten.style.width = plan.ort.w + 'px';
             const kopf = document.createElement('div');
             kopf.className = 'pg-fl-kopf';
+            if (freieGedankenkarte)
+                kopf.title = 'Gedankenkarte verschieben';
             if (plan.art === 'seite') {
                 const symAlt = wrap.querySelector('.pg-icon');
                 const titelAlt = wrap.querySelector('#title');
@@ -163633,7 +163762,7 @@ const Seitenflaeche = (() => {
                 }
             }
             else {
-                koerper.appendChild(Blocks.render(b));
+                koerper.appendChild(Blocks.render(b, 0, 0, { freieGedankenkarte }));
             }
             kaesten.push({ el: kasten, plan });
             ebene.appendChild(kasten);
@@ -163689,18 +163818,21 @@ const Seitenflaeche = (() => {
         const stellen = (merken = true) => {
             const z = sicht.z;
             ebene.style.transform = `translate(${sicht.x}px, ${sicht.y}px) scale(${z})`;
+            ebene.style.setProperty('--fl-gegenzoom', String(1 / z));
             let raster = RASTER * z;
             while (raster < 16)
                 raster *= 2;
             flaeche.style.backgroundSize = `${raster}px ${raster}px`;
             flaeche.style.backgroundPosition = `${sicht.x}px ${sicht.y}px`;
             massstabZeigen.textContent = Math.round(z * 100) + ' %';
+            auswahlLeistePositionieren();
             if (merken)
                 sichtSchreiben(p.id, sicht);
         };
         const inFlaeche = (sx, sy) => {
             const k = flaeche.getBoundingClientRect();
-            return { x: (sx - k.left - sicht.x) / sicht.z, y: (sy - k.top - sicht.y) / sicht.z };
+            return { x: (sx - k.left - sicht.x + flaeche.scrollLeft) / sicht.z,
+                y: (sy - k.top - sicht.y + flaeche.scrollTop) / sicht.z };
         };
         vorschlag = () => {
             const k = flaeche.getBoundingClientRect();
@@ -163775,6 +163907,12 @@ const Seitenflaeche = (() => {
         };
         let skalierZug = null;
         const auswahl = new Set();
+        const auswahlLeiste = document.createElement('div');
+        auswahlLeiste.className = 'pg-fl-auswahlleiste';
+        auswahlLeiste.setAttribute('role', 'group');
+        auswahlLeiste.setAttribute('aria-label', 'Werkzeuge der Formauswahl');
+        auswahlLeiste.hidden = true;
+        let auswahlPalette = null;
         const formKnoten = new Map();
         const linien = [];
         let verbindeVon = '';
@@ -163800,6 +163938,28 @@ const Seitenflaeche = (() => {
             const w = Math.max(...boxen.map(b => b.x + b.w)) - x;
             const h = Math.max(...boxen.map(b => b.y + b.h)) - y;
             return w > 0.1 && h > 0.1 ? { x, y, w, h } : null;
+        };
+        const auswahlLeistePositionieren = (rahmen = gruppenRahmen()) => {
+            const b = rahmen && werkzeug === 'zeiger' ? rahmen : null;
+            const breit = flaeche.clientWidth, hoch = flaeche.clientHeight;
+            if (!b || !breit || !hoch) {
+                auswahlLeiste.hidden = true;
+                return;
+            }
+            const links = sicht.x + b.x * sicht.z, oben = sicht.y + b.y * sicht.z;
+            const rechts = links + b.w * sicht.z, unten = oben + b.h * sicht.z;
+            auswahlLeiste.hidden = rechts < 0 || links > breit || unten < 0 || oben > hoch;
+            if (auswahlLeiste.hidden)
+                return;
+            const polster = auswahlLeiste.offsetWidth / 2 + 8;
+            auswahlLeiste.style.left = Math.max(polster, Math.min(breit - polster, (links + rechts) / 2)) + 'px';
+            const platz = auswahlLeiste.offsetHeight + 14;
+            auswahlLeiste.style.top = Math.max(4, Math.min(hoch - platz, oben >= platz ? oben - platz : unten + 12)) + 'px';
+        };
+        const auswahlPaletteSchliessen = () => {
+            auswahlPalette?.remove();
+            auswahlPalette = null;
+            auswahlLeiste.querySelector('[data-a="auswahlfarbe"]')?.setAttribute('aria-expanded', 'false');
         };
         const griffeZeigen = (r) => {
             const fingerziel = matchMedia('(pointer: coarse)').matches ? 42 : 20;
@@ -163830,6 +163990,10 @@ const Seitenflaeche = (() => {
             const rahmen = gruppenRahmen();
             if (rahmen)
                 griffeZeigen(rahmen);
+            auswahlLeistePositionieren(rahmen);
+            const beschriften = auswahlLeiste.querySelector('[data-a="auswahltext"]');
+            if (beschriften)
+                beschriften.disabled = !beschriftbareForm();
             leiste.setzeGesperrt('skalieren', !rahmen);
             const text = auswahl.size === 1 ? 'Eine Form ausgewählt' : auswahl.size + ' Formen ausgewählt';
             if (ansage.textContent !== text)
@@ -163839,6 +164003,7 @@ const Seitenflaeche = (() => {
             leiste.setzeGesperrt('alleFormen', !formen.some(beweglich));
         };
         const auswahlSetzen = (ids) => {
+            auswahlPaletteSchliessen();
             auswahl.clear();
             ids.forEach(id => auswahl.add(id));
             auswahlZeigen();
@@ -163999,6 +164164,36 @@ const Seitenflaeche = (() => {
                 return;
             merken();
             formenEntfernen(auswahl);
+            sichern();
+        };
+        const auswahlDuplizieren = () => {
+            const neu = new Map([...auswahl].map(id => [id, Store.uid().slice(0, 8)]));
+            if (!neu.size)
+                return;
+            const abstand = 22 / sicht.z;
+            const kopien = [];
+            for (const form of formen) {
+                if (form.art === 'verbindung') {
+                    const von = neu.get(form.von), nach = neu.get(form.nach);
+                    if (von && nach)
+                        kopien.push({ ...form, id: Store.uid().slice(0, 8), von, nach });
+                    continue;
+                }
+                const id = neu.get(formId(form));
+                if (!id)
+                    continue;
+                if (form.art === 'stift') {
+                    kopien.push({ ...form, id, pts: form.pts.map(([x, y, ...rest]) => [r2(x + abstand), r2(y + abstand), ...rest]) });
+                }
+                else {
+                    kopien.push({ ...form, id, x: r2(form.x + abstand), y: r2(form.y + abstand) });
+                }
+            }
+            if (!kopien.length)
+                return;
+            merken();
+            formen.push(...kopien);
+            auswahlSetzen([...neu.values()]);
             sichern();
         };
         const auswahlVerschieben = (dx, dy) => {
@@ -164420,7 +164615,55 @@ const Seitenflaeche = (() => {
             leiste.setzeWerkzeug(id);
             werkzeugWechseln(id);
         });
+        for (const [id, name, sym] of [
+            ['auswahlfarbe', 'Farbe und Füllung der Auswahl', 'palette'],
+            ['auswahltext', 'Text der ausgewählten Form bearbeiten', 'inkText'],
+            ['auswahlkopie', 'Auswahl duplizieren', 'copy']
+        ]) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.dataset.a = id;
+            b.title = name;
+            b.setAttribute('aria-label', name);
+            const icon = document.createElement('span');
+            icon.setAttribute('aria-hidden', 'true');
+            icon.dataset.sym = sym;
+            b.append(icon);
+            if (id === 'auswahlfarbe')
+                b.setAttribute('aria-expanded', 'false');
+            b.addEventListener('click', e => {
+                if (id === 'auswahlfarbe') {
+                    const offen = auswahlPalette === null;
+                    auswahlPaletteSchliessen();
+                    if (offen) {
+                        auswahlPalette = werkzeugPalette('farbe');
+                        auswahlPalette.classList.add('pg-fl-auswahlpalette');
+                        auswahlLeiste.append(auswahlPalette);
+                        const platz = flaeche.getBoundingClientRect(), menu = auswahlPalette.getBoundingClientRect();
+                        if (menu.right > platz.right - 6)
+                            auswahlPalette.dataset.ausrichtung = 'rechts';
+                        if (menu.bottom > platz.bottom - 6)
+                            auswahlPalette.dataset.hoch = '1';
+                        b.setAttribute('aria-expanded', 'true');
+                        if (e.detail === 0)
+                            auswahlPalette.querySelector('button')?.focus();
+                    }
+                }
+                else if (id === 'auswahlkopie') {
+                    auswahlDuplizieren();
+                    flaeche.focus({ preventScroll: true });
+                }
+                else {
+                    const form = beschriftbareForm();
+                    if (form)
+                        void textBearbeiten(form);
+                }
+            });
+            auswahlLeiste.append(b);
+        }
+        Register.symbole.fuelle(auswahlLeiste);
         flaeche.insertBefore(leiste.element, ebene);
+        flaeche.insertBefore(auswahlLeiste, ebene);
         flaeche.dataset['wz'] = werkzeug;
         if (typeof Register !== 'undefined' && Register.symbole)
             Register.symbole.fuelle(leiste.element);
@@ -164611,6 +164854,7 @@ const Seitenflaeche = (() => {
                 ecke, vorher: rahmen, nachher: rahmen };
             e.preventDefault();
             flaeche.focus({ preventScroll: true });
+            auswahlLeiste.hidden = true;
             try {
                 flaeche.setPointerCapture(e.pointerId);
             }
@@ -164630,9 +164874,11 @@ const Seitenflaeche = (() => {
             verbindungenNachziehen(0, 0);
             if (e?.type === 'pointerup')
                 skalierungSpeichern(zug.vorher, skalierZiel(e, zug));
+            auswahlLeistePositionieren();
         };
         const formZugEnde = () => {
             formenZug = null;
+            auswahlLeistePositionieren();
             if (formenBild)
                 cancelAnimationFrame(formenBild);
             formenBild = 0;
@@ -164790,6 +165036,11 @@ const Seitenflaeche = (() => {
         };
         const beginnt = (e) => {
             const ziel = e.target instanceof Element ? e.target : null;
+            if (ziel && auswahlLeiste.contains(ziel))
+                return;
+            auswahlPaletteSchliessen();
+            if (ziel?.closest('.gk-auf-flaeche') && auswahl.size)
+                auswahlSetzen([]);
             if (ziel && leiste.element.contains(ziel)) {
                 dockKlickUnterdrueckt = null;
                 dockZugStart(e, ziel);
@@ -164897,6 +165148,7 @@ const Seitenflaeche = (() => {
                     if (!auswahl.has(id))
                         auswahlSetzen([id]);
                     formenZug = { pointer: e.pointerId, sx: e.clientX, sy: e.clientY, dx: 0, dy: 0 };
+                    auswahlLeiste.hidden = true;
                     try {
                         flaeche.setPointerCapture(e.pointerId);
                     }
@@ -165120,6 +165372,12 @@ const Seitenflaeche = (() => {
             }
             if (e.defaultPrevented)
                 return;
+            if (e.key === 'Escape' && auswahlPalette) {
+                auswahlPaletteSchliessen();
+                auswahlLeiste.querySelector('[data-a="auswahlfarbe"]')?.focus();
+                e.preventDefault();
+                return;
+            }
             if (e.key === 'Escape' && leiste.istOffen()) {
                 leiste.schliesse();
                 e.preventDefault();

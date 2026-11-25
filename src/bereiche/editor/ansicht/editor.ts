@@ -816,7 +816,7 @@ const Blocks = (() => {
    *        zuletzt gezeichneter Ansicht eine andere Zahl sichern. Ein
    *        Anzeigewert gehört nicht in die Daten (§9).
    */
-  const render = (block: any, tiefe = 0, nr = 0) => {
+  const render = (block: any, tiefe = 0, nr = 0, ansicht: { freieGedankenkarte?: boolean } = {}) => {
     const t = typ(block.type);
     const el = document.createElement('div');
     el.className = 'blk b-' + block.type;
@@ -1295,7 +1295,7 @@ const Blocks = (() => {
       /* Die Gedankenkarte: Knoten als HTML, Linien als SVG — sie misst ihren
          Text beim Browser, statt ihn zu schätzen (E607). */
       case 'mindmap':
-        box.appendChild(Gedankenkarte.zeichne(block));
+        box.appendChild(Gedankenkarte.zeichne(block, ansicht.freieGedankenkarte === true));
         break;
 
       /* Ein Schaltplan: Symbolpalette links, Zeichenfläche rechts (Punkt 11). */
