@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-792 Entscheidungen, E1 bis E821 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+793 Entscheidungen, E1 bis E822 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -878,6 +878,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E819** — Die Knöpfe im Kopf der Bibliothek schrumpfen nicht unter ihr Wort (25. November 2026): Flex mit Umbruch statt drei gleicher Spalten in der Atelier-Haut am Telefon; `test657` (`quell/schale/stil/redion2.css`)
 * **E820** — Drei Skripte aus `index.html` und pdf-lib stehen im Grundstock des Dienstes; pdf-lib und perfect-freehand sind in `FREMDCODE.md` nachgetragen, das Ja dazu ist offen (25. November 2026); `test143` grün, `test87` bis auf die Steuerzeichen der fremden pdf-lib (`src/dienst/sw.ts`, `FREMDCODE.md`)
 * **E821** — Elf Werkstatt-Dinge in der Wurzel gehen nicht mehr ins Netz (`.agents/`, `.claude/`, `graphify-out/`, `plugins/`, `tools/`, Batterie-Skripte, iOS- und Codemagic-Angaben, `version.json`); `test270` 80 → 81/81 (`.assetsignore`)
+* **E822** — `test274` liest `bauen.mts` als dritten Ort, an dem Kennungen entstehen: `redion-pdf-lib` gibt es nur in der Einzeldatei, mit Absicht; 11/12 → 12/12, ohne Ausnahme in `ERLAUBT`
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71945,3 +71946,29 @@ Agenten-Anleitungen und der Quelltext-Graph öffentlich. Nicht gewählt.
 **Beweis.** `test270` im Hauptbaum vorher 80 ok, 1 offen; danach 81/81. (Im
 Arbeitsbaum des vollen Laufs ist er aus dem bekannten Grund aus §30 zusätzlich
 rot: `.git` ist dort eine Datei.)
+
+
+## E822 · Eine Kennung, die nur die Einzeldatei hat, ist nicht verwaist
+
+**Was.** `test274` nimmt `bauen.mts` zu den Orten, an denen eine Kennung
+(`id="…"`) entstehen kann. Gelesen wird dort nur nach Kennungen, nicht nach
+Aufrufen.
+
+**Warum.** Der volle Lauf vom 25. November meldete `src/fremd/pdf-lib/
+laden.ts: redion-pdf-lib` als verwaist. Nachgesehen: `bauen.mts` (Zeile 86 ff.)
+setzt pdf-lib als `<script type="application/octet-stream"
+id="redion-pdf-lib">` in die Einzeldatei, und `laden.ts` fragt zuerst danach
+und holt sonst `quell/fremd/pdf-lib/library.js`. In `index.html` fehlt das
+Element also mit Absicht. In der gebauten Einzeldatei steht es genau einmal
+(`grep -c` = 1).
+
+**Alternative.** Ein Eintrag in `ERLAUBT` wie bei `redion-graphit` — der hatte
+Redurs Wort (E750) und beschreibt einen Fall, den der Lauf nicht lesen kann.
+Hier kann er es, wenn er die richtige Datei liest. Eine Ausnahme hätte jede
+künftige Kennung aus `bauen.mts` weiter als Fehler gemeldet.
+
+**Kosten.** Eine Kennung, die nur im Kommentar von `bauen.mts` steht, zählt
+als vorhanden — dasselbe Mass, das der Lauf für `src/` schon anlegt.
+
+**Beweis.** `test274` vorher 11/12, danach 12/12; seine eingebaute Gegenprobe
+(eine erfundene Kennung) bleibt rot.
