@@ -19,6 +19,8 @@ Register.werkzeuge = (() => {
             sym: 'formEllipse', zeichen: '◯', gruppe: 'senior' },
         { id: 'dreieck', name: 'Dreieck', titel: 'Ein Dreieck aufziehen',
             sym: 'formTriangle', zeichen: '△', gruppe: 'senior' },
+        { id: 'raute', name: 'Raute', titel: 'Eine Raute aufziehen',
+            sym: 'formDiamond', zeichen: '◇', gruppe: 'senior' },
         { id: 'rahmenwahl', name: 'Rahmenauswahl', titel: 'Mehrere Formen mit einem Rahmen auswählen',
             sym: 'inkLasso', zeichen: '▧', gruppe: 'quick' },
         { id: 'notiz', name: 'Haftnotiz', titel: 'Eine Haftnotiz setzen und beschriften',

@@ -366,6 +366,57 @@ body:has(.pg-flaeche) #sammelleiste{
 .pg-fl-tools [data-karte="formen"] button,.pg-fl-tools [data-karte="notiz"] button{touch-action:none}
 .pg-fl-tools [data-karte="notiz"] button{cursor:grab}
 .pg-fl-dock-vorschau{opacity:.65}
+.pg-fl-tools .gfx-tb-palette{
+  display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:5px;
+  background:var(--bg-card);border-color:var(--line-strong,var(--line));
+}
+.pg-fl-tools .gfx-tb-palette .gfx-tb-menuewerkzeuge{flex-wrap:wrap;gap:1px;margin:0}
+.pg-fl-werkzeugpalette,.pg-fl-palettenoptionen,.pg-fl-palettengruppe{
+  display:flex;flex-wrap:wrap;align-items:center;gap:2px;min-width:0;
+}
+.pg-fl-werkzeugpalette{gap:4px}
+.pg-fl-palettengruppe{padding-inline:3px;border-inline-start:1px solid var(--line)}
+.pg-fl-palettengruppe button,.pg-fl-tools .gfx-tb-palette .gfx-tb-menuewerkzeuge button{
+  display:grid;place-items:center;width:34px;height:36px;flex:none;
+  border-radius:var(--radius-md);color:var(--text-dim);
+}
+.pg-fl-palettengruppe button:is(:hover,:focus-visible,[aria-pressed="true"]){
+  background:var(--bg-hover);color:var(--text);
+}
+.pg-fl-palettengruppe button:focus-visible{
+  outline:2px solid var(--accent-text);outline-offset:-2px;
+}
+.pg-fl-palettengruppe svg{width:18px;height:18px;display:block}
+.pg-fl-palettengruppe .pg-fl-gefuellt svg{fill:currentColor}
+.pg-fl-tools .gfx-tb-palette .gfx-tb-befehlsliste{
+  flex-direction:row;flex-wrap:wrap;min-width:0;gap:3px;
+}
+.pg-fl-tools button.pg-fl-vorlagenkarte{
+  display:grid;gap:5px;justify-items:start;min-height:72px;
+  padding:5px 9px;font-size:12px;white-space:normal;touch-action:none;cursor:grab;
+}
+.pg-fl-tools button.pg-fl-vorlagenkarte:active{cursor:grabbing}
+.pg-fl-tools .pg-fl-vorlagenkarte svg{display:block;width:118px;height:43px;flex:none}
+.pg-fl-palettenfarben button{width:29px}
+.pg-fl-farbpunkt{
+  display:block;width:15px;height:15px;border-radius:50%;
+  border:1px solid color-mix(in srgb,var(--text) 30%,transparent);
+}
+.pg-fl-palettenfarben [aria-pressed="true"] .pg-fl-farbpunkt{
+  outline:2px solid var(--accent-text);outline-offset:2px;
+}
+.pg-fl-breitenpunkt{width:var(--strich);height:var(--strich);border-radius:50%;background:currentColor}
+@media(max-width:760px),(pointer:coarse){
+  .pg-fl-palettengruppe button,.pg-fl-tools .gfx-tb-palette .gfx-tb-menuewerkzeuge button{
+    width:44px;height:44px;
+  }
+}
+@media(prefers-reduced-motion:no-preference){
+  body:not([data-bewegung="ruhig"]) .pg-fl-tools .gfx-tb-palette{animation:pg-fl-paletteneintritt .16s ease-out}
+}
+@keyframes pg-fl-paletteneintritt{
+  from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}
+}
 .pg-fl-griff-treffer{
   fill:transparent;stroke:transparent;stroke-width:12;stroke-dasharray:none;pointer-events:all;
 }

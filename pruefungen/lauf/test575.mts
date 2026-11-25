@@ -898,6 +898,114 @@ p('Elektro legt einen Schaltplan auf der geöffneten Fläche an', await plan.eva
   Store.childrenOf(id).some((b: any) => b.type === 'schaltplan' && !!b.flaecheOrt), planId));
 await plan.close();
 
+console.log('\n16 · Stift- und Formpaletten, Diagramme und Vorlagen');
+const { pg: palette, ids: paletteIds } = await bauen(1280, 900);
+await palette.evaluate((id: string) => {
+  App.theme('dark');
+  Store.updateBlock(id, { raumVersion: 1, shapes: [
+    { id: 'alter-rahmen', art: 'rechteck', x: 180, y: 330, w: 96, h: 52, farbe: '#529cca' }
+  ] });
+  App.zeichneSeite();
+}, paletteIds.seite);
+const paletteFlaeche = palette.locator('.pg-flaeche');
+const paletteDaten = () => palette.evaluate((id: string) => Store.getBlock(id)?.shapes ?? [], paletteIds.seite);
+const palettenMenu = paletteFlaeche.locator('.gfx-tb-menue');
+gleich('Eine gespeicherte Form ohne Füllinformation bleibt eine Kontur',
+  await paletteFlaeche.locator('[data-sid="alter-rahmen"]').getAttribute('fill'), 'none');
+const pinselKnopf = paletteFlaeche.getByRole('button', { name: 'Stift', exact: true });
+await pinselKnopf.press('Enter');
+p('Stift öffnet per Tastatur eine Palette mit Strichart, Breite und Farben',
+  await palettenMenu.getByRole('button', { name: 'Freihandstift', exact: true }).isVisible() &&
+  await palettenMenu.getByRole('button', { name: 'Textmarker', exact: true }).isVisible() &&
+  await palettenMenu.getByRole('button', { name: '7 pt', exact: true }).isVisible());
+await palettenMenu.getByRole('button', { name: 'Textmarker', exact: true }).click();
+await palettenMenu.getByRole('button', { name: '7 pt', exact: true }).click();
+await palettenMenu.getByRole('button', { name: 'Orange', exact: true }).click();
+const freieBox = await paletteFlaeche.boundingBox();
+if (!freieBox) throw Error('Keine Fläche für die Palettenprüfung');
+const paletteZiehen = async (x: number, y: number, dx: number, dy: number) => {
+  await palette.mouse.move(freieBox.x + x, freieBox.y + y);
+  await palette.mouse.down();
+  await palette.mouse.move(freieBox.x + x + dx, freieBox.y + y + dy, { steps: 10 });
+  await palette.mouse.up();
+};
+await paletteZiehen(freieBox.width * 0.76, freieBox.height * 0.32, 104, 18);
+const markerForm = (await paletteDaten()).find((s: any) => s.art === 'stift');
+p('Zeichnen speichert Marker, gewählte Breite und Farbe. Die Palette bleibt dabei offen.',
+  markerForm?.marker === true && markerForm.strichBreite === 7 && markerForm.farbe === '#ffa344' &&
+  await palettenMenu.isVisible() &&
+  await paletteFlaeche.locator('path[opacity="0.38"][data-sid="' + markerForm?.id + '"]').getAttribute('stroke-width') === '7');
+await palettenMenu.getByRole('button', { name: 'Freihandstift', exact: true }).click();
+gleich('Textmarker und Freihandstift behalten getrennte Breiten',
+  await palettenMenu.getByRole('button', { name: '2.5 pt', exact: true }).getAttribute('aria-pressed'), 'true');
+await palette.keyboard.press('Escape');
+p('Escape schliesst die Palette', !(await palettenMenu.isVisible()));
+const formenPalette = paletteFlaeche.getByRole('button', { name: 'Formen', exact: true });
+if (!await formenPalette.isVisible()) await paletteFlaeche.getByRole('button', { name: 'Weitere Werkzeuge', exact: true }).click();
+await formenPalette.click();
+await palettenMenu.getByRole('button', { name: 'Raute', exact: true }).click();
+await palettenMenu.getByRole('button', { name: 'Violett', exact: true }).click();
+await palettenMenu.getByRole('button', { name: 'Gefüllt', exact: true }).click();
+if (bilder) await palette.screenshot({ path: path.join(bilder, 'formenpalette-windows.png') });
+await paletteZiehen(freieBox.width * 0.68, freieBox.height * 0.48, 102, 75);
+const raute = (await paletteDaten()).find((s: any) => s.art === 'raute');
+p('Raute ist in der gewählten Farbe gefüllt und bleibt als echte Form gespeichert',
+  raute?.gefuellt === true && raute.farbe === '#9a6dd7' &&
+  await paletteFlaeche.locator('polygon[data-sid="' + raute?.id + '"]').getAttribute('fill') === '#9a6dd7');
+await palette.reload();
+await palette.waitForFunction((id: string) => typeof App !== 'undefined' && !!Store.getBlock(id), paletteIds.seite);
+await palette.evaluate((id: string) => App.oeffne(id), paletteIds.seite);
+await paletteFlaeche.locator('polygon[data-sid="' + raute?.id + '"]').waitFor();
+p('Marker und gefüllte Raute überstehen das Neuöffnen',
+  (await paletteDaten()).some((s: any) => s.id === markerForm?.id && s.marker === true) &&
+  await paletteFlaeche.locator('polygon[data-sid="' + raute?.id + '"]').getAttribute('fill') === '#9a6dd7');
+
+const vorlagenKnopf = paletteFlaeche.getByRole('button', { name: 'Blockvorlagen', exact: true });
+if (!await vorlagenKnopf.isVisible()) await paletteFlaeche.getByRole('button', { name: 'Weitere Werkzeuge', exact: true }).click();
+await vorlagenKnopf.click();
+const vorDiagramm = await paletteDaten();
+await palettenMenu.getByRole('button', { name: 'Entscheidungsbaum', exact: true }).click();
+const diagramm = (await paletteDaten()).slice(vorDiagramm.length);
+const knotenIds = diagramm.filter((f: any) => f.art !== 'verbindung').map((f: any) => f.id);
+p('Entscheidungsvorlage enthält vier beschriftete Formen und drei echte Verbindungen',
+  diagramm.length === 7 && knotenIds.length === 4 &&
+  diagramm.filter((f: any) => f.art === 'verbindung').every((f: any) =>
+    knotenIds.includes(f.von) && knotenIds.includes(f.nach)));
+if (bilder) await palette.screenshot({ path: path.join(bilder, 'entscheidung-windows.png') });
+await paletteFlaeche.focus();
+await palette.keyboard.press('Control+z');
+gleich('Rückgängig nimmt das gesamte Diagramm in einem Schritt zurück',
+  JSON.stringify(await paletteDaten()), JSON.stringify(vorDiagramm));
+
+await vorlagenKnopf.click();
+const ablaufKarte = palettenMenu.getByRole('button', { name: 'Ablaufdiagramm', exact: true });
+const ablaufBox = await ablaufKarte.boundingBox();
+if (!ablaufBox) throw Error('Keine Vorschau für das Ablaufdiagramm');
+await palette.mouse.move(ablaufBox.x + ablaufBox.width / 2, ablaufBox.y + ablaufBox.height / 2);
+await palette.mouse.down();
+await palette.mouse.move(freieBox.x + freieBox.width * 0.75, freieBox.y + freieBox.height * 0.50, { steps: 12 });
+p('Vorlagenzug zeigt das Ablaufdiagramm ohne Schreibzugriff als Vorschau',
+  await paletteFlaeche.locator('.pg-fl-dock-vorschau').count() === 1 &&
+  JSON.stringify(await paletteDaten()) === JSON.stringify(vorDiagramm));
+await palette.mouse.up();
+const ablauf = (await paletteDaten()).slice(vorDiagramm.length);
+p('Ablaufdiagramm wird am Ziel als drei Formen und zwei Verbindungen abgelegt',
+  ablauf.filter((f: any) => f.art !== 'verbindung').length === 3 &&
+  ablauf.filter((f: any) => f.art === 'verbindung').length === 2 &&
+  await paletteFlaeche.locator('.pg-fl-dock-vorschau').count() === 0);
+await palette.keyboard.press('Control+z');
+
+await paletteFlaeche.getByRole('button', { name: 'Gedankenkarte einfügen', exact: true }).click();
+await palettenMenu.getByRole('button', { name: 'Gedankenkarte · beidseitig', exact: true }).click();
+await paletteFlaeche.locator('.gk-kn').first().waitFor();
+p('Gedankenkarte besitzt vier bearbeitbare Knoten im vorhandenen Kartenformat',
+  await palette.evaluate((id: string) => Store.childrenOf(id).some((b: any) =>
+    b.type === 'mindmap' && !!b.flaecheOrt && b.karte?.knoten?.length === 4 &&
+    b.karte.knoten.some((k: any) => k.seite === 'links') &&
+    b.karte.knoten.some((k: any) => k.seite === 'rechts')), paletteIds.seite) &&
+  await paletteFlaeche.locator('.gk-kn').count() === 4);
+await palette.close();
+
 await handy.close();
 
 await browser.close();

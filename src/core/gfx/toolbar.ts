@@ -80,6 +80,7 @@ const GfxToolbar = (() => {
     zusatz?: Record<string, Node>;
     /** Der Inhalt eines Untermenüs — die Fläche baut ihn, der Kern zeigt ihn. */
     menue?: (id: string) => Node | null;
+    menueOffenHalten?: (id: string, ziel: Node) => boolean;
     aufWerkzeug?: (id: string) => void;
     aufAktion?: (id: string) => void;
     /** Was für Vorleser über der ganzen Leiste steht (§38). */
@@ -88,6 +89,7 @@ const GfxToolbar = (() => {
       schnell: string[];
       karten: { id: string; knoepfe: string[] }[];
       werkzeugMenues?: Record<string, string[]>;
+      paletten?: readonly string[];
       edgeless: { zusatz: string[] };
     };
   }
@@ -101,6 +103,7 @@ const GfxToolbar = (() => {
     const aktionen = (o.aktionen || []).filter(a => a && a.id);
     let aktiv = o.aktiv || werkzeuge[0]?.id || '';
     let offenesMenue: string | null = null;
+    let menueAusloeser: HTMLElement | null = null;
 
     const wurzel = document.createElement('div');
     wurzel.className = 'gfx-tb-sockel' + (o.klasse ? ' ' + o.klasse : '');
@@ -132,7 +135,9 @@ const GfxToolbar = (() => {
       const b = document.createElement('button');
       b.type = 'button';
       b.dataset[art === 'wz' ? 'wz' : 'a'] = teil.id;
-      if (menue) { b.dataset.menue = teil.id; b.setAttribute('aria-expanded', 'false'); }
+      if (menue) b.dataset.menue = teil.id;
+      if (menue || (art === 'wz' && o.galerie?.paletten?.includes(teil.id)))
+        b.setAttribute('aria-expanded', 'false');
       b.title = teil.titel || teil.name;
       b.setAttribute('aria-label', teil.name);
       b.tabIndex = -1;
@@ -306,7 +311,8 @@ const GfxToolbar = (() => {
         vorrat.append(gruppe);
       }
       wurzel.querySelector('.gfx-tb-menue')?.remove();
-      wurzel.querySelectorAll('[data-menue]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+      menueAusloeser?.setAttribute('aria-expanded', 'false');
+      menueAusloeser = null;
       offenesMenue = null;
     };
     const menueAuf = (id: string, ausloeser: HTMLElement, fokus = false): void => {
@@ -317,6 +323,7 @@ const GfxToolbar = (() => {
       const m = document.createElement('div');
       m.className = 'gfx-tb-menue';
       m.setAttribute('role', 'group');
+      if (o.galerie?.paletten?.includes(id)) m.classList.add('gfx-tb-palette');
       if (gruppe) {
         for (const knopf of gruppe.querySelectorAll('button')) knopf.tabIndex = 0;
         m.append(gruppe);
@@ -324,6 +331,7 @@ const GfxToolbar = (() => {
       if (inhalt) m.append(inhalt);
       wurzel.append(m);
       offenesMenue = id;
+      menueAusloeser = ausloeser;
       ausloeser.setAttribute('aria-expanded', 'true');
       /* Waagrecht am Auslöser ausrichten und in den Kasten klemmen. */
       const wr = wurzel.getBoundingClientRect(), ar = ausloeser.getBoundingClientRect();
@@ -345,13 +353,17 @@ const GfxToolbar = (() => {
       }
       const wz = ziel.closest<HTMLElement>('[data-wz]');
       if (wz && wurzel.contains(wz)) {
-        const ursprung = wz.closest('.gfx-tb-menue') && offenesMenue;
-        menueZu();
+        const ursprung = wz.closest('.gfx-tb-menue') ? offenesMenue : null;
         const id = wz.dataset.wz ?? '';
+        const behalten = !!ursprung && o.galerie?.paletten?.includes(ursprung);
+        const oeffnen = !ursprung && offenesMenue !== id && o.galerie?.paletten?.includes(id);
+        const ausloeser = ursprung ? menueAusloeser : null;
+        if (!behalten) menueZu();
         const teil = werkzeuge.find(w => w.id === id);
         if (teil?.haelt !== false) setzeWerkzeug(id);
         o.aufWerkzeug?.(id);
-        if (ursprung) wurzel.querySelector<HTMLElement>(`[data-menue="${CSS.escape(ursprung)}"]`)?.focus();
+        if (oeffnen) menueAuf(id, wz, e instanceof MouseEvent && e.detail === 0);
+        if (!behalten) ausloeser?.focus();
         return;
       }
       const ak = ziel.closest<HTMLElement>('[data-a]');
@@ -398,7 +410,7 @@ const GfxToolbar = (() => {
         /* Lag der Fokus IM Menü, ginge er mit ihm verloren — er kehrt zum
            Knopf zurück, der es geöffnet hat (§38, E302). */
         const imMenue = !!(document.activeElement && wurzel.querySelector('.gfx-tb-menue')?.contains(document.activeElement));
-        const ausloeser = wurzel.querySelector<HTMLElement>(`[data-menue="${CSS.escape(offenesMenue)}"]`);
+        const ausloeser = menueAusloeser;
         menueZu(); e.stopPropagation(); e.preventDefault();
         if (imMenue) ausloeser?.focus();
         return;
@@ -427,7 +439,7 @@ const GfxToolbar = (() => {
     const beiAussen = (e: Event): void => {
       if (!offenesMenue) return;
       const z = e.target as Node | null;
-      if (z && !wurzel.contains(z)) menueZu();
+      if (z && !wurzel.contains(z) && !o.menueOffenHalten?.(offenesMenue, z)) menueZu();
     };
     document.addEventListener('pointerdown', beiAussen, true);
 

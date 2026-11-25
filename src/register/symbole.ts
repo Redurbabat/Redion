@@ -323,6 +323,7 @@ Register.symbole = (() => {
     formRect: '<rect x="3.6" y="5.6" width="16.8" height="12.8"/>',
     formEllipse: '<ellipse cx="12" cy="12" rx="8.6" ry="6.6"/>',
     formTriangle: '<path d="M12 4.4 20.6 19.6H3.4z"/>',
+    formDiamond: '<path d="m12 3.5 8.5 8.5-8.5 8.5-8.5-8.5z"/>',
     /* ══ UND DAS RUNDE RECHTECK IST KLEINER UND RUNDER (E584) ════════════
        Es war `formRect` mit `rx="4.2"` — dieselbe Kontur, vier gerundete
        Ecken, und die vier Ecken sind bei 16 px zusammen ein knappes

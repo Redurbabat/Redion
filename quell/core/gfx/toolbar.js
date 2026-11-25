@@ -9,6 +9,7 @@ const GfxToolbar = (() => {
         const aktionen = (o.aktionen || []).filter(a => a && a.id);
         let aktiv = o.aktiv || werkzeuge[0]?.id || '';
         let offenesMenue = null;
+        let menueAusloeser = null;
         const wurzel = document.createElement('div');
         wurzel.className = 'gfx-tb-sockel' + (o.klasse ? ' ' + o.klasse : '');
         const roller = document.createElement('div');
@@ -23,10 +24,10 @@ const GfxToolbar = (() => {
             const b = document.createElement('button');
             b.type = 'button';
             b.dataset[art === 'wz' ? 'wz' : 'a'] = teil.id;
-            if (menue) {
+            if (menue)
                 b.dataset.menue = teil.id;
+            if (menue || (art === 'wz' && o.galerie?.paletten?.includes(teil.id)))
                 b.setAttribute('aria-expanded', 'false');
-            }
             b.title = teil.titel || teil.name;
             b.setAttribute('aria-label', teil.name);
             b.tabIndex = -1;
@@ -205,7 +206,8 @@ const GfxToolbar = (() => {
                 vorrat.append(gruppe);
             }
             wurzel.querySelector('.gfx-tb-menue')?.remove();
-            wurzel.querySelectorAll('[data-menue]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+            menueAusloeser?.setAttribute('aria-expanded', 'false');
+            menueAusloeser = null;
             offenesMenue = null;
         };
         const menueAuf = (id, ausloeser, fokus = false) => {
@@ -217,6 +219,8 @@ const GfxToolbar = (() => {
             const m = document.createElement('div');
             m.className = 'gfx-tb-menue';
             m.setAttribute('role', 'group');
+            if (o.galerie?.paletten?.includes(id))
+                m.classList.add('gfx-tb-palette');
             if (gruppe) {
                 for (const knopf of gruppe.querySelectorAll('button'))
                     knopf.tabIndex = 0;
@@ -226,6 +230,7 @@ const GfxToolbar = (() => {
                 m.append(inhalt);
             wurzel.append(m);
             offenesMenue = id;
+            menueAusloeser = ausloeser;
             ausloeser.setAttribute('aria-expanded', 'true');
             const wr = wurzel.getBoundingClientRect(), ar = ausloeser.getBoundingClientRect();
             const mb = m.getBoundingClientRect();
@@ -249,15 +254,21 @@ const GfxToolbar = (() => {
             }
             const wz = ziel.closest('[data-wz]');
             if (wz && wurzel.contains(wz)) {
-                const ursprung = wz.closest('.gfx-tb-menue') && offenesMenue;
-                menueZu();
+                const ursprung = wz.closest('.gfx-tb-menue') ? offenesMenue : null;
                 const id = wz.dataset.wz ?? '';
+                const behalten = !!ursprung && o.galerie?.paletten?.includes(ursprung);
+                const oeffnen = !ursprung && offenesMenue !== id && o.galerie?.paletten?.includes(id);
+                const ausloeser = ursprung ? menueAusloeser : null;
+                if (!behalten)
+                    menueZu();
                 const teil = werkzeuge.find(w => w.id === id);
                 if (teil?.haelt !== false)
                     setzeWerkzeug(id);
                 o.aufWerkzeug?.(id);
-                if (ursprung)
-                    wurzel.querySelector(`[data-menue="${CSS.escape(ursprung)}"]`)?.focus();
+                if (oeffnen)
+                    menueAuf(id, wz, e instanceof MouseEvent && e.detail === 0);
+                if (!behalten)
+                    ausloeser?.focus();
                 return;
             }
             const ak = ziel.closest('[data-a]');
@@ -287,7 +298,7 @@ const GfxToolbar = (() => {
         const beiTaste = (e) => {
             if (e.key === 'Escape' && offenesMenue) {
                 const imMenue = !!(document.activeElement && wurzel.querySelector('.gfx-tb-menue')?.contains(document.activeElement));
-                const ausloeser = wurzel.querySelector(`[data-menue="${CSS.escape(offenesMenue)}"]`);
+                const ausloeser = menueAusloeser;
                 menueZu();
                 e.stopPropagation();
                 e.preventDefault();
@@ -319,7 +330,7 @@ const GfxToolbar = (() => {
             if (!offenesMenue)
                 return;
             const z = e.target;
-            if (z && !wurzel.contains(z))
+            if (z && !wurzel.contains(z) && !o.menueOffenHalten?.(offenesMenue, z))
                 menueZu();
         };
         document.addEventListener('pointerdown', beiAussen, true);

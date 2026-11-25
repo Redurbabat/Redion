@@ -168,17 +168,40 @@ const GfxShapes = (() => {
     return m;
   };
 
-  /**
-   * Eine Form als SVG.
-   *
-   * Gibt IMMER ein Element zurück, auch bei einer unbekannten Art — dann
-   * eine leere Gruppe. Eine unbekannte Art ist der Block eines Menschen mit
-   * einer neueren Fassung (§18: unbekannte Blocktypen nicht löschen); sie
-   * darf nichts zeichnen, aber auch nichts werfen.
-   */
+  const mitBeschriftung = (umriss: SVGElement, s: any, farbe: string, gruppiert = false): SVGElement => {
+    if (!s.text && !gruppiert) return umriss;
+    const gruppe = sv('g');
+    gruppe.appendChild(umriss);
+    if (!s.text) return gruppe;
+    const { x, y, w, h } = rahmenVon(s);
+    const zentriert = ['ellipse', 'dreieck', 'raute'].includes(s.art);
+    const zeilen = zeilenUmbruch(String(s.text), Math.max(20, zentriert ? w * 0.62 : w - 18));
+    const tx = zentriert ? x + w / 2 : x + 10;
+    const mitte = y + h * (s.art === 'dreieck' ? 0.66 : 0.50);
+    const deckend = s.art === 'notiz' || s.gefuellt === true;
+    const textfarbe = deckend && typeof Farben !== 'undefined' && Farben.parse(farbe)
+      ? (Farben.contrast(farbe, '#18181b') >= Farben.contrast(farbe, '#ffffff') ? '#18181b' : '#ffffff')
+      : deckend ? '#18181b' : farbe;
+    const text = sv('text', {
+      x: tx, y: zentriert ? mitte + 5 - (zeilen.length - 1) * 9 : y + 22,
+      fill: textfarbe, 'font-size': 14, 'text-anchor': zentriert ? 'middle' : 'start'
+    });
+    if (!deckend) tinte(text, 'schrift', farbe);
+    zeilen.forEach((zeile, i) => {
+      const teil = sv('tspan', { x: tx, dy: i ? 18 : 0 });
+      teil.textContent = zeile;
+      text.appendChild(teil);
+    });
+    gruppe.appendChild(text);
+    return gruppe;
+  };
+
+  /** Gezeichnete Form, bei unbekannter Art eine leere SVG-Gruppe. */
   const zeichne = (s: any, o: ZeichenAngaben = {}): any => {
     if (!s || typeof s !== 'object') return sv('g');
-    const strich = o.strich ?? 2.5;
+    const dicke = typeof s.strichBreite === 'number' && Number.isFinite(s.strichBreite) && s.strichBreite > 0
+      ? Math.min(s.strichBreite, 50) : null;
+    const strich = o.strich ?? (s.art === 'stift' ? dicke : null) ?? 2.5;
     const farbe = String(s.farbe || 'currentColor');
 
     if (s.art === 'stift' || s.art === 'linie' || s.art === 'pfeil') {
@@ -214,6 +237,7 @@ const GfxShapes = (() => {
         });
       if (s.art === 'pfeil' && o.pfeilMarke) p.setAttribute('marker-end', `url(#${o.pfeilMarke})`);
       p.dataset.sid = s.id;
+      if (s.art === 'stift' && s.marker === true) p.setAttribute('opacity', '0.38');
       tinte(p, umriss ? 'schrift' : 'strich', farbe);
       /* EIN STRICH IST ZWEIEINHALB PIXEL BREIT — mit dem Finger trifft man
          ihn nicht. Darunter liegt deshalb derselbe Pfad noch einmal, 16 px
@@ -230,13 +254,12 @@ const GfxShapes = (() => {
     }
 
     if (s.art === 'rechteck' || s.art === 'notiz') {
-      const g = sv('g');
       const x = Math.min(zahl(s.x), zahl(s.x) + zahl(s.w));
       const y = Math.min(zahl(s.y), zahl(s.y) + zahl(s.h));
       const r = sv('rect', {
         x, y, width: Math.abs(zahl(s.w)), height: Math.abs(zahl(s.h)),
         rx: s.art === 'notiz' ? 3 : 5,
-        fill: s.art === 'notiz' ? farbe : 'none', stroke: farbe, 'stroke-width': 2,
+        fill: s.art === 'notiz' || s.gefuellt === true ? farbe : 'none', stroke: farbe, 'stroke-width': 2,
         'fill-opacity': s.art === 'notiz' ? .85 : 1,
         /* EIN RECHTECK OHNE FÜLLUNG NIMMT KEINE KLICKS AN (E144). SVG trifft
            standardmässig nur, was GEMALT ist — bei `fill: none` ist das
@@ -249,21 +272,7 @@ const GfxShapes = (() => {
       });
       r.dataset.sid = s.id;
       if (s.art === 'rechteck') tinte(r, 'strich', farbe);
-      g.appendChild(r);
-      if (s.text) {
-        const t = sv('text', {
-          x: x + 10, y: y + 22,
-          fill: s.art === 'notiz' ? '#1c1c1c' : farbe, 'font-size': 14
-        });
-        if (s.art !== 'notiz') tinte(t, 'schrift', farbe);
-        zeilenUmbruch(String(s.text), Math.abs(zahl(s.w)) - 18).forEach((z, i) => {
-          const ts = sv('tspan', { x: x + 10, dy: i ? 18 : 0 });
-          ts.textContent = z;
-          t.appendChild(ts);
-        });
-        g.appendChild(t);
-      }
-      return g;
+      return mitBeschriftung(r, s, farbe, true);
     }
 
     if (s.art === 'bild') {
@@ -299,27 +308,31 @@ const GfxShapes = (() => {
       return bild;
     }
 
-    if (s.art === 'dreieck') {
+    if (s.art === 'dreieck' || s.art === 'raute') {
       const { x, y, w, h } = rahmenVon(s);
+      const oben = `${x + w / 2},${y}`;
+      const punkte = s.art === 'raute'
+        ? `${oben} ${x + w},${y + h / 2} ${x + w / 2},${y + h} ${x},${y + h / 2}`
+        : `${oben} ${x + w},${y + h} ${x},${y + h}`;
       const e = sv('polygon', {
-        points: `${x + w / 2},${y} ${x + w},${y + h} ${x},${y + h}`,
-        fill: 'none', stroke: farbe, 'stroke-width': 2, 'pointer-events': 'all'
+        points: punkte, fill: s.gefuellt === true ? farbe : 'none',
+        stroke: farbe, 'stroke-width': 2, 'pointer-events': 'all'
       });
       e.dataset.sid = s.id;
       tinte(e, 'strich', farbe);
-      return e;
+      return mitBeschriftung(e, s, farbe);
     }
 
     if (s.art === 'ellipse') {
       const e = sv('ellipse', {
         cx: zahl(s.x) + zahl(s.w) / 2, cy: zahl(s.y) + zahl(s.h) / 2,
         rx: Math.abs(zahl(s.w) / 2), ry: Math.abs(zahl(s.h) / 2),
-        fill: 'none', stroke: farbe, 'stroke-width': 2,
+        fill: s.gefuellt === true ? farbe : 'none', stroke: farbe, 'stroke-width': 2,
         'pointer-events': 'all'   /* wie beim Rechteck, siehe dort */
       });
       e.dataset.sid = s.id;
       tinte(e, 'strich', farbe);
-      return e;
+      return mitBeschriftung(e, s, farbe);
     }
 
     if (s.art === 'text') {

@@ -555,6 +555,12 @@ const Seitenflaeche = (() => {
        jemand den einen Aufruf vorzieht. */
     let formen: any[] = formenLesen(p).slice();
     let farbe: string = GfxShapes.PALETTE[0]?.[0] ?? '#529cca';
+    const GESCHLOSSENE_FORMEN = ['rechteck', 'ellipse', 'dreieck', 'raute'];
+    let formFarbe = '#ffdc49';
+    let gefuellt = true;
+    let stiftBreite = 2.5;
+    let markerBreite = 12;
+    let marker = false;
     let aktiv: any = null;
 
     /** Zoomen und dabei den Punkt unter dem Finger festhalten. */
@@ -660,13 +666,13 @@ const Seitenflaeche = (() => {
       : Number.isFinite(form.x) && Number.isFinite(form.y));
 
     const beschriftbareForm = (): any => auswahl.size === 1 && formen.find(form =>
-      auswahl.has(formId(form)) && ['rechteck', 'notiz', 'text'].includes(form.art));
+      auswahl.has(formId(form)) && [...GESCHLOSSENE_FORMEN, 'notiz', 'text'].includes(form.art));
 
     const gruppenRahmen = (): FormRahmen | null => {
       if (werkzeug !== 'zeiger' || !auswahl.size) return null;
       const ausgewaehlt = formen.filter(form => auswahl.has(formId(form)));
       if (ausgewaehlt.length !== auswahl.size || ausgewaehlt.some(form =>
-        !['rechteck', 'ellipse', 'dreieck', 'notiz', 'linie', 'pfeil', 'stift'].includes(form.art) ||
+        ![...GESCHLOSSENE_FORMEN, 'notiz', 'linie', 'pfeil', 'stift'].includes(form.art) ||
         (form.art !== 'stift' && (!Number.isFinite(form.w) || !Number.isFinite(form.h))))) return null;
       const boxen = ausgewaehlt.map(GfxShapes.rahmenVon);
       const x = Math.min(...boxen.map(b => b.x)), y = Math.min(...boxen.map(b => b.y));
@@ -923,15 +929,29 @@ const Seitenflaeche = (() => {
       return null;
     };
 
-    const MALWERKZEUGE = ['stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'dreieck'];
+    const MALWERKZEUGE = ['stift', 'linie', 'pfeil', ...GESCHLOSSENE_FORMEN];
+    const formStilAnwenden = (stil: { farbe?: string; gefuellt?: boolean }): void => {
+      const zuAendern = (form: any): boolean => auswahl.has(formId(form)) &&
+        GESCHLOSSENE_FORMEN.includes(form.art) &&
+        ((stil.farbe !== undefined && form.farbe !== stil.farbe) ||
+          (stil.gefuellt !== undefined && (form.gefuellt === true) !== stil.gefuellt));
+      if (!formen.some(zuAendern)) return;
+      merken();
+      formen = formen.map(form => zuAendern(form) ? { ...form, ...stil } : form);
+      sichern();
+    };
+
+    const formenStil = (art: string): { farbe: string; gefuellt?: boolean } =>
+      GESCHLOSSENE_FORMEN.includes(art) ? { farbe: formFarbe, gefuellt } : { farbe };
     const maltGerade = () => MALWERKZEUGE.includes(werkzeug) || werkzeug === 'radierer';
 
     /* ======================================================================
      * Die Werkzeugleiste — dieselbe wie auf jeder anderen Fläche (E689)
      * ====================================================================*/
-    const blockEinsetzen = (art: string): void => {
-      const block = Store.addBlock(p.id, art, { text: '' });
-      aufFlaeche(block);
+    const blockEinsetzen = (art: string, felder: Record<string, unknown> = {},
+                          ort?: { x: number; y: number }): void => {
+      const block = Store.addBlock(p.id, art, { text: '', ...felder });
+      aufFlaeche(block, ort);
     };
     const menueEintrag = (liste: HTMLElement, name: string, zeichen: string, ausfuehren: () => void): void => {
       const b = document.createElement('button');
@@ -971,6 +991,110 @@ const Seitenflaeche = (() => {
       menueEintrag(liste, 'Seitenlink kopieren', 'link',
         () => Register.aktionen.tun('link', p, { kontext: 'seite' }));
     };
+    const VORLAGEN = {
+      'karte-beidseitig': { name: 'Gedankenkarte · beidseitig', w: BLOCK_BREITE, h: 240 },
+      'karte-rechts': { name: 'Gedankenkarte · nach rechts', w: BLOCK_BREITE, h: 240 },
+      ablauf: { name: 'Ablaufdiagramm', w: 400, h: 66 },
+      entscheidung: { name: 'Entscheidungsbaum', w: 400, h: 250 }
+    } as const;
+    type Vorlage = keyof typeof VORLAGEN;
+
+    const gedankenkarteEinsetzen = (art: 'beidseitig' | 'rechts', ort?: { x: number; y: number }): void => {
+      const karte = Gedankenkarte.neueKarte();
+      karte.knoten.push(...['Erster Ast', 'Zweiter Ast', 'Dritter Ast'].map((text, i): GkKnoten => ({
+        id: Store.uid().slice(0, 8), eltern: 'w', text,
+        seite: art === 'beidseitig' && i % 2 !== 0 ? 'links' : 'rechts',
+        farbe: Gedankenkarte.farbeVon(i),
+        form: art === 'rechts' ? 'kasten' : 'rund'
+      })));
+      blockEinsetzen('mindmap', { karte }, ort);
+    };
+
+    const diagrammPlan = (entscheidung: boolean, mitte: { x: number; y: number }) => {
+      const w = 116, h = 58;
+      const abstand = 142;
+      const x = r2(mitte.x - w / 2), y = r2(mitte.y - h / 2);
+      const knoten = [
+        { x: entscheidung ? x : x - abstand, y: entscheidung ? y - 92 : y,
+          art: 'ellipse', text: 'Start', farbe: '#4dab9a' },
+        { x, y, art: entscheidung ? 'raute' : 'rechteck',
+          text: entscheidung ? 'Prüfen' : 'Arbeitsschritt', farbe: '#ffdc49' },
+        { x: x + abstand, y: entscheidung ? y + 92 : y, art: 'rechteck',
+          text: entscheidung ? 'Ja' : 'Fertig', farbe: '#529cca' },
+        ...(entscheidung ? [{ x: x - abstand, y: y + 92, art: 'rechteck',
+          text: 'Nein', farbe: '#ff7369' }] : [])
+      ].map(form => ({ ...form, w, h, gefuellt: true }));
+      const kanten: ReadonlyArray<readonly [number, number]> = entscheidung
+        ? [[0, 1], [1, 2], [1, 3]] : [[0, 1], [1, 2]];
+      return { knoten, kanten };
+    };
+
+    const vorlageEinsetzen = (id: Vorlage, ort?: { x: number; y: number }): void => {
+      if (id === 'karte-beidseitig' || id === 'karte-rechts') {
+        gedankenkarteEinsetzen(id === 'karte-beidseitig' ? 'beidseitig' : 'rechts', ort);
+        return;
+      }
+      const rect = flaeche.getBoundingClientRect();
+      const { w, h } = VORLAGEN[id];
+      const mitte = ort ? { x: ort.x + w / 2, y: ort.y + h / 2 }
+        : inFlaeche(rect.left + rect.width / 2, rect.top + rect.height * 0.45);
+      const plan = diagrammPlan(id === 'entscheidung', mitte);
+      const knoten = plan.knoten.map(form => ({ ...form, id: Store.uid().slice(0, 8) }));
+      const kanten = plan.kanten.flatMap(([von, nach]) => {
+        const a = knoten[von], b = knoten[nach];
+        return a && b ? [{ id: Store.uid().slice(0, 8), art: 'verbindung', von: a.id, nach: b.id, farbe }] : [];
+      });
+      merken();
+      formen.push(...knoten, ...kanten);
+      werkzeugWechseln('zeiger');
+      leiste.setzeWerkzeug('zeiger');
+      auswahlSetzen(knoten.map(formId));
+      sichern();
+    };
+
+    const vorlagenGrafik = (id: Vorlage): SVGGElement => {
+      const grafik = GfxShapes.sv('g') as SVGGElement;
+      const { w, h } = VORLAGEN[id];
+      if (id === 'entscheidung' || id === 'ablauf') {
+        const plan = diagrammPlan(id === 'entscheidung', { x: w / 2, y: h / 2 });
+        for (const [von, nach] of plan.kanten) {
+          const a = plan.knoten[von], b = plan.knoten[nach];
+          if (a && b) grafik.append(GfxShapes.verbindungZeichne(
+            { id: '', art: 'verbindung', farbe }, GfxShapes.rahmenVon(a), GfxShapes.rahmenVon(b), pfeil));
+        }
+        for (const form of plan.knoten) grafik.append(GfxShapes.zeichne(form));
+        return grafik;
+      }
+      const rechts = id === 'karte-rechts';
+      const wurzelX = rechts ? 38 : 144;
+      const wurzelY = 102;
+      [34, 102, 170].forEach((y, i) => {
+        const x = !rechts && i === 1 ? 14 : 258;
+        const sx = x < wurzelX ? wurzelX : wurzelX + 91;
+        const ex = x < wurzelX ? x + 82 : x;
+        grafik.append(GfxShapes.sv('path', {
+          d: `M${sx} 120 C${(sx + ex) / 2} 120 ${(sx + ex) / 2} ${y + 18} ${ex} ${y + 18}`,
+          fill: 'none', stroke: Gedankenkarte.farbeVon(i), 'stroke-width': 3
+        }), GfxShapes.sv('rect', { x, y, width: 82, height: 36, rx: rechts ? 3 : 9,
+          fill: Gedankenkarte.farbeVon(i) }));
+      });
+      grafik.append(GfxShapes.sv('rect', { x: wurzelX, y: wurzelY, width: 91, height: 36, rx: 8, fill: '#ffdc49' }));
+      return grafik;
+    };
+
+    const vorlagenKarte = (liste: HTMLElement, id: Vorlage): void => {
+      const b = document.createElement('button');
+      const { name, w, h } = VORLAGEN[id];
+      b.type = 'button';
+      b.dataset.flaechenVorlage = id;
+      b.className = 'pg-fl-vorlagenkarte';
+      const vorschau = GfxShapes.sv('svg', { viewBox: `-6 -6 ${w + 12} ${h + 12}`, 'aria-hidden': 'true' });
+      vorschau.append(vorlagenGrafik(id));
+      b.append(vorschau, document.createTextNode(name));
+      b.addEventListener('click', () => { leiste.schliesse(); vorlageEinsetzen(id); });
+      liste.append(b);
+    };
+
     const aufsatzMenue = (id: string): HTMLElement | null => {
       if (id === 'elektro')
         return Elektrostart.werkzeugmenue(() => leiste.schliesse(), () => blockEinsetzen('schaltplan'));
@@ -978,7 +1102,14 @@ const Seitenflaeche = (() => {
       liste.className = 'gfx-tb-liste gfx-tb-befehlsliste';
       if (id === 'rahmen' || id === 'schnellmehr') rahmenEintraege(liste);
       if (id === 'seitenlink' || id === 'schnellmehr') linkEintraege(liste);
+      if (id === 'diagramme') {
+        vorlagenKarte(liste, 'karte-beidseitig');
+        vorlagenKarte(liste, 'karte-rechts');
+        menueEintrag(liste, 'Leere Gedankenkarte', 'plus', () => blockEinsetzen('mindmap'));
+      }
       if (id === 'vorlagen') {
+        vorlagenKarte(liste, 'ablauf');
+        vorlagenKarte(liste, 'entscheidung');
         menueEintrag(liste, 'Textblock', 'inkText', () => blockEinsetzen('text'));
         menueEintrag(liste, 'Gedankenkarte', 'sparkle', () => blockEinsetzen('mindmap'));
         menueEintrag(liste, 'Whiteboard', 'formRect', () => blockEinsetzen('whiteboard'));
@@ -988,6 +1119,111 @@ const Seitenflaeche = (() => {
       return liste;
     };
 
+    const palettenKnopf = (name: string, gewaehlt: boolean, zeichen: HTMLElement,
+                            aktion: () => void): HTMLButtonElement => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.title = name;
+      b.setAttribute('aria-label', name);
+      b.setAttribute('aria-pressed', String(gewaehlt));
+      zeichen.setAttribute('aria-hidden', 'true');
+      b.append(zeichen);
+      b.addEventListener('click', aktion);
+      return b;
+    };
+
+    const werkzeugPalette = (id: string): HTMLElement => {
+      const stift = id === 'stift';
+      const kasten = document.createElement('div');
+      kasten.className = 'pg-fl-werkzeugpalette';
+      const optionen = document.createElement('div');
+      optionen.className = 'pg-fl-palettenoptionen';
+      const typen = document.createElement('div');
+      typen.className = 'pg-fl-palettengruppe';
+      typen.setAttribute('role', 'group');
+      typen.setAttribute('aria-label', stift ? 'Strichart' : 'Formfüllung');
+      const breiten = document.createElement('div');
+      breiten.className = 'pg-fl-palettengruppe';
+      breiten.setAttribute('role', 'group');
+      breiten.setAttribute('aria-label', 'Strichbreite');
+
+      const breitenZeigen = (): void => {
+        const dicke = marker ? markerBreite : stiftBreite;
+        for (const b of breiten.querySelectorAll('button')) {
+          b.setAttribute('aria-pressed', String(Number(b.dataset.breite) === dicke));
+        }
+      };
+      const fuellbareAuswahl = formen.filter(form => auswahl.has(formId(form)) &&
+        GESCHLOSSENE_FORMEN.includes(form.art));
+      const fuellung = fuellbareAuswahl.length
+        ? fuellbareAuswahl.every(form => form.gefuellt === true) : gefuellt;
+      const modi = stift ? [
+        { name: 'Freihandstift', sym: 'inkPen', wert: false },
+        { name: 'Textmarker', sym: 'inkMarker', wert: true }
+      ] : [
+        { name: 'Kontur', sym: 'formRect', wert: false },
+        { name: 'Gefüllt', sym: 'formRect', wert: true }
+      ];
+      for (const { name, sym, wert } of modi) {
+        const icon = document.createElement('span');
+        icon.dataset.sym = sym;
+        icon.classList.toggle('pg-fl-gefuellt', !stift && wert);
+        const b = palettenKnopf(name, (stift ? marker : fuellung) === wert, icon, () => {
+          if (stift) {
+            marker = wert;
+            breitenZeigen();
+          } else {
+            gefuellt = wert;
+            formStilAnwenden({ gefuellt: wert });
+          }
+          typen.querySelectorAll('button').forEach(knopf =>
+            knopf.setAttribute('aria-pressed', String(knopf === b)));
+        });
+        typen.append(b);
+      }
+      optionen.append(typen);
+      if (stift) {
+        for (const dicke of [2.5, 4, 7, 12]) {
+          const strich = document.createElement('span');
+          strich.className = 'pg-fl-breitenpunkt';
+          strich.style.setProperty('--strich', Math.max(4, dicke) + 'px');
+          const b = palettenKnopf(dicke + ' pt', false, strich, () => {
+            if (marker) markerBreite = dicke;
+            else stiftBreite = dicke;
+            breitenZeigen();
+          });
+          b.dataset.breite = String(dicke);
+          breiten.append(b);
+        }
+        breitenZeigen();
+        optionen.append(breiten);
+      }
+      const farben = document.createElement('div');
+      farben.className = 'pg-fl-palettengruppe pg-fl-palettenfarben';
+      farben.setAttribute('role', 'group');
+      farben.setAttribute('aria-label', stift ? 'Stiftfarbe' : 'Formfarbe');
+      const aktivFarbe = stift ? farbe : fuellbareAuswahl[0]?.farbe ?? formFarbe;
+      for (const [wert, name] of GfxShapes.PALETTE) {
+        const punkt = document.createElement('span');
+        punkt.className = 'pg-fl-farbpunkt';
+        punkt.style.backgroundColor = wert;
+        const b = palettenKnopf(name === 'Gruen' ? 'Grün' : name, wert === aktivFarbe, punkt, () => {
+          if (stift || id === 'farbe') farbe = wert;
+          if (!stift) {
+            formFarbe = wert;
+            formStilAnwenden({ farbe: wert });
+          }
+          farben.querySelectorAll('button').forEach(knopf =>
+            knopf.setAttribute('aria-pressed', String(knopf === b)));
+        });
+        b.dataset.c = wert;
+        farben.append(b);
+      }
+      kasten.append(optionen, farben);
+      Register.symbole.fuelle(kasten);
+      return kasten;
+    };
+
     const leiste = GfxToolbar.erstelle({
       klasse: 'pg-fl-tools',
       beschriftung: 'Werkzeuge der Fläche',
@@ -995,7 +1231,7 @@ const Seitenflaeche = (() => {
          war die Bedingung aus L219: eine Leiste mit Knoepfen, die nichts
          bewirken, waere ein falsches Versprechen (Paragraph 32). */
       werkzeuge: Register.werkzeuge.auswahl(
-        ['zeiger', 'hand', 'rahmenwahl', 'verbindung', 'stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'dreieck', 'notiz', 'radierer']),
+        ['zeiger', 'hand', 'rahmenwahl', 'verbindung', ...MALWERKZEUGE, 'notiz', 'radierer']),
       aktiv: 'zeiger',
       galerie: {
         schnell: ['modus', 'rahmen', 'verbindung', 'seitenlink', 'schnellmehr'],
@@ -1007,15 +1243,16 @@ const Seitenflaeche = (() => {
           { id: 'diagramme', knoepfe: ['diagramme'] },
           { id: 'vorlagen', knoepfe: ['vorlagen'] }
         ],
+        paletten: ['stift', 'formen', 'farbe', 'diagramme', 'vorlagen'],
         werkzeugMenues: {
           modus: ['zeiger', 'hand', 'rahmenwahl'],
-          formen: ['rechteck', 'ellipse', 'dreieck', 'linie', 'pfeil']
+          formen: [...GESCHLOSSENE_FORMEN, 'linie', 'pfeil']
         }
       },
       aktionen: [
         { id: 'elektro', name: 'Elektro', sym: 'bolt', menue: true, kapsel: 'werkzeuge' },
         { id: 'formen', name: 'Formen', sym: 'formRect', menue: true, kapsel: 'werkzeuge' },
-        { id: 'diagramme', name: 'Gedankenkarte einfügen', sym: 'sparkle', kapsel: 'werkzeuge' },
+        { id: 'diagramme', name: 'Gedankenkarte einfügen', sym: 'sparkle', menue: true, kapsel: 'werkzeuge' },
         { id: 'vorlagen', name: 'Blockvorlagen', sym: 'table', menue: true, kapsel: 'werkzeuge' },
         { id: 'modus', name: 'Zeiger und Hand', sym: 'inkPointer', menue: true, kapsel: 'werkzeuge' },
         { id: 'rahmen', name: 'Rahmen', sym: 'grid', menue: true, kapsel: 'werkzeuge' },
@@ -1040,26 +1277,12 @@ const Seitenflaeche = (() => {
       /* Das Farbmenue baut die Flaeche, der Kern zeigt es - dasselbe Muster
          wie im Whiteboard (E689). Jeder Tupfer traegt seinen NAMEN, weil
          Paragraph 38 keine Auskunft allein ueber Farbe zulaesst. */
-      menue: (id: string) => {
-        if (id !== 'farbe' && id !== 'formen') return aufsatzMenue(id);
-        const kasten = document.createElement('div');
-        kasten.className = 'gfx-tb-farben';
-        for (const [wert, name] of GfxShapes.PALETTE) {
-          const k = document.createElement('button');
-          k.type = 'button';
-          k.dataset['c'] = wert;
-          k.title = name;
-          k.setAttribute('aria-label', name);
-          k.style.background = wert;
-          if (wert === farbe) k.classList.add('an');
-          k.addEventListener('click', () => { farbe = wert; leiste.schliesse(); });
-          kasten.appendChild(k);
-        }
-        return kasten;
-      },
+      menue: id => ['stift', 'formen', 'farbe'].includes(id) ? werkzeugPalette(id) : aufsatzMenue(id),
+      menueOffenHalten: (id, ziel) => ziel instanceof Element && flaeche.contains(ziel) &&
+        !ziel.closest('.pg-fl-notiz') && ((id === 'stift' && werkzeug === 'stift') ||
+          (id === 'formen' && werkzeug !== 'stift' && MALWERKZEUGE.includes(werkzeug))),
       aufWerkzeug: werkzeugWechseln,
       aufAktion: (id: string) => {
-        if (id === 'diagramme') blockEinsetzen('mindmap');
         if (id === 'zurueck') schrittZurueck();
         if (id === 'vor') schrittVor();
         if (id === 'kleiner') massstab(sicht.z / 1.25);
@@ -1384,7 +1607,7 @@ const Seitenflaeche = (() => {
     const dockArten = { rect: 'rechteck', ellipse: 'ellipse', triangle: 'dreieck' } as const;
     let dockZug: {
       pointer: number; knopf: HTMLButtonElement; sx: number; sy: number;
-      art: string; w: number; h: number; vorschau: SVGElement | null;
+      art: string; w: number; h: number; vorlage: Vorlage | undefined; vorschau: SVGElement | null;
     } | null = null;
     let dockKlickUnterdrueckt: HTMLButtonElement | null = null;
 
@@ -1393,11 +1616,14 @@ const Seitenflaeche = (() => {
       const knopf = ziel.closest<HTMLButtonElement>('button');
       if (!knopf || knopf.disabled) return;
       const zeichen = ziel.closest<HTMLElement>('[data-vorschau]')?.dataset.vorschau;
+      const id = knopf.dataset.flaechenVorlage;
+      const vorlage = id && Object.hasOwn(VORLAGEN, id) ? id as Vorlage : undefined;
       const art = knopf.dataset.wz === 'notiz' ? 'notiz'
         : dockArten[zeichen as keyof typeof dockArten];
-      if (!art) return;
-      dockZug = { pointer: e.pointerId, knopf, sx: e.clientX, sy: e.clientY, art,
-        w: art === 'notiz' ? 170 : 120, h: art === 'notiz' ? 110 : 90, vorschau: null };
+      if (!art && !vorlage) return;
+      const masse = vorlage ? VORLAGEN[vorlage] : art === 'notiz' ? { w: 170, h: 110 } : { w: 120, h: 90 };
+      dockZug = { pointer: e.pointerId, knopf, sx: e.clientX, sy: e.clientY, art: art ?? '',
+        w: masse.w, h: masse.h, vorlage, vorschau: null };
       try { knopf.setPointerCapture(e.pointerId); } catch { /* Der Zug kann auf der Fläche enden. */ }
     };
 
@@ -1411,10 +1637,11 @@ const Seitenflaeche = (() => {
       if (!d || d.pointer !== e.pointerId) return;
       if (!d.vorschau) {
         if (Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 6) return;
-        const vorschau: SVGElement = GfxShapes.zeichne({ id: '', art: d.art, x: 0, y: 0, w: d.w, h: d.h, farbe });
+        const vorschau: SVGElement = d.vorlage ? vorlagenGrafik(d.vorlage)
+          : GfxShapes.zeichne({ id: '', art: d.art, x: 0, y: 0, w: d.w, h: d.h, ...formenStil(d.art) });
         vorschau.classList.add('pg-fl-dock-vorschau');
         d.vorschau = vorschau;
-        leiste.schliesse();
+        if (!d.vorlage) leiste.schliesse();
         tinte.append(vorschau);
       }
       const { x, y } = dockZugOrt(e, d);
@@ -1433,10 +1660,11 @@ const Seitenflaeche = (() => {
       if (!ziel || !flaeche.contains(ziel) || ziel.closest('.gfx-tb-sockel, .pg-fl-notiz')) return;
       const ort = dockZugOrt(e, d);
       flaeche.focus({ preventScroll: true });
+      if (d.vorlage) { leiste.schliesse(); vorlageEinsetzen(d.vorlage, ort); return; }
       if (d.art === 'notiz') { void textBearbeiten(null, ort); return; }
       const id = Store.uid().slice(0, 8);
       merken();
-      formen.push({ id, art: d.art, ...ort, w: d.w, h: d.h, farbe });
+      formen.push({ id, art: d.art, ...ort, w: d.w, h: d.h, ...formenStil(d.art) });
       werkzeugWechseln('zeiger');
       leiste.setzeWerkzeug('zeiger');
       auswahlSetzen([id]);
@@ -1548,8 +1776,10 @@ const Seitenflaeche = (() => {
           return;
         }
         aktiv = werkzeug === 'stift'
-          ? { id: Store.uid().slice(0, 8), art: 'stift', pts: [[r2(punkt.x), r2(punkt.y)]], farbe }
-          : { id: Store.uid().slice(0, 8), art: werkzeug, x: punkt.x, y: punkt.y, w: 0, h: 0, farbe };
+          ? { id: Store.uid().slice(0, 8), art: 'stift', pts: [[r2(punkt.x), r2(punkt.y)]], farbe,
+              strichBreite: marker ? markerBreite : stiftBreite, marker }
+          : { id: Store.uid().slice(0, 8), art: werkzeug, x: punkt.x, y: punkt.y, w: 0, h: 0,
+              ...formenStil(werkzeug) };
         stiftGlatt = werkzeug === 'stift' && typeof InkStroke !== 'undefined'
           ? InkStroke.glaetter([r2(punkt.x), r2(punkt.y)]) as any : null;
         stiftZeit = Number(e.timeStamp) || 0;
@@ -1794,6 +2024,11 @@ const Seitenflaeche = (() => {
          eine Ebene ÜBER dem Whiteboard im Kasten: ein Strg+Z nahm dort
          zurück UND hier. Das Innerste gewinnt. */
       if (e.defaultPrevented) return;
+      if (e.key === 'Escape' && leiste.istOffen()) {
+        leiste.schliesse();
+        e.preventDefault();
+        return;
+      }
       const ziel = e.target as HTMLElement | null;
       if (ziel && (ziel.tagName === 'INPUT' || ziel.tagName === 'TEXTAREA' || ziel.isContentEditable)) return;
       /* TAB FÜHRT VOM WHITEBOARD IN SEINE LEISTE — wie in der Seitenansicht,
