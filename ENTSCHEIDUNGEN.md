@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-795 Entscheidungen, E1 bis E824 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+796 Entscheidungen, E1 bis E825 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -881,6 +881,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E822** — `test274` liest `bauen.mts` als dritten Ort, an dem Kennungen entstehen: `redion-pdf-lib` gibt es nur in der Einzeldatei, mit Absicht; 11/12 → 12/12, ohne Ausnahme in `ERLAUBT`
 * **E823** — `test285` und `test292` lesen den Namen des Dokuments aus `.document-title-name`, weil der Kopf seit dem Dokumentkompass auch Art und Umfang trägt; beide grün (53/53, 45/45)
 * **E824** — `test298` nimmt die Stilblätter, die `index.html` aus `quell/fremd/` lädt, als Quelle von Variablen dazu (die Glyphen `--affine-dock-*` des Zeichendocks); fremdes CSS wird nicht auf Redions Regeln geprüft; 8/8
+* **E825** — `test201` prüft das Glätten an einem sanften Bogen und hält die Ecke aus E676 als eigene Zusage; seine drei alten Punkte waren ein Knick; 33/33
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -72011,3 +72012,21 @@ zwei Quellen für dieselben Bilder (§8). Oder den ganzen Ordner `quell/fremd/`
 lesen — dann zählte auch ein Blatt, das keine Seite lädt.
 
 **Beweis.** `test298` im vollen Lauf rot mit acht Variablen, danach 8/8.
+
+
+## E825 · Glätten an einem Bogen prüfen, die Ecke an einem Knick
+
+**Was.** `test201` nimmt für „wird geglättet" vier Punkte eines sanften Bogens
+und prüft die drei alten Punkte `[0,0] [10,20] [30,10]` als Knick, der eine
+Ecke bleibt (`L10 20`, kein `Q`).
+
+**Warum.** Seit E676 (21. September, „der Glätter hält die Ecke") zieht
+`InkGeometry.path` an einem spitzen Knick keine Kurve mehr. Die drei Punkte des
+Laufs sind genau so ein Knick; er erwartete trotzdem `Q` und war seither rot
+(im vollen Lauf vom 25. November: `M0 0 L10 20 L20 15 L30 10`). Das Produkt
+tat, was E676 verspricht.
+
+**Alternative.** Die Zusage streichen — dann prüfte niemand mehr, dass
+überhaupt geglättet wird.
+
+**Beweis.** Im vollen Lauf rot; danach 33/33, mit beiden Seiten grün.
