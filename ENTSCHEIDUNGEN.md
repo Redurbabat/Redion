@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-798 Entscheidungen, E1 bis E827 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+799 Entscheidungen, E1 bis E828 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -884,6 +884,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E825** — `test201` prüft das Glätten an einem sanften Bogen und hält die Ecke aus E676 als eigene Zusage; seine drei alten Punkte waren ein Knick; 33/33
 * **E826** — Die Schriftgrösse je Block wirkt wieder: fünf Atelier-Regeln in `redion2.css` wogen mit `#page` mehr als `.blk .ct.tg-gross`; die vier Stufen sind dort ausgenommen; `test175` 16/17 → 17/17
 * **E827** — `test221` misst den Rand am ersten GEZEICHNETEN Kind: die ausgeblendete Beschriftung der Werkzeugzeile meldete `left 0`, der erste Knopf steht bei 30 px; grün
+* **E828** — `test341` liest die Seitenzahl auch aus `button.document-position`: seit Workspace 2.0 ist sie ein Knopf zum Springen, kein `span`; 37/37
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -72075,3 +72076,16 @@ Am Produkt war nichts falsch.
 
 **Beweis.** Im vollen Lauf rot mit dieser einen Zeile; danach ohne rote Zeile.
 Ein Element, das wirklich am Rand anfängt, hat einen Kasten und bleibt rot.
+
+
+## E828 · Die Seitenzahl ist ein Knopf
+
+**Was.** `test341` sucht „Seite n/m" in `.document-page :is(span,
+.document-position)` statt nur in `span`.
+
+**Warum.** Seit Workspace 2.0 (`document-mode.ts` um Zeile 2019) ist die
+Seitenzahl ein `<button class="document-position">`: ein Druck öffnet den
+Sprung-Dialog. Der Lauf fand keinen `span` mehr und las `""` — im vollen Lauf
+vom 25. November rot mit drei Zeilen. Die Anzeige selbst stimmte.
+
+**Beweis.** Danach 37/37.
