@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-797 Entscheidungen, E1 bis E826 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+798 Entscheidungen, E1 bis E827 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -883,6 +883,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E824** — `test298` nimmt die Stilblätter, die `index.html` aus `quell/fremd/` lädt, als Quelle von Variablen dazu (die Glyphen `--affine-dock-*` des Zeichendocks); fremdes CSS wird nicht auf Redions Regeln geprüft; 8/8
 * **E825** — `test201` prüft das Glätten an einem sanften Bogen und hält die Ecke aus E676 als eigene Zusage; seine drei alten Punkte waren ein Knick; 33/33
 * **E826** — Die Schriftgrösse je Block wirkt wieder: fünf Atelier-Regeln in `redion2.css` wogen mit `#page` mehr als `.blk .ct.tg-gross`; die vier Stufen sind dort ausgenommen; `test175` 16/17 → 17/17
+* **E827** — `test221` misst den Rand am ersten GEZEICHNETEN Kind: die ausgeblendete Beschriftung der Werkzeugzeile meldete `left 0`, der erste Knopf steht bei 30 px; grün
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -72056,3 +72057,21 @@ Orte, die gegeneinander aufrüsten.
 Browser: normal 15 px, klein 13,1, gross 21,6, sehr gross 28,8, riesig
 38,4 px; eine Überschrift mit „Gross" 21,6 px. Bild
 `bilder/schriftgroessen.png` (nicht eingecheckt, §55.4). Dienststand v1679.
+
+
+## E827 · Ein ausgeblendetes Element steht nicht am Bildschirmrand
+
+**Was.** `tinte()` in `test221` nimmt das erste Kind mit einem Kasten
+(`getClientRects().length > 0`), nicht einfach `firstElementChild`.
+
+**Warum.** Der volle Lauf meldete „Und keines fängt am Bildschirmrand an — ist
+pg-tools:0". Nachgemessen am iPhone 13: das erste Kind der Werkzeugzeile ist
+`.pg-tools-caption` („Seitenwerkzeuge"), am Telefon `display:none` (E783), mit
+`left 0` und keinem Kasten. Der erste sichtbare Knopf „Cover" beginnt bei 30 px.
+Am Produkt war nichts falsch.
+
+**Alternative.** Die Beschriftung aus dem DOM nehmen statt auszublenden — das
+änderte die Vorlesereihenfolge am Rechner für einen Messfehler.
+
+**Beweis.** Im vollen Lauf rot mit dieser einen Zeile; danach ohne rote Zeile.
+Ein Element, das wirklich am Rand anfängt, hat einen Kasten und bleibt rot.
