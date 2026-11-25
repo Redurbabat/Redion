@@ -278,3 +278,13 @@ if (typeof Register !== 'undefined' && (Register as any).kontext) {
     return raus;
   });
 }
+
+/* E829 (§5): das Werkzeugmenü geht an andere Bereiche über den Ereignisbus,
+   nicht über den Namen `Elektrostart`. */
+if (typeof Ereignisse !== 'undefined' && typeof Ereignisse.horche === 'function' && typeof ARTEN !== 'undefined') {
+  Ereignisse.horche(ARTEN.frageElektroMenue, (daten: unknown) => {
+    const d = daten as { schliessen?: unknown; planOeffnen?: unknown } | undefined;
+    if (typeof d?.schliessen !== 'function' || typeof d?.planOeffnen !== 'function') return undefined;
+    return Elektrostart.werkzeugmenue(d.schliessen as () => void, d.planOeffnen as () => void);
+  });
+}

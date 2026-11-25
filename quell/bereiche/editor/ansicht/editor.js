@@ -3509,3 +3509,12 @@ const Blocks = (() => {
         auswahl: () => ausgewaehlt.slice()
     };
 })();
+if (typeof Ereignisse !== 'undefined' && typeof Ereignisse.horche === 'function' && typeof ARTEN !== 'undefined') {
+    Ereignisse.horche(ARTEN.frageBlockAmEnde, (daten) => {
+        const art = daten?.art;
+        if (typeof art !== 'string' || !art)
+            return false;
+        Blocks.einfuegenAmEnde(art);
+        return true;
+    });
+}

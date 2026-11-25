@@ -47,6 +47,8 @@ const ARTEN = Object.freeze({
     frageZeilenMenue: 'frage.zeilenmenue',
     frageDateiExport: 'frage.datei-export',
     frageBefund: 'frage.befund',
+    frageBlockAmEnde: 'frage.block-am-ende',
+    frageElektroMenue: 'frage.elektro-menue',
     auftragAngelegt: 'auftrag.angelegt',
     auftragBeginnt: 'auftrag.beginnt',
     auftragSchritt: 'auftrag.schritt',

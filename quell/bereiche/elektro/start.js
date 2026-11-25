@@ -205,3 +205,11 @@ if (typeof Register !== 'undefined' && Register.kontext) {
         return raus;
     });
 }
+if (typeof Ereignisse !== 'undefined' && typeof Ereignisse.horche === 'function' && typeof ARTEN !== 'undefined') {
+    Ereignisse.horche(ARTEN.frageElektroMenue, (daten) => {
+        const d = daten;
+        if (typeof d?.schliessen !== 'function' || typeof d?.planOeffnen !== 'function')
+            return undefined;
+        return Elektrostart.werkzeugmenue(d.schliessen, d.planOeffnen);
+    });
+}

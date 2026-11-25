@@ -4104,3 +4104,15 @@ const Blocks = (() => {
     auswahl: () => ausgewaehlt.slice()
   };
 })();
+
+/* E829 (§5): andere Bereiche setzen einen Block am Ende nicht mehr über den
+   Namen `Blocks`, sondern fragen über den Ereignisbus. Antwort: true, wenn
+   eingesetzt wurde. */
+if (typeof Ereignisse !== 'undefined' && typeof Ereignisse.horche === 'function' && typeof ARTEN !== 'undefined') {
+  Ereignisse.horche(ARTEN.frageBlockAmEnde, (daten: unknown) => {
+    const art = (daten as { art?: unknown } | undefined)?.art;
+    if (typeof art !== 'string' || !art) return false;
+    Blocks.einfuegenAmEnde(art);
+    return true;
+  });
+}

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-799 Entscheidungen, E1 bis E828 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+800 Entscheidungen, E1 bis E829 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -885,6 +885,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E826** — Die Schriftgrösse je Block wirkt wieder: fünf Atelier-Regeln in `redion2.css` wogen mit `#page` mehr als `.blk .ct.tg-gross`; die vier Stufen sind dort ausgenommen; `test175` 16/17 → 17/17
 * **E827** — `test221` misst den Rand am ersten GEZEICHNETEN Kind: die ausgeblendete Beschriftung der Werkzeugzeile meldete `left 0`, der erste Knopf steht bei 30 px; grün
 * **E828** — `test341` liest die Seitenzahl auch aus `button.document-position`: seit Workspace 2.0 ist sie ein Knopf zum Springen, kein `span`; 37/37
+* **E829** — Der PDF-Bereich setzt Blöcke und holt das Elektro-Menü über den Ereignisbus (`frage.block-am-ende`, `frage.elektro-menue`) statt über `Blocks` und `Elektrostart` (§5, erster Weg); `test537` 125 → 123 Paare, 18/18
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -72089,3 +72090,33 @@ Sprung-Dialog. Der Lauf fand keinen `span` mehr und las `""` — im vollen Lauf
 vom 25. November rot mit drei Zeilen. Die Anzeige selbst stimmte.
 
 **Beweis.** Danach 37/37.
+
+
+## E829 · Der PDF-Bereich fragt, statt fremde Bereiche beim Namen zu rufen
+
+**Was.** Zwei neue Fragen in `src/kern/ereignisse/arten.ts`:
+`frageBlockAmEnde` (`frage.block-am-ende`, Daten `{ art }`, Antwort `true`)
+und `frageElektroMenue` (`frage.elektro-menue`, Daten `{ schliessen,
+planOeffnen }`, Antwort ein Element). Der Editor antwortet auf die erste, der
+Elektro-Bereich auf die zweite; `document-mode.ts` fragt nur noch.
+
+**Warum.** `b2b9001` (25. November, „PDF-Werkzeuggalerie und Elektro-Menü mit
+der Fläche vereinheitlichen") rief aus `bereiche/pdf` direkt
+`Blocks.einfuegenAmEnde` (Editor) und `Elektrostart.werkzeugmenue` (Elektro).
+Das sind zwei neue Paare über die Grenze, und `test537` hält §5: das
+Verzeichnis darf nur schrumpfen. §5 nennt als ersten Weg den Ereignisbus, und
+der Bus kennt `frage` schon (so läuft `frage.datei-export`). Die Schale
+(`seitenflaeche.ts`) ruft `Elektrostart` weiter direkt — sie ist kein Bereich.
+
+**Alternative.** Die zwei Paare mit Grund in `bereiche-bestand.json`
+eintragen — §5 nennt das Verzeichnis eine Schuld, keine Erlaubnis.
+
+**Kosten.** Ohne geladenen Editor oder Elektro-Bereich kommt keine Antwort; der
+PDF-Bereich zeigt dann kein Menü statt eines Fehlers (`?? null`).
+
+**Beweis.** `test537` im vollen Lauf rot („125 gegen 123", „513 gegen 511");
+danach 18/18 mit 123 Paaren und 511 Treffern. Im Browser, in `index.html` und in
+der Einzeldatei: die Elektro-Frage liefert ein Element mit 9 Knöpfen, ohne
+Rückrufe keine Antwort; die Block-Frage setzt einen `todo` ans Ende der Seite
+und antwortet `true`, eine leere Art `false`. `npm run typecheck` sauber.
+Dienststand v1680.

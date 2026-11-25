@@ -2209,12 +2209,18 @@ const DocumentMode = (() => {
     const pdfDockBlockOeffnen = (art: string): void => {
       if (!canAnnotate) return;
       App.neueSeite();
-      Blocks.einfuegenAmEnde(art);
+      /* Über den Ereignisbus, nicht über den Namen des Editors (§5, E829). */
+      Ereignisse.frage(ARTEN.frageBlockAmEnde, { art });
     };
     const pdfDockMenue = (id: string): HTMLElement | null => {
-      if (id === 'elektro') return Elektrostart.werkzeugmenue(() => galerie?.schliesse(), () => {
-        pdfDockBlockOeffnen('schaltplan');
-      });
+      if (id === 'elektro') {
+        /* Das Menü des Elektro-Bereichs kommt über den Ereignisbus (§5, E829). */
+        const antwort = Ereignisse.frage(ARTEN.frageElektroMenue, {
+          schliessen: () => galerie?.schliesse(),
+          planOeffnen: () => pdfDockBlockOeffnen('schaltplan')
+        }).find(x => x instanceof HTMLElement);
+        return (antwort as HTMLElement | undefined) ?? null;
+      }
       const liste = document.createElement('div');
       liste.className = 'gfx-tb-liste gfx-tb-befehlsliste';
       const eintrag = (name: string, symbol: string, tun: () => void, gesperrt = false): void => {
