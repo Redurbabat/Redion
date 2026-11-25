@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-790 Entscheidungen, E1 bis E819 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+791 Entscheidungen, E1 bis E820 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -876,6 +876,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E817** — Die Wahl fliegt auch dann ins Ziel, wenn die Seite neu gezeichnet wird, während sie fliegt (Seite → Fläche, 24. November 2026): der Flug hing an einem Bezugsrahmen, den die Neuzeichnung abreisst, und landete daneben; jetzt fliegt er ab dem letzten stimmenden Bild neu; `test585` 2 rot → 93/93 (`src/schale/bedienung/selection-flow.ts`)
 * **E818** — Ein Knoten der Gedankenkarte ist so breit wie sein Text, bis zur Decke (25. November 2026): `.gk-kn` bekommt `width:max-content`; eine frische Karte zeigte „Zentr / ales / Them / a"; `test656` (`quell/schale/stil/werkzeuge.css`)
 * **E819** — Die Knöpfe im Kopf der Bibliothek schrumpfen nicht unter ihr Wort (25. November 2026): Flex mit Umbruch statt drei gleicher Spalten in der Atelier-Haut am Telefon; `test657` (`quell/schale/stil/redion2.css`)
+* **E820** — Drei Skripte aus `index.html` und pdf-lib stehen im Grundstock des Dienstes; pdf-lib und perfect-freehand sind in `FREMDCODE.md` nachgetragen, das Ja dazu ist offen (25. November 2026); `test143` grün, `test87` bis auf die Steuerzeichen der fremden pdf-lib (`src/dienst/sw.ts`, `FREMDCODE.md`)
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71890,3 +71891,31 @@ die roten Zeilen verglichen: `test86` (1), `test424` (1), `test584` (2) und
 brechen auf beiden Ständen gleich ab; `test575` ist einzeln auf beiden
 Ständen grün (111/111) und war im Sammellauf rot — ein Wackler, kein Fund.
 Keine rote Zeile ist neu.
+
+
+## E820 · Was `index.html` lädt, liegt auch offline bereit — und fremder Code hat einen Eintrag
+
+**Was.** Im `GRUNDSTOCK` von `src/dienst/sw.ts` stehen jetzt
+`quell/fremd/pdf-lib/laden.js`, `quell/fremd/pdf-lib/library.js`,
+`quell/fremd/perfect-freehand/ink.js` und
+`quell/bereiche/bloecke/arten/schematico-import.js`. In `FREMDCODE.md` stehen
+pdf-lib und perfect-freehand mit dem, was sich aus den Dateien belegen lässt.
+
+**Warum.** Der volle Lauf vom 25. November auf `faa0e0e` war bei `test87` und
+`test143` rot mit derselben Zeile: drei Skripte, die `index.html` lädt, fehlten
+im Grundstock. Ohne Netz hätte der Dienst sie nicht gehabt — §28 hart.
+`library.js` lädt `laden.ts` erst beim Gebrauch; sie gehört trotzdem hinein,
+wie pdf.js (E389). Gekommen sind die Dateien mit `5411fec` (22. November) über
+PR #232; die Regel „zwei Einträge je neuer Skriptdatei" (§28) war dort nicht
+eingehalten. Dieselbe Übernahme brachte zwei fremde Stücke ohne Eintrag in
+`FREMDCODE.md` — §57 nennt das einen Fehler.
+
+**Was offen bleibt (Redur).** §57 verlangt vor jedem fremden Stück Redurs Ja;
+für pdf-lib und perfect-freehand ist keines belegt, und die Fassung von pdf-lib
+ist nirgends festgehalten. `test87` meldet weiter rohe Steuerzeichen in der
+verkleinerten `library.js`. Sie zu ersetzen hiesse, fremden Code zu ändern;
+den Wächter für diese Datei zu lockern hiesse, eine harte Regel aufzuweichen.
+Beides ist seine Entscheidung. Entfernt wurde nichts (§43).
+
+**Beweis.** `test143` vorher rot (eine Zeile), jetzt 23/23. `test87` vorher rot
+mit zwei Zeilen, jetzt mit einer (Steuerzeichen in pdf-lib). Dienststand v1678.
