@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-791 Entscheidungen, E1 bis E820 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+792 Entscheidungen, E1 bis E821 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -877,6 +877,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E818** — Ein Knoten der Gedankenkarte ist so breit wie sein Text, bis zur Decke (25. November 2026): `.gk-kn` bekommt `width:max-content`; eine frische Karte zeigte „Zentr / ales / Them / a"; `test656` (`quell/schale/stil/werkzeuge.css`)
 * **E819** — Die Knöpfe im Kopf der Bibliothek schrumpfen nicht unter ihr Wort (25. November 2026): Flex mit Umbruch statt drei gleicher Spalten in der Atelier-Haut am Telefon; `test657` (`quell/schale/stil/redion2.css`)
 * **E820** — Drei Skripte aus `index.html` und pdf-lib stehen im Grundstock des Dienstes; pdf-lib und perfect-freehand sind in `FREMDCODE.md` nachgetragen, das Ja dazu ist offen (25. November 2026); `test143` grün, `test87` bis auf die Steuerzeichen der fremden pdf-lib (`src/dienst/sw.ts`, `FREMDCODE.md`)
+* **E821** — Elf Werkstatt-Dinge in der Wurzel gehen nicht mehr ins Netz (`.agents/`, `.claude/`, `graphify-out/`, `plugins/`, `tools/`, Batterie-Skripte, iOS- und Codemagic-Angaben, `version.json`); `test270` 80 → 81/81 (`.assetsignore`)
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71919,3 +71920,28 @@ Beides ist seine Entscheidung. Entfernt wurde nichts (§43).
 
 **Beweis.** `test143` vorher rot (eine Zeile), jetzt 23/23. `test87` vorher rot
 mit zwei Zeilen, jetzt mit einer (Steuerzeichen in pdf-lib). Dienststand v1678.
+
+
+## E821 · Was der Browser nicht lädt, geht nicht ins Netz — auch das Neue
+
+**Was.** `.assetsignore` schliesst elf Einträge der Wurzel aus: `/.agents/`,
+`/.claude/`, `/graphify-out/`, `/plugins/`, `/tools/`, `/scratchpad/`,
+`/batterie-aufgaben.js`, `/batterie-labor-kern.js`, `/capacitor.config.json`,
+`/codemagic.yaml`, `/version.json`.
+
+**Warum.** Der volle Lauf vom 25. November meldete in `test270`: diese Dinge
+lägen beim Veröffentlichen mit im Netz. Die Regel aus E270 heisst „hier bleibt
+drin, was der Browser wirklich lädt"; keines davon lädt eine Seite.
+`version.json` liest nur die Windows-App aus ihrer eigenen Kopie
+(`windows/local-source.cts`, `windows/main.cjs`) — das Ausschliessen ändert
+an ihr nichts, weil `.assetsignore` nur Wrangler gilt. `.claude/` enthielt die
+Arbeitsbäume der Agenten, also den ganzen Quelltext ein zweites Mal.
+
+**Alternative.** Den Wächter um diese Namen erweitern — dann wären
+Agenten-Anleitungen und der Quelltext-Graph öffentlich. Nicht gewählt.
+
+**Kosten.** Keine: keine Seite verweist auf sie. Gelöscht wurde nichts (§43).
+
+**Beweis.** `test270` im Hauptbaum vorher 80 ok, 1 offen; danach 81/81. (Im
+Arbeitsbaum des vollen Laufs ist er aus dem bekannten Grund aus §30 zusätzlich
+rot: `.git` ist dort eine Datei.)
