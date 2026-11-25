@@ -366,6 +366,17 @@ body:has(.pg-flaeche) #sammelleiste{
 .pg-fl-tools [data-karte="formen"] button,.pg-fl-tools [data-karte="notiz"] button{touch-action:none}
 .pg-fl-tools [data-karte="notiz"] button{cursor:grab}
 .pg-fl-dock-vorschau{opacity:.65}
+.pg-fl-griff-treffer{
+  fill:transparent;stroke:transparent;stroke-width:12;stroke-dasharray:none;pointer-events:all;
+}
+.pg-fl-griff-sichtbar{
+  fill:var(--bg-card);stroke:var(--accent-text);stroke-width:2;stroke-dasharray:none;pointer-events:none;
+}
+.pg-fl-formauswahl [data-diagonal="gleich"]{cursor:nwse-resize}
+.pg-fl-formauswahl [data-diagonal="kreuz"]{cursor:nesw-resize}
+@media(pointer:coarse){
+  .pg-fl-griff-treffer{stroke-width:34}
+}
 .pg-fl-rahmenwahl{
   fill:color-mix(in srgb,var(--accent) 14%,transparent);
   stroke:var(--accent-text);stroke-width:1.5;pointer-events:none;

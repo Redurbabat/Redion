@@ -13530,6 +13530,17 @@ body:has(.pg-flaeche) #sammelleiste{
 .pg-fl-tools [data-karte="formen"] button,.pg-fl-tools [data-karte="notiz"] button{touch-action:none}
 .pg-fl-tools [data-karte="notiz"] button{cursor:grab}
 .pg-fl-dock-vorschau{opacity:.65}
+.pg-fl-griff-treffer{
+  fill:transparent;stroke:transparent;stroke-width:12;stroke-dasharray:none;pointer-events:all;
+}
+.pg-fl-griff-sichtbar{
+  fill:var(--bg-card);stroke:var(--accent-text);stroke-width:2;stroke-dasharray:none;pointer-events:none;
+}
+.pg-fl-formauswahl [data-diagonal="gleich"]{cursor:nwse-resize}
+.pg-fl-formauswahl [data-diagonal="kreuz"]{cursor:nesw-resize}
+@media(pointer:coarse){
+  .pg-fl-griff-treffer{stroke-width:34}
+}
 .pg-fl-rahmenwahl{
   fill:color-mix(in srgb,var(--accent) 14%,transparent);
   stroke:var(--accent-text);stroke-width:1.5;pointer-events:none;
@@ -30964,7 +30975,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1666, inhalt: '94cd1dfd37136672', gebaut: '2026-11-25T12:58:24.535Z' };
+const Stand = { fassung: 1668, inhalt: '5c295011b1cb2096', gebaut: '2026-11-25T13:52:03.975Z' };
 window.Stand = Stand;
 
 </script>
@@ -163621,6 +163632,8 @@ const Seitenflaeche = (() => {
             const fy = (sy - sicht.y) / sicht.z;
             sicht = { x: sx - fx * z, y: sy - fy * z, z };
             stellen();
+            if (auswahl.size && !skalierZug)
+                auswahlZeigen();
         };
         const passend = () => {
             const k = flaeche.getBoundingClientRect();
@@ -163663,6 +163676,11 @@ const Seitenflaeche = (() => {
             };
             stellen();
         };
+        const ECKEN = {
+            'oben-links': [-1, -1], 'oben-rechts': [1, -1],
+            'unten-links': [-1, 1], 'unten-rechts': [1, 1]
+        };
+        let skalierZug = null;
         const auswahl = new Set();
         const formKnoten = new Map();
         const linien = [];
@@ -163677,6 +163695,34 @@ const Seitenflaeche = (() => {
             ? Array.isArray(form.pts) && form.pts.length > 0
             : Number.isFinite(form.x) && Number.isFinite(form.y));
         const beschriftbareForm = () => auswahl.size === 1 && formen.find(form => auswahl.has(formId(form)) && ['rechteck', 'notiz', 'text'].includes(form.art));
+        const gruppenRahmen = () => {
+            if (werkzeug !== 'zeiger' || !auswahl.size)
+                return null;
+            const ausgewaehlt = formen.filter(form => auswahl.has(formId(form)));
+            if (ausgewaehlt.length !== auswahl.size || ausgewaehlt.some(form => !['rechteck', 'ellipse', 'dreieck', 'notiz', 'linie', 'pfeil', 'stift'].includes(form.art) ||
+                (form.art !== 'stift' && (!Number.isFinite(form.w) || !Number.isFinite(form.h)))))
+                return null;
+            const boxen = ausgewaehlt.map(GfxShapes.rahmenVon);
+            const x = Math.min(...boxen.map(b => b.x)), y = Math.min(...boxen.map(b => b.y));
+            const w = Math.max(...boxen.map(b => b.x + b.w)) - x;
+            const h = Math.max(...boxen.map(b => b.y + b.h)) - y;
+            return w > 0.1 && h > 0.1 ? { x, y, w, h } : null;
+        };
+        const griffeZeigen = (r) => {
+            const fingerziel = matchMedia('(pointer: coarse)').matches ? 42 : 20;
+            const ecken = r.w * sicht.z < fingerziel || r.h * sicht.z < fingerziel
+                ? ['unten-rechts'] : Object.keys(ECKEN);
+            for (const ecke of ecken) {
+                const [horizontal, vertikal] = ECKEN[ecke];
+                const cx = r.x + (horizontal > 0 ? r.w : 0);
+                const cy = r.y + (vertikal > 0 ? r.h : 0);
+                const griff = GfxShapes.sv('g', { 'data-skaliergriff': ecke,
+                    'data-diagonal': horizontal === vertikal ? 'gleich' : 'kreuz' });
+                const attrs = { cx, cy, r: 5 / sicht.z, 'vector-effect': 'non-scaling-stroke' };
+                griff.append(GfxShapes.sv('circle', { ...attrs, class: 'pg-fl-griff-treffer' }), GfxShapes.sv('circle', { ...attrs, class: 'pg-fl-griff-sichtbar' }));
+                auswahlRahmen.append(griff);
+            }
+        };
         const auswahlZeigen = () => {
             auswahlRahmen.replaceChildren();
             for (const form of formen) {
@@ -163688,6 +163734,10 @@ const Seitenflaeche = (() => {
                     'vector-effect': 'non-scaling-stroke'
                 }));
             }
+            const rahmen = gruppenRahmen();
+            if (rahmen)
+                griffeZeigen(rahmen);
+            leiste.setzeGesperrt('skalieren', !rahmen);
             const text = auswahl.size === 1 ? 'Eine Form ausgewählt' : auswahl.size + ' Formen ausgewählt';
             if (ansage.textContent !== text)
                 ansage.textContent = text;
@@ -163759,6 +163809,45 @@ const Seitenflaeche = (() => {
         const merken = () => { verlauf.merken(abbild()); standZeigen(); };
         const verwerfen = () => { verlauf.letztenVerwerfen(); standZeigen(); };
         const sichern = () => { formenSchreiben(p, formen); malen(); };
+        const skalierung = (von, nach) => {
+            const sx = nach.w / von.w, sy = nach.h / von.h;
+            const x = (wert) => nach.x + (wert - von.x) * sx;
+            const y = (wert) => nach.y + (wert - von.y) * sy;
+            return { sx, sy, x, y };
+        };
+        const skalierungSpeichern = (von, nach) => {
+            if (Math.abs(nach.w - von.w) < 0.01 && Math.abs(nach.h - von.h) < 0.01)
+                return;
+            const { x, y, sx, sy } = skalierung(von, nach);
+            merken();
+            formen = formen.map(form => {
+                if (!auswahl.has(formId(form)))
+                    return form;
+                if (form.art === 'stift')
+                    return { ...form, pts: form.pts.map(([px, py, ...rest]) => [r2(x(px)), r2(y(py)), ...rest]) };
+                return { ...form, x: r2(x(form.x)), y: r2(y(form.y)),
+                    w: r2(form.w * sx), h: r2(form.h * sy) };
+            });
+            sichern();
+        };
+        const groesseEingeben = async () => {
+            const von = gruppenRahmen();
+            if (!von || skalierZug)
+                return;
+            const auswahlVorher = [...auswahl].join(',');
+            const wert = await UI.frage('Grösse ändern · Breite × Höhe', r2(von.w) + ' × ' + r2(von.h));
+            if (wert === null || !flaeche.isConnected || [...auswahl].join(',') !== auswahlVorher)
+                return;
+            const teile = /^\s*(\d+(?:[.,]\d+)?)\s*[×xX]\s*(\d+(?:[.,]\d+)?)\s*$/.exec(wert);
+            const w = Number(teile?.[1]?.replace(',', '.')), h = Number(teile?.[2]?.replace(',', '.'));
+            if (!(w >= 1 && h >= 1 && w <= 100000 && h <= 100000)) {
+                UI.toast('Gib Breite und Höhe in Flächeneinheiten ein, zum Beispiel 160 × 90.');
+                return;
+            }
+            const aktuell = gruppenRahmen();
+            if (aktuell)
+                skalierungSpeichern(aktuell, { ...aktuell, w, h });
+        };
         const schrittZurueck = () => {
             const vorher = verlauf.zurueck(abbild());
             if (vorher === null)
@@ -163974,6 +164063,7 @@ const Seitenflaeche = (() => {
                 { id: 'groesser', name: 'Grösser', titel: 'Grösser (Strg + Rad)', sym: 'plus' },
                 { id: 'passend', name: 'Ins Bild', titel: 'Alles ins Bild holen', sym: 'maximize' },
                 { id: 'alleFormen', name: 'Alle Formen', titel: 'Alle Formen auswählen (Strg + A)', sym: 'formRect', gesperrt: true },
+                { id: 'skalieren', name: 'Grösse ändern', titel: 'Breite und Höhe der Auswahl eingeben', sym: 'inkRuler', gesperrt: true },
                 { id: 'beschriften', name: 'Beschriften', titel: 'Ausgewählte Form beschriften', sym: 'inkText', gesperrt: true },
                 { id: 'loeschen', name: 'Löschen', titel: 'Ausgewählte Formen löschen', sym: 'trash', gesperrt: true }
             ],
@@ -164015,6 +164105,8 @@ const Seitenflaeche = (() => {
                     alleFormenWaehlen();
                 if (id === 'loeschen')
                     auswahlLoeschen();
+                if (id === 'skalieren')
+                    void groesseEingeben();
                 if (id === 'beschriften') {
                     const form = beschriftbareForm();
                     if (form)
@@ -164170,16 +164262,77 @@ const Seitenflaeche = (() => {
                 formKnoten.get(id)?.setAttribute('transform', transform);
             verbindungenNachziehen(formenZug.dx, formenZug.dy);
         };
-        const verbindungenNachziehen = (dx, dy) => {
+        const verbindungenAnpassen = (anpassen) => {
             const rahmen = (form) => {
                 const r = GfxShapes.rahmenVon(form);
-                return auswahl.has(formId(form)) ? { ...r, x: r.x + dx, y: r.y + dy } : r;
+                return auswahl.has(formId(form)) ? anpassen(r) : r;
             };
             for (const { von, nach, pfad } of linien) {
                 if (!auswahl.has(formId(von)) && !auswahl.has(formId(nach)))
                     continue;
                 pfad.setAttribute('d', GfxShapes.verbindungsPfad(rahmen(von), rahmen(nach)));
             }
+        };
+        const verbindungenNachziehen = (dx, dy) => verbindungenAnpassen(r => ({ ...r, x: r.x + dx, y: r.y + dy }));
+        let skalierBild = 0;
+        const skalierVorschau = () => {
+            skalierBild = 0;
+            const zug = skalierZug;
+            if (!zug)
+                return;
+            const { vorher: a, nachher: b } = zug;
+            const { x, y, sx, sy } = skalierung(a, b);
+            const transform = `translate(${b.x} ${b.y}) scale(${sx} ${sy}) translate(${-a.x} ${-a.y})`;
+            auswahlRahmen.setAttribute('transform', transform);
+            for (const id of auswahl)
+                formKnoten.get(id)?.setAttribute('transform', transform);
+            verbindungenAnpassen(r => ({ x: x(r.x), y: y(r.y), w: r.w * sx, h: r.h * sy }));
+        };
+        const skalierZiel = (e, zug) => {
+            const a = zug.vorher;
+            const [horizontal, vertikal] = ECKEN[zug.ecke];
+            const dx = e.clientX - zug.sx, dy = e.clientY - zug.sy;
+            if (Math.hypot(dx, dy) < 3)
+                return a;
+            const dw = dx * horizontal / sicht.z, dh = dy * vertikal / sicht.z;
+            const minW = Math.min(a.w, 12), minH = Math.min(a.h, 12);
+            let w = Math.max(minW, a.w + dw), h = Math.max(minH, a.h + dh);
+            if (e.shiftKey) {
+                const faktor = Math.abs(dw / a.w) >= Math.abs(dh / a.h) ? w / a.w : h / a.h;
+                const f = Math.max(faktor, minW / a.w, minH / a.h);
+                w = a.w * f;
+                h = a.h * f;
+            }
+            return { x: horizontal < 0 ? a.x + a.w - w : a.x,
+                y: vertikal < 0 ? a.y + a.h - h : a.y, w, h };
+        };
+        const skalierZugStart = (e, ecke) => {
+            const rahmen = gruppenRahmen();
+            if (!rahmen)
+                return;
+            skalierZug = { pointer: e.pointerId, sx: e.clientX, sy: e.clientY,
+                ecke, vorher: rahmen, nachher: rahmen };
+            e.preventDefault();
+            flaeche.focus({ preventScroll: true });
+            try {
+                flaeche.setPointerCapture(e.pointerId);
+            }
+            catch { }
+        };
+        const skalierZugEnde = (e) => {
+            const zug = skalierZug;
+            if (!zug || (e && zug.pointer !== e.pointerId))
+                return;
+            skalierZug = null;
+            if (skalierBild)
+                cancelAnimationFrame(skalierBild);
+            skalierBild = 0;
+            auswahlRahmen.removeAttribute('transform');
+            for (const id of auswahl)
+                formKnoten.get(id)?.removeAttribute('transform');
+            verbindungenNachziehen(0, 0);
+            if (e?.type === 'pointerup')
+                skalierungSpeichern(zug.vorher, skalierZiel(e, zug));
         };
         const formZugEnde = () => {
             formenZug = null;
@@ -164347,6 +164500,14 @@ const Seitenflaeche = (() => {
                     formZugEnde();
                 if (rahmenZug)
                     rahmenZugEnde();
+                if (skalierZug)
+                    skalierZugEnde();
+                return;
+            }
+            const griffElement = ziel?.closest('[data-skaliergriff]');
+            const griff = griffElement?.getAttribute('data-skaliergriff');
+            if (griff && auswahlRahmen.contains(griffElement ?? null) && Object.hasOwn(ECKEN, griff) && e.button === 0) {
+                skalierZugStart(e, griff);
                 return;
             }
             if (werkzeug === 'rahmenwahl' && e.button === 0 && !ziel?.closest('.pg-fl-notiz, .gfx-tb-sockel')) {
@@ -164469,6 +164630,14 @@ const Seitenflaeche = (() => {
             }
             if (finger.has(e.pointerId))
                 finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (skalierZug) {
+                if (skalierZug.pointer !== e.pointerId)
+                    return;
+                skalierZug.nachher = skalierZiel(e, skalierZug);
+                if (!skalierBild)
+                    skalierBild = requestAnimationFrame(skalierVorschau);
+                return;
+            }
             if (rahmenZug?.pointer === e.pointerId) {
                 const box = auswahlRechteck(e, rahmenZug);
                 const rect = rahmenZug.element;
@@ -164561,6 +164730,10 @@ const Seitenflaeche = (() => {
             finger.delete(e.pointerId);
             if (finger.size < 2)
                 kneifen = null;
+            if (skalierZug?.pointer === e.pointerId) {
+                skalierZugEnde(e);
+                return;
+            }
             if (rahmenZug?.pointer === e.pointerId) {
                 rahmenZugEnde(e);
                 return;
@@ -164628,6 +164801,12 @@ const Seitenflaeche = (() => {
             if (e.key === 'Escape' && rahmenZug) {
                 e.preventDefault();
                 rahmenZugEnde();
+                return;
+            }
+            if (skalierZug && (e.key === 'Escape' || e.key === 'Delete' || e.key.startsWith('Arrow') || e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                if (e.key === 'Escape')
+                    skalierZugEnde();
                 return;
             }
             if (e.defaultPrevented)
@@ -164718,7 +164897,7 @@ const Seitenflaeche = (() => {
         flaeche.addEventListener('pointercancel', endet);
         flaeche.addEventListener('lostpointercapture', (e) => {
             if (formenZug?.pointer === e.pointerId || dockZug?.pointer === e.pointerId ||
-                rahmenZug?.pointer === e.pointerId)
+                rahmenZug?.pointer === e.pointerId || skalierZug?.pointer === e.pointerId)
                 endet(e);
         });
         const istBlockZug = (e) => !!e.dataTransfer && [...e.dataTransfer.types].includes('application/x-redion-block');

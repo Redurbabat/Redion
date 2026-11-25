@@ -655,12 +655,75 @@ if (bildordner) {
   await handy.screenshot({ path: path.join(bildordner, 'flaeche-mobil.png') });
 }
 
+console.log('\n13 · Grössenänderung von Formen und Verbindungen');
 const linksJetzt = await mittelpunkt('links');
 await plan.mouse.click(linksJetzt.x, linksJetzt.y);
+const groessenStart = JSON.stringify(await planDaten());
+gleich('Eine gewählte Form hat vier Eckgriffe', await planFlaeche.locator('[data-skaliergriff]').count(), 4);
+const griffOrt = () => planFlaeche.locator('[data-skaliergriff]').evaluateAll(griffe => {
+  for (const griff of griffe) {
+    const r = griff.getBoundingClientRect();
+    const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    const ziel = document.elementFromPoint(x, y);
+    if (ziel && griff.contains(ziel)) {
+      const ecke = griff.getAttribute('data-skaliergriff') ?? '';
+      return { x, y, sx: ecke.endsWith('rechts') ? 1 : -1, sy: ecke.startsWith('unten') ? 1 : -1 };
+    }
+  }
+  throw Error('Kein Eckgriff liegt frei auf der Fläche');
+});
+const pfeilVorGroesse = await wegPfeil();
+const g1 = await griffOrt();
+await plan.mouse.move(g1.x, g1.y);
+await plan.mouse.down();
+await plan.mouse.move(g1.x + 34 * g1.sx, g1.y + 24 * g1.sy, { steps: 7 });
+await plan.waitForFunction(() => document.querySelector('.pg-fl-formauswahl')?.getAttribute('transform')?.includes('scale('));
+p('Beim Skalieren folgen verbundene Pfeile der Vorschau', (await wegPfeil()) !== pfeilVorGroesse);
+gleich('Die Grössenvorschau bleibt bis zum Loslassen ausserhalb der Speicherung', JSON.stringify(await planDaten()), groessenStart);
+await plan.mouse.up();
+const standNeu = await planDaten() ?? [];
+const alt = JSON.parse(groessenStart).find((f: any) => f.id === 'links');
+const neu = standNeu.find((f: any) => f.id === 'links');
+p('Gespeicherte Form wächst am Griff und die gegenüberliegende Ecke bleibt fest',
+  neu?.w > alt.w && neu?.h > alt.h &&
+  Math.abs((g1.sx < 0 ? neu.x + neu.w : neu.x) - (g1.sx < 0 ? alt.x + alt.w : alt.x)) < 0.02 &&
+  Math.abs((g1.sy < 0 ? neu.y + neu.h : neu.y) - (g1.sy < 0 ? alt.y + alt.h : alt.y)) < 0.02);
+await plan.keyboard.press('Control+z');
+gleich('Rückgängig stellt Form und Verbindung in einem Schritt wieder her', JSON.stringify(await planDaten()), groessenStart);
+
+const g2 = await griffOrt();
+await plan.mouse.move(g2.x, g2.y);
+await plan.mouse.down();
+await plan.mouse.move(g2.x + 42 * g2.sx, g2.y + 17 * g2.sy, { steps: 5 });
+await plan.keyboard.press('Escape');
+await plan.mouse.up();
+gleich('Escape verwirft die laufende Grössenänderung', JSON.stringify(await planDaten()), groessenStart);
+gleich('Escape setzt den verbundenen Pfeil zurück', await wegPfeil(), pfeilVorGroesse);
+
+const g3 = await griffOrt();
+await plan.keyboard.down('Shift');
+await plan.mouse.move(g3.x,g3.y);
+await plan.mouse.down();
+await plan.mouse.move(g3.x+44*g3.sx,g3.y+12*g3.sy,{steps:5});
+await plan.mouse.up();
+await plan.keyboard.up('Shift');
+const proportional = (await planDaten())?.find((f: any) => f.id === 'links');
+p('Umschalt hält das Seitenverhältnis beim Ziehen', proportional?.w > alt.w &&
+  Math.abs(proportional.w / proportional.h - alt.w / alt.h) < .005);
+await plan.keyboard.press('Control+z');
+
+await planFlaeche.getByRole('button',{name:'Grösse ändern',exact:true}).press('Enter');
+await plan.locator('#fq').fill('128 × 96');
+await plan.locator('#fq').press('Enter');
+const genau = (await planDaten())?.find((f: any) => f.id === 'links');
+gleich('Tastaturbefehl setzt Breite und Höhe genau', [genau?.w, genau?.h], [128, 96]);
+await planFlaeche.focus();
+await plan.keyboard.press('Control+z');
+gleich('Nach Rückgängig sind auch die eingegebenen Masse wiederhergestellt', JSON.stringify(await planDaten()), groessenStart);
 await plan.keyboard.press('Delete');
 stand = await planDaten() ?? [];
 p('Beim Löschen einer Form verschwindet ihre Verbindung mit', !stand.some((s: any) => s.id === 'links' || s.art === 'verbindung'));
-console.log('\n13 · Werkzeuggalerie und Elektro');
+console.log('\n14 · Werkzeuggalerie und Elektro');
 const kartenAufDerFlaeche = () => planFlaeche.locator('[data-karte]:visible').evaluateAll(karten =>
   karten.map(karte => (karte as HTMLElement).dataset.karte).join(','));
 const zeiger = planFlaeche.getByRole('button', { name: 'Zeiger und Hand', exact: true });
@@ -699,7 +762,7 @@ p('Formen öffnet eine Palette über der Werkzeugleiste', await formenMenue.isVi
   await formenMenue.locator('[data-c]').count() >= 8);
 await formenMenue.getByRole('button', { name: 'Ellipse', exact: true }).click();
 gleich('Die Palette stellt das echte Ellipsenwerkzeug ein', await planFlaeche.getAttribute('data-wz'), 'ellipse');
-console.log('\n14 · Werkzeugvorschauen auf die Fläche ziehen');
+console.log('\n15 · Werkzeugvorschauen auf die Fläche ziehen');
 const ablage = await planFlaeche.evaluate(el => {
   const r = el.getBoundingClientRect();
   for (const fx of [.76, .86, .65]) {
@@ -776,12 +839,12 @@ await plan.mouse.move(ablage.x, ablage.y, { steps: 8 });
 await plan.mouse.up();
 const vorRahmen = (await planDaten()) || [];
 const ziele = vorRahmen.filter((f: any) => f.art === 'dreieck' || f.text === 'Notiz aus dem Dock');
-const boxen = await Promise.all(ziele.map((f: any) => planFlaeche.locator('[data-sid="' + f.id + '"]').first().boundingBox()));
-if (boxen.length !== 2 || boxen.some((box: any) => !box)) throw Error('Zwei sichtbare Ziele für die Rahmenauswahl erwartet');
-const sichtbar = boxen.filter((box): box is NonNullable<typeof box> => !!box);
 await zeiger.press('Enter');
 await planFlaeche.getByRole('button', { name: 'Rahmenauswahl', exact: true }).click();
 gleich('Der Zeigermenü-Befehl aktiviert die Rahmenauswahl', await planFlaeche.getAttribute('data-wz'), 'rahmenwahl');
+const boxen = await Promise.all(ziele.map((f: any) => planFlaeche.locator('[data-sid="' + f.id + '"]').first().boundingBox()));
+if (boxen.length !== 2 || boxen.some(box => !box)) throw Error('Zwei sichtbare Ziele für die Rahmenauswahl erwartet');
+const sichtbar = boxen.filter((box): box is NonNullable<typeof box> => !!box);
 const ecken = await planFlaeche.evaluate((el, boxen) => {
   const l = Math.min(...boxen.map(b => b.x)) - 12;
   const o = Math.min(...boxen.map(b => b.y)) - 12;
@@ -800,9 +863,27 @@ await plan.mouse.down();
 await plan.mouse.move(ecken.ende[0]!, ecken.ende[1]!, { steps: 6 });
 p('Rahmenauswahl zeigt ein temporäres Auswahlrechteck', await planFlaeche.locator('.pg-fl-rahmenwahl').count() === 1);
 await plan.mouse.up();
+const anzahlRahmen = await planFlaeche.locator('.pg-fl-formauswahl rect').count();
+const datenNachRahmen = await planDaten();
+const datenUnveraendert = JSON.stringify(datenNachRahmen) === JSON.stringify(vorRahmen);
 p('Rahmenauswahl erfasst beide Elemente und ändert ihre gespeicherten Daten nicht',
-  await planFlaeche.locator('.pg-fl-formauswahl rect').count() >= 2 &&
-  JSON.stringify(await planDaten()) === JSON.stringify(vorRahmen));
+  anzahlRahmen >= 2 && datenUnveraendert,
+  `Ausgewählte Formen: ${anzahlRahmen}, Daten unverändert: ${datenUnveraendert}`);
+if (anzahlRahmen < 2) throw Error('Die Rahmenauswahl enthält weniger als zwei Formen.');
+
+const erstMasse = ziele.map((f: any) => ({ id:f.id, w:f.w, h:f.h }));
+await planFlaeche.getByRole('button', { name:'Grösse ändern', exact:true }).press('Enter');
+await plan.locator('#fq').fill('260 × 290');
+await plan.locator('#fq').press('Enter');
+const groesserStand = await planDaten() || [];
+const skaliert = erstMasse.map((alt: { id: string; w: number; h: number }) =>
+  ({ alt, neu: groesserStand.find((s: any) => s.id === alt.id) }));
+const erster = skaliert[0], zweiter = skaliert[1];
+p('Eine gemeinsame Grössenänderung skaliert beide Formen gleichmässig und behält ihre IDs',
+  !!erster?.neu && !!zweiter?.neu &&
+  Math.abs(erster.neu.w / erster.alt.w - zweiter.neu.w / zweiter.alt.w) < 0.002 &&
+  Math.abs(erster.neu.h / erster.alt.h - zweiter.neu.h / zweiter.alt.h) < 0.002);
+
 
 const blitz = planFlaeche.getByRole('button', { name: 'Elektro', exact: true });
 await blitz.click();
