@@ -857,120 +857,225 @@ a.bl:hover{color:var(--text)}
 }
 
 
-/* Die AFFiNE-artige Werkzeuggalerie für die freie Seitenfläche.
-   Schnellwerkzeuge und Blätterpfeile bleiben vor dem rollbaren Streifen. */
-.gfx-tb-galerie{
+/* Edgeless, aus AFFiNE 81da59d: 36px Schnellwerkzeuge, 96px Vorschauen
+   und ein geteilter Streifen mit festen Blätterpositionen. */
+.gfx-tb-edgeless{
   --gfx-kartenhoehe:64px;
-  --gfx-galerie-aktiv:#4ab9ff;
-  width:min(720px,calc(100% - 24px));
+  --gfx-galerie-aktiv:#1c9ee4;
+  --gfx-dock-icon:#a8a8a0;
+  --gfx-dock-edge:#2e2e2e;
+  --gfx-dock-hover:rgb(255 255 255 / .1);
+  --gfx-dock-shadow:0 6px 18px #00000052;
+  --gfx-notiz-papier:#292929;
+  --gfx-notiz-linie:#535353;
+  --gfx-notiz-karte:#343434;
+  --gfx-notiz-schatten:0 2px 4px #0009,inset 0 -2px 1px #ffffff0f;
+  --gfx-dock-breite:566px;
+  width:min(var(--gfx-dock-breite),calc(100% - 24px));
   padding:0;
 }
-html[data-theme="light"] .gfx-tb-galerie{--gfx-galerie-aktiv:#00699b}
-.gfx-tb-galerie .gfx-tb-roller{display:block;overflow:visible;padding:0}
-.gfx-tb-galerie .gfx-tb-haupt{
+html[data-theme="light"] .gfx-tb-edgeless{
+  --gfx-galerie-aktiv:#1e96eb;
+  --gfx-dock-icon:#77757d;
+  --gfx-dock-edge:#e3e2e4;
+  --gfx-dock-hover:rgb(0 0 0 / .04);
+  --gfx-dock-shadow:0 6px 16px #00000024;
+  --gfx-notiz-papier:#f6f5f6;
+  --gfx-notiz-linie:#fff;
+  --gfx-notiz-karte:#fff;
+  --gfx-notiz-schatten:0 2px 4px #0003,inset 0 -2px 1px #0002;
+}
+.gfx-tb-edgeless .gfx-tb-roller{display:block;overflow:visible;padding:0}
+.gfx-tb-edgeless .gfx-tb-haupt{
+  position:relative;isolation:isolate;
   width:100%;max-width:100%;height:var(--gfx-kartenhoehe);
-  padding:0;gap:0;border-radius:16px;background:var(--bg-card);
+  padding:0 12px;gap:0;border:0;background:none;box-shadow:none;
 }
-.gfx-tb-galerie .gfx-tb-schnell{gap:0;padding:0 6px}
-.gfx-tb-galerie .gfx-tb-schnell button{width:46px;height:44px}
-.gfx-tb-galerie .gfx-tb-schnell svg{width:23px;height:23px}
-.gfx-tb-galerie .gfx-tb-schnell button.on{
-  background:var(--bg-hover);color:var(--gfx-galerie-aktiv);
+.gfx-tb-edgeless .gfx-tb-haupt::before{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  border:28px solid transparent;border-image:var(--affine-dock-rahmen) 28 fill;
+  filter:drop-shadow(var(--gfx-dock-shadow));
 }
-.gfx-tb-galerie [data-a="elektro"]{color:#e9b63e}
-html[data-theme="light"] .gfx-tb-galerie [data-a="elektro"]{color:#8a5c00}
-.gfx-tb-galerie [data-a="elektro"] svg{fill:currentColor}
-.gfx-tb-galerie .gfx-tb-trenn{margin:0;height:100%}
-.gfx-tb-galerie .gfx-tb-blatt{
-  width:40px;height:44px;
-  font-size:27px;font-weight:400;line-height:1;
+.gfx-tb-edgeless .gfx-tb-schnell{gap:10px;flex:none}
+.gfx-tb-edgeless .gfx-tb-schnell button{
+  width:36px;height:36px;color:var(--gfx-dock-icon);border-radius:8px;
 }
-.gfx-tb-galerie .gfx-tb-blatt[aria-disabled="true"]{opacity:.27}
-.gfx-tb-galerie .gfx-tb-blatt[aria-disabled="true"]:hover{background:transparent}
+.gfx-tb-edgeless .gfx-tb-schnell button:is(:hover,[aria-expanded="true"]):not(:disabled){
+  color:var(--gfx-dock-icon);background:var(--gfx-dock-hover);
+}
+.gfx-tb-edgeless .gfx-tb-schnell button.on,
+.pg-flaeche:is([data-wz="zeiger"],[data-wz="hand"],:not([data-wz])) .gfx-tb-edgeless [data-a="modus"],
+.document-studio:is([data-ink-tool="select"],[data-ink-tool="schreiben"]) .gfx-tb-edgeless [data-a="pdf-zeiger"]{
+  color:var(--gfx-galerie-aktiv);background:transparent;
+}
+.gfx-tb-edgeless [data-a="elektro"]{color:#e9b63e}
+html[data-theme="light"] .gfx-tb-edgeless [data-a="elektro"]{color:#8a5c00}
+.gfx-tb-edgeless [data-a="elektro"] svg{fill:currentColor}
+.gfx-tb-edgeless .gfx-tb-trenn{
+  position:relative;width:8px;height:100%;margin:0 8px;background:none;
+}
+.gfx-tb-edgeless .gfx-tb-trenn::after{
+  content:"";position:absolute;inset:0 auto 0 50%;width:1px;background:var(--gfx-dock-edge);
+}
+.gfx-tb-edgeless .gfx-tb-blatt{
+  width:20px;height:44px;color:var(--gfx-dock-icon);
+}
+.gfx-tb-edgeless .gfx-tb-blatt[data-richtung="links"]{margin-right:8px;--dock-glyphe:var(--affine-dock-left)}
+.gfx-tb-edgeless .gfx-tb-blatt[data-richtung="rechts"]{margin-left:8px;--dock-glyphe:var(--affine-dock-right)}
+.gfx-tb-edgeless .gfx-tb-blatt[aria-disabled="true"]{opacity:.27}
+.gfx-tb-edgeless .gfx-tb-blatt[aria-disabled="true"]:hover{background:transparent}
+.gfx-tb-edgeless :is([data-a="modus"],[data-a="pdf-zeiger"]){--dock-glyphe:var(--affine-dock-select)}
+.gfx-tb-edgeless .gfx-tb-schnell [data-sym="inkHand"]{--dock-glyphe:var(--affine-dock-hand)}
+.gfx-tb-edgeless :is([data-a="rahmen"],[data-a="pdf-rahmen"]){--dock-glyphe:var(--affine-dock-frame)}
+.gfx-tb-edgeless :is([data-wz="verbindung"],[data-a="pdf-verbinder"]){--dock-glyphe:var(--affine-dock-connector)}
+.gfx-tb-edgeless :is([data-a="seitenlink"],[data-a="pdf-link"]){--dock-glyphe:var(--affine-dock-link)}
+.gfx-tb-edgeless :is([data-a="schnellmehr"],[data-a="pdf-schnellmehr"]){--dock-glyphe:var(--affine-dock-more)}
+.gfx-tb-edgeless .gfx-tb-schnell .zeichen,
+.gfx-tb-edgeless .gfx-tb-blatt span{
+  width:24px;height:24px;display:block;font-size:0;
+}
+.gfx-tb-edgeless .gfx-tb-blatt span{width:20px;height:20px}
+.gfx-tb-edgeless .gfx-tb-schnell .zeichen svg{display:none}
+.gfx-tb-edgeless .gfx-tb-schnell .zeichen::before,
+.gfx-tb-edgeless .gfx-tb-blatt span::before,
+.gfx-tb-edgeless [data-karte="notiz"] [data-vorschau]::before{
+  content:"";display:block;width:100%;height:100%;background:currentColor;
+  mask:var(--dock-glyphe) center / contain no-repeat;
+}
+.gfx-tb-edgeless .gfx-tb-schnell :is([data-a="modus"],[data-a="pdf-zeiger"],[data-a="rahmen"],[data-a="pdf-rahmen"],[data-wz="verbindung"],[data-a="pdf-verbinder"])::after{
+  inset:-2px -2px auto auto;width:16px;height:16px;transform:none;
+  background:currentColor;mask:var(--affine-dock-up) center / contain no-repeat;
+}
+.gfx-tb-edgeless .gfx-tb-schnell :is([data-a="schnellmehr"],[data-a="pdf-schnellmehr"]){display:none}
 .gfx-tb-kartenfenster{
-  min-width:0;flex:1;height:calc(var(--gfx-kartenhoehe) - 2px);
-  overflow-x:auto;overflow-y:hidden;scrollbar-width:none;
-  overscroll-behavior-x:contain;scroll-snap-type:x proximity;touch-action:pan-x;
+  min-width:0;flex:1;height:100%;overflow:hidden;container-type:inline-size;
 }
-.gfx-tb-kartenfenster::-webkit-scrollbar{display:none}
 .gfx-tb-karten{width:max-content;gap:0;height:100%;align-items:stretch}
 .gfx-tb-karte{
-  position:relative;width:100px;display:flex;flex:0 0 auto;gap:0;overflow:hidden;
-  scroll-snap-align:start;
+  position:relative;width:min(96px,100cqw);display:flex;flex:0 0 auto;gap:0;overflow:hidden;
 }
-.gfx-tb-karte[data-karte="stifte"]{width:92px}
-.gfx-tb-galerie .gfx-tb-karte button{
+.gfx-tb-karte[hidden]{display:none}
+.gfx-tb-edgeless .gfx-tb-karte button{
   width:0;min-width:0;flex:1 1 0;height:100%;border-radius:8px;overflow:hidden;
 }
-.gfx-tb-galerie .gfx-tb-karte button:focus-visible{box-shadow:inset 0 0 0 2px var(--accent)}
-.gfx-tb-galerie .gfx-tb-karte button.on,
-.gfx-tb-galerie .gfx-tb-karte button[aria-expanded="true"]{
-  background:var(--bg-hover);color:var(--gfx-galerie-aktiv);
+.gfx-tb-edgeless [data-karte="stifte"]{gap:4px;justify-content:center}
+.gfx-tb-edgeless .gfx-tb-karte button:focus-visible{box-shadow:inset 0 0 0 2px var(--accent)}
+.gfx-tb-edgeless .gfx-tb-karte button:is(.on,[aria-expanded="true"]){
+  background:var(--gfx-dock-hover);color:var(--gfx-galerie-aktiv);
 }
-.gfx-tb-galerie .gfx-tb-karte .zeichen{
-  position:absolute;inset:0;background:var(--gfx-werkzeugbild) center bottom / auto 88% no-repeat;
-  transform:translateY(7px);transition:transform var(--motion-fast) var(--ease-enter);
-  pointer-events:none;
+.gfx-tb-edgeless .gfx-tb-karte .zeichen{
+  position:absolute;inset:0;background:var(--gfx-werkzeugbild) center bottom no-repeat;
+  transform:translateY(4px);transition:transform .3s ease-in-out;pointer-events:none;
 }
-.gfx-tb-galerie .gfx-tb-karte .zeichen svg{visibility:hidden}
-.gfx-tb-galerie .gfx-tb-karte button:is(:hover,:focus-visible,.on,[aria-expanded="true"]) .zeichen{
-  transform:translateY(1px);
+.gfx-tb-edgeless .gfx-tb-karte .zeichen svg{visibility:hidden}
+.gfx-tb-edgeless .gfx-tb-karte button:is(:hover,:focus-visible,.on) .zeichen{transform:none}
+.gfx-tb-edgeless [data-karte="stifte"] .zeichen{transform:translateY(8px)}
+.gfx-tb-edgeless [data-karte="stifte"] button:is(:hover,:focus-visible,.on) .zeichen{transform:none}
+@media(min-width:551px){
+  .gfx-tb-edgeless [data-karte="stifte"] [data-wz="stift"]{flex:0 0 35px}
+  .gfx-tb-edgeless [data-karte="stifte"] [data-wz="radierer"]{flex:0 0 49px}
 }
-.gfx-tb-galerie [data-karte="stifte"] .zeichen{background-size:auto 91%}
-.gfx-tb-galerie [data-karte="notiz"] .zeichen::before{
-  content:"";position:absolute;bottom:-13px;left:24%;width:53%;height:93%;
-  border:1px solid var(--line);border-radius:2px;
-  background:linear-gradient(150deg,var(--bg-hover),var(--bg-card));
-  box-shadow:2px 3px 10px #0005;transform:rotate(6deg);
+.gfx-tb-edgeless :is([data-karte="notiz"],[data-karte="formen"]) .zeichen{transform:none}
+.gfx-tb-edgeless [data-karte="notiz"] .zeichen::before{
+  content:"";position:absolute;left:calc(50% - 30px);bottom:-20px;width:60px;height:72px;
+  background:var(--affine-dock-notizpapier) 3px 32px no-repeat var(--gfx-notiz-papier);
+  border:1px solid var(--gfx-notiz-linie);
+  box-shadow:0 2px 6px #0007;transform:rotate(4.42deg);transition:transform .4s ease;
 }
-.gfx-tb-galerie [data-karte="notiz"] .zeichen::after{
-  content:"T   H₁";position:absolute;bottom:11px;left:16%;width:67%;
-  border-radius:4px;padding:4px 0;background:var(--bg-hover);color:var(--text-dim);
-  font-size:19px;box-shadow:0 2px 7px #0008;transform:rotate(-7deg);
+.gfx-tb-edgeless [data-karte="notiz"] [data-vorschau]{
+  display:grid;place-items:center;position:absolute;left:calc(50% - 13px);bottom:12px;
+  width:26px;height:26px;border-radius:2px;background:var(--gfx-notiz-karte);
+  color:var(--gfx-dock-icon);box-shadow:var(--gfx-notiz-schatten);
+  transform:translate(var(--notiz-x,0px),var(--notiz-y,0px)) rotate(var(--notiz-r,4deg));
+  transition:transform .4s ease;
 }
-.gfx-tb-galerie [data-karte="formen"] .zeichen{
-  background:linear-gradient(150deg,#ffdc69,#f9bd37) center 6px / 55% 58px no-repeat;
+.gfx-tb-edgeless [data-karte="notiz"] [data-vorschau]::before{width:24px;height:24px;opacity:.65}
+.gfx-tb-edgeless [data-vorschau="link"]{
+  --dock-glyphe:var(--affine-dock-link);--notiz-x:-22px;--notiz-y:-5px;--notiz-r:-6deg;
 }
-.gfx-tb-galerie [data-karte="formen"] .zeichen::before{
-  content:"";position:absolute;left:5%;top:32px;width:49%;aspect-ratio:1;border-radius:50%;
-  background:linear-gradient(135deg,#ffdc64,#efb22d);box-shadow:2px 3px 7px #67410760;
+.gfx-tb-edgeless [data-vorschau="text"]{--dock-glyphe:var(--affine-dock-text)}
+.gfx-tb-edgeless [data-vorschau="heading"]{
+  --dock-glyphe:var(--affine-dock-heading);--notiz-x:21px;--notiz-y:-7px;--notiz-r:8deg;
 }
-.gfx-tb-galerie [data-karte="formen"] .zeichen::after{
-  content:"";position:absolute;right:6%;top:28px;width:53%;height:49px;
-  background:linear-gradient(135deg,#ffe58d,#f4bb33);clip-path:polygon(50% 0,100% 100%,0 100%);
+.gfx-tb-edgeless [data-karte="notiz"] button:is(:hover,:focus-visible) .zeichen::before{
+  transform:translateY(-5px) rotate(4.42deg);
 }
-.gfx-tb-galerie .gfx-tb-neben{
+.gfx-tb-edgeless [data-karte="notiz"] button:is(:hover,:focus-visible) [data-vorschau="link"]{--notiz-x:-25px;--notiz-r:-9.5deg}
+.gfx-tb-edgeless [data-karte="notiz"] button:is(:hover,:focus-visible) [data-vorschau="text"]{--notiz-y:-10px}
+.gfx-tb-edgeless [data-karte="notiz"] button:is(:hover,:focus-visible) [data-vorschau="heading"]{--notiz-x:23px;--notiz-y:-8px;--notiz-r:15deg}
+.gfx-tb-edgeless [data-karte="formen"] [data-vorschau]{
+  position:absolute;inset:0;margin:auto;width:48px;height:48px;
+  transform:translate(var(--form-x),var(--form-y));transition:transform .3s ease;
+  background:var(--form-bild) center / contain no-repeat;filter:drop-shadow(0 0 7px #0004);
+}
+.gfx-tb-edgeless [data-vorschau="rect"]{--form-bild:var(--affine-dock-rect);--form-x:-9px;--form-y:4px}
+.gfx-tb-edgeless [data-vorschau="ellipse"]{--form-bild:var(--affine-dock-ellipse);--form-x:-20px;--form-y:29px}
+.gfx-tb-edgeless [data-karte="formen"] [data-vorschau="triangle"]{
+  width:62px;height:50px;--form-bild:var(--affine-dock-triangle);--form-x:18px;--form-y:23px;
+}
+.gfx-tb-edgeless [data-karte="formen"] button:is(:hover,:focus-visible) [data-vorschau="rect"]{--form-y:-7px}
+.gfx-tb-edgeless [data-karte="formen"] button:is(:hover,:focus-visible) [data-vorschau="ellipse"]{--form-y:13px}
+.gfx-tb-edgeless [data-karte="formen"] button:is(:hover,:focus-visible) [data-vorschau="triangle"]{--form-y:5px}
+.gfx-tb-edgeless .gfx-tb-edgeless-zusatz{
+  position:absolute;left:calc(100% + 8px);bottom:0;border-radius:16px;
+  height:var(--gfx-kartenhoehe);padding:0 5px;
+}
+.gfx-tb-edgeless .gfx-tb-edgeless-zusatz button{width:44px;height:44px}
+.gfx-tb-edgeless .gfx-tb-neben{
   position:absolute;bottom:calc(100% + 6px);right:0;
   max-width:100%;overflow-x:auto;scrollbar-width:none;
 }
-.gfx-tb-galerie .gfx-tb-neben::-webkit-scrollbar{display:none}
-.gfx-tb-galerie .pg-fl-kontext{
+.gfx-tb-edgeless .gfx-tb-neben::-webkit-scrollbar{display:none}
+.gfx-tb-edgeless .pg-fl-kontext{
   position:absolute;width:1px;height:1px;padding:0;border:0;clip-path:inset(50%);
 }
-.gfx-tb-galerie .gfx-tb-menue{
-  bottom:calc(100% + 47px);max-width:100%;max-height:min(52vh,360px);overflow:auto;
+.gfx-tb-edgeless .gfx-tb-menue{
+  bottom:calc(100% + 6px);max-width:100%;max-height:min(52vh,360px);overflow:auto;
 }
-.gfx-tb-galerie .gfx-tb-menuewerkzeuge{gap:4px;margin-bottom:7px}
-.gfx-tb-galerie .gfx-tb-menuewerkzeuge button{
+.gfx-tb-edgeless .gfx-tb-menuewerkzeuge{gap:4px;margin-bottom:7px}
+.gfx-tb-edgeless .gfx-tb-menuewerkzeuge button{
   width:44px;height:44px;display:grid;place-items:center;border-radius:var(--radius-md);
 }
-.gfx-tb-galerie .gfx-tb-menuewerkzeuge button:is(.on,:hover,:focus-visible){
+.gfx-tb-edgeless .gfx-tb-menuewerkzeuge button:is(.on,:hover,:focus-visible){
   background:var(--bg-hover);color:var(--gfx-galerie-aktiv);
 }
-.gfx-tb-galerie .gfx-tb-menuewerkzeuge svg,.gfx-tb-befehlsliste svg{width:20px;height:20px}
+.gfx-tb-edgeless .gfx-tb-menuewerkzeuge svg,.gfx-tb-befehlsliste svg{width:20px;height:20px}
 .gfx-tb-befehlsliste button{display:flex;align-items:center;gap:9px;min-height:44px}
 .gfx-tb-befehlsliste h3{font-size:12px;font-weight:650;color:var(--text-dim);margin:7px 12px 0}
-@media(max-width:760px){
-  .gfx-tb-galerie{--gfx-kartenhoehe:58px}
-  .gfx-tb-galerie .gfx-tb-schnell{padding:0}
-  .gfx-tb-galerie .gfx-tb-schnell button,.gfx-tb-galerie .gfx-tb-blatt{width:44px}
-  .gfx-tb-galerie .gfx-tb-karte:not([data-karte="stifte"]){width:78px}
-  .gfx-tb-galerie .gfx-tb-menue{bottom:calc(100% + 60px)}
+@media(max-width:800px){
+  .gfx-tb-edgeless .gfx-tb-edgeless-zusatz{
+    left:0;bottom:calc(100% + 6px);height:44px;
+  }
+  .gfx-tb-edgeless .gfx-tb-menue{bottom:calc(100% + 56px)}
+}
+@media(max-width:550px){
+  .gfx-tb-edgeless{--gfx-kartenhoehe:58px}
+  .gfx-tb-edgeless .gfx-tb-haupt{padding-inline:6px}
+  .gfx-tb-edgeless .gfx-tb-schnell{gap:2px}
+  .gfx-tb-edgeless .gfx-tb-schnell button,.gfx-tb-edgeless .gfx-tb-blatt{width:44px;height:44px}
+  .gfx-tb-edgeless .gfx-tb-blatt[data-richtung]{margin-inline:0}
+  .gfx-tb-edgeless .gfx-tb-trenn{margin-inline:3px}
+  .gfx-tb-edgeless .gfx-tb-schnell :is([data-a="rahmen"],[data-a="seitenlink"],[data-a="pdf-rahmen"],[data-a="pdf-verbinder"],[data-a="pdf-link"]){display:none}
+  .gfx-tb-edgeless .gfx-tb-schnell :is([data-a="schnellmehr"],[data-a="pdf-schnellmehr"]){display:grid}
 }
 @media(prefers-reduced-motion:reduce){
-  .gfx-tb-galerie .gfx-tb-karte .zeichen{transition:none}
+  .gfx-tb-edgeless .gfx-tb-karte :is(.zeichen,[data-vorschau]),
+  .gfx-tb-edgeless .gfx-tb-karte .zeichen::before{transition:none}
 }
-body[data-bewegung="ruhig"] .gfx-tb-galerie .gfx-tb-karte .zeichen{transition:none}
+body[data-bewegung="ruhig"] .gfx-tb-edgeless .gfx-tb-karte :is(.zeichen,[data-vorschau]),
+body[data-bewegung="ruhig"] .gfx-tb-edgeless .gfx-tb-karte .zeichen::before{transition:none}
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) .gfx-tb-edgeless{
+  --gfx-dock-edge:var(--text);--gfx-dock-icon:var(--text);--gfx-galerie-aktiv:var(--accent);
+}
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) .gfx-tb-edgeless .gfx-tb-haupt::before{
+  border:1px solid var(--text);border-radius:16px;background:var(--bg-card);filter:none;
+}
+@media(forced-colors:active){
+  .gfx-tb-edgeless .gfx-tb-haupt::before{border:1px solid ButtonText;border-radius:16px;background:Canvas;filter:none}
+  .gfx-tb-edgeless .gfx-tb-schnell .zeichen::before,
+  .gfx-tb-edgeless .gfx-tb-blatt span::before,
+  .gfx-tb-edgeless [data-karte="notiz"] [data-vorschau]::before{forced-color-adjust:none;background:ButtonText}
+}
 @media(forced-colors:active){
   .gfx-tb-galerie .gfx-tb-karte .zeichen{background:none;transform:none}
   .gfx-tb-galerie .gfx-tb-karte .zeichen::before,.gfx-tb-galerie .gfx-tb-karte .zeichen::after{display:none}
@@ -1865,27 +1970,10 @@ html[data-theme="light"] .gk-kn{ --ast-zug:var(--ast-hell, var(--ast)); }
 body.fokus #kante, body.fokus #kanten-lade, body.fokus #handy-oben,
 body.fokus .pg-ansichten, body.fokus .pg-tools{display:none!important}
 
-/* Die Flächenleiste hat gleich breite Karten. Auf schmalen Flächen stehen
-   Rahmen und Links im Menü der Schnellwerkzeuge weiter zur Verfügung. */
-.pg-fl-tools.gfx-tb-galerie{width:min(614px,calc(100% - 24px))}
-.pg-fl-tools.gfx-tb-galerie .gfx-tb-karte{width:96px}
-.pg-fl-tools.gfx-tb-galerie .gfx-tb-schnell [data-a="schnellmehr"]{display:none}
-.pg-fl-tools.gfx-tb-galerie [data-a="modus"]{position:relative}
-.pg-fl-tools.gfx-tb-galerie [data-a="modus"]::after{
-  content:"";position:absolute;right:4px;top:7px;width:5px;height:5px;
-  border-top:1px solid currentColor;border-left:1px solid currentColor;
-  transform:rotate(45deg);
-}
-.pg-flaeche:is([data-wz="zeiger"],[data-wz="hand"],:not([data-wz])) .pg-fl-tools [data-a="modus"]{
-  color:var(--gfx-galerie-aktiv);background:var(--bg-hover);
-}
-.pg-fl-tools.gfx-tb-galerie .gfx-tb-menuewerkzeuge :is([data-wz="zeiger"],[data-wz="hand"]){
+/* Die Zeigerwahl auf der Fläche bleibt auch per Tastatur benannt. */
+.pg-fl-tools.gfx-tb-edgeless .gfx-tb-menuewerkzeuge :is([data-wz="zeiger"],[data-wz="hand"]){
   width:auto;min-width:44px;display:flex;gap:8px;padding-inline:10px;
 }
-.pg-fl-tools.gfx-tb-galerie .gfx-tb-menuewerkzeuge :is([data-wz="zeiger"],[data-wz="hand"])::after{
+.pg-fl-tools.gfx-tb-edgeless .gfx-tb-menuewerkzeuge :is([data-wz="zeiger"],[data-wz="hand"])::after{
   content:attr(aria-label);
-}
-@media(max-width:500px){
-  .pg-fl-tools.gfx-tb-galerie .gfx-tb-schnell :is([data-a="rahmen"],[data-a="seitenlink"]){display:none}
-  .pg-fl-tools.gfx-tb-galerie .gfx-tb-schnell [data-a="schnellmehr"]{display:grid}
 }

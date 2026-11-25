@@ -88,7 +88,7 @@ const GfxToolbar = (() => {
       schnell: string[];
       karten: { id: string; knoepfe: string[] }[];
       werkzeugMenues?: Record<string, string[]>;
-      ganzeKarten?: boolean;
+      edgeless: { zusatz: string[] };
     };
   }
 
@@ -200,7 +200,7 @@ const GfxToolbar = (() => {
     vorrat.hidden = true;
     let galerieMessen: ResizeObserver | undefined;
     if (o.galerie) {
-      wurzel.classList.add('gfx-tb-galerie');
+      wurzel.classList.add('gfx-tb-galerie', 'gfx-tb-edgeless');
       const knoepfe = new Map([...roller.querySelectorAll<HTMLButtonElement>('button')].map(b =>
         [b.dataset.wz || b.dataset.a, b]));
       const einhaengen = (el: HTMLElement, ids: string[]): void => {
@@ -212,6 +212,11 @@ const GfxToolbar = (() => {
       leiste.replaceChildren();
       const schnell = gruppe('gfx-tb-schnell');
       einhaengen(schnell, o.galerie.schnell);
+      const zusatz = gruppe('gfx-tb gfx-tb-edgeless-zusatz');
+      zusatz.setAttribute('role', 'group');
+      zusatz.setAttribute('aria-label', 'Redion-Werkzeuge');
+      einhaengen(zusatz, o.galerie.edgeless.zusatz);
+      if (zusatz.childElementCount) roller.append(zusatz);
 
       const festerStreifen = document.createElement('div');
       festerStreifen.className = 'gfx-tb-kartenfenster';
@@ -220,9 +225,22 @@ const GfxToolbar = (() => {
         const karte = gruppe('gfx-tb-karte');
         karte.dataset.karte = id;
         einhaengen(karte, ids);
+        const vorschau = karte.querySelector<HTMLElement>('.zeichen');
+        if (vorschau && (id === 'notiz' || id === 'formen')) {
+          delete vorschau.dataset.sym;
+          const teile = id === 'notiz' ? ['link', 'text', 'heading'] : ['rect', 'ellipse', 'triangle'];
+          for (const teil of teile) {
+            const grafik = document.createElement('span');
+            grafik.dataset.vorschau = teil;
+            vorschau.append(grafik);
+          }
+        }
         if (karte.childElementCount) karten.append(karte);
       }
       festerStreifen.append(karten);
+      const galeriekarten = Array.from(karten.children) as HTMLElement[];
+      let kartenStart = 0;
+      let kartenProSeite = 3;
       for (const [id, ids] of Object.entries(o.galerie.werkzeugMenues ?? {})) {
         const zeile = gruppe('gfx-tb-menuewerkzeuge');
         einhaengen(zeile, ids);
@@ -238,6 +256,7 @@ const GfxToolbar = (() => {
         b.type = 'button';
         b.tabIndex = -1;
         b.className = 'gfx-tb-blatt';
+        b.dataset.richtung = richtung < 0 ? 'links' : 'rechts';
         b.title = name;
         b.setAttribute('aria-label', name);
         const symbol = document.createElement('span');
@@ -247,28 +266,31 @@ const GfxToolbar = (() => {
         b.addEventListener('click', () => {
           if (b.getAttribute('aria-disabled') === 'true') return;
           menueZu();
-          const sichtbareKarte = karten.firstElementChild?.getBoundingClientRect().width ?? 0;
-          // Der Flächenstreifen blättert wie Edgeless um vollständige Karten.
-          const platz = festerStreifen.clientWidth;
-          const schritt = o.galerie?.ganzeKarten
-            ? sichtbareKarte * Math.max(1, Math.floor(platz / (sichtbareKarte || 1)))
-            : Math.max(sichtbareKarte, platz - sichtbareKarte);
-          const ruhig = matchMedia('(prefers-reduced-motion: reduce)').matches ||
-            !!wurzel.closest('[data-bewegung="ruhig"]');
-          festerStreifen.scrollBy({ left: schritt * richtung, behavior: ruhig ? 'instant' : 'smooth' });
+          kartenStart += kartenProSeite * richtung;
+          blattstand();
+          haltPruefen();
         });
         return b;
       };
       const zurueck = blatt('Vorherige Werkzeuge', '‹', -1);
       const weiter = blatt('Weitere Werkzeuge', '›', 1);
       const blattstand = (): void => {
-        zurueck.setAttribute('aria-disabled', String(festerStreifen.scrollLeft <= 1));
-        weiter.setAttribute('aria-disabled', String(
-          festerStreifen.scrollLeft + festerStreifen.clientWidth >= festerStreifen.scrollWidth - 1));
+        if (festerStreifen.clientWidth > 0) {
+          kartenProSeite = Math.max(1, Math.floor(festerStreifen.clientWidth / 96));
+        }
+        const letzterStart = Math.max(0, galeriekarten.length - kartenProSeite);
+        kartenStart = Math.max(0, Math.min(kartenStart, letzterStart));
+        for (const [index, karte] of galeriekarten.entries()) {
+          karte.hidden = index < kartenStart || index >= kartenStart + kartenProSeite;
+        }
+        zurueck.setAttribute('aria-disabled', String(kartenStart === 0));
+        weiter.setAttribute('aria-disabled', String(kartenStart === letzterStart));
       };
       leiste.append(schnell, trenner(), zurueck, festerStreifen, weiter);
-      festerStreifen.addEventListener('scroll', blattstand, { passive: true });
-      galerieMessen = new ResizeObserver(blattstand);
+      galerieMessen = new ResizeObserver(() => {
+        blattstand();
+        haltPruefen();
+      });
       galerieMessen.observe(festerStreifen);
       blattstand();
     }

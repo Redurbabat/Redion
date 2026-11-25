@@ -97,6 +97,7 @@
 
 .pg-flaeche{
   position:relative; flex:1 1 auto; min-height:320px; overflow:hidden;
+  container:zeichenflaeche / inline-size;
   background-color:var(--bg-side);
   /* DAS PUNKTRASTER — wie AFFiNEs `radial-gradient` (edgeless-root-block).
      Grösse und Lage setzt JavaScript, damit es mit Zoom und Schub wandert;
@@ -198,6 +199,13 @@
 .pg-flaeche > .gfx-tb-sockel{
   position:absolute; left:50%; transform:translateX(-50%);
   bottom:18px; z-index:6; max-width:calc(100% - 24px);
+}
+@container zeichenflaeche (max-width:800px){
+  .pg-fl-tools.gfx-tb-edgeless .gfx-tb-edgeless-zusatz{
+    left:0;bottom:calc(100% + 6px);height:44px;
+  }
+  .pg-fl-tools.gfx-tb-edgeless .gfx-tb-neben{max-width:calc(100% - 110px)}
+  .pg-fl-tools.gfx-tb-edgeless .gfx-tb-menue{bottom:calc(100% + 56px)}
 }
 /* Das Wort, wessen Leiste es ist — „Fläche" oder „Zeichenfläche" (§38:
    keine Auskunft nur über Farbe; der Ring allein wäre eine). */

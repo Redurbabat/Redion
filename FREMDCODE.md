@@ -124,7 +124,7 @@ wie es ist.
 
 | Was | Lizenz | Wozu gelesen | Genommen |
 |---|---|---|---|
-| **AFFiNE** (`AFFiNE-canary`) | `blocksuite` und die meisten Pakete MIT; `packages/backend` eigene Lizenz | Plattform-Audit (E681): GFX-Aufbau; Redurs Bild der Edgeless-Leiste (AUFGABEN W6) | **nichts** — kein Code, kein Icon, keine Oberfläche; die Struktur der Werkzeugleiste ist als Massstab in W6 beschrieben |
+| **AFFiNE** (`AFFiNE-canary`) | `blocksuite` und die meisten Pakete MIT; `packages/backend` eigene Lizenz | Plattform-Audit (E681): GFX-Aufbau; Redurs Bild der Edgeless-Leiste (AUFGABEN W6) | Geometrie, Kartenlogik und MIT-Grafiken des Zeichendocks für PDF und Fläche (siehe unten) |
 | **SiYuan** (`siyuan-master`) | AGPL-3.0 | Plattform-Audit (E681): Plugin-System, Marktplatz, Kernel-API | **nichts** — und AGPL-Code kann auch künftig nur mit einer eigenen Lizenzentscheidung Redurs herein (er würde Redion mit lizenzieren) |
 | **open-swiftui-animations** (Amos Gyamfi, GitHub) | **keine Lizenzdatei** — damit nichts übernehmbar | Redurs Wunsch vom 2. November 2026 (E774): Namen und Ideen der SwiftUI-Beispiele | **nichts** — kein Code, kein GIF; der Skill `.claude/skills/redion-animationen/` ist Redions eigener Text und baut die Ideen mit Redions Federn |
 | **Amdion** | eigenes Projekt Redurs | Lesequelle (`doku/AMDION-UEBERNAHME.md`) | nach den dortigen Regeln |
@@ -185,6 +185,8 @@ den iPhone-Start geladen. Das Paket enthält ihre Lizenzhinweise.
    ein geflickter Fremdcode ohne Notiz ist beim nächsten Update weg.
 ```
 
-## AFFiNE-Werkzeugvorschauen
+## AFFiNE-Zeichendock
 
-Die Flächengalerie verwendet die statischen SVG-Grafiken für Stift, Radierer, Gedankenkarte und Vorlagen aus [AFFiNE / BlockSuite `81da59d`](https://github.com/toeverything/AFFiNE/tree/81da59d63d535d72ba677a097d9a0cc9a5871ade/blocksuite/affine/gfx). Die MIT-Lizenz liegt in `quell/fremd/affine-toolbar/LICENSE-MIT` und im Kopf der eingebetteten CSS-Datei.
+Das Zeichendock für PDFs und Fläche übernimmt Geometrie, Kartenreihenfolge und seitenweises Blättern aus [AFFiNE Edgeless `81da59d`](https://github.com/toeverything/AFFiNE/tree/81da59d63d535d72ba677a097d9a0cc9a5871ade/blocksuite/affine/widgets/edgeless-toolbar). Stift, Radierer, Formen, Gedankenkarte und Vorlagen verwenden die SVG-Grafiken aus demselben BlockSuite-Stand. `quell/fremd/affine-toolbar/LICENSE-MIT` enthält die MIT-Lizenz.
+
+Die SVG-Pfade der Schnellwerkzeuge, Notizkärtchen und Pfeile stammen aus [`@blocksuite/icons@2.2.17`](https://www.npmjs.com/package/@blocksuite/icons/v/2.2.17). Die SVG-Kontur stammt aus dem MIT-lizenzierten [figma-squircle](https://github.com/phamfoo/figma-squircle) im AFFiNE-Quellstand. Die Lizenztexte stehen mit den SVGs in `vorschauen.css` sowie in `LICENSE-BLOCKSUITE-ICONS` und `LICENSE-FIGMA-SQUIRCLE`.

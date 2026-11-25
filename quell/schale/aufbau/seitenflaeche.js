@@ -622,8 +622,8 @@ const Seitenflaeche = (() => {
             werkzeuge: Register.werkzeuge.auswahl(['zeiger', 'hand', 'verbindung', 'stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'notiz', 'radierer']),
             aktiv: 'zeiger',
             galerie: {
-                schnell: ['modus', 'rahmen', 'verbindung', 'seitenlink', 'elektro', 'schnellmehr'],
-                ganzeKarten: true,
+                schnell: ['modus', 'rahmen', 'verbindung', 'seitenlink', 'schnellmehr'],
+                edgeless: { zusatz: ['elektro', 'farbe'] },
                 karten: [
                     { id: 'notiz', knoepfe: ['notiz'] },
                     { id: 'stifte', knoepfe: ['stift', 'radierer'] },

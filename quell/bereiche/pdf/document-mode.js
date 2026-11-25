@@ -1429,11 +1429,16 @@ const DocumentMode = (() => {
         folienKlappe.hidden = !istFoliensatz(page);
         commandbar.append(modes, pagination, zoomGroup, findKlappe, zeigenKlappe, folienKlappe);
         let pdfZeigermodus = 'select';
+        const pdfDockBlockOeffnen = (art) => {
+            if (!canAnnotate)
+                return;
+            App.neueSeite();
+            Blocks.einfuegenAmEnde(art);
+        };
         const pdfDockMenue = (id) => {
             if (id === 'elektro')
                 return Elektrostart.werkzeugmenue(() => galerie?.schliesse(), () => {
-                    App.neueSeite();
-                    Blocks.einfuegenAmEnde('schaltplan');
+                    pdfDockBlockOeffnen('schaltplan');
                 });
             const liste = document.createElement('div');
             liste.className = 'gfx-tb-liste gfx-tb-befehlsliste';
@@ -1472,6 +1477,11 @@ const DocumentMode = (() => {
                 eintrag('Auswahl verlinken', 'link', () => verweis?.click(), !canAnnotate || !verweis || verweis.disabled);
                 eintrag('Dokumentlink kopieren', 'page', () => Register.aktionen.tun('link', page, { kontext: 'seite' }));
             }
+            if (id === 'vorlagen') {
+                eintrag('Textblock auf neuer Seite', 'inkText', () => pdfDockBlockOeffnen('text'), !canAnnotate);
+                eintrag('Gedankenkarte auf neuer Seite', 'sparkle', () => pdfDockBlockOeffnen('mindmap'), !canAnnotate);
+                eintrag('Whiteboard auf neuer Seite', 'grid', () => pdfDockBlockOeffnen('whiteboard'), !canAnnotate);
+            }
             if (!liste.childElementCount)
                 return null;
             Register.symbole.fuelle(liste);
@@ -1483,19 +1493,20 @@ const DocumentMode = (() => {
                 beschriftung: 'PDF bearbeiten',
                 werkzeuge: Marken.WERKZEUGE,
                 galerie: {
-                    schnell: ['pdf-zeiger', 'pdf-rahmen', 'pdf-verbinder', 'pdf-link', 'elektro', 'pdf-schnellmehr'],
-                    ganzeKarten: true,
+                    schnell: ['pdf-zeiger', 'pdf-rahmen', 'pdf-verbinder', 'pdf-link', 'pdf-schnellmehr'],
+                    edgeless: { zusatz: ['elektro', 'pdf-werkzeuge'] },
                     karten: [
                         { id: 'notiz', knoepfe: ['zettel'] },
                         { id: 'stifte', knoepfe: ['stift', 'radierer'] },
                         { id: 'formen', knoepfe: ['formen'] },
-                        { id: 'pdf-markieren', knoepfe: ['marker', 'abdeck'] },
-                        { id: 'pdf-text', knoepfe: ['text', 'textfix'] },
-                        { id: 'pdf-inhalt', knoepfe: ['elemente', 'bild'] },
-                        { id: 'pdf-hilfen', knoepfe: ['laser', 'ink-ruler'] },
-                        { id: 'pdf-einrichten', knoepfe: ['ink-options'] }
+                        { id: 'diagramme', knoepfe: ['diagramme'] },
+                        { id: 'vorlagen', knoepfe: ['vorlagen'] }
                     ],
-                    werkzeugMenues: { 'pdf-zeiger': ['select', 'schreiben'], elektro: ['zeichen'] }
+                    werkzeugMenues: {
+                        'pdf-zeiger': ['select', 'schreiben'],
+                        elektro: ['zeichen'],
+                        'pdf-werkzeuge': ['marker', 'abdeck', 'text', 'textfix', 'elemente', 'bild', 'laser', 'ink-ruler', 'ink-options']
+                    }
                 },
                 aktionen: [
                     { id: 'pdf-zeiger', name: 'Auswahl und Hand', sym: 'inkPointer', menue: true, kapsel: 'werkzeuge' },
@@ -1504,10 +1515,15 @@ const DocumentMode = (() => {
                     { id: 'pdf-link', name: 'Links', sym: 'link', menue: true, kapsel: 'werkzeuge' },
                     { id: 'elektro', name: 'Elektro', sym: 'bolt', menue: true, kapsel: 'werkzeuge' },
                     { id: 'pdf-schnellmehr', name: 'Weitere Schnellwerkzeuge', sym: 'dots', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'diagramme', name: 'Gedankenkarte auf neuer Seite', sym: 'sparkle', kapsel: 'werkzeuge', gesperrt: !canAnnotate },
+                    { id: 'vorlagen', name: 'Blockvorlagen', sym: 'table', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'pdf-werkzeuge', name: 'PDF-Werkzeuge', sym: 'dots', menue: true, kapsel: 'werkzeuge' },
                     { id: 'ink-options', name: 'Zeichenoptionen und Leiste einrichten', sym: 'dots', kapsel: 'werkzeuge' },
                     { id: 'ink-ruler', name: 'Lineal ein- oder ausblenden', sym: 'inkRuler', kapsel: 'werkzeuge' }
                 ],
-                menue: pdfDockMenue
+                menue: pdfDockMenue,
+                aufAktion: id => { if (id === 'diagramme')
+                    pdfDockBlockOeffnen('mindmap'); }
             })
             : null;
         const drawingbar = galerie?.element ?? document.createElement('div');
@@ -1523,21 +1539,6 @@ const DocumentMode = (() => {
                 const aktiv = workspace.dataset.inkTool;
                 inkWerkzeugWaehlen(aktiv === 'select' ? 'schreiben' : aktiv === 'schreiben' ? 'select' : pdfZeigermodus);
             });
-            const notiz = drawingbar.querySelector('[data-karte="notiz"] .zeichen');
-            if (notiz) {
-                delete notiz.dataset.sym;
-                notiz.replaceChildren(...['link', 'inkText', 'H₁'].map((zeichen, i) => {
-                    const platte = document.createElement('span');
-                    platte.className = 'pdf-dock-notizzeichen';
-                    platte.dataset.position = String(i);
-                    if (i < 2)
-                        platte.dataset.sym = zeichen;
-                    else
-                        platte.textContent = zeichen;
-                    return platte;
-                }));
-                Register.symbole.fuelle(notiz);
-            }
             const kurz = {
                 marker: 'Marker', abdeck: 'Abdecken', text: 'Text', textfix: 'Ändern',
                 elemente: 'Elemente', bild: 'Bild', laser: 'Laser', 'ink-ruler': 'Lineal',
@@ -3126,7 +3127,7 @@ const DocumentMode = (() => {
             if (event.key === 'Escape' && workspace.dataset.inkOptions === 'open') {
                 workspace.dataset.inkOptions = 'closed';
                 moreTools.setAttribute('aria-expanded', 'false');
-                moreTools.focus();
+                (drawingbar.querySelector('[data-a="pdf-werkzeuge"]') ?? moreTools).focus();
                 event.stopPropagation();
                 return;
             }

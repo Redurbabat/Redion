@@ -440,16 +440,23 @@ await pg.close();
 console.log('\n9 · Am Telefon');
 const { pg: handy, ids: ids2 } = await bauen(390, 844);
 const masse = await handy.evaluate(() =>
-  [...document.querySelectorAll<HTMLElement>('.pg-flaeche .gfx-tb-schnell button,.pg-flaeche .gfx-tb-karte button')]
+  [...document.querySelectorAll<HTMLElement>('.pg-flaeche :is(.gfx-tb-schnell,.gfx-tb-karte,.gfx-tb-edgeless-zusatz) button')]
     .filter(b => b.offsetParent !== null)
     .map(b => { const r = b.getBoundingClientRect();
       return { id: b.dataset['wz'] ?? b.dataset['a'] ?? '?', w: Math.round(r.width), h: Math.round(r.height) }; }));
 p('Die Fläche hat Werkzeuge am Telefon', masse.length >= 6, String(masse.length));
 p('Und jedes misst 44 px (§37)', masse.every(m => m.w >= 44 && m.h >= 44),
   masse.filter(m => m.w < 44 || m.h < 44).map(m => `${m.id} ${m.w}×${m.h}`).join(' · '));
-await handy.evaluate(() => {
-  document.querySelector<HTMLElement>('.pg-flaeche .gfx-tb-sockel [data-wz="stift"]')?.click();
-});
+const handyDock = handy.locator('.pg-flaeche .gfx-tb-edgeless');
+const handyStift = handyDock.getByRole('button', { name: 'Stift', exact: true });
+const zusatzBox = await handyDock.locator('.gfx-tb-edgeless-zusatz').boundingBox();
+const verlaufBox = await handyDock.locator('.gfx-tb-neben').boundingBox();
+p('Der Blitz verdeckt auf schmaler Fläche keine Verlaufswerkzeuge',
+  !!zusatzBox && !!verlaufBox && zusatzBox.x + zusatzBox.width <= verlaufBox.x);
+if (!await handyStift.isVisible()) {
+  await handyDock.getByRole('button', { name: 'Weitere Werkzeuge', exact: true }).click();
+}
+await handyStift.click();
 await handy.waitForTimeout(200);
 const k2 = await handy.evaluate(() => {
   const f = document.querySelector('.pg-flaeche')!.getBoundingClientRect();
@@ -654,15 +661,14 @@ await plan.keyboard.press('Delete');
 stand = await planDaten() ?? [];
 p('Beim Löschen einer Form verschwindet ihre Verbindung mit', !stand.some((s: any) => s.id === 'links' || s.art === 'verbindung'));
 console.log('\n13 · Werkzeuggalerie und Elektro');
-const st = planFlaeche.locator('.gfx-tb-kartenfenster');
+const kartenAufDerFlaeche = () => planFlaeche.locator('[data-karte]:visible').evaluateAll(karten =>
+  karten.map(karte => (karte as HTMLElement).dataset.karte).join(','));
 const zeiger = planFlaeche.getByRole('button', { name: 'Zeiger und Hand', exact: true });
 const zeigerVor = await zeiger.boundingBox();
+gleich('Die ersten drei Edgeless-Vorschauen', await kartenAufDerFlaeche(), 'notiz,stifte,formen');
 await planFlaeche.getByRole('button', { name: 'Weitere Werkzeuge', exact: true }).click();
-await st.evaluate(el => new Promise<void>(ok => {
-  if (el.scrollLeft > 2) ok();
-  else el.addEventListener('scroll', () => ok(), { once: true });
-}));
-p('Weiter blättert die grossen Vorschauen', await st.evaluate(el => el.scrollLeft > 1));
+gleich('Die letzte Kartengruppe enthält Formen, Gedankenkarte und Vorlagen',
+  await kartenAufDerFlaeche(), 'formen,diagramme,vorlagen');
 gleich('Die Schnellwerkzeuge bleiben am selben Platz', (await zeiger.boundingBox())?.x, zeigerVor?.x);
 await zeiger.click();
 gleich('Der Zeiger wechselt mit einem Klick zur Hand', await planFlaeche.getAttribute('data-wz'), 'hand');

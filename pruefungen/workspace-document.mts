@@ -152,9 +152,17 @@ try {
       await page.locator('.document-drawingbar:visible').count() === 1);
     const weiter = dock.getByRole('button', { name: 'Weitere Werkzeuge', exact: true });
     const vorBlitz = await blitz.boundingBox();
+    const sichtbareKarten = () => dock.locator('[data-karte]:visible').evaluateAll(karten =>
+      karten.map(karte => (karte as HTMLElement).dataset.karte).join(','));
+    const ersteKarten = await sichtbareKarten();
     await weiter.click();
-    await page.waitForFunction(() =>
-      (document.querySelector('.document-pdf-dock .gfx-tb-kartenfenster')?.scrollLeft ?? 0) > 0);
+    const zweiteKarten = await sichtbareKarten();
+    pass(label + ': Edgeless blättert in ganzen Karten und klemmt die letzte Gruppe',
+      zweiteKarten !== ersteKarten && (width < 900 ||
+        (ersteKarten === 'notiz,stifte,formen' && zweiteKarten === 'formen,diagramme,vorlagen')),
+      JSON.stringify({ ersteKarten, zweiteKarten }));
+    await dock.getByRole('button', { name: 'Vorherige Werkzeuge', exact: true }).click();
+    pass(label + ': die Rückrichtung zeigt wieder die Startgruppe', await sichtbareKarten() === ersteKarten);
     const nachBlitz = await blitz.boundingBox();
     pass(label + ': Werkzeugkarten blättern, Blitz bleibt am gleichen Ort',
       !!vorBlitz && !!nachBlitz && vorBlitz.x === nachBlitz.x && nachBlitz.width >= 44);
@@ -169,11 +177,15 @@ try {
     await page.waitForFunction(() => document.querySelector<HTMLElement>('.document-studio')?.dataset.inkTool === 'zeichen');
     pass(label + ': Fachzeichen bleibt das echte Dokumentwerkzeug',
       await page.locator('.document-stage[data-aktiv] .blatt-marken[data-tool="zeichen"]').count() === 1);
+    const pdfWerkzeuge = dock.getByRole('button', { name: 'PDF-Werkzeuge', exact: true });
     const optionen = dock.locator('[data-document-action="ink-options"]');
+    await pdfWerkzeuge.click();
     await optionen.click();
+    pass(label + ': PDF-Werkzeuge öffnen die vorhandenen Zeichenoptionen',
+      await page.locator('.document-studio').getAttribute('data-ink-options') === 'open');
     pass(label + ': geöffnete Optionen enthalten keine zweite Werkzeugreihe',
       await page.locator('.document-stage .blatt-werk > [data-wz]:visible').count() === 0);
-    await optionen.click();
+    await page.keyboard.press('Escape');
 
     await page.locator('[data-document-action="view"]').first().click();
     const jump = page.locator('.document-position');
