@@ -146,3 +146,51 @@ Action-Lauf das Artefakt 'redion-v07-mcp-tools' herunterladen.
 Connector-Bindung nicht automatisch. Der App-Entwickler-Editor muss
 den neuen Werkzeugvertrag tatsächlich veröffentlichen; Änderungen an
 '.app.json' oder am Präsentationsmanifest allein reichen dafür nicht.
+
+## ChatGPT-Web: bestehenden V07-Connector aktualisieren (23.11.2026)
+
+Der Cloud-MCP-Server selbst bietet die aktuelle Liste bereits an. ChatGPT
+kann aber eine ältere **gespeicherte Werkzeug-Snapshot-Version**
+verwenden. Der zuvor erstellte JSON-Export ist ein Prüf- und
+Wiederherstellungsartefakt; er ist **nicht** zwingend manuell zu
+importieren, wenn die App-Verwaltung eine Aktualisierung unterstützt.
+
+**Schnellster Weg (im ChatGPT-Webbrowser, nicht in der iOS-App):**
+
+1. ChatGPT im Browser öffnen: https://chatgpt.com/plugins
+2. Unter **Plugins/Apps** den vorhandenen privaten Eintrag
+   **Redion V07** öffnen (nicht den älteren Redion v05).
+3. Die App-Details bzw. **Manage/Verwalten** und – falls angeboten –
+   **Refresh/Aktualisieren** öffnen. Dadurch soll ChatGPT die aktuelle
+   MCP-`tools/list`-Antwort vom verbundenen Server abrufen.
+4. Den erkannten Unterschied prüfen: **24** aktuelle Namen,
+   **15** reine Lesewerkzeuge und **9** Schreibwerkzeuge; fünf
+   neue Lesewerkzeuge hinzufügen, sechs nicht mehr implementierte
+   Legacy-Werkzeuge entfernen und die strikteren Bearbeitungsschemas
+   übernehmen. Neue Schreibrechte bewusst prüfen und freigeben.
+5. Bei nötiger OAuth-Anmeldung die gewünschten Arbeitsbereiche und
+   `redion:read`/optional `redion:write` auswählen. Alte
+   Freigaben nicht automatisch widerrufen. Danach eine **neue**
+   ChatGPT-Unterhaltung starten und den aktualisierten Connector wählen.
+6. Abnahme nur lesend: `redion_list_page_blocks`,
+   `redion_get_page_path` und `redion_read_page` mit
+   `blockOffset` sollen verfügbar sein. Bei Schreibtests
+   eine eigens angelegte Testseite mit Versionsschutz verwenden.
+
+**Falls der persönliche App-Eintrag keinen Refresh-Button zeigt:**
+Nicht behaupten, dass das GitHub-Merge oder eine Änderung des
+Plugin-Creator-Anzeigemanifests die Werkzeugliste aktualisiert hätte.
+Stattdessen die ursprüngliche App-Verwaltung öffnen und dort
+Tool-Aktionen neu prüfen/veröffentlichen. Falls dieser Weg ebenfalls
+nicht verfügbar ist, die bestehende App nicht blind durch
+einen neuen Connector ersetzen: Zuerst die Verbindungseinstellungen
+und die Möglichkeit zur Wiederverbindung überprüfen.
+
+Offizielle Quellen (Stand 23.11.2026):
+- https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt
+- https://developers.openai.com/api/docs/guides/custom-mcp-server
+
+Die App-Snapshot-Aktualisierung ist eine **ChatGPT-Aktion** und
+wird weder von dieser GitHub-Dokumentation noch vom Backend selbst
+ausgeführt. Eine erfolgreiche Code- oder Deploymentprüfung ist kein
+Beleg für aktualisierte App-Tools.
