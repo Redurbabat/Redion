@@ -60,25 +60,17 @@ interface Seitenansicht {
 
 Register.seitenansichten = (() => {
 
-  /* Die Reihenfolge ist die des Umschalters, und sie ist AFFiNEs: zuerst die
-     Seite, dann die Fläche. Unsere eigene steht hinten — nicht, weil sie
-     weniger wert ist, sondern weil die zwei vorderen zusammengehören und ein
-     Fremdkörper zwischen ihnen die Ordnung zerschlägt. */
+  // Alte „seite"-Werte öffnen sich in der Standardansicht Redion.
   const ARTEN: Seitenansicht[] = [
     {
-      id: 'seite', name: 'Seite',
-      titel: 'Seite — schlank wie AFFiNEs `page`: Symbol, Titel, Text. Kein Cover, keine Werkzeugzeile.',
-      zeichen: 'page', herkunft: 'affine'
+      id: 'redion', name: 'Redion',
+      titel: 'Redion — Dokument, Cover und Seitenwerkzeuge',
+      zeichen: 'image', herkunft: 'redion'
     },
     {
       id: 'flaeche', name: 'Fläche',
-      titel: 'Fläche — die Leinwand wie AFFiNEs `edgeless`: Punktraster, der Seitentext als Kasten darauf, schieben und zoomen.',
+      titel: 'Fläche — freie Leinwand für Notizen, Formen und Verbindungen',
       zeichen: 'grid', herkunft: 'affine'
-    },
-    {
-      id: 'redion', name: 'Redion',
-      titel: 'Redion — unsere eigene: Cover, Symbol, Titel und die Werkzeugzeile. Das, was Redion immer gezeigt hat.',
-      zeichen: 'image', herkunft: 'redion'
     }
   ];
 

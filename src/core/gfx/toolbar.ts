@@ -88,6 +88,7 @@ const GfxToolbar = (() => {
       schnell: string[];
       karten: { id: string; knoepfe: string[] }[];
       werkzeugMenues?: Record<string, string[]>;
+      ganzeKarten?: boolean;
     };
   }
 
@@ -247,7 +248,11 @@ const GfxToolbar = (() => {
           if (b.getAttribute('aria-disabled') === 'true') return;
           menueZu();
           const sichtbareKarte = karten.firstElementChild?.getBoundingClientRect().width ?? 0;
-          const schritt = Math.max(sichtbareKarte, festerStreifen.clientWidth - sichtbareKarte);
+          // Der Flächenstreifen blättert wie Edgeless um vollständige Karten.
+          const platz = festerStreifen.clientWidth;
+          const schritt = o.galerie?.ganzeKarten
+            ? sichtbareKarte * Math.max(1, Math.floor(platz / (sichtbareKarte || 1)))
+            : Math.max(sichtbareKarte, platz - sichtbareKarte);
           const ruhig = matchMedia('(prefers-reduced-motion: reduce)').matches ||
             !!wurzel.closest('[data-bewegung="ruhig"]');
           festerStreifen.scrollBy({ left: schritt * richtung, behavior: ruhig ? 'instant' : 'smooth' });

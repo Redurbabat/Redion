@@ -511,6 +511,7 @@ const Seitenflaeche = (() => {
      * ====================================================================*/
     let sicht: Sicht = sichtLesen(p.id) ?? { x: 0, y: 0, z: 1 };
     let werkzeug = 'zeiger';
+    let letzterZeigermodus = 'zeiger';
 
     /* DIE ZOOMZAHL HAT EINEN NAMEN, keinen Wähler (E722). `stellen` fragte
        `flaeche.querySelector('.pg-fl-massstab')` — und seit die Leiste der
@@ -676,6 +677,14 @@ const Seitenflaeche = (() => {
     const werkzeugWechseln = (id: string): void => {
       werkzeug = id;
       flaeche.dataset['wz'] = id;
+      if (id === 'zeiger' || id === 'hand') {
+        letzterZeigermodus = id;
+        const symbol = leiste.element.querySelector<HTMLElement>('[data-a="modus"] [data-sym]');
+        if (symbol) {
+          symbol.dataset.sym = id === 'hand' ? 'inkHand' : 'inkPointer';
+          Register.symbole.fuelle(symbol.parentElement);
+        }
+      }
       verbindeVon = '';
       if (id !== 'zeiger') auswahlSetzen([]);
     };
@@ -856,15 +865,44 @@ const Seitenflaeche = (() => {
       });
       liste.append(b);
     };
+    const linkEinsetzen = async (): Promise<void> => {
+      const eingabe = await UI.frage('Weblink auf der Fläche einfügen', '');
+      if (!eingabe?.trim() || !flaeche.isConnected) return;
+      let url: URL;
+      try {
+        url = new URL(eingabe.trim());
+        if (url.protocol !== 'https:' && url.protocol !== 'http:') throw new Error();
+      } catch {
+        UI.toast('Gib einen vollständigen Weblink mit https:// oder http:// ein.');
+        return;
+      }
+      aufFlaeche(Store.addBlock(p.id, 'bookmark', { src: url.href, text: url.hostname }));
+    };
+    const rahmenEintraege = (liste: HTMLElement): void => {
+      menueEintrag(liste, 'Rechteckrahmen zeichnen', 'formRect', () => {
+        leiste.setzeWerkzeug('rechteck');
+        werkzeugWechseln('rechteck');
+      });
+      menueEintrag(liste, 'Whiteboard einfügen', 'grid', () => blockEinsetzen('whiteboard'));
+    };
+    const linkEintraege = (liste: HTMLElement): void => {
+      menueEintrag(liste, 'Weblink einfügen', 'bookmark', () => { void linkEinsetzen(); });
+      menueEintrag(liste, 'Seitenlink kopieren', 'link',
+        () => Register.aktionen.tun('link', p, { kontext: 'seite' }));
+    };
     const aufsatzMenue = (id: string): HTMLElement | null => {
-      if (id !== 'elektro' && id !== 'vorlagen') return null;
       if (id === 'elektro')
         return Elektrostart.werkzeugmenue(() => leiste.schliesse(), () => blockEinsetzen('schaltplan'));
       const liste = document.createElement('div');
       liste.className = 'gfx-tb-liste gfx-tb-befehlsliste';
-      menueEintrag(liste, 'Textblock', 'inkText', () => blockEinsetzen('text'));
-      menueEintrag(liste, 'Gedankenkarte', 'sparkle', () => blockEinsetzen('mindmap'));
-      menueEintrag(liste, 'Whiteboard', 'formRect', () => blockEinsetzen('whiteboard'));
+      if (id === 'rahmen' || id === 'schnellmehr') rahmenEintraege(liste);
+      if (id === 'seitenlink' || id === 'schnellmehr') linkEintraege(liste);
+      if (id === 'vorlagen') {
+        menueEintrag(liste, 'Textblock', 'inkText', () => blockEinsetzen('text'));
+        menueEintrag(liste, 'Gedankenkarte', 'sparkle', () => blockEinsetzen('mindmap'));
+        menueEintrag(liste, 'Whiteboard', 'formRect', () => blockEinsetzen('whiteboard'));
+      }
+      if (!liste.childElementCount) return null;
       Register.symbole.fuelle(liste);
       return liste;
     };
@@ -879,7 +917,8 @@ const Seitenflaeche = (() => {
         ['zeiger', 'hand', 'verbindung', 'stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'notiz', 'radierer']),
       aktiv: 'zeiger',
       galerie: {
-        schnell: ['zeiger', 'hand', 'verbindung', 'elektro'],
+        schnell: ['modus', 'rahmen', 'verbindung', 'seitenlink', 'elektro', 'schnellmehr'],
+        ganzeKarten: true,
         karten: [
           { id: 'notiz', knoepfe: ['notiz'] },
           { id: 'stifte', knoepfe: ['stift', 'radierer'] },
@@ -887,14 +926,20 @@ const Seitenflaeche = (() => {
           { id: 'diagramme', knoepfe: ['diagramme'] },
           { id: 'vorlagen', knoepfe: ['vorlagen'] }
         ],
-        werkzeugMenues: { formen: ['rechteck', 'ellipse', 'linie', 'pfeil'] }
+        werkzeugMenues: {
+          modus: ['zeiger', 'hand'],
+          formen: ['rechteck', 'ellipse', 'linie', 'pfeil']
+        }
       },
       aktionen: [
         { id: 'elektro', name: 'Elektro', sym: 'bolt', menue: true, kapsel: 'werkzeuge' },
         { id: 'formen', name: 'Formen', sym: 'formRect', menue: true, kapsel: 'werkzeuge' },
         { id: 'diagramme', name: 'Gedankenkarte einfügen', sym: 'sparkle', kapsel: 'werkzeuge' },
         { id: 'vorlagen', name: 'Blockvorlagen', sym: 'table', menue: true, kapsel: 'werkzeuge' },
-        { id: 'seitenlink', name: 'Seitenlink kopieren', sym: 'link' },
+        { id: 'modus', name: 'Zeiger und Hand', sym: 'inkPointer', menue: true, kapsel: 'werkzeuge' },
+        { id: 'rahmen', name: 'Rahmen', sym: 'grid', menue: true, kapsel: 'werkzeuge' },
+        { id: 'seitenlink', name: 'Link', sym: 'link', menue: true, kapsel: 'werkzeuge' },
+        { id: 'schnellmehr', name: 'Weitere Schnellwerkzeuge', sym: 'dots', menue: true, kapsel: 'werkzeuge' },
         { id: 'farbe', name: 'Farbe', titel: 'Farbe der Formen', sym: 'palette',
           menue: true, kapsel: 'werkzeuge' },
         { id: 'zurueck', name: 'Rückgängig', titel: 'Rückgängig (Strg + Z)', sym: 'undo', gesperrt: true },
@@ -933,7 +978,6 @@ const Seitenflaeche = (() => {
       aufWerkzeug: werkzeugWechseln,
       aufAktion: (id: string) => {
         if (id === 'diagramme') blockEinsetzen('mindmap');
-        if (id === 'seitenlink') Register.aktionen.tun('link', p, { kontext: 'seite' });
         if (id === 'zurueck') schrittZurueck();
         if (id === 'vor') schrittVor();
         if (id === 'kleiner') massstab(sicht.z / 1.25);
@@ -946,6 +990,16 @@ const Seitenflaeche = (() => {
           if (form) void textBearbeiten(form);
         }
       }
+    });
+    // Ein Klick wechselt zwischen Auswahl und Hand; Enter öffnet die
+    // beschriftete Auswahl für Tastatur und assistive Bedienung.
+    leiste.element.querySelector('[data-a="modus"]')?.addEventListener('click', (e: Event) => {
+      if (!(e instanceof MouseEvent) || e.detail === 0) return;
+      e.stopPropagation();
+      leiste.schliesse();
+      const id = werkzeug === 'zeiger' ? 'hand' : werkzeug === 'hand' ? 'zeiger' : letzterZeigermodus;
+      leiste.setzeWerkzeug(id);
+      werkzeugWechseln(id);
     });
     /* VOR die Ebene, nicht dahinter (E722): die Reihenfolge im Baum ist die
        Reihenfolge beim Tabben. Hinter der Ebene käme man über den Text des

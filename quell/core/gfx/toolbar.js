@@ -150,7 +150,10 @@ const GfxToolbar = (() => {
                         return;
                     menueZu();
                     const sichtbareKarte = karten.firstElementChild?.getBoundingClientRect().width ?? 0;
-                    const schritt = Math.max(sichtbareKarte, festerStreifen.clientWidth - sichtbareKarte);
+                    const platz = festerStreifen.clientWidth;
+                    const schritt = o.galerie?.ganzeKarten
+                        ? sichtbareKarte * Math.max(1, Math.floor(platz / (sichtbareKarte || 1)))
+                        : Math.max(sichtbareKarte, platz - sichtbareKarte);
                     const ruhig = matchMedia('(prefers-reduced-motion: reduce)').matches ||
                         !!wurzel.closest('[data-bewegung="ruhig"]');
                     festerStreifen.scrollBy({ left: schritt * richtung, behavior: ruhig ? 'instant' : 'smooth' });

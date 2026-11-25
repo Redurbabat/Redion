@@ -1864,3 +1864,28 @@ html[data-theme="light"] .gk-kn{ --ast-zug:var(--ast-hell, var(--ast)); }
    weil diese Regel die Grundregeln jeder dieser Leisten schlagen muss. */
 body.fokus #kante, body.fokus #kanten-lade, body.fokus #handy-oben,
 body.fokus .pg-ansichten, body.fokus .pg-tools{display:none!important}
+
+/* Die Flächenleiste hat gleich breite Karten. Auf schmalen Flächen stehen
+   Rahmen und Links im Menü der Schnellwerkzeuge weiter zur Verfügung. */
+.pg-fl-tools.gfx-tb-galerie{width:min(614px,calc(100% - 24px))}
+.pg-fl-tools.gfx-tb-galerie .gfx-tb-karte{width:96px}
+.pg-fl-tools.gfx-tb-galerie .gfx-tb-schnell [data-a="schnellmehr"]{display:none}
+.pg-fl-tools.gfx-tb-galerie [data-a="modus"]{position:relative}
+.pg-fl-tools.gfx-tb-galerie [data-a="modus"]::after{
+  content:"";position:absolute;right:4px;top:7px;width:5px;height:5px;
+  border-top:1px solid currentColor;border-left:1px solid currentColor;
+  transform:rotate(45deg);
+}
+.pg-flaeche:is([data-wz="zeiger"],[data-wz="hand"],:not([data-wz])) .pg-fl-tools [data-a="modus"]{
+  color:var(--gfx-galerie-aktiv);background:var(--bg-hover);
+}
+.pg-fl-tools.gfx-tb-galerie .gfx-tb-menuewerkzeuge :is([data-wz="zeiger"],[data-wz="hand"]){
+  width:auto;min-width:44px;display:flex;gap:8px;padding-inline:10px;
+}
+.pg-fl-tools.gfx-tb-galerie .gfx-tb-menuewerkzeuge :is([data-wz="zeiger"],[data-wz="hand"])::after{
+  content:attr(aria-label);
+}
+@media(max-width:500px){
+  .pg-fl-tools.gfx-tb-galerie .gfx-tb-schnell :is([data-a="rahmen"],[data-a="seitenlink"]){display:none}
+  .pg-fl-tools.gfx-tb-galerie .gfx-tb-schnell [data-a="schnellmehr"]{display:grid}
+}

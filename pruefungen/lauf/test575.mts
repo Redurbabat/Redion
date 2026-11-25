@@ -440,10 +440,10 @@ await pg.close();
 console.log('\n9 · Am Telefon');
 const { pg: handy, ids: ids2 } = await bauen(390, 844);
 const masse = await handy.evaluate(() =>
-  [...document.querySelectorAll<HTMLElement>('.pg-flaeche .gfx-tb-sockel [data-wz]')]
+  [...document.querySelectorAll<HTMLElement>('.pg-flaeche .gfx-tb-schnell button,.pg-flaeche .gfx-tb-karte button')]
     .filter(b => b.offsetParent !== null)
     .map(b => { const r = b.getBoundingClientRect();
-      return { id: b.dataset['wz'] ?? '?', w: Math.round(r.width), h: Math.round(r.height) }; }));
+      return { id: b.dataset['wz'] ?? b.dataset['a'] ?? '?', w: Math.round(r.width), h: Math.round(r.height) }; }));
 p('Die Fläche hat Werkzeuge am Telefon', masse.length >= 6, String(masse.length));
 p('Und jedes misst 44 px (§37)', masse.every(m => m.w >= 44 && m.h >= 44),
   masse.filter(m => m.w < 44 || m.h < 44).map(m => `${m.id} ${m.w}×${m.h}`).join(' · '));
@@ -534,7 +534,10 @@ const mittelpunkt = async (id: string) => {
   if (!r) throw Error('Form ohne sichtbaren Rahmen: ' + id);
   return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
 };
-const waehleWerkzeug = (id: string) => planFlaeche.locator(`[data-wz="${id}"]`).click();
+const waehleWerkzeug = async (id: string) => {
+  if (id === 'zeiger') await planFlaeche.getByRole('button', { name: 'Zeiger und Hand', exact: true }).press('Enter');
+  await planFlaeche.locator(`[data-wz="${id}"]`).click();
+};
 await waehleWerkzeug('verbindung');
 const ln = await mittelpunkt('links'), re = await mittelpunkt('rechts');
 await plan.mouse.click(ln.x, ln.y);
@@ -652,7 +655,7 @@ stand = await planDaten() ?? [];
 p('Beim Löschen einer Form verschwindet ihre Verbindung mit', !stand.some((s: any) => s.id === 'links' || s.art === 'verbindung'));
 console.log('\n13 · Werkzeuggalerie und Elektro');
 const st = planFlaeche.locator('.gfx-tb-kartenfenster');
-const zeiger = planFlaeche.getByRole('button', { name: 'Auswählen', exact: true });
+const zeiger = planFlaeche.getByRole('button', { name: 'Zeiger und Hand', exact: true });
 const zeigerVor = await zeiger.boundingBox();
 await planFlaeche.getByRole('button', { name: 'Weitere Werkzeuge', exact: true }).click();
 await st.evaluate(el => new Promise<void>(ok => {
@@ -661,6 +664,27 @@ await st.evaluate(el => new Promise<void>(ok => {
 }));
 p('Weiter blättert die grossen Vorschauen', await st.evaluate(el => el.scrollLeft > 1));
 gleich('Die Schnellwerkzeuge bleiben am selben Platz', (await zeiger.boundingBox())?.x, zeigerVor?.x);
+await zeiger.click();
+gleich('Der Zeiger wechselt mit einem Klick zur Hand', await planFlaeche.getAttribute('data-wz'), 'hand');
+await zeiger.click();
+gleich('Der nächste Klick wechselt zurück zur Auswahl', await planFlaeche.getAttribute('data-wz'), 'zeiger');
+await zeiger.press('Enter');
+p('Enter öffnet die beschrifteten Zeigermodi',
+  await planFlaeche.getByRole('button', { name: 'Hand', exact: true }).isVisible());
+await plan.keyboard.press('Escape');
+const rahmen = planFlaeche.getByRole('button', { name: 'Rahmen', exact: true });
+await rahmen.click();
+await planFlaeche.getByRole('button', { name: 'Rechteckrahmen zeichnen', exact: true }).click();
+gleich('Das Rahmenmenü aktiviert den Rechteckrahmen', await planFlaeche.getAttribute('data-wz'), 'rechteck');
+const linkKnopf = planFlaeche.getByRole('button', { name: 'Link', exact: true });
+await linkKnopf.click();
+await planFlaeche.getByRole('button', { name: 'Weblink einfügen', exact: true }).click();
+await plan.locator('#fq').fill('https://example.com/elektro');
+await plan.locator('#fq').press('Enter');
+await plan.waitForFunction((id: string) =>
+  Store.childrenOf(id).some((b: any) => b.type === 'bookmark' && !!b.flaecheOrt), planId);
+p('Ein Weblink liegt als Lesezeichen auf der Fläche', await plan.evaluate((id: string) =>
+  Store.childrenOf(id).some((b: any) => b.type === 'bookmark' && b.src === 'https://example.com/elektro' && !!b.flaecheOrt), planId));
 const formenKnopf = planFlaeche.getByRole('button', { name: 'Formen', exact: true });
 await formenKnopf.click();
 const formenMenue = planFlaeche.locator('.gfx-tb-menue');

@@ -1,63 +1,4 @@
-/* Suite 573 — Drei Ansichten einer Seite, umschaltbar oben (E690, A1)
- * ============================================================================
- * Redur, 26. September 2026, mit einem Bild von AFFiNEs Kopfzeile: „bei der
- * affine haben wir das es wechsel die ansichten und ich will dort auch die
- * beide und plus von unsere aktuelle stand also mit cover usw also dort
- * 3 bereiche" — und danach: „ich will die 2 von affine 1:1 haben auch alles
- * komplett wie es aussehn … und noch eine 3 für die aktuelle Redion".
- *
- * NACHGELESEN (doku/karte/thema-ansichten.md): AFFiNE hat genau ZWEI Modi,
- * `page` und `edgeless`, und es sind zwei Ansichten DESSELBEN Dokuments.
- * Redion bekommt dieselben zwei — und als dritte die eigene, die AFFiNE
- * nicht hat: Cover, Symbol, Werkzeugzeile, Dokumentmodus.
- *
- * WAS DIESER LAUF HÄLT
- *
- *   §1  Das Feld. Eine Seite trägt `ansicht` mit drei Werten. Wer das Feld
- *       NICHT hat, sieht genau das, was er immer gesehen hat — die Redion-
- *       Ansicht (§9: rückwärts denken, wie `raumVersion` in E686).
- *   §2  Der Umschalter steht OBEN, hat drei Knöpfe, und genau einer ist
- *       gedrückt (§38).
- *   §3  Ein Klick wechselt die Ansicht UND merkt sie an der Seite — wer die
- *       Seite wieder öffnet, ist da, wo er war.
- *   §4  „Redion" zeigt, was Redion heute zeigt: Cover-Knopf und
- *       Werkzeugzeile. Das ist die Ansicht, die es ohne diesen Bogen gibt.
- *   §5  „Seite" ist AFFiNEs schlanke: Symbol und Titel, aber KEIN Cover und
- *       KEINE Werkzeugzeile. Wer sie mit der Redion-Ansicht verwechselt,
- *       hat zwei Ansichten gebaut, die dasselbe zeigen.
- *   §6  „Fläche" ist die Leinwand: Punktraster, und der Seiteninhalt liegt
- *       darauf statt darunter.
- *   §7  KEINE Ansicht verliert Text. Derselbe Absatz ist in allen dreien
- *       zu finden — gemessen am Block, nicht am Bildschirm.
- *   §8  Am Telefon misst jeder Knopf des Umschalters 44 px (§37), und er
- *       steht nicht ausserhalb des Bildes.
- *
- * GEGEN DEN ALTEN STAND ist alles ab §1 rot: es gibt weder das Feld noch
- * den Umschalter.
- *
- * DREI NAMEN HAT DIESER LAUF UNTERWEGS GEÄNDERT, und jeder Grund steht hier,
- * damit niemand denkt, der Wächter sei dem Bau nachgezogen worden (§55.2).
- * Die ZUSAGEN sind dieselben geblieben; nur wie man sie erfragt, hat sich
- * geändert:
- *
- *   1. `Ansichten.ARTEN` → `Register.seitenansichten.ARTEN`. Der Name
- *      `Ansichten` ist seit Langem der Dienst der DATENBANK-Ansichten
- *      (`bereiche/datenbanken/ansichten/dienst.ts:13`, global :894), und
- *      `Register.ansichten` ist deren Katalog. Ein zweiter Katalog unter
- *      demselben Namen ist genau der Fall, vor dem §8 warnt.
- *   2. Das Feld `ansicht` → `seitenAnsicht`. `FORMEN.ansicht`
- *      (`kern/ablage/formen.ts:119`) ist die Form eines Eintrags im Fach
- *      `views`, und Datenbankblöcke tragen `aktiveView`. Ein drittes
- *      „ansicht" daneben wäre beim Lesen nicht zu unterscheiden (§53.6).
- *   3. `[data-ansicht]` mit `aria-pressed` → `[data-seg-wahl]` mit
- *      `aria-checked`. Drei sich ausschliessende Möglichkeiten sind eine
- *      RADIOGRUPPE, nicht drei Schalter — und Redion hat dafür seit E441-
- *      Umfeld ein bewachtes Bauteil (`schale/bedienung/segment.ts`,
- *      test425/427/429), das bis zu diesem Bogen an keiner Stelle benutzt
- *      war. Ein eigener Umschalter daneben wäre der vierte.
- *
- *   node pruefungen/alle.mts 573
- * ==========================================================================*/
+/* Suite 573 · Redion und Fläche, Umschalter und alte Ansichtsmerker. */
 import { chromium } from 'playwright';
 import http from 'node:http';
 import fs from 'node:fs';
@@ -90,7 +31,7 @@ await new Promise<void>(f => { server.listen(0, '127.0.0.1', () => f()); });
 const PORT = (server.address() as { port: number }).port;
 const browser = await chromium.launch();
 
-const TEXT = 'Derselbe Absatz in allen drei Ansichten';
+const TEXT = 'Derselbe Absatz in beiden Ansichten';
 const bauen = async (breite: number, hoehe: number) => {
   const pg = await browser.newPage({ viewport: { width: breite, height: hoehe } });
   await pg.goto(`http://127.0.0.1:${PORT}/index.html`);
@@ -134,8 +75,8 @@ p('Und ohne Feld sieht man die Redion-Ansicht — Cover-Knopf da',
   await pg.evaluate(() => !!document.querySelector('.pg-tools [data-a="cover"]')));
 const werte = await pg.evaluate(() => (window as any).Register?.seitenansichten?.ARTEN ?? null);
 p('Es gibt einen Katalog der Ansichten (`Register.seitenansichten.ARTEN`)', Array.isArray(werte), JSON.stringify(werte));
-gleich('Und er kennt genau drei: Seite, Fläche, Redion',
-  Array.isArray(werte) ? werte.map((a: any) => a.id).sort() : werte, ['flaeche', 'redion', 'seite']);
+gleich('Und er kennt genau Redion und Fläche',
+  Array.isArray(werte) ? werte.map((a: any) => a.id).sort() : werte, ['flaeche', 'redion']);
 
 /* ==========================================================================
  * §2 · Der Umschalter steht oben (§38)
@@ -157,7 +98,7 @@ const schalter = await pg.evaluate(() => {
   };
 });
 p('Es gibt einen Umschalter `.pg-ansichten`', schalter.da === true);
-gleich('Mit drei Knöpfen', (schalter.knoepfe ?? []).slice().sort(), ['flaeche', 'redion', 'seite']);
+gleich('Mit genau Redion und Fläche', schalter.knoepfe ?? [], ['redion', 'flaeche']);
 gleich('Genau einer ist gedrückt (§38)', (schalter.gedrueckt ?? []).length, 1);
 p('Jeder sagt einem Vorleser, was er ist (§38)', schalter.ohneNamen === 0, `${schalter.ohneNamen} stumm`);
 p('Er steht OBEN, nicht mitten auf der Seite', schalter.oben === true, schalter.lage ?? '');
@@ -166,46 +107,27 @@ p('Er steht OBEN, nicht mitten auf der Seite', schalter.oben === true, schalter.
  * §3 · Umschalten wechselt UND merkt
  * ======================================================================== */
 console.log('\n3 · Umschalten und merken');
-await pg.click('.pg-ansichten [data-seg-wahl="seite"]');
+await pg.click('.pg-ansichten [data-seg-wahl="flaeche"]');
 await pg.waitForTimeout(400);
-gleich('Nach dem Klick steht „seite" an der Seite', (await seite()).seitenAnsicht, 'seite');
+gleich('Nach dem Klick steht „flaeche“ an der Seite', (await seite()).seitenAnsicht, 'flaeche');
 p('Und der Knopf ist gedrückt',
-  await pg.evaluate(() => document.querySelector('.pg-ansichten [data-seg-wahl="seite"]')?.getAttribute('aria-checked') === 'true'));
+  await pg.evaluate(() => document.querySelector('.pg-ansichten [data-seg-wahl="flaeche"]')?.getAttribute('aria-checked') === 'true'));
 /* Neu öffnen: die Ansicht muss bleiben, sonst ist sie nur eine Laune. */
 await pg.evaluate((id: string) => { App.oeffne(id); }, ids.seite);
 await pg.waitForTimeout(500);
 p('Wer die Seite wieder öffnet, ist da, wo er war',
-  await pg.evaluate(() => document.querySelector('.pg-ansichten [data-seg-wahl="seite"]')?.getAttribute('aria-checked') === 'true'));
+  await pg.evaluate(() => document.querySelector('.pg-ansichten [data-seg-wahl="flaeche"]')?.getAttribute('aria-checked') === 'true'));
 
-/* ==========================================================================
- * §5 · „Seite" ist die schlanke (AFFiNEs page)
- * --------------------------------------------------------------------------
- * AFFiNE zeigt dort Symbol und Titel, sonst nichts: kein Cover (das gibt es
- * dort gar nicht) und keine Werkzeugzeile.
- * ======================================================================== */
-console.log('\n5 · Die Ansicht „Seite"');
-/* DER TITEL HEISST HIER `#title`, NICHT `.pg-title`. Der erste Anlauf dieses
-   Abschnitts suchte nach AFFiNEs Namen und war gegen einen richtig gebauten
-   Stand rot — ein Wächter, der nach einem Wähler sucht, den es im Produkt
-   nicht gibt, misst nichts (L206). Nachgesehen in `kopfleiste.ts:236-238`:
-   `<div id="title" role="heading" aria-level="1" contenteditable>`. Geprüft
-   wird deshalb der echte Wähler UND dass der Titel der Seite darin steht —
-   ein leeres Feld wäre auch „ein Titel". */
-const alsSeite = await pg.evaluate(() => ({
-  titel: (() => {
-    const t = document.querySelector<HTMLElement>('#title[role="heading"]');
-    return !!t && (t.textContent ?? '').includes('Drei Ansichten');
-  })(),
-  cover: !!document.querySelector('.pg-tools [data-a="cover"]'),
-  werkzeugzeile: !!document.querySelector('.pg-tools'),
-  raster: !!document.querySelector('.pg-flaeche'),
-  text: (document.querySelector('#page')?.textContent ?? '')
-}));
-p('Sie zeigt den Titel der Seite (`#title`, §38 mit `role=heading`)', alsSeite.titel === true);
-p('Aber KEINE Werkzeugzeile', alsSeite.werkzeugzeile === false);
-p('Und keinen Cover-Knopf', alsSeite.cover === false);
-p('Und kein Flächenraster', alsSeite.raster === false);
-p('Der Absatz steht da', alsSeite.text.includes(TEXT));
+console.log('\n5 · Kompatibilität');
+await pg.evaluate((id: string) => {
+  Store.updateBlock(id, { seitenAnsicht: 'seite' });
+  App.zeichneSeite();
+}, ids.seite);
+p('Eine alte schlanke Seite öffnet sich als Redion',
+  await pg.evaluate(() =>
+    !!document.querySelector('.pg-tools [data-a="cover"]') &&
+    document.querySelector('.pg-ansichten [data-seg-wahl="redion"]')?.getAttribute('aria-checked') === 'true'));
+gleich('Der alte Merker bleibt beim Öffnen erhalten', (await seite()).seitenAnsicht, 'seite');
 
 /* ==========================================================================
  * §6 · „Fläche" ist die Leinwand (AFFiNEs edgeless)
@@ -257,7 +179,7 @@ p('Der Absatz steht da', alsRedion.text.includes(TEXT));
 console.log('\n7 · Kein Text geht verloren');
 const nachAllem = await pg.evaluate((id: string) =>
   JSON.parse(JSON.stringify(Store.getBlock(id))), ids.block);
-gleich('Der Absatz steht nach drei Wechseln unverändert im Speicher', nachAllem.text, TEXT);
+gleich('Der Absatz steht nach den Ansichtswechseln unverändert im Speicher', nachAllem.text, TEXT);
 p('Und er lebt noch', nachAllem.alive !== false, String(nachAllem.alive));
 await pg.close();
 
@@ -277,7 +199,7 @@ const klein = await handy.evaluate(() => {
       return r.right > innerWidth + 1 || r.left < -1; }).length
   };
 });
-gleich('Auch am Telefon drei Knöpfe', klein.anzahl, 3);
+gleich('Auch am Telefon zwei Knöpfe', klein.anzahl, 2);
 p('Jeder misst 44 px (gerenderte Box, §37)', klein.zuKlein.length === 0,
   klein.zuKlein.map(m => `${m.id} ${m.w}×${m.h}`).join(' · '));
 p('Und keiner steht ausserhalb des Bildes', klein.raus === 0, `${klein.raus} draussen`);
