@@ -1,5 +1,5 @@
 /*
- * iPhone document-card actions and library filters use UIKit action sheets.
+ * iPhone document-card actions, library filters and learning menus use UIKit action sheets.
  * The existing Redion menu is the sole source of available actions,
  * permissions, confirmation dialogs and actual execution.
  */
@@ -17,7 +17,19 @@ private final class RedionNativeLibraryActions: NSObject, WKScriptMessageHandler
         let instance = shared
         NotificationCenter.default.addObserver(instance, selector: #selector(activate),
             name: UIScene.didActivateNotification, object: nil)
+        NotificationCenter.default.addObserver(instance, selector: #selector(deactivate(_:)),
+            name: UIScene.willDeactivateNotification, object: nil)
         instance.activate()
+    }
+
+    @objc private func deactivate(_ notification: Notification) {
+        guard let sheet = activeSheet,
+              let scene = notification.object as? UIScene,
+              installedWebView?.window?.windowScene === scene else { return }
+        // Do not keep private document names or pending actions onscreen
+        // while switching apps or locking the device.
+        cancelActive?()
+        sheet.dismiss(animated: false)
     }
 
     @objc private func activate() {
@@ -120,7 +132,7 @@ private final class RedionNativeLibraryActions: NSObject, WKScriptMessageHandler
       if (window.__redionLibraryActionsInstalled) return;
       window.__redionLibraryActionsInstalled = true;
       let busy = false;
-      const selector = '.bib-deckel-mehr[data-mehr-id], .bib [data-orte], .bib [data-art-wahl], .bib [data-form-wahl]';
+      const selector = '.bib-deckel-mehr[data-mehr-id], .bib [data-orte], .bib [data-art-wahl], .bib [data-form-wahl], .lernwelt button[data-lw-klappe]';
       const filterTitles = [['data-orte','Ort'],['data-art-wahl','Art'],['data-form-wahl','Darstellung']];
       // Mobile Menue.menu() returns a .blatt before applying desktop role=menu.
       const menuSelector = '.menu.blatt, .menu[role="menu"]';
@@ -130,7 +142,14 @@ private final class RedionNativeLibraryActions: NSObject, WKScriptMessageHandler
             document.hidden || document.getElementById('sperrschirm')) return;
         const anchor = event.target?.closest?.(selector);
         if (!anchor || anchor.disabled || anchor.getAttribute('aria-disabled') === 'true') return;
-        const filterTitle = filterTitles.find(([attribute]) => anchor.getAttribute(attribute) !== null)?.[1];
+        const learningKey = anchor.getAttribute('data-lw-klappe');
+        const learningLabel = anchor.getAttribute('aria-label') || '';
+        const learningPrefix = 'Weitere Ansichten: ';
+        const learningTitle = learningKey === 'faecher' ? 'Fächer'
+          : learningKey && learningLabel.startsWith(learningPrefix)
+            ? learningLabel.slice(learningPrefix.length).trim() : '';
+        if (learningKey !== null && !learningTitle) return;
+        const filterTitle = learningTitle || filterTitles.find(([attribute]) => anchor.getAttribute(attribute) !== null)?.[1];
         const handler = window.webkit?.messageHandlers?.redionLibraryActions;
         if (!handler) return;
         const previous = document.querySelector(menuSelector);
@@ -161,7 +180,7 @@ private final class RedionNativeLibraryActions: NSObject, WKScriptMessageHandler
             // Keep the active option and its group visible in a flat UIKit
             // action sheet. The action ID and state remain in Redion.
             if (filterTitle && name) {
-              if (filterTitle === 'Ort') {
+              if (filterTitle === 'Ort' || learningTitle) {
                 const group = b.closest('[role="group"]');
                 const groupID = group?.getAttribute('aria-labelledby');
                 const groupName = groupID ? document.getElementById(groupID)?.textContent?.trim() : '';

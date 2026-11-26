@@ -296,3 +296,57 @@ test('native library filters preserve active options, groups and existing select
     }
   }
 });
+
+test('learning action sheets reuse subject and view selection, including multiple checked groups', async () => {
+  const source=fs.readFileSync(new URL('./native-library-actions.swift',import.meta.url),'utf8');
+  const bridge=source.match(/private static let bridge = #"""([\s\S]*?)"""#/)[1];
+  assert.match(source,/UIScene\.willDeactivateNotification/);
+  assert.match(source,/cancelActive\?\(\)\s*sheet\.dismiss\(animated: false\)/);
+  for (const [key,label,title] of [
+    ['faecher','Fach wählen: Alle Fächer','Fächer'],
+    ['heute','Weitere Ansichten: Heute','Heute'],
+    ['lernen','Weitere Ansichten: Lernen','Lernen'],
+    ['schule','Weitere Ansichten: Schule','Schule']
+  ]) {
+    for (const mode of ['select','cancel','invalid','disabled']) {
+      let listener, callback, menu=null, posted=0, clicked=0, cancelled=0;
+      const attrs=new Map([['data-lw-klappe',key],['aria-label',label],['aria-expanded','true']]);
+      const anchor={isConnected:true,disabled:false,getAttribute:k=>attrs.get(k)??null};
+      const button=(name,active,group)=>({
+        isConnected:true,disabled:false,hidden:false,getAttribute:k=>k==='aria-checked'?String(active):null,
+        getClientRects:()=>[1],hasAttribute:()=>false,classList:{contains:()=>false},
+        closest:()=>group?{getAttribute:()=>group}:null,
+        cloneNode:()=>({querySelectorAll:()=>[],textContent:name}),click(){clicked++;}
+      });
+      const buttons=[button('Alle',true,null),button('Schule',true,'bereich'),button('Arbeit',false,'bereich')];
+      const sheetAttrs=new Map([['aria-label',title]]);
+      const sheet={isConnected:true,style:{visibility:''},classList:{contains:k=>k==='blatt'},
+        getAttribute:k=>sheetAttrs.get(k)??null,setAttribute:(k,v)=>sheetAttrs.set(k,v),removeAttribute:k=>sheetAttrs.delete(k),
+        querySelector:k=>k==='.blatt-titel'?{textContent:mode==='invalid'?'Fremd':title}:null,
+        querySelectorAll:k=>{assert.equal(k,'button[data-wahl][role="menuitemradio"]');return buttons;}};
+      const document={hidden:false,getElementById:k=>k==='bereich'?{textContent:'Lebensbereich'}:null,
+        addEventListener:(name,fn)=>{if(name==='click')listener=fn;},
+        querySelector:k=>k.includes('.menu.blatt')?menu:null,dispatchEvent:()=>{cancelled++;}};
+      const window={webkit:{messageHandlers:{redionLibraryActions:{async postMessage(payload){
+        posted++;
+        assert.equal(payload.title,title);
+        assert.equal(payload.rows[0].title,'✓ Alle');
+        assert.equal(payload.rows[1].title,'✓ Lebensbereich: Schule');
+        assert.equal(payload.rows[2].title,'Lebensbereich: Arbeit');
+        if(mode==='disabled')buttons[2].disabled=true;
+        return mode==='cancel'?-1:2;
+      }}}}};
+      vm.runInNewContext(bridge,{document,window,setTimeout:fn=>{callback=fn;},KeyboardEvent:class {}});
+      listener({isTrusted:true,detail:1,target:{closest:selector=>{
+        assert.ok(selector.includes('.lernwelt button[data-lw-klappe]'));
+        return anchor;
+      }}});
+      menu=sheet;
+      await callback();
+      assert.equal(posted,mode==='invalid'?0:1);
+      assert.equal(clicked,mode==='select'?1:0);
+      assert.equal(cancelled,['cancel','disabled'].includes(mode)?1:0);
+      assert.equal(sheet.style.visibility,'');
+    }
+  }
+});
