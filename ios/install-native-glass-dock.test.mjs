@@ -251,3 +251,48 @@ test('native library bridge supports mobile sheet without desktop role and safel
     assert.equal(backdrop.getAttribute('aria-hidden'),'true');
   }
 });
+
+test('native library filters preserve active options, groups and existing selection handlers', async () => {
+  const source=fs.readFileSync(new URL('./native-library-actions.swift',import.meta.url),'utf8');
+  const bridge=source.match(/private static let bridge = #"""([\s\S]*?)"""#/)[1];
+  for (const [attr,title] of [['data-orte','Ort'],['data-art-wahl','Art'],['data-form-wahl','Darstellung']]) {
+    for (const mode of ['select','cancel','stale','wrong-title','too-many']) {
+      let listener,callback,menu=null,posted=0,clicked=0,cancelled=0,selector='';
+      const anchorAttrs=new Map([[attr,''],['aria-expanded','true']]);
+      const anchor={isConnected:true,disabled:false,getAttribute:k=>anchorAttrs.get(k)??null};
+      const button=(active,name)=>({isConnected:true,disabled:false,hidden:false,
+        getAttribute:k=>k==='aria-checked'?String(active):null,
+        getClientRects:()=>[1],hasAttribute:()=>false,classList:{contains:()=>false},
+        closest:()=>({getAttribute:()=> 'group-name'}),
+        cloneNode:()=>({querySelectorAll:()=>[],textContent:name}),click(){clicked++;}});
+      const buttons=[button(true,'Alle'),button(false,'Andere')];
+      const attrs=new Map([['aria-label',title]]);
+      const sheet={isConnected:true,style:{visibility:''},classList:{contains:k=>k==='blatt'},
+        getAttribute:k=>attrs.get(k)??null,setAttribute:(k,v)=>attrs.set(k,v),removeAttribute:k=>attrs.delete(k),
+        querySelector:k=>k==='.blatt-titel'?{textContent:mode==='wrong-title'?'Fremd':title}:null,
+        querySelectorAll:k=>{selector=k;return mode==='too-many'?Array(25).fill(buttons[0]):buttons;}};
+      const document={hidden:false,getElementById:k=>k==='group-name'?{textContent:'Orte'}:null,
+        addEventListener:(name,fn)=>{if(name==='click')listener=fn;},
+        querySelector:k=>k.includes('.menu.blatt')?menu:null,dispatchEvent:()=>{cancelled++;}};
+      const window={webkit:{messageHandlers:{redionLibraryActions:{async postMessage(payload){
+        posted++;
+        assert.equal(payload.title,title);
+        assert.equal(payload.rows[0].title,attr==='data-orte'?'✓ Orte: Alle':'✓ Alle');
+        assert.equal(payload.rows[1].title,attr==='data-orte'?'Orte: Andere':'Andere');
+        assert.ok(payload.rows.every(row=>row.destructive===false));
+        if(mode==='stale')menu={};
+        return mode==='cancel'?-1:1;
+      }}}}};
+      vm.runInNewContext(bridge,{document,window,setTimeout:fn=>{callback=fn;},KeyboardEvent:class {}});
+      listener({isTrusted:true,detail:1,target:{closest:()=>anchor}});
+      menu=sheet;
+      await callback();
+      const fallback=['wrong-title','too-many'].includes(mode);
+      assert.equal(posted,fallback?0:1);
+      if(mode!=='wrong-title')assert.equal(selector,'button[data-wahl][role="menuitemradio"]');
+      assert.equal(clicked,mode==='select'?1:0);
+      assert.equal(cancelled,mode==='cancel'?1:0);
+      assert.equal(sheet.style.visibility,'');
+    }
+  }
+});

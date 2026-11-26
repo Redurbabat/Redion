@@ -1,5 +1,5 @@
 /*
- * iPhone document-card actions: UIKit presents the system action sheet.
+ * iPhone document-card actions and library filters use UIKit action sheets.
  * The existing Redion menu is the sole source of available actions,
  * permissions, confirmation dialogs and actual execution.
  */
@@ -120,7 +120,8 @@ private final class RedionNativeLibraryActions: NSObject, WKScriptMessageHandler
       if (window.__redionLibraryActionsInstalled) return;
       window.__redionLibraryActionsInstalled = true;
       let busy = false;
-      const selector = '.bib-deckel-mehr[data-mehr-id]';
+      const selector = '.bib-deckel-mehr[data-mehr-id], .bib [data-orte], .bib [data-art-wahl], .bib [data-form-wahl]';
+      const filterTitles = [['data-orte','Ort'],['data-art-wahl','Art'],['data-form-wahl','Darstellung']];
       // Mobile Menue.menu() returns a .blatt before applying desktop role=menu.
       const menuSelector = '.menu.blatt, .menu[role="menu"]';
       document.addEventListener('click', event => {
@@ -129,6 +130,7 @@ private final class RedionNativeLibraryActions: NSObject, WKScriptMessageHandler
             document.hidden || document.getElementById('sperrschirm')) return;
         const anchor = event.target?.closest?.(selector);
         if (!anchor || anchor.disabled || anchor.getAttribute('aria-disabled') === 'true') return;
+        const filterTitle = filterTitles.find(([attribute]) => anchor.getAttribute(attribute) !== null)?.[1];
         const handler = window.webkit?.messageHandlers?.redionLibraryActions;
         if (!handler) return;
         const previous = document.querySelector(menuSelector);
@@ -144,20 +146,34 @@ private final class RedionNativeLibraryActions: NSObject, WKScriptMessageHandler
           // leave the DOM menu alone rather than forwarding a stale action.
           const cardLabel = anchor.getAttribute('aria-label') || '';
           const label = menu.getAttribute('aria-label') || '';
-          if (menu.classList.contains('blatt')) {
-            const heading = (menu.querySelector('.blatt-titel')?.textContent || '').trim();
+          const heading = (menu.querySelector('.blatt-titel')?.textContent || '').trim();
+          if (filterTitle) {
+            if ((heading || label) !== filterTitle) return;
+          } else if (menu.classList.contains('blatt')) {
             if (!heading || cardLabel !== 'Aktionen für „' + heading + '“') return;
           } else if (label !== cardLabel.slice(0,120)) return;
-          const buttons = [...menu.querySelectorAll('button[data-a]')]
+          const buttons = [...menu.querySelectorAll(filterTitle ? 'button[data-wahl][role="menuitemradio"]' : 'button[data-a]')]
             .filter(b => !b.disabled && !b.hidden && b.getAttribute('aria-disabled') !== 'true' && b.getClientRects().length);
           const rows = buttons.map(b => {
             const clone = b.cloneNode(true);
             clone.querySelectorAll('.mi,.ms').forEach(n => n.remove());
-            return {title: (clone.textContent || '').trim().slice(0,120),
-                    destructive: b.hasAttribute('data-gefahr') || b.classList.contains('rot')};
+            let name = (clone.textContent || '').trim();
+            // Keep the active option and its group visible in a flat UIKit
+            // action sheet. The action ID and state remain in Redion.
+            if (filterTitle && name) {
+              if (filterTitle === 'Ort') {
+                const group = b.closest('[role="group"]');
+                const groupID = group?.getAttribute('aria-labelledby');
+                const groupName = groupID ? document.getElementById(groupID)?.textContent?.trim() : '';
+                if (groupName) name = groupName + ': ' + name;
+              }
+              if (b.getAttribute('aria-checked') === 'true') name = '✓ ' + name;
+            }
+            return {title: name.slice(0,120),
+                    destructive: !filterTitle && (b.hasAttribute('data-gefahr') || b.classList.contains('rot'))};
           });
           if (!rows.length || rows.length > 24 || rows.some(r => !r.title)) return;
-          const title = (menu.querySelector('.blatt-titel')?.textContent || anchor.getAttribute('aria-label') || 'Aktionen').trim().slice(0,120);
+          const title = (filterTitle || heading || anchor.getAttribute('aria-label') || 'Aktionen').trim().slice(0,120);
           const backdrop = document.querySelector('.menu-grund');
           const hidden = [menu, backdrop].filter(Boolean).map(el => [el, el.style.visibility, el.getAttribute('aria-hidden')]);
           const restore = () => hidden.forEach(([el, visibility, aria]) => {
@@ -170,8 +186,9 @@ private final class RedionNativeLibraryActions: NSObject, WKScriptMessageHandler
           try {
             const selected = await handler.postMessage({title,rows});
             restore();
-            if (!menu.isConnected) return;
-            if (!document.hidden && !document.getElementById('sperrschirm') &&
+            if (!menu.isConnected || document.querySelector(menuSelector) !== menu) return;
+            if (anchor.isConnected && anchor.getAttribute('aria-expanded') === 'true' &&
+                !document.hidden && !document.getElementById('sperrschirm') &&
                 Number.isInteger(selected) && selected >= 0 && selected < buttons.length &&
                 buttons[selected].isConnected && !buttons[selected].disabled &&
                 buttons[selected].getAttribute('aria-disabled') !== 'true') {
