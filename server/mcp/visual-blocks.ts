@@ -29,3 +29,52 @@ export function board(input:unknown,existing:Obj[]=[]):Obj[]{
  return added;
 }
 export function sheet(paper:unknown,pages:unknown=1):Obj{const n=num(pages,1,10);if(!Number.isInteger(n))fail('Ganze Seitenzahl erforderlich.');return {papier:choice(paper??'blanko',papers),blattBreite:595.28,blattHoehe:841.89*n,raumVersion:1};}
+
+/** Patch only named objects; unrelated native fields and objects survive. */
+export function editNode(value:unknown,operation:string,args:Obj):Obj{
+ if(!value||typeof value!=='object'||Array.isArray(value))return fail('Mindmap fehlt.');
+ const map=value as Obj;
+ if(!Array.isArray(map.knoten)||!Array.isArray(map.verbindungen))return fail('Ungültige Mindmap.');
+ const nodes=map.knoten as Obj[],links=map.verbindungen as Obj[];
+ if(nodes.length>100||links.length>100||nodes.some(n=>!n||typeof n!=='object')||links.some(n=>!n||typeof n!=='object'))return fail('Mindmap zu gross oder ungültig.');
+ const target=id(args.elementId),n=nodes.find(k=>k.id===target);
+ if(!n)return fail('Knoten fehlt.');
+ if(operation==='rename_node')return {...map,knoten:nodes.map(k=>k===n?{...k,text:str(args.text,500)}:k)};
+ if(operation==='style_node'){
+   const patch:Obj={};
+   if(args.color!==undefined)patch.farbe=color(args.color);
+   if(args.form!==undefined)patch.form=choice(args.form,forms);
+   if(args.collapsed!==undefined){if(typeof args.collapsed!=='boolean')fail('Ungültiger Zustand.');patch.zu=args.collapsed;}
+   if(!Object.keys(patch).length)fail('Keine Änderung.');
+   return {...map,knoten:nodes.map(k=>k===n?{...k,...patch}:k)};
+ }
+ if(operation==='delete_branch'){
+   if(n.eltern===null)fail('Die Wurzel darf nicht gelöscht werden.');
+   const removed=new Set<unknown>([target]);
+   for(let i=0;i<nodes.length;i++)for(const k of nodes)if(removed.has(k.eltern))removed.add(k.id);
+   return {...map,knoten:nodes.filter(k=>!removed.has(k.id)),verbindungen:links.filter(l=>!removed.has(l.von)&&!removed.has(l.zu))};
+ }
+ return fail('Unbekannte Knotenoperation.');
+}
+export function editShape(value:unknown,operation:string,args:Obj):Obj[]{
+ if(!Array.isArray(value)||value.length>200||value.some(s=>!s||typeof s!=='object'||Array.isArray(s)))return fail('Ungültige Formen.');
+ const all=value as Obj[],target=id(args.elementId),s=all.find(o=>o.id===target);
+ if(!s)return fail('Form fehlt.');
+ if(s.locked===true||s.groupId||Array.isArray(s.groupPath)&&s.groupPath.length)return fail('Gesperrte oder gruppierte Formen im nativen Editor bearbeiten.');
+ if(operation==='delete_shape')return all.filter(o=>o!==s&&!(o.art==='verbindung'&&(o.von===target||o.nach===target)));
+ if(!['rechteck','ellipse','dreieck','raute','linie','pfeil','text','notiz'].includes(String(s.art)))return fail('Diese Form benötigt eine spezielle Bearbeitung.');
+ const patch:Obj={};
+ if(operation==='move_shape'){patch.x=num(args.x,-10000,10000);patch.y=num(args.y,-10000,10000);}
+ else if(operation==='resize_shape'){
+   if(s.art==='text')return fail('Text hat keine feste Grösse.');
+   const min=s.art==='linie'||s.art==='pfeil'?-10000:1;
+   patch.w=num(args.width,min,10000);patch.h=num(args.height,min,10000);
+   if(patch.w===0&&patch.h===0)fail('Leere Linie.');
+ }else if(operation==='style_shape'){
+   if(args.color!==undefined)patch.farbe=color(args.color);
+   if(args.filled!==undefined){if(typeof args.filled!=='boolean')fail('Ungültige Füllung.');patch.gefuellt=args.filled;}
+   if(args.text!==undefined){if(!['text','notiz','rechteck','ellipse','dreieck','raute'].includes(String(s.art)))fail('Text nicht unterstützt.');patch.text=str(args.text,1000);}
+   if(!Object.keys(patch).length)fail('Keine Änderung.');
+ }else return fail('Unbekannte Formoperation.');
+ return all.map(o=>o===s?{...o,...patch}:o);
+}

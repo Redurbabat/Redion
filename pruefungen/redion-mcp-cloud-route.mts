@@ -159,7 +159,7 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       const transport=new StreamableHTTPClientTransport(new URL(origin+'/mcp/cloud'),{authProvider:provider,fetch:fetcher});
       await client.connect(transport);
       assert.equal(transport.sessionId,undefined);
-      const list=await client.listTools();assert.equal(list.tools.length,15);
+      const list=await client.listTools();assert.equal(list.tools.length,16);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
       assert.equal(JSON.parse(result.content[0]!.text).markdown,'Nur Testdaten');
        assert.equal((result.structuredContent as any)?.markdown,'Nur Testdaten');
@@ -2174,8 +2174,20 @@ test('Cloud-MCP native visual objects with version protection',async()=>{
  const read=await ok('redion_read_visual',ref);assert.equal(read.type,'mindmap');assert.equal(read.karte.knoten[1].eltern,'root');
  assert.equal((await ok('redion_update_visual',{...ref,expectedVersion:1,operation:'replace_mindmap',nodes:[...base.nodes,{id:'docs',text:'Dokumente',parentId:'root'}]})).version,2);
  assert.equal((await run('redion_update_visual',{...ref,expectedVersion:1,operation:'replace_mindmap',nodes:base.nodes})).isError,true);
+ assert.equal((await ok('redion_update_visual',{...ref,expectedVersion:2,operation:'rename_node',elementId:'learn',text:'Lernzentrum'})).version,3);
+ assert.equal((await ok('redion_update_visual',{...ref,expectedVersion:3,operation:'style_node',elementId:'learn',color:'#ff0000',form:'pille'})).version,4);
+ assert.equal((await run('redion_update_visual',{...ref,expectedVersion:4,operation:'delete_branch',elementId:'root'})).isError,true);
+ await ok('redion_update_visual',{...ref,expectedVersion:4,operation:'delete_branch',elementId:'docs'});
+ const edited=await ok('redion_read_visual',ref);assert.equal(edited.karte.knoten.length,2);assert.equal(edited.karte.knoten[1].text,'Lernzentrum');assert.equal(edited.karte.knoten[1].farbe,'#ff0000');
  const wb=await ok('redion_create_whiteboard',{workspaceId:'ws_test',documentId:'visual_page',expectedVersion:2,requestId:'native_board_001',title:'Board',shapes:[{id:'n',kind:'notiz',x:20,y:20,width:180,height:90,text:'Idee'}]});
  assert.equal((await ok('redion_read_visual',{workspaceId:'ws_test',blockId:wb.blockId})).shapes[0].art,'notiz');
+ const bref={workspaceId:'ws_test',blockId:wb.blockId};
+ await ok('redion_update_visual',{...bref,expectedVersion:1,operation:'move_shape',elementId:'n',x:50,y:70});
+ await ok('redion_update_visual',{...bref,expectedVersion:2,operation:'resize_shape',elementId:'n',width:220,height:110});
+ await ok('redion_update_visual',{...bref,expectedVersion:3,operation:'style_shape',elementId:'n',text:'Neue Idee',color:'#ff0000'});
+ const bEdit=await ok('redion_read_visual',bref);assert.equal(bEdit.shapes[0].x,50);assert.equal(bEdit.shapes[0].w,220);assert.equal(bEdit.shapes[0].text,'Neue Idee');
+ await ok('redion_update_visual',{...bref,expectedVersion:4,operation:'delete_shape',elementId:'n'});
+ assert.equal((await ok('redion_read_visual',bref)).shapes.length,0);
  const sheet=await ok('redion_create_sheet',{workspaceId:'ws_test',documentId:'visual_page',expectedVersion:3,requestId:'native_sheet_001',title:'A4',paper:'kariert',pages:2});
  assert.equal((await ok('redion_read_visual',{workspaceId:'ws_test',blockId:sheet.blockId})).blattHoehe,1683.78);
  }finally{f.close();}

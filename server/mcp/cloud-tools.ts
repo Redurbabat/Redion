@@ -10,7 +10,7 @@ import {BUILTIN_BLOCK_TYPES} from './block-catalog.ts';
 import {BUILTIN_SYMBOLS} from './symbol-catalog.ts';
 import {editSchematic} from './schematic-edit.ts';
 import {buildLearningCard,buildLearningSet} from './learning-card.ts';
-import {mindmap,board,sheet,papers,forms,shapes} from './visual-blocks.ts';
+import {mindmap,board,sheet,papers,forms,shapes,editNode,editShape} from './visual-blocks.ts';
 
 type Db=McpDatabase;
 type Args=Record<string,unknown>;
@@ -54,8 +54,8 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{...vCreate,paper:{type:'string',enum:papers},pages:{type:'integer',minimum:1,maximum:10}},required:vRequired,additionalProperties:false}},
   {name:'redion_read_visual',description:'Liest ein eingebettetes Mindmap-, Whiteboard- oder A4-Objekt mit Version.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField},required:['workspaceId','blockId'],additionalProperties:false}},
-  {name:'redion_update_visual',description:'Ersetzt den gesamten Mindmap-Baum (replace_mindmap), ergänzt Whiteboard-Formen (append_shapes) oder ändert Papier (set_paper), mit Versionsprüfung.',
-    inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},operation:{type:'string',enum:['replace_mindmap','append_shapes','set_paper']},nodes:vNodes,connections:vLinks,shapes:vShapes,paper:{type:'string',enum:papers}},required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
+  {name:'redion_update_visual',description:'Bearbeitet native Zeichenobjekte mit Versionsprüfung: Mindmap ersetzen, Knoten umbenennen, gestalten oder Ast löschen; Whiteboard-Formen ergänzen, verschieben, skalieren, gestalten oder löschen; A4-Papier ändern. elementId bezeichnet einen vorhandenen Knoten oder eine Form.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},operation:{type:'string',enum:['replace_mindmap','rename_node','style_node','delete_branch','append_shapes','move_shape','resize_shape','style_shape','delete_shape','set_paper']},nodes:vNodes,connections:vLinks,shapes:vShapes,paper:{type:'string',enum:papers},elementId:vId,text:{type:'string',maxLength:1000},color:vColor,form:{type:'string',enum:forms},collapsed:{type:'boolean'},filled:{type:'boolean'},x:vCoord,y:vCoord,width:vCoord,height:vCoord},required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
 
   {name:'redion_list_workspaces',description:'Zeigt nur die für diese KI-Verbindung freigegebenen Bereiche.',
     inputSchema:{type:'object',properties:{},additionalProperties:false}},
@@ -952,10 +952,12 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       }
       if(expected(args.expectedVersion)!==version)return err('conflict','Zeichenobjekt wurde geändert.');
       const op=args.operation,next={...data};
-      const fields:Record<string,string[]>={replace_mindmap:['nodes','connections'],append_shapes:['shapes'],set_paper:['paper']};
+      const fields:Record<string,string[]>={replace_mindmap:['nodes','connections'],rename_node:['elementId','text'],style_node:['elementId','color','form','collapsed'],delete_branch:['elementId'],append_shapes:['shapes'],move_shape:['elementId','x','y'],resize_shape:['elementId','width','height'],style_shape:['elementId','color','filled','text'],delete_shape:['elementId'],set_paper:['paper']};
       if(typeof op!=='string'||!fields[op]||Object.keys(args).some(k=>!['workspaceId','blockId','expectedVersion','operation',...fields[op]!].includes(k)))return err('invalid_arguments','Ungültige Operation.');
       try{
         if(type==='mindmap'&&op==='replace_mindmap')next.karte=mindmap(args.nodes,args.connections);
+        else if(type==='mindmap'&&['rename_node','style_node','delete_branch'].includes(op))next.karte=editNode(data.karte,op,args);
+        else if(type==='whiteboard'&&['move_shape','resize_shape','style_shape','delete_shape'].includes(op)){next.shapes=editShape(data.shapes,op,args);next.raumVersion=1;}
         else if(type==='whiteboard'&&op==='append_shapes'){
           const existing=data.shapes??[];if(!Array.isArray(existing)||existing.some(s=>!s||typeof s!=='object'||Array.isArray(s)))return err('invalid_data','Ungültige Formen.');
           next.shapes=[...existing,...board(args.shapes,existing)];next.raumVersion=1;
