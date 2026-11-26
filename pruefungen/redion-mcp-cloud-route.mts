@@ -2214,7 +2214,15 @@ test('Cloud-MCP native visual objects with version protection',async()=>{
  assert.equal((await ok('redion_read_visual',bref)).shapes.length,0);
  await ok('redion_update_visual',{...bref,expectedVersion:5,operation:'append_shapes',shapes:[{id:'ink',kind:'stift',points:[[10,20],[30,40],[50,60]],pressure:[0.4,0.8,0.5],strokeWidth:3,marker:true},{id:'rect',kind:'rechteck',x:20,y:20,width:100,height:80}]});
  const ink=await ok('redion_read_visual',bref);assert.deepEqual(ink.shapes[0].pts,[[10,20],[30,40],[50,60]]);assert.equal(ink.shapes[0].strichBreite,3);
+ const firstShape=await ok('redion_read_visual',{...bref,collection:'shapes',limit:1});
+ assert.equal(firstShape.nextOffset,1);
+ assert.equal(firstShape.items[0].id,'ink');
+ const secondShape=await ok('redion_read_visual',{...bref,offset:1,limit:1,expectedVersion:firstShape.version});
+ assert.equal(secondShape.items[0].id,'rect');
+ assert.equal(secondShape.nextOffset,null);
  await ok('redion_update_visual',{...bref,expectedVersion:6,operation:'move_stroke',elementId:'ink',dx:5,dy:-5});
+ const outdated=await run('redion_read_visual',{...bref,offset:1,expectedVersion:firstShape.version});
+ assert.equal(JSON.parse(outdated.content[0].text).code,'conflict');
  await ok('redion_update_visual',{...bref,expectedVersion:7,operation:'rotate_shape',elementId:'rect',rotation:45});
  await ok('redion_update_visual',{...bref,expectedVersion:8,operation:'order_shape',elementId:'ink',order:'front'});
  await ok('redion_update_visual',{...bref,expectedVersion:9,operation:'lock_shape',elementId:'rect',locked:true});
@@ -2262,5 +2270,22 @@ test('Cloud-MCP native visual objects with version protection',async()=>{
  });
  assert.equal(forbiddenEdit.isError,true);
  assert.equal(JSON.parse(forbiddenEdit.content[0].text).code,'forbidden');
+ const mapRecord=await f.store.hole('saetze',{bereich:'ws_test',id:ref.blockId});
+ assert.ok(mapRecord);
+ const mapData=JSON.parse(String(mapRecord.daten));
+ const nodes=Array.from({length:80},(_,i)=>({id:'long_'+i,text:'漢'.repeat(400),eltern:'root'}));
+ mapData.karte.knoten.push(...nodes);
+ await f.store.setze('saetze',{...mapRecord,daten:JSON.stringify(mapData),version:Number(mapRecord.version)+1});
+ const readAsReader=(options:Record<string,unknown>)=>call(readOnly.access_token,'redion_read_visual',{...ref,...options});
+ assert.equal(JSON.parse((await readAsReader({})).content[0].text).code,'too_large');
+ const firstPage=JSON.parse((await readAsReader({collection:'nodes',limit:40})).content[0].text);
+ assert.equal(firstPage.items[0].id,'root');
+ assert.ok(firstPage.nextOffset>2&&firstPage.nextOffset<40,'Bytegrenze begrenzt auch Unicode-Daten');
+ const unversioned=await readAsReader({collection:'nodes',offset:firstPage.nextOffset});
+ assert.equal(JSON.parse(unversioned.content[0].text).code,'invalid_arguments');
+ const nextPage=JSON.parse((await readAsReader({
+   collection:'nodes',offset:firstPage.nextOffset,expectedVersion:firstPage.version
+ })).content[0].text);
+ assert.equal(nextPage.items[0].id,nodes[firstPage.nextOffset-2]?.id);
  }finally{f.close();}
 });

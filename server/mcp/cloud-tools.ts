@@ -72,8 +72,12 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{...vCreate,shapes:vShapes},required:[...vRequired,'shapes'],additionalProperties:false}},
   {name:'redion_create_sheet',description:'Erstellt ein natives A4-Blatt mit Papier und Seitenzahl.',
     inputSchema:{type:'object',properties:{...vCreate,paper:{type:'string',enum:papers},pages:{type:'integer',minimum:1,maximum:10}},required:vRequired,additionalProperties:false}},
-  {name:'redion_read_visual',description:'Liest ein eingebettetes Mindmap-, Whiteboard- oder A4-Objekt mit Version.',
-    inputSchema:{type:'object',properties:{...workspace,blockId:idField},required:['workspaceId','blockId'],additionalProperties:false}},
+  {name:'redion_read_visual',description:'Liest ein eingebettetes Mindmap-, Whiteboard- oder A4-Objekt mit Version. Mit collection, offset oder limit Mindmap-Knoten, Querverbindungen oder Whiteboard-Objekte in Seiten lesen. Für nextOffset dieselbe collection und expectedVersion verwenden.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField,
+      collection:{type:'string',enum:['nodes','connections','shapes']},
+      offset:{type:'integer',minimum:0,maximum:100000},limit:{type:'integer',minimum:1,maximum:40},
+      expectedVersion:{type:'integer',minimum:1}
+    },required:['workspaceId','blockId'],additionalProperties:false}},
   {name:'redion_update_visual',description:'Bearbeitet native Zeichenobjekte mit Versionsprüfung: Mindmap ersetzen, Knoten umbenennen, gestalten oder Ast löschen; Whiteboard-Formen ergänzen, verschieben, skalieren, drehen, gestalten, anordnen, sperren oder löschen; Stiftstriche verschieben; A4-Papier ändern. elementId bezeichnet einen vorhandenen Knoten oder eine Form.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},operation:{type:'string',enum:['replace_mindmap','rename_node','style_node','delete_branch','append_shapes','move_shape','resize_shape','style_shape','delete_shape','rotate_shape','order_shape','lock_shape','move_stroke','set_paper']},nodes:vNodes,connections:vLinks,shapes:vShapes,paper:{type:'string',enum:papers},elementId:vId,text:{type:'string',maxLength:1000},color:vColor,form:{type:'string',enum:forms},collapsed:{type:'boolean'},filled:{type:'boolean'},x:vCoord,y:vCoord,width:vCoord,height:vCoord,rotation:vRotation,strokeWidth:vStrokeWidth,marker:{type:'boolean'},locked:{type:'boolean'},order:{type:'string',enum:['front','back','forward','backward']},dx:vCoord,dy:vCoord},required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
 
@@ -1000,8 +1004,40 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const ancestors=await embedding(w,pageId,id,data);
       const type=String(data.type),version=Number(s.version)||1;
       if(!writing){
+        if(args.expectedVersion!==undefined&&expected(args.expectedVersion)!==version)
+          return err('conflict','Zeichenobjekt wurde geändert. Bitte ab der ersten Seite neu lesen.');
+        if(args.collection!==undefined||args.offset!==undefined||args.limit!==undefined){
+          const collection=args.collection===undefined?(type==='mindmap'?'nodes':'shapes'):args.collection;
+          const offset=args.offset===undefined?0:args.offset;
+          if(typeof offset!=='number'||!Number.isSafeInteger(offset)||offset<0||offset>100000)
+            return err('invalid_arguments','Ungültiger Zeichenobjektversatz.');
+          if(offset&&args.expectedVersion===undefined)
+            return err('invalid_arguments','Für Folgeseiten ist expectedVersion erforderlich.');
+          const max=limit(args.limit,20,40);
+          let elements:unknown;
+          if(type==='whiteboard'&&collection==='shapes')elements=data.shapes??[];
+          else if(type==='mindmap'&&(collection==='nodes'||collection==='connections')){
+            const map=data.karte as Record<string,unknown>|undefined;
+            elements=map?.[collection==='nodes'?'knoten':'verbindungen'];
+          }else return err('invalid_arguments','Diese Liste passt nicht zum Blocktyp.');
+          if(!Array.isArray(elements))return err('invalid_data','Ungültige Elemente im Zeichenobjekt.');
+          const encoder=new TextEncoder();
+          let bytes=2;
+          const items:unknown[]=[];
+          for(const element of elements.slice(offset,offset+max)){
+            const size=encoder.encode(JSON.stringify(element)).byteLength+(items.length?1:0);
+            if(bytes+size>28000){
+              if(!items.length)return err('too_large','Ein einzelnes Zeichenelement ist zu gross.');
+              break;
+            }
+            items.push(element);
+            bytes+=size;
+          }
+          const nextOffset=offset+items.length<elements.length?offset+items.length:null;
+          return {workspaceId:w,documentId:pageId,blockId:id,type,version,collection,offset,nextOffset,items};
+        }
         const view=type==='mindmap'?{karte:data.karte??null}:type==='whiteboard'?{shapes:data.shapes??[],sicht:data.sicht??null}:{papier:data.papier??'blanko',blattBreite:data.blattBreite??595.28,blattHoehe:data.blattHoehe??841.89};
-        if(JSON.stringify(view).length>32000)return err('too_large','Zeichenobjekt zu gross.');
+        if(new TextEncoder().encode(JSON.stringify(view)).byteLength>32000)return err('too_large','Zeichenobjekt zu gross. Knoten, Verbindungen oder Formen seitenweise lesen.');
         return {workspaceId:w,documentId:pageId,blockId:id,type,version,...view};
       }
       if(expected(args.expectedVersion)!==version)return err('conflict','Zeichenobjekt wurde geändert.');

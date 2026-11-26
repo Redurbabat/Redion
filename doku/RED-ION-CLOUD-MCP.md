@@ -431,3 +431,18 @@ unveränderter Version. Die Elternseite wird nicht überschrieben.
 Die Funktion ist **keine** Bearbeitung von Schaltplänen, Tabellenzellen
 oder privaten verschlüsselten Blöcken. Produktionsbereitstellung und
 Connector-Aktualisierung bleiben separate Schritte.
+
+## Grosse Zeichenobjekte lesen
+
+`redion_read_visual` liefert bei kleinen Objekten wie bisher die vollständigen
+Daten. Für eine Mindmap sendet der Client `collection: "nodes"` oder
+`collection: "connections"`. Für ein Whiteboard sendet er
+`collection: "shapes"`. Die Antwort gibt `items`, `version` und
+`nextOffset` zurück. Sie enthält bis zu 40 Elemente und höchstens
+28.000 UTF-8-Bytes an Elementdaten.
+
+Für die Folgeseite wird `nextOffset` als `offset` übergeben. Der Client
+sendet dieselbe `collection` sowie die gelesene Version als
+`expectedVersion`. Bei einem Versionskonflikt beginnt er erneut bei
+Offset null. Ein einzelnes Element über der Bytegrenze wird als zu gross
+gemeldet. A4-Blätter behalten ihre Metadatenantwort.
