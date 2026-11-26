@@ -53,7 +53,8 @@ const fixture=async()=>{
   const oauth=createMcpOAuth({state,issuer:origin,resource:origin+'/mcp/cloud',authorizationEndpoint:origin+'/mcp/authorize'});
   const client=await oauth.register({client_name:'Synthetic ChatGPT',redirect_uris:['https://client.example.test/callback'],grant_types:['authorization_code','refresh_token']});
   const verifier='v'.repeat(64);
-  const authorize=async(write:boolean,accountId='owner')=>{
+  const authorize=async(write:boolean,accountId='owner',clientForGrant=client)=>{
+    const client=clientForGrant;
     const begin=await oauth.begin(accountId,{client_id:client.client_id,redirect_uri:client.redirect_uris[0],
       response_type:'code',resource:origin+'/mcp/cloud',scope:write?'redion:read redion:write':'redion:read',
       code_challenge:await pkceChallenge(verifier),code_challenge_method:'S256'});
@@ -1748,6 +1749,20 @@ test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und at
     assert.equal(after.data.version,6);
     assert.equal(after.data.plan.texte.length,2);
     assert.equal(new Set(after.data.plan.texte.map((x:any)=>x.id)).size,2);
+    const addBatchLabel={operation:'add_label',labelId:'TB',labelText:'Batch',x:200,y:350};
+    const rejected=await update({expectedVersion:6,changes:[addBatchLabel,addBatchLabel]});
+    assert.equal(rejected.data.code,'invalid_arguments');
+    assert.match(rejected.data.message,/Schritt 2/);
+    const unchanged=await call('redion_read_schematic',{blockId});
+    assert.equal(unchanged.data.version,6);
+    assert.deepEqual(unchanged.data.plan,after.data.plan);
+    const changes=[addBatchLabel,{operation:'move_label',labelId:'TB',x:210,y:370}];
+    const committed=await update({expectedVersion:6,changes});
+    assert.equal(committed.data.version,7);
+    assert.deepEqual(committed.data.elements,[{elementId:'TB',elementType:'label'},{elementId:'TB',elementType:'label'}]);
+    assert.equal((await update({expectedVersion:6,changes})).data.code,'conflict');
+    const finalPlan=await call('redion_read_schematic',{blockId});
+    assert.deepEqual(finalPlan.data.plan.texte.filter((item:any)=>item.id==='TB').map((item:any)=>[item.x,item.y]),[[210,370]]);
 
     await f.store.setze('saetze',{id:'encrypted_schematic',bereich:'ws_test',tabelle:'blocks',
       daten:JSON.stringify({type:'schaltplan',plan:after.data.plan}),
@@ -2201,5 +2216,16 @@ test('Cloud-MCP native visual objects with version protection',async()=>{
  assert.equal((await ok('redion_read_visual',bref)).version,11);
  const sheet=await ok('redion_create_sheet',{workspaceId:'ws_test',documentId:'visual_page',expectedVersion:3,requestId:'native_sheet_001',title:'A4',paper:'kariert',pages:2});
  assert.equal((await ok('redion_read_visual',{workspaceId:'ws_test',blockId:sheet.blockId})).blattHoehe,1683.78);
+ const reviewClient=await f.oauth.register({client_name:'Synthetic visual reader',
+   redirect_uris:['https://reader.example.test/callback'],grant_types:['authorization_code']});
+ const readOnly=await f.authorize(false,'owner',reviewClient);
+ const readerResult=await call(readOnly.access_token,'redion_read_visual',ref);
+ assert.notEqual(readerResult.isError,true);
+ assert.deepEqual(JSON.parse(readerResult.content[0].text),edited);
+ const forbiddenEdit=await call(readOnly.access_token,'redion_update_visual',{
+   ...ref,expectedVersion:1,operation:'rename_node',elementId:'learn',text:'Verboten'
+ });
+ assert.equal(forbiddenEdit.isError,true);
+ assert.equal(JSON.parse(forbiddenEdit.content[0].text).code,'forbidden');
  }finally{f.close();}
 });

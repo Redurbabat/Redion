@@ -73,7 +73,8 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
   assert.equal(names(read).includes('redion_update_schematic'),false);
   assert.ok(names(write).includes('redion_update_schematic'));
   assert.deepEqual(updateSchematic?.inputSchema.required,
-    ['workspaceId','blockId','expectedVersion','operation']);
+    ['workspaceId','blockId','expectedVersion']);
+  assert.match(JSON.stringify(updateSchematic?.inputSchema.properties.changes), /"maxItems":20/);
   assert.deepEqual(updateSchematic?.inputSchema.properties.operation,
     {type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label']});
   assert.deepEqual(updateSchematic?.inputSchema.properties.rotation,

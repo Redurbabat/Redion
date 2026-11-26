@@ -47,6 +47,17 @@ const vRotation={type:'number',minimum:-360,maximum:360};
 const vShapes={type:'array',maxItems:100,items:{type:'object',properties:{id:vId,kind:{type:'string',enum:shapes},x:vCoord,y:vCoord,width:vCoord,height:vCoord,color:vColor,text:{type:'string',maxLength:1000},filled:{type:'boolean'},from:vId,to:vId,points:{type:'array',minItems:2,maxItems:500,items:{type:'array',minItems:2,maxItems:2,items:vCoord}},pressure:{type:'array',minItems:2,maxItems:500,items:{type:'number',minimum:0.05,maximum:1}},strokeWidth:vStrokeWidth,marker:{type:'boolean'},rotation:vRotation},required:['id','kind'],additionalProperties:false}};
 const vCreate={...workspace,...documentId,expectedVersion:{type:'integer',minimum:1},requestId:{type:'string',minLength:8,maxLength:100},title:nameField};
 const vRequired=['workspaceId','documentId','expectedVersion','requestId','title'];
+const schematicEditFields={
+  operation:{type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label']},
+  componentId:idField,symbolId:idField,x:{type:'integer',minimum:0,maximum:4000},
+  y:{type:'integer',minimum:0,maximum:4000},
+  rotation:{type:'integer',enum:[0,90,180,270]},
+  mirrored:{type:'boolean'},layer:{type:'string',enum:['plan','aufgabe','loesung']},
+  bmk:{type:'string',maxLength:30},wireId:idField,
+  fromComponentId:idField,fromTerminal:{type:'string',minLength:1,maxLength:20},
+  toComponentId:idField,toTerminal:{type:'string',minLength:1,maxLength:20},
+  labelId:idField,labelText:{type:'string',minLength:1,maxLength:200}
+};
 export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_create_mindmap',description:'Erstellt eine native editierbare Mindmap mit Knoten, Farben und Querverbindungen. parentId null für die Wurzel.',
     inputSchema:{type:'object',properties:{...vCreate,nodes:vNodes,connections:vLinks},required:[...vRequired,'nodes'],additionalProperties:false}},
@@ -77,19 +88,12 @@ export const CLOUD_TOOLS:ToolDef[]=[
       text:{type:'string',maxLength:8000},checked:{type:'boolean'},
       note:{type:'string',maxLength:2000},dueDate:{type:'string',maxLength:10}},
       required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
-  {name:'redion_update_schematic',description:'Bearbeitet einen Klartext-Schaltplan: Bauteil/Beschriftung hinzufügen oder verschieben sowie vorhandene Klemmen verbinden. Verbundene Bauteile können nur im nativen Editor verschoben werden. Alle Aktionen sind versioniert; keine elektrische Sicherheits- oder Normprüfung.',
+  {name:'redion_update_schematic',description:'Bearbeitet einen Klartext-Schaltplan. Für eine einzelne Änderung operation und ihre Felder übergeben. Für bis zu 20 atomare Änderungen nur changes übergeben. Jeder Schritt wird vor dem Speichern geprüft, die Planversion steigt einmal. Verbundene Bauteile im nativen Editor verschieben.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,
       expectedVersion:{type:'integer',minimum:1},
-      operation:{type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label']},
-      componentId:idField,symbolId:idField,x:{type:'integer',minimum:0,maximum:4000},
-      y:{type:'integer',minimum:0,maximum:4000},
-      rotation:{type:'integer',enum:[0,90,180,270]},
-      mirrored:{type:'boolean'},layer:{type:'string',enum:['plan','aufgabe','loesung']},
-      bmk:{type:'string',maxLength:30},wireId:idField,
-      fromComponentId:idField,fromTerminal:{type:'string',minLength:1,maxLength:20},
-      toComponentId:idField,toTerminal:{type:'string',minLength:1,maxLength:20},
-      labelId:idField,labelText:{type:'string',minLength:1,maxLength:200}},
-      required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
+      ...schematicEditFields,changes:{type:'array',minItems:1,maxItems:20,
+        items:{type:'object',properties:schematicEditFields,required:['operation'],additionalProperties:false}}},
+      required:['workspaceId','blockId','expectedVersion'],additionalProperties:false}},
   {name:'redion_add_schematic',description:'Erstellt einen leeren Schaltplan mit dem nativen RED-ION-Format auf einer freigegebenen Seite. Kein automatisch gezeichneter Stromkreis und keine Sicherheitsabnahme. Atomar, versioniert, mit requestId wiederholbar.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,
       expectedVersion:{type:'integer',minimum:1},
@@ -925,8 +929,6 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const nextOffset=allVisible&&rows.results.length>max?Number(offset)+max:null;
       return root?{workspaceId:w,documents,nextOffset}:{parentId,documents,nextOffset};
     }
-    if(!principal.scopes.includes('redion:write'))
-      return err('forbidden','Schreibrechte sind nicht freigegeben.');
     if(name==='redion_read_visual'||name==='redion_update_visual'){
       const id=required(args.blockId,128),writing=name==='redion_update_visual';
       const s=await ablage.hole('saetze',{bereich:w,id});
@@ -974,6 +976,8 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',text:'Zeichenobjekt über Cloud-MCP bearbeitet',objekt:id});
       return {workspaceId:w,documentId:pageId,blockId:id,type,version:updated.version};
     }
+    if(!principal.scopes.includes('redion:write'))
+      return err('forbidden','Schreibrechte sind nicht freigegeben.');
     if(name==='redion_update_block'){
       const id=required(args.blockId,128);
       const ver=expected(args.expectedVersion);
@@ -1089,14 +1093,33 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         !data.plan||typeof data.plan!=='object'||Array.isArray(data.plan))
         return err('not_found','Schaltplan nicht verfügbar.');
       if(ver!==Number(s.version)||ver<1)return err('conflict','Schaltplan wurde geändert. Bitte erneut lesen.');
-      let edited:{plan:Record<string,unknown>;elementId:string;kind:string};
-      try{edited=editSchematic(data.plan,args);}
+      const batch=args.changes!==undefined;
+      if(batch&&(!Array.isArray(args.changes)||args.changes.length<1||args.changes.length>20||
+        Object.keys(args).some(key=>!['workspaceId','blockId','expectedVersion','changes'].includes(key))))
+        return err('invalid_arguments','Ein Batch muss 1–20 Änderungen enthalten und darf keine Einzelaktion enthalten.');
+      let plan=data.plan;
+      const elements:{elementId:string;elementType:string}[]=[];
+      try{
+        for(const [index,change] of (batch?args.changes as unknown[]:[args]).entries()){
+          if(!change||typeof change!=='object'||Array.isArray(change))throw new Error(`Schritt ${index+1} ist kein Änderungsobjekt.`);
+          if(batch&&Object.keys(change).some(key=>!Object.hasOwn(schematicEditFields,key)))
+            throw new Error(`Schritt ${index+1} enthält unbekannte Felder.`);
+          try{
+            const edited=editSchematic(plan,change as Args);
+            plan=edited.plan;
+            elements.push({elementId:edited.elementId,elementType:edited.kind});
+          }catch(error){
+            if(!batch)throw error;
+            throw new Error(`Schritt ${index+1}: ${error instanceof Error?error.message:'Ungültige Planänderung.'}`);
+          }
+        }
+      }
       catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Ungültige Planänderung.');}
-      if(JSON.stringify(edited.plan).length>32000)
+      if(new TextEncoder().encode(JSON.stringify(plan)).byteLength>32000)
         return err('too_large','Schaltplan überschreitet die sichere Lesegrenze.');
       const timestamp=new Date().toISOString();
-      const payload=JSON.stringify({...data,plan:edited.plan,edited:timestamp});
-      if(payload.length>50000)return err('too_large','Schaltplanblock ist zu gross.');
+      const payload=JSON.stringify({...data,plan,edited:timestamp});
+      if(new TextEncoder().encode(payload).byteLength>50000)return err('too_large','Schaltplanblock ist zu gross.');
       const updated=await db.prepare(
         "UPDATE saetze SET daten=?1,version=version+1,geaendert=?2,vonGeraet='Cloud-MCP' "+
         "WHERE bereich=?3 AND id=?4 AND tabelle='blocks' AND seite=?5 AND version=?6 "+
@@ -1109,7 +1132,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',
         text:'Schaltplan über Cloud-MCP ergänzt',objekt:id});
       return {workspaceId:w,documentId:pageId,blockId:id,version:updated.version,
-        elementId:edited.elementId,elementType:edited.kind,
+        ...(batch?{elements}:elements[0]),
         electricalValidation:false,routingVerified:false};
     }
     if(name==='redion_create_learning_set'){
