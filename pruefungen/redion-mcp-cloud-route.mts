@@ -2159,3 +2159,24 @@ test('Cloud-MCP learning set validates all cards, attaches them once and retries
     assert.equal((await f.store.finde('saetze',{bereich:'ws_test',tabelle:'blocks'})).length,3);
   }finally{f.close();}
 });
+
+test('Cloud-MCP native visual objects with version protection',async()=>{
+ const f=await fixture();try{
+ await f.store.setze('saetze',{id:'visual_page',bereich:'ws_test',tabelle:'blocks',daten:JSON.stringify({type:'page',text:'Visuals',content:[]}),verschluesselt:0,seite:'visual_page',version:1,geaendert:'',geloescht:0,vonGeraet:'Test'});
+ const reader=await f.authorize(false),base={workspaceId:'ws_test',documentId:'visual_page',expectedVersion:1,requestId:'native_map_001',title:'RED ION',nodes:[{id:'root',text:'RED ION',parentId:null},{id:'learn',text:'Lernen',parentId:'root'}]};
+ const call=async(token:string,name:string,args:Record<string,unknown>)=>(await f.rpc(token,'tools/call',{name,arguments:args})).data.result;
+ assert.equal((await call(reader.access_token,'redion_create_mindmap',base)).isError,true);
+ const writer=await f.authorize(true),run=(name:string,args:Record<string,unknown>)=>call(writer.access_token,name,args);
+ const ok=async(name:string,args:Record<string,unknown>)=>{const x=await run(name,args);assert.notEqual(x.isError,true,JSON.stringify(x));return JSON.parse(x.content[0].text);};
+ assert.equal((await run('redion_create_mindmap',{...base,nodes:[{id:'x',text:'X',parentId:'x'}]})).isError,true);
+ const map=await ok('redion_create_mindmap',base),ref={workspaceId:'ws_test',blockId:map.blockId};
+ assert.equal(map.parentVersion,2);assert.equal((await ok('redion_create_mindmap',base)).alreadyExists,true);
+ const read=await ok('redion_read_visual',ref);assert.equal(read.type,'mindmap');assert.equal(read.karte.knoten[1].eltern,'root');
+ assert.equal((await ok('redion_update_visual',{...ref,expectedVersion:1,operation:'replace_mindmap',nodes:[...base.nodes,{id:'docs',text:'Dokumente',parentId:'root'}]})).version,2);
+ assert.equal((await run('redion_update_visual',{...ref,expectedVersion:1,operation:'replace_mindmap',nodes:base.nodes})).isError,true);
+ const wb=await ok('redion_create_whiteboard',{workspaceId:'ws_test',documentId:'visual_page',expectedVersion:2,requestId:'native_board_001',title:'Board',shapes:[{id:'n',kind:'notiz',x:20,y:20,width:180,height:90,text:'Idee'}]});
+ assert.equal((await ok('redion_read_visual',{workspaceId:'ws_test',blockId:wb.blockId})).shapes[0].art,'notiz');
+ const sheet=await ok('redion_create_sheet',{workspaceId:'ws_test',documentId:'visual_page',expectedVersion:3,requestId:'native_sheet_001',title:'A4',paper:'kariert',pages:2});
+ assert.equal((await ok('redion_read_visual',{workspaceId:'ws_test',blockId:sheet.blockId})).blattHoehe,1683.78);
+ }finally{f.close();}
+});
