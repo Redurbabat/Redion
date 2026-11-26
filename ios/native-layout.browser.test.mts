@@ -136,3 +136,33 @@ test('iPhone library stays compact with long names and accessible actions', asyn
     await context.close();
   } finally {await browser.close();}
 });
+
+test('iPhone settings and search stay within the visible keyboard viewport', async () => {
+  const browser = await chromium.launch({headless:true});
+  try {
+    const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+    const page=await context.newPage();
+    await page.goto(indexUrl,{waitUntil:'domcontentloaded'});
+    await page.addStyleTag({content:IOS_LAYOUT_CSS+IOS_PHONE_POLISH_CSS});
+    const result=await page.evaluate(()=>{
+      document.documentElement.style.setProperty('--visual-height','420px');
+      document.documentElement.style.setProperty('--visual-bottom','424px');
+      const wrap=document.createElement('div');
+      wrap.className='overlay';
+      wrap.innerHTML='<div class="einst-fenster" data-blick="liste"><nav class="einst-nav"><input class="einst-suche"><div class="einst-karte"><button>Darstellung</button></div></nav></div>';
+      document.body.append(wrap);
+      const settings=wrap.querySelector('.einst-fenster')!;
+      const button=wrap.querySelector('button')!;
+      const input=wrap.querySelector('input')!;
+      const dimensions={settings:settings.getBoundingClientRect().height,button:button.getBoundingClientRect().height,input:input.getBoundingClientRect().height};
+      wrap.innerHTML='<div class="finder such"><input id="q"><div class="such-koerper"><div class="res"></div></div></div>';
+      const finder=wrap.querySelector('.finder')!;
+      return {...dimensions,searchMax:getComputedStyle(finder).maxHeight};
+    });
+    assert.ok(result.settings<=420);
+    assert.ok(result.button>=48);
+    assert.ok(result.input>=48);
+    assert.equal(result.searchMax,'404px');
+    await context.close();
+  } finally {await browser.close();}
+});

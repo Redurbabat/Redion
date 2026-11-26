@@ -151,3 +151,11 @@ test('iPhone document library keeps visible actions, flexible columns and 44pt t
   assert.match(IOS_PHONE_POLISH_CSS,/\.bib\[data-bib-bereich\] \.bib-gitter \{[^}]*grid-template-columns:repeat\(auto-fit/);
   assert.match(IOS_PHONE_POLISH_CSS,/\.bib\[data-bib-bereich\] \.bib-deckel-mehr \{[^}]*min-width:44px/);
 });
+
+test('iPhone settings and menus respect the real keyboard viewport and keep existing switches', () => {
+  assert.match(IOS_PHONE_POLISH_CSS,/\.einst-fenster \{[^}]*max-height:var\(--visual-height,100dvh\)/);
+  assert.match(IOS_PHONE_POLISH_CSS,/\.einst-fenster \.einst-nav button \{[^}]*min-height:48px/);
+  assert.match(IOS_PHONE_POLISH_CSS,/\.ez-steuer button:not\(\.schalter\) \{[^}]*min-height:44px/);
+  assert.match(IOS_PHONE_POLISH_CSS,/\.menu\.blatt \{[^}]*max-height:calc\(var\(--visual-height,100dvh\) - 16px\)/);
+  assert.match(IOS_PHONE_POLISH_CSS,/\.overlay \.finder\.such \{[^}]*max-height:calc\(var\(--visual-height,100dvh\) - 16px\)/);
+});
