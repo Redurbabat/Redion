@@ -31651,7 +31651,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1715, inhalt: 'aa7583963131ee36', gebaut: '2026-11-26T23:09:58.272Z' };
+const Stand = { fassung: 1716, inhalt: '7dcdc830f1680395', gebaut: '2026-11-26T23:14:39.509Z' };
 window.Stand = Stand;
 
 </script>
@@ -75111,6 +75111,8 @@ const Schaltplan = ((Register) => {
             if (probiert.has(sch))
                 return false;
             probiert.add(sch);
+            if (wie.kandidatErlaubt && !wie.kandidatErlaubt(w))
+                return false;
             if (!pruefeBeruehrung(plan, l, w, orte, plan.leitungen, erlaubt))
                 return false;
             if (ueberlappt(w, plan.leitungen))
@@ -75130,7 +75132,7 @@ const Schaltplan = ((Register) => {
             for (const w of hakenWege(a, b, breite, hoehe))
                 if (pruefe(w))
                     return w;
-        return ohneFremdes || erster;
+        return wie.kandidatErlaubt ? [] : ohneFremdes || erster;
     };
     const vereinfachen = (ps) => {
         const q = ohneDoppel(ps);

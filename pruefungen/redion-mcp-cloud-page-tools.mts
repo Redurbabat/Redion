@@ -249,9 +249,21 @@ test('Cloud MCP: native Schaltpläne verschieben nur unverbundene Bauteile ohne 
     /Leitungsanschlüsse/);
   const c=add(wirePlan,'C',200,0);
   const d=add(c,'D',200,240);
-  assert.throws(()=>invoke(d,'connect_terminals',{
-    wireId:'would_cross',fromComponentId:'C',fromTerminal:'X2',
-    toComponentId:'D',toTerminal:'X1'}),/kreuzt oder berührt/);
+  const crossing={wireId:'detour',fromComponentId:'C',fromTerminal:'X2',
+    toComponentId:'D',toTerminal:'X1'};
+  const routed=invoke(d,'connect_terminals',crossing);
+  const detour=routed.leitungen[1];
+  assert.deepEqual(detour.punkte,[
+    {x:230,y:60},{x:100,y:60},{x:100,y:240},{x:230,y:240}
+  ]);
+  assert.deepEqual(invoke(d,'connect_terminals',crossing),routed);
+  assert.deepEqual(routed.leitungen[0],d.leitungen[0]);
+  assert.equal(d.leitungen.length,1);
+  // The original route can be avoided. A full-width barrier on another
+  // layer cannot, because the simulation forms nets across layers.
+  const barrier={...d,leitungen:[{id:'barrier',ebene:'aufgabe',
+    punkte:[{x:0,y:100},{x:800,y:100}]}]};
+  assert.throws(()=>invoke(barrier,'connect_terminals',crossing),/Kein eindeutiger Leitungsweg/);
   assert.throws(()=>add(d,'on_wire',200,100),/berührt eine vorhandene Leitung/);
   assert.throws(()=>invoke(d,'move_component',{componentId:'C',x:200,y:100}),
     /berührt eine vorhandene Leitung/);

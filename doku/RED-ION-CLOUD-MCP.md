@@ -325,6 +325,14 @@ sind ausdrücklich gekennzeichnet. Der Aufruf misst einen statischen Zustand.
 
 ## Schaltpläne mit MCP erweitern (23.11.2026)
 
+Beim Verbinden sucht der gemeinsame Redion-Router einen orthogonalen Weg.
+MCP prüft die beiden Winkel und bis zu 40 Wege mit einem Versatz. Der Weg
+muss im Blatt bleiben, die fremden Klemmen und Bauteile umgehen und Abstand
+zu vorhandenen Leitungen halten. Die Prüfung umfasst alle Ebenen, weil das
+elektrische Modell sie gemeinsam wertet. Findet die begrenzte Suche keinen
+passenden Umweg, bleibt die Planversion unverändert. Gemeinsame Leitungsenden
+und Verzweigungen müssen weiterhin im Editor angelegt werden.
+
 'redion_update_schematic' erweitert einen bereits gespeicherten
 Schaltplan-Block, ohne beliebige Fremd-JSON-Daten zu akzeptieren.
 Erforderlich sind 'workspaceId', 'blockId', 'expectedVersion' (die

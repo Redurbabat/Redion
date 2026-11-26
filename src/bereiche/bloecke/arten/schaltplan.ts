@@ -1038,11 +1038,13 @@ const Schaltplan = ((Register: { fachzeichen: typeof ElektroFachzeichen } | unde
    * entlangläuft und durch kein Zeichen geht, gilt; sonst der erste ohne
    * Fremdes; sonst der Winkel wie bisher. `schnell` lässt die Hakenwege aus
    * und nimmt nur die ersten vierzig Z-Wege — für die Vorschau beim Ziehen.
+   * Ein Aufrufer mit `kandidatErlaubt` verlangt einen strikten Weg. Wenn
+   * keiner passt, bleibt die Liste leer, statt den ersten Winkel zu liefern.
    */
   const leitungFuehren = (plan: Plan, a: Punkt, b: Punkt,
                           vonFang?: { teil: string; nr: string } | null,
                           nachFang?: { teil: string; nr: string } | null,
-                          wie: { schnell?: boolean } = {}): Punkt[] => {
+                          wie: { schnell?: boolean; kandidatErlaubt?: (punkte: Punkt[]) => boolean } = {}): Punkt[] => {
     const erster = ohneDoppel(rechtwinklig(a, b));
     if (gleicherPunkt(a, b)) return erster;
     const l: Leitung = { id: '\u0000neu', punkte: [], ebene: 'plan' };
@@ -1071,6 +1073,7 @@ const Schaltplan = ((Register: { fachzeichen: typeof ElektroFachzeichen } | unde
       const sch = JSON.stringify(w);
       if (probiert.has(sch)) return false;
       probiert.add(sch);
+      if (wie.kandidatErlaubt && !wie.kandidatErlaubt(w)) return false;
       if (!pruefeBeruehrung(plan, l, w, orte, plan.leitungen, erlaubt)) return false;
       if (ueberlappt(w, plan.leitungen)) return false;
       if (!ohneFremdes) ohneFremdes = w;
@@ -1080,7 +1083,7 @@ const Schaltplan = ((Register: { fachzeichen: typeof ElektroFachzeichen } | unde
     const zw = zWege(a, b, breite, hoehe);
     for (const w of (wie.schnell ? zw.slice(0, 40) : zw)) if (pruefe(w)) return w;
     if (!wie.schnell) for (const w of hakenWege(a, b, breite, hoehe)) if (pruefe(w)) return w;
-    return ohneFremdes || erster;
+    return wie.kandidatErlaubt ? [] : ohneFremdes || erster;
   };
 
   /** Doppelte Punkte und Punkte mitten auf einer Geraden heraus (die Enden bleiben). */

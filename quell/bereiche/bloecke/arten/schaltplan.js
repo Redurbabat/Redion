@@ -672,6 +672,8 @@ const Schaltplan = ((Register) => {
             if (probiert.has(sch))
                 return false;
             probiert.add(sch);
+            if (wie.kandidatErlaubt && !wie.kandidatErlaubt(w))
+                return false;
             if (!pruefeBeruehrung(plan, l, w, orte, plan.leitungen, erlaubt))
                 return false;
             if (ueberlappt(w, plan.leitungen))
@@ -691,7 +693,7 @@ const Schaltplan = ((Register) => {
             for (const w of hakenWege(a, b, breite, hoehe))
                 if (pruefe(w))
                     return w;
-        return ohneFremdes || erster;
+        return wie.kandidatErlaubt ? [] : ohneFremdes || erster;
     };
     const vereinfachen = (ps) => {
         const q = ohneDoppel(ps);
