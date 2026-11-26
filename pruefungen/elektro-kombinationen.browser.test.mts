@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 
 const bildordner = process.env.REDION_ELEKTRO_BILDER;
 const vorher = process.argv.includes('--vorher');
 if (bildordner) await mkdir(bildordner, { recursive: true });
-const browser = await chromium.launch();
+const engine = process.argv.includes('--webkit') ? webkit : chromium;
+const browser = await engine.launch();
 try {
   for (const width of [1366, 390, 320]) {
     const page = await browser.newPage({

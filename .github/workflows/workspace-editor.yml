@@ -7,6 +7,8 @@ on:
       - 'quell/schale/aufbau/kopfleiste.js'
       - 'quell/schale/stil/studio.css'
       - 'pruefungen/workspace-editor.mts'
+      - 'pruefungen/elektro-kombinationen.browser.test.mts'
+      - 'src/bereiche/bloecke/arten/planflaeche.ts'
       - '.github/workflows/workspace-editor.yml'
   workflow_dispatch:
 
@@ -45,11 +47,18 @@ jobs:
         run: node pruefungen/workspace-editor.mts --capture
       - name: Dasselbe unter WebKit (iPhone-Browserengine)
         run: node pruefungen/workspace-editor.mts --webkit --capture
+      - name: Schaltplan und Soll-Ist-Bericht in beiden Browsern prüfen
+        if: always() && !cancelled()
+        run: |
+          REDION_ELEKTRO_BILDER=bilder/elektro/chromium node pruefungen/elektro-kombinationen.browser.test.mts
+          REDION_ELEKTRO_BILDER=bilder/elektro/webkit node pruefungen/elektro-kombinationen.browser.test.mts --webkit
       - name: Nur Bilder synthetischer Testdaten
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: workspace-editor-vorher-nachher
-          path: bilder/workspace-2/editor/**/*.png
+          path: |
+            bilder/workspace-2/editor/**/*.png
+            bilder/elektro/**/*.png
           if-no-files-found: warn
           retention-days: 14

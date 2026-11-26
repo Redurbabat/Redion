@@ -1008,7 +1008,7 @@ body[data-bewegung="ruhig"] .sp-wrap .sp-flaeche .sp-umgelegt .sp-klinge{animati
 .sp-wrap[data-electro-context="simulation"] .sp-sim-back { display: none; }
 .sp-pruef-kombinationen { padding: 12px; border-block-start: 1px solid var(--line); }
 .sp-pruef-kombinationen summary { min-height: var(--touch-min); cursor: pointer; }
-.sp-pruef-kombinationen fieldset { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-block: 8px; }
-.sp-pruef-kombinationen label { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: var(--touch-min); }
-.sp-pruef-kombinationen :is(select,input[type="text"],button) { min-height: var(--touch-min); max-width: 100%; }
+.sp-pruef-kombinationen fieldset { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-block: 8px; border: 1px solid var(--line); border-radius: var(--radius-md); }
+.sp-wrap .sp-pruef-kombinationen fieldset label { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; min-width: var(--touch-min); min-height: var(--touch-min); }
+.sp-wrap .sp-pruef-kombinationen :is(select,input[type="text"],button) { min-height: var(--touch-min); max-width: 100%; }
 .sp-pruef-kombinationen [data-kombinationen] { margin-block-start: 8px; overflow-wrap: anywhere; }

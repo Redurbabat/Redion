@@ -56,7 +56,12 @@ const quelle = sammeln(path.join(WURZEL, 'src'), ['.ts']);
 console.log('\n§1 Kein erfundenes Farbtoken');
 
 const definiert = new Set<string>();
-for (const f of stile) {
+// Ein direkt in index.html geladenes Fremdblatt kann öffentliche Tokens
+// bereitstellen. Unbenutzte Dateien auf der Platte zählen nicht.
+const index = fs.readFileSync(path.join(WURZEL, 'index.html'), 'utf8');
+const fremdstile = [...index.matchAll(/<link\b[^>]*\brel="stylesheet"[^>]*\bhref="(quell\/fremd\/[\w./-]+\.css)"/g)]
+  .flatMap(m => m[1] ? [path.join(WURZEL, m[1])] : []);
+for (const f of [...stile, ...fremdstile]) {
   const t = fs.readFileSync(f, 'utf8');
   for (const m of t.matchAll(/(--[\w-]+)\s*:/g)) if (m[1]) definiert.add(m[1]);
 }

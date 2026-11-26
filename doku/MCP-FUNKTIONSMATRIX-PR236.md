@@ -50,3 +50,17 @@ angebotener Vertrag einzeln nachzuweisen.
   Drei Chromium-Breiten prüfen den normalen Block, eine aktive Auswahl und
   die Herkunftsmarkierung an Textblöcken. Vorher-/Nachher-Bilder und Bilder
   des Prüfzentrums enthalten synthetische Daten.
+- Bestehende Elektroläufe 604–608, 625 und 631 bestanden. Die 60 Zusagen
+  zu Dock, PDF und Whiteboard bestehen im Chromium-Browser. Das Prüfzentrum
+  besitzt einen eigenen Schliessknopf. Der zusätzliche Knopf der Werkstätten
+  liegt daher nicht über seinen Eingaben.
+- Vier zuvor rote Bestandsprüfungen (87, 290, 401, 402) gezielt korrigiert
+  und einzeln bestätigt. Ein SHA-256-Abgleich begrenzt die Ausnahme für
+  Steuerbytes auf das unveränderte npm-Bündel von pdf-lib 1.17.1.
+  Eingebundene CSS-Token werden erkannt, drei Treffflächen messen 44 Pixel.
+- Schaltpläne brauchen zum Lesen und Bearbeiten eine nachgewiesene
+  Elternkette. Ein abgelöster Datensatz bleibt auch bei passendem Seitenfeld
+  unzugänglich. Vor dem atomaren Speichern wird die Version aller geprüften
+  Eltern im selben SQL-Update erneut geprüft.
+- Mac-Baulauf 45908191971 für `581e3b98` erfolgreich. Das Artefakt ist eine
+  unsignierte IPA. Abnahme auf einem echten iPhone steht aus.

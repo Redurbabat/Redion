@@ -427,8 +427,9 @@ const Planflaeche = (() => {
         const fachStatus = () => {
             relaisPanel.hidden = z.simulation || !relaisOffen;
             batteriePanel.hidden = z.simulation || !batterieOffen;
-            fachSchliessen.hidden = !(!relaisPanel.hidden || !batteriePanel.hidden || !pruefPanel.hidden);
-            wurzel.classList.toggle('sp-fach-offen', !fachSchliessen.hidden);
+            const werkstattSichtbar = !relaisPanel.hidden || !batteriePanel.hidden;
+            fachSchliessen.hidden = !werkstattSichtbar;
+            wurzel.classList.toggle('sp-fach-offen', werkstattSichtbar || !pruefPanel.hidden);
         };
         const WERKZEUGE = [
             { id: 'zeigen', name: 'Auswahl', sym: 'inkPointer', taste: '1', titel: 'Auswählen und verschieben' },
@@ -1359,6 +1360,12 @@ const Planflaeche = (() => {
                                 return;
                             }
                             ausgabe.textContent = bericht.faelle.filter(fall => fall.bestanden).length + ' von ' + bericht.faelle.length + ' bestanden';
+                            const annahmen = [...new Set(bericht.faelle.flatMap(fall => fall.annahmen))];
+                            if (annahmen.length) {
+                                const hinweis = document.createElement('p');
+                                hinweis.textContent = annahmen.join(' ');
+                                ausgabe.append(hinweis);
+                            }
                             const liste = document.createElement('ol');
                             for (const fall of bericht.faelle) {
                                 const zeile = document.createElement('li');
