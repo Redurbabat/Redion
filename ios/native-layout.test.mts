@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { IOS_LAYOUT_CSS, IOS_PHONE_POLISH_CSS, IOS_LAYOUT_STYLE_ID, installIosNativeLayout } from './native-layout.mts';
+import { IOS_LAYOUT_CSS, IOS_PHONE_POLISH_CSS, IOS_LAYOUT_STYLE_ID, installIosNativeLayout, installIosSearchControls } from './native-layout.mts';
 
 type TestStyle = {
   id: string;
@@ -83,4 +83,65 @@ test('iPhone polish targets premium specificity without touching the dock or doc
   assert.match(IOS_PHONE_POLISH_CSS,/\.redion-ios-search-close/);
   assert.match(IOS_PHONE_POLISH_CSS,/min-height:44px/);
   assert.doesNotMatch(IOS_PHONE_POLISH_CSS,/#handy-oben|#ho-pille|#ho-ziele/);
+});
+
+test('native search close control uses existing Escape route and is installed once', () => {
+  let callback: (() => void) | undefined;
+  let disconnected = false;
+  const events: Array<{key:string}> = [];
+  const attrs: Record<string,string> = {};
+  const headings: any[] = [];
+  const input = {
+    setAttribute(name:string,value:string) { attrs[name]=value; },
+    dispatchEvent(event:{key:string}) { events.push(event); }
+  };
+  const finder = {
+    firstChild:input,
+    querySelector(selector:string) {
+      return selector === '#q' ? input : headings[0] || null;
+    },
+    insertBefore(heading:any) { headings.push(heading); }
+  };
+  const doc = {
+    body:{},
+    defaultView:{
+      matchMedia:()=>({matches:true}),
+      MutationObserver:class {
+        constructor(fn:()=>void) { callback=fn; }
+        observe() {}
+        disconnect() { disconnected=true; }
+      },
+      KeyboardEvent:class {
+        key:string;
+        constructor(_type:string,options:{key:string}) { this.key=options.key; }
+      }
+    },
+    querySelectorAll(selector:string) {
+      return selector === '.overlay .finder.such' ? [finder] : [...headings];
+    },
+    createElement() {
+      return {
+        children:[] as any[],
+        textContent:'',
+        click:undefined as (()=>void)|undefined,
+        setAttribute() {},
+        append(...children:any[]) { this.children.push(...children); },
+        addEventListener(_event:string, fn:()=>void) { this.click=fn; },
+        remove() { const i=headings.indexOf(this); if(i>=0)headings.splice(i,1); }
+      };
+    }
+  };
+  const stop=installIosSearchControls(doc);
+  assert.equal(headings.length,1);
+  callback?.();
+  assert.equal(headings.length,1);
+  assert.equal(headings[0].children[0].textContent,'Suchen');
+  assert.equal(headings[0].children[1].textContent,'Fertig');
+  assert.equal(attrs.enterkeyhint,'search');
+  headings[0].children[1].click();
+  assert.equal(events.length,1);
+  assert.equal(events[0]?.key,'Escape');
+  stop();
+  assert.equal(disconnected,true);
+  assert.equal(headings.length,0);
 });
