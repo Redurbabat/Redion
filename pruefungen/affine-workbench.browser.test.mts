@@ -147,7 +147,7 @@ try {
       g: { type: 'group', children: { s1: true, s2: true } },
       l: { type: 'connector', source: { id: 's1' }, target: { id: 's2' }, mode: 1 }
     } } }] };
-    await panel.locator('input[type="file"]').setInputFiles({ name: 'affine-snapshot.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(affine)) });
+    await panel.getByLabel('Fläche oder AFFiNE-Snapshot importieren', { exact: true }).setInputFiles({ name: 'affine-snapshot.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(affine)) });
     await panel.getByRole('button', { name: 'AFFiNE-Import', exact: true }).waitFor();
     const imported = (await shapes()).find(o => o.text === 'AFFiNE-Import');
     check(`${width}: AFFiNE-Snapshot importiert Gruppen und Winkel`, imported.rotation === 15 && imported.groupId && imported.id !== 's1');
@@ -163,7 +163,7 @@ try {
         return [...new Uint8Array(await zip.arrayBuffer())];
       }, ids.file);
       await panel.getByRole('button', { name: 'Austausch', exact: true }).click();
-      await panel.locator('input[type="file"]').setInputFiles({ name: 'affine-attachments.zip', mimeType: 'application/zip', buffer: Buffer.from(archive) });
+      await panel.getByLabel('Fläche oder AFFiNE-Snapshot importieren', { exact: true }).setInputFiles({ name: 'affine-attachments.zip', mimeType: 'application/zip', buffer: Buffer.from(archive) });
       await panel.getByRole('button', { name: 'Entwurf.txt', exact: true }).waitFor();
       const asset = (await shapes()).find(o => o.art === 'attachment');
       check('AFFiNE-Anhang bleibt bytegenau', await page.evaluate(async id => (await Dateien.alsBlob(id))?.text(), asset.dateiId) === 'Anhang bytegenau ✓');

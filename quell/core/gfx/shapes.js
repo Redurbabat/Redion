@@ -124,8 +124,9 @@ const GfxShapes = (() => {
         const tx = zentriert ? x + w / 2 : x + 10;
         const mitte = y + h * (s.art === 'dreieck' ? 0.66 : 0.50);
         const deckend = s.art === 'notiz' || s.gefuellt === true;
-        const textfarbe = deckend && typeof Farben !== 'undefined' && Farben.parse(farbe)
-            ? (Farben.contrast(farbe, '#18181b') >= Farben.contrast(farbe, '#ffffff') ? '#18181b' : '#ffffff')
+        const background = typeof s.fillColor === 'string' ? s.fillColor : farbe;
+        const textfarbe = deckend && typeof Farben !== 'undefined' && Farben.parse(background)
+            ? (Farben.contrast(background, '#18181b') >= Farben.contrast(background, '#ffffff') ? '#18181b' : '#ffffff')
             : deckend ? '#18181b' : farbe;
         const text = sv('text', {
             x: tx, y: zentriert ? mitte + 5 - (zeilen.length - 1) * 9 : y + 22,
@@ -148,6 +149,8 @@ const GfxShapes = (() => {
             ? Math.min(s.strichBreite, 50) : null;
         const strich = o.strich ?? (s.art === 'stift' ? dicke : null) ?? 2.5;
         const farbe = String(s.farbe || 'currentColor');
+        const fillColor = typeof s.fillColor === 'string' ? s.fillColor : farbe;
+        const shapeWidth = Number.isFinite(s.strichBreite) && s.strichBreite > 0 ? Math.min(50, s.strichBreite) : 2;
         if (s.art === 'stift' || s.art === 'linie' || s.art === 'pfeil') {
             const pts = Array.isArray(s.pts) ? s.pts : [];
             const kern = globalThis.InkGeometry;
@@ -209,8 +212,9 @@ const GfxShapes = (() => {
             const y = Math.min(zahl(s.y), zahl(s.y) + zahl(s.h));
             const r = sv('rect', {
                 x, y, width: Math.abs(zahl(s.w)), height: Math.abs(zahl(s.h)),
-                rx: s.art === 'notiz' ? 3 : 5,
-                fill: s.art === 'notiz' || s.gefuellt === true ? farbe : 'none', stroke: farbe, 'stroke-width': 2,
+                rx: s.art === 'notiz' ? 3 : Number.isFinite(s.cornerRadius) ? Math.min(Math.abs(zahl(s.w)), Math.abs(zahl(s.h))) * Math.max(0, Math.min(.5, s.cornerRadius)) : 5,
+                fill: s.art === 'notiz' || s.gefuellt === true ? fillColor : 'none', stroke: farbe, 'stroke-width': shapeWidth,
+                ...(s.dash ? { 'stroke-dasharray': '6 4' } : {}),
                 'fill-opacity': s.art === 'notiz' ? .85 : 1,
                 'pointer-events': 'all'
             });
@@ -254,8 +258,8 @@ const GfxShapes = (() => {
                 ? `${oben} ${x + w},${y + h / 2} ${x + w / 2},${y + h} ${x},${y + h / 2}`
                 : `${oben} ${x + w},${y + h} ${x},${y + h}`;
             const e = sv('polygon', {
-                points: punkte, fill: s.gefuellt === true ? farbe : 'none',
-                stroke: farbe, 'stroke-width': 2, 'pointer-events': 'all'
+                points: punkte, fill: s.gefuellt === true ? fillColor : 'none',
+                stroke: farbe, 'stroke-width': shapeWidth, 'pointer-events': 'all', ...(s.dash ? { 'stroke-dasharray': '6 4' } : {})
             });
             e.dataset.sid = s.id;
             tinte(e, 'strich', farbe);
@@ -265,7 +269,8 @@ const GfxShapes = (() => {
             const e = sv('ellipse', {
                 cx: zahl(s.x) + zahl(s.w) / 2, cy: zahl(s.y) + zahl(s.h) / 2,
                 rx: Math.abs(zahl(s.w) / 2), ry: Math.abs(zahl(s.h) / 2),
-                fill: s.gefuellt === true ? farbe : 'none', stroke: farbe, 'stroke-width': 2,
+                fill: s.gefuellt === true ? fillColor : 'none', stroke: farbe, 'stroke-width': shapeWidth,
+                ...(s.dash ? { 'stroke-dasharray': '6 4' } : {}),
                 'pointer-events': 'all'
             });
             e.dataset.sid = s.id;

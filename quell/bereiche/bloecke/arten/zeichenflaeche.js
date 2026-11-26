@@ -238,6 +238,13 @@ const Zusatz = (() => {
                 flaeche.append(sv('rect', { x: b.x, y: b.y, width: b.w, height: b.h,
                     fill: 'none', stroke: 'var(--accent)', 'stroke-width': 1 / sicht.z, 'stroke-dasharray': s.locked ? '5 4' : 'none', 'pointer-events': 'none' }));
             }
+            if (werkzeug === 'zeiger' && objectSelection.size && !GfxObjects.locked(daten, objectSelection)) {
+                const box = GfxObjects.bounds(daten.filter((o) => objectSelection.has(o.id)));
+                if (box) {
+                    const cx = box.x + box.w / 2, cy = box.y - 34 / sicht.z;
+                    flaeche.append(sv('line', { x1: cx, y1: box.y, x2: cx, y2: cy, stroke: 'var(--accent)', 'stroke-width': 1 / sicht.z, 'pointer-events': 'none' }), sv('circle', { cx, cy, r: 22 / sicht.z, fill: 'transparent', 'data-wb-rotate': 'true', 'pointer-events': 'all' }), sv('circle', { cx, cy, r: 6 / sicht.z, fill: 'var(--accent)', 'pointer-events': 'none' }));
+                }
+            }
             if (werkzeug === 'zeiger' && gewaehlt) {
                 const s = daten.find((q) => q.id === gewaehlt);
                 if (s && !s.locked && objectSelection.size <= 1 && groessenFaehig(s)) {
@@ -441,6 +448,7 @@ const Zusatz = (() => {
         let gewaehlt = null;
         const objectSelection = new Set();
         let selectionDrag = null;
+        let rotationDrag = null;
         const chooseObjects = (ids, exact = false) => {
             objectSelection.clear();
             (exact ? ids : GfxObjects.expand(daten, new Set(ids))).forEach(id => objectSelection.add(id));
@@ -473,6 +481,15 @@ const Zusatz = (() => {
             if (ziel && (ziel.tagName === 'INPUT' || ziel.tagName === 'TEXTAREA' || ziel.isContentEditable))
                 return;
             const strg = e.ctrlKey || e.metaKey;
+            if (rotationDrag) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    daten.splice(0, daten.length, ...rotationDrag.before);
+                    rotationDrag = null;
+                    male();
+                }
+                return;
+            }
             if (strg && e.key.toLowerCase() === 'a') {
                 e.preventDefault();
                 chooseObjects(daten.filter((o) => o.art !== 'verbindung').map((o) => o.id));
@@ -535,6 +552,14 @@ const Zusatz = (() => {
                 return;
             }
             const [x, y] = punkt(e);
+            if (e.target instanceof Element && e.target.closest('[data-wb-rotate]') && !GfxObjects.locked(daten, objectSelection)) {
+                const box = GfxObjects.bounds(daten.filter((o) => objectSelection.has(o.id)));
+                if (box) {
+                    const pivot = { x: box.x + box.w / 2, y: box.y + box.h / 2 };
+                    rotationDrag = { before: daten.slice(), pivot, start: Math.atan2(y - pivot.y, x - pivot.x), degrees: 0 };
+                }
+                return;
+            }
             if (['rahmenwahl', 'freihandwahl'].includes(werkzeug)) {
                 selectionDrag = { start: [x, y], points: [[x, y]], free: werkzeug === 'freihandwahl' };
                 return;
@@ -675,6 +700,16 @@ const Zusatz = (() => {
                 return;
             }
             const [x, y] = punkt(e);
+            if (rotationDrag) {
+                const drag = rotationDrag;
+                let degrees = (Math.atan2(y - drag.pivot.y, x - drag.pivot.x) - drag.start) * 180 / Math.PI;
+                if (e.shiftKey)
+                    degrees = Math.round(degrees / 15) * 15;
+                drag.degrees = degrees;
+                daten.splice(0, daten.length, ...GfxObjects.rotate(drag.before, objectSelection, degrees));
+                male();
+                return;
+            }
             if (selectionDrag) {
                 selectionDrag.points.push([x, y]);
                 male();
@@ -743,6 +778,21 @@ const Zusatz = (() => {
             male();
         });
         const fertig = (e) => {
+            if (rotationDrag) {
+                const drag = rotationDrag;
+                rotationDrag = null;
+                if (e?.type === 'pointerup' && Math.abs(drag.degrees) > .1) {
+                    verlauf.merken(JSON.stringify(drag.before));
+                    standZeigen();
+                    sichern();
+                }
+                else
+                    daten.splice(0, daten.length, ...drag.before);
+                if (e?.pointerId !== undefined)
+                    finger.delete(e.pointerId);
+                male();
+                return;
+            }
             if (selectionDrag) {
                 const last = selectionDrag.points[selectionDrag.points.length - 1], a = selectionDrag.start;
                 const polygon = selectionDrag.free ? selectionDrag.points : [a, [last[0], a[1]], last, [a[0], last[1]]];

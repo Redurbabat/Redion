@@ -14,7 +14,25 @@ const GfxObjects = (() => {
   const expand = (objects: readonly GfxObject[], ids: ReadonlySet<string>): Set<string> => {
     const groups = new Set(objects.filter(o => ids.has(o.id) && typeof o.groupId === 'string' && o.groupId)
       .map(o => o.groupId));
-    return new Set(objects.filter(o => ids.has(o.id) || (!!o.groupId && groups.has(o.groupId))).map(o => o.id));
+    const selected = new Set(objects.filter(o => ids.has(o.id) || (!!o.groupId && groups.has(o.groupId))).map(o => o.id));
+    // Ein Rahmen nimmt seine räumlich enthaltenen Objekte mit. Die bestehenden
+    // IDs und Gruppen bleiben erhalten; es wird kein zweiter Inhalt gespeichert.
+    for (let pass = 0; pass < objects.length; pass++) {
+      const count = selected.size;
+      for (const frame of objects.filter(o => selected.has(o.id) && o['art'] === 'frame')) {
+        const f = GfxShapes.rahmenVon(frame);
+        for (const object of objects) {
+          if (selected.has(object.id) || object['art'] === 'verbindung') continue;
+          const b = GfxShapes.rahmenVon(object);
+          if (b.x >= f.x && b.y >= f.y && b.x + b.w <= f.x + f.w && b.y + b.h <= f.y + f.h &&
+              (object['art'] !== 'frame' || b.w < f.w || b.h < f.h)) selected.add(object.id);
+        }
+      }
+      const outer = new Set(objects.filter(o => selected.has(o.id) && o.groupId).map(o => o.groupId));
+      objects.filter(o => o.groupId && outer.has(o.groupId)).forEach(o => selected.add(o.id));
+      if (selected.size === count) break;
+    }
+    return selected;
   };
 
   const locked = (objects: readonly GfxObject[], ids: ReadonlySet<string>): boolean =>

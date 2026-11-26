@@ -99,6 +99,8 @@ const GfxToolbar = (() => {
         let galerieMessen;
         if (o.galerie) {
             wurzel.classList.add('gfx-tb-galerie', 'gfx-tb-edgeless');
+            if (o.galerie.beschriftet)
+                wurzel.classList.add('gfx-tb-beschriftet');
             const knoepfe = new Map([...roller.querySelectorAll('button')].map(b => [b.dataset.wz || b.dataset.a, b]));
             const einhaengen = (el, ids) => {
                 for (const id of ids) {
@@ -129,6 +131,13 @@ const GfxToolbar = (() => {
                 for (const b of karte.querySelectorAll('button')) {
                     if (!['notiz', 'formen'].includes(id) && !['stift', 'radierer'].includes(b.dataset.wz ?? ''))
                         b.classList.add('gfx-tb-symbol');
+                    if (o.galerie.beschriftet) {
+                        const label = document.createElement('span');
+                        label.className = 'gfx-tb-kartenname';
+                        label.textContent = b.getAttribute('aria-label') || '';
+                        label.setAttribute('aria-hidden', 'true');
+                        b.append(label);
+                    }
                 }
                 if (vorschau && (id === 'notiz' || id === 'formen')) {
                     delete vorschau.dataset.sym;

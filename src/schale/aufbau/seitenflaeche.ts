@@ -656,6 +656,7 @@ const Seitenflaeche = (() => {
       pointer: number; sx: number; sy: number; ecke: Ecke;
       vorher: FormRahmen; nachher: FormRahmen;
     } | null = null;
+    let rotationDrag: { pointer: number; before: any[]; ids: Set<string>; pivot: { x: number; y: number }; start: number; degrees: number } | null = null;
     const auswahl = new Set<string>();
     const auswahlLeiste = document.createElement('div');
     auswahlLeiste.className = 'pg-fl-auswahlleiste';
@@ -715,7 +716,7 @@ const Seitenflaeche = (() => {
       if (auswahlLeiste.hidden) return;
       const polster = auswahlLeiste.offsetWidth / 2 + 8;
       auswahlLeiste.style.left = Math.max(polster, Math.min(breit - polster, (links + rechts) / 2)) + 'px';
-      const platz = auswahlLeiste.offsetHeight + 14;
+      const platz = auswahlLeiste.offsetHeight + 58;
       auswahlLeiste.style.top = Math.max(4, Math.min(hoch - platz,
         oben >= platz ? oben - platz : unten + 12)) + 'px';
     };
@@ -727,6 +728,13 @@ const Seitenflaeche = (() => {
     };
 
     const griffeZeigen = (r: FormRahmen): void => {
+      const cx = r.x + r.w / 2, cy = r.y - 34 / sicht.z;
+      auswahlRahmen.append(GfxShapes.sv('line', { x1: cx, y1: r.y, x2: cx, y2: cy,
+        stroke: 'var(--accent)', 'stroke-width': 1 / sicht.z, 'pointer-events': 'none' }));
+      const rotate = GfxShapes.sv('g', { 'data-drehgriff': 'true' });
+      rotate.append(GfxShapes.sv('circle', { cx, cy, r: 22 / sicht.z, fill: 'transparent', class: 'pg-fl-dreh-treffer', 'pointer-events': 'all' }),
+        GfxShapes.sv('circle', { cx, cy, r: 6 / sicht.z, fill: 'var(--accent)', stroke: 'var(--bg)', 'stroke-width': 2 / sicht.z, 'pointer-events': 'none' }));
+      auswahlRahmen.append(rotate);
       const fingerziel = matchMedia('(pointer: coarse)').matches ? 42 : 20;
       const ecken = r.w * sicht.z < fingerziel || r.h * sicht.z < fingerziel
         ? ['unten-rechts' as const] : Object.keys(ECKEN) as Ecke[];
@@ -990,6 +998,20 @@ const Seitenflaeche = (() => {
         return { ...form, x: r2(form.x + dx), y: r2(form.y + dy) };
       });
       sichern();
+    };
+    const rotationStart = (e: PointerEvent): void => {
+      const box = gruppenRahmen(); if (!box || selectionLocked()) return;
+      const pivot = { x: box.x + box.w / 2, y: box.y + box.h / 2 }, point = inFlaeche(e.clientX, e.clientY);
+      rotationDrag = { pointer: e.pointerId, before: formen, ids: new Set(auswahl), pivot,
+        start: Math.atan2(point.y - pivot.y, point.x - pivot.x), degrees: 0 };
+      e.preventDefault(); flaeche.focus({ preventScroll: true });
+      try { flaeche.setPointerCapture(e.pointerId); } catch { /* Loslassen auf der Fläche bleibt möglich. */ }
+    };
+    const rotationEnd = (commit = false): void => {
+      const drag = rotationDrag; if (!drag) return; rotationDrag = null;
+      if (commit && Math.abs(drag.degrees) > .1) {
+        verlauf.merken(JSON.stringify(drag.before)); standZeigen(); sichern();
+      } else { formen = drag.before; malen(); }
     };
 
     /** Welche Form liegt an dieser Stelle? Gerechnet, nicht ueber das
@@ -2016,6 +2038,7 @@ const Seitenflaeche = (() => {
         return;
       }
       const griffElement = ziel?.closest('[data-skaliergriff]');
+      if (ziel?.closest('[data-drehgriff]') && e.button === 0) { rotationStart(e); return; }
       const griff = griffElement?.getAttribute('data-skaliergriff');
       if (griff && auswahlRahmen.contains(griffElement ?? null) && Object.hasOwn(ECKEN, griff) && e.button === 0) {
         skalierZugStart(e, griff as Ecke);
@@ -2136,6 +2159,12 @@ const Seitenflaeche = (() => {
     };
 
     const bewegt = (e: PointerEvent): void => {
+      if (rotationDrag?.pointer === e.pointerId) {
+        const drag = rotationDrag, point = inFlaeche(e.clientX, e.clientY);
+        let degrees = (Math.atan2(point.y - drag.pivot.y, point.x - drag.pivot.x) - drag.start) * 180 / Math.PI;
+        if (e.shiftKey) degrees = Math.round(degrees / 15) * 15;
+        drag.degrees = degrees; formen = GfxObjects.rotate(drag.before, drag.ids, degrees); malen(); auswahlLeiste.hidden = true; return;
+      }
       if (dockZug) { dockZugZeigen(e); return; }
       if (finger.has(e.pointerId)) finger.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (skalierZug) {
@@ -2228,6 +2257,7 @@ const Seitenflaeche = (() => {
     };
 
     const endet = (e: PointerEvent): void => {
+      if (rotationDrag?.pointer === e.pointerId) { finger.delete(e.pointerId); rotationEnd(e.type === 'pointerup'); return; }
       if (dockZug?.pointer === e.pointerId) { dockZugEnde(e); return; }
       finger.delete(e.pointerId);
       if (finger.size < 2) kneifen = null;
@@ -2292,6 +2322,7 @@ const Seitenflaeche = (() => {
     flaeche.tabIndex = 0;
     flaeche.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.key === 'Escape' && dockZug) { e.preventDefault(); dockZugEnde(); return; }
+      if (rotationDrag) { if (e.key === 'Escape') { e.preventDefault(); rotationEnd(); } return; }
       if (e.key === 'Escape' && rahmenZug) { e.preventDefault(); rahmenZugEnde(); return; }
       if (skalierZug && (e.key === 'Escape' || e.key === 'Delete' || e.key.startsWith('Arrow') || e.ctrlKey || e.metaKey)) {
         e.preventDefault();

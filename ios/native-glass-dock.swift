@@ -247,7 +247,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         const keyboard = !!(window.visualViewport && window.visualViewport.height < window.innerHeight - 140);
         // Die Zeichenfläche besitzt ihr eigenes AFFiNE-Werkzeugdock.
         // Die Navigation und Suche liegen dort nicht über den Zeichenwerkzeugen.
-        const drawing = Array.from(document.querySelectorAll('.document-studio, .pg-flaeche, .sp-voll'))
+        const drawing = Array.from(document.querySelectorAll('.document-studio, .pg-flaeche, .sp-voll, .gfx-presenting-screen'))
           .some(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden');
         window.webkit?.messageHandlers?.redionDock?.postMessage({
           selected: current < 0 ? 0 : current,

@@ -303,6 +303,21 @@ vollständige `.redion`-Sicherung bleibt für Dokumentblöcke und den Arbeitsber
 zuständig. Dynamische Bibliotheksregeln stehen als Liste unter dem Meta-Schlüssel
 `bibliothek:dynamic-collections` und werden mit der bestehenden Sicherung erfasst.
 
+**Ergänzung E832:** `objectComments` darf zusätzlich `author: {id,name}`,
+`replies: [{id,text,created,author,mentions}]` und
+`mentions: [{id,name,kind:'person'|'page'}]` enthalten. Es bleiben optionale
+Objektfelder in derselben Sicherung. Der Abgleich führt Objekte, PDF-Marken,
+Kommentare und Antworten anhand ihrer Kennungen zusammen; ein gleichzeitiges
+Löschen und Bearbeiten wird zur Entscheidung erhalten.
+
+Importierte Formen dürfen `fillColor`, `cornerRadius`, `strichBreite`, `dash`
+und `fontSize` als optionale Angaben behalten. Die Quellwerte liegen daneben
+in `affineSource`. Vollständige Dokumentsnapshots werden als neue Seiten unter
+einer Importseite angelegt. Der Originalexport ist dort ein wirklicher
+Dateianhang; nicht unterstützte Blockarten sind sichtbare JSON-Codeblöcke.
+Die Rohdaten eines Blocks enthalten Kinderkennungen statt vervielfachter
+Unterbäume. Das Originalarchiv bewahrt die vollständige ursprüngliche Struktur.
+
 **Die Ansicht einer Seite** (E690): ein Seitenblock darf `seitenAnsicht`
 tragen — `'seite'`, `'flaeche'` oder `'redion'`. **Ein Block ohne das Feld
 ist nicht kaputt, sondern von gestern**, und er bekommt die Redion-Ansicht:

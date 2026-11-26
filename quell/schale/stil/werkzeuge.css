@@ -2027,3 +2027,12 @@ body.fokus .pg-ansichten, body.fokus .pg-tools{display:none!important}
 .bib-dynamic-form label { display: grid; gap: 4px; font-size: 13px; }
 .bib-dynamic-form input, .bib-dynamic-form select, .bib-dynamic-form button { min-height: 44px; max-width: 100%; }
 .bib-dynamic-form input[type="checkbox"] { width: 44px; }
+.gfx-tb-beschriftet .gfx-tb-karte button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
+.gfx-tb-beschriftet .gfx-tb-kartenname { display: block; max-width: 90px; white-space: normal; line-height: 1.15; font-size: 11px; text-align: center; overflow-wrap: anywhere; }
+.gfx-tb-beschriftet .gfx-tb-karte .zeichen { max-height: 30px; }
+.gfx-tb-beschriftet .gfx-tb-karte [data-wz="stift"] .zeichen { transform: scale(.65); margin: -10px 0; }
+.gfx-presenting-screen { position: fixed !important; inset: 0 !important; z-index: 190 !important; width: 100vw !important; height: 100dvh !important; max-width: none !important; max-height: none !important; margin: 0 !important; border: 0 !important; background: var(--bg); }
+.gfx-comment-reply { margin: 12px 0 8px 12px; border-inline-start: 2px solid var(--border); padding-inline-start: 10px; }
+.gfx-comment-mention { display: inline-block; margin: 4px; padding: 4px 7px; border-radius: 6px; color: var(--accent); background: color-mix(in srgb,var(--accent) 12%,transparent); }
+.gfx-tb-edgeless .gfx-tb-schnell .gfx-tb-symbol .zeichen svg { display: block; }
+.gfx-tb-edgeless .gfx-tb-schnell .gfx-tb-symbol .zeichen::before { display: none; }

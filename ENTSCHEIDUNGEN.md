@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-800 Entscheidungen, E1 bis E829 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+803 Entscheidungen, E1 bis E832 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -888,6 +888,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E829** — Der PDF-Bereich setzt Blöcke und holt das Elektro-Menü über den Ereignisbus (`frage.block-am-ende`, `frage.elektro-menue`) statt über `Blocks` und `Elektrostart` (§5, erster Weg); `test537` 125 → 123 Paare, 18/18
 * **E830** — Neutrale Oberfläche ohne Bordeaux; gespeicherte Gruppen, Zeichenreihenfolge und Sperren auf der Seitenfläche, mit eigenem GFX-Kern und Sicherungsrundreisen.
 * **E831** — Gemeinsame Objektübersicht für Seite, Whiteboard und PDF; Ausrichten, verschachtelte Gruppen, Rahmenvortrag, Kommentare, Flächenarchive und dynamische Bibliothekssammlungen ergänzen PR #232.
+* **E832** — Fortlaufendes AFFiNE-Ziel: passende Elektro-Kontextdocks, direkte Drehgriffe, Rahmeninhalt/Vollbild/PDF, Objektantworten mit konfliktbewusstem Abgleich und Dokumentimport samt Originalexport. Batterie-Laufzeitdateien gelangen über den bestehenden Build nach `quell/`.
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -72188,3 +72189,44 @@ Die Umsetzung enthält keinen weiteren AFFiNE-Quellcode und keinen neuen Dienst.
 
 Die Abnahme und konkreten Formatgrenzen stehen in
 `doku/AFFINE-WEITERER-AUSBAU-PR232.md`. Browserbilder sind getrennte Artefakte.
+
+## E832 · Ein fortlaufendes Ziel und passende Werkzeuge im Elektrobereich
+
+26. November 2026 · Redur: alle weiteren AFFiNE-Funktionen ausbauen, ohne nach
+jedem Teilbogen erneut zu fragen. Fachzeichnen, Elektrosimulator und verwandte
+Werkstätten sollen dasselbe Dock mit passenden Inhalten bekommen. Der
+Fortschritt und die weiterhin offenen Kategorien stehen in `doku/AFFINE-ZIEL-PR232.md`.
+
+- Eine Instanz je Kontext ist eingehängt: Fachzeichnen, Simulation, Relais
+  oder Batterie. Karten rufen dieselben bestehenden Befehle auf. Pause und
+  Tempo steuern die vorhandene Laboruhr; es gibt keinen neuen Rechner und
+  keine Speicherung von Versuchsschalterstellungen im Plan. Beim Simulieren
+  sind die Werkstattfächer aus dem Weg; nach dem Stoppen kommen sie zurück.
+- Die gemeinsamen Drehgriffe rechnen auf dem bestehenden Formenformat.
+  Die Vorschau bleibt ungespeichert, Loslassen erzeugt einen Verlaufsschritt,
+  Escape verwirft ihn. Rahmen nehmen räumlich enthaltene Objekte und Gruppen
+  mit; gesperrter Inhalt wird damit nicht umgangen.
+- Der Rahmenvortrag belegt die ganze Fläche mit einem sichtbaren Rückweg.
+  PDF-Folien verwenden den vorhandenen pdf-lib-Lader und gerenderte Ausschnitte;
+  es wird keine zweite PDF-Bibliothek eingebaut. Die native Navigation blendet
+  sich auch bei einer Whiteboard-Präsentation aus.
+- Objektkommentare erhalten optionale Autoren, Antworten und Erwähnungen.
+  Der vorhandene Dreiwege-Abgleich führt Objekte/Marken und Fäden anhand
+  ihrer IDs zusammen. Löschen gegen Bearbeiten bleibt ein sichtbarer Konflikt.
+  Die Konfliktentscheidung folgt IDs statt veralteter Indizes. Ein eigener
+  Test war vor der Korrektur dieses Entscheidungswegs rot. Eine echte
+  Serverzustellung oder Geräteabnahme wird dadurch nicht behauptet.
+- Der Dokumentimport übersetzt BlockSuite-Snapshots in bestehende Seiten und
+  Blöcke, einschliesslich Rich Text, Listen, Dateien und Dokumentverweisen.
+  Mindmaps werden bearbeitbare Formen und Verbinder. Nicht umgewandelte Blöcke
+  bleiben sichtbar als JSON, und der ganze Originalexport bleibt als Datei.
+  Die gesamte Struktur und alle Anhänge werden vor dem ersten Schreiben geprüft.
+- Zwei bestehende Batterie-JavaScript-Dateien wurden aus `index.html` geladen,
+  aber durch `.assetsignore` ausgeschlossen und von der iOS-Paketierung nicht
+  mitgenommen. `bauen-elektro.mts` stellt sie ohne Algorithmusänderung unter
+  `quell/bereiche/elektro/` bereit; Index und Offline-Grundstock zeigen dorthin.
+  Die Originale und ihre bestehenden Node-Prüfungen bleiben bestehen. Das ist
+  eine Paketierungskorrektur, keine behauptete TypeScript-Migration der Rechner.
+
+Der vollständige AFFiNE-Katalog ist damit noch nicht pauschal abgenommen.
+Prüfergebnisse, Bildartefakte und echte native Nachweise stehen beim laufenden Ziel.

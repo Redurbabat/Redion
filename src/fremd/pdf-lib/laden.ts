@@ -3,11 +3,13 @@
 type PdfKopieSeite = {
   getRotation(): { angle: number };
   setRotation(rotation: { angle: number }): void;
+  drawImage(image: unknown, options: { x: number; y: number; width: number; height: number }): void;
 };
 type PdfKopieDokument = {
   getPageCount(): number;
   copyPages(source: PdfKopieDokument, indices: number[]): Promise<PdfKopieSeite[]>;
-  addPage(page: PdfKopieSeite): void;
+  addPage(page: PdfKopieSeite | [number, number]): PdfKopieSeite;
+  embedPng(bytes: ArrayBuffer): Promise<unknown>;
   save(options: { updateFieldAppearances: boolean }): Promise<Uint8Array<ArrayBuffer>>;
 };
 type PdfLibApi = {
@@ -100,5 +102,17 @@ const PdfOriginal = (() => {
     }
     return new Blob([await ziel.save({ updateFieldAppearances: false })], { type: 'application/pdf' });
   };
-  return { seitenleser, zusammenstellen };
+  const ausBildern = async (pages: { blob: Blob; w: number; h: number }[]): Promise<Blob> => {
+    if (!pages.length || pages.length > MAX_PAGES || pages.some(p => !Number.isFinite(p.w) || !Number.isFinite(p.h) || p.w <= 0 || p.h <= 0))
+      throw new Error('Ungültige PDF-Folien.');
+    const pdf = await laden(), doc = await pdf.PDFDocument.create();
+    for (const page of pages) {
+      if (page.blob.size > MAX_BYTES) throw new Error('Diese Folie ist zu gross.');
+      const factor = Math.min(1, 14400 / Math.max(page.w, page.h)), w = page.w * factor, h = page.h * factor;
+      const image = await doc.embedPng(await page.blob.arrayBuffer()), sheet = doc.addPage([w, h]);
+      sheet.drawImage(image, { x: 0, y: 0, width: w, height: h });
+    }
+    return new Blob([await doc.save({ updateFieldAppearances: false })], { type: 'application/pdf' });
+  };
+  return { seitenleser, zusammenstellen, ausBildern };
 })();

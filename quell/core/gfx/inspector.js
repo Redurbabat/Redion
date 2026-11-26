@@ -1,6 +1,10 @@
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/gfx/inspector.ts (npm run bauen:ts). */
 const GfxInspector = (() => {
+    let session = {
+        author: () => ({ id: 'local', name: 'Ich' }), mentions: () => [], openPage: () => { }
+    };
+    const bindSession = (next) => { session = next; };
     const label = (o) => String(o.text || o.title || { frame: 'Rahmen', stift: 'Strich',
         rechteck: 'Rechteck', rectangle: 'Rechteck', ellipse: 'Ellipse', verbindung: 'Verbindung', bild: 'Bild', notiz: 'Notiz',
         line: 'Linie', arrow: 'Pfeil', triangle: 'Dreieck', roundrect: 'Abgerundetes Rechteck', pen: 'Strich', text: 'Text', attachment: 'Anhang' }[o.art] || o.art || 'Objekt').slice(0, 80);
@@ -53,7 +57,10 @@ const GfxInspector = (() => {
             if (!panel.isConnected)
                 return;
             tabs.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === tab)));
+            const focusedBody = body.contains(document.activeElement);
             body.replaceChildren();
+            if (focusedBody)
+                panel.focus({ preventScroll: true });
             if (tab === 'layers') {
                 note('Oben liegt vorne. Tippen wählt die Gruppe; „Einzeln“ öffnet ein Mitglied.');
                 const rows = document.createElement('div');
@@ -152,14 +159,14 @@ const GfxInspector = (() => {
                         const frame = { id: uid(), art: 'frame', x: b.x - 32, y: b.y - 48, w: b.w + 64, h: b.h + 80,
                             farbe: '#529cca', text: 'Rahmen ' + (read().filter(o => o.art === 'frame').length + 1) };
                         change([frame, ...read()]);
-                        select([frame.id], true);
+                        select([frame.id]);
                         render();
                     });
                     const frames = read().filter(o => o.art === 'frame').sort((a, b) => (a.frameOrder || 0) - (b.frameOrder || 0));
                     frames.forEach((frame, index) => {
                         const row = document.createElement('div');
                         row.className = 'gfx-layer-row';
-                        button(row, (index + 1) + '. ' + label(frame), () => { select([frame.id], true); options.zoom?.(GfxShapes.rahmenVon(frame)); });
+                        button(row, (index + 1) + '. ' + label(frame), () => { select([frame.id]); options.zoom?.(GfxShapes.rahmenVon(frame)); });
                         const reorder = (delta) => {
                             const next = frames.slice();
                             [next[index], next[index + delta]] = [next[index + delta], next[index]];
@@ -177,6 +184,10 @@ const GfxInspector = (() => {
                         body.append(name);
                     });
                     button(body, 'Präsentation starten', () => { close(); present(options, frames); }, !frames.length);
+                    const exportStatus = document.createElement('p');
+                    exportStatus.setAttribute('role', 'status');
+                    button(body, 'Rahmen als PDF exportieren', () => { void exportFrames(options, frames).catch(error => { exportStatus.textContent = error instanceof Error ? error.message : 'PDF-Export fehlgeschlagen.'; }); }, !frames.length);
+                    body.append(exportStatus);
                 }
             }
             else if (tab === 'comments') {
@@ -187,15 +198,67 @@ const GfxInspector = (() => {
                 }
                 const object = objects[0];
                 subtitle(label(object));
+                const composer = (container, name, saveLabel, save) => {
+                    const input = document.createElement('textarea');
+                    input.rows = 3;
+                    input.maxLength = 10000;
+                    input.setAttribute('aria-label', name);
+                    container.append(input);
+                    const targets = session.mentions(), mentions = new Map();
+                    if (targets.length) {
+                        const select = document.createElement('select');
+                        select.setAttribute('aria-label', 'Erwähnung hinzufügen');
+                        const placeholder = document.createElement('option');
+                        placeholder.value = '';
+                        placeholder.textContent = 'Person oder Seite erwähnen …';
+                        select.append(placeholder);
+                        targets.forEach((target, index) => { const option = document.createElement('option'); option.value = String(index); option.textContent = target.name; select.append(option); });
+                        select.addEventListener('change', () => {
+                            const target = targets[Number(select.value)];
+                            if (!target || select.value === '')
+                                return;
+                            mentions.set(target.id, target);
+                            input.value += (input.value && !input.value.endsWith(' ') ? ' ' : '') + '@' + target.name + ' ';
+                            select.value = '';
+                            input.focus();
+                        });
+                        container.append(select);
+                    }
+                    button(container, saveLabel, () => { if (input.value.trim())
+                        save(input.value.trim(), [...mentions.values()]); });
+                    return input;
+                };
+                const attribution = (container, item) => {
+                    const author = document.createElement('small');
+                    author.textContent = String(item.author?.name || 'Ich') + ' · ' + new Date(item.created).toLocaleString('de-DE');
+                    container.append(author);
+                    for (const mention of Array.isArray(item.mentions) ? item.mentions : []) {
+                        if (mention.kind === 'page')
+                            button(container, '@' + String(mention.name), () => session.openPage(String(mention.id)));
+                        else {
+                            const label = document.createElement('span');
+                            label.className = 'gfx-comment-mention';
+                            label.textContent = '@' + String(mention.name);
+                            container.append(label);
+                        }
+                    }
+                };
                 for (const comment of Array.isArray(object.objectComments) ? object.objectComments : []) {
                     const article = document.createElement('article');
                     article.className = 'gfx-object-comment';
                     const text = document.createElement('p');
                     text.textContent = String(comment.text || '');
                     article.append(text);
-                    const date = document.createElement('small');
-                    date.textContent = new Date(comment.created).toLocaleString('de-DE');
-                    article.append(date);
+                    attribution(article, comment);
+                    for (const reply of Array.isArray(comment.replies) ? comment.replies : []) {
+                        const row = document.createElement('div');
+                        row.className = 'gfx-comment-reply';
+                        const text = document.createElement('p');
+                        text.textContent = String(reply.text || '');
+                        row.append(text);
+                        attribution(row, reply);
+                        article.append(row);
+                    }
                     button(article, comment.resolved ? 'Erneut öffnen' : 'Erledigen', () => update({ objectComments: object.objectComments.map((c) => c.id === comment.id ? { ...c, resolved: !c.resolved } : c) }));
                     button(article, 'Bearbeiten', () => {
                         const editor = document.createElement('textarea');
@@ -208,17 +271,24 @@ const GfxInspector = (() => {
                             update({ objectComments: object.objectComments.map((c) => c.id === comment.id ? { ...c, text: editor.value.trim() } : c) }); });
                         editor.focus();
                     });
+                    button(article, 'Antworten', () => {
+                        if (article.querySelector('[data-reply-form]'))
+                            return;
+                        const form = document.createElement('div');
+                        form.dataset.replyForm = 'true';
+                        article.append(form);
+                        const input = composer(form, 'Antwort auf Kommentar', 'Antwort speichern', (text, mentions) => {
+                            const current = read().find(o => o.id === object.id);
+                            update({ objectComments: (current?.objectComments || []).map((c) => c.id === comment.id ? { ...c,
+                                    replies: [...(c.replies || []), { id: uid(), text, mentions, author: session.author(), created: new Date().toISOString() }] } : c) });
+                        });
+                        input.focus();
+                    });
                     body.append(article);
                 }
-                const input = document.createElement('textarea');
-                input.rows = 3;
-                input.maxLength = 10000;
-                input.setAttribute('aria-label', 'Neuer Objektkommentar');
-                body.append(input);
-                button(body, 'Kommentar hinzufügen', () => {
-                    if (!input.value.trim())
-                        return;
-                    update({ objectComments: [...(object.objectComments || []), { id: uid(), text: input.value.trim(), created: new Date().toISOString(), resolved: false }] });
+                composer(body, 'Neuer Objektkommentar', 'Kommentar hinzufügen', (text, mentions) => {
+                    const current = read().find(o => o.id === object.id);
+                    update({ objectComments: [...(current?.objectComments || []), { id: uid(), text, mentions, author: session.author(), replies: [], created: new Date().toISOString(), resolved: false }] });
                 });
             }
             else if (tab === 'exchange') {
@@ -256,6 +326,36 @@ const GfxInspector = (() => {
                             status.textContent = error instanceof Error ? error.message : 'Die Datei konnte nicht importiert werden.';
                         }
                     });
+                    subtitle('AFFiNE-Dokumente');
+                    note('Dokumentsnapshots als neue Seiten importieren. Die Originaldatei wird als Anhang mitgesichert.');
+                    const documents = document.createElement('input');
+                    documents.type = 'file';
+                    documents.accept = '.json,.zip,.affine';
+                    documents.setAttribute('aria-label', 'AFFiNE-Dokumente importieren');
+                    body.append(documents);
+                    const documentStatus = document.createElement('p');
+                    documentStatus.setAttribute('role', 'status');
+                    body.append(documentStatus);
+                    documents.addEventListener('change', async () => {
+                        const file = documents.files?.[0];
+                        if (!file)
+                            return;
+                        documents.disabled = true;
+                        documentStatus.textContent = 'Dokumente werden eingelesen …';
+                        try {
+                            const result = await GfxExchange.importDocuments(file, () => panel.isConnected);
+                            if (!panel.isConnected)
+                                return;
+                            documentStatus.textContent = result.pages + ' Dokumente importiert.' + (result.warnings.length ? ' Hinweise: ' + result.warnings.join(' · ') : '');
+                            button(body, 'Importierte Dokumente öffnen', () => session.openPage(result.rootId));
+                        }
+                        catch (error) {
+                            documentStatus.textContent = error instanceof Error ? error.message : 'Dokumentimport fehlgeschlagen.';
+                        }
+                        finally {
+                            documents.disabled = false;
+                        }
+                    });
                     subtitle('Vorlagen');
                     for (const [kind, name] of [['kanban', 'Projektboard'], ['swot', 'SWOT'], ['timeline', 'Zeitstrahl'], ['retro', 'Retrospektive']])
                         button(body, name, () => { const next = template(kind, uid); change([...read(), ...next]); select(next.map(o => o.id)); options.zoom?.(GfxObjects.bounds(next)); });
@@ -284,12 +384,13 @@ const GfxInspector = (() => {
         a.click();
         setTimeout(() => URL.revokeObjectURL(url), 60000);
     };
-    const exportGraphic = async (options, png) => {
-        const objects = options.read(), box = GfxObjects.bounds(objects);
+    const graphicBlob = async (options, png, crop) => {
+        const objects = options.read(), box = crop || GfxObjects.bounds(objects);
         if (!box)
-            return;
-        const svg = GfxShapes.sv('svg', { xmlns: 'http://www.w3.org/2000/svg', viewBox: `${box.x - 24} ${box.y - 24} ${box.w + 48} ${box.h + 48}`,
-            width: Math.ceil(box.w + 48), height: Math.ceil(box.h + 48) });
+            throw new Error('Keine Zeichenobjekte vorhanden.');
+        const pad = crop ? 0 : 24, width = Math.max(1, box.w + pad * 2), height = Math.max(1, box.h + pad * 2);
+        const svg = GfxShapes.sv('svg', { xmlns: 'http://www.w3.org/2000/svg', viewBox: `${box.x - pad} ${box.y - pad} ${width} ${height}`,
+            width: Math.ceil(width), height: Math.ceil(height) });
         const defs = GfxShapes.sv('defs');
         GfxShapes.pfeilMarke(defs, 'export-arrow');
         svg.append(defs);
@@ -310,26 +411,39 @@ const GfxInspector = (() => {
         for (const o of objects.filter(o => o.art !== 'verbindung'))
             svg.append(GfxShapes.zeichne(o, { pfeilMarke: 'export-arrow', bildAdresse: id => images.get(id) || null }));
         const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' });
-        if (!png) {
-            download(blob, 'Zeichenfläche.svg');
-            return;
-        }
+        if (!png)
+            return blob;
         const url = URL.createObjectURL(blob);
         try {
             const image = new Image();
             image.src = url;
             await image.decode();
-            const canvas = document.createElement('canvas'), factor = Math.min(2, 8192 / Math.max(box.w + 48, box.h + 48));
-            canvas.width = Math.ceil((box.w + 48) * factor);
-            canvas.height = Math.ceil((box.h + 48) * factor);
+            const canvas = document.createElement('canvas'), factor = Math.min(2, 8192 / Math.max(width, height));
+            canvas.width = Math.ceil(width * factor);
+            canvas.height = Math.ceil(height * factor);
+            if (crop) {
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
             canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
             const result = await new Promise(resolve => canvas.toBlob(resolve));
-            if (result)
-                download(result, 'Zeichenfläche.png');
+            if (!result)
+                throw new Error('Das Bild konnte nicht erstellt werden.');
+            return result;
         }
         finally {
             URL.revokeObjectURL(url);
         }
+    };
+    const exportGraphic = async (options, png) => download(await graphicBlob(options, png), png ? 'Zeichenfläche.png' : 'Zeichenfläche.svg');
+    const exportFrames = async (options, frames) => {
+        const pages = [];
+        for (const frame of frames) {
+            const b = GfxShapes.rahmenVon(frame);
+            pages.push({ blob: await graphicBlob(options, true, b), w: b.w, h: b.h });
+        }
+        download(await GfxExchange.pdfFromImages(pages), 'Rahmen-Folien.pdf');
     };
     const exportEditable = async (options) => {
         const objects = JSON.parse(JSON.stringify(options.read()));
@@ -357,6 +471,7 @@ const GfxInspector = (() => {
         if (!frames.length || !options.zoom)
             return;
         options.host.dataset.gfxPresenting = 'true';
+        options.host.classList.add('gfx-presenting-screen');
         const bar = document.createElement('div');
         bar.className = 'gfx-presentation';
         bar.setAttribute('role', 'group');
@@ -370,12 +485,25 @@ const GfxInspector = (() => {
             e.stopImmediatePropagation();
         } };
         options.host.addEventListener('pointerdown', blockDrawing, true);
+        let ended = false, nativeFullscreen = false;
+        const fullscreenChanged = () => { if (nativeFullscreen && document.fullscreenElement !== options.host)
+            end();
+        else
+            show(); };
         const end = () => {
+            if (ended)
+                return;
+            ended = true;
             document.removeEventListener('keydown', key, true);
+            document.removeEventListener('fullscreenchange', fullscreenChanged);
             options.host.removeEventListener('pointerdown', blockDrawing, true);
+            options.host.classList.remove('gfx-presenting-screen');
             delete options.host.dataset.gfxPresenting;
             bar.remove();
-            options.restoreView?.();
+            if (document.fullscreenElement === options.host)
+                void document.exitFullscreen().finally(() => options.restoreView?.());
+            else
+                options.restoreView?.();
         };
         const key = (e) => {
             if (['Escape', 'ArrowRight', 'ArrowLeft', 'PageDown', 'PageUp', ' '].includes(e.key)) {
@@ -402,11 +530,17 @@ const GfxInspector = (() => {
         options.host.append(bar);
         document.addEventListener('keydown', key, true);
         show();
+        document.addEventListener('fullscreenchange', fullscreenChanged);
+        if (document.fullscreenEnabled && !document.fullscreenElement)
+            void options.host.requestFullscreen().then(() => { nativeFullscreen = true; if (!ended)
+                show(); }).catch(() => { });
         bar.querySelector('button')?.focus();
         new MutationObserver((_, observer) => {
             if (!bar.isConnected) {
                 document.removeEventListener('keydown', key, true);
                 options.host.removeEventListener('pointerdown', blockDrawing, true);
+                document.removeEventListener('fullscreenchange', fullscreenChanged);
+                options.host.classList.remove('gfx-presenting-screen');
                 delete options.host.dataset.gfxPresenting;
                 observer.disconnect();
             }
@@ -421,6 +555,6 @@ const GfxInspector = (() => {
             return [frame, note];
         });
     };
-    return { open, present, template, exportGraphic, exportEditable, download };
+    return { open, present, template, exportGraphic, exportEditable, exportFrames, graphicBlob, download, bindSession };
 })();
 window.GfxInspector = GfxInspector;

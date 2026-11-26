@@ -4856,6 +4856,15 @@ body.fokus .pg-ansichten, body.fokus .pg-tools{display:none!important}
 .bib-dynamic-form label { display: grid; gap: 4px; font-size: 13px; }
 .bib-dynamic-form input, .bib-dynamic-form select, .bib-dynamic-form button { min-height: 44px; max-width: 100%; }
 .bib-dynamic-form input[type="checkbox"] { width: 44px; }
+.gfx-tb-beschriftet .gfx-tb-karte button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
+.gfx-tb-beschriftet .gfx-tb-kartenname { display: block; max-width: 90px; white-space: normal; line-height: 1.15; font-size: 11px; text-align: center; overflow-wrap: anywhere; }
+.gfx-tb-beschriftet .gfx-tb-karte .zeichen { max-height: 30px; }
+.gfx-tb-beschriftet .gfx-tb-karte [data-wz="stift"] .zeichen { transform: scale(.65); margin: -10px 0; }
+.gfx-presenting-screen { position: fixed !important; inset: 0 !important; z-index: 190 !important; width: 100vw !important; height: 100dvh !important; max-width: none !important; max-height: none !important; margin: 0 !important; border: 0 !important; background: var(--bg); }
+.gfx-comment-reply { margin: 12px 0 8px 12px; border-inline-start: 2px solid var(--border); padding-inline-start: 10px; }
+.gfx-comment-mention { display: inline-block; margin: 4px; padding: 4px 7px; border-radius: 6px; color: var(--accent); background: color-mix(in srgb,var(--accent) 12%,transparent); }
+.gfx-tb-edgeless .gfx-tb-schnell .gfx-tb-symbol .zeichen svg { display: block; }
+.gfx-tb-edgeless .gfx-tb-schnell .gfx-tb-symbol .zeichen::before { display: none; }
 
 </style>
 <style>
@@ -13739,6 +13748,7 @@ body:has(.pg-flaeche) #sammelleiste{
 .pg-flaeche[data-wz="pfeil"], .pg-flaeche[data-wz="rechteck"],
 .pg-flaeche:is([data-wz="ellipse"],[data-wz="dreieck"]){cursor:crosshair}
 .pg-flaeche[data-wz="radierer"]{cursor:cell}
+.pg-fl-dreh-treffer { cursor: grab; }
 
 </style>
 <!-- Der Löschen-Knopf, der zerfliesst (E709): ein Bauteil-Blatt, also vor
@@ -15173,6 +15183,9 @@ body[data-bewegung="ruhig"] .sp-wrap .sp-flaeche .sp-umgelegt .sp-klinge{animati
 .sp-connection-status{font-size:.8125rem;color:var(--text)}
 .sp-connection-status:empty{display:none}
 @media(max-width:760px){.sp-ink-hilfe{display:none}.sp-ink-tools{gap:.25rem;padding:.25rem .5rem}.sp-ink-tools input[type="range"]{width:4rem}}
+.sp-wrap.sp-fach-offen > :is(.sp-batterie-fach,.sp-relais-fach,.sp-pruef-fach):not([hidden]) { bottom: 220px; max-height: min(55vh, calc(100% - 300px)); }
+.sp-wrap.sp-fach-offen .sp-werkzeuge { z-index: 48; }
+.sp-wrap[data-electro-context="simulation"] .sp-sim-back { display: none; }
 
 </style>
 <style>
@@ -31616,7 +31629,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1697, inhalt: '97240b108f87c3c3', gebaut: '2026-11-26T17:45:30.192Z' };
+const Stand = { fassung: 1707, inhalt: '9287167e9c05c19d', gebaut: '2026-11-26T18:43:05.675Z' };
 window.Stand = Stand;
 
 </script>
@@ -32304,8 +32317,9 @@ const GfxShapes = (() => {
         const tx = zentriert ? x + w / 2 : x + 10;
         const mitte = y + h * (s.art === 'dreieck' ? 0.66 : 0.50);
         const deckend = s.art === 'notiz' || s.gefuellt === true;
-        const textfarbe = deckend && typeof Farben !== 'undefined' && Farben.parse(farbe)
-            ? (Farben.contrast(farbe, '#18181b') >= Farben.contrast(farbe, '#ffffff') ? '#18181b' : '#ffffff')
+        const background = typeof s.fillColor === 'string' ? s.fillColor : farbe;
+        const textfarbe = deckend && typeof Farben !== 'undefined' && Farben.parse(background)
+            ? (Farben.contrast(background, '#18181b') >= Farben.contrast(background, '#ffffff') ? '#18181b' : '#ffffff')
             : deckend ? '#18181b' : farbe;
         const text = sv('text', {
             x: tx, y: zentriert ? mitte + 5 - (zeilen.length - 1) * 9 : y + 22,
@@ -32328,6 +32342,8 @@ const GfxShapes = (() => {
             ? Math.min(s.strichBreite, 50) : null;
         const strich = o.strich ?? (s.art === 'stift' ? dicke : null) ?? 2.5;
         const farbe = String(s.farbe || 'currentColor');
+        const fillColor = typeof s.fillColor === 'string' ? s.fillColor : farbe;
+        const shapeWidth = Number.isFinite(s.strichBreite) && s.strichBreite > 0 ? Math.min(50, s.strichBreite) : 2;
         if (s.art === 'stift' || s.art === 'linie' || s.art === 'pfeil') {
             const pts = Array.isArray(s.pts) ? s.pts : [];
             const kern = globalThis.InkGeometry;
@@ -32389,8 +32405,9 @@ const GfxShapes = (() => {
             const y = Math.min(zahl(s.y), zahl(s.y) + zahl(s.h));
             const r = sv('rect', {
                 x, y, width: Math.abs(zahl(s.w)), height: Math.abs(zahl(s.h)),
-                rx: s.art === 'notiz' ? 3 : 5,
-                fill: s.art === 'notiz' || s.gefuellt === true ? farbe : 'none', stroke: farbe, 'stroke-width': 2,
+                rx: s.art === 'notiz' ? 3 : Number.isFinite(s.cornerRadius) ? Math.min(Math.abs(zahl(s.w)), Math.abs(zahl(s.h))) * Math.max(0, Math.min(.5, s.cornerRadius)) : 5,
+                fill: s.art === 'notiz' || s.gefuellt === true ? fillColor : 'none', stroke: farbe, 'stroke-width': shapeWidth,
+                ...(s.dash ? { 'stroke-dasharray': '6 4' } : {}),
                 'fill-opacity': s.art === 'notiz' ? .85 : 1,
                 'pointer-events': 'all'
             });
@@ -32434,8 +32451,8 @@ const GfxShapes = (() => {
                 ? `${oben} ${x + w},${y + h / 2} ${x + w / 2},${y + h} ${x},${y + h / 2}`
                 : `${oben} ${x + w},${y + h} ${x},${y + h}`;
             const e = sv('polygon', {
-                points: punkte, fill: s.gefuellt === true ? farbe : 'none',
-                stroke: farbe, 'stroke-width': 2, 'pointer-events': 'all'
+                points: punkte, fill: s.gefuellt === true ? fillColor : 'none',
+                stroke: farbe, 'stroke-width': shapeWidth, 'pointer-events': 'all', ...(s.dash ? { 'stroke-dasharray': '6 4' } : {})
             });
             e.dataset.sid = s.id;
             tinte(e, 'strich', farbe);
@@ -32445,7 +32462,8 @@ const GfxShapes = (() => {
             const e = sv('ellipse', {
                 cx: zahl(s.x) + zahl(s.w) / 2, cy: zahl(s.y) + zahl(s.h) / 2,
                 rx: Math.abs(zahl(s.w) / 2), ry: Math.abs(zahl(s.h) / 2),
-                fill: s.gefuellt === true ? farbe : 'none', stroke: farbe, 'stroke-width': 2,
+                fill: s.gefuellt === true ? fillColor : 'none', stroke: farbe, 'stroke-width': shapeWidth,
+                ...(s.dash ? { 'stroke-dasharray': '6 4' } : {}),
                 'pointer-events': 'all'
             });
             e.dataset.sid = s.id;
@@ -32581,6 +32599,8 @@ const GfxToolbar = (() => {
         let galerieMessen;
         if (o.galerie) {
             wurzel.classList.add('gfx-tb-galerie', 'gfx-tb-edgeless');
+            if (o.galerie.beschriftet)
+                wurzel.classList.add('gfx-tb-beschriftet');
             const knoepfe = new Map([...roller.querySelectorAll('button')].map(b => [b.dataset.wz || b.dataset.a, b]));
             const einhaengen = (el, ids) => {
                 for (const id of ids) {
@@ -32611,6 +32631,13 @@ const GfxToolbar = (() => {
                 for (const b of karte.querySelectorAll('button')) {
                     if (!['notiz', 'formen'].includes(id) && !['stift', 'radierer'].includes(b.dataset.wz ?? ''))
                         b.classList.add('gfx-tb-symbol');
+                    if (o.galerie.beschriftet) {
+                        const label = document.createElement('span');
+                        label.className = 'gfx-tb-kartenname';
+                        label.textContent = b.getAttribute('aria-label') || '';
+                        label.setAttribute('aria-hidden', 'true');
+                        b.append(label);
+                    }
                 }
                 if (vorschau && (id === 'notiz' || id === 'formen')) {
                     delete vorschau.dataset.sym;
@@ -32871,7 +32898,26 @@ const GfxObjects = (() => {
     const expand = (objects, ids) => {
         const groups = new Set(objects.filter(o => ids.has(o.id) && typeof o.groupId === 'string' && o.groupId)
             .map(o => o.groupId));
-        return new Set(objects.filter(o => ids.has(o.id) || (!!o.groupId && groups.has(o.groupId))).map(o => o.id));
+        const selected = new Set(objects.filter(o => ids.has(o.id) || (!!o.groupId && groups.has(o.groupId))).map(o => o.id));
+        for (let pass = 0; pass < objects.length; pass++) {
+            const count = selected.size;
+            for (const frame of objects.filter(o => selected.has(o.id) && o['art'] === 'frame')) {
+                const f = GfxShapes.rahmenVon(frame);
+                for (const object of objects) {
+                    if (selected.has(object.id) || object['art'] === 'verbindung')
+                        continue;
+                    const b = GfxShapes.rahmenVon(object);
+                    if (b.x >= f.x && b.y >= f.y && b.x + b.w <= f.x + f.w && b.y + b.h <= f.y + f.h &&
+                        (object['art'] !== 'frame' || b.w < f.w || b.h < f.h))
+                        selected.add(object.id);
+                }
+            }
+            const outer = new Set(objects.filter(o => selected.has(o.id) && o.groupId).map(o => o.groupId));
+            objects.filter(o => o.groupId && outer.has(o.groupId)).forEach(o => selected.add(o.id));
+            if (selected.size === count)
+                break;
+        }
+        return selected;
     };
     const locked = (objects, ids) => objects.some(o => ids.has(o.id) && o.locked === true);
     const group = (objects, ids, groupId) => objects.map(o => {
@@ -33055,9 +33101,28 @@ const GfxExchange = (() => {
             return Promise.reject(new Error('Der Dateiaustausch ist noch nicht bereit.'));
         return fileIO.pack(files);
     };
+    const pdfFromImages = (pages) => {
+        if (!fileIO)
+            return Promise.reject(new Error('Der PDF-Export ist noch nicht bereit.'));
+        return fileIO.pdf(pages);
+    };
+    const importDocuments = (file, active) => {
+        if (!fileIO)
+            return Promise.reject(new Error('Der Dokumentimport ist noch nicht bereit.'));
+        return fileIO.documents(file, active);
+    };
     const text = (value) => typeof value === 'string' ? value :
         Array.isArray(value?.delta) ? value.delta.map((p) => typeof p.insert === 'string' ? p.insert : '').join('') :
             Array.isArray(value) ? value.map(p => typeof p.insert === 'string' ? p.insert : '').join('') : '';
+    const affineColor = (value, fallback = '#529cca') => {
+        const raw = typeof value === 'string' ? value : value?.light;
+        if (typeof raw !== 'string')
+            return fallback;
+        if (/^#[\da-f]{3,8}$/i.test(raw))
+            return raw;
+        const name = /--affine-palette-(?:line|shape|text)-([a-z]+)/.exec(raw)?.[1];
+        return { blue: '#529cca', green: '#4dab9a', orange: '#ffa344', red: '#ff7369', purple: '#9a6dd7', pink: '#e255a1', yellow: '#ffdc49', grey: '#9b9a97', gray: '#9b9a97', black: '#25252a', white: '#ffffff' }[name || ''] || fallback;
+    };
     const remap = (objects, uid) => {
         const ids = new Map(objects.map(o => [o.id, uid()])), groups = new Map();
         const group = (id) => { if (!groups.has(id))
@@ -33111,7 +33176,7 @@ const GfxExchange = (() => {
         if (!blocks.length && data?.elements)
             for (const [id, e] of Object.entries(data.elements))
                 elements.push({ ...e, id: e.id || id });
-        const result = [], groups = elements.filter(e => e.type === 'group');
+        const result = [], groups = elements.filter(e => e.type === 'group' || e.type === 'mindmap');
         const box = (raw) => {
             const b = typeof raw === 'string' ? JSON.parse(raw) : raw;
             if (!Array.isArray(b) || b.length !== 4 || !b.every(Number.isFinite))
@@ -33119,15 +33184,19 @@ const GfxExchange = (() => {
             return { x: b[0], y: b[1], w: b[2], h: b[3] };
         };
         for (const e of elements) {
-            if (e.type === 'group')
+            if (e.type === 'group' || e.type === 'mindmap')
                 continue;
-            const common = { id: String(e.id || uid()), farbe: /^#[\da-f]{3,8}$/i.test(e.strokeColor || e.color || e.stroke) ? (e.strokeColor || e.color || e.stroke) : '#529cca',
+            const common = { id: String(e.id || uid()), farbe: affineColor(e.strokeColor || e.color || e.stroke),
                 rotation: Number(e.rotate) || 0, affineSource: e };
             if (e.type === 'shape') {
                 const art = { rect: 'rechteck', ellipse: 'ellipse', triangle: 'dreieck', diamond: 'raute' }[e.shapeType];
                 if (!art)
                     throw new Error('Diese AFFiNE-Form wird noch nicht unterstützt: ' + e.shapeType);
-                result.push({ ...common, ...box(e.xywh), art, gefuellt: e.filled === true, text: text(e.text) });
+                const color = affineColor(e.fillColor, common.farbe);
+                result.push({ ...common, ...box(e.xywh), art, gefuellt: e.filled === true, text: text(e.text),
+                    fillColor: color,
+                    strichBreite: Number(e.strokeWidth) || 2, cornerRadius: Math.max(0, Math.min(1, Number(e.radius) || 0)),
+                    ...(String(e.strokeStyle).toLowerCase() === 'dash' ? { dash: true } : {}), fontSize: Number(e.fontSize) || 14 });
             }
             else if (e.type === 'brush' || e.type === 'highlighter') {
                 const b = box(e.xywh);
@@ -33142,6 +33211,26 @@ const GfxExchange = (() => {
                     route: e.mode === 1 || e.mode === 'orthogonal' ? 'orthogonal' : e.mode === 2 || e.mode === 'curve' ? 'curve' : 'straight' });
             else
                 throw new Error('Dieses AFFiNE-Element wird noch nicht unterstützt: ' + String(e.type));
+        }
+        for (const map of elements.filter(e => e.type === 'mindmap')) {
+            const children = map.children?.json || map.children;
+            if (!children || typeof children !== 'object')
+                throw new Error('Ungültige AFFiNE-Gedankenkarte.');
+            for (const [id, detail] of Object.entries(children)) {
+                if (id.startsWith('affine:'))
+                    continue;
+                const node = result.find(o => o.id === id);
+                if (!node)
+                    throw new Error('Ein Knoten der AFFiNE-Gedankenkarte fehlt.');
+                node.groupId = String(map.id);
+                node.groupPath = [String(map.id)];
+                node.affineMindmap = map;
+                if (detail?.parent) {
+                    if (!result.some(o => o.id === detail.parent))
+                        throw new Error('Ein Ast der AFFiNE-Gedankenkarte hat keine Quelle.');
+                    result.push({ id: uid(), art: 'verbindung', von: detail.parent, nach: id, route: 'curve', farbe: node.farbe, affineSource: { mindmap: map.id, parent: detail.parent, child: id } });
+                }
+            }
         }
         for (const block of blocks) {
             const props = block.props || block, flavour = String(block.flavour);
@@ -33166,7 +33255,7 @@ const GfxExchange = (() => {
             const path = [];
             let current = o.id;
             for (let i = 0; i < groups.length; i++) {
-                const group = groups.find(g => g.children?.[current]);
+                const group = groups.find(g => (g.children?.json || g.children)?.[current]);
                 if (!group)
                     break;
                 if (path.includes(group.id))
@@ -33251,7 +33340,7 @@ const GfxExchange = (() => {
             return Promise.reject(new Error('Der Dateiaustausch ist noch nicht bereit.'));
         return readFile(file, uid, { zip: io.zip, save: (blob, name) => io.save(blob, name, owner), remove: io.remove, active });
     };
-    return { parse, remap, readFile, bindIO, fileBlob, packArchive, importFile };
+    return { parse, remap, readFile, bindIO, fileBlob, packArchive, importFile, pdfFromImages, importDocuments, text };
 })();
 window.GfxExchange = GfxExchange;
 
@@ -33261,6 +33350,10 @@ window.GfxExchange = GfxExchange;
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/gfx/inspector.ts (npm run bauen:ts). */
 const GfxInspector = (() => {
+    let session = {
+        author: () => ({ id: 'local', name: 'Ich' }), mentions: () => [], openPage: () => { }
+    };
+    const bindSession = (next) => { session = next; };
     const label = (o) => String(o.text || o.title || { frame: 'Rahmen', stift: 'Strich',
         rechteck: 'Rechteck', rectangle: 'Rechteck', ellipse: 'Ellipse', verbindung: 'Verbindung', bild: 'Bild', notiz: 'Notiz',
         line: 'Linie', arrow: 'Pfeil', triangle: 'Dreieck', roundrect: 'Abgerundetes Rechteck', pen: 'Strich', text: 'Text', attachment: 'Anhang' }[o.art] || o.art || 'Objekt').slice(0, 80);
@@ -33313,7 +33406,10 @@ const GfxInspector = (() => {
             if (!panel.isConnected)
                 return;
             tabs.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === tab)));
+            const focusedBody = body.contains(document.activeElement);
             body.replaceChildren();
+            if (focusedBody)
+                panel.focus({ preventScroll: true });
             if (tab === 'layers') {
                 note('Oben liegt vorne. Tippen wählt die Gruppe; „Einzeln“ öffnet ein Mitglied.');
                 const rows = document.createElement('div');
@@ -33412,14 +33508,14 @@ const GfxInspector = (() => {
                         const frame = { id: uid(), art: 'frame', x: b.x - 32, y: b.y - 48, w: b.w + 64, h: b.h + 80,
                             farbe: '#529cca', text: 'Rahmen ' + (read().filter(o => o.art === 'frame').length + 1) };
                         change([frame, ...read()]);
-                        select([frame.id], true);
+                        select([frame.id]);
                         render();
                     });
                     const frames = read().filter(o => o.art === 'frame').sort((a, b) => (a.frameOrder || 0) - (b.frameOrder || 0));
                     frames.forEach((frame, index) => {
                         const row = document.createElement('div');
                         row.className = 'gfx-layer-row';
-                        button(row, (index + 1) + '. ' + label(frame), () => { select([frame.id], true); options.zoom?.(GfxShapes.rahmenVon(frame)); });
+                        button(row, (index + 1) + '. ' + label(frame), () => { select([frame.id]); options.zoom?.(GfxShapes.rahmenVon(frame)); });
                         const reorder = (delta) => {
                             const next = frames.slice();
                             [next[index], next[index + delta]] = [next[index + delta], next[index]];
@@ -33437,6 +33533,10 @@ const GfxInspector = (() => {
                         body.append(name);
                     });
                     button(body, 'Präsentation starten', () => { close(); present(options, frames); }, !frames.length);
+                    const exportStatus = document.createElement('p');
+                    exportStatus.setAttribute('role', 'status');
+                    button(body, 'Rahmen als PDF exportieren', () => { void exportFrames(options, frames).catch(error => { exportStatus.textContent = error instanceof Error ? error.message : 'PDF-Export fehlgeschlagen.'; }); }, !frames.length);
+                    body.append(exportStatus);
                 }
             }
             else if (tab === 'comments') {
@@ -33447,15 +33547,67 @@ const GfxInspector = (() => {
                 }
                 const object = objects[0];
                 subtitle(label(object));
+                const composer = (container, name, saveLabel, save) => {
+                    const input = document.createElement('textarea');
+                    input.rows = 3;
+                    input.maxLength = 10000;
+                    input.setAttribute('aria-label', name);
+                    container.append(input);
+                    const targets = session.mentions(), mentions = new Map();
+                    if (targets.length) {
+                        const select = document.createElement('select');
+                        select.setAttribute('aria-label', 'Erwähnung hinzufügen');
+                        const placeholder = document.createElement('option');
+                        placeholder.value = '';
+                        placeholder.textContent = 'Person oder Seite erwähnen …';
+                        select.append(placeholder);
+                        targets.forEach((target, index) => { const option = document.createElement('option'); option.value = String(index); option.textContent = target.name; select.append(option); });
+                        select.addEventListener('change', () => {
+                            const target = targets[Number(select.value)];
+                            if (!target || select.value === '')
+                                return;
+                            mentions.set(target.id, target);
+                            input.value += (input.value && !input.value.endsWith(' ') ? ' ' : '') + '@' + target.name + ' ';
+                            select.value = '';
+                            input.focus();
+                        });
+                        container.append(select);
+                    }
+                    button(container, saveLabel, () => { if (input.value.trim())
+                        save(input.value.trim(), [...mentions.values()]); });
+                    return input;
+                };
+                const attribution = (container, item) => {
+                    const author = document.createElement('small');
+                    author.textContent = String(item.author?.name || 'Ich') + ' · ' + new Date(item.created).toLocaleString('de-DE');
+                    container.append(author);
+                    for (const mention of Array.isArray(item.mentions) ? item.mentions : []) {
+                        if (mention.kind === 'page')
+                            button(container, '@' + String(mention.name), () => session.openPage(String(mention.id)));
+                        else {
+                            const label = document.createElement('span');
+                            label.className = 'gfx-comment-mention';
+                            label.textContent = '@' + String(mention.name);
+                            container.append(label);
+                        }
+                    }
+                };
                 for (const comment of Array.isArray(object.objectComments) ? object.objectComments : []) {
                     const article = document.createElement('article');
                     article.className = 'gfx-object-comment';
                     const text = document.createElement('p');
                     text.textContent = String(comment.text || '');
                     article.append(text);
-                    const date = document.createElement('small');
-                    date.textContent = new Date(comment.created).toLocaleString('de-DE');
-                    article.append(date);
+                    attribution(article, comment);
+                    for (const reply of Array.isArray(comment.replies) ? comment.replies : []) {
+                        const row = document.createElement('div');
+                        row.className = 'gfx-comment-reply';
+                        const text = document.createElement('p');
+                        text.textContent = String(reply.text || '');
+                        row.append(text);
+                        attribution(row, reply);
+                        article.append(row);
+                    }
                     button(article, comment.resolved ? 'Erneut öffnen' : 'Erledigen', () => update({ objectComments: object.objectComments.map((c) => c.id === comment.id ? { ...c, resolved: !c.resolved } : c) }));
                     button(article, 'Bearbeiten', () => {
                         const editor = document.createElement('textarea');
@@ -33468,17 +33620,24 @@ const GfxInspector = (() => {
                             update({ objectComments: object.objectComments.map((c) => c.id === comment.id ? { ...c, text: editor.value.trim() } : c) }); });
                         editor.focus();
                     });
+                    button(article, 'Antworten', () => {
+                        if (article.querySelector('[data-reply-form]'))
+                            return;
+                        const form = document.createElement('div');
+                        form.dataset.replyForm = 'true';
+                        article.append(form);
+                        const input = composer(form, 'Antwort auf Kommentar', 'Antwort speichern', (text, mentions) => {
+                            const current = read().find(o => o.id === object.id);
+                            update({ objectComments: (current?.objectComments || []).map((c) => c.id === comment.id ? { ...c,
+                                    replies: [...(c.replies || []), { id: uid(), text, mentions, author: session.author(), created: new Date().toISOString() }] } : c) });
+                        });
+                        input.focus();
+                    });
                     body.append(article);
                 }
-                const input = document.createElement('textarea');
-                input.rows = 3;
-                input.maxLength = 10000;
-                input.setAttribute('aria-label', 'Neuer Objektkommentar');
-                body.append(input);
-                button(body, 'Kommentar hinzufügen', () => {
-                    if (!input.value.trim())
-                        return;
-                    update({ objectComments: [...(object.objectComments || []), { id: uid(), text: input.value.trim(), created: new Date().toISOString(), resolved: false }] });
+                composer(body, 'Neuer Objektkommentar', 'Kommentar hinzufügen', (text, mentions) => {
+                    const current = read().find(o => o.id === object.id);
+                    update({ objectComments: [...(current?.objectComments || []), { id: uid(), text, mentions, author: session.author(), replies: [], created: new Date().toISOString(), resolved: false }] });
                 });
             }
             else if (tab === 'exchange') {
@@ -33516,6 +33675,36 @@ const GfxInspector = (() => {
                             status.textContent = error instanceof Error ? error.message : 'Die Datei konnte nicht importiert werden.';
                         }
                     });
+                    subtitle('AFFiNE-Dokumente');
+                    note('Dokumentsnapshots als neue Seiten importieren. Die Originaldatei wird als Anhang mitgesichert.');
+                    const documents = document.createElement('input');
+                    documents.type = 'file';
+                    documents.accept = '.json,.zip,.affine';
+                    documents.setAttribute('aria-label', 'AFFiNE-Dokumente importieren');
+                    body.append(documents);
+                    const documentStatus = document.createElement('p');
+                    documentStatus.setAttribute('role', 'status');
+                    body.append(documentStatus);
+                    documents.addEventListener('change', async () => {
+                        const file = documents.files?.[0];
+                        if (!file)
+                            return;
+                        documents.disabled = true;
+                        documentStatus.textContent = 'Dokumente werden eingelesen …';
+                        try {
+                            const result = await GfxExchange.importDocuments(file, () => panel.isConnected);
+                            if (!panel.isConnected)
+                                return;
+                            documentStatus.textContent = result.pages + ' Dokumente importiert.' + (result.warnings.length ? ' Hinweise: ' + result.warnings.join(' · ') : '');
+                            button(body, 'Importierte Dokumente öffnen', () => session.openPage(result.rootId));
+                        }
+                        catch (error) {
+                            documentStatus.textContent = error instanceof Error ? error.message : 'Dokumentimport fehlgeschlagen.';
+                        }
+                        finally {
+                            documents.disabled = false;
+                        }
+                    });
                     subtitle('Vorlagen');
                     for (const [kind, name] of [['kanban', 'Projektboard'], ['swot', 'SWOT'], ['timeline', 'Zeitstrahl'], ['retro', 'Retrospektive']])
                         button(body, name, () => { const next = template(kind, uid); change([...read(), ...next]); select(next.map(o => o.id)); options.zoom?.(GfxObjects.bounds(next)); });
@@ -33544,12 +33733,13 @@ const GfxInspector = (() => {
         a.click();
         setTimeout(() => URL.revokeObjectURL(url), 60000);
     };
-    const exportGraphic = async (options, png) => {
-        const objects = options.read(), box = GfxObjects.bounds(objects);
+    const graphicBlob = async (options, png, crop) => {
+        const objects = options.read(), box = crop || GfxObjects.bounds(objects);
         if (!box)
-            return;
-        const svg = GfxShapes.sv('svg', { xmlns: 'http://www.w3.org/2000/svg', viewBox: `${box.x - 24} ${box.y - 24} ${box.w + 48} ${box.h + 48}`,
-            width: Math.ceil(box.w + 48), height: Math.ceil(box.h + 48) });
+            throw new Error('Keine Zeichenobjekte vorhanden.');
+        const pad = crop ? 0 : 24, width = Math.max(1, box.w + pad * 2), height = Math.max(1, box.h + pad * 2);
+        const svg = GfxShapes.sv('svg', { xmlns: 'http://www.w3.org/2000/svg', viewBox: `${box.x - pad} ${box.y - pad} ${width} ${height}`,
+            width: Math.ceil(width), height: Math.ceil(height) });
         const defs = GfxShapes.sv('defs');
         GfxShapes.pfeilMarke(defs, 'export-arrow');
         svg.append(defs);
@@ -33570,26 +33760,39 @@ const GfxInspector = (() => {
         for (const o of objects.filter(o => o.art !== 'verbindung'))
             svg.append(GfxShapes.zeichne(o, { pfeilMarke: 'export-arrow', bildAdresse: id => images.get(id) || null }));
         const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' });
-        if (!png) {
-            download(blob, 'Zeichenfläche.svg');
-            return;
-        }
+        if (!png)
+            return blob;
         const url = URL.createObjectURL(blob);
         try {
             const image = new Image();
             image.src = url;
             await image.decode();
-            const canvas = document.createElement('canvas'), factor = Math.min(2, 8192 / Math.max(box.w + 48, box.h + 48));
-            canvas.width = Math.ceil((box.w + 48) * factor);
-            canvas.height = Math.ceil((box.h + 48) * factor);
+            const canvas = document.createElement('canvas'), factor = Math.min(2, 8192 / Math.max(width, height));
+            canvas.width = Math.ceil(width * factor);
+            canvas.height = Math.ceil(height * factor);
+            if (crop) {
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
             canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
             const result = await new Promise(resolve => canvas.toBlob(resolve));
-            if (result)
-                download(result, 'Zeichenfläche.png');
+            if (!result)
+                throw new Error('Das Bild konnte nicht erstellt werden.');
+            return result;
         }
         finally {
             URL.revokeObjectURL(url);
         }
+    };
+    const exportGraphic = async (options, png) => download(await graphicBlob(options, png), png ? 'Zeichenfläche.png' : 'Zeichenfläche.svg');
+    const exportFrames = async (options, frames) => {
+        const pages = [];
+        for (const frame of frames) {
+            const b = GfxShapes.rahmenVon(frame);
+            pages.push({ blob: await graphicBlob(options, true, b), w: b.w, h: b.h });
+        }
+        download(await GfxExchange.pdfFromImages(pages), 'Rahmen-Folien.pdf');
     };
     const exportEditable = async (options) => {
         const objects = JSON.parse(JSON.stringify(options.read()));
@@ -33617,6 +33820,7 @@ const GfxInspector = (() => {
         if (!frames.length || !options.zoom)
             return;
         options.host.dataset.gfxPresenting = 'true';
+        options.host.classList.add('gfx-presenting-screen');
         const bar = document.createElement('div');
         bar.className = 'gfx-presentation';
         bar.setAttribute('role', 'group');
@@ -33630,12 +33834,25 @@ const GfxInspector = (() => {
             e.stopImmediatePropagation();
         } };
         options.host.addEventListener('pointerdown', blockDrawing, true);
+        let ended = false, nativeFullscreen = false;
+        const fullscreenChanged = () => { if (nativeFullscreen && document.fullscreenElement !== options.host)
+            end();
+        else
+            show(); };
         const end = () => {
+            if (ended)
+                return;
+            ended = true;
             document.removeEventListener('keydown', key, true);
+            document.removeEventListener('fullscreenchange', fullscreenChanged);
             options.host.removeEventListener('pointerdown', blockDrawing, true);
+            options.host.classList.remove('gfx-presenting-screen');
             delete options.host.dataset.gfxPresenting;
             bar.remove();
-            options.restoreView?.();
+            if (document.fullscreenElement === options.host)
+                void document.exitFullscreen().finally(() => options.restoreView?.());
+            else
+                options.restoreView?.();
         };
         const key = (e) => {
             if (['Escape', 'ArrowRight', 'ArrowLeft', 'PageDown', 'PageUp', ' '].includes(e.key)) {
@@ -33662,11 +33879,17 @@ const GfxInspector = (() => {
         options.host.append(bar);
         document.addEventListener('keydown', key, true);
         show();
+        document.addEventListener('fullscreenchange', fullscreenChanged);
+        if (document.fullscreenEnabled && !document.fullscreenElement)
+            void options.host.requestFullscreen().then(() => { nativeFullscreen = true; if (!ended)
+                show(); }).catch(() => { });
         bar.querySelector('button')?.focus();
         new MutationObserver((_, observer) => {
             if (!bar.isConnected) {
                 document.removeEventListener('keydown', key, true);
                 options.host.removeEventListener('pointerdown', blockDrawing, true);
+                document.removeEventListener('fullscreenchange', fullscreenChanged);
+                options.host.classList.remove('gfx-presenting-screen');
                 delete options.host.dataset.gfxPresenting;
                 observer.disconnect();
             }
@@ -33681,9 +33904,264 @@ const GfxInspector = (() => {
             return [frame, note];
         });
     };
-    return { open, present, template, exportGraphic, exportEditable, download };
+    return { open, present, template, exportGraphic, exportEditable, exportFrames, graphicBlob, download, bindSession };
 })();
 window.GfxInspector = GfxInspector;
+
+</script>
+<script>
+/* ===== quell/bereiche/dateien/affine.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/dateien/affine.ts (npm run bauen:ts). */
+const AffineImport = (() => {
+    const sourceRecord = (source) => ({ ...source, children: (source.children || []).map((child) => typeof child === 'string' ? child : child.id) });
+    const richText = (value, plain = false) => {
+        const delta = Array.isArray(value?.delta) ? value.delta : Array.isArray(value) ? value : null;
+        if (!delta)
+            return GfxExchange.text(value);
+        return delta.map((part) => {
+            if (typeof part.insert !== 'string')
+                return '';
+            let text = part.insert;
+            if (plain)
+                return text;
+            const a = part.attributes || {};
+            if (a.code)
+                text = '`' + text + '`';
+            if (a.bold)
+                text = '**' + text + '**';
+            if (a.italic)
+                text = '*' + text + '*';
+            if (a.underline)
+                text = '__' + text + '__';
+            if (a.strike)
+                text = '~~' + text + '~~';
+            if (typeof a.link === 'string') {
+                try {
+                    const url = new URL(a.link);
+                    if (['https:', 'http:'].includes(url.protocol))
+                        text = '[' + text + '](' + url.href + ')';
+                }
+                catch { }
+            }
+            return text;
+        }).join('');
+    };
+    const plan = (data, fallback = 'AFFiNE-Dokument') => {
+        const roots = [];
+        const find = (value, wrapper, depth = 0) => {
+            if (!value || typeof value !== 'object' || depth > 50)
+                return;
+            if (value.flavour === 'affine:page') {
+                roots.push({ root: value, wrapper });
+                return;
+            }
+            if (Array.isArray(value))
+                value.forEach(v => find(v, wrapper, depth + 1));
+            else
+                for (const [key, child] of Object.entries(value))
+                    if (!['props', 'elements'].includes(key))
+                        find(child, value.meta ? value : wrapper, depth + 1);
+        };
+        find(data, data);
+        if (!roots.length)
+            throw new Error('Kein AFFiNE-Dokumentsnapshot gefunden. Binäre Arbeitsbereiche benötigen einen Export aus AFFiNE.');
+        return roots.map(({ root, wrapper }, index) => {
+            const warnings = [], seen = new Set(), byId = new Map();
+            const collect = (value, depth = 0) => {
+                if (!value || typeof value !== 'object' || depth > 50)
+                    return;
+                if (value.flavour && value.id)
+                    byId.set(String(value.id), value);
+                if (Array.isArray(value))
+                    value.forEach(v => collect(v, depth + 1));
+                else
+                    for (const [key, v] of Object.entries(value))
+                        if (!['props', 'elements'].includes(key))
+                            collect(v, depth + 1);
+            };
+            collect(wrapper);
+            collect(root);
+            const title = GfxExchange.text(root.props?.title) || wrapper.meta?.title || fallback + (roots.length > 1 ? ' ' + (index + 1) : '');
+            const block = (raw, depth = 0) => {
+                const source = typeof raw === 'string' ? byId.get(raw) : raw;
+                if (!source?.flavour || depth > 50)
+                    throw new Error('Unvollständige oder zu tief verschachtelte AFFiNE-Blöcke.');
+                const id = String(source.id || '');
+                if (id && seen.has(id))
+                    throw new Error('Zyklische oder doppelte AFFiNE-Blockkennung.');
+                if (id)
+                    seen.add(id);
+                const p = source.props || {}, flavour = String(source.flavour), children = (source.children || []).flatMap((child) => block(child, depth + 1));
+                let type = 'text';
+                const fields = { text: richText(p.text), affineSource: sourceRecord(source) };
+                if (['affine:surface', 'affine:frame'].includes(flavour))
+                    return children;
+                if (flavour === 'affine:note') {
+                    type = 'callout';
+                    fields.text = GfxExchange.text(p.title) || 'Notiz';
+                    fields.icon = '📝';
+                    if (p.xywh) {
+                        const b = typeof p.xywh === 'string' ? JSON.parse(p.xywh) : p.xywh;
+                        if (Array.isArray(b) && b.length === 4 && b.every(Number.isFinite))
+                            fields.flaecheOrt = { x: b[0], y: b[1], w: Math.max(100, b[2]), raumVersion: 1 };
+                    }
+                }
+                else if (flavour === 'affine:paragraph')
+                    type = /^h[1-6]$/.test(p.type) ? 'h' + Math.min(3, Number(p.type.slice(1))) : p.type === 'quote' ? 'quote' : 'text';
+                else if (flavour === 'affine:list') {
+                    type = { todo: 'todo', bulleted: 'bullet', numbered: 'number', toggle: 'toggle' }[p.type] || 'bullet';
+                    fields.checked = p.checked === true;
+                    fields.collapsed = p.collapsed === true;
+                }
+                else if (flavour === 'affine:code') {
+                    type = 'code';
+                    fields.text = richText(p.text, true);
+                    fields.lang = String(p.language || 'Plain Text');
+                }
+                else if (flavour === 'affine:latex') {
+                    type = 'equation';
+                    fields.text = String(p.latex || '');
+                }
+                else if (flavour === 'affine:divider')
+                    type = 'divider';
+                else if (flavour === 'affine:callout')
+                    type = 'callout';
+                else if (flavour === 'affine:bookmark') {
+                    type = 'bookmark';
+                    fields.src = String(p.url || '');
+                    fields.text = String(p.title || p.url || 'Link');
+                    fields.caption = String(p.description || '');
+                }
+                else if (flavour === 'affine:image' || flavour === 'affine:attachment') {
+                    if (!p.sourceId)
+                        throw new Error('Ein AFFiNE-Anhang hat keine Quellenkennung.');
+                    type = flavour === 'affine:image' ? 'image' : 'file';
+                    fields.affineAsset = String(p.sourceId);
+                    fields.text = String(p.name || p.caption || 'Anhang');
+                    fields.caption = String(p.caption || '');
+                }
+                else if (['affine:embed-linked-doc', 'affine:embed-synced-doc'].includes(flavour)) {
+                    type = flavour === 'affine:embed-synced-doc' ? 'synced' : 'pageref';
+                    fields.affineTarget = String(p.pageId || p.docId || '');
+                }
+                else if (flavour === 'affine:table' && Array.isArray(p.rows)) {
+                    type = 'table';
+                    fields.rows = p.rows;
+                }
+                else {
+                    type = 'code';
+                    fields.lang = 'JSON';
+                    fields.text = JSON.stringify(sourceRecord(source), null, 2);
+                    fields.caption = 'AFFiNE-Block: ' + flavour;
+                    warnings.push(flavour + ': Originaldaten als JSON erhalten');
+                    fields.affineUnsupported = true;
+                }
+                return [{ source, type, fields, children }];
+            };
+            const blocks = (root.children || []).flatMap((child) => block(child));
+            let shapes = [];
+            try {
+                shapes = GfxExchange.parse({ blocks: [...byId.values()].filter(b => b.flavour === 'affine:surface' || b.flavour === 'affine:frame') }, () => Store.uid());
+            }
+            catch (error) {
+                if ([...byId.values()].some(b => b.flavour === 'affine:surface' && Object.keys(b.props?.elements || {}).length))
+                    throw error;
+            }
+            return { sourceId: String(wrapper.meta?.id || root.id || index), title: String(title), blocks, shapes, source: root, warnings };
+        });
+    };
+    const file = async (file, active = () => true) => {
+        if (file.size > 64 * 1024 * 1024)
+            throw new Error('Dieser Snapshot ist zu gross (64 MB).');
+        const archive = /\.(zip|affine)$/i.test(file.name) ? await Einlesen.zipLesenAusBlob(file) : null;
+        const pages = [], fallback = file.name.replace(/\.[^.]+$/, '');
+        if (archive) {
+            for (const name of archive.namen.filter((n) => /\.json$/i.test(n))) {
+                const text = await archive.text(name);
+                if (!text)
+                    continue;
+                let data;
+                try {
+                    data = JSON.parse(text);
+                }
+                catch {
+                    continue;
+                }
+                if (!JSON.stringify(data).includes('affine:page'))
+                    continue;
+                pages.push(...plan(data, name.replace(/\.json$/i, '')));
+            }
+        }
+        else
+            pages.push(...plan(JSON.parse(await file.text()), fallback));
+        if (!pages.length)
+            throw new Error('Im Archiv fehlt ein Dokumentsnapshot.');
+        const assets = new Map();
+        const walk = (blocks, visit) => blocks.forEach(b => { visit(b); walk(b.children, visit); });
+        const requested = new Set();
+        pages.forEach(p => { walk(p.blocks, b => { if (b.fields.affineAsset)
+            requested.add(b.fields.affineAsset); }); p.shapes.forEach(o => { if (o.affineAsset)
+            requested.add(o.affineAsset); }); });
+        for (const id of requested) {
+            const name = archive?.namen.find((name) => name === id || name === 'assets/' + id || name.endsWith('/assets/' + id));
+            const blob = name && archive ? await archive.alsBlob(name) : null;
+            if (!blob)
+                throw new Error('Ein AFFiNE-Anhang fehlt: ' + id);
+            assets.set(id, { blob, name: id });
+        }
+        const rootId = Store.uid(), pageIds = pages.map(() => Store.uid()), files = new Map();
+        let root = null;
+        try {
+            if (!active())
+                throw new Error('Import abgebrochen.');
+            for (const [id, asset] of assets) {
+                if (!active())
+                    throw new Error('Import abgebrochen.');
+                files.set(id, (await Dateien.ablegen(new File([asset.blob], asset.name, { type: asset.blob.type }), { blockId: rootId })).id);
+            }
+            const original = await Dateien.ablegen(file, { blockId: rootId });
+            files.set('__original__', original.id);
+            if (!active())
+                throw new Error('Import abgebrochen.');
+            root = Store.addPage(null, { id: rootId, text: fallback || 'AFFiNE-Import', icon: '📥' });
+            Store.addBlock(root.id, 'file', { text: 'Original: ' + file.name, dateiId: original.id });
+            pages.forEach((page, index) => {
+                const shapes = GfxExchange.remap(page.shapes.map(o => { const { affineAsset, ...shape } = o; return affineAsset ? { ...shape, dateiId: files.get(affineAsset) } : shape; }), () => Store.uid());
+                const target = Store.addPage(root.id, { id: pageIds[index], text: page.title, affineSource: sourceRecord(page.source), ...(shapes.length ? { shapes, raumVersion: 1 } : {}) });
+                const insert = (blocks, parent) => blocks.forEach(b => {
+                    const { affineAsset, affineTarget, ...fields } = b.fields;
+                    if (affineAsset)
+                        fields.dateiId = files.get(affineAsset);
+                    if (affineTarget) {
+                        const index = pages.findIndex(p => p.sourceId === affineTarget);
+                        if (index >= 0)
+                            fields[b.type === 'synced' ? 'quelle' : 'ziel'] = pageIds[index];
+                        else {
+                            fields.text = 'AFFiNE-Verweis: ' + affineTarget;
+                            fields.affineUnsupported = true;
+                            page.warnings.push('Nicht mitexportiertes Zieldokument: ' + affineTarget);
+                        }
+                    }
+                    const created = Store.addBlock(parent, b.type, fields);
+                    insert(b.children, created.id);
+                });
+                insert(page.blocks, target.id);
+            });
+            await Store.flush();
+            return { rootId, pages: pages.length, warnings: pages.flatMap(p => p.warnings) };
+        }
+        catch (error) {
+            if (root)
+                Store.purgeBlock(rootId);
+            for (const id of files.values())
+                await Dateien.weg(id);
+            throw error;
+        }
+    };
+    return { plan, richText, file };
+})();
+window.AffineImport = AffineImport;
 
 </script>
 <script>
@@ -62348,6 +62826,13 @@ const Zusatz = (() => {
                 flaeche.append(sv('rect', { x: b.x, y: b.y, width: b.w, height: b.h,
                     fill: 'none', stroke: 'var(--accent)', 'stroke-width': 1 / sicht.z, 'stroke-dasharray': s.locked ? '5 4' : 'none', 'pointer-events': 'none' }));
             }
+            if (werkzeug === 'zeiger' && objectSelection.size && !GfxObjects.locked(daten, objectSelection)) {
+                const box = GfxObjects.bounds(daten.filter((o) => objectSelection.has(o.id)));
+                if (box) {
+                    const cx = box.x + box.w / 2, cy = box.y - 34 / sicht.z;
+                    flaeche.append(sv('line', { x1: cx, y1: box.y, x2: cx, y2: cy, stroke: 'var(--accent)', 'stroke-width': 1 / sicht.z, 'pointer-events': 'none' }), sv('circle', { cx, cy, r: 22 / sicht.z, fill: 'transparent', 'data-wb-rotate': 'true', 'pointer-events': 'all' }), sv('circle', { cx, cy, r: 6 / sicht.z, fill: 'var(--accent)', 'pointer-events': 'none' }));
+                }
+            }
             if (werkzeug === 'zeiger' && gewaehlt) {
                 const s = daten.find((q) => q.id === gewaehlt);
                 if (s && !s.locked && objectSelection.size <= 1 && groessenFaehig(s)) {
@@ -62551,6 +63036,7 @@ const Zusatz = (() => {
         let gewaehlt = null;
         const objectSelection = new Set();
         let selectionDrag = null;
+        let rotationDrag = null;
         const chooseObjects = (ids, exact = false) => {
             objectSelection.clear();
             (exact ? ids : GfxObjects.expand(daten, new Set(ids))).forEach(id => objectSelection.add(id));
@@ -62583,6 +63069,15 @@ const Zusatz = (() => {
             if (ziel && (ziel.tagName === 'INPUT' || ziel.tagName === 'TEXTAREA' || ziel.isContentEditable))
                 return;
             const strg = e.ctrlKey || e.metaKey;
+            if (rotationDrag) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    daten.splice(0, daten.length, ...rotationDrag.before);
+                    rotationDrag = null;
+                    male();
+                }
+                return;
+            }
             if (strg && e.key.toLowerCase() === 'a') {
                 e.preventDefault();
                 chooseObjects(daten.filter((o) => o.art !== 'verbindung').map((o) => o.id));
@@ -62645,6 +63140,14 @@ const Zusatz = (() => {
                 return;
             }
             const [x, y] = punkt(e);
+            if (e.target instanceof Element && e.target.closest('[data-wb-rotate]') && !GfxObjects.locked(daten, objectSelection)) {
+                const box = GfxObjects.bounds(daten.filter((o) => objectSelection.has(o.id)));
+                if (box) {
+                    const pivot = { x: box.x + box.w / 2, y: box.y + box.h / 2 };
+                    rotationDrag = { before: daten.slice(), pivot, start: Math.atan2(y - pivot.y, x - pivot.x), degrees: 0 };
+                }
+                return;
+            }
             if (['rahmenwahl', 'freihandwahl'].includes(werkzeug)) {
                 selectionDrag = { start: [x, y], points: [[x, y]], free: werkzeug === 'freihandwahl' };
                 return;
@@ -62785,6 +63288,16 @@ const Zusatz = (() => {
                 return;
             }
             const [x, y] = punkt(e);
+            if (rotationDrag) {
+                const drag = rotationDrag;
+                let degrees = (Math.atan2(y - drag.pivot.y, x - drag.pivot.x) - drag.start) * 180 / Math.PI;
+                if (e.shiftKey)
+                    degrees = Math.round(degrees / 15) * 15;
+                drag.degrees = degrees;
+                daten.splice(0, daten.length, ...GfxObjects.rotate(drag.before, objectSelection, degrees));
+                male();
+                return;
+            }
             if (selectionDrag) {
                 selectionDrag.points.push([x, y]);
                 male();
@@ -62853,6 +63366,21 @@ const Zusatz = (() => {
             male();
         });
         const fertig = (e) => {
+            if (rotationDrag) {
+                const drag = rotationDrag;
+                rotationDrag = null;
+                if (e?.type === 'pointerup' && Math.abs(drag.degrees) > .1) {
+                    verlauf.merken(JSON.stringify(drag.before));
+                    standZeigen();
+                    sichern();
+                }
+                else
+                    daten.splice(0, daten.length, ...drag.before);
+                if (e?.pointerId !== undefined)
+                    finger.delete(e.pointerId);
+                male();
+                return;
+            }
             if (selectionDrag) {
                 const last = selectionDrag.points[selectionDrag.points.length - 1], a = selectionDrag.start;
                 const polygon = selectionDrag.free ? selectionDrag.points : [a, [last[0], a[1]], last, [a[0], last[1]]];
@@ -75093,7 +75621,8 @@ window.Schaltplan = Schaltplan;
 
 </script>
 <script>
-/* ===== batterie-labor-kern.js ===== */
+/* ===== quell/bereiche/elektro/batterie-labor-kern.js ===== */
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: batterie-labor-kern.js (node bauen-elektro.mts). */
 /* Batterieanlagen: reine Netzprüfung für die Zeichenübungen.
  * Keine ideale Parallelschaltung ungleicher Spannungen, keine Lade-/Entladekurve.
  * Im Browser und mit node --test verwendbar. */
@@ -75449,7 +75978,8 @@ window.Schaltplan = Schaltplan;
 
 </script>
 <script>
-/* ===== batterie-aufgaben.js ===== */
+/* ===== quell/bereiche/elektro/batterie-aufgaben.js ===== */
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: batterie-aufgaben.js (node bauen-elektro.mts). */
 /* Kapitel 12: echte, editierbare Akkuzellen und Pakete im Redion-Schaltplan.
  * Kein zusätzlicher Editor: Fachzeichen, Leitungen, Raster, Netzliste, Undo
  * und Speicherung kommen aus dem bestehenden Schaltplan-Werkzeug. */
@@ -76646,7 +77176,9 @@ const Planflaeche = (() => {
             wurzel.querySelector('.sp-buehne')?.focus({ preventScroll: true });
         });
         const fachStatus = () => {
-            fachSchliessen.hidden = !(batterieOffen || relaisOffen || pruefungOffen);
+            relaisPanel.hidden = z.simulation || !relaisOffen;
+            batteriePanel.hidden = z.simulation || !batterieOffen;
+            fachSchliessen.hidden = !(!relaisPanel.hidden || !batteriePanel.hidden || !pruefPanel.hidden);
             wurzel.classList.toggle('sp-fach-offen', !fachSchliessen.hidden);
         };
         const WERKZEUGE = [
@@ -76666,7 +77198,10 @@ const Planflaeche = (() => {
                 gruppe: w.id === 'zeigen' || w.id === 'leitung' ? 'quick' : 'senior' })),
             galerie: {
                 schnell: ['plan-modus'], edgeless: { zusatz: ['palette-toggle', 'zoom-alles'] },
+                beschriftet: true,
                 karten: [
+                    { id: 'bauteile', knoepfe: ['dock-bauteile'] },
+                    { id: 'simulation', knoepfe: ['simulation'] },
                     { id: 'stifte', knoepfe: ['stift'] },
                     { id: 'radieren', knoepfe: ['radieren'] },
                     { id: 'text', knoepfe: ['text'] },
@@ -76675,6 +77210,8 @@ const Planflaeche = (() => {
                 werkzeugMenues: { 'plan-modus': ['zeigen', 'leitung'] }
             },
             aktionen: [
+                { id: 'dock-bauteile', name: 'Fachzeichen', sym: 'plus', kapsel: 'werkzeuge' },
+                { id: 'simulation', name: 'Strom ein', sym: 'play', kapsel: 'werkzeuge' },
                 { id: 'plan-modus', name: 'Auswahl und Leitung', sym: 'inkPointer', menue: true, kapsel: 'werkzeuge' },
                 { id: 'palette-toggle', name: 'Bauteile', titel: 'Bauteile öffnen oder schliessen (B)', sym: 'plus', kapsel: 'werkzeuge' },
                 { id: 'zoom-alles', name: 'Einpassen', titel: 'Den ganzen Schaltplan zeigen (0)', sym: 'maximize', kapsel: 'werkzeuge' }
@@ -76689,6 +77226,70 @@ const Planflaeche = (() => {
         dock.querySelector('[data-a="palette-toggle"]')?.classList.add('sp-palette-knopf');
         dock.querySelector('[data-a="zoom-alles"]')?.classList.add('sp-dock-fit');
         Register.symbole.fuelle(dock);
+        const contextDock = (context, name, actions, quick) => {
+            const result = GfxToolbar.erstelle({ klasse: 'sp-werkzeuge sp-kontextdock', beschriftung: name,
+                werkzeuge: [], aktionen: [...actions.map(a => ({ ...a, kapsel: 'werkzeuge' })),
+                    { id: 'zoom-alles', name: 'Einpassen', sym: 'maximize', kapsel: 'werkzeuge' }],
+                galerie: { schnell: quick, beschriftet: true, edgeless: { zusatz: ['zoom-alles'] },
+                    karten: actions.filter(a => !quick.includes(a.id)).map(a => ({ id: a.id, knoepfe: [a.id] })) },
+                menue: id => {
+                    if (id !== 'sim-tempo')
+                        return null;
+                    const list = document.createElement('div');
+                    list.className = 'gfx-tb-liste';
+                    for (const speed of [.25, .5, 1, 2, 4]) {
+                        const b = document.createElement('button');
+                        b.type = 'button';
+                        b.textContent = speed + '×';
+                        b.setAttribute('aria-pressed', String(speed === laborTempo));
+                        b.addEventListener('click', () => {
+                            const select = labor.querySelector('[data-labor-tempo]');
+                            if (select) {
+                                select.value = String(speed);
+                                select.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
+                            result.schliesse();
+                        });
+                        list.append(b);
+                    }
+                    return list;
+                }
+            });
+            result.element.dataset.dockContext = context;
+            result.element.querySelectorAll('.gfx-tb-schnell button').forEach(button => button.classList.add('gfx-tb-symbol'));
+            Register.symbole.fuelle(result.element);
+            return result;
+        };
+        dock.dataset.dockContext = 'zeichnen';
+        const simulationDock = contextDock('simulation', 'Simulation: Schalten und Messen', [
+            { id: 'simulation', name: 'Strom aus', sym: 'bolt' },
+            { id: 'sim-schalten', name: 'Schalten', sym: 'inkPointer' },
+            { id: 'sim-messen', name: 'Messwerte', sym: 'eye' },
+            { id: 'sim-pause', name: 'Pause / Weiter', sym: 'play' },
+            { id: 'sim-reset', name: 'Reset', sym: 'undo' },
+            { id: 'sim-tempo', name: 'Tempo', sym: 'clock', menue: true },
+            { id: 'sim-zeichnen', name: 'Skizzieren', sym: 'inkPen' },
+            { id: 'pruefzentrum', name: 'Prüfen', sym: 'checkCircle' }
+        ], ['simulation']);
+        const relayDock = contextDock('relais', 'Relais-Werkstatt', [
+            { id: 'context-zeichnen', name: 'Zeichnen', sym: 'inkPointer' },
+            { id: 'relay-einsetzen', name: 'Einsetzen', sym: 'plus' },
+            { id: 'relay-lehr-selbsthaltung', name: 'Selbsthaltung', sym: 'bolt' },
+            { id: 'relay-lehr-treppenhaus', name: 'Zeitrelais', sym: 'clock' },
+            { id: 'relay-import', name: 'Import', sym: 'upload' },
+            { id: 'relay-original', name: 'Original sichern', sym: 'download' },
+            { id: 'relay-freigeben', name: 'Freigeben', sym: 'checkCircle' }
+        ], ['context-zeichnen']);
+        const batteryDock = contextDock('batterie', 'Batteriewerkstatt', [
+            { id: 'context-zeichnen', name: 'Zeichnen', sym: 'inkPointer' },
+            { id: 'battery-einsetzen', name: 'Aufgabe einsetzen', sym: 'plus' },
+            { id: 'battery-leer', name: 'Leere Zeichnung', sym: 'page' },
+            { id: 'battery-uebernehmen', name: 'Zeichnung messen', sym: 'eye' },
+            { id: 'battery-pruefen', name: 'Prüfen', sym: 'checkCircle' },
+            { id: 'battery-muster', name: 'Muster', sym: 'grid' },
+            { id: 'simulation', name: 'Strom ein / aus', sym: 'bolt' }
+        ], ['context-zeichnen']);
+        let mountedDock = planDock;
         const kopfRechts = document.createElement('span');
         kopfRechts.className = 'sp-rechts';
         kopf.append(kopfLinks, dock, kopfRechts);
@@ -76716,6 +77317,21 @@ const Planflaeche = (() => {
             }
         };
         const dockAktualisieren = () => {
+            const next = z.simulation ? simulationDock : relaisOffen ? relayDock : batterieOffen ? batteryDock : planDock;
+            wurzel.dataset.electroContext = next.element.dataset.dockContext || 'zeichnen';
+            if (mountedDock !== next) {
+                const focused = mountedDock.element.contains(document.activeElement);
+                mountedDock.schliesse();
+                mountedDock.element.replaceWith(next.element);
+                mountedDock = next;
+                if (focused)
+                    next.element.querySelector('button')?.focus({ preventScroll: true });
+            }
+            simulationDock.element.querySelector('[data-a="sim-pause"]')?.setAttribute('aria-pressed', String(zeitStand.pause));
+            relayDock.setzeGesperrt('relay-original', !z.plan.relaisLegacy);
+            relayDock.setzeGesperrt('relay-freigeben', !z.plan.relaisLegacy || !!z.plan.relaisLegacy.verifiziert);
+            for (const action of ['pruefen', 'muster'])
+                batteryDock.setzeGesperrt('battery-' + action, !batteriePanel.querySelector(`[data-bat="${action}"]`));
             planDock.setzeWerkzeug(z.werkzeug);
             dock.querySelectorAll('.sp-wz').forEach(b => {
                 const an = b.dataset.wz === z.werkzeug;
@@ -79730,6 +80346,41 @@ const Planflaeche = (() => {
                 kopfMalen();
                 return;
             }
+            if (b.dataset.a === 'dock-bauteile') {
+                dock.querySelector('[data-a="palette-toggle"]')?.click();
+                return;
+            }
+            if (b.dataset.a === 'context-zeichnen') {
+                fachSchliessen.click();
+                return;
+            }
+            if (b.dataset.a?.startsWith('relay-')) {
+                relaisPanel.querySelector(`button[data-rel="${CSS.escape(b.dataset.a.slice(6))}"]`)?.click();
+                return;
+            }
+            if (b.dataset.a?.startsWith('battery-')) {
+                batteriePanel.querySelector(`button[data-bat="${CSS.escape(b.dataset.a.slice(8))}"]`)?.click();
+                dockAktualisieren();
+                return;
+            }
+            if (b.dataset.a === 'sim-pause' || b.dataset.a === 'sim-reset') {
+                labor.querySelector(`[data-labor-aktion="${b.dataset.a === 'sim-pause' ? 'pause' : 'reset'}"]`)?.click();
+                dockAktualisieren();
+                return;
+            }
+            if (b.dataset.a === 'sim-messen') {
+                labor.tabIndex = -1;
+                labor.focus({ preventScroll: true });
+                labor.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+                return;
+            }
+            if (b.dataset.a === 'sim-schalten' || b.dataset.a === 'sim-zeichnen') {
+                z.werkzeug = b.dataset.a === 'sim-zeichnen' ? 'stift' : 'zeigen';
+                z.gewaehltesZeichen = '';
+                z.auswahl.clear();
+                male(true);
+                return;
+            }
             if (b.dataset.a === 'zoom-alles')
                 return allesZeigen();
             if (b.dataset.a === 'bereiche')
@@ -79765,7 +80416,12 @@ const Planflaeche = (() => {
                 return;
             }
             if (b.dataset.a === 'relais-werkstatt') {
-                relaisOffen = !relaisOffen;
+                if (z.simulation) {
+                    simulationUmschalten();
+                    relaisOffen = true;
+                }
+                else
+                    relaisOffen = !relaisOffen;
                 relaisZeigen();
                 kopfMalen();
                 return;
@@ -79773,7 +80429,12 @@ const Planflaeche = (() => {
             if (b.dataset.a === 'netz')
                 return schaltungMenue(b);
             if (b.dataset.a === 'batterie-labor') {
-                batterieOffen = !batterieOffen;
+                if (z.simulation) {
+                    simulationUmschalten();
+                    batterieOffen = true;
+                }
+                else
+                    batterieOffen = !batterieOffen;
                 batteriePanel.hidden = !batterieOffen;
                 kopfMalen();
                 if (batterie)
@@ -92397,7 +93058,20 @@ const PdfOriginal = (() => {
         }
         return new Blob([await ziel.save({ updateFieldAppearances: false })], { type: 'application/pdf' });
     };
-    return { seitenleser, zusammenstellen };
+    const ausBildern = async (pages) => {
+        if (!pages.length || pages.length > MAX_PAGES || pages.some(p => !Number.isFinite(p.w) || !Number.isFinite(p.h) || p.w <= 0 || p.h <= 0))
+            throw new Error('Ungültige PDF-Folien.');
+        const pdf = await laden(), doc = await pdf.PDFDocument.create();
+        for (const page of pages) {
+            if (page.blob.size > MAX_BYTES)
+                throw new Error('Diese Folie ist zu gross.');
+            const factor = Math.min(1, 14400 / Math.max(page.w, page.h)), w = page.w * factor, h = page.h * factor;
+            const image = await doc.embedPng(await page.blob.arrayBuffer()), sheet = doc.addPage([w, h]);
+            sheet.drawImage(image, { x: 0, y: 0, width: w, height: h });
+        }
+        return new Blob([await doc.save({ updateFieldAppearances: false })], { type: 'application/pdf' });
+    };
+    return { seitenleser, zusammenstellen, ausBildern };
 })();
 
 </script>
@@ -145316,6 +145990,7 @@ const Zusammen = (() => {
         'lastEdited', 'zuletzt']);
     const TEXT = new Set(['text', 'name', 'title', 'beschreibung', 'notiz', 'caption']);
     const LISTE = new Set(['content', 'children', 'viewIds', 'spalten', 'reihenfolge']);
+    const OBJECT_LIST = new Set(['shapes', 'marken', 'objectComments', 'replies', 'mentions', 'kommentare', 'antworten']);
     const istObjekt = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
     const dreiWege = (basis, hier, dort) => {
         const konflikte = [];
@@ -145379,6 +146054,44 @@ const Zusammen = (() => {
                         gemischt = true;
                     continue;
                 }
+                if (OBJECT_LIST.has(k) && Array.isArray(H) && Array.isArray(D) &&
+                    [...(Array.isArray(B) ? B : []), ...H, ...D].every(item => item && typeof item.id === 'string') &&
+                    [B, H, D].every(list => !Array.isArray(list) || new Set(list.map(item => item.id)).size === list.length)) {
+                    const base = Array.isArray(B) ? B : [], byId = (list) => new Map(list.map(item => [item.id, item]));
+                    const baseMap = byId(base), local = byId(H), remote = byId(D), merged = new Map();
+                    for (const id of new Set([...baseMap.keys(), ...local.keys(), ...remote.keys()])) {
+                        const b = baseMap.get(id), h = local.get(id), d = remote.get(id);
+                        if (gleich(h, d)) {
+                            if (h !== undefined)
+                                merged.set(id, h);
+                            continue;
+                        }
+                        if (gleich(b, h)) {
+                            if (d !== undefined)
+                                merged.set(id, d);
+                            continue;
+                        }
+                        if (gleich(b, d)) {
+                            if (h !== undefined)
+                                merged.set(id, h);
+                            continue;
+                        }
+                        if (h === undefined || d === undefined) {
+                            merged.set(id, h ?? d);
+                            konflikte.push({ pfad: [...p, id], feld: pfadName(p), hier: h, dort: d,
+                                grund: 'Ein Objekt wurde gelöscht und auf dem anderen Gerät geändert.' });
+                        }
+                        else
+                            merged.set(id, geheDurch(b || {}, h, d, [...p, id]));
+                    }
+                    const order = listeDreiWege(base.map(item => item.id), H.map(item => item.id), D.map(item => item.id));
+                    const ids = [...order.liste, ...merged.keys()].filter((id, i, all) => merged.has(id) && all.indexOf(id) === i);
+                    raus[k] = ids.map(id => merged.get(id));
+                    gemischt = true;
+                    if (order.konflikt)
+                        konflikte.push({ pfad: p, feld: pfadName(p), hier: H, dort: D, grund: 'Beide haben die Objektreihenfolge verschieden geändert.' });
+                    continue;
+                }
                 if (istObjekt(H) && istObjekt(D)) {
                     raus[k] = geheDurch(istObjekt(B) ? B : {}, H, D, p);
                     continue;
@@ -145423,22 +146136,39 @@ const Zusammen = (() => {
     const setzeTief = (obj, pfad, wert) => {
         if (!pfad.length)
             return wert;
-        let z = obj;
-        for (let i = 0; i < pfad.length - 1; i++) {
-            const s = pfad[i];
-            if (s === undefined)
-                continue;
-            if (!istObjekt(z[s]))
-                z[s] = {};
-            z = z[s];
-        }
-        const letzt = pfad[pfad.length - 1];
-        if (letzt === undefined)
-            return obj;
-        if (wert === undefined)
-            delete z[letzt];
-        else
-            z[letzt] = wert;
+        const set = (node, depth) => {
+            const key = pfad[depth];
+            if (key === undefined)
+                return;
+            const last = depth === pfad.length - 1;
+            if (Array.isArray(node)) {
+                const index = node.findIndex(item => item?.id === key);
+                if (last) {
+                    if (index >= 0) {
+                        if (wert === undefined)
+                            node.splice(index, 1);
+                        else
+                            node[index] = wert;
+                    }
+                    else if (wert !== undefined)
+                        node.push(wert);
+                }
+                else if (index >= 0)
+                    set(node[index], depth + 1);
+                return;
+            }
+            if (last) {
+                if (wert === undefined)
+                    delete node[key];
+                else
+                    node[key] = wert;
+                return;
+            }
+            if (!istObjekt(node[key]) && !Array.isArray(node[key]))
+                node[key] = {};
+            set(node[key], depth + 1);
+        };
+        set(obj, 0);
         return obj;
     };
     const satzHolen = (tabelle, id) => tabelle === 'collections' ? Store.cache.collections[id]
@@ -166387,6 +167117,7 @@ const Seitenflaeche = (() => {
             'unten-links': [-1, 1], 'unten-rechts': [1, 1]
         };
         let skalierZug = null;
+        let rotationDrag = null;
         const auswahl = new Set();
         const auswahlLeiste = document.createElement('div');
         auswahlLeiste.className = 'pg-fl-auswahlleiste';
@@ -166448,7 +167179,7 @@ const Seitenflaeche = (() => {
                 return;
             const polster = auswahlLeiste.offsetWidth / 2 + 8;
             auswahlLeiste.style.left = Math.max(polster, Math.min(breit - polster, (links + rechts) / 2)) + 'px';
-            const platz = auswahlLeiste.offsetHeight + 14;
+            const platz = auswahlLeiste.offsetHeight + 58;
             auswahlLeiste.style.top = Math.max(4, Math.min(hoch - platz, oben >= platz ? oben - platz : unten + 12)) + 'px';
         };
         const auswahlPaletteSchliessen = () => {
@@ -166457,6 +167188,12 @@ const Seitenflaeche = (() => {
             auswahlLeiste.querySelector('[data-a="auswahlfarbe"]')?.setAttribute('aria-expanded', 'false');
         };
         const griffeZeigen = (r) => {
+            const cx = r.x + r.w / 2, cy = r.y - 34 / sicht.z;
+            auswahlRahmen.append(GfxShapes.sv('line', { x1: cx, y1: r.y, x2: cx, y2: cy,
+                stroke: 'var(--accent)', 'stroke-width': 1 / sicht.z, 'pointer-events': 'none' }));
+            const rotate = GfxShapes.sv('g', { 'data-drehgriff': 'true' });
+            rotate.append(GfxShapes.sv('circle', { cx, cy, r: 22 / sicht.z, fill: 'transparent', class: 'pg-fl-dreh-treffer', 'pointer-events': 'all' }), GfxShapes.sv('circle', { cx, cy, r: 6 / sicht.z, fill: 'var(--accent)', stroke: 'var(--bg)', 'stroke-width': 2 / sicht.z, 'pointer-events': 'none' }));
+            auswahlRahmen.append(rotate);
             const fingerziel = matchMedia('(pointer: coarse)').matches ? 42 : 20;
             const ecken = r.w * sicht.z < fingerziel || r.h * sicht.z < fingerziel
                 ? ['unten-rechts'] : Object.keys(ECKEN);
@@ -166729,6 +167466,35 @@ const Seitenflaeche = (() => {
                 return { ...form, x: r2(form.x + dx), y: r2(form.y + dy) };
             });
             sichern();
+        };
+        const rotationStart = (e) => {
+            const box = gruppenRahmen();
+            if (!box || selectionLocked())
+                return;
+            const pivot = { x: box.x + box.w / 2, y: box.y + box.h / 2 }, point = inFlaeche(e.clientX, e.clientY);
+            rotationDrag = { pointer: e.pointerId, before: formen, ids: new Set(auswahl), pivot,
+                start: Math.atan2(point.y - pivot.y, point.x - pivot.x), degrees: 0 };
+            e.preventDefault();
+            flaeche.focus({ preventScroll: true });
+            try {
+                flaeche.setPointerCapture(e.pointerId);
+            }
+            catch { }
+        };
+        const rotationEnd = (commit = false) => {
+            const drag = rotationDrag;
+            if (!drag)
+                return;
+            rotationDrag = null;
+            if (commit && Math.abs(drag.degrees) > .1) {
+                verlauf.merken(JSON.stringify(drag.before));
+                standZeigen();
+                sichern();
+            }
+            else {
+                formen = drag.before;
+                malen();
+            }
         };
         const formAn = (fx, fy, radius, mitVerbindungen = false, skipLocked = false) => {
             const nah = (a, b) => {
@@ -167739,6 +168505,10 @@ const Seitenflaeche = (() => {
                 return;
             }
             const griffElement = ziel?.closest('[data-skaliergriff]');
+            if (ziel?.closest('[data-drehgriff]') && e.button === 0) {
+                rotationStart(e);
+                return;
+            }
             const griff = griffElement?.getAttribute('data-skaliergriff');
             if (griff && auswahlRahmen.contains(griffElement ?? null) && Object.hasOwn(ECKEN, griff) && e.button === 0) {
                 skalierZugStart(e, griff);
@@ -167864,6 +168634,17 @@ const Seitenflaeche = (() => {
                 flaeche.setPointerCapture(e.pointerId);
         };
         const bewegt = (e) => {
+            if (rotationDrag?.pointer === e.pointerId) {
+                const drag = rotationDrag, point = inFlaeche(e.clientX, e.clientY);
+                let degrees = (Math.atan2(point.y - drag.pivot.y, point.x - drag.pivot.x) - drag.start) * 180 / Math.PI;
+                if (e.shiftKey)
+                    degrees = Math.round(degrees / 15) * 15;
+                drag.degrees = degrees;
+                formen = GfxObjects.rotate(drag.before, drag.ids, degrees);
+                malen();
+                auswahlLeiste.hidden = true;
+                return;
+            }
             if (dockZug) {
                 dockZugZeigen(e);
                 return;
@@ -167969,6 +168750,11 @@ const Seitenflaeche = (() => {
             return sx >= r.left && sx <= r.right && sy >= r.top && sy <= r.bottom;
         };
         const endet = (e) => {
+            if (rotationDrag?.pointer === e.pointerId) {
+                finger.delete(e.pointerId);
+                rotationEnd(e.type === 'pointerup');
+                return;
+            }
             if (dockZug?.pointer === e.pointerId) {
                 dockZugEnde(e);
                 return;
@@ -168042,6 +168828,13 @@ const Seitenflaeche = (() => {
             if (e.key === 'Escape' && dockZug) {
                 e.preventDefault();
                 dockZugEnde();
+                return;
+            }
+            if (rotationDrag) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    rotationEnd();
+                }
                 return;
             }
             if (e.key === 'Escape' && rahmenZug) {
@@ -171444,9 +172237,13 @@ const App = (() => {
             if (seite2)
                 beobachter.observe(seite2);
         }
-        GfxExchange.bindIO({ zip: Einlesen.zipLesenAusBlob, read: Dateien.alsBlob, remove: Dateien.weg,
+        GfxExchange.bindIO({ zip: Einlesen.zipLesenAusBlob, read: Dateien.alsBlob, remove: Dateien.weg, pdf: PdfOriginal.ausBildern, documents: AffineImport.file,
             pack: files => Austausch.zipSchreiben(files),
             save: async (blob, name, owner) => (await Dateien.ablegen(new File([blob], name, { type: blob.type }), { blockId: owner })).id });
+        GfxInspector.bindSession({ author: () => ({ id: Konten.aktiv().id, name: Store.getMeta('nutzer', Konten.aktiv().name || 'Ich') }),
+            mentions: () => [...Konten.alle().map((person) => ({ id: person.id, name: person.name, kind: 'person' })),
+                ...Object.values(Store.cache.blocks).filter(page => page.alive !== false && page.type === 'page' && Konten.darf('lesen', page.id))
+                    .map(page => ({ id: page.id, name: page.text || 'Ohne Titel', kind: 'page' }))], openPage: id => oeffne(id) });
         Seitenleiste.binde({
             oeffne, aktuelleSeite, kuerzlich, kommendeTermine, seitenMenue, suche, papierkorb
         });

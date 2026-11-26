@@ -525,3 +525,4 @@ body:has(.pg-flaeche) #sammelleiste{
 .pg-flaeche[data-wz="pfeil"], .pg-flaeche[data-wz="rechteck"],
 .pg-flaeche:is([data-wz="ellipse"],[data-wz="dreieck"]){cursor:crosshair}
 .pg-flaeche[data-wz="radierer"]{cursor:cell}
+.pg-fl-dreh-treffer { cursor: grab; }

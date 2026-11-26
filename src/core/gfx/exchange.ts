@@ -5,7 +5,9 @@
 const GfxExchange = (() => {
   type FileIO = { zip: (blob: Blob) => Promise<any>; save: (blob: Blob, name: string, owner: string) => Promise<string>;
     remove: (id: string) => Promise<unknown>; read: (id: string) => Promise<Blob | null>;
-    pack: (files: { name: string; inhalt: Blob | string }[]) => Promise<Blob> };
+    pack: (files: { name: string; inhalt: Blob | string }[]) => Promise<Blob>;
+    pdf: (pages: { blob: Blob; w: number; h: number }[]) => Promise<Blob>;
+    documents: (file: File, active: () => boolean) => Promise<{ rootId: string; pages: number; warnings: string[] }> };
   let fileIO: FileIO | null = null;
   const bindIO = (next: FileIO) => { fileIO = next; };
   const fileBlob = (id: string): Promise<Blob | null> => fileIO?.read(id) || Promise.resolve(null);
@@ -13,9 +15,24 @@ const GfxExchange = (() => {
     if (!fileIO) return Promise.reject(new Error('Der Dateiaustausch ist noch nicht bereit.'));
     return fileIO.pack(files);
   };
+  const pdfFromImages = (pages: { blob: Blob; w: number; h: number }[]): Promise<Blob> => {
+    if (!fileIO) return Promise.reject(new Error('Der PDF-Export ist noch nicht bereit.'));
+    return fileIO.pdf(pages);
+  };
+  const importDocuments = (file: File, active: () => boolean) => {
+    if (!fileIO) return Promise.reject(new Error('Der Dokumentimport ist noch nicht bereit.'));
+    return fileIO.documents(file, active);
+  };
   const text = (value: any): string => typeof value === 'string' ? value :
     Array.isArray(value?.delta) ? value.delta.map((p: any) => typeof p.insert === 'string' ? p.insert : '').join('') :
       Array.isArray(value) ? value.map(p => typeof p.insert === 'string' ? p.insert : '').join('') : '';
+  const affineColor = (value: any, fallback = '#529cca'): string => {
+    const raw = typeof value === 'string' ? value : value?.light;
+    if (typeof raw !== 'string') return fallback;
+    if (/^#[\da-f]{3,8}$/i.test(raw)) return raw;
+    const name = /--affine-palette-(?:line|shape|text)-([a-z]+)/.exec(raw)?.[1];
+    return ({ blue:'#529cca',green:'#4dab9a',orange:'#ffa344',red:'#ff7369',purple:'#9a6dd7',pink:'#e255a1',yellow:'#ffdc49',grey:'#9b9a97',gray:'#9b9a97',black:'#25252a',white:'#ffffff' } as Record<string,string>)[name || ''] || fallback;
+  };
   const remap = (objects: any[], uid: () => string): any[] => {
     const ids = new Map(objects.map(o => [o.id, uid()])), groups = new Map<string, string>();
     const group = (id: string) => { if (!groups.has(id)) groups.set(id, uid()); return groups.get(id)!; };
@@ -51,20 +68,24 @@ const GfxExchange = (() => {
     };
     visit(data);
     if (!blocks.length && data?.elements) for (const [id, e] of Object.entries<any>(data.elements)) elements.push({ ...e, id: e.id || id });
-    const result: any[] = [], groups = elements.filter(e => e.type === 'group');
+    const result: any[] = [], groups = elements.filter(e => e.type === 'group' || e.type === 'mindmap');
     const box = (raw: any): { x: number; y: number; w: number; h: number } => {
       const b = typeof raw === 'string' ? JSON.parse(raw) : raw;
       if (!Array.isArray(b) || b.length !== 4 || !b.every(Number.isFinite)) throw new Error('Ungültige AFFiNE-Koordinaten.');
       return { x: b[0], y: b[1], w: b[2], h: b[3] };
     };
     for (const e of elements) {
-      if (e.type === 'group') continue;
-      const common = { id: String(e.id || uid()), farbe: /^#[\da-f]{3,8}$/i.test(e.strokeColor || e.color || e.stroke) ? (e.strokeColor || e.color || e.stroke) : '#529cca',
+      if (e.type === 'group' || e.type === 'mindmap') continue;
+      const common = { id: String(e.id || uid()), farbe: affineColor(e.strokeColor || e.color || e.stroke),
         rotation: Number(e.rotate) || 0, affineSource: e };
       if (e.type === 'shape') {
         const art = ({ rect: 'rechteck', ellipse: 'ellipse', triangle: 'dreieck', diamond: 'raute' } as any)[e.shapeType];
         if (!art) throw new Error('Diese AFFiNE-Form wird noch nicht unterstützt: ' + e.shapeType);
-        result.push({ ...common, ...box(e.xywh), art, gefuellt: e.filled === true, text: text(e.text) });
+        const color = affineColor(e.fillColor, common.farbe);
+        result.push({ ...common, ...box(e.xywh), art, gefuellt: e.filled === true, text: text(e.text),
+          fillColor: color,
+          strichBreite: Number(e.strokeWidth) || 2, cornerRadius: Math.max(0, Math.min(1, Number(e.radius) || 0)),
+          ...(String(e.strokeStyle).toLowerCase() === 'dash' ? { dash: true } : {}), fontSize: Number(e.fontSize) || 14 });
       } else if (e.type === 'brush' || e.type === 'highlighter') {
         const b = box(e.xywh);
         if (!Array.isArray(e.points) || e.points.some((p: any) => !Array.isArray(p) || !Number.isFinite(p[0]) || !Number.isFinite(p[1]))) throw new Error('Ungültiger AFFiNE-Strich.');
@@ -73,6 +94,19 @@ const GfxExchange = (() => {
       else if (e.type === 'connector' && e.source?.id && e.target?.id) result.push({ ...common, art: 'verbindung', von: e.source.id, nach: e.target.id,
         route: e.mode === 1 || e.mode === 'orthogonal' ? 'orthogonal' : e.mode === 2 || e.mode === 'curve' ? 'curve' : 'straight' });
       else throw new Error('Dieses AFFiNE-Element wird noch nicht unterstützt: ' + String(e.type));
+    }
+    for (const map of elements.filter(e => e.type === 'mindmap')) {
+      const children = map.children?.json || map.children;
+      if (!children || typeof children !== 'object') throw new Error('Ungültige AFFiNE-Gedankenkarte.');
+      for (const [id, detail] of Object.entries<any>(children)) {
+        if (id.startsWith('affine:')) continue;
+        const node = result.find(o => o.id === id); if (!node) throw new Error('Ein Knoten der AFFiNE-Gedankenkarte fehlt.');
+        node.groupId = String(map.id); node.groupPath = [String(map.id)]; node.affineMindmap = map;
+        if (detail?.parent) {
+          if (!result.some(o => o.id === detail.parent)) throw new Error('Ein Ast der AFFiNE-Gedankenkarte hat keine Quelle.');
+          result.push({ id: uid(), art: 'verbindung', von: detail.parent, nach: id, route: 'curve', farbe: node.farbe, affineSource: { mindmap: map.id, parent: detail.parent, child: id } });
+        }
+      }
     }
     for (const block of blocks) {
       const props = block.props || block, flavour = String(block.flavour);
@@ -91,7 +125,7 @@ const GfxExchange = (() => {
     for (const o of result) {
       const path: string[] = []; let current = o.id;
       for (let i = 0; i < groups.length; i++) {
-        const group = groups.find(g => g.children?.[current]); if (!group) break;
+        const group = groups.find(g => (g.children?.json || g.children)?.[current]); if (!group) break;
         if (path.includes(group.id)) throw new Error('Zyklische AFFiNE-Gruppe.');
         path.push(group.id); current = group.id;
       }
@@ -144,6 +178,6 @@ const GfxExchange = (() => {
     const io = fileIO; if (!io) return Promise.reject(new Error('Der Dateiaustausch ist noch nicht bereit.'));
     return readFile(file, uid, { zip: io.zip, save: (blob, name) => io.save(blob, name, owner), remove: io.remove, active });
   };
-  return { parse, remap, readFile, bindIO, fileBlob, packArchive, importFile };
+  return { parse, remap, readFile, bindIO, fileBlob, packArchive, importFile, pdfFromImages, importDocuments, text };
 })();
 (window as any).GfxExchange = GfxExchange;

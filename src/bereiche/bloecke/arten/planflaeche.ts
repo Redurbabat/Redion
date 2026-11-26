@@ -616,7 +616,9 @@ const Planflaeche = (() => {
       wurzel.querySelector<HTMLElement>('.sp-buehne')?.focus({ preventScroll: true });
     });
     const fachStatus = (): void => {
-      fachSchliessen.hidden = !(batterieOffen || relaisOffen || pruefungOffen);
+      relaisPanel.hidden = z.simulation || !relaisOffen;
+      batteriePanel.hidden = z.simulation || !batterieOffen;
+      fachSchliessen.hidden = !(!relaisPanel.hidden || !batteriePanel.hidden || !pruefPanel.hidden);
       wurzel.classList.toggle('sp-fach-offen', !fachSchliessen.hidden);
     };
 
@@ -662,7 +664,10 @@ const Planflaeche = (() => {
         gruppe: w.id === 'zeigen' || w.id === 'leitung' ? 'quick' as const : 'senior' as const })),
       galerie: {
         schnell: ['plan-modus'], edgeless: { zusatz: ['palette-toggle', 'zoom-alles'] },
+        beschriftet: true,
         karten: [
+          { id: 'bauteile', knoepfe: ['dock-bauteile'] },
+          { id: 'simulation', knoepfe: ['simulation'] },
           { id: 'stifte', knoepfe: ['stift'] },
           { id: 'radieren', knoepfe: ['radieren'] },
           { id: 'text', knoepfe: ['text'] },
@@ -671,6 +676,8 @@ const Planflaeche = (() => {
         werkzeugMenues: { 'plan-modus': ['zeigen', 'leitung'] }
       },
       aktionen: [
+        { id: 'dock-bauteile', name: 'Fachzeichen', sym: 'plus', kapsel: 'werkzeuge' },
+        { id: 'simulation', name: 'Strom ein', sym: 'play', kapsel: 'werkzeuge' },
         { id: 'plan-modus', name: 'Auswahl und Leitung', sym: 'inkPointer', menue: true, kapsel: 'werkzeuge' },
         { id: 'palette-toggle', name: 'Bauteile', titel: 'Bauteile öffnen oder schliessen (B)', sym: 'plus', kapsel: 'werkzeuge' },
         { id: 'zoom-alles', name: 'Einpassen', titel: 'Den ganzen Schaltplan zeigen (0)', sym: 'maximize', kapsel: 'werkzeuge' }
@@ -685,6 +692,57 @@ const Planflaeche = (() => {
     dock.querySelector('[data-a="palette-toggle"]')?.classList.add('sp-palette-knopf');
     dock.querySelector('[data-a="zoom-alles"]')?.classList.add('sp-dock-fit');
     Register.symbole.fuelle(dock);
+    const contextDock = (context: string, name: string, actions: { id: string; name: string; sym: string; menue?: boolean }[], quick: string[]) => {
+      const result = GfxToolbar.erstelle({ klasse: 'sp-werkzeuge sp-kontextdock', beschriftung: name,
+        werkzeuge: [], aktionen: [...actions.map(a => ({ ...a, kapsel: 'werkzeuge' as const })),
+          { id: 'zoom-alles', name: 'Einpassen', sym: 'maximize', kapsel: 'werkzeuge' }],
+        galerie: { schnell: quick, beschriftet: true, edgeless: { zusatz: ['zoom-alles'] },
+          karten: actions.filter(a => !quick.includes(a.id)).map(a => ({ id: a.id, knoepfe: [a.id] })) },
+        menue: id => {
+          if (id !== 'sim-tempo') return null;
+          const list = document.createElement('div'); list.className = 'gfx-tb-liste';
+          for (const speed of [.25, .5, 1, 2, 4]) {
+            const b = document.createElement('button'); b.type = 'button'; b.textContent = speed + '×'; b.setAttribute('aria-pressed', String(speed === laborTempo));
+            b.addEventListener('click', () => { const select = labor.querySelector<HTMLSelectElement>('[data-labor-tempo]');
+              if (select) { select.value = String(speed); select.dispatchEvent(new Event('change', { bubbles: true })); } result.schliesse(); }); list.append(b);
+          }
+          return list;
+        }
+      });
+      result.element.dataset.dockContext = context;
+      result.element.querySelectorAll('.gfx-tb-schnell button').forEach(button => button.classList.add('gfx-tb-symbol'));
+      Register.symbole.fuelle(result.element); return result;
+    };
+    dock.dataset.dockContext = 'zeichnen';
+    const simulationDock = contextDock('simulation', 'Simulation: Schalten und Messen', [
+      { id: 'simulation', name: 'Strom aus', sym: 'bolt' },
+      { id: 'sim-schalten', name: 'Schalten', sym: 'inkPointer' },
+      { id: 'sim-messen', name: 'Messwerte', sym: 'eye' },
+      { id: 'sim-pause', name: 'Pause / Weiter', sym: 'play' },
+      { id: 'sim-reset', name: 'Reset', sym: 'undo' },
+      { id: 'sim-tempo', name: 'Tempo', sym: 'clock', menue: true },
+      { id: 'sim-zeichnen', name: 'Skizzieren', sym: 'inkPen' },
+      { id: 'pruefzentrum', name: 'Prüfen', sym: 'checkCircle' }
+    ], ['simulation']);
+    const relayDock = contextDock('relais', 'Relais-Werkstatt', [
+      { id: 'context-zeichnen', name: 'Zeichnen', sym: 'inkPointer' },
+      { id: 'relay-einsetzen', name: 'Einsetzen', sym: 'plus' },
+      { id: 'relay-lehr-selbsthaltung', name: 'Selbsthaltung', sym: 'bolt' },
+      { id: 'relay-lehr-treppenhaus', name: 'Zeitrelais', sym: 'clock' },
+      { id: 'relay-import', name: 'Import', sym: 'upload' },
+      { id: 'relay-original', name: 'Original sichern', sym: 'download' },
+      { id: 'relay-freigeben', name: 'Freigeben', sym: 'checkCircle' }
+    ], ['context-zeichnen']);
+    const batteryDock = contextDock('batterie', 'Batteriewerkstatt', [
+      { id: 'context-zeichnen', name: 'Zeichnen', sym: 'inkPointer' },
+      { id: 'battery-einsetzen', name: 'Aufgabe einsetzen', sym: 'plus' },
+      { id: 'battery-leer', name: 'Leere Zeichnung', sym: 'page' },
+      { id: 'battery-uebernehmen', name: 'Zeichnung messen', sym: 'eye' },
+      { id: 'battery-pruefen', name: 'Prüfen', sym: 'checkCircle' },
+      { id: 'battery-muster', name: 'Muster', sym: 'grid' },
+      { id: 'simulation', name: 'Strom ein / aus', sym: 'bolt' }
+    ], ['context-zeichnen']);
+    let mountedDock = planDock;
     const kopfRechts = document.createElement('span');
     kopfRechts.className = 'sp-rechts';
     kopf.append(kopfLinks, dock, kopfRechts);
@@ -708,6 +766,17 @@ const Planflaeche = (() => {
       if (!markeGesetzt) { void marke.offsetWidth; marke.style.transition = ''; markeGesetzt = true; }
     };
     const dockAktualisieren = (): void => {
+      const next = z.simulation ? simulationDock : relaisOffen ? relayDock : batterieOffen ? batteryDock : planDock;
+      wurzel.dataset.electroContext = next.element.dataset.dockContext || 'zeichnen';
+      if (mountedDock !== next) {
+        const focused = mountedDock.element.contains(document.activeElement);
+        mountedDock.schliesse(); mountedDock.element.replaceWith(next.element); mountedDock = next;
+        if (focused) next.element.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true });
+      }
+      simulationDock.element.querySelector('[data-a="sim-pause"]')?.setAttribute('aria-pressed', String(zeitStand.pause));
+      relayDock.setzeGesperrt('relay-original', !z.plan.relaisLegacy);
+      relayDock.setzeGesperrt('relay-freigeben', !z.plan.relaisLegacy || !!z.plan.relaisLegacy.verifiziert);
+      for (const action of ['pruefen', 'muster']) batteryDock.setzeGesperrt('battery-' + action, !batteriePanel.querySelector(`[data-bat="${action}"]`));
       planDock.setzeWerkzeug(z.werkzeug);
       dock.querySelectorAll<HTMLElement>('.sp-wz').forEach(b => {
         const an = b.dataset.wz === z.werkzeug;
@@ -3827,6 +3896,13 @@ const Planflaeche = (() => {
         palette.hidden = !paletteOffen;
         kopfMalen(); return;
       }
+      if (b.dataset.a === 'dock-bauteile') { dock.querySelector<HTMLButtonElement>('[data-a="palette-toggle"]')?.click(); return; }
+      if (b.dataset.a === 'context-zeichnen') { fachSchliessen.click(); return; }
+      if (b.dataset.a?.startsWith('relay-')) { relaisPanel.querySelector<HTMLButtonElement>(`button[data-rel="${CSS.escape(b.dataset.a.slice(6))}"]`)?.click(); return; }
+      if (b.dataset.a?.startsWith('battery-')) { batteriePanel.querySelector<HTMLButtonElement>(`button[data-bat="${CSS.escape(b.dataset.a.slice(8))}"]`)?.click(); dockAktualisieren(); return; }
+      if (b.dataset.a === 'sim-pause' || b.dataset.a === 'sim-reset') { labor.querySelector<HTMLButtonElement>(`[data-labor-aktion="${b.dataset.a === 'sim-pause' ? 'pause' : 'reset'}"]`)?.click(); dockAktualisieren(); return; }
+      if (b.dataset.a === 'sim-messen') { labor.tabIndex = -1; labor.focus({ preventScroll: true }); labor.scrollIntoView({ block: 'nearest', behavior: 'auto' }); return; }
+      if (b.dataset.a === 'sim-schalten' || b.dataset.a === 'sim-zeichnen') { z.werkzeug = b.dataset.a === 'sim-zeichnen' ? 'stift' : 'zeigen'; z.gewaehltesZeichen = ''; z.auswahl.clear(); male(true); return; }
       if (b.dataset.a === 'zoom-alles') return allesZeigen();
       if (b.dataset.a === 'bereiche') return bereicheMenue(b);
       if (b.dataset.a === 'plan-fokus') {
@@ -3844,10 +3920,13 @@ const Planflaeche = (() => {
         pruefungOffen = !pruefungOffen; pruefPanel.hidden = !pruefungOffen;
         kopfMalen(); if (pruefungOffen) pruefMalen(); return;
       }
-      if (b.dataset.a === 'relais-werkstatt') { relaisOffen = !relaisOffen; relaisZeigen(); kopfMalen(); return; }
+      if (b.dataset.a === 'relais-werkstatt') {
+        if (z.simulation) { simulationUmschalten(); relaisOffen = true; } else relaisOffen = !relaisOffen;
+        relaisZeigen(); kopfMalen(); return;
+      }
       if (b.dataset.a === 'netz') return schaltungMenue(b);
       if (b.dataset.a === 'batterie-labor') {
-        batterieOffen = !batterieOffen;
+        if (z.simulation) { simulationUmschalten(); batterieOffen = true; } else batterieOffen = !batterieOffen;
         batteriePanel.hidden = !batterieOffen;
         kopfMalen();
         if (batterie) batterie.aktualisiere();
