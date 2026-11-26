@@ -1,7 +1,6 @@
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/register/fachzeichen.ts (npm run bauen:ts). */
-window.Register = window.Register || {};
-Register.fachzeichen = (() => {
+const ElektroFachzeichen = (() => {
     const RASTER = 10;
     const GRUPPEN = [
         ['schalter', 'Schalter', '⎔'],
@@ -1340,3 +1339,10 @@ Register.fachzeichen = (() => {
     return { RASTER, NAH, alle, holen, inGruppe, gruppen, gruppenName,
         alsSvg, anschlussLage, klemmeFuer, masse, melde, vergiss, hatStellungsbild };
 })();
+if (typeof window === 'undefined') {
+    module.exports = ElektroFachzeichen;
+}
+else {
+    window.Register = window.Register || {};
+    Register.fachzeichen = ElektroFachzeichen;
+}

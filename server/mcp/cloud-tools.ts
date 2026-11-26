@@ -9,6 +9,7 @@ import {rolleAuf,darf,notieren,feldRechte} from '../kern.ts';
 import {BUILTIN_BLOCK_TYPES} from './block-catalog.ts';
 import {BUILTIN_SYMBOLS} from './symbol-catalog.ts';
 import {editSchematic} from './schematic-edit.ts';
+import {runSwitchTest} from './schematic-test.ts';
 import {buildLearningCard,buildLearningSet} from './learning-card.ts';
 import {mindmap,board,sheet,papers,forms,shapes,editNode,editShape} from './visual-blocks.ts';
 
@@ -142,8 +143,12 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,
       childOffset:{type:'integer',minimum:0,maximum:100000},
       childLimit:{type:'integer',minimum:1,maximum:40}},required:['workspaceId','blockId'],additionalProperties:false}},
-  {name:'redion_read_schematic',description:'Liest einen vorhandenen Schaltplan-Block mit geprüften Seitenrechten. Bauteile, Leitungen, Beschriftungen und Planversion sind enthalten.',
-    inputSchema:{type:'object',properties:{...workspace,blockId:idField},required:['workspaceId','blockId'],additionalProperties:false}},
+  {name:'redion_read_schematic',description:'Liest Bauteile, Leitungen, Beschriftungen und Planversion. Optional switchTest und expectedVersion mitsenden, um bis zu 32 Schalterkombinationen mit dem Redion-Simulationskern gegen die Sollfolge zu prüfen. Der letzte Schalter wechselt am schnellsten. Der Test verändert den Plan nicht.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},
+      switchTest:{type:'object',additionalProperties:false,required:['switchIds','targetId','expected'],properties:{
+        switchIds:{type:'array',minItems:1,maxItems:6,uniqueItems:true,items:idField},targetId:idField,
+        expected:{type:'array',minItems:1,maxItems:32,items:{type:'boolean'}}
+      }}},required:['workspaceId','blockId'],additionalProperties:false}},
   {name:'redion_list_symbols',description:'Listet die 131 eingebauten elektrotechnischen Fachzeichen mit Nummern und Positionen der Anschlüsse. Keine auf Geräten nachinstallierten Symbole; nicht als zertifizierte Normbibliothek verwenden.',
     inputSchema:{type:'object',properties:{gruppe:{type:'string',maxLength:40},suche:{type:'string',maxLength:80}},additionalProperties:false}},
   {name:'redion_list_block_types',description:'Listet eingebaute benannte Blockarten der RED-ION-App, inklusive intern gespeicherter Arten. Gerätebezogene Plugins sind nicht enthalten.',
@@ -444,8 +449,24 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         const plan=data.plan as Record<string,unknown>;
         const payload=JSON.stringify(plan);
         if(payload.length>32000)return err('too_large','Schaltplan ist für einen Aufruf zu gross.');
+        const version=Number(s.version)||1;
+        if(args.expectedVersion!==undefined||args.switchTest!==undefined){
+          if(expected(args.expectedVersion)!==version)
+            return err('conflict','Schaltplan wurde geändert. Bitte erneut lesen.');
+        }
+        if(args.switchTest!==undefined){
+          try{
+            const report=runSwitchTest(plan,args.switchTest);
+            if(new TextEncoder().encode(JSON.stringify(report)).byteLength>32000)
+              return err('too_large','Der Bericht ist zu gross. Einen kleineren Teilplan prüfen.');
+            return {workspaceId:w,blockId:id,documentId:pageId,version,report};
+          }catch(error){
+            if(error instanceof CloudMcpToolError)throw error;
+            return err('invalid_arguments',error instanceof Error?error.message:'Prüfung konnte nicht ausgeführt werden.');
+          }
+        }
         return {workspaceId:w,blockId:id,documentId:pageId,
-          version:Number(s.version)||1,plan,
+          version,plan,
           teile:Array.isArray(plan.teile)?plan.teile:[],
           leitungen:Array.isArray(plan.leitungen)?plan.leitungen:[],
           texte:Array.isArray(plan.texte)?plan.texte:[]};

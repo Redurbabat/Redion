@@ -60,7 +60,10 @@
  * hinzustellen, die niemand nachprüfen kann.
  * ==========================================================================*/
 
-const Stromfluss = (() => {
+const Stromfluss = ((
+  Register: { fachzeichen: typeof ElektroFachzeichen } | undefined,
+  schaltplanHolen: () => typeof Schaltplan | undefined
+) => {
 
   /* ------------------------------------------------------------------------
    * 1. WAS EIN SYMBOL ELEKTRISCH IST
@@ -576,8 +579,7 @@ const Stromfluss = (() => {
   const klemmen = (plan: any): Klemme[] => {
     const raus: Klemme[] = [];
     (plan.teile || []).forEach((t: any) => {
-      const liste = (typeof Schaltplan !== 'undefined')
-        ? Schaltplan.anschluesseVon(t) : [];
+      const liste = schaltplanHolen()?.anschluesseVon(t) ?? [];
       liste.forEach((a: any) => raus.push({
         teil: t.id, nr: a.nr, x: a.x, y: a.y, schluessel: `k:${t.id}:${a.nr}`
       }));
@@ -2166,6 +2168,19 @@ const Stromfluss = (() => {
     loeseKomplex, leiterrollen,
     /* für Prüfungen sichtbar gemacht */ klemmen, aufStrecke
   };
-})();
+})(
+  typeof window === 'undefined'
+    ? { fachzeichen: require('../../register/fachzeichen.js') }
+    : typeof Register === 'undefined' ? undefined : Register,
+  () => typeof window === 'undefined'
+    ? require('../bloecke/arten/schaltplan.js')
+    : typeof Schaltplan === 'undefined' ? undefined : Schaltplan
+);
 
-(window as any).Stromfluss = Stromfluss;
+if (typeof window === 'undefined') module.exports = Stromfluss;
+else {
+  (window as any).Stromfluss = Stromfluss;
+  // Dienstschnittstelle für das Prüfzentrum. Der Browser lädt das
+  // Schaltplanmodul erst anschliessend, daher wird es beim Aufruf geholt.
+  if (typeof Register !== 'undefined') Register.stromfluss = Stromfluss;
+}

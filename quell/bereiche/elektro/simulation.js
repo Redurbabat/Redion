@@ -1,6 +1,6 @@
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/elektro/simulation.ts (npm run bauen:ts). */
-const Stromfluss = (() => {
+const Stromfluss = ((Register, schaltplanHolen) => {
     const ZEIT_ANNAHME = 'Die Verzögerung wird nicht gerechnet — die Simulation kennt keine Zeit. Der Kontakt folgt sofort.';
     const AUF_ZU = (a, b) => [
         { name: 'offen', zu: [] },
@@ -244,8 +244,7 @@ const Stromfluss = (() => {
     const klemmen = (plan) => {
         const raus = [];
         (plan.teile || []).forEach((t) => {
-            const liste = (typeof Schaltplan !== 'undefined')
-                ? Schaltplan.anschluesseVon(t) : [];
+            const liste = schaltplanHolen()?.anschluesseVon(t) ?? [];
             liste.forEach((a) => raus.push({
                 teil: t.id, nr: a.nr, x: a.x, y: a.y, schluessel: `k:${t.id}:${a.nr}`
             }));
@@ -1279,5 +1278,15 @@ const Stromfluss = (() => {
         loeseKomplex, leiterrollen,
         klemmen, aufStrecke
     };
-})();
-window.Stromfluss = Stromfluss;
+})(typeof window === 'undefined'
+    ? { fachzeichen: require('../../register/fachzeichen.js') }
+    : typeof Register === 'undefined' ? undefined : Register, () => typeof window === 'undefined'
+    ? require('../bloecke/arten/schaltplan.js')
+    : typeof Schaltplan === 'undefined' ? undefined : Schaltplan);
+if (typeof window === 'undefined')
+    module.exports = Stromfluss;
+else {
+    window.Stromfluss = Stromfluss;
+    if (typeof Register !== 'undefined')
+        Register.stromfluss = Stromfluss;
+}

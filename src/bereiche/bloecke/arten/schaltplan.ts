@@ -35,7 +35,7 @@
  * die fast am Anschluss enden, sieht richtig aus und ist es nicht.
  * ==========================================================================*/
 
-const Schaltplan = (() => {
+const Schaltplan = ((Register: { fachzeichen: typeof ElektroFachzeichen } | undefined) => {
 
   const esc = (s: unknown): string => String(s ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -1360,7 +1360,7 @@ const Schaltplan = (() => {
 
   /** Derselbe reale Aussenrahmen für Vorlagenplatzierung und Desktop-Aktionen. */
   const teilRahmen = (t: Teil, dx = 0, dy = 0) => {
-    const m = teilMasse(t), zc = Register.fachzeichen.holen(t.zeichen);
+    const m = teilMasse(t), zc = Register?.fachzeichen.holen(t.zeichen);
     const cx = Number(t.x) + dx + (zc ? zc.w : UNBEKANNT_MASS.w) / 2;
     const cy = Number(t.y) + dy + (zc ? zc.h : UNBEKANNT_MASS.h) / 2;
     return { l: cx - m.w / 2, o: cy - m.h / 2, r: cx + m.w / 2, u: cy + m.h / 2 };
@@ -1578,7 +1578,7 @@ const Schaltplan = (() => {
       const innen = unbekannt ? unbekanntesZeichen(t.zeichen, farbe)
         : svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
       const gewaehlt = opt.auswahl && opt.auswahl.has(t.id);
-      const mass = unbekannt ? { ...UNBEKANNT_MASS } : Register.fachzeichen.masse(t.zeichen, 0);
+      const mass = unbekannt || !Register ? { ...UNBEKANNT_MASS } : Register.fachzeichen.masse(t.zeichen, 0);
 
       /* Was die Simulation über dieses Bauteil weiss. */
       const w = opt.strom ? opt.strom.werte[t.id] : undefined;
@@ -1917,6 +1917,9 @@ const Schaltplan = (() => {
     netzBauen, BEISPIELE, beispielBauen, uid, esc,
     SCHIENEN, leitungFuehren, ueberlappt, ueberlappungen, streckeSchieben, gruppeUmformen, planDrehen
   };
-})();
+})(typeof window === 'undefined'
+  ? { fachzeichen: require('../../../register/fachzeichen.js') }
+  : typeof Register === 'undefined' ? undefined : Register);
 
-(window as any).Schaltplan = Schaltplan;
+if (typeof window === 'undefined') module.exports = Schaltplan;
+else (window as any).Schaltplan = Schaltplan;

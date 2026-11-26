@@ -1565,10 +1565,11 @@ const Planflaeche = (() => {
         `<button type="button" data-p-a="json">Prüfbericht JSON</button>` +
         `<button type="button" data-p-a="aufraeumen" title="Redundante Zwischenpunkte entfernen – Anschlusspunkte bleiben erhalten">Leitungen aufräumen</button>` +
         `</div><div class="sp-pruef-liste">${liste}</div>`;
-      if (pruefAnsicht === 'diagnose' && typeof Stromfluss !== 'undefined') {
+      const kombinationsDienst = Register.stromfluss as typeof Stromfluss | undefined;
+      if (pruefAnsicht === 'diagnose' && kombinationsDienst) {
         const teile = z.plan.teile as { id: string; zeichen: string; bmk?: string }[];
         const schalter = teile.filter(teil => {
-          const modell = Stromfluss.verhalten(teil.zeichen);
+          const modell = kombinationsDienst.verhalten(teil.zeichen);
           return (modell?.stellungen?.length || 0) >= 2 && !modell?.folgtSpule;
         });
         if (schalter.length) {
@@ -1591,7 +1592,7 @@ const Planflaeche = (() => {
             try {
               const ids = eingabe.getAll('schalter').map(String);
               const soll = Array.from(String(eingabe.get('soll')), zeichen => zeichen === '1');
-              const bericht = Stromfluss.pruefeSchalter(z.plan, ids, String(eingabe.get('ziel')), soll);
+              const bericht = kombinationsDienst.pruefeSchalter(z.plan, ids, String(eingabe.get('ziel')), soll);
               if (bericht.status === 'nicht_modelliert') {
                 ausgabe.textContent = 'Ohne Simulationsmodell: ' + bericht.nichtModelliert.map(teil => teil.symbol).join(', ');
                 return;

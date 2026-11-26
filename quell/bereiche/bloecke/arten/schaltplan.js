@@ -1,6 +1,6 @@
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/bloecke/arten/schaltplan.ts (npm run bauen:ts). */
-const Schaltplan = (() => {
+const Schaltplan = ((Register) => {
     const esc = (s) => String(s ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -910,7 +910,7 @@ const Schaltplan = (() => {
     const teilMasse = (t) => (typeof Register !== 'undefined' && Register.fachzeichen && Register.fachzeichen.holen(t.zeichen))
         ? Register.fachzeichen.masse(t.zeichen, t.drehung) : { ...UNBEKANNT_MASS };
     const teilRahmen = (t, dx = 0, dy = 0) => {
-        const m = teilMasse(t), zc = Register.fachzeichen.holen(t.zeichen);
+        const m = teilMasse(t), zc = Register?.fachzeichen.holen(t.zeichen);
         const cx = Number(t.x) + dx + (zc ? zc.w : UNBEKANNT_MASS.w) / 2;
         const cy = Number(t.y) + dy + (zc ? zc.h : UNBEKANNT_MASS.h) / 2;
         return { l: cx - m.w / 2, o: cy - m.h / 2, r: cx + m.w / 2, u: cy + m.h / 2 };
@@ -1048,7 +1048,7 @@ const Schaltplan = (() => {
             const innen = unbekannt ? unbekanntesZeichen(t.zeichen, farbe)
                 : svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
             const gewaehlt = opt.auswahl && opt.auswahl.has(t.id);
-            const mass = unbekannt ? { ...UNBEKANNT_MASS } : Register.fachzeichen.masse(t.zeichen, 0);
+            const mass = unbekannt || !Register ? { ...UNBEKANNT_MASS } : Register.fachzeichen.masse(t.zeichen, 0);
             const w = opt.strom ? opt.strom.werte[t.id] : undefined;
             const vh = (typeof Stromfluss !== 'undefined' && Stromfluss.verhalten)
                 ? Stromfluss.verhalten(t.zeichen) : null;
@@ -1269,5 +1269,10 @@ const Schaltplan = (() => {
         netzBauen, BEISPIELE, beispielBauen, uid, esc,
         SCHIENEN, leitungFuehren, ueberlappt, ueberlappungen, streckeSchieben, gruppeUmformen, planDrehen
     };
-})();
-window.Schaltplan = Schaltplan;
+})(typeof window === 'undefined'
+    ? { fachzeichen: require('../../../register/fachzeichen.js') }
+    : typeof Register === 'undefined' ? undefined : Register);
+if (typeof window === 'undefined')
+    module.exports = Schaltplan;
+else
+    window.Schaltplan = Schaltplan;

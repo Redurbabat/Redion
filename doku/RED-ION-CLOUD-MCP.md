@@ -296,6 +296,25 @@ wird dadurch **nicht** implementiert. Vor produktiver Nutzung sind
 Deployment, Connector-Aktualisierung und ein Live-Test notwendig.
 
 
+## Schalterkombinationen mit MCP prüfen
+
+`redion_read_schematic` gibt wie bisher den Schaltplan und seine `version` zurück.
+Für eine Prüfung sendet der Client zusätzlich `expectedVersion` und einen
+`switchTest` mit `switchIds`, `targetId` und der booleschen Sollfolge `expected`.
+Mit drei Schaltern sind zum Beispiel acht Sollwerte nötig, wenn jeder Schalter
+zwei Stellungen hat. Der letzte Schalter in `switchIds` wechselt am schnellsten.
+
+Die Antwort enthält einen Bericht pro Kombination. Sie nennt die Schalterstellung,
+den Sollwert, den gemessenen Zustand, Fehler und Annahmen. Die Prüfung rechnet
+aus der Ruhelage und speichert den Schaltplan nicht. Ein nicht modelliertes
+Bauteil oder ein instabiler Zustand wird ausdrücklich gemeldet. Die Cloud prüft
+höchstens 32 Kombinationen mit bis zu 60 Bauteilen, 100 Leitungen und begrenzter
+Punktzahl. Grosse Pläne benötigen kleinere Teilpläne.
+
+Die Rechnung verwendet dieselbe erzeugte Simulationsdatei samt Fachzeichen und
+Klemmenmodell wie die App. Der vorhandene Lesezugriff auf die eingebettete Seite
+ist erforderlich. Die Prüfung ersetzt keine elektrische Norm- oder Sicherheitsabnahme.
+
 ## Schaltpläne mit MCP erweitern (23.11.2026)
 
 'redion_update_schematic' erweitert einen bereits gespeicherten

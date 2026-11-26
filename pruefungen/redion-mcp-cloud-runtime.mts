@@ -8,6 +8,7 @@ import {build} from 'rolldown';
 import {SCHEMA} from '../server/ablage.ts';
 import {mcpStateD1} from '../server/mcp/state.ts';
 import {createMcpOAuth,pkceChallenge} from '../server/mcp/oauth.ts';
+import {schema6} from './hilfe/elektro-szenario.mts';
 
 // Vorhandenes Wrangler verwenden. Kein Download, keine Kontoverbindung,
 // keine entfernte Bindung. Der Test schlägt bei fehlender Laufzeit klar fehl.
@@ -70,6 +71,30 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
     assert.equal((await client.listTools()).tools.length,16);
     const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'runtime-workspace',documentId:'runtime-page'}});
     assert.equal(JSON.parse(result.content[0].text).markdown,'Isolierte Testdaten');
+    const {plan:kreuzplan,soll,schalter}=schema6();
+    await db.prepare('INSERT INTO saetze(id,bereich,tabelle,daten,verschluesselt,seite,version,geloescht) VALUES(?,?,?,?,0,?,1,0)')
+      .bind('runtime-schema6','runtime-workspace','blocks',JSON.stringify({
+        type:'schaltplan',parentId:'runtime-page',parentTable:'block',plan:kreuzplan
+      }),'runtime-page').run();
+    await db.prepare("UPDATE saetze SET daten=json_set(daten,'$.content',json(?1)) WHERE bereich=?2 AND id=?3")
+      .bind(JSON.stringify(['runtime-schema6']),'runtime-workspace','runtime-page').run();
+    const switchTest={switchIds:schalter,targetId:'E1',expected:soll};
+    const checkPlan=async(expectedVersion:number)=>{
+      const response=await client.callTool({name:'redion_read_schematic',arguments:{
+        workspaceId:'runtime-workspace',blockId:'runtime-schema6',expectedVersion,switchTest
+      }});
+      return {response,body:JSON.parse(response.content[0].text)};
+    };
+    const report=await checkPlan(1);
+    assert.equal(report.response.isError,undefined,JSON.stringify(report.body));
+    assert.equal(report.body.report.status,'bestanden');
+    assert.deepEqual(report.body.report.faelle.map((fall:{ist:boolean})=>fall.ist),soll);
+    assert.deepEqual((await checkPlan(1)).body,report.body);
+    assert.equal((await checkPlan(2)).body.code,'conflict');
+    const unchanged=await db.prepare('SELECT daten,version FROM saetze WHERE bereich=? AND id=?')
+      .bind('runtime-workspace','runtime-schema6').first();
+    assert.equal(unchanged.version,1);
+    assert.deepEqual(JSON.parse(unchanged.daten).plan,kreuzplan);
     const denied=await client.callTool({name:'redion_create_page',arguments:{workspaceId:'runtime-workspace',title:'Gesperrt',requestId:'runtime_request'}});
     assert.equal(denied.isError,true);
     // Real workerd/D1 integration: exercise the new write tools, not only read.
@@ -333,7 +358,7 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
     assert.ok(!openTasks.payload.tasks.some((x:any)=>x.taskId===task.payload.blockId));
     await oauth.revokeGrant('runtime-owner',(await oauth.listGrants('runtime-owner'))[0]!.id);
     assert.equal((await fetcher(resource,{headers:{Authorization:'Bearer '+tokens.access_token}})).status,401);
-    assert.equal((await db.prepare('SELECT COUNT(*) n FROM saetze').first()).n,52);
+    assert.equal((await db.prepare('SELECT COUNT(*) n FROM saetze').first()).n,53);
     assert.deepEqual(outbound,[],'Keine ausgehenden Netzaufrufe');
   }finally{await Promise.allSettled([client?.close(),writer?.close()]);await mf.dispose();}
 });
