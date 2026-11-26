@@ -132,6 +132,73 @@ const Trainer = (() => {
     return b;
   };
 
+
+  type MatchPaar = {frage:string;antwort:string};
+  type MatchRunde = {kapitel:string;paare:MatchPaar[];links:number[];rechts:number[];wahl:{seite:string;index:number}|null;fertig:Set<number>;fehler:number;beginn:number;sekunden:number;meldung:string};
+  let matchRunde: MatchRunde | null = null;
+  const matchPaare = (karten: Karte[]): MatchPaar[] => {
+    const roh = karten.filter(k => k.quiz?.kind === 'schreiben' && k.quiz?.format === 'flashcard' && !k.quiz.image)
+      .map(k => ({frage:frageVon(k),antwort:String(k.quiz.musterloesung?.[0] || '').trim()}))
+      .filter(p => p.frage && p.antwort && p.frage.length <= 160 && p.antwort.length <= 100);
+    const norm = (s: string) => s.normalize('NFKC').trim().replace(/\s+/g,' ').toLowerCase();
+    // Both sides must be unambiguous: no repeated question or answer.
+    const fragen = new Map<string,number>(), antworten = new Map<string,number>();
+    for (const p of roh) {
+      const f=norm(p.frage), a=norm(p.antwort);
+      fragen.set(f,(fragen.get(f)||0)+1);
+      antworten.set(a,(antworten.get(a)||0)+1);
+    }
+    return roh.filter(p=>fragen.get(norm(p.frage))===1 && antworten.get(norm(p.antwort))===1);
+  };
+  const matchStart = (kapitel: string) => {
+    const paare=mischen(matchPaare(karten().filter(k=>kapitelVon(k)===kapitel))).slice(0,6);
+    if(paare.length<3){start();return;}
+    const ids=paare.map((_,i)=>i);
+    zustand.runde=null;
+    matchRunde={kapitel,paare,links:mischen(ids),rechts:mischen(ids),wahl:null,fertig:new Set(),fehler:0,beginn:Date.now(),sekunden:0,meldung:'Wähle eine Frage und die passende Antwort.'};
+    matchZeige();
+  };
+  const matchZeige = () => {
+    const ziel=zustand.ziel,r=matchRunde;
+    if(!ziel||!r)return;
+    if(r.fertig.size===r.paare.length){
+      ziel.innerHTML=`<section class="lw-trainer-match"><header class="lw-section-head"><h2>Match abgeschlossen</h2><p>${esc(r.kapitel)}</p></header>
+        <div class="lw-training-result"><h2>${r.paare.length} / ${r.paare.length} Paare</h2><p>${r.sekunden} Sekunden · ${r.fehler} Fehlversuche</p></div>
+        <div class="lw-trainer-reihe">${knopf('Zur Übersicht','data-tr-zurueck')}${knopf('Nochmal spielen',`data-tr-start="match" data-kapitel="${esc(r.kapitel)}"`,'is-primary')}</div></section>`;
+      ziel.querySelector<HTMLElement>('[data-tr-zurueck]')?.focus();
+      return;
+    }
+    const spalte=(seite: 'links'|'rechts',ids: number[])=>ids.map(i=>{
+      const fertig=r.fertig.has(i), aktiv=r.wahl?.seite===seite&&r.wahl.index===i;
+      const p=r.paare[i]!;
+      return `<button type="button" class="lw-match-kachel${fertig?' is-fertig':''}" data-tr-match="${seite}" data-index="${i}" aria-pressed="${aktiv}" ${fertig?'disabled':''}>${esc(seite==='links'?p.frage:p.antwort)}${fertig?' <span aria-label="Zugeordnet">✓</span>':''}</button>`;
+    }).join('');
+    ziel.innerHTML=`<section class="lw-trainer-match"><header class="lw-session-head"><div><p>Match</p><h2>${esc(r.kapitel)}</h2></div>${knopf('Beenden','data-tr-zurueck')}</header>
+      <progress max="${r.paare.length}" value="${r.fertig.size}" aria-label="Zugeordnete Paare"></progress>
+      <p class="lw-trainer-hinweis">${r.fertig.size} von ${r.paare.length} Paaren · ${r.fehler} Fehlversuche</p>
+      <div class="lw-match-grid"><div class="lw-match-spalte"><h3>Fragen</h3>${spalte('links',r.links)}</div><div class="lw-match-spalte"><h3>Antworten</h3>${spalte('rechts',r.rechts)}</div></div>
+      <p class="lw-match-meldung" role="status" aria-live="polite">${esc(r.meldung)}</p></section>`;
+  };
+  const matchWahl = (seite: string,index: number) => {
+    const r=matchRunde,ziel=zustand.ziel;
+    if(!r||!ziel||!['links','rechts'].includes(seite)||!Number.isInteger(index)||index<0||index>=r.paare.length||r.fertig.has(index))return;
+    if(!r.wahl||r.wahl.seite===seite){
+      r.wahl=r.wahl?.index===index&&r.wahl.seite===seite?null:{seite,index};
+      r.meldung=r.wahl?'Wähle das passende Gegenstück.':'Wähle eine Frage oder Antwort.';
+    }else{
+      if(r.wahl.index===index){
+        r.fertig.add(index);r.meldung='Richtig zugeordnet.';
+        if(r.fertig.size===r.paare.length)r.sekunden=Math.max(0,Math.floor((Date.now()-r.beginn)/1000));
+      }else{r.fehler++;r.meldung='Das passt nicht. Versuche es erneut.';}
+      r.wahl=null;
+    }
+    matchZeige();
+    if(r.fertig.size===r.paare.length)return;
+    const andere=seite==='links'?'rechts':'links';
+    const focusSelector=r.wahl?`[data-tr-match="${andere}"]:not(:disabled)`:`[data-tr-match="${seite}"]:not(:disabled)`;
+    ziel.querySelector<HTMLElement>(focusSelector)?.focus({preventScroll:true});
+  };
+
   /** Welche Karten eine Runde meint. */
   const aufgabenVon = (name: string): Karte[] => {
     const alle = karten();
@@ -197,6 +264,7 @@ const Trainer = (() => {
     const ziel = zustand.ziel;
     if (!ziel) return;
     zustand.runde = null;
+    matchRunde = null;
     const alle = karten();
     /* Kapitel, die es als Vorlage gibt und noch nicht als Seite: ein Knopf je
        Kapitel — auch dann, wenn schon eines liegt (E679). */
@@ -231,6 +299,7 @@ const Trainer = (() => {
         <div class="lw-trainer-reihe">
           ${knopf(`Lernen — ${zu.length} Aufgaben`, `data-tr-start="kapitel" data-kapitel="${esc(kap)}"`)}
           ${knopf(`Test — ${Math.min(zu.length, RUNDE_HOECHSTENS)} Fragen`, `data-tr-start="test" data-kapitel="${esc(kap)}"`)}
+          ${matchPaare(zu).length>=3?knopf('Match — Paare zuordnen',`data-tr-start="match" data-kapitel="${esc(kap)}"`):''}
 
           ${pruefung ? knopf(`Prüfung üben — ${pruefung} Fragen der Reihe nach`, `data-tr-start="pruefung" data-kapitel="${esc(kap)}"`) : ''}
         </div>
@@ -450,8 +519,9 @@ const Trainer = (() => {
   /* ── Horcher ──────────────────────────────────────────────────────────── */
   const beiKlick = (e: Event): void => {
     const ziel = zustand.ziel;
-    const el = (e.target as HTMLElement | null)?.closest<HTMLElement>('[data-tr-start], [data-tr-anlegen], [data-tr-pruefen], [data-tr-weiter], [data-tr-aufdecken], [data-tr-rate], [data-tr-ende], [data-tr-zurueck], [data-tr-option]');
+    const el = (e.target as HTMLElement | null)?.closest<HTMLElement>('[data-tr-start], [data-tr-anlegen], [data-tr-pruefen], [data-tr-weiter], [data-tr-aufdecken], [data-tr-rate], [data-tr-ende], [data-tr-zurueck], [data-tr-option], [data-tr-match]');
     if (!ziel || !el || !ziel.contains(el)) return;
+    if (el.hasAttribute('data-tr-match')) { e.preventDefault(); matchWahl(el.dataset.trMatch || '',Number(el.dataset.index)); return; }
     if (el.hasAttribute('data-tr-option')) {
       if (zustand.geprueft) { (el as HTMLInputElement).checked = zustand.gewaehlt.has(Number(el.dataset['trOption'])); return; }
       const i = Number(el.dataset['trOption']);
@@ -473,6 +543,7 @@ const Trainer = (() => {
       else if (art === 'pruefung') rundeStarten(el.dataset['kapitel'] ? 'pruefung:' + el.dataset['kapitel'] : 'pruefung');
       else if (art === 'kapitel') rundeStarten('kapitel:' + (el.dataset['kapitel'] || ''));
       else if (art === 'test') rundeStarten('test:' + (el.dataset['kapitel'] || ''));
+      else if (art === 'match') matchStart(el.dataset['kapitel'] || '');
       else if (art === 'thema') rundeStarten('thema:' + (el.dataset['thema'] || ''));
       else if (art === 'art') rundeStarten('art:' + (el.dataset['art'] || 'mc'));
       else if (art === 'nochmal') rundeStarten(el.dataset['name'] || 'lernen');
@@ -494,6 +565,7 @@ const Trainer = (() => {
   const beiTaste = (e: KeyboardEvent): void => {
     const ziel = zustand.ziel;
     if (!ziel || !ziel.isConnected) { abmelden(); return; }
+    if (matchRunde && e.key === 'Escape') {e.preventDefault();start();return;}
     if (!zustand.runde) return;
     const t = e.target as HTMLElement | null;
     const imText = t instanceof HTMLTextAreaElement;
@@ -519,6 +591,7 @@ const Trainer = (() => {
     zustand.ziel?.removeEventListener('click', beiKlick);
     zustand.ziel = null;
     zustand.runde = null;
+    matchRunde = null;
   };
 
   /** In ein Element zeichnen — die Lernwelt gibt es her. */
