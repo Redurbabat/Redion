@@ -368,6 +368,8 @@ const DocumentMode = (() => {
     return schreiber.schliessen();
   };
 
+  const dateiBlob = (id: string): Promise<Blob | null> => Dateien.alsBlob(id);
+
   /** Ein generiertes PDF/PNG anbieten: iOS als echte Datei, Web unverändert. */
   const herunterladen = async (blob: Blob, name: string): Promise<boolean> => {
     const nativeDateien = (globalThis as any).RedionNativeDateien;
@@ -1781,6 +1783,16 @@ const DocumentMode = (() => {
     const datenZeile = document.createElement('div');
     datenZeile.className = 'document-inspector-daten';
     datenZeile.append(pdfKnopf, importButton);
+    const originalId = original?.dataset.documentOriginal;
+    if (originalId) {
+      const kopie = makeAction('pdf-original-kopie', 'Originalseiten als PDF kopieren');
+      kopie.className = 'document-import';
+      kopie.dataset.pdfQuelle = originalId;
+      const kombinieren = makeAction('pdf-original-kombinieren', 'PDF-Dateien zusammenführen');
+      kombinieren.className = 'document-import';
+      kombinieren.dataset.pdfQuelle = originalId;
+      datenZeile.append(kopie, kombinieren);
+    }
     /* DERSELBE SATZ ALS SICHTBARER TEXT (E505) — zwei Zeilen, kurz genug,
        dass man sie liest, und da, wo der Knopf steht. Am Telefon ist er
        das Einzige, was der Mensch ueberhaupt zu sehen bekommt. */
@@ -1921,7 +1933,11 @@ const DocumentMode = (() => {
     learning.sourceMenu(page, documentBlock, region || null);
   };
 
+  let werkzeugDockAufraeumen: (() => void) | undefined;
+  const dockFreigeben = (): void => { werkzeugDockAufraeumen?.(); werkzeugDockAufraeumen = undefined; };
+
   const render = (wrap: HTMLElement, page: any): boolean => {
+    dockFreigeben();
     const documents = documentsIn(page);
     if (!documents.length) return false;
     const state = stateFor(page.id);
@@ -2189,29 +2205,165 @@ const DocumentMode = (() => {
     commandbar.append(modes, pagination, zoomGroup, findKlappe, zeigenKlappe,
                       folienKlappe);
 
-    // One document-wide tool strip. Each action delegates to the existing page
-    // controller; the original controls, undo stacks and mark objects stay intact.
-    const drawingbar = document.createElement('div');
-    drawingbar.className = 'document-drawingbar';
-    drawingbar.setAttribute('role', 'toolbar');
-    drawingbar.setAttribute('aria-label', 'PDF bearbeiten');
-    /* E572: derselbe Katalog wie auf dem Blatt. Die alte Abschrift hatte
-       den Laser vergessen und verwendete andere Symbole für dieselbe Tat. */
-    const drawingTools = Marken.WERKZEUGE.map(tool => [tool.id, tool.sym, tool.name]);
-    drawingTools.forEach(([tool, icon, label]) => {
-      const button = document.createElement('button');
-      button.type = 'button'; button.dataset.documentTool = tool!;
-      button.title = label!; button.setAttribute('aria-label', label!);
-      const glyph = document.createElement('span'); glyph.dataset.sym = icon!;
-      glyph.setAttribute('aria-hidden', 'true'); button.appendChild(glyph);
-      drawingbar.appendChild(button);
-    });
-    const rulerButton = topButton('ink-ruler', '', 'Lineal ein- oder ausblenden');
-    rulerButton.innerHTML = '<span data-sym="inkRuler" aria-hidden="true"></span>';
-    rulerButton.setAttribute('aria-pressed', 'false'); drawingbar.append(rulerButton);
-    const moreTools = topButton('ink-options', '···', 'Weitere Zeichenoptionen und Leiste einrichten');
+    let pdfZeigermodus = 'select';
+    const pdfDockBlockOeffnen = (art: string): void => {
+      if (!canAnnotate) return;
+      App.neueSeite();
+      /* Über den Ereignisbus, nicht über den Namen des Editors (§5, E829). */
+      Ereignisse.frage(ARTEN.frageBlockAmEnde, { art });
+    };
+    const pdfDockMenue = (id: string): HTMLElement | null => {
+      if (id === 'elektro') {
+        /* Das Menü des Elektro-Bereichs kommt über den Ereignisbus (§5, E829). */
+        const antwort = Ereignisse.frage(ARTEN.frageElektroMenue, {
+          schliessen: () => galerie?.schliesse(),
+          planOeffnen: () => pdfDockBlockOeffnen('schaltplan')
+        }).find(x => x instanceof HTMLElement);
+        return (antwort as HTMLElement | undefined) ?? null;
+      }
+      const liste = document.createElement('div');
+      liste.className = 'gfx-tb-liste gfx-tb-befehlsliste';
+      const eintrag = (name: string, symbol: string, tun: () => void, gesperrt = false): void => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.disabled = gesperrt;
+        const griff = document.createElement('span');
+        griff.dataset.sym = symbol;
+        griff.setAttribute('aria-hidden', 'true');
+        b.append(griff, document.createTextNode(name));
+        b.addEventListener('click', () => {
+          galerie?.schliesse();
+          tun();
+        });
+        liste.append(b);
+      };
+      const form = (kennzeichen: string, name: string, symbol: string): void => {
+        eintrag(name, symbol, () => {
+          inkWerkzeugWaehlen('formen');
+          inkToolbar()?.querySelector<HTMLButtonElement>(
+            '[data-act="formart"][data-form="' + kennzeichen + '"]')?.click();
+          inkSync();
+        }, !canAnnotate);
+      };
+      if (id === 'pdf-rahmen' || id === 'pdf-schnellmehr') {
+        form('rectangle', 'Rechteck', 'formRect');
+        form('ellipse', 'Ellipse', 'formEllipse');
+      }
+      if (id === 'pdf-verbinder' || id === 'pdf-schnellmehr') {
+        form('line', 'Linie', 'formLine');
+        form('arrow', 'Pfeil', 'formArrow');
+        form('curve', 'Kurve', 'formCurve');
+      }
+      if (id === 'pdf-link' || id === 'pdf-schnellmehr') {
+        const verweis = inkToolbar()?.querySelector<HTMLButtonElement>('[data-act="verweis"]');
+        eintrag('Auswahl verlinken', 'link', () => verweis?.click(), !canAnnotate || !verweis || verweis.disabled);
+        eintrag('Dokumentlink kopieren', 'page', () => Register.aktionen.tun('link', page, { kontext: 'seite' }));
+      }
+      if (id === 'pdf-schnellmehr') {
+        const objects = inkToolbar()?.querySelector<HTMLButtonElement>('[data-act="objekte"]');
+        eintrag('Ebenen, Gruppen und Ausrichten', 'grid', () => objects?.click(), !canAnnotate || !objects);
+      }
+      if (id === 'vorlagen') {
+        eintrag('Textblock auf neuer Seite', 'inkText', () => pdfDockBlockOeffnen('text'), !canAnnotate);
+        eintrag('Gedankenkarte auf neuer Seite', 'sparkle', () => pdfDockBlockOeffnen('mindmap'), !canAnnotate);
+        eintrag('Whiteboard auf neuer Seite', 'grid', () => pdfDockBlockOeffnen('whiteboard'), !canAnnotate);
+      }
+      if (!liste.childElementCount) return null;
+      Register.symbole.fuelle(liste);
+      return liste;
+    };
+    const galerie: ReturnType<typeof GfxToolbar.erstelle> | null = art === 'PDF'
+      ? GfxToolbar.erstelle({
+        klasse: 'document-pdf-dock',
+        beschriftung: 'PDF bearbeiten',
+        werkzeuge: Marken.WERKZEUGE,
+        galerie: {
+          schnell: ['pdf-zeiger', 'pdf-rahmen', 'pdf-verbinder', 'pdf-link', 'pdf-schnellmehr'],
+          edgeless: { zusatz: ['pdf-objekte', 'elektro', 'pdf-werkzeuge'] },
+          karten: [
+            { id: 'notiz', knoepfe: ['zettel'] },
+            { id: 'stifte', knoepfe: ['stift', 'radierer'] },
+            { id: 'formen', knoepfe: ['formen'] },
+            { id: 'diagramme', knoepfe: ['diagramme'] },
+            { id: 'vorlagen', knoepfe: ['vorlagen'] }
+          ],
+          werkzeugMenues: {
+            'pdf-zeiger': ['select', 'schreiben'],
+            elektro: ['zeichen'],
+            'pdf-werkzeuge': ['marker', 'abdeck', 'text', 'textfix', 'elemente', 'bild', 'laser', 'ink-ruler', 'ink-options']
+          }
+        },
+        aktionen: [
+          { id: 'pdf-zeiger', name: 'Auswahl und Hand', sym: 'inkPointer', menue: true, kapsel: 'werkzeuge' },
+          { id: 'pdf-rahmen', name: 'Rahmenformen', sym: 'grid', menue: true, kapsel: 'werkzeuge' },
+          { id: 'pdf-verbinder', name: 'Linien und Pfeile', sym: 'inkConnector', menue: true, kapsel: 'werkzeuge' },
+          { id: 'pdf-link', name: 'Links', sym: 'link', menue: true, kapsel: 'werkzeuge' },
+          { id: 'elektro', name: 'Elektro', sym: 'bolt', menue: true, kapsel: 'werkzeuge' },
+          { id: 'pdf-schnellmehr', name: 'Weitere Schnellwerkzeuge', sym: 'dots', menue: true, kapsel: 'werkzeuge' },
+          { id: 'pdf-objekte', name: 'Objekte und Ebenen', sym: 'grid', kapsel: 'werkzeuge', gesperrt: !canAnnotate },
+          { id: 'diagramme', name: 'Gedankenkarte auf neuer Seite', sym: 'sparkle', kapsel: 'werkzeuge', gesperrt: !canAnnotate },
+          { id: 'vorlagen', name: 'Blockvorlagen', sym: 'table', menue: true, kapsel: 'werkzeuge' },
+          { id: 'pdf-werkzeuge', name: 'PDF-Werkzeuge', sym: 'dots', menue: true, kapsel: 'werkzeuge' },
+          { id: 'ink-options', name: 'Zeichenoptionen und Leiste einrichten', sym: 'dots', kapsel: 'werkzeuge' },
+          { id: 'ink-ruler', name: 'Lineal ein- oder ausblenden', sym: 'inkRuler', kapsel: 'werkzeuge' }
+        ],
+        menue: pdfDockMenue,
+        aufAktion: id => {
+          if (id === 'diagramme') pdfDockBlockOeffnen('mindmap');
+          if (id === 'pdf-objekte' && canAnnotate) inkToolbar()?.querySelector<HTMLButtonElement>('[data-act="objekte"]')?.click();
+        }
+      })
+      : null;
+    const drawingbar = galerie?.element ?? document.createElement('div');
+    drawingbar.classList.add('document-drawingbar');
+    if (galerie) {
+      workspace.dataset.pdfGalerie = 'an';
+      const zeiger = drawingbar.querySelector<HTMLButtonElement>('[data-a="pdf-zeiger"]');
+      zeiger?.addEventListener('click', (e: MouseEvent) => {
+        if (e.detail === 0 || !canAnnotate) return;
+        e.stopPropagation();
+        galerie.schliesse();
+        const aktiv = workspace.dataset.inkTool;
+        inkWerkzeugWaehlen(aktiv === 'select' ? 'schreiben' : aktiv === 'schreiben' ? 'select' : pdfZeigermodus);
+      });
+      // Die Galerieknoepfe benutzen denselben Ereignispfad wie der Foliensatz.
+      const kurz: Record<string, string> = {
+        marker: 'Marker', abdeck: 'Abdecken', text: 'Text', textfix: 'Ändern',
+        elemente: 'Elemente', bild: 'Bild', laser: 'Laser', 'ink-ruler': 'Lineal',
+        'ink-options': 'Einrichten', select: 'Auswahl', schreiben: 'Hand', zeichen: 'Fachzeichen aufs PDF'
+      };
+      for (const knopf of drawingbar.querySelectorAll<HTMLButtonElement>('[data-wz],[data-a]')) {
+        const id = knopf.dataset.wz ?? knopf.dataset.a ?? '';
+        if (knopf.dataset.wz) knopf.dataset.documentTool = id;
+        if (id === 'ink-options' || id === 'ink-ruler') knopf.dataset.documentAction = id;
+        if (kurz[id]) {
+          const name = document.createElement('span');
+          name.className = 'document-pdf-werkzeugname';
+          name.textContent = kurz[id];
+          knopf.append(name);
+        }
+      }
+      werkzeugDockAufraeumen = galerie.zerstoere;
+    } else {
+      drawingbar.setAttribute('role', 'toolbar');
+      drawingbar.setAttribute('aria-label', 'PDF bearbeiten');
+      for (const { id, sym, name } of Marken.WERKZEUGE) {
+        const knopf = document.createElement('button');
+        knopf.type = 'button'; knopf.dataset.documentTool = id;
+        knopf.title = name; knopf.setAttribute('aria-label', name);
+        const symbol = document.createElement('span');
+        symbol.dataset.sym = sym;
+        symbol.setAttribute('aria-hidden', 'true');
+        knopf.append(symbol); drawingbar.append(knopf);
+      }
+    }
+    const rulerButton = drawingbar.querySelector<HTMLButtonElement>('[data-document-action="ink-ruler"]')
+      ?? topButton('ink-ruler', '', 'Lineal ein- oder ausblenden', 'inkRuler');
+    rulerButton.setAttribute('aria-pressed', 'false');
+    const moreTools = drawingbar.querySelector<HTMLButtonElement>('[data-document-action="ink-options"]')
+      ?? topButton('ink-options', '···', 'Weitere Zeichenoptionen und Leiste einrichten');
     moreTools.setAttribute('aria-expanded', 'false');
-    drawingbar.appendChild(moreTools);
+    if (!galerie) drawingbar.append(rulerButton, moreTools);
     /* ZURÜCK UND VOR STEHEN LINKS (E490, Redurs Bild vom 7. September).
        So steht es bei GoodNotes: ganz links in der Leiste, vor den
        Werkzeugen — und die Hand sucht sie dort, weil sie dort immer waren.
@@ -2320,7 +2472,7 @@ const DocumentMode = (() => {
          stellt, stuende sonst beim naechsten „Annotieren" wieder die Hand —
          und die Zeichenleiste bliebe zu (sie zeigt sich nur bei einem
          Zeichenwerkzeug). Dann lieber der Stift. */
-      const key = drawingTools.some(([tool]) => tool === penTool) && penTool !== 'schreiben' ? penTool : 'stift';
+      const key = Marken.WERKZEUGE.some(({ id }) => id === penTool) && penTool !== 'schreiben' ? penTool : 'stift';
       /* ERST DAS WERKZEUG, DANN FARBE UND STÄRKE (E674). Seit jedes Werkzeug
          seine Farbe merkt, holte ein Werkzeugwechsel NACH dem Setzen der
          Dokumentfarbe die gemerkte Stiftfarbe zurück — die Dokumentfarbe
@@ -2727,8 +2879,8 @@ const DocumentMode = (() => {
        hängt. */
     let folienband = folienbandBauen(page, drawingbar);
     workspace.append(top, ...(folienband ? [folienband] : []),
-                     findbar, ...(folienband ? [] : [drawingbar]),
-                     commandbar, body);
+                     findbar, ...(folienband || galerie ? [] : [drawingbar]),
+                     commandbar, body, ...(galerie ? [drawingbar] : []));
 
     /**
      * Das Band kommt und geht mit der Fensterbreite.
@@ -2783,7 +2935,7 @@ const DocumentMode = (() => {
        DEN ZUSTAND BESITZT ES NICHT. Das Heft geht auch über sein ✕ und
        über Escape zu; abgefragt würde das nie bemerkt. Also horcht der
        Knopf (`Formelheft.horche`) — ein Zustand, eine Quelle (§8). */
-    if (typeof Formelheft !== 'undefined') {
+    if (!galerie && typeof Formelheft !== 'undefined') {
       const heft = document.createElement('button');
       heft.type = 'button';
       heft.dataset.documentAction = 'formelheft';
@@ -2885,7 +3037,7 @@ const DocumentMode = (() => {
        den das Umhängen oben schon gekostet hat. */
     const zeichenSpiegeln = (kopie: HTMLElement, echt: HTMLElement | null | undefined): void => {
       if (!echt) return;
-      const glyph = kopie.querySelector<HTMLElement>('[data-sym]');
+      const glyph = kopie.querySelector<HTMLElement>(':scope > [data-sym]');
       const sym = echt.querySelector<HTMLElement>('[data-sym]')?.dataset.sym || '';
       if (!glyph || !sym) return;
       const form = echt.dataset.form || '';
@@ -2923,7 +3075,7 @@ const DocumentMode = (() => {
         .filter((button): button is HTMLButtonElement => !!button);
       const jetzt = Array.from(drawingbar.querySelectorAll<HTMLButtonElement>(':scope > [data-document-tool]'))
         .filter(button => wunsch.includes(button));
-      if (wunsch.some((button, index) => button !== jetzt[index])) {
+      if (!galerie && wunsch.some((button, index) => button !== jetzt[index])) {
         wunsch.forEach(button => drawingbar.insertBefore(button, rulerButton));
       }
       const realRuler = source?.querySelector<HTMLButtonElement>('[data-act="lineal"]');
@@ -2944,7 +3096,21 @@ const DocumentMode = (() => {
          beide schliessen dieselbe Reihe über `state.toolsOpen`. */
       rulerButton.disabled = !canAnnotate || !state.toolsOpen || !realRuler;
       rulerButton.setAttribute('aria-pressed', realRuler?.getAttribute('aria-pressed') || 'false');
-      workspace.dataset.inkTool = source?.dataset.tool || 'schreiben';
+      const werkzeug = source?.dataset.tool || 'schreiben';
+      if (galerie && workspace.dataset.inkTool !== werkzeug) {
+        const aktiverKnopf = source?.querySelector<HTMLElement>(':scope > [data-wz].on');
+        galerie.setzeWerkzeug(aktiverKnopf?.dataset.wz ?? werkzeug);
+      }
+      workspace.dataset.inkTool = werkzeug;
+      if (galerie && (werkzeug === 'select' || werkzeug === 'schreiben')) {
+        pdfZeigermodus = werkzeug;
+        const symbol = drawingbar.querySelector<HTMLElement>('[data-a="pdf-zeiger"] .zeichen');
+        const zeichen = werkzeug === 'schreiben' ? 'inkHand' : 'inkPointer';
+        if (symbol && symbol.dataset.sym !== zeichen) {
+          symbol.dataset.sym = zeichen;
+          Register.symbole.fuelle(symbol.parentElement);
+        }
+      }
       drawingbar.querySelectorAll<HTMLButtonElement>('[data-document-tool]').forEach(button => {
         const real = source?.querySelector<HTMLButtonElement>('[data-wz="' + button.dataset.documentTool + '"]');
         button.disabled = !canAnnotate || !state.toolsOpen || !real || real.disabled;
@@ -3725,7 +3891,7 @@ const DocumentMode = (() => {
         const alt = String(block.bildDateiId);
         void (async () => {
           try {
-            const [blob, satz] = await Promise.all([Dateien.alsBlob(alt), Store.dateiHolen(alt)]);
+            const [blob, satz] = await Promise.all([dateiBlob(alt), Store.dateiHolen(alt)]);
             if (!blob) return;
             /* ABGELEITET IST NUR, WAS SICH NEU RECHNEN LAESST (E471, Fund der
                Prüfung). Das Seitenbild einer PDF-Seite kommt aus der Quelle
@@ -4273,6 +4439,12 @@ const DocumentMode = (() => {
       state.toolsOpen = an;
       Store.setMeta('dokWerkzeuge:' + page.id, an);
       workspace.dataset.documentTools = an ? 'open' : 'closed';
+      if (!an && galerie) {
+        galerie.schliesse();
+        delete workspace.dataset.pdfZubehoer;
+        workspace.dataset.inkOptions = 'closed';
+        moreTools.setAttribute('aria-expanded', 'false');
+      }
       readButton.setAttribute('aria-pressed', String(!an));
       annotateButton.setAttribute('aria-pressed', String(an));
       center.querySelectorAll<HTMLElement>('.blatt-papier').forEach(paper => {
@@ -4352,7 +4524,13 @@ const DocumentMode = (() => {
       }
       if (event.key === 'Escape' && workspace.dataset.inkOptions === 'open') {
         workspace.dataset.inkOptions = 'closed'; moreTools.setAttribute('aria-expanded', 'false');
-        moreTools.focus(); event.stopPropagation(); return;
+        (drawingbar.querySelector<HTMLElement>('[data-a="pdf-werkzeuge"]') ?? moreTools).focus();
+        event.stopPropagation(); return;
+      }
+      if (event.key === 'Escape' && workspace.dataset.pdfZubehoer === 'an') {
+        delete workspace.dataset.pdfZubehoer;
+        event.stopPropagation();
+        return;
       }
       if (event.key === 'Escape' && workspace.dataset.documentView === 'open') {
         workspace.dataset.documentView = 'closed';
@@ -4368,6 +4546,27 @@ const DocumentMode = (() => {
         event.preventDefault(); springe(state.index + (event.key === 'PageDown' ? 1 : -1));
       }
     });
+    const inkWerkzeugWaehlen = (tool: string, anchor?: HTMLElement | null): void => {
+      if (!canAnnotate) return;
+      if (galerie) {
+        const zubehoer = !['schreiben', 'bild', 'elemente', 'laser'].includes(tool);
+        const erneut = workspace.dataset.inkTool === tool && workspace.dataset.pdfZubehoer === 'an';
+        if (zubehoer && !erneut) workspace.dataset.pdfZubehoer = 'an';
+        else delete workspace.dataset.pdfZubehoer;
+      }
+      if (tool !== 'bild') { penTool = tool; Store.setMeta('dokStift:' + page.id, tool); }
+      toolsSetzen(true);
+      inkToolbar()?.querySelector<HTMLButtonElement>('[data-wz="' + tool + '"]')?.click();
+      // Das vorhandene Werkzeug öffnet seine eigene Laser- oder Elemente-Auswahl.
+      if (tool === 'laser' || tool === 'elemente') inkToolbar()?.dispatchEvent(new CustomEvent('ink-panel', {
+        detail: { kind: tool, anchor }
+      }));
+      inkSync();
+    };
+    if (galerie) workspace.addEventListener('pointerdown', event => {
+      if (event.target instanceof Element &&
+          !event.target.closest('.document-pdf-dock, .blatt-reihe')) delete workspace.dataset.pdfZubehoer;
+    });
     workspace.addEventListener('click', event => {
       const element = event.target instanceof Element ? event.target : null;
       const inkButton = element?.closest<HTMLElement>('.blatt-werk button');
@@ -4380,16 +4579,11 @@ const DocumentMode = (() => {
       if (inkButton?.dataset.wz && inkButton.dataset.wz !== 'bild') {
         penTool = inkButton.dataset.wz; Store.setMeta('dokStift:' + page.id, penTool);
       }
-      const tool = element?.closest<HTMLElement>('[data-document-tool]')?.dataset.documentTool;
-      if (tool && canAnnotate) {
-        if (tool !== 'bild') { penTool = tool; Store.setMeta('dokStift:' + page.id, tool); }
-        toolsSetzen(true);
-        inkToolbar()?.querySelector<HTMLButtonElement>('[data-wz="' + tool + '"]')?.click();
-        // Eine Auswahlklappe zeigt Möglichkeiten, ohne einen Strich abzulegen.
-        if (tool === 'laser' || tool === 'elemente') inkToolbar()?.dispatchEvent(new CustomEvent('ink-panel', {
-          detail: { kind: tool, anchor: element?.closest<HTMLElement>('[data-document-tool]') }
-        }));
-        inkSync(); return;
+      const werkzeugknopf = element?.closest<HTMLElement>('[data-document-tool]');
+      const tool = werkzeugknopf?.dataset.documentTool;
+      if (tool) {
+        inkWerkzeugWaehlen(tool, werkzeugknopf);
+        return;
       }
       /* Ein Klick in die Zeichenleiste schliesst die Ansichtsklappe nicht
          (E468): „Lesen" stellt die Schicht per Klick auf die Hand, und der
@@ -4601,6 +4795,56 @@ const DocumentMode = (() => {
         Store.updateBlock(block.id, { marken: neu });
         UI.toast(offen === 1 ? 'Entsperrt' : offen + ' Marken entsperrt');
         neuMit(block.id);
+        return;
+      }
+      if (action === 'pdf-original-kopie' || action === 'pdf-original-kombinieren') {
+        const knopf = tatKnopf as HTMLButtonElement;
+        const quelle = knopf.dataset.pdfQuelle;
+        if (!quelle || knopf.disabled) return;
+        const sichern = async (auswahl: string, drehung: number, weitere: File[]) => {
+          const datei = await dateiBlob(quelle);
+          if (!datei) throw new Error('Die Originaldatei fehlt auf diesem Gerät.');
+          const blob = await PdfOriginal.zusammenstellen(
+            [{ datei, auswahl }, ...weitere.map(datei => ({ datei, auswahl: '*' }))], drehung);
+          const name = String(page.text || 'Dokument').replace(/[\\/:*?"<>|]+/g, ' ').trim();
+          if (await herunterladen(blob, (name || 'Dokument') + ' – Originalseiten.pdf'))
+            UI.toast('PDF-Kopie gesichert');
+        };
+        const ausfuehren = (auftrag: () => Promise<void>) => {
+          knopf.disabled = true;
+          void auftrag().catch(error => UI.toast(error instanceof Error ? error.message : 'Die PDF-Kopie ist fehlgeschlagen.'))
+            .finally(() => { knopf.disabled = false; });
+        };
+        if (action === 'pdf-original-kopie') {
+          ausfuehren(async () => {
+            const auswahl = await Dialog.frage('Originalseiten wählen. * für alle oder z. B. 1–3, 7, 5–4.', '*');
+            if (auswahl === null || !workspace.isConnected) return;
+            const drehung = await Dialog.wahl({
+              titel: 'Originalseiten kopieren',
+              text: 'Die PDF-Kopie behält den Originaltext. Redion-Markierungen sind im separaten PDF-Export enthalten.',
+              knoepfe: [{ id: '0', text: 'Kopie speichern' }, { id: '90', text: '90° nach rechts drehen' },
+                { id: '180', text: '180° drehen' }, { id: '270', text: '90° nach links drehen' }]
+            });
+            if (drehung && workspace.isConnected) await sichern(auswahl, Number(drehung), []);
+          });
+        } else {
+          const auswahl = document.createElement('input');
+          auswahl.type = 'file';
+          auswahl.accept = '.pdf,application/pdf';
+          auswahl.multiple = true;
+          auswahl.addEventListener('change', () => {
+            const weitere = Array.from(auswahl.files ?? []);
+            if (weitere.length && workspace.isConnected) ausfuehren(async () => {
+              const bestaetigt = await Dialog.bestaetigen({
+                titel: 'PDF-Dateien zusammenführen',
+                text: 'Reihenfolge: das Original, danach ' + weitere.map(datei => datei.name).join(', ') + '.',
+                ja: 'PDF speichern'
+              });
+              if (bestaetigt && workspace.isConnected) await sichern('*', 0, weitere);
+            });
+          }, { once: true });
+          auswahl.click();
+        }
         return;
       }
       if (action === 'export-pdf') {
@@ -5150,7 +5394,7 @@ const DocumentMode = (() => {
            /* E725: wo im Dokument gesucht wird (eine Erinnerung für Suchleiste
               und Suche oben) — und „Dieses Dokument" über die Suchleiste. */
            findBereich, findBereichMerken, findenIn,
-           freigeben: (): void => { griffeSchliessen(); verweisHorchenAus(); } };
+           freigeben: (): void => { griffeSchliessen(); verweisHorchenAus(); dockFreigeben(); } };
 })();
 
 (window as any).DocumentMode = DocumentMode;

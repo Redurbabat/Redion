@@ -1678,12 +1678,15 @@ const Lernwelt = (() => {
     const ausschnitt = seitenId ? miniatur(seitenId, 4) : '';
     const darfImportieren = typeof Konten === 'undefined' || Konten.darf('bearbeiten');
     const importVerfuegbar = typeof Bibliothek !== 'undefined' && !!Bibliothek.pdfImportieren;
-    return '<section class="lw-desk" aria-label="Dein Dokumentenstudio">' +
-      '<div class="lw-desk-copy"><p class="lw-eyebrow">DEIN PLATZ FÜR IDEEN</p>' +
-        /* Zwei Spannen für die Linse (E712); der Text bleibt derselbe. */
-        '<h2><span class="ru-held-zeile" data-zeile="Aufmachen.">Aufmachen.</span><br>' +
-          '<span class="ru-held-zeile" data-zeile="Weiterdenken.">Weiterdenken.</span></h2>' +
-        '<p>Deine PDFs, Notizen und Unterlagen. Ein Griff — und du bist mittendrin.</p>' +
+    const glassWheel = document.body.dataset.uiShell === 'glass-wheel';
+    return '<section class="lw-desk" aria-label="Dokumente">' +
+      '<div class="lw-desk-copy">' +
+        (glassWheel
+          ? '<p class="lw-eyebrow">Dein Platz für Ideen</p>' +
+            '<h2><span class="ru-held-zeile" data-zeile="Aufmachen.">Aufmachen.</span><br>' +
+              '<span class="ru-held-zeile" data-zeile="Weiterdenken.">Weiterdenken.</span></h2>' +
+            '<p>Deine PDFs, Notizen und Unterlagen.</p>'
+          : '<h2>Dokumente</h2>') +
         /* EINE HAUPTHANDLUNG JE BILD (E701, grund.css: „Genau eine je
            Bild — mehr macht keine wichtig"). Dieses Studio steht nur auf
            „Heute", und dort ist „Lernen starten" die eine (E638) — zwei
@@ -1753,10 +1756,8 @@ const Lernwelt = (() => {
         '.</h2></div><div class="lw-goal"><button type="button" data-lw-action="goal" aria-label="Tagesziel ändern">' +
         '<span>' + stats.reviewedToday + ' / ' + ziel + '</span><small>Lernziel heute</small></button>' +
         '<progress max="100" value="' + zielProzent + '" aria-label="Tagesfortschritt"></progress></div></section>' +
-      gemerktStreifen(ktx) +
-      dokumentEinstieg() +
-      '<section class="lw-next-step" aria-label="Dein nächster Lernschritt">' +
-        zeichenSpan('cards', 'lw-next-icon') + '<div><p>Ein guter nächster Schritt</p><h2>' +
+      '<section class="lw-next-step" aria-label="Lernrunde">' +
+        zeichenSpan('cards', 'lw-next-icon') + '<div><p>Lernrunde</p><h2>' +
           (queue.all.length ? queue.all.length + (queue.all.length === 1 ? ' Karte für heute' : ' Karten für heute')
             : stats.total ? 'Deine Wiederholungen sind erledigt' : 'Aus Wissen wird Können') +
           '</h2><span>' + (queue.all.length
@@ -1767,6 +1768,8 @@ const Lernwelt = (() => {
           (queue.all.length ? '<button type="button" class="is-primary" data-lw-train="today">Lernen starten →</button>'
             : '<button type="button" class="is-primary" data-lw-nav="lernen">Lernen öffnen →</button>') +
           '<button type="button" data-lw-nav="lernen">Lernplan ansehen</button></div></section>' +
+      dokumentEinstieg() +
+      gemerktStreifen(ktx) +
       (weiterKarten.length
         ? '<section class="lw-continue"><header><div><h2>Zuletzt auf deinem Schreibtisch</h2>' +
             '<p>Genau dort weiter, wo du aufgehört hast.</p></div>' +
@@ -3246,7 +3249,7 @@ const Lernwelt = (() => {
     reiterRollstand();
     /* Die Linse (E712, linse.ts) gleitet nur beim Ankommen und verblasst danach;
        sonst gibt es keine (E744). */
-    const satz = root.querySelector<HTMLElement>('.lw-desk h2');
+    const satz = root.querySelector<HTMLElement>('.lw-desk h2:has(.ru-held-zeile)');
     const gleiten = neuAngekommen;
     neuAngekommen = false;
     if (satz && typeof Linse !== 'undefined' && Linse.ueberSatz) {

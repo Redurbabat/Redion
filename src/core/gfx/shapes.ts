@@ -90,7 +90,7 @@ const GfxShapes = (() => {
    * Jede Art rechnet anders, und `text` lässt sich nur schätzen; das reicht,
    * weil beides nur Anhaltspunkte braucht.
    * ----------------------------------------------------------------------*/
-  const rahmenVon = (s: any): { x: number; y: number; w: number; h: number } => {
+  const localBounds = (s: any): { x: number; y: number; w: number; h: number } => {
     if (s?.art === 'stift') {
       const pts: any[] = Array.isArray(s.pts) ? s.pts : [];
       if (!pts.length) return { x: 0, y: 0, w: 0, h: 0 };
@@ -103,6 +103,53 @@ const GfxShapes = (() => {
                w: Math.max(20, String(s.text || '').length * 8), h: 20 };
     const x = zahl(s?.x), y = zahl(s?.y), w = zahl(s?.w), h = zahl(s?.h);
     return { x: Math.min(x, x + w), y: Math.min(y, y + h), w: Math.abs(w), h: Math.abs(h) };
+  };
+
+  const rahmenVon = (s: any): ReturnType<typeof localBounds> => {
+    const b = localBounds(s), angle = zahl(s?.rotation) * Math.PI / 180;
+    if (!angle) return b;
+    const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+    const points = [[b.x, b.y], [b.x + b.w, b.y], [b.x + b.w, b.y + b.h], [b.x, b.y + b.h]]
+      .map(([x, y]) => [cx + (x! - cx) * Math.cos(angle) - (y! - cy) * Math.sin(angle), cy + (x! - cx) * Math.sin(angle) + (y! - cy) * Math.cos(angle)]);
+    const xs = points.map(p => p[0]!), ys = points.map(p => p[1]!);
+    const x = Math.min(...xs), y = Math.min(...ys);
+    return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
+  };
+
+  type Rahmen = ReturnType<typeof rahmenVon>;
+  const randPunkt = (rahmen: Rahmen, zielX: number, zielY: number): [number, number] => {
+    const mx = rahmen.x + rahmen.w / 2, my = rahmen.y + rahmen.h / 2;
+    const dx = zielX - mx, dy = zielY - my;
+    if (!dx && !dy) return [mx, my];
+    const halbW = Math.max(1, rahmen.w / 2), halbH = Math.max(1, rahmen.h / 2);
+    const anteil = Math.min(halbW / Math.abs(dx || .0001), halbH / Math.abs(dy || .0001));
+    return [mx + dx * anteil, my + dy * anteil];
+  };
+
+  const verbindungsStrecke = (a: Rahmen, b: Rahmen): [[number, number], [number, number]] => [
+    randPunkt(a, b.x + b.w / 2, b.y + b.h / 2),
+    randPunkt(b, a.x + a.w / 2, a.y + a.h / 2)
+  ];
+
+  const verbindungsPfad = (a: Rahmen, b: Rahmen, form?: any): string => {
+    const anchor = (r: Rahmen, name: unknown, fallback: [number, number]): [number, number] =>
+      name === 'top' ? [r.x + r.w / 2, r.y] : name === 'bottom' ? [r.x + r.w / 2, r.y + r.h] :
+      name === 'left' ? [r.x, r.y + r.h / 2] : name === 'right' ? [r.x + r.w, r.y + r.h / 2] : fallback;
+    const [a0, b0] = verbindungsStrecke(a, b);
+    const [x1, y1] = anchor(a, form?.sourceAnchor, a0), [x2, y2] = anchor(b, form?.targetAnchor, b0);
+    const mid = (x1 + x2) / 2;
+    if (form?.route === 'orthogonal') return `M${x1} ${y1} H${mid} V${y2} H${x2}`;
+    if (form?.route === 'curve') return `M${x1} ${y1} C${mid} ${y1} ${mid} ${y2} ${x2} ${y2}`;
+    return `M${x1} ${y1} L${x2} ${y2}`;
+  };
+
+  const verbindungZeichne = (form: GfxForm, a: Rahmen, b: Rahmen, marke: string): SVGPathElement => {
+    const pfad = sv('path', {
+      d: verbindungsPfad(a, b, form), stroke: form.farbe || 'currentColor', 'stroke-width': 2,
+      fill: 'none', 'stroke-dasharray': '6 4', 'marker-end': `url(#${marke})`
+    }) as SVGPathElement;
+    pfad.dataset.sid = form.id;
+    return pfad;
   };
 
   /** Der Text einer Haftnotiz auf Zeilen verteilt. */
@@ -139,18 +186,44 @@ const GfxShapes = (() => {
     return m;
   };
 
-  /**
-   * Eine Form als SVG.
-   *
-   * Gibt IMMER ein Element zurück, auch bei einer unbekannten Art — dann
-   * eine leere Gruppe. Eine unbekannte Art ist der Block eines Menschen mit
-   * einer neueren Fassung (§18: unbekannte Blocktypen nicht löschen); sie
-   * darf nichts zeichnen, aber auch nichts werfen.
-   */
-  const zeichne = (s: any, o: ZeichenAngaben = {}): any => {
+  const mitBeschriftung = (umriss: SVGElement, s: any, farbe: string, gruppiert = false): SVGElement => {
+    if (!s.text && !gruppiert) return umriss;
+    const gruppe = sv('g');
+    gruppe.appendChild(umriss);
+    if (!s.text) return gruppe;
+    const { x, y, w, h } = localBounds(s);
+    const zentriert = ['ellipse', 'dreieck', 'raute'].includes(s.art);
+    const zeilen = zeilenUmbruch(String(s.text), Math.max(20, zentriert ? w * 0.62 : w - 18));
+    const tx = zentriert ? x + w / 2 : x + 10;
+    const mitte = y + h * (s.art === 'dreieck' ? 0.66 : 0.50);
+    const deckend = s.art === 'notiz' || s.gefuellt === true;
+    const background = typeof s.fillColor === 'string' ? s.fillColor : farbe;
+    const textfarbe = deckend && typeof Farben !== 'undefined' && Farben.parse(background)
+      ? (Farben.contrast(background, '#18181b') >= Farben.contrast(background, '#ffffff') ? '#18181b' : '#ffffff')
+      : deckend ? '#18181b' : farbe;
+    const text = sv('text', {
+      x: tx, y: zentriert ? mitte + 5 - (zeilen.length - 1) * 9 : y + 22,
+      fill: textfarbe, 'font-size': 14, 'text-anchor': zentriert ? 'middle' : 'start'
+    });
+    if (!deckend) tinte(text, 'schrift', farbe);
+    zeilen.forEach((zeile, i) => {
+      const teil = sv('tspan', { x: tx, dy: i ? 18 : 0 });
+      teil.textContent = zeile;
+      text.appendChild(teil);
+    });
+    gruppe.appendChild(text);
+    return gruppe;
+  };
+
+  /** Gezeichnete Form, bei unbekannter Art eine leere SVG-Gruppe. */
+  const zeichneRaw = (s: any, o: ZeichenAngaben = {}): any => {
     if (!s || typeof s !== 'object') return sv('g');
-    const strich = o.strich ?? 2.5;
+    const dicke = typeof s.strichBreite === 'number' && Number.isFinite(s.strichBreite) && s.strichBreite > 0
+      ? Math.min(s.strichBreite, 50) : null;
+    const strich = o.strich ?? (s.art === 'stift' ? dicke : null) ?? 2.5;
     const farbe = String(s.farbe || 'currentColor');
+    const fillColor = typeof s.fillColor === 'string' ? s.fillColor : farbe;
+    const shapeWidth = Number.isFinite(s.strichBreite) && s.strichBreite > 0 ? Math.min(50, s.strichBreite) : 2;
 
     if (s.art === 'stift' || s.art === 'linie' || s.art === 'pfeil') {
       const pts: any[] = Array.isArray(s.pts) ? s.pts : [];
@@ -185,6 +258,7 @@ const GfxShapes = (() => {
         });
       if (s.art === 'pfeil' && o.pfeilMarke) p.setAttribute('marker-end', `url(#${o.pfeilMarke})`);
       p.dataset.sid = s.id;
+      if (s.art === 'stift' && s.marker === true) p.setAttribute('opacity', '0.38');
       tinte(p, umriss ? 'schrift' : 'strich', farbe);
       /* EIN STRICH IST ZWEIEINHALB PIXEL BREIT — mit dem Finger trifft man
          ihn nicht. Darunter liegt deshalb derselbe Pfad noch einmal, 16 px
@@ -200,14 +274,27 @@ const GfxShapes = (() => {
       return gruppe;
     }
 
+    if (s.art === 'frame') {
+      const b = localBounds(s), g = sv('g', { 'data-sid': s.id });
+      g.append(sv('rect', { x: b.x, y: b.y, width: b.w, height: b.h, rx: 8,
+        fill: 'none', stroke: farbe, 'stroke-width': 1.5, 'stroke-dasharray': '10 5', 'pointer-events': 'stroke' }));
+      const label = sv('text', { x: b.x + 10, y: b.y - 10, fill: farbe, 'font-size': 15, 'data-sid': s.id });
+      label.textContent = String(s.text || 'Rahmen'); g.append(label); return g;
+    }
+    if (s.art === 'attachment') {
+      const b = localBounds(s), g = sv('g', { 'data-sid': s.id });
+      g.append(sv('rect', { x: b.x, y: b.y, width: b.w, height: b.h, rx: 10, fill: 'var(--bg, #fff)', stroke: farbe, 'stroke-width': 2, 'pointer-events': 'all', 'data-sid': s.id }));
+      const name = sv('text', { x: b.x + 14, y: b.y + 30, fill: farbe, 'font-size': 15, 'data-sid': s.id });
+      name.textContent = String(s.fileName || s.text || 'Anhang'); g.append(name); return g;
+    }
     if (s.art === 'rechteck' || s.art === 'notiz') {
-      const g = sv('g');
       const x = Math.min(zahl(s.x), zahl(s.x) + zahl(s.w));
       const y = Math.min(zahl(s.y), zahl(s.y) + zahl(s.h));
       const r = sv('rect', {
         x, y, width: Math.abs(zahl(s.w)), height: Math.abs(zahl(s.h)),
-        rx: s.art === 'notiz' ? 3 : 5,
-        fill: s.art === 'notiz' ? farbe : 'none', stroke: farbe, 'stroke-width': 2,
+        rx: s.art === 'notiz' ? 3 : Number.isFinite(s.cornerRadius) ? Math.min(Math.abs(zahl(s.w)), Math.abs(zahl(s.h))) * Math.max(0, Math.min(.5, s.cornerRadius)) : 5,
+        fill: s.art === 'notiz' || s.gefuellt === true ? fillColor : 'none', stroke: farbe, 'stroke-width': shapeWidth,
+        ...(s.dash ? { 'stroke-dasharray': '6 4' } : {}),
         'fill-opacity': s.art === 'notiz' ? .85 : 1,
         /* EIN RECHTECK OHNE FÜLLUNG NIMMT KEINE KLICKS AN (E144). SVG trifft
            standardmässig nur, was GEMALT ist — bei `fill: none` ist das
@@ -220,21 +307,7 @@ const GfxShapes = (() => {
       });
       r.dataset.sid = s.id;
       if (s.art === 'rechteck') tinte(r, 'strich', farbe);
-      g.appendChild(r);
-      if (s.text) {
-        const t = sv('text', {
-          x: x + 10, y: y + 22,
-          fill: s.art === 'notiz' ? '#1c1c1c' : farbe, 'font-size': 14
-        });
-        if (s.art !== 'notiz') tinte(t, 'schrift', farbe);
-        zeilenUmbruch(String(s.text), Math.abs(zahl(s.w)) - 18).forEach((z, i) => {
-          const ts = sv('tspan', { x: x + 10, dy: i ? 18 : 0 });
-          ts.textContent = z;
-          t.appendChild(ts);
-        });
-        g.appendChild(t);
-      }
-      return g;
+      return mitBeschriftung(r, s, farbe, true);
     }
 
     if (s.art === 'bild') {
@@ -270,16 +343,32 @@ const GfxShapes = (() => {
       return bild;
     }
 
+    if (s.art === 'dreieck' || s.art === 'raute') {
+      const { x, y, w, h } = localBounds(s);
+      const oben = `${x + w / 2},${y}`;
+      const punkte = s.art === 'raute'
+        ? `${oben} ${x + w},${y + h / 2} ${x + w / 2},${y + h} ${x},${y + h / 2}`
+        : `${oben} ${x + w},${y + h} ${x},${y + h}`;
+      const e = sv('polygon', {
+        points: punkte, fill: s.gefuellt === true ? fillColor : 'none',
+        stroke: farbe, 'stroke-width': shapeWidth, 'pointer-events': 'all', ...(s.dash ? { 'stroke-dasharray': '6 4' } : {})
+      });
+      e.dataset.sid = s.id;
+      tinte(e, 'strich', farbe);
+      return mitBeschriftung(e, s, farbe);
+    }
+
     if (s.art === 'ellipse') {
       const e = sv('ellipse', {
         cx: zahl(s.x) + zahl(s.w) / 2, cy: zahl(s.y) + zahl(s.h) / 2,
         rx: Math.abs(zahl(s.w) / 2), ry: Math.abs(zahl(s.h) / 2),
-        fill: 'none', stroke: farbe, 'stroke-width': 2,
+        fill: s.gefuellt === true ? fillColor : 'none', stroke: farbe, 'stroke-width': shapeWidth,
+        ...(s.dash ? { 'stroke-dasharray': '6 4' } : {}),
         'pointer-events': 'all'   /* wie beim Rechteck, siehe dort */
       });
       e.dataset.sid = s.id;
       tinte(e, 'strich', farbe);
-      return e;
+      return mitBeschriftung(e, s, farbe);
     }
 
     if (s.art === 'text') {
@@ -297,7 +386,15 @@ const GfxShapes = (() => {
     return leer;
   };
 
-  return { zeichne, rahmenVon, zeilenUmbruch, pfeilMarke, sv, PALETTE };
+  const zeichne = (s: any, o: ZeichenAngaben = {}): any => {
+    const node = zeichneRaw(s, o);
+    if (!zahl(s?.rotation)) return node;
+    const b = localBounds(s), group = sv('g', { 'data-sid': s.id,
+      transform: `rotate(${zahl(s.rotation)} ${b.x + b.w / 2} ${b.y + b.h / 2})` });
+    group.append(node); return group;
+  };
+
+  return { zeichne, rahmenVon, localBounds, zeilenUmbruch, pfeilMarke, verbindungsStrecke, verbindungsPfad, verbindungZeichne, sv, PALETTE };
 })();
 
 (window as any).GfxShapes = GfxShapes;

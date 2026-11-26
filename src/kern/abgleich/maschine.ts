@@ -129,6 +129,18 @@ const Wolke = (() => {
     return b;
   };
 
+  // Die App erreicht den Konto-Endpunkt auch ohne Cloudflare-Websitzung.
+  // 401 ist hier die erwartete Redion-Antwort, weil der Test keine Anmeldung mitsendet.
+  const geraeteZugangErreichbar = async (): Promise<boolean> => {
+    const server = adresse();
+    if (!server) return false;
+    const antwort = await fetch(server + '/konto/ich', {
+      credentials: 'omit', redirect: 'error', cache: 'no-store'
+    });
+    if (antwort.status !== 401) return false;
+    return (await antwort.json())?.code === 'unauthorized';
+  };
+
   /* ========================================================================
    * 3 · DER SCHLÜSSEL — er bleibt hier
    * --------------------------------------------------------------------
@@ -312,8 +324,19 @@ const Wolke = (() => {
     location.protocol === 'https:' && adresse() === location.origin;
   const anmeldenMitAccess = async () => {
     if (!accessMoeglich()) throw new Error('Die Access-Anmeldung geht nur auf der Redion-Website selbst.');
-    const a = await fetch(location.origin + '/konto/access', {
-      method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    let a: Response;
+    try {
+      a = await fetch(location.origin + '/konto/access', {
+        method: 'POST', credentials: 'same-origin', redirect: 'manual',
+        headers: { 'Content-Type': 'application/json' }, body: '{}'
+      });
+    } catch {
+      throw new Error('Die Cloudflare-Anmeldung konnte nicht geladen werden. ' +
+        'Öffne Redion direkt im Browser und versuche es erneut.');
+    }
+    if (a.type === 'opaqueredirect')
+      throw new Error('Die Cloudflare-Sitzung muss erneuert werden. ' +
+        'Lade die Redion-Seite im Browser neu und melde dich bei Cloudflare an.');
     let b: any = null;
     try { b = await a.json(); } catch { /* unten gemeldet */ }
     if (!a.ok || !b || typeof b.token !== 'string')
@@ -1333,7 +1356,7 @@ const Wolke = (() => {
            geteiltSetzen, istGeteilt, freigeben, freigaben,
            veroeffentlichen, zurueckziehen,
            markeAnlegen, markenListe, markeWeg, geraeteListe, geraetWeg,
-           ruf, start };
+           ruf, geraeteZugangErreichbar, start };
 })();
 
 (window as any).Wolke = Wolke;

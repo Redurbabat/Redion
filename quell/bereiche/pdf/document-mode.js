@@ -208,6 +208,7 @@ const DocumentMode = (() => {
             melden(seiten.length, seiten.length);
         return schreiber.schliessen();
     };
+    const dateiBlob = (id) => Dateien.alsBlob(id);
     const herunterladen = async (blob, name) => {
         const nativeDateien = globalThis.RedionNativeDateien;
         if (nativeDateien && typeof nativeDateien.speichern === 'function') {
@@ -1117,6 +1118,16 @@ const DocumentMode = (() => {
         const datenZeile = document.createElement('div');
         datenZeile.className = 'document-inspector-daten';
         datenZeile.append(pdfKnopf, importButton);
+        const originalId = original?.dataset.documentOriginal;
+        if (originalId) {
+            const kopie = makeAction('pdf-original-kopie', 'Originalseiten als PDF kopieren');
+            kopie.className = 'document-import';
+            kopie.dataset.pdfQuelle = originalId;
+            const kombinieren = makeAction('pdf-original-kombinieren', 'PDF-Dateien zusammenführen');
+            kombinieren.className = 'document-import';
+            kombinieren.dataset.pdfQuelle = originalId;
+            datenZeile.append(kopie, kombinieren);
+        }
         const pdfHinweis = document.createElement('p');
         pdfHinweis.className = 'document-export-hinweis';
         pdfHinweis.textContent = 'Deine Handschrift wird eine echte Anmerkung — in jedem '
@@ -1263,7 +1274,10 @@ const DocumentMode = (() => {
         }
         learning.sourceMenu(page, documentBlock, region || null);
     };
+    let werkzeugDockAufraeumen;
+    const dockFreigeben = () => { werkzeugDockAufraeumen?.(); werkzeugDockAufraeumen = undefined; };
     const render = (wrap, page) => {
+        dockFreigeben();
         const documents = documentsIn(page);
         if (!documents.length)
             return false;
@@ -1425,30 +1439,173 @@ const DocumentMode = (() => {
         folienKlappe.setAttribute('aria-haspopup', 'menu');
         folienKlappe.hidden = !istFoliensatz(page);
         commandbar.append(modes, pagination, zoomGroup, findKlappe, zeigenKlappe, folienKlappe);
-        const drawingbar = document.createElement('div');
-        drawingbar.className = 'document-drawingbar';
-        drawingbar.setAttribute('role', 'toolbar');
-        drawingbar.setAttribute('aria-label', 'PDF bearbeiten');
-        const drawingTools = Marken.WERKZEUGE.map(tool => [tool.id, tool.sym, tool.name]);
-        drawingTools.forEach(([tool, icon, label]) => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.dataset.documentTool = tool;
-            button.title = label;
-            button.setAttribute('aria-label', label);
-            const glyph = document.createElement('span');
-            glyph.dataset.sym = icon;
-            glyph.setAttribute('aria-hidden', 'true');
-            button.appendChild(glyph);
-            drawingbar.appendChild(button);
-        });
-        const rulerButton = topButton('ink-ruler', '', 'Lineal ein- oder ausblenden');
-        rulerButton.innerHTML = '<span data-sym="inkRuler" aria-hidden="true"></span>';
+        let pdfZeigermodus = 'select';
+        const pdfDockBlockOeffnen = (art) => {
+            if (!canAnnotate)
+                return;
+            App.neueSeite();
+            Ereignisse.frage(ARTEN.frageBlockAmEnde, { art });
+        };
+        const pdfDockMenue = (id) => {
+            if (id === 'elektro') {
+                const antwort = Ereignisse.frage(ARTEN.frageElektroMenue, {
+                    schliessen: () => galerie?.schliesse(),
+                    planOeffnen: () => pdfDockBlockOeffnen('schaltplan')
+                }).find(x => x instanceof HTMLElement);
+                return antwort ?? null;
+            }
+            const liste = document.createElement('div');
+            liste.className = 'gfx-tb-liste gfx-tb-befehlsliste';
+            const eintrag = (name, symbol, tun, gesperrt = false) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.disabled = gesperrt;
+                const griff = document.createElement('span');
+                griff.dataset.sym = symbol;
+                griff.setAttribute('aria-hidden', 'true');
+                b.append(griff, document.createTextNode(name));
+                b.addEventListener('click', () => {
+                    galerie?.schliesse();
+                    tun();
+                });
+                liste.append(b);
+            };
+            const form = (kennzeichen, name, symbol) => {
+                eintrag(name, symbol, () => {
+                    inkWerkzeugWaehlen('formen');
+                    inkToolbar()?.querySelector('[data-act="formart"][data-form="' + kennzeichen + '"]')?.click();
+                    inkSync();
+                }, !canAnnotate);
+            };
+            if (id === 'pdf-rahmen' || id === 'pdf-schnellmehr') {
+                form('rectangle', 'Rechteck', 'formRect');
+                form('ellipse', 'Ellipse', 'formEllipse');
+            }
+            if (id === 'pdf-verbinder' || id === 'pdf-schnellmehr') {
+                form('line', 'Linie', 'formLine');
+                form('arrow', 'Pfeil', 'formArrow');
+                form('curve', 'Kurve', 'formCurve');
+            }
+            if (id === 'pdf-link' || id === 'pdf-schnellmehr') {
+                const verweis = inkToolbar()?.querySelector('[data-act="verweis"]');
+                eintrag('Auswahl verlinken', 'link', () => verweis?.click(), !canAnnotate || !verweis || verweis.disabled);
+                eintrag('Dokumentlink kopieren', 'page', () => Register.aktionen.tun('link', page, { kontext: 'seite' }));
+            }
+            if (id === 'pdf-schnellmehr') {
+                const objects = inkToolbar()?.querySelector('[data-act="objekte"]');
+                eintrag('Ebenen, Gruppen und Ausrichten', 'grid', () => objects?.click(), !canAnnotate || !objects);
+            }
+            if (id === 'vorlagen') {
+                eintrag('Textblock auf neuer Seite', 'inkText', () => pdfDockBlockOeffnen('text'), !canAnnotate);
+                eintrag('Gedankenkarte auf neuer Seite', 'sparkle', () => pdfDockBlockOeffnen('mindmap'), !canAnnotate);
+                eintrag('Whiteboard auf neuer Seite', 'grid', () => pdfDockBlockOeffnen('whiteboard'), !canAnnotate);
+            }
+            if (!liste.childElementCount)
+                return null;
+            Register.symbole.fuelle(liste);
+            return liste;
+        };
+        const galerie = art === 'PDF'
+            ? GfxToolbar.erstelle({
+                klasse: 'document-pdf-dock',
+                beschriftung: 'PDF bearbeiten',
+                werkzeuge: Marken.WERKZEUGE,
+                galerie: {
+                    schnell: ['pdf-zeiger', 'pdf-rahmen', 'pdf-verbinder', 'pdf-link', 'pdf-schnellmehr'],
+                    edgeless: { zusatz: ['pdf-objekte', 'elektro', 'pdf-werkzeuge'] },
+                    karten: [
+                        { id: 'notiz', knoepfe: ['zettel'] },
+                        { id: 'stifte', knoepfe: ['stift', 'radierer'] },
+                        { id: 'formen', knoepfe: ['formen'] },
+                        { id: 'diagramme', knoepfe: ['diagramme'] },
+                        { id: 'vorlagen', knoepfe: ['vorlagen'] }
+                    ],
+                    werkzeugMenues: {
+                        'pdf-zeiger': ['select', 'schreiben'],
+                        elektro: ['zeichen'],
+                        'pdf-werkzeuge': ['marker', 'abdeck', 'text', 'textfix', 'elemente', 'bild', 'laser', 'ink-ruler', 'ink-options']
+                    }
+                },
+                aktionen: [
+                    { id: 'pdf-zeiger', name: 'Auswahl und Hand', sym: 'inkPointer', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'pdf-rahmen', name: 'Rahmenformen', sym: 'grid', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'pdf-verbinder', name: 'Linien und Pfeile', sym: 'inkConnector', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'pdf-link', name: 'Links', sym: 'link', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'elektro', name: 'Elektro', sym: 'bolt', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'pdf-schnellmehr', name: 'Weitere Schnellwerkzeuge', sym: 'dots', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'pdf-objekte', name: 'Objekte und Ebenen', sym: 'grid', kapsel: 'werkzeuge', gesperrt: !canAnnotate },
+                    { id: 'diagramme', name: 'Gedankenkarte auf neuer Seite', sym: 'sparkle', kapsel: 'werkzeuge', gesperrt: !canAnnotate },
+                    { id: 'vorlagen', name: 'Blockvorlagen', sym: 'table', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'pdf-werkzeuge', name: 'PDF-Werkzeuge', sym: 'dots', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'ink-options', name: 'Zeichenoptionen und Leiste einrichten', sym: 'dots', kapsel: 'werkzeuge' },
+                    { id: 'ink-ruler', name: 'Lineal ein- oder ausblenden', sym: 'inkRuler', kapsel: 'werkzeuge' }
+                ],
+                menue: pdfDockMenue,
+                aufAktion: id => {
+                    if (id === 'diagramme')
+                        pdfDockBlockOeffnen('mindmap');
+                    if (id === 'pdf-objekte' && canAnnotate)
+                        inkToolbar()?.querySelector('[data-act="objekte"]')?.click();
+                }
+            })
+            : null;
+        const drawingbar = galerie?.element ?? document.createElement('div');
+        drawingbar.classList.add('document-drawingbar');
+        if (galerie) {
+            workspace.dataset.pdfGalerie = 'an';
+            const zeiger = drawingbar.querySelector('[data-a="pdf-zeiger"]');
+            zeiger?.addEventListener('click', (e) => {
+                if (e.detail === 0 || !canAnnotate)
+                    return;
+                e.stopPropagation();
+                galerie.schliesse();
+                const aktiv = workspace.dataset.inkTool;
+                inkWerkzeugWaehlen(aktiv === 'select' ? 'schreiben' : aktiv === 'schreiben' ? 'select' : pdfZeigermodus);
+            });
+            const kurz = {
+                marker: 'Marker', abdeck: 'Abdecken', text: 'Text', textfix: 'Ändern',
+                elemente: 'Elemente', bild: 'Bild', laser: 'Laser', 'ink-ruler': 'Lineal',
+                'ink-options': 'Einrichten', select: 'Auswahl', schreiben: 'Hand', zeichen: 'Fachzeichen aufs PDF'
+            };
+            for (const knopf of drawingbar.querySelectorAll('[data-wz],[data-a]')) {
+                const id = knopf.dataset.wz ?? knopf.dataset.a ?? '';
+                if (knopf.dataset.wz)
+                    knopf.dataset.documentTool = id;
+                if (id === 'ink-options' || id === 'ink-ruler')
+                    knopf.dataset.documentAction = id;
+                if (kurz[id]) {
+                    const name = document.createElement('span');
+                    name.className = 'document-pdf-werkzeugname';
+                    name.textContent = kurz[id];
+                    knopf.append(name);
+                }
+            }
+            werkzeugDockAufraeumen = galerie.zerstoere;
+        }
+        else {
+            drawingbar.setAttribute('role', 'toolbar');
+            drawingbar.setAttribute('aria-label', 'PDF bearbeiten');
+            for (const { id, sym, name } of Marken.WERKZEUGE) {
+                const knopf = document.createElement('button');
+                knopf.type = 'button';
+                knopf.dataset.documentTool = id;
+                knopf.title = name;
+                knopf.setAttribute('aria-label', name);
+                const symbol = document.createElement('span');
+                symbol.dataset.sym = sym;
+                symbol.setAttribute('aria-hidden', 'true');
+                knopf.append(symbol);
+                drawingbar.append(knopf);
+            }
+        }
+        const rulerButton = drawingbar.querySelector('[data-document-action="ink-ruler"]')
+            ?? topButton('ink-ruler', '', 'Lineal ein- oder ausblenden', 'inkRuler');
         rulerButton.setAttribute('aria-pressed', 'false');
-        drawingbar.append(rulerButton);
-        const moreTools = topButton('ink-options', '···', 'Weitere Zeichenoptionen und Leiste einrichten');
+        const moreTools = drawingbar.querySelector('[data-document-action="ink-options"]')
+            ?? topButton('ink-options', '···', 'Weitere Zeichenoptionen und Leiste einrichten');
         moreTools.setAttribute('aria-expanded', 'false');
-        drawingbar.appendChild(moreTools);
+        if (!galerie)
+            drawingbar.append(rulerButton, moreTools);
         const history = document.createElement('div');
         history.className = 'document-ink-history';
         history.setAttribute('role', 'group');
@@ -1496,7 +1653,7 @@ const DocumentMode = (() => {
             if (!state.toolsOpen || !canAnnotate || !stand.isConnected)
                 return;
             const toolbar = stand.querySelector('.blatt-werk');
-            const key = drawingTools.some(([tool]) => tool === penTool) && penTool !== 'schreiben' ? penTool : 'stift';
+            const key = Marken.WERKZEUGE.some(({ id }) => id === penTool) && penTool !== 'schreiben' ? penTool : 'stift';
             if (toolbar && toolbar.dataset.tool !== key)
                 toolbar.querySelector('[data-wz="' + key + '"]')?.click();
             if (toolbar && !toolbar.dataset.documentPenReady) {
@@ -1751,7 +1908,7 @@ const DocumentMode = (() => {
         findListe.hidden = true;
         findbar.append(findFeld, findZahl, findBereichHuelle, topButton('find-previous', '‹', 'Voriger Treffer'), topButton('find-next', '›', 'Nächster Treffer'), topButton('find-close', '✕', 'Suche schließen'), findListe);
         let folienband = folienbandBauen(page, drawingbar);
-        workspace.append(top, ...(folienband ? [folienband] : []), findbar, ...(folienband ? [] : [drawingbar]), commandbar, body);
+        workspace.append(top, ...(folienband ? [folienband] : []), findbar, ...(folienband || galerie ? [] : [drawingbar]), commandbar, body, ...(galerie ? [drawingbar] : []));
         const folienbandNachziehen = () => {
             const soll = istFoliensatz(page) && innerWidth >= BAND_AB;
             const ist = !!folienband && folienband.isConnected;
@@ -1770,7 +1927,7 @@ const DocumentMode = (() => {
                 top.after(folienband);
         };
         wrap.appendChild(workspace);
-        if (typeof Formelheft !== 'undefined') {
+        if (!galerie && typeof Formelheft !== 'undefined') {
             const heft = document.createElement('button');
             heft.type = 'button';
             heft.dataset.documentAction = 'formelheft';
@@ -1823,7 +1980,7 @@ const DocumentMode = (() => {
         const zeichenSpiegeln = (kopie, echt) => {
             if (!echt)
                 return;
-            const glyph = kopie.querySelector('[data-sym]');
+            const glyph = kopie.querySelector(':scope > [data-sym]');
             const sym = echt.querySelector('[data-sym]')?.dataset.sym || '';
             if (!glyph || !sym)
                 return;
@@ -1857,13 +2014,27 @@ const DocumentMode = (() => {
                 .filter((button) => !!button);
             const jetzt = Array.from(drawingbar.querySelectorAll(':scope > [data-document-tool]'))
                 .filter(button => wunsch.includes(button));
-            if (wunsch.some((button, index) => button !== jetzt[index])) {
+            if (!galerie && wunsch.some((button, index) => button !== jetzt[index])) {
                 wunsch.forEach(button => drawingbar.insertBefore(button, rulerButton));
             }
             const realRuler = source?.querySelector('[data-act="lineal"]');
             rulerButton.disabled = !canAnnotate || !state.toolsOpen || !realRuler;
             rulerButton.setAttribute('aria-pressed', realRuler?.getAttribute('aria-pressed') || 'false');
-            workspace.dataset.inkTool = source?.dataset.tool || 'schreiben';
+            const werkzeug = source?.dataset.tool || 'schreiben';
+            if (galerie && workspace.dataset.inkTool !== werkzeug) {
+                const aktiverKnopf = source?.querySelector(':scope > [data-wz].on');
+                galerie.setzeWerkzeug(aktiverKnopf?.dataset.wz ?? werkzeug);
+            }
+            workspace.dataset.inkTool = werkzeug;
+            if (galerie && (werkzeug === 'select' || werkzeug === 'schreiben')) {
+                pdfZeigermodus = werkzeug;
+                const symbol = drawingbar.querySelector('[data-a="pdf-zeiger"] .zeichen');
+                const zeichen = werkzeug === 'schreiben' ? 'inkHand' : 'inkPointer';
+                if (symbol && symbol.dataset.sym !== zeichen) {
+                    symbol.dataset.sym = zeichen;
+                    Register.symbole.fuelle(symbol.parentElement);
+                }
+            }
             drawingbar.querySelectorAll('[data-document-tool]').forEach(button => {
                 const real = source?.querySelector('[data-wz="' + button.dataset.documentTool + '"]');
                 button.disabled = !canAnnotate || !state.toolsOpen || !real || real.disabled;
@@ -2422,7 +2593,7 @@ const DocumentMode = (() => {
                 const alt = String(block.bildDateiId);
                 void (async () => {
                     try {
-                        const [blob, satz] = await Promise.all([Dateien.alsBlob(alt), Store.dateiHolen(alt)]);
+                        const [blob, satz] = await Promise.all([dateiBlob(alt), Store.dateiHolen(alt)]);
                         if (!blob)
                             return;
                         const kopie = await Dateien.ablegen(new File([blob], String(satz?.name || 'seite.webp'), { type: blob.type || 'image/webp' }), { blockId: zielId, abgeleitet: satz ? !!satz.abgeleitet : block.herkunft !== 'bild' });
@@ -2881,6 +3052,12 @@ const DocumentMode = (() => {
             state.toolsOpen = an;
             Store.setMeta('dokWerkzeuge:' + page.id, an);
             workspace.dataset.documentTools = an ? 'open' : 'closed';
+            if (!an && galerie) {
+                galerie.schliesse();
+                delete workspace.dataset.pdfZubehoer;
+                workspace.dataset.inkOptions = 'closed';
+                moreTools.setAttribute('aria-expanded', 'false');
+            }
             readButton.setAttribute('aria-pressed', String(!an));
             annotateButton.setAttribute('aria-pressed', String(an));
             center.querySelectorAll('.blatt-papier').forEach(paper => {
@@ -2973,7 +3150,12 @@ const DocumentMode = (() => {
             if (event.key === 'Escape' && workspace.dataset.inkOptions === 'open') {
                 workspace.dataset.inkOptions = 'closed';
                 moreTools.setAttribute('aria-expanded', 'false');
-                moreTools.focus();
+                (drawingbar.querySelector('[data-a="pdf-werkzeuge"]') ?? moreTools).focus();
+                event.stopPropagation();
+                return;
+            }
+            if (event.key === 'Escape' && workspace.dataset.pdfZubehoer === 'an') {
+                delete workspace.dataset.pdfZubehoer;
                 event.stopPropagation();
                 return;
             }
@@ -2997,6 +3179,35 @@ const DocumentMode = (() => {
                 springe(state.index + (event.key === 'PageDown' ? 1 : -1));
             }
         });
+        const inkWerkzeugWaehlen = (tool, anchor) => {
+            if (!canAnnotate)
+                return;
+            if (galerie) {
+                const zubehoer = !['schreiben', 'bild', 'elemente', 'laser'].includes(tool);
+                const erneut = workspace.dataset.inkTool === tool && workspace.dataset.pdfZubehoer === 'an';
+                if (zubehoer && !erneut)
+                    workspace.dataset.pdfZubehoer = 'an';
+                else
+                    delete workspace.dataset.pdfZubehoer;
+            }
+            if (tool !== 'bild') {
+                penTool = tool;
+                Store.setMeta('dokStift:' + page.id, tool);
+            }
+            toolsSetzen(true);
+            inkToolbar()?.querySelector('[data-wz="' + tool + '"]')?.click();
+            if (tool === 'laser' || tool === 'elemente')
+                inkToolbar()?.dispatchEvent(new CustomEvent('ink-panel', {
+                    detail: { kind: tool, anchor }
+                }));
+            inkSync();
+        };
+        if (galerie)
+            workspace.addEventListener('pointerdown', event => {
+                if (event.target instanceof Element &&
+                    !event.target.closest('.document-pdf-dock, .blatt-reihe'))
+                    delete workspace.dataset.pdfZubehoer;
+            });
         workspace.addEventListener('click', event => {
             const element = event.target instanceof Element ? event.target : null;
             const inkButton = element?.closest('.blatt-werk button');
@@ -3012,19 +3223,10 @@ const DocumentMode = (() => {
                 penTool = inkButton.dataset.wz;
                 Store.setMeta('dokStift:' + page.id, penTool);
             }
-            const tool = element?.closest('[data-document-tool]')?.dataset.documentTool;
-            if (tool && canAnnotate) {
-                if (tool !== 'bild') {
-                    penTool = tool;
-                    Store.setMeta('dokStift:' + page.id, tool);
-                }
-                toolsSetzen(true);
-                inkToolbar()?.querySelector('[data-wz="' + tool + '"]')?.click();
-                if (tool === 'laser' || tool === 'elemente')
-                    inkToolbar()?.dispatchEvent(new CustomEvent('ink-panel', {
-                        detail: { kind: tool, anchor: element?.closest('[data-document-tool]') }
-                    }));
-                inkSync();
+            const werkzeugknopf = element?.closest('[data-document-tool]');
+            const tool = werkzeugknopf?.dataset.documentTool;
+            if (tool) {
+                inkWerkzeugWaehlen(tool, werkzeugknopf);
                 return;
             }
             if (!element?.closest('.document-commandbar,[data-document-action="view"],.blatt-werk')) {
@@ -3249,6 +3451,62 @@ const DocumentMode = (() => {
                 Store.updateBlock(block.id, { marken: neu });
                 UI.toast(offen === 1 ? 'Entsperrt' : offen + ' Marken entsperrt');
                 neuMit(block.id);
+                return;
+            }
+            if (action === 'pdf-original-kopie' || action === 'pdf-original-kombinieren') {
+                const knopf = tatKnopf;
+                const quelle = knopf.dataset.pdfQuelle;
+                if (!quelle || knopf.disabled)
+                    return;
+                const sichern = async (auswahl, drehung, weitere) => {
+                    const datei = await dateiBlob(quelle);
+                    if (!datei)
+                        throw new Error('Die Originaldatei fehlt auf diesem Gerät.');
+                    const blob = await PdfOriginal.zusammenstellen([{ datei, auswahl }, ...weitere.map(datei => ({ datei, auswahl: '*' }))], drehung);
+                    const name = String(page.text || 'Dokument').replace(/[\\/:*?"<>|]+/g, ' ').trim();
+                    if (await herunterladen(blob, (name || 'Dokument') + ' – Originalseiten.pdf'))
+                        UI.toast('PDF-Kopie gesichert');
+                };
+                const ausfuehren = (auftrag) => {
+                    knopf.disabled = true;
+                    void auftrag().catch(error => UI.toast(error instanceof Error ? error.message : 'Die PDF-Kopie ist fehlgeschlagen.'))
+                        .finally(() => { knopf.disabled = false; });
+                };
+                if (action === 'pdf-original-kopie') {
+                    ausfuehren(async () => {
+                        const auswahl = await Dialog.frage('Originalseiten wählen. * für alle oder z. B. 1–3, 7, 5–4.', '*');
+                        if (auswahl === null || !workspace.isConnected)
+                            return;
+                        const drehung = await Dialog.wahl({
+                            titel: 'Originalseiten kopieren',
+                            text: 'Die PDF-Kopie behält den Originaltext. Redion-Markierungen sind im separaten PDF-Export enthalten.',
+                            knoepfe: [{ id: '0', text: 'Kopie speichern' }, { id: '90', text: '90° nach rechts drehen' },
+                                { id: '180', text: '180° drehen' }, { id: '270', text: '90° nach links drehen' }]
+                        });
+                        if (drehung && workspace.isConnected)
+                            await sichern(auswahl, Number(drehung), []);
+                    });
+                }
+                else {
+                    const auswahl = document.createElement('input');
+                    auswahl.type = 'file';
+                    auswahl.accept = '.pdf,application/pdf';
+                    auswahl.multiple = true;
+                    auswahl.addEventListener('change', () => {
+                        const weitere = Array.from(auswahl.files ?? []);
+                        if (weitere.length && workspace.isConnected)
+                            ausfuehren(async () => {
+                                const bestaetigt = await Dialog.bestaetigen({
+                                    titel: 'PDF-Dateien zusammenführen',
+                                    text: 'Reihenfolge: das Original, danach ' + weitere.map(datei => datei.name).join(', ') + '.',
+                                    ja: 'PDF speichern'
+                                });
+                                if (bestaetigt && workspace.isConnected)
+                                    await sichern('*', 0, weitere);
+                            });
+                    }, { once: true });
+                    auswahl.click();
+                }
                 return;
             }
             if (action === 'export-pdf') {
@@ -3762,7 +4020,7 @@ const DocumentMode = (() => {
         stelleIn,
         stellenSuchen: (wort) => fremdeTreffer(wort, ''),
         findBereich, findBereichMerken, findenIn,
-        freigeben: () => { griffeSchliessen(); verweisHorchenAus(); } };
+        freigeben: () => { griffeSchliessen(); verweisHorchenAus(); dockFreigeben(); } };
 })();
 window.DocumentMode = DocumentMode;
 if (typeof Register !== 'undefined' && Register.kontext) {

@@ -622,12 +622,64 @@ const Marken = (() => {
     const oben = Math.max(0, h.getBoundingClientRect().top);
     r.style.setProperty('--reihe-platz', Math.max(220, Math.round(window.innerHeight - oben - 12)) + 'px');
   };
+  /* ══ EINE FREIE LEISTE BLEIBT GANZ IM FENSTER (E810) ═══════════════════
+     Die freie Lage ist ein Punkt in Prozent der Hülle. Die Hülle kann aber
+     mit ihrer Oberkante über dem Fensterrand liegen, wenn die Seite gerollt
+     ist — und dann sagte die alte Grenze „innerhalb der Hülle" ja, obwohl
+     die Leiste oben aus dem Bild ragte. Test534 §9 hält das: losgelassen
+     bei y = −13, nach dem Verkleinern bei y = −58.
+
+     Darum wird die MITTE so begrenzt, dass die ganze Leiste ins Fenster
+     passt — beim Ziehen, beim Loslassen und bei jeder Fenstergrösse. Ein
+     Punkt, der dabei verschoben wurde, wird neu gemerkt. Ist die Leiste
+     breiter oder höher als das Fenster, steht sie in der Mitte. */
+  /* Das SICHTBARE Feld ist der Rollbereich der Seite (`#scroll`): darüber
+     liegt die Kopfleiste, links die Seitenleiste. Eine Leiste unter der
+     Kopfleiste ist genauso verloren wie eine über dem Fensterrand — am Bild
+     vom 24. November stand sie unter der Kopfleiste, als die Grenze das
+     ganze Fenster war. Fehlt der Rollbereich, gilt das Fenster. */
+  const sichtFeld = (): { links: number; oben: number; rechts: number; unten: number } => {
+    const b = document.querySelector<HTMLElement>('#scroll')?.getBoundingClientRect();
+    if (b && b.width > 0 && b.height > 0) return { links: b.left, oben: b.top, rechts: b.right, unten: b.bottom };
+    return { links: 0, oben: 0, rechts: window.innerWidth, unten: window.innerHeight };
+  };
+  const fensterMitte = (mx: number, my: number, breit: number, hoch: number): { x: number; y: number } => {
+    const f = sichtFeld();
+    const klemm = (wert: number, halb: number, von: number, bis: number): number =>
+      2 * halb >= bis - von ? (von + bis) / 2 : Math.min(bis - halb, Math.max(von + halb, wert));
+    return { x: klemm(mx, breit / 2, f.links, f.rechts), y: klemm(my, hoch / 2, f.oben, f.unten) };
+  };
+  const merkeFrei = (r: HTMLElement): void => {
+    if (typeof Store === 'undefined') return;
+    try {
+      Store.setMeta(M_FREI, r.style.getPropertyValue('--leiste-x').trim()
+        + ' ' + r.style.getPropertyValue('--leiste-y').trim());
+    } catch { /* nur diese Sitzung */ }
+  };
+  const freiImFenster = (r: HTMLElement): void => {
+    if (r.dataset['lage'] !== 'frei') return;
+    const h = r.parentElement;
+    if (!h) return;
+    const k = h.getBoundingClientRect();
+    const box = r.getBoundingClientRect();
+    if (!k.width || !k.height || !box.width || !box.height) return;
+    const mitte = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+    const ziel = fensterMitte(mitte.x, mitte.y, box.width, box.height);
+    if (Math.abs(ziel.x - mitte.x) < 0.5 && Math.abs(ziel.y - mitte.y) < 0.5) return;
+    r.style.setProperty('--leiste-x', ((ziel.x - k.left) / k.width * 100).toFixed(2) + '%');
+    r.style.setProperty('--leiste-y', ((ziel.y - k.top) / k.height * 100).toFixed(2) + '%');
+    merkeFrei(r);
+  };
+
   let spalteBild = 0;
   const spaltenNachFenster = (): void => {
     if (spalteBild) return;
     spalteBild = requestAnimationFrame(() => {
       spalteBild = 0;
-      document.querySelectorAll<HTMLElement>('.blatt-reihe').forEach(spaltePlatz);
+      document.querySelectorAll<HTMLElement>('.blatt-reihe').forEach(r => {
+        spaltePlatz(r);
+        freiImFenster(r);
+      });
     });
   };
 
@@ -2519,7 +2571,7 @@ const Marken = (() => {
         }
       }
       const before = snapshot();
-      const neue = zwischenablage.map(mark => InkGeometry.move({ ...clone(mark), id: frischeId() }, 16, 16));
+      const neue = GfxExchange.remap(zwischenablage.map(mark => clone(mark)), frischeId).map(mark => InkGeometry.move(mark, 16, 16));
       marks.push(...neue);
       neue.forEach(mark => { const node = zeichneMarke(mark); if (node) { flaeche.appendChild(node); merke(mark); } });
       selection = new Set(neue.map(mark => idOf(mark)));
@@ -3211,6 +3263,7 @@ const Marken = (() => {
               selection.add(idOf(mark));
             });
           }
+          selection = GfxObjects.expand(marks, selection);
           renderSelection();
           /* ══ EIN TIPP AUF LEERES PAPIER SCHREIBT (E605) ══════════════════
              REDUR, 16. September 2026: „dort sollte, wenn ich klicke, wie
@@ -4350,8 +4403,11 @@ const Marken = (() => {
           return;
         }
         if (targetId) {
-          if (event.shiftKey) selection.has(targetId) ? selection.delete(targetId) : selection.add(targetId);
-          else if (!selection.has(targetId)) selection = new Set([targetId]);
+          const members = GfxObjects.expand(marks, new Set([targetId]));
+          if (event.shiftKey) {
+            if (selection.has(targetId)) members.forEach(id => selection.delete(id));
+            else members.forEach(id => selection.add(id));
+          } else if (!selection.has(targetId)) selection = members;
           renderSelection();
           if (!selection.has(targetId)) return;
           selectDrag = { mode: 'move', start: point, before: snapshot(), moved: false,
@@ -4923,7 +4979,30 @@ const Marken = (() => {
     };
     const formenAn = (): boolean => formen;
 
-    const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, setzeRadierModus, radierModusVon, copySelection, paste, marken: marks,
+    const objectPanel = (): void => {
+      const host = flaeche.closest<HTMLElement>('.document-studio') || flaeche.parentElement;
+      if (!host) return;
+      const apply = (next: any[]) => {
+        const before = snapshot(); marks.splice(0, marks.length, ...next); redraw(); commit(before);
+      };
+      GfxInspector.open({ host, ink: true, read: () => marks.map(mark => ({ ...mark, id: idOf(mark), locked: mark.gesperrt === true })),
+        selected: () => selection, uid: frischeId,
+        select: (ids, exact) => { setzeWerkzeug('select'); selection = exact ? new Set(ids) : GfxObjects.expand(marks, new Set(ids)); renderSelection(); notifyState(); },
+        commit: next => apply(next.map(o => { const { locked, ...mark } = o; if (locked) mark.gesperrt = true; else delete mark.gesperrt; return mark; })),
+        layout: command => {
+          if (!selection.size || marks.some(m => selection.has(idOf(m)) && m.gesperrt)) return;
+          if (command.startsWith('rotate:')) {
+            const b = auswahlKasten(); apply(marks.map(m => selection.has(idOf(m)) ? InkGeometry.rotate(clone(m), [b.x + b.width / 2, b.y + b.height / 2], Number(command.slice(7))) : m));
+          } else {
+            const proxies = marks.map(m => { const b = InkGeometry.bounds(m); return { id: idOf(m), art: 'rechteck', x: b.x, y: b.y, w: b.width, h: b.height, groupId: m.groupId }; });
+            const next = GfxObjects.align(proxies, selection, command);
+            apply(marks.map((m, i) => selection.has(idOf(m)) ? InkGeometry.move(clone(m), next[i].x - proxies[i]!.x, next[i].y - proxies[i]!.y) : m));
+          }
+        }
+      });
+    };
+
+    const steuerung = { flaeche, objectPanel, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, setzeRadierModus, radierModusVon, copySelection, paste, marken: marks,
       undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn, setzeFormen, formenAn, bildEinfuegen,
       setzeSchrift, schriftVon, resumeWriting, finishWriting: schreiberSchliessen,
       /* E466: Auswahl wie GoodNotes. */
@@ -5870,6 +5949,7 @@ const Marken = (() => {
       '<button data-act="vor" data-gruppe="auswahl" title="Auswahl nach vorn — über alles andere" disabled><span class="zeichen" data-sym="layerUp" aria-hidden="true"></span><span class="wort">Nach vorn</span></button>' +
       '<button data-act="hinten" data-gruppe="auswahl" title="Auswahl nach hinten — unter alles andere" disabled><span class="zeichen" data-sym="layerDown" aria-hidden="true"></span><span class="wort">Nach hinten</span></button>' +
       '<button data-act="sperren" data-gruppe="auswahl" aria-pressed="false" title="Auswahl sperren: nicht mehr schieben, ziehen, drehen, löschen oder radieren" disabled><span class="zeichen" data-sym="lock" aria-hidden="true"></span><span class="wort">Sperren</span></button>' +
+      '<button data-act="objekte" data-gruppe="auswahl" title="Ebenen, Gruppen, Ausrichten und Objektkommentare"><span class="zeichen" data-sym="grid" aria-hidden="true"></span><span class="wort">Objekte</span></button>' +
       /* EIN VERWEIS (E468): der Auswahl eine Adresse oder eine Seite geben. */
       '<button data-act="verweis" data-gruppe="auswahl" title="Der Auswahl einen Verweis geben: eine Adresse (https://…) oder eine Seite ([[Name]]) — im Lesemodus antippen" disabled><span class="zeichen" data-sym="link" aria-hidden="true"></span><span class="wort">Verweis</span></button>' +
       /* ALS ELEMENT SICHERN (E494): der einzige Weg IN die Bibliothek. Er
@@ -6322,6 +6402,7 @@ const Marken = (() => {
       else if (h.firstElementChild !== r) h.insertBefore(r, h.firstElementChild);
       /* Die Höhe erst NACH dem Einhängen: vorher hat die Hülle keinen Ort (E696). */
       spaltePlatz(r);
+      freiImFenster(r);
       window.addEventListener('resize', spaltenNachFenster, { passive: true });
     };
 
@@ -6381,16 +6462,13 @@ const Marken = (() => {
         }
         const k = huelle.getBoundingClientRect();
         if (!k.width || !k.height) return;
-        /* GANZ IM BILD BLEIBEN. Der gemerkte Punkt ist die MITTE der Leiste
-           (`translate(-50%,-50%)`), also darf er nicht näher an den Rand als
-           ihre halbe Breite — sonst hängt eine Hälfte draussen, und beim
-           Bild vom 19. September tat sie das auch: rechts abgeschnitten. */
-        const halbX = ((row.offsetWidth / 2) / k.width) * 100;
-        const halbY = ((row.offsetHeight / 2) / k.height) * 100;
-        const klemm = (wert: number, halb: number): number =>
-          halb * 2 >= 100 ? 50 : Math.min(100 - halb, Math.max(halb, wert));
-        const x = klemm(((e.clientX - k.x) / k.width) * 100, halbX);
-        const y = klemm(((e.clientY - k.y) / k.height) * 100, halbY);
+        /* GANZ IM BILD BLEIBEN (E810). Der gemerkte Punkt ist die MITTE der
+           Leiste (`translate(-50%,-50%)`); die Grenze ist das Fenster, nicht
+           die Hülle — die kann über dem Rand liegen, wenn die Seite gerollt
+           ist. Gerechnet wird in Bildpunkten, dann in Prozent der Hülle. */
+        const m = fensterMitte(e.clientX, e.clientY, row.offsetWidth, row.offsetHeight);
+        const x = ((m.x - k.x) / k.width) * 100;
+        const y = ((m.y - k.y) / k.height) * 100;
         row.dataset.lage = 'frei';
         row.style.setProperty('--leiste-x', x.toFixed(2) + '%');
         row.style.setProperty('--leiste-y', y.toFixed(2) + '%');
@@ -6422,13 +6500,10 @@ const Marken = (() => {
         /* Frei stehen geblieben: die zwei Zahlen als Prozent merken, nicht
            als Pixel — ein kleineres Fenster schöbe sie sonst hinter den
            Rand. Als Text, weil `meta` Text sicher übersteht (§9). */
+        /* Erst anwenden: dabei rückt `freiImFenster` die Mitte ins Bild, und
+           gemerkt wird der Punkt, der danach steht (E810). */
         lageAnwenden('frei');
-        if (typeof Store !== 'undefined') {
-          try {
-            Store.setMeta(M_FREI, row.style.getPropertyValue('--leiste-x').trim()
-              + ' ' + row.style.getPropertyValue('--leiste-y').trim());
-          } catch { /* nur diese Sitzung */ }
-        }
+        merkeFrei(row);
       };
       window.addEventListener('pointermove', bewegen);
       window.addEventListener('pointerup', beenden);
@@ -7256,6 +7331,7 @@ const Marken = (() => {
         if (target.dataset.act === 'vor' && controls.nachVorn) controls.nachVorn();
         if (target.dataset.act === 'hinten' && controls.nachHinten) controls.nachHinten();
         if (target.dataset.act === 'sperren' && controls.sperren) { controls.sperren(); return; }
+        if (target.dataset.act === 'objekte' && controls.objectPanel) { controls.objectPanel(); return; }
         if (target.dataset.act === 'verweis' && controls.verweisSetzen) { void controls.verweisSetzen(); return; }
         /* E494: die Bibliothek öffnen, und die Auswahl hineinlegen. */
         if (target.dataset.act === 'elemente' && controls.elementWaehlen) {

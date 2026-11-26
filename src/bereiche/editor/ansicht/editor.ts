@@ -816,7 +816,7 @@ const Blocks = (() => {
    *        zuletzt gezeichneter Ansicht eine andere Zahl sichern. Ein
    *        Anzeigewert gehört nicht in die Daten (§9).
    */
-  const render = (block: any, tiefe = 0, nr = 0) => {
+  const render = (block: any, tiefe = 0, nr = 0, ansicht: { freieGedankenkarte?: boolean } = {}) => {
     const t = typ(block.type);
     const el = document.createElement('div');
     el.className = 'blk b-' + block.type;
@@ -1180,7 +1180,9 @@ const Blocks = (() => {
           b.textContent = 'Quelle wählen …';
           b.addEventListener('click', () => quelleWaehlen(block));
           w.appendChild(b);
-        } else if (block.quelle === block.id || quelleImInneren(quelle.id, block.id)) {
+        } else if (quelle.alive === false || (typeof Konten !== 'undefined' && !Konten.darf('lesen', quelle.id))) {
+          w.textContent = 'Die eingebettete Quelle ist nicht verfügbar.';
+        } else if (tiefe > 12 || block.quelle === block.id || quelleImInneren(quelle.id, block.id)) {
           /* Ein Spiegel, der sich selbst enthält, würde endlos zeichnen. */
           w.innerHTML = '<div class="sy-kopf sy-warn">⇄ Diese Quelle enthält den Spiegel selbst — ' +
                         'das würde sich endlos wiederholen.</div>';
@@ -1295,7 +1297,7 @@ const Blocks = (() => {
       /* Die Gedankenkarte: Knoten als HTML, Linien als SVG — sie misst ihren
          Text beim Browser, statt ihn zu schätzen (E607). */
       case 'mindmap':
-        box.appendChild(Gedankenkarte.zeichne(block));
+        box.appendChild(Gedankenkarte.zeichne(block, ansicht.freieGedankenkarte === true));
         break;
 
       /* Ein Schaltplan: Symbolpalette links, Zeichenfläche rechts (Punkt 11). */
@@ -2509,14 +2511,26 @@ const Blocks = (() => {
     const b = Store.getBlock(id);
     if (!b) return;
 
-    /* Datenbank-Blöcke sind eigene Sache */
+    /* UMWANDELN VERLIERT NICHTS (E803, §18 hart). Die vier Sonderwege
+       unten haben vorher Daten weggeworfen: → Datenbank löschte den Block
+       ENDGÜLTIG samt Unterblöcken, → Seite tauschte die Kennung und legte
+       die Unterblöcke in den Papierkorb, → Einbettung und → Spalten
+       leerten den Text. `test647` hält jeden Weg fest. */
+
+    /* Datenbank-Blöcke sind eigene Sache: eine Datenbank ist ein eigener
+       Satz mit Sammlung und Ansicht, also entsteht sie NEU. Der alte Block
+       geht in den Papierkorb — holbar, samt Unterblöcken —, und sein Text
+       wird der Name. Nur ein ganz leerer Block wird gleich weggeräumt:
+       an ihm ist nichts zu verlieren. */
     if (neuerTyp.startsWith('db-')) {
       const layout = neuerTyp.slice(3);
       const eltern = Store.getBlock(b.parentId);
       const idx = eltern ? eltern.content.indexOf(b.id) : -1;
+      const name = String(b.text || '').trim();
+      const leer = !name && !(b.content || []).length;
       Store.trashBlock(b.id);
-      Store.purgeBlock(b.id);
-      const { block } = Store.addDatabase(b.parentId, 'Neue Datenbank', null, layout);
+      if (leer) Store.purgeBlock(b.id);
+      const { block } = Store.addDatabase(b.parentId, name || 'Neue Datenbank', null, layout);
       if (eltern && idx >= 0) {
         eltern.content = eltern.content.filter((x: any) => x !== block.id);
         eltern.content.splice(idx, 0, block.id);
@@ -2528,7 +2542,9 @@ const Blocks = (() => {
 
     /* Einbettungen sind alle derselbe Block, nur mit gemerktem Dienst */
     if (neuerTyp.startsWith('embed-')) {
-      Store.updateBlock(id, { type: 'embed', dienst: neuerTyp.slice(6), text: '', src: null });
+      /* Der Text bleibt stehen (E803) — eine Einbettung zeigt ihn nicht,
+         aber wer zurück in einen Textblock wandelt, hat ihn wieder. */
+      Store.updateBlock(id, { type: 'embed', dienst: neuerTyp.slice(6), src: null });
       App.zeichneSeite();
       return;
     }
@@ -2539,11 +2555,21 @@ const Blocks = (() => {
       return;
     }
 
+    /* → Seite AN ORT UND STELLE: eine Seite ist ein Block mit
+       `type: 'page'` (§17). Kennung, Platz, Text und Unterblöcke bleiben —
+       die Unterblöcke sind danach der Inhalt der Seite, wie in Notion.
+       Was eine Seite zusätzlich braucht, kommt nur dazu, wo es fehlt. */
     if (neuerTyp === 'page') {
-      const p = Store.addPage(App.aktuelleSeite(), { text: b.text || '' });
-      Store.trashBlock(b.id);
+      const ergaenzt: Record<string, unknown> = { type: 'page' };
+      if (!b.icon) ergaenzt["icon"] = '📄';
+      if (!Array.isArray(b.aliases)) ergaenzt["aliases"] = [];
+      if (b.cover === undefined) ergaenzt["cover"] = '';
+      if (b.wide === undefined) ergaenzt["wide"] = false;
+      if (b.font === undefined) ergaenzt["font"] = 'default';
+      if (b.small === undefined) ergaenzt["small"] = false;
+      Store.updateBlock(id, ergaenzt);
       App.zeichneSeite();
-      App.oeffne(p.id);
+      App.oeffne(id);
       return;
     }
 
@@ -2556,7 +2582,8 @@ const Blocks = (() => {
 
     /* Spalten brauchen Kinder, sonst bleiben sie leer */
     if (neuerTyp === 'columns' || neuerTyp === 'columns3') {
-      Store.updateBlock(id, { type: neuerTyp, text: '' });
+      /* Der Text bleibt stehen (E803); Spalten zeigen ihn nicht. */
+      Store.updateBlock(id, { type: neuerTyp });
       const n = neuerTyp === 'columns3' ? 3 : 2;
       /* Je Spalte ein `spalte`-Behälter mit einer leeren Zeile darin —
          nicht der Inhalt direkt (E102). */
@@ -4079,3 +4106,15 @@ const Blocks = (() => {
     auswahl: () => ausgewaehlt.slice()
   };
 })();
+
+/* E829 (§5): andere Bereiche setzen einen Block am Ende nicht mehr über den
+   Namen `Blocks`, sondern fragen über den Ereignisbus. Antwort: true, wenn
+   eingesetzt wurde. */
+if (typeof Ereignisse !== 'undefined' && typeof Ereignisse.horche === 'function' && typeof ARTEN !== 'undefined') {
+  Ereignisse.horche(ARTEN.frageBlockAmEnde, (daten: unknown) => {
+    const art = (daten as { art?: unknown } | undefined)?.art;
+    if (typeof art !== 'string' || !art) return false;
+    Blocks.einfuegenAmEnde(art);
+    return true;
+  });
+}

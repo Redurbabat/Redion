@@ -96,7 +96,13 @@ const ARTEN = Object.freeze({
   frageBefehle:      'frage.befehle',          /* was gehört in die Befehlspalette? */
   frageSeitenMenue:  'frage.seitenmenue',      /* was gehört ins Menü dieser Seite? */
   frageZeilenMenue:  'frage.zeilenmenue',
+  frageDateiExport:  'frage.datei-export',    /* kann die Datei gespeichert werden? */
   frageBefund:       'frage.befund'            /* was gehört in den Gesundheitsbericht? */,
+  /* E829: der PDF-Bereich setzte Blöcke und holte das Elektro-Menü über die
+     Namen fremder Bereiche (§5, test537). Jetzt fragt er; Editor und
+     Elektro antworten. */
+  frageBlockAmEnde:  'frage.block-am-ende',   /* füge diesen Block am Ende der offenen Seite ein */
+  frageElektroMenue: 'frage.elektro-menue',   /* das Werkzeugmenü der Elektrotechnik, als Element */
 
   /* --- Aufträge (E429) ---------------------------------------------------
      Diese fünf gab es seit der Auftragsmaschine, aber nur als rohe

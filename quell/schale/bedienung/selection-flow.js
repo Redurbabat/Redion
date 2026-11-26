@@ -589,6 +589,10 @@ const SelectionFlow = (() => {
             if (performance.now() - schlucken < 300)
                 e.stopPropagation();
         });
+        a.reihe.addEventListener('touchmove', (e) => {
+            if (zug && e.cancelable)
+                e.preventDefault();
+        }, { passive: false });
         window.addEventListener('keydown', (e) => {
             if (e.key !== 'Escape' || !(zug?.amZiehen || zug?.ue))
                 return;
@@ -705,16 +709,22 @@ const SelectionFlow = (() => {
         const name = reihe.dataset['material'] || '';
         let zuletzt = start;
         let rahmen = reihe.getBoundingClientRect();
+        const bezugNoch = () => flug.isConnected && bezug.isConnected && (flug.offsetParent ?? traeger) === bezug;
         const wache = () => {
             if (reiheFluege.get(traeger) !== eintrag)
                 return;
-            if (flug.isConnected && neu.isConnected && reihe.isConnected) {
+            if (flug.isConnected && neu.isConnected && reihe.isConnected && bezugNoch()) {
                 zuletzt = flug.getBoundingClientRect();
                 rahmen = reihe.getBoundingClientRect();
                 requestAnimationFrame(wache);
                 return;
             }
+            const rahmenWechsel = reihe.isConnected && neu.isConnected && flug.isConnected;
             eintrag.fertig();
+            if (rahmenWechsel && runde < 3) {
+                materialFliegen(reihe, zuletzt, neu, gruppe, runde + 1);
+                return;
+            }
             const andere = runde < 3 ? reiheSuchen(name, rahmen) : null;
             const ziel = andere ? gewaehltIn(andere, gruppe) : null;
             if (andere && ziel)

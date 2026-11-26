@@ -147,6 +147,12 @@ const WERKZEUG = `
     return { h, s, l }; };
   window.__akzentHsl = () => { const i = document.createElement('i'); i.style.color = 'var(--accent)';
     document.body.appendChild(i); const c = window.__hsl(window.__rgb(getComputedStyle(i).color)); i.remove(); return c; };
+  /* Jede Farbe, auch color(srgb …) aus color-mix(), als Zahlen: eine
+     1×1-Leinwand rechnet sie in rgb um (ein rgb()-Regex sähe sie nicht). */
+  window.__farbeRgb = (s) => { const c = document.createElement('canvas'); c.width = c.height = 1;
+    const x = c.getContext('2d', { willReadFrequently: true }); x.clearRect(0, 0, 1, 1);
+    x.fillStyle = '#000'; x.fillStyle = s; x.fillRect(0, 0, 1, 1);
+    const d = x.getImageData(0, 0, 1, 1).data; return { r: d[0], g: d[1], b: d[2], a: d[3] / 255 }; };
   /* „Akzentgefüllt": deckend, gesättigt, im Farbton des Akzents. */
   window.__akzentig = (c, akz) => { if (!c || c.a < 0.6) return false; const x = window.__hsl(c);
     const dh = Math.min(Math.abs(x.h - akz.h), 360 - Math.abs(x.h - akz.h));
@@ -229,7 +235,7 @@ const WORT = `(b, zelle) => { const k = b.cloneNode(true);
 const EINST = ['konto=Mein Konto', 'allgemein=Einstellungen', 'benachricht=Benachrichtigungen',
   'daten=Importieren', 'ki=Künstliche Intelligenz', 'verbindungen=Verbindungen', 'mcp=MCP',
   'worker=Worker', 'verifiziert=Verifizierte Seiten', 'oeffentlich=Öffentliche Seiten', 'emoji=Emoji',
-  'arbeitsplatz=Arbeitsbereich', 'analysen=Analysen', 'bereiche=Bereiche', 'sicherheit=Sicherheit',
+  'geraete=iPhone und Windows', 'arbeitsplatz=Arbeitsbereich', 'analysen=Analysen', 'bereiche=Bereiche', 'sicherheit=Sicherheit',
   'schluessel=Schlüssel und APIs', 'speicher=Speicher', 'abrechnung=Abrechnung', 'ueber=Über diese App'];
 const MENUE = ['link=Link kopieren', 'inhalt=Seiteninhalte kopieren', 'dup=Duplizieren',
   'wz-verschieben=Verschieben nach', 'archiv=Archivieren', 'del=In den Papierkorb verschieben',
@@ -432,14 +438,62 @@ for (const handy of [false, true]) {
       emoji: kn.filter(b => window.__emoji.test(b.textContent)).map(b => b.dataset.b),
       laut: kn.filter(b => !b.classList.contains('on') && b.querySelector('svg.sym') &&
                            !window.__still(b.querySelector('svg.sym'))).map(b => b.dataset.b),
-      aktuell: (() => { const b = document.querySelector('.einst-nav button.on svg.sym');
-        return b ? window.__akzentig(window.__rgb(getComputedStyle(b).color), window.__akzentHsl()) ||
-          window.__hsl(window.__rgb(getComputedStyle(b).color)).s > 0.3 : false; })() }; })()`) as any;
-  gleich(`${g} · Einstellungen: dieselben 19 Bereiche, dieselben Wörter, dieselbe Folge`, e.griffe, EINST);
+    }; })()`) as any;
+  gleich(`${g} · Einstellungen: dieselben 20 Bereiche, dieselben Wörter, dieselbe Folge (E755: geraete dazu)`, e.griffe, EINST);
   p(`${g} · Einstellungen: jede Zeile trägt genau ein gezeichnetes Zeichen`, e.falsch.length === 0, JSON.stringify(e.falsch.slice(0, 5)));
   gleich(`${g} · Einstellungen: kein Emoji`, e.emoji, []);
   gleich(`${g} · Einstellungen: die Zeichen sind still (grau)`, e.laut, []);
-  p(`${g} · Einstellungen: der gewählte Bereich trägt den Akzent`, e.aktuell === true);
+
+  /* DIE GEWÄHLTE ZEILE (Redur, 24. November: „Ganze Zeile, wie iPad").
+     Am Rechner: hinter der Zeile liegt eine gesättigte Akzent-FLÄCHE, der Name
+     darauf hält 4,5 : 1 — auch gegen den hellen Rand des Glanzverlaufs (6 %
+     Weiss, die ganze Zeile hat ihn) — und KEINE andere Zeile hat dieselbe
+     Fläche. Gemessen wird die gerechnete Farbe (Leinwand), nicht der Text.
+     Am Telefon bleibt die Zeile ohne Fläche (E812, eigene Regel in
+     einstellungen.css); dort prüft der Lauf das Gegenteil. */
+  const FLAECHE = `(() => {
+    const lum = (c) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+      return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b); };
+    const alle = [...document.querySelectorAll('.einst-nav button[data-b]')];
+    const mit = alle.map(b => window.__farbeRgb(getComputedStyle(b).backgroundColor)).filter(c => c.a > 0.5);
+    const b = document.querySelector('.einst-nav button.on');
+    if (!b) return { da: false };
+    const f = window.__farbeRgb(getComputedStyle(b).backgroundColor);
+    const oben = { r: f.r * 0.94 + 255 * 0.06, g: f.g * 0.94 + 255 * 0.06, b: f.b * 0.94 + 255 * 0.06 };
+    const name = window.__farbeRgb(getComputedStyle(b).color);
+    const x = lum(oben), y = lum(name);
+    return { da: true, flaeche: f.a > 0.5, s: window.__hsl(f).s,
+      kontrast: (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05),
+      gleiche: mit.filter(c => c.r === f.r && c.g === f.g && c.b === f.b).length,
+      zeilen: mit.length };
+  })()`;
+  const bewertet = (r: any) => r.da === true && r.flaeche === true && r.s > 0.3 && r.kontrast >= 4.5 && r.gleiche === 1;
+  const fl = await s.evaluate(FLAECHE) as any;
+  if (!handy) {
+    p(`${g} · Einstellungen: die gewählte Zeile hat eine gesättigte Akzent-Fläche (Sättigung ${fl.s?.toFixed?.(2)} > 0,3)`,
+      fl.da === true && fl.flaeche === true && fl.s > 0.3, JSON.stringify(fl));
+    p(`${g} · Einstellungen: der Name darauf hält 4,5 : 1 (${fl.kontrast?.toFixed?.(2)} : 1)`,
+      fl.kontrast >= 4.5, JSON.stringify(fl));
+    gleich(`${g} · Einstellungen: keine andere Zeile hat dieselbe Fläche`, fl.gleiche, 1);
+    /* GEGENPROBEN: grau statt Akzent, und eine zweite Zeile mit dem Akzent —
+       beide Male muss die Bewertung rot sein, sonst misst sie nichts. */
+    await s.evaluate((css: string) => { const st = document.createElement('style'); st.id = 'gp-flaeche';
+      st.textContent = css; document.head.appendChild(st); },
+      '.einst-fenster .einst-nav button.on{background-color:var(--bg-hover)!important;color:var(--text)!important}');
+    const grau = await s.evaluate(FLAECHE) as any;
+    p('Gegenprobe: eine graue gewählte Zeile wäre rot', !bewertet(grau), `Sättigung ${grau.s?.toFixed?.(2)}`);
+    await s.evaluate(() => document.getElementById('gp-flaeche')?.remove());
+    await s.evaluate((css: string) => { const st = document.createElement('style'); st.id = 'gp-flaeche';
+      st.textContent = css; document.head.appendChild(st); },
+      '.einst-fenster .einst-nav button[data-b="konto"]{background-color:color-mix(in srgb, var(--accent) 50%, #000)!important}');
+    const doppelt = await s.evaluate(FLAECHE) as any;
+    p('Gegenprobe: eine zweite Zeile mit gleicher Fläche wäre rot', !bewertet(doppelt), `gleiche ${doppelt.gleiche}`);
+    await s.evaluate(() => document.getElementById('gp-flaeche')?.remove());
+    p(`${g} · Einstellungen: die gewählte Zeile ist wirklich gewählt und bewertet (ausgelesen, nicht geraten)`,
+      bewertet(fl), JSON.stringify(fl));
+  } else {
+    gleich(`${g} · Einstellungen: am Telefon keine Zeilenfläche (E812, eigene Regel)`, fl.zeilen, 0);
+  }
   await aufraeumen(s);
 
   /* — die Seite, ihre Werkzeuge und ihr ⋯-Menü — */

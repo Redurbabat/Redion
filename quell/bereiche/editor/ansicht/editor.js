@@ -621,7 +621,7 @@ const Blocks = (() => {
         };
         return { blatt, zeichneFuer, zeichneFuerSuche };
     })();
-    const render = (block, tiefe = 0, nr = 0) => {
+    const render = (block, tiefe = 0, nr = 0, ansicht = {}) => {
         const t = typ(block.type);
         const el = document.createElement('div');
         el.className = 'blk b-' + block.type;
@@ -926,7 +926,10 @@ const Blocks = (() => {
                     b.addEventListener('click', () => quelleWaehlen(block));
                     w.appendChild(b);
                 }
-                else if (block.quelle === block.id || quelleImInneren(quelle.id, block.id)) {
+                else if (quelle.alive === false || (typeof Konten !== 'undefined' && !Konten.darf('lesen', quelle.id))) {
+                    w.textContent = 'Die eingebettete Quelle ist nicht verfügbar.';
+                }
+                else if (tiefe > 12 || block.quelle === block.id || quelleImInneren(quelle.id, block.id)) {
                     w.innerHTML = '<div class="sy-kopf sy-warn">⇄ Diese Quelle enthält den Spiegel selbst — ' +
                         'das würde sich endlos wiederholen.</div>';
                     const b = document.createElement('button');
@@ -1018,7 +1021,7 @@ const Blocks = (() => {
                 box.appendChild(Zusatz.whiteboard(block));
                 break;
             case 'mindmap':
-                box.appendChild(Gedankenkarte.zeichne(block));
+                box.appendChild(Gedankenkarte.zeichne(block, ansicht.freieGedankenkarte === true));
                 break;
             case 'schaltplan':
                 box.appendChild(Planflaeche.zeichne(block));
@@ -2083,9 +2086,12 @@ const Blocks = (() => {
             const layout = neuerTyp.slice(3);
             const eltern = Store.getBlock(b.parentId);
             const idx = eltern ? eltern.content.indexOf(b.id) : -1;
+            const name = String(b.text || '').trim();
+            const leer = !name && !(b.content || []).length;
             Store.trashBlock(b.id);
-            Store.purgeBlock(b.id);
-            const { block } = Store.addDatabase(b.parentId, 'Neue Datenbank', null, layout);
+            if (leer)
+                Store.purgeBlock(b.id);
+            const { block } = Store.addDatabase(b.parentId, name || 'Neue Datenbank', null, layout);
             if (eltern && idx >= 0) {
                 eltern.content = eltern.content.filter((x) => x !== block.id);
                 eltern.content.splice(idx, 0, block.id);
@@ -2095,7 +2101,7 @@ const Blocks = (() => {
             return;
         }
         if (neuerTyp.startsWith('embed-')) {
-            Store.updateBlock(id, { type: 'embed', dienst: neuerTyp.slice(6), text: '', src: null });
+            Store.updateBlock(id, { type: 'embed', dienst: neuerTyp.slice(6), src: null });
             App.zeichneSeite();
             return;
         }
@@ -2104,10 +2110,22 @@ const Blocks = (() => {
             return;
         }
         if (neuerTyp === 'page') {
-            const p = Store.addPage(App.aktuelleSeite(), { text: b.text || '' });
-            Store.trashBlock(b.id);
+            const ergaenzt = { type: 'page' };
+            if (!b.icon)
+                ergaenzt["icon"] = '📄';
+            if (!Array.isArray(b.aliases))
+                ergaenzt["aliases"] = [];
+            if (b.cover === undefined)
+                ergaenzt["cover"] = '';
+            if (b.wide === undefined)
+                ergaenzt["wide"] = false;
+            if (b.font === undefined)
+                ergaenzt["font"] = 'default';
+            if (b.small === undefined)
+                ergaenzt["small"] = false;
+            Store.updateBlock(id, ergaenzt);
             App.zeichneSeite();
-            App.oeffne(p.id);
+            App.oeffne(id);
             return;
         }
         if (neuerTyp.startsWith('toggle-h')) {
@@ -2116,7 +2134,7 @@ const Blocks = (() => {
             return;
         }
         if (neuerTyp === 'columns' || neuerTyp === 'columns3') {
-            Store.updateBlock(id, { type: neuerTyp, text: '' });
+            Store.updateBlock(id, { type: neuerTyp });
             const n = neuerTyp === 'columns3' ? 3 : 2;
             for (let i = Store.childrenOf(id).length; i < n; i++) {
                 const sp = Store.addBlock(id, 'spalte', { text: '' });
@@ -3494,3 +3512,12 @@ const Blocks = (() => {
         auswahl: () => ausgewaehlt.slice()
     };
 })();
+if (typeof Ereignisse !== 'undefined' && typeof Ereignisse.horche === 'function' && typeof ARTEN !== 'undefined') {
+    Ereignisse.horche(ARTEN.frageBlockAmEnde, (daten) => {
+        const art = daten?.art;
+        if (typeof art !== 'string' || !art)
+            return false;
+        Blocks.einfuegenAmEnde(art);
+        return true;
+    });
+}

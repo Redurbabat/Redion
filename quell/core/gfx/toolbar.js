@@ -9,6 +9,7 @@ const GfxToolbar = (() => {
         const aktionen = (o.aktionen || []).filter(a => a && a.id);
         let aktiv = o.aktiv || werkzeuge[0]?.id || '';
         let offenesMenue = null;
+        let menueAusloeser = null;
         const wurzel = document.createElement('div');
         wurzel.className = 'gfx-tb-sockel' + (o.klasse ? ' ' + o.klasse : '');
         const roller = document.createElement('div');
@@ -25,6 +26,8 @@ const GfxToolbar = (() => {
             b.dataset[art === 'wz' ? 'wz' : 'a'] = teil.id;
             if (menue)
                 b.dataset.menue = teil.id;
+            if (menue || (art === 'wz' && o.galerie?.paletten?.includes(teil.id)))
+                b.setAttribute('aria-expanded', 'false');
             b.title = teil.titel || teil.name;
             b.setAttribute('aria-label', teil.name);
             b.tabIndex = -1;
@@ -90,27 +93,164 @@ const GfxToolbar = (() => {
         if (neben.childNodes.length)
             roller.append(neben);
         wurzel.append(roller);
+        const menueGruppen = new Map();
+        const vorrat = document.createElement('div');
+        vorrat.hidden = true;
+        let galerieMessen;
+        if (o.galerie) {
+            wurzel.classList.add('gfx-tb-galerie', 'gfx-tb-edgeless');
+            if (o.galerie.beschriftet)
+                wurzel.classList.add('gfx-tb-beschriftet');
+            const knoepfe = new Map([...roller.querySelectorAll('button')].map(b => [b.dataset.wz || b.dataset.a, b]));
+            const einhaengen = (el, ids) => {
+                for (const id of ids) {
+                    const b = knoepfe.get(id);
+                    if (b) {
+                        el.append(b);
+                        knoepfe.delete(id);
+                    }
+                }
+            };
+            leiste.replaceChildren();
+            const schnell = gruppe('gfx-tb-schnell');
+            einhaengen(schnell, o.galerie.schnell);
+            const zusatz = gruppe('gfx-tb gfx-tb-edgeless-zusatz');
+            zusatz.setAttribute('role', 'group');
+            zusatz.setAttribute('aria-label', 'Redion-Werkzeuge');
+            einhaengen(zusatz, o.galerie.edgeless.zusatz);
+            if (zusatz.childElementCount)
+                roller.append(zusatz);
+            const festerStreifen = document.createElement('div');
+            festerStreifen.className = 'gfx-tb-kartenfenster';
+            const karten = gruppe('gfx-tb-karten');
+            for (const { id, knoepfe: ids } of o.galerie.karten) {
+                const karte = gruppe('gfx-tb-karte');
+                karte.dataset.karte = id;
+                einhaengen(karte, ids);
+                const vorschau = karte.querySelector('.zeichen');
+                for (const b of karte.querySelectorAll('button')) {
+                    if (!['notiz', 'formen'].includes(id) && !['stift', 'radierer'].includes(b.dataset.wz ?? ''))
+                        b.classList.add('gfx-tb-symbol');
+                    if (o.galerie.beschriftet) {
+                        const label = document.createElement('span');
+                        label.className = 'gfx-tb-kartenname';
+                        label.textContent = b.getAttribute('aria-label') || '';
+                        label.setAttribute('aria-hidden', 'true');
+                        b.append(label);
+                    }
+                }
+                if (vorschau && (id === 'notiz' || id === 'formen')) {
+                    delete vorschau.dataset.sym;
+                    const teile = id === 'notiz' ? ['link', 'text', 'heading'] : ['rect', 'ellipse', 'triangle'];
+                    for (const teil of teile) {
+                        const grafik = document.createElement('span');
+                        grafik.dataset.vorschau = teil;
+                        vorschau.append(grafik);
+                    }
+                }
+                if (karte.childElementCount)
+                    karten.append(karte);
+            }
+            festerStreifen.append(karten);
+            const galeriekarten = Array.from(karten.children);
+            let kartenStart = 0;
+            let kartenProSeite = 3;
+            for (const [id, ids] of Object.entries(o.galerie.werkzeugMenues ?? {})) {
+                const zeile = gruppe('gfx-tb-menuewerkzeuge');
+                einhaengen(zeile, ids);
+                menueGruppen.set(id, zeile);
+                vorrat.append(zeile);
+            }
+            wurzel.append(vorrat);
+            for (const b of knoepfe.values())
+                if (!neben.contains(b))
+                    neben.append(b);
+            if (neben.childElementCount && !neben.parentElement)
+                roller.append(neben);
+            const blatt = (name, zeichen, richtung) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.tabIndex = -1;
+                b.className = 'gfx-tb-blatt';
+                b.dataset.richtung = richtung < 0 ? 'links' : 'rechts';
+                b.title = name;
+                b.setAttribute('aria-label', name);
+                const symbol = document.createElement('span');
+                symbol.textContent = zeichen;
+                symbol.setAttribute('aria-hidden', 'true');
+                b.append(symbol);
+                b.addEventListener('click', () => {
+                    if (b.getAttribute('aria-disabled') === 'true')
+                        return;
+                    menueZu();
+                    kartenStart += kartenProSeite * richtung;
+                    blattstand();
+                    haltPruefen();
+                });
+                return b;
+            };
+            const zurueck = blatt('Vorherige Werkzeuge', '‹', -1);
+            const weiter = blatt('Weitere Werkzeuge', '›', 1);
+            const blattstand = () => {
+                if (festerStreifen.clientWidth > 0) {
+                    kartenProSeite = Math.max(1, Math.floor(festerStreifen.clientWidth / 96));
+                }
+                const letzterStart = Math.max(0, galeriekarten.length - kartenProSeite);
+                kartenStart = Math.max(0, Math.min(kartenStart, letzterStart));
+                for (const [index, karte] of galeriekarten.entries()) {
+                    karte.hidden = index < kartenStart || index >= kartenStart + kartenProSeite;
+                }
+                zurueck.setAttribute('aria-disabled', String(kartenStart === 0));
+                weiter.setAttribute('aria-disabled', String(kartenStart === letzterStart));
+            };
+            leiste.append(schnell, trenner(), zurueck, festerStreifen, weiter);
+            galerieMessen = new ResizeObserver(() => {
+                blattstand();
+                haltPruefen();
+            });
+            galerieMessen.observe(festerStreifen);
+            blattstand();
+        }
         const menueZu = () => {
+            const gruppe = offenesMenue ? menueGruppen.get(offenesMenue) : undefined;
+            if (gruppe) {
+                for (const knopf of gruppe.querySelectorAll('button'))
+                    knopf.tabIndex = -1;
+                vorrat.append(gruppe);
+            }
             wurzel.querySelector('.gfx-tb-menue')?.remove();
-            wurzel.querySelectorAll('[data-menue]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+            menueAusloeser?.setAttribute('aria-expanded', 'false');
+            menueAusloeser = null;
             offenesMenue = null;
         };
-        const menueAuf = (id, ausloeser) => {
+        const menueAuf = (id, ausloeser, fokus = false) => {
             const inhalt = o.menue?.(id);
-            if (!inhalt)
+            const gruppe = menueGruppen.get(id);
+            if (!inhalt && !gruppe)
                 return;
             menueZu();
             const m = document.createElement('div');
             m.className = 'gfx-tb-menue';
             m.setAttribute('role', 'group');
-            m.append(inhalt);
+            if (o.galerie?.paletten?.includes(id))
+                m.classList.add('gfx-tb-palette');
+            if (gruppe) {
+                for (const knopf of gruppe.querySelectorAll('button'))
+                    knopf.tabIndex = 0;
+                m.append(gruppe);
+            }
+            if (inhalt)
+                m.append(inhalt);
             wurzel.append(m);
             offenesMenue = id;
+            menueAusloeser = ausloeser;
             ausloeser.setAttribute('aria-expanded', 'true');
             const wr = wurzel.getBoundingClientRect(), ar = ausloeser.getBoundingClientRect();
             const mb = m.getBoundingClientRect();
             const links = Math.max(0, Math.min(wr.width - mb.width, ar.left - wr.left + ar.width / 2 - mb.width / 2));
             m.style.left = Math.round(links) + 'px';
+            if (fokus)
+                m.querySelector('button:not(:disabled)')?.focus();
         };
         const beiKlick = (e) => {
             const ziel = e.target;
@@ -122,17 +262,26 @@ const GfxToolbar = (() => {
                 if (offenesMenue === id)
                     menueZu();
                 else
-                    menueAuf(id, mn);
+                    menueAuf(id, mn, e instanceof MouseEvent && e.detail === 0);
                 return;
             }
             const wz = ziel.closest('[data-wz]');
             if (wz && wurzel.contains(wz)) {
-                menueZu();
+                const ursprung = wz.closest('.gfx-tb-menue') ? offenesMenue : null;
                 const id = wz.dataset.wz ?? '';
+                const behalten = !!ursprung && o.galerie?.paletten?.includes(ursprung);
+                const oeffnen = !ursprung && offenesMenue !== id && o.galerie?.paletten?.includes(id);
+                const ausloeser = ursprung ? menueAusloeser : null;
+                if (!behalten)
+                    menueZu();
                 const teil = werkzeuge.find(w => w.id === id);
                 if (teil?.haelt !== false)
                     setzeWerkzeug(id);
                 o.aufWerkzeug?.(id);
+                if (oeffnen)
+                    menueAuf(id, wz, e instanceof MouseEvent && e.detail === 0);
+                if (!behalten)
+                    ausloeser?.focus();
                 return;
             }
             const ak = ziel.closest('[data-a]');
@@ -162,7 +311,7 @@ const GfxToolbar = (() => {
         const beiTaste = (e) => {
             if (e.key === 'Escape' && offenesMenue) {
                 const imMenue = !!(document.activeElement && wurzel.querySelector('.gfx-tb-menue')?.contains(document.activeElement));
-                const ausloeser = wurzel.querySelector(`[data-menue="${CSS.escape(offenesMenue)}"]`);
+                const ausloeser = menueAusloeser;
                 menueZu();
                 e.stopPropagation();
                 e.preventDefault();
@@ -194,7 +343,7 @@ const GfxToolbar = (() => {
             if (!offenesMenue)
                 return;
             const z = e.target;
-            if (z && !wurzel.contains(z))
+            if (z && !wurzel.contains(z) && !o.menueOffenHalten?.(offenesMenue, z))
                 menueZu();
         };
         document.addEventListener('pointerdown', beiAussen, true);
@@ -205,6 +354,10 @@ const GfxToolbar = (() => {
                 b.classList.toggle('on', an);
                 b.setAttribute('aria-pressed', String(an));
             });
+            for (const [menuId, group] of menueGruppen) {
+                const trigger = wurzel.querySelector(`[data-menue="${CSS.escape(menuId)}"]`);
+                trigger?.classList.toggle('on', !!group.querySelector(`[data-wz="${CSS.escape(id)}"]`));
+            }
             tabstoppSetzen();
         };
         const setzeGesperrt = (id, ja) => {
@@ -216,6 +369,7 @@ const GfxToolbar = (() => {
                 tabstoppSetzen();
         };
         const zerstoere = () => {
+            galerieMessen?.disconnect();
             document.removeEventListener('pointerdown', beiAussen, true);
             wurzel.remove();
         };

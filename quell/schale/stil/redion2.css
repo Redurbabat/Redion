@@ -157,16 +157,20 @@ html[data-theme="light"]{
 }
 
 /* ── 4 · Die Seite: Titel, Text, Überschriften auf EINER Skala ─────────── */
+/* E826: die Grösse je Block (`tg-…`, E101) geht vor. Mit `#page` wogen die
+   fünf Regeln unten mehr als `.blk .ct.tg-gross`, und „Gross" blieb 15 px
+   (test175). Die vier Stufen sind darum ausgenommen; ohne Stufe gilt die
+   Schriftrolle wie bisher. */
 body:not([data-ui-shell="glass-wheel"]) #title{
   font-size:var(--t-title); font-weight:var(--w-bold); letter-spacing:-.4px;
   line-height:1.2; margin:var(--space-1) 0 var(--space-2);
 }
 body:not([data-ui-shell="glass-wheel"]) #page > .pg-icon{font-size:48px; margin-top:var(--space-7)}
-body:not([data-ui-shell="glass-wheel"]) #page .b-text .ct{font-size:var(--t-body); line-height:var(--lh-body)}
-body:not([data-ui-shell="glass-wheel"]) #page :is(.b-bullet,.b-number,.b-todo,.b-toggle,.b-quote) .ct{font-size:var(--t-body); line-height:var(--lh-body)}
-body:not([data-ui-shell="glass-wheel"]) #page .b-h1 .ct{font-size:var(--t-h1); font-weight:var(--w-bold); letter-spacing:-.25px; padding-top:var(--space-6)}
-body:not([data-ui-shell="glass-wheel"]) #page .b-h2 .ct{font-size:var(--t-h2); font-weight:var(--w-semibold); letter-spacing:-.15px; padding-top:var(--space-5)}
-body:not([data-ui-shell="glass-wheel"]) #page .b-h3 .ct{font-size:var(--t-h3); font-weight:var(--w-semibold); padding-top:var(--space-4)}
+body:not([data-ui-shell="glass-wheel"]) #page .b-text .ct:not(.tg-klein,.tg-gross,.tg-sehrgross,.tg-riesig){font-size:var(--t-body); line-height:var(--lh-body)}
+body:not([data-ui-shell="glass-wheel"]) #page :is(.b-bullet,.b-number,.b-todo,.b-toggle,.b-quote) .ct:not(.tg-klein,.tg-gross,.tg-sehrgross,.tg-riesig){font-size:var(--t-body); line-height:var(--lh-body)}
+body:not([data-ui-shell="glass-wheel"]) #page .b-h1 .ct:not(.tg-klein,.tg-gross,.tg-sehrgross,.tg-riesig){font-size:var(--t-h1); font-weight:var(--w-bold); letter-spacing:-.25px; padding-top:var(--space-6)}
+body:not([data-ui-shell="glass-wheel"]) #page .b-h2 .ct:not(.tg-klein,.tg-gross,.tg-sehrgross,.tg-riesig){font-size:var(--t-h2); font-weight:var(--w-semibold); letter-spacing:-.15px; padding-top:var(--space-5)}
+body:not([data-ui-shell="glass-wheel"]) #page .b-h3 .ct:not(.tg-klein,.tg-gross,.tg-sehrgross,.tg-riesig){font-size:var(--t-h3); font-weight:var(--w-semibold); padding-top:var(--space-4)}
 
 /* DIE SEITENWERKZEUGE (E783): eine ruhige Zeile mit sichtbaren Funktionen.
    Auf Desktop und Mobilgeräten bleibt sie ohne Hover dauerhaft erreichbar.
@@ -268,4 +272,517 @@ body:not([data-ui-shell="glass-wheel"]) .lernwelt :is(.lw-metrik,.lw-study-actio
 body[data-bewegung="ruhig"]:not([data-ui-shell="glass-wheel"]) #page > .pg-tools{transition:none}
 @media (forced-colors:active),(prefers-contrast:more){
   body:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel{border-color:var(--text); box-shadow:none}
+}
+
+/* Atelier. Gemeinsame Oberfläche für Desktop und Mobilgeräte. Die
+   Alternativschale behält ihre Navigation und ihr eigenes Erscheinungsbild. */
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) {
+  --atelier-rail: #f4f4f5;
+  --atelier-rail-ink: #25252a;
+  --atelier-rail-dim: #60616a;
+  --atelier-rail-active: #e3e9f2;
+  --atelier-accent: #0969da;
+  --atelier-paper: #fafafa;
+  --atelier-sheet: #ffffff;
+  --atelier-tint: #eef3f8;
+  --atelier-edge: #d9dce1;
+  --atelier-display: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --atelier-on-accent: #ffffff;
+}
+
+:where(html:not([data-theme="light"], [data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) {
+  --atelier-rail: #202024;
+  --atelier-rail-ink: #f4f4f5;
+  --atelier-rail-dim: #b5b5bd;
+  --atelier-rail-active: #343a46;
+  --atelier-accent: #78b7ff;
+  --atelier-paper: #1b1b1f;
+  --atelier-sheet: #242428;
+  --atelier-tint: #303038;
+  --atelier-edge: #45454e;
+  --atelier-on-accent: #10233d;
+}
+
+:where(html:not([data-gesetzt~="--accent"], [data-schema="kontrast"]))
+  body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) {
+  --accent: var(--atelier-accent);
+  --accent-text: var(--atelier-accent);
+  --accent-hover: color-mix(in srgb, var(--atelier-accent) 85%, var(--atelier-on-accent));
+  --accent-schwach: color-mix(in srgb, var(--atelier-accent) 14%, var(--atelier-sheet));
+  --auf-accent: var(--atelier-on-accent);
+  --haupt-flaeche: var(--atelier-accent);
+  --haupt-schein: none;
+}
+
+@media (min-width: 761px) {
+  :where(html:not([data-schema="kontrast"], [data-windows-titelleiste])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"], [data-dokument="an"]) #main > #studio-bar {
+    min-height: calc(var(--touch-min) + var(--space-3));
+    padding-inline: var(--space-4);
+    gap: var(--space-2);
+    background: var(--atelier-rail);
+    color: var(--atelier-rail-ink);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-brand {
+    color: inherit;
+    font-size: 15px;
+    font-weight: 730;
+    letter-spacing: .085em;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-icon {
+    color: var(--atelier-rail-ink);
+    border-color: transparent;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #studio-bar :is(.studio-icon,.studio-brand):hover {
+    background: var(--atelier-rail-active);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-import {
+    background: var(--atelier-rail-active);
+    color: var(--atelier-rail-ink);
+    box-shadow: none;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search {
+    color: var(--atelier-rail-ink);
+    background-color: color-mix(in srgb, var(--atelier-rail-ink) 12%, var(--atelier-rail));
+    border-radius: var(--radius-lg);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #studio-bar .studio-search:hover {
+    background-color: var(--atelier-rail-active);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #studio-bar :is(button,a):focus-visible {
+    outline-color: var(--atelier-rail-ink);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #main > #kante {
+    color: var(--atelier-rail-ink);
+    background: var(--atelier-rail);
+    border-right-color: var(--atelier-rail);
+    padding-top: var(--space-4);
+    --line-soft: color-mix(in srgb, var(--atelier-rail-ink) 24%, transparent);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #kante .k-knopf {
+    color: var(--atelier-rail-dim);
+    border-radius: var(--radius-sm);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #kante .k-knopf:is(:hover, .ist-hier, .ist-an) {
+    color: var(--atelier-rail-ink);
+    background: var(--atelier-rail-active);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #kante .k-knopf.ist-hier svg {
+    color: var(--atelier-rail-ink);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #kante .k-knopf:focus-visible {
+    outline-color: var(--atelier-rail-ink);
+  }
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"], [data-dokument="an"]) #main > :is(#topbar,#reiterleiste) {
+  background: var(--atelier-sheet);
+  border-color: var(--atelier-edge);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"], [data-dokument="an"]) #scroll:has(
+  #page.lernwelt, #page > :is(.bib,.home)
+) {
+  background: var(--atelier-paper);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) :is(#title,.bib-dkopf h1,.lernwelt .lw-page-head h2,.home h1) {
+  font-family: var(--atelier-display);
+  font-weight: 600;
+  letter-spacing: -.04em;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #title {
+  font-size: clamp(32px, 4.5vw, 50px);
+}
+
+/* Bibliothek: Titel und Dateibefehle als eigene Arbeitsfläche.
+   Die Filter behalten ihre bestehende Reihenfolge und ihre Beschriftungen. */
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] {
+  padding-top: clamp(var(--space-4), 3vw, var(--space-8));
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-dkopf {
+  background: var(--atelier-sheet);
+  border: 1px solid var(--atelier-edge);
+  border-top: 4px solid var(--atelier-accent);
+  border-radius: var(--radius-lg);
+  padding: clamp(var(--space-4), 3vw, var(--space-8));
+  box-shadow: none;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-dkopf h1 {
+  font-size: clamp(32px, 5vw, 56px);
+  line-height: 1.05;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib-workspace-eyebrow {
+  color: var(--atelier-accent);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-wahl {
+  border-color: var(--atelier-edge);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] :is(.bib-pille,.bib-form-knopf) {
+  background: var(--atelier-paper);
+  border-color: var(--atelier-edge);
+  border-radius: var(--radius-sm);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] :is(.bib-search,.bib-neu) {
+  background: var(--atelier-sheet);
+  border-color: var(--atelier-edge);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-studio-import {
+  background: var(--atelier-accent);
+  color: var(--atelier-on-accent);
+  box-shadow: none;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel {
+  background: var(--atelier-sheet);
+  border-color: var(--atelier-edge);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-deckel-blatt {
+  background: var(--atelier-tint);
+  border-radius: var(--radius-sm);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-card-kind {
+  color: var(--atelier-accent);
+  font-weight: 650;
+}
+
+/* Tagesübersicht: Lernrunde und Dokumente bilden beim breiten Layout
+   zwei gleichrangige Spalten. Die DOM-Reihenfolge folgt dem schmalen Layout. */
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today {
+  display: grid;
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today > * {
+  order: 0;
+  margin-block: 0;
+  min-width: 0;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact {
+  align-items: center;
+  background: var(--atelier-rail);
+  color: var(--atelier-rail-ink);
+  border: 0;
+  border-radius: var(--radius-lg);
+  padding: clamp(var(--space-4), 3vw, var(--space-8));
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact h2 {
+  font: 600 clamp(25px, 5vw, 48px)/1.08 var(--atelier-display);
+  letter-spacing: -.035em;
+  overflow-wrap: anywhere;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact :is(p, .lw-goal button small) {
+  color: var(--atelier-rail-dim);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact .lw-goal {
+  background: var(--atelier-rail-active);
+  border: 0;
+  box-shadow: none;
+  color: var(--atelier-rail-ink);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact .lw-goal button {
+  color: inherit;
+  background: transparent;
+  box-shadow: none;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact .lw-goal button span {
+  color: var(--atelier-rail-ink);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact .lw-goal button:focus-visible {
+  outline-color: var(--atelier-rail-ink);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today :is(.lw-next-step, .lw-desk) {
+  align-items: start;
+  align-content: start;
+  padding: clamp(var(--space-4), 3vw, var(--space-6));
+  gap: var(--space-3);
+  background: var(--atelier-sheet);
+  border: 1px solid var(--atelier-edge);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today .lw-next-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today .lw-next-step .lw-actions {
+  grid-column: 1 / -1;
+  justify-content: start;
+  margin: 0;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today .lw-next-step .lw-actions button.is-primary {
+  background: var(--atelier-accent);
+  color: var(--atelier-on-accent);
+  border: 1px solid var(--atelier-accent);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-desk {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-desk h2 {
+  font: 600 clamp(24px, 3vw, 34px)/1.17 var(--atelier-display);
+  margin-bottom: var(--space-2);
+  letter-spacing: -.035em;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-paper-stack {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  transform: none;
+  background: transparent;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-paper-sheet {
+  min-height: 0;
+  transform: none;
+  box-shadow: none;
+  background: var(--atelier-paper);
+  color: var(--text);
+  border: 1px solid var(--atelier-edge);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-paper-sheet :is(.lw-paper-cap,.lw-paper-preview,.lw-paper-foot) {
+  margin-block: var(--space-2);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-paper-sheet :is(.lw-paper-cap,.lw-paper-foot,.lw-paper-message) {
+  color: var(--text-dim);
+}
+
+@media (min-width: 1024px) {
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today > :not(.lw-next-step,.lw-desk) {
+    grid-column: 1 / -1;
+  }
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) :is(.home-karten .hk, .lernwelt .lw-study-actions article, .einst-fenster) {
+  background: var(--atelier-sheet);
+  border-color: var(--atelier-edge);
+  box-shadow: none;
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .home-karten .hk {
+  border-inline-start: 3px solid var(--atelier-accent);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .einst-nav {
+  background: var(--atelier-paper);
+  border-color: var(--atelier-edge);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .einst-nav button.on {
+  color: var(--atelier-accent);
+  background: var(--atelier-tint);
+}
+
+:where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .einst-inhalt h2 {
+  font-family: var(--atelier-display);
+  font-size: clamp(22px,3vw,34px);
+}
+
+@media (max-width: 760px) {
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"], [data-dokument="an"]) #main > #menueband {
+    background: var(--atelier-rail);
+    color: var(--atelier-rail-ink);
+    border-color: var(--atelier-rail);
+    --bg-side: var(--atelier-rail);
+    --bg-card: var(--atelier-rail);
+    --bg-hover: var(--atelier-rail-active);
+    --bg-input: var(--atelier-rail);
+    --text: var(--atelier-rail-ink);
+    --text-dim: var(--atelier-rail-dim);
+    --text-faint: var(--atelier-rail-dim);
+    --accent-text: var(--atelier-rail-ink);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) #menueband :is(.mb-rechts,.mb-klapp) {
+    background: var(--atelier-rail);
+    box-shadow: none;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact {
+    gap: var(--space-2);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact .lw-goal {
+    width: 100%;
+    grid-template-columns: 1fr;
+    align-self: stretch;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-hero-compact .lw-goal button {
+    min-height: var(--touch-min);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-workspace-intro {
+    flex-basis: 100%;
+  }
+
+  /* Flex mit Umbruch statt gleich breiter Spalten (E819): drei Drittel von
+     330 px sind 97 px, „+ PDF öffnen" braucht rund 110 — das „n" lag unter
+     dem Rand. Kein Knopf schrumpft unter sein Wort; was nicht passt, geht
+     in eine eigene Zeile (test657). */
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-workspace-actions {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-workspace-actions > button {
+    flex: 1 0 auto;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-workspace-actions button {
+    min-width: 0;
+    padding-inline: var(--space-2);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today .lw-goal {
+    align-self: center;
+    flex: 0 0 auto;
+    padding: var(--space-2);
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today .lw-next-step .lw-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today .lw-next-step .lw-actions button {
+    flex: 1 1 auto;
+  }
+}
+
+#studio-window-menu[hidden] { display: none; }
+
+/* Windows legt die echten Fensterknöpfe über die erste Zeile. Nur diese
+   Zeile belegt die Overlay-Höhe. PDF-Reiter und Papier beginnen darunter. */
+html[data-windows-titelleiste] {
+  --windows-kopf: env(titlebar-area-height, 48px);
+  --windows-kopf-flaeche: #202124;
+  --windows-kopf-text: #f5f4f2;
+}
+html[data-windows-titelleiste][data-theme="light"] {
+  --windows-kopf-flaeche: #f3f1ee;
+  --windows-kopf-text: #252423;
+}
+html[data-windows-titelleiste] body #main > #studio-bar {
+  display: flex;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  box-sizing: border-box;
+  height: var(--windows-kopf);
+  min-height: 0;
+  padding: 0 calc(100% - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100%) + var(--space-2))
+    0 calc(env(titlebar-area-x, 0px) + var(--space-2));
+  gap: var(--space-1);
+  background: var(--windows-kopf-flaeche);
+  color: var(--windows-kopf-text);
+  border-color: var(--line);
+  border-radius: 0;
+  app-region: drag;
+}
+html[data-windows-titelleiste] #studio-bar button {
+  app-region: no-drag;
+  color: inherit;
+  height: min(38px, calc(var(--windows-kopf) - 4px));
+  min-height: 0;
+}
+html[data-windows-titelleiste] #studio-bar button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+html[data-windows-titelleiste] #studio-bar .studio-icon {
+  flex: none;
+  width: 38px;
+  min-width: 0;
+}
+html[data-windows-titelleiste] #studio-bar .studio-monogram {
+  width: 30px;
+  height: min(30px, calc(var(--windows-kopf) - 6px));
+  background-size: contain;
+}
+html[data-windows-titelleiste] #studio-bar .studio-search {
+  flex: 0 1 340px;
+  min-width: 0;
+  margin-inline-end: auto;
+}
+html[data-windows-titelleiste] body[data-dokument="an"] #main {
+  grid-template-rows: var(--windows-kopf) auto minmax(0, 1fr) !important;
+}
+html[data-windows-titelleiste] body[data-dokument="an"] #main > #studio-bar {
+  display: flex !important;
+}
+html[data-windows-titelleiste] body[data-dokument="an"] #main > #reiterleiste {
+  grid-row: 2 !important;
+}
+html[data-windows-titelleiste] body[data-dokument="an"] #main > #scroll {
+  grid-row: 3 !important;
+}
+html[data-windows-titelleiste] body:is(.fokus, [data-dokument="an"]) #studio-bar > :not(#studio-window-menu) {
+  display: none;
+}
+@media (max-width: 760px) {
+  html[data-windows-titelleiste] #studio-bar > :not(#studio-window-menu, #studio-search) {
+    display: none;
+  }
+  html[data-windows-titelleiste] #studio-bar .studio-search > :is(kbd, span:not([data-sym])) {
+    display: none;
+  }
+  html[data-windows-titelleiste] #studio-bar .studio-search {
+    flex-basis: 38px;
+    justify-content: center;
+  }
+}
+@media (forced-colors: active) {
+  html[data-windows-titelleiste] body #main > #studio-bar {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
 }

@@ -125,16 +125,86 @@ try {
         (dark ? 'dunkel' : 'hell') + '-nachher.png') });
     }
 
+    const dock = page.locator('.document-pdf-dock');
+    const blitz = dock.getByRole('button', { name: 'Elektro', exact: true });
+    const dockKasten = await dock.boundingBox();
+    pass(label + ': die PDF-Kopfzeile bleibt die Redion-Dokumentansicht',
+      await page.locator('.document-topbar [data-document-action="exit"]').count() === 1 &&
+      await page.locator('.document-topbar [data-document-action="print"]').count() === 1);
+    const zeiger = dock.getByRole('button', { name: 'Auswahl und Hand', exact: true });
+    await zeiger.click();
+    const ersterModus = await page.locator('.document-studio').getAttribute('data-ink-tool');
+    await zeiger.click();
+    const zweiterModus = await page.locator('.document-studio').getAttribute('data-ink-tool');
+    pass(label + ': der Zeiger wechselt direkt zwischen Auswahl und Hand',
+      [ersterModus, zweiterModus].sort().join(',') === 'schreiben,select');
+    const formMenue = dock.getByRole('button', {
+      name: width > 550 ? 'Linien und Pfeile' : 'Weitere Schnellwerkzeuge', exact: true
+    });
+    await formMenue.click();
+    await dock.locator('.gfx-tb-menue').getByRole('button', { name: 'Pfeil', exact: true }).click();
+    pass(label + ': der Schnellbefehl aktiviert die echte PDF-Pfeilform',
+      await page.locator('.document-stage[data-aktiv] .blatt-marken[data-tool="arrow"]').count() === 1 &&
+      await page.locator('.document-stage[data-aktiv] [data-act="formart"][data-form="arrow"]').getAttribute('aria-pressed') === 'true');
+    await page.keyboard.press('Escape');
+    pass(label + ': PDF nutzt eine Werkzeuggalerie am unteren Rand',
+      !!dockKasten && dockKasten.y > height * .72 &&
+      await page.locator('.document-drawingbar:visible').count() === 1);
+    const weiter = dock.getByRole('button', { name: 'Weitere Werkzeuge', exact: true });
+    const vorBlitz = await blitz.boundingBox();
+    const sichtbareKarten = () => dock.locator('[data-karte]:visible').evaluateAll(karten =>
+      karten.map(karte => (karte as HTMLElement).dataset.karte).join(','));
+    const ersteKarten = await sichtbareKarten();
+    await weiter.click();
+    const zweiteKarten = await sichtbareKarten();
+    pass(label + ': Edgeless blättert in ganzen Karten und klemmt die letzte Gruppe',
+      zweiteKarten !== ersteKarten && (width < 900 ||
+        (ersteKarten === 'notiz,stifte,formen' && zweiteKarten === 'formen,diagramme,vorlagen')),
+      JSON.stringify({ ersteKarten, zweiteKarten }));
+    await dock.getByRole('button', { name: 'Vorherige Werkzeuge', exact: true }).click();
+    pass(label + ': die Rückrichtung zeigt wieder die Startgruppe', await sichtbareKarten() === ersteKarten);
+    const nachBlitz = await blitz.boundingBox();
+    pass(label + ': Werkzeugkarten blättern, Blitz bleibt am gleichen Ort',
+      !!vorBlitz && !!nachBlitz && vorBlitz.x === nachBlitz.x && nachBlitz.width >= 44);
+    await blitz.click();
+    const menue = dock.locator('.gfx-tb-menue');
+    const fachzeichen = menue.getByRole('button', { name: 'Fachzeichen', exact: true });
+    pass(label + ': Fachzeichen und Schaltplan gemeinsam unter Elektro',
+      await fachzeichen.isVisible() &&
+      await menue.getByRole('button', { name: 'Schaltplan und Simulation', exact: true }).isVisible());
+    if (capture) await page.screenshot({ path: path.join(folder, width + '-elektro.png') });
+    await fachzeichen.click();
+    await page.waitForFunction(() => document.querySelector<HTMLElement>('.document-studio')?.dataset.inkTool === 'zeichen');
+    pass(label + ': Fachzeichen bleibt das echte Dokumentwerkzeug',
+      await page.locator('.document-stage[data-aktiv] .blatt-marken[data-tool="zeichen"]').count() === 1);
+    const pdfWerkzeuge = dock.getByRole('button', { name: 'PDF-Werkzeuge', exact: true });
+    const optionen = dock.locator('[data-document-action="ink-options"]');
+    await pdfWerkzeuge.click();
+    await optionen.click();
+    pass(label + ': PDF-Werkzeuge öffnen die vorhandenen Zeichenoptionen',
+      await page.locator('.document-studio').getAttribute('data-ink-options') === 'open');
+    pass(label + ': geöffnete Optionen enthalten keine zweite Werkzeugreihe',
+      await page.locator('.document-stage .blatt-werk > [data-wz]:visible').count() === 0);
+    await page.keyboard.press('Escape');
+
     await page.locator('[data-document-action="view"]').first().click();
     const jump = page.locator('.document-position');
+    await jump.waitFor({ state: 'visible' });
+    // Während des Öffnens verändert die Bewegung nur den sichtbaren Massstab.
+    await page.waitForFunction(() =>
+      (document.querySelector('.document-position')?.getBoundingClientRect().height ?? 0) >= 44,
+      null, { timeout: 2500 });
+    const sprungknopf = await jump.evaluate((el: HTMLButtonElement) => ({
+      art: el.tagName, hoehe: el.getBoundingClientRect().height, name: el.getAttribute('aria-label')
+    }));
     pass(label + ': direkter Sprung ist ein echter, zugänglicher Knopf',
-      await jump.evaluate((el: HTMLButtonElement) =>
-        el.tagName === 'BUTTON' && el.getBoundingClientRect().height >= 44 &&
-        el.getAttribute('aria-label')?.includes('springen') === true));
+      sprungknopf.art === 'BUTTON' && sprungknopf.hoehe >= 44 &&
+      sprungknopf.name?.includes('springen') === true, JSON.stringify(sprungknopf));
 
     await jump.click();
     await page.locator('#fq').fill('4');
     await page.locator('[data-a="ok"]').click();
+    await page.locator('#fq').waitFor({ state: 'detached' });
     await page.waitForFunction(() =>
       (document.querySelector('.document-position')?.textContent || '').includes('4/6'));
     state = await progress(page);
@@ -146,13 +216,15 @@ try {
     await jump.click();
     await page.locator('#fq').fill('999');
     await page.locator('[data-a="ok"]').click();
+    await page.locator('#fq').waitFor({ state: 'detached' });
     state = await progress(page);
     pass(label + ': ungültige Seitenzahl ändert den Lesestand nicht',
       state.value === 4 && (await jump.textContent()) === 'Seite 4/6');
 
     await jump.click();
     await page.locator('#fq').fill('3');
-    await page.locator('[data-a="zu"]').click();
+    await page.getByRole('button', { name: 'Abbrechen', exact: true }).click();
+    await page.locator('#fq').waitFor({ state: 'detached' });
     state = await progress(page);
     pass(label + ': Abbrechen verwirft die Eingabe',
       state.value === 4);

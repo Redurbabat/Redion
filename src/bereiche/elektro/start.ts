@@ -193,7 +193,40 @@ const Elektrostart = (() => {
     App.zeigeSonder('Elektro', zeichnen);
   };
 
-  return { oeffne, zeichnen, zuletzt, wege };
+  /** Gemeinsames Blitzmenü für Arbeitsflächen und Dokumente. */
+  const werkzeugmenue = (schliessen: () => void, planOeffnen: () => void): HTMLElement => {
+    const liste = document.createElement('div');
+    liste.className = 'gfx-tb-liste gfx-tb-befehlsliste';
+    const eintrag = (name: string, zeichen: string, tun: () => void): void => {
+      const knopf = document.createElement('button');
+      knopf.type = 'button';
+      const symbol = document.createElement('span');
+      symbol.dataset.sym = zeichen;
+      symbol.setAttribute('aria-hidden', 'true');
+      knopf.append(symbol, document.createTextNode(name));
+      knopf.addEventListener('click', () => {
+        schliessen();
+        tun();
+      });
+      liste.append(knopf);
+    };
+    const gruppen = wege();
+    const plan = gruppen.flatMap(g => g.eintraege).find(e => e.id === 'e-plan');
+    if (plan) eintrag('Schaltplan und Simulation', plan.zeichen, planOeffnen);
+    eintrag('Elektrotechnik öffnen', 'bolt', oeffne);
+    for (const gruppe of gruppen) {
+      const werkzeuge = gruppe.eintraege.filter(e => e.id !== 'e-plan');
+      if (!werkzeuge.length) continue;
+      const titel = document.createElement('h3');
+      titel.textContent = gruppe.gruppe;
+      liste.append(titel);
+      for (const e of werkzeuge) eintrag(e.name, e.zeichen, () => e.tun());
+    }
+    Register.symbole.fuelle(liste);
+    return liste;
+  };
+
+  return { oeffne, zeichnen, zuletzt, wege, werkzeugmenue };
 })();
 
 (window as any).Elektrostart = Elektrostart;
@@ -243,5 +276,15 @@ if (typeof Register !== 'undefined' && (Register as any).kontext) {
       }
     } catch { /* ohne Register bleibt die Kante leer, die Seite läuft weiter */ }
     return raus;
+  });
+}
+
+/* E829 (§5): das Werkzeugmenü geht an andere Bereiche über den Ereignisbus,
+   nicht über den Namen `Elektrostart`. */
+if (typeof Ereignisse !== 'undefined' && typeof Ereignisse.horche === 'function' && typeof ARTEN !== 'undefined') {
+  Ereignisse.horche(ARTEN.frageElektroMenue, (daten: unknown) => {
+    const d = daten as { schliessen?: unknown; planOeffnen?: unknown } | undefined;
+    if (typeof d?.schliessen !== 'function' || typeof d?.planOeffnen !== 'function') return undefined;
+    return Elektrostart.werkzeugmenue(d.schliessen as () => void, d.planOeffnen as () => void);
   });
 }

@@ -3203,6 +3203,13 @@ const App = (() => {
             if (seite2)
                 beobachter.observe(seite2);
         }
+        GfxExchange.bindIO({ zip: Einlesen.zipLesenAusBlob, read: Dateien.alsBlob, remove: Dateien.weg, pdf: PdfOriginal.ausBildern, documents: AffineImport.file,
+            pack: files => Austausch.zipSchreiben(files),
+            save: async (blob, name, owner) => (await Dateien.ablegen(new File([blob], name, { type: blob.type }), { blockId: owner })).id });
+        GfxInspector.bindSession({ author: () => ({ id: Konten.aktiv().id, name: Store.getMeta('nutzer', Konten.aktiv().name || 'Ich') }),
+            mentions: () => [...Konten.alle().map((person) => ({ id: person.id, name: person.name, kind: 'person' })),
+                ...Object.values(Store.cache.blocks).filter(page => page.alive !== false && page.type === 'page' && Konten.darf('lesen', page.id))
+                    .map(page => ({ id: page.id, name: page.text || 'Ohne Titel', kind: 'page' }))], openPage: id => oeffne(id) });
         Seitenleiste.binde({
             oeffne, aktuelleSeite, kuerzlich, kommendeTermine, seitenMenue, suche, papierkorb
         });

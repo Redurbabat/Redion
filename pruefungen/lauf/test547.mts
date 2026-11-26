@@ -149,7 +149,7 @@ const karten = await seite.evaluate(
 + '  return { antwort: String(antwort).slice(0, 160), vorher: vorher,\n'
 + '           nachher: nachher.length, neu: neu.length,\n'
 + '           typen: Array.from(new Set(neu.map(c => c.type))),\n'
-+ '           geteilt: eine, protokoll: prot.ids.length };\n'
++ '           geteilt: eine, protokoll: prot.ids.length, trainer: neu.every(c=>c.quiz?.format=== "flashcard" && c.quiz?.kapitel === "Kapitel 4 — Karten") };\n'
 + '})()') as any;
 
 console.log('    Antwort: ' + karten.antwort);
@@ -159,6 +159,7 @@ console.log('    Frage/Antwort getrennt: ' + JSON.stringify(karten.geteilt));
 
 p('Die Lernwelt zählt drei neue Karten', Number(karten.neu) === 3,
   karten.fehler || (karten.neu + ' statt 3'));
+p('KI-Karten sind auch im Trainer als Kartenset verfügbar', karten.trainer === true);
 p('Es sind echte flashcard-Blöcke',
   JSON.stringify(karten.typen) === '["flashcard"]', JSON.stringify(karten.typen));
 p('Frage und Antwort stehen getrennt',

@@ -1,41 +1,7 @@
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/schale/aufbau/seitenansicht.ts (npm run bauen:ts). */
-/* ============================================================================
- * schale/aufbau/seitenansicht.ts — der Umschalter über der Seite
- * ----------------------------------------------------------------------------
- * ERZEUGT — NICHT VON HAND ÄNDERN.
- * Die Quelle ist `src/schale/aufbau/seitenansicht.ts`. `npm run bauen:ts`
- * schreibt daraus `quell/schale/aufbau/seitenansicht.js`; `test105` meldet es
- * vorher.
- * ----------------------------------------------------------------------------
- * DREI BLICKE AUF EINE SEITE, nicht drei Seiten (E690). Der Katalog steht in
- * `register/seitenansichten.ts`; hier steht, wie man wechselt und was der
- * Wechsel am Block ändert.
- *
- * DREI DINGE, DIE DARAN LEICHT SCHIEFGEHEN
- *
- * 1. DAS FEHLENDE FELD IST DER NORMALFALL. Jede Seite, die es heute gibt,
- *    trägt kein `seitenAnsicht` — und muss weiter das zeigen, was sie immer
- *    gezeigt hat. `art()` fällt deshalb auf `Register.seitenansichten.VORGABE`
- *    ('redion') zurück, nicht auf den ersten Eintrag des Katalogs (das wäre
- *    'seite', und damit wären über Nacht alle Cover weg). §9.
- *
- * 2. DER UMSCHALTER GEHÖRT NICHT IN DIE KOPFZEILE. AFFiNE hat ihn dort, und
- *    der erste Entwurf wollte es nachbauen — `test40` hält aber fest, dass am
- *    Telefon in `#topbar` GENAU zwei Knöpfe sichtbar sind (Zurück und
- *    Seitenmenü), und `test573 §8` verlangt drei Umschaltknöpfe à 44 px auch
- *    am Telefon. Beides zugleich geht nicht. Er steht deshalb als erstes
- *    Element IN der Seite, also unter der Brotkrume — auf dem Bildschirm
- *    dieselbe Ecke wie bei AFFiNE, nur eine Zeile tiefer.
- *
- * 3. ER IST KEINE EIGENE KNOPFREIHE. `schale/bedienung/segment.ts` gibt es
- *    seit E441-Umfeld, es ist von `test425`, `test427` und `test429` bewacht
- *    (Radiogruppe, roving tabindex, sichtbarer Fokus, Markierung nicht nur
- *    über Farbe) — und es war bis heute an keiner einzigen Stelle benutzt.
- *    Eine zweite Knopfreihe daneben zu bauen wäre §8 in Reinform.
- *    Darum trägt der gewählte Knopf `aria-checked`, nicht `aria-pressed`:
- *    drei sich ausschliessende Möglichkeiten sind eine Radiogruppe, nicht
- *    drei Schalter.
- * ==========================================================================*/
+/* Dieselbe Seite lässt sich als Redion-Dokument oder als Fläche öffnen.
+   Der Umschalter liest den Katalog. Alte schlanke Ansichten fallen auf
+   Redion zurück, ohne gespeicherte Dokumente umzuschreiben. */
 
 const Seitenansicht = (() => {
 

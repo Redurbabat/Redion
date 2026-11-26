@@ -214,8 +214,11 @@ const dok = await telefon.evaluate(async () => {
   (window as any).__t221seite = s.id;
 
   const tinte = (el: Element): number => {
+    /* Nur ein GEZEICHNETES Kind zählt (E827): die Beschriftung der
+       Werkzeugzeile ist am Telefon `display:none` und meldet left 0 — der
+       erste Knopf steht bei 30 px. */
     const kn = [...el.childNodes].find(n => n.nodeType === 3 && (n.textContent || '').trim())
-      || el.firstElementChild;
+      || [...el.children].find(c => c.getClientRects().length > 0);
     if (!kn) return -1;
     if (kn.nodeType === 3) {
       const rg = document.createRange();
@@ -278,8 +281,11 @@ const ohneDok = await telefon.evaluate(async () => {
   await new Promise(r => setTimeout(r, 700));
 
   const tinte = (el: Element): number => {
+    /* Nur ein GEZEICHNETES Kind zählt (E827): die Beschriftung der
+       Werkzeugzeile ist am Telefon `display:none` und meldet left 0 — der
+       erste Knopf steht bei 30 px. */
     const kn = [...el.childNodes].find(n => n.nodeType === 3 && (n.textContent || '').trim())
-      || el.firstElementChild;
+      || [...el.children].find(c => c.getClientRects().length > 0);
     if (!kn) return -1;
     if (kn.nodeType === 3) {
       const rg = document.createRange();

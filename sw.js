@@ -34,11 +34,11 @@ const ich = self;
 /** Der Name der Ablage. Muss `KONSTANTEN.ABLAGE_NAME` gleichen — siehe
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
-const VERSION = 'notizen-v1619';
+const VERSION = 'notizen-v1707';
 /** Der Stempel über den Grundstock — geschrieben von `dienststand.mts`,
  *  von Hand nicht anfassen. Er steht NEBEN der Nummer, nicht in ihr:
  *  `test143` prüft an `VERSION` die Form `notizen-v<Zahl>`. */
-const INHALT = '5905a57e40ccd138';
+const INHALT = '9287167e9c05c19d';
 /* DER ABLAGENAME FOLGT DEM INHALT, NICHT DER NUMMER (E610).
    Hier stand `const ABLAGE = VERSION;`. Solange die Nummer nur steigt, geht
    das gut — sie steigt aber nicht immer: ein `git revert` nimmt sw.ts und
@@ -79,6 +79,10 @@ const GRUNDSTOCK = [
     './quell/core/gfx/history.js',
     './quell/core/gfx/shapes.js',
     './quell/core/gfx/toolbar.js',
+    './quell/core/gfx/objects.js',
+    './quell/core/gfx/exchange.js',
+    './quell/core/gfx/inspector.js',
+    './quell/bereiche/dateien/affine.js',
     './quell/core/ink/geometry.js',
     './quell/core/export/pdfWriter.js',
     './quell/core/ink/shapes.js',
@@ -187,6 +191,12 @@ const GRUNDSTOCK = [
     './quell/bereiche/bloecke/arten/gedankenkarte.js',
     './quell/fremd/pdfjs/daten.js',
     './quell/fremd/pdfjs/laden.js',
+    /* E820: drei Skripte aus `index.html` standen nicht im Grundstock und
+       fehlten offline (test87, test143). `library.js` wird wie pdf.js erst beim
+       Gebrauch geladen und gehört trotzdem hierher (§28). */
+    './quell/fremd/pdf-lib/laden.js',
+    './quell/fremd/pdf-lib/library.js',
+    './quell/fremd/perfect-freehand/ink.js',
     './quell/bereiche/pdf/ink-menu.js',
     './quell/bereiche/pdf/ink-ruler.js',
     './quell/bereiche/pdf/marken.js',
@@ -196,8 +206,9 @@ const GRUNDSTOCK = [
     './quell/bereiche/bloecke/arten/blatt.js',
     './quell/bereiche/elektro/simulation.js',
     './quell/bereiche/bloecke/arten/schaltplan.js',
-    './batterie-labor-kern.js',
-    './batterie-aufgaben.js',
+    './quell/bereiche/bloecke/arten/schematico-import.js',
+    './quell/bereiche/elektro/batterie-labor-kern.js',
+    './quell/bereiche/elektro/batterie-aufgaben.js',
     './quell/bereiche/bloecke/arten/planflaeche.js',
     /* E769: nachgeladen mit der Relais-Werkstatt, trotzdem offline da (§28) */
     './quell/bereiche/bloecke/arten/relais-kern.js',
@@ -353,6 +364,7 @@ const GRUNDSTOCK = [
     './quell/schale/stil/datenbanken.css',
     './quell/schale/stil/ki.css',
     './quell/schale/stil/werkzeuge.css',
+    './quell/fremd/affine-toolbar/vorschauen.css',
     './quell/schale/stil/ansichten.css',
     './quell/schale/stil/einstellungen.css',
     './quell/schale/stil/tabelle.css',

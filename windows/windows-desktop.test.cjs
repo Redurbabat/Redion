@@ -117,3 +117,19 @@ test('no dependency points to a local folder (the project itself would be packed
   assert.deepEqual(lokal, [], 'lokale Abhängigkeiten: ' + JSON.stringify(lokal));
   assert.equal(Object.prototype.hasOwnProperty.call(deps, 'redion'), false);
 });
+
+test('L268: a refused unload asks instead of trapping the window', () => {
+  /* Gegenprobe: REDION_MAIN auf den Stand vor L268 zeigen lassen. */
+  const source = fs.readFileSync(process.env.REDION_MAIN || path.join(__dirname, 'main.cjs'), 'utf8');
+  const at = source.indexOf("'will-prevent-unload'");
+  assert.ok(at > 0, 'main.cjs must handle will-prevent-unload');
+  const body = source.slice(at, source.indexOf('\n    });', at));
+  assert.match(body, /showMessageBoxSync\(/, 'it asks with a native dialog');
+  assert.match(body, /buttons:\s*\['Bleiben',\s*'Trotzdem schliessen'\]/, 'stay is the first button');
+  assert.match(body, /defaultId:\s*0/, 'Enter keeps the window open');
+  assert.match(body, /cancelId:\s*0/, 'Escape keeps the window open');
+  assert.match(body, /if \(choice === 1\) event\.preventDefault\(\)/, 'only the explicit choice closes');
+  assert.match(body, /if \(systemEnding \|\| !mainWindow\) \{ event\.preventDefault\(\); return; \}/,
+    'a system shutdown is never held up');
+  assert.match(source, /'session-end', \(\) => \{ systemEnding = true;/, 'shutdown sets the flag');
+});

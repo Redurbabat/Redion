@@ -266,6 +266,58 @@ keine PDF-Punkte wie beim Blatt. `raumVersion: 1` ist diese Deutung; ein
 Block ohne das Feld ist Fassung 1. Wer die Deutung je ändert, hebt die
 Zahl an und wandelt beim Lesen — nie stillschweigend.
 
+**Gruppen, Sperren und Reihenfolge auf der Seitenfläche** (26. November 2026):
+Ein Element in `shapes` darf zusätzlich `groupId: string` und `locked: true`
+tragen. Gleiche nichtleere Gruppenkennungen wählen und bewegen sich gemeinsam;
+eine Kopie bekommt eine neue Gruppenkennung. Auflösen entfernt `groupId`,
+Entsperren entfernt `locked`. Beide Angaben sind optional; bestehende Formen
+werden nicht migriert. Sperren einer Gruppe schliesst ihre internen Verbinder
+mit ein. Die Reihenfolge der Formen in `shapes` bestimmt ihre Zeichenreihenfolge;
+Verbinder bleiben darunter und zählen beim schrittweisen Anordnen nicht mit.
+
+Die erweiterten Bearbeitungsregeln gelten auch im Whiteboard. PDF-Marken
+verwenden für die Sperre weiterhin `gesperrt`; die gemeinsame Übersicht bildet
+diesen Wert nur für ihre Bedienung ab. Ältere Clients bewahren optionale Felder,
+erzwingen die Sperre aber nicht. Sie ist ausdrücklich keine Sicherheitsgrenze.
+Die Felder und ihre Kennungen müssen in JSON und `.redion` erhalten bleiben.
+
+**Weitere optionale Flächenfelder** (E831): `groupPath: string[]` speichert die
+Gruppen vom innersten zum äussersten Knoten; `groupId` ist der letzte Eintrag.
+Ohne Pfad entspricht `groupId` einer einfachen Gruppe. Auflösen nimmt eine Ebene
+zurück. Kopieren vergibt für alle Pfade eigene Gruppenkennungen.
+`rotation: number` dreht Formen um ihre lokale Mitte, im Uhrzeigersinn in Grad.
+Freihandstriche drehen ihre Punkte. PDF benutzt unverändert sein Feld `dreh`.
+`art: 'frame'` mit `x,y,w,h,text,frameOrder` bezeichnet einen Präsentationsrahmen;
+`art: 'attachment'` mit `dateiId,fileName` bezeichnet eine Datei auf der Fläche.
+Verbinder dürfen `route: 'straight'|'curve'|'orthogonal'` und
+`sourceAnchor`/`targetAnchor: 'auto'|'top'|'right'|'bottom'|'left'` tragen.
+`objectComments` enthält lokale Einträge `{id,text,created,resolved}`; bestehende
+Kommentarbereiche und Benachrichtigungsdienste werden dadurch nicht ersetzt.
+`affineSource` bewahrt die ursprünglichen JSON-Werte eines importierten Objekts.
+
+Das eigenständige Austauschformat `{format:'redion-canvas',version:1,shapes}`
+ist keine vollständige Redion-Sicherung. Mit Anhängen liegt `canvas.json`
+in einem ZIP, dazu `assets` als Zuordnung von alten Datei-IDs zu `{path,mime}`.
+Beim Einlesen werden Datei-, Objekt- und Gruppen-IDs neu vergeben. Eine
+vollständige `.redion`-Sicherung bleibt für Dokumentblöcke und den Arbeitsbereich
+zuständig. Dynamische Bibliotheksregeln stehen als Liste unter dem Meta-Schlüssel
+`bibliothek:dynamic-collections` und werden mit der bestehenden Sicherung erfasst.
+
+**Ergänzung E832:** `objectComments` darf zusätzlich `author: {id,name}`,
+`replies: [{id,text,created,author,mentions}]` und
+`mentions: [{id,name,kind:'person'|'page'}]` enthalten. Es bleiben optionale
+Objektfelder in derselben Sicherung. Der Abgleich führt Objekte, PDF-Marken,
+Kommentare und Antworten anhand ihrer Kennungen zusammen; ein gleichzeitiges
+Löschen und Bearbeiten wird zur Entscheidung erhalten.
+
+Importierte Formen dürfen `fillColor`, `cornerRadius`, `strichBreite`, `dash`
+und `fontSize` als optionale Angaben behalten. Die Quellwerte liegen daneben
+in `affineSource`. Vollständige Dokumentsnapshots werden als neue Seiten unter
+einer Importseite angelegt. Der Originalexport ist dort ein wirklicher
+Dateianhang; nicht unterstützte Blockarten sind sichtbare JSON-Codeblöcke.
+Die Rohdaten eines Blocks enthalten Kinderkennungen statt vervielfachter
+Unterbäume. Das Originalarchiv bewahrt die vollständige ursprüngliche Struktur.
+
 **Die Ansicht einer Seite** (E690): ein Seitenblock darf `seitenAnsicht`
 tragen — `'seite'`, `'flaeche'` oder `'redion'`. **Ein Block ohne das Feld
 ist nicht kaputt, sondern von gestern**, und er bekommt die Redion-Ansicht:
@@ -319,9 +371,10 @@ Seitenblock trägt dann `shapes` und `raumVersion` — **dieselben Felder mit
 derselben Bedeutung wie ein `whiteboard`-Block** (oben). Das ist kein
 zweites Format und keine Ähnlichkeit, sondern dieselbe Liste, gelesen und
 gezeichnet von derselben Stelle (`GfxShapes` in `src/core/gfx/shapes.ts`).
-Auf der Seitenfläche entstehen heute fünf der Arten — `stift`, `linie`,
-`pfeil`, `rechteck`, `ellipse` —; die übrigen (`notiz`, `text`, `bild`,
-`verbindung`) liest sie, weil das Whiteboard sie schreibt.
+Die Seitenfläche speichert auch Haftnotizen (`notiz`) und Verbindungen
+(`verbindung`) mit denselben Feldern. Bei Verbindungen bleiben die Form-IDs
+in `von` und `nach` beim Verschieben erhalten. Auswahlrahmen, Vorschau und
+laufende Zeigerbewegungen sind reine Ansichts-Zustände.
 
 Zwei Dinge dazu:
 

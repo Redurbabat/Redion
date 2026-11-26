@@ -1,5 +1,7 @@
 # CLAUDE.md — Regeln für Redion
 
+**Beginne jeden Redion-Auftrag mit dem [Graphify-Bericht](graphify-out/GRAPH_REPORT.md).** Danach lies die Projektregeln in dieser Datei und folge der Reihenfolge in [AGENTS.md](AGENTS.md).
+
 Redion ist eine Notiz-, Datenbank- und Wissens-App im Stil von Notion.
 Sie ist local-first, läuft direkt im Browser, kann ohne Konto benutzt werden
 und lässt sich optional mit einem Server auf Cloudflare erweitern.
@@ -930,7 +932,7 @@ baut `npm run bauen:ts` die Inseln ZUERST.
 
 ## 30. Tests / Prüfungen  **[hart]**
 
-**Prüfungen sind Pflicht.** Heute sind es 577 Läufe unter
+**Prüfungen sind Pflicht.** Heute sind es 590 Läufe unter
 `pruefungen/lauf/testNNN.mts`.
 
 *Die Zahl stand hier bis zum 12. September 2026 auf 323 — hundertfünfzehn
@@ -2248,6 +2250,128 @@ Blöcke b643_10 bis b643_29 und „verschluesselt=0“. Aus
 `codex/redion-visual-cloud-mcp` in PR #213 übernommen. Gezählt am
 19. November: `ls pruefungen/lauf/test*.mts | wc -l` sagt 577.*
 
+*Und 578: `test644` — Arbeitsschritte landen ganz oder gar nicht (E800).
+Redur am 24. November nach der Notion-Analyse: „Mache mit der grosste
+anderung ohen viel test", im Fragebogen „Transaktionen" und „Nur
+Pflicht-Datentests". Er liest IMMER direkt aus IndexedDB, nie aus
+`Store.cache`, und lässt `addBlock` einen Block mit einer Funktion darin
+schreiben — `put` wirft DataCloneError. Gegen den alten Stand rot mit 9 von
+15 und der Zeile, um die es geht: der Elternteil stand mit der neuen
+Kennung auf der Platte, das Kind nicht. Einmal stürzte er gegen den alten
+Stand ab, statt rot zu melden — der neue Block war nach 120 ms gar nicht
+auf der Platte, und `null.text` warf; seither liest er mit `?.`. Gezählt am
+24. November, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+578.*
+
+*Und 579: `test645` — zwei Fenster überschreiben einander nicht (E801). Zwei
+echte Tabs über einen Prüfserver auf freiem Port, der Dienst-Arbeiter
+gesperrt, und jeder Wettlauf echt: B schreibt, bevor es As Nachricht
+verarbeitet hat. Gegen E800 rot mit 10 von 18 — „Ein Satz" stand wieder auf
+der Platte statt „A hat geschrieben", und As Kind fiel aus der Seite. Einmal
+war er aus dem FALSCHEN Grund grün: §2 fragte nach „A" im Text, und
+„Anfang" enthält selbst eines (§55.2). Sein breiterer Begleitlauf fand
+nebenbei E800s überzähligen `pagehide`-Zuhörer über `test189`. Gezählt am
+24. November, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+579.*
+
+*Und 580: `test646` — Speicher voll, und nichts geht still verloren (E802).
+Der volle Speicher ist echt: Chromium bekommt über CDP ein Kontingent knapp
+über dem Startbestand. Zweimal mass er zuerst gar keinen vollen Speicher —
+eine Seite aus lauter „x" schrumpfte in der komprimierenden Ablage, und ein
+nach dem ersten Besuch abgesenktes Kontingent nahm Chromium nicht an; beides
+fanden Sonden, nicht der Lauf. Gegen E801 rot mit 4 von 10: keine Meldung,
+keine Rückfrage, und das Fenster war mit allem Ungesicherten zu. Gezählt am
+24. November, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+580.*
+
+*Und 581: `test647` — Umwandeln verliert nichts (E803, §18 hart). Er wandelt
+einen abgehakten, roten To-do-Block mit Unterblock auf jeden Sonderweg und
+liest danach die Ablage: gegen den alten Stand rot mit 8 von 19, und die
+schwerste Zeile war „→ Datenbank: der alte Block ist nicht endgültig weg —
+false" — Text und Unterblock waren gelöscht, nicht im Papierkorb. Gezählt am
+24. November, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+581.*
+
+*Und 582: `test648` — eine Waise wird beim Laden wieder eingehängt (E804).
+Er schreibt einen Block an der App vorbei auf die Platte, der auf eine
+Seite zeigt, ohne in ihrem `content` zu stehen, und lädt neu. Gegen den
+alten Stand rot mit 2 von 7: der Block war da und nirgends zu sehen. Und er
+hält die Gegenseite: ein Block im Papierkorb kommt nicht zurück, und ein
+zweites Laden hängt nichts doppelt ein. Gezählt am 24. November, im selben
+Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 582.*
+
+*Und 583: `test649` — Redion bittet von selbst um dauerhaften Speicher
+(E805). Er umwickelt `navigator.storage.persist` mit einem Zähler und
+verlangt genau eine Bitte je Sitzung, keine in der nächsten und wieder
+eine nach 30 Tagen. Gegen den alten Stand rot mit 3 von 6 — null Bitten,
+obwohl der Helfer seit Monaten bereitlag. Und er war einmal aus einem
+Grund rot, der nicht ihn betraf: `test105` fand in ihm eine unbenutzte
+Konstante (`noUnusedLocals`, §52.6). Gezählt am 24. November, im selben
+Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt 583.*
+
+*Und 584: `test650` — die Bibliothek zeichnet die Deckel in Schritten
+(E806). Er legt 10 000 Seiten an, startet neu und misst mit
+`PerformanceObserver`, wie lange der Hauptfaden steht: gegen den alten
+Stand 3,6 s und 1,5 s, danach 0,8 s. Einmal war er aus dem FALSCHEN Grund
+rot: er erwartete „120 von 10000", und Redion legt beim Start selbst eine
+Seite an — es waren 10 001. Seither liest er die Gesamtzahl aus der Grenze.
+Gezählt am 24. November, im selben Bogen: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 584.*
+
+*Und 585: `test651` — die Suche ordnet nach Passung, nicht nur nach Datum
+(E807, B31). Ohne Browser: er führt das GEBAUTE `query.js` in einer Sandbox
+aus. Seine Goldliste ist mit Absicht gemein — in jedem Fall ist das
+schlechter passende Dokument das jüngere, sonst wäre der alte Stand, in dem
+bei gleicher Stufe das Datum entschied, zufällig grün. Gegen den alten Stand
+rot mit 5 von 9: „Netzkabel bestellen" vor „Kabel". Gezählt am
+24. November, im selben Bogen: `ls pruefungen/lauf/test*.mts | wc -l` sagt
+585.*
+
+*Und 586: `test652` — ein Speichern, das nicht vor der Platte fertig meldet, ist
+keines (E809). Ein zweiter `flush` fand nichts mehr vor und meldete „gespeichert",
+während der erste noch schrieb; ein Neuladen verlor die Seite — gemessen in
+9 von 10 Fällen, und der Stand davor lag im selben Zustand. Der Lauf zählt
+nach dem Neuladen mit einer eigenen Verbindung. Gegenprobe mit der gebauten
+Datei von vor E809: rot. Gezählt am 24. November: `ls pruefungen/lauf/test*.mts |
+wc -l` sagt 586.*
+
+*Und 587: `test654` — die Einstellungen wie die iPhone-Einstellungen, mit Redions
+eigenen Mitteln (E812): Gruppen als Karten, farbige Quadrate, Titel und Suche;
+am Telefon zwei Seiten mit Schiebefahrt, Wischen vom Rand und Glasleiste beim
+Rollen, am Rechner zwei Spalten. Gebaut von einem Haiku-Agenten, im Hauptzweig
+nachgefahren (65 von 65). Vor dem Umbau rot (Gegenprobe), auch der Kontrast
+der Quadrate (vorher 1,69 : 1). Zwei ältere Zusagen stimmen mit dieser Form
+nicht mehr zusammen — `test580` (Akzent am gewählten Zeichen) und `test581`
+(Name der Wisch-Animation); Redur entscheidet sie. Gezählt am 24. November:
+`ls pruefungen/lauf/test*.mts | wc -l` sagt 587.*
+
+*Und 588: `test655` — EINE Kapsel am Telefon, Zeichen über dem Wort (E813).
+Redurs Foto vom 24. November zeigte auf dem echten iPhone die Zeichen über den
+Wörtern („Dok▢ente"); im Chromium des Containers war es sauber. Der Lauf misst
+für jeden Reiter, dass das Zeichen ganz über dem Wort steht, in einer festen
+Box, und dass um die Kapsel nur EINE Lichtkante liegt — Standard und Glass
+Wheel, hell und dunkel. Gegen den Stand davor rot mit 16 Zeilen. Zwei Zeilen
+bleiben beim Einchecken rot und sind ein echter Fund: das aktive Wort liegt im
+Glass Wheel bei 3,4 : 1, nicht 4,5. Gebaut von einem Haiku-Agenten, im
+Hauptzweig nachgefahren. Gezählt am 24. November: `ls pruefungen/lauf/test*.mts
+| wc -l` sagt 588.*
+
+*Und 589: `test656` — ein Knoten der Gedankenkarte bricht nicht mitten im Wort
+(E818). Eine frisch angelegte Karte zeigte „Zentrales Thema" 84 px breit als
+„Zentr / ales / Them / a": der Knoten ist absolut gesetzt in einer Welt ohne
+Breite. Gefunden hat es das BILD eines Startfensters, nicht ein Lauf — und
+der erste Anlauf des Laufs war GRÜN, weil er eine Karte mit drei Knoten
+vorgab; erst die frisch angelegte Karte (§0) ist rot (§55.2). Gezählt am
+25. November: `ls pruefungen/lauf/test*.mts | wc -l` sagt 590 (mit test657).*
+
+*Und 590: `test657` — die Knöpfe im Kopf der Bibliothek zeigen ihr ganzes Wort
+(E819). Die Atelier-Haut legte sie am Telefon in drei gleich breite Spalten,
+und „+ PDF öffnen" stand bei 390 px als „PDF öffne" da. Gegen den Stand davor
+rot mit 1 von 28; gegen den ERSTEN Reparaturstand rot mit 2 — „+ Neu" wurde
+nun gequetscht. Ein Lauf, der jeden Knopf der Zeile misst statt den einen
+gemeldeten, fand die Nachbarstelle selbst (§45). Gezählt am 25. November: `ls
+pruefungen/lauf/test*.mts | wc -l` sagt 590.*
+
 ### Die Befehle
 
 ```txt
@@ -2269,7 +2393,7 @@ npm run pruefen -- --schnell         der schnelle Lauf: jeder Lauf ohne
                                      4 min 14 s gemessen — genau ihn
                                      fährt die CI (E745)
 npm run pruefen -- --schnell --liste zeigt nur, was er fahren würde
-npm run pruefen                      alle 577 Läufe
+npm run pruefen                      alle 590 Läufe
 node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
 ```
 
@@ -2366,7 +2490,7 @@ der Lauf die Sache wirklich hält (§55.2).
 
 ## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
 
-Von 577 Läufen sind diese sechs die, die man beim Namen kennt:
+Von 590 Läufen sind diese sechs die, die man beim Namen kennt:
 
 | Lauf | Was er hält |
 |---|---|

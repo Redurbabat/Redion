@@ -327,6 +327,67 @@ p('Angezeigt steht sie NICHT immer am selben Platz', new Set(mischung.plaetze).s
 p('Die Buchstaben a) b) c) d) folgen der Anzeige', mischung.buchstabenOk);
 p('Text und Auswertung folgen dem gespeicherten Platz — alle Richtigen angekreuzt heisst „Richtig."', mischung.zuordnungOk);
 
+
+console.log('\n9 · Lernset-Test ohne Wiederholungen und ohne Änderung des Lernplans');
+const setTest=await seite.evaluate(async()=>{
+  const w={Store,Trainer,Produktwelten} as any;
+  const name='MCP Testset';
+  const page=w.Store.addPage(null,{text:name});
+  const ids=['Spannung','Strom'].map((answer,i)=>w.Store.addBlock(page.id,'flashcard',{
+    text:'Frage '+i+' :: '+answer,quiz:{kind:'mc',format:'single_select',kapitel:name,thema:name,topic:name,subject:'ET',
+      optionen:[{text:answer,richtig:true},{text:'Andere',richtig:false}]}
+  }).id);
+  w.Produktwelten.lernen('trainer');
+  await new Promise(r=>setTimeout(r,350));
+  const root=document.querySelector('.lernwelt')!;
+  const set=Array.from(root.querySelectorAll<HTMLElement>('.lw-trainer-kapitel')).find(x=>x.dataset.trKapitel===name);
+  const progress=set?.querySelector('progress')?.max;
+  set?.querySelector<HTMLElement>('[data-tr-start="test"]')?.click();
+  const seen:string[]=[];
+  for(let i=0;i<2;i++){
+    const round=root.querySelector<HTMLElement>('.lw-trainer-runde');
+    if(!round)break;
+    seen.push(round.dataset.trId||'');
+    round.querySelector<HTMLInputElement>('input[data-tr-option="1"]')?.click();
+    round.querySelector<HTMLElement>('[data-tr-pruefen]')?.click();
+    root.querySelector<HTMLElement>('[data-tr-weiter]')?.click();
+  }
+  return {progress,seen,ids,done:!!root.querySelector('.lw-trainer-ergebnis-seite'),
+    untouched:ids.every((id:string)=>!w.Store.getBlock(id).sr)};
+});
+p('Set zeigt Anzahl und Fortschritt',setTest.progress===2);
+p('Test fragt jede Karte genau einmal',setTest.seen.length===2&&new Set(setTest.seen).size===2&&setTest.seen.every(id=>setTest.ids.includes(id)));
+p('Test endet auch bei falschen Antworten',setTest.done);
+p('Test verändert den Wiederholungsplan nicht',setTest.untouched);
+
+
+console.log('\n10 · Match mit eindeutigen Paaren, Fehlversuch und ohne Lernplanänderung');
+const matchTest=await seite.evaluate(async()=>{
+  const w={Store,Produktwelten} as any;
+  const name='MCP Matchset';
+  const page=w.Store.addPage(null,{text:name});
+  const ids=['Volt','Ampere','Ohm','Watt','Watt'].map((answer,i)=>w.Store.addBlock(page.id,'flashcard',{
+    text:'Begriff '+i+' :: '+answer,quiz:{kind:'schreiben',format:'flashcard',kapitel:name,thema:name,musterloesung:[answer]}
+  }).id);
+  w.Produktwelten.lernen('trainer');
+  await new Promise(r=>setTimeout(r,350));
+  const root=document.querySelector('.lernwelt')!;
+  const set=Array.from(root.querySelectorAll<HTMLElement>('.lw-trainer-kapitel')).find(x=>x.dataset.trKapitel===name);
+  set?.querySelector<HTMLElement>('[data-tr-start="match"]')?.click();
+  const count=root.querySelectorAll('[data-tr-match="links"]').length;
+  const click=(side:string,i:number)=>root.querySelector<HTMLElement>(`[data-tr-match="${side}"][data-index="${i}"]`)?.click();
+  click('links',0);click('rechts',1);
+  const wrong=root.querySelector('.lw-match-meldung')?.textContent?.includes('passt nicht');
+  const noProgress=root.querySelector('progress')?.value===0;
+  for(let i=0;i<count;i++){click('rechts',i);click('links',i);}
+  const finished=root.querySelector('.lw-training-result')?.textContent||'';
+  return {count,wrong,noProgress,finished,untouched:ids.every((id:string)=>!w.Store.getBlock(id).sr)};
+});
+p('Match schliesst doppelte Antworten aus',matchTest.count===3);
+p('Fehlversuch zählt nicht als Paar',matchTest.wrong&&matchTest.noProgress);
+p('Match zeigt Ergebnis und Fehlversuche',matchTest.finished.includes('3 / 3')&&matchTest.finished.includes('1 Fehlversuche'));
+p('Match verändert den Lernplan nicht',matchTest.untouched);
+
 await browser.close();
 server.close();
 console.log('\n' + '─'.repeat(60));

@@ -152,9 +152,9 @@ const Store = (() => {
             const [bloecke, sammlungen, ansichten, metadaten] = await Promise.all([
                 all('blocks'), all('collections'), all('views'), all('meta')
             ]);
-            bloecke.forEach((b) => cache.blocks[b.id] = b);
-            sammlungen.forEach((c) => cache.collections[c.id] = c);
-            ansichten.forEach((v) => cache.views[v.id] = v);
+            bloecke.forEach((b) => { revAbnehmen('blocks', b); cache.blocks[b.id] = b; });
+            sammlungen.forEach((c) => { revAbnehmen('collections', c); cache.collections[c.id] = c; });
+            ansichten.forEach((v) => { revAbnehmen('views', v); cache.views[v.id] = v; });
             metadaten.forEach((m) => cache.meta[m.k] = m.v);
         }
         catch (err) {
@@ -258,6 +258,7 @@ const Store = (() => {
             return null;
         if (patch && 'checked' in patch && b.type === 'todo')
             patch = Object.assign({}, patch, { erledigtAm: patch.checked ? now() : null });
+        merkeBasis('blocks', b);
         Object.assign(b, patch, { edited: now(), geaendertVon: getMeta('nutzer', '') || 'Ich' });
         save('blocks', b);
         return b;
@@ -550,6 +551,7 @@ const Store = (() => {
         const c = cache.collections[id];
         if (!c)
             return null;
+        merkeBasis('collections', c);
         Object.assign(c, patch);
         if (!('edited' in patch))
             c.edited = now();
@@ -560,6 +562,7 @@ const Store = (() => {
         const v = cache.views[id];
         if (!v)
             return null;
+        merkeBasis('views', v);
         Object.assign(v, patch);
         if (!('edited' in patch))
             v.edited = now();
@@ -696,8 +699,12 @@ const Store = (() => {
             const id = schluessel.slice(trenn + 1);
             if (!['blocks', 'collections', 'views', 'meta'].includes(fach))
                 continue;
+            if (fach !== 'meta' && pending.has(schluessel))
+                continue;
             try {
                 const satz = await get(fach, fach === 'meta' ? id : id);
+                if (fach !== 'meta')
+                    revAbnehmen(fach, satz);
                 if (fach === 'meta') {
                     if (satz)
                         cache.meta[satz.k] = satz.v;
@@ -743,81 +750,357 @@ const Store = (() => {
             await Promise.all([...unterwegs].map(p => p.catch(() => { })));
     };
     const pending = new Map();
+    const VERSIONIERT = new Set(['blocks', 'collections', 'views']);
+    const plattenRev = new Map();
+    const basisStand = new Map();
+    const revAbnehmen = (fach, satz) => {
+        if (!satz || !VERSIONIERT.has(fach))
+            return;
+        if (typeof satz.rev === 'number')
+            plattenRev.set(fach + ':' + satz.id, satz.rev);
+        if ('rev' in satz)
+            delete satz.rev;
+    };
+    const merkeBasis = (fach, satz) => {
+        if (!satz)
+            return;
+        const k = fach + ':' + satz.id;
+        if (pending.has(k) || basisStand.has(k))
+            return;
+        try {
+            basisStand.set(k, JSON.parse(JSON.stringify(satz)));
+        }
+        catch { }
+    };
+    const gleichWert = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+    const zusammenMitFenster = (basis, hier, dort) => {
+        if (basis && typeof Zusammen !== 'undefined' && Zusammen.dreiWege) {
+            const r = Zusammen.dreiWege(basis, hier, dort);
+            return { satz: r.satz, konflikte: r.konflikte || [] };
+        }
+        const satz = { ...hier };
+        const konflikte = [];
+        const namen = new Set([...Object.keys(hier || {}), ...Object.keys(dort || {})]);
+        for (const k of namen) {
+            const H = hier?.[k], D = dort?.[k];
+            if (gleichWert(H, D))
+                continue;
+            if (H === undefined) {
+                satz[k] = D;
+                continue;
+            }
+            if (D === undefined)
+                continue;
+            if (k === 'edited' || k === 'created') {
+                satz[k] = String(H) > String(D) ? H : D;
+                continue;
+            }
+            if (Array.isArray(H) && Array.isArray(D) && (k === 'content' || k === 'viewIds')) {
+                satz[k] = [...H, ...D.filter((x) => !H.includes(x))];
+                continue;
+            }
+            konflikte.push({ pfad: [k], feld: k, hier: H, dort: D,
+                grund: 'Zwei Fenster haben dasselbe Feld zugleich geändert — dieses Fenster hat seine Fassung behalten.' });
+        }
+        return { satz, konflikte };
+    };
     let timer = null;
+    let eilig = false;
+    let speicherVoll = false;
+    let wiederholung = null;
+    const WIEDERHOLEN_MS = 15000;
+    const istVoll = (err) => {
+        const e = err;
+        return !!e && (e.speicherVoll === true || e.name === 'QuotaExceededError' ||
+            /quota/i.test(String(e.message ?? '')));
+    };
+    const meldeVoll = () => {
+        speicherVoll = true;
+        const n = pending.size;
+        warne('Der Speicher dieses Geräts ist voll: ' + n + ' Änderung' + (n === 1 ? ' ist' : 'en sind') +
+            ' noch nicht gesichert. Redion versucht es alle 15 Sekunden wieder. ' +
+            'Gib Platz frei oder lege eine Sicherung an — und schliesse dieses Fenster nicht, ' +
+            'solange diese Meldung steht.');
+        if (!wiederholung)
+            wiederholung = setTimeout(() => {
+                wiederholung = null;
+                flush().catch(() => { });
+            }, WIEDERHOLEN_MS);
+    };
+    const vollVorbei = () => {
+        if (!speicherVoll || pending.size)
+            return;
+        speicherVoll = false;
+        if (wiederholung) {
+            clearTimeout(wiederholung);
+            wiederholung = null;
+        }
+        warne('Der Speicher hat wieder Platz — alle Änderungen sind gesichert.');
+    };
+    let naechsterSchritt = 1;
+    let offenerSchritt = 0;
+    const schrittEltern = new Map();
+    const schrittWurzel = (s) => {
+        let w = s;
+        while (schrittEltern.has(w) && schrittEltern.get(w) !== w)
+            w = schrittEltern.get(w);
+        let x = s;
+        while (x !== w) {
+            const n = schrittEltern.get(x);
+            schrittEltern.set(x, w);
+            x = n;
+        }
+        return w;
+    };
+    const schritteVereinen = (a, b) => {
+        const wa = schrittWurzel(a), wb = schrittWurzel(b);
+        if (wa !== wb) {
+            schrittEltern.set(wb, wa);
+            schrittGroesse.set(wa, (schrittGroesse.get(wa) || 0) + (schrittGroesse.get(wb) || 0));
+            schrittGroesse.delete(wb);
+        }
+        return wa;
+    };
+    const schrittGroesse = new Map();
+    const aktuellerSchritt = () => {
+        if (!offenerSchritt) {
+            offenerSchritt = naechsterSchritt++;
+            const zu = () => { offenerSchritt = 0; };
+            if (typeof queueMicrotask === 'function')
+                queueMicrotask(zu);
+            else
+                Promise.resolve().then(zu);
+        }
+        return offenerSchritt;
+    };
     const save = (store, val) => {
         if (store === 'blocks' || store === 'collections')
             datenGeaendert();
-        pending.set(store + ':' + val.id, { store, val });
+        const k = store + ':' + val.id;
+        let s = aktuellerSchritt();
+        const vorher = pending.get(k);
+        if (vorher && schrittWurzel(vorher.schritt) !== schrittWurzel(s))
+            s = schritteVereinen(vorher.schritt, s);
+        const w = schrittWurzel(s);
+        if (!vorher || schrittWurzel(vorher.schritt) !== w)
+            schrittGroesse.set(w, (schrittGroesse.get(w) || 0) + 1);
+        pending.set(k, { store, val, schritt: w });
+        if ((schrittGroesse.get(w) || 0) > 1)
+            eilig = true;
         clearTimeout(timer);
-        timer = setTimeout(flush, (typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.SCHREIB_PAUSE_MS : 400);
+        timer = setTimeout(() => {
+            flush().catch((err) => { if (!istVoll(err))
+                throw err; });
+        }, eilig ? 0 :
+            ((typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.SCHREIB_PAUSE_MS : 400));
     };
+    let dauerhaftGefragt = false;
+    const DAUERHAFT_SCHLUESSEL = 'redion:speicher-dauerhaft:gefragt';
+    const DAUERHAFT_ABSTAND_MS = 30 * 24 * 3600 * 1000;
+    function dauerhaftBitten() {
+        if (dauerhaftGefragt || DEMO || typeof AppEinstellung === 'undefined')
+            return;
+        dauerhaftGefragt = true;
+        try {
+            const zuletzt = Number(localStorage.getItem(DAUERHAFT_SCHLUESSEL) || 0);
+            if (zuletzt && Date.now() - zuletzt < DAUERHAFT_ABSTAND_MS)
+                return;
+            localStorage.setItem(DAUERHAFT_SCHLUESSEL, String(Date.now()));
+        }
+        catch { }
+        AppEinstellung.speicherSichern().catch(() => false);
+    }
+    let laufend = Promise.resolve();
     const flush = () => {
+        clearTimeout(timer);
+        eilig = false;
         if (!db) {
             pending.clear();
+            schrittEltern.clear();
+            schrittGroesse.clear();
             return Promise.resolve();
         }
         const schluessel = [...pending.keys()];
-        const posten = [...pending.values()];
+        const posten = [...pending.values()].map(x => ({ ...x, schritt: schrittWurzel(x.schritt) }));
         pending.clear();
+        posten.forEach(x => schrittGroesse.delete(x.schritt));
         if (!posten.length)
-            return Promise.resolve();
+            return laufend.then(() => undefined, () => undefined);
         const zurueckInDenStapel = (welche) => {
             welche.forEach(x => {
                 const k = x.store + ':' + x.val.id;
-                if (!pending.has(k))
+                const da = pending.get(k);
+                if (!da) {
                     pending.set(k, x);
+                    const w = schrittWurzel(x.schritt);
+                    schrittGroesse.set(w, (schrittGroesse.get(w) || 0) + 1);
+                }
+                else {
+                    da.schritt = schritteVereinen(da.schritt, x.schritt);
+                }
             });
         };
-        let fertig;
-        try {
-            const faecher = [...new Set(posten.map(x => x.store))];
-            const t = tx(faecher, 'readwrite');
-            const gescheitert = [];
-            posten.forEach((eintrag) => {
-                const { store, val } = eintrag;
+        const melde = (eintrag, err) => {
+            if (typeof Reporter !== 'undefined')
+                Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store: eintrag.store, id: eintrag.val.id, ...(err ? { err } : {}) });
+        };
+        const ganzOderGarNicht = (menge) => new Promise((ok, nein) => {
+            let t;
+            try {
+                t = tx([...new Set(menge.map(x => x.store))], 'readwrite');
+            }
+            catch (err) {
+                nein(err);
+                return;
+            }
+            let ersterFehler = null;
+            const raus = [];
+            t.oncomplete = () => ok(raus);
+            t.onerror = t.onabort = () => nein(ersterFehler || t.error ||
+                new Error('Das Schreiben wurde abgebrochen — nichts davon ist auf der Platte'));
+            const abbrechen = (eintrag, err) => {
+                if (!ersterFehler)
+                    ersterFehler = err;
+                melde(eintrag, err);
                 try {
-                    const r = t.objectStore(store).put(val);
-                    r.onerror = (e) => {
-                        e.preventDefault();
-                        gescheitert.push(eintrag);
-                        if (typeof Reporter !== 'undefined')
-                            Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id });
-                    };
+                    t.abort();
+                }
+                catch { }
+            };
+            const schreibe = (eintrag, wert) => {
+                const r = t.objectStore(eintrag.store).put(wert);
+                r.onerror = () => { if (!ersterFehler)
+                    ersterFehler = r.error; melde(eintrag, r.error); };
+            };
+            for (const eintrag of menge) {
+                const id = String(eintrag.val.id);
+                const k = eintrag.store + ':' + id;
+                if (!VERSIONIERT.has(eintrag.store)) {
+                    try {
+                        schreibe(eintrag, eintrag.val);
+                    }
+                    catch (err) {
+                        abbrechen(eintrag, err);
+                        return;
+                    }
+                    raus.push({ k, store: eintrag.store, id, rev: null, zusammengefuehrt: false, konflikte: [] });
+                    continue;
+                }
+                let lesen;
+                try {
+                    lesen = t.objectStore(eintrag.store).get(eintrag.val.id);
                 }
                 catch (err) {
-                    gescheitert.push(eintrag);
-                    if (typeof Reporter !== 'undefined')
-                        Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id, err });
+                    abbrechen(eintrag, err);
+                    return;
                 }
-            });
-            fertig = new Promise((ok, nein) => {
-                t.oncomplete = () => {
-                    if (!gescheitert.length)
-                        return ok(undefined);
-                    zurueckInDenStapel(gescheitert);
-                    nein(new Error(gescheitert.length + ' von ' + posten.length +
-                        ' Sätzen liessen sich nicht schreiben'));
+                lesen.onsuccess = () => {
+                    try {
+                        const platte = lesen.result;
+                        const plattenNr = platte && typeof platte.rev === 'number' ? platte.rev : undefined;
+                        const erwartet = plattenRev.get(k);
+                        let zusammengefuehrt = false;
+                        let konflikte = [];
+                        if (platte && (plattenNr !== undefined || erwartet !== undefined) && plattenNr !== erwartet) {
+                            const dort = { ...platte };
+                            delete dort.rev;
+                            const r = zusammenMitFenster(basisStand.get(k) ?? null, eintrag.val, dort);
+                            Object.assign(eintrag.val, r.satz);
+                            if ('rev' in eintrag.val)
+                                delete eintrag.val.rev;
+                            zusammengefuehrt = true;
+                            konflikte = r.konflikte;
+                        }
+                        const neu = (plattenNr ?? 0) + 1;
+                        schreibe(eintrag, { ...eintrag.val, rev: neu });
+                        raus.push({ k, store: eintrag.store, id, rev: neu, zusammengefuehrt, konflikte });
+                    }
+                    catch (err) {
+                        abbrechen(eintrag, err);
+                    }
                 };
-                t.onerror = t.onabort = () => {
-                    zurueckInDenStapel(posten);
-                    nein(t.error ||
-                        new Error('Das Schreiben wurde abgebrochen — nichts davon ist auf der Platte'));
-                };
+            }
+        });
+        const nachSchreiben = (liste) => {
+            let zeichnen = false;
+            for (const g of liste) {
+                if (g.rev !== null)
+                    plattenRev.set(g.k, g.rev);
+                basisStand.delete(g.k);
+                if (g.zusammengefuehrt)
+                    zeichnen = true;
+                if (g.konflikte.length && typeof Zusammen !== 'undefined') {
+                    try {
+                        Zusammen.merke(g.id, g.store, g.konflikte);
+                    }
+                    catch { }
+                }
+            }
+            if (liste.some(g => g.konflikte.length) && typeof Zusammen !== 'undefined') {
+                try {
+                    Zusammen.melde();
+                    Zusammen.hinweisen();
+                }
+                catch { }
+            }
+            if (zeichnen)
+                notify('fremd');
+            if (liste.some(g => g.store === 'blocks'))
+                dauerhaftBitten();
+        };
+        const fertig = ganzOderGarNicht(posten).then((liste) => { nachSchreiben(liste); vollVorbei(); return undefined; }, async (ersterFehler) => {
+            let voll = istVoll(ersterFehler);
+            const schritte = new Map();
+            posten.forEach(x => {
+                const liste = schritte.get(x.schritt);
+                if (liste)
+                    liste.push(x);
+                else
+                    schritte.set(x.schritt, [x]);
             });
-        }
-        catch (err) {
-            fertig = Promise.all(posten.map((eintrag) => put(eintrag.store, eintrag.val).then(() => undefined, () => { zurueckInDenStapel([eintrag]); return 'kaputt'; }))).then(ergebnisse => {
-                const kaputt = ergebnisse.filter(x => x === 'kaputt').length;
-                if (kaputt)
-                    throw new Error(kaputt + ' von ' + posten.length +
-                        ' Sätzen liessen sich nicht schreiben');
-                return undefined;
-            });
-        }
-        fertig.then(() => meldeAnAndereFenster('geaendert', schluessel), () => { });
+            const gescheitert = [];
+            const gelandet = [];
+            for (const menge of schritte.values()) {
+                try {
+                    nachSchreiben(await ganzOderGarNicht(menge));
+                    menge.forEach(x => gelandet.push(x.store + ':' + x.val.id));
+                }
+                catch (err) {
+                    gescheitert.push(...menge);
+                    if (istVoll(err))
+                        voll = true;
+                }
+            }
+            if (gelandet.length)
+                meldeAnAndereFenster('geaendert', gelandet);
+            if (!gescheitert.length) {
+                vollVorbei();
+                return 'gemeldet';
+            }
+            zurueckInDenStapel(gescheitert);
+            if (voll)
+                meldeVoll();
+            throw Object.assign(new Error(gescheitert.length + ' von ' + posten.length +
+                ' Sätzen liessen sich nicht schreiben — ihre Arbeitsschritte bleiben ganz im Stapel'), { speicherVoll: voll });
+        });
+        fertig.then((x) => { if (x !== 'gemeldet')
+            meldeAnAndereFenster('geaendert', schluessel); }, () => { });
+        const aufraeumen = () => { if (!pending.size) {
+            schrittEltern.clear();
+            schrittGroesse.clear();
+        } };
+        fertig.then(aufraeumen, aufraeumen);
+        laufend = fertig.then(() => undefined, () => undefined);
         return fertig;
     };
-    window.addEventListener('beforeunload', () => { flush().catch(() => { }); });
+    window.addEventListener('beforeunload', (e) => {
+        const ungesichert = speicherVoll && pending.size > 0;
+        flush().catch(() => { });
+        if (ungesichert) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
     window.addEventListener('visibilitychange', () => { if (document.hidden)
         flush().catch(() => { }); });
     const search = (q, filter = {}) => {
@@ -1206,6 +1489,8 @@ const Store = (() => {
                     'es noch einmal.');
             });
         }
+        plattenRev.clear();
+        basisStand.clear();
         if (art === 'ersetzen') {
             cache.blocks = neu.blocks;
             cache.collections = neu.collections;
@@ -1683,6 +1968,8 @@ const Store = (() => {
         cache.views = {};
         cache.meta = {};
         cache.suchindex = {};
+        plattenRev.clear();
+        basisStand.clear();
         datenGeaendert();
         meldeAnAndereFenster('alles', []);
         if (geblieben.length) {

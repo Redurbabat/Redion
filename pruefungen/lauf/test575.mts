@@ -440,15 +440,23 @@ await pg.close();
 console.log('\n9 · Am Telefon');
 const { pg: handy, ids: ids2 } = await bauen(390, 844);
 const masse = await handy.evaluate(() =>
-  [...document.querySelectorAll<HTMLElement>('.pg-flaeche .gfx-tb-sockel [data-wz]')]
+  [...document.querySelectorAll<HTMLElement>('.pg-flaeche :is(.gfx-tb-schnell,.gfx-tb-karte,.gfx-tb-edgeless-zusatz) button')]
+    .filter(b => b.offsetParent !== null)
     .map(b => { const r = b.getBoundingClientRect();
-      return { id: b.dataset['wz'] ?? '?', w: Math.round(r.width), h: Math.round(r.height) }; }));
+      return { id: b.dataset['wz'] ?? b.dataset['a'] ?? '?', w: Math.round(r.width), h: Math.round(r.height) }; }));
 p('Die Fläche hat Werkzeuge am Telefon', masse.length >= 6, String(masse.length));
 p('Und jedes misst 44 px (§37)', masse.every(m => m.w >= 44 && m.h >= 44),
   masse.filter(m => m.w < 44 || m.h < 44).map(m => `${m.id} ${m.w}×${m.h}`).join(' · '));
-await handy.evaluate(() => {
-  document.querySelector<HTMLElement>('.pg-flaeche .gfx-tb-sockel [data-wz="stift"]')?.click();
-});
+const handyDock = handy.locator('.pg-flaeche .gfx-tb-edgeless');
+const handyStift = handyDock.getByRole('button', { name: 'Stift', exact: true });
+const zusatzBox = await handyDock.locator('.gfx-tb-edgeless-zusatz').boundingBox();
+const verlaufBox = await handyDock.locator('.gfx-tb-neben').boundingBox();
+p('Der Blitz verdeckt auf schmaler Fläche keine Verlaufswerkzeuge',
+  !!zusatzBox && !!verlaufBox && zusatzBox.x + zusatzBox.width <= verlaufBox.x);
+if (!await handyStift.isVisible()) {
+  await handyDock.getByRole('button', { name: 'Weitere Werkzeuge', exact: true }).click();
+}
+await handyStift.click();
 await handy.waitForTimeout(200);
 const k2 = await handy.evaluate(() => {
   const f = document.querySelector('.pg-flaeche')!.getBoundingClientRect();
@@ -509,6 +517,583 @@ p('Kein leeres `shapes` bleibt stehen', leerDanach.hatShapes === false,
   JSON.stringify(leerDanach));
 p('Und keine `raumVersion` ohne Formen', leerDanach.hatRaum === false,
   JSON.stringify(leerDanach));
+
+/* ==========================================================================
+ * §12 · Auswahl, Haftnotiz und gekoppelte Pfeile
+ * ======================================================================== */
+console.log('\n12 · Formen auswählen, verbinden und bearbeiten');
+const { pg: plan } = await bauen(1280, 900);
+const planId = await plan.evaluate(async () => {
+  const s = Store.addPage(null, { text: 'Zwei verbundene Formen', seitenAnsicht: 'flaeche', raumVersion: 1, shapes: [
+    { id: 'links', art: 'rechteck', x: 120, y: 300, w: 100, h: 70, farbe: '#529cca' },
+    { id: 'rechts', art: 'rechteck', x: 490, y: 360, w: 105, h: 75, farbe: '#e03e3e' }
+  ] });
+  Store.addBlock(s.id, 'text', { text: 'Seiteninhalt bleibt neben der Zeichnung erhalten.' });
+  await Store.flush();
+  App.zeichneBaum(); App.oeffne(s.id);
+  return s.id;
+});
+const planFlaeche = plan.locator('.pg-flaeche');
+await planFlaeche.locator('[data-sid="links"]').waitFor();
+const planDaten = () => plan.evaluate((id: string) => Store.getBlock(id)?.shapes, planId);
+const mittelpunkt = async (id: string) => {
+  const r = await planFlaeche.locator(`[data-sid="${id}"]`).boundingBox();
+  if (!r) throw Error('Form ohne sichtbaren Rahmen: ' + id);
+  return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+};
+const waehleWerkzeug = async (id: string) => {
+  if (id === 'zeiger') await planFlaeche.getByRole('button', { name: 'Zeiger und Hand', exact: true }).press('Enter');
+  await planFlaeche.locator(`[data-wz="${id}"]`).click();
+};
+await waehleWerkzeug('verbindung');
+const ln = await mittelpunkt('links'), re = await mittelpunkt('rechts');
+await plan.mouse.click(ln.x, ln.y);
+await plan.mouse.click(re.x, re.y);
+let stand = await planDaten() ?? [];
+const link = stand.find((s: any) => s.art === 'verbindung');
+p('Zwei Klicks speichern eine Verbindung mit den vorhandenen Form-IDs', link?.von === 'links' && link?.nach === 'rechts');
+const wegPfeil = () => planFlaeche.locator(`path[data-sid="${link?.id}"]`).getAttribute('d');
+const vorherPfeil = link ? await wegPfeil() : null;
+
+await waehleWerkzeug('zeiger');
+await plan.mouse.click(ln.x, ln.y);
+await plan.keyboard.down('Shift');
+await plan.mouse.click(re.x, re.y);
+await plan.keyboard.up('Shift');
+gleich('Umschalt-Klick zeichnet zwei Auswahlrahmen', await planFlaeche.locator('.pg-fl-formauswahl rect').count(), 2);
+await plan.mouse.move(ln.x, ln.y);
+await plan.mouse.down();
+await plan.mouse.move(ln.x + 36, ln.y + 18, { steps: 6 });
+await plan.waitForTimeout(50);
+const vorschau = link ? await wegPfeil() : null;
+p('Der Pfeil folgt noch vor dem Loslassen', !!vorschau && vorschau !== vorherPfeil);
+stand = await planDaten() ?? [];
+gleich('Ein laufender Zug bleibt aus der Speicherung', stand.slice(0, 2).map((s: any) => s.x), [120, 490]);
+await plan.mouse.up();
+stand = await planDaten() ?? [];
+gleich('Beim Loslassen wandern beide Formen um denselben Versatz', stand.slice(0, 2).map((s: any) => [s.x, s.y]),
+  [[156, 318], [526, 378]]);
+await planFlaeche.focus();
+await plan.keyboard.press('Control+z');
+stand = await planDaten() ?? [];
+gleich('Ein Rückgängig setzt beide Formen zurück', stand.slice(0, 2).map((s: any) => s.x), [120, 490]);
+await plan.keyboard.press('Control+Shift+z');
+stand = await planDaten() ?? [];
+gleich('Ein Wiederholen verschiebt wieder beide Formen', stand.slice(0, 2).map((s: any) => s.x), [156, 526]);
+
+const bewegtLinks = await mittelpunkt('links');
+await plan.mouse.move(bewegtLinks.x, bewegtLinks.y);
+await plan.mouse.down();
+await plan.mouse.move(bewegtLinks.x + 52, bewegtLinks.y - 14, { steps: 4 });
+await plan.keyboard.press('Escape');
+await plan.mouse.up();
+stand = await planDaten() ?? [];
+gleich('Escape verwirft die Vorschau ohne Positionsänderung', stand.slice(0, 2).map((s: any) => s.x), [156, 526]);
+
+const beschriftetLinks = await mittelpunkt('links');
+await plan.mouse.click(beschriftetLinks.x, beschriftetLinks.y);
+await plan.keyboard.press('ArrowRight');
+stand = await planDaten() ?? [];
+gleich('Die Pfeiltaste verschiebt nur die ausgewählte Form', stand.slice(0, 2).map((s: any) => s.x), [157, 526]);
+await plan.keyboard.press('Control+z');
+await planFlaeche.locator('[data-a="beschriften"]').click();
+const etikett = plan.getByRole('textbox').filter({ visible: true }).last();
+await etikett.fill('Quelle');
+await etikett.press('Enter');
+await plan.waitForFunction((id: string) => Store.getBlock(id)?.shapes?.some((s: any) => s.id === 'links' && s.text === 'Quelle'), planId);
+p('Das Beschriften ändert den vorhandenen Rechteckblock', await planFlaeche.getByText('Quelle', { exact: true }).count() === 1);
+
+await waehleWerkzeug('notiz');
+const brett = await planFlaeche.boundingBox();
+if (!brett) throw Error('Keine sichtbare Fläche');
+await plan.mouse.click(brett.x + 175, brett.y + 470);
+const eingabe = plan.getByRole('textbox').filter({ visible: true }).last();
+await eingabe.fill('Recherche und Rückfragen');
+await eingabe.press('Enter');
+await plan.waitForFunction((id: string) => Store.getBlock(id)?.shapes?.some((s: any) => s.text === 'Recherche und Rückfragen'), planId);
+stand = await planDaten() ?? [];
+p('Eine Haftnotiz liegt mit ihrer Beschriftung in derselben Liste', stand.some((s: any) =>
+  s.art === 'notiz' && s.text === 'Recherche und Rückfragen'));
+
+await plan.evaluate(() => Store.flush());
+await plan.reload();
+await plan.waitForFunction(() => typeof App !== 'undefined' && !!document.querySelector('#page')?.firstElementChild);
+await plan.evaluate((id: string) => App.oeffne(id), planId);
+await planFlaeche.locator('[data-sid="links"]').waitFor();
+stand = await planDaten() ?? [];
+p('Verbindung und Haftnotiz überleben das Neuöffnen', stand.some((s: any) =>
+  s.art === 'verbindung' && s.von === 'links' && s.nach === 'rechts') &&
+  stand.some((s: any) => s.art === 'notiz' && s.text === 'Recherche und Rückfragen'));
+const mobilId = await handy.evaluate(async () => {
+  const s = Store.addPage(null, { text: 'Form auf dem Telefon', seitenAnsicht: 'flaeche', raumVersion: 1, shapes: [
+    { id: 'touchform', art: 'rechteck', x: 60, y: 320, w: 100, h: 72, farbe: '#529cca' }
+  ] });
+  await Store.flush();
+  App.zeichneBaum(); App.oeffne(s.id);
+  return s.id;
+});
+await handy.waitForFunction(() => document.getElementById('ru-vorhang')?.hidden === true);
+const mobilForm = handy.locator('.pg-flaeche [data-sid="touchform"]');
+const mobilBox = await mobilForm.boundingBox();
+if (!mobilBox) throw Error('Keine Form für die Touch-Prüfung');
+const mobilZoom = await handy.locator('.pg-fl-sicht').evaluate(el => new DOMMatrix(getComputedStyle(el).transform).a);
+const touch = await handy.context().newCDPSession(handy);
+const mx = mobilBox.x + mobilBox.width / 2, my = mobilBox.y + mobilBox.height / 2;
+await touch.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{x: mx, y: my}] });
+await touch.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{x: mx + 24, y: my + 12}] });
+await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+await touch.detach();
+const mobilDanach = await handy.evaluate((id: string) => Store.getBlock(id)?.shapes?.[0], mobilId);
+p('Die Form folgt dem Touch-Zug auf dem 390-Pixel-Bildschirm', !!mobilDanach &&
+  Math.abs((mobilDanach.x - 60) * mobilZoom - 24) <= 1 && Math.abs((mobilDanach.y - 320) * mobilZoom - 12) <= 1,
+  JSON.stringify({ mobilZoom, mobilDanach }));
+const bildordner = process.env.REDION_FLAECHE_BILDER;
+if (bildordner) {
+  await plan.waitForFunction(() => document.getElementById('ru-vorhang')?.hidden === true);
+  fs.mkdirSync(bildordner, { recursive: true });
+  await plan.screenshot({ path: path.join(bildordner, 'flaeche-windows.png') });
+  await handy.screenshot({ path: path.join(bildordner, 'flaeche-mobil.png') });
+}
+
+console.log('\n13 · Grössenänderung von Formen und Verbindungen');
+const linksJetzt = await mittelpunkt('links');
+await plan.mouse.click(linksJetzt.x, linksJetzt.y);
+const groessenStart = JSON.stringify(await planDaten());
+gleich('Eine gewählte Form hat vier Eckgriffe', await planFlaeche.locator('[data-skaliergriff]').count(), 4);
+const griffOrt = () => planFlaeche.locator('[data-skaliergriff]').evaluateAll(griffe => {
+  for (const griff of griffe) {
+    const r = griff.getBoundingClientRect();
+    const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    const ziel = document.elementFromPoint(x, y);
+    if (ziel && griff.contains(ziel)) {
+      const ecke = griff.getAttribute('data-skaliergriff') ?? '';
+      return { x, y, sx: ecke.endsWith('rechts') ? 1 : -1, sy: ecke.startsWith('unten') ? 1 : -1 };
+    }
+  }
+  throw Error('Kein Eckgriff liegt frei auf der Fläche');
+});
+const pfeilVorGroesse = await wegPfeil();
+const g1 = await griffOrt();
+await plan.mouse.move(g1.x, g1.y);
+await plan.mouse.down();
+await plan.mouse.move(g1.x + 34 * g1.sx, g1.y + 24 * g1.sy, { steps: 7 });
+await plan.waitForFunction(() => document.querySelector('.pg-fl-formauswahl')?.getAttribute('transform')?.includes('scale('));
+p('Beim Skalieren folgen verbundene Pfeile der Vorschau', (await wegPfeil()) !== pfeilVorGroesse);
+gleich('Die Grössenvorschau bleibt bis zum Loslassen ausserhalb der Speicherung', JSON.stringify(await planDaten()), groessenStart);
+await plan.mouse.up();
+const standNeu = await planDaten() ?? [];
+const alt = JSON.parse(groessenStart).find((f: any) => f.id === 'links');
+const neu = standNeu.find((f: any) => f.id === 'links');
+p('Gespeicherte Form wächst am Griff und die gegenüberliegende Ecke bleibt fest',
+  neu?.w > alt.w && neu?.h > alt.h &&
+  Math.abs((g1.sx < 0 ? neu.x + neu.w : neu.x) - (g1.sx < 0 ? alt.x + alt.w : alt.x)) < 0.02 &&
+  Math.abs((g1.sy < 0 ? neu.y + neu.h : neu.y) - (g1.sy < 0 ? alt.y + alt.h : alt.y)) < 0.02);
+await plan.keyboard.press('Control+z');
+gleich('Rückgängig stellt Form und Verbindung in einem Schritt wieder her', JSON.stringify(await planDaten()), groessenStart);
+
+const g2 = await griffOrt();
+await plan.mouse.move(g2.x, g2.y);
+await plan.mouse.down();
+await plan.mouse.move(g2.x + 42 * g2.sx, g2.y + 17 * g2.sy, { steps: 5 });
+await plan.keyboard.press('Escape');
+await plan.mouse.up();
+gleich('Escape verwirft die laufende Grössenänderung', JSON.stringify(await planDaten()), groessenStart);
+gleich('Escape setzt den verbundenen Pfeil zurück', await wegPfeil(), pfeilVorGroesse);
+
+const g3 = await griffOrt();
+await plan.keyboard.down('Shift');
+await plan.mouse.move(g3.x,g3.y);
+await plan.mouse.down();
+await plan.mouse.move(g3.x+44*g3.sx,g3.y+12*g3.sy,{steps:5});
+await plan.mouse.up();
+await plan.keyboard.up('Shift');
+const proportional = (await planDaten())?.find((f: any) => f.id === 'links');
+p('Umschalt hält das Seitenverhältnis beim Ziehen', proportional?.w > alt.w &&
+  Math.abs(proportional.w / proportional.h - alt.w / alt.h) < .005);
+await plan.keyboard.press('Control+z');
+
+await planFlaeche.getByRole('button',{name:'Grösse ändern',exact:true}).press('Enter');
+await plan.locator('#fq').fill('128 × 96');
+await plan.locator('#fq').press('Enter');
+const genau = (await planDaten())?.find((f: any) => f.id === 'links');
+gleich('Tastaturbefehl setzt Breite und Höhe genau', [genau?.w, genau?.h], [128, 96]);
+await planFlaeche.focus();
+await plan.keyboard.press('Control+z');
+gleich('Nach Rückgängig sind auch die eingegebenen Masse wiederhergestellt', JSON.stringify(await planDaten()), groessenStart);
+await plan.keyboard.press('Delete');
+stand = await planDaten() ?? [];
+p('Beim Löschen einer Form verschwindet ihre Verbindung mit', !stand.some((s: any) => s.id === 'links' || s.art === 'verbindung'));
+console.log('\n14 · Werkzeuggalerie und Elektro');
+const kartenAufDerFlaeche = () => planFlaeche.locator('[data-karte]:visible').evaluateAll(karten =>
+  karten.map(karte => (karte as HTMLElement).dataset.karte).join(','));
+const zeiger = planFlaeche.getByRole('button', { name: 'Zeiger und Hand', exact: true });
+const zeigerVor = await zeiger.boundingBox();
+gleich('Die ersten drei Edgeless-Vorschauen', await kartenAufDerFlaeche(), 'notiz,stifte,formen');
+await planFlaeche.getByRole('button', { name: 'Weitere Werkzeuge', exact: true }).click();
+gleich('Die letzte Kartengruppe enthält Formen, Gedankenkarte und Vorlagen',
+  await kartenAufDerFlaeche(), 'formen,diagramme,vorlagen');
+gleich('Die Schnellwerkzeuge bleiben am selben Platz', (await zeiger.boundingBox())?.x, zeigerVor?.x);
+await zeiger.click();
+gleich('Der Zeiger wechselt mit einem Klick zur Hand', await planFlaeche.getAttribute('data-wz'), 'hand');
+await zeiger.click();
+gleich('Der nächste Klick wechselt zurück zur Auswahl', await planFlaeche.getAttribute('data-wz'), 'zeiger');
+await zeiger.press('Enter');
+p('Enter öffnet die beschrifteten Zeigermodi',
+  await planFlaeche.getByRole('button', { name: 'Hand', exact: true }).isVisible());
+await plan.keyboard.press('Escape');
+const rahmen = planFlaeche.getByRole('button', { name: 'Rahmen', exact: true });
+await rahmen.click();
+await planFlaeche.getByRole('button', { name: 'Rechteckrahmen zeichnen', exact: true }).click();
+gleich('Das Rahmenmenü aktiviert den Rechteckrahmen', await planFlaeche.getAttribute('data-wz'), 'rechteck');
+const linkKnopf = planFlaeche.getByRole('button', { name: 'Link', exact: true });
+await linkKnopf.click();
+await planFlaeche.getByRole('button', { name: 'Weblink einfügen', exact: true }).click();
+await plan.locator('#fq').fill('https://example.com/elektro');
+await plan.locator('#fq').press('Enter');
+await plan.waitForFunction((id: string) =>
+  Store.childrenOf(id).some((b: any) => b.type === 'bookmark' && !!b.flaecheOrt), planId);
+p('Ein Weblink liegt als Lesezeichen auf der Fläche', await plan.evaluate((id: string) =>
+  Store.childrenOf(id).some((b: any) => b.type === 'bookmark' && b.src === 'https://example.com/elektro' && !!b.flaecheOrt), planId));
+const formenKnopf = planFlaeche.getByRole('button', { name: 'Formen', exact: true });
+await formenKnopf.click();
+const formenMenue = planFlaeche.locator('.gfx-tb-menue');
+p('Formen öffnet eine Palette über der Werkzeugleiste', await formenMenue.isVisible() &&
+  await formenMenue.getByRole('button', { name: 'Ellipse', exact: true }).count() === 1 &&
+  await formenMenue.locator('[data-c]').count() >= 8);
+await formenMenue.getByRole('button', { name: 'Ellipse', exact: true }).click();
+gleich('Die Palette stellt das echte Ellipsenwerkzeug ein', await planFlaeche.getAttribute('data-wz'), 'ellipse');
+console.log('\n15 · Werkzeugvorschauen auf die Fläche ziehen');
+const ablage = await planFlaeche.evaluate(el => {
+  const r = el.getBoundingClientRect();
+  for (const fx of [.76, .86, .65]) {
+    for (const fy of [.30, .42, .55]) {
+      const x = r.left + r.width * fx, y = r.top + r.height * fy;
+      const hit = document.elementFromPoint(x, y);
+      if (hit && el.contains(hit) && !hit.closest('.pg-fl-notiz,.gfx-tb-sockel')) return { x, y };
+    }
+  }
+  throw Error('Kein freier Ablagepunkt für das Werkzeug');
+});
+const dreieckVorschau = planFlaeche.locator('[data-karte="formen"] [data-vorschau="triangle"]');
+const griffpunkt = async () => {
+  await dreieckVorschau.hover();
+  return dreieckVorschau.evaluate(async el => {
+    await Promise.allSettled(el.getAnimations().map(animation => animation.finished));
+    const r = el.getBoundingClientRect();
+    for (let y = r.top + 3; y < r.bottom - 2; y += 4) {
+      for (let x = r.left + 3; x < r.right - 2; x += 5) {
+        if (document.elementFromPoint(x, y) === el) return { x, y };
+      }
+    }
+    throw Error('Der Griff des Dreiecks ist verdeckt');
+  });
+};
+const vorAblage = (await planDaten())?.length || 0;
+const griff = await griffpunkt();
+await plan.mouse.move(griff.x, griff.y);
+await plan.mouse.down();
+await plan.mouse.move(ablage.x, ablage.y, { steps: 8 });
+p('Gezogenes Dreieck zeigt eine Vorschau und speichert vor dem Loslassen nichts',
+  await planFlaeche.locator('.pg-fl-dock-vorschau polygon, polygon.pg-fl-dock-vorschau').count() === 1 &&
+  (await planDaten())?.length === vorAblage);
+await plan.mouse.up();
+const abgelegtDreieck = [...((await planDaten()) || [])].reverse().find((f: any) => f.art === 'dreieck');
+p('Am Ablagepunkt liegt ein echtes, ausgewähltes Dreieck', !!abgelegtDreieck &&
+  await planFlaeche.locator('polygon[data-sid="' + abgelegtDreieck.id + '"]').count() === 1 &&
+  await planFlaeche.locator('.pg-fl-formauswahl rect').count() === 1);
+await plan.keyboard.press('Control+z');
+gleich('Eine Rückgängig-Aktion entfernt die Ablage', (await planDaten())?.length, vorAblage);
+const zweiterGriff = await griffpunkt();
+await plan.mouse.move(zweiterGriff.x, zweiterGriff.y);
+await plan.mouse.down();
+await plan.mouse.move(ablage.x, ablage.y, { steps: 5 });
+await plan.keyboard.press('Escape');
+await plan.mouse.up();
+p('Escape verwirft den Zug samt Vorschau', (await planDaten())?.length === vorAblage &&
+  await planFlaeche.locator('.pg-fl-dock-vorschau').count() === 0);
+
+const haftkarte = planFlaeche.getByRole('button', { name: 'Haftnotiz', exact: true });
+if (!await haftkarte.isVisible()) await planFlaeche.getByRole('button', { name: 'Vorherige Werkzeuge', exact: true }).click();
+const notizAblage = await planFlaeche.evaluate((el, ort) => {
+  for (const dy of [120, -120, 80, -80]) {
+    const punkt = { x: ort.x, y: ort.y + dy };
+    const ziel = document.elementFromPoint(punkt.x, punkt.y);
+    if (ziel && el.contains(ziel) && !ziel.closest('.pg-fl-notiz,.gfx-tb-sockel')) return punkt;
+  }
+  throw Error('Kein freier zweiter Ablagepunkt');
+}, ablage);
+const haftbox = await haftkarte.boundingBox();
+if (!haftbox) throw Error('Keine Haftnotizkarte sichtbar');
+await plan.mouse.move(haftbox.x + haftbox.width / 2, haftbox.y + haftbox.height / 2);
+await plan.mouse.down();
+await plan.mouse.move(notizAblage.x, notizAblage.y, { steps: 8 });
+await plan.mouse.up();
+await plan.locator('#fq').fill('Notiz aus dem Dock');
+await plan.locator('#fq').press('Enter');
+p('Die abgelegte Haftnotiz ist beschriftet und verwendet den vorhandenen Seitenspeicher',
+  (await planDaten())?.some((f: any) => f.art === 'notiz' && f.text === 'Notiz aus dem Dock') === true);
+
+const letzterGriff = await griffpunkt();
+await plan.mouse.move(letzterGriff.x, letzterGriff.y);
+await plan.mouse.down();
+await plan.mouse.move(ablage.x, ablage.y, { steps: 8 });
+await plan.mouse.up();
+const vorRahmen = (await planDaten()) || [];
+const ziele = vorRahmen.filter((f: any) => f.art === 'dreieck' || f.text === 'Notiz aus dem Dock');
+await zeiger.press('Enter');
+await planFlaeche.getByRole('button', { name: 'Rahmenauswahl', exact: true }).click();
+gleich('Der Zeigermenü-Befehl aktiviert die Rahmenauswahl', await planFlaeche.getAttribute('data-wz'), 'rahmenwahl');
+const boxen = await Promise.all(ziele.map((f: any) => planFlaeche.locator('[data-sid="' + f.id + '"]').first().boundingBox()));
+if (boxen.length !== 2 || boxen.some(box => !box)) throw Error('Zwei sichtbare Ziele für die Rahmenauswahl erwartet');
+const sichtbar = boxen.filter((box): box is NonNullable<typeof box> => !!box);
+const flaechenScroll = await planFlaeche.evaluate(el => [el.scrollLeft, el.scrollTop]);
+gleich('Das Öffnen einer Palette verschiebt nur den Fokus, ohne die Zeichenfläche zu scrollen',
+  flaechenScroll, [0, 0]);
+const ecken = await planFlaeche.evaluate((el, boxen) => {
+  const l = Math.min(...boxen.map(b => b.x)) - 12;
+  const o = Math.min(...boxen.map(b => b.y)) - 12;
+  const r = Math.max(...boxen.map(b => b.x + b.width)) + 12;
+  const u = Math.max(...boxen.map(b => b.y + b.height)) + 12;
+  const punkte = [[l, o], [r, o], [l, u], [r, u]];
+  const index = punkte.findIndex(([x, y], i) => {
+    const ziel = document.elementFromPoint(x!, y!);
+    const [endeX, endeY] = punkte[3 - i]!;
+    const ende = document.elementFromPoint(endeX!, endeY!);
+    return !!ziel && !!ende && el.contains(ziel) && el.contains(ende) &&
+      !ziel.closest('.pg-fl-notiz,.gfx-tb-sockel,.pg-fl-auswahlleiste');
+  });
+  if (index < 0) throw Error('Kein freier Ansatzpunkt um die beiden Formen');
+  return { start: punkte[index]!, ende: punkte[3 - index]! };
+}, sichtbar);
+await plan.mouse.move(ecken.start[0]!, ecken.start[1]!);
+await plan.mouse.down();
+await plan.mouse.move(ecken.ende[0]!, ecken.ende[1]!, { steps: 6 });
+const rahmenVorschau = planFlaeche.locator('.pg-fl-rahmenwahl');
+p('Rahmenauswahl zeigt ein temporäres Auswahlrechteck', await rahmenVorschau.count() === 1);
+const rahmenMasse = await rahmenVorschau.evaluate(el =>
+  Object.fromEntries(['x', 'y', 'width', 'height'].map(k => [k, el.getAttribute(k)])));
+await plan.mouse.up();
+const anzahlRahmen = await planFlaeche.locator('.pg-fl-formauswahl rect').count();
+const datenNachRahmen = await planDaten();
+const datenUnveraendert = JSON.stringify(datenNachRahmen) === JSON.stringify(vorRahmen);
+p('Rahmenauswahl erfasst beide Elemente und ändert ihre gespeicherten Daten nicht',
+  anzahlRahmen >= 2 && datenUnveraendert,
+  JSON.stringify({ anzahlRahmen, datenUnveraendert, rahmenMasse }));
+if (anzahlRahmen < 2) throw Error('Die Rahmenauswahl enthält weniger als zwei Formen.');
+
+const erstMasse = ziele.map((f: any) => ({ id:f.id, w:f.w, h:f.h }));
+await planFlaeche.getByRole('button', { name:'Grösse ändern', exact:true }).press('Enter');
+await plan.locator('#fq').fill('260 × 290');
+await plan.locator('#fq').press('Enter');
+const groesserStand = await planDaten() || [];
+const skaliert = erstMasse.map((alt: { id: string; w: number; h: number }) =>
+  ({ alt, neu: groesserStand.find((s: any) => s.id === alt.id) }));
+const erster = skaliert[0], zweiter = skaliert[1];
+p('Eine gemeinsame Grössenänderung skaliert beide Formen gleichmässig und behält ihre IDs',
+  !!erster?.neu && !!zweiter?.neu &&
+  Math.abs(erster.neu.w / erster.alt.w - zweiter.neu.w / zweiter.alt.w) < 0.002 &&
+  Math.abs(erster.neu.h / erster.alt.h - zweiter.neu.h / zweiter.alt.h) < 0.002);
+
+
+const blitz = planFlaeche.getByRole('button', { name: 'Elektro', exact: true });
+await blitz.click();
+const elMenue = planFlaeche.locator('.gfx-tb-menue');
+const elektroNamen = await elMenue.getByRole('button').allTextContents();
+p('Der Blitz enthält die vorhandenen Elektro-Wege', ['Rechner','Formelheft','Formeldreieck','Sinuskurve',
+  'Üben','Prüfung','Arbeitsplatz','Schaltplan und Simulation'].every(name => elektroNamen.includes(name)), elektroNamen.join(', '));
+const bilder = process.env.REDION_FLAECHE_BILDER;
+if (bilder) await plan.screenshot({ path: path.join(bilder, 'flaeche-elektro.png') });
+await elMenue.getByRole('button', { name: 'Schaltplan und Simulation', exact: true }).click();
+p('Elektro legt einen Schaltplan auf der geöffneten Fläche an', await plan.evaluate((id: string) =>
+  Store.childrenOf(id).some((b: any) => b.type === 'schaltplan' && !!b.flaecheOrt), planId));
+await plan.close();
+
+console.log('\n16 · Stift- und Formpaletten, Diagramme und Vorlagen');
+const { pg: palette, ids: paletteIds } = await bauen(1280, 900);
+await palette.evaluate((id: string) => {
+  App.theme('dark');
+  Store.updateBlock(id, { raumVersion: 1, shapes: [
+    { id: 'alter-rahmen', art: 'rechteck', x: 180, y: 330, w: 96, h: 52, farbe: '#529cca' }
+  ] });
+  App.zeichneSeite();
+}, paletteIds.seite);
+const paletteFlaeche = palette.locator('.pg-flaeche');
+const paletteDaten = () => palette.evaluate((id: string) => Store.getBlock(id)?.shapes ?? [], paletteIds.seite);
+const palettenMenu = paletteFlaeche.locator('.gfx-tb-menue');
+gleich('Eine gespeicherte Form ohne Füllinformation bleibt eine Kontur',
+  await paletteFlaeche.locator('[data-sid="alter-rahmen"]').getAttribute('fill'), 'none');
+const pinselKnopf = paletteFlaeche.getByRole('button', { name: 'Stift', exact: true });
+await pinselKnopf.press('Enter');
+p('Stift öffnet per Tastatur eine Palette mit Strichart, Breite und Farben',
+  await palettenMenu.getByRole('button', { name: 'Freihandstift', exact: true }).isVisible() &&
+  await palettenMenu.getByRole('button', { name: 'Textmarker', exact: true }).isVisible() &&
+  await palettenMenu.getByRole('button', { name: '7 pt', exact: true }).isVisible());
+await palettenMenu.getByRole('button', { name: 'Textmarker', exact: true }).click();
+await palettenMenu.getByRole('button', { name: '7 pt', exact: true }).click();
+await palettenMenu.getByRole('button', { name: 'Orange', exact: true }).click();
+const freieBox = await paletteFlaeche.boundingBox();
+if (!freieBox) throw Error('Keine Fläche für die Palettenprüfung');
+const paletteZiehen = async (x: number, y: number, dx: number, dy: number) => {
+  const anfang = await paletteFlaeche.evaluate((el, {x, y, dx, dy}) => {
+    const b = el.getBoundingClientRect();
+    const kandidaten = [[x, y], [b.width * .78, b.height * .42], [b.width * .72, b.height * .53],
+      [b.width * .58, b.height * .56], [b.width * .80, b.height * .62]];
+    for (const [px, py] of kandidaten) {
+      const sx = b.left + px!, sy = b.top + py!;
+      const frei = [0, .5, 1].every(t => {
+        const hit = document.elementFromPoint(sx + dx * t, sy + dy * t);
+        return !!hit && el.contains(hit) && !hit.closest('.pg-fl-notiz,.gfx-tb-sockel,.pg-fl-auswahlleiste');
+      });
+      if (frei) return {x: sx, y: sy};
+    }
+    throw Error('Kein freier Ansatzpunkt für die Malpalette');
+  }, {x, y, dx, dy});
+  await palette.mouse.move(anfang.x, anfang.y);
+  await palette.mouse.down();
+  await palette.mouse.move(anfang.x + dx, anfang.y + dy, { steps: 10 });
+  await palette.mouse.up();
+};
+await paletteZiehen(freieBox.width * 0.76, freieBox.height * 0.32, 104, 18);
+const markerForm = (await paletteDaten()).find((s: any) => s.art === 'stift');
+p('Zeichnen speichert Marker, gewählte Breite und Farbe. Die Palette bleibt dabei offen.',
+  markerForm?.marker === true && markerForm.strichBreite === 7 && markerForm.farbe === '#ffa344' &&
+  await palettenMenu.isVisible() &&
+  await paletteFlaeche.locator('path[opacity="0.38"][data-sid="' + markerForm?.id + '"]').getAttribute('stroke-width') === '7');
+await palettenMenu.getByRole('button', { name: 'Freihandstift', exact: true }).click();
+gleich('Textmarker und Freihandstift behalten getrennte Breiten',
+  await palettenMenu.getByRole('button', { name: '2.5 pt', exact: true }).getAttribute('aria-pressed'), 'true');
+await palette.keyboard.press('Escape');
+p('Escape schliesst die Palette', !(await palettenMenu.isVisible()));
+const formenPalette = paletteFlaeche.getByRole('button', { name: 'Formen', exact: true });
+if (!await formenPalette.isVisible()) await paletteFlaeche.getByRole('button', { name: 'Weitere Werkzeuge', exact: true }).click();
+await formenPalette.click();
+await palettenMenu.getByRole('button', { name: 'Raute', exact: true }).click();
+await palettenMenu.getByRole('button', { name: 'Violett', exact: true }).click();
+await palettenMenu.getByRole('button', { name: 'Gefüllt', exact: true }).click();
+if (bilder) await palette.screenshot({ path: path.join(bilder, 'formenpalette-windows.png') });
+await paletteZiehen(freieBox.width * 0.68, freieBox.height * 0.48, 102, 75);
+const raute = (await paletteDaten()).find((s: any) => s.art === 'raute');
+p('Raute ist in der gewählten Farbe gefüllt und bleibt als echte Form gespeichert',
+  raute?.gefuellt === true && raute.farbe === '#9a6dd7' &&
+  await paletteFlaeche.locator('polygon[data-sid="' + raute?.id + '"]').getAttribute('fill') === '#9a6dd7');
+await palette.reload();
+await palette.waitForFunction((id: string) => typeof App !== 'undefined' && !!Store.getBlock(id), paletteIds.seite);
+await palette.evaluate((id: string) => App.oeffne(id), paletteIds.seite);
+await paletteFlaeche.locator('polygon[data-sid="' + raute?.id + '"]').waitFor();
+p('Marker und gefüllte Raute überstehen das Neuöffnen',
+  (await paletteDaten()).some((s: any) => s.id === markerForm?.id && s.marker === true) &&
+  await paletteFlaeche.locator('polygon[data-sid="' + raute?.id + '"]').getAttribute('fill') === '#9a6dd7');
+
+const vorlagenKnopf = paletteFlaeche.getByRole('button', { name: 'Blockvorlagen', exact: true });
+if (!await vorlagenKnopf.isVisible()) await paletteFlaeche.getByRole('button', { name: 'Weitere Werkzeuge', exact: true }).click();
+await vorlagenKnopf.click();
+const vorDiagramm = await paletteDaten();
+await palettenMenu.getByRole('button', { name: 'Entscheidungsbaum', exact: true }).click();
+const diagramm = (await paletteDaten()).slice(vorDiagramm.length);
+const knotenIds = diagramm.filter((f: any) => f.art !== 'verbindung').map((f: any) => f.id);
+p('Entscheidungsvorlage enthält vier beschriftete Formen und drei echte Verbindungen',
+  diagramm.length === 7 && knotenIds.length === 4 &&
+  diagramm.filter((f: any) => f.art === 'verbindung').every((f: any) =>
+    knotenIds.includes(f.von) && knotenIds.includes(f.nach)));
+if (bilder) await palette.screenshot({ path: path.join(bilder, 'entscheidung-windows.png') });
+await paletteFlaeche.focus();
+await palette.keyboard.press('Control+z');
+gleich('Rückgängig nimmt das gesamte Diagramm in einem Schritt zurück',
+  JSON.stringify(await paletteDaten()), JSON.stringify(vorDiagramm));
+
+await vorlagenKnopf.click();
+const ablaufKarte = palettenMenu.getByRole('button', { name: 'Ablaufdiagramm', exact: true });
+const ablaufBox = await ablaufKarte.boundingBox();
+if (!ablaufBox) throw Error('Keine Vorschau für das Ablaufdiagramm');
+await palette.mouse.move(ablaufBox.x + ablaufBox.width / 2, ablaufBox.y + ablaufBox.height / 2);
+await palette.mouse.down();
+const ablaufZiel = await paletteFlaeche.evaluate(el => {
+  const box = el.getBoundingClientRect();
+  for (const fx of [.75, .83, .62, .52]) {
+    for (const fy of [.50, .62, .56, .66]) {
+      const x = box.left + box.width * fx, y = box.top + box.height * fy;
+      const hit = document.elementFromPoint(x, y);
+      if (hit && el.contains(hit) && !hit.closest('.pg-fl-notiz,.gfx-tb-sockel,.pg-fl-auswahlleiste'))
+        return { x, y };
+    }
+  }
+  throw Error('Kein freier Ablagepunkt für das Ablaufdiagramm');
+});
+await palette.mouse.move(ablaufZiel.x, ablaufZiel.y, { steps: 12 });
+p('Vorlagenzug zeigt das Ablaufdiagramm ohne Schreibzugriff als Vorschau',
+  await paletteFlaeche.locator('.pg-fl-dock-vorschau').count() === 1 &&
+  JSON.stringify(await paletteDaten()) === JSON.stringify(vorDiagramm));
+await palette.mouse.up();
+const ablauf = (await paletteDaten()).slice(vorDiagramm.length);
+p('Ablaufdiagramm wird am Ziel als drei Formen und zwei Verbindungen abgelegt',
+  ablauf.filter((f: any) => f.art !== 'verbindung').length === 3 &&
+  ablauf.filter((f: any) => f.art === 'verbindung').length === 2 &&
+  await paletteFlaeche.locator('.pg-fl-dock-vorschau').count() === 0);
+const auswahlLeiste = paletteFlaeche.getByRole('group', { name: 'Werkzeuge der Formauswahl' });
+p('Nach dem Ablegen steht die Werkzeugleiste bei der ausgewählten Vorlage',
+  await auswahlLeiste.isVisible());
+await auswahlLeiste.getByRole('button', { name: 'Auswahl duplizieren', exact: true }).click();
+const kopie = (await paletteDaten()).slice(vorDiagramm.length + ablauf.length);
+const eigeneIds = new Set(kopie.filter((f: any) => f.art !== 'verbindung').map((f: any) => f.id));
+p('Die Auswahlkopie hat eigene Kennungen und kopiert ihre internen Pfeile',
+  eigeneIds.size === 3 && kopie.length === 5 &&
+  kopie.filter((f: any) => f.art === 'verbindung').every((v: any) =>
+    eigeneIds.has(v.von) && eigeneIds.has(v.nach)));
+await palette.keyboard.press('Control+z');
+gleich('Die Auswahlkopie ist ein einziger Verlaufsschritt', (await paletteDaten()).length, vorDiagramm.length + ablauf.length);
+await palette.keyboard.press('Control+z');
+
+await paletteFlaeche.getByRole('button', { name: 'Gedankenkarte einfügen', exact: true }).click();
+await palettenMenu.getByRole('button', { name: 'Gedankenkarte · beidseitig', exact: true }).click();
+await paletteFlaeche.locator('.gk-kn').first().waitFor();
+p('Gedankenkarte besitzt vier bearbeitbare Knoten im vorhandenen Kartenformat',
+  await palette.evaluate((id: string) => Store.childrenOf(id).some((b: any) =>
+    b.type === 'mindmap' && !!b.flaecheOrt && b.karte?.knoten?.length === 4 &&
+    b.karte.knoten.some((k: any) => k.seite === 'links') &&
+    b.karte.knoten.some((k: any) => k.seite === 'rechts')), paletteIds.seite) &&
+  await paletteFlaeche.locator('.gk-kn').count() === 4);
+
+console.log('\n17 · Freie Gedankenkarte und gespeicherte ältere Position');
+const kartenId = await palette.evaluate((id: string) => {
+  const karte = Store.childrenOf(id).find((b: any) => b.type === 'mindmap');
+  Store.updateBlock(karte.id, {
+    hoehe: 420,
+    karte: { ...karte.karte, sicht: { x: 2400, y: 450, z: 1 } }
+  });
+  App.zeichneSeite();
+  return karte.id as string;
+}, paletteIds.seite);
+const freieKarte = paletteFlaeche.locator('.pg-fl-gedankenkarte').filter({ has: palette.locator('.gk-auf-flaeche') });
+await freieKarte.locator('.gk-wurzel').waitFor();
+await palette.waitForFunction(() =>
+  (document.querySelector<HTMLElement>('.gk-auf-flaeche .gk-buehne')?.offsetWidth ?? 0) > 220);
+const layout = await freieKarte.evaluate(el => {
+  const buehne = el.querySelector('.gk-buehne')!;
+  const box = buehne.getBoundingClientRect();
+  const knoten = [...el.querySelectorAll('.gk-kn')].map(k => k.getBoundingClientRect());
+  return {
+    höhe: (buehne as HTMLElement).offsetHeight,
+    frei: getComputedStyle(buehne).overflow === 'visible' && getComputedStyle(el).backgroundColor === 'rgba(0, 0, 0, 0)',
+    passt: knoten.every(k => k.left >= box.left - 1 && k.right <= box.right + 1 &&
+      k.top >= box.top - 1 && k.bottom <= box.bottom + 1)
+  };
+});
+p('Eine alte Karte zeigt alle vier Knoten frei und ohne 420-Pixel-Editorfenster',
+  layout.frei && layout.passt && layout.höhe < 250);
+p('Die eigene Gedankenleisten-Palette ist vor der Auswahl verborgen',
+  !(await freieKarte.locator('.gk-leiste').isVisible()));
+await freieKarte.locator('.gk-wurzel').dblclick();
+const karteText = freieKarte.locator('.gk-wurzel .gk-txt[contenteditable="true"]');
+await karteText.fill('Direkt auf der Fläche');
+await karteText.press('Escape');
+gleich('Direktes Umbenennen verwendet weiterhin denselben Mindmap-Block',
+  await palette.evaluate((id: string) => Store.getBlock(id)?.karte?.knoten?.[0]?.text, kartenId),
+  'Direkt auf der Fläche');
+gleich('Der alte gespeicherte Karten-Ausschnitt bleibt für die Seitenansicht verfügbar',
+  await palette.evaluate((id: string) => Store.getBlock(id)?.karte?.sicht, kartenId),
+  { x: 2400, y: 450, z: 1 });
+if (bilder) await palette.screenshot({ path: path.join(bilder, 'freie-gedankenkarte.png') });
+await palette.close();
 
 await handy.close();
 

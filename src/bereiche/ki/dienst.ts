@@ -103,6 +103,10 @@ const KI = (() => {
    *
    * „frei" heisst: es gibt ein kostenloses Kontingent ohne Kreditkarte.
    * ----------------------------------------------------------------------*/
+  const NVIDIA_MODELL = 'moonshotai/kimi-k3.1-pro';
+  const nvidiaTicket = (globalThis as typeof globalThis & {
+    RedionDesktop?: { nvidiaTicket?: () => Promise<string> }
+  }).RedionDesktop?.nvidiaTicket;
   const ANBIETER = [
     /* DIE MODELLNAMEN HIER SIND EIN RÜCKFALL, KEINE WAHRHEIT (E661).
        Ein Anbieter mustert Modelle aus, ohne dass dieses Programm es
@@ -138,6 +142,12 @@ const KI = (() => {
       modelle:['claude-3-5-haiku-latest','claude-sonnet-4-5'],
       woher:'console.anthropic.com/settings/keys',
       hinweis:'Kostenpflichtig · eigenes Nachrichtenformat' },
+    ...(nvidiaTicket ? [{
+      id: 'nvidia', name: 'NVIDIA', frei: true,
+      url: 'redion-local://app/ki/nvidia', modelle: [NVIDIA_MODELL],
+      woher: 'build.nvidia.com',
+      hinweis: 'Kimi K3.1 Pro als NVIDIA-Prototyp. Bei Auswahl geht der Anfragekontext an NVIDIA.'
+    }] : []),
     { id:'eigen',      name:'Eigener Server', frei:true,
       url:'', modelle:[], woher:'',
       hinweis:'Jede Adresse, die wie OpenAI antwortet — auch LM Studio oder llama.cpp' }
@@ -313,6 +323,7 @@ const KI = (() => {
   const modelleHolen = async (id: string): Promise<string[] | null> => {
     try {
       const a = anbieter(id);
+      if (a.id === 'nvidia') return a.modelle;
       const key = schluessel(a.id);
       const url = modellAdresse(a.id === 'eigen' ? Store.getMeta('api:eigenUrl', '') : a.url);
       if (!url) return null;
@@ -396,6 +407,10 @@ const KI = (() => {
       kopf['anthropic-dangerous-direct-browser-access'] = 'true';
     } else if (key) {
       kopf['Authorization'] = 'Bearer ' + key;
+    }
+    if (a.id === 'nvidia') {
+      if (!nvidiaTicket) throw new Error('NVIDIA braucht die Redion-Windows-App.');
+      kopf['X-Redion-NVIDIA-Ticket'] = await nvidiaTicket();
     }
 
     const sys = nachrichten.find((m: any) => m.role === 'system');
@@ -841,7 +856,8 @@ const KI = (() => {
     const gemerkt = Store.getMeta('ki', null);
 
     /* Zuletzt ein Wolken-Modell benutzt und der Schlüssel liegt noch da? */
-    if (gemerkt && gemerkt.quelle === 'wolke' &&
+    if (gemerkt && gemerkt.quelle === 'wolke' && gemerkt.anbieter !== 'nvidia' &&
+        ANBIETER.some(a => a.id === gemerkt.anbieter) &&
         (schluessel(gemerkt.anbieter) || gemerkt.anbieter === 'eigen')) {
       zustand.quelle = 'wolke';
       zustand.anbieter = gemerkt.anbieter;
@@ -1007,7 +1023,9 @@ const KI = (() => {
       zustand.quelle = b.dataset.q ?? zustand.quelle;
       zustand.modell = b.dataset.m ?? zustand.modell;
       if (b.dataset.q === 'wolke') zustand.anbieter = b.dataset.a ?? zustand.anbieter;
-      Store.setMeta('ki', { quelle: zustand.quelle, modell: zustand.modell, anbieter: zustand.anbieter });
+      // NVIDIA wird im laufenden Fenster gewählt. Der gespeicherte lokale Start bleibt verfügbar.
+      if (zustand.quelle !== 'wolke' || zustand.anbieter !== 'nvidia')
+        Store.setMeta('ki', { quelle: zustand.quelle, modell: zustand.modell, anbieter: zustand.anbieter });
 
       if (zustand.quelle === 'wolke') {
         zustand.bereit = true;
@@ -2000,13 +2018,20 @@ const KI = (() => {
   /** Karteikarten aus „Frage :: Antwort"-Zeilen — echte Blöcke (E724, D7).
       Vorher landeten sie als Textzeilen auf der Seite, und die Lernwelt
       zählte keine einzige. */
-  const alsKarteikarten = (text: string): number => {
-    const seite = App.aktuelleSeite();
+  const alsKarteikarten = (text: string, seite = App.aktuelleSeite()): number => {
+    const page = Store.getBlock(seite);
+    if (!page || page.alive === false || page.type !== 'page' || !Konten.darf('bearbeiten', seite)) {
+      UI.toast('Auf dieser Seite darfst du keine Karten anlegen.'); return 0;
+    }
+    const titel = String(page.text || 'Lernkarten');
     const karten = String(text || '').split('\n').map(z => z.replace(/^[-*•\d.\s]+/, '').trim())
-      .filter(z => /\S\s*::\s*\S/.test(z));
-    karten.forEach(z => Store.addBlock(seite, 'flashcard', { text: z, herkunft: 'ki' }));
-    if (karten.length) { App.zeichneSeite(); UI.toast(karten.length + ' Karteikarten eingefügt'); }
-    else UI.toast('In der Antwort steht keine Zeile „Frage :: Antwort"');
+      .map(z => z.split('::').map(t=>t.trim())).filter(z=>z.length===2&&z.every(t=>t&&t.length<=2000)).slice(0,20);
+    karten.forEach(([frage,antwort])=>Store.addBlock(seite,'flashcard',{
+      text:frage+' :: '+antwort,herkunft:'ki',
+      quiz:{kind:'schreiben',format:'flashcard',kapitel:titel,thema:titel,topic:titel,quelle:titel,pruefung:false,musterloesung:[antwort]}
+    }));
+    if(karten.length){App.zeichneSeite();UI.toast(karten.length+' Karteikarten eingefügt');}
+    else UI.toast('In der Antwort steht keine gültige Zeile „Frage :: Antwort“');
     return karten.length;
   };
 
@@ -2017,6 +2042,7 @@ const KI = (() => {
    */
   const schreibLauf = async (befehl: any, auftrag: any, opt: KiLauf = {}) => {
     const quelle = eingabe(befehl, opt);
+    const kartenZiel = App.aktuelleSeite();
     if (!quelle.text.trim()) { UI.toast('Es gibt noch keinen Text.'); return; }
 
     App.kiPanel(true);
@@ -2064,7 +2090,7 @@ const KI = (() => {
       if (b.dataset.a === 'kopieren') { Ablage.kopiereJetzt(antwort, 'Kopiert'); }
       if (b.dataset.a === 'nochmal')  { schreibLauf(befehl, auftrag, opt); }
       if (b.dataset.a === 'darunter') { alsBloeckeEinfuegen(antwort); }
-      if (b.dataset.a === 'karteikarten') { alsKarteikarten(antwort); }
+      if (b.dataset.a === 'karteikarten') { if (alsKarteikarten(antwort, kartenZiel) > 0) b.setAttribute('disabled',''); }
       if (b.dataset.a === 'ersetzen') await ersetzen(antwort, quelle, opt);
     });
     ziel.appendChild(leiste);

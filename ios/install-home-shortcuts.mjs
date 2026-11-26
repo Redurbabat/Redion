@@ -43,7 +43,7 @@ private final class RedionHomeShortcuts {
 
     private func deliver(_ action: String, window: UIWindow?, token: Int, tries: Int) {
         guard self.token == token, tries < 65 else { return }
-        guard let web = (window?.rootViewController as? CAPBridgeViewController)?.webView else {
+        guard let web = ((window?.rootViewController as? CAPBridgeViewController)?.webView ?? redionBridgeWebView(in: window)) else {
             retry(action, window: window, token: token, tries: tries)
             return
         }

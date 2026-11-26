@@ -55,9 +55,16 @@
  * ===========================================================================*/
 
 type StrokePoint = [number, number];
+declare const RedionPerfectFreehand: {
+  getStroke(points: [number, number, number][], options: {
+    size: number; thinning: number; smoothing: number; streamline: number;
+    simulatePressure: boolean; last: boolean;
+  }): StrokePoint[];
+};
 
 /** Freihand im Dokumentraum; Vorschaupunkte gehören niemals hierher. */
 interface InkAnnotation {
+  kontur?: 'weich';
   id: string;
   art: 'stift';
   pts: StrokePoint[];
@@ -684,6 +691,7 @@ const InkStroke = (() => {
     const mark: InkAnnotation = { id: r.id, art: 'stift', pts, farbe: inkColor(r.farbe),
       breite: typeof r.breite === 'number' && Number.isFinite(r.breite) ? Math.max(.3, Math.min(24, r.breite)) : 2.4,
       ebene: typeof r.ebene === 'string' ? r.ebene : 'plan' };
+    if (r.kontur === 'weich') mark.kontur = 'weich';
     for (const key of ['pressure', 'neigung'] as const) {
       const values = r[key];
       if (Array.isArray(values) && values.length === pts.length && values.every(v => typeof v === 'number' && Number.isFinite(v)))
@@ -695,7 +703,17 @@ const InkStroke = (() => {
   const inkHalfWidth = (mark: Pick<InkAnnotation, 'breite'>, pressure = .5): number =>
     Math.max(.15, mark.breite * (.35 + Math.max(0, Math.min(1, pressure)) * .9) / 2);
 
-  return { samples, tiltOf, inkColor, readAnnotation, inkHalfWidth,
+  const weichUmriss = (mark: InkAnnotation): StrokePoint[] => {
+    if (mark.kontur !== 'weich' || mark.pts.length < 2 || mark.pts.length > 12_000 ||
+        typeof RedionPerfectFreehand === 'undefined') return [];
+    const eingabe = mark.pts.map(([x, y], i): [number, number, number] => [x, y, mark.pressure?.[i] ?? .5]);
+    return RedionPerfectFreehand.getStroke(eingabe, {
+      size: mark.breite, thinning: .45, smoothing: .5, streamline: .12,
+      simulatePressure: false, last: true
+    }).map(([x, y]) => [Number(x.toFixed(3)), Number(y.toFixed(3))]);
+  };
+
+  return { samples, tiltOf, inkColor, readAnnotation, inkHalfWidth, weichUmriss,
            Feder, glaetter, druckGlaetter, vorhersage, deckeln, bremse, tempoFaktor, tempoMesser,
            ALPHA_LANGSAM, ALPHA_SCHNELL, TEMPO_VOLL,
            VORHER_MS, VORHER_PX, KEHRE, TEMPO_AB, TEMPO_BIS, TEMPO_FENSTER };

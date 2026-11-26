@@ -98,6 +98,13 @@ const dateien = alleQuellen('src');
 const markup = lies('index.html');
 let alles = '';
 for (const f of dateien) alles += lies(f);
+/* UND DER BAU DER EINZELDATEI (E822). `bauen.mts` setzt Elemente in
+   `redion-einzeldatei.html` ein, die `index.html` mit Absicht nicht hat —
+   `redion-pdf-lib` trägt dort pdf-lib als Base64, und `src/fremd/pdf-lib/
+   laden.ts` fragt danach, bevor es die Datei holt. Die Kennung entsteht
+   also wirklich, nur an einem dritten Ort. Gelesen wird nur nach `id="…"`;
+   ein Aufruf in `bauen.mts` zählt nicht als Nachschlagestelle. */
+alles += lies('bauen.mts');
 /* Dasselbe noch einmal OHNE Kommentare. `alles` darf sie behalten — dort
    wird nach `id="…"` gesucht, und ein `id="x"` im Kommentar ist praktisch
    immer ein echtes daneben. Wo aber nach einem AUFRUF gesucht wird, muss

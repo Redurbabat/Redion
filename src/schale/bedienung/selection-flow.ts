@@ -903,6 +903,16 @@ const SelectionFlow = (() => {
     a.reihe.addEventListener('touchend', (e: TouchEvent) => {
       if (performance.now() - schlucken < 300) e.stopPropagation();
     });
+    /* KEIN SCHWUNG AUS DEM ZUG (E816). Ein schneller Zug über die Oberkante
+       erzeugt im Browser einen Fling (gemessen: 41 Schritte der Schwungbahn
+       nach −400 px, keiner nach −20 px). Der nächste Tipp stoppt dann den
+       Schwung und erzeugt KEINEN Klick — Chromiums Tipp-Unterdrückung
+       (FilteredForFling). Solange ein Zug auf der Leiste liegt, wird die
+       Bewegung nicht gerollt: `touchmove` ist nicht passiv. Der Klick des
+       Zuges bleibt unberührt (test614 §7f). */
+    a.reihe.addEventListener('touchmove', (e: TouchEvent) => {
+      if (zug && e.cancelable) e.preventDefault();
+    }, { passive: false });
     window.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || !(zug?.amZiehen || zug?.ue)) return;
       e.preventDefault();
@@ -1049,15 +1059,29 @@ const SelectionFlow = (() => {
     const name = reihe.dataset['material'] || '';
     let zuletzt: Rechteck = start;
     let rahmen: Rechteck = reihe.getBoundingClientRect();
+    /* Der Bezugsrahmen des Fluges (`bezug`) ist beim Start gemessen. Zeichnet
+       die Seite NEU, ohne dass die Reihe verschwindet (Seitenansicht Seite →
+       Fläche, test585), hängt der Flug an einem Rahmen, den es nicht mehr gibt:
+       er bleibt an seiner alten Stelle stehen und landet daneben. Dann fliegt
+       er ab dem letzten Bild, das stimmte, neu zur Wahl (E817). */
+    const bezugNoch = (): boolean =>
+      flug.isConnected && bezug.isConnected && (flug.offsetParent ?? traeger) === bezug;
     const wache = (): void => {
       if (reiheFluege.get(traeger) !== eintrag) return;     /* gelandet oder überholt */
-      if (flug.isConnected && neu.isConnected && reihe.isConnected) {
+      if (flug.isConnected && neu.isConnected && reihe.isConnected && bezugNoch()) {
         zuletzt = flug.getBoundingClientRect();
         rahmen = reihe.getBoundingClientRect();
         requestAnimationFrame(wache);
         return;
       }
+      /* Der Rahmen wechselte, die Reihe und das Ziel blieben: von `zuletzt`
+         neu fliegen. Die Prüfung steht VOR dem Aufräumen des Fluges. */
+      const rahmenWechsel = reihe.isConnected && neu.isConnected && flug.isConnected;
       eintrag.fertig();
+      if (rahmenWechsel && runde < 3) {
+        materialFliegen(reihe, zuletzt, neu, gruppe, runde + 1);
+        return;
+      }
       const andere = runde < 3 ? reiheSuchen(name, rahmen) : null;
       const ziel = andere ? gewaehltIn(andere, gruppe) : null;
       if (andere && ziel) materialFliegen(andere, zuletzt, ziel, gruppe, runde + 1);

@@ -177,7 +177,8 @@ await klick('.rt-tab[data-i="0"]', 'Ein Klick auf den ersten Reiter führt zum e
 await pc.waitForTimeout(800);
 const zurueck = await pc.evaluate(() => ({
   offen: App.aktuelleSeite(), aktiv: Fenster.aktiv(),
-  titel: (document.querySelector('.document-title')?.textContent || '').trim()
+  /* Den NAMEN, nicht den ganzen Kasten (E823, Dokumentkompass). */
+  titel: ((document.querySelector('.document-title-name') ?? document.querySelector('.document-title'))?.textContent || '').trim()
 }));
 gleich('Ein Klick auf den ersten Reiter führt zum ersten Dokument',
   zurueck.offen, ids.a);

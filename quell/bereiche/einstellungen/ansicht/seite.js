@@ -45,6 +45,51 @@ const Einstellungen = (() => {
         }
     };
     const BEREICHE = GRUPPEN.flatMap(([, liste]) => liste);
+    const FARBE = {
+        konto: 'grau', allgemein: 'grau', benachricht: 'rot', daten: 'blau',
+        ki: 'lila', verbindungen: 'blau', mcp: 'orange', worker: 'grau',
+        verifiziert: 'gruen', oeffentlich: 'blau', emoji: 'gelb',
+        geraete: 'gruen', arbeitsplatz: 'orange', analysen: 'rosa', bereiche: 'lila',
+        sicherheit: 'rot', schluessel: 'gelb', speicher: 'grau', abrechnung: 'gruen', ueber: 'grau'
+    };
+    const kopfLeiste = () => {
+        const name = BEREICHE.find(([id]) => id === offenerBereich)?.[2] ?? '';
+        return '<div class="einst-leiste"><button class="einst-zurueck" data-a="liste" ' +
+            'aria-label="Zurück zu den Einstellungen">‹ Einstellungen</button>' +
+            `<span class="einst-leiste-titel">${esc(name)}</span></div>`;
+    };
+    const sucheAnwenden = (o, wort) => {
+        const w = wort.trim().toLowerCase();
+        o.querySelectorAll('.einst-nav .einst-karte').forEach(karte => {
+            let treffer = 0;
+            karte.querySelectorAll('button[data-b]').forEach(b => {
+                const passt = !w || (b.textContent ?? '').toLowerCase().includes(w);
+                b.hidden = !passt;
+                if (passt)
+                    treffer++;
+            });
+            karte.hidden = treffer === 0;
+            const kopf = karte.previousElementSibling;
+            if (kopf instanceof HTMLElement && kopf.classList.contains('einst-grp'))
+                kopf.hidden = treffer === 0;
+        });
+    };
+    const zeilenKarten = (ziel) => {
+        let karte = null;
+        [...ziel.children].forEach(kind => {
+            if (kind instanceof HTMLElement && kind.classList.contains('ez-zeile')) {
+                if (!karte) {
+                    karte = document.createElement('div');
+                    karte.className = 'ez-karte';
+                    kind.before(karte);
+                }
+                karte.appendChild(kind);
+            }
+            else {
+                karte = null;
+            }
+        });
+    };
     const anwenden = () => {
         document.documentElement.dataset.theme = V('theme', 'dark');
         document.body.dataset.schrift = V('schriftgroesse', 'normal');
@@ -115,18 +160,23 @@ const Einstellungen = (() => {
         o.className = 'overlay';
         o.innerHTML =
             '<div class="einst-fenster" data-blick="liste">' +
-                '<div class="einst-nav" data-material="einstellungen">' +
+                '<div class="einst-nav">' +
+                '<div class="einst-leiste einst-leiste-liste" aria-hidden="true"><span class="einst-leiste-titel">Einstellungen</span></div>' +
+                '<div class="einst-titel" role="heading" aria-level="1">Einstellungen</div>' +
+                '<input type="search" class="einst-suche" placeholder="Suchen" ' +
+                'aria-label="Einstellungen durchsuchen" autocomplete="off">' +
                 `<div class="einst-konto"><span class="ws-icon">${esc(V('arbeitsIcon', 'N'))}</span>` +
                 `<div><b>${esc(V('arbeitsName', 'Redion'))}</b>` +
                 `<span>${esc(V('nutzer', 'Ohne Namen'))}</span></div></div>` +
                 GRUPPEN.map(([titel, liste]) => (titel ? `<div class="einst-grp">${titel}</div>` : '') +
-                    liste.map(([id, i, n]) => `<button data-b="${id}" class="${id === offenerBereich ? 'on' : ''}">` +
-                        `<span class="mi">${zeichen(i)}</span>${n}</button>`).join('')).join('') +
+                    '<div class="einst-karte" data-material="einstellungen">' +
+                    liste.map(([id, i, n]) => `<button data-b="${id}" data-farbe="${FARBE[id] ?? 'grau'}" class="${id === offenerBereich ? 'on' : ''}">` +
+                        `<span class="mi">${zeichen(i)}</span>${n}</button>`).join('') +
+                    '</div>').join('') +
                 '</div>' +
+                '<div class="einst-schleier" aria-hidden="true"></div>' +
                 '<div class="einst-mehr" aria-hidden="true">\u2304</div>' +
-                '<div class="einst-inhalt" id="ei">' +
-                '<button class="einst-zurueck" data-a="liste" aria-label="Zurück zur Übersicht">' +
-                '‹ Übersicht</button>' +
+                '<div class="einst-inhalt" id="ei">' + kopfLeiste() +
                 '</div>' +
                 '<button class="einst-zu" data-a="zu" aria-label="Schliessen">✕</button>' +
                 '</div>';
@@ -135,17 +185,28 @@ const Einstellungen = (() => {
         const zeichne = () => {
             const ziel = o.querySelector('#ei');
             if (ziel)
-                ziel.innerHTML =
-                    '<button class="einst-zurueck" data-a="liste" aria-label="Zurück zur Übersicht">' +
-                        '‹ Übersicht</button>' + inhalt(offenerBereich);
+                ziel.innerHTML = kopfLeiste() + inhalt(offenerBereich);
+            if (ziel) {
+                ziel.classList.remove('einst-ueber');
+                void ziel.offsetWidth;
+                ziel.classList.add('einst-ueber');
+            }
             if (ziel && offenerBereich === 'allgemein' && typeof Schnellkacheln !== 'undefined')
                 Schnellkacheln.einsetzen(ziel, { nach: ziel.querySelector(':scope > h2'), rolle: ziel });
+            if (ziel)
+                zeilenKarten(ziel);
             o.querySelectorAll('.einst-nav button').forEach(b => b.classList.toggle('on', b.dataset.b === offenerBereich));
             binde(o);
             if (ziel && offenerBereich === 'mcp')
                 RegisterAutomatisierung.montiereAnsicht(ziel);
         };
         zeichne();
+        o.querySelector('.einst-suche')?.addEventListener('input', (e) => sucheAnwenden(o, e.target.value));
+        setTimeout(() => {
+            const feld = o.querySelector('.einst-suche');
+            if (feld && document.activeElement === feld)
+                o.querySelector('.einst-nav button[data-b]')?.focus({ focusVisible: false });
+        }, 30);
         const navEl = o.querySelector('.einst-nav');
         const mehrPruefen = () => {
             if (!navEl || !fenster)
@@ -161,29 +222,91 @@ const Einstellungen = (() => {
         const blick = (ziel) => {
             if (!fenster)
                 return;
-            const vorher = fenster.getAttribute('data-blick');
             fenster.setAttribute('data-blick', ziel);
-            if (vorher === ziel || !amTelefon() || AppEinstellung.wenigBewegung())
-                return;
-            const teil = fenster.querySelector(ziel === 'bereich' ? '.einst-inhalt' : '.einst-nav');
-            if (!teil)
-                return;
-            const klasse = ziel === 'bereich' ? 'einst-push' : 'einst-pop';
-            teil.classList.remove('einst-push', 'einst-pop');
-            void teil.offsetWidth;
-            teil.classList.add(klasse);
-            const fertig = (ev) => {
-                if (ev && ev.target !== teil)
-                    return;
-                teil.classList.remove(klasse);
-                teil.removeEventListener('animationend', fertig);
-            };
-            teil.addEventListener('animationend', fertig);
-            setTimeout(() => fertig(), 1200);
+            const inh = fenster.querySelector('.einst-inhalt');
+            const nv = fenster.querySelector('.einst-nav');
+            const amMobilgeraet = amTelefon();
+            if (inh)
+                inh.inert = amMobilgeraet && ziel === 'liste';
+            if (nv)
+                nv.inert = amMobilgeraet && ziel === 'bereich';
         };
+        const schliesse = () => {
+            const wenig = AppEinstellung.wenigBewegung() ||
+                document.body.dataset.bewegung === 'ruhig' ||
+                window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (!amTelefon() || wenig || !fenster) {
+                o.remove();
+                return;
+            }
+            fenster.classList.add('einst-geht');
+            let fertig = false;
+            const weg = () => { if (fertig)
+                return; fertig = true; o.remove(); };
+            fenster.addEventListener('animationend', weg, { once: true });
+            setTimeout(weg, 800);
+        };
+        const rollBeob = (rolle) => {
+            const pruefe = () => { rolle.classList.toggle('einst-gerollt', rolle.scrollTop > 24); };
+            rolle.addEventListener('scroll', pruefe, { passive: true });
+            pruefe();
+        };
+        const eiEl = o.querySelector('#ei');
+        if (eiEl)
+            rollBeob(eiEl);
+        if (navEl)
+            rollBeob(navEl);
+        if (eiEl && navEl && fenster) {
+            const wischen = (fenst, inh, nv) => {
+                let zug = null;
+                let zieht = false;
+                let dx = 0;
+                inh.addEventListener('pointerdown', (e) => {
+                    if (!amTelefon() || fenst.getAttribute('data-blick') !== 'bereich' || e.clientX > 24)
+                        return;
+                    zug = { x: e.clientX, y: e.clientY, t: performance.now() };
+                    zieht = false;
+                    dx = 0;
+                });
+                inh.addEventListener('pointermove', (e) => {
+                    if (!zug)
+                        return;
+                    const ddx = e.clientX - zug.x;
+                    const ddy = e.clientY - zug.y;
+                    if (!zieht) {
+                        if (Math.abs(ddy) > Math.abs(ddx)) {
+                            zug = null;
+                            return;
+                        }
+                        if (ddx < 6)
+                            return;
+                        zieht = true;
+                        fenst.classList.add('einst-zieht');
+                    }
+                    dx = Math.max(0, ddx);
+                    inh.style.transform = `translateX(${dx}px)`;
+                    nv.style.transform = `translateX(calc(-30% + ${dx * 0.3}px))`;
+                });
+                const ende = () => {
+                    const z = zug;
+                    zug = null;
+                    if (!z || !zieht)
+                        return;
+                    const weit = dx > inh.clientWidth / 2;
+                    const schnell = dx > 40 && dx / Math.max(1, performance.now() - z.t) > 0.5;
+                    fenst.classList.remove('einst-zieht');
+                    inh.style.transform = '';
+                    nv.style.transform = '';
+                    blick(weit || schnell ? 'liste' : 'bereich');
+                };
+                inh.addEventListener('pointerup', ende);
+                inh.addEventListener('pointercancel', ende);
+            };
+            wischen(fenster, eiEl, navEl);
+        }
         o.addEventListener('click', e => {
             if (e.target === o || elVon(e)?.closest('[data-a="zu"]')) {
-                o.remove();
+                schliesse();
                 return;
             }
             if (elVon(e)?.closest('[data-a="liste"]')) {
@@ -203,6 +326,7 @@ const Einstellungen = (() => {
         });
         if (bereich && amTelefon())
             fenster?.setAttribute('data-blick', 'bereich');
+        blick(fenster?.getAttribute('data-blick') === 'bereich' ? 'bereich' : 'liste');
         const beiTaste = (e) => {
             if (e.key !== 'Escape')
                 return;

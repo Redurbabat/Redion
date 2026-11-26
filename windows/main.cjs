@@ -4,11 +4,12 @@
  * Start-menu entry and installer. The renderer uses the existing Redion UI.
  * No Node APIs reach notes or the editor; all app files are read-only.
  */
-const { app, BrowserWindow, Menu, protocol, net, shell, dialog, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, Menu, protocol, net, shell, dialog, ipcMain, screen, nativeTheme } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { resolveBundledAsset } = require('./paths.cjs');
+const { NVIDIA_CHAT_PATH, nvidiaChat } = require('./generated/nvidia.cjs');
 const { startRedionAutoUpdates } = require('./auto-update.cjs');
 const { configuredSource, saveConfiguredSource, startSourceUpdates, validateSource } =
   require('./generated/local-source.cjs');
@@ -157,6 +158,44 @@ if (!lock) {
     if (!trustedSender(event, mainWindow?.webContents)) throw new Error('Dateizugriff nicht erlaubt.');
     return serial(() => fn(...args));
   });
+  // Nur der lokale Hauptframe darf die Darstellung ändern oder das App-Menü öffnen.
+  let chromeTheme = null;
+  const windowOverlay = () => {
+    const forced = nativeTheme.shouldUseHighContrastColors || nativeTheme.inForcedColorsMode;
+    const dark = forced || !chromeTheme ? nativeTheme.shouldUseDarkColors : chromeTheme === 'dark';
+    return {
+      color: forced ? (dark ? '#000000' : '#ffffff') : (dark ? '#202124' : '#f3f1ee'),
+      symbolColor: dark ? '#f5f4f2' : '#252423',
+      height: 48
+    };
+  };
+  if (process.platform === 'win32') {
+    const refreshOverlay = () => {
+      if (mainWindow && !mainWindow.isDestroyed()) mainWindow.setTitleBarOverlay(windowOverlay());
+    };
+    const chromeAction = (channel, action) => ipcMain.handle(channel, (event, ...args) => {
+      if (!trustedSender(event, mainWindow?.webContents)) throw new Error('Fensterzugriff nicht erlaubt.');
+      return action(...args);
+    });
+    nativeTheme.on('updated', refreshOverlay);
+    chromeAction('redion:fenster:thema', thema => {
+      if (thema !== 'light' && thema !== 'dark') throw new Error('Ungültiges Fensterthema.');
+      chromeTheme = thema;
+      refreshOverlay();
+    });
+    chromeAction('redion:fenster:menue', (x, y) => {
+      if (!Number.isSafeInteger(x) || !Number.isSafeInteger(y) || x < 0 || y < 0)
+        throw new Error('Ungültige Menüposition.');
+      const zoom = mainWindow.webContents.getZoomFactor();
+      const { width, height } = mainWindow.getContentBounds();
+      Menu.getApplicationMenu()?.popup({
+        window: mainWindow,
+        x: Math.min(width - 1, Math.round(x * zoom)),
+        y: Math.min(height - 1, Math.round(y * zoom))
+      });
+    });
+  }
+
   // Ziel aus der Sprungliste: der Hauptprozess merkt es, bis die App es abholt.
   // Nur Bezeichner aus der festen Liste, nie eine Adresse oder ein Pfad.
   let pendingDestination = destinationFromArgs(process.argv);
@@ -165,6 +204,12 @@ if (!lock) {
     const ziel = pendingDestination;
     pendingDestination = null;
     return ziel;
+  });
+  const nvidiaTicket = randomUUID();
+  ipcMain.handle('redion:ki:nvidia:ticket', event => {
+    if (process.platform !== 'win32' || !trustedSender(event, mainWindow?.webContents))
+      throw new Error('NVIDIA ist nur im lokalen Redion-Hauptfenster verfügbar.');
+    return nvidiaTicket;
   });
   const automationSender = event => {
     if (!trustedSender(event, mainWindow?.webContents)) throw new Error('Automatisierungszugriff nicht erlaubt.');
@@ -403,6 +448,8 @@ if (!lock) {
     // allowlisted web snapshot is served, never arbitrary paths or source files.
     if (!protocolReady) {
       protocol.handle(SCHEME, request => {
+        if (process.platform === 'win32' && request.url === SCHEME + '://app' + NVIDIA_CHAT_PATH)
+          return nvidiaChat(request, nvidiaTicket);
         const file = resolveBundledAsset(servedAssets || assets, request.url);
         if (!file) return new Response('Nicht gefunden', { status: 404 });
         return net.fetch(pathToFileURL(file).href);
@@ -423,8 +470,12 @@ if (!lock) {
       ...(remembered ? { x: remembered.x, y: remembered.y } : {}),
       minWidth: 860,
       minHeight: 580,
-      backgroundColor: '#191a1e',
-      autoHideMenuBar: false,
+      backgroundColor: '#211218',
+      ...(process.platform === 'win32' ? {
+        titleBarStyle: 'hidden',
+        titleBarOverlay: windowOverlay(),
+        autoHideMenuBar: true
+      } : { autoHideMenuBar: false }),
       show: false,
       icon,
       webPreferences: {
@@ -451,8 +502,28 @@ if (!lock) {
     mainWindow.webContents.session.setPermissionRequestHandler((_wc, _permission, callback) => {
       callback(false);
     });
+    // L268: Redion lehnt das Entladen nur ab, wenn wegen vollen Speichers
+    // Änderungen ungesichert im Arbeitsspeicher liegen (E802). Ohne diesen
+    // Griff hielte Electron das Fenster ohne jeden Dialog fest. Beim
+    // Abmelden oder Herunterfahren wird nicht gefragt: ein Dialog hielte
+    // Windows an, retten könnte er bei vollem Speicher ohnehin nichts.
+    let systemEnding = false;
+    mainWindow.webContents.on('will-prevent-unload', (event) => {
+      if (systemEnding || !mainWindow) { event.preventDefault(); return; }
+      const choice = dialog.showMessageBoxSync(mainWindow, {
+        type: 'warning',
+        buttons: ['Bleiben', 'Trotzdem schliessen'],
+        defaultId: 0,
+        cancelId: 0,
+        noLink: true,
+        title: 'Änderungen nicht gesichert',
+        message: 'Der Speicher dieses Geräts ist voll. Einige Änderungen sind noch nicht gesichert.',
+        detail: 'Wenn du jetzt schliesst, gehen sie verloren. Schaffe Platz auf dem Gerät und bleib in Redion, bis die Meldung „alle Änderungen sind gesichert" erscheint.'
+      });
+      if (choice === 1) event.preventDefault();
+    });
     // Do not run NSIS while Windows is logging off or shutting down.
-    mainWindow.on('session-end', () => updateController?.onSystemShutdown?.());
+    mainWindow.on('session-end', () => { systemEnding = true; updateController?.onSystemShutdown?.(); });
     mainWindow.once('ready-to-show', () => {
       if (remembered?.maximized) mainWindow?.maximize();
       mainWindow?.show();

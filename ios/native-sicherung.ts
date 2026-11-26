@@ -80,12 +80,6 @@ if (Capacitor.getPlatform() === 'ios' && Capacitor.isNativePlatform()) {
     prepare();
   }
 
-  // Native iOS Home Screen Quick Actions (long-press app icon) use the
-  // EXISTING Redion tab click handlers. This global is defined only in
-  // the iOS IPA, never on the browser/PWA website.
-  (globalThis as any).RedionNativeShortcut =
-    createHomeShortcutRouter({ document });
-
   // When iOS returns from another app's Share Sheet, accept the App
   // Group item only after the ordinary Redion store has saved it. The
   // extension's JSON file stays on disk if Redion is not ready or fails.
@@ -100,6 +94,11 @@ if (Capacitor.getPlatform() === 'ios' && Capacitor.isNativePlatform()) {
     eventName: 'ablage.geladen',
     document
   });
+  // Home shortcuts and widget deep links use the same startup/lock guard
+  // as incoming documents. Existing navigation remains the only router.
+  (globalThis as any).RedionNativeShortcut =
+    createHomeShortcutRouter({ document, ready: () => readiness.ready() });
+
   let incoming: ReturnType<typeof createIosShareInbox> | null = null;
   (globalThis as any).RedionNativeDocuments = createNativeDocumentInbox({
     filesystem: Filesystem, directory: Directory.Documents,

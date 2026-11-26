@@ -288,9 +288,12 @@ const Store = (() => {
       const [bloecke, sammlungen, ansichten, metadaten] = await Promise.all([
         all('blocks'), all('collections'), all('views'), all('meta')
       ]);
-      bloecke.forEach((b: any)      => cache.blocks[b.id] = b);
-      sammlungen.forEach((c: any)   => cache.collections[c.id] = c);
-      ansichten.forEach((v: any)    => cache.views[v.id] = v);
+      /* Die Versionsnummer `rev` gehört der Platte, nicht dem Satz (E801):
+         sie wird hier abgenommen und gemerkt, damit sie weder in eine
+         Sicherung noch in den Abgleich reist. */
+      bloecke.forEach((b: any)      => { revAbnehmen('blocks', b); cache.blocks[b.id] = b; });
+      sammlungen.forEach((c: any)   => { revAbnehmen('collections', c); cache.collections[c.id] = c; });
+      ansichten.forEach((v: any)    => { revAbnehmen('views', v); cache.views[v.id] = v; });
       metadaten.forEach((m: any)    => cache.meta[m.k] = m.v);
     } catch (err) {
       db = null;
@@ -459,6 +462,7 @@ const Store = (() => {
     if (patch && 'checked' in patch && b.type === 'todo')
       patch = Object.assign({}, patch,
         { erledigtAm: patch.checked ? now() : null });
+    merkeBasis('blocks', b);
     Object.assign(b, patch, { edited: now(), geaendertVon: getMeta('nutzer', '') || 'Ich' });
     save('blocks', b);
     return b;
@@ -1003,6 +1007,7 @@ const Store = (() => {
   const updateCollection = (id: string, patch: any) => {
     const c = cache.collections[id];
     if (!c) return null;
+    merkeBasis('collections', c);
     Object.assign(c, patch);
     if (!('edited' in patch)) c.edited = now();
     save('collections', c);
@@ -1012,6 +1017,7 @@ const Store = (() => {
   const updateView = (id: string, patch: any) => {
     const v = cache.views[id];
     if (!v) return null;
+    merkeBasis('views', v);
     Object.assign(v, patch);
     if (!('edited' in patch)) v.edited = now();
     save('views', v);
@@ -1302,8 +1308,17 @@ const Store = (() => {
       const fach = schluessel.slice(0, trenn);
       const id   = schluessel.slice(trenn + 1);
       if (!['blocks', 'collections', 'views', 'meta'].includes(fach)) continue;
+      /* WARTET HIER SELBST EINE ÄNDERUNG AN DIESEM SATZ, wird das lebende
+         Objekt NICHT ausgetauscht (E801). Vorher geschah genau das: der
+         Zwischenspeicher zeigte den fremden Stand, der Stapel hielt aber
+         das alte Objekt mit der eigenen Änderung und schrieb es später
+         über den fremden — auf der Platte stand dann wieder der eigene,
+         und die Änderung von drüben war weg. Jetzt vergleicht `flush` die
+         Versionsnummer und führt zusammen. */
+      if (fach !== 'meta' && pending.has(schluessel)) continue;
       try {
         const satz = await get(fach, fach === 'meta' ? id : id);
+        if (fach !== 'meta') revAbnehmen(fach, satz);
         if (fach === 'meta') {
           if (satz) cache.meta[satz.k] = satz.v; else delete cache.meta[id];
         } else if (satz) {
@@ -1393,15 +1408,225 @@ const Store = (() => {
 
   /* --- Schreiben mit Verzögerung ----------------------------------------- */
   /* Beim Tippen soll nicht jeder Tastendruck eine Transaktion auslösen.     */
-  const pending = new Map();
+
+  /* ------------------------------------------------------------------------
+   * ARBEITSSCHRITTE — GANZ ODER GAR NICHT (E800)
+   * ------------------------------------------------------------------------
+   * Eine Handlung schreibt oft mehrere Sätze: `addBlock` den neuen Block
+   * UND den Elternteil mit der neuen Kennung in `content`, ein Verschieben
+   * den alten Elternteil, den neuen und den Block. Diese Sätze gehören
+   * zusammen. Landet nur ein Teil davon auf der Platte, zeigt nach dem
+   * Neuladen ein `content` auf einen Block, den es nicht gibt, oder ein
+   * Block hängt an keinem Elternteil — der halbe Zustand aus §13.
+   *
+   * Genau das konnte `flush` vorher: ein Satz, der sich nicht schreiben
+   * liess, wurde mit `preventDefault` übergangen, und der Rest der
+   * Transaktion kam an. Der Elternteil stand mit dem neuen Kind auf der
+   * Platte, das Kind nicht.
+   *
+   * DER SCHRITT ENTSTEHT VON SELBST. Alles, was eine Handlung SYNCHRON
+   * schreibt, ist ein Schritt: der erste `save` eines Durchlaufs öffnet
+   * ihn, eine Mikroaufgabe schliesst ihn. Kein Aufrufer muss etwas
+   * Neues lernen — die achtzig Stellen, die heute `addBlock`,
+   * `updateBlock` und Co. rufen, sind ohne Änderung abgedeckt.
+   *
+   * Schreibt ein späterer Schritt einen Satz, der schon in einem früheren
+   * wartet, werden beide EIN Schritt (Vereinigung): der wartende Satz ist
+   * das lebende Objekt aus dem Zwischenspeicher und trägt beide Änderungen,
+   * also dürfen die Partner des früheren Schritts nicht ohne ihn landen.
+   *
+   * WIE GESCHRIEBEN WIRD. Im Normalfall wie bisher: EINE Transaktion für
+   * alles (die zweitausend Sätze beim ersten Start, siehe unten). Scheitert
+   * darin etwas, bricht sie jetzt GANZ ab — nichts landet — und dann wird
+   * Schritt für Schritt in eigenen Transaktionen geschrieben. Die guten
+   * Schritte kommen an, der schlechte bleibt vollständig im Stapel. Der
+   * Grundsatz von vorher („ein schlechter Satz darf den Stapel nicht
+   * mitreissen") bleibt, nur ist die Einheit jetzt der Schritt, nicht der
+   * Satz.
+   *
+   * UND SOFORT, WENN ES ZÄHLT. Ein Schritt mit mehr als einem Satz ist eine
+   * Umstellung (anlegen, verschieben, löschen) — er wird nicht 400 ms lang
+   * nur im Arbeitsspeicher gehalten, sondern im nächsten Takt geschrieben.
+   * Tippen bleibt ein Satz je Schritt und behält die Pause.
+   * ----------------------------------------------------------------------*/
+  type Posten = { store: any; val: any; schritt: number };
+  const pending = new Map<string, Posten>();
+
+  /* ------------------------------------------------------------------------
+   * VERSIONSNUMMER JE SATZ — ZWEI FENSTER ÜBERSCHREIBEN EINANDER NICHT (E801)
+   * ------------------------------------------------------------------------
+   * Jeder Satz in `blocks`, `collections` und `views` trägt AUF DER PLATTE
+   * eine Zahl `rev`, die bei jedem Schreiben um eins steigt. Dieses Fenster
+   * merkt sich, welche Zahl es zuletzt von der Platte gesehen hat
+   * (`plattenRev`). Beim Schreiben liest `flush` in DERSELBEN Transaktion
+   * erst die Platte: steht dort eine andere Zahl, hat ein anderes Fenster
+   * dazwischen geschrieben — dann wird zusammengeführt statt überschrieben.
+   * IndexedDB reiht Schreibtransaktionen auf dasselbe Fach hintereinander,
+   * auch über Fenster hinweg; Lesen und Schreiben in einer Transaktion ist
+   * deshalb ein echtes „vergleichen und setzen".
+   *
+   * WARUM DIE ZAHL NICHT IM SATZ IM SPEICHER STEHT. Die Objekte im
+   * Zwischenspeicher reisen in Sicherungen (`exportAll`) und in den Abgleich
+   * mit anderen Geräten. Eine Zahl, die nur für DIESES Gerät stimmt, wäre
+   * dort ein Feld, in dem sich zwei Geräte immer unterscheiden — ein
+   * Konflikt ohne Inhalt. Also: auf der Platte ja, im Satz nein. Beim Laden
+   * und beim Nachlesen wird sie abgenommen (`revAbnehmen`).
+   *
+   * DIE BASIS. Zum Zusammenführen braucht es den Stand, auf dem die eigene
+   * Änderung beruht. `updateBlock`, `updateCollection` und `updateView`
+   * merken ihn sich VOR der Änderung (`merkeBasis`), aber nur, solange der
+   * Satz sauber ist — dann ist der Zwischenspeicher gleich der Platte.
+   * Gemerkt wird nur, was wartet; nach dem Schreiben wird es vergessen.
+   * Ohne Basis (andere Wege, die direkt ändern) wird feldweise
+   * zusammengeführt: Listen von Kennungen vereint, Zeitstempel nach dem
+   * jüngeren, und wo beide dasselbe Feld verschieden haben, behält dieses
+   * Fenster seins und der andere Wert steht in der Konfliktliste — wie beim
+   * Abgleich zwischen Geräten (`Zusammen`).
+   *
+   * ALTE SÄTZE ohne `rev` werden ohne Vergleich geschrieben, wie bisher, und
+   * bekommen dabei ihre erste Zahl. Ein Fenster mit der alten Fassung der App
+   * schreibt weiter ohne Zahl; das ist kein Rückschritt, nur kein Schutz.
+   * ----------------------------------------------------------------------*/
+  const VERSIONIERT = new Set(['blocks', 'collections', 'views']);
+  const plattenRev = new Map<string, number>();
+  const basisStand = new Map<string, any>();
+
+  const revAbnehmen = (fach: string, satz: any): void => {
+    if (!satz || !VERSIONIERT.has(fach)) return;
+    if (typeof satz.rev === 'number') plattenRev.set(fach + ':' + satz.id, satz.rev);
+    if ('rev' in satz) delete satz.rev;
+  };
+
+  const merkeBasis = (fach: string, satz: any): void => {
+    if (!satz) return;
+    const k = fach + ':' + satz.id;
+    if (pending.has(k) || basisStand.has(k)) return;
+    try { basisStand.set(k, JSON.parse(JSON.stringify(satz))); }
+    catch { /* ein Satz, der sich nicht abbilden lässt, wird ohne Basis zusammengeführt */ }
+  };
+
+  const gleichWert = (a: unknown, b: unknown): boolean =>
+    JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+
+  /** Eigene Fassung (`hier`) und die auf der Platte (`dort`) zu einer. */
+  const zusammenMitFenster = (basis: any, hier: any, dort: any): { satz: any; konflikte: any[] } => {
+    if (basis && typeof Zusammen !== 'undefined' && Zusammen.dreiWege) {
+      const r = Zusammen.dreiWege(basis, hier, dort);
+      return { satz: r.satz, konflikte: r.konflikte || [] };
+    }
+    const satz: Record<string, any> = { ...hier };
+    const konflikte: any[] = [];
+    const namen = new Set([...Object.keys(hier || {}), ...Object.keys(dort || {})]);
+    for (const k of namen) {
+      const H = hier?.[k], D = dort?.[k];
+      if (gleichWert(H, D)) continue;
+      if (H === undefined) { satz[k] = D; continue; }      /* nur drüben: übernehmen */
+      if (D === undefined) continue;                       /* nur hier: behalten */
+      if (k === 'edited' || k === 'created') { satz[k] = String(H) > String(D) ? H : D; continue; }
+      if (Array.isArray(H) && Array.isArray(D) && (k === 'content' || k === 'viewIds')) {
+        /* Kein Zeiger geht verloren: erst die eigene Folge, dann was drüben dazukam. */
+        satz[k] = [...H, ...D.filter((x: unknown) => !H.includes(x))];
+        continue;
+      }
+      konflikte.push({ pfad: [k], feld: k, hier: H, dort: D,
+        grund: 'Zwei Fenster haben dasselbe Feld zugleich geändert — dieses Fenster hat seine Fassung behalten.' });
+    }
+    return { satz, konflikte };
+  };
   let timer: any = null;
+  let eilig = false;
+
+  /* ------------------------------------------------------------------------
+   * SPEICHER VOLL (E802)
+   * ------------------------------------------------------------------------
+   * Ist das Kontingent des Browsers erschöpft, scheitert jedes Schreiben mit
+   * `QuotaExceededError`. Die Sätze bleiben dann im Stapel — aber nur im
+   * Arbeitsspeicher. Vorher erschien dafür eine allgemeine Fehlermeldung,
+   * und wer das Fenster schloss, verlor alles, was noch wartete, ohne
+   * Rückfrage. Jetzt: eine Meldung, die sagt, was los ist und wie viel
+   * wartet; alle 15 Sekunden ein neuer Versuch; und im Browser eine
+   * Rückfrage beim Schliessen, solange etwas ungesichert ist.
+   * ----------------------------------------------------------------------*/
+  let speicherVoll = false;
+  let wiederholung: any = null;
+  const WIEDERHOLEN_MS = 15000;
+  const istVoll = (err: unknown): boolean => {
+    const e = err as { name?: unknown; message?: unknown; speicherVoll?: unknown } | null;
+    return !!e && (e.speicherVoll === true || e.name === 'QuotaExceededError' ||
+                   /quota/i.test(String(e.message ?? '')));
+  };
+  const meldeVoll = (): void => {
+    speicherVoll = true;
+    const n = pending.size;
+    warne('Der Speicher dieses Geräts ist voll: ' + n + ' Änderung' + (n === 1 ? ' ist' : 'en sind') +
+          ' noch nicht gesichert. Redion versucht es alle 15 Sekunden wieder. ' +
+          'Gib Platz frei oder lege eine Sicherung an — und schliesse dieses Fenster nicht, ' +
+          'solange diese Meldung steht.');
+    if (!wiederholung) wiederholung = setTimeout(() => {
+      wiederholung = null;
+      flush().catch(() => { /* meldet sich selbst wieder */ });
+    }, WIEDERHOLEN_MS);
+  };
+  const vollVorbei = (): void => {
+    if (!speicherVoll || pending.size) return;
+    speicherVoll = false;
+    if (wiederholung) { clearTimeout(wiederholung); wiederholung = null; }
+    warne('Der Speicher hat wieder Platz — alle Änderungen sind gesichert.');
+  };
+
+  let naechsterSchritt = 1;
+  let offenerSchritt = 0;
+  /* Vereinigung der Schritte: Kennung → Vertreter. */
+  const schrittEltern = new Map<number, number>();
+  const schrittWurzel = (s: number): number => {
+    let w = s;
+    while (schrittEltern.has(w) && schrittEltern.get(w) !== w) w = schrittEltern.get(w)!;
+    /* Pfad verkürzen, damit lange Ketten beim Tippen nicht wachsen */
+    let x = s;
+    while (x !== w) { const n = schrittEltern.get(x)!; schrittEltern.set(x, w); x = n; }
+    return w;
+  };
+  const schritteVereinen = (a: number, b: number): number => {
+    const wa = schrittWurzel(a), wb = schrittWurzel(b);
+    if (wa !== wb) {
+      schrittEltern.set(wb, wa);
+      schrittGroesse.set(wa, (schrittGroesse.get(wa) || 0) + (schrittGroesse.get(wb) || 0));
+      schrittGroesse.delete(wb);
+    }
+    return wa;
+  };
+  /* Satzzahl je Schritt (am Vertreter), um Umstellungen zu erkennen. */
+  const schrittGroesse = new Map<number, number>();
+
+  const aktuellerSchritt = (): number => {
+    if (!offenerSchritt) {
+      offenerSchritt = naechsterSchritt++;
+      const zu = () => { offenerSchritt = 0; };
+      if (typeof queueMicrotask === 'function') queueMicrotask(zu);
+      else Promise.resolve().then(zu);
+    }
+    return offenerSchritt;
+  };
 
   const save = (store: any, val: any) => {
     if (store === 'blocks' || store === 'collections') datenGeaendert();
-    pending.set(store + ':' + val.id, { store, val });
+    const k = store + ':' + val.id;
+    let s = aktuellerSchritt();
+    const vorher = pending.get(k);
+    if (vorher && schrittWurzel(vorher.schritt) !== schrittWurzel(s))
+      s = schritteVereinen(vorher.schritt, s);
+    const w = schrittWurzel(s);
+    if (!vorher || schrittWurzel(vorher.schritt) !== w)
+      schrittGroesse.set(w, (schrittGroesse.get(w) || 0) + 1);
+    pending.set(k, { store, val, schritt: w });
+    if ((schrittGroesse.get(w) || 0) > 1) eilig = true;
     clearTimeout(timer);
-    timer = setTimeout(flush,
-      (typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.SCHREIB_PAUSE_MS : 400);
+    timer = setTimeout(() => {
+      /* Ein voller Speicher hat seine eigene Meldung (E802); alles andere
+         geht weiter als unbehandelte Ablehnung an die Fehleranzeige. */
+      flush().catch((err: unknown) => { if (!istVoll(err)) throw err; });
+    }, eilig ? 0 :
+      ((typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.SCHREIB_PAUSE_MS : 400));
   };
 
   /**
@@ -1427,79 +1652,195 @@ const Store = (() => {
    * Anfrage ihr eigenes `onerror`, das den Abbruch verhindert. Der schlechte
    * Satz geht verloren, die guten kommen an.
    */
+  /* SPEICHER DAUERHAFT ERBITTEN (E805). Ohne `navigator.storage.persist()`
+     darf der Browser die Ablage bei Platznot räumen — still. Den Helfer
+     gab es (`AppEinstellung.speicherSichern`), gerufen wurde er nur von
+     einem Knopf in den Einstellungen. Jetzt: beim ersten gelungenen
+     Schreiben von Blöcken in einer Sitzung, höchstens einmal in 30 Tagen
+     (Firefox fragt dafür mit einem Dialog nach, und eine Bitte, die jeden
+     Start wiederkommt, wäre Drängeln). Ist der Speicher schon dauerhaft,
+     fragt `speicherSichern` gar nicht erst.
+
+     Der Zeitpunkt der letzten Bitte ist eine Einstellung DIESES Geräts,
+     kein Inhalt: er liegt in `localStorage` (wie die Anzeigewahl des
+     Glass Wheel), damit er weder in eine Sicherung noch in den Abgleich
+     reist. Ist `localStorage` gesperrt, wird eben je Sitzung gefragt. */
+  let dauerhaftGefragt = false;
+  const DAUERHAFT_SCHLUESSEL = 'redion:speicher-dauerhaft:gefragt';
+  const DAUERHAFT_ABSTAND_MS = 30 * 24 * 3600 * 1000;
+  function dauerhaftBitten(): void {
+    if (dauerhaftGefragt || DEMO || typeof AppEinstellung === 'undefined') return;
+    dauerhaftGefragt = true;
+    try {
+      const zuletzt = Number(localStorage.getItem(DAUERHAFT_SCHLUESSEL) || 0);
+      if (zuletzt && Date.now() - zuletzt < DAUERHAFT_ABSTAND_MS) return;
+      localStorage.setItem(DAUERHAFT_SCHLUESSEL, String(Date.now()));
+    } catch { /* gesperrt: dann eben je Sitzung */ }
+    AppEinstellung.speicherSichern().catch(() => false);
+  }
+
+  /* DER LETZTE DURCHGANG, DER NOCH SCHREIBT (E809). Ein `flush`, der nichts
+     mehr vorfindet, weil ein früherer die Sätze schon genommen hat, wartete
+     bisher auf nichts: er meldete „gespeichert", während die Transaktion
+     noch lief. Ein Neuladen dazwischen verlor die Seite (gemessen: auf dem
+     Stand vor E809 blieb nach `flush(); flush(); reload` in 9 von 10 Fällen
+     nichts übrig). Jetzt wartet jeder Aufruf auf den letzten Durchgang. */
+  let laufend: Promise<unknown> = Promise.resolve();
   const flush = (): Promise<unknown> => {
-    if (!db) { pending.clear(); return Promise.resolve(); }
+    clearTimeout(timer);
+    eilig = false;
+    if (!db) { pending.clear(); schrittEltern.clear(); schrittGroesse.clear(); return Promise.resolve(); }
     const schluessel = [...pending.keys()];
-    const posten = [...pending.values()];
+    /* Den Vertreter jedes Schritts JETZT festhalten: was danach gespeichert
+       wird, darf die Gruppen dieses Durchgangs nicht mehr verschieben. */
+    const posten: Posten[] = [...pending.values()].map(x => ({ ...x, schritt: schrittWurzel(x.schritt) }));
     pending.clear();
-    if (!posten.length) return Promise.resolve();
+    posten.forEach(x => schrittGroesse.delete(x.schritt));
+    if (!posten.length) return laufend.then(() => undefined, () => undefined);
 
     /* Ein Satz, der nicht ankam, kommt zurück in den Stapel — der nächste
        flush versucht es wieder. Aber nur, wenn dort nicht längst ein
        NEUERER Stand desselben Satzes wartet; der ältere darf ihn nie
-       überschreiben. Der Schlüssel ist derselbe wie in `save`. */
-    const zurueckInDenStapel = (welche: { store: any; val: any }[]): void => {
+       überschreiben. Der Schlüssel ist derselbe wie in `save`.
+       Wartet dort schon ein neuerer Stand, wird dessen Schritt mit dem
+       zurückgekehrten vereint: der neuere Satz trägt die Änderung des
+       gescheiterten Schritts mit, also müssen dessen Partner mit ihm
+       landen und nicht ohne ihn (E800). */
+    const zurueckInDenStapel = (welche: Posten[]): void => {
       welche.forEach(x => {
         const k = x.store + ':' + x.val.id;
-        if (!pending.has(k)) pending.set(k, x);
+        const da = pending.get(k);
+        if (!da) {
+          pending.set(k, x);
+          const w = schrittWurzel(x.schritt);
+          schrittGroesse.set(w, (schrittGroesse.get(w) || 0) + 1);
+        } else {
+          da.schritt = schritteVereinen(da.schritt, x.schritt);
+        }
       });
     };
 
-    let fertig: Promise<unknown>;
-    try {
-      const faecher = [...new Set(posten.map(x => x.store))];
-      const t = tx(faecher, 'readwrite');
-      const gescheitert: { store: any; val: any }[] = [];
-      posten.forEach((eintrag) => {
-        const { store, val } = eintrag;
-        try {
-          const r = t.objectStore(store).put(val);
-          r.onerror = (e: any) => {
-            e.preventDefault();          /* nicht den ganzen Stapel abbrechen */
-            gescheitert.push(eintrag);
-            if (typeof Reporter !== 'undefined')
-              Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id });
-          };
-        } catch (err) {
-          gescheitert.push(eintrag);
-          if (typeof Reporter !== 'undefined')
-            Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben', { store, id: val.id, err });
+    const melde = (eintrag: Posten, err?: unknown) => {
+      if (typeof Reporter !== 'undefined')
+        Reporter.warn('ablage', 'Ein Satz liess sich nicht schreiben',
+          { store: eintrag.store, id: eintrag.val.id, ...(err ? { err } : {}) });
+    };
+
+    /* Schreibt eine Menge Sätze in EINER Transaktion, ganz oder gar nicht.
+       Ein Satz, der scheitert (auch ein synchroner Wurf, etwa ein
+       DataCloneError), bricht die Transaktion ab — dann ist NICHTS davon
+       auf der Platte. `oncomplete` heisst: auf der Platte. */
+    /* Was eine gelungene Transaktion über jeden Satz weiss. */
+    type Geschrieben = { k: string; store: string; id: string; rev: number | null;
+                         zusammengefuehrt: boolean; konflikte: any[] };
+
+    const ganzOderGarNicht = (menge: Posten[]): Promise<Geschrieben[]> => new Promise((ok, nein) => {
+      let t: IDBTransaction;
+      try {
+        t = tx([...new Set(menge.map(x => x.store))], 'readwrite');
+      } catch (err) { nein(err); return; }
+      let ersterFehler: unknown = null;
+      const raus: Geschrieben[] = [];
+      t.oncomplete = () => ok(raus);
+      t.onerror = t.onabort = () => nein(ersterFehler || (t as any).error ||
+        new Error('Das Schreiben wurde abgebrochen — nichts davon ist auf der Platte'));
+      const abbrechen = (eintrag: Posten, err: unknown) => {
+        if (!ersterFehler) ersterFehler = err;
+        melde(eintrag, err);
+        try { t.abort(); } catch { /* schon beendet */ }
+      };
+      const schreibe = (eintrag: Posten, wert: any) => {
+        const r = t.objectStore(eintrag.store).put(wert);
+        r.onerror = () => { if (!ersterFehler) ersterFehler = r.error; melde(eintrag, r.error); };
+      };
+      for (const eintrag of menge) {
+        const id = String(eintrag.val.id);
+        const k = eintrag.store + ':' + id;
+        if (!VERSIONIERT.has(eintrag.store)) {
+          try { schreibe(eintrag, eintrag.val); }
+          catch (err) { abbrechen(eintrag, err); return; }
+          raus.push({ k, store: eintrag.store, id, rev: null, zusammengefuehrt: false, konflikte: [] });
+          continue;
         }
-      });
-      /* `oncomplete` heisst: auf der Platte. `onerror` und `onabort`
-         zeigten hier jahrelang auf DASSELBE `ok` — ein flush nach vollem
-         Speicher „gelang", und die Meldung unten ging trotzdem hinaus.
-         Jetzt: ein Abbruch rollt alles zurück (so arbeitet eine
-         Transaktion), also wandert alles zurück in den Stapel, und der
-         Aufrufer bekommt ein Nein. Einzelne gescheiterte Sätze in einer
-         sonst gelungenen Transaktion sind auch ein Nein — eines, das die
-         Zahl nennt. */
-      fertig = new Promise((ok, nein) => {
-        t.oncomplete = () => {
-          if (!gescheitert.length) return ok(undefined);
-          zurueckInDenStapel(gescheitert);
-          nein(new Error(gescheitert.length + ' von ' + posten.length +
-                         ' Sätzen liessen sich nicht schreiben'));
+        /* Erst lesen, dann schreiben — in DIESER Transaktion (E801). */
+        let lesen: IDBRequest;
+        try { lesen = t.objectStore(eintrag.store).get(eintrag.val.id); }
+        catch (err) { abbrechen(eintrag, err); return; }
+        lesen.onsuccess = () => {
+          try {
+            const platte = lesen.result;
+            const plattenNr = platte && typeof platte.rev === 'number' ? platte.rev : undefined;
+            const erwartet = plattenRev.get(k);
+            let zusammengefuehrt = false;
+            let konflikte: any[] = [];
+            if (platte && (plattenNr !== undefined || erwartet !== undefined) && plattenNr !== erwartet) {
+              /* Ein anderes Fenster hat dazwischen geschrieben. */
+              const dort = { ...platte };
+              delete dort.rev;
+              const r = zusammenMitFenster(basisStand.get(k) ?? null, eintrag.val, dort);
+              Object.assign(eintrag.val, r.satz);
+              if ('rev' in eintrag.val) delete eintrag.val.rev;
+              zusammengefuehrt = true;
+              konflikte = r.konflikte;
+            }
+            const neu = (plattenNr ?? 0) + 1;
+            schreibe(eintrag, { ...eintrag.val, rev: neu });
+            raus.push({ k, store: eintrag.store, id, rev: neu, zusammengefuehrt, konflikte });
+          } catch (err) { abbrechen(eintrag, err); }
         };
-        t.onerror = t.onabort = () => {
-          zurueckInDenStapel(posten);
-          nein((t as any).error ||
-               new Error('Das Schreiben wurde abgebrochen — nichts davon ist auf der Platte'));
-        };
+      }
+    });
+
+    /* Nach einer gelungenen Transaktion: die neue Zahl merken, die Basis
+       vergessen, und was zusammengeführt wurde zeigen. Ein Konflikt, den
+       niemand sieht, ist so gut wie keiner (E801). */
+    const nachSchreiben = (liste: Geschrieben[]): void => {
+      let zeichnen = false;
+      for (const g of liste) {
+        if (g.rev !== null) plattenRev.set(g.k, g.rev);
+        basisStand.delete(g.k);
+        if (g.zusammengefuehrt) zeichnen = true;
+        if (g.konflikte.length && typeof Zusammen !== 'undefined') {
+          try { Zusammen.merke(g.id, g.store, g.konflikte); } catch { /* die Liste ist Zugabe */ }
+        }
+      }
+      if (liste.some(g => g.konflikte.length) && typeof Zusammen !== 'undefined') {
+        try { Zusammen.melde(); Zusammen.hinweisen(); } catch { /* ohne Oberfläche */ }
+      }
+      if (zeichnen) notify('fremd');
+      if (liste.some(g => g.store === 'blocks')) dauerhaftBitten();
+    };
+
+
+    /* Erst alles in einem Zug — der schnelle Weg, und der übliche. Geht das
+       schief, ist nichts geschrieben; dann Schritt für Schritt, damit ein
+       schlechter Schritt die guten nicht aufhält. */
+    const fertig: Promise<unknown> = ganzOderGarNicht(posten).then((liste) => { nachSchreiben(liste); vollVorbei(); return undefined; }, async (ersterFehler: unknown) => {
+      let voll = istVoll(ersterFehler);
+      const schritte = new Map<number, Posten[]>();
+      posten.forEach(x => {
+        const liste = schritte.get(x.schritt);
+        if (liste) liste.push(x); else schritte.set(x.schritt, [x]);
       });
-    } catch (err) {
-      /* Geht die Sammeltransaktion gar nicht auf, lieber einzeln als nicht:
-         ein langsamer Weg ist besser als ein verlorener Stapel. */
-      fertig = Promise.all(posten.map((eintrag) =>
-        put(eintrag.store, eintrag.val).then(() => undefined,
-          () => { zurueckInDenStapel([eintrag]); return 'kaputt'; })
-      )).then(ergebnisse => {
-        const kaputt = ergebnisse.filter(x => x === 'kaputt').length;
-        if (kaputt) throw new Error(kaputt + ' von ' + posten.length +
-                                    ' Sätzen liessen sich nicht schreiben');
-        return undefined;
-      });
-    }
+      const gescheitert: Posten[] = [];
+      const gelandet: string[] = [];
+      for (const menge of schritte.values()) {
+        try {
+          nachSchreiben(await ganzOderGarNicht(menge));
+          menge.forEach(x => gelandet.push(x.store + ':' + x.val.id));
+        } catch (err) { gescheitert.push(...menge); if (istVoll(err)) voll = true; }
+      }
+      /* Was gelandet ist, erfahren die anderen Fenster auch dann, wenn ein
+         anderer Schritt hängen blieb — sonst schreiben sie ihren alten
+         Stand über einen Satz, der längst auf der Platte steht. */
+      if (gelandet.length) meldeAnAndereFenster('geaendert', gelandet);
+      if (!gescheitert.length) { vollVorbei(); return 'gemeldet'; }
+      zurueckInDenStapel(gescheitert);
+      if (voll) meldeVoll();
+      throw Object.assign(new Error(gescheitert.length + ' von ' + posten.length +
+                      ' Sätzen liessen sich nicht schreiben — ihre Arbeitsschritte bleiben ganz im Stapel'),
+                      { speicherVoll: voll });
+    });
 
     /* Und die anderen Fenster wissen es jetzt auch. Siehe `nachbarn.js`:
        ohne diese Zeile hält jedes Fenster seinen eigenen Stand für die
@@ -1511,14 +1852,34 @@ const Store = (() => {
        auch im Fehlerfall: nach einem Abbruch geht KEINE Meldung hinaus —
        drüben gäbe es nichts zu lesen. (Der leere zweite Ast hält nur die
        abgeleitete Kette still; die Ablehnung selbst bekommt der Aufrufer.) */
-    fertig.then(() => meldeAnAndereFenster('geaendert', schluessel), () => {});
+    fertig.then((x) => { if (x !== 'gemeldet') meldeAnAndereFenster('geaendert', schluessel); }, () => {});
+    /* Wartet nichts mehr, braucht es keine Zuordnung der Schritte mehr —
+       sonst wüchse sie beim Tippen mit jedem Tastendruck. */
+    const aufraeumen = () => { if (!pending.size) { schrittEltern.clear(); schrittGroesse.clear(); } };
+    fertig.then(aufraeumen, aufraeumen);
+    laufend = fertig.then(() => undefined, () => undefined);
     return fertig;
   };
 
   /* Vor dem Schließen des Tabs alles rausschreiben. Die Ablehnung ist hier
      nicht mehr zu gebrauchen — das Fenster schliesst; gemeldet hat flush
      selbst schon über den Reporter. */
-  window.addEventListener('beforeunload', () => { flush().catch(() => {}); });
+  window.addEventListener('beforeunload', (e: BeforeUnloadEvent) => {
+    const ungesichert = speicherVoll && pending.size > 0;
+    flush().catch(() => {});
+    /* Rückfrage im Browser UND in der Desktop-App: dort fängt
+       `windows/main.cjs` das abgelehnte Entladen mit `will-prevent-unload`
+       und fragt mit einem eigenen Dialog (L268). */
+    if (ungesichert) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+  /* KEIN EIGENER `pagehide`-ZUHÖRER (E800, Nachtrag E801). E800 hatte einen
+     gesetzt; `test189` zählt die `pagehide`-Zuhörer und erlaubt einen, und
+     nötig war er nicht: `visibilitychange` mit `document.hidden` kommt in
+     allen heutigen Browsern — auch Safari und WKWebView beim Wegwischen —
+     VOR `pagehide`, und dort wird oben schon geschrieben. */
   window.addEventListener('visibilitychange', () => { if (document.hidden) flush().catch(() => {}); });
 
   /* ========================================================================
@@ -2356,6 +2717,7 @@ const Store = (() => {
     }
 
     /* Erst JETZT, nach dem oncomplete, den Zwischenspeicher umstellen. */
+    plattenRev.clear(); basisStand.clear();
     if (art === 'ersetzen') {
       cache.blocks = neu.blocks; cache.collections = neu.collections;
       cache.views = neu.views;   cache.meta = neu.meta;
@@ -2997,6 +3359,7 @@ const Store = (() => {
     })));
     cache.blocks = {}; cache.collections = {}; cache.views = {}; cache.meta = {};
     cache.suchindex = {};
+    plattenRev.clear(); basisStand.clear();
     datenGeaendert();
     meldeAnAndereFenster('alles', []);
     if (geblieben.length) {

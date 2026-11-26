@@ -66,7 +66,11 @@ const geometry = await page.evaluate(() => {
     oldPath: old?.getAttribute('d'), tags: samples.map(node => node?.tagName),
     markerOpacity: samples[0]?.getAttribute('opacity'),
     text: samples[5]?.textContent, textChildren: samples[5]?.children.length,
-    smooth: InkGeometry.path([[0, 0], [10, 20], [30, 10]]),
+    /* E825: seit E676 hält der Glätter eine spitze Ecke — die drei Punkte
+       hier standen früher allein und sind ein Knick. Also beide Seiten:
+       ein sanfter Bogen wird Kurve, ein Knick bleibt Ecke. */
+    smooth: InkGeometry.path([[0, 0], [10, 4], [20, 6], [30, 6]]),
+    corner: InkGeometry.path([[0, 0], [10, 20], [30, 10]]),
     lowWidth: Number(lowPressure?.getAttribute('stroke-width')),
     highWidth: Number(highPressure?.getAttribute('stroke-width'))
   };
@@ -82,6 +86,7 @@ equal('Text wird als Text statt als HTML gezeichnet', [geometry.text, geometry.t
 check('Druck veraendert die sichtbare Strichbreite', geometry.highWidth > geometry.lowWidth,
   `${geometry.lowWidth} / ${geometry.highWidth}`);
 check('Freihand mit mehreren Punkten wird geglaettet', geometry.smooth.includes(' Q'), geometry.smooth);
+check('Ein spitzer Knick bleibt eine Ecke (E676)', !geometry.corner.includes(' Q') && geometry.corner.includes(' L10 20'), geometry.corner);
 
 const built = await page.evaluate(async () => {
   Store.setMeta('rundgangGesehen', true);

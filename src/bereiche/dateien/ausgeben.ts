@@ -3301,3 +3301,12 @@ const Austausch = (() => {
 })();
 
 (window as any).Austausch = Austausch;
+
+if (typeof Ereignisse !== 'undefined' && typeof Ereignisse.horche === 'function' && typeof ARTEN !== 'undefined') {
+  Ereignisse.horche(ARTEN.frageDateiExport, (daten: unknown) => {
+    const exportDatei = daten as { blob?: unknown; name?: unknown } | undefined;
+    if (exportDatei?.blob instanceof Blob && typeof exportDatei.name === 'string')
+      return Austausch.laden(exportDatei.blob, exportDatei.name);
+    return undefined;
+  });
+}

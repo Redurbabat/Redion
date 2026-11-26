@@ -75,6 +75,72 @@ const Trainer = (() => {
         }
         return b;
     };
+
+
+    let matchRunde = null;
+    const matchPaare = (karten) => {
+      const roh = karten.filter(k => k.quiz?.kind === 'schreiben' && k.quiz?.format === 'flashcard' && !k.quiz.image)
+        .map(k => ({frage:frageVon(k),antwort:String(k.quiz.musterloesung?.[0] || '').trim()}))
+        .filter(p => p.frage && p.antwort && p.frage.length <= 160 && p.antwort.length <= 100);
+      const norm = (s) => s.normalize('NFKC').trim().replace(/\s+/g,' ').toLowerCase();
+      // Both sides must be unambiguous: no repeated question or answer.
+      const fragen = new Map(), antworten = new Map();
+      for (const p of roh) {
+        const f=norm(p.frage), a=norm(p.antwort);
+        fragen.set(f,(fragen.get(f)||0)+1);
+        antworten.set(a,(antworten.get(a)||0)+1);
+      }
+      return roh.filter(p=>fragen.get(norm(p.frage))===1 && antworten.get(norm(p.antwort))===1);
+    };
+    const matchStart = (kapitel) => {
+      const paare=mischen(matchPaare(karten().filter(k=>kapitelVon(k)===kapitel))).slice(0,6);
+      if(paare.length<3){start();return;}
+      const ids=paare.map((_,i)=>i);
+      zustand.runde=null;
+      matchRunde={kapitel,paare,links:mischen(ids),rechts:mischen(ids),wahl:null,fertig:new Set(),fehler:0,beginn:Date.now(),sekunden:0,meldung:'Wähle eine Frage und die passende Antwort.'};
+      matchZeige();
+    };
+    const matchZeige = () => {
+      const ziel=zustand.ziel,r=matchRunde;
+      if(!ziel||!r)return;
+      if(r.fertig.size===r.paare.length){
+        ziel.innerHTML=`<section class="lw-trainer-match"><header class="lw-section-head"><h2>Match abgeschlossen</h2><p>${esc(r.kapitel)}</p></header>
+          <div class="lw-training-result"><h2>${r.paare.length} / ${r.paare.length} Paare</h2><p>${r.sekunden} Sekunden · ${r.fehler} Fehlversuche</p></div>
+          <div class="lw-trainer-reihe">${knopf('Zur Übersicht','data-tr-zurueck')}${knopf('Nochmal spielen',`data-tr-start="match" data-kapitel="${esc(r.kapitel)}"`,'is-primary')}</div></section>`;
+        ziel.querySelector('[data-tr-zurueck]')?.focus();
+        return;
+      }
+      const spalte=(seite,ids)=>ids.map(i=>{
+        const fertig=r.fertig.has(i), aktiv=r.wahl?.seite===seite&&r.wahl.index===i;
+        const p=r.paare[i];
+        return `<button type="button" class="lw-match-kachel${fertig?' is-fertig':''}" data-tr-match="${seite}" data-index="${i}" aria-pressed="${aktiv}" ${fertig?'disabled':''}>${esc(seite==='links'?p.frage:p.antwort)}${fertig?' <span aria-label="Zugeordnet">✓</span>':''}</button>`;
+      }).join('');
+      ziel.innerHTML=`<section class="lw-trainer-match"><header class="lw-session-head"><div><p>Match</p><h2>${esc(r.kapitel)}</h2></div>${knopf('Beenden','data-tr-zurueck')}</header>
+        <progress max="${r.paare.length}" value="${r.fertig.size}" aria-label="Zugeordnete Paare"></progress>
+        <p class="lw-trainer-hinweis">${r.fertig.size} von ${r.paare.length} Paaren · ${r.fehler} Fehlversuche</p>
+        <div class="lw-match-grid"><div class="lw-match-spalte"><h3>Fragen</h3>${spalte('links',r.links)}</div><div class="lw-match-spalte"><h3>Antworten</h3>${spalte('rechts',r.rechts)}</div></div>
+        <p class="lw-match-meldung" role="status" aria-live="polite">${esc(r.meldung)}</p></section>`;
+    };
+    const matchWahl = (seite,index) => {
+      const r=matchRunde,ziel=zustand.ziel;
+      if(!r||!ziel||!['links','rechts'].includes(seite)||!Number.isInteger(index)||index<0||index>=r.paare.length||r.fertig.has(index))return;
+      if(!r.wahl||r.wahl.seite===seite){
+        r.wahl=r.wahl?.index===index&&r.wahl.seite===seite?null:{seite,index};
+        r.meldung=r.wahl?'Wähle das passende Gegenstück.':'Wähle eine Frage oder Antwort.';
+      }else{
+        if(r.wahl.index===index){
+          r.fertig.add(index);r.meldung='Richtig zugeordnet.';
+          if(r.fertig.size===r.paare.length)r.sekunden=Math.max(0,Math.floor((Date.now()-r.beginn)/1000));
+        }else{r.fehler++;r.meldung='Das passt nicht. Versuche es erneut.';}
+        r.wahl=null;
+      }
+      matchZeige();
+      if(r.fertig.size===r.paare.length)return;
+      const andere=seite==='links'?'rechts':'links';
+      const focusSelector=r.wahl?`[data-tr-match="${andere}"]:not(:disabled)`:`[data-tr-match="${seite}"]:not(:disabled)`;
+      ziel.querySelector(focusSelector)?.focus({preventScroll:true});
+    };
+
     const aufgabenVon = (name) => {
         const alle = karten();
         if (name === 'pruefung')
@@ -83,6 +149,8 @@ const Trainer = (() => {
             return alle.filter(k => istPruefung(k) && kapitelVon(k) === name.slice(9));
         if (name.startsWith('kapitel:'))
             return alle.filter(k => kapitelVon(k) === name.slice(8));
+        if (name.startsWith('test:'))
+            return alle.filter(k => kapitelVon(k) === name.slice(5));
         if (name.startsWith('thema:'))
             return alle.filter(k => String(k.quiz.thema || '') === name.slice(6));
         if (name.startsWith('art:'))
@@ -92,6 +160,8 @@ const Trainer = (() => {
     const warteschlange = (name, aufgaben) => {
         if (name === 'pruefung' || name.startsWith('pruefung:'))
             return aufgaben;
+        if (name.startsWith('test:'))
+            return mischen(aufgaben).slice(0, RUNDE_HOECHSTENS);
         const faellig = mischen(aufgaben.filter(istFaellig)).sort((a, b) => boxRang(a) - boxRang(b));
         const rest = mischen(aufgaben.filter(k => !istFaellig(k))).sort((a, b) => boxRang(a) - boxRang(b));
         return faellig.concat(rest).slice(0, RUNDE_HOECHSTENS);
@@ -146,6 +216,7 @@ const Trainer = (() => {
         if (!ziel)
             return;
         zustand.runde = null;
+        matchRunde = null;
         const alle = karten();
         const offen = kapitelVorlagen().filter(v => !v.angelegt);
         const anlegen = offen.length
@@ -167,9 +238,17 @@ const Trainer = (() => {
             const themen = Array.from(new Set(zu.map(k => String(k.quiz.thema || '')).filter(Boolean)));
             const pruefung = aufgabenVon('pruefung:' + kap).length;
             const sitztKap = zu.filter(k => boxRang(k) >= 4).length;
+            const faelligKap = zu.filter(istFaellig).length;
+            const neuKap = zu.filter(k => !k.sr).length;
+            const fachNamen = Array.from(new Set(zu.map(k => String(k.quiz.subject || '')).filter(Boolean)));
             return `<section class="lw-trainer-kapitel" data-tr-kapitel="${esc(kap)}"><h3 class="lw-trainer-h3">${esc(kap)} · ${sitztKap}/${zu.length} sitzen</h3>
+        <p class="lw-trainer-hinweis">${fachNamen.length ? esc(fachNamen.join(' · ')) + ' · ' : ''}${zu.length} Karten · ${neuKap} neu · ${faelligKap} fällig</p>
+        <progress max="${zu.length}" value="${sitztKap}" aria-label="Sichere Karten im Set"></progress>
         <div class="lw-trainer-reihe">
           ${knopf(`Lernen — ${zu.length} Aufgaben`, `data-tr-start="kapitel" data-kapitel="${esc(kap)}"`)}
+          ${knopf(`Test — ${Math.min(zu.length, RUNDE_HOECHSTENS)} Fragen`, `data-tr-start="test" data-kapitel="${esc(kap)}"`)}
+          ${matchPaare(zu).length>=3?knopf('Match — Paare zuordnen',`data-tr-start="match" data-kapitel="${esc(kap)}"`):''}
+
           ${pruefung ? knopf(`Prüfung üben — ${pruefung} Fragen der Reihe nach`, `data-tr-start="pruefung" data-kapitel="${esc(kap)}"`) : ''}
         </div>
         ${themen.length ? `<div class="lw-trainer-reihe">${themen.map(t => {
@@ -229,7 +308,7 @@ const Trainer = (() => {
     const kopf = (k) => {
         const r = zustand.runde;
         const b = boxVon(k);
-        return `<header class="lw-session-head lw-trainer-kopf"><div><p>${esc(r.name.startsWith('pruefung') ? 'Prüfung üben' : 'Lernen')}</p>
+        return `<header class="lw-session-head lw-trainer-kopf"><div><p>${esc(r.name.startsWith('test:') ? 'Test' : r.name.startsWith('pruefung') ? 'Prüfung üben' : 'Lernen')}</p>
       <h2>Karte ${r.index + 1} von ${r.reihenfolge.length}</h2></div>${knopf('Beenden', 'data-tr-ende')}</header>
       <progress max="${r.reihenfolge.length}" value="${r.index}" aria-label="Fortschritt der Runde"></progress>
       <div class="lw-trainer-marken"><span class="lw-trainer-marke">${esc(themaName(String(k.quiz.thema || '')))}</span>
@@ -260,16 +339,16 @@ const Trainer = (() => {
             const optionen = Array.isArray(k.quiz.optionen) ? k.quiz.optionen : [];
             const reihenfolge = mischen(optionen.map((_, i) => i));
             rumpf = `<h3 class="lw-trainer-frage">${esc(frageVon(k))}</h3>
-        <p class="lw-trainer-anweisung">Kreuzen Sie die richtige(n) Antwort(en) an.</p>
-        <div class="lw-trainer-optionen">${reihenfolge.map((i, platz) => `<label class="lw-trainer-option"><input type="checkbox" data-tr-option="${i}"><span class="lw-trainer-option-text"><b>${'abcdefgh'[platz] ?? ''})</b> ${esc(optionen[i]?.text ?? '')}</span></label>`).join('')}</div>
+        <p class="lw-trainer-anweisung">${k.quiz.format === 'single_select' || k.quiz.format === 'true_false' ? 'Wähle eine Antwort.' : 'Wähle alle richtigen Antworten.'}</p>
+        <div class="lw-trainer-optionen">${reihenfolge.map((i, platz) => `<label class="lw-trainer-option"><input type="${k.quiz.format === 'single_select' || k.quiz.format === 'true_false' ? 'radio' : 'checkbox'}" name="redion-trainer-option" data-tr-option="${i}"><span class="lw-trainer-option-text"><b>${'abcdefgh'[platz] ?? ''})</b> ${esc(optionen[i]?.text ?? '')}</span></label>`).join('')}</div>
         <div class="lw-trainer-ergebnis" aria-live="polite"></div>
         <div class="lw-rating lw-trainer-fuss">${knopf('Prüfen', 'data-tr-pruefen', 'is-primary')}</div>`;
         }
         else if (kind === 'schreiben') {
             rumpf = `<h3 class="lw-trainer-frage">${k.quiz.nummer ? `<span class="lw-trainer-nummer">${esc(k.quiz.nummer)}</span> ` : ''}${esc(frageVon(k))}</h3>
-        <textarea class="lw-trainer-antwort" data-tr-antwort rows="4" placeholder="Antwort in eigenen Worten …" aria-label="Deine Antwort"></textarea>
+        ${k.quiz.format === 'flashcard' ? '<p class="lw-trainer-anweisung">Denke an die Antwort und decke die Karte auf.</p>' : `<textarea class="lw-trainer-antwort" data-tr-antwort rows="4" placeholder="Antwort in eigenen Worten …" aria-label="Deine Antwort"></textarea>`}
         <div class="lw-trainer-ergebnis" aria-live="polite"></div>
-        <div class="lw-rating lw-trainer-fuss">${knopf('Musterlösung zeigen', 'data-tr-aufdecken', 'is-primary')}</div>`;
+        <div class="lw-rating lw-trainer-fuss">${knopf(k.quiz.format === 'flashcard' ? 'Antwort anzeigen' : 'Musterlösung zeigen', 'data-tr-aufdecken', 'is-primary')}</div>`;
         }
         else {
             const text = String(k.text || '');
@@ -281,7 +360,11 @@ const Trainer = (() => {
         <div class="lw-trainer-ergebnis" aria-live="polite"></div>
         <div class="lw-rating lw-trainer-fuss">${knopf('Prüfen', 'data-tr-pruefen', 'is-primary')}</div>`;
         }
-        ziel.innerHTML = `<section class="lw-trainer-runde" data-tr-id="${esc(k.id)}" data-tr-kind="${esc(kind)}">${kopf(k)}<article class="lw-study-card lw-trainer-karte">${rumpf}</article></section>`;
+        const image = k.quiz.image;
+        const imageData = typeof image?.data === 'string' && image.data.length <= 12000 &&
+          /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image.data) ? image.data : '';
+        const picture = imageData ? `<figure class="lw-trainer-bild"><img src="${esc(imageData)}" alt="${esc(image.alt || 'Lernbild')}" style="display:block;max-width:100%;max-height:260px;object-fit:contain;margin:auto"></figure>` : '';
+        ziel.innerHTML = `<section class="lw-trainer-runde" data-tr-id="${esc(k.id)}" data-tr-kind="${esc(kind)}">${kopf(k)}<article class="lw-study-card lw-trainer-karte">${picture}${rumpf}</article></section>`;
         zustand.gewaehlt = new Set();
         zustand.geprueft = false;
         zustand.aufgedeckt = false;
@@ -309,7 +392,7 @@ const Trainer = (() => {
         if (!r)
             return;
         try {
-            if (typeof WissenDienst !== 'undefined')
+            if (!r.name.startsWith('test:') && typeof WissenDienst !== 'undefined')
                 WissenDienst.planen(k, note);
         }
         catch { }
@@ -318,7 +401,7 @@ const Trainer = (() => {
         else
             r.falsch++;
         const id = String(k.id);
-        if (note < NOTE_RICHTIG && !r.name.startsWith('pruefung') && (r.nochmal[id] || 0) < NOCHMAL_HOECHSTENS) {
+        if (note < NOTE_RICHTIG && !r.name.startsWith('pruefung') && !r.name.startsWith('test:') && (r.nochmal[id] || 0) < NOCHMAL_HOECHSTENS) {
             r.nochmal[id] = (r.nochmal[id] || 0) + 1;
             r.reihenfolge.splice(Math.min(r.reihenfolge.length, r.index + 1 + NOCHMAL_NACH), 0, id);
         }
@@ -355,7 +438,7 @@ const Trainer = (() => {
             if (wort)
                 l.insertAdjacentHTML('beforeend', `<span class="lw-trainer-option-wort">${wort}</span>`);
         });
-        ergebnisSetzen(`<p class="${richtig ? 'lw-trainer-gut' : 'lw-trainer-schlecht'}">${richtig ? 'Richtig.' : 'Nicht ganz — grün ist richtig, rot war falsch angekreuzt, gestrichelt hat gefehlt.'}</p>`);
+        ergebnisSetzen(`<p class="${richtig ? 'lw-trainer-gut' : 'lw-trainer-schlecht'}">${richtig ? 'Richtig.' : 'Nicht ganz — grün ist richtig, rot war falsch angekreuzt, gestrichelt hat gefehlt.'}</p>${k.quiz.hinweis ? `<p class="lw-trainer-hinweis">${esc(k.quiz.hinweis)}</p>` : ''}`);
         fussSetzen(knopf('Weiter', 'data-tr-weiter', 'is-primary'));
         zustand.ziel?.querySelector('[data-tr-weiter]')?.focus();
         zustand.ziel?.querySelector('.lw-trainer-fuss')?.setAttribute('data-tr-note', String(richtig ? NOTE_RICHTIG : NOTE_FALSCH));
@@ -410,15 +493,18 @@ const Trainer = (() => {
     };
     const beiKlick = (e) => {
         const ziel = zustand.ziel;
-        const el = e.target?.closest('[data-tr-start], [data-tr-anlegen], [data-tr-pruefen], [data-tr-weiter], [data-tr-aufdecken], [data-tr-rate], [data-tr-ende], [data-tr-zurueck], [data-tr-option]');
+        const el = e.target?.closest('[data-tr-start], [data-tr-anlegen], [data-tr-pruefen], [data-tr-weiter], [data-tr-aufdecken], [data-tr-rate], [data-tr-ende], [data-tr-zurueck], [data-tr-option], [data-tr-match]');
         if (!ziel || !el || !ziel.contains(el))
             return;
+        if (el.hasAttribute('data-tr-match')) { e.preventDefault(); matchWahl(el.dataset.trMatch || '',Number(el.dataset.index)); return; }
         if (el.hasAttribute('data-tr-option')) {
             if (zustand.geprueft) {
                 el.checked = zustand.gewaehlt.has(Number(el.dataset['trOption']));
                 return;
             }
             const i = Number(el.dataset['trOption']);
+            if (el.type === 'radio')
+                zustand.gewaehlt.clear();
             if (el.checked)
                 zustand.gewaehlt.add(i);
             else
@@ -444,6 +530,9 @@ const Trainer = (() => {
                 rundeStarten(el.dataset['kapitel'] ? 'pruefung:' + el.dataset['kapitel'] : 'pruefung');
             else if (art === 'kapitel')
                 rundeStarten('kapitel:' + (el.dataset['kapitel'] || ''));
+            else if (art === 'test')
+                rundeStarten('test:' + (el.dataset['kapitel'] || ''));
+            else if (art === 'match') matchStart(el.dataset['kapitel'] || '');
             else if (art === 'thema')
                 rundeStarten('thema:' + (el.dataset['thema'] || ''));
             else if (art === 'art')
@@ -492,6 +581,7 @@ const Trainer = (() => {
             abmelden();
             return;
         }
+        if (matchRunde && e.key === 'Escape') {e.preventDefault();start();return;}
         if (!zustand.runde)
             return;
         const t = e.target;
@@ -529,6 +619,7 @@ const Trainer = (() => {
         zustand.ziel?.removeEventListener('click', beiKlick);
         zustand.ziel = null;
         zustand.runde = null;
+        matchRunde = null;
     };
     const render = (ziel, opts = {}) => {
         abmelden();

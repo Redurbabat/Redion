@@ -24,18 +24,34 @@ export class VisualCapture {
     Promise<{bytes:Buffer;info:Omit<ImageMetadata,'artifactId'|'bytes'|'sha256'|'expires'>}> {
     const window=this.getWindow();if(!window||window.isDestroyed()||window.webContents.isDestroyed())throw fault('APP_NOT_READY','Das Redion-Fenster ist nicht verfügbar.');
     check();
-    const geometry=await this.geometry(input);check();
-    const source=rect(geometry.rect),viewport=rect(geometry.viewport);
-    if(source.x+source.width>viewport.width||source.y+source.height>viewport.height||!Array.isArray(geometry.masks)||geometry.masks.length>500)
-      throw fault('INVALID_REGION','Die Redion-Fläche hat sich geändert.');
-    const masks=geometry.masks.map(rect);
-    const crop=input.crop===undefined?{x:0,y:0,width:source.width,height:source.height}:rect(input.crop);
-    if(crop.x+crop.width>source.width||crop.y+crop.height>source.height)throw fault('INVALID_REGION','Der Ausschnitt liegt ausserhalb des gewählten Bereichs.');
-    const region={x:source.x+crop.x,y:source.y+crop.y,width:crop.width,height:crop.height};
-    const captured=await window.webContents.capturePage(region,{stayHidden:true});check();
-    const after=await this.geometry(input);check();
-    if(JSON.stringify([geometry.documentId,geometry.blockId,geometry.rect,geometry.viewport])!==JSON.stringify([after.documentId,after.blockId,after.rect,after.viewport]))
-      throw fault('STALE_DOCUMENT','Die sichtbare Seite oder Fläche wurde während der Aufnahme gewechselt.');
+    let geometry:Record<string,unknown>={};
+    let region:Rect={x:0,y:0,width:1,height:1};
+    let masks:Rect[]=[];
+    let captured=nativeImage.createEmpty();
+    /* Layout und Electron-capturePage können im gleichen Frame die Fläche
+       um wenige Pixel verschieben. Statt die Bildfreigabe ohne Prüfung zu
+       umgehen, eine frische Aufnahme mit frisch gemessenen Masken versuchen.
+       Seitenwechsel bleiben immer hart gesperrt; maximal drei Versuche. */
+    for(let attempt=0;attempt<3;attempt++){
+      geometry=await this.geometry(input);check();
+      const source=rect(geometry.rect),viewport=rect(geometry.viewport);
+      if(source.x+source.width>viewport.width||source.y+source.height>viewport.height||
+        !Array.isArray(geometry.masks)||geometry.masks.length>500)
+        throw fault('INVALID_REGION','Die Redion-Fläche hat sich geändert.');
+      masks=geometry.masks.map(rect);
+      const crop=input.crop===undefined?{x:0,y:0,width:source.width,height:source.height}:rect(input.crop);
+      if(crop.x+crop.width>source.width||crop.y+crop.height>source.height)
+        throw fault('INVALID_REGION','Der Ausschnitt liegt ausserhalb des gewählten Bereichs.');
+      region={x:source.x+crop.x,y:source.y+crop.y,width:crop.width,height:crop.height};
+      captured=await window.webContents.capturePage(region,{stayHidden:true});check();
+      const after=await this.geometry(input);check();
+      if(geometry.documentId!==after.documentId||geometry.blockId!==after.blockId)
+        throw fault('STALE_DOCUMENT','Die sichtbare Seite wurde während der Aufnahme gewechselt.');
+      const beforeLayout=JSON.stringify([geometry.rect,geometry.viewport,geometry.masks]);
+      const afterLayout=JSON.stringify([after.rect,after.viewport,after.masks]);
+      if(beforeLayout===afterLayout)break;
+      if(attempt===2)throw fault('STALE_DOCUMENT','Die sichtbare Fläche hat sich während der Aufnahme geändert.');
+    }
     if(captured.isEmpty())throw fault('IMAGE_UNAVAILABLE','Redion konnte kein Bild dieser Fläche aufnehmen.');
     const size=captured.getSize(),bitmap=captured.toBitmap();
     if(size.width<1||size.height<1||size.width*size.height>32*1024*1024||bitmap.length!==size.width*size.height*4)

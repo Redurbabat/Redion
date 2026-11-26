@@ -130,6 +130,19 @@ const gibt = (rel: string): boolean => da(dazu(WURZEL, rel));
 for (const e of buendel.buendel ?? [])
   if (bewiesen(buendel, e, gibt, waechterText)) erzeugt.add(e.pfad);
 
+/* E832: Zwei bereits vorhandene JS-Rechner werden für Web/Offline/iOS nur
+   kopiert. Kein wachsender Ausnahmekatalog: exakt diese beiden Ziele zählen
+   ausschliesslich mit unverändertem Quelltext, Erzeugt-Kopf und aktivem Bau.
+   Die Originale bleiben im schrumpfenden JS-Bestand. */
+const elektroBau = gibt('bauen-elektro.mts') ? lies(dazu(WURZEL, 'bauen-elektro.mts'), 'utf8') : '';
+const baufolge = JSON.parse(lies(dazu(WURZEL, 'package.json'), 'utf8')).scripts?.['bauen:ts'] ?? '';
+for (const name of ['batterie-labor-kern.js', 'batterie-aufgaben.js']) {
+  const ziel = 'quell/bereiche/elektro/' + name;
+  const kopf = `/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: ${name} (node bauen-elektro.mts). */\n`;
+  if (gibt(name) && gibt(ziel) && elektroBau.includes(name) && baufolge.includes('node bauen-elektro.mts') &&
+      lies(dazu(WURZEL, ziel), 'utf8') === kopf + lies(dazu(WURZEL, name), 'utf8')) erzeugt.add(ziel);
+}
+
 const vonHand = alles
   .filter(f => /\.(js|mjs|cjs)$/.test(f))
   .filter(f => !erzeugt.has(f))

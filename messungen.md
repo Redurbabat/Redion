@@ -9923,3 +9923,100 @@ alten Rot (§3, auch auf a6472d3f7); 388 rot wie vorher, +27 KB.
 Gegenproben: Palette offen → 632 §1 rot; ohne `max-height` → 625 rot
 (102 von 110); ohne Hochkomma und E747 → 633 dreimal rot; ohne Tempo →
 634 §2 rot.
+
+## §116 · Grosse Arbeitsbereiche, Stand nach E800–E805 (24. November 2026)
+
+**Warum.** Stufe 0 der Roadmap aus der Notion-Analyse (B8): erst messen,
+dann bauen (§36). Vor allem für die Frage, ob Redion den Bestand teilweise
+laden muss (B6), statt alles in den Arbeitsspeicher zu lesen.
+
+**Methode.** `node pruefungen/messung-grosse-arbeitsbereiche.mts`, frisches
+Chromium-Profil im Container, je Seite ein Textblock, eine Datenbank mit
+der halben Seitenzahl an Zeilen in einer Ansicht mit `limit: 0` („Alle
+zeigen" — der schlimmste Fall).
+
+```txt
+                         1 000 Seiten     10 000 Seiten
+Import (ersetzen)        325 ms           1 442 ms
+Datenbank öffnen         336 ms           1 874 ms     ← alle Zeilen im DOM
+  Zeilen im DOM          1 003            5 003
+Seitenbaum zeichnen      8,5 ms           36 ms
+Quick Find, kalt         42 ms            205 ms
+Suche, warm (Index)      —                0,5 ms
+Sicherung (exportAll)    10 ms            62 ms
+JS-Heap danach           18 MB            48 MB
+IndexedDB                15 MB            29 MB
+```
+
+**Was daraus folgt.**
+- Der Vollbestand im Arbeitsspeicher kostet bei 10 000 Seiten 48 MB Heap.
+  Auf dem Rechner kein Problem; auf einem iPhone noch keines, aber es wächst
+  linear. B6 (Teil-Laden) ist damit **nicht dringend**; erst messen am
+  echten Gerät.
+- Der teuerste Weg ist „Alle zeigen" in einer grossen Datenbank: 1,9 s und
+  jede Zeile im DOM. Im Normalfall zeigt Redion 50 Zeilen mit „Mehr laden"
+  (L22, E180) — die 1,9 s trifft nur, wer ausdrücklich alle will. Das ist
+  ein Fall für B46 (Virtualisierung), nicht für B6.
+- Quick Find kalt (205 ms) ist der einzige spürbare Wert im Alltag; warm
+  über den Index 0,5 ms.
+
+**Nicht gemessen.** Der Start nach einem Neuladen mit 10 000 Seiten; das
+Werkzeug misst ihn nicht. Und alles am echten iPhone (§55, `ios/`).
+
+**Nachtrag, am selben Tag: der Start mit 10 000 Seiten.** Eine Sonde mass,
+was das Werkzeug nicht misst: lange Aufgaben nach einem Neustart
+(`PerformanceObserver` `longtask`). Vorher 6 760 / 6 808 ms in vier bis fünf
+Aufgaben, die grösste 3 646 / 3 518 ms. Das CPU-Profil (CDP, 1 ms Takt):
+„program" 3,2 s, `getBoundingClientRect` 1,8 s, `wannText` 0,4 s,
+`gruppeBauen` 0,16 s, `zeichneDeckel` 0,15 s — die Bibliothek zeichnete
+jeden Deckel. Nach E806 (erst 120 Deckel): 899 / 842 ms, die grösste
+834 / 842 ms. Die Ausreisser beim reinen Neuladen (bis 10 s bis zur ersten
+Antwort) zeigte der Stand `2d6038e` vor E800 genauso.
+
+## §117 · Suche nach Passung und `content-visibility` (24. November 2026)
+
+Methode: Node 22, das gebaute `quell/kern/suche/query.js` in einer Sandbox,
+10 000 Dokumente mit je acht Sätzen, fünf Läufe gemittelt nach einem
+Aufwärmlauf; „alt" ist `git show HEAD:quell/kern/suche/query.js` vor E807.
+
+| Abfrage | alt | E807 |
+|---|---|---|
+| „Leitung" (alle 10 000 passen) | 58,2 ms | 83,3 ms |
+| „xyz" (keines passt) | 28,1 ms | 24,0 ms |
+
+`content-visibility` (B47), Chromium 1280 × 800, eine Seite mit 3000
+Absätzen, das Stilblatt per `addStyleTag` (`.blk{content-visibility:auto;
+contain-intrinsic-size:auto 28px}`), zwei Runden:
+
+| | ohne | mit |
+|---|---|---|
+| `App.oeffne` bis zwei Bilder | 466 / 461 ms | 220 / 192 ms |
+| fünfmal Breite ändern und messen | 149 / 119 ms | 17 / 17 ms |
+| zu Block 1500 springen | 6 / 4 ms | 7 / 5 ms |
+
+Nicht gebaut (E807): die Griffe ragen 46 px links aus dem Block und wären
+abgeschnitten.
+
+
+## §118 · Speichern vor dem Neuladen (24. November 2026, E809)
+
+Methode: Chromium, `index.html` über file://, eine Seite mit einem Kind
+angelegt, `App.oeffne`, zweimal `flush` (der zweite wartet nicht auf den
+ersten), sofort neu laden; danach liest eine eigene Verbindung die Datenbank.
+
+| Stand | gespeichert nach dem Neuladen |
+|---|---|
+| `2d6038e` | 1 von 10 |
+| vor E809 (Branch) | 0 von 10 |
+| mit E809 | 10 von 10 |
+
+Im Ablauf von `test67` (Neuladen nach `Store.flush()` und 2,6 s Wartezeit)
+fehlte die Seite vor E809 in 2 von 8 Läufen, mit E809 in keinem von 28.
+
+Speicher- und Sicherungsläufe nach E809: `test96`, `test100`, `test105`,
+`test109`, `test147`, `test189`, `test644` bis `test650`, `test652`, `test67`
+— 15 von 15 grün.
+
+Vollständig gelaufen wurde der Rest des vollen Laufs nicht erneut; siehe
+E809 zu den roten Läufen, die auf `2d6038e` ebenfalls rot sind (`test32`,
+`test34`, … , `test603`, `test614`, `test623`, `test624`).

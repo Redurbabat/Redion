@@ -137,7 +137,9 @@ type Zustand = {
   startAnsicht: unknown; marke: unknown;
 };
 const zustand = (pg: Seite): Promise<Zustand> => pg.evaluate(() => {
-  const pos = [...document.querySelectorAll('.document-page span')]
+  /* E828: seit Workspace 2.0 ist die Seitenzahl ein Knopf
+     (`button.document-position`, ein Druck springt) — kein `span` mehr. */
+  const pos = [...document.querySelectorAll('.document-page :is(span, .document-position)')]
     .map(e => (e.textContent || '').trim()).find(t => /^Seite \d+\/\d+$/.test(t)) || '';
   const erste = Store.rootPages()[0] || {};
   return {

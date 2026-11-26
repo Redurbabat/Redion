@@ -109,6 +109,25 @@ quell/entwicklung/
 #  ist mit 227 KB die grösste Einzeldatei unter `oeffentlich/`.
 oeffentlich/icons/marke.png
 
+# --- Werkstatt, dritter Teil (E821, 25. November 2026) --------------------
+#  `test270` fand sie im vollen Lauf: Agenten-Anleitungen, der Wissensgraph,
+#  Plugins, Werkzeuge, die Batterie-Prüfskripte, die Bauangaben für iOS und
+#  Codemagic, `version.json` (liest nur die Windows-App, aus ihrer eigenen
+#  Kopie — nachgesehen in `windows/local-source.cts`) und ein leerer
+#  `scratchpad/`. Keine Seite lädt eines davon. Verankert an der Wurzel
+#  (E524), damit nichts unter `quell/` mitgefangen wird.
+/.agents/
+/.claude/
+/graphify-out/
+/plugins/
+/tools/
+/scratchpad/
+/batterie-aufgaben.js
+/batterie-labor-kern.js
+/capacitor.config.json
+/codemagic.yaml
+/version.json
+
 # --- Geheimnisse: gehören nie ins Netz und nie ins Repository (§42) --------
 .env
 .env.*

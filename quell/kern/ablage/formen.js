@@ -181,6 +181,29 @@ const Formen = (() => {
         durch('block', Store.cache.blocks);
         durch('sammlung', Store.cache.collections);
         durch('ansicht', Store.cache.views);
+        if (heilen) {
+            const bloecke = Store.cache.blocks;
+            let eingehaengt = 0;
+            for (const id of Object.keys(bloecke)) {
+                const b = bloecke[id];
+                if (!b || b['alive'] === false || b['parentTable'] === 'collection')
+                    continue;
+                const elternId = b['parentId'];
+                if (typeof elternId !== 'string' || !elternId)
+                    continue;
+                const eltern = bloecke[elternId];
+                if (!eltern || eltern['alive'] === false || !Array.isArray(eltern['content']))
+                    continue;
+                if (eltern['content'].includes(id))
+                    continue;
+                Store.updateBlock(elternId, { content: [...eltern['content'], id] });
+                eingehaengt++;
+            }
+            if (eingehaengt) {
+                bericht.geheilt += eingehaengt;
+                bericht.stellen['Unsichtbare Blöcke wieder eingehängt'] = eingehaengt;
+            }
+        }
         return bericht;
     };
     return { FORMEN, passt, maengel, heil, heile, zustand, felderVon };

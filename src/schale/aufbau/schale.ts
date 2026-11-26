@@ -4401,6 +4401,13 @@ const App = (() => {
     /* Die Seitenleiste bekommt, was ihr nicht gehört — hier und nur hier.
        Das muss vor allem anderen stehen: sobald irgendetwas zeichnet, ruft
        es `zeichneBaum`, und das läuft dann schon nach drüben. */
+    GfxExchange.bindIO({ zip: Einlesen.zipLesenAusBlob, read: Dateien.alsBlob, remove: Dateien.weg, pdf: PdfOriginal.ausBildern, documents: AffineImport.file,
+      pack: files => Austausch.zipSchreiben(files),
+      save: async (blob, name, owner) => (await Dateien.ablegen(new File([blob], name, { type: blob.type }), { blockId: owner })).id });
+    GfxInspector.bindSession({ author: () => ({ id: Konten.aktiv().id, name: Store.getMeta('nutzer', Konten.aktiv().name || 'Ich') }),
+      mentions: () => [...Konten.alle().map((person: any) => ({ id: person.id, name: person.name, kind: 'person' })),
+        ...Object.values<any>(Store.cache.blocks).filter(page => page.alive !== false && page.type === 'page' && Konten.darf('lesen', page.id))
+          .map(page => ({ id: page.id, name: page.text || 'Ohne Titel', kind: 'page' }))], openPage: id => oeffne(id) });
     Seitenleiste.binde({
       oeffne, aktuelleSeite, kuerzlich, kommendeTermine, seitenMenue, suche, papierkorb
     });

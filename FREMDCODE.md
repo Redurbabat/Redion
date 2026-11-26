@@ -97,6 +97,8 @@ Grund in der Liste).
 | **React** (`react`, `react-dom` samt `react-dom/client`, `react/jsx-runtime`; darin `scheduler`) | react 19.3.0 · react-dom 19.3.0 · scheduler 0.28.0 — genau festgenagelt in `package.json` | MIT, © Meta Platforms, Inc. and affiliates (`quell/fremd/react/LIZENZ.txt`; der Text steht auch oben in `react.js`, damit er in der Einzeldatei mitreist) | `quell/fremd/react/react.js` (222'474 Bytes, sha256 `daebc437afbc…`), gebaut von `bauen-inseln.mts` aus fünf Produktionsdateien der Pakete, jede mit Prüfsumme in `fremd-bestand.json`; nicht im Startweg — Lader `src/schale/inseln/laden.ts` (Redion-Code) | trägt die Bauteile des Touch Kits als Inseln in der bestehenden Schale; Redur: „du kannst react nutzen keien problem", siehe ENTSCHEIDUNGEN.md E699 | **nichts am Code**: gebündelt zu einem klassischen Skript mit einem globalen Namen `RedionReact`, Produktionsfassung (`NODE_ENV=production`), verkleinert; Kopf mit Herkunft und MIT-Text davor | `test578` baut neu und vergleicht Byte für Byte, rechnet die Prüfsummen nach und prüft, dass `react.js` beim Laden nichts einhängt; `test579` im Browser; `test388` §5: nicht beim Start |
 | **Touch Kit** — eigener Code von Redur aus UI-Kit @d21c402 (seit E710, vorher @c192821; `Redurbabat/UI-Kit`, Ordner `app/src/touch`, Zweig `claude/apple-ui-kit-react-i2ew4y`) | Commit `d21c402118cf…` (28. September 2026; neu geholt mit E710, davor `c192821f4bfa…` vom 27. September) | eigener Code von Redur — kein Lizenztext nötig; ausgenommen die Glas-Dateien (nächste Zeile) | `fremd/touch/` — 103 Dateien, 583'770 Bytes, jede mit sha256 in `fremd/touch/HERKUNFT.txt` (deren sha256 `9315fea73c4a…` in `fremd-bestand.json`); nicht ausgeliefert (`.assetsignore`), ausgeliefert wird nur, was `bauen-inseln.mts` davon ins Inselbündel `quell/islands/islands.js` + `.css` nimmt (Stufe 1a: Button, Toggle, Glyph, usePress, cx, die Marken; Stufe 1b, E710: Dialog, ActionSheet, Portal, useModal, usePresence, focus, inert, scrollLock, pageTheme) | Redurs Design-System (E639/E640) als echte Bauteile statt Nachbau von Hand; Federn, Glas, 44-px-Trefferflächen, Tastatur und „weniger Bewegung" schon im Kit geprüft | **nichts** — geholt mit `skripte/touch-holen.mts` aus dem Commit, weggelassen nur die Vitest-Läufe (`*.test.*`, `test/`); die Farben kommen über eine Brücke (`src/islands/bridge.css`, Redions Code), nicht über Änderungen im Kit | `test578` §3 rechnet jede Datei gegen `HERKUNFT.txt` nach und meldet jede Datei, die nicht aus dem Commit kommt |
 | **Glas-Code** aus ALEXalesha/LiquidGlass (`index.html`: `corner`, `sdf`, `bakeFields`, `filterPad`, `filterMarkup`) | Stand `34d616f` (laut UI-Kit `HERKUNFT.md`), angepasst in UI-Kit @c192821, nachgezogen @d21c402 (E710: strenge Typen) | MIT, © 2026 ALEXalesha (`fremd/touch/glass/LIZENZ-ALEXalesha.txt`) | `fremd/touch/glass/field.ts` (4'042 Bytes, sha256 `ca1069501160…`) · `fremd/touch/glass/filter.ts` (3'076 Bytes, sha256 `2b5df85b018c…`); in Stufe 1a und 1b in keinem Bündel | die Lichtbrechung des Glases im Kit (Verschiebungsfeld und SVG-Filter) | in UI-Kit angepasst: getypt, eine Karte statt vier, neutraler Rand für die Linse, Fresnel-Ring im Blaukanal, nur ein Durchgang (so steht es in den Köpfen beider Dateien); in Redion **nichts**. Kommt der Glas-Code in ein Bündel, schreibt `bauen-inseln.mts` den MIT-Text in dessen Kopf | `test578` §3 rechnet beide Dateien und den Lizenztext nach |
+| **pdf-lib** (samt `@pdf-lib/standard-fonts` 1.0.0, siehe `DRITTANBIETER.txt`) | **nicht festgehalten** — keine Fassung in `package.json` oder im Kopf der Datei | MIT, © 2019 Andrew Dillon (`quell/fremd/pdf-lib/LIZENZ.txt`); darin tslib, Apache-2.0, © Microsoft | `quell/fremd/pdf-lib/library.js` (525'099 Bytes, sha256 `0f9a5cad0794…`); Lader `src/fremd/pdf-lib/laden.ts` (Redion-Code), lädt erst beim Gebrauch | PDF-Werkzeuge offline: Seiten zusammenfügen, teilen, Originalbytes schreiben | unbekannt — kam mit `5411fec` (22. November 2026) | keiner, der Herkunft oder Prüfsumme nachrechnet; `test87` meldet rohe Steuerzeichen darin |
+| **perfect-freehand** | 1.2.3 (Kopf von `ink.js`) | MIT, © 2021 Stephen Ruiz Ltd (`quell/fremd/perfect-freehand/LIZENZ.txt`) | `quell/fremd/perfect-freehand/ink.js` (4'776 Bytes, sha256 `c411ebac6a03…`), im Startweg aus `index.html` | Strichform für die Freihand | eingepackt als klassisches Skript mit dem globalen Namen `RedionPerfectFreehand` | keiner |
 | **WebLLM** (`@mlc-ai/web-llm`) | die, die `esm.run` gerade liefert — **nicht festgenagelt** | Apache-2.0 | nicht im Verzeichnis: `src/bereiche/ki/dienst.ts` lädt sie zur Laufzeit von `https://esm.run/@mlc-ai/web-llm`, nur wenn der Mensch WebLLM wählt | lokale KI im Browser ohne Ollama (§21) | keine; Modellgewichte kommen vom Modellanbieter (`CreateMLCEngine`), beim ersten Mal mit Internet | keiner — siehe offene Frage unten |
 
 Mehr fremden Code gibt es nicht. Nachgezählt am 25. September 2026:
@@ -106,6 +108,13 @@ src index.html` findet nur die WebLLM-Zeile. **Seit E699 (27. September)**
 kommen die drei Zeilen darüber dazu, und die Lizenzdateien
 `quell/fremd/react/LIZENZ.txt` und `fremd/touch/glass/LIZENZ-ALEXalesha.txt`;
 nichts davon wird zur Laufzeit aus dem Netz geholt.
+
+**Nachgetragen am 25. November 2026 (E820):** pdf-lib und perfect-freehand
+kamen mit `5411fec` ohne Eintrag herein. Die zwei Zeilen oben halten fest,
+was sich aus den Dateien belegen lässt. **Offen ist, was §57 verlangt und
+hier fehlt:** Redurs Ja je Stück, die Fassung von pdf-lib und ein Wächter,
+der beide Dateien nachrechnet. Bis Redur entscheidet, bleiben beide, wie
+sie sind — nichts wird ohne Rückfrage entfernt (§43).
 
 **Redurs Ja, je Stück (§57), 27. September 2026, ca. 11:27 UTC:** „React
 19.3.0, Touch Kit (dein UI-Kit), Glas-Code (ALEXalesha, MIT)".
@@ -124,7 +133,7 @@ wie es ist.
 
 | Was | Lizenz | Wozu gelesen | Genommen |
 |---|---|---|---|
-| **AFFiNE** (`AFFiNE-canary`) | `blocksuite` und die meisten Pakete MIT; `packages/backend` eigene Lizenz | Plattform-Audit (E681): GFX-Aufbau; Redurs Bild der Edgeless-Leiste (AUFGABEN W6) | **nichts** — kein Code, kein Icon, keine Oberfläche; die Struktur der Werkzeugleiste ist als Massstab in W6 beschrieben |
+| **AFFiNE** (`AFFiNE-canary`) | `blocksuite` und die meisten Pakete MIT; `packages/backend` eigene Lizenz | Plattform-Audit (E681): GFX-Aufbau; Redurs Bild der Edgeless-Leiste (AUFGABEN W6) | Geometrie, Kartenlogik und MIT-Grafiken des Zeichendocks für PDF und Fläche (siehe unten) |
 | **SiYuan** (`siyuan-master`) | AGPL-3.0 | Plattform-Audit (E681): Plugin-System, Marktplatz, Kernel-API | **nichts** — und AGPL-Code kann auch künftig nur mit einer eigenen Lizenzentscheidung Redurs herein (er würde Redion mit lizenzieren) |
 | **open-swiftui-animations** (Amos Gyamfi, GitHub) | **keine Lizenzdatei** — damit nichts übernehmbar | Redurs Wunsch vom 2. November 2026 (E774): Namen und Ideen der SwiftUI-Beispiele | **nichts** — kein Code, kein GIF; der Skill `.claude/skills/redion-animationen/` ist Redions eigener Text und baut die Ideen mit Redions Federn |
 | **Amdion** | eigenes Projekt Redurs | Lesequelle (`doku/AMDION-UEBERNAHME.md`) | nach den dortigen Regeln |
@@ -184,3 +193,9 @@ den iPhone-Start geladen. Das Paket enthält ihre Lizenzhinweise.
 6. Was daran geändert wird, steht in der Spalte „Was daran geändert ist" —
    ein geflickter Fremdcode ohne Notiz ist beim nächsten Update weg.
 ```
+
+## AFFiNE-Zeichendock
+
+Das Zeichendock für PDFs und Fläche übernimmt Geometrie, Kartenreihenfolge und seitenweises Blättern aus [AFFiNE Edgeless `81da59d`](https://github.com/toeverything/AFFiNE/tree/81da59d63d535d72ba677a097d9a0cc9a5871ade/blocksuite/affine/widgets/edgeless-toolbar). Stift, Radierer, Formen, Gedankenkarte und Vorlagen verwenden die SVG-Grafiken aus demselben BlockSuite-Stand. `quell/fremd/affine-toolbar/LICENSE-MIT` enthält die MIT-Lizenz.
+
+Die SVG-Pfade der Schnellwerkzeuge, Notizkärtchen und Pfeile stammen aus [`@blocksuite/icons@2.2.17`](https://www.npmjs.com/package/@blocksuite/icons/v/2.2.17). Die SVG-Kontur stammt aus dem MIT-lizenzierten [figma-squircle](https://github.com/phamfoo/figma-squircle) im AFFiNE-Quellstand. Die Lizenztexte stehen mit den SVGs in `vorschauen.css` sowie in `LICENSE-BLOCKSUITE-ICONS` und `LICENSE-FIGMA-SQUIRCLE`.

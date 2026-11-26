@@ -897,7 +897,7 @@ body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) {
 
 /* Desktop-Suche: eine kleine, lesbare Glaslinse, keine glasierte Kopfzeile. */
 body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #studio-bar .studio-search {
-  background: var(--bg-card);  /* Fallback ohne backdrop-filter */
+  background: var(--bg-card);  /* Fallback ohne Glas */
   border: 1px solid var(--line);
   box-shadow: inset 0 1px 0 var(--liquid-highlight), 0 2px 10px #0000000b;
   transition: background var(--motion-fast) ease,
@@ -938,8 +938,7 @@ body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #kanten-lade:no
    Keine Transformation am Dock selbst: SelectionFlow misst seine Geometrie. */
 @media (max-width: 760px) {
   body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #handy-oben {
-    box-shadow: var(--glas-kante), 0 14px 38px #0000002b,
-                0 3px 9px #00000019;
+    box-shadow: inset 0 1px 0 #ffffff38, 0 14px 38px #0000002b;
   }
   body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #handy-oben > button .ho-z {
     transition: transform var(--liquid-duration) var(--liquid-ease),
@@ -1282,23 +1281,20 @@ body[data-bewegung="ruhig"] #page > .pg-tools > button{
     border:1px solid color-mix(in srgb,var(--text) 15%,transparent);
     border-radius:999px;
     box-shadow:inset 0 1px 0 #ffffff38,
-               inset 0 -1px 0 #ffffff0b,
-               0 12px 30px #00000030,0 2px 8px #00000017;
+               0 12px 30px #00000030;
     -webkit-backdrop-filter:blur(28px) saturate(175%);
     backdrop-filter:blur(28px) saturate(175%);
     isolation:isolate;
   }
-  body:not([data-kontrast="hoch"]) #handy-oben::after {
-    content:"";position:absolute;inset:1px;border-radius:inherit;
-    background:linear-gradient(160deg,#ffffff1c,transparent 37%,#ffffff06 75%);
-    pointer-events:none;z-index:0;
-  }
+  /* E813: der zweite Ring innerhalb des Randes ist weg — die Kapsel hat EINE
+     Lichtkante (oben, im Schatten) und sonst nichts, wie das Original. */
+  body:not([data-kontrast="hoch"]) #handy-oben::after {display:none}
   /* Do not override the swipe-up navigation's touch-action:none contract. */
   body #handy-oben > button {position:relative;z-index:1;min-width:0}
   /* The existing dock icon transform/transition remains authoritative. */
   body:not([data-kontrast="hoch"]) #handy-oben #ho-pille {
     border-radius:999px;
-    background:color-mix(in srgb,var(--accent) 24%,#ffffff13);
+    background:color-mix(in srgb,var(--text) 5%,transparent);
     box-shadow:inset 0 1px 1px #ffffff38,inset 0 -1px 1px #00000014,
                0 3px 12px #00000014;
     -webkit-backdrop-filter:blur(18px) saturate(145%);

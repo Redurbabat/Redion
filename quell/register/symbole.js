@@ -110,6 +110,7 @@ Register.symbole = (() => {
         formRect: '<rect x="3.6" y="5.6" width="16.8" height="12.8"/>',
         formEllipse: '<ellipse cx="12" cy="12" rx="8.6" ry="6.6"/>',
         formTriangle: '<path d="M12 4.4 20.6 19.6H3.4z"/>',
+        formDiamond: '<path d="m12 3.5 8.5 8.5-8.5 8.5-8.5-8.5z"/>',
         formRoundrect: '<rect x="5.4" y="7.4" width="13.2" height="9.2" rx="4.6"/>',
         formCurve: '<path d="M3.4 17.6c4.4 0 5.2-11.2 9.4-11.2s4.4 11.2 7.8 11.2"/>',
         scissors: '<circle cx="6.4" cy="6.4" r="2.6"/><circle cx="6.4" cy="17.6" r="2.6"/>' +

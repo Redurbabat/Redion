@@ -138,7 +138,9 @@ console.log('\n1 · Kein Seitenkopf mehr — und der Name bleibt');
 
 const eins = await pc.evaluate(() => {
   const seite = document.getElementById('page');
-  const titel = document.querySelector('.document-title') as HTMLElement | null;
+  /* Den NAMEN lesen, nicht den ganzen Kasten (E823): seit dem Dokumentkompass
+     (Workspace 2.0) stehen darin Name, Art und Umfang — „…PDF · 4 Seiten". */
+  const titel = (document.querySelector('.document-title-name') ?? document.querySelector('.document-title')) as HTMLElement | null;
   return {
     kinder: [...(seite?.children || [])].map(e => (e as HTMLElement).id ||
       String((e as HTMLElement).className).split(' ')[0]),

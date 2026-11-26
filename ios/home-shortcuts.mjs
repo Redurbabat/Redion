@@ -17,7 +17,8 @@ export function createHomeShortcutRouter({
   schedule = (fn, ms) => setTimeout(fn, ms),
   cancel = id => clearTimeout(id),
   now = Date.now,
-  maxRetries = 65
+  maxRetries = 65,
+  ready = () => true
 }) {
   if (!doc || typeof doc.getElementById !== 'function') {
     throw new TypeError('Redion-Dokument für die iOS-Schnellaktionen fehlt.');
@@ -34,8 +35,14 @@ export function createHomeShortcutRouter({
     // Let start.js finish attaching the existing button handlers.
     // Loading or hidden views are not ready for external navigation.
     const button = doc.getElementById(SHORTCUT_TABS[pending]);
+    // A cold launch can have a complete DOM before the encrypted/local store
+    // is available. Never create a page or switch views over the lock screen.
+    let appReady = false;
+    try { appReady = !!ready(); } catch { /* Startup not ready yet. */ }
     if (doc.readyState === 'complete' && !doc.hidden &&
+        !doc.getElementById('sperrschirm') && appReady &&
         button?.isConnected && !button.disabled &&
+        button.getAttribute?.('aria-disabled') !== 'true' &&
         attempts > 1) {
       const action = pending;
       pending = null;

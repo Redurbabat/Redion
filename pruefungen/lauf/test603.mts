@@ -305,7 +305,8 @@ const MOTOR = (sel: string) => `(() => {
   const glasRegel = sup.find(s => /studio-search/.test(s) && /backdrop-filter:\s*var\(--glas-blur\)/.test(s) && /-webkit-backdrop-filter:\s*var\(--glas-blur\)/.test(s));
   p('Das Glas der Kapsel steht nur unter @supports, mit -webkit-Zwilling, aus der Marke', !!glasRegel);
   const ausserhalb = css.replace(/@supports[^{]*\{[\s\S]*?\n\}/g, '');
-  p('… und nirgends ausserhalb davon', !/studio-search[^{}]*\{[^{}]*backdrop-filter/.test(ausserhalb));
+  /* `backdrop-filter: none` ist das Abschalten des Glases (Kontrast, Ruhe), kein Glas. */
+  p('… und nirgends ausserhalb davon', !/studio-search[^{}]*\{[^{}]*backdrop-filter\s*:(?!\s*none\s*;)/.test(ausserhalb));
   /* Starker Kontrast: deckend. */
   await pc.evaluate(`Aussehen.setzen({ schema: 'kontrast', akzent: '' })`);
   await pc.hover('#studio-search'); await pc.waitForTimeout(150);

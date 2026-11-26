@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-770 Entscheidungen, E1 bis E793 (E781 blieb unvergeben) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
+803 Entscheidungen, E1 bis E832 (E781 blieb unvergeben; E794 bis E797 werden im Quelltext der Wolke zitiert und haben noch keinen Eintrag, E798 und E799 sind frei) (**E707** ist der Bitte vom 27. September noch vergeben und folgt, sobald es landet; E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen; **E600** ist den Folienübergängen vergeben und folgt, sobald der Bogen landet — E601 kam vorher, weil Redur den Ordnerdeckel gesehen hat). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -856,6 +856,39 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E791** — RED Ion Windows-MCP: semantische Live-Steuerung mit freigegebenen Aktionen und Sicherheitsbestätigungen.
 * **E792** — Visual MCP, sichere Mehrschritt-Aufträge und dauerhafte widerrufbare Freigaben
 * **E793** — Zugriff ohne Laptop ausschliesslich kostenlos
+* **E800** — Arbeitsschritte landen ganz oder gar nicht (24. November 2026, Redur: „Mache mit der grosste anderung“, im Fragebogen „Transaktionen“ und „Nur Pflicht-Datentests“): was eine Handlung synchron schreibt, ist ein Schritt; ein Schritt kommt ganz oder gar nicht auf die Platte; Umstellungen werden sofort geschrieben, Tippen behält die Pause (`test644`); der zusätzliche `pagehide`-Zuhörer wurde mit E801 wieder entfernt
+* **E801** — Zwei Fenster überschreiben einander nicht (24. November 2026, Redur: „Weiter ohne pause“, nach E800 der nächste Punkt der Roadmap, B2): jeder Satz trägt AUF DER PLATTE eine Versionsnummer `rev`; `flush` liest und schreibt in einer Transaktion und führt zusammen, wenn ein anderes Fenster dazwischen geschrieben hat; eine wartende Änderung wird nicht durch Fremdes ersetzt; die Zahl reist weder in Sicherung noch Abgleich (`test645`)
+* **E802** — Speicher voll: nichts geht still verloren (24. November 2026, Redur: „Weiter“, B10 der Roadmap): bei `QuotaExceededError` eine Meldung mit der Zahl ungesicherter Änderungen, ein neuer Versuch alle 15 Sekunden ohne neue Eingabe, im Browser eine Rückfrage beim Schliessen; die Windows-App bekommt keine Rückfrage, weil sie das Fenster dort ohne Dialog festhielte (`test646`)
+* **E803** — Umwandeln verliert nichts (24. November 2026, Redur: Ziel „arbeite ohne pause bis du alles fertig gemacht hast“, B18 der Roadmap, §18 hart): → Datenbank legt den alten Block in den Papierkorb statt ihn endgültig zu löschen und nimmt seinen Text als Namen; → Seite wandelt an Ort und Stelle (Kennung, Platz, Unterblöcke bleiben); → Einbettung und → Spalten leeren den Text nicht mehr (`test647`)
+* **E804** — Unsichtbare Blöcke werden beim Laden wieder eingehängt (24. November 2026, B5 der Roadmap): ein lebender Block, dessen lebender Elternteil ihn nicht in `content` führt, kommt hinten wieder hinein und wird gesichert; Papierkorb und Datenbankzeilen bleiben unberührt (`test648`). Dazu B19 gemessen: unbekannte Blockarten überstehen Zeichnen, Bearbeiten und Sicherung schon heute
+* **E805** — Redion bittet von selbst um dauerhaften Speicher (24. November 2026, B9 der Roadmap): beim ersten gelungenen Schreiben von Blöcken in einer Sitzung, höchstens einmal in 30 Tagen; der Zeitpunkt ist eine Geräteeinstellung in `localStorage` und reist nicht mit (`test649`). Dazu B14 nachgelesen: der `localStorage` des Staatskunde-Trainers gehört nur der eigenständigen Seite `lernen/staatskunde.html`, in Redion bleibt er leer (`test565`)
+* **E806** — Die Bibliothek zeichnet die Deckel in Schritten (24. November 2026, Stufe 0/4 der Roadmap, gemessen): erst 120, dann „Mehr zeigen“ (+120) oder „Alle zeigen“; die Grenze nennt beide Zahlen; mit 10 000 Seiten blockiert der Start 0,8 s statt 6,8 s (`test650`, messungen §116)
+* **E807** — Die Suche ordnet nach Passung (24. November 2026, B31): innerhalb gleicher Stufe zählen Titel gleich/beginnt/enthält und eine kleine BM25-Rechnung über den Inhalt, erst danach das Datum; `content-visibility` (B47) gemessen und zurückgestellt (`test651`, messungen §117)
+* **E808** — Die Desktop-App fragt beim Schliessen, wenn der Speicher voll ist (24. November 2026, schliesst L268): `will-prevent-unload` mit „Bleiben" / „Trotzdem schliessen", beim Herunterfahren nicht; `indexdb.ts` fragt ohne Ausnahme
+* **E809** — `flush` wartet auf den Durchgang, der noch schreibt (24. November 2026): ein Aufruf, der nichts mehr vorfindet, meldet nicht „gespeichert", bevor die Transaktion auf der Platte ist; `test652`, messungen §118
+* **E810** — Die freie Zeichenleiste bleibt im sichtbaren Feld (24. November 2026): beim Ziehen, Loslassen und bei jeder Fenstergrösse auf den Rollbereich `#scroll` begrenzt; `test534` §9
+* **E811** — Drei alte rote Läufe: was sie wirklich fanden
+* **E812** — Die Einstellungen wie die iPhone-Einstellungen, mit Redions eigenen Mitteln (24. November 2026, Redur: „Die Einstellungen aufräumen, sie sollen wie die iPhone-Einstellungen sein."): Gruppen als Karten, farbige Quadrate mit weissem Zeichen, Titel und Suche; Telefon zwei Seiten, Rechner zwei Spalten. Die Wächter test580 und test389 werden dabei an zwei Zusagen rot — offen für Redur.
+* **E813** — Das untere Dock ist EINE Kapsel, und das Zeichen steht über dem Wort (24. November 2026): zweiter Ring weg, zweite Innenlinie weg, feste Zeichenbox für Safari; `test655`
+* **E814** — Vier alte Zusagen der Einstellungen auf Redurs Antworten umgeschrieben (24. November 2026): ganze Zeile, Rollen mit 44 px, Fahrt auf Verhalten, 20 Bereiche gezählt; `test32` `test34` `test389` `test580` `test581`
+* **E815** — Das Dock am Telefon: Zeichen farbig, Wort normal, und iOS gilt überall (24. November 2026, Redurs zwei Antworten): das Wort des aktiven Reiters ist Textfarbe und fett (4,5 : 1 gemessen, 13 bis 15 : 1), der aktive Knopf liegt über seiner Linse; `test623` fünf Zeilen auf das JETZT gewollte Verhalten umgeschrieben; `test585` `test623` `test655`
+* **E816** — Der nächste Tipp nach einem schnellen Zug über die Oberkante kommt an: ein Zug auf der Leiste erzeugt einen Schwung des Browsers, und der Tipp stoppt ihn (24. November 2026, Redurs Auftrag: test614 §7f rot, Ursache belegen): `touchmove` auf der unteren Leiste ist nicht passiv und wird verhindert, solange ein Zug liegt (`selection-flow.ts`, `ziehbar`); test614 125/125, test360 34/34, test588 79/79, test541 25/25, test613 68/68, test655 89/89, test590 Lauf grün.
+* **E817** — Die Wahl fliegt auch dann ins Ziel, wenn die Seite neu gezeichnet wird, während sie fliegt (Seite → Fläche, 24. November 2026): der Flug hing an einem Bezugsrahmen, den die Neuzeichnung abreisst, und landete daneben; jetzt fliegt er ab dem letzten stimmenden Bild neu; `test585` 2 rot → 93/93 (`src/schale/bedienung/selection-flow.ts`)
+* **E818** — Ein Knoten der Gedankenkarte ist so breit wie sein Text, bis zur Decke (25. November 2026): `.gk-kn` bekommt `width:max-content`; eine frische Karte zeigte „Zentr / ales / Them / a"; `test656` (`quell/schale/stil/werkzeuge.css`)
+* **E819** — Die Knöpfe im Kopf der Bibliothek schrumpfen nicht unter ihr Wort (25. November 2026): Flex mit Umbruch statt drei gleicher Spalten in der Atelier-Haut am Telefon; `test657` (`quell/schale/stil/redion2.css`)
+* **E820** — Drei Skripte aus `index.html` und pdf-lib stehen im Grundstock des Dienstes; pdf-lib und perfect-freehand sind in `FREMDCODE.md` nachgetragen, das Ja dazu ist offen (25. November 2026); `test143` grün, `test87` bis auf die Steuerzeichen der fremden pdf-lib (`src/dienst/sw.ts`, `FREMDCODE.md`)
+* **E821** — Elf Werkstatt-Dinge in der Wurzel gehen nicht mehr ins Netz (`.agents/`, `.claude/`, `graphify-out/`, `plugins/`, `tools/`, Batterie-Skripte, iOS- und Codemagic-Angaben, `version.json`); `test270` 80 → 81/81 (`.assetsignore`)
+* **E822** — `test274` liest `bauen.mts` als dritten Ort, an dem Kennungen entstehen: `redion-pdf-lib` gibt es nur in der Einzeldatei, mit Absicht; 11/12 → 12/12, ohne Ausnahme in `ERLAUBT`
+* **E823** — `test285` und `test292` lesen den Namen des Dokuments aus `.document-title-name`, weil der Kopf seit dem Dokumentkompass auch Art und Umfang trägt; beide grün (53/53, 45/45)
+* **E824** — `test298` nimmt die Stilblätter, die `index.html` aus `quell/fremd/` lädt, als Quelle von Variablen dazu (die Glyphen `--affine-dock-*` des Zeichendocks); fremdes CSS wird nicht auf Redions Regeln geprüft; 8/8
+* **E825** — `test201` prüft das Glätten an einem sanften Bogen und hält die Ecke aus E676 als eigene Zusage; seine drei alten Punkte waren ein Knick; 33/33
+* **E826** — Die Schriftgrösse je Block wirkt wieder: fünf Atelier-Regeln in `redion2.css` wogen mit `#page` mehr als `.blk .ct.tg-gross`; die vier Stufen sind dort ausgenommen; `test175` 16/17 → 17/17
+* **E827** — `test221` misst den Rand am ersten GEZEICHNETEN Kind: die ausgeblendete Beschriftung der Werkzeugzeile meldete `left 0`, der erste Knopf steht bei 30 px; grün
+* **E828** — `test341` liest die Seitenzahl auch aus `button.document-position`: seit Workspace 2.0 ist sie ein Knopf zum Springen, kein `span`; 37/37
+* **E829** — Der PDF-Bereich setzt Blöcke und holt das Elektro-Menü über den Ereignisbus (`frage.block-am-ende`, `frage.elektro-menue`) statt über `Blocks` und `Elektrostart` (§5, erster Weg); `test537` 125 → 123 Paare, 18/18
+* **E830** — Neutrale Oberfläche ohne Bordeaux; gespeicherte Gruppen, Zeichenreihenfolge und Sperren auf der Seitenfläche, mit eigenem GFX-Kern und Sicherungsrundreisen.
+* **E831** — Gemeinsame Objektübersicht für Seite, Whiteboard und PDF; Ausrichten, verschachtelte Gruppen, Rahmenvortrag, Kommentare, Flächenarchive und dynamische Bibliothekssammlungen ergänzen PR #232.
+* **E832** — Fortlaufendes AFFiNE-Ziel: passende Elektro-Kontextdocks, direkte Drehgriffe, Rahmeninhalt/Vollbild/PDF, Objektantworten mit konfliktbewusstem Abgleich und Dokumentimport samt Originalexport. Batterie-Laufzeitdateien gelangen über den bestehenden Build nach `quell/`.
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -71064,3 +71097,1136 @@ Der Cloud-Dienst verwendet bestehende Redion-Konten, saetze und Versions-/Rechte
 OAuth-Freigaben sind an Client, Ressource, Konto, Bereiche und Rechte gebunden. Gemerkte Zustimmung bleibt bis Widerruf erhalten; zusätzliche Rechte verlangen erneut Zustimmung. Zugangstokens sind kurzlebig, Refresh-Tokens rotieren und verlängern sich bei Nutzung; nach 30 Tagen ohne Refresh ist eine neue Anmeldung nötig. Tokens und Geheimnisse werden nur gehasht gespeichert. Die bestehende Website behält ihr Access-Tor.
 
 Stand und Grenzen: doku/RED-ION-CLOUD-MCP.md. Lokale Modell-, SDK-OAuth- und Browserprüfungen sind keine öffentliche MCP-Verbindung, kein Cloud-Deployment und kein Beleg für abgeglichene persönliche Dokumente. E792 und die ersten beiden Phasen bleiben vollständig beauftragt.
+
+## E800 · Arbeitsschritte landen ganz oder gar nicht
+
+**Wer und wann.** Redur, 24. November 2026, nach der Notion-Analyse: „Mache
+mit der grosste anderung ohen viel test". Im Fragebogen gewählt:
+„Transaktionen" und „Nur Pflicht-Datentests" (`test96`, `test100`, ein
+eigener Lauf; kein voller Lauf).
+
+**Was entschieden wurde.** `Store.save` ordnet jeden Satz einem
+Arbeitsschritt zu. Alles, was eine Handlung SYNCHRON schreibt, ist ein
+Schritt: der erste `save` eines Durchlaufs öffnet ihn, eine Mikroaufgabe
+schliesst ihn. Wird ein wartender Satz in einem späteren Schritt noch
+einmal geschrieben, werden beide Schritte vereint. `flush` schreibt wie
+bisher alles in EINER Transaktion; scheitert darin ein Satz, bricht sie
+ganz ab, und dann wird Schritt für Schritt in eigenen Transaktionen
+geschrieben. Ein Schritt mit mehr als einem Satz (anlegen, verschieben,
+löschen) wartet nicht die 400 ms Schreibpause ab, sondern geht im nächsten
+Takt auf die Platte. Zusätzlich schrieb ein `pagehide`-Zuhörer (Safari,
+WKWebView) — **Nachtrag (E801):** wieder entfernt. `test189` zählt die
+`pagehide`-Zuhörer und war deshalb rot, und der Zuhörer war überflüssig:
+`visibilitychange` mit `document.hidden` kommt vor `pagehide`, und dort
+schreibt Redion schon. Der Fund kam aus dem breiteren Lauf von E801 — der
+schmale Lauf von E800 hatte `test189` nicht dabei.
+
+**Warum.** Vorher übersprang `flush` einen unschreibbaren Satz mit
+`preventDefault` und schrieb den Rest. Bei `addBlock` stand dann der
+Elternteil mit der neuen Kennung in `content` auf der Platte, das Kind
+nicht — ein Zeiger ins Leere nach dem Neuladen, der halbe Zustand, den §13
+verbietet. `test644` hat es gegen den alten Stand wörtlich gezeigt: 9 von 15,
+„Elternteil zeigt auf ein Kind, das auf der Platte fehlt".
+
+**Die Alternative und warum nicht.** Die Notion-Analyse (Liste B, Punkt 3
+und 4) schlug eine dauerhafte Schreibwarteschlange als eigenes Fach vor,
+nach Notions TransactionQueue. Beim Bauen zeigte sich: Notions Warteschlange
+überbrückt den Weg zum Server, Redions Ziel IST IndexedDB. Eine
+Warteschlange davor wäre derselbe Schreibvorgang zweimal und eine
+Datenmigration (Fassung 6) ohne Gewinn. Das Gegenstück für Redion ist,
+zusammengehörige Sätze atomar und sofort zu schreiben — ohne neues Fach und
+ohne Migration. Ausdrückliche Aufrufe wie `Store.transaktion(fn)` wurden
+nicht eingeführt: der automatische Schritt deckt alle bestehenden Aufrufer
+ab, ohne dass einer geändert werden muss.
+
+**Was es kostet.** Ein Schritt, der dauerhaft nicht schreibbar ist, hält
+jetzt auch seine Partner zurück (vorher landeten sie ohne ihn). Das ist
+gewollt — es ist genau der halbe Zustand —, aber es heisst: ein solcher
+Fehler zeigt sich an mehr Sätzen. Umstellungen öffnen öfter eine
+IndexedDB-Transaktion als vorher (eine je Handlung statt eine je 400 ms).
+Was über mehrere Takte hinweg schreibt (`await` dazwischen, etwa der
+Import), ist weiterhin mehrere Schritte; dort sorgt `importAll` selbst für
+Ordnung.
+
+**Geprüft.** `test644` (15 Zusagen; gegen den Stand vor E800 rot mit 9 von
+15), `test96`, `test100`, `test105`, `test109`, `npm run typecheck`. Kein
+voller Lauf, auf Redurs Wunsch — für das Vorspulen von `main` gilt §46
+unverändert.
+
+## E801 · Zwei Fenster überschreiben einander nicht
+
+**Wer und wann.** Redur, 24. November 2026: „Weiter ohne pause" — nach E800
+der nächste Punkt der Roadmap aus der Notion-Analyse (B2, Versionsnummer je
+Datensatz).
+
+**Was vorher geschah.** Zwei Wege führten zu einem stillen Verlust, beide
+in `test645` gegen den Stand von E800 gezeigt (10 von 18):
+
+1. Fenster A schreibt Block X. Fenster B ändert X, bevor es die Nachricht
+   von A verarbeitet hat (`nachbarn.ts` sammelt 120 ms). B schreibt seinen
+   ganzen Satz — mit As altem Text — über As Fassung. Gemessen: der Text
+   stand danach wieder auf „Ein Satz", As „A hat geschrieben" war weg; ein
+   Kind, das A an eine Seite hängte, fiel aus deren `content`.
+2. Wartet in B eine Änderung an X, ersetzte `fremdesEintragen` das lebende
+   Objekt durch As Fassung — der Stapel hielt aber das alte Objekt und
+   schrieb es später über A. Bildschirm und Platte zeigten Verschiedenes.
+
+`nachbarn.ts` sagt den ersten Fall selbst: „wenn zwei Menschen gleichzeitig
+denselben Absatz tippen, gewinnt der spätere Schreibvorgang". §16 verlangt,
+dass Konflikte mindestens erkannt werden.
+
+**Was entschieden wurde.**
+- Jeder Satz in `blocks`, `collections`, `views` trägt auf der Platte eine
+  Zahl `rev`, die bei jedem Schreiben steigt. Das Fenster merkt sich je Satz,
+  welche Zahl es zuletzt gesehen hat.
+- `flush` liest jeden dieser Sätze in DERSELBEN Schreibtransaktion, bevor er
+  schreibt. Stimmt die Zahl nicht, hat ein anderes Fenster dazwischen
+  geschrieben: dann wird zusammengeführt — mit `Zusammen.dreiWege`, wenn die
+  Basis bekannt ist (`updateBlock`, `updateCollection`, `updateView` merken
+  sie VOR der Änderung, solange der Satz sauber ist), sonst feldweise:
+  Kennungslisten vereint, Zeitstempel nach dem jüngeren, und wo beide
+  dasselbe Feld verschieden haben, behält dieses Fenster seins und der
+  andere Wert steht in der bestehenden Konfliktliste (`Zusammen.merke`, mit
+  Hinweis). IndexedDB reiht Schreibtransaktionen auf dasselbe Fach auch über
+  Fenster hinweg hintereinander — das ist ein echtes Vergleichen und Setzen.
+- `fremdesEintragen` ersetzt einen Satz nicht mehr, an dem hier selbst eine
+  Änderung wartet; das Zusammenführen übernimmt `flush`.
+- Die Zahl steht NUR auf der Platte. Beim Laden und Nachlesen wird sie
+  abgenommen; die Sätze im Speicher tragen sie nicht.
+
+**Warum nicht im Satz.** Die Sätze im Speicher reisen in Sicherungen und in
+den Abgleich mit anderen Geräten. Eine Zahl, die nur für dieses Gerät gilt,
+wäre dort ein Feld, in dem sich zwei Geräte immer unterscheiden — ein
+Konflikt ohne Inhalt bei jedem Abgleich.
+
+**Die Alternative.** Eine Kopie jedes Satzes als Basis dauerhaft im
+Speicher halten — das hätte jeden Bestand im Arbeitsspeicher verdoppelt.
+Gemerkt wird die Basis nur für Sätze, die gerade warten.
+
+**Was es kostet.** Jeder Schreibvorgang auf diese drei Fächer liest vorher
+einmal (in derselben Transaktion). Alte Sätze ohne Zahl werden beim ersten
+Schreiben ohne Vergleich geschrieben und bekommen dabei ihre erste. Ein
+Fenster mit einer alten Fassung der App schreibt weiter ohne Zahl — kein
+Rückschritt, nur kein Schutz. Ohne bekannte Basis kann eine Änderung, die
+nur drüben geschah, als Konflikt erscheinen statt still übernommen zu
+werden; sie geht dabei nicht verloren.
+
+**Nebenbefund.** Der breitere Lauf fand, dass E800s zusätzlicher
+`pagehide`-Zuhörer `test189` rot machte (der Wächter erlaubt einen). Er war
+überflüssig (`visibilitychange` kommt vorher) und ist entfernt; E800 trägt
+den Nachtrag. `test412` war schon vor E800 rot (Stilblock in
+`desktop-automatisierung.ts`, Hellwerte in `schaltatelier.css`) —
+unberührt.
+
+**Geprüft.** `test645` (18 Zusagen, zwei echte Tabs über einen Prüfserver;
+gegen E800 rot mit 10 von 18), `test644`, `test96`, `test100`, `test105`,
+`test109`, `test72`, `test87`, `test189`, `test279`, `test316`, `test326`,
+`test333`, `test335`, `test390`, `test643`. Kein voller Lauf.
+
+## E802 · Speicher voll: nichts geht still verloren
+
+**Wer und wann.** Redur, 24. November 2026: „Weiter" — B10 der Roadmap aus
+der Notion-Analyse. Notion nennt Speicherkontingente als einen Grund, warum
+es IndexedDB auf dem Desktop verlassen hat; Redion bleibt bei IndexedDB
+(§10) und muss deshalb mit einem vollen Kontingent umgehen können.
+
+**Was vorher geschah** (gemessen mit `test646` gegen E801, 4 von 10): Ein
+Schreibvorgang scheiterte mit `QuotaExceededError`, die Sätze blieben im
+Stapel — aber nur im Arbeitsspeicher. Gezeigt wurde eine allgemeine
+Fehlermeldung ohne Angabe, wie viel wartet. Ein neuer Versuch kam erst mit
+der nächsten Eingabe. Und das Fenster liess sich ohne Rückfrage schliessen;
+danach war alles Wartende weg.
+
+**Was entschieden wurde.**
+- `flush` erkennt einen vollen Speicher (`QuotaExceededError`, auch im
+  Rückfall Schritt für Schritt) und ruft `meldeVoll`: über `Store.beiWarnung`
+  erscheint ein Streifen mit der Zahl der ungesicherten Änderungen und der
+  Bitte, das Fenster offen zu lassen.
+- Alle 15 Sekunden ein neuer Versuch, ohne dass der Nutzer etwas tun muss.
+  Gelingt er und wartet nichts mehr, sagt ein Streifen „wieder Platz — alle
+  Änderungen sind gesichert".
+- Im Browser fragt `beforeunload` nach, solange etwas ungesichert ist — und
+  nur dann.
+- Die Ablehnung des Takt-Schreibens geht bei vollem Speicher nicht mehr
+  zusätzlich als allgemeiner Fehler an die Fehleranzeige; jede andere
+  Ablehnung weiterhin.
+
+**Die Alternative und warum nicht.** Ungesichertes in `localStorage`
+retten: §10 und §47 verbieten es, und dessen Kontingent ist meist dasselbe
+oder kleiner. Automatisch eine `.redion`-Sicherung herunterladen: das wäre
+ein Download ohne Auslöser des Nutzers (§21-Geist), und auf dem iPhone
+nicht ohne Rückfrage möglich.
+
+**Was es kostet.** In der Windows-App gibt es KEINE Rückfrage beim
+Schliessen: Electron hält ein abgelehntes Entladen ohne Dialog fest, solange
+der Hauptprozess `will-prevent-unload` nicht behandelt — das Fenster wäre
+nicht mehr zu schliessen. Dort bleibt es beim Streifen. Das steht als
+offene Lücke **L268** da (ein Dialog im Hauptprozess wäre der Weg).
+
+**Ein Fund über das Werkzeug.** `Storage.overrideQuotaForOrigin` (CDP)
+wirkt nur, wenn es VOR dem ersten Besuch einer Herkunft gesetzt ist; ein
+späteres Absenken nahm Chromium in vier Sonden nicht an (3 MB kamen
+durch). Und eine Seite aus lauter „x" passte ins kleine Kontingent, weil
+die Ablage komprimiert. `test646` misst deshalb zuerst in einem
+Wegwerf-Kontext, wie viel der Startbestand braucht, und schreibt
+zufällige Zeichen.
+
+**Geprüft.** `test646` (14 Zusagen; gegen E801 rot mit 4 von 10, und dort
+war das Fenster nach §2 schon zu), `test96`, `test100`, `test105`,
+`test109`, `test189`, `test644`, `test645`, `npm run typecheck`. Kein voller
+Lauf.
+
+## E803 · Umwandeln verliert nichts
+
+**Wer und wann.** Redur, 24. November 2026, Ziel „arbeite ohne pause bis du
+alles fertig gemacht hast" — B18 der Roadmap aus der Notion-Analyse: Notion
+ändert beim „Turn into" nur den Typ, und die Felder bleiben, auch die, die
+der neue Typ nicht zeigt. §18 verlangt dasselbe ausdrücklich als hart.
+
+**Was vorher geschah** (`test647` gegen den Stand vor E803, 8 von 19): Der
+gewöhnliche Weg (`Store.updateBlock(id, { type })`) war schon verlustfrei.
+Vier Sonderwege in `Blocks.umwandeln` waren es nicht:
+- **→ Datenbank:** `trashBlock` und gleich danach `purgeBlock` — Text und
+  Unterblöcke ENDGÜLTIG weg, nicht einmal im Papierkorb.
+- **→ Seite:** eine NEUE Seite am Ende der Seite, der alte Block samt
+  Unterblöcken in den Papierkorb, die Kennung gewechselt (Verweise auf den
+  Block zeigten danach in den Papierkorb).
+- **→ Einbettung** und **→ Spalten:** `text: ''`.
+
+**Was entschieden wurde.**
+- → Datenbank: die Datenbank entsteht weiter neu (sie ist ein eigener Satz
+  mit Sammlung und Ansicht), am selben Platz. Der alte Block geht in den
+  Papierkorb und bleibt holbar, samt Unterblöcken; sein Text wird der Name
+  der Datenbank. Nur ein ganz leerer Block (kein Text, keine Unterblöcke)
+  wird gleich weggeräumt — an ihm ist nichts zu verlieren, und er würde den
+  Papierkorb nur füllen.
+- → Seite: an Ort und Stelle. Eine Seite ist ein Block mit `type: 'page'`
+  (§17); Kennung, Platz, Text und Unterblöcke bleiben, die Unterblöcke sind
+  danach der Inhalt der Seite. Die Seitenfelder (`icon`, `aliases`, `cover`,
+  `wide`, `font`, `small`) kommen nur dazu, wo sie fehlen.
+- → Einbettung und → Spalten lassen den Text stehen; sie zeigen ihn nicht,
+  aber wer zurückwandelt, hat ihn wieder.
+
+**Die Alternative.** Für → Datenbank den Block an Ort und Stelle zur
+Datenbank machen — das hiesse, einen Block nachträglich an eine neue
+Sammlung zu binden, ein zweiter Weg neben `addDatabase`. §8: kein zweiter
+Katalog, kein zweiter Weg für dasselbe.
+
+**Was es kostet.** Wer häufig Textblöcke zu Datenbanken macht, findet ihre
+Reste im Papierkorb, bis dessen Frist abläuft. → Seite verhält sich sichtbar
+anders: die Seite steht dort, wo der Block stand, nicht mehr am Ende
+(Bilder am Rechner und am Telefon im Gespräch, §55.3).
+
+**Geprüft.** `test647` (19 Zusagen; gegen den alten Stand rot mit 8 von 19),
+dazu `test39`, `test143`, `test176`, `test191`, `test192`, `test212`,
+`test105`, `test109`. `test65` ist an einer Stelle rot („Vierzehn Gruppen in
+der Übersicht", gezählt 15) — am Stand vor E803 genauso, unberührt. Kein
+voller Lauf.
+
+## E804 · Unsichtbare Blöcke werden beim Laden wieder eingehängt
+
+**Wer und wann.** 24. November 2026, Redurs Ziel „arbeite ohne pause bis du
+alles fertig gemacht hast" — B5 der Roadmap aus der Notion-Analyse. Notion
+hält Abwärts- (`content`) und Aufwärtszeiger (`parent`) gespiegelt und nennt
+Abweichungen selbst „edge cases".
+
+**Was fehlte.** Die Selbstheilung beim Laden (`kern/ablage/formen.ts`) fing
+die eine Richtung schon ab: ein `content`-Eintrag ohne Block wird beiseite
+gelegt (`contentFehlt`). Die andere nicht: ein lebender Block, dessen
+`parentId` auf einen lebenden Block zeigt, der ihn NICHT in `content`
+führt. Gezeichnet wird über `content` — so ein Block ist da und
+unsichtbar. Genau das konnte `flush` vor E800 hinterlassen. `test648`
+schreibt eine solche Waise an der App vorbei auf die Platte und lädt neu:
+vor E804 rot mit 2 von 7.
+
+**Was entschieden wurde.** `Formen.zustand(true)` hängt jede Waise hinten
+an den `content` ihres Elternteils (über `Store.updateBlock`, also auch
+gesichert) und meldet die Zahl im Melder. Unberührt bleibt, was im
+Papierkorb liegt (`alive: false`), was eine Datenbankzeile ist
+(`parentTable: 'collection'`) und was einen toten Elternteil hat.
+
+**Warum hinten.** Die Folge der übrigen Kinder ist die Arbeit des Nutzers;
+wo die Waise einmal stand, weiss niemand mehr. Sichtbar am Ende ist besser
+als unsichtbar irgendwo.
+
+**Gemessen vor dem Bau.** Im Startbestand 1970 Blöcke, 0 Waisen. Blöcke,
+die auf die Fläche gezogen sind (E691), stehen weiter in `content` — es
+gibt also keine gewollte Waise, die jetzt ungewollt zurückkäme.
+
+**B19 im selben Bogen, ohne Bau.** „Unbekannte Blockarten sichtbar rendern"
+ist schon erfüllt; eine Sonde mass einen Block `type: 'zukunftsblock'` mit
+eigenem Feld: er wird als Text gezeichnet, lässt sich bearbeiten, behält
+Typ und Feld und übersteht `exportAll` → `importAll('ersetzen')`.
+
+**Geprüft.** `test648` (7 Zusagen; gegen den alten Stand rot mit 2 von 7),
+`test85`, `test145`, `test209`, `test501`, `test520`, `test575`, `test96`,
+`test100`, `test105`, `test109`, `test644`, `test645`. Kein voller Lauf.
+
+## E805 · Redion bittet von selbst um dauerhaften Speicher
+
+**Wer und wann.** 24. November 2026, Redurs Ziel „arbeite ohne pause bis du
+alles fertig gemacht hast" — B9 der Roadmap aus der Notion-Analyse.
+
+**Was fehlte.** Ohne `navigator.storage.persist()` darf ein Browser die
+Ablage bei Platznot räumen, ohne zu fragen — für eine App, deren Wahrheit
+auf dem Gerät liegt (Ziel 1), ist das der gefährlichste stille Verlust.
+Der Helfer `AppEinstellung.speicherSichern()` stand seit langem in
+`kern/einstellung/app.ts` — und wurde von NIEMANDEM gerufen. Gefragt wurde
+nur, wenn jemand in den Einstellungen oder im Installationsfenster den Knopf
+„dauerhaft" drückte. `test649` gegen den alten Stand: 3 von 6, null Bitten.
+
+**Was entschieden wurde.** `flush` ruft nach dem ersten gelungenen
+Schreiben von Blöcken einer Sitzung `speicherSichern()` — das fragt nicht,
+wenn der Speicher schon dauerhaft ist. Höchstens einmal in 30 Tagen:
+Firefox zeigt für die Bitte einen Dialog, und eine Bitte bei jedem Start
+wäre Drängeln. Der Zeitpunkt der letzten Bitte liegt in `localStorage`
+unter `redion:speicher-dauerhaft:gefragt`.
+
+**Warum `localStorage` und nicht `meta`.** Der Zeitpunkt ist eine
+Einstellung DIESES Geräts, kein Inhalt — wie die Anzeigewahl des Glass
+Wheel. Im `meta`-Fach reiste er in jede Sicherung und in den Abgleich und
+bräuchte dort eigene Regeln (`GERAETEIGEN`, `NUR_HIER`). §10 bleibt
+gewahrt: IndexedDB bleibt der Speicher der Daten, ersetzt wird nichts. Ist
+`localStorage` gesperrt, wird eben je Sitzung einmal gebeten.
+
+**Was es kostet.** In Firefox erscheint beim ersten Schreiben ein Dialog
+des Browsers. Die Bitte kommt ohne vorherige Erklärung in Redion; wer ablehnt,
+wird 30 Tage nicht wieder gefragt.
+
+**B14 im selben Bogen, ohne Bau.** Die Liste B nannte zwei Schreiber von
+`localStorage`, die REA gefunden hatte. Das Glass Wheel speichert dort
+begründet eine Anzeigewahl des Geräts. Der Staatskunde-Trainer schreibt
+dort nur auf der eigenständigen Seite `lernen/staatskunde.html`, die keine
+Ablage lädt; in Redion selbst lebt der Trainer seit E677 auf gewöhnlichen
+Lernkarten, und `test565` hält, dass `localStorage` dort leer bleibt.
+
+**Geprüft.** `test649` (6 Zusagen; gegen den alten Stand rot mit 3 von 6),
+`test96`, `test100`, `test105`, `test109`, `test644`, `test645`, `test646`,
+`test648`. Kein voller Lauf.
+
+## E806 · Die Bibliothek zeichnet die Deckel in Schritten
+
+**Wer und wann.** 24. November 2026, Redurs Ziel „arbeite ohne pause bis du
+alles fertig gemacht hast" — gefunden mit der Messung aus Stufe 0 der
+Roadmap (B8, messungen §116), gebaut nach §36 („erst messen, dann bauen").
+
+**Was gemessen wurde.** Mit 10 000 Seiten an der Wurzel hielt der Start den
+Hauptfaden 6,8 s fest, in vier bis fünf langen Aufgaben, die grösste 3,5 s
+(PerformanceObserver `longtask`, zweimal gemessen, 6 760 und 6 808 ms). Das
+CPU-Profil über CDP zeigte, wohin: Layout (`getBoundingClientRect` 1,8 s,
+„program" 3,2 s), `wannText` 0,4 s, `zeichneDeckel`, `sortiere` — die
+Bibliothek ist der Startbildschirm, und ihre Ablage zeichnete JEDEN Deckel.
+Nur der Reiter „Kürzlich" war begrenzt (60). Die Ausreisser beim Neustart
+(bis 10 s) zeigte der Stand vor E800 genauso; sie sind keine Folge von
+E800–E805.
+
+**Was entschieden wurde.** Die Deckelansicht zeigt erst 120 Deckel, darunter
+„120 von N Dokumenten · Mehr zeigen · Alle zeigen". „Mehr zeigen" bringt
+120 dazu und lässt den Fokus auf sich; „Alle zeigen" zeigt alles. Gemerkt
+wird je Ort, Ordner und Art, nur für die Sitzung. Die Knöpfe messen 44 px
+(§37 — die Bibliothek ist ein Hauptweg; die Datenbank-Grenze `db-grenze`
+hat kleinere, das bleibt dort, wie es ist).
+
+**Warum eine Grenze mit Ansage und keine Virtualisierung.** Dasselbe Muster
+hat Redion bei Datenbanken (L22, E180): eine Ansicht, die einen Teil zeigt,
+MUSS sagen, dass sie einen Teil zeigt. Virtualisierung (B46) hielte alle
+Deckel erreichbar, aber Strg+F, Tastaturweg, Drucken und die Vorschaubilder
+(`Vorschau.bilderNachtragen`) müssten dafür jede einzeln umgebaut werden —
+ein Umbau statt einer Grenze.
+
+**Was es kostet.** Wer in einer Ablage mit mehr als 120 Dokumenten per
+Strg+F im Browser sucht, findet nur die gezeigten; Redions eigene Suche
+(Strg P) findet alle. Liste und Regal sind unverändert (noch ohne Grenze).
+
+**Geprüft.** `test650` (11 Zusagen; gegen den Stand vor E806 rot mit 2 von
+11, gemessene lange Aufgaben dort 3 579 und 1 451 ms, danach 809 ms), dazu
+alle 54 Läufe, die die Bibliothek berühren, sowie `test105` und `test109`.
+Bilder am Rechner und am Telefon (§55.3). Kein voller Lauf.
+
+**Nachtrag, Ergebnis der Nachbarläufe.** Von den Läufen, die die Bibliothek
+berühren, waren 13 rot. Zwölf davon sind auf dem Grundstand `2d6038e`
+genauso rot (34, 238, 272, 341, 351, 388, 493, 560, 581, 585, 603, 623).
+Der dreizehnte, `test67`, ist einzeln grün (65 von 65) und auch zusammen mit
+`test54`; er war im Sammellauf wackelig. E806 hat also keinen roten Lauf
+dazugebracht.
+
+
+## E807 · Die Suche ordnet nach Passung, nicht nur nach Datum
+
+*24. November 2026 · Roadmap Stufe 5, B31 · `src/kern/suche/query.ts`*
+
+**Was entschieden wurde.** `QueryLanguage.run` sortiert wie bisher zuerst
+nach der groben Stufe (`scoreFor`: Titel, Status/Schlagwort, Inhalt). Bei
+gleicher Stufe entscheidet jetzt die Passung und erst danach das Datum:
+Titel gleich dem Wort (3) vor „beginnt damit" (2) vor „enthält es" (1), dazu
+für den Inhalt eine kleine BM25-Rechnung (k1 = 1,2, b = 0,75) über die
+Dokumente, die ohnehin passen.
+
+**Warum.** Wer „Kabel" suchte, bekam „Netzkabel bestellen" vor der Seite
+„Kabel", wenn die erste jünger war, und einen langen Text, der das Wort
+einmal streift, vor dem, der davon handelt. Notion nennt das „Best Matches";
+BM25 ist öffentliches Standardwissen, nichts davon ist übernommen.
+
+**Was die Alternative war.** BM25 über den Dreigramm-Index der KI
+(`bereiche/ki/kontext.ts`) — das hätte die Schalensuche an einen Bereich
+gehängt (§5 Regel 1) und ist B32, ein eigener Schritt. Die Rechnung hier
+braucht keinen Index, weil sie nur über die Treffer läuft.
+
+**Was es kostet.** Gemessen mit 10 000 Seiten, die alle passen: 58 → 83 ms
+je Tastendruck; passt nichts, 28 → 24 ms (messungen §117). Die Reihenfolge
+gleich guter Treffer bleibt beim Datum, und ein reiner Filter (`typ:seite`)
+ordnet wie vorher.
+
+**Und B47 (`content-visibility`).** Gemessen: eine Seite mit 3000 Absätzen
+öffnet in 200 statt 465 ms, ein Umbruch ist achtmal schneller. Gebaut ist
+es NICHT: `content-visibility:auto` schaltet Paint-Containment auch für
+sichtbare Blöcke ein, und die Griffe `⋮⋮` stehen 46 px links ausserhalb des
+Blocks — sie wären abgeschnitten. `overflow-clip-margin` fängt das in
+Chromium auf, in Safari nicht. Zurückgestellt, bis die Griffe im Block
+stehen oder eine Seite mit Tausenden Blöcken ein echtes Problem ist (§51).
+
+**Geprüft.** `test651` (9 Zusagen; gegen den Stand davor rot mit 5 von 9),
+`test229` (die Suche im Fenster, 20 von 20), `test105`, `test109`.
+
+## E808 · Die Desktop-App fragt beim Schliessen, wenn der Speicher voll ist
+
+*24. November 2026 · schliesst L268 · `windows/main.cjs`, `src/kern/ablage/indexdb.ts`*
+
+**Was entschieden wurde.** Der Hauptprozess behandelt `will-prevent-unload`:
+lehnt Redion das Entladen ab (E802: der Speicher ist voll, und Änderungen
+liegen nur im Arbeitsspeicher), fragt ein eigener Dialog „Bleiben" oder
+„Trotzdem schliessen". Enter und Escape heissen „Bleiben". Beim Abmelden oder
+Herunterfahren von Windows (`session-end`) wird nicht gefragt. Die Ausnahme
+`RedionDesktop` in `indexdb.ts` fällt weg.
+
+**Warum.** Ohne den Griff hielt Electron ein abgelehntes `beforeunload` ohne
+Dialog fest — das Fenster liesse sich nicht mehr schliessen. Deshalb hatte
+E802 in der Desktop-App gar nicht gefragt, und dort ging beim Schliessen
+still verloren, was der volle Speicher nicht aufnehmen konnte (L268).
+
+**Was die Alternative war.** Beim Schliessen alles in eine Datei neben die
+App schreiben. Bei einem vollen Speicher hat auch die Platte keinen Platz;
+und es wäre ein zweiter Speicherweg (§9).
+
+**Was es kostet.** Wer bei vollem Speicher herunterfährt, verliert, was nicht
+gesichert ist — ein Dialog, der Windows anhält, rettet es auch nicht. Und
+geprüft ist der Dialog nur am Quelltext: im Container gibt es kein Electron.
+
+**Geprüft.** `windows/windows-desktop.test.cjs` „L268" (gegen den Stand davor
+rot: kein `will-prevent-unload`), `test646` (14 von 14), `test105`,
+`test549`. Die Windows-Smoke-Reihe läuft auf Redurs Rechner.
+
+
+## E809 · `flush` wartet auf den Durchgang, der noch schreibt
+
+*24. November 2026 · `src/kern/ablage/indexdb.ts`*
+
+**Was entschieden wurde.** `flush()` merkt sich den letzten Durchgang, der
+noch schreibt (`laufend`). Findet ein Aufruf nichts mehr im Stapel vor, weil
+ein früherer die Sätze genommen hat, wartet er auf genau diesen Durchgang,
+statt sofort „gespeichert" zu melden.
+
+**Warum.** Gefunden hat es die Prüfung eines Neuladens (`test67`), die in
+zwei von drei Läufen die Seite nicht fand. Die Ursache lag tiefer: nach
+`Store.flush()` und einem Neuladen fehlte die Seite auf der Platte, obwohl
+`letzte` schon auf sie zeigte. Zwei Aufrufe hintereinander — der zweite
+meldete sofort — verloren die Seite in 9 von 10 Fällen auf dem Stand vor
+E809 (0 von 10 gespeichert). Der Stand `2d6038e` ist im selben Ablauf in neun
+von zehn Fällen auch verloren gegangen (1 von 10 gespeichert). Die Lücke gab
+es also schon vor E800; auf meinem Stand war sie größer, und warum, habe ich
+nicht ergründet — gemessen ist nur der Unterschied. Der Test147 hatte dasselbe
+behauptet („meldet erst, wenn es auf der Platte steht") und war nur nicht
+auf diesen Ablauf gebaut.
+
+**Was die Alternative war.** Den Aufrufer warten lassen, bis der Stapel
+leer ist. Das hätte die Eingabe bei jedem Tastendruck verlangsamt und einen
+neuen Warteschlange-Weg gebraucht; das Merken des letzten Durchgangs ist ein
+Feld und ein `then`.
+
+**Was es kostet.** Ein `flush` ohne neue Arbeit wartet jetzt auf einen
+Schreibvorgang, der noch läuft — bei einem langsamen Speicher kann das
+spürbar sein. Ein Fehler des früheren Durchgangs wird dort NICHT weitergereicht
+(der Aufrufer des früheren hat ihn schon); der Wartende sieht nur das Ende.
+
+**Geprüft.** `test652` (10 Rundgänge; gegen die gebaute Datei von vor E809
+rot), `test147` (17 von 17), `test646` bis `test650`, `test644`, `test645`,
+`test96`, `test100`, `test105`, `test109`, `test189` — siehe messungen §118.
+
+## E810 · Die freie Zeichenleiste bleibt im sichtbaren Feld
+
+*24. November 2026 · `src/bereiche/pdf/marken.ts`, `test534` §9 · gebaut von einem Haiku-Agenten, durchgesehen und nachgeprüft im Hauptzweig*
+
+Die Zeichenleiste im Blatt-Modus lässt sich frei in die Mitte ziehen (Lage „frei", E620). Ihre Lage ist ein Punkt in Prozent der Hülle. Rollt die Seite während des Zugs, kann die Hülle mit ihrer Oberkante über dem Fensterrand liegen. Die alte Grenze war die Hülle, nicht das Fenster: Losgelassen oben im Bild stand die Leiste mit ihrem Rand 13 px über dem Fenster, nach dem Verkleinern 58 px darüber. `test534` §9 hält genau das, und gegen den Stand vor E810 ist er rot.
+
+Die Entscheidung: Die Mitte wird beim Ziehen, beim Loslassen und bei jeder Fenstergrösse so begrenzt, dass die ganze Leiste im sichtbaren Feld liegt. Das Feld ist der Rollbereich `#scroll` — unter der Kopfleiste und neben der Seitenleiste. Fehlt er, gilt das Fenster. Ein Punkt, der dabei verschoben wurde, wird neu gemerkt. Das Andocken an die Kanten (E620) und die Lagen oben, unten, links und rechts bleiben unverändert. Am Telefon wird nicht gezogen (§37); eine dort gemerkte freie Lage wird beim Öffnen auf dasselbe Feld begrenzt.
+
+Die Alternative war, die Grenze an der Hülle zu lassen und nur beim Loslassen zu prüfen. Verworfen: Das Verkleinern des Fensters öffnete den Fehler wieder, und eine Grenze am ganzen Fenster schob die Leiste unter die Kopfleiste, wo sie verdeckt ist. Das zeigte das Bild vom Rechner, nicht die Messung allein (§55.1). Kosten: Eine Leiste, die beim Verkleinern aus dem Feld rutscht, wird an dessen Rand gesetzt und nicht an ihre alte Stelle in der Seite.
+
+Ein Fund am Rande: Die Messung in `test534` §4 war mal grün, mal «oben», mal bei `y = -101`. Die Ursache lag am Test: Das Klicken auf den Griff rollte die Seite, der Griff lag oberhalb des Fensters, und der Zug fing daneben an. Dort rollt der Test jetzt vor dem Zug zurück. Der Produktfehler ist davon unabhängig und steht in §9.
+
+Prüfung: `test534` fünfmal hintereinander grün (55 von 55). Die Gegenprobe mit dem alten gebauten Stand macht §9 rot (53 von 55, die beiden Zeilen zur Lage im Feld). `test533` war schon vor diesem Bogen rot (zwei Zeilen zur Zeilenzahl und zu den Wörtern am Telefon); das ist nicht Teil dieses Bogens. Bilder: `bilder/e810-*.png` (nicht mitversioniert).
+
+## E811 · Drei alte rote Läufe: was sie wirklich fanden
+
+*24. November 2026 · gebaut von einem Haiku-Agenten, durchgesehen und nachgeprüft im Hauptzweig (test603 74/74, test614 124/125)*
+
+Die drei Läufe `test603`, `test614` und `test623` waren im vollen Lauf rot, und auf dem älteren Stand `2d6038e` genauso. Dieser Eintrag hält fest, was jeder davon tatsächlich gefunden hat — und was ausdrücklich NICHT geändert wurde, weil es eine Gestaltungsentscheidung ist.
+
+**`test603` — grün.** Die Prüfung suchte ausserhalb von `@supports` nach `studio-search` mit `backdrop-filter`. Ihr erster Treffer war der Kommentar „Fallback ohne backdrop-filter“ in `quell/schale/stil/studio.css` (Regel `body[data-schale="premium"]:where([data-ui-shell="glass-wheel"]) #studio-bar .studio-search`). Der Kommentar ist umformuliert zu „Fallback ohne Glas“; die Werte blieben. Zwei weitere Treffer waren gar kein Glas: `backdrop-filter: none` in den Zurücksetzungen für starken Kontrast und Ruhe. Die Prüfung erkennt jetzt `none` als Abschalten, nicht als Glas (`pruefungen/lauf/test603.mts`). Die erste Fassung dieser Ausnahme war selbst falsch, weil ein Leerzeichen zurückgegeben werden konnte; die Ausnahme sitzt nun direkt hinter dem Doppelpunkt.
+
+**`test614` — teilweise.** §14 war rot, weil die Übergänge von `#handy-oben > button .ho-z` und `#ho-ziele > button .ho-z` neben `transform` auch `color` bewegten. Der Kommentar darüber sagt „Nur Compositor-Effekte“; Farbe ist keiner. `color` ist aus dieser Übergangsliste gestrichen (`quell/schale/stil/bausteine.css`), `transform` bleibt. §14 ist grün. Ein Bild wurde nicht gemacht: die Farbe des aktiven Reiterzeichens wechselt jetzt ohne Ausblendung. Das ist eine kleine sichtbare Änderung; Redur sollte sie am Telefon ansehen.
+
+§7f ist NICHT repariert. Gemessen: nach einer Geste, die hinauf übergeben und dort losgelassen wird (`zu hoch losgelassen`), kommt der nächste echte Tipp nicht an — bei 120 ms, 400 ms und 1000 ms gleichermassen. Der Browser schickt für diesen Tipp `pointerdown` und `pointerup`, aber KEIN `click`. Die Zielleiste ist es nicht (ausgeblendet gemessen, kein Unterschied). `touch-action:none` auf `#handy-oben` schliesst einen Fling aus. Nach einem `touchcancel` tritt der Fehler nicht auf. Vermutet wird der Übergabeweg in `src/schale/bedienung/selection-flow.ts` (`uebergeben`, `setPointerCapture`); bestätigt ist das nicht, daher keine Reparatur.
+
+**`test623` — nur berichtet, nicht geändert.** Drei Abweichungen von der klassischen Fassung vom 13. Oktober:
+- Der Schatten der unteren Leiste ist `0 12px 30px #00000030, 0 2px 8px #00000017` aus dem Block „iPhone UI polish (2026-11)“ in `quell/schale/stil/studio.css` (Zeile 1286), eingebracht mit Commit `48f0b38` (laut `git log -S`).
+- Die Übergangsdauer des Zeichens (0,542 s) und der Druck (`translateY(-2px) scale(1.08)`) kommen aus der Feder-Regel für `.ho-z` in `quell/schale/stil/bausteine.css` (Zeile ~2041), eingebracht in `a105e4a`, dem Commit der Federn des Touch Kits (E702).
+Beide Stellen sind bewusste Gestaltungsentscheidungen der Telefon-Politur bzw. der Federn. Ob die klassische Fassung zurück soll, entscheidet Redur.
+
+Nachbarläufe: `test105` und `test109` grün. `test576` und `test582` sind auf dem Stand `2d6038e` GENAU so rot (Glas-Werte und Kontrast der Telefonleiste); diese Änderung hat daran nichts geändert.
+
+## E812 · Die Einstellungen wie die iPhone-Einstellungen, mit Redions eigenen Mitteln
+
+**Wer.** Redur, 24. November 2026: „Die Einstellungen aufräumen, sie sollen wie die iPhone-Einstellungen sein." Gemeint ist der Aufbau — keine Apple-Grafiken, keine Apple-Texte.
+
+**Entschieden.** Die Einstellungen bekommen den Aufbau der iOS-Einstellungen, gebaut aus Redions eigenen Bauteilen:
+
+- ein grosser Titel „Einstellungen" und darunter eine Suche (`.einst-titel`, `.einst-suche`); die Suche blendet Bereiche und leere Gruppen aus, sie filtert nach dem Namen und lässt die Griffe im Baum;
+- die Gruppen als Karten mit runden Ecken (`.einst-karte`), darüber die kleine graue Überschrift (`.einst-grp`); die vier Gruppen bleiben, wie E701 sie hat;
+- jede Zeile mindestens 44 px hoch, links ein farbiges Quadrat von 29 px mit weissem Zeichen (`data-farbe`, Farbe je Zeile aus `--c-*`), rechts der Pfeil „›", die Trennlinie ab dem Text;
+- Telefon (≤ 760 px): Liste und Detailseite als zwei Seiten, der Rückweg heisst „‹ Einstellungen"; Rechner: links die Liste (300 px), rechts die Detailseite;
+- die Zeilen einer Detailseite stehen in Karten (`.ez-karte`, von `zeilenKarten()` in `seite.ts` gebildet, die Zeilen selbst unverändert);
+- Hell: grauer Grund, weisse Karte. Dunkel: dunkler Grund, etwas hellere Karte. Nur vorhandene Tokens (`--bg`, `--bg-hover`, `--bg-card`, `--line-soft`, `--c-*`).
+
+Alle 20 Bereiche bleiben mit ihren Kennungen, Wörtern und ihrer Folge. Der Auftrag sprach von 19; der Bestand hat 20, seit `geraete` (iPhone und Windows) dazugekommen ist. Diese Zahl wurde nicht verändert, nur gezählt.
+
+**Warum.** Redur will die Ruhe und Klarheit der iPhone-Einstellungen. Die Grösse der Berührungsflächen bleibt Pflicht (§37: 44 px), die Farbe bleibt Tokenfarbe (§39), und jeder Griff bleibt erreichbar (§43).
+
+**Alternative.** 36-px-Zeilen wie bisher hätten die Liste ohne Rollen gelassen (E392). Verworfen, weil Redur ausdrücklich die iOS-Form will und die Zeilen dort ein Fingerziel sind. Ein Wrapper pro Gruppe in `seite.ts` statt Karten per CSS hätte den Aufbau nur für die Liste gebracht; die Detailseite hat ihre Karten per Hülle aus `zeilenKarten()` bekommen.
+
+**Was daraus folgt — und wo der Bau gegen alte Zusagen steht.** Das sind keine Fehler im Umbau, sondern Zusagen, die mit der neuen Form nicht mehr zusammen gelten. Redur entscheidet, welche bleibt:
+
+1. **test580 §3, „der gewählte Bereich trägt den Akzent".** Das Zeichen ist weiss (Redurs Wunsch). Gemessen wird die Farbe des Zeichens im gewählten Bereich; sie ist weiss, also rot. Die Zusage „die Zeichen sind still" (grau) bleibt grün, weil weiss unbunt ist. Zwei Wege: die Zusage auf „der gewählte Bereich ist markiert" umschreiben, oder das gewählte Zeichen wieder mit Akzent malen (dann weicht der Bau vom Wunsch ab). Der Lauf wurde nicht aufgeweicht.
+2. **test389 §2, „Bei 1360 × 900 ist die Liste vollständig".** Zwanzig Zeilen zu je 44 px sind 880 px, dazu Titel, Suche und drei Überschriften; das Fenster hat 828 px. Die Liste rollt jetzt, der Streifen „es geht weiter" (E392, `.einst-mehr`) zeigt es. Der Lauf misst 453 px Überhang. Zwei Wege: die Zusage auf „die Liste rollt, und der Streifen zeigt es" umschreiben, oder die Zeilen auf 36 px zurücknehmen (dann verletzt der Bau den Wunsch nach 44 px).
+3. **„19 Bereiche" in test32, test34, test389, test580.** Vorhanden vor E812: die Liste hat 20 Bereiche. Diese Läufe zählen 19 und sind deshalb schon vor diesem Umbau rot. Nicht geändert.
+4. **Dunkel: weisses Zeichen auf den Pastellfarben.** Das gerechnete Verhältnis von Weiss zu `--c-blue` (dunkel, `#6dbcf2`) liegt bei rund 2 : 1. Das Zeichen ist Beiwerk, der Name daneben trägt die Bedeutung, aber §38 verlangt Kontrast; ein dunkles Zeichen auf denselben Quadraten wäre die Alternative.
+5. **Der Wechsel-Flug** (`data-material`) sitzt auf der Karte, nicht auf der Liste: `selection-flow.ts` liest nur die direkten Kinder eines Trägers. Der Flug bleibt innerhalb einer Gruppe; über eine Kartengrenze springt die Markierung.
+6. **Der Fokus beim Öffnen** lag auf dem Suchfeld, und am Telefon hätte das die Bildschirmtastatur geöffnet. Der allgemeine Fokushalter (`ueberlagerung/fokus.ts`) bleibt unverändert; das Einstellungsfenster setzt den Fokus nach einem Takt auf die erste Zeile, ohne sichtbaren Rahmen.
+
+**Prüfung.** `pruefungen/lauf/test654.mts` ist neu. Vor dem Umbau gegen den Stand `2d6038e` rot (Gegenprobe: keine Karten, keine Suche, keine Titelzeile); nach dem Umbau 46 von 46 grün. Gemessen wird im Browser am Rechner und am Telefon: 20 Bereiche in vier Karten mit Radius ≥ 10 px, Kennungen und Wörter in der Folge, Zeilen ≥ 44 px, Quadrat 28–32 px, weisses Zeichen, Pfeil, Trennlinie, `static`, Karte und Grund in beiden Themen unterscheidbar, Zurück und Escape auf dem Telefon, Enter auf einer Zeile, die Suche, Tab mit sichtbarem Umriss.
+
+Die Vorher- und Nachher-Läufe (13 aus dem Auftrag, dazu die übrigen Einstellungsläufe): rot blieben test32 und test580 (vorher zwei Zeilen, nachher vier — siehe Punkt 1). Neu rot: test389 (Punkt 2). test585 ist auf den Stand des HEAD zurückgekehrt: die beiden Flugzeilen der Einstellungen sind grün, die übrigen vier Zeilen waren schon vorher rot. Vorhanden rot auf dem unveränderten HEAD, geprüft in einem temporären Arbeitsbaum: test34 (Punkt 3), test270, test272, test353, test623 (drei Zeilen der unteren Leiste), test585 (vier Zeilen der unteren Leiste und des Seitenflugs), test581 (`#ho-ziele`, nicht in den geänderten Dateien).
+
+**Was es kostet.** Zwei Zusagen aus früheren Entscheidungen (E701, E392) stimmen so nicht mehr; Redur entscheidet nach Punkt 1 und 2. Am Rechner rollt die Liste, und nicht mehr alle Bereiche sind auf einen Blick zu sehen. Die Zeilen sind höher, die Detailseite wird länger.
+
+**Nachbesserungen (Koordinator, im selben Bogen).**
+
+- *Kontrast dunkel (§38).* Die Farbtokens sind im Dunkelmodus helle Pastelle; weisses Zeichen darauf lag bei 1,69 : 1. Im Dunkelmodus wird das Quadrat mit Schwarz gemischt (`color-mix`, 60 % Tokenfarbe). Gemessen über alle zehn Schemata (`test654 §9`, Leinwand, gerenderte Farbe): kleinster Wert dunkel 4,44 : 1, hell 6,27 : 1. Ziel war 3 : 1 (WCAG 1.4.11).
+- *Gewählte Zeile am Rechner (test580 §3).* Fläche in `--accent` mit 50 % Schwarz gemischt, Name und Pfeil weiss; das Zeichen-Quadrat bleibt farbig. Gemessen: Name auf der Fläche kleinster Wert 5,28 : 1 (Schema „kontrast"), alle Schemata über 4,5 : 1. Der Mischanteil 50 % ist aus den Messungen abgeleitet: bei reinem Akzent lagen „kontrast" bei 1,43 : 1 und „wald" bei 2,26 : 1.
+- *Das Zeichen der gewählten Zeile bleibt weiss.* test580 misst dort die Farbe des Zeichens und verlangt einen gesättigten Ton. Mit weissem Zeichen auf dem farbigen Quadrat schlägt die Zeile deshalb weiter fehl. Die Alternativen sind im Bericht gegeben: Akzent als Schrift (`--accent-text`) lag auf dem Quadrat bei 1,0 bis 2,3 : 1 und war unlesbar; eine feste Pastellfarbe brauchte eine Handfarbe, die test584 verbietet; ein weisses Quadrat mit Akzentzeichen widerspricht „Quadrat bleibt farbig". Die Entscheidung liegt bei Redur. test580 bleibt an dieser einen Stelle rot.
+- *Profil.* Der Buchstabe steht in einem Kreis von 44 px in `--accent`, zentriert und weiss.
+- *Zusatz von Redur: iOS-Glas und -Übergänge.* Telefon wie ein Navigationsstapel: die Detailseite fährt von rechts herein (`--feder-sanft`, `--feder-sanft-dauer`), die Liste wandert 30 % nach links und wird abgedunkelt. Nur `transform` und `opacity` bewegen sich (`test654 §10`, gemessen Bild für Bild). Wischen vom linken Rand (x < 24) zieht die Detailseite mit dem Finger, über die Mitte oder schnell losgelassen geht es zurück. Die Glasleiste erscheint beim Rollen: der grosse Titel weicht, die kleine Leiste trägt `--glas-blur` unter `@supports` mit `-webkit-`-Zwilling und eine Haarlinie. Das Blatt öffnet sich am Telefon von unten und schliesst nach unten; am Rechner blendet es mit 0,98 → 1 ein, der Bereichswechsel blendet über statt zu schieben. Weniger Bewegung (System und „Ruhige Darstellung") heisst kein Zwischenbild; starker Kontrast nimmt das Glas weg.
+- *Offen dabei.* test581 prüft zwei Zeilen am alten Animationsnamen `wisch-rein-links`/`wisch-rein-rechts`. Die Fahrt läuft jetzt über Übergänge statt Schlüsselbilder, das Verhalten misst test654 §10. Diese zwei Zeilen sind rot und bleiben rot, bis Redur entscheidet.
+
+## E813 · Das untere Dock ist eine Kapsel, und das Zeichen steht über dem Wort
+
+*24. November 2026 · Redur: „Das Dock sollte nur eines sein, momentan ist es doppelt. Es soll wie das Original von iOS sein." · Foto seines iPhones: `bilder/redur-iphone-dock-18-13.png`*
+
+**Was entschieden wurde.** Die Leiste am Telefon ist eine schwebende Glaskapsel mit EINER Lichtkante oben und einem weichen Schatten nach unten. Der zweite Ring innerhalb des Randes (`#handy-oben::after` in `quell/schale/stil/studio.css`) ist weg. Die zweite Innenlinie im Schatten (`inset 0 -1px`) und der zweite äussere Schatten sind weg, in `studio.css`, `glasswheel.css` und in der Glass-Wheel-Fassung von `studio.css`. Das Zeichen steht in einer festen Box (`.ho-z`, 24 px, `overflow: hidden`), das SVG darin 19 px; das Wort darunter hat `line-height: 1.15`. Die Masse stehen als CSS-Variablen an EINER Stelle (`#handy-oben{ --dock-zeichen; --dock-zeichen-box; --dock-wort }` in `quell/schale/stil/bausteine.css`).
+
+**Warum.** Redurs iPhone zeigte die Zeichen GROSS über den Wörtern („Dok▢ente", „H▢te"). Im Chromium des Containers ist das nicht zu sehen; die Ursache liegt sehr wahrscheinlich in Safari, und sie war nicht nachzustellen (kein WebKit im Container). Darum wird die Zeichenbox nicht mehr von der Grösse des SVG bestimmt, sondern festgelegt und beschnitten. Das Foto zeigt die STANDARD-Fassung (oben „Werkzeuge", Suche, Sparkle, Raster), nicht das Glass Wheel; das Glass Wheel war im Container ebenfalls sauber.
+
+**Was NICHT entschieden wurde (offen, bei Redur).**
+- Der Griffstrich über der Leiste (`#handy-oben::before`, 42 px) bleibt. `test623` prüft ihn im Code (Zeile 345 bis 346) für die klassische Fassung, und die klassische Fassung ist der Standard (`data-schale="premium"` ohne `data-ui-shell`). Ein Entfernen hätte `test623` rot gemacht; das wurde nicht gemacht. Entscheidung: Redur, ob der Strich weg soll und `test623` dann angepasst wird.
+- Die Richtwerte aus Apples Tab-Bar (Kapselhöhe ca. 62 px, Abstände 16–20 px, Zeichen 22–24 px, Wort 10 px) sind NICHT gesetzt. Sie stehen nicht in Redurs Bild; die Masse bleiben bei den gemessenen Werten (Kapsel 60 px, Zeichen 19 px) bis Redur ein Bild seines iPhones schickt. Das gefüllte Zeichen für den aktiven Reiter ist nicht eingeführt; das Register hat dafür keine Fassung.
+- Der Kontrast des aktiven Wortes ist NOCH ZU NIEDRIG. Gemessen an den Bildpunkten (`test585` §2): Standard hell 3,06 : 1, Standard dunkel 3,73 : 1, Glass Wheel hell 3,43 : 1, dunkel 3,58 : 1 (Soll 4,5 : 1). Vorher 2,83 und 3,47. Die Lösung liegt bei der Pille oder der Wortfarbe; das ist eine Gestaltungsfrage und nicht in diesem Bogen entschieden.
+
+**Prüfungen.** `test655` (neu, 89 Zusagen in beiden Schalen, hell und dunkel): vor der Änderung 73 bestanden, 16 rot; danach 87 bestanden, 2 rot (die beiden Kontrast-Zeilen des Glass Wheel, 3,43 und 3,58). Die WebKit-Ersatzprobe (das SVG ohne Grösse und ohne Attribute) ist in Chromium auch vor der Änderung grün gewesen; darum prüft `test655` §3 zusätzlich, ob die Box beschnitten ist (`overflow: hidden`), und das war vorher rot. Sie beweist Safari NICHT; sie beweist, dass das Zeichen nicht mehr über das Wort malen kann. Bestehende Läufe vorher/nachher: `test541` 25/25 und `test614` 124/125 und `test613` gleich; `test585` 89/93 gleich (Kontrast-Zeilen besser, nicht grün); `test623` 52/55 gleich (Schatten, Übergang und Druck bleiben rot wie vorher, der Schatten jetzt mit dem neuen Wert); `test588` 79/79, `test584` 36/37 gleich wie vorher; `test576`, `test581`, `test582` unverändert rot wie vorher (Glas-Werte und Farbe des System-Modus, nicht von dieser Änderung berührt).
+
+### Nachtrag zu E813 (24. November 2026): Griffstrich weg, Wort lesbar
+
+**Was entschieden wurde.** Redur, Fragebogen vom 24. November, wörtlich gewählt: „Weg, wie iOS." Der kurze graue Griffstrich über der unteren Leiste (`#handy-oben::before`) ist in allen drei Fassungen weg (Standard, Glass Wheel, klassisch). Das Hochziehen der Zielleiste bleibt voll erhalten (E749, `test614`): der Zug hängt an der Leiste, nicht an diesem Strich. Der offene Punkt „Griffstrich bleibt" oben ist damit entschieden.
+
+**Kontrast des aktiven Wortes (Dokumente).** Die Ursache war nicht die Schrift, sondern die Pille: `studio.css` und ein späterer Block in `bausteine.css` setzten die Pille in Ruhe auf Akzent 24 %. Der Akzent-Text lag also auf Akzent. Geändert ist nur die Ruhe-Fläche der Pille, auf `color-mix(in srgb, var(--text) 5%, transparent)` (das vorhandene Token, fast klar), in `bausteine.css`, `studio.css` und `glasswheel.css`. Das Akzent-Token `--accent-text` ist unverändert. Die Fahr-Fläche bleibt akzentfarben.
+
+Gemessen mit der Methode von `test655` (Telefon 390 × 844, Gerät mit doppelter Dichte):
+
+| Fassung | vorher | nachher |
+|---|---|---|
+| Standard hell | 4,73 : 1 | 5,57 : 1 |
+| Standard dunkel | 5,37 : 1 | 6,14 : 1 |
+| Glass Wheel hell | 3,43 : 1 | 5,26 : 1 |
+| Glass Wheel dunkel | 3,58 : 1 | 5,16 : 1 |
+
+**Offen bleibt `test585`.** Dieser Lauf misst bei einfacher Dichte, und dort liegt Dokumente weiter unter 4,5 : 1: hell 3,06 → 3,08, dunkel 3,73 → 3,74. Auch eine ganz durchsichtige Pille reicht dort nicht (gemessen 2,81 : 1 hell, 3,47 : 1 dunkel). Die Grenze liegt bei der Schrift selbst (Akzent, 10,5 px, Stärke 650), nicht bei der Fläche. Ob das aktive Wort eine andere Textfarbe braucht (zum Beispiel `--text`) oder eine andere Stärke, entscheidet Redur. Das wurde in diesem Bogen NICHT eigenmächtig gelöst.
+
+**Druck der Zielleiste (`test581` §8).** `#ho-ziele > button:active .ho-z` war eine eigene `:active`-Skalierung. Sie ist jetzt `[data-gedrueckt]`, das Attribut, das `press.ts` setzt. `press.ts` führt `#ho-ziele > button` in `OWN_PRESS` (wie die Reiter der Leiste `#handy-oben`), damit der Knopf selbst nicht zusätzlich einsinkt. Die Erlaubt-Liste in `test581` ist nicht erweitert. Ergebnis: die `:active`-Zeile ist grün (vorher rot, Gegenprobe gegen den Altstand `b996a53` rot). Die zwei Zeilen „Einstellungen schiebt sich herein" (waapi) waren schon auf `b996a53` rot; sie gehören nicht zu diesem Bogen.
+
+**Prüfungen, vorher → nachher.**
+- `test655`: vorher 87 von 89 (zwei Kontrastzeilen des Glass Wheel rot), nachher 89 von 89.
+- `test585`: 89 von 93, unverändert rot in den zwei Kontrastzeilen (siehe oben); die übrigen zwei Zeilen „landet genau auf der neuen Wahl" waren vorher schon rot.
+- `test623`: 50 von 55, unverändert. Die Griffstrich-Zeile ist umgeschrieben zu „über der Leiste steht KEIN Griffstrich (Redur, 24. November, E813-Nachtrag)". Vorher rot, nachher grün. Gegenprobe gegen den Altstand: rot mit Hintergrund `rgb(99, 99, 102)`, Breite 42 px, Deckkraft 0,55. Die fünf roten Zeilen (zwei Einstellungs-Fenster, Schatten, Übergang, Druck) waren schon vorher rot und sind nicht berührt.
+- `test614`: 124 von 125, unverändert. Einzige rote Zeile ist §7f (zu hoch losgelassen), wie vorher.
+- `test581`: 91 von 93, vorher 90 von 93 auf dem Altstand (dieselben zwei Einstellungs-Zeilen rot).
+- `test584`: 36 von 37, unverändert (Glass-Wheel-Vorschaufläche, vorher rot).
+- `test541`: 25 von 25, unverändert.
+- `npm run stand`: Dienststand v1637 unverändert gegen den letzten Bau.
+
+**Bilder.** `bilder/dock-kontrast-standard-hell.png`, `bilder/dock-kontrast-standard-dunkel.png`, `bilder/dock-kontrast-glass-hell.png`, `bilder/dock-kontrast-glass-dunkel.png` (Telefon 390 × 844, doppelte Dichte; im Ordner `/home/user/Redion/bilder/`). Auf allen vier fehlt der Griffstrich über der Leiste; das Wort „Dokumente" ist lesbar.
+
+## E814 · Vier alte Zusagen der Einstellungen auf Redurs Antworten umgeschrieben
+
+*24. November 2026 · Redur im Fragebogen zu den Einstellungen (E812): drei Antworten gehören zu den Prüfläufen, die vierte („Weg, wie iOS") ist der Strich über der Leiste und gehört einem anderen Bogen.*
+
+**Was entschieden wurde.** Die Zusagen, die E812 rot gemacht hat, werden auf das neue Verhalten umgeschrieben. Der App-Code bleibt, wie er ist; geändert wird nur, was geprüft wird. Keine Zusage wird aufgeweicht: jede neue Prüfung misst dasselbe Merkmal schärfer oder genauer, und jede hat eine Gegenprobe, die gegen einen kaputten Stand rot wird.
+
+- **test580, „der gewählte Bereich trägt den Akzent"** — Redur: „Ganze Zeile, wie iPad (Empfohlen)". *Alt:* die Farbe des Zeichens im gewählten Bereich war Akzent oder Sättigung > 0,3. *Neu (Rechner):* hinter der gewählten Zeile liegt eine gesättigte Akzent-FLÄCHE (Sättigung 0,61 gemessen, Grenze 0,3), der Name darauf hält 4,5 : 1 (10,86 : 1 gemessen, gerechnet gegen den hellen Rand des Glanzverlaufs, 6 % Weiss), und KEINE andere Zeile hat dieselbe Fläche. Die Farbe kommt aus einer 1×1-Leinwand, weil `color-mix()` als `color(srgb …)` ankommt und ein `rgb()`-Regex sie nicht sähe. *Telefon:* die Zusage „Rechner und Telefon" ist hier NICHT wörtlich übernommen. E812 sagt ausdrücklich: „Am Telefon bleibt die Zeile ohne Fläche" (eigene Regel in `einstellungen.css`). Der Lauf prüft am Telefon das Gegenteil: keine Zeile hat eine Fläche. Wer am Telefon eine Fläche will, ändert E812, nicht den Lauf.
+- **test32, test34, test389, test580, „19 Bereiche"** — Zählung, kein Redur-Wort. *Alt:* 19. *Neu:* 20, mit `geraete` („iPhone und Windows"), das E755 dazugebracht hat; test580 führt den Eintrag zwischen `emoji` und `arbeitsplatz` in der Liste, die exakt verglichen wird. Die Zahl wurde gezählt, nicht geschätzt: vor der Änderung rot mit „ist 20, soll 19" in test389 und mit der vollen Liste in test580.
+- **test389, „bei 1360 × 900 ist die Liste vollständig"** — Redur: „Rollen ok, 44 px bleiben (Empfohlen)". *Alt:* kein Eintrag ausserhalb, nichts zu rollen, „Über diese App" steht da, und „passt alles" schweigt. *Neu:* jede Zeile ≥ 44 px (kleinste gemessen 44); die Liste rollt (Überhang gemessen, `overflow-y` auto oder scroll); oben passen nicht alle Bereiche; jeder der 20 Bereiche kommt durch Rollen unter den Finger (rollen, dann `elementFromPoint` an der Mitte der Zeile trifft die Zeile selbst). Der Streifen „es geht weiter" (E392) wird in der Mitte des Rollens geprüft und ganz unten als still. Die Zusage „passt alles" ist entfallen, weil es kein Fenster mehr gibt, in dem alle 20 passen (Fenster ≤ 920 px; 20 × 44 px plus Titel und Überschriften liegen darüber). Ihre Stelle hält das „ganz unten schweigt".
+- **test581, „Bereich schiebt sich von rechts herein" und „Zurück bringt die Liste von links"** — Redur: „Ja, auf Verhalten prüfen (Empfohlen)". *Alt:* der Name der Keyframes `wisch-rein-links` bzw. `wisch-rein-rechts` an `getAnimations()`. Seit E812 ist die Fahrt aber ein Übergang der Eigenschaft `transform` (`data-blick` schaltet ihn), und die Namen gibt es nicht mehr; die Zusage war damit rot, obwohl die App richtig fuhr. *Neu:* Bild für Bild wird die Stellung gelesen (`DOMMatrixReadOnly`, m41). Bei „Tipp auf eine Zeile": die Detailseite liegt in mindestens drei Bildern zwischen Bildbreite und 0, startet rechts, wird nicht rückwärts bewegt und kommt bei 0 an. Bei „Zurück": die Liste startet im Versatz von −30 %, liegt in mindestens drei Bildern dazwischen, wird nicht rückwärts bewegt und kommt bei 0 an. Mit „Ruhige Darstellung" und mit System-Bewegung reduziert ist die Detailseite im ersten Bild da (gemessen: der erste Bild-Wert nach dem Tipp ist 0).
+
+**Gegenproben (im Lauf, rot gemessen).**
+
+| Zusage | Gegenprobe | Ergebnis |
+|---|---|---|
+| test580 Akzent | Zeile grau statt Akzent (`var(--bg-hover)`) | rot (Sättigung unter 0,3) |
+| test580 Akzent | zweite Zeile mit gleicher Fläche (`color-mix` auf `konto`) | rot (gleiche 2) |
+| test389 Rollen | ein Glas über der Liste (`position:absolute`, im Fenster) | rot (0 von 20 erreichbar) |
+| test389 44 px | Zeilen auf 36 px gezwungen | rot |
+| test581 Fahrt | Übergang abgeschaltet (`transition:none`) | rot (kein Zwischenbild) |
+
+Ein Hinweis zur Gegenprobe des Rollens: ein `overflow:hidden` auf der Liste täuscht die Prüfung nicht. `scrollIntoView` rollt programmatisch weiter, auch wenn der Nutzer nicht rollen kann. Die Prüfung misst deshalb, was unter dem Finger liegt, nicht, ob die Liste rollt; die Gegenprobe dazu ist das Glas. Ein Glas am Körper der Seite reichte nicht: das Einstellungsfenster liegt darüber (gemessen).
+
+**Läufe vorher und nachher.** Gleicher Befehl, `node pruefungen/alle.mts 32 34 389 580 581`.
+
+| Lauf | vorher | nachher |
+|---|---|---|
+| test32 | 56 von 57 (19 Bereiche) | 57 von 57 |
+| test34 | 84 von 85 (19 Bereiche) | 85 von 85 |
+| test389 | 14 von 19 | 22 von 22 |
+| test580 | rot in vier Zeilen (zwei Zählungen, zwei Akzente) | 99 ok, 0 offen |
+| test581 | rot in drei Zeilen (zwei Keyframe-Namen, eine §8-Zeile) | rot in einer Zeile (die §8-Zeile, siehe unten) |
+
+**Was bleibt rot, und warum.** test581 §8: „Keine `:active{transform:scale(…)}` mehr ausser den benannten eigenen Druckbildern" — gefunden wird `bausteine.css: #ho-ziele > button:active .ho-z`. Diese Zeile war schon vor E814 rot und gehört nicht zu den Einstellungen; sie wird hier nicht angefasst. Der volle Lauf der Gesamtheit ist nicht gefahren; die Zahlen oben gelten für diese fünf Läufe.
+
+**Offen, bei Redur.** Ob die Telefonzeile eine Fläche bekommt, wie es „Rechner und Telefon" im Auftrag las. E812 sagt nein; der Lauf folgt E812, bis Redur das ändert.
+
+---
+
+## E815 · Das Dock am Telefon: Zeichen farbig, Wort normal — und iOS gilt überall
+
+*24. November 2026 · Redur im Fragebogen, wörtlich: „iOS gilt überall (Empfohlen)" (Frage A) und „Zeichen farbig, Wort normal (Empfohlen)" (Frage B). Beide Antworten sind die Empfehlung, die Redur angenommen hat.*
+
+**Was entschieden wurde.**
+
+- **A — „iOS gilt überall".** Die iOS-Übergänge, das Glas und die eine Dock-Kapsel gelten auch im Standard- und klassischen Design. Der Code tut das seit E813/E812 schon; was rot war, war die Prüfung, die den Stand vom 13. Oktober verlangte (E757, `test623`). Die Zusagen dazu sind für die genannten Punkte überholt und umgeschrieben (siehe unten). Nichts am App-Code wurde für A geändert.
+- **B — „Zeichen farbig, Wort normal".** Im Dock am Telefon (`#handy-oben`, aktiver Reiter `button.an` bzw. `aria-selected="true"`) ist das ZEICHEN in Akzentfarbe, das WORT in Textfarbe (`var(--text)`) und fett. Kontrast des Wortes ≥ 4,5 : 1, auch bei einfacher Pixeldichte (`test585` misst dort 3,08 hell und 3,74 dunkel, vorher). Das gilt in Standard und Glass Wheel gleich; klassisch ist Standard.
+
+**Umsetzung von B** (`quell/schale/stil/bausteine.css`, Zeilen 2428–2440; keine neuen Tokens):
+
+- Zeilen 2433–2434: `#handy-oben > button.an b, #handy-oben > button[aria-selected="true"] b { color: var(--text) }`. Das Zeichen bleibt bei seiner bestehenden Regel `#handy-oben > button[aria-selected="true"] .ho-z { color: var(--accent-text, var(--accent)) }` (Zeile 2306). Akzent gemessen: `--accent-text` (Hell `#7c3aed`, Dunkel `#9b87ff`) ist auf der Pille 4,6 bis 5,0 : 1 nach E815 (vorher 3,8 bis 5,0 : 1 — dieselbe Farbe, die das Zeichen schon hatte). `--accent` wird hier nicht gebraucht.
+- Zeile 2440: `#handy-oben > button[aria-selected="true"]{ z-index:3 }`. **Warum eine zweite Regel, und warum sie nicht vergessen werden darf:** Die Farbe allein reichte in der Glass-Fassung nicht. Die Linse (`#ho-pille`, E639, `z-index:2`) liegt über den Knöpfen und ist dort ein Weichzeichner mit hellem Schimmer; sie legte sich über das Wort und hellte es auf. Gemessen bei einfacher Pixeldichte: Farbe allein 2,93 : 1, mit dem aktiven Knopf über der Linse 14,23 : 1. Die Linse bleibt, wo sie war; nur der Knopf des gewählten Reiters liegt darauf. Der Hebe-Versatz des Wortes (`translateY(-1px)`) war NICHT die Ursache (gemessen: ohne ihn bleibt das dunkelste Pixel bei 101, vorher 102; mit der Linse unter dem Knopf wird es 29, die Textfarbe).
+
+**Kontrast des Wortes, gemessen** (`test585`-Methode: dunkelster gegen hellsten Bildpunkt im Kasten des Wortes, 0,5 % und 99,5 %-Perzentil; iPhone-Größe 390 × 844; „vorher" = Wort in Akzentfarbe und Knopf auf `z-index:1`, wie vor E815 — über eine eingespritzte Regel nachgestellt):
+
+| Fassung | Pixeldichte | vorher | nachher | Zeichen (Akzent gegen Pille) vorher → nachher |
+|---|---|---|---|---|
+| Standard hell | 1 | 3,08 | 15,04 | 4,01 → 4,87 |
+| Glass Wheel hell | 1 | 1,92 | 14,23 | 3,97 → 4,82 |
+| Standard dunkel | 1 | 3,74 | 15,45 | 4,01 → 4,96 |
+| Glass Wheel dunkel | 1 | 2,05 | 13,13 | 3,77 → 4,72 |
+| Standard hell | 2 | 5,57 | 15,04 | 4,96 → 4,96 |
+| Glass Wheel hell | 2 | 5,26 | 14,48 | 4,82 → 4,86 |
+| Standard dunkel | 2 | 6,14 | 15,43 | 4,99 → 4,99 |
+| Glass Wheel dunkel | 2 | 5,16 | 12,98 | 4,58 → 4,59 |
+
+Das Zeichen liegt überall über 3 : 1 (Wert gegen den Median des Ausschnitts als Pillenfarbe — ein Näherungswert, kein Pixelmittel der Pille). Das Wort ist fett: 650 im Standard, 600 im Glass Wheel (dort verlangt die Glass-Regel das Gewicht 600, das bleibt).
+
+**test623 — welche Zusagen nicht mehr gelten, und was dafür gilt.** Die fünf roten Zeilen waren genau die aus E757, die A überholt. Umgeschrieben nach dem JETZT gewollten Verhalten; alle übrigen Zeilen unverändert (`test623` 50 von 55 vorher, 62 von 62 nachher; die Zahl steigt, weil drei Einstellungs-Prüfungen und eine Ruhe-Prüfung dazukamen):
+
+| Zeile | alt (13. Oktober, E757) | neu (E815) |
+|---|---|---|
+| §3a Rechner: „Das Fenster fliegt nicht ein" | `none` (kein Einfliegen) | `einst-einblenden`, 200 ms, Skalierung 0,98 → 1 |
+| §3a Rechner: neu | — | „unter Ruhige Darstellung" und „bei reduzierter Bewegung" laufen ohne Animation (`none`) |
+| §3b Telefon: „Das Fenster fliegt nicht ein" | `none` | `einst-blatt-hoch` (Blatt von unten); neu: Ruhe und reduzierte Bewegung `none` |
+| §2 Telefon: „Die untere Leiste trägt ihren alten Schatten" | drei Innenlinien, `0 1px 0 0 inset`, `0 0 0 1px inset`, `0 -1px 0 0 inset` | genau EINE Innenlinie: `rgba(255,255,255,0.22) 0 1px 0 0 inset, rgba(0,0,0,0.19) 0 12px 30px 0` (wie `test655` §1); neu: „genau EINE Innenlinie" |
+| §2 Telefon: „… ohne eigenen Übergang" am Zeichen | `0s` | federt: Übergang 0,542 s (Kit-Feder, E702); neu: unter Ruhige Darstellung `0s` |
+| §2 Telefon: „… schrumpft nicht über transform (scale .92)" | `none` beim Druck | die Kit-Feder: `matrix(1.08, 0, 0, 1.08, 0, -2)` beim Druck (`:active` über `CSS.forcePseudoState`, nur gemessen, wenn der Reiter wirklich `:active` ist) |
+
+**Eine Entscheidung, die nicht in den Fragen stand — bitte bestätigen.** Den Druck hat Redur nicht erwähnt. Die Zeile „schrumpft nicht" wurde so umgeschrieben, dass sie den Wert misst, den der Code heute hat (Kit-Feder, E702, 1,08 und −2 px), statt „kein transform". Die Glass-Regel „Druck auf scale .92" (`studio.css` ~1012) bleibt nur im Glass Wheel. Ob der Druck im Standard auch auf .92 schrumpfen soll, ist offen — es wäre eine neue Zusage, keine Umschreibung.
+
+**Gegenproben (je umgeschriebene Zeile, im Lauf, rot gemessen).** Eingespritzt über `GEGENPROBE_CSS` (neue Umgebungsvariable von `test623`; ohne sie läuft der Lauf wie sonst):
+
+| Zusage | Gegenprobe | Ergebnis |
+|---|---|---|
+| Einstellungen blenden ein (Rechner und Telefon) | `.einst-fenster{animation:none !important}` | rot: „ist none · soll einst-einblenden", „ist 0s · soll 0.2s", „ist none · soll einst-blatt-hoch"; dazu rot „Die Einstellungen fliegen ein" in Glass, weil die Gegenprobe dort ebenfalls alles abschaltet |
+| untere Leiste, eine Innenlinie | Dock mit drei Innenlinien im `box-shadow` | rot: „genau EINE Innenlinie" und „EINE Lichtkante" |
+| Zeichen federt | `#handy-oben > button .ho-z{transition:none !important}` | rot: „ist 0s" |
+| Druck: Kit-Feder | `#handy-oben > button:is(:focus-visible,:active) .ho-z{transform:none !important}` | rot: „ist none" |
+
+Bei allen vier Gegenproben blieben die übrigen umgeschriebenen Zeilen grün, außer wo sie denselben Stil betreffen.
+
+**Läufe vorher und nachher.** Gleicher Befehl, `node pruefungen/alle.mts 623 585 655 614 541 581 580 584`.
+
+| Lauf | vorher | nachher |
+|---|---|---|
+| test623 | 50 von 55 (fünf rot) | 62 von 62 |
+| test585 | 89 von 93 (Kontrast Hell/Dunkel rot, zwei „Seite → Fläche" rot) | 91 von 93 (Kontrast grün; die zwei „Seite → Fläche" bleiben rot) |
+| test655 | grün (89) | grün (89) |
+| test541 | grün (25) | grün (25) |
+| test580 | grün | grün |
+| test581 | grün (98) | grün (98) |
+| test614 | 124 von 125 (§7f rot) | 124 von 125 (§7f rot, unverändert) |
+| test584 | 36 von 37 („Keine bunte Farbe von Hand", `glasswheel.css`) | 36 von 37 (unverändert) |
+
+**Was bleibt rot, und warum.**
+
+- `test585` „Seite → Fläche" (Rechner und Telefon): dieselben zwei Zeilen waren schon vor E815 rot, mit fast gleichen Zahlen. Ihre Ursache ist nicht untersucht; sie hängen nicht an der Wortfarbe. Nicht angefasst.
+- `test614` §7f: ein zu hoch losgelassener Tipp auf „Termine" zählt nicht; schon vor E815 rot.
+- `test584` „Keine bunte Farbe von Hand": `glasswheel.css` (Vorschau und Hintergrund des Glass Wheel). Schon vor E815 rot.
+
+**Gebaut und geprüft.** `npm run typecheck` grün; `npm run bauen:ts` (Grundstock, `sw.ts`, `stand.ts`, `sw.js` neu, weil die CSS im Grundstock liegt); `node bauen.mts` (`redion-einzeldatei.html`, 10 207 KB); `npm run stand` meldet den Dienststand als unverändert (74a145465131d6b5), nachdem der Bau ihn angehoben hat.
+
+**Bilder** (iPhone-Größe 390 × 844, Pixeldichte 3, hell und dunkel, Standard und Glass Wheel, aktiver Reiter „Dokumente"): `/home/user/Redion/bilder/dock-wort-standard-hell.png`, `dock-wort-standard-dunkel.png`, `dock-wort-glass-hell.png`, `dock-wort-glass-dunkel.png` (Ausschnitt des Docks), dazu je eine Ganzansicht `…-ganz.png`.
+
+**Offen, bei Redur.** Ob der Druck im Standard auf .92 schrumpfen soll (siehe oben). Und ob die Linse im Glass Wheel über dem Wort bleiben soll, wenn sie nicht mehr darüber liegt — heute liegt nur der aktive Knopf darauf, die Linse selbst bleibt unter ihm.
+
+
+
+## E816 · Der nächste Tipp kommt an — der Schwung des Zuges wird nicht gerollt
+
+*24. November 2026 · Auftrag des Koordinators: test614 §7f ist rot („zu hoch losgelassen, 120 ms später ein echter Tipp auf Termine: kein Klick"). Redur hat dazu nichts gesagt; dieser Eintrag folgt aus dem Befund.*
+
+**Falsche Vermutung (zuerst).** Ein Fänger in der App, ein Pointer-Capture-Rest oder die Übergabe an die Zielleiste (`uebergeben`, `setPointerCapture`) schlucken den Klick. Alle drei widerlegt, siehe unten.
+
+**Wie gefunden.** Proben im Browser (Telefon 390 × 844, echte CDP-Berührung). Erst die App-Ebene: `Event.prototype.preventDefault` und `stopImmediatePropagation` protokolliert — während Geste und Tipp kein einziger Aufruf. Dann `TabShelf.nimm` durch `null` bzw. ein leeres Handover ersetzt: der Tipp bleibt aus, also nicht die Übergabe. Pointer Capture leer (`hasPointerCapture` für alle Zeiger). Reduzierte Bewegung, `touch-action` an Wurzel und Leiste, `overflow:hidden` am Körper: alles ohne Wirkung. Ein Inhalts-Flick ohne Leiste schluckt den Tipp nicht. Dann ein CDP-Trace (`input`, `input.scrolling`, `toplevel`): nach einer Geste −400 läuft ein Schwung (`FlingBooster::ObserveProgressFling`, 41 bis 84 Schritte zu je ~16 ms); nach −20 keiner (0 Schritte). Der Tipp danach erzeugt `GestureFlingCancel` und dann `FilteredForFling` bzw. `FilterTapSuppression`: Chromium unterdrückt den Klick, der einen laufenden Schwung stoppt.
+
+**Ursache (belegt).** Der schnelle Zug über die Oberkante wird vom Browser als Rollgeste gelesen, die in einen Schwung übergeht. Ein Tipp, der diesen Schwung stoppt, erzeugt keinen `click`. Die Leiste setzt `touch-action:none` schon auf `#handy-oben` und auf die Reiter; das hindert den Schwung nicht (Trace und Proben: 41 Schritte mit beiden). Verhindert wird der Schwung erst, wenn `touchmove` abgebrochen wird.
+
+**Änderung.** `src/schale/bedienung/selection-flow.ts`, in `ziehbar` nach dem `touchend`-Zuhörer der Reihe: ein `touchmove`-Zuhörer mit `{ passive: false }`, der `preventDefault()` ruft, solange `zug` gesetzt ist. Der Zug selbst (Pointer-Ereignisse, Übergabe, Klick) bleibt unverändert.
+
+**Beweis.**
+- Vorher: test614 124/125 (§7f rot). Nachher: 125/125.
+- Gegenprobe: das gebaute `quell/schale/bedienung/selection-flow.js` aus HEAD in den Baum gelegt → test614 wieder 124/125 mit genau §7f. Zurückgelegt, danach test105 und test109 grün.
+- Trace: Kontrolle −400 hat 41 Schwung-Schritte und keinen Klick; mit `touchmove`-Abbruch 0 Schritte und der Klick kommt an.
+- Gegenregression (Rollen anderswo): test360 34/34, test588 79/79, test541 25/25, test613 68/68, test655 89/89, test590 grün. Nicht vorher-gemessen ohne Reparatur, nur nachher; die Grünheit wird hier nicht als Vorher-Vergleich behauptet.
+
+**Lehre.** Ein Tipp, der nach einer Geste fehlt, ist nicht immer die App: Chromium hat eine eigene Regel, nach der ein Tipp einen laufenden Schwung stoppt und dabei keinen Klick erzeugt. Die Frage „ist der Klick weg?" beantwortet ein Fenster-Zuhörer in der Erfassungsphase; die Frage „warum?" beantwortet der Trace (`input.scrolling`), nicht das Raten an der App.
+
+## E817 · Die Wahl fliegt auch bei einer Neuzeichnung ins Ziel
+
+**Entschieden am 24. November 2026, Auftrag von Redur (Fehler aus test585).** Die Wahl im Umschalter der Seitenansicht (Seite / Fläche / Redion, E690) fliegt nach dem Klick als gleitende Fläche vom alten zum neuen Knopf (E706). Beim Wechsel auf „Fläche" landete sie nicht: am Rechner bei l=95,7 statt 279,8, t=24 statt 122 (`test585`, Telefon ebenso).
+
+**Ursache (gemessen, nicht geraten).** Ein Bild-für-Bild-Probelauf (Playwright, Rechner 1440 × 900) zeigt: der Umschalter wird nicht ersetzt, er wandert. Die Seite wird nach dem Klick ein zweites Mal gezeichnet; die Reihe bleibt dieselbe, bekommt aber einen anderen Elternknoten (`offsetParent` wechselt von `wide flaeche-page` auf `""`). Der Flug wurde beim Start mit Koordinaten im ALTEN Rahmen angelegt (`lokal()` über `bezug = offsetParent`). Nach der Neuzeichnung liegt er im neuen Rahmen an einer falschen Stelle (oben 24 statt 122) und bleibt dort stehen. `wache()` in `materialFliegen` prüfte nur, ob Flug, Ziel und Reihe noch im Dokument hängen — alles hing noch, also wurde nichts neu begonnen.
+
+**Falsche Vermutung.** Zuerst lag der Verdacht nahe, der Kopf der Seite werde beim Wechsel komplett ersetzt, die Fläche gehöre dem alten Knopf, oder die Messung lese den falschen Wähler. Keines davon stimmt: der Wähler bleibt, und die Messung liest den richtigen. Der Lauf hat gemessen, was er behauptet (§55.2): die zwei roten Zeilen waren echt.
+
+**Änderung.** `src/schale/bedienung/selection-flow.ts`, Funktion `materialFliegen`, in `wache()`: Wechselt der Bezugsrahmen des Fluges (`bezugNoch()` = Flug und Rahmen hängen noch, und `offsetParent` ist noch derselbe), fliegt die Wahl von der zuletzt stimmenden Stelle (`zuletzt`) neu zur gewählten Stelle derselben Reihe, höchstens dreimal (`runde < 3`, wie der Wechsel der Reihe). Der Zustand `rahmenWechsel` wird VOR dem Aufräumen des alten Fluges gemerkt (sonst wäre der Flug schon entfernt). Gebaut: `quell/schale/bedienung/selection-flow.js`, Dienststand v1639 (`sw.js`, `src/dienst/sw.ts`, `quell/kern/einstellung/stand.js`).
+
+**Beweis.**
+
+- `test585` gegen den Grundstand (`2d6038e`): rot mit zwei Zeilen (Telefon `88,13 statt 88,25 · t 22 statt 123`; Rechner `95,71 statt 279,84 · t 24 statt 122`). Nach der Änderung: **93/93**.
+- Nachbarn `node pruefungen/alle.mts 573 574 580 581 589 106`: 98 Zusagen grün in fünf Läufen. `test589` ist ROT — aber auch gegen den Grundstand rot (Zeitmesser-Kachel in den Einstellungen, `.einst-fenster` fängt den Klick ab, Zeile 1464). Nicht durch diese Änderung verursacht; nicht angefasst.
+- Gegenprobe: mit dem alten `selection-flow.js` (Grundstand) wieder rot, mit dem neuen grün — derselbe Lauf, nur die eine Datei getauscht.
+- Bild-Probe: Flug Bild für Bild (`requestAnimationFrame`-Abtastung): vorher 2 Bilder mit `offsetParent` alt, dann Sprung nach 157,24 (ein Bild), dann gleitet er 351 → 280 auf 122 und landet genau auf „Fläche" (280,122).
+
+**Rest, ehrlich.** Das Bild, in dem die zweite Neuzeichnung passiert, wird noch einmal an der alten Stelle gemalt (ein Bild, etwa 16 ms). Die Ursache wird erst im nächsten Bild erkannt, weil `wache()` nach dem Zeichnen läuft. Ein Vorab-Erkennen würde einen Hook auf `App.zeichneSeite` brauchen — zu viel für diesen Fehler, nicht gemacht.
+
+**Bilder** (Ausschnitte in `/home/user/Redion/bilder/`): `e817-rechner-vorher.png`, `e817-rechner-mitte.png`, `e817-rechner-nachher.png`, `e817-telefon-vorher.png`, `e817-telefon-mitte.png`, `e817-telefon-nachher.png`. „Nachher" am Rechner: „Fläche" gewählt, die Linse steht unter „Fläche".
+
+**Gezählt.** `ls pruefungen/lauf/test*.mts | wc -l` sagt 588 (kein neuer Lauf in diesem Bogen; `test585` ist unverändert).
+
+
+## E818 · Ein Knoten der Gedankenkarte ist so breit wie sein Text
+
+**Was.** `.gk-kn` trägt `width:max-content` (`quell/schale/stil/werkzeuge.css`).
+`max-width` (230 px, Wurzel 260 px) bleibt die Decke; darüber bricht der
+Text an Wortgrenzen.
+
+**Warum.** Eine frisch angelegte Gedankenkarte (Schrägstrich-Befehl, Weg
+„Mindmap" im Startfenster des Artefakts) zeigte den Mittelknoten 84 px breit
+und vierzeilig: „Zentr / ales / Them / a". Der Knoten ist absolut gesetzt in
+`.gk-welt`, und die ist selbst absolut und hat nur absolut gesetzte Kinder —
+sie hat keine Breite. Ein absolut gesetztes Element ohne Breite schrumpft auf
+die verfügbare Breite, also auf seine kleinste, und `overflow-wrap:anywhere`
+macht die kleinste Breite zu wenigen Buchstaben. Auf der Fläche stand die
+Antwort seit dem Bogen der Fläche schon (`seitenansichten.css`, `.gk-auf-flaeche
+.gk-kn{width:max-content}`); in der Seite fehlte sie. Mit vorgegebener Karte
+(drei Knoten) trat der Fehler nicht auf — darum fiel er keinem Lauf auf.
+
+**Alternative.** `white-space:nowrap` — sprengt bei langen Themen die Decke;
+`test656` §2 hält genau das. Oder `overflow-wrap:break-word` statt
+`anywhere` — ändert die kleinste Breite, aber nicht den Grund, und ein
+einzelnes langes Wort liefe dann über den Rand.
+
+**Kosten.** Keine Datenänderung. Gespeicherte Lagen (`sicht`) bleiben; die
+Knoten werden nach dem Messen neu gesetzt, wie bisher.
+
+**Beweis.** `test656` gegen den Stand davor: rot mit 2 von 13 („4 Zeilen,
+84 px breit", „2 Brüche"); danach 13/13. Bild: `bilder/mindmap-neu.png`
+(nicht eingecheckt, §55.4).
+
+## E819 · Die Knöpfe im Kopf der Bibliothek schrumpfen nicht unter ihr Wort
+
+**Was.** Am Telefon setzt die Atelier-Haut (`redion2.css`) die Zeile
+`.bib-workspace-actions` als Flex mit Umbruch; jeder Knopf `flex:1 0 auto`.
+Vorher: ein Raster `repeat(auto-fit, minmax(min(100%, 92px), 1fr))`.
+
+**Warum.** Drei gleiche Spalten von 330 px sind 97 px; „+ PDF öffnen"
+braucht rund 110. Das „n" lag 13 px hinter dem Innenrand und `overflow:
+hidden` aus `studio.css` (der Lichtstreif) schnitt es ab — gesehen im Bild bei
+390 px. Der erste Reparaturstand gab nur dem PDF-Knopf `flex:1 0 auto` und
+den anderen `1 1 0`; dann wurde „+ Neu" bei 320 und 360 px gequetscht
+(`test657` rot mit 2). Darum gilt die Regel für jeden Knopf: was nicht
+passt, geht in eine eigene Zeile.
+
+**Alternative.** Kleinere Schrift oder ein kürzeres Wort („PDF") — beides
+nimmt dem Hauptweg Lesbarkeit; ein festes Spaltenmass für drei Knöpfe hängt an
+ihrer Zahl.
+
+**Kosten.** Bei 320 px kann der Hauptknopf eine eigene Zeile brauchen; die
+Höhe des Kopfs wächst dann um eine Knopfzeile. Gemessen bei 320, 360, 390
+und 430 px: alles in einer Zeile, jeder Knopf ≥ 44 px (§37).
+
+**Beweis.** `test657` gegen den Stand davor: rot mit 1 von 28 („PDF öffnen —
+13.2 px über dem Innenrand"); danach 28/28. Bilder `bilder/kopf-320.png`,
+`bilder/kopf-390.png` (nicht eingecheckt).
+
+**Gezählt.** `ls pruefungen/lauf/test*.mts | wc -l` sagt 590.
+
+**Nachbarn (E818 und E819 zusammen).** `node pruefungen/alle.mts 656 657 529
+538 568 575 584 86 424 430 437 482 540 581 626`: sieben rot. Jeder davon
+einzeln auf `459f5e0` (eigener Arbeitsbaum) und auf diesem Stand gefahren,
+die roten Zeilen verglichen: `test86` (1), `test424` (1), `test584` (2) und
+`test626` (2) haben auf beiden Ständen dieselben roten Zeilen; `test437`
+(„Vierzehn echte Zeichenwerkzeuge") und `test568` (Zeitüberschreitung)
+brechen auf beiden Ständen gleich ab; `test575` ist einzeln auf beiden
+Ständen grün (111/111) und war im Sammellauf rot — ein Wackler, kein Fund.
+Keine rote Zeile ist neu.
+
+
+## E820 · Was `index.html` lädt, liegt auch offline bereit — und fremder Code hat einen Eintrag
+
+**Was.** Im `GRUNDSTOCK` von `src/dienst/sw.ts` stehen jetzt
+`quell/fremd/pdf-lib/laden.js`, `quell/fremd/pdf-lib/library.js`,
+`quell/fremd/perfect-freehand/ink.js` und
+`quell/bereiche/bloecke/arten/schematico-import.js`. In `FREMDCODE.md` stehen
+pdf-lib und perfect-freehand mit dem, was sich aus den Dateien belegen lässt.
+
+**Warum.** Der volle Lauf vom 25. November auf `faa0e0e` war bei `test87` und
+`test143` rot mit derselben Zeile: drei Skripte, die `index.html` lädt, fehlten
+im Grundstock. Ohne Netz hätte der Dienst sie nicht gehabt — §28 hart.
+`library.js` lädt `laden.ts` erst beim Gebrauch; sie gehört trotzdem hinein,
+wie pdf.js (E389). Gekommen sind die Dateien mit `5411fec` (22. November) über
+PR #232; die Regel „zwei Einträge je neuer Skriptdatei" (§28) war dort nicht
+eingehalten. Dieselbe Übernahme brachte zwei fremde Stücke ohne Eintrag in
+`FREMDCODE.md` — §57 nennt das einen Fehler.
+
+**Was offen bleibt (Redur).** §57 verlangt vor jedem fremden Stück Redurs Ja;
+für pdf-lib und perfect-freehand ist keines belegt, und die Fassung von pdf-lib
+ist nirgends festgehalten. `test87` meldet weiter rohe Steuerzeichen in der
+verkleinerten `library.js`. Sie zu ersetzen hiesse, fremden Code zu ändern;
+den Wächter für diese Datei zu lockern hiesse, eine harte Regel aufzuweichen.
+Beides ist seine Entscheidung. Entfernt wurde nichts (§43).
+
+**Beweis.** `test143` vorher rot (eine Zeile), jetzt 23/23. `test87` vorher rot
+mit zwei Zeilen, jetzt mit einer (Steuerzeichen in pdf-lib). Dienststand v1678.
+
+
+## E821 · Was der Browser nicht lädt, geht nicht ins Netz — auch das Neue
+
+**Was.** `.assetsignore` schliesst elf Einträge der Wurzel aus: `/.agents/`,
+`/.claude/`, `/graphify-out/`, `/plugins/`, `/tools/`, `/scratchpad/`,
+`/batterie-aufgaben.js`, `/batterie-labor-kern.js`, `/capacitor.config.json`,
+`/codemagic.yaml`, `/version.json`.
+
+**Warum.** Der volle Lauf vom 25. November meldete in `test270`: diese Dinge
+lägen beim Veröffentlichen mit im Netz. Die Regel aus E270 heisst „hier bleibt
+drin, was der Browser wirklich lädt"; keines davon lädt eine Seite.
+`version.json` liest nur die Windows-App aus ihrer eigenen Kopie
+(`windows/local-source.cts`, `windows/main.cjs`) — das Ausschliessen ändert
+an ihr nichts, weil `.assetsignore` nur Wrangler gilt. `.claude/` enthielt die
+Arbeitsbäume der Agenten, also den ganzen Quelltext ein zweites Mal.
+
+**Alternative.** Den Wächter um diese Namen erweitern — dann wären
+Agenten-Anleitungen und der Quelltext-Graph öffentlich. Nicht gewählt.
+
+**Kosten.** Keine: keine Seite verweist auf sie. Gelöscht wurde nichts (§43).
+
+**Beweis.** `test270` im Hauptbaum vorher 80 ok, 1 offen; danach 81/81. (Im
+Arbeitsbaum des vollen Laufs ist er aus dem bekannten Grund aus §30 zusätzlich
+rot: `.git` ist dort eine Datei.)
+
+
+## E822 · Eine Kennung, die nur die Einzeldatei hat, ist nicht verwaist
+
+**Was.** `test274` nimmt `bauen.mts` zu den Orten, an denen eine Kennung
+(`id="…"`) entstehen kann. Gelesen wird dort nur nach Kennungen, nicht nach
+Aufrufen.
+
+**Warum.** Der volle Lauf vom 25. November meldete `src/fremd/pdf-lib/
+laden.ts: redion-pdf-lib` als verwaist. Nachgesehen: `bauen.mts` (Zeile 86 ff.)
+setzt pdf-lib als `<script type="application/octet-stream"
+id="redion-pdf-lib">` in die Einzeldatei, und `laden.ts` fragt zuerst danach
+und holt sonst `quell/fremd/pdf-lib/library.js`. In `index.html` fehlt das
+Element also mit Absicht. In der gebauten Einzeldatei steht es genau einmal
+(`grep -c` = 1).
+
+**Alternative.** Ein Eintrag in `ERLAUBT` wie bei `redion-graphit` — der hatte
+Redurs Wort (E750) und beschreibt einen Fall, den der Lauf nicht lesen kann.
+Hier kann er es, wenn er die richtige Datei liest. Eine Ausnahme hätte jede
+künftige Kennung aus `bauen.mts` weiter als Fehler gemeldet.
+
+**Kosten.** Eine Kennung, die nur im Kommentar von `bauen.mts` steht, zählt
+als vorhanden — dasselbe Mass, das der Lauf für `src/` schon anlegt.
+
+**Beweis.** `test274` vorher 11/12, danach 12/12; seine eingebaute Gegenprobe
+(eine erfundene Kennung) bleibt rot.
+
+
+## E823 · Der Name eines Dokuments steht in seinem eigenen Feld
+
+**Was.** `test285` und `test292` lesen den Namen aus `.document-title-name`
+(mit `.document-title` als Rückfall), nicht mehr den ganzen Kopf.
+
+**Warum.** Seit dem Dokumentkompass (Workspace 2.0, `document-mode.ts` um
+Zeile 2049) steht im Kopf neben dem Namen auch „PDF · 4 Seiten" und ein
+Lesefortschritt. Die zwei Läufe lasen `textContent` des ganzen Kastens und
+bekamen „Elektrotechnik – SkriptPDF · 4 Seiten". Das Produkt zeigt den Namen
+richtig, in seinem eigenen `span`; nur die Messung lag daneben.
+
+**Alternative.** Den Zusatz aus dem Kopf nehmen — das hiesse, eine gewollte
+Anzeige zurückzubauen, damit zwei Läufe grün werden.
+
+**Beweis.** Im vollen Lauf vom 25. November beide rot mit genau dieser Zeile;
+danach `test285` 53/53, `test292` 45/45.
+
+
+## E824 · Eine Variable aus einem geladenen fremden Stilblatt hat eine Quelle
+
+**Was.** `test298` liest die `<link rel="stylesheet">` aus `index.html`, die
+nach `quell/fremd/` zeigen, und zählt deren `--x:`-Zeilen als Quelle.
+Benutzt-Stellen in diesen Dateien prüft er nicht.
+
+**Warum.** Der volle Lauf vom 25. November meldete acht Variablen ohne Quelle,
+alle `--affine-dock-*` aus `werkzeuge.css`. Sie stehen in
+`quell/fremd/affine-toolbar/vorschauen.css` (Zeile 85 ff.), und `index.html`
+lädt dieses Blatt (Zeile 61). Der Lauf kannte nur `quell/schale/stil/` und
+`oeffentlich/`. Gezeichnet wird die Glyphe also; nur die Messung sah sie nicht.
+
+**Alternative.** Die Variablen nach `bausteine.css` kopieren — dann gäbe es
+zwei Quellen für dieselben Bilder (§8). Oder den ganzen Ordner `quell/fremd/`
+lesen — dann zählte auch ein Blatt, das keine Seite lädt.
+
+**Beweis.** `test298` im vollen Lauf rot mit acht Variablen, danach 8/8.
+
+
+## E825 · Glätten an einem Bogen prüfen, die Ecke an einem Knick
+
+**Was.** `test201` nimmt für „wird geglättet" vier Punkte eines sanften Bogens
+und prüft die drei alten Punkte `[0,0] [10,20] [30,10]` als Knick, der eine
+Ecke bleibt (`L10 20`, kein `Q`).
+
+**Warum.** Seit E676 (21. September, „der Glätter hält die Ecke") zieht
+`InkGeometry.path` an einem spitzen Knick keine Kurve mehr. Die drei Punkte des
+Laufs sind genau so ein Knick; er erwartete trotzdem `Q` und war seither rot
+(im vollen Lauf vom 25. November: `M0 0 L10 20 L20 15 L30 10`). Das Produkt
+tat, was E676 verspricht.
+
+**Alternative.** Die Zusage streichen — dann prüfte niemand mehr, dass
+überhaupt geglättet wird.
+
+**Beweis.** Im vollen Lauf rot; danach 33/33, mit beiden Seiten grün.
+
+
+## E826 · „Gross" ist wieder gross
+
+**Was.** In `quell/schale/stil/redion2.css` tragen die fünf Regeln für
+Fliesstext, Listen und Überschriften (`#page … .ct{font-size:…}`) den Zusatz
+`:not(.tg-klein,.tg-gross,.tg-sehrgross,.tg-riesig)`.
+
+**Warum.** Seit `a105e4a` (18. November) setzt die Schale die Schriftgrösse über
+`body:not(…) #page .b-text .ct` — mit der Kennung `#page` wiegt das mehr als
+`.blk .ct.tg-gross` aus E101. Wer in einem Block „Gross" wählte, bekam die
+Klasse und den Eintrag in den Daten, aber keine grössere Schrift: 15 px →
+15 px (`test175`, voller Lauf vom 25. November). Daten gingen dabei nicht
+verloren — nur die Anzeige folgte ihnen nicht.
+
+**Alternative.** `!important` an den vier Stufen — macht sie unüberschreibbar,
+auch für eine spätere Haut. Oder die Stufen mit `#page` beschweren — zwei
+Orte, die gegeneinander aufrüsten.
+
+**Kosten.** Ein Block mit Stufe nimmt deren Zeilenhöhe statt `--lh-body`.
+
+**Beweis.** `test175` vorher 16 ok, 1 offen; danach 17/17. Gemessen im
+Browser: normal 15 px, klein 13,1, gross 21,6, sehr gross 28,8, riesig
+38,4 px; eine Überschrift mit „Gross" 21,6 px. Bild
+`bilder/schriftgroessen.png` (nicht eingecheckt, §55.4). Dienststand v1679.
+
+
+## E827 · Ein ausgeblendetes Element steht nicht am Bildschirmrand
+
+**Was.** `tinte()` in `test221` nimmt das erste Kind mit einem Kasten
+(`getClientRects().length > 0`), nicht einfach `firstElementChild`.
+
+**Warum.** Der volle Lauf meldete „Und keines fängt am Bildschirmrand an — ist
+pg-tools:0". Nachgemessen am iPhone 13: das erste Kind der Werkzeugzeile ist
+`.pg-tools-caption` („Seitenwerkzeuge"), am Telefon `display:none` (E783), mit
+`left 0` und keinem Kasten. Der erste sichtbare Knopf „Cover" beginnt bei 30 px.
+Am Produkt war nichts falsch.
+
+**Alternative.** Die Beschriftung aus dem DOM nehmen statt auszublenden — das
+änderte die Vorlesereihenfolge am Rechner für einen Messfehler.
+
+**Beweis.** Im vollen Lauf rot mit dieser einen Zeile; danach ohne rote Zeile.
+Ein Element, das wirklich am Rand anfängt, hat einen Kasten und bleibt rot.
+
+
+## E828 · Die Seitenzahl ist ein Knopf
+
+**Was.** `test341` sucht „Seite n/m" in `.document-page :is(span,
+.document-position)` statt nur in `span`.
+
+**Warum.** Seit Workspace 2.0 (`document-mode.ts` um Zeile 2019) ist die
+Seitenzahl ein `<button class="document-position">`: ein Druck öffnet den
+Sprung-Dialog. Der Lauf fand keinen `span` mehr und las `""` — im vollen Lauf
+vom 25. November rot mit drei Zeilen. Die Anzeige selbst stimmte.
+
+**Beweis.** Danach 37/37.
+
+
+## E829 · Der PDF-Bereich fragt, statt fremde Bereiche beim Namen zu rufen
+
+**Was.** Zwei neue Fragen in `src/kern/ereignisse/arten.ts`:
+`frageBlockAmEnde` (`frage.block-am-ende`, Daten `{ art }`, Antwort `true`)
+und `frageElektroMenue` (`frage.elektro-menue`, Daten `{ schliessen,
+planOeffnen }`, Antwort ein Element). Der Editor antwortet auf die erste, der
+Elektro-Bereich auf die zweite; `document-mode.ts` fragt nur noch.
+
+**Warum.** `b2b9001` (25. November, „PDF-Werkzeuggalerie und Elektro-Menü mit
+der Fläche vereinheitlichen") rief aus `bereiche/pdf` direkt
+`Blocks.einfuegenAmEnde` (Editor) und `Elektrostart.werkzeugmenue` (Elektro).
+Das sind zwei neue Paare über die Grenze, und `test537` hält §5: das
+Verzeichnis darf nur schrumpfen. §5 nennt als ersten Weg den Ereignisbus, und
+der Bus kennt `frage` schon (so läuft `frage.datei-export`). Die Schale
+(`seitenflaeche.ts`) ruft `Elektrostart` weiter direkt — sie ist kein Bereich.
+
+**Alternative.** Die zwei Paare mit Grund in `bereiche-bestand.json`
+eintragen — §5 nennt das Verzeichnis eine Schuld, keine Erlaubnis.
+
+**Kosten.** Ohne geladenen Editor oder Elektro-Bereich kommt keine Antwort; der
+PDF-Bereich zeigt dann kein Menü statt eines Fehlers (`?? null`).
+
+**Beweis.** `test537` im vollen Lauf rot („125 gegen 123", „513 gegen 511");
+danach 18/18 mit 123 Paaren und 511 Treffern. Im Browser, in `index.html` und in
+der Einzeldatei: die Elektro-Frage liefert ein Element mit 9 Knöpfen, ohne
+Rückrufe keine Antwort; die Block-Frage setzt einen `todo` ans Ende der Seite
+und antwortet `true`, eine leere Art `false`. `npm run typecheck` sauber.
+Dienststand v1680.
+
+
+## E830 · Neutrale Oberfläche und weitere AFFiNE-Flächenbefehle
+
+26. November 2026 · Redurs Auftrag: Bordeaux entfernen und die Übernahme der
+AFFiNE-Funktionen umfassend prüfen. Ergänzung auf dem Stand von PR #232.
+
+- Die bestehende gemeinsame Palette bekommt neutrale helle und dunkle Flächen
+  mit blauem Akzent. `--atelier-accent` ersetzt die bisherigen Wine-Tokens.
+  Die native UIKit-Tab-Bar verwendet Systemblau. Eigene Nutzeranpassungen und
+  hoher Kontrast behalten ihre bestehenden Vorrangregeln.
+- Auf der freien Seitenfläche lassen sich Formen dauerhaft gruppieren, in
+  ihrer Zeichenreihenfolge ändern und sperren. Das Menü sitzt an der bestehenden
+  Formauswahl und zusätzlich im Zeichendock; Tastatur und Rückgängig bleiben
+  beim vorhandenen Flächenkontext.
+- `core/gfx/objects.ts` enthält nur Auswahl- und Reihenfolgeregeln, ohne DOM,
+  Store oder Bereichszugriff. `groupId` und `locked` sind optionale Felder an
+  bestehenden Formen. Es gibt keinen Schemaumzug und keine neue Datenhaltung.
+- Kopien erhalten eigene Gruppenkennungen. Eine Sperre umfasst die internen
+  Verbinder und verhindert die vorhandenen Änderungswege; Aufheben bleibt
+  im Menü erreichbar. Diese Bearbeitungshilfe ist keine Zugriffsberechtigung.
+- Die Ergänzungen gelten für Formen der Seitenfläche. Der neue Gesamtabgleich
+  nennt ausdrücklich den restlichen Umfang: unter anderem Präsentationsrahmen,
+  Funktionsgleichheit weiterer Zeichenkontexte und reale Zusammenarbeit.
+- Kein weiterer AFFiNE-Quellcode wird übernommen. Frontend und Backend haben
+  unterschiedliche Lizenzbereiche; Herkunft und Einschränkungen stehen im
+  `doku/AFFINE-GESAMTABGLEICH.md`.
+
+Geprüft werden Bedienung, Geschichte, Neuladen sowie JSON- und `.redion`-
+Sicherungen. Bilder der Oberfläche bleiben ausserhalb von Git. Ein Browserlauf
+ist keine iPhone- oder IPA-Abnahme.
+
+## E831 · Weitere AFFiNE-Funktionen mit Redions Datenwegen
+
+26. November 2026 · Redurs Auftrag „Nehme alles“ bezieht sich auf die danach
+genannte Liste: Rahmen, Ausrichten, Lasso, Drehung, Ebenen, Gruppen, Verbinder,
+Dokumenteinbettung, Objektkommentare, Austausch und dynamische Sammlungen.
+
+`GfxObjects` übernimmt die gemeinsame Geometrie und Gruppenregeln.
+`GfxInspector` bietet dieselbe Objektübersicht in Seitenfläche, Whiteboard und
+PDF. Jeder Adapter schreibt über seinen vorhandenen Verlauf; PDF behält seine
+Punkte und `gesperrt`, Flächen behalten `shapes` und `locked`. Lasso und Drehung
+der PDF werden weiterverwendet. Gruppenkennungen werden beim Kopieren neu vergeben.
+
+Rahmen sind eigene Flächenobjekte mit Titel und `frameOrder`. Der Vortrag
+fährt ihre Ausschnitte ab, sperrt Zeichenanfänge und stellt den vorherigen Blick
+wieder her. Anordnung und Mitgliedschaft der Zeichenobjekte bleiben erhalten.
+Kommentare sind lokale Fäden an Objekten, keine erfundene Serverzustellung.
+Dokumenteinbettungen verwenden den vorhandenen synchronisierten Block. Eine
+nicht mehr lesbare Quelle und zu tiefe Spiegelketten werden abgefangen.
+
+Die dynamischen Sammlungen filtern den vorhandenen lesbaren Seitenbestand nach
+Titel, Schlagwort, Art, Favoriten und Bearbeitungszeit. Ihre Regeln liegen in
+`bibliothek:dynamic-collections`; es gibt weder kopierte Seiten noch eine zweite
+Datenbank. Der bisherige Suchbereich verwendet denselben Filter.
+
+Der Austausch verwendet Redions ZIP-Leser, ZIP-Schreiber und Dateiablage.
+Flächen mit Anhängen werden als Archiv exportiert; fehlende Anhänge brechen
+den Export ab. AFFiNE-BlockSuite-JSON wird in Redions Formen übersetzt. Nicht
+unterstützte GFX-Elemente brechen ab. Binäre Yjs-Arbeitsbereiche sind kein
+JSON-Snapshot und werden ausdrücklich nicht als kompatibel ausgegeben.
+Quellwerte bleiben an importierten Elementen als `affineSource` erhalten.
+Die Umsetzung enthält keinen weiteren AFFiNE-Quellcode und keinen neuen Dienst.
+
+Die Abnahme und konkreten Formatgrenzen stehen in
+`doku/AFFINE-WEITERER-AUSBAU-PR232.md`. Browserbilder sind getrennte Artefakte.
+
+## E832 · Ein fortlaufendes Ziel und passende Werkzeuge im Elektrobereich
+
+26. November 2026 · Redur: alle weiteren AFFiNE-Funktionen ausbauen, ohne nach
+jedem Teilbogen erneut zu fragen. Fachzeichnen, Elektrosimulator und verwandte
+Werkstätten sollen dasselbe Dock mit passenden Inhalten bekommen. Der
+Fortschritt und die weiterhin offenen Kategorien stehen in `doku/AFFINE-ZIEL-PR232.md`.
+
+- Eine Instanz je Kontext ist eingehängt: Fachzeichnen, Simulation, Relais
+  oder Batterie. Karten rufen dieselben bestehenden Befehle auf. Pause und
+  Tempo steuern die vorhandene Laboruhr; es gibt keinen neuen Rechner und
+  keine Speicherung von Versuchsschalterstellungen im Plan. Beim Simulieren
+  sind die Werkstattfächer aus dem Weg; nach dem Stoppen kommen sie zurück.
+- Die gemeinsamen Drehgriffe rechnen auf dem bestehenden Formenformat.
+  Die Vorschau bleibt ungespeichert, Loslassen erzeugt einen Verlaufsschritt,
+  Escape verwirft ihn. Rahmen nehmen räumlich enthaltene Objekte und Gruppen
+  mit; gesperrter Inhalt wird damit nicht umgangen.
+- Der Rahmenvortrag belegt die ganze Fläche mit einem sichtbaren Rückweg.
+  PDF-Folien verwenden den vorhandenen pdf-lib-Lader und gerenderte Ausschnitte;
+  es wird keine zweite PDF-Bibliothek eingebaut. Die native Navigation blendet
+  sich auch bei einer Whiteboard-Präsentation aus.
+- Objektkommentare erhalten optionale Autoren, Antworten und Erwähnungen.
+  Der vorhandene Dreiwege-Abgleich führt Objekte/Marken und Fäden anhand
+  ihrer IDs zusammen. Löschen gegen Bearbeiten bleibt ein sichtbarer Konflikt.
+  Die Konfliktentscheidung folgt IDs statt veralteter Indizes. Ein eigener
+  Test war vor der Korrektur dieses Entscheidungswegs rot. Eine echte
+  Serverzustellung oder Geräteabnahme wird dadurch nicht behauptet.
+- Der Dokumentimport übersetzt BlockSuite-Snapshots in bestehende Seiten und
+  Blöcke, einschliesslich Rich Text, Listen, Dateien und Dokumentverweisen.
+  Mindmaps werden bearbeitbare Formen und Verbinder. Nicht umgewandelte Blöcke
+  bleiben sichtbar als JSON, und der ganze Originalexport bleibt als Datei.
+  Die gesamte Struktur und alle Anhänge werden vor dem ersten Schreiben geprüft.
+- Zwei bestehende Batterie-JavaScript-Dateien wurden aus `index.html` geladen,
+  aber durch `.assetsignore` ausgeschlossen und von der iOS-Paketierung nicht
+  mitgenommen. `bauen-elektro.mts` stellt sie ohne Algorithmusänderung unter
+  `quell/bereiche/elektro/` bereit; Index und Offline-Grundstock zeigen dorthin.
+  Die Originale und ihre bestehenden Node-Prüfungen bleiben bestehen. Das ist
+  eine Paketierungskorrektur, keine behauptete TypeScript-Migration der Rechner.
+
+Der vollständige AFFiNE-Katalog ist damit noch nicht pauschal abgenommen.
+Prüfergebnisse, Bildartefakte und echte native Nachweise stehen beim laufenden Ziel.

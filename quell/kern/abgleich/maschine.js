@@ -78,6 +78,17 @@ const Wolke = (() => {
             throw new Error(b.message || b.error || ('Fehler ' + a.status));
         return b;
     };
+    const geraeteZugangErreichbar = async () => {
+        const server = adresse();
+        if (!server)
+            return false;
+        const antwort = await fetch(server + '/konto/ich', {
+            credentials: 'omit', redirect: 'error', cache: 'no-store'
+        });
+        if (antwort.status !== 401)
+            return false;
+        return (await antwort.json())?.code === 'unauthorized';
+    };
     let schluessel = null;
     const schluesselAus = async (satz, salz) => {
         const roh = await crypto.subtle.importKey('raw', new TextEncoder().encode(satz), 'PBKDF2', false, ['deriveKey']);
@@ -199,9 +210,20 @@ const Wolke = (() => {
     const anmeldenMitAccess = async () => {
         if (!accessMoeglich())
             throw new Error('Die Access-Anmeldung geht nur auf der Redion-Website selbst.');
-        const a = await fetch(location.origin + '/konto/access', {
-            method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}'
-        });
+        let a;
+        try {
+            a = await fetch(location.origin + '/konto/access', {
+                method: 'POST', credentials: 'same-origin', redirect: 'manual',
+                headers: { 'Content-Type': 'application/json' }, body: '{}'
+            });
+        }
+        catch {
+            throw new Error('Die Cloudflare-Anmeldung konnte nicht geladen werden. ' +
+                'Öffne Redion direkt im Browser und versuche es erneut.');
+        }
+        if (a.type === 'opaqueredirect')
+            throw new Error('Die Cloudflare-Sitzung muss erneuert werden. ' +
+                'Lade die Redion-Seite im Browser neu und melde dich bei Cloudflare an.');
         let b = null;
         try {
             b = await a.json();
@@ -983,6 +1005,6 @@ const Wolke = (() => {
         geteiltSetzen, istGeteilt, freigeben, freigaben,
         veroeffentlichen, zurueckziehen,
         markeAnlegen, markenListe, markeWeg, geraeteListe, geraetWeg,
-        ruf, start };
+        ruf, geraeteZugangErreichbar, start };
 })();
 window.Wolke = Wolke;

@@ -50,6 +50,8 @@ const API = 9049;
    Damit lassen sich die vier Ausgänge von „Server prüfen" durchspielen,
    ohne einen echten Worker zu veröffentlichen. */
 let standAntwort: any = { ablage: 'd1', dateien: 'r2' };
+let geraeteAntwort = { code: 'unauthorized' };
+let geraeteAutorisierung: string | undefined;
 const attrappe = http.createServer((a: IncomingMessage, b: ServerResponse) => {
   /* `Wolke.ruf` schickt eigene Kopfzeilen (Content-Type, Redion-Geraet).
      Damit wird jede Anfrage von einem anderen Ursprung vorab mit OPTIONS
@@ -61,6 +63,12 @@ const attrappe = http.createServer((a: IncomingMessage, b: ServerResponse) => {
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
   };
   if (a.method === 'OPTIONS') { b.writeHead(204, kopf); b.end(); return; }
+  if (a.url === '/konto/ich') {
+    geraeteAutorisierung = a.headers.authorization;
+    b.writeHead(401, { ...kopf, 'Content-Type': 'application/json' });
+    b.end(JSON.stringify(geraeteAntwort));
+    return;
+  }
   b.writeHead(200, { ...kopf, 'Content-Type': 'application/json' });
   b.end(JSON.stringify(standAntwort));
 });
@@ -377,6 +385,19 @@ const bereit = await pruefe({ ablage: 'd1', dateien: 'r2' });
 p('Steht beides, sagt es „Alles bereit"',
   bereit.includes('Alles bereit') && bereit.includes('d1') && bereit.includes('r2'),
   bereit.slice(0, 160));
+p('Geräteprüfung erkennt die erwartete Redion-Antwort ohne Konto', await seite.evaluate(async () => {
+  const vorher = Store.getMeta('wolkeToken', '');
+  Store.setMeta('wolkeToken', 'synthetische-redion-sitzung');
+  try {
+    return await Wolke.geraeteZugangErreichbar() && Wolke.token() === 'synthetische-redion-sitzung';
+  } finally {
+    Store.setMeta('wolkeToken', vorher);
+  }
+}));
+gleich('Geräteprüfung sendet das vorhandene Token nicht mit', geraeteAutorisierung, undefined);
+geraeteAntwort = { code: 'access_denied' };
+p('Geräteprüfung meldet eine fremde 401-Antwort nicht als Redion-Zugang',
+  !(await seite.evaluate(() => Wolke.geraeteZugangErreichbar())));
 const wegVom = await seite.evaluate(async () => {
   const ziel = document.createElement('div');
   document.body.appendChild(ziel);

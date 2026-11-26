@@ -425,7 +425,9 @@ const Planflaeche = (() => {
             wurzel.querySelector('.sp-buehne')?.focus({ preventScroll: true });
         });
         const fachStatus = () => {
-            fachSchliessen.hidden = !(batterieOffen || relaisOffen || pruefungOffen);
+            relaisPanel.hidden = z.simulation || !relaisOffen;
+            batteriePanel.hidden = z.simulation || !batterieOffen;
+            fachSchliessen.hidden = !(!relaisPanel.hidden || !batteriePanel.hidden || !pruefPanel.hidden);
             wurzel.classList.toggle('sp-fach-offen', !fachSchliessen.hidden);
         };
         const WERKZEUGE = [
@@ -439,23 +441,104 @@ const Planflaeche = (() => {
         const symbol = (id, gr = 20) => (typeof Register !== 'undefined' && Register.symbole) ? Register.symbole.alsSvg(id, gr) : '';
         const kopfLinks = document.createElement('span');
         kopfLinks.className = 'sp-links';
-        const dock = document.createElement('span');
-        dock.className = 'sp-werkzeuge sp-mit-marke';
-        dock.setAttribute('role', 'toolbar');
-        dock.setAttribute('aria-label', 'Zeichenwerkzeuge');
-        dock.innerHTML =
-            `<span class="sp-wz-marke" aria-hidden="true"></span>` +
-                WERKZEUGE.map(w => `<button type="button" class="sp-wz" data-wz="${w.id}" title="${esc(w.titel)} (${w.taste})" ` +
-                    `aria-label="${esc(w.titel)}" aria-keyshortcuts="${w.taste}" aria-pressed="false">` +
-                    `<span class="sp-wz-zeichen" aria-hidden="true">${symbol(w.sym)}</span>` +
-                    `<span class="sp-wz-name" aria-hidden="true">${esc(w.name)}</span></button>`).join('') +
-                `<span class="sp-dock-trenner" aria-hidden="true"></span>` +
-                `<button type="button" class="sp-palette-knopf" data-a="palette-toggle" aria-label="Bauteilpalette öffnen oder schliessen" ` +
-                `aria-keyshortcuts="B" aria-expanded="false" title="Bauteile ausklappen und direkt auf die Zeichnung ziehen (B)">` +
-                `<span class="sp-wz-zeichen" aria-hidden="true">${symbol('plus')}</span><span class="sp-wz-name">Bauteile</span></button>` +
-                `<button type="button" class="sp-dock-fit" data-a="zoom-alles" title="Einpassen: den ganzen Schaltplan zeigen (0)" ` +
-                `aria-label="Einpassen — den ganzen Schaltplan zeigen" aria-keyshortcuts="0">` +
-                `<span class="sp-wz-zeichen" aria-hidden="true">${symbol('maximize')}</span><span class="sp-wz-name" aria-hidden="true">Einpassen</span></button>`;
+        const planDock = GfxToolbar.erstelle({
+            klasse: 'sp-werkzeuge', beschriftung: 'Zeichenwerkzeuge', aktiv: z.werkzeug,
+            werkzeuge: WERKZEUGE.map(w => ({ ...w, zeichen: '',
+                gruppe: w.id === 'zeigen' || w.id === 'leitung' ? 'quick' : 'senior' })),
+            galerie: {
+                schnell: ['plan-modus'], edgeless: { zusatz: ['palette-toggle', 'zoom-alles'] },
+                beschriftet: true,
+                karten: [
+                    { id: 'bauteile', knoepfe: ['dock-bauteile'] },
+                    { id: 'simulation', knoepfe: ['simulation'] },
+                    { id: 'stifte', knoepfe: ['stift'] },
+                    { id: 'radieren', knoepfe: ['radieren'] },
+                    { id: 'text', knoepfe: ['text'] },
+                    { id: 'schiene', knoepfe: ['schiene'] }
+                ],
+                werkzeugMenues: { 'plan-modus': ['zeigen', 'leitung'] }
+            },
+            aktionen: [
+                { id: 'dock-bauteile', name: 'Fachzeichen', sym: 'plus', kapsel: 'werkzeuge' },
+                { id: 'simulation', name: 'Strom ein', sym: 'play', kapsel: 'werkzeuge' },
+                { id: 'plan-modus', name: 'Auswahl und Leitung', sym: 'inkPointer', menue: true, kapsel: 'werkzeuge' },
+                { id: 'palette-toggle', name: 'Bauteile', titel: 'Bauteile öffnen oder schliessen (B)', sym: 'plus', kapsel: 'werkzeuge' },
+                { id: 'zoom-alles', name: 'Einpassen', titel: 'Den ganzen Schaltplan zeigen (0)', sym: 'maximize', kapsel: 'werkzeuge' }
+            ]
+        });
+        const dock = planDock.element;
+        for (const w of WERKZEUGE) {
+            const button = dock.querySelector(`[data-wz="${w.id}"]`);
+            button?.classList.add('sp-wz');
+            button?.setAttribute('aria-keyshortcuts', w.taste);
+        }
+        dock.querySelector('[data-a="palette-toggle"]')?.classList.add('sp-palette-knopf');
+        dock.querySelector('[data-a="zoom-alles"]')?.classList.add('sp-dock-fit');
+        Register.symbole.fuelle(dock);
+        const contextDock = (context, name, actions, quick) => {
+            const result = GfxToolbar.erstelle({ klasse: 'sp-werkzeuge sp-kontextdock', beschriftung: name,
+                werkzeuge: [], aktionen: [...actions.map(a => ({ ...a, kapsel: 'werkzeuge' })),
+                    { id: 'zoom-alles', name: 'Einpassen', sym: 'maximize', kapsel: 'werkzeuge' }],
+                galerie: { schnell: quick, beschriftet: true, edgeless: { zusatz: ['zoom-alles'] },
+                    karten: actions.filter(a => !quick.includes(a.id)).map(a => ({ id: a.id, knoepfe: [a.id] })) },
+                menue: id => {
+                    if (id !== 'sim-tempo')
+                        return null;
+                    const list = document.createElement('div');
+                    list.className = 'gfx-tb-liste';
+                    for (const speed of [.25, .5, 1, 2, 4]) {
+                        const b = document.createElement('button');
+                        b.type = 'button';
+                        b.textContent = speed + '×';
+                        b.setAttribute('aria-pressed', String(speed === laborTempo));
+                        b.addEventListener('click', () => {
+                            const select = labor.querySelector('[data-labor-tempo]');
+                            if (select) {
+                                select.value = String(speed);
+                                select.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
+                            result.schliesse();
+                        });
+                        list.append(b);
+                    }
+                    return list;
+                }
+            });
+            result.element.dataset.dockContext = context;
+            result.element.querySelectorAll('.gfx-tb-schnell button').forEach(button => button.classList.add('gfx-tb-symbol'));
+            Register.symbole.fuelle(result.element);
+            return result;
+        };
+        dock.dataset.dockContext = 'zeichnen';
+        const simulationDock = contextDock('simulation', 'Simulation: Schalten und Messen', [
+            { id: 'simulation', name: 'Strom aus', sym: 'bolt' },
+            { id: 'sim-schalten', name: 'Schalten', sym: 'inkPointer' },
+            { id: 'sim-messen', name: 'Messwerte', sym: 'eye' },
+            { id: 'sim-pause', name: 'Pause / Weiter', sym: 'play' },
+            { id: 'sim-reset', name: 'Reset', sym: 'undo' },
+            { id: 'sim-tempo', name: 'Tempo', sym: 'clock', menue: true },
+            { id: 'sim-zeichnen', name: 'Skizzieren', sym: 'inkPen' },
+            { id: 'pruefzentrum', name: 'Prüfen', sym: 'checkCircle' }
+        ], ['simulation']);
+        const relayDock = contextDock('relais', 'Relais-Werkstatt', [
+            { id: 'context-zeichnen', name: 'Zeichnen', sym: 'inkPointer' },
+            { id: 'relay-einsetzen', name: 'Einsetzen', sym: 'plus' },
+            { id: 'relay-lehr-selbsthaltung', name: 'Selbsthaltung', sym: 'bolt' },
+            { id: 'relay-lehr-treppenhaus', name: 'Zeitrelais', sym: 'clock' },
+            { id: 'relay-import', name: 'Import', sym: 'upload' },
+            { id: 'relay-original', name: 'Original sichern', sym: 'download' },
+            { id: 'relay-freigeben', name: 'Freigeben', sym: 'checkCircle' }
+        ], ['context-zeichnen']);
+        const batteryDock = contextDock('batterie', 'Batteriewerkstatt', [
+            { id: 'context-zeichnen', name: 'Zeichnen', sym: 'inkPointer' },
+            { id: 'battery-einsetzen', name: 'Aufgabe einsetzen', sym: 'plus' },
+            { id: 'battery-leer', name: 'Leere Zeichnung', sym: 'page' },
+            { id: 'battery-uebernehmen', name: 'Zeichnung messen', sym: 'eye' },
+            { id: 'battery-pruefen', name: 'Prüfen', sym: 'checkCircle' },
+            { id: 'battery-muster', name: 'Muster', sym: 'grid' },
+            { id: 'simulation', name: 'Strom ein / aus', sym: 'bolt' }
+        ], ['context-zeichnen']);
+        let mountedDock = planDock;
         const kopfRechts = document.createElement('span');
         kopfRechts.className = 'sp-rechts';
         kopf.append(kopfLinks, dock, kopfRechts);
@@ -483,6 +566,22 @@ const Planflaeche = (() => {
             }
         };
         const dockAktualisieren = () => {
+            const next = z.simulation ? simulationDock : relaisOffen ? relayDock : batterieOffen ? batteryDock : planDock;
+            wurzel.dataset.electroContext = next.element.dataset.dockContext || 'zeichnen';
+            if (mountedDock !== next) {
+                const focused = mountedDock.element.contains(document.activeElement);
+                mountedDock.schliesse();
+                mountedDock.element.replaceWith(next.element);
+                mountedDock = next;
+                if (focused)
+                    next.element.querySelector('button')?.focus({ preventScroll: true });
+            }
+            simulationDock.element.querySelector('[data-a="sim-pause"]')?.setAttribute('aria-pressed', String(zeitStand.pause));
+            relayDock.setzeGesperrt('relay-original', !z.plan.relaisLegacy);
+            relayDock.setzeGesperrt('relay-freigeben', !z.plan.relaisLegacy || !!z.plan.relaisLegacy.verifiziert);
+            for (const action of ['pruefen', 'muster'])
+                batteryDock.setzeGesperrt('battery-' + action, !batteriePanel.querySelector(`[data-bat="${action}"]`));
+            planDock.setzeWerkzeug(z.werkzeug);
             dock.querySelectorAll('.sp-wz').forEach(b => {
                 const an = b.dataset.wz === z.werkzeug;
                 b.classList.toggle('an', an);
@@ -1168,10 +1267,11 @@ const Planflaeche = (() => {
             v.catch(() => { w.__pruefLaden = null; });
             return v;
         };
+        const planNetze = (plan) => Stromfluss.netze(plan);
         const pruefDaten = () => window.Planpruefung.analysieren(z.plan, {
             anschluesseVon: (t) => Schaltplan.anschluesseVon(t),
             holeSymbol: (id) => Register.fachzeichen.holen(id),
-            netze: (plan) => Stromfluss.netze(plan),
+            netze: planNetze,
             offeneKlemmen: (plan) => {
                 const r = stromRechnung(plan, {}, {});
                 return ((r && r.warnungen) || []).filter((w) => / hängt an keiner Leitung\.$/.test(w));
@@ -1224,6 +1324,7 @@ const Planflaeche = (() => {
             pruefPanel.innerHTML = kopf + `<div class="sp-pruef-werkzeuge">` +
                 `<label>Filtern<input type="search" class="sp-pruef-suche" value="${esc(pruefSuche)}" placeholder="Kennzeichen, Typ, Fundstelle …" /></label>` +
                 `<button type="button" data-p-a="export">${pruefAnsicht === 'diagnose' ? 'Bericht TXT' : 'Export CSV'}</button>` +
+                `<button type="button" data-p-a="json">Prüfbericht JSON</button>` +
                 `<button type="button" data-p-a="aufraeumen" title="Redundante Zwischenpunkte entfernen – Anschlusspunkte bleiben erhalten">Leitungen aufräumen</button>` +
                 `</div><div class="sp-pruef-liste">${liste}</div>`;
             pruefFiltern();
@@ -1285,12 +1386,7 @@ const Planflaeche = (() => {
                 return;
             }
             const blob = new Blob([text], { type: mime });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = datei;
-            a.click();
-            setTimeout(() => URL.revokeObjectURL(url), 4000);
+            void Ereignisse.frageAsync(ARTEN.frageDateiExport, { blob, name: datei });
         };
         pruefPanel.addEventListener('input', e => {
             const el = e.target;
@@ -1330,6 +1426,10 @@ const Planflaeche = (() => {
                 pruefungOffen = false;
                 pruefPanel.hidden = true;
                 kopfMalen();
+                return;
+            }
+            if (b.dataset.pA === 'json') {
+                pruefHerunterladen(window.Planpruefung.berichtJson(pruefDaten()), 'Redion-Schaltplan-Pruefbericht.json', 'application/json;charset=utf-8');
                 return;
             }
             if (b.dataset.pA === 'export') {
@@ -2347,7 +2447,7 @@ const Planflaeche = (() => {
             ({ drehen, spiegeln, doppeln, loeschen }[aktion || '']?.());
         });
         let inkSession = null;
-        let inkColor = GfxShapes.PALETTE[0][0], inkWidth = 2.4, inkErase = false;
+        let inkColor = GfxShapes.PALETTE[0][0], inkWidth = 2.4, inkErase = false, inkWeich = true;
         const inkVon = (id) => z.plan.ink?.find(m => m.id === id);
         const inkTools = document.createElement('div');
         inkTools.className = 'sp-ink-tools';
@@ -2357,6 +2457,7 @@ const Planflaeche = (() => {
         inkTools.innerHTML = `<label>Farbe <input type="color" data-ink-color value="${inkColor}" aria-label="Stiftfarbe"></label>` +
             `<label>Breite <input type="range" data-ink-width min="0.6" max="8" step="0.2" value="2.4" aria-label="Strichbreite"></label>` +
             `<button type="button" data-ink-mode="draw" aria-pressed="true">Schreiben</button>` +
+            `<button type="button" data-ink-kontur aria-pressed="true">Weiche Kontur</button>` +
             `<button type="button" data-ink-mode="erase" aria-pressed="false">Tinte radieren</button>` +
             `<span class="sp-ink-hilfe">Freie Notizen · auch während Strom läuft</span>`;
         wurzel.insertBefore(inkTools, koerper);
@@ -2368,6 +2469,12 @@ const Planflaeche = (() => {
                 inkWidth = Number(input.value);
         });
         inkTools.addEventListener('click', e => {
+            const stil = e.target.closest('[data-ink-kontur]');
+            if (stil) {
+                inkWeich = !inkWeich;
+                stil.setAttribute('aria-pressed', String(inkWeich));
+                return;
+            }
             const button = e.target.closest('[data-ink-mode]');
             if (!button)
                 return;
@@ -2539,6 +2646,8 @@ const Planflaeche = (() => {
             const kind = (z.werkzeug === 'stift' && inkErase) || erasePen ? 'erase' : z.werkzeug === 'zeigen' && hit ? 'move' : 'draw';
             const mark = kind === 'move' ? JSON.parse(JSON.stringify(inkVon(hit.dataset.ink))) :
                 { id: Schaltplan.uid(), art: 'stift', pts: [start], farbe: inkColor, breite: inkWidth, ebene: aktiveEbene() };
+            if (kind === 'draw' && inkWeich)
+                mark.kontur = 'weich';
             if (kind === 'draw' && event.pointerType === 'pen') {
                 mark.pressure = [event.pressure > 0 ? event.pressure : .5];
                 const tilt = InkStroke.tiltOf(event);
@@ -3486,6 +3595,41 @@ const Planflaeche = (() => {
                 kopfMalen();
                 return;
             }
+            if (b.dataset.a === 'dock-bauteile') {
+                dock.querySelector('[data-a="palette-toggle"]')?.click();
+                return;
+            }
+            if (b.dataset.a === 'context-zeichnen') {
+                fachSchliessen.click();
+                return;
+            }
+            if (b.dataset.a?.startsWith('relay-')) {
+                relaisPanel.querySelector(`button[data-rel="${CSS.escape(b.dataset.a.slice(6))}"]`)?.click();
+                return;
+            }
+            if (b.dataset.a?.startsWith('battery-')) {
+                batteriePanel.querySelector(`button[data-bat="${CSS.escape(b.dataset.a.slice(8))}"]`)?.click();
+                dockAktualisieren();
+                return;
+            }
+            if (b.dataset.a === 'sim-pause' || b.dataset.a === 'sim-reset') {
+                labor.querySelector(`[data-labor-aktion="${b.dataset.a === 'sim-pause' ? 'pause' : 'reset'}"]`)?.click();
+                dockAktualisieren();
+                return;
+            }
+            if (b.dataset.a === 'sim-messen') {
+                labor.tabIndex = -1;
+                labor.focus({ preventScroll: true });
+                labor.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+                return;
+            }
+            if (b.dataset.a === 'sim-schalten' || b.dataset.a === 'sim-zeichnen') {
+                z.werkzeug = b.dataset.a === 'sim-zeichnen' ? 'stift' : 'zeigen';
+                z.gewaehltesZeichen = '';
+                z.auswahl.clear();
+                male(true);
+                return;
+            }
             if (b.dataset.a === 'zoom-alles')
                 return allesZeigen();
             if (b.dataset.a === 'bereiche')
@@ -3521,7 +3665,12 @@ const Planflaeche = (() => {
                 return;
             }
             if (b.dataset.a === 'relais-werkstatt') {
-                relaisOffen = !relaisOffen;
+                if (z.simulation) {
+                    simulationUmschalten();
+                    relaisOffen = true;
+                }
+                else
+                    relaisOffen = !relaisOffen;
                 relaisZeigen();
                 kopfMalen();
                 return;
@@ -3529,7 +3678,12 @@ const Planflaeche = (() => {
             if (b.dataset.a === 'netz')
                 return schaltungMenue(b);
             if (b.dataset.a === 'batterie-labor') {
-                batterieOffen = !batterieOffen;
+                if (z.simulation) {
+                    simulationUmschalten();
+                    batterieOffen = true;
+                }
+                else
+                    batterieOffen = !batterieOffen;
                 batteriePanel.hidden = !batterieOffen;
                 kopfMalen();
                 if (batterie)
@@ -3979,6 +4133,7 @@ const Planflaeche = (() => {
                 '<button data-m="pruefzentrum">Prüfzentrum / Stückliste (Alt+Umschalt+P)</button>' +
                 '<button data-m="vorlage">Als Vorlage speichern</button>' +
                 '<button data-m="svg">Als Bild speichern (SVG)</button>' +
+                '<button data-m="schematico-import">Schematico-Schaltplan öffnen</button>' +
                 '<button data-m="leeren" data-gefahr>Plan leeren</button>', r.left - 180, r.bottom + 6);
             m.addEventListener('click', e => {
                 const b = e.target.closest('[data-m]');
@@ -4033,7 +4188,62 @@ const Planflaeche = (() => {
                     return vorlageSpeichern();
                 if (was === 'svg')
                     return alsBildSpeichern();
+                if (was === 'schematico-import')
+                    return schematischEinlesen();
             });
+        };
+        const schematischEinlesen = () => {
+            if (z.simulation || z.zieht) {
+                UI.toast('Vor dem Import die Simulation und laufende Eingaben beenden.');
+                return;
+            }
+            const eingang = document.createElement('input');
+            eingang.type = 'file';
+            eingang.accept = '.json,.ems,application/json';
+            eingang.addEventListener('change', async () => {
+                const datei = eingang.files?.[0];
+                if (!datei)
+                    return;
+                const vorher = abzug();
+                try {
+                    if (datei.size > SchematicoImport.MAX_BYTES)
+                        throw new Error('Die Schematico-Datei ist zu gross.');
+                    const { blaetter, logischeLeitungen } = SchematicoImport.lesen(await datei.text());
+                    const id = blaetter.length === 1 ? blaetter[0].id : await Dialog.wahl({
+                        titel: 'Schematico-Stromlaufblatt wählen',
+                        text: 'Redion importiert ein Stromlaufblatt in diesen Block.',
+                        knoepfe: blaetter.map(blatt => ({ id: blatt.id, text: blatt.titel }))
+                    });
+                    const blatt = blaetter.find(blatt => blatt.id === id);
+                    if (!blatt || !wurzel.isConnected)
+                        return;
+                    const plan = SchematicoImport.importieren(blatt, logischeLeitungen, planNetze);
+                    const bestaetigt = await Dialog.bestaetigen({
+                        titel: 'Schematico-Blatt übernehmen?',
+                        text: 'Der aktuelle Schaltplan wird durch „' + blatt.titel + '“ ersetzt. Redion führt die Leitungen neu. ' +
+                            'Enthalten sind unterstützte Bauteile, explizite Verbindungen und Blatttexte. Rückgängig stellt den bisherigen Plan wieder her.',
+                        ja: 'Blatt übernehmen'
+                    });
+                    if (!bestaetigt || !wurzel.isConnected)
+                        return;
+                    if (z.simulation || z.zieht || abzug() !== vorher) {
+                        UI.toast('Der Plan wurde inzwischen geändert. Import bitte erneut öffnen.');
+                        return;
+                    }
+                    aendere(() => {
+                        z.plan = plan;
+                        z.auswahl.clear();
+                        z.stellungen = {};
+                        z.spulenStand = {};
+                    });
+                    UI.toast(plan.teile.length + ' Bauteile und ' + plan.leitungen.length + ' Leitungen übernommen');
+                }
+                catch (error) {
+                    UI.toast(error instanceof SyntaxError ? 'Nur Schematico-JSON und JSON-Seitenmakros werden unterstützt.' :
+                        error instanceof Error ? error.message : 'Die Schematico-Datei konnte nicht gelesen werden.');
+                }
+            }, { once: true });
+            eingang.click();
         };
         const VORLAGEN = 'elektro:planvorlagen';
         const vorlageSpeichern = () => {

@@ -81,10 +81,36 @@ const StudioSchale = (() => {
         if (knopf)
             knopf.title = name;
     };
+    const fensterkopf = () => {
+        const desktop = globalThis.RedionDesktop;
+        const overlay = navigator.windowControlsOverlay;
+        const menu = document.querySelector('#studio-window-menu');
+        if (!desktop?.windowChrome || !overlay || !menu)
+            return;
+        const wurzel = document.documentElement;
+        const groesse = () => {
+            wurzel.toggleAttribute('data-windows-titelleiste', overlay.visible);
+            menu.hidden = !overlay.visible;
+        };
+        const thema = () => {
+            const farbe = wurzel.dataset.theme === 'light' ? 'light' : 'dark';
+            void desktop.windowTheme?.(farbe).catch(() => { });
+        };
+        overlay.addEventListener('geometrychange', groesse);
+        new MutationObserver(thema).observe(wurzel, { attributeFilter: ['data-theme'] });
+        menu.addEventListener('click', () => {
+            const anker = menu.getBoundingClientRect();
+            void desktop.windowMenu?.(Math.round(anker.left), Math.round(anker.bottom))
+                .catch(() => UI.toast('Das App-Menü konnte nicht geöffnet werden.'));
+        });
+        groesse();
+        thema();
+    };
     const start = () => {
         if (gestartet)
             return;
         gestartet = true;
+        fensterkopf();
         einstellen(Store.getMeta(META, false) === true);
         const gespeichert = Store.getMeta(BREITE, null);
         const zahl = typeof gespeichert === 'number' ? gespeichert

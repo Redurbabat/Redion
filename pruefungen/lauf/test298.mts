@@ -61,8 +61,16 @@ const tsDateien = dateien(path.join(WURZEL, 'src'), /\.ts$/);
    · aus dem Code         `style.setProperty('--x', …)` — davon lebt Redion
      an mehreren Stellen (die Blattbreite, die Höhe des Vorführbalkens, der
      sichtbare Ausschnitt über der Telefontastatur). */
+/* UND WAS index.html AUS `quell/fremd/` LÄDT (E824). Das Zeichendock nimmt
+   seine Glyphen aus `quell/fremd/affine-toolbar/vorschauen.css`
+   (`--affine-dock-*`). Diese Blätter zählen nur als QUELLE einer Variable —
+   geprüft auf Redions Regeln wird fremdes CSS hier nicht. Gelesen wird die
+   Liste aus `index.html`, nicht geraten. */
+const fremdCss = [...fs.readFileSync(path.join(WURZEL, 'index.html'), 'utf-8')
+  .matchAll(/<link[^>]+rel="stylesheet"[^>]+href="(quell\/fremd\/[^"]+\.css)"/g)]
+  .map(m => path.join(WURZEL, m[1]!)).filter(f => fs.existsSync(f));
 const gesetzt = new Set<string>();
-for (const f of [...cssDateien, ...tsDateien]) {
+for (const f of [...cssDateien, ...tsDateien, ...fremdCss]) {
   const t = fs.readFileSync(f, 'utf-8');
   /* Das Anführungszeichen darf dazwischenstehen: im TypeScript heissen die
      Schlüssel `'--blatt-zeile': hoch(8.75)`, und ohne diese Nachsicht meldete

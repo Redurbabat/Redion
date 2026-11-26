@@ -552,7 +552,9 @@ gleich('package-lock.json sagt dasselbe',
   ['8.3.1', '19.3.0', '19.3.0', '0.28.0', '19.3.0', '19.3.0']);
 p('`npm run bauen:inseln` gibt es', paket.scripts?.['bauen:inseln'] === 'node bauen-inseln.mts');
 p('`npm run bauen:ts` baut die Inseln ZUERST — dann rechnet dienststand die frischen Bytes',
-  String(paket.scripts?.['bauen:ts'] ?? '').startsWith('node bauen-inseln.mts && tsc -p tsconfig.bauen.json && node dienststand.mts'));
+  // E832: Zwischen Inselbau und tsc werden unveränderte Batterie-Rechner
+  // paketiert. Die Reihenfolge vor der Dienststandberechnung bleibt bindend.
+  /^node bauen-inseln\.mts && (?:node bauen-elektro\.mts && )?tsc -p tsconfig\.bauen\.json && node dienststand\.mts(?: &&|$)/.test(String(paket.scripts?.['bauen:ts'] ?? '')));
 p('`npm run typecheck` prüft die Inseln mit', /tsc -p tsconfig\.islands\.json/.test(String(paket.scripts?.typecheck ?? '')));
 
 /* ==========================================================================

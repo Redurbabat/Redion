@@ -103,6 +103,26 @@ const Planpruefung = (() => {
             if (t.x < 0 || t.y < 0 || t.x > Number(plan.breite) || t.y > Number(plan.hoehe))
                 melden('hinweis', 'ausserhalb', `${t.bmk || t.zeichen || 'Bauteil'} liegt ausserhalb des Planblatts.`, t.id, t);
         }
+        const teileNachId = new Map(teile.filter(t => t?.id).map(t => [t.id, t]));
+        const pruefeKlemmenbezug = (l, p, teilId, nr) => {
+            if (!hilfen.anschluesseVon || (!teilId && !nr))
+                return;
+            const teil = teileNachId.get(teilId);
+            let anschluss;
+            try {
+                anschluss = teil && feld(anschluesseVon(teil)).find(a => a?.nr === nr);
+            }
+            catch {
+            }
+            if (!nr || !anschluss || !pos(anschluss)) {
+                melden('fehler', 'klemmenbezug-fehlt', 'Leitungsende verweist auf eine fehlende Klemme (' + String(teil?.bmk || teilId || 'ohne Bauteil') +
+                    ', ' + String(nr || 'ohne Nummer') + ').', l.id, p);
+            }
+            else if (!gleich(p, anschluss)) {
+                melden('fehler', 'klemmenbezug-versetzt', 'Leitungsende trifft die zugeordnete Klemme ' +
+                    String(teil.bmk || teil.id) + ':' + String(nr) + ' nicht.', l.id, p);
+            }
+        };
         const schuetzen = schutzpunkte(plan, anschluesseVon);
         const verbindungAmEnde = (l, p) => {
             for (const t of teile) {
@@ -141,9 +161,14 @@ const Planpruefung = (() => {
                 }
             }
             const erster = ps[0], letzter = ps[ps.length - 1];
-            for (const p of [erster, letzter]) {
-                if (!verbindungAmEnde(l, p) && !(l.vonTeil && gleich(p, erster)) && !(l.nachTeil && gleich(p, letzter)))
-                    melden('hinweis', 'offenes-ende', `Offenes Leitungsende bei ${ort(p)} (gegebenenfalls beabsichtigt).`, l.id, p);
+            pruefeKlemmenbezug(l, erster, l.vonTeil, l.vonNr);
+            pruefeKlemmenbezug(l, letzter, l.nachTeil, l.nachNr);
+            const enden = [
+                [erster, l.vonTeil || l.vonNr], [letzter, l.nachTeil || l.nachNr],
+            ];
+            for (const [p, bezug] of enden) {
+                if (!bezug && !verbindungAmEnde(l, p))
+                    melden('hinweis', 'offenes-ende', 'Offenes Leitungsende bei ' + ort(p) + ' (gegebenenfalls beabsichtigt).', l.id, p);
             }
         }
         if (typeof hilfen.offeneKlemmen === 'function') {
@@ -229,6 +254,7 @@ const Planpruefung = (() => {
         '',
         ...r.punkte.map(p => `[${STUFE[p.stufe]}] ${p.text}${p.id ? ` (${p.id})` : ''}`)
     ].join('\n') + '\n';
-    return { analysieren, vereinfachen, bauteileCsv, netzeCsv, berichtText };
+    const berichtJson = (ergebnis) => JSON.stringify({ format: 'redion-schaltplan-pruefbericht', version: 1, ...ergebnis }, null, 2) + '\n';
+    return { analysieren, vereinfachen, bauteileCsv, netzeCsv, berichtText, berichtJson };
 })();
 window.Planpruefung = Planpruefung;

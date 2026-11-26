@@ -32,6 +32,35 @@ let blockId = '';
 try {
   if (web) await page.goto(pathToFileURL(path.join(root, 'index.html')).href);
   await page.waitForFunction(() => typeof App !== 'undefined' && typeof Store !== 'undefined' && !!document.querySelector('#page')?.firstElementChild);
+  if (web) {
+    assert.equal(await page.locator('#studio-window-menu').isVisible(), false,
+      'Das native Fenster-Menü erscheint nur in der Windows-App.');
+  }
+  if (native && process.platform === 'win32' && !baseline) {
+    await page.waitForSelector('html[data-windows-titelleiste] #studio-window-menu');
+    const geometry = () => page.evaluate(() => {
+      const overlay = (navigator as Navigator & {
+        windowControlsOverlay: { getTitlebarAreaRect: () => DOMRect };
+      }).windowControlsOverlay.getTitlebarAreaRect();
+      const head = document.querySelector('#studio-bar')!.getBoundingClientRect();
+      const scroll = document.querySelector('#scroll')!.getBoundingClientRect();
+      const menu = document.querySelector('#studio-window-menu')!.getBoundingClientRect();
+      return { available: overlay.right, bottom: head.bottom, menuRight: menu.right,
+        menuWidth: menu.width, editorTop: scroll.top };
+    });
+    for (const pdf of [false, true]) {
+      await page.evaluate(active => {
+        if (active) document.body.dataset.dokument = 'an';
+        else delete document.body.dataset.dokument;
+      }, pdf);
+      const layout = await geometry();
+      assert.ok(layout.menuWidth > 0 && layout.menuRight <= layout.available + 1,
+        'Das App-Menü bleibt vor den Windows-Fensterknöpfen bedienbar.');
+      assert.ok(layout.bottom > 0 && layout.editorTop + 1 >= layout.bottom,
+        'Der Inhalt beginnt auch im PDF-Raster unter der Windows-Titelleiste.');
+    }
+    await page.evaluate(() => { delete document.body.dataset.dokument; });
+  }
   const ids = await page.evaluate(async () => {
     Store.setMeta('rundgangGesehen', true); Store.setMeta('neuerungenGesehen', 99);
     Store.setMeta('kartenGemeldet', new Date().toISOString().slice(0, 10));

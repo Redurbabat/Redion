@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit && tsc -p tsconfig.islands.json",
     "typecheck:mcp": "tsc -p windows/tsconfig.json --noEmit && tsc -p plugins/red-ion/tsconfig.json",
     "bauen:inseln": "node bauen-inseln.mts",
-    "bauen:ts": "node bauen-inseln.mts && tsc -p tsconfig.bauen.json && node dienststand.mts && tsc -p tsconfig.stand.json && tsc -p tsconfig.sw.json",
+    "bauen:ts": "node bauen-inseln.mts && node bauen-elektro.mts && tsc -p tsconfig.bauen.json && node dienststand.mts && tsc -p tsconfig.stand.json && tsc -p tsconfig.sw.json",
     "stand": "node dienststand.mts --pruefen",
     "server": "node server/pruefserver.ts 8790",
     "veroeffentlichen": "npx wrangler deploy",

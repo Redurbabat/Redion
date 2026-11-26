@@ -229,6 +229,7 @@ const Zusammen = (() => {
 
   /* Felder, die Listen von Kennungen sind. */
   const LISTE = new Set(['content', 'children', 'viewIds', 'spalten', 'reihenfolge']);
+  const OBJECT_LIST = new Set(['shapes', 'marken', 'objectComments', 'replies', 'mentions', 'kommentare', 'antworten']);
 
   const istObjekt = (x: unknown): boolean => !!x && typeof x === 'object' && !Array.isArray(x);
 
@@ -297,6 +298,29 @@ const Zusammen = (() => {
           continue;
         }
 
+        if (OBJECT_LIST.has(k) && Array.isArray(H) && Array.isArray(D) &&
+            [...(Array.isArray(B) ? B : []), ...H, ...D].every(item => item && typeof item.id === 'string') &&
+            [B, H, D].every(list => !Array.isArray(list) || new Set(list.map(item => item.id)).size === list.length)) {
+          const base = Array.isArray(B) ? B : [], byId = (list: any[]) => new Map<string, any>(list.map(item => [item.id, item]));
+          const baseMap = byId(base), local = byId(H), remote = byId(D), merged = new Map<string, any>();
+          for (const id of new Set([...baseMap.keys(), ...local.keys(), ...remote.keys()])) {
+            const b = baseMap.get(id), h = local.get(id), d = remote.get(id);
+            if (gleich(h, d)) { if (h !== undefined) merged.set(id, h); continue; }
+            if (gleich(b, h)) { if (d !== undefined) merged.set(id, d); continue; }
+            if (gleich(b, d)) { if (h !== undefined) merged.set(id, h); continue; }
+            if (h === undefined || d === undefined) {
+              merged.set(id, h ?? d);
+              konflikte.push({ pfad: [...p, id], feld: pfadName(p), hier: h, dort: d,
+                grund: 'Ein Objekt wurde gelöscht und auf dem anderen Gerät geändert.' });
+            } else merged.set(id, geheDurch(b || {}, h, d, [...p, id]));
+          }
+          const order = listeDreiWege(base.map(item => item.id), H.map(item => item.id), D.map(item => item.id));
+          const ids = [...order.liste, ...merged.keys()].filter((id, i, all) => merged.has(id) && all.indexOf(id) === i);
+          raus[k] = ids.map(id => merged.get(id)); gemischt = true;
+          if (order.konflikt) konflikte.push({ pfad: p, feld: pfadName(p), hier: H, dort: D, grund: 'Beide haben die Objektreihenfolge verschieden geändert.' });
+          continue;
+        }
+
         if (istObjekt(H) && istObjekt(D)) {   /* props, schema, format … */
           raus[k] = geheDurch(istObjekt(B) ? B : {}, H, D, p);
           continue;
@@ -354,17 +378,24 @@ const Zusammen = (() => {
   /** Einen Wert tief in einem Satz setzen. */
   const setzeTief = (obj: any, pfad: string[], wert: unknown): any => {
     if (!pfad.length) return wert;
-    let z = obj;
-    for (let i = 0; i < pfad.length - 1; i++) {
-      const s = pfad[i];
-      if (s === undefined) continue;
-      if (!istObjekt(z[s])) z[s] = {};
-      z = z[s];
-    }
-    const letzt = pfad[pfad.length - 1];
-    if (letzt === undefined) return obj;
-    if (wert === undefined) delete z[letzt];
-    else z[letzt] = wert;
+    const set = (node: any, depth: number): void => {
+      const key = pfad[depth]; if (key === undefined) return;
+      const last = depth === pfad.length - 1;
+      if (Array.isArray(node)) {
+        // Die Kennung bleibt auch nach einer Umsortierung dieselbe. Ein
+        // Konflikt darf deshalb keinen veralteten Arrayindex verwenden.
+        const index = node.findIndex(item => item?.id === key);
+        if (last) {
+          if (index >= 0) { if (wert === undefined) node.splice(index, 1); else node[index] = wert; }
+          else if (wert !== undefined) node.push(wert);
+        } else if (index >= 0) set(node[index], depth + 1);
+        return;
+      }
+      if (last) { if (wert === undefined) delete node[key]; else node[key] = wert; return; }
+      if (!istObjekt(node[key]) && !Array.isArray(node[key])) node[key] = {};
+      set(node[key], depth + 1);
+    };
+    set(obj, 0);
     return obj;
   };
 

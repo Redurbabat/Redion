@@ -14,6 +14,22 @@
  * bleiben), und das Glass Wheel (`body[data-ui-shell="glass-wheel"]`) ist
  * seine freiwillige Wahl und bleibt, wie es heute aussieht.
  *
+ * SEIT REDURS ENTSCHEIDUNG VOM 24. NOVEMBER 2026 (E815, „iOS gilt überall")
+ * gelten diese Zusagen von oben NICHT mehr; sie sind unten umgeschrieben und
+ * stehen so in der Prüfung:
+ *   · §3a/§3b „Das Fenster fliegt nicht ein": jetzt blendet es ein — am
+ *     Rechner `einst-einblenden` (0,98 → 1), am Telefon `einst-blatt-hoch`
+ *     (von unten). Unter „Ruhige Darstellung" und reduzierter Bewegung
+ *     läuft nichts mehr.
+ *   · §2 „alter Schatten" der unteren Leiste: jetzt EINE Innen-Lichtkante
+ *     (wie test655 §1), nicht mehr der doppelte Ring mit drei Innenlinien.
+ *   · §2 „ohne eigenen Übergang" am Zeichen: jetzt federt es (Übergang über
+ *     0 s); unter „Ruhige Darstellung" bleibt es ohne Übergang.
+ *   · §2 „schrumpft nicht über transform (scale .92)": der gedrückte Reiter
+ *     bekommt die Kit-Feder aus E702 (Zeichen 1,08 und 2 px hoch), nicht
+ *     mehr „kein transform". Dass er nicht schrumpft, bleibt gemessen.
+ * Alles andere in diesem Lauf gilt unverändert.
+ *
  * Die Liquid-Glass-Regeln stehen in `quell/schale/stil/studio.css` in zwei
  * Blöcken („REDION LIQUID GLASS / BEWEGUNG (Oktober 2026)" und „REDION MOTION
  * / FEINSCHLIFF (zweite Etappe, 21. Oktober 2026)"), gekommen mit
@@ -99,13 +115,9 @@ const ALT = {
   pilleUebergang: 'background 0.14s cubic-bezier(0.2, 0.8, 0.3, 1), border-color 0.14s cubic-bezier(0.2, 0.8, 0.3, 1)',
   pilleUeber: 'none',
   /* Telefon */
-  leisteSchatten: 'rgba(255, 255, 255, 0.95) 0px 1px 0px 0px inset, rgba(15, 15, 15, 0.05) 0px -1px 0px 0px inset, rgba(15, 15, 15, 0.1) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.16) 0px 12px 36px 0px, rgba(0, 0, 0, 0.1) 0px 1px 3px 0px',
   zeichenAn: 'none',
-  zeichenAnDauer: '0s',
   wortAn: 'none',
-  zeichenGedrueckt: 'none',
   /* Einstellungen */
-  einstAnimation: 'none',
   einstSchatten: 'rgba(15, 15, 15, 0.12) 0px 8px 28px 0px',
   navAnSchatten: 'none',
   navAnLage: 'static',
@@ -122,6 +134,41 @@ const GLAS = {
   einstDauer: '0.796s',
   zeichenAn: 'matrix(1.1, 0, 0, 1.1, 0, -2)',
   wortAn: 'matrix(1, 0, 0, 1, 0, -1)'
+};
+/* ══ DAS JETZT GEWOLLTE (E815, Redurs Entscheidung A vom 24. November) ═════ */
+const JETZT = {
+  /* Am Rechner blendet das Fenster ein (0,98 → 1, 200 ms), am Telefon fährt
+     das Blatt von unten (quell/schale/stil/einstellungen.css). */
+  einstRechner: 'einst-einblenden',
+  einstTelefon: 'einst-blatt-hoch',
+  /* Die untere Leiste: EINE Innen-Lichtkante oben, dazu der weiche Schatten
+     (bausteine.css/studio.css, Telefon). Wie in test655 §1. */
+  leisteSchatten: 'rgba(255, 255, 255, 0.22) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.19) 0px 12px 30px 0px',
+  /* Der gedrückte Reiter: die Kit-Feder aus E702 (translateY(-2px) scale(1.08)). */
+  gedrueckt: [1.08, 0, 0, 1.08, 0, -2]
+};
+const MATRIX = (s: unknown): number[] | null => {
+  const m = String(s ?? '').match(/^matrix\(([^)]+)\)$/);
+  return m && m[1] ? m[1].split(',').map(Number) : null;
+};
+const nahe = (ist: number[] | null, soll: number[]): boolean =>
+  !!ist && ist.length === soll.length && ist.every((v, i) => Math.abs(v - (soll[i] ?? NaN)) < 0.01);
+/** Einstellungsfenster öffnen, während „Ruhige Darstellung" oder reduzierte
+ *  Bewegung gilt; zurückgeben, welche Animation läuft (E815). */
+const einstOhneBewegung = async (a: Auf, wie: 'ruhig' | 'reduziert'): Promise<string | null> => {
+  if (wie === 'ruhig') await a.pc.evaluate(() => document.body.setAttribute('data-bewegung', 'ruhig'));
+  else await a.cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+  await warte(150);
+  await a.pc.evaluate(() => Einstellungen.oeffne());
+  await warte(60);
+  const s = await stil(a.pc, '.einst-fenster');
+  await a.pc.keyboard.press('Escape');
+  await warte(400);
+  await a.pc.evaluate(() => document.querySelectorAll('.overlay').forEach(e => e.remove()));
+  if (wie === 'ruhig') await a.pc.evaluate(() => document.body.removeAttribute('data-bewegung'));
+  else await a.cdp.send('Emulation.setEmulatedMedia', { features: [] });
+  await warte(200);
+  return s?.animation ?? null;
 };
 const MARKEN = ['--liquid-ease', '--liquid-duration', '--liquid-highlight', '--liquid-accent-glow'];
 
@@ -148,6 +195,10 @@ const aufmachen = async (handy: boolean): Promise<Auf> => {
     App.theme('light');
   });
   await pc.waitForTimeout(500);
+  /* Gegenprobe (§55.2): ein kaputter Stand, eingespritzt — dann müssen die
+     umgeschriebenen Zeilen ROT werden. Ohne Umgebungsvariable nichts. */
+  const gegen = process.env['GEGENPROBE_CSS'];
+  if (gegen) await pc.addStyleTag({ content: gegen });
   return { ctx, pc, cdp: await ctx.newCDPSession(pc) };
 };
 
@@ -289,7 +340,10 @@ gleich('… und hebt sich unter dem Zeiger wie damals', rk.pilleUeber?.transform
 
 /* ══ §3a EINSTELLUNGEN AM RECHNER ═══════════════════════════════════════════ */
 console.log('\n§3a Einstellungen am Rechner, klassisch');
-gleich('Das Fenster fliegt nicht ein', rk.einst.frueh?.animation, ALT.einstAnimation);
+gleich('Das Fenster blendet ein (E815, iOS): einst-einblenden', rk.einst.frueh?.animation, JETZT.einstRechner);
+gleich('… in 200 ms, Skalierung 0,98 → 1', rk.einst.frueh?.animDauer, '0.2s');
+gleich('… und unter „Ruhige Darstellung" läuft nichts', await einstOhneBewegung(r, 'ruhig'), 'none');
+gleich('… und bei reduzierter Bewegung läuft nichts', await einstOhneBewegung(r, 'reduziert'), 'none');
 gleich('… und trägt den alten Schatten', rk.einst.spaet?.schatten, ALT.einstSchatten);
 gleich('Der gewählte Bereich hat keinen Akzentstrich', rk.einst.an?.schatten, ALT.navAnSchatten);
 gleich('… und keine eigene Lage', rk.einst.an?.lage, ALT.navAnLage);
@@ -326,24 +380,49 @@ const h = await aufmachen(true);
 const hk = await handyMessen(h);
 console.log('\n§2 Telefon 390 × 844, klassisch');
 gleich('Keine `--liquid-*`-Marken', hk.marken, ['', '', '', '']);
-gleich('Die untere Leiste trägt ihren alten Schatten', hk.leiste?.schatten, ALT.leisteSchatten);
+gleich('Die untere Leiste hat EINE Lichtkante und den Schatten von heute (E815, iOS)', hk.leiste?.schatten, JETZT.leisteSchatten);
+p('… und genau EINE Innenlinie im Schatten (kein doppelter Ring)',
+  (String(hk.leiste?.schatten ?? '').match(/inset/g) ?? []).length === 1, String(hk.leiste?.schatten));
 gleich('Das Zeichen des aktiven Reiters steht (kein scale 1,1, kein Heben)', hk.zeichenAn?.transform, ALT.zeichenAn);
-gleich('… ohne eigenen Übergang', hk.zeichenAn?.dauer, ALT.zeichenAnDauer);
+const zeichenDauer = parseFloat(String(hk.zeichenAn?.dauer ?? '0'));
+p('… und federt: die Feder läuft (Übergang über 0 s, E815)', zeichenDauer > 0, String(hk.zeichenAn?.dauer));
+{
+  await h.pc.evaluate(() => document.body.setAttribute('data-bewegung', 'ruhig'));
+  await warte(200);
+  const ruhig = await stil(h.pc, '#handy-oben > button.an .ho-z');
+  await h.pc.evaluate(() => document.body.removeAttribute('data-bewegung'));
+  await warte(200);
+  gleich('… unter „Ruhige Darstellung" ohne Übergang', ruhig?.dauer, '0s');
+}
 gleich('Das Wort des aktiven Reiters hebt sich nicht', hk.wortAn?.transform, ALT.wortAn);
 p('Der Finger liegt wirklich auf einem Reiter (`:active`) — sonst misst das Folgende nichts', hk.gedrueckt?.aktiv === true,
   JSON.stringify(hk.gedrueckt));
-gleich('… und sein Zeichen schrumpft nicht über `transform` (scale .92)', hk.gedrueckt?.transform, ALT.zeichenGedrueckt);
+p('… und sein Zeichen wächst nicht über 1,08 hinaus, hebt sich 2 px: die Kit-Feder (E702, E815)',
+  nahe(MATRIX(hk.gedrueckt?.transform), JETZT.gedrueckt), String(hk.gedrueckt?.transform));
 
 /* ══ §3b EINSTELLUNGEN AM TELEFON ═══════════════════════════════════════════ */
 console.log('\n§3b Einstellungen am Telefon, klassisch');
-gleich('Das Fenster fliegt nicht ein', hk.einst.frueh?.animation, ALT.einstAnimation);
+gleich('Das Blatt fährt von unten herein (E815, iOS): einst-blatt-hoch', hk.einst.frueh?.animation, JETZT.einstTelefon);
+gleich('… unter „Ruhige Darstellung" fährt es nicht', await einstOhneBewegung(h, 'ruhig'), 'none');
+gleich('… und bei reduzierter Bewegung fährt es nicht', await einstOhneBewegung(h, 'reduziert'), 'none');
 gleich('… und trägt den alten Schatten', hk.einst.spaet?.schatten, ALT.einstSchatten);
 gleich('Der gewählte Bereich hat keinen Akzentstrich', hk.einst.an?.schatten, ALT.navAnSchatten);
 
 /* ══ §4 WAS BLEIBT ══════════════════════════════════════════════════════════ */
 console.log('\n§4 Was bleibt: die Zusätze der Zielleiste (Workspace 2.0)');
-const griff = await stil(h.pc, '#handy-oben', '::before');
-p('Der Ziehgriff steht über der Leiste (42 px, ohne Trefferfläche)', griff?.inhalt === '""' && griff?.breite === '42px', JSON.stringify(griff));
+/* E813-Nachtrag (Redur, 24. November 2026: „Weg, wie iOS"): über der Leiste
+   steht KEIN Griffstrich mehr. Gemessen wird, ob `::before` etwas malt —
+   Inhalt, Fläche mit Farbe oder Bild, Breite und Deckkraft. */
+const griff = await h.pc.evaluate(() => {
+  const e = Array.from(document.querySelectorAll<HTMLElement>('#handy-oben')).find(x => x.getClientRects().length > 0);
+  if (!e) return null;
+  const c = getComputedStyle(e, '::before');
+  return { inhalt: c.content, bg: c.backgroundColor, bild: c.backgroundImage, breite: c.width, deckkraft: c.opacity };
+});
+const griffMalt = !!griff && griff.inhalt !== 'none' && griff.inhalt !== 'normal' && parseFloat(griff.deckkraft) > 0
+  && parseFloat(griff.breite) > 0
+  && (griff.bild !== 'none' || (griff.bg !== 'rgba(0, 0, 0, 0)' && griff.bg !== 'transparent'));
+p('Über der Leiste steht KEIN Griffstrich (Redur, 24. November, E813-Nachtrag)', griff !== null && !griffMalt, JSON.stringify(griff));
 p('Die Namensblase der Zielleiste ist gebaut', await h.pc.evaluate(() => !!document.querySelector('#ho-ziele > .ho-ziel-vorschau')));
 
 /* ══ §5b TELEFON, GLASS WHEEL ═══════════════════════════════════════════════ */

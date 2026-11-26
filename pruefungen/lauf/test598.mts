@@ -24,7 +24,7 @@
  *   §2  Nichts geht verloren: nach einem Tipp ins Whiteboard trägt die Leiste
  *       seine zwölf Werkzeuge und Farbe, Kleiner, Grösser, Ins Bild, Zurück,
  *       Vor und Mehr (Mehr öffnet „Alles löschen" und „Als Bild
- *       speichern"); nach einem Tipp auf die Fläche ihre acht Werkzeuge und
+ *       speichern"); nach einem Tipp auf die Fläche ihre zehn Werkzeuge und
  *       dazu „Schritt vorwärts".
  *   §3  Genau EIN gewähltes Werkzeug und EINE Zoomzahl sind zu sehen, und
  *       die Zahl des Whiteboards stimmt nach dem Wechsel mit seiner Sicht.
@@ -227,9 +227,9 @@ const s2b = await pg.evaluate((s: string) => {
   return { wz: [...(l?.querySelectorAll<HTMLElement>('[data-wz]') ?? [])].map(b => b.dataset['wz']),
            a: [...(l?.querySelectorAll<HTMLElement>('[data-a]') ?? [])].map(b => b.dataset['a']) };
 }, SCHACHT);
-const FL_WZ = ['zeiger', 'hand', 'stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'radierer'];
-p('Nach einem Tipp auf die Fläche trägt sie deren acht Werkzeuge',
-  FL_WZ.every(w => s2b.wz.includes(w)) && s2b.wz.length === 8, s2b.wz.join(','));
+const FL_WZ = ['zeiger', 'hand', 'verbindung', 'notiz', 'stift', 'radierer', 'rechteck', 'ellipse', 'linie', 'pfeil'];
+p('Nach einem Tipp auf die Fläche trägt sie deren zehn Werkzeuge',
+  FL_WZ.every(w => s2b.wz.includes(w)) && s2b.wz.length === FL_WZ.length, s2b.wz.join(','));
 p('… und dazu „Schritt vorwärts" (vorher nur über Strg+Umschalt+Z — mit dem Finger unmöglich)',
   s2b.a.includes('vor') && s2b.a.includes('zurueck'), s2b.a.join(','));
 

@@ -144,8 +144,10 @@ test('Share Sheet block IDs are accepted by the REAL Redion Store and share one 
   assert.match(indexed, /\}, patch\);/);
   assert.match(indexed, /const getBlock = \(id\??:/);
   assert.match(indexed, /const flush = \(\): Promise<unknown> => \{/);
-  assert.match(indexed, /const t = tx\(faecher, 'readwrite'\)/);
-  assert.match(indexed, /t\.oncomplete = \(\) => \{/);
+  // Seit E800 schreibt flush über ganzOderGarNicht, ein Commit je Arbeitsschritt:
+  // EINE Transaktion über alle Fächer der Menge, Erfolg erst bei oncomplete.
+  assert.match(indexed, /t = tx\(\[\.\.\.new Set\(menge\.map\(x => x\.store\)\)\], 'readwrite'\);/);
+  assert.match(indexed, /t\.oncomplete = \(\) => ok\(raus\);/);
   assert.match(share, /id: ids\.page/);
   assert.match(share, /id: ids\.content/);
   assert.match(share, /await store\.flush\(\)/);

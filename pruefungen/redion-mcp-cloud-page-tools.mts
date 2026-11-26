@@ -313,3 +313,23 @@ test('Cloud MCP: gedrehte Fachzeichen bleiben mit allen vier Ecken auf dem Blatt
     operation:'move_component',componentId:'rot90_inside',x:0,y:20
   }),/ausserhalb des Planblatts/);
 });
+
+test('Cloud MCP learning cards use the existing Trainer format with strict inputs',async()=>{
+  const {buildLearningCard}=await import('../server/mcp/learning-card.ts');
+  const args={deck:'Elektrotechnik',question:'Was misst ein Voltmeter?',answer:'Spannung'};
+  const card=buildLearningCard({...args,kind:'flashcard'});
+  assert.equal(card.content,'Was misst ein Voltmeter? :: Spannung');
+  assert.deepEqual((card.meta.quiz as any).musterloesung,['Spannung']);
+  const mc={...args,kind:'single_select',options:[{text:'Strom',correct:false},{text:'Spannung',correct:true},{text:'Leistung',correct:false},{text:'Widerstand',correct:false}]};
+  assert.equal((buildLearningCard(mc).meta.quiz as any).kind,'mc');
+  assert.equal((buildLearningCard(mc).meta.quiz as any).optionen[1].richtig,true);
+  assert.throws(()=>buildLearningCard({...mc,options:mc.options.map(o=>({...o,correct:true}))}));
+  assert.equal(buildLearningCard({...args,kind:'cloze',question:'Ein Voltmeter misst ___.'}).content,'Ein Voltmeter misst {{Spannung}}.');
+  assert.throws(()=>buildLearningCard({...args,kind:'cloze',question:'___ und ___'}));
+  assert.throws(()=>buildLearningCard({...args,kind:'flashcard',image:{data:'https://example.test/a.png',alt:'Bild'}}));
+  assert.throws(()=>buildLearningCard({...args,kind:'flashcard',image:{data:'data:image/png;base64,YWJj',alt:'Bild'}}));
+  const png='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6S0AAAAASUVORK5CYII=';
+  assert.equal((buildLearningCard({...args,kind:'flashcard',image:{data:png,alt:'Testbild'}}).meta.quiz as any).image.data,png);
+  assert.ok(!visibleCloudTools(principal(['redion:read'])).some(t=>t.name==='redion_create_learning_card'));
+  assert.equal(visibleCloudTools(principal(['redion:read','redion:write'])).find(t=>t.name==='redion_create_learning_card')?.annotations?.idempotentHint,true);
+});

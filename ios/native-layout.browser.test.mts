@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
-import { IOS_LAYOUT_CSS } from './native-layout.mts';
+import { IOS_LAYOUT_CSS, IOS_PHONE_POLISH_CSS, IOS_DOCUMENT_POLISH_CSS, IOS_DRAWING_POLISH_CSS } from './native-layout.mts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const indexUrl = pathToFileURL(path.join(root, 'index.html')).href;
@@ -79,6 +79,144 @@ test('Tablet/Desktop bekommt keine iPhone-Safe-Area-Korrektur', async () => {
     await page.addStyleTag({content:IOS_LAYOUT_CSS});
     const height=await page.locator('#main > #topbar').evaluate(el=>getComputedStyle(el).height);
     assert.notEqual(height,'50px','Die 760px-Grenze muss respektiert werden.');
+    await context.close();
+  } finally {await browser.close();}
+});
+
+test('iPhone premium polish overrides existing Today typography and keeps actions tappable', async () => {
+  const browser = await chromium.launch({headless:true});
+  try {
+    const context = await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+    const page = await context.newPage();
+    await page.goto(indexUrl,{waitUntil:'domcontentloaded'});
+    await page.addStyleTag({content:IOS_LAYOUT_CSS + IOS_PHONE_POLISH_CSS});
+    const result=await page.evaluate(() => {
+      document.body.dataset.schale='premium';
+      delete document.body.dataset.uiShell;
+      delete document.documentElement.dataset.schema;
+      const root=document.querySelector('#page')!;
+      root.className='lernwelt';
+      root.innerHTML='<div class="lw-today"><section class="lw-hero lw-hero-compact"><div><p>Heute</p><h2>Guten Abend.</h2></div><div class="lw-goal"><button><span>0 / 20</span><small>Lernziel heute</small></button><progress max="100" value="0"></progress></div></section><section class="lw-next-step"><span class="lw-next-icon"></span><div><h2>22 Karten für heute</h2></div><div class="lw-actions"><button>Lernen starten</button><button>Lernplan ansehen</button></div></section></div>';
+      // Measure in the same JS task: the real application's asynchronous
+      // startup can replace #page between two independent Playwright calls.
+      const el=root.querySelector('.lw-hero-compact')!;
+      const heading=el.querySelector('h2')!;
+      const button=el.querySelector('button')!;
+      return {font:getComputedStyle(heading).fontFamily,height:button.getBoundingClientRect().height,padding:getComputedStyle(el).paddingTop};
+    });
+    assert.match(result.font,/-apple-system/);
+    assert.equal(result.padding,'12px');
+    assert.ok(result.height>=44);
+    await context.close();
+  } finally {await browser.close();}
+});
+
+test('iPhone library stays compact with long names and accessible actions', async () => {
+  const browser = await chromium.launch({headless:true});
+  try {
+    const context = await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+    const page = await context.newPage();
+    await page.goto(indexUrl,{waitUntil:'domcontentloaded'});
+    await page.addStyleTag({content:IOS_LAYOUT_CSS + IOS_PHONE_POLISH_CSS});
+    const result=await page.evaluate(() => {
+      document.body.dataset.schale='premium';
+      delete document.body.dataset.uiShell;
+      delete document.documentElement.dataset.schema;
+      const root=document.querySelector('#page')!;
+      root.innerHTML='<div class="bib" data-bib-bereich="dokumente"><header class="bib-dkopf"><h1>Dokumente</h1><div class="bib-workspace-actions"><button class="bib-neu">Neue Seite</button><button class="bib-studio-import">PDF importieren</button></div></header><div class="bib-gitter"><div class="bib-deckel"><div class="bib-deckel-name"><b>ArbeitssicherheitundChemiefürElektroberufe</b></div></div><div class="bib-deckel">Notizen</div></div></div>';
+      const head=root.querySelector('.bib-dkopf')!;
+      const grid=root.querySelector('.bib-gitter')!;
+      return {padding:getComputedStyle(head).paddingTop,
+        cols:getComputedStyle(grid).gridTemplateColumns,
+        heights:[...head.querySelectorAll('button')].map(b=>b.getBoundingClientRect().height)};
+    });
+    assert.equal(result.padding,'14px');
+    assert.notEqual(result.cols,'none');
+    assert.ok(result.heights.every(h=>h>=44));
+    await context.close();
+  } finally {await browser.close();}
+});
+
+test('iPhone settings and search stay within the visible keyboard viewport', async () => {
+  const browser = await chromium.launch({headless:true});
+  try {
+    const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+    const page=await context.newPage();
+    await page.goto(indexUrl,{waitUntil:'domcontentloaded'});
+    await page.addStyleTag({content:IOS_LAYOUT_CSS+IOS_PHONE_POLISH_CSS});
+    const result=await page.evaluate(()=>{
+      document.documentElement.style.setProperty('--visual-height','420px');
+      document.documentElement.style.setProperty('--visual-bottom','424px');
+      const wrap=document.createElement('div');
+      wrap.className='overlay';
+      wrap.innerHTML='<div class="einst-fenster" data-blick="liste"><nav class="einst-nav"><input class="einst-suche"><div class="einst-karte"><button>Darstellung</button></div></nav></div>';
+      document.body.append(wrap);
+      const settings=wrap.querySelector('.einst-fenster')!;
+      const button=wrap.querySelector('button')!;
+      const input=wrap.querySelector('input')!;
+      const dimensions={settings:settings.getBoundingClientRect().height,button:button.getBoundingClientRect().height,input:input.getBoundingClientRect().height};
+      wrap.innerHTML='<div class="finder such"><input id="q"><div class="such-koerper"><div class="res"></div></div></div>';
+      const finder=wrap.querySelector('.finder')!;
+      return {...dimensions,searchMax:getComputedStyle(finder).maxHeight};
+    });
+    assert.ok(result.settings<=420);
+    assert.ok(result.button>=48);
+    assert.ok(result.input>=48);
+    assert.equal(result.searchMax,'404px');
+    await context.close();
+  } finally {await browser.close();}
+});
+
+for (const viewport of [{width:390,height:844},{width:844,height:390}]) {
+  test('iPhone PDF controls remain reachable at '+viewport.width+'x'+viewport.height, async () => {
+    const browser=await chromium.launch({headless:true});
+    try {
+      const context=await browser.newContext({viewport,isMobile:true,hasTouch:true,reducedMotion:'reduce'});
+      const page=await context.newPage();
+      await page.goto(indexUrl,{waitUntil:'domcontentloaded'});
+      await page.addStyleTag({content:IOS_LAYOUT_CSS+IOS_PHONE_POLISH_CSS+IOS_DOCUMENT_POLISH_CSS});
+      const result=await page.evaluate(()=>{
+        document.body.dataset.dokument='an';
+        document.documentElement.style.setProperty('--visual-height','300px');
+        const studio=document.createElement('section');
+        studio.className='document-studio';
+        studio.dataset.documentView='open';
+        studio.innerHTML='<div class="document-topbar"><button aria-label="Zurück">‹</button><div class="document-title"><span class="document-title-name">Arbeitssicherheit und Chemie für Elektroberufe</span></div></div><div class="document-commandbar"><div class="document-pagination"><button class="document-position">Seite 1/10</button></div></div><div class="document-findbar"><input type="search"><button>✕</button></div>';
+        document.body.append(studio);
+        const top=studio.querySelector('.document-topbar button')!;
+        const menu=studio.querySelector('.document-commandbar')!;
+        const search=studio.querySelector('.document-findbar input')!;
+        return {coarse:matchMedia('(pointer:coarse)').matches,topHeight:getComputedStyle(top).minHeight,menuMax:getComputedStyle(menu).maxHeight,inputFont:getComputedStyle(search).fontSize};
+      });
+      assert.equal(result.coarse,true);
+      assert.equal(result.topHeight,'44px');
+      assert.equal(result.menuMax,'196px');
+      assert.equal(result.inputFont,'16px');
+      await context.close();
+    } finally {await browser.close();}
+  });
+}
+
+test('iPhone drawing menu and inspector remain bounded by visible viewport', async () => {
+  const browser=await chromium.launch({headless:true});
+  try {
+    const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+    const page=await context.newPage();
+    await page.goto(indexUrl,{waitUntil:'domcontentloaded'});
+    await page.addStyleTag({content:IOS_DRAWING_POLISH_CSS});
+    const result=await page.evaluate(()=>{
+      document.documentElement.style.setProperty('--visual-height','320px');
+      const root=document.createElement('div');
+      root.innerHTML='<div class="gfx-tb-edgeless"><div class="gfx-tb-menue"><div class="gfx-tb-menuewerkzeuge"><button>Stift</button></div></div></div><div class="gfx-inspector"><button>Ebene</button></div>';
+      document.body.append(root);
+      const menu=root.querySelector('.gfx-tb-menue')!;
+      const inspector=root.querySelector('.gfx-inspector')!;
+      const button=menu.querySelector('button')!;
+      return {menuMax:getComputedStyle(menu).maxHeight,inspectorMax:getComputedStyle(inspector).maxHeight,buttonMin:getComputedStyle(button).minHeight};
+    });
+    assert.equal(result.menuMax,'150px');
+    assert.equal(result.inspectorMax,'240px');
+    assert.equal(result.buttonMin,'44px');
     await context.close();
   } finally {await browser.close();}
 });

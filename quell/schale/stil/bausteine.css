@@ -1931,21 +1931,9 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     bottom:calc(var(--hunten) + 8px); height:var(--mobile-nav-height);
     padding:5px 6px; background:var(--bg-card); border:1px solid var(--line);
   }
-  /* Zieh-Griff als dezente Entdeckungshilfe IN der vorhandenen
-     unteren Navigation. Kein Element, keine Trefferfläche, kein Listener.
-     Beim Hochziehen verschwindet er hinter der erscheinenden Zielleiste. */
-  #handy-oben::before{
-    content:'';position:absolute;left:50%;top:-8px;
-    width:42px;height:3px;border-radius:999px;
-    background:var(--text-dim);opacity:.55;
-    transform:translateX(-50%);pointer-events:none;
-    transition:opacity var(--motion-fast) var(--ease)
-  }
-  #handy-oben[data-zielleiste]::before{opacity:0}
-  @media(prefers-reduced-motion:reduce){
-    #handy-oben::before{transition:none}
-  }
-  body[data-bewegung="ruhig"] #handy-oben::before{transition:none}
+  /* KEIN Zieh-Griff über der Leiste (Redur, 24. November 2026, E813-Nachtrag:
+     „Weg, wie iOS"). Hochgezogen wird die Zielleiste trotzdem: der Zug
+     hängt an der Leiste selbst (E749, test614), nicht an diesem Strich. */
   #ho-ziele[hidden]{ display:none }
   #ho-ziele[data-geht]{ pointer-events:none }
   /* WORKSPACE 2.0 — VOLLSTÄNDIGES ZIEL LESBAR BEIM HOCHZIEHEN.
@@ -2039,8 +2027,7 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   #handy-oben > button .ho-z,
   #ho-ziele > button .ho-z{
     will-change:auto;
-    transition:transform var(--feder-knapp-dauer) var(--feder-knapp),
-               color var(--motion-fast) var(--ease-standard)
+    transition:transform var(--feder-knapp-dauer) var(--feder-knapp)
   }
   #handy-oben > button:is(:focus-visible,:active) .ho-z{
     transform:translateY(-2px) scale(1.08)
@@ -2050,19 +2037,19 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
     outline:2px solid var(--accent-text,var(--accent));
     outline-offset:-2px
   }
-  #ho-ziele > button:active .ho-z{transform:scale(1.08)}
+  #ho-ziele > button[data-gedrueckt] .ho-z{transform:scale(1.08)}
   /* Lesbarkeit statt reinem Farbwechsel: aktives Ziel ist auch fetter. */
   #handy-oben > button[aria-selected="true"] b{font-weight:700}
   @media(prefers-reduced-motion:reduce){
     #handy-oben > button .ho-z,
     #ho-ziele > button .ho-z{transition:none}
     #handy-oben > button:is(:focus-visible,:active) .ho-z,
-    #ho-ziele > button:active .ho-z{transform:none}
+    #ho-ziele > button[data-gedrueckt] .ho-z{transform:none}
   }
   body[data-bewegung="ruhig"] #handy-oben > button .ho-z,
   body[data-bewegung="ruhig"] #ho-ziele > button .ho-z{transition:none}
   body[data-bewegung="ruhig"] #handy-oben > button:is(:focus-visible,:active) .ho-z,
-  body[data-bewegung="ruhig"] #ho-ziele > button:active .ho-z{transform:none}
+  body[data-bewegung="ruhig"] #ho-ziele > button[data-gedrueckt] .ho-z{transform:none}
   #ho-ziele > button:is([data-anvisiert],[aria-current="page"]){ color:var(--accent-text,var(--accent)) }
   #ho-ziele > button[aria-current="page"] b{ font-weight:650 }
   #ho-ziele .ho-z{ display:flex; align-items:center; justify-content:center;
@@ -2165,7 +2152,12 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
        1,83 : 1 (hell) und 2,06 : 1 (dunkel) heraus. Die Aufhellung unten
        bleibt — sie ist die Linse (E639, `test539` §2) und hebt den Grund
        mehr als die Schrift. Glas wird sie beim Fahren und Halten (`::after`). */
-    background:color-mix(in srgb,var(--text) 5%,transparent);
+    /* E813-Nachtrag (24. November): die Fläche ist NEUTRAL, nicht mehr ein
+       Hauch Schrift-Farbe. Hell wird sie etwas heller als die Leiste,
+       dunkel etwas dunkler — der Akzent-Text („Dokumente") liegt dann
+       auf dem Grund, nicht auf einem grauen Schleier. Gemessen: 3,06 : 1
+       (hell) und 3,73 : 1 (dunkel) mit dem alten 5-%-Schleier (test585). */
+    background:color-mix(in srgb,var(--bg) 85%,transparent);
     /* ══ EINE KONTUR, NICHT DREI (E646) ═════════════════════════════════
        Hier lagen VIER Innenschatten und zogen einen hellen Ring rund um
        die Fläche. Zusammen mit dem Rand der Leiste selbst und ihrem
@@ -2294,8 +2286,13 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   /* BBT-Bit-Video vom 07.11.: farbige, gleitende Auswahl-Linse.
      Bestehende SelectionFlow-Feder und Trefferflaechen bleiben unveraendert.
      Die Akzentfarbe kommt aus Redions Theme, nicht aus einer Musik-Route. */
+  /* In Ruhe NEUTRAL und fast klar (E813-Nachtrag): der Akzent-Text
+     („Dokumente") liegt auf dem Grund, nicht auf einem Akzent-Schleier.
+     Gemessen mit test585-Methode: Akzent 24 % 3,06 : 1 · 85 % Grund 1,29 : 1
+     (die Linse deckt das Wort zu) · 5 % Schrift-Farbe 5,57 : 1 hell, 6,14 : 1
+     dunkel. Beim Fahren bleibt die Akzentfläche (sie zieht den Blick zum Ziel). */
   #handy-oben #ho-pille{
-    background:color-mix(in srgb,var(--accent) 24%,transparent);
+    background:color-mix(in srgb,var(--text) 5%,transparent);
     box-shadow:inset 0 1px 0 color-mix(in srgb,var(--bg-card) 55%,transparent),
                0 0 13px color-mix(in srgb,var(--accent) 20%,transparent);
   }
@@ -2428,9 +2425,32 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   #handy-oben > button.an{ color:var(--accent-text,var(--accent));
                            transition-delay:130ms }
   #handy-oben > button.an b{ font-weight:650 }
+  /* B (Redur, 24. November 2026, „Zeichen farbig, Wort normal"): im aktiven
+     Reiter ist nur das ZEICHEN in Akzentfarbe (Regel oben, `.ho-z`); das
+     WORT bleibt in Textfarbe und ist fett. Kontrast des Wortes ≥ 4,5 : 1
+     (test585 §2). Gilt in Standard und Glass Wheel gleich — das Glas
+     ändert die Farbe nicht. */
+  #handy-oben > button.an b,
+  #handy-oben > button[aria-selected="true"] b{ color:var(--text) }
+  /* Der aktive Knopf liegt ÜBER seiner Linse (z-index 3 gegen 2). Die Linse
+     ist in der Glass-Fassung ein Weichzeichner mit hellem Schimmer; über dem
+     Wort gelegt hellte sie die Schrift auf 3,0 : 1 auf, bei einfacher
+     Pixeldichte (test585 §2 misst genau das). Die Linse bleibt, wo sie
+     war — nur der Knopf des gewählten Reiters liegt darauf. */
+  #handy-oben > button[aria-selected="true"]{ z-index:3 }
 
-  #handy-oben .ho-z{ display:flex; align-items:center; justify-content:center }
-  #handy-oben .ho-z svg{ display:block }
+  /* E813 — das Zeichen über dem Wort, in JEDEM Browser gleich. Safari hat
+     das SVG ohne eigene Höhe in die Zeile gelegt und über das Wort gemalt
+     (Redurs Foto, 24. November). Darum eine feste Box: 24 px hoch, das SVG
+     19 px darin, nichts kann herausragen. Die Masse stehen hier, an EINER
+     Stelle, damit sie nach Redurs Bild in einer Zeile nachstellbar sind.
+     Richtwerte aus Apples Tab-Bar (eigenes Wissen, nicht aus Redurs Bild). */
+  #handy-oben{ --dock-zeichen:19px; --dock-zeichen-box:24px }
+  #handy-oben .ho-z{ display:flex; align-items:center; justify-content:center;
+                     flex:0 0 auto; width:var(--dock-zeichen-box); height:var(--dock-zeichen-box);
+                     overflow:hidden }
+  #handy-oben .ho-z svg{ display:block; width:var(--dock-zeichen); height:var(--dock-zeichen); flex:0 0 auto }
+  #handy-oben > button b{ line-height:1.15 }
 
   /* KEINE ZWEITE KOPFLEISTE. Die Pillen SIND die Kopfleiste; darunter
      stand bisher `#topbar` mit ☰, Suchen und Neu — dreimal dasselbe Ziel

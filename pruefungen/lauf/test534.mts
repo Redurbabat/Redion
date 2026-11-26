@@ -46,6 +46,8 @@
  *   §6 DIE FREIE LAGE bleibt im Bild, auch wenn das Fenster kleiner wird.
  *   §7 §37: der Griff misst 44 px.
  *   §8 Keine Seitenfehler.
+ *   §9 Eine freie Leiste bleibt GANZ im Fenster, auch wenn die Seite beim
+ *      Ziehen rollt — losgelassen oben und nach dem Verkleinern (E810).
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ──────────────────────────────────
  * Am 19. September, vor dem Bau, waren §1 (unten), §2 (die Spalte auf dem
@@ -374,6 +376,13 @@ if (await griff.count() === 1) {
 
   /* In die Mitte gezogen: dort ist kein Rand — also bleibt sie frei stehen. */
   await lageSetzen(p1, 'oben');
+  /* Die Klicks auf den Griff haben die Seite gerollt (Playwright holt den
+     Knopf ins Bild). Dann lag der Griff OBERHALB des Fensters, der Zug fing
+     daneben an, und die Leiste blieb «oben» stehen — das war der Fehler
+     bei `y=-101`, und er lag am Test, nicht am Produkt. Zurück an den
+     Anfang, dann erst messen. */
+  await p1.evaluate(() => { const s = document.querySelector<HTMLElement>('#scroll'); if (s) s.scrollTop = 0; });
+  await p1.waitForTimeout(150);
   const g2 = (await p1.locator('.blatt-werk [data-act="lage"]').first().boundingBox())!;
   await p1.mouse.move(g2.x + g2.width / 2, g2.y + g2.height / 2);
   await p1.mouse.down();
@@ -442,6 +451,53 @@ if (await griffHandy.count() === 1) {
   p('Ziehen am Telefon macht die Leiste nicht frei schwebend',
     m?.lage !== 'frei', m?.lage || '(nichts)');
 } else p('Griff am Telefon gefunden', false, 'kein [data-act="lage"]');
+
+/* ═══ §9 Eine freie Leiste bleibt im Fenster (E810) ════════════════════════
+   Die freie Lage hängt an der Hülle in Prozent. Rollt die Seite, während
+   die Leiste gezogen wird, kann die Hülle mit ihrer Oberkante über dem
+   Fensterrand liegen — und ein Loslassen oben im Bild liess die Leiste mit
+   ihrem Rand heraushängen. Ohne Rollen ist dieser Fall nicht zu erreichen,
+   deshalb rollt dieser Abschnitt bewusst. Er ist deterministisch: kein
+   Zufall, keine Wiederholung. */
+console.log('\n§9 Frei heisst im Fenster — auch wenn die Seite beim Ziehen rollt');
+const { ktx: k4, pg: p4 } = await aufbauen(1440, false);
+await p4.evaluate(() => { const s = document.querySelector<HTMLElement>('#scroll'); if (s) s.scrollTop = 0; });
+await p4.waitForTimeout(150);
+const gz = (await p4.locator('.blatt-werk [data-act="lage"]').first().boundingBox())!;
+await p4.mouse.move(gz.x + gz.width / 2, gz.y + gz.height / 2);
+await p4.mouse.down();
+await p4.mouse.move(gz.x + gz.width / 2, gz.y + gz.height / 2 + 20, { steps: 4 });
+/* Die Seite rollt während des Zugs, bis die Hülle mit ihrer Oberkante
+   ÜBER dem Fenster liegt. Der Zeiger ist dann oben im Bild. Der Abstand
+   zum Hüllenrand bleibt über dem Andock-Band (64 px), sonst dockte die
+   Leiste an die Hülle an, und der Fall wäre ein anderer. */
+await p4.evaluate(() => { const s = document.querySelector<HTMLElement>('#scroll'); if (s) s.scrollTop = 480; });
+await p4.mouse.move(720, 10, { steps: 8 });
+await p4.mouse.up();
+await p4.waitForTimeout(320);
+const ober = await kasten(p4);
+p('Oben losgelassen heisst «frei» (kein Andocken an die Hülle)',
+  ober?.lage === 'frei', ober?.lage || '(nichts)');
+/* Das sichtbare Feld ist der Rollbereich (`#scroll`): unter der Kopfleiste,
+   neben der Seitenleiste. Eine Leiste darüber ist für den Menschen verloren,
+   auch wenn sie im Fenster steht (§9 misst deshalb gegen das Feld). */
+const feld = () => p4.evaluate(() => {
+  const b = document.querySelector<HTMLElement>('#scroll')!.getBoundingClientRect();
+  return { oben: b.top, unten: b.bottom, links: b.left, rechts: b.right };
+});
+const imFeld = (k: any, f: { oben: number; unten: number; links: number; rechts: number }): boolean =>
+  !!k && k.lage === 'frei' && k.y >= f.oben - 1 && k.y + k.h <= f.unten + 1
+    && k.x >= f.links - 1 && k.x + k.w <= f.rechts + 1;
+const f1 = await feld();
+p('… und steht ganz im sichtbaren Feld, nicht unter der Kopfleiste',
+  imFeld(ober, f1), JSON.stringify(ober && [ober.x, ober.y, ober.w, ober.h]) + ` Feld oben ${Math.round(f1.oben)}`);
+await p4.setViewportSize({ width: 900, height: 700 });
+await p4.waitForTimeout(420);
+const eng2 = await kasten(p4);
+const f2 = await feld();
+p('Nach dem Verkleinern steht sie noch im sichtbaren Feld',
+  imFeld(eng2, f2), JSON.stringify(eng2 && [eng2.x, eng2.y, eng2.w, eng2.h]) + ` Feld oben ${Math.round(f2.oben)}`);
+await k4.close();
 
 /* ═══ §8 Keine Seitenfehler ════════════════════════════════════════════════ */
 console.log('\n§8 Keine Seitenfehler');

@@ -690,27 +690,73 @@ console.log('\n§6 · Ein Ortswechsel, eine Ankunft: aus der richtigen Richtung,
   const gleicherOrt = await wechsel('hl-dok');
   gleich('Derselbe Reiter noch einmal: keine Ankunft (nichts hat sich bewegt)', gleicherOrt.gesehen, []);
 
-  /* Die Einstellungen am Telefon: Liste → Bereich schiebt, zurück ebenso. */
+  /* Die Einstellungen am Telefon (E812, Zusatz). Redur, 24. November: „Ja,
+     auf Verhalten prüfen". Gemessen wird die STELLUNG Bild für Bild — nicht
+     der Name einer Animation, denn die Fahrt ist seit E812 ein Übergang der
+     Eigenschaft `transform` (`data-blick` schaltet ihn), kein benanntes
+     Schlüsselbild mehr. Die Zahlen sind Pixel in x. */
+  const fahrt = (pg: any, wahl: string, ziel: string, ms = 1000): Promise<{ werte: number[]; breite: number }> =>
+    pg.evaluate(([wahl, ziel, ms]: [string, string, number]) => new Promise<any>(fertig => {
+      const el = document.querySelector<HTMLElement>(ziel)!;
+      const tx = (): number => { const t = getComputedStyle(el).transform;
+        return t === 'none' ? 0 : new DOMMatrixReadOnly(t).m41; };
+      document.querySelector<HTMLElement>(wahl)!.click();
+      const werte: number[] = []; const bis = performance.now() + ms;
+      const schau = (): void => { werte.push(Math.round(tx()));
+        if (performance.now() < bis) requestAnimationFrame(schau);
+        else fertig({ werte, breite: el.clientWidth }); };
+      requestAnimationFrame(schau);
+    }), [wahl, ziel, ms] as [string, string, number]);
+  const zwischen = (w: number[], lo: number, hi: number): number => w.filter(x => x > lo && x < hi).length;
+  const stetig = (w: number[], wohin: 1 | -1): boolean => w.every((x, i) => i === 0 || (wohin === -1 ? x <= w[i - 1]! : x >= w[i - 1]!));
+
+  /* Liste → Bereich: die Detailseite kommt von rechts. */
   await s.evaluate(() => Einstellungen.oeffne());
   await s.waitForTimeout(600);
-  const push = await s.evaluate(() => new Promise<any>(fertig => {
-    (document.querySelector('.einst-nav button[data-b="allgemein"]') as HTMLElement).click();
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      const inh = document.querySelector('.einst-inhalt')!;
-      fertig(inh.getAnimations().map(a => (a as any).animationName ?? '(waapi)'));
-    }));
-  }));
-  gleich('Einstellungen: ein Bereich schiebt sich von rechts herein', push, ['wisch-rein-links']);
+  const hin = await fahrt(s, '.einst-nav button[data-b="allgemein"]', '.einst-inhalt');
+  p('Telefon · Einstellungen: die Detailseite fährt in mehreren Bildern zwischen Bildbreite und 0',
+    zwischen(hin.werte, 0, hin.breite) >= 3, JSON.stringify(hin.werte.slice(0, 12)));
+  p('… sie startet rechts und kommt bei 0 an, ohne Rücksprung',
+    hin.werte[0]! > 0 && hin.werte.every(x => x >= 0 && x <= hin.breite) && hin.werte.at(-1) === 0 && stetig(hin.werte, -1),
+    `Start ${hin.werte[0]}, Ende ${hin.werte.at(-1)}, Bildbreite ${hin.breite}`);
   await s.waitForTimeout(900);
-  const pop = await s.evaluate(() => new Promise<any>(fertig => {
-    (document.querySelector('[data-a="liste"]') as HTMLElement).click();
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      const nav = document.querySelector('.einst-nav')!;
-      fertig(nav.getAnimations().map(a => (a as any).animationName ?? '(waapi)'));
-    }));
-  }));
-  gleich('… und „Zurück" bringt die Liste von links', pop, ['wisch-rein-rechts']);
+
+  /* „Zurück": die Liste kommt von links — aus dem Versatz von −30 % auf 0. */
+  const zurueck = await fahrt(s, '[data-a="liste"]', '.einst-nav');
+  const versatz = -Math.round(0.3 * zurueck.breite);
+  p('Telefon · „Zurück": die Liste kommt von links, Start im Versatz (−30 %)',
+    zurueck.werte[0]! < 0 && zurueck.werte[0]! >= versatz - 1, `Start ${zurueck.werte[0]}, Versatz ${versatz}`);
+  p('… in mehreren Bildern bis 0, ohne Rücksprung, und bei 0 angekommen',
+    zwischen(zurueck.werte, versatz - 1, 0) >= 3 && stetig(zurueck.werte, 1) && zurueck.werte.at(-1) === 0,
+    JSON.stringify(zurueck.werte.slice(0, 12)));
   await o.ctx.close();
+
+  /* Mit „Ruhige Darstellung" und mit System-Bewegung reduziert: im ERSTEN
+     Bild fertig — kein Zwischenbild. */
+  for (const [name, opt, vorher] of [
+    ['Ruhige Darstellung', { handy: true }, 'ruhig'],
+    ['System: Bewegung reduziert', { handy: true, reduce: true }, ''],
+  ] as const) {
+    const r = await oeffne(opt);
+    if (vorher) await r.s.evaluate(() => Einstellungen.S('bewegung', 'ruhig'));
+    await r.s.evaluate(() => Einstellungen.oeffne());
+    await r.s.waitForTimeout(600);
+    const f = await fahrt(r.s, '.einst-nav button[data-b="allgemein"]', '.einst-inhalt', 400);
+    p(`Telefon · ${name}: die Detailseite ist im ersten Bild da`,
+      f.werte[0] === 0 && zwischen(f.werte, 0, f.breite) === 0, JSON.stringify(f.werte.slice(0, 5)));
+    await r.ctx.close();
+  }
+
+  /* GEGENPROBE: ohne den Übergang springt die Seite — dann wäre die Zusage rot. */
+  const gp = await oeffne({ handy: true });
+  await gp.s.evaluate(() => { const st = document.createElement('style');
+    st.textContent = '.einst-fenster .einst-inhalt{transition:none!important}'; document.head.appendChild(st); });
+  await gp.s.evaluate(() => Einstellungen.oeffne());
+  await gp.s.waitForTimeout(600);
+  const sprung = await fahrt(gp.s, '.einst-nav button[data-b="allgemein"]', '.einst-inhalt');
+  p('Gegenprobe: ohne Übergang gibt es kein Zwischenbild — die Zusage wäre rot',
+    zwischen(sprung.werte, 0, sprung.breite) < 3, JSON.stringify(sprung.werte.slice(0, 6)));
+  await gp.ctx.close();
 }
 
 /* ==========================================================================

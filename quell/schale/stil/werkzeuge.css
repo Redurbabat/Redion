@@ -856,6 +856,249 @@ a.bl:hover{color:var(--text)}
   .gfx-tb-liste button{min-height:var(--touch-min)}
 }
 
+
+/* Edgeless, aus AFFiNE 81da59d: 36px Schnellwerkzeuge, 96px Vorschauen
+   und ein geteilter Streifen mit festen Blätterpositionen. */
+.gfx-tb-edgeless{
+  --gfx-kartenhoehe:64px;
+  --gfx-galerie-aktiv:#1c9ee4;
+  --gfx-dock-icon:#a8a8a0;
+  --gfx-dock-edge:#2e2e2e;
+  --gfx-dock-hover:rgb(255 255 255 / .1);
+  --gfx-dock-shadow:0 6px 18px #00000052;
+  --gfx-notiz-papier:#292929;
+  --gfx-notiz-linie:#535353;
+  --gfx-notiz-karte:#343434;
+  --gfx-notiz-schatten:0 2px 4px #0009,inset 0 -2px 1px #ffffff0f;
+  --gfx-dock-breite:566px;
+  width:min(var(--gfx-dock-breite),calc(100% - 24px));
+  padding:0;
+}
+html[data-theme="light"] .gfx-tb-edgeless{
+  --gfx-galerie-aktiv:#1e96eb;
+  --gfx-dock-icon:#77757d;
+  --gfx-dock-edge:#e3e2e4;
+  --gfx-dock-hover:rgb(0 0 0 / .04);
+  --gfx-dock-shadow:0 6px 16px #00000024;
+  --gfx-notiz-papier:#f6f5f6;
+  --gfx-notiz-linie:#fff;
+  --gfx-notiz-karte:#fff;
+  --gfx-notiz-schatten:0 2px 4px #0003,inset 0 -2px 1px #0002;
+}
+.gfx-tb-edgeless .gfx-tb-roller{display:block;overflow:visible;padding:0}
+.gfx-tb-edgeless .gfx-tb-haupt{
+  position:relative;isolation:isolate;
+  width:100%;max-width:100%;height:var(--gfx-kartenhoehe);
+  padding:0 12px;gap:0;border:0;background:none;box-shadow:none;
+}
+.gfx-tb-edgeless .gfx-tb-haupt::before{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  border:28px solid transparent;border-image:var(--affine-dock-rahmen) 28 fill;
+  filter:drop-shadow(var(--gfx-dock-shadow));
+}
+.gfx-tb-edgeless .gfx-tb-schnell{gap:10px;flex:none}
+.gfx-tb-edgeless .gfx-tb-schnell button{
+  width:36px;height:36px;color:var(--gfx-dock-icon);border-radius:8px;
+}
+.gfx-tb-edgeless .gfx-tb-schnell button:is(:hover,[aria-expanded="true"]):not(:disabled){
+  color:var(--gfx-dock-icon);background:var(--gfx-dock-hover);
+}
+.gfx-tb-edgeless .gfx-tb-schnell button.on,
+.pg-flaeche:is([data-wz="zeiger"],[data-wz="hand"],:not([data-wz])) .gfx-tb-edgeless [data-a="modus"],
+.document-studio:is([data-ink-tool="select"],[data-ink-tool="schreiben"]) .gfx-tb-edgeless [data-a="pdf-zeiger"]{
+  color:var(--gfx-galerie-aktiv);background:transparent;
+}
+.gfx-tb-edgeless [data-a="elektro"]{color:#e9b63e}
+html[data-theme="light"] .gfx-tb-edgeless [data-a="elektro"]{color:#8a5c00}
+.gfx-tb-edgeless [data-a="elektro"] svg{fill:currentColor}
+.gfx-tb-edgeless .gfx-tb-trenn{
+  position:relative;width:8px;height:100%;margin:0 8px;background:none;
+}
+.gfx-tb-edgeless .gfx-tb-trenn::after{
+  content:"";position:absolute;inset:0 auto 0 50%;width:1px;background:var(--gfx-dock-edge);
+}
+.gfx-tb-edgeless .gfx-tb-blatt{
+  width:20px;height:44px;color:var(--gfx-dock-icon);
+}
+.gfx-tb-edgeless .gfx-tb-blatt[data-richtung="links"]{margin-right:8px;--dock-glyphe:var(--affine-dock-left)}
+.gfx-tb-edgeless .gfx-tb-blatt[data-richtung="rechts"]{margin-left:8px;--dock-glyphe:var(--affine-dock-right)}
+.gfx-tb-edgeless .gfx-tb-blatt[aria-disabled="true"]{opacity:.27}
+.gfx-tb-edgeless .gfx-tb-blatt[aria-disabled="true"]:hover{background:transparent}
+.gfx-tb-edgeless :is([data-a="modus"],[data-a="pdf-zeiger"]){--dock-glyphe:var(--affine-dock-select)}
+.gfx-tb-edgeless .gfx-tb-schnell [data-sym="inkHand"]{--dock-glyphe:var(--affine-dock-hand)}
+.gfx-tb-edgeless .gfx-tb-schnell [data-sym="inkPointer"]{--dock-glyphe:var(--affine-dock-select)}
+.gfx-tb-edgeless .gfx-tb-schnell [data-sym="inkConnector"]{--dock-glyphe:var(--affine-dock-connector)}
+.gfx-tb-edgeless :is([data-a="rahmen"],[data-a="pdf-rahmen"]){--dock-glyphe:var(--affine-dock-frame)}
+.gfx-tb-edgeless :is([data-wz="verbindung"],[data-a="pdf-verbinder"]){--dock-glyphe:var(--affine-dock-connector)}
+.gfx-tb-edgeless :is([data-a="seitenlink"],[data-a="pdf-link"]){--dock-glyphe:var(--affine-dock-link)}
+.gfx-tb-edgeless :is([data-a="schnellmehr"],[data-a="pdf-schnellmehr"]){--dock-glyphe:var(--affine-dock-more)}
+.gfx-tb-edgeless .gfx-tb-schnell .zeichen,
+.gfx-tb-edgeless .gfx-tb-blatt span{
+  width:24px;height:24px;display:block;font-size:0;
+}
+.gfx-tb-edgeless .gfx-tb-blatt span{width:20px;height:20px}
+.gfx-tb-edgeless .gfx-tb-schnell .zeichen svg{display:none}
+.gfx-tb-edgeless .gfx-tb-schnell .zeichen::before,
+.gfx-tb-edgeless .gfx-tb-blatt span::before,
+.gfx-tb-edgeless [data-karte="notiz"] [data-vorschau]::before{
+  content:"";display:block;width:100%;height:100%;background:currentColor;
+  mask:var(--dock-glyphe) center / contain no-repeat;
+}
+.gfx-tb-edgeless .gfx-tb-schnell :is([data-a="modus"],[data-a="pdf-zeiger"],[data-a="rahmen"],[data-a="pdf-rahmen"],[data-wz="verbindung"],[data-a="pdf-verbinder"])::after{
+  inset:-2px -2px auto auto;width:16px;height:16px;transform:none;
+  background:currentColor;mask:var(--affine-dock-up) center / contain no-repeat;
+}
+.gfx-tb-edgeless .gfx-tb-schnell :is([data-a="schnellmehr"],[data-a="pdf-schnellmehr"]){display:none}
+.gfx-tb-kartenfenster{
+  min-width:0;flex:1;height:100%;overflow:hidden;container-type:inline-size;
+}
+.gfx-tb-karten{width:max-content;gap:0;height:100%;align-items:stretch}
+.gfx-tb-karte{
+  position:relative;width:min(96px,100cqw);display:flex;flex:0 0 auto;gap:0;overflow:hidden;
+}
+.gfx-tb-karte[hidden]{display:none}
+.gfx-tb-edgeless .gfx-tb-karte button{
+  width:0;min-width:0;flex:1 1 0;height:100%;border-radius:8px;overflow:hidden;
+}
+.gfx-tb-edgeless [data-karte="stifte"]{gap:4px;justify-content:center}
+.gfx-tb-edgeless .gfx-tb-karte button:focus-visible{box-shadow:inset 0 0 0 2px var(--accent)}
+.gfx-tb-edgeless .gfx-tb-karte button:is(.on,[aria-expanded="true"]){
+  background:var(--gfx-dock-hover);color:var(--gfx-galerie-aktiv);
+}
+.gfx-tb-edgeless .gfx-tb-karte .zeichen{
+  position:absolute;inset:0;background:var(--gfx-werkzeugbild) center bottom no-repeat;
+  transform:translateY(4px);transition:transform .3s ease-in-out;pointer-events:none;
+}
+.gfx-tb-edgeless .gfx-tb-karte .zeichen svg{visibility:hidden}
+.gfx-tb-edgeless .gfx-tb-symbol .zeichen{display:grid;place-items:center;background:none;transform:none}
+.gfx-tb-edgeless .gfx-tb-symbol .zeichen svg{visibility:visible;width:30px;height:30px}
+.gfx-tb-edgeless .gfx-tb-karte button:is(:hover,:focus-visible,.on) .zeichen{transform:none}
+.gfx-tb-edgeless [data-karte="stifte"] .zeichen{transform:translateY(8px)}
+.gfx-tb-edgeless [data-karte="stifte"] button:is(:hover,:focus-visible,.on) .zeichen{transform:none}
+@media(min-width:551px){
+  .gfx-tb-edgeless [data-karte="stifte"] [data-wz="stift"]{flex:0 0 35px}
+  .gfx-tb-edgeless [data-karte="stifte"] [data-wz="radierer"]{flex:0 0 49px}
+}
+.gfx-tb-edgeless :is([data-karte="notiz"],[data-karte="formen"]) .zeichen{transform:none}
+.gfx-tb-edgeless [data-karte="notiz"] .zeichen::before{
+  content:"";position:absolute;left:calc(50% - 30px);bottom:-20px;width:60px;height:72px;
+  background:var(--affine-dock-notizpapier) 3px 32px no-repeat var(--gfx-notiz-papier);
+  border:1px solid var(--gfx-notiz-linie);
+  box-shadow:0 2px 6px #0007;transform:rotate(4.42deg);transition:transform .4s ease;
+}
+.gfx-tb-edgeless [data-karte="notiz"] [data-vorschau]{
+  display:grid;place-items:center;position:absolute;left:calc(50% - 13px);bottom:12px;
+  width:26px;height:26px;border-radius:2px;background:var(--gfx-notiz-karte);
+  color:var(--gfx-dock-icon);box-shadow:var(--gfx-notiz-schatten);
+  transform:translate(var(--notiz-x,0px),var(--notiz-y,0px)) rotate(var(--notiz-r,4deg));
+  transition:transform .4s ease;
+}
+.gfx-tb-edgeless [data-karte="notiz"] [data-vorschau]::before{width:24px;height:24px;opacity:.65}
+.gfx-tb-edgeless [data-vorschau="link"]{
+  --dock-glyphe:var(--affine-dock-link);--notiz-x:-22px;--notiz-y:-5px;--notiz-r:-6deg;
+}
+.gfx-tb-edgeless [data-vorschau="text"]{--dock-glyphe:var(--affine-dock-text)}
+.gfx-tb-edgeless [data-vorschau="heading"]{
+  --dock-glyphe:var(--affine-dock-heading);--notiz-x:21px;--notiz-y:-7px;--notiz-r:8deg;
+}
+.gfx-tb-edgeless [data-karte="notiz"] button:is(:hover,:focus-visible) .zeichen::before{
+  transform:translateY(-5px) rotate(4.42deg);
+}
+.gfx-tb-edgeless [data-karte="notiz"] button:is(:hover,:focus-visible) [data-vorschau="link"]{--notiz-x:-25px;--notiz-r:-9.5deg}
+.gfx-tb-edgeless [data-karte="notiz"] button:is(:hover,:focus-visible) [data-vorschau="text"]{--notiz-y:-10px}
+.gfx-tb-edgeless [data-karte="notiz"] button:is(:hover,:focus-visible) [data-vorschau="heading"]{--notiz-x:23px;--notiz-y:-8px;--notiz-r:15deg}
+.gfx-tb-edgeless [data-karte="formen"] [data-vorschau]{
+  position:absolute;inset:0;margin:auto;width:48px;height:48px;
+  transform:translate(var(--form-x),var(--form-y));transition:transform .3s ease;
+  background:var(--form-bild) center / contain no-repeat;filter:drop-shadow(0 0 7px #0004);
+}
+.gfx-tb-edgeless [data-vorschau="rect"]{--form-bild:var(--affine-dock-rect);--form-x:-9px;--form-y:4px}
+.gfx-tb-edgeless [data-vorschau="ellipse"]{--form-bild:var(--affine-dock-ellipse);--form-x:-20px;--form-y:29px}
+.gfx-tb-edgeless [data-karte="formen"] [data-vorschau="triangle"]{
+  width:62px;height:50px;--form-bild:var(--affine-dock-triangle);--form-x:18px;--form-y:23px;
+}
+.gfx-tb-edgeless [data-karte="formen"] button:is(:hover,:focus-visible) [data-vorschau="rect"]{--form-y:-7px}
+.gfx-tb-edgeless [data-karte="formen"] button:is(:hover,:focus-visible) [data-vorschau="ellipse"]{--form-y:13px}
+.gfx-tb-edgeless [data-karte="formen"] button:is(:hover,:focus-visible) [data-vorschau="triangle"]{--form-y:5px}
+.gfx-tb-edgeless .gfx-tb-edgeless-zusatz{
+  position:absolute;left:calc(100% + 8px);bottom:0;border-radius:16px;
+  height:var(--gfx-kartenhoehe);padding:0 5px;
+}
+.gfx-tb-edgeless .gfx-tb-edgeless-zusatz button{width:44px;height:44px}
+.gfx-tb-edgeless .gfx-tb-neben{
+  position:absolute;bottom:calc(100% + 6px);right:0;
+  max-width:100%;overflow-x:auto;scrollbar-width:none;
+}
+.gfx-tb-edgeless .gfx-tb-neben::-webkit-scrollbar{display:none}
+/* Das eingebettete Whiteboard hält auch für die Zusatzreihe einen eigenen
+   Platz frei. Sonst lägen Farbe und Verlauf auf der Zeichnung. */
+.wb > .gfx-tb-edgeless{margin:58px auto 12px;scroll-margin-block:100px}
+.wb{container-type:inline-size;container-name:whiteboard}
+@container whiteboard (max-width:800px){
+  .wb-tools.gfx-tb-edgeless .gfx-tb-edgeless-zusatz{left:0;bottom:calc(100% + 6px);height:44px}
+  .wb-tools.gfx-tb-edgeless .gfx-tb-neben{max-width:calc(100% - 102px)}
+  .wb-tools.gfx-tb-edgeless .gfx-tb-menue{bottom:calc(100% + 56px)}
+}
+@media(max-width:800px){
+  :is(.wb-tools,.sp-werkzeuge).gfx-tb-edgeless .gfx-tb-neben{max-width:calc(100% - 102px)}
+}
+.gfx-tb-edgeless .pg-fl-kontext{
+  position:absolute;width:1px;height:1px;padding:0;border:0;clip-path:inset(50%);
+}
+.gfx-tb-edgeless .gfx-tb-menue{
+  bottom:calc(100% + 6px);max-width:100%;max-height:min(52vh,360px);overflow:auto;
+}
+.gfx-tb-edgeless .gfx-tb-menuewerkzeuge{gap:4px;margin-bottom:7px}
+.gfx-tb-edgeless .gfx-tb-menuewerkzeuge button{
+  width:44px;height:44px;display:grid;place-items:center;border-radius:var(--radius-md);
+}
+.gfx-tb-edgeless .gfx-tb-menuewerkzeuge button:is(.on,:hover,:focus-visible){
+  background:var(--bg-hover);color:var(--gfx-galerie-aktiv);
+}
+.gfx-tb-edgeless .gfx-tb-menuewerkzeuge svg,.gfx-tb-befehlsliste svg{width:20px;height:20px}
+.gfx-tb-befehlsliste button{display:flex;align-items:center;gap:9px;min-height:44px}
+.gfx-tb-befehlsliste h3{font-size:12px;font-weight:650;color:var(--text-dim);margin:7px 12px 0}
+@media(max-width:800px){
+  .gfx-tb-edgeless .gfx-tb-edgeless-zusatz{
+    left:0;bottom:calc(100% + 6px);height:44px;
+  }
+  .gfx-tb-edgeless .gfx-tb-menue{bottom:calc(100% + 56px)}
+}
+@media(max-width:550px){
+  .gfx-tb-edgeless{--gfx-kartenhoehe:58px}
+  .gfx-tb-edgeless .gfx-tb-haupt{padding-inline:6px}
+  .gfx-tb-edgeless .gfx-tb-schnell{gap:2px}
+  .gfx-tb-edgeless .gfx-tb-schnell button,.gfx-tb-edgeless .gfx-tb-blatt{width:44px;height:44px}
+  .gfx-tb-edgeless .gfx-tb-blatt[data-richtung]{margin-inline:0}
+  .gfx-tb-edgeless .gfx-tb-trenn{margin-inline:3px}
+  .gfx-tb-edgeless .gfx-tb-schnell :is([data-a="rahmen"],[data-a="seitenlink"],[data-a="pdf-rahmen"],[data-a="pdf-verbinder"],[data-a="pdf-link"]){display:none}
+  .gfx-tb-edgeless .gfx-tb-schnell :is([data-a="schnellmehr"],[data-a="pdf-schnellmehr"]){display:grid}
+}
+@media(prefers-reduced-motion:reduce){
+  .gfx-tb-edgeless .gfx-tb-karte :is(.zeichen,[data-vorschau]),
+  .gfx-tb-edgeless .gfx-tb-karte .zeichen::before{transition:none}
+}
+body[data-bewegung="ruhig"] .gfx-tb-edgeless .gfx-tb-karte :is(.zeichen,[data-vorschau]),
+body[data-bewegung="ruhig"] .gfx-tb-edgeless .gfx-tb-karte .zeichen::before{transition:none}
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) .gfx-tb-edgeless{
+  --gfx-dock-edge:var(--text);--gfx-dock-icon:var(--text);--gfx-galerie-aktiv:var(--accent);
+}
+:is(body[data-kontrast="hoch"], html[data-schema="kontrast"] > body) .gfx-tb-edgeless .gfx-tb-haupt::before{
+  border:1px solid var(--text);border-radius:16px;background:var(--bg-card);filter:none;
+}
+@media(forced-colors:active){
+  .gfx-tb-edgeless .gfx-tb-haupt::before{border:1px solid ButtonText;border-radius:16px;background:Canvas;filter:none}
+  .gfx-tb-edgeless .gfx-tb-schnell .zeichen::before,
+  .gfx-tb-edgeless .gfx-tb-blatt span::before,
+  .gfx-tb-edgeless [data-karte="notiz"] [data-vorschau]::before{forced-color-adjust:none;background:ButtonText}
+}
+@media(forced-colors:active){
+  .gfx-tb-galerie .gfx-tb-karte .zeichen{background:none;transform:none}
+  .gfx-tb-galerie .gfx-tb-karte .zeichen::before,.gfx-tb-galerie .gfx-tb-karte .zeichen::after{display:none}
+  .gfx-tb-galerie .gfx-tb-karte .zeichen{display:grid;place-items:center}
+  .gfx-tb-galerie .gfx-tb-karte .zeichen svg{visibility:visible}
+}
+
 /* --- Whiteboard ---------------------------------------------------------------------------- */
 .wb{width:100%; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:8px 0}
 /* Der Kasten nimmt seit E682 die Tastatur (Strg+Z) — ein Fokus, den man sieht (§38), dieselbe Regel wie .sp-wrap */
@@ -1556,7 +1799,12 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .gk-welt{ position:absolute; left:0; top:0; transform-origin:0 0; }
 .gk-linien{ position:absolute; left:0; top:0; overflow:visible; pointer-events:none; }
 
-.gk-kn{ position:absolute; box-sizing:border-box; max-width:230px;
+/* `width:max-content` (E818): ein absolut gesetzter Knoten schrumpft sonst
+   auf die verfügbare Breite seines Behälters, und `.gk-welt` hat bei einer
+   frischen Karte keine — „Zentrales Thema" stand als „Zentr / ales / Them /
+   a" da. `max-width` bleibt die Decke; darüber bricht er an Wortgrenzen
+   (test656). Die Fläche tat das schon (seitenansichten.css). */
+.gk-kn{ position:absolute; box-sizing:border-box; width:max-content; max-width:230px;
         display:flex; align-items:center; gap:6px;
         padding:6px 11px; border-radius:8px;
         border:2px solid var(--ast-zug, var(--line));
@@ -1742,3 +1990,49 @@ html[data-theme="light"] .gk-kn{ --ast-zug:var(--ast-hell, var(--ast)); }
    weil diese Regel die Grundregeln jeder dieser Leisten schlagen muss. */
 body.fokus #kante, body.fokus #kanten-lade, body.fokus #handy-oben,
 body.fokus .pg-ansichten, body.fokus .pg-tools{display:none!important}
+
+/* Die Zeigerwahl auf der Fläche bleibt auch per Tastatur benannt. */
+.pg-fl-tools.gfx-tb-edgeless .gfx-tb-menuewerkzeuge :is([data-wz="zeiger"],[data-wz="hand"],[data-wz="rahmenwahl"]){
+  width:auto;min-width:44px;display:flex;gap:8px;padding-inline:10px;
+}
+.pg-fl-tools.gfx-tb-edgeless .gfx-tb-menuewerkzeuge :is([data-wz="zeiger"],[data-wz="hand"],[data-wz="rahmenwahl"])::after{
+  content:attr(aria-label);
+}
+/* Objektübersicht aller Zeichenkontexte; vorhandene Farb- und Fokustokens. */
+.gfx-inspector { position: fixed; z-index: 180; right: 16px; top: 80px; width: min(370px, calc(100vw - 24px)); max-height: calc(100dvh - 160px); display: flex; flex-direction: column; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 12px 48px #0003; overflow: hidden; font: 14px/1.45 var(--font, sans-serif); }
+.gfx-inspector header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.gfx-inspector nav { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; border-bottom: 1px solid var(--border); }
+.gfx-inspector button, .gfx-presentation button { min-height: 44px; min-width: 44px; padding: 8px 12px; color: inherit; background: var(--bg2, var(--bg)); border: 1px solid var(--border); border-radius: 9px; cursor: pointer; font: inherit; }
+.gfx-inspector button:focus-visible, .gfx-presentation button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.gfx-inspector button[aria-pressed="true"], .gfx-layer-row[data-selected="true"] { background: color-mix(in srgb, var(--accent) 14%, var(--bg)); box-shadow: inset 3px 0 var(--accent); }
+.gfx-inspector button:disabled { opacity: .45; cursor: default; }
+.gfx-inspector-body { padding: 12px; overflow: auto; overscroll-behavior: contain; }
+.gfx-inspector-body h3 { margin: 18px 0 8px; font-size: 14px; }
+.gfx-inspector-body p { margin: 4px 0 12px; }
+.gfx-inspector-body > button { display: block; width: 100%; margin-block: 6px; text-align: left; }
+.gfx-inspector-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.gfx-layer-row { display: flex; gap: 4px; margin-block: 4px; border-radius: 9px; align-items: center; }
+.gfx-layer-row > button:first-child { flex: 1; min-width: 0; overflow-wrap: anywhere; text-align: left; }
+.gfx-layer-group { margin-block-start: 8px; }
+.gfx-layer-group > button { width: 100%; font-weight: 600; text-align: left; }
+.gfx-inspector label { display: grid; gap: 4px; margin-block: 8px; }
+.gfx-inspector input, .gfx-inspector select, .gfx-inspector textarea { min-height: 44px; max-width: 100%; width: 100%; box-sizing: border-box; color: inherit; background: var(--bg2, var(--bg)); border: 1px solid var(--border); border-radius: 8px; padding: 8px; font: inherit; }
+.gfx-object-comment { border-block-end: 1px solid var(--border); padding-block: 10px; }
+.gfx-object-comment p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.gfx-presentation { position: fixed; z-index: 181; top: 12px; left: 50%; transform: translateX(-50%); max-width: calc(100vw - 24px); display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 8px 32px #0003; }
+.gfx-presentation > span { min-width: 75px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-gfx-presenting="true"] > .gfx-tb-sockel, [data-gfx-presenting="true"] .pg-fl-auswahlleiste, [data-gfx-presenting="true"] .pg-fl-formauswahl, [data-gfx-presenting="true"] .wb-tools { visibility: hidden; }
+@media (max-width: 600px) { .gfx-inspector { top: 68px; right: 8px; max-height: calc(100dvh - 220px); } .gfx-presentation { gap: 4px; flex-wrap: wrap; } }
+.bib-dynamic-form { display: grid; gap: 10px; padding: 12px; width: min(340px, calc(100vw - 48px)); }
+.bib-dynamic-form label { display: grid; gap: 4px; font-size: 13px; }
+.bib-dynamic-form input, .bib-dynamic-form select, .bib-dynamic-form button { min-height: 44px; max-width: 100%; }
+.bib-dynamic-form input[type="checkbox"] { width: 44px; }
+.gfx-tb-beschriftet .gfx-tb-karte button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
+.gfx-tb-beschriftet .gfx-tb-kartenname { display: block; max-width: 90px; white-space: normal; line-height: 1.15; font-size: 11px; text-align: center; overflow-wrap: anywhere; }
+.gfx-tb-beschriftet .gfx-tb-karte .zeichen { max-height: 30px; }
+.gfx-tb-beschriftet .gfx-tb-karte [data-wz="stift"] .zeichen { transform: scale(.65); margin: -10px 0; }
+.gfx-presenting-screen { position: fixed !important; inset: 0 !important; z-index: 190 !important; width: 100vw !important; height: 100dvh !important; max-width: none !important; max-height: none !important; margin: 0 !important; border: 0 !important; background: var(--bg); }
+.gfx-comment-reply { margin: 12px 0 8px 12px; border-inline-start: 2px solid var(--border); padding-inline-start: 10px; }
+.gfx-comment-mention { display: inline-block; margin: 4px; padding: 4px 7px; border-radius: 6px; color: var(--accent); background: color-mix(in srgb,var(--accent) 12%,transparent); }
+.gfx-tb-edgeless .gfx-tb-schnell .gfx-tb-symbol .zeichen svg { display: block; }
+.gfx-tb-edgeless .gfx-tb-schnell .gfx-tb-symbol .zeichen::before { display: none; }

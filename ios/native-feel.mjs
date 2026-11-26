@@ -82,7 +82,7 @@ export function startIosNativeFeel({
 
   const onClick = (event) => {
     // Only touch/mouse activation (not simulated keyboard Enter/Space).
-    if (event.detail === 0) return;
+    if (event.detail === 0 || event.isTrusted === false) return;
     const target = event.target;
     if (typeof target?.closest !== 'function') return;
     const button = target.closest(
@@ -90,7 +90,15 @@ export function startIosNativeFeel({
       '#ho-ziele > button[role="menuitem"], ' +
       '.document-workspace [data-document-action="previous"], ' +
       '.document-workspace [data-document-action="next"], ' +
-      '.document-workspace [data-document-action="page-jump"]'
+      '.document-workspace [data-document-action="page-jump"], ' +
+      '.gfx-tb-edgeless button[data-wz], ' +
+      '.gfx-tb-edgeless button[data-a], ' +
+      '.gfx-tb-edgeless .gfx-tb-menuewerkzeuge button, ' +
+      '.gfx-tb-edgeless .gfx-tb-befehlsliste button, ' +
+      '.gfx-inspector button[aria-pressed], ' +
+      '.lernwelt button[data-lw-train], ' +
+      '.lernwelt button[data-lw-nav], ' +
+      '.einst-fenster button.schalter'
     );
     if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') return;
     feedback();
@@ -137,7 +145,8 @@ export function startIosNativeFeel({
   gestureObserver.observe(doc.body, {
     attributes: true, subtree: true, attributeFilter: ['data-anvisiert']
   });
-  doc.addEventListener('click', onClick, { passive: true });
+  // Capture before tool commands can rebuild/remove their own toolbar.
+  doc.addEventListener('click', onClick, { passive: true, capture: true });
   doc.addEventListener('visibilitychange', onResume);
   doc.defaultView?.addEventListener?.('pageshow', onResume);
   doc.defaultView?.addEventListener?.('focus', onResume);
@@ -147,7 +156,7 @@ export function startIosNativeFeel({
     ended = true;
     themeObserver.disconnect();
     gestureObserver.disconnect();
-    doc.removeEventListener('click', onClick);
+    doc.removeEventListener('click', onClick, true);
     doc.removeEventListener('visibilitychange', onResume);
     doc.defaultView?.removeEventListener?.('pageshow', onResume);
     doc.defaultView?.removeEventListener?.('focus', onResume);
