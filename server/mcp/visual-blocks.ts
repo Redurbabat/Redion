@@ -9,7 +9,7 @@ const color=(v:unknown):string=>typeof v==='string'&&/^#[0-9a-fA-F]{6}$/.test(v)
 const arr=(v:unknown,min:number,max:number):unknown[]=>Array.isArray(v)&&v.length>=min&&v.length<=max?v:fail('Ungültige Anzahl.');
 export const papers=['blanko','liniert','kariert','punkte','mm','cornell','noten'];
 export const forms=['rund','kasten','pille','ellipse','raute','sechseck'];
-export const shapes=['rechteck','ellipse','dreieck','raute','linie','pfeil','text','notiz','verbindung'];
+export const shapes=['rechteck','ellipse','dreieck','raute','linie','pfeil','text','notiz','verbindung','stift'];
 export function mindmap(nodes:unknown,connections:unknown=[]):Obj{
  const knoten=arr(nodes,1,100).map(v=>{const o=obj(v,['id','text','parentId','side','color','form']);const k:Obj={id:id(o.id),text:str(o.text,500),eltern:o.parentId===null?null:id(o.parentId)};
  if(o.side!==undefined)k.seite=choice(o.side,['links','rechts']);if(o.color!==undefined)k.farbe=color(o.color);if(o.form!==undefined)k.form=choice(o.form,forms);return k;});
@@ -20,8 +20,24 @@ export function mindmap(nodes:unknown,connections:unknown=[]):Obj{
  return {knoten,verbindungen,aufbau:'karte'};
 }
 export function board(input:unknown,existing:Obj[]=[]):Obj[]{
- const added=arr(input,0,100).map(v=>{const o=obj(v,['id','kind','x','y','width','height','color','text','filled','from','to']);const art=choice(o.kind,shapes),s:Obj={id:id(o.id),art,farbe:color(o.color??'#2f8ab5')};
- if(art==='verbindung'){s.von=id(o.from);s.nach=id(o.to);return s;}
+ const added=arr(input,0,100).map(v=>{const o=obj(v,['id','kind','x','y','width','height','color','text','filled','from','to','points','pressure','strokeWidth','marker','rotation']);const art=choice(o.kind,shapes),s:Obj={id:id(o.id),art,farbe:color(o.color??'#2f8ab5')};
+ if(art==='verbindung'){
+   if(Object.keys(o).some(k=>!['id','kind','color','from','to'].includes(k)))fail('Ungültige Verbindungsfelder.');
+   s.von=id(o.from);s.nach=id(o.to);return s;
+ }
+ if(art==='stift'){
+   if(Object.keys(o).some(k=>!['id','kind','color','points','pressure','strokeWidth','marker'].includes(k)))fail('Ungültige Stiftfelder.');
+   const pts=arr(o.points,2,500).map(p=>{const pair=arr(p,2,2);return [num(pair[0],-10000,10000),num(pair[1],-10000,10000)];});
+   if(pts.every(p=>p[0]===pts[0]![0]&&p[1]===pts[0]![1]))fail('Leerer Strich.');
+   s.pts=pts;
+   if(o.pressure!==undefined){const pressure=arr(o.pressure,pts.length,pts.length).map(v=>num(v,0.05,1));s.pressure=pressure;}
+   if(o.strokeWidth!==undefined)s.strichBreite=num(o.strokeWidth,0.1,50);
+   if(o.marker!==undefined){if(typeof o.marker!=='boolean')fail('Ungültiger Marker.');s.marker=o.marker;}
+   return s;
+ }
+ if(o.points!==undefined||o.pressure!==undefined||o.marker!==undefined||o.from!==undefined||o.to!==undefined)fail('Felder passen nicht zur Form.');
+ if(o.strokeWidth!==undefined)s.strichBreite=num(o.strokeWidth,0.1,50);
+ if(o.rotation!==undefined)s.rotation=num(o.rotation,-360,360);
  s.x=num(o.x,-10000,10000);s.y=num(o.y,-10000,10000);if(art!=='text'){const min=art==='linie'||art==='pfeil'?-10000:1;s.w=num(o.width,min,10000);s.h=num(o.height,min,10000);if(s.w===0&&s.h===0)fail('Leere Linie.');}
  if(art==='notiz'||art==='text'||o.text!==undefined)s.text=str(o.text,1000);if(o.filled!==undefined){if(typeof o.filled!=='boolean')fail('Ungültige Füllung.');s.gefuellt=o.filled;}return s;});
  const all=[...existing,...added],ids=new Set(all.map(s=>s.id));if(all.length>200||ids.size!==all.length)fail('Zu viele oder doppelte Formen.');
@@ -60,17 +76,53 @@ export function editShape(value:unknown,operation:string,args:Obj):Obj[]{
  if(!Array.isArray(value)||value.length>200||value.some(s=>!s||typeof s!=='object'||Array.isArray(s)))return fail('Ungültige Formen.');
  const all=value as Obj[],target=id(args.elementId),s=all.find(o=>o.id===target);
  if(!s)return fail('Form fehlt.');
+ if(operation==='lock_shape'){
+   if(typeof args.locked!=='boolean')return fail('locked muss boolesch sein.');
+   return all.map(o=>o===s?{...o,locked:args.locked}:o);
+ }
  if(s.locked===true||s.groupId||Array.isArray(s.groupPath)&&s.groupPath.length)return fail('Gesperrte oder gruppierte Formen im nativen Editor bearbeiten.');
- if(operation==='delete_shape')return all.filter(o=>o!==s&&!(o.art==='verbindung'&&(o.von===target||o.nach===target)));
+ if(operation==='order_shape'){
+   if(s.art==='verbindung')return fail('Verbindungen liegen immer hinter Formen.');
+   const order=choice(args.order,['front','back','forward','backward']);
+   const ordered=all.filter(o=>o.art!=='verbindung'),i=ordered.indexOf(s);
+   const dest=order==='front'?ordered.length-1:order==='back'?0:order==='forward'?Math.min(i+1,ordered.length-1):Math.max(i-1,0);
+   ordered.splice(i,1);ordered.splice(dest,0,s);let index=0;
+   return all.map(o=>o.art==='verbindung'?o:ordered[index++]!);
+ }
+ if(operation==='delete_shape'){
+   const removed=all.filter(o=>o===s||o.art==='verbindung'&&(o.von===target||o.nach===target));
+   if(removed.some(o=>o.locked===true||o.groupId||Array.isArray(o.groupPath)&&o.groupPath.length))return fail('Verknüpfte Objekte sind gesperrt oder gruppiert.');
+   return all.filter(o=>!removed.includes(o));
+ }
+ if(s.art==='stift'){
+   if(operation==='move_stroke'){
+     const dx=num(args.dx,-10000,10000),dy=num(args.dy,-10000,10000);
+     const pts=arr(s.pts,2,500).map(p=>{const pair=arr(p,2,2);return [num(num(pair[0],-10000,10000)+dx,-10000,10000),num(num(pair[1],-10000,10000)+dy,-10000,10000)];});
+     return all.map(o=>o===s?{...o,pts}:o);
+   }
+   if(operation==='style_shape'){
+     if(args.text!==undefined||args.filled!==undefined)return fail('Stift unterstützt keinen Text oder Flächenfüllung.');
+     const patch:Obj={};
+     if(args.color!==undefined)patch.farbe=color(args.color);
+     if(args.strokeWidth!==undefined)patch.strichBreite=num(args.strokeWidth,0.1,50);
+     if(args.marker!==undefined){if(typeof args.marker!=='boolean')fail('Ungültiger Marker.');patch.marker=args.marker;}
+     if(!Object.keys(patch).length)fail('Keine Änderung.');
+     return all.map(o=>o===s?{...o,...patch}:o);
+   }
+   return fail('Stift mit move_stroke oder style_shape bearbeiten.');
+ }
  if(!['rechteck','ellipse','dreieck','raute','linie','pfeil','text','notiz'].includes(String(s.art)))return fail('Diese Form benötigt eine spezielle Bearbeitung.');
  const patch:Obj={};
  if(operation==='move_shape'){patch.x=num(args.x,-10000,10000);patch.y=num(args.y,-10000,10000);}
+ else if(operation==='rotate_shape'){patch.rotation=num(args.rotation,-360,360);}
  else if(operation==='resize_shape'){
    if(s.art==='text')return fail('Text hat keine feste Grösse.');
    const min=s.art==='linie'||s.art==='pfeil'?-10000:1;
    patch.w=num(args.width,min,10000);patch.h=num(args.height,min,10000);
    if(patch.w===0&&patch.h===0)fail('Leere Linie.');
  }else if(operation==='style_shape'){
+   if(args.marker!==undefined)return fail('Marker nur für Stift.');
+   if(args.strokeWidth!==undefined)patch.strichBreite=num(args.strokeWidth,0.1,50);
    if(args.color!==undefined)patch.farbe=color(args.color);
    if(args.filled!==undefined){if(typeof args.filled!=='boolean')fail('Ungültige Füllung.');patch.gefuellt=args.filled;}
    if(args.text!==undefined){if(!['text','notiz','rechteck','ellipse','dreieck','raute'].includes(String(s.art)))fail('Text nicht unterstützt.');patch.text=str(args.text,1000);}

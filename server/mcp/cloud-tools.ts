@@ -42,20 +42,22 @@ const vColor={type:'string',pattern:'^#[0-9a-fA-F]{6}$'};
 const vNodes={type:'array',minItems:1,maxItems:100,items:{type:'object',properties:{id:vId,text:{type:'string',maxLength:500},parentId:{type:['string','null'],maxLength:64},side:{type:'string',enum:['links','rechts']},color:vColor,form:{type:'string',enum:forms}},required:['id','text','parentId'],additionalProperties:false}};
 const vLinks={type:'array',maxItems:100,items:{type:'object',properties:{id:vId,from:vId,to:vId},required:['id','from','to'],additionalProperties:false}};
 const vCoord={type:'number',minimum:-10000,maximum:10000};
-const vShapes={type:'array',maxItems:100,items:{type:'object',properties:{id:vId,kind:{type:'string',enum:shapes},x:vCoord,y:vCoord,width:vCoord,height:vCoord,color:vColor,text:{type:'string',maxLength:1000},filled:{type:'boolean'},from:vId,to:vId},required:['id','kind'],additionalProperties:false}};
+const vStrokeWidth={type:'number',minimum:0.1,maximum:50};
+const vRotation={type:'number',minimum:-360,maximum:360};
+const vShapes={type:'array',maxItems:100,items:{type:'object',properties:{id:vId,kind:{type:'string',enum:shapes},x:vCoord,y:vCoord,width:vCoord,height:vCoord,color:vColor,text:{type:'string',maxLength:1000},filled:{type:'boolean'},from:vId,to:vId,points:{type:'array',minItems:2,maxItems:500,items:{type:'array',minItems:2,maxItems:2,items:vCoord}},pressure:{type:'array',minItems:2,maxItems:500,items:{type:'number',minimum:0.05,maximum:1}},strokeWidth:vStrokeWidth,marker:{type:'boolean'},rotation:vRotation},required:['id','kind'],additionalProperties:false}};
 const vCreate={...workspace,...documentId,expectedVersion:{type:'integer',minimum:1},requestId:{type:'string',minLength:8,maxLength:100},title:nameField};
 const vRequired=['workspaceId','documentId','expectedVersion','requestId','title'];
 export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_create_mindmap',description:'Erstellt eine native editierbare Mindmap mit Knoten, Farben und Querverbindungen. parentId null für die Wurzel.',
     inputSchema:{type:'object',properties:{...vCreate,nodes:vNodes,connections:vLinks},required:[...vRequired,'nodes'],additionalProperties:false}},
-  {name:'redion_create_whiteboard',description:'Erstellt ein natives Whiteboard mit Formen, Texten, Haftnotizen, Pfeilen und Verbindungen.',
+  {name:'redion_create_whiteboard',description:'Erstellt ein natives Whiteboard mit Formen, Texten, Haftnotizen, Pfeilen, Verbindungen und Stiftstrichen (points als [x,y]-Paare).',
     inputSchema:{type:'object',properties:{...vCreate,shapes:vShapes},required:[...vRequired,'shapes'],additionalProperties:false}},
   {name:'redion_create_sheet',description:'Erstellt ein natives A4-Blatt mit Papier und Seitenzahl.',
     inputSchema:{type:'object',properties:{...vCreate,paper:{type:'string',enum:papers},pages:{type:'integer',minimum:1,maximum:10}},required:vRequired,additionalProperties:false}},
   {name:'redion_read_visual',description:'Liest ein eingebettetes Mindmap-, Whiteboard- oder A4-Objekt mit Version.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField},required:['workspaceId','blockId'],additionalProperties:false}},
-  {name:'redion_update_visual',description:'Bearbeitet native Zeichenobjekte mit Versionsprüfung: Mindmap ersetzen, Knoten umbenennen, gestalten oder Ast löschen; Whiteboard-Formen ergänzen, verschieben, skalieren, gestalten oder löschen; A4-Papier ändern. elementId bezeichnet einen vorhandenen Knoten oder eine Form.',
-    inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},operation:{type:'string',enum:['replace_mindmap','rename_node','style_node','delete_branch','append_shapes','move_shape','resize_shape','style_shape','delete_shape','set_paper']},nodes:vNodes,connections:vLinks,shapes:vShapes,paper:{type:'string',enum:papers},elementId:vId,text:{type:'string',maxLength:1000},color:vColor,form:{type:'string',enum:forms},collapsed:{type:'boolean'},filled:{type:'boolean'},x:vCoord,y:vCoord,width:vCoord,height:vCoord},required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
+  {name:'redion_update_visual',description:'Bearbeitet native Zeichenobjekte mit Versionsprüfung: Mindmap ersetzen, Knoten umbenennen, gestalten oder Ast löschen; Whiteboard-Formen ergänzen, verschieben, skalieren, drehen, gestalten, anordnen, sperren oder löschen; Stiftstriche verschieben; A4-Papier ändern. elementId bezeichnet einen vorhandenen Knoten oder eine Form.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},operation:{type:'string',enum:['replace_mindmap','rename_node','style_node','delete_branch','append_shapes','move_shape','resize_shape','style_shape','delete_shape','rotate_shape','order_shape','lock_shape','move_stroke','set_paper']},nodes:vNodes,connections:vLinks,shapes:vShapes,paper:{type:'string',enum:papers},elementId:vId,text:{type:'string',maxLength:1000},color:vColor,form:{type:'string',enum:forms},collapsed:{type:'boolean'},filled:{type:'boolean'},x:vCoord,y:vCoord,width:vCoord,height:vCoord,rotation:vRotation,strokeWidth:vStrokeWidth,marker:{type:'boolean'},locked:{type:'boolean'},order:{type:'string',enum:['front','back','forward','backward']},dx:vCoord,dy:vCoord},required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
 
   {name:'redion_list_workspaces',description:'Zeigt nur die für diese KI-Verbindung freigegebenen Bereiche.',
     inputSchema:{type:'object',properties:{},additionalProperties:false}},
@@ -952,12 +954,12 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       }
       if(expected(args.expectedVersion)!==version)return err('conflict','Zeichenobjekt wurde geändert.');
       const op=args.operation,next={...data};
-      const fields:Record<string,string[]>={replace_mindmap:['nodes','connections'],rename_node:['elementId','text'],style_node:['elementId','color','form','collapsed'],delete_branch:['elementId'],append_shapes:['shapes'],move_shape:['elementId','x','y'],resize_shape:['elementId','width','height'],style_shape:['elementId','color','filled','text'],delete_shape:['elementId'],set_paper:['paper']};
+      const fields:Record<string,string[]>={replace_mindmap:['nodes','connections'],rename_node:['elementId','text'],style_node:['elementId','color','form','collapsed'],delete_branch:['elementId'],append_shapes:['shapes'],move_shape:['elementId','x','y'],resize_shape:['elementId','width','height'],style_shape:['elementId','color','filled','text','strokeWidth','marker'],delete_shape:['elementId'],rotate_shape:['elementId','rotation'],order_shape:['elementId','order'],lock_shape:['elementId','locked'],move_stroke:['elementId','dx','dy'],set_paper:['paper']};
       if(typeof op!=='string'||!fields[op]||Object.keys(args).some(k=>!['workspaceId','blockId','expectedVersion','operation',...fields[op]!].includes(k)))return err('invalid_arguments','Ungültige Operation.');
       try{
         if(type==='mindmap'&&op==='replace_mindmap')next.karte=mindmap(args.nodes,args.connections);
         else if(type==='mindmap'&&['rename_node','style_node','delete_branch'].includes(op))next.karte=editNode(data.karte,op,args);
-        else if(type==='whiteboard'&&['move_shape','resize_shape','style_shape','delete_shape'].includes(op)){next.shapes=editShape(data.shapes,op,args);next.raumVersion=1;}
+        else if(type==='whiteboard'&&['move_shape','resize_shape','style_shape','delete_shape','rotate_shape','order_shape','lock_shape','move_stroke'].includes(op)){next.shapes=editShape(data.shapes,op,args);next.raumVersion=1;}
         else if(type==='whiteboard'&&op==='append_shapes'){
           const existing=data.shapes??[];if(!Array.isArray(existing)||existing.some(s=>!s||typeof s!=='object'||Array.isArray(s)))return err('invalid_data','Ungültige Formen.');
           next.shapes=[...existing,...board(args.shapes,existing)];next.raumVersion=1;

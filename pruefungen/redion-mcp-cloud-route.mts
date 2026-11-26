@@ -2188,6 +2188,17 @@ test('Cloud-MCP native visual objects with version protection',async()=>{
  const bEdit=await ok('redion_read_visual',bref);assert.equal(bEdit.shapes[0].x,50);assert.equal(bEdit.shapes[0].w,220);assert.equal(bEdit.shapes[0].text,'Neue Idee');
  await ok('redion_update_visual',{...bref,expectedVersion:4,operation:'delete_shape',elementId:'n'});
  assert.equal((await ok('redion_read_visual',bref)).shapes.length,0);
+ await ok('redion_update_visual',{...bref,expectedVersion:5,operation:'append_shapes',shapes:[{id:'ink',kind:'stift',points:[[10,20],[30,40],[50,60]],pressure:[0.4,0.8,0.5],strokeWidth:3,marker:true},{id:'rect',kind:'rechteck',x:20,y:20,width:100,height:80}]});
+ const ink=await ok('redion_read_visual',bref);assert.deepEqual(ink.shapes[0].pts,[[10,20],[30,40],[50,60]]);assert.equal(ink.shapes[0].strichBreite,3);
+ await ok('redion_update_visual',{...bref,expectedVersion:6,operation:'move_stroke',elementId:'ink',dx:5,dy:-5});
+ await ok('redion_update_visual',{...bref,expectedVersion:7,operation:'rotate_shape',elementId:'rect',rotation:45});
+ await ok('redion_update_visual',{...bref,expectedVersion:8,operation:'order_shape',elementId:'ink',order:'front'});
+ await ok('redion_update_visual',{...bref,expectedVersion:9,operation:'lock_shape',elementId:'rect',locked:true});
+ assert.equal((await run('redion_update_visual',{...bref,expectedVersion:10,operation:'move_shape',elementId:'rect',x:10,y:10})).isError,true);
+ const locked=await ok('redion_read_visual',bref);assert.equal(locked.shapes[0].id,'rect');assert.equal(locked.shapes[0].rotation,45);assert.equal(locked.shapes[0].locked,true);assert.deepEqual(locked.shapes[1].pts[0],[15,15]);
+ await ok('redion_update_visual',{...bref,expectedVersion:10,operation:'lock_shape',elementId:'rect',locked:false});
+ assert.equal((await run('redion_update_visual',{...bref,expectedVersion:11,operation:'append_shapes',shapes:[{id:'invalid',kind:'stift',points:[[1,2],[3,4]],pressure:[0.5]}]})).isError,true);
+ assert.equal((await ok('redion_read_visual',bref)).version,11);
  const sheet=await ok('redion_create_sheet',{workspaceId:'ws_test',documentId:'visual_page',expectedVersion:3,requestId:'native_sheet_001',title:'A4',paper:'kariert',pages:2});
  assert.equal((await ok('redion_read_visual',{workspaceId:'ws_test',blockId:sheet.blockId})).blattHoehe,1683.78);
  }finally{f.close();}
