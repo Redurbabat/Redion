@@ -9,6 +9,7 @@ import {rolleAuf,darf,notieren,feldRechte} from '../kern.ts';
 import {BUILTIN_BLOCK_TYPES} from './block-catalog.ts';
 import {BUILTIN_SYMBOLS} from './symbol-catalog.ts';
 import {editSchematic} from './schematic-edit.ts';
+import {buildLearningCard} from './learning-card.ts';
 
 type Db=McpDatabase;
 type Args=Record<string,unknown>;
@@ -74,6 +75,16 @@ export const CLOUD_TOOLS:ToolDef[]=[
       titel:{type:'string',maxLength:120},
       requestId:{type:'string',minLength:8,maxLength:100}},
       required:['workspaceId','documentId','expectedVersion','art'],additionalProperties:false}},
+  {name:'redion_create_learning_card',description:'Erstellt eine echte Lernkarte im RED ION Trainer: klassische Karten, Single/Multiple Choice, Richtig/Falsch (Optionen Richtig, Falsch), Lücken (___) und kleine Rasterbilder. Eine Karte je Aufruf, parentVersion für nächste Karte. KI prüft fachliche Antworten selbst.',
+    inputSchema:{type:'object',properties:{...workspace,...documentId,
+      expectedVersion:{type:'integer',minimum:1},requestId:{type:'string',minLength:8,maxLength:100},
+      kind:{type:'string',enum:['flashcard','single_select','multi_select','true_false','cloze']},
+      deck:{type:'string',minLength:1,maxLength:160},topic:{type:'string',maxLength:160},subject:{type:'string',maxLength:120},
+      question:{type:'string',minLength:1,maxLength:2000},answer:{type:'string',minLength:1,maxLength:2000},
+      explanation:{type:'string',maxLength:1500},source:{type:'string',maxLength:300},
+      options:{type:'array',minItems:2,maxItems:4,items:{type:'object',properties:{text:{type:'string',minLength:1,maxLength:500},correct:{type:'boolean'}},required:['text','correct'],additionalProperties:false}},
+      image:{type:'object',properties:{data:{type:'string',maxLength:12000},alt:{type:'string',minLength:1,maxLength:300}},required:['data','alt'],additionalProperties:false}},
+      required:['workspaceId','documentId','expectedVersion','kind','deck','question','answer'],additionalProperties:false}},
   {name:'redion_add_block',description:'Erstellt einen sicheren Text- oder Todo-Block auf einer freigegebenen Seite; neue Blockzeile und Elternliste werden in einer D1-Transaktion gespeichert. requestId optional, Wiederholung mit derselben Seitenversion idempotent. Verschachtelte Blöcke noch nicht unterstützt.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,expectedVersion:{type:'integer',minimum:1},
       typ:{type:'string',enum:['text','h1','h2','h3','todo','bullet','number','quote','code','divider']},text:{type:'string',maxLength:12000},
@@ -122,7 +133,7 @@ export const CLOUD_TOOLS:ToolDef[]=[
       replacement:{type:'string',maxLength:4000},expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId','find','replacement','expectedVersion'],additionalProperties:false}}
 ];
-const writeNames=new Set(['redion_create_page','redion_update_page','redion_replace_text','redion_append_content','redion_move_page','redion_add_block','redion_add_schematic','redion_update_schematic','redion_update_block']);
+const writeNames=new Set(['redion_create_page','redion_update_page','redion_replace_text','redion_append_content','redion_move_page','redion_add_block','redion_add_schematic','redion_update_schematic','redion_update_block','redion_create_learning_card']);
 // MCP annotations tell AI clients which tools are read-only, additive or
 // modifying. They are advisory; server-side OAuth and ACL checks still govern.
 const toolTitles:Record<string,string>={
@@ -133,6 +144,7 @@ const toolTitles:Record<string,string>={
   redion_read_pages:'Mehrere Seiten lesen',
   redion_create_page:'Seite erstellen',
   redion_add_block:'Block oder Aufgabe erstellen',
+  redion_create_learning_card:'Lernkarte oder Quizfrage erstellen',
   redion_add_schematic:'Leeren Schaltplan erstellen',
   redion_update_schematic:'Schaltplan ergänzen',
   redion_update_block:'Blocktext oder Aufgabe bearbeiten',
@@ -159,7 +171,7 @@ export const visibleCloudTools=(p:McpPrincipal):ToolDef[]=>
       return {...t,annotations:{
         title:toolTitles[t.name]||t.name,readOnlyHint:readOnly,
         destructiveHint:destructiveNames.has(t.name),
-        idempotentHint:t.name==='redion_create_page'||t.name==='redion_add_block'||t.name==='redion_add_schematic',
+        idempotentHint:t.name==='redion_create_page'||t.name==='redion_add_block'||t.name==='redion_add_schematic'||t.name==='redion_create_learning_card',
         openWorldHint:false
       }};
     });
@@ -1020,18 +1032,21 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         elementId:edited.elementId,elementType:edited.kind,
         electricalValidation:false,routingVerified:false};
     }
-    if(name==='redion_add_block'||name==='redion_add_schematic'){
+    if(name==='redion_add_block'||name==='redion_add_schematic'||name==='redion_create_learning_card'){
       const createSchematic=name==='redion_add_schematic';
+      const createCard=name==='redion_create_learning_card';
       const id=required(args.documentId,128);
       const ver=expected(args.expectedVersion);
       const current=await page(w,id,'bearbeiten');
-      const typ=createSchematic?'schaltplan':required(args.typ,40);
+      let learning:{content:string;meta:Record<string,unknown>}|undefined;
+      if(createCard){try{learning=buildLearningCard(args);}catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Ungültige Lernkarte.');}}
+      const typ=createCard?'flashcard':createSchematic?'schaltplan':required(args.typ,40);
       const allowedTypes=new Set(['text','h1','h2','h3','todo','bullet','number','quote','code','divider']);
-      if(!createSchematic&&!allowedTypes.has(typ))
+      if(!createCard&&!createSchematic&&!allowedTypes.has(typ))
         return err('invalid_arguments','Diese Blockart erfordert eine eigene geprüfte Schreibfunktion.');
       if(args.inBlockId!==undefined)
         return err('invalid_arguments','Verschachtelte Blockerstellung ist noch nicht freigegeben.');
-      const content=createSchematic?
+      const content=learning?learning.content:createSchematic?
         (args.titel===undefined?'Schaltplan':required(args.titel,120)):
         (args.text===undefined?'':text(args.text,12000));
       if(!createSchematic&&args.text!==undefined&&(typeof args.text!=='string'||args.text.length>12000))
@@ -1040,7 +1055,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       if(args.daten!==undefined&&(!args.daten||typeof args.daten!=='object'||Array.isArray(args.daten)))
         return err('invalid_arguments','Blockdaten müssen ein Objekt sein.');
       const input=args.daten as Record<string,unknown>|undefined;
-      const meta:Record<string,unknown>={};
+      const meta:Record<string,unknown>=learning?learning.meta:{};
       if(createSchematic){
         const art=required(args.art,40);
         if(!SCHEMATIC_ARTEN.includes(art))
