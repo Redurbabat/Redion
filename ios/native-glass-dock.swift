@@ -14,8 +14,9 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
     static let shared = RedionNativeDock()
     private static var started = false
 
-    private let labels = ["Dokumente", "Heute", "Lernen", "Termine", "Mehr"]
-    private let symbols = ["book.closed", "house", "graduationcap", "calendar", "ellipsis"]
+    // Native order is independent of the WebView DOM order.
+    private let labels = ["Heute", "Dokumente", "Lernen", "Termine", "Mehr"]
+    private let symbols = ["house", "book.closed", "graduationcap", "calendar", "ellipsis"]
     private weak var webView: WKWebView?
     private var systemBar: UITabBar?
     private var searchButton: UIButton?
@@ -222,13 +223,16 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         document.documentElement.classList.add('redion-ios-native-dock');
         legacyBar?.setAttribute('aria-hidden', 'true');
       };
-      const selector = '#handy-oben > button[role="tab"]';
+      const routeIds = ['hl-start', 'hl-dok', 'hl-lernen', 'hl-bespr', 'hl-mehr'];
+      function routeButtons() {
+        return routeIds.map(id => document.querySelector('#handy-oben > button[role="tab"]#' + id));
+      }
       let barObserver, bodyObserver;
       let frame = false;
       function sync() {
         frame = false;
-        const buttons = Array.from(document.querySelectorAll(selector));
-        if (buttons.length !== 5) return;
+        const buttons = routeButtons();
+        if (buttons.some(b => !b)) return;
         if (!barObserver) {
           barObserver = new MutationObserver(queue);
           barObserver.observe(buttons[0].parentElement, {
@@ -261,7 +265,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
       }
       window.__redionNativeDockSync = queue;
       window.__redionNativeDockSelect = index => {
-        const b = document.querySelectorAll(selector)[index];
+        const b = routeButtons()[index];
         if (b) { b.click(); queue(); }
       };
       window.__redionNativeDockSearch = () => {
@@ -270,7 +274,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         queue();
       };
       window.__redionNativeDockTargets = index => {
-        const b = document.querySelectorAll(selector)[index];
+        const b = routeButtons()[index];
         if (b) b.dispatchEvent(new KeyboardEvent('keydown',
           {key:'ArrowUp', bubbles:true, cancelable:true}));
       };
