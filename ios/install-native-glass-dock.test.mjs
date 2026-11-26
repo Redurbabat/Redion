@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import vm from 'node:vm';
 import { injectNativeGlassDock } from './install-native-glass-dock.mjs';
 
 const swift = fs.readFileSync(new URL('./native-glass-dock.swift', import.meta.url), 'utf8');
@@ -85,4 +86,52 @@ test('fuenf Ziele und eine separate Suchkapsel mit Apples Glas ab iOS 26', () =>
   assert.match(swift, /self\.searchButton\?\.isHidden = !visible/);
   assert.match(swift, /!keyboard && !drawing/);
   assert.match(swift, /\.document-studio, \.pg-flaeche, \.sp-voll/);
+});
+
+
+test('native Heute-first order routes and synchronizes by stable ID, not web order', () => {
+  assert.match(swift, /private let labels = \["Heute", "Dokumente", "Lernen", "Termine", "Mehr"\]/);
+  assert.match(swift, /private let symbols = \["house", "book.closed", "graduationcap", "calendar", "ellipsis"\]/);
+  const bridge = swift.match(/private static let bridgeJavaScript = #"""([\s\S]*?)"""#/)[1];
+  const domOrder = ['hl-dok', 'hl-start', 'hl-lernen', 'hl-bespr', 'hl-mehr'];
+  const nativeOrder = ['hl-start', 'hl-dok', 'hl-lernen', 'hl-bespr', 'hl-mehr'];
+  const actions = [], messages = [], frames = [];
+  let selected = 'hl-start';
+  const bar = { getClientRects: () => [1], setAttribute() {} };
+  const buttons = new Map(domOrder.map(id => [id, {
+    parentElement: bar,
+    getAttribute: name => name === 'aria-selected' && id === selected ? 'true' : 'false',
+    click() { selected = id; actions.push(['select', id]); },
+    dispatchEvent(event) { actions.push([event.key, id]); }
+  }]));
+  const root = { dataset: { theme: 'dark' }, classList: { add() {} }, appendChild() {} };
+  const document = {
+    documentElement: root, head: root, body: {}, activeElement: null,
+    createElement: () => ({}), addEventListener() {},
+    getElementById: id => id === 'handy-oben' ? bar : null,
+    querySelector: selector => buttons.get(selector.split('#').pop()) ?? null,
+    querySelectorAll: selector => selector.includes('button[role="tab"]') ? [...buttons.values()] : []
+  };
+  const window = { innerHeight: 800, webkit: { messageHandlers: {
+    redionDock: { postMessage: message => messages.push(message) }
+  } } };
+  vm.runInNewContext(bridge, {
+    document, window, getComputedStyle: () => ({display: 'flex', visibility: 'visible'}),
+    MutationObserver: class { observe() {} },
+    KeyboardEvent: class { constructor(type, options) { this.key = options.key; } },
+    requestAnimationFrame: cb => frames.push(cb)
+  });
+  const flush = () => { while (frames.length) frames.shift()(); };
+  flush();
+  assert.equal(messages.at(-1).selected, 0);
+  nativeOrder.forEach((id, index) => {
+    window.__redionNativeDockSelect(index); flush();
+    assert.deepEqual(actions.at(-1), ['select', id]);
+    assert.equal(messages.at(-1).selected, index);
+    window.__redionNativeDockTargets(index);
+    assert.deepEqual(actions.at(-1), ['ArrowUp', id]);
+  });
+  selected = 'hl-dok';
+  window.__redionNativeDockSync(); flush();
+  assert.equal(messages.at(-1).selected, 1);
 });
