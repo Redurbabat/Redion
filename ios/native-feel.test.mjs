@@ -195,3 +195,21 @@ test('Schneller Hell-Dunkel-Wechsel uebergibt nur das letzte Theme an iOS', asyn
   assert.deepEqual(h.styles, ['LIGHT']);
   h.stop();
 });
+
+test('drawing, learning and settings controls receive native feedback only from real clicks', async () => {
+  const h=harness();
+  let selector='';
+  const event={detail:1,isTrusted:true,target:{closest(value){selector=value;return h.button;}}};
+  h.listeners.get('click')(event);
+  await h.settle();
+  assert.match(selector,/\.gfx-tb-edgeless button\[data-wz\]/);
+  assert.match(selector,/\.gfx-tb-edgeless \.gfx-tb-befehlsliste button/);
+  assert.match(selector,/\.lernwelt button\[data-lw-train\]/);
+  assert.match(selector,/\.einst-fenster button\.schalter/);
+  assert.equal(h.impacts.length,1);
+  h.tick(200);
+  h.listeners.get('click')({...event,isTrusted:false});
+  await h.settle();
+  assert.equal(h.impacts.length,1);
+  h.stop();
+});

@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
-import { IOS_LAYOUT_CSS, IOS_PHONE_POLISH_CSS, IOS_DOCUMENT_POLISH_CSS } from './native-layout.mts';
+import { IOS_LAYOUT_CSS, IOS_PHONE_POLISH_CSS, IOS_DOCUMENT_POLISH_CSS, IOS_DRAWING_POLISH_CSS } from './native-layout.mts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const indexUrl = pathToFileURL(path.join(root, 'index.html')).href;
@@ -196,3 +196,27 @@ for (const viewport of [{width:390,height:844},{width:844,height:390}]) {
     } finally {await browser.close();}
   });
 }
+
+test('iPhone drawing menu and inspector remain bounded by visible viewport', async () => {
+  const browser=await chromium.launch({headless:true});
+  try {
+    const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+    const page=await context.newPage();
+    await page.goto(indexUrl,{waitUntil:'domcontentloaded'});
+    await page.addStyleTag({content:IOS_DRAWING_POLISH_CSS});
+    const result=await page.evaluate(()=>{
+      document.documentElement.style.setProperty('--visual-height','320px');
+      const root=document.createElement('div');
+      root.innerHTML='<div class="gfx-tb-edgeless"><div class="gfx-tb-menue"><div class="gfx-tb-menuewerkzeuge"><button>Stift</button></div></div></div><div class="gfx-inspector"><button>Ebene</button></div>';
+      document.body.append(root);
+      const menu=root.querySelector('.gfx-tb-menue')!;
+      const inspector=root.querySelector('.gfx-inspector')!;
+      const button=menu.querySelector('button')!;
+      return {menuMax:getComputedStyle(menu).maxHeight,inspectorMax:getComputedStyle(inspector).maxHeight,buttonMin:getComputedStyle(button).minHeight};
+    });
+    assert.equal(result.menuMax,'150px');
+    assert.equal(result.inspectorMax,'240px');
+    assert.equal(result.buttonMin,'44px');
+    await context.close();
+  } finally {await browser.close();}
+});
