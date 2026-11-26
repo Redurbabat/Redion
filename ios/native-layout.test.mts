@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { IOS_LAYOUT_CSS, IOS_PHONE_POLISH_CSS, IOS_LAYOUT_STYLE_ID, installIosNativeLayout, installIosSearchControls } from './native-layout.mts';
+import { IOS_LAYOUT_CSS, IOS_PHONE_POLISH_CSS, IOS_DOCUMENT_POLISH_CSS, IOS_LAYOUT_STYLE_ID, installIosNativeLayout, installIosSearchControls } from './native-layout.mts';
 
 type TestStyle = {
   id: string;
@@ -34,7 +34,7 @@ test('Native CSS wird genau einmal eingefuegt und entfernt', () => {
   assert.equal(nodes.length,1);
   assert.equal(nodes[0]!.id,IOS_LAYOUT_STYLE_ID);
   assert.equal(nodes[0]!.attrs['data-redion-native'],'layout');
-  assert.equal(nodes[0]!.textContent,IOS_LAYOUT_CSS + IOS_PHONE_POLISH_CSS);
+  assert.equal(nodes[0]!.textContent,IOS_LAYOUT_CSS + IOS_PHONE_POLISH_CSS + IOS_DOCUMENT_POLISH_CSS);
   second();assert.equal(nodes.length,1);
   stop();assert.equal(nodes.length,0);
   assert.equal(typeof installIosNativeLayout({}), 'function');
@@ -158,4 +158,15 @@ test('iPhone settings and menus respect the real keyboard viewport and keep exis
   assert.match(IOS_PHONE_POLISH_CSS,/\.ez-steuer button:not\(\.schalter\) \{[^}]*min-height:44px/);
   assert.match(IOS_PHONE_POLISH_CSS,/\.menu\.blatt \{[^}]*max-height:calc\(var\(--visual-height,100dvh\) - 16px\)/);
   assert.match(IOS_PHONE_POLISH_CSS,/\.overlay \.finder\.such \{[^}]*max-height:calc\(var\(--visual-height,100dvh\) - 16px\)/);
+});
+
+test('iPhone PDF chrome respects portrait, landscape, keyboard and preserves ink gestures', () => {
+  assert.match(IOS_DOCUMENT_POLISH_CSS,/max-width:760px/);
+  assert.match(IOS_DOCUMENT_POLISH_CSS,/max-height:500px/);
+  assert.match(IOS_DOCUMENT_POLISH_CSS,/\.document-topbar button \{[^}]*min-width:44px;min-height:44px/);
+  assert.match(IOS_DOCUMENT_POLISH_CSS,/\.document-findbar input \{[^}]*font-size:16px/);
+  assert.match(IOS_DOCUMENT_POLISH_CSS,/var\(--visual-height,100dvh\)/);
+  assert.match(IOS_DOCUMENT_POLISH_CSS,/safe-area-inset-left/);
+  assert.match(IOS_DOCUMENT_POLISH_CSS,/safe-area-inset-right/);
+  assert.doesNotMatch(IOS_DOCUMENT_POLISH_CSS,/touch-action|\.blatt-marken|\.document-stage|\.document-pdf-dock|\.gfx-tb|#handy-oben/);
 });

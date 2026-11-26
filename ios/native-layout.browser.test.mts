@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
-import { IOS_LAYOUT_CSS, IOS_PHONE_POLISH_CSS } from './native-layout.mts';
+import { IOS_LAYOUT_CSS, IOS_PHONE_POLISH_CSS, IOS_DOCUMENT_POLISH_CSS } from './native-layout.mts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const indexUrl = pathToFileURL(path.join(root, 'index.html')).href;
@@ -166,3 +166,33 @@ test('iPhone settings and search stay within the visible keyboard viewport', asy
     await context.close();
   } finally {await browser.close();}
 });
+
+for (const viewport of [{width:390,height:844},{width:844,height:390}]) {
+  test('iPhone PDF controls remain reachable at '+viewport.width+'x'+viewport.height, async () => {
+    const browser=await chromium.launch({headless:true});
+    try {
+      const context=await browser.newContext({viewport,isMobile:true,hasTouch:true,reducedMotion:'reduce'});
+      const page=await context.newPage();
+      await page.goto(indexUrl,{waitUntil:'domcontentloaded'});
+      await page.addStyleTag({content:IOS_LAYOUT_CSS+IOS_PHONE_POLISH_CSS+IOS_DOCUMENT_POLISH_CSS});
+      const result=await page.evaluate(()=>{
+        document.body.dataset.dokument='an';
+        document.documentElement.style.setProperty('--visual-height','300px');
+        const studio=document.createElement('section');
+        studio.className='document-studio';
+        studio.dataset.documentView='open';
+        studio.innerHTML='<div class="document-topbar"><button aria-label="Zurück">‹</button><div class="document-title"><span class="document-title-name">Arbeitssicherheit und Chemie für Elektroberufe</span></div></div><div class="document-commandbar"><div class="document-pagination"><button class="document-position">Seite 1/10</button></div></div><div class="document-findbar"><input type="search"><button>✕</button></div>';
+        document.body.append(studio);
+        const top=studio.querySelector('.document-topbar button')!;
+        const menu=studio.querySelector('.document-commandbar')!;
+        const search=studio.querySelector('.document-findbar input')!;
+        return {coarse:matchMedia('(pointer:coarse)').matches,topHeight:getComputedStyle(top).minHeight,menuMax:getComputedStyle(menu).maxHeight,inputFont:getComputedStyle(search).fontSize};
+      });
+      assert.equal(result.coarse,true);
+      assert.equal(result.topHeight,'44px');
+      assert.equal(result.menuMax,'196px');
+      assert.equal(result.inputFont,'16px');
+      await context.close();
+    } finally {await browser.close();}
+  });
+}
