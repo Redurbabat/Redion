@@ -14,8 +14,9 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
     static let shared = RedionNativeDock()
     private static var started = false
 
-    private let labels = ["Dokumente", "Heute", "Lernen", "Termine", "Mehr"]
-    private let symbols = ["book.closed", "house", "graduationcap", "calendar", "ellipsis"]
+    // Native display order; routes are mapped by stable WebView IDs, not DOM order.
+    private let labels = ["Heute", "Dokumente", "Lernen", "Termine", "Mehr"]
+    private let symbols = ["house", "book.closed", "graduationcap", "calendar", "ellipsis"]
     private weak var webView: WKWebView?
     private var systemBar: UITabBar?
     private var attempt = 0
@@ -190,13 +191,17 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
       // toolbar. Programmatic .click() continues to use Redion's one router.
       const legacyBar = document.getElementById('handy-oben');
       legacyBar?.setAttribute('aria-hidden', 'true');
-      const selector = '#handy-oben > button[role="tab"]';
+      // Native order is intentionally independent of the shared web dock order.
+      const routeIds = ['hl-start', 'hl-dok', 'hl-lernen', 'hl-bespr', 'hl-mehr'];
+      function routeButtons() {
+        return routeIds.map(id => document.querySelector('#handy-oben > button[role="tab"]#' + id));
+      }
       let barObserver, bodyObserver;
       let frame = false;
       function sync() {
         frame = false;
-        const buttons = Array.from(document.querySelectorAll(selector));
-        if (buttons.length !== 5) return;
+        const buttons = routeButtons();
+        if (buttons.some(b => !b)) return;
         if (!barObserver) {
           barObserver = new MutationObserver(queue);
           barObserver.observe(buttons[0].parentElement, {
@@ -225,11 +230,11 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
       }
       window.__redionNativeDockSync = queue;
       window.__redionNativeDockSelect = index => {
-        const b = document.querySelectorAll(selector)[index];
+        const b = routeButtons()[index];
         if (b) { b.click(); queue(); }
       };
       window.__redionNativeDockTargets = index => {
-        const b = document.querySelectorAll(selector)[index];
+        const b = routeButtons()[index];
         if (b) b.dispatchEvent(new KeyboardEvent('keydown',
           {key:'ArrowUp', bubbles:true, cancelable:true}));
       };
