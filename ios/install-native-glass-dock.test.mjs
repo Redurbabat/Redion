@@ -193,3 +193,17 @@ test('iPhone keyboard, repeated tab and resume are coordinated natively', () => 
   assert.match(swift, /tabBarController\.selectedTab\?\.identifier == tab\.identifier/);
   assert.match(swift, /webView\.evaluateJavaScript\(Self\.bridgeJavaScript/);
 });
+
+test('iPhone library presents a native action sheet while keeping Redion action handlers', () => {
+  const menu = fs.readFileSync(new URL('./native-library-actions.swift', import.meta.url), 'utf8');
+  assert.match(installer,/RedionNativeLibraryActions\.start\(\)/);
+  assert.match(menu,/WKScriptMessageHandlerWithReply/);
+  assert.match(menu,/preferredStyle: \.actionSheet/);
+  assert.match(menu,/message\.frameInfo\.isMainFrame/);
+  assert.match(menu,/buttons\[selected\]\.click\(\)/);
+  assert.match(menu,/if \(!event\.isTrusted/);
+  assert.match(menu,/document\.getElementById\('sperrschirm'\)/);
+  assert.match(menu,/key:'Escape'/);
+  assert.match(menu,/catch \{[\s\S]*?restore\(\)/);
+  assert.doesNotMatch(menu,/localStorage|indexedDB|Store\.|Register\.aktionen\.tun/);
+});

@@ -42,7 +42,12 @@ export function installNativeGlassDock(root = process.cwd()) {
   const source = fs.readFileSync(sourcePath, 'utf8');
   // Only native UIKit tab bar. All five pages remain the original Redion WebView.
   const modified = injectNativeGlassDock(delegate, source);
-  fs.writeFileSync(dest, modified);
+  const menuSource = fs.readFileSync(path.join(root, 'ios', 'native-library-actions.swift'), 'utf8');
+  if (!menuSource.includes('class RedionNativeLibraryActions') || !menuSource.includes('WKScriptMessageHandlerWithReply')) {
+    throw new Error('Native iPhone-Aktionsmenuequelle fehlt.');
+  }
+  const withMenus = modified.replace(HOOK, HOOK + '\n        RedionNativeLibraryActions.start()');
+  fs.writeFileSync(dest, withMenus.trimEnd() + '\n\n' + menuSource.trim() + '\n');
   return dest;
 }
 
