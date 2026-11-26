@@ -2233,7 +2233,7 @@ test('Cloud-MCP native visual objects with version protection',async()=>{
    const statement=prepare.call(this,sql);
    if(!sql.startsWith('UPDATE saetze SET daten=?1,version=version+1')||!sql.includes('AND daten=?7'))return statement;
    const first=statement.first.bind(statement);
-   statement.first=async <T>()=>{
+   statement.first=async function<T>(){
      const parent=JSON.parse(String(pageRecord.daten));
      parent.content=parent.content.filter((child:string)=>child!==sheet.blockId);
      await f.store.setze('saetze',{...pageRecord,daten:JSON.stringify(parent),version:Number(pageRecord.version)+1});
