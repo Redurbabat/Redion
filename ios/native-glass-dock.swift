@@ -149,7 +149,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         let search = UISearchTab { _ in UIViewController() }
         search.automaticallyActivatesSearch = false
         controller.tabs = tabs + [search]
-        controller.prominentTabIdentifier = search.identifier
+        // UISearchTab automatically separates search in compact tab bars.
         controller.delegate = self
         controller.selectedTab = tabs.first
         controller.view.tintColor = .systemBlue
@@ -182,7 +182,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         content.didMove(toParent: host)
     }
 
-    @available(iOS 26.0, *)
+    @available(iOS 18.0, *)
     func tabBarController(_ tabBarController: UITabBarController, shouldSelectTab tab: UITab) -> Bool {
         if tab is UISearchTab {
             // Open existing RED ION search, never replace the current document.
@@ -192,7 +192,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         return true
     }
 
-    @available(iOS 26.0, *)
+    @available(iOS 18.0, *)
     func tabBarController(_ tabBarController: UITabBarController, didSelectTab selectedTab: UITab, previousTab: UITab?) {
         guard let index = tabBarController.tabs.firstIndex(where: { $0.identifier == selectedTab.identifier }),
               hosts.indices.contains(index) else { return }

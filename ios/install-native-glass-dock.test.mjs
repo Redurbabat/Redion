@@ -141,7 +141,10 @@ test('iOS 26 uses system controller and prominent search, not manual geometry', 
   assert.match(swift, /\} else if systemBar == nil \{/);
   assert.match(swift, /let controller = UITabBarController\(\)/);
   assert.match(swift, /let search = UISearchTab/);
-  assert.match(swift, /controller\.prominentTabIdentifier = search\.identifier/);
+  assert.doesNotMatch(swift, /prominentTabIdentifier/);
+  assert.match(swift, /controller\.tabs = tabs \+ \[search\]/);
+  assert.match(swift, /@available\(iOS 18\.0, \*\)\s+func tabBarController\([^\n]+shouldSelectTab/);
+  assert.match(swift, /@available\(iOS 18\.0, \*\)\s+func tabBarController\([^\n]+didSelectTab/);
   assert.match(swift, /controller\.setTabBarHidden\(!visible, animated: false\)/);
   assert.match(swift, /window\.rootViewController = controller/);
   assert.match(swift, /host\.addChild\(content\)/);
