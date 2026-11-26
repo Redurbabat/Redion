@@ -9,7 +9,7 @@ import {rolleAuf,darf,notieren,feldRechte} from '../kern.ts';
 import {BUILTIN_BLOCK_TYPES} from './block-catalog.ts';
 import {BUILTIN_SYMBOLS} from './symbol-catalog.ts';
 import {editSchematic} from './schematic-edit.ts';
-import {buildLearningCard} from './learning-card.ts';
+import {buildLearningCard,buildLearningSet} from './learning-card.ts';
 
 type Db=McpDatabase;
 type Args=Record<string,unknown>;
@@ -85,6 +85,16 @@ export const CLOUD_TOOLS:ToolDef[]=[
       options:{type:'array',minItems:2,maxItems:4,items:{type:'object',properties:{text:{type:'string',minLength:1,maxLength:500},correct:{type:'boolean'}},required:['text','correct'],additionalProperties:false}},
       image:{type:'object',properties:{data:{type:'string',maxLength:12000},alt:{type:'string',minLength:1,maxLength:300}},required:['data','alt'],additionalProperties:false}},
       required:['workspaceId','documentId','expectedVersion','kind','deck','question','answer'],additionalProperties:false}},
+  {name:'redion_create_learning_set',description:'Erstellt 1–20 Lernkarten eines Sets in einer atomaren Transaktion. Ein gemeinsames deck, optional topic/subject, gemischte Quizarten und kleine Rasterbilder. requestId ist Pflicht; parentVersion für weitere Sets.',
+    inputSchema:{type:'object',properties:{...workspace,...documentId,expectedVersion:{type:'integer',minimum:1},requestId:{type:'string',minLength:8,maxLength:100},
+      deck:{type:'string',minLength:1,maxLength:160},topic:{type:'string',maxLength:160},subject:{type:'string',maxLength:120},
+      cards:{type:'array',minItems:1,maxItems:20,items:{type:'object',properties:{kind:{type:'string',enum:['flashcard','single_select','multi_select','true_false','cloze']},
+      topic:{type:'string',maxLength:160},subject:{type:'string',maxLength:120},
+      question:{type:'string',minLength:1,maxLength:2000},answer:{type:'string',minLength:1,maxLength:2000},
+      explanation:{type:'string',maxLength:1500},source:{type:'string',maxLength:300},
+      options:{type:'array',minItems:2,maxItems:4,items:{type:'object',properties:{text:{type:'string',minLength:1,maxLength:500},correct:{type:'boolean'}},required:['text','correct'],additionalProperties:false}},
+      image:{type:'object',properties:{data:{type:'string',maxLength:12000},alt:{type:'string',minLength:1,maxLength:300}},required:['data','alt'],additionalProperties:false}},required:['kind','question','answer'],additionalProperties:false}}},
+      required:['workspaceId','documentId','expectedVersion','requestId','deck','cards'],additionalProperties:false}},
   {name:'redion_add_block',description:'Erstellt einen sicheren Text- oder Todo-Block auf einer freigegebenen Seite; neue Blockzeile und Elternliste werden in einer D1-Transaktion gespeichert. requestId optional, Wiederholung mit derselben Seitenversion idempotent. Verschachtelte Blöcke noch nicht unterstützt.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,expectedVersion:{type:'integer',minimum:1},
       typ:{type:'string',enum:['text','h1','h2','h3','todo','bullet','number','quote','code','divider']},text:{type:'string',maxLength:12000},
@@ -133,7 +143,7 @@ export const CLOUD_TOOLS:ToolDef[]=[
       replacement:{type:'string',maxLength:4000},expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId','find','replacement','expectedVersion'],additionalProperties:false}}
 ];
-const writeNames=new Set(['redion_create_page','redion_update_page','redion_replace_text','redion_append_content','redion_move_page','redion_add_block','redion_add_schematic','redion_update_schematic','redion_update_block','redion_create_learning_card']);
+const writeNames=new Set(['redion_create_page','redion_update_page','redion_replace_text','redion_append_content','redion_move_page','redion_add_block','redion_add_schematic','redion_update_schematic','redion_update_block','redion_create_learning_card','redion_create_learning_set']);
 // MCP annotations tell AI clients which tools are read-only, additive or
 // modifying. They are advisory; server-side OAuth and ACL checks still govern.
 const toolTitles:Record<string,string>={
@@ -145,6 +155,7 @@ const toolTitles:Record<string,string>={
   redion_create_page:'Seite erstellen',
   redion_add_block:'Block oder Aufgabe erstellen',
   redion_create_learning_card:'Lernkarte oder Quizfrage erstellen',
+  redion_create_learning_set:'Lernkartenset erstellen',
   redion_add_schematic:'Leeren Schaltplan erstellen',
   redion_update_schematic:'Schaltplan ergänzen',
   redion_update_block:'Blocktext oder Aufgabe bearbeiten',
@@ -171,7 +182,7 @@ export const visibleCloudTools=(p:McpPrincipal):ToolDef[]=>
       return {...t,annotations:{
         title:toolTitles[t.name]||t.name,readOnlyHint:readOnly,
         destructiveHint:destructiveNames.has(t.name),
-        idempotentHint:t.name==='redion_create_page'||t.name==='redion_add_block'||t.name==='redion_add_schematic'||t.name==='redion_create_learning_card',
+        idempotentHint:t.name==='redion_create_page'||t.name==='redion_add_block'||t.name==='redion_add_schematic'||t.name==='redion_create_learning_card'||t.name==='redion_create_learning_set',
         openWorldHint:false
       }};
     });
@@ -1031,6 +1042,69 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       return {workspaceId:w,documentId:pageId,blockId:id,version:updated.version,
         elementId:edited.elementId,elementType:edited.kind,
         electricalValidation:false,routingVerified:false};
+    }
+    if(name==='redion_create_learning_set'){
+      const id=required(args.documentId,128),ver=expected(args.expectedVersion);
+      const current=await page(w,id,'bearbeiten');
+      const key=required(args.requestId,100);
+      if(!/^[A-Za-z0-9_-]{8,100}$/.test(key))return err('invalid_arguments','Ungültige requestId.');
+      let cards:ReturnType<typeof buildLearningSet>;
+      try{cards=buildLearningSet(args);}catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Ungültiges Set.');}
+      const hash=async(value:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),b=>b.toString(16).padStart(2,'0')).join('');
+      const setId=await hash('cloud-mcp-learning-set\0'+principal.grantId+'\0'+w+'\0'+id+'\0'+key);
+      const fingerprint=await hash(JSON.stringify({w,id,cards}));
+      const cardIds=await Promise.all(cards.map(async(_,i)=>(await hash(setId+'\0'+i)).slice(0,32)));
+      const now=new Date().toISOString();
+      const rows=cards.map((card,i)=>({id:cardIds[i],type:'flashcard',text:card.content,content:[],parentId:id,parentTable:'block',alive:true,created:now,edited:now,herkunft:'ki',...card.meta,mcpRequestHash:fingerprint,mcpLearningSet:setId}));
+      const list=current.data.content===undefined?[]:current.data.content;
+      if(!Array.isArray(list)||list.some(k=>typeof k!=='string'||!k||k.length>128))
+        return err('invalid_data','Ungültige Elternliste.');
+      // A retry checks all original IDs and hashes, not just the first card.
+      const retry=async()=>{
+        const fresh=await page(w,id,'bearbeiten');
+        if(!Array.isArray(fresh.data.content)||!cardIds.every(k=>(fresh.data.content as unknown[]).includes(k)))return null;
+        const found=await Promise.all(cardIds.map(k=>ablage.hole('saetze',{bereich:w,id:k})));
+        for(const row of found){
+          if(!row||row.geloescht||row.verschluesselt||row.tabelle!=='blocks'||row.seite!==id)return null;
+          let data:Record<string,unknown>;try{data=JSON.parse(String(row.daten));}catch{return null;}
+          if(data.type!=='flashcard'||data.parentId!==id||data.alive===false||data.mcpRequestHash!==fingerprint||data.mcpLearningSet!==setId)return null;
+        }
+        return {workspaceId:w,documentId:id,cardIds,count:cards.length,parentVersion:Number(fresh.s.version),alreadyExists:true};
+      };
+      const previous=await retry();if(previous)return previous;
+      if(Number(current.s.version)!==ver)return err('conflict','Seite wurde geändert. Bitte neu lesen.');
+      if(list.length+cards.length>200)return err('too_large','Zu viele Blöcke auf dieser Seite.');
+      const parent=JSON.stringify({...current.data,content:[...list,...cardIds],edited:now});
+      if(new TextEncoder().encode(parent).byteLength>64000)return err('too_large','Elternseite zu gross.');
+      if(!db.batch)return err('unavailable','D1-Transaktion nicht verfügbar.');
+      const packed=JSON.stringify(rows),ids=JSON.stringify(cardIds);
+      if(new TextEncoder().encode(packed).byteLength>80000)return err('too_large','Set zu gross.');
+      // INSERT reads the complete candidate set. A single collision or stale
+      // parent version prevents ALL rows. Plain INSERT rolls back on SQL error.
+      const insert=db.prepare(
+        "INSERT INTO saetze(id,bereich,tabelle,daten,verschluesselt,seite,version,geaendert,geloescht,vonGeraet) "+
+        "SELECT json_extract(j.value,'$.id'),?2,'blocks',j.value,0,?3,1,?4,0,'Cloud-MCP' FROM json_each(?1) j "+
+        "WHERE EXISTS (SELECT 1 FROM saetze p WHERE p.bereich=?2 AND p.id=?3 AND p.seite=?3 AND p.version=?5 "+
+        "AND p.tabelle='blocks' AND p.verschluesselt=0 AND p.geloescht=0 AND p.daten=?6) "+
+        "AND NOT EXISTS (SELECT 1 FROM saetze s JOIN json_each(?7) k ON s.id=k.value WHERE s.bereich=?2) "+
+        "AND NOT EXISTS (SELECT 1 FROM json_each(?7) k JOIN json_each(?8) old ON old.value=k.value) RETURNING id"
+      ).bind(packed,w,id,now,ver,String(current.s.daten),ids,JSON.stringify(list));
+      const updateParent=db.prepare(
+        "UPDATE saetze SET daten=?1,version=version+1,geaendert=?2,vonGeraet='Cloud-MCP' "+
+        "WHERE bereich=?3 AND id=?4 AND version=?5 AND tabelle='blocks' AND verschluesselt=0 AND geloescht=0 AND daten=?6 "+
+        "AND NOT EXISTS (SELECT 1 FROM json_each(?7) k WHERE NOT EXISTS (SELECT 1 FROM saetze s WHERE s.bereich=?3 AND s.id=k.value "+
+        "AND s.seite=?4 AND s.tabelle='blocks' AND s.verschluesselt=0 AND s.geloescht=0 AND json_valid(s.daten) "+
+        "AND json_extract(s.daten,'$.mcpRequestHash')=?8 AND json_extract(s.daten,'$.mcpLearningSet')=?9)) "+
+        "RETURNING version"
+      ).bind(parent,now,w,id,ver,String(current.s.daten),ids,fingerprint,setId);
+      const outcome=await db.batch([insert,updateParent]);
+      const count=outcome[0]?.results?.length||0,updated=outcome[1]?.results?.length||0;
+      if(count===cards.length&&updated===1){
+        await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',text:'Lernkartenset über Cloud-MCP erstellt',objekt:id});
+        return {workspaceId:w,documentId:id,cardIds,count,parentVersion:ver+1,alreadyExists:false};
+      }
+      const same=await retry();if(same)return same;
+      return err('conflict','Seitenversion oder requestId stimmt nicht mehr. Bitte neu lesen.');
     }
     if(name==='redion_add_block'||name==='redion_add_schematic'||name==='redion_create_learning_card'){
       const createSchematic=name==='redion_add_schematic';

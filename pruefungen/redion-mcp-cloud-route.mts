@@ -2121,3 +2121,34 @@ test('Cloud-MCP creates actual Trainer cards atomically, with write scope and id
     assert.deepEqual(JSON.parse(page!.daten).content,[card.blockId]);
   }finally{f.close();}
 });
+
+test('Cloud-MCP learning set validates all cards, attaches them once and retries atomically',async()=>{
+  const f=await fixture();
+  try{
+    await f.store.setze('saetze',{id:'learning_set_page',bereich:'ws_test',tabelle:'blocks',
+      daten:JSON.stringify({type:'page',text:'Elektro',content:[]}),verschluesselt:0,seite:'learning_set_page',version:1,geaendert:'2026-11-23',geloescht:0,vonGeraet:'Test'});
+    const reader=await f.authorize(false,'owner'),writer=await f.authorize(true);
+    const args={workspaceId:'ws_test',documentId:'learning_set_page',expectedVersion:1,requestId:'learning_set_001',deck:'Elektrotechnik',subject:'ET',
+      cards:[{kind:'flashcard',question:'Einheit der Spannung?',answer:'Volt'},{kind:'cloze',question:'Strom wird in ___ gemessen.',answer:'Ampere'}]};
+    const call=async(token:string,p:Record<string,unknown>)=>(await f.rpc(token,'tools/call',{name:'redion_create_learning_set',arguments:p})).data.result;
+    assert.equal((await call(reader.access_token,args)).isError,true);
+    assert.equal((await call(writer.access_token,{...args,cards:[args.cards[0],{...args.cards[1],question:'Keine Lücke'}]})).isError,true);
+    assert.equal((await f.store.finde('saetze',{bereich:'ws_test',tabelle:'blocks'})).length,1);
+    const first=await call(writer.access_token,args);
+    assert.notEqual(first.isError,true,JSON.stringify(first));
+    const set=JSON.parse(first.content[0]!.text);
+    assert.equal(set.count,2);assert.equal(set.parentVersion,2);
+    const page=await f.store.hole('saetze',{bereich:'ws_test',id:'learning_set_page'});
+    assert.deepEqual(JSON.parse(page!.daten).content,set.cardIds);
+    for(const id of set.cardIds){
+      const row=await f.store.hole('saetze',{bereich:'ws_test',id});
+      const card=JSON.parse(row!.daten);
+      assert.equal(card.type,'flashcard');assert.equal(card.quiz.kapitel,'Elektrotechnik');assert.equal(card.quiz.subject,'ET');
+    }
+    const retry=JSON.parse((await call(writer.access_token,args)).content[0]!.text);
+    assert.deepEqual(retry.cardIds,set.cardIds);assert.equal(retry.alreadyExists,true);
+    assert.equal((await call(writer.access_token,{...args,requestId:'learning_set_002'})).isError,true);
+    assert.equal((await call(writer.access_token,{...args,expectedVersion:2,cards:[{...args.cards[0],answer:'Ampere'}]})).isError,true);
+    assert.equal((await f.store.finde('saetze',{bereich:'ws_test',tabelle:'blocks'})).length,3);
+  }finally{f.close();}
+});

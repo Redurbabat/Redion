@@ -52,3 +52,15 @@ export function buildLearningCard(args:Record<string,unknown>):{content:string;m
   }
   return {content,meta:{quiz}};
 }
+
+export function buildLearningSet(args:Record<string,unknown>):ReturnType<typeof buildLearningCard>[] {
+  if(!Array.isArray(args.cards)||args.cards.length<1||args.cards.length>20)throw new Error('1–20 Lernkarten erforderlich.');
+  const cards=args.cards.map((raw:unknown)=>{
+    if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new Error('Ungültige Karte.');
+    const card=raw as Record<string,unknown>;
+    if(Object.keys(card).some(k=>!['kind','question','answer','topic','subject','explanation','source','options','image'].includes(k)))throw new Error('Unbekanntes Kartenfeld.');
+    return buildLearningCard({topic:args.topic,subject:args.subject,...card,deck:args.deck});
+  });
+  if(new TextEncoder().encode(JSON.stringify(cards)).byteLength>60000)throw new Error('Kartenset zu gross; bitte kleinere Sets erstellen.');
+  return cards;
+}
