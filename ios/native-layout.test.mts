@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { IOS_LAYOUT_CSS, IOS_LAYOUT_STYLE_ID, installIosNativeLayout } from './native-layout.mts';
+import { IOS_LAYOUT_CSS, IOS_PHONE_POLISH_CSS, IOS_LAYOUT_STYLE_ID, installIosNativeLayout } from './native-layout.mts';
 
 type TestStyle = {
   id: string;
@@ -34,7 +34,7 @@ test('Native CSS wird genau einmal eingefuegt und entfernt', () => {
   assert.equal(nodes.length,1);
   assert.equal(nodes[0]!.id,IOS_LAYOUT_STYLE_ID);
   assert.equal(nodes[0]!.attrs['data-redion-native'],'layout');
-  assert.equal(nodes[0]!.textContent,IOS_LAYOUT_CSS);
+  assert.equal(nodes[0]!.textContent,IOS_LAYOUT_CSS + IOS_PHONE_POLISH_CSS);
   second();assert.equal(nodes.length,1);
   stop();assert.equal(nodes.length,0);
   assert.equal(typeof installIosNativeLayout({}), 'function');
@@ -74,4 +74,13 @@ test('iPhone Today and search density preserve touch targets and readable text',
   assert.match(IOS_LAYOUT_CSS,/\.lw-today \.lw-hero-compact \{[^}]*min-height:0/);
   assert.match(IOS_LAYOUT_CSS,/\.lw-today \.lw-actions button \{[^}]*min-height:44px/);
   assert.match(IOS_LAYOUT_CSS,/\.overlay \.finder\.such :is\(input,textarea\) \{font-size:16px/);
+});
+
+test('iPhone polish targets premium specificity without touching the dock or documents', () => {
+  assert.match(IOS_PHONE_POLISH_CSS,/max-width:760px/);
+  assert.match(IOS_PHONE_POLISH_CSS,/body\[data-schale="premium"\]/);
+  assert.match(IOS_PHONE_POLISH_CSS,/\.lw-today \.lw-hero-compact h2/);
+  assert.match(IOS_PHONE_POLISH_CSS,/\.redion-ios-search-close/);
+  assert.match(IOS_PHONE_POLISH_CSS,/min-height:44px/);
+  assert.doesNotMatch(IOS_PHONE_POLISH_CSS,/#handy-oben|#ho-pille|#ho-ziele/);
 });

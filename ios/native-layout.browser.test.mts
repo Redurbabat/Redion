@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
-import { IOS_LAYOUT_CSS } from './native-layout.mts';
+import { IOS_LAYOUT_CSS, IOS_PHONE_POLISH_CSS } from './native-layout.mts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const indexUrl = pathToFileURL(path.join(root, 'index.html')).href;
@@ -79,6 +79,33 @@ test('Tablet/Desktop bekommt keine iPhone-Safe-Area-Korrektur', async () => {
     await page.addStyleTag({content:IOS_LAYOUT_CSS});
     const height=await page.locator('#main > #topbar').evaluate(el=>getComputedStyle(el).height);
     assert.notEqual(height,'50px','Die 760px-Grenze muss respektiert werden.');
+    await context.close();
+  } finally {await browser.close();}
+});
+
+test('iPhone premium polish overrides existing Today typography and keeps actions tappable', async () => {
+  const browser = await chromium.launch({headless:true});
+  try {
+    const context = await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+    const page = await context.newPage();
+    await page.goto(indexUrl,{waitUntil:'domcontentloaded'});
+    await page.addStyleTag({content:IOS_LAYOUT_CSS + IOS_PHONE_POLISH_CSS});
+    await page.evaluate(() => {
+      document.body.dataset.schale='premium';
+      delete document.body.dataset.uiShell;
+      delete document.documentElement.dataset.schema;
+      const root=document.querySelector('#page')!;
+      root.className='lernwelt';
+      root.innerHTML='<div class="lw-today"><section class="lw-hero lw-hero-compact"><div><p>Heute</p><h2>Guten Abend.</h2></div><div class="lw-goal"><button><span>0 / 20</span><small>Lernziel heute</small></button><progress max="100" value="0"></progress></div></section><section class="lw-next-step"><span class="lw-next-icon"></span><div><h2>22 Karten für heute</h2></div><div class="lw-actions"><button>Lernen starten</button><button>Lernplan ansehen</button></div></section></div>';
+    });
+    const result=await page.locator('.lw-hero-compact').evaluate(el=>{
+      const heading=el.querySelector('h2')!;
+      const button=el.querySelector('button')!;
+      return {font:getComputedStyle(heading).fontFamily,height:button.getBoundingClientRect().height,padding:getComputedStyle(el).paddingTop};
+    });
+    assert.match(result.font,/-apple-system/);
+    assert.equal(result.padding,'12px');
+    assert.ok(result.height>=44);
     await context.close();
   } finally {await browser.close();}
 });
