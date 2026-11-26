@@ -83,6 +83,8 @@ const Trainer = (() => {
             return alle.filter(k => istPruefung(k) && kapitelVon(k) === name.slice(9));
         if (name.startsWith('kapitel:'))
             return alle.filter(k => kapitelVon(k) === name.slice(8));
+        if (name.startsWith('test:'))
+            return alle.filter(k => kapitelVon(k) === name.slice(5));
         if (name.startsWith('thema:'))
             return alle.filter(k => String(k.quiz.thema || '') === name.slice(6));
         if (name.startsWith('art:'))
@@ -92,6 +94,8 @@ const Trainer = (() => {
     const warteschlange = (name, aufgaben) => {
         if (name === 'pruefung' || name.startsWith('pruefung:'))
             return aufgaben;
+        if (name.startsWith('test:'))
+            return mischen(aufgaben).slice(0, RUNDE_HOECHSTENS);
         const faellig = mischen(aufgaben.filter(istFaellig)).sort((a, b) => boxRang(a) - boxRang(b));
         const rest = mischen(aufgaben.filter(k => !istFaellig(k))).sort((a, b) => boxRang(a) - boxRang(b));
         return faellig.concat(rest).slice(0, RUNDE_HOECHSTENS);
@@ -167,9 +171,16 @@ const Trainer = (() => {
             const themen = Array.from(new Set(zu.map(k => String(k.quiz.thema || '')).filter(Boolean)));
             const pruefung = aufgabenVon('pruefung:' + kap).length;
             const sitztKap = zu.filter(k => boxRang(k) >= 4).length;
+            const faelligKap = zu.filter(istFaellig).length;
+            const neuKap = zu.filter(k => !k.sr).length;
+            const fachNamen = Array.from(new Set(zu.map(k => String(k.quiz.subject || '')).filter(Boolean)));
             return `<section class="lw-trainer-kapitel" data-tr-kapitel="${esc(kap)}"><h3 class="lw-trainer-h3">${esc(kap)} · ${sitztKap}/${zu.length} sitzen</h3>
+        <p class="lw-trainer-hinweis">${fachNamen.length ? esc(fachNamen.join(' · ')) + ' · ' : ''}${zu.length} Karten · ${neuKap} neu · ${faelligKap} fällig</p>
+        <progress max="${zu.length}" value="${sitztKap}" aria-label="Sichere Karten im Set"></progress>
         <div class="lw-trainer-reihe">
           ${knopf(`Lernen — ${zu.length} Aufgaben`, `data-tr-start="kapitel" data-kapitel="${esc(kap)}"`)}
+          ${knopf(`Test — ${Math.min(zu.length, RUNDE_HOECHSTENS)} Fragen`, `data-tr-start="test" data-kapitel="${esc(kap)}"`)}
+
           ${pruefung ? knopf(`Prüfung üben — ${pruefung} Fragen der Reihe nach`, `data-tr-start="pruefung" data-kapitel="${esc(kap)}"`) : ''}
         </div>
         ${themen.length ? `<div class="lw-trainer-reihe">${themen.map(t => {
@@ -229,7 +240,7 @@ const Trainer = (() => {
     const kopf = (k) => {
         const r = zustand.runde;
         const b = boxVon(k);
-        return `<header class="lw-session-head lw-trainer-kopf"><div><p>${esc(r.name.startsWith('pruefung') ? 'Prüfung üben' : 'Lernen')}</p>
+        return `<header class="lw-session-head lw-trainer-kopf"><div><p>${esc(r.name.startsWith('test:') ? 'Test' : r.name.startsWith('pruefung') ? 'Prüfung üben' : 'Lernen')}</p>
       <h2>Karte ${r.index + 1} von ${r.reihenfolge.length}</h2></div>${knopf('Beenden', 'data-tr-ende')}</header>
       <progress max="${r.reihenfolge.length}" value="${r.index}" aria-label="Fortschritt der Runde"></progress>
       <div class="lw-trainer-marken"><span class="lw-trainer-marke">${esc(themaName(String(k.quiz.thema || '')))}</span>
@@ -313,7 +324,7 @@ const Trainer = (() => {
         if (!r)
             return;
         try {
-            if (typeof WissenDienst !== 'undefined')
+            if (!r.name.startsWith('test:') && typeof WissenDienst !== 'undefined')
                 WissenDienst.planen(k, note);
         }
         catch { }
@@ -322,7 +333,7 @@ const Trainer = (() => {
         else
             r.falsch++;
         const id = String(k.id);
-        if (note < NOTE_RICHTIG && !r.name.startsWith('pruefung') && (r.nochmal[id] || 0) < NOCHMAL_HOECHSTENS) {
+        if (note < NOTE_RICHTIG && !r.name.startsWith('pruefung') && !r.name.startsWith('test:') && (r.nochmal[id] || 0) < NOCHMAL_HOECHSTENS) {
             r.nochmal[id] = (r.nochmal[id] || 0) + 1;
             r.reihenfolge.splice(Math.min(r.reihenfolge.length, r.index + 1 + NOCHMAL_NACH), 0, id);
         }
@@ -450,6 +461,8 @@ const Trainer = (() => {
                 rundeStarten(el.dataset['kapitel'] ? 'pruefung:' + el.dataset['kapitel'] : 'pruefung');
             else if (art === 'kapitel')
                 rundeStarten('kapitel:' + (el.dataset['kapitel'] || ''));
+            else if (art === 'test')
+                rundeStarten('test:' + (el.dataset['kapitel'] || ''));
             else if (art === 'thema')
                 rundeStarten('thema:' + (el.dataset['thema'] || ''));
             else if (art === 'art')
