@@ -91,6 +91,23 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
     assert.deepEqual(report.body.report.faelle.map((fall:{ist:boolean})=>fall.ist),soll);
     assert.deepEqual((await checkPlan(1)).body,report.body);
     assert.equal((await checkPlan(2)).body.code,'conflict');
+    const messen=async(position:number)=>{
+      const response=await client.callTool({name:'redion_read_schematic',arguments:{
+        workspaceId:'runtime-workspace',blockId:'runtime-schema6',expectedVersion:1,
+        operatingPoint:{switches:[{componentId:'S1',position}],componentIds:['E1']}
+      }});
+      return JSON.parse(response.content[0].text);
+    };
+    const an=(await messen(0)).report;
+    assert.equal(an.status,'berechnet');
+    assert.equal(an.wechsel,true);
+    assert.ok(Math.abs(an.messwerte[0].wert.Ubetrag-230)<0.01);
+    assert.ok(Math.abs(an.messwerte[0].wert.Ibetrag-100/230)<0.001);
+    assert.ok(Math.abs(an.messwerte[0].wert.P-100)<0.01);
+    const aus=(await messen(1)).report.messwerte[0].wert;
+    assert.equal(aus.Ubetrag,0);
+    assert.equal(aus.Ibetrag,0);
+    assert.equal((await messen(2)).code,'invalid_arguments');
     const unchanged=await db.prepare('SELECT daten,version FROM saetze WHERE bereich=? AND id=?')
       .bind('runtime-workspace','runtime-schema6').first();
     assert.equal(unchanged.version,1);

@@ -315,6 +315,14 @@ Die Rechnung verwendet dieselbe erzeugte Simulationsdatei samt Fachzeichen und
 Klemmenmodell wie die App. Der vorhandene Lesezugriff auf die eingebettete Seite
 ist erforderlich. Die Prüfung ersetzt keine elektrische Norm- oder Sicherheitsabnahme.
 
+Für einen einzelnen Betriebspunkt sendet der Client statt `switchTest` ein
+`operatingPoint` mit `switches` (Liste von `{componentId, position}`) und
+`componentIds` (ein bis acht Messobjekte). Nicht genannte Schalter bleiben
+in Ruhelage. Bei Wechselstrom gibt die Antwort unter anderem Effektivwerte
+`Ubetrag` in Volt und `Ibetrag` in Ampere sowie `P` in Watt zurück.
+Bei mehrpoligen Bauteilen stehen Werte pro Glied bereit. Fehlende Messwerte
+sind ausdrücklich gekennzeichnet. Der Aufruf misst einen statischen Zustand.
+
 ## Schaltpläne mit MCP erweitern (23.11.2026)
 
 'redion_update_schematic' erweitert einen bereits gespeicherten

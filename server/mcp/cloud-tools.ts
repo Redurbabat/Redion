@@ -9,7 +9,7 @@ import {rolleAuf,darf,notieren,feldRechte} from '../kern.ts';
 import {BUILTIN_BLOCK_TYPES} from './block-catalog.ts';
 import {BUILTIN_SYMBOLS} from './symbol-catalog.ts';
 import {editSchematic} from './schematic-edit.ts';
-import {runSwitchTest} from './schematic-test.ts';
+import {measureOperatingPoint,runSwitchTest} from './schematic-test.ts';
 import {buildLearningCard,buildLearningSet} from './learning-card.ts';
 import {mindmap,board,sheet,papers,forms,shapes,editNode,editShape} from './visual-blocks.ts';
 
@@ -143,11 +143,15 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,
       childOffset:{type:'integer',minimum:0,maximum:100000},
       childLimit:{type:'integer',minimum:1,maximum:40}},required:['workspaceId','blockId'],additionalProperties:false}},
-  {name:'redion_read_schematic',description:'Liest Bauteile, Leitungen, Beschriftungen und Planversion. Optional switchTest und expectedVersion mitsenden, um bis zu 32 Schalterkombinationen mit dem Redion-Simulationskern gegen die Sollfolge zu prüfen. Der letzte Schalter wechselt am schnellsten. Der Test verändert den Plan nicht.',
+  {name:'redion_read_schematic',description:'Liest Bauteile, Leitungen, Beschriftungen und Planversion. Mit switchTest bis zu 32 Kombinationen gegen eine Sollfolge prüfen (letzter Schalter wechselt am schnellsten). Mit operatingPoint Strom, Spannung und Leistung für gewählte Schalterstellungen messen. Beide Modi benötigen expectedVersion und speichern keine Änderungen.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},
       switchTest:{type:'object',additionalProperties:false,required:['switchIds','targetId','expected'],properties:{
         switchIds:{type:'array',minItems:1,maxItems:6,uniqueItems:true,items:idField},targetId:idField,
         expected:{type:'array',minItems:1,maxItems:32,items:{type:'boolean'}}
+      }},operatingPoint:{type:'object',additionalProperties:false,required:['switches','componentIds'],properties:{
+        switches:{type:'array',maxItems:12,items:{type:'object',additionalProperties:false,
+          required:['componentId','position'],properties:{componentId:idField,position:{type:'integer',minimum:0,maximum:32}}}},
+        componentIds:{type:'array',minItems:1,maxItems:8,uniqueItems:true,items:idField}
       }}},required:['workspaceId','blockId'],additionalProperties:false}},
   {name:'redion_list_symbols',description:'Listet die 131 eingebauten elektrotechnischen Fachzeichen mit Nummern und Positionen der Anschlüsse. Keine auf Geräten nachinstallierten Symbole; nicht als zertifizierte Normbibliothek verwenden.',
     inputSchema:{type:'object',properties:{gruppe:{type:'string',maxLength:40},suche:{type:'string',maxLength:80}},additionalProperties:false}},
@@ -450,20 +454,23 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         const payload=JSON.stringify(plan);
         if(payload.length>32000)return err('too_large','Schaltplan ist für einen Aufruf zu gross.');
         const version=Number(s.version)||1;
-        if(args.expectedVersion!==undefined||args.switchTest!==undefined){
+        const switchTest=args.switchTest!==undefined;
+        const operatingPoint=args.operatingPoint!==undefined;
+        if(switchTest&&operatingPoint)return err('invalid_arguments','Pro Aufruf entweder Sollfolge prüfen oder Messwerte lesen.');
+        if(args.expectedVersion!==undefined||switchTest||operatingPoint){
           if(expected(args.expectedVersion)!==version)
             return err('conflict','Schaltplan wurde geändert. Bitte erneut lesen.');
         }
-        if(args.switchTest!==undefined){
+        if(switchTest||operatingPoint){
+          let report;
           try{
-            const report=runSwitchTest(plan,args.switchTest);
-            if(new TextEncoder().encode(JSON.stringify(report)).byteLength>32000)
-              return err('too_large','Der Bericht ist zu gross. Einen kleineren Teilplan prüfen.');
-            return {workspaceId:w,blockId:id,documentId:pageId,version,report};
+            report=switchTest?runSwitchTest(plan,args.switchTest):measureOperatingPoint(plan,args.operatingPoint);
           }catch(error){
-            if(error instanceof CloudMcpToolError)throw error;
             return err('invalid_arguments',error instanceof Error?error.message:'Prüfung konnte nicht ausgeführt werden.');
           }
+          if(new TextEncoder().encode(JSON.stringify(report)).byteLength>32000)
+            return err('too_large','Der Bericht ist zu gross. Einen kleineren Teilplan prüfen.');
+          return {workspaceId:w,blockId:id,documentId:pageId,version,report};
         }
         return {workspaceId:w,blockId:id,documentId:pageId,
           version,plan,
