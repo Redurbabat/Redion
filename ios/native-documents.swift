@@ -66,7 +66,7 @@ private final class RedionDocumentInbox {
 
     private func drain(window: UIWindow?) {
         guard !delivering,
-              let web = (window?.rootViewController as? CAPBridgeViewController)?.webView,
+              let web = ((window?.rootViewController as? CAPBridgeViewController)?.webView ?? redionBridgeWebView(in: window)),
               let inbox = try? root(),
               let folders = try? FileManager.default.contentsOfDirectory(at: inbox, includingPropertiesForKeys: nil),
               let folder = folders.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }).first(where: {

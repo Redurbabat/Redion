@@ -29,7 +29,7 @@ private final class RedionIncomingInbox {
     }
 
     func drain(window: UIWindow?) {
-        guard let web = (window?.rootViewController as? CAPBridgeViewController)?.webView,
+        guard let web = ((window?.rootViewController as? CAPBridgeViewController)?.webView ?? redionBridgeWebView(in: window)),
               let container = FileManager.default.containerURL(
                 forSecurityApplicationGroupIdentifier: group) else { return }
         let inbox = container.appendingPathComponent("Inbox", isDirectory: true)

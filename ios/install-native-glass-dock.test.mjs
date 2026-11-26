@@ -135,3 +135,21 @@ test('native Heute-first order routes and synchronizes by stable ID, not web ord
   window.__redionNativeDockSync(); flush();
   assert.equal(messages.at(-1).selected, 1);
 });
+
+test('iOS 26 uses system controller and prominent search, not manual geometry', () => {
+  assert.match(swift, /if #available\(iOS 26\.0, \*\) \{\s*if nativeController == nil \{ installSystemController/);
+  assert.match(swift, /\} else if systemBar == nil \{/);
+  assert.match(swift, /let controller = UITabBarController\(\)/);
+  assert.match(swift, /let search = UISearchTab/);
+  assert.match(swift, /controller\.prominentTabIdentifier = search\.identifier/);
+  assert.match(swift, /controller\.setTabBarHidden\(!visible, animated: false\)/);
+  assert.match(swift, /window\.rootViewController = controller/);
+  assert.match(swift, /host\.addChild\(content\)/);
+  assert.match(swift, /content\.removeFromParent\(\)/);
+  assert.match(swift, /guard !applyingWebSelection/);
+  assert.match(swift, /if tab is UISearchTab \{[\s\S]*?openSearch\(\)[\s\S]*?return false/);
+  for (const path of ['native-documents.swift', 'install-home-shortcuts.mjs', 'install-incoming-share-widget.mjs']) {
+    const source = fs.readFileSync(new URL('./' + path, import.meta.url), 'utf8');
+    assert.match(source, /redionBridgeWebView\(in: window\)/);
+  }
+});

@@ -1,7 +1,7 @@
 /*
  * RED ION iOS - Apple's real system tab bar, without parallel native page overlays.
- * A standalone UITabBar is a supported UIKit control (Apple Developer: UITabBar).
- * The iOS 26 SDK gives this system component its adaptive Liquid Glass design.
+ * On iOS 26 a system UITabBarController owns the full tab/search layout.
+ * The standalone UITabBar is only the older-system fallback.
  *
  * The existing Capacitor WKWebView stays the only content/navigation owner.
  * No changes to Redion data, web/PWA, workspace or MCP.
@@ -10,7 +10,7 @@ import UIKit
 import WebKit
 
 private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
-                                      UITabBarDelegate, UIGestureRecognizerDelegate {
+                                      UITabBarDelegate, UITabBarControllerDelegate, UIGestureRecognizerDelegate {
     static let shared = RedionNativeDock()
     private static var started = false
 
@@ -19,6 +19,10 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
     private let symbols = ["house", "book.closed", "graduationcap", "calendar", "ellipsis"]
     private weak var webView: WKWebView?
     private var systemBar: UITabBar?
+    private var nativeController: UITabBarController?
+    private var sharedContent: UIViewController?
+    private var hosts: [UIViewController] = []
+    private var applyingWebSelection = false
     private var searchButton: UIButton?
     private var attempt = 0
     private var registered = false
@@ -55,7 +59,9 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
                   let web = findWebView(root.view) else { continue }
             webView = web
 
-            if systemBar == nil {
+            if #available(iOS 26.0, *) {
+                if nativeController == nil { installSystemController(in: window, content: root) }
+            } else if systemBar == nil {
                 // No visual imitation, custom blur, capsule background or
                 // UITabBarAppearance override. UIKit chooses the OS material.
                 let bar = UITabBar(frame: .zero)
@@ -129,6 +135,91 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         }
     }
 
+    // One existing Capacitor controller, never five WebViews or new data stores.
+    @available(iOS 26.0, *)
+    private func installSystemController(in window: UIWindow, content: UIViewController) {
+        let controller = UITabBarController()
+        sharedContent = content
+        hosts = labels.map { _ in UIViewController() }
+        let tabs = labels.indices.map { index -> UITab in
+            let host = hosts[index]
+            return UITab(title: labels[index], image: UIImage(systemName: symbols[index]),
+                         identifier: "redion-tab-\(index)") { _ in host }
+        }
+        let search = UISearchTab { _ in UIViewController() }
+        search.automaticallyActivatesSearch = false
+        controller.tabs = tabs + [search]
+        controller.prominentTabIdentifier = search.identifier
+        controller.delegate = self
+        controller.selectedTab = tabs.first
+        controller.view.tintColor = .systemBlue
+        controller.setTabBarHidden(true, animated: false)
+        nativeController = controller
+        window.rootViewController = controller
+        mountSharedContent(in: hosts[0])
+        let swipe = UIPanGestureRecognizer(target: self, action: #selector(onSwipeUp(_:)))
+        swipe.delegate = self
+        swipe.maximumNumberOfTouches = 1
+        controller.tabBar.addGestureRecognizer(swipe)
+    }
+
+    private func mountSharedContent(in host: UIViewController) {
+        guard let content = sharedContent, content.parent !== host else { return }
+        if content.parent != nil {
+            content.willMove(toParent: nil)
+            content.view.removeFromSuperview()
+            content.removeFromParent()
+        }
+        host.addChild(content)
+        content.view.translatesAutoresizingMaskIntoConstraints = false
+        host.view.addSubview(content.view)
+        NSLayoutConstraint.activate([
+            content.view.leadingAnchor.constraint(equalTo: host.view.leadingAnchor),
+            content.view.trailingAnchor.constraint(equalTo: host.view.trailingAnchor),
+            content.view.topAnchor.constraint(equalTo: host.view.topAnchor),
+            content.view.bottomAnchor.constraint(equalTo: host.view.bottomAnchor)
+        ])
+        content.didMove(toParent: host)
+    }
+
+    @available(iOS 26.0, *)
+    func tabBarController(_ tabBarController: UITabBarController, shouldSelectTab tab: UITab) -> Bool {
+        if tab is UISearchTab {
+            // Open existing RED ION search, never replace the current document.
+            openSearch()
+            return false
+        }
+        return true
+    }
+
+    @available(iOS 26.0, *)
+    func tabBarController(_ tabBarController: UITabBarController, didSelectTab selectedTab: UITab, previousTab: UITab?) {
+        guard let index = tabBarController.tabs.firstIndex(where: { $0.identifier == selectedTab.identifier }),
+              hosts.indices.contains(index) else { return }
+        mountSharedContent(in: hosts[index])
+        guard !applyingWebSelection else { return }
+        webView?.evaluateJavaScript(
+            "window.__redionNativeDockSelect?.(\(index));", completionHandler: nil)
+        UISelectionFeedbackGenerator().selectionChanged()
+    }
+
+    @available(iOS 26.0, *)
+    private func syncSystemController(_ controller: UITabBarController, selected: Int,
+                                      visible: Bool, theme: UIUserInterfaceStyle) {
+        applyingWebSelection = true
+        if controller.selectedTab?.identifier != controller.tabs[selected].identifier {
+            controller.selectedTab = controller.tabs[selected]
+        }
+        mountSharedContent(in: hosts[selected])
+        applyingWebSelection = false
+        if controller.overrideUserInterfaceStyle != theme {
+            controller.overrideUserInterfaceStyle = theme
+        }
+        if controller.isTabBarHidden == visible {
+            controller.setTabBarHidden(!visible, animated: false)
+        }
+    }
+
     private func findWebView(_ view: UIView) -> WKWebView? {
         if let web = view as? WKWebView { return web }
         for child in view.subviews {
@@ -152,7 +243,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
     }
 
     @objc private func onSwipeUp(_ gesture: UIPanGestureRecognizer) {
-        guard gesture.state == .ended, let bar = systemBar else { return }
+        guard gesture.state == .ended, let bar = (gesture.view as? UITabBar) else { return }
         let vector = gesture.translation(in: bar)
         guard vector.y < -32, abs(vector.y) > abs(vector.x) else { return }
         let x = gesture.location(in: bar).x
@@ -175,14 +266,19 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
               let selected = data["selected"] as? Int,
               (0..<labels.count).contains(selected) else { return }
         DispatchQueue.main.async { [weak self] in
-            guard let self, let bar = self.systemBar else { return }
-            bar.selectedItem = bar.items?[selected]
-            bar.overrideUserInterfaceStyle =
+            guard let self else { return }
+            let theme: UIUserInterfaceStyle =
                 (data["theme"] as? String) == "light" ? .light : .dark
             let visible = (data["visible"] as? Bool) ?? true
-            bar.isHidden = !visible
-            self.searchButton?.isHidden = !visible
-            self.searchButton?.overrideUserInterfaceStyle = bar.overrideUserInterfaceStyle
+            if #available(iOS 26.0, *), let controller = self.nativeController {
+                self.syncSystemController(controller, selected: selected, visible: visible, theme: theme)
+            } else if let bar = self.systemBar {
+                bar.selectedItem = bar.items?[selected]
+                bar.overrideUserInterfaceStyle = theme
+                bar.isHidden = !visible
+                self.searchButton?.isHidden = !visible
+                self.searchButton?.overrideUserInterfaceStyle = bar.overrideUserInterfaceStyle
+            } else { return }
 
             // Hide the legacy web bar only AFTER the real system bar exists.
             // It keeps its DOM geometry so Redion's existing content clearance
@@ -295,4 +391,18 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
       queue();
     })();
     """#
+}
+
+// Native share, documents and home shortcuts must find the same Capacitor WebView
+// even when the system tab controller is the window root.
+func redionBridgeWebView(in window: UIWindow?) -> WKWebView? {
+    func find(_ view: UIView) -> WKWebView? {
+        if let web = view as? WKWebView { return web }
+        for child in view.subviews {
+            if let web = find(child) { return web }
+        }
+        return nil
+    }
+    guard let root = window?.rootViewController else { return nil }
+    return find(root.view)
 }
