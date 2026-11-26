@@ -863,6 +863,30 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
    ohne Wort), das aktive unverwechselbar unter einer Marke in Akzentfarbe,
    „Bauteile" als die Handlung, mit der ein Plan beginnt, hervorgehoben. */
 .sp-wrap .sp-werkzeuge{gap:2px;padding:5px;border-radius:19px}
+/* Dieselbe AFFiNE-Galerie wie PDF und Whiteboard, über dem bestehenden
+   freien Werkzeugstreifen. Die alten .sp-wz bleiben Bedienungsanker. */
+.sp-wrap .sp-werkzeuge.gfx-tb-edgeless{
+  display:block;padding:0;border:0;background:none;box-shadow:none;
+  width:min(var(--gfx-dock-breite),calc(100% - 24px));
+  overflow:visible;
+}
+.sp-wrap .sp-werkzeuge.gfx-tb-edgeless .sp-wz{
+  min-width:0;width:36px;height:36px;padding:0;border:0;
+}
+.sp-wrap .sp-werkzeuge.gfx-tb-edgeless .gfx-tb-karte .sp-wz{
+  width:0;height:100%;
+}
+.sp-wrap .sp-werkzeuge.gfx-tb-edgeless .sp-wz.an{
+  background:var(--gfx-dock-hover);color:var(--gfx-galerie-aktiv);
+}
+@media(max-width:550px){
+  .sp-wrap .sp-werkzeuge.gfx-tb-edgeless .gfx-tb-schnell .sp-wz{width:44px;height:44px}
+}
+@container sp (max-width:800px){
+  .sp-werkzeuge.gfx-tb-edgeless .gfx-tb-edgeless-zusatz{left:0;bottom:calc(100% + 6px);height:44px}
+  .sp-werkzeuge.gfx-tb-edgeless .gfx-tb-menue{bottom:calc(100% + 56px)}
+  .sp-wrap .sp-koerper{padding-bottom:138px}
+}
 .sp-wrap .sp-werkzeuge > :is(button){position:relative;z-index:1}
 .sp-wrap .sp-werkzeuge :is(.sp-wz,.sp-dock-fit,.sp-palette-knopf){
   display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;

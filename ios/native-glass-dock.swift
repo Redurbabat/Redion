@@ -18,6 +18,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
     private let symbols = ["book.closed", "house", "graduationcap", "calendar", "ellipsis"]
     private weak var webView: WKWebView?
     private var systemBar: UITabBar?
+    private var searchButton: UIButton?
     private var attempt = 0
     private var registered = false
 
@@ -76,18 +77,41 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
                 bar.selectedItem = items.first
                 bar.isHidden = true // Wait for WebView to report its real tab state.
                 bar.accessibilityIdentifier = "redion-native-system-tab-bar"
+                let search = UIButton(type: .system)
+                var configuration: UIButton.Configuration
+                if #available(iOS 26.0, *) {
+                    configuration = .glass()
+                } else {
+                    configuration = .gray()
+                }
+                configuration.cornerStyle = .capsule
+                configuration.image = UIImage(systemName: "magnifyingglass")
+                configuration.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 24, weight: .regular)
+                search.configuration = configuration
+                search.tintColor = .label
+                search.translatesAutoresizingMaskIntoConstraints = false
+                search.accessibilityLabel = "Suchen"
+                search.accessibilityIdentifier = "redion-native-search"
+                search.addTarget(self, action: #selector(openSearch), for: .touchUpInside)
+                search.isHidden = true
                 root.view.addSubview(bar)
+                root.view.addSubview(search)
                 NSLayoutConstraint.activate([
-                    bar.leadingAnchor.constraint(equalTo: root.view.leadingAnchor, constant: 12),
-                    bar.trailingAnchor.constraint(equalTo: root.view.trailingAnchor, constant: -12),
+                    bar.leadingAnchor.constraint(equalTo: root.view.safeAreaLayoutGuide.leadingAnchor, constant: 8),
+                    search.trailingAnchor.constraint(equalTo: root.view.safeAreaLayoutGuide.trailingAnchor, constant: -8),
+                    bar.trailingAnchor.constraint(equalTo: search.leadingAnchor, constant: -8),
                     bar.bottomAnchor.constraint(equalTo: root.view.safeAreaLayoutGuide.bottomAnchor, constant: -8),
-                    bar.heightAnchor.constraint(equalToConstant: 68)
+                    bar.heightAnchor.constraint(equalToConstant: 68),
+                    search.centerYAnchor.constraint(equalTo: bar.centerYAnchor),
+                    search.widthAnchor.constraint(equalToConstant: 52),
+                    search.heightAnchor.constraint(equalToConstant: 52)
                 ])
                 let swipe = UIPanGestureRecognizer(target: self, action: #selector(onSwipeUp(_:)))
                 swipe.delegate = self
                 swipe.maximumNumberOfTouches = 1
                 bar.addGestureRecognizer(swipe)
                 systemBar = bar
+                searchButton = search
             }
 
             if !registered {
@@ -127,6 +151,10 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         UISelectionFeedbackGenerator().selectionChanged()
     }
 
+    @objc private func openSearch() {
+        webView?.evaluateJavaScript("window.__redionNativeDockSearch?.();", completionHandler: nil)
+    }
+
     @objc private func onSwipeUp(_ gesture: UIPanGestureRecognizer) {
         guard gesture.state == .ended, let bar = systemBar else { return }
         let vector = gesture.translation(in: bar)
@@ -157,12 +185,14 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
                 (data["theme"] as? String) == "light" ? .light : .dark
             let visible = (data["visible"] as? Bool) ?? true
             bar.isHidden = !visible
+            self.searchButton?.isHidden = !visible
+            self.searchButton?.overrideUserInterfaceStyle = bar.overrideUserInterfaceStyle
 
             // Hide the legacy web bar only AFTER the real system bar exists.
             // It keeps its DOM geometry so Redion's existing content clearance
             // and navigation state still work without data migration.
             self.webView?.evaluateJavaScript(
-                "document.documentElement.classList.add('redion-ios-native-dock')",
+                "window.__redionNativeDockReady?.();",
                 completionHandler: nil)
         }
     }
@@ -190,11 +220,13 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         "pointer-events:none!important;" +
         "}";
       (document.head || document.documentElement).appendChild(sheet);
-      document.documentElement.classList.add('redion-ios-native-dock');
       // Keep the old DOM as a private click target, not a second accessible
       // toolbar. Programmatic .click() continues to use Redion's one router.
       const legacyBar = document.getElementById('handy-oben');
-      legacyBar?.setAttribute('aria-hidden', 'true');
+      window.__redionNativeDockReady = () => {
+        document.documentElement.classList.add('redion-ios-native-dock');
+        legacyBar?.setAttribute('aria-hidden', 'true');
+      };
       const selector = '#handy-oben > button[role="tab"]';
       let barObserver, bodyObserver;
       let frame = false;
@@ -218,11 +250,15 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         const bar = buttons[0].parentElement;
         const dockShown = !!(bar && bar.getClientRects().length && getComputedStyle(bar).display !== 'none');
         const keyboard = !!(window.visualViewport && window.visualViewport.height < window.innerHeight - 140);
+        // Die Zeichenfläche besitzt ihr eigenes AFFiNE-Werkzeugdock.
+        // Die Navigation und Suche liegen dort nicht über den Zeichenwerkzeugen.
+        const drawing = Array.from(document.querySelectorAll('.document-studio, .pg-flaeche, .sp-voll'))
+          .some(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden');
         window.webkit?.messageHandlers?.redionDock?.postMessage({
           selected: current < 0 ? 0 : current,
           locked,
           theme: document.documentElement.dataset.theme || 'dark',
-          visible: dockShown && !modal && !locked && !editing && !keyboard
+          visible: dockShown && !modal && !locked && !editing && !keyboard && !drawing
         });
       }
       function queue() {
@@ -232,6 +268,11 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
       window.__redionNativeDockSelect = index => {
         const b = document.querySelectorAll(selector)[index];
         if (b) { b.click(); queue(); }
+      };
+      window.__redionNativeDockSearch = () => {
+        const button = document.getElementById('btn-suche-handy');
+        if (button && !button.disabled) button.click();
+        queue();
       };
       window.__redionNativeDockTargets = index => {
         const b = document.querySelectorAll(selector)[index];

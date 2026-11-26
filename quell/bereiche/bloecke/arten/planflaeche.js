@@ -439,23 +439,35 @@ const Planflaeche = (() => {
         const symbol = (id, gr = 20) => (typeof Register !== 'undefined' && Register.symbole) ? Register.symbole.alsSvg(id, gr) : '';
         const kopfLinks = document.createElement('span');
         kopfLinks.className = 'sp-links';
-        const dock = document.createElement('span');
-        dock.className = 'sp-werkzeuge sp-mit-marke';
-        dock.setAttribute('role', 'toolbar');
-        dock.setAttribute('aria-label', 'Zeichenwerkzeuge');
-        dock.innerHTML =
-            `<span class="sp-wz-marke" aria-hidden="true"></span>` +
-                WERKZEUGE.map(w => `<button type="button" class="sp-wz" data-wz="${w.id}" title="${esc(w.titel)} (${w.taste})" ` +
-                    `aria-label="${esc(w.titel)}" aria-keyshortcuts="${w.taste}" aria-pressed="false">` +
-                    `<span class="sp-wz-zeichen" aria-hidden="true">${symbol(w.sym)}</span>` +
-                    `<span class="sp-wz-name" aria-hidden="true">${esc(w.name)}</span></button>`).join('') +
-                `<span class="sp-dock-trenner" aria-hidden="true"></span>` +
-                `<button type="button" class="sp-palette-knopf" data-a="palette-toggle" aria-label="Bauteilpalette öffnen oder schliessen" ` +
-                `aria-keyshortcuts="B" aria-expanded="false" title="Bauteile ausklappen und direkt auf die Zeichnung ziehen (B)">` +
-                `<span class="sp-wz-zeichen" aria-hidden="true">${symbol('plus')}</span><span class="sp-wz-name">Bauteile</span></button>` +
-                `<button type="button" class="sp-dock-fit" data-a="zoom-alles" title="Einpassen: den ganzen Schaltplan zeigen (0)" ` +
-                `aria-label="Einpassen — den ganzen Schaltplan zeigen" aria-keyshortcuts="0">` +
-                `<span class="sp-wz-zeichen" aria-hidden="true">${symbol('maximize')}</span><span class="sp-wz-name" aria-hidden="true">Einpassen</span></button>`;
+        const planDock = GfxToolbar.erstelle({
+            klasse: 'sp-werkzeuge', beschriftung: 'Zeichenwerkzeuge', aktiv: z.werkzeug,
+            werkzeuge: WERKZEUGE.map(w => ({ ...w, zeichen: '',
+                gruppe: w.id === 'zeigen' || w.id === 'leitung' ? 'quick' : 'senior' })),
+            galerie: {
+                schnell: ['plan-modus'], edgeless: { zusatz: ['palette-toggle', 'zoom-alles'] },
+                karten: [
+                    { id: 'stifte', knoepfe: ['stift'] },
+                    { id: 'radieren', knoepfe: ['radieren'] },
+                    { id: 'text', knoepfe: ['text'] },
+                    { id: 'schiene', knoepfe: ['schiene'] }
+                ],
+                werkzeugMenues: { 'plan-modus': ['zeigen', 'leitung'] }
+            },
+            aktionen: [
+                { id: 'plan-modus', name: 'Auswahl und Leitung', sym: 'inkPointer', menue: true, kapsel: 'werkzeuge' },
+                { id: 'palette-toggle', name: 'Bauteile', titel: 'Bauteile öffnen oder schliessen (B)', sym: 'plus', kapsel: 'werkzeuge' },
+                { id: 'zoom-alles', name: 'Einpassen', titel: 'Den ganzen Schaltplan zeigen (0)', sym: 'maximize', kapsel: 'werkzeuge' }
+            ]
+        });
+        const dock = planDock.element;
+        for (const w of WERKZEUGE) {
+            const button = dock.querySelector(`[data-wz="${w.id}"]`);
+            button?.classList.add('sp-wz');
+            button?.setAttribute('aria-keyshortcuts', w.taste);
+        }
+        dock.querySelector('[data-a="palette-toggle"]')?.classList.add('sp-palette-knopf');
+        dock.querySelector('[data-a="zoom-alles"]')?.classList.add('sp-dock-fit');
+        Register.symbole.fuelle(dock);
         const kopfRechts = document.createElement('span');
         kopfRechts.className = 'sp-rechts';
         kopf.append(kopfLinks, dock, kopfRechts);
@@ -483,6 +495,7 @@ const Planflaeche = (() => {
             }
         };
         const dockAktualisieren = () => {
+            planDock.setzeWerkzeug(z.werkzeug);
             dock.querySelectorAll('.sp-wz').forEach(b => {
                 const an = b.dataset.wz === z.werkzeug;
                 b.classList.toggle('an', an);

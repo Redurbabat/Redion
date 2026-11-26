@@ -205,6 +205,7 @@ const Zusatz = (() => {
     const leiste = GfxToolbar.erstelle({
       werkzeuge: Register.werkzeuge.auswahl(WERKZEUG_IDS),
       aktionen: [
+        { id: 'wb-modus', name: 'Auswahl, Hand und Verbinden', sym: 'inkPointer', menue: true, kapsel: 'werkzeuge' },
         { id: 'farbe', name: 'Farbe', titel: 'Farbe wählen', sym: 'palette', menue: true, kapsel: 'werkzeuge' },
         { id: 'kleiner', name: 'Verkleinern', sym: 'minus' },
         { id: 'groesser', name: 'Vergrössern', sym: 'plus' },
@@ -218,6 +219,22 @@ const Zusatz = (() => {
       zusatz: { groesser: massstabZeigen },
       aktiv: werkzeug,
       klasse: 'wb-tools',
+      galerie: {
+        schnell: ['wb-modus'],
+        edgeless: { zusatz: ['farbe', 'mehr'] },
+        karten: [
+          { id: 'notiz', knoepfe: ['notiz'] },
+          { id: 'stifte', knoepfe: ['stift'] },
+          { id: 'stifte', knoepfe: ['radierer'] },
+          { id: 'rechteck', knoepfe: ['rechteck'] },
+          { id: 'ellipse', knoepfe: ['ellipse'] },
+          { id: 'linie', knoepfe: ['linie'] },
+          { id: 'pfeil', knoepfe: ['pfeil'] },
+          { id: 'text', knoepfe: ['text'] },
+          { id: 'bild', knoepfe: ['bild'] }
+        ],
+        werkzeugMenues: { 'wb-modus': ['zeiger', 'hand', 'verbindung'] }
+      },
       /* MIT DEM TITEL, WENN ES EINEN GIBT (Durchsicht E722, §38). Zwei
          Whiteboards auf einer Seite oder auf der Fläche hiessen sonst gleich,
          und wer vorlesen lässt, hörte nicht, welches die Leiste bedient.

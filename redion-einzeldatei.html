@@ -3755,6 +3755,8 @@ html[data-theme="light"] .gfx-tb-edgeless [data-a="elektro"]{color:#8a5c00}
 .gfx-tb-edgeless .gfx-tb-blatt[aria-disabled="true"]:hover{background:transparent}
 .gfx-tb-edgeless :is([data-a="modus"],[data-a="pdf-zeiger"]){--dock-glyphe:var(--affine-dock-select)}
 .gfx-tb-edgeless .gfx-tb-schnell [data-sym="inkHand"]{--dock-glyphe:var(--affine-dock-hand)}
+.gfx-tb-edgeless .gfx-tb-schnell [data-sym="inkPointer"]{--dock-glyphe:var(--affine-dock-select)}
+.gfx-tb-edgeless .gfx-tb-schnell [data-sym="inkConnector"]{--dock-glyphe:var(--affine-dock-connector)}
 .gfx-tb-edgeless :is([data-a="rahmen"],[data-a="pdf-rahmen"]){--dock-glyphe:var(--affine-dock-frame)}
 .gfx-tb-edgeless :is([data-wz="verbindung"],[data-a="pdf-verbinder"]){--dock-glyphe:var(--affine-dock-connector)}
 .gfx-tb-edgeless :is([data-a="seitenlink"],[data-a="pdf-link"]){--dock-glyphe:var(--affine-dock-link)}
@@ -3797,6 +3799,8 @@ html[data-theme="light"] .gfx-tb-edgeless [data-a="elektro"]{color:#8a5c00}
   transform:translateY(4px);transition:transform .3s ease-in-out;pointer-events:none;
 }
 .gfx-tb-edgeless .gfx-tb-karte .zeichen svg{visibility:hidden}
+.gfx-tb-edgeless .gfx-tb-symbol .zeichen{display:grid;place-items:center;background:none;transform:none}
+.gfx-tb-edgeless .gfx-tb-symbol .zeichen svg{visibility:visible;width:30px;height:30px}
 .gfx-tb-edgeless .gfx-tb-karte button:is(:hover,:focus-visible,.on) .zeichen{transform:none}
 .gfx-tb-edgeless [data-karte="stifte"] .zeichen{transform:translateY(8px)}
 .gfx-tb-edgeless [data-karte="stifte"] button:is(:hover,:focus-visible,.on) .zeichen{transform:none}
@@ -3855,6 +3859,18 @@ html[data-theme="light"] .gfx-tb-edgeless [data-a="elektro"]{color:#8a5c00}
   max-width:100%;overflow-x:auto;scrollbar-width:none;
 }
 .gfx-tb-edgeless .gfx-tb-neben::-webkit-scrollbar{display:none}
+/* Das eingebettete Whiteboard hält auch für die Zusatzreihe einen eigenen
+   Platz frei. Sonst lägen Farbe und Verlauf auf der Zeichnung. */
+.wb > .gfx-tb-edgeless{margin:58px auto 12px;scroll-margin-block:100px}
+.wb{container-type:inline-size;container-name:whiteboard}
+@container whiteboard (max-width:800px){
+  .wb-tools.gfx-tb-edgeless .gfx-tb-edgeless-zusatz{left:0;bottom:calc(100% + 6px);height:44px}
+  .wb-tools.gfx-tb-edgeless .gfx-tb-neben{max-width:calc(100% - 102px)}
+  .wb-tools.gfx-tb-edgeless .gfx-tb-menue{bottom:calc(100% + 56px)}
+}
+@media(max-width:800px){
+  :is(.wb-tools,.sp-werkzeuge).gfx-tb-edgeless .gfx-tb-neben{max-width:calc(100% - 102px)}
+}
 .gfx-tb-edgeless .pg-fl-kontext{
   position:absolute;width:1px;height:1px;padding:0;border:0;clip-path:inset(50%);
 }
@@ -14985,6 +15001,30 @@ body[data-bewegung="ruhig"] .sp-wrap :is(
    ohne Wort), das aktive unverwechselbar unter einer Marke in Akzentfarbe,
    „Bauteile" als die Handlung, mit der ein Plan beginnt, hervorgehoben. */
 .sp-wrap .sp-werkzeuge{gap:2px;padding:5px;border-radius:19px}
+/* Dieselbe AFFiNE-Galerie wie PDF und Whiteboard, über dem bestehenden
+   freien Werkzeugstreifen. Die alten .sp-wz bleiben Bedienungsanker. */
+.sp-wrap .sp-werkzeuge.gfx-tb-edgeless{
+  display:block;padding:0;border:0;background:none;box-shadow:none;
+  width:min(var(--gfx-dock-breite),calc(100% - 24px));
+  overflow:visible;
+}
+.sp-wrap .sp-werkzeuge.gfx-tb-edgeless .sp-wz{
+  min-width:0;width:36px;height:36px;padding:0;border:0;
+}
+.sp-wrap .sp-werkzeuge.gfx-tb-edgeless .gfx-tb-karte .sp-wz{
+  width:0;height:100%;
+}
+.sp-wrap .sp-werkzeuge.gfx-tb-edgeless .sp-wz.an{
+  background:var(--gfx-dock-hover);color:var(--gfx-galerie-aktiv);
+}
+@media(max-width:550px){
+  .sp-wrap .sp-werkzeuge.gfx-tb-edgeless .gfx-tb-schnell .sp-wz{width:44px;height:44px}
+}
+@container sp (max-width:800px){
+  .sp-werkzeuge.gfx-tb-edgeless .gfx-tb-edgeless-zusatz{left:0;bottom:calc(100% + 6px);height:44px}
+  .sp-werkzeuge.gfx-tb-edgeless .gfx-tb-menue{bottom:calc(100% + 56px)}
+  .sp-wrap .sp-koerper{padding-bottom:138px}
+}
 .sp-wrap .sp-werkzeuge > :is(button){position:relative;z-index:1}
 .sp-wrap .sp-werkzeuge :is(.sp-wz,.sp-dock-fit,.sp-palette-knopf){
   display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
@@ -31542,7 +31582,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1680, inhalt: '677809797819f9ba', gebaut: '2026-11-25T22:17:34.529Z' };
+const Stand = { fassung: 1683, inhalt: '93ca44e22b53a013', gebaut: '2026-11-26T12:02:59.194Z' };
 window.Stand = Stand;
 
 </script>
@@ -32489,6 +32529,10 @@ const GfxToolbar = (() => {
                 karte.dataset.karte = id;
                 einhaengen(karte, ids);
                 const vorschau = karte.querySelector('.zeichen');
+                for (const b of karte.querySelectorAll('button')) {
+                    if (!['notiz', 'formen'].includes(id) && !['stift', 'radierer'].includes(b.dataset.wz ?? ''))
+                        b.classList.add('gfx-tb-symbol');
+                }
                 if (vorschau && (id === 'notiz' || id === 'formen')) {
                     delete vorschau.dataset.sym;
                     const teile = id === 'notiz' ? ['link', 'text', 'heading'] : ['rect', 'ellipse', 'triangle'];
@@ -32704,6 +32748,10 @@ const GfxToolbar = (() => {
                 b.classList.toggle('on', an);
                 b.setAttribute('aria-pressed', String(an));
             });
+            for (const [menuId, group] of menueGruppen) {
+                const trigger = wurzel.querySelector(`[data-menue="${CSS.escape(menuId)}"]`);
+                trigger?.classList.toggle('on', !!group.querySelector(`[data-wz="${CSS.escape(id)}"]`));
+            }
             tabstoppSetzen();
         };
         const setzeGesperrt = (id, ja) => {
@@ -61247,6 +61295,7 @@ const Zusatz = (() => {
         const leiste = GfxToolbar.erstelle({
             werkzeuge: Register.werkzeuge.auswahl(WERKZEUG_IDS),
             aktionen: [
+                { id: 'wb-modus', name: 'Auswahl, Hand und Verbinden', sym: 'inkPointer', menue: true, kapsel: 'werkzeuge' },
                 { id: 'farbe', name: 'Farbe', titel: 'Farbe wählen', sym: 'palette', menue: true, kapsel: 'werkzeuge' },
                 { id: 'kleiner', name: 'Verkleinern', sym: 'minus' },
                 { id: 'groesser', name: 'Vergrössern', sym: 'plus' },
@@ -61258,6 +61307,22 @@ const Zusatz = (() => {
             zusatz: { groesser: massstabZeigen },
             aktiv: werkzeug,
             klasse: 'wb-tools',
+            galerie: {
+                schnell: ['wb-modus'],
+                edgeless: { zusatz: ['farbe', 'mehr'] },
+                karten: [
+                    { id: 'notiz', knoepfe: ['notiz'] },
+                    { id: 'stifte', knoepfe: ['stift'] },
+                    { id: 'stifte', knoepfe: ['radierer'] },
+                    { id: 'rechteck', knoepfe: ['rechteck'] },
+                    { id: 'ellipse', knoepfe: ['ellipse'] },
+                    { id: 'linie', knoepfe: ['linie'] },
+                    { id: 'pfeil', knoepfe: ['pfeil'] },
+                    { id: 'text', knoepfe: ['text'] },
+                    { id: 'bild', knoepfe: ['bild'] }
+                ],
+                werkzeugMenues: { 'wb-modus': ['zeiger', 'hand', 'verbindung'] }
+            },
             beschriftung: 'Werkzeuge der Zeichenfläche' +
                 (String(block.text ?? '').trim() ? ` „${String(block.text).trim()}“` : ''),
             menue: (id) => id === 'farbe' ? farbMenue() : id === 'mehr' ? mehrMenue() : null,
@@ -75552,23 +75617,35 @@ const Planflaeche = (() => {
         const symbol = (id, gr = 20) => (typeof Register !== 'undefined' && Register.symbole) ? Register.symbole.alsSvg(id, gr) : '';
         const kopfLinks = document.createElement('span');
         kopfLinks.className = 'sp-links';
-        const dock = document.createElement('span');
-        dock.className = 'sp-werkzeuge sp-mit-marke';
-        dock.setAttribute('role', 'toolbar');
-        dock.setAttribute('aria-label', 'Zeichenwerkzeuge');
-        dock.innerHTML =
-            `<span class="sp-wz-marke" aria-hidden="true"></span>` +
-                WERKZEUGE.map(w => `<button type="button" class="sp-wz" data-wz="${w.id}" title="${esc(w.titel)} (${w.taste})" ` +
-                    `aria-label="${esc(w.titel)}" aria-keyshortcuts="${w.taste}" aria-pressed="false">` +
-                    `<span class="sp-wz-zeichen" aria-hidden="true">${symbol(w.sym)}</span>` +
-                    `<span class="sp-wz-name" aria-hidden="true">${esc(w.name)}</span></button>`).join('') +
-                `<span class="sp-dock-trenner" aria-hidden="true"></span>` +
-                `<button type="button" class="sp-palette-knopf" data-a="palette-toggle" aria-label="Bauteilpalette öffnen oder schliessen" ` +
-                `aria-keyshortcuts="B" aria-expanded="false" title="Bauteile ausklappen und direkt auf die Zeichnung ziehen (B)">` +
-                `<span class="sp-wz-zeichen" aria-hidden="true">${symbol('plus')}</span><span class="sp-wz-name">Bauteile</span></button>` +
-                `<button type="button" class="sp-dock-fit" data-a="zoom-alles" title="Einpassen: den ganzen Schaltplan zeigen (0)" ` +
-                `aria-label="Einpassen — den ganzen Schaltplan zeigen" aria-keyshortcuts="0">` +
-                `<span class="sp-wz-zeichen" aria-hidden="true">${symbol('maximize')}</span><span class="sp-wz-name" aria-hidden="true">Einpassen</span></button>`;
+        const planDock = GfxToolbar.erstelle({
+            klasse: 'sp-werkzeuge', beschriftung: 'Zeichenwerkzeuge', aktiv: z.werkzeug,
+            werkzeuge: WERKZEUGE.map(w => ({ ...w, zeichen: '',
+                gruppe: w.id === 'zeigen' || w.id === 'leitung' ? 'quick' : 'senior' })),
+            galerie: {
+                schnell: ['plan-modus'], edgeless: { zusatz: ['palette-toggle', 'zoom-alles'] },
+                karten: [
+                    { id: 'stifte', knoepfe: ['stift'] },
+                    { id: 'radieren', knoepfe: ['radieren'] },
+                    { id: 'text', knoepfe: ['text'] },
+                    { id: 'schiene', knoepfe: ['schiene'] }
+                ],
+                werkzeugMenues: { 'plan-modus': ['zeigen', 'leitung'] }
+            },
+            aktionen: [
+                { id: 'plan-modus', name: 'Auswahl und Leitung', sym: 'inkPointer', menue: true, kapsel: 'werkzeuge' },
+                { id: 'palette-toggle', name: 'Bauteile', titel: 'Bauteile öffnen oder schliessen (B)', sym: 'plus', kapsel: 'werkzeuge' },
+                { id: 'zoom-alles', name: 'Einpassen', titel: 'Den ganzen Schaltplan zeigen (0)', sym: 'maximize', kapsel: 'werkzeuge' }
+            ]
+        });
+        const dock = planDock.element;
+        for (const w of WERKZEUGE) {
+            const button = dock.querySelector(`[data-wz="${w.id}"]`);
+            button?.classList.add('sp-wz');
+            button?.setAttribute('aria-keyshortcuts', w.taste);
+        }
+        dock.querySelector('[data-a="palette-toggle"]')?.classList.add('sp-palette-knopf');
+        dock.querySelector('[data-a="zoom-alles"]')?.classList.add('sp-dock-fit');
+        Register.symbole.fuelle(dock);
         const kopfRechts = document.createElement('span');
         kopfRechts.className = 'sp-rechts';
         kopf.append(kopfLinks, dock, kopfRechts);
@@ -75596,6 +75673,7 @@ const Planflaeche = (() => {
             }
         };
         const dockAktualisieren = () => {
+            planDock.setzeWerkzeug(z.werkzeug);
             dock.querySelectorAll('.sp-wz').forEach(b => {
                 const an = b.dataset.wz === z.werkzeug;
                 b.classList.toggle('an', an);

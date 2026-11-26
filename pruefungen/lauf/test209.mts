@@ -85,8 +85,19 @@ const mitte = async (): Promise<{ x: number; y: number }> => {
   return { x: kasten.x + kasten.width / 2, y: kasten.y + kasten.height / 2 };
 };
 
-const werkzeug = (name: string): Promise<void> =>
-  seite.locator(`.wb-tools [data-wz="${name}"]`).click();
+const werkzeug = async (name: string): Promise<void> => {
+  const button = seite.locator(`.wb-tools [data-wz="${name}"]`);
+  if (['zeiger', 'hand', 'verbindung'].includes(name)) {
+    await seite.locator('.wb-tools [data-a="wb-modus"]').click();
+  } else {
+    // Die Galerie blättert wie im PDF; eine echte Eingabe muss das Werkzeug erreichen.
+    const back = seite.locator('.wb-tools [data-richtung="links"]');
+    for (let i = 0; i < 10 && await back.getAttribute('aria-disabled') !== 'true'; i++) await back.click();
+    for (let i = 0; i < 10 && !await button.isVisible(); i++)
+      await seite.locator('.wb-tools [data-richtung="rechts"]').click();
+  }
+  await button.click();
+};
 
 const formen = (id: string): Promise<any[]> => seite.evaluate(
   (blockId: string) => (Store.getBlock(blockId)?.shapes || []) as any[], id);

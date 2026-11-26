@@ -72,3 +72,17 @@ test('UIKit entscheidet ueber originales Systemmaterial', () => {
   const app = fs.readFileSync(new URL('./native-sicherung.ts', import.meta.url), 'utf8');
   assert.doesNotMatch(app, /native-glass-dock\.swift/);
 });
+
+test('fuenf Ziele und eine separate Suchkapsel mit Apples Glas ab iOS 26', () => {
+  assert.match(swift, /let search = UIButton\(type: \.system\)/);
+  assert.match(swift, /if #available\(iOS 26\.0, \*\)[\s\S]*?configuration = \.glass\(\)/);
+  assert.match(swift, /configuration = \.gray\(\)/);
+  assert.match(swift, /bar\.trailingAnchor\.constraint\(equalTo: search\.leadingAnchor/);
+  assert.match(swift, /search\.widthAnchor\.constraint\(equalToConstant: 52\)/);
+  assert.match(swift, /search\.accessibilityLabel = "Suchen"/);
+  assert.match(swift, /__redionNativeDockSearch/);
+  assert.match(swift, /getElementById\('btn-suche-handy'\)/);
+  assert.match(swift, /self\.searchButton\?\.isHidden = !visible/);
+  assert.match(swift, /!keyboard && !drawing/);
+  assert.match(swift, /\.document-studio, \.pg-flaeche, \.sp-voll/);
+});

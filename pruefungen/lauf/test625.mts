@@ -312,6 +312,17 @@ const klemme = (s: Page, bid: string, tid: string, nr: string): Promise<{ x: num
 const klick = async (s: Page, sel: string): Promise<boolean> => {
   const l = s.locator(sel).last();
   if (!(await l.count())) return false;
+  const tool = sel.match(/\[data-wz="([^"]+)"\]/)?.[1];
+  if (tool && !await l.isVisible()) {
+    const dock = s.locator('.sp-werkzeuge').last();
+    if (tool === 'zeigen' || tool === 'leitung') {
+      await dock.locator('[data-a="plan-modus"]').click();
+    } else {
+      const back = dock.locator('[data-richtung="links"]');
+      for (let i = 0; i < 10 && await back.getAttribute('aria-disabled') !== 'true'; i++) await back.click();
+      for (let i = 0; i < 10 && !await l.isVisible(); i++) await dock.locator('[data-richtung="rechts"]').click();
+    }
+  }
   try { await l.click({ timeout: 2000 }); } catch { return false; }
   await s.waitForTimeout(150);
   return true;
@@ -507,8 +518,20 @@ const T = await aufmachen({ touch: true });
   await klick(s, '.sp-wrap [data-a="zoom-alles"]');
   p('§2e „Einpassen" kehrt zur Ansicht vom Öffnen zurück', nahe(await massstab(s), m0, m0 * 0.02) && (await wert()) === wert0, await wert());
 
+  /* Die breite Galerie kann über (300,200) liegen. Wirklich über der Bühne
+     testen — sonst zoomt das Rad am Werkzeugdock, nicht auf dem Plan. */
+  const frei = await s.evaluate((): [number, number] => {
+    const stage = [...document.querySelectorAll<HTMLElement>('.sp-buehne')].pop()!;
+    const r = stage.getBoundingClientRect();
+    for (const fy of [0.3, 0.2, 0.4, 0.5]) for (const fx of [0.7, 0.5, 0.3]) {
+      const x = r.left + r.width * fx, y = r.top + r.height * fy;
+      if (document.elementFromPoint(x, y)?.closest('.sp-buehne') === stage) return [x, y];
+    }
+    throw new Error('Kein unverdeckter Punkt auf der Planbühne');
+  });
+  const probe = await planpunkt(s, ...frei);
   /* Strg+Rad um den Zeiger. */
-  const [cx, cy] = await bild(s, 300, 200);
+  const [cx, cy] = await bild(s, ...probe);
   await s.mouse.move(cx, cy);
   await svgZaehler(s);
   const vorPunkt = await planpunkt(s, cx, cy);
@@ -524,28 +547,28 @@ const T = await aufmachen({ touch: true });
   gleich('§7a beim Zoomen wird das SVG nicht neu gebaut', await neueSvg(s), 0);
   const scrollVor = await s.evaluate(() => (document.querySelector('#page')?.closest('[class*="scroll"], main') as HTMLElement | null)?.scrollTop ?? scrollY);
   /* Das Rad verschiebt, wenn gezoomt ist. */
-  const [ex0, ey0] = await bild(s, 300, 200);
+  const [ex0, ey0] = await bild(s, ...probe);
   await s.mouse.wheel(0, 100); await s.waitForTimeout(200);
-  const [ex1, ey1] = await bild(s, 300, 200);
+  const [ex1, ey1] = await bild(s, ...probe);
   p('§2h das Rad verschiebt den gezoomten Plan', nahe(ex0, ex1, 2) && ey1 < ey0 - 40, JSON.stringify([ex0, ey0, ex1, ey1]));
   void scrollVor;
   /* Mittlere Maustaste. */
   const vorTeile = JSON.stringify((await plan(s, bid)).teile);
-  const [mx0, my0] = await bild(s, 300, 200);
+  const [mx0, my0] = await bild(s, ...probe);
   await zieheMaus(s, await planpunkt(s, mx0, my0), await planpunkt(s, mx0 + 100, my0 + 30), 6, 'middle');
-  const [mx1, my1] = await bild(s, 300, 200);
+  const [mx1, my1] = await bild(s, ...probe);
   p('§2i die mittlere Maustaste verschiebt', nahe(mx1 - mx0, 100, 6) && nahe(my1 - my0, 30, 6), JSON.stringify([mx1 - mx0, my1 - my0]));
   gleich('§2j … und bewegt kein Teil', JSON.stringify((await plan(s, bid)).teile), vorTeile);
   /* Leertaste + Ziehen auf leerer Fläche. */
   await s.evaluate(() => [...document.querySelectorAll<HTMLElement>('.sp-wrap')].pop()!.focus());
-  const [lx0, ly0] = await bild(s, 300, 200);
+  const [lx0, ly0] = await bild(s, ...probe);
   await s.keyboard.down(' ');
   /* Neben (300,200), wo nichts liegt: 30 px rechts, 20 px tiefer. */
   const leer = await planpunkt(s, lx0 + 30, ly0 + 20);
   const leer2 = await planpunkt(s, lx0 + 90, ly0 + 60);
   await zieheMaus(s, leer, leer2, 6);
   await s.keyboard.up(' ');
-  const [lx1, ly1] = await bild(s, 300, 200);
+  const [lx1, ly1] = await bild(s, ...probe);
   p('§2k Leertaste + Ziehen verschiebt', nahe(lx1 - lx0, 60, 8) && nahe(ly1 - ly0, 40, 8), JSON.stringify([lx1 - lx0, ly1 - ly0]));
   const auswahlNachLeer = await s.locator('.sp-wrap .sp-gewaehlt').count();
   gleich('§2l … und zieht keinen Rahmen auf', auswahlNachLeer, 0);

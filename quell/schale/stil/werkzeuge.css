@@ -926,6 +926,8 @@ html[data-theme="light"] .gfx-tb-edgeless [data-a="elektro"]{color:#8a5c00}
 .gfx-tb-edgeless .gfx-tb-blatt[aria-disabled="true"]:hover{background:transparent}
 .gfx-tb-edgeless :is([data-a="modus"],[data-a="pdf-zeiger"]){--dock-glyphe:var(--affine-dock-select)}
 .gfx-tb-edgeless .gfx-tb-schnell [data-sym="inkHand"]{--dock-glyphe:var(--affine-dock-hand)}
+.gfx-tb-edgeless .gfx-tb-schnell [data-sym="inkPointer"]{--dock-glyphe:var(--affine-dock-select)}
+.gfx-tb-edgeless .gfx-tb-schnell [data-sym="inkConnector"]{--dock-glyphe:var(--affine-dock-connector)}
 .gfx-tb-edgeless :is([data-a="rahmen"],[data-a="pdf-rahmen"]){--dock-glyphe:var(--affine-dock-frame)}
 .gfx-tb-edgeless :is([data-wz="verbindung"],[data-a="pdf-verbinder"]){--dock-glyphe:var(--affine-dock-connector)}
 .gfx-tb-edgeless :is([data-a="seitenlink"],[data-a="pdf-link"]){--dock-glyphe:var(--affine-dock-link)}
@@ -968,6 +970,8 @@ html[data-theme="light"] .gfx-tb-edgeless [data-a="elektro"]{color:#8a5c00}
   transform:translateY(4px);transition:transform .3s ease-in-out;pointer-events:none;
 }
 .gfx-tb-edgeless .gfx-tb-karte .zeichen svg{visibility:hidden}
+.gfx-tb-edgeless .gfx-tb-symbol .zeichen{display:grid;place-items:center;background:none;transform:none}
+.gfx-tb-edgeless .gfx-tb-symbol .zeichen svg{visibility:visible;width:30px;height:30px}
 .gfx-tb-edgeless .gfx-tb-karte button:is(:hover,:focus-visible,.on) .zeichen{transform:none}
 .gfx-tb-edgeless [data-karte="stifte"] .zeichen{transform:translateY(8px)}
 .gfx-tb-edgeless [data-karte="stifte"] button:is(:hover,:focus-visible,.on) .zeichen{transform:none}
@@ -1026,6 +1030,18 @@ html[data-theme="light"] .gfx-tb-edgeless [data-a="elektro"]{color:#8a5c00}
   max-width:100%;overflow-x:auto;scrollbar-width:none;
 }
 .gfx-tb-edgeless .gfx-tb-neben::-webkit-scrollbar{display:none}
+/* Das eingebettete Whiteboard hält auch für die Zusatzreihe einen eigenen
+   Platz frei. Sonst lägen Farbe und Verlauf auf der Zeichnung. */
+.wb > .gfx-tb-edgeless{margin:58px auto 12px;scroll-margin-block:100px}
+.wb{container-type:inline-size;container-name:whiteboard}
+@container whiteboard (max-width:800px){
+  .wb-tools.gfx-tb-edgeless .gfx-tb-edgeless-zusatz{left:0;bottom:calc(100% + 6px);height:44px}
+  .wb-tools.gfx-tb-edgeless .gfx-tb-neben{max-width:calc(100% - 102px)}
+  .wb-tools.gfx-tb-edgeless .gfx-tb-menue{bottom:calc(100% + 56px)}
+}
+@media(max-width:800px){
+  :is(.wb-tools,.sp-werkzeuge).gfx-tb-edgeless .gfx-tb-neben{max-width:calc(100% - 102px)}
+}
 .gfx-tb-edgeless .pg-fl-kontext{
   position:absolute;width:1px;height:1px;padding:0;border:0;clip-path:inset(50%);
 }

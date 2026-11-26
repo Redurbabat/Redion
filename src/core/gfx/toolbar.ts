@@ -231,6 +231,12 @@ const GfxToolbar = (() => {
         karte.dataset.karte = id;
         einhaengen(karte, ids);
         const vorschau = karte.querySelector<HTMLElement>('.zeichen');
+        // Vorschauen nur dort ausblenden, wo es tatsächlich ein Werkzeugbild gibt.
+        // Plan-Schiene, Text und einzelne Whiteboard-Formen behalten ihr Registersymbol.
+        for (const b of karte.querySelectorAll<HTMLElement>('button')) {
+          if (!['notiz', 'formen'].includes(id) && !['stift', 'radierer'].includes(b.dataset.wz ?? ''))
+            b.classList.add('gfx-tb-symbol');
+        }
         if (vorschau && (id === 'notiz' || id === 'formen')) {
           delete vorschau.dataset.sym;
           const teile = id === 'notiz' ? ['link', 'text', 'heading'] : ['rect', 'ellipse', 'triangle'];
@@ -451,6 +457,10 @@ const GfxToolbar = (() => {
         b.classList.toggle('on', an);
         b.setAttribute('aria-pressed', String(an));
       });
+      for (const [menuId, group] of menueGruppen) {
+        const trigger = wurzel.querySelector<HTMLElement>(`[data-menue="${CSS.escape(menuId)}"]`);
+        trigger?.classList.toggle('on', !!group.querySelector(`[data-wz="${CSS.escape(id)}"]`));
+      }
       tabstoppSetzen();
     };
     const setzeGesperrt = (id: string, ja: boolean): void => {
