@@ -75,3 +75,9 @@ Eine Sperre ist eine Bearbeitungshilfe, keine Zugriffsberechtigung.
 - In der Windows-EXE im getrennten Offline-Profil waren bei 36 % Zoom alle acht Knoten zweier Bestandskarten sichtbar. Ein Doppelklick änderte das Thema im bestehenden Block. Die Leiste für Farbe, Text und Kopieren blieb oberhalb der Formauswahl in Bildschirmgrösse.
 - Die Fläche hält beim Fokussieren einen festen Ausschnitt. Dadurch bleiben Auswahlrahmen und gezeichnete Formen an denselben Bildschirmkoordinaten.
 - Typprüfung, Einzeldatei und Dienststand waren erfolgreich. Der Flächenlauf `test575` bestand mit 111 Prüfungen, der eigenständige Gedankenkarten-Test `test538` mit 53 Prüfungen.
+
+## Weiterer Ausbau
+
+Die Fortsetzung auf `7adad1ae` mit Rahmen, Ausrichten, Ebenenübersicht,
+verschachtelten Gruppen, Kommentaren und Austausch ist in
+[AFFINE-WEITERER-AUSBAU-PR232.md](AFFINE-WEITERER-AUSBAU-PR232.md) dokumentiert.

@@ -96,6 +96,8 @@ Register.werkzeuge = (() => {
       sym: 'formDiamond', zeichen: '◇', gruppe: 'senior' },
     { id: 'rahmenwahl', name: 'Rahmenauswahl', titel: 'Mehrere Formen mit einem Rahmen auswählen',
       sym: 'inkLasso', zeichen: '▧', gruppe: 'quick' },
+    { id: 'freihandwahl', name: 'Freihandlasso', titel: 'Formen mit einer frei gezeichneten Auswahl umfassen',
+      sym: 'inkLasso', zeichen: '⌖', gruppe: 'quick' },
     { id: 'notiz', name: 'Haftnotiz', titel: 'Eine Haftnotiz setzen und beschriften',
       sym: 'inkNote', zeichen: '🗒', gruppe: 'senior' }
   ];

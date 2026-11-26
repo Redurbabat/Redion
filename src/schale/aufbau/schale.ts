@@ -4401,6 +4401,9 @@ const App = (() => {
     /* Die Seitenleiste bekommt, was ihr nicht gehört — hier und nur hier.
        Das muss vor allem anderen stehen: sobald irgendetwas zeichnet, ruft
        es `zeichneBaum`, und das läuft dann schon nach drüben. */
+    GfxExchange.bindIO({ zip: Einlesen.zipLesenAusBlob, read: Dateien.alsBlob, remove: Dateien.weg,
+      pack: files => Austausch.zipSchreiben(files),
+      save: async (blob, name, owner) => (await Dateien.ablegen(new File([blob], name, { type: blob.type }), { blockId: owner })).id });
     Seitenleiste.binde({
       oeffne, aktuelleSeite, kuerzlich, kommendeTermine, seitenMenue, suche, papierkorb
     });

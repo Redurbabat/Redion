@@ -926,7 +926,10 @@ const Blocks = (() => {
                     b.addEventListener('click', () => quelleWaehlen(block));
                     w.appendChild(b);
                 }
-                else if (block.quelle === block.id || quelleImInneren(quelle.id, block.id)) {
+                else if (quelle.alive === false || (typeof Konten !== 'undefined' && !Konten.darf('lesen', quelle.id))) {
+                    w.textContent = 'Die eingebettete Quelle ist nicht verfügbar.';
+                }
+                else if (tiefe > 12 || block.quelle === block.id || quelleImInneren(quelle.id, block.id)) {
                     w.innerHTML = '<div class="sy-kopf sy-warn">⇄ Diese Quelle enthält den Spiegel selbst — ' +
                         'das würde sich endlos wiederholen.</div>';
                     const b = document.createElement('button');

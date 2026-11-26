@@ -275,10 +275,33 @@ werden nicht migriert. Sperren einer Gruppe schliesst ihre internen Verbinder
 mit ein. Die Reihenfolge der Formen in `shapes` bestimmt ihre Zeichenreihenfolge;
 Verbinder bleiben darunter und zählen beim schrittweisen Anordnen nicht mit.
 
-Die erweiterten Bearbeitungsregeln werden aktuell von der freien Seitenfläche
-angewendet. Ältere Clients und andere Zeichenkontexte bewahren die Felder,
+Die erweiterten Bearbeitungsregeln gelten auch im Whiteboard. PDF-Marken
+verwenden für die Sperre weiterhin `gesperrt`; die gemeinsame Übersicht bildet
+diesen Wert nur für ihre Bedienung ab. Ältere Clients bewahren optionale Felder,
 erzwingen die Sperre aber nicht. Sie ist ausdrücklich keine Sicherheitsgrenze.
 Die Felder und ihre Kennungen müssen in JSON und `.redion` erhalten bleiben.
+
+**Weitere optionale Flächenfelder** (E831): `groupPath: string[]` speichert die
+Gruppen vom innersten zum äussersten Knoten; `groupId` ist der letzte Eintrag.
+Ohne Pfad entspricht `groupId` einer einfachen Gruppe. Auflösen nimmt eine Ebene
+zurück. Kopieren vergibt für alle Pfade eigene Gruppenkennungen.
+`rotation: number` dreht Formen um ihre lokale Mitte, im Uhrzeigersinn in Grad.
+Freihandstriche drehen ihre Punkte. PDF benutzt unverändert sein Feld `dreh`.
+`art: 'frame'` mit `x,y,w,h,text,frameOrder` bezeichnet einen Präsentationsrahmen;
+`art: 'attachment'` mit `dateiId,fileName` bezeichnet eine Datei auf der Fläche.
+Verbinder dürfen `route: 'straight'|'curve'|'orthogonal'` und
+`sourceAnchor`/`targetAnchor: 'auto'|'top'|'right'|'bottom'|'left'` tragen.
+`objectComments` enthält lokale Einträge `{id,text,created,resolved}`; bestehende
+Kommentarbereiche und Benachrichtigungsdienste werden dadurch nicht ersetzt.
+`affineSource` bewahrt die ursprünglichen JSON-Werte eines importierten Objekts.
+
+Das eigenständige Austauschformat `{format:'redion-canvas',version:1,shapes}`
+ist keine vollständige Redion-Sicherung. Mit Anhängen liegt `canvas.json`
+in einem ZIP, dazu `assets` als Zuordnung von alten Datei-IDs zu `{path,mime}`.
+Beim Einlesen werden Datei-, Objekt- und Gruppen-IDs neu vergeben. Eine
+vollständige `.redion`-Sicherung bleibt für Dokumentblöcke und den Arbeitsbereich
+zuständig. Dynamische Bibliotheksregeln stehen als Liste unter dem Meta-Schlüssel
+`bibliothek:dynamic-collections` und werden mit der bestehenden Sicherung erfasst.
 
 **Die Ansicht einer Seite** (E690): ein Seitenblock darf `seitenAnsicht`
 tragen — `'seite'`, `'flaeche'` oder `'redion'`. **Ein Block ohne das Feld

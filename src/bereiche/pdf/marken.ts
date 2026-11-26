@@ -2571,7 +2571,7 @@ const Marken = (() => {
         }
       }
       const before = snapshot();
-      const neue = zwischenablage.map(mark => InkGeometry.move({ ...clone(mark), id: frischeId() }, 16, 16));
+      const neue = GfxExchange.remap(zwischenablage.map(mark => clone(mark)), frischeId).map(mark => InkGeometry.move(mark, 16, 16));
       marks.push(...neue);
       neue.forEach(mark => { const node = zeichneMarke(mark); if (node) { flaeche.appendChild(node); merke(mark); } });
       selection = new Set(neue.map(mark => idOf(mark)));
@@ -3263,6 +3263,7 @@ const Marken = (() => {
               selection.add(idOf(mark));
             });
           }
+          selection = GfxObjects.expand(marks, selection);
           renderSelection();
           /* ══ EIN TIPP AUF LEERES PAPIER SCHREIBT (E605) ══════════════════
              REDUR, 16. September 2026: „dort sollte, wenn ich klicke, wie
@@ -4402,8 +4403,11 @@ const Marken = (() => {
           return;
         }
         if (targetId) {
-          if (event.shiftKey) selection.has(targetId) ? selection.delete(targetId) : selection.add(targetId);
-          else if (!selection.has(targetId)) selection = new Set([targetId]);
+          const members = GfxObjects.expand(marks, new Set([targetId]));
+          if (event.shiftKey) {
+            if (selection.has(targetId)) members.forEach(id => selection.delete(id));
+            else members.forEach(id => selection.add(id));
+          } else if (!selection.has(targetId)) selection = members;
           renderSelection();
           if (!selection.has(targetId)) return;
           selectDrag = { mode: 'move', start: point, before: snapshot(), moved: false,
@@ -4975,7 +4979,30 @@ const Marken = (() => {
     };
     const formenAn = (): boolean => formen;
 
-    const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, setzeRadierModus, radierModusVon, copySelection, paste, marken: marks,
+    const objectPanel = (): void => {
+      const host = flaeche.closest<HTMLElement>('.document-studio') || flaeche.parentElement;
+      if (!host) return;
+      const apply = (next: any[]) => {
+        const before = snapshot(); marks.splice(0, marks.length, ...next); redraw(); commit(before);
+      };
+      GfxInspector.open({ host, ink: true, read: () => marks.map(mark => ({ ...mark, id: idOf(mark), locked: mark.gesperrt === true })),
+        selected: () => selection, uid: frischeId,
+        select: (ids, exact) => { setzeWerkzeug('select'); selection = exact ? new Set(ids) : GfxObjects.expand(marks, new Set(ids)); renderSelection(); notifyState(); },
+        commit: next => apply(next.map(o => { const { locked, ...mark } = o; if (locked) mark.gesperrt = true; else delete mark.gesperrt; return mark; })),
+        layout: command => {
+          if (!selection.size || marks.some(m => selection.has(idOf(m)) && m.gesperrt)) return;
+          if (command.startsWith('rotate:')) {
+            const b = auswahlKasten(); apply(marks.map(m => selection.has(idOf(m)) ? InkGeometry.rotate(clone(m), [b.x + b.width / 2, b.y + b.height / 2], Number(command.slice(7))) : m));
+          } else {
+            const proxies = marks.map(m => { const b = InkGeometry.bounds(m); return { id: idOf(m), art: 'rechteck', x: b.x, y: b.y, w: b.width, h: b.height, groupId: m.groupId }; });
+            const next = GfxObjects.align(proxies, selection, command);
+            apply(marks.map((m, i) => selection.has(idOf(m)) ? InkGeometry.move(clone(m), next[i].x - proxies[i]!.x, next[i].y - proxies[i]!.y) : m));
+          }
+        }
+      });
+    };
+
+    const steuerung = { flaeche, objectPanel, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, setzeRadierModus, radierModusVon, copySelection, paste, marken: marks,
       undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn, setzeFormen, formenAn, bildEinfuegen,
       setzeSchrift, schriftVon, resumeWriting, finishWriting: schreiberSchliessen,
       /* E466: Auswahl wie GoodNotes. */
@@ -5922,6 +5949,7 @@ const Marken = (() => {
       '<button data-act="vor" data-gruppe="auswahl" title="Auswahl nach vorn — über alles andere" disabled><span class="zeichen" data-sym="layerUp" aria-hidden="true"></span><span class="wort">Nach vorn</span></button>' +
       '<button data-act="hinten" data-gruppe="auswahl" title="Auswahl nach hinten — unter alles andere" disabled><span class="zeichen" data-sym="layerDown" aria-hidden="true"></span><span class="wort">Nach hinten</span></button>' +
       '<button data-act="sperren" data-gruppe="auswahl" aria-pressed="false" title="Auswahl sperren: nicht mehr schieben, ziehen, drehen, löschen oder radieren" disabled><span class="zeichen" data-sym="lock" aria-hidden="true"></span><span class="wort">Sperren</span></button>' +
+      '<button data-act="objekte" data-gruppe="auswahl" title="Ebenen, Gruppen, Ausrichten und Objektkommentare"><span class="zeichen" data-sym="grid" aria-hidden="true"></span><span class="wort">Objekte</span></button>' +
       /* EIN VERWEIS (E468): der Auswahl eine Adresse oder eine Seite geben. */
       '<button data-act="verweis" data-gruppe="auswahl" title="Der Auswahl einen Verweis geben: eine Adresse (https://…) oder eine Seite ([[Name]]) — im Lesemodus antippen" disabled><span class="zeichen" data-sym="link" aria-hidden="true"></span><span class="wort">Verweis</span></button>' +
       /* ALS ELEMENT SICHERN (E494): der einzige Weg IN die Bibliothek. Er
@@ -7303,6 +7331,7 @@ const Marken = (() => {
         if (target.dataset.act === 'vor' && controls.nachVorn) controls.nachVorn();
         if (target.dataset.act === 'hinten' && controls.nachHinten) controls.nachHinten();
         if (target.dataset.act === 'sperren' && controls.sperren) { controls.sperren(); return; }
+        if (target.dataset.act === 'objekte' && controls.objectPanel) { controls.objectPanel(); return; }
         if (target.dataset.act === 'verweis' && controls.verweisSetzen) { void controls.verweisSetzen(); return; }
         /* E494: die Bibliothek öffnen, und die Auswahl hineinlegen. */
         if (target.dataset.act === 'elemente' && controls.elementWaehlen) {

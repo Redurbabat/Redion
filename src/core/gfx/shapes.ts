@@ -90,7 +90,7 @@ const GfxShapes = (() => {
    * Jede Art rechnet anders, und `text` lässt sich nur schätzen; das reicht,
    * weil beides nur Anhaltspunkte braucht.
    * ----------------------------------------------------------------------*/
-  const rahmenVon = (s: any): { x: number; y: number; w: number; h: number } => {
+  const localBounds = (s: any): { x: number; y: number; w: number; h: number } => {
     if (s?.art === 'stift') {
       const pts: any[] = Array.isArray(s.pts) ? s.pts : [];
       if (!pts.length) return { x: 0, y: 0, w: 0, h: 0 };
@@ -103,6 +103,17 @@ const GfxShapes = (() => {
                w: Math.max(20, String(s.text || '').length * 8), h: 20 };
     const x = zahl(s?.x), y = zahl(s?.y), w = zahl(s?.w), h = zahl(s?.h);
     return { x: Math.min(x, x + w), y: Math.min(y, y + h), w: Math.abs(w), h: Math.abs(h) };
+  };
+
+  const rahmenVon = (s: any): ReturnType<typeof localBounds> => {
+    const b = localBounds(s), angle = zahl(s?.rotation) * Math.PI / 180;
+    if (!angle) return b;
+    const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+    const points = [[b.x, b.y], [b.x + b.w, b.y], [b.x + b.w, b.y + b.h], [b.x, b.y + b.h]]
+      .map(([x, y]) => [cx + (x! - cx) * Math.cos(angle) - (y! - cy) * Math.sin(angle), cy + (x! - cx) * Math.sin(angle) + (y! - cy) * Math.cos(angle)]);
+    const xs = points.map(p => p[0]!), ys = points.map(p => p[1]!);
+    const x = Math.min(...xs), y = Math.min(...ys);
+    return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
   };
 
   type Rahmen = ReturnType<typeof rahmenVon>;
@@ -120,14 +131,21 @@ const GfxShapes = (() => {
     randPunkt(b, a.x + a.w / 2, a.y + a.h / 2)
   ];
 
-  const verbindungsPfad = (a: Rahmen, b: Rahmen): string => {
-    const [[x1, y1], [x2, y2]] = verbindungsStrecke(a, b);
+  const verbindungsPfad = (a: Rahmen, b: Rahmen, form?: any): string => {
+    const anchor = (r: Rahmen, name: unknown, fallback: [number, number]): [number, number] =>
+      name === 'top' ? [r.x + r.w / 2, r.y] : name === 'bottom' ? [r.x + r.w / 2, r.y + r.h] :
+      name === 'left' ? [r.x, r.y + r.h / 2] : name === 'right' ? [r.x + r.w, r.y + r.h / 2] : fallback;
+    const [a0, b0] = verbindungsStrecke(a, b);
+    const [x1, y1] = anchor(a, form?.sourceAnchor, a0), [x2, y2] = anchor(b, form?.targetAnchor, b0);
+    const mid = (x1 + x2) / 2;
+    if (form?.route === 'orthogonal') return `M${x1} ${y1} H${mid} V${y2} H${x2}`;
+    if (form?.route === 'curve') return `M${x1} ${y1} C${mid} ${y1} ${mid} ${y2} ${x2} ${y2}`;
     return `M${x1} ${y1} L${x2} ${y2}`;
   };
 
   const verbindungZeichne = (form: GfxForm, a: Rahmen, b: Rahmen, marke: string): SVGPathElement => {
     const pfad = sv('path', {
-      d: verbindungsPfad(a, b), stroke: form.farbe || 'currentColor', 'stroke-width': 2,
+      d: verbindungsPfad(a, b, form), stroke: form.farbe || 'currentColor', 'stroke-width': 2,
       fill: 'none', 'stroke-dasharray': '6 4', 'marker-end': `url(#${marke})`
     }) as SVGPathElement;
     pfad.dataset.sid = form.id;
@@ -173,7 +191,7 @@ const GfxShapes = (() => {
     const gruppe = sv('g');
     gruppe.appendChild(umriss);
     if (!s.text) return gruppe;
-    const { x, y, w, h } = rahmenVon(s);
+    const { x, y, w, h } = localBounds(s);
     const zentriert = ['ellipse', 'dreieck', 'raute'].includes(s.art);
     const zeilen = zeilenUmbruch(String(s.text), Math.max(20, zentriert ? w * 0.62 : w - 18));
     const tx = zentriert ? x + w / 2 : x + 10;
@@ -197,7 +215,7 @@ const GfxShapes = (() => {
   };
 
   /** Gezeichnete Form, bei unbekannter Art eine leere SVG-Gruppe. */
-  const zeichne = (s: any, o: ZeichenAngaben = {}): any => {
+  const zeichneRaw = (s: any, o: ZeichenAngaben = {}): any => {
     if (!s || typeof s !== 'object') return sv('g');
     const dicke = typeof s.strichBreite === 'number' && Number.isFinite(s.strichBreite) && s.strichBreite > 0
       ? Math.min(s.strichBreite, 50) : null;
@@ -253,6 +271,19 @@ const GfxShapes = (() => {
       return gruppe;
     }
 
+    if (s.art === 'frame') {
+      const b = localBounds(s), g = sv('g', { 'data-sid': s.id });
+      g.append(sv('rect', { x: b.x, y: b.y, width: b.w, height: b.h, rx: 8,
+        fill: 'none', stroke: farbe, 'stroke-width': 1.5, 'stroke-dasharray': '10 5', 'pointer-events': 'stroke' }));
+      const label = sv('text', { x: b.x + 10, y: b.y - 10, fill: farbe, 'font-size': 15, 'data-sid': s.id });
+      label.textContent = String(s.text || 'Rahmen'); g.append(label); return g;
+    }
+    if (s.art === 'attachment') {
+      const b = localBounds(s), g = sv('g', { 'data-sid': s.id });
+      g.append(sv('rect', { x: b.x, y: b.y, width: b.w, height: b.h, rx: 10, fill: 'var(--bg, #fff)', stroke: farbe, 'stroke-width': 2, 'pointer-events': 'all', 'data-sid': s.id }));
+      const name = sv('text', { x: b.x + 14, y: b.y + 30, fill: farbe, 'font-size': 15, 'data-sid': s.id });
+      name.textContent = String(s.fileName || s.text || 'Anhang'); g.append(name); return g;
+    }
     if (s.art === 'rechteck' || s.art === 'notiz') {
       const x = Math.min(zahl(s.x), zahl(s.x) + zahl(s.w));
       const y = Math.min(zahl(s.y), zahl(s.y) + zahl(s.h));
@@ -309,7 +340,7 @@ const GfxShapes = (() => {
     }
 
     if (s.art === 'dreieck' || s.art === 'raute') {
-      const { x, y, w, h } = rahmenVon(s);
+      const { x, y, w, h } = localBounds(s);
       const oben = `${x + w / 2},${y}`;
       const punkte = s.art === 'raute'
         ? `${oben} ${x + w},${y + h / 2} ${x + w / 2},${y + h} ${x},${y + h / 2}`
@@ -350,7 +381,15 @@ const GfxShapes = (() => {
     return leer;
   };
 
-  return { zeichne, rahmenVon, zeilenUmbruch, pfeilMarke, verbindungsStrecke, verbindungsPfad, verbindungZeichne, sv, PALETTE };
+  const zeichne = (s: any, o: ZeichenAngaben = {}): any => {
+    const node = zeichneRaw(s, o);
+    if (!zahl(s?.rotation)) return node;
+    const b = localBounds(s), group = sv('g', { 'data-sid': s.id,
+      transform: `rotate(${zahl(s.rotation)} ${b.x + b.w / 2} ${b.y + b.h / 2})` });
+    group.append(node); return group;
+  };
+
+  return { zeichne, rahmenVon, localBounds, zeilenUmbruch, pfeilMarke, verbindungsStrecke, verbindungsPfad, verbindungZeichne, sv, PALETTE };
 })();
 
 (window as any).GfxShapes = GfxShapes;

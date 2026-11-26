@@ -3203,6 +3203,9 @@ const App = (() => {
             if (seite2)
                 beobachter.observe(seite2);
         }
+        GfxExchange.bindIO({ zip: Einlesen.zipLesenAusBlob, read: Dateien.alsBlob, remove: Dateien.weg,
+            pack: files => Austausch.zipSchreiben(files),
+            save: async (blob, name, owner) => (await Dateien.ablegen(new File([blob], name, { type: blob.type }), { blockId: owner })).id });
         Seitenleiste.binde({
             oeffne, aktuelleSeite, kuerzlich, kommendeTermine, seitenMenue, suche, papierkorb
         });

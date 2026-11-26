@@ -4827,6 +4827,35 @@ body.fokus .pg-ansichten, body.fokus .pg-tools{display:none!important}
 .pg-fl-tools.gfx-tb-edgeless .gfx-tb-menuewerkzeuge :is([data-wz="zeiger"],[data-wz="hand"],[data-wz="rahmenwahl"])::after{
   content:attr(aria-label);
 }
+/* Objektübersicht aller Zeichenkontexte; vorhandene Farb- und Fokustokens. */
+.gfx-inspector { position: fixed; z-index: 180; right: 16px; top: 80px; width: min(370px, calc(100vw - 24px)); max-height: calc(100dvh - 160px); display: flex; flex-direction: column; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 12px 48px #0003; overflow: hidden; font: 14px/1.45 var(--font, sans-serif); }
+.gfx-inspector header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.gfx-inspector nav { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; border-bottom: 1px solid var(--border); }
+.gfx-inspector button, .gfx-presentation button { min-height: 44px; min-width: 44px; padding: 8px 12px; color: inherit; background: var(--bg2, var(--bg)); border: 1px solid var(--border); border-radius: 9px; cursor: pointer; font: inherit; }
+.gfx-inspector button:focus-visible, .gfx-presentation button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.gfx-inspector button[aria-pressed="true"], .gfx-layer-row[data-selected="true"] { background: color-mix(in srgb, var(--accent) 14%, var(--bg)); box-shadow: inset 3px 0 var(--accent); }
+.gfx-inspector button:disabled { opacity: .45; cursor: default; }
+.gfx-inspector-body { padding: 12px; overflow: auto; overscroll-behavior: contain; }
+.gfx-inspector-body h3 { margin: 18px 0 8px; font-size: 14px; }
+.gfx-inspector-body p { margin: 4px 0 12px; }
+.gfx-inspector-body > button { display: block; width: 100%; margin-block: 6px; text-align: left; }
+.gfx-inspector-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.gfx-layer-row { display: flex; gap: 4px; margin-block: 4px; border-radius: 9px; align-items: center; }
+.gfx-layer-row > button:first-child { flex: 1; min-width: 0; overflow-wrap: anywhere; text-align: left; }
+.gfx-layer-group { margin-block-start: 8px; }
+.gfx-layer-group > button { width: 100%; font-weight: 600; text-align: left; }
+.gfx-inspector label { display: grid; gap: 4px; margin-block: 8px; }
+.gfx-inspector input, .gfx-inspector select, .gfx-inspector textarea { min-height: 44px; max-width: 100%; width: 100%; box-sizing: border-box; color: inherit; background: var(--bg2, var(--bg)); border: 1px solid var(--border); border-radius: 8px; padding: 8px; font: inherit; }
+.gfx-object-comment { border-block-end: 1px solid var(--border); padding-block: 10px; }
+.gfx-object-comment p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.gfx-presentation { position: fixed; z-index: 181; top: 12px; left: 50%; transform: translateX(-50%); max-width: calc(100vw - 24px); display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 8px 32px #0003; }
+.gfx-presentation > span { min-width: 75px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-gfx-presenting="true"] > .gfx-tb-sockel, [data-gfx-presenting="true"] .pg-fl-auswahlleiste, [data-gfx-presenting="true"] .pg-fl-formauswahl, [data-gfx-presenting="true"] .wb-tools { visibility: hidden; }
+@media (max-width: 600px) { .gfx-inspector { top: 68px; right: 8px; max-height: calc(100dvh - 220px); } .gfx-presentation { gap: 4px; flex-wrap: wrap; } }
+.bib-dynamic-form { display: grid; gap: 10px; padding: 12px; width: min(340px, calc(100vw - 48px)); }
+.bib-dynamic-form label { display: grid; gap: 4px; font-size: 13px; }
+.bib-dynamic-form input, .bib-dynamic-form select, .bib-dynamic-form button { min-height: 44px; max-width: 100%; }
+.bib-dynamic-form input[type="checkbox"] { width: 44px; }
 
 </style>
 <style>
@@ -13392,7 +13421,7 @@ body .rmo-liquid::after {
   .pg-fl-tools.gfx-tb-edgeless .gfx-tb-edgeless-zusatz{
     left:0;bottom:calc(100% + 6px);height:44px;
   }
-  .pg-fl-tools.gfx-tb-edgeless .gfx-tb-neben{max-width:calc(100% - 110px)}
+  .pg-fl-tools.gfx-tb-edgeless .gfx-tb-neben{max-width:calc(100% - 160px)}
   .pg-fl-tools.gfx-tb-edgeless .gfx-tb-menue{bottom:calc(100% + 56px)}
 }
 /* Das Wort, wessen Leiste es ist — „Fläche" oder „Zeichenfläche" (§38:
@@ -31587,7 +31616,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1688, inhalt: '58c32beb2a3228a1', gebaut: '2026-11-26T16:05:00.931Z' };
+const Stand = { fassung: 1697, inhalt: '97240b108f87c3c3', gebaut: '2026-11-26T17:45:30.192Z' };
 window.Stand = Stand;
 
 </script>
@@ -32177,7 +32206,7 @@ const GfxShapes = (() => {
         const n = Number(roh);
         return Number.isFinite(n) ? n : ersatz;
     };
-    const rahmenVon = (s) => {
+    const localBounds = (s) => {
         if (s?.art === 'stift') {
             const pts = Array.isArray(s.pts) ? s.pts : [];
             if (!pts.length)
@@ -32192,6 +32221,17 @@ const GfxShapes = (() => {
         const x = zahl(s?.x), y = zahl(s?.y), w = zahl(s?.w), h = zahl(s?.h);
         return { x: Math.min(x, x + w), y: Math.min(y, y + h), w: Math.abs(w), h: Math.abs(h) };
     };
+    const rahmenVon = (s) => {
+        const b = localBounds(s), angle = zahl(s?.rotation) * Math.PI / 180;
+        if (!angle)
+            return b;
+        const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+        const points = [[b.x, b.y], [b.x + b.w, b.y], [b.x + b.w, b.y + b.h], [b.x, b.y + b.h]]
+            .map(([x, y]) => [cx + (x - cx) * Math.cos(angle) - (y - cy) * Math.sin(angle), cy + (x - cx) * Math.sin(angle) + (y - cy) * Math.cos(angle)]);
+        const xs = points.map(p => p[0]), ys = points.map(p => p[1]);
+        const x = Math.min(...xs), y = Math.min(...ys);
+        return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
+    };
     const randPunkt = (rahmen, zielX, zielY) => {
         const mx = rahmen.x + rahmen.w / 2, my = rahmen.y + rahmen.h / 2;
         const dx = zielX - mx, dy = zielY - my;
@@ -32205,13 +32245,21 @@ const GfxShapes = (() => {
         randPunkt(a, b.x + b.w / 2, b.y + b.h / 2),
         randPunkt(b, a.x + a.w / 2, a.y + a.h / 2)
     ];
-    const verbindungsPfad = (a, b) => {
-        const [[x1, y1], [x2, y2]] = verbindungsStrecke(a, b);
+    const verbindungsPfad = (a, b, form) => {
+        const anchor = (r, name, fallback) => name === 'top' ? [r.x + r.w / 2, r.y] : name === 'bottom' ? [r.x + r.w / 2, r.y + r.h] :
+            name === 'left' ? [r.x, r.y + r.h / 2] : name === 'right' ? [r.x + r.w, r.y + r.h / 2] : fallback;
+        const [a0, b0] = verbindungsStrecke(a, b);
+        const [x1, y1] = anchor(a, form?.sourceAnchor, a0), [x2, y2] = anchor(b, form?.targetAnchor, b0);
+        const mid = (x1 + x2) / 2;
+        if (form?.route === 'orthogonal')
+            return `M${x1} ${y1} H${mid} V${y2} H${x2}`;
+        if (form?.route === 'curve')
+            return `M${x1} ${y1} C${mid} ${y1} ${mid} ${y2} ${x2} ${y2}`;
         return `M${x1} ${y1} L${x2} ${y2}`;
     };
     const verbindungZeichne = (form, a, b, marke) => {
         const pfad = sv('path', {
-            d: verbindungsPfad(a, b), stroke: form.farbe || 'currentColor', 'stroke-width': 2,
+            d: verbindungsPfad(a, b, form), stroke: form.farbe || 'currentColor', 'stroke-width': 2,
             fill: 'none', 'stroke-dasharray': '6 4', 'marker-end': `url(#${marke})`
         });
         pfad.dataset.sid = form.id;
@@ -32250,7 +32298,7 @@ const GfxShapes = (() => {
         gruppe.appendChild(umriss);
         if (!s.text)
             return gruppe;
-        const { x, y, w, h } = rahmenVon(s);
+        const { x, y, w, h } = localBounds(s);
         const zentriert = ['ellipse', 'dreieck', 'raute'].includes(s.art);
         const zeilen = zeilenUmbruch(String(s.text), Math.max(20, zentriert ? w * 0.62 : w - 18));
         const tx = zentriert ? x + w / 2 : x + 10;
@@ -32273,7 +32321,7 @@ const GfxShapes = (() => {
         gruppe.appendChild(text);
         return gruppe;
     };
-    const zeichne = (s, o = {}) => {
+    const zeichneRaw = (s, o = {}) => {
         if (!s || typeof s !== 'object')
             return sv('g');
         const dicke = typeof s.strichBreite === 'number' && Number.isFinite(s.strichBreite) && s.strichBreite > 0
@@ -32319,6 +32367,23 @@ const GfxShapes = (() => {
             gruppe.appendChild(p);
             return gruppe;
         }
+        if (s.art === 'frame') {
+            const b = localBounds(s), g = sv('g', { 'data-sid': s.id });
+            g.append(sv('rect', { x: b.x, y: b.y, width: b.w, height: b.h, rx: 8,
+                fill: 'none', stroke: farbe, 'stroke-width': 1.5, 'stroke-dasharray': '10 5', 'pointer-events': 'stroke' }));
+            const label = sv('text', { x: b.x + 10, y: b.y - 10, fill: farbe, 'font-size': 15, 'data-sid': s.id });
+            label.textContent = String(s.text || 'Rahmen');
+            g.append(label);
+            return g;
+        }
+        if (s.art === 'attachment') {
+            const b = localBounds(s), g = sv('g', { 'data-sid': s.id });
+            g.append(sv('rect', { x: b.x, y: b.y, width: b.w, height: b.h, rx: 10, fill: 'var(--bg, #fff)', stroke: farbe, 'stroke-width': 2, 'pointer-events': 'all', 'data-sid': s.id }));
+            const name = sv('text', { x: b.x + 14, y: b.y + 30, fill: farbe, 'font-size': 15, 'data-sid': s.id });
+            name.textContent = String(s.fileName || s.text || 'Anhang');
+            g.append(name);
+            return g;
+        }
         if (s.art === 'rechteck' || s.art === 'notiz') {
             const x = Math.min(zahl(s.x), zahl(s.x) + zahl(s.w));
             const y = Math.min(zahl(s.y), zahl(s.y) + zahl(s.h));
@@ -32363,7 +32428,7 @@ const GfxShapes = (() => {
             return bild;
         }
         if (s.art === 'dreieck' || s.art === 'raute') {
-            const { x, y, w, h } = rahmenVon(s);
+            const { x, y, w, h } = localBounds(s);
             const oben = `${x + w / 2},${y}`;
             const punkte = s.art === 'raute'
                 ? `${oben} ${x + w},${y + h / 2} ${x + w / 2},${y + h} ${x},${y + h / 2}`
@@ -32399,7 +32464,16 @@ const GfxShapes = (() => {
         leer.dataset.sid = s.id;
         return leer;
     };
-    return { zeichne, rahmenVon, zeilenUmbruch, pfeilMarke, verbindungsStrecke, verbindungsPfad, verbindungZeichne, sv, PALETTE };
+    const zeichne = (s, o = {}) => {
+        const node = zeichneRaw(s, o);
+        if (!zahl(s?.rotation))
+            return node;
+        const b = localBounds(s), group = sv('g', { 'data-sid': s.id,
+            transform: `rotate(${zahl(s.rotation)} ${b.x + b.w / 2} ${b.y + b.h / 2})` });
+        group.append(node);
+        return group;
+    };
+    return { zeichne, rahmenVon, localBounds, zeilenUmbruch, pfeilMarke, verbindungsStrecke, verbindungsPfad, verbindungZeichne, sv, PALETTE };
 })();
 window.GfxShapes = GfxShapes;
 
@@ -32804,10 +32878,19 @@ const GfxObjects = (() => {
         if (!ids.has(o.id))
             return o;
         const copy = { ...o };
+        const path = Array.isArray(o.groupPath) ? o.groupPath.slice() : o.groupId ? [o.groupId] : [];
         if (groupId)
-            copy.groupId = groupId;
+            path.push(groupId);
         else
+            path.pop();
+        if (path.length) {
+            copy.groupId = path[path.length - 1];
+            copy.groupPath = path;
+        }
+        else {
             delete copy.groupId;
+            delete copy.groupPath;
+        }
         return copy;
     });
     const reorder = (objects, ids, order) => {
@@ -32833,9 +32916,774 @@ const GfxObjects = (() => {
         }
         return result;
     };
-    return { expand, locked, group, reorder };
+    const bounds = (objects) => {
+        const boxes = objects.filter(o => o.art !== 'verbindung').map(o => GfxShapes.rahmenVon(o));
+        if (!boxes.length)
+            return null;
+        const x = Math.min(...boxes.map(b => b.x)), y = Math.min(...boxes.map(b => b.y));
+        return { x, y, w: Math.max(...boxes.map(b => b.x + b.w)) - x, h: Math.max(...boxes.map(b => b.y + b.h)) - y };
+    };
+    const move = (o, dx, dy) => o.art === 'verbindung' ? { ...o } :
+        o.art === 'stift' ? { ...o, pts: o.pts.map((p) => [p[0] + dx, p[1] + dy, ...p.slice(2)]) } :
+            { ...o, x: Number(o.x) + dx, y: Number(o.y) + dy };
+    const units = (objects, ids) => {
+        const result = new Map();
+        for (const o of objects) {
+            if (!ids.has(o.id) || o.art === 'verbindung')
+                continue;
+            const key = o.groupId || o.id;
+            if (!result.has(key))
+                result.set(key, []);
+            result.get(key).push(o);
+        }
+        return [...result.values()];
+    };
+    const align = (objects, ids, command) => {
+        if (locked(objects, ids))
+            return objects.slice();
+        const groups = units(objects, ids), all = bounds(groups.flat());
+        if (!all || groups.length < 2)
+            return objects.slice();
+        const shifts = new Map();
+        if (command === 'horizontal' || command === 'vertical') {
+            if (groups.length < 3)
+                return objects.slice();
+            const horizontal = command === 'horizontal', axis = horizontal ? 'x' : 'y', size = horizontal ? 'w' : 'h';
+            const sorted = groups.map(items => ({ items, box: bounds(items) })).sort((a, b) => a.box[axis] - b.box[axis]);
+            const first = sorted[0], last = sorted[sorted.length - 1];
+            const gap = (last.box[axis] + last.box[size] - first.box[axis] - sorted.reduce((n, g) => n + g.box[size], 0)) / (sorted.length - 1);
+            let cursor = first.box[axis];
+            for (const g of sorted) {
+                for (const o of g.items)
+                    shifts.set(o.id, horizontal ? [cursor - g.box.x, 0] : [0, cursor - g.box.y]);
+                cursor += g.box[size] + gap;
+            }
+        }
+        else
+            for (const items of groups) {
+                const b = bounds(items);
+                const dx = command === 'left' ? all.x - b.x : command === 'right' ? all.x + all.w - b.x - b.w :
+                    command === 'center' ? all.x + all.w / 2 - b.x - b.w / 2 : 0;
+                const dy = command === 'top' ? all.y - b.y : command === 'bottom' ? all.y + all.h - b.y - b.h :
+                    command === 'middle' ? all.y + all.h / 2 - b.y - b.h / 2 : 0;
+                for (const o of items)
+                    shifts.set(o.id, [dx, dy]);
+            }
+        return objects.map(o => shifts.has(o.id) ? move(o, ...shifts.get(o.id)) : o);
+    };
+    const rotate = (objects, ids, degrees) => {
+        const b = bounds(objects.filter(o => ids.has(o.id)));
+        if (!b || locked(objects, ids) || !Number.isFinite(degrees))
+            return objects.slice();
+        const cx = b.x + b.w / 2, cy = b.y + b.h / 2, angle = degrees * Math.PI / 180;
+        const point = (x, y) => [
+            cx + (x - cx) * Math.cos(angle) - (y - cy) * Math.sin(angle),
+            cy + (x - cx) * Math.sin(angle) + (y - cy) * Math.cos(angle)
+        ];
+        return objects.map(o => {
+            if (!ids.has(o.id) || o.art === 'verbindung')
+                return o;
+            if (o.art === 'stift')
+                return { ...o, pts: o.pts.map((p) => [...point(p[0], p[1]), ...p.slice(2)]) };
+            if (o.art === 'linie' || o.art === 'pfeil') {
+                const a = point(o.x, o.y), z = point(o.x + o.w, o.y + o.h);
+                return { ...o, x: a[0], y: a[1], w: z[0] - a[0], h: z[1] - a[1] };
+            }
+            const local = GfxShapes.localBounds(o), mid = point(local.x + local.w / 2, local.y + local.h / 2);
+            return { ...move(o, mid[0] - local.x - local.w / 2, mid[1] - local.y - local.h / 2), rotation: ((Number(o.rotation) || 0) + degrees) % 360 };
+        });
+    };
+    const inPolygon = (x, y, polygon) => {
+        let inside = false;
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+            const a = polygon[i], b = polygon[j];
+            if ((a[1] > y) !== (b[1] > y) && x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0])
+                inside = !inside;
+        }
+        return inside;
+    };
+    const lasso = (objects, polygon) => objects.filter(o => {
+        if (o.art === 'verbindung' || polygon.length < 3)
+            return false;
+        const b = GfxShapes.rahmenVon(o);
+        return [[b.x, b.y], [b.x + b.w, b.y], [b.x + b.w, b.y + b.h], [b.x, b.y + b.h]]
+            .every(p => inPolygon(p[0], p[1], polygon));
+    }).map(o => o.id);
+    const snap = (objects, ids, dx, dy, tolerance) => {
+        const b = bounds(objects.filter(o => ids.has(o.id)));
+        const guides = [];
+        if (!b)
+            return { dx, dy, guides };
+        let bestX = tolerance, bestY = tolerance, ox = 0, oy = 0;
+        const bx = [b.x + dx, b.x + b.w / 2 + dx, b.x + b.w + dx], by = [b.y + dy, b.y + b.h / 2 + dy, b.y + b.h + dy];
+        for (const o of objects) {
+            if (ids.has(o.id) || o.art === 'verbindung' || o.art === 'frame')
+                continue;
+            const r = GfxShapes.rahmenVon(o);
+            for (const at of [r.x, r.x + r.w / 2, r.x + r.w])
+                for (const x of bx)
+                    if (Math.abs(at - x) < bestX) {
+                        bestX = Math.abs(at - x);
+                        ox = at - x;
+                        guides[0] = { axis: 'x', at };
+                    }
+            for (const at of [r.y, r.y + r.h / 2, r.y + r.h])
+                for (const y of by)
+                    if (Math.abs(at - y) < bestY) {
+                        bestY = Math.abs(at - y);
+                        oy = at - y;
+                        guides[1] = { axis: 'y', at };
+                    }
+        }
+        return { dx: dx + ox, dy: dy + oy, guides: guides.filter(Boolean) };
+    };
+    return { expand, locked, group, reorder, bounds, move, align, rotate, lasso, snap, units };
 })();
 window.GfxObjects = GfxObjects;
+
+</script>
+<script>
+/* ===== quell/core/gfx/exchange.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/gfx/exchange.ts (npm run bauen:ts). */
+const GfxExchange = (() => {
+    let fileIO = null;
+    const bindIO = (next) => { fileIO = next; };
+    const fileBlob = (id) => fileIO?.read(id) || Promise.resolve(null);
+    const packArchive = (files) => {
+        if (!fileIO)
+            return Promise.reject(new Error('Der Dateiaustausch ist noch nicht bereit.'));
+        return fileIO.pack(files);
+    };
+    const text = (value) => typeof value === 'string' ? value :
+        Array.isArray(value?.delta) ? value.delta.map((p) => typeof p.insert === 'string' ? p.insert : '').join('') :
+            Array.isArray(value) ? value.map(p => typeof p.insert === 'string' ? p.insert : '').join('') : '';
+    const remap = (objects, uid) => {
+        const ids = new Map(objects.map(o => [o.id, uid()])), groups = new Map();
+        const group = (id) => { if (!groups.has(id))
+            groups.set(id, uid()); return groups.get(id); };
+        return objects.map(o => ({ ...o, id: ids.get(o.id),
+            ...(o.von ? { von: ids.get(o.von) || o.von } : {}), ...(o.nach ? { nach: ids.get(o.nach) || o.nach } : {}),
+            ...(o.groupId ? { groupId: group(o.groupId) } : {}),
+            ...(o.groupPath ? { groupPath: o.groupPath.map(group) } : {}) }));
+    };
+    const parse = (data, uid) => {
+        if (data?.format === 'redion-canvas') {
+            if (data.version !== 1 || !Array.isArray(data.shapes))
+                throw new Error('Unbekannte Flächenversion.');
+            for (const o of data.shapes) {
+                if (!o || typeof o.id !== 'string' || !['stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'dreieck', 'raute', 'notiz', 'text', 'bild', 'attachment', 'verbindung', 'frame'].includes(o.art))
+                    throw new Error('Ungültiges Zeichenobjekt.');
+                if (o.art === 'stift' && (!Array.isArray(o.pts) || o.pts.some((p) => !Array.isArray(p) || !Number.isFinite(p[0]) || !Number.isFinite(p[1]))))
+                    throw new Error('Ungültige Strichpunkte.');
+                if (!['stift', 'verbindung'].includes(o.art) && (!Number.isFinite(o.x) || !Number.isFinite(o.y)))
+                    throw new Error('Ungültige Objektkoordinaten.');
+                if (!['stift', 'verbindung', 'text'].includes(o.art) && (!Number.isFinite(o.w) || !Number.isFinite(o.h)))
+                    throw new Error('Ungültige Objektgrösse.');
+                if (o.groupPath !== undefined && (!Array.isArray(o.groupPath) || o.groupPath.length > 64 || o.groupPath.some((id) => typeof id !== 'string')))
+                    throw new Error('Ungültiger Gruppenpfad.');
+                if (o.rotation !== undefined && !Number.isFinite(o.rotation))
+                    throw new Error('Ungültiger Drehwinkel.');
+            }
+            if (new Set(data.shapes.map((o) => o.id)).size !== data.shapes.length)
+                throw new Error('Doppelte Objektkennungen.');
+            return data.shapes.map((o) => data.assets?.[o.dateiId] ? { ...o, transferAsset: data.assets[o.dateiId] } : o);
+        }
+        const elements = [], blocks = [];
+        const visit = (value, depth = 0) => {
+            if (!value || typeof value !== 'object' || depth > 50)
+                return;
+            if (value.flavour) {
+                blocks.push(value);
+                const entries = value.props?.elements || value.elements;
+                if (entries && typeof entries === 'object')
+                    for (const [id, e] of Object.entries(entries))
+                        elements.push({ ...e, id: e.id || id });
+            }
+            if (Array.isArray(value))
+                value.forEach(v => visit(v, depth + 1));
+            else
+                for (const [key, v] of Object.entries(value))
+                    if (key !== 'elements' && key !== 'props')
+                        visit(v, depth + 1);
+        };
+        visit(data);
+        if (!blocks.length && data?.elements)
+            for (const [id, e] of Object.entries(data.elements))
+                elements.push({ ...e, id: e.id || id });
+        const result = [], groups = elements.filter(e => e.type === 'group');
+        const box = (raw) => {
+            const b = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            if (!Array.isArray(b) || b.length !== 4 || !b.every(Number.isFinite))
+                throw new Error('Ungültige AFFiNE-Koordinaten.');
+            return { x: b[0], y: b[1], w: b[2], h: b[3] };
+        };
+        for (const e of elements) {
+            if (e.type === 'group')
+                continue;
+            const common = { id: String(e.id || uid()), farbe: /^#[\da-f]{3,8}$/i.test(e.strokeColor || e.color || e.stroke) ? (e.strokeColor || e.color || e.stroke) : '#529cca',
+                rotation: Number(e.rotate) || 0, affineSource: e };
+            if (e.type === 'shape') {
+                const art = { rect: 'rechteck', ellipse: 'ellipse', triangle: 'dreieck', diamond: 'raute' }[e.shapeType];
+                if (!art)
+                    throw new Error('Diese AFFiNE-Form wird noch nicht unterstützt: ' + e.shapeType);
+                result.push({ ...common, ...box(e.xywh), art, gefuellt: e.filled === true, text: text(e.text) });
+            }
+            else if (e.type === 'brush' || e.type === 'highlighter') {
+                const b = box(e.xywh);
+                if (!Array.isArray(e.points) || e.points.some((p) => !Array.isArray(p) || !Number.isFinite(p[0]) || !Number.isFinite(p[1])))
+                    throw new Error('Ungültiger AFFiNE-Strich.');
+                result.push({ ...common, art: 'stift', pts: e.points.map((p) => [b.x + p[0], b.y + p[1]]), strichBreite: Number(e.lineWidth) || 3, marker: e.type === 'highlighter' });
+            }
+            else if (e.type === 'text')
+                result.push({ ...common, ...box(e.xywh), art: 'text', text: text(e.text) });
+            else if (e.type === 'connector' && e.source?.id && e.target?.id)
+                result.push({ ...common, art: 'verbindung', von: e.source.id, nach: e.target.id,
+                    route: e.mode === 1 || e.mode === 'orthogonal' ? 'orthogonal' : e.mode === 2 || e.mode === 'curve' ? 'curve' : 'straight' });
+            else
+                throw new Error('Dieses AFFiNE-Element wird noch nicht unterstützt: ' + String(e.type));
+        }
+        for (const block of blocks) {
+            const props = block.props || block, flavour = String(block.flavour);
+            if (flavour === 'affine:frame')
+                result.push({ id: String(block.id || uid()), art: 'frame', ...box(props.xywh), text: text(props.title), farbe: '#529cca', affineSource: block });
+            if (flavour === 'affine:image' && !props.sourceId)
+                throw new Error('Ein AFFiNE-Bild hat keinen Anhang.');
+            if (flavour === 'affine:image')
+                result.push({ id: String(block.id || uid()), art: 'bild', ...box(props.xywh), affineAsset: String(props.sourceId), affineSource: block });
+            if (flavour === 'affine:attachment' && !props.sourceId)
+                throw new Error('Eine AFFiNE-Datei hat keinen Anhang.');
+            if (flavour === 'affine:attachment')
+                result.push({ id: String(block.id || uid()), art: 'attachment',
+                    ...(props.xywh ? box(props.xywh) : { x: 0, y: 0, w: 260, h: 72 }), affineAsset: String(props.sourceId || ''),
+                    text: String(props.name || 'Anhang'), fileName: String(props.name || 'Anhang'), mime: String(props.type || ''), affineSource: block });
+            if (flavour === 'affine:note' && props.xywh) {
+                const content = (block.children || []).map((child) => typeof child === 'object' ? text(child.props?.text) : text(blocks.find(b => b.id === child)?.props?.text)).filter(Boolean).join('\n');
+                result.push({ id: String(block.id || uid()), art: 'notiz', ...box(props.xywh), text: content, farbe: '#ffdc49', affineSource: block });
+            }
+        }
+        for (const o of result) {
+            const path = [];
+            let current = o.id;
+            for (let i = 0; i < groups.length; i++) {
+                const group = groups.find(g => g.children?.[current]);
+                if (!group)
+                    break;
+                if (path.includes(group.id))
+                    throw new Error('Zyklische AFFiNE-Gruppe.');
+                path.push(group.id);
+                current = group.id;
+            }
+            if (path.length) {
+                o.groupPath = path;
+                o.groupId = path[path.length - 1];
+            }
+            if (o.art === 'verbindung' && (!result.some(x => x.id === o.von) || !result.some(x => x.id === o.nach)))
+                throw new Error('Ein AFFiNE-Verbinder hat kein Ziel.');
+        }
+        if (!result.length)
+            throw new Error('Keine Zeichenfläche gefunden. Unterstützt werden BlockSuite-JSON-Snapshots; binäre Yjs-Sicherungen benötigen AFFiNE zum Exportieren.');
+        return result;
+    };
+    const readFile = async (file, uid, io) => {
+        if (file.size > 64 * 1024 * 1024)
+            throw new Error('Diese Datei ist zu gross für den Flächenimport (64 MB).');
+        const zip = /\.(zip|affine)$/i.test(file.name) ? await io.zip(file) : null;
+        let objects = [];
+        if (zip) {
+            for (const name of zip.namen.filter((n) => /\.json$/i.test(n))) {
+                const raw = await zip.text(name);
+                if (!raw)
+                    continue;
+                let data;
+                try {
+                    data = JSON.parse(raw);
+                }
+                catch {
+                    continue;
+                }
+                if (!data?.blocks && !data?.elements && data?.format !== 'redion-canvas' && !data?.flavour)
+                    continue;
+                objects.push(...parse(data, uid));
+            }
+            if (!objects.length)
+                throw new Error('Im Archiv fehlt ein unterstützter JSON-Snapshot.');
+        }
+        else
+            objects = parse(JSON.parse(await file.text()), uid);
+        const assets = new Map();
+        for (const o of objects)
+            if (o.affineAsset || o.transferAsset) {
+                const name = o.transferAsset?.path || zip?.namen.find((n) => n === o.affineAsset || n === 'assets/' + o.affineAsset || n.endsWith('/assets/' + o.affineAsset));
+                const blob = name && zip ? await zip.alsBlob(name) : null;
+                if (!blob)
+                    throw new Error('Ein Bildanhang fehlt: ' + o.affineAsset);
+                const key = o.affineAsset || o.dateiId;
+                assets.set(key, new Blob([blob], { type: o.transferAsset?.mime || o.mime || blob.type }));
+            }
+        if (!zip && objects.some(o => o.dateiId || o.affineAsset))
+            throw new Error('Für Anhänge wird das vollständige Flächenarchiv benötigt.');
+        const written = new Map();
+        try {
+            for (const [asset, blob] of assets) {
+                if (io.active && !io.active())
+                    throw new Error('Import abgebrochen.');
+                written.set(asset, await io.save(blob, asset));
+            }
+            if (io.active && !io.active())
+                throw new Error('Import abgebrochen.');
+            return objects.map(o => {
+                const { transferAsset, affineAsset, ...copy } = o;
+                if (transferAsset || affineAsset)
+                    copy.dateiId = written.get(affineAsset || o.dateiId);
+                return copy;
+            });
+        }
+        catch (error) {
+            for (const id of written.values())
+                await io.remove(id);
+            throw error;
+        }
+    };
+    const importFile = (file, uid, owner, active) => {
+        const io = fileIO;
+        if (!io)
+            return Promise.reject(new Error('Der Dateiaustausch ist noch nicht bereit.'));
+        return readFile(file, uid, { zip: io.zip, save: (blob, name) => io.save(blob, name, owner), remove: io.remove, active });
+    };
+    return { parse, remap, readFile, bindIO, fileBlob, packArchive, importFile };
+})();
+window.GfxExchange = GfxExchange;
+
+</script>
+<script>
+/* ===== quell/core/gfx/inspector.js ===== */
+"use strict";
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/core/gfx/inspector.ts (npm run bauen:ts). */
+const GfxInspector = (() => {
+    const label = (o) => String(o.text || o.title || { frame: 'Rahmen', stift: 'Strich',
+        rechteck: 'Rechteck', rectangle: 'Rechteck', ellipse: 'Ellipse', verbindung: 'Verbindung', bild: 'Bild', notiz: 'Notiz',
+        line: 'Linie', arrow: 'Pfeil', triangle: 'Dreieck', roundrect: 'Abgerundetes Rechteck', pen: 'Strich', text: 'Text', attachment: 'Anhang' }[o.art] || o.art || 'Objekt').slice(0, 80);
+    const open = (options, initial = 'layers') => {
+        const { host, read, selected, select, commit, uid } = options;
+        host.querySelector('.gfx-inspector')?.remove();
+        const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        const panel = document.createElement('section');
+        panel.className = 'gfx-inspector';
+        panel.setAttribute('role', 'dialog');
+        panel.setAttribute('aria-label', options.ink ? 'Objekte' : 'Objekte und Rahmen');
+        panel.tabIndex = -1;
+        const heading = document.createElement('header'), title = document.createElement('strong');
+        title.textContent = options.ink ? 'Objekte' : 'Objekte und Rahmen';
+        heading.append(title);
+        panel.append(heading);
+        const button = (container, name, run, disabled = false) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = name;
+            b.disabled = disabled;
+            b.addEventListener('click', () => { run(); });
+            container.append(b);
+            return b;
+        };
+        const close = () => { panel.remove(); previous?.isConnected && previous.focus({ preventScroll: true }); };
+        button(heading, 'Schliessen', close).setAttribute('aria-label', 'Objektübersicht schliessen');
+        const tabs = document.createElement('nav');
+        tabs.setAttribute('aria-label', 'Objektbereiche');
+        panel.append(tabs);
+        const body = document.createElement('div');
+        body.className = 'gfx-inspector-body';
+        panel.append(body);
+        let tab = initial;
+        const change = (next) => { commit(next); render(); };
+        const update = (fields) => change(read().map(o => selected().has(o.id) ||
+            (fields.locked !== undefined && o.art === 'verbindung' && selected().has(o.von) && selected().has(o.nach)) ? { ...o, ...fields } : o));
+        const subtitle = (text) => { const h = document.createElement('h3'); h.textContent = text; body.append(h); };
+        const note = (text) => { const p = document.createElement('p'); p.textContent = text; body.append(p); };
+        const editable = () => selected().size > 0 && !GfxObjects.locked(read(), selected());
+        const runLayout = (command) => {
+            if (options.layout) {
+                options.layout(command);
+                render();
+                return;
+            }
+            change(command.startsWith('rotate:') ? GfxObjects.rotate(read(), selected(), Number(command.slice(7))) : GfxObjects.align(read(), selected(), command));
+        };
+        const render = () => {
+            if (!panel.isConnected)
+                return;
+            tabs.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === tab)));
+            body.replaceChildren();
+            if (tab === 'layers') {
+                note('Oben liegt vorne. Tippen wählt die Gruppe; „Einzeln“ öffnet ein Mitglied.');
+                const rows = document.createElement('div');
+                rows.className = 'gfx-layer-list';
+                body.append(rows);
+                const paths = new Set();
+                for (const o of read().slice().reverse()) {
+                    const path = Array.isArray(o.groupPath) ? o.groupPath : o.groupId ? [o.groupId] : [];
+                    path.slice().reverse().forEach((group, depth) => {
+                        if (paths.has(group))
+                            return;
+                        paths.add(group);
+                        const groupRow = document.createElement('div');
+                        groupRow.className = 'gfx-layer-group';
+                        groupRow.style.paddingInlineStart = Math.min(depth, 8) * 12 + 'px';
+                        button(groupRow, 'Gruppe · ' + read().filter(x => (x.groupPath || [x.groupId]).includes(group)).length, () => { select(read().filter(x => (x.groupPath || [x.groupId]).includes(group)).map(x => x.id), true); render(); });
+                        rows.append(groupRow);
+                    });
+                    const row = document.createElement('div');
+                    row.className = 'gfx-layer-row';
+                    row.dataset.selected = String(selected().has(o.id));
+                    row.style.paddingInlineStart = Math.min(path.length, 8) * 12 + 'px';
+                    const choose = button(row, (o.locked ? '🔒 ' : '') + label(o), () => { select([o.id]); render(); });
+                    choose.setAttribute('aria-pressed', String(selected().has(o.id)));
+                    if (path.length)
+                        button(row, 'Einzeln', () => { select([o.id], true); render(); });
+                    rows.append(row);
+                }
+                if (!read().length)
+                    note('Noch keine Objekte. Zeichne oder füge eine Vorlage ein.');
+                subtitle('Auswahl');
+                const actions = document.createElement('div');
+                actions.className = 'gfx-inspector-grid';
+                body.append(actions);
+                button(actions, 'Alle auswählen', () => { select(read().filter(o => o.art !== 'verbindung').map(o => o.id)); render(); });
+                button(actions, 'Gruppieren', () => change(GfxObjects.group(read(), selected(), uid())), !editable() || selected().size < 2);
+                button(actions, 'Gruppe auflösen', () => change(GfxObjects.group(read(), selected(), null)), !editable() || !read().some(o => selected().has(o.id) && o.groupId));
+                button(actions, GfxObjects.locked(read(), selected()) ? 'Entsperren' : 'Sperren', () => update({ locked: !GfxObjects.locked(read(), selected()) }), !selected().size);
+                for (const [id, name] of [['front', 'Ganz nach vorne'], ['forward', 'Eine Ebene vor'], ['backward', 'Eine Ebene zurück'], ['back', 'Ganz nach hinten']])
+                    button(actions, name, () => change(GfxObjects.reorder(read(), selected(), id)), !editable());
+                const attachment = read().find(o => selected().size === 1 && selected().has(o.id) && o.dateiId);
+                if (attachment && options.image)
+                    button(body, 'Anhang speichern', () => {
+                        void options.image(attachment.dateiId).then(blob => { if (blob)
+                            download(blob, String(attachment.fileName || attachment.text || 'Anhang')); });
+                    });
+            }
+            else if (tab === 'layout') {
+                note('Gruppen werden als Einheit ausgerichtet. Verteilen braucht mindestens drei Einheiten.');
+                const grid = document.createElement('div');
+                grid.className = 'gfx-inspector-grid';
+                body.append(grid);
+                for (const [id, name] of [['left', 'Links'], ['center', 'Horizontal mittig'], ['right', 'Rechts'], ['top', 'Oben'], ['middle', 'Vertikal mittig'], ['bottom', 'Unten'], ['horizontal', 'Horizontal verteilen'], ['vertical', 'Vertikal verteilen']])
+                    button(grid, name, () => runLayout(id), !editable() || selected().size < (['horizontal', 'vertical'].includes(id) ? 3 : 2));
+                subtitle('Drehen');
+                button(body, '90° im Uhrzeigersinn', () => runLayout('rotate:90'), !editable());
+                const angle = document.createElement('input');
+                angle.type = 'number';
+                angle.value = '15';
+                angle.min = '-360';
+                angle.max = '360';
+                angle.setAttribute('aria-label', 'Drehwinkel in Grad');
+                body.append(angle);
+                button(body, 'Um diesen Winkel drehen', () => { const n = Number(angle.value); if (Number.isFinite(n) && Math.abs(n) <= 360)
+                    runLayout('rotate:' + n); }, !editable());
+                if (!options.ink) {
+                    subtitle('Verbinder');
+                    for (const [field, name, choices] of [
+                        ['route', 'Verlauf', [['straight', 'Gerade'], ['curve', 'Kurve'], ['orthogonal', 'Rechtwinklig']]],
+                        ['sourceAnchor', 'Anfang', [['auto', 'Automatisch'], ['top', 'Oben'], ['right', 'Rechts'], ['bottom', 'Unten'], ['left', 'Links']]],
+                        ['targetAnchor', 'Ende', [['auto', 'Automatisch'], ['top', 'Oben'], ['right', 'Rechts'], ['bottom', 'Unten'], ['left', 'Links']]]
+                    ]) {
+                        const l = document.createElement('label');
+                        l.textContent = name;
+                        const s = document.createElement('select');
+                        s.setAttribute('aria-label', name);
+                        for (const [value, text] of choices) {
+                            const option = document.createElement('option');
+                            option.value = value;
+                            option.textContent = text;
+                            s.append(option);
+                        }
+                        s.value = read().find(o => selected().has(o.id) && o.art === 'verbindung')?.[field] || choices[0][0];
+                        s.disabled = !editable() || !read().some(o => selected().has(o.id) && o.art === 'verbindung');
+                        s.addEventListener('change', () => change(read().map(o => selected().has(o.id) && o.art === 'verbindung' ? { ...o, [field]: s.value } : o)));
+                        l.append(s);
+                        body.append(l);
+                    }
+                }
+            }
+            else if (tab === 'frames') {
+                note('Rahmen ordnen Ausschnitte als Folien. Pfeile wechseln die Folie; Escape beendet den Vortrag.');
+                if (!options.ink) {
+                    button(body, 'Rahmen um Auswahl', () => {
+                        const b = GfxObjects.bounds(read().filter(o => selected().has(o.id))) || { x: 0, y: 0, w: 720, h: 405 };
+                        const frame = { id: uid(), art: 'frame', x: b.x - 32, y: b.y - 48, w: b.w + 64, h: b.h + 80,
+                            farbe: '#529cca', text: 'Rahmen ' + (read().filter(o => o.art === 'frame').length + 1) };
+                        change([frame, ...read()]);
+                        select([frame.id], true);
+                        render();
+                    });
+                    const frames = read().filter(o => o.art === 'frame').sort((a, b) => (a.frameOrder || 0) - (b.frameOrder || 0));
+                    frames.forEach((frame, index) => {
+                        const row = document.createElement('div');
+                        row.className = 'gfx-layer-row';
+                        button(row, (index + 1) + '. ' + label(frame), () => { select([frame.id], true); options.zoom?.(GfxShapes.rahmenVon(frame)); });
+                        const reorder = (delta) => {
+                            const next = frames.slice();
+                            [next[index], next[index + delta]] = [next[index + delta], next[index]];
+                            change(read().map(o => o.art === 'frame' ? { ...o, frameOrder: next.findIndex(f => f.id === o.id) } : o));
+                        };
+                        button(row, '↑', () => reorder(-1), index === 0).setAttribute('aria-label', 'Rahmen nach vorne');
+                        button(row, '↓', () => reorder(1), index === frames.length - 1).setAttribute('aria-label', 'Rahmen nach hinten');
+                        body.append(row);
+                        const name = document.createElement('input');
+                        name.value = label(frame);
+                        name.setAttribute('aria-label', 'Rahmentitel ' + (index + 1));
+                        name.disabled = !!frame.locked;
+                        name.maxLength = 200;
+                        name.addEventListener('change', () => change(read().map(o => o.id === frame.id ? { ...o, text: name.value.trim() || 'Rahmen' } : o)));
+                        body.append(name);
+                    });
+                    button(body, 'Präsentation starten', () => { close(); present(options, frames); }, !frames.length);
+                }
+            }
+            else if (tab === 'comments') {
+                const objects = read().filter(o => selected().has(o.id));
+                if (objects.length !== 1) {
+                    note('Wähle ein einzelnes Objekt in der Ebenenliste, um seinen Kommentarverlauf zu öffnen.');
+                    return;
+                }
+                const object = objects[0];
+                subtitle(label(object));
+                for (const comment of Array.isArray(object.objectComments) ? object.objectComments : []) {
+                    const article = document.createElement('article');
+                    article.className = 'gfx-object-comment';
+                    const text = document.createElement('p');
+                    text.textContent = String(comment.text || '');
+                    article.append(text);
+                    const date = document.createElement('small');
+                    date.textContent = new Date(comment.created).toLocaleString('de-DE');
+                    article.append(date);
+                    button(article, comment.resolved ? 'Erneut öffnen' : 'Erledigen', () => update({ objectComments: object.objectComments.map((c) => c.id === comment.id ? { ...c, resolved: !c.resolved } : c) }));
+                    button(article, 'Bearbeiten', () => {
+                        const editor = document.createElement('textarea');
+                        editor.value = String(comment.text || '');
+                        editor.rows = 3;
+                        editor.maxLength = 10000;
+                        editor.setAttribute('aria-label', 'Kommentar bearbeiten');
+                        article.append(editor);
+                        button(article, 'Änderung speichern', () => { if (editor.value.trim())
+                            update({ objectComments: object.objectComments.map((c) => c.id === comment.id ? { ...c, text: editor.value.trim() } : c) }); });
+                        editor.focus();
+                    });
+                    body.append(article);
+                }
+                const input = document.createElement('textarea');
+                input.rows = 3;
+                input.maxLength = 10000;
+                input.setAttribute('aria-label', 'Neuer Objektkommentar');
+                body.append(input);
+                button(body, 'Kommentar hinzufügen', () => {
+                    if (!input.value.trim())
+                        return;
+                    update({ objectComments: [...(object.objectComments || []), { id: uid(), text: input.value.trim(), created: new Date().toISOString(), resolved: false }] });
+                });
+            }
+            else if (tab === 'exchange') {
+                note('Die bearbeitbare Datei bewahrt Gruppen, Rahmen und Kommentare. SVG und PNG zeigen die Zeichenobjekte. Dokumentblöcke bleiben in der vollständigen Redion-Sicherung.');
+                if (!options.ink) {
+                    const status = document.createElement('p');
+                    status.setAttribute('role', 'status');
+                    const attempt = (run) => { void run().catch(error => { status.textContent = error instanceof Error ? error.message : 'Export fehlgeschlagen.'; }); };
+                    button(body, 'Bearbeitbare Fläche exportieren', () => attempt(() => exportEditable(options)));
+                    button(body, 'SVG exportieren', () => attempt(() => exportGraphic(options, false)));
+                    button(body, 'PNG exportieren', () => attempt(() => exportGraphic(options, true)));
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.json,.zip,.affine';
+                    input.setAttribute('aria-label', 'Fläche oder AFFiNE-Snapshot importieren');
+                    body.append(input);
+                    body.append(status);
+                    input.addEventListener('change', async () => {
+                        const file = input.files?.[0];
+                        if (!file)
+                            return;
+                        try {
+                            const imported = options.importFile ? await options.importFile(file, () => panel.isConnected) : GfxExchange.parse(JSON.parse(await file.text()), uid);
+                            if (!panel.isConnected)
+                                return;
+                            if (!imported.length)
+                                throw new Error('Keine unterstützten Zeichenobjekte gefunden.');
+                            const merged = GfxExchange.remap(imported, uid);
+                            change([...read(), ...merged]);
+                            select(merged.map(o => o.id));
+                            tab = 'layers';
+                            render();
+                        }
+                        catch (error) {
+                            status.textContent = error instanceof Error ? error.message : 'Die Datei konnte nicht importiert werden.';
+                        }
+                    });
+                    subtitle('Vorlagen');
+                    for (const [kind, name] of [['kanban', 'Projektboard'], ['swot', 'SWOT'], ['timeline', 'Zeitstrahl'], ['retro', 'Retrospektive']])
+                        button(body, name, () => { const next = template(kind, uid); change([...read(), ...next]); select(next.map(o => o.id)); options.zoom?.(GfxObjects.bounds(next)); });
+                }
+            }
+        };
+        for (const [id, name] of [['layers', 'Ebenen'], ['layout', 'Ausrichten'], ...(!options.ink ? [['frames', 'Rahmen']] : []), ['comments', 'Kommentare'], ...(!options.ink ? [['exchange', 'Austausch']] : [])]) {
+            const b = button(tabs, name, () => { tab = id; render(); });
+            b.dataset.tab = id;
+        }
+        panel.addEventListener('keydown', e => { if (e.key === 'Escape') {
+            e.stopPropagation();
+            close();
+        } });
+        for (const event of ['pointerdown', 'pointermove', 'pointerup', 'wheel'])
+            panel.addEventListener(event, e => e.stopPropagation());
+        host.append(panel);
+        render();
+        panel.focus({ preventScroll: true });
+        return panel;
+    };
+    const download = (blob, name) => {
+        const url = URL.createObjectURL(blob), a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+    };
+    const exportGraphic = async (options, png) => {
+        const objects = options.read(), box = GfxObjects.bounds(objects);
+        if (!box)
+            return;
+        const svg = GfxShapes.sv('svg', { xmlns: 'http://www.w3.org/2000/svg', viewBox: `${box.x - 24} ${box.y - 24} ${box.w + 48} ${box.h + 48}`,
+            width: Math.ceil(box.w + 48), height: Math.ceil(box.h + 48) });
+        const defs = GfxShapes.sv('defs');
+        GfxShapes.pfeilMarke(defs, 'export-arrow');
+        svg.append(defs);
+        const images = new Map();
+        for (const o of objects)
+            if (o.art === 'bild' && o.dateiId && options.image && !images.has(o.dateiId)) {
+                const blob = await options.image(o.dateiId);
+                if (!blob)
+                    throw new Error('Ein Bildanhang fehlt. Der Export wurde abgebrochen.');
+                const data = await new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result)); r.onerror = reject; r.readAsDataURL(blob); });
+                images.set(o.dateiId, data);
+            }
+        for (const o of objects.filter(o => o.art === 'verbindung')) {
+            const a = objects.find(x => x.id === o.von), b = objects.find(x => x.id === o.nach);
+            if (a && b)
+                svg.append(GfxShapes.verbindungZeichne(o, GfxShapes.rahmenVon(a), GfxShapes.rahmenVon(b), 'export-arrow'));
+        }
+        for (const o of objects.filter(o => o.art !== 'verbindung'))
+            svg.append(GfxShapes.zeichne(o, { pfeilMarke: 'export-arrow', bildAdresse: id => images.get(id) || null }));
+        const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' });
+        if (!png) {
+            download(blob, 'Zeichenfläche.svg');
+            return;
+        }
+        const url = URL.createObjectURL(blob);
+        try {
+            const image = new Image();
+            image.src = url;
+            await image.decode();
+            const canvas = document.createElement('canvas'), factor = Math.min(2, 8192 / Math.max(box.w + 48, box.h + 48));
+            canvas.width = Math.ceil((box.w + 48) * factor);
+            canvas.height = Math.ceil((box.h + 48) * factor);
+            canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+            const result = await new Promise(resolve => canvas.toBlob(resolve));
+            if (result)
+                download(result, 'Zeichenfläche.png');
+        }
+        finally {
+            URL.revokeObjectURL(url);
+        }
+    };
+    const exportEditable = async (options) => {
+        const objects = JSON.parse(JSON.stringify(options.read()));
+        const ids = new Set(objects.filter((o) => o.dateiId).map((o) => String(o.dateiId)));
+        const assets = Object.create(null), files = [];
+        for (const id of ids) {
+            const blob = await options.image?.(id);
+            if (!blob)
+                throw new Error('Ein Anhang fehlt. Die Fläche wurde nicht unvollständig exportiert.');
+            const name = 'assets/' + files.length;
+            files.push({ name, inhalt: blob });
+            assets[id] = { path: name, mime: blob.type };
+        }
+        const data = JSON.stringify({ format: 'redion-canvas', version: 1, shapes: objects, ...(ids.size ? { assets } : {}) }, null, 2);
+        if (ids.size) {
+            if (!options.pack)
+                throw new Error('Der Archivexport ist nicht verfügbar.');
+            files.push({ name: 'canvas.json', inhalt: data });
+            download(await options.pack(files), 'Zeichenfläche.redion-canvas.zip');
+        }
+        else
+            download(new Blob([data], { type: 'application/json' }), 'Zeichenfläche.redion-canvas.json');
+    };
+    const present = (options, frames) => {
+        if (!frames.length || !options.zoom)
+            return;
+        options.host.dataset.gfxPresenting = 'true';
+        const bar = document.createElement('div');
+        bar.className = 'gfx-presentation';
+        bar.setAttribute('role', 'group');
+        bar.setAttribute('aria-label', 'Präsentationssteuerung');
+        let index = 0;
+        const status = document.createElement('span');
+        status.setAttribute('role', 'status');
+        const show = () => { const frame = frames[index]; options.zoom(GfxShapes.rahmenVon(frame)); status.textContent = `${index + 1} / ${frames.length} · ${label(frame)}`; };
+        const blockDrawing = (e) => { if (e.target instanceof Node && !bar.contains(e.target)) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        } };
+        options.host.addEventListener('pointerdown', blockDrawing, true);
+        const end = () => {
+            document.removeEventListener('keydown', key, true);
+            options.host.removeEventListener('pointerdown', blockDrawing, true);
+            delete options.host.dataset.gfxPresenting;
+            bar.remove();
+            options.restoreView?.();
+        };
+        const key = (e) => {
+            if (['Escape', 'ArrowRight', 'ArrowLeft', 'PageDown', 'PageUp', ' '].includes(e.key)) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                if (e.key === 'Escape')
+                    end();
+                else {
+                    index = Math.max(0, Math.min(frames.length - 1, index + (['ArrowLeft', 'PageUp'].includes(e.key) ? -1 : 1)));
+                    show();
+                }
+            }
+        };
+        for (const [name, run] of [['Zurück', () => { index = Math.max(0, index - 1); show(); }], ['Weiter', () => { index = Math.min(frames.length - 1, index + 1); show(); }], ['Beenden', end]]) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = name;
+            b.addEventListener('click', run);
+            bar.append(b);
+        }
+        bar.prepend(status);
+        for (const event of ['pointerdown', 'pointerup'])
+            bar.addEventListener(event, e => e.stopPropagation());
+        options.host.append(bar);
+        document.addEventListener('keydown', key, true);
+        show();
+        bar.querySelector('button')?.focus();
+        new MutationObserver((_, observer) => {
+            if (!bar.isConnected) {
+                document.removeEventListener('keydown', key, true);
+                options.host.removeEventListener('pointerdown', blockDrawing, true);
+                delete options.host.dataset.gfxPresenting;
+                observer.disconnect();
+            }
+        }).observe(document.body, { childList: true, subtree: true });
+    };
+    const template = (kind, uid) => {
+        const titles = kind === 'swot' ? ['Stärken', 'Schwächen', 'Chancen', 'Risiken'] : kind === 'retro' ? ['Gut gelaufen', 'Gelernt', 'Verbessern'] : kind === 'timeline' ? ['Start', 'Meilenstein', 'Ergebnis'] : ['Offen', 'In Arbeit', 'Erledigt'];
+        return titles.flatMap((text, i) => {
+            const x = kind === 'swot' ? (i % 2) * 300 : i * 300, y = kind === 'swot' ? Math.floor(i / 2) * 250 : 0;
+            const frame = { id: uid(), art: 'frame', x, y, w: 270, h: 210, text, farbe: '#529cca', frameOrder: i };
+            const note = { id: uid(), art: 'notiz', x: x + 24, y: y + 30, w: 220, h: 140, text: 'Idee hinzufügen', farbe: GfxShapes.PALETTE[i % 8][0] };
+            return [frame, note];
+        });
+    };
+    return { open, present, template, exportGraphic, exportEditable, download };
+})();
+window.GfxInspector = GfxInspector;
 
 </script>
 <script>
@@ -41351,6 +42199,8 @@ Register.werkzeuge = (() => {
             sym: 'formDiamond', zeichen: '◇', gruppe: 'senior' },
         { id: 'rahmenwahl', name: 'Rahmenauswahl', titel: 'Mehrere Formen mit einem Rahmen auswählen',
             sym: 'inkLasso', zeichen: '▧', gruppe: 'quick' },
+        { id: 'freihandwahl', name: 'Freihandlasso', titel: 'Formen mit einer frei gezeichneten Auswahl umfassen',
+            sym: 'inkLasso', zeichen: '⌖', gruppe: 'quick' },
         { id: 'notiz', name: 'Haftnotiz', titel: 'Eine Haftnotiz setzen und beschriften',
             sym: 'inkNote', zeichen: '🗒', gruppe: 'senior' }
     ];
@@ -61317,7 +62167,7 @@ const Zusatz = (() => {
         massstabZeigen.className = 'wb-massstab';
         massstabZeigen.setAttribute('aria-live', 'polite');
         massstabZeigen.textContent = '100 %';
-        const WERKZEUG_IDS = ['zeiger', 'hand', 'verbindung', 'radierer',
+        const WERKZEUG_IDS = ['zeiger', 'hand', 'rahmenwahl', 'freihandwahl', 'verbindung', 'radierer',
             'stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'notiz', 'text', 'bild'];
         const farbMenue = () => {
             const kasten = document.createElement('div');
@@ -61337,7 +62187,7 @@ const Zusatz = (() => {
         const mehrMenue = () => {
             const kasten = document.createElement('div');
             kasten.className = 'gfx-tb-liste';
-            for (const [id, name] of [['leeren', 'Alles löschen'], ['png', 'Als Bild speichern']]) {
+            for (const [id, name] of [['objekte', 'Ebenen, Gruppen und Ausrichten'], ['rahmen', 'Rahmen und Präsentation'], ['austausch', 'Import, Export und Vorlagen'], ['leeren', 'Alles löschen'], ['png', 'Als Bild speichern']]) {
                 const b = document.createElement('button');
                 b.type = 'button';
                 b.dataset.a = id;
@@ -61375,7 +62225,7 @@ const Zusatz = (() => {
                     { id: 'text', knoepfe: ['text'] },
                     { id: 'bild', knoepfe: ['bild'] }
                 ],
-                werkzeugMenues: { 'wb-modus': ['zeiger', 'hand', 'verbindung'] }
+                werkzeugMenues: { 'wb-modus': ['zeiger', 'hand', 'rahmenwahl', 'freihandwahl', 'verbindung'] }
             },
             beschriftung: 'Werkzeuge der Zeichenfläche' +
                 (String(block.text ?? '').trim() ? ` „${String(block.text).trim()}“` : ''),
@@ -61383,12 +62233,16 @@ const Zusatz = (() => {
             aufWerkzeug: (id) => {
                 werkzeug = id;
                 verbindeVon = null;
-                if (werkzeug !== 'zeiger')
+                if (werkzeug !== 'zeiger') {
                     gewaehlt = null;
+                    objectSelection.clear();
+                }
                 w.classList.toggle('wb-schiebt', werkzeug === 'hand');
                 male();
             },
             aufAktion: (id) => {
+                if (['objekte', 'rahmen', 'austausch'].includes(id))
+                    openObjects(id === 'rahmen' ? 'frames' : id === 'austausch' ? 'exchange' : 'layers');
                 if (id === 'zurueck')
                     schrittZurueck();
                 if (id === 'vor')
@@ -61396,7 +62250,8 @@ const Zusatz = (() => {
                 if (id === 'leeren') {
                     if (!daten.length || confirm('Die ganze Zeichenfläche leeren?')) {
                         merken();
-                        daten.length = 0;
+                        const keep = daten.filter((o) => o.locked);
+                        daten.splice(0, daten.length, ...keep);
                         male();
                         sichern();
                     }
@@ -61488,9 +62343,14 @@ const Zusatz = (() => {
                 flaeche.appendChild(linie); });
             daten.filter((s) => s.art !== 'verbindung')
                 .forEach((s) => flaeche.appendChild(formZeichnen(s)));
+            for (const s of daten.filter((o) => objectSelection.has(o.id))) {
+                const b = rahmenVon(s);
+                flaeche.append(sv('rect', { x: b.x, y: b.y, width: b.w, height: b.h,
+                    fill: 'none', stroke: 'var(--accent)', 'stroke-width': 1 / sicht.z, 'stroke-dasharray': s.locked ? '5 4' : 'none', 'pointer-events': 'none' }));
+            }
             if (werkzeug === 'zeiger' && gewaehlt) {
                 const s = daten.find((q) => q.id === gewaehlt);
-                if (s && groessenFaehig(s)) {
+                if (s && !s.locked && objectSelection.size <= 1 && groessenFaehig(s)) {
                     const rahmen = rahmenVon(s);
                     const kante = GRIFF / sicht.z;
                     flaeche.appendChild(sv('rect', {
@@ -61689,6 +62549,30 @@ const Zusatz = (() => {
             sichtSichern();
         };
         let gewaehlt = null;
+        const objectSelection = new Set();
+        let selectionDrag = null;
+        const chooseObjects = (ids, exact = false) => {
+            objectSelection.clear();
+            (exact ? ids : GfxObjects.expand(daten, new Set(ids))).forEach(id => objectSelection.add(id));
+            gewaehlt = objectSelection.size === 1 ? [...objectSelection][0] : null;
+        };
+        const openObjects = (tab = 'layers') => {
+            const previousView = { ...sicht };
+            GfxInspector.open({ host: w, read: () => daten, selected: () => objectSelection, uid: () => Store.uid(),
+                select: (ids, exact) => { werkzeug = 'zeiger'; leiste.setzeWerkzeug('zeiger'); chooseObjects(ids, exact); male(); },
+                commit: next => { merken(); daten.splice(0, daten.length, ...next); male(); sichern(); },
+                zoom: box => {
+                    const r = flaeche.getBoundingClientRect();
+                    sicht.z = Math.max(.1, Math.min(4, Math.min((r.width - 48) / Math.max(1, box.w), (r.height - 48) / Math.max(1, box.h))));
+                    sicht.x = box.x - (r.width / sicht.z - box.w) / 2;
+                    sicht.y = box.y - (r.height / sicht.z - box.h) / 2;
+                    male();
+                    sichtSichern();
+                },
+                restoreView: () => { Object.assign(sicht, previousView); male(); sichtSichern(); }, image: GfxExchange.fileBlob, pack: GfxExchange.packArchive,
+                importFile: (file, active) => GfxExchange.importFile(file, () => Store.uid(), block.id, active)
+            }, tab);
+        };
         const GRIFF = 9;
         let aktiv = null, verschiebt = null, schiebt = null, groesst = null;
         const finger = new Map();
@@ -61699,6 +62583,33 @@ const Zusatz = (() => {
             if (ziel && (ziel.tagName === 'INPUT' || ziel.tagName === 'TEXTAREA' || ziel.isContentEditable))
                 return;
             const strg = e.ctrlKey || e.metaKey;
+            if (strg && e.key.toLowerCase() === 'a') {
+                e.preventDefault();
+                chooseObjects(daten.filter((o) => o.art !== 'verbindung').map((o) => o.id));
+                male();
+                return;
+            }
+            if (strg && e.key.toLowerCase() === 'g' && !GfxObjects.locked(daten, objectSelection)) {
+                e.preventDefault();
+                if (objectSelection.size > 1 || e.shiftKey) {
+                    merken();
+                    const next = GfxObjects.group(daten, objectSelection, e.shiftKey ? null : Store.uid());
+                    daten.splice(0, daten.length, ...next);
+                    male();
+                    sichern();
+                }
+                return;
+            }
+            if ((e.key === 'Delete' || e.key === 'Backspace') && objectSelection.size && !GfxObjects.locked(daten, objectSelection)) {
+                e.preventDefault();
+                merken();
+                const keep = daten.filter((o) => !objectSelection.has(o.id) && !(o.art === 'verbindung' && (objectSelection.has(o.von) || objectSelection.has(o.nach))));
+                daten.splice(0, daten.length, ...keep);
+                chooseObjects([]);
+                male();
+                sichern();
+                return;
+            }
             if (!strg)
                 return;
             const taste = e.key.toLowerCase();
@@ -61734,6 +62645,10 @@ const Zusatz = (() => {
                 return;
             }
             const [x, y] = punkt(e);
+            if (['rahmenwahl', 'freihandwahl'].includes(werkzeug)) {
+                selectionDrag = { start: [x, y], points: [[x, y]], free: werkzeug === 'freihandwahl' };
+                return;
+            }
             const maus = e.pointerType === 'mouse';
             if (werkzeug === 'hand' || (maus && e.button === 1)) {
                 schiebt = { x: e.clientX, y: e.clientY, sx: sicht.x, sy: sicht.y };
@@ -61768,7 +62683,7 @@ const Zusatz = (() => {
                 const sid = e.target.dataset?.sid;
                 if (sid) {
                     const i = daten.findIndex((s) => s.id === sid);
-                    if (i >= 0) {
+                    if (i >= 0 && !daten[i].locked) {
                         merken();
                         daten.splice(i, 1);
                         for (let j = daten.length - 1; j >= 0; j--)
@@ -61782,22 +62697,29 @@ const Zusatz = (() => {
             }
             if (werkzeug === 'zeiger') {
                 const gewaehlteForm = daten.find((q) => q.id === gewaehlt);
-                if (gewaehlteForm && groessenFaehig(gewaehlteForm)) {
+                if (gewaehlteForm && !gewaehlteForm.locked && objectSelection.size <= 1 && groessenFaehig(gewaehlteForm)) {
                     const rahmen = rahmenVon(gewaehlteForm);
                     const nah = GRIFF / sicht.z + 3;
                     if (Math.abs(x - (rahmen.x + rahmen.w)) <= nah &&
                         Math.abs(y - (rahmen.y + rahmen.h)) <= nah) {
                         merken();
-                        groesst = { s: gewaehlteForm, x, y };
+                        groesst = { s: gewaehlteForm, x, y, original: { ...gewaehlteForm }, bounds: rahmen };
                         return;
                     }
                 }
                 const sid = e.target.dataset?.sid;
                 const s = daten.find((q) => q.id === sid);
-                gewaehlt = s ? String(s.id) : null;
-                if (s) {
+                if (e.shiftKey && s) {
+                    const members = GfxObjects.expand(daten, new Set([s.id]));
+                    chooseObjects(objectSelection.has(s.id) ? [...objectSelection].filter(id => !members.has(id)) : [...objectSelection, ...members]);
+                    male();
+                    return;
+                }
+                if (!s || !objectSelection.has(s.id))
+                    chooseObjects(s ? [s.id] : []);
+                if (s && !GfxObjects.locked(daten, objectSelection)) {
                     merken();
-                    verschiebt = { s, x, y };
+                    verschiebt = { s, x, y, originals: daten.slice(), startX: x, startY: y };
                 }
                 return;
             }
@@ -61863,8 +62785,25 @@ const Zusatz = (() => {
                 return;
             }
             const [x, y] = punkt(e);
+            if (selectionDrag) {
+                selectionDrag.points.push([x, y]);
+                male();
+                const polygon = selectionDrag.free ? selectionDrag.points : [selectionDrag.start, [x, selectionDrag.start[1]], [x, y], [selectionDrag.start[0], y]];
+                flaeche.append(sv('path', { d: 'M' + polygon.map(p => p.join(' ')).join(' L') + ' Z', fill: 'var(--accent)', 'fill-opacity': '.08', stroke: 'var(--accent)', 'stroke-width': 1 / sicht.z, 'pointer-events': 'none' }));
+                return;
+            }
             if (groesst) {
                 const s = groesst.s;
+                if (Number(s.rotation)) {
+                    const original = groesst.original, b = groesst.bounds;
+                    const factor = Math.max(.05, (x - b.x) / Math.max(1, b.w), (y - b.y) / Math.max(1, b.h));
+                    s.w = original.w * factor;
+                    s.h = original.h * factor;
+                    s.x = b.x + (original.x + original.w / 2 - b.x) * factor - s.w / 2;
+                    s.y = b.y + (original.y + original.h / 2 - b.y) * factor - s.h / 2;
+                    male();
+                    return;
+                }
                 const links = Math.min(s.x, s.x + s.w), oben = Math.min(s.y, s.y + s.h);
                 s.x = links;
                 s.y = oben;
@@ -61874,17 +62813,15 @@ const Zusatz = (() => {
                 return;
             }
             if (verschiebt) {
-                const dx = x - verschiebt.x, dy = y - verschiebt.y;
-                const s = verschiebt.s;
-                if (s.art === 'stift')
-                    s.pts = s.pts.map((p) => [p[0] + dx, p[1] + dy]);
-                else {
-                    s.x += dx;
-                    s.y += dy;
-                }
-                verschiebt.x = x;
-                verschiebt.y = y;
+                const { dx, dy, guides } = e.altKey ? { dx: x - verschiebt.startX, dy: y - verschiebt.startY, guides: [] } :
+                    GfxObjects.snap(verschiebt.originals, objectSelection, x - verschiebt.startX, y - verschiebt.startY, 5 / sicht.z);
+                daten.splice(0, daten.length, ...verschiebt.originals.map((o) => objectSelection.has(o.id) ? GfxObjects.move(o, dx, dy) : o));
                 male();
+                const view = ausschnitt();
+                for (const guide of guides)
+                    flaeche.append(sv('line', { x1: guide.axis === 'x' ? guide.at : view.x, y1: guide.axis === 'y' ? guide.at : view.y,
+                        x2: guide.axis === 'x' ? guide.at : view.x + view.w, y2: guide.axis === 'y' ? guide.at : view.y + view.h,
+                        stroke: 'var(--accent)', 'stroke-width': 1 / sicht.z, 'stroke-dasharray': '4 3', 'pointer-events': 'none' }));
                 return;
             }
             if (!aktiv)
@@ -61916,6 +62853,15 @@ const Zusatz = (() => {
             male();
         });
         const fertig = (e) => {
+            if (selectionDrag) {
+                const last = selectionDrag.points[selectionDrag.points.length - 1], a = selectionDrag.start;
+                const polygon = selectionDrag.free ? selectionDrag.points : [a, [last[0], a[1]], last, [a[0], last[1]]];
+                chooseObjects(GfxObjects.lasso(daten, polygon));
+                selectionDrag = null;
+                werkzeug = 'zeiger';
+                leiste.setzeWerkzeug('zeiger');
+                male();
+            }
             if (stiftZeiger !== null && typeof e?.pointerId === 'number' && e.pointerId !== stiftZeiger)
                 return;
             stiftZeiger = null;
@@ -61983,7 +62929,7 @@ const Zusatz = (() => {
         flaeche.addEventListener('dblclick', (e) => {
             const sid = e.target?.dataset?.sid;
             const s = daten.find((q) => q.id === sid);
-            if (!s || (s.art !== 'notiz' && s.art !== 'text'))
+            if (!s || s.locked || (s.art !== 'notiz' && s.art !== 'text'))
                 return;
             e.preventDefault();
             const rahmen = rahmenVon(s);
@@ -66214,7 +67160,7 @@ const Marken = (() => {
                 }
             }
             const before = snapshot();
-            const neue = zwischenablage.map(mark => InkGeometry.move({ ...clone(mark), id: frischeId() }, 16, 16));
+            const neue = GfxExchange.remap(zwischenablage.map(mark => clone(mark)), frischeId).map(mark => InkGeometry.move(mark, 16, 16));
             marks.push(...neue);
             neue.forEach(mark => { const node = zeichneMarke(mark); if (node) {
                 flaeche.appendChild(node);
@@ -66776,6 +67722,7 @@ const Marken = (() => {
                             selection.add(idOf(mark));
                         });
                     }
+                    selection = GfxObjects.expand(marks, selection);
                     renderSelection();
                     const istTipp = pts.length < 2 || pts.every(q => Math.abs((q[0] ?? 0) - (pts[0][0] ?? 0)) <= 4
                         && Math.abs((q[1] ?? 0) - (pts[0][1] ?? 0)) <= 4);
@@ -67637,10 +68584,15 @@ const Marken = (() => {
                     return;
                 }
                 if (targetId) {
-                    if (event.shiftKey)
-                        selection.has(targetId) ? selection.delete(targetId) : selection.add(targetId);
+                    const members = GfxObjects.expand(marks, new Set([targetId]));
+                    if (event.shiftKey) {
+                        if (selection.has(targetId))
+                            members.forEach(id => selection.delete(id));
+                        else
+                            members.forEach(id => selection.add(id));
+                    }
                     else if (!selection.has(targetId))
-                        selection = new Set([targetId]);
+                        selection = members;
                     renderSelection();
                     if (!selection.has(targetId))
                         return;
@@ -68188,7 +69140,39 @@ const Marken = (() => {
                 Store.setMeta('zeichnen:formen', formen);
         };
         const formenAn = () => formen;
-        const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, setzeRadierModus, radierModusVon, copySelection, paste, marken: marks,
+        const objectPanel = () => {
+            const host = flaeche.closest('.document-studio') || flaeche.parentElement;
+            if (!host)
+                return;
+            const apply = (next) => {
+                const before = snapshot();
+                marks.splice(0, marks.length, ...next);
+                redraw();
+                commit(before);
+            };
+            GfxInspector.open({ host, ink: true, read: () => marks.map(mark => ({ ...mark, id: idOf(mark), locked: mark.gesperrt === true })),
+                selected: () => selection, uid: frischeId,
+                select: (ids, exact) => { setzeWerkzeug('select'); selection = exact ? new Set(ids) : GfxObjects.expand(marks, new Set(ids)); renderSelection(); notifyState(); },
+                commit: next => apply(next.map(o => { const { locked, ...mark } = o; if (locked)
+                    mark.gesperrt = true;
+                else
+                    delete mark.gesperrt; return mark; })),
+                layout: command => {
+                    if (!selection.size || marks.some(m => selection.has(idOf(m)) && m.gesperrt))
+                        return;
+                    if (command.startsWith('rotate:')) {
+                        const b = auswahlKasten();
+                        apply(marks.map(m => selection.has(idOf(m)) ? InkGeometry.rotate(clone(m), [b.x + b.width / 2, b.y + b.height / 2], Number(command.slice(7))) : m));
+                    }
+                    else {
+                        const proxies = marks.map(m => { const b = InkGeometry.bounds(m); return { id: idOf(m), art: 'rechteck', x: b.x, y: b.y, w: b.width, h: b.height, groupId: m.groupId }; });
+                        const next = GfxObjects.align(proxies, selection, command);
+                        apply(marks.map((m, i) => selection.has(idOf(m)) ? InkGeometry.move(clone(m), next[i].x - proxies[i].x, next[i].y - proxies[i].y) : m));
+                    }
+                }
+            });
+        };
+        const steuerung = { flaeche, objectPanel, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, setzeRadierModus, radierModusVon, copySelection, paste, marken: marks,
             undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn, setzeFormen, formenAn, bildEinfuegen,
             setzeSchrift, schriftVon, resumeWriting, finishWriting: schreiberSchliessen,
             cutSelection, nachVorn, nachHinten, sperren, gesperrtGewaehlt,
@@ -68817,6 +69801,7 @@ const Marken = (() => {
                 '<button data-act="vor" data-gruppe="auswahl" title="Auswahl nach vorn — über alles andere" disabled><span class="zeichen" data-sym="layerUp" aria-hidden="true"></span><span class="wort">Nach vorn</span></button>' +
                 '<button data-act="hinten" data-gruppe="auswahl" title="Auswahl nach hinten — unter alles andere" disabled><span class="zeichen" data-sym="layerDown" aria-hidden="true"></span><span class="wort">Nach hinten</span></button>' +
                 '<button data-act="sperren" data-gruppe="auswahl" aria-pressed="false" title="Auswahl sperren: nicht mehr schieben, ziehen, drehen, löschen oder radieren" disabled><span class="zeichen" data-sym="lock" aria-hidden="true"></span><span class="wort">Sperren</span></button>' +
+                '<button data-act="objekte" data-gruppe="auswahl" title="Ebenen, Gruppen, Ausrichten und Objektkommentare"><span class="zeichen" data-sym="grid" aria-hidden="true"></span><span class="wort">Objekte</span></button>' +
                 '<button data-act="verweis" data-gruppe="auswahl" title="Der Auswahl einen Verweis geben: eine Adresse (https://…) oder eine Seite ([[Name]]) — im Lesemodus antippen" disabled><span class="zeichen" data-sym="link" aria-hidden="true"></span><span class="wort">Verweis</span></button>' +
                 '<button data-act="element-sichern" data-gruppe="auswahl" title="Die Auswahl als Element sichern — danach mit dem Werkzeug «Elemente» auf jede Seite setzen" disabled><span class="zeichen" data-sym="star" aria-hidden="true"></span><span class="wort">Als Element</span></button>' +
                 '<button data-act="elemente" data-gruppe="elemente" title="Elemente-Bibliothek öffnen und wählen, was der nächste Tipp setzt"><span class="zeichen" data-sym="star" aria-hidden="true"></span><span class="wort">Elemente</span></button>' +
@@ -69903,6 +70888,10 @@ const Marken = (() => {
                     controls.nachHinten();
                 if (target.dataset.act === 'sperren' && controls.sperren) {
                     controls.sperren();
+                    return;
+                }
+                if (target.dataset.act === 'objekte' && controls.objectPanel) {
+                    controls.objectPanel();
                     return;
                 }
                 if (target.dataset.act === 'verweis' && controls.verweisSetzen) {
@@ -92907,6 +93896,10 @@ const DocumentMode = (() => {
                 eintrag('Auswahl verlinken', 'link', () => verweis?.click(), !canAnnotate || !verweis || verweis.disabled);
                 eintrag('Dokumentlink kopieren', 'page', () => Register.aktionen.tun('link', page, { kontext: 'seite' }));
             }
+            if (id === 'pdf-schnellmehr') {
+                const objects = inkToolbar()?.querySelector('[data-act="objekte"]');
+                eintrag('Ebenen, Gruppen und Ausrichten', 'grid', () => objects?.click(), !canAnnotate || !objects);
+            }
             if (id === 'vorlagen') {
                 eintrag('Textblock auf neuer Seite', 'inkText', () => pdfDockBlockOeffnen('text'), !canAnnotate);
                 eintrag('Gedankenkarte auf neuer Seite', 'sparkle', () => pdfDockBlockOeffnen('mindmap'), !canAnnotate);
@@ -92924,7 +93917,7 @@ const DocumentMode = (() => {
                 werkzeuge: Marken.WERKZEUGE,
                 galerie: {
                     schnell: ['pdf-zeiger', 'pdf-rahmen', 'pdf-verbinder', 'pdf-link', 'pdf-schnellmehr'],
-                    edgeless: { zusatz: ['elektro', 'pdf-werkzeuge'] },
+                    edgeless: { zusatz: ['pdf-objekte', 'elektro', 'pdf-werkzeuge'] },
                     karten: [
                         { id: 'notiz', knoepfe: ['zettel'] },
                         { id: 'stifte', knoepfe: ['stift', 'radierer'] },
@@ -92945,6 +93938,7 @@ const DocumentMode = (() => {
                     { id: 'pdf-link', name: 'Links', sym: 'link', menue: true, kapsel: 'werkzeuge' },
                     { id: 'elektro', name: 'Elektro', sym: 'bolt', menue: true, kapsel: 'werkzeuge' },
                     { id: 'pdf-schnellmehr', name: 'Weitere Schnellwerkzeuge', sym: 'dots', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'pdf-objekte', name: 'Objekte und Ebenen', sym: 'grid', kapsel: 'werkzeuge', gesperrt: !canAnnotate },
                     { id: 'diagramme', name: 'Gedankenkarte auf neuer Seite', sym: 'sparkle', kapsel: 'werkzeuge', gesperrt: !canAnnotate },
                     { id: 'vorlagen', name: 'Blockvorlagen', sym: 'table', menue: true, kapsel: 'werkzeuge' },
                     { id: 'pdf-werkzeuge', name: 'PDF-Werkzeuge', sym: 'dots', menue: true, kapsel: 'werkzeuge' },
@@ -92952,8 +93946,12 @@ const DocumentMode = (() => {
                     { id: 'ink-ruler', name: 'Lineal ein- oder ausblenden', sym: 'inkRuler', kapsel: 'werkzeuge' }
                 ],
                 menue: pdfDockMenue,
-                aufAktion: id => { if (id === 'diagramme')
-                    pdfDockBlockOeffnen('mindmap'); }
+                aufAktion: id => {
+                    if (id === 'diagramme')
+                        pdfDockBlockOeffnen('mindmap');
+                    if (id === 'pdf-objekte' && canAnnotate)
+                        inkToolbar()?.querySelector('[data-act="objekte"]')?.click();
+                }
             })
             : null;
         const drawingbar = galerie?.element ?? document.createElement('div');
@@ -98839,7 +99837,10 @@ const Blocks = (() => {
                     b.addEventListener('click', () => quelleWaehlen(block));
                     w.appendChild(b);
                 }
-                else if (block.quelle === block.id || quelleImInneren(quelle.id, block.id)) {
+                else if (quelle.alive === false || (typeof Konten !== 'undefined' && !Konten.darf('lesen', quelle.id))) {
+                    w.textContent = 'Die eingebettete Quelle ist nicht verfügbar.';
+                }
+                else if (tiefe > 12 || block.quelle === block.id || quelleImInneren(quelle.id, block.id)) {
                     w.innerHTML = '<div class="sy-kopf sy-warn">⇄ Diese Quelle enthält den Spiegel selbst — ' +
                         'das würde sich endlos wiederholen.</div>';
                     const b = document.createElement('button');
@@ -148482,6 +149483,25 @@ const Bibliothek = (() => {
         return Array.isArray(entries) ? entries.length > 0 : Object.keys(entries).length > 0;
     };
     const reiterFilter = (reiter, alle) => {
+        if (reiter.startsWith('dynamic:')) {
+            const rule = dynamicCollections().find(c => c.id === reiter.slice(8));
+            if (!rule)
+                return [];
+            return alle.filter(page => {
+                const matches = [];
+                if (rule.title)
+                    matches.push(String(page.text || '').toLocaleLowerCase().includes(rule.title.toLocaleLowerCase()));
+                if (rule.tag)
+                    matches.push((Array.isArray(page.tags) ? page.tags : []).some((t) => String(t).toLocaleLowerCase() === rule.tag.toLocaleLowerCase()));
+                if (rule.kind && rule.kind !== 'alle')
+                    matches.push(artVon(page).id === rule.kind);
+                if (rule.favorite)
+                    matches.push(!!page.favorite);
+                if (rule.days > 0)
+                    matches.push(zeitZahl(page.edited || page.created) >= Date.now() - rule.days * 86400000);
+                return !matches.length || (rule.match === 'any' ? matches.some(Boolean) : matches.every(Boolean));
+            });
+        }
         if (reiter === 'kuerzlich')
             return alle.filter(p => p.zuletztGeoeffnet || p.edited);
         if (reiter === 'favoriten')
@@ -148607,7 +149627,7 @@ const Bibliothek = (() => {
         if (ordner)
             teile.push(String(ordner.text || 'Ohne Titel'));
         else if (ort !== 'ablage' && ort !== 'alle')
-            teile.push(ORTE.find(o => o.id === ort)?.name || ort);
+            teile.push(dynamicCollections().find(c => 'dynamic:' + c.id === ort)?.name || ORTE.find(o => o.id === ort)?.name || ort);
         if (ort !== 'pdf' && zustand.art !== 'alle')
             teile.push(ART_FILTER.find(a => a.id === zustand.art)?.name || zustand.art);
         return {
@@ -149327,7 +150347,7 @@ const Bibliothek = (() => {
         wrap.querySelector('[data-orte]')?.addEventListener('click', ereignis => ortMenue(ereignis.currentTarget));
     };
     const deckelKopf = (alle, anzahl, gesamt = anzahl) => {
-        const ort = ORTE.find(r => r.id === ortAktiv())?.name || 'Alle';
+        const ort = dynamicCollections().find(c => 'dynamic:' + c.id === ortAktiv())?.name || ORTE.find(r => r.id === ortAktiv())?.name || 'Alle';
         const satz = umfangSatz(anzahl, gesamt, 'Dokument', 'Dokumente', 'Dokumenten');
         const schnitt = satz.lastIndexOf(' ');
         const satzZahl = schnitt > 0 ? satz.slice(0, schnitt) : satz;
@@ -149407,7 +150427,7 @@ const Bibliothek = (() => {
             zustand.art = 'pdf';
         }
         else {
-            zustand.reiter = ORTE.some(o => o.id === id) ? id : zustand.reiter;
+            zustand.reiter = ORTE.some(o => o.id === id) || dynamicCollections().some(c => 'dynamic:' + c.id === id) ? id : zustand.reiter;
             zustand.art = 'alle';
         }
         if (id === 'ablage') {
@@ -149435,9 +150455,18 @@ const Bibliothek = (() => {
             anker, titel: 'Ort',
             gruppen: [
                 { name: 'Orte', optionen: ORTE.map(o => ({ id: o.id, name: o.name, zeichen: o.zeichen, aktiv: o.id === aktiv })) },
+                { name: 'Dynamische Sammlungen', optionen: [
+                        ...dynamicCollections().map(c => ({ id: 'dynamic:' + c.id, name: c.name, zeichen: 'filter', aktiv: aktiv === 'dynamic:' + c.id })),
+                        { id: 'dynamic-new', name: 'Sammlung erstellen', zeichen: 'plus' },
+                        ...(aktiv.startsWith('dynamic:') ? [{ id: 'dynamic-edit', name: 'Sammlung bearbeiten', zeichen: 'pencil' }] : [])
+                    ] },
                 ...(sammlungen.length ? [{ name: 'Sammlungen', optionen: sammlungen.map(a => ({ id: 'sammlung:' + a.id, name: a.name, zeichen: SAMMLUNG_ZEICHEN[a.id] || 'grid' })) }] : [])
             ],
             beiWahl: (id) => {
+                if (id === 'dynamic-new' || id === 'dynamic-edit') {
+                    editDynamicCollection(anker, id === 'dynamic-edit' ? aktiv.slice(8) : undefined);
+                    return;
+                }
                 if (id.startsWith('sammlung:')) {
                     if (typeof Arbeitswelt !== 'undefined')
                         Arbeitswelt.oeffnen(id.slice('sammlung:'.length));
@@ -149448,6 +150477,87 @@ const Bibliothek = (() => {
             }
         });
         markeImMenue(m);
+    };
+    const dynamicCollections = () => {
+        const value = Store.getMeta('bibliothek:dynamic-collections');
+        return Array.isArray(value) ? value.filter(c => c && typeof c.id === 'string' && typeof c.name === 'string').map(c => ({ ...c,
+            title: typeof c.title === 'string' ? c.title : '', tag: typeof c.tag === 'string' ? c.tag : '', kind: typeof c.kind === 'string' ? c.kind : 'alle',
+            favorite: c.favorite === true, days: Number.isFinite(c.days) ? Math.max(0, c.days) : 0, match: c.match === 'any' ? 'any' : 'all' })) : [];
+    };
+    const editDynamicCollection = (anchor, id) => {
+        const old = dynamicCollections().find(c => c.id === id);
+        const r = anchor.getBoundingClientRect(), menu = UI.menu('', Math.max(8, r.left), r.bottom + 8);
+        menu.setAttribute('role', 'dialog');
+        menu.setAttribute('aria-label', 'Dynamische Sammlung');
+        const form = document.createElement('form');
+        form.className = 'bib-dynamic-form';
+        const fields = {};
+        const field = (key, title, type, value) => {
+            const label = document.createElement('label');
+            label.textContent = title;
+            const input = document.createElement('input');
+            input.name = key;
+            input.type = type;
+            input.value = value;
+            input.setAttribute('aria-label', title);
+            if (type === 'number') {
+                input.min = '0';
+                input.max = '36500';
+            }
+            label.append(input);
+            form.append(label);
+            fields[key] = input;
+            return input;
+        };
+        field('name', 'Name der Sammlung', 'text', old?.name || '').required = true;
+        field('title', 'Titel enthält', 'text', old?.title || '');
+        field('tag', 'Schlagwort', 'text', old?.tag || '');
+        field('days', 'In den letzten Tagen bearbeitet (0 = immer)', 'number', String(old?.days || 0));
+        const favorite = field('favorite', 'Nur Favoriten', 'checkbox', '');
+        favorite.checked = old?.favorite || false;
+        for (const [key, title, choices, value] of [
+            ['kind', 'Dokumentart', [['alle', 'Alle'], ...ART_FILTER.filter(a => a.id !== 'alle').map(a => [a.id, a.name])], old?.kind || 'alle'],
+            ['match', 'Regeln verknüpfen', [['all', 'Alle Regeln müssen passen'], ['any', 'Eine Regel genügt']], old?.match || 'all']
+        ]) {
+            const label = document.createElement('label');
+            label.textContent = title;
+            const input = document.createElement('select');
+            input.name = key;
+            input.setAttribute('aria-label', title);
+            for (const [value, name] of choices) {
+                const o = document.createElement('option');
+                o.value = value;
+                o.textContent = name;
+                input.append(o);
+            }
+            input.value = value;
+            label.append(input);
+            fields[key] = input;
+            form.append(label);
+        }
+        const submit = document.createElement('button');
+        submit.type = 'submit';
+        submit.textContent = 'Sammlung speichern';
+        form.append(submit);
+        const cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.textContent = 'Abbrechen';
+        cancel.addEventListener('click', () => menu.remove());
+        form.append(cancel);
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            if (!form.reportValidity())
+                return;
+            const value = { ...old, id: old?.id || Store.uid(), name: fields.name.value.trim(), title: fields.title.value.trim(), tag: fields.tag.value.trim(),
+                kind: fields.kind.value, days: Math.max(0, Math.min(36500, Number(fields.days.value) || 0)), match: fields.match.value, favorite: favorite.checked };
+            if (!value.name)
+                return;
+            Store.setMeta('bibliothek:dynamic-collections', [...dynamicCollections().filter(c => c.id !== value.id), value]);
+            menu.remove();
+            ortSetzen('dynamic:' + value.id);
+        });
+        menu.append(form);
+        fields.name?.focus();
     };
     const artMenue = (anker) => {
         const { liste: alle } = auswahl();
@@ -165290,6 +166400,12 @@ const Seitenflaeche = (() => {
         auswahlLeiste.append(lockLabel);
         let auswahlPalette = null;
         const formKnoten = new Map();
+        const imageUrls = new Map();
+        const loadImage = (id) => {
+            imageUrls.set(id, null);
+            void Dateien.adresse(id).then(url => { imageUrls.set(id, url); if (url && flaeche.isConnected)
+                malen(); }).catch(() => imageUrls.set(id, null));
+        };
         const linien = [];
         let verbindeVon = '';
         const auswahlRahmen = GfxShapes.sv('g', { class: 'pg-fl-formauswahl', 'aria-hidden': 'true' });
@@ -165309,7 +166425,7 @@ const Seitenflaeche = (() => {
             if (!includeLocked && selectionLocked())
                 return null;
             const ausgewaehlt = formen.filter(form => auswahl.has(formId(form)));
-            if (ausgewaehlt.length !== auswahl.size || ausgewaehlt.some(form => ![...GESCHLOSSENE_FORMEN, 'notiz', 'linie', 'pfeil', 'stift'].includes(form.art) ||
+            if (ausgewaehlt.length !== auswahl.size || ausgewaehlt.some(form => ![...GESCHLOSSENE_FORMEN, 'frame', 'notiz', 'linie', 'pfeil', 'stift'].includes(form.art) ||
                 (form.art !== 'stift' && (!Number.isFinite(form.w) || !Number.isFinite(form.h)))))
                 return null;
             const boxen = ausgewaehlt.map(GfxShapes.rahmenVon);
@@ -165389,10 +166505,10 @@ const Seitenflaeche = (() => {
             leiste.setzeGesperrt('beschriften', !beschriftbareForm() || werkzeug === 'verbindung');
             leiste.setzeGesperrt('alleFormen', !formen.some(beweglich));
         };
-        const auswahlSetzen = (ids) => {
+        const auswahlSetzen = (ids, exact = false) => {
             auswahlPaletteSchliessen();
             auswahl.clear();
-            GfxObjects.expand(formen, new Set(ids)).forEach(id => auswahl.add(id));
+            (exact ? new Set(ids) : GfxObjects.expand(formen, new Set(ids))).forEach(id => auswahl.add(id));
             auswahlZeigen();
         };
         const werkzeugWechseln = (id) => {
@@ -165434,13 +166550,14 @@ const Seitenflaeche = (() => {
             for (const form of formen) {
                 if (form.art === 'verbindung')
                     continue;
-                const el = GfxShapes.zeichne(form, { pfeilMarke: pfeil });
+                const el = GfxShapes.sv('g');
+                el.append(GfxShapes.zeichne(form, { pfeilMarke: pfeil, bildAdresse: id => imageUrls.get(id), bildHolen: loadImage }));
                 if (beweglich(form))
                     formKnoten.set(formId(form), el);
                 tinte.appendChild(el);
             }
             for (const id of auswahl)
-                if (!formKnoten.has(id))
+                if (!formen.some(form => formId(form) === id))
                     auswahl.delete(id);
             tinte.appendChild(auswahlRahmen);
             auswahlZeigen();
@@ -165461,6 +166578,8 @@ const Seitenflaeche = (() => {
             return { sx, sy, x, y };
         };
         const skalierungSpeichern = (von, nach) => {
+            if (formen.some(form => auswahl.has(formId(form)) && Number(form.rotation)))
+                nach = { ...nach, h: von.h * nach.w / von.w };
             if (Math.abs(nach.w - von.w) < 0.01 && Math.abs(nach.h - von.h) < 0.01)
                 return;
             const { x, y, sx, sy } = skalierung(von, nach);
@@ -165579,11 +166698,16 @@ const Seitenflaeche = (() => {
                         copiedGroups.set(form.groupId, Store.uid());
                     return copiedGroups.get(form.groupId);
                 })() : undefined;
+                const groupPath = Array.isArray(form.groupPath) ? form.groupPath.map((group) => {
+                    if (!copiedGroups.has(group))
+                        copiedGroups.set(group, Store.uid());
+                    return copiedGroups.get(group);
+                }) : undefined;
                 if (form.art === 'stift') {
-                    kopien.push({ ...form, id, ...(groupId ? { groupId } : {}), pts: form.pts.map(([x, y, ...rest]) => [r2(x + abstand), r2(y + abstand), ...rest]) });
+                    kopien.push({ ...form, id, ...(groupId ? { groupId } : {}), ...(groupPath ? { groupPath } : {}), pts: form.pts.map(([x, y, ...rest]) => [r2(x + abstand), r2(y + abstand), ...rest]) });
                 }
                 else {
-                    kopien.push({ ...form, id, ...(groupId ? { groupId } : {}), x: r2(form.x + abstand), y: r2(form.y + abstand) });
+                    kopien.push({ ...form, id, ...(groupId ? { groupId } : {}), ...(groupPath ? { groupPath } : {}), x: r2(form.x + abstand), y: r2(form.y + abstand) });
                 }
             }
             if (!kopien.length)
@@ -165630,6 +166754,8 @@ const Seitenflaeche = (() => {
                 }
                 else {
                     const r = GfxShapes.rahmenVon(form);
+                    if (form.art === 'frame' && fx > r.x + radius && fx < r.x + r.w - radius && fy > r.y + radius && fy < r.y + r.h - radius)
+                        continue;
                     if (fx >= r.x - radius && fx <= r.x + r.w + radius &&
                         fy >= r.y - radius && fy <= r.y + r.h + radius)
                         return form;
@@ -165710,8 +166836,25 @@ const Seitenflaeche = (() => {
                 { id: 'front', name: 'Ganz nach vorne', sym: 'plus', enabled: editable, run: () => arrangeSelection('front') },
                 { id: 'forward', name: 'Eine Ebene nach vorne', sym: 'plus', enabled: editable, run: () => arrangeSelection('forward') },
                 { id: 'backward', name: 'Eine Ebene nach hinten', sym: 'minus', enabled: editable, run: () => arrangeSelection('backward') },
-                { id: 'back', name: 'Ganz nach hinten', sym: 'minus', enabled: editable, run: () => arrangeSelection('back') }
+                { id: 'back', name: 'Ganz nach hinten', sym: 'minus', enabled: editable, run: () => arrangeSelection('back') },
+                { id: 'inspector', name: 'Ebenen und Ausrichten öffnen', sym: 'grid', enabled: true, run: () => openInspector() },
+                { id: 'comments', name: 'Objektkommentare', sym: 'inkText', enabled: auswahl.size === 1, run: () => openInspector('comments') }
             ];
+        };
+        const openInspector = (tab = 'layers') => {
+            const previousView = { ...sicht };
+            GfxInspector.open({ host: flaeche, read: () => formen, selected: () => auswahl,
+                select: (ids, exact) => { werkzeugWechseln('zeiger'); leiste.setzeWerkzeug('zeiger'); auswahlSetzen(ids, exact); },
+                uid: () => Store.uid(), commit: next => { merken(); formen = next; sichern(); },
+                zoom: box => {
+                    const rect = flaeche.getBoundingClientRect(), z = Math.max(.1, Math.min(4, Math.min((rect.width - 64) / Math.max(1, box.w), (rect.height - 170) / Math.max(1, box.h))));
+                    sicht = { z, x: (rect.width - box.w * z) / 2 - box.x * z, y: (rect.height - 140 - box.h * z) / 2 - box.y * z };
+                    stellen();
+                }, restoreView: () => { sicht = previousView; stellen(); }, image: id => Dateien.alsBlob(id), pack: files => Austausch.zipSchreiben(files),
+                importFile: (file, active) => GfxExchange.readFile(file, () => Store.uid(), { zip: Einlesen.zipLesenAusBlob, active,
+                    save: async (blob, name) => (await Dateien.ablegen(new File([blob], name, { type: blob.type }), { blockId: p.id })).id,
+                    remove: id => Dateien.weg(id) })
+            }, tab);
         };
         const showObjectActions = (anchor) => {
             const actions = objectActions();
@@ -165764,6 +166907,7 @@ const Seitenflaeche = (() => {
             aufFlaeche(Store.addBlock(p.id, 'bookmark', { src: url.href, text: url.hostname }));
         };
         const rahmenEintraege = (liste) => {
+            menueEintrag(liste, 'Rahmen und Präsentation', 'grid', () => openInspector('frames'));
             menueEintrag(liste, 'Rechteckrahmen zeichnen', 'formRect', () => {
                 leiste.setzeWerkzeug('rechteck');
                 werkzeugWechseln('rechteck');
@@ -165771,6 +166915,30 @@ const Seitenflaeche = (() => {
             menueEintrag(liste, 'Whiteboard einfügen', 'grid', () => blockEinsetzen('whiteboard'));
         };
         const linkEintraege = (liste) => {
+            menueEintrag(liste, 'Dokument einbetten', 'page', () => {
+                const pages = Object.values(Store.cache.blocks).filter(page => page.alive !== false && page.type === 'page' && page.id !== p.id &&
+                    (typeof Konten === 'undefined' || Konten.darf('lesen', page.id)));
+                const menu = UI.menu('', 24, 100, { rolle: 'menu', fokus: 'erster', beschriftung: 'Dokument einbetten' });
+                for (const page of pages) {
+                    const button = document.createElement('button');
+                    button.dataset.embedPage = page.id;
+                    button.textContent = page.text || 'Ohne Titel';
+                    menu.append(button);
+                }
+                if (!pages.length) {
+                    const message = document.createElement('p');
+                    message.textContent = 'Keine weitere Seite vorhanden.';
+                    menu.append(message);
+                }
+                menu.querySelector('button')?.focus();
+                menu.addEventListener('click', e => {
+                    const id = e.target instanceof Element ? e.target.closest('[data-embed-page]')?.dataset.embedPage : null;
+                    if (!id)
+                        return;
+                    menu.remove();
+                    blockEinsetzen('synced', { quelle: id });
+                });
+            });
             menueEintrag(liste, 'Weblink einfügen', 'bookmark', () => { void linkEinsetzen(); });
             menueEintrag(liste, 'Seitenlink kopieren', 'link', () => Register.aktionen.tun('link', p, { kontext: 'seite' }));
         };
@@ -165881,6 +167049,10 @@ const Seitenflaeche = (() => {
                 rahmenEintraege(liste);
             if (id === 'seitenlink' || id === 'schnellmehr')
                 linkEintraege(liste);
+            if (id === 'schnellmehr') {
+                menueEintrag(liste, 'Ebenen und Ausrichten', 'grid', () => openInspector());
+                menueEintrag(liste, 'Import, Export und Vorlagen', 'table', () => openInspector('exchange'));
+            }
             if (id === 'diagramme') {
                 vorlagenKarte(liste, 'karte-beidseitig');
                 vorlagenKarte(liste, 'karte-rechts');
@@ -166011,11 +167183,11 @@ const Seitenflaeche = (() => {
         const leiste = GfxToolbar.erstelle({
             klasse: 'pg-fl-tools',
             beschriftung: 'Werkzeuge der Fläche',
-            werkzeuge: Register.werkzeuge.auswahl(['zeiger', 'hand', 'rahmenwahl', 'verbindung', ...MALWERKZEUGE, 'notiz', 'radierer']),
+            werkzeuge: Register.werkzeuge.auswahl(['zeiger', 'hand', 'rahmenwahl', 'freihandwahl', 'verbindung', ...MALWERKZEUGE, 'notiz', 'radierer']),
             aktiv: 'zeiger',
             galerie: {
                 schnell: ['modus', 'rahmen', 'verbindung', 'seitenlink', 'schnellmehr'],
-                edgeless: { zusatz: ['elektro', 'farbe'] },
+                edgeless: { zusatz: ['objekte', 'elektro', 'farbe'] },
                 karten: [
                     { id: 'notiz', knoepfe: ['notiz'] },
                     { id: 'stifte', knoepfe: ['stift', 'radierer'] },
@@ -166025,11 +167197,12 @@ const Seitenflaeche = (() => {
                 ],
                 paletten: ['stift', 'formen', 'farbe', 'diagramme', 'vorlagen'],
                 werkzeugMenues: {
-                    modus: ['zeiger', 'hand', 'rahmenwahl'],
+                    modus: ['zeiger', 'hand', 'rahmenwahl', 'freihandwahl'],
                     formen: [...GESCHLOSSENE_FORMEN, 'linie', 'pfeil']
                 }
             },
             aktionen: [
+                { id: 'objekte', name: 'Objekte und Rahmen', sym: 'grid', kapsel: 'werkzeuge' },
                 { id: 'elektro', name: 'Elektro', sym: 'bolt', menue: true, kapsel: 'werkzeuge' },
                 { id: 'formen', name: 'Formen', sym: 'formRect', menue: true, kapsel: 'werkzeuge' },
                 { id: 'diagramme', name: 'Gedankenkarte einfügen', sym: 'sparkle', menue: true, kapsel: 'werkzeuge' },
@@ -166059,6 +167232,8 @@ const Seitenflaeche = (() => {
                 (id === 'formen' && werkzeug !== 'stift' && MALWERKZEUGE.includes(werkzeug))),
             aufWerkzeug: werkzeugWechseln,
             aufAktion: (id) => {
+                if (id === 'objekte')
+                    openInspector();
                 if (id === 'zurueck')
                     schrittZurueck();
                 if (id === 'vor')
@@ -166291,10 +167466,10 @@ const Seitenflaeche = (() => {
                 const r = GfxShapes.rahmenVon(form);
                 return auswahl.has(formId(form)) ? anpassen(r) : r;
             };
-            for (const { von, nach, pfad } of linien) {
+            for (const { form, von, nach, pfad } of linien) {
                 if (!auswahl.has(formId(von)) && !auswahl.has(formId(nach)))
                     continue;
-                pfad.setAttribute('d', GfxShapes.verbindungsPfad(rahmen(von), rahmen(nach)));
+                pfad.setAttribute('d', GfxShapes.verbindungsPfad(rahmen(von), rahmen(nach), form));
             }
         };
         const verbindungenNachziehen = (dx, dy) => verbindungenAnpassen(r => ({ ...r, x: r.x + dx, y: r.y + dy }));
@@ -166321,7 +167496,7 @@ const Seitenflaeche = (() => {
             const dw = dx * horizontal / sicht.z, dh = dy * vertikal / sicht.z;
             const minW = Math.min(a.w, 12), minH = Math.min(a.h, 12);
             let w = Math.max(minW, a.w + dw), h = Math.max(minH, a.h + dh);
-            if (e.shiftKey) {
+            if (e.shiftKey || formen.some(form => auswahl.has(formId(form)) && Number(form.rotation))) {
                 const faktor = Math.abs(dw / a.w) >= Math.abs(dh / a.h) ? w / a.w : h / a.h;
                 const f = Math.max(faktor, minW / a.w, minH / a.h);
                 w = a.w * f;
@@ -166361,6 +167536,7 @@ const Seitenflaeche = (() => {
             auswahlLeistePositionieren();
         };
         const formZugEnde = () => {
+            snapGuides.replaceChildren();
             formenZug = null;
             auswahlLeistePositionieren();
             if (formenBild)
@@ -166373,8 +167549,21 @@ const Seitenflaeche = (() => {
         };
         const formVersatz = (e, start) => {
             const dx = e.clientX - start.sx, dy = e.clientY - start.sy;
-            return Math.hypot(dx, dy) < 3 ? { dx: 0, dy: 0 } : { dx: dx / sicht.z, dy: dy / sicht.z };
+            snapGuides.replaceChildren();
+            if (Math.hypot(dx, dy) < 3)
+                return { dx: 0, dy: 0 };
+            if (e.altKey)
+                return { dx: dx / sicht.z, dy: dy / sicht.z };
+            const result = GfxObjects.snap(formen, auswahl, dx / sicht.z, dy / sicht.z, 5 / sicht.z);
+            const area = flaeche.getBoundingClientRect(), a = inFlaeche(area.left, area.top), b = inFlaeche(area.right, area.bottom);
+            for (const guide of result.guides)
+                snapGuides.append(GfxShapes.sv('line', { x1: guide.axis === 'x' ? guide.at : a.x,
+                    y1: guide.axis === 'y' ? guide.at : a.y, x2: guide.axis === 'x' ? guide.at : b.x,
+                    y2: guide.axis === 'y' ? guide.at : b.y, stroke: 'var(--accent)', 'stroke-width': 1, 'vector-effect': 'non-scaling-stroke', 'stroke-dasharray': '4 3' }));
+            tinte.append(snapGuides);
+            return result;
         };
+        const snapGuides = GfxShapes.sv('g', { 'pointer-events': 'none', 'aria-hidden': 'true' });
         let stiftGlatt = null;
         let stiftZeit = 0;
         let stiftBildGeplant = false;
@@ -166482,10 +167671,11 @@ const Seitenflaeche = (() => {
         let rahmenZug = null;
         const rahmenZugStart = (e) => {
             const ort = inFlaeche(e.clientX, e.clientY);
-            const element = GfxShapes.sv('rect', { class: 'pg-fl-rahmenwahl', x: ort.x, y: ort.y,
+            const free = werkzeug === 'freihandwahl';
+            const element = GfxShapes.sv(free ? 'path' : 'rect', { class: 'pg-fl-rahmenwahl', x: ort.x, y: ort.y,
                 width: 0, height: 0, 'vector-effect': 'non-scaling-stroke', 'aria-hidden': 'true' });
             rahmenZug = { pointer: e.pointerId, ...ort, sx: e.clientX, sy: e.clientY, element,
-                vorhandene: e.shiftKey ? [...auswahl] : [] };
+                vorhandene: e.shiftKey ? [...auswahl] : [], ...(free ? { points: [[ort.x, ort.y]] } : {}) };
             tinte.append(element);
             e.preventDefault();
             flaeche.focus({ preventScroll: true });
@@ -166505,10 +167695,12 @@ const Seitenflaeche = (() => {
                 return;
             rahmenZug = null;
             r.element.remove();
-            if (e?.type !== 'pointerup' || Math.hypot(e.clientX - r.sx, e.clientY - r.sy) < 4)
+            if (e?.type !== 'pointerup' || (!r.points && Math.hypot(e.clientX - r.sx, e.clientY - r.sy) < 4))
                 return;
             const box = auswahlRechteck(e, r);
             const darin = formen.filter(form => {
+                if (r.points)
+                    return GfxObjects.lasso([form], r.points).length > 0;
                 if (!beweglich(form))
                     return false;
                 const f = GfxShapes.rahmenVon(form);
@@ -166552,7 +167744,7 @@ const Seitenflaeche = (() => {
                 skalierZugStart(e, griff);
                 return;
             }
-            if (werkzeug === 'rahmenwahl' && e.button === 0 && !ziel?.closest('.pg-fl-notiz, .gfx-tb-sockel')) {
+            if (['rahmenwahl', 'freihandwahl'].includes(werkzeug) && e.button === 0 && !ziel?.closest('.pg-fl-notiz, .gfx-tb-sockel')) {
                 rahmenZugStart(e);
                 return;
             }
@@ -166687,6 +167879,12 @@ const Seitenflaeche = (() => {
                 return;
             }
             if (rahmenZug?.pointer === e.pointerId) {
+                if (rahmenZug.points) {
+                    const point = inFlaeche(e.clientX, e.clientY);
+                    rahmenZug.points.push([point.x, point.y]);
+                    rahmenZug.element.setAttribute('d', 'M' + rahmenZug.points.map(p => p.join(' ')).join(' L') + ' Z');
+                    return;
+                }
                 const box = auswahlRechteck(e, rahmenZug);
                 const rect = rahmenZug.element;
                 rect.setAttribute('x', String(box.x));
@@ -170246,6 +171444,9 @@ const App = (() => {
             if (seite2)
                 beobachter.observe(seite2);
         }
+        GfxExchange.bindIO({ zip: Einlesen.zipLesenAusBlob, read: Dateien.alsBlob, remove: Dateien.weg,
+            pack: files => Austausch.zipSchreiben(files),
+            save: async (blob, name, owner) => (await Dateien.ablegen(new File([blob], name, { type: blob.type }), { blockId: owner })).id });
         Seitenleiste.binde({
             oeffne, aktuelleSeite, kuerzlich, kommendeTermine, seitenMenue, suche, papierkorb
         });

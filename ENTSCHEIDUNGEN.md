@@ -887,6 +887,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E828** — `test341` liest die Seitenzahl auch aus `button.document-position`: seit Workspace 2.0 ist sie ein Knopf zum Springen, kein `span`; 37/37
 * **E829** — Der PDF-Bereich setzt Blöcke und holt das Elektro-Menü über den Ereignisbus (`frage.block-am-ende`, `frage.elektro-menue`) statt über `Blocks` und `Elektrostart` (§5, erster Weg); `test537` 125 → 123 Paare, 18/18
 * **E830** — Neutrale Oberfläche ohne Bordeaux; gespeicherte Gruppen, Zeichenreihenfolge und Sperren auf der Seitenfläche, mit eigenem GFX-Kern und Sicherungsrundreisen.
+* **E831** — Gemeinsame Objektübersicht für Seite, Whiteboard und PDF; Ausrichten, verschachtelte Gruppen, Rahmenvortrag, Kommentare, Flächenarchive und dynamische Bibliothekssammlungen ergänzen PR #232.
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -72152,3 +72153,38 @@ AFFiNE-Funktionen umfassend prüfen. Ergänzung auf dem Stand von PR #232.
 Geprüft werden Bedienung, Geschichte, Neuladen sowie JSON- und `.redion`-
 Sicherungen. Bilder der Oberfläche bleiben ausserhalb von Git. Ein Browserlauf
 ist keine iPhone- oder IPA-Abnahme.
+
+## E831 · Weitere AFFiNE-Funktionen mit Redions Datenwegen
+
+26. November 2026 · Redurs Auftrag „Nehme alles“ bezieht sich auf die danach
+genannte Liste: Rahmen, Ausrichten, Lasso, Drehung, Ebenen, Gruppen, Verbinder,
+Dokumenteinbettung, Objektkommentare, Austausch und dynamische Sammlungen.
+
+`GfxObjects` übernimmt die gemeinsame Geometrie und Gruppenregeln.
+`GfxInspector` bietet dieselbe Objektübersicht in Seitenfläche, Whiteboard und
+PDF. Jeder Adapter schreibt über seinen vorhandenen Verlauf; PDF behält seine
+Punkte und `gesperrt`, Flächen behalten `shapes` und `locked`. Lasso und Drehung
+der PDF werden weiterverwendet. Gruppenkennungen werden beim Kopieren neu vergeben.
+
+Rahmen sind eigene Flächenobjekte mit Titel und `frameOrder`. Der Vortrag
+fährt ihre Ausschnitte ab, sperrt Zeichenanfänge und stellt den vorherigen Blick
+wieder her. Anordnung und Mitgliedschaft der Zeichenobjekte bleiben erhalten.
+Kommentare sind lokale Fäden an Objekten, keine erfundene Serverzustellung.
+Dokumenteinbettungen verwenden den vorhandenen synchronisierten Block. Eine
+nicht mehr lesbare Quelle und zu tiefe Spiegelketten werden abgefangen.
+
+Die dynamischen Sammlungen filtern den vorhandenen lesbaren Seitenbestand nach
+Titel, Schlagwort, Art, Favoriten und Bearbeitungszeit. Ihre Regeln liegen in
+`bibliothek:dynamic-collections`; es gibt weder kopierte Seiten noch eine zweite
+Datenbank. Der bisherige Suchbereich verwendet denselben Filter.
+
+Der Austausch verwendet Redions ZIP-Leser, ZIP-Schreiber und Dateiablage.
+Flächen mit Anhängen werden als Archiv exportiert; fehlende Anhänge brechen
+den Export ab. AFFiNE-BlockSuite-JSON wird in Redions Formen übersetzt. Nicht
+unterstützte GFX-Elemente brechen ab. Binäre Yjs-Arbeitsbereiche sind kein
+JSON-Snapshot und werden ausdrücklich nicht als kompatibel ausgegeben.
+Quellwerte bleiben an importierten Elementen als `affineSource` erhalten.
+Die Umsetzung enthält keinen weiteren AFFiNE-Quellcode und keinen neuen Dienst.
+
+Die Abnahme und konkreten Formatgrenzen stehen in
+`doku/AFFINE-WEITERER-AUSBAU-PR232.md`. Browserbilder sind getrennte Artefakte.

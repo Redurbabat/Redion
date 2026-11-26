@@ -1491,6 +1491,10 @@ const DocumentMode = (() => {
                 eintrag('Auswahl verlinken', 'link', () => verweis?.click(), !canAnnotate || !verweis || verweis.disabled);
                 eintrag('Dokumentlink kopieren', 'page', () => Register.aktionen.tun('link', page, { kontext: 'seite' }));
             }
+            if (id === 'pdf-schnellmehr') {
+                const objects = inkToolbar()?.querySelector('[data-act="objekte"]');
+                eintrag('Ebenen, Gruppen und Ausrichten', 'grid', () => objects?.click(), !canAnnotate || !objects);
+            }
             if (id === 'vorlagen') {
                 eintrag('Textblock auf neuer Seite', 'inkText', () => pdfDockBlockOeffnen('text'), !canAnnotate);
                 eintrag('Gedankenkarte auf neuer Seite', 'sparkle', () => pdfDockBlockOeffnen('mindmap'), !canAnnotate);
@@ -1508,7 +1512,7 @@ const DocumentMode = (() => {
                 werkzeuge: Marken.WERKZEUGE,
                 galerie: {
                     schnell: ['pdf-zeiger', 'pdf-rahmen', 'pdf-verbinder', 'pdf-link', 'pdf-schnellmehr'],
-                    edgeless: { zusatz: ['elektro', 'pdf-werkzeuge'] },
+                    edgeless: { zusatz: ['pdf-objekte', 'elektro', 'pdf-werkzeuge'] },
                     karten: [
                         { id: 'notiz', knoepfe: ['zettel'] },
                         { id: 'stifte', knoepfe: ['stift', 'radierer'] },
@@ -1529,6 +1533,7 @@ const DocumentMode = (() => {
                     { id: 'pdf-link', name: 'Links', sym: 'link', menue: true, kapsel: 'werkzeuge' },
                     { id: 'elektro', name: 'Elektro', sym: 'bolt', menue: true, kapsel: 'werkzeuge' },
                     { id: 'pdf-schnellmehr', name: 'Weitere Schnellwerkzeuge', sym: 'dots', menue: true, kapsel: 'werkzeuge' },
+                    { id: 'pdf-objekte', name: 'Objekte und Ebenen', sym: 'grid', kapsel: 'werkzeuge', gesperrt: !canAnnotate },
                     { id: 'diagramme', name: 'Gedankenkarte auf neuer Seite', sym: 'sparkle', kapsel: 'werkzeuge', gesperrt: !canAnnotate },
                     { id: 'vorlagen', name: 'Blockvorlagen', sym: 'table', menue: true, kapsel: 'werkzeuge' },
                     { id: 'pdf-werkzeuge', name: 'PDF-Werkzeuge', sym: 'dots', menue: true, kapsel: 'werkzeuge' },
@@ -1536,8 +1541,12 @@ const DocumentMode = (() => {
                     { id: 'ink-ruler', name: 'Lineal ein- oder ausblenden', sym: 'inkRuler', kapsel: 'werkzeuge' }
                 ],
                 menue: pdfDockMenue,
-                aufAktion: id => { if (id === 'diagramme')
-                    pdfDockBlockOeffnen('mindmap'); }
+                aufAktion: id => {
+                    if (id === 'diagramme')
+                        pdfDockBlockOeffnen('mindmap');
+                    if (id === 'pdf-objekte' && canAnnotate)
+                        inkToolbar()?.querySelector('[data-act="objekte"]')?.click();
+                }
             })
             : null;
         const drawingbar = galerie?.element ?? document.createElement('div');

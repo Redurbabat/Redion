@@ -1,5 +1,10 @@
 # AFFiNE in Redion: Funktionsabgleich vom 26. November 2026
 
+**Fortsetzung:** Nach Redurs „Nehme alles“ sind weitere der unten als offen
+genannten Flächenfunktionen ergänzt. Der aktuelle Umfang, die Formatgrenzen
+und die Abnahme stehen in [Weiterer Ausbau PR #232](AFFINE-WEITERER-AUSBAU-PR232.md).
+Die Tabelle dokumentiert den Ausgangspunkt dieses zweiten Bogens.
+
 Redur möchte die Bordeaux-Farbe entfernen und möglichst alle AFFiNE-Funktionen
 in Redion haben. Die Oberfläche ist jetzt neutral in Hell und Dunkel, mit blauem
 Akzent. Die native iOS-Tab-Bar verwendet Systemblau. Vorhandene vom Nutzer selbst

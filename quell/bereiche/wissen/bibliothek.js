@@ -243,6 +243,25 @@ const Bibliothek = (() => {
         return Array.isArray(entries) ? entries.length > 0 : Object.keys(entries).length > 0;
     };
     const reiterFilter = (reiter, alle) => {
+        if (reiter.startsWith('dynamic:')) {
+            const rule = dynamicCollections().find(c => c.id === reiter.slice(8));
+            if (!rule)
+                return [];
+            return alle.filter(page => {
+                const matches = [];
+                if (rule.title)
+                    matches.push(String(page.text || '').toLocaleLowerCase().includes(rule.title.toLocaleLowerCase()));
+                if (rule.tag)
+                    matches.push((Array.isArray(page.tags) ? page.tags : []).some((t) => String(t).toLocaleLowerCase() === rule.tag.toLocaleLowerCase()));
+                if (rule.kind && rule.kind !== 'alle')
+                    matches.push(artVon(page).id === rule.kind);
+                if (rule.favorite)
+                    matches.push(!!page.favorite);
+                if (rule.days > 0)
+                    matches.push(zeitZahl(page.edited || page.created) >= Date.now() - rule.days * 86400000);
+                return !matches.length || (rule.match === 'any' ? matches.some(Boolean) : matches.every(Boolean));
+            });
+        }
         if (reiter === 'kuerzlich')
             return alle.filter(p => p.zuletztGeoeffnet || p.edited);
         if (reiter === 'favoriten')
@@ -368,7 +387,7 @@ const Bibliothek = (() => {
         if (ordner)
             teile.push(String(ordner.text || 'Ohne Titel'));
         else if (ort !== 'ablage' && ort !== 'alle')
-            teile.push(ORTE.find(o => o.id === ort)?.name || ort);
+            teile.push(dynamicCollections().find(c => 'dynamic:' + c.id === ort)?.name || ORTE.find(o => o.id === ort)?.name || ort);
         if (ort !== 'pdf' && zustand.art !== 'alle')
             teile.push(ART_FILTER.find(a => a.id === zustand.art)?.name || zustand.art);
         return {
@@ -1088,7 +1107,7 @@ const Bibliothek = (() => {
         wrap.querySelector('[data-orte]')?.addEventListener('click', ereignis => ortMenue(ereignis.currentTarget));
     };
     const deckelKopf = (alle, anzahl, gesamt = anzahl) => {
-        const ort = ORTE.find(r => r.id === ortAktiv())?.name || 'Alle';
+        const ort = dynamicCollections().find(c => 'dynamic:' + c.id === ortAktiv())?.name || ORTE.find(r => r.id === ortAktiv())?.name || 'Alle';
         const satz = umfangSatz(anzahl, gesamt, 'Dokument', 'Dokumente', 'Dokumenten');
         const schnitt = satz.lastIndexOf(' ');
         const satzZahl = schnitt > 0 ? satz.slice(0, schnitt) : satz;
@@ -1168,7 +1187,7 @@ const Bibliothek = (() => {
             zustand.art = 'pdf';
         }
         else {
-            zustand.reiter = ORTE.some(o => o.id === id) ? id : zustand.reiter;
+            zustand.reiter = ORTE.some(o => o.id === id) || dynamicCollections().some(c => 'dynamic:' + c.id === id) ? id : zustand.reiter;
             zustand.art = 'alle';
         }
         if (id === 'ablage') {
@@ -1196,9 +1215,18 @@ const Bibliothek = (() => {
             anker, titel: 'Ort',
             gruppen: [
                 { name: 'Orte', optionen: ORTE.map(o => ({ id: o.id, name: o.name, zeichen: o.zeichen, aktiv: o.id === aktiv })) },
+                { name: 'Dynamische Sammlungen', optionen: [
+                        ...dynamicCollections().map(c => ({ id: 'dynamic:' + c.id, name: c.name, zeichen: 'filter', aktiv: aktiv === 'dynamic:' + c.id })),
+                        { id: 'dynamic-new', name: 'Sammlung erstellen', zeichen: 'plus' },
+                        ...(aktiv.startsWith('dynamic:') ? [{ id: 'dynamic-edit', name: 'Sammlung bearbeiten', zeichen: 'pencil' }] : [])
+                    ] },
                 ...(sammlungen.length ? [{ name: 'Sammlungen', optionen: sammlungen.map(a => ({ id: 'sammlung:' + a.id, name: a.name, zeichen: SAMMLUNG_ZEICHEN[a.id] || 'grid' })) }] : [])
             ],
             beiWahl: (id) => {
+                if (id === 'dynamic-new' || id === 'dynamic-edit') {
+                    editDynamicCollection(anker, id === 'dynamic-edit' ? aktiv.slice(8) : undefined);
+                    return;
+                }
                 if (id.startsWith('sammlung:')) {
                     if (typeof Arbeitswelt !== 'undefined')
                         Arbeitswelt.oeffnen(id.slice('sammlung:'.length));
@@ -1209,6 +1237,87 @@ const Bibliothek = (() => {
             }
         });
         markeImMenue(m);
+    };
+    const dynamicCollections = () => {
+        const value = Store.getMeta('bibliothek:dynamic-collections');
+        return Array.isArray(value) ? value.filter(c => c && typeof c.id === 'string' && typeof c.name === 'string').map(c => ({ ...c,
+            title: typeof c.title === 'string' ? c.title : '', tag: typeof c.tag === 'string' ? c.tag : '', kind: typeof c.kind === 'string' ? c.kind : 'alle',
+            favorite: c.favorite === true, days: Number.isFinite(c.days) ? Math.max(0, c.days) : 0, match: c.match === 'any' ? 'any' : 'all' })) : [];
+    };
+    const editDynamicCollection = (anchor, id) => {
+        const old = dynamicCollections().find(c => c.id === id);
+        const r = anchor.getBoundingClientRect(), menu = UI.menu('', Math.max(8, r.left), r.bottom + 8);
+        menu.setAttribute('role', 'dialog');
+        menu.setAttribute('aria-label', 'Dynamische Sammlung');
+        const form = document.createElement('form');
+        form.className = 'bib-dynamic-form';
+        const fields = {};
+        const field = (key, title, type, value) => {
+            const label = document.createElement('label');
+            label.textContent = title;
+            const input = document.createElement('input');
+            input.name = key;
+            input.type = type;
+            input.value = value;
+            input.setAttribute('aria-label', title);
+            if (type === 'number') {
+                input.min = '0';
+                input.max = '36500';
+            }
+            label.append(input);
+            form.append(label);
+            fields[key] = input;
+            return input;
+        };
+        field('name', 'Name der Sammlung', 'text', old?.name || '').required = true;
+        field('title', 'Titel enthält', 'text', old?.title || '');
+        field('tag', 'Schlagwort', 'text', old?.tag || '');
+        field('days', 'In den letzten Tagen bearbeitet (0 = immer)', 'number', String(old?.days || 0));
+        const favorite = field('favorite', 'Nur Favoriten', 'checkbox', '');
+        favorite.checked = old?.favorite || false;
+        for (const [key, title, choices, value] of [
+            ['kind', 'Dokumentart', [['alle', 'Alle'], ...ART_FILTER.filter(a => a.id !== 'alle').map(a => [a.id, a.name])], old?.kind || 'alle'],
+            ['match', 'Regeln verknüpfen', [['all', 'Alle Regeln müssen passen'], ['any', 'Eine Regel genügt']], old?.match || 'all']
+        ]) {
+            const label = document.createElement('label');
+            label.textContent = title;
+            const input = document.createElement('select');
+            input.name = key;
+            input.setAttribute('aria-label', title);
+            for (const [value, name] of choices) {
+                const o = document.createElement('option');
+                o.value = value;
+                o.textContent = name;
+                input.append(o);
+            }
+            input.value = value;
+            label.append(input);
+            fields[key] = input;
+            form.append(label);
+        }
+        const submit = document.createElement('button');
+        submit.type = 'submit';
+        submit.textContent = 'Sammlung speichern';
+        form.append(submit);
+        const cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.textContent = 'Abbrechen';
+        cancel.addEventListener('click', () => menu.remove());
+        form.append(cancel);
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            if (!form.reportValidity())
+                return;
+            const value = { ...old, id: old?.id || Store.uid(), name: fields.name.value.trim(), title: fields.title.value.trim(), tag: fields.tag.value.trim(),
+                kind: fields.kind.value, days: Math.max(0, Math.min(36500, Number(fields.days.value) || 0)), match: fields.match.value, favorite: favorite.checked };
+            if (!value.name)
+                return;
+            Store.setMeta('bibliothek:dynamic-collections', [...dynamicCollections().filter(c => c.id !== value.id), value]);
+            menu.remove();
+            ortSetzen('dynamic:' + value.id);
+        });
+        menu.append(form);
+        fields.name?.focus();
     };
     const artMenue = (anker) => {
         const { liste: alle } = auswahl();

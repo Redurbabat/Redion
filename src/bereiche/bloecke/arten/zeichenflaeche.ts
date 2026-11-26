@@ -165,7 +165,7 @@ const Zusatz = (() => {
     /** Die zwölf Werkzeuge dieser Fläche, in ihrer Reihenfolge. Was sie
      *  heissen und wie sie aussehen, steht im Register; was sie TUN, steht
      *  hier — ein Register beschreibt, es zeichnet nicht. */
-    const WERKZEUG_IDS = ['zeiger', 'hand', 'verbindung', 'radierer',
+    const WERKZEUG_IDS = ['zeiger', 'hand', 'rahmenwahl', 'freihandwahl', 'verbindung', 'radierer',
       'stift', 'linie', 'pfeil', 'rechteck', 'ellipse', 'notiz', 'text', 'bild'];
 
     /** Die acht Farben klappen als Untermenü auf, statt als acht Tupfer in der
@@ -192,7 +192,7 @@ const Zusatz = (() => {
     const mehrMenue = (): HTMLElement => {
       const kasten = document.createElement('div');
       kasten.className = 'gfx-tb-liste';
-      for (const [id, name] of [['leeren', 'Alles löschen'], ['png', 'Als Bild speichern']]) {
+      for (const [id, name] of [['objekte', 'Ebenen, Gruppen und Ausrichten'], ['rahmen', 'Rahmen und Präsentation'], ['austausch', 'Import, Export und Vorlagen'], ['leeren', 'Alles löschen'], ['png', 'Als Bild speichern']]) {
         const b = document.createElement('button');
         b.type = 'button';
         b.dataset.a = id as string;
@@ -233,7 +233,7 @@ const Zusatz = (() => {
           { id: 'text', knoepfe: ['text'] },
           { id: 'bild', knoepfe: ['bild'] }
         ],
-        werkzeugMenues: { 'wb-modus': ['zeiger', 'hand', 'verbindung'] }
+        werkzeugMenues: { 'wb-modus': ['zeiger', 'hand', 'rahmenwahl', 'freihandwahl', 'verbindung'] }
       },
       /* MIT DEM TITEL, WENN ES EINEN GIBT (Durchsicht E722, §38). Zwei
          Whiteboards auf einer Seite oder auf der Fläche hiessen sonst gleich,
@@ -247,16 +247,17 @@ const Zusatz = (() => {
         verbindeVon = null;
         /* Der Griff gehört zum Zeiger. Bleibt er beim Wechsel stehen, sieht
            die Fläche aus, als wäre noch etwas ausgewählt. */
-        if (werkzeug !== 'zeiger') gewaehlt = null;
+        if (werkzeug !== 'zeiger') { gewaehlt = null; objectSelection.clear(); }
         w.classList.toggle('wb-schiebt', werkzeug === 'hand');
         male();
       },
       aufAktion: (id: string) => {
+        if (['objekte', 'rahmen', 'austausch'].includes(id)) openObjects(id === 'rahmen' ? 'frames' : id === 'austausch' ? 'exchange' : 'layers');
         if (id === 'zurueck') schrittZurueck();
         if (id === 'vor') schrittVor();
         if (id === 'leeren') {
           if (!daten.length || confirm('Die ganze Zeichenfläche leeren?')) {
-            merken(); daten.length = 0; male(); sichern();
+            merken(); const keep = daten.filter((o: any) => o.locked); daten.splice(0, daten.length, ...keep); male(); sichern();
           }
         }
         if (id === 'kleiner') massstab(sicht.z / 1.25);
@@ -385,9 +386,13 @@ const Zusatz = (() => {
         .forEach((s: any) => { const linie = verbindungZeichnen(s); if (linie) flaeche.appendChild(linie); });
       daten.filter((s: any) => s.art !== 'verbindung')
         .forEach((s: any) => flaeche.appendChild(formZeichnen(s)));
+      for (const s of daten.filter((o: any) => objectSelection.has(o.id))) {
+        const b = rahmenVon(s); flaeche.append(sv('rect', { x: b.x, y: b.y, width: b.w, height: b.h,
+          fill: 'none', stroke: 'var(--accent)', 'stroke-width': 1 / sicht.z, 'stroke-dasharray': s.locked ? '5 4' : 'none', 'pointer-events': 'none' }));
+      }
       if (werkzeug === 'zeiger' && gewaehlt) {
         const s = daten.find((q: any) => q.id === gewaehlt);
-        if (s && groessenFaehig(s)) {
+        if (s && !s.locked && objectSelection.size <= 1 && groessenFaehig(s)) {
           const rahmen = rahmenVon(s);
           const kante = GRIFF / sicht.z;
           flaeche.appendChild(sv('rect', {
@@ -628,6 +633,23 @@ const Zusatz = (() => {
        einer vollen Fläche ein Punktemeer; einer ohne sichtbaren Griff wäre
        ein Geheimnis. */
     let gewaehlt: string | null = null;
+    const objectSelection = new Set<string>();
+    let selectionDrag: { start: number[]; points: number[][]; free: boolean } | null = null;
+    const chooseObjects = (ids: string[], exact = false) => {
+      objectSelection.clear(); (exact ? ids : GfxObjects.expand(daten, new Set(ids))).forEach(id => objectSelection.add(id));
+      gewaehlt = objectSelection.size === 1 ? [...objectSelection][0]! : null;
+    };
+    const openObjects = (tab = 'layers') => {
+      const previousView = { ...sicht };
+      GfxInspector.open({ host: w, read: () => daten, selected: () => objectSelection, uid: () => Store.uid(),
+        select: (ids, exact) => { werkzeug = 'zeiger'; leiste.setzeWerkzeug('zeiger'); chooseObjects(ids, exact); male(); },
+        commit: next => { merken(); daten.splice(0, daten.length, ...next); male(); sichern(); },
+        zoom: box => { const r = flaeche.getBoundingClientRect(); sicht.z = Math.max(.1, Math.min(4, Math.min((r.width - 48) / Math.max(1, box.w), (r.height - 48) / Math.max(1, box.h))));
+          sicht.x = box.x - (r.width / sicht.z - box.w) / 2; sicht.y = box.y - (r.height / sicht.z - box.h) / 2; male(); sichtSichern(); },
+        restoreView: () => { Object.assign(sicht, previousView); male(); sichtSichern(); }, image: GfxExchange.fileBlob, pack: GfxExchange.packArchive,
+        importFile: (file, active) => GfxExchange.importFile(file, () => Store.uid(), block.id, active)
+      }, tab);
+    };
     const GRIFF = 9;
     let aktiv: any = null, verschiebt: any = null, schiebt: any = null, groesst: any = null;
     const finger = new Map<number, { x: number; y: number }>();
@@ -644,6 +666,14 @@ const Zusatz = (() => {
       const ziel = e.target as HTMLElement | null;
       if (ziel && (ziel.tagName === 'INPUT' || ziel.tagName === 'TEXTAREA' || ziel.isContentEditable)) return;
       const strg = e.ctrlKey || e.metaKey;
+      if (strg && e.key.toLowerCase() === 'a') { e.preventDefault(); chooseObjects(daten.filter((o: any) => o.art !== 'verbindung').map((o: any) => o.id)); male(); return; }
+      if (strg && e.key.toLowerCase() === 'g' && !GfxObjects.locked(daten, objectSelection)) {
+        e.preventDefault(); if (objectSelection.size > 1 || e.shiftKey) { merken(); const next = GfxObjects.group(daten, objectSelection, e.shiftKey ? null : Store.uid()); daten.splice(0, daten.length, ...next); male(); sichern(); } return;
+      }
+      if ((e.key === 'Delete' || e.key === 'Backspace') && objectSelection.size && !GfxObjects.locked(daten, objectSelection)) {
+        e.preventDefault(); merken(); const keep = daten.filter((o: any) => !objectSelection.has(o.id) && !(o.art === 'verbindung' && (objectSelection.has(o.von) || objectSelection.has(o.nach))));
+        daten.splice(0, daten.length, ...keep); chooseObjects([]); male(); sichern(); return;
+      }
       if (!strg) return;
       const taste = e.key.toLowerCase();
       if (taste === 'z' && !e.shiftKey) { e.preventDefault(); schrittZurueck(); }
@@ -670,6 +700,7 @@ const Zusatz = (() => {
         return;
       }
       const [x, y] = punkt(e);
+      if (['rahmenwahl', 'freihandwahl'].includes(werkzeug)) { selectionDrag = { start: [x, y], points: [[x, y]], free: werkzeug === 'freihandwahl' }; return; }
 
       /* DIE MITTLERE TASTE SCHIEBT, DIE RECHTE ZEICHNET NICHT (Durchsicht
          E722). Auf der Fläche schiebt die mittlere Taste die Fläche; im
@@ -699,7 +730,7 @@ const Zusatz = (() => {
         const sid = e.target.dataset?.sid;
         if (sid) {
           const i = daten.findIndex((s: any) => s.id === sid);
-          if (i >= 0) {
+          if (i >= 0 && !daten[i].locked) {
             merken();
             /* Mit der Form gehen ihre Verbindungen. Sonst bliebe ein Pfeil
                stehen, der nichts mehr verbindet — gezeichnet wird er dann
@@ -717,20 +748,23 @@ const Zusatz = (() => {
         /* Erst der Griff: er liegt über der Form und muss deshalb zuerst
            gefragt werden, sonst schiebt man beim Ziehen daran. */
         const gewaehlteForm = daten.find((q: any) => q.id === gewaehlt);
-        if (gewaehlteForm && groessenFaehig(gewaehlteForm)) {
+        if (gewaehlteForm && !gewaehlteForm.locked && objectSelection.size <= 1 && groessenFaehig(gewaehlteForm)) {
           const rahmen = rahmenVon(gewaehlteForm);
           const nah = GRIFF / sicht.z + 3;
           if (Math.abs(x - (rahmen.x + rahmen.w)) <= nah &&
               Math.abs(y - (rahmen.y + rahmen.h)) <= nah) {
             merken();
-            groesst = { s: gewaehlteForm, x, y };
+            groesst = { s: gewaehlteForm, x, y, original: { ...gewaehlteForm }, bounds: rahmen };
             return;
           }
         }
         const sid = e.target.dataset?.sid;
         const s = daten.find((q: any) => q.id === sid);
-        gewaehlt = s ? String(s.id) : null;
-        if (s) { merken(); verschiebt = { s, x, y }; }
+        if (e.shiftKey && s) {
+          const members = GfxObjects.expand(daten, new Set([s.id])); chooseObjects(objectSelection.has(s.id) ? [...objectSelection].filter(id => !members.has(id)) : [...objectSelection, ...members]); male(); return;
+        }
+        if (!s || !objectSelection.has(s.id)) chooseObjects(s ? [s.id] : []);
+        if (s && !GfxObjects.locked(daten, objectSelection)) { merken(); verschiebt = { s, x, y, originals: daten.slice(), startX: x, startY: y }; }
         /* HIER DARF NICHT NEU GEZEICHNET WERDEN. `male()` setzt
            `flaeche.innerHTML = ''` — und damit verschwindet genau das
            Element, auf dem der Zeiger gerade heruntergegangen ist. Chrome
@@ -802,8 +836,21 @@ const Zusatz = (() => {
         return;
       }
       const [x, y] = punkt(e);
+      if (selectionDrag) {
+        selectionDrag.points.push([x, y]); male();
+        const polygon = selectionDrag.free ? selectionDrag.points : [selectionDrag.start, [x, selectionDrag.start[1]!], [x, y], [selectionDrag.start[0]!, y]];
+        flaeche.append(sv('path', { d: 'M' + polygon.map(p => p.join(' ')).join(' L') + ' Z', fill: 'var(--accent)', 'fill-opacity': '.08', stroke: 'var(--accent)', 'stroke-width': 1 / sicht.z, 'pointer-events': 'none' })); return;
+      }
       if (groesst) {
         const s = groesst.s;
+        if (Number(s.rotation)) {
+          const original = groesst.original, b = groesst.bounds;
+          const factor = Math.max(.05, (x - b.x) / Math.max(1, b.w), (y - b.y) / Math.max(1, b.h));
+          s.w = original.w * factor; s.h = original.h * factor;
+          s.x = b.x + (original.x + original.w / 2 - b.x) * factor - s.w / 2;
+          s.y = b.y + (original.y + original.h / 2 - b.y) * factor - s.h / 2;
+          male(); return;
+        }
         /* Von der linken oberen Ecke aus, damit die Form nicht wegläuft:
            bei negativer Breite läge sie sonst plötzlich woanders. */
         const links = Math.min(s.x, s.x + s.w), oben = Math.min(s.y, s.y + s.h);
@@ -814,12 +861,14 @@ const Zusatz = (() => {
         return;
       }
       if (verschiebt) {
-        const dx = x - verschiebt.x, dy = y - verschiebt.y;
-        const s = verschiebt.s;
-        if (s.art === 'stift') s.pts = s.pts.map((p: any) => [p[0] + dx, p[1] + dy]);
-        else { s.x += dx; s.y += dy; }
-        verschiebt.x = x; verschiebt.y = y;
+        const { dx, dy, guides } = e.altKey ? { dx: x - verschiebt.startX, dy: y - verschiebt.startY, guides: [] } :
+          GfxObjects.snap(verschiebt.originals, objectSelection, x - verschiebt.startX, y - verschiebt.startY, 5 / sicht.z);
+        daten.splice(0, daten.length, ...verschiebt.originals.map((o: any) => objectSelection.has(o.id) ? GfxObjects.move(o, dx, dy) : o));
         male();
+        const view = ausschnitt();
+        for (const guide of guides) flaeche.append(sv('line', { x1: guide.axis === 'x' ? guide.at : view.x, y1: guide.axis === 'y' ? guide.at : view.y,
+          x2: guide.axis === 'x' ? guide.at : view.x + view.w, y2: guide.axis === 'y' ? guide.at : view.y + view.h,
+          stroke: 'var(--accent)', 'stroke-width': 1 / sicht.z, 'stroke-dasharray': '4 3', 'pointer-events': 'none' }));
         return;
       }
       if (!aktiv) return;
@@ -848,6 +897,11 @@ const Zusatz = (() => {
     });
 
     const fertig = (e?: any) => {
+      if (selectionDrag) {
+        const last = selectionDrag.points[selectionDrag.points.length - 1]!, a = selectionDrag.start;
+        const polygon = selectionDrag.free ? selectionDrag.points : [a, [last[0]!, a[1]!], last, [a[0]!, last[1]!]];
+        chooseObjects(GfxObjects.lasso(daten, polygon)); selectionDrag = null; werkzeug = 'zeiger'; leiste.setzeWerkzeug('zeiger'); male();
+      }
       if (stiftZeiger !== null && typeof e?.pointerId === 'number' && e.pointerId !== stiftZeiger) return;
       stiftZeiger = null; stiftArt = '';
       window.removeEventListener('pointerup', fertig, true);
@@ -903,7 +957,7 @@ const Zusatz = (() => {
     flaeche.addEventListener('dblclick', (e: any) => {
       const sid = e.target?.dataset?.sid;
       const s = daten.find((q: any) => q.id === sid);
-      if (!s || (s.art !== 'notiz' && s.art !== 'text')) return;
+      if (!s || s.locked || (s.art !== 'notiz' && s.art !== 'text')) return;
       e.preventDefault();
       const rahmen = rahmenVon(s);
       void textErfassen(rahmen.x, rahmen.y, Math.max(120, rahmen.w),
