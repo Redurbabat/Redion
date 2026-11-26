@@ -1,6 +1,7 @@
 /*
  * RED ION iOS - Apple's real system tab bar, without parallel native page overlays.
- * On iOS 26 a system UITabBarController owns the full tab/search layout.
+ * On iOS 26 a system UITabBarController owns exactly five navigation tabs.
+ * Search is a separate native glass button, not a sixth overflow tab.
  * The standalone UITabBar is only the older-system fallback.
  *
  * The existing Capacitor WKWebView stays the only content/navigation owner.
@@ -146,10 +147,9 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
             return UITab(title: labels[index], image: UIImage(systemName: symbols[index]),
                          identifier: "redion-tab-\(index)") { _ in host }
         }
-        let search = UISearchTab { _ in UIViewController() }
-        search.automaticallyActivatesSearch = false
-        controller.tabs = tabs + [search]
-        // UISearchTab automatically separates search in compact tab bars.
+        // UIKit replaces the fifth item with More when six tabs are registered.
+        // Keep all five Redion destinations visible; search is an action, not a page.
+        controller.tabs = tabs
         controller.delegate = self
         controller.selectedTab = tabs.first
         controller.view.tintColor = .systemBlue
@@ -157,10 +157,36 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         nativeController = controller
         window.rootViewController = controller
         mountSharedContent(in: hosts[0])
+        installNativeSearchButton(in: controller)
         let swipe = UIPanGestureRecognizer(target: self, action: #selector(onSwipeUp(_:)))
         swipe.delegate = self
         swipe.maximumNumberOfTouches = 1
         controller.tabBar.addGestureRecognizer(swipe)
+    }
+
+    @available(iOS 26.0, *)
+    private func installNativeSearchButton(in controller: UITabBarController) {
+        let button = UIButton(type: .system)
+        var configuration = UIButton.Configuration.glass()
+        configuration.cornerStyle = .capsule
+        configuration.image = UIImage(systemName: "magnifyingglass")
+        configuration.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 24, weight: .regular)
+        button.configuration = configuration
+        button.tintColor = .label
+        button.accessibilityLabel = "Suchen"
+        button.accessibilityIdentifier = "redion-native-search"
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.isHidden = true
+        button.addTarget(self, action: #selector(openSearch), for: .touchUpInside)
+        controller.view.addSubview(button)
+        // Do not modify UIKit's bar frame or compress its tab items.
+        NSLayoutConstraint.activate([
+            button.trailingAnchor.constraint(equalTo: controller.view.safeAreaLayoutGuide.trailingAnchor, constant: -12),
+            button.bottomAnchor.constraint(equalTo: controller.tabBar.topAnchor, constant: -8),
+            button.widthAnchor.constraint(equalToConstant: 52),
+            button.heightAnchor.constraint(equalToConstant: 52)
+        ])
+        searchButton = button
     }
 
     private func mountSharedContent(in host: UIViewController) {
@@ -184,12 +210,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
 
     @available(iOS 18.0, *)
     func tabBarController(_ tabBarController: UITabBarController, shouldSelectTab tab: UITab) -> Bool {
-        if tab is UISearchTab {
-            // Open existing RED ION search, never replace the current document.
-            openSearch()
-            return false
-        }
-        return true
+        return tabBarController.tabs.contains { $0.identifier == tab.identifier }
     }
 
     @available(iOS 18.0, *)
@@ -217,6 +238,10 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         }
         if controller.isTabBarHidden == visible {
             controller.setTabBarHidden(!visible, animated: false)
+        }
+        searchButton?.isHidden = !visible
+        if let button = searchButton, visible {
+            controller.view.bringSubviewToFront(button)
         }
     }
 

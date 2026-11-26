@@ -108,7 +108,7 @@ test('native Heute-first order routes and synchronizes by stable ID, not web ord
   const document = {
     documentElement: root, head: root, body: {}, activeElement: null,
     createElement: () => ({}), addEventListener() {},
-    getElementById: id => id === 'handy-oben' ? bar : null,
+    getElementById: id => id === 'handy-oben' ? bar : id === 'btn-suche-handy' ? { click() { actions.push(['search']); } } : null,
     querySelector: selector => buttons.get(selector.split('#').pop()) ?? null,
     querySelectorAll: selector => selector.includes('button[role="tab"]') ? [...buttons.values()] : []
   };
@@ -131,18 +131,24 @@ test('native Heute-first order routes and synchronizes by stable ID, not web ord
     window.__redionNativeDockTargets(index);
     assert.deepEqual(actions.at(-1), ['ArrowUp', id]);
   });
+  window.__redionNativeDockSearch(); flush();
+  assert.deepEqual(actions.at(-1), ['search']);
+  assert.equal(messages.at(-1).selected, 4);
   selected = 'hl-dok';
   window.__redionNativeDockSync(); flush();
   assert.equal(messages.at(-1).selected, 1);
 });
 
-test('iOS 26 uses system controller and prominent search, not manual geometry', () => {
+test('iOS 26 uses exactly five system tabs and separate native search without overflow', () => {
   assert.match(swift, /if #available\(iOS 26\.0, \*\) \{\s*if nativeController == nil \{ installSystemController/);
   assert.match(swift, /\} else if systemBar == nil \{/);
   assert.match(swift, /let controller = UITabBarController\(\)/);
-  assert.match(swift, /let search = UISearchTab/);
-  assert.doesNotMatch(swift, /prominentTabIdentifier/);
-  assert.match(swift, /controller\.tabs = tabs \+ \[search\]/);
+  assert.doesNotMatch(swift, /UISearchTab|prominentTabIdentifier/);
+  assert.match(swift, /controller\.tabs = tabs\s*\n/);
+  assert.match(swift, /installNativeSearchButton\(in: controller\)/);
+  assert.match(swift, /button\.bottomAnchor\.constraint\(equalTo: controller\.tabBar\.topAnchor/);
+  assert.match(swift, /button\.addTarget\(self, action: #selector\(openSearch\), for: \.touchUpInside\)/);
+  assert.match(swift, /searchButton\?\.isHidden = !visible/);
   assert.match(swift, /@available\(iOS 18\.0, \*\)\s+func tabBarController\([^\n]+shouldSelectTab/);
   assert.match(swift, /@available\(iOS 18\.0, \*\)\s+func tabBarController\([^\n]+didSelectTab/);
   assert.match(swift, /controller\.setTabBarHidden\(!visible, animated: false\)/);
@@ -150,7 +156,7 @@ test('iOS 26 uses system controller and prominent search, not manual geometry', 
   assert.match(swift, /host\.addChild\(content\)/);
   assert.match(swift, /content\.removeFromParent\(\)/);
   assert.match(swift, /guard !applyingWebSelection/);
-  assert.match(swift, /if tab is UISearchTab \{[\s\S]*?openSearch\(\)[\s\S]*?return false/);
+  assert.match(swift, /return tabBarController\.tabs\.contains/);
   for (const path of ['native-documents.swift', 'install-home-shortcuts.mjs', 'install-incoming-share-widget.mjs']) {
     const source = fs.readFileSync(new URL('./' + path, import.meta.url), 'utf8');
     assert.match(source, /redionBridgeWebView\(in: window\)/);
