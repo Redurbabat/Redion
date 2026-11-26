@@ -145,3 +145,9 @@ test('native search close control uses existing Escape route and is installed on
   assert.equal(disconnected,true);
   assert.equal(headings.length,0);
 });
+
+test('iPhone document library keeps visible actions, flexible columns and 44pt targets', () => {
+  assert.match(IOS_PHONE_POLISH_CSS,/\.bib\[data-bib-bereich\] \.bib-workspace-actions > button \{[^}]*min-height:44px/);
+  assert.match(IOS_PHONE_POLISH_CSS,/\.bib\[data-bib-bereich\] \.bib-gitter \{[^}]*grid-template-columns:repeat\(auto-fit/);
+  assert.match(IOS_PHONE_POLISH_CSS,/\.bib\[data-bib-bereich\] \.bib-deckel-mehr \{[^}]*min-width:44px/);
+});

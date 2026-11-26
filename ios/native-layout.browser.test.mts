@@ -90,15 +90,16 @@ test('iPhone premium polish overrides existing Today typography and keeps action
     const page = await context.newPage();
     await page.goto(indexUrl,{waitUntil:'domcontentloaded'});
     await page.addStyleTag({content:IOS_LAYOUT_CSS + IOS_PHONE_POLISH_CSS});
-    await page.evaluate(() => {
+    const result=await page.evaluate(() => {
       document.body.dataset.schale='premium';
       delete document.body.dataset.uiShell;
       delete document.documentElement.dataset.schema;
       const root=document.querySelector('#page')!;
       root.className='lernwelt';
       root.innerHTML='<div class="lw-today"><section class="lw-hero lw-hero-compact"><div><p>Heute</p><h2>Guten Abend.</h2></div><div class="lw-goal"><button><span>0 / 20</span><small>Lernziel heute</small></button><progress max="100" value="0"></progress></div></section><section class="lw-next-step"><span class="lw-next-icon"></span><div><h2>22 Karten für heute</h2></div><div class="lw-actions"><button>Lernen starten</button><button>Lernplan ansehen</button></div></section></div>';
-    });
-    const result=await page.locator('.lw-hero-compact').evaluate(el=>{
+      // Measure in the same JS task: the real application's asynchronous
+      // startup can replace #page between two independent Playwright calls.
+      const el=root.querySelector('.lw-hero-compact')!;
       const heading=el.querySelector('h2')!;
       const button=el.querySelector('button')!;
       return {font:getComputedStyle(heading).fontFamily,height:button.getBoundingClientRect().height,padding:getComputedStyle(el).paddingTop};
@@ -106,6 +107,32 @@ test('iPhone premium polish overrides existing Today typography and keeps action
     assert.match(result.font,/-apple-system/);
     assert.equal(result.padding,'12px');
     assert.ok(result.height>=44);
+    await context.close();
+  } finally {await browser.close();}
+});
+
+test('iPhone library stays compact with long names and accessible actions', async () => {
+  const browser = await chromium.launch({headless:true});
+  try {
+    const context = await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+    const page = await context.newPage();
+    await page.goto(indexUrl,{waitUntil:'domcontentloaded'});
+    await page.addStyleTag({content:IOS_LAYOUT_CSS + IOS_PHONE_POLISH_CSS});
+    const result=await page.evaluate(() => {
+      document.body.dataset.schale='premium';
+      delete document.body.dataset.uiShell;
+      delete document.documentElement.dataset.schema;
+      const root=document.querySelector('#page')!;
+      root.innerHTML='<div class="bib" data-bib-bereich="dokumente"><header class="bib-dkopf"><h1>Dokumente</h1><div class="bib-workspace-actions"><button class="bib-neu">Neue Seite</button><button class="bib-studio-import">PDF importieren</button></div></header><div class="bib-gitter"><div class="bib-deckel"><div class="bib-deckel-name"><b>ArbeitssicherheitundChemiefürElektroberufe</b></div></div><div class="bib-deckel">Notizen</div></div></div>';
+      const head=root.querySelector('.bib-dkopf')!;
+      const grid=root.querySelector('.bib-gitter')!;
+      return {padding:getComputedStyle(head).paddingTop,
+        cols:getComputedStyle(grid).gridTemplateColumns,
+        heights:[...head.querySelectorAll('button')].map(b=>b.getBoundingClientRect().height)};
+    });
+    assert.equal(result.padding,'14px');
+    assert.notEqual(result.cols,'none');
+    assert.ok(result.heights.every(h=>h>=44));
     await context.close();
   } finally {await browser.close();}
 });
