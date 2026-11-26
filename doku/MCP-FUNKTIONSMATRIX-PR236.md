@@ -77,3 +77,8 @@ Planversion und einen Konflikt bei falscher Versionsvorgabe.
 Der gleiche Worker-Test prüft am Betriebspunkt der Schema-6-Lampe rund
 230 V, 0,435 A und 100 W, danach 0 V und 0 A bei geänderter Stellung.
 Eine ausserhalb des Modells liegende Stellung wird abgewiesen.
+
+Für Schreibzugriffe auf Mindmaps, Whiteboards und A4-Blätter prüft das
+SQL-Update auch die Versionen der Elternkette. Die Gegenprobe entfernt ein
+A4-Blatt nach der Rechteprüfung aus seiner Elternseite. Die vorbereitete
+Papieränderung erhält einen Konflikt und bleibt ungespeichert.

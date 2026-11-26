@@ -25,6 +25,12 @@ const text=(value:unknown,max:number):string=>typeof value==='string'&&value.len
 const required=(value:unknown,max:number):string=>{
   const s=text(value,max).trim();if(!s)return err('invalid_arguments','Ein erforderlicher Text fehlt oder ist zu lang.');return s;
 };
+// Only these fixed parameter positions are used by the two UPDATE statements.
+const unchangedEmbedding=(parameter:'?7'|'?8')=>
+  'AND NOT EXISTS (SELECT 1 FROM json_each('+parameter+') ancestor WHERE NOT EXISTS ('+
+  'SELECT 1 FROM saetze p WHERE p.bereich=?3 AND p.seite=?5 AND p.tabelle=\'blocks\' '+
+  "AND p.id=json_extract(ancestor.value,'$.id') AND p.version=json_extract(ancestor.value,'$.version') "+
+  'AND p.geloescht=0 AND p.verschluesselt=0)) ';
 const limit=(value:unknown,fallback:number,max:number):number=>value===undefined?fallback:
   Number.isSafeInteger(value)&&Number(value)>0&&Number(value)<=max?Number(value):
   err('invalid_arguments','Ungültige Anzahl.');
@@ -991,18 +997,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const pageId=required(s.seite,128);await page(w,pageId,writing?'bearbeiten':'lesen');
       let data:Record<string,unknown>;try{data=JSON.parse(String(s.daten));}catch{return err('not_found','Zeichenobjekt nicht verfügbar.');}
       if(!data||!['mindmap','whiteboard','blatt'].includes(String(data.type))||data.parentTable==='collection'||data.alive===false||data.archiviert===true)return err('not_found','Zeichenobjekt nicht verfügbar.');
-      let child=id,parentId=required(data.parentId,128),valid=false;const seen=new Set([id]);
-      for(let depth=0;depth<40;depth++){
-        if(seen.has(parentId))break;seen.add(parentId);
-        const p=await ablage.hole('saetze',{bereich:w,id:parentId});
-        if(!p||p.tabelle!=='blocks'||p.seite!==pageId||p.geloescht||p.verschluesselt)break;
-        let d:Record<string,unknown>;try{d=JSON.parse(String(p.daten));}catch{break;}
-        if(!d||d.parentTable==='collection'||d.alive===false||d.archiviert===true||!Array.isArray(d.content)||!d.content.includes(child))break;
-        if(parentId===pageId){valid=d.type==='page';break;}
-        if(d.type==='page'||typeof d.parentId!=='string'||!d.parentId||d.parentId.length>128)break;
-        child=parentId;parentId=d.parentId;
-      }
-      if(!valid)return err('not_found','Zeichenobjekt ist nicht eingebettet.');
+      const ancestors=await embedding(w,pageId,id,data);
       const type=String(data.type),version=Number(s.version)||1;
       if(!writing){
         const view=type==='mindmap'?{karte:data.karte??null}:type==='whiteboard'?{shapes:data.shapes??[],sicht:data.sicht??null}:{papier:data.papier??'blanko',blattBreite:data.blattBreite??595.28,blattHoehe:data.blattHoehe??841.89};
@@ -1026,7 +1021,12 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       }catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Ungültige Zeichnung.');}
       const now=new Date().toISOString(),payload=JSON.stringify({...next,edited:now});
       if(new TextEncoder().encode(payload).byteLength>48000)return err('too_large','Zeichenobjekt zu gross.');
-      const updated=await db.prepare("UPDATE saetze SET daten=?1,version=version+1,geaendert=?2,vonGeraet='Cloud-MCP' WHERE bereich=?3 AND id=?4 AND tabelle='blocks' AND seite=?5 AND version=?6 AND verschluesselt=0 AND geloescht=0 AND daten=?7 RETURNING version").bind(payload,now,w,id,pageId,version,String(s.daten)).first<{version:number}>();
+      const updated=await db.prepare(
+        "UPDATE saetze SET daten=?1,version=version+1,geaendert=?2,vonGeraet='Cloud-MCP' "+
+        "WHERE bereich=?3 AND id=?4 AND tabelle='blocks' AND seite=?5 AND version=?6 "+
+        'AND verschluesselt=0 AND geloescht=0 AND daten=?7 '+
+        unchangedEmbedding('?8')+'RETURNING version'
+      ).bind(payload,now,w,id,pageId,version,String(s.daten),JSON.stringify(ancestors)).first<{version:number}>();
       if(!updated)return err('conflict','Zeichenobjekt wurde zwischenzeitlich geändert.');
       await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',text:'Zeichenobjekt über Cloud-MCP bearbeitet',objekt:id});
       return {workspaceId:w,documentId:pageId,blockId:id,type,version:updated.version};
@@ -1182,10 +1182,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         "AND geloescht=0 AND verschluesselt=0 AND json_valid(daten) "+
         "AND json_extract(daten,'$.type')='schaltplan' "+
         "AND COALESCE(json_extract(daten,'$.parentTable'),'')<>'collection' "+
-        "AND NOT EXISTS (SELECT 1 FROM json_each(?7) ancestor WHERE NOT EXISTS ("+
-        "SELECT 1 FROM saetze p WHERE p.bereich=?3 AND p.seite=?5 AND p.tabelle='blocks' "+
-        "AND p.id=json_extract(ancestor.value,'$.id') AND p.version=json_extract(ancestor.value,'$.version') "+
-        "AND p.geloescht=0 AND p.verschluesselt=0)) "+
+        unchangedEmbedding('?7')+
         "RETURNING version"
       ).bind(payload,timestamp,w,id,pageId,ver,JSON.stringify(ancestors)).first<{version:number}>();
       if(!updated)return err('conflict','Schaltplan wurde inzwischen bearbeitet. Bitte erneut lesen.');

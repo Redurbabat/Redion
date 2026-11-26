@@ -2225,6 +2225,32 @@ test('Cloud-MCP native visual objects with version protection',async()=>{
  assert.equal((await ok('redion_read_visual',bref)).version,11);
  const sheet=await ok('redion_create_sheet',{workspaceId:'ws_test',documentId:'visual_page',expectedVersion:3,requestId:'native_sheet_001',title:'A4',paper:'kariert',pages:2});
  assert.equal((await ok('redion_read_visual',{workspaceId:'ws_test',blockId:sheet.blockId})).blattHoehe,1683.78);
+ const pageRecord=await f.store.hole('saetze',{bereich:'ws_test',id:'visual_page'});
+ assert.ok(pageRecord);
+ const prepare=f.db.prepare;
+ let parentChanged=false;
+ f.db.prepare=function(sql){
+   const statement=prepare.call(this,sql);
+   if(!sql.startsWith('UPDATE saetze SET daten=?1,version=version+1')||!sql.includes('AND daten=?7'))return statement;
+   const first=statement.first.bind(statement);
+   statement.first=async <T>()=>{
+     const parent=JSON.parse(String(pageRecord.daten));
+     parent.content=parent.content.filter((child:string)=>child!==sheet.blockId);
+     await f.store.setze('saetze',{...pageRecord,daten:JSON.stringify(parent),version:Number(pageRecord.version)+1});
+     parentChanged=true;
+     return first<T>();
+   };
+   return statement;
+ };
+ try{
+   const raced=await run('redion_update_visual',{workspaceId:'ws_test',blockId:sheet.blockId,
+     expectedVersion:1,operation:'set_paper',paper:'blanko'});
+   assert.equal(parentChanged,true);
+   assert.equal(JSON.parse(raced.content[0].text).code,'conflict');
+   const saved=await f.store.hole('saetze',{bereich:'ws_test',id:sheet.blockId});
+   assert.equal(saved?.version,1);
+   assert.equal(JSON.parse(String(saved?.daten)).papier,'kariert');
+ }finally{f.db.prepare=prepare;}
  const reviewClient=await f.oauth.register({client_name:'Synthetic visual reader',
    redirect_uris:['https://reader.example.test/callback'],grant_types:['authorization_code']});
  const readOnly=await f.authorize(false,'owner',reviewClient);
