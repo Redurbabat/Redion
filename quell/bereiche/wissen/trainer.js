@@ -281,7 +281,11 @@ const Trainer = (() => {
         <div class="lw-trainer-ergebnis" aria-live="polite"></div>
         <div class="lw-rating lw-trainer-fuss">${knopf('Prüfen', 'data-tr-pruefen', 'is-primary')}</div>`;
         }
-        ziel.innerHTML = `<section class="lw-trainer-runde" data-tr-id="${esc(k.id)}" data-tr-kind="${esc(kind)}">${kopf(k)}<article class="lw-study-card lw-trainer-karte">${rumpf}</article></section>`;
+        const image = k.quiz.image;
+        const imageData = typeof image?.data === 'string' && image.data.length <= 12000 &&
+          /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image.data) ? image.data : '';
+        const picture = imageData ? `<figure class="lw-trainer-bild"><img src="${esc(imageData)}" alt="${esc(image.alt || 'Lernbild')}" style="display:block;max-width:100%;max-height:260px;object-fit:contain;margin:auto"></figure>` : '';
+        ziel.innerHTML = `<section class="lw-trainer-runde" data-tr-id="${esc(k.id)}" data-tr-kind="${esc(kind)}">${kopf(k)}<article class="lw-study-card lw-trainer-karte">${picture}${rumpf}</article></section>`;
         zustand.gewaehlt = new Set();
         zustand.geprueft = false;
         zustand.aufgedeckt = false;
@@ -355,7 +359,7 @@ const Trainer = (() => {
             if (wort)
                 l.insertAdjacentHTML('beforeend', `<span class="lw-trainer-option-wort">${wort}</span>`);
         });
-        ergebnisSetzen(`<p class="${richtig ? 'lw-trainer-gut' : 'lw-trainer-schlecht'}">${richtig ? 'Richtig.' : 'Nicht ganz — grün ist richtig, rot war falsch angekreuzt, gestrichelt hat gefehlt.'}</p>`);
+        ergebnisSetzen(`<p class="${richtig ? 'lw-trainer-gut' : 'lw-trainer-schlecht'}">${richtig ? 'Richtig.' : 'Nicht ganz — grün ist richtig, rot war falsch angekreuzt, gestrichelt hat gefehlt.'}</p>${k.quiz.hinweis ? `<p class="lw-trainer-hinweis">${esc(k.quiz.hinweis)}</p>` : ''}`);
         fussSetzen(knopf('Weiter', 'data-tr-weiter', 'is-primary'));
         zustand.ziel?.querySelector('[data-tr-weiter]')?.focus();
         zustand.ziel?.querySelector('.lw-trainer-fuss')?.setAttribute('data-tr-note', String(richtig ? NOTE_RICHTIG : NOTE_FALSCH));
