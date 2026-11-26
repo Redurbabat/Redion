@@ -459,6 +459,7 @@ const Ansichten = (() => {
     });
     const mehrGruppen = () => [
         { name: 'Wo du arbeitest', eintraege: [
+                ...(document.documentElement.classList.contains('redion-ios-native-dock') ? [{ z: 'calendarDays', t: 'Termine', s: 'Kalender, Tagesplan und Besprechungen.', a: 'termine' }] : []),
                 { z: 'pages', t: 'Seiten & Wissen', s: 'Dein Bestand und offene Seiten. Weitere Sammlungen findest du in der Bibliothek.', a: 'workspace' },
                 { z: 'workspace', t: 'Arbeitsbereich', s: 'Name, Zeichen und der Baum aller Seiten.', a: 'schublade' }
             ] },
@@ -508,6 +509,8 @@ const Ansichten = (() => {
     const mehrTun = (a) => {
         if (a === 'workspace')
             Produktwelten.workspace('start');
+        else if (a === 'termine')
+            document.getElementById('hl-bespr')?.click();
         else if (a === 'schublade')
             App.arbeitsbereich();
         else if (a === 'kompass')

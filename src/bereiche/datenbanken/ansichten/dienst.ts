@@ -754,6 +754,7 @@ const Ansichten = (() => {
        §46 sagt, dass nichts verschwinden darf, und ein Weg, den man nur
        noch über die Adresszeile findet, ist verschwunden. */
     { name: 'Wo du arbeitest', eintraege: [
+      ...(document.documentElement.classList.contains('redion-ios-native-dock') ? [{ z: 'calendarDays', t: 'Termine', s: 'Kalender, Tagesplan und Besprechungen.', a: 'termine' }] : []),
       { z: 'pages', t: 'Seiten & Wissen', s: 'Dein Bestand und offene Seiten. Weitere Sammlungen findest du in der Bibliothek.', a: 'workspace' },
       { z: 'workspace', t: 'Arbeitsbereich', s: 'Name, Zeichen und der Baum aller Seiten.', a: 'schublade' } ] },
     { name: 'Wichtige Werkzeuge', eintraege: [
@@ -813,6 +814,7 @@ const Ansichten = (() => {
   const mehrTun = (a: string): void => {
     /* Die zwei Wege, die mit E236 aus der Navigation hierherkamen. */
     if (a === 'workspace')          Produktwelten.workspace('start');
+    else if (a === 'termine')       document.getElementById('hl-bespr')?.click();
     else if (a === 'schublade')     App.arbeitsbereich();
     else if (a === 'kompass')       kompass();
     else if (a === 'befehle')       Werkzeuge.palette();

@@ -29,8 +29,8 @@ test('bei unpassender Vorlage fail-closed, keine zweite Installation', () => {
   assert.throws(() => injectNativeGlassDock(original, 'import SwiftUI'), /fehlt/);
 });
 
-test('fuenf Apple Tab-Items leiten zur bestehenden Redion Navigation weiter', () => {
-  for (const label of ['Dokumente','Heute','Lernen','Termine','Mehr']) {
+test('vier Apple Navigations-Items leiten zur bestehenden Redion Navigation weiter', () => {
+  for (const label of ['Dokumente','Heute','Lernen','Mehr']) {
     assert.ok(swift.includes('"' + label + '"'));
   }
   assert.match(swift, /UITabBarItem\(title:/);
@@ -74,7 +74,7 @@ test('UIKit entscheidet ueber originales Systemmaterial', () => {
   assert.doesNotMatch(app, /native-glass-dock\.swift/);
 });
 
-test('fuenf Ziele und eine separate Suchkapsel mit Apples Glas ab iOS 26', () => {
+test('vier Ziele und Suchkapsel im aelteren iOS-Fallback', () => {
   assert.match(swift, /let search = UIButton\(type: \.system\)/);
   assert.match(swift, /if #available\(iOS 26\.0, \*\)[\s\S]*?configuration = \.glass\(\)/);
   assert.match(swift, /configuration = \.gray\(\)/);
@@ -90,11 +90,11 @@ test('fuenf Ziele und eine separate Suchkapsel mit Apples Glas ab iOS 26', () =>
 
 
 test('native Heute-first order routes and synchronizes by stable ID, not web order', () => {
-  assert.match(swift, /private let labels = \["Heute", "Dokumente", "Lernen", "Termine", "Mehr"\]/);
-  assert.match(swift, /private let symbols = \["house", "book.closed", "graduationcap", "calendar", "ellipsis"\]/);
+  assert.match(swift, /private let labels = \["Heute", "Dokumente", "Lernen", "Mehr"\]/);
+  assert.match(swift, /private let symbols = \["house", "book.closed", "graduationcap", "ellipsis"\]/);
   const bridge = swift.match(/private static let bridgeJavaScript = #"""([\s\S]*?)"""#/)[1];
   const domOrder = ['hl-dok', 'hl-start', 'hl-lernen', 'hl-bespr', 'hl-mehr'];
-  const nativeOrder = ['hl-start', 'hl-dok', 'hl-lernen', 'hl-bespr', 'hl-mehr'];
+  const nativeOrder = ['hl-start', 'hl-dok', 'hl-lernen', 'hl-mehr'];
   const actions = [], messages = [], frames = [];
   let selected = 'hl-start';
   const bar = { getClientRects: () => [1], setAttribute() {} };
@@ -108,7 +108,7 @@ test('native Heute-first order routes and synchronizes by stable ID, not web ord
   const document = {
     documentElement: root, head: root, body: {}, activeElement: null,
     createElement: () => ({}), addEventListener() {},
-    getElementById: id => id === 'handy-oben' ? bar : id === 'btn-suche-handy' ? { click() { actions.push(['search']); } } : null,
+    getElementById: id => id === 'handy-oben' ? bar : id === 'btn-suche-handy' ? { click() { actions.push(['search']); } } : buttons.get(id) ?? null,
     querySelector: selector => buttons.get(selector.split('#').pop()) ?? null,
     querySelectorAll: selector => selector.includes('button[role="tab"]') ? [...buttons.values()] : []
   };
@@ -133,22 +133,24 @@ test('native Heute-first order routes and synchronizes by stable ID, not web ord
   });
   window.__redionNativeDockSearch(); flush();
   assert.deepEqual(actions.at(-1), ['search']);
-  assert.equal(messages.at(-1).selected, 4);
+  assert.equal(messages.at(-1).selected, 3);
+  selected = 'hl-bespr';
+  window.__redionNativeDockSync(); flush();
+  assert.equal(messages.at(-1).selected, 3);
   selected = 'hl-dok';
   window.__redionNativeDockSync(); flush();
   assert.equal(messages.at(-1).selected, 1);
 });
 
-test('iOS 26 uses exactly five system tabs and separate native search without overflow', () => {
+test('iOS 26 uses three primary tabs, Mehr and system search without overflow', () => {
   assert.match(swift, /if #available\(iOS 26\.0, \*\) \{\s*if nativeController == nil \{ installSystemController/);
   assert.match(swift, /\} else if systemBar == nil \{/);
   assert.match(swift, /let controller = UITabBarController\(\)/);
-  assert.doesNotMatch(swift, /UISearchTab|prominentTabIdentifier/);
-  assert.match(swift, /controller\.tabs = tabs\s*\n/);
-  assert.match(swift, /installNativeSearchButton\(in: controller\)/);
-  assert.match(swift, /button\.bottomAnchor\.constraint\(equalTo: controller\.tabBar\.topAnchor/);
-  assert.match(swift, /button\.addTarget\(self, action: #selector\(openSearch\), for: \.touchUpInside\)/);
-  assert.match(swift, /searchButton\?\.isHidden = !visible/);
+  assert.doesNotMatch(swift, /prominentTabIdentifier|installNativeSearchButton/);
+  assert.match(swift, /let search = UISearchTab/);
+  assert.match(swift, /search\.automaticallyActivatesSearch = true/);
+  assert.match(swift, /controller\.tabs = tabs \+ \[search\]/);
+  assert.match(swift, /if tab is UISearchTab \{[\s\S]*?openSearch\(\)[\s\S]*?return false/);
   assert.match(swift, /@available\(iOS 18\.0, \*\)\s+func tabBarController\([^\n]+shouldSelectTab/);
   assert.match(swift, /@available\(iOS 18\.0, \*\)\s+func tabBarController\([^\n]+didSelectTab/);
   assert.match(swift, /controller\.setTabBarHidden\(!visible, animated: false\)/);
@@ -160,5 +162,13 @@ test('iOS 26 uses exactly five system tabs and separate native search without ov
   for (const path of ['native-documents.swift', 'install-home-shortcuts.mjs', 'install-incoming-share-widget.mjs']) {
     const source = fs.readFileSync(new URL('./' + path, import.meta.url), 'utf8');
     assert.match(source, /redionBridgeWebView\(in: window\)/);
+  }
+});
+
+test('Termine remains reachable under Mehr in native iOS without changing web navigation', () => {
+  for (const path of ['../src/bereiche/datenbanken/ansichten/dienst.ts', '../quell/bereiche/datenbanken/ansichten/dienst.js']) {
+    const source = fs.readFileSync(new URL(path, import.meta.url), 'utf8');
+    assert.match(source, /classList\.contains\('redion-ios-native-dock'\) \? \[\{[^\n]+t: 'Termine'/);
+    assert.match(source, /a === 'termine'\)[\s\S]*?getElementById\('hl-bespr'\)\?\.click\(\)/);
   }
 });

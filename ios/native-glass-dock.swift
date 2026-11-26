@@ -1,7 +1,7 @@
 /*
  * RED ION iOS - Apple's real system tab bar, without parallel native page overlays.
- * On iOS 26 a system UITabBarController owns exactly five navigation tabs.
- * Search is a separate native glass button, not a sixth overflow tab.
+ * On iOS 26 a system UITabBarController owns four navigation tabs plus UISearchTab.
+ * Three primary destinations, Mehr and system search fit without overflow.
  * The standalone UITabBar is only the older-system fallback.
  *
  * The existing Capacitor WKWebView stays the only content/navigation owner.
@@ -16,8 +16,8 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
     private static var started = false
 
     // Native order is independent of the WebView DOM order.
-    private let labels = ["Heute", "Dokumente", "Lernen", "Termine", "Mehr"]
-    private let symbols = ["house", "book.closed", "graduationcap", "calendar", "ellipsis"]
+    private let labels = ["Heute", "Dokumente", "Lernen", "Mehr"]
+    private let symbols = ["house", "book.closed", "graduationcap", "ellipsis"]
     private weak var webView: WKWebView?
     private var systemBar: UITabBar?
     private var nativeController: UITabBarController?
@@ -147,9 +147,10 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
             return UITab(title: labels[index], image: UIImage(systemName: symbols[index]),
                          identifier: "redion-tab-\(index)") { _ in host }
         }
-        // UIKit replaces the fifth item with More when six tabs are registered.
-        // Keep all five Redion destinations visible; search is an action, not a page.
-        controller.tabs = tabs
+        // Four destinations plus Apple's search tab: never six root tabs.
+        let search = UISearchTab { _ in UIViewController() }
+        search.automaticallyActivatesSearch = true
+        controller.tabs = tabs + [search]
         controller.delegate = self
         controller.selectedTab = tabs.first
         controller.view.tintColor = .systemBlue
@@ -157,36 +158,10 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         nativeController = controller
         window.rootViewController = controller
         mountSharedContent(in: hosts[0])
-        installNativeSearchButton(in: controller)
         let swipe = UIPanGestureRecognizer(target: self, action: #selector(onSwipeUp(_:)))
         swipe.delegate = self
         swipe.maximumNumberOfTouches = 1
         controller.tabBar.addGestureRecognizer(swipe)
-    }
-
-    @available(iOS 26.0, *)
-    private func installNativeSearchButton(in controller: UITabBarController) {
-        let button = UIButton(type: .system)
-        var configuration = UIButton.Configuration.glass()
-        configuration.cornerStyle = .capsule
-        configuration.image = UIImage(systemName: "magnifyingglass")
-        configuration.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 24, weight: .regular)
-        button.configuration = configuration
-        button.tintColor = .label
-        button.accessibilityLabel = "Suchen"
-        button.accessibilityIdentifier = "redion-native-search"
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.isHidden = true
-        button.addTarget(self, action: #selector(openSearch), for: .touchUpInside)
-        controller.view.addSubview(button)
-        // Do not modify UIKit's bar frame or compress its tab items.
-        NSLayoutConstraint.activate([
-            button.trailingAnchor.constraint(equalTo: controller.view.safeAreaLayoutGuide.trailingAnchor, constant: -12),
-            button.bottomAnchor.constraint(equalTo: controller.tabBar.topAnchor, constant: -8),
-            button.widthAnchor.constraint(equalToConstant: 52),
-            button.heightAnchor.constraint(equalToConstant: 52)
-        ])
-        searchButton = button
     }
 
     private func mountSharedContent(in host: UIViewController) {
@@ -210,6 +185,11 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
 
     @available(iOS 18.0, *)
     func tabBarController(_ tabBarController: UITabBarController, shouldSelectTab tab: UITab) -> Bool {
+        if tab is UISearchTab {
+            // The system search slot is an action; retain the active Capacitor page.
+            openSearch()
+            return false
+        }
         return tabBarController.tabs.contains { $0.identifier == tab.identifier }
     }
 
@@ -238,10 +218,6 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         }
         if controller.isTabBarHidden == visible {
             controller.setTabBarHidden(!visible, animated: false)
-        }
-        searchButton?.isHidden = !visible
-        if let button = searchButton, visible {
-            controller.view.bringSubviewToFront(button)
         }
     }
 
@@ -272,8 +248,9 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         let vector = gesture.translation(in: bar)
         guard vector.y < -32, abs(vector.y) > abs(vector.x) else { return }
         let x = gesture.location(in: bar).x
-        let index = max(0, min(labels.count - 1,
-                               Int(x / max(1, bar.bounds.width) * CGFloat(labels.count))))
+        let slotCount = labels.count + (nativeController == nil ? 0 : 1)
+        let index = max(0, Int(x / max(1, bar.bounds.width) * CGFloat(slotCount)))
+        guard labels.indices.contains(index) else { return }
         webView?.evaluateJavaScript(
             "window.__redionNativeDockTargets?.(\(index));",
             completionHandler: nil)
@@ -344,7 +321,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         document.documentElement.classList.add('redion-ios-native-dock');
         legacyBar?.setAttribute('aria-hidden', 'true');
       };
-      const routeIds = ['hl-start', 'hl-dok', 'hl-lernen', 'hl-bespr', 'hl-mehr'];
+      const routeIds = ['hl-start', 'hl-dok', 'hl-lernen', 'hl-mehr'];
       function routeButtons() {
         return routeIds.map(id => document.querySelector('#handy-oben > button[role="tab"]#' + id));
       }
@@ -362,6 +339,8 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
           });
         }
         const current = buttons.findIndex(b => b.getAttribute('aria-selected') === 'true');
+        const calendar = document.getElementById('hl-bespr');
+        const calendarSelected = calendar?.getAttribute('aria-selected') === 'true';
         const settings = document.querySelector('.einst-fenster');
         const modal = !!(settings && settings.getClientRects().length);
         const locked = !!document.getElementById('sperrschirm');
@@ -375,7 +354,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         const drawing = Array.from(document.querySelectorAll('.document-studio, .pg-flaeche, .sp-voll, .gfx-presenting-screen'))
           .some(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden');
         window.webkit?.messageHandlers?.redionDock?.postMessage({
-          selected: current < 0 ? 0 : current,
+          selected: calendarSelected ? routeIds.indexOf('hl-mehr') : current < 0 ? 0 : current,
           locked,
           theme: document.documentElement.dataset.theme || 'dark',
           visible: dockShown && !modal && !locked && !editing && !keyboard && !drawing
