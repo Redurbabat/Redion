@@ -2018,13 +2018,20 @@ const KI = (() => {
   /** Karteikarten aus „Frage :: Antwort"-Zeilen — echte Blöcke (E724, D7).
       Vorher landeten sie als Textzeilen auf der Seite, und die Lernwelt
       zählte keine einzige. */
-  const alsKarteikarten = (text: string): number => {
-    const seite = App.aktuelleSeite();
+  const alsKarteikarten = (text: string, seite = App.aktuelleSeite()): number => {
+    const page = Store.getBlock(seite);
+    if (!page || page.alive === false || page.type !== 'page' || !Konten.darf('bearbeiten', seite)) {
+      UI.toast('Auf dieser Seite darfst du keine Karten anlegen.'); return 0;
+    }
+    const titel = String(page.text || 'Lernkarten');
     const karten = String(text || '').split('\n').map(z => z.replace(/^[-*•\d.\s]+/, '').trim())
-      .filter(z => /\S\s*::\s*\S/.test(z));
-    karten.forEach(z => Store.addBlock(seite, 'flashcard', { text: z, herkunft: 'ki' }));
-    if (karten.length) { App.zeichneSeite(); UI.toast(karten.length + ' Karteikarten eingefügt'); }
-    else UI.toast('In der Antwort steht keine Zeile „Frage :: Antwort"');
+      .map(z => z.split('::').map(t=>t.trim())).filter(z=>z.length===2&&z.every(t=>t&&t.length<=2000)).slice(0,20);
+    karten.forEach(([frage,antwort])=>Store.addBlock(seite,'flashcard',{
+      text:frage+' :: '+antwort,herkunft:'ki',
+      quiz:{kind:'schreiben',format:'flashcard',kapitel:titel,thema:titel,topic:titel,quelle:titel,pruefung:false,musterloesung:[antwort]}
+    }));
+    if(karten.length){App.zeichneSeite();UI.toast(karten.length+' Karteikarten eingefügt');}
+    else UI.toast('In der Antwort steht keine gültige Zeile „Frage :: Antwort“');
     return karten.length;
   };
 
@@ -2035,6 +2042,7 @@ const KI = (() => {
    */
   const schreibLauf = async (befehl: any, auftrag: any, opt: KiLauf = {}) => {
     const quelle = eingabe(befehl, opt);
+    const kartenZiel = App.aktuelleSeite();
     if (!quelle.text.trim()) { UI.toast('Es gibt noch keinen Text.'); return; }
 
     App.kiPanel(true);
@@ -2082,7 +2090,7 @@ const KI = (() => {
       if (b.dataset.a === 'kopieren') { Ablage.kopiereJetzt(antwort, 'Kopiert'); }
       if (b.dataset.a === 'nochmal')  { schreibLauf(befehl, auftrag, opt); }
       if (b.dataset.a === 'darunter') { alsBloeckeEinfuegen(antwort); }
-      if (b.dataset.a === 'karteikarten') { alsKarteikarten(antwort); }
+      if (b.dataset.a === 'karteikarten') { if (alsKarteikarten(antwort, kartenZiel) > 0) b.setAttribute('disabled',''); }
       if (b.dataset.a === 'ersetzen') await ersetzen(antwort, quelle, opt);
     });
     ziel.appendChild(leiste);

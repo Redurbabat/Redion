@@ -1587,21 +1587,25 @@ const KI = (() => {
         ziel.before(status);
         return status;
     };
-    const alsKarteikarten = (text) => {
-        const seite = App.aktuelleSeite();
-        const karten = String(text || '').split('\n').map(z => z.replace(/^[-*•\d.\s]+/, '').trim())
-            .filter(z => /\S\s*::\s*\S/.test(z));
-        karten.forEach(z => Store.addBlock(seite, 'flashcard', { text: z, herkunft: 'ki' }));
-        if (karten.length) {
-            App.zeichneSeite();
-            UI.toast(karten.length + ' Karteikarten eingefügt');
-        }
-        else
-            UI.toast('In der Antwort steht keine Zeile „Frage :: Antwort"');
-        return karten.length;
+    const alsKarteikarten = (text, seite = App.aktuelleSeite()) => {
+      const page = Store.getBlock(seite);
+      if (!page || page.alive === false || page.type !== 'page' || !Konten.darf('bearbeiten', seite)) {
+        UI.toast('Auf dieser Seite darfst du keine Karten anlegen.'); return 0;
+      }
+      const titel = String(page.text || 'Lernkarten');
+      const karten = String(text || '').split('\n').map(z => z.replace(/^[-*•\d.\s]+/, '').trim())
+        .map(z => z.split('::').map(t=>t.trim())).filter(z=>z.length===2&&z.every(t=>t&&t.length<=2000)).slice(0,20);
+      karten.forEach(([frage,antwort])=>Store.addBlock(seite,'flashcard',{
+        text:frage+' :: '+antwort,herkunft:'ki',
+        quiz:{kind:'schreiben',format:'flashcard',kapitel:titel,thema:titel,topic:titel,quelle:titel,pruefung:false,musterloesung:[antwort]}
+      }));
+      if(karten.length){App.zeichneSeite();UI.toast(karten.length+' Karteikarten eingefügt');}
+      else UI.toast('In der Antwort steht keine gültige Zeile „Frage :: Antwort“');
+      return karten.length;
     };
     const schreibLauf = async (befehl, auftrag, opt = {}) => {
         const quelle = eingabe(befehl, opt);
+        const kartenZiel = App.aktuelleSeite();
         if (!quelle.text.trim()) {
             UI.toast('Es gibt noch keinen Text.');
             return;
@@ -1661,7 +1665,7 @@ const KI = (() => {
                 alsBloeckeEinfuegen(antwort);
             }
             if (b.dataset.a === 'karteikarten') {
-                alsKarteikarten(antwort);
+                if (alsKarteikarten(antwort, kartenZiel) > 0) b.setAttribute('disabled','');
             }
             if (b.dataset.a === 'ersetzen')
                 await ersetzen(antwort, quelle, opt);

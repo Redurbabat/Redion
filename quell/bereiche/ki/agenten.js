@@ -179,31 +179,58 @@ const Agent = (() => {
             }
         },
         karteikartenAnlegen: {
-            recht: 'bearbeiten',
-            beschreibung: 'Legt echte Lernkarten an, die im Lernzentrum auftauchen. Argument: ' +
-                '{"titel":"Name der Kartenseite","karten":[{"frage":"…","antwort":"…"}]}',
-            lauf: async (a, protokoll) => {
-                const karten = Array.isArray(a && a.karten) ? a.karten : [];
-                if (!karten.length)
-                    return 'Keine Karten angegeben. Nichts angelegt.';
-                const unterId = App.aktuelleSeite();
-                if (!Konten.darf('bearbeiten', unterId))
-                    return 'Hier darfst du nichts anlegen.';
-                const seite = Store.addPage(unterId, { text: String((a && a.titel) || 'Lernkarten'), icon: '🎴' });
-                let gezaehlt = 0;
-                karten.forEach((k) => {
-                    const frage = String((k && k.frage) || '').trim();
-                    const antwort = String((k && k.antwort) || '').trim();
-                    if (!frage)
-                        return;
-                    Store.addBlock(seite.id, 'flashcard', { text: frage + ' :: ' + (antwort || '…'), herkunft: 'ki' });
-                    gezaehlt++;
-                });
-                protokoll.ids.push(seite.id);
-                App.zeichneBaum();
-                return gezaehlt + ' Lernkarten auf der Seite „' + (seite.text || 'Lernkarten') +
-                    '" angelegt. Sie stehen ab sofort im Lernzentrum zur Wiederholung bereit.';
+          recht: 'bearbeiten',
+          beschreibung: 'Erstellt bis zu 20 echte Trainer-Lernkarten auf einer neuen Unterseite. Lies zuerst die Quelle mit seiteLesen oder pdfLesen. Nur belegte Fragen; bei gekürztem PDF weitere Seiten gezielt lesen. Argument: ' +
+            '{"titel":"Kartenset","fach":"Elektrotechnik","thema":"Grundlagen","quelle":"Skript S. 4","karten":[{"frage":"…","antwort":"…","art":"karte|single_select|multi_select|true_false|cloze|schreiben","erklaerung":"…","optionen":[{"text":"…","richtig":true}]}]}. art optional: karte. Für Lücken genau einmal ___; für Richtig/Falsch Optionen Richtig, Falsch.',
+          lauf: async (a, protokoll) => {
+            const karten = Array.isArray(a?.karten) ? a.karten : [];
+            if (!karten.length || karten.length > 20) return 'Bitte 1–20 Karten angeben. Nichts angelegt.';
+            const unterId = App.aktuelleSeite();
+            if (!Konten.darf('bearbeiten', unterId)) return 'Hier darfst du nichts anlegen.';
+            const sauber = (v, max) => typeof v === 'string' && v.trim() && v.length <= max && !v.includes('::') ? v.trim() : '';
+            const titel = sauber(a?.titel || 'Lernkarten', 160);
+            const thema = sauber(a?.thema || titel, 160);
+            const fach = sauber(a?.fach, 120);
+            const quelle = sauber(a?.quelle, 300);
+            if (!titel || !thema) return 'Ungültiger Titel oder ungültiges Thema.';
+            const vorbereitet = [];
+            for (const k of karten) {
+              const frage = sauber(k?.frage, 2000), antwort = sauber(k?.antwort, 2000);
+              const art = k?.art || 'karte';
+              if (!frage || !antwort || !['karte','schreiben','single_select','multi_select','true_false','cloze'].includes(art))
+                return 'Ungültige Karte: Frage, Antwort oder Kartenart fehlt. Nichts angelegt.';
+              const quiz = {kind:'schreiben',kapitel:titel,thema,topic:thema,pruefung:false,musterloesung:[antwort]};
+              if (fach) quiz.subject=fach;
+              if (quelle) quiz.quelle=quelle;
+              if (sauber(k.erklaerung,1500)) quiz.hinweis=sauber(k.erklaerung,1500);
+              let text=frage+' :: '+antwort;
+              if(art==='karte')quiz.format='flashcard';
+              if(['single_select','multi_select','true_false'].includes(art)){
+                if(!Array.isArray(k.optionen)||k.optionen.length!==(art==='true_false'?2:4))
+                  return 'Ungültige Antwortoptionen. Nichts angelegt.';
+                const optionen=k.optionen.map((o)=>({text:sauber(o?.text,500),richtig:o?.richtig}));
+                const count=optionen.filter((o)=>o.richtig===true).length;
+                if(optionen.some((o)=>!o.text||typeof o.richtig!=='boolean')||
+                  new Set(optionen.map((o)=>o.text.toLowerCase())).size!==optionen.length||
+                  (art==='multi_select'?(count<2||count>3):count!==1)||
+                  (art==='true_false'&&!optionen.every((o,i)=>o.text===(i===0?'Richtig':'Falsch'))))
+                  return 'Ungültige richtige Antworten. Nichts angelegt.';
+                quiz.kind='mc';quiz.format=art;quiz.optionen=optionen;delete quiz.musterloesung;
+                text=frage+' :: '+optionen.filter((o)=>o.richtig).map((o)=>o.text).join(' · ');
+              }else if(art==='cloze'){
+                if(frage.split('___').length!==2||/[{}]/.test(frage)||/[{}\n]/.test(antwort))
+                  return 'Genau eine Lücke mit ___ erforderlich. Nichts angelegt.';
+                quiz.kind='luecke';quiz.loesungen=[antwort];delete quiz.musterloesung;
+                text=frage.replace('___','{{'+antwort+'}}');
+              }
+              vorbereitet.push({text,quiz});
             }
+            const seite=Store.addPage(unterId,{text:titel,icon:'🎴'});
+            protokoll.ids.push(seite.id);
+            for(const card of vorbereitet)Store.addBlock(seite.id,'flashcard',{...card,herkunft:'ki'});
+            App.zeichneBaum();
+            return vorbereitet.length+' Lernkarten auf der Seite „'+titel+'" angelegt. Im Lernzentrum und Trainer verfügbar.';
+          }
         },
         pdfLesen: {
             recht: 'lesen',
