@@ -8,7 +8,7 @@ import { SHORTCUTS, injectQuickActions, plistCommands } from './install-home-sho
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-function setup() {
+function setup(ready = () => true) {
   let currentTime = 1000;
   let next = 0;
   const tasks = new Map();
@@ -23,6 +23,7 @@ function setup() {
   };
   const route = createHomeShortcutRouter({
     document: doc,
+    ready,
     now: () => currentTime,
     schedule(fn) { const id = ++next; tasks.set(id, fn); return id; },
     cancel(id) { tasks.delete(id); }
@@ -157,7 +158,7 @@ test('Nur native Buildartefakte; gemeinsamer Webcode bleibt unberührt', () => {
   assert.equal(cfg.ios.path, 'build/ios-capacitor');
   assert.match(yaml, /node ios\/install-home-shortcuts\.mjs/);
   assert.match(yaml, /node --test ios\/home-shortcuts\.test\.mjs/);
-  assert.match(native, /createHomeShortcutRouter\(\{ document \}\)/);
+  assert.match(native, /createHomeShortcutRouter\(\{ document, ready: \(\) => readiness\.ready\(\) \}\)/);
   assert.doesNotMatch(website, /RedionNativeShortcut|home-shortcuts\.mjs/);
 });
 
@@ -171,4 +172,38 @@ test('der Codemagic-Schritt prüft die Schnellaktionen in ihrer echten Reihenfol
   assert.ok(proben.length >= 2, 'der Schritt prüft mindestens den ersten und den letzten Eintrag');
   for (const [, nummer, id] of proben) assert.equal(SHORTCUTS[Number(nummer)]?.id, id);
   assert.ok(proben.some(([, nummer]) => Number(nummer) === SHORTCUTS.length - 1), 'auch der letzte Eintrag wird geprüft');
+});
+
+test('home shortcuts and widget deep links wait for the local store and unlock', () => {
+  let loaded=false;
+  const x=setup(()=>loaded);
+  x.doc.readyState='complete';
+  x.route.receive('neu');
+  x.tick();x.tick();x.tick();
+  assert.deepEqual(x.clicked,[]);
+  loaded=true;
+  x.buttons.sperrschirm={isConnected:true};
+  x.tick();
+  assert.deepEqual(x.clicked,[]);
+  delete x.buttons.sperrschirm;
+  x.tick();
+  assert.deepEqual(x.clicked,['btn-new-bottom']);
+  x.route.stop();
+});
+
+test('native shortcut fails closed when readiness throws or action is aria-disabled', () => {
+  let loaded=false;
+  const x=setup(()=>{if(!loaded)throw new Error('not initialized');return true;});
+  x.doc.readyState='complete';
+  x.route.receive('dokumente');
+  x.tick();x.tick();x.tick();
+  assert.deepEqual(x.clicked,[]);
+  loaded=true;
+  x.buttons['hl-dok'].getAttribute=()=> 'true';
+  x.tick();
+  assert.deepEqual(x.clicked,[]);
+  x.buttons['hl-dok'].getAttribute=()=>null;
+  x.tick();
+  assert.deepEqual(x.clicked,['hl-dok']);
+  x.route.stop();
 });
