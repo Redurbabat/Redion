@@ -15199,6 +15199,12 @@ body[data-bewegung="ruhig"] .sp-wrap .sp-flaeche .sp-umgelegt .sp-klinge{animati
 .sp-wrap.sp-fach-offen > :is(.sp-batterie-fach,.sp-relais-fach,.sp-pruef-fach):not([hidden]) { bottom: 220px; max-height: min(55vh, calc(100% - 300px)); }
 .sp-wrap.sp-fach-offen .sp-werkzeuge { z-index: 48; }
 .sp-wrap[data-electro-context="simulation"] .sp-sim-back { display: none; }
+.sp-pruef-kombinationen { padding: 12px; border-block-start: 1px solid var(--line); }
+.sp-pruef-kombinationen summary { min-height: var(--touch-min); cursor: pointer; }
+.sp-pruef-kombinationen fieldset { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-block: 8px; }
+.sp-pruef-kombinationen label { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: var(--touch-min); }
+.sp-pruef-kombinationen :is(select,input[type="text"],button) { min-height: var(--touch-min); max-width: 100%; }
+.sp-pruef-kombinationen [data-kombinationen] { margin-block-start: 8px; overflow-wrap: anywhere; }
 
 </style>
 <style>
@@ -24130,6 +24136,9 @@ body:not([data-dokument="an"]):has(.blatt-reihe[data-lage="unten"]) :is(.zm-pill
   content:""; position:absolute; left:-10px; top:4px; bottom:4px; width:3px;
   border-radius:2px; opacity:.65}
 .blk[data-herkunft="ki"]::before{background:var(--c-purple)}
+/* Die Herkunft bleibt im Blockmenü. Am hohen Schaltplan steht nur bei
+   aktiver Blockauswahl eine sichtbare Markierung. */
+.blk.b-schaltplan[data-herkunft="ki"]:not(.gewaehlt)::before{content:none}
 .blk[data-herkunft="quelle"]::before{background:var(--c-blue)}
 .blk[data-herkunft="fremd"]::before{background:var(--c-orange)}
 
@@ -31642,7 +31651,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1708, inhalt: 'eec339f92eb18fda', gebaut: '2026-11-26T22:51:31.609Z' };
+const Stand = { fassung: 1711, inhalt: '9807ab1c6dcb6bd9', gebaut: '2026-11-26T22:58:45.678Z' };
 window.Stand = Stand;
 
 </script>
@@ -73325,7 +73334,7 @@ const Stromfluss = (() => {
         bewegungsmelder: { art: 'schalter', stellungen: AUF_ZU('L', 'L′') },
         'bp-daemmerung': { art: 'schalter', stellungen: AUF_ZU('L', 'L′') }
     };
-    const verhalten = (zeichenId) => VERHALTEN[zeichenId] || null;
+    const verhalten = (zeichenId) => Object.hasOwn(VERHALTEN, zeichenId) ? VERHALTEN[zeichenId] : null;
     const stellungenVon = (zeichenId) => {
         const v = VERHALTEN[zeichenId];
         return (v && v.stellungen) ? v.stellungen : [];
@@ -73975,6 +73984,7 @@ const Stromfluss = (() => {
             return mitFehlern(erg);
         const gesehen = new Set();
         let runde = 1;
+        let konvergiert = false;
         const MAX = 24;
         while (runde < MAX) {
             const naechster = Object.assign({}, stellung);
@@ -73993,8 +74003,10 @@ const Stromfluss = (() => {
                 naechster[`d:${t.id}`] = (w && w.I < -SCHWELLE) ? 1 : 0;
             });
             const schluessel = JSON.stringify(naechster);
-            if (schluessel === JSON.stringify(stand))
+            if (schluessel === JSON.stringify(stand)) {
+                konvergiert = true;
                 break;
+            }
             if (gesehen.has(schluessel)) {
                 erg.warnungen.push('Die Steuerung kommt nicht zur Ruhe — ein Kontakt schaltet die Spule ab, die ihn hält. In echt ist das ein Blinker.');
                 break;
@@ -74009,6 +74021,9 @@ const Stromfluss = (() => {
             runde++;
         }
         erg.durchgaenge = runde;
+        erg.konvergiert = konvergiert;
+        if (!konvergiert && runde === MAX)
+            erg.warnungen.push('Die Steuerung hat innerhalb der Rechengrenze keinen stabilen Zustand erreicht.');
         if (zeitAusgaenge)
             erg.annahmen = erg.annahmen.filter(a => a !== ZEIT_ANNAHME);
         const gemeldet = new Set();
@@ -74347,8 +74362,57 @@ const Stromfluss = (() => {
         }
         return `${wert.toExponential(2)} ${einheit}`;
     };
+    const pruefeSchalter = (plan, schalterIds, zielId, soll) => {
+        if (!Array.isArray(plan?.teile) || !Array.isArray(plan?.leitungen) ||
+            plan.teile.length > 120 || plan.leitungen.length > 200)
+            throw new Error('Für den Prüflauf einen Teilplan mit höchstens 120 Bauteilen und 200 Leitungen wählen.');
+        const bauteile = plan.teile;
+        const teile = new Map();
+        for (const teil of bauteile) {
+            if (typeof teil?.id !== 'string' || !teil.id || teile.has(teil.id))
+                throw new Error('Die Bauteilkennungen müssen eindeutig sein.');
+            teile.set(teil.id, teil);
+        }
+        const nichtModelliert = bauteile.filter(teil => !verhalten(teil.zeichen))
+            .map(teil => ({ id: teil.id, symbol: teil.zeichen }));
+        if (nichtModelliert.length)
+            return { status: 'nicht_modelliert', nichtModelliert, faelle: [] };
+        if (!teile.has(zielId))
+            throw new Error('Das zu prüfende Bauteil fehlt.');
+        if (!schalterIds.length || schalterIds.length > 6 || new Set(schalterIds).size !== schalterIds.length)
+            throw new Error('Ein bis sechs verschiedene Handschalter angeben.');
+        const anzahlJeSchalter = schalterIds.map(id => {
+            const modell = verhalten(teile.get(id)?.zeichen ?? '');
+            if (!modell?.stellungen || modell.stellungen.length < 2 || modell.folgtSpule)
+                throw new Error('Kein manuell umschaltbares Bauteil: ' + id);
+            return modell.stellungen.length;
+        });
+        const anzahl = anzahlJeSchalter.reduce((produkt, n) => produkt * n, 1);
+        if (anzahl > 32 || soll.length !== anzahl || Array.from(soll).some(wert => typeof wert !== 'boolean'))
+            throw new Error('Genau einen booleschen Sollwert je Kombination angeben. Höchstens 32 Kombinationen je Prüfauftrag.');
+        const faelle = Array.from({ length: anzahl }, (_wert, index) => {
+            let rest = index;
+            const stellung = Object.create(null);
+            for (let spalte = schalterIds.length - 1; spalte >= 0; spalte--) {
+                const basis = anzahlJeSchalter[spalte];
+                stellung[schalterIds[spalte]] = rest % basis;
+                rest = Math.floor(rest / basis);
+            }
+            const ergebnis = rechne(plan, stellung);
+            const glieder = Object.values(ergebnis.teilwerte[zielId] ?? {});
+            const messung = ergebnis.werte[zielId];
+            const messbar = messung || glieder.length;
+            const ist = ergebnis.ok && ergebnis.konvergiert && messbar
+                ? (glieder.length ? glieder.some(wert => wert.fliesst) : messung.fliesst) : null;
+            return { stellung, erwartet: soll[index], ist, bestanden: ist === soll[index],
+                fehler: ergebnis.fehler, anschlussfehler: ergebnis.anschlussfehler,
+                warnungen: ergebnis.warnungen, annahmen: ergebnis.annahmen };
+        });
+        return { status: faelle.every(fall => fall.bestanden) ? 'bestanden' : 'fehlgeschlagen',
+            faelle, nichtModelliert };
+    };
     return {
-        VERHALTEN, verhalten, stellungenVon, netze, rechne, zeige, loese,
+        VERHALTEN, verhalten, stellungenVon, netze, rechne, pruefeSchalter, zeige, loese,
         loeseKomplex, leiterrollen,
         klemmen, aufStrecke
     };
@@ -78091,6 +78155,57 @@ const Planflaeche = (() => {
                 `<button type="button" data-p-a="json">Prüfbericht JSON</button>` +
                 `<button type="button" data-p-a="aufraeumen" title="Redundante Zwischenpunkte entfernen – Anschlusspunkte bleiben erhalten">Leitungen aufräumen</button>` +
                 `</div><div class="sp-pruef-liste">${liste}</div>`;
+            if (pruefAnsicht === 'diagnose' && typeof Stromfluss !== 'undefined') {
+                const teile = z.plan.teile;
+                const schalter = teile.filter(teil => {
+                    const modell = Stromfluss.verhalten(teil.zeichen);
+                    return (modell?.stellungen?.length || 0) >= 2 && !modell?.folgtSpule;
+                });
+                if (schalter.length) {
+                    const name = (teil) => esc(teil.bmk || teil.zeichen);
+                    const formular = document.createElement('form');
+                    formular.className = 'sp-pruef-kombinationen';
+                    formular.innerHTML = `<details><summary>Schalterkombinationen prüfen</summary>` +
+                        `<fieldset><legend>Handschalter in der angezeigten Reihenfolge</legend>` +
+                        schalter.map(teil => `<label><input type="checkbox" name="schalter" value="${esc(teil.id)}"> ${name(teil)}</label>`).join('') +
+                        `</fieldset><label>Verbraucher<select name="ziel" required><option value="">Auswählen</option>` +
+                        teile.filter(teil => !schalter.includes(teil)).map(teil => `<option value="${esc(teil.id)}">${name(teil)}</option>`).join('') +
+                        `</select></label><label>Sollfolge (1 = Strom, 0 = kein Strom)` +
+                        `<input name="soll" type="text" inputmode="numeric" pattern="[01]+" maxlength="32" required></label>` +
+                        `<p>Alle Schalter starten auf Stellung 0. Der letzte gewählte Schalter wechselt am schnellsten.</p>` +
+                        `<button type="submit">Kombinationen prüfen</button><div role="status" data-kombinationen></div></details>`;
+                    formular.addEventListener('submit', e => {
+                        e.preventDefault();
+                        const eingabe = new FormData(formular);
+                        const ausgabe = formular.querySelector('[data-kombinationen]');
+                        try {
+                            const ids = eingabe.getAll('schalter').map(String);
+                            const soll = Array.from(String(eingabe.get('soll')), zeichen => zeichen === '1');
+                            const bericht = Stromfluss.pruefeSchalter(z.plan, ids, String(eingabe.get('ziel')), soll);
+                            if (bericht.status === 'nicht_modelliert') {
+                                ausgabe.textContent = 'Ohne Simulationsmodell: ' + bericht.nichtModelliert.map(teil => teil.symbol).join(', ');
+                                return;
+                            }
+                            ausgabe.textContent = bericht.faelle.filter(fall => fall.bestanden).length + ' von ' + bericht.faelle.length + ' bestanden';
+                            const liste = document.createElement('ol');
+                            for (const fall of bericht.faelle) {
+                                const zeile = document.createElement('li');
+                                const stellung = ids.map(id => fall.stellung[id]).join(' / ');
+                                const ist = fall.ist === null ? 'nicht berechenbar' : fall.ist ? '1' : '0';
+                                zeile.textContent = `${stellung} · Soll ${Number(fall.erwartet)} · Ist ${ist} · ${fall.bestanden ? 'Bestanden' : 'Fehlgeschlagen'}`;
+                                if (fall.fehler || fall.warnungen.length)
+                                    zeile.append(' · ' + [fall.fehler, ...fall.warnungen].filter(Boolean).join(' '));
+                                liste.append(zeile);
+                            }
+                            ausgabe.append(liste);
+                        }
+                        catch (fehler) {
+                            ausgabe.textContent = fehler instanceof Error ? fehler.message : 'Prüfung fehlgeschlagen.';
+                        }
+                    });
+                    pruefPanel.append(formular);
+                }
+            }
             pruefFiltern();
         };
         const pruefFiltern = () => {

@@ -1327,6 +1327,57 @@ const Planflaeche = (() => {
                 `<button type="button" data-p-a="json">Prüfbericht JSON</button>` +
                 `<button type="button" data-p-a="aufraeumen" title="Redundante Zwischenpunkte entfernen – Anschlusspunkte bleiben erhalten">Leitungen aufräumen</button>` +
                 `</div><div class="sp-pruef-liste">${liste}</div>`;
+            if (pruefAnsicht === 'diagnose' && typeof Stromfluss !== 'undefined') {
+                const teile = z.plan.teile;
+                const schalter = teile.filter(teil => {
+                    const modell = Stromfluss.verhalten(teil.zeichen);
+                    return (modell?.stellungen?.length || 0) >= 2 && !modell?.folgtSpule;
+                });
+                if (schalter.length) {
+                    const name = (teil) => esc(teil.bmk || teil.zeichen);
+                    const formular = document.createElement('form');
+                    formular.className = 'sp-pruef-kombinationen';
+                    formular.innerHTML = `<details><summary>Schalterkombinationen prüfen</summary>` +
+                        `<fieldset><legend>Handschalter in der angezeigten Reihenfolge</legend>` +
+                        schalter.map(teil => `<label><input type="checkbox" name="schalter" value="${esc(teil.id)}"> ${name(teil)}</label>`).join('') +
+                        `</fieldset><label>Verbraucher<select name="ziel" required><option value="">Auswählen</option>` +
+                        teile.filter(teil => !schalter.includes(teil)).map(teil => `<option value="${esc(teil.id)}">${name(teil)}</option>`).join('') +
+                        `</select></label><label>Sollfolge (1 = Strom, 0 = kein Strom)` +
+                        `<input name="soll" type="text" inputmode="numeric" pattern="[01]+" maxlength="32" required></label>` +
+                        `<p>Alle Schalter starten auf Stellung 0. Der letzte gewählte Schalter wechselt am schnellsten.</p>` +
+                        `<button type="submit">Kombinationen prüfen</button><div role="status" data-kombinationen></div></details>`;
+                    formular.addEventListener('submit', e => {
+                        e.preventDefault();
+                        const eingabe = new FormData(formular);
+                        const ausgabe = formular.querySelector('[data-kombinationen]');
+                        try {
+                            const ids = eingabe.getAll('schalter').map(String);
+                            const soll = Array.from(String(eingabe.get('soll')), zeichen => zeichen === '1');
+                            const bericht = Stromfluss.pruefeSchalter(z.plan, ids, String(eingabe.get('ziel')), soll);
+                            if (bericht.status === 'nicht_modelliert') {
+                                ausgabe.textContent = 'Ohne Simulationsmodell: ' + bericht.nichtModelliert.map(teil => teil.symbol).join(', ');
+                                return;
+                            }
+                            ausgabe.textContent = bericht.faelle.filter(fall => fall.bestanden).length + ' von ' + bericht.faelle.length + ' bestanden';
+                            const liste = document.createElement('ol');
+                            for (const fall of bericht.faelle) {
+                                const zeile = document.createElement('li');
+                                const stellung = ids.map(id => fall.stellung[id]).join(' / ');
+                                const ist = fall.ist === null ? 'nicht berechenbar' : fall.ist ? '1' : '0';
+                                zeile.textContent = `${stellung} · Soll ${Number(fall.erwartet)} · Ist ${ist} · ${fall.bestanden ? 'Bestanden' : 'Fehlgeschlagen'}`;
+                                if (fall.fehler || fall.warnungen.length)
+                                    zeile.append(' · ' + [fall.fehler, ...fall.warnungen].filter(Boolean).join(' '));
+                                liste.append(zeile);
+                            }
+                            ausgabe.append(liste);
+                        }
+                        catch (fehler) {
+                            ausgabe.textContent = fehler instanceof Error ? fehler.message : 'Prüfung fehlgeschlagen.';
+                        }
+                    });
+                    pruefPanel.append(formular);
+                }
+            }
             pruefFiltern();
         };
         const pruefFiltern = () => {

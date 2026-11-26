@@ -19,7 +19,7 @@ eigenen Adapter unter `plugins/red-ion/` und `windows/`.
 | Blockeditor und Formate · `src/register/bloecke.ts`, `textstile.ts`, `aktionen.ts`, `src/bereiche/editor/` | Blockkatalog, Text ändern, formatieren, verschieben, verschachteln | Blockkatalog, Listen/Lesen, Anfügen, Teilmenge der Blockänderungen, Textersetzung | Verschachtelung, Umordnen, Duplizieren, Typ- und Stilfelder, Cover, Inhaltsverzeichnis, Vorlagen und Undo | Web/iOS/Windows-Oberfläche, Lese- bzw. Schreibscope und Seitenrechte | Cloud-Route und Katalogabgleich |
 | Mindmap, Whiteboard und A4 · `server/mcp/visual-blocks.ts`, `src/bereiche/bloecke/arten/zeichenflaeche.ts`, `src/core/gfx/` | Native Formen, Knoten, Stift und Papier bearbeiten | Fünf Werkzeuge für Erstellen/Lesen/Bearbeiten. Versionsprüfung und Elemente mit nativen IDs | Anordnung, Gruppierung, umfassende Formatierung, Layout, geprüfte Koordinaten, paginierte Knoten, frei platzierte A4-Inhalte | Gemeinsames Web-Rendering für Web/iOS/Windows, eingebetteter Klartextblock, Seitenrechte | Route mit nativen Datensätzen. Plattformbedienung gesondert offen |
 | Schaltplan und Fachzeichen · `src/register/fachzeichen.ts`, `src/bereiche/bloecke/arten/{schaltplan,planflaeche,schaltplan-pruefung}.ts`, `server/mcp/schematic-edit.ts` | Zeichnen, Symbole und Leitungen einsetzen, Prüfung öffnen | Fachzeichenliste, nativen Plan anlegen/lesen, Bauteile und Texte einsetzen/verschieben, Klemmen verbinden, bis zu 20 Schritte atomar bearbeiten | Verbundene Bauteile verschieben, kontrolliert entfernen, Layout und Netzprüfung | Web/iOS/Windows-Oberfläche, Planrechte, Versionsbindung | HTTP-Tests für Einzelaktion, atomaren Batch, Konflikt und zurückgerollte Eingabe |
-| Simulation · `src/bereiche/elektro/simulation.ts`, `src/bereiche/bloecke/arten/{planflaeche,relais-kern,relais-werkstatt,relais-vorlagen}.ts` | Start, Schalter, Labor, Messwerte, Relaismodelle | Eigenständige Simulationsaktion fehlt | Bestehenden graphbasierten Kern gemeinsam nutzbar machen, Abdeckung der Bauteilmodelle und Erwartungstests belegen, Zeit und Messung fernsteuern | Web/iOS/Windows-Oberfläche, Simulatorzugriff künftig an Planrechte binden | Kern und Eintrittspunkte identifiziert. Geforderte Abnahme offen |
+| Simulation · `src/bereiche/elektro/simulation.ts`, `src/bereiche/bloecke/arten/{planflaeche,relais-kern,relais-werkstatt,relais-vorlagen}.ts` | Start, Schalter, Labor, Messwerte, Relaismodelle | Eigenständige Simulationsaktion fehlt | Bestehenden graphbasierten Kern für MCP zugänglich machen, mehr Sollwertfälle prüfen, Zeit und Messung fernsteuern | Web/iOS/Windows-Oberfläche, Simulatorzugriff künftig an Planrechte binden | Schema 6 mit acht Soll-/Ist-Fällen, fehlendem Rückleiter und unbekanntem Modell geprüft. Prüfzentrum in Chromium bei drei Breiten bedient |
 | Datenbanken und Tabellen · `src/bereiche/datenbanken/`, `src/register/{ansichten,eigenschaften,formeln}.ts` | Schema, Zeilen, Filter, Board, Kalender, Berechnungen | Datenbanken auflisten und lesen | Versionierte atomare Schreiboperationen, Ansichten, CSV/Excel, kontrollierte Löschung | Web/iOS/Windows-Oberfläche, Seiten-, Zeilen- und Feldrechte | Leserechtetests |
 | Lernen · `src/bereiche/wissen/trainer.ts`, `server/mcp/learning-card.ts` | Trainer, Karten, Quiz, Fortschritt | Einzelne Lernkarten und atomare Sets, kleine Rasterbilder | Abfrage, Nachbearbeitung, Statistik, Import/Export und weitere Übungsformen | Web/iOS/Windows-Oberfläche, Schreibrechte auf Zielseite | Synthetischer Cloud-Route- und Formatnachweis |
 | Dateien, PDF, Import/Export · `src/bereiche/dateien/`, `src/bereiche/pdf/`, `src/kern/ablage/` | Datei öffnen, PDF markieren, sichern, importieren | Blockbezogene Metadaten über lesbare Seiten | Medienbytes mit Eigentümerkette, PDF-Paginierung, Tinte, OCR, Formate und Wiederherstellung | Browser und native Dateiadapter, Dateirechte und Größenlimits | Plattform- und Inhaltstests offen |
@@ -33,3 +33,20 @@ Für Nutzeraktionen bleiben die Register `bloecke`, `aktionen`, `befehle`,
 registrierte Aktion zählt erst nach Zuordnung und überprüftem Aufruf als
 MCP-Funktionsparität. Für den produktiven Connector ist sein tatsächlich
 angebotener Vertrag einzeln nachzuweisen.
+
+## Prüfstand des ersten Umsetzungsschritts
+
+- 70 Cloud-MCP-Tests und 3 Connector-Vertragstests bestanden. Der synthetische
+  Cloudflare-Worker-/D1-Lauf und der Connector-Export bestanden für `67f73e1c`.
+- Fünf lokale Sync-Vertragstests bestanden. Die Aktualisierung auf verbundenen
+  Geräten und der produktive Cloud-Endpunkt sind noch offen.
+- `npm run typecheck`, `npm run typecheck:mcp`, Web-Einzeldatei und
+  Offline-Dienststand wurden mit den Projektwerkzeugen geprüft.
+- `Stromfluss.pruefeSchalter` prüft 1 bis 32 Zustandskombinationen aus der
+  Ruhelage gegen explizite Sollwerte. Der letzte gewählte Handschalter wechselt
+  am schnellsten. Unbekannte Modelle und instabile oder fehlende Messwerte
+  dürfen keinen Erfolg auslösen. Zeitabhängige Sequenzen brauchen weitere Tests.
+- Die violette Linie war das CSS-Pseudoelement der KI-Herkunft am Schaltplan.
+  Drei Chromium-Breiten prüfen den normalen Block, eine aktive Auswahl und
+  die Herkunftsmarkierung an Textblöcken. Vorher-/Nachher-Bilder und Bilder
+  des Prüfzentrums enthalten synthetische Daten.

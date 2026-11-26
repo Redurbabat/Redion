@@ -467,7 +467,7 @@ const Stromfluss = (() => {
 
   /** Was ein Symbol elektrisch ist — `null`, wenn es nur gezeichnet wird. */
   const verhalten = (zeichenId: string): Verhalten | null =>
-    VERHALTEN[zeichenId] || null;
+    Object.hasOwn(VERHALTEN, zeichenId) ? VERHALTEN[zeichenId]! : null;
 
   /** Wie viele Stellungen ein Bauteil hat (1 = nicht schaltbar). */
   const stellungenVon = (zeichenId: string): Stellung[] => {
@@ -908,6 +908,8 @@ const Stromfluss = (() => {
 
   type Ergebnis = {
     ok: boolean;
+    /** False, wenn der letzte berechenbare Zustand nur ein Zwischenstand ist. */
+    konvergiert?: boolean;
     /** Was schiefging, in einem Satz für den Menschen. */
     fehler: string;
     /** Spannung je Netz, Netznummer → Volt. Bei Wechselstrom der Effektivwert. */
@@ -1572,6 +1574,7 @@ const Stromfluss = (() => {
 
     const gesehen = new Set<string>();
     let runde = 1;
+    let konvergiert = false;
     const MAX = 24;
     while (runde < MAX) {
       const naechster: Record<string, number> = Object.assign({}, stellung);
@@ -1593,7 +1596,7 @@ const Stromfluss = (() => {
       });
 
       const schluessel = JSON.stringify(naechster);
-      if (schluessel === JSON.stringify(stand)) break;
+      if (schluessel === JSON.stringify(stand)) { konvergiert = true; break; }
       if (gesehen.has(schluessel)) {
         erg.warnungen.push('Die Steuerung kommt nicht zur Ruhe — ein Kontakt schaltet die Spule ab, die ihn hält. In echt ist das ein Blinker.');
         break;
@@ -1608,6 +1611,9 @@ const Stromfluss = (() => {
     }
 
     erg.durchgaenge = runde;
+    erg.konvergiert = konvergiert;
+    if (!konvergiert && runde === MAX)
+      erg.warnungen.push('Die Steuerung hat innerhalb der Rechengrenze keinen stabilen Zustand erreicht.');
     if (zeitAusgaenge) erg.annahmen = erg.annahmen.filter(a => a !== ZEIT_ANNAHME);
 
     /* Überbrückte Bauteile melden.
@@ -2103,8 +2109,60 @@ const Stromfluss = (() => {
     return `${wert.toExponential(2)} ${einheit}`;
   };
 
+  /** Prüft alle Stellungen der angegebenen Handschalter aus der Ruhelage.
+   * Die Sollwerte stammen vom Prüfauftrag, nie aus der Rechnung selbst.
+   * Der letzte Schalter wechselt am schnellsten. Es wird kein Plan gespeichert. */
+  const pruefeSchalter = (plan: any, schalterIds: readonly string[], zielId: string,
+                          soll: readonly boolean[]) => {
+    if (!Array.isArray(plan?.teile) || !Array.isArray(plan?.leitungen) ||
+        plan.teile.length > 120 || plan.leitungen.length > 200)
+      throw new Error('Für den Prüflauf einen Teilplan mit höchstens 120 Bauteilen und 200 Leitungen wählen.');
+    const bauteile = plan.teile as { id: string; zeichen: string }[];
+    const teile = new Map<string, { id: string; zeichen: string }>();
+    for (const teil of bauteile) {
+      if (typeof teil?.id !== 'string' || !teil.id || teile.has(teil.id))
+        throw new Error('Die Bauteilkennungen müssen eindeutig sein.');
+      teile.set(teil.id, teil);
+    }
+    const nichtModelliert = bauteile.filter(teil => !verhalten(teil.zeichen))
+      .map(teil => ({ id: teil.id, symbol: teil.zeichen }));
+    if (nichtModelliert.length) return { status: 'nicht_modelliert' as const, nichtModelliert, faelle: [] };
+    if (!teile.has(zielId)) throw new Error('Das zu prüfende Bauteil fehlt.');
+    if (!schalterIds.length || schalterIds.length > 6 || new Set(schalterIds).size !== schalterIds.length)
+      throw new Error('Ein bis sechs verschiedene Handschalter angeben.');
+    const anzahlJeSchalter = schalterIds.map(id => {
+      const modell = verhalten(teile.get(id)?.zeichen ?? '');
+      if (!modell?.stellungen || modell.stellungen.length < 2 || modell.folgtSpule)
+        throw new Error('Kein manuell umschaltbares Bauteil: ' + id);
+      return modell.stellungen.length;
+    });
+    const anzahl = anzahlJeSchalter.reduce((produkt, n) => produkt * n, 1);
+    if (anzahl > 32 || soll.length !== anzahl || Array.from(soll).some(wert => typeof wert !== 'boolean'))
+      throw new Error('Genau einen booleschen Sollwert je Kombination angeben. Höchstens 32 Kombinationen je Prüfauftrag.');
+    const faelle = Array.from({ length: anzahl }, (_wert, index) => {
+      let rest = index;
+      const stellung: Record<string, number> = Object.create(null);
+      for (let spalte = schalterIds.length - 1; spalte >= 0; spalte--) {
+        const basis = anzahlJeSchalter[spalte]!;
+        stellung[schalterIds[spalte]!] = rest % basis;
+        rest = Math.floor(rest / basis);
+      }
+      const ergebnis = rechne(plan, stellung);
+      const glieder = Object.values(ergebnis.teilwerte[zielId] ?? {});
+      const messung = ergebnis.werte[zielId];
+      const messbar = messung || glieder.length;
+      const ist = ergebnis.ok && ergebnis.konvergiert && messbar
+        ? (glieder.length ? glieder.some(wert => wert.fliesst) : messung!.fliesst) : null;
+      return { stellung, erwartet: soll[index]!, ist, bestanden: ist === soll[index],
+        fehler: ergebnis.fehler, anschlussfehler: ergebnis.anschlussfehler,
+        warnungen: ergebnis.warnungen, annahmen: ergebnis.annahmen };
+    });
+    return { status: faelle.every(fall => fall.bestanden) ? 'bestanden' as const : 'fehlgeschlagen' as const,
+      faelle, nichtModelliert };
+  };
+
   return {
-    VERHALTEN, verhalten, stellungenVon, netze, rechne, zeige, loese,
+    VERHALTEN, verhalten, stellungenVon, netze, rechne, pruefeSchalter, zeige, loese,
     loeseKomplex, leiterrollen,
     /* für Prüfungen sichtbar gemacht */ klemmen, aufStrecke
   };
