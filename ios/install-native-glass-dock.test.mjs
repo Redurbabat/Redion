@@ -207,3 +207,47 @@ test('iPhone library presents a native action sheet while keeping Redion action 
   assert.match(menu,/catch \{[\s\S]*?restore\(\)/);
   assert.doesNotMatch(menu,/localStorage|indexedDB|Store\.|Register\.aktionen\.tun/);
 });
+
+test('native library bridge supports mobile sheet without desktop role and safely falls back', async () => {
+  const source=fs.readFileSync(new URL('./native-library-actions.swift',import.meta.url),'utf8');
+  const bridge=source.match(/private static let bridge = #"""([\s\S]*?)"""#/)[1];
+  for (const mode of ['select','cancel','unavailable','locked']) {
+    let listener, callback, menu=null, clicks=0, cancelled=0, posted=0;
+    const attrs=new Map([['aria-label','Aktionen für „Testdokument“'],['aria-expanded','true']]);
+    const anchor={isConnected:true,disabled:false,getAttribute:k=>attrs.get(k)??null};
+    const node=(initial={})=>{
+      const map=new Map(Object.entries(initial));
+      return {style:{visibility:''},getAttribute:k=>map.get(k)??null,
+        setAttribute:(k,v)=>map.set(k,v),removeAttribute:k=>map.delete(k)};
+    };
+    const button={disabled:false,hidden:false,isConnected:true,getAttribute:()=>null,
+      getClientRects:()=>[1],hasAttribute:()=>false,classList:{contains:()=>false},
+      cloneNode:()=>({querySelectorAll:()=>[],textContent:'Öffnen'}),click(){clicks++;}};
+    const backdrop=node({'aria-hidden':'true'});
+    const sheet={...node({'aria-label':'Testdokument'}),isConnected:true,
+      classList:{contains:k=>k==='blatt'},
+      querySelector:k=>k==='.blatt-titel'?{textContent:'Testdokument'}:null,
+      querySelectorAll:()=>[button]};
+    let locked=false;
+    const document={hidden:false,getElementById:()=>locked?{}:null,
+      addEventListener:(name,fn)=>{if(name==='click')listener=fn;},
+      querySelector:k=>k==='.menu-grund'?backdrop:k.includes('.menu.blatt')?menu:null,
+      dispatchEvent:()=>{cancelled++;}};
+    const window={webkit:{messageHandlers:{redionLibraryActions:{async postMessage(payload){
+      posted++;assert.equal(payload.title,'Testdokument');
+      assert.equal(sheet.style.visibility,'hidden');
+      if(mode==='unavailable')throw Error('native unavailable');
+      if(mode==='locked')locked=true;
+      return mode==='cancel'?-1:0;
+    }}}}};
+    vm.runInNewContext(bridge,{document,window,setTimeout:fn=>{callback=fn;},KeyboardEvent:class {}});
+    listener({isTrusted:true,detail:1,target:{closest:()=>anchor}});
+    menu=sheet;
+    await callback();
+    assert.equal(posted,1);
+    assert.equal(clicks,mode==='select'?1:0);
+    assert.equal(cancelled,['cancel','locked'].includes(mode)?1:0);
+    assert.equal(sheet.style.visibility,'');
+    assert.equal(backdrop.getAttribute('aria-hidden'),'true');
+  }
+});

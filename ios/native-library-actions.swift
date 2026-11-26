@@ -6,11 +6,12 @@
 import UIKit
 import WebKit
 
-private final class RedionNativeLibraryActions: NSObject, WKScriptMessageHandlerWithReply {
+private final class RedionNativeLibraryActions: NSObject, WKScriptMessageHandlerWithReply, UIAdaptivePresentationControllerDelegate {
     static let shared = RedionNativeLibraryActions()
     private weak var installedWebView: WKWebView?
     private weak var activeSheet: UIAlertController?
     private var retries = 0
+    private var cancelActive: (() -> Void)?
 
     static func start() {
         let instance = shared
@@ -86,6 +87,7 @@ private final class RedionNativeLibraryActions: NSObject, WKScriptMessageHandler
                     }
                 } else {
                     self?.activeSheet = nil
+                    self?.cancelActive = nil
                     replyHandler(index, nil)
                 }
             }
@@ -101,7 +103,16 @@ private final class RedionNativeLibraryActions: NSObject, WKScriptMessageHandler
             popover.sourceRect = CGRect(x: root.view.bounds.midX, y: root.view.bounds.maxY - 1, width: 1, height: 1)
             popover.permittedArrowDirections = []
         }
-        root.present(sheet, animated: true)
+        cancelActive = { finish(-1) }
+        sheet.presentationController?.delegate = self
+        root.present(sheet, animated: true) { [weak self, weak sheet] in
+            sheet?.presentationController?.delegate = self
+        }
+    }
+
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        guard presentationController.presentedViewController === activeSheet else { return }
+        cancelActive?()
     }
 
     private static let bridge = #"""
@@ -110,6 +121,8 @@ private final class RedionNativeLibraryActions: NSObject, WKScriptMessageHandler
       window.__redionLibraryActionsInstalled = true;
       let busy = false;
       const selector = '.bib-deckel-mehr[data-mehr-id]';
+      // Mobile Menue.menu() returns a .blatt before applying desktop role=menu.
+      const menuSelector = '.menu.blatt, .menu[role="menu"]';
       document.addEventListener('click', event => {
         // Only an actual user tap on a library card's original action button.
         if (!event.isTrusted || event.detail === 0 || busy ||
@@ -118,15 +131,23 @@ private final class RedionNativeLibraryActions: NSObject, WKScriptMessageHandler
         if (!anchor || anchor.disabled || anchor.getAttribute('aria-disabled') === 'true') return;
         const handler = window.webkit?.messageHandlers?.redionLibraryActions;
         if (!handler) return;
-        const previous = document.querySelector('.menu[role="menu"]');
+        const previous = document.querySelector(menuSelector);
         // Capture only observes. The existing click handler creates the
         // authorized menu (it stops bubbling); read it after that event.
         setTimeout(async () => {
           if (busy || document.hidden || document.getElementById('sperrschirm') ||
               !anchor.isConnected || anchor.getAttribute('aria-expanded') !== 'true') return;
-          const menu = document.querySelector('.menu[role="menu"]');
+          const menu = document.querySelector(menuSelector);
           if (!menu || menu === previous || !menu.isConnected ||
               menu.querySelector('.ru-tropfen-kopf, input, select, textarea')) return;
+          // The selected card must still own this specific menu. Otherwise
+          // leave the DOM menu alone rather than forwarding a stale action.
+          const cardLabel = anchor.getAttribute('aria-label') || '';
+          const label = menu.getAttribute('aria-label') || '';
+          if (menu.classList.contains('blatt')) {
+            const heading = (menu.querySelector('.blatt-titel')?.textContent || '').trim();
+            if (!heading || cardLabel !== 'Aktionen für „' + heading + '“') return;
+          } else if (label !== cardLabel.slice(0,120)) return;
           const buttons = [...menu.querySelectorAll('button[data-a]')]
             .filter(b => !b.disabled && !b.hidden && b.getAttribute('aria-disabled') !== 'true' && b.getClientRects().length);
           const rows = buttons.map(b => {
