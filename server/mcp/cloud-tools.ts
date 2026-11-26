@@ -240,6 +240,29 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     if(!Number.isSafeInteger(v)||Number(v)<1)return err('invalid_arguments','expectedVersion muss eine positive ganze Zahl sein.');
     return Number(v);
   };
+  /** A block's seite field alone never grants access to a detached record. */
+  const embedding=async(w:string,pageId:string,id:string,data:Args)=>{
+    let childId=id;
+    let parentId=data.parentId;
+    const seen=new Set([id]);
+    const snapshots:{id:string;version:number}[]=[];
+    for(let depth=0;depth<40;depth++){
+      if(typeof parentId!=='string'||!parentId||parentId.length>128||seen.has(parentId))break;
+      seen.add(parentId);
+      const row=await ablage.hole('saetze',{bereich:w,id:parentId});
+      if(!row||row.tabelle!=='blocks'||row.geloescht||row.verschluesselt||row.seite!==pageId)break;
+      let parent:Args;
+      try{parent=JSON.parse(String(row.daten));}catch{break;}
+      if(!parent||parent.alive===false||parent.archiviert===true||parent.parentTable==='collection'||
+          !Array.isArray(parent.content)||!parent.content.includes(childId))break;
+      snapshots.push({id:parentId,version:Number(row.version)});
+      if(parentId===pageId&&parent.type==='page')return snapshots;
+      if(parent.type==='page')break;
+      childId=parentId;
+      parentId=parent.parentId;
+    }
+    return err('not_found','Block ist nicht auf einer lesbaren Seite eingebettet.');
+  };
   const update=async(w:string,id:string,old:number,updated:Record<string,unknown>,guardParent?:string)=>{
     const payload=JSON.stringify(updated);
     if(payload.length>64000)return err('invalid_arguments','Seite ist für diese Änderung zu gross.');
@@ -398,6 +421,10 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const pageId=String(s.seite||'');
       if(!pageId)return err('not_found','Block nicht verfügbar.');
       await page(w,pageId,'lesen');
+      if(data.type==='schaltplan'){
+        if(data.archiviert===true)return err('not_found','Schaltplan nicht verfügbar.');
+        await embedding(w,pageId,id,data);
+      }
       // Do not fail on a page with >40 children: return a bounded visible
       // window and a continuation cursor. Older clients can read page 1.
       const childOffset=args.childOffset===undefined?0:args.childOffset;
@@ -1089,9 +1116,10 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       try{data=JSON.parse(String(s.daten||'')) as Record<string,unknown>;}
       catch{return err('invalid_data','Schaltplanblock ist nicht lesbar.');}
       if(!data||typeof data!=='object'||Array.isArray(data)||data.type!=='schaltplan'||
-        data.parentTable==='collection'||data.alive===false||
+        data.parentTable==='collection'||data.alive===false||data.archiviert===true||
         !data.plan||typeof data.plan!=='object'||Array.isArray(data.plan))
         return err('not_found','Schaltplan nicht verfügbar.');
+      const ancestors=await embedding(w,pageId,id,data);
       if(ver!==Number(s.version)||ver<1)return err('conflict','Schaltplan wurde geändert. Bitte erneut lesen.');
       const batch=args.changes!==undefined;
       if(batch&&(!Array.isArray(args.changes)||args.changes.length<1||args.changes.length>20||
@@ -1126,8 +1154,12 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         "AND geloescht=0 AND verschluesselt=0 AND json_valid(daten) "+
         "AND json_extract(daten,'$.type')='schaltplan' "+
         "AND COALESCE(json_extract(daten,'$.parentTable'),'')<>'collection' "+
+        "AND NOT EXISTS (SELECT 1 FROM json_each(?7) ancestor WHERE NOT EXISTS ("+
+        "SELECT 1 FROM saetze p WHERE p.bereich=?3 AND p.seite=?5 AND p.tabelle='blocks' "+
+        "AND p.id=json_extract(ancestor.value,'$.id') AND p.version=json_extract(ancestor.value,'$.version') "+
+        "AND p.geloescht=0 AND p.verschluesselt=0)) "+
         "RETURNING version"
-      ).bind(payload,timestamp,w,id,pageId,ver).first<{version:number}>();
+      ).bind(payload,timestamp,w,id,pageId,ver,JSON.stringify(ancestors)).first<{version:number}>();
       if(!updated)return err('conflict','Schaltplan wurde inzwischen bearbeitet. Bitte erneut lesen.');
       await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',
         text:'Schaltplan über Cloud-MCP ergänzt',objekt:id});

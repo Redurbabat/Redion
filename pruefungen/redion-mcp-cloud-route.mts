@@ -1143,8 +1143,8 @@ test('Cloud-MCP: Block lesen schützt Seiten, geheime Kinder und Datenbankzeilen
         daten:JSON.stringify(data),verschluesselt:encrypted,seite,
         version:4,geaendert:'2030-01-01',geloescht:deleted,vonGeraet:'Test'});
     };
-    await put('block_page_public',{type:'page',text:'Frei',inhalt:'Seiteninhalt'});
-    await put('block_page_private',{type:'page',text:'Geheim',inhalt:'Nicht lesen'});
+    await put('block_page_public',{type:'page',text:'Frei',inhalt:'Seiteninhalt',content:['block_parent','block_schematic']});
+    await put('block_page_private',{type:'page',text:'Geheim',inhalt:'Nicht lesen',content:['block_secret_schematic']});
     await put('block_page_encrypted',{type:'page',text:'Unsichtbar'},'block_page_encrypted',1);
     await put('block_parent',{type:'toggle',text:'Lesbarer Block',parentId:'block_page_public',
       content:['block_child','block_secret_child','block_deleted_child',
@@ -1763,6 +1763,15 @@ test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und at
     assert.equal((await update({expectedVersion:6,changes})).data.code,'conflict');
     const finalPlan=await call('redion_read_schematic',{blockId});
     assert.deepEqual(finalPlan.data.plan.texte.filter((item:any)=>item.id==='TB').map((item:any)=>[item.x,item.y]),[[210,370]]);
+    const orphanId='detached_schematic';
+    await f.store.setze('saetze',{id:orphanId,bereich:'ws_test',tabelle:'blocks',
+      daten:JSON.stringify({type:'schaltplan',parentId:'edit_schematic_page',plan:finalPlan.data.plan}),
+      verschluesselt:0,seite:'edit_schematic_page',version:1,geaendert:'2026-11-23',
+      geloescht:0,vonGeraet:'Test'});
+    assert.equal((await call('redion_read_schematic',{blockId:orphanId})).data.code,'not_found');
+    assert.equal((await call('redion_read_block',{blockId:orphanId})).data.code,'not_found');
+    assert.equal((await update({blockId:orphanId,expectedVersion:1,changes})).data.code,'not_found');
+    assert.equal((await f.store.hole('saetze',{bereich:'ws_test',id:orphanId}))?.version,1);
 
     await f.store.setze('saetze',{id:'encrypted_schematic',bereich:'ws_test',tabelle:'blocks',
       daten:JSON.stringify({type:'schaltplan',plan:after.data.plan}),
