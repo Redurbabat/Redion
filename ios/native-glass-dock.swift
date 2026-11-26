@@ -24,6 +24,9 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
     private var sharedContent: UIViewController?
     private var hosts: [UIViewController] = []
     private var applyingWebSelection = false
+    private var contentConstraints: [NSLayoutConstraint] = []
+    private var keyboardVisible = false
+    private var webDockVisible = false
     private var searchButton: UIButton?
     private var attempt = 0
     private var registered = false
@@ -38,6 +41,12 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         NotificationCenter.default.addObserver(instance,
             selector: #selector(checkWindow),
             name: UIApplication.didBecomeActiveNotification, object: nil)
+        NotificationCenter.default.addObserver(instance,
+            selector: #selector(keyboardWillShow),
+            name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(instance,
+            selector: #selector(keyboardWillHide),
+            name: UIResponder.keyboardWillHideNotification, object: nil)
         instance.checkWindow()
     }
 
@@ -46,9 +55,37 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
             DispatchQueue.main.async { [weak self] in self?.checkWindow() }
             return
         }
-        if let webView, webView.window != nil { return }
+        if let webView, webView.window != nil {
+            // Restore the bridge after returning from Files, share or app suspension.
+            webView.evaluateJavaScript(Self.bridgeJavaScript, completionHandler: nil)
+            return
+        }
         attempt = 0
         locateWebView()
+    }
+
+    @objc private func keyboardWillShow() {
+        keyboardVisible = true
+        updateDockVisibility()
+    }
+
+    @objc private func keyboardWillHide() {
+        keyboardVisible = false
+        // Wait for the DOM focus/viewport to settle; do not force a hidden editor dock on.
+        webView?.evaluateJavaScript("window.__redionNativeDockSync?.(true);", completionHandler: nil)
+        updateDockVisibility()
+    }
+
+    private func updateDockVisibility() {
+        let visible = webDockVisible && !keyboardVisible
+        if #available(iOS 26.0, *), let controller = nativeController {
+            if controller.isTabBarHidden == visible {
+                controller.setTabBarHidden(!visible, animated: false)
+            }
+        } else if let bar = systemBar {
+            bar.isHidden = !visible
+            searchButton?.isHidden = !visible
+        }
     }
 
     private func locateWebView() {
@@ -149,7 +186,8 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         }
         // Four destinations plus Apple's search tab: never six root tabs.
         let search = UISearchTab { _ in UIViewController() }
-        search.automaticallyActivatesSearch = true
+        // RED ION owns search results; no empty native search controller.
+        search.automaticallyActivatesSearch = false
         controller.tabs = tabs + [search]
         controller.delegate = self
         controller.selectedTab = tabs.first
@@ -166,6 +204,8 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
 
     private func mountSharedContent(in host: UIViewController) {
         guard let content = sharedContent, content.parent !== host else { return }
+        NSLayoutConstraint.deactivate(contentConstraints)
+        contentConstraints.removeAll()
         if content.parent != nil {
             content.willMove(toParent: nil)
             content.view.removeFromSuperview()
@@ -174,12 +214,13 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         host.addChild(content)
         content.view.translatesAutoresizingMaskIntoConstraints = false
         host.view.addSubview(content.view)
-        NSLayoutConstraint.activate([
+        contentConstraints = [
             content.view.leadingAnchor.constraint(equalTo: host.view.leadingAnchor),
             content.view.trailingAnchor.constraint(equalTo: host.view.trailingAnchor),
             content.view.topAnchor.constraint(equalTo: host.view.topAnchor),
             content.view.bottomAnchor.constraint(equalTo: host.view.bottomAnchor)
-        ])
+        ]
+        NSLayoutConstraint.activate(contentConstraints)
         content.didMove(toParent: host)
     }
 
@@ -188,6 +229,13 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         if tab is UISearchTab {
             // The system search slot is an action; retain the active Capacitor page.
             openSearch()
+            return false
+        }
+        // Re-tapping Mehr after navigating to Termine must reopen Mehr.
+        if !applyingWebSelection, tabBarController.selectedTab?.identifier == tab.identifier,
+           let index = tabBarController.tabs.firstIndex(where: { $0.identifier == tab.identifier }),
+           hosts.indices.contains(index) {
+            webView?.evaluateJavaScript("window.__redionNativeDockSelect?.(\(index));", completionHandler: nil)
             return false
         }
         return tabBarController.tabs.contains { $0.identifier == tab.identifier }
@@ -206,7 +254,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
 
     @available(iOS 26.0, *)
     private func syncSystemController(_ controller: UITabBarController, selected: Int,
-                                      visible: Bool, theme: UIUserInterfaceStyle) {
+                                      theme: UIUserInterfaceStyle) {
         applyingWebSelection = true
         if controller.selectedTab?.identifier != controller.tabs[selected].identifier {
             controller.selectedTab = controller.tabs[selected]
@@ -215,9 +263,6 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         applyingWebSelection = false
         if controller.overrideUserInterfaceStyle != theme {
             controller.overrideUserInterfaceStyle = theme
-        }
-        if controller.isTabBarHidden == visible {
-            controller.setTabBarHidden(!visible, animated: false)
         }
     }
 
@@ -271,16 +316,15 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
             guard let self else { return }
             let theme: UIUserInterfaceStyle =
                 (data["theme"] as? String) == "light" ? .light : .dark
-            let visible = (data["visible"] as? Bool) ?? true
+            self.webDockVisible = (data["visible"] as? Bool) ?? false
             if #available(iOS 26.0, *), let controller = self.nativeController {
-                self.syncSystemController(controller, selected: selected, visible: visible, theme: theme)
+                self.syncSystemController(controller, selected: selected, theme: theme)
             } else if let bar = self.systemBar {
                 bar.selectedItem = bar.items?[selected]
                 bar.overrideUserInterfaceStyle = theme
-                bar.isHidden = !visible
-                self.searchButton?.isHidden = !visible
                 self.searchButton?.overrideUserInterfaceStyle = bar.overrideUserInterfaceStyle
             } else { return }
+            self.updateDockVisibility()
 
             // Hide the legacy web bar only AFTER the real system bar exists.
             // It keeps its DOM geometry so Redion's existing content clearance
@@ -294,7 +338,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
     private static let bridgeJavaScript = #"""
     (() => {
       if (window.__redionNativeDockBridgeInstalled) {
-        window.__redionNativeDockSync?.();
+        window.__redionNativeDockSync?.(true);
         return;
       }
       window.__redionNativeDockBridgeInstalled = true;
@@ -319,7 +363,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
       const legacyBar = document.getElementById('handy-oben');
       window.__redionNativeDockReady = () => {
         document.documentElement.classList.add('redion-ios-native-dock');
-        legacyBar?.setAttribute('aria-hidden', 'true');
+        if (legacyBar?.getAttribute('aria-hidden') !== 'true') legacyBar?.setAttribute('aria-hidden', 'true');
       };
       const routeIds = ['hl-start', 'hl-dok', 'hl-lernen', 'hl-mehr'];
       function routeButtons() {
@@ -327,6 +371,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
       }
       let barObserver, bodyObserver;
       let frame = false;
+      let lastPayload = '';
       function sync() {
         frame = false;
         const buttons = routeButtons();
@@ -342,7 +387,9 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         const calendar = document.getElementById('hl-bespr');
         const calendarSelected = calendar?.getAttribute('aria-selected') === 'true';
         const settings = document.querySelector('.einst-fenster');
-        const modal = !!(settings && settings.getClientRects().length);
+        const finder = document.querySelector('.finder.such');
+        const modal = !!(settings && settings.getClientRects().length) ||
+          !!(finder && finder.getClientRects().length);
         const locked = !!document.getElementById('sperrschirm');
         const input = document.activeElement;
         const editing = !!(input && (/^(INPUT|TEXTAREA)$/.test(input.tagName) || input.isContentEditable));
@@ -353,17 +400,24 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
         // Die Navigation und Suche liegen dort nicht über den Zeichenwerkzeugen.
         const drawing = Array.from(document.querySelectorAll('.document-studio, .pg-flaeche, .sp-voll, .gfx-presenting-screen'))
           .some(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden');
-        window.webkit?.messageHandlers?.redionDock?.postMessage({
+        const state = {
           selected: calendarSelected ? routeIds.indexOf('hl-mehr') : current < 0 ? 0 : current,
           locked,
           theme: document.documentElement.dataset.theme || 'dark',
           visible: dockShown && !modal && !locked && !editing && !keyboard && !drawing
-        });
+        };
+        const payload = JSON.stringify(state);
+        if (payload === lastPayload) return;
+        const handler = window.webkit?.messageHandlers?.redionDock;
+        if (handler) { handler.postMessage(state); lastPayload = payload; }
       }
       function queue() {
         if (!frame) { frame = true; requestAnimationFrame(sync); }
       }
-      window.__redionNativeDockSync = queue;
+      window.__redionNativeDockSync = force => {
+        if (force === true) lastPayload = '';
+        queue();
+      };
       window.__redionNativeDockSelect = index => {
         const b = routeButtons()[index];
         if (b) { b.click(); queue(); }
@@ -386,6 +440,9 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
       document.addEventListener('focusout', queue);
       window.visualViewport?.addEventListener('resize', queue);
       document.addEventListener('DOMContentLoaded', queue, {once:true});
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) window.__redionNativeDockSync(true);
+      });
       if (document.body) {
         new MutationObserver(queue).observe(document.body, {
           childList:true, subtree:true, attributes:true,

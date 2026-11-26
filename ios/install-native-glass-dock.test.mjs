@@ -83,7 +83,7 @@ test('vier Ziele und Suchkapsel im aelteren iOS-Fallback', () => {
   assert.match(swift, /search\.accessibilityLabel = "Suchen"/);
   assert.match(swift, /__redionNativeDockSearch/);
   assert.match(swift, /getElementById\('btn-suche-handy'\)/);
-  assert.match(swift, /self\.searchButton\?\.isHidden = !visible/);
+  assert.match(swift, /searchButton\?\.isHidden = !visible/);
   assert.match(swift, /!keyboard && !drawing/);
   assert.match(swift, /\.document-studio, \.pg-flaeche, \.sp-voll/);
 });
@@ -96,8 +96,8 @@ test('native Heute-first order routes and synchronizes by stable ID, not web ord
   const domOrder = ['hl-dok', 'hl-start', 'hl-lernen', 'hl-bespr', 'hl-mehr'];
   const nativeOrder = ['hl-start', 'hl-dok', 'hl-lernen', 'hl-mehr'];
   const actions = [], messages = [], frames = [];
-  let selected = 'hl-start';
-  const bar = { getClientRects: () => [1], setAttribute() {} };
+  let selected = 'hl-start', finderOpen = false;
+  const bar = { getClientRects: () => [1], getAttribute: () => null, setAttribute() {} };
   const buttons = new Map(domOrder.map(id => [id, {
     parentElement: bar,
     getAttribute: name => name === 'aria-selected' && id === selected ? 'true' : 'false',
@@ -109,7 +109,7 @@ test('native Heute-first order routes and synchronizes by stable ID, not web ord
     documentElement: root, head: root, body: {}, activeElement: null,
     createElement: () => ({}), addEventListener() {},
     getElementById: id => id === 'handy-oben' ? bar : id === 'btn-suche-handy' ? { click() { actions.push(['search']); } } : buttons.get(id) ?? null,
-    querySelector: selector => buttons.get(selector.split('#').pop()) ?? null,
+    querySelector: selector => selector === '.finder.such' && finderOpen ? { getClientRects: () => [1] } : buttons.get(selector.split('#').pop()) ?? null,
     querySelectorAll: selector => selector.includes('button[role="tab"]') ? [...buttons.values()] : []
   };
   const window = { innerHeight: 800, webkit: { messageHandlers: {
@@ -140,6 +140,17 @@ test('native Heute-first order routes and synchronizes by stable ID, not web ord
   selected = 'hl-dok';
   window.__redionNativeDockSync(); flush();
   assert.equal(messages.at(-1).selected, 1);
+  const count = messages.length;
+  window.__redionNativeDockSync(); flush();
+  assert.equal(messages.length, count, 'unchanged DOM does not flood Swift');
+  window.__redionNativeDockSync(true); flush();
+  assert.equal(messages.length, count + 1, 'resume can force fresh state');
+  finderOpen = true;
+  window.__redionNativeDockSync(); flush();
+  assert.equal(messages.at(-1).visible, false);
+  finderOpen = false;
+  window.__redionNativeDockSync(); flush();
+  assert.equal(messages.at(-1).visible, true);
 });
 
 test('iOS 26 uses three primary tabs, Mehr and system search without overflow', () => {
@@ -148,7 +159,7 @@ test('iOS 26 uses three primary tabs, Mehr and system search without overflow', 
   assert.match(swift, /let controller = UITabBarController\(\)/);
   assert.doesNotMatch(swift, /prominentTabIdentifier|installNativeSearchButton/);
   assert.match(swift, /let search = UISearchTab/);
-  assert.match(swift, /search\.automaticallyActivatesSearch = true/);
+  assert.match(swift, /search\.automaticallyActivatesSearch = false/);
   assert.match(swift, /controller\.tabs = tabs \+ \[search\]/);
   assert.match(swift, /if tab is UISearchTab \{[\s\S]*?openSearch\(\)[\s\S]*?return false/);
   assert.match(swift, /@available\(iOS 18\.0, \*\)\s+func tabBarController\([^\n]+shouldSelectTab/);
@@ -171,4 +182,14 @@ test('Termine remains reachable under Mehr in native iOS without changing web na
     assert.match(source, /classList\.contains\('redion-ios-native-dock'\) \? \[\{[^\n]+t: 'Termine'/);
     assert.match(source, /a === 'termine'\)[\s\S]*?getElementById\('hl-bespr'\)\?\.click\(\)/);
   }
+});
+
+test('iPhone keyboard, repeated tab and resume are coordinated natively', () => {
+  assert.match(swift, /UIResponder\.keyboardWillShowNotification/);
+  assert.match(swift, /UIResponder\.keyboardWillHideNotification/);
+  assert.match(swift, /let visible = webDockVisible && !keyboardVisible/);
+  assert.match(swift, /self\.updateDockVisibility\(\)/);
+  assert.match(swift, /NSLayoutConstraint\.deactivate\(contentConstraints\)/);
+  assert.match(swift, /tabBarController\.selectedTab\?\.identifier == tab\.identifier/);
+  assert.match(swift, /webView\.evaluateJavaScript\(Self\.bridgeJavaScript/);
 });

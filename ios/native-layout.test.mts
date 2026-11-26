@@ -69,3 +69,9 @@ test('Native Bruecke aktiviert die Korrektur, Web-App nicht', () => {
   assert.match(native,/Capacitor\.getPlatform\(\) === 'ios'/);
   assert.doesNotMatch(web,/native-layout\.mts|redion-ios-layout-fixes/);
 });
+
+test('iPhone Today and search density preserve touch targets and readable text', () => {
+  assert.match(IOS_LAYOUT_CSS,/\.lw-today \.lw-hero-compact \{[^}]*min-height:0/);
+  assert.match(IOS_LAYOUT_CSS,/\.lw-today \.lw-actions button \{[^}]*min-height:44px/);
+  assert.match(IOS_LAYOUT_CSS,/\.overlay \.finder\.such :is\(input,textarea\) \{font-size:16px/);
+});
