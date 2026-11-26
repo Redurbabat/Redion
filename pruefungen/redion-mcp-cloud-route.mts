@@ -2099,12 +2099,15 @@ test('Cloud-MCP creates actual Trainer cards atomically, with write scope and id
     await f.store.setze('saetze',{id:'learning_test_page',bereich:'ws_test',tabelle:'blocks',
       daten:JSON.stringify({type:'page',text:'Lernkarten',content:[]}),verschluesselt:0,seite:'learning_test_page',version:1,geaendert:'2026-11-23',geloescht:0,vonGeraet:'Test'});
     const reader=await f.authorize(false,'owner');
-    const writer=await f.authorize(true);
     const args={workspaceId:'ws_test',documentId:'learning_test_page',expectedVersion:1,requestId:'learning_test_001',
       kind:'single_select',deck:'Elektrotechnik',question:'Einheit der Spannung?',answer:'Volt',
       options:[{text:'Volt',correct:true},{text:'Ampere',correct:false},{text:'Ohm',correct:false},{text:'Watt',correct:false}]};
-    const call=async(token:string,p:Record<string,unknown>)=>(await f.rpc(token,'tools/call',{name:'redion_create_learning_card',arguments:p})).data.result;
-    assert.equal((await call(reader.access_token,args)).isError,true);
+    const call=async(token:string,p:Record<string,unknown>)=>{const response=await f.rpc(token,'tools/call',{name:'redion_create_learning_card',arguments:p});assert.equal(response.status,200,JSON.stringify(response.data));return response.data.result;};
+    const denied=await call(reader.access_token,args);
+    assert.equal(denied?.isError,true,JSON.stringify(denied));
+    assert.equal(JSON.parse(denied.content[0]!.text).code,'forbidden');
+    // Changing a remembered grant rotates its epoch, invalidating the earlier token.
+    const writer=await f.authorize(true);
     const first=await call(writer.access_token,args);
     assert.notEqual(first.isError,true,JSON.stringify(first));
     const card=JSON.parse(first.content[0]!.text);
@@ -2127,11 +2130,15 @@ test('Cloud-MCP learning set validates all cards, attaches them once and retries
   try{
     await f.store.setze('saetze',{id:'learning_set_page',bereich:'ws_test',tabelle:'blocks',
       daten:JSON.stringify({type:'page',text:'Elektro',content:[]}),verschluesselt:0,seite:'learning_set_page',version:1,geaendert:'2026-11-23',geloescht:0,vonGeraet:'Test'});
-    const reader=await f.authorize(false,'owner'),writer=await f.authorize(true);
+    const reader=await f.authorize(false,'owner');
     const args={workspaceId:'ws_test',documentId:'learning_set_page',expectedVersion:1,requestId:'learning_set_001',deck:'Elektrotechnik',subject:'ET',
       cards:[{kind:'flashcard',question:'Einheit der Spannung?',answer:'Volt'},{kind:'cloze',question:'Strom wird in ___ gemessen.',answer:'Ampere'}]};
-    const call=async(token:string,p:Record<string,unknown>)=>(await f.rpc(token,'tools/call',{name:'redion_create_learning_set',arguments:p})).data.result;
-    assert.equal((await call(reader.access_token,args)).isError,true);
+    const call=async(token:string,p:Record<string,unknown>)=>{const response=await f.rpc(token,'tools/call',{name:'redion_create_learning_set',arguments:p});assert.equal(response.status,200,JSON.stringify(response.data));return response.data.result;};
+    const denied=await call(reader.access_token,args);
+    assert.equal(denied?.isError,true,JSON.stringify(denied));
+    assert.equal(JSON.parse(denied.content[0]!.text).code,'forbidden');
+    // Changing a remembered grant rotates its epoch, invalidating the earlier token.
+    const writer=await f.authorize(true);
     assert.equal((await call(writer.access_token,{...args,cards:[args.cards[0],{...args.cards[1],question:'Keine Lücke'}]})).isError,true);
     assert.equal((await f.store.finde('saetze',{bereich:'ws_test',tabelle:'blocks'})).length,1);
     const first=await call(writer.access_token,args);
