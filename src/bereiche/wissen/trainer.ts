@@ -308,16 +308,16 @@ const Trainer = (() => {
          gespeicherte Platz, die Buchstaben folgen der Anzeige. */
       const reihenfolge = mischen(optionen.map((_, i) => i));
       rumpf = `<h3 class="lw-trainer-frage">${esc(frageVon(k))}</h3>
-        <p class="lw-trainer-anweisung">Kreuzen Sie die richtige(n) Antwort(en) an.</p>
+        <p class="lw-trainer-anweisung">${k.quiz.format === 'single_select' || k.quiz.format === 'true_false' ? 'Wähle eine Antwort.' : 'Wähle alle richtigen Antworten.'}</p>
         <div class="lw-trainer-optionen">${reihenfolge.map((i, platz) =>
-          `<label class="lw-trainer-option"><input type="checkbox" data-tr-option="${i}"><span class="lw-trainer-option-text"><b>${'abcdefgh'[platz] ?? ''})</b> ${esc(optionen[i]?.text ?? '')}</span></label>`).join('')}</div>
+          `<label class="lw-trainer-option"><input type="${k.quiz.format === 'single_select' || k.quiz.format === 'true_false' ? 'radio' : 'checkbox'}" name="redion-trainer-option" data-tr-option="${i}"><span class="lw-trainer-option-text"><b>${'abcdefgh'[platz] ?? ''})</b> ${esc(optionen[i]?.text ?? '')}</span></label>`).join('')}</div>
         <div class="lw-trainer-ergebnis" aria-live="polite"></div>
         <div class="lw-rating lw-trainer-fuss">${knopf('Prüfen', 'data-tr-pruefen', 'is-primary')}</div>`;
     } else if (kind === 'schreiben') {
       rumpf = `<h3 class="lw-trainer-frage">${k.quiz.nummer ? `<span class="lw-trainer-nummer">${esc(k.quiz.nummer)}</span> ` : ''}${esc(frageVon(k))}</h3>
-        <textarea class="lw-trainer-antwort" data-tr-antwort rows="4" placeholder="Antwort in eigenen Worten …" aria-label="Deine Antwort"></textarea>
+        ${k.quiz.format === 'flashcard' ? '<p class="lw-trainer-anweisung">Denke an die Antwort und decke die Karte auf.</p>' : `<textarea class="lw-trainer-antwort" data-tr-antwort rows="4" placeholder="Antwort in eigenen Worten …" aria-label="Deine Antwort"></textarea>`}
         <div class="lw-trainer-ergebnis" aria-live="polite"></div>
-        <div class="lw-rating lw-trainer-fuss">${knopf('Musterlösung zeigen', 'data-tr-aufdecken', 'is-primary')}</div>`;
+        <div class="lw-rating lw-trainer-fuss">${knopf(k.quiz.format === 'flashcard' ? 'Antwort anzeigen' : 'Musterlösung zeigen', 'data-tr-aufdecken', 'is-primary')}</div>`;
     } else {
       const text = String(k.text || '');
       const m = /\{\{([^{}\n]+)\}\}/.exec(text);
@@ -446,6 +446,7 @@ const Trainer = (() => {
     if (el.hasAttribute('data-tr-option')) {
       if (zustand.geprueft) { (el as HTMLInputElement).checked = zustand.gewaehlt.has(Number(el.dataset['trOption'])); return; }
       const i = Number(el.dataset['trOption']);
+      if ((el as HTMLInputElement).type === 'radio') zustand.gewaehlt.clear();
       if ((el as HTMLInputElement).checked) zustand.gewaehlt.add(i); else zustand.gewaehlt.delete(i);
       return;
     }

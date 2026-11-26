@@ -13,6 +13,7 @@ export function buildLearningCard(args:Record<string,unknown>):{content:string;m
   if(args.explanation!==undefined)quiz.hinweis=str(args.explanation,1500);
   if(args.source!==undefined)quiz.quelle=str(args.source,300);
   let content=question+' :: '+answer;
+  if(kind==='flashcard')quiz.format='flashcard';
   if(kind==='single_select'||kind==='multi_select'||kind==='true_false'){
     if(!Array.isArray(args.options)||args.options.length!==(kind==='true_false'?2:4))return fail('Ungültige Antwortoptionen.');
     const optionen=args.options.map((o:unknown)=>{
