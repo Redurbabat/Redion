@@ -277,38 +277,40 @@ body[data-bewegung="ruhig"]:not([data-ui-shell="glass-wheel"]) #page > .pg-tools
 /* Atelier. Gemeinsame Oberfläche für Desktop und Mobilgeräte. Die
    Alternativschale behält ihre Navigation und ihr eigenes Erscheinungsbild. */
 :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) {
-  --atelier-rail: #2d1820;
-  --atelier-rail-ink: #fff2ed;
-  --atelier-rail-dim: #e3cbd2;
-  --atelier-rail-active: #73334a;
-  --atelier-wine: #762d48;
-  --atelier-paper: #f9f3ed;
-  --atelier-sheet: #fffaf5;
-  --atelier-tint: #efe1db;
-  --atelier-edge: #dfcdc5;
+  --atelier-rail: #f4f4f5;
+  --atelier-rail-ink: #25252a;
+  --atelier-rail-dim: #60616a;
+  --atelier-rail-active: #e3e9f2;
+  --atelier-accent: #0969da;
+  --atelier-paper: #fafafa;
+  --atelier-sheet: #ffffff;
+  --atelier-tint: #eef3f8;
+  --atelier-edge: #d9dce1;
   --atelier-display: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
-  --atelier-on-wine: #fff9f6;
+  --atelier-on-accent: #ffffff;
 }
 
 :where(html:not([data-theme="light"], [data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) {
-  --atelier-rail: #211218;
-  --atelier-rail-active: #73334a;
-  --atelier-wine: #f1adbf;
-  --atelier-paper: #211b1e;
-  --atelier-sheet: #2a2226;
-  --atelier-tint: #3a2b32;
-  --atelier-edge: #58434d;
-  --atelier-on-wine: #311821;
+  --atelier-rail: #202024;
+  --atelier-rail-ink: #f4f4f5;
+  --atelier-rail-dim: #b5b5bd;
+  --atelier-rail-active: #343a46;
+  --atelier-accent: #78b7ff;
+  --atelier-paper: #1b1b1f;
+  --atelier-sheet: #242428;
+  --atelier-tint: #303038;
+  --atelier-edge: #45454e;
+  --atelier-on-accent: #10233d;
 }
 
 :where(html:not([data-gesetzt~="--accent"], [data-schema="kontrast"]))
   body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) {
-  --accent: var(--atelier-wine);
-  --accent-text: var(--atelier-wine);
-  --accent-hover: color-mix(in srgb, var(--atelier-wine) 85%, var(--atelier-on-wine));
-  --accent-schwach: color-mix(in srgb, var(--atelier-wine) 14%, var(--atelier-sheet));
-  --auf-accent: var(--atelier-on-wine);
-  --haupt-flaeche: var(--atelier-wine);
+  --accent: var(--atelier-accent);
+  --accent-text: var(--atelier-accent);
+  --accent-hover: color-mix(in srgb, var(--atelier-accent) 85%, var(--atelier-on-accent));
+  --accent-schwach: color-mix(in srgb, var(--atelier-accent) 14%, var(--atelier-sheet));
+  --auf-accent: var(--atelier-on-accent);
+  --haupt-flaeche: var(--atelier-accent);
   --haupt-schein: none;
 }
 
@@ -414,7 +416,7 @@ body[data-bewegung="ruhig"]:not([data-ui-shell="glass-wheel"]) #page > .pg-tools
 :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-dkopf {
   background: var(--atelier-sheet);
   border: 1px solid var(--atelier-edge);
-  border-top: 4px solid var(--atelier-wine);
+  border-top: 4px solid var(--atelier-accent);
   border-radius: var(--radius-lg);
   padding: clamp(var(--space-4), 3vw, var(--space-8));
   box-shadow: none;
@@ -426,7 +428,7 @@ body[data-bewegung="ruhig"]:not([data-ui-shell="glass-wheel"]) #page > .pg-tools
 }
 
 :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib-workspace-eyebrow {
-  color: var(--atelier-wine);
+  color: var(--atelier-accent);
 }
 
 :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-wahl {
@@ -445,8 +447,8 @@ body[data-bewegung="ruhig"]:not([data-ui-shell="glass-wheel"]) #page > .pg-tools
 }
 
 :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-studio-import {
-  background: var(--atelier-wine);
-  color: var(--atelier-on-wine);
+  background: var(--atelier-accent);
+  color: var(--atelier-on-accent);
   box-shadow: none;
 }
 
@@ -463,7 +465,7 @@ body[data-bewegung="ruhig"]:not([data-ui-shell="glass-wheel"]) #page > .pg-tools
 }
 
 :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .bib[data-bib-bereich] .bib-card-kind {
-  color: var(--atelier-wine);
+  color: var(--atelier-accent);
   font-weight: 650;
 }
 
@@ -545,9 +547,9 @@ body[data-bewegung="ruhig"]:not([data-ui-shell="glass-wheel"]) #page > .pg-tools
 }
 
 :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .lernwelt .lw-today .lw-next-step .lw-actions button.is-primary {
-  background: var(--atelier-wine);
-  color: var(--atelier-on-wine);
-  border: 1px solid var(--atelier-wine);
+  background: var(--atelier-accent);
+  color: var(--atelier-on-accent);
+  border: 1px solid var(--atelier-accent);
   border-radius: var(--radius-md);
   box-shadow: none;
 }
@@ -604,7 +606,7 @@ body[data-bewegung="ruhig"]:not([data-ui-shell="glass-wheel"]) #page > .pg-tools
 }
 
 :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .home-karten .hk {
-  border-inline-start: 3px solid var(--atelier-wine);
+  border-inline-start: 3px solid var(--atelier-accent);
 }
 
 :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .einst-nav {
@@ -613,7 +615,7 @@ body[data-bewegung="ruhig"]:not([data-ui-shell="glass-wheel"]) #page > .pg-tools
 }
 
 :where(html:not([data-schema="kontrast"])) body[data-schale="premium"]:not([data-ui-shell="glass-wheel"]) .einst-nav button.on {
-  color: var(--atelier-wine);
+  color: var(--atelier-accent);
   background: var(--atelier-tint);
 }
 

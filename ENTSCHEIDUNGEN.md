@@ -886,6 +886,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E827** — `test221` misst den Rand am ersten GEZEICHNETEN Kind: die ausgeblendete Beschriftung der Werkzeugzeile meldete `left 0`, der erste Knopf steht bei 30 px; grün
 * **E828** — `test341` liest die Seitenzahl auch aus `button.document-position`: seit Workspace 2.0 ist sie ein Knopf zum Springen, kein `span`; 37/37
 * **E829** — Der PDF-Bereich setzt Blöcke und holt das Elektro-Menü über den Ereignisbus (`frage.block-am-ende`, `frage.elektro-menue`) statt über `Blocks` und `Elektrostart` (§5, erster Weg); `test537` 125 → 123 Paare, 18/18
+* **E830** — Neutrale Oberfläche ohne Bordeaux; gespeicherte Gruppen, Zeichenreihenfolge und Sperren auf der Seitenfläche, mit eigenem GFX-Kern und Sicherungsrundreisen.
 
 ## E790 — Windows-Stiftstudio mit eigener Freihandebene
 
@@ -72120,3 +72121,34 @@ der Einzeldatei: die Elektro-Frage liefert ein Element mit 9 Knöpfen, ohne
 Rückrufe keine Antwort; die Block-Frage setzt einen `todo` ans Ende der Seite
 und antwortet `true`, eine leere Art `false`. `npm run typecheck` sauber.
 Dienststand v1680.
+
+
+## E830 · Neutrale Oberfläche und weitere AFFiNE-Flächenbefehle
+
+26. November 2026 · Redurs Auftrag: Bordeaux entfernen und die Übernahme der
+AFFiNE-Funktionen umfassend prüfen. Ergänzung auf dem Stand von PR #232.
+
+- Die bestehende gemeinsame Palette bekommt neutrale helle und dunkle Flächen
+  mit blauem Akzent. `--atelier-accent` ersetzt die bisherigen Wine-Tokens.
+  Die native UIKit-Tab-Bar verwendet Systemblau. Eigene Nutzeranpassungen und
+  hoher Kontrast behalten ihre bestehenden Vorrangregeln.
+- Auf der freien Seitenfläche lassen sich Formen dauerhaft gruppieren, in
+  ihrer Zeichenreihenfolge ändern und sperren. Das Menü sitzt an der bestehenden
+  Formauswahl und zusätzlich im Zeichendock; Tastatur und Rückgängig bleiben
+  beim vorhandenen Flächenkontext.
+- `core/gfx/objects.ts` enthält nur Auswahl- und Reihenfolgeregeln, ohne DOM,
+  Store oder Bereichszugriff. `groupId` und `locked` sind optionale Felder an
+  bestehenden Formen. Es gibt keinen Schemaumzug und keine neue Datenhaltung.
+- Kopien erhalten eigene Gruppenkennungen. Eine Sperre umfasst die internen
+  Verbinder und verhindert die vorhandenen Änderungswege; Aufheben bleibt
+  im Menü erreichbar. Diese Bearbeitungshilfe ist keine Zugriffsberechtigung.
+- Die Ergänzungen gelten für Formen der Seitenfläche. Der neue Gesamtabgleich
+  nennt ausdrücklich den restlichen Umfang: unter anderem Präsentationsrahmen,
+  Funktionsgleichheit weiterer Zeichenkontexte und reale Zusammenarbeit.
+- Kein weiterer AFFiNE-Quellcode wird übernommen. Frontend und Backend haben
+  unterschiedliche Lizenzbereiche; Herkunft und Einschränkungen stehen im
+  `doku/AFFINE-GESAMTABGLEICH.md`.
+
+Geprüft werden Bedienung, Geschichte, Neuladen sowie JSON- und `.redion`-
+Sicherungen. Bilder der Oberfläche bleiben ausserhalb von Git. Ein Browserlauf
+ist keine iPhone- oder IPA-Abnahme.

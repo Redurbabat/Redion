@@ -4,13 +4,17 @@ Referenz ist der [AFFiNE-Quellstand 81da59d](https://github.com/toeverything/AFF
 
 | Arbeitsablauf | Redion heute | Weiterer Ausbau |
 | --- | --- | --- |
-| Seite und freie Fläche | Dieselbe Seite lässt sich als Textseite oder auf der freien Fläche öffnen. Blöcke lassen sich auf der Fläche platzieren. | Rahmen und Präsentationsfolgen, persistente Gruppen, Ebenen und Sperren. |
+| Seite und freie Fläche | Dieselbe Seite lässt sich als Textseite oder auf der freien Fläche öffnen. Blöcke lassen sich auf der Fläche platzieren. | Rahmen und Präsentationsfolgen, verschachtelte Gruppen sowie derselbe Gruppenumfang in allen Zeichenkontexten. Auf der freien Seitenfläche sind gespeicherte Gruppen, Zeichenreihenfolge und Sperren jetzt ergänzt. |
 | Formen und Haftnotizen | Gefüllte Formen, Raute und Textmarker sind im Dock verfügbar. Formen und Stiftstriche lassen sich einzeln oder im Rahmen auswählen, gemeinsam verschieben und skalieren sowie beschriften, verbinden und rückgängig machen. Rechtecke, Ellipsen, Dreiecke und Haftnotizen lassen sich aus dem Dock auf die Fläche ziehen. | Freihandlasso, Drehung, verbundene Blöcke und Übersicht aller Seitenflächen. |
 | Dokumente und Verweise | Blockeditor, Markdown, Dateianhänge, Seitenlinks, Vorschau, Rückverweise und geteilte Ansicht sind vorhanden. | Vorschauen eingebetteter Dokumente, Kommentar-Fäden in Blöcken, gemeinsame Vorlagen und AFFiNE-Import mit Anhängen. |
 | Bibliothek und Planung | Arbeitsbereiche, Ordner, Suche, Favoriten, Tags, Aufgaben und Kalender sind vorhanden. | Journal, dynamische Sammlungen, Arbeitsbereichseigenschaften und Vorlagen für wiederkehrende Dokumente vergleichen und ausbauen. |
 | Datenbanken | Tabellen, Ansichten, Relationen, Filter und Formeln sind vorhanden. | AFFiNE-Ansichten und deren Interaktionen am konkreten Datenmodell abgleichen. Dazu gehören Kanban, Kalender, Diagramme und Aktivitätsansichten. |
 | Offline und Zusammenarbeit | Lokale Ablage, Sicherungen und optionaler Geräteabgleich sind vorhanden. | Gleichzeitiges Bearbeiten, Präsenz, Konflikte, Freigaben und die vollständige Wiederherstellung mit Anhängen Ende zu Ende prüfen. |
 | KI, Integrationen und Clients | Redion hat eigene KI-, MCP-, Lern-, PDF- und Elektro-Werkzeuge sowie Windows- und iPhone-Clients. | AFFiNE-Arbeitsabläufe für Dokumente und Fläche, Web Clipper, Android und weitere native Funktionen einzeln integrieren und prüfen. |
+
+Der [Gesamtabgleich der AFFiNE-Modulgruppen](AFFINE-GESAMTABGLEICH.md)
+trennt vorhandene Redion-Funktionen, ergänzte Flächenfunktionen und noch offene
+Arbeiten. Eine ähnliche Oberfläche bedeutet keine vollständige Funktionsparität.
 
 ## Flächenwerkzeuge ausprobieren
 
@@ -25,6 +29,18 @@ Referenz ist der [AFFiNE-Quellstand 81da59d](https://github.com/toeverything/AFF
 9. Blättere im Dock nach rechts. Unter **Gedankenkarte einfügen** stehen zwei bearbeitbare Startkarten. **Blockvorlagen** enthält Ablaufdiagramm und Entscheidungsbaum. Ziehe eine Vorschau an die gewünschte Stelle oder füge sie mit einem Klick ein.
 10. Die Themen und Äste einer Gedankenkarte liegen direkt auf der Fläche. Doppelklick auf ein Thema öffnet seinen Text. Wähle ein Thema, um die Werkzeuge der Karte einzublenden.
 11. Über ausgewählten Formen kannst du direkt Farbe und Füllung ändern, Text bearbeiten oder die Auswahl duplizieren. Pfeile zwischen kopierten Formen werden gemeinsam mit ihnen übernommen.
+
+12. Wähle auf der freien Seitenfläche mehrere Formen und drücke **Strg + G**
+    oder **⌘ G**. Die Gruppe bleibt nach Neuladen erhalten; ein Mitglied wählt
+    die ganze Gruppe. **Strg/⌘ + Umschalt + G** löst sie auf.
+13. Im **⋯ der Formauswahl** stehen **Sperren**, **Entsperren** und die vier
+    Befehle für die Zeichenreihenfolge. Gesperrte Formen lassen sich dort
+    weder verschieben, skalieren, beschriften, einfärben, löschen noch radieren.
+    Gruppen, Sperren und Reihenfolge verwenden denselben Rückgängig-Verlauf.
+
+Diese drei Ergänzungen gelten zunächst für Formen der **freien Seitenfläche**.
+Die PDF-Tinte und das eingebettete Whiteboard behalten ihre jeweiligen Modelle.
+Eine Sperre ist eine Bearbeitungshilfe, keine Zugriffsberechtigung.
 
 ## Abnahme der bisherigen Grundfunktionen
 

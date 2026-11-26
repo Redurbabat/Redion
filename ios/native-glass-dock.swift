@@ -61,12 +61,7 @@ private final class RedionNativeDock: NSObject, WKScriptMessageHandler,
                 bar.delegate = self
                 bar.translatesAutoresizingMaskIntoConstraints = false
                 bar.isTranslucent = true
-                bar.tintColor = UIColor { traits in
-                    if traits.userInterfaceStyle == .dark {
-                        return UIColor(red: 0.945, green: 0.678, blue: 0.749, alpha: 1)
-                    }
-                    return UIColor(red: 0.463, green: 0.176, blue: 0.282, alpha: 1)
-                }
+                bar.tintColor = .systemBlue
                 bar.unselectedItemTintColor = .secondaryLabel
                 let items = zip(labels, symbols).enumerated().map { index, value in
                     UITabBarItem(title: value.0,

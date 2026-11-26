@@ -14,7 +14,7 @@ const baseline = process.argv.includes('--baseline');
 const capture = process.argv.includes('--capture');
 const engine = process.argv.includes('--webkit') ? webkit : chromium;
 const browser = await engine.launch();
-const folder = path.join(repo, 'bilder', 'context-docks', engine.name());
+const folder = path.join(process.env.REDION_DOCK_PICTURES || path.join(repo, 'bilder', 'context-docks'), engine.name());
 if (capture) fs.mkdirSync(folder, { recursive: true });
 const swift = fs.readFileSync(path.join(root, 'ios/native-glass-dock.swift'), 'utf8');
 const bridge = swift.match(/private static let bridgeJavaScript = #"""\n([\s\S]*?)\n    """#/)?.[1];
@@ -71,6 +71,11 @@ try {
       await Store.flush(); App.zeichneBaum();
       return { wb: wb.id, pdf: pdf.id, plan: plan.id };
     }, { dark });
+    if (capture) {
+      await page.evaluate(() => Bibliothek.oeffne());
+      await page.getByRole('heading', { name: 'Dokumente', exact: true }).waitFor();
+      await page.screenshot({ path: path.join(folder, `bibliothek-${width}-${dark ? 'dunkel' : 'hell'}-${baseline ? 'vorher' : 'nachher'}.png`) });
+    }
     for (const kind of ['wb', 'pdf', 'plan'] as const) {
       await page.evaluate(id => App.oeffne(id), ids[kind]);
       const selector = kind === 'wb' ? '.wb-tools' : kind === 'pdf' ? '.document-pdf-dock' : '.sp-werkzeuge';

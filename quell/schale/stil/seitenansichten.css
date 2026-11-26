@@ -419,6 +419,7 @@ body:has(.pg-flaeche) #sammelleiste{
   stroke-dasharray:5 3;
   pointer-events:none;
 }
+.pg-fl-formauswahl[data-locked="true"]{stroke:var(--text-dim);stroke-dasharray:2 4}
 .pg-fl-tools [data-karte="formen"] [data-vorschau]{pointer-events:auto;cursor:grab}
 .pg-fl-tools [data-karte="formen"] button,.pg-fl-tools [data-karte="notiz"] button{touch-action:none}
 .pg-fl-tools [data-karte="notiz"] button{cursor:grab}
@@ -481,6 +482,8 @@ body:has(.pg-flaeche) #sammelleiste{
   border-radius:var(--radius-md);box-shadow:var(--schatten-schwebend);
 }
 .pg-fl-auswahlleiste[hidden]{display:none}
+.pg-fl-lock-status{padding:0 8px;color:var(--text-dim);font-size:12px;white-space:nowrap}
+.pg-fl-lock-status[hidden]{display:none}
 .pg-fl-auswahlleiste>button{
   display:grid;place-items:center;width:32px;height:32px;
   border-radius:var(--radius-md);color:var(--text);

@@ -371,6 +371,11 @@ const Seitenflaeche = (() => {
         auswahlLeiste.setAttribute('role', 'group');
         auswahlLeiste.setAttribute('aria-label', 'Werkzeuge der Formauswahl');
         auswahlLeiste.hidden = true;
+        const lockLabel = document.createElement('span');
+        lockLabel.className = 'pg-fl-lock-status';
+        lockLabel.textContent = 'Gesperrt';
+        lockLabel.hidden = true;
+        auswahlLeiste.append(lockLabel);
         let auswahlPalette = null;
         const formKnoten = new Map();
         const linien = [];
@@ -384,9 +389,12 @@ const Seitenflaeche = (() => {
         const beweglich = (form) => !!formId(form) && (form.art === 'stift'
             ? Array.isArray(form.pts) && form.pts.length > 0
             : Number.isFinite(form.x) && Number.isFinite(form.y));
-        const beschriftbareForm = () => auswahl.size === 1 && formen.find(form => auswahl.has(formId(form)) && [...GESCHLOSSENE_FORMEN, 'notiz', 'text'].includes(form.art));
-        const gruppenRahmen = () => {
+        const selectionLocked = () => GfxObjects.locked(formen, auswahl);
+        const beschriftbareForm = () => auswahl.size === 1 && formen.find(form => auswahl.has(formId(form)) && !selectionLocked() && [...GESCHLOSSENE_FORMEN, 'notiz', 'text'].includes(form.art));
+        const gruppenRahmen = (includeLocked = false) => {
             if (werkzeug !== 'zeiger' || !auswahl.size)
+                return null;
+            if (!includeLocked && selectionLocked())
                 return null;
             const ausgewaehlt = formen.filter(form => auswahl.has(formId(form)));
             if (ausgewaehlt.length !== auswahl.size || ausgewaehlt.some(form => ![...GESCHLOSSENE_FORMEN, 'notiz', 'linie', 'pfeil', 'stift'].includes(form.art) ||
@@ -398,7 +406,7 @@ const Seitenflaeche = (() => {
             const h = Math.max(...boxen.map(b => b.y + b.h)) - y;
             return w > 0.1 && h > 0.1 ? { x, y, w, h } : null;
         };
-        const auswahlLeistePositionieren = (rahmen = gruppenRahmen()) => {
+        const auswahlLeistePositionieren = (rahmen = gruppenRahmen(true)) => {
             const b = rahmen && werkzeug === 'zeiger' ? rahmen : null;
             const breit = flaeche.clientWidth, hoch = flaeche.clientHeight;
             if (!b || !breit || !hoch) {
@@ -449,22 +457,30 @@ const Seitenflaeche = (() => {
             const rahmen = gruppenRahmen();
             if (rahmen)
                 griffeZeigen(rahmen);
-            auswahlLeistePositionieren(rahmen);
+            auswahlLeistePositionieren(rahmen ?? gruppenRahmen(true));
+            auswahlRahmen.dataset.locked = String(selectionLocked());
+            lockLabel.hidden = !selectionLocked();
+            for (const id of ['auswahlfarbe', 'auswahlkopie']) {
+                const button = auswahlLeiste.querySelector(`[data-a="${id}"]`);
+                if (button)
+                    button.disabled = selectionLocked();
+            }
             const beschriften = auswahlLeiste.querySelector('[data-a="auswahltext"]');
             if (beschriften)
                 beschriften.disabled = !beschriftbareForm();
             leiste.setzeGesperrt('skalieren', !rahmen);
-            const text = auswahl.size === 1 ? 'Eine Form ausgewählt' : auswahl.size + ' Formen ausgewählt';
+            const text = (auswahl.size === 1 ? 'Eine Form ausgewählt' : auswahl.size + ' Formen ausgewählt') +
+                (selectionLocked() ? ' · Gesperrt' : '');
             if (ansage.textContent !== text)
                 ansage.textContent = text;
-            leiste.setzeGesperrt('loeschen', !auswahl.size || werkzeug === 'verbindung');
+            leiste.setzeGesperrt('loeschen', !auswahl.size || selectionLocked() || werkzeug === 'verbindung');
             leiste.setzeGesperrt('beschriften', !beschriftbareForm() || werkzeug === 'verbindung');
             leiste.setzeGesperrt('alleFormen', !formen.some(beweglich));
         };
         const auswahlSetzen = (ids) => {
             auswahlPaletteSchliessen();
             auswahl.clear();
-            ids.forEach(id => auswahl.add(id));
+            GfxObjects.expand(formen, new Set(ids)).forEach(id => auswahl.add(id));
             auswahlZeigen();
         };
         const werkzeugWechseln = (id) => {
@@ -585,6 +601,8 @@ const Seitenflaeche = (() => {
         const textBearbeiten = async (form, punkt) => {
             if (beschriftet || formenZug)
                 return;
+            if (!punkt && form?.locked === true)
+                return;
             beschriftet = true;
             let text;
             try {
@@ -607,7 +625,7 @@ const Seitenflaeche = (() => {
             }
             else {
                 const aktuell = formen.find(x => formId(x) === formId(form));
-                if (!aktuell || text === String(aktuell.text || ''))
+                if (!aktuell || aktuell.locked === true || text === String(aktuell.text || ''))
                     return;
                 merken();
                 formen = formen.map(x => x === aktuell ? { ...x, text } : x);
@@ -619,18 +637,21 @@ const Seitenflaeche = (() => {
                 (form.art !== 'verbindung' || (!ids.has(form.von) && !ids.has(form.nach))));
         };
         const auswahlLoeschen = () => {
-            if (!auswahl.size || formenZug || werkzeug === 'verbindung')
+            if (!auswahl.size || selectionLocked() || formenZug || werkzeug === 'verbindung')
                 return;
             merken();
             formenEntfernen(auswahl);
             sichern();
         };
         const auswahlDuplizieren = () => {
+            if (selectionLocked())
+                return;
             const neu = new Map([...auswahl].map(id => [id, Store.uid().slice(0, 8)]));
             if (!neu.size)
                 return;
             const abstand = 22 / sicht.z;
             const kopien = [];
+            const copiedGroups = new Map();
             for (const form of formen) {
                 if (form.art === 'verbindung') {
                     const von = neu.get(form.von), nach = neu.get(form.nach);
@@ -641,11 +662,16 @@ const Seitenflaeche = (() => {
                 const id = neu.get(formId(form));
                 if (!id)
                     continue;
+                const groupId = typeof form.groupId === 'string' && form.groupId ? (() => {
+                    if (!copiedGroups.has(form.groupId))
+                        copiedGroups.set(form.groupId, Store.uid());
+                    return copiedGroups.get(form.groupId);
+                })() : undefined;
                 if (form.art === 'stift') {
-                    kopien.push({ ...form, id, pts: form.pts.map(([x, y, ...rest]) => [r2(x + abstand), r2(y + abstand), ...rest]) });
+                    kopien.push({ ...form, id, ...(groupId ? { groupId } : {}), pts: form.pts.map(([x, y, ...rest]) => [r2(x + abstand), r2(y + abstand), ...rest]) });
                 }
                 else {
-                    kopien.push({ ...form, id, x: r2(form.x + abstand), y: r2(form.y + abstand) });
+                    kopien.push({ ...form, id, ...(groupId ? { groupId } : {}), x: r2(form.x + abstand), y: r2(form.y + abstand) });
                 }
             }
             if (!kopien.length)
@@ -656,7 +682,7 @@ const Seitenflaeche = (() => {
             sichern();
         };
         const auswahlVerschieben = (dx, dy) => {
-            if ((!dx && !dy) || !auswahl.size)
+            if ((!dx && !dy) || !auswahl.size || selectionLocked())
                 return;
             merken();
             formen = formen.map(form => {
@@ -668,7 +694,7 @@ const Seitenflaeche = (() => {
             });
             sichern();
         };
-        const formAn = (fx, fy, radius, mitVerbindungen = false) => {
+        const formAn = (fx, fy, radius, mitVerbindungen = false, skipLocked = false) => {
             const nah = (a, b) => {
                 const ax = Number(a?.[0]), ay = Number(a?.[1]), bx = Number(b?.[0]), by = Number(b?.[1]);
                 const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
@@ -677,6 +703,8 @@ const Seitenflaeche = (() => {
             };
             for (let i = formen.length - 1; i >= 0; i--) {
                 const form = formen[i];
+                if (skipLocked && form.locked === true)
+                    continue;
                 if (!beweglich(form))
                     continue;
                 if (form.art === 'stift') {
@@ -698,7 +726,7 @@ const Seitenflaeche = (() => {
             if (mitVerbindungen) {
                 for (let i = linien.length - 1; i >= 0; i--) {
                     const link = linien[i];
-                    if (!link)
+                    if (!link || (skipLocked && link.form.locked === true))
                         continue;
                     const [a, b] = GfxShapes.verbindungsStrecke(GfxShapes.rahmenVon(link.von), GfxShapes.rahmenVon(link.nach));
                     if (nah(a, b))
@@ -709,6 +737,8 @@ const Seitenflaeche = (() => {
         };
         const MALWERKZEUGE = ['stift', 'linie', 'pfeil', ...GESCHLOSSENE_FORMEN];
         const formStilAnwenden = (stil) => {
+            if (selectionLocked())
+                return;
             const zuAendern = (form) => auswahl.has(formId(form)) &&
                 GESCHLOSSENE_FORMEN.includes(form.art) &&
                 ((stil.farbe !== undefined && form.farbe !== stil.farbe) ||
@@ -718,6 +748,73 @@ const Seitenflaeche = (() => {
             merken();
             formen = formen.map(form => zuAendern(form) ? { ...form, ...stil } : form);
             sichern();
+        };
+        const groupSelection = (remove = false) => {
+            if (formenZug || skalierZug || selectionLocked())
+                return;
+            const selected = formen.filter(form => auswahl.has(formId(form)));
+            if (remove ? !selected.some(form => form.groupId) : selected.length < 2)
+                return;
+            merken();
+            formen = GfxObjects.group(formen, auswahl, remove ? null : Store.uid());
+            sichern();
+        };
+        const lockSelection = (lock) => {
+            if (!auswahl.size || formenZug || skalierZug)
+                return;
+            if (!formen.some(form => auswahl.has(formId(form)) && (form.locked === true) !== lock))
+                return;
+            merken();
+            formen = formen.map(form => {
+                if (!auswahl.has(formId(form)) && !(form.art === 'verbindung' && auswahl.has(form.von) && auswahl.has(form.nach)))
+                    return form;
+                const copy = { ...form };
+                if (lock)
+                    copy.locked = true;
+                else
+                    delete copy.locked;
+                return copy;
+            });
+            sichern();
+        };
+        const arrangeSelection = (order) => {
+            if (!auswahl.size || selectionLocked() || formenZug || skalierZug)
+                return;
+            const next = GfxObjects.reorder(formen, auswahl, order);
+            if (next.every((form, index) => form === formen[index]))
+                return;
+            merken();
+            formen = next;
+            sichern();
+        };
+        const objectActions = () => {
+            const editable = auswahl.size > 0 && !selectionLocked() && !formenZug && !skalierZug;
+            const grouped = formen.some(form => auswahl.has(formId(form)) && form.groupId);
+            return [
+                { id: 'group', name: 'Gruppieren', sym: 'formRect', enabled: editable && auswahl.size >= 2, run: () => groupSelection() },
+                { id: 'ungroup', name: 'Gruppe auflösen', sym: 'grid', enabled: editable && grouped, run: () => groupSelection(true) },
+                { id: 'lock', name: 'Sperren', sym: 'lock', enabled: editable, run: () => lockSelection(true) },
+                { id: 'unlock', name: 'Entsperren', sym: 'lockOpen', enabled: selectionLocked(), run: () => lockSelection(false) },
+                { id: 'front', name: 'Ganz nach vorne', sym: 'plus', enabled: editable, run: () => arrangeSelection('front') },
+                { id: 'forward', name: 'Eine Ebene nach vorne', sym: 'plus', enabled: editable, run: () => arrangeSelection('forward') },
+                { id: 'backward', name: 'Eine Ebene nach hinten', sym: 'minus', enabled: editable, run: () => arrangeSelection('backward') },
+                { id: 'back', name: 'Ganz nach hinten', sym: 'minus', enabled: editable, run: () => arrangeSelection('back') }
+            ];
+        };
+        const showObjectActions = (anchor) => {
+            const actions = objectActions();
+            const r = anchor.getBoundingClientRect();
+            const menu = UI.menu(actions.map(action => `<button data-object-action="${action.id}"` +
+                `${action.enabled ? '' : ' disabled'}>${action.name}</button>`).join(''), Math.max(8, Math.min(r.left, innerWidth - 260)), r.bottom + 4, { rolle: 'menu', anker: anchor, rueckfokus: anchor, fokus: 'erster', beschriftung: 'Gruppen, Ebenen und Sperren' });
+            menu.addEventListener('click', e => {
+                const button = e.target instanceof Element ? e.target.closest('[data-object-action]') : null;
+                const action = actions.find(action => action.id === button?.dataset.objectAction);
+                if (!action?.enabled || button?.disabled)
+                    return;
+                menu.remove();
+                action.run();
+                flaeche.focus({ preventScroll: true });
+            });
         };
         const formenStil = (art) => GESCHLOSSENE_FORMEN.includes(art) ? { farbe: formFarbe, gefuellt } : { farbe };
         const maltGerade = () => MALWERKZEUGE.includes(werkzeug) || werkzeug === 'radierer';
@@ -884,6 +981,13 @@ const Seitenflaeche = (() => {
                 menueEintrag(liste, 'Gedankenkarte', 'sparkle', () => blockEinsetzen('mindmap'));
                 menueEintrag(liste, 'Whiteboard', 'formRect', () => blockEinsetzen('whiteboard'));
             }
+            if (id === 'anordnen')
+                for (const action of objectActions()) {
+                    menueEintrag(liste, action.name, action.sym, action.run);
+                    const button = liste.lastElementChild;
+                    button.dataset.objectAction = action.id;
+                    button.disabled = !action.enabled;
+                }
             if (!liste.childElementCount)
                 return null;
             Register.symbole.fuelle(liste);
@@ -1031,6 +1135,7 @@ const Seitenflaeche = (() => {
                 { id: 'groesser', name: 'Grösser', titel: 'Grösser (Strg + Rad)', sym: 'plus' },
                 { id: 'passend', name: 'Ins Bild', titel: 'Alles ins Bild holen', sym: 'maximize' },
                 { id: 'alleFormen', name: 'Alle Formen', titel: 'Alle Formen auswählen (Strg + A)', sym: 'formRect', gesperrt: true },
+                { id: 'anordnen', name: 'Gruppen, Ebenen und Sperren', sym: 'dots', menue: true },
                 { id: 'skalieren', name: 'Grösse ändern', titel: 'Breite und Höhe der Auswahl eingeben', sym: 'inkRuler', gesperrt: true },
                 { id: 'beschriften', name: 'Beschriften', titel: 'Ausgewählte Form beschriften', sym: 'inkText', gesperrt: true },
                 { id: 'loeschen', name: 'Löschen', titel: 'Ausgewählte Formen löschen', sym: 'trash', gesperrt: true }
@@ -1077,7 +1182,8 @@ const Seitenflaeche = (() => {
         for (const [id, name, sym] of [
             ['auswahlfarbe', 'Farbe und Füllung der Auswahl', 'palette'],
             ['auswahltext', 'Text der ausgewählten Form bearbeiten', 'inkText'],
-            ['auswahlkopie', 'Auswahl duplizieren', 'copy']
+            ['auswahlkopie', 'Auswahl duplizieren', 'copy'],
+            ['auswahlmehr', 'Gruppen, Ebenen und Sperren', 'dots']
         ]) {
             const b = document.createElement('button');
             b.type = 'button';
@@ -1090,6 +1196,10 @@ const Seitenflaeche = (() => {
             b.append(icon);
             if (id === 'auswahlfarbe')
                 b.setAttribute('aria-expanded', 'false');
+            if (id === 'auswahlmehr') {
+                b.setAttribute('aria-haspopup', 'menu');
+                b.setAttribute('aria-expanded', 'false');
+            }
             b.addEventListener('click', e => {
                 if (id === 'auswahlfarbe') {
                     const offen = auswahlPalette === null;
@@ -1107,6 +1217,9 @@ const Seitenflaeche = (() => {
                         if (e.detail === 0)
                             auswahlPalette.querySelector('button')?.focus();
                     }
+                }
+                else if (id === 'auswahlmehr') {
+                    showObjectActions(b);
                 }
                 else if (id === 'auswahlkopie') {
                     auswahlDuplizieren();
@@ -1539,7 +1652,7 @@ const Seitenflaeche = (() => {
                 catch { }
                 merken();
                 if (werkzeug === 'radierer') {
-                    const treffer = formAn(punkt.x, punkt.y, 12 / sicht.z, true);
+                    const treffer = formAn(punkt.x, punkt.y, 12 / sicht.z, true, true);
                     if (treffer) {
                         formenEntfernen(new Set([formId(treffer)]));
                         sichern();
@@ -1601,11 +1714,14 @@ const Seitenflaeche = (() => {
                     e.preventDefault();
                     flaeche.focus({ preventScroll: true });
                     if (e.shiftKey) {
-                        auswahlSetzen(auswahl.has(id) ? [...auswahl].filter(x => x !== id) : [...auswahl, id]);
+                        const members = GfxObjects.expand(formen, new Set([id]));
+                        auswahlSetzen(auswahl.has(id) ? [...auswahl].filter(x => !members.has(x)) : [...auswahl, ...members]);
                         return;
                     }
                     if (!auswahl.has(id))
                         auswahlSetzen([id]);
+                    if (selectionLocked())
+                        return;
                     formenZug = { pointer: e.pointerId, sx: e.clientX, sy: e.clientY, dx: 0, dy: 0 };
                     auswahlLeiste.hidden = true;
                     try {
@@ -1678,7 +1794,7 @@ const Seitenflaeche = (() => {
             if (aktiv) {
                 const punkt = inFlaeche(e.clientX, e.clientY);
                 if (aktiv.art === 'radieren') {
-                    const treffer = formAn(punkt.x, punkt.y, 12 / sicht.z, true);
+                    const treffer = formAn(punkt.x, punkt.y, 12 / sicht.z, true, true);
                     if (treffer) {
                         formenEntfernen(new Set([formId(treffer)]));
                         sichern();
@@ -1868,6 +1984,11 @@ const Seitenflaeche = (() => {
                 }
             }
             if (ziel === flaeche) {
+                if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'g' && !formenZug && !skalierZug) {
+                    e.preventDefault();
+                    groupSelection(e.shiftKey);
+                    return;
+                }
                 if (e.key === 'Escape' && auswahl.size) {
                     e.preventDefault();
                     if (formenZug)

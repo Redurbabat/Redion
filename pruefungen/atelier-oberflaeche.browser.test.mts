@@ -35,7 +35,7 @@ test('Windows-Ansicht verbindet die neue Leiste mit Bibliothek und Editor', { ti
   try {
     const page = await browser.newPage({ viewport: { width: 1366, height: 900 }, reducedMotion: 'reduce' });
     await ablageOeffnen(page);
-    assert.equal(await page.locator('#kante').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(45, 24, 32)');
+    assert.equal(await page.locator('#kante').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(244, 244, 245)');
     assert.equal(await page.locator('.bib-dkopf').evaluate(el => getComputedStyle(el).borderTopWidth), '4px');
     const karten = page.locator('.bib-deckel').filter({ hasText: 'Werkstatt UI Probe' });
     await karten.click();
@@ -47,7 +47,7 @@ test('Windows-Ansicht verbindet die neue Leiste mit Bibliothek und Editor', { ti
     await page.waitForFunction(() => {
       const kopf = document.querySelector('.bib-dkopf');
       return document.documentElement.dataset.theme === 'dark' &&
-        kopf && getComputedStyle(kopf).backgroundColor === 'rgb(42, 34, 38)';
+        kopf && getComputedStyle(kopf).backgroundColor === 'rgb(36, 36, 40)';
     });
   } finally {
     await browser.close();

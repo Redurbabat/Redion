@@ -266,6 +266,20 @@ keine PDF-Punkte wie beim Blatt. `raumVersion: 1` ist diese Deutung; ein
 Block ohne das Feld ist Fassung 1. Wer die Deutung je ändert, hebt die
 Zahl an und wandelt beim Lesen — nie stillschweigend.
 
+**Gruppen, Sperren und Reihenfolge auf der Seitenfläche** (26. November 2026):
+Ein Element in `shapes` darf zusätzlich `groupId: string` und `locked: true`
+tragen. Gleiche nichtleere Gruppenkennungen wählen und bewegen sich gemeinsam;
+eine Kopie bekommt eine neue Gruppenkennung. Auflösen entfernt `groupId`,
+Entsperren entfernt `locked`. Beide Angaben sind optional; bestehende Formen
+werden nicht migriert. Sperren einer Gruppe schliesst ihre internen Verbinder
+mit ein. Die Reihenfolge der Formen in `shapes` bestimmt ihre Zeichenreihenfolge;
+Verbinder bleiben darunter und zählen beim schrittweisen Anordnen nicht mit.
+
+Die erweiterten Bearbeitungsregeln werden aktuell von der freien Seitenfläche
+angewendet. Ältere Clients und andere Zeichenkontexte bewahren die Felder,
+erzwingen die Sperre aber nicht. Sie ist ausdrücklich keine Sicherheitsgrenze.
+Die Felder und ihre Kennungen müssen in JSON und `.redion` erhalten bleiben.
+
 **Die Ansicht einer Seite** (E690): ein Seitenblock darf `seitenAnsicht`
 tragen — `'seite'`, `'flaeche'` oder `'redion'`. **Ein Block ohne das Feld
 ist nicht kaputt, sondern von gestern**, und er bekommt die Redion-Ansicht:
