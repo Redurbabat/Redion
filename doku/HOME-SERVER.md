@@ -230,3 +230,15 @@ beide Apps verteilt werden. Der Server prüft keine Verschlüsselung; erst
 die konkrete App-Integration kann Ende-zu-Ende-Schutz sicherstellen.
 Das SDK enthält ein striktes QR-Payload-Format für App-ID und öffentliche
 Challenge, aber noch keine native QR-Kamera oder QR-Renderer.
+
+## RED Vault – Migration und Schlüsselwechsel
+
+`node server/home/vault-migrate.ts BACKUP NEW_DATA_DIR BACKUP_KEY NEW_VAULT_KEY --new-copy [OLD_VAULT_KEY]`
+verifiziert zuerst ein verschlüsseltes Backup und migriert ausschliesslich
+in eine neue Datenablage. Vorhandene Ziele werden abgelehnt. Jeder Blob
+wird verschlüsselt und erneut entschlüsselt verglichen; bei einem Fehler
+wird die neue Kopie verworfen. Die Quelle bleibt unverändert. Bei einer
+bereits verschlüsselten Quelle ist der alte Vault-Key erforderlich. Erst
+nach erfolgreicher Prüfung die neue Ablage manuell auswählen; nach einem
+Prozessabbruch keine unvollständige Ablage starten. SQLite und Metadaten
+benötigen weiterhin LUKS oder vergleichbare Datenträgerverschlüsselung.
