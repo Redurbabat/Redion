@@ -336,7 +336,7 @@ const Gedankenkarte = (() => {
             sicht: {
                 x: zahl(s.x, 0),
                 y: zahl(s.y, 0),
-                z: Math.min(4, Math.max(.2, zahl(s.z, 1))),
+                z: Math.min(4, Math.max(.02, zahl(s.z, 1))),
             },
         };
     };
@@ -369,7 +369,7 @@ const Gedankenkarte = (() => {
         });
         return { kinder, wurzel: wurzel.id };
     };
-    const LESBAR = .72;
+    const LESBAR = .02;
     const LUECKE_X = 54;
     const LUECKE_Y = 14;
     const RAND = 28;
@@ -470,8 +470,10 @@ const Gedankenkarte = (() => {
         let letzterAufbau = null;
         let letzteMasse = {};
         const hoehe = Math.max(220, zahl(block.hoehe, 420));
-        let mussEinpassen = !aufFlaeche && !(block && block.karte && typeof block.karte.sicht === 'object'
-            && block.karte.sicht);
+        let mussEinpassen = !aufFlaeche && (window.matchMedia('(max-width: 760px)').matches || !(block && block.karte && typeof block.karte.sicht === 'object'
+            && block.karte.sicht));
+        let autoSicht = mussEinpassen;
+        let volleAnsicht = false;
         const w = document.createElement('div');
         w.className = aufFlaeche ? 'gk gk-auf-flaeche' : 'gk';
         const LEISTE = [
@@ -540,6 +542,45 @@ const Gedankenkarte = (() => {
                     schalten(false);
             });
             w.prepend(werkzeuge);
+        }
+        if (!aufFlaeche) {
+          const kopf = document.createElement('div');
+          kopf.className = 'gk-mobile-kopf';
+          kopf.innerHTML = '<button type="button" data-m="werkzeuge" aria-expanded="false">Werkzeuge</button>' +
+            '<button type="button" data-m="kleiner" aria-label="Verkleinern">−</button>' +
+            '<span class="gk-mobile-mass">100 %</span>' +
+            '<button type="button" data-m="groesser" aria-label="Vergrössern">+</button>' +
+            '<button type="button" data-m="passend" aria-label="Gesamtübersicht">⤢</button>' +
+            '<button type="button" data-m="vollbild" aria-label="Vollbild" aria-pressed="false">⛶</button>';
+          const leiste = w.querySelector('.gk-leiste');
+          const werkzeug = kopf.querySelector('[data-m="werkzeuge"]');
+          const leisteZeigen = (offen) => {
+            leiste.hidden = !offen;
+            werkzeug.setAttribute('aria-expanded', String(offen));
+          };
+          const vollbildWechseln = () => {
+            volleAnsicht = !volleAnsicht;
+            w.classList.toggle('gk-vollbild', volleAnsicht);
+            kopf.querySelector('[data-m="vollbild"]')?.setAttribute('aria-pressed', String(volleAnsicht));
+            autoSicht = true;
+            requestAnimationFrame(() => { if (w.isConnected) male(); });
+          };
+          leisteZeigen(!window.matchMedia('(max-width: 760px)').matches);
+          kopf.addEventListener('click', e => {
+            const aktion = (e.target instanceof Element ? e.target.closest('button') : null)?.dataset.m;
+            if (aktion === 'werkzeuge') leisteZeigen(leiste.hidden);
+            if (aktion === 'kleiner') zoomen(1 / 1.25);
+            if (aktion === 'groesser') zoomen(1.25);
+            if (aktion === 'passend') { autoSicht = true; einpassen(1, false); }
+            if (aktion === 'vollbild') vollbildWechseln();
+          });
+          w.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && volleAnsicht && !schreibt) {
+              e.preventDefault();
+              vollbildWechseln();
+            }
+          });
+          w.prepend(kopf);
         }
         const buehne = document.createElement('div');
         buehne.className = 'gk-buehne';
@@ -710,6 +751,8 @@ const Gedankenkarte = (() => {
             const m = w.querySelector('.gk-massstab');
             if (m)
                 m.textContent = Math.round(karte.sicht.z * 100) + ' %';
+          const mobilMass = w.querySelector('.gk-mobile-mass');
+          if (mobilMass) mobilMass.textContent = Math.round(karte.sicht.z * 100) + ' %';
         };
         const male = () => {
             if (schreibt)
@@ -810,7 +853,7 @@ const Gedankenkarte = (() => {
                 });
             }
             sichtAnwenden();
-            if (mussEinpassen && buehne.getBoundingClientRect().width > 4) {
+            if ((mussEinpassen || autoSicht) && buehne.getBoundingClientRect().width > 4) {
                 mussEinpassen = false;
                 einpassen(1, false, LESBAR);
             }
@@ -1066,8 +1109,9 @@ const Gedankenkarte = (() => {
             sichtAnwenden();
         };
         const zoomen = (faktor) => {
-            const alt = karte.sicht.z;
-            const neu = Math.min(4, Math.max(.2, alt * faktor));
+            autoSicht = false;
+          const alt = karte.sicht.z;
+            const neu = Math.min(4, Math.max(.02, alt * faktor));
             if (neu === alt)
                 return;
             const b = buehne.getBoundingClientRect();
@@ -1077,7 +1121,7 @@ const Gedankenkarte = (() => {
             sichtAnwenden();
             sichern();
         };
-        const einpassen = (hoechstens, speichern, mindestens = .2) => {
+        const einpassen = (hoechstens, speichern, mindestens = .02) => {
             if (aufFlaeche)
                 return;
             const plan = letzterAufbau;
@@ -1319,6 +1363,54 @@ const Gedankenkarte = (() => {
                 default: break;
             }
         });
+        const finger = new Map();
+        let pinching = false;
+        let pinchStart = null;
+        const pinchPaar = () => {
+          const [a,b] = Array.from(finger.values());
+          if (!a || !b) return null;
+          const rect = buehne.getBoundingClientRect();
+          return {d: Math.max(1, Math.hypot(a.x-b.x,a.y-b.y)), x:(a.x+b.x)/2-rect.left, y:(a.y+b.y)/2-rect.top};
+        };
+        if (!aufFlaeche) {
+          buehne.addEventListener('pointerdown', e => {
+            if (e.pointerType !== 'touch' || schreibt) return;
+            finger.set(e.pointerId,{x:e.clientX,y:e.clientY});
+            if (finger.size < 2) return;
+            const p = pinchPaar();
+            if (!p) return;
+            pinching = true;
+            autoSicht = false;
+            pinchStart = {d:p.d,z:karte.sicht.z,wx:(karte.sicht.x+p.x)/karte.sicht.z,wy:(karte.sicht.y+p.y)/karte.sicht.z};
+            for (const id of finger.keys()) { try { buehne.setPointerCapture(id); } catch {} }
+            e.preventDefault();
+            e.stopImmediatePropagation();
+          }, true);
+          buehne.addEventListener('pointermove', e => {
+            if (!finger.has(e.pointerId)) return;
+            finger.set(e.pointerId,{x:e.clientX,y:e.clientY});
+            if (!pinching) return;
+            const p = pinchPaar();
+            if (p && pinchStart) {
+              const z = Math.min(4,Math.max(.02,pinchStart.z*p.d/pinchStart.d));
+              karte.sicht = {z,x:pinchStart.wx*z-p.x,y:pinchStart.wy*z-p.y};
+              sichtAnwenden();
+            }
+            e.preventDefault();
+            e.stopPropagation();
+          });
+          const fingerLos = (e) => {
+            if (!finger.delete(e.pointerId)) return;
+            if (pinching && finger.size === 0) {
+              pinching = false;
+              pinchStart = null;
+              sichern();
+            }
+          };
+          buehne.addEventListener('pointerup',fingerLos);
+          buehne.addEventListener('pointercancel',fingerLos);
+          buehne.addEventListener('lostpointercapture',fingerLos);
+        }
         buehne.addEventListener('pointerdown', e => {
             const griffel = elVon(e)?.closest('.gk-griffel');
             if (griffel) {
@@ -1391,22 +1483,27 @@ const Gedankenkarte = (() => {
             }
             if (aufFlaeche)
                 return;
-            const startX = e.clientX, startY = e.clientY;
-            const vonX = karte.sicht.x, vonY = karte.sicht.y;
-            buehne.classList.add('gk-schiebt');
-            const zug = (ev) => {
-                karte.sicht.x = vonX - (ev.clientX - startX);
-                karte.sicht.y = vonY - (ev.clientY - startY);
-                sichtAnwenden();
-            };
-            const aus = () => {
-                window.removeEventListener('pointermove', zug);
-                window.removeEventListener('pointerup', aus);
-                buehne.classList.remove('gk-schiebt');
-                sichern();
-            };
-            window.addEventListener('pointermove', zug);
-            window.addEventListener('pointerup', aus);
+            autoSicht = false;
+          const startX = e.clientX, startY = e.clientY;
+          const vonX = karte.sicht.x, vonY = karte.sicht.y;
+          buehne.classList.add('gk-schiebt');
+          const zug = (ev) => {
+            if (ev.pointerId !== e.pointerId || pinching) return;
+            karte.sicht.x = vonX - (ev.clientX - startX);
+            karte.sicht.y = vonY - (ev.clientY - startY);
+            sichtAnwenden();
+          };
+          const aus = (ev) => {
+            if (ev.pointerId !== e.pointerId) return;
+            window.removeEventListener('pointermove', zug);
+            window.removeEventListener('pointerup', aus);
+            window.removeEventListener('pointercancel', aus);
+            buehne.classList.remove('gk-schiebt');
+            sichern();
+          };
+          window.addEventListener('pointermove', zug);
+          window.addEventListener('pointerup', aus);
+          window.addEventListener('pointercancel', aus);
         });
         buehne.addEventListener('dblclick', e => {
             const kn = elVon(e)?.closest('.gk-kn');
@@ -1556,11 +1653,11 @@ const Gedankenkarte = (() => {
             window.addEventListener('pointerup', aus);
         });
         if (typeof ResizeObserver !== 'undefined') {
-            let hatte = false;
+            let letzteBreite = 0, letzteHoehe = 0;
             const beobachter = new ResizeObserver(() => {
                 const b = buehne.getBoundingClientRect();
-                if (b.width > 4 && !hatte) {
-                    hatte = true;
+                if (b.width > 4 && b.height > 4 && (b.width !== letzteBreite || b.height !== letzteHoehe)) {
+                    letzteBreite = b.width; letzteHoehe = b.height;
                     male();
                 }
             });
