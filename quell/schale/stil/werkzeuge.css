@@ -1935,8 +1935,20 @@ html[data-theme="light"] .gk-kn{ --ast-zug:var(--ast-hell, var(--ast)); }
   /* Am Telefon ist der Bildschirm schmal — ein 230 px breiter Knoten neben
      einem zweiten passt nicht mehr nebeneinander. Schmaler heisst hier: mehr
      Umbrüche, aber alles bleibt lesbar. */
-  .gk-kn{ max-width:160px; font-size:14px; }
-  .gk-kn.gk-wurzel{ max-width:180px; font-size:16px; }
+  .gk-kn{ max-width:230px; font-size:14px; }
+  .gk-kn.gk-wurzel{ max-width:260px; font-size:16px; }
+  .gk-kn .gk-txt{ overflow-wrap:anywhere; hyphens:auto; }
+  /* Ein Streifen statt drei Zeilen; Einpassen und Zoom bleiben am Anfang. */
+  .gk:not(.gk-auf-flaeche) > .gk-leiste{
+    flex-wrap:nowrap; overflow-x:auto; overscroll-behavior-x:contain;
+    touch-action:pan-x; padding:4px 6px; gap:4px;
+  }
+  .gk:not(.gk-auf-flaeche) > .gk-leiste > *{ flex-shrink:0; }
+  .gk:not(.gk-auf-flaeche) > .gk-leiste .gk-zoom{ order:-1; }
+  .gk:not(.gk-auf-flaeche) > .gk-leiste button:not(.gk-farbe){ width:44px; height:44px; flex-shrink:0; }
+  .gk:not(.gk-auf-flaeche) > .gk-leiste .gk-farben{ gap:12px; padding-inline:8px; }
+  .gk:not(.gk-auf-flaeche) > .gk-leiste button::after{ display:none; }
+  .gk:not(.gk-auf-flaeche) > .gk-leiste .gk-farbe{ width:28px; height:28px; flex-shrink:0; }
   /* Am Telefon zieht ein Finger, kein Zeiger: 20 px sichtbar, 36 px Fläche.
      Der Grund für weniger als 44 px steht oben bei `.gk-griffel` — die
      Griffe sind der genaue Nebenweg, die Leiste bleibt der Hauptweg. */

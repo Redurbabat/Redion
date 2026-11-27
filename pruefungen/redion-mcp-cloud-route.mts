@@ -1763,6 +1763,21 @@ test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und at
     assert.equal((await update({expectedVersion:6,changes})).data.code,'conflict');
     const finalPlan=await call('redion_read_schematic',{blockId});
     assert.deepEqual(finalPlan.data.plan.texte.filter((item:any)=>item.id==='TB').map((item:any)=>[item.x,item.y]),[[210,370]]);
+    const values=await update({expectedVersion:7,changes:[
+      {operation:'add_component',componentId:'G12',symbolId:'gleichspannung',x:500,y:450},
+      {operation:'set_component_values',componentId:'G12',values:{U:12}},
+      {operation:'add_component',componentId:'E12',symbolId:'lampe',x:650,y:450},
+      {operation:'set_component_values',componentId:'E12',values:{R:24,Un:12}}
+    ]});
+    assert.equal(values.data.version,8);
+    const valued=await call('redion_read_schematic',{blockId});
+    assert.deepEqual(valued.data.plan.teile.find((p:any)=>p.id==='G12').werte,{U:12});
+    assert.deepEqual(valued.data.plan.teile.find((p:any)=>p.id==='E12').werte,{R:24,Un:12});
+    for(const [componentId,values] of [['G12',{U:-1}],['G12',{R:24}],['S1',{U:12}]]){
+      const invalid=await update({expectedVersion:8,operation:'set_component_values',componentId,values});
+      assert.equal(invalid.data.code,'invalid_arguments');
+    }
+    assert.equal((await call('redion_read_schematic',{blockId})).data.version,8);
     const orphanId='detached_schematic';
     await f.store.setze('saetze',{id:orphanId,bereich:'ws_test',tabelle:'blocks',
       daten:JSON.stringify({type:'schaltplan',parentId:'edit_schematic_page',plan:finalPlan.data.plan}),

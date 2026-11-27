@@ -506,7 +506,7 @@ const Gedankenkarte = (() => {
       sicht: {
         x: zahl(s.x, 0),
         y: zahl(s.y, 0),
-        z: Math.min(4, Math.max(.2, zahl(s.z, 1))),
+        z: Math.min(4, Math.max(MIN_ZOOM, zahl(s.z, 1))),
       },
     };
   };
@@ -565,16 +565,8 @@ const Gedankenkarte = (() => {
    * `planflaeche`.
    * ------------------------------------------------------------------------*/
 
-  /* DIE UNTERGRENZE FÜR DEN ERSTEN BLICK — und warum sie gemessen ist.
-     Ohne sie passt die App die Karte beim Öffnen IMMER ganz ein. Auf dem
-     Bild vom 16. September am iPhone 13 Pro Max hiess das: 33 %. Ein Knoten
-     mit 14 px Schrift stand dort mit 4,6 px am Bildschirm — sichtbar, aber
-     nicht lesbar, und lesbar ist der Punkt einer Gedankenkarte.
-     10 px sind die Grenze, unter der man aufhört zu lesen und anfängt zu
-     raten. 10 / 13,5 ergibt 0,74; gerundet 0,72, weil die Schrift am Telefon
-     14 px ist und dort schon 0,72 reichen. Wer wirklich alles sehen will,
-     drückt ⤢ — der Knopf kennt diese Grenze nicht. */
-  const LESBAR = .72;
+  /* Die Übersicht zeigt auch grosse Karten vollständig; zum Lesen zoomen. */
+  const MIN_ZOOM = .05;
 
   const LUECKE_X = 54;   /* Abstand zwischen zwei Ebenen */
   const LUECKE_Y = 14;   /* Abstand zwischen Geschwistern */
@@ -705,6 +697,7 @@ const Gedankenkarte = (() => {
     let mussEinpassen = !aufFlaeche && !(block && block.karte && typeof block.karte.sicht === 'object'
                           && block.karte.sicht);
 
+    let automatischeSicht = mussEinpassen;
     const w = document.createElement('div');
     w.className = aufFlaeche ? 'gk gk-auf-flaeche' : 'gk';
 
@@ -1167,7 +1160,7 @@ const Gedankenkarte = (() => {
       sichtAnwenden();
       if (mussEinpassen && buehne.getBoundingClientRect().width > 4) {
         mussEinpassen = false;
-        einpassen(1, false, LESBAR);
+        einpassen(1, false);
       }
     };
 
@@ -1418,8 +1411,9 @@ const Gedankenkarte = (() => {
 
     /* --- Massstab --------------------------------------------------------- */
     const zoomen = (faktor: number): void => {
+      automatischeSicht = false;
       const alt = karte.sicht.z;
-      const neu = Math.min(4, Math.max(.2, alt * faktor));
+      const neu = Math.min(4, Math.max(MIN_ZOOM, alt * faktor));
       if (neu === alt) return;
       /* Um die Mitte der Bühne, nicht um die linke obere Ecke — sonst wandert
          beim Verkleinern alles aus dem Bild. */
@@ -1440,7 +1434,7 @@ const Gedankenkarte = (() => {
      * kleine Karte auf 340 % aufgeblasen sieht nicht nach Sorgfalt aus,
      * sondern nach einem Fehler.
      */
-    const einpassen = (hoechstens: number, speichern: boolean, mindestens = .2): void => {
+    const einpassen = (hoechstens: number, speichern: boolean, mindestens = MIN_ZOOM): void => {
       if (aufFlaeche) return;
       const plan = letzterAufbau;
       if (!plan || !plan.breite || !plan.hoehe) return;
@@ -1465,7 +1459,7 @@ const Gedankenkarte = (() => {
         karte.sicht.y = my * z - hoch / 2;
       }
       sichtAnwenden();
-      if (speichern) sichern();
+      if (speichern) { automatischeSicht = false; sichern(); }
     };
 
     /* ══ DAS VORLAGEN-MENÜ (E628) ═══════════════════════════════════════
@@ -1655,7 +1649,53 @@ const Gedankenkarte = (() => {
       }
     });
 
+    // Kameragesten gehören der Bühne; ein zweiter Finger übernimmt die laufende
+    // Verschiebung. Die Weltkoordinate unter dem Mittelpunkt bleibt fest.
+    const kameraZeiger = new Map<number, { x: number; y: number }>();
+    let kameraGeaendert = false;
+    const kameraStart = (e: PointerEvent): void => {
+      if (kameraZeiger.size >= 2 || (e.pointerType !== 'touch' && e.button !== 0)) return;
+      e.preventDefault();
+      kameraZeiger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (e.isTrusted) buehne.setPointerCapture(e.pointerId);
+      buehne.classList.add('gk-schiebt');
+    };
+    buehne.addEventListener('pointermove', e => {
+      const alt = kameraZeiger.get(e.pointerId);
+      if (!alt) return;
+      const andere = [...kameraZeiger.entries()].find(([id]) => id !== e.pointerId)?.[1];
+      const neu = { x: e.clientX, y: e.clientY };
+      if (alt.x === neu.x && alt.y === neu.y) return;
+      kameraZeiger.set(e.pointerId, neu);
+      automatischeSicht = false;
+      kameraGeaendert = true;
+      if (andere) {
+        const b = buehne.getBoundingClientRect();
+        const dist = Math.hypot(alt.x - andere.x, alt.y - andere.y);
+        const neuDist = Math.hypot(neu.x - andere.x, neu.y - andere.y);
+        const z = Math.min(4, Math.max(MIN_ZOOM, karte.sicht.z * neuDist / Math.max(1, dist)));
+        const faktor = z / karte.sicht.z;
+        karte.sicht.x = (karte.sicht.x + (alt.x + andere.x) / 2 - b.left) * faktor - ((neu.x + andere.x) / 2 - b.left);
+        karte.sicht.y = (karte.sicht.y + (alt.y + andere.y) / 2 - b.top) * faktor - ((neu.y + andere.y) / 2 - b.top);
+        karte.sicht.z = z;
+      } else {
+        karte.sicht.x -= neu.x - alt.x;
+        karte.sicht.y -= neu.y - alt.y;
+      }
+      sichtAnwenden();
+    });
+    const kameraEnde = (e: PointerEvent): void => {
+      if (!kameraZeiger.delete(e.pointerId) || kameraZeiger.size) return;
+      buehne.classList.remove('gk-schiebt');
+      if (kameraGeaendert) sichern();
+      kameraGeaendert = false;
+    };
+    buehne.addEventListener('pointerup', kameraEnde);
+    buehne.addEventListener('pointercancel', kameraEnde);
+    buehne.addEventListener('lostpointercapture', kameraEnde);
+
     buehne.addEventListener('pointerdown', e => {
+      if (!aufFlaeche && kameraZeiger.size && e.pointerType === 'touch') { kameraStart(e); return; }
       /* ══ EIN GRIFF KANN ZWEIERLEI (E628) ═══════════════════════════════
          Tippen legt ein Thema an, Ziehen zieht eine Verbindung. Entschieden
          wird am Weg: unter sechs Pixeln ist es ein Tipp. Dieselbe Schwelle
@@ -1726,22 +1766,7 @@ const Gedankenkarte = (() => {
       if (schreibt) { schreiberSchliessen(null); return; }
       if (aufFlaeche) return;
       /* Auf leerer Fläche: schieben. */
-      const startX = e.clientX, startY = e.clientY;
-      const vonX = karte.sicht.x, vonY = karte.sicht.y;
-      buehne.classList.add('gk-schiebt');
-      const zug = (ev: PointerEvent): void => {
-        karte.sicht.x = vonX - (ev.clientX - startX);
-        karte.sicht.y = vonY - (ev.clientY - startY);
-        sichtAnwenden();
-      };
-      const aus = (): void => {
-        window.removeEventListener('pointermove', zug);
-        window.removeEventListener('pointerup', aus);
-        buehne.classList.remove('gk-schiebt');
-        sichern();
-      };
-      window.addEventListener('pointermove', zug);
-      window.addEventListener('pointerup', aus);
+      kameraStart(e);
     });
 
     buehne.addEventListener('dblclick', e => {
@@ -1864,10 +1889,13 @@ const Gedankenkarte = (() => {
        jeder Knoten 0 breit und die ganze Karte läge übereinander. Beim ersten
        echten Anblick wird deshalb neu gezeichnet. */
     if (typeof ResizeObserver !== 'undefined') {
-      let hatte = false;
+      let letzteBreite = 0;
       const beobachter = new ResizeObserver(() => {
         const b = buehne.getBoundingClientRect();
-        if (b.width > 4 && !hatte) { hatte = true; male(); }
+        if (b.width <= 4 || Math.abs(b.width - letzteBreite) < 1) return;
+        letzteBreite = b.width;
+        if (automatischeSicht) mussEinpassen = true;
+        male();
       });
       beobachter.observe(buehne);
     }

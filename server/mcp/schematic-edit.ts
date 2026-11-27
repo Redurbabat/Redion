@@ -187,6 +187,24 @@ export const editSchematic=(raw:unknown,args:Item):{plan:Item;elementId:string;k
     checkFreeComponent(part,components,wires,width,height);
     return {plan:{...raw,teile:[...components,part]},elementId:id,kind:'component'};
   }
+  if(kind==='set_component_values'){
+    allowedKeys(args,['componentId','values']);
+    const id=ident(args.componentId,'Bauteil');
+    const part=components.find(p=>isRecord(p)&&p.id===id);
+    if(!isRecord(part))fail('Bauteil fehlt.');
+    const values=args.values;
+    if(!isRecord(values)||!Object.keys(values).length)fail('Mindestens ein Bauteilwert ist erforderlich.');
+    const symbol=String(part.zeichen);
+    const allowed = ['gleichspannung','wechselspannung','batterie'].includes(symbol)
+      ? ['U'] : ['lampe','signalleuchte','widerstand'].includes(symbol)
+      ? (symbol==='widerstand'?['R']:['R','Un']) : [];
+    for(const [key,value] of Object.entries(values)){
+      if(!allowed.includes(key)||typeof value!=='number'||!Number.isFinite(value)||value<=0||
+        value>(key==='R'?1e9:1000))fail('Ungültiger oder nicht unterstützter Bauteilwert: '+key);
+    }
+    const old=isRecord(part.werte)?part.werte:{};
+    return {plan:{...raw,teile:components.map(p=>p===part?{...part,werte:{...old,...values}}:p)},elementId:id,kind:'component'};
+  }
   if(kind==='connect_terminals'){
     allowedKeys(args,['wireId','fromComponentId','fromTerminal','toComponentId','toTerminal','layer']);
     const id=ident(args.wireId,'Leitung');

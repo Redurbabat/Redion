@@ -8927,7 +8927,7 @@ body:not([data-dokument="an"]):has(.blatt-reihe[data-lage="unten"]) :is(.zm-pill
 .blk[data-herkunft="ki"]::before{background:var(--c-purple)}
 /* Die Herkunft bleibt im Blockmenü. Am hohen Schaltplan steht nur bei
    aktiver Blockauswahl eine sichtbare Markierung. */
-.blk.b-schaltplan[data-herkunft="ki"]:not(.gewaehlt)::before{content:none}
+.blk:is(.b-schaltplan,.b-mindmap,.b-whiteboard,.b-blatt)[data-herkunft="ki"]:not(.gewaehlt)::before{content:none}
 .blk[data-herkunft="quelle"]::before{background:var(--c-blue)}
 .blk[data-herkunft="fremd"]::before{background:var(--c-orange)}
 
