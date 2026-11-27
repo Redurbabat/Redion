@@ -26,7 +26,7 @@ jobs:
       - name: TypeScript
         run: npm run typecheck
       - name: Both isolated AFFiNE adapters
-        run: node --test pruefungen/affine/agent-1-editor/adapter.test.mts pruefungen/affine/agent-2-canvas/canvas.test.mjs
+        run: node --test pruefungen/affine/agent-1-editor/adapter.test.mts pruefungen/affine/agent-2-canvas/canvas.test.mts
       - name: Build native shared sources
         run: npm run bauen:ts
       - name: Build standalone HTML

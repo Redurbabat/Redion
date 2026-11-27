@@ -67,7 +67,8 @@ export class BoardModel {
   private current:Board;
   private past:Board[]=[];
   private future:Board[]=[];
-  constructor(readonly documentId:string, initial?:unknown){this.current=initial===undefined?{version:1,documentId,objects:[]}:parseBoard(initial,documentId);}
+  readonly documentId:string;
+  constructor(documentId:string, initial?:unknown){this.documentId=documentId;this.current=initial===undefined?{version:1,documentId,objects:[]}:parseBoard(initial,documentId);}
   serialize():Board{return clone(this.current);}
   replace(objects:Shape[]):boolean{
     const next=parseBoard({version:1,documentId:this.documentId,objects},this.documentId);

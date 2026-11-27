@@ -38,7 +38,9 @@ export class CanvasAdapter {
   private dpr=1;
   private dead=false;
   private frame=0;
-  constructor(private options:CanvasOptions){
+  private options:CanvasOptions;
+  constructor(options:CanvasOptions){
+    this.options=options;
     this.model=new BoardModel(options.documentId,options.initial);
     this.settings=readSettings(options.settings);this.theme=options.theme??'light';
     const d=options.host.ownerDocument;
@@ -299,7 +301,9 @@ export class DrawingDock {
   private toggle:HTMLButtonElement;
   private orientation:HTMLButtonElement;
   private drag:{id:number;x:number;y:number;left:number;top:number}|null=null;
-  constructor(private adapter:DrawingDockHost){
+  private adapter:DrawingDockHost;
+  constructor(adapter:DrawingDockHost){
+    this.adapter=adapter;
     const d=adapter.root.ownerDocument,signal=this.abort.signal;
     this.element=d.createElement('div');this.element.setAttribute('role','group');this.element.setAttribute('aria-label','Zeichnen-Dock');
     Object.assign(this.element.style,{position:'absolute',zIndex:'2',display:'flex',flexDirection:'column',gap:'4px',padding:'6px',border:'1px solid',borderRadius:'16px',boxShadow:'0 8px 24px #0003',maxWidth:'calc(100% - 16px)',maxHeight:'min(45%, calc(100% - 16px))',boxSizing:'border-box',overflow:'auto',font:'13px system-ui'});

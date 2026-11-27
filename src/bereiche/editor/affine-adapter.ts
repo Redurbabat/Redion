@@ -1,3 +1,4 @@
+/*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/bereiche/editor/affine-adapter.ts (npm run bauen:ts). */
 /* Eigenständiger Adapter; keine Übernahme von AFFiNE-Quellcode.
  * Der Host bleibt für Berechtigungen, Speicherung und Verlauf verantwortlich. */
 type RedionAffineBlock = { id: string; type: string; text?: string; content?: string[]; parentId?: string | null; [key: string]: unknown };
