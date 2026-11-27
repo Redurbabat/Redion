@@ -2279,8 +2279,27 @@ test('Cloud-MCP native visual objects with version protection',async()=>{
  assert.deepEqual(ordered.shapes.filter((s:any)=>s.art!=='verbindung').map((s:any)=>s.id),['loose','rect','ink']);
  await ok('redion_update_visual',{...bref,expectedVersion:20,operation:'ungroup_selection',selection:['ink']});
  assert.equal((await ok('redion_read_visual',bref)).shapes.find((s:any)=>s.id==='rect').groupId,undefined);
- const sheet=await ok('redion_create_sheet',{workspaceId:'ws_test',documentId:'visual_page',expectedVersion:3,requestId:'native_sheet_001',title:'A4',paper:'kariert',pages:2});
- assert.equal((await ok('redion_read_visual',{workspaceId:'ws_test',blockId:sheet.blockId})).blattHoehe,1683.78);
+ const textMark={id:'title',kind:'text',text:'Übungsblatt',x:50,y:60,width:320,fontSize:24,bold:true};
+ const penMark={id:'stroke',kind:'stift',color:'#2e77a5',points:[[50,895],[140,900],[230,895]]};
+ const sheetArgs={workspaceId:'ws_test',documentId:'visual_page',expectedVersion:3,requestId:'native_sheet_001',title:'A4',paper:'kariert',pages:2,marks:[textMark]};
+ const sheet=await ok('redion_create_sheet',sheetArgs);
+ assert.equal((await ok('redion_create_sheet',sheetArgs)).blockId,sheet.blockId);
+ const sheetRef={workspaceId:'ws_test',blockId:sheet.blockId};
+ assert.equal((await ok('redion_read_visual',sheetRef)).blattHoehe,1683.78);
+ const append={...sheetRef,expectedVersion:1,operation:'append_marks'};
+ for(const invalid of [textMark,{...penMark,id:'ausserhalb',points:[[10,40],[596,900]]}]){
+   const rejected=await run('redion_update_visual',{...append,marks:[penMark,invalid]});
+   assert.equal(JSON.parse(rejected.content[0].text).code,'invalid_arguments');
+ }
+ const firstMarks=await ok('redion_read_visual',{...sheetRef,collection:'marks',limit:1});
+ assert.equal(firstMarks.coordinateSpace,'sheetPoints');
+ assert.deepEqual(firstMarks.items[0],{id:'title',art:'text',farbe:'#2e77a5',point:[50,60],text:'Übungsblatt',breiteBox:320,fontSize:24,fett:true});
+ assert.equal(firstMarks.nextOffset,null);
+ await ok('redion_update_visual',{...append,marks:[penMark]});
+ const marked=await ok('redion_read_visual',{...sheetRef,collection:'marks',limit:1,expectedVersion:2});
+ assert.equal(marked.nextOffset,1);
+ assert.deepEqual((await ok('redion_read_visual',{...sheetRef,offset:1,expectedVersion:2})).items[0].pts,penMark.points);
+ assert.equal(JSON.parse((await run('redion_update_visual',{...append,marks:[penMark]})).content[0].text).code,'conflict');
  const pageRecord=await f.store.hole('saetze',{bereich:'ws_test',id:'visual_page'});
  assert.ok(pageRecord);
  const prepare=f.db.prepare;
@@ -2300,11 +2319,11 @@ test('Cloud-MCP native visual objects with version protection',async()=>{
  };
  try{
    const raced=await run('redion_update_visual',{workspaceId:'ws_test',blockId:sheet.blockId,
-     expectedVersion:1,operation:'set_paper',paper:'blanko'});
+     expectedVersion:2,operation:'set_paper',paper:'blanko'});
    assert.equal(parentChanged,true);
    assert.equal(JSON.parse(raced.content[0].text).code,'conflict');
    const saved=await f.store.hole('saetze',{bereich:'ws_test',id:sheet.blockId});
-   assert.equal(saved?.version,1);
+   assert.equal(saved?.version,2);
    assert.equal(JSON.parse(String(saved?.daten)).papier,'kariert');
  }finally{f.db.prepare=prepare;}
  const reviewClient=await f.oauth.register({client_name:'Synthetic visual reader',

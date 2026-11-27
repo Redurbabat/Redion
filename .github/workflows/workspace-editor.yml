@@ -8,6 +8,8 @@ on:
       - 'quell/schale/stil/studio.css'
       - 'pruefungen/workspace-editor.mts'
       - 'pruefungen/elektro-kombinationen.browser.test.mts'
+      - 'pruefungen/redion-mcp-sheet.browser.mts'
+      - 'server/mcp/visual-blocks.ts'
       - 'src/bereiche/bloecke/arten/planflaeche.ts'
       - '.github/workflows/workspace-editor.yml'
   workflow_dispatch:
@@ -52,6 +54,9 @@ jobs:
         run: |
           REDION_ELEKTRO_BILDER=bilder/elektro/chromium node pruefungen/elektro-kombinationen.browser.test.mts
           REDION_ELEKTRO_BILDER=bilder/elektro/webkit node pruefungen/elektro-kombinationen.browser.test.mts --webkit
+      - name: MCP-Zeichenmarken im nativen A4-Editor prüfen
+        if: always() && !cancelled()
+        run: REDION_SHEET_SCREENSHOTS=bilder/mcp-a4 node --test pruefungen/redion-mcp-sheet.browser.mts
       - name: Nur Bilder synthetischer Testdaten
         if: always()
         uses: actions/upload-artifact@v4
@@ -60,5 +65,6 @@ jobs:
           path: |
             bilder/workspace-2/editor/**/*.png
             bilder/elektro/**/*.png
+            bilder/mcp-a4/**/*.png
           if-no-files-found: warn
           retention-days: 14

@@ -489,3 +489,27 @@ Alle vier Operationen verwenden den vorhandenen Seiten- und Versionsschutz.
 Die Mindmap behält ihren Aufbau und Ausschnitt. MCP akzeptiert bis zu 200
 Knoten und 200 Querverbindungen, begrenzt durch Datensatzgrösse und
 Baumtiefe. Für grosse Karten stehen versionierte Leseseiten bereit.
+
+## Freie Zeichenmarken auf A4-Blättern
+
+`redion_create_sheet` nimmt optional `marks` an. Auf einem vorhandenen
+`blatt` ergänzt `redion_update_visual` mit `operation: "append_marks"`
+und der gelesenen `expectedVersion` bis zu 40 Marken in einem Schreibvorgang.
+Die Objekte erscheinen in der Zeichenschicht des normalen RED ION Editors.
+
+- `kind: "text"` verwendet `id`, `text`, `x`, `y`, `width` und optional
+  `color`, `fontSize` und `bold`. `x` und `y` bezeichnen die linke obere
+  Ecke des Textkastens.
+- `stift` und `marker` verwenden `points` mit 2–500 `[x,y]`-Paaren.
+- `line`, `arrow`, `rectangle`, `ellipse` und `triangle` verwenden zwei
+  Punkte. Für sämtliche Striche und Formen sind `color` und `strokeWidth`
+  optional.
+
+Einheit ist der Blattpunkt (1/72 Zoll). Die Koordinaten laufen von links
+oben nach rechts unten und über A4-Seitenumbrüche hinweg weiter. Eine
+zweite Hochformatseite beginnt bei `y = 841.89`. Die Blattgrösse steht in
+der Metadatenantwort. `collection: "marks"` liefert dazu versionierte
+Seiten mit den gespeicherten Marken und `coordinateSpace`. Bei älteren
+Blättern mit unkonvertierten Marken wird kein Schreibversuch übernommen.
+Fremde Markentypen werden nur anhand ihrer Kennung und Art ausgewiesen.
+Das Werkzeug verschiebt oder löscht bestehende Marken derzeit nicht.

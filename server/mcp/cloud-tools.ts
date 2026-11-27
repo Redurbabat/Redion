@@ -11,7 +11,7 @@ import {BUILTIN_SYMBOLS} from './symbol-catalog.ts';
 import {editSchematic} from './schematic-edit.ts';
 import {measureOperatingPoint,runSwitchTest} from './schematic-test.ts';
 import {buildLearningCard,buildLearningSet} from './learning-card.ts';
-import {mindmap,board,sheet,papers,forms,shapes,alignments,mindmapLimit,editNode,editShape,editSelection} from './visual-blocks.ts';
+import {mindmap,board,sheet,papers,forms,shapes,alignments,mindmapLimit,editNode,editShape,editSelection,appendSheetMarks,readSheetMark,sheetMarkKinds} from './visual-blocks.ts';
 
 type Db=McpDatabase;
 type Args=Record<string,unknown>;
@@ -52,6 +52,13 @@ const vCoord={type:'number',minimum:-10000,maximum:10000};
 const vStrokeWidth={type:'number',minimum:0.1,maximum:50};
 const vRotation={type:'number',minimum:-360,maximum:360};
 const vShapes={type:'array',maxItems:100,items:{type:'object',properties:{id:vId,kind:{type:'string',enum:shapes},x:vCoord,y:vCoord,width:vCoord,height:vCoord,color:vColor,text:{type:'string',maxLength:1000},filled:{type:'boolean'},from:vId,to:vId,points:{type:'array',minItems:2,maxItems:500,items:{type:'array',minItems:2,maxItems:2,items:vCoord}},pressure:{type:'array',minItems:2,maxItems:500,items:{type:'number',minimum:0.05,maximum:1}},strokeWidth:vStrokeWidth,marker:{type:'boolean'},rotation:vRotation},required:['id','kind'],additionalProperties:false}};
+const vSheetCoord={type:'number',minimum:0,maximum:10000};
+const vSheetMarks={type:'array',minItems:1,maxItems:40,items:{type:'object',properties:{
+  id:vId,kind:{type:'string',enum:sheetMarkKinds},color:vColor,points:{type:'array',minItems:2,maxItems:500,
+    items:{type:'array',minItems:2,maxItems:2,items:vSheetCoord}},strokeWidth:{type:'number',minimum:0.5,maximum:48},
+  x:vSheetCoord,y:vSheetCoord,width:{type:'number',minimum:24,maximum:10000},
+  fontSize:{type:'number',minimum:8,maximum:96},bold:{type:'boolean'},text:{type:'string',maxLength:1000}
+},required:['id','kind'],additionalProperties:false}};
 const vCreate={...workspace,...documentId,expectedVersion:{type:'integer',minimum:1},requestId:{type:'string',minLength:8,maxLength:100},title:nameField};
 const vRequired=['workspaceId','documentId','expectedVersion','requestId','title'];
 const shapeSelectionOperations=['group_selection','ungroup_selection','align_selection','move_selection','order_selection'];
@@ -72,16 +79,16 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{...vCreate,nodes:vNodes,connections:vLinks},required:[...vRequired,'nodes'],additionalProperties:false}},
   {name:'redion_create_whiteboard',description:'Erstellt ein natives Whiteboard mit Formen, Texten, Haftnotizen, Pfeilen, Verbindungen und Stiftstrichen (points als [x,y]-Paare).',
     inputSchema:{type:'object',properties:{...vCreate,shapes:vShapes},required:[...vRequired,'shapes'],additionalProperties:false}},
-  {name:'redion_create_sheet',description:'Erstellt ein natives A4-Blatt mit Papier und Seitenzahl.',
-    inputSchema:{type:'object',properties:{...vCreate,paper:{type:'string',enum:papers},pages:{type:'integer',minimum:1,maximum:10}},required:vRequired,additionalProperties:false}},
-  {name:'redion_read_visual',description:'Liest ein eingebettetes Mindmap-, Whiteboard- oder A4-Objekt mit Version. Mit collection, offset oder limit Mindmap-Knoten, Querverbindungen oder Whiteboard-Objekte in Seiten lesen. Für nextOffset dieselbe collection und expectedVersion verwenden.',
+  {name:'redion_create_sheet',description:'Erstellt ein natives A4-Blatt mit Papier, Seitenzahl und optionalen Text- oder Zeichenmarken. Positionen in Blattpunkten ab der linken oberen Ecke.',
+    inputSchema:{type:'object',properties:{...vCreate,paper:{type:'string',enum:papers},pages:{type:'integer',minimum:1,maximum:10},marks:vSheetMarks},required:vRequired,additionalProperties:false}},
+  {name:'redion_read_visual',description:'Liest ein eingebettetes Mindmap-, Whiteboard- oder A4-Objekt mit Version. Mit collection, offset oder limit Mindmap-Knoten, Querverbindungen, Whiteboard-Objekte oder A4-Zeichenmarken in Seiten lesen. Für nextOffset dieselbe collection und expectedVersion verwenden.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,
-      collection:{type:'string',enum:['nodes','connections','shapes']},
+      collection:{type:'string',enum:['nodes','connections','shapes','marks']},
       offset:{type:'integer',minimum:0,maximum:100000},limit:{type:'integer',minimum:1,maximum:40},
       expectedVersion:{type:'integer',minimum:1}
     },required:['workspaceId','blockId'],additionalProperties:false}},
-  {name:'redion_update_visual',description:'Bearbeitet native Zeichenobjekte mit Versionsprüfung. Mindmap ersetzen, Knoten ergänzen, verschieben oder gestalten und Querverbindungen ändern. Whiteboard-Formen und Gruppen bearbeiten. A4-Papier ändern.',
-    inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},operation:{type:'string',enum:['replace_mindmap',...mindmapEditOperations,'append_shapes','move_shape','resize_shape','style_shape','delete_shape','rotate_shape','order_shape','lock_shape','move_stroke','set_paper',...shapeSelectionOperations]},nodes:vNodes,connections:vLinks,node:vNodes.items,parentId:vId,connection:vLinks.items,shapes:vShapes,paper:{type:'string',enum:papers},elementId:vId,text:{type:'string',maxLength:1000},color:vColor,form:{type:'string',enum:forms},collapsed:{type:'boolean'},filled:{type:'boolean'},x:vCoord,y:vCoord,width:vCoord,height:vCoord,rotation:vRotation,strokeWidth:vStrokeWidth,marker:{type:'boolean'},locked:{type:'boolean'},order:{type:'string',enum:['front','back','forward','backward']},dx:vCoord,dy:vCoord,
+  {name:'redion_update_visual',description:'Bearbeitet native Zeichenobjekte mit Versionsprüfung. Mindmap ersetzen, Knoten ergänzen, verschieben oder gestalten und Querverbindungen ändern. Whiteboard-Formen und Gruppen bearbeiten. A4-Papier ändern oder Zeichenmarken ergänzen.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},operation:{type:'string',enum:['replace_mindmap',...mindmapEditOperations,'append_shapes','move_shape','resize_shape','style_shape','delete_shape','rotate_shape','order_shape','lock_shape','move_stroke','set_paper','append_marks',...shapeSelectionOperations]},nodes:vNodes,connections:vLinks,node:vNodes.items,parentId:vId,connection:vLinks.items,shapes:vShapes,marks:vSheetMarks,paper:{type:'string',enum:papers},elementId:vId,text:{type:'string',maxLength:1000},color:vColor,form:{type:'string',enum:forms},collapsed:{type:'boolean'},filled:{type:'boolean'},x:vCoord,y:vCoord,width:vCoord,height:vCoord,rotation:vRotation,strokeWidth:vStrokeWidth,marker:{type:'boolean'},locked:{type:'boolean'},order:{type:'string',enum:['front','back','forward','backward']},dx:vCoord,dy:vCoord,
       selection:{type:'array',minItems:1,maxItems:40,uniqueItems:true,items:vId},groupId:vId,alignment:{type:'string',enum:alignments}},required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
 
   {name:'redion_list_workspaces',description:'Zeigt nur die für diese KI-Verbindung freigegebenen Bereiche.',
@@ -1010,7 +1017,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         if(args.expectedVersion!==undefined&&expected(args.expectedVersion)!==version)
           return err('conflict','Zeichenobjekt wurde geändert. Bitte ab der ersten Seite neu lesen.');
         if(args.collection!==undefined||args.offset!==undefined||args.limit!==undefined){
-          const collection=args.collection===undefined?(type==='mindmap'?'nodes':'shapes'):args.collection;
+          const collection=args.collection??(type==='mindmap'?'nodes':type==='blatt'?'marks':'shapes');
           const offset=args.offset===undefined?0:args.offset;
           if(typeof offset!=='number'||!Number.isSafeInteger(offset)||offset<0||offset>100000)
             return err('invalid_arguments','Ungültiger Zeichenobjektversatz.');
@@ -1019,6 +1026,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
           const max=limit(args.limit,20,40);
           let elements:unknown;
           if(type==='whiteboard'&&collection==='shapes')elements=data.shapes??[];
+          else if(type==='blatt'&&collection==='marks')elements=data.marken??[];
           else if(type==='mindmap'&&(collection==='nodes'||collection==='connections')){
             const map=data.karte as Record<string,unknown>|undefined;
             elements=map?.[collection==='nodes'?'knoten':'verbindungen'];
@@ -1027,7 +1035,8 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
           const encoder=new TextEncoder();
           let bytes=2;
           const items:unknown[]=[];
-          for(const element of elements.slice(offset,offset+max)){
+          for(const raw of elements.slice(offset,offset+max)){
+            const element=type==='blatt'?readSheetMark(raw):raw;
             const size=encoder.encode(JSON.stringify(element)).byteLength+(items.length?1:0);
             if(bytes+size>28000){
               if(!items.length)return err('too_large','Ein einzelnes Zeichenelement ist zu gross.');
@@ -1037,7 +1046,8 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
             bytes+=size;
           }
           const nextOffset=offset+items.length<elements.length?offset+items.length:null;
-          return {workspaceId:w,documentId:pageId,blockId:id,type,version,collection,offset,nextOffset,items};
+          return {workspaceId:w,documentId:pageId,blockId:id,type,version,collection,offset,nextOffset,items,
+            ...(type==='blatt'?{coordinateSpace:data.raumVersion===1?'sheetPoints':'legacy'}:{})};
         }
         const view=type==='mindmap'?{karte:data.karte??null}:type==='whiteboard'?{shapes:data.shapes??[],sicht:data.sicht??null}:{papier:data.papier??'blanko',blattBreite:data.blattBreite??595.28,blattHoehe:data.blattHoehe??841.89};
         if(new TextEncoder().encode(JSON.stringify(view)).byteLength>32000)return err('too_large','Zeichenobjekt zu gross. Knoten, Verbindungen oder Formen seitenweise lesen.');
@@ -1048,7 +1058,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const fields:Record<string,string[]>={replace_mindmap:['nodes','connections'],rename_node:['elementId','text'],style_node:['elementId','color','form','collapsed'],delete_branch:['elementId'],append_shapes:['shapes'],move_shape:['elementId','x','y'],resize_shape:['elementId','width','height'],style_shape:['elementId','color','filled','text','strokeWidth','marker'],delete_shape:['elementId'],rotate_shape:['elementId','rotation'],order_shape:['elementId','order'],lock_shape:['elementId','locked'],move_stroke:['elementId','dx','dy'],set_paper:['paper'],
         group_selection:['selection','groupId'],ungroup_selection:['selection'],align_selection:['selection','alignment'],
         move_selection:['selection','dx','dy'],order_selection:['selection','order'],
-        append_node:['node'],move_node:['elementId','parentId'],add_connection:['connection'],remove_connection:['elementId']};
+        append_node:['node'],move_node:['elementId','parentId'],add_connection:['connection'],remove_connection:['elementId'],append_marks:['marks']};
       if(typeof op!=='string'||!Object.hasOwn(fields,op)||Object.keys(args).some(k=>!['workspaceId','blockId','expectedVersion','operation',...fields[op]!].includes(k)))return err('invalid_arguments','Ungültige Operation.');
       try{
         if(type==='mindmap'&&op==='replace_mindmap')next.karte=mindmap(args.nodes,args.connections);
@@ -1062,6 +1072,8 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
           next.shapes=[...existing,...board(args.shapes,existing)];next.raumVersion=1;
         }else if(type==='blatt'&&op==='set_paper'){
           if(typeof args.paper!=='string'||!papers.includes(args.paper))return err('invalid_arguments','Unbekanntes Papier.');next.papier=args.paper;
+        }else if(type==='blatt'&&op==='append_marks'){
+          next.marken=appendSheetMarks(data,args.marks);next.raumVersion=1;
         }else return err('invalid_arguments','Operation passt nicht zum Blocktyp.');
       }catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Ungültige Zeichnung.');}
       const now=new Date().toISOString(),payload=JSON.stringify({...next,edited:now});
@@ -1326,11 +1338,14 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const input=args.daten as Record<string,unknown>|undefined;
       const meta:Record<string,unknown>=learning?learning.meta:{};
       if(visualType){
-        const fields=visualType==='mindmap'?['nodes','connections']:visualType==='whiteboard'?['shapes']:['paper','pages'];
+        const fields=visualType==='mindmap'?['nodes','connections']:visualType==='whiteboard'?['shapes']:['paper','pages','marks'];
         if(args.requestId===undefined||Object.keys(args).some(k=>!['workspaceId','documentId','expectedVersion','title','requestId',...fields].includes(k)))return err('invalid_arguments','Ungültige Zeichenfelder.');
         try{if(visualType==='mindmap')meta.karte=mindmap(args.nodes,args.connections);
           else if(visualType==='whiteboard'){meta.shapes=board(args.shapes);meta.raumVersion=1;meta.hoehe=520;}
-          else Object.assign(meta,sheet(args.paper,args.pages));
+          else {
+            Object.assign(meta,sheet(args.paper,args.pages));
+            if(args.marks!==undefined)meta.marken=appendSheetMarks(meta,args.marks);
+          }
         }catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Ungültige Zeichnung.');}
       }
       if(createSchematic){

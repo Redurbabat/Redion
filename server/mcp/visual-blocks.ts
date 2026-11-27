@@ -95,6 +95,56 @@ export function board(input:unknown,existing:Obj[]=[]):Obj[]{
 }
 export function sheet(paper:unknown,pages:unknown=1):Obj{const n=num(pages,1,10);if(!Number.isInteger(n))fail('Ganze Seitenzahl erforderlich.');return {papier:choice(paper??'blanko',papers),blattBreite:595.28,blattHoehe:841.89*n,raumVersion:1};}
 
+export const sheetMarkKinds=['text','stift','marker','line','arrow','rectangle','ellipse','triangle'];
+
+export function readSheetMark(value:unknown):Obj {
+ if(!value||typeof value!=='object'||Array.isArray(value))return {supported:false};
+ const mark=value as Obj;
+ const base={id:mark.id,art:mark.art};
+ if(typeof mark.art!=='string'||!sheetMarkKinds.includes(mark.art))return {...base,supported:false};
+ const fields=['farbe','point','pts','text','breiteBox','fontSize','fett','breite','breiteFest','dreh','gesperrt','schrift','ausricht'];
+ return {...base,...Object.fromEntries(fields.filter(key=>Object.hasOwn(mark,key)).map(key=>[key,mark[key]]))};
+}
+
+/** Store marks in the point coordinate system consumed by Marken.schicht. */
+export function appendSheetMarks(block:Obj,input:unknown):Obj[] {
+ const existing=block.marken===undefined?[]:block.marken;
+ if(!Array.isArray(existing)||(existing.length&&block.raumVersion!==1))
+   return fail('Die vorhandenen Zeichenmarken benötigen zuerst die native Koordinatenmigration.');
+ const width=num(block.blattBreite??595.28,1,10000),height=num(block.blattHoehe??841.89,1,10000);
+ const ids=new Set(existing.map(mark=>mark?.id));
+ const added=arr(input,1,40).map(value=>{
+   const entry=obj(value,['id','kind','color','points','strokeWidth','text','x','y','width','fontSize','bold']);
+   const art=choice(entry.kind,sheetMarkKinds),markId=id(entry.id);
+   if(ids.has(markId))fail('Doppelte Kennung einer Zeichenmarke.');
+   ids.add(markId);
+   const mark={id:markId,art,farbe:color(entry.color??(art==='marker'?'#ffe164':'#2e77a5'))};
+   if(art==='text'){
+     if(entry.points!==undefined||entry.strokeWidth!==undefined)fail('Strichfelder passen nicht zu Text.');
+     if(entry.bold!==undefined&&typeof entry.bold!=='boolean')fail('Ungültiges Textformat.');
+     const x=num(entry.x,0,width),y=num(entry.y,0,height);
+     const fontSize=num(entry.fontSize??18,8,96),breiteBox=num(entry.width,24,width-x);
+     if(y+fontSize>height)fail('Textanker liegt zu nah am Blattrand.');
+     return {...mark,point:[x,y],text:str(entry.text,1000),breiteBox,fontSize,fett:entry.bold??false};
+   }
+   if(['text','x','y','width','fontSize','bold'].some(key=>entry[key]!==undefined))
+     fail('Textfelder passen nicht zu dieser Zeichenmarke.');
+   const stroke=art==='stift'||art==='marker';
+   const pts=arr(entry.points,2,stroke?500:2).map(value=>{
+     const [x,y]=arr(value,2,2);
+     return [num(x,0,width),num(y,0,height)];
+   });
+   const [a,b]=pts;
+   if(!a||!b||pts.every(point=>point[0]===a[0]&&point[1]===a[1]))fail('Leere Zeichenmarke.');
+   if(['rectangle','ellipse','triangle'].includes(art)&&(a![0]===b![0]||a![1]===b![1]))
+     fail('Die Fläche braucht Breite und Höhe.');
+   const breiteFest=num(entry.strokeWidth??(art==='marker'?10:2),0.5,48);
+   return {...mark,pts,breite:breiteFest,breiteFest};
+ });
+ if(existing.length+added.length>500)fail('Zu viele Zeichenmarken auf einem A4-Block.');
+ return [...existing,...added];
+}
+
 /** Patch only named objects; unrelated native fields and objects survive. */
 export function editNode(value:unknown,operation:string,args:Obj):Obj{
  if(!value||typeof value!=='object'||Array.isArray(value))return fail('Mindmap fehlt.');
