@@ -506,7 +506,7 @@ const Gedankenkarte = (() => {
       sicht: {
         x: zahl(s.x, 0),
         y: zahl(s.y, 0),
-        z: Math.min(4, Math.max(.2, zahl(s.z, 1))),
+        z: Math.min(4, Math.max(.02, zahl(s.z, 1))),
       },
     };
   };
@@ -565,16 +565,8 @@ const Gedankenkarte = (() => {
    * `planflaeche`.
    * ------------------------------------------------------------------------*/
 
-  /* DIE UNTERGRENZE FÜR DEN ERSTEN BLICK — und warum sie gemessen ist.
-     Ohne sie passt die App die Karte beim Öffnen IMMER ganz ein. Auf dem
-     Bild vom 16. September am iPhone 13 Pro Max hiess das: 33 %. Ein Knoten
-     mit 14 px Schrift stand dort mit 4,6 px am Bildschirm — sichtbar, aber
-     nicht lesbar, und lesbar ist der Punkt einer Gedankenkarte.
-     10 px sind die Grenze, unter der man aufhört zu lesen und anfängt zu
-     raten. 10 / 13,5 ergibt 0,74; gerundet 0,72, weil die Schrift am Telefon
-     14 px ist und dort schon 0,72 reichen. Wer wirklich alles sehen will,
-     drückt ⤢ — der Knopf kennt diese Grenze nicht. */
-  const LESBAR = .72;
+  // Gesamtübersicht auch bei grossen Karten.
+  const LESBAR = .02;
 
   const LUECKE_X = 54;   /* Abstand zwischen zwei Ebenen */
   const LUECKE_Y = 14;   /* Abstand zwischen Geschwistern */
@@ -702,9 +694,11 @@ const Gedankenkarte = (() => {
        selbst zurechtrückt, ist angenehmer als eine, die beim blossen Ansehen
        den Block ändert. Wer selbst schiebt oder zoomt, speichert — ab dann
        gilt seine Sicht. */
-    let mussEinpassen = !aufFlaeche && !(block && block.karte && typeof block.karte.sicht === 'object'
-                          && block.karte.sicht);
+    let mussEinpassen = !aufFlaeche && (window.matchMedia('(max-width: 760px)').matches || !(block && block.karte && typeof block.karte.sicht === 'object'
+                          && block.karte.sicht));
 
+    let autoSicht = mussEinpassen;
+    let volleAnsicht = false;
     const w = document.createElement('div');
     w.className = aufFlaeche ? 'gk gk-auf-flaeche' : 'gk';
 
@@ -805,6 +799,45 @@ const Gedankenkarte = (() => {
       w.prepend(werkzeuge);
     }
 
+    if (!aufFlaeche) {
+      const kopf = document.createElement('div');
+      kopf.className = 'gk-mobile-kopf';
+      kopf.innerHTML = '<button type="button" data-m="werkzeuge" aria-expanded="false">Werkzeuge</button>' +
+        '<button type="button" data-m="kleiner" aria-label="Verkleinern">−</button>' +
+        '<span class="gk-mobile-mass">100 %</span>' +
+        '<button type="button" data-m="groesser" aria-label="Vergrössern">+</button>' +
+        '<button type="button" data-m="passend" aria-label="Gesamtübersicht">⤢</button>' +
+        '<button type="button" data-m="vollbild" aria-label="Vollbild" aria-pressed="false">⛶</button>';
+      const leiste = w.querySelector<HTMLElement>('.gk-leiste')!;
+      const werkzeug = kopf.querySelector<HTMLButtonElement>('[data-m="werkzeuge"]')!;
+      const leisteZeigen = (offen: boolean) => {
+        leiste.hidden = !offen;
+        werkzeug.setAttribute('aria-expanded', String(offen));
+      };
+      const vollbildWechseln = () => {
+        volleAnsicht = !volleAnsicht;
+        w.classList.toggle('gk-vollbild', volleAnsicht);
+        kopf.querySelector('[data-m="vollbild"]')?.setAttribute('aria-pressed', String(volleAnsicht));
+        autoSicht = true;
+        requestAnimationFrame(() => { if (w.isConnected) male(); });
+      };
+      leisteZeigen(!window.matchMedia('(max-width: 760px)').matches);
+      kopf.addEventListener('click', e => {
+        const aktion = (e.target instanceof Element ? e.target.closest<HTMLButtonElement>('button') : null)?.dataset.m;
+        if (aktion === 'werkzeuge') leisteZeigen(leiste.hidden);
+        if (aktion === 'kleiner') zoomen(1 / 1.25);
+        if (aktion === 'groesser') zoomen(1.25);
+        if (aktion === 'passend') { autoSicht = true; einpassen(1, false); }
+        if (aktion === 'vollbild') vollbildWechseln();
+      });
+      w.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && volleAnsicht && !schreibt) {
+          e.preventDefault();
+          vollbildWechseln();
+        }
+      });
+      w.prepend(kopf);
+    }
     const buehne = document.createElement('div');
     buehne.className = 'gk-buehne';
     buehne.tabIndex = 0;
@@ -1043,6 +1076,8 @@ const Gedankenkarte = (() => {
                              `${(-karte.sicht.y).toFixed(1)}px) scale(${karte.sicht.z})`;
       const m = w.querySelector('.gk-massstab');
       if (m) m.textContent = Math.round(karte.sicht.z * 100) + ' %';
+      const mobilMass = w.querySelector('.gk-mobile-mass');
+      if (mobilMass) mobilMass.textContent = Math.round(karte.sicht.z * 100) + ' %';
     };
 
     /**
@@ -1165,7 +1200,7 @@ const Gedankenkarte = (() => {
       }
 
       sichtAnwenden();
-      if (mussEinpassen && buehne.getBoundingClientRect().width > 4) {
+      if ((mussEinpassen || autoSicht) && buehne.getBoundingClientRect().width > 4) {
         mussEinpassen = false;
         einpassen(1, false, LESBAR);
       }
@@ -1418,8 +1453,9 @@ const Gedankenkarte = (() => {
 
     /* --- Massstab --------------------------------------------------------- */
     const zoomen = (faktor: number): void => {
+      autoSicht = false;
       const alt = karte.sicht.z;
-      const neu = Math.min(4, Math.max(.2, alt * faktor));
+      const neu = Math.min(4, Math.max(.02, alt * faktor));
       if (neu === alt) return;
       /* Um die Mitte der Bühne, nicht um die linke obere Ecke — sonst wandert
          beim Verkleinern alles aus dem Bild. */
@@ -1440,7 +1476,7 @@ const Gedankenkarte = (() => {
      * kleine Karte auf 340 % aufgeblasen sieht nicht nach Sorgfalt aus,
      * sondern nach einem Fehler.
      */
-    const einpassen = (hoechstens: number, speichern: boolean, mindestens = .2): void => {
+    const einpassen = (hoechstens: number, speichern: boolean, mindestens = .02): void => {
       if (aufFlaeche) return;
       const plan = letzterAufbau;
       if (!plan || !plan.breite || !plan.hoehe) return;
@@ -1655,6 +1691,54 @@ const Gedankenkarte = (() => {
       }
     });
 
+    const finger = new Map<number, {x:number; y:number}>();
+    let pinching = false;
+    let pinchStart: { d:number; z:number; wx:number; wy:number } | null = null;
+    const pinchPaar = () => {
+      const [a,b] = Array.from(finger.values());
+      if (!a || !b) return null;
+      const rect = buehne.getBoundingClientRect();
+      return {d: Math.max(1, Math.hypot(a.x-b.x,a.y-b.y)), x:(a.x+b.x)/2-rect.left, y:(a.y+b.y)/2-rect.top};
+    };
+    if (!aufFlaeche) {
+      buehne.addEventListener('pointerdown', e => {
+        if (e.pointerType !== 'touch' || schreibt) return;
+        finger.set(e.pointerId,{x:e.clientX,y:e.clientY});
+        if (finger.size < 2) return;
+        const p = pinchPaar();
+        if (!p) return;
+        pinching = true;
+        autoSicht = false;
+        pinchStart = {d:p.d,z:karte.sicht.z,wx:(karte.sicht.x+p.x)/karte.sicht.z,wy:(karte.sicht.y+p.y)/karte.sicht.z};
+        for (const id of finger.keys()) { try { buehne.setPointerCapture(id); } catch {} }
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }, true);
+      buehne.addEventListener('pointermove', e => {
+        if (!finger.has(e.pointerId)) return;
+        finger.set(e.pointerId,{x:e.clientX,y:e.clientY});
+        if (!pinching) return;
+        const p = pinchPaar();
+        if (p && pinchStart) {
+          const z = Math.min(4,Math.max(.02,pinchStart.z*p.d/pinchStart.d));
+          karte.sicht = {z,x:pinchStart.wx*z-p.x,y:pinchStart.wy*z-p.y};
+          sichtAnwenden();
+        }
+        e.preventDefault();
+        e.stopPropagation();
+      });
+      const fingerLos = (e: PointerEvent) => {
+        if (!finger.delete(e.pointerId)) return;
+        if (pinching && finger.size === 0) {
+          pinching = false;
+          pinchStart = null;
+          sichern();
+        }
+      };
+      buehne.addEventListener('pointerup',fingerLos);
+      buehne.addEventListener('pointercancel',fingerLos);
+      buehne.addEventListener('lostpointercapture',fingerLos);
+    }
     buehne.addEventListener('pointerdown', e => {
       /* ══ EIN GRIFF KANN ZWEIERLEI (E628) ═══════════════════════════════
          Tippen legt ein Thema an, Ziehen zieht eine Verbindung. Entschieden
@@ -1726,22 +1810,27 @@ const Gedankenkarte = (() => {
       if (schreibt) { schreiberSchliessen(null); return; }
       if (aufFlaeche) return;
       /* Auf leerer Fläche: schieben. */
+      autoSicht = false;
       const startX = e.clientX, startY = e.clientY;
       const vonX = karte.sicht.x, vonY = karte.sicht.y;
       buehne.classList.add('gk-schiebt');
-      const zug = (ev: PointerEvent): void => {
+      const zug = (ev: PointerEvent) => {
+        if (ev.pointerId !== e.pointerId || pinching) return;
         karte.sicht.x = vonX - (ev.clientX - startX);
         karte.sicht.y = vonY - (ev.clientY - startY);
         sichtAnwenden();
       };
-      const aus = (): void => {
+      const aus = (ev: PointerEvent) => {
+        if (ev.pointerId !== e.pointerId) return;
         window.removeEventListener('pointermove', zug);
         window.removeEventListener('pointerup', aus);
+        window.removeEventListener('pointercancel', aus);
         buehne.classList.remove('gk-schiebt');
         sichern();
       };
       window.addEventListener('pointermove', zug);
       window.addEventListener('pointerup', aus);
+      window.addEventListener('pointercancel', aus);
     });
 
     buehne.addEventListener('dblclick', e => {
@@ -1864,10 +1953,12 @@ const Gedankenkarte = (() => {
        jeder Knoten 0 breit und die ganze Karte läge übereinander. Beim ersten
        echten Anblick wird deshalb neu gezeichnet. */
     if (typeof ResizeObserver !== 'undefined') {
-      let hatte = false;
+      let letzteBreite = 0, letzteHoehe = 0;
       const beobachter = new ResizeObserver(() => {
         const b = buehne.getBoundingClientRect();
-        if (b.width > 4 && !hatte) { hatte = true; male(); }
+        if (b.width > 4 && b.height > 4 && (b.width !== letzteBreite || b.height !== letzteHoehe)) {
+          letzteBreite = b.width; letzteHoehe = b.height; male();
+        }
       });
       beobachter.observe(buehne);
     }
