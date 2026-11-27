@@ -1878,6 +1878,28 @@ test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und at
     const afterRail=await call('redion_read_schematic',{blockId});
     assert.equal(afterRail.data.version,18);
     assert.deepEqual(afterRail.data.plan,withRail.data.plan);
+    const preview=await update({expectedVersion:18,dryRun:true,changes:[
+      {operation:'add_label',labelId:'preview_label',labelText:'Nur Vorschau',x:100,y:500},
+      {operation:'rename_label',labelId:'preview_label',labelText:'Vorschau geändert'}
+    ]});
+    assert.equal(preview.data.version,18,JSON.stringify(preview.data));
+    assert.equal(preview.data.dryRun,true);
+    assert.equal(preview.data.saved,false);
+    assert.equal(preview.data.elements.length,2);
+    assert.equal(preview.data.previewPlan.texte.find((t:any)=>t.id==='preview_label').t,'Vorschau geändert');
+    const singlePreview=await update({expectedVersion:18,dryRun:true,operation:'delete_wire',wireId:'railL1'});
+    assert.equal(singlePreview.data.saved,false);
+    assert.equal(singlePreview.data.previewPlan.leitungen.some((w:any)=>w.id==='railL1'),false);
+    assert.equal((await update({expectedVersion:18,dryRun:true,operation:'delete_wire',wireId:'railL1'},readOnly.access_token)).data.code,'forbidden');
+    assert.equal((await update({expectedVersion:17,dryRun:true,operation:'delete_wire',wireId:'railL1'})).data.code,'conflict');
+    assert.equal((await update({expectedVersion:18,dryRun:false,operation:'delete_wire',wireId:'railL1'})).data.code,'invalid_arguments');
+    assert.equal((await update({expectedVersion:18,dryRun:true,changes:[
+      {operation:'delete_wire',wireId:'railL1'},
+      {operation:'delete_wire',wireId:'missing'}
+    ]})).data.code,'invalid_arguments');
+    const afterPreview=await call('redion_read_schematic',{blockId});
+    assert.equal(afterPreview.data.version,18);
+    assert.deepEqual(afterPreview.data.plan,withRail.data.plan);
     const geometry=await call('redion_read_schematic',{blockId,expectedVersion:18,geometryAudit:true},readOnly.access_token);
     assert.equal(geometry.data.version,18,JSON.stringify(geometry.data));
     assert.equal(geometry.data.report.wireCount,withRail.data.plan.leitungen.length);
