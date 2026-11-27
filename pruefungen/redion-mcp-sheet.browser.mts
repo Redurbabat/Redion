@@ -93,11 +93,17 @@ test('Ein MCP-Blatt wird an der Querformatgrenze in zwei native Seiten geteilt',
     await page.locator('[data-document-action="inspector"]').click();
     await page.locator('[data-document-action="page-split"]').click();
     await page.locator('.overlay [data-w="ja"]').click();
-    await page.waitForFunction(id=>Store.childrenOf(id).filter(block=>block.type==='blatt').length===2,documentId);
-    const sheets=await page.evaluate(id=>Store.childrenOf(id).filter(block=>block.type==='blatt').map(block=>({
-      width:block.blattBreite,height:block.blattHoehe,orientation:block.blattAusrichtung,
-      id:block.marken[0].id,point:block.marken[0].point.map(n=>Math.round(n*100)/100)
-    })),documentId);
+    await page.waitForFunction(id=>Store.childrenOf(id).filter((child:{type:string})=>child.type==='blatt').length===2,documentId);
+    const sheets=await page.evaluate(id=>{
+      const blocks=Store.childrenOf(id) as Array<{
+        type:string;blattBreite:number;blattHoehe:number;blattAusrichtung?:string;
+        marken:[{id:string;point:[number,number]}];
+      }>;
+      return blocks.filter(block=>block.type==='blatt').map(block=>({
+        width:block.blattBreite,height:block.blattHoehe,orientation:block.blattAusrichtung,
+        id:block.marken[0].id,point:block.marken[0].point.map(n=>Math.round(n*100)/100)
+      }));
+    },documentId);
     assert.deepEqual(sheets,[
       {width:841.89,height:595.28,orientation:'quer',id:'one',point:[60,55]},
       {width:841.89,height:595.28,orientation:'quer',id:'two',point:[640,50]}
