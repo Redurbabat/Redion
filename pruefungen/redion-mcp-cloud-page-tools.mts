@@ -5,7 +5,7 @@ import type {McpPrincipal} from '../server/mcp/oauth.ts';
 import {readFileSync} from 'node:fs';
 import {BUILTIN_BLOCK_TYPES} from '../server/mcp/block-catalog.ts';
 import {BUILTIN_SYMBOLS} from '../server/mcp/symbol-catalog.ts';
-import {editSchematic} from '../server/mcp/schematic-edit.ts';
+import {editSchematic,schematicChangeSummary} from '../server/mcp/schematic-edit.ts';
 
 const principal=(scopes:('redion:read'|'redion:write'|'redion:images')[]):McpPrincipal=>({
   userId:'test-user',clientId:'test-client',grantId:'test-grant',workspaceIds:['test-workspace'],scopes
@@ -567,4 +567,30 @@ test('Cloud MCP: geometrische Prüfung identifiziert fehlerhafte Leitungsenden o
   const overlap={...base,leitungen:[{id:'a',punkte:[{x:10,y:20},{x:100,y:20}]},{id:'b',punkte:[{x:30,y:20},{x:120,y:20}]}]};
   assert.equal(auditWiring(overlap).hintCount,2);
   assert.equal(auditWiring(overlap).errorCount,0);
+});
+
+
+test('Cloud MCP: Änderungsvergleich enthält indirekte Leitungsänderungen und Nettoeffekte',()=>{
+  const before={teile:[{id:'A',x:100,y:100,werte:{R:24,Un:12}}],
+    leitungen:[{id:'W',punkte:[{x:100,y:100},{x:300,y:100}]}],
+    texte:[{id:'T',t:'Alt'}]};
+  const after={teile:[{id:'A',x:120,y:100,werte:{Un:12,R:24}}],
+    leitungen:[{id:'W',punkte:[{x:120,y:100},{x:300,y:100}]}],
+    texte:[{id:'N',t:'Neu'}]};
+  const snapshot=structuredClone(before);
+  assert.deepEqual(schematicChangeSummary(before,after),{
+    added:1,removed:1,modified:2,total:4,truncated:false,entries:[
+      {elementId:'A',elementType:'component',action:'modified',fields:['x']},
+      {elementId:'W',elementType:'wire',action:'modified',fields:['punkte']},
+      {elementId:'T',elementType:'label',action:'removed',fields:[]},
+      {elementId:'N',elementType:'label',action:'added',fields:[]}
+    ]});
+  assert.deepEqual(before,snapshot);
+  assert.equal(schematicChangeSummary(before,before).total,0);
+  const empty={teile:[],leitungen:[],texte:[]};
+  const large={...empty,texte:Array.from({length:50},(_,i)=>({id:'T'+i,t:'Neu'}))};
+  assert.equal(schematicChangeSummary(empty,large).added,50);
+  assert.equal(schematicChangeSummary(empty,large).entries.length,40);
+  assert.equal(schematicChangeSummary(empty,large).truncated,true);
+  assert.throws(()=>schematicChangeSummary(empty,{...empty,texte:[{id:'T'},{id:'T'}]}));
 });
