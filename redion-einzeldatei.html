@@ -31651,7 +31651,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1719, inhalt: 'e02856e8a04bc8a7', gebaut: '2026-11-27T05:36:37.211Z' };
+const Stand = { fassung: 1720, inhalt: 'd625ee3e5cd22798', gebaut: '2026-11-27T05:40:22.317Z' };
 window.Stand = Stand;
 
 </script>
@@ -32138,7 +32138,8 @@ const SheetSpace = (() => {
             return [rund(punkt.x), rund(punkt.y)];
         };
     };
-    const seiten = (hoehe) => Math.max(1, Math.ceil((Number(hoehe) || A4_HOEHE) / A4_HOEHE));
+    const seitenHoehe = (block) => block?.blattAusrichtung === 'quer' ? A4_BREITE : A4_HOEHE;
+    const seiten = (hoehe, seitenmass = A4_HOEHE) => Math.max(1, Math.ceil(Math.round((Number(hoehe) || seitenmass) * 100) / Math.round(seitenmass * 100)));
     const gedrehtVon = (block) => {
         const g = ((Math.round((Number(block?.gedreht) || 0) / 90) * 90) % 360 + 360) % 360;
         return g === 90 || g === 180 || g === 270 ? g : 0;
@@ -32164,7 +32165,7 @@ const SheetSpace = (() => {
         huelle.appendChild(inhalt);
         return huelle;
     };
-    return { A4_BREITE, A4_HOEHE, RAND, RAUM_VERSION, rund, zuBlatt, umrechner, seiten, gedrehtVon, masseVon, drehHuelle };
+    return { A4_BREITE, A4_HOEHE, RAND, RAUM_VERSION, rund, zuBlatt, umrechner, seiten, seitenHoehe, gedrehtVon, masseVon, drehHuelle };
 })();
 window.SheetSpace = SheetSpace;
 
@@ -73041,11 +73042,12 @@ const Blatt = (() => {
     };
     const zeichne = (block) => {
         const R = SheetSpace;
-        const hoehe = Number(block.blattHoehe) || R.A4_HOEHE;
-        const breite = Number(block.blattBreite) || R.A4_BREITE;
+        const seitenHoehe = R.seitenHoehe(block);
+        const hoehe = Number(block.blattHoehe) || seitenHoehe;
+        const breite = Number(block.blattBreite) || (block.blattAusrichtung === 'quer' ? R.A4_HOEHE : R.A4_BREITE);
         const w = document.createElement('div');
         w.className = 'blatt-huelle';
-        const schicht = Marken.schicht(block, breite, hoehe, R.A4_HOEHE);
+        const schicht = Marken.schicht(block, breite, hoehe, seitenHoehe);
         const jetzt = papierVon(block);
         const werk = Marken.leiste(schicht, '<span class="blatt-trenn"></span>' +
             '<button data-a="seite" title="Eine Seite anhängen">' +
@@ -73059,7 +73061,7 @@ const Blatt = (() => {
         const grundfarbe = String(block.grundfarbe || '');
         if (/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(grundfarbe))
             papier.style.setProperty('--paper', grundfarbe);
-        for (const [name, wert] of Object.entries(masse(breite, hoehe, R.A4_HOEHE)))
+        for (const [name, wert] of Object.entries(masse(breite, hoehe, seitenHoehe)))
             papier.style.setProperty(name, wert);
         w.appendChild(R.drehHuelle(block, papier));
         const papierListe = werk.querySelector('.blatt-papierliste');
@@ -73117,7 +73119,7 @@ const Blatt = (() => {
             if (b.dataset.a !== 'seite')
                 return;
             Store.updateBlock(block.id, {
-                blattHoehe: hoehe + R.A4_HOEHE, blattBreite: breite,
+                blattHoehe: R.rund(hoehe + seitenHoehe), blattBreite: breite,
                 raumVersion: R.RAUM_VERSION
             });
             App.zeichneSeite();
@@ -94237,7 +94239,7 @@ const DocumentMode = (() => {
         knoepfe.append(seitenKnopf('page-add', '＋', eins + ' danach', 'Eine leere ' + eins + ' hinter dieser einfügen — mit dem Papier aus der Auswahl darunter'), seitenKnopf('page-duplicate', '⧉', 'Duplizieren', 'Diese ' + eins + ' mit allem darauf verdoppeln'), seitenKnopf('page-rotate', '⟳', 'Drehen', 'Diese ' + eins + ' um 90° im Uhrzeigersinn drehen'), seitenKnopf('page-up', '↑', 'Nach oben', 'Diese ' + eins + ' eine Stelle nach vorn'), seitenKnopf('page-down', '↓', 'Nach unten', 'Diese ' + eins + ' eine Stelle nach hinten'), seitenKnopf('page-bookmark', '🔖', 'Lesezeichen', documentBlock.lesezeichen ? 'Lesezeichen entfernen' : 'Diese ' + eins + ' mit einem Lesezeichen merken', !!documentBlock.lesezeichen), seitenKnopf('page-delete', '🗑', 'Löschen', 'Diese ' + eins + ' in den Papierkorb legen — von dort kommt sie zurück'), seitenKnopf('page-add-image', '🖼', 'Bild als ' + eins, 'Ein Foto, einen Scan oder eine Grafik als neue ' + eins + ' hinter dieser einfügen'), seitenKnopf('page-add-camera', '📷', 'Foto aufnehmen', 'Mit der Kamera eine neue ' + eins + ' hinter dieser aufnehmen — am Rechner ohne Kamera öffnet sich der Dateiwähler'), seitenKnopf('page-add-pdf', '📕', 'PDF hier einfügen', 'Die Seiten einer weiteren PDF hinter dieser ' + eins + ' einfügen'), seitenKnopf('page-export-image', '⬇', 'Als Bild sichern', 'Diese ' + eins + ' mit allem darauf als PNG speichern'), seitenKnopf('page-to-doc', '↗', 'In anderes Dokument', 'Diese ' + eins + ' mit allem darauf in ein anderes Dokument kopieren oder verschieben'), seitenKnopf('page-split', '⌸', 'In ' + viele + ' zerlegen', 'Dieses mehrseitige Blatt in einzelne A4-' + viele + ' zerlegen — danach greifen Drehen, Löschen und Verschieben je ' + eins));
         {
             const teilbar = documentBlock?.type === 'blatt'
-                && SheetSpace.seiten(Number(documentBlock.blattHoehe) || SheetSpace.A4_HOEHE) > 1;
+                && SheetSpace.seiten(documentBlock.blattHoehe, SheetSpace.seitenHoehe(documentBlock)) > 1;
             const knopf = knoepfe.querySelector('[data-document-action="page-split"]');
             if (knopf && !teilbar) {
                 knopf.disabled = true;
@@ -95808,8 +95810,11 @@ const DocumentMode = (() => {
                 return;
             }
             const papier = String(Store.getMeta('heft:papier', 'blanko'));
+            const quer = block?.type === 'blatt' && block.blattAusrichtung === 'quer';
             const neu = Store.addBlock(stelle.eltern.id, 'blatt', {
-                text: '', papier, blattBreite: SheetSpace.A4_BREITE, blattHoehe: SheetSpace.A4_HOEHE,
+                text: '', papier, blattBreite: quer ? SheetSpace.A4_HOEHE : SheetSpace.A4_BREITE,
+                blattHoehe: quer ? SheetSpace.A4_BREITE : SheetSpace.A4_HOEHE,
+                ...(quer ? { blattAusrichtung: 'quer' } : {}),
                 raumVersion: SheetSpace.RAUM_VERSION
             }, stelle.index + 1);
             Store.addBlock(neu.id, 'text', { text: '' });
@@ -95958,7 +95963,7 @@ const DocumentMode = (() => {
         const zerlegbar = (block) => {
             if (!block || block.type !== 'blatt')
                 return 0;
-            return SheetSpace.seiten(Number(block.blattHoehe) || SheetSpace.A4_HOEHE);
+            return SheetSpace.seiten(block.blattHoehe, SheetSpace.seitenHoehe(block));
         };
         const seiteZerlegen = async (wen) => {
             const block = wen || jetzt();
@@ -95976,7 +95981,7 @@ const DocumentMode = (() => {
             }
             if (typeof Dialog === 'undefined')
                 return;
-            const A4 = SheetSpace.A4_HOEHE;
+            const A4 = SheetSpace.seitenHoehe(block);
             const marken = Array.isArray(block.marken) ? block.marken : [];
             const faecher = Array.from({ length: anzahl }, () => []);
             let ueberGrenze = 0;
@@ -96013,6 +96018,7 @@ const DocumentMode = (() => {
                     text: '', papier: block.papier || 'blanko',
                     blattBreite: Number(block.blattBreite) || SheetSpace.A4_BREITE,
                     blattHoehe: A4, raumVersion: SheetSpace.RAUM_VERSION,
+                    ...(block.blattAusrichtung === 'quer' ? { blattAusrichtung: 'quer' } : {}),
                     marken: faecher[i]
                 }, stelle.index + 1);
                 Store.addBlock(neu.id, 'text', { text: '' });
@@ -157934,7 +157940,10 @@ const Notebook = (() => {
         const a4 = (typeof SheetSpace !== 'undefined' && SheetSpace.A4_HOEHE) || 842;
         return Store.childrenOf(p.id)
             .filter((k) => k.type === 'blatt')
-            .reduce((n, k) => n + Math.max(1, Math.round((Number(k.blattHoehe) || a4) / a4)), 0);
+            .reduce((n, k) => {
+            const hoehe = typeof SheetSpace !== 'undefined' ? SheetSpace.seitenHoehe(k) : a4;
+            return n + Math.max(1, Math.round((Number(k.blattHoehe) || hoehe) / hoehe));
+        }, 0);
     };
     const wann = (p) => {
         const bib = globalThis.Bibliothek;

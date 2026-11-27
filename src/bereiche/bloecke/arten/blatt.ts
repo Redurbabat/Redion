@@ -155,14 +155,15 @@ const Blatt = (() => {
 
   const zeichne = (block: any): HTMLElement => {
     const R = SheetSpace;
-    const hoehe = Number(block.blattHoehe) || R.A4_HOEHE;
-    const breite = Number(block.blattBreite) || R.A4_BREITE;
+    const seitenHoehe = R.seitenHoehe(block);
+    const hoehe = Number(block.blattHoehe) || seitenHoehe;
+    const breite = Number(block.blattBreite) || (block.blattAusrichtung === 'quer' ? R.A4_HOEHE : R.A4_BREITE);
 
     const w = document.createElement('div');
     w.className = 'blatt-huelle';
 
     /* Die Zeichenschicht zuerst — die Leiste braucht ihre Schalter. */
-    const schicht = Marken.schicht(block, breite, hoehe, R.A4_HOEHE);
+    const schicht = Marken.schicht(block, breite, hoehe, seitenHoehe);
 
     const jetzt = papierVon(block);
     const werk = Marken.leiste(schicht,
@@ -189,7 +190,7 @@ const Blatt = (() => {
     const grundfarbe = String((block as any).grundfarbe || '');
     if (/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(grundfarbe))
       papier.style.setProperty('--paper', grundfarbe);
-    for (const [name, wert] of Object.entries(masse(breite, hoehe, R.A4_HOEHE)))
+    for (const [name, wert] of Object.entries(masse(breite, hoehe, seitenHoehe)))
       papier.style.setProperty(name, wert);
     /* Gedreht per Huelle (E467); ungedreht haengt das Papier wie immer
        unmittelbar in der Huelle. */
@@ -259,7 +260,7 @@ const Blatt = (() => {
 
       if (b.dataset.a !== 'seite') return;
       Store.updateBlock(block.id, {
-        blattHoehe: hoehe + R.A4_HOEHE, blattBreite: breite,
+        blattHoehe: R.rund(hoehe + seitenHoehe), blattBreite: breite,
         raumVersion: R.RAUM_VERSION
       });
       App.zeichneSeite();

@@ -96,7 +96,14 @@ export function board(input:unknown,existing:Obj[]=[]):Obj[]{
  const endpoints=new Set(all.filter(s=>s.art!=='verbindung').map(s=>s.id));for(const s of added)if(s.art==='verbindung'&&(!endpoints.has(s.von)||!endpoints.has(s.nach)||s.von===s.nach))fail('Endpunkt fehlt.');
  return added;
 }
-export function sheet(paper:unknown,pages:unknown=1):Obj{const n=num(pages,1,10);if(!Number.isInteger(n))fail('Ganze Seitenzahl erforderlich.');return {papier:choice(paper??'blanko',papers),blattBreite:595.28,blattHoehe:841.89*n,raumVersion:1};}
+export function sheet(paper:unknown,pages:unknown=1,orientation:unknown='portrait'):Obj {
+ const n=num(pages,1,10);
+ if(!Number.isInteger(n))fail('Ganze Seitenzahl erforderlich.');
+ const landscape=choice(orientation,['portrait','landscape'])==='landscape';
+ const height=landscape?595.28:841.89;
+ return {papier:choice(paper??'blanko',papers),blattBreite:landscape?841.89:595.28,
+   blattHoehe:Math.round(height*n*100)/100,raumVersion:1,...(landscape?{blattAusrichtung:'quer'}:{})};
+}
 
 export const sheetMarkKinds=['text','stift','marker','line','arrow','rectangle','ellipse','triangle'];
 

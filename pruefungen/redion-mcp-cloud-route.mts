@@ -2372,5 +2372,17 @@ test('Cloud-MCP native visual objects with version protection',async()=>{
    offset:150,limit:40,expectedVersion:1});
  assert.deepEqual(lastPage.items,[{id:'node_149',text:'Thema 149',eltern:'root'}]);
  assert.equal(lastPage.nextOffset,null);
+ const landscapeArgs={...sheetArgs,expectedVersion:large.parentVersion,requestId:'native_sheet_landscape',
+   orientation:'landscape',marks:[{...textMark,x:650,y:640,width:160}]};
+ const landscape=await ok('redion_create_sheet',landscapeArgs);
+ const landscapeRef={workspaceId:'ws_test',blockId:landscape.blockId};
+ const landscapeRead=await ok('redion_read_visual',landscapeRef);
+ assert.equal(landscapeRead.blattBreite,841.89);
+ assert.equal(landscapeRead.blattHoehe,1190.56);
+ assert.equal(landscapeRead.orientation,'landscape');
+ assert.deepEqual((await ok('redion_read_visual',{...landscapeRef,collection:'marks'})).items[0].point,[650,640]);
+ const mismatched=await run('redion_create_sheet',{...landscapeArgs,requestId:'native_sheet_bad_portrait',
+   expectedVersion:landscape.parentVersion,orientation:'portrait'});
+ assert.equal(JSON.parse(mismatched.content[0].text).code,'invalid_arguments');
  }finally{f.close();}
 });

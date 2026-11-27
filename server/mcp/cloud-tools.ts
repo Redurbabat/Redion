@@ -79,8 +79,8 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{...vCreate,nodes:vNodes,connections:vLinks},required:[...vRequired,'nodes'],additionalProperties:false}},
   {name:'redion_create_whiteboard',description:'Erstellt ein natives Whiteboard mit Formen, Texten, Haftnotizen, Pfeilen, Verbindungen und Stiftstrichen (points als [x,y]-Paare).',
     inputSchema:{type:'object',properties:{...vCreate,shapes:vShapes},required:[...vRequired,'shapes'],additionalProperties:false}},
-  {name:'redion_create_sheet',description:'Erstellt ein natives A4-Blatt mit Papier, Seitenzahl und optionalen Text- oder Zeichenmarken. Positionen in Blattpunkten ab der linken oberen Ecke.',
-    inputSchema:{type:'object',properties:{...vCreate,paper:{type:'string',enum:papers},pages:{type:'integer',minimum:1,maximum:10},marks:vSheetMarks},required:vRequired,additionalProperties:false}},
+  {name:'redion_create_sheet',description:'Erstellt ein natives A4-Blatt im Hoch- oder Querformat mit Papier, Seitenzahl und optionalen Text- oder Zeichenmarken. Positionen in Blattpunkten ab der linken oberen Ecke.',
+    inputSchema:{type:'object',properties:{...vCreate,paper:{type:'string',enum:papers},pages:{type:'integer',minimum:1,maximum:10},orientation:{type:'string',enum:['portrait','landscape']},marks:vSheetMarks},required:vRequired,additionalProperties:false}},
   {name:'redion_read_visual',description:'Liest ein eingebettetes Mindmap-, Whiteboard- oder A4-Objekt mit Version. Mit collection, offset oder limit Mindmap-Knoten, Querverbindungen, Whiteboard-Objekte oder A4-Zeichenmarken in Seiten lesen. Für nextOffset dieselbe collection und expectedVersion verwenden.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,
       collection:{type:'string',enum:['nodes','connections','shapes','marks']},
@@ -1049,7 +1049,8 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
           return {workspaceId:w,documentId:pageId,blockId:id,type,version,collection,offset,nextOffset,items,
             ...(type==='blatt'?{coordinateSpace:data.raumVersion===1?'sheetPoints':'legacy'}:{})};
         }
-        const view=type==='mindmap'?{karte:data.karte??null}:type==='whiteboard'?{shapes:data.shapes??[],sicht:data.sicht??null}:{papier:data.papier??'blanko',blattBreite:data.blattBreite??595.28,blattHoehe:data.blattHoehe??841.89};
+        const view=type==='mindmap'?{karte:data.karte??null}:type==='whiteboard'?{shapes:data.shapes??[],sicht:data.sicht??null}:{papier:data.papier??'blanko',blattBreite:data.blattBreite??595.28,blattHoehe:data.blattHoehe??841.89,
+          ...(data.blattAusrichtung==='quer'?{orientation:'landscape'}:{})};
         if(new TextEncoder().encode(JSON.stringify(view)).byteLength>32000)return err('too_large','Zeichenobjekt zu gross. Knoten, Verbindungen oder Formen seitenweise lesen.');
         return {workspaceId:w,documentId:pageId,blockId:id,type,version,...view};
       }
@@ -1340,12 +1341,12 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const input=args.daten as Record<string,unknown>|undefined;
       const meta:Record<string,unknown>=learning?learning.meta:{};
       if(visualType){
-        const fields=visualType==='mindmap'?['nodes','connections']:visualType==='whiteboard'?['shapes']:['paper','pages','marks'];
+        const fields=visualType==='mindmap'?['nodes','connections']:visualType==='whiteboard'?['shapes']:['paper','pages','orientation','marks'];
         if(args.requestId===undefined||Object.keys(args).some(k=>!['workspaceId','documentId','expectedVersion','title','requestId',...fields].includes(k)))return err('invalid_arguments','Ungültige Zeichenfelder.');
         try{if(visualType==='mindmap')meta.karte=mindmap(args.nodes,args.connections);
           else if(visualType==='whiteboard'){meta.shapes=board(args.shapes);meta.raumVersion=1;meta.hoehe=520;}
           else {
-            Object.assign(meta,sheet(args.paper,args.pages));
+            Object.assign(meta,sheet(args.paper,args.pages,args.orientation));
             if(args.marks!==undefined)meta.marken=appendSheetMarks(meta,args.marks);
           }
         }catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Ungültige Zeichnung.');}

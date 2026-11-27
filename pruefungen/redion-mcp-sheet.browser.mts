@@ -63,3 +63,48 @@ for(const [engine,device,width] of [[chromium,'desktop',1366],[chromium,'mobile'
     }finally{await browser.close();}
   });
 }
+
+test('Ein MCP-Blatt wird an der Querformatgrenze in zwei native Seiten geteilt',async()=>{
+  const block=sheet('punkte',2,'landscape');
+  block.marken=appendSheetMarks(block,[
+    {id:'one',kind:'text',text:'Querformat · Seite 1',x:60,y:55,width:480,fontSize:30,bold:true},
+    {id:'two',kind:'text',text:'Querformat · Seite 2',x:640,y:645.28,width:175,fontSize:14}
+  ]);
+  const browser=await chromium.launch();
+  try{
+    const page=await browser.newPage({viewport:{width:1366,height:950},reducedMotion:'reduce',serviceWorkers:'block'});
+    await page.goto(new URL('../index.html',import.meta.url).href);
+    await page.waitForFunction(()=>typeof App!=='undefined'&&!!document.querySelector('#page')?.firstElementChild);
+    const documentId=await page.evaluate(async block=>{
+      Store.setMeta('rundgangGesehen',true);
+      Store.setMeta('neuerungenGesehen',1e9);
+      document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung,#rg-neu').forEach(node=>node.remove());
+      const doc=Store.addPage(null,{text:'A4 quer aus MCP'});
+      Store.addBlock(doc.id,'blatt',{text:'',...block});
+      Store.updateBlock(doc.id,{dokumentModus:true});
+      await Store.flush();
+      App.oeffne(doc.id);
+      return doc.id;
+    },block);
+    const boundaries=page.locator('.blatt-marken .blatt-umbruch');
+    await boundaries.first().waitFor({state:'attached'});
+    assert.equal(await boundaries.count(),1);
+    assert.equal(await boundaries.getAttribute('y1'),'595.28');
+    await page.locator('[data-document-action="inspector"]').click();
+    await page.locator('[data-document-action="page-split"]').click();
+    await page.locator('.overlay [data-w="ja"]').click();
+    await page.waitForFunction(id=>Store.childrenOf(id).filter(block=>block.type==='blatt').length===2,documentId);
+    const sheets=await page.evaluate(id=>Store.childrenOf(id).filter(block=>block.type==='blatt').map(block=>({
+      width:block.blattBreite,height:block.blattHoehe,orientation:block.blattAusrichtung,
+      id:block.marken[0].id,point:block.marken[0].point.map(n=>Math.round(n*100)/100)
+    })),documentId);
+    assert.deepEqual(sheets,[
+      {width:841.89,height:595.28,orientation:'quer',id:'one',point:[60,55]},
+      {width:841.89,height:595.28,orientation:'quer',id:'two',point:[640,50]}
+    ]);
+    if(output){
+      await mkdir(output,{recursive:true});
+      await page.screenshot({path:join(output,'redion-pr236-a4-mcp-landscape.png'),animations:'disabled'});
+    }
+  }finally{await browser.close();}
+});

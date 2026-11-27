@@ -507,8 +507,11 @@ Die Objekte erscheinen in der Zeichenschicht des normalen RED ION Editors.
 
 Einheit ist der Blattpunkt (1/72 Zoll). Die Koordinaten laufen von links
 oben nach rechts unten und über A4-Seitenumbrüche hinweg weiter. Eine
-zweite Hochformatseite beginnt bei `y = 841.89`. Die Blattgrösse steht in
-der Metadatenantwort. `collection: "marks"` liefert dazu versionierte
+zweite Hochformatseite beginnt bei `y = 841.89`. Beim Erstellen setzt
+`orientation: "landscape"` echte 841.89 × 595.28 Blattpunkte je Seite.
+Die zweite Querseite beginnt bei `y = 595.28`. Der native Dokumenteditor
+kann mehrseitige Blätter an dieser Grenze in einzelne Seiten zerlegen.
+Die Blattgrösse steht in der Metadatenantwort. `collection: "marks"` liefert versionierte
 Seiten mit den gespeicherten Marken und `coordinateSpace`. Bei älteren
 Blättern mit unkonvertierten Marken wird kein Schreibversuch übernommen.
 Fremde Markentypen werden nur anhand ihrer Kennung und Art ausgewiesen.

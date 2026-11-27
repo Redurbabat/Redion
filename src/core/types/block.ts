@@ -82,6 +82,8 @@ export interface RedionBlock {
   /** Deutung der räumlichen Zahlen. Blatt/PDF-Seite: SheetSpace.RAUM_VERSION;
    *  Whiteboard: 1 = CSS-Pixel bei Massstab 1 (E686). Fehlt = 1. */
   raumVersion?: number;
+  /** A4-Querformat mit ungedrehtem Koordinatensystem. Fehlt im Hochformat. */
+  blattAusrichtung?: 'quer';
   /** Gedankenkarte (E607): Knoten und Ausschnitt. */
   karte?: unknown;
   /** Schaltplan (E?): Plan mit teile/leitungen/texte/ebenen. */

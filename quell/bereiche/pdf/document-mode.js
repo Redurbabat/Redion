@@ -991,7 +991,7 @@ const DocumentMode = (() => {
         knoepfe.append(seitenKnopf('page-add', '＋', eins + ' danach', 'Eine leere ' + eins + ' hinter dieser einfügen — mit dem Papier aus der Auswahl darunter'), seitenKnopf('page-duplicate', '⧉', 'Duplizieren', 'Diese ' + eins + ' mit allem darauf verdoppeln'), seitenKnopf('page-rotate', '⟳', 'Drehen', 'Diese ' + eins + ' um 90° im Uhrzeigersinn drehen'), seitenKnopf('page-up', '↑', 'Nach oben', 'Diese ' + eins + ' eine Stelle nach vorn'), seitenKnopf('page-down', '↓', 'Nach unten', 'Diese ' + eins + ' eine Stelle nach hinten'), seitenKnopf('page-bookmark', '🔖', 'Lesezeichen', documentBlock.lesezeichen ? 'Lesezeichen entfernen' : 'Diese ' + eins + ' mit einem Lesezeichen merken', !!documentBlock.lesezeichen), seitenKnopf('page-delete', '🗑', 'Löschen', 'Diese ' + eins + ' in den Papierkorb legen — von dort kommt sie zurück'), seitenKnopf('page-add-image', '🖼', 'Bild als ' + eins, 'Ein Foto, einen Scan oder eine Grafik als neue ' + eins + ' hinter dieser einfügen'), seitenKnopf('page-add-camera', '📷', 'Foto aufnehmen', 'Mit der Kamera eine neue ' + eins + ' hinter dieser aufnehmen — am Rechner ohne Kamera öffnet sich der Dateiwähler'), seitenKnopf('page-add-pdf', '📕', 'PDF hier einfügen', 'Die Seiten einer weiteren PDF hinter dieser ' + eins + ' einfügen'), seitenKnopf('page-export-image', '⬇', 'Als Bild sichern', 'Diese ' + eins + ' mit allem darauf als PNG speichern'), seitenKnopf('page-to-doc', '↗', 'In anderes Dokument', 'Diese ' + eins + ' mit allem darauf in ein anderes Dokument kopieren oder verschieben'), seitenKnopf('page-split', '⌸', 'In ' + viele + ' zerlegen', 'Dieses mehrseitige Blatt in einzelne A4-' + viele + ' zerlegen — danach greifen Drehen, Löschen und Verschieben je ' + eins));
         {
             const teilbar = documentBlock?.type === 'blatt'
-                && SheetSpace.seiten(Number(documentBlock.blattHoehe) || SheetSpace.A4_HOEHE) > 1;
+                && SheetSpace.seiten(documentBlock.blattHoehe, SheetSpace.seitenHoehe(documentBlock)) > 1;
             const knopf = knoepfe.querySelector('[data-document-action="page-split"]');
             if (knopf && !teilbar) {
                 knopf.disabled = true;
@@ -2562,8 +2562,11 @@ const DocumentMode = (() => {
                 return;
             }
             const papier = String(Store.getMeta('heft:papier', 'blanko'));
+            const quer = block?.type === 'blatt' && block.blattAusrichtung === 'quer';
             const neu = Store.addBlock(stelle.eltern.id, 'blatt', {
-                text: '', papier, blattBreite: SheetSpace.A4_BREITE, blattHoehe: SheetSpace.A4_HOEHE,
+                text: '', papier, blattBreite: quer ? SheetSpace.A4_HOEHE : SheetSpace.A4_BREITE,
+                blattHoehe: quer ? SheetSpace.A4_BREITE : SheetSpace.A4_HOEHE,
+                ...(quer ? { blattAusrichtung: 'quer' } : {}),
                 raumVersion: SheetSpace.RAUM_VERSION
             }, stelle.index + 1);
             Store.addBlock(neu.id, 'text', { text: '' });
@@ -2712,7 +2715,7 @@ const DocumentMode = (() => {
         const zerlegbar = (block) => {
             if (!block || block.type !== 'blatt')
                 return 0;
-            return SheetSpace.seiten(Number(block.blattHoehe) || SheetSpace.A4_HOEHE);
+            return SheetSpace.seiten(block.blattHoehe, SheetSpace.seitenHoehe(block));
         };
         const seiteZerlegen = async (wen) => {
             const block = wen || jetzt();
@@ -2730,7 +2733,7 @@ const DocumentMode = (() => {
             }
             if (typeof Dialog === 'undefined')
                 return;
-            const A4 = SheetSpace.A4_HOEHE;
+            const A4 = SheetSpace.seitenHoehe(block);
             const marken = Array.isArray(block.marken) ? block.marken : [];
             const faecher = Array.from({ length: anzahl }, () => []);
             let ueberGrenze = 0;
@@ -2767,6 +2770,7 @@ const DocumentMode = (() => {
                     text: '', papier: block.papier || 'blanko',
                     blattBreite: Number(block.blattBreite) || SheetSpace.A4_BREITE,
                     blattHoehe: A4, raumVersion: SheetSpace.RAUM_VERSION,
+                    ...(block.blattAusrichtung === 'quer' ? { blattAusrichtung: 'quer' } : {}),
                     marken: faecher[i]
                 }, stelle.index + 1);
                 Store.addBlock(neu.id, 'text', { text: '' });
