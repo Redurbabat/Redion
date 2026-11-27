@@ -79,6 +79,7 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
     {type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label','set_component_values','rename_label','delete_label','delete_wire','rotate_component','mirror_component','delete_component','move_connected_component','branch_wire','add_busbar']});
   assert.deepEqual(updateSchematic?.inputSchema.properties.rotation,
     {type:'integer',enum:[0,90,180,270]});
+  assert.deepEqual(updateSchematic?.inputSchema.properties.dryRun,{type:'boolean',enum:[true]});
   assert.equal(updateSchematic?.annotations?.readOnlyHint,false);
   assert.equal(updateSchematic?.annotations?.idempotentHint,false);
   assert.equal(updateSchematic?.annotations?.destructiveHint,true);
