@@ -249,6 +249,49 @@ export const editSchematic=(raw:unknown,args:Item):{plan:Item;elementId:string;k
     const wire={id,punkte,ebene,vonTeil:fromId,vonNr:fromNr,nachTeil:toId,nachNr:toNr};
     return {plan:{...raw,leitungen:[...wires,wire]},elementId:id,kind:'wire'};
   }
+  if(kind==='rotate_component'||kind==='mirror_component'||kind==='delete_component'){
+    allowedKeys(args,kind==='rotate_component'?['componentId','rotation']:
+      kind==='mirror_component'?['componentId','mirrored']:['componentId']);
+    const id=ident(args.componentId,'Bauteil');
+    const old=components.find(c=>isRecord(c)&&c.id===id);
+    if(!isRecord(old))fail('Bauteil existiert nicht.');
+    // The simulation can form contacts across layers. Refuse all explicit
+    // and geometric connections before changing or removing a component.
+    if(wires.some(w=>isRecord(w)&&(w.vonTeil===id||w.nachTeil===id)))
+      fail('Bauteil hat Leitungsanschlüsse. Zuerst gezielt Leitungen entfernen.');
+    rotation(old.drehung);
+    mirror(old.gespiegelt);
+    const pins=pinsFor(old);
+    for(const w of wires.filter(isRecord))
+      if(pins.some(p=>nearPath(p.at,validPoints(w.punkte))))
+        fail('Bauteil berührt bereits eine Leitung.');
+    for(const other of components.filter(isRecord)){
+      if(other.id===id)continue;
+      const otherPins=pinsFor(other);
+      if(pins.some(p=>otherPins.some(q=>(p.at.x-q.at.x)**2+(p.at.y-q.at.y)**2<=NEAR**2)))
+        fail('Bauteilklemme berührt ein anderes Bauteil.');
+    }
+    if(kind==='delete_component')
+      return {plan:{...raw,teile:components.filter(c=>c!==old)},elementId:id,kind:'component'};
+    let changed:Item;
+    if(kind==='rotate_component'){
+      if(args.rotation===undefined)fail('Drehung fehlt.');
+      const drehung=rotation(args.rotation);
+      if(drehung===rotation(old.drehung))fail('Bauteildrehung ist bereits unverändert.');
+      changed={...old,drehung};
+    }else{
+      if(typeof args.mirrored!=='boolean')fail('Spiegelung muss true oder false sein.');
+      if(args.mirrored===mirror(old.gespiegelt))fail('Spiegelung ist bereits unverändert.');
+      changed={...old,gespiegelt:args.mirrored};
+    }
+    // Evaluate candidate contact geometry on all layers without changing
+    // the stored layer assignment of any element.
+    const ebene=String(changed.ebene??'plan');
+    checkFreeComponent({...changed,ebene},
+      components.filter(isRecord).map(c=>({...c,ebene})),
+      wires.filter(isRecord).map(w=>({...w,ebene})),width,height);
+    return {plan:{...raw,teile:components.map(c=>c===old?changed:c)},elementId:id,kind:'component'};
+  }
   if(kind==='move_component'){
     allowedKeys(args,['componentId','x','y']);
     const id=ident(args.componentId,'Bauteil');

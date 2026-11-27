@@ -1808,6 +1808,31 @@ test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und at
     assert.deepEqual(disconnected.data.plan.leitungen,[]);
     assert.deepEqual(disconnected.data.plan.teile,afterDeletion.data.plan.teile);
     assert.deepEqual(disconnected.data.plan.texte,afterDeletion.data.plan.texte);
+    const forbiddenRotate=await update({expectedVersion:11,operation:'rotate_component',componentId:'S1',rotation:90},readOnly.access_token);
+    assert.equal(forbiddenRotate.data.code,'forbidden');
+    const rotatedComponent=await update({expectedVersion:11,changes:[
+      {operation:'rotate_component',componentId:'S1',rotation:90},
+      {operation:'mirror_component',componentId:'S1',mirrored:true}
+    ]});
+    assert.equal(rotatedComponent.data.version,12);
+    const transformed=await call('redion_read_schematic',{blockId});
+    const transformedS1=transformed.data.plan.teile.find((p:any)=>p.id==='S1');
+    assert.equal(transformedS1.drehung,90);
+    assert.equal(transformedS1.gespiegelt,true);
+    const invalidDelete=await update({expectedVersion:12,changes:[
+      {operation:'delete_component',componentId:'S1'},
+      {operation:'delete_component',componentId:'S1'}
+    ]});
+    assert.equal(invalidDelete.data.code,'invalid_arguments');
+    const afterInvalidDelete=await call('redion_read_schematic',{blockId});
+    assert.equal(afterInvalidDelete.data.version,12);
+    assert.deepEqual(afterInvalidDelete.data.plan,transformed.data.plan);
+    const removedComponent=await update({expectedVersion:12,operation:'delete_component',componentId:'S1'});
+    assert.equal(removedComponent.data.version,13);
+    const afterComponentDelete=await call('redion_read_schematic',{blockId});
+    assert.equal(afterComponentDelete.data.plan.teile.some((p:any)=>p.id==='S1'),false);
+    assert.deepEqual(afterComponentDelete.data.plan.teile,transformed.data.plan.teile.filter((p:any)=>p.id!=='S1'));
+    assert.deepEqual(afterComponentDelete.data.plan.leitungen,transformed.data.plan.leitungen);
     const orphanId='detached_schematic';
     await f.store.setze('saetze',{id:orphanId,bereich:'ws_test',tabelle:'blocks',
       daten:JSON.stringify({type:'schaltplan',parentId:'edit_schematic_page',plan:finalPlan.data.plan}),

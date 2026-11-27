@@ -67,7 +67,7 @@ const vRequired=['workspaceId','documentId','expectedVersion','requestId','title
 const shapeSelectionOperations=['group_selection','ungroup_selection','align_selection','move_selection','order_selection'];
 const mindmapEditOperations=['rename_node','style_node','delete_branch','append_node','move_node','add_connection','remove_connection'];
 const schematicEditFields={
-  operation:{type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label','set_component_values','rename_label','delete_label','delete_wire']},
+  operation:{type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label','set_component_values','rename_label','delete_label','delete_wire','rotate_component','mirror_component','delete_component']},
   componentId:idField,symbolId:idField,x:{type:'integer',minimum:0,maximum:4000},
   y:{type:'integer',minimum:0,maximum:4000},
   rotation:{type:'integer',enum:[0,90,180,270]},
@@ -113,7 +113,7 @@ export const CLOUD_TOOLS:ToolDef[]=[
       text:{type:'string',maxLength:8000},checked:{type:'boolean'},
       note:{type:'string',maxLength:2000},dueDate:{type:'string',maxLength:10}},
       required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
-  {name:'redion_update_schematic',description:'Bearbeitet einen Klartext-Schaltplan. Für eine einzelne Änderung operation und ihre Felder übergeben. Für bis zu 20 atomare Änderungen nur changes übergeben. Jeder Schritt wird vor dem Speichern geprüft, die Planversion steigt einmal. set_component_values setzt U (Quelle, V), R (Widerstand, Ohm) und Un (Lampe, V) entsprechend dem Fachzeichen. rename_label ändert Beschriftungstext; delete_label und delete_wire entfernen genau das angegebene Element. Entfernte Leitungen können den Stromkreis verändern; danach erneut simulieren. Verbundene Bauteile im nativen Editor verschieben.',
+  {name:'redion_update_schematic',description:'Bearbeitet einen Klartext-Schaltplan. Für eine einzelne Änderung operation und ihre Felder übergeben. Für bis zu 20 atomare Änderungen nur changes übergeben. Jeder Schritt wird vor dem Speichern geprüft, die Planversion steigt einmal. set_component_values setzt U (Quelle, V), R (Widerstand, Ohm) und Un (Lampe, V) entsprechend dem Fachzeichen. rename_label ändert Beschriftungstext; delete_label und delete_wire entfernen genau das angegebene Element. Entfernte Leitungen können den Stromkreis verändern; danach erneut simulieren. rotate_component, mirror_component und delete_component bearbeiten nur unverbundene Bauteile; verbundene Bauteile im nativen Editor verschieben.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,
       expectedVersion:{type:'integer',minimum:1},
       ...schematicEditFields,changes:{type:'array',minItems:1,maxItems:20,

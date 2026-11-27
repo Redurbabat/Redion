@@ -76,7 +76,7 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
     ['workspaceId','blockId','expectedVersion']);
   assert.match(JSON.stringify(updateSchematic?.inputSchema.properties.changes), /"maxItems":20/);
   assert.deepEqual(updateSchematic?.inputSchema.properties.operation,
-    {type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label','set_component_values','rename_label','delete_label','delete_wire']});
+    {type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label','set_component_values','rename_label','delete_label','delete_wire','rotate_component','mirror_component','delete_component']});
   assert.deepEqual(updateSchematic?.inputSchema.properties.rotation,
     {type:'integer',enum:[0,90,180,270]});
   assert.equal(updateSchematic?.annotations?.readOnlyHint,false);
@@ -376,4 +376,48 @@ test('Cloud MCP: einzelne Beschriftungen und Leitungen gezielt korrigieren',()=>
   assert.throws(()=>invoke(original,'delete_wire',{wireId:'W1',labelText:'Fremdfeld'}));
   assert.throws(()=>invoke(disconnected,'delete_wire',{wireId:'W1'}));
   assert.deepEqual(original,snapshot);
+});
+
+
+test('Cloud MCP: Bauteile nur ohne elektrische Kontakte drehen, spiegeln oder löschen',()=>{
+  const base={art:'stromlauf-aufgeloest',breite:800,hoehe:700,
+    teile:[] as any[],leitungen:[] as any[],texte:[] as any[],
+    ebenen:[{id:'plan',name:'Plan',farbe:'var(--text)',sichtbar:true},
+      {id:'aufgabe',name:'Aufgabe',farbe:'#c2410c',sichtbar:true}]};
+  const invoke=(raw:unknown,operation:string,params:Record<string,unknown>)=>
+    editSchematic(raw,{operation,...params}).plan as typeof base;
+  const a=invoke(base,'add_component',{componentId:'A',symbolId:'schliesser',x:100,y:100});
+  const original=structuredClone(a);
+  // A 90-degree turn moves pin 3 from (120,100) to (150,130).
+  // A contact on another layer must not be created by the rotation.
+  const futureContact={...a,leitungen:[{id:'future',ebene:'aufgabe',
+    punkte:[{x:150,y:130},{x:180,y:130}]}]};
+  const beforeContact=structuredClone(futureContact);
+  assert.throws(()=>invoke(futureContact,'rotate_component',{componentId:'A',rotation:90}),
+    /berührt eine vorhandene Leitung/);
+  assert.deepEqual(futureContact,beforeContact);
+  const rotated=invoke(a,'rotate_component',{componentId:'A',rotation:90});
+  assert.equal(rotated.teile[0].drehung,90);
+  const mirrored=invoke(rotated,'mirror_component',{componentId:'A',mirrored:true});
+  assert.equal(mirrored.teile[0].gespiegelt,true);
+  assert.equal(mirrored.teile[0].drehung,90);
+  assert.deepEqual(invoke(mirrored,'delete_component',{componentId:'A'}).teile,[]);
+  assert.deepEqual(a,original);
+  for(const params of [{},{rotation:45},{rotation:0}])
+    assert.throws(()=>invoke(a,'rotate_component',{componentId:'A',...params}));
+  assert.throws(()=>invoke(a,'mirror_component',{componentId:'A'}));
+  assert.throws(()=>invoke(a,'mirror_component',{componentId:'A',mirrored:false}));
+  assert.throws(()=>invoke(a,'delete_component',{componentId:'missing'}));
+  const edge=invoke(base,'add_component',{componentId:'A',symbolId:'schliesser',x:0,y:100});
+  assert.throws(()=>invoke(edge,'rotate_component',{componentId:'A',rotation:90}),/ausserhalb/);
+  const wired={...a,leitungen:[{id:'W',vonTeil:'A',punkte:[{x:10,y:10},{x:20,y:20}],ebene:'plan'}]};
+  const geometric={...a,leitungen:[{id:'W',punkte:[{x:0,y:100},{x:400,y:100}],ebene:'aufgabe'}]};
+  const overlapping={...a,teile:[...a.teile,{...a.teile[0],id:'B',ebene:'aufgabe'}]};
+  for(const raw of [wired,geometric,overlapping]){
+    const before=structuredClone(raw);
+    assert.throws(()=>invoke(raw,'rotate_component',{componentId:'A',rotation:90}));
+    assert.throws(()=>invoke(raw,'mirror_component',{componentId:'A',mirrored:true}));
+    assert.throws(()=>invoke(raw,'delete_component',{componentId:'A'}));
+    assert.deepEqual(raw,before);
+  }
 });
