@@ -336,7 +336,7 @@ const Gedankenkarte = (() => {
             sicht: {
                 x: zahl(s.x, 0),
                 y: zahl(s.y, 0),
-                z: Math.min(4, Math.max(.2, zahl(s.z, 1))),
+                z: Math.min(4, Math.max(MIN_ZOOM, zahl(s.z, 1))),
             },
         };
     };
@@ -369,7 +369,7 @@ const Gedankenkarte = (() => {
         });
         return { kinder, wurzel: wurzel.id };
     };
-    const LESBAR = .72;
+    const MIN_ZOOM = .05;
     const LUECKE_X = 54;
     const LUECKE_Y = 14;
     const RAND = 28;
@@ -472,6 +472,7 @@ const Gedankenkarte = (() => {
         const hoehe = Math.max(220, zahl(block.hoehe, 420));
         let mussEinpassen = !aufFlaeche && !(block && block.karte && typeof block.karte.sicht === 'object'
             && block.karte.sicht);
+        let automatischeSicht = mussEinpassen;
         const w = document.createElement('div');
         w.className = aufFlaeche ? 'gk gk-auf-flaeche' : 'gk';
         const LEISTE = [
@@ -812,7 +813,7 @@ const Gedankenkarte = (() => {
             sichtAnwenden();
             if (mussEinpassen && buehne.getBoundingClientRect().width > 4) {
                 mussEinpassen = false;
-                einpassen(1, false, LESBAR);
+                einpassen(1, false);
             }
         };
         const schreiberSchliessen = (weiter) => {
@@ -1066,8 +1067,9 @@ const Gedankenkarte = (() => {
             sichtAnwenden();
         };
         const zoomen = (faktor) => {
-            const alt = karte.sicht.z;
-            const neu = Math.min(4, Math.max(.2, alt * faktor));
+            automatischeSicht = false;
+          const alt = karte.sicht.z;
+            const neu = Math.min(4, Math.max(MIN_ZOOM, alt * faktor));
             if (neu === alt)
                 return;
             const b = buehne.getBoundingClientRect();
@@ -1077,7 +1079,7 @@ const Gedankenkarte = (() => {
             sichtAnwenden();
             sichern();
         };
-        const einpassen = (hoechstens, speichern, mindestens = .2) => {
+        const einpassen = (hoechstens, speichern, mindestens = MIN_ZOOM) => {
             if (aufFlaeche)
                 return;
             const plan = letzterAufbau;
@@ -1102,8 +1104,10 @@ const Gedankenkarte = (() => {
                 karte.sicht.y = my * z - hoch / 2;
             }
             sichtAnwenden();
-            if (speichern)
+            if (speichern) {
+                automatischeSicht = false;
                 sichern();
+            }
         };
         const karteLeer = () => karte.knoten.length <= 1 &&
             !karte.verbindungen.length &&
@@ -1319,7 +1323,59 @@ const Gedankenkarte = (() => {
                 default: break;
             }
         });
+        const kameraZeiger = new Map();
+        let kameraGeaendert = false;
+        const kameraStart = (e) => {
+            if (kameraZeiger.size >= 2)
+                return;
+            e.preventDefault();
+            kameraZeiger.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            buehne.setPointerCapture(e.pointerId);
+            buehne.classList.add('gk-schiebt');
+        };
+        buehne.addEventListener('pointermove', e => {
+            const alt = kameraZeiger.get(e.pointerId);
+            if (!alt)
+                return;
+            const andere = [...kameraZeiger.entries()].find(([id]) => id !== e.pointerId)?.[1];
+            const neu = { x: e.clientX, y: e.clientY };
+            if (alt.x === neu.x && alt.y === neu.y)
+                return;
+            kameraZeiger.set(e.pointerId, neu);
+            automatischeSicht = false;
+            kameraGeaendert = true;
+            if (andere) {
+                const b = buehne.getBoundingClientRect();
+                const dist = Math.hypot(alt.x - andere.x, alt.y - andere.y);
+                const neuDist = Math.hypot(neu.x - andere.x, neu.y - andere.y);
+                const z = Math.min(4, Math.max(MIN_ZOOM, karte.sicht.z * neuDist / Math.max(1, dist)));
+                const faktor = z / karte.sicht.z;
+                karte.sicht.x = (karte.sicht.x + (alt.x + andere.x) / 2 - b.left) * faktor - ((neu.x + andere.x) / 2 - b.left);
+                karte.sicht.y = (karte.sicht.y + (alt.y + andere.y) / 2 - b.top) * faktor - ((neu.y + andere.y) / 2 - b.top);
+                karte.sicht.z = z;
+            }
+            else {
+                karte.sicht.x -= neu.x - alt.x;
+                karte.sicht.y -= neu.y - alt.y;
+            }
+            sichtAnwenden();
+        });
+        const kameraEnde = (e) => {
+            if (!kameraZeiger.delete(e.pointerId) || kameraZeiger.size)
+                return;
+            buehne.classList.remove('gk-schiebt');
+            if (kameraGeaendert)
+                sichern();
+            kameraGeaendert = false;
+        };
+        buehne.addEventListener('pointerup', kameraEnde);
+        buehne.addEventListener('pointercancel', kameraEnde);
+        buehne.addEventListener('lostpointercapture', kameraEnde);
         buehne.addEventListener('pointerdown', e => {
+            if (!aufFlaeche && kameraZeiger.size && e.pointerType === 'touch') {
+                kameraStart(e);
+                return;
+            }
             const griffel = elVon(e)?.closest('.gk-griffel');
             if (griffel) {
                 e.preventDefault();
@@ -1391,22 +1447,7 @@ const Gedankenkarte = (() => {
             }
             if (aufFlaeche)
                 return;
-            const startX = e.clientX, startY = e.clientY;
-            const vonX = karte.sicht.x, vonY = karte.sicht.y;
-            buehne.classList.add('gk-schiebt');
-            const zug = (ev) => {
-                karte.sicht.x = vonX - (ev.clientX - startX);
-                karte.sicht.y = vonY - (ev.clientY - startY);
-                sichtAnwenden();
-            };
-            const aus = () => {
-                window.removeEventListener('pointermove', zug);
-                window.removeEventListener('pointerup', aus);
-                buehne.classList.remove('gk-schiebt');
-                sichern();
-            };
-            window.addEventListener('pointermove', zug);
-            window.addEventListener('pointerup', aus);
+            kameraStart(e);
         });
         buehne.addEventListener('dblclick', e => {
             const kn = elVon(e)?.closest('.gk-kn');
@@ -1556,13 +1597,15 @@ const Gedankenkarte = (() => {
             window.addEventListener('pointerup', aus);
         });
         if (typeof ResizeObserver !== 'undefined') {
-            let hatte = false;
+            let letzteBreite = 0;
             const beobachter = new ResizeObserver(() => {
                 const b = buehne.getBoundingClientRect();
-                if (b.width > 4 && !hatte) {
-                    hatte = true;
-                    male();
-                }
+                if (b.width <= 4 || Math.abs(b.width - letzteBreite) < 1)
+                    return;
+                letzteBreite = b.width;
+                if (automatischeSicht)
+                    mussEinpassen = true;
+                male();
             });
             beobachter.observe(buehne);
         }
