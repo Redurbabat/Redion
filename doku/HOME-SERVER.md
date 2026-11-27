@@ -47,10 +47,31 @@ allen echten Geräten geprüft werden; keine Behauptung vollständiger E2EE.
   hinter dem tatsächlichen Proxy, Recovery und Authentifizierungsprüfung.
 - RED ID / gemeinsames SDK und sichere Gerätesitzungen, private native
   Anmeldeoberfläche, kein offener Registrierungsweg.
-- OAuth-Consent ohne Cloudflare Access und MCP-Freigaben; die neue API
-  lässt MCP absichtlich noch gesperrt. Kein Bypass durch gefälschte Header.
+- Lokaler OAuth-Consent und MCP-Routing sind optional implementiert; offen
+  bleiben Browser-/Connector-Abnahme, Proxy-Grenzen und Widerrufstests.
 - Live-Sync, Versionskonflikte, Offline-Roundtrip, iOS/Windows/Android.
 - Verschlüsselte Anhänge und Schlüsselverwaltung, Sicherheitsprüfung,
   Migration ohne Verlust; konsistente Sicherung und Restore von DB und Blobs.
 - HTTPS-Proxy, Speicher-/Mount-Prüfung, Dashboard, Updates mit Rollback,
   Tests auf dem HP EliteDesk. Kein automatisches Deployment.
+
+## Optionaler MCP-Testbetrieb
+
+`REDION_ENABLE_MCP=1` setzen und Container neu starten. Der MCP-Endpunkt
+bleibt `/mcp/cloud`, aber ohne Cloudflare-Abhängigkeit. Der bestehende
+OAuth-Werkzeugkatalog wird weiterverwendet. Lokale Geräteanmeldung zuerst.
+Für eine menschliche OAuth-Zustimmung an der privaten HTTPS-Adresse einen
+Einmalcode auf der Serverkonsole erzeugen:
+
+```sh
+docker compose -f deploy/home/compose.yaml exec redion node server/home-server.ts mcp-login-code
+```
+
+Der Code verfällt nach fünf Minuten und wird beim Einlösen atomar gelöscht.
+Browser-Sitzung: eine Stunde, Secure/HttpOnly/SameSite-Cookie, nur ein
+lokales Konto. Der Code gehört nicht in eine URL. Schreiben bleibt beim
+bestehenden OAuth-Consent standardmässig ausgeschaltet. Nur lesbare,
+ausdrücklich freigegebene Klartextinhalte sind per MCP erreichbar; private
+verschlüsselte Inhalte bleiben unlesbar. Keine öffentliche Bereitstellung
+vor vollständiger Sicherheits- und Geräteabnahme. Logout der Browser-Sitzung
+ist nicht gleich Widerruf eines OAuth-Grants.

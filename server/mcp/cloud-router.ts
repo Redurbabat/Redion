@@ -7,7 +7,7 @@ import {ablageD1} from '../ablage.ts';
 import {rolleAuf,darf} from '../kern.ts';
 import {torModus,nachweisAusAnfrage,zerlegeNachweis} from '../sicherheit/tor.ts';
 import {createMcpOAuth} from './oauth.ts';
-import {createMcpOAuthHttp} from './oauth-http.ts';
+import {createMcpOAuthHttp,type CloudUser} from './oauth-http.ts';
 import {mcpStateD1,type McpDatabase} from './state.ts';
 import {CloudMcpToolError,createCloudActions,visibleCloudTools} from './cloud-tools.ts';
 import {CLOUD_MCP_PROTOCOL_VERSIONS,CLOUD_MCP_SERVER_INFO} from './contract-meta.ts';
@@ -34,7 +34,7 @@ const rpcError=(id:string|number|null,code:number,message:string)=>json({jsonrpc
 const bodyLimit=32768;
 const protocolVersions:readonly string[]=CLOUD_MCP_PROTOCOL_VERSIONS;
 
-export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,accessVerified=false):Promise<Response>=>{
+export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,accessVerified=false, localIdentify?: (request:Request)=>Promise<CloudUser|null>):Promise<Response>=>{
   const url=new URL(request.url);
   const path=url.pathname;
   if(!publicPaths.has(path)&&!privatePaths.has(path))return json({error:'not_found'},404);
@@ -78,7 +78,7 @@ export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,access
   try{
     if(path!=='/mcp/cloud'){
       const oauthHttp=createMcpOAuthHttp({
-        oauth,state,identify,rateKey:req=>req.headers.get('cf-connecting-ip')||'unbekannt'});
+        oauth,state,identify:localIdentify??identify,rateKey:req=>req.headers.get('cf-connecting-ip')||'unbekannt'});
       return await oauthHttp(request)??json({error:'not_found'},404);
     }
     if(request.headers.has('origin')&&request.headers.get('origin')!==issuer)

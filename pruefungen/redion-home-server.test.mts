@@ -7,6 +7,8 @@ import {openHomeDatabase} from '../server/home/sqlite.ts';
 import {openHomeBlobs} from '../server/home/blobs.ts';
 import {openHomeServer} from '../server/home-server.ts';
 import {approveHomeDevice} from '../server/home/pairing.ts';
+import {issueHomeConsentCode} from '../server/home/consent.ts';
+import {pkceChallenge} from '../server/mcp/oauth.ts';
 
 test('Home SQLite persists across restart and rolls back failed batches',async()=>{
   const root=await mkdtemp(join(tmpdir(),'redion-home-'));
@@ -76,5 +78,55 @@ test('Local device approval and claim are single-use across database connections
       assert.equal(await service.store.ablage.zaehle('konten'),1);
       assert.equal(await service.store.ablage.zaehle('sitzungen'),1);
     }finally{operator.close();service.close();}
+  }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test('Opt-in home MCP requires a local one-time consent login and scoped OAuth',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'redion-mcp-home-'));
+  try{
+    const origin='https://redion.example.test',resource=origin+'/mcp/cloud';
+    const service=await openHomeServer({dataDir:root,origin,enableMcp:true});
+    try{
+      await service.store.ablage.setze('konten',{id:'owner',gesperrt:0});
+      await service.store.ablage.setze('bereiche',{id:'workspace',name:'Test',besitzer:'owner'});
+      const send=(path:string,init?:RequestInit)=>service.handle(new Request(origin+path,init));
+      assert.equal((await send('/.well-known/oauth-authorization-server')).status,200);
+      assert.equal((await send('/mcp/cloud')).status,401);
+      const registration=await send('/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_name:'Synthetic',redirect_uris:['https://client.example.test/callback'],grant_types:['authorization_code'],token_endpoint_auth_method:'none'})});
+      assert.equal(registration.status,201);
+      const client=await registration.json() as {client_id:string};
+      const verifier='v'.repeat(64);
+      const query=new URLSearchParams({client_id:client.client_id,redirect_uri:'https://client.example.test/callback',response_type:'code',resource,scope:'redion:read redion:write',code_challenge:await pkceChallenge(verifier),code_challenge_method:'S256',state:'synthetic'});
+      const target='/mcp/authorize?'+query;
+      const initial=await send(target,{headers:{'Cf-Access-Authenticated-User-Email':'owner@example.test'}});
+      assert.match(await initial.text(),/name="code"/);
+      const code=issueHomeConsentCode(service.store.sqlite);
+      const login=()=>send('/home/mcp-login',{method:'POST',headers:{Origin:origin,'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({code,target})});
+      const auth=await login();
+      assert.equal(auth.status,303);
+      assert.equal((await login()).status,401);
+      const rawCookie=auth.headers.get('Set-Cookie')!;
+      assert.match(rawCookie,/HttpOnly/);
+      assert.match(rawCookie,/Secure/);
+      const cookie=rawCookie.split(';')[0]!;
+      const consent=await send(target,{headers:{Cookie:cookie}});
+      assert.equal(consent.status,200);
+      const html=await consent.text();
+      const requestId=/name="requestId" value="([^"]+)"/.exec(html)?.[1];
+      const csrf=/name="csrf" value="([^"]+)"/.exec(html)?.[1];
+      assert.ok(requestId&&csrf);
+      const approve=await send('/mcp/authorize',{method:'POST',headers:{Origin:origin,Cookie:cookie,'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({requestId,csrf,decision:'allow',workspace:'workspace'})});
+      assert.equal(approve.status,303);
+      const oauthCode=new URL(approve.headers.get('Location')!).searchParams.get('code')!;
+      const exchange=await send('/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',client_id:client.client_id,code:oauthCode,redirect_uri:'https://client.example.test/callback',code_verifier:verifier,resource})});
+      assert.equal(exchange.status,200);
+      const issued=await exchange.json() as {access_token:string;scope:string};
+      assert.equal(issued.scope,'redion:read');
+      const list=await send('/mcp/cloud',{method:'POST',headers:{Authorization:'Bearer '+issued.access_token,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/list'})});
+      assert.equal(list.status,200);
+      assert.ok((await list.json() as {result:{tools:unknown[]}}).result.tools.length>0);
+      assert.equal((await send('/home/mcp-logout',{method:'POST',headers:{Origin:origin,Cookie:cookie}})).status,204);
+      assert.match(await (await send('/mcp/settings',{headers:{Cookie:cookie}})).text(),/name="code"/);
+    }finally{service.close();}
   }finally{await rm(root,{recursive:true,force:true});}
 });

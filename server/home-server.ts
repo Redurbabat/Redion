@@ -6,6 +6,8 @@ import {openHomeDatabase} from './home/sqlite.ts';
 import {openHomeBlobs} from './home/blobs.ts';
 import {beantworte} from './kern.ts';
 import {approveHomeDevice,claimHomeDevice} from './home/pairing.ts';
+import {prepareHomeConsent,issueHomeConsentCode,identifyHomeConsent,homeConsentLogin,exchangeHomeConsent,logoutHomeConsent} from './home/consent.ts';
+import {handleCloudMcp,isCloudMcpPublicPath,isCloudMcpPrivatePath} from './mcp/cloud-router.ts';
 import {alsAnfrage,alsAntwort} from './cloudflare.ts';
 import {zuGrossAntwort} from './sicherheit/eingaben.ts';
 import {istAbgleichWeg,mitAppUrsprung} from './sicherheit/abgleich-tor.ts';
@@ -15,19 +17,39 @@ const json=(status:number,error:string)=>Response.json({error},{status,headers:{
 
 /** Initial private API: no static repository files, public registration,
  * public pages, or unverified Cloudflare identity headers. */
-export async function openHomeServer(options:{dataDir:string;origin:string}){
+export async function openHomeServer(options:{dataDir:string;origin:string;enableMcp?:boolean}){
   const origin=new URL(options.origin);
   if(origin.protocol!=='https:'||origin.origin!==options.origin)throw new Error('REDION_ORIGIN must be an HTTPS origin');
   const store=openHomeDatabase(join(options.dataDir,'redion.sqlite'));
   const blobs=await openHomeBlobs(join(options.dataDir,'blobs')).catch(error=>{store.close();throw error;});
+  if(options.enableMcp)prepareHomeConsent(store.sqlite);
   let queue:Promise<unknown>=Promise.resolve();
+  function serial<T>(execute:()=>Promise<T>):Promise<T>{
+    const result=queue.then(execute);
+    queue=result.catch(()=>undefined);
+    return result;
+  }
   async function handle(request:Request):Promise<Response>{
     const path=new URL(request.url).pathname;
     if(new URL(request.url).origin!==origin.origin)return json(400,'invalid_host');
-    if(!istAbgleichWeg(path)&&!privateRoutes.has(path))return json(404,'not_found');
+    const mcpRoute=isCloudMcpPublicPath(path)||isCloudMcpPrivatePath(path)||['/home/mcp-login','/home/mcp-logout'].includes(path);
+    if(mcpRoute&&!options.enableMcp)return json(404,'not_found');
+    if(!mcpRoute&&!istAbgleichWeg(path)&&!privateRoutes.has(path))return json(404,'not_found');
     const clientOrigin=request.headers.get('origin');
     if(clientOrigin&&clientOrigin!==origin.origin&&!(istAbgleichWeg(path)&&['redion-local://app','capacitor://localhost'].includes(clientOrigin)))return json(403,'invalid_origin');
     if(request.method==='OPTIONS'&&!istAbgleichWeg(path))return json(405,'method_not_allowed');
+    if(mcpRoute){
+      return serial(async()=>{
+        if(path==='/home/mcp-login')return exchangeHomeConsent(store.sqlite,request,origin.origin);
+        if(path==='/home/mcp-logout')return logoutHomeConsent(store.sqlite,request,origin.origin);
+        const identify=async(req:Request)=>identifyHomeConsent(store.sqlite,req);
+        if(isCloudMcpPrivatePath(path)&&!await identify(request)){
+          if(request.method!=='GET')return json(401,'consent_login_required');
+          return homeConsentLogin(path+new URL(request.url).search,origin.origin);
+        }
+        return handleCloudMcp(request,{DB:store.db},false,identify);
+      });
+    }
     const parsed=await alsAnfrage(request);
     if('zuGross' in parsed)return alsAntwort(zuGrossAntwort(parsed.zuGross));
     const execute=async()=>{
@@ -37,9 +59,7 @@ export async function openHomeServer(options:{dataDir:string;origin:string}){
       }
       return alsAntwort(await beantworte(parsed,store.ablage,{ADRESSE:origin.origin,blobs}));
     };
-    const result=queue.then(execute);
-    queue=result.catch(()=>undefined);
-    const response=await result;
+    const response=await serial(execute);
     if(clientOrigin===origin.origin&&istAbgleichWeg(path)){
       response.headers.set('Access-Control-Allow-Origin',origin.origin);
       response.headers.append('Vary','Origin');
@@ -54,8 +74,16 @@ async function main(){
   const dataDir=resolve(process.env.REDION_DATA_DIR||'redion-home-data');
   const origin=process.env.REDION_ORIGIN;
   if(!origin)throw new Error('Set REDION_ORIGIN first');
-  const service=await openHomeServer({dataDir,origin});
+  const enableMcp=process.env.REDION_ENABLE_MCP==='1';
+  const service=await openHomeServer({dataDir,origin,enableMcp});
   const command=process.argv[2];
+  if(command==='mcp-login-code'){
+    try{
+      if(!enableMcp)throw new Error('Set REDION_ENABLE_MCP=1 first');
+      console.log(issueHomeConsentCode(service.store.sqlite));
+    } finally {service.close();}
+    return;
+  }
   if(command==='approve-device'){
     try{
       approveHomeDevice(service.store.sqlite,process.argv[3]);

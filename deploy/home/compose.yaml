@@ -4,6 +4,7 @@ services:
       context: ../..
       dockerfile: deploy/home/Dockerfile
     environment:
+      REDION_ENABLE_MCP: ${REDION_ENABLE_MCP:-0}
       REDION_ORIGIN: ${REDION_ORIGIN:?Set HTTPS origin in environment}
     ports:
       - "127.0.0.1:8790:8790"
