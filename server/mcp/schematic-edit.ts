@@ -146,6 +146,48 @@ const wireClearance=(fromId:string,fromNr:string,toId:string,toNr:string,
     !wires.some(wire=>nearPolyline(points,wire));
 };
 
+/** Compare original and candidate elements by ID, not by requested action.
+ * A moved component can implicitly move several wires; include those too.
+ * No stored history or arbitrary snapshot restoration is implied. */
+export function schematicChangeSummary(before:unknown,after:unknown){
+  const collections=[['teile','component'],['leitungen','wire'],['texte','label']] as const;
+  type Entry={elementId:string;elementType:string;action:'added'|'removed'|'modified';fields:string[]};
+  const entries:Entry[]=[];
+  const map=(plan:unknown,key:string)=>{
+    if(!isRecord(plan)||!Array.isArray(plan[key]))fail('Ungültiger Plan für Änderungsvergleich.');
+    const result=new Map<string,Item>();
+    for(const element of plan[key]){
+      if(!isRecord(element)||typeof element.id!=='string'||result.has(element.id))
+        fail('Ungültige oder doppelte Elementkennung.');
+      result.set(element.id,element);
+    }
+    return result;
+  };
+  // JSON values are persisted data. Ignore object-key insertion order,
+  // preserve arrays (in particular the sequence of wire points).
+  const stable=(value:unknown):string=>Array.isArray(value)
+    ? '['+value.map(stable).join(',')+']'
+    : isRecord(value)?'{'+Object.keys(value).sort().map(k=>JSON.stringify(k)+':'+stable(value[k])).join(',')+'}'
+    : JSON.stringify(value)??'undefined';
+  for(const [key,elementType] of collections){
+    const a=map(before,key),b=map(after,key);
+    for(const elementId of new Set([...a.keys(),...b.keys()])){
+      const old=a.get(elementId),next=b.get(elementId);
+      if(!old||!next){
+        entries.push({elementId,elementType,action:old?'removed':'added',fields:[]});
+        continue;
+      }
+      const fields=[...new Set([...Object.keys(old),...Object.keys(next)])]
+        .filter(k=>stable(old[k])!==stable(next[k])).sort();
+      if(fields.length)entries.push({elementId,elementType,action:'modified',fields});
+    }
+  }
+  const counts={added:0,removed:0,modified:0};
+  for(const e of entries)counts[e.action]++;
+  return {...counts,total:entries.length,entries:entries.slice(0,40),
+    truncated:entries.length>40};
+}
+
 /** A new plan is returned; the input and all unrelated metadata remain unchanged. */
 export const editSchematic=(raw:unknown,args:Item):{plan:Item;elementId:string;kind:string}=>{
   if(!isRecord(raw)||!Array.isArray(raw.teile)||!Array.isArray(raw.leitungen)||
