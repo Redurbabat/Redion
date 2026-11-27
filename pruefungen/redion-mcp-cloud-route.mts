@@ -2433,3 +2433,47 @@ test('Cloud-MCP reads prepared PDF text and edits native marks within the page g
   assert.equal(data.suchtext,pdf.suchtext);
  }finally{f.close();}
 });
+
+test('Cloud-MCP archives, finds and restores native pages without deleting content',async()=>{
+ const f=await fixture();
+ try{
+  const readClient=await f.oauth.register({client_name:'Synthetic archive reader',
+    redirect_uris:['https://reader.example.test/callback'],grant_types:['authorization_code']});
+  const reader=await f.authorize(false,'owner',readClient),writer=await f.authorize(true);
+  const call=async(token:string,name:string,args:Record<string,unknown>)=>{
+    const response=await f.rpc(token,'tools/call',{name,arguments:{workspaceId:'ws_test',...args}});
+    assert.equal(response.status,200);
+    return JSON.parse(response.data.result.content[0].text);
+  };
+  const root=await call(writer.access_token,'redion_create_page',{title:'Werkstattarchiv',requestId:'archive_root_seed'});
+  const child=await call(writer.access_token,'redion_create_page',{title:'Messreihe',content:'Zwei Prüfungen',
+    parentId:root.documentId,requestId:'archive_child_seed'});
+  const args={documentId:child.documentId,expectedVersion:1,archived:true};
+  const archive=(patch:Record<string,unknown>={})=>call(writer.access_token,'redion_update_page',{...args,...patch});
+  const list=(archived?:boolean)=>call(reader.access_token,'redion_list_child_pages',{parentId:root.documentId,...(archived===undefined?{}:{archived})});
+  const find=(archived:boolean)=>call(reader.access_token,'redion_search',{query:'Messreihe',archived});
+  assert.equal((await call(reader.access_token,'redion_update_page',args)).code,'forbidden');
+  assert.equal((await archive({archived:'true'})).code,'invalid_arguments');
+  assert.equal((await list()).documents[0].documentId,child.documentId);
+  assert.equal((await archive()).version,2);
+  assert.equal((await archive()).code,'conflict');
+  assert.deepEqual(await archive({expectedVersion:2}),{documentId:child.documentId,archived:true,version:2,unchanged:true});
+  assert.deepEqual((await list()).documents,[]);
+  assert.deepEqual((await find(false)).documents,[]);
+  assert.equal((await list(true)).documents[0].documentId,child.documentId);
+  assert.equal((await find(true)).documents[0].documentId,child.documentId);
+  const read=await call(reader.access_token,'redion_read_page',{documentId:child.documentId});
+  assert.equal(read.archived,true);
+  assert.equal(read.markdown,'Zwei Prüfungen');
+  const saved=await f.store.hole('saetze',{bereich:'ws_test',id:child.documentId});
+  assert.equal(saved?.geloescht,0);
+  const data=JSON.parse(String(saved?.daten));
+  assert.equal(data.parentId,root.documentId);
+  assert.ok(Number.isFinite(Date.parse(data.archiviertAm)));
+  const restored=await archive({expectedVersion:2,archived:false});
+  assert.equal(restored.archived,false);
+  assert.equal(restored.version,3);
+  assert.equal((await list()).documents[0].documentId,child.documentId);
+  assert.deepEqual((await list(true)).documents,[]);
+ }finally{f.close();}
+});

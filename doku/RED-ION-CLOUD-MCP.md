@@ -534,3 +534,18 @@ Koordinaten beziehen sich auf die Seite vor der zusätzlichen Anzeigedrehung.
 Die Originaldatei und der vorbereitete Text bleiben erhalten.
 Import, Export und OCR stehen weiterhin in der App beziehungsweise in den
 vorhandenen Dateifunktionen zur Verfügung, sofern dort unterstützt.
+
+## Seiten archivieren und zurückholen
+
+`redion_update_page` nimmt `archived: true` zum Archivieren und
+`archived: false` zum Zurückholen aus dem Archiv an. Der Aufruf benötigt die
+aktuelle `expectedVersion`, Cloud-Schreibscope und Seitenbearbeitungsrecht.
+Die Seite behält ihre Kennung, ihren Elternknoten und ihren Inhalt.
+Wiederholung mit bereits erreichtem Status und aktueller Version liefert
+`unchanged: true`.
+
+`redion_search`, `redion_list_root_pages` und `redion_list_child_pages`
+zeigen standardmässig aktive Seiten. `archived: true` filtert auf das
+Archiv. Eine bekannte Seitenkennung lässt sich mit `redion_read_page`
+und Seitenleserecht weiterhin direkt lesen. Dieses Archiv ist das native
+Seitenarchiv der App. Der Papierkorb hat einen eigenen Lebenszyklus.

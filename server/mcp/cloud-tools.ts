@@ -34,6 +34,8 @@ const unchangedEmbedding=(parameter:'?7'|'?8')=>
 const limit=(value:unknown,fallback:number,max:number):number=>value===undefined?fallback:
   Number.isSafeInteger(value)&&Number(value)>0&&Number(value)<=max?Number(value):
   err('invalid_arguments','Ungültige Anzahl.');
+const archiveFlag=(value:unknown):number=>value===undefined||value===false?0:value===true?1:
+  err('invalid_arguments','archived muss true oder false sein.');
 const nameField={type:'string',maxLength:160};
 const idField={type:'string',maxLength:128};
 const workspace={workspaceId:idField};
@@ -93,8 +95,8 @@ export const CLOUD_TOOLS:ToolDef[]=[
 
   {name:'redion_list_workspaces',description:'Zeigt nur die für diese KI-Verbindung freigegebenen Bereiche.',
     inputSchema:{type:'object',properties:{},additionalProperties:false}},
-  {name:'redion_search',description:'Sucht nach freigegebenen, nicht verschlüsselten Seiten.',
-    inputSchema:{type:'object',properties:{...workspace,query:{type:'string',maxLength:200},limit:{type:'integer',minimum:1,maximum:30},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
+  {name:'redion_search',description:'Sucht nach freigegebenen, nicht verschlüsselten Seiten. archived: true durchsucht das Archiv.',
+    inputSchema:{type:'object',properties:{...workspace,query:{type:'string',maxLength:200},archived:{type:'boolean'},limit:{type:'integer',minimum:1,maximum:30},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
   {name:'redion_read_page',description:'Liest Markdown und (bei blockbasierten Seiten) eine rechtegefilterte Blockvorschau. blockOffset und blockLimit paginieren sichtbare direkte Kinder unabhängig von Markdown. Bei älteren Clients steht bereits die erste Vorschau ohne Zusatzparameter bereit.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,offset:{type:'integer',minimum:0},limit:{type:'integer',minimum:1,maximum:12000},blockOffset:{type:'integer',minimum:0,maximum:100000},blockLimit:{type:'integer',minimum:1,maximum:20},expectedVersion:{type:'integer',minimum:1},responseFormat:{type:'string',enum:['portable','legacy']}},required:['workspaceId','documentId'],additionalProperties:false}},
   {name:'redion_get_page_path',description:'Zeigt den Pfad einer lesbaren Seite von der Hauptseite bis zum Dokument. Wenn ein Vorfahr nicht lesbar ist, werden keine Pfadteile offengelegt.',
@@ -151,9 +153,9 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_create_page',description:'Legt eine Seite an. requestId verhindert doppelte Erstellung bei Wiederholung.',
     inputSchema:{type:'object',properties:{...workspace,title:nameField,content:{type:'string',maxLength:12000},parentId:idField,requestId:{type:'string',minLength:8,maxLength:100}},
       required:['workspaceId','title','requestId'],additionalProperties:false}},
-  {name:'redion_update_page',description:'Ändert den Seitentitel nur bei passender expectedVersion.',
-    inputSchema:{type:'object',properties:{...workspace,...documentId,title:nameField,expectedVersion:{type:'integer',minimum:1}},
-      required:['workspaceId','documentId','title','expectedVersion'],additionalProperties:false}},
+  {name:'redion_update_page',description:'Ändert den Seitentitel oder den Archivstatus nur bei passender expectedVersion. archived: false holt die Seite aus dem Archiv.',
+    inputSchema:{type:'object',properties:{...workspace,...documentId,title:nameField,archived:{type:'boolean'},expectedVersion:{type:'integer',minimum:1}},
+      required:['workspaceId','documentId','expectedVersion'],additionalProperties:false}},
   {name:'redion_list_page_blocks',description:'Liest sichtbare Seitenblöcke und verschachtelte Kindblöcke in stabiler Reihenfolge und kleinen Seiten. Offset zählt nur tatsächlich lesbare Blöcke; expectedVersion verhindert das Vermischen veränderter Listen.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,parentBlockId:idField,
       limit:{type:'integer',minimum:1,maximum:20},offset:{type:'integer',minimum:0,maximum:100000},
@@ -186,9 +188,9 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_list_databases',description:'Listet lesbare Klartext-Datenbanken auf Seiten, die der Benutzer lesen darf. Keine versteckten Seiten oder Spaltenwerte.',
     inputSchema:{type:'object',properties:{...workspace,limit:{type:'integer',minimum:1,maximum:30},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
   {name:'redion_list_root_pages',description:'Listet freigegebene Hauptseiten eines Arbeitsbereichs; nur sichtbare Seiten zählen bei limit und offset.',
-    inputSchema:{type:'object',properties:{...workspace,limit:{type:'integer',minimum:1,maximum:100},offset:{type:'integer',minimum:0,maximum:100000}},required:['workspaceId'],additionalProperties:false}},
+    inputSchema:{type:'object',properties:{...workspace,archived:{type:'boolean'},limit:{type:'integer',minimum:1,maximum:100},offset:{type:'integer',minimum:0,maximum:100000}},required:['workspaceId'],additionalProperties:false}},
   {name:'redion_list_child_pages',description:'Listet lesbare, unverschlüsselte Unterseiten einer Seite auf.',
-    inputSchema:{type:'object',properties:{...workspace,parentId:idField,limit:{type:'integer',minimum:1,maximum:100},offset:{type:'integer',minimum:0,maximum:100000}},required:['workspaceId','parentId'],additionalProperties:false}},
+    inputSchema:{type:'object',properties:{...workspace,parentId:idField,archived:{type:'boolean'},limit:{type:'integer',minimum:1,maximum:100},offset:{type:'integer',minimum:0,maximum:100000}},required:['workspaceId','parentId'],additionalProperties:false}},
   {name:'redion_append_content',description:'Hängt Markdown an eine Klartext-Seite an; benötigt Schreibrecht und passende Version.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,content:{type:'string',minLength:1,maxLength:4000},expectedVersion:{type:'integer',minimum:1}},required:['workspaceId','documentId','content','expectedVersion'],additionalProperties:false}},
   {name:'redion_move_page',description:'Verschiebt eine Klartext-Seite unter eine andere Seite oder auf die oberste Ebene. Prüft Schreibrechte, Zyklen und Version.',
@@ -683,16 +685,18 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         "WHERE p.bereich=?1 AND p.tabelle='blocks' AND p.geloescht=0 AND p.verschluesselt=0 "+
         "AND CASE WHEN json_valid(p.daten) THEN "+
         "(json_extract(p.daten,'$.type')='page' AND "+
-        "COALESCE(json_extract(p.daten,'$.parentTable'),'')<>'collection' AND ("+
+        "COALESCE(json_extract(p.daten,'$.parentTable'),'')<>'collection' AND "+
+        "(json_extract(p.daten,'$.archiviert') IS 1)=?5 AND ("+
         "?2='' OR instr(lower(COALESCE(json_extract(p.daten,'$.text'),'')),lower(?2))>0 "+
         "OR instr(lower(COALESCE(json_extract(p.daten,'$.inhalt'),'')),lower(?2))>0 "+
         "OR "+childMatches+")) ELSE 0 END "+
         "ORDER BY p.geaendert DESC,p.id DESC LIMIT ?3 OFFSET ?4";
       const found:{documentId:string;title:string;version:number}[]=[];
+      const archived=archiveFlag(args.archived);
       const batch=100,maxScanned=2000;
       let scanned=0,visible=0;
       while(scanned<maxScanned&&found.length<=max){
-        const result=await db.prepare(sql).bind(w,sqlNeedle,batch,scanned)
+        const result=await db.prepare(sql).bind(w,sqlNeedle,batch,scanned,archived)
           .all<{id:string;seite:string|null;daten:string;version:number}>();
         for(const s of result.results){
           const r=await rolleAuf(ablage,w,String(s.seite||s.id),userId);
@@ -927,6 +931,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const base={documentId:id,workspaceId:w,title:String(result.data.text||''),
         version:Number(result.s.version)||1,offset:start,totalLength:full.length,
         nextOffset:end<full.length?end:null,
+        ...(typeof result.data.archiviert==='boolean'?{archived:result.data.archiviert}:{}),
         // Structural hint only: do not reveal the number or IDs of hidden children.
         blockStorage:Array.isArray(result.data.content)?'referenced':'none'};
       const part=full.slice(start,end);
@@ -963,6 +968,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const parentId=root?'':required(args.parentId,128);
       if(!root)await page(w,parentId,'lesen');
       const max=limit(args.limit,50,100);
+      const archived=archiveFlag(args.archived);
       const offset=args.offset===undefined?0:args.offset;
       if(!Number.isSafeInteger(offset)||Number(offset)<0||Number(offset)>100000)
         return err('invalid_arguments','Ungültiger Seitenversatz.');
@@ -985,11 +991,13 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         "SELECT s.id,s.seite,s.daten,s.version FROM saetze AS s "+
         "WHERE s.bereich=?1 AND s.tabelle='blocks' AND s.geloescht=0 AND s.verschluesselt=0 "+
         "AND CASE WHEN json_valid(s.daten) THEN "+
-        "(json_extract(s.daten,'$.type')='page' AND "+parentWhere+") "+
+        "(json_extract(s.daten,'$.type')='page' AND "+parentWhere+
+        " AND COALESCE(json_extract(s.daten,'$.parentTable'),'')<>'collection'"+
+        " AND (json_extract(s.daten,'$.archiviert') IS 1)=?7) "+
         "ELSE 0 END AND (?5=1 OR COALESCE("+
         pageRole('?6')+","+pageRole("'*'")+","+fallback+
         ")=1) ORDER BY s.geaendert DESC,s.id DESC LIMIT ?3 OFFSET ?4"
-      ).bind(w,parentId,max+1,Number(offset),area.besitzer===userId?1:0,userId)
+      ).bind(w,parentId,max+1,Number(offset),area.besitzer===userId?1:0,userId,archived)
         .all<{id:string;seite:string|null;daten:string;version:number}>();
       const documents=[];
       for(const s of rows.results.slice(0,max)){
@@ -1544,7 +1552,21 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       return update(w,id,ver,{...current.data,parentId:target||null},target||undefined);
     }
     if(name==='redion_update_page'){
-      return update(w,id,ver,{...current.data,text:required(args.title,160)});
+      if(Object.keys(args).some(key=>!['workspaceId','documentId','expectedVersion','title','archived'].includes(key)))
+        return err('invalid_arguments','Unbekannte Seitenänderung.');
+      if(args.archived===undefined)return update(w,id,ver,{...current.data,text:required(args.title,160)});
+      const archive=archiveFlag(args.archived)===1;
+      if(current.data.alive===false||current.data.parentTable==='collection'||current.data.system||
+          (current.s.seite&&current.s.seite!==id))return err('not_found','Archivfähige Seite nicht verfügbar.');
+      const next={...current.data};
+      if(args.title!==undefined)next.text=required(args.title,160);
+      if(archive!==(current.data.archiviert===true)){
+        next.archiviert=archive;
+        next.archiviertAm=archive?new Date().toISOString():'';
+      }
+      if(JSON.stringify(next)===JSON.stringify(current.data))return {documentId:id,version:ver,archived:archive,unchanged:true};
+      next.edited=new Date().toISOString();
+      return {...await update(w,id,ver,next),archived:archive,unchanged:false};
     }
     if(name==='redion_replace_text'){
       if(typeof args.find!=='string'||!args.find.length||args.find.length>2000)
