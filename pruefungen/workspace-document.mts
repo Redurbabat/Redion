@@ -152,16 +152,32 @@ try {
       await page.locator('.document-drawingbar:visible').count() === 1);
     const weiter = dock.getByRole('button', { name: 'Weitere Werkzeuge', exact: true });
     const vorBlitz = await blitz.boundingBox();
+    const reihenfolge = ['notiz', 'stifte', 'formen', 'diagramme', 'vorlagen'];
     const sichtbareKarten = () => dock.locator('[data-karte]:visible').evaluateAll(karten =>
       karten.map(karte => (karte as HTMLElement).dataset.karte).join(','));
     const ersteKarten = await sichtbareKarten();
-    await weiter.click();
-    const zweiteKarten = await sichtbareKarten();
-    pass(label + ': Edgeless blättert in ganzen Karten und klemmt die letzte Gruppe',
-      zweiteKarten !== ersteKarten && (width < 900 ||
-        (ersteKarten === 'notiz,stifte,formen' && zweiteKarten === 'formen,diagramme,vorlagen')),
-      JSON.stringify({ ersteKarten, zweiteKarten }));
-    await dock.getByRole('button', { name: 'Vorherige Werkzeuge', exact: true }).click();
+    const kartenProSeite = ersteKarten.split(',').length;
+    const letzterStart = reihenfolge.length - kartenProSeite;
+    pass(label + ': Die erste Gruppe beginnt mit der ersten Werkzeugkarte',
+      letzterStart > 0 && ersteKarten === reihenfolge.slice(0, kartenProSeite).join(','), ersteKarten);
+    let start = 0;
+    while (start < letzterStart) {
+      await weiter.click();
+      start = Math.min(start + kartenProSeite, letzterStart);
+      const gruppe = await sichtbareKarten();
+      pass(label + ': Edgeless blättert in ganzen Karten und klemmt die letzte Gruppe',
+        gruppe === reihenfolge.slice(start, start + kartenProSeite).join(','), gruppe);
+    }
+    pass(label + ': Die letzte Gruppe hält an der letzten Werkzeugkarte',
+      await weiter.getAttribute('aria-disabled') === 'true');
+    const zurueck = dock.getByRole('button', { name: 'Vorherige Werkzeuge', exact: true });
+    while (start > 0) {
+      await zurueck.click();
+      start = Math.max(0, start - kartenProSeite);
+      const gruppe = await sichtbareKarten();
+      pass(label + ': Rückwärts bleiben die Werkzeugkarten in Reihenfolge',
+        gruppe === reihenfolge.slice(start, start + kartenProSeite).join(','), gruppe);
+    }
     pass(label + ': die Rückrichtung zeigt wieder die Startgruppe', await sichtbareKarten() === ersteKarten);
     const nachBlitz = await blitz.boundingBox();
     pass(label + ': Werkzeugkarten blättern, Blitz bleibt am gleichen Ort',
