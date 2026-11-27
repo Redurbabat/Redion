@@ -49,7 +49,8 @@ allen echten Geräten geprüft werden; keine Behauptung vollständiger E2EE.
   Anmeldeoberfläche, kein offener Registrierungsweg.
 - Lokaler OAuth-Consent und MCP-Routing sind optional implementiert; offen
   bleiben Browser-/Connector-Abnahme, Proxy-Grenzen und Widerrufstests.
-- Live-Sync, Versionskonflikte, Offline-Roundtrip, iOS/Windows/Android.
+- Live-Sync: serverseitige Invalidierung implementiert. Client-Anbindung,
+  Versionskonflikte, Offline-Roundtrip und echte Geräte bleiben offen.
 - Verschlüsselte Anhänge und Schlüsselverwaltung, Sicherheitsprüfung,
   Migration ohne Verlust; konsistente Sicherung und Restore von DB und Blobs.
 - HTTPS-Proxy, Speicher-/Mount-Prüfung, Dashboard, Updates mit Rollback,
@@ -75,3 +76,19 @@ ausdrücklich freigegebene Klartextinhalte sind per MCP erreichbar; private
 verschlüsselte Inhalte bleiben unlesbar. Keine öffentliche Bereitstellung
 vor vollständiger Sicherheits- und Geräteabnahme. Logout der Browser-Sitzung
 ist nicht gleich Widerruf eines OAuth-Grants.
+
+## Geräteverwaltung und schneller Abgleich
+
+Die bestehenden Kontorouten `GET /konto/geraete` und
+`POST /konto/geraete/weg` sind für eigene Gerätesitzungen verfügbar.
+Der neue authentifizierte Endpunkt `GET /home/sync/wait` erwartet
+`bereich`, optional `cursor` und `wait` (0–10 Sekunden). Er liefert
+nur einen opaken Cursor und `changed`, keine Dokumentinhalte. Clients
+rufen bei einer Änderung den normalen Sync auf; der bestehende
+Verschlüsselungs- und Berechtigungsweg bleibt massgeblich.
+SQLite-Trigger erkennen auch Schreibtransaktionen des MCP-Diensts.
+Ein Neustart wechselt den Cursor-Epoch und erzwingt einen erneuten Abgleich.
+Wartende Requests blockieren nicht die Schreibwarteschlange; maximal 64
+gleichzeitige Wartevorgänge. Kein WebSocket, keine Hintergrundgarantie
+für iOS. Die App muss diesen neuen Endpunkt noch integrieren; vorhandenes
+15-Sekunden-Polling bleibt bis dahin unverändert.

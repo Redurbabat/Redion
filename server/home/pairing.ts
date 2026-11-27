@@ -41,7 +41,7 @@ export function claimHomeDevice(db:DatabaseSync,input:unknown):{status:number;bo
     if(typeof mark.bis!=='string'||mark.bis<=now)return {status:410,body:{error:'expired_code'}};
     if(!mark.kontoId)return {status:202,body:{wartet:true}};
     const account=db.prepare('SELECT id,name,mail,bild,gesperrt FROM konten WHERE id=?').get(mark.kontoId);
-    if(!account||account.gesperrt)return {status:403,body:{error:'account_unavailable'}};
+    if(!account||typeof account.id!=='string'||account.gesperrt)return {status:403,body:{error:'account_unavailable'}};
     const removed=db.prepare("DELETE FROM marken WHERE wert=? AND art='geraetecode' AND kontoId=?").run(key,mark.kontoId);
     if(removed.changes!==1)throw new Error('Device claim conflict');
     const token='sit_'+randomBytes(32).toString('hex'),bis=new Date(Date.now()+30*86400000).toISOString();

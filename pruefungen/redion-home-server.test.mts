@@ -130,3 +130,42 @@ test('Opt-in home MCP requires a local one-time consent login and scoped OAuth',
     }finally{service.close();}
   }finally{await rm(root,{recursive:true,force:true});}
 });
+
+test('Home device management and durable live invalidation use authenticated owner sessions',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'redion-live-home-'));
+  try{
+    const origin='https://redion.example.test';
+    const service=await openHomeServer({dataDir:root,origin});
+    try{
+      const post=(path:string,body:Record<string,unknown>,token?:string)=>service.handle(new Request(origin+path,{method:'POST',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(body)}));
+      const pair=async(name:string)=>{
+        const {code}=await (await post('/konto/code',{geraet:name})).json() as {code:string};
+        approveHomeDevice(service.store.sqlite,code);
+        return await (await post('/konto/code-holen',{code})).json() as {token:string;bereiche:{id:string}[]};
+      };
+      const a=await pair('iPhone'),b=await pair('Windows');
+      const workspace=a.bereiche[0]!.id,auth={Authorization:'Bearer '+a.token};
+      const wait=(cursor?:string,seconds=0)=>service.handle(new Request(origin+'/home/sync/wait?'+new URLSearchParams({bereich:workspace,wait:String(seconds),...(cursor?{cursor}:{})}),{headers:auth}));
+      assert.equal((await service.handle(new Request(origin+'/home/sync/wait?bereich='+workspace))).status,401);
+      const first=await (await wait()).json() as {cursor:string;changed:boolean};
+      assert.equal(first.changed,true);
+      assert.equal((await (await wait(first.cursor)).json() as {changed:boolean}).changed,false);
+      const pending=wait(first.cursor,2);
+      const upload=await post('/sync/hoch',{bereich:workspace,saetze:[{id:'test-page',tabelle:'blocks',daten:'{}',version:1}]},b.token);
+      assert.equal(upload.status,200);
+      const next=await (await pending).json() as {cursor:string;changed:boolean};
+      assert.equal(next.changed,true);
+      assert.notEqual(next.cursor,first.cursor);
+      await service.store.db.batch!([service.store.db.prepare('UPDATE saetze SET version=2 WHERE bereich=? AND id=?').bind(workspace,'test-page')]);
+      const afterMcp=await (await wait(next.cursor)).json() as {cursor:string;changed:boolean};
+      assert.equal(afterMcp.changed,true);
+      const list=await service.handle(new Request(origin+'/konto/geraete',{headers:{...auth,Origin:'capacitor://localhost'}}));
+      assert.equal(list.headers.get('Access-Control-Allow-Origin'),'capacitor://localhost');
+      const devices=await list.json() as {geraete:{kennung:string;geraet:string}[]};
+      const target=devices.geraete.find(x=>x.geraet==='Windows')!;
+      assert.ok(target);
+      assert.equal((await post('/konto/geraete/weg',{kennung:target.kennung},a.token)).status,200);
+      assert.equal((await service.handle(new Request(origin+'/home/sync/wait?bereich='+workspace,{headers:{Authorization:'Bearer '+b.token}}))).status,401);
+    }finally{service.close();}
+  }finally{await rm(root,{recursive:true,force:true});}
+});

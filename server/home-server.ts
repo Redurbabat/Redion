@@ -5,6 +5,7 @@ import {pathToFileURL} from 'node:url';
 import {openHomeDatabase} from './home/sqlite.ts';
 import {openHomeBlobs} from './home/blobs.ts';
 import {beantworte} from './kern.ts';
+import {prepareHomeSync,createHomeSyncWait} from './home/live-sync.ts';
 import {approveHomeDevice,claimHomeDevice} from './home/pairing.ts';
 import {prepareHomeConsent,issueHomeConsentCode,identifyHomeConsent,homeConsentLogin,exchangeHomeConsent,logoutHomeConsent} from './home/consent.ts';
 import {handleCloudMcp,isCloudMcpPublicPath,isCloudMcpPrivatePath} from './mcp/cloud-router.ts';
@@ -12,7 +13,8 @@ import {alsAnfrage,alsAntwort} from './cloudflare.ts';
 import {zuGrossAntwort} from './sicherheit/eingaben.ts';
 import {istAbgleichWeg,mitAppUrsprung} from './sicherheit/abgleich-tor.ts';
 
-const privateRoutes=new Set(['/api/stand','/konto/geraete']);
+const privateRoutes=new Set(['/api/stand']);
+const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait']);
 const json=(status:number,error:string)=>Response.json({error},{status,headers:{'Cache-Control':'no-store'}});
 
 /** Initial private API: no static repository files, public registration,
@@ -23,6 +25,8 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
   const store=openHomeDatabase(join(options.dataDir,'redion.sqlite'));
   const blobs=await openHomeBlobs(join(options.dataDir,'blobs')).catch(error=>{store.close();throw error;});
   if(options.enableMcp)prepareHomeConsent(store.sqlite);
+  prepareHomeSync(store.sqlite);
+  const live=createHomeSyncWait(store.sqlite,store.ablage);
   let queue:Promise<unknown>=Promise.resolve();
   function serial<T>(execute:()=>Promise<T>):Promise<T>{
     const result=queue.then(execute);
@@ -34,10 +38,11 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
     if(new URL(request.url).origin!==origin.origin)return json(400,'invalid_host');
     const mcpRoute=isCloudMcpPublicPath(path)||isCloudMcpPrivatePath(path)||['/home/mcp-login','/home/mcp-logout'].includes(path);
     if(mcpRoute&&!options.enableMcp)return json(404,'not_found');
-    if(!mcpRoute&&!istAbgleichWeg(path)&&!privateRoutes.has(path))return json(404,'not_found');
+    const appRoute=istAbgleichWeg(path)||deviceRoutes.has(path);
+    if(!mcpRoute&&!appRoute&&!privateRoutes.has(path))return json(404,'not_found');
     const clientOrigin=request.headers.get('origin');
-    if(clientOrigin&&clientOrigin!==origin.origin&&!(istAbgleichWeg(path)&&['redion-local://app','capacitor://localhost'].includes(clientOrigin)))return json(403,'invalid_origin');
-    if(request.method==='OPTIONS'&&!istAbgleichWeg(path))return json(405,'method_not_allowed');
+    if(clientOrigin&&clientOrigin!==origin.origin&&!(appRoute&&['redion-local://app','capacitor://localhost'].includes(clientOrigin)))return json(403,'invalid_origin');
+    if(request.method==='OPTIONS'&&!appRoute)return json(405,'method_not_allowed');
     if(mcpRoute){
       return serial(async()=>{
         if(path==='/home/mcp-login')return exchangeHomeConsent(store.sqlite,request,origin.origin);
@@ -50,6 +55,11 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
         return handleCloudMcp(request,{DB:store.db},false,identify);
       });
     }
+    if(path==='/home/sync/wait'&&request.method!=='OPTIONS'){
+      const response=await live.handle(request);
+      if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
+      return mitAppUrsprung(request,response);
+    }
     const parsed=await alsAnfrage(request);
     if('zuGross' in parsed)return alsAntwort(zuGrossAntwort(parsed.zuGross));
     const execute=async()=>{
@@ -60,13 +70,13 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
       return alsAntwort(await beantworte(parsed,store.ablage,{ADRESSE:origin.origin,blobs}));
     };
     const response=await serial(execute);
-    if(clientOrigin===origin.origin&&istAbgleichWeg(path)){
+    if(clientOrigin===origin.origin&&appRoute){
       response.headers.set('Access-Control-Allow-Origin',origin.origin);
       response.headers.append('Vary','Origin');
     }
-    return istAbgleichWeg(path)?mitAppUrsprung(request,response):response;
+    return appRoute?mitAppUrsprung(request,response):response;
   }
-  return {handle,store,blobs,close:()=>store.close()};
+  return {handle,store,blobs,close:()=>{live.close();store.close();}};
 }
 
 async function main(){
@@ -105,7 +115,9 @@ async function main(){
       const method=req.method||'GET';
       const path=req.url||'/';
       if(!path.startsWith('/')||path.startsWith('//')){res.writeHead(400);res.end();return;}
-      const init:RequestInit & {duplex?:'half'}={method,headers};
+      const abort=new AbortController();
+      res.once('close',()=>abort.abort());
+      const init:RequestInit & {duplex?:'half'}={method,headers,signal:abort.signal};
       if(method!=='GET'&&method!=='HEAD'){init.body=Readable.toWeb(req) as unknown as ReadableStream<Uint8Array>;init.duplex='half';}
       const response=await service.handle(new Request(origin+path,init));
       res.writeHead(response.status,Object.fromEntries(response.headers));
