@@ -512,4 +512,7 @@ der Metadatenantwort. `collection: "marks"` liefert dazu versionierte
 Seiten mit den gespeicherten Marken und `coordinateSpace`. Bei älteren
 Blättern mit unkonvertierten Marken wird kein Schreibversuch übernommen.
 Fremde Markentypen werden nur anhand ihrer Kennung und Art ausgewiesen.
-Das Werkzeug verschiebt oder löscht bestehende Marken derzeit nicht.
+`move_mark` verschiebt einzelne Text-, Stift- und Formmarken anhand ihrer
+`elementId` und der Blattpunktdifferenz `dx`/`dy`. Bestehende Marken behalten
+ihre Formatierung. Koordinatenfehler, gesperrte oder gruppierte Marken und
+ein neues Ziel ausserhalb des Blatts führen zu keiner Änderung.

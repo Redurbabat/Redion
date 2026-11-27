@@ -2300,6 +2300,13 @@ test('Cloud-MCP native visual objects with version protection',async()=>{
  assert.equal(marked.nextOffset,1);
  assert.deepEqual((await ok('redion_read_visual',{...sheetRef,offset:1,expectedVersion:2})).items[0].pts,penMark.points);
  assert.equal(JSON.parse((await run('redion_update_visual',{...append,marks:[penMark]})).content[0].text).code,'conflict');
+ const move={...sheetRef,expectedVersion:2,operation:'move_mark',elementId:'stroke',dx:10,dy:-30};
+ const movedOutside=await run('redion_update_visual',{...move,dx:-51});
+ assert.equal(JSON.parse(movedOutside.content[0].text).code,'invalid_arguments');
+ assert.equal((await ok('redion_update_visual',move)).version,3);
+ const movedMarks=await ok('redion_read_visual',{...sheetRef,collection:'marks'});
+ assert.deepEqual(movedMarks.items[0],firstMarks.items[0]);
+ assert.deepEqual(movedMarks.items[1].pts,[[60,865],[150,870],[240,865]]);
  const pageRecord=await f.store.hole('saetze',{bereich:'ws_test',id:'visual_page'});
  assert.ok(pageRecord);
  const prepare=f.db.prepare;
@@ -2319,11 +2326,11 @@ test('Cloud-MCP native visual objects with version protection',async()=>{
  };
  try{
    const raced=await run('redion_update_visual',{workspaceId:'ws_test',blockId:sheet.blockId,
-     expectedVersion:2,operation:'set_paper',paper:'blanko'});
+     expectedVersion:3,operation:'set_paper',paper:'blanko'});
    assert.equal(parentChanged,true);
    assert.equal(JSON.parse(raced.content[0].text).code,'conflict');
    const saved=await f.store.hole('saetze',{bereich:'ws_test',id:sheet.blockId});
-   assert.equal(saved?.version,2);
+   assert.equal(saved?.version,3);
    assert.equal(JSON.parse(String(saved?.daten)).papier,'kariert');
  }finally{f.db.prepare=prepare;}
  const reviewClient=await f.oauth.register({client_name:'Synthetic visual reader',

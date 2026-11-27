@@ -3,14 +3,14 @@ import {mkdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import test from 'node:test';
 import {chromium,webkit} from 'playwright';
-import {appendSheetMarks,sheet} from '../server/mcp/visual-blocks.ts';
+import {appendSheetMarks,moveSheetMark,sheet} from '../server/mcp/visual-blocks.ts';
 
 const output=process.env.REDION_SHEET_SCREENSHOTS;
 
 for(const [engine,device,width] of [[chromium,'desktop',1366],[chromium,'mobile',390],[webkit,'mobile',390]] as const){
   test(`Native MCP-Zeichenmarken sind in ${engine.name()} (${width} px) sichtbar und bearbeitbar`,async()=>{
     const block=sheet('punkte');
-    block.marken=appendSheetMarks(block,[
+    const marks=appendSheetMarks(block,[
       {id:'title',kind:'text',text:'Werkstatt · Messprotokoll',x:52,y:60,width:480,fontSize:28,bold:true},
       {id:'intro',kind:'text',text:'1. Trage deinen Messwert ein.\n2. Vergleiche die beiden Skizzen.',x:52,y:115,width:470,fontSize:19},
       {id:'frame',kind:'rectangle',color:'#2e77a5',points:[[54,220],[540,385]]},
@@ -18,6 +18,11 @@ for(const [engine,device,width] of [[chromium,'desktop',1366],[chromium,'mobile'
       {id:'pencil',kind:'stift',color:'#26749d',points:[[80,330],[130,300],[165,320],[215,265],[255,285],[300,247]]},
       {id:'arrow',kind:'arrow',color:'#228075',points:[[340,300],[480,300]],strokeWidth:3}
     ]);
+    const move={elementId:'title',dx:4,dy:2};
+    block.marken=marks;
+    assert.throws(()=>moveSheetMark({...block,marken:marks.map(mark=>
+      mark.id==='title'?{...mark,gesperrt:true}:mark)},move),/Gesperrte/);
+    block.marken=moveSheetMark(block,move);
     const browser=await engine.launch();
     try{
       const page=await browser.newPage({viewport:{width,height:width===390?844:950},serviceWorkers:'block',reducedMotion:'reduce'});
@@ -54,6 +59,7 @@ for(const [engine,device,width] of [[chromium,'desktop',1366],[chromium,'mobile'
       await editor.press('Escape');
       await page.waitForFunction(id=>Store.getBlock(id)?.marken?.[0]?.text==='Messprotokoll bearbeitet',blockId);
       assert.equal(await title.textContent(),'Messprotokoll bearbeitet');
+      assert.deepEqual(await page.evaluate(id=>Store.getBlock(id)?.marken?.[0]?.point,blockId),[56,62]);
     }finally{await browser.close();}
   });
 }

@@ -1,6 +1,9 @@
 // @ts-expect-error Classic browser build has no module declaration.
 import compiledObjects from '../../quell/core/gfx/objects.js';
+// @ts-expect-error Classic browser build has no module declaration.
+import compiledInk from '../../quell/core/ink/geometry.js';
 const gfx:typeof GfxObjects=compiledObjects;
+const ink:typeof InkGeometry=compiledInk;
 
 type Obj=Record<string,unknown>;
 const fail=(s:string):never=>{throw new Error(s);};
@@ -102,7 +105,7 @@ export function readSheetMark(value:unknown):Obj {
  const mark=value as Obj;
  const base={id:mark.id,art:mark.art};
  if(typeof mark.art!=='string'||!sheetMarkKinds.includes(mark.art))return {...base,supported:false};
- const fields=['farbe','point','pts','text','breiteBox','fontSize','fett','breite','breiteFest','dreh','gesperrt','schrift','ausricht'];
+ const fields=['farbe','point','pts','text','breiteBox','fontSize','fett','breite','breiteFest','dreh','gesperrt','groupId','schrift','ausricht'];
  return {...base,...Object.fromEntries(fields.filter(key=>Object.hasOwn(mark,key)).map(key=>[key,mark[key]]))};
 }
 
@@ -143,6 +146,30 @@ export function appendSheetMarks(block:Obj,input:unknown):Obj[] {
  });
  if(existing.length+added.length>500)fail('Zu viele Zeichenmarken auf einem A4-Block.');
  return [...existing,...added];
+}
+
+export function moveSheetMark(block:Obj,args:Obj):Obj[] {
+ if(block.raumVersion!==1||!Array.isArray(block.marken))
+   return fail('Die Zeichenmarken benötigen native Blattkoordinaten.');
+ const target=id(args.elementId);
+ const marks=block.marken as Obj[];
+ const matches=marks.filter(mark=>mark?.id===target);
+ const [mark]=matches;
+ if(matches.length!==1||!mark||typeof mark.art!=='string'||!sheetMarkKinds.includes(mark.art))
+   return fail('Zeichenmarke fehlt, ist mehrdeutig oder wird nicht unterstützt.');
+ if(mark.gesperrt||mark.groupId)fail('Gesperrte und gruppierte Zeichenmarken müssen zuerst freigegeben werden.');
+ const dx=num(args.dx,-10000,10000),dy=num(args.dy,-10000,10000);
+ if(!dx&&!dy)fail('Verschiebung ist leer.');
+ const points=mark.art==='text'?[mark.point]:mark.pts;
+ if(!Array.isArray(points)||!points.length||points.length>500||points.some(point=>
+   !Array.isArray(point)||point.length!==2||point.some(coord=>typeof coord!=='number'||!Number.isFinite(coord))))
+   fail('Ungültige Koordinaten der Zeichenmarke.');
+ const width=num(block.blattBreite??595.28,1,10000),height=num(block.blattHoehe??841.89,1,10000);
+ const moved:Obj=ink.move({...mark},dx,dy);
+ const bounds=ink.bounds(moved);
+ if(bounds.x<0||bounds.y<0||bounds.x+bounds.width>width||bounds.y+bounds.height>height)
+   fail('Die verschobene Zeichenmarke reicht über das Blatt.');
+ return marks.map(value=>value===mark?moved:value);
 }
 
 /** Patch only named objects; unrelated native fields and objects survive. */
