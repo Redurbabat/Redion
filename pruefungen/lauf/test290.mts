@@ -99,7 +99,7 @@ const messen = (dateien: Array<{ name: string; text: string }>) => {
 const lesen = (text: string): Map<string, string> => {
   const raus = new Map<string, string>();
   for (const z of text.split('\n')) {
-    const t = /^([a-z]{2,4})\s+(\d+)\s+([a-z]+\.css)\s*$/.exec(z);
+    const t = /^([a-z]{2,4})\s+(\d+)\s+([a-z][a-z0-9-]*\.css)\s*$/.exec(z);
     if (t) raus.set(t[1] as string, t[3] as string);
   }
   return raus;

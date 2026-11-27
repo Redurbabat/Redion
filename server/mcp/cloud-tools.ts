@@ -9,7 +9,10 @@ import {rolleAuf,darf,notieren,feldRechte} from '../kern.ts';
 import {BUILTIN_BLOCK_TYPES} from './block-catalog.ts';
 import {BUILTIN_SYMBOLS} from './symbol-catalog.ts';
 import {editSchematic} from './schematic-edit.ts';
+import {measureOperatingPoint,runSwitchTest} from './schematic-test.ts';
 import {buildLearningCard,buildLearningSet} from './learning-card.ts';
+import {applyDatabaseValues,databaseBatchLimit,databaseFieldLimit,parseDatabaseChanges,readWritableDatabaseRowsSql,updateDatabaseRowsSql} from './database-edit.ts';
+import {mindmap,board,sheet,papers,forms,shapes,alignments,mindmapLimit,editNode,editShape,editSelection,appendSheetMarks,moveSheetMark,readSheetMark,sheetMarkKinds} from './visual-blocks.ts';
 
 type Db=McpDatabase;
 type Args=Record<string,unknown>;
@@ -23,9 +26,17 @@ const text=(value:unknown,max:number):string=>typeof value==='string'&&value.len
 const required=(value:unknown,max:number):string=>{
   const s=text(value,max).trim();if(!s)return err('invalid_arguments','Ein erforderlicher Text fehlt oder ist zu lang.');return s;
 };
+// Only these fixed parameter positions are used by the two UPDATE statements.
+const unchangedEmbedding=(parameter:'?7'|'?8')=>
+  'AND NOT EXISTS (SELECT 1 FROM json_each('+parameter+') ancestor WHERE NOT EXISTS ('+
+  'SELECT 1 FROM saetze p WHERE p.bereich=?3 AND p.seite=?5 AND p.tabelle=\'blocks\' '+
+  "AND p.id=json_extract(ancestor.value,'$.id') AND p.version=json_extract(ancestor.value,'$.version') "+
+  'AND p.geloescht=0 AND p.verschluesselt=0)) ';
 const limit=(value:unknown,fallback:number,max:number):number=>value===undefined?fallback:
   Number.isSafeInteger(value)&&Number(value)>0&&Number(value)<=max?Number(value):
   err('invalid_arguments','Ungültige Anzahl.');
+const archiveFlag=(value:unknown):number=>value===undefined||value===false?0:value===true?1:
+  err('invalid_arguments','archived muss true oder false sein.');
 const nameField={type:'string',maxLength:160};
 const idField={type:'string',maxLength:128};
 const workspace={workspaceId:idField};
@@ -36,11 +47,57 @@ const SCHEMATIC_ARTEN=[
   'anschlussplan','blockschaltbild','funktionsplan','aufbauplan'
 ];
 const SCHEMATIC_QUER=new Set(['installationsplan','blockschaltbild','funktionsplan','aufbauplan']);
+const vId={type:'string',maxLength:64};
+const vColor={type:'string',pattern:'^#[0-9a-fA-F]{6}$'};
+const vNodes={type:'array',minItems:1,maxItems:mindmapLimit,items:{type:'object',properties:{id:vId,text:{type:'string',maxLength:500},parentId:{type:['string','null'],maxLength:64},side:{type:'string',enum:['links','rechts']},color:vColor,form:{type:'string',enum:forms}},required:['id','text','parentId'],additionalProperties:false}};
+const vLinks={type:'array',maxItems:mindmapLimit,items:{type:'object',properties:{id:vId,from:vId,to:vId},required:['id','from','to'],additionalProperties:false}};
+const vCoord={type:'number',minimum:-10000,maximum:10000};
+const vStrokeWidth={type:'number',minimum:0.1,maximum:50};
+const vRotation={type:'number',minimum:-360,maximum:360};
+const vShapes={type:'array',maxItems:100,items:{type:'object',properties:{id:vId,kind:{type:'string',enum:shapes},x:vCoord,y:vCoord,width:vCoord,height:vCoord,color:vColor,text:{type:'string',maxLength:1000},filled:{type:'boolean'},from:vId,to:vId,points:{type:'array',minItems:2,maxItems:500,items:{type:'array',minItems:2,maxItems:2,items:vCoord}},pressure:{type:'array',minItems:2,maxItems:500,items:{type:'number',minimum:0.05,maximum:1}},strokeWidth:vStrokeWidth,marker:{type:'boolean'},rotation:vRotation},required:['id','kind'],additionalProperties:false}};
+const vSheetCoord={type:'number',minimum:0,maximum:10000};
+const vSheetMarks={type:'array',minItems:1,maxItems:40,items:{type:'object',properties:{
+  id:vId,kind:{type:'string',enum:sheetMarkKinds},color:vColor,points:{type:'array',minItems:2,maxItems:500,
+    items:{type:'array',minItems:2,maxItems:2,items:vSheetCoord}},strokeWidth:{type:'number',minimum:0.5,maximum:48},
+  x:vSheetCoord,y:vSheetCoord,width:{type:'number',minimum:24,maximum:10000},
+  fontSize:{type:'number',minimum:8,maximum:96},bold:{type:'boolean'},text:{type:'string',maxLength:1000}
+},required:['id','kind'],additionalProperties:false}};
+const vCreate={...workspace,...documentId,expectedVersion:{type:'integer',minimum:1},requestId:{type:'string',minLength:8,maxLength:100},title:nameField};
+const vRequired=['workspaceId','documentId','expectedVersion','requestId','title'];
+const shapeSelectionOperations=['group_selection','ungroup_selection','align_selection','move_selection','order_selection'];
+const mindmapEditOperations=['rename_node','style_node','delete_branch','append_node','move_node','add_connection','remove_connection'];
+const schematicEditFields={
+  operation:{type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label']},
+  componentId:idField,symbolId:idField,x:{type:'integer',minimum:0,maximum:4000},
+  y:{type:'integer',minimum:0,maximum:4000},
+  rotation:{type:'integer',enum:[0,90,180,270]},
+  mirrored:{type:'boolean'},layer:{type:'string',enum:['plan','aufgabe','loesung']},
+  bmk:{type:'string',maxLength:30},wireId:idField,
+  fromComponentId:idField,fromTerminal:{type:'string',minLength:1,maxLength:20},
+  toComponentId:idField,toTerminal:{type:'string',minLength:1,maxLength:20},
+  labelId:idField,labelText:{type:'string',minLength:1,maxLength:200}
+};
 export const CLOUD_TOOLS:ToolDef[]=[
+  {name:'redion_create_mindmap',description:'Erstellt eine native editierbare Mindmap mit Knoten, Farben und Querverbindungen. parentId null für die Wurzel.',
+    inputSchema:{type:'object',properties:{...vCreate,nodes:vNodes,connections:vLinks},required:[...vRequired,'nodes'],additionalProperties:false}},
+  {name:'redion_create_whiteboard',description:'Erstellt ein natives Whiteboard mit Formen, Texten, Haftnotizen, Pfeilen, Verbindungen und Stiftstrichen (points als [x,y]-Paare).',
+    inputSchema:{type:'object',properties:{...vCreate,shapes:vShapes},required:[...vRequired,'shapes'],additionalProperties:false}},
+  {name:'redion_create_sheet',description:'Erstellt ein natives A4-Blatt im Hoch- oder Querformat mit Papier, Seitenzahl und optionalen Text- oder Zeichenmarken. Positionen in Blattpunkten ab der linken oberen Ecke.',
+    inputSchema:{type:'object',properties:{...vCreate,paper:{type:'string',enum:papers},pages:{type:'integer',minimum:1,maximum:10},orientation:{type:'string',enum:['portrait','landscape']},marks:vSheetMarks},required:vRequired,additionalProperties:false}},
+  {name:'redion_read_visual',description:'Liest Mindmaps, Whiteboards, A4-Blätter und PDF-Seiten mit Version. collection, offset und limit paginieren Knoten, Verbindungen, Formen, Zeichenmarken oder gespeicherten PDF-Text. Für nextOffset dieselbe collection und expectedVersion verwenden.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField,
+      collection:{type:'string',enum:['nodes','connections','shapes','marks','pdf_text']},
+      offset:{type:'integer',minimum:0,maximum:100000},limit:{type:'integer',minimum:1,maximum:40},
+      expectedVersion:{type:'integer',minimum:1}
+    },required:['workspaceId','blockId'],additionalProperties:false}},
+  {name:'redion_update_visual',description:'Bearbeitet native Zeichenobjekte mit Versionsprüfung. Mindmap-Knoten und Querverbindungen, Whiteboard-Formen und Gruppen, A4-Papier und Zeichenmarken auf A4-Blättern oder PDF-Seiten.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},operation:{type:'string',enum:['replace_mindmap',...mindmapEditOperations,'append_shapes','move_shape','resize_shape','style_shape','delete_shape','rotate_shape','order_shape','lock_shape','move_stroke','set_paper','append_marks','move_mark',...shapeSelectionOperations]},nodes:vNodes,connections:vLinks,node:vNodes.items,parentId:vId,connection:vLinks.items,shapes:vShapes,marks:vSheetMarks,paper:{type:'string',enum:papers},elementId:vId,text:{type:'string',maxLength:1000},color:vColor,form:{type:'string',enum:forms},collapsed:{type:'boolean'},filled:{type:'boolean'},x:vCoord,y:vCoord,width:vCoord,height:vCoord,rotation:vRotation,strokeWidth:vStrokeWidth,marker:{type:'boolean'},locked:{type:'boolean'},order:{type:'string',enum:['front','back','forward','backward']},dx:vCoord,dy:vCoord,
+      selection:{type:'array',minItems:1,maxItems:40,uniqueItems:true,items:vId},groupId:vId,alignment:{type:'string',enum:alignments}},required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
+
   {name:'redion_list_workspaces',description:'Zeigt nur die für diese KI-Verbindung freigegebenen Bereiche.',
     inputSchema:{type:'object',properties:{},additionalProperties:false}},
-  {name:'redion_search',description:'Sucht nach freigegebenen, nicht verschlüsselten Seiten.',
-    inputSchema:{type:'object',properties:{...workspace,query:{type:'string',maxLength:200},limit:{type:'integer',minimum:1,maximum:30},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
+  {name:'redion_search',description:'Sucht nach freigegebenen, nicht verschlüsselten Seiten. archived: true durchsucht das Archiv.',
+    inputSchema:{type:'object',properties:{...workspace,query:{type:'string',maxLength:200},archived:{type:'boolean'},limit:{type:'integer',minimum:1,maximum:30},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
   {name:'redion_read_page',description:'Liest Markdown und (bei blockbasierten Seiten) eine rechtegefilterte Blockvorschau. blockOffset und blockLimit paginieren sichtbare direkte Kinder unabhängig von Markdown. Bei älteren Clients steht bereits die erste Vorschau ohne Zusatzparameter bereit.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,offset:{type:'integer',minimum:0},limit:{type:'integer',minimum:1,maximum:12000},blockOffset:{type:'integer',minimum:0,maximum:100000},blockLimit:{type:'integer',minimum:1,maximum:20},expectedVersion:{type:'integer',minimum:1},responseFormat:{type:'string',enum:['portable','legacy']}},required:['workspaceId','documentId'],additionalProperties:false}},
   {name:'redion_get_page_path',description:'Zeigt den Pfad einer lesbaren Seite von der Hauptseite bis zum Dokument. Wenn ein Vorfahr nicht lesbar ist, werden keine Pfadteile offengelegt.',
@@ -55,19 +112,12 @@ export const CLOUD_TOOLS:ToolDef[]=[
       text:{type:'string',maxLength:8000},checked:{type:'boolean'},
       note:{type:'string',maxLength:2000},dueDate:{type:'string',maxLength:10}},
       required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
-  {name:'redion_update_schematic',description:'Bearbeitet einen Klartext-Schaltplan: Bauteil/Beschriftung hinzufügen oder verschieben sowie vorhandene Klemmen verbinden. Verbundene Bauteile können nur im nativen Editor verschoben werden. Alle Aktionen sind versioniert; keine elektrische Sicherheits- oder Normprüfung.',
+  {name:'redion_update_schematic',description:'Bearbeitet einen Klartext-Schaltplan. Für eine einzelne Änderung operation und ihre Felder übergeben. Für bis zu 20 atomare Änderungen nur changes übergeben. Jeder Schritt wird vor dem Speichern geprüft, die Planversion steigt einmal. Verbundene Bauteile im nativen Editor verschieben.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,
       expectedVersion:{type:'integer',minimum:1},
-      operation:{type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label']},
-      componentId:idField,symbolId:idField,x:{type:'integer',minimum:0,maximum:4000},
-      y:{type:'integer',minimum:0,maximum:4000},
-      rotation:{type:'integer',enum:[0,90,180,270]},
-      mirrored:{type:'boolean'},layer:{type:'string',enum:['plan','aufgabe','loesung']},
-      bmk:{type:'string',maxLength:30},wireId:idField,
-      fromComponentId:idField,fromTerminal:{type:'string',minLength:1,maxLength:20},
-      toComponentId:idField,toTerminal:{type:'string',minLength:1,maxLength:20},
-      labelId:idField,labelText:{type:'string',minLength:1,maxLength:200}},
-      required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
+      ...schematicEditFields,changes:{type:'array',minItems:1,maxItems:20,
+        items:{type:'object',properties:schematicEditFields,required:['operation'],additionalProperties:false}}},
+      required:['workspaceId','blockId','expectedVersion'],additionalProperties:false}},
   {name:'redion_add_schematic',description:'Erstellt einen leeren Schaltplan mit dem nativen RED-ION-Format auf einer freigegebenen Seite. Kein automatisch gezeichneter Stromkreis und keine Sicherheitsabnahme. Atomar, versioniert, mit requestId wiederholbar.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,
       expectedVersion:{type:'integer',minimum:1},
@@ -104,9 +154,9 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_create_page',description:'Legt eine Seite an. requestId verhindert doppelte Erstellung bei Wiederholung.',
     inputSchema:{type:'object',properties:{...workspace,title:nameField,content:{type:'string',maxLength:12000},parentId:idField,requestId:{type:'string',minLength:8,maxLength:100}},
       required:['workspaceId','title','requestId'],additionalProperties:false}},
-  {name:'redion_update_page',description:'Ändert den Seitentitel nur bei passender expectedVersion.',
-    inputSchema:{type:'object',properties:{...workspace,...documentId,title:nameField,expectedVersion:{type:'integer',minimum:1}},
-      required:['workspaceId','documentId','title','expectedVersion'],additionalProperties:false}},
+  {name:'redion_update_page',description:'Ändert den Seitentitel oder den Archivstatus nur bei passender expectedVersion. archived: false holt die Seite aus dem Archiv.',
+    inputSchema:{type:'object',properties:{...workspace,...documentId,title:nameField,archived:{type:'boolean'},expectedVersion:{type:'integer',minimum:1}},
+      required:['workspaceId','documentId','expectedVersion'],additionalProperties:false}},
   {name:'redion_list_page_blocks',description:'Liest sichtbare Seitenblöcke und verschachtelte Kindblöcke in stabiler Reihenfolge und kleinen Seiten. Offset zählt nur tatsächlich lesbare Blöcke; expectedVersion verhindert das Vermischen veränderter Listen.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,parentBlockId:idField,
       limit:{type:'integer',minimum:1,maximum:20},offset:{type:'integer',minimum:0,maximum:100000},
@@ -116,8 +166,16 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,
       childOffset:{type:'integer',minimum:0,maximum:100000},
       childLimit:{type:'integer',minimum:1,maximum:40}},required:['workspaceId','blockId'],additionalProperties:false}},
-  {name:'redion_read_schematic',description:'Liest einen vorhandenen Schaltplan-Block mit geprüften Seitenrechten. Bauteile, Leitungen, Beschriftungen und Planversion sind enthalten.',
-    inputSchema:{type:'object',properties:{...workspace,blockId:idField},required:['workspaceId','blockId'],additionalProperties:false}},
+  {name:'redion_read_schematic',description:'Liest Bauteile, Leitungen, Beschriftungen und Planversion. Mit switchTest bis zu 32 Kombinationen gegen eine Sollfolge prüfen (letzter Schalter wechselt am schnellsten). Mit operatingPoint Strom, Spannung und Leistung für gewählte Schalterstellungen messen. Beide Modi benötigen expectedVersion und speichern keine Änderungen.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},
+      switchTest:{type:'object',additionalProperties:false,required:['switchIds','targetId','expected'],properties:{
+        switchIds:{type:'array',minItems:1,maxItems:6,uniqueItems:true,items:idField},targetId:idField,
+        expected:{type:'array',minItems:1,maxItems:32,items:{type:'boolean'}}
+      }},operatingPoint:{type:'object',additionalProperties:false,required:['switches','componentIds'],properties:{
+        switches:{type:'array',maxItems:12,items:{type:'object',additionalProperties:false,
+          required:['componentId','position'],properties:{componentId:idField,position:{type:'integer',minimum:0,maximum:32}}}},
+        componentIds:{type:'array',minItems:1,maxItems:8,uniqueItems:true,items:idField}
+      }}},required:['workspaceId','blockId'],additionalProperties:false}},
   {name:'redion_list_symbols',description:'Listet die 131 eingebauten elektrotechnischen Fachzeichen mit Nummern und Positionen der Anschlüsse. Keine auf Geräten nachinstallierten Symbole; nicht als zertifizierte Normbibliothek verwenden.',
     inputSchema:{type:'object',properties:{gruppe:{type:'string',maxLength:40},suche:{type:'string',maxLength:80}},additionalProperties:false}},
   {name:'redion_list_block_types',description:'Listet eingebaute benannte Blockarten der RED-ION-App, inklusive intern gespeicherter Arten. Gerätebezogene Plugins sind nicht enthalten.',
@@ -128,12 +186,21 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_read_database',description:'Liest freigegebene Datenbankspalten und sichtbare Zeilen. Kompatibilität mit älteren Clients: limit bis 500 wird akzeptiert, aber pro Antwort sicher auf maximal 10 sichtbare Zeilen begrenzt. effectiveLimit und limitCapped zeigen das an; für weitere Zeilen nextOffset verwenden.',
     inputSchema:{type:'object',properties:{...workspace,databaseId:idField,limit:{type:'integer',minimum:1,maximum:500},
       offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId','databaseId'],additionalProperties:false}},
+  {name:'redion_update_database_rows',description:'Ändert bis zu zehn native Datenbankzeilen atomar. Unterstützt Titel, Text, Zahl, Checkbox und Datum. Erfordert Datenbankblock-ID, Schema-Version und Version je Zeile.',
+    inputSchema:{type:'object',properties:{...workspace,databaseId:idField,databaseBlockId:idField,
+      expectedDatabaseVersion:{type:'integer',minimum:1},
+      changes:{type:'array',minItems:1,maxItems:databaseBatchLimit,items:{type:'object',properties:{
+        rowId:idField,expectedVersion:{type:'integer',minimum:1},
+        values:{type:'object',minProperties:1,maxProperties:databaseFieldLimit,
+          additionalProperties:{type:['string','number','boolean'],maxLength:4000}}
+      },required:['rowId','expectedVersion','values'],additionalProperties:false}}
+    },required:['workspaceId','databaseId','databaseBlockId','expectedDatabaseVersion','changes'],additionalProperties:false}},
   {name:'redion_list_databases',description:'Listet lesbare Klartext-Datenbanken auf Seiten, die der Benutzer lesen darf. Keine versteckten Seiten oder Spaltenwerte.',
     inputSchema:{type:'object',properties:{...workspace,limit:{type:'integer',minimum:1,maximum:30},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
   {name:'redion_list_root_pages',description:'Listet freigegebene Hauptseiten eines Arbeitsbereichs; nur sichtbare Seiten zählen bei limit und offset.',
-    inputSchema:{type:'object',properties:{...workspace,limit:{type:'integer',minimum:1,maximum:100},offset:{type:'integer',minimum:0,maximum:100000}},required:['workspaceId'],additionalProperties:false}},
+    inputSchema:{type:'object',properties:{...workspace,archived:{type:'boolean'},limit:{type:'integer',minimum:1,maximum:100},offset:{type:'integer',minimum:0,maximum:100000}},required:['workspaceId'],additionalProperties:false}},
   {name:'redion_list_child_pages',description:'Listet lesbare, unverschlüsselte Unterseiten einer Seite auf.',
-    inputSchema:{type:'object',properties:{...workspace,parentId:idField,limit:{type:'integer',minimum:1,maximum:100},offset:{type:'integer',minimum:0,maximum:100000}},required:['workspaceId','parentId'],additionalProperties:false}},
+    inputSchema:{type:'object',properties:{...workspace,parentId:idField,archived:{type:'boolean'},limit:{type:'integer',minimum:1,maximum:100},offset:{type:'integer',minimum:0,maximum:100000}},required:['workspaceId','parentId'],additionalProperties:false}},
   {name:'redion_append_content',description:'Hängt Markdown an eine Klartext-Seite an; benötigt Schreibrecht und passende Version.',
     inputSchema:{type:'object',properties:{...workspace,...documentId,content:{type:'string',minLength:1,maxLength:4000},expectedVersion:{type:'integer',minimum:1}},required:['workspaceId','documentId','content','expectedVersion'],additionalProperties:false}},
   {name:'redion_move_page',description:'Verschiebt eine Klartext-Seite unter eine andere Seite oder auf die oberste Ebene. Prüft Schreibrechte, Zyklen und Version.',
@@ -143,7 +210,7 @@ export const CLOUD_TOOLS:ToolDef[]=[
       replacement:{type:'string',maxLength:4000},expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId','find','replacement','expectedVersion'],additionalProperties:false}}
 ];
-const writeNames=new Set(['redion_create_page','redion_update_page','redion_replace_text','redion_append_content','redion_move_page','redion_add_block','redion_add_schematic','redion_update_schematic','redion_update_block','redion_create_learning_card','redion_create_learning_set']);
+const writeNames=new Set(['redion_create_page','redion_update_page','redion_replace_text','redion_append_content','redion_move_page','redion_add_block','redion_add_schematic','redion_update_schematic','redion_update_block','redion_create_learning_card','redion_create_learning_set','redion_create_mindmap','redion_create_whiteboard','redion_create_sheet','redion_update_visual','redion_update_database_rows']);
 // MCP annotations tell AI clients which tools are read-only, additive or
 // modifying. They are advisory; server-side OAuth and ACL checks still govern.
 const toolTitles:Record<string,string>={
@@ -162,6 +229,7 @@ const toolTitles:Record<string,string>={
   redion_update_page:'Seitentitel ändern',
   redion_list_databases:'Datenbanken auflisten',
   redion_read_database:'Datenbank lesen',
+  redion_update_database_rows:'Datenbankzeilen bearbeiten',
   redion_list_tasks:'Aufgaben auflisten',
   redion_list_block_types:'Blockarten auflisten',
   redion_list_symbols:'Schaltzeichen auflisten',
@@ -174,7 +242,7 @@ const toolTitles:Record<string,string>={
   redion_move_page:'Seite verschieben',
   redion_replace_text:'Text ersetzen'
 };
-const destructiveNames=new Set(['redion_update_page','redion_move_page','redion_replace_text','redion_update_block']);
+const destructiveNames=new Set(['redion_update_page','redion_move_page','redion_replace_text','redion_update_block','redion_update_visual','redion_update_database_rows']);
 export const visibleCloudTools=(p:McpPrincipal):ToolDef[]=>
   CLOUD_TOOLS.filter(t=>!writeNames.has(t.name)||p.scopes.includes('redion:write'))
     .map(t=>{
@@ -182,7 +250,7 @@ export const visibleCloudTools=(p:McpPrincipal):ToolDef[]=>
       return {...t,annotations:{
         title:toolTitles[t.name]||t.name,readOnlyHint:readOnly,
         destructiveHint:destructiveNames.has(t.name),
-        idempotentHint:t.name==='redion_create_page'||t.name==='redion_add_block'||t.name==='redion_add_schematic'||t.name==='redion_create_learning_card'||t.name==='redion_create_learning_set',
+        idempotentHint:t.name==='redion_create_page'||t.name==='redion_add_block'||t.name==='redion_add_schematic'||t.name==='redion_create_learning_card'||t.name==='redion_create_learning_set'||['redion_create_mindmap','redion_create_whiteboard','redion_create_sheet'].includes(t.name),
         openWorldHint:false
       }};
     });
@@ -213,6 +281,29 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
   const expected=(v:unknown):number=>{
     if(!Number.isSafeInteger(v)||Number(v)<1)return err('invalid_arguments','expectedVersion muss eine positive ganze Zahl sein.');
     return Number(v);
+  };
+  /** A block's seite field alone never grants access to a detached record. */
+  const embedding=async(w:string,pageId:string,id:string,data:Args)=>{
+    let childId=id;
+    let parentId=data.parentId;
+    const seen=new Set([id]);
+    const snapshots:{id:string;version:number}[]=[];
+    for(let depth=0;depth<40;depth++){
+      if(typeof parentId!=='string'||!parentId||parentId.length>128||seen.has(parentId))break;
+      seen.add(parentId);
+      const row=await ablage.hole('saetze',{bereich:w,id:parentId});
+      if(!row||row.tabelle!=='blocks'||row.geloescht||row.verschluesselt||row.seite!==pageId)break;
+      let parent:Args;
+      try{parent=JSON.parse(String(row.daten));}catch{break;}
+      if(!parent||parent.alive===false||parent.archiviert===true||parent.parentTable==='collection'||
+          !Array.isArray(parent.content)||!parent.content.includes(childId))break;
+      snapshots.push({id:parentId,version:Number(row.version)});
+      if(parentId===pageId&&parent.type==='page')return snapshots;
+      if(parent.type==='page')break;
+      childId=parentId;
+      parentId=parent.parentId;
+    }
+    return err('not_found','Block ist nicht auf einer lesbaren Seite eingebettet.');
   };
   const update=async(w:string,id:string,old:number,updated:Record<string,unknown>,guardParent?:string)=>{
     const payload=JSON.stringify(updated);
@@ -372,6 +463,10 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const pageId=String(s.seite||'');
       if(!pageId)return err('not_found','Block nicht verfügbar.');
       await page(w,pageId,'lesen');
+      if(data.type==='schaltplan'){
+        if(data.archiviert===true)return err('not_found','Schaltplan nicht verfügbar.');
+        await embedding(w,pageId,id,data);
+      }
       // Do not fail on a page with >40 children: return a bounded visible
       // window and a continuation cursor. Older clients can read page 1.
       const childOffset=args.childOffset===undefined?0:args.childOffset;
@@ -391,8 +486,27 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         const plan=data.plan as Record<string,unknown>;
         const payload=JSON.stringify(plan);
         if(payload.length>32000)return err('too_large','Schaltplan ist für einen Aufruf zu gross.');
+        const version=Number(s.version)||1;
+        const switchTest=args.switchTest!==undefined;
+        const operatingPoint=args.operatingPoint!==undefined;
+        if(switchTest&&operatingPoint)return err('invalid_arguments','Pro Aufruf entweder Sollfolge prüfen oder Messwerte lesen.');
+        if(args.expectedVersion!==undefined||switchTest||operatingPoint){
+          if(expected(args.expectedVersion)!==version)
+            return err('conflict','Schaltplan wurde geändert. Bitte erneut lesen.');
+        }
+        if(switchTest||operatingPoint){
+          let report;
+          try{
+            report=switchTest?runSwitchTest(plan,args.switchTest):measureOperatingPoint(plan,args.operatingPoint);
+          }catch(error){
+            return err('invalid_arguments',error instanceof Error?error.message:'Prüfung konnte nicht ausgeführt werden.');
+          }
+          if(new TextEncoder().encode(JSON.stringify(report)).byteLength>32000)
+            return err('too_large','Der Bericht ist zu gross. Einen kleineren Teilplan prüfen.');
+          return {workspaceId:w,blockId:id,documentId:pageId,version,report};
+        }
         return {workspaceId:w,blockId:id,documentId:pageId,
-          version:Number(s.version)||1,plan,
+          version,plan,
           teile:Array.isArray(plan.teile)?plan.teile:[],
           leitungen:Array.isArray(plan.leitungen)?plan.leitungen:[],
           texte:Array.isArray(plan.texte)?plan.texte:[]};
@@ -582,16 +696,18 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         "WHERE p.bereich=?1 AND p.tabelle='blocks' AND p.geloescht=0 AND p.verschluesselt=0 "+
         "AND CASE WHEN json_valid(p.daten) THEN "+
         "(json_extract(p.daten,'$.type')='page' AND "+
-        "COALESCE(json_extract(p.daten,'$.parentTable'),'')<>'collection' AND ("+
+        "COALESCE(json_extract(p.daten,'$.parentTable'),'')<>'collection' AND "+
+        "(json_extract(p.daten,'$.archiviert') IS 1)=?5 AND ("+
         "?2='' OR instr(lower(COALESCE(json_extract(p.daten,'$.text'),'')),lower(?2))>0 "+
         "OR instr(lower(COALESCE(json_extract(p.daten,'$.inhalt'),'')),lower(?2))>0 "+
         "OR "+childMatches+")) ELSE 0 END "+
         "ORDER BY p.geaendert DESC,p.id DESC LIMIT ?3 OFFSET ?4";
       const found:{documentId:string;title:string;version:number}[]=[];
+      const archived=archiveFlag(args.archived);
       const batch=100,maxScanned=2000;
       let scanned=0,visible=0;
       while(scanned<maxScanned&&found.length<=max){
-        const result=await db.prepare(sql).bind(w,sqlNeedle,batch,scanned)
+        const result=await db.prepare(sql).bind(w,sqlNeedle,batch,scanned,archived)
           .all<{id:string;seite:string|null;daten:string;version:number}>();
         for(const s of result.results){
           const r=await rolleAuf(ablage,w,String(s.seite||s.id),userId);
@@ -621,6 +737,69 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       // No raw-row truncation marker: that could disclose the existence of
       // content that the caller is explicitly forbidden to read.
       return {documents:found.slice(0,max),nextOffset:found.length>max?Number(offset)+max:null};
+    }
+    if(name==='redion_update_database_rows'){
+      if(Object.keys(args).some(key=>!['workspaceId','databaseId','databaseBlockId','expectedDatabaseVersion','changes'].includes(key)))
+        return err('invalid_arguments','Unbekanntes Feld für die Datenbankbearbeitung.');
+      const databaseId=required(args.databaseId,128),blockId=required(args.databaseBlockId,128);
+      const databaseVersion=expected(args.expectedDatabaseVersion);
+      let changes:ReturnType<typeof parseDatabaseChanges>;
+      try{changes=parseDatabaseChanges(args.changes);}
+      catch(error){return err('invalid_arguments',(error as Error).message);}
+      const block=await ablage.hole('saetze',{bereich:w,id:blockId});
+      if(!block||block.tabelle!=='blocks'||block.geloescht||block.verschluesselt||!block.seite)
+        return err('not_found','Datenbankblock nicht verfügbar.');
+      const pageId=String(block.seite);
+      await page(w,pageId,'bearbeiten');
+      let link:Args;
+      try{link=JSON.parse(String(block.daten));}
+      catch{return err('not_found','Datenbankblock nicht verfügbar.');}
+      if(!link||link.type!=='database'||link.collectionId!==databaseId||link.alive===false||
+          link.archiviert===true||link.gesperrt===true||link.parentTable==='collection')
+        return err('not_found','Datenbankblock nicht verfügbar.');
+      const ancestors=await embedding(w,pageId,blockId,link);
+      const database=await ablage.hole('saetze',{bereich:w,id:databaseId});
+      if(!database||database.tabelle!=='collections'||database.geloescht||database.verschluesselt)
+        return err('not_found','Datenbank nicht verfügbar.');
+      if(Number(database.version)!==databaseVersion)return err('conflict','Datenbankschema wurde geändert.');
+      let schema:Args;
+      try{schema=JSON.parse(String(database.daten))?.schema;}
+      catch{return err('invalid_data','Datenbankschema ist ungültig.');}
+      if(!schema||typeof schema!=='object'||Array.isArray(schema))return err('invalid_data','Datenbankschema ist ungültig.');
+      const fields=[...new Set(changes.flatMap(change=>change.values.map(([key])=>key)))];
+      if(!fields.includes('title')&&fields.some(key=>(schema[key] as Args|undefined)?.type==='title'))fields.push('title');
+      const rights=await feldRechte(ablage,w,databaseId,userId);
+      if(fields.some(key=>Object.hasOwn(rights,key)&&rights[key]!=='voll'))
+        return err('forbidden','Mindestens eine Spalte ist schreibgeschützt.');
+      const rows=await db.prepare(readWritableDatabaseRowsSql).bind(
+        JSON.stringify(changes.map(change=>({id:change.rowId}))),w,userId,pageId
+      ).all<{id:string;version:number;daten:string}>();
+      const byId=new Map(rows.results.map(row=>[row.id,row]));
+      const now=new Date().toISOString(),encoder=new TextEncoder();
+      const updates=[];
+      for(const change of changes){
+        const row=byId.get(change.rowId);
+        if(!row)return err('not_found','Datenbankzeile nicht verfügbar.');
+        let data:Args;
+        try{data=JSON.parse(row.daten);}
+        catch{return err('invalid_data','Datenbankzeile ist ungültig.');}
+        if(!data||data.type!=='page'||data.parentTable!=='collection'||data.parentId!==databaseId||
+            data.alive===false||data.archiviert===true||data.gesperrt===true)
+          return err('not_found','Datenbankzeile nicht verfügbar.');
+        if(Number(row.version)!==change.expectedVersion)return err('conflict','Eine Datenbankzeile wurde geändert.');
+        let payload:string;
+        try{payload=JSON.stringify(applyDatabaseValues(data,schema,change.values,now));}
+        catch(error){return err('invalid_arguments',(error as Error).message);}
+        if(encoder.encode(payload).byteLength>48000)return err('too_large','Eine Datenbankzeile überschreitet das Schreiblimit.');
+        updates.push({id:change.rowId,version:change.expectedVersion,payload});
+      }
+      const saved=await db.prepare(updateDatabaseRowsSql).bind(JSON.stringify(updates),w,userId,pageId,databaseId,
+        databaseVersion,JSON.stringify([{id:blockId,version:Number(block.version)},...ancestors]),JSON.stringify(fields),now)
+        .all<{id:string;version:number}>();
+      if(saved.results.length!==updates.length)return err('conflict','Daten, Einbettung oder Berechtigungen wurden zwischenzeitlich geändert.');
+      const versions=new Map(saved.results.map(row=>[row.id,row.version]));
+      await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',text:'Datenbankzeilen über Cloud-MCP bearbeitet',objekt:databaseId});
+      return {workspaceId:w,databaseId,databaseVersion,rows:updates.map(row=>({rowId:row.id,version:versions.get(row.id)}))};
     }
     if(name==='redion_read_database'){
       const databaseId=required(args.databaseId,128);
@@ -826,6 +1005,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const base={documentId:id,workspaceId:w,title:String(result.data.text||''),
         version:Number(result.s.version)||1,offset:start,totalLength:full.length,
         nextOffset:end<full.length?end:null,
+        ...(typeof result.data.archiviert==='boolean'?{archived:result.data.archiviert}:{}),
         // Structural hint only: do not reveal the number or IDs of hidden children.
         blockStorage:Array.isArray(result.data.content)?'referenced':'none'};
       const part=full.slice(start,end);
@@ -862,6 +1042,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const parentId=root?'':required(args.parentId,128);
       if(!root)await page(w,parentId,'lesen');
       const max=limit(args.limit,50,100);
+      const archived=archiveFlag(args.archived);
       const offset=args.offset===undefined?0:args.offset;
       if(!Number.isSafeInteger(offset)||Number(offset)<0||Number(offset)>100000)
         return err('invalid_arguments','Ungültiger Seitenversatz.');
@@ -884,11 +1065,13 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         "SELECT s.id,s.seite,s.daten,s.version FROM saetze AS s "+
         "WHERE s.bereich=?1 AND s.tabelle='blocks' AND s.geloescht=0 AND s.verschluesselt=0 "+
         "AND CASE WHEN json_valid(s.daten) THEN "+
-        "(json_extract(s.daten,'$.type')='page' AND "+parentWhere+") "+
+        "(json_extract(s.daten,'$.type')='page' AND "+parentWhere+
+        " AND COALESCE(json_extract(s.daten,'$.parentTable'),'')<>'collection'"+
+        " AND (json_extract(s.daten,'$.archiviert') IS 1)=?7) "+
         "ELSE 0 END AND (?5=1 OR COALESCE("+
         pageRole('?6')+","+pageRole("'*'")+","+fallback+
         ")=1) ORDER BY s.geaendert DESC,s.id DESC LIMIT ?3 OFFSET ?4"
-      ).bind(w,parentId,max+1,Number(offset),area.besitzer===userId?1:0,userId)
+      ).bind(w,parentId,max+1,Number(offset),area.besitzer===userId?1:0,userId,archived)
         .all<{id:string;seite:string|null;daten:string;version:number}>();
       const documents=[];
       for(const s of rows.results.slice(0,max)){
@@ -902,6 +1085,103 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const allVisible=documents.length===Math.min(rows.results.length,max);
       const nextOffset=allVisible&&rows.results.length>max?Number(offset)+max:null;
       return root?{workspaceId:w,documents,nextOffset}:{parentId,documents,nextOffset};
+    }
+    if(name==='redion_read_visual'||name==='redion_update_visual'){
+      const id=required(args.blockId,128),writing=name==='redion_update_visual';
+      const s=await ablage.hole('saetze',{bereich:w,id});
+      if(!s||s.tabelle!=='blocks'||s.geloescht||s.verschluesselt)return err('not_found','Zeichenobjekt nicht verfügbar.');
+      const pageId=required(s.seite,128);await page(w,pageId,writing?'bearbeiten':'lesen');
+      let data:Record<string,unknown>;try{data=JSON.parse(String(s.daten));}catch{return err('not_found','Zeichenobjekt nicht verfügbar.');}
+      if(!data||!['mindmap','whiteboard','blatt','pdfseite'].includes(String(data.type))||data.parentTable==='collection'||data.alive===false||data.archiviert===true)return err('not_found','Zeichenobjekt nicht verfügbar.');
+      const ancestors=await embedding(w,pageId,id,data);
+      const type=String(data.type),version=Number(s.version)||1;
+      const hasMarks=type==='blatt'||type==='pdfseite';
+      if(!writing){
+        if(args.expectedVersion!==undefined&&expected(args.expectedVersion)!==version)
+          return err('conflict','Zeichenobjekt wurde geändert. Bitte ab der ersten Seite neu lesen.');
+        if(args.collection!==undefined||args.offset!==undefined||args.limit!==undefined){
+          const collection=args.collection===undefined?(type==='mindmap'?'nodes':hasMarks?'marks':'shapes'):args.collection;
+          const offset=args.offset===undefined?0:args.offset;
+          if(typeof offset!=='number'||!Number.isSafeInteger(offset)||offset<0||offset>100000)
+            return err('invalid_arguments','Ungültiger Zeichenobjektversatz.');
+          if(offset&&args.expectedVersion===undefined)
+            return err('invalid_arguments','Für Folgeseiten ist expectedVersion erforderlich.');
+          const max=limit(args.limit,20,40);
+          let elements:unknown;
+          if(type==='whiteboard'&&collection==='shapes')elements=data.shapes??[];
+          else if(hasMarks&&collection==='marks')elements=data.marken??[];
+          else if(type==='pdfseite'&&collection==='pdf_text'){
+            const characters=Array.from(typeof data.suchtext==='string'?data.suchtext:'');
+            elements=Array.from({length:Math.ceil(characters.length/500)},(_,i)=>characters.slice(i*500,(i+1)*500).join(''));
+          }
+          else if(type==='mindmap'&&(collection==='nodes'||collection==='connections')){
+            const map=data.karte as Record<string,unknown>|undefined;
+            elements=map?.[collection==='nodes'?'knoten':'verbindungen'];
+          }else return err('invalid_arguments','Diese Liste passt nicht zum Blocktyp.');
+          if(!Array.isArray(elements))return err('invalid_data','Ungültige Elemente im Zeichenobjekt.');
+          const encoder=new TextEncoder();
+          let bytes=2;
+          const items:unknown[]=[];
+          for(const raw of elements.slice(offset,offset+max)){
+            const element=collection==='marks'?readSheetMark(raw):raw;
+            const size=encoder.encode(JSON.stringify(element)).byteLength+(items.length?1:0);
+            if(bytes+size>28000){
+              if(!items.length)return err('too_large','Ein einzelnes Zeichenelement ist zu gross.');
+              break;
+            }
+            items.push(element);
+            bytes+=size;
+          }
+          const nextOffset=offset+items.length<elements.length?offset+items.length:null;
+          return {workspaceId:w,documentId:pageId,blockId:id,type,version,collection,offset,nextOffset,items,
+            ...(collection==='marks'?{coordinateSpace:data.raumVersion===1?'sheetPoints':'legacy'}:{})};
+        }
+        if(type==='pdfseite')return {workspaceId:w,documentId:pageId,blockId:id,type,version,
+          width:typeof data.bw==='number'?data.bw:null,height:typeof data.bh==='number'?data.bh:null,
+          pageNumber:Number.isSafeInteger(data.nr)?data.nr:null,pageCount:Number.isSafeInteger(data.vonSeiten)?data.vonSeiten:null,
+          rotation:data.gedreht===90||data.gedreht===180||data.gedreht===270?data.gedreht:0,
+          hasText:typeof data.suchtext==='string'&&data.suchtext.length>0};
+        const view=type==='mindmap'?{karte:data.karte??null}:type==='whiteboard'?{shapes:data.shapes??[],sicht:data.sicht??null}:{papier:data.papier??'blanko',blattBreite:data.blattBreite??595.28,blattHoehe:data.blattHoehe??841.89,
+          ...(data.blattAusrichtung==='quer'?{orientation:'landscape'}:{})};
+        if(new TextEncoder().encode(JSON.stringify(view)).byteLength>32000)return err('too_large','Zeichenobjekt zu gross. Knoten, Verbindungen oder Formen seitenweise lesen.');
+        return {workspaceId:w,documentId:pageId,blockId:id,type,version,...view};
+      }
+      if(expected(args.expectedVersion)!==version)return err('conflict','Zeichenobjekt wurde geändert.');
+      const op=args.operation,next={...data};
+      const fields:Record<string,string[]>={replace_mindmap:['nodes','connections'],rename_node:['elementId','text'],style_node:['elementId','color','form','collapsed'],delete_branch:['elementId'],append_shapes:['shapes'],move_shape:['elementId','x','y'],resize_shape:['elementId','width','height'],style_shape:['elementId','color','filled','text','strokeWidth','marker'],delete_shape:['elementId'],rotate_shape:['elementId','rotation'],order_shape:['elementId','order'],lock_shape:['elementId','locked'],move_stroke:['elementId','dx','dy'],set_paper:['paper'],
+        group_selection:['selection','groupId'],ungroup_selection:['selection'],align_selection:['selection','alignment'],
+        move_selection:['selection','dx','dy'],order_selection:['selection','order'],
+        append_node:['node'],move_node:['elementId','parentId'],add_connection:['connection'],remove_connection:['elementId'],append_marks:['marks'],move_mark:['elementId','dx','dy']};
+      if(typeof op!=='string'||!Object.hasOwn(fields,op)||Object.keys(args).some(k=>!['workspaceId','blockId','expectedVersion','operation',...fields[op]!].includes(k)))return err('invalid_arguments','Ungültige Operation.');
+      try{
+        if(type==='mindmap'&&op==='replace_mindmap')next.karte=mindmap(args.nodes,args.connections);
+        else if(type==='mindmap'&&mindmapEditOperations.includes(op))next.karte=editNode(data.karte,op,args);
+        else if(type==='whiteboard'&&shapeSelectionOperations.includes(op)){
+          next.shapes=editSelection(data.shapes,op,args);next.raumVersion=1;
+        }
+        else if(type==='whiteboard'&&['move_shape','resize_shape','style_shape','delete_shape','rotate_shape','order_shape','lock_shape','move_stroke'].includes(op)){next.shapes=editShape(data.shapes,op,args);next.raumVersion=1;}
+        else if(type==='whiteboard'&&op==='append_shapes'){
+          const existing=data.shapes??[];if(!Array.isArray(existing)||existing.some(s=>!s||typeof s!=='object'||Array.isArray(s)))return err('invalid_data','Ungültige Formen.');
+          next.shapes=[...existing,...board(args.shapes,existing)];next.raumVersion=1;
+        }else if(type==='blatt'&&op==='set_paper'){
+          if(typeof args.paper!=='string'||!papers.includes(args.paper))return err('invalid_arguments','Unbekanntes Papier.');next.papier=args.paper;
+        }else if(hasMarks&&op==='append_marks'){
+          next.marken=appendSheetMarks(data,args.marks);next.raumVersion=1;
+        }else if(hasMarks&&op==='move_mark'){
+          next.marken=moveSheetMark(data,args);
+        }else return err('invalid_arguments','Operation passt nicht zum Blocktyp.');
+      }catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Ungültige Zeichnung.');}
+      const now=new Date().toISOString(),payload=JSON.stringify({...next,edited:now});
+      if(new TextEncoder().encode(payload).byteLength>48000)return err('too_large','Zeichenobjekt zu gross.');
+      const updated=await db.prepare(
+        "UPDATE saetze SET daten=?1,version=version+1,geaendert=?2,vonGeraet='Cloud-MCP' "+
+        "WHERE bereich=?3 AND id=?4 AND tabelle='blocks' AND seite=?5 AND version=?6 "+
+        'AND verschluesselt=0 AND geloescht=0 AND daten=?7 '+
+        unchangedEmbedding('?8')+'RETURNING version'
+      ).bind(payload,now,w,id,pageId,version,String(s.daten),JSON.stringify(ancestors)).first<{version:number}>();
+      if(!updated)return err('conflict','Zeichenobjekt wurde zwischenzeitlich geändert.');
+      await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',text:'Zeichenobjekt über Cloud-MCP bearbeitet',objekt:id});
+      return {workspaceId:w,documentId:pageId,blockId:id,type,version:updated.version};
     }
     if(!principal.scopes.includes('redion:write'))
       return err('forbidden','Schreibrechte sind nicht freigegeben.');
@@ -1016,31 +1296,52 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       try{data=JSON.parse(String(s.daten||'')) as Record<string,unknown>;}
       catch{return err('invalid_data','Schaltplanblock ist nicht lesbar.');}
       if(!data||typeof data!=='object'||Array.isArray(data)||data.type!=='schaltplan'||
-        data.parentTable==='collection'||data.alive===false||
+        data.parentTable==='collection'||data.alive===false||data.archiviert===true||
         !data.plan||typeof data.plan!=='object'||Array.isArray(data.plan))
         return err('not_found','Schaltplan nicht verfügbar.');
+      const ancestors=await embedding(w,pageId,id,data);
       if(ver!==Number(s.version)||ver<1)return err('conflict','Schaltplan wurde geändert. Bitte erneut lesen.');
-      let edited:{plan:Record<string,unknown>;elementId:string;kind:string};
-      try{edited=editSchematic(data.plan,args);}
+      const batch=args.changes!==undefined;
+      if(batch&&(!Array.isArray(args.changes)||args.changes.length<1||args.changes.length>20||
+        Object.keys(args).some(key=>!['workspaceId','blockId','expectedVersion','changes'].includes(key))))
+        return err('invalid_arguments','Ein Batch muss 1–20 Änderungen enthalten und darf keine Einzelaktion enthalten.');
+      let plan=data.plan;
+      const elements:{elementId:string;elementType:string}[]=[];
+      try{
+        for(const [index,change] of (batch?args.changes as unknown[]:[args]).entries()){
+          if(!change||typeof change!=='object'||Array.isArray(change))throw new Error(`Schritt ${index+1} ist kein Änderungsobjekt.`);
+          if(batch&&Object.keys(change).some(key=>!Object.hasOwn(schematicEditFields,key)))
+            throw new Error(`Schritt ${index+1} enthält unbekannte Felder.`);
+          try{
+            const edited=editSchematic(plan,change as Args);
+            plan=edited.plan;
+            elements.push({elementId:edited.elementId,elementType:edited.kind});
+          }catch(error){
+            if(!batch)throw error;
+            throw new Error(`Schritt ${index+1}: ${error instanceof Error?error.message:'Ungültige Planänderung.'}`);
+          }
+        }
+      }
       catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Ungültige Planänderung.');}
-      if(JSON.stringify(edited.plan).length>32000)
+      if(new TextEncoder().encode(JSON.stringify(plan)).byteLength>32000)
         return err('too_large','Schaltplan überschreitet die sichere Lesegrenze.');
       const timestamp=new Date().toISOString();
-      const payload=JSON.stringify({...data,plan:edited.plan,edited:timestamp});
-      if(payload.length>50000)return err('too_large','Schaltplanblock ist zu gross.');
+      const payload=JSON.stringify({...data,plan,edited:timestamp});
+      if(new TextEncoder().encode(payload).byteLength>50000)return err('too_large','Schaltplanblock ist zu gross.');
       const updated=await db.prepare(
         "UPDATE saetze SET daten=?1,version=version+1,geaendert=?2,vonGeraet='Cloud-MCP' "+
         "WHERE bereich=?3 AND id=?4 AND tabelle='blocks' AND seite=?5 AND version=?6 "+
         "AND geloescht=0 AND verschluesselt=0 AND json_valid(daten) "+
         "AND json_extract(daten,'$.type')='schaltplan' "+
         "AND COALESCE(json_extract(daten,'$.parentTable'),'')<>'collection' "+
+        unchangedEmbedding('?7')+
         "RETURNING version"
-      ).bind(payload,timestamp,w,id,pageId,ver).first<{version:number}>();
+      ).bind(payload,timestamp,w,id,pageId,ver,JSON.stringify(ancestors)).first<{version:number}>();
       if(!updated)return err('conflict','Schaltplan wurde inzwischen bearbeitet. Bitte erneut lesen.');
       await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',
         text:'Schaltplan über Cloud-MCP ergänzt',objekt:id});
       return {workspaceId:w,documentId:pageId,blockId:id,version:updated.version,
-        elementId:edited.elementId,elementType:edited.kind,
+        ...(batch?{elements}:elements[0]),
         electricalValidation:false,routingVerified:false};
     }
     if(name==='redion_create_learning_set'){
@@ -1106,21 +1407,22 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const same=await retry();if(same)return same;
       return err('conflict','Seitenversion oder requestId stimmt nicht mehr. Bitte neu lesen.');
     }
-    if(name==='redion_add_block'||name==='redion_add_schematic'||name==='redion_create_learning_card'){
+    if(name==='redion_add_block'||name==='redion_add_schematic'||name==='redion_create_learning_card'||['redion_create_mindmap','redion_create_whiteboard','redion_create_sheet'].includes(name)){
       const createSchematic=name==='redion_add_schematic';
       const createCard=name==='redion_create_learning_card';
+      const visualType=name==='redion_create_mindmap'?'mindmap':name==='redion_create_whiteboard'?'whiteboard':name==='redion_create_sheet'?'blatt':'';
       const id=required(args.documentId,128);
       const ver=expected(args.expectedVersion);
       const current=await page(w,id,'bearbeiten');
       let learning:{content:string;meta:Record<string,unknown>}|undefined;
       if(createCard){try{learning=buildLearningCard(args);}catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Ungültige Lernkarte.');}}
-      const typ=createCard?'flashcard':createSchematic?'schaltplan':required(args.typ,40);
+      const typ=visualType||(createCard?'flashcard':createSchematic?'schaltplan':required(args.typ,40));
       const allowedTypes=new Set(['text','h1','h2','h3','todo','bullet','number','quote','code','divider']);
-      if(!createCard&&!createSchematic&&!allowedTypes.has(typ))
+      if(!visualType&&!createCard&&!createSchematic&&!allowedTypes.has(typ))
         return err('invalid_arguments','Diese Blockart erfordert eine eigene geprüfte Schreibfunktion.');
       if(args.inBlockId!==undefined)
         return err('invalid_arguments','Verschachtelte Blockerstellung ist noch nicht freigegeben.');
-      const content=learning?learning.content:createSchematic?
+      const content=visualType?required(args.title,160):learning?learning.content:createSchematic?
         (args.titel===undefined?'Schaltplan':required(args.titel,120)):
         (args.text===undefined?'':text(args.text,12000));
       if(!createSchematic&&args.text!==undefined&&(typeof args.text!=='string'||args.text.length>12000))
@@ -1130,6 +1432,17 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         return err('invalid_arguments','Blockdaten müssen ein Objekt sein.');
       const input=args.daten as Record<string,unknown>|undefined;
       const meta:Record<string,unknown>=learning?learning.meta:{};
+      if(visualType){
+        const fields=visualType==='mindmap'?['nodes','connections']:visualType==='whiteboard'?['shapes']:['paper','pages','orientation','marks'];
+        if(args.requestId===undefined||Object.keys(args).some(k=>!['workspaceId','documentId','expectedVersion','title','requestId',...fields].includes(k)))return err('invalid_arguments','Ungültige Zeichenfelder.');
+        try{if(visualType==='mindmap')meta.karte=mindmap(args.nodes,args.connections);
+          else if(visualType==='whiteboard'){meta.shapes=board(args.shapes);meta.raumVersion=1;meta.hoehe=520;}
+          else {
+            Object.assign(meta,sheet(args.paper,args.pages,args.orientation));
+            if(args.marks!==undefined)meta.marken=appendSheetMarks(meta,args.marks);
+          }
+        }catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Ungültige Zeichnung.');}
+      }
       if(createSchematic){
         const art=required(args.art,40);
         if(!SCHEMATIC_ARTEN.includes(art))
@@ -1313,7 +1626,21 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       return update(w,id,ver,{...current.data,parentId:target||null},target||undefined);
     }
     if(name==='redion_update_page'){
-      return update(w,id,ver,{...current.data,text:required(args.title,160)});
+      if(Object.keys(args).some(key=>!['workspaceId','documentId','expectedVersion','title','archived'].includes(key)))
+        return err('invalid_arguments','Unbekannte Seitenänderung.');
+      if(args.archived===undefined)return update(w,id,ver,{...current.data,text:required(args.title,160)});
+      const archive=archiveFlag(args.archived)===1;
+      if(current.data.alive===false||current.data.parentTable==='collection'||current.data.system||
+          (current.s.seite&&current.s.seite!==id))return err('not_found','Archivfähige Seite nicht verfügbar.');
+      const next={...current.data};
+      if(args.title!==undefined)next.text=required(args.title,160);
+      if(archive!==(current.data.archiviert===true)){
+        next.archiviert=archive;
+        next.archiviertAm=archive?new Date().toISOString():'';
+      }
+      if(JSON.stringify(next)===JSON.stringify(current.data))return {documentId:id,version:ver,archived:archive,unchanged:true};
+      next.edited=new Date().toISOString();
+      return {...await update(w,id,ver,next),archived:archive,unchanged:false};
     }
     if(name==='redion_replace_text'){
       if(typeof args.find!=='string'||!args.find.length||args.find.length>2000)

@@ -19,7 +19,8 @@ const SheetSpace = (() => {
             return [rund(punkt.x), rund(punkt.y)];
         };
     };
-    const seiten = (hoehe) => Math.max(1, Math.ceil((Number(hoehe) || A4_HOEHE) / A4_HOEHE));
+    const seitenHoehe = (block) => block?.blattAusrichtung === 'quer' ? A4_BREITE : A4_HOEHE;
+    const seiten = (hoehe, seitenmass = A4_HOEHE) => Math.max(1, Math.ceil(Math.round((Number(hoehe) || seitenmass) * 100) / Math.round(seitenmass * 100)));
     const gedrehtVon = (block) => {
         const g = ((Math.round((Number(block?.gedreht) || 0) / 90) * 90) % 360 + 360) % 360;
         return g === 90 || g === 180 || g === 270 ? g : 0;
@@ -45,6 +46,6 @@ const SheetSpace = (() => {
         huelle.appendChild(inhalt);
         return huelle;
     };
-    return { A4_BREITE, A4_HOEHE, RAND, RAUM_VERSION, rund, zuBlatt, umrechner, seiten, gedrehtVon, masseVon, drehHuelle };
+    return { A4_BREITE, A4_HOEHE, RAND, RAUM_VERSION, rund, zuBlatt, umrechner, seiten, seitenHoehe, gedrehtVon, masseVon, drehHuelle };
 })();
 window.SheetSpace = SheetSpace;

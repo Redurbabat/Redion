@@ -12,6 +12,7 @@ on:
       - 'capacitor.config.json'
       - 'codemagic.yaml'
       - '.github/workflows/ios-native-tests.yml'
+      - '.github/workflows/affine-integration.yml'
   workflow_dispatch:
 
 permissions:

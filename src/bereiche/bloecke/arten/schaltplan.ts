@@ -35,7 +35,7 @@
  * die fast am Anschluss enden, sieht richtig aus und ist es nicht.
  * ==========================================================================*/
 
-const Schaltplan = (() => {
+const Schaltplan = ((Register: { fachzeichen: typeof ElektroFachzeichen } | undefined) => {
 
   const esc = (s: unknown): string => String(s ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -1038,11 +1038,13 @@ const Schaltplan = (() => {
    * entlangläuft und durch kein Zeichen geht, gilt; sonst der erste ohne
    * Fremdes; sonst der Winkel wie bisher. `schnell` lässt die Hakenwege aus
    * und nimmt nur die ersten vierzig Z-Wege — für die Vorschau beim Ziehen.
+   * Ein Aufrufer mit `kandidatErlaubt` verlangt einen strikten Weg. Wenn
+   * keiner passt, bleibt die Liste leer, statt den ersten Winkel zu liefern.
    */
   const leitungFuehren = (plan: Plan, a: Punkt, b: Punkt,
                           vonFang?: { teil: string; nr: string } | null,
                           nachFang?: { teil: string; nr: string } | null,
-                          wie: { schnell?: boolean } = {}): Punkt[] => {
+                          wie: { schnell?: boolean; kandidatErlaubt?: (punkte: Punkt[]) => boolean } = {}): Punkt[] => {
     const erster = ohneDoppel(rechtwinklig(a, b));
     if (gleicherPunkt(a, b)) return erster;
     const l: Leitung = { id: '\u0000neu', punkte: [], ebene: 'plan' };
@@ -1071,6 +1073,7 @@ const Schaltplan = (() => {
       const sch = JSON.stringify(w);
       if (probiert.has(sch)) return false;
       probiert.add(sch);
+      if (wie.kandidatErlaubt && !wie.kandidatErlaubt(w)) return false;
       if (!pruefeBeruehrung(plan, l, w, orte, plan.leitungen, erlaubt)) return false;
       if (ueberlappt(w, plan.leitungen)) return false;
       if (!ohneFremdes) ohneFremdes = w;
@@ -1080,7 +1083,7 @@ const Schaltplan = (() => {
     const zw = zWege(a, b, breite, hoehe);
     for (const w of (wie.schnell ? zw.slice(0, 40) : zw)) if (pruefe(w)) return w;
     if (!wie.schnell) for (const w of hakenWege(a, b, breite, hoehe)) if (pruefe(w)) return w;
-    return ohneFremdes || erster;
+    return wie.kandidatErlaubt ? [] : ohneFremdes || erster;
   };
 
   /** Doppelte Punkte und Punkte mitten auf einer Geraden heraus (die Enden bleiben). */
@@ -1360,7 +1363,7 @@ const Schaltplan = (() => {
 
   /** Derselbe reale Aussenrahmen für Vorlagenplatzierung und Desktop-Aktionen. */
   const teilRahmen = (t: Teil, dx = 0, dy = 0) => {
-    const m = teilMasse(t), zc = Register.fachzeichen.holen(t.zeichen);
+    const m = teilMasse(t), zc = Register?.fachzeichen.holen(t.zeichen);
     const cx = Number(t.x) + dx + (zc ? zc.w : UNBEKANNT_MASS.w) / 2;
     const cy = Number(t.y) + dy + (zc ? zc.h : UNBEKANNT_MASS.h) / 2;
     return { l: cx - m.w / 2, o: cy - m.h / 2, r: cx + m.w / 2, u: cy + m.h / 2 };
@@ -1578,7 +1581,7 @@ const Schaltplan = (() => {
       const innen = unbekannt ? unbekanntesZeichen(t.zeichen, farbe)
         : svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
       const gewaehlt = opt.auswahl && opt.auswahl.has(t.id);
-      const mass = unbekannt ? { ...UNBEKANNT_MASS } : Register.fachzeichen.masse(t.zeichen, 0);
+      const mass = unbekannt || !Register ? { ...UNBEKANNT_MASS } : Register.fachzeichen.masse(t.zeichen, 0);
 
       /* Was die Simulation über dieses Bauteil weiss. */
       const w = opt.strom ? opt.strom.werte[t.id] : undefined;
@@ -1917,6 +1920,9 @@ const Schaltplan = (() => {
     netzBauen, BEISPIELE, beispielBauen, uid, esc,
     SCHIENEN, leitungFuehren, ueberlappt, ueberlappungen, streckeSchieben, gruppeUmformen, planDrehen
   };
-})();
+})(typeof window === 'undefined'
+  ? { fachzeichen: require('../../../register/fachzeichen.js') }
+  : typeof Register === 'undefined' ? undefined : Register);
 
-(window as any).Schaltplan = Schaltplan;
+if (typeof window === 'undefined') module.exports = Schaltplan;
+else (window as any).Schaltplan = Schaltplan;

@@ -53,7 +53,8 @@ const fixture=async()=>{
   const oauth=createMcpOAuth({state,issuer:origin,resource:origin+'/mcp/cloud',authorizationEndpoint:origin+'/mcp/authorize'});
   const client=await oauth.register({client_name:'Synthetic ChatGPT',redirect_uris:['https://client.example.test/callback'],grant_types:['authorization_code','refresh_token']});
   const verifier='v'.repeat(64);
-  const authorize=async(write:boolean,accountId='owner')=>{
+  const authorize=async(write:boolean,accountId='owner',clientForGrant=client)=>{
+    const client=clientForGrant;
     const begin=await oauth.begin(accountId,{client_id:client.client_id,redirect_uri:client.redirect_uris[0],
       response_type:'code',resource:origin+'/mcp/cloud',scope:write?'redion:read redion:write':'redion:read',
       code_challenge:await pkceChallenge(verifier),code_challenge_method:'S256'});
@@ -159,7 +160,7 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       const transport=new StreamableHTTPClientTransport(new URL(origin+'/mcp/cloud'),{authProvider:provider,fetch:fetcher});
       await client.connect(transport);
       assert.equal(transport.sessionId,undefined);
-      const list=await client.listTools();assert.equal(list.tools.length,15);
+      const list=await client.listTools();assert.equal(list.tools.length,16);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
       assert.equal(JSON.parse(result.content[0]!.text).markdown,'Nur Testdaten');
        assert.equal((result.structuredContent as any)?.markdown,'Nur Testdaten');
@@ -1142,8 +1143,8 @@ test('Cloud-MCP: Block lesen schützt Seiten, geheime Kinder und Datenbankzeilen
         daten:JSON.stringify(data),verschluesselt:encrypted,seite,
         version:4,geaendert:'2030-01-01',geloescht:deleted,vonGeraet:'Test'});
     };
-    await put('block_page_public',{type:'page',text:'Frei',inhalt:'Seiteninhalt'});
-    await put('block_page_private',{type:'page',text:'Geheim',inhalt:'Nicht lesen'});
+    await put('block_page_public',{type:'page',text:'Frei',inhalt:'Seiteninhalt',content:['block_parent','block_schematic']});
+    await put('block_page_private',{type:'page',text:'Geheim',inhalt:'Nicht lesen',content:['block_secret_schematic']});
     await put('block_page_encrypted',{type:'page',text:'Unsichtbar'},'block_page_encrypted',1);
     await put('block_parent',{type:'toggle',text:'Lesbarer Block',parentId:'block_page_public',
       content:['block_child','block_secret_child','block_deleted_child',
@@ -1748,6 +1749,29 @@ test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und at
     assert.equal(after.data.version,6);
     assert.equal(after.data.plan.texte.length,2);
     assert.equal(new Set(after.data.plan.texte.map((x:any)=>x.id)).size,2);
+    const addBatchLabel={operation:'add_label',labelId:'TB',labelText:'Batch',x:200,y:350};
+    const rejected=await update({expectedVersion:6,changes:[addBatchLabel,addBatchLabel]});
+    assert.equal(rejected.data.code,'invalid_arguments');
+    assert.match(rejected.data.message,/Schritt 2/);
+    const unchanged=await call('redion_read_schematic',{blockId});
+    assert.equal(unchanged.data.version,6);
+    assert.deepEqual(unchanged.data.plan,after.data.plan);
+    const changes=[addBatchLabel,{operation:'move_label',labelId:'TB',x:210,y:370}];
+    const committed=await update({expectedVersion:6,changes});
+    assert.equal(committed.data.version,7);
+    assert.deepEqual(committed.data.elements,[{elementId:'TB',elementType:'label'},{elementId:'TB',elementType:'label'}]);
+    assert.equal((await update({expectedVersion:6,changes})).data.code,'conflict');
+    const finalPlan=await call('redion_read_schematic',{blockId});
+    assert.deepEqual(finalPlan.data.plan.texte.filter((item:any)=>item.id==='TB').map((item:any)=>[item.x,item.y]),[[210,370]]);
+    const orphanId='detached_schematic';
+    await f.store.setze('saetze',{id:orphanId,bereich:'ws_test',tabelle:'blocks',
+      daten:JSON.stringify({type:'schaltplan',parentId:'edit_schematic_page',plan:finalPlan.data.plan}),
+      verschluesselt:0,seite:'edit_schematic_page',version:1,geaendert:'2026-11-23',
+      geloescht:0,vonGeraet:'Test'});
+    assert.equal((await call('redion_read_schematic',{blockId:orphanId})).data.code,'not_found');
+    assert.equal((await call('redion_read_block',{blockId:orphanId})).data.code,'not_found');
+    assert.equal((await update({blockId:orphanId,expectedVersion:1,changes})).data.code,'not_found');
+    assert.equal((await f.store.hole('saetze',{bereich:'ws_test',id:orphanId}))?.version,1);
 
     await f.store.setze('saetze',{id:'encrypted_schematic',bereich:'ws_test',tabelle:'blocks',
       daten:JSON.stringify({type:'schaltplan',plan:after.data.plan}),
@@ -2158,4 +2182,395 @@ test('Cloud-MCP learning set validates all cards, attaches them once and retries
     assert.equal((await call(writer.access_token,{...args,expectedVersion:2,cards:[{...args.cards[0],answer:'Ampere'}]})).isError,true);
     assert.equal((await f.store.finde('saetze',{bereich:'ws_test',tabelle:'blocks'})).length,3);
   }finally{f.close();}
+});
+
+test('Cloud-MCP native visual objects with version protection',async()=>{
+ const f=await fixture();try{
+ await f.store.setze('saetze',{id:'visual_page',bereich:'ws_test',tabelle:'blocks',daten:JSON.stringify({type:'page',text:'Visuals',content:[]}),verschluesselt:0,seite:'visual_page',version:1,geaendert:'',geloescht:0,vonGeraet:'Test'});
+ const reader=await f.authorize(false),base={workspaceId:'ws_test',documentId:'visual_page',expectedVersion:1,requestId:'native_map_001',title:'RED ION',nodes:[{id:'root',text:'RED ION',parentId:null},{id:'learn',text:'Lernen',parentId:'root'}]};
+ const call=async(token:string,name:string,args:Record<string,unknown>)=>(await f.rpc(token,'tools/call',{name,arguments:args})).data.result;
+ assert.equal((await call(reader.access_token,'redion_create_mindmap',base)).isError,true);
+ const writer=await f.authorize(true),run=(name:string,args:Record<string,unknown>)=>call(writer.access_token,name,args);
+ const ok=async(name:string,args:Record<string,unknown>)=>{const x=await run(name,args);assert.notEqual(x.isError,true,JSON.stringify(x));return JSON.parse(x.content[0].text);};
+ assert.equal((await run('redion_create_mindmap',{...base,nodes:[{id:'x',text:'X',parentId:'x'}]})).isError,true);
+ const map=await ok('redion_create_mindmap',base),ref={workspaceId:'ws_test',blockId:map.blockId};
+ assert.equal(map.parentVersion,2);assert.equal((await ok('redion_create_mindmap',base)).alreadyExists,true);
+ const read=await ok('redion_read_visual',ref);assert.equal(read.type,'mindmap');assert.equal(read.karte.knoten[1].eltern,'root');
+ assert.equal((await ok('redion_update_visual',{...ref,expectedVersion:1,operation:'replace_mindmap',nodes:[...base.nodes,{id:'docs',text:'Dokumente',parentId:'root'}]})).version,2);
+ assert.equal((await run('redion_update_visual',{...ref,expectedVersion:1,operation:'replace_mindmap',nodes:base.nodes})).isError,true);
+ assert.equal((await ok('redion_update_visual',{...ref,expectedVersion:2,operation:'rename_node',elementId:'learn',text:'Lernzentrum'})).version,3);
+ assert.equal((await ok('redion_update_visual',{...ref,expectedVersion:3,operation:'style_node',elementId:'learn',color:'#ff0000',form:'pille'})).version,4);
+ assert.equal((await run('redion_update_visual',{...ref,expectedVersion:4,operation:'delete_branch',elementId:'root'})).isError,true);
+ await ok('redion_update_visual',{...ref,expectedVersion:4,operation:'delete_branch',elementId:'docs'});
+ const renamed=await ok('redion_read_visual',ref);assert.equal(renamed.karte.knoten.length,2);assert.equal(renamed.karte.knoten[1].text,'Lernzentrum');assert.equal(renamed.karte.knoten[1].farbe,'#ff0000');
+ await ok('redion_update_visual',{...ref,expectedVersion:5,operation:'append_node',node:{id:'topic',text:'Projekte',parentId:'root'}});
+ await ok('redion_update_visual',{...ref,expectedVersion:6,operation:'append_node',node:{id:'detail',text:'Planung',parentId:'topic'}});
+ await ok('redion_update_visual',{...ref,expectedVersion:7,operation:'move_node',elementId:'detail',parentId:'learn'});
+ const cycle=await run('redion_update_visual',{...ref,expectedVersion:8,operation:'move_node',elementId:'learn',parentId:'detail'});
+ assert.match(JSON.parse(cycle.content[0].text).message,/zyklisch/);
+ await ok('redion_update_visual',{...ref,expectedVersion:8,operation:'add_connection',connection:{id:'cross',from:'topic',to:'detail'}});
+ const links=await ok('redion_read_visual',{...ref,collection:'connections'});
+ assert.deepEqual(links.items,[{id:'cross',von:'topic',zu:'detail'}]);
+ const duplicate=await run('redion_update_visual',{...ref,expectedVersion:9,operation:'add_connection',connection:{id:'back',from:'detail',to:'topic'}});
+ assert.equal(JSON.parse(duplicate.content[0].text).code,'invalid_arguments');
+ await ok('redion_update_visual',{...ref,expectedVersion:9,operation:'remove_connection',elementId:'cross'});
+ const edited=await ok('redion_read_visual',ref);
+ assert.equal(edited.karte.knoten.find((node:any)=>node.id==='detail').eltern,'learn');
+ assert.equal(edited.karte.knoten.find((node:any)=>node.id==='learn').farbe,'#ff0000');
+ assert.deepEqual(edited.karte.verbindungen,[]);
+ const wb=await ok('redion_create_whiteboard',{workspaceId:'ws_test',documentId:'visual_page',expectedVersion:2,requestId:'native_board_001',title:'Board',shapes:[{id:'n',kind:'notiz',x:20,y:20,width:180,height:90,text:'Idee'}]});
+ assert.equal((await ok('redion_read_visual',{workspaceId:'ws_test',blockId:wb.blockId})).shapes[0].art,'notiz');
+ const bref={workspaceId:'ws_test',blockId:wb.blockId};
+ await ok('redion_update_visual',{...bref,expectedVersion:1,operation:'move_shape',elementId:'n',x:50,y:70});
+ await ok('redion_update_visual',{...bref,expectedVersion:2,operation:'resize_shape',elementId:'n',width:220,height:110});
+ await ok('redion_update_visual',{...bref,expectedVersion:3,operation:'style_shape',elementId:'n',text:'Neue Idee',color:'#ff0000'});
+ const bEdit=await ok('redion_read_visual',bref);assert.equal(bEdit.shapes[0].x,50);assert.equal(bEdit.shapes[0].w,220);assert.equal(bEdit.shapes[0].text,'Neue Idee');
+ await ok('redion_update_visual',{...bref,expectedVersion:4,operation:'delete_shape',elementId:'n'});
+ assert.equal((await ok('redion_read_visual',bref)).shapes.length,0);
+ await ok('redion_update_visual',{...bref,expectedVersion:5,operation:'append_shapes',shapes:[{id:'ink',kind:'stift',points:[[10,20],[30,40],[50,60]],pressure:[0.4,0.8,0.5],strokeWidth:3,marker:true},{id:'rect',kind:'rechteck',x:20,y:20,width:100,height:80}]});
+ const ink=await ok('redion_read_visual',bref);assert.deepEqual(ink.shapes[0].pts,[[10,20],[30,40],[50,60]]);assert.equal(ink.shapes[0].strichBreite,3);
+ const firstShape=await ok('redion_read_visual',{...bref,collection:'shapes',limit:1});
+ assert.equal(firstShape.nextOffset,1);
+ assert.equal(firstShape.items[0].id,'ink');
+ const secondShape=await ok('redion_read_visual',{...bref,offset:1,limit:1,expectedVersion:firstShape.version});
+ assert.equal(secondShape.items[0].id,'rect');
+ assert.equal(secondShape.nextOffset,null);
+ await ok('redion_update_visual',{...bref,expectedVersion:6,operation:'move_stroke',elementId:'ink',dx:5,dy:-5});
+ const outdated=await run('redion_read_visual',{...bref,offset:1,expectedVersion:firstShape.version});
+ assert.equal(JSON.parse(outdated.content[0].text).code,'conflict');
+ await ok('redion_update_visual',{...bref,expectedVersion:7,operation:'rotate_shape',elementId:'rect',rotation:45});
+ await ok('redion_update_visual',{...bref,expectedVersion:8,operation:'order_shape',elementId:'ink',order:'front'});
+ await ok('redion_update_visual',{...bref,expectedVersion:9,operation:'lock_shape',elementId:'rect',locked:true});
+ assert.equal((await run('redion_update_visual',{...bref,expectedVersion:10,operation:'move_shape',elementId:'rect',x:10,y:10})).isError,true);
+ const locked=await ok('redion_read_visual',bref);assert.equal(locked.shapes[0].id,'rect');assert.equal(locked.shapes[0].rotation,45);assert.equal(locked.shapes[0].locked,true);assert.deepEqual(locked.shapes[1].pts[0],[15,15]);
+ await ok('redion_update_visual',{...bref,expectedVersion:10,operation:'lock_shape',elementId:'rect',locked:false});
+ assert.equal((await run('redion_update_visual',{...bref,expectedVersion:11,operation:'append_shapes',shapes:[{id:'invalid',kind:'stift',points:[[1,2],[3,4]],pressure:[0.5]}]})).isError,true);
+ assert.equal((await ok('redion_read_visual',bref)).version,11);
+ await ok('redion_update_visual',{...bref,expectedVersion:11,operation:'append_shapes',shapes:[
+   {id:'loose',kind:'rechteck',x:240,y:140,width:50,height:50},
+   {id:'link',kind:'verbindung',from:'rect',to:'loose'}
+ ]});
+ await ok('redion_update_visual',{...bref,expectedVersion:12,operation:'group_selection',selection:['rect','ink'],groupId:'inner'});
+ await ok('redion_update_visual',{...bref,expectedVersion:13,operation:'group_selection',selection:['ink'],groupId:'outer'});
+ const nested=await ok('redion_read_visual',bref);
+ assert.deepEqual(nested.shapes.find((s:any)=>s.id==='rect').groupPath,['inner','outer']);
+ assert.deepEqual(nested.shapes.find((s:any)=>s.id==='ink').groupPath,['inner','outer']);
+ await ok('redion_update_visual',{...bref,expectedVersion:14,operation:'ungroup_selection',selection:['rect']});
+ await ok('redion_update_visual',{...bref,expectedVersion:15,operation:'lock_shape',elementId:'rect',locked:true});
+ const align={...bref,operation:'align_selection',selection:['ink','loose'],alignment:'left'};
+ const blockedAlign=await run('redion_update_visual',{...align,expectedVersion:16});
+ assert.match(JSON.parse(blockedAlign.content[0].text).message,/gesperrt/);
+ await ok('redion_update_visual',{...bref,expectedVersion:16,operation:'lock_shape',elementId:'rect',locked:false});
+ await ok('redion_update_visual',{...align,expectedVersion:17});
+ const aligned=await ok('redion_read_visual',bref);
+ const loose=aligned.shapes.find((s:any)=>s.id==='loose');
+ assert.equal(loose.groupId,undefined);
+ assert.ok(loose.x>=0&&loose.x<25);
+ assert.deepEqual(aligned.shapes.find((s:any)=>s.id==='ink').groupPath,['inner']);
+ assert.deepEqual(aligned.shapes.find((s:any)=>s.id==='ink').pts[0],[15,15]);
+ assert.deepEqual(aligned.shapes.find((s:any)=>s.id==='link'),nested.shapes.find((s:any)=>s.id==='link'));
+ await ok('redion_update_visual',{...bref,expectedVersion:18,operation:'move_selection',selection:['rect'],dx:30,dy:40});
+ const movedGroup=await ok('redion_read_visual',bref);
+ assert.equal(movedGroup.shapes.find((s:any)=>s.id==='rect').x,50);
+ assert.deepEqual(movedGroup.shapes.find((s:any)=>s.id==='ink').pts[0],[45,55]);
+ assert.equal(movedGroup.shapes.find((s:any)=>s.id==='loose').x,loose.x);
+ await ok('redion_update_visual',{...bref,expectedVersion:19,operation:'order_selection',selection:['ink'],order:'front'});
+ const ordered=await ok('redion_read_visual',bref);
+ assert.deepEqual(ordered.shapes.filter((s:any)=>s.art!=='verbindung').map((s:any)=>s.id),['loose','rect','ink']);
+ await ok('redion_update_visual',{...bref,expectedVersion:20,operation:'ungroup_selection',selection:['ink']});
+ assert.equal((await ok('redion_read_visual',bref)).shapes.find((s:any)=>s.id==='rect').groupId,undefined);
+ const textMark={id:'title',kind:'text',text:'Übungsblatt',x:50,y:60,width:320,fontSize:24,bold:true};
+ const penMark={id:'stroke',kind:'stift',color:'#2e77a5',points:[[50,895],[140,900],[230,895]]};
+ const sheetArgs={workspaceId:'ws_test',documentId:'visual_page',expectedVersion:3,requestId:'native_sheet_001',title:'A4',paper:'kariert',pages:2,marks:[textMark]};
+ const sheet=await ok('redion_create_sheet',sheetArgs);
+ assert.equal((await ok('redion_create_sheet',sheetArgs)).blockId,sheet.blockId);
+ const sheetRef={workspaceId:'ws_test',blockId:sheet.blockId};
+ assert.equal((await ok('redion_read_visual',sheetRef)).blattHoehe,1683.78);
+ const append={...sheetRef,expectedVersion:1,operation:'append_marks'};
+ for(const invalid of [textMark,{...penMark,id:'ausserhalb',points:[[10,40],[596,900]]}]){
+   const rejected=await run('redion_update_visual',{...append,marks:[penMark,invalid]});
+   assert.equal(JSON.parse(rejected.content[0].text).code,'invalid_arguments');
+ }
+ const firstMarks=await ok('redion_read_visual',{...sheetRef,collection:'marks',limit:1});
+ assert.equal(firstMarks.coordinateSpace,'sheetPoints');
+ assert.deepEqual(firstMarks.items[0],{id:'title',art:'text',farbe:'#2e77a5',point:[50,60],text:'Übungsblatt',breiteBox:320,fontSize:24,fett:true});
+ assert.equal(firstMarks.nextOffset,null);
+ await ok('redion_update_visual',{...append,marks:[penMark]});
+ const marked=await ok('redion_read_visual',{...sheetRef,collection:'marks',limit:1,expectedVersion:2});
+ assert.equal(marked.nextOffset,1);
+ assert.deepEqual((await ok('redion_read_visual',{...sheetRef,offset:1,expectedVersion:2})).items[0].pts,penMark.points);
+ assert.equal(JSON.parse((await run('redion_update_visual',{...append,marks:[penMark]})).content[0].text).code,'conflict');
+ const move={...sheetRef,expectedVersion:2,operation:'move_mark',elementId:'stroke',dx:10,dy:-30};
+ const movedOutside=await run('redion_update_visual',{...move,dx:-51});
+ assert.equal(JSON.parse(movedOutside.content[0].text).code,'invalid_arguments');
+ assert.equal((await ok('redion_update_visual',move)).version,3);
+ const movedMarks=await ok('redion_read_visual',{...sheetRef,collection:'marks'});
+ assert.deepEqual(movedMarks.items[0],firstMarks.items[0]);
+ assert.deepEqual(movedMarks.items[1].pts,[[60,865],[150,870],[240,865]]);
+ const pageRecord=await f.store.hole('saetze',{bereich:'ws_test',id:'visual_page'});
+ assert.ok(pageRecord);
+ const prepare=f.db.prepare;
+ let parentChanged=false;
+ f.db.prepare=function(sql){
+   const statement=prepare.call(this,sql);
+   if(!sql.startsWith('UPDATE saetze SET daten=?1,version=version+1')||!sql.includes('AND daten=?7'))return statement;
+   const first=statement.first.bind(statement);
+   statement.first=async function<T>(){
+     const parent=JSON.parse(String(pageRecord.daten));
+     parent.content=parent.content.filter((child:string)=>child!==sheet.blockId);
+     await f.store.setze('saetze',{...pageRecord,daten:JSON.stringify(parent),version:Number(pageRecord.version)+1});
+     parentChanged=true;
+     return first<T>();
+   };
+   return statement;
+ };
+ try{
+   const raced=await run('redion_update_visual',{workspaceId:'ws_test',blockId:sheet.blockId,
+     expectedVersion:3,operation:'set_paper',paper:'blanko'});
+   assert.equal(parentChanged,true);
+   assert.equal(JSON.parse(raced.content[0].text).code,'conflict');
+   const saved=await f.store.hole('saetze',{bereich:'ws_test',id:sheet.blockId});
+   assert.equal(saved?.version,3);
+   assert.equal(JSON.parse(String(saved?.daten)).papier,'kariert');
+ }finally{f.db.prepare=prepare;}
+ const reviewClient=await f.oauth.register({client_name:'Synthetic visual reader',
+   redirect_uris:['https://reader.example.test/callback'],grant_types:['authorization_code']});
+ const readOnly=await f.authorize(false,'owner',reviewClient);
+ const readerResult=await call(readOnly.access_token,'redion_read_visual',ref);
+ assert.notEqual(readerResult.isError,true);
+ assert.deepEqual(JSON.parse(readerResult.content[0].text),edited);
+ const forbiddenEdit=await call(readOnly.access_token,'redion_update_visual',{
+   ...ref,expectedVersion:1,operation:'rename_node',elementId:'learn',text:'Verboten'
+ });
+ assert.equal(forbiddenEdit.isError,true);
+ assert.equal(JSON.parse(forbiddenEdit.content[0].text).code,'forbidden');
+ const mapRecord=await f.store.hole('saetze',{bereich:'ws_test',id:ref.blockId});
+ assert.ok(mapRecord);
+ const mapData=JSON.parse(String(mapRecord.daten));
+ const originalNodes=mapData.karte.knoten.length;
+ const nodes=Array.from({length:80},(_,i)=>({id:'long_'+i,text:'漢'.repeat(400),eltern:'root'}));
+ mapData.karte.knoten.push(...nodes);
+ await f.store.setze('saetze',{...mapRecord,daten:JSON.stringify(mapData),version:Number(mapRecord.version)+1});
+ const readAsReader=(options:Record<string,unknown>)=>call(readOnly.access_token,'redion_read_visual',{...ref,...options});
+ assert.equal(JSON.parse((await readAsReader({})).content[0].text).code,'too_large');
+ const firstPage=JSON.parse((await readAsReader({collection:'nodes',limit:40})).content[0].text);
+ assert.equal(firstPage.items[0].id,'root');
+ assert.ok(firstPage.nextOffset>originalNodes&&firstPage.nextOffset<40,'Bytegrenze begrenzt auch Unicode-Daten');
+ const unversioned=await readAsReader({collection:'nodes',offset:firstPage.nextOffset});
+ assert.equal(JSON.parse(unversioned.content[0].text).code,'invalid_arguments');
+ const nextPage=JSON.parse((await readAsReader({
+   collection:'nodes',offset:firstPage.nextOffset,expectedVersion:firstPage.version
+ })).content[0].text);
+ assert.equal(nextPage.items[0].id,nodes[firstPage.nextOffset-originalNodes]?.id);
+ const currentPage=await f.store.hole('saetze',{bereich:'ws_test',id:'visual_page'});
+ assert.ok(currentPage);
+ const manyNodes=[{id:'root',text:'Übersicht',parentId:null},
+   ...Array.from({length:150},(_,i)=>({id:'node_'+i,text:'Thema '+i,parentId:'root'}))];
+ const large=await ok('redion_create_mindmap',{...base,nodes:manyNodes,
+   expectedVersion:Number(currentPage.version),requestId:'native_map_large_001'});
+ const lastPage=await ok('redion_read_visual',{workspaceId:'ws_test',blockId:large.blockId,
+   offset:150,limit:40,expectedVersion:1});
+ assert.deepEqual(lastPage.items,[{id:'node_149',text:'Thema 149',eltern:'root'}]);
+ assert.equal(lastPage.nextOffset,null);
+ const landscapeArgs={...sheetArgs,expectedVersion:large.parentVersion,requestId:'native_sheet_landscape',
+   orientation:'landscape',marks:[{...textMark,x:650,y:640,width:160}]};
+ const landscape=await ok('redion_create_sheet',landscapeArgs);
+ const landscapeRef={workspaceId:'ws_test',blockId:landscape.blockId};
+ const landscapeRead=await ok('redion_read_visual',landscapeRef);
+ assert.equal(landscapeRead.blattBreite,841.89);
+ assert.equal(landscapeRead.blattHoehe,1190.56);
+ assert.equal(landscapeRead.orientation,'landscape');
+ assert.deepEqual((await ok('redion_read_visual',{...landscapeRef,collection:'marks'})).items[0].point,[650,640]);
+ const mismatched=await run('redion_create_sheet',{...landscapeArgs,requestId:'native_sheet_bad_portrait',
+   expectedVersion:landscape.parentVersion,orientation:'portrait'});
+ assert.equal(JSON.parse(mismatched.content[0].text).code,'invalid_arguments');
+ }finally{f.close();}
+});
+
+test('Cloud-MCP reads prepared PDF text and edits native marks within the page grant',async()=>{
+ const f=await fixture();
+ try{
+  const storage={bereich:'ws_test',tabelle:'blocks',verschluesselt:0,seite:'pdf_parent',version:1,
+    geaendert:'2026-11-23',geloescht:0,vonGeraet:'Test'};
+  const firstText='A'.repeat(499)+'📄';
+  const pdf={type:'pdfseite',text:'',id:'pdf_page',parentId:'pdf_parent',parentTable:'block',
+    nr:2,vonSeiten:3,bw:420,bh:595,gedreht:90,suchtext:firstText+' Stromkreis',raumVersion:1,
+    quelleId:'synthetic_source',bildDateiId:'synthetic_preview'};
+  await f.store.setze('saetze',{...storage,id:'pdf_parent',daten:JSON.stringify({type:'page',content:['pdf_page']})});
+  await f.store.setze('saetze',{...storage,id:pdf.id,daten:JSON.stringify(pdf)});
+  await f.store.setze('saetze',{...storage,id:'detached',daten:JSON.stringify({...pdf,id:'detached'})});
+  const readClient=await f.oauth.register({client_name:'Synthetic PDF reader',
+    redirect_uris:['https://reader.example.test/callback'],grant_types:['authorization_code']});
+  const reader=await f.authorize(false,'owner',readClient),writer=await f.authorize(true);
+  const ref={workspaceId:'ws_test',blockId:'pdf_page'};
+  const call=async(token:string,name:string,args:Record<string,unknown>)=>{
+    const response=await f.rpc(token,'tools/call',{name,arguments:{...ref,...args}});
+    assert.equal(response.status,200);
+    return JSON.parse(response.data.result.content[0].text);
+  };
+  const read=(args:Record<string,unknown>={})=>call(reader.access_token,'redion_read_visual',args);
+  const update=(args:Record<string,unknown>)=>call(writer.access_token,'redion_update_visual',args);
+  assert.deepEqual(await read(),{...ref,documentId:'pdf_parent',type:'pdfseite',version:1,
+    width:420,height:595,rotation:90,pageNumber:2,pageCount:3,hasText:true});
+  assert.equal((await read({blockId:'detached'})).code,'not_found');
+  const text=await read({collection:'pdf_text',limit:1});
+  assert.deepEqual(text.items,[firstText]);
+  assert.equal(text.nextOffset,1);
+  assert.deepEqual((await read({collection:'pdf_text',offset:1,expectedVersion:1})).items,[' Stromkreis']);
+  const mark={id:'highlight',kind:'marker',points:[[30,45],[185,45]],color:'#efb62e'};
+  const append={expectedVersion:1,operation:'append_marks',marks:[mark]};
+  assert.equal((await call(reader.access_token,'redion_update_visual',append)).code,'forbidden');
+  assert.equal((await update({...append,marks:[{...mark,points:[[30,45],[421,45]]}]})).code,'invalid_arguments');
+  assert.equal((await update(append)).version,2);
+  assert.equal((await read({collection:'pdf_text',offset:1,expectedVersion:1})).code,'conflict');
+  const moved=await update({expectedVersion:2,operation:'move_mark',elementId:'highlight',dx:10,dy:15});
+  assert.equal(moved.version,3);
+  assert.deepEqual((await read({collection:'marks'})).items[0].pts,[[40,60],[195,60]]);
+  const saved=await f.store.hole('saetze',{bereich:'ws_test',id:pdf.id});
+  const data=JSON.parse(String(saved?.daten));
+  assert.equal(data.quelleId,pdf.quelleId);
+  assert.equal(data.bildDateiId,pdf.bildDateiId);
+  assert.equal(data.suchtext,pdf.suchtext);
+ }finally{f.close();}
+});
+
+test('Cloud-MCP edits native database rows atomically with live rights and version protection',async()=>{
+ const f=await fixture();
+ try{
+  const put=(id:string,tabelle:string,seite:string,data:Record<string,unknown>,version=1)=>
+    f.store.setze('saetze',{id,tabelle,seite,bereich:'ws_test',daten:JSON.stringify(data),
+      version,geloescht:0,verschluesselt:0,geaendert:'2026-11-25',vonGeraet:'Test'});
+  const schema={title:{type:'title'},amount:{type:'number'},date:{type:'date'},done:{type:'checkbox'},
+    hidden:{type:'text'},result:{type:'formula'}};
+  await put('table_page','blocks','table_page',{type:'page',content:['table_block']});
+  await put('table_block','blocks','table_page',{type:'database',parentId:'table_page',collectionId:'table_collection'});
+  await put('detached_table','blocks','table_page',{type:'database',parentId:'table_page',collectionId:'table_collection'});
+  await put('table_collection','collections','table_collection',{schema});
+  for(const id of ['table_row_1','table_row_2'])await put(id,'blocks',id,{id,type:'page',
+    parentId:'table_collection',parentTable:'collection',text:'vorher',props:{amount:20,hidden:'bleibt'},content:[]});
+  await f.store.setze('konten',{id:'table_editor',mail:'table_editor@example.test',name:'Editor',herkunft:'github',angelegt:'',gesperrt:0});
+  await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'table_editor',rolle:'edit',von:'owner',wann:''});
+  const protect=(feld:string,rolle:string)=>f.store.setze('feldrechte',{bereich:'ws_test',sammlung:'table_collection',
+    feld,kontoId:'table_editor',rolle,von:'owner',wann:''});
+  await protect('hidden','kein');
+  const token=await f.authorize(true,'table_editor');
+  const readOnly=await f.authorize(false);
+  const base={workspaceId:'ws_test',databaseId:'table_collection',databaseBlockId:'table_block',
+    expectedDatabaseVersion:1,changes:[
+      {rowId:'table_row_1',expectedVersion:1,values:{title:'A',amount:31.5,done:false}},
+      {rowId:'table_row_2',expectedVersion:1,values:{title:'B',date:'2026-11-27'}}
+    ]};
+  const call=async(patch:Record<string,unknown>={},access=token.access_token)=>{
+    const res=await f.rpc(access,'tools/call',{name:'redion_update_database_rows',arguments:{...base,...patch}});
+    assert.equal(res.status,200);
+    return JSON.parse(res.data.result.content[0].text);
+  };
+  const row=(id:string)=>f.store.hole('saetze',{bereich:'ws_test',id});
+  assert.equal((await call({},readOnly.access_token)).code,'forbidden');
+  assert.equal((await call({databaseBlockId:'detached_table'})).code,'not_found');
+  assert.equal((await call({expectedDatabaseVersion:2})).code,'conflict');
+  const other=base.changes[1]!;
+  for(const [change,code] of [
+    [{...other,expectedVersion:2},'conflict'],
+    [{...other,values:{date:'2026-02-30'}},'invalid_arguments'],
+    [{...other,values:{result:'1+1'}},'invalid_arguments'],
+    [{...other,values:{hidden:'unerlaubt'}},'forbidden'],
+    [base.changes[0],'invalid_arguments']
+  ] as const){
+    assert.equal((await call({changes:[base.changes[0],change]})).code,code);
+    assert.equal((await row('table_row_1'))?.version,1);
+  }
+  const prepare=f.db.prepare;
+  let beforeWrite:()=>Promise<unknown>=()=>protect('amount','lesen');
+  f.db.prepare=function(sql){
+    const stmt=prepare.call(this,sql);
+    if(sql.includes('eligible AS MATERIALIZED')){
+      const run=stmt.all.bind(stmt);
+      stmt.all=async function<T>(){
+        await beforeWrite();
+        return run<T>();
+      };
+    }
+    return stmt;
+  };
+  try{
+    assert.equal((await call()).code,'conflict');
+    assert.equal((await row('table_row_1'))?.version,1);
+    assert.equal((await row('table_row_2'))?.version,1);
+    await protect('amount','voll');
+    beforeWrite=async()=>{
+      const saved=await row('table_row_2');
+      assert.ok(saved);
+      await f.store.setze('saetze',{...saved,version:2,daten:JSON.stringify({
+        ...JSON.parse(String(saved.daten)),icon:'🔧'
+      })});
+    };
+    assert.equal((await call()).code,'conflict');
+    assert.equal((await row('table_row_1'))?.version,1);
+    assert.equal((await row('table_row_2'))?.version,2);
+  }finally{f.db.prepare=prepare;}
+  assert.deepEqual((await call({changes:[base.changes[0],{...other,expectedVersion:2}]})).rows,
+    [{rowId:'table_row_1',version:2},{rowId:'table_row_2',version:3}]);
+  assert.equal((await call()).code,'conflict');
+  const saved=JSON.parse(String((await row('table_row_1'))?.daten));
+  assert.equal(saved.text,'A');
+  assert.deepEqual(saved.props,{amount:31.5,hidden:'bleibt',done:false});
+  assert.equal(saved.parentId,'table_collection');
+  assert.equal(JSON.parse(String((await row('table_row_2'))?.daten)).icon,'🔧');
+  const readable=await f.rpc(token.access_token,'tools/call',{name:'redion_read_database',
+    arguments:{workspaceId:'ws_test',databaseId:'table_collection'}});
+  assert.equal(JSON.parse(readable.data.result.content[0].text).rows.find((entry:{rowId:string})=>
+    entry.rowId==='table_row_1').values.amount,31.5);
+  const app=await redionKern.syncWeg({suche:{}},f.store,
+    {konto:{id:'table_editor'},rechte:['alles']},['sync','runter'],'POST',
+    {bereich:'ws_test',seit:new Date(Date.now()-60000).toISOString()},{'redion-geraet':'iPhone'});
+  assert.equal(app.status,200);
+  const delta=JSON.parse(app.koerper).saetze.find((entry:{id:string})=>entry.id==='table_row_1');
+  assert.equal(delta.version,2);
+  assert.deepEqual(JSON.parse(delta.daten).props,{amount:31.5,done:false});
+ }finally{f.close();}
+});
+
+test('Cloud-MCP archives, finds and restores native pages without deleting content',async()=>{
+ const f=await fixture();
+ try{
+  const readClient=await f.oauth.register({client_name:'Synthetic archive reader',
+    redirect_uris:['https://reader.example.test/callback'],grant_types:['authorization_code']});
+  const reader=await f.authorize(false,'owner',readClient),writer=await f.authorize(true);
+  const call=async(token:string,name:string,args:Record<string,unknown>)=>{
+    const response=await f.rpc(token,'tools/call',{name,arguments:{workspaceId:'ws_test',...args}});
+    assert.equal(response.status,200);
+    return JSON.parse(response.data.result.content[0].text);
+  };
+  const root=await call(writer.access_token,'redion_create_page',{title:'Werkstattarchiv',requestId:'archive_root_seed'});
+  const child=await call(writer.access_token,'redion_create_page',{title:'Messreihe',content:'Zwei Prüfungen',
+    parentId:root.documentId,requestId:'archive_child_seed'});
+  const args={documentId:child.documentId,expectedVersion:1,archived:true};
+  const archive=(patch:Record<string,unknown>={})=>call(writer.access_token,'redion_update_page',{...args,...patch});
+  const list=(archived?:boolean)=>call(reader.access_token,'redion_list_child_pages',{parentId:root.documentId,...(archived===undefined?{}:{archived})});
+  const find=(archived:boolean)=>call(reader.access_token,'redion_search',{query:'Messreihe',archived});
+  assert.equal((await call(reader.access_token,'redion_update_page',args)).code,'forbidden');
+  assert.equal((await archive({archived:'true'})).code,'invalid_arguments');
+  assert.equal((await list()).documents[0].documentId,child.documentId);
+  assert.equal((await archive()).version,2);
+  assert.equal((await archive()).code,'conflict');
+  assert.deepEqual(await archive({expectedVersion:2}),{documentId:child.documentId,archived:true,version:2,unchanged:true});
+  assert.deepEqual((await list()).documents,[]);
+  assert.deepEqual((await find(false)).documents,[]);
+  assert.equal((await list(true)).documents[0].documentId,child.documentId);
+  assert.equal((await find(true)).documents[0].documentId,child.documentId);
+  const read=await call(reader.access_token,'redion_read_page',{documentId:child.documentId});
+  assert.equal(read.archived,true);
+  assert.equal(read.markdown,'Zwei Prüfungen');
+  const saved=await f.store.hole('saetze',{bereich:'ws_test',id:child.documentId});
+  assert.equal(saved?.geloescht,0);
+  const data=JSON.parse(String(saved?.daten));
+  assert.equal(data.parentId,root.documentId);
+  assert.ok(Number.isFinite(Date.parse(data.archiviertAm)));
+  const restored=await archive({expectedVersion:2,archived:false});
+  assert.equal(restored.archived,false);
+  assert.equal(restored.version,3);
+  assert.equal((await list()).documents[0].documentId,child.documentId);
+  assert.deepEqual((await list(true)).documents,[]);
+ }finally{f.close();}
 });

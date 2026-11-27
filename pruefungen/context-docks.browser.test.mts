@@ -122,8 +122,11 @@ try {
         }
       }
       if (kind === 'plan') {
-        await dock.locator('[data-wz="stift"]').click();
-        check(`${width}: Plan-Stift wählt das vorhandene Werkzeug`, await dock.locator('[data-wz="stift"]').getAttribute('aria-pressed') === 'true');
+        const stift = dock.locator('[data-wz="stift"]');
+        const weiter = dock.getByRole('button', { name: 'Weitere Werkzeuge' });
+        for (let seite = 0; seite < 8 && !await stift.isVisible(); seite++) await weiter.click();
+        await stift.click();
+        check(`${width}: Plan-Stift wählt das vorhandene Werkzeug`, await stift.getAttribute('aria-pressed') === 'true');
         await dock.locator('[data-a="palette-toggle"]').click();
         check(`${width}: Bauteilpalette öffnet sich`, await page.locator('.sp-palette').isVisible());
         if (capture) await page.screenshot({ path: path.join(folder, `plan-stift-${width}-nachher.png`) });

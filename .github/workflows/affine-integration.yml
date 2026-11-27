@@ -1,0 +1,57 @@
+name: AFFiNE integration gate
+
+on:
+  pull_request:
+    branches: ['main', 'feat/mcp-native-visual-tools']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  affine:
+    name: AFFiNE adapters and combined build
+    runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+      - name: TypeScript
+        run: npm run typecheck
+      - name: Both isolated AFFiNE adapters
+        run: node --test pruefungen/affine/agent-1-editor/adapter.test.mts pruefungen/affine/agent-2-canvas/canvas.test.mts
+      - name: Build native shared sources
+        run: npm run bauen:ts
+      - name: Build standalone HTML
+        run: npm run bauen
+      - name: Generated file diagnostics
+        run: git -c safe.directory="$GITHUB_WORKSPACE" status --short
+      - name: Generated outputs for review (no automatic push)
+        uses: actions/upload-artifact@v4
+        with:
+          name: affine-generated-review
+          path: |
+            quell/bereiche/editor/affine-adapter.js
+            quell/kern/einstellung/stand.js
+            src/kern/einstellung/stand.ts
+            src/dienst/sw.ts
+            sw.js
+            redion-einzeldatei.html
+          if-no-files-found: error
+          retention-days: 7
+      - name: Structure, generated code and service-worker consistency
+        run: |
+          npm run test:struktur
+          npm run stand
+          node pruefungen/lauf/test105.mts
+      - name: Existing MCP contract and simulator
+        run: |
+          npm run test:mcp-connector
+          node --test pruefungen/elektro-kombinationen.test.mts

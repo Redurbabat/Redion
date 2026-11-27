@@ -296,7 +296,42 @@ wird dadurch **nicht** implementiert. Vor produktiver Nutzung sind
 Deployment, Connector-Aktualisierung und ein Live-Test notwendig.
 
 
+## Schalterkombinationen mit MCP prüfen
+
+`redion_read_schematic` gibt wie bisher den Schaltplan und seine `version` zurück.
+Für eine Prüfung sendet der Client zusätzlich `expectedVersion` und einen
+`switchTest` mit `switchIds`, `targetId` und der booleschen Sollfolge `expected`.
+Mit drei Schaltern sind zum Beispiel acht Sollwerte nötig, wenn jeder Schalter
+zwei Stellungen hat. Der letzte Schalter in `switchIds` wechselt am schnellsten.
+
+Die Antwort enthält einen Bericht pro Kombination. Sie nennt die Schalterstellung,
+den Sollwert, den gemessenen Zustand, Fehler und Annahmen. Die Prüfung rechnet
+aus der Ruhelage und speichert den Schaltplan nicht. Ein nicht modelliertes
+Bauteil oder ein instabiler Zustand wird ausdrücklich gemeldet. Die Cloud prüft
+höchstens 32 Kombinationen mit bis zu 60 Bauteilen, 100 Leitungen und begrenzter
+Punktzahl. Grosse Pläne benötigen kleinere Teilpläne.
+
+Die Rechnung verwendet dieselbe erzeugte Simulationsdatei samt Fachzeichen und
+Klemmenmodell wie die App. Der vorhandene Lesezugriff auf die eingebettete Seite
+ist erforderlich. Die Prüfung ersetzt keine elektrische Norm- oder Sicherheitsabnahme.
+
+Für einen einzelnen Betriebspunkt sendet der Client statt `switchTest` ein
+`operatingPoint` mit `switches` (Liste von `{componentId, position}`) und
+`componentIds` (ein bis acht Messobjekte). Nicht genannte Schalter bleiben
+in Ruhelage. Bei Wechselstrom gibt die Antwort unter anderem Effektivwerte
+`Ubetrag` in Volt und `Ibetrag` in Ampere sowie `P` in Watt zurück.
+Bei mehrpoligen Bauteilen stehen Werte pro Glied bereit. Fehlende Messwerte
+sind ausdrücklich gekennzeichnet. Der Aufruf misst einen statischen Zustand.
+
 ## Schaltpläne mit MCP erweitern (23.11.2026)
+
+Beim Verbinden sucht der gemeinsame Redion-Router einen orthogonalen Weg.
+MCP prüft die beiden Winkel und bis zu 40 Wege mit einem Versatz. Der Weg
+muss im Blatt bleiben, die fremden Klemmen und Bauteile umgehen und Abstand
+zu vorhandenen Leitungen halten. Die Prüfung umfasst alle Ebenen, weil das
+elektrische Modell sie gemeinsam wertet. Findet die begrenzte Suche keinen
+passenden Umweg, bleibt die Planversion unverändert. Gemeinsame Leitungsenden
+und Verzweigungen müssen weiterhin im Editor angelegt werden.
 
 'redion_update_schematic' erweitert einen bereits gespeicherten
 Schaltplan-Block, ohne beliebige Fremd-JSON-Daten zu akzeptieren.
@@ -386,7 +421,7 @@ gespeicherte Elternkette. Jeder Vorfahr muss den Kindblock in seiner
 'content'-Liste referenzieren, im selben Arbeitsbereich/auf derselben
 Seite liegen, nicht verschlüsselt oder gelöscht sein und schliesslich
 in der echten Seite enden. Verwaiste bzw. ausgegliederte Blöcke und
-Datenbankzeilen werden nicht direkt bearbeitet.
+Datenbankzeilen werden über `redion_update_database_rows` bearbeitet.
 
 Ein SQLite-Update erhöht die Blockversion nur, wenn sie mit
 'expectedVersion' übereinstimmt; bei gleichzeitiger Änderung muss
@@ -396,3 +431,139 @@ unveränderter Version. Die Elternseite wird nicht überschrieben.
 Die Funktion ist **keine** Bearbeitung von Schaltplänen, Tabellenzellen
 oder privaten verschlüsselten Blöcken. Produktionsbereitstellung und
 Connector-Aktualisierung bleiben separate Schritte.
+
+## Grosse Zeichenobjekte lesen
+
+`redion_read_visual` liefert bei kleinen Objekten wie bisher die vollständigen
+Daten. Für eine Mindmap sendet der Client `collection: "nodes"` oder
+`collection: "connections"`. Für ein Whiteboard sendet er
+`collection: "shapes"`. Die Antwort gibt `items`, `version` und
+`nextOffset` zurück. Sie enthält bis zu 40 Elemente und höchstens
+28.000 UTF-8-Bytes an Elementdaten.
+
+Für die Folgeseite wird `nextOffset` als `offset` übergeben. Der Client
+sendet dieselbe `collection` sowie die gelesene Version als
+`expectedVersion`. Bei einem Versionskonflikt beginnt er erneut bei
+Offset null. Ein einzelnes Element über der Bytegrenze wird als zu gross
+gemeldet. A4-Blätter behalten ihre Metadatenantwort.
+
+## Whiteboard-Auswahlen bearbeiten
+
+`redion_update_visual` akzeptiert bei einem Whiteboard zusätzliche
+Operationen. `selection` enthält bis zu 40 vorhandene Formkennungen.
+Ein ausgewähltes Gruppenmitglied nimmt seine ganze Gruppe mit.
+
+- `group_selection` bündelt die Auswahl unter einer neuen, freien `groupId`.
+- `ungroup_selection` löst die äusserste Gruppe auf und erhält innere Gruppen.
+- `align_selection` richtet einzelne Formen oder ganze Gruppen mit
+  `alignment` aus. Die Werte `left`, `center`, `right`, `top`, `middle`
+  und `bottom` richten aus. `horizontal` und `vertical` verteilen ab drei
+  unabhängigen Formen oder Gruppen.
+- `move_selection` verschiebt die Auswahl um `dx` und `dy`.
+- `order_selection` ordnet die Auswahl mit `order` neu. `front` und `back`
+  bewegen sie ganz nach vorne oder hinten. `forward` und `backward` ändern
+  die Reihenfolge um einen Schritt.
+
+Die Operationen verwenden die Geometrie des Whiteboard-Editors und
+dessen Felder `groupId` und `groupPath`. Gesperrte Mitglieder verhindern
+die Änderung der Auswahl. Verbinder bleiben über ihre Endpunkte
+verknüpft. Die Prüfung von Schreibrecht, Elternkette und
+`expectedVersion` gilt auch hier.
+
+## Mindmap-Knoten und Querverbindungen einzeln bearbeiten
+
+`redion_update_visual` akzeptiert für eine Mindmap vier weitere Operationen:
+
+- `append_node` fügt mit `node` einen Knoten unter einer vorhandenen
+  `parentId` hinzu. `node` verwendet dieselben Felder wie beim Erstellen
+  einer Mindmap.
+- `move_node` hängt `elementId` und seinen gesamten Ast unter
+  `parentId` um. Die Wurzel und die innere Struktur des Asts bleiben
+  erhalten. Ein eigener Nachfahre ist kein gültiges Ziel.
+- `add_connection` ergänzt mit `connection: {id, from, to}` eine
+  Querverbindung zwischen zwei vorhandenen Knoten.
+- `remove_connection` entfernt die Querverbindung mit der Kennung
+  `elementId`. Ihre Knoten bleiben erhalten.
+
+Alle vier Operationen verwenden den vorhandenen Seiten- und Versionsschutz.
+Die Mindmap behält ihren Aufbau und Ausschnitt. MCP akzeptiert bis zu 200
+Knoten und 200 Querverbindungen, begrenzt durch Datensatzgrösse und
+Baumtiefe. Für grosse Karten stehen versionierte Leseseiten bereit.
+
+## Freie Zeichenmarken auf A4-Blättern
+
+`redion_create_sheet` nimmt optional `marks` an. Auf einem vorhandenen
+`blatt` ergänzt `redion_update_visual` mit `operation: "append_marks"`
+und der gelesenen `expectedVersion` bis zu 40 Marken in einem Schreibvorgang.
+Die Objekte erscheinen in der Zeichenschicht des normalen RED ION Editors.
+
+- `kind: "text"` verwendet `id`, `text`, `x`, `y`, `width` und optional
+  `color`, `fontSize` und `bold`. `x` und `y` bezeichnen die linke obere
+  Ecke des Textkastens.
+- `stift` und `marker` verwenden `points` mit 2–500 `[x,y]`-Paaren.
+- `line`, `arrow`, `rectangle`, `ellipse` und `triangle` verwenden zwei
+  Punkte. Für sämtliche Striche und Formen sind `color` und `strokeWidth`
+  optional.
+
+Einheit ist der Blattpunkt (1/72 Zoll). Die Koordinaten laufen von links
+oben nach rechts unten und über A4-Seitenumbrüche hinweg weiter. Eine
+zweite Hochformatseite beginnt bei `y = 841.89`. Beim Erstellen setzt
+`orientation: "landscape"` echte 841.89 × 595.28 Blattpunkte je Seite.
+Die zweite Querseite beginnt bei `y = 595.28`. Der native Dokumenteditor
+kann mehrseitige Blätter an dieser Grenze in einzelne Seiten zerlegen.
+Die Blattgrösse steht in der Metadatenantwort. `collection: "marks"` liefert versionierte
+Seiten mit den gespeicherten Marken und `coordinateSpace`. Bei älteren
+Blättern mit unkonvertierten Marken wird kein Schreibversuch übernommen.
+Fremde Markentypen werden nur anhand ihrer Kennung und Art ausgewiesen.
+`move_mark` verschiebt einzelne Text-, Stift- und Formmarken anhand ihrer
+`elementId` und der Blattpunktdifferenz `dx`/`dy`. Bestehende Marken behalten
+ihre Formatierung. Koordinatenfehler, gesperrte oder gruppierte Marken und
+ein neues Ziel ausserhalb des Blatts führen zu keiner Änderung.
+
+## Vorbereitete PDF-Seiten lesen und markieren
+
+`redion_read_visual` akzeptiert die ID eines eingebetteten `pdfseite`-Blocks.
+Die Metadaten nennen Seitenzahl, Seitenformat, Anzeigedrehung und `hasText`.
+`collection: "pdf_text"` liefert den beim nativen Import gespeicherten
+Text in Stücken zu bis zu 500 Unicode-Codepoints. `nextOffset` zählt diese
+Stücke. Seiten ohne gespeicherten Text liefern eine leere Liste.
+
+`collection: "marks"`, `append_marks` und `move_mark` funktionieren auf
+PDF-Seiten mit demselben Koordinatensystem wie bei A4. Die Massangaben und
+Koordinaten beziehen sich auf die Seite vor der zusätzlichen Anzeigedrehung.
+Die Originaldatei und der vorbereitete Text bleiben erhalten.
+Import, Export und OCR stehen weiterhin in der App beziehungsweise in den
+vorhandenen Dateifunktionen zur Verfügung, sofern dort unterstützt.
+
+## Seiten archivieren und zurückholen
+
+`redion_update_page` nimmt `archived: true` zum Archivieren und
+`archived: false` zum Zurückholen aus dem Archiv an. Der Aufruf benötigt die
+aktuelle `expectedVersion`, Cloud-Schreibscope und Seitenbearbeitungsrecht.
+Die Seite behält ihre Kennung, ihren Elternknoten und ihren Inhalt.
+Wiederholung mit bereits erreichtem Status und aktueller Version liefert
+`unchanged: true`.
+
+`redion_search`, `redion_list_root_pages` und `redion_list_child_pages`
+zeigen standardmässig aktive Seiten. `archived: true` filtert auf das
+Archiv. Eine bekannte Seitenkennung lässt sich mit `redion_read_page`
+und Seitenleserecht weiterhin direkt lesen. Dieses Archiv ist das native
+Seitenarchiv der App. Der Papierkorb hat einen eigenen Lebenszyklus.
+
+## Native Datenbankzeilen gesammelt bearbeiten
+
+`redion_update_database_rows` ändert bis zu zehn bestehende Zeilen mit
+bis zu 20 Feldern je Zeile. `databaseBlockId` ist der eingebettete
+Datenbankblock aus `redion_list_page_blocks`. `databaseId`,
+`expectedDatabaseVersion` und die `expectedVersion` je Zeile kommen aus
+`redion_read_database`. `changes` enthält Objekte mit `rowId`,
+`expectedVersion` und `values`. In `values` stehen die Feldkennungen
+aus dem gelesenen Schema, unabhängig von den sichtbaren Spaltentiteln.
+
+Unterstützt sind Titel, Text, Zahlen, Checkboxen und Kalenderdaten im
+Format JJJJ-MM-TT. Ein leerer String leert Text-, Zahl- und Datumswerte.
+Die Transaktion prüft den OAuth-Schreibscope, die Einbettung der
+Datenbank sowie die Rechte und Versionen sämtlicher betroffener Zeilen
+und Felder. Ändert sich während der Bearbeitung ein Datensatz oder ein
+Recht, meldet der Aufruf einen Konflikt. Die Antwort enthält die neuen
+Versionen. Der normale Sync liefert die nativen Zeilen an die App.

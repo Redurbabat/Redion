@@ -889,4 +889,7 @@ const InkGeometry = (() => {
         textWidth, textLines, textLayout, LINIEN, SCHRIFTEN, schriftStapel, gemessenAn,
         boundsLokal: boundsRoh, ecken, drehung, drehePunkte, overlapConvex, kastenEcken };
 })();
-window.InkGeometry = InkGeometry;
+if (typeof window === 'undefined')
+    module.exports = InkGeometry;
+else
+    window.InkGeometry = InkGeometry;

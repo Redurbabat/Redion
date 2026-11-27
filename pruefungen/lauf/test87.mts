@@ -42,6 +42,7 @@ import { dirname as _ordner, resolve as _loese, join as _dazu, relative as _rela
 import { readFileSync as _lies, readdirSync as _liste, existsSync as _da } from 'node:fs';
 import { ROLLEN as SERVER, darf as serverDarf } from '../../server/kern.ts';
 import { nurCode } from '../hilfe/quelltext.mts';
+import { createHash } from 'node:crypto';
 
 const WURZEL = _loese(_ordner(_alsPfad(import.meta.url)), '../..');
 
@@ -66,7 +67,14 @@ const quellen = alleDateien(_dazu(WURZEL, 'quell'))
 /* Erlaubt sind Tabulator (9), Zeilenumbruch (10) und Wagenrücklauf (13).
    Alles andere unter 32 gehört als Escape-Folge geschrieben, nicht roh. */
 const schmutzig = quellen
-  .filter(f => _lies(f).some(b => b < 9 || (b > 13 && b < 32)))
+  .filter(f => {
+    const inhalt = _lies(f);
+    // Das unveränderte pdf-lib 1.17.1 npm-Bündel enthält rohe Bytes in
+    // Zeichensatztabellen. Die Ausnahme gilt ausschliesslich für diese Fassung.
+    if (f === _dazu(WURZEL, 'quell/fremd/pdf-lib/library.js') &&
+        createHash('sha256').update(inhalt).digest('hex') === '0f9a5cad07941f0826586c94e089d89b918c46e5c17cf2d5a3c6f666e3bc694f') return false;
+    return inhalt.some(b => b < 9 || (b > 10 && b !== 13 && b < 32));
+  })
   .map(f => _relativ(WURZEL, f));
 
 p('Keine Quelldatei hat rohe Steuerzeichen', schmutzig.length === 0, schmutzig.join(', '));

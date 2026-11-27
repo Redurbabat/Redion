@@ -426,7 +426,7 @@ body:has(.pg-flaeche) #sammelleiste{
 .pg-fl-dock-vorschau{opacity:.65}
 .pg-fl-tools .gfx-tb-palette{
   display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:5px;
-  background:var(--bg-card);border-color:var(--line-strong,var(--line));
+  background:var(--bg-card);border-color:var(--line);
 }
 .pg-fl-tools .gfx-tb-palette .gfx-tb-menuewerkzeuge{flex-wrap:wrap;gap:1px;margin:0}
 .pg-fl-werkzeugpalette,.pg-fl-palettenoptionen,.pg-fl-palettengruppe{
@@ -435,7 +435,7 @@ body:has(.pg-flaeche) #sammelleiste{
 .pg-fl-werkzeugpalette{gap:4px}
 .pg-fl-palettengruppe{padding-inline:3px;border-inline-start:1px solid var(--line)}
 .pg-fl-palettengruppe button,.pg-fl-tools .gfx-tb-palette .gfx-tb-menuewerkzeuge button{
-  display:grid;place-items:center;width:34px;height:36px;flex:none;
+  display:grid;place-items:center;width:44px;height:44px;flex:none;
   border-radius:var(--radius-md);color:var(--text-dim);
 }
 .pg-fl-palettengruppe button:is(:hover,:focus-visible,[aria-pressed="true"]){
@@ -485,7 +485,7 @@ body:has(.pg-flaeche) #sammelleiste{
 .pg-fl-lock-status{padding:0 8px;color:var(--text-dim);font-size:12px;white-space:nowrap}
 .pg-fl-lock-status[hidden]{display:none}
 .pg-fl-auswahlleiste>button{
-  display:grid;place-items:center;width:32px;height:32px;
+  display:grid;place-items:center;width:44px;height:44px;
   border-radius:var(--radius-md);color:var(--text);
 }
 .pg-fl-auswahlleiste>button:is(:hover,:focus-visible,[aria-expanded="true"]):not(:disabled){

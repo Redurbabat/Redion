@@ -105,8 +105,11 @@ const SheetSpace = (() => {
   };
 
   /** Wie viele Blattseiten hoch ist dieses Blatt? Mindestens eine. */
-  const seiten = (hoehe: unknown): number =>
-    Math.max(1, Math.ceil((Number(hoehe) || A4_HOEHE) / A4_HOEHE));
+  const seitenHoehe = (block: { blattAusrichtung?: unknown } | null | undefined): number =>
+    block?.blattAusrichtung === 'quer' ? A4_BREITE : A4_HOEHE;
+
+  const seiten = (hoehe: unknown, seitenmass = A4_HOEHE): number =>
+    Math.max(1, Math.ceil(Math.round((Number(hoehe) || seitenmass) * 100) / Math.round(seitenmass * 100)));
 
   /* ══ DIE GEDREHTE SEITE (E467) ═══════════════════════════════════════════
      `gedreht` ist die Drehung, die ein MENSCH einer Seite gegeben hat — 0,
@@ -160,7 +163,7 @@ const SheetSpace = (() => {
     return huelle;
   };
 
-  return { A4_BREITE, A4_HOEHE, RAND, RAUM_VERSION, rund, zuBlatt, umrechner, seiten, gedrehtVon, masseVon, drehHuelle };
+  return { A4_BREITE, A4_HOEHE, RAND, RAUM_VERSION, rund, zuBlatt, umrechner, seiten, seitenHoehe, gedrehtVon, masseVon, drehHuelle };
 })();
 
 (window as any).SheetSpace = SheetSpace;

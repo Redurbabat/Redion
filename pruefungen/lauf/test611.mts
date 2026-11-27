@@ -363,6 +363,13 @@ const oeffne = async (welcher: 'W' | 'B' | 'P' | 'Q' | 'A'): Promise<string> => 
    Züge unten lassen ÜBER der Palette los, also wird sie dort geöffnet — mit
    einem Klick aus dem Code, damit der laufende Zug der Maus nicht endet.
    Was sie prüfen, bleibt Wort für Wort dasselbe. */
+const planWerkzeug = async (kennung: 'leitung' | 'zeigen'): Promise<void> => {
+  const dock = seite.locator('.sp-wrap .sp-werkzeuge');
+  const knopf = dock.locator(`button[data-wz="${kennung}"]`);
+  if (!await knopf.isVisible()) await dock.locator('button[data-a="plan-modus"]').click();
+  await knopf.click();
+};
+
 const paletteAuf = async (): Promise<void> => {
   await seite.evaluate(() => {
     const pal = document.querySelector<HTMLElement>('.sp-wrap .sp-palette');
@@ -1224,7 +1231,7 @@ await cdp.detach();
 {
   const bid = await oeffne('W');
   await seite.waitForTimeout(300);
-  await seite.locator('.sp-wrap button[data-wz="leitung"]').click();
+  await planWerkzeug('leitung');
   await seite.waitForTimeout(250);
   const start = await zustand(bid);
   const bild = await bildpunkt(bid);
@@ -1241,7 +1248,7 @@ await cdp.detach();
   const nach = await zustand(bid);
   p('Eine Leitung, losgelassen über der Palette, verfällt — keine neue Leitung, die Ablage Byte für Byte wie vorher',
     nach.json === start.json, `${Object.keys(start.punkte).length} → ${Object.keys(nach.punkte).length} Leitungen`);
-  await seite.locator('.sp-wrap button[data-wz="zeigen"]').click();
+  await planWerkzeug('zeigen');
   await seite.waitForTimeout(250);
 }
 
@@ -1441,8 +1448,8 @@ seite.on('download', d => { downloads.push(d); });
     await seite.mouse.up();
     await seite.waitForTimeout(450);
   };
-  const werkzeug = async (wz: string): Promise<void> => {
-    await seite.locator(`.sp-wrap button[data-wz="${wz}"]`).click();
+  const werkzeug = async (wz: 'leitung' | 'zeigen'): Promise<void> => {
+    await planWerkzeug(wz);
     await seite.waitForTimeout(250);
   };
   const bidA = await oeffne('W');

@@ -14,6 +14,7 @@ on:
       - 'pruefungen/redion-abgleich-tor.mts'
       - 'package.json'
       - '.github/workflows/live-sync-native.yml'
+      - '.github/workflows/affine-integration.yml'
   push:
     branches: [main]
     paths:

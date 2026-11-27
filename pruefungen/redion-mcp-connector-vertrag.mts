@@ -18,9 +18,9 @@ test('V07-Connector: Export stimmt exakt mit aktuellem Cloud-MCP tools/list übe
   assert.equal(contract.format,'redion.mcp.connector-contract.v1');
   assert.equal(contract.endpointPath,'/mcp/cloud');
   assert.equal(contract.containsCredentials,false);
-  assert.equal(contract.toolCount,26);
-  assert.equal(contract.readonlyCount,15);
-  assert.equal(contract.writeCount,11);
+  assert.equal(contract.toolCount,32);
+  assert.equal(contract.readonlyCount,16);
+  assert.equal(contract.writeCount,16);
   assert.deepEqual(names(contract.tools),names(full));
   assert.equal(new Set(names(contract.tools)).size,contract.tools.length);
   assert.deepEqual(contract.tools.map(t=>({
@@ -74,5 +74,5 @@ test('V07-Connector: JSON-Datei ist deterministisch und ohne Kontodaten',()=>{
   assert.ok(!first.includes('access_token'));
   assert.ok(!first.includes('client_secret'));
   assert.ok(!first.includes('refresh_token'));
-  assert.equal(JSON.parse(first).tools.length,26);
+  assert.equal(JSON.parse(first).tools.length,32);
 });

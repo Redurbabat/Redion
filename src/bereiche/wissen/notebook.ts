@@ -268,8 +268,10 @@ const Notebook = (() => {
     const a4 = (typeof SheetSpace !== 'undefined' && SheetSpace.A4_HOEHE) || 842;
     return Store.childrenOf(p.id)
       .filter((k: any) => k.type === 'blatt')
-      .reduce((n: number, k: any) =>
-        n + Math.max(1, Math.round((Number(k.blattHoehe) || a4) / a4)), 0);
+      .reduce((n: number, k: any) => {
+        const hoehe = typeof SheetSpace !== 'undefined' ? SheetSpace.seitenHoehe(k) : a4;
+        return n + Math.max(1, Math.round((Number(k.blattHoehe) || hoehe) / hoehe));
+      }, 0);
   };
 
   const wann = (p: any): string => {

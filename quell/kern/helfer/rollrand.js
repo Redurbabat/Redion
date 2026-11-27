@@ -34,20 +34,31 @@ const Rollrand = (() => {
         if (!feld)
             return () => { };
         const nachsehen = () => pruefe(feld, wahl);
+        let rahmen = null;
+        const nachsehenBald = () => {
+            if (rahmen !== null)
+                return;
+            rahmen = requestAnimationFrame(() => {
+                rahmen = null;
+                nachsehen();
+            });
+        };
         feld.addEventListener('scroll', nachsehen, { passive: true });
         let beobachter = null;
         if (typeof ResizeObserver !== 'undefined') {
-            beobachter = new ResizeObserver(nachsehen);
+            beobachter = new ResizeObserver(nachsehenBald);
             beobachter.observe(feld);
             const inhalt = feld.firstElementChild;
             if (inhalt)
                 beobachter.observe(inhalt);
         }
         nachsehen();
-        requestAnimationFrame(nachsehen);
+        nachsehenBald();
         return () => {
             feld.removeEventListener('scroll', nachsehen);
             beobachter?.disconnect();
+            if (rahmen !== null)
+                cancelAnimationFrame(rahmen);
         };
     };
     const zeige = (feld, stueck, wahl = {}) => {

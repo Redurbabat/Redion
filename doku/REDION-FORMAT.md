@@ -243,6 +243,13 @@ Fremde Archive ohne UTF-8-Bit werden als CP437 gelesen, wenn ihre Namen
 kein gültiges UTF-8 sind; verschlüsselte Einträge (Bit 0) kann Redion nicht
 lesen und sagt es.
 
+**A4-Ausrichtung:** Ein natives `blatt` im Querformat trägt
+`blattAusrichtung: "quer"`, `blattBreite: 841.89` und `blattHoehe` als
+Gesamthöhe in Vielfachen von 595.28 Blattpunkten. Die Zeichenmarken
+behalten ihren Ursprung links oben. Ohne das Feld bleiben die bisherigen
+Blattmasse und der Hochformat-Seitenschritt von 841.89 Punkten gültig.
+Die separate Anzeigedrehung `gedreht` ändert die gespeicherten Punkte nicht.
+
 **Ein Bild auf dem Blatt** (E357) ist eine Marke der Art `bild` mit einer
 `dateiId`; die Datei liegt wie jeder Anhang unter `dateien/`, ihr `blockId`
 ist das Blatt oder die Seite, auf der sie liegt. Weil Kennungen beim

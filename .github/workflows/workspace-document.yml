@@ -8,6 +8,7 @@ on:
       - 'quell/schale/stil/pdf-studio.css'
       - 'pruefungen/workspace-document.mts'
       - '.github/workflows/workspace-document.yml'
+      - 'package-lock.json'
   workflow_dispatch:
 
 permissions:
@@ -17,6 +18,9 @@ jobs:
   document:
     name: Dokumentansicht in Chromium und WebKit
     runs-on: ubuntu-24.04
+    # Browserversionen passend zu package-lock.json.
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble@sha256:f1e7e01021efd65dd1a2c56064be399f3e4de00fd021ac561325f2bfbb2b837a
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +33,6 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run bauen:ts
       - run: npm run typecheck
-      - run: npx playwright install --with-deps chromium webkit
       - name: Vorher-Stand aus demselben Pull Request holen
         uses: actions/checkout@v4
         with:

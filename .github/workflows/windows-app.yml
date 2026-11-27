@@ -6,12 +6,13 @@ on:
     paths:
       - '.github/workflows/ios-ipa.yml'
       - '.github/workflows/windows-app.yml'
+      - '.github/workflows/affine-integration.yml'
       - 'plugins/red-ion/tests/electron.mts'
 permissions:
   contents: read
 jobs:
   windows:
-    if: github.event_name != 'pull_request' || github.event.pull_request.number == 232
+    if: github.event_name != 'pull_request' || (github.event.pull_request.number == 232 || github.event.pull_request.number == 236)
     runs-on: windows-latest
     timeout-minutes: 40
     steps:

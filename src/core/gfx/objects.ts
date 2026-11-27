@@ -10,7 +10,7 @@ interface GfxObject {
   [field: string]: unknown;
 }
 
-const GfxObjects = (() => {
+const GfxObjects = ((formen: typeof GfxShapes) => {
   const expand = (objects: readonly GfxObject[], ids: ReadonlySet<string>): Set<string> => {
     const groups = new Set(objects.filter(o => ids.has(o.id) && typeof o.groupId === 'string' && o.groupId)
       .map(o => o.groupId));
@@ -20,10 +20,10 @@ const GfxObjects = (() => {
     for (let pass = 0; pass < objects.length; pass++) {
       const count = selected.size;
       for (const frame of objects.filter(o => selected.has(o.id) && o['art'] === 'frame')) {
-        const f = GfxShapes.rahmenVon(frame);
+        const f = formen.rahmenVon(frame);
         for (const object of objects) {
           if (selected.has(object.id) || object['art'] === 'verbindung') continue;
-          const b = GfxShapes.rahmenVon(object);
+          const b = formen.rahmenVon(object);
           if (b.x >= f.x && b.y >= f.y && b.x + b.w <= f.x + f.w && b.y + b.h <= f.y + f.h &&
               (object['art'] !== 'frame' || b.w < f.w || b.h < f.h)) selected.add(object.id);
         }
@@ -74,7 +74,7 @@ const GfxObjects = (() => {
   };
   type Box = { x: number; y: number; w: number; h: number };
   const bounds = (objects: readonly any[]): Box | null => {
-    const boxes = objects.filter(o => o.art !== 'verbindung').map(o => GfxShapes.rahmenVon(o));
+    const boxes = objects.filter(o => o.art !== 'verbindung').map(o => formen.rahmenVon(o));
     if (!boxes.length) return null;
     const x = Math.min(...boxes.map(b => b.x)), y = Math.min(...boxes.map(b => b.y));
     return { x, y, w: Math.max(...boxes.map(b => b.x + b.w)) - x, h: Math.max(...boxes.map(b => b.y + b.h)) - y };
@@ -134,7 +134,7 @@ const GfxObjects = (() => {
         const a = point(o.x, o.y), z = point(o.x + o.w, o.y + o.h);
         return { ...o, x: a[0], y: a[1], w: z[0] - a[0], h: z[1] - a[1] };
       }
-      const local = GfxShapes.localBounds(o), mid = point(local.x + local.w / 2, local.y + local.h / 2);
+      const local = formen.localBounds(o), mid = point(local.x + local.w / 2, local.y + local.h / 2);
       return { ...move(o, mid[0] - local.x - local.w / 2, mid[1] - local.y - local.h / 2), rotation: ((Number(o.rotation) || 0) + degrees) % 360 };
     });
   };
@@ -148,7 +148,7 @@ const GfxObjects = (() => {
   };
   const lasso = (objects: readonly any[], polygon: readonly number[][]): string[] => objects.filter(o => {
     if (o.art === 'verbindung' || polygon.length < 3) return false;
-    const b = GfxShapes.rahmenVon(o);
+    const b = formen.rahmenVon(o);
     return [[b.x, b.y], [b.x + b.w, b.y], [b.x + b.w, b.y + b.h], [b.x, b.y + b.h]]
       .every(p => inPolygon(p[0]!, p[1]!, polygon));
   }).map(o => o.id);
@@ -160,7 +160,7 @@ const GfxObjects = (() => {
     const bx = [b.x + dx, b.x + b.w / 2 + dx, b.x + b.w + dx], by = [b.y + dy, b.y + b.h / 2 + dy, b.y + b.h + dy];
     for (const o of objects) {
       if (ids.has(o.id) || o.art === 'verbindung' || o.art === 'frame') continue;
-      const r = GfxShapes.rahmenVon(o);
+      const r = formen.rahmenVon(o);
       for (const at of [r.x, r.x + r.w / 2, r.x + r.w]) for (const x of bx)
         if (Math.abs(at - x) < bestX) { bestX = Math.abs(at - x); ox = at - x; guides[0] = { axis: 'x', at }; }
       for (const at of [r.y, r.y + r.h / 2, r.y + r.h]) for (const y of by)
@@ -169,6 +169,7 @@ const GfxObjects = (() => {
     return { dx: dx + ox, dy: dy + oy, guides: guides.filter(Boolean) };
   };
   return { expand, locked, group, reorder, bounds, move, align, rotate, lasso, snap, units };
-})();
+})(typeof window === 'undefined' ? require('./shapes.js') : GfxShapes);
 
-(window as any).GfxObjects = GfxObjects;
+if (typeof window === 'undefined') module.exports = GfxObjects;
+else (window as any).GfxObjects = GfxObjects;

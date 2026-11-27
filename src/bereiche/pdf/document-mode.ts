@@ -1604,7 +1604,7 @@ const DocumentMode = (() => {
        gleich, und wer ihn sucht, findet ihn mit seinem Grund. */
     {
       const teilbar = documentBlock?.type === 'blatt'
-        && SheetSpace.seiten(Number(documentBlock.blattHoehe) || SheetSpace.A4_HOEHE) > 1;
+        && SheetSpace.seiten(documentBlock.blattHoehe, SheetSpace.seitenHoehe(documentBlock)) > 1;
       const knopf = knoepfe.querySelector<HTMLButtonElement>('[data-document-action="page-split"]');
       if (knopf && !teilbar) {
         knopf.disabled = true;
@@ -3843,8 +3843,11 @@ const DocumentMode = (() => {
       /* Das Papier aus der Auswahl im Inspector — dieselbe Vorgabe wie fuer
          neue Hefte (E264), darum derselbe Merker. */
       const papier = String(Store.getMeta('heft:papier', 'blanko'));
+      const quer = block?.type === 'blatt' && block.blattAusrichtung === 'quer';
       const neu = Store.addBlock(stelle.eltern.id, 'blatt', {
-        text: '', papier, blattBreite: SheetSpace.A4_BREITE, blattHoehe: SheetSpace.A4_HOEHE,
+        text: '', papier, blattBreite: quer ? SheetSpace.A4_HOEHE : SheetSpace.A4_BREITE,
+        blattHoehe: quer ? SheetSpace.A4_BREITE : SheetSpace.A4_HOEHE,
+        ...(quer ? { blattAusrichtung: 'quer' } : {}),
         raumVersion: SheetSpace.RAUM_VERSION }, stelle.index + 1);
       /* Eine Zeile muss da sein (E118) — sonst ist das Papier nur Malgrund. */
       Store.addBlock(neu.id, 'text', { text: '' });
@@ -4056,7 +4059,7 @@ const DocumentMode = (() => {
        geschieht (§35). */
     const zerlegbar = (block: any): number => {
       if (!block || block.type !== 'blatt') return 0;
-      return SheetSpace.seiten(Number(block.blattHoehe) || SheetSpace.A4_HOEHE);
+      return SheetSpace.seiten(block.blattHoehe, SheetSpace.seitenHoehe(block));
     };
 
     const seiteZerlegen = async (wen?: any): Promise<void> => {
@@ -4072,7 +4075,7 @@ const DocumentMode = (() => {
       if (!stelle) { UI.toast('Dieses Blatt hat keinen Platz, an dem die Seiten stehen könnten.'); return; }
       if (typeof Dialog === 'undefined') return;
 
-      const A4 = SheetSpace.A4_HOEHE;
+      const A4 = SheetSpace.seitenHoehe(block);
       const marken = Array.isArray(block.marken) ? block.marken : [];
       const faecher: any[][] = Array.from({ length: anzahl }, () => []);
       let ueberGrenze = 0;
@@ -4117,6 +4120,7 @@ const DocumentMode = (() => {
           text: '', papier: block.papier || 'blanko',
           blattBreite: Number(block.blattBreite) || SheetSpace.A4_BREITE,
           blattHoehe: A4, raumVersion: SheetSpace.RAUM_VERSION,
+          ...(block.blattAusrichtung === 'quer' ? { blattAusrichtung: 'quer' } : {}),
           marken: faecher[i]
         }, stelle.index + 1);
         /* Eine Zeile muss da sein (E118) — sonst ist das Papier nur Malgrund. */

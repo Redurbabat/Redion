@@ -97,6 +97,9 @@ jobs:
       - name: Typen prüfen
         run: npm run typecheck
 
+      - name: Schalterkombinationen im nativen Simulationskern prüfen
+        run: node --test pruefungen/elektro-kombinationen.test.mts
+
       # Quellen nicht umziehen: src/ ist kanonisch, quell/ muss offline
       # startbar bleiben, und lokale Visual-/MCP-Pakete gehoeren nur nach
       # build/. Keine privaten Sicherungen oder EXE-Dateien ins Repository.

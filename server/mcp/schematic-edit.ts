@@ -3,6 +3,10 @@
  * This is an editor helper, NOT an electrical safety or standards verifier.
  */
 import {BUILTIN_SYMBOLS} from './symbol-catalog.ts';
+// @ts-expect-error Classic browser build has no module declaration.
+import compiledPlan from '../../quell/bereiche/bloecke/arten/schaltplan.js';
+
+const planTools:typeof Schaltplan=compiledPlan;
 
 type Item=Record<string,unknown>;
 type Pos={x:number;y:number};
@@ -128,22 +132,18 @@ const checkFreeComponent=(part:Item,components:unknown[],wires:unknown[],
       fail('Bauteilklemme berührt eine vorhandene Leitung.');
   }
 };
-const checkFreeWire=(points:Pos[],fromId:string,fromNr:string,
-  toId:string,toNr:string,ebene:string,components:unknown[],wires:unknown[])=>{
+const wireClearance=(fromId:string,fromNr:string,toId:string,toNr:string,
+  components:Item[],wires:Pos[][])=>{
+  const foreignPins:Pos[]=[];
   for(const component of components){
-    if(!isRecord(component)||!sameLayer(component,ebene))continue;
     for(const pin of pinsFor(component)){
       if((component.id===fromId&&pin.nr===fromNr)||
         (component.id===toId&&pin.nr===toNr))continue;
-      if(nearPath(pin.at,points))
-        fail('Leitung berührt eine andere Klemme; der Netzverlauf ist nicht eindeutig.');
+      foreignPins.push(pin.at);
     }
   }
-  for(const wire of wires){
-    if(!isRecord(wire)||!sameLayer(wire,ebene))continue;
-    if(nearPolyline(points,validPoints(wire.punkte)))
-      fail('Leitung kreuzt oder berührt eine bestehende Leitung; manuell prüfen.');
-  }
+  return (points:Pos[])=>!foreignPins.some(pin=>nearPath(pin,points))&&
+    !wires.some(wire=>nearPolyline(points,wire));
 };
 
 /** A new plan is returned; the input and all unrelated metadata remain unchanged. */
@@ -214,12 +214,20 @@ export const editSchematic=(raw:unknown,args:Item):{plan:Item;elementId:string;k
       (w.vonTeil===toId&&w.vonNr===toNr&&w.nachTeil===fromId&&w.nachNr===fromNr)
     ));
     if(duplicate)fail('Diese beiden Klemmen sind bereits direkt verbunden.');
-    // Orthogonal routing only. Junctions, crossings and electrical behaviour
-    // are NOT verified by this helper.
-    const horizontal=Math.abs(end.x-start.x)>=Math.abs(end.y-start.y);
-    const corner=horizontal?{x:end.x,y:start.y}:{x:start.x,y:end.y};
-    const punkte=start.x===end.x||start.y===end.y?[start,end]:[start,corner,end];
-    checkFreeWire(punkte,fromId,fromNr,toId,toNr,ebene,components,wires);
+    const teile=components.filter(isRecord);
+    const leitungen=wires.filter(isRecord);
+    const wirePoints=leitungen.map(w=>validPoints(w.punkte));
+    if(wirePoints.reduce((sum,points)=>sum+points.length,0)>500)
+      fail('Zu viele Leitungspunkte für automatische Führung. Kleineres Teilnetz wählen.');
+    // Der Solver wertet momentan alle Ebenen aus. Auch Leitungen auf einer
+    // anderen Ebene dürfen deshalb nicht berührt werden.
+    const clear=wireClearance(fromId,fromNr,toId,toNr,teile,wirePoints);
+    const punkte=planTools.leitungFuehren({...raw,teile,leitungen} as Parameters<typeof Schaltplan.leitungFuehren>[0],
+      start,end,{teil:fromId,nr:fromNr},{teil:toId,nr:toNr},{
+        schnell:true,
+        kandidatErlaubt:points=>points.every(p=>p.x>=0&&p.x<=width&&p.y>=0&&p.y<=height)&&clear(points)
+      });
+    if(punkte.length<2)fail('Kein eindeutiger Leitungsweg ohne fremde Kontakte oder Kreuzung gefunden.');
     const wire={id,punkte,ebene,vonTeil:fromId,vonNr:fromNr,nachTeil:toId,nachNr:toNr};
     return {plan:{...raw,leitungen:[...wires,wire]},elementId:id,kind:'wire'};
   }

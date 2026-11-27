@@ -34,9 +34,7 @@
  * Klemmenplan kennt andere Nummern als eine Übung.
  * ==========================================================================*/
 
-(window as any).Register = (window as any).Register || {};
-
-Register.fachzeichen = (() => {
+const ElektroFachzeichen = (() => {
 
   /** Feinraster in Pixeln. Alle Zeichen und Anschlüsse liegen darauf. */
   const RASTER = 10;
@@ -1652,3 +1650,10 @@ Register.fachzeichen = (() => {
   return { RASTER, NAH, alle, holen, inGruppe, gruppen, gruppenName,
            alsSvg, anschlussLage, klemmeFuer, masse, melde, vergiss, hatStellungsbild };
 })();
+
+if (typeof window === 'undefined') {
+  module.exports = ElektroFachzeichen;
+} else {
+  (window as any).Register = (window as any).Register || {};
+  Register.fachzeichen = ElektroFachzeichen;
+}

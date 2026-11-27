@@ -1232,4 +1232,5 @@ const InkGeometry = (() => {
     boundsLokal: boundsRoh, ecken, drehung, drehePunkte, overlapConvex, kastenEcken };
 })();
 
-(window as any).InkGeometry = InkGeometry;
+if (typeof window === 'undefined') module.exports = InkGeometry;
+else (window as any).InkGeometry = InkGeometry;
