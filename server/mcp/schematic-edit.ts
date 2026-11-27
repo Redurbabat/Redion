@@ -205,6 +205,38 @@ export const editSchematic=(raw:unknown,args:Item):{plan:Item;elementId:string;k
     const old=isRecord(part.werte)?part.werte:{};
     return {plan:{...raw,teile:components.map(p=>p===part?{...part,werte:{...old,...values}}:p)},elementId:id,kind:'component'};
   }
+  if(kind==='add_busbar'){
+    allowedKeys(args,['wireId','conductor','x','y','endX','endY','layer']);
+    const id=ident(args.wireId,'Stromschiene');
+    if(ids.has(id)||wires.length>=200)fail('Leitungskennung bereits vergeben oder Leitungsgrenze erreicht.');
+    const conductor=args.conductor;
+    if(typeof conductor!=='string'||!planTools.SCHIENEN.includes(conductor))
+      fail('Unbekannter Stromschienentyp.');
+    const ebene=layer(args.layer);
+    if(!raw.ebenen.some(e=>isRecord(e)&&e.id===ebene))fail('Diese Ebene fehlt im Plan.');
+    const a={x:grid(args.x,'X-Koordinate',width),y:grid(args.y,'Y-Koordinate',height)};
+    const b={x:grid(args.endX,'End-X-Koordinate',width),y:grid(args.endY,'End-Y-Koordinate',height)};
+    if((a.x!==b.x&&a.y!==b.y)||Math.hypot(a.x-b.x,a.y-b.y)<20)
+      fail('Stromschiene muss gerade und mindestens 20 Rastereinheiten lang sein.');
+    const punkte=[a,b];
+    const teile=components.filter(isRecord),leitungen=wires.filter(isRecord);
+    const existing=leitungen.map(w=>validPoints(w.punkte));
+    if(existing.reduce((n,p)=>n+p.length,0)>500)fail('Zu viele Leitungspunkte.');
+    for(const p of teile){
+      if(typeof p.x!=='number'||!Number.isFinite(p.x)||typeof p.y!=='number'||!Number.isFinite(p.y))
+        fail('Ungültige Bauteilposition.');
+      rotation(p.drehung);mirror(p.gespiegelt);
+      if(pinsFor(p).some(k=>nearPath(k.at,punkte)))fail('Stromschiene berührt eine vorhandene Klemme.');
+    }
+    if(existing.some(w=>nearPolyline(punkte,w)))fail('Stromschiene berührt oder kreuzt eine vorhandene Leitung.');
+    // The conductor name is visual metadata, not a power source or an
+    // implicit electrical connection to another rail with the same name.
+    const wire={id,punkte,ebene,schiene:conductor};
+    const plan={...raw,teile,leitungen:[...leitungen,wire]} as Parameters<typeof Schaltplan.kontakte>[0];
+    const contacts=planTools.kontakte(plan,wire);
+    if(contacts.klemmen.length||contacts.leitungen.length)fail('Nativer Netztest erkennt fremde Kontakte.');
+    return {plan:{...raw,leitungen:[...wires,wire]},elementId:id,kind:'wire'};
+  }
   if(kind==='branch_wire'){
     allowedKeys(args,['wireId','targetWireId','fromComponentId','fromTerminal','x','y','layer']);
     const id=ident(args.wireId,'Leitung');
