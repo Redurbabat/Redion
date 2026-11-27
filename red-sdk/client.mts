@@ -51,7 +51,21 @@ export function createRedIdV2Client(origin:string,app:RedAppId,store:RedSecureSt
   };
   const rotate=async(s:RedSession)=>{try{const next=validate(await request('refresh','POST',{app,refreshToken:s.refreshToken}));await store.save(next);return next;}catch(error){if(error instanceof RedIdError&&error.status===401)await store.clear();throw error;}};
   const loaded=async()=>{const s=await store.load();if(!s)throw new RedIdError(401);return validate(s);};
+  const share=async(path:string,input?:object)=>{
+    let s=await loaded();
+    if(Date.parse(s.expiresAt)<=Date.now()+30000)s=await rotate(s);
+    const send=async(session:RedSession)=>{
+      const res=await fetcher(origin+'/red-share/v1/'+path,{method:input?'POST':'GET',headers:{Authorization:'Bearer '+session.accessToken,...(input?{'Content-Type':'application/json'}:{})},...(input?{body:JSON.stringify(input)}:{}),cache:'no-store',credentials:'omit',redirect:'error'});
+      if(!res.ok)throw new RedIdError(res.status);return res.json();
+    };
+    try{return await send(s);}catch(error){if(!(error instanceof RedIdError)||error.status!==401)throw error;return send(await rotate(s));}
+  };
   return {
+    shareSend:(target:RedAppId,channel:string,id:string,envelope:string)=>serial(async()=>{await share('send',{target,channel,id,envelope});}),
+    shareInbox:()=>serial(async():Promise<RedShareMessage[]>=>{
+      const data=await share('inbox');if(data?.version!==1||!Array.isArray(data.messages))throw Error('Invalid share inbox');return data.messages as RedShareMessage[];
+    }),
+    shareAck:(source:RedAppId,channel:string,id:string)=>serial(async()=>{await share('ack',{source,channel,id});}),
     pair:(code:string,verifier:string)=>serial(async()=>{const s=validate(await request('exchange','POST',{app,code,verifier}));await store.save(s);}),
     refresh:()=>serial(async()=>{await rotate(await loaded());}),
     me:()=>serial(async():Promise<RedIdentityV2>=>{
@@ -65,3 +79,46 @@ export function createRedIdV2Client(origin:string,app:RedAppId,store:RedSecureSt
     logout:()=>serial(async()=>{try{const s=await loaded();let current=s;if(Date.parse(s.expiresAt)<=Date.now()+30000)current=await rotate(s);await request('logout','POST',undefined,current.accessToken);}finally{await store.clear();}}),
   };
 }
+
+/** QR payload contains only the target app and public challenge, never a verifier or token. */
+export function encodeRedPairRequest(app:RedAppId,challenge:string){
+  if(!/^[A-Za-z0-9_-]{43}$/.test(challenge))throw Error('Invalid challenge');
+  return JSON.stringify({kind:'red-pair',version:1,app,challenge});
+}
+export function decodeRedPairRequest(value:string):{app:RedAppId;challenge:string}{
+  if(value.length>256)throw Error('Invalid pairing request');
+  const data=JSON.parse(value);
+  const apps:RedAppId[]=['red-ion','red-fit','red-poly','red-bit','red-loop','red-efz','red-kurd','red-uhr','red-yt','stran','babat-red'];
+  if(data?.kind!=='red-pair'||data.version!==1||!apps.includes(data.app)||typeof data.challenge!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(data.challenge))throw Error('Invalid pairing request');
+  return {app:data.app,challenge:data.challenge};
+}
+export type RedShareAddress={source:RedAppId;target:RedAppId;channel:string;id:string};
+const shareAAD=(v:RedShareAddress)=>{
+  if(!/^[a-z][a-z0-9_-]{0,31}$/.test(v.channel)||!/^[a-f0-9]{32}$/.test(v.id)||v.source===v.target)throw Error('Invalid share address');
+  return new TextEncoder().encode(JSON.stringify(['red-share-v1',v.source,v.target,v.channel,v.id]));
+};
+const unbase64url=(value:string)=>{
+  if(!/^[A-Za-z0-9_-]+$/.test(value))throw Error('Invalid envelope');
+  const raw=atob(value.replaceAll('-','+').replaceAll('_','/'));
+  return Uint8Array.from(raw,c=>c.charCodeAt(0));
+};
+/** The caller must distribute a fresh 32-byte key securely to the two
+ * authorized apps, independently of RED ID and the server. Never send keys
+ * via the share API. No automatic key distribution is provided. */
+export async function encryptRedShare(key:Uint8Array,address:RedShareAddress,plaintext:Uint8Array){
+  if(key.byteLength!==32||plaintext.byteLength>44000)throw Error('Invalid key or payload size');
+  const crypto=globalThis.crypto,nonce=crypto.getRandomValues(new Uint8Array(12));
+  const k=await crypto.subtle.importKey('raw',new Uint8Array(key),'AES-GCM',false,['encrypt']);
+  const encrypted=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv:nonce,additionalData:shareAAD(address)},k,new Uint8Array(plaintext)));
+  const out=new Uint8Array(12+encrypted.length);out.set(nonce);out.set(encrypted,12);
+  // Avoid spreading tens of thousands of elements into one function call.
+  let raw='';for(const byte of out)raw+=String.fromCharCode(byte);
+  return btoa(raw).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,'');
+}
+export async function decryptRedShare(key:Uint8Array,address:RedShareAddress,envelope:string){
+  if(key.byteLength!==32||envelope.length>60000)throw Error('Invalid key or envelope');
+  const bytes=unbase64url(envelope);if(bytes.length<28)throw Error('Invalid envelope');
+  const crypto=globalThis.crypto,k=await crypto.subtle.importKey('raw',new Uint8Array(key),'AES-GCM',false,['decrypt']);
+  return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes.slice(0,12),additionalData:shareAAD(address)},k,bytes.slice(12)));
+}
+export type RedShareMessage={source:RedAppId;channel:string;id:string;envelope:string;expires:number};

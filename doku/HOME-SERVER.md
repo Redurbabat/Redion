@@ -215,3 +215,18 @@ Teil dieses PRs. Die Code-Anzeige ist manuell, nicht als QR-Code umgesetzt.
 Das SDK ist als privates ESM-Paket `@red-ecosystem/sdk` v0.2.0 mit
 TypeScript-Deklarationen paketierbar. Der Home-Server-CI-Job baut und prüft
 das Paket; keine öffentliche Registry und kein automatisches Publishing.
+
+## RED Share und QR-Protokoll
+
+Die Freigabe `POST /red-share/v1/grant` (source, target, channel) kann nur
+von einer RED ION Gerätesitzung erteilt werden, gilt sieben Tage und nur
+in eine Richtung. Nachrichten verfallen spätestens nach einem Tag. Nur
+die Ziel-App darf Nachrichten empfangen und quittieren. Widerruf entfernt
+zugehörige Freigaben und Nachrichten. Kein Zugriff auf fremde Dokumente.
+Der SDK-Client bietet shareSend, shareInbox und shareAck. AES-256-GCM-
+Hilfsfunktionen binden Sender, Empfänger, Kanal und Nachrichten-ID an das
+Envelope. Die 32-Byte-Schlüssel müssen ausserhalb des Servers sicher an
+beide Apps verteilt werden. Der Server prüft keine Verschlüsselung; erst
+die konkrete App-Integration kann Ende-zu-Ende-Schutz sicherstellen.
+Das SDK enthält ein striktes QR-Payload-Format für App-ID und öffentliche
+Challenge, aber noch keine native QR-Kamera oder QR-Renderer.

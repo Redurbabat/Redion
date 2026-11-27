@@ -38,6 +38,7 @@ export function createRedIdV2(db:DatabaseSync,ablage:Ablage){
     const path=new URL(request.url).pathname;
     if(!(RED_ID_V2_ROUTES as readonly string[]).includes(path))return reply(404,{error:'not_found'});
     if(request.method!==(path.endsWith('/me')||path.endsWith('/apps')?'GET':'POST'))return reply(405,{error:'method_not_allowed'});
+    const inputBody=request.method==='POST'&&!path.endsWith('/logout')?await body(request):null;
     const now=Date.now();
     if(path.endsWith('/me')||path.endsWith('/logout')){
       const m=/^Bearer (redat_[a-f0-9]{64})$/.exec(request.headers.get('authorization')??'');
@@ -60,7 +61,7 @@ export function createRedIdV2(db:DatabaseSync,ablage:Ablage){
     if(path.endsWith('/pair')||path.endsWith('/revoke')){
       const who=await werFragt(ablage,{authorization:request.headers.get('authorization')??''});
       if(!who?.sitzung)return reply(401,{error:'unauthorized'});
-      const owner=String(who.konto.id),input=await body(request);
+      const owner=String(who.konto.id),input=inputBody;
       if(!input||!appValid(input.app))return reply(400,{error:'invalid_request'});
       const app=input.app;
       if(path.endsWith('/revoke')){
@@ -80,7 +81,7 @@ export function createRedIdV2(db:DatabaseSync,ablage:Ablage){
       });
       return reply(201,{version:2,app,code,expiresAt:new Date(now+PAIR).toISOString()});
     }
-    const input=await body(request);
+    const input=inputBody;
     if(!input||!appValid(input.app))return reply(400,{error:'invalid_request'});
     const app=input.app;
     if(path.endsWith('/exchange')){
