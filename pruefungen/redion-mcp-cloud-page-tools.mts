@@ -531,3 +531,35 @@ test('Cloud MCP: fehlende elektrische Bauteilwerte mit ID und Modellvorgabe meld
   assert.equal(componentParameterHints(large).parameterHinweise.length,40);
   assert.equal(componentParameterHints(large).parameterHinweiseGekuerzt,true);
 });
+
+
+test('Cloud MCP: geometrische Prüfung identifiziert fehlerhafte Leitungsenden ohne Planänderung',async()=>{
+  const {auditWiring}=await import('../server/mcp/schematic-test.ts');
+  const base={art:'stromlauf-aufgeloest',breite:800,hoehe:700,
+    teile:[] as any[],leitungen:[] as any[],texte:[] as any[],
+    ebenen:[{id:'plan',name:'Plan',farbe:'var(--text)',sichtbar:true}]};
+  const invoke=(raw:unknown,operation:string,params:Record<string,unknown>)=>
+    editSchematic(raw,{operation,...params}).plan as typeof base;
+  let plan=base;
+  for(const [componentId,x,y] of [['A',100,100],['B',300,100],['C',200,240]])
+    plan=invoke(plan,'add_component',{componentId,symbolId:'bp-sonnerie',x,y});
+  plan=invoke(plan,'connect_terminals',{wireId:'W',fromComponentId:'A',fromTerminal:'X1',toComponentId:'B',toTerminal:'X1'});
+  plan=invoke(plan,'branch_wire',{wireId:'T',targetWireId:'W',fromComponentId:'C',fromTerminal:'X1',x:230,y:100});
+  assert.equal(auditWiring(plan).status,'no_geometry_issues_found');
+  const bad=structuredClone(plan);
+  bad.leitungen[0].punkte[0]={x:140,y:100};
+  bad.leitungen[0].nachNr='unknown_terminal';
+  bad.leitungen.push({id:'missing',vonTeil:'D',vonNr:'X1',punkte:[{x:0,y:0},{x:10,y:10}]});
+  bad.leitungen.push({id:'outside',punkte:[{x:0,y:0},{x:900,y:0}]});
+  bad.leitungen.push({id:'short',punkte:[{x:0,y:0}]});
+  const snapshot=structuredClone(bad);
+  const report=auditWiring(bad);
+  assert.equal(report.status,'geometry_errors');
+  assert.ok(report.issues.some(i=>i.code==='terminal_position_mismatch'&&i.elementId==='W'&&i.end==='from'));
+  for(const code of ['unknown_terminal','missing_component','diagonal_segment','wire_outside_sheet','wire_too_short'])
+    assert.ok(report.issues.some(i=>i.code===code),code);
+  assert.deepEqual(bad,snapshot);
+  const overlap={...base,leitungen:[{id:'a',punkte:[{x:10,y:20},{x:100,y:20}]},{id:'b',punkte:[{x:30,y:20},{x:120,y:20}]}]};
+  assert.equal(auditWiring(overlap).hintCount,2);
+  assert.equal(auditWiring(overlap).errorCount,0);
+});
