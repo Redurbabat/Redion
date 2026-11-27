@@ -126,3 +126,17 @@ Serverprozesses (Containergrenzen können abweichen). Speicherwerte sind
 Dateisystemkapazitäten, keine Quote. Temperatur und Netzwerk können fehlen.
 Gerätesitzungen und MCP-Freigabeeinträge sind keine Online-Verbindungen.
 Keine Schlüssel, Dateipfade oder Inhalte in der Antwort. Kein Docker-Socket.
+
+## RED ID v2 und SDK (Kopplungsprotokoll)
+
+Eine authentifizierte RED ION Gerätesitzung erzeugt `POST /red-id/v2/pair`
+für eine App mit SHA-256-PKCE-Challenge. Die Ziel-App erstellt die Challenge
+und behält den Verifier geheim. Der Kopplungscode ist fünf Minuten gültig,
+einmalig und nur mit passendem Verifier und App-ID nutzbar. `exchange` gibt
+15-Minuten-Access- und maximal 30-Tage-Refresh-Token aus, beide gehasht in
+SQLite. Refresh rotiert beide atomar; keine unbegrenzte Verlängerung.
+`revoke` benötigt eine Gerätesitzung und widerruft v1/v2 für genau eine App.
+V2-Zugänge bleiben auf `identity:read` beschränkt. Kein OAuth-Browser-SSO,
+keine QR-Oberfläche und keine automatische Anmeldung fremder Repositories.
+`createRedIdV2Client` verwendet eine vom nativen Client bereitgestellte
+sichere Speicherimplementierung. SDK-Integration in den Apps bleibt offen.
