@@ -6,6 +6,7 @@ import {openHomeDatabase} from './home/sqlite.ts';
 import {openHomeBlobs} from './home/blobs.ts';
 import {beantworte} from './kern.ts';
 import {prepareHomeSync,createHomeSyncWait} from './home/live-sync.ts';
+import {createHomeDashboard} from './home/dashboard.ts';
 import {prepareRedId,issueRedId,revokeRedApp,handleRedId} from './home/red-id.ts';
 import {approveHomeDevice,claimHomeDevice} from './home/pairing.ts';
 import {prepareHomeConsent,issueHomeConsentCode,identifyHomeConsent,homeConsentLogin,exchangeHomeConsent,logoutHomeConsent} from './home/consent.ts';
@@ -15,7 +16,7 @@ import {zuGrossAntwort} from './sicherheit/eingaben.ts';
 import {istAbgleichWeg,mitAppUrsprung} from './sicherheit/abgleich-tor.ts';
 
 const privateRoutes=new Set(['/api/stand']);
-const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/red-id/v1/me','/red-id/v1/logout']);
+const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/home/dashboard','/red-id/v1/me','/red-id/v1/logout']);
 const json=(status:number,error:string)=>Response.json({error},{status,headers:{'Cache-Control':'no-store'}});
 
 /** Initial private API: no static repository files, public registration,
@@ -29,6 +30,7 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
   prepareHomeSync(store.sqlite);
   prepareRedId(store.sqlite);
   const live=createHomeSyncWait(store.sqlite,store.ablage);
+  const dashboard=createHomeDashboard(store.sqlite,store.ablage,options.dataDir,!!options.enableMcp);
   let queue:Promise<unknown>=Promise.resolve();
   function serial<T>(execute:()=>Promise<T>):Promise<T>{
     const result=queue.then(execute);
@@ -56,6 +58,11 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
         }
         return handleCloudMcp(request,{DB:store.db},false,identify);
       });
+    }
+    if(path==='/home/dashboard'){
+      const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Authorization','Cache-Control':'no-store'}}):await dashboard(request);
+      if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
+      return mitAppUrsprung(request,response);
     }
     if(path.startsWith('/red-id/v1/')&&request.method!=='OPTIONS'){
       const response=await serial(async()=>handleRedId(store.sqlite,request));

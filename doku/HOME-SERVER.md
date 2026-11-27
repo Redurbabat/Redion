@@ -116,3 +116,13 @@ Andere RED-Repositories sind noch nicht angepasst. App-eigene
 Datenbereiche, native sichere Token-Speicherung, interaktive Anmeldung
 und vollständiges SSO sind separate offene Schritte; die neuen Tokens
 dürfen keine RED ION Dokumente lesen oder schreiben.
+
+## Server-Dashboard (erste Version)
+
+Einstellungen → RED Home Server → Serverstatus abrufen. Nur eine gültige
+RED ION Gerätesitzung darf `GET /home/dashboard` aufrufen; RED-ID-Tokens
+sind ausgeschlossen. CPU/RAM und Netzwerk beschreiben die Sicht des
+Serverprozesses (Containergrenzen können abweichen). Speicherwerte sind
+Dateisystemkapazitäten, keine Quote. Temperatur und Netzwerk können fehlen.
+Gerätesitzungen und MCP-Freigabeeinträge sind keine Online-Verbindungen.
+Keine Schlüssel, Dateipfade oder Inhalte in der Antwort. Kein Docker-Socket.

@@ -22,6 +22,8 @@ jobs:
           node-version: '24'
       - name: Generate offline artifacts using existing scripts
         run: |
+          npm ci --ignore-scripts
+          npm run bauen:ts
           node dienststand.mts
           node --input-type=module <<'JS'
           import fs from 'node:fs';
@@ -43,7 +45,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- src/dienst/sw.ts sw.js src/kern/einstellung/stand.ts quell/kern/einstellung/stand.js redion-einzeldatei.html
+          git add -- quell/bereiche/einstellungen/ansicht/seite.js src/dienst/sw.ts sw.js src/kern/einstellung/stand.ts quell/kern/einstellung/stand.js redion-einzeldatei.html
           git diff --cached --stat
           if git diff --cached --quiet; then exit 0; fi
           git -c core.hooksPath=/dev/null commit -m 'build: regenerate offline artifacts'
