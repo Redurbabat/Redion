@@ -388,6 +388,14 @@ test('Cloud MCP: Bauteile nur ohne elektrische Kontakte drehen, spiegeln oder l√
     editSchematic(raw,{operation,...params}).plan as typeof base;
   const a=invoke(base,'add_component',{componentId:'A',symbolId:'schliesser',x:100,y:100});
   const original=structuredClone(a);
+  // A 90-degree turn moves pin 3 from (120,100) to (150,130).
+  // A contact on another layer must not be created by the rotation.
+  const futureContact={...a,leitungen:[{id:'future',ebene:'aufgabe',
+    punkte:[{x:150,y:130},{x:180,y:130}]}]};
+  const beforeContact=structuredClone(futureContact);
+  assert.throws(()=>invoke(futureContact,'rotate_component',{componentId:'A',rotation:90}),
+    /ber√ºhrt eine vorhandene Leitung/);
+  assert.deepEqual(futureContact,beforeContact);
   const rotated=invoke(a,'rotate_component',{componentId:'A',rotation:90});
   assert.equal(rotated.teile[0].drehung,90);
   const mirrored=invoke(rotated,'mirror_component',{componentId:'A',mirrored:true});
