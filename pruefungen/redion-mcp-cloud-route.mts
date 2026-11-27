@@ -1900,6 +1900,20 @@ test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und at
     const afterPreview=await call('redion_read_schematic',{blockId});
     assert.equal(afterPreview.data.version,18);
     assert.deepEqual(afterPreview.data.plan,withRail.data.plan);
+    const geometry=await call('redion_read_schematic',{blockId,expectedVersion:18,geometryAudit:true},readOnly.access_token);
+    assert.equal(geometry.data.version,18,JSON.stringify(geometry.data));
+    assert.equal(geometry.data.report.wireCount,withRail.data.plan.leitungen.length);
+    assert.equal(geometry.data.report.errorCount,0,JSON.stringify(geometry.data.report));
+    const staleGeometry=await call('redion_read_schematic',{blockId,expectedVersion:17,geometryAudit:true});
+    assert.equal(staleGeometry.data.code,'conflict');
+    const noVersionGeometry=await call('redion_read_schematic',{blockId,geometryAudit:true});
+    assert.equal(noVersionGeometry.data.code,'invalid_arguments');
+    const bothModes=await call('redion_read_schematic',{blockId,expectedVersion:18,geometryAudit:true,
+      operatingPoint:{switches:[],componentIds:['P2']}});
+    assert.equal(bothModes.data.code,'invalid_arguments');
+    const afterAudit=await call('redion_read_schematic',{blockId});
+    assert.equal(afterAudit.data.version,18);
+    assert.deepEqual(afterAudit.data.plan,withRail.data.plan);
     const orphanId='detached_schematic';
     await f.store.setze('saetze',{id:orphanId,bereich:'ws_test',tabelle:'blocks',
       daten:JSON.stringify({type:'schaltplan',parentId:'edit_schematic_page',plan:finalPlan.data.plan}),
