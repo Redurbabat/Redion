@@ -76,7 +76,7 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
     ['workspaceId','blockId','expectedVersion']);
   assert.match(JSON.stringify(updateSchematic?.inputSchema.properties.changes), /"maxItems":20/);
   assert.deepEqual(updateSchematic?.inputSchema.properties.operation,
-    {type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label','set_component_values','rename_label','delete_label','delete_wire','rotate_component','mirror_component','delete_component','move_connected_component']});
+    {type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label','set_component_values','rename_label','delete_label','delete_wire','rotate_component','mirror_component','delete_component','move_connected_component','branch_wire']});
   assert.deepEqual(updateSchematic?.inputSchema.properties.rotation,
     {type:'integer',enum:[0,90,180,270]});
   assert.equal(updateSchematic?.annotations?.readOnlyHint,false);
@@ -447,4 +447,29 @@ test('Cloud MCP: verbundenes Bauteil mit unveränderten Netzkontakten verschiebe
   ambiguous.leitungen[0].vonNr='unknown';
   assert.throws(()=>invoke(ambiguous,'move_connected_component',{componentId:'A',x:100,y:200}));
   assert.deepEqual(wired,snapshot);
+});
+
+
+test('Cloud MCP: gezielter T-Abzweig auf einer vorhandenen Leitung',()=>{
+  const base={art:'stromlauf-aufgeloest',breite:800,hoehe:700,
+    teile:[] as any[],leitungen:[] as any[],texte:[] as any[],
+    ebenen:[{id:'plan',name:'Plan',farbe:'var(--text)',sichtbar:true}]};
+  const invoke=(raw:unknown,operation:string,params:Record<string,unknown>)=>
+    editSchematic(raw,{operation,...params}).plan as typeof base;
+  let plan=base;
+  for(const [componentId,x,y] of [['A',100,100],['B',300,100],['C',200,240]])
+    plan=invoke(plan,'add_component',{componentId,symbolId:'bp-sonnerie',x,y});
+  const trunk=invoke(plan,'connect_terminals',{wireId:'W1',fromComponentId:'A',fromTerminal:'X1',toComponentId:'B',toTerminal:'X1'});
+  const snapshot=structuredClone(trunk);
+  const params={wireId:'W2',targetWireId:'W1',fromComponentId:'C',fromTerminal:'X1',x:230,y:100};
+  const branched=invoke(trunk,'branch_wire',params);
+  assert.deepEqual(branched.leitungen[0],trunk.leitungen[0]);
+  assert.deepEqual(branched.leitungen[1].punkte,[{x:230,y:240},{x:230,y:100}]);
+  assert.deepEqual(branched.teile,trunk.teile);
+  assert.deepEqual(trunk,snapshot);
+  for(const changes of [{x:130},{y:110},{targetWireId:'missing'},{wireId:'W1'},{fromTerminal:'unknown'}])
+    assert.throws(()=>invoke(trunk,'branch_wire',{...params,...changes}));
+  const blocked={...trunk,leitungen:[...trunk.leitungen,{id:'W3',ebene:'aufgabe',punkte:[{x:230,y:0},{x:230,y:100}]}]};
+  assert.throws(()=>invoke(blocked,'branch_wire',params));
+  assert.deepEqual(trunk,snapshot);
 });
