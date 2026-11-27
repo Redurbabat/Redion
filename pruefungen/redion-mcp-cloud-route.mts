@@ -2231,6 +2231,39 @@ test('Cloud-MCP native visual objects with version protection',async()=>{
  await ok('redion_update_visual',{...bref,expectedVersion:10,operation:'lock_shape',elementId:'rect',locked:false});
  assert.equal((await run('redion_update_visual',{...bref,expectedVersion:11,operation:'append_shapes',shapes:[{id:'invalid',kind:'stift',points:[[1,2],[3,4]],pressure:[0.5]}]})).isError,true);
  assert.equal((await ok('redion_read_visual',bref)).version,11);
+ await ok('redion_update_visual',{...bref,expectedVersion:11,operation:'append_shapes',shapes:[
+   {id:'loose',kind:'rechteck',x:240,y:140,width:50,height:50},
+   {id:'link',kind:'verbindung',from:'rect',to:'loose'}
+ ]});
+ await ok('redion_update_visual',{...bref,expectedVersion:12,operation:'group_selection',selection:['rect','ink'],groupId:'inner'});
+ await ok('redion_update_visual',{...bref,expectedVersion:13,operation:'group_selection',selection:['ink'],groupId:'outer'});
+ const nested=await ok('redion_read_visual',bref);
+ assert.deepEqual(nested.shapes.find((s:any)=>s.id==='rect').groupPath,['inner','outer']);
+ assert.deepEqual(nested.shapes.find((s:any)=>s.id==='ink').groupPath,['inner','outer']);
+ await ok('redion_update_visual',{...bref,expectedVersion:14,operation:'ungroup_selection',selection:['rect']});
+ await ok('redion_update_visual',{...bref,expectedVersion:15,operation:'lock_shape',elementId:'rect',locked:true});
+ const align={...bref,operation:'align_selection',selection:['ink','loose'],alignment:'left'};
+ const blockedAlign=await run('redion_update_visual',{...align,expectedVersion:16});
+ assert.match(JSON.parse(blockedAlign.content[0].text).message,/gesperrt/);
+ await ok('redion_update_visual',{...bref,expectedVersion:16,operation:'lock_shape',elementId:'rect',locked:false});
+ await ok('redion_update_visual',{...align,expectedVersion:17});
+ const aligned=await ok('redion_read_visual',bref);
+ const loose=aligned.shapes.find((s:any)=>s.id==='loose');
+ assert.equal(loose.groupId,undefined);
+ assert.ok(loose.x>=0&&loose.x<25);
+ assert.deepEqual(aligned.shapes.find((s:any)=>s.id==='ink').groupPath,['inner']);
+ assert.deepEqual(aligned.shapes.find((s:any)=>s.id==='ink').pts[0],[15,15]);
+ assert.deepEqual(aligned.shapes.find((s:any)=>s.id==='link'),nested.shapes.find((s:any)=>s.id==='link'));
+ await ok('redion_update_visual',{...bref,expectedVersion:18,operation:'move_selection',selection:['rect'],dx:30,dy:40});
+ const movedGroup=await ok('redion_read_visual',bref);
+ assert.equal(movedGroup.shapes.find((s:any)=>s.id==='rect').x,50);
+ assert.deepEqual(movedGroup.shapes.find((s:any)=>s.id==='ink').pts[0],[45,55]);
+ assert.equal(movedGroup.shapes.find((s:any)=>s.id==='loose').x,loose.x);
+ await ok('redion_update_visual',{...bref,expectedVersion:19,operation:'order_selection',selection:['ink'],order:'front'});
+ const ordered=await ok('redion_read_visual',bref);
+ assert.deepEqual(ordered.shapes.filter((s:any)=>s.art!=='verbindung').map((s:any)=>s.id),['loose','rect','ink']);
+ await ok('redion_update_visual',{...bref,expectedVersion:20,operation:'ungroup_selection',selection:['ink']});
+ assert.equal((await ok('redion_read_visual',bref)).shapes.find((s:any)=>s.id==='rect').groupId,undefined);
  const sheet=await ok('redion_create_sheet',{workspaceId:'ws_test',documentId:'visual_page',expectedVersion:3,requestId:'native_sheet_001',title:'A4',paper:'kariert',pages:2});
  assert.equal((await ok('redion_read_visual',{workspaceId:'ws_test',blockId:sheet.blockId})).blattHoehe,1683.78);
  const pageRecord=await f.store.hole('saetze',{bereich:'ws_test',id:'visual_page'});

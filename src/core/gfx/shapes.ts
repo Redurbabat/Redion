@@ -397,4 +397,5 @@ const GfxShapes = (() => {
   return { zeichne, rahmenVon, localBounds, zeilenUmbruch, pfeilMarke, verbindungsStrecke, verbindungsPfad, verbindungZeichne, sv, PALETTE };
 })();
 
-(window as any).GfxShapes = GfxShapes;
+if (typeof window === 'undefined') module.exports = GfxShapes;
+else (window as any).GfxShapes = GfxShapes;

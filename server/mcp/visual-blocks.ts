@@ -1,3 +1,7 @@
+// @ts-expect-error Classic browser build has no module declaration.
+import compiledObjects from '../../quell/core/gfx/objects.js';
+const gfx:typeof GfxObjects=compiledObjects;
+
 type Obj=Record<string,unknown>;
 const fail=(s:string):never=>{throw new Error(s);};
 const obj=(v:unknown,keys:string[]):Obj=>{if(!v||typeof v!=='object'||Array.isArray(v))return fail('Objekt erwartet.');const o=v as Obj;if(Object.keys(o).some(k=>!keys.includes(k)))return fail('Unbekanntes Feld.');return o;};
@@ -10,6 +14,7 @@ const arr=(v:unknown,min:number,max:number):unknown[]=>Array.isArray(v)&&v.lengt
 export const papers=['blanko','liniert','kariert','punkte','mm','cornell','noten'];
 export const forms=['rund','kasten','pille','ellipse','raute','sechseck'];
 export const shapes=['rechteck','ellipse','dreieck','raute','linie','pfeil','text','notiz','verbindung','stift'];
+export const alignments=['left','center','right','top','middle','bottom','horizontal','vertical'];
 export function mindmap(nodes:unknown,connections:unknown=[]):Obj{
  const knoten=arr(nodes,1,100).map(v=>{const o=obj(v,['id','text','parentId','side','color','form']);const k:Obj={id:id(o.id),text:str(o.text,500),eltern:o.parentId===null?null:id(o.parentId)};
  if(o.side!==undefined)k.seite=choice(o.side,['links','rechts']);if(o.color!==undefined)k.farbe=color(o.color);if(o.form!==undefined)k.form=choice(o.form,forms);return k;});
@@ -129,4 +134,64 @@ export function editShape(value:unknown,operation:string,args:Obj):Obj[]{
    if(!Object.keys(patch).length)fail('Keine Änderung.');
  }else return fail('Unbekannte Formoperation.');
  return all.map(o=>o===s?{...o,...patch}:o);
+}
+
+/** Uses the same group expansion, lock checks and geometry as the Whiteboard. */
+export function editSelection(value:unknown,operation:string,args:Obj):GfxObject[]{
+ if(!Array.isArray(value)||value.length>200)return fail('Ungültige Auswahlfläche.');
+ const objects:GfxObject[]=value.map(form=>{
+   if(!form||typeof form!=='object'||Array.isArray(form)||typeof form.id!=='string'||
+       (form.groupId!==undefined&&typeof form.groupId!=='string')||
+       (form.groupPath!==undefined&&(!Array.isArray(form.groupPath)||form.groupPath.length>20||
+         !form.groupPath.every((group:unknown)=>typeof group==='string'))))
+     return fail('Ungültiges Zeichenobjekt.');
+   return form as GfxObject;
+ });
+ const known=new Set(objects.map(form=>form.id));
+ if(known.size!==objects.length)fail('Doppelte Objektkennungen auf dem Whiteboard.');
+ const requested=arr(args.selection,1,40).map(id);
+ const selected=new Set(requested);
+ if(selected.size!==requested.length||requested.some(wanted=>!known.has(wanted)))
+   fail('Auswahl enthält doppelte oder fehlende Objekte.');
+ const ids=gfx.expand(objects,selected);
+ const members=objects.filter(form=>ids.has(form.id));
+ if(members.some(form=>form.art==='verbindung'))fail('Verbindungen werden über ihre Endpunkte bearbeitet.');
+ if(gfx.locked(objects,ids))fail('Mindestens ein Objekt der Auswahl ist gesperrt.');
+ if(operation==='group_selection'){
+   if(members.length<2)fail('Zum Gruppieren mindestens zwei Objekte auswählen.');
+   const groupId=id(args.groupId);
+   if(known.has(groupId)||objects.some(form=>form.groupId===groupId||form.groupPath?.includes(groupId)))
+     fail('Gruppenkennung wird schon verwendet.');
+   if(members.some(form=>(form.groupPath?.length??0)>=20))fail('Gruppen sind zu tief verschachtelt.');
+   return gfx.group(objects,ids,groupId);
+ }
+ if(operation==='ungroup_selection'){
+   if(!members.some(form=>form.groupId))fail('Die Auswahl enthält keine Gruppe.');
+   return gfx.group(objects,ids,null);
+ }
+ if(operation==='order_selection'){
+   const order=choice(args.order,['front','back','forward','backward']) as Parameters<typeof gfx.reorder>[2];
+   return gfx.reorder(objects,ids,order);
+ }
+ let result:GfxObject[];
+ if(operation==='move_selection'){
+   const dx=num(args.dx,-10000,10000),dy=num(args.dy,-10000,10000);
+   result=objects.map(form=>ids.has(form.id)?gfx.move(form,dx,dy):form);
+ }else if(operation==='align_selection'){
+   const command=choice(args.alignment,alignments);
+   const needed=command==='horizontal'||command==='vertical'?3:2;
+   if(gfx.units(objects,ids).length<needed)fail('Für diese Aktion mehr einzelne Objekte oder Gruppen auswählen.');
+   result=gfx.align(objects,ids,command);
+ }else return fail('Unbekannte Auswahlaktion.');
+ // Validate only the coordinates that the selection command actually writes.
+ for(const form of result){
+   if(!ids.has(form.id))continue;
+   if(form.art==='stift'){
+     arr(form.pts,1,2000).forEach(raw=>{
+       const point=arr(raw,2,4);
+       num(point[0],-10000,10000);num(point[1],-10000,10000);
+     });
+   }else{num(form.x,-10000,10000);num(form.y,-10000,10000);}
+ }
+ return result;
 }

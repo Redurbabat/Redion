@@ -446,3 +446,26 @@ sendet dieselbe `collection` sowie die gelesene Version als
 `expectedVersion`. Bei einem Versionskonflikt beginnt er erneut bei
 Offset null. Ein einzelnes Element über der Bytegrenze wird als zu gross
 gemeldet. A4-Blätter behalten ihre Metadatenantwort.
+
+## Whiteboard-Auswahlen bearbeiten
+
+`redion_update_visual` akzeptiert bei einem Whiteboard zusätzliche
+Operationen. `selection` enthält bis zu 40 vorhandene Formkennungen.
+Ein ausgewähltes Gruppenmitglied nimmt seine ganze Gruppe mit.
+
+- `group_selection` bündelt die Auswahl unter einer neuen, freien `groupId`.
+- `ungroup_selection` löst die äusserste Gruppe auf und erhält innere Gruppen.
+- `align_selection` richtet einzelne Formen oder ganze Gruppen mit
+  `alignment` aus. Die Werte `left`, `center`, `right`, `top`, `middle`
+  und `bottom` richten aus. `horizontal` und `vertical` verteilen ab drei
+  unabhängigen Formen oder Gruppen.
+- `move_selection` verschiebt die Auswahl um `dx` und `dy`.
+- `order_selection` ordnet die Auswahl mit `order` neu. `front` und `back`
+  bewegen sie ganz nach vorne oder hinten. `forward` und `backward` ändern
+  die Reihenfolge um einen Schritt.
+
+Die Operationen verwenden die Geometrie des Whiteboard-Editors und
+dessen Felder `groupId` und `groupPath`. Gesperrte Mitglieder verhindern
+die Änderung der Auswahl. Verbinder bleiben über ihre Endpunkte
+verknüpft. Die Prüfung von Schreibrecht, Elternkette und
+`expectedVersion` gilt auch hier.
