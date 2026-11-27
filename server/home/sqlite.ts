@@ -15,13 +15,17 @@ export function openHomeDatabase(filename:string) {
   } catch(error) {sqlite.close();throw error;}
   const prepared=new WeakMap<object,()=>Record<string,unknown>[]>();
   function statement(sql:string,values:SQLInputValue[]=[]): McpStatement & {run():Promise<unknown>} {
-    const args=()=>/\?\d+/.test(sql)?[Object.fromEntries(values.map((v,i)=>['?'+(i+1),v]))]:values;
-    const rows=()=>sqlite.prepare(sql).all(...args()) as Record<string,unknown>[];
+    const named=()=>Object.fromEntries(values.map((v,i)=>['?'+(i+1),v]));
+    const numbered=/\?\d+/.test(sql);
+    const rows=()=> {
+      const stmt=sqlite.prepare(sql);
+      return numbered?stmt.all(named()):stmt.all(...values);
+    };
     const stmt={
       bind(...next:SQLInputValue[]){return statement(sql,next);},
-      async first<T>(){return (sqlite.prepare(sql).get(...args()) as T|undefined)??null;},
+      async first<T>(){const stmt=sqlite.prepare(sql);return ((numbered?stmt.get(named()):stmt.get(...values)) as T|undefined)??null;},
       async all<T>(){return {results:rows() as T[]};},
-      async run(){return sqlite.prepare(sql).run(...args());}
+      async run(){const stmt=sqlite.prepare(sql);return numbered?stmt.run(named()):stmt.run(...values);}
     };
     prepared.set(stmt,rows);
     return stmt;

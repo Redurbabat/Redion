@@ -33,14 +33,17 @@ Lokale Freigabe im Container:
 ```sh
 docker compose -f deploy/home/compose.yaml exec redion node server/home-server.ts approve-device XXXX-XXXX
 ```
-Nur die erste lokale Admin-Freigabe darf ein Konto erzeugen.
+Nur die erste lokale Admin-Freigabe darf ein Konto erzeugen. Jede weitere
+Gerätefreigabe bleibt ebenfalls auf die lokale Konsole beschränkt. Die
+Freigabe und der einmalige Verbrauch verwenden SQLite-Transaktionen.
 Kein Geheimnis in Git speichern. Den Verschlüsselungssatz niemals auf den
 Server übertragen. Die vorhandenen Sync- und Schlüsselpfade müssen auf
 allen echten Geräten geprüft werden; keine Behauptung vollständiger E2EE.
 
 ## Abnahme vor Produktion (noch offen)
 
-- Atomare Gerätefreigabe/Einmalverbrauch über Prozessgrenzen, Rate Limits
+- Atomare Gerätefreigabe/Einmalverbrauch sind implementiert und werden in
+  einem Zwei-Verbindungen-Test geprüft. Offen: Rate Limits
   hinter dem tatsächlichen Proxy, Recovery und Authentifizierungsprüfung.
 - RED ID / gemeinsames SDK und sichere Gerätesitzungen, private native
   Anmeldeoberfläche, kein offener Registrierungsweg.

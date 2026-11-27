@@ -6,6 +6,7 @@ import {join} from 'node:path';
 import {openHomeDatabase} from '../server/home/sqlite.ts';
 import {openHomeBlobs} from '../server/home/blobs.ts';
 import {openHomeServer} from '../server/home-server.ts';
+import {approveHomeDevice} from '../server/home/pairing.ts';
 
 test('Home SQLite persists across restart and rolls back failed batches',async()=>{
   const root=await mkdtemp(join(tmpdir(),'redion-home-'));
@@ -48,5 +49,32 @@ test('Private home API blocks public routes, foreign origins and anonymous sync'
       assert.equal((await service.handle(new Request(origin+'/server/schema.sql'))).status,404);
       assert.equal((await service.handle(new Request(origin+'/sync/runter',{headers:{Origin:'https://evil.example.test'}}))).status,403);
     }finally{service.close();}
+  }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test('Local device approval and claim are single-use across database connections',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'redion-pair-'));
+  try{
+    const origin='https://redion.example.test';
+    const service=await openHomeServer({dataDir:root,origin});
+    const operator=openHomeDatabase(join(root,'redion.sqlite'));
+    try{
+      const post=(path:string,body:Record<string,unknown>)=>service.handle(new Request(origin+path,{method:'POST',headers:{'Content-Type':'application/json',Origin:'capacitor://localhost'},body:JSON.stringify(body)}));
+      const created=await post('/konto/code',{geraet:'Test'});
+      assert.equal(created.status,200);
+      const {code}=await created.json() as {code:string};
+      assert.equal((await post('/konto/code-holen',{code})).status,202);
+      assert.equal((await post('/konto/code-freigeben',{code})).status,404);
+      approveHomeDevice(operator.sqlite,code);
+      assert.throws(()=>approveHomeDevice(operator.sqlite,code));
+      const responses=await Promise.all([post('/konto/code-holen',{code}),post('/konto/code-holen',{code})]);
+      assert.deepEqual(responses.map(r=>r.status).sort(),[200,404]);
+      const success=responses.find(r=>r.status===200)!;
+      const session=await success.json() as {token:string;bereiche:unknown[]};
+      assert.equal(session.bereiche.length,1);
+      assert.equal((await service.handle(new Request(origin+'/konto/ich',{headers:{Authorization:'Bearer '+session.token}}))).status,200);
+      assert.equal(await service.store.ablage.zaehle('konten'),1);
+      assert.equal(await service.store.ablage.zaehle('sitzungen'),1);
+    }finally{operator.close();service.close();}
   }finally{await rm(root,{recursive:true,force:true});}
 });

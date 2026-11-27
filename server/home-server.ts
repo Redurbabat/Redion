@@ -4,12 +4,13 @@ import {resolve,join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {openHomeDatabase} from './home/sqlite.ts';
 import {openHomeBlobs} from './home/blobs.ts';
-import {beantworte,abdruck,kennung,jetzt} from './kern.ts';
+import {beantworte} from './kern.ts';
+import {approveHomeDevice,claimHomeDevice} from './home/pairing.ts';
 import {alsAnfrage,alsAntwort} from './cloudflare.ts';
 import {zuGrossAntwort} from './sicherheit/eingaben.ts';
 import {istAbgleichWeg,mitAppUrsprung} from './sicherheit/abgleich-tor.ts';
 
-const privateRoutes=new Set(['/api/stand','/konto/code-freigeben','/konto/geraete']);
+const privateRoutes=new Set(['/api/stand','/konto/geraete']);
 const json=(status:number,error:string)=>Response.json({error},{status,headers:{'Cache-Control':'no-store'}});
 
 /** Initial private API: no static repository files, public registration,
@@ -29,10 +30,20 @@ export async function openHomeServer(options:{dataDir:string;origin:string}){
     if(request.method==='OPTIONS'&&!istAbgleichWeg(path))return json(405,'method_not_allowed');
     const parsed=await alsAnfrage(request);
     if('zuGross' in parsed)return alsAntwort(zuGrossAntwort(parsed.zuGross));
-    const execute=async()=>alsAntwort(await beantworte(parsed,store.ablage,{ADRESSE:origin.origin,blobs}));
+    const execute=async()=>{
+      if(path==='/konto/code-holen'&&request.method==='POST'){
+        const result=claimHomeDevice(store.sqlite,parsed.koerper?.code);
+        return Response.json(result.body,{status:result.status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
+      }
+      return alsAntwort(await beantworte(parsed,store.ablage,{ADRESSE:origin.origin,blobs}));
+    };
     const result=queue.then(execute);
     queue=result.catch(()=>undefined);
     const response=await result;
+    if(clientOrigin===origin.origin&&istAbgleichWeg(path)){
+      response.headers.set('Access-Control-Allow-Origin',origin.origin);
+      response.headers.append('Vary','Origin');
+    }
     return istAbgleichWeg(path)?mitAppUrsprung(request,response):response;
   }
   return {handle,store,blobs,close:()=>store.close()};
@@ -47,16 +58,7 @@ async function main(){
   const command=process.argv[2];
   if(command==='approve-device'){
     try{
-      const code=String(process.argv[3]||'').trim().toUpperCase();
-      if(!/^[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(code))throw new Error('Invalid device code');
-      const fp=await abdruck(code);
-      const mark=await service.store.ablage.hole('marken',{wert:fp});
-      if(!mark||mark.art!=='geraetecode'||mark.bis<jetzt()||mark.kontoId)throw new Error('Code missing, expired or already approved');
-      const owners=await service.store.ablage.finde('konten');
-      if(owners.length>1||owners[0]?.gesperrt)throw new Error('Single-owner mode only');
-      const owner=owners[0]||{id:kennung(),name:'RED Owner',herkunft:'home',angelegt:jetzt(),gesperrt:0};
-      if(!owners.length)await service.store.ablage.setze('konten',owner);
-      await service.store.ablage.setze('marken',{...mark,kontoId:owner.id,benutzt:jetzt()});
+      approveHomeDevice(service.store.sqlite,process.argv[3]);
       console.log('Device approved locally. Return to the RED ION client.');
     } finally {service.close();}
     return;
