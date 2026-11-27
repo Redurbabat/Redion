@@ -114,10 +114,11 @@ export const CLOUD_TOOLS:ToolDef[]=[
       text:{type:'string',maxLength:8000},checked:{type:'boolean'},
       note:{type:'string',maxLength:2000},dueDate:{type:'string',maxLength:10}},
       required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
-  {name:'redion_update_schematic',description:'Bearbeitet einen Klartext-Schaltplan. Für eine einzelne Änderung operation und ihre Felder übergeben. Für bis zu 20 atomare Änderungen nur changes übergeben. Mit dryRun: true denselben Änderungslauf ohne Speichern ausführen; Vorschau enthält Kandidatenplan und bisherige Version. Optional previewSwitchTest oder previewOperatingPoint (nur zusammen mit dryRun: true) prüft den Kandidaten mit dem nativen Simulator. Jeder Schritt wird vor dem Speichern geprüft, die Planversion steigt nur beim tatsächlichen Speichern einmal. set_component_values setzt U (Quelle, V), R (Widerstand, Ohm) und Un (Lampe, V) entsprechend dem Fachzeichen. rename_label ändert Beschriftungstext; delete_label und delete_wire entfernen genau das angegebene Element. Entfernte Leitungen können den Stromkreis verändern; danach erneut simulieren. rotate_component, mirror_component und delete_component bearbeiten nur unverbundene Bauteile; add_busbar zeichnet eine isolierte gerade Stromschiene mit conductor L1/L2/L3/N/PE und Start x/y sowie Ende endX/endY. Die Kennzeichnung liefert keine Spannung und verbindet gleichnamige Schienen nicht automatisch. branch_wire verbindet eine Startklemme (fromComponentId, fromTerminal) mit einem eindeutigen inneren Punkt x/y einer vorhandenen targetWireId; keine fremden Kontakte. move_connected_component zieht bis zu acht eindeutig gebundene Leitungen mit dem nativen Netzkontaktwächter nach; bei geänderten Kontakten oder uneindeutigem Weg wird die ganze Aktion abgelehnt.',
+  {name:'redion_update_schematic',description:'Bearbeitet einen Klartext-Schaltplan. Für eine einzelne Änderung operation und ihre Felder übergeben. Für bis zu 20 atomare Änderungen nur changes übergeben. Mit dryRun: true denselben Änderungslauf ohne Speichern ausführen; Vorschau enthält Kandidatenplan und bisherige Version. Optional previewSwitchTest oder previewOperatingPoint (nur zusammen mit dryRun: true) prüft den Kandidaten mit dem nativen Simulator. previewGeometryAudit: true vergleicht zusätzlich die geometrische Diagnose vor und nach der Änderung. Jeder Schritt wird vor dem Speichern geprüft, die Planversion steigt nur beim tatsächlichen Speichern einmal. set_component_values setzt U (Quelle, V), R (Widerstand, Ohm) und Un (Lampe, V) entsprechend dem Fachzeichen. rename_label ändert Beschriftungstext; delete_label und delete_wire entfernen genau das angegebene Element. Entfernte Leitungen können den Stromkreis verändern; danach erneut simulieren. rotate_component, mirror_component und delete_component bearbeiten nur unverbundene Bauteile; add_busbar zeichnet eine isolierte gerade Stromschiene mit conductor L1/L2/L3/N/PE und Start x/y sowie Ende endX/endY. Die Kennzeichnung liefert keine Spannung und verbindet gleichnamige Schienen nicht automatisch. branch_wire verbindet eine Startklemme (fromComponentId, fromTerminal) mit einem eindeutigen inneren Punkt x/y einer vorhandenen targetWireId; keine fremden Kontakte. move_connected_component zieht bis zu acht eindeutig gebundene Leitungen mit dem nativen Netzkontaktwächter nach; bei geänderten Kontakten oder uneindeutigem Weg wird die ganze Aktion abgelehnt.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,
       expectedVersion:{type:'integer',minimum:1},
       ...schematicEditFields,dryRun:{type:'boolean',enum:[true]},
+      previewGeometryAudit:{type:'boolean',enum:[true]},
       previewSwitchTest:{type:'object',additionalProperties:false,required:['switchIds','targetId','expected'],properties:{
         switchIds:{type:'array',minItems:1,maxItems:6,uniqueItems:true,items:idField},targetId:idField,
         expected:{type:'array',minItems:1,maxItems:32,items:{type:'boolean'}}
@@ -1316,15 +1317,18 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       if(ver!==Number(s.version)||ver<1)return err('conflict','Schaltplan wurde geändert. Bitte erneut lesen.');
       const dryRun=args.dryRun===true;
       if(args.dryRun!==undefined&&!dryRun)return err('invalid_arguments','dryRun muss true sein.');
+      const previewGeometry=args.previewGeometryAudit!==undefined;
+      if(previewGeometry&&(!dryRun||args.previewGeometryAudit!==true))
+        return err('invalid_arguments','previewGeometryAudit benötigt true und dryRun: true.');
       const previewSwitch=args.previewSwitchTest!==undefined;
       const previewOperating=args.previewOperatingPoint!==undefined;
       if((previewSwitch||previewOperating)&&!dryRun||previewSwitch&&previewOperating)
         return err('invalid_arguments','Genau einen Vorschau-Prüfmodus zusammen mit dryRun: true wählen.');
       const batch=args.changes!==undefined;
       if(batch&&(!Array.isArray(args.changes)||args.changes.length<1||args.changes.length>20||
-        Object.keys(args).some(key=>!['workspaceId','blockId','expectedVersion','changes','dryRun','previewSwitchTest','previewOperatingPoint'].includes(key))))
+        Object.keys(args).some(key=>!['workspaceId','blockId','expectedVersion','changes','dryRun','previewSwitchTest','previewOperatingPoint','previewGeometryAudit'].includes(key))))
         return err('invalid_arguments','Ein Batch muss 1–20 Änderungen enthalten und darf keine Einzelaktion enthalten.');
-      const {dryRun:_dryRun,previewSwitchTest:_previewSwitchTest,previewOperatingPoint:_previewOperatingPoint,...singleChange}=args;
+      const {dryRun:_dryRun,previewSwitchTest:_previewSwitchTest,previewOperatingPoint:_previewOperatingPoint,previewGeometryAudit:_previewGeometryAudit,...singleChange}=args;
       let plan=data.plan;
       const elements:{elementId:string;elementType:string}[]=[];
       try{
@@ -1356,9 +1360,19 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
               measureOperatingPoint(plan as Record<string,unknown>,args.previewOperatingPoint);
           }catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Vorschauprüfung fehlgeschlagen.');}
         }
+        let geometryComparison:unknown;
+        if(previewGeometry){
+          try{
+            const before=auditWiring(data.plan as Record<string,unknown>);
+            const after=auditWiring(plan as Record<string,unknown>);
+            geometryComparison={before,after,errorCountDelta:after.errorCount-before.errorCount,
+              hintCountDelta:after.hintCount-before.hintCount};
+          }catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Geometrische Vorschauprüfung fehlgeschlagen.');}
+        }
         const preview={workspaceId:w,documentId:pageId,blockId:id,version:ver,
           dryRun:true,saved:false,elements,previewPlan:plan,
           ...(previewSwitch||previewOperating?{previewReport}:{}),
+          ...(previewGeometry?{geometryComparison}:{}),
           electricalValidation:false,routingVerified:false};
         if(new TextEncoder().encode(JSON.stringify(preview)).byteLength>32000)
           return err('too_large','Vorschau ist zu gross. Kleineren Teilplan wählen.');
