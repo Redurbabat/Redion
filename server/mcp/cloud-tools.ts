@@ -5,7 +5,8 @@
 import type {Ablage} from '../typen.ts';
 import type {McpPrincipal} from './oauth.ts';
 import type {McpDatabase} from './state.ts';
-import {rolleAuf,darf,notieren,feldRechte} from '../kern.ts';
+import {rolleAuf,darf,notieren,feldRechte,abdruck} from '../kern.ts';
+import {canonicalMcpJson,CLOUD_MCP_PROTOCOL_VERSIONS,CLOUD_MCP_SERVER_INFO} from './contract-meta.ts';
 import {BUILTIN_BLOCK_TYPES} from './block-catalog.ts';
 import {BUILTIN_SYMBOLS} from './symbol-catalog.ts';
 import {editSchematic,schematicChangeSummary} from './schematic-edit.ts';
@@ -80,6 +81,8 @@ const schematicEditFields={
   labelId:idField,labelText:{type:'string',minLength:1,maxLength:200}
 };
 export const CLOUD_TOOLS:ToolDef[]=[
+  {name:'redion_get_capabilities',description:'Zeigt Serverversion, unterstützte MCP-Protokolle und den SHA-256-Abdruck der für diese OAuth-Freigabe sichtbaren Werkzeugdefinitionen.',
+    inputSchema:{type:'object',properties:{},additionalProperties:false}},
   {name:'redion_create_mindmap',description:'Erstellt eine native editierbare Mindmap mit Knoten, Farben und Querverbindungen. parentId null für die Wurzel.',
     inputSchema:{type:'object',properties:{...vCreate,nodes:vNodes,connections:vLinks},required:[...vRequired,'nodes'],additionalProperties:false}},
   {name:'redion_create_whiteboard',description:'Erstellt ein natives Whiteboard mit Formen, Texten, Haftnotizen, Pfeilen, Verbindungen und Stiftstrichen (points als [x,y]-Paare).',
@@ -226,6 +229,7 @@ const writeNames=new Set(['redion_create_page','redion_update_page','redion_repl
 // MCP annotations tell AI clients which tools are read-only, additive or
 // modifying. They are advisory; server-side OAuth and ACL checks still govern.
 const toolTitles:Record<string,string>={
+  redion_get_capabilities:'MCP-Fähigkeiten und Vertragsversion anzeigen',
   redion_list_workspaces:'Bereiche auflisten',
   redion_search:'Seiten und Inhalte suchen',
   redion_read_page:'Seite lesen',
@@ -373,6 +377,14 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       return err('unknown_tool','Dieses Werkzeug ist im Cloud-MCP nicht implementiert. Bitte die aktuelle Werkzeugliste neu laden.');
     if(!visibleCloudTools(principal).some(t=>t.name===name))
       return err('forbidden','Für dieses Werkzeug fehlen die erforderlichen OAuth-Rechte.');
+    if(name==='redion_get_capabilities'){
+      if(Object.keys(args).length)return err('invalid_arguments','Dieses Werkzeug benötigt keine Eingabe.');
+      const tools=visibleCloudTools(principal).sort((a,b)=>a.name<b.name?-1:a.name>b.name?1:0);
+      const readonlyCount=tools.filter(tool=>tool.annotations?.readOnlyHint===true).length;
+      return {serverInfo:CLOUD_MCP_SERVER_INFO,protocolVersions:CLOUD_MCP_PROTOCOL_VERSIONS,
+        toolCount:tools.length,readonlyCount,writeCount:tools.length-readonlyCount,
+        toolSchemaSha256:await abdruck(canonicalMcpJson(tools))};
+    }
     if(name==='redion_list_symbols'){
       if(args.gruppe!==undefined&&(typeof args.gruppe!=='string'||args.gruppe.length>40))
         return err('invalid_arguments','Gruppe muss ein kurzer Text sein.');

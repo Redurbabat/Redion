@@ -46,3 +46,27 @@ Status: O = offen / Bestand prüfen; T = Teilimplementierung vorhanden; A = in d
 5. Connector im Anbieter-Editor neu laden bzw. aktualisieren, Live-Test in einem ausdrücklich dafür vorgesehenen Testdokument ausführen. Erst dann produktive Parität behaupten.
 
 Diese Schritte automatisieren die Erkennung von Drift, nicht die externe Veröffentlichung. Cloudflare-Konto, Connector-Administration und Signierzugänge müssen separat verfügbar sein. Elektrische Simulation bleibt ein Lernwerkzeug, keine Installations- oder Sicherheitsabnahme.
+
+## Nachweis Master Development 2.0 – MCP-Vertragsversion
+
+PR #243 und #244 wurden nach vollständig grüner CI zusammengeführt.
+Der Arbeitsstand dieses Pakets basiert auf main nach PR #249.
+Branch `feat/master-mcp-capabilities` erweitert Ziel 01 um
+`redion_get_capabilities`. Das Werkzeug liefert Serverversion, unterstützte
+Protokolle sowie Anzahl und SHA-256-Abdruck der für den aktuellen Grant
+sichtbaren Definitionen. Der Abdruck berücksichtigt Eingabeschemas,
+Beschreibungen und Sicherheitskennzeichnungen. Die Initialisierung und
+der lokal exportierte Vertrag verwenden dieselbe Serverversion.
+
+Lokal geprüft wurden TypeScript, Cloud-MCP-Routen, der Connector-Vertrag
+und der echte isolierte Worker mit D1. Die Runtime vergleicht die
+zurückgegebene Prüfsumme mit der über das MCP-SDK gelesenen Werkzeugliste
+für Lese- und Schreibrechte. Produktionsdeployment und Registrierung des
+zusätzlichen Werkzeugs im Anbieter-Connector sind offen. Die produktive
+Verbindung antwortete vor dieser Änderung auf lesende Katalogabfragen.
+Es wurde kein produktives Nutzerdokument verändert.
+
+Weitere Arbeitspakete liegen in eigenen Worktrees. Schema-6-Vorlage,
+Mindmap-Minimap, Pencil-Neigungsdaten, Lernfortschritt, Sync-Nachlauf und
+Windows-Build-Wiederverwendung sind begonnen. Ihr Status bleibt bis zum
+vollständigen Test und separaten PR Teilimplementierung.

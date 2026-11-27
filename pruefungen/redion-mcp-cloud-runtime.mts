@@ -4,10 +4,12 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createRequire} from 'node:module';
+import {createHash} from 'node:crypto';
 import {build} from 'rolldown';
 import {SCHEMA} from '../server/ablage.ts';
 import {mcpStateD1} from '../server/mcp/state.ts';
 import {createMcpOAuth,pkceChallenge} from '../server/mcp/oauth.ts';
+import {canonicalMcpJson,CLOUD_MCP_SERVER_INFO} from '../server/mcp/contract-meta.ts';
 import {schema6} from './hilfe/elektro-szenario.mts';
 
 // Vorhandenes Wrangler verwenden. Kein Download, keine Kontoverbindung,
@@ -68,7 +70,21 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
     assert.equal(tokenResponse.status,200);const tokens=await tokenResponse.json();
     client=new Client({name:'synthetic-workerd-client',version:'1'});
     await client.connect(new StreamableHTTPClientTransport(new URL(resource),{fetch:fetcher,requestInit:{headers:{Authorization:'Bearer '+tokens.access_token}}}));
-    assert.equal((await client.listTools()).tools.length,16);
+    const audit=async(connection:any,readonly:boolean)=>{
+      const list=await connection.listTools();
+      const tools=list.tools.sort((a:{name:string},b:{name:string})=>a.name<b.name?-1:a.name>b.name?1:0);
+      const res=await connection.callTool({name:'redion_get_capabilities',arguments:{}});
+      assert.equal(res.isError,undefined);
+      const meta=JSON.parse(res.content[0].text);
+      assert.deepEqual(meta.serverInfo,connection.getServerVersion());
+      assert.deepEqual(meta.serverInfo,CLOUD_MCP_SERVER_INFO);
+      assert.equal(meta.toolCount,readonly?17:33);
+      assert.equal(meta.readonlyCount,17);
+      assert.equal(meta.writeCount,readonly?0:16);
+      assert.equal(meta.toolSchemaSha256,createHash('sha256').update(canonicalMcpJson(tools)).digest('hex'));
+      return meta.toolSchemaSha256;
+    };
+    const readHash=await audit(client,true);
     const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'runtime-workspace',documentId:'runtime-page'}});
     assert.equal(JSON.parse(result.content[0].text).markdown,'Isolierte Testdaten');
     const {plan:kreuzplan,soll,schalter}=schema6();
@@ -131,6 +147,7 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
     await writer.connect(new StreamableHTTPClientTransport(new URL(resource),{
       fetch:fetcher,requestInit:{headers:{Authorization:'Bearer '+writeTokens.access_token}}
     }));
+    assert.notEqual(await audit(writer,false),readHash);
     const invoke=async(name:string,arguments_:Record<string,unknown>)=>{
       const res=await writer.callTool({name,arguments:arguments_});
       return {res,payload:JSON.parse(res.content[0].text) as any};
