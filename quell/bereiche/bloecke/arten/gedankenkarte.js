@@ -1068,7 +1068,7 @@ const Gedankenkarte = (() => {
         };
         const zoomen = (faktor) => {
             automatischeSicht = false;
-          const alt = karte.sicht.z;
+            const alt = karte.sicht.z;
             const neu = Math.min(4, Math.max(MIN_ZOOM, alt * faktor));
             if (neu === alt)
                 return;
@@ -1326,11 +1326,12 @@ const Gedankenkarte = (() => {
         const kameraZeiger = new Map();
         let kameraGeaendert = false;
         const kameraStart = (e) => {
-            if (kameraZeiger.size >= 2)
+            if (kameraZeiger.size >= 2 || (e.pointerType !== 'touch' && e.button !== 0))
                 return;
             e.preventDefault();
             kameraZeiger.set(e.pointerId, { x: e.clientX, y: e.clientY });
-            buehne.setPointerCapture(e.pointerId);
+            if (e.isTrusted)
+                buehne.setPointerCapture(e.pointerId);
             buehne.classList.add('gk-schiebt');
         };
         buehne.addEventListener('pointermove', e => {
