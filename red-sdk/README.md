@@ -36,3 +36,10 @@ AES-GCM helpers; independent secure key distribution remains required.
 SDK 0.4 adds proof-bound login claim, a platform-secret-store adapter scoped to
 origin and app, and P-256 ECDH/HKDF key exchange with explicit fingerprint
 comparison on both trusted devices. Never confirm fingerprints from a relay.
+
+### Native Apple SDK
+
+For Swift applications, add `red-sdk/apple` as a local Swift package pinned
+to the reviewed commit. `RedNativeClient` uses the device-only Keychain by
+default. It supports PKCE, direct approval claims, legacy pairing, rotating
+refresh and logout. It does not yet implement native RED Share or QR UI.

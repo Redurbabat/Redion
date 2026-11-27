@@ -1,0 +1,16 @@
+name: RED Native Apple SDK
+on:
+  pull_request:
+    paths:
+      - 'red-sdk/apple/**'
+      - '.github/workflows/red-native-apple.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  swift:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift test --package-path red-sdk/apple

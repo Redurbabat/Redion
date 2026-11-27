@@ -1,6 +1,6 @@
 # RED SDK – Integrationsplan für das Ökosystem
 
-Basis: RED ID v2, RED Share v1 und RED SDK 0.3.0 aus Redion PR #257.
+Basis: RED ID v2, RED Share v1 und RED SDK 0.4.0 aus Redion PR #257.
 Keine App darf automatisch auf Daten einer anderen App zugreifen.
 Die folgenden Repositories wurden auf main lesend geprüft. Dieser Plan
 ändert die anderen Repositories nicht. Für jedes echte Integrationsergebnis
@@ -43,3 +43,11 @@ QR-Kamera/Renderer, Browser-SSO, plattformspezifische SecureStore-Adapter und
 UI, echte iOS/Windows/Android/Garmin-Tests. Keine Behauptung, dass die zehn
 externen Apps schon RED ID verwenden. Vor Produktivbetrieb Audit und
 Geräteprüfung.
+
+### Apple-Paket
+
+`red-sdk/apple` enthält das lokale Swift Package `RedNativeIdentity` für
+iOS 15+ und macOS 12+. Native HTTPS-Aufrufe (keine Redirects), CryptoKit-PKCE,
+Keychain-Gerätespeicher und direkte Anmeldung/Refresh/Logout. App-eigene
+Kopplungsoberfläche, Integration in die externen Repositories und physische
+Gerätetests bleiben erforderlich. Die Swift-CI prüft Proof und Scope.
