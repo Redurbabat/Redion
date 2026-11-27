@@ -78,6 +78,20 @@ try {
   await page.waitForTimeout(500);
   await page.screenshot({ path: path.join(output, '01-klassisch.png') });
   const count = () => page.evaluate(id => Store.getBlock(id).plan.ink?.length || 0, blockId);
+  const usePen = async (context: 'zeichnen' | 'simulation' = 'zeichnen'): Promise<void> => {
+    const dock = page.locator(`.sp-wrap [data-dock-context="${context}"]`);
+    const pen = dock.locator(context === 'simulation' ? '[data-a="sim-zeichnen"]' : '[data-wz="stift"]');
+    await dock.waitFor();
+    if (!await pen.isVisible()) {
+      const previous = dock.getByRole('button', { name: 'Vorherige Werkzeuge', exact: true });
+      const next = dock.getByRole('button', { name: 'Weitere Werkzeuge', exact: true });
+      const cards = await dock.locator('[data-karte]').count();
+      for (let i = 0; i < cards && await previous.isEnabled(); i++) await previous.click();
+      for (let i = 0; i < cards && !await pen.isVisible() && await next.isEnabled(); i++) await next.click();
+    }
+    await pen.click();
+    assert.equal(await page.locator('.sp-buehne.sp-schreibt').count(), 1);
+  };
   const frameTimes = await page.evaluate(() => new Promise<number[]>(resolve => {
     const times: number[] = []; let before = performance.now();
     const tick = (now: number) => { times.push(now - before); before = now;
@@ -100,7 +114,7 @@ try {
     });
     await page.locator('.sp-wrap').focus(); await page.keyboard.press('f');
     await page.waitForTimeout(500);
-    await page.locator('[data-wz="stift"]').click();
+    await usePen();
     const area = await page.locator('.sp-buehne').boundingBox(); assert.ok(area);
     const x = area.x + area.width * .35, y = area.y + area.height * .55;
     await page.mouse.move(x, y); await page.mouse.down();
@@ -116,7 +130,7 @@ try {
       const p = Store.getBlock(id).plan; return JSON.stringify(Stromfluss.rechne(p, {}, {}));
     }, blockId);
     await page.locator('.sp-start').click();
-    await page.locator('[data-wz="stift"]').click();
+    await usePen('simulation');
     await page.mouse.move(x, y - 40); await page.mouse.down();
     await page.mouse.move(x + 110, y - 30, { steps: 24 }); await page.mouse.up();
     assert.equal(await count(), 2, 'Freihand bleibt bei laufender Simulation möglich');
@@ -136,15 +150,21 @@ try {
     assert.equal(await page.evaluate(id => JSON.stringify(Store.getBlock(id).plan.leitungen), blockId), wires, 'Tintenradierer verändert keine Leitung');
     await page.keyboard.press('Control+z'); assert.equal(await count(), 2);
     await page.locator('.sp-start').click();
-    await page.locator('[data-wz="stift"]').click();
+    await usePen();
     await page.locator('[data-ink-mode="draw"]').click();
     await page.locator('.sp-buehne').scrollIntoViewIfNeeded();
     const penArea = await page.locator('.sp-buehne').boundingBox(); assert.ok(penArea);
     const px = penArea.x + penArea.width * .55, py = penArea.y + penArea.height * .5;
-    const expectedPenEnd = await page.evaluate(({ x, y }) => {
-      const q = new DOMPoint(x, y).matrixTransform(document.querySelector<SVGSVGElement>('.sp-flaeche')!.getScreenCTM()!.inverse());
-      return [+q.x.toFixed(2), +q.y.toFixed(2)];
-    }, { x: px + 48, y: py + Math.sin(4) * 10 });
+    await page.evaluate(() => {
+      const released = (event: PointerEvent): void => {
+        if (event.pointerType !== 'pen') return;
+        document.removeEventListener('pointerup', released, true);
+        const matrix = document.querySelector<SVGSVGElement>('.sp-flaeche')!.getScreenCTM()!.inverse();
+        const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix);
+        (window as any).__inkPenEnd = [Math.round(point.x * 100) / 100, Math.round(point.y * 100) / 100];
+      };
+      document.addEventListener('pointerup', released, true);
+    });
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: px, y: py, button: 'left', buttons: 1, pointerType: 'pen', force: .2, tiltX: 20 });
     await page.locator('.sp-flaeche').dispatchEvent('pointerdown', { pointerType: 'touch', pointerId: 8001, clientX: px + 20, clientY: py + 10, button: 0, buttons: 1 });
@@ -158,6 +178,8 @@ try {
     assert.equal(pen.neigung.length, pen.pts.length);
     assert.ok(pen.neigung.every((value: number) => value >= 0 && value <= 1), 'Neigung benutzt den gemeinsamen normierten Sensorkanal');
     assert.ok(new Set(pen.pressure).size > 2, 'Emulierte Druckwerte bleiben erhalten');
+    const expectedPenEnd = await page.evaluate(() => (window as any).__inkPenEnd);
+    assert.ok(Array.isArray(expectedPenEnd), 'Der Browser hat das Absetzen des Stifts gemeldet');
     assert.deepEqual(pen.pts.at(-1), expectedPenEnd, 'Die gespeicherte Spitze endet am echten Absetzpunkt');
     const renderTimes: number[] = await page.evaluate(() => (window as any).__inkDurations);
     renderTimes.sort((a, b) => a - b);
@@ -172,9 +194,9 @@ try {
     await page.waitForFunction(id => typeof Store !== 'undefined' && !!Store.getBlock(id), blockId);
     assert.deepEqual(await page.evaluate(id => Store.getBlock(id).plan, blockId), persisted, 'Neuladen erhält alle Plan- und Freihanddaten');
     await page.evaluate(id => App.oeffne(id), ids.page);
-    await page.waitForSelector('[data-wz="stift"]');
+    await page.waitForSelector('.sp-wrap [data-dock-context="zeichnen"]');
     await page.evaluate(() => GlassWheel.setMode('glass-wheel'));
-    await page.locator('[data-wz="stift"]').click();
+    await usePen();
     await page.locator('.sp-wrap').scrollIntoViewIfNeeded();
     await page.screenshot({ path: path.join(output, '03-liquid-glass-dunkel.png') });
     await page.evaluate(() => document.body.dataset.kontrast = 'hoch');
