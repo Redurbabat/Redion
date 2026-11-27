@@ -201,6 +201,7 @@ const Einstellungen = (() => {
             if (ziel && offenerBereich === 'home-server') {
                 bindeHomeServer(ziel);
                 bindeRedApps(ziel);
+                bindeRedShare(ziel);
             }
             if (ziel && offenerBereich === 'mcp')
                 RegisterAutomatisierung.montiereAnsicht(ziel);
@@ -436,6 +437,40 @@ const Einstellungen = (() => {
             }
             result.textContent = 'App-Zugänge aktualisiert.';
         }));
+        ziel.querySelector('[data-red-import]')?.addEventListener('click', () => {
+            const field = ziel.querySelector('[data-red-request]');
+            if (!field)
+                return;
+            try {
+                const raw = field.value.trim();
+                if (raw.length > 256)
+                    throw new Error('Ungültige Anfrage');
+                const d = JSON.parse(raw);
+                if (d?.kind !== 'red-pair' || d.version !== 1 || !Array.from(app.options).some(o => o.value === d.app) || typeof d.challenge !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(d.challenge))
+                    throw new Error('Ungültige Anfrage');
+                app.value = d.app;
+                challenge.value = d.challenge;
+                field.value = '';
+                result.textContent = 'Anfrage übernommen. Vergleiche App und Challenge mit dem Zielgerät, bevor du freigibst.';
+            }
+            catch {
+                result.textContent = 'Ungültige Kopplungsanfrage.';
+            }
+        });
+        ziel.querySelector('[data-red-approve]')?.addEventListener('click', () => {
+            const selected = app.value, proof = challenge.value.trim();
+            if (!/^[A-Za-z0-9_-]{43}$/.test(proof)) {
+                result.textContent = 'Gültige Challenge erforderlich.';
+                return;
+            }
+            if (!window.confirm('Anmeldung für ' + selected.toUpperCase() + ' mit Challenge ' + proof + ' freigeben? Nur bei Übereinstimmung mit dem eigenen Zielgerät bestätigen.'))
+                return;
+            void run(async () => {
+                await request('approve-login', { app: selected, challenge: proof });
+                challenge.value = '';
+                result.textContent = '5 Minuten freigegeben. Anmeldung auf dem Zielgerät abschliessen.';
+            });
+        });
         ziel.querySelector('[data-red-pair]')?.addEventListener('click', () => {
             if (!/^[A-Za-z0-9_-]{43}$/.test(challenge.value.trim())) {
                 result.textContent = 'Die Ziel-App muss zuerst eine gültige SHA-256-Challenge erzeugen.';
@@ -460,6 +495,74 @@ const Einstellungen = (() => {
                 list.replaceChildren();
             });
         });
+    };
+    const bindeRedShare = (ziel) => {
+        const source = ziel.querySelector('[data-share-source]');
+        const target = ziel.querySelector('[data-share-target]');
+        const channel = ziel.querySelector('[data-share-channel]');
+        const list = ziel.querySelector('[data-share-items]');
+        const status = ziel.querySelector('[data-share-status]');
+        if (!source || !target || !channel || !list || !status)
+            return;
+        let busy = false;
+        const request = async (path, payload) => {
+            const w = typeof Wolke === 'undefined' ? null : Wolke;
+            const origin = w?.adresse(), token = w?.token();
+            if (!origin || !token || !w?.serverAdressePruefen(origin))
+                throw new Error('Kein angemeldeter HTTPS-Server');
+            const r = await fetch(origin + '/red-share/v1/' + path, {
+                method: payload ? 'POST' : 'GET', headers: { Authorization: 'Bearer ' + token, ...(payload ? { 'Content-Type': 'application/json' } : {}) },
+                ...(payload ? { body: JSON.stringify(payload) } : {}), credentials: 'omit', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(8000)
+            });
+            if (!r.ok)
+                throw new Error('HTTP ' + r.status);
+            return r.json();
+        };
+        const refresh = async () => {
+            const data = await request('grants');
+            if (data?.version !== 1 || !Array.isArray(data.grants))
+                throw new Error('Ungültige Antwort');
+            list.replaceChildren();
+            for (const g of data.grants) {
+                if (typeof g.source !== 'string' || typeof g.target !== 'string' || typeof g.channel !== 'string' || !Number.isFinite(g.expires))
+                    continue;
+                const li = document.createElement('li'), button = document.createElement('button');
+                button.className = 'ez-knopf';
+                button.textContent = g.source.toUpperCase() + ' → ' + g.target.toUpperCase() + ' · ' + g.channel + ' · bis ' + new Date(g.expires).toLocaleDateString('de-CH');
+                button.addEventListener('click', () => { source.value = g.source; target.value = g.target; channel.value = g.channel; });
+                li.append(button);
+                list.append(li);
+            }
+            status.textContent = data.grants.length ? 'Freigaben aktualisiert.' : 'Keine aktiven Freigaben.';
+        };
+        const run = async (fn) => {
+            if (busy)
+                return;
+            busy = true;
+            status.textContent = 'Anfrage läuft …';
+            try {
+                await fn();
+            }
+            catch {
+                status.textContent = 'Anfrage fehlgeschlagen. Anmeldung und Server prüfen.';
+            }
+            finally {
+                busy = false;
+            }
+        };
+        ziel.querySelector('[data-share-list]')?.addEventListener('click', () => void run(refresh));
+        const change = (revoke) => {
+            const payload = { source: source.value, target: target.value, channel: channel.value.trim() };
+            if (!payload.source || !payload.target || payload.source === payload.target || !/^[a-z][a-z0-9_-]{0,31}$/.test(payload.channel)) {
+                status.textContent = 'Zwei verschiedene Apps und gültigen Kanal wählen.';
+                return;
+            }
+            if (!window.confirm(payload.source.toUpperCase() + ' → ' + payload.target.toUpperCase() + ' · ' + payload.channel + (revoke ? ': Freigabe widerrufen und wartende Nachrichten löschen?' : ': Datenkanal 7 Tage freigeben?')))
+                return;
+            void run(async () => { await request(revoke ? 'revoke' : 'grant', payload); await refresh(); });
+        };
+        ziel.querySelector('[data-share-grant]')?.addEventListener('click', () => change(false));
+        ziel.querySelector('[data-share-revoke]')?.addEventListener('click', () => change(true));
     };
     const bindeHomeServer = (ziel) => {
         const button = ziel.querySelector('[data-home-refresh]');
@@ -515,7 +618,7 @@ const Einstellungen = (() => {
         });
     };
     const inhalt = (b) => ({
-        'home-server': () => kopf('RED Home Server', 'Private Infrastruktur und Diagnose') + '<div class="ez-karte"><button class="ez-knopf" data-home-refresh>Serverstatus abrufen</button><p data-home-status role="status">Verbinde zuerst dein Gerät mit dem privaten Server.</p><dl data-home-metrics></dl></div><div class="ez-karte"><h3>RED ID · App-Verbindungen</h3><p>Nur autorisierte Zugänge, keine Aussage über installierte oder online befindliche Apps.</p><button class="ez-knopf" data-red-list>App-Zugänge anzeigen</button><ul data-red-apps></ul><label>RED-App <select data-red-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Challenge der Ziel-App <input type="text" data-red-challenge autocomplete="off" spellcheck="false" maxlength="43"></label><button class="ez-knopf" data-red-pair>Kopplung freigeben</button><button class="ez-knopf" data-red-revoke>App-Zugänge widerrufen</button><p data-red-result role="status"></p><pre data-red-code style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></div>',
+        'home-server': () => kopf('RED Home Server', 'Private Infrastruktur und Diagnose') + '<div class="ez-karte"><button class="ez-knopf" data-home-refresh>Serverstatus abrufen</button><p data-home-status role="status">Verbinde zuerst dein Gerät mit dem privaten Server.</p><dl data-home-metrics></dl></div><div class="ez-karte"><h3>RED ID · App-Verbindungen</h3><p>Nur autorisierte Zugänge, keine Aussage über installierte oder online befindliche Apps.</p><button class="ez-knopf" data-red-list>App-Zugänge anzeigen</button><ul data-red-apps></ul><label>RED-App <select data-red-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Challenge der Ziel-App <input type="text" data-red-challenge autocomplete="off" spellcheck="false" maxlength="43"></label><label>Kopplungsanfrage (JSON aus der Ziel-App) <input data-red-request type="text" maxlength="256" autocomplete="off" spellcheck="false"></label><button class="ez-knopf" data-red-import>Anfrage übernehmen</button><button class="ez-knopf" data-red-approve>Direkte Anmeldung freigeben</button><button class="ez-knopf" data-red-pair>Kopplung freigeben</button><button class="ez-knopf" data-red-revoke>App-Zugänge widerrufen</button><p data-red-result role="status"></p><pre data-red-code style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></div><div class="ez-karte"><h3>RED Share · Datenfreigaben</h3><p>Nur ausgewählte Apps und Kanäle. Schlüssel separat auf beiden Geräten bestätigen.</p><button class="ez-knopf" data-share-list>Freigaben abrufen</button><ul data-share-items></ul><label>Sender <select data-share-source><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Empfänger <select data-share-target><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Kanal <input data-share-channel maxlength="32" autocomplete="off" spellcheck="false" placeholder="workout"></label><button class="ez-knopf" data-share-grant>7 Tage freigeben</button><button class="ez-knopf" data-share-revoke>Freigabe widerrufen</button><p data-share-status role="status"></p></div>',
         geraete: () => kopf('iPhone und Windows', 'Geräte, Sicherungen und freiwilliger Abgleich') + DeviceIntegration.overview(),
         konto: () => {
             const w = globalThis.Wolke;
