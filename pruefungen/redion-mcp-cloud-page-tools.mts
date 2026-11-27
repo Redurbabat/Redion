@@ -76,7 +76,7 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
     ['workspaceId','blockId','expectedVersion']);
   assert.match(JSON.stringify(updateSchematic?.inputSchema.properties.changes), /"maxItems":20/);
   assert.deepEqual(updateSchematic?.inputSchema.properties.operation,
-    {type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label','set_component_values','rename_label','delete_label','delete_wire','rotate_component','mirror_component','delete_component','move_connected_component','branch_wire','add_busbar']});
+    {type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label','set_component_values','rename_label','delete_label','delete_wire','rotate_component','mirror_component','delete_component','move_connected_component','branch_wire','add_busbar','normalize_wire_points']});
   assert.deepEqual(updateSchematic?.inputSchema.properties.rotation,
     {type:'integer',enum:[0,90,180,270]});
   assert.deepEqual(updateSchematic?.inputSchema.properties.dryRun,{type:'boolean',enum:[true]});
@@ -562,4 +562,33 @@ test('Cloud MCP: geometrische Prüfung identifiziert fehlerhafte Leitungsenden o
   const overlap={...base,leitungen:[{id:'a',punkte:[{x:10,y:20},{x:100,y:20}]},{id:'b',punkte:[{x:30,y:20},{x:120,y:20}]}]};
   assert.equal(auditWiring(overlap).hintCount,2);
   assert.equal(auditWiring(overlap).errorCount,0);
+});
+
+
+test('Cloud MCP: doppelte Leitungspunkte entfernen und Reparaturvorschlag melden',async()=>{
+  const {auditWiring}=await import('../server/mcp/schematic-test.ts');
+  const base={art:'stromlauf-aufgeloest',breite:800,hoehe:700,
+    teile:[] as any[],leitungen:[] as any[],texte:[] as any[],
+    ebenen:[{id:'plan',name:'Plan',farbe:'var(--text)',sichtbar:true}]};
+  const invoke=(raw:unknown,operation:string,params:Record<string,unknown>)=>
+    editSchematic(raw,{operation,...params}).plan as typeof base;
+  let plan=base;
+  for(const [componentId,x,y] of [['A',100,100],['B',300,100],['C',200,240]])
+    plan=invoke(plan,'add_component',{componentId,symbolId:'bp-sonnerie',x,y});
+  plan=invoke(plan,'connect_terminals',{wireId:'W',fromComponentId:'A',fromTerminal:'X1',toComponentId:'B',toTerminal:'X1'});
+  plan=invoke(plan,'branch_wire',{wireId:'T',targetWireId:'W',fromComponentId:'C',fromTerminal:'X1',x:230,y:100});
+  const damaged=structuredClone(plan);
+  damaged.leitungen[0].punkte.splice(1,0,{...damaged.leitungen[0].punkte[0]});
+  const original=structuredClone(damaged);
+  const report=auditWiring(damaged);
+  assert.deepEqual(report.repairProposals,[{operation:'normalize_wire_points',wireId:'W',requiresPreview:true}]);
+  const cleaned=invoke(damaged,'normalize_wire_points',{wireId:'W'});
+  assert.deepEqual(cleaned,plan);
+  assert.deepEqual(damaged,original);
+  assert.equal(auditWiring(cleaned).repairProposals.length,0);
+  assert.throws(()=>invoke(cleaned,'normalize_wire_points',{wireId:'W'}),/doppelten Punkte/);
+  const collapsed=structuredClone(damaged);
+  collapsed.leitungen[0].punkte=[{x:130,y:100},{x:130,y:100}];
+  assert.throws(()=>invoke(collapsed,'normalize_wire_points',{wireId:'W'}),/einzelnen Punkt/);
+  assert.throws(()=>invoke(damaged,'normalize_wire_points',{wireId:'missing'}));
 });
