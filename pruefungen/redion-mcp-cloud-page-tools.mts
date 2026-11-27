@@ -76,7 +76,7 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
     ['workspaceId','blockId','expectedVersion']);
   assert.match(JSON.stringify(updateSchematic?.inputSchema.properties.changes), /"maxItems":20/);
   assert.deepEqual(updateSchematic?.inputSchema.properties.operation,
-    {type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label','set_component_values','rename_label','delete_label','delete_wire','rotate_component','mirror_component','delete_component','move_connected_component','branch_wire']});
+    {type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label','set_component_values','rename_label','delete_label','delete_wire','rotate_component','mirror_component','delete_component','move_connected_component','branch_wire','add_busbar']});
   assert.deepEqual(updateSchematic?.inputSchema.properties.rotation,
     {type:'integer',enum:[0,90,180,270]});
   assert.equal(updateSchematic?.annotations?.readOnlyHint,false);
@@ -472,4 +472,29 @@ test('Cloud MCP: gezielter T-Abzweig auf einer vorhandenen Leitung',()=>{
   const blocked={...trunk,leitungen:[...trunk.leitungen,{id:'W3',ebene:'aufgabe',punkte:[{x:230,y:0},{x:230,y:100}]}]};
   assert.throws(()=>invoke(blocked,'branch_wire',params));
   assert.deepEqual(trunk,snapshot);
+});
+
+
+test('Cloud MCP: isolierte native Stromschienen und gezielter Anschluss',()=>{
+  const base={art:'stromlauf-aufgeloest',breite:800,hoehe:700,
+    teile:[] as any[],leitungen:[] as any[],texte:[] as any[],
+    ebenen:[{id:'plan',name:'Plan',farbe:'var(--text)',sichtbar:true}]};
+  const invoke=(raw:unknown,operation:string,params:Record<string,unknown>)=>
+    editSchematic(raw,{operation,...params}).plan as typeof base;
+  const params={wireId:'L',conductor:'L1',x:40,y:100,endX:760,endY:100};
+  const rail=invoke(base,'add_busbar',params);
+  assert.deepEqual(rail.leitungen,[{id:'L',punkte:[{x:40,y:100},{x:760,y:100}],ebene:'plan',schiene:'L1'}]);
+  assert.deepEqual(base.leitungen,[]);
+  let all=rail;
+  for(const [i,conductor] of ['L2','L3','N','PE'].entries())
+    all=invoke(all,'add_busbar',{...params,wireId:'rail'+i,conductor,y:120+i*20,endY:120+i*20});
+  assert.equal(all.leitungen.length,5);
+  for(const changes of [{wireId:'L'},{conductor:'X'},{endY:120},{endX:50},{endX:810},{y:105},{x:200,y:0,endX:200,endY:200}])
+    assert.throws(()=>invoke(rail,'add_busbar',{...params,wireId:'new',...changes}));
+  const withPart=invoke(rail,'add_component',{componentId:'A',symbolId:'bp-sonnerie',x:200,y:240});
+  assert.throws(()=>invoke(withPart,'add_busbar',{...params,wireId:'bad',y:240,endY:240}),/Klemme/);
+  const attached=invoke(withPart,'branch_wire',{wireId:'B',targetWireId:'L',fromComponentId:'A',fromTerminal:'X1',x:230,y:100});
+  assert.deepEqual(attached.leitungen[0],rail.leitungen[0]);
+  assert.deepEqual(attached.leitungen[1].punkte,[{x:230,y:240},{x:230,y:100}]);
+  assert.equal(withPart.leitungen.length,1);
 });
