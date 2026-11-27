@@ -82,7 +82,7 @@ test('V07-Connector: JSON-Datei ist deterministisch und ohne Kontodaten',()=>{
 test('V07-Connector: identische Werkzeuglisten und read-only Scope erkennen',()=>{
   const contract=makeConnectorContract();
   assert.deepEqual(compareConnectorContract(contract),{
-    matches:true,scope:'read-write',expectedCount:32,actualCount:32,
+    matches:true,scope:'read-write',expectedCount:33,actualCount:33,
     missing:[],unexpected:[],changed:[]});
   const tools=visibleCloudTools(principal(false));
   assert.equal(compareConnectorContract({jsonrpc:'2.0',id:1,result:{tools}},false).matches,true);
