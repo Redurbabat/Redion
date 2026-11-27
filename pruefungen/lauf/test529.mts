@@ -447,7 +447,43 @@ try {
     JSON.stringify(runde.nachZip), JSON.stringify(runde.vorher));
 
   /* ---------------------------------------------------------------------- */
-  console.log('\n15 · Und nichts ist dabei kaputtgegangen');
+  console.log('\n15 · Mobile Mindmap: vollständige Übersicht und Zweifinger-Zoom');
+  await page.setViewportSize({width:390,height:844});
+  await page.evaluate(async () => {
+    const seite = Store.addPage(null, {text:'Mobile Mindmap'});
+    const knoten = [{id:'root',text:'Einfamilienhaus',eltern:null as string|null,seite:'rechts'}];
+    for(let i=0;i<6;i++){
+      knoten.push({id:'a'+i,text:'Hauptthema '+i,eltern:'root',seite:i%2?'links':'rechts'});
+      for(let j=0;j<9;j++)knoten.push({id:'b'+i+'-'+j,text:'Unterthema '+i+' / '+j,eltern:'a'+i,seite:i%2?'links':'rechts'});
+    }
+    Store.addBlock(seite.id,'mindmap',{karte:{knoten,verbindungen:[],aufbau:'karte'},herkunft:'ki'});
+    await Store.flush();
+    App.oeffne(seite.id);
+  });
+  await page.waitForSelector('.gk-kn[data-k="root"]');
+  await page.waitForTimeout(300);
+  const mobil=await page.evaluate(()=>{
+    const b=document.querySelector<HTMLElement>('.gk-buehne')!;
+    const r=b.getBoundingClientRect();
+    const kn=[...b.querySelectorAll<HTMLElement>('.gk-kn')];
+    const voll=kn.every(k=>{const q=k.getBoundingClientRect();return q.left>=r.left-2&&q.right<=r.right+2&&q.top>=r.top-2&&q.bottom<=r.bottom+2});
+    const leiste=document.querySelector<HTMLElement>('.gk-leiste')!;
+    const blk=b.closest('.blk')!;
+    const vorher=parseFloat(document.querySelector('.gk-massstab')!.textContent!);
+    const zeiger=(typ:string,id:number,x:number,y:number)=>b.dispatchEvent(new PointerEvent(typ,{bubbles:true,pointerId:id,pointerType:'touch',clientX:r.left+x,clientY:r.top+y,button:0}));
+    zeiger('pointerdown',1,20,40); zeiger('pointerdown',2,100,40);
+    zeiger('pointermove',2,180,40);
+    zeiger('pointerup',2,180,40); zeiger('pointerup',1,20,40);
+    const nachher=parseFloat(document.querySelector('.gk-massstab')!.textContent!);
+    return {voll,anzahl:kn.length,einzeilig:getComputedStyle(leiste).flexWrap==='nowrap',streifen:getComputedStyle(blk,'::before').content,vorher,nachher};
+  });
+  gleich('61 Knoten sichtbar und vollständig eingepasst',mobil.anzahl,61);
+  pr('Alle Knoten passen in die Bühne',mobil.voll,JSON.stringify(mobil));
+  pr('Werkzeugleiste bleibt einzeilig',mobil.einzeilig);
+  gleich('KI-Herkunftsstreifen bei ungewählter Mindmap verborgen',mobil.streifen,'none');
+  pr('Zwei Zeiger vergrössern den Zoom',mobil.nachher>mobil.vorher,JSON.stringify(mobil));
+
+  console.log('\n16 · Und nichts ist dabei kaputtgegangen');
   pr('Keine Seitenfehler', errors.length === 0, errors.join(' | '));
 
 } finally {
