@@ -24,7 +24,7 @@ test('Encrypted offline backup restores SQLite and blobs, rejects tampering and 
   try{assert.equal((await copy.store.ablage.hole('konten',{id:'backup-owner'}))?.id,'backup-owner');assert.equal(new TextDecoder().decode(await copy.blobs.hole('sample')??new Uint8Array()),'private backup attachment');}
   finally{copy.close();}
   await assert.rejects(restoreOfflineBackup(dest,restored,key));
-  const encrypted=await readFile(join(dest,'000001.enc'));encrypted[0]^=1;await writeFile(join(dest,'000001.enc'),encrypted);
+  const encrypted=await readFile(join(dest,'000001.enc'));encrypted[0]=encrypted[0]!^1;await writeFile(join(dest,'000001.enc'),encrypted);
   await assert.rejects(restoreOfflineBackup(dest,bad,key));await assert.rejects(access(bad));
  }finally{await rm(root,{recursive:true,force:true});}
 });

@@ -17,7 +17,7 @@ test('RED Vault encrypts chunks, rejects wrong keys and authenticated tampering'
   assert.deepEqual(await (await openHomeBlobs(root,key)).hole('attachment'),bytes);
   await assert.rejects(openHomeBlobs(root));await assert.rejects(openHomeBlobs(root,randomBytes(32)));
   await writeFile(second,encoded);await assert.rejects(vault.hole('another'));
-  encoded[encoded.length-1]^=1;await writeFile(path,encoded);await assert.rejects(vault.hole('attachment'));
+  encoded[encoded.length-1]=encoded[encoded.length-1]!^1;await writeFile(path,encoded);await assert.rejects(vault.hole('attachment'));
  }finally{await rm(root,{recursive:true,force:true});}
 });
 test('RED Vault will not reinterpret or erase an existing plaintext volume',async()=>{

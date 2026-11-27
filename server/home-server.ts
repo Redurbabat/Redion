@@ -109,7 +109,7 @@ async function main(){
   if(!origin)throw new Error('Set REDION_ORIGIN first');
   const enableMcp=process.env.REDION_ENABLE_MCP==='1';
   const vaultKey=process.env.REDION_VAULT_KEY_FILE?await readFile(process.env.REDION_VAULT_KEY_FILE):undefined;
-  const service=await openHomeServer({dataDir,origin,enableMcp,vaultKey});
+  const service=await openHomeServer({dataDir,origin,enableMcp,...(vaultKey?{vaultKey}:{})});
   const command=process.argv[2];
   if(command==='red-id-issue'||command==='red-id-revoke'){
     try{

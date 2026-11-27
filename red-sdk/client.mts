@@ -36,12 +36,12 @@ export function createRedIdV2Client(origin:string,app:RedAppId,store:RedSecureSt
   const url=new URL(origin);
   if(url.protocol!=='https:'||url.origin!==origin)throw new Error('RED ID requires exact HTTPS origin');
   let queue:Promise<unknown>=Promise.resolve();
-  const serial=<T>(fn:()=>Promise<T>):Promise<T>=>{const pending=queue.then(fn);queue=pending.catch(()=>undefined);return pending;};
+  const serial=<T,>(fn:()=>Promise<T>):Promise<T>=>{const pending=queue.then(fn);queue=pending.catch(()=>undefined);return pending;};
   const request=async(path:string,method:string,input?:object,token?:string)=>{
     const headers:Record<string,string>={};
     if(input)headers['Content-Type']='application/json';
     if(token)headers.Authorization='Bearer '+token;
-    const res=await fetcher(origin+'/red-id/v2/'+path,{method,headers,body:input?JSON.stringify(input):undefined,credentials:'omit',redirect:'error',cache:'no-store'});
+    const res=await fetcher(origin+'/red-id/v2/'+path,{method,headers,...(input?{body:JSON.stringify(input)}:{}),credentials:'omit',redirect:'error',cache:'no-store'});
     if(!res.ok)throw new RedIdError(res.status);
     return res.json();
   };

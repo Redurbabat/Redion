@@ -1,7 +1,7 @@
 import {createCipheriv,createDecipheriv,randomBytes} from 'node:crypto';
 import {createReadStream,createWriteStream} from 'node:fs';
 import {mkdir,readFile,readdir,lstat,realpath,writeFile,rm} from 'node:fs/promises';
-import {dirname,join,resolve,relative,isAbsolute} from 'node:path';
+import {dirname,basename,join,resolve,relative,isAbsolute,sep} from 'node:path';
 import {pipeline} from 'node:stream/promises';
 import {DatabaseSync} from 'node:sqlite';
 import {pathToFileURL} from 'node:url';
@@ -14,12 +14,12 @@ const validPath=(p:unknown):p is string=>typeof p==='string'&&(p==='redion.sqlit
 const validHex=(v:unknown,len:number):v is string=>typeof v==='string'&&v.length===len&&/^[a-f0-9]+$/.test(v);
 const keyBytes=(key:Uint8Array)=>{if(key.byteLength!==32)throw Error('Backup key must contain 32 random bytes');return Buffer.from(key);};
 const aad=(id:string,path:string)=>Buffer.from('redion-backup-v1:'+id+':'+path);
-const nested=(root:string,target:string)=>{const rel=relative(root,target);return rel===''||(!rel.startsWith('..')&&!isAbsolute(rel));};
+const nested=(root:string,target:string)=>{const rel=relative(root,target);return rel===''||(rel!=='..'&&!rel.startsWith('..'+sep)&&!isAbsolute(rel));};
 async function regular(path:string){
   const st=await lstat(path);if(!st.isFile()||st.isSymbolicLink())throw Error('Backup requires regular files');return st;
 }
 async function fresh(source:string,destination:string){
-  const root=await realpath(source),target=join(await realpath(dirname(resolve(destination))),resolve(destination).split(/[\\/]/).pop()!);
+  const root=await realpath(source),target=join(await realpath(dirname(resolve(destination))),basename(resolve(destination)));
   if(nested(root,target)||nested(target,root))throw Error('Source and destination must be separate');
   await mkdir(target,{mode:0o700}); // Exclusive: existing destination is never overwritten.
   return {root,target};
