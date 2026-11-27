@@ -71,3 +71,25 @@ RED-YT PR #1 ist der zweite getrennte Apple-Pilot. Der native UIKit-
 Menüeintrag öffnet die private RED-ID-SwiftUI-Seite; das YouTube-Konto und
 die WebKit-Daten bleiben getrennt. Kein Merge, kein Deployment.
 https://github.com/Redurbabat/RED-YT/pull/1
+
+## Browser-Piloten: SDK 0.5.0
+
+Die folgenden unabhängigen Draft-PRs enthalten eine opt-in RED-ID-Oberfläche
+mit dem gepinnten RAM-only Browser-Client (`350f0434`). Keine dauerhafte
+Token-Ablage, keine Änderung an lokalen App-Daten, kein RED Share.
+
+| App | Draft-PR |
+|---|---|
+| RED FIT | [#18](https://github.com/Redurbabat/Red-Fit/pull/18) |
+| RED KURD | [#9](https://github.com/Redurbabat/RED-KURD/pull/9) |
+| STRAN | [#134](https://github.com/Redurbabat/STRAN/pull/134) |
+| BABAT RED | [#569](https://github.com/Redurbabat/BABAT-RED/pull/569) |
+| RED LOOP | [#34](https://github.com/Redurbabat/RED-Loop/pull/34) |
+
+Nur ausdrücklich konfigurierte HTTPS-Web-Ursprünge dürfen die fünf
+Client-Identitätswege nutzen. Keine Owner-Funktionen über diese CORS-Regel.
+RED LOOP behält zusätzlich die bestehende CSP ausser auf der isolierten
+RED-ID-Seite mit einem explizit konfigurierten privaten HTTPS-Origin.
+RED POLY, RED EFZ und RED UHR sind noch nicht angebunden. Die bestehenden
+Apple-Piloten RED BIT und RED YT sind unabhängig davon. Alle PRs offen,
+keine Produktivfreigabe; CI und Geräte-/Netzwerkabnahme erforderlich.
