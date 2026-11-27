@@ -279,3 +279,8 @@ privaten Schlüssel. Ohne diesen Vergleich keine sichere Authentisierung.
 Die Apps müssen den Schlüssel in ihrem nativen Credential Store ablegen.
 `createScopedRedStore` trennt RED-ID-Zugangsdaten nach Origin und App;
 die native Keychain-/Keystore-Bridge muss die jeweilige App bereitstellen.
+
+In RED ION → Einstellungen → RED Home Server lassen sich jetzt JSON-
+Kopplungsanfragen übernehmen, direkte Anmeldungen bestätigen sowie
+RED-Share-Kanäle einzeln ansehen, freigeben und widerrufen. Die Oberfläche
+verarbeitet keine privaten Schlüssel. QR-Kamera/Renderer sind noch offen.
