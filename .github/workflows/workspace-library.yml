@@ -6,6 +6,7 @@ on:
       - 'chatgpt/redion-workspace-skills-audit-20261107'
     paths:
       - '.github/workflows/workspace-library.yml'
+      - '.github/workflows/affine-integration.yml'
       - 'src/bereiche/wissen/bibliothek.ts'
       - 'quell/bereiche/wissen/bibliothek.js'
       - 'pruefungen/workspace-library.mts'
