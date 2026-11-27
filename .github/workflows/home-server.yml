@@ -10,6 +10,7 @@ on:
       - 'pruefungen/red-vault.test.mts'
       - 'pruefungen/red-backup.test.mts'
       - 'red-sdk/**'
+      - 'pruefungen/red-connect.test.mjs'
       - '.github/workflows/home-server.yml'
   workflow_dispatch:
 permissions:
@@ -24,4 +25,6 @@ jobs:
         with:
           node-version: '24'
       - run: node --test pruefungen/redion-home-server.test.mts pruefungen/redion-home-dashboard.test.mts pruefungen/red-id-v2.test.mts pruefungen/red-vault.test.mts pruefungen/red-backup.test.mts
+      - run: node --test pruefungen/red-connect.test.mjs
+      - run: bash -n deploy/home/backup.sh deploy/home/update.sh
       - run: docker build -f deploy/home/Dockerfile -t redion-home:test .

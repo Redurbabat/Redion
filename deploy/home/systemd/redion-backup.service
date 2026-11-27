@@ -1,0 +1,8 @@
+[Unit]
+Description=RED Home Server encrypted offline backup
+[Service]
+Type=oneshot
+User=redion-maintenance
+EnvironmentFile=/etc/redion/home-backup.env
+WorkingDirectory=/opt/redion/deploy/home
+ExecStart=/opt/redion/deploy/home/backup.sh

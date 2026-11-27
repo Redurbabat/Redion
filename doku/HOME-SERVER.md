@@ -175,3 +175,39 @@ Datenträger behalten. Falls RED Vault genutzt wird, ist zusätzlich dessen
 Schlüssel nötig. Backup-Key nicht auf demselben Datenträger speichern.
 Eine tägliche Ausführung kann später über einen explizit installierten
 systemd-Timer erfolgen; kein Timer/Deployment wurde aktiviert.
+
+## RED Update und RED Connect
+
+`deploy/home/update.sh check` vergleicht die lokale Commit-ID mit GitHub main;
+`stage FULL_MAIN_SHA --approve` baut genau die überprüfte main-Fassung in
+einem separaten Git-Worktree und prüft die private API in einem netzlosen
+Testcontainer. Kein Deployment, keine Veränderung des laufenden Servers.
+Vor einem späteren Wechsel immer Backup und getesteten Restore in eine
+neue Datenablage durchführen, bisheriges Image und bisherige Ablage behalten.
+Automatischer Live-Cutover und Rollback sind erst nach Hardware-Abnahme
+freizugeben; nach neuen Schreibvorgängen nicht auf einen alten Datenstand
+zurückschalten. Die systemd-Beispiele unter deploy/home/systemd müssen
+mit einem vorhandenen, berechtigten Wartungsbenutzer und echten Pfaden
+konfiguriert werden; sie sind nicht installiert.
+
+Privater Fernzugriff: Tailscale Serve (`tailscale serve --bg 8790`) nur im
+Tailnet, mit aktivierter HTTPS-Funktion und restriktiver Tailnet-Zugriffsregel.
+Die angezeigte HTTPS-Adresse exakt als REDION_ORIGIN und in den Apps setzen.
+Kein Funnel, keine Router-Portfreigabe, kein Abschalten der TLS-Prüfung.
+Für den lokalen LAN-Betrieb ist ein Caddyfile-Beispiel enthalten; eigener
+LAN-DNS-Name und auf jedem Gerät vertrauenswürdige lokale CA erforderlich.
+`node deploy/home/connect-check.mjs` prüft die konfigurierte HTTPS-Adresse
+und ob das Dashboard ohne Geräte-Token gesperrt ist. Die Tailscale- und
+LAN-Optionen sind nicht automatisch aktiviert. Ein rein privater Tailnet-
+Endpunkt ist nicht automatisch von einem externen Cloud-MCP-Client erreichbar.
+
+## RED Ecosystem – App-Verwaltung
+
+RED ION → Einstellungen → RED Home Server zeigt autorisierte App-Zugänge
+für alle elf Kennungen. Eine RED ION Gerätesitzung kann eine Challenge der
+Ziel-App freigeben und einen kurzlebigen Kopplungscode ausgeben; der Verifier
+bleibt auf der Ziel-App. Widerruf löscht v1/v2-Zugänge und offene Kopplungen
+für genau die ausgewählte App. Die API liefert keine Dokumente an RED-ID-
+Tokens. Die anderen Repositories benötigen den SDK-Client, native sichere
+Speicheradapter, eine Kopplungsoberfläche und eigene Tests; sie sind nicht
+Teil dieses PRs. Die Code-Anzeige ist manuell, nicht als QR-Code umgesetzt.

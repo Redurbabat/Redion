@@ -307,7 +307,7 @@ const Einstellungen = (() => {
       o.querySelectorAll<HTMLElement>('.einst-nav button').forEach(b =>
         b.classList.toggle('on', b.dataset.b === offenerBereich));
       binde(o);
-      if (ziel && offenerBereich === 'home-server') bindeHomeServer(ziel);
+      if (ziel && offenerBereich === 'home-server') { bindeHomeServer(ziel); bindeRedApps(ziel); }
       if (ziel && offenerBereich === 'mcp') RegisterAutomatisierung.montiereAnsicht(ziel);
     };
     zeichne();
@@ -565,6 +565,66 @@ const Einstellungen = (() => {
   /* ========================================================================
    * DIE EINZELNEN BEREICHE
    * ======================================================================*/
+  const bindeRedApps = (ziel: HTMLElement): void => {
+    const app = ziel.querySelector<HTMLSelectElement>('[data-red-app]');
+    const challenge = ziel.querySelector<HTMLInputElement>('[data-red-challenge]');
+    const list = ziel.querySelector<HTMLElement>('[data-red-apps]');
+    const result = ziel.querySelector<HTMLElement>('[data-red-result]');
+    const code = ziel.querySelector<HTMLElement>('[data-red-code]');
+    if (!app || !challenge || !list || !result || !code) return;
+    let busy = false;
+    let clearCode: ReturnType<typeof setTimeout> | undefined;
+    const clear = () => { if (clearCode !== undefined) clearTimeout(clearCode); code.textContent = ''; };
+    const request = async (path: string, payload?: object) => {
+      const w = typeof Wolke === 'undefined' ? null : Wolke;
+      const origin = w?.adresse(), token = w?.token();
+      if (!origin || !token || !w?.serverAdressePruefen(origin)) throw new Error('Kein angemeldeter HTTPS-Server');
+      const response = await fetch(origin + '/red-id/v2/' + path, {
+        method: payload ? 'POST' : 'GET', headers: { Authorization: 'Bearer ' + token, ...(payload ? { 'Content-Type': 'application/json' } : {}) },
+        ...(payload ? { body: JSON.stringify(payload) } : {}), credentials: 'omit', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(8000)
+      });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return response.json();
+    };
+    const run = async (action: () => Promise<void>) => {
+      if (busy) return;
+      busy = true; clear(); result.textContent = 'Anfrage läuft …';
+      try { await action(); } catch { result.textContent = 'Anfrage fehlgeschlagen. Prüfe die Anmeldung und Serverversion.'; }
+      finally { busy = false; }
+    };
+    ziel.querySelector('[data-red-list]')?.addEventListener('click', () => void run(async () => {
+      list.replaceChildren();
+      const data = await request('apps');
+      if (data.version !== 2 || !Array.isArray(data.apps)) throw new Error('Ungültige Antwort');
+      for (const entry of data.apps) {
+        if (typeof entry.app !== 'string' || !Number.isSafeInteger(entry.v1Credentials) || !Number.isSafeInteger(entry.v2Sessions)) continue;
+        const li = document.createElement('li');
+        li.textContent = entry.app.toUpperCase() + ': ' + (entry.v1Credentials + entry.v2Sessions) + ' Zugänge' + (entry.pendingPair ? ' · Kopplung offen' : '');
+        list.append(li);
+      }
+      result.textContent = 'App-Zugänge aktualisiert.';
+    }));
+    ziel.querySelector('[data-red-pair]')?.addEventListener('click', () => {
+      if (!/^[A-Za-z0-9_-]{43}$/.test(challenge.value.trim())) { result.textContent = 'Die Ziel-App muss zuerst eine gültige SHA-256-Challenge erzeugen.'; return; }
+      void run(async () => {
+        const data = await request('pair', { app: app.value, challenge: challenge.value.trim() });
+        if (data.app !== app.value || !/^redpair_[a-f0-9]{64}$/.test(data.code)) throw new Error('Ungültige Antwort');
+        challenge.value = '';
+        code.textContent = data.code;
+        clearCode = setTimeout(clear, 300000);
+        result.textContent = 'Einmalcode · 5 Minuten gültig. Nur in die Ziel-App übertragen; nicht teilen.';
+      });
+    });
+    ziel.querySelector('[data-red-revoke]')?.addEventListener('click', () => {
+      if (!window.confirm('Alle RED-ID-Zugänge für ' + app.value.toUpperCase() + ' widerrufen?')) return;
+      void run(async () => {
+        await request('revoke', { app: app.value });
+        result.textContent = 'App-Zugänge widerrufen. Liste erneut abrufen.';
+        list.replaceChildren();
+      });
+    });
+  };
+
   const bindeHomeServer = (ziel: HTMLElement): void => {
     const button = ziel.querySelector<HTMLButtonElement>('[data-home-refresh]');
     const status = ziel.querySelector<HTMLElement>('[data-home-status]');
@@ -612,7 +672,7 @@ const Einstellungen = (() => {
   };
 
   const inhalt = (b: any): string => (({
-    'home-server': () => kopf('RED Home Server', 'Private Infrastruktur und Diagnose') + '<div class="ez-karte"><button class="ez-knopf" data-home-refresh>Serverstatus abrufen</button><p data-home-status role="status">Verbinde zuerst dein Gerät mit dem privaten Server.</p><dl data-home-metrics></dl></div>',
+    'home-server': () => kopf('RED Home Server', 'Private Infrastruktur und Diagnose') + '<div class="ez-karte"><button class="ez-knopf" data-home-refresh>Serverstatus abrufen</button><p data-home-status role="status">Verbinde zuerst dein Gerät mit dem privaten Server.</p><dl data-home-metrics></dl></div><div class="ez-karte"><h3>RED ID · App-Verbindungen</h3><p>Nur autorisierte Zugänge, keine Aussage über installierte oder online befindliche Apps.</p><button class="ez-knopf" data-red-list>App-Zugänge anzeigen</button><ul data-red-apps></ul><label>RED-App <select data-red-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Challenge der Ziel-App <input type="text" data-red-challenge autocomplete="off" spellcheck="false" maxlength="43"></label><button class="ez-knopf" data-red-pair>Kopplung freigeben</button><button class="ez-knopf" data-red-revoke>App-Zugänge widerrufen</button><p data-red-result role="status"></p><pre data-red-code style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></div>',
     geraete: () => kopf('iPhone und Windows', 'Geräte, Sicherungen und freiwilliger Abgleich') + DeviceIntegration.overview(),
     /* HIER STAND DAS GEGENTEIL DESSEN, WAS GEBAUT IST (E270).
        „Diese App kennt kein Konto und keinen Server", „es gibt keine
