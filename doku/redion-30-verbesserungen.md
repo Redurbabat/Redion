@@ -70,3 +70,39 @@ Weitere Arbeitspakete liegen in eigenen Worktrees. Schema-6-Vorlage,
 Mindmap-Minimap, Pencil-Neigungsdaten, Lernfortschritt, Sync-Nachlauf und
 Windows-Build-Wiederverwendung sind begonnen. Ihr Status bleibt bis zum
 vollständigen Test und separaten PR Teilimplementierung.
+
+## Ziel 26 – Windows-Build-Artefakte wiederverwenden
+
+Branch `feat/master26-test-build-reuse` baut die Windows-Brücke, das
+Offline-Webpaket und das MCP-Paket vor den Tests jeweils einmal.
+Die normalen npm-Befehle bereiten ihre Artefakte weiterhin selbst vor.
+Die Windows-CI verwendet zusätzliche `:prepared`-Befehle und paketiert
+anschliessend dieselben geprüften Dateien als NSIS und Portable.
+Alle bisherigen Testdateien bleiben erhalten. Der Desktop-Test läuft
+innerhalb von `npm --prefix windows test` einmal, der Test der gepackten
+EXE und der abschliessende Web-Paritätsvergleich bleiben im Workflow.
+
+Gemessen am 27.11.2026 im Linux-Workspace, Node 24.22.3. Verglichen wurden
+nur die wiederholten Vorbereitungsbefehle der bisherigen Windows-CI mit
+der einmaligen Vorbereitung, bei bereits installierten Abhängigkeiten.
+Reihenfolge der sechs Läufe war vorher/nachher/nachher/vorher/vorher/nachher.
+Die SHA-256-Abdrücke aller 541 erzeugten Dateien stimmten nach jedem Lauf
+überein. Die Messung umfasst keinen Windows-Installerlauf.
+
+| Vorbereitung | Drei Läufe in Sekunden | Median |
+| --- | --- | --- |
+| Bisherige Wiederholungen | 174.264, 38.548, 20.230 | 38.548 s |
+| Einmalige Vorbereitung | 31.606, 17.468, 4.925 | 17.468 s |
+
+Der Median sank in dieser Messung um 54.7 Prozent. Die Streuung im geteilten
+Workspace ist gross. Die gesamte CI-Laufzeit muss der echte Windows-Job
+bestätigen. Die Befehlsfolge umfasste zuvor fünf Bridge-Emits, drei
+Web-Stagings und drei MCP-Paketbauten, danach je einen.
+
+Lokal bestanden die zehn MCP-/Bildtests, drei Build-Paritätstests und
+25 Windows-Komponententests. Bei den vier MCP-Skripttests bestand der
+plattformunabhängige Test; drei PowerShell-Tests wurden unter Linux
+übersprungen. Der vollständige Windows-Electron-, Installer- und
+PowerShell-Nachweis bleibt bis zum erfolgreichen GitHub-Job offen.
+Die Änderung betrifft die Build-Pipeline und benötigt keine neue
+JavaScript-Generierung der App.
