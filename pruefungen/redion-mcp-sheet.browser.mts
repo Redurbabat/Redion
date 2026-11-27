@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {mkdir} from 'node:fs/promises';
+import {createRequire} from 'node:module';
 import {join} from 'node:path';
 import test from 'node:test';
 import {chromium,webkit} from 'playwright';
@@ -112,5 +113,58 @@ test('Ein MCP-Blatt wird an der Querformatgrenze in zwei native Seiten geteilt',
       await mkdir(output,{recursive:true});
       await page.screenshot({path:join(output,'redion-pr236-a4-mcp-landscape.png'),animations:'disabled'});
     }
+  }finally{await browser.close();}
+});
+
+test('Vom PDF-Import vorbereitete Seite zeigt und bearbeitet MCP-Anmerkungen',async()=>{
+  const require=createRequire(import.meta.url);
+  const {PDFDocument}=require('../quell/fremd/pdf-lib/library.js');
+  const pdf=await PDFDocument.create();
+  const source=pdf.addPage([595,842]);
+  source.drawText('Messprotokoll', {x:56,y:755,size:32});
+  source.drawText('Widerstand, Spannung und Stromstaerke', {x:56,y:700,size:18});
+  const bytes=Array.from(await pdf.save() as Uint8Array);
+  const browser=await chromium.launch();
+  try{
+    const page=await browser.newPage({viewport:{width:1366,height:950},reducedMotion:'reduce',serviceWorkers:'block'});
+    await page.goto(new URL('../index.html',import.meta.url).href);
+    await page.waitForFunction(()=>typeof App!=='undefined'&&!!document.querySelector('#page')?.firstElementChild);
+    const imported=await page.evaluate(async data=>{
+      Store.setMeta('rundgangGesehen',true);
+      Store.setMeta('neuerungenGesehen',1e9);
+      document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung,#rg-neu').forEach(node=>node.remove());
+      const documentPage=Store.addPage(null,{text:'PDF aus MCP-Test',dokumentModus:true});
+      const file=new File([new Uint8Array(data)],'probe.pdf',{type:'application/pdf'});
+      await PdfEinlesen.alsSeiten(file,documentPage.id,{anordnung:'untereinander'});
+      const block=Store.childrenOf(documentPage.id).find((child:{type:string})=>child.type==='pdfseite');
+      return {documentId:documentPage.id,block};
+    },bytes);
+    assert.match(imported.block.suchtext,/Widerstand, Spannung/);
+    const marks=appendSheetMarks(imported.block,[
+      {id:'highlight',kind:'marker',points:[[56,137],[370,137]],color:'#e9ba43',strokeWidth:18},
+      {id:'feedback',kind:'text',text:'Messwerte hier ergänzen',x:56,y:200,width:420,fontSize:22}
+    ]);
+    await page.evaluate(async({imported,marks})=>{
+      Store.updateBlock(imported.block.id,{marken:marks});
+      await Store.flush();
+      App.oeffne(imported.documentId);
+    },{imported,marks});
+    const note=page.locator('.blatt-marken [data-sid="feedback"]');
+    await note.waitFor();
+    const highlight=page.locator('.blatt-marken [data-sid="highlight"]');
+    await highlight.waitFor({state:'attached'});
+    assert.equal(await highlight.getAttribute('stroke-width'),'18');
+    if(output){
+      await mkdir(output,{recursive:true});
+      await page.screenshot({path:join(output,'redion-pr236-pdf-mcp-1366.png'),animations:'disabled'});
+    }
+    const dock=page.locator('.document-pdf-dock');
+    await dock.getByRole('button',{name:'PDF-Werkzeuge',exact:true}).click();
+    await dock.getByRole('button',{name:'Text',exact:true}).click();
+    await note.click();
+    const editor=page.locator('.blatt-schreiber');
+    await editor.fill('Ergänzung geprüft');
+    await editor.press('Escape');
+    await page.waitForFunction(id=>Store.getBlock(id)?.marken?.[1]?.text==='Ergänzung geprüft',imported.block.id);
   }finally{await browser.close();}
 });

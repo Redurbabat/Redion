@@ -519,3 +519,18 @@ Fremde Markentypen werden nur anhand ihrer Kennung und Art ausgewiesen.
 `elementId` und der Blattpunktdifferenz `dx`/`dy`. Bestehende Marken behalten
 ihre Formatierung. Koordinatenfehler, gesperrte oder gruppierte Marken und
 ein neues Ziel ausserhalb des Blatts führen zu keiner Änderung.
+
+## Vorbereitete PDF-Seiten lesen und markieren
+
+`redion_read_visual` akzeptiert die ID eines eingebetteten `pdfseite`-Blocks.
+Die Metadaten nennen Seitenzahl, Seitenformat, Anzeigedrehung und `hasText`.
+`collection: "pdf_text"` liefert den beim nativen Import gespeicherten
+Text in Stücken zu bis zu 500 Unicode-Codepoints. `nextOffset` zählt diese
+Stücke. Seiten ohne gespeicherten Text liefern eine leere Liste.
+
+`collection: "marks"`, `append_marks` und `move_mark` funktionieren auf
+PDF-Seiten mit demselben Koordinatensystem wie bei A4. Die Massangaben und
+Koordinaten beziehen sich auf die Seite vor der zusätzlichen Anzeigedrehung.
+Die Originaldatei und der vorbereitete Text bleiben erhalten.
+Import, Export und OCR stehen weiterhin in der App beziehungsweise in den
+vorhandenen Dateifunktionen zur Verfügung, sofern dort unterstützt.

@@ -116,12 +116,17 @@ export function readSheetMark(value:unknown):Obj {
  return {...base,...Object.fromEntries(fields.filter(key=>Object.hasOwn(mark,key)).map(key=>[key,mark[key]]))};
 }
 
+function markDimensions(block:Obj):{width:number;height:number} {
+ if(block.type==='pdfseite')return {width:num(block.bw,1,10000),height:num(block.bh,1,10000)};
+ return {width:num(block.blattBreite??595.28,1,10000),height:num(block.blattHoehe??841.89,1,10000)};
+}
+
 /** Store marks in the point coordinate system consumed by Marken.schicht. */
 export function appendSheetMarks(block:Obj,input:unknown):Obj[] {
  const existing=block.marken===undefined?[]:block.marken;
  if(!Array.isArray(existing)||(existing.length&&block.raumVersion!==1))
    return fail('Die vorhandenen Zeichenmarken benötigen zuerst die native Koordinatenmigration.');
- const width=num(block.blattBreite??595.28,1,10000),height=num(block.blattHoehe??841.89,1,10000);
+ const {width,height}=markDimensions(block);
  const ids=new Set(existing.map(mark=>mark?.id));
  const added=arr(input,1,40).map(value=>{
    const entry=obj(value,['id','kind','color','points','strokeWidth','text','x','y','width','fontSize','bold']);
@@ -151,7 +156,7 @@ export function appendSheetMarks(block:Obj,input:unknown):Obj[] {
    const breiteFest=num(entry.strokeWidth??(art==='marker'?10:2),0.5,48);
    return {...mark,pts,breite:breiteFest,breiteFest};
  });
- if(existing.length+added.length>500)fail('Zu viele Zeichenmarken auf einem A4-Block.');
+ if(existing.length+added.length>500)fail('Zu viele Zeichenmarken auf einer Seite.');
  return [...existing,...added];
 }
 
@@ -171,7 +176,7 @@ export function moveSheetMark(block:Obj,args:Obj):Obj[] {
  if(!Array.isArray(points)||!points.length||points.length>500||points.some(point=>
    !Array.isArray(point)||point.length!==2||point.some(coord=>typeof coord!=='number'||!Number.isFinite(coord))))
    fail('Ungültige Koordinaten der Zeichenmarke.');
- const width=num(block.blattBreite??595.28,1,10000),height=num(block.blattHoehe??841.89,1,10000);
+ const {width,height}=markDimensions(block);
  const moved:Obj=ink.move({...mark},dx,dy);
  const bounds=ink.bounds(moved);
  if(bounds.x<0||bounds.y<0||bounds.x+bounds.width>width||bounds.y+bounds.height>height)

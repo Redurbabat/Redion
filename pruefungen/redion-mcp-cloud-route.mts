@@ -2386,3 +2386,50 @@ test('Cloud-MCP native visual objects with version protection',async()=>{
  assert.equal(JSON.parse(mismatched.content[0].text).code,'invalid_arguments');
  }finally{f.close();}
 });
+
+test('Cloud-MCP reads prepared PDF text and edits native marks within the page grant',async()=>{
+ const f=await fixture();
+ try{
+  const storage={bereich:'ws_test',tabelle:'blocks',verschluesselt:0,seite:'pdf_parent',version:1,
+    geaendert:'2026-11-23',geloescht:0,vonGeraet:'Test'};
+  const firstText='A'.repeat(499)+'📄';
+  const pdf={type:'pdfseite',text:'',id:'pdf_page',parentId:'pdf_parent',parentTable:'block',
+    nr:2,vonSeiten:3,bw:420,bh:595,gedreht:90,suchtext:firstText+' Stromkreis',raumVersion:1,
+    quelleId:'synthetic_source',bildDateiId:'synthetic_preview'};
+  await f.store.setze('saetze',{...storage,id:'pdf_parent',daten:JSON.stringify({type:'page',content:['pdf_page']})});
+  await f.store.setze('saetze',{...storage,id:pdf.id,daten:JSON.stringify(pdf)});
+  await f.store.setze('saetze',{...storage,id:'detached',daten:JSON.stringify({...pdf,id:'detached'})});
+  const readClient=await f.oauth.register({client_name:'Synthetic PDF reader',
+    redirect_uris:['https://reader.example.test/callback'],grant_types:['authorization_code']});
+  const reader=await f.authorize(false,'owner',readClient),writer=await f.authorize(true);
+  const ref={workspaceId:'ws_test',blockId:'pdf_page'};
+  const call=async(token:string,name:string,args:Record<string,unknown>)=>{
+    const response=await f.rpc(token,'tools/call',{name,arguments:{...ref,...args}});
+    assert.equal(response.status,200);
+    return JSON.parse(response.data.result.content[0].text);
+  };
+  const read=(args:Record<string,unknown>={})=>call(reader.access_token,'redion_read_visual',args);
+  const update=(args:Record<string,unknown>)=>call(writer.access_token,'redion_update_visual',args);
+  assert.deepEqual(await read(),{...ref,documentId:'pdf_parent',type:'pdfseite',version:1,
+    width:420,height:595,rotation:90,pageNumber:2,pageCount:3,hasText:true});
+  assert.equal((await read({blockId:'detached'})).code,'not_found');
+  const text=await read({collection:'pdf_text',limit:1});
+  assert.deepEqual(text.items,[firstText]);
+  assert.equal(text.nextOffset,1);
+  assert.deepEqual((await read({collection:'pdf_text',offset:1,expectedVersion:1})).items,[' Stromkreis']);
+  const mark={id:'highlight',kind:'marker',points:[[30,45],[185,45]],color:'#efb62e'};
+  const append={expectedVersion:1,operation:'append_marks',marks:[mark]};
+  assert.equal((await call(reader.access_token,'redion_update_visual',append)).code,'forbidden');
+  assert.equal((await update({...append,marks:[{...mark,points:[[30,45],[421,45]]}]})).code,'invalid_arguments');
+  assert.equal((await update(append)).version,2);
+  assert.equal((await read({collection:'pdf_text',offset:1,expectedVersion:1})).code,'conflict');
+  const moved=await update({expectedVersion:2,operation:'move_mark',elementId:'highlight',dx:10,dy:15});
+  assert.equal(moved.version,3);
+  assert.deepEqual((await read({collection:'marks'})).items[0].pts,[[40,60],[195,60]]);
+  const saved=await f.store.hole('saetze',{bereich:'ws_test',id:pdf.id});
+  const data=JSON.parse(String(saved?.daten));
+  assert.equal(data.quelleId,pdf.quelleId);
+  assert.equal(data.bildDateiId,pdf.bildDateiId);
+  assert.equal(data.suchtext,pdf.suchtext);
+ }finally{f.close();}
+});

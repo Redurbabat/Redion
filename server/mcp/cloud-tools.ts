@@ -81,13 +81,13 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{...vCreate,shapes:vShapes},required:[...vRequired,'shapes'],additionalProperties:false}},
   {name:'redion_create_sheet',description:'Erstellt ein natives A4-Blatt im Hoch- oder Querformat mit Papier, Seitenzahl und optionalen Text- oder Zeichenmarken. Positionen in Blattpunkten ab der linken oberen Ecke.',
     inputSchema:{type:'object',properties:{...vCreate,paper:{type:'string',enum:papers},pages:{type:'integer',minimum:1,maximum:10},orientation:{type:'string',enum:['portrait','landscape']},marks:vSheetMarks},required:vRequired,additionalProperties:false}},
-  {name:'redion_read_visual',description:'Liest ein eingebettetes Mindmap-, Whiteboard- oder A4-Objekt mit Version. Mit collection, offset oder limit Mindmap-Knoten, Querverbindungen, Whiteboard-Objekte oder A4-Zeichenmarken in Seiten lesen. Für nextOffset dieselbe collection und expectedVersion verwenden.',
+  {name:'redion_read_visual',description:'Liest Mindmaps, Whiteboards, A4-Blätter und PDF-Seiten mit Version. collection, offset und limit paginieren Knoten, Verbindungen, Formen, Zeichenmarken oder gespeicherten PDF-Text. Für nextOffset dieselbe collection und expectedVersion verwenden.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,
-      collection:{type:'string',enum:['nodes','connections','shapes','marks']},
+      collection:{type:'string',enum:['nodes','connections','shapes','marks','pdf_text']},
       offset:{type:'integer',minimum:0,maximum:100000},limit:{type:'integer',minimum:1,maximum:40},
       expectedVersion:{type:'integer',minimum:1}
     },required:['workspaceId','blockId'],additionalProperties:false}},
-  {name:'redion_update_visual',description:'Bearbeitet native Zeichenobjekte mit Versionsprüfung. Mindmap ersetzen, Knoten ergänzen, verschieben oder gestalten und Querverbindungen ändern. Whiteboard-Formen und Gruppen bearbeiten. A4-Papier ändern und Zeichenmarken ergänzen oder verschieben.',
+  {name:'redion_update_visual',description:'Bearbeitet native Zeichenobjekte mit Versionsprüfung. Mindmap-Knoten und Querverbindungen, Whiteboard-Formen und Gruppen, A4-Papier und Zeichenmarken auf A4-Blättern oder PDF-Seiten.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},operation:{type:'string',enum:['replace_mindmap',...mindmapEditOperations,'append_shapes','move_shape','resize_shape','style_shape','delete_shape','rotate_shape','order_shape','lock_shape','move_stroke','set_paper','append_marks','move_mark',...shapeSelectionOperations]},nodes:vNodes,connections:vLinks,node:vNodes.items,parentId:vId,connection:vLinks.items,shapes:vShapes,marks:vSheetMarks,paper:{type:'string',enum:papers},elementId:vId,text:{type:'string',maxLength:1000},color:vColor,form:{type:'string',enum:forms},collapsed:{type:'boolean'},filled:{type:'boolean'},x:vCoord,y:vCoord,width:vCoord,height:vCoord,rotation:vRotation,strokeWidth:vStrokeWidth,marker:{type:'boolean'},locked:{type:'boolean'},order:{type:'string',enum:['front','back','forward','backward']},dx:vCoord,dy:vCoord,
       selection:{type:'array',minItems:1,maxItems:40,uniqueItems:true,items:vId},groupId:vId,alignment:{type:'string',enum:alignments}},required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
 
@@ -1010,14 +1010,15 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       if(!s||s.tabelle!=='blocks'||s.geloescht||s.verschluesselt)return err('not_found','Zeichenobjekt nicht verfügbar.');
       const pageId=required(s.seite,128);await page(w,pageId,writing?'bearbeiten':'lesen');
       let data:Record<string,unknown>;try{data=JSON.parse(String(s.daten));}catch{return err('not_found','Zeichenobjekt nicht verfügbar.');}
-      if(!data||!['mindmap','whiteboard','blatt'].includes(String(data.type))||data.parentTable==='collection'||data.alive===false||data.archiviert===true)return err('not_found','Zeichenobjekt nicht verfügbar.');
+      if(!data||!['mindmap','whiteboard','blatt','pdfseite'].includes(String(data.type))||data.parentTable==='collection'||data.alive===false||data.archiviert===true)return err('not_found','Zeichenobjekt nicht verfügbar.');
       const ancestors=await embedding(w,pageId,id,data);
       const type=String(data.type),version=Number(s.version)||1;
+      const hasMarks=type==='blatt'||type==='pdfseite';
       if(!writing){
         if(args.expectedVersion!==undefined&&expected(args.expectedVersion)!==version)
           return err('conflict','Zeichenobjekt wurde geändert. Bitte ab der ersten Seite neu lesen.');
         if(args.collection!==undefined||args.offset!==undefined||args.limit!==undefined){
-          const collection=args.collection??(type==='mindmap'?'nodes':type==='blatt'?'marks':'shapes');
+          const collection=args.collection??(type==='mindmap'?'nodes':hasMarks?'marks':'shapes');
           const offset=args.offset===undefined?0:args.offset;
           if(typeof offset!=='number'||!Number.isSafeInteger(offset)||offset<0||offset>100000)
             return err('invalid_arguments','Ungültiger Zeichenobjektversatz.');
@@ -1026,7 +1027,11 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
           const max=limit(args.limit,20,40);
           let elements:unknown;
           if(type==='whiteboard'&&collection==='shapes')elements=data.shapes??[];
-          else if(type==='blatt'&&collection==='marks')elements=data.marken??[];
+          else if(hasMarks&&collection==='marks')elements=data.marken??[];
+          else if(type==='pdfseite'&&collection==='pdf_text'){
+            const characters=Array.from(typeof data.suchtext==='string'?data.suchtext:'');
+            elements=Array.from({length:Math.ceil(characters.length/500)},(_,i)=>characters.slice(i*500,(i+1)*500).join(''));
+          }
           else if(type==='mindmap'&&(collection==='nodes'||collection==='connections')){
             const map=data.karte as Record<string,unknown>|undefined;
             elements=map?.[collection==='nodes'?'knoten':'verbindungen'];
@@ -1036,7 +1041,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
           let bytes=2;
           const items:unknown[]=[];
           for(const raw of elements.slice(offset,offset+max)){
-            const element=type==='blatt'?readSheetMark(raw):raw;
+            const element=collection==='marks'?readSheetMark(raw):raw;
             const size=encoder.encode(JSON.stringify(element)).byteLength+(items.length?1:0);
             if(bytes+size>28000){
               if(!items.length)return err('too_large','Ein einzelnes Zeichenelement ist zu gross.');
@@ -1047,8 +1052,13 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
           }
           const nextOffset=offset+items.length<elements.length?offset+items.length:null;
           return {workspaceId:w,documentId:pageId,blockId:id,type,version,collection,offset,nextOffset,items,
-            ...(type==='blatt'?{coordinateSpace:data.raumVersion===1?'sheetPoints':'legacy'}:{})};
+            ...(collection==='marks'?{coordinateSpace:data.raumVersion===1?'sheetPoints':'legacy'}:{})};
         }
+        if(type==='pdfseite')return {workspaceId:w,documentId:pageId,blockId:id,type,version,
+          width:typeof data.bw==='number'?data.bw:null,height:typeof data.bh==='number'?data.bh:null,
+          pageNumber:Number.isSafeInteger(data.nr)?data.nr:null,pageCount:Number.isSafeInteger(data.vonSeiten)?data.vonSeiten:null,
+          rotation:data.gedreht===90||data.gedreht===180||data.gedreht===270?data.gedreht:0,
+          hasText:typeof data.suchtext==='string'&&data.suchtext.length>0};
         const view=type==='mindmap'?{karte:data.karte??null}:type==='whiteboard'?{shapes:data.shapes??[],sicht:data.sicht??null}:{papier:data.papier??'blanko',blattBreite:data.blattBreite??595.28,blattHoehe:data.blattHoehe??841.89,
           ...(data.blattAusrichtung==='quer'?{orientation:'landscape'}:{})};
         if(new TextEncoder().encode(JSON.stringify(view)).byteLength>32000)return err('too_large','Zeichenobjekt zu gross. Knoten, Verbindungen oder Formen seitenweise lesen.');
@@ -1073,9 +1083,9 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
           next.shapes=[...existing,...board(args.shapes,existing)];next.raumVersion=1;
         }else if(type==='blatt'&&op==='set_paper'){
           if(typeof args.paper!=='string'||!papers.includes(args.paper))return err('invalid_arguments','Unbekanntes Papier.');next.papier=args.paper;
-        }else if(type==='blatt'&&op==='append_marks'){
+        }else if(hasMarks&&op==='append_marks'){
           next.marken=appendSheetMarks(data,args.marks);next.raumVersion=1;
-        }else if(type==='blatt'&&op==='move_mark'){
+        }else if(hasMarks&&op==='move_mark'){
           next.marken=moveSheetMark(data,args);
         }else return err('invalid_arguments','Operation passt nicht zum Blocktyp.');
       }catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Ungültige Zeichnung.');}
