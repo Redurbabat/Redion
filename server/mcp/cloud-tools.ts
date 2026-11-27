@@ -1018,7 +1018,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         if(args.expectedVersion!==undefined&&expected(args.expectedVersion)!==version)
           return err('conflict','Zeichenobjekt wurde geändert. Bitte ab der ersten Seite neu lesen.');
         if(args.collection!==undefined||args.offset!==undefined||args.limit!==undefined){
-          const collection=args.collection??(type==='mindmap'?'nodes':hasMarks?'marks':'shapes');
+          const collection=args.collection===undefined?(type==='mindmap'?'nodes':hasMarks?'marks':'shapes'):args.collection;
           const offset=args.offset===undefined?0:args.offset;
           if(typeof offset!=='number'||!Number.isSafeInteger(offset)||offset<0||offset>100000)
             return err('invalid_arguments','Ungültiger Zeichenobjektversatz.');
