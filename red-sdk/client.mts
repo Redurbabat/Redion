@@ -166,6 +166,7 @@ export async function createRedShareKeyExchange(context:RedShareKeyContext,role:
     if(peer?.kind!=='red-share-key'||peer.version!==1||peer.role!==(role==='source'?'target':'source')||contextBytes(peer.context)!==ctx||typeof peer.publicKey!=='string'||peer.publicKey===own||peer.publicKey.length!==87)throw Error('Invalid peer offer');
     const raw=unbase64url(peer.publicKey);
     if(raw.length!==65||raw[0]!==4||base64url(raw)!==peer.publicKey)throw Error('Invalid public key');
+    used=true;
     const publicKey=await crypto.subtle.importKey('raw',raw,{name:'ECDH',namedCurve:'P-256'},false,[]);
     const shared=await crypto.subtle.deriveBits({name:'ECDH',public:publicKey},pair.privateKey,256);
     const transcript=new TextEncoder().encode(JSON.stringify(['red-share-key-v1',ctx,role==='source'?own:peer.publicKey,role==='target'?own:peer.publicKey]));
@@ -176,7 +177,6 @@ export async function createRedShareKeyExchange(context:RedShareKeyContext,role:
     const check=await derive('red-share-fingerprint-v1');
     const fingerprint=Array.from(check.subarray(0,16),v=>v.toString(16).padStart(2,'0')).join('').match(/.{1,4}/g)!.join('-');
     check.fill(0);
-    used=true;
     let confirmed=false;
     return {fingerprint,async confirm(expected:string){
       if(confirmed)throw Error('Exchange already confirmed');

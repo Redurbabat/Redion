@@ -1,5 +1,7 @@
 import Foundation
 import CryptoKit
+import CoreImage
+import CoreGraphics
 import Security
 
 public enum RedNativeError: Error, Equatable {
@@ -36,10 +38,14 @@ public protocol RedNativeCredentialStore {
 public struct RedKeychainStore: RedNativeCredentialStore {
     public init() {}
     private func query(_ scope: String) -> [String: Any] {
-        [kSecClass as String: kSecClassGenericPassword,
+        var q: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
          kSecAttrService as String: "com.red.ecosystem.identity.v2",
          kSecAttrAccount as String: scope,
          kSecAttrSynchronizable as String: false]
+        #if os(macOS)
+        q[kSecUseDataProtectionKeychain as String] = true
+        #endif
+        return q
     }
     public func load(scope: String) throws -> Data? {
         var q = query(scope)
@@ -227,5 +233,27 @@ public actor RedNativeClient {
             throw error
         }
         try store.clear(scope: scope)
+    }
+}
+
+public enum RedPairQRCode {
+    /// Render only the public pairing request. Integral scaling and four
+    /// white quiet-zone modules preserve scanner readability.
+    public static func image(app: String, challenge: String, scale: Int = 6) throws -> CGImage {
+        guard (2...16).contains(scale) else { throw RedNativeError.invalidResponse }
+        let payload = try RedNativeClient.pairingRequest(app: app, challenge: challenge)
+        guard let filter = CIFilter(name: "CIQRCodeGenerator") else { throw RedNativeError.invalidResponse }
+        filter.setValue(Data(payload.utf8), forKey: "inputMessage")
+        filter.setValue("M", forKey: "inputCorrectionLevel")
+        guard let qr = filter.outputImage else { throw RedNativeError.invalidResponse }
+        let size = qr.extent.integral
+        let bounds = CGRect(x: 0, y: 0, width: size.width + 8, height: size.height + 8)
+        let white = CIImage(color: CIColor(red: 1, green: 1, blue: 1)).cropped(to: bounds)
+        let padded = qr.transformed(by: CGAffineTransform(translationX: 4 - size.minX, y: 4 - size.minY)).composited(over: white)
+        let factor = CGFloat(scale)
+        let output = padded.transformed(by: CGAffineTransform(scaleX: factor, y: factor))
+        guard let image = CIContext(options: [.useSoftwareRenderer: true]).createCGImage(output, from: output.extent.integral)
+        else { throw RedNativeError.invalidResponse }
+        return image
     }
 }

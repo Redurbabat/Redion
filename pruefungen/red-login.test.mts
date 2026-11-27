@@ -4,6 +4,7 @@ import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {openHomeServer} from '../server/home-server.ts';
+import {revokeRedAppEverywhere} from '../server/home/red-id-v2.ts';
 import {approveHomeDevice} from '../server/home/pairing.ts';
 import {createRedPairProof,createRedIdV2Client,type RedSession} from '../red-sdk/client.mts';
 test('one-tap approval requires owner and verifier, cannot be replayed or claimed across apps',async()=>{
@@ -33,5 +34,12 @@ test('one-tap approval requires owner and verifier, cannot be replayed or claime
   assert.equal((await post(base+'approve-login',{app:'red-fit',challenge:third.challenge},token)).status,201);
   s.store.sqlite.prepare('UPDATE home_red_login SET expires=0 WHERE challenge=?').run(third.challenge);
   assert.equal((await post(base+'claim-login',{app:'red-fit',verifier:third.verifier})).status,401);
+  const fourth=await createRedPairProof(),fifth=await createRedPairProof();
+  assert.equal((await post(base+'approve-login',{app:'red-fit',challenge:fourth.challenge},token)).status,201);
+  await client.claimLogin(fourth.verifier);
+  assert.equal((await post(base+'approve-login',{app:'red-fit',challenge:fifth.challenge},token)).status,201);
+  assert.equal(revokeRedAppEverywhere(s.store.sqlite,'red-fit'),1);
+  await assert.rejects(client.me());
+  assert.equal((await post(base+'claim-login',{app:'red-fit',verifier:fifth.verifier})).status,401);
  }finally{s.close();await rm(root,{recursive:true,force:true});}
 });

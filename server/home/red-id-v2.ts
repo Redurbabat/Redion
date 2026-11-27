@@ -140,3 +140,18 @@ export function createRedIdV2(db:DatabaseSync,ablage:Ablage){
     });
   };
 }
+
+/** Local operator command: revoke the selected app across all local accounts,
+ * including pending direct approvals and undelivered messages. */
+export function revokeRedAppEverywhere(db:DatabaseSync,app:string):number{
+  if(!appValid(app))throw Error('Unknown RED app');
+  return transaction(db,()=>{
+    const a=db.prepare('DELETE FROM home_red_id WHERE app=?').run(app);
+    const b=db.prepare('DELETE FROM home_red_session WHERE app=?').run(app);
+    db.prepare('DELETE FROM home_red_pair WHERE app=?').run(app);
+    db.prepare('UPDATE home_red_login SET used=1 WHERE app=?').run(app);
+    db.prepare('DELETE FROM home_red_share_message WHERE source=? OR target=?').run(app,app);
+    db.prepare('DELETE FROM home_red_share_grant WHERE source=? OR target=?').run(app,app);
+    return Number(a.changes)+Number(b.changes);
+  });
+}

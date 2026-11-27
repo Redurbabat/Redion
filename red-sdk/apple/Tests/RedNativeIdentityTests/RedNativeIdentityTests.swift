@@ -20,6 +20,14 @@ final class RedNativeIdentityTests: XCTestCase {
         XCTAssertEqual(decoded["challenge"] as? String, a.challenge)
         XCTAssertThrowsError(try RedNativeClient.pairingRequest(app: "unknown", challenge: a.challenge))
     }
+    func testQRCode() throws {
+        let proof = RedNativeClient.makeProof()
+        let a = try RedPairQRCode.image(app: "red-bit", challenge: proof.challenge, scale: 4)
+        XCTAssertGreaterThan(a.width, 100)
+        XCTAssertEqual(a.width, a.height)
+        XCTAssertEqual(a.width % 4, 0)
+        XCTAssertThrowsError(try RedPairQRCode.image(app: "red-bit", challenge: proof.challenge, scale: 0))
+    }
     func testScopes() throws {
         let a = try RedNativeClient.credentialScope(origin: "https://home.example.test", app: "red-bit")
         XCTAssertEqual(a.count, 64)

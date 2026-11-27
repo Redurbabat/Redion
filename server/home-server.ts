@@ -7,10 +7,10 @@ import {openHomeDatabase} from './home/sqlite.ts';
 import {openHomeBlobs} from './home/blobs.ts';
 import {beantworte} from './kern.ts';
 import {prepareHomeSync,createHomeSyncWait} from './home/live-sync.ts';
-import {prepareRedIdV2,createRedIdV2,RED_ID_V2_ROUTES} from './home/red-id-v2.ts';
+import {prepareRedIdV2,createRedIdV2,RED_ID_V2_ROUTES,revokeRedAppEverywhere} from './home/red-id-v2.ts';
 import {prepareRedShare,createRedShare,SHARE_ROUTES} from './home/red-share.ts';
 import {createHomeDashboard} from './home/dashboard.ts';
-import {prepareRedId,issueRedId,revokeRedApp,handleRedId} from './home/red-id.ts';
+import {prepareRedId,issueRedId,handleRedId} from './home/red-id.ts';
 import {approveHomeDevice,claimHomeDevice} from './home/pairing.ts';
 import {prepareHomeConsent,issueHomeConsentCode,identifyHomeConsent,homeConsentLogin,exchangeHomeConsent,logoutHomeConsent} from './home/consent.ts';
 import {handleCloudMcp,isCloudMcpPublicPath,isCloudMcpPrivatePath} from './mcp/cloud-router.ts';
@@ -123,7 +123,7 @@ async function main(){
     try{
       const app=process.argv[3]||'';
       if(command==='red-id-issue')console.log(JSON.stringify(issueRedId(service.store.sqlite,app)));
-      else console.log('Revoked app credentials: '+revokeRedApp(service.store.sqlite,app));
+      else console.log('Revoked app credentials: '+revokeRedAppEverywhere(service.store.sqlite,app));
     } finally {service.close();}
     return;
   }

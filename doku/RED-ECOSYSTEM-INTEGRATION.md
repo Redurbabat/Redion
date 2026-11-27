@@ -51,3 +51,8 @@ iOS 15+ und macOS 12+. Native HTTPS-Aufrufe (keine Redirects), CryptoKit-PKCE,
 Keychain-Gerätespeicher und direkte Anmeldung/Refresh/Logout. App-eigene
 Kopplungsoberfläche, Integration in die externen Repositories und physische
 Gerätetests bleiben erforderlich. Die Swift-CI prüft Proof und Scope.
+
+Das Apple-Paket enthält zusätzlich `RedPairQRCode.image` für die lokale
+QR-Darstellung der öffentlichen Challenge. Eine Kamera-/Scanner-UI muss
+die jeweilige App implementieren. Der Operator-Befehl `red-id-revoke`
+widerruft jetzt auch v2-Sitzungen, offene Anmeldungen und Share-Kanäle.
