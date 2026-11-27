@@ -607,7 +607,7 @@ const Gedankenkarte = (() => {
     const links: string[] = [];
     ebene1.forEach((id, i) => {
       const k = karte.knoten.find(n => n.id === id);
-      const seite = k?.seite ?? (i % 2 === 0 ? 'rechts' : 'links');
+      const seite = karte.aufbau === 'links' || karte.aufbau === 'rechts' ? karte.aufbau : k?.seite ?? (i % 2 === 0 ? 'rechts' : 'links');
       (seite === 'links' ? links : rechts).push(id);
     });
 
@@ -694,11 +694,12 @@ const Gedankenkarte = (() => {
        selbst zurechtrückt, ist angenehmer als eine, die beim blossen Ansehen
        den Block ändert. Wer selbst schiebt oder zoomt, speichert — ab dann
        gilt seine Sicht. */
-    let mussEinpassen = !aufFlaeche && (window.matchMedia('(max-width: 760px)').matches || !(block && block.karte && typeof block.karte.sicht === 'object'
+    let mussEinpassen = !aufFlaeche && ((window.matchMedia('(max-width: 760px)').matches && !block.karte?.sicht?.fest) || !(block && block.karte && typeof block.karte.sicht === 'object'
                           && block.karte.sicht));
 
     let autoSicht = mussEinpassen;
     let volleAnsicht = false;
+    let platzhalter: Comment | null = null;
     const w = document.createElement('div');
     w.className = aufFlaeche ? 'gk gk-auf-flaeche' : 'gk';
 
@@ -807,8 +808,16 @@ const Gedankenkarte = (() => {
         '<span class="gk-mobile-mass">100 %</span>' +
         '<button type="button" data-m="groesser" aria-label="Vergrössern">+</button>' +
         '<button type="button" data-m="passend" aria-label="Gesamtübersicht">⤢</button>' +
+        '<button type="button" data-m="minimap" aria-label="Minimap" aria-pressed="false">▧</button>' +
         '<button type="button" data-m="vollbild" aria-label="Vollbild" aria-pressed="false">⛶</button>';
       const leiste = w.querySelector<HTMLElement>('.gk-leiste')!;
+      const layout = document.createElement('select');
+      layout.className = 'gk-layout';
+      layout.setAttribute('aria-label', 'Mindmap-Layout');
+      layout.innerHTML = '<option value="karte">Beidseitig</option><option value="rechts">Nach rechts</option><option value="links">Nach links</option>';
+      layout.value = ['karte','rechts','links'].includes(karte.aufbau) ? karte.aufbau : 'karte';
+      layout.addEventListener('change', () => { autoSicht = true; aendere(() => { karte.aufbau = layout.value; }); });
+      leiste.appendChild(layout);
       const werkzeug = kopf.querySelector<HTMLButtonElement>('[data-m="werkzeuge"]')!;
       const leisteZeigen = (offen: boolean) => {
         leiste.hidden = !offen;
@@ -816,7 +825,19 @@ const Gedankenkarte = (() => {
       };
       const vollbildWechseln = () => {
         volleAnsicht = !volleAnsicht;
+        if (volleAnsicht && w.parentNode) {
+          platzhalter = document.createComment('Mindmap im Vollbild');
+          w.parentNode.insertBefore(platzhalter, w);
+          document.body.appendChild(w);
+          leisteZeigen(false);
+        } else if (platzhalter) {
+          if (platzhalter.isConnected && platzhalter.parentNode) platzhalter.parentNode.replaceChild(w, platzhalter);
+          else w.remove();
+          platzhalter = null;
+          leisteZeigen(!window.matchMedia('(max-width: 760px)').matches);
+        }
         w.classList.toggle('gk-vollbild', volleAnsicht);
+        w.querySelector<HTMLElement>('.gk-buehne')?.focus({preventScroll:true});
         kopf.querySelector('[data-m="vollbild"]')?.setAttribute('aria-pressed', String(volleAnsicht));
         autoSicht = true;
         requestAnimationFrame(() => { if (w.isConnected) male(); });
@@ -828,6 +849,7 @@ const Gedankenkarte = (() => {
         if (aktion === 'kleiner') zoomen(1 / 1.25);
         if (aktion === 'groesser') zoomen(1.25);
         if (aktion === 'passend') { autoSicht = true; einpassen(1, false); }
+        if (aktion === 'minimap') { mini.hidden = !mini.hidden; kopf.querySelector('[data-m="minimap"]')?.setAttribute('aria-pressed', String(!mini.hidden)); sichtAnwenden(); }
         if (aktion === 'vollbild') vollbildWechseln();
       });
       w.addEventListener('keydown', e => {
@@ -853,6 +875,42 @@ const Gedankenkarte = (() => {
     const linien = sv('svg', { class: 'gk-linien' }) as SVGSVGElement;
     welt.appendChild(linien);
 
+    const mini = document.createElement('button');
+    mini.type = 'button';
+    mini.className = 'gk-minikarte';
+    mini.hidden = true;
+    mini.setAttribute('aria-label', 'Mindmap-Übersicht: Ausschnitt verschieben');
+    const miniSvg = sv('svg', {width:120,height:80, 'aria-hidden':'true'}) as SVGSVGElement;
+    mini.appendChild(miniSvg);
+    if (!aufFlaeche) buehne.appendChild(mini);
+    mini.addEventListener('pointerdown', e => e.stopPropagation());
+    mini.addEventListener('click', e => {
+      e.stopPropagation();
+      const plan = letzterAufbau;
+      if (!plan) return;
+      const matrix = miniSvg.getScreenCTM();
+      if (!matrix) return;
+      const p = e.detail === 0 ? {x:plan.breite/2,y:plan.hoehe/2} : new DOMPoint(e.clientX,e.clientY).matrixTransform(matrix.inverse());
+      const b = buehne.getBoundingClientRect();
+      autoSicht = false;
+      karte.sicht.x = p.x*karte.sicht.z-b.width/2;
+      karte.sicht.y = p.y*karte.sicht.z-b.height/2;
+      sichtAnwenden();
+      sichern();
+    });
+    const miniMalen = () => {
+      const plan = letzterAufbau;
+      if (mini.hidden || !plan || !plan.breite || !plan.hoehe) return;
+      miniSvg.setAttribute('viewBox', '0 0 '+plan.breite+' '+plan.hoehe);
+      const teile = Object.entries(plan.orte).map(([id,o]) => {
+        const m = letzteMasse[id];
+        return sv('rect',{x:o.x,y:o.y,width:m?.w ?? 140,height:m?.h ?? 34,fill:plan.farben[id] || 'currentColor',opacity:.75});
+      });
+      const b = buehne.getBoundingClientRect();
+      const z = karte.sicht.z;
+      const rahmen = sv('rect',{x:karte.sicht.x/z,y:karte.sicht.y/z,width:b.width/z,height:b.height/z,fill:'none',stroke:'currentColor','stroke-width':2,'vector-effect':'non-scaling-stroke'});
+      miniSvg.replaceChildren(...teile,rahmen);
+    };
     const griff = document.createElement('div');
     griff.className = 'gk-griff';
     griff.title = 'Höhe ziehen';
@@ -1078,6 +1136,7 @@ const Gedankenkarte = (() => {
       if (m) m.textContent = Math.round(karte.sicht.z * 100) + ' %';
       const mobilMass = w.querySelector('.gk-mobile-mass');
       if (mobilMass) mobilMass.textContent = Math.round(karte.sicht.z * 100) + ' %';
+      miniMalen();
     };
 
     /**
@@ -1672,7 +1731,7 @@ const Gedankenkarte = (() => {
         case 'weg':      loeschen(gewaehlt); break;
         case 'kleiner':  zoomen(1 / 1.25); break;
         case 'groesser': zoomen(1.25); break;
-        case 'passend':  einpassen(4, true); break;
+        case 'passend': autoSicht = true;  einpassen(4, true); break;
         case 'vorlage':  vorlagenMenue(b); break;
         case 'markdown': markdownMenue(b); break;
         case 'zurueck': {
@@ -1702,7 +1761,7 @@ const Gedankenkarte = (() => {
     };
     if (!aufFlaeche) {
       buehne.addEventListener('pointerdown', e => {
-        if (e.pointerType !== 'touch' || schreibt) return;
+        if (e.pointerType !== 'touch' || schreibt || (e.target instanceof Element && e.target.closest('.gk-minikarte,.gk-griffel'))) return;
         finger.set(e.pointerId,{x:e.clientX,y:e.clientY});
         if (finger.size < 2) return;
         const p = pinchPaar();
@@ -1737,7 +1796,7 @@ const Gedankenkarte = (() => {
       };
       buehne.addEventListener('pointerup',fingerLos);
       buehne.addEventListener('pointercancel',fingerLos);
-      buehne.addEventListener('lostpointercapture',fingerLos);
+      buehne.addEventListener('lostpointercapture', e => { if (e.target === buehne) fingerLos(e); });
     }
     buehne.addEventListener('pointerdown', e => {
       /* ══ EIN GRIFF KANN ZWEIERLEI (E628) ═══════════════════════════════
