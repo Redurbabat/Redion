@@ -257,3 +257,13 @@ Testverzeichnis muss auf einem geschützten Datenträger liegen. Keine
 Rückkehr auf einen älteren Datenstand nach neuen produktiven Schreibvorgängen.
 Ein tatsächlicher Cutover benötigt weiterhin explizite Freigabe, abgeschaltete
 Clients/Schreiber und Abnahme auf dem Mini-PC.
+
+## RED ID – Freigabe ohne Rückgabe eines Einmalcodes
+
+Ziel-App erzeugt lokal einen frischen PKCE-Verifier und zeigt nur die
+öffentliche Challenge. RED ION Owner sendet app und challenge an
+`POST /red-id/v2/approve-login`. Ziel-App ruft mit eigenem Verifier und
+app `POST /red-id/v2/claim-login` (SDK claimLogin) auf. Einmalig, 5 Minuten,
+App-gebunden; Widerruf beendet offene Freigaben. Die Challenge darf erst
+nach Vergleich mit der tatsächlich gewünschten Ziel-App bestätigt werden.
+Keine automatische Anmeldung unbekannter Apps, kein öffentlicher OAuth-SSO.

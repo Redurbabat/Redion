@@ -12,12 +12,14 @@ const appValid=(v:unknown):v is string=>typeof v==='string'&&(RED_APPS as readon
 const is=(v:unknown,re:RegExp):v is string=>typeof v==='string'&&re.test(v);
 const reply=(status:number,data:unknown)=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const ACCESS=15*60*1000,REFRESH=30*86400000,PAIR=5*60*1000;
-export const RED_ID_V2_ROUTES=['/red-id/v2/pair','/red-id/v2/exchange','/red-id/v2/refresh','/red-id/v2/me','/red-id/v2/logout','/red-id/v2/revoke','/red-id/v2/apps'] as const;
+export const RED_ID_V2_ROUTES=['/red-id/v2/pair','/red-id/v2/exchange','/red-id/v2/refresh','/red-id/v2/me','/red-id/v2/logout','/red-id/v2/revoke','/red-id/v2/apps','/red-id/v2/approve-login','/red-id/v2/claim-login'] as const;
 export function prepareRedIdV2(db:DatabaseSync){
   db.exec(`CREATE TABLE IF NOT EXISTS home_red_pair (digest TEXT PRIMARY KEY, owner TEXT NOT NULL, app TEXT NOT NULL, challenge TEXT NOT NULL, expires INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS home_red_session (id TEXT PRIMARY KEY, owner TEXT NOT NULL, app TEXT NOT NULL, access_digest TEXT UNIQUE NOT NULL, refresh_digest TEXT UNIQUE NOT NULL, access_until INTEGER NOT NULL, refresh_until INTEGER NOT NULL);
 CREATE INDEX IF NOT EXISTS home_red_session_owner ON home_red_session(owner,app);
-CREATE INDEX IF NOT EXISTS home_red_pair_owner ON home_red_pair(owner,app);`);
+CREATE INDEX IF NOT EXISTS home_red_pair_owner ON home_red_pair(owner,app);
+CREATE TABLE IF NOT EXISTS home_red_login (challenge TEXT PRIMARY KEY,owner TEXT NOT NULL,app TEXT NOT NULL,expires INTEGER NOT NULL,used INTEGER NOT NULL DEFAULT 0);
+CREATE INDEX IF NOT EXISTS home_red_login_owner ON home_red_login(owner,app);`);
 }
 async function body(request:Request):Promise<Record<string,unknown>|null>{
   if(!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type')??''))return null;
@@ -56,7 +58,35 @@ export function createRedIdV2(db:DatabaseSync,ablage:Ablage){
       return reply(200,{version:2,apps:RED_APPS.map(app=>({app,
         v1Credentials:count('SELECT COUNT(*) AS n FROM home_red_id WHERE owner=? AND app=? AND expires>?',app),
         v2Sessions:count('SELECT COUNT(*) AS n FROM home_red_session WHERE owner=? AND app=? AND refresh_until>?',app),
-        pendingPair:count('SELECT COUNT(*) AS n FROM home_red_pair WHERE owner=? AND app=? AND expires>?',app)>0}))});
+        pendingPair:count('SELECT COUNT(*) AS n FROM home_red_pair WHERE owner=? AND app=? AND expires>?',app)+count('SELECT COUNT(*) AS n FROM home_red_login WHERE owner=? AND app=? AND expires>? AND used=0',app)>0}))});
+    }
+    if(path.endsWith('/approve-login')){
+      const who=await werFragt(ablage,{authorization:request.headers.get('authorization')??''});
+      if(!who?.sitzung)return reply(401,{error:'unauthorized'});
+      const input=inputBody;
+      if(!input||!appValid(input.app)||!is(input.challenge,/^[A-Za-z0-9_-]{43}$/))return reply(400,{error:'invalid_request'});
+      const owner=String(who.konto.id),app=input.app,challenge=input.challenge;
+      return transaction(db,()=>{
+        db.prepare('DELETE FROM home_red_login WHERE expires<=?').run(now);
+        if(db.prepare('SELECT challenge FROM home_red_login WHERE challenge=?').get(challenge))return reply(409,{error:'challenge_already_used'});
+        if(Number(db.prepare('SELECT COUNT(*) AS n FROM home_red_login WHERE owner=?').get(owner)?.n??0)>=64)return reply(429,{error:'approval_limit'});
+        db.prepare('INSERT INTO home_red_login(challenge,owner,app,expires) VALUES(?,?,?,?)').run(challenge,owner,app,now+PAIR);
+        return reply(201,{version:2,app,expiresAt:new Date(now+PAIR).toISOString()});
+      });
+    }
+    if(path.endsWith('/claim-login')){
+      const input=inputBody;
+      if(!input||!appValid(input.app)||!is(input.verifier,/^[A-Za-z0-9._~-]{43,128}$/))return reply(400,{error:'invalid_request'});
+      const challenge=proof(input.verifier),app=input.app;
+      return transaction(db,()=>{
+        const row=db.prepare('SELECT p.owner FROM home_red_login p JOIN konten c ON c.id=p.owner WHERE p.challenge=? AND p.app=? AND p.expires>? AND p.used=0 AND c.gesperrt=0').get(challenge,app,now);
+        if(!row||typeof row.owner!=='string')return reply(401,{error:'not_approved'});
+        db.prepare('UPDATE home_red_login SET used=1 WHERE challenge=?').run(challenge);
+        db.prepare('DELETE FROM home_red_session WHERE refresh_until<=?').run(now);
+        const c=credentials(now);
+        db.prepare('INSERT INTO home_red_session VALUES(?,?,?,?,?,?,?)').run(secret('session_'),row.owner,app,c.accessDigest,c.refreshDigest,c.accessUntil,c.refreshUntil);
+        return reply(200,responseTokens(app,c));
+      });
     }
     if(path.endsWith('/pair')||path.endsWith('/revoke')){
       const who=await werFragt(ablage,{authorization:request.headers.get('authorization')??''});
@@ -69,6 +99,7 @@ export function createRedIdV2(db:DatabaseSync,ablage:Ablage){
           const a=db.prepare('DELETE FROM home_red_session WHERE owner=? AND app=?').run(owner,app);
           const b=db.prepare('DELETE FROM home_red_id WHERE owner=? AND app=?').run(owner,app);
           db.prepare('DELETE FROM home_red_pair WHERE owner=? AND app=?').run(owner,app);
+          db.prepare('UPDATE home_red_login SET used=1 WHERE owner=? AND app=?').run(owner,app);
           revokeRedShare(db,owner,app);
           return Number(a.changes)+Number(b.changes);
         });return reply(200,{revoked});

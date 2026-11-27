@@ -66,6 +66,7 @@ export function createRedIdV2Client(origin:string,app:RedAppId,store:RedSecureSt
       const data=await share('inbox');if(data?.version!==1||!Array.isArray(data.messages))throw Error('Invalid share inbox');return data.messages as RedShareMessage[];
     }),
     shareAck:(source:RedAppId,channel:string,id:string)=>serial(async()=>{await share('ack',{source,channel,id});}),
+    claimLogin:(verifier:string)=>serial(async()=>{const s=validate(await request('claim-login','POST',{app,verifier}));await store.save(s);}),
     pair:(code:string,verifier:string)=>serial(async()=>{const s=validate(await request('exchange','POST',{app,code,verifier}));await store.save(s);}),
     refresh:()=>serial(async()=>{await rotate(await loaded());}),
     me:()=>serial(async():Promise<RedIdentityV2>=>{

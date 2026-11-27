@@ -1,0 +1,37 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {openHomeServer} from '../server/home-server.ts';
+import {approveHomeDevice} from '../server/home/pairing.ts';
+import {createRedPairProof,createRedIdV2Client,type RedSession} from '../red-sdk/client.mts';
+test('one-tap approval requires owner and verifier, cannot be replayed or claimed across apps',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'red-login-')),origin='https://redion.example.test';
+ const s=await openHomeServer({dataDir:root,origin});
+ try{
+  const post=(path:string,body:unknown,token?:string)=>s.handle(new Request(origin+path,{method:'POST',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(body)}));
+  const {code}=await (await post('/konto/code',{geraet:'Owner'})).json() as any;
+  approveHomeDevice(s.store.sqlite,code);
+  const {token}=await (await post('/konto/code-holen',{code})).json() as any;
+  const proof=await createRedPairProof(),base='/red-id/v2/',payload={app:'red-fit',challenge:proof.challenge};
+  assert.equal((await post(base+'approve-login',payload)).status,401);
+  assert.equal((await post(base+'claim-login',{app:'red-fit',verifier:proof.verifier})).status,401);
+  assert.equal((await post(base+'approve-login',payload,token)).status,201);
+  assert.equal((await post(base+'claim-login',{app:'red-poly',verifier:proof.verifier})).status,401);
+  assert.equal((await post(base+'claim-login',{app:'red-fit',verifier:'x'.repeat(43)})).status,401);
+  let session:RedSession|null=null;
+  const client=createRedIdV2Client(origin,'red-fit',{async load(){return session;},async save(v){session=v;},async clear(){session=null;}},(input,init)=>s.handle(new Request(input,init)));
+  await client.claimLogin(proof.verifier);assert.equal((await client.me()).app,'red-fit');
+  assert.equal((await post(base+'claim-login',{app:'red-fit',verifier:proof.verifier})).status,401);
+  assert.equal((await post(base+'approve-login',payload,token)).status,409);
+  const second=await createRedPairProof();
+  assert.equal((await post(base+'approve-login',{app:'red-fit',challenge:second.challenge},token)).status,201);
+  assert.equal((await post(base+'revoke',{app:'red-fit'},token)).status,200);
+  assert.equal((await post(base+'claim-login',{app:'red-fit',verifier:second.verifier})).status,401);
+  const third=await createRedPairProof();
+  assert.equal((await post(base+'approve-login',{app:'red-fit',challenge:third.challenge},token)).status,201);
+  s.store.sqlite.prepare('UPDATE home_red_login SET expires=0 WHERE challenge=?').run(third.challenge);
+  assert.equal((await post(base+'claim-login',{app:'red-fit',verifier:third.verifier})).status,401);
+ }finally{s.close();await rm(root,{recursive:true,force:true});}
+});
