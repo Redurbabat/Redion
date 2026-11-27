@@ -153,3 +153,25 @@ setzen. Kein Schlüssel in Git. SQLite selbst ist dadurch nicht verschlüsselt;
 für vollständigen Schutz bei Diebstahl der SSD zusätzlich LUKS/Datenträger-
 verschlüsselung und sichere Schlüsselablage einsetzen. Migration vorhandener
 Daten, per-App-Vault-Berechtigungen und E2EE-Abnahme bleiben offen.
+
+## RED Backup – verschlüsselte Offline-Sicherung
+
+`deploy/home/backup.sh` stoppt den Compose-Dienst, sperrt parallele
+Wartungsskripte per flock, erstellt ein AES-256-GCM-verschlüsseltes Backup
+von SQLite und Blob-Dateien und startet einen zuvor laufenden Dienst wieder.
+Alle anderen Datenbank-/Dateischreiber müssen ebenfalls beendet sein; die
+CLI prüft SQLite-Integrität und WAL und erkennt veränderte Dateien.
+Ein eigenes 32-Byte-Backup-Schlüsselfile sowie ein separates, existierendes
+Backup-Verzeichnis (möglichst zweiter Datenträger) sind erforderlich. Keine
+automatische Löschung, kein Überschreiben. Das authentifizierte Manifest
+wird zuletzt geschrieben. Wiederherstellung nur in ein neues Verzeichnis:
+
+```
+node server/home/backup.ts restore /path/backup /path/new-data /path/key --offline-confirmed
+```
+
+Den wiederhergestellten Bestand zuerst offline prüfen und den originalen
+Datenträger behalten. Falls RED Vault genutzt wird, ist zusätzlich dessen
+Schlüssel nötig. Backup-Key nicht auf demselben Datenträger speichern.
+Eine tägliche Ausführung kann später über einen explizit installierten
+systemd-Timer erfolgen; kein Timer/Deployment wurde aktiviert.
