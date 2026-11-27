@@ -211,3 +211,7 @@ für genau die ausgewählte App. Die API liefert keine Dokumente an RED-ID-
 Tokens. Die anderen Repositories benötigen den SDK-Client, native sichere
 Speicheradapter, eine Kopplungsoberfläche und eigene Tests; sie sind nicht
 Teil dieses PRs. Die Code-Anzeige ist manuell, nicht als QR-Code umgesetzt.
+
+Das SDK ist als privates ESM-Paket `@red-ecosystem/sdk` v0.2.0 mit
+TypeScript-Deklarationen paketierbar. Der Home-Server-CI-Job baut und prüft
+das Paket; keine öffentliche Registry und kein automatisches Publishing.

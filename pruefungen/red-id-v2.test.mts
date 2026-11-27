@@ -20,6 +20,10 @@ test('RED ID v2: authenticated pairing, proof, rotation, isolation, revocation',
   assert.equal((await post(base+'pair',{app:'red-fit',challenge:proof.challenge})).status,401);
   const pair=await post(base+'pair',{app:'red-fit',challenge:proof.challenge},token);assert.equal(pair.status,201);
   const pairing=await pair.json() as any;
+  const list=()=>send(base+'apps',{headers:{Authorization:'Bearer '+token}});
+  assert.equal((await send(base+'apps')).status,401);
+  const pending=await (await list()).json() as any;
+  assert.equal(pending.apps.length,11);assert.equal(pending.apps.find((a:any)=>a.app==='red-fit').pendingPair,true);
   assert.equal((await post(base+'exchange',{app:'red-poly',code:pairing.code,verifier:proof.verifier})).status,401);
   assert.equal((await post(base+'exchange',{app:'red-fit',code:pairing.code,verifier:'a'.repeat(43)})).status,401);
   let session:RedSession|null=null;
@@ -28,6 +32,10 @@ test('RED ID v2: authenticated pairing, proof, rotation, isolation, revocation',
   await client.pair(pairing.code,proof.verifier);
   const identity=await client.me();assert.equal(identity.app,'red-fit');assert.deepEqual(identity.scopes,['identity:read']);
   const old=(await store.load())!;
+  assert.equal((await send(base+'apps',{headers:{Authorization:'Bearer '+old.accessToken}})).status,401);
+  const linked=await (await list()).json() as any;
+  assert.equal(linked.apps.find((a:any)=>a.app==='red-fit').v2Sessions,1);assert.equal(linked.apps.find((a:any)=>a.app==='red-fit').pendingPair,false);
+  assert.equal(linked.apps.find((a:any)=>a.app==='red-poly').v2Sessions,0);
   assert.equal((await post(base+'exchange',{app:'red-fit',code:pairing.code,verifier:proof.verifier})).status,401);
   assert.equal((await send('/home/dashboard',{headers:{Authorization:'Bearer '+old.accessToken}})).status,401);
   assert.equal((await send('/sync/runter',{headers:{Authorization:'Bearer '+old.accessToken}})).status,401);
@@ -38,5 +46,6 @@ test('RED ID v2: authenticated pairing, proof, rotation, isolation, revocation',
   assert.equal((await post(base+'revoke',{app:'red-fit'},next.accessToken)).status,401);
   assert.equal((await post(base+'revoke',{app:'red-fit'},token)).status,200);
   await assert.rejects(client.me());assert.equal(await store.load(),null);
+  const revoked=await (await list()).json() as any;assert.equal(revoked.apps.find((a:any)=>a.app==='red-fit').v2Sessions,0);
  }finally{service.close();await rm(root,{recursive:true,force:true});}
 });
