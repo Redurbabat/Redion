@@ -498,3 +498,35 @@ test('Cloud MCP: isolierte native Stromschienen und gezielter Anschluss',()=>{
   assert.deepEqual(attached.leitungen[1].punkte,[{x:230,y:240},{x:230,y:100}]);
   assert.equal(withPart.leitungen.length,1);
 });
+
+
+test('Cloud MCP: fehlende elektrische Bauteilwerte mit ID und Modellvorgabe melden',async()=>{
+  const {componentParameterHints,measureOperatingPoint}=await import('../server/mcp/schematic-test.ts');
+  const plan={teile:[
+    {id:'G1',zeichen:'gleichspannung',x:100,y:100,nummern:{}},
+    {id:'E1',zeichen:'lampe',x:300,y:100,nummern:{}},
+    {id:'R1',zeichen:'widerstand',x:400,y:100,nummern:{},werte:{R:100}},
+    {id:'S1',zeichen:'ausschalter',x:200,y:100,nummern:{}}
+  ],leitungen:[]};
+  const snapshot=structuredClone(plan);
+  assert.deepEqual(componentParameterHints(plan),{parameterHinweise:[
+    {componentId:'G1',symbol:'gleichspannung',field:'U',reason:'missing',modelDefault:24},
+    {componentId:'E1',symbol:'lampe',field:'R',reason:'missing',modelDefault:529},
+    {componentId:'E1',symbol:'lampe',field:'Un',reason:'missing',modelDefault:230}
+  ],parameterHinweiseGesamt:3,parameterHinweiseGekuerzt:false});
+  const report=measureOperatingPoint(plan,{switches:[],componentIds:['E1']});
+  assert.deepEqual(report.parameterHinweise,componentParameterHints(plan).parameterHinweise);
+  assert.deepEqual(plan,snapshot);
+  const corrected={...plan,teile:plan.teile.map(p=>p.id==='G1'?{...p,werte:{U:12}}:
+    p.id==='E1'?{...p,werte:{R:24,Un:12}}:p)};
+  assert.equal(componentParameterHints(corrected).parameterHinweiseGesamt,0);
+  const invalid={teile:[{id:'E',zeichen:'lampe',werte:{R:0,Un:-1}}]};
+  assert.deepEqual(componentParameterHints(invalid).parameterHinweise,[
+    {componentId:'E',symbol:'lampe',field:'R',reason:'invalid',modelDefault:529},
+    {componentId:'E',symbol:'lampe',field:'Un',reason:'invalid'}
+  ]);
+  const large={teile:Array.from({length:60},(_,i)=>({id:'E'+i,zeichen:'lampe'}))};
+  assert.equal(componentParameterHints(large).parameterHinweiseGesamt,120);
+  assert.equal(componentParameterHints(large).parameterHinweise.length,40);
+  assert.equal(componentParameterHints(large).parameterHinweiseGekuerzt,true);
+});
