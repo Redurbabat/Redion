@@ -67,12 +67,13 @@ const vRequired=['workspaceId','documentId','expectedVersion','requestId','title
 const shapeSelectionOperations=['group_selection','ungroup_selection','align_selection','move_selection','order_selection'];
 const mindmapEditOperations=['rename_node','style_node','delete_branch','append_node','move_node','add_connection','remove_connection'];
 const schematicEditFields={
-  operation:{type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label']},
+  operation:{type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label','set_component_values']},
   componentId:idField,symbolId:idField,x:{type:'integer',minimum:0,maximum:4000},
   y:{type:'integer',minimum:0,maximum:4000},
   rotation:{type:'integer',enum:[0,90,180,270]},
   mirrored:{type:'boolean'},layer:{type:'string',enum:['plan','aufgabe','loesung']},
   bmk:{type:'string',maxLength:30},wireId:idField,
+  values:{type:'object',additionalProperties:false,minProperties:1,properties:{U:{type:'number',exclusiveMinimum:0,maximum:1000},Un:{type:'number',exclusiveMinimum:0,maximum:1000},R:{type:'number',exclusiveMinimum:0,maximum:1e9}}},
   fromComponentId:idField,fromTerminal:{type:'string',minLength:1,maxLength:20},
   toComponentId:idField,toTerminal:{type:'string',minLength:1,maxLength:20},
   labelId:idField,labelText:{type:'string',minLength:1,maxLength:200}
@@ -112,7 +113,7 @@ export const CLOUD_TOOLS:ToolDef[]=[
       text:{type:'string',maxLength:8000},checked:{type:'boolean'},
       note:{type:'string',maxLength:2000},dueDate:{type:'string',maxLength:10}},
       required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
-  {name:'redion_update_schematic',description:'Bearbeitet einen Klartext-Schaltplan. Für eine einzelne Änderung operation und ihre Felder übergeben. Für bis zu 20 atomare Änderungen nur changes übergeben. Jeder Schritt wird vor dem Speichern geprüft, die Planversion steigt einmal. Verbundene Bauteile im nativen Editor verschieben.',
+  {name:'redion_update_schematic',description:'Bearbeitet einen Klartext-Schaltplan. Für eine einzelne Änderung operation und ihre Felder übergeben. Für bis zu 20 atomare Änderungen nur changes übergeben. Jeder Schritt wird vor dem Speichern geprüft, die Planversion steigt einmal. set_component_values setzt U (Quelle, V), R (Widerstand, Ohm) und Un (Lampe, V) entsprechend dem Fachzeichen. Verbundene Bauteile im nativen Editor verschieben.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,
       expectedVersion:{type:'integer',minimum:1},
       ...schematicEditFields,changes:{type:'array',minItems:1,maxItems:20,
@@ -176,7 +177,7 @@ export const CLOUD_TOOLS:ToolDef[]=[
           required:['componentId','position'],properties:{componentId:idField,position:{type:'integer',minimum:0,maximum:32}}}},
         componentIds:{type:'array',minItems:1,maxItems:8,uniqueItems:true,items:idField}
       }}},required:['workspaceId','blockId'],additionalProperties:false}},
-  {name:'redion_list_symbols',description:'Listet die 131 eingebauten elektrotechnischen Fachzeichen mit Nummern und Positionen der Anschlüsse. Keine auf Geräten nachinstallierten Symbole; nicht als zertifizierte Normbibliothek verwenden.',
+  {name:'redion_list_symbols',description:'Listet die 131 eingebauten elektrotechnischen Fachzeichen mit Nummern und Positionen der Anschlüsse. Keine auf Geräten nachinstallierten Symbole; nicht als zertifizierte Normbibliothek verwenden. Beim Kreuzschalter und ch-schema6 sind die Klemmenpaare der beiden Seiten 1/3 und 2/4 (gerade 1–2 und 3–4, gekreuzt 1–4 und 3–2).',
     inputSchema:{type:'object',properties:{gruppe:{type:'string',maxLength:40},suche:{type:'string',maxLength:80}},additionalProperties:false}},
   {name:'redion_list_block_types',description:'Listet eingebaute benannte Blockarten der RED-ION-App, inklusive intern gespeicherter Arten. Gerätebezogene Plugins sind nicht enthalten.',
     inputSchema:{type:'object',properties:{},additionalProperties:false}},
