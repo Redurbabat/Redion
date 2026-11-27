@@ -49,7 +49,9 @@ const SCHEMATIC_ARTEN=[
 const SCHEMATIC_QUER=new Set(['installationsplan','blockschaltbild','funktionsplan','aufbauplan']);
 const vId={type:'string',maxLength:64};
 const vColor={type:'string',pattern:'^#[0-9a-fA-F]{6}$'};
-const vNodes={type:'array',minItems:1,maxItems:mindmapLimit,items:{type:'object',properties:{id:vId,text:{type:'string',maxLength:500},parentId:{type:['string','null'],maxLength:64},side:{type:'string',enum:['links','rechts']},color:vColor,form:{type:'string',enum:forms}},required:['id','text','parentId'],additionalProperties:false}};
+const vNodes={type:'array',minItems:1,maxItems:mindmapLimit,items:{type:'object',properties:{id:vId,text:{type:'string',maxLength:500},parentId:{type:['string','null'],maxLength:64},side:{type:'string',enum:['links','rechts']},color:vColor,form:{type:'string',enum:forms},collapsed:{type:'boolean'}},required:['id','text','parentId'],additionalProperties:false}};
+const vLayout={type:'string',enum:['karte','links','rechts']};
+const vCamera={type:'object',properties:{x:{type:'number',minimum:-100000,maximum:100000},y:{type:'number',minimum:-100000,maximum:100000},z:{type:'number',minimum:.02,maximum:4}},required:['x','y','z'],additionalProperties:false};
 const vLinks={type:'array',maxItems:mindmapLimit,items:{type:'object',properties:{id:vId,from:vId,to:vId},required:['id','from','to'],additionalProperties:false}};
 const vCoord={type:'number',minimum:-10000,maximum:10000};
 const vStrokeWidth={type:'number',minimum:0.1,maximum:50};
@@ -79,7 +81,7 @@ const schematicEditFields={
 };
 export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_create_mindmap',description:'Erstellt eine native editierbare Mindmap mit Knoten, Farben und Querverbindungen. parentId null für die Wurzel.',
-    inputSchema:{type:'object',properties:{...vCreate,nodes:vNodes,connections:vLinks},required:[...vRequired,'nodes'],additionalProperties:false}},
+    inputSchema:{type:'object',properties:{...vCreate,nodes:vNodes,connections:vLinks,layout:vLayout,camera:vCamera},required:[...vRequired,'nodes'],additionalProperties:false}},
   {name:'redion_create_whiteboard',description:'Erstellt ein natives Whiteboard mit Formen, Texten, Haftnotizen, Pfeilen, Verbindungen und Stiftstrichen (points als [x,y]-Paare).',
     inputSchema:{type:'object',properties:{...vCreate,shapes:vShapes},required:[...vRequired,'shapes'],additionalProperties:false}},
   {name:'redion_create_sheet',description:'Erstellt ein natives A4-Blatt im Hoch- oder Querformat mit Papier, Seitenzahl und optionalen Text- oder Zeichenmarken. Positionen in Blattpunkten ab der linken oberen Ecke.',
@@ -91,7 +93,7 @@ export const CLOUD_TOOLS:ToolDef[]=[
       expectedVersion:{type:'integer',minimum:1}
     },required:['workspaceId','blockId'],additionalProperties:false}},
   {name:'redion_update_visual',description:'Bearbeitet native Zeichenobjekte mit Versionsprüfung. Mindmap-Knoten und Querverbindungen, Whiteboard-Formen und Gruppen, A4-Papier und Zeichenmarken auf A4-Blättern oder PDF-Seiten.',
-    inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},operation:{type:'string',enum:['replace_mindmap',...mindmapEditOperations,'append_shapes','move_shape','resize_shape','style_shape','delete_shape','rotate_shape','order_shape','lock_shape','move_stroke','set_paper','append_marks','move_mark',...shapeSelectionOperations]},nodes:vNodes,connections:vLinks,node:vNodes.items,parentId:vId,connection:vLinks.items,shapes:vShapes,marks:vSheetMarks,paper:{type:'string',enum:papers},elementId:vId,text:{type:'string',maxLength:1000},color:vColor,form:{type:'string',enum:forms},collapsed:{type:'boolean'},filled:{type:'boolean'},x:vCoord,y:vCoord,width:vCoord,height:vCoord,rotation:vRotation,strokeWidth:vStrokeWidth,marker:{type:'boolean'},locked:{type:'boolean'},order:{type:'string',enum:['front','back','forward','backward']},dx:vCoord,dy:vCoord,
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},operation:{type:'string',enum:['replace_mindmap',...mindmapEditOperations,'append_shapes','move_shape','resize_shape','style_shape','delete_shape','rotate_shape','order_shape','lock_shape','move_stroke','set_paper','append_marks','move_mark',...shapeSelectionOperations]},nodes:vNodes,connections:vLinks,layout:vLayout,camera:vCamera,node:vNodes.items,parentId:vId,connection:vLinks.items,shapes:vShapes,marks:vSheetMarks,paper:{type:'string',enum:papers},elementId:vId,text:{type:'string',maxLength:1000},color:vColor,form:{type:'string',enum:forms},collapsed:{type:'boolean'},filled:{type:'boolean'},x:vCoord,y:vCoord,width:vCoord,height:vCoord,rotation:vRotation,strokeWidth:vStrokeWidth,marker:{type:'boolean'},locked:{type:'boolean'},order:{type:'string',enum:['front','back','forward','backward']},dx:vCoord,dy:vCoord,
       selection:{type:'array',minItems:1,maxItems:40,uniqueItems:true,items:vId},groupId:vId,alignment:{type:'string',enum:alignments}},required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
 
   {name:'redion_list_workspaces',description:'Zeigt nur die für diese KI-Verbindung freigegebenen Bereiche.',
@@ -1148,13 +1150,13 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       }
       if(expected(args.expectedVersion)!==version)return err('conflict','Zeichenobjekt wurde geändert.');
       const op=args.operation,next={...data};
-      const fields:Record<string,string[]>={replace_mindmap:['nodes','connections'],rename_node:['elementId','text'],style_node:['elementId','color','form','collapsed'],delete_branch:['elementId'],append_shapes:['shapes'],move_shape:['elementId','x','y'],resize_shape:['elementId','width','height'],style_shape:['elementId','color','filled','text','strokeWidth','marker'],delete_shape:['elementId'],rotate_shape:['elementId','rotation'],order_shape:['elementId','order'],lock_shape:['elementId','locked'],move_stroke:['elementId','dx','dy'],set_paper:['paper'],
+      const fields:Record<string,string[]>={replace_mindmap:['nodes','connections','layout','camera'],rename_node:['elementId','text'],style_node:['elementId','color','form','collapsed'],delete_branch:['elementId'],append_shapes:['shapes'],move_shape:['elementId','x','y'],resize_shape:['elementId','width','height'],style_shape:['elementId','color','filled','text','strokeWidth','marker'],delete_shape:['elementId'],rotate_shape:['elementId','rotation'],order_shape:['elementId','order'],lock_shape:['elementId','locked'],move_stroke:['elementId','dx','dy'],set_paper:['paper'],
         group_selection:['selection','groupId'],ungroup_selection:['selection'],align_selection:['selection','alignment'],
         move_selection:['selection','dx','dy'],order_selection:['selection','order'],
         append_node:['node'],move_node:['elementId','parentId'],add_connection:['connection'],remove_connection:['elementId'],append_marks:['marks'],move_mark:['elementId','dx','dy']};
       if(typeof op!=='string'||!Object.hasOwn(fields,op)||Object.keys(args).some(k=>!['workspaceId','blockId','expectedVersion','operation',...fields[op]!].includes(k)))return err('invalid_arguments','Ungültige Operation.');
       try{
-        if(type==='mindmap'&&op==='replace_mindmap')next.karte=mindmap(args.nodes,args.connections);
+        if(type==='mindmap'&&op==='replace_mindmap')next.karte=mindmap(args.nodes,args.connections,args.layout,args.camera);
         else if(type==='mindmap'&&mindmapEditOperations.includes(op))next.karte=editNode(data.karte,op,args);
         else if(type==='whiteboard'&&shapeSelectionOperations.includes(op)){
           next.shapes=editSelection(data.shapes,op,args);next.raumVersion=1;
@@ -1433,9 +1435,9 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const input=args.daten as Record<string,unknown>|undefined;
       const meta:Record<string,unknown>=learning?learning.meta:{};
       if(visualType){
-        const fields=visualType==='mindmap'?['nodes','connections']:visualType==='whiteboard'?['shapes']:['paper','pages','orientation','marks'];
+        const fields=visualType==='mindmap'?['nodes','connections','layout','camera']:visualType==='whiteboard'?['shapes']:['paper','pages','orientation','marks'];
         if(args.requestId===undefined||Object.keys(args).some(k=>!['workspaceId','documentId','expectedVersion','title','requestId',...fields].includes(k)))return err('invalid_arguments','Ungültige Zeichenfelder.');
-        try{if(visualType==='mindmap')meta.karte=mindmap(args.nodes,args.connections);
+        try{if(visualType==='mindmap')meta.karte=mindmap(args.nodes,args.connections,args.layout,args.camera);
           else if(visualType==='whiteboard'){meta.shapes=board(args.shapes);meta.raumVersion=1;meta.hoehe=520;}
           else {
             Object.assign(meta,sheet(args.paper,args.pages,args.orientation));
