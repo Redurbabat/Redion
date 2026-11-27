@@ -9,7 +9,7 @@ import {rolleAuf,darf,notieren,feldRechte} from '../kern.ts';
 import {BUILTIN_BLOCK_TYPES} from './block-catalog.ts';
 import {BUILTIN_SYMBOLS} from './symbol-catalog.ts';
 import {editSchematic} from './schematic-edit.ts';
-import {measureOperatingPoint,runSwitchTest} from './schematic-test.ts';
+import {auditWiring,measureOperatingPoint,runSwitchTest} from './schematic-test.ts';
 import {buildLearningCard,buildLearningSet} from './learning-card.ts';
 import {applyDatabaseValues,databaseBatchLimit,databaseFieldLimit,parseDatabaseChanges,readWritableDatabaseRowsSql,updateDatabaseRowsSql} from './database-edit.ts';
 import {mindmap,board,sheet,papers,forms,shapes,alignments,mindmapLimit,editNode,editShape,editSelection,appendSheetMarks,moveSheetMark,readSheetMark,sheetMarkKinds} from './visual-blocks.ts';
@@ -168,8 +168,9 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,
       childOffset:{type:'integer',minimum:0,maximum:100000},
       childLimit:{type:'integer',minimum:1,maximum:40}},required:['workspaceId','blockId'],additionalProperties:false}},
-  {name:'redion_read_schematic',description:'Liest Bauteile, Leitungen, Beschriftungen und Planversion. Mit switchTest bis zu 32 Kombinationen gegen eine Sollfolge prüfen (letzter Schalter wechselt am schnellsten). Mit operatingPoint Strom, Spannung und Leistung für gewählte Schalterstellungen messen. Beide Modi benötigen expectedVersion und speichern keine Änderungen.',
+  {name:'redion_read_schematic',description:'Liest Bauteile, Leitungen, Beschriftungen und Planversion. Mit switchTest bis zu 32 Kombinationen gegen eine Sollfolge prüfen (letzter Schalter wechselt am schnellsten). Mit operatingPoint Strom, Spannung und Leistung für gewählte Schalterstellungen messen. Mit geometryAudit: true geometrische Leitungsfehler und Klemmenpositionen prüfen. Alle Prüfmodi benötigen expectedVersion und speichern keine Änderungen.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},
+      geometryAudit:{type:'boolean',enum:[true]},
       switchTest:{type:'object',additionalProperties:false,required:['switchIds','targetId','expected'],properties:{
         switchIds:{type:'array',minItems:1,maxItems:6,uniqueItems:true,items:idField},targetId:idField,
         expected:{type:'array',minItems:1,maxItems:32,items:{type:'boolean'}}
@@ -491,15 +492,17 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         const version=Number(s.version)||1;
         const switchTest=args.switchTest!==undefined;
         const operatingPoint=args.operatingPoint!==undefined;
-        if(switchTest&&operatingPoint)return err('invalid_arguments','Pro Aufruf entweder Sollfolge prüfen oder Messwerte lesen.');
-        if(args.expectedVersion!==undefined||switchTest||operatingPoint){
+        const geometryAudit=args.geometryAudit!==undefined;
+        if(geometryAudit&&args.geometryAudit!==true)return err('invalid_arguments','geometryAudit muss true sein.');
+        if(Number(switchTest)+Number(operatingPoint)+Number(geometryAudit)>1)return err('invalid_arguments','Pro Aufruf genau einen Prüfmodus wählen.');
+        if(args.expectedVersion!==undefined||switchTest||operatingPoint||geometryAudit){
           if(expected(args.expectedVersion)!==version)
             return err('conflict','Schaltplan wurde geändert. Bitte erneut lesen.');
         }
-        if(switchTest||operatingPoint){
+        if(switchTest||operatingPoint||geometryAudit){
           let report;
           try{
-            report=switchTest?runSwitchTest(plan,args.switchTest):measureOperatingPoint(plan,args.operatingPoint);
+            report=geometryAudit?auditWiring(plan):switchTest?runSwitchTest(plan,args.switchTest):measureOperatingPoint(plan,args.operatingPoint);
           }catch(error){
             return err('invalid_arguments',error instanceof Error?error.message:'Prüfung konnte nicht ausgeführt werden.');
           }
