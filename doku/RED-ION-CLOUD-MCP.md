@@ -421,7 +421,7 @@ gespeicherte Elternkette. Jeder Vorfahr muss den Kindblock in seiner
 'content'-Liste referenzieren, im selben Arbeitsbereich/auf derselben
 Seite liegen, nicht verschlüsselt oder gelöscht sein und schliesslich
 in der echten Seite enden. Verwaiste bzw. ausgegliederte Blöcke und
-Datenbankzeilen werden nicht direkt bearbeitet.
+Datenbankzeilen werden über `redion_update_database_rows` bearbeitet.
 
 Ein SQLite-Update erhöht die Blockversion nur, wenn sie mit
 'expectedVersion' übereinstimmt; bei gleichzeitiger Änderung muss
@@ -549,3 +549,21 @@ zeigen standardmässig aktive Seiten. `archived: true` filtert auf das
 Archiv. Eine bekannte Seitenkennung lässt sich mit `redion_read_page`
 und Seitenleserecht weiterhin direkt lesen. Dieses Archiv ist das native
 Seitenarchiv der App. Der Papierkorb hat einen eigenen Lebenszyklus.
+
+## Native Datenbankzeilen gesammelt bearbeiten
+
+`redion_update_database_rows` ändert bis zu zehn bestehende Zeilen mit
+bis zu 20 Feldern je Zeile. `databaseBlockId` ist der eingebettete
+Datenbankblock aus `redion_list_page_blocks`. `databaseId`,
+`expectedDatabaseVersion` und die `expectedVersion` je Zeile kommen aus
+`redion_read_database`. `changes` enthält Objekte mit `rowId`,
+`expectedVersion` und `values`. In `values` stehen die Feldkennungen
+aus dem gelesenen Schema, unabhängig von den sichtbaren Spaltentiteln.
+
+Unterstützt sind Titel, Text, Zahlen, Checkboxen und Kalenderdaten im
+Format JJJJ-MM-TT. Ein leerer String leert Text-, Zahl- und Datumswerte.
+Die Transaktion prüft den OAuth-Schreibscope, die Einbettung der
+Datenbank sowie die Rechte und Versionen sämtlicher betroffener Zeilen
+und Felder. Ändert sich während der Bearbeitung ein Datensatz oder ein
+Recht, meldet der Aufruf einen Konflikt. Die Antwort enthält die neuen
+Versionen. Der normale Sync liefert die nativen Zeilen an die App.

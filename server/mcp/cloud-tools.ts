@@ -11,6 +11,7 @@ import {BUILTIN_SYMBOLS} from './symbol-catalog.ts';
 import {editSchematic} from './schematic-edit.ts';
 import {measureOperatingPoint,runSwitchTest} from './schematic-test.ts';
 import {buildLearningCard,buildLearningSet} from './learning-card.ts';
+import {applyDatabaseValues,databaseBatchLimit,databaseFieldLimit,parseDatabaseChanges,readWritableDatabaseRowsSql,updateDatabaseRowsSql} from './database-edit.ts';
 import {mindmap,board,sheet,papers,forms,shapes,alignments,mindmapLimit,editNode,editShape,editSelection,appendSheetMarks,moveSheetMark,readSheetMark,sheetMarkKinds} from './visual-blocks.ts';
 
 type Db=McpDatabase;
@@ -185,6 +186,15 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_read_database',description:'Liest freigegebene Datenbankspalten und sichtbare Zeilen. Kompatibilität mit älteren Clients: limit bis 500 wird akzeptiert, aber pro Antwort sicher auf maximal 10 sichtbare Zeilen begrenzt. effectiveLimit und limitCapped zeigen das an; für weitere Zeilen nextOffset verwenden.',
     inputSchema:{type:'object',properties:{...workspace,databaseId:idField,limit:{type:'integer',minimum:1,maximum:500},
       offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId','databaseId'],additionalProperties:false}},
+  {name:'redion_update_database_rows',description:'Ändert bis zu zehn native Datenbankzeilen atomar. Unterstützt Titel, Text, Zahl, Checkbox und Datum. Erfordert Datenbankblock-ID, Schema-Version und Version je Zeile.',
+    inputSchema:{type:'object',properties:{...workspace,databaseId:idField,databaseBlockId:idField,
+      expectedDatabaseVersion:{type:'integer',minimum:1},
+      changes:{type:'array',minItems:1,maxItems:databaseBatchLimit,items:{type:'object',properties:{
+        rowId:idField,expectedVersion:{type:'integer',minimum:1},
+        values:{type:'object',minProperties:1,maxProperties:databaseFieldLimit,
+          additionalProperties:{type:['string','number','boolean'],maxLength:4000}}
+      },required:['rowId','expectedVersion','values'],additionalProperties:false}}
+    },required:['workspaceId','databaseId','databaseBlockId','expectedDatabaseVersion','changes'],additionalProperties:false}},
   {name:'redion_list_databases',description:'Listet lesbare Klartext-Datenbanken auf Seiten, die der Benutzer lesen darf. Keine versteckten Seiten oder Spaltenwerte.',
     inputSchema:{type:'object',properties:{...workspace,limit:{type:'integer',minimum:1,maximum:30},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
   {name:'redion_list_root_pages',description:'Listet freigegebene Hauptseiten eines Arbeitsbereichs; nur sichtbare Seiten zählen bei limit und offset.',
@@ -200,7 +210,7 @@ export const CLOUD_TOOLS:ToolDef[]=[
       replacement:{type:'string',maxLength:4000},expectedVersion:{type:'integer',minimum:1}},
       required:['workspaceId','documentId','find','replacement','expectedVersion'],additionalProperties:false}}
 ];
-const writeNames=new Set(['redion_create_page','redion_update_page','redion_replace_text','redion_append_content','redion_move_page','redion_add_block','redion_add_schematic','redion_update_schematic','redion_update_block','redion_create_learning_card','redion_create_learning_set','redion_create_mindmap','redion_create_whiteboard','redion_create_sheet','redion_update_visual']);
+const writeNames=new Set(['redion_create_page','redion_update_page','redion_replace_text','redion_append_content','redion_move_page','redion_add_block','redion_add_schematic','redion_update_schematic','redion_update_block','redion_create_learning_card','redion_create_learning_set','redion_create_mindmap','redion_create_whiteboard','redion_create_sheet','redion_update_visual','redion_update_database_rows']);
 // MCP annotations tell AI clients which tools are read-only, additive or
 // modifying. They are advisory; server-side OAuth and ACL checks still govern.
 const toolTitles:Record<string,string>={
@@ -219,6 +229,7 @@ const toolTitles:Record<string,string>={
   redion_update_page:'Seitentitel ändern',
   redion_list_databases:'Datenbanken auflisten',
   redion_read_database:'Datenbank lesen',
+  redion_update_database_rows:'Datenbankzeilen bearbeiten',
   redion_list_tasks:'Aufgaben auflisten',
   redion_list_block_types:'Blockarten auflisten',
   redion_list_symbols:'Schaltzeichen auflisten',
@@ -231,7 +242,7 @@ const toolTitles:Record<string,string>={
   redion_move_page:'Seite verschieben',
   redion_replace_text:'Text ersetzen'
 };
-const destructiveNames=new Set(['redion_update_page','redion_move_page','redion_replace_text','redion_update_block','redion_update_visual']);
+const destructiveNames=new Set(['redion_update_page','redion_move_page','redion_replace_text','redion_update_block','redion_update_visual','redion_update_database_rows']);
 export const visibleCloudTools=(p:McpPrincipal):ToolDef[]=>
   CLOUD_TOOLS.filter(t=>!writeNames.has(t.name)||p.scopes.includes('redion:write'))
     .map(t=>{
@@ -726,6 +737,69 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       // No raw-row truncation marker: that could disclose the existence of
       // content that the caller is explicitly forbidden to read.
       return {documents:found.slice(0,max),nextOffset:found.length>max?Number(offset)+max:null};
+    }
+    if(name==='redion_update_database_rows'){
+      if(Object.keys(args).some(key=>!['workspaceId','databaseId','databaseBlockId','expectedDatabaseVersion','changes'].includes(key)))
+        return err('invalid_arguments','Unbekanntes Feld für die Datenbankbearbeitung.');
+      const databaseId=required(args.databaseId,128),blockId=required(args.databaseBlockId,128);
+      const databaseVersion=expected(args.expectedDatabaseVersion);
+      let changes:ReturnType<typeof parseDatabaseChanges>;
+      try{changes=parseDatabaseChanges(args.changes);}
+      catch(error){return err('invalid_arguments',(error as Error).message);}
+      const block=await ablage.hole('saetze',{bereich:w,id:blockId});
+      if(!block||block.tabelle!=='blocks'||block.geloescht||block.verschluesselt||!block.seite)
+        return err('not_found','Datenbankblock nicht verfügbar.');
+      const pageId=String(block.seite);
+      await page(w,pageId,'bearbeiten');
+      let link:Args;
+      try{link=JSON.parse(String(block.daten));}
+      catch{return err('not_found','Datenbankblock nicht verfügbar.');}
+      if(!link||link.type!=='database'||link.collectionId!==databaseId||link.alive===false||
+          link.archiviert===true||link.gesperrt===true||link.parentTable==='collection')
+        return err('not_found','Datenbankblock nicht verfügbar.');
+      const ancestors=await embedding(w,pageId,blockId,link);
+      const database=await ablage.hole('saetze',{bereich:w,id:databaseId});
+      if(!database||database.tabelle!=='collections'||database.geloescht||database.verschluesselt)
+        return err('not_found','Datenbank nicht verfügbar.');
+      if(Number(database.version)!==databaseVersion)return err('conflict','Datenbankschema wurde geändert.');
+      let schema:Args;
+      try{schema=JSON.parse(String(database.daten))?.schema;}
+      catch{return err('invalid_data','Datenbankschema ist ungültig.');}
+      if(!schema||typeof schema!=='object'||Array.isArray(schema))return err('invalid_data','Datenbankschema ist ungültig.');
+      const fields=[...new Set(changes.flatMap(change=>change.values.map(([key])=>key)))];
+      if(!fields.includes('title')&&fields.some(key=>(schema[key] as Args|undefined)?.type==='title'))fields.push('title');
+      const rights=await feldRechte(ablage,w,databaseId,userId);
+      if(fields.some(key=>Object.hasOwn(rights,key)&&rights[key]!=='voll'))
+        return err('forbidden','Mindestens eine Spalte ist schreibgeschützt.');
+      const rows=await db.prepare(readWritableDatabaseRowsSql).bind(
+        JSON.stringify(changes.map(change=>({id:change.rowId}))),w,userId,pageId
+      ).all<{id:string;version:number;daten:string}>();
+      const byId=new Map(rows.results.map(row=>[row.id,row]));
+      const now=new Date().toISOString(),encoder=new TextEncoder();
+      const updates=[];
+      for(const change of changes){
+        const row=byId.get(change.rowId);
+        if(!row)return err('not_found','Datenbankzeile nicht verfügbar.');
+        let data:Args;
+        try{data=JSON.parse(row.daten);}
+        catch{return err('invalid_data','Datenbankzeile ist ungültig.');}
+        if(!data||data.type!=='page'||data.parentTable!=='collection'||data.parentId!==databaseId||
+            data.alive===false||data.archiviert===true||data.gesperrt===true)
+          return err('not_found','Datenbankzeile nicht verfügbar.');
+        if(Number(row.version)!==change.expectedVersion)return err('conflict','Eine Datenbankzeile wurde geändert.');
+        let payload:string;
+        try{payload=JSON.stringify(applyDatabaseValues(data,schema,change.values,now));}
+        catch(error){return err('invalid_arguments',(error as Error).message);}
+        if(encoder.encode(payload).byteLength>48000)return err('too_large','Eine Datenbankzeile überschreitet das Schreiblimit.');
+        updates.push({id:change.rowId,version:change.expectedVersion,payload});
+      }
+      const saved=await db.prepare(updateDatabaseRowsSql).bind(JSON.stringify(updates),w,userId,pageId,databaseId,
+        databaseVersion,JSON.stringify([{id:blockId,version:Number(block.version)},...ancestors]),JSON.stringify(fields),now)
+        .all<{id:string;version:number}>();
+      if(saved.results.length!==updates.length)return err('conflict','Daten, Einbettung oder Berechtigungen wurden zwischenzeitlich geändert.');
+      const versions=new Map(saved.results.map(row=>[row.id,row.version]));
+      await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',text:'Datenbankzeilen über Cloud-MCP bearbeitet',objekt:databaseId});
+      return {workspaceId:w,databaseId,databaseVersion,rows:updates.map(row=>({rowId:row.id,version:versions.get(row.id)}))};
     }
     if(name==='redion_read_database'){
       const databaseId=required(args.databaseId,128);

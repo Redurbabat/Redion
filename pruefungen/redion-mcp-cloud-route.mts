@@ -2434,6 +2434,103 @@ test('Cloud-MCP reads prepared PDF text and edits native marks within the page g
  }finally{f.close();}
 });
 
+test('Cloud-MCP edits native database rows atomically with live rights and version protection',async()=>{
+ const f=await fixture();
+ try{
+  const put=(id:string,tabelle:string,seite:string,data:Record<string,unknown>,version=1)=>
+    f.store.setze('saetze',{id,tabelle,seite,bereich:'ws_test',daten:JSON.stringify(data),
+      version,geloescht:0,verschluesselt:0,geaendert:'2026-11-25',vonGeraet:'Test'});
+  const schema={title:{type:'title'},amount:{type:'number'},date:{type:'date'},done:{type:'checkbox'},
+    hidden:{type:'text'},result:{type:'formula'}};
+  await put('table_page','blocks','table_page',{type:'page',content:['table_block']});
+  await put('table_block','blocks','table_page',{type:'database',parentId:'table_page',collectionId:'table_collection'});
+  await put('detached_table','blocks','table_page',{type:'database',parentId:'table_page',collectionId:'table_collection'});
+  await put('table_collection','collections','table_collection',{schema});
+  for(const id of ['table_row_1','table_row_2'])await put(id,'blocks',id,{id,type:'page',
+    parentId:'table_collection',parentTable:'collection',text:'vorher',props:{amount:20,hidden:'bleibt'},content:[]});
+  await f.store.setze('konten',{id:'table_editor',mail:'table_editor@example.test',name:'Editor',herkunft:'github',angelegt:'',gesperrt:0});
+  await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'table_editor',rolle:'edit',von:'owner',wann:''});
+  const protect=(feld:string,rolle:string)=>f.store.setze('feldrechte',{bereich:'ws_test',sammlung:'table_collection',
+    feld,kontoId:'table_editor',rolle,von:'owner',wann:''});
+  await protect('hidden','kein');
+  const token=await f.authorize(true,'table_editor');
+  const readOnly=await f.authorize(false);
+  const base={workspaceId:'ws_test',databaseId:'table_collection',databaseBlockId:'table_block',
+    expectedDatabaseVersion:1,changes:[
+      {rowId:'table_row_1',expectedVersion:1,values:{title:'A',amount:31.5,done:false}},
+      {rowId:'table_row_2',expectedVersion:1,values:{title:'B',date:'2026-11-27'}}
+    ]};
+  const call=async(patch:Record<string,unknown>={},access=token.access_token)=>{
+    const res=await f.rpc(access,'tools/call',{name:'redion_update_database_rows',arguments:{...base,...patch}});
+    assert.equal(res.status,200);
+    return JSON.parse(res.data.result.content[0].text);
+  };
+  const row=(id:string)=>f.store.hole('saetze',{bereich:'ws_test',id});
+  assert.equal((await call({},readOnly.access_token)).code,'forbidden');
+  assert.equal((await call({databaseBlockId:'detached_table'})).code,'not_found');
+  assert.equal((await call({expectedDatabaseVersion:2})).code,'conflict');
+  const other=base.changes[1]!;
+  for(const [change,code] of [
+    [{...other,expectedVersion:2},'conflict'],
+    [{...other,values:{date:'2026-02-30'}},'invalid_arguments'],
+    [{...other,values:{result:'1+1'}},'invalid_arguments'],
+    [{...other,values:{hidden:'unerlaubt'}},'forbidden'],
+    [base.changes[0],'invalid_arguments']
+  ] as const){
+    assert.equal((await call({changes:[base.changes[0],change]})).code,code);
+    assert.equal((await row('table_row_1'))?.version,1);
+  }
+  const prepare=f.db.prepare;
+  let beforeWrite:()=>Promise<unknown>=()=>protect('amount','lesen');
+  f.db.prepare=function(sql){
+    const stmt=prepare.call(this,sql);
+    if(sql.includes('eligible AS MATERIALIZED')){
+      const run=stmt.all.bind(stmt);
+      stmt.all=async function<T>(){
+        await beforeWrite();
+        return run<T>();
+      };
+    }
+    return stmt;
+  };
+  try{
+    assert.equal((await call()).code,'conflict');
+    assert.equal((await row('table_row_1'))?.version,1);
+    assert.equal((await row('table_row_2'))?.version,1);
+    await protect('amount','voll');
+    beforeWrite=async()=>{
+      const saved=await row('table_row_2');
+      assert.ok(saved);
+      await f.store.setze('saetze',{...saved,version:2,daten:JSON.stringify({
+        ...JSON.parse(String(saved.daten)),icon:'🔧'
+      })});
+    };
+    assert.equal((await call()).code,'conflict');
+    assert.equal((await row('table_row_1'))?.version,1);
+    assert.equal((await row('table_row_2'))?.version,2);
+  }finally{f.db.prepare=prepare;}
+  assert.deepEqual((await call({changes:[base.changes[0],{...other,expectedVersion:2}]})).rows,
+    [{rowId:'table_row_1',version:2},{rowId:'table_row_2',version:3}]);
+  assert.equal((await call()).code,'conflict');
+  const saved=JSON.parse(String((await row('table_row_1'))?.daten));
+  assert.equal(saved.text,'A');
+  assert.deepEqual(saved.props,{amount:31.5,hidden:'bleibt',done:false});
+  assert.equal(saved.parentId,'table_collection');
+  assert.equal(JSON.parse(String((await row('table_row_2'))?.daten)).icon,'🔧');
+  const readable=await f.rpc(token.access_token,'tools/call',{name:'redion_read_database',
+    arguments:{workspaceId:'ws_test',databaseId:'table_collection'}});
+  assert.equal(JSON.parse(readable.data.result.content[0].text).rows.find((entry:{rowId:string})=>
+    entry.rowId==='table_row_1').values.amount,31.5);
+  const app=await redionKern.syncWeg({suche:{}},f.store,
+    {konto:{id:'table_editor'},rechte:['alles']},['sync','runter'],'POST',
+    {bereich:'ws_test',seit:new Date(Date.now()-60000).toISOString()},{'redion-geraet':'iPhone'});
+  assert.equal(app.status,200);
+  const delta=JSON.parse(app.koerper).saetze.find((entry:{id:string})=>entry.id==='table_row_1');
+  assert.equal(delta.version,2);
+  assert.deepEqual(JSON.parse(delta.daten).props,{amount:31.5,done:false});
+ }finally{f.close();}
+});
+
 test('Cloud-MCP archives, finds and restores native pages without deleting content',async()=>{
  const f=await fixture();
  try{

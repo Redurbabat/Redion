@@ -373,9 +373,34 @@ test('Cloudflare workerd: echter Worker, isoliertes D1, öffentliche DCR, SDK-Le
       workspaceId:'runtime-workspace',nurOffen:true
     });
     assert.ok(!openTasks.payload.tasks.some((x:any)=>x.taskId===task.payload.blockId));
+    assert.equal((await db.prepare('SELECT COUNT(*) n FROM saetze').first()).n,53);
+    const putRecord=(id:string,table:string,seite:string,data:Record<string,unknown>)=>db.prepare(
+      'INSERT INTO saetze(id,bereich,tabelle,daten,verschluesselt,seite,version,geloescht) VALUES(?,?,?,?,0,?,1,0)'
+    ).bind(id,'runtime-workspace',table,JSON.stringify(data),seite).run();
+    await putRecord('runtime-db-page','blocks','runtime-db-page',{type:'page',content:['runtime-db-block']});
+    await putRecord('runtime-db-block','blocks','runtime-db-page',{
+      type:'database',parentId:'runtime-db-page',collectionId:'runtime-db'
+    });
+    await putRecord('runtime-db','collections','runtime-db',{schema:{done:{type:'checkbox'},amount:{type:'number'}}});
+    for(const id of ['runtime-row-a','runtime-row-b'])await putRecord(id,'blocks',id,{
+      type:'page',parentTable:'collection',parentId:'runtime-db',props:{done:false}
+    });
+    const rowBatch={workspaceId:'runtime-workspace',databaseId:'runtime-db',databaseBlockId:'runtime-db-block',
+      expectedDatabaseVersion:1,changes:[
+        {rowId:'runtime-row-a',expectedVersion:1,values:{done:true}},
+        {rowId:'runtime-row-b',expectedVersion:1,values:{amount:12.5}}
+      ]};
+    const staleBatch=await invoke('redion_update_database_rows',{...rowBatch,
+      changes:[rowBatch.changes[0],{...rowBatch.changes[1],expectedVersion:2}]});
+    assert.equal(staleBatch.payload.code,'conflict');
+    const batchSaved=await invoke('redion_update_database_rows',rowBatch);
+    assert.equal(batchSaved.res.isError,undefined,JSON.stringify(batchSaved.payload));
+    assert.deepEqual(batchSaved.payload.rows,[{rowId:'runtime-row-a',version:2},{rowId:'runtime-row-b',version:2}]);
+    const tableRead=await invoke('redion_read_database',{workspaceId:'runtime-workspace',databaseId:'runtime-db'});
+    assert.deepEqual(tableRead.payload.rows.find((row:{rowId:string})=>row.rowId==='runtime-row-b').values,
+      {done:false,amount:12.5});
     await oauth.revokeGrant('runtime-owner',(await oauth.listGrants('runtime-owner'))[0]!.id);
     assert.equal((await fetcher(resource,{headers:{Authorization:'Bearer '+tokens.access_token}})).status,401);
-    assert.equal((await db.prepare('SELECT COUNT(*) n FROM saetze').first()).n,53);
     assert.deepEqual(outbound,[],'Keine ausgehenden Netzaufrufe');
   }finally{await Promise.allSettled([client?.close(),writer?.close()]);await mf.dispose();}
 });
