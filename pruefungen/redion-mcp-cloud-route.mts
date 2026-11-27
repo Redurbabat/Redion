@@ -1799,6 +1799,15 @@ test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und at
     assert.deepEqual(afterDeletion.data.plan.leitungen,valued.data.plan.leitungen);
     assert.deepEqual(afterDeletion.data.plan.teile,valued.data.plan.teile);
     assert.equal((await update({expectedVersion:9,operation:'delete_label',labelId:'TB'})).data.code,'conflict');
+    const deniedDeletion=await update({expectedVersion:10,operation:'delete_wire',wireId:'L1'},readOnly.access_token);
+    assert.equal(deniedDeletion.data.code,'forbidden');
+    const removedWire=await update({expectedVersion:10,operation:'delete_wire',wireId:'L1'});
+    assert.equal(removedWire.data.version,11);
+    assert.equal(removedWire.data.electricalValidation,false);
+    const disconnected=await call('redion_read_schematic',{blockId});
+    assert.deepEqual(disconnected.data.plan.leitungen,[]);
+    assert.deepEqual(disconnected.data.plan.teile,afterDeletion.data.plan.teile);
+    assert.deepEqual(disconnected.data.plan.texte,afterDeletion.data.plan.texte);
     const orphanId='detached_schematic';
     await f.store.setze('saetze',{id:orphanId,bereich:'ws_test',tabelle:'blocks',
       daten:JSON.stringify({type:'schaltplan',parentId:'edit_schematic_page',plan:finalPlan.data.plan}),
