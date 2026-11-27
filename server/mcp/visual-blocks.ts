@@ -21,11 +21,12 @@ export const alignments=['left','center','right','top','middle','bottom','horizo
 export const mindmapLimit=200;
 
 function makeNode(value:unknown):Obj {
- const input=obj(value,['id','text','parentId','side','color','form']);
+ const input=obj(value,['id','text','parentId','side','color','form','collapsed']);
  const node:Obj={id:id(input.id),text:str(input.text,500),eltern:input.parentId===null?null:id(input.parentId)};
  if(input.side!==undefined)node.seite=choice(input.side,['links','rechts']);
  if(input.color!==undefined)node.farbe=color(input.color);
  if(input.form!==undefined)node.form=choice(input.form,forms);
+ if(input.collapsed!==undefined){if(typeof input.collapsed!=='boolean')fail('Ungültiger Zustand.');node.zu=input.collapsed;}
  return node;
 }
 
@@ -65,11 +66,13 @@ function validateConnections(links:Obj[],nodes:ReadonlyMap<unknown,Obj>):void {
  }
 }
 
-export function mindmap(nodes:unknown,connections:unknown=[]):Obj{
+export function mindmap(nodes:unknown,connections:unknown=[],layout:unknown='karte',camera?:unknown):Obj{
  const knoten=arr(nodes,1,mindmapLimit).map(makeNode);
  const verbindungen=arr(connections,0,mindmapLimit).map(makeConnection);
  validateConnections(verbindungen,validateTree(knoten));
- return {knoten,verbindungen,aufbau:'karte'};
+ const karte:Obj={knoten,verbindungen,aufbau:choice(layout,['karte','links','rechts'])};
+ if(camera!==undefined){const s=obj(camera,['x','y','z']);karte.sicht={x:num(s.x,-100000,100000),y:num(s.y,-100000,100000),z:num(s.z,.02,4)};}
+ return karte;
 }
 export function board(input:unknown,existing:Obj[]=[]):Obj[]{
  const added=arr(input,0,100).map(v=>{const o=obj(v,['id','kind','x','y','width','height','color','text','filled','from','to','points','pressure','strokeWidth','marker','rotation']);const art=choice(o.kind,shapes),s:Obj={id:id(o.id),art,farbe:color(o.color??'#2f8ab5')};
