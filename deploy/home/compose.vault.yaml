@@ -1,0 +1,10 @@
+# Optional; use only for an empty blob volume or a previously encrypted vault.
+services:
+  redion:
+    environment:
+      REDION_VAULT_KEY_FILE: /run/secrets/redion_vault_key
+    secrets:
+      - redion_vault_key
+secrets:
+  redion_vault_key:
+    file: ${REDION_VAULT_KEY_PATH:?Set a private 32-byte key file outside the SSD}

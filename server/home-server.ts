@@ -1,5 +1,6 @@
 import http from 'node:http';
 import {Readable} from 'node:stream';
+import {readFile} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {openHomeDatabase} from './home/sqlite.ts';
@@ -22,11 +23,11 @@ const json=(status:number,error:string)=>Response.json({error},{status,headers:{
 
 /** Initial private API: no static repository files, public registration,
  * public pages, or unverified Cloudflare identity headers. */
-export async function openHomeServer(options:{dataDir:string;origin:string;enableMcp?:boolean}){
+export async function openHomeServer(options:{dataDir:string;origin:string;enableMcp?:boolean;vaultKey?:Uint8Array}){
   const origin=new URL(options.origin);
   if(origin.protocol!=='https:'||origin.origin!==options.origin)throw new Error('REDION_ORIGIN must be an HTTPS origin');
   const store=openHomeDatabase(join(options.dataDir,'redion.sqlite'));
-  const blobs=await openHomeBlobs(join(options.dataDir,'blobs')).catch(error=>{store.close();throw error;});
+  const blobs=await openHomeBlobs(join(options.dataDir,'blobs'),options.vaultKey).catch(error=>{store.close();throw error;});
   if(options.enableMcp)prepareHomeConsent(store.sqlite);
   prepareHomeSync(store.sqlite);
   prepareRedId(store.sqlite);
@@ -107,7 +108,8 @@ async function main(){
   const origin=process.env.REDION_ORIGIN;
   if(!origin)throw new Error('Set REDION_ORIGIN first');
   const enableMcp=process.env.REDION_ENABLE_MCP==='1';
-  const service=await openHomeServer({dataDir,origin,enableMcp});
+  const vaultKey=process.env.REDION_VAULT_KEY_FILE?await readFile(process.env.REDION_VAULT_KEY_FILE):undefined;
+  const service=await openHomeServer({dataDir,origin,enableMcp,vaultKey});
   const command=process.argv[2];
   if(command==='red-id-issue'||command==='red-id-revoke'){
     try{

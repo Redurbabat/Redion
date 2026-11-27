@@ -140,3 +140,16 @@ V2-Zugänge bleiben auf `identity:read` beschränkt. Kein OAuth-Browser-SSO,
 keine QR-Oberfläche und keine automatische Anmeldung fremder Repositories.
 `createRedIdV2Client` verwendet eine vom nativen Client bereitgestellte
 sichere Speicherimplementierung. SDK-Integration in den Apps bleibt offen.
+
+## RED Vault – optionale Verschlüsselung der Blob-Dateien
+
+AES-256-GCM mit zufälligem Nonce je Schreibvorgang und Bindung an die
+Blob-Kennung. Start verweigert falsche/fehlende Schlüssel und eine
+automatische Umstellung bestehender Klartextdateien. Schlüssel ausserhalb
+der SSD aufbewahren und separat sicher sichern. Für den opt-in Container
+`deploy/home/compose.vault.yaml` ergänzen und `REDION_VAULT_KEY_PATH` auf
+eine exakt 32 Byte lange, für den Container lesbare private Schlüsseldatei
+setzen. Kein Schlüssel in Git. SQLite selbst ist dadurch nicht verschlüsselt;
+für vollständigen Schutz bei Diebstahl der SSD zusätzlich LUKS/Datenträger-
+verschlüsselung und sichere Schlüsselablage einsetzen. Migration vorhandener
+Daten, per-App-Vault-Berechtigungen und E2EE-Abnahme bleiben offen.
