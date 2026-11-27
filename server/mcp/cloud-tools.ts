@@ -5,7 +5,8 @@
 import type {Ablage} from '../typen.ts';
 import type {McpPrincipal} from './oauth.ts';
 import type {McpDatabase} from './state.ts';
-import {rolleAuf,darf,notieren,feldRechte} from '../kern.ts';
+import {rolleAuf,darf,notieren,feldRechte,abdruck} from '../kern.ts';
+import {canonicalMcpJson,CLOUD_MCP_PROTOCOL_VERSIONS,CLOUD_MCP_SERVER_INFO} from './contract-meta.ts';
 import {BUILTIN_BLOCK_TYPES} from './block-catalog.ts';
 import {BUILTIN_SYMBOLS} from './symbol-catalog.ts';
 import {editSchematic,schematicChangeSummary} from './schematic-edit.ts';
@@ -13,7 +14,7 @@ import {createUndoCheckpoint,undoCandidate} from './schematic-undo.ts';
 import {mcpStateD1} from './state.ts';
 import {auditWiring,measureOperatingPoint,runSwitchTest} from './schematic-test.ts';
 import {buildLearningCard,buildLearningSet} from './learning-card.ts';
-import {applyDatabaseValues,databaseBatchLimit,databaseFieldLimit,parseDatabaseChanges,readWritableDatabaseRowsSql,updateDatabaseRowsSql} from './database-edit.ts';
+import {applyDatabaseValues,databaseBatchLimit,databaseFieldLimit,databaseOptionNames,databaseSelectionLimit,parseDatabaseChanges,readWritableDatabaseRowsSql,updateDatabaseRowsSql} from './database-edit.ts';
 import {mindmap,board,sheet,papers,forms,shapes,alignments,mindmapLimit,editNode,editShape,editSelection,appendSheetMarks,moveSheetMark,readSheetMark,sheetMarkKinds} from './visual-blocks.ts';
 
 type Db=McpDatabase;
@@ -82,6 +83,8 @@ const schematicEditFields={
   labelId:idField,labelText:{type:'string',minLength:1,maxLength:200}
 };
 export const CLOUD_TOOLS:ToolDef[]=[
+  {name:'redion_get_capabilities',description:'Zeigt Serverversion, unterstützte MCP-Protokolle und den SHA-256-Abdruck der für diese OAuth-Freigabe sichtbaren Werkzeugdefinitionen.',
+    inputSchema:{type:'object',properties:{},additionalProperties:false}},
   {name:'redion_create_mindmap',description:'Erstellt eine native editierbare Mindmap mit Knoten, Farben und Querverbindungen. parentId null für die Wurzel.',
     inputSchema:{type:'object',properties:{...vCreate,nodes:vNodes,connections:vLinks},required:[...vRequired,'nodes'],additionalProperties:false}},
   {name:'redion_create_whiteboard',description:'Erstellt ein natives Whiteboard mit Formen, Texten, Haftnotizen, Pfeilen, Verbindungen und Stiftstrichen (points als [x,y]-Paare).',
@@ -200,16 +203,17 @@ export const CLOUD_TOOLS:ToolDef[]=[
   {name:'redion_list_tasks',description:'Listet lesbare Aufgaben aus Todo-Blöcken und aus Datenbankzeilen mit sichtbaren Status- oder Checkbox-Spalten. Nur sichtbare Treffer zählen bei der Paginierung.',
     inputSchema:{type:'object',properties:{...workspace,nurOffen:{type:'boolean'},
       limit:{type:'integer',minimum:1,maximum:40},offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId'],additionalProperties:false}},
-  {name:'redion_read_database',description:'Liest freigegebene Datenbankspalten und sichtbare Zeilen. Kompatibilität mit älteren Clients: limit bis 500 wird akzeptiert, aber pro Antwort sicher auf maximal 10 sichtbare Zeilen begrenzt. effectiveLimit und limitCapped zeigen das an; für weitere Zeilen nextOffset verwenden.',
+  {name:'redion_read_database',description:'Liest freigegebene Datenbankspalten und sichtbare Zeilen. includeOptions zeigt gespeicherte Auswahloptionen. limit bis 500 wird akzeptiert; pro Antwort sind maximal 10 Zeilen sichtbar. Für weitere Zeilen nextOffset verwenden.',
     inputSchema:{type:'object',properties:{...workspace,databaseId:idField,limit:{type:'integer',minimum:1,maximum:500},
-      offset:{type:'integer',minimum:0,maximum:1000}},required:['workspaceId','databaseId'],additionalProperties:false}},
-  {name:'redion_update_database_rows',description:'Ändert bis zu zehn native Datenbankzeilen atomar. Unterstützt Titel, Text, Zahl, Checkbox und Datum. Erfordert Datenbankblock-ID, Schema-Version und Version je Zeile.',
+      offset:{type:'integer',minimum:0,maximum:1000},includeOptions:{type:'boolean'}},required:['workspaceId','databaseId'],additionalProperties:false}},
+  {name:'redion_update_database_rows',description:'Ändert bis zu zehn native Datenbankzeilen atomar. Unterstützt Titel, Text, Zahl, Checkbox, Datum, Auswahl, Status und Mehrfachauswahl. Erfordert Datenbankblock-ID, Schema-Version und Version je Zeile.',
     inputSchema:{type:'object',properties:{...workspace,databaseId:idField,databaseBlockId:idField,
       expectedDatabaseVersion:{type:'integer',minimum:1},
       changes:{type:'array',minItems:1,maxItems:databaseBatchLimit,items:{type:'object',properties:{
         rowId:idField,expectedVersion:{type:'integer',minimum:1},
         values:{type:'object',minProperties:1,maxProperties:databaseFieldLimit,
-          additionalProperties:{type:['string','number','boolean'],maxLength:4000}}
+          additionalProperties:{type:['string','number','boolean','array'],maxLength:4000,maxItems:databaseSelectionLimit,
+            uniqueItems:true,items:{type:'string',maxLength:160}}}
       },required:['rowId','expectedVersion','values'],additionalProperties:false}}
     },required:['workspaceId','databaseId','databaseBlockId','expectedDatabaseVersion','changes'],additionalProperties:false}},
   {name:'redion_list_databases',description:'Listet lesbare Klartext-Datenbanken auf Seiten, die der Benutzer lesen darf. Keine versteckten Seiten oder Spaltenwerte.',
@@ -231,6 +235,7 @@ const writeNames=new Set(['redion_create_page','redion_update_page','redion_repl
 // MCP annotations tell AI clients which tools are read-only, additive or
 // modifying. They are advisory; server-side OAuth and ACL checks still govern.
 const toolTitles:Record<string,string>={
+  redion_get_capabilities:'MCP-Fähigkeiten und Vertragsversion anzeigen',
   redion_list_workspaces:'Bereiche auflisten',
   redion_search:'Seiten und Inhalte suchen',
   redion_read_page:'Seite lesen',
@@ -378,6 +383,14 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       return err('unknown_tool','Dieses Werkzeug ist im Cloud-MCP nicht implementiert. Bitte die aktuelle Werkzeugliste neu laden.');
     if(!visibleCloudTools(principal).some(t=>t.name===name))
       return err('forbidden','Für dieses Werkzeug fehlen die erforderlichen OAuth-Rechte.');
+    if(name==='redion_get_capabilities'){
+      if(Object.keys(args).length)return err('invalid_arguments','Dieses Werkzeug benötigt keine Eingabe.');
+      const tools=visibleCloudTools(principal).sort((a,b)=>a.name<b.name?-1:a.name>b.name?1:0);
+      const readonlyCount=tools.filter(tool=>tool.annotations?.readOnlyHint===true).length;
+      return {serverInfo:CLOUD_MCP_SERVER_INFO,protocolVersions:CLOUD_MCP_PROTOCOL_VERSIONS,
+        toolCount:tools.length,readonlyCount,writeCount:tools.length-readonlyCount,
+        toolSchemaSha256:await abdruck(canonicalMcpJson(tools))};
+    }
     if(name==='redion_list_symbols'){
       if(args.gruppe!==undefined&&(typeof args.gruppe!=='string'||args.gruppe.length>40))
         return err('invalid_arguments','Gruppe muss ein kurzer Text sein.');
@@ -856,6 +869,8 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
     }
     if(name==='redion_read_database'){
       const databaseId=required(args.databaseId,128);
+      if(args.includeOptions!==undefined&&typeof args.includeOptions!=='boolean')
+        return err('invalid_arguments','includeOptions muss true oder false sein.');
       const requestedLimit=limit(args.limit,10,500);
       const max=Math.min(10,requestedLimit);
       const offset=args.offset===undefined?0:args.offset;
@@ -886,11 +901,22 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       }
       if(!readable)return err('not_found','Datenbank nicht verfügbar.');
       const rights=await feldRechte(ablage,w,databaseId,userId);
+      let optionBytesRemaining=8000;
+      const optionEncoder=new TextEncoder();
       const cols=Object.entries(data.schema as Record<string,unknown>)
         .filter(([key])=>rights[key]!=='kein'&&!['__proto__','prototype','constructor'].includes(key))
         .map(([key,def])=>{
           const x=def&&typeof def==='object'&&!Array.isArray(def)?def as Record<string,unknown>:{};
-          return {key,name:String(x.name||key).slice(0,120),type:String(x.type||'text').slice(0,40)};
+          const column={key,name:String(x.name||key).slice(0,120),type:String(x.type||'text').slice(0,40)};
+          if(args.includeOptions!==true||!['select','status','multi'].includes(column.type))return column;
+          const names=databaseOptionNames(x),options:string[]=[];
+          for(const name of names.slice(0,databaseSelectionLimit)){
+            const bytes=optionEncoder.encode(JSON.stringify(name)).byteLength+1;
+            if(bytes>optionBytesRemaining)break;
+            options.push(name);
+            optionBytesRemaining-=bytes;
+          }
+          return {...column,options,optionsTruncated:options.length<names.length};
         });
       if(cols.length>40)return err('too_large','Diese Datenbank hat mehr als 40 sichtbare Spalten.');
       const columns=new Set(cols.map(x=>x.key));

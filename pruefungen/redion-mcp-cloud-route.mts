@@ -160,7 +160,7 @@ test('Echter MCP-SDK-Transport: DCR ohne Name, S256, initialize, Toolliste, Lese
       const transport=new StreamableHTTPClientTransport(new URL(origin+'/mcp/cloud'),{authProvider:provider,fetch:fetcher});
       await client.connect(transport);
       assert.equal(transport.sessionId,undefined);
-      const list=await client.listTools();assert.equal(list.tools.length,16);
+      const list=await client.listTools();assert.equal(list.tools.length,17);
       const result=await client.callTool({name:'redion_read_page',arguments:{workspaceId:'ws_test',documentId:'page_test'}});
       assert.equal(JSON.parse(result.content[0]!.text).markdown,'Nur Testdaten');
        assert.equal((result.structuredContent as any)?.markdown,'Nur Testdaten');
@@ -2627,7 +2627,9 @@ test('Cloud-MCP edits native database rows atomically with live rights and versi
   const put=(id:string,tabelle:string,seite:string,data:Record<string,unknown>,version=1)=>
     f.store.setze('saetze',{id,tabelle,seite,bereich:'ws_test',daten:JSON.stringify(data),
       version,geloescht:0,verschluesselt:0,geaendert:'2026-11-25',vonGeraet:'Test'});
+  const options=[{name:'Offen',color:'gray'},{name:'Geprüft',color:'green'}];
   const schema={title:{type:'title'},amount:{type:'number'},date:{type:'date'},done:{type:'checkbox'},
+    status:{type:'status',options},tags:{type:'multi',options},
     hidden:{type:'text'},result:{type:'formula'}};
   await put('table_page','blocks','table_page',{type:'page',content:['table_block']});
   await put('table_block','blocks','table_page',{type:'database',parentId:'table_page',collectionId:'table_collection'});
@@ -2645,7 +2647,7 @@ test('Cloud-MCP edits native database rows atomically with live rights and versi
   const base={workspaceId:'ws_test',databaseId:'table_collection',databaseBlockId:'table_block',
     expectedDatabaseVersion:1,changes:[
       {rowId:'table_row_1',expectedVersion:1,values:{title:'A',amount:31.5,done:false}},
-      {rowId:'table_row_2',expectedVersion:1,values:{title:'B',date:'2026-11-27'}}
+      {rowId:'table_row_2',expectedVersion:1,values:{title:'B',date:'2026-11-27',status:'Geprüft',tags:['Offen','Geprüft']}}
     ]};
   const call=async(patch:Record<string,unknown>={},access=token.access_token)=>{
     const res=await f.rpc(access,'tools/call',{name:'redion_update_database_rows',arguments:{...base,...patch}});
@@ -2661,6 +2663,8 @@ test('Cloud-MCP edits native database rows atomically with live rights and versi
     [{...other,expectedVersion:2},'conflict'],
     [{...other,values:{date:'2026-02-30'}},'invalid_arguments'],
     [{...other,values:{result:'1+1'}},'invalid_arguments'],
+    [{...other,values:{status:'unbekannt'}},'invalid_arguments'],
+    [{...other,values:{tags:['Offen','Offen']}},'invalid_arguments'],
     [{...other,values:{hidden:'unerlaubt'}},'forbidden'],
     [base.changes[0],'invalid_arguments']
   ] as const){
@@ -2708,6 +2712,12 @@ test('Cloud-MCP edits native database rows atomically with live rights and versi
     arguments:{workspaceId:'ws_test',databaseId:'table_collection'}});
   assert.equal(JSON.parse(readable.data.result.content[0].text).rows.find((entry:{rowId:string})=>
     entry.rowId==='table_row_1').values.amount,31.5);
+  const expanded=await f.rpc(token.access_token,'tools/call',{name:'redion_read_database',
+    arguments:{workspaceId:'ws_test',databaseId:'table_collection',includeOptions:true}});
+  const database=JSON.parse(expanded.data.result.content[0].text);
+  assert.deepEqual(database.columns.find((column:{key:string})=>column.key==='status').options,['Offen','Geprüft']);
+  assert.equal(database.columns.find((column:{key:string})=>column.key==='tags').optionsTruncated,false);
+  assert.deepEqual(database.rows.find((entry:{rowId:string})=>entry.rowId==='table_row_2').values.tags,['Offen','Geprüft']);
   const app=await redionKern.syncWeg({suche:{}},f.store,
     {konto:{id:'table_editor'},rechte:['alles']},['sync','runter'],'POST',
     {bereich:'ws_test',seit:new Date(Date.now()-60000).toISOString()},{'redion-geraet':'iPhone'});

@@ -7,6 +7,7 @@ import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {CLOUD_TOOLS,visibleCloudTools} from '../server/mcp/cloud-tools.ts';
 import type {McpPrincipal} from '../server/mcp/oauth.ts';
+import {canonicalMcpJson,CLOUD_MCP_SERVER_INFO} from '../server/mcp/contract-meta.ts';
 
 const principal=(write:boolean):McpPrincipal=>({
   userId:'contract-only',clientId:'contract-only',grantId:'contract-only',
@@ -35,6 +36,7 @@ export const makeConnectorContract=()=>{
     format:'redion.mcp.connector-contract.v1',
     source:'server/mcp/cloud-tools.ts',
     endpointPath:'/mcp/cloud',
+    serverInfo:CLOUD_MCP_SERVER_INFO,
     generatedLocally:true,
     containsCredentials:false,
     // Capture the real tool descriptions and schemas; the browser-based
@@ -48,11 +50,6 @@ export const makeConnectorContract=()=>{
 // Compare a saved connector contract or a complete MCP tools/list response.
 // No credentials or remote calls are required, and raw input is never printed.
 const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
-const canonical=(v:unknown):string=>Array.isArray(v)
-  ? '['+v.map(canonical).join(',')+']'
-  : object(v)?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}'
-  : JSON.stringify(v)??'undefined';
-
 export function compareConnectorContract(snapshot:unknown,write=true){
   const payload=object(snapshot)&&object(snapshot.result)?snapshot.result:snapshot;
   const tools=Array.isArray(payload)?payload:object(payload)?payload.tools:undefined;
@@ -74,7 +71,7 @@ export function compareConnectorContract(snapshot:unknown,write=true){
     const actual=byName.get(t.name);
     if(!actual)return [];
     const fields=['description','inputSchema','annotations'].filter(k=>
-      canonical(actual[k])!==canonical((t as unknown as Record<string,unknown>)[k]));
+      canonicalMcpJson(actual[k])!==canonicalMcpJson((t as unknown as Record<string,unknown>)[k]));
     if(Object.hasOwn(actual,'oauthScope')&&actual.oauthScope!==t.oauthScope)fields.push('oauthScope');
     return fields.length?[{name:t.name,fields}]:[];
   });
