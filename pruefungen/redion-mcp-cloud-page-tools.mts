@@ -5,7 +5,7 @@ import type {McpPrincipal} from '../server/mcp/oauth.ts';
 import {readFileSync} from 'node:fs';
 import {BUILTIN_BLOCK_TYPES} from '../server/mcp/block-catalog.ts';
 import {BUILTIN_SYMBOLS} from '../server/mcp/symbol-catalog.ts';
-import {editSchematic} from '../server/mcp/schematic-edit.ts';
+import {editSchematic,schematicChangeSummary} from '../server/mcp/schematic-edit.ts';
 
 const principal=(scopes:('redion:read'|'redion:write'|'redion:images')[]):McpPrincipal=>({
   userId:'test-user',clientId:'test-client',grantId:'test-grant',workspaceIds:['test-workspace'],scopes
@@ -596,4 +596,34 @@ test('Cloud MCP: doppelte Leitungspunkte entfernen und Reparaturvorschlag melden
   collapsed.leitungen[0].punkte=[{x:130,y:100},{x:130,y:100}];
   assert.throws(()=>invoke(collapsed,'normalize_wire_points',{wireId:'W'}),/einzelnen Punkt/);
   assert.throws(()=>invoke(damaged,'normalize_wire_points',{wireId:'missing'}));
+});
+
+
+test('Cloud MCP: Änderungsvergleich enthält indirekte Leitungsänderungen und Nettoeffekte',()=>{
+  const before={teile:[{id:'A',x:100,y:100,werte:{R:24,Un:12}}],
+    leitungen:[{id:'W',punkte:[{x:100,y:100},{x:300,y:100}]}],
+    texte:[{id:'T',t:'Alt'}]};
+  const after={teile:[{id:'A',x:120,y:100,werte:{Un:12,R:24}}],
+    leitungen:[{id:'W',punkte:[{x:120,y:100},{x:300,y:100}]}],
+    texte:[{id:'N',t:'Neu'}]};
+  const snapshot=structuredClone(before);
+  assert.deepEqual(schematicChangeSummary(before,after),{
+    added:1,removed:1,modified:2,total:4,truncated:false,entries:[
+      {elementId:'A',elementType:'component',action:'modified',fields:['x']},
+      {elementId:'W',elementType:'wire',action:'modified',fields:['punkte']},
+      {elementId:'T',elementType:'label',action:'removed',fields:[]},
+      {elementId:'N',elementType:'label',action:'added',fields:[]}
+    ]});
+  assert.deepEqual(before,snapshot);
+  assert.equal(schematicChangeSummary(before,before).total,0);
+  const reordered={...before,teile:[{...before.teile[0],werte:{Un:12,R:24}}]};
+  assert.equal(schematicChangeSummary(before,reordered).total,0);
+  const pointsReversed={...before,leitungen:[{...before.leitungen[0],punkte:[...before.leitungen[0]!.punkte].reverse()}]};
+  assert.deepEqual(schematicChangeSummary(before,pointsReversed).entries,[{elementId:'W',elementType:'wire',action:'modified',fields:['punkte']}]);
+  const empty={teile:[],leitungen:[],texte:[]};
+  const large={...empty,texte:Array.from({length:50},(_,i)=>({id:'T'+i,t:'Neu'}))};
+  assert.equal(schematicChangeSummary(empty,large).added,50);
+  assert.equal(schematicChangeSummary(empty,large).entries.length,40);
+  assert.equal(schematicChangeSummary(empty,large).truncated,true);
+  assert.throws(()=>schematicChangeSummary(empty,{...empty,texte:[{id:'T'},{id:'T'}]}));
 });

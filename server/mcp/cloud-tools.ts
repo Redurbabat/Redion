@@ -8,7 +8,7 @@ import type {McpDatabase} from './state.ts';
 import {rolleAuf,darf,notieren,feldRechte} from '../kern.ts';
 import {BUILTIN_BLOCK_TYPES} from './block-catalog.ts';
 import {BUILTIN_SYMBOLS} from './symbol-catalog.ts';
-import {editSchematic} from './schematic-edit.ts';
+import {editSchematic,schematicChangeSummary} from './schematic-edit.ts';
 import {auditWiring,measureOperatingPoint,runSwitchTest} from './schematic-test.ts';
 import {buildLearningCard,buildLearningSet} from './learning-card.ts';
 import {applyDatabaseValues,databaseBatchLimit,databaseFieldLimit,parseDatabaseChanges,readWritableDatabaseRowsSql,updateDatabaseRowsSql} from './database-edit.ts';
@@ -114,7 +114,7 @@ export const CLOUD_TOOLS:ToolDef[]=[
       text:{type:'string',maxLength:8000},checked:{type:'boolean'},
       note:{type:'string',maxLength:2000},dueDate:{type:'string',maxLength:10}},
       required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
-  {name:'redion_update_schematic',description:'Bearbeitet einen Klartext-Schaltplan. Für eine einzelne Änderung operation und ihre Felder übergeben. Für bis zu 20 atomare Änderungen nur changes übergeben. Mit dryRun: true denselben Änderungslauf ohne Speichern ausführen; Vorschau enthält Kandidatenplan und bisherige Version. Optional previewSwitchTest oder previewOperatingPoint (nur zusammen mit dryRun: true) prüft den Kandidaten mit dem nativen Simulator. previewGeometryAudit: true vergleicht zusätzlich die geometrische Diagnose vor und nach der Änderung. Jeder Schritt wird vor dem Speichern geprüft, die Planversion steigt nur beim tatsächlichen Speichern einmal. set_component_values setzt U (Quelle, V), R (Widerstand, Ohm) und Un (Lampe, V) entsprechend dem Fachzeichen. rename_label ändert Beschriftungstext; delete_label und delete_wire entfernen genau das angegebene Element. Entfernte Leitungen können den Stromkreis verändern; danach erneut simulieren. rotate_component, mirror_component und delete_component bearbeiten nur unverbundene Bauteile; normalize_wire_points entfernt nur aufeinanderfolgende identische Leitungspunkte bei unveränderten nativen Kontakten und Anschlussauflösung. Erst dryRun: true nutzen. add_busbar zeichnet eine isolierte gerade Stromschiene mit conductor L1/L2/L3/N/PE und Start x/y sowie Ende endX/endY. Die Kennzeichnung liefert keine Spannung und verbindet gleichnamige Schienen nicht automatisch. branch_wire verbindet eine Startklemme (fromComponentId, fromTerminal) mit einem eindeutigen inneren Punkt x/y einer vorhandenen targetWireId; keine fremden Kontakte. move_connected_component zieht bis zu acht eindeutig gebundene Leitungen mit dem nativen Netzkontaktwächter nach; bei geänderten Kontakten oder uneindeutigem Weg wird die ganze Aktion abgelehnt.',
+  {name:'redion_update_schematic',description:'Bearbeitet einen Klartext-Schaltplan. Für eine einzelne Änderung operation und ihre Felder übergeben. Für bis zu 20 atomare Änderungen nur changes übergeben. Mit dryRun: true denselben Änderungslauf ohne Speichern ausführen; Vorschau enthält Kandidatenplan, bisherige Version und changeSummary der tatsächlich hinzugefügten, entfernten und geänderten Elemente. Optional previewSwitchTest oder previewOperatingPoint (nur zusammen mit dryRun: true) prüft den Kandidaten mit dem nativen Simulator. previewGeometryAudit: true vergleicht zusätzlich die geometrische Diagnose vor und nach der Änderung. Jeder Schritt wird vor dem Speichern geprüft, die Planversion steigt nur beim tatsächlichen Speichern einmal. set_component_values setzt U (Quelle, V), R (Widerstand, Ohm) und Un (Lampe, V) entsprechend dem Fachzeichen. rename_label ändert Beschriftungstext; delete_label und delete_wire entfernen genau das angegebene Element. Entfernte Leitungen können den Stromkreis verändern; danach erneut simulieren. rotate_component, mirror_component und delete_component bearbeiten nur unverbundene Bauteile; normalize_wire_points entfernt nur aufeinanderfolgende identische Leitungspunkte bei unveränderten nativen Kontakten und Anschlussauflösung. Erst dryRun: true nutzen. add_busbar zeichnet eine isolierte gerade Stromschiene mit conductor L1/L2/L3/N/PE und Start x/y sowie Ende endX/endY. Die Kennzeichnung liefert keine Spannung und verbindet gleichnamige Schienen nicht automatisch. branch_wire verbindet eine Startklemme (fromComponentId, fromTerminal) mit einem eindeutigen inneren Punkt x/y einer vorhandenen targetWireId; keine fremden Kontakte. move_connected_component zieht bis zu acht eindeutig gebundene Leitungen mit dem nativen Netzkontaktwächter nach; bei geänderten Kontakten oder uneindeutigem Weg wird die ganze Aktion abgelehnt.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,
       expectedVersion:{type:'integer',minimum:1},
       ...schematicEditFields,dryRun:{type:'boolean',enum:[true]},
@@ -1349,6 +1349,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Ungültige Planänderung.');}
       if(new TextEncoder().encode(JSON.stringify(plan)).byteLength>32000)
         return err('too_large','Schaltplan überschreitet die sichere Lesegrenze.');
+      const changeSummary=schematicChangeSummary(data.plan,plan);
       const timestamp=new Date().toISOString();
       const payload=JSON.stringify({...data,plan,edited:timestamp});
       if(new TextEncoder().encode(payload).byteLength>50000)return err('too_large','Schaltplanblock ist zu gross.');
@@ -1370,7 +1371,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
           }catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Geometrische Vorschauprüfung fehlgeschlagen.');}
         }
         const preview={workspaceId:w,documentId:pageId,blockId:id,version:ver,
-          dryRun:true,saved:false,elements,previewPlan:plan,
+          dryRun:true,saved:false,elements,previewPlan:plan,changeSummary,
           ...(previewSwitch||previewOperating?{previewReport}:{}),
           ...(previewGeometry?{geometryComparison}:{}),
           electricalValidation:false,routingVerified:false};
@@ -1391,7 +1392,7 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',
         text:'Schaltplan über Cloud-MCP bearbeitet',objekt:id});
       return {workspaceId:w,documentId:pageId,blockId:id,version:updated.version,
-        ...(batch?{elements}:elements[0]),
+        ...(batch?{elements}:elements[0]),changeSummary,
         electricalValidation:false,routingVerified:false};
     }
     if(name==='redion_create_learning_set'){
