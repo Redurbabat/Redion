@@ -43,3 +43,9 @@ For Swift applications, add `red-sdk/apple` as a local Swift package pinned
 to the reviewed commit. `RedNativeClient` uses the device-only Keychain by
 default. It supports PKCE, direct approval claims, legacy pairing, rotating
 refresh and logout. It does not yet implement native RED Share or QR UI.
+
+### Native Android SDK
+
+See `red-sdk/android/README.md` for Gradle library, encrypted AndroidKeyStore
+credential adapter, proof creation, claim, refresh and logout. Unit tests
+use an injected transport; physical-device Keystore tests remain open.

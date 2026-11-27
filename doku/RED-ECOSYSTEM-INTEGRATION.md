@@ -56,3 +56,13 @@ Das Apple-Paket enthält zusätzlich `RedPairQRCode.image` für die lokale
 QR-Darstellung der öffentlichen Challenge. Eine Kamera-/Scanner-UI muss
 die jeweilige App implementieren. Der Operator-Befehl `red-id-revoke`
 widerruft jetzt auch v2-Sitzungen, offene Anmeldungen und Share-Kanäle.
+
+### Android-Paket und erster externer Pilot
+
+`red-sdk/android` enthält die native Android-Bibliothek (API 26+, Java 17)
+mit AndroidKeyStore und AES-GCM-verschlüsseltem, von Systembackups
+excluded Zugangsspeicher. Die Bibliothek hat eigene Gradle-Tests. Keine
+Garantie für hardwaregebundene Schlüssel auf jedem Gerät; Gerätetest offen.
+RED-Bit PR #60 ist der erste separate Apple-Pilot mit echtem Settings-Eintrag
+und lokal gepinntem Swift-Paket. Kein Merge, kein automatischer Datenaustausch.
+https://github.com/Redurbabat/RED-Bit/pull/60

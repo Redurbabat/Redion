@@ -18,7 +18,7 @@ import java.io.IOException;
 /** Blocking API: call on a dedicated worker, never the Android main thread.
  * Exactly one client per origin/app per process to serialize token rotation. */
 public final class RedAndroidClient {
-    private static final Set<String> APPS = Set.of("red-ion","red-fit","red-poly","red-bit","red-loop","red-efz","red-kurd","red-uhr","red-yt","stran","babat-red");
+    private static final Set<String> APPS = new java.util.HashSet<>(java.util.Arrays.asList("red-ion","red-fit","red-poly","red-bit","red-loop","red-efz","red-kurd","red-uhr","red-yt","stran","babat-red"));
     public interface Store { String load(String scope) throws Exception; void save(String scope,String value) throws Exception; void clear(String scope) throws Exception; }
     public interface Transport { JSONObject request(String url,String method,JSONObject body,String token) throws Exception; }
     public static final class HttpError extends IOException {
