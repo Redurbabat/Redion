@@ -1783,9 +1783,16 @@ test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und at
       {operation:'connect_terminals',wireId:'preview_minus',fromComponentId:'G12',fromTerminal:'−',toComponentId:'E12',toTerminal:'X2'}
     ];
     const previewMeasurement={switches:[],componentIds:['E12']};
-    const simulated=await update({expectedVersion:8,dryRun:true,changes:previewWires,previewOperatingPoint:previewMeasurement});
+    const simulated=await update({expectedVersion:8,dryRun:true,changes:previewWires,previewOperatingPoint:previewMeasurement,previewGeometryAudit:true});
     assert.equal(simulated.data.saved,false,JSON.stringify(simulated.data));
     assert.equal(simulated.data.version,8);
+    const comparison=simulated.data.geometryComparison;
+    assert.equal(comparison.before.wireCount,valued.data.plan.leitungen.length);
+    assert.equal(comparison.after.wireCount,comparison.before.wireCount+2);
+    assert.equal(comparison.errorCountDelta,comparison.after.errorCount-comparison.before.errorCount);
+    assert.equal(comparison.after.errorCount,0);
+    assert.equal((await update({expectedVersion:8,changes:previewWires,previewGeometryAudit:true})).data.code,'invalid_arguments');
+    assert.equal((await update({expectedVersion:8,dryRun:true,changes:previewWires,previewGeometryAudit:false})).data.code,'invalid_arguments');
     assert.equal(simulated.data.previewReport.status,'berechnet',JSON.stringify(simulated.data.previewReport));
     const lamp=simulated.data.previewReport.messwerte.find((m:any)=>m.componentId==='E12').wert;
     assert.ok(Math.abs(Math.abs(lamp.U)-12)<1e-6);
