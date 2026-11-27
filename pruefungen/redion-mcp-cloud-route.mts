@@ -1778,6 +1778,30 @@ test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und at
       assert.equal(invalid.data.code,'invalid_arguments');
     }
     assert.equal((await call('redion_read_schematic',{blockId})).data.version,8);
+    const previewWires=[
+      {operation:'connect_terminals',wireId:'preview_plus',fromComponentId:'G12',fromTerminal:'+',toComponentId:'E12',toTerminal:'X1'},
+      {operation:'connect_terminals',wireId:'preview_minus',fromComponentId:'G12',fromTerminal:'−',toComponentId:'E12',toTerminal:'X2'}
+    ];
+    const previewMeasurement={switches:[],componentIds:['E12']};
+    const simulated=await update({expectedVersion:8,dryRun:true,changes:previewWires,previewOperatingPoint:previewMeasurement});
+    assert.equal(simulated.data.saved,false,JSON.stringify(simulated.data));
+    assert.equal(simulated.data.version,8);
+    assert.equal(simulated.data.previewReport.status,'berechnet',JSON.stringify(simulated.data.previewReport));
+    const lamp=simulated.data.previewReport.messwerte.find((m:any)=>m.componentId==='E12').wert;
+    assert.ok(Math.abs(Math.abs(lamp.U)-12)<1e-6);
+    assert.ok(Math.abs(Math.abs(lamp.I)-0.5)<1e-6);
+    assert.equal((await update({expectedVersion:8,changes:previewWires,previewOperatingPoint:previewMeasurement})).data.code,'invalid_arguments');
+    assert.equal((await update({expectedVersion:8,dryRun:true,changes:previewWires,
+      previewOperatingPoint:previewMeasurement,previewSwitchTest:{switchIds:['S1'],targetId:'E12',expected:[true,true]}})).data.code,'invalid_arguments');
+    assert.equal((await update({expectedVersion:8,dryRun:true,changes:previewWires,
+      previewOperatingPoint:{switches:[],componentIds:['missing']}})).data.code,'invalid_arguments');
+    const switchedPreview=await update({expectedVersion:8,dryRun:true,changes:previewWires,
+      previewSwitchTest:{switchIds:['S1'],targetId:'E12',expected:[true,true]}});
+    assert.equal(switchedPreview.data.saved,false,JSON.stringify(switchedPreview.data));
+    assert.equal(switchedPreview.data.previewReport.faelle.length,2);
+    const untouched=await call('redion_read_schematic',{blockId});
+    assert.equal(untouched.data.version,8);
+    assert.deepEqual(untouched.data.plan,valued.data.plan);
     const badCorrection=await update({expectedVersion:8,changes:[
       {operation:'rename_label',labelId:'TB',labelText:'Korrigiert'},
       {operation:'delete_wire',wireId:'missing_wire'}
