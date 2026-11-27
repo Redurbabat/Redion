@@ -1,4 +1,4 @@
-# RED SDK v0.2 – private app identity
+# RED SDK v0.3 – private app identity
 
 Build from the RED ION repository root:
 
@@ -29,3 +29,6 @@ identity:read. There is no implicit access to another app's documents,
 no user-password login, no public registration or automatic data sharing.
 The owner can revoke app sessions in RED ION. Native integration, QR scanning
 and secure-storage adapters must be implemented and tested in each app.
+
+SDK 0.3 adds QR request payload encoding, explicit app sharing transport and
+AES-GCM helpers; independent secure key distribution remains required.

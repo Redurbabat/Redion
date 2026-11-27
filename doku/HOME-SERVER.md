@@ -242,3 +242,18 @@ bereits verschlüsselten Quelle ist der alte Vault-Key erforderlich. Erst
 nach erfolgreicher Prüfung die neue Ablage manuell auswählen; nach einem
 Prozessabbruch keine unvollständige Ablage starten. SQLite und Metadaten
 benötigen weiterhin LUKS oder vergleichbare Datenträgerverschlüsselung.
+
+## Update/Rollback-Probe mit echten Sicherungskopien
+
+Zwei zuvor geprüfte und revisionsmarkierte Images (alt/neu) lokal mit
+`deploy/home/rehearse-update.sh OLD_IMAGE NEW_IMAGE --approve-rehearsal`
+prüfen. REDION_REHEARSAL_ROOT, REDION_BACKUP_PATH, REDION_BACKUP_KEY_PATH,
+REDION_DATA_DIR und bei Vault REDION_VAULT_KEY_PATH setzen. Das Skript
+stellt die verschlüsselte Sicherung zweimal in ein separates privates
+Testverzeichnis wieder her; Netzwerk deaktiviert. Neues Image gegen die
+Upgrade-Kopie, altes gegen die Rückfallkopie: Start, Authentifizierung,
+SQLite-Integrität. Es verändert weder laufenden Dienst noch Originalbackup.
+Testverzeichnis muss auf einem geschützten Datenträger liegen. Keine
+Rückkehr auf einen älteren Datenstand nach neuen produktiven Schreibvorgängen.
+Ein tatsächlicher Cutover benötigt weiterhin explizite Freigabe, abgeschaltete
+Clients/Schreiber und Abnahme auf dem Mini-PC.
