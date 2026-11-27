@@ -66,3 +66,8 @@ Garantie für hardwaregebundene Schlüssel auf jedem Gerät; Gerätetest offen.
 RED-Bit PR #60 ist der erste separate Apple-Pilot mit echtem Settings-Eintrag
 und lokal gepinntem Swift-Paket. Kein Merge, kein automatischer Datenaustausch.
 https://github.com/Redurbabat/RED-Bit/pull/60
+
+RED-YT PR #1 ist der zweite getrennte Apple-Pilot. Der native UIKit-
+Menüeintrag öffnet die private RED-ID-SwiftUI-Seite; das YouTube-Konto und
+die WebKit-Daten bleiben getrennt. Kein Merge, kein Deployment.
+https://github.com/Redurbabat/RED-YT/pull/1

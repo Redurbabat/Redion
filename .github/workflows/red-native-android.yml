@@ -20,6 +20,16 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
-      - uses: android-actions/setup-android@v3
-      - run: sdkmanager "platforms;android-35"
+      - name: Use preinstalled Android SDK without obsolete tools package
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          manager="$sdk/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$manager"
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
+          if [[ ! -f "$sdk/platforms/android-35/android.jar" ]]; then
+            "$manager" --sdk_root="$sdk" "platforms;android-35"
+          fi
+          test -f "$sdk/platforms/android-35/android.jar"
       - run: gradle -p red-sdk/android testDebugUnitTest assembleDebug --no-daemon
