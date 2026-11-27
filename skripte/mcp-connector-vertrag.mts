@@ -2,7 +2,7 @@
  * Keine Remote-Abfrage, kein Token, keine produktiven Nutzerdaten.
  * Exportiert dieselben registrierten Definitionen, die tools/list liefert.
  */
-import {mkdir,writeFile} from 'node:fs/promises';
+import {mkdir,writeFile,readFile,stat} from 'node:fs/promises';
 import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {CLOUD_TOOLS,visibleCloudTools} from '../server/mcp/cloud-tools.ts';
@@ -45,12 +45,60 @@ export const makeConnectorContract=()=>{
     tools
   };
 };
+// Compare a saved connector contract or a complete MCP tools/list response.
+// No credentials or remote calls are required, and raw input is never printed.
+const object=(v:unknown):v is Record<string,unknown>=>!!v&&typeof v==='object'&&!Array.isArray(v);
+const canonical=(v:unknown):string=>Array.isArray(v)
+  ? '['+v.map(canonical).join(',')+']'
+  : object(v)?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}'
+  : JSON.stringify(v)??'undefined';
+
+export function compareConnectorContract(snapshot:unknown,write=true){
+  const payload=object(snapshot)&&object(snapshot.result)?snapshot.result:snapshot;
+  const tools=Array.isArray(payload)?payload:object(payload)?payload.tools:undefined;
+  if(!Array.isArray(tools)||tools.length>500||
+    (object(payload)&&payload.nextCursor!=null))
+    throw new Error('Vollständige, unpaginierte Werkzeugliste erforderlich.');
+  const byName=new Map<string,Record<string,unknown>>();
+  for(const t of tools){
+    if(!object(t)||typeof t.name!=='string'||!/^[a-zA-Z0-9_-]{1,128}$/.test(t.name)||
+      !object(t.inputSchema)||byName.has(t.name))
+      throw new Error('Ungültige oder doppelte Werkzeugdefinition.');
+    byName.set(t.name,t);
+  }
+  const expected=makeConnectorContract().tools.filter(t=>write||t.oauthScope==='redion:read');
+  const names=new Set(expected.map(t=>t.name));
+  const missing=expected.filter(t=>!byName.has(t.name)).map(t=>t.name).sort();
+  const unexpected=[...byName.keys()].filter(n=>!names.has(n)).sort();
+  const changed=expected.flatMap(t=>{
+    const actual=byName.get(t.name);
+    if(!actual)return [];
+    const fields=['description','inputSchema','annotations'].filter(k=>
+      canonical(actual[k])!==canonical((t as unknown as Record<string,unknown>)[k]));
+    if(Object.hasOwn(actual,'oauthScope')&&actual.oauthScope!==t.oauthScope)fields.push('oauthScope');
+    return fields.length?[{name:t.name,fields}]:[];
+  });
+  return {matches:!missing.length&&!unexpected.length&&!changed.length,
+    scope:write?'read-write':'read-only',expectedCount:expected.length,
+    actualCount:byName.size,missing,unexpected,changed};
+}
 const main=async()=>{
   const contract=JSON.stringify(makeConnectorContract(),null,2)+'\n';
   const args=process.argv.slice(2);
+  if(args[0]==='--compare'&&(args.length===2||args.length===3&&args[2]==='--read-only')&&args[1]){
+    const info=await stat(args[1]);
+    if(!info.isFile()||info.size>2_000_000)throw new Error('Werkzeugliste muss eine JSON-Datei bis 2 MB sein.');
+    let snapshot:unknown;
+    try{snapshot=JSON.parse(await readFile(args[1],'utf8'));}
+    catch{throw new Error('Werkzeugliste ist kein lesbares JSON.');}
+    const report=compareConnectorContract(snapshot,args[2]!=='--read-only');
+    process.stdout.write(JSON.stringify(report,null,2)+'\n');
+    if(!report.matches)process.exitCode=1;
+    return;
+  }
   if(args.length===0){process.stdout.write(contract);return;}
   if(args.length!==2||args[0]!=='--output'||!args[1])
-    throw new Error('Aufruf: node skripte/mcp-connector-vertrag.mts [--output <pfad>]');
+    throw new Error('Aufruf: node skripte/mcp-connector-vertrag.mts [--output <pfad> | --compare <pfad> [--read-only]]');
   const file=resolve(args[1]);
   await mkdir(dirname(file),{recursive:true});
   await writeFile(file,contract,'utf8');
