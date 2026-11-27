@@ -1866,6 +1866,18 @@ test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und at
       targetWireId:'BT',fromComponentId:'BC',fromTerminal:'X2',x:130,y:600});
     assert.equal(badBranch.data.code,'invalid_arguments');
     assert.equal((await call('redion_read_schematic',{blockId})).data.version,17);
+    const busbar=await update({expectedVersion:17,operation:'add_busbar',wireId:'railL1',
+      conductor:'L1',x:40,y:20,endX:760,endY:20});
+    assert.equal(busbar.data.version,18,JSON.stringify(busbar.data));
+    const withRail=await call('redion_read_schematic',{blockId});
+    assert.deepEqual(withRail.data.plan.leitungen.find((w:any)=>w.id==='railL1'),
+      {id:'railL1',punkte:[{x:40,y:20},{x:760,y:20}],ebene:'plan',schiene:'L1'});
+    const overlappingRail=await update({expectedVersion:18,operation:'add_busbar',wireId:'railN',
+      conductor:'N',x:40,y:20,endX:760,endY:20});
+    assert.equal(overlappingRail.data.code,'invalid_arguments');
+    const afterRail=await call('redion_read_schematic',{blockId});
+    assert.equal(afterRail.data.version,18);
+    assert.deepEqual(afterRail.data.plan,withRail.data.plan);
     const orphanId='detached_schematic';
     await f.store.setze('saetze',{id:orphanId,bereich:'ws_test',tabelle:'blocks',
       daten:JSON.stringify({type:'schaltplan',parentId:'edit_schematic_page',plan:finalPlan.data.plan}),
