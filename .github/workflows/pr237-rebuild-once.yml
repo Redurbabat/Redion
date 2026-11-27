@@ -1,0 +1,39 @@
+# Temporary, branch-restricted build repair for PR 237. Remove after use.
+name: PR 237 generated assets
+on:
+  pull_request:
+    types: [synchronize]
+permissions:
+  contents: read
+jobs:
+  rebuild:
+    if: github.repository == 'Redurbabat/Redion' && github.event.pull_request.number == 237 && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'fix/mindmap-mobile-schema6-audit'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/mindmap-mobile-schema6-audit
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Verify exact PR head
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - name: Install and regenerate tracked assets
+        run: |
+          npm ci
+          npm run bauen:ts
+          node bauen.mts
+          npm run stand
+          npm run typecheck
+      - name: Commit only generated assets on PR branch
+        run: |
+          git add -- src/dienst/sw.ts src/kern/einstellung/stand.ts sw.js quell redion-einzeldatei.html
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "build: regenerate tracked assets for PR 237"
+          git push origin HEAD:refs/heads/fix/mindmap-mobile-schema6-audit
