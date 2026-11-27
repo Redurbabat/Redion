@@ -10,6 +10,7 @@ import {createMcpOAuth} from './oauth.ts';
 import {createMcpOAuthHttp} from './oauth-http.ts';
 import {mcpStateD1,type McpDatabase} from './state.ts';
 import {CloudMcpToolError,createCloudActions,visibleCloudTools} from './cloud-tools.ts';
+import {CLOUD_MCP_PROTOCOL_VERSIONS,CLOUD_MCP_SERVER_INFO} from './contract-meta.ts';
 import {leseBegrenzt} from '../sicherheit/eingaben.ts';
 
 export type CloudMcpEnvironment={DB?:McpDatabase|null;TOR?:string;ACCESS_AUD?:string;ACCESS_TEAM?:string};
@@ -31,7 +32,7 @@ const missing=()=>json({error:'cloud_mcp_unavailable',
 const rpc=(id:string|number|null,result:unknown)=>json({jsonrpc:'2.0',id,result});
 const rpcError=(id:string|number|null,code:number,message:string)=>json({jsonrpc:'2.0',id,error:{code,message}});
 const bodyLimit=32768;
-const protocolVersions=['2025-11-25','2025-06-18','2025-03-26'];
+const protocolVersions:readonly string[]=CLOUD_MCP_PROTOCOL_VERSIONS;
 
 export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,accessVerified=false):Promise<Response>=>{
   const url=new URL(request.url);
@@ -121,7 +122,7 @@ export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,access
         return rpcError(id,-32602,'Initialisierungsparameter fehlen.');
       return rpc(id,{
         protocolVersion:protocolVersions.includes(params.protocolVersion)?params.protocolVersion:protocolVersions[0],
-        capabilities:{tools:{listChanged:false}},serverInfo:{name:'RED ION Cloud MCP',version:'1.0.1'}});
+        capabilities:{tools:{listChanged:false}},serverInfo:CLOUD_MCP_SERVER_INFO});
     }
     if(method==='ping')return rpc(id,{});
     if(method==='tools/list')return rpc(id,{tools:visibleCloudTools(principal)});
