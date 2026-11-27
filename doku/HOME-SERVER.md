@@ -267,3 +267,15 @@ app `POST /red-id/v2/claim-login` (SDK claimLogin) auf. Einmalig, 5 Minuten,
 App-gebunden; Widerruf beendet offene Freigaben. Die Challenge darf erst
 nach Vergleich mit der tatsächlich gewünschten Ziel-App bestätigt werden.
 Keine automatische Anmeldung unbekannter Apps, kein öffentlicher OAuth-SSO.
+
+## RED Share – manuell authentifizierter Schlüsselaustausch
+
+SDK 0.4: `createRedShareKeyExchange` erstellt ein kurzlebiges P-256-Schlüsselpaar.
+Die beiden Apps tauschen nur öffentliche Offers aus. Origin, Konto, Sender,
+Empfänger und Kanal sind im HKDF-Transkript gebunden. Fingerprint (128 Bit)
+auf beiden vertrauenswürdigen Geräten direkt vergleichen und bestätigen;
+erst dann wird der AES-256-Schlüssel abgeleitet. Der Server sieht keine
+privaten Schlüssel. Ohne diesen Vergleich keine sichere Authentisierung.
+Die Apps müssen den Schlüssel in ihrem nativen Credential Store ablegen.
+`createScopedRedStore` trennt RED-ID-Zugangsdaten nach Origin und App;
+die native Keychain-/Keystore-Bridge muss die jeweilige App bereitstellen.

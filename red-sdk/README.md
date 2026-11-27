@@ -32,3 +32,7 @@ and secure-storage adapters must be implemented and tested in each app.
 
 SDK 0.3 adds QR request payload encoding, explicit app sharing transport and
 AES-GCM helpers; independent secure key distribution remains required.
+
+SDK 0.4 adds proof-bound login claim, a platform-secret-store adapter scoped to
+origin and app, and P-256 ECDH/HKDF key exchange with explicit fingerprint
+comparison on both trusted devices. Never confirm fingerprints from a relay.

@@ -123,3 +123,65 @@ export async function decryptRedShare(key:Uint8Array,address:RedShareAddress,env
   return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes.slice(0,12),additionalData:shareAAD(address)},k,bytes.slice(12)));
 }
 export type RedShareMessage={source:RedAppId;channel:string;id:string;envelope:string;expires:number};
+
+/** Native platform bridge. Implement with Keychain, Keystore or equivalent,
+ * not plain preferences or browser localStorage. */
+export interface RedNativeSecrets {
+  get(key:string):Promise<string|null>;
+  set(key:string,value:string):Promise<void>;
+  remove(key:string):Promise<void>;
+}
+export async function createScopedRedStore(origin:string,app:RedAppId,bridge:RedNativeSecrets):Promise<RedSecureStore>{
+  const u=new URL(origin);
+  if(u.protocol!=='https:'||u.origin!==origin)throw Error('RED ID requires exact HTTPS origin');
+  const scope=base64url(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify([origin,app])))));
+  const key='red-id-v2-'+scope;
+  return {
+    async load(){const raw=await bridge.get(key);if(raw===null)return null;const parsed=JSON.parse(raw);if(parsed.origin!==origin||parsed.app!==app||parsed.session?.app!==app)throw Error('Credential scope mismatch');return parsed.session as RedSession;},
+    async save(session){if(session.app!==app)throw Error('Credential scope mismatch');await bridge.set(key,JSON.stringify({origin,app,session}));},
+    async clear(){await bridge.remove(key);}
+  };
+}
+export type RedShareKeyContext={origin:string;owner:string;source:RedAppId;target:RedAppId;channel:string};
+export type RedShareKeyOffer={kind:'red-share-key';version:1;role:'source'|'target';context:RedShareKeyContext;publicKey:string};
+const contextBytes=(c:RedShareKeyContext)=>{
+  const url=new URL(c.origin);
+  const apps=['red-ion','red-fit','red-poly','red-bit','red-loop','red-efz','red-kurd','red-uhr','red-yt','stran','babat-red'];
+  if(url.protocol!=='https:'||url.origin!==c.origin||typeof c.owner!=='string'||c.owner.length<1||c.owner.length>128||!apps.includes(c.source)||!apps.includes(c.target)||c.source===c.target||!/^[a-z][a-z0-9_-]{0,31}$/.test(c.channel))throw Error('Invalid key context');
+  return JSON.stringify([c.origin,c.owner,c.source,c.target,c.channel]);
+};
+/** Authenticated out-of-band exchange. Exchange PUBLIC offers, then compare
+ * the 128-bit fingerprint on both trusted devices (not via the relay).
+ * Never accept a fingerprint supplied by the server. Private keys stay
+ * non-exportable. This is not automatic or unattended key distribution. */
+export async function createRedShareKeyExchange(context:RedShareKeyContext,role:'source'|'target'){
+  const ctx=contextBytes(context);
+  if(role!=='source'&&role!=='target')throw Error('Invalid role');
+  const pair=await crypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'},false,['deriveBits']);
+  const own=base64url(new Uint8Array(await crypto.subtle.exportKey('raw',pair.publicKey)));
+  const offer:RedShareKeyOffer={kind:'red-share-key',version:1,role,context:{...context},publicKey:own};
+  let used=false;
+  return {offer,async compare(peer:RedShareKeyOffer){
+    if(used)throw Error('Exchange already used');
+    if(peer?.kind!=='red-share-key'||peer.version!==1||peer.role!==(role==='source'?'target':'source')||contextBytes(peer.context)!==ctx||typeof peer.publicKey!=='string'||peer.publicKey===own||peer.publicKey.length!==87)throw Error('Invalid peer offer');
+    const raw=unbase64url(peer.publicKey);
+    if(raw.length!==65||raw[0]!==4||base64url(raw)!==peer.publicKey)throw Error('Invalid public key');
+    const publicKey=await crypto.subtle.importKey('raw',raw,{name:'ECDH',namedCurve:'P-256'},false,[]);
+    const shared=await crypto.subtle.deriveBits({name:'ECDH',public:publicKey},pair.privateKey,256);
+    const transcript=new TextEncoder().encode(JSON.stringify(['red-share-key-v1',ctx,role==='source'?own:peer.publicKey,role==='target'?own:peer.publicKey]));
+    const salt=await crypto.subtle.digest('SHA-256',transcript);
+    const master=await crypto.subtle.importKey('raw',shared,'HKDF',false,['deriveBits']);
+    new Uint8Array(shared).fill(0);
+    const derive=async(label:string)=>new Uint8Array(await crypto.subtle.deriveBits({name:'HKDF',hash:'SHA-256',salt,info:new TextEncoder().encode(label)},master,256));
+    const check=await derive('red-share-fingerprint-v1');
+    const fingerprint=Array.from(check.subarray(0,16),v=>v.toString(16).padStart(2,'0')).join('').match(/.{1,4}/g)!.join('-');
+    check.fill(0);
+    used=true;
+    let confirmed=false;
+    return {fingerprint,async confirm(expected:string){
+      if(confirmed)throw Error('Exchange already confirmed');
+      if(expected.toLowerCase()!==fingerprint)throw Error('Fingerprint mismatch');
+      confirmed=true;return derive('red-share-aes256-v1');
+    }};
+  }};
+}
