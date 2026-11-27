@@ -24,14 +24,14 @@ export type RedAppId='red-ion'|'red-fit'|'red-poly'|'red-bit'|'red-loop'|'red-ef
 export type RedSession={version:2;app:RedAppId;accessToken:string;refreshToken:string;expiresAt:string;refreshExpiresAt:string;scopes:string[]};
 export type RedIdentityV2=Omit<RedIdentity,'version'|'app'>&{version:2;app:RedAppId};
 export interface RedSecureStore{load():Promise<RedSession|null>;save(value:RedSession):Promise<void>;clear():Promise<void>}
-const base64url=(v:Uint8Array)=>btoa(String.fromCharCode(...v)).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'');
+const base64url=(v:Uint8Array)=>btoa(String.fromCharCode(...v)).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,'');
 export async function createRedPairProof(){
   const bytes=globalThis.crypto.getRandomValues(new Uint8Array(32));
   const verifier=base64url(bytes);
   const challenge=base64url(new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier))));
   return {verifier,challenge};
 }
-export class RedIdError extends Error{constructor(readonly status:number){super('RED ID request failed: '+status);}}
+export class RedIdError extends Error{readonly status:number;constructor(status:number){super('RED ID request failed: '+status);this.status=status;}}
 export function createRedIdV2Client(origin:string,app:RedAppId,store:RedSecureStore,fetcher:typeof fetch=fetch){
   const url=new URL(origin);
   if(url.protocol!=='https:'||url.origin!==origin)throw new Error('RED ID requires exact HTTPS origin');

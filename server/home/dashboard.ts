@@ -39,7 +39,7 @@ export function createHomeDashboard(db:DatabaseSync,ablage:Ablage,dataDir:string
     const owner=String(who.konto.id);
     const count=(sql:string,...values:(string|number)[])=>Number(db.prepare(sql).get(...values)?.n??0);
     const devices=count("SELECT COUNT(*) AS n FROM sitzungen WHERE kontoId=? AND (bis IS NULL OR bis='' OR bis>=?)",owner,new Date().toISOString());
-    const appCredentials=count('SELECT COUNT(*) AS n FROM home_red_id WHERE owner=? AND expires>?',owner,Date.now());
+    const appCredentials=count('SELECT COUNT(*) AS n FROM home_red_id WHERE owner=? AND expires>?',owner,Date.now())+count('SELECT COUNT(*) AS n FROM home_red_session WHERE owner=? AND refresh_until>?',owner,Date.now());
     const mcpGrantRecords=mcpEnabled?count("SELECT COUNT(*) AS n FROM mcp_state WHERE kind='grant' AND expires>?",Date.now()):0;
     // Concurrent authenticated requests share the same measurement; no user data in the sample.
     if(!sample)sample=metrics().finally(()=>{sample=null;});

@@ -587,7 +587,7 @@ const Einstellungen = (() => {
         if (data.version !== 1 || !data.cpu || !data.memory || !data.storage || !data.devices || !data.services) throw new Error('Ungültige Antwort');
         const number = (v: unknown, unit = '') => typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 10) / 10 + unit : 'Nicht verfügbar';
         const gb = (v: unknown) => typeof v === 'number' && Number.isFinite(v) ? number(v / 1e9, ' GB') : 'Nicht verfügbar';
-        const rows = [
+        const rows: [string, string][] = [
           ['CPU', number(data.cpu.percent, ' %')],
           ['RAM', gb(data.memory.usedBytes) + ' / ' + gb(data.memory.totalBytes)],
           ['SSD/Dateisystem verfügbar', gb(data.storage.availableBytes) + ' / ' + gb(data.storage.totalBytes)],
