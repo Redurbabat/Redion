@@ -3,6 +3,7 @@ import type {DatabaseSync} from 'node:sqlite';
 import type {Ablage} from '../typen.ts';
 import {werFragt} from '../kern.ts';
 import {RED_APPS} from './red-id.ts';
+import {revokeRedShare} from './red-share.ts';
 
 const hash=(v:string)=>createHash('sha256').update(v).digest('hex');
 const proof=(v:string)=>createHash('sha256').update(v).digest('base64url');
@@ -67,6 +68,7 @@ export function createRedIdV2(db:DatabaseSync,ablage:Ablage){
           const a=db.prepare('DELETE FROM home_red_session WHERE owner=? AND app=?').run(owner,app);
           const b=db.prepare('DELETE FROM home_red_id WHERE owner=? AND app=?').run(owner,app);
           db.prepare('DELETE FROM home_red_pair WHERE owner=? AND app=?').run(owner,app);
+          revokeRedShare(db,owner,app);
           return Number(a.changes)+Number(b.changes);
         });return reply(200,{revoked});
       }

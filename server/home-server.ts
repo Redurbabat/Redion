@@ -8,6 +8,7 @@ import {openHomeBlobs} from './home/blobs.ts';
 import {beantworte} from './kern.ts';
 import {prepareHomeSync,createHomeSyncWait} from './home/live-sync.ts';
 import {prepareRedIdV2,createRedIdV2,RED_ID_V2_ROUTES} from './home/red-id-v2.ts';
+import {prepareRedShare,createRedShare,SHARE_ROUTES} from './home/red-share.ts';
 import {createHomeDashboard} from './home/dashboard.ts';
 import {prepareRedId,issueRedId,revokeRedApp,handleRedId} from './home/red-id.ts';
 import {approveHomeDevice,claimHomeDevice} from './home/pairing.ts';
@@ -18,7 +19,7 @@ import {zuGrossAntwort} from './sicherheit/eingaben.ts';
 import {istAbgleichWeg,mitAppUrsprung} from './sicherheit/abgleich-tor.ts';
 
 const privateRoutes=new Set(['/api/stand']);
-const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/home/dashboard','/red-id/v1/me','/red-id/v1/logout',...RED_ID_V2_ROUTES]);
+const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/home/dashboard','/red-id/v1/me','/red-id/v1/logout',...RED_ID_V2_ROUTES,...SHARE_ROUTES]);
 const json=(status:number,error:string)=>Response.json({error},{status,headers:{'Cache-Control':'no-store'}});
 
 /** Initial private API: no static repository files, public registration,
@@ -32,6 +33,8 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
   prepareHomeSync(store.sqlite);
   prepareRedId(store.sqlite);
   prepareRedIdV2(store.sqlite);
+  prepareRedShare(store.sqlite);
+  const share=createRedShare(store.sqlite,store.ablage);
   const redIdV2=createRedIdV2(store.sqlite,store.ablage);
   const live=createHomeSyncWait(store.sqlite,store.ablage);
   const dashboard=createHomeDashboard(store.sqlite,store.ablage,options.dataDir,!!options.enableMcp);
@@ -65,6 +68,11 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
     }
     if(path==='/home/dashboard'){
       const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Authorization','Cache-Control':'no-store'}}):await dashboard(request);
+      if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
+      return mitAppUrsprung(request,response);
+    }
+    if((SHARE_ROUTES as readonly string[]).includes(path)){
+      const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Cache-Control':'no-store'}}):await share(request);
       if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
       return mitAppUrsprung(request,response);
     }

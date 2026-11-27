@@ -11,6 +11,7 @@ on:
       - 'pruefungen/red-backup.test.mts'
       - 'red-sdk/**'
       - 'pruefungen/red-connect.test.mts'
+      - 'pruefungen/red-share.test.mts'
       - '.github/workflows/home-server.yml'
   workflow_dispatch:
 permissions:
@@ -25,7 +26,7 @@ jobs:
         with:
           node-version: '24'
       - run: node --test pruefungen/redion-home-server.test.mts pruefungen/redion-home-dashboard.test.mts pruefungen/red-id-v2.test.mts pruefungen/red-vault.test.mts pruefungen/red-backup.test.mts
-      - run: node --test pruefungen/red-connect.test.mts
+      - run: node --test pruefungen/red-connect.test.mts pruefungen/red-share.test.mts
       - run: bash -n deploy/home/backup.sh && bash -n deploy/home/update.sh
       - run: npm ci --ignore-scripts
       - run: npm --prefix red-sdk run build && npm --prefix red-sdk pack --dry-run
