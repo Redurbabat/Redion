@@ -114,10 +114,10 @@ export const CLOUD_TOOLS:ToolDef[]=[
       text:{type:'string',maxLength:8000},checked:{type:'boolean'},
       note:{type:'string',maxLength:2000},dueDate:{type:'string',maxLength:10}},
       required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
-  {name:'redion_update_schematic',description:'Bearbeitet einen Klartext-Schaltplan. Für eine einzelne Änderung operation und ihre Felder übergeben. Für bis zu 20 atomare Änderungen nur changes übergeben. Jeder Schritt wird vor dem Speichern geprüft, die Planversion steigt einmal. set_component_values setzt U (Quelle, V), R (Widerstand, Ohm) und Un (Lampe, V) entsprechend dem Fachzeichen. rename_label ändert Beschriftungstext; delete_label und delete_wire entfernen genau das angegebene Element. Entfernte Leitungen können den Stromkreis verändern; danach erneut simulieren. rotate_component, mirror_component und delete_component bearbeiten nur unverbundene Bauteile; add_busbar zeichnet eine isolierte gerade Stromschiene mit conductor L1/L2/L3/N/PE und Start x/y sowie Ende endX/endY. Die Kennzeichnung liefert keine Spannung und verbindet gleichnamige Schienen nicht automatisch. branch_wire verbindet eine Startklemme (fromComponentId, fromTerminal) mit einem eindeutigen inneren Punkt x/y einer vorhandenen targetWireId; keine fremden Kontakte. move_connected_component zieht bis zu acht eindeutig gebundene Leitungen mit dem nativen Netzkontaktwächter nach; bei geänderten Kontakten oder uneindeutigem Weg wird die ganze Aktion abgelehnt.',
+  {name:'redion_update_schematic',description:'Bearbeitet einen Klartext-Schaltplan. Für eine einzelne Änderung operation und ihre Felder übergeben. Für bis zu 20 atomare Änderungen nur changes übergeben. Mit dryRun: true denselben Änderungslauf ohne Speichern ausführen; Vorschau enthält Kandidatenplan und bisherige Version. Jeder Schritt wird vor dem Speichern geprüft, die Planversion steigt nur beim tatsächlichen Speichern einmal. set_component_values setzt U (Quelle, V), R (Widerstand, Ohm) und Un (Lampe, V) entsprechend dem Fachzeichen. rename_label ändert Beschriftungstext; delete_label und delete_wire entfernen genau das angegebene Element. Entfernte Leitungen können den Stromkreis verändern; danach erneut simulieren. rotate_component, mirror_component und delete_component bearbeiten nur unverbundene Bauteile; add_busbar zeichnet eine isolierte gerade Stromschiene mit conductor L1/L2/L3/N/PE und Start x/y sowie Ende endX/endY. Die Kennzeichnung liefert keine Spannung und verbindet gleichnamige Schienen nicht automatisch. branch_wire verbindet eine Startklemme (fromComponentId, fromTerminal) mit einem eindeutigen inneren Punkt x/y einer vorhandenen targetWireId; keine fremden Kontakte. move_connected_component zieht bis zu acht eindeutig gebundene Leitungen mit dem nativen Netzkontaktwächter nach; bei geänderten Kontakten oder uneindeutigem Weg wird die ganze Aktion abgelehnt.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,
       expectedVersion:{type:'integer',minimum:1},
-      ...schematicEditFields,changes:{type:'array',minItems:1,maxItems:20,
+      ...schematicEditFields,dryRun:{type:'boolean',enum:[true]},changes:{type:'array',minItems:1,maxItems:20,
         items:{type:'object',properties:schematicEditFields,required:['operation'],additionalProperties:false}}},
       required:['workspaceId','blockId','expectedVersion'],additionalProperties:false}},
   {name:'redion_add_schematic',description:'Erstellt einen leeren Schaltplan mit dem nativen RED-ION-Format auf einer freigegebenen Seite. Kein automatisch gezeichneter Stromkreis und keine Sicherheitsabnahme. Atomar, versioniert, mit requestId wiederholbar.',
@@ -1306,14 +1306,17 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         return err('not_found','Schaltplan nicht verfügbar.');
       const ancestors=await embedding(w,pageId,id,data);
       if(ver!==Number(s.version)||ver<1)return err('conflict','Schaltplan wurde geändert. Bitte erneut lesen.');
+      const dryRun=args.dryRun===true;
+      if(args.dryRun!==undefined&&!dryRun)return err('invalid_arguments','dryRun muss true sein.');
       const batch=args.changes!==undefined;
       if(batch&&(!Array.isArray(args.changes)||args.changes.length<1||args.changes.length>20||
-        Object.keys(args).some(key=>!['workspaceId','blockId','expectedVersion','changes'].includes(key))))
+        Object.keys(args).some(key=>!['workspaceId','blockId','expectedVersion','changes','dryRun'].includes(key))))
         return err('invalid_arguments','Ein Batch muss 1–20 Änderungen enthalten und darf keine Einzelaktion enthalten.');
+      const {dryRun:_dryRun,...singleChange}=args;
       let plan=data.plan;
       const elements:{elementId:string;elementType:string}[]=[];
       try{
-        for(const [index,change] of (batch?args.changes as unknown[]:[args]).entries()){
+        for(const [index,change] of (batch?args.changes as unknown[]:[singleChange]).entries()){
           if(!change||typeof change!=='object'||Array.isArray(change))throw new Error(`Schritt ${index+1} ist kein Änderungsobjekt.`);
           if(batch&&Object.keys(change).some(key=>!Object.hasOwn(schematicEditFields,key)))
             throw new Error(`Schritt ${index+1} enthält unbekannte Felder.`);
@@ -1333,6 +1336,14 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const timestamp=new Date().toISOString();
       const payload=JSON.stringify({...data,plan,edited:timestamp});
       if(new TextEncoder().encode(payload).byteLength>50000)return err('too_large','Schaltplanblock ist zu gross.');
+      if(dryRun){
+        const preview={workspaceId:w,documentId:pageId,blockId:id,version:ver,
+          dryRun:true,saved:false,elements,previewPlan:plan,
+          electricalValidation:false,routingVerified:false};
+        if(new TextEncoder().encode(JSON.stringify(preview)).byteLength>32000)
+          return err('too_large','Vorschau ist zu gross. Kleineren Teilplan wählen.');
+        return preview;
+      }
       const updated=await db.prepare(
         "UPDATE saetze SET daten=?1,version=version+1,geaendert=?2,vonGeraet='Cloud-MCP' "+
         "WHERE bereich=?3 AND id=?4 AND tabelle='blocks' AND seite=?5 AND version=?6 "+
