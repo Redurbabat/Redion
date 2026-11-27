@@ -1,4 +1,4 @@
-/** Strict, additive edits to RED ION's persisted block.plan format.
+/** Strict, versioned edits to RED ION's persisted block.plan format.
  * Client geometry is limited to the canonical 10px grid and BUILTIN_SYMBOLS.
  * This is an editor helper, NOT an electrical safety or standards verifier.
  */
@@ -276,6 +276,26 @@ export const editSchematic=(raw:unknown,args:Item):{plan:Item;elementId:string;k
     checkFreeComponent(moved,components,wires,width,height);
     return {plan:{...raw,teile:components.map(c=>c===old?moved:c)},
       elementId:id,kind:'component'};
+  }
+  if(kind==='rename_label'||kind==='delete_label'){
+    allowedKeys(args,kind==='rename_label'?['labelId','labelText']:['labelId']);
+    const id=ident(args.labelId,'Beschriftung');
+    const old=labels.find(l=>isRecord(l)&&l.id===id);
+    if(!isRecord(old))fail('Beschriftung existiert nicht.');
+    if(kind==='delete_label')
+      return {plan:{...raw,texte:labels.filter(l=>l!==old)},elementId:id,kind:'label'};
+    const t=nonempty(args.labelText,'Beschriftung',200);
+    if(old.t===t)fail('Beschriftung ist bereits unverändert.');
+    return {plan:{...raw,texte:labels.map(l=>l===old?{...old,t}:l)},elementId:id,kind:'label'};
+  }
+  if(kind==='delete_wire'){
+    allowedKeys(args,['wireId']);
+    const id=ident(args.wireId,'Leitung');
+    const old=wires.find(w=>isRecord(w)&&w.id===id);
+    if(!isRecord(old))fail('Leitung existiert nicht.');
+    // Only the explicitly selected wire is removed. Other paths may
+    // still connect the terminals; no electrical validation is implied.
+    return {plan:{...raw,leitungen:wires.filter(w=>w!==old)},elementId:id,kind:'wire'};
   }
   if(kind==='move_label'){
     allowedKeys(args,['labelId','x','y']);
