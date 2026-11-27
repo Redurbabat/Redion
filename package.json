@@ -22,15 +22,19 @@
     "test:live-sync": "node --test pruefungen/live-sync-iphone-windows.test.mts",
     "version:pruefen": "node --test windows/version.test.mts",
     "test:ink": "node --test pruefungen/windows-ink-model.mts",
-    "test:mcp": "node node_modules/typescript/bin/tsc -p windows/tsconfig.json && node --test pruefungen/redion-mcp-model.mts plugins/red-ion/tests/visual-frames.mts",
-    "test:windows-mcp": "npm --prefix windows run prepare:app && npm --prefix plugins/red-ion run build && node plugins/red-ion/tests/electron.mts",
-    "test:mcp-scripts": "npm --prefix plugins/red-ion run build && node --test plugins/red-ion/tests/windows-scripts.mts plugins/red-ion/tests/discovery.mts",
+    "test:mcp": "node node_modules/typescript/bin/tsc -p windows/tsconfig.json && npm run test:mcp:prepared --",
+    "test:mcp:prepared": "node --test pruefungen/redion-mcp-model.mts plugins/red-ion/tests/visual-frames.mts",
+    "test:windows-mcp": "npm --prefix windows run prepare:app && npm --prefix plugins/red-ion run build && npm run test:windows-mcp:prepared --",
+    "test:windows-mcp:prepared": "node plugins/red-ion/tests/electron.mts",
+    "test:mcp-scripts": "npm --prefix plugins/red-ion run build && npm run test:mcp-scripts:prepared --",
+    "test:mcp-scripts:prepared": "node --test plugins/red-ion/tests/windows-scripts.mts plugins/red-ion/tests/discovery.mts",
     "test:mcp-cloud": "node --test pruefungen/redion-mcp-cloud-state.mts pruefungen/redion-mcp-cloud-oauth.mts pruefungen/redion-mcp-cloud-http.mts pruefungen/redion-mcp-cloud-route.mts pruefungen/redion-abgleich-tor.mts pruefungen/redion-mcp-cloud-page-tools.mts",
     "test:mcp-cloud-browser": "node --test pruefungen/redion-mcp-cloud-browser.mts",
     "test:mcp-cloud-runtime": "node --test pruefungen/redion-mcp-cloud-runtime.mts",
     "mcp:connector:export": "node skripte/mcp-connector-vertrag.mts --output build/mcp/redion-v07-werkzeuge.json",
     "test:mcp-connector": "node --test pruefungen/redion-mcp-connector-vertrag.mts",
-    "test:windows-ink": "npm --prefix windows run prepare:app && node pruefungen/windows-ink-studio.mts"
+    "test:windows-ink": "npm --prefix windows run prepare:app && npm run test:windows-ink:prepared --",
+    "test:windows-ink:prepared": "node pruefungen/windows-ink-studio.mts"
   },
   "keywords": [
     "notizen",

@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: '22.20.0'
           cache: npm
-      - name: Gemeinsamen Web-Code und Windows-Brücke bauen
+      - name: Abhängigkeiten installieren
         shell: pwsh
         run: |
           npm ci --no-audit --no-fund
@@ -30,30 +30,42 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           npm ci --prefix plugins/red-ion --ignore-scripts --no-audit --no-fund
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Web-Code, Windows-Brücke und MCP-Paket vorbereiten
+        shell: pwsh
+        run: |
           npm run bauen:ts
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           npm run typecheck
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          npm run typecheck:mcp
+          npm --prefix windows run prepare:app
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          node node_modules/typescript/bin/tsc -p windows/tsconfig.json
+          node node_modules/typescript/bin/tsc -p plugins/red-ion/tsconfig.json
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          node --test windows/windows-desktop.test.cjs pruefungen/native-windows-files.mts
+          npm --prefix plugins/red-ion run build
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Windows-Komponenten mit vorbereiteten Artefakten prüfen
+        shell: pwsh
+        run: |
           npm --prefix windows test
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          node --test pruefungen/windows-ink-model.mts pruefungen/native-build-parity.mts
+          node --test pruefungen/native-windows-files.mts pruefungen/windows-ink-model.mts pruefungen/native-build-parity.mts
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          npm run test:windows-ink
+          npm run test:windows-ink:prepared
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          npm run test:mcp
+          npm run test:mcp:prepared
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          npm run test:windows-mcp
+          npm run test:windows-mcp:prepared
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          npm run test:mcp-scripts
+          npm run test:mcp-scripts:prepared
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          npm --prefix windows run dist
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      # Die x64-Ziele NSIS und Portable stehen in windows/package.json.
+      - name: Vorbereitete App als Windows-Installer und Portable paketieren
+        working-directory: windows
+        shell: pwsh
+        run: .\node_modules\.bin\electron-builder.cmd --win --publish never
+      - name: Gebaute Windows-EXE und Webparität prüfen
+        shell: pwsh
+        run: |
           node plugins/red-ion/tests/electron.mts --packaged=build/windows-dist/win-unpacked/Redion.exe
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           node windows/compare-web.mts
