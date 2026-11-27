@@ -9,6 +9,8 @@ import {rolleAuf,darf,notieren,feldRechte} from '../kern.ts';
 import {BUILTIN_BLOCK_TYPES} from './block-catalog.ts';
 import {BUILTIN_SYMBOLS} from './symbol-catalog.ts';
 import {editSchematic,schematicChangeSummary} from './schematic-edit.ts';
+import {createUndoCheckpoint,undoCandidate} from './schematic-undo.ts';
+import {mcpStateD1} from './state.ts';
 import {auditWiring,measureOperatingPoint,runSwitchTest} from './schematic-test.ts';
 import {buildLearningCard,buildLearningSet} from './learning-card.ts';
 import {applyDatabaseValues,databaseBatchLimit,databaseFieldLimit,parseDatabaseChanges,readWritableDatabaseRowsSql,updateDatabaseRowsSql} from './database-edit.ts';
@@ -114,10 +116,12 @@ export const CLOUD_TOOLS:ToolDef[]=[
       text:{type:'string',maxLength:8000},checked:{type:'boolean'},
       note:{type:'string',maxLength:2000},dueDate:{type:'string',maxLength:10}},
       required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
-  {name:'redion_update_schematic',description:'Bearbeitet einen Klartext-Schaltplan. Für eine einzelne Änderung operation und ihre Felder übergeben. Für bis zu 20 atomare Änderungen nur changes übergeben. Mit dryRun: true denselben Änderungslauf ohne Speichern ausführen; Vorschau enthält Kandidatenplan, bisherige Version und changeSummary der tatsächlich hinzugefügten, entfernten und geänderten Elemente. Optional previewSwitchTest oder previewOperatingPoint (nur zusammen mit dryRun: true) prüft den Kandidaten mit dem nativen Simulator. previewGeometryAudit: true vergleicht zusätzlich die geometrische Diagnose vor und nach der Änderung. Jeder Schritt wird vor dem Speichern geprüft, die Planversion steigt nur beim tatsächlichen Speichern einmal. set_component_values setzt U (Quelle, V), R (Widerstand, Ohm) und Un (Lampe, V) entsprechend dem Fachzeichen. rename_label ändert Beschriftungstext; delete_label und delete_wire entfernen genau das angegebene Element. Entfernte Leitungen können den Stromkreis verändern; danach erneut simulieren. rotate_component, mirror_component und delete_component bearbeiten nur unverbundene Bauteile; normalize_wire_points entfernt nur aufeinanderfolgende identische Leitungspunkte bei unveränderten nativen Kontakten und Anschlussauflösung. Erst dryRun: true nutzen. add_busbar zeichnet eine isolierte gerade Stromschiene mit conductor L1/L2/L3/N/PE und Start x/y sowie Ende endX/endY. Die Kennzeichnung liefert keine Spannung und verbindet gleichnamige Schienen nicht automatisch. branch_wire verbindet eine Startklemme (fromComponentId, fromTerminal) mit einem eindeutigen inneren Punkt x/y einer vorhandenen targetWireId; keine fremden Kontakte. move_connected_component zieht bis zu acht eindeutig gebundene Leitungen mit dem nativen Netzkontaktwächter nach; bei geänderten Kontakten oder uneindeutigem Weg wird die ganze Aktion abgelehnt.',
+  {name:'redion_update_schematic',description:'Bearbeitet einen Klartext-Schaltplan. Für eine einzelne Änderung operation und ihre Felder übergeben. Für bis zu 20 atomare Änderungen nur changes übergeben. Mit dryRun: true denselben Änderungslauf ohne Speichern ausführen; Vorschau enthält Kandidatenplan, bisherige Version und changeSummary der tatsächlich hinzugefügten, entfernten und geänderten Elemente. Mit retainUndo: true beim Speichern einen befristeten Wiederherstellungspunkt anfordern; mit undoId und expectedVersion einmalig wiederherstellen. Optional retainRedo: true beim Undo erzeugt redoId. Mit redoId und expectedVersion die rückgängig gemachte Änderung wiederholen, optional retainUndo: true für einen neuen Undo-Prüfpunkt. Keine anderen Aktionen in einem Wiederherstellungsaufruf. Optional previewSwitchTest oder previewOperatingPoint (nur zusammen mit dryRun: true) prüft den Kandidaten mit dem nativen Simulator. previewGeometryAudit: true vergleicht zusätzlich die geometrische Diagnose vor und nach der Änderung. Jeder Schritt wird vor dem Speichern geprüft, die Planversion steigt nur beim tatsächlichen Speichern einmal. set_component_values setzt U (Quelle, V), R (Widerstand, Ohm) und Un (Lampe, V) entsprechend dem Fachzeichen. rename_label ändert Beschriftungstext; delete_label und delete_wire entfernen genau das angegebene Element. Entfernte Leitungen können den Stromkreis verändern; danach erneut simulieren. rotate_component, mirror_component und delete_component bearbeiten nur unverbundene Bauteile; normalize_wire_points entfernt nur aufeinanderfolgende identische Leitungspunkte bei unveränderten nativen Kontakten und Anschlussauflösung. Erst dryRun: true nutzen. add_busbar zeichnet eine isolierte gerade Stromschiene mit conductor L1/L2/L3/N/PE und Start x/y sowie Ende endX/endY. Die Kennzeichnung liefert keine Spannung und verbindet gleichnamige Schienen nicht automatisch. branch_wire verbindet eine Startklemme (fromComponentId, fromTerminal) mit einem eindeutigen inneren Punkt x/y einer vorhandenen targetWireId; keine fremden Kontakte. move_connected_component zieht bis zu acht eindeutig gebundene Leitungen mit dem nativen Netzkontaktwächter nach; bei geänderten Kontakten oder uneindeutigem Weg wird die ganze Aktion abgelehnt.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,
       expectedVersion:{type:'integer',minimum:1},
-      ...schematicEditFields,dryRun:{type:'boolean',enum:[true]},
+      ...schematicEditFields,dryRun:{type:'boolean',enum:[true]},retainUndo:{type:'boolean',enum:[true]},
+      undoId:{type:'string',pattern:'^schematic_undo:[a-f0-9-]{36}$'},
+      redoId:{type:'string',pattern:'^schematic_redo:[a-f0-9-]{36}$'},retainRedo:{type:'boolean',enum:[true]},
       previewGeometryAudit:{type:'boolean',enum:[true]},
       previewSwitchTest:{type:'object',additionalProperties:false,required:['switchIds','targetId','expected'],properties:{
         switchIds:{type:'array',minItems:1,maxItems:6,uniqueItems:true,items:idField},targetId:idField,
@@ -1317,6 +1321,82 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       if(ver!==Number(s.version)||ver<1)return err('conflict','Schaltplan wurde geändert. Bitte erneut lesen.');
       const dryRun=args.dryRun===true;
       if(args.dryRun!==undefined&&!dryRun)return err('invalid_arguments','dryRun muss true sein.');
+      const retainUndo=args.retainUndo===true;
+      if(args.retainUndo!==undefined&&(!retainUndo||dryRun))
+        return err('invalid_arguments','retainUndo benötigt true und eine tatsächliche Änderung.');
+      const retainRedo=args.retainRedo===true;
+      if(args.retainRedo!==undefined&&(!retainRedo||args.undoId===undefined||dryRun))
+        return err('invalid_arguments','retainRedo benötigt einen Undo-Aufruf.');
+      const context={workspaceId:w,documentId:pageId,blockId:id,userId,grantId:principal.grantId};
+      const oldRaw=String(s.daten);
+      const embeddingJson=JSON.stringify(ancestors);
+      const guard="bereich=?3 AND id=?4 AND tabelle='blocks' AND seite=?5 AND version=?6 "+
+        "AND geloescht=0 AND verschluesselt=0 AND json_valid(daten) "+
+        "AND json_extract(daten,'$.type')='schaltplan' "+
+        "AND COALESCE(json_extract(daten,'$.parentTable'),'')<>'collection' "+unchangedEmbedding('?7');
+      const updateSql="UPDATE saetze SET daten=?1,version=version+1,geaendert=?2,vonGeraet='Cloud-MCP' WHERE "+guard;
+      const unexpired="expires>CAST((julianday('now')-2440587.5)*86400000 AS INTEGER)";
+      if(args.undoId!==undefined||args.redoId!==undefined){
+        const redo=args.redoId!==undefined;
+        const idFieldName=redo?'redoId':'undoId';
+        const retainFieldName=redo?'retainUndo':'retainRedo';
+        const kind=redo?'schematic_redo':'schematic_undo';
+        const key=args[idFieldName];
+        const allowed=new Set(['workspaceId','blockId','expectedVersion',idFieldName,retainFieldName]);
+        if(typeof key!=='string'||!new RegExp('^'+kind+':[a-f0-9-]{36}$').test(key)||
+          Object.keys(args).some(k=>!allowed.has(k)))
+          return err('invalid_arguments','Wiederherstellung benötigt nur Kennung, Version und optional den Gegenprüfpunkt.');
+        if(!db.batch)return err('unavailable','D1-Transaktion nicht verfügbar.');
+        const row=await db.prepare("SELECT data FROM mcp_state WHERE key=?1 AND kind=?2 AND "+unexpired)
+          .bind(key,kind).first<{data:string}>();
+        if(!row)return err('conflict','Wiederherstellungspunkt nicht verfügbar oder abgelaufen.');
+        let restored:unknown;
+        try{restored=await undoCandidate(JSON.parse(row.data),context,ver,oldRaw);}
+        catch{return err('conflict','Wiederherstellungspunkt passt nicht zum aktuellen Schaltplan.');}
+        const timestamp=new Date().toISOString();
+        const payload=JSON.stringify({...data,plan:restored,edited:timestamp});
+        if(new TextEncoder().encode(payload).byteLength>50000||ver>=Number.MAX_SAFE_INTEGER)
+          return err('too_large','Wiederherstellung überschreitet die sichere Grenze.');
+        const changeSummary=schematicChangeSummary(data.plan,restored);
+        const retainInverse=redo?retainUndo:retainRedo;
+        const nextKind=redo?'schematic_undo':'schematic_redo';
+        let inverse:Awaited<ReturnType<typeof createUndoCheckpoint>>|undefined;
+        let inverseKey:string|undefined;
+        if(retainInverse){
+          try{inverse=await createUndoCheckpoint(context,ver,oldRaw,payload);}
+          catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Gegenprüfpunkt nicht möglich.');}
+          inverseKey=nextKind+':'+crypto.randomUUID();
+        }
+        await page(w,pageId,'bearbeiten');
+        const apply=db.prepare(updateSql+
+          "AND daten=?8 AND EXISTS (SELECT 1 FROM mcp_state WHERE key=?9 AND kind=?10 AND data=?11 AND "+unexpired+") RETURNING version")
+          .bind(payload,timestamp,w,id,pageId,ver,embeddingJson,oldRaw,key,kind,row.data);
+        // D1 batch executes statements sequentially in one SQL transaction.
+        // changes() gates subsequent statements on the immediately preceding
+        // successful write, in addition to the exact restored row predicate.
+        const statements=[apply];
+        if(inverse&&inverseKey){
+          statements.push(db.prepare("INSERT INTO mcp_state(key,kind,data,expires,revision) "+
+            "SELECT ?1,?2,?3,?4,1 WHERE changes()=1 AND EXISTS "+
+            "(SELECT 1 FROM saetze WHERE bereich=?5 AND id=?6 AND seite=?7 AND version=?8 "+
+            "AND tabelle='blocks' AND geloescht=0 AND verschluesselt=0 AND daten=?9) RETURNING key")
+            .bind(inverseKey,nextKind,JSON.stringify(inverse),inverse.expires,w,id,pageId,ver+1,payload));
+        }
+        statements.push(db.prepare("DELETE FROM mcp_state WHERE key=?1 AND kind=?2 AND data=?3 AND changes()=1 "+
+          "AND EXISTS (SELECT 1 FROM saetze WHERE bereich=?4 AND id=?5 AND seite=?6 AND version=?7 "+
+          "AND tabelle='blocks' AND geloescht=0 AND verschluesselt=0 AND daten=?8) RETURNING key")
+          .bind(key,kind,row.data,w,id,pageId,ver+1,payload));
+        const result=await db.batch(statements);
+        if(result.length!==statements.length||result.some(r=>r.results?.length!==1))
+          return err('conflict','Schaltplan oder Wiederherstellungspunkt wurde inzwischen geändert.');
+        await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',
+          text:redo?'Schaltplanänderung über Cloud-MCP wiederholt':'Schaltplanänderung über Cloud-MCP rückgängig gemacht',objekt:id});
+        return {workspaceId:w,documentId:pageId,blockId:id,version:ver+1,
+          ...(redo?{redone:true}:{undone:true}),changeSummary,
+          ...(inverse&&inverseKey?(redo?{undoId:inverseKey,undoExpires:inverse.expires}:
+            {redoId:inverseKey,redoExpires:inverse.expires}):{}),
+          electricalValidation:false,routingVerified:false};
+      }
       const previewGeometry=args.previewGeometryAudit!==undefined;
       if(previewGeometry&&(!dryRun||args.previewGeometryAudit!==true))
         return err('invalid_arguments','previewGeometryAudit benötigt true und dryRun: true.');
@@ -1326,9 +1406,9 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         return err('invalid_arguments','Genau einen Vorschau-Prüfmodus zusammen mit dryRun: true wählen.');
       const batch=args.changes!==undefined;
       if(batch&&(!Array.isArray(args.changes)||args.changes.length<1||args.changes.length>20||
-        Object.keys(args).some(key=>!['workspaceId','blockId','expectedVersion','changes','dryRun','previewSwitchTest','previewOperatingPoint','previewGeometryAudit'].includes(key))))
+        Object.keys(args).some(key=>!['workspaceId','blockId','expectedVersion','changes','dryRun','retainUndo','previewSwitchTest','previewOperatingPoint','previewGeometryAudit'].includes(key))))
         return err('invalid_arguments','Ein Batch muss 1–20 Änderungen enthalten und darf keine Einzelaktion enthalten.');
-      const {dryRun:_dryRun,previewSwitchTest:_previewSwitchTest,previewOperatingPoint:_previewOperatingPoint,previewGeometryAudit:_previewGeometryAudit,...singleChange}=args;
+      const {dryRun:_dryRun,retainUndo:_retainUndo,previewSwitchTest:_previewSwitchTest,previewOperatingPoint:_previewOperatingPoint,previewGeometryAudit:_previewGeometryAudit,...singleChange}=args;
       let plan=data.plan;
       const elements:{elementId:string;elementType:string}[]=[];
       try{
@@ -1379,20 +1459,38 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
           return err('too_large','Vorschau ist zu gross. Kleineren Teilplan wählen.');
         return preview;
       }
-      const updated=await db.prepare(
-        "UPDATE saetze SET daten=?1,version=version+1,geaendert=?2,vonGeraet='Cloud-MCP' "+
-        "WHERE bereich=?3 AND id=?4 AND tabelle='blocks' AND seite=?5 AND version=?6 "+
-        "AND geloescht=0 AND verschluesselt=0 AND json_valid(daten) "+
-        "AND json_extract(daten,'$.type')='schaltplan' "+
-        "AND COALESCE(json_extract(daten,'$.parentTable'),'')<>'collection' "+
-        unchangedEmbedding('?7')+
-        "RETURNING version"
-      ).bind(payload,timestamp,w,id,pageId,ver,JSON.stringify(ancestors)).first<{version:number}>();
+      let updated:{version:number}|null;
+      let undo:{undoId:string;undoExpires:number}|undefined;
+      if(retainUndo){
+        if(!db.batch)return err('unavailable','D1-Transaktion nicht verfügbar.');
+        let checkpoint:Awaited<ReturnType<typeof createUndoCheckpoint>>;
+        try{checkpoint=await createUndoCheckpoint(context,ver,oldRaw,payload);}
+        catch(error){return err('invalid_arguments',error instanceof Error?error.message:'Undo-Prüfpunkt nicht möglich.');}
+        const key='schematic_undo:'+crypto.randomUUID();
+        const checkpointJson=JSON.stringify(checkpoint);
+        await mcpStateD1(db).prune(100);
+        await page(w,pageId,'bearbeiten');
+        const insert=db.prepare("INSERT INTO mcp_state(key,kind,data,expires,revision) "+
+          "SELECT ?1,'schematic_undo',?2,?8,1 FROM saetze WHERE "+guard+
+          "AND daten=?9 RETURNING key")
+          .bind(key,checkpointJson,w,id,pageId,ver,embeddingJson,checkpoint.expires,oldRaw);
+        const apply=db.prepare(updateSql+
+          "AND daten=?8 AND EXISTS (SELECT 1 FROM mcp_state WHERE key=?9 AND kind='schematic_undo' AND data=?10) RETURNING version")
+          .bind(payload,timestamp,w,id,pageId,ver,embeddingJson,oldRaw,key,checkpointJson);
+        const result=await db.batch([insert,apply]);
+        if(result[0]?.results?.length!==1||result[1]?.results?.length!==1)
+          return err('conflict','Schaltplan wurde inzwischen bearbeitet. Bitte erneut lesen.');
+        updated={version:ver+1};
+        undo={undoId:key,undoExpires:checkpoint.expires};
+      }else{
+        updated=await db.prepare(updateSql+"RETURNING version")
+          .bind(payload,timestamp,w,id,pageId,ver,embeddingJson).first<{version:number}>();
+      }
       if(!updated)return err('conflict','Schaltplan wurde inzwischen bearbeitet. Bitte erneut lesen.');
       await notieren(ablage,{bereich:w,kontoId:userId,art:'mcp',
         text:'Schaltplan über Cloud-MCP bearbeitet',objekt:id});
       return {workspaceId:w,documentId:pageId,blockId:id,version:updated.version,
-        ...(batch?{elements}:elements[0]),changeSummary,
+        ...(batch?{elements}:elements[0]),...(undo??{}),changeSummary,
         electricalValidation:false,routingVerified:false};
     }
     if(name==='redion_create_learning_set'){
