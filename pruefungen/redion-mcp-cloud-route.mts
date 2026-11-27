@@ -1833,6 +1833,23 @@ test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und at
     assert.equal(afterComponentDelete.data.plan.teile.some((p:any)=>p.id==='S1'),false);
     assert.deepEqual(afterComponentDelete.data.plan.teile,transformed.data.plan.teile.filter((p:any)=>p.id!=='S1'));
     assert.deepEqual(afterComponentDelete.data.plan.leitungen,transformed.data.plan.leitungen);
+    const newPart=await update({expectedVersion:13,operation:'add_component',componentId:'P2',
+      symbolId:'bp-sonnerie',x:100,y:100});
+    assert.equal(newPart.data.version,14);
+    const newWire=await update({expectedVersion:14,operation:'connect_terminals',wireId:'Wmove',
+      fromComponentId:'P2',fromTerminal:'X1',toComponentId:'P1',toTerminal:'X1'});
+    assert.equal(newWire.data.version,15);
+    const deniedMove=await update({expectedVersion:15,operation:'move_connected_component',
+      componentId:'P2',x:100,y:200},readOnly.access_token);
+    assert.equal(deniedMove.data.code,'forbidden');
+    const moveResult=await update({expectedVersion:15,operation:'move_connected_component',
+      componentId:'P2',x:100,y:200});
+    assert.equal(moveResult.data.version,16);
+    const movedPlan=await call('redion_read_schematic',{blockId});
+    assert.deepEqual(movedPlan.data.plan.leitungen.find((p:any)=>p.id==='Wmove').punkte[0],{x:130,y:200});
+    assert.equal(movedPlan.data.plan.teile.find((p:any)=>p.id==='P2').y,200);
+    assert.equal((await update({expectedVersion:15,operation:'move_connected_component',
+      componentId:'P2',x:100,y:240})).data.code,'conflict');
     const orphanId='detached_schematic';
     await f.store.setze('saetze',{id:orphanId,bereich:'ws_test',tabelle:'blocks',
       daten:JSON.stringify({type:'schaltplan',parentId:'edit_schematic_page',plan:finalPlan.data.plan}),
