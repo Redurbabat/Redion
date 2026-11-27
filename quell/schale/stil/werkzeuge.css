@@ -2036,3 +2036,26 @@ body.fokus .pg-ansichten, body.fokus .pg-tools{display:none!important}
 .gfx-comment-mention { display: inline-block; margin: 4px; padding: 4px 7px; border-radius: 6px; color: var(--accent); background: color-mix(in srgb,var(--accent) 12%,transparent); }
 .gfx-tb-edgeless .gfx-tb-schnell .gfx-tb-symbol .zeichen svg { display: block; }
 .gfx-tb-edgeless .gfx-tb-schnell .gfx-tb-symbol .zeichen::before { display: none; }
+
+/* Mobile Gedankenkarte: Ansicht und Werkzeugleiste sind getrennt. */
+.gk-mobile-kopf{display:none;}
+.gk-vollbild{position:fixed!important;inset:0;z-index:10000;display:flex;flex-direction:column;margin:0!important;border-radius:0;background:var(--bg);padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);box-sizing:border-box;}
+.gk-vollbild .gk-buehne{flex:1;min-height:0;height:auto!important;}
+.gk-vollbild .gk-griff{display:none;}
+.gk-vollbild .gk-mobile-kopf{display:flex;}
+.gk-mobile-kopf{align-items:center;justify-content:space-between;gap:4px;padding:4px 8px;background:var(--bg-card);border-bottom:1px solid var(--line);}
+.gk-mobile-kopf button{min-height:44px;min-width:44px;border:0;border-radius:10px;padding:0 8px;background:transparent;color:var(--text);cursor:pointer;}
+.gk-mobile-kopf button:focus-visible{outline:2px solid var(--accent);}
+.gk-mobile-kopf .gk-mobile-mass{font-size:13px;color:var(--text-dim);font-variant-numeric:tabular-nums;}
+.gk .gk-leiste[hidden]{display:none;}
+.gk-kn{overflow-wrap:break-word;word-break:normal;hyphens:auto;}
+@media (max-width:760px){
+  .gk:not(.gk-auf-flaeche) .gk-mobile-kopf{display:flex;}
+  .gk:not(.gk-auf-flaeche) .gk-leiste{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;gap:6px;padding:4px 8px;}
+  .gk:not(.gk-auf-flaeche) .gk-leiste > *{flex-shrink:0;}
+  .gk:not(.gk-auf-flaeche) .gk-leiste button{min-width:44px;min-height:44px;}
+  .gk:not(.gk-auf-flaeche) .gk-leiste button::after{display:none;}
+  .gk:not(.gk-auf-flaeche) .gk-leiste .gk-farbe{min-width:30px;min-height:30px;}
+  .gk-kn{max-width:260px;}
+  .gk-kn.gk-wurzel{max-width:280px;}
+}
