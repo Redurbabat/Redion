@@ -45,7 +45,7 @@ test('Speichern, Laden, Undo/Redo und ungültigen Import atomar ablehnen',()=>{
 });
 test('Gruppen, Bewegung, Verbindungen und Koordinaten',()=>{
   const a={...shape('a'),group:'g'},b={...shape('b'),group:'g'};
-  const c={...shape('c'),kind:'connector',from:'a',to:'b'};
+  const c={...shape('c'),kind:'connector' as const,from:'a',to:'b'};
   const group=m.expandGroups([a,b,c],new Set(['a']));assert.deepEqual([...group],['a','b']);
   const moved=m.moveObjects([a,b,c],group,5,8);assert.equal(moved[0]!.points[0]!.x,5);
   assert.equal(m.without(moved,new Set(['a']))[1]!.from,'');
