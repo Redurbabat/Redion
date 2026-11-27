@@ -2863,3 +2863,79 @@ test('Cloud MCP: opt-in Undo speichert und verbraucht Prüfpunkt atomar',async()
     assert.equal(redoRows.results.length,0);
   }finally{f.close();}
 });
+
+
+test('Cloud MCP: begrenzte eigene Schaltplan-Aktivität ohne fremde Protokolle oder Inhalte',async()=>{
+  const f=await fixture();
+  try{
+    await f.store.setze('konten',{id:'history_reader',mail:'history-reader@example.test',
+      name:'History Reader',herkunft:'github',angelegt:'',gesperrt:0});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'history_reader',
+      rolle:'lesen',von:'owner',wann:'2026-11-27'});
+    const reader=await f.authorize(false,'history_reader');
+    const writer=await f.authorize(true);
+    await f.store.setze('saetze',{id:'history_page',bereich:'ws_test',tabelle:'blocks',
+      daten:JSON.stringify({type:'page',text:'History',content:[]}),
+      verschluesselt:0,seite:'history_page',version:1,geaendert:'',geloescht:0,vonGeraet:'Test'});
+    const call=async(name:string,args:Record<string,unknown>,token=writer.access_token)=>{
+      const r=await f.rpc(token,'tools/call',{name,arguments:{workspaceId:'ws_test',...args}});
+      assert.equal(r.status,200);
+      return JSON.parse(r.data.result.content[0].text);
+    };
+    const created=await call('redion_add_schematic',{documentId:'history_page',
+      art:'stromlauf-aufgeloest',expectedVersion:1,requestId:'history_test_0001'});
+    const blockId=created.blockId;
+    assert.ok(blockId);
+    const read=(args:Record<string,unknown>,token?:string)=>call('redion_read_schematic',{blockId,...args},token);
+    const write=(args:Record<string,unknown>)=>call('redion_update_schematic',{blockId,...args});
+    const original=await read({});
+    const empty=await read({expectedVersion:1,history:true});
+    assert.deepEqual(empty.history,[]);
+    const edit=await write({operation:'add_label',labelId:'T1',labelText:'Privater Text',
+      x:100,y:100,expectedVersion:1,retainUndo:true});
+    assert.equal(edit.version,2,JSON.stringify(edit));
+    const undo=await write({undoId:edit.undoId,expectedVersion:2,retainRedo:true});
+    assert.equal(undo.version,3,JSON.stringify(undo));
+    const redo=await write({redoId:undo.redoId,expectedVersion:3});
+    assert.equal(redo.version,4,JSON.stringify(redo));
+    const recordEvent=async(id:string,changes:Record<string,unknown>)=>f.store.setze('protokoll',{
+      id,bereich:'ws_test',kontoId:'owner',art:'mcp',objekt:blockId,
+      text:'Schaltplan über Cloud-MCP bearbeitet',wann:'2026-01-01T00:00:00.000Z',...changes});
+    await recordEvent('foreign_account',{kontoId:'history_reader'});
+    await recordEvent('foreign_block',{objekt:'other_block'});
+    await recordEvent('foreign_workspace',{bereich:'other_workspace'});
+    await recordEvent('unrecognized_text',{text:'Nicht freigegebener Protokolltext'});
+    await recordEvent('foreign_kind',{art:'sync'});
+    const report=await read({expectedVersion:4,history:true});
+    assert.equal(report.version,4,JSON.stringify(report));
+    assert.equal(report.historyScope,'own_mcp_schematic_events');
+    assert.equal(report.complete,false);
+    assert.equal(report.historyTruncated,false);
+    assert.deepEqual(report.history.map((e:any)=>e.action).sort(),['edit','redo','undo']);
+    assert.ok(report.history.every((e:any)=>Object.keys(e).sort().join(',')==='action,at,eventId'));
+    assert.equal(JSON.stringify(report).includes('Privater Text'),false);
+    assert.equal(JSON.stringify(report).includes('foreign_account'),false);
+    assert.equal(JSON.stringify(report).includes('unrecognized_text'),false);
+    const limited=await read({expectedVersion:4,history:true,historyLimit:1});
+    assert.equal(limited.history.length,1);
+    assert.equal(limited.historyTruncated,true);
+    const ownReader=await read({expectedVersion:4,history:true},reader.access_token);
+    assert.deepEqual(ownReader.history.map((e:any)=>e.eventId),['foreign_account']);
+    for(const args of [{history:true},{history:true,expectedVersion:3},
+      {history:false,expectedVersion:4},{historyLimit:1,expectedVersion:4},
+      {history:true,expectedVersion:4,geometryAudit:true},{history:true,expectedVersion:4,historyLimit:41}]){
+      const denied=await read(args);
+      assert.ok(['invalid_arguments','conflict'].includes(denied.code),JSON.stringify(denied));
+    }
+    assert.equal((await read({})).version,4);
+    assert.equal(original.plan.texte.length,0);
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'history_reader',
+      rolle:'kein',von:'owner',wann:'2026-11-27'});
+    const denied=await read({expectedVersion:4,history:true},reader.access_token);
+    assert.ok(['forbidden','not_found'].includes(denied.code),JSON.stringify(denied));
+    const row=await f.store.hole('saetze',{bereich:'ws_test',id:blockId});
+    assert.ok(row);
+    await f.store.setze('saetze',{...row,verschluesselt:1});
+    assert.equal((await read({expectedVersion:4,history:true})).code,'not_found');
+  }finally{f.close();}
+});

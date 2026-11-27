@@ -181,9 +181,10 @@ export const CLOUD_TOOLS:ToolDef[]=[
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,
       childOffset:{type:'integer',minimum:0,maximum:100000},
       childLimit:{type:'integer',minimum:1,maximum:40}},required:['workspaceId','blockId'],additionalProperties:false}},
-  {name:'redion_read_schematic',description:'Liest Bauteile, Leitungen, Beschriftungen und Planversion. Mit switchTest bis zu 32 Kombinationen gegen eine Sollfolge prüfen (letzter Schalter wechselt am schnellsten). Mit operatingPoint Strom, Spannung und Leistung für gewählte Schalterstellungen messen. Mit geometryAudit: true geometrische Leitungsfehler und Klemmenpositionen prüfen. Alle Prüfmodi benötigen expectedVersion und speichern keine Änderungen.',
+  {name:'redion_read_schematic',description:'Liest Bauteile, Leitungen, Beschriftungen und Planversion. Mit switchTest bis zu 32 Kombinationen gegen eine Sollfolge prüfen (letzter Schalter wechselt am schnellsten). Mit operatingPoint Strom, Spannung und Leistung für gewählte Schalterstellungen messen. Mit geometryAudit: true geometrische Leitungsfehler und Klemmenpositionen prüfen. Mit history: true die letzten eigenen MCP-Schaltplanänderungen aus dem vorhandenen Serverprotokoll lesen (historyLimit 1–40). Keine vollständige Versionshistorie. Alle Prüfmodi und history benötigen expectedVersion und speichern keine Änderungen.',
     inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},
-      geometryAudit:{type:'boolean',enum:[true]},
+      geometryAudit:{type:'boolean',enum:[true]},history:{type:'boolean',enum:[true]},
+      historyLimit:{type:'integer',minimum:1,maximum:40},
       switchTest:{type:'object',additionalProperties:false,required:['switchIds','targetId','expected'],properties:{
         switchIds:{type:'array',minItems:1,maxItems:6,uniqueItems:true,items:idField},targetId:idField,
         expected:{type:'array',minItems:1,maxItems:32,items:{type:'boolean'}}
@@ -500,6 +501,40 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
         if(data.type!=='schaltplan'||!data.plan||typeof data.plan!=='object'||Array.isArray(data.plan))
           return err('not_found','Schaltplan nicht verfügbar.');
         const plan=data.plan as Record<string,unknown>;
+        const history=args.history===true;
+        if(args.history!==undefined&&!history||args.historyLimit!==undefined&&!history)
+          return err('invalid_arguments','historyLimit benötigt history: true.');
+        if(history){
+          if(args.switchTest!==undefined||args.operatingPoint!==undefined||args.geometryAudit!==undefined)
+            return err('invalid_arguments','Historie und Prüfung in getrennten Aufrufen lesen.');
+          const version=Number(s.version)||1;
+          if(expected(args.expectedVersion)!==version)
+            return err('conflict','Schaltplan wurde geändert. Bitte erneut lesen.');
+          const max=limit(args.historyLimit,20,40);
+          // Return only the caller's own recognized MCP schematic events.
+          // No arbitrary log text, other account identifiers or snapshots.
+          const rows=await db.prepare(
+            "SELECT id,wann,CASE text "+
+            "WHEN 'Schaltplan über Cloud-MCP bearbeitet' THEN 'edit' "+
+            "WHEN 'Schaltplanänderung über Cloud-MCP rückgängig gemacht' THEN 'undo' "+
+            "WHEN 'Schaltplanänderung über Cloud-MCP wiederholt' THEN 'redo' END AS action "+
+            "FROM protokoll WHERE bereich=?1 AND objekt=?2 AND kontoId=?3 AND art='mcp' "+
+            "AND text IN ('Schaltplan über Cloud-MCP bearbeitet','Schaltplanänderung über Cloud-MCP rückgängig gemacht','Schaltplanänderung über Cloud-MCP wiederholt') "+
+            "ORDER BY wann DESC,id DESC LIMIT ?4"
+          ).bind(w,id,userId,max+1).all<{id:string;wann:string;action:'edit'|'undo'|'redo'}>();
+          // Recheck current access after the asynchronous query. The block
+          // must still be live, unencrypted and embedded in the same page.
+          const fresh=await ablage.hole('saetze',{bereich:w,id});
+          if(!fresh||fresh.geloescht||fresh.verschluesselt||fresh.seite!==pageId||
+             fresh.tabelle!=='blocks'||Number(fresh.version)!==version||fresh.daten!==s.daten)
+            return err('conflict','Schaltplan wurde geändert. Bitte erneut lesen.');
+          await page(w,pageId,'lesen');
+          await embedding(w,pageId,id,data);
+          return {workspaceId:w,documentId:pageId,blockId:id,version,
+            history:rows.results.slice(0,max).map(row=>({eventId:row.id,at:row.wann,action:row.action})),
+            historyTruncated:rows.results.length>max,
+            historyScope:'own_mcp_schematic_events',complete:false};
+        }
         const payload=JSON.stringify(plan);
         if(payload.length>32000)return err('too_large','Schaltplan ist für einen Aufruf zu gross.');
         const version=Number(s.version)||1;
