@@ -292,6 +292,72 @@ export const editSchematic=(raw:unknown,args:Item):{plan:Item;elementId:string;k
       wires.filter(isRecord).map(w=>({...w,ebene})),width,height);
     return {plan:{...raw,teile:components.map(c=>c===old?changed:c)},elementId:id,kind:'component'};
   }
+  if(kind==='move_connected_component'){
+    allowedKeys(args,['componentId','x','y']);
+    const id=ident(args.componentId,'Bauteil');
+    const old=components.find(c=>isRecord(c)&&c.id===id);
+    if(!isRecord(old))fail('Bauteil existiert nicht.');
+    const x=grid(args.x,'X-Koordinate',width),y=grid(args.y,'Y-Koordinate',height);
+    if(old.x===x&&old.y===y)fail('Bauteilposition ist bereits unverändert.');
+    const attached=wires.filter(isRecord).filter(w=>w.vonTeil===id||w.nachTeil===id);
+    if(!attached.length||attached.length>8)fail('Ein bis acht explizit gebundene Leitungen erforderlich.');
+    // Bound work in the cloud runtime; reject unknown symbols, malformed
+    // geometry and legacy terminal aliases before invoking native routing.
+    const allParts=components.filter(isRecord);
+    for(const p of allParts){
+      if(typeof p.x!=='number'||!Number.isFinite(p.x)||typeof p.y!=='number'||!Number.isFinite(p.y))
+        fail('Ungültige Bauteilposition.');
+      rotation(p.drehung);mirror(p.gespiegelt);pinsFor(p);
+    }
+    const allWires=wires.filter(isRecord);
+    if(allWires.reduce((n,w)=>n+validPoints(w.punkte).length,0)>500)
+      fail('Zu viele Leitungspunkte für das Nachziehen.');
+    const equal=(a:Pos,b:Pos)=>a.x===b.x&&a.y===b.y;
+    const endpoints=(wire:Item,parts:Item[])=>{
+      const from=parts.find(p=>p.id===wire.vonTeil),to=parts.find(p=>p.id===wire.nachTeil);
+      if(!from||!to||from===to||typeof wire.vonNr!=='string'||typeof wire.nachNr!=='string')
+        return fail('Leitungsenden sind nicht eindeutig an zwei Bauteile gebunden.');
+      return [terminalPos(from,wire.vonNr),terminalPos(to,wire.nachNr)] as const;
+    };
+    for(const w of attached){
+      const pts=validPoints(w.punkte),[a,b]=endpoints(w,allParts);
+      if(w.schiene!==undefined||!equal(pts[0]!,a)||!equal(pts[pts.length-1]!,b))
+        fail('Gebundene Leitung hat keine eindeutigen Endpunkte.');
+    }
+    const moved={...old,x,y};
+    const envelope=rotatedEnvelope(moved);
+    if(envelope.minX<0||envelope.minY<0||envelope.maxX>width||envelope.maxY>height)
+      fail('Das Fachzeichen liegt ausserhalb des Planblatts.');
+    for(const pin of pinsFor(moved))
+      if(pin.at.x<0||pin.at.y<0||pin.at.x>width||pin.at.y>height)
+        fail('Anschluss liegt ausserhalb des Planblatts.');
+    // Native editor uses the same contact rules as the simulator.
+    // Work on a clone and reject every change in the contact graph, even
+    // when the native editor would merely warn about its fallback route.
+    const plan=structuredClone(raw) as unknown as Parameters<typeof Schaltplan.vorherMerken>[0];
+    const before=planTools.vorherMerken(plan);
+    const target=plan.teile.find(p=>p.id===id)!;
+    target.x=x;target.y=y;
+    const report=planTools.nachziehen(plan,before,[id],{schnell:true});
+    if(report.length!==attached.length||report.some(r=>r.stufe!==1)||
+      planTools.veraendert(plan,before).length)
+      fail('Leitungen können nicht ohne Änderung der Kontakte nachgezogen werden.');
+    const newParts=plan.teile as unknown as Item[];
+    for(const w of plan.leitungen){
+      const original=allWires.find(p=>p.id===w.id)!;
+      if(!attached.includes(original)){
+        if(JSON.stringify(w)!==JSON.stringify(original))fail('Unbeteiligte Leitung wurde verändert.');
+        continue;
+      }
+      const pts=validPoints(w.punkte),[a,b]=endpoints(w as unknown as Item,newParts);
+      if(!equal(pts[0]!,a)||!equal(pts[pts.length-1]!,b)||
+        pts.some(p=>p.x<0||p.y<0||p.x>width||p.y>height)||
+        pts.some((p,i)=>i>0&&p.x!==pts[i-1]!.x&&p.y!==pts[i-1]!.y)||
+        planTools.ueberlappt(pts,plan.leitungen,w.id))
+        fail('Nachgezogene Leitung ist nicht eindeutig oder liegt ausserhalb des Plans.');
+    }
+    return {plan:plan as unknown as Item,elementId:id,kind:'component'};
+  }
   if(kind==='move_component'){
     allowedKeys(args,['componentId','x','y']);
     const id=ident(args.componentId,'Bauteil');

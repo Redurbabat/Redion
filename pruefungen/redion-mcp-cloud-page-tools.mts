@@ -76,7 +76,7 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
     ['workspaceId','blockId','expectedVersion']);
   assert.match(JSON.stringify(updateSchematic?.inputSchema.properties.changes), /"maxItems":20/);
   assert.deepEqual(updateSchematic?.inputSchema.properties.operation,
-    {type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label','set_component_values','rename_label','delete_label','delete_wire','rotate_component','mirror_component','delete_component']});
+    {type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label','set_component_values','rename_label','delete_label','delete_wire','rotate_component','mirror_component','delete_component','move_connected_component']});
   assert.deepEqual(updateSchematic?.inputSchema.properties.rotation,
     {type:'integer',enum:[0,90,180,270]});
   assert.equal(updateSchematic?.annotations?.readOnlyHint,false);
@@ -420,4 +420,31 @@ test('Cloud MCP: Bauteile nur ohne elektrische Kontakte drehen, spiegeln oder lÃ
     assert.throws(()=>invoke(raw,'delete_component',{componentId:'A'}));
     assert.deepEqual(raw,before);
   }
+});
+
+
+test('Cloud MCP: verbundenes Bauteil mit unverÃ¤nderten Netzkontakten verschieben',()=>{
+  const base={art:'stromlauf-aufgeloest',breite:800,hoehe:700,
+    teile:[] as any[],leitungen:[] as any[],texte:[] as any[],
+    ebenen:[{id:'plan',name:'Plan',farbe:'var(--text)',sichtbar:true}]};
+  const invoke=(raw:unknown,operation:string,params:Record<string,unknown>)=>
+    editSchematic(raw,{operation,...params}).plan as typeof base;
+  const a=invoke(base,'add_component',{componentId:'A',symbolId:'bp-sonnerie',x:100,y:100});
+  const b=invoke(a,'add_component',{componentId:'B',symbolId:'bp-sonnerie',x:300,y:100});
+  const wired=invoke(b,'connect_terminals',{wireId:'W',fromComponentId:'A',fromTerminal:'X1',toComponentId:'B',toTerminal:'X1'});
+  const snapshot=structuredClone(wired);
+  const moved=invoke(wired,'move_connected_component',{componentId:'A',x:100,y:200});
+  assert.equal(moved.teile[0].y,200);
+  assert.deepEqual(moved.teile[1],wired.teile[1]);
+  assert.deepEqual(moved.leitungen[0].punkte[0],{x:130,y:200});
+  assert.deepEqual(moved.leitungen[0].punkte.at(-1),{x:330,y:100});
+  assert.deepEqual({...moved.leitungen[0],punkte:[]},{...wired.leitungen[0],punkte:[]});
+  assert.deepEqual(wired,snapshot);
+  assert.throws(()=>invoke(b,'move_connected_component',{componentId:'A',x:100,y:200}),/gebundene Leitungen/);
+  assert.throws(()=>invoke(wired,'move_connected_component',{componentId:'A',x:790,y:200}),/ausserhalb/);
+  assert.throws(()=>invoke(wired,'move_connected_component',{componentId:'A',x:300,y:100}));
+  const ambiguous=structuredClone(wired);
+  ambiguous.leitungen[0].vonNr='unknown';
+  assert.throws(()=>invoke(ambiguous,'move_connected_component',{componentId:'A',x:100,y:200}));
+  assert.deepEqual(wired,snapshot);
 });
