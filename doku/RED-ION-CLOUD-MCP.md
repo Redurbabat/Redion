@@ -560,8 +560,13 @@ Datenbankblock aus `redion_list_page_blocks`. `databaseId`,
 `expectedVersion` und `values`. In `values` stehen die Feldkennungen
 aus dem gelesenen Schema, unabhängig von den sichtbaren Spaltentiteln.
 
-Unterstützt sind Titel, Text, Zahlen, Checkboxen und Kalenderdaten im
-Format JJJJ-MM-TT. Ein leerer String leert Text-, Zahl- und Datumswerte.
+Unterstützt sind Titel, Text, Zahlen, Checkboxen, Kalenderdaten im
+Format JJJJ-MM-TT, Auswahl, Status und Mehrfachauswahl. Mit
+`redion_read_database` und `includeOptions: true` erscheinen die
+gespeicherten Optionsnamen sichtbarer Spalten, begrenzt auf 20 je Spalte
+und 8 KB Optionsdaten pro Antwort. `optionsTruncated` kennzeichnet eine
+gekürzte Liste. Ein leerer String leert Text, Zahl, Datum oder eine
+Einfachauswahl. Ein leeres Array leert eine Mehrfachauswahl.
 Die Transaktion prüft den OAuth-Schreibscope, die Einbettung der
 Datenbank sowie die Rechte und Versionen sämtlicher betroffener Zeilen
 und Felder. Ändert sich während der Bearbeitung ein Datensatz oder ein

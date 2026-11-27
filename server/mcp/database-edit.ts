@@ -7,6 +7,15 @@ const validKey = (key: string): boolean =>
 
 export const databaseBatchLimit = 10;
 export const databaseFieldLimit = 20;
+export const databaseSelectionLimit = 20;
+const selectionTypes = new Set(['select', 'status', 'multi']);
+
+export function databaseOptionNames(column: RecordData): string[] {
+  if (typeof column.type !== 'string' || !selectionTypes.has(column.type) || !Array.isArray(column.options)) return [];
+  return [...new Set(column.options.flatMap(option =>
+    isObject(option) && typeof option.name === 'string' && option.name.length && option.name.length <= 160 ? [option.name] : []
+  ))];
+}
 
 export function parseDatabaseChanges(input: unknown) {
   if (!Array.isArray(input) || !input.length || input.length > databaseBatchLimit)
@@ -55,6 +64,22 @@ export function applyDatabaseValues(row: RecordData, schema: RecordData, values:
           throw new Error('Die Datumsspalte erwartet JJJJ-MM-TT oder einen leeren Wert.');
         props[field] = value;
         break;
+      case 'select':
+      case 'status': {
+        if (value !== '' && (typeof value !== 'string' || !databaseOptionNames(column as RecordData).includes(value)))
+          throw new Error('Die Spalte erwartet eine vorhandene Option oder einen leeren Wert.');
+        props[field] = value;
+        break;
+      }
+      case 'multi': {
+        const options = new Set(databaseOptionNames(column as RecordData));
+        if (!Array.isArray(value) || value.length > databaseSelectionLimit ||
+            value.some(item => typeof item !== 'string' || !options.has(item)) ||
+            new Set(value).size !== value.length)
+          throw new Error('Die Mehrfachauswahl erwartet bis zu 20 unterschiedliche vorhandene Optionen.');
+        props[field] = value;
+        break;
+      }
       default:
         throw new Error('Diese Spalte ist nicht für die Bearbeitung über MCP verfügbar.');
     }
