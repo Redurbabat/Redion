@@ -17,6 +17,7 @@
     "types": []
   },
   "include": [
-    "client.mts"
+    "client.mts",
+    "browser.mts"
   ]
 }

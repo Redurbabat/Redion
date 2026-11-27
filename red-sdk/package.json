@@ -1,6 +1,6 @@
 {
   "name": "@red-ecosystem/sdk",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "description": "Private RED identity SDK",
@@ -8,6 +8,10 @@
     ".": {
       "types": "./dist/client.d.mts",
       "import": "./dist/client.mjs"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.mts",
+      "import": "./dist/browser.mjs"
     }
   },
   "files": [

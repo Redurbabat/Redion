@@ -49,3 +49,7 @@ refresh and logout. It does not yet implement native RED Share or QR UI.
 See `red-sdk/android/README.md` for Gradle library, encrypted AndroidKeyStore
 credential adapter, proof creation, claim, refresh and logout. Unit tests
 use an injected transport; physical-device Keystore tests remain open.
+
+Browser pilot: `@red-ecosystem/sdk/browser` provides an opt-in memory-only
+identity client. The home server must explicitly allow the exact controlled
+web origin. This client does not persist tokens or share app data.

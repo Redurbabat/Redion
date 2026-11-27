@@ -9,6 +9,7 @@ import {beantworte} from './kern.ts';
 import {prepareHomeSync,createHomeSyncWait} from './home/live-sync.ts';
 import {prepareRedIdV2,createRedIdV2,RED_ID_V2_ROUTES,revokeRedAppEverywhere} from './home/red-id-v2.ts';
 import {prepareRedShare,createRedShare,SHARE_ROUTES} from './home/red-share.ts';
+import {parseRedWebOrigins,isRedWebRoute} from './home/web-origins.ts';
 import {createHomeDashboard} from './home/dashboard.ts';
 import {prepareRedId,issueRedId,handleRedId} from './home/red-id.ts';
 import {approveHomeDevice,claimHomeDevice} from './home/pairing.ts';
@@ -24,9 +25,10 @@ const json=(status:number,error:string)=>Response.json({error},{status,headers:{
 
 /** Initial private API: no static repository files, public registration,
  * public pages, or unverified Cloudflare identity headers. */
-export async function openHomeServer(options:{dataDir:string;origin:string;enableMcp?:boolean;vaultKey?:Uint8Array}){
+export async function openHomeServer(options:{dataDir:string;origin:string;enableMcp?:boolean;vaultKey?:Uint8Array;webOrigins?:string}){
   const origin=new URL(options.origin);
   if(origin.protocol!=='https:'||origin.origin!==options.origin)throw new Error('REDION_ORIGIN must be an HTTPS origin');
+  const webOrigins=parseRedWebOrigins(options.webOrigins??'');
   const store=openHomeDatabase(join(options.dataDir,'redion.sqlite'));
   const blobs=await openHomeBlobs(join(options.dataDir,'blobs'),options.vaultKey).catch(error=>{store.close();throw error;});
   if(options.enableMcp)prepareHomeConsent(store.sqlite);
@@ -52,7 +54,8 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
     const appRoute=istAbgleichWeg(path)||deviceRoutes.has(path);
     if(!mcpRoute&&!appRoute&&!privateRoutes.has(path))return json(404,'not_found');
     const clientOrigin=request.headers.get('origin');
-    if(clientOrigin&&clientOrigin!==origin.origin&&!(appRoute&&['redion-local://app','capacitor://localhost'].includes(clientOrigin)))return json(403,'invalid_origin');
+    const externalWeb=isRedWebRoute(path,clientOrigin,webOrigins);
+    if(clientOrigin&&clientOrigin!==origin.origin&&!externalWeb&&!(appRoute&&['redion-local://app','capacitor://localhost'].includes(clientOrigin)))return json(403,'invalid_origin');
     if(request.method==='OPTIONS'&&!appRoute)return json(405,'method_not_allowed');
     if(mcpRoute){
       return serial(async()=>{
@@ -78,7 +81,7 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
     }
     if((RED_ID_V2_ROUTES as readonly string[]).includes(path)){
       const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Cache-Control':'no-store'}}):await redIdV2(request);
-      if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
+      if(clientOrigin&&(clientOrigin===origin.origin||externalWeb)){response.headers.set('Access-Control-Allow-Origin',clientOrigin);response.headers.append('Vary','Origin');}
       return mitAppUrsprung(request,response);
     }
     if(path.startsWith('/red-id/v1/')&&request.method!=='OPTIONS'){
@@ -117,7 +120,7 @@ async function main(){
   if(!origin)throw new Error('Set REDION_ORIGIN first');
   const enableMcp=process.env.REDION_ENABLE_MCP==='1';
   const vaultKey=process.env.REDION_VAULT_KEY_FILE?await readFile(process.env.REDION_VAULT_KEY_FILE):undefined;
-  const service=await openHomeServer({dataDir,origin,enableMcp,...(vaultKey?{vaultKey}:{})});
+  const service=await openHomeServer({dataDir,origin,enableMcp,webOrigins:process.env.REDION_WEB_ORIGINS??'',...(vaultKey?{vaultKey}:{})});
   const command=process.argv[2];
   if(command==='red-id-issue'||command==='red-id-revoke'){
     try{

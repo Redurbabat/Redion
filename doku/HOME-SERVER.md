@@ -284,3 +284,18 @@ In RED ION → Einstellungen → RED Home Server lassen sich jetzt JSON-
 Kopplungsanfragen übernehmen, direkte Anmeldungen bestätigen sowie
 RED-Share-Kanäle einzeln ansehen, freigeben und widerrufen. Die Oberfläche
 verarbeitet keine privaten Schlüssel. QR-Kamera/Renderer sind noch offen.
+
+## Private Web-App-Anbindung (standardmässig aus)
+
+`REDION_WEB_ORIGINS` ist eine kommagetrennte Liste exakter HTTPS-Ursprünge
+(maximal 16, kein Stern, kein Pfad). Nur die fünf Client-Identitätswege
+Claim, Exchange, Refresh, Me und Logout akzeptieren diese Ursprünge.
+RED ION Owner-API, Dashboard, Sync, MCP und RED Share bleiben gesperrt.
+CORS ersetzt keine Authentifizierung. Keine Freigabe für fremde öffentliche
+Websites; nur eigene kontrollierte Deployments. Browser und Netzwerk müssen
+den privaten Server erreichen und seinem TLS-Zertifikat vertrauen.
+Das Browser-SDK `@red-ecosystem/sdk/browser` hält Tokens nur im RAM und
+meldet sich ausschliesslich auf ausdrückliche Bedienung an. Bei Reload oder
+Verlassen der Komponente gehen lokale Tokens verloren; die Serversitzung
+kann bis zum Ablauf bestehen bleiben und ist in RED ION widerrufbar.
+Nicht automatisch für Trainings-/Lern-/Musikdaten aktiviert.
