@@ -1850,6 +1850,22 @@ test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und at
     assert.equal(movedPlan.data.plan.teile.find((p:any)=>p.id==='P2').y,200);
     assert.equal((await update({expectedVersion:15,operation:'move_connected_component',
       componentId:'P2',x:100,y:240})).data.code,'conflict');
+    const branchBatch=await update({expectedVersion:16,changes:[
+      {operation:'add_component',componentId:'BA',symbolId:'bp-sonnerie',x:100,y:600},
+      {operation:'add_component',componentId:'BB',symbolId:'bp-sonnerie',x:300,y:600},
+      {operation:'add_component',componentId:'BC',symbolId:'bp-sonnerie',x:200,y:350},
+      {operation:'connect_terminals',wireId:'BT',fromComponentId:'BA',fromTerminal:'X1',toComponentId:'BB',toTerminal:'X1'},
+      {operation:'branch_wire',wireId:'BR',targetWireId:'BT',fromComponentId:'BC',fromTerminal:'X2',x:230,y:600}
+    ]});
+    assert.equal(branchBatch.data.version,17,JSON.stringify(branchBatch.data));
+    const branchedPlan=await call('redion_read_schematic',{blockId});
+    const branch=branchedPlan.data.plan.leitungen.find((p:any)=>p.id==='BR');
+    assert.deepEqual(branch.punkte.at(-1),{x:230,y:600});
+    assert.equal(branch.vonTeil,'BC');
+    const badBranch=await update({expectedVersion:17,operation:'branch_wire',wireId:'BR2',
+      targetWireId:'BT',fromComponentId:'BC',fromTerminal:'X2',x:130,y:600});
+    assert.equal(badBranch.data.code,'invalid_arguments');
+    assert.equal((await call('redion_read_schematic',{blockId})).data.version,17);
     const orphanId='detached_schematic';
     await f.store.setze('saetze',{id:orphanId,bereich:'ws_test',tabelle:'blocks',
       daten:JSON.stringify({type:'schaltplan',parentId:'edit_schematic_page',plan:finalPlan.data.plan}),

@@ -205,6 +205,60 @@ export const editSchematic=(raw:unknown,args:Item):{plan:Item;elementId:string;k
     const old=isRecord(part.werte)?part.werte:{};
     return {plan:{...raw,teile:components.map(p=>p===part?{...part,werte:{...old,...values}}:p)},elementId:id,kind:'component'};
   }
+  if(kind==='branch_wire'){
+    allowedKeys(args,['wireId','targetWireId','fromComponentId','fromTerminal','x','y','layer']);
+    const id=ident(args.wireId,'Leitung');
+    if(ids.has(id)||wires.length>=200)fail('Leitungskennung bereits vergeben oder Leitungsgrenze erreicht.');
+    const targetId=ident(args.targetWireId,'Zielleitung');
+    const fromId=ident(args.fromComponentId,'Startbauteil');
+    const fromNr=nonempty(args.fromTerminal,'Startklemme',20);
+    const from=components.find(p=>isRecord(p)&&p.id===fromId);
+    const target=wires.find(w=>isRecord(w)&&w.id===targetId);
+    if(!isRecord(from)||!isRecord(target))fail('Bauteil oder Zielleitung fehlt.');
+    const ebene=layer(args.layer);
+    if(from.ebene!==ebene||target.ebene!==ebene||
+      !raw.ebenen.some(e=>isRecord(e)&&e.id===ebene))fail('Bauteil und Zielleitung müssen dieselbe Ebene haben.');
+    const start=terminalPos(from,fromNr);
+    const end={x:grid(args.x,'X-Koordinate',width),y:grid(args.y,'Y-Koordinate',height)};
+    if(start.x<0||start.y<0||start.x>width||start.y>height)
+      fail('Startklemme liegt ausserhalb des Plans.');
+    const teile=components.filter(isRecord),leitungen=wires.filter(isRecord);
+    const targetPoints=validPoints(target.punkte);
+    const existing=leitungen.map(w=>({id:w.id,points:validPoints(w.punkte)}));
+    if(existing.reduce((n,w)=>n+w.points.length,0)>500)fail('Zu viele Leitungspunkte.');
+    // Only a precise interior point of one straight segment is accepted.
+    // Avoid ambiguous knots, endpoints and parallel overlap with the target.
+    const segments=targetPoints.slice(0,-1).map((a,i)=>({a,b:targetPoints[i+1]!}));
+    const matches=segments.filter(({a,b})=>(a.x===b.x||a.y===b.y)&&
+      distSquared(end,a,b)===0&&Math.hypot(end.x-a.x,end.y-a.y)>NEAR&&
+      Math.hypot(end.x-b.x,end.y-b.y)>NEAR);
+    if(matches.length!==1)fail('Abzweig muss eindeutig im Inneren einer geraden Leitung liegen.');
+    const segment=matches[0]!;
+    if(nearPath(start,targetPoints)||segments.some(s=>s!==segment&&distSquared(end,s.a,s.b)<=NEAR**2))
+      fail('Abzweig oder Startklemme liegt an einem mehrdeutigen Kontakt.');
+    const foreignPins=teile.flatMap(p=>pinsFor(p).filter(k=>p.id!==fromId||k.nr!==fromNr).map(k=>k.at));
+    const foreignWires=existing.filter(w=>w.id!==targetId).map(w=>w.points);
+    const candidate=(points:Pos[])=>{
+      if(points.length<2||points.some(p=>p.x<0||p.y<0||p.x>width||p.y>height)||
+        foreignPins.some(p=>nearPath(p,points))||foreignWires.some(w=>nearPolyline(points,w)))return false;
+      const last=points[points.length-2]!;
+      if(Math.hypot(last.x-end.x,last.y-end.y)<=NEAR)return false;
+      if(segment.a.x===segment.b.x?last.y!==end.y:last.x!==end.x)return false;
+      if(nearPolyline(points.slice(0,-1),targetPoints))return false;
+      return !segments.some(s=>s!==segment&&nearSegments(last,end,s.a,s.b));
+    };
+    const plan={...raw,teile,leitungen} as Parameters<typeof Schaltplan.leitungFuehren>[0];
+    const punkte=planTools.leitungFuehren(plan,start,end,{teil:fromId,nr:fromNr},null,
+      {schnell:true,kandidatErlaubt:candidate});
+    if(punkte.length<2)fail('Kein eindeutiger Abzweig ohne fremde Kontakte gefunden.');
+    const wire={id,punkte,ebene,vonTeil:fromId,vonNr:fromNr};
+    const next={...plan,leitungen:[...plan.leitungen,wire]};
+    const contact=planTools.kontakte(next,wire);
+    if(contact.klemmen.length!==1||contact.klemmen[0]!==fromId+':'+fromNr||
+      contact.leitungen.length!==1||contact.leitungen[0]!==targetId)
+      fail('Nativer Netztest hat einen mehrdeutigen Abzweig erkannt.');
+    return {plan:{...raw,leitungen:[...wires,wire]},elementId:id,kind:'wire'};
+  }
   if(kind==='connect_terminals'){
     allowedKeys(args,['wireId','fromComponentId','fromTerminal','toComponentId','toTerminal','layer']);
     const id=ident(args.wireId,'Leitung');
