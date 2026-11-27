@@ -144,14 +144,24 @@ const Rollrand = (() => {
   const binde = (feld: HTMLElement | null, wahl: Wahl = {}): (() => void) => {
     if (!feld) return () => {};
     const nachsehen = () => pruefe(feld, wahl);
+    let rahmen: number | null = null;
+    const nachsehenBald = () => {
+      if (rahmen !== null) return;
+      rahmen = requestAnimationFrame(() => {
+        rahmen = null;
+        nachsehen();
+      });
+    };
     feld.addEventListener('scroll', nachsehen, { passive: true });
 
     /* Die Breite ändert sich auch ohne Rollen: das Fenster dreht sich, eine
        Spalte wird breiter gezogen, die Seitenleiste klappt ein. Ohne diesen
-       Beobachter bliebe die Kante stehen, wo sie beim ersten Zeichnen war. */
+       Beobachter bliebe die Kante stehen, wo sie beim ersten Zeichnen war.
+       Die Randattribute können das gemessene Layout ändern. WebKit meldet
+       Schleifen, wenn sie direkt im ResizeObserver gesetzt werden. */
     let beobachter: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined') {
-      beobachter = new ResizeObserver(nachsehen);
+      beobachter = new ResizeObserver(nachsehenBald);
       beobachter.observe(feld);
       /* Auch der Inhalt zählt — eine neue Spalte macht `scrollWidth` grösser,
          beim Hochen eine neue Zeile `scrollHeight`, ohne dass sich am Feld
@@ -163,11 +173,12 @@ const Rollrand = (() => {
     /* Beim ersten Mal steht die Breite noch nicht fest: das Feld ist gerade
        erst im Dokument, und der Zeichner war noch nicht dran. */
     nachsehen();
-    requestAnimationFrame(nachsehen);
+    nachsehenBald();
 
     return () => {
       feld.removeEventListener('scroll', nachsehen);
       beobachter?.disconnect();
+      if (rahmen !== null) cancelAnimationFrame(rahmen);
     };
   };
 

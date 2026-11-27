@@ -206,15 +206,16 @@ try {
     await page.locator('[data-document-action="view"]').first().click();
     const jump = page.locator('.document-position');
     await jump.waitFor({ state: 'visible' });
-    // Während des Öffnens verändert die Bewegung nur den sichtbaren Massstab.
+    // Während des Öffnens verändert die Bewegung den sichtbaren Massstab.
+    // WebKit meldet 44 CSS-Pixel dabei teils als 43.999992.
     await page.waitForFunction(() =>
-      (document.querySelector('.document-position')?.getBoundingClientRect().height ?? 0) >= 44,
+      Math.round((document.querySelector('.document-position')?.getBoundingClientRect().height ?? 0) * 100) >= 4400,
       null, { timeout: 2500 });
     const sprungknopf = await jump.evaluate((el: HTMLButtonElement) => ({
       art: el.tagName, hoehe: el.getBoundingClientRect().height, name: el.getAttribute('aria-label')
     }));
     pass(label + ': direkter Sprung ist ein echter, zugänglicher Knopf',
-      sprungknopf.art === 'BUTTON' && sprungknopf.hoehe >= 44 &&
+      sprungknopf.art === 'BUTTON' && Math.round(sprungknopf.hoehe * 100) >= 4400 &&
       sprungknopf.name?.includes('springen') === true, JSON.stringify(sprungknopf));
 
     await jump.click();

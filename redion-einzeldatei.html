@@ -31651,7 +31651,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1720, inhalt: 'd625ee3e5cd22798', gebaut: '2026-11-27T05:40:22.317Z' };
+const Stand = { fassung: 1721, inhalt: '7c9d1bf909e5fee7', gebaut: '2026-11-27T05:49:27.354Z' };
 window.Stand = Stand;
 
 </script>
@@ -139781,20 +139781,31 @@ const Rollrand = (() => {
         if (!feld)
             return () => { };
         const nachsehen = () => pruefe(feld, wahl);
+        let rahmen = null;
+        const nachsehenBald = () => {
+            if (rahmen !== null)
+                return;
+            rahmen = requestAnimationFrame(() => {
+                rahmen = null;
+                nachsehen();
+            });
+        };
         feld.addEventListener('scroll', nachsehen, { passive: true });
         let beobachter = null;
         if (typeof ResizeObserver !== 'undefined') {
-            beobachter = new ResizeObserver(nachsehen);
+            beobachter = new ResizeObserver(nachsehenBald);
             beobachter.observe(feld);
             const inhalt = feld.firstElementChild;
             if (inhalt)
                 beobachter.observe(inhalt);
         }
         nachsehen();
-        requestAnimationFrame(nachsehen);
+        nachsehenBald();
         return () => {
             feld.removeEventListener('scroll', nachsehen);
             beobachter?.disconnect();
+            if (rahmen !== null)
+                cancelAnimationFrame(rahmen);
         };
     };
     const zeige = (feld, stueck, wahl = {}) => {
