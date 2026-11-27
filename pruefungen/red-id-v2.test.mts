@@ -41,7 +41,17 @@ test('RED ID v2: authenticated pairing, proof, rotation, isolation, revocation',
   assert.equal((await send('/sync/runter',{headers:{Authorization:'Bearer '+old.accessToken}})).status,401);
   await client.refresh();
   const next=(await store.load())!;assert.notEqual(next.accessToken,old.accessToken);assert.notEqual(next.refreshToken,old.refreshToken);
+  // Wrong app cannot invalidate a different app's session.
+  assert.equal((await post(base+'refresh',{app:'red-poly',refreshToken:old.refreshToken})).status,401);
+  assert.equal((await send(base+'me',{headers:{Authorization:'Bearer '+next.accessToken}})).status,200);
+  const otherProof=await createRedPairProof();
+  assert.equal((await post(base+'approve-login',{app:'red-fit',challenge:otherProof.challenge},token)).status,201);
+  const other=await (await post(base+'claim-login',{app:'red-fit',verifier:otherProof.verifier})).json() as RedSession;
   assert.equal((await post(base+'refresh',{app:'red-fit',refreshToken:old.refreshToken})).status,401);
+  assert.equal((await send(base+'me',{headers:{Authorization:'Bearer '+next.accessToken}})).status,401);
+  assert.equal((await post(base+'refresh',{app:'red-fit',refreshToken:next.refreshToken})).status,401);
+  assert.equal((await send(base+'me',{headers:{Authorization:'Bearer '+other.accessToken}})).status,200);
+  assert.equal(Number(service.store.sqlite.prepare('SELECT COUNT(*) AS n FROM home_red_refresh_used').get()?.n),0);
   assert.equal((await send(base+'me',{headers:{Authorization:'Bearer '+old.accessToken}})).status,401);
   assert.equal((await post(base+'revoke',{app:'red-fit'},next.accessToken)).status,401);
   assert.equal((await post(base+'revoke',{app:'red-fit'},token)).status,200);

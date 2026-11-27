@@ -90,6 +90,20 @@ Nur ausdrücklich konfigurierte HTTPS-Web-Ursprünge dürfen die fünf
 Client-Identitätswege nutzen. Keine Owner-Funktionen über diese CORS-Regel.
 RED LOOP behält zusätzlich die bestehende CSP ausser auf der isolierten
 RED-ID-Seite mit einem explizit konfigurierten privaten HTTPS-Origin.
-RED POLY, RED EFZ und RED UHR sind noch nicht angebunden. Die bestehenden
+RED POLY, RED EFZ und RED UHR besitzen jetzt eigene Draft-Piloten (siehe unten). Die bestehenden
 Apple-Piloten RED BIT und RED YT sind unabhängig davon. Alle PRs offen,
 keine Produktivfreigabe; CI und Geräte-/Netzwerkabnahme erforderlich.
+
+## Weitere Pilot-PRs
+
+| App | Draft-PR | Umfang |
+|---|---|---|
+| RED POLY | [#9](https://github.com/Redurbabat/RED-Poly/pull/9) | Expo-Profil, lokale native Bridge für iOS/Android, RAM-only Web. Native Build-/Geräteabnahme offen. |
+| RED EFZ | [#1](https://github.com/Redurbabat/RED-EFZ/pull/1) | Separater HTTPS-Companion, reine Identität, kein Dokumentenzugriff. |
+| RED UHR | [#9](https://github.com/Redurbabat/RED-Uhr/pull/9) | Companion am Telefon/Computer, lokaler Snapshot-Validator/Export, keine Garmin-Übertragung. |
+
+Alle elf Kennungen haben jetzt Server- oder Pilotcode. Die Companion-PRs
+sind keine native Integration des Schularchivs oder der Garmin-Uhr.
+Kein Merge, keine Live-Freigabe, kein automatischer Austausch persönlicher
+Daten. Native Bridges und alle externen Piloten müssen einzeln abgenommen
+werden. HTTPS-Ursprünge nur nach ausdrücklicher Freigabe konfigurieren.

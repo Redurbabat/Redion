@@ -299,3 +299,14 @@ meldet sich ausschliesslich auf ausdrückliche Bedienung an. Bei Reload oder
 Verlassen der Komponente gehen lokale Tokens verloren; die Serversitzung
 kann bis zum Ablauf bestehen bleiben und ist in RED ION widerrufbar.
 Nicht automatisch für Trainings-/Lern-/Musikdaten aktiviert.
+
+### Schutz vor Wiederverwendung rotierter Refresh-Tokens
+
+Der Server speichert ausschliesslich SHA-256-Digests bereits rotierter
+Refresh-Tokens bis zum ursprünglichen Sitzungsablauf. Bei Wiederverwendung
+mit derselben App-ID wird nur die betroffene Sitzungsfamilie widerrufen;
+andere Geräte und Apps bleiben aktiv. Eine andere App-ID darf die Familie
+nicht widerrufen. Beim Löschen einer Sitzung räumt ein SQLite-Trigger die
+Historie auf. Maximal 4096 Rotationen pro Sitzung; danach neu koppeln.
+Bei einem verlorenen Refresh-Response kann ein Retry ebenfalls zur erneuten
+Kopplung führen. Keine automatische, parallele Refresh-Wiederholung.

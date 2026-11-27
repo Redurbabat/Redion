@@ -19,7 +19,10 @@ CREATE TABLE IF NOT EXISTS home_red_session (id TEXT PRIMARY KEY, owner TEXT NOT
 CREATE INDEX IF NOT EXISTS home_red_session_owner ON home_red_session(owner,app);
 CREATE INDEX IF NOT EXISTS home_red_pair_owner ON home_red_pair(owner,app);
 CREATE TABLE IF NOT EXISTS home_red_login (challenge TEXT PRIMARY KEY,owner TEXT NOT NULL,app TEXT NOT NULL,expires INTEGER NOT NULL,used INTEGER NOT NULL DEFAULT 0);
-CREATE INDEX IF NOT EXISTS home_red_login_owner ON home_red_login(owner,app);`);
+CREATE INDEX IF NOT EXISTS home_red_login_owner ON home_red_login(owner,app);
+CREATE TABLE IF NOT EXISTS home_red_refresh_used (digest TEXT PRIMARY KEY, session_id TEXT NOT NULL, app TEXT NOT NULL, expires INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS home_red_refresh_used_session ON home_red_refresh_used(session_id);
+CREATE TRIGGER IF NOT EXISTS home_red_refresh_cleanup AFTER DELETE ON home_red_session BEGIN DELETE FROM home_red_refresh_used WHERE session_id=OLD.id; END;`);
 }
 async function body(request:Request):Promise<Record<string,unknown>|null>{
   if(!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type')??''))return null;
@@ -132,7 +135,19 @@ export function createRedIdV2(db:DatabaseSync,ablage:Ablage){
     const digest=hash(input.refreshToken);
     return transaction(db,()=>{
       const row=db.prepare('SELECT s.id,s.refresh_until FROM home_red_session s JOIN konten c ON c.id=s.owner WHERE s.refresh_digest=? AND s.app=? AND s.refresh_until>? AND c.gesperrt=0').get(digest,app,now);
-      if(!row||typeof row.id!=='string'||typeof row.refresh_until!=='number')return reply(401,{error:'invalid_refresh'});
+      if(!row||typeof row.id!=='string'||typeof row.refresh_until!=='number'){
+        // A previously rotated credential for this app implies replay.
+        // Revoke only its session family, never unrelated devices/apps.
+        const used=db.prepare('SELECT session_id FROM home_red_refresh_used WHERE digest=? AND app=? AND expires>?').get(digest,app,now);
+        if(typeof used?.session_id==='string')db.prepare('DELETE FROM home_red_session WHERE id=? AND app=?').run(used.session_id,app);
+        return reply(401,{error:'invalid_refresh'});
+      }
+      db.prepare('DELETE FROM home_red_refresh_used WHERE expires<=?').run(now);
+      if(Number(db.prepare('SELECT COUNT(*) AS n FROM home_red_refresh_used WHERE session_id=?').get(row.id)?.n??0)>=4096){
+        db.prepare('DELETE FROM home_red_session WHERE id=?').run(row.id);
+        return reply(401,{error:'rotation_limit'});
+      }
+      db.prepare('INSERT INTO home_red_refresh_used(digest,session_id,app,expires) VALUES(?,?,?,?)').run(digest,row.id,app,row.refresh_until);
       // Rotation is atomic; the previous access and refresh credentials stop working immediately.
       const c=credentials(now,row.refresh_until);
       db.prepare('UPDATE home_red_session SET access_digest=?,refresh_digest=?,access_until=? WHERE id=?').run(c.accessDigest,c.refreshDigest,c.accessUntil,row.id);
