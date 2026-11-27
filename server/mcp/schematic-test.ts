@@ -42,6 +42,40 @@ function validatePlan(plan:Record<string,unknown>,rechnungen:number) {
 
 const grenze='Statische Rechnung aus der Ruhelage. Keine elektrische Norm- oder Sicherheitsabnahme.';
 
+// Report the actual component IDs, rather than only a generic solver
+// assumption. Do not silently insert values or infer voltage from labels.
+export function componentParameterHints(plan:Record<string,unknown>){
+  type Hint={componentId:string;symbol:string;field:'U'|'R'|'Un';
+    reason:'missing'|'invalid';modelDefault?:number};
+  const hints:Hint[]=[];
+  const lights=new Set(['lampe','signalleuchte','ch-kontrolllampe','ch-orientierungslampe','bp-leuchte']);
+  for(const part of Array.isArray(plan.teile)?plan.teile:[]){
+    if(!record(part)||!id(part.id)||typeof part.zeichen!=='string')continue;
+    const model=simulation.verhalten(part.zeichen);
+    if(!model)continue;
+    const values=record(part.werte)?part.werte:{};
+    const check=(field:Hint['field'],fallback:number,valid:(v:unknown)=>boolean)=>{
+      const value=values[field];
+      if(valid(value))return;
+      const missing=!Object.hasOwn(values,field);
+      hints.push({componentId:part.id as string,symbol:part.zeichen as string,field,
+        reason:missing?'missing':'invalid',
+        // For invalid explicit Un the native solver need not fall back;
+        // do not claim a default was used in that case.
+        ...(field!=='Un'||missing?{modelDefault:fallback}:{})});
+    };
+    const finite=(v:unknown)=>typeof v==='number'&&Number.isFinite(v);
+    const positive=(v:unknown)=>typeof v==='number'&&Number.isFinite(v)&&v>0;
+    if(model.art==='quelle')check('U',typeof model.wert==='number'?model.wert:230,finite);
+    if(model.art==='widerstand'){
+      check('R',typeof model.wert==='number'&&model.wert>0?model.wert:1000,positive);
+      if(lights.has(part.zeichen))check('Un',230,positive);
+    }
+  }
+  return {parameterHinweise:hints.slice(0,40),parameterHinweiseGesamt:hints.length,
+    parameterHinweiseGekuerzt:hints.length>40};
+}
+
 export function runSwitchTest(plan:Record<string,unknown>,request:unknown) {
   if(!record(request)||Object.keys(request).some(key=>!['switchIds','targetId','expected'].includes(key)))
     throw new Error('Ungültiger Kombinationsauftrag.');
@@ -61,7 +95,7 @@ export function runSwitchTest(plan:Record<string,unknown>,request:unknown) {
     hinweiseGekuerzt:warnungen.length>4||anschlussfehler.length>4||annahmen.length>4||
       [...warnungen,...annahmen].some(hinweis=>hinweis.length>300)
   }));
-  return {...report,faelle,grenze};
+  return {...report,faelle,grenze,...componentParameterHints(plan)};
 }
 
 export function measureOperatingPoint(plan:Record<string,unknown>,request:unknown) {
@@ -89,7 +123,7 @@ export function measureOperatingPoint(plan:Record<string,unknown>,request:unknow
   }
   const nichtModelliert=[...bauteile].filter(([,symbol])=>!simulation.verhalten(symbol))
     .map(([id,symbol])=>({id,symbol}));
-  if(nichtModelliert.length)return {status:'nicht_modelliert',nichtModelliert,grenze};
+  if(nichtModelliert.length)return {status:'nicht_modelliert',nichtModelliert,grenze,...componentParameterHints(plan)};
   const ergebnis=simulation.rechne(plan,stellungen);
   const status=!ergebnis.ok?'nicht_berechenbar':ergebnis.konvergiert?'berechnet':'instabil';
   const messwerte=status==='berechnet'?componentIds.map(componentId=>{
@@ -99,5 +133,8 @@ export function measureOperatingPoint(plan:Record<string,unknown>,request:unknow
   }):[];
   return {status,grenze,messwerte,wechsel:ergebnis.wechsel,stellungen:ergebnis.stellungen,
     spulen:ergebnis.spulen,fehler:ergebnis.fehler,annahmen:ergebnis.annahmen,
-    warnungen:ergebnis.warnungen.slice(0,20),hinweiseGekuerzt:ergebnis.warnungen.length>20};
+    anschlussfehler:ergebnis.anschlussfehler.slice(0,20),
+    warnungen:ergebnis.warnungen.slice(0,20),
+    hinweiseGekuerzt:ergebnis.warnungen.length>20||ergebnis.anschlussfehler.length>20,
+    ...componentParameterHints(plan)};
 }
