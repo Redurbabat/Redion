@@ -2771,3 +2771,181 @@ test('Cloud-MCP archives, finds and restores native pages without deleting conte
   assert.deepEqual((await list(true)).documents,[]);
  }finally{f.close();}
 });
+
+
+test('Cloud MCP: opt-in Undo speichert und verbraucht Prüfpunkt atomar',async()=>{
+  const f=await fixture();
+  try{
+    await f.store.setze('konten',{id:'undo_reader',mail:'undo-reader@example.test',
+      name:'Undo Reader',herkunft:'github',angelegt:'',gesperrt:0});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'undo_reader',
+      rolle:'lesen',von:'owner',wann:'2026-11-27'});
+    const reader=await f.authorize(false,'undo_reader');
+    const writer=await f.authorize(true);
+    await f.store.setze('saetze',{id:'undo_page',bereich:'ws_test',tabelle:'blocks',
+      daten:JSON.stringify({type:'page',text:'Undo',content:[]}),
+      verschluesselt:0,seite:'undo_page',version:1,geaendert:'',geloescht:0,vonGeraet:'Test'});
+    const call=async(name:string,args:Record<string,unknown>,token=writer.access_token)=>{
+      const r=await f.rpc(token,'tools/call',{name,arguments:{workspaceId:'ws_test',...args}});
+      assert.equal(r.status,200);
+      return JSON.parse(r.data.result.content[0].text);
+    };
+    const created=await call('redion_add_schematic',{documentId:'undo_page',
+      art:'stromlauf-aufgeloest',expectedVersion:1,requestId:'undo_test_0001'});
+    const blockId=created.blockId;
+    assert.ok(blockId);
+    const update=(args:Record<string,unknown>,token?:string)=>call('redion_update_schematic',{blockId,...args},token);
+    const read=()=>call('redion_read_schematic',{blockId});
+    const checkpoints=async()=>(await f.db.prepare("SELECT key FROM mcp_state WHERE kind='schematic_undo'").all<{key:string}>()).results;
+    const initial=await read();
+    const label={operation:'add_label',labelId:'T1',labelText:'Test',x:100,y:100};
+    assert.equal((await update({...label,expectedVersion:1,retainUndo:true,dryRun:true})).code,'invalid_arguments');
+    assert.equal((await update({...label,expectedVersion:1,dryRun:true})).saved,false);
+    assert.equal((await checkpoints()).length,0);
+    const edit=await update({...label,expectedVersion:1,retainUndo:true});
+    assert.equal(edit.version,2,JSON.stringify(edit));
+    assert.match(edit.undoId,/^schematic_undo:[a-f0-9-]{36}$/);
+    assert.ok(edit.undoExpires>Date.now());
+    assert.equal((await checkpoints()).length,1);
+    assert.equal((await read()).plan.texte.length,1);
+    assert.equal((await update({undoId:edit.undoId,expectedVersion:2},reader.access_token)).code,'forbidden');
+    assert.equal((await update({undoId:edit.undoId,expectedVersion:1})).code,'conflict');
+    assert.equal((await update({undoId:edit.undoId,expectedVersion:2,operation:'delete_label',labelId:'T1'})).code,'invalid_arguments');
+    const restored=await update({undoId:edit.undoId,expectedVersion:2});
+    assert.equal(restored.undone,true,JSON.stringify(restored));
+    assert.equal(restored.version,3);
+    assert.deepEqual((await read()).plan,initial.plan);
+    assert.equal((await checkpoints()).length,0);
+    assert.equal((await update({undoId:edit.undoId,expectedVersion:3})).code,'conflict');
+    const saved=await update({...label,expectedVersion:3,retainUndo:true});
+    assert.equal(saved.version,4,JSON.stringify(saved));
+    const normal=await update({operation:'rename_label',labelId:'T1',labelText:'Neu',expectedVersion:4});
+    assert.equal(normal.version,5);
+    assert.equal(normal.undoId,undefined);
+    assert.equal((await update({undoId:saved.undoId,expectedVersion:5})).code,'conflict');
+    assert.equal((await read()).plan.texte[0].t,'Neu');
+    const expiring=await update({operation:'rename_label',labelId:'T1',labelText:'Befristet',expectedVersion:5,retainUndo:true});
+    assert.equal(expiring.version,6,JSON.stringify(expiring));
+    await f.db.prepare("UPDATE mcp_state SET expires=?1 WHERE key=?2 RETURNING key")
+      .bind(Date.now()-1000,expiring.undoId).first();
+    assert.equal((await update({undoId:expiring.undoId,expectedVersion:6})).code,'conflict');
+    assert.equal((await read()).version,6);
+    const race=await Promise.all([
+      update({operation:'rename_label',labelId:'T1',labelText:'A',expectedVersion:6,retainUndo:true}),
+      update({operation:'rename_label',labelId:'T1',labelText:'B',expectedVersion:6,retainUndo:true})
+    ]);
+    assert.equal(race.filter(r=>r.version===7).length,1);
+    assert.equal(race.filter(r=>r.code==='conflict').length,1);
+    const winner=race.find(r=>r.version===7)!;
+    const consumed=await Promise.all([
+      update({undoId:winner.undoId,expectedVersion:7}),update({undoId:winner.undoId,expectedVersion:7})
+    ]);
+    assert.equal(consumed.filter(r=>r.undone===true).length,1);
+    assert.equal(consumed.filter(r=>r.code==='conflict').length,1);
+    assert.equal((await read()).plan.texte[0].t,'Befristet');
+    assert.equal((await read()).version,8);
+    assert.deepEqual((await checkpoints()).map(r=>r.key),[saved.undoId]);
+    const beforeRedo=await read();
+    const editForRedo=await update({operation:'rename_label',labelId:'T1',labelText:'Redo-Test',expectedVersion:8,retainUndo:true});
+    assert.equal(editForRedo.version,9,JSON.stringify(editForRedo));
+    const changedPlan=(await read()).plan;
+    const undoForRedo=await update({undoId:editForRedo.undoId,expectedVersion:9,retainRedo:true});
+    assert.equal(undoForRedo.undone,true,JSON.stringify(undoForRedo));
+    assert.equal(undoForRedo.version,10);
+    assert.match(undoForRedo.redoId,/^schematic_redo:[a-f0-9-]{36}$/);
+    assert.deepEqual((await read()).plan,beforeRedo.plan);
+    assert.equal((await update({redoId:undoForRedo.redoId,expectedVersion:10},reader.access_token)).code,'forbidden');
+    assert.equal((await update({redoId:undoForRedo.redoId,expectedVersion:9})).code,'conflict');
+    assert.equal((await update({undoId:undoForRedo.redoId,expectedVersion:10})).code,'invalid_arguments');
+    assert.equal((await update({redoId:undoForRedo.redoId,undoId:editForRedo.undoId,expectedVersion:10})).code,'invalid_arguments');
+    const redone=await update({redoId:undoForRedo.redoId,expectedVersion:10,retainUndo:true});
+    assert.equal(redone.redone,true,JSON.stringify(redone));
+    assert.equal(redone.version,11);
+    assert.match(redone.undoId,/^schematic_undo:[a-f0-9-]{36}$/);
+    assert.deepEqual((await read()).plan,changedPlan);
+    assert.equal((await update({redoId:undoForRedo.redoId,expectedVersion:11})).code,'conflict');
+    const finalUndo=await update({undoId:redone.undoId,expectedVersion:11});
+    assert.equal(finalUndo.undone,true);
+    assert.equal(finalUndo.version,12);
+    assert.equal(finalUndo.redoId,undefined);
+    assert.deepEqual((await read()).plan,beforeRedo.plan);
+    const redoRows=await f.db.prepare("SELECT key FROM mcp_state WHERE kind='schematic_redo'").all();
+    assert.equal(redoRows.results.length,0);
+  }finally{f.close();}
+});
+
+
+test('Cloud MCP: begrenzte eigene Schaltplan-Aktivität ohne fremde Protokolle oder Inhalte',async()=>{
+  const f=await fixture();
+  try{
+    await f.store.setze('konten',{id:'history_reader',mail:'history-reader@example.test',
+      name:'History Reader',herkunft:'github',angelegt:'',gesperrt:0});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'history_reader',
+      rolle:'lesen',von:'owner',wann:'2026-11-27'});
+    const reader=await f.authorize(false,'history_reader');
+    const writer=await f.authorize(true);
+    await f.store.setze('saetze',{id:'history_page',bereich:'ws_test',tabelle:'blocks',
+      daten:JSON.stringify({type:'page',text:'History',content:[]}),
+      verschluesselt:0,seite:'history_page',version:1,geaendert:'',geloescht:0,vonGeraet:'Test'});
+    const call=async(name:string,args:Record<string,unknown>,token=writer.access_token)=>{
+      const r=await f.rpc(token,'tools/call',{name,arguments:{workspaceId:'ws_test',...args}});
+      assert.equal(r.status,200);
+      return JSON.parse(r.data.result.content[0].text);
+    };
+    const created=await call('redion_add_schematic',{documentId:'history_page',
+      art:'stromlauf-aufgeloest',expectedVersion:1,requestId:'history_test_0001'});
+    const blockId=created.blockId;
+    assert.ok(blockId);
+    const read=(args:Record<string,unknown>,token?:string)=>call('redion_read_schematic',{blockId,...args},token);
+    const write=(args:Record<string,unknown>)=>call('redion_update_schematic',{blockId,...args});
+    const original=await read({});
+    const empty=await read({expectedVersion:1,history:true});
+    assert.deepEqual(empty.history,[]);
+    const edit=await write({operation:'add_label',labelId:'T1',labelText:'Privater Text',
+      x:100,y:100,expectedVersion:1,retainUndo:true});
+    assert.equal(edit.version,2,JSON.stringify(edit));
+    const undo=await write({undoId:edit.undoId,expectedVersion:2,retainRedo:true});
+    assert.equal(undo.version,3,JSON.stringify(undo));
+    const redo=await write({redoId:undo.redoId,expectedVersion:3});
+    assert.equal(redo.version,4,JSON.stringify(redo));
+    const recordEvent=async(id:string,changes:Record<string,unknown>)=>f.store.setze('protokoll',{
+      id,bereich:'ws_test',kontoId:'owner',art:'mcp',objekt:blockId,
+      text:'Schaltplan über Cloud-MCP bearbeitet',wann:'2026-01-01T00:00:00.000Z',...changes});
+    await recordEvent('foreign_account',{kontoId:'history_reader'});
+    await recordEvent('foreign_block',{objekt:'other_block'});
+    await recordEvent('foreign_workspace',{bereich:'other_workspace'});
+    await recordEvent('unrecognized_text',{text:'Nicht freigegebener Protokolltext'});
+    await recordEvent('foreign_kind',{art:'sync'});
+    const report=await read({expectedVersion:4,history:true});
+    assert.equal(report.version,4,JSON.stringify(report));
+    assert.equal(report.historyScope,'own_mcp_schematic_events');
+    assert.equal(report.complete,false);
+    assert.equal(report.historyTruncated,false);
+    assert.deepEqual(report.history.map((e:any)=>e.action).sort(),['edit','redo','undo']);
+    assert.ok(report.history.every((e:any)=>Object.keys(e).sort().join(',')==='action,at,eventId'));
+    assert.equal(JSON.stringify(report).includes('Privater Text'),false);
+    assert.equal(JSON.stringify(report).includes('foreign_account'),false);
+    assert.equal(JSON.stringify(report).includes('unrecognized_text'),false);
+    const limited=await read({expectedVersion:4,history:true,historyLimit:1});
+    assert.equal(limited.history.length,1);
+    assert.equal(limited.historyTruncated,true);
+    const ownReader=await read({expectedVersion:4,history:true},reader.access_token);
+    assert.deepEqual(ownReader.history.map((e:any)=>e.eventId),['foreign_account']);
+    for(const args of [{history:true},{history:true,expectedVersion:3},
+      {history:false,expectedVersion:4},{historyLimit:1,expectedVersion:4},
+      {history:true,expectedVersion:4,geometryAudit:true},{history:true,expectedVersion:4,historyLimit:41}]){
+      const denied=await read(args);
+      assert.ok(['invalid_arguments','conflict'].includes(denied.code),JSON.stringify(denied));
+    }
+    assert.equal((await read({})).version,4);
+    assert.equal(original.plan.texte.length,0);
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'history_reader',
+      rolle:'kein',von:'owner',wann:'2026-11-27'});
+    const denied=await read({expectedVersion:4,history:true},reader.access_token);
+    assert.ok(['forbidden','not_found'].includes(denied.code),JSON.stringify(denied));
+    const row=await f.store.hole('saetze',{bereich:'ws_test',id:blockId});
+    assert.ok(row);
+    await f.store.setze('saetze',{...row,verschluesselt:1});
+    assert.equal((await read({expectedVersion:4,history:true})).code,'not_found');
+  }finally{f.close();}
+});
