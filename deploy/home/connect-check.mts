@@ -1,10 +1,10 @@
 import {pathToFileURL} from 'node:url';
 import {resolve} from 'node:path';
 
-export async function checkPrivateConnection(origin,fetcher=fetch){
+export async function checkPrivateConnection(origin:string,fetcher:typeof fetch=fetch){
   const url=new URL(origin);
   if(url.protocol!=='https:'||url.origin!==origin)throw Error('Use an exact trusted HTTPS origin');
-  const options={method:'GET',credentials:'omit',redirect:'error',cache:'no-store',signal:AbortSignal.timeout(8000)};
+  const options:RequestInit={method:'GET',credentials:'omit',redirect:'error',cache:'no-store',signal:AbortSignal.timeout(8000)};
   const stand=await fetcher(origin+'/api/stand',options);
   const dashboard=await fetcher(origin+'/home/dashboard',options);
   return {ready:stand.status===200&&dashboard.status===401,standStatus:stand.status,anonymousDashboardStatus:dashboard.status};

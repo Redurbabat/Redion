@@ -196,7 +196,7 @@ Die angezeigte HTTPS-Adresse exakt als REDION_ORIGIN und in den Apps setzen.
 Kein Funnel, keine Router-Portfreigabe, kein Abschalten der TLS-Prüfung.
 Für den lokalen LAN-Betrieb ist ein Caddyfile-Beispiel enthalten; eigener
 LAN-DNS-Name und auf jedem Gerät vertrauenswürdige lokale CA erforderlich.
-`node deploy/home/connect-check.mjs` prüft die konfigurierte HTTPS-Adresse
+`node deploy/home/connect-check.mts` prüft die konfigurierte HTTPS-Adresse
 und ob das Dashboard ohne Geräte-Token gesperrt ist. Die Tailscale- und
 LAN-Optionen sind nicht automatisch aktiviert. Ein rein privater Tailnet-
 Endpunkt ist nicht automatisch von einem externen Cloud-MCP-Client erreichbar.
