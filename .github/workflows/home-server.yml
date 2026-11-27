@@ -1,0 +1,21 @@
+name: RED ION Home Server
+on:
+  pull_request:
+    paths:
+      - 'server/**'
+      - 'deploy/home/**'
+      - 'pruefungen/redion-home-server.test.mts'
+      - '.github/workflows/home-server.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  private-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test pruefungen/redion-home-server.test.mts
+      - run: docker build -f deploy/home/Dockerfile -t redion-home:test .
