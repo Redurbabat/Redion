@@ -1,0 +1,52 @@
+name: One-time offline artifact rebuild (PR 257)
+on:
+  push:
+    branches:
+      - feat/redion-home-server
+permissions:
+  contents: read
+jobs:
+  rebuild:
+    if: github.repository == 'Redurbabat/Redion' && github.ref == 'refs/heads/feat/redion-home-server'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Generate offline artifacts using existing scripts
+        run: |
+          node dienststand.mts
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const source=fs.readFileSync('src/kern/einstellung/stand.ts','utf8');
+          const stand=/const Stand = (\{[^\n]+\}) as const;/.exec(source)?.[1];
+          if(!stand)throw Error('Missing generated stand');
+          const js=fs.readFileSync('quell/kern/einstellung/stand.js','utf8');
+          fs.writeFileSync('quell/kern/einstellung/stand.js',js.replace(/const Stand = \{[^\n]+\};/,'const Stand = '+stand+';'));
+          const sw=fs.readFileSync('src/dienst/sw.ts','utf8');
+          const version=/const VERSION = '[^']+';/.exec(sw)?.[0];
+          const content=/const INHALT = '[^']+';/.exec(sw)?.[0];
+          if(!version||!content)throw Error('Missing service worker stamp');
+          const compiled=fs.readFileSync('sw.js','utf8');
+          fs.writeFileSync('sw.js',compiled.replace(/const VERSION = '[^']+';/,version).replace(/const INHALT = '[^']+';/,content));
+          JS
+          node dienststand.mts --pruefen
+          node bauen.mts
+      - name: Commit only generated files to the same feature branch and remove helper workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- src/dienst/sw.ts sw.js src/kern/einstellung/stand.ts quell/kern/einstellung/stand.js redion-einzeldatei.html
+          git rm -- .github/workflows/home-rebuild-once.yml
+          git diff --cached --stat
+          git -c core.hooksPath=/dev/null commit -m 'build: regenerate offline artifacts and remove one-time helper'
+          git -c core.hooksPath=/dev/null -c http.extraHeader="AUTHORIZATION: bearer ${GH_TOKEN}" push origin HEAD:refs/heads/feat/redion-home-server

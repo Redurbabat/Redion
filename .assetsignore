@@ -156,3 +156,5 @@ wrangler.toml
 # Private deployment and home data are never static assets.
 /deploy/
 /redion-home-data/
+
+/red-sdk/

@@ -6,6 +6,7 @@ import {openHomeDatabase} from './home/sqlite.ts';
 import {openHomeBlobs} from './home/blobs.ts';
 import {beantworte} from './kern.ts';
 import {prepareHomeSync,createHomeSyncWait} from './home/live-sync.ts';
+import {prepareRedId,issueRedId,revokeRedApp,handleRedId} from './home/red-id.ts';
 import {approveHomeDevice,claimHomeDevice} from './home/pairing.ts';
 import {prepareHomeConsent,issueHomeConsentCode,identifyHomeConsent,homeConsentLogin,exchangeHomeConsent,logoutHomeConsent} from './home/consent.ts';
 import {handleCloudMcp,isCloudMcpPublicPath,isCloudMcpPrivatePath} from './mcp/cloud-router.ts';
@@ -14,7 +15,7 @@ import {zuGrossAntwort} from './sicherheit/eingaben.ts';
 import {istAbgleichWeg,mitAppUrsprung} from './sicherheit/abgleich-tor.ts';
 
 const privateRoutes=new Set(['/api/stand']);
-const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait']);
+const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/red-id/v1/me','/red-id/v1/logout']);
 const json=(status:number,error:string)=>Response.json({error},{status,headers:{'Cache-Control':'no-store'}});
 
 /** Initial private API: no static repository files, public registration,
@@ -26,6 +27,7 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
   const blobs=await openHomeBlobs(join(options.dataDir,'blobs')).catch(error=>{store.close();throw error;});
   if(options.enableMcp)prepareHomeConsent(store.sqlite);
   prepareHomeSync(store.sqlite);
+  prepareRedId(store.sqlite);
   const live=createHomeSyncWait(store.sqlite,store.ablage);
   let queue:Promise<unknown>=Promise.resolve();
   function serial<T>(execute:()=>Promise<T>):Promise<T>{
@@ -54,6 +56,11 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
         }
         return handleCloudMcp(request,{DB:store.db},false,identify);
       });
+    }
+    if(path.startsWith('/red-id/v1/')&&request.method!=='OPTIONS'){
+      const response=await serial(async()=>handleRedId(store.sqlite,request));
+      if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
+      return mitAppUrsprung(request,response);
     }
     if(path==='/home/sync/wait'&&request.method!=='OPTIONS'){
       const response=await live.handle(request);
@@ -87,6 +94,14 @@ async function main(){
   const enableMcp=process.env.REDION_ENABLE_MCP==='1';
   const service=await openHomeServer({dataDir,origin,enableMcp});
   const command=process.argv[2];
+  if(command==='red-id-issue'||command==='red-id-revoke'){
+    try{
+      const app=process.argv[3]||'';
+      if(command==='red-id-issue')console.log(JSON.stringify(issueRedId(service.store.sqlite,app)));
+      else console.log('Revoked app credentials: '+revokeRedApp(service.store.sqlite,app));
+    } finally {service.close();}
+    return;
+  }
   if(command==='mcp-login-code'){
     try{
       if(!enableMcp)throw new Error('Set REDION_ENABLE_MCP=1 first');

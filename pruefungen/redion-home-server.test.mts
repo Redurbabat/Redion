@@ -169,3 +169,30 @@ test('Home device management and durable live invalidation use authenticated own
     }finally{service.close();}
   }finally{await rm(root,{recursive:true,force:true});}
 });
+
+test('RED ID issues separate app credentials without document privileges',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'red-id-home-'));
+  try{
+    const origin='https://redion.example.test';
+    const service=await openHomeServer({dataDir:root,origin});
+    try{
+      const {issueRedId,revokeRedApp}=await import('../server/home/red-id.ts');
+      const {createRedIdClient}=await import('../red-sdk/client.mts');
+      await service.store.ablage.setze('konten',{id:'owner',name:'RED Owner',gesperrt:0});
+      const fit=issueRedId(service.store.sqlite,'red-fit'),poly=issueRedId(service.store.sqlite,'red-poly');
+      assert.notEqual(fit.token,poly.token);
+      const fetcher:typeof fetch=async(input,init)=>service.handle(new Request(input,init));
+      const client=createRedIdClient(origin,async()=>fit.token,fetcher);
+      const identity=await client.me();
+      assert.equal(identity.id,'owner');assert.equal(identity.app,'red-fit');
+      assert.deepEqual(identity.scopes,['identity:read']);
+      assert.equal((await service.handle(new Request(origin+'/sync/runter',{headers:{Authorization:'Bearer '+fit.token}}))).status,401);
+      await client.logout();
+      await assert.rejects(client.me());
+      const other=createRedIdClient(origin,async()=>poly.token,fetcher);
+      assert.equal((await other.me()).id,'owner');
+      assert.equal(revokeRedApp(service.store.sqlite,'red-poly'),1);
+      await assert.rejects(other.me());
+    }finally{service.close();}
+  }finally{await rm(root,{recursive:true,force:true});}
+});

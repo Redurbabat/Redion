@@ -96,3 +96,23 @@ aktiv. Bei fehlendem Endpunkt folgt eine Minute Pause vor einem neuen
 Versuch; keine automatische Änderung der Anmeldung. Sichtwechsel,
 Netzverlust, Taktwechsel und deaktivierter Sync beenden den Wartevorgang.
 Die Geräteabnahme bleibt offen.
+
+## RED ID – erste gemeinsame Identität
+
+Die lokale Konsole kann nach der ersten Geräteanmeldung ein separates
+Identitäts-Token je RED-App ausstellen, beispielsweise:
+
+```sh
+docker compose -f deploy/home/compose.yaml exec redion node server/home-server.ts red-id-issue red-fit
+docker compose -f deploy/home/compose.yaml exec redion node server/home-server.ts red-id-revoke red-fit
+```
+
+Ausgabe des ersten Befehls vertraulich behandeln. Das Token läuft nach
+30 Tagen ab, wird nur als SHA-256-Abdruck gespeichert und hat nur
+`identity:read`. `GET /red-id/v1/me` liefert dieselbe Konto-ID für alle
+Apps, `POST /red-id/v1/logout` widerruft das einzelne Token.
+`red-sdk/client.mts` bietet einen ersten typisierten Client.
+Andere RED-Repositories sind noch nicht angepasst. App-eigene
+Datenbereiche, native sichere Token-Speicherung, interaktive Anmeldung
+und vollständiges SSO sind separate offene Schritte; die neuen Tokens
+dürfen keine RED ION Dokumente lesen oder schreiben.
