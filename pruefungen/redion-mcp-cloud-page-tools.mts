@@ -76,12 +76,12 @@ test('Cloud MCP: new tools are scoped and have strict schemas',()=>{
     ['workspaceId','blockId','expectedVersion']);
   assert.match(JSON.stringify(updateSchematic?.inputSchema.properties.changes), /"maxItems":20/);
   assert.deepEqual(updateSchematic?.inputSchema.properties.operation,
-    {type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label','set_component_values']});
+    {type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label','set_component_values','rename_label','delete_label','delete_wire']});
   assert.deepEqual(updateSchematic?.inputSchema.properties.rotation,
     {type:'integer',enum:[0,90,180,270]});
   assert.equal(updateSchematic?.annotations?.readOnlyHint,false);
   assert.equal(updateSchematic?.annotations?.idempotentHint,false);
-  assert.equal(updateSchematic?.annotations?.destructiveHint,false);
+  assert.equal(updateSchematic?.annotations?.destructiveHint,true);
   const addSchematic=write.find(x=>x.name==='redion_add_schematic');
   assert.equal(names(read).includes('redion_add_schematic'),false);
   assert.ok(names(write).includes('redion_add_schematic'));
@@ -345,4 +345,35 @@ test('Cloud MCP learning cards use the existing Trainer format with strict input
   assert.equal((buildLearningCard({...args,kind:'flashcard',image:{data:png,alt:'Testbild'}}).meta.quiz as any).image.data,png);
   assert.ok(!visibleCloudTools(principal(['redion:read'])).some(t=>t.name==='redion_create_learning_card'));
   assert.equal(visibleCloudTools(principal(['redion:read','redion:write'])).find(t=>t.name==='redion_create_learning_card')?.annotations?.idempotentHint,true);
+});
+
+
+test('Cloud MCP: einzelne Beschriftungen und Leitungen gezielt korrigieren',()=>{
+  const original={art:'stromlauf-aufgeloest',breite:800,hoehe:700,
+    teile:[{id:'A',zeichen:'lampe',x:100,y:100}],
+    leitungen:[{id:'W1',punkte:[{x:100,y:100},{x:100,y:200}],ebene:'plan'},
+      {id:'W2',punkte:[{x:200,y:100},{x:200,y:200}],ebene:'plan'}],
+    texte:[{id:'T1',t:'Alt',x:100,y:300,ebene:'plan',farbe:'#123456'},
+      {id:'T2',t:'Bleibt',x:200,y:300,ebene:'plan'}],
+    ebenen:[{id:'plan',name:'Plan',farbe:'var(--text)',sichtbar:true}]};
+  const snapshot=structuredClone(original);
+  const invoke=(raw:unknown,operation:string,params:Record<string,unknown>)=>
+    editSchematic(raw,{operation,...params}).plan as typeof original;
+  const renamed=invoke(original,'rename_label',{labelId:'T1',labelText:' Neu '});
+  assert.deepEqual(renamed.texte[0],{...original.texte[0],t:'Neu'});
+  assert.deepEqual(renamed.texte[1],original.texte[1]);
+  const deleted=invoke(renamed,'delete_label',{labelId:'T1'});
+  assert.deepEqual(deleted.texte,[original.texte[1]]);
+  const disconnected=invoke(deleted,'delete_wire',{wireId:'W1'});
+  assert.deepEqual(disconnected.leitungen,[original.leitungen[1]]);
+  assert.deepEqual(disconnected.teile,original.teile);
+  assert.deepEqual(disconnected.ebenen,original.ebenen);
+  assert.deepEqual(original,snapshot);
+  for(const labelText of ['', '   ', 'x'.repeat(201), 'Alt'])
+    assert.throws(()=>invoke(original,'rename_label',{labelId:'T1',labelText}));
+  assert.throws(()=>invoke(original,'delete_label',{labelId:'W1'}));
+  assert.throws(()=>invoke(original,'delete_wire',{wireId:'T1'}));
+  assert.throws(()=>invoke(original,'delete_wire',{wireId:'W1',labelText:'Fremdfeld'}));
+  assert.throws(()=>invoke(disconnected,'delete_wire',{wireId:'W1'}));
+  assert.deepEqual(original,snapshot);
 });
