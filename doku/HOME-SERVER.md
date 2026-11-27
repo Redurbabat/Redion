@@ -49,7 +49,7 @@ allen echten Geräten geprüft werden; keine Behauptung vollständiger E2EE.
   Anmeldeoberfläche, kein offener Registrierungsweg.
 - Lokaler OAuth-Consent und MCP-Routing sind optional implementiert; offen
   bleiben Browser-/Connector-Abnahme, Proxy-Grenzen und Widerrufstests.
-- Live-Sync: serverseitige Invalidierung implementiert. Client-Anbindung,
+- Live-Sync: serverseitige Invalidierung implementiert. Client-Anbindung im 15-Sekunden-Modus ergänzt;
   Versionskonflikte, Offline-Roundtrip und echte Geräte bleiben offen.
 - Verschlüsselte Anhänge und Schlüsselverwaltung, Sicherheitsprüfung,
   Migration ohne Verlust; konsistente Sicherung und Restore von DB und Blobs.
@@ -90,5 +90,9 @@ SQLite-Trigger erkennen auch Schreibtransaktionen des MCP-Diensts.
 Ein Neustart wechselt den Cursor-Epoch und erzwingt einen erneuten Abgleich.
 Wartende Requests blockieren nicht die Schreibwarteschlange; maximal 64
 gleichzeitige Wartevorgänge. Kein WebSocket, keine Hintergrundgarantie
-für iOS. Die App muss diesen neuen Endpunkt noch integrieren; vorhandenes
-15-Sekunden-Polling bleibt bis dahin unverändert.
+für iOS. Die App versucht den neuen Endpunkt nur im ausdrücklich gewählten
+15-Sekunden-Modus. Der normale Abgleich bleibt parallel als Rückfallweg
+aktiv. Bei fehlendem Endpunkt folgt eine Minute Pause vor einem neuen
+Versuch; keine automatische Änderung der Anmeldung. Sichtwechsel,
+Netzverlust, Taktwechsel und deaktivierter Sync beenden den Wartevorgang.
+Die Geräteabnahme bleibt offen.

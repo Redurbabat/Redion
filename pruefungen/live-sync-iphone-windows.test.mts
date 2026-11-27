@@ -10,7 +10,7 @@ type H={wolke:any;meta:Map<string,any>;intervals:Map<number,{fn:()=>void,ms:numb
   document:{hidden:boolean};navigator:{onLine:boolean};requests:string[];
   replies:Map<string,any>;store:any;writes:any[];files:Map<string,any>};
 
-function app():H{
+function app(home=false):H{
   const meta=new Map<string,any>([['wolkeAdresse','https://redion.example.test'],['wolkeBereich','ws_test']]);
   const intervals=new Map<number,{fn:()=>void,ms:number}>();
   const windows=new Map<string,()=>void>();
@@ -41,7 +41,8 @@ function app():H{
     getBlock:()=>null
   };
   vm.runInNewContext(source,{Store:store,window:host,location:{protocol:'capacitor:',origin:'null'},navigator,
-    document,URL,crypto,TextEncoder,Uint8Array,Date,console,
+    document,URL,URLSearchParams,crypto,TextEncoder,Uint8Array,Date,console,
+    ...(home?{AbortController}:{}),
     setTimeout:()=>0,
     setInterval:(fn:()=>void,ms:number)=>{const id=++seq;intervals.set(id,{fn,ms});return id;},
     clearInterval:(id:number)=>{intervals.delete(id);},
@@ -154,4 +155,28 @@ test('Fehlender Datei-Chunk blockiert weder andere Downloads noch den Upload',as
   assert.ok(Array.isArray(retry)&&retry.some((d:any)=>d.id==='defekt'));
   assert.equal(h.meta.get('wolkeMarkeDateien'),'2026-11-23T19:20:00Z');
   assert.ok(h.requests.some(x=>x.endsWith('/datei/stueck')));
+});
+
+test('Home live mode authenticates the signal and aborts on opt-out',async()=>{
+  const h=app(true);
+  await h.wolke.start();
+  h.meta.set('wolkeToken','synthetic-token');
+  h.meta.set('wolkeAbgleich',true);
+  let signal:AbortSignal|undefined;
+  h.replies.set('/home/sync/wait',(init:RequestInit)=>{
+    signal=init.signal??undefined;
+    assert.equal((init.headers as Record<string,string>).Authorization,'Bearer synthetic-token');
+    assert.equal(init.redirect,'error');
+    return {cursor:'12345678-1234-1234-1234-123456789012:1',changed:true};
+  });
+  h.wolke.taktSetzen('15');
+  const tick=[...h.intervals.values()][0]!.fn;
+  tick();await settled();
+  assert.ok(h.requests.some(x=>x.includes('/home/sync/wait?')));
+  assert.ok(signal);
+  h.wolke.abgleichSetzen(false);
+  assert.equal(signal.aborted,true);
+  const count=h.requests.filter(x=>x.includes('/home/sync/wait?')).length;
+  tick();await settled();
+  assert.equal(h.requests.filter(x=>x.includes('/home/sync/wait?')).length,count);
 });
