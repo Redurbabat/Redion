@@ -2725,3 +2725,79 @@ test('Cloud-MCP archives, finds and restores native pages without deleting conte
   assert.deepEqual((await list(true)).documents,[]);
  }finally{f.close();}
 });
+
+
+test('Cloud MCP: opt-in Undo speichert und verbraucht Prüfpunkt atomar',async()=>{
+  const f=await fixture();
+  try{
+    await f.store.setze('konten',{id:'undo_reader',mail:'undo-reader@example.test',
+      name:'Undo Reader',herkunft:'github',angelegt:'',gesperrt:0});
+    await f.store.setze('freigaben',{bereich:'ws_test',seite:'*',kontoId:'undo_reader',
+      rolle:'lesen',von:'owner',wann:'2026-11-27'});
+    const reader=await f.authorize(false,'undo_reader');
+    const writer=await f.authorize(true);
+    await f.store.setze('saetze',{id:'undo_page',bereich:'ws_test',tabelle:'blocks',
+      daten:JSON.stringify({type:'page',text:'Undo',content:[]}),
+      verschluesselt:0,seite:'undo_page',version:1,geaendert:'',geloescht:0,vonGeraet:'Test'});
+    const call=async(name:string,args:Record<string,unknown>,token=writer.access_token)=>{
+      const r=await f.rpc(token,'tools/call',{name,arguments:{workspaceId:'ws_test',...args}});
+      assert.equal(r.status,200);
+      return JSON.parse(r.data.result.content[0].text);
+    };
+    const created=await call('redion_add_schematic',{documentId:'undo_page',
+      art:'stromlauf-aufgeloest',expectedVersion:1,requestId:'undo_test_0001'});
+    const blockId=created.blockId;
+    assert.ok(blockId);
+    const update=(args:Record<string,unknown>,token?:string)=>call('redion_update_schematic',{blockId,...args},token);
+    const read=()=>call('redion_read_schematic',{blockId});
+    const checkpoints=async()=>(await f.db.prepare("SELECT key FROM mcp_state WHERE kind='schematic_undo'").all<{key:string}>()).results;
+    const initial=await read();
+    const label={operation:'add_label',labelId:'T1',labelText:'Test',x:100,y:100};
+    assert.equal((await update({...label,expectedVersion:1,retainUndo:true,dryRun:true})).code,'invalid_arguments');
+    assert.equal((await update({...label,expectedVersion:1,dryRun:true})).saved,false);
+    assert.equal((await checkpoints()).length,0);
+    const edit=await update({...label,expectedVersion:1,retainUndo:true});
+    assert.equal(edit.version,2,JSON.stringify(edit));
+    assert.match(edit.undoId,/^schematic_undo:[a-f0-9-]{36}$/);
+    assert.ok(edit.undoExpires>Date.now());
+    assert.equal((await checkpoints()).length,1);
+    assert.equal((await read()).plan.texte.length,1);
+    assert.equal((await update({undoId:edit.undoId,expectedVersion:2},reader.access_token)).code,'forbidden');
+    assert.equal((await update({undoId:edit.undoId,expectedVersion:1})).code,'conflict');
+    assert.equal((await update({undoId:edit.undoId,expectedVersion:2,operation:'delete_label',labelId:'T1'})).code,'invalid_arguments');
+    const restored=await update({undoId:edit.undoId,expectedVersion:2});
+    assert.equal(restored.undone,true,JSON.stringify(restored));
+    assert.equal(restored.version,3);
+    assert.deepEqual((await read()).plan,initial.plan);
+    assert.equal((await checkpoints()).length,0);
+    assert.equal((await update({undoId:edit.undoId,expectedVersion:3})).code,'conflict');
+    const saved=await update({...label,expectedVersion:3,retainUndo:true});
+    assert.equal(saved.version,4,JSON.stringify(saved));
+    const normal=await update({operation:'rename_label',labelId:'T1',labelText:'Neu',expectedVersion:4});
+    assert.equal(normal.version,5);
+    assert.equal(normal.undoId,undefined);
+    assert.equal((await update({undoId:saved.undoId,expectedVersion:5})).code,'conflict');
+    assert.equal((await read()).plan.texte[0].t,'Neu');
+    const expiring=await update({operation:'rename_label',labelId:'T1',labelText:'Befristet',expectedVersion:5,retainUndo:true});
+    assert.equal(expiring.version,6,JSON.stringify(expiring));
+    await f.db.prepare("UPDATE mcp_state SET expires=?1 WHERE key=?2 RETURNING key")
+      .bind(Date.now()-1000,expiring.undoId).first();
+    assert.equal((await update({undoId:expiring.undoId,expectedVersion:6})).code,'conflict');
+    assert.equal((await read()).version,6);
+    const race=await Promise.all([
+      update({operation:'rename_label',labelId:'T1',labelText:'A',expectedVersion:6,retainUndo:true}),
+      update({operation:'rename_label',labelId:'T1',labelText:'B',expectedVersion:6,retainUndo:true})
+    ]);
+    assert.equal(race.filter(r=>r.version===7).length,1);
+    assert.equal(race.filter(r=>r.code==='conflict').length,1);
+    const winner=race.find(r=>r.version===7)!;
+    const consumed=await Promise.all([
+      update({undoId:winner.undoId,expectedVersion:7}),update({undoId:winner.undoId,expectedVersion:7})
+    ]);
+    assert.equal(consumed.filter(r=>r.undone===true).length,1);
+    assert.equal(consumed.filter(r=>r.code==='conflict').length,1);
+    assert.equal((await read()).plan.texte[0].t,'Befristet');
+    assert.equal((await read()).version,8);
+    assert.deepEqual((await checkpoints()).map(r=>r.key),[saved.undoId]);
+  }finally{f.close();}
+});
