@@ -349,7 +349,8 @@ const Folienvorlagen = (() => {
    * Präsentation. Der Unterschied, den man messen kann, ist das Papier:
    * eine Folie ist breiter als hoch, ein Heft hochkant. PowerPoints Vorgabe
    * ist 16:9, Redions eingelesene Folien auch (E540); ein A4-Heft ist 595
-   * auf 842.
+   * auf 842. Ein ausdrücklich als A4-Querformat markiertes Blatt gehört
+   * weiterhin zum Notizheft, auch nach dem Zerlegen in einzelne Seiten.
    *
    * Was das NICHT trifft: eine hochkant gebaute Präsentation. Die gibt es in
    * PowerPoint, sie ist aber selten, und die Verwechslung in die andere
@@ -359,7 +360,7 @@ const Folienvorlagen = (() => {
     const seite = seiteId ? Store.getBlock(seiteId) : null;
     if (!seite || !seite.dokumentModus) return false;
     return (Store.childrenOf(seiteId) || []).some((b: any) =>
-      b && b.type === 'blatt' &&
+      b && b.type === 'blatt' && b.blattAusrichtung !== 'quer' &&
       Number(b.blattBreite) > Number(b.blattHoehe));
   };
 

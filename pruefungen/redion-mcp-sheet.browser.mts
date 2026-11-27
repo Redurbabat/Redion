@@ -95,6 +95,8 @@ test('Ein MCP-Blatt wird an der Querformatgrenze in zwei native Seiten geteilt',
     await page.locator('[data-document-action="page-split"]').click();
     await page.locator('.overlay [data-w="ja"]').click();
     await page.waitForFunction(id=>Store.childrenOf(id).filter((child:{type:string})=>child.type==='blatt').length===2,documentId);
+    await page.waitForFunction(()=>
+      document.querySelector('.document-title-meta')?.textContent==='Notizheft · 2 Seiten');
     const sheets=await page.evaluate(id=>{
       const blocks=Store.childrenOf(id) as Array<{
         type:string;blattBreite:number;blattHoehe:number;blattAusrichtung?:string;

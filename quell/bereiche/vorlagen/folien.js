@@ -237,7 +237,7 @@ const Folienvorlagen = (() => {
         const seite = seiteId ? Store.getBlock(seiteId) : null;
         if (!seite || !seite.dokumentModus)
             return false;
-        return (Store.childrenOf(seiteId) || []).some((b) => b && b.type === 'blatt' &&
+        return (Store.childrenOf(seiteId) || []).some((b) => b && b.type === 'blatt' && b.blattAusrichtung !== 'quer' &&
             Number(b.blattBreite) > Number(b.blattHoehe));
     };
     const offenerSatz = () => {
