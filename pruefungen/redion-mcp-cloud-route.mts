@@ -1759,6 +1759,8 @@ test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und at
     const changes=[addBatchLabel,{operation:'move_label',labelId:'TB',x:210,y:370}];
     const committed=await update({expectedVersion:6,changes});
     assert.equal(committed.data.version,7);
+    assert.deepEqual(committed.data.changeSummary,{added:1,removed:0,modified:0,total:1,truncated:false,
+      entries:[{elementId:'TB',elementType:'label',action:'added',fields:[]}]});
     assert.deepEqual(committed.data.elements,[{elementId:'TB',elementType:'label'},{elementId:'TB',elementType:'label'}]);
     assert.equal((await update({expectedVersion:6,changes})).data.code,'conflict');
     const finalPlan=await call('redion_read_schematic',{blockId});
@@ -1786,6 +1788,9 @@ test('Cloud-MCP: Schaltplanbearbeitung prüft Symbole, reale Klemmen, ACL und at
     const simulated=await update({expectedVersion:8,dryRun:true,changes:previewWires,previewOperatingPoint:previewMeasurement,previewGeometryAudit:true});
     assert.equal(simulated.data.saved,false,JSON.stringify(simulated.data));
     assert.equal(simulated.data.version,8);
+    assert.equal(simulated.data.changeSummary.added,2);
+    assert.equal(simulated.data.changeSummary.total,2);
+    assert.deepEqual(simulated.data.changeSummary.entries.map((e:any)=>e.elementId),['preview_plus','preview_minus']);
     const comparison=simulated.data.geometryComparison;
     assert.equal(comparison.before.wireCount,valued.data.plan.leitungen.length);
     assert.equal(comparison.after.wireCount,comparison.before.wireCount+2);
