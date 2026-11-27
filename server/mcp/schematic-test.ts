@@ -156,10 +156,14 @@ export function auditWiring(plan:Record<string,unknown>){
     if(planTools.ueberlappt(wire.punkte,usable,wire.id))
       issues.push({code:'overlapping_wire',severity:'hint',elementId:wire.id});
   const errors=issues.filter(i=>i.severity==='error').length;
+  const proposals=issues.filter(i=>i.code==='duplicate_wire_point'&&/^[A-Za-z0-9_-]{1,64}$/.test(i.elementId)&&
+    !issues.some(e=>e.elementId===i.elementId&&e.severity==='error')).map(i=>({
+      operation:'normalize_wire_points',wireId:i.elementId,requiresPreview:true}));
   return {status:errors?'geometry_errors':issues.length?'geometry_hints':'no_geometry_issues_found',
     componentCount:native.teile.length,wireCount:native.leitungen.length,
     errorCount:errors,hintCount:issues.length-errors,issues:issues.slice(0,40),
-    truncated:issues.length>40,...componentParameterHints(plan),
+    truncated:issues.length>40,repairProposals:proposals.slice(0,10),
+    repairProposalsTruncated:proposals.length>10,...componentParameterHints(plan),
     grenze:'Geometrische Teilprüfung; keine vollständige Netz-, Norm- oder Sicherheitsabnahme.'};
 }
 

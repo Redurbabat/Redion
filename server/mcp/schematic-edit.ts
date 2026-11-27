@@ -205,6 +205,36 @@ export const editSchematic=(raw:unknown,args:Item):{plan:Item;elementId:string;k
     const old=isRecord(part.werte)?part.werte:{};
     return {plan:{...raw,teile:components.map(p=>p===part?{...part,werte:{...old,...values}}:p)},elementId:id,kind:'component'};
   }
+  if(kind==='normalize_wire_points'){
+    allowedKeys(args,['wireId']);
+    const id=ident(args.wireId,'Leitung');
+    const target=wires.find(w=>isRecord(w)&&w.id===id);
+    if(!isRecord(target))fail('Leitung fehlt.');
+    const old=validPoints(target.punkte);
+    const unique=old.filter((p,i)=>i===0||p.x!==old[i-1]!.x||p.y!==old[i-1]!.y);
+    if(unique.length===old.length)fail('Keine aufeinanderfolgenden doppelten Punkte.');
+    if(unique.length<2)fail('Leitung würde zu einem einzelnen Punkt.');
+    if(old.some(p=>p.x<0||p.x>width||p.y<0||p.y>height))
+      fail('Leitung liegt ausserhalb des Planblatts.');
+    for(const p of components.filter(isRecord)){
+      if(typeof p.x!=='number'||!Number.isFinite(p.x)||typeof p.y!=='number'||!Number.isFinite(p.y))
+        fail('Ungültige Bauteilposition.');
+      rotation(p.drehung);mirror(p.gespiegelt);pinsFor(p);
+    }
+    if(wires.filter(isRecord).reduce((n,w)=>n+validPoints(w.punkte).length,0)>500)
+      fail('Zu viele Leitungspunkte.');
+    // Preserve all explicit terminal bindings, first/last positions and
+    // nonzero segments. The native contact comparison also guards other wires.
+    const candidate={...raw,leitungen:wires.map(w=>w===target?{...target,punkte:unique}:w)};
+    const before=planTools.vorherMerken(raw as unknown as Parameters<typeof Schaltplan.vorherMerken>[0]);
+    const next=candidate as unknown as Parameters<typeof Schaltplan.vorherMerken>[0];
+    if(planTools.veraendert(next,before).length)fail('Netzkontakte würden sich ändern.');
+    const after=planTools.vorherMerken(next);
+    for(const [wireId,ends] of before.klemmen)
+      if(JSON.stringify(ends)!==JSON.stringify(after.klemmen.get(wireId)))
+        fail('Anschlussauflösung würde sich ändern.');
+    return {plan:candidate,elementId:id,kind:'wire'};
+  }
   if(kind==='add_busbar'){
     allowedKeys(args,['wireId','conductor','x','y','endX','endY','layer']);
     const id=ident(args.wireId,'Stromschiene');
