@@ -3,7 +3,12 @@
 // @ts-expect-error Classic browser build has no module declaration.
 import compiled from '../../quell/bereiche/elektro/simulation.js';
 
+// @ts-expect-error Classic browser build has no module declaration.
+import compiledPlan from '../../quell/bereiche/bloecke/arten/schaltplan.js';
+import {BUILTIN_SYMBOLS} from './symbol-catalog.ts';
+
 const simulation: typeof Stromfluss = compiled;
+const planTools: typeof Schaltplan = compiledPlan;
 const record=(value:unknown):value is Record<string,unknown>=>
   !!value&&typeof value==='object'&&!Array.isArray(value);
 const position=(value:unknown):value is number=>
@@ -74,6 +79,88 @@ export function componentParameterHints(plan:Record<string,unknown>){
   }
   return {parameterHinweise:hints.slice(0,40),parameterHinweiseGesamt:hints.length,
     parameterHinweiseGekuerzt:hints.length>40};
+}
+
+/** Read-only inspection of persisted geometry. A free wire end can be a
+ * legitimate junction or rail, so absence of endpoint metadata alone is not
+ * an error. This is not a connectivity or electrical safety certificate. */
+export function auditWiring(plan:Record<string,unknown>){
+  validatePlan(plan,1);
+  const width=plan.breite,height=plan.hoehe;
+  if(typeof width!=='number'||!Number.isFinite(width)||width<=0||
+    typeof height!=='number'||!Number.isFinite(height)||height<=0)
+    throw new Error('Ungültige Planabmessungen.');
+  type Issue={code:string;severity:'error'|'hint';elementId:string;
+    end?:'from'|'to';componentId?:string;terminal?:string;
+    expected?:{x:number;y:number};actual?:{x:number;y:number}};
+  const issues:Issue[]=[];
+  const native=plan as unknown as Parameters<typeof Schaltplan.kontakte>[0];
+  const parts=new Map(native.teile.map(p=>[p.id,p]));
+  const badParts=new Set<string>();
+  for(const part of native.teile){
+    if(!BUILTIN_SYMBOLS.some(s=>s.id===part.zeichen)){
+      issues.push({code:'symbol_not_in_cloud_catalog',severity:'hint',elementId:part.id});
+      badParts.add(part.id);
+    }else if((part.drehung!==undefined&&![0,90,180,270].includes(part.drehung))||
+      (part.gespiegelt!==undefined&&typeof part.gespiegelt!=='boolean')){
+      issues.push({code:'invalid_transform',severity:'error',elementId:part.id});
+      badParts.add(part.id);
+    }
+  }
+  const seen=new Set(parts.keys());
+  const usable:typeof native.leitungen=[];
+  const outside=(p:{x:number;y:number})=>p.x<0||p.x>width||p.y<0||p.y>height;
+  for(const wire of native.leitungen){
+    if(seen.has(wire.id))issues.push({code:'duplicate_element_id',severity:'error',elementId:wire.id});
+    seen.add(wire.id);
+    const pts=wire.punkte;
+    if(pts.length<2){
+      issues.push({code:'wire_too_short',severity:'error',elementId:wire.id});
+      continue;
+    }
+    usable.push(wire);
+    if(pts.some(outside))issues.push({code:'wire_outside_sheet',severity:'error',elementId:wire.id});
+    if(pts.some((p,i)=>i>0&&p.x===pts[i-1]!.x&&p.y===pts[i-1]!.y))
+      issues.push({code:'duplicate_wire_point',severity:'hint',elementId:wire.id});
+    if(pts.some((p,i)=>i>0&&p.x!==pts[i-1]!.x&&p.y!==pts[i-1]!.y))
+      issues.push({code:'diagonal_segment',severity:'hint',elementId:wire.id});
+    const ends=[['from',wire.vonTeil,wire.vonNr,pts[0]!],
+      ['to',wire.nachTeil,wire.nachNr,pts[pts.length-1]!]] as const;
+    for(const [end,partId,nr,actual] of ends){
+      if(partId===undefined&&nr===undefined)continue;
+      const base={elementId:wire.id,end,actual:{x:actual.x,y:actual.y}};
+      if(typeof partId!=='string'||!partId||typeof nr!=='string'||!nr){
+        issues.push({...base,code:'incomplete_terminal_binding',severity:'error'});
+        continue;
+      }
+      const part=parts.get(partId);
+      const ref={...base,componentId:partId,terminal:nr};
+      if(!part){
+        issues.push({...ref,code:'missing_component',severity:'error'});
+        continue;
+      }
+      if(badParts.has(partId))continue;
+      const resolved=planTools.klemmeFuer(part,nr,actual);
+      const expected=resolved?planTools.anschlussOrt(part,resolved):null;
+      if(!expected){
+        issues.push({...ref,code:'unknown_terminal',severity:'error'});
+        continue;
+      }
+      if(resolved!==nr)issues.push({...ref,code:'legacy_terminal_alias',severity:'hint'});
+      if(actual.x!==expected.x||actual.y!==expected.y)
+        issues.push({...ref,code:'terminal_position_mismatch',severity:'error',expected});
+    }
+  }
+  // Native overlap test distinguishes an overlap from a perpendicular crossing.
+  for(const wire of usable)
+    if(planTools.ueberlappt(wire.punkte,usable,wire.id))
+      issues.push({code:'overlapping_wire',severity:'hint',elementId:wire.id});
+  const errors=issues.filter(i=>i.severity==='error').length;
+  return {status:errors?'geometry_errors':issues.length?'geometry_hints':'no_geometry_issues_found',
+    componentCount:native.teile.length,wireCount:native.leitungen.length,
+    errorCount:errors,hintCount:issues.length-errors,issues:issues.slice(0,40),
+    truncated:issues.length>40,...componentParameterHints(plan),
+    grenze:'Geometrische Teilprüfung; keine vollständige Netz-, Norm- oder Sicherheitsabnahme.'};
 }
 
 export function runSwitchTest(plan:Record<string,unknown>,request:unknown) {
