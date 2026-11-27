@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {makeConnectorContract} from '../skripte/mcp-connector-vertrag.mts';
+import {makeConnectorContract,compareConnectorContract} from '../skripte/mcp-connector-vertrag.mts';
 import {visibleCloudTools} from '../server/mcp/cloud-tools.ts';
 import type {McpPrincipal} from '../server/mcp/oauth.ts';
 
@@ -75,4 +75,45 @@ test('V07-Connector: JSON-Datei ist deterministisch und ohne Kontodaten',()=>{
   assert.ok(!first.includes('client_secret'));
   assert.ok(!first.includes('refresh_token'));
   assert.equal(JSON.parse(first).tools.length,32);
+});
+
+
+test('V07-Connector: identische Werkzeuglisten und read-only Scope erkennen',()=>{
+  const contract=makeConnectorContract();
+  assert.deepEqual(compareConnectorContract(contract),{
+    matches:true,scope:'read-write',expectedCount:32,actualCount:32,
+    missing:[],unexpected:[],changed:[]});
+  const tools=visibleCloudTools(principal(false));
+  assert.equal(compareConnectorContract({jsonrpc:'2.0',id:1,result:{tools}},false).matches,true);
+  assert.equal(compareConnectorContract({tools},true).missing.length,16);
+  assert.equal(compareConnectorContract({tools:[...contract.tools].reverse()}).matches,true);
+});
+
+test('V07-Connector: fehlende Aktionen, alte Schemas und Berechtigungsabweichungen erkennen',()=>{
+  const contract=makeConnectorContract();
+  const tools=structuredClone(contract.tools) as any[];
+  const tool=tools.find(t=>t.name==='redion_update_schematic')!;
+  tool.inputSchema.properties.operation.enum=['add_component','connect_terminals','add_label','move_component','move_label'];
+  tool.annotations.destructiveHint=false;
+  tool.oauthScope='redion:read';
+  const i=tools.findIndex(t=>t.name==='redion_list_child_pages');
+  tools.splice(i,1);
+  tools.push({name:'old_tool',inputSchema:{type:'object'}});
+  const report=compareConnectorContract({tools});
+  assert.equal(report.matches,false);
+  assert.deepEqual(report.missing,['redion_list_child_pages']);
+  assert.deepEqual(report.unexpected,['old_tool']);
+  assert.deepEqual(report.changed,[{name:'redion_update_schematic',fields:['inputSchema','annotations','oauthScope']}]);
+  assert.equal(compareConnectorContract(contract).matches,true);
+});
+
+test('V07-Connector: JSON-Objektreihenfolge egal, ungültige oder unvollständige Exporte abgelehnt',()=>{
+  const tools=makeConnectorContract().tools;
+  const reversed=tools.map(t=>Object.fromEntries(Object.entries(t).reverse()));
+  assert.equal(compareConnectorContract(reversed).matches,true);
+  assert.throws(()=>compareConnectorContract({tools,nextCursor:'more'}));
+  assert.throws(()=>compareConnectorContract({tools:[tools[0],tools[0]]}));
+  assert.throws(()=>compareConnectorContract({tools:[{name:'bad',inputSchema:null}]}));
+  assert.throws(()=>compareConnectorContract({}));
+  assert.throws(()=>compareConnectorContract({tools:Array(501).fill(tools[0])}));
 });
