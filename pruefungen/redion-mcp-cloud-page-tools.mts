@@ -618,7 +618,7 @@ test('Cloud MCP: Änderungsvergleich enthält indirekte Leitungsänderungen und 
   assert.equal(schematicChangeSummary(before,before).total,0);
   const reordered={...before,teile:[{...before.teile[0],werte:{Un:12,R:24}}]};
   assert.equal(schematicChangeSummary(before,reordered).total,0);
-  const pointsReversed={...before,leitungen:[{...before.leitungen[0],punkte:[...before.leitungen[0].punkte].reverse()}]};
+  const pointsReversed={...before,leitungen:[{...before.leitungen[0],punkte:[...before.leitungen[0]!.punkte].reverse()}]};
   assert.deepEqual(schematicChangeSummary(before,pointsReversed).entries,[{elementId:'W',elementType:'wire',action:'modified',fields:['punkte']}]);
   const empty={teile:[],leitungen:[],texte:[]};
   const large={...empty,texte:Array.from({length:50},(_,i)=>({id:'T'+i,t:'Neu'}))};
