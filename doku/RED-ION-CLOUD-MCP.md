@@ -469,3 +469,23 @@ dessen Felder `groupId` und `groupPath`. Gesperrte Mitglieder verhindern
 die Änderung der Auswahl. Verbinder bleiben über ihre Endpunkte
 verknüpft. Die Prüfung von Schreibrecht, Elternkette und
 `expectedVersion` gilt auch hier.
+
+## Mindmap-Knoten und Querverbindungen einzeln bearbeiten
+
+`redion_update_visual` akzeptiert für eine Mindmap vier weitere Operationen:
+
+- `append_node` fügt mit `node` einen Knoten unter einer vorhandenen
+  `parentId` hinzu. `node` verwendet dieselben Felder wie beim Erstellen
+  einer Mindmap.
+- `move_node` hängt `elementId` und seinen gesamten Ast unter
+  `parentId` um. Die Wurzel und die innere Struktur des Asts bleiben
+  erhalten. Ein eigener Nachfahre ist kein gültiges Ziel.
+- `add_connection` ergänzt mit `connection: {id, from, to}` eine
+  Querverbindung zwischen zwei vorhandenen Knoten.
+- `remove_connection` entfernt die Querverbindung mit der Kennung
+  `elementId`. Ihre Knoten bleiben erhalten.
+
+Alle vier Operationen verwenden den vorhandenen Seiten- und Versionsschutz.
+Die Mindmap behält ihren Aufbau und Ausschnitt. MCP akzeptiert bis zu 200
+Knoten und 200 Querverbindungen, begrenzt durch Datensatzgrösse und
+Baumtiefe. Für grosse Karten stehen versionierte Leseseiten bereit.

@@ -2202,7 +2202,22 @@ test('Cloud-MCP native visual objects with version protection',async()=>{
  assert.equal((await ok('redion_update_visual',{...ref,expectedVersion:3,operation:'style_node',elementId:'learn',color:'#ff0000',form:'pille'})).version,4);
  assert.equal((await run('redion_update_visual',{...ref,expectedVersion:4,operation:'delete_branch',elementId:'root'})).isError,true);
  await ok('redion_update_visual',{...ref,expectedVersion:4,operation:'delete_branch',elementId:'docs'});
- const edited=await ok('redion_read_visual',ref);assert.equal(edited.karte.knoten.length,2);assert.equal(edited.karte.knoten[1].text,'Lernzentrum');assert.equal(edited.karte.knoten[1].farbe,'#ff0000');
+ const renamed=await ok('redion_read_visual',ref);assert.equal(renamed.karte.knoten.length,2);assert.equal(renamed.karte.knoten[1].text,'Lernzentrum');assert.equal(renamed.karte.knoten[1].farbe,'#ff0000');
+ await ok('redion_update_visual',{...ref,expectedVersion:5,operation:'append_node',node:{id:'topic',text:'Projekte',parentId:'root'}});
+ await ok('redion_update_visual',{...ref,expectedVersion:6,operation:'append_node',node:{id:'detail',text:'Planung',parentId:'topic'}});
+ await ok('redion_update_visual',{...ref,expectedVersion:7,operation:'move_node',elementId:'detail',parentId:'learn'});
+ const cycle=await run('redion_update_visual',{...ref,expectedVersion:8,operation:'move_node',elementId:'learn',parentId:'detail'});
+ assert.match(JSON.parse(cycle.content[0].text).message,/zyklisch/);
+ await ok('redion_update_visual',{...ref,expectedVersion:8,operation:'add_connection',connection:{id:'cross',from:'topic',to:'detail'}});
+ const links=await ok('redion_read_visual',{...ref,collection:'connections'});
+ assert.deepEqual(links.items,[{id:'cross',von:'topic',zu:'detail'}]);
+ const duplicate=await run('redion_update_visual',{...ref,expectedVersion:9,operation:'add_connection',connection:{id:'back',from:'detail',to:'topic'}});
+ assert.equal(JSON.parse(duplicate.content[0].text).code,'invalid_arguments');
+ await ok('redion_update_visual',{...ref,expectedVersion:9,operation:'remove_connection',elementId:'cross'});
+ const edited=await ok('redion_read_visual',ref);
+ assert.equal(edited.karte.knoten.find((node:any)=>node.id==='detail').eltern,'learn');
+ assert.equal(edited.karte.knoten.find((node:any)=>node.id==='learn').farbe,'#ff0000');
+ assert.deepEqual(edited.karte.verbindungen,[]);
  const wb=await ok('redion_create_whiteboard',{workspaceId:'ws_test',documentId:'visual_page',expectedVersion:2,requestId:'native_board_001',title:'Board',shapes:[{id:'n',kind:'notiz',x:20,y:20,width:180,height:90,text:'Idee'}]});
  assert.equal((await ok('redion_read_visual',{workspaceId:'ws_test',blockId:wb.blockId})).shapes[0].art,'notiz');
  const bref={workspaceId:'ws_test',blockId:wb.blockId};
@@ -2306,6 +2321,7 @@ test('Cloud-MCP native visual objects with version protection',async()=>{
  const mapRecord=await f.store.hole('saetze',{bereich:'ws_test',id:ref.blockId});
  assert.ok(mapRecord);
  const mapData=JSON.parse(String(mapRecord.daten));
+ const originalNodes=mapData.karte.knoten.length;
  const nodes=Array.from({length:80},(_,i)=>({id:'long_'+i,text:'漢'.repeat(400),eltern:'root'}));
  mapData.karte.knoten.push(...nodes);
  await f.store.setze('saetze',{...mapRecord,daten:JSON.stringify(mapData),version:Number(mapRecord.version)+1});
@@ -2313,12 +2329,22 @@ test('Cloud-MCP native visual objects with version protection',async()=>{
  assert.equal(JSON.parse((await readAsReader({})).content[0].text).code,'too_large');
  const firstPage=JSON.parse((await readAsReader({collection:'nodes',limit:40})).content[0].text);
  assert.equal(firstPage.items[0].id,'root');
- assert.ok(firstPage.nextOffset>2&&firstPage.nextOffset<40,'Bytegrenze begrenzt auch Unicode-Daten');
+ assert.ok(firstPage.nextOffset>originalNodes&&firstPage.nextOffset<40,'Bytegrenze begrenzt auch Unicode-Daten');
  const unversioned=await readAsReader({collection:'nodes',offset:firstPage.nextOffset});
  assert.equal(JSON.parse(unversioned.content[0].text).code,'invalid_arguments');
  const nextPage=JSON.parse((await readAsReader({
    collection:'nodes',offset:firstPage.nextOffset,expectedVersion:firstPage.version
  })).content[0].text);
- assert.equal(nextPage.items[0].id,nodes[firstPage.nextOffset-2]?.id);
+ assert.equal(nextPage.items[0].id,nodes[firstPage.nextOffset-originalNodes]?.id);
+ const currentPage=await f.store.hole('saetze',{bereich:'ws_test',id:'visual_page'});
+ assert.ok(currentPage);
+ const manyNodes=[{id:'root',text:'Übersicht',parentId:null},
+   ...Array.from({length:150},(_,i)=>({id:'node_'+i,text:'Thema '+i,parentId:'root'}))];
+ const large=await ok('redion_create_mindmap',{...base,nodes:manyNodes,
+   expectedVersion:Number(currentPage.version),requestId:'native_map_large_001'});
+ const lastPage=await ok('redion_read_visual',{workspaceId:'ws_test',blockId:large.blockId,
+   offset:150,limit:40,expectedVersion:1});
+ assert.deepEqual(lastPage.items,[{id:'node_149',text:'Thema 149',eltern:'root'}]);
+ assert.equal(lastPage.nextOffset,null);
  }finally{f.close();}
 });

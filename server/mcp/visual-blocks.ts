@@ -15,13 +15,57 @@ export const papers=['blanko','liniert','kariert','punkte','mm','cornell','noten
 export const forms=['rund','kasten','pille','ellipse','raute','sechseck'];
 export const shapes=['rechteck','ellipse','dreieck','raute','linie','pfeil','text','notiz','verbindung','stift'];
 export const alignments=['left','center','right','top','middle','bottom','horizontal','vertical'];
+export const mindmapLimit=200;
+
+function makeNode(value:unknown):Obj {
+ const input=obj(value,['id','text','parentId','side','color','form']);
+ const node:Obj={id:id(input.id),text:str(input.text,500),eltern:input.parentId===null?null:id(input.parentId)};
+ if(input.side!==undefined)node.seite=choice(input.side,['links','rechts']);
+ if(input.color!==undefined)node.farbe=color(input.color);
+ if(input.form!==undefined)node.form=choice(input.form,forms);
+ return node;
+}
+
+function validateTree(nodes:Obj[]) {
+ const byId=new Map(nodes.map(node=>[node.id,node]));
+ if(byId.size!==nodes.length||nodes.filter(node=>node.eltern===null).length!==1)
+   fail('Genau eine Wurzel und eindeutige Kennungen sind erforderlich.');
+ for(const node of nodes){
+   let parent=node.eltern;
+   const seen=new Set([node.id]);
+   while(parent!==null){
+     if(seen.has(parent)||seen.size>=20)fail('Die Verschachtelung ist zyklisch oder zu tief.');
+     seen.add(parent);
+     const ancestor=byId.get(parent);
+     if(!ancestor)return fail('Elternknoten fehlt.');
+     parent=ancestor.eltern;
+   }
+ }
+ return byId;
+}
+
+function makeConnection(value:unknown):{id:string;von:string;zu:string} {
+ const input=obj(value,['id','from','to']);
+ return {id:id(input.id),von:id(input.from),zu:id(input.to)};
+}
+
+function validateConnections(links:Obj[],nodes:ReadonlyMap<unknown,Obj>):void {
+ const ids=new Set(nodes.keys()),pairs=new Set<string>();
+ for(const link of links){
+   const {id,von,zu}=link;
+   if(typeof von!=='string'||typeof zu!=='string')fail('Querverbindung ohne Knotenkennung.');
+   const pair=JSON.stringify([von,zu].sort());
+   if(ids.has(id)||!nodes.has(von)||!nodes.has(zu)||von===zu||pairs.has(pair))
+     fail('Doppelte oder ungültige Querverbindung.');
+   ids.add(id);
+   pairs.add(pair);
+ }
+}
+
 export function mindmap(nodes:unknown,connections:unknown=[]):Obj{
- const knoten=arr(nodes,1,100).map(v=>{const o=obj(v,['id','text','parentId','side','color','form']);const k:Obj={id:id(o.id),text:str(o.text,500),eltern:o.parentId===null?null:id(o.parentId)};
- if(o.side!==undefined)k.seite=choice(o.side,['links','rechts']);if(o.color!==undefined)k.farbe=color(o.color);if(o.form!==undefined)k.form=choice(o.form,forms);return k;});
- const byId=new Map(knoten.map(k=>[k.id,k]));if(byId.size!==knoten.length||knoten.filter(k=>k.eltern===null).length!==1)fail('Genau eine Wurzel, eindeutige IDs.');
- for(const k of knoten){let p=k.eltern;const seen=new Set([k.id]);while(p!==null){if(seen.has(p)||seen.size>=20)fail('Zyklus oder Tiefe.');seen.add(p);const a=byId.get(p);if(!a)return fail('Elternknoten fehlt.');p=a.eltern;}}
- const ids=new Set(byId.keys()),pairs=new Set<string>();
- const verbindungen=arr(connections,0,100).map(v=>{const o=obj(v,['id','from','to']),vid=id(o.id),von=id(o.from),zu=id(o.to),pair=[von,zu].sort().join('|');if(ids.has(vid)||!byId.has(von)||!byId.has(zu)||von===zu||pairs.has(pair))fail('Ungültige Verbindung.');ids.add(vid);pairs.add(pair);return {id:vid,von,zu};});
+ const knoten=arr(nodes,1,mindmapLimit).map(makeNode);
+ const verbindungen=arr(connections,0,mindmapLimit).map(makeConnection);
+ validateConnections(verbindungen,validateTree(knoten));
  return {knoten,verbindungen,aufbau:'karte'};
 }
 export function board(input:unknown,existing:Obj[]=[]):Obj[]{
@@ -57,9 +101,39 @@ export function editNode(value:unknown,operation:string,args:Obj):Obj{
  const map=value as Obj;
  if(!Array.isArray(map.knoten)||!Array.isArray(map.verbindungen))return fail('Ungültige Mindmap.');
  const nodes=map.knoten as Obj[],links=map.verbindungen as Obj[];
- if(nodes.length>100||links.length>100||nodes.some(n=>!n||typeof n!=='object')||links.some(n=>!n||typeof n!=='object'))return fail('Mindmap zu gross oder ungültig.');
+ if(nodes.length>mindmapLimit||links.length>mindmapLimit||
+    [...nodes,...links].some(entry=>!entry||typeof entry!=='object'||Array.isArray(entry)||typeof entry.id!=='string'))
+   return fail('Mindmap zu gross oder ungültig.');
+ if(operation==='append_node'){
+   if(nodes.length>=mindmapLimit)fail('Die Mindmap hat die Knotengrenze erreicht.');
+   const node=makeNode(args.node);
+   if(node.eltern===null)fail('Ein neuer Knoten braucht einen Elternknoten.');
+   const knoten=[...nodes,node];
+   validateConnections(links,validateTree(knoten));
+   return {...map,knoten};
+ }
+ if(operation==='add_connection'){
+   if(links.length>=mindmapLimit)fail('Die Mindmap hat die Verbindungsgrenze erreicht.');
+   const verbindungen=[...links,makeConnection(args.connection)];
+   validateConnections(verbindungen,validateTree(nodes));
+   return {...map,verbindungen};
+ }
+ if(operation==='remove_connection'){
+   const target=id(args.elementId);
+   if(!links.some(link=>link.id===target))fail('Querverbindung fehlt.');
+   return {...map,verbindungen:links.filter(link=>link.id!==target)};
+ }
  const target=id(args.elementId),n=nodes.find(k=>k.id===target);
  if(!n)return fail('Knoten fehlt.');
+ if(operation==='move_node'){
+   if(n.eltern===null)fail('Die Wurzel kann nicht verschoben werden.');
+   const eltern=id(args.parentId);
+   if(n.eltern===eltern)fail('Der Knoten hat bereits diesen Elternknoten.');
+   const moved={...n,eltern};
+   const knoten=[...nodes.filter(node=>node!==n),moved];
+   validateTree(knoten);
+   return {...map,knoten};
+ }
  if(operation==='rename_node')return {...map,knoten:nodes.map(k=>k===n?{...k,text:str(args.text,500)}:k)};
  if(operation==='style_node'){
    const patch:Obj={};

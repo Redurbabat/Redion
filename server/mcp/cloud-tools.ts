@@ -11,7 +11,7 @@ import {BUILTIN_SYMBOLS} from './symbol-catalog.ts';
 import {editSchematic} from './schematic-edit.ts';
 import {measureOperatingPoint,runSwitchTest} from './schematic-test.ts';
 import {buildLearningCard,buildLearningSet} from './learning-card.ts';
-import {mindmap,board,sheet,papers,forms,shapes,alignments,editNode,editShape,editSelection} from './visual-blocks.ts';
+import {mindmap,board,sheet,papers,forms,shapes,alignments,mindmapLimit,editNode,editShape,editSelection} from './visual-blocks.ts';
 
 type Db=McpDatabase;
 type Args=Record<string,unknown>;
@@ -46,8 +46,8 @@ const SCHEMATIC_ARTEN=[
 const SCHEMATIC_QUER=new Set(['installationsplan','blockschaltbild','funktionsplan','aufbauplan']);
 const vId={type:'string',maxLength:64};
 const vColor={type:'string',pattern:'^#[0-9a-fA-F]{6}$'};
-const vNodes={type:'array',minItems:1,maxItems:100,items:{type:'object',properties:{id:vId,text:{type:'string',maxLength:500},parentId:{type:['string','null'],maxLength:64},side:{type:'string',enum:['links','rechts']},color:vColor,form:{type:'string',enum:forms}},required:['id','text','parentId'],additionalProperties:false}};
-const vLinks={type:'array',maxItems:100,items:{type:'object',properties:{id:vId,from:vId,to:vId},required:['id','from','to'],additionalProperties:false}};
+const vNodes={type:'array',minItems:1,maxItems:mindmapLimit,items:{type:'object',properties:{id:vId,text:{type:'string',maxLength:500},parentId:{type:['string','null'],maxLength:64},side:{type:'string',enum:['links','rechts']},color:vColor,form:{type:'string',enum:forms}},required:['id','text','parentId'],additionalProperties:false}};
+const vLinks={type:'array',maxItems:mindmapLimit,items:{type:'object',properties:{id:vId,from:vId,to:vId},required:['id','from','to'],additionalProperties:false}};
 const vCoord={type:'number',minimum:-10000,maximum:10000};
 const vStrokeWidth={type:'number',minimum:0.1,maximum:50};
 const vRotation={type:'number',minimum:-360,maximum:360};
@@ -55,6 +55,7 @@ const vShapes={type:'array',maxItems:100,items:{type:'object',properties:{id:vId
 const vCreate={...workspace,...documentId,expectedVersion:{type:'integer',minimum:1},requestId:{type:'string',minLength:8,maxLength:100},title:nameField};
 const vRequired=['workspaceId','documentId','expectedVersion','requestId','title'];
 const shapeSelectionOperations=['group_selection','ungroup_selection','align_selection','move_selection','order_selection'];
+const mindmapEditOperations=['rename_node','style_node','delete_branch','append_node','move_node','add_connection','remove_connection'];
 const schematicEditFields={
   operation:{type:'string',enum:['add_component','connect_terminals','add_label','move_component','move_label']},
   componentId:idField,symbolId:idField,x:{type:'integer',minimum:0,maximum:4000},
@@ -79,8 +80,8 @@ export const CLOUD_TOOLS:ToolDef[]=[
       offset:{type:'integer',minimum:0,maximum:100000},limit:{type:'integer',minimum:1,maximum:40},
       expectedVersion:{type:'integer',minimum:1}
     },required:['workspaceId','blockId'],additionalProperties:false}},
-  {name:'redion_update_visual',description:'Bearbeitet native Zeichenobjekte mit Versionsprüfung. Mindmap ersetzen oder Knoten bearbeiten. Whiteboard-Formen ergänzen, gestalten, bewegen, sperren oder löschen. Mit selection Gruppen bilden, auflösen, ausrichten, verschieben oder in der Ebenenreihenfolge ändern. A4-Papier ändern.',
-    inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},operation:{type:'string',enum:['replace_mindmap','rename_node','style_node','delete_branch','append_shapes','move_shape','resize_shape','style_shape','delete_shape','rotate_shape','order_shape','lock_shape','move_stroke','set_paper',...shapeSelectionOperations]},nodes:vNodes,connections:vLinks,shapes:vShapes,paper:{type:'string',enum:papers},elementId:vId,text:{type:'string',maxLength:1000},color:vColor,form:{type:'string',enum:forms},collapsed:{type:'boolean'},filled:{type:'boolean'},x:vCoord,y:vCoord,width:vCoord,height:vCoord,rotation:vRotation,strokeWidth:vStrokeWidth,marker:{type:'boolean'},locked:{type:'boolean'},order:{type:'string',enum:['front','back','forward','backward']},dx:vCoord,dy:vCoord,
+  {name:'redion_update_visual',description:'Bearbeitet native Zeichenobjekte mit Versionsprüfung. Mindmap ersetzen, Knoten ergänzen, verschieben oder gestalten und Querverbindungen ändern. Whiteboard-Formen und Gruppen bearbeiten. A4-Papier ändern.',
+    inputSchema:{type:'object',properties:{...workspace,blockId:idField,expectedVersion:{type:'integer',minimum:1},operation:{type:'string',enum:['replace_mindmap',...mindmapEditOperations,'append_shapes','move_shape','resize_shape','style_shape','delete_shape','rotate_shape','order_shape','lock_shape','move_stroke','set_paper',...shapeSelectionOperations]},nodes:vNodes,connections:vLinks,node:vNodes.items,parentId:vId,connection:vLinks.items,shapes:vShapes,paper:{type:'string',enum:papers},elementId:vId,text:{type:'string',maxLength:1000},color:vColor,form:{type:'string',enum:forms},collapsed:{type:'boolean'},filled:{type:'boolean'},x:vCoord,y:vCoord,width:vCoord,height:vCoord,rotation:vRotation,strokeWidth:vStrokeWidth,marker:{type:'boolean'},locked:{type:'boolean'},order:{type:'string',enum:['front','back','forward','backward']},dx:vCoord,dy:vCoord,
       selection:{type:'array',minItems:1,maxItems:40,uniqueItems:true,items:vId},groupId:vId,alignment:{type:'string',enum:alignments}},required:['workspaceId','blockId','expectedVersion','operation'],additionalProperties:false}},
 
   {name:'redion_list_workspaces',description:'Zeigt nur die für diese KI-Verbindung freigegebenen Bereiche.',
@@ -1046,11 +1047,12 @@ export const createCloudActions=(ablage:Ablage,db:Db,principal:McpPrincipal)=>{
       const op=args.operation,next={...data};
       const fields:Record<string,string[]>={replace_mindmap:['nodes','connections'],rename_node:['elementId','text'],style_node:['elementId','color','form','collapsed'],delete_branch:['elementId'],append_shapes:['shapes'],move_shape:['elementId','x','y'],resize_shape:['elementId','width','height'],style_shape:['elementId','color','filled','text','strokeWidth','marker'],delete_shape:['elementId'],rotate_shape:['elementId','rotation'],order_shape:['elementId','order'],lock_shape:['elementId','locked'],move_stroke:['elementId','dx','dy'],set_paper:['paper'],
         group_selection:['selection','groupId'],ungroup_selection:['selection'],align_selection:['selection','alignment'],
-        move_selection:['selection','dx','dy'],order_selection:['selection','order']};
+        move_selection:['selection','dx','dy'],order_selection:['selection','order'],
+        append_node:['node'],move_node:['elementId','parentId'],add_connection:['connection'],remove_connection:['elementId']};
       if(typeof op!=='string'||!Object.hasOwn(fields,op)||Object.keys(args).some(k=>!['workspaceId','blockId','expectedVersion','operation',...fields[op]!].includes(k)))return err('invalid_arguments','Ungültige Operation.');
       try{
         if(type==='mindmap'&&op==='replace_mindmap')next.karte=mindmap(args.nodes,args.connections);
-        else if(type==='mindmap'&&['rename_node','style_node','delete_branch'].includes(op))next.karte=editNode(data.karte,op,args);
+        else if(type==='mindmap'&&mindmapEditOperations.includes(op))next.karte=editNode(data.karte,op,args);
         else if(type==='whiteboard'&&shapeSelectionOperations.includes(op)){
           next.shapes=editSelection(data.shapes,op,args);next.raumVersion=1;
         }
