@@ -627,3 +627,31 @@ test('Cloud MCP: Änderungsvergleich enthält indirekte Leitungsänderungen und 
   assert.equal(schematicChangeSummary(empty,large).truncated,true);
   assert.throws(()=>schematicChangeSummary(empty,{...empty,texte:[{id:'T'},{id:'T'}]}));
 });
+
+
+test('Cloud MCP: Undo-Prüfpunkt ist befristet, inhalts- und freigabegebunden',async()=>{
+  const {createUndoCheckpoint,undoCandidate}=await import('../server/mcp/schematic-undo.ts');
+  const context={workspaceId:'w',documentId:'p',blockId:'b',userId:'u',grantId:'grant:test'};
+  const plan={breite:800,hoehe:700,teile:[],leitungen:[],texte:[{id:'T',t:'Alt'}],ebenen:[]};
+  const previous=JSON.stringify({type:'schaltplan',parentId:'p',plan});
+  const next=JSON.stringify({type:'schaltplan',parentId:'p',plan:{...plan,texte:[{id:'T',t:'Neu'}]}});
+  const now=1700000000000;
+  const checkpoint=await createUndoCheckpoint(context,7,previous,next,now);
+  assert.equal(checkpoint.version,8);
+  assert.equal(checkpoint.expires,now+900000);
+  assert.equal(checkpoint.afterHash.length,64);
+  const restored=await undoCandidate(checkpoint,context,8,next,now+1);
+  assert.deepEqual(restored,plan);
+  (restored.texte as any[])[0].t='Verändert';
+  assert.deepEqual(checkpoint.previousPlan,plan);
+  for(const key of Object.keys(context) as (keyof typeof context)[])
+    await assert.rejects(()=>undoCandidate(checkpoint,{...context,[key]:'foreign'},8,next,now+1),/Freigabe/);
+  await assert.rejects(()=>undoCandidate(checkpoint,context,9,next,now+1),/version/);
+  await assert.rejects(()=>undoCandidate(checkpoint,context,8,next+' ',now+1),/inhalt/);
+  await assert.rejects(()=>undoCandidate(checkpoint,context,8,next,now+900000),/abgelaufen/);
+  await assert.rejects(()=>undoCandidate({...checkpoint,afterHash:'bad'},context,8,next,now),/ungültig/);
+  await assert.rejects(()=>createUndoCheckpoint(context,7,previous,previous,now),/Keine Planänderung/);
+  await assert.rejects(()=>createUndoCheckpoint(context,7,previous,next.replace('"parentId":"p"','"parentId":"q"'),now),/Einbettung/);
+  const large=JSON.stringify({type:'schaltplan',parentId:'p',plan:{...plan,texte:[{id:'T',t:'x'.repeat(17000)}]}});
+  await assert.rejects(()=>createUndoCheckpoint(context,7,large,next,now),/16 KiB/);
+});
