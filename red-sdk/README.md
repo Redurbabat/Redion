@@ -178,3 +178,7 @@ Batch pairing requests are strictly limited to the four public fields `kind`, `v
 ### Apple: device-only storage for sync keys
 
 `RedNativeSyncKeyStore` stores an explicitly obtained 32-byte key under a separate Keychain service, scoped by exact HTTPS origin, owner, app and purpose (`sync`, `file`, `localSync`). Uses `WhenUnlockedThisDeviceOnly`, no shared access group, no iCloud synchronisation. Atomic insert-only `install` accepts an identical existing key but refuses different keys. No silent creation on missing data and no destructive rotation. Calling apps still need verified key transfer, UI, lifecycle, recovery and real Keychain/device tests. Unit tests use an injected backend, not a real iPhone. Signing out of identity does not destroy the separately stored data key.
+
+### Windows: isolated sync-key pilot
+
+`tools/red-windows-sync-keys.cjs` accepts Electron main-process `safeStorage` after app readiness, Windows only. Caller supplies a trusted private directory and explicitly obtained 32-byte key. Scope binds HTTPS origin, owner, app and purpose. Encrypted file is atomically published without replacing an existing key; same key is idempotent, another key is refused. Filesystem must support hard links. No renderer bridge, automatic recovery, key rotation, packaging or production integration. Windows DPAPI protects against other OS accounts, not malware running as the same user. CI smoke test uses an isolated synthetic profile.

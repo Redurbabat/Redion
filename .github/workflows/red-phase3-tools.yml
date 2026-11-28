@@ -8,6 +8,8 @@ on:
       - 'tools/red-developer-check.mts'
       - 'tools/red-file-disk-sink.mts'
       - 'tools/red-sync-sqlite.mts'
+      - 'tools/red-windows-sync-keys.cjs'
+      - 'pruefungen/red-windows-sync-keys.test.cjs'
       - 'pruefungen/red-sync-sqlite.test.mts'
       - 'pruefungen/red-phase3-tools.test.mts'
       - 'red-sdk/**'
@@ -20,6 +22,8 @@ on:
       - 'tools/red-developer-check.mts'
       - 'tools/red-file-disk-sink.mts'
       - 'tools/red-sync-sqlite.mts'
+      - 'tools/red-windows-sync-keys.cjs'
+      - 'pruefungen/red-windows-sync-keys.test.cjs'
       - 'pruefungen/red-sync-sqlite.test.mts'
       - 'pruefungen/red-phase3-tools.test.mts'
       - 'red-sdk/**'
@@ -39,7 +43,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: node --test pruefungen/red-phase3-tools.test.mts pruefungen/red-sync-sqlite.test.mts
+      - run: node --test pruefungen/red-phase3-tools.test.mts pruefungen/red-sync-sqlite.test.mts pruefungen/red-windows-sync-keys.test.cjs
       - run: node tools/red-developer-check.mts
       - run: node tools/red-video-preview.mts tools/red-video-example.json red-video-preview.html
       - name: Install browser test dependencies

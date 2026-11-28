@@ -62,3 +62,7 @@ Wiederkehrender Chromium-390px-Befund (Run 46160781715): Leiste vorhanden, Sicht
 ## P1-Fortschritt: Apple Sync-Keychain
 
 Separater nativer Apple-Schlüsselspeicher für explizit erhaltene 32-Byte-Schlüssel, an Serverursprung, Konto, App und Zweck gebunden. Atomarer Insert-only-Keychain-Weg, keine automatische Neuerzeugung oder Überschreibung bestehender Schlüssel, kein iCloud-Keychain. Tests der Scope-Isolation und Insert-only-Logik mit Testbackend. Reale Geräte-Keychain, App-Anbindung, Recovery, Windows DPAPI und Android-Sync-Key-Adapter bleiben offen.
+
+## P1-Fortschritt: Windows Sync-Schlüssel
+
+Apple-SDK-Workflow 46162342676 auf `9d65bf4c` bestanden. Windows-Pilot nutzt Electron safeStorage ausschliesslich unter Windows im Main-Prozess, separaten vertrauenswürdigen Ordner, Scope-Bindung und atomare Hardlink-Veröffentlichung ohne Überschreiben. CI ergänzt echten Electron/DPAPI-Smoke-Test und Node-Scope-Tests. Keine IPC-Freigabe, kein produktives Profil, kein automatisches Erzeugen/Löschen/Rotieren von Schlüsseln; kein Einbau in die ausgelieferte App. Neue Tests noch nicht ausgeführt.

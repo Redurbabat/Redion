@@ -31,6 +31,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npm ci --prefix plugins/red-ion
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Real Windows DPAPI sync key smoke test
+        run: |
+          & .\windows\node_modules\.bin\electron.cmd windows/red-sync-keys-smoke.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Compile and stage exact renderer
         run: |
           npm run typecheck
