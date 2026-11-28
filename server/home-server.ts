@@ -19,6 +19,7 @@ import {homeEcosystemCapabilities} from './home/ecosystem.ts';
 import {prepareRedStore,createRedStore,STORE_ROUTES} from './home/red-store.ts';
 import {parseRedWebOrigins,isRedWebRoute} from './home/web-origins.ts';
 import {createHomeDashboard} from './home/dashboard.ts';
+import {AI_ROUTES,parseLocalAiModels,createLocalAiGateway} from './home/ai-gateway.ts';
 import {prepareRedId,issueRedId,handleRedId} from './home/red-id.ts';
 import {approveHomeDevice,claimHomeDevice} from './home/pairing.ts';
 import {prepareHomeConsent,issueHomeConsentCode,identifyHomeConsent,homeConsentLogin,exchangeHomeConsent,logoutHomeConsent} from './home/consent.ts';
@@ -28,15 +29,16 @@ import {zuGrossAntwort} from './sicherheit/eingaben.ts';
 import {istAbgleichWeg,mitAppUrsprung} from './sicherheit/abgleich-tor.ts';
 
 const privateRoutes=new Set(['/api/stand']);
-const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/home/dashboard','/home/apps','/red-id/v1/me','/red-id/v1/logout',...RED_ID_V2_ROUTES,...SHARE_ROUTES,...STORE_ROUTES,...REMINDER_ROUTES]);
+const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/home/dashboard','/home/apps','/red-id/v1/me','/red-id/v1/logout',...RED_ID_V2_ROUTES,...SHARE_ROUTES,...STORE_ROUTES,...REMINDER_ROUTES,...AI_ROUTES]);
 const json=(status:number,error:string)=>Response.json({error},{status,headers:{'Cache-Control':'no-store'}});
 
 /** Initial private API: no static repository files, public registration,
  * public pages, or unverified Cloudflare identity headers. */
-export async function openHomeServer(options:{dataDir:string;origin:string;enableMcp?:boolean;vaultKey?:Uint8Array;webOrigins?:string;enableReminderScheduler?:boolean}){
+export async function openHomeServer(options:{dataDir:string;origin:string;enableMcp?:boolean;vaultKey?:Uint8Array;webOrigins?:string;enableReminderScheduler?:boolean;localAiModels?:string}){
   const origin=new URL(options.origin);
   if(origin.protocol!=='https:'||origin.origin!==options.origin)throw new Error('REDION_ORIGIN must be an HTTPS origin');
   const webOrigins=parseRedWebOrigins(options.webOrigins??'');
+  const aiModels=parseLocalAiModels(options.localAiModels??'');
   const store=openHomeDatabase(join(options.dataDir,'redion.sqlite'));
   const blobs=await openHomeBlobs(join(options.dataDir,'blobs'),options.vaultKey).catch(error=>{store.close();throw error;});
   if(options.enableMcp)prepareHomeConsent(store.sqlite);
@@ -54,6 +56,7 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
   const live=createHomeSyncWait(store.sqlite,store.ablage);
   const monitor=createHomeMonitor();
   const appCenter=createRedAppCenter(store.sqlite,store.ablage);
+  const localAi=createLocalAiGateway(store.ablage,aiModels);
   const dashboard=createHomeDashboard(store.sqlite,store.ablage,options.dataDir,!!options.enableMcp,monitor.snapshot);
   let queue:Promise<unknown>=Promise.resolve();
   function serial<T>(execute:()=>Promise<T>):Promise<T>{
@@ -81,8 +84,14 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
           if(request.method!=='GET')return json(401,'consent_login_required');
           return homeConsentLogin(path+new URL(request.url).search,origin.origin);
         }
-        return handleCloudMcp(request,{DB:store.db},false,identify,()=>homeEcosystemCapabilities(!!options.vaultKey,!!options.enableReminderScheduler));
+        return handleCloudMcp(request,{DB:store.db},false,identify,()=>homeEcosystemCapabilities(!!options.vaultKey,!!options.enableReminderScheduler,aiModels.length>0));
       });
+    }
+    if((AI_ROUTES as readonly string[]).includes(path)){
+      if(!aiModels.length)return json(404,'not_found');
+      const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Cache-Control':'no-store'}}):await localAi.handle(request);
+      if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
+      return mitAppUrsprung(request,response);
     }
     if(path==='/home/dashboard'||path==='/home/apps'){
       const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Authorization','Cache-Control':'no-store'}}):(path==='/home/apps'?await appCenter(request):await dashboard(request));
@@ -141,7 +150,7 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
     catch(error){monitor.record(500,performance.now()-start);throw error;}
   }
   const reminderScheduler=options.enableReminderScheduler?startRedReminderScheduler(store.sqlite,{...(maintenanceReview?{review:maintenanceReview}:{}),onError:()=>console.error('RED reminder scheduler failed')}):undefined;
-  return {handle,store,blobs,close:()=>{reminderScheduler?.close();live.close();store.close();}};
+  return {handle,store,blobs,close:()=>{reminderScheduler?.close();localAi.close();live.close();store.close();}};
 }
 
 async function main(){
@@ -153,7 +162,8 @@ async function main(){
   const vaultKey=process.env.REDION_VAULT_KEY_FILE?await readFile(process.env.REDION_VAULT_KEY_FILE):undefined;
   const command=process.argv[2];
   const enableReminderScheduler=(!command||command==='serve')&&process.env.REDION_ENABLE_REMINDER_SCHEDULER==='1';
-  const service=await openHomeServer({dataDir,origin,enableMcp,enableReminderScheduler,webOrigins:process.env.REDION_WEB_ORIGINS??'',...(vaultKey?{vaultKey}:{})});
+  const localAiModels=(!command||command==='serve')?process.env.REDION_LOCAL_AI_MODELS??'':'';
+  const service=await openHomeServer({dataDir,origin,enableMcp,enableReminderScheduler,localAiModels,webOrigins:process.env.REDION_WEB_ORIGINS??'',...(vaultKey?{vaultKey}:{})});
   if(command==='recovery-reset-access'){
     try{console.log(JSON.stringify(resetHomeAccess(service.store.sqlite,process.argv[3]||'')));}
     finally{service.close();}
