@@ -12,7 +12,7 @@ export function prepareMaintenanceReviews(db:DatabaseSync){
 /** Read bounded owner-scoped history. The latest result per rule is separate. */
 export function listMaintenanceHistory(db:DatabaseSync,owner:string){
  const rows=db.prepare('SELECT id,kind,due,measured_at AS measuredAt,status,result FROM home_red_maintenance_history WHERE owner=? ORDER BY measured_at DESC,due DESC,id DESC LIMIT ?').all(owner,HISTORY_RESPONSE_LIMIT+1);
- return {entries:rows.slice(0,HISTORY_RESPONSE_LIMIT).map(row=>({...row,result:JSON.parse(String(row.result))})),truncated:rows.length>HISTORY_RESPONSE_LIMIT,retentionLimit:MAINTENANCE_HISTORY_LIMIT};
+ return {entries:rows.slice(0,HISTORY_RESPONSE_LIMIT).map(row=>({id:String(row.id),kind:String(row.kind),due:Number(row.due),measuredAt:Number(row.measuredAt),status:String(row.status),result:JSON.parse(String(row.result)) as unknown})),truncated:rows.length>HISTORY_RESPONSE_LIMIT,retentionLimit:MAINTENANCE_HISTORY_LIMIT};
 }
 /** Called synchronously inside the reminder transaction. No external actions.
  * Store the latest result plus a bounded history, not user content. */
