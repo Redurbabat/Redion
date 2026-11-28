@@ -1,5 +1,5 @@
 /** Isolierter lokaler SQLite-Adapter. Kein Zugriff auf bestehende Redion-Profile. */
-import {createCipheriv,createDecipheriv,randomBytes,randomUUID} from 'node:crypto';
+import {createCipheriv,createDecipheriv,createHash,randomBytes,randomUUID} from 'node:crypto';
 import type {DatabaseSync} from 'node:sqlite';
 import {prepareRedStoreWrite,openRedStoreRecord} from '../red-sdk/client.mts';
 import type {RedStoreWrite,RedStoreResult,RedStoreRecord,RedStoreKind,RedSyncAdapter,RedSyncBatch,RedSyncConflict,RedSyncLocalItem,RedSyncScope,RedSyncSnapshot} from '../red-sdk/client.mts';
@@ -85,6 +85,31 @@ export function createSqliteSyncAdapter(db:DatabaseSync,scope:RedSyncScope,local
    }else read(); // Falscher Schlüssel/Bereich oder beschädigte Daten: kein Reset.
   });
  }catch(error){key.fill(0);disposed=true;throw error;}
+ /** Read-only authenticated conflict preview. No network writes. */
+ async function pendingConflict(id:string,remoteKey:Uint8Array,transport:Pick<UploadTransport,'storeGet'>){
+  if(!validId(id)||syncScope.kind!=='sync'||remoteKey.byteLength!==32)throw Error('Ungültige Konfliktprüfung');
+  const initial=read(),pending=initial.state.outbox?.find(p=>p.write.id===id),item=initial.state.items.find(i=>i.id===id);
+  if(!pending||!item?.dirty||item.deleted!==0||item.value===null)throw Error('Kein lösbarer Textkonflikt');
+  const secret=Buffer.from(remoteKey);
+  try{
+   const write=pending.write,expected=write.expectedRevision+1;
+   const prepared=await openRedStoreRecord(secret,{...syncScope,id},{version:1,id,revision:expected,deleted:0,updated:0,envelope:write.envelope});
+   try{if(new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}).decode(prepared)!==pending.value)throw Error('Ungültiger Upload-Auftrag');}
+   finally{prepared.fill(0);}
+   const remote=await transport.storeGet('sync',id);
+   if(remote.id!==id||remote.version!==1||remote.deleted!==0||!natural(remote.revision)||remote.revision<expected)throw Error('Serverkonflikt nicht sicher auflösbar');
+   if(remote.revision===expected&&remote.envelope===write.envelope)throw Error('Upload bereits vorhanden; erneut bestätigen');
+   const bytes=await openRedStoreRecord(secret,{...syncScope,id},remote);
+   let remoteValue:string;
+   try{remoteValue=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}).decode(bytes);}
+   finally{bytes.fill(0);}
+   if(!textValid(remoteValue))throw Error('Ungültiger Servertext');
+   const token=createHash('sha256').update(JSON.stringify([initial.generation,write.operationId,remote.revision,remote.envelope])).digest('hex');
+   active();
+   if(read().generation!==initial.generation)throw Error('Lokaler Bestand geändert; Vorschau erneuern');
+   return {token,generation:initial.generation,operationId:write.operationId,id,remoteRevision:remote.revision,remoteValue,localValue:item.value,pendingValue:pending.value};
+  }finally{secret.fill(0);}
+ }
  const adapter:RedSyncAdapter<string>={
   async snapshot():Promise<RedSyncSnapshot>{
    const {generation,state}=read();
@@ -160,6 +185,36 @@ export function createSqliteSyncAdapter(db:DatabaseSync,scope:RedSyncScope,local
      return {revision,dirty};
     });
    }finally{secret.fill(0);}
+  },
+  async previewPendingConflict(id:string,remoteKey:Uint8Array,transport:Pick<UploadTransport,'storeGet'>){
+   const {generation:_,operationId:__,...preview}=await pendingConflict(id,remoteKey,transport);
+   void _;void __;
+   return preview;
+  },
+  /** Explicit keep-both resolution. A fresh authenticated read must match
+   * the preview token. The original receives the server text; local and
+   * previously prepared distinct text remain in new dirty records. */
+  async resolvePendingKeepBoth(id:string,token:string,remoteKey:Uint8Array,transport:Pick<UploadTransport,'storeGet'>){
+   if(typeof token!=='string'||!/^[a-f0-9]{64}$/.test(token))throw Error('Konfliktvorschau erforderlich');
+   const preview=await pendingConflict(id,remoteKey,transport);
+   if(preview.token!==token)throw Error('Konfliktvorschau veraltet');
+   return transaction(()=>{
+    const {generation,state}=read(),entry=state.outbox?.find(p=>p.write.id===id),item=state.items.find(i=>i.id===id);
+    if(generation!==preview.generation||entry?.write.operationId!==preview.operationId||!item?.dirty||item.deleted!==0||item.value!==preview.localValue)throw Error('Konfliktvorschau veraltet');
+    const items=new Map(state.items.map(i=>[i.id,i]));
+    const copies:{id:string;source:'local'|'pending'}[]=[];
+    const fork=(value:string,source:'local'|'pending')=>{
+     if(value===preview.remoteValue)return;
+     const newId=randomBytes(16).toString('hex');
+     if(items.has(newId)||state.conflicts.some(c=>c.id===newId))throw Error('ID-Kollision');
+     items.set(newId,{id:newId,revision:0,deleted:0,dirty:true,value});copies.push({id:newId,source});
+    };
+    fork(preview.localValue,'local');
+    if(preview.pendingValue!==preview.localValue)fork(preview.pendingValue,'pending');
+    items.set(id,{id,revision:preview.remoteRevision,deleted:0,dirty:false,value:preview.remoteValue});
+    save({...state,items:[...items.values()],outbox:(state.outbox??[]).filter(p=>p.write.id!==id)},generation);
+    return {id,remoteRevision:preview.remoteRevision,copies};
+   });
   },
   pendingUploads(){return (read().state.outbox??[]).map(p=>({id:p.write.id,expectedRevision:p.write.expectedRevision}));},
   getLocal(id:string){if(!validId(id))throw Error('Ungültige ID');return read().state.items.find(i=>i.id===id)??null;},

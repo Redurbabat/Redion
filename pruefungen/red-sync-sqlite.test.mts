@@ -93,3 +93,48 @@ test('Upload confirmation mismatch retains outbox; no automatic tombstone upload
   await assert.rejects(a.snapshot());a.dispose();
  }finally{db.close();}
 });
+
+test('Keep-both conflict recovery authenticates server state and preserves both local versions',async()=>{
+ const db=new DatabaseSync(':memory:');
+ try{
+  const a=createSqliteSyncAdapter(db,scope,localKey);a.putLocal(id,'Pending first version');
+  const failed={async storePut(_w:RedStoreWrite){throw Error('offline');},async storeGet():Promise<RedStoreRecord>{throw Error('offline');}};
+  await assert.rejects(a.pushLocal(id,remoteKey,failed));a.putLocal(id,'Newest offline edit');
+  const r=await prepareRedStoreWrite(remoteKey,{...scope,id},1,new TextEncoder().encode('Other device'));
+  let record:RedStoreRecord={version:1,id,revision:2,deleted:0,updated:2,envelope:r.envelope};
+  const transport={async storeGet(){return record;}};
+  await assert.rejects(a.previewPendingConflict(id,localKey,transport));
+  const old=await a.previewPendingConflict(id,remoteKey,transport);
+  assert.equal(old.remoteValue,'Other device');assert.equal(old.localValue,'Newest offline edit');assert.equal(old.pendingValue,'Pending first version');
+  a.putLocal(id,'Newer edit after preview');
+  await assert.rejects(a.resolvePendingKeepBoth(id,old.token,remoteKey,transport),/veraltet/);
+  const preview=await a.previewPendingConflict(id,remoteKey,transport);
+  const newer=await prepareRedStoreWrite(remoteKey,{...scope,id},2,new TextEncoder().encode('Latest remote'));
+  record={...record,revision:3,envelope:newer.envelope};
+  await assert.rejects(a.resolvePendingKeepBoth(id,preview.token,remoteKey,transport),/veraltet/);
+  assert.equal(a.pendingUploads().length,1);assert.equal(a.getLocal(id)?.value,'Newer edit after preview');
+  const fresh=await a.previewPendingConflict(id,remoteKey,transport);
+  const result=await a.resolvePendingKeepBoth(id,fresh.token,remoteKey,transport);
+  assert.equal(result.remoteRevision,3);assert.equal(result.copies.length,2);
+  assert.equal(a.getLocal(id)?.value,'Latest remote');assert.equal(a.getLocal(id)?.dirty,false);
+  assert.deepEqual(result.copies.map(c=>a.getLocal(c.id)?.value),['Newer edit after preview','Pending first version']);
+  assert.ok(result.copies.every(c=>a.getLocal(c.id)?.dirty===true&&a.getLocal(c.id)?.revision===0));
+  assert.deepEqual(a.pendingUploads(),[]);assert.equal((await a.snapshot()).cursor,null);
+  await assert.rejects(a.resolvePendingKeepBoth(id,fresh.token,remoteKey,transport));
+  a.dispose();
+ }finally{db.close();}
+});
+test('Conflict recovery refuses unauthenticated records, tombstones and a matching upload',async()=>{
+ const db=new DatabaseSync(':memory:');
+ try{
+  const a=createSqliteSyncAdapter(db,scope,localKey);a.putLocal(id,'Local');
+  let write:RedStoreWrite|undefined;
+  await assert.rejects(a.pushLocal(id,remoteKey,{async storePut(w){write=w;throw Error('lost reply');},async storeGet(){throw Error('not called');}}));
+  const original:RedStoreRecord={version:1,id,revision:1,deleted:0,updated:1,envelope:write!.envelope};
+  for(const record of [original,{...original,revision:2},{...original,revision:2,deleted:1 as const,envelope:''}]){
+   await assert.rejects(a.previewPendingConflict(id,remoteKey,{async storeGet(){return record;}}));
+   assert.equal(a.pendingUploads().length,1);assert.equal(a.getLocal(id)?.value,'Local');
+  }
+  a.dispose();
+ }finally{db.close();}
+});

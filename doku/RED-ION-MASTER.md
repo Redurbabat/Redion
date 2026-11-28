@@ -42,3 +42,7 @@ Auf `cf56d4f6` bestanden alle 18 PR-Workflows und der Push-Prüflauf. Editor ers
 ## P0-Fortschritt: Upload-Warteschlange
 
 Auf `c20c2671` sind alle 18 PR-Workflows und der Push-Prüflauf grün. Der neue Arbeitsschritt ergänzt persistente idempotente Text-Uploads, Readback und Schutz neuer lokaler Bearbeitungen. Tests für Neustart nach verlorener Antwort, falschen Schlüssel, abweichenden Serverstand und verweigerten Lösch-Upload. Neue Revision noch nicht abgenommen; Konfliktauflösung, native Schlüsselablage und echte Geräte bleiben offen.
+
+## P0-Fortschritt: blockierte Upload-Konflikte
+
+Explizite Keep-both-Auflösung mit authentifizierter Vorschau und erneuter Prüfung; jüngste lokale und vorbereitete Fassung bleiben bei Abweichung als separate lokale Kopien erhalten. Kein Server-Write und kein Cursor-Fortschritt. Regressionen für veraltete Vorschau, Server-/lokale Änderungen, falschen Schlüssel und Tombstones. Neue Revision noch zu prüfen. Reguläre Pull-Konflikte, native UI und Geräteabnahme bleiben offen.

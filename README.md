@@ -83,7 +83,7 @@ Lokaler Prüfserver: `npm run server` (Port 8790). Ordnerbericht: `npm run struk
 
 - RED Video Preview: `node tools/red-video-preview.mts eingabe.json ausgabe.html` – eine validierte animierte Offline-HTML-Timeline, noch kein MP4-Renderer.
 - RED Developer Check: `node tools/red-developer-check.mts` – liest Projektbestand und Node-Version, startet keinen Build und keine externen Programme.
-- RED Sync: isolierter verschlüsselter SQLite-Adapter mit atomarem Cursor, Konfliktjournal und persistenter Upload-Warteschlange (Node-Pilot, noch keine native App-Integration).
+- RED Sync: isolierter verschlüsselter SQLite-Adapter mit atomarem Cursor, Konfliktjournal und persistenter Upload-Warteschlange und expliziter Keep-both-Auflösung blockierter Text-Uploads (Node-Pilot, noch keine native App-Integration).
 - RED Files: optionaler Node-Dateisink für expliziten Klartext-Export in ein vertrauenswürdiges Zielverzeichnis, mit temporärer Ablage und Veröffentlichung ohne Überschreiben.
 
 Details und Testbefehle: [RED ION Entwicklungsphase 3](doku/RED-ION-PHASE-3.md).
