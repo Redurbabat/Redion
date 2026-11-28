@@ -11,7 +11,7 @@ mkdir -p "$tmp/old" "$tmp/live" "$tmp/rehearsal"
 git archive "$old_sha" server quell package.json deploy/home/Dockerfile | tar -x -C "$tmp/old"
 # The original baseline Dockerfile omitted required runtime assets and could
 # not start. Rebuild only its packaging; retain its exact old server code.
-cp deploy/home/Dockerfile "$tmp/old/deploy/home/Dockerfile"
+cp deploy/home/Dockerfile deploy/home/Dockerfile.dockerignore "$tmp/old/deploy/home/"
 old="redion-home:$old_sha"; new="redion-home:$new_sha"
 docker build -f "$tmp/old/deploy/home/Dockerfile" --label "org.opencontainers.image.revision=$old_sha" -t "$old" "$tmp/old"
 docker build -f deploy/home/Dockerfile --label "org.opencontainers.image.revision=$new_sha" -t "$new" .
