@@ -661,7 +661,7 @@ const Planflaeche = (() => {
     // Die vorhandene Ereignisdelegation am Kopf bleibt für alle Handlungen zuständig.
     const planDock = GfxToolbar.erstelle({
       klasse: 'sp-werkzeuge', beschriftung: 'Zeichenwerkzeuge', aktiv: z.werkzeug,
-      werkzeuge: WERKZEUGE.map(w => ({ ...w, zeichen: '',
+      werkzeuge: WERKZEUGE.map(w => ({ ...w, titel: w.titel + ' (' + w.taste + ')', zeichen: '',
         gruppe: w.id === 'zeigen' || w.id === 'leitung' ? 'quick' as const : 'senior' as const })),
       galerie: {
         schnell: ['plan-modus'], edgeless: { zusatz: ['palette-toggle', 'zoom-alles'] },

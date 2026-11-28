@@ -590,6 +590,36 @@ for (; runde < 60 && !angekommen; runde++) {
 p('Fläche: Tab erreicht die Leiste', angekommen, `nach ${runde} Mal Tab nicht`);
 await pt.close();
 
+/* Desktop gallery: selecting a tool from another controller must reveal its
+   real card without triggering a second command. Labels remain derived from
+   the accessible name and hidden outside desktop conditions. */
+const pd = await bauen(1400, 950);
+const gallery = await pd.evaluate(async () => {
+  const G = (window as any).GfxToolbar;
+  const ids = ['a','b','c','d','e','f'];
+  let actions = 0;
+  const toolbar = G.erstelle({
+    werkzeuge: ids.map(id => ({id,name:'Werkzeug '+id,titel:'Werkzeug '+id,sym:'cursor',zeichen:'',gruppe:'senior'})),
+    aktiv:'a',galerie:{schnell:[],karten:ids.map(id=>({id,knoepfe:[id]})),edgeless:{zusatz:[]}},
+    aufWerkzeug:()=>actions++
+  });
+  document.body.append(toolbar.element);
+  const strip = toolbar.element.querySelector('.gfx-tb-kartenfenster') as HTMLElement;
+  strip.style.flex='0 0 96px'; strip.style.width='96px';
+  await new Promise(resolve=>setTimeout(resolve,100));
+  const target = toolbar.element.querySelector('[data-wz="f"]') as HTMLButtonElement;
+  const before = target.closest<HTMLElement>('.gfx-tb-karte')?.hidden;
+  toolbar.setzeWerkzeug('f');
+  const after = target.closest<HTMLElement>('.gfx-tb-karte')?.hidden;
+  const label = target.querySelector('.gfx-tb-desktop-name')?.textContent;
+  const pressed = target.getAttribute('aria-pressed');
+  toolbar.zerstoere();
+  return {before,after,label,pressed,actions};
+});
+p('Desktop: externe Werkzeugwahl zeigt die aktive Karte und ihren Namen, ohne Doppelaktion',
+  gallery.before===true && gallery.after===false && gallery.label==='Werkzeug f' && gallery.pressed==='true' && gallery.actions===0,JSON.stringify(gallery));
+await pd.close();
+
 await browser.close();
 server.close();
 console.log(`\n${ok} ok, ${weg} rot`);
