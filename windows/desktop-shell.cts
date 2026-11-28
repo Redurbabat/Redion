@@ -78,8 +78,23 @@ function defaultWindowBounds(area: Area): Area {
   }, area);
 }
 
+/** Windows-Arbeitsfläche teilen, ohne einen zweiten Editor oder Datenspeicher
+ * zu erzeugen. Bei zu kleinen Monitoren kein unbrauchbares Halbfenster. */
+function windowLayout(area: Area, box: Area, mode: 'left' | 'right' | 'center'): Area | null {
+  if (mode === 'center') {
+    const fitted = fitWindowToWorkArea(box, area);
+    return { ...fitted, x: area.x + Math.max(0, Math.floor((area.width - fitted.width) / 2)),
+      y: area.y + Math.max(0, Math.floor((area.height - fitted.height) / 2)) };
+  }
+  if (mode !== 'left' && mode !== 'right') return null;
+  const half = Math.floor(area.width / 2);
+  const width = mode === 'left' ? half : area.width - half;
+  if (width < 860 || area.height < 580) return null;
+  return { x: area.x + (mode === 'right' ? half : 0), y: area.y, width, height: area.height };
+}
+
 function windowStateToSave(bounds: Area, maximized: boolean): WindowState {
   return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height, maximized: !!maximized };
 }
 
-module.exports = { DESTINATIONS, destinationFromArgs, jumpTasks, readWindowState, windowStateToSave, fitWindowToWorkArea, defaultWindowBounds };
+module.exports = { DESTINATIONS, destinationFromArgs, jumpTasks, readWindowState, windowStateToSave, fitWindowToWorkArea, defaultWindowBounds, windowLayout };

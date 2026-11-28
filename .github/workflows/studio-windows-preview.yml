@@ -40,7 +40,7 @@ jobs:
           npm --prefix windows run prepare:app
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify desktop window and packaging contracts
-        run: node --test windows/windows-desktop.test.cjs
+        run: node --test windows/windows-desktop.test.cjs windows/studio-preview-fingerprint.test.mts
       - name: Verify visible native UI
         run: npm --prefix windows run preview:check
       - name: Build isolated portable EXE (no release)

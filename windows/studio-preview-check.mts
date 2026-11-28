@@ -12,7 +12,7 @@ const windows=import.meta.dirname;
 const root=path.resolve(windows,'..');
 const out=path.join(root,'build','studio-preview','screenshots');
 fs.mkdirSync(out,{recursive:true});
-for(const filename of ['result.json','01-elektro.png','02-simulator.png','03-whiteboard.png','04-whiteboard-ebenen.png','05-pdf.png','fehler.png']){
+for(const filename of ['result.json','01-elektro.png','02-simulator.png','03-whiteboard.png','04-whiteboard-ebenen.png','05-pdf.png','06-fenster.png','fehler.png']){
   fs.rmSync(path.join(out,filename),{force:true});
 }
 const fingerprint=previewFingerprint(root);
@@ -87,6 +87,20 @@ try{
   await page.locator('.document-desktop-objects').waitFor({state:'visible'});
   await page.screenshot({path:path.join(out,'05-pdf.png')});
   console.log('PASS: native PDF-Seitenfilter und Objektzugriff sichtbar.');
+  // Exercise the actual native menu action, not a renderer imitation.
+  const layout=await app.evaluate(({BrowserWindow,Menu,screen})=>{
+    const win=BrowserWindow.getAllWindows()[0]!;
+    const menu=Menu.getApplicationMenu()?.getMenuItemById('studio-window-center');
+    if(!menu)throw Error('Natives Fenstermenü fehlt.');
+    const area=screen.getDisplayMatching(win.getBounds()).workArea;
+    menu.click(menu,win,{} as never);
+    return {area,bounds:win.getBounds()};
+  });
+  assert.ok(layout.bounds.x>=layout.area.x&&layout.bounds.y>=layout.area.y);
+  assert.equal(layout.bounds.x,layout.area.x+Math.max(0,Math.floor((layout.area.width-layout.bounds.width)/2)));
+  assert.equal(layout.bounds.y,layout.area.y+Math.max(0,Math.floor((layout.area.height-layout.bounds.height)/2)));
+  await page.screenshot({path:path.join(out,'06-fenster.png')});
+  console.log('PASS: native Fensteranordnung über echtes App-Menü.');
   assert.deepEqual(errors,[]);
   assert.equal(previewFingerprint(root),fingerprint,'Der getestete Renderer wurde während der Prüfung verändert.');
   fs.writeFileSync(path.join(out,'result.json'),JSON.stringify({ok:true,fingerprint,platform:process.platform,electron:true,errors,viewport:await page.evaluate(()=>({width:innerWidth,height:innerHeight}))},null,2));

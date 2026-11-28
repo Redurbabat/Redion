@@ -167,3 +167,15 @@ test('preview taskbar identity remains distinct from production', () => {
   const source = fs.readFileSync(path.join(__dirname, 'main.cjs'), 'utf8');
   assert.match(source, /app\.setAppUserModelId\(STUDIO_PREVIEW \? 'ch\.redurbabat\.redion\.studio\.preview' : APP_ID\)/);
 });
+
+test('native window arrangement respects taskbars, negative coordinates and minimum size', () => {
+  const { windowLayout } = require('./generated/desktop-shell.cjs');
+  const area = { x: -1921, y: 40, width: 1921, height: 1000 };
+  const box = { x: -500, y: 200, width: 1100, height: 700 };
+  assert.deepEqual(windowLayout(area, box, 'left'), { x: -1921, y: 40, width: 960, height: 1000 });
+  assert.deepEqual(windowLayout(area, box, 'right'), { x: -961, y: 40, width: 961, height: 1000 });
+  assert.deepEqual(windowLayout(area, box, 'center'), { x: -1511, y: 190, width: 1100, height: 700 });
+  assert.equal(windowLayout({x:0,y:0,width:1600,height:900},box,'left'),null);
+  assert.equal(windowLayout({x:0,y:0,width:1920,height:500},box,'right'),null);
+  assert.equal(windowLayout(area,box,'unknown'),null);
+});

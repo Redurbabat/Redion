@@ -13,7 +13,7 @@ const { NVIDIA_CHAT_PATH, nvidiaChat } = require('./generated/nvidia.cjs');
 const { startRedionAutoUpdates } = require('./auto-update.cjs');
 const { configuredSource, saveConfiguredSource, startSourceUpdates, validateSource } =
   require('./generated/local-source.cjs');
-const { destinationFromArgs, jumpTasks, readWindowState, windowStateToSave, defaultWindowBounds } = require('./generated/desktop-shell.cjs');
+const { destinationFromArgs, jumpTasks, readWindowState, windowStateToSave, defaultWindowBounds, windowLayout } = require('./generated/desktop-shell.cjs');
 const { NativeFiles, trustedSender, safeExportName } = require('./generated/files.cjs');
 const { AutomationBridge, secureDirectory } = require('./generated/automation-bridge.cjs');
 const { VisualCapture } = require('./generated/visual-capture.cjs');
@@ -377,6 +377,22 @@ if (!lock) {
     });
   }
 
+  function arrangeWindow(mode) {
+    const win = mainWindow;
+    if (!win || win.isDestroyed() || win.isFullScreen()) return;
+    const display = screen.getDisplayMatching(win.getBounds());
+    const target = windowLayout(display.workArea, win.getNormalBounds(), mode);
+    if (!target) {
+      void dialog.showMessageBox(win, { type: 'info', title: 'Fenster anordnen',
+        message: 'Dieser Bildschirm ist für ein Halbfenster zu klein.',
+        detail: 'Verwende ein grösseres Display oder zentriere das Fenster.' });
+      return;
+    }
+    if (win.isMinimized()) win.restore();
+    if (win.isMaximized()) win.unmaximize();
+    win.setBounds(target);
+  }
+
   function appMenu() {
     const items = [
       { label: 'Datei', submenu: [
@@ -403,6 +419,13 @@ if (!lock) {
         { role: 'zoomOut', label: 'Verkleinern' },
         { role: 'togglefullscreen', label: 'Vollbild' }
       ] },
+      ...(process.platform === 'win32' ? [{ label: 'Fenster', submenu: [
+        { id: 'studio-window-left', label: 'Linke Bildschirmhälfte', click: () => arrangeWindow('left') },
+        { id: 'studio-window-right', label: 'Rechte Bildschirmhälfte', click: () => arrangeWindow('right') },
+        { id: 'studio-window-center', label: 'Fenster zentrieren', click: () => arrangeWindow('center') },
+        { type: 'separator' },
+        { role: 'minimize', label: 'Minimieren' }
+      ] }] : []),
       { label: 'Entwicklung', submenu: [
         { label: 'Lokalen Redion-Ordner verbinden …', click: () => { void connectLocalSource(); } },
         { label: 'Lokalen Ordner trennen', enabled: !!LOCAL_SOURCE,
