@@ -30,6 +30,9 @@ test('dashboard requires a real device session and exposes measured, non-secret 
     assert.equal(data.version,1);assert.equal(data.devices.authorizedSessions,1);
     assert.equal(data.redId.activeCredentials,1);assert.equal(data.services.mcp,'disabled');
     assert.ok(data.memory.totalBytes>0&&data.storage.totalBytes>0);
+    assert.ok(['ok','warning','critical'].includes(data.storageReview.status));
+    assert.equal(data.storageReview.totalBytes,data.storage.totalBytes);
+    assert.equal(data.storageReview.availableBytes,data.storage.availableBytes);
     assert.ok(data.cpu.percent===null||data.cpu.percent>=0&&data.cpu.percent<=100);
     assert.ok(!JSON.stringify(data).includes(token));assert.ok(!JSON.stringify(data).includes(root));
     assert.equal((await send(endpoint,{headers:{...headers,Origin:'https://evil.example'}})).status,403);

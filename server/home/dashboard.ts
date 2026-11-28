@@ -1,8 +1,9 @@
 import {cpus,totalmem,freemem,uptime,loadavg} from 'node:os';
-import {statfs,readFile} from 'node:fs/promises';
+import {readFile} from 'node:fs/promises';
 import {setTimeout as delay} from 'node:timers/promises';
 import type {DatabaseSync} from 'node:sqlite';
 import {werFragt} from '../kern.ts';
+import {reviewStorageCapacity} from './maintenance-storage.ts';
 import type {Ablage} from '../typen.ts';
 
 const json=(status:number,body:unknown)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
@@ -23,12 +24,12 @@ export function createHomeDashboard(db:DatabaseSync,ablage:Ablage,dataDir:string
   async function metrics(){
     const first=cpuSample();await delay(100);const last=cpuSample();
     const delta=last.total-first.total;
-    const fs=await statfs(dataDir);
+    const storageReview=await reviewStorageCapacity(dataDir);
     const total=totalmem(),free=freemem();
     return {version:1,measuredAt:new Date().toISOString(),scope:'server-visible',
       cpu:{percent:delta>0?Math.max(0,Math.min(100,100*(1-(last.idle-first.idle)/delta))):null,cores:cpus().length,load1m:loadavg()[0]??null},
       memory:{totalBytes:total,usedBytes:Math.max(0,total-free)},
-      storage:{totalBytes:fs.blocks*fs.bsize,availableBytes:fs.bavail*fs.bsize},
+      storage:{totalBytes:storageReview.totalBytes,availableBytes:storageReview.availableBytes},storageReview,
       temperatureC:await temperature(),network:await network(),uptimeSeconds:Math.floor(uptime()),processUptimeSeconds:Math.floor(process.uptime()),
       services:{sqlite:'ready',sync:'ready',redId:'ready',mcp:mcpEnabled?'enabled':'disabled'}};
   }

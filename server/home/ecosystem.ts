@@ -1,13 +1,13 @@
 import {RED_APPS} from './red-id.ts';
 /** Deliberately static, non-sensitive metadata, available only from the
  * opt-in private Home MCP transport after its normal OAuth checks. */
-export function homeEcosystemCapabilities(vaultEnabled:boolean){
+export function homeEcosystemCapabilities(vaultEnabled:boolean,backgroundRunner=false){
  return {version:1,mode:'private-home',apps:[...RED_APPS],services:{
   identity:{version:2,explicitApproval:true,batchApproval:true,sharedSession:false},
   sync:{version:1,scope:'same-owner-app',explicitGrant:true,revisionConflicts:true,incrementalMetadata:true},
   files:{version:1,scope:'same-owner-app',explicitGrant:true,maxPlaintextBytes:44000,streaming:false,incrementalMetadata:true,multipartSdk:{version:2,maxFileBytes:8*1024*1024,chunkBytes:40000,immutable:true,manifestLast:true}},
   notify:{version:1,ownerOnly:true,delivery:'authenticated-poll',push:false},
-  automation:{version:1,actions:['maintenance-reminder'],backgroundRunner:false},
+  automation:{version:1,actions:['maintenance-reminder'],backgroundRunner},
   calendar:{version:1,scope:'maintenance-schedule',externalCalendars:false},
   search:{version:1,localSdkOnly:true,serverIndex:false,crossApp:false},
   appCenter:{version:1,ownerOnly:true,installedStatus:false,automaticUpdates:false},

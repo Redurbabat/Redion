@@ -520,7 +520,7 @@ keine automatische Sommerzeitkorrektur. Create-ID und Bestätigung einer
 konkreten fälligen Instanz sind wiederholbar. Poll erzeugt fällige Hinweise,
 fasst versäumte Wiederholungen zusammen und erhält offene Hinweise bis zur
 Bestätigung. GET ändert nichts. Regeln bleiben nach Neustart erhalten.
-Kein Hintergrundtimer, Push, Zugriff anderer Apps oder MCP-Schreibrecht;
+Optionaler Hintergrundtimer (siehe unten), kein Push, Zugriff anderer Apps oder MCP-Schreibrecht;
 keine automatische Ausführung von Backups, Updates, Befehlen oder Netzaufrufen.
 Cancel entfernt die Regel mit ihrem Hinweis; eine erneut gesendete alte
 Create-Anfrage kann die Regel neu anlegen. Die UI soll deshalb nach
@@ -538,3 +538,9 @@ App-Token. Jede App muss separat ihren privaten Verifier vorweisen und
 bekommt eigene, widerrufbare Zugangsdaten. Gemeinsame Identität bedeutet
 nicht gemeinsame Zugangsdaten. SDK-Validierung vorbereitet; die explizite
 Mehrfachfreigabe-Oberfläche bleibt offen. Kein vollständiges Browser-SSO.
+
+### RED Automation – Hintergrundhinweise und Kapazitätsprüfung (#259)
+
+`REDION_ENABLE_REMINDER_SCHEDULER=1` aktiviert beim Serverstart und im Docker-Compose-Dienst einen 30-Sekunden-Timer (Standard aus). CLI-Wartungsbefehle starten ihn nicht. Start und Tick materialisieren höchstens 256 fällige Regeln atomar; manuelles Polling bleibt konto-isoliert. Offene Hinweise bleiben erhalten; Shutdown stoppt den Timer. Kein Push und keine automatische Ausführung von Backup, Update oder Shell-Befehlen.
+
+Das Owner-Dashboard liefert zusätzlich `storageReview` mit Status `ok`, `warning`, `critical` oder `unknown`. Bis 5 % frei ist kritisch, bis 15 % Warnung. Fehler/ungültige Messwerte bleiben unbekannt. Die Messung betrifft nur das sichtbare Dateisystem; SSD-Identität, Mount und Verschlüsselung separat hostseitig prüfen. Keine neue App- oder MCP-Zugriffsfreigabe. Automatische Prüfjobs, Historie und UI sind noch offen.

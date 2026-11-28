@@ -1,12 +1,12 @@
 import type {DatabaseSync} from 'node:sqlite';
 import type {Ablage} from '../typen.ts';
 import {werFragt} from '../kern.ts';
+import {advanceRedReminders} from './reminder-scheduler.ts';
 export const REMINDER_ROUTES=['/home/reminders/list','/home/reminders/create','/home/reminders/poll','/home/reminders/ack','/home/reminders/cancel'] as const;
 const DAY=86400000;
 const MAX_RULES=64;
 const kinds=['backup-review','grant-review','storage-review','update-review'] as const;
 const periods={once:0,daily:DAY,weekly:7*DAY} as const;
-type Period=keyof typeof periods;
 const idValid=(v:unknown):v is string=>typeof v==='string'&&/^[a-f0-9]{32}$/.test(v);
 const integer=(v:unknown):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=0;
 const reply=(status:number,data:unknown)=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
@@ -18,7 +18,7 @@ async function read(req:Request):Promise<Record<string,unknown>|null>{
  catch{return null;}finally{r.releaseLock();}
 }
 export function prepareRedReminders(db:DatabaseSync){
- db.exec('CREATE TABLE IF NOT EXISTS home_red_reminder(owner TEXT NOT NULL,id TEXT NOT NULL,kind TEXT NOT NULL,period TEXT NOT NULL,first_due INTEGER NOT NULL,next_due INTEGER,pending_due INTEGER,last_ack INTEGER,PRIMARY KEY(owner,id));');
+ db.exec('CREATE TABLE IF NOT EXISTS home_red_reminder(owner TEXT NOT NULL,id TEXT NOT NULL,kind TEXT NOT NULL,period TEXT NOT NULL,first_due INTEGER NOT NULL,next_due INTEGER,pending_due INTEGER,last_ack INTEGER,PRIMARY KEY(owner,id)); CREATE INDEX IF NOT EXISTS home_red_reminder_due ON home_red_reminder(next_due,owner,id);');
 }
 function transaction<T>(db:DatabaseSync,fn:()=>T):T{db.exec('BEGIN IMMEDIATE');try{const v=fn();db.exec('COMMIT');return v;}catch(e){db.exec('ROLLBACK');throw e;}}
 /** Owner-only maintenance reminders. Poll advances time rules, never runs
@@ -39,18 +39,8 @@ export function createRedReminders(db:DatabaseSync,ablage:Ablage,clock=Date.now)
   if(!input)return reply(400,{error:'invalid_request'});
   if(action==='poll'){
    if(!exact(input,[]))return reply(400,{error:'invalid_poll'});
-   return transaction(db,()=>{
-    const due=db.prepare('SELECT id,period,next_due,pending_due FROM home_red_reminder WHERE owner=? AND next_due<=? ORDER BY next_due,id').all(owner,now);
-    const update=db.prepare('UPDATE home_red_reminder SET next_due=?,pending_due=? WHERE owner=? AND id=?');
-    for(const row of due){
-     const first=Number(row.next_due),step=periods[row.period as Period];
-     if(step===undefined)throw Error('Invalid reminder period');
-     const latest=step===0?first:first+Math.floor((now-first)/step)*step;
-     // Retain an existing unacknowledged occurrence; skip missed repeats.
-     update.run(step===0?null:latest+step,row.pending_due===null?latest:Number(row.pending_due),owner,String(row.id));
-    }
-    return reply(200,{version:1,asOf:now,rules:inventory(owner)});
-   });
+   advanceRedReminders(db,now,owner);
+   return reply(200,{version:1,asOf:now,rules:inventory(owner)});
   }
   if(!idValid(input.id))return reply(400,{error:'invalid_id'});
   const id=input.id;

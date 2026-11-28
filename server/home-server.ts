@@ -12,6 +12,7 @@ import {prepareRedShare,createRedShare,SHARE_ROUTES} from './home/red-share.ts';
 import {resetHomeAccess} from './home/recovery.ts';
 import {createHomeMonitor} from './home/monitor.ts';
 import {prepareRedReminders,createRedReminders,REMINDER_ROUTES} from './home/reminders.ts';
+import {startRedReminderScheduler} from './home/reminder-scheduler.ts';
 import {createRedAppCenter} from './home/app-center.ts';
 import {homeEcosystemCapabilities} from './home/ecosystem.ts';
 import {prepareRedStore,createRedStore,STORE_ROUTES} from './home/red-store.ts';
@@ -31,7 +32,7 @@ const json=(status:number,error:string)=>Response.json({error},{status,headers:{
 
 /** Initial private API: no static repository files, public registration,
  * public pages, or unverified Cloudflare identity headers. */
-export async function openHomeServer(options:{dataDir:string;origin:string;enableMcp?:boolean;vaultKey?:Uint8Array;webOrigins?:string}){
+export async function openHomeServer(options:{dataDir:string;origin:string;enableMcp?:boolean;vaultKey?:Uint8Array;webOrigins?:string;enableReminderScheduler?:boolean}){
   const origin=new URL(options.origin);
   if(origin.protocol!=='https:'||origin.origin!==options.origin)throw new Error('REDION_ORIGIN must be an HTTPS origin');
   const webOrigins=parseRedWebOrigins(options.webOrigins??'');
@@ -78,7 +79,7 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
           if(request.method!=='GET')return json(401,'consent_login_required');
           return homeConsentLogin(path+new URL(request.url).search,origin.origin);
         }
-        return handleCloudMcp(request,{DB:store.db},false,identify,()=>homeEcosystemCapabilities(!!options.vaultKey));
+        return handleCloudMcp(request,{DB:store.db},false,identify,()=>homeEcosystemCapabilities(!!options.vaultKey,!!options.enableReminderScheduler));
       });
     }
     if(path==='/home/dashboard'||path==='/home/apps'){
@@ -137,7 +138,8 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
     try{const response=await route(request);monitor.record(response.status,performance.now()-start);return response;}
     catch(error){monitor.record(500,performance.now()-start);throw error;}
   }
-  return {handle,store,blobs,close:()=>{live.close();store.close();}};
+  const reminderScheduler=options.enableReminderScheduler?startRedReminderScheduler(store.sqlite,{onError:()=>console.error('RED reminder scheduler failed')}):undefined;
+  return {handle,store,blobs,close:()=>{reminderScheduler?.close();live.close();store.close();}};
 }
 
 async function main(){
@@ -147,8 +149,9 @@ async function main(){
   if(!origin)throw new Error('Set REDION_ORIGIN first');
   const enableMcp=process.env.REDION_ENABLE_MCP==='1';
   const vaultKey=process.env.REDION_VAULT_KEY_FILE?await readFile(process.env.REDION_VAULT_KEY_FILE):undefined;
-  const service=await openHomeServer({dataDir,origin,enableMcp,webOrigins:process.env.REDION_WEB_ORIGINS??'',...(vaultKey?{vaultKey}:{})});
   const command=process.argv[2];
+  const enableReminderScheduler=(!command||command==='serve')&&process.env.REDION_ENABLE_REMINDER_SCHEDULER==='1';
+  const service=await openHomeServer({dataDir,origin,enableMcp,enableReminderScheduler,webOrigins:process.env.REDION_WEB_ORIGINS??'',...(vaultKey?{vaultKey}:{})});
   if(command==='recovery-reset-access'){
     try{console.log(JSON.stringify(resetHomeAccess(service.store.sqlite,process.argv[3]||'')));}
     finally{service.close();}

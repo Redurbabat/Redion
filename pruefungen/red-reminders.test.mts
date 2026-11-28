@@ -58,3 +58,23 @@ test('maintenance automation is scoped, persistent, idempotent and coalesces mis
   assert.equal((await rules('list')).length,1);
  }finally{s.close();await rm(root,{recursive:true,force:true});}
 });
+
+test('opt-in server lifecycle catches up stored reminders without polling',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'red-reminder-lifecycle-')),origin='https://home.example.test';
+ let s=await openHomeServer({dataDir:root,origin});
+ try{
+  const call=(path:string,body?:object,token?:string)=>s.handle(new Request(origin+path,{method:body?'POST':'GET',headers:{...(body?{'Content-Type':'application/json'}:{}),...(token?{Authorization:'Bearer '+token}:{})},...(body?{body:JSON.stringify(body)}:{})}));
+  const {code}=await (await call('/konto/code',{geraet:'Owner'})).json() as {code:string};
+  approveHomeDevice(s.store.sqlite,code);
+  const {token}=await (await call('/konto/code-holen',{code})).json() as {token:string};
+  const firstDue=Date.now()-1000,id='d'.repeat(32);
+  assert.equal((await call('/home/reminders/create',{id,kind:'storage-review',period:'once',firstDue},token)).status,201);
+  const list=async()=>(await (await call('/home/reminders/list',undefined,token)).json() as {rules:Rule[]}).rules.find(r=>r.id===id);
+  assert.equal((await list())?.pendingDue,null);
+  s.close();s=await openHomeServer({dataDir:root,origin,enableReminderScheduler:true});
+  assert.equal((await list())?.pendingDue,firstDue);
+  assert.equal((await list())?.nextDue,null);
+  assert.equal((await call('/home/reminders/ack',{id,due:firstDue},token)).status,200);
+  assert.equal((await list())?.pendingDue,null);
+ }finally{s.close();await rm(root,{recursive:true,force:true});}
+});
