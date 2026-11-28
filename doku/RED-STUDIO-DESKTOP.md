@@ -30,3 +30,7 @@ Windows-Desktop: Seitenübersicht filtern nach Dokumentposition (auch #3), vorha
 ## Elektro-Messwertinspektor und Taster
 
 Windows-Desktop: ausklappbare, auf 64 Bauteile begrenzte Tabelle der tatsächlich berechneten U/I/P-Modellwerte; fehlende/nicht endliche Werte als Strich, Fehlertext ohne erfundene Messwerte. Aktualisiert auch bei Zeitrelais, unveränderte Anzeige wird nicht neu gebaut. Beim Ausschalten leeren. Taster lösen bei passendem Pointerup/-cancel, Fensterblur, verstecktem Dokument und Stop/Reset; keine neuen gespeicherten Zustände. Test630 erweitert mit realer Zeitrelais-/Tasterfolge und Messwertanzeige. CI/Windows-Abnahme offen.
+
+## Whiteboard Desktop
+
+Direkte Kommandoleiste mit vorhandenen Ebenen-/Rahmen-/Import-Export-Inspektoren, Objekt- und Auswahlanzahl, Zoom auf Auswahl. Windows-Tasten V/H/P/E/R/O/T, 0 (alles), 1 (Auswahl); nur bei Fokus der Zeichenfläche, ohne laufende Geste, nicht in Textfeldern. Kein neues Objektmodell; Auswahlzoom speichert nur Ansicht. Test572 erweitert. Zusätzlich Messwert-Tupel typisiert (TS2322 aus CI 46138138969). Native Abnahme ausstehend.

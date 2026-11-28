@@ -988,7 +988,7 @@ const Planflaeche = (() => {
         for(const row of begrenzt){
           const tr=body.insertRow();tr.dataset.messwertId=row.id;
           const name=document.createElement('th');name.scope='row';name.textContent=row.name+' · '+row.symbol;tr.append(name);
-          for(const [key,value] of [['U',row.U],['I',row.I],['P',row.P]]){const td=tr.insertCell();td.dataset.messwert=key;td.textContent=value;}
+          for(const [key,value] of [['U',row.U],['I',row.I],['P',row.P]] as const){const td=tr.insertCell();td.dataset.messwert=key;td.textContent=value;}
         }
         frag.append(table);
       }

@@ -624,6 +624,20 @@ p('Desktop: externe Werkzeugwahl zeigt die aktive Karte und ihren Namen, ohne Do
   gallery.before===true && gallery.after===false && gallery.label==='Werkzeug f' && gallery.pressed==='true' && gallery.actions===0,JSON.stringify(gallery));
 p('Windows Studio: Desktop-Namen sichtbar und Dock ohne festes Rasterbild',
   gallery.material==='none' && gallery.caption==='block',JSON.stringify(gallery));
+await pd.evaluate(()=>document.documentElement.setAttribute('data-windows-titelleiste',''));
+const whiteboard = pd.locator('.wb').first();
+await whiteboard.focus(); await pd.keyboard.press('v');
+await pd.keyboard.press('Control+a');
+p('Windows Whiteboard: Auswahl per Tastatur und Objektanzahl',
+  (await whiteboard.locator('.wb-desktop-status').textContent())?.includes('1 gewählt')===true);
+p('Windows Whiteboard: Auswahlzoom verfügbar',await whiteboard.locator('[data-wb-desktop="selection"]').isEnabled());
+const wbBefore=await pd.evaluate(()=>JSON.stringify(Store.childrenOf((window as any).__seite572).find((b:any)=>b.type==='whiteboard').shapes));
+await whiteboard.locator('[data-wb-desktop="selection"]').click();
+p('Windows Whiteboard: Auswahlzoom ändert keine Formen',
+  (await pd.evaluate(()=>JSON.stringify(Store.childrenOf((window as any).__seite572).find((b:any)=>b.type==='whiteboard').shapes)))===wbBefore);
+await whiteboard.locator('[data-wb-desktop="layers"]').click();
+p('Windows Whiteboard: Ebenen öffnen den vorhandenen Inspektor',
+  await pd.locator('.gfx-inspector [data-tab="layers"][aria-pressed="true"]').count()===1);
 await pd.close();
 
 await browser.close();

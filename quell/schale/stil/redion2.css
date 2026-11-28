@@ -1005,3 +1005,24 @@ html[data-windows-titelleiste] body:is(.fokus, [data-dokument="an"]) #studio-bar
   .sp-desktop-messwerte-inhalt :is(td,th){padding:var(--space-1) var(--space-2);border-bottom:1px solid var(--line)}
   .sp-desktop-messwerte-inhalt thead th{position:sticky;top:0;background:var(--bg-card)}
 }
+
+
+/* Desktop Whiteboard commands use the existing GfxInspector, never a
+   duplicate object store. The command row is outside the drawing canvas. */
+.wb-desktop-command{display:none}
+@media(min-width:1024px) and (hover:hover) and (pointer:fine){
+  html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .wb-desktop-command{
+    display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-1);
+    padding:var(--space-2);background:var(--bg-side);color:var(--text);
+    border-bottom:1px solid var(--line);border-radius:var(--radius-md) var(--radius-md) 0 0;
+  }
+  .wb-desktop-status{flex:1 1 120px;font-size:var(--t-caption);color:var(--text-dim);font-variant-numeric:tabular-nums}
+  .wb-desktop-command button{
+    min-height:var(--touch-min);padding:var(--space-1) var(--space-2);
+    border:1px solid var(--line);border-radius:var(--radius-md);
+    background:var(--bg-card);color:var(--text);font:inherit;font-size:var(--t-small);
+  }
+  .wb-desktop-command button:disabled{opacity:.55;cursor:default}
+  .wb-desktop-command button:not(:disabled):hover{background:var(--bg-hover)}
+  .wb-desktop-command button:focus-visible{outline:2px solid var(--accent-text);outline-offset:-2px}
+}
