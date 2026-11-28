@@ -4,7 +4,9 @@ const path=require('node:path');
 const {createHash,randomBytes,timingSafeEqual}=require('node:crypto');
 const apps=new Set(['red-ion','red-fit','red-poly','red-bit','red-loop','red-efz','red-kurd','red-uhr','red-yt','stran','babat-red']);
 const purposes=new Set(['sync','file','localSync']);
-function account(scope){
+type Scope={origin:string;owner:string;app:string;purpose:string};
+type SafeStorage={isEncryptionAvailable():boolean;encryptString(value:string):Buffer;decryptString(value:Buffer):string};
+function account(scope:Scope){
  const {origin,owner,app,purpose}=scope;
  const url=new URL(origin);
  if(url.protocol!=='https:'||url.origin!==origin||typeof owner!=='string'||!owner.length||owner.length>128||!apps.has(app)||!purposes.has(purpose))throw Error('Invalid sync key scope');
@@ -13,14 +15,14 @@ function account(scope){
 /** Isolated main-process pilot. Call after app.whenReady() on Windows.
  * The directory must be private, trusted and separate from existing profiles.
  * No IPC, automatic creation of keys, rotation or deletion. */
-function createWindowsSyncKeyStore(root,safeStorage){
+function createWindowsSyncKeyStore(root:string,safeStorage:SafeStorage){
  if(process.platform!=='win32')throw Error('Windows DPAPI required');
  if(!safeStorage?.isEncryptionAvailable())throw Error('Windows secure storage unavailable');
  const stat=fs.lstatSync(root);
  if(!stat.isDirectory()||stat.isSymbolicLink())throw Error('Trusted key directory required');
  const dir=fs.realpathSync(root);
  function active(){if(!safeStorage.isEncryptionAvailable())throw Error('Windows secure storage unavailable');}
- function read(id){
+ function read(id:string):Buffer|null{
   active();
   const target=path.join(dir,id+'.enc');
   let info;
@@ -41,12 +43,12 @@ function createWindowsSyncKeyStore(root,safeStorage){
   return key;
  }
  return {
-  load(scope){return read(account(scope));},
-  install(scope,key){
+  load(scope:Scope){return read(account(scope));},
+  install(scope:Scope,key:Uint8Array){
    active();
    if(!(key instanceof Uint8Array)||key.byteLength!==32)throw Error('Invalid key');
    const id=account(scope),existing=read(id),incoming=Buffer.from(key);
-   function compare(old){try{if(!timingSafeEqual(old,incoming))throw Error('Existing different key');}finally{old.fill(0);}}
+   function compare(old:Buffer){try{if(!timingSafeEqual(old,incoming))throw Error('Existing different key');}finally{old.fill(0);}}
    try{
     if(existing){compare(existing);return;}
     const encrypted=safeStorage.encryptString(JSON.stringify({version:1,scope:id,key:incoming.toString('base64url')}));

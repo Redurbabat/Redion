@@ -4,12 +4,12 @@ const fs=require('node:fs');
 const os=require('node:os');
 const path=require('node:path');
 const assert=require('node:assert/strict');
-const {createWindowsSyncKeyStore,account}=require('../tools/red-windows-sync-keys.cjs');
+const {createWindowsSyncKeyStore,account}=require('../tools/red-windows-sync-keys.cts');
 const root=fs.mkdtempSync(path.join(os.tmpdir(),'red-dpapi-test-'));
 const profile=path.join(root,'profile'),keys=path.join(root,'keys');
 fs.mkdirSync(profile);fs.mkdirSync(keys);app.setPath('userData',profile);
 app.whenReady().then(()=>{
- const scope={origin:'https://home.example.test',owner:'test-owner',app:'red-ion',purpose:'sync'};
+ const scope: {origin:string;owner:string;app:string;purpose:string}={origin:'https://home.example.test',owner:'test-owner',app:'red-ion',purpose:'sync'};
  const key=Buffer.alloc(32,77),other=Buffer.alloc(32,88);
  const store=createWindowsSyncKeyStore(keys,safeStorage);
  assert.equal(store.load(scope),null);
