@@ -1643,6 +1643,18 @@ const DocumentMode = (() => {
     papierWahl.addEventListener('change', () => Store.setMeta('heft:papier', papierWahl.value));
     papierZeile.append(papierWort, papierWahl);
     seite.append(seiteTitel, knoepfe, papierZeile);
+    const inkSection = document.createElement('section');
+    inkSection.className = 'document-desktop-objects';
+    const inkTitle = document.createElement('h3');
+    inkTitle.className = 'document-section-title'; inkTitle.textContent = 'Zeichenobjekte';
+    const inkButton = makeAction('desktop-ink-objects', 'Ebenen und Objekte öffnen');
+    inkButton.dataset.documentInkBlock = String(documentBlock.id);
+    inkButton.disabled = !darfSeiten;
+    inkButton.title = 'Objekte dieser Seite auswählen, gruppieren, ausrichten oder sperren';
+    const inkHint = document.createElement('p');
+    inkHint.textContent = 'Die Objekte liegen auf dieser Seite. Das PDF-Original bleibt unverändert.';
+    inkSection.append(inkTitle, inkButton, inkHint);
+    seite.append(inkSection);
     /* Die Liste der Lesezeichen — nur, wenn es welche gibt. Jedes ist ein
        Sprung (`data-document-index`, derselbe Weg wie die Miniaturen). */
     const gemerkte = seiten.map((block, i) => ({ block, i })).filter(x => x.block.lesezeichen);
@@ -2265,7 +2277,7 @@ const DocumentMode = (() => {
       }
       if (id === 'pdf-schnellmehr') {
         const objects = inkToolbar()?.querySelector<HTMLButtonElement>('[data-act="objekte"]');
-        eintrag('Ebenen, Gruppen und Ausrichten', 'grid', () => objects?.click(), !canAnnotate || !objects);
+        eintrag('Ebenen, Gruppen und Ausrichten', 'grid', () => openInkObjects(), !canAnnotate || !objects || objects.disabled);
       }
       if (id === 'vorlagen') {
         eintrag('Textblock auf neuer Seite', 'inkText', () => pdfDockBlockOeffnen('text'), !canAnnotate);
@@ -2314,7 +2326,7 @@ const DocumentMode = (() => {
         menue: pdfDockMenue,
         aufAktion: id => {
           if (id === 'diagramme') pdfDockBlockOeffnen('mindmap');
-          if (id === 'pdf-objekte' && canAnnotate) inkToolbar()?.querySelector<HTMLButtonElement>('[data-act="objekte"]')?.click();
+          if (id === 'pdf-objekte') openInkObjects();
         }
       })
       : null;
@@ -3023,6 +3035,24 @@ const DocumentMode = (() => {
 
     const inkToolbar = (): HTMLElement | null =>
       staende[state.index]?.querySelector<HTMLElement>('.blatt-werk') || null;
+    const closeStaleInkObjects = (): void => {
+      const panel = workspace.querySelector<HTMLElement>('.gfx-inspector[data-document-ink-block]');
+      if (!panel || panel.dataset.documentInkBlock === String(jetzt()?.id)) return;
+      panel.querySelector<HTMLButtonElement>('[aria-label="Objektübersicht schliessen"]')?.click();
+    };
+    const openInkObjects = (expected?: string): void => {
+      const currentPage = Store.getBlock(page.id);
+      const block = jetzt();
+      if (!canAnnotate || !currentPage || currentPage.gesperrt || !darfSeiten() ||
+          !block || (expected !== undefined && String(block.id) !== expected)) return;
+      zeichneStand(state.index);
+      toolsSetzen(true);
+      const source = inkToolbar()?.querySelector<HTMLButtonElement>('[data-act="objekte"]');
+      if (!source || source.disabled) { UI.toast('Zeichenobjekte dieser Seite sind nicht verfügbar.'); return; }
+      source.click();
+      const panel = workspace.querySelector<HTMLElement>('.gfx-inspector');
+      if (panel) panel.dataset.documentInkBlock = String(block.id);
+    };
     /* DIE FLÄCHE, AUF DER DIE KNÖPFE WIRKLICH LIEGEN (E614, W2).
        Seit der Tafel ist das einzige Kind von `.blatt-werk` ein `<div>`.
        Wer hier die Leiste nimmt, beobachtet ein Element, das sich nie mehr
@@ -3326,7 +3356,9 @@ const DocumentMode = (() => {
 
     const beiGroesse = (): void => {
       if (!workspace.isConnected) { window.removeEventListener('resize', beiGroesse); return; }
-      if (!thumbDesktop.matches && filterActive()) thumbClear.click();
+      if (filterActive() && (!thumbDesktop.matches ||
+          !document.documentElement.hasAttribute('data-windows-titelleiste') ||
+          document.body.dataset.uiShell === 'glass-wheel')) thumbClear.click();
       folienbandNachziehen();
       hoeheSetzen(); passen(); aktivMarkieren(); nachziehen();
     };
@@ -3386,6 +3418,7 @@ const DocumentMode = (() => {
        nichts wissen und nichts wissen sollen (§5 Regel 1). Das CSS liest
        `[data-aktiv]` und blendet die übrigen aus. */
     const aktivMarkieren = (): void => {
+      closeStaleInkObjects();
       previousButton.disabled = state.index === 0;
       nextButton.disabled = state.index === documents.length - 1;
       /* Derselbe Zustand für Sprungknopf und Fortschrittsanzeige,
@@ -4734,6 +4767,11 @@ const DocumentMode = (() => {
             position.disabled = false;
           }
         })();
+        return;
+      }
+      if (action === 'desktop-ink-objects') {
+        const expected = tatKnopf?.dataset.documentInkBlock;
+        if (expected) openInkObjects(expected);
         return;
       }
       if (action === 'ink-ruler' && canAnnotate) {

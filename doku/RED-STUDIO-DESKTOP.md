@@ -34,3 +34,7 @@ Windows-Desktop: ausklappbare, auf 64 Bauteile begrenzte Tabelle der tatsächlic
 ## Whiteboard Desktop
 
 Direkte Kommandoleiste mit vorhandenen Ebenen-/Rahmen-/Import-Export-Inspektoren, Objekt- und Auswahlanzahl, Zoom auf Auswahl. Windows-Tasten V/H/P/E/R/O/T, 0 (alles), 1 (Auswahl); nur bei Fokus der Zeichenfläche, ohne laufende Geste, nicht in Textfeldern. Kein neues Objektmodell; Auswahlzoom speichert nur Ansicht. Test572 erweitert. Zusätzlich Messwert-Tupel typisiert (TS2322 aus CI 46138138969). Native Abnahme ausstehend.
+
+## PDF-Zeichenobjekte
+
+Windows-Inspektor zeigt einen direkten Einstieg zu vorhandenen seitengebundenen Ebenen/Objekten. Gemeinsamer Öffnungspfad auch für bestehende Dock-Aktionen: Bearbeitungsrechte, aktuelle Seite/Block-ID prüfen, tatsächliche Zeichenleiste öffnen. Markierter Objektinspektor wird bei Seitenwechsel geschlossen. Keine neue PDF-Datenstruktur, keine Veränderung des Originals. Test285 erweitert; CI und Geräteabnahme offen.

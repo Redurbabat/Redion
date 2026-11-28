@@ -448,6 +448,17 @@ const insp = await sicht('.document-inspector.is-open');
 p('Das ⓘ holt den Inspector — und er steht rechts vom Dokument',
   insp.breit > 150 && insp.links >= mitInsp.rechts - 2,
   `${JSON.stringify(insp)} vs ${JSON.stringify(mitInsp)}`);
+await pc.evaluate(()=>document.documentElement.setAttribute('data-windows-titelleiste',''));
+const desktopObjects = pc.locator('.document-desktop-objects [data-document-action="desktop-ink-objects"]');
+const inkBlock = await desktopObjects.getAttribute('data-document-ink-block');
+p('Windows PDF: direkter Objektzugriff an der aktiven Seite',!!inkBlock && await desktopObjects.isEnabled());
+const marksBefore = await pc.evaluate((id:string)=>JSON.stringify(Store.getBlock(id).marken??[]),inkBlock!);
+await desktopObjects.click();
+const objectPanel = pc.locator('.gfx-inspector[data-document-ink-block]');
+p('Windows PDF: vorhandener Ebeneninspektor an der richtigen Seite',await objectPanel.getAttribute('data-document-ink-block')===inkBlock);
+p('Windows PDF: Öffnen verändert keine Zeichenobjekte',await pc.evaluate((id:string)=>JSON.stringify(Store.getBlock(id).marken??[]),inkBlock!)===marksBefore);
+await objectPanel.locator('[aria-label="Objektübersicht schliessen"]').click();
+await pc.evaluate(()=>document.documentElement.removeAttribute('data-windows-titelleiste'));
 await aufraeumen();
 await pc.click('.document-inspector.is-open [data-document-action="inspector-close"]');
 await pc.waitForTimeout(350);
