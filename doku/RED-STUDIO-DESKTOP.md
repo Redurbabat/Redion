@@ -38,3 +38,7 @@ Direkte Kommandoleiste mit vorhandenen Ebenen-/Rahmen-/Import-Export-Inspektoren
 ## PDF-Zeichenobjekte
 
 Windows-Inspektor zeigt einen direkten Einstieg zu vorhandenen seitengebundenen Ebenen/Objekten. Gemeinsamer Öffnungspfad auch für bestehende Dock-Aktionen: Bearbeitungsrechte, aktuelle Seite/Block-ID prüfen, tatsächliche Zeichenleiste öffnen. Markierter Objektinspektor wird bei Seitenwechsel geschlossen. Keine neue PDF-Datenstruktur, keine Veränderung des Originals. Test285 erweitert; CI und Geräteabnahme offen.
+
+## Windows-Vorschau für Geräteabnahme
+
+PR-gebundener Windows-Workflow (kein Release) installiert gesperrte Abhängigkeiten, kompiliert den aktuellen Renderer, prüft die echten sichtbaren Desktop-Bedienelemente in Electron mit synthetischen Dokumenten und erzeugt fünf Screenshots. Erst danach wird eine portable, unsignierte x64-EXE gebaut und mit SHA256 als Actions-Artefakt abgelegt. `studioPreview:true` im Paket aktiviert beim Doppelklick ein eigenes temporäres Testprofil (keine Produktionsdaten, kein Auto-Update). Normales Paket unverändert. Lokale Entwicklung mit `npm --prefix windows start` verwendet Redion-Entwicklung; vorher Haupt-App schliessen. EXE-Bau auf Windows über `npm --prefix windows run preview:exe` nach `npm ci` im Root, Windows und Plugin, `npm run bauen:ts`, `npm --prefix windows run prepare:app` und erfolgreichem `preview:check`. Artefakt-/Native-Abnahme noch offen; keine Freigabe oder Installation.

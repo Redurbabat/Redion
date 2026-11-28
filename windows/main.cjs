@@ -26,7 +26,11 @@ const APP_ID = 'ch.redurbabat.redion.windows';
 // Bewusst getrennte Abnahme einer GEBAUTEN EXE. Keine freien Profilpfade,
 // keine Änderung der normalen Ablage und keine Abschwächung der MCP-Rechte.
 const testFlag = process.argv.find(value => value.startsWith('--redion-test-profile='));
-const TEST_PROFILE = testFlag ? testFlag.slice('--redion-test-profile='.length) : null;
+// Packaged Studio previews use a dedicated disposable profile even when
+// opened by double-click; the normal release retains its existing profile.
+const STUDIO_PREVIEW = app.isPackaged && require('./package.json').studioPreview === true;
+const TEST_PROFILE = testFlag ? testFlag.slice('--redion-test-profile='.length) :
+  STUDIO_PREVIEW ? '72656473747564696f70726576696577' : null;
 if (TEST_PROFILE !== null) {
   if (process.platform !== 'win32' || !/^[a-f0-9]{32}$/.test(TEST_PROFILE)) throw new Error('Ungültiges isoliertes Windows-Testprofil.');
   const base = path.join(app.getPath('temp'), 'Redion-Testprofile');
@@ -464,7 +468,7 @@ if (!lock) {
     const remembered = readWindowState(() => fs.readFileSync(stateFile, 'utf8'),
       screen.getAllDisplays().map(display => display.workArea));
     mainWindow = new BrowserWindow({
-      title: TEST_PROFILE ? 'Redion · Isoliertes Testprofil' : LOCAL_SOURCE ? 'Redion · Lokaler Entwicklungsstand' : 'Redion',
+      title: STUDIO_PREVIEW ? 'RED Studio · Windows Vorschau' : TEST_PROFILE ? 'Redion · Isoliertes Testprofil' : LOCAL_SOURCE ? 'Redion · Lokaler Entwicklungsstand' : 'Redion',
       width: remembered?.width ?? 1300,
       height: remembered?.height ?? 860,
       ...(remembered ? { x: remembered.x, y: remembered.y } : {}),

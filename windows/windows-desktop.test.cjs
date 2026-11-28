@@ -71,6 +71,16 @@ test('Windows installer packages two EXEs and a stable offline data profile', ()
   assert.doesNotMatch(main, /loadURL\(['"]https?:/);
 });
 
+test('Studio preview is isolated and never publishes a release', () => {
+  const main = fs.readFileSync(path.join(__dirname,'main.cjs'),'utf8');
+  const preview = fs.readFileSync(path.join(__dirname,'studio-preview-exe.mts'),'utf8');
+  assert.match(main,/app\.isPackaged && require\('\.\/package\.json'\)\.studioPreview === true/);
+  assert.match(main,/STUDIO_PREVIEW \? '[a-f0-9]{32}' : null/);
+  assert.match(preview,/extraMetadata:\{studioPreview:true\}/);
+  assert.match(preview,/'--publish','never'/);
+  assert.match(preview,/target:'portable'/);
+});
+
 test('local-first app and iOS app are never modified by Windows packager', () => {
   const script = fs.readFileSync(path.join(__dirname, 'prepare.mjs'), 'utf8');
   const pkg = require('./package.json');
