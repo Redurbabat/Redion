@@ -178,3 +178,27 @@ eine Momentaufnahme. Ein MCP-Client kann nach Freigabe einen erneuten
 tools/list-Abruf benötigen. Eine Verbindung mit ChatGPT setzt einen
 erreichbaren, vertrauenswürdigen HTTPS-Endpunkt und kompatiblen Client voraus;
 dieses Dashboard veröffentlicht keinen Server und verbindet ChatGPT nicht.
+
+### Durchgängige Integration und Geräteabnahme
+
+Die automatisierte Prüfung in pruefungen/red-bit-permissions.test.mts
+verwendet den tatsächlichen Home-Router mit temporärer SQLite-Datenbank,
+OAuth-Registrierung, PKCE, einmaligem Consent-Login, Token-Austausch,
+tools/list, tools/call, RED-ID-Gerätepaarung und der Transport-API.
+Sie prüft auch das Fehlen der Werkzeuge vor Delegation, Replay-Ablehnung
+und das Abbrechen ausstehender Aufträge bei OAuth-Grant-Widerruf.
+Die simulierte Gerätequittung beweist keine hörbare Wiedergabe.
+
+Manuelle Abnahme erst nach grüner CI:
+1. Privaten Home Server mit vertrauenswürdigem HTTPS und den benötigten
+   expliziten Pilotflags starten. Keine ungeschützten Verwaltungsrouten
+   veröffentlichen. MCP-Client muss den OAuth-Endpunkt erreichen können.
+2. RED Bit aus dem passenden Apple-Branch installieren, RED ID koppeln
+   und die lokale Transport-/Statusfreigabe bewusst aktivieren.
+3. Kompatiblen MCP-Client am Home-Endpunkt /mcp/cloud anmelden.
+   Geräte- und KI-Delegation im RED ION Dashboard erteilen.
+4. Werkzeugliste neu abrufen; Statusauftrag erstellen, in RED Bit
+   bestätigen, Ergebnis abrufen. Danach genau einen Musikbefehl testen.
+5. KI-Freigabe widerrufen und prüfen, dass weitere Aufträge abgelehnt
+   werden. Keine automatische Wiederholung bei unklarem Ergebnis.
+Eine tatsächliche ChatGPT-Verbindung ist damit nicht automatisch eingerichtet.
