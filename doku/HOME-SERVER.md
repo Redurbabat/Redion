@@ -500,3 +500,12 @@ berechtigt. Keine Token, Objektnamen, Inhalte oder ID-Digests werden geliefert.
 Pilotkategorien beschreiben vorhandenen Integrationscode; sie sind kein
 Installations-, Online- oder Release-Nachweis. Keine App-Installation,
 automatische Updates oder Ausführung anderer Apps.
+
+### RED Search (SDK 0.12)
+
+Lokaler, flüchtiger Index für maximal 4096 vom App-Adapter ausdrücklich
+bereitgestellte Metadaten-Einträge. Suche über Titel, Tags und Kurztext;
+Akzentnormalisierung und Mehrwortsuche, keine Serveranfrage. Keine
+automatische Indizierung privater Dokumente und keine App-übergreifende
+Suche ohne eigene spätere Freigaben. Pro Konto/App separat instanziieren,
+bei Sperre/Logout verwerfen. UI und echte App-Integration offen.

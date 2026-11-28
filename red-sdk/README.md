@@ -137,3 +137,12 @@ The existing 16 MiB encoded-data / 1024-object per-account pilot limit still
 applies; other stored objects may prevent an 8 MiB upload. Keep explicit
 manifest references in your local app catalogue. File names are display
 metadata only; apply platform-specific path sanitization before export.
+
+### SDK 0.12 – RED Search
+
+`createRedLocalSearch()` builds an in-memory index only from explicitly
+supplied app-local display metadata (title, tags, summary and type).
+It supports ranked multi-term matching, accent folding, type filters and
+bounded results. No network, persistence, remote index or cross-app access.
+Use a separate instance per authenticated app/account; clear or dispose it
+on logout and lock. It is not automatic integration with RED ION documents.

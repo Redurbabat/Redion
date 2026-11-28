@@ -609,3 +609,66 @@ export function createRedFiles(client:RedFileTransport,scope:RedFileScope,key:Ui
   dispose(){disposed=true;if(!busy)secret.fill(0);}
  };
 }
+
+
+/** RED Search: an explicitly supplied, bounded, in-memory index for one
+ * authenticated app's local display metadata. No server calls, disk cache,
+ * cross-app indexing, automatic document access or full-text cloud search. */
+export type RedSearchEntry={id:string;title:string;kind:'document'|'file'|'note'|'other';tags:string[];summary:string};
+export type RedSearchHit=RedSearchEntry&{score:number};
+const normalizeSearch=(v:string)=>v.normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase().replaceAll('ı','i').replaceAll('ß','ss').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+const searchKind=(v:unknown):v is RedSearchEntry['kind']=>v==='document'||v==='file'||v==='note'||v==='other';
+function searchEntry(v:RedSearchEntry):RedSearchEntry{
+ if(!v||typeof v.id!=='string'||!storeId(v.id)||typeof v.title!=='string'||v.title.trim().length===0||v.title.length>200||!searchKind(v.kind)||typeof v.summary!=='string'||v.summary.length>512||!Array.isArray(v.tags)||v.tags.length>16||!v.tags.every(t=>typeof t==='string'&&t.length>0&&t.length<=64))throw Error('Invalid RED search entry');
+ return {id:v.id,title:v.title,kind:v.kind,tags:[...v.tags],summary:v.summary};
+}
+export function createRedLocalSearch(){
+ type Indexed={entry:RedSearchEntry;title:string;tags:string;summary:string};
+ let items=new Map<string,Indexed>(),disposed=false;
+ const active=()=>{if(disposed)throw Error('Search disposed');};
+ const index=(value:RedSearchEntry):Indexed=>{
+  const entry=searchEntry(value);
+  return {entry,title:normalizeSearch(entry.title),tags:normalizeSearch(entry.tags.join(' ')),summary:normalizeSearch(entry.summary)};
+ };
+ return {
+  /** Replace atomically: invalid snapshots leave the old index untouched. */
+  replace(entries:readonly RedSearchEntry[]){
+   active();if(entries.length>4096)throw Error('Search index limit exceeded');
+   const next=new Map<string,Indexed>();
+   for(const value of entries){
+    const item=index(value);if(next.has(item.entry.id))throw Error('Duplicate search entry');
+    next.set(item.entry.id,item);
+   }
+   items=next;
+  },
+  upsert(value:RedSearchEntry){
+   active();const item=index(value);
+   if(!items.has(item.entry.id)&&items.size>=4096)throw Error('Search index limit exceeded');
+   items.set(item.entry.id,item);
+  },
+  remove(id:string){active();if(!storeId(id))throw Error('Invalid search ID');items.delete(id);},
+  search(query:string,options:{kind?:RedSearchEntry['kind'];limit?:number}={}):RedSearchHit[]{
+   active();
+   const limit=options.limit??20;
+   if(typeof query!=='string'||query.length>128||!Number.isSafeInteger(limit)||limit<1||limit>100||options.kind!==undefined&&!searchKind(options.kind))throw Error('Invalid search query');
+   const normalized=normalizeSearch(query);if(!normalized)return [];
+   const words=[...new Set(normalized.split(' '))];if(words.length>12)throw Error('Too many search terms');
+   const hits:RedSearchHit[]=[];
+   for(const item of items.values()){
+    if(options.kind!==undefined&&item.entry.kind!==options.kind)continue;
+    let score=0,match=true;
+    for(const word of words){
+     const value=(item.title.includes(word)?6:0)+(item.tags.includes(word)?3:0)+(item.summary.includes(word)?1:0);
+     if(!value){match=false;break;}score+=value;
+    }
+    if(match){
+     if(item.title===normalized)score+=20;else if(item.title.startsWith(normalized))score+=10;
+     hits.push({...item.entry,tags:[...item.entry.tags],score});
+    }
+   }
+   return hits.sort((a,b)=>b.score-a.score||(a.id<b.id?-1:a.id>b.id?1:0)).slice(0,limit);
+  },
+  clear(){active();items.clear();},
+  dispose(){disposed=true;items.clear();}
+ };
+}
