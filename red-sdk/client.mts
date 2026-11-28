@@ -241,7 +241,7 @@ export type RedStoreRecord=RedStoreResult&{envelope:string;updated:number};
 export type RedStoreMeta=Omit<RedStoreRecord,'version'|'envelope'>&{encodedBytes:number};
 export type RedStorePage={version:1;items:RedStoreMeta[];next:string|null};
 const storeId=(s:string)=>/^[a-f0-9]{32}$/.test(s);
-const safeNatural=(x:unknown)=>Number.isSafeInteger(x)&&Number(x)>=0;
+const safeNatural=(x:unknown):x is number=>typeof x==='number'&&Number.isSafeInteger(x)&&x>=0;
 const storeKind=(x:unknown):x is RedStoreKind=>x==='sync'||x==='file';
 export function newRedStoreId(){return Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,'0')).join('');}
 function isStoreResult(v:unknown):v is RedStoreResult{
@@ -254,7 +254,7 @@ function validStoreEnvelope(v:unknown):v is string{
 }
 function isStoreMeta(v:unknown):v is RedStoreMeta{
  if(!isStoreResult(v))return false;
- const r=v as RedStoreMeta;return safeNatural(r.updated)&&safeNatural(r.encodedBytes)&&r.encodedBytes<=60000&&(r.deleted===1?r.encodedBytes===0:r.encodedBytes>=38);
+ const r=v as RedStoreResult & Partial<RedStoreMeta>;return safeNatural(r.updated)&&safeNatural(r.encodedBytes)&&r.encodedBytes<=60000&&(r.deleted===1?r.encodedBytes===0:r.encodedBytes>=38);
 }
 function isStoreRecord(v:unknown):v is RedStoreRecord{
  if(!isStoreResult(v))return false;
