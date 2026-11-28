@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,mkdir,rm,readFile,writeFile,access} from 'node:fs/promises';
+import {mkdtemp,mkdir,rm,readFile,writeFile,access,symlink} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {randomBytes} from 'node:crypto';
 import {openHomeServer} from '../server/home-server.ts';
-import {createOfflineBackup,restoreOfflineBackup,verifyEncryptedBackup} from '../server/home/backup.ts';
+import {createOfflineBackup,restoreOfflineBackup,verifyEncryptedBackup,verifyLatestEncryptedBackup} from '../server/home/backup.ts';
 
 test('Encrypted offline backup restores SQLite and blobs, rejects tampering and never overwrites',async()=>{
  const root=await mkdtemp(join(tmpdir(),'red-backup-'));
@@ -29,5 +29,29 @@ test('Encrypted offline backup restores SQLite and blobs, rejects tampering and 
   const encrypted=await readFile(join(dest,'000001.enc'));encrypted[0]=encrypted[0]!^1;await writeFile(join(dest,'000001.enc'),encrypted);
   await assert.rejects(verifyEncryptedBackup(dest,key));
   await assert.rejects(restoreOfflineBackup(dest,bad,key));await assert.rejects(access(bad));
+ }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test('latest backup verification never falls back to an older valid backup',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'red-backup-latest-')),key=randomBytes(32);
+ const source=join(root,'source'),backups=join(root,'backups');
+ const older=join(backups,'20260101T000000Z-aaaaaaaa'),newer=join(backups,'20260102T000000Z-bbbbbbbb'),newest=join(backups,'20260103T000000Z-cccccccc');
+ try{
+  await mkdir(source);await mkdir(backups);
+  const s=await openHomeServer({dataDir:source,origin:'https://redion.example.test'});s.close();
+  await assert.rejects(verifyLatestEncryptedBackup(backups,key));
+  await createOfflineBackup(source,older,key);
+  await createOfflineBackup(source,newer,key);
+  await mkdir(join(backups,'unrelated'));
+  const report=await verifyLatestEncryptedBackup(backups,key);
+  assert.equal(report.backupName,'20260102T000000Z-bbbbbbbb');
+  assert.equal(report.sqliteIntegrityVerified,false);
+  assert.ok(report.backupAgeMs>=0);assert.ok(Number.isFinite(Date.parse(report.verifiedAt)));
+  await assert.rejects(verifyLatestEncryptedBackup(backups,randomBytes(32)));
+  await symlink(older,newest,'dir');await assert.rejects(verifyLatestEncryptedBackup(backups,key));await rm(newest);
+  await mkdir(newest);await assert.rejects(verifyLatestEncryptedBackup(backups,key));await rm(newest,{recursive:true});
+  const bytes=await readFile(join(newer,'000000.enc'));bytes[0]=bytes[0]!^1;await writeFile(join(newer,'000000.enc'),bytes);
+  await assert.rejects(verifyLatestEncryptedBackup(backups,key));
+  assert.equal((await verifyEncryptedBackup(older,key)).sqliteIntegrityVerified,false);
  }finally{await rm(root,{recursive:true,force:true});}
 });
