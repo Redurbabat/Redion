@@ -444,7 +444,7 @@ const Planflaeche = (() => {
         kopfLinks.className = 'sp-links';
         const planDock = GfxToolbar.erstelle({
             klasse: 'sp-werkzeuge', beschriftung: 'Zeichenwerkzeuge', aktiv: z.werkzeug,
-            werkzeuge: WERKZEUGE.map(w => ({ ...w, zeichen: '',
+            werkzeuge: WERKZEUGE.map(w => ({ ...w, titel: w.titel + ' (' + w.taste + ')', zeichen: '',
                 gruppe: w.id === 'zeigen' || w.id === 'leitung' ? 'quick' : 'senior' })),
             galerie: {
                 schnell: ['plan-modus'], edgeless: { zusatz: ['palette-toggle', 'zoom-alles'] },

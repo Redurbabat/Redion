@@ -30177,6 +30177,58 @@ html[data-windows-titelleiste] body:is(.fokus, [data-dokument="an"]) #studio-bar
   }
 }
 
+
+/* RED Studio Desktop – shared drawing surfaces, not a second design system.
+   Narrow/coarse-pointer layouts retain the existing mobile dock. Labels are
+   generated from the accessible command name and do not change tool IDs. */
+.gfx-tb-desktop-name{display:none}
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){
+  body:not([data-ui-shell="glass-wheel"]) .gfx-tb-edgeless .gfx-tb-karte button>.gfx-tb-desktop-name{
+    display:block;position:absolute;inset:auto 3px 3px;z-index:1;
+    font-size:var(--font-xs,.6875rem);line-height:1.15;font-weight:550;
+    text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    color:var(--text);background:var(--bg-card);border-radius:var(--radius-sm);
+    padding:2px 3px;pointer-events:none;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .gfx-tb-edgeless .gfx-tb-karte button:is(.on,[aria-pressed="true"])>.gfx-tb-desktop-name{
+    color:var(--accent-text);background:var(--accent-schwach);
+  }
+  /* The outer dock must not clip its own menus; the inner roller already
+     manages the horizontal strip. Existing touch targets are unchanged. */
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-werkzeuge.gfx-tb-edgeless{overflow:visible;isolation:isolate}
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-koerper{
+    background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-lg);
+  }
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap :is(.sp-palette,.sp-studio){
+    background:var(--bg-side);scrollbar-gutter:stable;overscroll-behavior:contain;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-palette{
+    width:clamp(190px,19vw,250px);border-inline-end:1px solid var(--line);
+  }
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-studio{
+    flex-basis:clamp(240px,23vw,320px);border-inline-start:1px solid var(--line);
+  }
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-fuss{
+    background:var(--bg-side);font-variant-numeric:tabular-nums;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-live-labor:not([hidden]){
+    background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-md);
+  }
+  body:not([data-ui-shell="glass-wheel"]) .document-studio .document-thumbnails{
+    background:var(--bg-side);border-inline-end:1px solid var(--line);scrollbar-gutter:stable;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .document-studio .document-inspector{
+    border-inline-start:1px solid var(--line);scrollbar-gutter:stable;overscroll-behavior:contain;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .document-studio .document-center{
+    background:var(--pdf-desk);overscroll-behavior:contain;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .document-studio .document-thumbnail.is-selected{
+    outline:2px solid var(--accent);outline-offset:-2px;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .document-studio[data-pdf-galerie]{--pdf-dock-breite:720px}
+}
+
 </style>
 
 <!-- =========================================================================
@@ -31663,7 +31715,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1729, inhalt: 'd852d12e2e2dc30b', gebaut: '2026-11-28T09:19:51.882Z' };
+const Stand = { fassung: 1730, inhalt: '4e9c0a95f6d38bca', gebaut: '2026-11-28T10:48:22.548Z' };
 window.Stand = Stand;
 
 </script>
@@ -32635,6 +32687,8 @@ const GfxToolbar = (() => {
         const vorrat = document.createElement('div');
         vorrat.hidden = true;
         let galerieMessen;
+        let galerieAktivZeigen = () => { };
+        const desktopGalerie = () => window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches;
         if (o.galerie) {
             wurzel.classList.add('gfx-tb-galerie', 'gfx-tb-edgeless');
             if (o.galerie.beschriftet)
@@ -32669,13 +32723,11 @@ const GfxToolbar = (() => {
                 for (const b of karte.querySelectorAll('button')) {
                     if (!['notiz', 'formen'].includes(id) && !['stift', 'radierer'].includes(b.dataset.wz ?? ''))
                         b.classList.add('gfx-tb-symbol');
-                    if (o.galerie.beschriftet) {
-                        const label = document.createElement('span');
-                        label.className = 'gfx-tb-kartenname';
-                        label.textContent = b.getAttribute('aria-label') || '';
-                        label.setAttribute('aria-hidden', 'true');
-                        b.append(label);
-                    }
+                    const label = document.createElement('span');
+                    label.className = o.galerie.beschriftet ? 'gfx-tb-kartenname' : 'gfx-tb-desktop-name';
+                    label.textContent = b.getAttribute('aria-label') || '';
+                    label.setAttribute('aria-hidden', 'true');
+                    b.append(label);
                 }
                 if (vorschau && (id === 'notiz' || id === 'formen')) {
                     delete vorschau.dataset.sym;
@@ -32740,6 +32792,15 @@ const GfxToolbar = (() => {
                 }
                 zurueck.setAttribute('aria-disabled', String(kartenStart === 0));
                 weiter.setAttribute('aria-disabled', String(kartenStart === letzterStart));
+            };
+            galerieAktivZeigen = (id) => {
+                if (!desktopGalerie())
+                    return;
+                const index = galeriekarten.findIndex(karte => !!karte.querySelector('[data-wz="' + CSS.escape(id) + '"]'));
+                if (index < 0 || !galeriekarten[index]?.hidden)
+                    return;
+                kartenStart = index;
+                blattstand();
             };
             leiste.append(schnell, trenner(), zurueck, festerStreifen, weiter);
             galerieMessen = new ResizeObserver(() => {
@@ -32886,7 +32947,10 @@ const GfxToolbar = (() => {
         };
         document.addEventListener('pointerdown', beiAussen, true);
         const setzeWerkzeug = (id) => {
+            const gewechselt = aktiv !== id;
             aktiv = id;
+            if (gewechselt)
+                galerieAktivZeigen(id);
             wurzel.querySelectorAll('[data-wz]').forEach(b => {
                 const an = b.dataset.wz === id;
                 b.classList.toggle('on', an);
@@ -32913,7 +32977,7 @@ const GfxToolbar = (() => {
         };
         tabstoppSetzen();
         if (typeof requestAnimationFrame === 'function')
-            requestAnimationFrame(haltPruefen);
+            requestAnimationFrame(() => { galerieAktivZeigen(aktiv); haltPruefen(); });
         return {
             element: wurzel,
             setzeWerkzeug,
@@ -77361,7 +77425,7 @@ const Planflaeche = (() => {
         kopfLinks.className = 'sp-links';
         const planDock = GfxToolbar.erstelle({
             klasse: 'sp-werkzeuge', beschriftung: 'Zeichenwerkzeuge', aktiv: z.werkzeug,
-            werkzeuge: WERKZEUGE.map(w => ({ ...w, zeichen: '',
+            werkzeuge: WERKZEUGE.map(w => ({ ...w, titel: w.titel + ' (' + w.taste + ')', zeichen: '',
                 gruppe: w.id === 'zeigen' || w.id === 'leitung' ? 'quick' : 'senior' })),
             galerie: {
                 schnell: ['plan-modus'], edgeless: { zusatz: ['palette-toggle', 'zoom-alles'] },
