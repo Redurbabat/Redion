@@ -37,6 +37,23 @@ test('RED Files: manifest-last, interrupted upload retry, isolation and authenti
   const wrong=createRedFiles(b,scope,new Uint8Array(32).fill(9));await assert.rejects(wrong.download(plan.id));wrong.dispose();
   const corrupt=createRedFiles({storePut:b.storePut,async storeGet(kind,id){const record=await b.storeGet(kind,id);return id===plan.chunks[0]?.id?{...record,envelope:(record.envelope[0]==='A'?'B':'A')+record.envelope.slice(1)}:record;}},scope,key);
   await assert.rejects(corrupt.download(plan.id));corrupt.dispose();
+  // The staged sink receives authenticated chunks, then publishes exactly once.
+  const staged:Uint8Array[]=[];const borrowed:Uint8Array[]=[];let commits=0,aborts=0;
+  const sink={
+   async begin(info:Readonly<{name:string;size:number}>){assert.equal(info.name,'private.pdf');assert.equal(info.size,bytes.length);staged.length=0;},
+   async write(chunk:Uint8Array,offset:number){assert.equal(offset,staged.reduce((n,v)=>n+v.length,0));borrowed.push(chunk);staged.push(new Uint8Array(chunk));},
+   async commit(){commits++;},async abort(){aborts++;staged.length=0;}
+  };
+  assert.deepEqual(await reader.downloadTo(plan.id,sink),{name:'private.pdf',size:bytes.length});
+  assert.deepEqual(Buffer.concat(staged),Buffer.from(bytes));assert.equal(commits,1);assert.equal(aborts,0);
+  assert.ok(borrowed.every(chunk=>chunk.every(v=>v===0)));
+  const lateCorrupt=createRedFiles({storePut:b.storePut,async storeGet(kind,id){const record=await b.storeGet(kind,id);return id===plan.chunks[1]?.id?{...record,envelope:(record.envelope[0]==='A'?'B':'A')+record.envelope.slice(1)}:record;}},scope,key);
+  await assert.rejects(lateCorrupt.downloadTo(plan.id,sink));
+  assert.equal(commits,1);assert.equal(aborts,1);assert.equal(staged.length,0);lateCorrupt.dispose();
+  await assert.rejects(reader.downloadTo(plan.id,{...sink,async write(){throw Error('disk full');}}),/disk full/);
+  assert.equal(aborts,2);assert.equal(commits,1);
+  await assert.rejects(reader.downloadTo(plan.id,{...sink,async begin(){throw Error('staging failed');}}),/staging failed/);
+  assert.equal(aborts,3);assert.equal(commits,1);
   const invalid={...plan,chunks:[...plan.chunks].reverse()};await assert.rejects(writer.upload(invalid));
   const empty=await writer.prepare('empty.txt',new Uint8Array());assert.equal(empty.chunks.length,0);await writer.upload(empty);assert.equal((await reader.download(empty.id)).bytes.length,0);
   await assert.rejects(writer.prepare('../secret',bytes));await assert.rejects(writer.prepare('too-big',new Uint8Array(RED_FILE_MAX_BYTES+1)));
