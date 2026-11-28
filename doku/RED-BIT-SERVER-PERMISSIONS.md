@@ -75,3 +75,18 @@ ausser beim Widerruf/Erneuerung. Kein dauerhafter Replay-Schutz über neue Grant
 noch kein automatischer Client, kein Schreibwerkzeug und kein ChatGPT-MCP.
 Die App muss den Nutzer vor Abholung und Statusübermittlung separat zustimmen
 lassen. Kein Einsatz mit produktiven Daten vor echter Geräteabnahme.
+
+## Separate Transportfreigabe (dritter Pilot, keine Ausführung)
+
+Standard aus; explizit REDION_ENABLE_RED_BIT_TRANSPORT_PERMISSIONS=1.
+Unabhängig von der Lesefreigabe, eigene SQLite-Tabelle und eigener Scope
+music:transport:control, maximal 15 Minuten und höchstens bis Sitzungsende.
+Owner-Routen: GET /home/red-bit/transport-grants, POST
+/home/red-bit/transport-grant und /home/red-bit/transport-revoke (jeweils
+sessionId, confirm:true). GET /red-bit/v1/transport-permission ist nur für
+die betreffende RED-Bit-Sitzung. Session-Widerruf entfernt den Grant.
+Antworten kennzeichnen remoteAvailable:false und localConfirmationRequired:true.
+Noch kein Auftragskanal, keine Befehlsausführung und keine MCP-Werkzeuge.
+Vor Wiederaktivierung gegebenenfalls alte Grants bzw. Sitzungen widerrufen.
+Für die spätere Ausführung sind separate lokale Bestätigung, Replay-Schutz,
+begrenzte Befehle, Widerruf und Geräteabnahme erforderlich.
