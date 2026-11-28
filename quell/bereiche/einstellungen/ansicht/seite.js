@@ -203,6 +203,7 @@ const Einstellungen = (() => {
                 bindeRedApps(ziel);
                 bindeRedShare(ziel);
                 bindeRedStore(ziel);
+                bindeRedSessions(ziel);
             }
             if (ziel && offenerBereich === 'mcp')
                 RegisterAutomatisierung.montiereAnsicht(ziel);
@@ -652,6 +653,70 @@ const Einstellungen = (() => {
         ziel.querySelector('[data-store-grant]')?.addEventListener('click', () => change(false));
         ziel.querySelector('[data-store-revoke]')?.addEventListener('click', () => change(true));
     };
+    const bindeRedSessions = (ziel) => {
+        const refreshButton = ziel.querySelector('[data-red-sessions-refresh]');
+        const list = ziel.querySelector('[data-red-sessions]');
+        const status = ziel.querySelector('[data-red-sessions-status]');
+        if (!refreshButton || !list || !status)
+            return;
+        let busy = false;
+        const request = async (path, payload) => {
+            const w = typeof Wolke === 'undefined' ? null : Wolke;
+            const origin = w?.adresse(), token = w?.token();
+            if (!origin || !token || !w?.serverAdressePruefen(origin))
+                throw new Error('Kein angemeldeter HTTPS-Server');
+            const response = await fetch(origin + '/red-id/v2/' + path, {
+                method: payload ? 'POST' : 'GET', headers: { Authorization: 'Bearer ' + token, ...(payload ? { 'Content-Type': 'application/json' } : {}) },
+                ...(payload ? { body: JSON.stringify(payload) } : {}), credentials: 'omit', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(8000)
+            });
+            if (!response.ok)
+                throw new Error('HTTP ' + response.status);
+            return response.json();
+        };
+        const refresh = async () => {
+            const data = await request('sessions');
+            if (data?.version !== 1 || !Array.isArray(data.sessions))
+                throw new Error('Ungültige Antwort');
+            list.replaceChildren();
+            for (const session of data.sessions) {
+                if (typeof session.id !== 'string' || !/^session_[a-f0-9]{64}$/.test(session.id) || typeof session.app !== 'string' || !Number.isFinite(Date.parse(session.createdAt)) || !Number.isFinite(Date.parse(session.refreshExpiresAt)))
+                    continue;
+                const li = document.createElement('li'), label = document.createElement('p'), button = document.createElement('button');
+                label.textContent = session.app.toUpperCase() + ' · ' + session.id.slice(-8) + ' · gekoppelt ' + new Date(session.createdAt).toLocaleString('de-CH') + ' · gültig bis ' + new Date(session.refreshExpiresAt).toLocaleString('de-CH');
+                button.className = 'ez-knopf';
+                button.textContent = 'Nur diese Sitzung widerrufen';
+                const id = session.id, app = session.app;
+                button.addEventListener('click', () => {
+                    if (busy || !window.confirm(app.toUpperCase() + ' · ' + id.slice(-8) + ': Nur diese Anmeldung widerrufen? Andere App-Sitzungen und gespeicherte Daten bleiben erhalten.'))
+                        return;
+                    void run(async () => { await request('revoke-session', { id }); await refresh(); });
+                });
+                li.append(label, button);
+                list.append(li);
+            }
+            status.textContent = data.truncated ? 'Weitere Sitzungen vorhanden. Anzeige begrenzt.' : data.sessions.length + ' autorisierte App-Sitzungen. Kein Online-Status.';
+        };
+        const run = async (fn) => {
+            if (busy)
+                return;
+            busy = true;
+            refreshButton.disabled = true;
+            status.textContent = 'Anfrage läuft …';
+            list.querySelectorAll('button').forEach(b => b.disabled = true);
+            try {
+                await fn();
+            }
+            catch {
+                status.textContent = 'Anfrage fehlgeschlagen. Anmeldung und Server prüfen.';
+            }
+            finally {
+                busy = false;
+                refreshButton.disabled = false;
+                list.querySelectorAll('button').forEach(b => b.disabled = false);
+            }
+        };
+        refreshButton.addEventListener('click', () => void run(refresh));
+    };
     const bindeHomeServer = (ziel) => {
         const button = ziel.querySelector('[data-home-refresh]');
         const status = ziel.querySelector('[data-home-status]');
@@ -687,6 +752,11 @@ const Einstellungen = (() => {
                     ['RED-ID-Zugänge', number(data.redId?.activeCredentials)],
                     ['MCP', data.services.mcp === 'enabled' ? 'Aktiviert' : 'Deaktiviert'],
                     ['MCP-Freigabeeinträge', number(data.mcp?.grantRecords)],
+                    ['Anfragen (letzte 60 Minuten)', number(data.monitor?.requests)],
+                    ['Clientfehler (4xx)', number(data.monitor?.clientErrors)],
+                    ['Serverfehler (5xx)', number(data.monitor?.serverErrors)],
+                    ['Mittlere Antwortzeit', number(data.monitor?.meanMs, ' ms')],
+                    ['Maximale Antwortzeit', number(data.monitor?.maxMs, ' ms')],
                     ['Netzwerk empfangen / gesendet', gb(data.network?.receivedBytes) + ' / ' + gb(data.network?.sentBytes)]
                 ];
                 for (const [label, value] of rows) {
@@ -706,7 +776,7 @@ const Einstellungen = (() => {
         });
     };
     const inhalt = (b) => ({
-        'home-server': () => kopf('RED Home Server', 'Private Infrastruktur und Diagnose') + '<div class="ez-karte"><button class="ez-knopf" data-home-refresh>Serverstatus abrufen</button><p data-home-status role="status">Verbinde zuerst dein Gerät mit dem privaten Server.</p><dl data-home-metrics></dl></div><div class="ez-karte"><h3>RED ID · App-Verbindungen</h3><p>Nur autorisierte Zugänge, keine Aussage über installierte oder online befindliche Apps.</p><button class="ez-knopf" data-red-list>App-Zugänge anzeigen</button><ul data-red-apps></ul><label>RED-App <select data-red-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Challenge der Ziel-App <input type="text" data-red-challenge autocomplete="off" spellcheck="false" maxlength="43"></label><label>Kopplungsanfrage (JSON aus der Ziel-App) <input data-red-request type="text" maxlength="256" autocomplete="off" spellcheck="false"></label><button class="ez-knopf" data-red-import>Anfrage übernehmen</button><button class="ez-knopf" data-red-approve>Direkte Anmeldung freigeben</button><button class="ez-knopf" data-red-pair>Kopplung freigeben</button><button class="ez-knopf" data-red-revoke>App-Zugänge widerrufen</button><p data-red-result role="status"></p><pre data-red-code style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></div><div class="ez-karte"><h3>RED Share · Datenfreigaben</h3><p>Nur ausgewählte Apps und Kanäle. Schlüssel separat auf beiden Geräten bestätigen.</p><button class="ez-knopf" data-share-list>Freigaben abrufen</button><ul data-share-items></ul><label>Sender <select data-share-source><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Empfänger <select data-share-target><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Kanal <input data-share-channel maxlength="32" autocomplete="off" spellcheck="false" placeholder="workout"></label><button class="ez-knopf" data-share-grant>7 Tage freigeben</button><button class="ez-knopf" data-share-revoke>Freigabe widerrufen</button><p data-share-status role="status"></p></div><div class="ez-karte"><h3>RED Sync &amp; RED Files · Pilot</h3><p>Getrennte verschlüsselte App-Objekte. Keine automatische Freigabe zwischen Apps. Alle Geräte derselben App teilen die Freigabe; der Schlüssel muss separat verwaltet werden.</p><button class="ez-knopf" data-store-list>Speicher und Freigaben anzeigen</button><ul data-store-items></ul><label>RED-App <select data-store-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Bereich <select data-store-kind><option value="sync">Sync-Daten</option><option value="file">Kleine Dateiobjekte</option></select></label><button class="ez-knopf" data-store-grant>7 Tage freigeben</button><button class="ez-knopf" data-store-revoke>Zugriff widerrufen</button><p data-store-status role="status"></p></div>',
+        'home-server': () => kopf('RED Home Server', 'Private Infrastruktur und Diagnose') + '<div class="ez-karte"><button class="ez-knopf" data-home-refresh>Serverstatus abrufen</button><p data-home-status role="status">Verbinde zuerst dein Gerät mit dem privaten Server.</p><dl data-home-metrics></dl></div><div class="ez-karte"><h3>RED ID · App-Verbindungen</h3><p>Nur autorisierte Zugänge, keine Aussage über installierte oder online befindliche Apps.</p><button class="ez-knopf" data-red-list>App-Zugänge anzeigen</button><ul data-red-apps></ul><label>RED-App <select data-red-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Challenge der Ziel-App <input type="text" data-red-challenge autocomplete="off" spellcheck="false" maxlength="43"></label><label>Kopplungsanfrage (JSON aus der Ziel-App) <input data-red-request type="text" maxlength="256" autocomplete="off" spellcheck="false"></label><button class="ez-knopf" data-red-import>Anfrage übernehmen</button><button class="ez-knopf" data-red-approve>Direkte Anmeldung freigeben</button><button class="ez-knopf" data-red-pair>Kopplung freigeben</button><button class="ez-knopf" data-red-revoke>App-Zugänge widerrufen</button><p data-red-result role="status"></p><pre data-red-code style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></div><div class="ez-karte"><h3>RED Devices · App-Sitzungen</h3><p>Einzelne RED-ID-v2-Anmeldungen widerrufen. Es werden keine Gerätepositionen oder Online-Aktivitäten erfasst.</p><button class="ez-knopf" data-red-sessions-refresh>Sitzungen abrufen</button><ul data-red-sessions></ul><p data-red-sessions-status role="status"></p></div><div class="ez-karte"><h3>RED Share · Datenfreigaben</h3><p>Nur ausgewählte Apps und Kanäle. Schlüssel separat auf beiden Geräten bestätigen.</p><button class="ez-knopf" data-share-list>Freigaben abrufen</button><ul data-share-items></ul><label>Sender <select data-share-source><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Empfänger <select data-share-target><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Kanal <input data-share-channel maxlength="32" autocomplete="off" spellcheck="false" placeholder="workout"></label><button class="ez-knopf" data-share-grant>7 Tage freigeben</button><button class="ez-knopf" data-share-revoke>Freigabe widerrufen</button><p data-share-status role="status"></p></div><div class="ez-karte"><h3>RED Sync &amp; RED Files · Pilot</h3><p>Getrennte verschlüsselte App-Objekte. Keine automatische Freigabe zwischen Apps. Alle Geräte derselben App teilen die Freigabe; der Schlüssel muss separat verwaltet werden.</p><button class="ez-knopf" data-store-list>Speicher und Freigaben anzeigen</button><ul data-store-items></ul><label>RED-App <select data-store-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Bereich <select data-store-kind><option value="sync">Sync-Daten</option><option value="file">Kleine Dateiobjekte</option></select></label><button class="ez-knopf" data-store-grant>7 Tage freigeben</button><button class="ez-knopf" data-store-revoke>Zugriff widerrufen</button><p data-store-status role="status"></p></div>',
         geraete: () => kopf('iPhone und Windows', 'Geräte, Sicherungen und freiwilliger Abgleich') + DeviceIntegration.overview(),
         konto: () => {
             const w = globalThis.Wolke;
