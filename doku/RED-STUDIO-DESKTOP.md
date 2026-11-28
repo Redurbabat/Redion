@@ -14,3 +14,7 @@ Actual Windows/Electron and mobile visual regression, full-width layout and resi
 ## macOS-inspiriertes Windows-Design
 
 Windows-only über das vorhandene `data-windows-titelleiste`, ab 1024 px mit Maus/Trackpad, kein Eingriff in native Fensterknöpfe oder Overlay-Geometrie. Ruhige Materialien aus Theme-Tokens, kompakte Rahmen, grössere gemeinsame Galerie, transparente Zusatzkapseln wenn das System es erlaubt; deckende Alternative und bestehender Hochkontrast bleiben erhalten. Elektro zeigt Arbeitsmodus und direkt zugänglichen Inspektor, Schalten/Skizzieren erhalten wahrheitsgemässe gedrückt-Zustände. Kein simulierter OS-Chrome und keine neue Berechnungslogik. Desktop-/Mobile-Abnahme und EXE noch offen.
+
+## Desktop panel sizing
+
+Windows-only wide plan container (>=850px), fine pointer and >=1024px window. Existing palette/inspector become in-flow columns; drag the divider or use arrows, Shift+arrows, Home/End; double-click resets. Width is view-only, bounded 180–380 px and additionally limited by container width. Narrow/phone and focus modes retain existing layout. No electrical model mutation. Browser and native tests pending.

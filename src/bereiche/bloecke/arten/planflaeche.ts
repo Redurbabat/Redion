@@ -584,6 +584,54 @@ const Planflaeche = (() => {
     koerper.appendChild(palette);
     koerper.appendChild(buehne);
     koerper.appendChild(studioPanel);
+    // Desktop-only view state. Do not persist widths in the electrical model.
+    const studioBreite = (panel: HTMLElement, name: string, seite: 'links' | 'rechts', start: number): HTMLButtonElement => {
+      const griff = document.createElement('button');
+      griff.type = 'button'; griff.className = 'sp-desktop-resize';
+      griff.dataset.seite = seite;
+      griff.setAttribute('role', 'separator');
+      griff.setAttribute('aria-orientation', 'vertical');
+      griff.setAttribute('aria-label', name + ' Breite');
+      griff.setAttribute('aria-valuemin', '180'); griff.setAttribute('aria-valuemax', '380');
+      griff.title = name + ' – Breite ziehen oder Pfeiltasten, Home/End';
+      let breite = start;
+      const aktualisieren = (wert: number) => {
+        breite = Math.min(380, Math.max(180, Math.round(wert)));
+        panel.style.setProperty('--sp-desktop-panel-width', breite + 'px');
+        griff.setAttribute('aria-valuenow', String(breite));
+        griff.setAttribute('aria-valuetext', breite + ' Pixel');
+      };
+      aktualisieren(start);
+      let zug: { id: number; x: number; breite: number } | null = null;
+      griff.addEventListener('pointerdown', e => {
+        if (e.button !== 0 || zug || z.zieht) return;
+        e.preventDefault(); e.stopPropagation();
+        zug = { id: e.pointerId, x: e.clientX, breite };
+        griff.focus({preventScroll:true});
+        griff.setPointerCapture(e.pointerId);
+      });
+      griff.addEventListener('pointermove', e => {
+        if (!zug || zug.id !== e.pointerId) return;
+        aktualisieren(zug.breite + (e.clientX - zug.x) * (seite === 'links' ? 1 : -1));
+      });
+      const ende = (e: PointerEvent) => { if (zug?.id === e.pointerId) zug = null; };
+      griff.addEventListener('pointerup', ende);
+      griff.addEventListener('pointercancel', ende);
+      griff.addEventListener('lostpointercapture', ende);
+      griff.addEventListener('dblclick', () => aktualisieren(start));
+      griff.addEventListener('keydown', e => {
+        if (!['ArrowLeft','ArrowRight','Home','End'].includes(e.key)) return;
+        e.preventDefault(); e.stopPropagation();
+        if (e.key === 'Home') aktualisieren(180);
+        else if (e.key === 'End') aktualisieren(380);
+        else aktualisieren(breite + (e.key === 'ArrowRight' ? 1 : -1) * (seite === 'links' ? 1 : -1) * (e.shiftKey ? 32 : 8));
+      });
+      return griff;
+    };
+    const paletteGriff = studioBreite(palette, 'Bauteilbibliothek', 'links', 248);
+    const studioGriff = studioBreite(studioPanel, 'Inspektor', 'rechts', 288);
+    // Siblings survive innerHTML rebuilds of the two existing panels.
+    palette.after(paletteGriff); studioPanel.before(studioGriff);
     const fussInhalt = document.createElement('div');
     fussInhalt.className = 'sp-fuss-inhalt';
     fuss.appendChild(fussInhalt);
