@@ -131,3 +131,18 @@ Nach unklarem Ausgang zuerst Wiedergabe auf dem Zielgerät prüfen.
 Auftrags-IDs bleiben nur im Speicher der geöffneten Dashboard-Ansicht;
 nach Navigation ist eine alte Quittung dort nicht mehr abrufbar.
 Native Gegenstelle: RED Bit PR #63. CI und echte Geräteabnahme ausstehend.
+
+## MCP-Delegation (Vorbereitung, noch keine Remote-Werkzeuge)
+
+Nur bei REDION_ENABLE_MCP=1 und REDION_ENABLE_RED_BIT_MCP=1 sowie den
+jeweils notwendigen Job-/Berechtigungsflags verfügbar.
+Owner-Sitzung: GET /home/red-bit/mcp-grants, POST /home/red-bit/mcp-grant
+und /home/red-bit/mcp-revoke mit exakt grantId, sessionId, mode
+(status oder transport), confirm:true. Bindung an eine aktive OAuth-Freigabe
+und deren Epoch, ein eigenes RED-Bit-Gerät und den jeweiligen Geräte-Grant.
+Maximal fünf Minuten; keine Verlängerung über die unterliegenden Rechte.
+Serverstart, OAuth-Neufreigabe, Geräte-Widerruf oder -Erneuerung entwerten
+die Delegation. Keine Tokens oder Epoch in den API-Antworten.
+Bestehende RED-ION-Dokumentenrechte allein genügen nicht.
+toolsAvailable:false bleibt gesetzt: noch kein MCP tools/list oder tools/call
+für RED Bit, kein Dashboard zur MCP-Delegation und keine ChatGPT-Abnahme.
