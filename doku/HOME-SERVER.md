@@ -584,3 +584,7 @@ SDK 0.15 ergänzt für RED Clipboard einen authentifizierten Inbox-Empfangsvertr
 ### RED MCP Hub und AI Gateway – Einstellungen
 
 Die Home-Server-Einstellungen zeigen aktive eigene MCP-Verbindungen mit explizitem Widerruf und einen getrennten lokalen KI-Textgenerator. Beide verlangen Owner-Gerätesitzung und exakten HTTPS-Server. Keine automatischen Abrufe, keine Hintergrundgenerierung, kein automatischer Dokumentzugriff. Modellliste ist Konfiguration, keine Installationsprüfung. Vor jeder Generierung ausdrückliche Bestätigung, Abbruch per AbortController und keine automatische Speicherung; Ausgabe als Text, nicht als HTML. Bei geänderter Sitzung werden Anfragen blockiert. Native Geräteabnahme und tatsächlicher Offline-Betrieb bleiben offen.
+
+### Backup-Frische (Host)
+
+`REDION_MAX_BACKUP_AGE_HOURS` legt die maximale Frische für `verify-latest` fest (Standard 48 Stunden, ganze Zahl 1 bis 8760). Der Bericht enthält `freshness.status` und `maxAgeHours`. Exitcode 0: authentifiziert und innerhalb der Frist; 2: authentifiziert, aber veraltet; 1: Prüfung oder Konfiguration fehlgeschlagen. `verify` für eine ausdrücklich gewählte ältere Sicherung bleibt ohne Frische-Gate. Keine automatische Löschung, Wiederherstellung oder Schlüsselübertragung. Ein frisches Backup ersetzt weiterhin keine Restore-Abnahme.

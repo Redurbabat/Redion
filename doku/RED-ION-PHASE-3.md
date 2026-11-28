@@ -49,3 +49,7 @@ Vorhandene Release-Gates bleiben unverändert. Der neue Werkzeug-Workflow prüft
 | P2 | Developer | Read-only CI-/Build-Inventar, getrennte Testprofile; schreibende Aktionen nur autorisiert |
 
 Kein Produktionsmerge ohne grüne CI auf der gemeinsamen Revision. Graphify muss im vollständigen Checkout nachgezogen werden.
+
+## Nacharbeit zur Master-Abnahme
+
+Playwright 1.56.1 benötigt einen unterstützten Linux-Runner; Ubuntu 24.04 ersetzt für diesen Test Ubuntu latest (26.04). Keine Browserprüfung entfernt. Der Disk-Sink wird zusätzlich über den echten verschlüsselten SDK-Chunkpfad mit Mehrteildatei, leerer Datei und manipulierter Chiffre geprüft. Nach erfolgreicher Veröffentlichung wird die Zieldatei bei einem Bereinigungsfehler nicht gelöscht; der Fehler benennt den bereits erfolgten Export ausdrücklich. Das bleibt ein lokaler Klartextexport, keine verschlüsselte SSD-Integration.

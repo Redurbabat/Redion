@@ -30,3 +30,7 @@ Diese Datei ist ein zusätzlicher Pfadtrigger für vorhandene Workflows: Home Se
 - Graphify im vollständigen Checkout nachziehen; vorhandener Graph ist historisch.
 
 Siehe [Phase 3](RED-ION-PHASE-3.md), [Home Server](HOME-SERVER.md), [Studio](RED-STUDIO-DESKTOP.md), [MCP](RED-ION-MCP-ARCHITEKTUR.md), [iPhone/Windows](IPHONE-WINDOWS-INTEGRATION.md).
+
+## Aktueller Prüffund
+
+Auf `dcdde61e` bestanden 17 von 18 PR-Workflows, einschliesslich unsignierter IPA und Windows-Paket. Phase 3 scheiterte beim Chromium-Setup: Playwright 1.56.1 unterstützt Ubuntu 26.04 nicht. Der Runner wird auf 24.04 festgelegt; erneute vollständige Abnahme nötig. Die neuen Backup-Frische- und SDK-Disk-Sink-Tests sind noch nicht bestätigt. Keine physische Abnahme.

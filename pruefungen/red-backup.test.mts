@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {randomBytes} from 'node:crypto';
 import {openHomeServer} from '../server/home-server.ts';
-import {createOfflineBackup,restoreOfflineBackup,verifyEncryptedBackup,verifyLatestEncryptedBackup} from '../server/home/backup.ts';
+import {createOfflineBackup,restoreOfflineBackup,verifyEncryptedBackup,verifyLatestEncryptedBackup,assessBackupAge} from '../server/home/backup.ts';
 
 test('Encrypted offline backup restores SQLite and blobs, rejects tampering and never overwrites',async()=>{
  const root=await mkdtemp(join(tmpdir(),'red-backup-'));
@@ -46,6 +46,7 @@ test('latest backup verification never falls back to an older valid backup',asyn
   const report=await verifyLatestEncryptedBackup(backups,key);
   assert.equal(report.backupName,'20260102T000000Z-bbbbbbbb');
   assert.equal(report.sqliteIntegrityVerified,false);
+  assert.equal(report.freshness.status,'fresh');assert.equal(report.freshness.maxAgeHours,48);
   assert.ok(report.backupAgeMs>=0);assert.ok(Number.isFinite(Date.parse(report.verifiedAt)));
   await assert.rejects(verifyLatestEncryptedBackup(backups,randomBytes(32)));
   await symlink(older,newest,'dir');await assert.rejects(verifyLatestEncryptedBackup(backups,key));await rm(newest);
@@ -54,4 +55,13 @@ test('latest backup verification never falls back to an older valid backup',asyn
   await assert.rejects(verifyLatestEncryptedBackup(backups,key));
   assert.equal((await verifyEncryptedBackup(older,key)).sqliteIntegrityVerified,false);
  }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test('Backup freshness distinguishes authenticated old backups from current backups',()=>{
+ const hour=3600000;
+ assert.deepEqual(assessBackupAge(48*hour),{status:'fresh',maxAgeHours:48});
+ assert.deepEqual(assessBackupAge(48*hour+1),{status:'stale',maxAgeHours:48});
+ assert.equal(assessBackupAge(2*hour,1).status,'stale');
+ for(const x of [0,-1,1.5,NaN,8761])assert.throws(()=>assessBackupAge(0,x));
+ for(const x of [-1,NaN,Infinity,0.5])assert.throws(()=>assessBackupAge(x));
 });

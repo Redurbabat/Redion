@@ -1,5 +1,5 @@
 /** Expliziter Klartextexport. Nur für ein vom Nutzer gewähltes, vertrauenswürdiges Verzeichnis. */
-import {open,link,unlink,mkdtemp,rm,realpath,stat} from 'node:fs/promises';
+import {open,link,mkdtemp,rm,realpath,stat} from 'node:fs/promises';
 import type {FileHandle} from 'node:fs/promises';
 import {dirname,basename,join,resolve} from 'node:path';
 import type {RedFileSink} from '../red-sdk/client.mts';
@@ -10,10 +10,10 @@ export function createDiskDownloadSink(destination:string):RedFileSink{
  let stage:string|null=null,handle:FileHandle|null=null,final:string|null=null,offset=0,total=0;
  let state:'new'|'staging'|'done'|'aborted'='new';
  async function abort(){
-  if(state==='done')return;
+  if(state==='done'&&!stage)return;
   if(handle){await handle.close();handle=null;}
   if(stage){await rm(stage,{recursive:true,force:true});stage=null;}
-  state='aborted';
+  if(state!=='done')state='aborted';
  }
  return {
   async begin(info){
@@ -33,8 +33,11 @@ export function createDiskDownloadSink(destination:string):RedFileSink{
    await handle.sync();await handle.close();handle=null;
    // Hardlink ist atomar und überschreibt kein bestehendes Ziel. Kein unsicherer Fallback.
    await link(join(stage,'data'),final);
-   try{await rm(stage,{recursive:true,force:true});stage=null;state='done';}
-   catch(error){try{await unlink(final);}catch(rollback){throw new AggregateError([error,rollback],'Export veröffentlicht; Bereinigung nicht bestätigt');}throw error;}
+   // The published path is never removed by rollback: another process may
+   // already have opened or replaced it. Cleanup failure is explicit.
+   state='done';
+   try{await rm(stage,{recursive:true,force:true});stage=null;}
+   catch(error){throw new Error('Export vollständig veröffentlicht; temporäre Bereinigung fehlgeschlagen',{cause:error});}
   },
   abort
  };

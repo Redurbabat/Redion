@@ -117,7 +117,11 @@ export async function verifyEncryptedBackup(source:string,rawKey:Uint8Array){
 }
 /** Verify the newest host-generated backup directory, never silently fall
  * back to an older successful backup. Run outside the online API process. */
-export async function verifyLatestEncryptedBackup(backupDirectory:string,rawKey:Uint8Array){
+export function assessBackupAge(ageMs:number,maxAgeHours=48){
+  if(!Number.isSafeInteger(ageMs)||ageMs<0||!Number.isSafeInteger(maxAgeHours)||maxAgeHours<1||maxAgeHours>8760)throw Error('Invalid backup freshness policy');
+  return {status:ageMs>maxAgeHours*3600000?'stale' as const:'fresh' as const,maxAgeHours};
+}
+export async function verifyLatestEncryptedBackup(backupDirectory:string,rawKey:Uint8Array,maxAgeHours=48){
   const root=await realpath(backupDirectory);
   const names=(await readdir(root)).filter(name=>/^\d{8}T\d{6}Z-[a-f0-9]{8}$/.test(name)).sort();
   const latest=names.at(-1);
@@ -128,14 +132,25 @@ export async function verifyLatestEncryptedBackup(backupDirectory:string,rawKey:
   const report=await verifyEncryptedBackup(selected,rawKey);
   const now=Date.now(),created=Date.parse(report.createdAt);
   if(!Number.isFinite(created)||created>now)throw Error('Backup creation time is in the future');
-  return {...report,backupName:latest,verifiedAt:new Date(now).toISOString(),backupAgeMs:now-created};
+  return {...report,backupName:latest,verifiedAt:new Date(now).toISOString(),backupAgeMs:now-created,freshness:assessBackupAge(now-created,maxAgeHours)};
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
   process.umask(0o077);
   const [command,source,destination,keyFile,confirmation]=process.argv.slice(2);
   if((command==='verify'||command==='verify-latest')&&source&&destination&&keyFile==='--verify-only'&&confirmation===undefined){
-    const verify=command==='verify-latest'?verifyLatestEncryptedBackup:verifyEncryptedBackup;
-    (async()=>console.log(JSON.stringify(await verify(source,await readFile(destination)))))().catch(()=>{console.error('RED backup verification failed. Check key, integrity and source.');process.exitCode=1;});
+    (async()=>{
+      const raw=await readFile(destination);
+      try{
+        if(command==='verify-latest'){
+          const limit=process.env.REDION_MAX_BACKUP_AGE_HOURS??'48';
+          if(!/^[1-9][0-9]{0,3}$/.test(limit))throw Error('Invalid backup freshness policy');
+          const hours=Number(limit);assessBackupAge(0,hours);
+          const report=await verifyLatestEncryptedBackup(source,raw,hours);
+          console.log(JSON.stringify(report));
+          if(report.freshness.status==='stale'){console.error('RED backup authenticated but exceeds freshness policy.');process.exitCode=2;}
+        }else console.log(JSON.stringify(await verifyEncryptedBackup(source,raw)));
+      }finally{raw.fill(0);}
+    })().catch(()=>{console.error('RED backup verification failed. Check key, integrity, source and freshness policy.');process.exitCode=1;});
   }else if(!source||!destination||!keyFile||confirmation!=='--offline-confirmed'||!['create','restore'].includes(command??'')){
     console.error('Usage: backup.ts create|restore SOURCE NEW_DESTINATION KEY_FILE --offline-confirmed; or verify|verify-latest SOURCE KEY_FILE --verify-only');process.exitCode=1;
   }else{

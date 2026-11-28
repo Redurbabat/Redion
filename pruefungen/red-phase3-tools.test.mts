@@ -6,6 +6,7 @@ import {join} from 'node:path';
 import {validateTimeline,renderVideoPreview} from '../tools/red-video-preview.mts';
 import {inspectDeveloper,supportedNode} from '../tools/red-developer-check.mts';
 import {createDiskDownloadSink} from '../tools/red-file-disk-sink.mts';
+import {createRedFiles,RED_FILE_CHUNK_BYTES,type RedStoreRecord,type RedStoreWrite} from '../red-sdk/client.mts';
 
 test('Timeline: begrenzte Dauer, escaped Inhalte, keine eingebetteten Nutzerskripte',()=>{
  const t={version:1,title:'<script>alert(1)</script>',scenes:[{title:'Ohm',body:'U = R × I & <b>Text</b>',seconds:5}]};
@@ -38,4 +39,22 @@ test('Disk-Sink publiziert erst nach vollständigem Export und überschreibt nie
   const failed=createDiskDownloadSink(join(dir,'never.bin'));await failed.begin({name:'ignored',size:2});
   await assert.rejects(failed.write(new Uint8Array([1]),1));await failed.abort();assert.deepEqual(await readdir(dir),['export.bin']);
  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('Encrypted SDK file download to disk: authenticated bytes, zero length and corruption rollback',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'red-encrypted-sink-'));
+ const records=new Map<string,RedStoreRecord>();
+ const transport={async storePut(w:RedStoreWrite){records.set(w.id,{version:1,id:w.id,revision:1,deleted:0,envelope:w.envelope,updated:1});return {version:1 as const,id:w.id,revision:1,deleted:0 as const};},async storeGet(_kind:'file'|'sync',id:string){const r=records.get(id);if(!r)throw Error('missing');return r;}};
+ const scope={origin:'https://home.example.test',owner:'owner',app:'red-fit'} as const;
+ const key=new Uint8Array(32).fill(4),files=createRedFiles(transport,scope,key);
+ try{
+  const bytes=new Uint8Array(RED_FILE_CHUNK_BYTES*2+5);for(let i=0;i<bytes.length;i++)bytes[i]=i%251;
+  const plan=await files.prepare('test.bin',bytes);await files.upload(plan);
+  const dest=join(dir,'export.bin');await files.downloadTo(plan.id,createDiskDownloadSink(dest));assert.deepEqual(await readFile(dest),Buffer.from(bytes));
+  const empty=await files.prepare('empty.bin',new Uint8Array());await files.upload(empty);await files.downloadTo(empty.id,createDiskDownloadSink(join(dir,'empty.bin')));assert.equal((await readFile(join(dir,'empty.bin'))).length,0);
+  const id=plan.chunks[1]!.id,record=records.get(id)!;
+  records.set(id,{...record,envelope:(record.envelope[0]==='A'?'B':'A')+record.envelope.slice(1)});
+  await assert.rejects(files.downloadTo(plan.id,createDiskDownloadSink(join(dir,'broken.bin'))));
+  assert.deepEqual((await readdir(dir)).sort(),['empty.bin','export.bin']);
+ }finally{files.dispose();key.fill(0);await rm(dir,{recursive:true,force:true});}
 });
