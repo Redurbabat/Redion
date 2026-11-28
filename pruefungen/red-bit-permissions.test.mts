@@ -172,3 +172,30 @@ test('Read job expiry and grant renewal cannot revive a previously claimed resul
   assert.equal(Number(service.store.sqlite.prepare('SELECT COUNT(*) AS n FROM home_red_bit_read_job').get().n),0);
  },true);
 });
+
+test('Read-job preflight allows only trusted app origins and never grants execution',async()=>{
+ for(const enabled of [false,true]){
+  await fixture(true,async({send})=>{
+   for(const path of [requestJob,resultJob,claimJob,completeJob]){
+    for(const source of ['redion-local://app','capacitor://localhost',origin]){
+     const headers={Origin:source,'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'authorization,content-type'};
+     const response=await send(path,{method:'OPTIONS',headers});
+     assert.equal(response.status,enabled?204:404);
+     if(enabled){
+      assert.equal(response.headers.get('Access-Control-Allow-Origin'),source);
+      assert.match(response.headers.get('Access-Control-Allow-Methods')??'',/POST/);
+      assert.match(response.headers.get('Access-Control-Allow-Headers')??'',/Authorization/i);
+      assert.equal(await response.text(),'');
+      const denied=await send(path,{method:'POST',headers:{Origin:source,'Content-Type':'application/json'},body:JSON.stringify({confirm:true})});
+      assert.equal(denied.status,401);
+     }
+    }
+    for(const source of ['https://evil.example.test','null']){
+     const response=await send(path,{method:'OPTIONS',headers:{Origin:source}});
+     assert.equal(response.status,403);
+     assert.equal(response.headers.get('Access-Control-Allow-Origin'),null);
+    }
+   }
+  },enabled);
+ }
+});
