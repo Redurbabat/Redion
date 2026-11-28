@@ -110,6 +110,28 @@ export function createSqliteSyncAdapter(db:DatabaseSync,scope:RedSyncScope,local
    return {token,generation:initial.generation,operationId:write.operationId,id,remoteRevision:remote.revision,remoteValue,localValue:item.value,pendingValue:pending.value};
   }finally{secret.fill(0);}
  }
+ /** Only ordinary local-edit text conflicts can be reconciled this way.
+  * Rollback, missing remote records and unauthenticated tombstones remain blocked. */
+ async function pullConflict(id:string,remoteKey:Uint8Array,transport:Pick<UploadTransport,'storeGet'>){
+  if(!validId(id)||syncScope.kind!=='sync'||remoteKey.byteLength!==32)throw Error('Ungültige Konfliktprüfung');
+  const initial=read(),item=initial.state.items.find(i=>i.id===id);
+  const journal=initial.state.conflicts.filter(c=>c.id===id);
+  if(initial.state.outbox?.some(p=>p.write.id===id)||!item?.dirty||item.deleted!==0||item.value===null||!journal.length||journal.some(c=>c.reason!=='local_edit'||c.remoteRevision===null||c.localRevision!==item.revision))throw Error('Kein lösbarer Pull-Textkonflikt');
+  const minimum=Math.max(item.revision+1,...journal.map(c=>c.remoteRevision!));
+  const secret=Buffer.from(remoteKey);
+  try{
+   const remote=await transport.storeGet('sync',id);
+   if(remote.id!==id||remote.version!==1||remote.deleted!==0||!natural(remote.revision)||remote.revision<minimum)throw Error('Serverkonflikt nicht sicher auflösbar');
+   const bytes=await openRedStoreRecord(secret,{...syncScope,id},remote);
+   let remoteValue:string;
+   try{remoteValue=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}).decode(bytes);}
+   finally{bytes.fill(0);}
+   if(!textValid(remoteValue))throw Error('Ungültiger Servertext');
+   const token=createHash('sha256').update(JSON.stringify(['pull-conflict-v1',initial.generation,id,remote.revision,remote.envelope])).digest('hex');
+   if(read().generation!==initial.generation)throw Error('Lokaler Bestand geändert; Vorschau erneuern');
+   return {token,generation:initial.generation,id,remoteRevision:remote.revision,remoteValue,localValue:item.value,localRevision:item.revision};
+  }finally{secret.fill(0);}
+ }
  const adapter:RedSyncAdapter<string>={
   async snapshot():Promise<RedSyncSnapshot>{
    const {generation,state}=read();
@@ -214,6 +236,30 @@ export function createSqliteSyncAdapter(db:DatabaseSync,scope:RedSyncScope,local
     items.set(id,{id,revision:preview.remoteRevision,deleted:0,dirty:false,value:preview.remoteValue});
     save({...state,items:[...items.values()],outbox:(state.outbox??[]).filter(p=>p.write.id!==id)},generation);
     return {id,remoteRevision:preview.remoteRevision,copies};
+   });
+  },
+  async previewPullConflict(id:string,remoteKey:Uint8Array,transport:Pick<UploadTransport,'storeGet'>){
+   const {generation,...preview}=await pullConflict(id,remoteKey,transport);void generation;
+   return preview;
+  },
+  async resolvePullKeepBoth(id:string,token:string,remoteKey:Uint8Array,transport:Pick<UploadTransport,'storeGet'>){
+   if(typeof token!=='string'||!/^[a-f0-9]{64}$/.test(token))throw Error('Konfliktvorschau erforderlich');
+   const preview=await pullConflict(id,remoteKey,transport);
+   if(preview.token!==token)throw Error('Konfliktvorschau veraltet');
+   return transaction(()=>{
+    const {generation,state}=read();
+    if(generation!==preview.generation)throw Error('Konfliktvorschau veraltet');
+    const items=new Map(state.items.map(i=>[i.id,i]));
+    let copyId:string|null=null;
+    if(preview.localValue!==preview.remoteValue){
+     copyId=randomBytes(16).toString('hex');
+     if(items.has(copyId)||state.conflicts.some(c=>c.id===copyId))throw Error('ID-Kollision');
+     items.set(copyId,{id:copyId,revision:0,deleted:0,dirty:true,value:preview.localValue});
+    }
+    items.set(id,{id,revision:preview.remoteRevision,deleted:0,dirty:false,value:preview.remoteValue});
+    // Remove only explicitly resolved active conflicts. No server write or cursor movement.
+    save({...state,items:[...items.values()],conflicts:state.conflicts.filter(c=>c.id!==id)},generation);
+    return {id,remoteRevision:preview.remoteRevision,copyId};
    });
   },
   pendingUploads(){return (read().state.outbox??[]).map(p=>({id:p.write.id,expectedRevision:p.write.expectedRevision}));},

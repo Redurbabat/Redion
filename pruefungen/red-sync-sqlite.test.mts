@@ -138,3 +138,51 @@ test('Conflict recovery refuses unauthenticated records, tombstones and a matchi
   a.dispose();
  }finally{db.close();}
 });
+
+test('Actual SDK pull conflict can be resolved by authenticated keep-both without cursor advance',async()=>{
+ const db=new DatabaseSync(':memory:');
+ try{
+  const a=createSqliteSyncAdapter(db,scope,localKey);a.putLocal(id,'Local offline');
+  const w=await prepareRedStoreWrite(remoteKey,{...scope,id},0,new TextEncoder().encode('Server version'));
+  let record:RedStoreRecord={version:1,id,revision:1,deleted:0,updated:1,envelope:w.envelope};
+  const feed:RedStoreChanges={version:1,reset:true,cursor,items:[{id,revision:1,deleted:0,updated:1,encodedBytes:record.envelope.length}]};
+  const transport={async storeChanges(){return feed;},async storeGet(){return record;}};
+  const sync=createRedSync(transport,scope,remoteKey,a,b=>new TextDecoder().decode(b));
+  assert.equal((await sync.pull()).conflicts,1);
+  assert.equal(a.getLocal(id)?.value,'Local offline');assert.equal(a.conflicts().length,1);
+  await assert.rejects(a.previewPullConflict(id,localKey,transport));
+  const first=await a.previewPullConflict(id,remoteKey,transport);
+  a.putLocal(id,'New local version');
+  await assert.rejects(a.resolvePullKeepBoth(id,first.token,remoteKey,transport),/veraltet/);
+  const fresh=await a.previewPullConflict(id,remoteKey,transport);
+  const w2=await prepareRedStoreWrite(remoteKey,{...scope,id},1,new TextEncoder().encode('New server version'));
+  record={...record,revision:2,envelope:w2.envelope};
+  await assert.rejects(a.resolvePullKeepBoth(id,fresh.token,remoteKey,transport),/veraltet/);
+  const current=await a.previewPullConflict(id,remoteKey,transport);
+  const result=await a.resolvePullKeepBoth(id,current.token,remoteKey,transport);
+  assert.ok(result.copyId);assert.equal(a.getLocal(result.copyId)?.value,'New local version');
+  assert.equal(a.getLocal(result.copyId)?.dirty,true);assert.equal(a.getLocal(id)?.value,'New server version');
+  assert.equal(a.getLocal(id)?.revision,2);assert.equal(a.getLocal(id)?.dirty,false);
+  assert.equal(a.conflicts().length,0);assert.equal((await a.snapshot()).cursor,cursor);
+  await assert.rejects(a.resolvePullKeepBoth(id,current.token,remoteKey,transport));
+  sync.dispose();a.dispose();
+ }finally{db.close();}
+});
+test('Pull conflict resolution refuses rollback, missing remote, tombstones and unverified revision',async()=>{
+ const db=new DatabaseSync(':memory:');
+ try{
+  const a=createSqliteSyncAdapter(db,scope,localKey);a.putLocal(id,'Local');
+  const snap=await a.snapshot();
+  await a.commit(snap.generation,{cursor,imports:[],conflicts:[{id,localRevision:0,remoteRevision:2,reason:'local_edit'}]});
+  const w=await prepareRedStoreWrite(remoteKey,{...scope,id},0,new TextEncoder().encode('Old'));
+  const old:RedStoreRecord={version:1,id,revision:1,deleted:0,updated:1,envelope:w.envelope};
+  await assert.rejects(a.previewPullConflict(id,remoteKey,{async storeGet(){return old;}}));
+  await assert.rejects(a.previewPullConflict(id,remoteKey,{async storeGet(){return {...old,revision:2,deleted:1,envelope:''};}}));
+  await assert.rejects(a.previewPullConflict(id,remoteKey,{async storeGet(){throw Error('missing');}}));
+  const next=await a.snapshot();
+  await a.commit(next.generation,{cursor,imports:[],conflicts:[{id,localRevision:0,remoteRevision:null,reason:'missing_remote'}]});
+  let calls=0;
+  await assert.rejects(a.previewPullConflict(id,remoteKey,{async storeGet(){calls++;return old;}}));
+  assert.equal(calls,0);assert.equal(a.conflicts().length,2);assert.equal(a.getLocal(id)?.value,'Local');a.dispose();
+ }finally{db.close();}
+});

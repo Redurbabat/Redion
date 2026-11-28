@@ -46,3 +46,7 @@ Auf `c20c2671` sind alle 18 PR-Workflows und der Push-Prüflauf grün. Der neue 
 ## P0-Fortschritt: blockierte Upload-Konflikte
 
 Explizite Keep-both-Auflösung mit authentifizierter Vorschau und erneuter Prüfung; jüngste lokale und vorbereitete Fassung bleiben bei Abweichung als separate lokale Kopien erhalten. Kein Server-Write und kein Cursor-Fortschritt. Regressionen für veraltete Vorschau, Server-/lokale Änderungen, falschen Schlüssel und Tombstones. Neue Revision noch zu prüfen. Reguläre Pull-Konflikte, native UI und Geräteabnahme bleiben offen.
+
+## P0-Fortschritt: eingehende Textkonflikte
+
+Ergänzt Keep-both für gewöhnliche lokale Textänderungskonflikte im SDK-Pull, mit authentifizierter Vorschau, neuer lokaler Kopie und atomarer Entfernung des explizit gelösten aktiven Konflikts. Kein Cursor-Fortschritt, keine Netzwerkschreiboperation. Tests für echten SDK-Pull, veraltete Vorschau, falschen Schlüssel und blockierte Sonderfälle. Vorherige und neue Gesamt-CI noch nicht vollständig abgenommen. UI, Sonderfälle und native Integration bleiben offen.
