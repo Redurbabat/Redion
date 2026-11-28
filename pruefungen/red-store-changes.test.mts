@@ -22,8 +22,9 @@ test('change anchors are scoped, bounded and transactional; legacy records are s
   add.run('other','red-fit','sync','c'.repeat(32),1,0,'A'.repeat(40),'o','d',2);
   assert.equal(readRedStoreChanges(db,'other','red-fit','sync',first.cursor).reset,true);
   assert.equal(readRedStoreChanges(db,'owner','red-fit','file',first.cursor).items.length,0);
-  const update=db.prepare('UPDATE home_red_store_record SET revision=revision+1 WHERE owner=? AND app=? AND kind=? AND id=?');
-  for(let i=0;i<513;i++)update.run('owner','red-fit','sync','a'.repeat(32));
+  // Outer UPSERT conflict policies must not override the trigger's explicit UPSERT.
+  const update=db.prepare('INSERT INTO home_red_store_record VALUES(?,?,?,?,1,0,?,\'o\',\'d\',1) ON CONFLICT(owner,app,kind,id) DO UPDATE SET revision=home_red_store_record.revision+1');
+  for(let i=0;i<513;i++)update.run('owner','red-fit','sync','a'.repeat(32),'A'.repeat(40));
   const reset=readRedStoreChanges(db,'owner','red-fit','sync',first.cursor);
   assert.equal(reset.reset,true);assert.equal(reset.items[0]?.revision,514);
   assert.equal(Number(db.prepare("SELECT COUNT(*) AS n FROM home_red_store_anchor WHERE owner='owner'").get()?.n),512);

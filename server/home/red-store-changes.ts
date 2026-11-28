@@ -17,9 +17,10 @@ INSERT OR IGNORE INTO home_red_store_anchor SELECT owner,app,kind,seq,stamp FROM
   // Triggers keep the revision and its change marker in the same SQLite
   // transaction, including when a compatible older writer updates the row.
   const statements=`INSERT INTO home_red_store_clock VALUES(NEW.owner,NEW.app,NEW.kind,1,lower(hex(randomblob(32)))) ON CONFLICT(owner,app,kind) DO UPDATE SET seq=seq+1,stamp=lower(hex(randomblob(32)));
-INSERT OR REPLACE INTO home_red_store_change SELECT owner,app,kind,NEW.id,seq FROM home_red_store_clock WHERE owner=NEW.owner AND app=NEW.app AND kind=NEW.kind;
+INSERT INTO home_red_store_change SELECT owner,app,kind,NEW.id,seq FROM home_red_store_clock WHERE owner=NEW.owner AND app=NEW.app AND kind=NEW.kind ON CONFLICT(owner,app,kind,id) DO UPDATE SET seq=excluded.seq;
 INSERT INTO home_red_store_anchor SELECT owner,app,kind,seq,stamp FROM home_red_store_clock WHERE owner=NEW.owner AND app=NEW.app AND kind=NEW.kind;
 DELETE FROM home_red_store_anchor WHERE owner=NEW.owner AND app=NEW.app AND kind=NEW.kind AND seq<=(SELECT seq FROM home_red_store_clock WHERE owner=NEW.owner AND app=NEW.app AND kind=NEW.kind)-${KEEP};`;
+  db.exec('DROP TRIGGER IF EXISTS home_red_store_change_insert; DROP TRIGGER IF EXISTS home_red_store_change_update;');
   db.exec('CREATE TRIGGER IF NOT EXISTS home_red_store_change_insert AFTER INSERT ON home_red_store_record BEGIN '+statements+' END;');
   db.exec('CREATE TRIGGER IF NOT EXISTS home_red_store_change_update AFTER UPDATE OF revision ON home_red_store_record WHEN OLD.revision<>NEW.revision BEGIN '+statements+' END;');
   db.exec('COMMIT');
