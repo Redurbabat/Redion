@@ -53,6 +53,31 @@ const Zusatz = (() => {
         let verbindeVon = null;
         const w = document.createElement('div');
         w.className = 'wb';
+        const desktopStudio = () => document.documentElement.hasAttribute('data-windows-titelleiste') &&
+            document.body.dataset.uiShell !== 'glass-wheel' &&
+            window.matchMedia('(min-width:1024px) and (hover:hover) and (pointer:fine)').matches;
+        const desktopBar = document.createElement('div');
+        desktopBar.className = 'wb-desktop-command';
+        desktopBar.setAttribute('role', 'group');
+        desktopBar.setAttribute('aria-label', 'Whiteboard Arbeitsbereich');
+        const desktopStatus = document.createElement('span');
+        desktopStatus.className = 'wb-desktop-status';
+        desktopBar.append(desktopStatus);
+        const desktopButton = (id, name, action) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.dataset.wbDesktop = id;
+            button.textContent = name;
+            button.addEventListener('click', action);
+            desktopBar.append(button);
+            return button;
+        };
+        desktopButton('layers', 'Ebenen', () => openObjects('layers'));
+        desktopButton('frames', 'Rahmen', () => openObjects('frames'));
+        desktopButton('exchange', 'Import / Export', () => openObjects('exchange'));
+        const zoomSelectionButton = desktopButton('selection', 'Auswahl zoomen', () => auswahlInsBild());
+        zoomSelectionButton.disabled = true;
+        w.append(desktopBar);
         const massstabZeigen = document.createElement('b');
         massstabZeigen.className = 'wb-massstab';
         massstabZeigen.setAttribute('aria-live', 'polite');
@@ -259,6 +284,9 @@ const Zusatz = (() => {
                 }
             }
             massstabZeigen.textContent = Math.round(sicht.z * 100) + ' %';
+            const count = daten.filter((o) => o.art !== 'verbindung').length;
+            desktopStatus.textContent = count + ' Objekte · ' + objectSelection.size + ' gewählt';
+            zoomSelectionButton.disabled = !daten.some((o) => objectSelection.has(o.id) && o.art !== 'verbindung');
         };
         const bildAdressen = new Map();
         const bildHolen = (dateiId) => {
@@ -454,6 +482,19 @@ const Zusatz = (() => {
             (exact ? ids : GfxObjects.expand(daten, new Set(ids))).forEach(id => objectSelection.add(id));
             gewaehlt = objectSelection.size === 1 ? [...objectSelection][0] : null;
         };
+        const auswahlInsBild = () => {
+            const box = GfxObjects.bounds(daten.filter((o) => objectSelection.has(o.id) && o.art !== 'verbindung'));
+            if (!box)
+                return;
+            const r = flaeche.getBoundingClientRect();
+            if (r.width <= 48 || r.height <= 48)
+                return;
+            sicht.z = Math.max(KLEINSTER, Math.min(GROESSTER, Math.min((r.width - 48) / Math.max(1, box.w), (r.height - 48) / Math.max(1, box.h))));
+            sicht.x = box.x - (r.width / sicht.z - box.w) / 2;
+            sicht.y = box.y - (r.height / sicht.z - box.h) / 2;
+            male();
+            sichtSichern();
+        };
         const openObjects = (tab = 'layers') => {
             const previousView = { ...sicht };
             GfxInspector.open({ host: w, read: () => daten, selected: () => objectSelection, uid: () => Store.uid(),
@@ -517,8 +558,36 @@ const Zusatz = (() => {
                 sichern();
                 return;
             }
-            if (!strg)
+            if (!strg) {
+                if (!desktopStudio() || e.altKey || e.shiftKey || e.repeat ||
+                    (ziel !== w && !ziel?.closest('.wb-flaeche')) ||
+                    aktiv || verschiebt || schiebt || groesst || selectionDrag || stiftZeiger !== null || finger.size)
+                    return;
+                const id = { v: 'zeiger', h: 'hand', p: 'stift', e: 'radierer', r: 'rechteck', o: 'ellipse', t: 'text' }[e.key.toLowerCase()];
+                if (id) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    werkzeug = id;
+                    leiste.setzeWerkzeug(id);
+                    verbindeVon = null;
+                    if (id !== 'zeiger') {
+                        gewaehlt = null;
+                        objectSelection.clear();
+                    }
+                    w.classList.toggle('wb-schiebt', id === 'hand');
+                    male();
+                    return;
+                }
+                if (e.key === '0' || e.key === '1') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (e.key === '0')
+                        insBild();
+                    else
+                        auswahlInsBild();
+                }
                 return;
+            }
             const taste = e.key.toLowerCase();
             if (taste === 'z' && !e.shiftKey) {
                 e.preventDefault();
