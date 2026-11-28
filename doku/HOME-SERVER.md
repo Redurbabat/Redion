@@ -325,3 +325,14 @@ Receipt-Quote ACK nicht als erfolgreich behandeln; keine Daten erneut importiere
 Server prüft die kanonische Envelope-Form, kann aber Verschlüsselung nicht
 beweisen. Browser-Allowlist bleibt auf Identität beschränkt. Bestehende
 App-Clients müssen separat auf SDK 0.6 aktualisiert werden.
+
+### Echte Docker-Updateprobe in CI
+
+`pruefungen/red-update-rehearsal.sh` baut die geprüfte Ausgangsversion
+`0e9b8506` und den aktuellen CI-Commit als getrennte Images, erstellt
+synthetische Vault-Daten und eine verschlüsselte Sicherung, führt die reale
+Upgrade-/Pre-Cutover-Rollback-Probe aus und vergleicht die Hashes der
+unveränderten Live-Fixture. Keine echten Daten, Ports oder Deployments.
+Der Rehearsal-Code verwendet nach Prüfung der Revision unveränderliche
+Docker-Image-IDs statt beweglicher Tags. Kein Nachweis eines Rollbacks
+nach neuen Live-Schreibvorgängen.

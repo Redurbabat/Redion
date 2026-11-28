@@ -12,6 +12,7 @@ on:
       - 'pruefungen/red-vault.test.mts'
       - 'pruefungen/red-vault-migrate.test.mts'
       - 'pruefungen/red-backup.test.mts'
+      - 'pruefungen/red-update-rehearsal.sh'
       - 'red-sdk/**'
       - 'pruefungen/red-connect.test.mts'
       - 'pruefungen/red-share.test.mts'
@@ -27,6 +28,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -35,4 +38,4 @@ jobs:
       - run: bash -n deploy/home/backup.sh && bash -n deploy/home/update.sh && bash -n deploy/home/rehearse-update.sh
       - run: npm ci --ignore-scripts
       - run: npm --prefix red-sdk run build && npm --prefix red-sdk pack --dry-run
-      - run: docker build -f deploy/home/Dockerfile -t redion-home:test .
+      - run: bash pruefungen/red-update-rehearsal.sh

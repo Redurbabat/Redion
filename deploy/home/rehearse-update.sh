@@ -20,12 +20,16 @@ for path in "$root" "$backup" "$key"; do
 done
 case "$root/" in "$backup/"*) echo "Rehearsal must not be inside the backup." >&2; exit 1;; esac
 case "$live/" in "$root/"*) echo "Choose a dedicated rehearsal root, not a parent of live data." >&2; exit 1;; esac
+image_ids=()
 for image in "$old" "$new"; do
   sha="${image#redion-home:}"
-  [[ $(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image") == "$sha" ]] || {
+  image_id=$(docker image inspect --format '{{.Id}}' "$image")
+  [[ "$image_id" =~ ^sha256:[a-f0-9]{64}$ && $(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image_id") == "$sha" ]] || {
     echo "Image must be staged and revision-labelled first." >&2; exit 1;
   }
+  image_ids+=("$image_id")
 done
+old_id="${image_ids[0]}"; new_id="${image_ids[1]}"
 umask 077
 work=$(mktemp -d "$root/redion-rehearsal.XXXXXXXX")
 cleanup(){ rm -rf -- "$work"; }
@@ -42,7 +46,7 @@ if [[ -n "${REDION_VAULT_KEY_PATH:-}" ]]; then
   vault_env=(-e REDION_VAULT_KEY_FILE=/run/vault-key)
 fi
 for slot in upgrade rollback; do
-  "${base[@]}" "${mounts[@]}" "$new" node server/home/backup.ts restore /snapshot "/rehearsal/$slot" /run/backup-key --offline-confirmed
+  "${base[@]}" "${mounts[@]}" "$new_id" node server/home/backup.ts restore /snapshot "/rehearsal/$slot" /run/backup-key --offline-confirmed
 done
 probe() {
   local image=$1 slot=$2
@@ -60,7 +64,7 @@ probe() {
     }finally{s.close();}
   '
 }
-probe "$new" upgrade
-probe "$old" rollback
+probe "$new_id" upgrade
+probe "$old_id" rollback
 echo "Upgrade and PRE-CUTOVER rollback rehearsal passed; live service and original backup unchanged."
 echo "This does not validate rollback after accepting new writes. Do not restore stale data over live data."
