@@ -12,15 +12,21 @@ const grantId=(v:unknown):v is string=>typeof v==='string'&&/^grant:[a-f0-9]{64}
 const sessionId=(v:unknown):v is string=>typeof v==='string'&&/^session_[a-f0-9]{64}$/.test(v);
 const reply=(status:number,body:unknown)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const TTL=300_000,LIMIT=128;
-const activeOAuth=(db:DatabaseSync,owner:string,grant:string,now:number)=>db.prepare("SELECT expires,json_extract(data,'$.epoch') AS epoch FROM mcp_state WHERE key=? AND kind='grant' AND expires>? AND json_extract(data,'$.userId')=? AND json_extract(data,'$.active')=1").get(grant,now,owner);
+const activeOAuth=(db:DatabaseSync,owner:string,grant:string,now:number)=>db.prepare("SELECT expires,json_extract(data,'$.epoch') AS epoch,json_extract(data,'$.clientId') AS client_id FROM mcp_state WHERE key=? AND kind='grant' AND expires>? AND json_extract(data,'$.userId')=? AND json_extract(data,'$.active')=1").get(grant,now,owner);
 const activeDevice=(db:DatabaseSync,owner:string,session:string,kind:Mode,now:number)=>{
  const table=kind==='status'?'home_red_bit_permission':'home_red_bit_transport_permission';
  return db.prepare("SELECT g.expires,s.refresh_until FROM "+table+" g JOIN home_red_session s ON s.id=g.session_id AND s.owner=g.owner JOIN konten c ON c.id=s.owner WHERE g.owner=? AND g.session_id=? AND g.expires>? AND s.refresh_until>? AND s.app='red-bit' AND c.gesperrt=0").get(owner,session,now,now);
 };
 
-export function prepareRedBitMcpGrants(db:DatabaseSync){
+export function prepareRedBitMcpGrants(db:DatabaseSync,enabled:ReadonlySet<Mode>){
  db.exec(`CREATE TABLE IF NOT EXISTS home_red_bit_mcp_grant(owner TEXT NOT NULL,grant_id TEXT NOT NULL,epoch TEXT NOT NULL,session_id TEXT NOT NULL,mode TEXT NOT NULL CHECK(mode IN ('status','transport')),expires INTEGER NOT NULL,PRIMARY KEY(owner,grant_id,session_id,mode));
  CREATE TRIGGER IF NOT EXISTS home_red_bit_mcp_session_cleanup AFTER DELETE ON home_red_session BEGIN DELETE FROM home_red_bit_mcp_grant WHERE session_id=OLD.id; END;`);
+ for(const kind of enabled){
+  const table=kind==='status'?'home_red_bit_permission':'home_red_bit_transport_permission';
+  for(const event of ['DELETE','UPDATE']){
+   db.exec("CREATE TRIGGER IF NOT EXISTS home_red_bit_mcp_"+kind+"_"+event.toLowerCase()+" AFTER "+event+" ON "+table+" BEGIN DELETE FROM home_red_bit_mcp_grant WHERE session_id=OLD.session_id AND mode='"+kind+"'; END;");
+  }
+ }
  // A new pilot configuration must not revive old explicit authorizations.
  db.exec('DELETE FROM home_red_bit_mcp_grant');
 }
@@ -30,7 +36,7 @@ export function prepareRedBitMcpGrants(db:DatabaseSync){
 export function redBitMcpAllowed(db:DatabaseSync,principal:McpPrincipal,session:string,kind:Mode,enabled:ReadonlySet<Mode>,now=Date.now()):boolean{
  if(!enabled.has(kind)||!sessionId(session)||!grantId(principal.grantId)||!principal.scopes.includes('redion:read'))return false;
  const oauth=activeOAuth(db,principal.userId,principal.grantId,now);
- if(!oauth||typeof oauth.epoch!=='string')return false;
+ if(!oauth||typeof oauth.epoch!=='string'||oauth.client_id!==principal.clientId)return false;
  const row=db.prepare('SELECT 1 FROM home_red_bit_mcp_grant WHERE owner=? AND grant_id=? AND epoch=? AND session_id=? AND mode=? AND expires>?').get(principal.userId,principal.grantId,oauth.epoch,session,kind,now);
  return !!row&&!!activeDevice(db,principal.userId,session,kind,now);
 }
