@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {openHomeServer} from '../server/home-server.ts';
 import {approveHomeDevice} from '../server/home/pairing.ts';
+import {createRedBitMcpTools} from '../server/home/red-bit-mcp-tools.ts';
 import {redBitMcpAllowed} from '../server/home/red-bit-mcp-grants.ts';
 import {createRedPairProof} from '../red-sdk/client.mts';
 
@@ -332,7 +333,7 @@ test('MCP delegation requires separate owner confirmation, matching OAuth epoch 
   const created=await post('/home/red-bit/mcp-grant',body,token);
   assert.equal(created.status,201);
   const receipt=await created.json() as any;
-  assert.equal(receipt.toolsAvailable,false);
+  assert.equal(receipt.toolsAvailable,true);
   assert.ok(receipt.expiresAt<=Date.now()+300000);
   assert.equal(allow(),true);
   assert.equal(redBitMcpAllowed(db,principal,other.sessionId,'status',enabled),false);
@@ -355,4 +356,44 @@ test('MCP delegation is disabled by default despite device permissions',async()=
  await fixture(true,async({get,token})=>{
   assert.equal((await get('/home/red-bit/mcp-grants',token)).status,404);
  },true,true,true);
+});
+
+test('Delegated MCP tools queue actual device jobs, isolate results and cancel on revocation',async()=>{
+ await fixture(true,async({service,post,token,pair})=>{
+  const bit=await pair('red-bit'),db=service.store.sqlite;
+  const owner=String(db.prepare('SELECT owner FROM home_red_session WHERE id=?').get(bit.sessionId).owner);
+  const grantId='grant:'+'c'.repeat(64),clientId='mcp-fixture',epoch='epoch-a';
+  const oauth={userId:owner,clientId,epoch,active:true,remember:false,scopes:['redion:read'],workspaceIds:[]};
+  db.prepare("INSERT INTO mcp_state(key,kind,data,expires,revision) VALUES(?,'grant',?,?,1)").run(grantId,JSON.stringify(oauth),Date.now()+600000);
+  const p={userId:owner,clientId,grantId,scopes:['redion:read' as const],workspaceIds:[]};
+  const tools=createRedBitMcpTools(db,new Set(['status','transport'] as const));
+  const sessionId=bit.sessionId,base={sessionId,confirm:true},delegation={...base,grantId,mode:'status'};
+  const args={...base,requestId:'1'.repeat(32)};
+  assert.deepEqual(tools.list(p),[]);
+  assert.throws(()=>tools.call(p,'redbit_read_status',args));
+  await post(grant,base,token);
+  await post('/home/red-bit/mcp-grant',delegation,token);
+  assert.ok(tools.list(p).some(t=>t.name==='redbit_read_status'));
+  assert.ok(!tools.list(p).some(t=>t.name==='redbit_play'));
+  const job=tools.call(p,'redbit_read_status',args) as {jobId:string};
+  assert.throws(()=>tools.call(p,'redbit_read_status',args));
+  assert.throws(()=>tools.call(p,'redbit_play',{...args,requestId:'2'.repeat(32)}));
+  const claim=await (await post(claimJob,{confirm:true},bit.accessToken)).json() as any;
+  assert.equal(claim.job.id,job.jobId);
+  await post(completeJob,{id:job.jobId,status},bit.accessToken);
+  assert.equal((tools.call(p,'redbit_get_job_result',{sessionId,jobId:job.jobId}) as {state:string}).state,'completed');
+  assert.throws(()=>tools.call({...p,grantId:'grant:'+'d'.repeat(64)},'redbit_get_job_result',{sessionId,jobId:job.jobId}));
+  await post(transportGrant,base,token);
+  await post('/home/red-bit/mcp-grant',{...delegation,mode:'transport'},token);
+  const play=tools.call(p,'redbit_play',{...args,requestId:'3'.repeat(32)}) as {jobId:string};
+  const claimed=await (await post(trClaim,{confirm:true},bit.accessToken)).json() as any;
+  assert.equal(claimed.job.id,play.jobId);
+  await post('/home/red-bit/mcp-revoke',{...delegation,mode:'transport'},token);
+  assert.equal((await post(trAuthorize,{id:play.jobId,command:'play',confirm:true},bit.accessToken)).status,409);
+  assert.throws(()=>tools.call(p,'redbit_get_job_result',{sessionId,jobId:play.jobId}));
+  const next=tools.call(p,'redbit_read_status',{...args,requestId:'4'.repeat(32)}) as {jobId:string};
+  db.prepare('UPDATE mcp_state SET data=? WHERE key=?').run(JSON.stringify({...oauth,epoch:'new'}),grantId);
+  assert.deepEqual(await (await post(claimJob,{confirm:true},bit.accessToken)).json(),{version:1,job:null});
+  assert.throws(()=>tools.call(p,'redbit_get_job_result',{sessionId,jobId:next.jobId}));
+ },true,true,true,true);
 });
