@@ -449,6 +449,28 @@ const Planflaeche = (() => {
         const studioGriff = studioBreite(studioPanel, 'Inspektor', 'rechts', 288);
         palette.after(paletteGriff);
         studioPanel.before(studioGriff);
+        const desktopDoppelspalte = () => document.documentElement.hasAttribute('data-windows-titelleiste') &&
+            document.body.dataset.uiShell !== 'glass-wheel' &&
+            !planFokus && wurzel.clientWidth >= 1180 &&
+            window.matchMedia('(min-width:1024px) and (hover:hover) and (pointer:fine)').matches;
+        const paletteSetzen = (offen) => {
+            paletteOffen = offen;
+            palette.hidden = !offen;
+            wurzel.classList.toggle('sp-palette-offen', offen);
+            if (offen && studioOffen && !desktopDoppelspalte()) {
+                studioOffen = false;
+                studioPanel.hidden = true;
+            }
+        };
+        const studioSetzen = (offen) => {
+            studioOffen = offen;
+            studioPanel.hidden = !offen;
+            if (offen) {
+                if (!desktopDoppelspalte())
+                    paletteSetzen(false);
+                studioTab = 'eigenschaften';
+            }
+        };
         const fussInhalt = document.createElement('div');
         fussInhalt.className = 'sp-fuss-inhalt';
         fuss.appendChild(fussInhalt);
@@ -668,6 +690,8 @@ const Planflaeche = (() => {
                 markeSetzen();
             }).observe(dock);
         const kopfMalen = () => {
+            if (paletteOffen && studioOffen && !desktopDoppelspalte())
+                paletteSetzen(false);
             fachStatus();
             dockAktualisieren();
             einstiegMalen();
@@ -2558,12 +2582,7 @@ const Planflaeche = (() => {
                 return;
             }
             if (aktion === 'eigenschaften') {
-                studioOffen = true;
-                studioTab = 'eigenschaften';
-                studioPanel.hidden = false;
-                paletteOffen = false;
-                palette.hidden = true;
-                wurzel.classList.remove('sp-palette-offen');
+                studioSetzen(true);
                 studioMalen();
                 kopfMalen();
                 return;
@@ -3709,13 +3728,7 @@ const Planflaeche = (() => {
                 return;
             }
             if (b.dataset.a === 'palette-toggle') {
-                paletteOffen = !paletteOffen;
-                if (paletteOffen && studioOffen) {
-                    studioOffen = false;
-                    studioPanel.hidden = true;
-                }
-                wurzel.classList.toggle('sp-palette-offen', paletteOffen);
-                palette.hidden = !paletteOffen;
+                paletteSetzen(!paletteOffen);
                 kopfMalen();
                 return;
             }
@@ -3767,14 +3780,7 @@ const Planflaeche = (() => {
                 return;
             }
             if (b.dataset.a === 'elektro-studio' || b.dataset.a === 'desktop-inspector') {
-                studioOffen = !studioOffen;
-                studioPanel.hidden = !studioOffen;
-                if (studioOffen) {
-                    paletteOffen = false;
-                    palette.hidden = true;
-                    wurzel.classList.remove('sp-palette-offen');
-                    studioTab = 'eigenschaften';
-                }
+                studioSetzen(!studioOffen);
                 kopfMalen();
                 if (studioOffen)
                     studioMalen();
@@ -3993,14 +3999,7 @@ const Planflaeche = (() => {
                 return;
             if (!e.ctrlKey && !e.metaKey && e.altKey && e.shiftKey && e.key.toLowerCase() === 'e') {
                 e.preventDefault();
-                studioOffen = !studioOffen;
-                studioPanel.hidden = !studioOffen;
-                if (studioOffen) {
-                    paletteOffen = false;
-                    palette.hidden = true;
-                    wurzel.classList.remove('sp-palette-offen');
-                    studioTab = 'eigenschaften';
-                }
+                studioSetzen(!studioOffen);
                 kopfMalen();
                 if (studioOffen)
                     studioMalen();
@@ -4056,18 +4055,8 @@ const Planflaeche = (() => {
                         simulationUmschalten();
                         return;
                     }
-                    if (!paletteOffen) {
-                        paletteOffen = true;
-                        palette.hidden = false;
-                        wurzel.classList.add('sp-palette-offen');
-                        kopfMalen();
-                    }
-                    else {
-                        paletteOffen = false;
-                        palette.hidden = true;
-                        wurzel.classList.remove('sp-palette-offen');
-                        kopfMalen();
-                    }
+                    paletteSetzen(!paletteOffen);
+                    kopfMalen();
                     return;
                 }
                 if (e.key === 'f' || e.key === 'F') {
@@ -4183,15 +4172,9 @@ const Planflaeche = (() => {
                     return kopf.querySelector('[data-a="palette-toggle"]')?.click();
                 if (was === 'studio')
                     return (() => {
-                        studioOffen = !studioOffen;
-                        studioPanel.hidden = !studioOffen;
-                        if (studioOffen) {
-                            paletteOffen = false;
-                            palette.hidden = true;
-                            wurzel.classList.remove('sp-palette-offen');
-                            studioTab = 'eigenschaften';
+                        studioSetzen(!studioOffen);
+                        if (studioOffen)
                             studioMalen();
-                        }
                         kopfMalen();
                     })();
                 if (was === 'fokus') {
@@ -4434,6 +4417,20 @@ const Planflaeche = (() => {
         palette.hidden = !paletteOffen;
         paletteMalen();
         male();
+        if (typeof ResizeObserver === 'function') {
+            const panelObserver = new ResizeObserver(() => {
+                if (!wurzel.isConnected)
+                    return;
+                if (!paletteOffen || !studioOffen || desktopDoppelspalte())
+                    return;
+                const restoreFocus = palette.contains(document.activeElement) || document.activeElement === paletteGriff;
+                paletteSetzen(false);
+                kopfMalen();
+                if (restoreFocus)
+                    kopf.querySelector('[data-a="desktop-inspector"]')?.focus({ preventScroll: true });
+            });
+            panelObserver.observe(wurzel);
+        }
         if (relaisOffen)
             relaisZeigen();
         return wurzel;
