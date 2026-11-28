@@ -27855,7 +27855,8 @@ body[data-schale="premium"]:where([data-ui-shell="glass-wheel"])[data-bewegung="
    oberhalb des eigentlichen Texts. */
 #page > .pg-tools{
   display:flex;flex-wrap:wrap;align-items:center;gap:6px 7px;
-  opacity:1;min-width:0;max-width:100%;margin:10px 0 22px;padding:9px;
+  /* Dauerhaft sichtbar: keine geerbte Hover-Opacity-Transition. */
+  opacity:1;transition:none;min-height:44px;min-width:0;max-width:100%;margin:10px 0 22px;padding:9px;
   background:var(--bg-card);border:1px solid var(--line);
   border-radius:var(--radius-xl);
   box-shadow:var(--studio-highlight),var(--shadow-1)
@@ -27868,7 +27869,7 @@ body[data-schale="premium"]:where([data-ui-shell="glass-wheel"])[data-bewegung="
 }
 #page > .pg-tools > button{
   flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;
-  min-height:var(--touch-min);min-width:0;padding:8px 11px;
+  min-height:max(44px,var(--touch-min,44px));min-width:0;padding:8px 11px;
   border:1px solid transparent;border-radius:var(--radius-lg);
   background:var(--bg-hover);color:var(--text);
   font-size:12px;line-height:1.2;font-weight:550;white-space:nowrap;
@@ -27889,7 +27890,7 @@ body[data-schale="premium"]:where([data-ui-shell="glass-wheel"])[data-bewegung="
     border-radius:var(--radius-lg);
   }
   #page > .pg-tools > .pg-tools-caption{display:none}
-  #page > .pg-tools > button{flex:0 0 auto;min-height:var(--touch-min);padding:8px 10px}
+  #page > .pg-tools > button{flex:0 0 auto;min-height:max(44px,var(--touch-min,44px));padding:8px 10px}
   /* Die bestehenden sticky Scroll-Hinweise liegen über dem Inhalt.
      Ihr Hintergrund muss nun zur Chip-Scheibe passen, statt zum Papier. */
   #page > .pg-tools::before{
@@ -31923,7 +31924,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1738, inhalt: '69c6a353d43ebdce', gebaut: '2026-11-28T14:31:33.449Z' };
+const Stand = { fassung: 1739, inhalt: '4b8eb7b968ab93a0', gebaut: '2026-11-28T15:41:51.164Z' };
 window.Stand = Stand;
 
 </script>
