@@ -1,0 +1,56 @@
+name: One-time offline artifact rebuild (PR 258)
+on:
+  push:
+    branches:
+      - feat/red-ecosystem-sync-v2
+permissions:
+  contents: read
+jobs:
+  rebuild:
+    if: github.repository == 'Redurbabat/Redion' && github.ref == 'refs/heads/feat/red-ecosystem-sync-v2'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: offline-rebuild-pr258
+      cancel-in-progress: true
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Generate offline artifacts using existing scripts
+        run: |
+          npm ci --ignore-scripts
+          npm run bauen:ts
+          node dienststand.mts
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const source=fs.readFileSync('src/kern/einstellung/stand.ts','utf8');
+          const stand=/const Stand = (\{[^\n]+\}) as const;/.exec(source)?.[1];
+          if(!stand)throw Error('Missing generated stand');
+          const js=fs.readFileSync('quell/kern/einstellung/stand.js','utf8');
+          fs.writeFileSync('quell/kern/einstellung/stand.js',js.replace(/const Stand = \{[^\n]+\};/,'const Stand = '+stand+';'));
+          const sw=fs.readFileSync('src/dienst/sw.ts','utf8');
+          const version=/const VERSION = '[^']+';/.exec(sw)?.[0];
+          const content=/const INHALT = '[^']+';/.exec(sw)?.[0];
+          if(!version||!content)throw Error('Missing service worker stamp');
+          const compiled=fs.readFileSync('sw.js','utf8');
+          fs.writeFileSync('sw.js',compiled.replace(/const VERSION = '[^']+';/,version).replace(/const INHALT = '[^']+';/,content));
+          JS
+          node dienststand.mts --pruefen
+          node bauen.mts
+      - name: Commit only generated files to the same feature branch
+        run: |
+          test "$(git ls-remote origin refs/heads/feat/red-ecosystem-sync-v2 | cut -f1)" = "$GITHUB_SHA" || { echo 'Branch advanced; skip stale build'; exit 0; }
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- quell/bereiche/einstellungen/ansicht/seite.js src/dienst/sw.ts sw.js src/kern/einstellung/stand.ts quell/kern/einstellung/stand.js redion-einzeldatei.html
+          git diff --cached --stat
+          if git diff --cached --quiet; then exit 0; fi
+          git -c core.hooksPath=/dev/null commit -m 'build: regenerate offline artifacts'
+          git -c core.hooksPath=/dev/null push origin HEAD:refs/heads/feat/red-ecosystem-sync-v2
