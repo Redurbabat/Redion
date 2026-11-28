@@ -9,6 +9,7 @@ import {beantworte} from './kern.ts';
 import {prepareRedBitPermissions,createRedBitPermissions,RED_BIT_PERMISSION_ROUTES} from './home/red-bit-permissions.ts';
 import {prepareRedBitTransportPermissions,createRedBitTransportPermissions,RED_BIT_TRANSPORT_ROUTES} from './home/red-bit-transport-permissions.ts';
 import {prepareRedBitTransportJobs,createRedBitTransportJobs,RED_BIT_TRANSPORT_JOB_ROUTES} from './home/red-bit-transport-jobs.ts';
+import {createRedBitMcpTools} from './home/red-bit-mcp-tools.ts';
 import {prepareRedBitMcpGrants,createRedBitMcpGrants,RED_BIT_MCP_GRANT_ROUTES} from './home/red-bit-mcp-grants.ts';
 import {prepareRedBitReadJobs,createRedBitReadJobs,RED_BIT_JOB_ROUTES} from './home/red-bit-read-jobs.ts';
 import {prepareHomeSync,createHomeSyncWait} from './home/live-sync.ts';
@@ -65,6 +66,7 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
     if(transportJobsEnabled)redBitMcpModes.add('transport');
   }
   if(redBitMcpModes.size)prepareRedBitMcpGrants(store.sqlite,redBitMcpModes);
+  const redBitMcpTools=redBitMcpModes.size?createRedBitMcpTools(store.sqlite,redBitMcpModes):undefined;
   const redBitMcpGrants=redBitMcpModes.size?createRedBitMcpGrants(store.sqlite,store.ablage,redBitMcpModes):undefined;
   const redBitTransportPermissions=options.enableRedBitTransportPermissions?createRedBitTransportPermissions(store.sqlite,store.ablage):undefined;
   const redBitPermissions=options.enableRedBitPermissions?createRedBitPermissions(store.sqlite,store.ablage):undefined;
@@ -108,7 +110,7 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
           if(request.method!=='GET')return json(401,'consent_login_required');
           return homeConsentLogin(path+new URL(request.url).search,origin.origin);
         }
-        return handleCloudMcp(request,{DB:store.db},false,identify,()=>homeEcosystemCapabilities(!!options.vaultKey,!!options.enableReminderScheduler,aiModels.length>0));
+        return handleCloudMcp(request,{DB:store.db},false,identify,()=>homeEcosystemCapabilities(!!options.vaultKey,!!options.enableReminderScheduler,aiModels.length>0),redBitMcpTools);
       });
     }
     if((RED_BIT_JOB_ROUTES as readonly string[]).includes(path)){
