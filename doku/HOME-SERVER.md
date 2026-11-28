@@ -566,3 +566,7 @@ Auf dem Host mit Node 24 und vorhandenen `REDION_BACKUP_DIR`/`REDION_BACKUP_KEY_
 ### RED Clipboard – SDK-Pilot 0.14
 
 Expliziter Texttransfer zwischen zwei verschiedenen RED-Apps über die vorhandene richtungsgebundene RED-Share-Freigabe und separat bestätigten `clipboard`-Kanalschlüssel. Maximal 8192 UTF-8-Bytes, authentifizierte 5-Minuten-Gültigkeit, Empfänger-/Sender-/Kanalbindung. Keine Änderung am Servertransport; Ciphertext kann bis ACK bzw. zum bestehenden Relay-Ablauf (max. 24 Stunden) verbleiben. Keine native Zwischenablage, Geräteadressierung, automatische Übertragung oder Hintergrundlesung. Client muss Replay-ID persistent speichern und Paste explizit auslösen. Vollständige geräteübergreifende Zwischenablage bleibt offen.
+
+### RED SSO – explizite Mehrfachfreigabe in den Einstellungen
+
+Die Owner-Oberfläche kann bis zu elf öffentliche JSON-Kopplungsanfragen (eine je Zeile) prüfen und gemeinsam atomar freigeben. Doppelte Apps/Challenges, unerwartete Felder und ungültige Eingaben werden abgelehnt. Vollständige Challenges erscheinen vor der ausdrücklichen Bestätigung; Änderungen an Eingabe, Server oder Sitzung erzwingen erneute Prüfung. Die UI speichert keine Verifier und erstellt keine gemeinsame Sitzung. Jede Ziel-App muss innerhalb der Freigabefrist separat claim-login abschliessen. Bei unklarer Antwort App-Zugänge prüfen statt blind erneut freizugeben. Native Browser-SSO-Redirects und Geräteabnahme bleiben offen.

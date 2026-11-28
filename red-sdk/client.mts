@@ -117,7 +117,7 @@ export function decodeRedPairRequest(value:string):{app:RedAppId;challenge:strin
   if(value.length>256)throw Error('Invalid pairing request');
   const data=JSON.parse(value);
   const apps:RedAppId[]=['red-ion','red-fit','red-poly','red-bit','red-loop','red-efz','red-kurd','red-uhr','red-yt','stran','babat-red'];
-  if(data?.kind!=='red-pair'||data.version!==1||!apps.includes(data.app)||typeof data.challenge!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(data.challenge))throw Error('Invalid pairing request');
+  if(!data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).length!==4||data.kind!=='red-pair'||data.version!==1||!apps.includes(data.app)||typeof data.challenge!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(data.challenge))throw Error('Invalid pairing request');
   return {app:data.app,challenge:data.challenge};
 }
 export type RedShareAddress={source:RedAppId;target:RedAppId;channel:string;id:string};

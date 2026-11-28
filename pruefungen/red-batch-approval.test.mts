@@ -36,3 +36,12 @@ test('batch approval is owner-only, all-or-nothing, separate proof-bound session
   assert.equal((await send(base+'me',undefined,p.accessToken)).status,200);
  }finally{s.close();await rm(root,{recursive:true,force:true});}
 });
+
+test('batch SDK rejects duplicate challenges and unexpected pairing fields',async()=>{
+ const proof=await createRedPairProof();
+ const first=encodeRedPairRequest('red-fit',proof.challenge),second=encodeRedPairRequest('red-poly',proof.challenge);
+ assert.throws(()=>prepareRedBatchApproval([first,second]));
+ assert.throws(()=>prepareRedBatchApproval([JSON.stringify({...JSON.parse(first),verifier:proof.verifier})]));
+ assert.throws(()=>prepareRedBatchApproval([]));
+ assert.throws(()=>prepareRedBatchApproval(Array(12).fill(first)));
+});

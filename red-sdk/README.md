@@ -161,3 +161,5 @@ owner access. Batch-approval UI is not yet integrated.
 ### SDK 0.14 – RED Clipboard (explicit text share pilot)
 
 `prepareRedClipboard(key, source, target, text)` prepares a client-encrypted message on the `clipboard` channel. Require explicit directional RED Share grant and a separately fingerprint-verified channel key. Maximum 8192 UTF-8 bytes, authenticated creation/expiry timestamps, five-minute logical TTL (30 seconds future-clock tolerance), and expected sender/recipient/channel checks in `openRedClipboard(key, source, target, message)`. Use the existing share send/inbox/ACK transport. Persist processed IDs before ACK; clients decide whether to paste, never auto-copy or inspect the OS clipboard. Ciphertext may remain in the existing server mailbox until ACK or its existing expiry (up to 24 hours). No same-app device targeting, global clipboard, native UI or replay store provided. No password/secret auto-transfer. Client clocks must be reasonably synchronized.
+
+Batch pairing requests are strictly limited to the four public fields `kind`, `version`, `app`, `challenge`. Never include the private verifier in the JSON provided to the owner UI.
