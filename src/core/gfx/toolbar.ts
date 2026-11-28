@@ -205,6 +205,8 @@ const GfxToolbar = (() => {
     const vorrat = document.createElement('div');
     vorrat.hidden = true;
     let galerieMessen: ResizeObserver | undefined;
+    let galerieAktivZeigen: (id: string) => void = () => {};
+    const desktopGalerie = () => window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches;
     if (o.galerie) {
       wurzel.classList.add('gfx-tb-galerie', 'gfx-tb-edgeless');
       if (o.galerie.beschriftet) wurzel.classList.add('gfx-tb-beschriftet');
@@ -238,10 +240,10 @@ const GfxToolbar = (() => {
         for (const b of karte.querySelectorAll<HTMLElement>('button')) {
           if (!['notiz', 'formen'].includes(id) && !['stift', 'radierer'].includes(b.dataset.wz ?? ''))
             b.classList.add('gfx-tb-symbol');
-          if (o.galerie.beschriftet) {
-            const label = document.createElement('span'); label.className = 'gfx-tb-kartenname';
-            label.textContent = b.getAttribute('aria-label') || ''; label.setAttribute('aria-hidden', 'true'); b.append(label);
-          }
+          const label = document.createElement('span');
+          label.className = o.galerie.beschriftet ? 'gfx-tb-kartenname' : 'gfx-tb-desktop-name';
+          label.textContent = b.getAttribute('aria-label') || '';
+          label.setAttribute('aria-hidden', 'true'); b.append(label);
         }
         if (vorschau && (id === 'notiz' || id === 'formen')) {
           delete vorschau.dataset.sym;
@@ -302,6 +304,17 @@ const GfxToolbar = (() => {
         }
         zurueck.setAttribute('aria-disabled', String(kartenStart === 0));
         weiter.setAttribute('aria-disabled', String(kartenStart === letzterStart));
+      };
+      /* A desktop shortcut or another controller can activate a tool on
+       * a different gallery page. Do not make the user hunt for it. Manual
+       * browsing stays independent; reveal only on a changed selection. */
+      galerieAktivZeigen = (id: string): void => {
+        if (!desktopGalerie()) return;
+        const index = galeriekarten.findIndex(karte =>
+          !!karte.querySelector('[data-wz="' + CSS.escape(id) + '"]'));
+        if (index < 0 || !galeriekarten[index]?.hidden) return;
+        kartenStart = index;
+        blattstand();
       };
       leiste.append(schnell, trenner(), zurueck, festerStreifen, weiter);
       galerieMessen = new ResizeObserver(() => {
@@ -457,7 +470,9 @@ const GfxToolbar = (() => {
 
     /* --- Was die Fläche von aussen darf ------------------------------------ */
     const setzeWerkzeug = (id: string): void => {
+      const gewechselt = aktiv !== id;
       aktiv = id;
+      if (gewechselt) galerieAktivZeigen(id);
       wurzel.querySelectorAll<HTMLElement>('[data-wz]').forEach(b => {
         const an = b.dataset.wz === id;
         b.classList.toggle('on', an);
@@ -484,7 +499,7 @@ const GfxToolbar = (() => {
     tabstoppSetzen();
     /* Nach dem ersten Bild, wenn der Aufrufer die Leiste eingehängt hat: liegt
        der Halt auf einem Knopf, den man nicht sieht, rückt er nach. */
-    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(haltPruefen);
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => { galerieAktivZeigen(aktiv); haltPruefen(); });
 
     return {
       element: wurzel,

@@ -411,6 +411,26 @@ p('Die Mitte wird dafür schmaler statt überdeckt',
   mitMini.breit < grundMitte.breit - 100,
   `${grundMitte.breit} → ${mitMini.breit}`);
 
+/* Windows Studio filter: visible real rows retain their original index;
+   jumping is navigation, not a document edit. */
+await pc.evaluate(()=>document.documentElement.setAttribute('data-windows-titelleiste',''));
+const filter = pc.locator('.document-desktop-filter input');
+const beforeFilter = await pc.evaluate((id:string)=>JSON.stringify(Store.childrenOf(id)),seitenId);
+await filter.fill('3');
+gleich('PDF-Seitenfilter: Nummer 3 bleibt sichtbar',await pc.locator('.document-thumb-zeile:not([hidden])').evaluateAll(rows=>rows.map(r=>(r as HTMLElement).dataset.documentThumbZeile)),['2']);
+await filter.press('Enter');
+await pc.waitForTimeout(200);
+p('PDF-Seitenfilter: Sprung zur Originalseite',await pc.locator('[data-document-index="2"]').getAttribute('aria-current')==='page');
+await filter.fill('999');
+gleich('PDF-Seitenfilter: keine falschen Treffer',await pc.locator('.document-thumb-zeile:not([hidden])').count(),0);
+await filter.press('Escape');
+gleich('PDF-Seitenfilter: Escape zeigt alle Seiten',await pc.locator('.document-thumb-zeile:not([hidden])').count(),4);
+await pc.locator('.document-desktop-filter button[aria-pressed]').click();
+gleich('PDF-Seitenfilter: keine Lesezeichen im Testdokument',await pc.locator('.document-thumb-zeile:not([hidden])').count(),0);
+await pc.locator('.document-desktop-filter button').last().click();
+gleich('PDF-Seitenfilter verändert keine Dokumentblöcke',await pc.evaluate((id:string)=>JSON.stringify(Store.childrenOf(id)),seitenId),beforeFilter);
+await pc.evaluate(()=>document.documentElement.removeAttribute('data-windows-titelleiste'));
+
 await aufraeumen();
 await pc.click('.document-thumbnails.is-open [data-document-action="thumbnails-close"]');
 await pc.waitForTimeout(350);
@@ -428,6 +448,17 @@ const insp = await sicht('.document-inspector.is-open');
 p('Das ⓘ holt den Inspector — und er steht rechts vom Dokument',
   insp.breit > 150 && insp.links >= mitInsp.rechts - 2,
   `${JSON.stringify(insp)} vs ${JSON.stringify(mitInsp)}`);
+await pc.evaluate(()=>document.documentElement.setAttribute('data-windows-titelleiste',''));
+const desktopObjects = pc.locator('.document-desktop-objects [data-document-action="desktop-ink-objects"]');
+const inkBlock = await desktopObjects.getAttribute('data-document-ink-block');
+p('Windows PDF: direkter Objektzugriff an der aktiven Seite',!!inkBlock && await desktopObjects.isEnabled());
+const marksBefore = await pc.evaluate((id:string)=>JSON.stringify(Store.getBlock(id).marken??[]),inkBlock!);
+await desktopObjects.click();
+const objectPanel = pc.locator('.gfx-inspector[data-document-ink-block]');
+p('Windows PDF: vorhandener Ebeneninspektor an der richtigen Seite',await objectPanel.getAttribute('data-document-ink-block')===inkBlock);
+p('Windows PDF: Öffnen verändert keine Zeichenobjekte',await pc.evaluate((id:string)=>JSON.stringify(Store.getBlock(id).marken??[]),inkBlock!)===marksBefore);
+await objectPanel.locator('[aria-label="Objektübersicht schliessen"]').click();
+await pc.evaluate(()=>document.documentElement.removeAttribute('data-windows-titelleiste'));
 await aufraeumen();
 await pc.click('.document-inspector.is-open [data-document-action="inspector-close"]');
 await pc.waitForTimeout(350);
