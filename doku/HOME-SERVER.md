@@ -467,3 +467,13 @@ Koordinator bei Start, Vordergrund oder erlaubtem Hintergrundereignis
 selbst aufrufen. RED Config wird per exakter Objekt-ID einem eigenen
 kryptografisch prüfenden Decoder zugeordnet, damit der allgemeine Sync-Key
 nicht mit dem separaten Config-Key verwechselt wird.
+
+### SDK 0.10 – manueller Geräteschlüsseltransfer
+
+Zwei bereits vertrauenswürdige Geräte können einen vorhandenen 32-Byte-
+Speicherschlüssel einmalig verschlüsselt übertragen. Öffentliche P-256-Angebote,
+HKDF und AES-GCM sind an die exakte App-/Konto-/Origin-/Typ-Kombination gebunden.
+Der vollständige 128-Bit-Fingerabdruck muss auf beiden vertrauenswürdigen
+Geräten unabhängig verglichen werden. Ohne diese Prüfung kein sicherer
+Geräteidentitätsnachweis. Keine serverseitige Schlüsselablage und keine
+unbeaufsichtigte Freigabe. Native QR- und Keychain-/Keystore-Integration offen.

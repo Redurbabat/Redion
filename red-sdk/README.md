@@ -107,3 +107,16 @@ context and ciphertext; the default path uses the app record key. Use
 `createRedSyncCoordinator` for app lifecycle triggers, coalescing and bounded
 exponential backoff. It does not create timers or continue after `stop`;
 in-flight work must still be handled by the platform lifecycle.
+
+### SDK 0.10: manual trusted-device storage-key transfer
+
+`createRedDeviceKeyTransfer` uses ephemeral P-256 ECDH, HKDF-SHA256 and
+AES-256-GCM. Exchange the two public offers on trusted devices and compare
+the full 128-bit fingerprint independently before calling `confirm`.
+The sender wraps an existing 32-byte app/kind storage key; the recipient
+unwraps once and must save it in native secure storage. Never exchange the
+fingerprint through an untrusted relay or automatically accept it. The
+packet is bound to the offer transcript, origin, owner, app and kind.
+No server receives the key; QR scanning, secure storage UI, key rotation
+and automated recovery remain outside this helper. Restart a failed transfer
+with new offers. The helper does not authenticate device ownership by itself.
