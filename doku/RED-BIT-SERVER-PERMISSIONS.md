@@ -132,7 +132,7 @@ Auftrags-IDs bleiben nur im Speicher der geöffneten Dashboard-Ansicht;
 nach Navigation ist eine alte Quittung dort nicht mehr abrufbar.
 Native Gegenstelle: RED Bit PR #63. CI und echte Geräteabnahme ausstehend.
 
-## MCP-Delegation (Vorbereitung, noch keine Remote-Werkzeuge)
+## MCP-Delegation und Remote-Werkzeuge
 
 Nur bei REDION_ENABLE_MCP=1 und REDION_ENABLE_RED_BIT_MCP=1 sowie den
 jeweils notwendigen Job-/Berechtigungsflags verfügbar.
@@ -144,5 +144,22 @@ Maximal fünf Minuten; keine Verlängerung über die unterliegenden Rechte.
 Serverstart, OAuth-Neufreigabe, Geräte-Widerruf oder -Erneuerung entwerten
 die Delegation. Keine Tokens oder Epoch in den API-Antworten.
 Bestehende RED-ION-Dokumentenrechte allein genügen nicht.
-toolsAvailable:false bleibt gesetzt: noch kein MCP tools/list oder tools/call
-für RED Bit, kein Dashboard zur MCP-Delegation und keine ChatGPT-Abnahme.
+toolsAvailable:true kennzeichnet den aktivierten Pilot, nicht die tatsächliche Geräteverfügbarkeit.
+Die Tools werden nur am privaten Home-MCP-Endpunkt und nur bei einer gültigen
+Delegation sichtbar. Dashboard zur MCP-Delegation und ChatGPT-Abnahme fehlen noch.
+
+### MCP-Aufträge
+
+Nach separater Owner-Delegation zeigt redbit_list_devices die freigegebenen
+Sitzungen. redbit_read_status, redbit_play, redbit_pause, redbit_next und
+redbit_previous benötigen sessionId, requestId (32 zufällige lowercase
+Hex-Zeichen) und confirm:true. Sie erstellen einen Auftrag; sie melden
+keinen Wiedergabeerfolg. Auf dem Zielgerät ist die lokale Bestätigung
+weiter erforderlich. redbit_get_job_result benötigt sessionId und jobId,
+nur für Aufträge derselben OAuth-Verbindung. Kein automatischer Retry.
+Widerruf oder Erneuerung der Delegation, Gerätefreigabe oder OAuth-Epoch
+entwertet ausstehende Aufträge. Eine bereits erteilte Ausführungsfreigabe
+kann nicht zurückgerufen werden. Replay-Schutz ist auf 120 Sekunden begrenzt;
+keine globale Exactly-once-Garantie. Einzelne OAuth-Token-Widerrufe ohne
+Grant-Widerruf entwerten bereits angelegte Jobs nicht automatisch.
+Die öffentliche Worker-MCP-Schnittstelle erhält keine RED-Bit-Werkzeuge.
