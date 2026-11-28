@@ -54,3 +54,7 @@ Ergänzt Keep-both für gewöhnliche lokale Textänderungskonflikte im SDK-Pull,
 ## P0-Fortschritt: durchgängige Server-Regression
 
 Erweitert `red-store.test.mts` um zwei separat verschlüsselte persistente SQLite-Clients mit echtem RED ID v2, Freigabe und tatsächlichen Home-Server-Request-Handlern. Verlorene Antwort nach serverseitigem Commit, Neustart, idempotenter Retry, Offline-Konflikt, Keep-both-Kopie, Übertragung an das zweite Profil und Rechtewiderruf werden zusammen geprüft. Transport innerhalb des Prozesses, keine physische Geräte-/TLS-Abnahme. Test in bestehendem Home-Server-Workflow; neue CI noch nicht bestätigt.
+
+## Editor-Regressionskorrektur
+
+Wiederkehrender Chromium-390px-Befund (Run 46160781715): Leiste vorhanden, Sichtbarkeitsassertion fehlgeschlagen; bisherige Messung unterschied Opacity und Höhe nicht. Die Seitenleiste erhält eine explizite Mindesthöhe, keine geerbte Opacity-Transition und eine 44px-Untergrenze auch bei abweichenden Theme-Tokens. Browserdiagnose protokolliert Höhe, Opacity, Transition, Elterntransform und sämtliche Buttonhöhen. Vorhandene Assertions bleiben bestehen, alle Buttonhöhen kommen hinzu. Ursache noch nicht abschliessend nachgewiesen; neue Offline-Artefakte müssen gebaut und CI erneut geprüft werden.

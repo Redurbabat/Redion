@@ -87,6 +87,11 @@ try {
       return {
         role: el.getAttribute('role'), label: el.getAttribute('aria-label'),
         visible: +style.opacity >= .99 && rect.height >= 44,
+        opacity: style.opacity, height: rect.height, minHeight: style.minHeight,
+        display: style.display, visibility: style.visibility, transition: style.transition,
+        buttonHeights: Array.from(el.querySelectorAll('button[data-a]'), b => b.getBoundingClientRect().height),
+        pageHeight: el.parentElement?.getBoundingClientRect().height,
+        pageTransform: el.parentElement ? getComputedStyle(el.parentElement).transform : null,
         column: style.flexWrap,
         caption: caption?.textContent,
         captionVisible: !!caption && getComputedStyle(caption).display !== 'none',
@@ -104,6 +109,7 @@ try {
     const minHeight = await page.locator('#page > .pg-tools button[data-a]').first()
       .evaluate(el => Math.round(el.getBoundingClientRect().height));
     check(label + ': Touch-/Klickziel mindestens 44 px', minHeight >= 44);
+    check(label + ': alle Seitenwerkzeuge mindestens 44 px', state.buttonHeights.every(height => Math.round(height) >= 44));
 
     await page.mouse.move(0, 0);
     const opacity = await page.locator('#page > .pg-tools').evaluate(el => +getComputedStyle(el).opacity);
