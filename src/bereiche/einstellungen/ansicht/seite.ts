@@ -846,7 +846,10 @@ const Einstellungen = (() => {
     const date = ziel.querySelector<HTMLInputElement>('[data-reminder-date]');
     const refreshButton = ziel.querySelector<HTMLButtonElement>('[data-reminder-refresh]');
     const createButton = ziel.querySelector<HTMLButtonElement>('[data-reminder-create]');
-    if (!list || !status || !kind || !period || !date || !refreshButton || !createButton) return;
+    const historyButton = ziel.querySelector<HTMLButtonElement>('[data-reminder-history-refresh]');
+    const historyList = ziel.querySelector<HTMLElement>('[data-reminder-history-list]');
+    const historyStatus = ziel.querySelector<HTMLElement>('[data-reminder-history-status]');
+    if (!list || !status || !kind || !period || !date || !refreshButton || !createButton || !historyButton || !historyList || !historyStatus) return;
     const labels: Record<string,string> = { 'backup-review': 'Backup prüfen', 'grant-review': 'Freigaben prüfen', 'storage-review': 'Speicher prüfen', 'update-review': 'Updates prüfen' };
     const periods: Record<string,string> = { once: 'Einmalig', daily: 'Alle 24 Stunden', weekly: 'Alle 7 Tage' };
     let busy = false;
@@ -863,6 +866,35 @@ const Einstellungen = (() => {
       return response.json();
     };
     const format = (v: number) => new Date(v).toLocaleString('de-CH');
+    const validTime = (v: unknown): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 && v <= 8640000000000000;
+    const resultLabels: Record<string,string> = {ok:'Normal',warning:'Warnung',critical:'Kritisch',unknown:'Unbekannt'};
+    const reviewText = (v: unknown, k: string): string => {
+      if (!v || typeof v !== 'object') return 'Noch kein Prüfergebnis';
+      const r = v as {status?:unknown; measuredAt?:unknown; result?:{availablePercent?:unknown; store?:{expiringSoon?:unknown}; share?:{expiringSoon?:unknown}; credentials?:{expiringSoon?:unknown}}};
+      if (typeof r.status !== 'string' || !Object.hasOwn(resultLabels,r.status) || !validTime(r.measuredAt)) return 'Prüfergebnis nicht verfügbar';
+      let text = resultLabels[r.status] + ' · ' + format(r.measuredAt);
+      if (k === 'storage-review' && typeof r.result?.availablePercent === 'number' && Number.isFinite(r.result.availablePercent) && r.result.availablePercent >= 0 && r.result.availablePercent <= 100) text += ' · ' + r.result.availablePercent.toFixed(1) + ' % frei';
+      if (k === 'grant-review') {
+        const counts = [r.result?.store?.expiringSoon,r.result?.share?.expiringSoon,r.result?.credentials?.expiringSoon];
+        if (counts.every(n => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0)) text += ' · ' + counts.reduce<number>((sum,n) => sum + Number(n),0) + ' laufen in 24 h aus';
+      }
+      return text;
+    };
+    const refreshHistory = async () => {
+      historyList.replaceChildren(); historyStatus.textContent = 'Historie wird abgerufen …';
+      try {
+        const data = await request('history');
+        if (data?.version !== 1 || !Array.isArray(data.entries) || data.entries.length > 64 || typeof data.truncated !== 'boolean') throw Error('Ungültige Historie');
+        const fragment = document.createDocumentFragment();
+        for (const entry of data.entries) {
+          if (!entry || !['storage-review','grant-review'].includes(entry.kind) || !validTime(entry.due) || !validTime(entry.measuredAt)) throw Error('Ungültiger Eintrag');
+          const li = document.createElement('li'); li.textContent = labels[entry.kind] + ' · ' + reviewText(entry,entry.kind); fragment.append(li);
+        }
+        historyList.replaceChildren(fragment);
+        historyStatus.textContent = data.entries.length ? data.entries.length + ' neueste Prüfungen' + (data.truncated ? ' · weitere ältere Einträge vorhanden' : '') : 'Noch keine gespeicherten Prüfungen.';
+        status.textContent = 'Historie abgerufen.';
+      } catch { historyStatus.textContent = 'Historie nicht verfügbar. Serverversion und Anmeldung prüfen.'; status.textContent = 'Historie nicht verfügbar.'; }
+    };
     const refresh = async () => {
       const data = await request('poll', {});
       if (data?.version !== 1 || !Array.isArray(data.rules) || data.rules.length > 64) throw Error('Ungültige Antwort');
@@ -874,6 +906,9 @@ const Einstellungen = (() => {
         title.textContent = labels[rule.kind] + ' · ' + periods[rule.period];
         detail.textContent = (rule.pendingDue !== null ? 'Fällig seit ' + format(rule.pendingDue) + ' · ' : '') + (rule.nextDue !== null ? 'Nächster Termin: ' + format(rule.nextDue) : 'Keine Wiederholung');
         row.append(title, detail);
+        if (rule.kind === 'storage-review' || rule.kind === 'grant-review') {
+          const result = document.createElement('p'); result.textContent = 'Letzte Prüfung: ' + reviewText(rule.review,rule.kind); row.append(result);
+        }
         const id: string = rule.id;
         if (rule.pendingDue !== null) {
           due++;
@@ -885,29 +920,31 @@ const Einstellungen = (() => {
         const cancel = document.createElement('button');
         cancel.className = 'ez-knopf'; cancel.textContent = 'Termin entfernen';
         cancel.addEventListener('click', () => {
-          if (busy || !window.confirm('Wartungstermin und offene Hinweise entfernen?')) return;
+          if (busy || !window.confirm('Wartungstermin, offene Hinweise und zugehörige Prüfhistorie entfernen?')) return;
           if (pendingCreate?.id === id) pendingCreate = null;
           void run(async () => { await request('cancel', { id }); await refresh(); });
         });
         row.append(cancel); fragment.append(row);
       }
       list.replaceChildren(fragment);
+      historyList.replaceChildren(); historyStatus.textContent = 'Historie bei Bedarf aktualisieren.';
       status.textContent = due + ' fällige Hinweise · ' + data.rules.length + ' Wartungstermine.';
     };
     const run = async (fn: () => Promise<void>) => {
       if (busy) return;
-      busy = true; refreshButton.disabled = true; createButton.disabled = true; kind.disabled = true; period.disabled = true; date.disabled = true;
+      busy = true; refreshButton.disabled = true; createButton.disabled = true; historyButton.disabled = true; kind.disabled = true; period.disabled = true; date.disabled = true;
       list.querySelectorAll('button').forEach(b => b.disabled = true);
       status.textContent = 'Anfrage läuft …';
       try { await fn(); } catch { status.textContent = 'Anfrage fehlgeschlagen. Server und Anmeldung prüfen; bei gleichem Termin erneut versuchen.'; }
-      finally { busy = false; refreshButton.disabled = false; createButton.disabled = false; kind.disabled = false; period.disabled = false; date.disabled = false; list.querySelectorAll('button').forEach(b => b.disabled = false); }
+      finally { busy = false; refreshButton.disabled = false; createButton.disabled = false; historyButton.disabled = false; kind.disabled = false; period.disabled = false; date.disabled = false; list.querySelectorAll('button').forEach(b => b.disabled = false); }
     };
     refreshButton.addEventListener('click', () => void run(refresh));
+    historyButton.addEventListener('click', () => void run(refreshHistory));
     createButton.addEventListener('click', () => {
       if (busy) return;
       const firstDue = new Date(date.value).getTime(), k = kind.value, p = period.value;
       if (!Number.isSafeInteger(firstDue) || firstDue < Date.now() - 60000 || firstDue > Date.now() + 366*86400000 || !Object.hasOwn(labels,k) || !Object.hasOwn(periods,p)) { status.textContent = 'Gültigen zukünftigen Termin innerhalb eines Jahres auswählen.'; return; }
-      if (!window.confirm(labels[k] + ' · ' + format(firstDue) + ' · ' + periods[p] + '? Es wird nur ein Hinweis erstellt.')) return;
+      if (!window.confirm(labels[k] + ' · ' + format(firstDue) + ' · ' + periods[p] + '? Speicher und Freigaben werden bei aktiviertem Server-Scheduler nur lesend geprüft. Backup und Updates bleiben Hinweise.')) return;
       const same = pendingCreate && pendingCreate.kind === k && pendingCreate.period === p && pendingCreate.firstDue === firstDue;
       const payload = same && pendingCreate ? pendingCreate : {id: Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2,'0')).join(''),kind:k,period:p,firstDue};
       pendingCreate = payload;
@@ -941,6 +978,11 @@ const Einstellungen = (() => {
           ['CPU', number(data.cpu.percent, ' %')],
           ['RAM', gb(data.memory.usedBytes) + ' / ' + gb(data.memory.totalBytes)],
           ['SSD/Dateisystem verfügbar', gb(data.storage.availableBytes) + ' / ' + gb(data.storage.totalBytes)],
+          ['Speicherstatus', data.storageReview?.status === 'ok' ? 'Normal' : data.storageReview?.status === 'warning' ? 'Warnung' : data.storageReview?.status === 'critical' ? 'Kritisch' : 'Unbekannt'],
+          ['Freier Speicher', number(data.storageReview?.availablePercent, ' %')],
+          ['Sync-/Dateifreigaben laufen in 24 h aus', number(data.grantReview?.store?.expiringSoon)],
+          ['Share-Freigaben laufen in 24 h aus', number(data.grantReview?.share?.expiringSoon)],
+          ['RED-ID-Zugänge laufen in 24 h aus', number(data.grantReview?.credentials?.expiringSoon)],
           ['Temperatur', number(data.temperatureC, ' °C')],
           ['Serverprozess aktiv seit', number(data.processUptimeSeconds / 60, ' min')],
           ['Autorisierte Gerätesitzungen', number(data.devices.authorizedSessions)],
@@ -967,7 +1009,7 @@ const Einstellungen = (() => {
   };
 
   const inhalt = (b: any): string => (({
-    'home-server': () => kopf('RED Home Server', 'Private Infrastruktur und Diagnose') + '<div class="ez-karte"><button class="ez-knopf" data-home-refresh>Serverstatus abrufen</button><p data-home-status role="status">Verbinde zuerst dein Gerät mit dem privaten Server.</p><dl data-home-metrics></dl></div><div class="ez-karte"><h3>RED App Center</h3><p>Zentrale Übersicht der autorisierten RED-App-Zugänge und Freigaben. Keine Installation oder automatische Aktualisierung.</p><button class="ez-knopf" data-app-center-refresh>Alle 11 Apps anzeigen</button><ul data-app-center-list></ul><p data-app-center-status role="status"></p></div><div class="ez-karte"><h3>RED Notify · Wartungskalender</h3><p>Nur Wartungshinweise, keine automatische Ausführung. Fällige Hinweise werden beim Abruf erzeugt. Wiederholung als feste UTC-Intervalle, ohne Sommerzeitkorrektur.</p><label>Aufgabe <select data-reminder-kind><option value="backup-review">Backup prüfen</option><option value="grant-review">Freigaben prüfen</option><option value="storage-review">Speicher prüfen</option><option value="update-review">Updates prüfen</option></select></label><label>Erster Termin (Ortszeit) <input type="datetime-local" data-reminder-date></label><label>Wiederholung <select data-reminder-period><option value="once">Einmalig</option><option value="daily">Alle 24 Stunden</option><option value="weekly">Alle 7 Tage</option></select></label><button class="ez-knopf" data-reminder-create>Termin anlegen</button><button class="ez-knopf" data-reminder-refresh>Fällige Hinweise abrufen</button><ul data-reminder-list></ul><p data-reminder-status role="status"></p></div><div class="ez-karte"><h3>RED ID · App-Verbindungen</h3><p>Nur autorisierte Zugänge, keine Aussage über installierte oder online befindliche Apps.</p><button class="ez-knopf" data-red-list>App-Zugänge anzeigen</button><ul data-red-apps></ul><label>RED-App <select data-red-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Challenge der Ziel-App <input type="text" data-red-challenge autocomplete="off" spellcheck="false" maxlength="43"></label><label>Kopplungsanfrage (JSON aus der Ziel-App) <input data-red-request type="text" maxlength="256" autocomplete="off" spellcheck="false"></label><button class="ez-knopf" data-red-import>Anfrage übernehmen</button><button class="ez-knopf" data-red-approve>Direkte Anmeldung freigeben</button><button class="ez-knopf" data-red-pair>Kopplung freigeben</button><button class="ez-knopf" data-red-revoke>App-Zugänge widerrufen</button><p data-red-result role="status"></p><pre data-red-code style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></div><div class="ez-karte"><h3>RED Devices · App-Sitzungen</h3><p>Einzelne RED-ID-v2-Anmeldungen widerrufen. Es werden keine Gerätepositionen oder Online-Aktivitäten erfasst.</p><button class="ez-knopf" data-red-sessions-refresh>Sitzungen abrufen</button><ul data-red-sessions></ul><p data-red-sessions-status role="status"></p></div><div class="ez-karte"><h3>RED Share · Datenfreigaben</h3><p>Nur ausgewählte Apps und Kanäle. Schlüssel separat auf beiden Geräten bestätigen.</p><button class="ez-knopf" data-share-list>Freigaben abrufen</button><ul data-share-items></ul><label>Sender <select data-share-source><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Empfänger <select data-share-target><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Kanal <input data-share-channel maxlength="32" autocomplete="off" spellcheck="false" placeholder="workout"></label><button class="ez-knopf" data-share-grant>7 Tage freigeben</button><button class="ez-knopf" data-share-revoke>Freigabe widerrufen</button><p data-share-status role="status"></p></div><div class="ez-karte"><h3>RED Sync &amp; RED Files · Pilot</h3><p>Getrennte verschlüsselte App-Objekte. Keine automatische Freigabe zwischen Apps. Alle Geräte derselben App teilen die Freigabe; der Schlüssel muss separat verwaltet werden.</p><button class="ez-knopf" data-store-list>Speicher und Freigaben anzeigen</button><ul data-store-items></ul><label>RED-App <select data-store-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Bereich <select data-store-kind><option value="sync">Sync-Daten</option><option value="file">Kleine Dateiobjekte</option></select></label><button class="ez-knopf" data-store-grant>7 Tage freigeben</button><button class="ez-knopf" data-store-revoke>Zugriff widerrufen</button><p data-store-status role="status"></p></div>',
+    'home-server': () => kopf('RED Home Server', 'Private Infrastruktur und Diagnose') + '<div class="ez-karte"><button class="ez-knopf" data-home-refresh>Serverstatus abrufen</button><p data-home-status role="status">Verbinde zuerst dein Gerät mit dem privaten Server.</p><dl data-home-metrics></dl></div><div class="ez-karte"><h3>RED App Center</h3><p>Zentrale Übersicht der autorisierten RED-App-Zugänge und Freigaben. Keine Installation oder automatische Aktualisierung.</p><button class="ez-knopf" data-app-center-refresh>Alle 11 Apps anzeigen</button><ul data-app-center-list></ul><p data-app-center-status role="status"></p></div><div class="ez-karte"><h3>RED Notify · Wartungskalender</h3><p>Wartungshinweise beim Abruf oder mit aktiviertem Server-Scheduler. Speicher und Freigaben werden dann nur lesend geprüft; Backup und Updates bleiben Hinweise. Wiederholung als feste UTC-Intervalle, ohne Sommerzeitkorrektur.</p><label>Aufgabe <select data-reminder-kind><option value="backup-review">Backup prüfen</option><option value="grant-review">Freigaben prüfen</option><option value="storage-review">Speicher prüfen</option><option value="update-review">Updates prüfen</option></select></label><label>Erster Termin (Ortszeit) <input type="datetime-local" data-reminder-date></label><label>Wiederholung <select data-reminder-period><option value="once">Einmalig</option><option value="daily">Alle 24 Stunden</option><option value="weekly">Alle 7 Tage</option></select></label><button class="ez-knopf" data-reminder-create>Termin anlegen</button><button class="ez-knopf" data-reminder-refresh>Fällige Hinweise abrufen</button><ul data-reminder-list></ul><p data-reminder-status role="status"></p><h3>Wartungshistorie</h3><button class="ez-knopf" data-reminder-history-refresh>Prüfhistorie abrufen</button><p data-reminder-history-status role="status"></p><ul data-reminder-history-list></ul></div><div class="ez-karte"><h3>RED ID · App-Verbindungen</h3><p>Nur autorisierte Zugänge, keine Aussage über installierte oder online befindliche Apps.</p><button class="ez-knopf" data-red-list>App-Zugänge anzeigen</button><ul data-red-apps></ul><label>RED-App <select data-red-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Challenge der Ziel-App <input type="text" data-red-challenge autocomplete="off" spellcheck="false" maxlength="43"></label><label>Kopplungsanfrage (JSON aus der Ziel-App) <input data-red-request type="text" maxlength="256" autocomplete="off" spellcheck="false"></label><button class="ez-knopf" data-red-import>Anfrage übernehmen</button><button class="ez-knopf" data-red-approve>Direkte Anmeldung freigeben</button><button class="ez-knopf" data-red-pair>Kopplung freigeben</button><button class="ez-knopf" data-red-revoke>App-Zugänge widerrufen</button><p data-red-result role="status"></p><pre data-red-code style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></div><div class="ez-karte"><h3>RED Devices · App-Sitzungen</h3><p>Einzelne RED-ID-v2-Anmeldungen widerrufen. Es werden keine Gerätepositionen oder Online-Aktivitäten erfasst.</p><button class="ez-knopf" data-red-sessions-refresh>Sitzungen abrufen</button><ul data-red-sessions></ul><p data-red-sessions-status role="status"></p></div><div class="ez-karte"><h3>RED Share · Datenfreigaben</h3><p>Nur ausgewählte Apps und Kanäle. Schlüssel separat auf beiden Geräten bestätigen.</p><button class="ez-knopf" data-share-list>Freigaben abrufen</button><ul data-share-items></ul><label>Sender <select data-share-source><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Empfänger <select data-share-target><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Kanal <input data-share-channel maxlength="32" autocomplete="off" spellcheck="false" placeholder="workout"></label><button class="ez-knopf" data-share-grant>7 Tage freigeben</button><button class="ez-knopf" data-share-revoke>Freigabe widerrufen</button><p data-share-status role="status"></p></div><div class="ez-karte"><h3>RED Sync &amp; RED Files · Pilot</h3><p>Getrennte verschlüsselte App-Objekte. Keine automatische Freigabe zwischen Apps. Alle Geräte derselben App teilen die Freigabe; der Schlüssel muss separat verwaltet werden.</p><button class="ez-knopf" data-store-list>Speicher und Freigaben anzeigen</button><ul data-store-items></ul><label>RED-App <select data-store-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Bereich <select data-store-kind><option value="sync">Sync-Daten</option><option value="file">Kleine Dateiobjekte</option></select></label><button class="ez-knopf" data-store-grant>7 Tage freigeben</button><button class="ez-knopf" data-store-revoke>Zugriff widerrufen</button><p data-store-status role="status"></p></div>',
     geraete: () => kopf('iPhone und Windows', 'Geräte, Sicherungen und freiwilliger Abgleich') + DeviceIntegration.overview(),
     /* HIER STAND DAS GEGENTEIL DESSEN, WAS GEBAUT IST (E270).
        „Diese App kennt kein Konto und keinen Server", „es gibt keine

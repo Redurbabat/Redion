@@ -556,3 +556,5 @@ Bei aktiviertem `REDION_ENABLE_REMINDER_SCHEDULER=1` werden neue fällige Speich
 ### RED Automation – Wartungshistorie
 
 Owner-only `GET /home/reminders/history` liefert bis zu 64 neueste tatsächlich ausgeführte Speicher-/Freigabeprüfungen (`entries`, `truncated`, `retentionLimit`). Je Konto bleiben maximal 256 Ereignisse erhalten, sortiert nach Messzeit, Fälligkeit und Regel-ID. Eine Instanz wird anhand Konto/Regel/Fälligkeit dedupliziert. Ergebnisse und Hinweis werden in derselben Transaktion gespeichert; ACK behält sie, Cancel löscht die zugehörige Historie. Kein nachträgliches Erfinden früherer Messungen: vor der Migration gespeicherte letzte Ergebnisse bleiben im bisherigen `review` sichtbar. Kein öffentliches API, keine App-Token-Freigabe. Anzeige in den App-Einstellungen folgt separat.
+
+Die RED-ION-Einstellungen enthalten eine Anzeige des letzten Prüfergebnisses, einen separaten Historienabruf und zusätzliche Kapazitäts-/Freigabewerte im Dashboard. Bei älteren Servern wird fehlende Historie als nicht verfügbar angezeigt. Offline-Artefakte müssen aus der Quelle neu erzeugt werden; Hardwareabnahme separat.
