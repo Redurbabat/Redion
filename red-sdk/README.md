@@ -81,3 +81,21 @@ revision; never overwrite pending local edits automatically. Apply records
 and persist the returned cursor in one local transaction. An unknown cursor
 (e.g. after restore) causes a fresh snapshot rather than silent data loss.
 No credentials, encryption keys or plaintext are included in the feed.
+
+### SDK 0.9: atomic pull and app-scoped RED Config
+
+`createRedSync(client, scope, key, adapter, decode)` provides one explicit
+pull cycle. Implement the adapter with a local transaction that compares
+the generation, imports data, durably records conflicts and commits the
+cursor together. If a fetch, validation or decryption fails, no cursor is
+committed. Dirty records, rollbacks, missing objects and unauthenticated
+tombstones are conflicts, never automatic destructive actions. The decoder
+must return owned data, not a view of the temporary plaintext buffer.
+Call pull from an app-controlled foreground/background scheduler, with
+backoff; this package does not install one. Use a dedicated key and scope
+per app and store kind. `createRedConfigContext` provides a deterministic
+opaque ID and separate HKDF-derived key for theme, locale and reduced motion.
+No secrets or arbitrary settings accepted. Grant Sync as before. Config is
+app-scoped, not cross-app SSO or shared global preferences. Dispose keys when
+not in use. Platform storage, native integration and actual conflict UI remain
+app responsibilities.

@@ -444,3 +444,19 @@ lokale Konflikte behandeln und Cursor erst nach atomarem lokalem Commit
 speichern. Die Feed-Migration erfasst vorhandene Objekte ohne deren Inhalte
 zu ändern. Native App-Integration, Hintergrundsync und Schlüsselverwaltung
 bleiben separat offen.
+
+### SDK 0.9 – lokale Sync-Transaktionen und RED Config
+
+Der Sync-Client lädt einen Metadatenfeed, prüft neue Ciphertext-Datensätze
+und übergibt Importe, Konflikte und Cursor an einen atomaren lokalen Adapter.
+Kein Cursor-Commit bei Entschlüsselungsfehlern oder geänderten Serverrevisionen.
+Lokale Änderungen und Rollbacks werden als Konflikte gespeichert, nicht
+automatisch überschrieben. Tombstones sind serverseitige Metadaten ohne
+kryptografisch authentifizierten Löschinhalt: daher ebenfalls Konflikt,
+keine automatische lokale Löschung. Adapter müssen Generation und Konflikte
+atomar speichern. Dies ist noch keine Integration in konkrete Apps und kein
+ständig laufender Hintergrundprozess.
+RED Config synchronisiert zunächst Theme, Sprache und reduzierte Bewegung
+je App über den bestehenden Sync-Grant. ID und Schlüssel sind unabhängig
+über HKDF abgeleitet; unbekannte Felder werden abgelehnt. Keine Passwörter,
+Token, globalen App-Einstellungen oder automatischen App-Freigaben.

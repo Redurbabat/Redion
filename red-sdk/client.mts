@@ -293,3 +293,105 @@ export async function openRedStoreRecord(key:Uint8Array,context:Omit<RedStoreCon
  const raw=unbase64url(record.envelope),k=await crypto.subtle.importKey('raw',new Uint8Array(key),'AES-GCM',false,['decrypt']);
  return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:raw.slice(0,12),additionalData:storeAAD({...context,revision:record.revision})},k,raw.slice(12)));
 }
+
+/** App adapters implement an atomic local commit (e.g. SQLite transaction)
+ * including the cursor, imported records, and conflict journal. The SDK
+ * does not persist plaintext or create a background service. */
+export type RedSyncScope=Omit<RedStoreContext,'id'|'revision'>;
+export type RedSyncLocalItem={id:string;revision:number;dirty:boolean;deleted:0|1};
+export type RedSyncSnapshot={cursor:string|null;generation:string;items:RedSyncLocalItem[]};
+export type RedSyncImport<T>={id:string;revision:number;deleted:0|1;value:T|null};
+export type RedSyncConflict={id:string;localRevision:number;remoteRevision:number|null;reason:'local_edit'|'remote_rollback'|'missing_remote'|'revision_changed'};
+export type RedSyncBatch<T>={cursor:string|null;imports:RedSyncImport<T>[];conflicts:RedSyncConflict[]};
+export interface RedSyncAdapter<T>{
+ snapshot():Promise<RedSyncSnapshot>;
+ /** Must reject if local generation changed; must durably journal every
+  * conflict before advancing the cursor. Never clear dirty local data. */
+ commit(expectedGeneration:string,batch:RedSyncBatch<T>):Promise<void>;
+}
+type RedSyncTransport={storeChanges(kind:RedStoreKind,cursor:string|null):Promise<RedStoreChanges>;storeGet(kind:RedStoreKind,id:string):Promise<RedStoreRecord>};
+export function createRedSync<T>(client:RedSyncTransport,scope:RedSyncScope,key:Uint8Array,adapter:RedSyncAdapter<T>,decode:(bytes:Uint8Array)=>T){
+ const bound={...scope};
+ storeAAD({...bound,id:'0'.repeat(32),revision:1});
+ if(key.byteLength!==32)throw Error('Invalid sync key');
+ const secret=new Uint8Array(key);
+ let running=false,disposed=false;
+ async function pull():Promise<{imported:number;conflicts:number;reset:boolean}>{
+  if(disposed||running)throw Error('Sync unavailable or already running');
+  running=true;
+  try{
+   const snapshot=await adapter.snapshot();
+   if(typeof snapshot.generation!=='string'||snapshot.generation.length===0||snapshot.items.length>4096||snapshot.cursor!==null&&!/^[a-f0-9]{64}$/.test(snapshot.cursor))throw Error('Invalid local sync snapshot');
+   const local=new Map<string,RedSyncLocalItem>();
+   for(const item of snapshot.items){
+    if(!storeId(item.id)||!safeNatural(item.revision)||typeof item.dirty!=='boolean'||(item.deleted!==0&&item.deleted!==1)||local.has(item.id))throw Error('Invalid local sync record');
+    local.set(item.id,{...item});
+   }
+   const feed=await client.storeChanges(bound.kind,snapshot.cursor);
+   const imports:RedSyncImport<T>[]=[],conflicts:RedSyncConflict[]=[];
+   const seen=new Set<string>();
+   for(const meta of feed.items){
+    if(seen.has(meta.id)||!isStoreMeta(meta))throw Error('Invalid change feed');
+    seen.add(meta.id);
+    const old=local.get(meta.id);
+    if(old&&old.revision>meta.revision){conflicts.push({id:meta.id,localRevision:old.revision,remoteRevision:meta.revision,reason:'remote_rollback'});continue;}
+    if(old&&old.revision===meta.revision&&old.deleted===meta.deleted)continue;
+    if(old?.dirty){conflicts.push({id:meta.id,localRevision:old.revision,remoteRevision:meta.revision,reason:'local_edit'});continue;}
+    // A tombstone has no authenticated payload. Never automatically delete a
+    // local record: surface the remote deletion for explicit reconciliation.
+    if(meta.deleted===1){conflicts.push({id:meta.id,localRevision:old?.revision??0,remoteRevision:meta.revision,reason:'revision_changed'});continue;}
+    const record=await client.storeGet(bound.kind,meta.id);
+    if(record.revision!==meta.revision||record.deleted!==meta.deleted){
+     // The feed cursor covers only the observed snapshot. Do not commit it
+     // on a concurrent mutation; the next pull starts from the old cursor.
+     throw Error('Remote record changed during pull; retry');
+    }
+    const bytes=await openRedStoreRecord(secret,{...bound,id:meta.id},record);
+    try{imports.push({id:meta.id,revision:meta.revision,deleted:0,value:decode(bytes)});}
+    finally{bytes.fill(0);}
+   }
+   if(feed.reset)for(const old of local.values())if(old.revision>0&&!seen.has(old.id))conflicts.push({id:old.id,localRevision:old.revision,remoteRevision:null,reason:'missing_remote'});
+   if(disposed)throw Error('Sync disposed');
+   await adapter.commit(snapshot.generation,{cursor:feed.cursor,imports,conflicts});
+   return {imported:imports.length,conflicts:conflicts.length,reset:feed.reset};
+  }finally{running=false;}
+ }
+ return {pull,dispose(){disposed=true;secret.fill(0);}};
+}
+
+/** RED Config: deliberately non-sensitive, app-scoped preferences only.
+ * Settings are encrypted with a separate derived key. A deterministic
+ * opaque ID is scoped to origin, owner and app, not shared across apps. */
+export type RedConfig={version:1;theme:'system'|'light'|'dark';locale:string;reducedMotion:boolean};
+export function parseRedConfig(value:unknown):RedConfig{
+ if(!value||typeof value!=='object'||Array.isArray(value))throw Error('Invalid RED config');
+ const v=value as Record<string,unknown>;
+ if(Object.keys(v).length!==4||v.version!==1||(v.theme!=='system'&&v.theme!=='light'&&v.theme!=='dark')||typeof v.locale!=='string'||v.locale.length>35||typeof v.reducedMotion!=='boolean')throw Error('Invalid RED config');
+ let locale:string;
+ try{const list=Intl.getCanonicalLocales(v.locale);if(list.length!==1)throw Error('locale');locale=list[0]!;}catch{throw Error('Invalid RED config locale');}
+ return {version:1,theme:v.theme,locale,reducedMotion:v.reducedMotion};
+}
+export async function createRedConfigContext(key:Uint8Array,scope:Omit<RedSyncScope,'kind'>){
+ if(key.byteLength!==32)throw Error('Invalid config key');
+ const base={origin:scope.origin,owner:scope.owner,app:scope.app,kind:'sync' as const};
+ const salt=storeAAD({...base,id:'0'.repeat(32),revision:1});
+ const master=await crypto.subtle.importKey('raw',new Uint8Array(key),'HKDF',false,['deriveBits']);
+ const derive=(label:string)=>crypto.subtle.deriveBits({name:'HKDF',hash:'SHA-256',salt,info:new TextEncoder().encode(label)},master,256);
+ const idBytes=new Uint8Array(await derive('red-config-id-v1')),configKey=new Uint8Array(await derive('red-config-key-v1'));
+ const id=Array.from(idBytes.slice(0,16),b=>b.toString(16).padStart(2,'0')).join('');idBytes.fill(0);
+ const context={...base,id};
+ let disposed=false;
+ return {id,
+  async prepare(value:RedConfig,expectedRevision:number){
+   if(disposed)throw Error('Config disposed');
+   const bytes=new TextEncoder().encode(JSON.stringify(parseRedConfig(value)));
+   try{return await prepareRedStoreWrite(configKey,context,expectedRevision,bytes);}finally{bytes.fill(0);}
+  },
+  async open(record:RedStoreRecord){
+   if(disposed)throw Error('Config disposed');
+   const bytes=await openRedStoreRecord(configKey,context,record);
+   try{return parseRedConfig(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)));}finally{bytes.fill(0);}
+  },
+  dispose(){disposed=true;configKey.fill(0);}
+ };
+}
