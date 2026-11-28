@@ -5,12 +5,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { createRequire } from 'node:module';
+import { previewFingerprint } from './studio-preview-fingerprint.mts';
 declare const Store:any, App:any, Schaltplan:any, GlassWheel:any;
 if(process.platform!=='win32')throw Error('Native Windows-Abnahme erfordert Windows.');
 const windows=import.meta.dirname;
 const root=path.resolve(windows,'..');
 const out=path.join(root,'build','studio-preview','screenshots');
 fs.mkdirSync(out,{recursive:true});
+for(const filename of ['result.json','01-elektro.png','02-simulator.png','03-whiteboard.png','04-whiteboard-ebenen.png','05-pdf.png','fehler.png']){
+  fs.rmSync(path.join(out,filename),{force:true});
+}
+const fingerprint=previewFingerprint(root);
 const require=createRequire(import.meta.url);
 const app=await electron.launch({executablePath:require('electron'),args:[windows,'--redion-test-profile='+randomBytes(16).toString('hex'),'--force-device-scale-factor=1']});
 const page=await app.firstWindow();
@@ -52,11 +57,15 @@ try{
   await inspector.waitFor({state:'visible'});await inspector.click();
   await page.locator('.sp-studio:not([hidden])').waitFor({state:'visible'});
   await page.screenshot({path:path.join(out,'01-elektro.png')});
-  await page.locator('.sp-wrap [data-a="simulation"]').click();
+  console.log('PASS: native Elektro-Inspektor sichtbar.');
+  // There is also a dock action with data-a="simulation". Exercise the
+  // dedicated, visible main power button, not an ambiguous selector.
+  await page.locator('.sp-wrap .sp-kopf .sp-start[data-a="simulation"]').click();
   await page.locator('.sp-desktop-messwerte summary').waitFor({state:'visible'});
   await page.locator('.sp-desktop-messwerte summary').click();
   await page.locator('.sp-desktop-messwerte-inhalt table').waitFor({state:'visible'});
   await page.screenshot({path:path.join(out,'02-simulator.png')});
+  console.log('PASS: native Messwerttabelle sichtbar.');
   await open(ids.board,'.wb-flaeche');
   const commands=page.locator('.wb-desktop-command');
   await commands.waitFor({state:'visible'});
@@ -65,6 +74,7 @@ try{
   await commands.locator('[data-wb-desktop="layers"]').click();
   await page.locator('.gfx-inspector').waitFor({state:'visible'});
   await page.screenshot({path:path.join(out,'04-whiteboard-ebenen.png')});
+  console.log('PASS: native Whiteboard-Kommandos und Ebenen sichtbar.');
   await page.locator('.gfx-inspector [aria-label="Objektübersicht schliessen"]').click();
   await open(ids.pdf,'.document-workspace');
   await page.locator('.document-topbar [data-document-action="thumbnails"]').click();
@@ -76,8 +86,10 @@ try{
   await page.locator('.document-topbar [data-document-action="inspector"]').click();
   await page.locator('.document-desktop-objects').waitFor({state:'visible'});
   await page.screenshot({path:path.join(out,'05-pdf.png')});
+  console.log('PASS: native PDF-Seitenfilter und Objektzugriff sichtbar.');
   assert.deepEqual(errors,[]);
-  fs.writeFileSync(path.join(out,'result.json'),JSON.stringify({ok:true,platform:process.platform,electron:true,errors,viewport:await page.evaluate(()=>({width:innerWidth,height:innerHeight}))},null,2));
+  assert.equal(previewFingerprint(root),fingerprint,'Der getestete Renderer wurde während der Prüfung verändert.');
+  fs.writeFileSync(path.join(out,'result.json'),JSON.stringify({ok:true,fingerprint,platform:process.platform,electron:true,errors,viewport:await page.evaluate(()=>({width:innerWidth,height:innerHeight}))},null,2));
   console.log('RED Studio: sichtbare Windows-Bedienelemente in Elektro, Simulator, Whiteboard und PDF geprüft.');
 }catch(error){
   await page.screenshot({path:path.join(out,'fehler.png')}).catch(()=>{});

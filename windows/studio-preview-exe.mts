@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { previewFingerprint } from './studio-preview-fingerprint.mts';
 const windows=import.meta.dirname;
 const root=path.resolve(windows,'..');
 if(process.platform!=='win32')throw Error('Die Windows-Vorschau wird auf Windows gebaut.');
@@ -17,6 +18,10 @@ const run=(file:string,args:string[],cwd:string)=>{
   if(result.error||result.status!==0)throw result.error||Error('Vorschau-Bau fehlgeschlagen: '+args.join(' '));
 };
 run(process.execPath,[path.join(windows,'prepare.mjs')],windows);
+const result=JSON.parse(fs.readFileSync(path.join(out,'screenshots','result.json'),'utf8'));
+if(result.ok!==true||result.platform!=='win32'||result.electron!==true||
+   result.fingerprint!==previewFingerprint(root)||!Array.isArray(result.errors)||result.errors.length!==0)
+  throw Error('Sichtprüfung fehlt oder Renderer geändert. Zuerst preview:check erfolgreich ausführen.');
 run(process.execPath,[path.join(root,'plugins/red-ion/build.mts')],root);
 fs.writeFileSync(config,JSON.stringify({
   ...pkg.build,appId:'ch.redurbabat.redion.studio.preview',productName:'RED Studio Preview',
