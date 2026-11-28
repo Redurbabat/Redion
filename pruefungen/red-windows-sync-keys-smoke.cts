@@ -29,5 +29,5 @@ app.whenReady().then(()=>{
  key.fill(0);other.fill(0);
  console.log('Real Electron Windows safeStorage: scoped insert-only keys and tamper rejection passed');
  app.exit(0);
-}).catch(error=>{console.error(error);app.exit(1);});
+}).catch((error:unknown)=>{console.error(error);app.exit(1);});
 app.on('quit',()=>{try{fs.rmSync(root,{recursive:true,force:true});}catch{}});

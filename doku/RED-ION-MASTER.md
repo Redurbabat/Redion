@@ -86,3 +86,7 @@ Windows DPAPI-Smoke-Schritt (Run 46163139251) und Android SDK (46163139216) auf 
 ## CI-Korrektur: strikte Typprüfung und Bibliotheksdiagnose
 
 Run 46163679899 meldet drei Typfehler: SQLite-Spalten vor Wiederherstellung auf String/Bytes prüfen; feste Build-Dateipaare als readonly Tupel typisieren. Bibliotheks-Treffflächenprüfung protokolliert nun tatsächliche Geometrie und CSS der Elternkette inklusive Transform/Scale/Zoom. Die 44px-Anforderung bleibt unverändert; kein CSS-Umbau ohne Messbefund. Neue CI erforderlich.
+
+## CI-Korrektur: Windows-Paketgrenze
+
+Die Windows-Builds 46163850149 und 46163850019 scheiterten an TS7006 im DPAPI-Test (`catch`-Parameter). Testquelle in `pruefungen/` verschoben, Fehlerparameter typisiert; der separate Smoke-Builder referenziert den neuen Pfad. `windows/tsconfig.json` und Produktions-Paketregeln bleiben unverändert. Der zuvor erfolgreiche DPAPI-Smoke bleibt verpflichtend. Neue Windows-CI erforderlich.
