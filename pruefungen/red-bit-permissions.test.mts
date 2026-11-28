@@ -10,9 +10,9 @@ import {createRedPairProof} from '../red-sdk/client.mts';
 const origin='https://redion.example.test';
 const grant='/home/red-bit/grant',revoke='/home/red-bit/revoke',grants='/home/red-bit/grants',permission='/red-bit/v1/permission';
 
-async function fixture(enabled:boolean,run:(f:any)=>Promise<void>,jobs=false,transport=false){
+async function fixture(enabled:boolean,run:(f:any)=>Promise<void>,jobs=false,transport=false,transportJobs=false){
  const root=await mkdtemp(join(tmpdir(),'red-bit-permissions-'));
- const service=await openHomeServer({dataDir:root,origin,enableRedBitPermissions:enabled,enableRedBitReadJobs:jobs,enableRedBitTransportPermissions:transport});
+ const service=await openHomeServer({dataDir:root,origin,enableRedBitPermissions:enabled,enableRedBitReadJobs:jobs,enableRedBitTransportPermissions:transport,enableRedBitTransportJobs:transportJobs});
  try{
   const send=(path:string,init?:RequestInit)=>service.handle(new Request(origin+path,init));
   const get=(path:string,token?:string)=>send(path,{headers:token?{Authorization:'Bearer '+token}:{}});
@@ -243,4 +243,70 @@ test('Transport grant is short-lived, explicitly confirmed and isolated from rea
   assert.equal(Number(service.store.sqlite.prepare('SELECT COUNT(*) AS n FROM home_red_bit_transport_permission WHERE session_id=?').get(bit.sessionId).n),0);
   assert.equal((await post('/red-bit/v1/execute',{},other.accessToken)).status,404);
  },false,true);
+});
+
+const trRequest='/home/red-bit/transport-request',trResult='/home/red-bit/transport-result',trClaim='/red-bit/v1/transport-claim',trAuthorize='/red-bit/v1/transport-authorize',trComplete='/red-bit/v1/transport-complete';
+test('Transport jobs need independent opt-in and transport grant',async()=>{
+ await fixture(true,async({post,token,pair})=>{
+  const bit=await pair('red-bit');
+  await post(transportGrant,{sessionId:bit.sessionId,confirm:true},token);
+  assert.equal((await post(trClaim,{confirm:true},bit.accessToken)).status,404);
+ },false,true);
+ await fixture(true,async({post,token,pair})=>{
+  const bit=await pair('red-bit');
+  await post(grant,{sessionId:bit.sessionId,confirm:true},token);
+  assert.equal((await post(trClaim,{confirm:true},bit.accessToken)).status,403);
+ },false,true,true);
+});
+test('Transport command is isolated and authorized once; only exact allowed commands',async()=>{
+ await fixture(false,async({post,token,pair})=>{
+  const bit=await pair('red-bit'),other=await pair('red-bit');
+  const body={sessionId:bit.sessionId,confirm:true};
+  await post(transportGrant,body,token);
+  await post(transportGrant,{sessionId:other.sessionId,confirm:true},token);
+  const id='d'.repeat(32),request={...body,id,command:'next',issuedAt:Date.now()};
+  assert.equal((await post(trRequest,{...request,command:'delete'},token)).status,400);
+  assert.equal((await post(trRequest,request,bit.accessToken)).status,401);
+  assert.equal((await post(trRequest,request,token)).status,201);
+  assert.equal((await post(trRequest,{...request,id:'e'.repeat(32)},token)).status,409);
+  assert.deepEqual(await (await post(trClaim,{confirm:true},other.accessToken)).json(),{version:1,job:null});
+  assert.equal((await post(trAuthorize,{id,command:'next',confirm:true},bit.accessToken)).status,409);
+  const claim=await (await post(trClaim,{confirm:true},bit.accessToken)).json() as any;
+  assert.equal(claim.job.command,'next');
+  assert.deepEqual(await (await post(trClaim,{confirm:true},bit.accessToken)).json(),{version:1,job:null});
+  assert.equal((await post(trComplete,{id,outcome:'executed'},bit.accessToken)).status,409);
+  assert.equal((await post(trAuthorize,{id,command:'pause',confirm:true},bit.accessToken)).status,409);
+  assert.equal((await post(trAuthorize,{id,command:'next',confirm:false},bit.accessToken)).status,400);
+  assert.equal((await post(trAuthorize,{id,command:'next',confirm:true},other.accessToken)).status,409);
+  const permit=await post(trAuthorize,{id,command:'next',confirm:true},bit.accessToken);
+  assert.equal(permit.status,200);
+  assert.ok((await permit.json() as any).expiresAt<=Date.now()+5000);
+  assert.equal((await post(trAuthorize,{id,command:'next',confirm:true},bit.accessToken)).status,409);
+  assert.equal((await post(trComplete,{id,outcome:'executed'},bit.accessToken)).status,200);
+  assert.equal((await post(trComplete,{id,outcome:'executed'},bit.accessToken)).status,409);
+  assert.deepEqual(await (await post(trResult,{sessionId:bit.sessionId,id},token)).json(),{version:1,state:'completed',outcome:'executed'});
+  await post(transportRevoke,body,token);
+  await post(transportGrant,body,token);
+  assert.equal((await post(trRequest,{...request,issuedAt:Date.now()},token)).status,409);
+ },false,true,true);
+});
+test('Transport cancellation, expiry and grant renewal prevent authorization',async()=>{
+ await fixture(false,async({post,token,pair,service})=>{
+  const bit=await pair('red-bit'),body={sessionId:bit.sessionId,confirm:true};
+  await post(transportGrant,body,token);
+  const req=(id:string)=>({...body,id,command:'play',issuedAt:Date.now()});
+  const a='a'.repeat(32),b='b'.repeat(32),c='c'.repeat(32);
+  await post(trRequest,req(a),token);
+  await post(trClaim,{confirm:true},bit.accessToken);
+  assert.equal((await post(trComplete,{id:a,outcome:'declined'},bit.accessToken)).status,200);
+  assert.equal((await post(trAuthorize,{id:a,command:'play',confirm:true},bit.accessToken)).status,409);
+  await post(trRequest,req(b),token);
+  await post(trClaim,{confirm:true},bit.accessToken);
+  await post(transportGrant,body,token);
+  assert.equal((await post(trAuthorize,{id:b,command:'play',confirm:true},bit.accessToken)).status,409);
+  await post(trRequest,req(c),token);
+  await post(trClaim,{confirm:true},bit.accessToken);
+  service.store.sqlite.prepare('UPDATE home_red_bit_transport_job SET expires=? WHERE id=?').run(Date.now()-1,c);
+  assert.equal((await post(trAuthorize,{id:c,command:'play',confirm:true},bit.accessToken)).status,409);
+ },false,true,true);
 });
