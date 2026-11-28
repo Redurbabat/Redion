@@ -146,7 +146,7 @@ die Delegation. Keine Tokens oder Epoch in den API-Antworten.
 Bestehende RED-ION-Dokumentenrechte allein genügen nicht.
 toolsAvailable:true kennzeichnet den aktivierten Pilot, nicht die tatsächliche Geräteverfügbarkeit.
 Die Tools werden nur am privaten Home-MCP-Endpunkt und nur bei einer gültigen
-Delegation sichtbar. Dashboard zur MCP-Delegation und ChatGPT-Abnahme fehlen noch.
+Delegation sichtbar. Die ChatGPT-Abnahme steht noch aus.
 
 ### MCP-Aufträge
 
@@ -163,3 +163,18 @@ kann nicht zurückgerufen werden. Replay-Schutz ist auf 120 Sekunden begrenzt;
 keine globale Exactly-once-Garantie. Einzelne OAuth-Token-Widerrufe ohne
 Grant-Widerruf entwerten bereits angelegte Jobs nicht automatisch.
 Die öffentliche Worker-MCP-Schnittstelle erhält keine RED-Bit-Werkzeuge.
+
+### KI-Freigaben im Dashboard
+
+RED ION → Einstellungen → RED Home Server → RED Bit · KI-Freigaben.
+Zuerst RED Bit koppeln, den gewünschten Geräte-Grant erteilen und die KI
+über den privaten Home-MCP-OAuth-Flow verbinden. Dann KI-Verbindungen,
+Geräte und Freigaben abrufen. Die konkrete OAuth-Verbindung, Gerätesitzung
+und Berechtigung (Status oder Transport) auswählen und bestätigen.
+Aktive Delegationen mit Ablaufzeit werden angezeigt; dieselbe Auswahl
+kann einzeln widerrufen werden. Kein automatischer Grant, kein automatisches
+Verlängern. Der Server prüft jede Anfrage erneut; angezeigte Rechte sind
+eine Momentaufnahme. Ein MCP-Client kann nach Freigabe einen erneuten
+tools/list-Abruf benötigen. Eine Verbindung mit ChatGPT setzt einen
+erreichbaren, vertrauenswürdigen HTTPS-Endpunkt und kompatiblen Client voraus;
+dieses Dashboard veröffentlicht keinen Server und verbindet ChatGPT nicht.
