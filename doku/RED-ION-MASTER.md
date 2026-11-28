@@ -34,3 +34,7 @@ Siehe [Phase 3](RED-ION-PHASE-3.md), [Home Server](HOME-SERVER.md), [Studio](RED
 ## Aktueller Prüffund
 
 Auf `dcdde61e` bestanden 17 von 18 PR-Workflows, einschliesslich unsignierter IPA und Windows-Paket. Phase 3 scheiterte beim Chromium-Setup: Playwright 1.56.1 unterstützt Ubuntu 26.04 nicht. Der Runner wird auf 24.04 festgelegt; erneute vollständige Abnahme nötig. Die neuen Backup-Frische- und SDK-Disk-Sink-Tests sind noch nicht bestätigt. Keine physische Abnahme.
+
+## P0-Fortschritt: lokaler Sync-Adapter
+
+Auf `cf56d4f6` bestanden alle 18 PR-Workflows und der Push-Prüflauf. Editor erst im zweiten unveränderten Lauf erfolgreich; sporadische Sichtbarkeit noch beobachten. Neu: isolierter verschlüsselter Node-/SQLite-Sync-Adapter mit atomarem Cursor, Generation und Konfliktjournal, Regressionen über den echten SDK-Pull und zwei DB-Verbindungen. Die nächste Revision muss erneut geprüft werden. Keine native App-Anbindung, keine Freigabe von Schlüsselablage oder produktiven Datenprofilen.
