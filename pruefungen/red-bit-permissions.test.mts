@@ -10,9 +10,9 @@ import {createRedPairProof} from '../red-sdk/client.mts';
 const origin='https://redion.example.test';
 const grant='/home/red-bit/grant',revoke='/home/red-bit/revoke',grants='/home/red-bit/grants',permission='/red-bit/v1/permission';
 
-async function fixture(enabled:boolean,run:(f:any)=>Promise<void>){
+async function fixture(enabled:boolean,run:(f:any)=>Promise<void>,jobs=false){
  const root=await mkdtemp(join(tmpdir(),'red-bit-permissions-'));
- const service=await openHomeServer({dataDir:root,origin,enableRedBitPermissions:enabled});
+ const service=await openHomeServer({dataDir:root,origin,enableRedBitPermissions:enabled,enableRedBitReadJobs:jobs});
  try{
   const send=(path:string,init?:RequestInit)=>service.handle(new Request(origin+path,init));
   const get=(path:string,token?:string)=>send(path,{headers:token?{Authorization:'Bearer '+token}:{}});
@@ -107,4 +107,68 @@ test('Permission pilot rejects invalid origin, unbounded input, and locked accou
   assert.equal((await get(permission,bit.accessToken)).status,401);
   assert.equal((await get(grants,token)).status,401);
  });
+});
+
+const requestJob='/home/red-bit/read-request',resultJob='/home/red-bit/read-result',claimJob='/red-bit/v1/read-claim',completeJob='/red-bit/v1/read-complete';
+const status={version:1,state:'paused',hasTrack:true,canNext:false,canPrevious:false,controlsLocked:false,hasPlaybackError:false};
+const jobId='a'.repeat(32);
+const requestBody=(sessionId:string,id=jobId)=>({sessionId,id,issuedAt:Date.now(),confirm:true});
+
+test('Read job transport needs its own opt-in',async()=>{
+ await fixture(true,async({get,post,token,pair})=>{
+  const bit=await pair('red-bit');
+  await post(grant,{sessionId:bit.sessionId,confirm:true},token);
+  assert.equal((await post(requestJob,requestBody(bit.sessionId),token)).status,404);
+  assert.equal((await post(claimJob,{confirm:true},bit.accessToken)).status,404);
+ });
+});
+
+test('Read job is owner-approved, isolated, claimed once and returns only strict status',async()=>{
+ await fixture(true,async({post,token,pair})=>{
+  const bit=await pair('red-bit'),other=await pair('red-bit'),fit=await pair('red-fit');
+  assert.equal((await post(requestJob,requestBody(bit.sessionId),token)).status,403);
+  await post(grant,{sessionId:bit.sessionId,confirm:true},token);
+  await post(grant,{sessionId:other.sessionId,confirm:true},token);
+  const body=requestBody(bit.sessionId);
+  assert.equal((await post(requestJob,body,bit.accessToken)).status,401);
+  assert.equal((await post(requestJob,{...body,tool:'redbit_play'},token)).status,400);
+  assert.equal((await post(requestJob,{...body,issuedAt:Date.now()-31000},token)).status,400);
+  const created=await post(requestJob,body,token);assert.equal(created.status,201);
+  assert.equal((await created.json() as any).tool,'redbit_read_status');
+  assert.equal((await post(requestJob,body,token)).status,409);
+  assert.equal((await post(requestJob,requestBody(bit.sessionId,'b'.repeat(32)),token)).status,409);
+  assert.equal((await post(claimJob,{confirm:true},fit.accessToken)).status,401);
+  assert.equal((await post(claimJob,{confirm:false},bit.accessToken)).status,400);
+  assert.deepEqual(await (await post(claimJob,{confirm:true},other.accessToken)).json(),{version:1,job:null});
+  assert.equal((await post(completeJob,{id:jobId,status},bit.accessToken)).status,409);
+  const claimed=await (await post(claimJob,{confirm:true},bit.accessToken)).json() as any;
+  assert.equal(claimed.job.id,jobId);
+  assert.deepEqual(await (await post(claimJob,{confirm:true},bit.accessToken)).json(),{version:1,job:null});
+  assert.equal((await post(completeJob,{id:jobId,status},other.accessToken)).status,409);
+  assert.equal((await post(completeJob,{id:jobId,status:{...status,title:'private'}},bit.accessToken)).status,400);
+  assert.equal((await post(completeJob,{id:jobId,status},bit.accessToken)).status,200);
+  assert.equal((await post(completeJob,{id:jobId,status},bit.accessToken)).status,409);
+  assert.equal((await post(resultJob,{sessionId:bit.sessionId,id:jobId},bit.accessToken)).status,401);
+  assert.deepEqual(await (await post(resultJob,{sessionId:bit.sessionId,id:jobId},token)).json(),{version:1,state:'completed',status});
+  await post(revoke,{sessionId:bit.sessionId,confirm:true},token);
+  assert.equal((await post(resultJob,{sessionId:bit.sessionId,id:jobId},token)).status,403);
+ },true);
+});
+
+test('Read job expiry and grant renewal cannot revive a previously claimed result',async()=>{
+ await fixture(true,async({service,post,token,pair})=>{
+  const bit=await pair('red-bit');
+  await post(grant,{sessionId:bit.sessionId,confirm:true},token);
+  await post(requestJob,requestBody(bit.sessionId),token);
+  await post(claimJob,{confirm:true},bit.accessToken);
+  service.store.sqlite.prepare('UPDATE home_red_bit_read_job SET expires=? WHERE id=?').run(Date.now()-1,jobId);
+  assert.equal((await post(completeJob,{id:jobId,status},bit.accessToken)).status,409);
+  assert.equal((await post(resultJob,{sessionId:bit.sessionId,id:jobId},token)).status,404);
+  const second='c'.repeat(32);
+  assert.equal((await post(requestJob,requestBody(bit.sessionId,second),token)).status,201);
+  await post(claimJob,{confirm:true},bit.accessToken);
+  await post(grant,{sessionId:bit.sessionId,confirm:true},token);
+  assert.equal((await post(completeJob,{id:second,status},bit.accessToken)).status,409);
+  assert.equal(Number(service.store.sqlite.prepare('SELECT COUNT(*) AS n FROM home_red_bit_read_job').get().n),0);
+ },true);
 });

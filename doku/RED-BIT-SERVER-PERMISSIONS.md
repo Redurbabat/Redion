@@ -52,3 +52,26 @@ Aufträge, eindeutige Gerätezuordnung, Wiederholungsschutz über Neustarts,
 Rate-Limits und redigierte Audits, Prüfung von Widerruf und iOS-Lifecycle.
 Keine Musikbefehle über die vorhandenen identity:read-Tokens oder RED ION
 Workspace-OAuth-Grants.
+
+## Separater Status-Auftragskanal (zweiter Pilot)
+
+Zusätzlich `REDION_ENABLE_RED_BIT_READ_JOBS=1` erforderlich, neben der
+Berechtigungsfreigabe. Owner kann eine bestätigte Statusabfrage für exakt
+eine autorisierte RED-Bit-Sitzung erstellen. POST-Routen:
+
+- /home/red-bit/read-request: sessionId, zufällige 32 Hex-Zeichen als id,
+  issuedAt (Millisekunden, höchstens 30 s alt), confirm:true.
+- /red-bit/v1/read-claim: confirm:true, nur mit RED-Bit-Access-Token,
+  einmalige Abholung der ausstehenden Abfrage.
+- /red-bit/v1/read-complete: id und begrenztes Statusobjekt.
+- /home/red-bit/read-result: sessionId und id, nur Owner.
+
+Aufträge laufen spätestens nach 45 Sekunden ab, höchstens einer gleichzeitig
+offen pro Sitzung, 10 Aufträge je 60 Sekunden. Ergebnisse sind nur bis Ablauf
+lesbar und werden bei der nächsten autorisierten Job-Operation bereinigt.
+Widerruf oder Erneuerung der Freigabe löscht die betreffenden Jobs per Trigger.
+Keine Wiederholung nach Claim; IDs bleiben bis 120 s nach Erstellung gespeichert,
+ausser beim Widerruf/Erneuerung. Kein dauerhafter Replay-Schutz über neue Grants;
+noch kein automatischer Client, kein Schreibwerkzeug und kein ChatGPT-MCP.
+Die App muss den Nutzer vor Abholung und Statusübermittlung separat zustimmen
+lassen. Kein Einsatz mit produktiven Daten vor echter Geräteabnahme.
