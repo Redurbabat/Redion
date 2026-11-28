@@ -50,3 +50,7 @@ Explizite Keep-both-Auflösung mit authentifizierter Vorschau und erneuter Prüf
 ## P0-Fortschritt: eingehende Textkonflikte
 
 Ergänzt Keep-both für gewöhnliche lokale Textänderungskonflikte im SDK-Pull, mit authentifizierter Vorschau, neuer lokaler Kopie und atomarer Entfernung des explizit gelösten aktiven Konflikts. Kein Cursor-Fortschritt, keine Netzwerkschreiboperation. Tests für echten SDK-Pull, veraltete Vorschau, falschen Schlüssel und blockierte Sonderfälle. Vorherige und neue Gesamt-CI noch nicht vollständig abgenommen. UI, Sonderfälle und native Integration bleiben offen.
+
+## P0-Fortschritt: durchgängige Server-Regression
+
+Erweitert `red-store.test.mts` um zwei separat verschlüsselte persistente SQLite-Clients mit echtem RED ID v2, Freigabe und tatsächlichen Home-Server-Request-Handlern. Verlorene Antwort nach serverseitigem Commit, Neustart, idempotenter Retry, Offline-Konflikt, Keep-both-Kopie, Übertragung an das zweite Profil und Rechtewiderruf werden zusammen geprüft. Transport innerhalb des Prozesses, keine physische Geräte-/TLS-Abnahme. Test in bestehendem Home-Server-Workflow; neue CI noch nicht bestätigt.

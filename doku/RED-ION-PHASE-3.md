@@ -69,3 +69,7 @@ Playwright 1.56.1 benötigt einen unterstützten Linux-Runner; Ubuntu 24.04 erse
 ### Gewöhnliche Pull-Textkonflikte
 
 `previewPullConflict` und `resolvePullKeepBoth` verwenden das aktive Konfliktjournal, authentifizierten Servertext und einen an lokale Generation und Serverchiffre gebundenen Vorschau-Token. Nur lokale Textänderungen mit nachweislich neuerer Remote-Revision sind zulässig. Abweichende lokale Fassung bleibt als neue dirty Kopie erhalten; ursprüngliche ID übernimmt den Servertext. Der explizit aufgelöste aktive Konflikt wird entfernt; kein separates Archiv der Auflösungsentscheidung. Cursor und Server bleiben unverändert. Rollback, fehlende Remote-Daten, Tombstones, lokale Löschabsichten und gemischte Konfliktarten bleiben blockiert. Keine UI oder Geräteintegration.
+
+### Durchgängige RED Home Server-Regression
+
+`node --test pruefungen/red-store.test.mts` enthält eine vollständige synthetische Integration der SQLite-Sync-Adapter mit zwei getrennten Profilen und echten RED-ID-v2-/RED-Store-Request-Handlern. Kein vorgetäuschter Serverzustand; lediglich die Übertragung erfolgt im Prozess, mit gezielt verlorener Antwort. Reale Netzwerkverbindung, Betriebssystem-Schlüsselspeicher, App-Oberflächen und physische Geräte bleiben separat zu prüfen.
