@@ -58,3 +58,7 @@ Erweitert `red-store.test.mts` um zwei separat verschlüsselte persistente SQLit
 ## Editor-Regressionskorrektur
 
 Wiederkehrender Chromium-390px-Befund (Run 46160781715): Leiste vorhanden, Sichtbarkeitsassertion fehlgeschlagen; bisherige Messung unterschied Opacity und Höhe nicht. Die Seitenleiste erhält eine explizite Mindesthöhe, keine geerbte Opacity-Transition und eine 44px-Untergrenze auch bei abweichenden Theme-Tokens. Browserdiagnose protokolliert Höhe, Opacity, Transition, Elterntransform und sämtliche Buttonhöhen. Vorhandene Assertions bleiben bestehen, alle Buttonhöhen kommen hinzu. Ursache noch nicht abschliessend nachgewiesen; neue Offline-Artefakte müssen gebaut und CI erneut geprüft werden.
+
+## P1-Fortschritt: Apple Sync-Keychain
+
+Separater nativer Apple-Schlüsselspeicher für explizit erhaltene 32-Byte-Schlüssel, an Serverursprung, Konto, App und Zweck gebunden. Atomarer Insert-only-Keychain-Weg, keine automatische Neuerzeugung oder Überschreibung bestehender Schlüssel, kein iCloud-Keychain. Tests der Scope-Isolation und Insert-only-Logik mit Testbackend. Reale Geräte-Keychain, App-Anbindung, Recovery, Windows DPAPI und Android-Sync-Key-Adapter bleiben offen.
