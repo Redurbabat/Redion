@@ -31663,7 +31663,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1733, inhalt: '3a665e8ddadcc1c7', gebaut: '2026-11-28T10:21:07.626Z' };
+const Stand = { fassung: 1734, inhalt: '94ec5c44827e6d42', gebaut: '2026-11-28T10:42:29.249Z' };
 window.Stand = Stand;
 
 </script>
@@ -119839,6 +119839,8 @@ const Einstellungen = (() => {
                 bindeRedSessions(ziel);
                 bindeRedAppCenter(ziel);
                 bindeRedReminders(ziel);
+                bindeMcpHub(ziel);
+                bindeLocalAi(ziel);
             }
             if (ziel && offenerBereich === 'mcp')
                 RegisterAutomatisierung.montiereAnsicht(ziel);
@@ -120635,6 +120637,183 @@ const Einstellungen = (() => {
             void run(async () => { await request('create', payload); pendingCreate = null; await refresh(); });
         });
     };
+    const homeIdentity = () => {
+        const w = typeof Wolke === 'undefined' ? null : Wolke;
+        const origin = w?.adresse(), token = w?.token();
+        if (!origin || !token || !w?.serverAdressePruefen(origin))
+            throw Error('Kein angemeldeter HTTPS-Server');
+        return { origin, token };
+    };
+    const sameHomeIdentity = (identity) => {
+        try {
+            const current = homeIdentity();
+            return current.origin === identity.origin && current.token === identity.token;
+        }
+        catch {
+            return false;
+        }
+    };
+    const homeRequest = async (identity, path, payload, signal = AbortSignal.timeout(8000)) => {
+        if (!sameHomeIdentity(identity))
+            throw Error('Anmeldung geändert');
+        const response = await fetch(identity.origin + path, {
+            method: payload ? 'POST' : 'GET', headers: { Authorization: 'Bearer ' + identity.token, ...(payload ? { 'Content-Type': 'application/json' } : {}) },
+            ...(payload ? { body: JSON.stringify(payload) } : {}), credentials: 'omit', redirect: 'error', cache: 'no-store', signal
+        });
+        if (!response.ok)
+            throw Error('HTTP ' + response.status);
+        const result = await response.json();
+        if (!sameHomeIdentity(identity) || signal.aborted)
+            throw Error('Anfrage abgebrochen oder Anmeldung geändert');
+        return result;
+    };
+    const bindeMcpHub = (ziel) => {
+        const refresh = ziel.querySelector('[data-hub-refresh]');
+        const list = ziel.querySelector('[data-hub-list]');
+        const status = ziel.querySelector('[data-hub-status]');
+        if (!refresh || !list || !status)
+            return;
+        let busy = false;
+        const scopes = { 'redion:read': 'Lesen', 'redion:write': 'Bearbeiten', 'redion:images': 'Bilder lesen' };
+        const load = async (identity) => {
+            list.replaceChildren();
+            const data = await homeRequest(identity, '/home/mcp-hub/connections');
+            if (data?.version !== 1 || typeof data.enabled !== 'boolean' || typeof data.truncated !== 'boolean' || !Array.isArray(data.connections) || data.connections.length > 128)
+                throw Error('Ungültige Antwort');
+            const fragment = document.createDocumentFragment();
+            for (const entry of data.connections) {
+                if (!entry || typeof entry.id !== 'string' || !/^grant:[a-f0-9]{64}$/.test(entry.id) || typeof entry.clientName !== 'string' || entry.clientName.length > 120 || !Array.isArray(entry.scopes) || entry.scopes.length > 3 || !entry.scopes.every((scope) => typeof scope === 'string' && Object.hasOwn(scopes, scope)) || !Number.isSafeInteger(entry.workspaceCount) || entry.workspaceCount < 0 || typeof entry.remember !== 'boolean')
+                    throw Error('Ungültige Verbindung');
+                const name = entry.clientName, id = entry.id;
+                const li = document.createElement('li'), title = document.createElement('strong'), details = document.createElement('p'), revoke = document.createElement('button');
+                title.textContent = name;
+                details.textContent = entry.scopes.map((scope) => scopes[scope]).join(' · ') + ' · ' + entry.workspaceCount + ' Arbeitsbereiche' + (entry.remember ? ' · Freigabe gemerkt' : '');
+                revoke.className = 'ez-knopf';
+                revoke.textContent = 'Verbindung widerrufen';
+                revoke.addEventListener('click', () => {
+                    if (busy)
+                        return;
+                    if (!sameHomeIdentity(identity)) {
+                        list.replaceChildren();
+                        status.textContent = 'Anmeldung geändert. Verbindungen erneut abrufen.';
+                        return;
+                    }
+                    if (!window.confirm('KI-Verbindung „' + name + '“ widerrufen? Neue Anfragen mit ihren bisherigen Tokens werden gesperrt.'))
+                        return;
+                    void run(async () => { const result = await homeRequest(identity, '/home/mcp-hub/revoke', { id, confirm: true }); if (result?.ok !== true)
+                        throw Error('Ungültige Antwort'); await load(identity); });
+                });
+                li.append(title, details, revoke);
+                fragment.append(li);
+            }
+            list.replaceChildren(fragment);
+            status.textContent = (data.enabled ? 'MCP aktiviert' : 'MCP deaktiviert') + ' · ' + data.connections.length + ' aktive Freigaben' + (data.truncated ? ' · weitere vorhanden' : '');
+        };
+        const run = async (fn) => {
+            if (busy)
+                return;
+            busy = true;
+            refresh.disabled = true;
+            list.querySelectorAll('button').forEach(b => b.disabled = true);
+            status.textContent = 'Anfrage läuft …';
+            try {
+                await fn();
+            }
+            catch {
+                list.replaceChildren();
+                status.textContent = 'Anfrage fehlgeschlagen. Server und Anmeldung prüfen. Nach unklarem Widerruf Liste neu abrufen.';
+            }
+            finally {
+                busy = false;
+                refresh.disabled = false;
+                list.querySelectorAll('button').forEach(b => b.disabled = false);
+            }
+        };
+        refresh.addEventListener('click', () => void run(() => load(homeIdentity())));
+    };
+    const bindeLocalAi = (ziel) => {
+        const load = ziel.querySelector('[data-ai-models]');
+        const select = ziel.querySelector('[data-ai-model]');
+        const prompt = ziel.querySelector('[data-ai-prompt]');
+        const generate = ziel.querySelector('[data-ai-generate]');
+        const cancel = ziel.querySelector('[data-ai-cancel]');
+        const clear = ziel.querySelector('[data-ai-clear]');
+        const output = ziel.querySelector('[data-ai-output]');
+        const status = ziel.querySelector('[data-ai-status]');
+        if (!load || !select || !prompt || !generate || !cancel || !clear || !output || !status)
+            return;
+        let identity = null, allowed = new Set(), active = null;
+        const resetModels = () => { identity = null; allowed.clear(); select.replaceChildren(); generate.disabled = true; };
+        const controls = (busy) => { load.disabled = busy; select.disabled = busy; prompt.disabled = busy; generate.disabled = busy || !identity || !allowed.size; cancel.disabled = !busy; clear.disabled = busy; };
+        const run = async (fn) => {
+            if (active)
+                return;
+            const controller = new AbortController();
+            active = controller;
+            controls(true);
+            try {
+                await fn(controller);
+            }
+            catch {
+                output.textContent = '';
+                status.textContent = controller.signal.aborted ? 'Anfrage abgebrochen.' : 'Lokale KI nicht verfügbar. Serverkonfiguration, Modell und Anmeldung prüfen.';
+            }
+            finally {
+                if (active === controller)
+                    active = null;
+                if (identity && !sameHomeIdentity(identity))
+                    resetModels();
+                controls(false);
+            }
+        };
+        load.addEventListener('click', () => void run(async (controller) => {
+            resetModels();
+            output.textContent = '';
+            status.textContent = 'Konfigurierte Modelle werden abgerufen …';
+            const current = homeIdentity();
+            const data = await homeRequest(current, '/home/ai/models', undefined, AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]));
+            if (data?.version !== 1 || data.provider !== 'loopback-ollama' || data.installedStatus !== false || !Array.isArray(data.models) || data.models.length > 16 || !data.models.every((m) => typeof m === 'string' && m.length > 0 && m.length <= 120) || new Set(data.models).size !== data.models.length)
+                throw Error('Ungültige Modellliste');
+            for (const name of data.models) {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.append(option);
+            }
+            identity = current;
+            allowed = new Set(data.models);
+            status.textContent = allowed.size + ' konfigurierte Modelle. Installation und Offline-Betrieb nicht geprüft.';
+        }));
+        generate.addEventListener('click', () => {
+            if (active || !identity)
+                return;
+            if (!sameHomeIdentity(identity)) {
+                resetModels();
+                output.textContent = '';
+                status.textContent = 'Anmeldung geändert. Modelle erneut abrufen.';
+                return;
+            }
+            const current = identity, model = select.value, text = prompt.value;
+            if (!allowed.has(model) || !text.trim() || new TextEncoder().encode(text).byteLength > 16384) {
+                status.textContent = 'Modell und Eingabe prüfen (max. 16 KiB UTF-8).';
+                return;
+            }
+            if (!window.confirm('Eingabe an das konfigurierte Ollama-Modell „' + model + '“ auf deinem Home-Server senden? Der Serverbetreiber muss den Offline-Betrieb sicherstellen.'))
+                return;
+            void run(async (controller) => {
+                output.textContent = '';
+                status.textContent = 'Antwort wird erzeugt …';
+                const data = await homeRequest(current, '/home/ai/generate', { model, prompt: text, confirmLocalProcessing: true }, AbortSignal.any([controller.signal, AbortSignal.timeout(65000)]));
+                if (data?.version !== 1 || data.model !== model || typeof data.text !== 'string' || data.text.length > 262144)
+                    throw Error('Ungültige Antwort');
+                output.textContent = data.text;
+                status.textContent = 'Antwort erhalten. Nicht automatisch gespeichert.';
+            });
+        });
+        cancel.addEventListener('click', () => active?.abort());
+        clear.addEventListener('click', () => { if (active)
+            return; prompt.value = ''; output.textContent = ''; status.textContent = 'Eingabe und Ausgabe entfernt.'; });
+    };
     const bindeHomeServer = (ziel) => {
         const button = ziel.querySelector('[data-home-refresh]');
         const status = ziel.querySelector('[data-home-status]');
@@ -120699,7 +120878,7 @@ const Einstellungen = (() => {
         });
     };
     const inhalt = (b) => ({
-        'home-server': () => kopf('RED Home Server', 'Private Infrastruktur und Diagnose') + '<div class="ez-karte"><button class="ez-knopf" data-home-refresh>Serverstatus abrufen</button><p data-home-status role="status">Verbinde zuerst dein Gerät mit dem privaten Server.</p><dl data-home-metrics></dl></div><div class="ez-karte"><h3>RED App Center</h3><p>Zentrale Übersicht der autorisierten RED-App-Zugänge und Freigaben. Keine Installation oder automatische Aktualisierung.</p><button class="ez-knopf" data-app-center-refresh>Alle 11 Apps anzeigen</button><ul data-app-center-list></ul><p data-app-center-status role="status"></p></div><div class="ez-karte"><h3>RED Notify · Wartungskalender</h3><p>Wartungshinweise beim Abruf oder mit aktiviertem Server-Scheduler. Speicher und Freigaben werden dann nur lesend geprüft; Backup und Updates bleiben Hinweise. Wiederholung als feste UTC-Intervalle, ohne Sommerzeitkorrektur.</p><label>Aufgabe <select data-reminder-kind><option value="backup-review">Backup prüfen</option><option value="grant-review">Freigaben prüfen</option><option value="storage-review">Speicher prüfen</option><option value="update-review">Updates prüfen</option></select></label><label>Erster Termin (Ortszeit) <input type="datetime-local" data-reminder-date></label><label>Wiederholung <select data-reminder-period><option value="once">Einmalig</option><option value="daily">Alle 24 Stunden</option><option value="weekly">Alle 7 Tage</option></select></label><button class="ez-knopf" data-reminder-create>Termin anlegen</button><button class="ez-knopf" data-reminder-refresh>Fällige Hinweise abrufen</button><ul data-reminder-list></ul><p data-reminder-status role="status"></p><h3>Wartungshistorie</h3><button class="ez-knopf" data-reminder-history-refresh>Prüfhistorie abrufen</button><p data-reminder-history-status role="status"></p><ul data-reminder-history-list></ul></div><div class="ez-karte"><h3>RED ID · App-Verbindungen</h3><p>Nur autorisierte Zugänge, keine Aussage über installierte oder online befindliche Apps.</p><button class="ez-knopf" data-red-list>App-Zugänge anzeigen</button><ul data-red-apps></ul><label>RED-App <select data-red-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Challenge der Ziel-App <input type="text" data-red-challenge autocomplete="off" spellcheck="false" maxlength="43"></label><label>Kopplungsanfrage (JSON aus der Ziel-App) <input data-red-request type="text" maxlength="256" autocomplete="off" spellcheck="false"></label><button class="ez-knopf" data-red-import>Anfrage übernehmen</button><button class="ez-knopf" data-red-approve>Direkte Anmeldung freigeben</button><button class="ez-knopf" data-red-pair>Kopplung freigeben</button><button class="ez-knopf" data-red-revoke>App-Zugänge widerrufen</button><p data-red-result role="status"></p><pre data-red-code style="white-space:pre-wrap;overflow-wrap:anywhere"></pre><h3>RED SSO · Mehrfachfreigabe</h3><p>Bis zu 11 verschiedene Apps. Pro Zeile eine öffentliche Kopplungsanfrage aus dem eigenen Zielgerät. Keine privaten Verifier oder Tokens eingeben. Jede App erhält eine eigene Sitzung.</p><label>Kopplungsanfragen <textarea data-red-batch-input maxlength="3000" rows="5" autocomplete="off" spellcheck="false"></textarea></label><button class="ez-knopf" data-red-batch-review>Alle Anfragen prüfen</button><ul data-red-batch-preview style="overflow-wrap:anywhere"></ul><button class="ez-knopf" data-red-batch-approve disabled>Geprüfte Anmeldungen freigeben</button></div><div class="ez-karte"><h3>RED Devices · App-Sitzungen</h3><p>Einzelne RED-ID-v2-Anmeldungen widerrufen. Es werden keine Gerätepositionen oder Online-Aktivitäten erfasst.</p><button class="ez-knopf" data-red-sessions-refresh>Sitzungen abrufen</button><ul data-red-sessions></ul><p data-red-sessions-status role="status"></p></div><div class="ez-karte"><h3>RED Share · Datenfreigaben</h3><p>Nur ausgewählte Apps und Kanäle. Schlüssel separat auf beiden Geräten bestätigen.</p><button class="ez-knopf" data-share-list>Freigaben abrufen</button><ul data-share-items></ul><label>Sender <select data-share-source><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Empfänger <select data-share-target><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Kanal <input data-share-channel maxlength="32" autocomplete="off" spellcheck="false" placeholder="workout"></label><button class="ez-knopf" data-share-grant>7 Tage freigeben</button><button class="ez-knopf" data-share-revoke>Freigabe widerrufen</button><p data-share-status role="status"></p></div><div class="ez-karte"><h3>RED Sync &amp; RED Files · Pilot</h3><p>Getrennte verschlüsselte App-Objekte. Keine automatische Freigabe zwischen Apps. Alle Geräte derselben App teilen die Freigabe; der Schlüssel muss separat verwaltet werden.</p><button class="ez-knopf" data-store-list>Speicher und Freigaben anzeigen</button><ul data-store-items></ul><label>RED-App <select data-store-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Bereich <select data-store-kind><option value="sync">Sync-Daten</option><option value="file">Kleine Dateiobjekte</option></select></label><button class="ez-knopf" data-store-grant>7 Tage freigeben</button><button class="ez-knopf" data-store-revoke>Zugriff widerrufen</button><p data-store-status role="status"></p></div>',
+        'home-server': () => kopf('RED Home Server', 'Private Infrastruktur und Diagnose') + '<div class="ez-karte"><button class="ez-knopf" data-home-refresh>Serverstatus abrufen</button><p data-home-status role="status">Verbinde zuerst dein Gerät mit dem privaten Server.</p><dl data-home-metrics></dl></div><div class="ez-karte"><h3>RED MCP Hub</h3><p>Eigene OAuth-Verbindungen anzeigen und widerrufen. Keine externen MCP-Server oder neuen Werkzeugrechte.</p><button class="ez-knopf" data-hub-refresh>KI-Verbindungen abrufen</button><p data-hub-status role="status"></p><ul data-hub-list style="overflow-wrap:anywhere"></ul></div><div class="ez-karte"><h3>RED AI Gateway</h3><p>Explizite Textgenerierung über konfiguriertes Ollama. Kein automatischer Dokumentzugriff, kein Gesprächsverlauf. Offline-Betrieb durch Serverbetreiber sicherstellen.</p><button class="ez-knopf" data-ai-models>Modelle abrufen</button><label>Modell <select data-ai-model></select></label><label>Eingabe <textarea data-ai-prompt rows="5" maxlength="16384" autocomplete="off" spellcheck="false"></textarea></label><button class="ez-knopf" data-ai-generate disabled>Antwort erzeugen</button><button class="ez-knopf" data-ai-cancel disabled>Abbrechen</button><button class="ez-knopf" data-ai-clear>Eingabe und Antwort leeren</button><p data-ai-status role="status"></p><pre data-ai-output style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></div><div class="ez-karte"><h3>RED App Center</h3><p>Zentrale Übersicht der autorisierten RED-App-Zugänge und Freigaben. Keine Installation oder automatische Aktualisierung.</p><button class="ez-knopf" data-app-center-refresh>Alle 11 Apps anzeigen</button><ul data-app-center-list></ul><p data-app-center-status role="status"></p></div><div class="ez-karte"><h3>RED Notify · Wartungskalender</h3><p>Wartungshinweise beim Abruf oder mit aktiviertem Server-Scheduler. Speicher und Freigaben werden dann nur lesend geprüft; Backup und Updates bleiben Hinweise. Wiederholung als feste UTC-Intervalle, ohne Sommerzeitkorrektur.</p><label>Aufgabe <select data-reminder-kind><option value="backup-review">Backup prüfen</option><option value="grant-review">Freigaben prüfen</option><option value="storage-review">Speicher prüfen</option><option value="update-review">Updates prüfen</option></select></label><label>Erster Termin (Ortszeit) <input type="datetime-local" data-reminder-date></label><label>Wiederholung <select data-reminder-period><option value="once">Einmalig</option><option value="daily">Alle 24 Stunden</option><option value="weekly">Alle 7 Tage</option></select></label><button class="ez-knopf" data-reminder-create>Termin anlegen</button><button class="ez-knopf" data-reminder-refresh>Fällige Hinweise abrufen</button><ul data-reminder-list></ul><p data-reminder-status role="status"></p><h3>Wartungshistorie</h3><button class="ez-knopf" data-reminder-history-refresh>Prüfhistorie abrufen</button><p data-reminder-history-status role="status"></p><ul data-reminder-history-list></ul></div><div class="ez-karte"><h3>RED ID · App-Verbindungen</h3><p>Nur autorisierte Zugänge, keine Aussage über installierte oder online befindliche Apps.</p><button class="ez-knopf" data-red-list>App-Zugänge anzeigen</button><ul data-red-apps></ul><label>RED-App <select data-red-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Challenge der Ziel-App <input type="text" data-red-challenge autocomplete="off" spellcheck="false" maxlength="43"></label><label>Kopplungsanfrage (JSON aus der Ziel-App) <input data-red-request type="text" maxlength="256" autocomplete="off" spellcheck="false"></label><button class="ez-knopf" data-red-import>Anfrage übernehmen</button><button class="ez-knopf" data-red-approve>Direkte Anmeldung freigeben</button><button class="ez-knopf" data-red-pair>Kopplung freigeben</button><button class="ez-knopf" data-red-revoke>App-Zugänge widerrufen</button><p data-red-result role="status"></p><pre data-red-code style="white-space:pre-wrap;overflow-wrap:anywhere"></pre><h3>RED SSO · Mehrfachfreigabe</h3><p>Bis zu 11 verschiedene Apps. Pro Zeile eine öffentliche Kopplungsanfrage aus dem eigenen Zielgerät. Keine privaten Verifier oder Tokens eingeben. Jede App erhält eine eigene Sitzung.</p><label>Kopplungsanfragen <textarea data-red-batch-input maxlength="3000" rows="5" autocomplete="off" spellcheck="false"></textarea></label><button class="ez-knopf" data-red-batch-review>Alle Anfragen prüfen</button><ul data-red-batch-preview style="overflow-wrap:anywhere"></ul><button class="ez-knopf" data-red-batch-approve disabled>Geprüfte Anmeldungen freigeben</button></div><div class="ez-karte"><h3>RED Devices · App-Sitzungen</h3><p>Einzelne RED-ID-v2-Anmeldungen widerrufen. Es werden keine Gerätepositionen oder Online-Aktivitäten erfasst.</p><button class="ez-knopf" data-red-sessions-refresh>Sitzungen abrufen</button><ul data-red-sessions></ul><p data-red-sessions-status role="status"></p></div><div class="ez-karte"><h3>RED Share · Datenfreigaben</h3><p>Nur ausgewählte Apps und Kanäle. Schlüssel separat auf beiden Geräten bestätigen.</p><button class="ez-knopf" data-share-list>Freigaben abrufen</button><ul data-share-items></ul><label>Sender <select data-share-source><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Empfänger <select data-share-target><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Kanal <input data-share-channel maxlength="32" autocomplete="off" spellcheck="false" placeholder="workout"></label><button class="ez-knopf" data-share-grant>7 Tage freigeben</button><button class="ez-knopf" data-share-revoke>Freigabe widerrufen</button><p data-share-status role="status"></p></div><div class="ez-karte"><h3>RED Sync &amp; RED Files · Pilot</h3><p>Getrennte verschlüsselte App-Objekte. Keine automatische Freigabe zwischen Apps. Alle Geräte derselben App teilen die Freigabe; der Schlüssel muss separat verwaltet werden.</p><button class="ez-knopf" data-store-list>Speicher und Freigaben anzeigen</button><ul data-store-items></ul><label>RED-App <select data-store-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Bereich <select data-store-kind><option value="sync">Sync-Daten</option><option value="file">Kleine Dateiobjekte</option></select></label><button class="ez-knopf" data-store-grant>7 Tage freigeben</button><button class="ez-knopf" data-store-revoke>Zugriff widerrufen</button><p data-store-status role="status"></p></div>',
         geraete: () => kopf('iPhone und Windows', 'Geräte, Sicherungen und freiwilliger Abgleich') + DeviceIntegration.overview(),
         konto: () => {
             const w = globalThis.Wolke;
