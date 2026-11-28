@@ -495,13 +495,22 @@ export async function createRedDeviceKeyTransfer(scope:RedSyncScope,role:'sender
 
 /** RED Files 2 pilot: immutable, encrypted multipart objects. The manifest
  * is published last. Keep the encrypted upload plan for idempotent retry.
- * This is a bounded in-memory helper, not a filesystem or streaming API. */
+ * The optional transactional sink streams downloads in bounded chunks. */
 export const RED_FILE_MAX_BYTES=8*1024*1024;
 export const RED_FILE_CHUNK_BYTES=40000;
 const maxFileChunks=Math.ceil(RED_FILE_MAX_BYTES/RED_FILE_CHUNK_BYTES);
 export type RedFileScope=Omit<RedSyncScope,'kind'>;
 export type RedFileManifest={version:2;name:string;size:number;chunks:{id:string;size:number;sha256:string}[]};
 export type RedFilePlan={version:2;id:string;manifest:RedStoreWrite;chunks:RedStoreWrite[]};
+// A trusted local adapter must stage bytes privately and publish atomically
+// only on commit. abort must discard staging (even after a failed begin).
+// The borrowed chunk is wiped after write settles; copy it if needed.
+export type RedFileSink={
+ begin(file:Readonly<{name:string;size:number}>):Promise<void>;
+ write(chunk:Uint8Array,offset:number):Promise<void>;
+ commit():Promise<void>;
+ abort():Promise<void>;
+};
 type RedFileTransport={storeGet(kind:RedStoreKind,id:string):Promise<RedStoreRecord>;storePut(write:RedStoreWrite):Promise<RedStoreResult>};
 const fileNameValid=(v:unknown):v is string=>typeof v==='string'&&v.length>0&&v.length<=200&&v!=='.'&&v!=='..'&&!/[/\\\u0000-\u001f\u007f]/.test(v);
 const digestHex=async(data:Uint8Array)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(data))),b=>b.toString(16).padStart(2,'0')).join('');
@@ -605,6 +614,29 @@ export function createRedFiles(client:RedFileTransport,scope:RedFileScope,key:Ui
     assertActive();return {name:manifest.name,bytes:output};
    }catch(e){output?.fill(0);throw e;}
    finally{keys.manifest.fill(0);keys.chunk.fill(0);}
+  });},
+  /** Bounded-memory download into a trusted transactional local sink. */
+  downloadTo(id:string,sink:RedFileSink):Promise<{name:string;size:number}>{return use(async()=>{
+   if(typeof id!=='string'||!storeId(id))throw Error('Invalid file ID');
+   const keys=await derive(id);let staging=false;
+   try{
+    const manifest=await openManifest(id,await client.storeGet('file',id),keys.manifest);
+    assertActive();
+    const info=Object.freeze({name:manifest.name,size:manifest.size});
+    staging=true;await sink.begin(info);
+    let offset=0;
+    for(const entry of manifest.chunks){
+     assertActive();
+     const bytes=await openChunk(await client.storeGet('file',entry.id),entry,keys.chunk);
+     try{assertActive();await sink.write(bytes,offset);offset+=bytes.length;}finally{bytes.fill(0);}
+    }
+    assertActive();
+    if(offset!==manifest.size)throw Error('File size mismatch');
+    await sink.commit();staging=false;return info;
+   }catch(error){
+    if(staging){try{await sink.abort();}catch(cleanup){throw new AggregateError([error,cleanup],'File transfer and staging cleanup failed');}}
+    throw error;
+   }finally{keys.manifest.fill(0);keys.chunk.fill(0);}
   });},
   dispose(){disposed=true;if(!busy)secret.fill(0);}
  };
