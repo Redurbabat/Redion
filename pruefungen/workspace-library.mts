@@ -123,8 +123,9 @@ try {
           }
           return chain;
         });
+        // Same bounded floating-point tolerance as the editor; not integer rounding.
         const r=geometry[0];
-        assert.ok(r && r.width>=44 && r.height>=44,`${width}/${dark?'dark':'light'}: ${selector} mindestens 44 × 44; ${JSON.stringify(geometry)}`);
+        assert.ok(r && r.width>=44-0.0001 && r.height>=44-0.0001,`${width}/${dark?'dark':'light'}: ${selector} mindestens 44 × 44; ${JSON.stringify(geometry)}`);
       }
       const favorite=page.locator(`[data-bib-favorite="${ids.notes}"]`);
       // Gegenprobe: nur im isolierten Testbrowser die Zustandsbindung lösen.
