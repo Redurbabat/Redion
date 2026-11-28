@@ -182,3 +182,7 @@ Batch pairing requests are strictly limited to the four public fields `kind`, `v
 ### Windows: isolated sync-key pilot
 
 `tools/red-windows-sync-keys.cjs` accepts Electron main-process `safeStorage` after app readiness, Windows only. Caller supplies a trusted private directory and explicitly obtained 32-byte key. Scope binds HTTPS origin, owner, app and purpose. Encrypted file is atomically published without replacing an existing key; same key is idempotent, another key is refused. Filesystem must support hard links. No renderer bridge, automatic recovery, key rotation, packaging or production integration. Windows DPAPI protects against other OS accounts, not malware running as the same user. CI smoke test uses an isolated synthetic profile.
+
+### Android: isolated sync-key pilot
+
+See Android README for `RedAndroidSyncKeys`, separate per-scope AndroidKeyStore wrapping keys and insert-only encrypted storage. Tests cover scope and data-key lifecycle with a test backend; device-specific recovery and app integration remain open.

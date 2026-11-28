@@ -66,3 +66,7 @@ Separater nativer Apple-Schlüsselspeicher für explizit erhaltene 32-Byte-Schl�
 ## P1-Fortschritt: Windows Sync-Schlüssel
 
 Apple-SDK-Workflow 46162342676 auf `9d65bf4c` bestanden. Windows-Pilot nutzt Electron safeStorage ausschliesslich unter Windows im Main-Prozess, separaten vertrauenswürdigen Ordner, Scope-Bindung und atomare Hardlink-Veröffentlichung ohne Überschreiben. CI ergänzt echten Electron/DPAPI-Smoke-Test und Node-Scope-Tests. Keine IPC-Freigabe, kein produktives Profil, kein automatisches Erzeugen/Löschen/Rotieren von Schlüsseln; kein Einbau in die ausgelieferte App. Neue Tests noch nicht ausgeführt.
+
+## P1-Fortschritt: Android Sync-Key-Adapter
+
+Ergänzt separaten Android-KeyStore-Adapter mit verschlüsseltem No-backup-Verzeichnis, Scope-Bindung, Prozess-/Dateisperre, atomarem Insert-only und Fail-closed bei fehlender Chiffre mit vorhandenem Wrapping-Key. Zwei JVM-Tests mit injiziertem Backend. Keine Geräteabnahme, Recovery, Rotation oder App-Anbindung. Windows-/Android-Kandidaten gemeinsam abnehmen, sobald die laufende Gesamt-CI abgeschlossen ist.

@@ -10,3 +10,7 @@ AES-GCM in the app's no-backup directory. No custom CA bypass, no redirect,
 no plaintext SharedPreferences. Device tests of hardware-backed availability,
 lock-screen behavior and key invalidation remain necessary. API does not
 provide native QR UI, cross-app payload transport, or browser OAuth SSO.
+
+## Separate Sync-Schlüssel
+
+`RedAndroidSyncKeys` stores explicit 32-byte data keys in a separate no-backup directory, encrypted by per-scope non-exportable AndroidKeyStore AES-GCM wrapping keys. Scope includes origin, owner, app, purpose. Insert-only; no overwrite, automatic generation of data keys, deletion or rotation. A process/file lock serializes cooperating callers; hard-link publication never replaces an existing file. Missing ciphertext with an existing wrapping key fails closed (including interrupted first installation); explicit recovery is not yet implemented. JVM tests use an injected backend; physical device tests, filesystem hard-link availability, secure transfer and app integration remain open.
