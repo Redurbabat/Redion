@@ -5,7 +5,7 @@ import {mkdtemp,rm,readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createSqliteSyncAdapter} from '../tools/red-sync-sqlite.mts';
-import {createRedSync,prepareRedStoreWrite,type RedStoreRecord,type RedStoreChanges} from '../red-sdk/client.mts';
+import {createRedSync,prepareRedStoreWrite,type RedStoreRecord,type RedStoreChanges,type RedStoreWrite} from '../red-sdk/client.mts';
 const scope={origin:'https://home.example.test',owner:'owner',app:'red-fit',kind:'sync'} as const;
 const localKey=new Uint8Array(32).fill(4),remoteKey=new Uint8Array(32).fill(5);
 const id='a'.repeat(32),other='b'.repeat(32),cursor='c'.repeat(64);
@@ -55,5 +55,41 @@ test('Tamper and journal overflow fail closed without advancing the cursor',asyn
   assert.equal((await a.snapshot()).cursor,null);assert.equal(a.conflicts().length,4096);
   db.exec('UPDATE red_local_sync_v1 SET payload=zeroblob(length(payload)) WHERE id=1');
   await assert.rejects(a.snapshot());assert.throws(()=>createSqliteSyncAdapter(db,scope,localKey));a.dispose();
+ }finally{db.close();}
+});
+
+test('Durable outbox reuses ciphertext after lost reply and preserves concurrent edits',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'red-sync-outbox-')),file=join(dir,'local.sqlite');
+ let db=new DatabaseSync(file),remote:RedStoreRecord|undefined,first:RedStoreWrite|undefined,calls=0;
+ const transport={async storePut(write:RedStoreWrite){
+  calls++;
+  if(!remote){first={...write};remote={version:1,id:write.id,revision:write.expectedRevision+1,deleted:0,updated:1,envelope:write.envelope};throw Error('lost reply');}
+  if(calls===2)assert.deepEqual(write,first);
+  else remote={version:1,id:write.id,revision:write.expectedRevision+1,deleted:0,updated:1,envelope:write.envelope};
+  return {version:1 as const,id:write.id,revision:remote.revision,deleted:0 as const};
+ },async storeGet(){if(!remote)throw Error('missing');return remote;}};
+ try{
+  const a=createSqliteSyncAdapter(db,scope,localKey);a.putLocal(id,'First version');
+  await assert.rejects(a.pushLocal(id,remoteKey,transport),/lost reply/);
+  assert.deepEqual(a.pendingUploads(),[{id,expectedRevision:0}]);await assert.rejects(a.snapshot());
+  a.putLocal(id,'Edited while offline');a.dispose();db.close();
+  db=new DatabaseSync(file);const b=createSqliteSyncAdapter(db,scope,localKey);
+  await assert.rejects(b.pushLocal(id,localKey,transport));assert.equal(calls,1);
+  assert.deepEqual(await b.pushLocal(id,remoteKey,transport),{revision:1,dirty:true});
+  assert.equal(b.getLocal(id)?.value,'Edited while offline');assert.deepEqual(b.pendingUploads(),[]);
+  assert.deepEqual(await b.pushLocal(id,remoteKey,transport),{revision:2,dirty:false});
+  assert.equal(b.getLocal(id)?.dirty,false);assert.equal((await b.snapshot()).cursor,null);b.dispose();
+ }finally{if(db.isOpen)db.close();await rm(dir,{recursive:true,force:true});}
+});
+test('Upload confirmation mismatch retains outbox; no automatic tombstone upload',async()=>{
+ const db=new DatabaseSync(':memory:');
+ try{
+  const a=createSqliteSyncAdapter(db,scope,localKey);a.putLocal(id,'Local');a.putLocal(other,null);
+  let calls=0;
+  const transport={async storePut(w:RedStoreWrite){calls++;return {version:1 as const,id:w.id,revision:w.expectedRevision+1,deleted:0 as const};},async storeGet(){return {version:1 as const,id,revision:2,deleted:0 as const,updated:1,envelope:'unexpected'};}};
+  await assert.rejects(a.pushLocal(other,remoteKey,transport));assert.equal(calls,0);
+  await assert.rejects(a.pushLocal(id,remoteKey,transport),/nicht bestätigt/);
+  assert.equal(a.getLocal(id)?.dirty,true);assert.equal(a.getLocal(id)?.revision,0);assert.equal(a.pendingUploads().length,1);
+  await assert.rejects(a.snapshot());a.dispose();
  }finally{db.close();}
 });

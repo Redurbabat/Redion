@@ -1,10 +1,14 @@
 /** Isolierter lokaler SQLite-Adapter. Kein Zugriff auf bestehende Redion-Profile. */
 import {createCipheriv,createDecipheriv,randomBytes,randomUUID} from 'node:crypto';
 import type {DatabaseSync} from 'node:sqlite';
-import type {RedSyncAdapter,RedSyncBatch,RedSyncConflict,RedSyncLocalItem,RedSyncScope,RedSyncSnapshot} from '../red-sdk/client.mts';
+import {prepareRedStoreWrite,openRedStoreRecord} from '../red-sdk/client.mts';
+import type {RedStoreWrite,RedStoreResult,RedStoreRecord,RedStoreKind,RedSyncAdapter,RedSyncBatch,RedSyncConflict,RedSyncLocalItem,RedSyncScope,RedSyncSnapshot} from '../red-sdk/client.mts';
 
 type Item=RedSyncLocalItem&{value:string|null};
-type State={cursor:string|null;items:Item[];conflicts:RedSyncConflict[]};
+type Pending={write:RedStoreWrite;value:string};
+type State={cursor:string|null;items:Item[];conflicts:RedSyncConflict[];outbox?:Pending[]};
+type UploadTransport={storePut(write:RedStoreWrite):Promise<RedStoreResult>;storeGet(kind:RedStoreKind,id:string):Promise<RedStoreRecord>};
+const MAX_PENDING=64;
 const MAX_ITEMS=4096,MAX_CONFLICTS=4096,MAX_VALUE=128*1024,MAX_STATE=16*1024*1024;
 const validId=(v:unknown):v is string=>typeof v==='string'&&/^[a-f0-9]{32}$/.test(v);
 const natural=(v:unknown):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=0;
@@ -22,15 +26,25 @@ function validateState(s:State){
   seen.add(item.id);
  }
  if(s.conflicts.some(c=>!validConflict(c)))throw Error('Ungültiges Konfliktjournal');
+ if(s.outbox!==undefined){
+  if(!Array.isArray(s.outbox)||s.outbox.length>MAX_PENDING)throw Error('Ungültige Upload-Warteschlange');
+  const queued=new Set<string>();
+  for(const entry of s.outbox){
+   const w=entry?.write,item=s.items.find(i=>i.id===w?.id);
+   if(!w||w.kind!=='sync'||!validId(w.id)||!validId(w.operationId)||queued.has(w.id)||!natural(w.expectedRevision)||w.expectedRevision>=Number.MAX_SAFE_INTEGER-1||typeof w.envelope!=='string'||!/^[A-Za-z0-9_-]{38,60000}$/.test(w.envelope)||!textValid(entry.value)||Buffer.byteLength(entry.value)>44000||!item?.dirty||item.revision!==w.expectedRevision)throw Error('Ungültiger Upload-Auftrag');
+   queued.add(w.id);
+  }
+ }
 }
 function conflictKey(c:RedSyncConflict){return JSON.stringify([c.id,c.localRevision,c.remoteRevision,c.reason]);}
 
 /** Eine separate, vertrauenswürdige lokale Datenbank pro Konto/App/Kind.
  * Der Aufrufer verwaltet DB-Lebensdauer, Dateirechte und einen separaten
- * 32-Byte-Schlüssel. Keine Schlüsselablage, Upload- oder Konfliktauflösung. */
+ * 32-Byte-Schlüssel. Keine Schlüsselablage oder automatische Konfliktauflösung. */
 export function createSqliteSyncAdapter(db:DatabaseSync,scope:RedSyncScope,localKey:Uint8Array){
  if(localKey.byteLength!==32||![scope.origin,scope.owner,scope.app,scope.kind].every(v=>typeof v==='string'&&v.length>0&&v.length<=512))throw Error('Ungültiger lokaler Sync-Schlüssel oder Bereich');
- const bound=JSON.stringify(['red-local-sync-v1',scope.origin,scope.owner,scope.app,scope.kind]);
+ const syncScope={...scope};
+ const bound=JSON.stringify(['red-local-sync-v1',syncScope.origin,syncScope.owner,syncScope.app,syncScope.kind]);
  const key=Buffer.from(localKey);let disposed=false;
  function active(){if(disposed)throw Error('Sync-Adapter geschlossen');}
  function aad(g:string){return Buffer.from(JSON.stringify([bound,g]));}
@@ -74,12 +88,13 @@ export function createSqliteSyncAdapter(db:DatabaseSync,scope:RedSyncScope,local
  const adapter:RedSyncAdapter<string>={
   async snapshot():Promise<RedSyncSnapshot>{
    const {generation,state}=read();
+   if(state.outbox?.length)throw Error('Ausstehende Uploads zuerst abgleichen');
    return {generation,cursor:state.cursor,items:state.items.map(({id,revision,dirty,deleted})=>({id,revision,dirty,deleted}))};
   },
   async commit(expectedGeneration:string,batch:RedSyncBatch<string>){
    transaction(()=>{
     const {generation,state}=read();
-    if(generation!==expectedGeneration)throw Error('Lokale Generation geändert');
+    if(generation!==expectedGeneration||state.outbox?.length)throw Error('Lokale Generation geändert oder Upload ausstehend');
     if(!cursorValid(batch.cursor)||!Array.isArray(batch.imports)||batch.imports.length>MAX_ITEMS||!Array.isArray(batch.conflicts)||batch.conflicts.length>MAX_CONFLICTS)throw Error('Ungültiger Sync-Batch');
     const items=new Map(state.items.map(i=>[i.id,i])),seen=new Set<string>(),journal=new Map(state.conflicts.map(c=>[conflictKey(c),c]));
     for(const item of batch.imports){
@@ -93,7 +108,7 @@ export function createSqliteSyncAdapter(db:DatabaseSync,scope:RedSyncScope,local
      journal.set(conflictKey(conflict),{id:conflict.id,localRevision:conflict.localRevision,remoteRevision:conflict.remoteRevision,reason:conflict.reason});
     }
     // Bei vollem Journal weder Konflikte verwerfen noch Cursor fortschreiben.
-    save({cursor:batch.cursor,items:[...items.values()],conflicts:[...journal.values()]},generation);
+    save({...state,cursor:batch.cursor,items:[...items.values()],conflicts:[...journal.values()]},generation);
    });
   }
  };
@@ -103,6 +118,50 @@ export function createSqliteSyncAdapter(db:DatabaseSync,scope:RedSyncScope,local
    if(!validId(id)||(value!==null&&!textValid(value)))throw Error('Ungültige lokale Änderung');
    transaction(()=>{const {generation,state}=read();const items=new Map(state.items.map(i=>[i.id,i]));items.set(id,{id,revision:items.get(id)?.revision??0,dirty:true,deleted:value===null?1:0,value});save({...state,items:[...items.values()]},generation);});
   },
+  /** Expliziter Upload eines einzelnen dirty Textes. Kein automatischer
+   * Löschauftrag. Persistiert die exakte Chiffre VOR dem Netzwerkaufruf.
+   * Bei Fehler bleiben Auftrag, Operation-ID und neuere Bearbeitungen erhalten. */
+  async pushLocal(id:string,remoteKey:Uint8Array,transport:UploadTransport){
+   if(!validId(id)||syncScope.kind!=='sync'||remoteKey.byteLength!==32)throw Error('Ungültiger Upload');
+   const secret=Buffer.from(remoteKey);
+   try{
+    const initial=read();let entry=initial.state.outbox?.find(p=>p.write.id===id);
+    if(!entry){
+     const item=initial.state.items.find(i=>i.id===id);
+     if(!item?.dirty||item.deleted!==0||item.value===null||initial.state.conflicts.some(c=>c.id===id))throw Error('Kein freigegebener lokaler Text-Upload');
+     const value=item.value,bytes=Buffer.from(value,'utf8');
+     if(bytes.toString('utf8')!==value){bytes.fill(0);throw Error('Ungültiger UTF-8-Text');}
+     let write:RedStoreWrite;
+     try{write=await prepareRedStoreWrite(secret,{...syncScope,id},item.revision,bytes);}
+     finally{bytes.fill(0);}
+     const prepared:Pending={write,value};
+     transaction(()=>{
+      const {generation,state}=read();if(generation!==initial.generation)throw Error('Lokale Generation geändert; Upload erneut starten');
+      save({...state,outbox:[...(state.outbox??[]),prepared]},generation);
+     });
+     entry=prepared;
+    }
+    const pending=entry,write=pending.write,revision=write.expectedRevision+1;
+    // Vor jeder Wiederholung auch den Schlüssel der gespeicherten Chiffre prüfen.
+    const bytes=await openRedStoreRecord(secret,{...syncScope,id},{version:1,id,revision,deleted:0,updated:0,envelope:write.envelope});
+    try{if(new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}).decode(bytes)!==pending.value)throw Error('Upload-Auftrag stimmt nicht überein');}
+    finally{bytes.fill(0);}
+    active();
+    const response=await transport.storePut({...write});
+    if(response.version!==1||response.id!==id||response.revision!==revision||response.deleted!==0)throw Error('Unerwartete Upload-Bestätigung');
+    const confirmed=await transport.storeGet('sync',id);
+    if(confirmed.version!==1||confirmed.id!==id||confirmed.revision!==revision||confirmed.deleted!==0||confirmed.envelope!==write.envelope)throw Error('Remote-Auftrag nicht bestätigt; Konflikt prüfen');
+    return transaction(()=>{
+     const {generation,state}=read(),current=state.outbox?.find(p=>p.write.id===id),item=state.items.find(i=>i.id===id);
+     if(!current||current.write.operationId!==write.operationId||!item?.dirty||item.revision!==write.expectedRevision)throw Error('Upload-Auftrag geändert; erneut prüfen');
+     const dirty=item.deleted!==0||item.value!==pending.value;
+     const items=state.items.map(i=>i.id===id?{...i,revision,dirty}:i);
+     save({...state,items,outbox:(state.outbox??[]).filter(p=>p.write.id!==id)},generation);
+     return {revision,dirty};
+    });
+   }finally{secret.fill(0);}
+  },
+  pendingUploads(){return (read().state.outbox??[]).map(p=>({id:p.write.id,expectedRevision:p.write.expectedRevision}));},
   getLocal(id:string){if(!validId(id))throw Error('Ungültige ID');return read().state.items.find(i=>i.id===id)??null;},
   conflicts(){return read().state.conflicts;},
   dispose(){disposed=true;key.fill(0);}

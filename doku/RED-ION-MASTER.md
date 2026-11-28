@@ -38,3 +38,7 @@ Auf `dcdde61e` bestanden 17 von 18 PR-Workflows, einschliesslich unsignierter IP
 ## P0-Fortschritt: lokaler Sync-Adapter
 
 Auf `cf56d4f6` bestanden alle 18 PR-Workflows und der Push-Prüflauf. Editor erst im zweiten unveränderten Lauf erfolgreich; sporadische Sichtbarkeit noch beobachten. Neu: isolierter verschlüsselter Node-/SQLite-Sync-Adapter mit atomarem Cursor, Generation und Konfliktjournal, Regressionen über den echten SDK-Pull und zwei DB-Verbindungen. Die nächste Revision muss erneut geprüft werden. Keine native App-Anbindung, keine Freigabe von Schlüsselablage oder produktiven Datenprofilen.
+
+## P0-Fortschritt: Upload-Warteschlange
+
+Auf `c20c2671` sind alle 18 PR-Workflows und der Push-Prüflauf grün. Der neue Arbeitsschritt ergänzt persistente idempotente Text-Uploads, Readback und Schutz neuer lokaler Bearbeitungen. Tests für Neustart nach verlorener Antwort, falschen Schlüssel, abweichenden Serverstand und verweigerten Lösch-Upload. Neue Revision noch nicht abgenommen; Konfliktauflösung, native Schlüsselablage und echte Geräte bleiben offen.
