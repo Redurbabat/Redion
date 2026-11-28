@@ -30347,6 +30347,37 @@ html[data-windows-titelleiste] body:is(.fokus, [data-dokument="an"]) #studio-bar
   }
 }
 
+
+/* Desktop document navigation: compact search and bookmark view. Native
+   page rows retain their original indices; filtered rows never drag. */
+.document-desktop-filter{display:none}
+.document-thumbnails .document-thumb-zeile[hidden]{display:none}
+@media(min-width:1024px) and (hover:hover) and (pointer:fine){
+  html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .document-desktop-filter{
+    display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-1);
+    padding:var(--space-2);border-bottom:1px solid var(--line);
+    background:var(--bg-side);color:var(--text);
+  }
+  .document-desktop-filter input{
+    grid-column:1/-1;min-width:0;width:100%;box-sizing:border-box;
+    min-height:var(--touch-min);padding:var(--space-1) var(--space-2);
+    background:var(--bg-input);color:var(--text);border:1px solid var(--line);
+    border-radius:var(--radius-md);font:inherit;
+  }
+  .document-desktop-filter button{
+    min-width:0;min-height:var(--touch-min);border:1px solid var(--line);
+    border-radius:var(--radius-md);background:var(--bg-card);color:var(--text);
+    font:inherit;font-size:var(--t-small);
+  }
+  .document-desktop-filter button[aria-pressed="true"]{
+    background:var(--accent-schwach);color:var(--accent-text);
+  }
+  .document-desktop-filter :is(input,button):focus-visible{
+    outline:2px solid var(--accent-text);outline-offset:-2px;
+  }
+  .document-filter-count{grid-column:1/-1;margin:0;color:var(--text-dim);font-size:var(--t-caption)}
+}
+
 </style>
 
 <!-- =========================================================================
@@ -31833,7 +31864,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1733, inhalt: '5edfa208d81c737e', gebaut: '2026-11-28T10:59:47.828Z' };
+const Stand = { fassung: 1734, inhalt: '99d7893be805a250', gebaut: '2026-11-28T11:02:41.155Z' };
 window.Stand = Stand;
 
 </script>
@@ -94334,7 +94365,13 @@ const DocumentMode = (() => {
         zeile.append(button, menue);
         return zeile;
     };
+    const thumbnailRefresh = new WeakMap();
     const activateVisibleThumbnails = (panel) => {
+        const existing = thumbnailRefresh.get(panel);
+        if (existing) {
+            existing();
+            return;
+        }
         let scheduled = false;
         const loadVisible = () => {
             scheduled = false;
@@ -94348,7 +94385,7 @@ const DocumentMode = (() => {
             const top = Math.max(0, panelRect.top) - 220;
             const bottom = Math.min(window.innerHeight, panelRect.bottom) + 220;
             panel.querySelectorAll('img[data-document-thumbnail-file]').forEach(image => {
-                if (image.src || image.dataset.loading === 'true')
+                if (image.src || image.dataset.loading === 'true' || image.closest('[hidden]'))
                     return;
                 const rect = image.getBoundingClientRect();
                 if (rect.bottom < top || rect.top > bottom)
@@ -94376,6 +94413,7 @@ const DocumentMode = (() => {
             requestAnimationFrame(loadVisible);
         };
         panel.addEventListener('scroll', schedule, { passive: true });
+        thumbnailRefresh.set(panel, schedule);
         schedule();
     };
     const originalKnopf = (page, documentBlock) => {
@@ -95175,7 +95213,66 @@ const DocumentMode = (() => {
         const thumbClose = topButton('thumbnails-close', '✕', wortViele(page) + 'übersicht schließen');
         thumbHeader.append(thumbTitle, thumbClose);
         thumbnails.appendChild(thumbHeader);
+        const thumbFilter = document.createElement('div');
+        thumbFilter.className = 'document-desktop-filter';
+        const thumbSearch = document.createElement('input');
+        thumbSearch.type = 'search';
+        thumbSearch.maxLength = 100;
+        thumbSearch.placeholder = 'Seitennummer oder Titel';
+        thumbSearch.setAttribute('aria-label', 'Seitenübersicht filtern');
+        thumbSearch.autocomplete = 'off';
+        const thumbBookmarks = document.createElement('button');
+        thumbBookmarks.type = 'button';
+        thumbBookmarks.textContent = 'Lesezeichen';
+        thumbBookmarks.setAttribute('aria-pressed', 'false');
+        const thumbClear = document.createElement('button');
+        thumbClear.type = 'button';
+        thumbClear.textContent = 'Alle';
+        const thumbCount = document.createElement('p');
+        thumbCount.setAttribute('role', 'status');
+        thumbCount.className = 'document-filter-count';
+        thumbFilter.append(thumbSearch, thumbBookmarks, thumbClear, thumbCount);
+        thumbnails.appendChild(thumbFilter);
         documents.forEach((block, index) => thumbnails.appendChild(thumbnail(block, index, index === state.index)));
+        const thumbRows = Array.from(thumbnails.querySelectorAll('.document-thumb-zeile'));
+        let bookmarkFilter = false;
+        const filterActive = () => !!thumbSearch.value.trim() || bookmarkFilter;
+        const filterPages = () => {
+            const term = thumbSearch.value.trim().toLocaleLowerCase('de-CH');
+            const number = /^#?\d+$/.test(term) ? Number(term.replace(/^#/, '')) : null;
+            let count = 0;
+            thumbRows.forEach((row, index) => {
+                const block = Store.getBlock(documents[index].id) || documents[index];
+                const matches = !term || (number !== null ? index + 1 === number : sourceLabel(block).toLocaleLowerCase('de-CH').includes(term));
+                row.hidden = !(matches && (!bookmarkFilter || block.lesezeichen));
+                if (!row.hidden)
+                    count++;
+            });
+            thumbBookmarks.setAttribute('aria-pressed', String(bookmarkFilter));
+            thumbCount.textContent = count + ' / ' + documents.length + ' ' + wortViele(page) +
+                (filterActive() ? ' · Reihenfolge gesperrt' : '');
+            thumbnails.dataset.filtered = String(filterActive());
+            activateVisibleThumbnails(thumbnails);
+        };
+        thumbSearch.addEventListener('input', () => { zugEnde(); menueSchliessen(); filterPages(); });
+        thumbBookmarks.addEventListener('click', () => { zugEnde(); menueSchliessen(); bookmarkFilter = !bookmarkFilter; filterPages(); });
+        thumbClear.addEventListener('click', () => { zugEnde(); menueSchliessen(); thumbSearch.value = ''; bookmarkFilter = false; filterPages(); });
+        thumbSearch.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                event.stopPropagation();
+                const first = thumbRows.find(row => !row.hidden);
+                if (first)
+                    springe(Number(first.dataset.documentThumbZeile), false);
+            }
+            else if (event.key === 'Escape' && filterActive()) {
+                event.preventDefault();
+                event.stopPropagation();
+                thumbClear.click();
+            }
+        });
+        thumbCount.textContent = documents.length + ' / ' + documents.length + ' ' + wortViele(page);
+        const thumbDesktop = window.matchMedia('(min-width:1024px) and (hover:hover) and (pointer:fine)');
         const center = document.createElement('main');
         center.className = 'document-center' + (state.einzeln ? ' ist-einzeln' : '');
         center.setAttribute('aria-label', 'Papierfläche');
@@ -95661,6 +95758,8 @@ const DocumentMode = (() => {
                 window.removeEventListener('resize', beiGroesse);
                 return;
             }
+            if (!thumbDesktop.matches && filterActive())
+                thumbClear.click();
             folienbandNachziehen();
             hoeheSetzen();
             passen();
@@ -96503,7 +96602,7 @@ const DocumentMode = (() => {
             if (!ziel || ziel.closest('.document-thumb-menue, .document-thumb-menue-knopf'))
                 return;
             const zeile = ziel.closest('.document-thumb-zeile');
-            if (!zeile || !darfSeiten())
+            if (!zeile || !darfSeiten() || filterActive())
                 return;
             const index = Number(zeile.dataset.documentThumbZeile);
             const block = documents[index];
