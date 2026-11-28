@@ -90,3 +90,30 @@ Noch kein Auftragskanal, keine Befehlsausführung und keine MCP-Werkzeuge.
 Vor Wiederaktivierung gegebenenfalls alte Grants bzw. Sitzungen widerrufen.
 Für die spätere Ausführung sind separate lokale Bestätigung, Replay-Schutz,
 begrenzte Befehle, Widerruf und Geräteabnahme erforderlich.
+
+## Transport-Auftragskanal (vierter Pilot)
+
+Zusätzlich REDION_ENABLE_RED_BIT_TRANSPORT_JOBS=1 erforderlich; beide
+Transportflags standardmässig aus. Nur play, pause, next, previous.
+Alle Routen POST mit JSON und jeweiligem Bearer-Token:
+
+- Owner /home/red-bit/transport-request: sessionId, id (32 Hex-Zeichen),
+  command, issuedAt (Millisekunden, höchstens 15 s alt), confirm:true.
+- App /red-bit/v1/transport-claim: confirm:true; liefert einmalig den Auftrag.
+- App /red-bit/v1/transport-authorize: id, command, confirm:true; erst nach
+  Anzeige und lokaler Bestätigung genau dieses Befehls. Einmaliger Permit
+  mit höchstens 5 s Gültigkeit, begrenzt durch den Auftragsablauf.
+- App /red-bit/v1/transport-complete: id, outcome (executed, failed oder
+  declined); declined nur vor Autorisierung, sonst nur nach Autorisierung.
+- Owner /home/red-bit/transport-result: sessionId, id; liest nur Zustand
+  und Ergebnis bis Auftragsablauf (max. 30 s nach issuedAt).
+
+Maximal ein offener Auftrag je Sitzung, sechs pro Minute, IDs bleiben
+120 s als Replay-Schutz auch nach Grant-Erneuerung oder Widerruf erhalten.
+Keine Wiederholung nach Claim oder Autorisierung, auch bei Netzfehlern.
+Der Server kann eine bereits erhaltene Ausführungsfreigabe nicht zurückholen;
+die native App muss den Permit-Ablauf und den lokalen Zustand unmittelbar
+vor Ausführung prüfen. Ergebnis ist eine Client-Quittung, kein unabhängiger
+Nachweis der tatsächlichen Wiedergabe. Keine Titel, Dateien oder Tokens im
+Auftragsdatensatz. Native App, Dashboard-Steuerung und MCP noch nicht angebunden.
+Die Permission-API meldet bis zur Abnahme weiterhin remoteAvailable:false.
