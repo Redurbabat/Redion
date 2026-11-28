@@ -6,6 +6,7 @@ export function homeEcosystemCapabilities(vaultEnabled:boolean){
   identity:{version:2,explicitApproval:true},
   sync:{version:1,scope:'same-owner-app',explicitGrant:true,revisionConflicts:true,incrementalMetadata:true},
   files:{version:1,scope:'same-owner-app',explicitGrant:true,maxPlaintextBytes:44000,streaming:false,incrementalMetadata:true,multipartSdk:{version:2,maxFileBytes:8*1024*1024,chunkBytes:40000,immutable:true,manifestLast:true}},
+  appCenter:{version:1,ownerOnly:true,installedStatus:false,automaticUpdates:false},
   config:{version:1,transport:'sync',scope:'same-owner-app',clientEncryption:true,keys:['theme','locale','reducedMotion'],nativeUi:false},
   share:{version:1,explicitDirectionalGrant:true,clientEncryption:true},
   vault:{blobEncryptionEnabled:vaultEnabled,sqliteEncryptionVerified:false},

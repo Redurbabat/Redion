@@ -490,3 +490,13 @@ Löschen unvollständiger Uploads, keine grosse SSD-Quote, kein Streaming.
 Die Grenze 16 MiB kodierte Daten und 1024 Objekte pro Konto bleibt bestehen.
 Download und Vorbereitung sind speicherbegrenzt, aber im Arbeitsspeicher.
 Native Dateiauswahl, lokales Uploadjournal und Export fehlen noch.
+
+### RED App Center
+
+`GET /home/apps` und die RED-ION-Home-Server-Einstellungen zeigen alle
+elf bekannten App-Kennungen mit aktiven RED-ID-Zugängen, Sync-/Datei-Freigaben,
+Share-Richtungen und Objektverbrauch. Nur echte Owner-Gerätesitzungen sind
+berechtigt. Keine Token, Objektnamen, Inhalte oder ID-Digests werden geliefert.
+Pilotkategorien beschreiben vorhandenen Integrationscode; sie sind kein
+Installations-, Online- oder Release-Nachweis. Keine App-Installation,
+automatische Updates oder Ausführung anderer Apps.

@@ -11,6 +11,7 @@ import {prepareRedIdV2,createRedIdV2,RED_ID_V2_ROUTES,revokeRedAppEverywhere} fr
 import {prepareRedShare,createRedShare,SHARE_ROUTES} from './home/red-share.ts';
 import {resetHomeAccess} from './home/recovery.ts';
 import {createHomeMonitor} from './home/monitor.ts';
+import {createRedAppCenter} from './home/app-center.ts';
 import {homeEcosystemCapabilities} from './home/ecosystem.ts';
 import {prepareRedStore,createRedStore,STORE_ROUTES} from './home/red-store.ts';
 import {parseRedWebOrigins,isRedWebRoute} from './home/web-origins.ts';
@@ -24,7 +25,7 @@ import {zuGrossAntwort} from './sicherheit/eingaben.ts';
 import {istAbgleichWeg,mitAppUrsprung} from './sicherheit/abgleich-tor.ts';
 
 const privateRoutes=new Set(['/api/stand']);
-const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/home/dashboard','/red-id/v1/me','/red-id/v1/logout',...RED_ID_V2_ROUTES,...SHARE_ROUTES,...STORE_ROUTES]);
+const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/home/dashboard','/home/apps','/red-id/v1/me','/red-id/v1/logout',...RED_ID_V2_ROUTES,...SHARE_ROUTES,...STORE_ROUTES]);
 const json=(status:number,error:string)=>Response.json({error},{status,headers:{'Cache-Control':'no-store'}});
 
 /** Initial private API: no static repository files, public registration,
@@ -46,6 +47,7 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
   const redIdV2=createRedIdV2(store.sqlite,store.ablage);
   const live=createHomeSyncWait(store.sqlite,store.ablage);
   const monitor=createHomeMonitor();
+  const appCenter=createRedAppCenter(store.sqlite,store.ablage);
   const dashboard=createHomeDashboard(store.sqlite,store.ablage,options.dataDir,!!options.enableMcp,monitor.snapshot);
   let queue:Promise<unknown>=Promise.resolve();
   function serial<T>(execute:()=>Promise<T>):Promise<T>{
@@ -76,8 +78,8 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
         return handleCloudMcp(request,{DB:store.db},false,identify,()=>homeEcosystemCapabilities(!!options.vaultKey));
       });
     }
-    if(path==='/home/dashboard'){
-      const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Authorization','Cache-Control':'no-store'}}):await dashboard(request);
+    if(path==='/home/dashboard'||path==='/home/apps'){
+      const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Authorization','Cache-Control':'no-store'}}):(path==='/home/apps'?await appCenter(request):await dashboard(request));
       if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
       return mitAppUrsprung(request,response);
     }

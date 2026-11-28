@@ -19,6 +19,7 @@ on:
       - 'pruefungen/red-sync-client.test.mts'
       - 'pruefungen/red-device-key-transfer.test.mts'
       - 'pruefungen/red-files-v2.test.mts'
+      - 'pruefungen/red-app-center.test.mts'
       - 'pruefungen/red-recovery.test.mts'
       - 'red-sdk/**'
       - 'pruefungen/red-connect.test.mts'
@@ -41,7 +42,7 @@ jobs:
         with:
           node-version: '24'
       - run: node --test pruefungen/redion-home-server.test.mts pruefungen/redion-home-dashboard.test.mts pruefungen/red-id-v2.test.mts pruefungen/red-login.test.mts pruefungen/red-web-browser.test.mts pruefungen/red-vault.test.mts pruefungen/red-vault-migrate.test.mts pruefungen/red-backup.test.mts
-      - run: node --test pruefungen/red-connect.test.mts pruefungen/red-share.test.mts pruefungen/red-sdk-share.test.mts pruefungen/red-key-exchange.test.mts pruefungen/red-storage-check.test.mts pruefungen/red-store.test.mts pruefungen/red-store-changes.test.mts pruefungen/red-sync-client.test.mts pruefungen/red-device-key-transfer.test.mts pruefungen/red-files-v2.test.mts pruefungen/red-recovery.test.mts
+      - run: node --test pruefungen/red-connect.test.mts pruefungen/red-share.test.mts pruefungen/red-sdk-share.test.mts pruefungen/red-key-exchange.test.mts pruefungen/red-storage-check.test.mts pruefungen/red-store.test.mts pruefungen/red-store-changes.test.mts pruefungen/red-sync-client.test.mts pruefungen/red-device-key-transfer.test.mts pruefungen/red-files-v2.test.mts pruefungen/red-app-center.test.mts pruefungen/red-recovery.test.mts
       - run: bash -n deploy/home/backup.sh && bash -n deploy/home/update.sh && bash -n deploy/home/rehearse-update.sh && bash -n deploy/home/storage-check.sh && bash -n deploy/home/recovery-reset.sh
       - run: npm ci --ignore-scripts
       - run: npm --prefix red-sdk run build && npm --prefix red-sdk pack --dry-run
