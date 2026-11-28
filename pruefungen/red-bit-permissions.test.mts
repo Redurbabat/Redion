@@ -5,14 +5,15 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {openHomeServer} from '../server/home-server.ts';
 import {approveHomeDevice} from '../server/home/pairing.ts';
+import {redBitMcpAllowed} from '../server/home/red-bit-mcp-grants.ts';
 import {createRedPairProof} from '../red-sdk/client.mts';
 
 const origin='https://redion.example.test';
 const grant='/home/red-bit/grant',revoke='/home/red-bit/revoke',grants='/home/red-bit/grants',permission='/red-bit/v1/permission';
 
-async function fixture(enabled:boolean,run:(f:any)=>Promise<void>,jobs=false,transport=false,transportJobs=false){
+async function fixture(enabled:boolean,run:(f:any)=>Promise<void>,jobs=false,transport=false,transportJobs=false,mcp=false){
  const root=await mkdtemp(join(tmpdir(),'red-bit-permissions-'));
- const service=await openHomeServer({dataDir:root,origin,enableRedBitPermissions:enabled,enableRedBitReadJobs:jobs,enableRedBitTransportPermissions:transport,enableRedBitTransportJobs:transportJobs});
+ const service=await openHomeServer({dataDir:root,origin,enableRedBitPermissions:enabled,enableRedBitReadJobs:jobs,enableRedBitTransportPermissions:transport,enableRedBitTransportJobs:transportJobs,enableMcp:mcp,enableRedBitMcp:mcp});
  try{
   const send=(path:string,init?:RequestInit)=>service.handle(new Request(origin+path,init));
   const get=(path:string,token?:string)=>send(path,{headers:token?{Authorization:'Bearer '+token}:{}});
@@ -309,4 +310,49 @@ test('Transport cancellation, expiry and grant renewal prevent authorization',as
   service.store.sqlite.prepare('UPDATE home_red_bit_transport_job SET expires=? WHERE id=?').run(Date.now()-1,c);
   assert.equal((await post(trAuthorize,{id:c,command:'play',confirm:true},bit.accessToken)).status,409);
  },false,true,true);
+});
+
+test('MCP delegation requires separate owner confirmation, matching OAuth epoch and device permission',async()=>{
+ await fixture(true,async({service,get,post,token,pair})=>{
+  const bit=await pair('red-bit'),other=await pair('red-bit');
+  const db=service.store.sqlite;
+  const owner=String(db.prepare('SELECT owner FROM home_red_session WHERE id=?').get(bit.sessionId).owner);
+  const grantId='grant:'+'a'.repeat(64),clientId='client-fixture';
+  const oauth={userId:owner,clientId,epoch:'epoch-1',active:true,remember:false,scopes:['redion:read'],workspaceIds:[]};
+  db.prepare("INSERT INTO mcp_state(key,kind,data,expires,revision) VALUES(?,'grant',?,?,1)").run(grantId,JSON.stringify(oauth),Date.now()+600000);
+  const principal={userId:owner,clientId,grantId,scopes:['redion:read' as const],workspaceIds:[]};
+  const enabled=new Set<'status'|'transport'>(['status','transport']);
+  const body={grantId,sessionId:bit.sessionId,mode:'status',confirm:true};
+  const allow=()=>redBitMcpAllowed(db,principal,bit.sessionId,'status',enabled);
+  assert.equal(allow(),false);
+  assert.equal((await post('/home/red-bit/mcp-grant',body,token)).status,403);
+  await post(grant,{sessionId:bit.sessionId,confirm:true},token);
+  assert.equal((await post('/home/red-bit/mcp-grant',body,bit.accessToken)).status,401);
+  assert.equal((await post('/home/red-bit/mcp-grant',{...body,confirm:false},token)).status,400);
+  const created=await post('/home/red-bit/mcp-grant',body,token);
+  assert.equal(created.status,201);
+  const receipt=await created.json() as any;
+  assert.equal(receipt.toolsAvailable,false);
+  assert.ok(receipt.expiresAt<=Date.now()+300000);
+  assert.equal(allow(),true);
+  assert.equal(redBitMcpAllowed(db,principal,other.sessionId,'status',enabled),false);
+  assert.equal(redBitMcpAllowed(db,principal,bit.sessionId,'transport',enabled),false);
+  assert.equal(redBitMcpAllowed(db,{...principal,clientId:'other'},bit.sessionId,'status',enabled),false);
+  const listed=await (await get('/home/red-bit/mcp-grants',token)).json() as any;
+  assert.equal(listed.grants.length,1);assert.equal(Object.hasOwn(listed.grants[0],'epoch'),false);
+  db.prepare('UPDATE mcp_state SET data=? WHERE key=?').run(JSON.stringify({...oauth,epoch:'epoch-2'}),grantId);
+  assert.equal(allow(),false);
+  await post('/home/red-bit/mcp-grant',body,token);
+  assert.equal(allow(),true);
+  await post(grant,{sessionId:bit.sessionId,confirm:true},token);
+  assert.equal(allow(),false);
+  await post('/home/red-bit/mcp-grant',body,token);
+  assert.equal((await post('/home/red-bit/mcp-revoke',body,token)).status,200);
+  assert.equal(allow(),false);
+ },true,true,true,true);
+});
+test('MCP delegation is disabled by default despite device permissions',async()=>{
+ await fixture(true,async({get,token})=>{
+  assert.equal((await get('/home/red-bit/mcp-grants',token)).status,404);
+ },true,true,true);
 });
