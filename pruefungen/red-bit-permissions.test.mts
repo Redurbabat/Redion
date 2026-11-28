@@ -425,8 +425,8 @@ test('End-to-end Home MCP OAuth, separate delegation and RED Bit device command 
   assert.equal(exchanged.status,200);
   const {access_token}=await exchanged.json() as {access_token:string};
   let seq=0;
-  const rpc=async(method:string,params:object={},access=access_token)=>{
-   const response=await send('/mcp/cloud',{method:'POST',headers:{Authorization:'Bearer '+access,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:++seq,method,params})});
+  const rpc=async(method:string,params:object={})=>{
+   const response=await send('/mcp/cloud',{method:'POST',headers:{Authorization:'Bearer '+access_token,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:++seq,method,params})});
    assert.equal(response.status,200);return (await response.json() as any).result;
   };
   const call=(name:string,args:object)=>rpc('tools/call',{name,arguments:args});
