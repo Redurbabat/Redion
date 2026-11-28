@@ -12,7 +12,7 @@ const windows=import.meta.dirname;
 const root=path.resolve(windows,'..');
 const out=path.join(root,'build','studio-preview','screenshots');
 fs.mkdirSync(out,{recursive:true});
-for(const filename of ['result.json','01-elektro.png','02-simulator.png','03-whiteboard.png','04-whiteboard-ebenen.png','05-pdf.png','06-fenster.png','fehler.png']){
+for(const filename of ['result.json','01-elektro.png','02-simulator.png','03-whiteboard.png','04-whiteboard-ebenen.png','05-pdf.png','06-fenster.png','07-referenz.png','fehler.png']){
   fs.rmSync(path.join(out,filename),{force:true});
 }
 const fingerprint=previewFingerprint(root);
@@ -101,6 +101,30 @@ try{
   assert.equal(layout.bounds.y,layout.area.y+Math.max(0,Math.floor((layout.area.height-layout.bounds.height)/2)));
   await page.screenshot({path:path.join(out,'06-fenster.png')});
   console.log('PASS: native Fensteranordnung über echtes App-Menü.');
+  // Open the explicitly local reference through its real menu action.
+  const referenceEvent=app.waitForEvent('window');
+  await app.evaluate(({BrowserWindow,Menu})=>{
+    const win=BrowserWindow.getAllWindows()[0]!;
+    const item=Menu.getApplicationMenu()?.getMenuItemById('studio-reference-open');
+    if(!item)throw Error('Referenzmenü fehlt.');
+    item.click(item,win,{} as never);
+  });
+  const reference=await referenceEvent;
+  await reference.getByRole('heading',{name:'Schreibgeschützte Referenz'}).waitFor({state:'visible'});
+  const frozen=await reference.locator('main img').getAttribute('src');
+  assert.ok(frozen?.startsWith('data:image/jpeg;base64,'));
+  await reference.waitForFunction(()=>{const img=document.querySelector('main img') as HTMLImageElement;return img?.complete&&img.naturalWidth>0;});
+  assert.equal(await reference.evaluate(()=>typeof (window as any).RedionDesktop),'undefined');
+  await reference.screenshot({path:path.join(out,'07-referenz.png')});
+  await open(ids.board,'.wb-flaeche');
+  assert.equal(await reference.locator('main img').getAttribute('src'),frozen,'Referenz muss beim Seitenwechsel unverändert bleiben');
+  const closed=reference.waitForEvent('close');
+  await app.evaluate(({BrowserWindow,Menu})=>{
+    const win=BrowserWindow.getAllWindows().find(w=>w.webContents.getURL().startsWith('redion-local:'))!;
+    Menu.getApplicationMenu()?.getMenuItemById('studio-reference-close')?.click(null as never,win,{} as never);
+  });
+  await closed;
+  console.log('PASS: getrennte schreibgeschützte Referenz bleibt beim Seitenwechsel erhalten und schliesst.');
   assert.deepEqual(errors,[]);
   assert.equal(previewFingerprint(root),fingerprint,'Der getestete Renderer wurde während der Prüfung verändert.');
   fs.writeFileSync(path.join(out,'result.json'),JSON.stringify({ok:true,fingerprint,platform:process.platform,electron:true,errors,viewport:await page.evaluate(()=>({width:innerWidth,height:innerHeight}))},null,2));

@@ -179,3 +179,18 @@ test('native window arrangement respects taskbars, negative coordinates and mini
   assert.equal(windowLayout({x:0,y:0,width:1920,height:500},box,'right'),null);
   assert.equal(windowLayout(area,box,'unknown'),null);
 });
+
+test('reference is a local frozen image with no privileged renderer or persistent partition', () => {
+  const source=fs.readFileSync(path.join(__dirname,'main.cjs'),'utf8');
+  const body=source.slice(source.indexOf('async function openReference()'),source.indexOf('function appMenu()'));
+  assert.match(body,/source\.webContents\.capturePage\(\)/);
+  assert.match(body,/partition: 'redion-reference-' \+ randomUUID\(\)/);
+  assert.match(body,/nodeIntegration: false, webSecurity: true, devTools: false/);
+  assert.match(body,/sandbox: true/);
+  assert.match(body,/contextIsolation: true/);
+  assert.match(body,/will-navigate/);
+  assert.match(body,/will-download/);
+  assert.match(body,/default-src &#39;none&#39;/);
+  assert.doesNotMatch(body,/preload:|persist:|desktopCapturer|writeFile|https?:\/\//);
+  assert.match(source,/mainWindow\.on\('closed', \(\) => \{\s*closeReference\(\)/);
+});
