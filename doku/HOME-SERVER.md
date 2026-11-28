@@ -544,3 +544,7 @@ Mehrfachfreigabe-Oberfläche bleibt offen. Kein vollständiges Browser-SSO.
 `REDION_ENABLE_REMINDER_SCHEDULER=1` aktiviert beim Serverstart und im Docker-Compose-Dienst einen 30-Sekunden-Timer (Standard aus). CLI-Wartungsbefehle starten ihn nicht. Start und Tick materialisieren höchstens 256 fällige Regeln atomar; manuelles Polling bleibt konto-isoliert. Offene Hinweise bleiben erhalten; Shutdown stoppt den Timer. Kein Push und keine automatische Ausführung von Backup, Update oder Shell-Befehlen.
 
 Das Owner-Dashboard liefert zusätzlich `storageReview` mit Status `ok`, `warning`, `critical` oder `unknown`. Bis 5 % frei ist kritisch, bis 15 % Warnung. Fehler/ungültige Messwerte bleiben unbekannt. Die Messung betrifft nur das sichtbare Dateisystem; SSD-Identität, Mount und Verschlüsselung separat hostseitig prüfen. Keine neue App- oder MCP-Zugriffsfreigabe. Automatische Prüfjobs, Historie und UI sind noch offen.
+
+### RED Security – read-only grant review
+
+Das Owner-Dashboard liefert `grantReview` mit konto-isolierten Zählern für aktive und innerhalb von 24 Stunden auslaufende Sync-/Datei- und Share-Freigaben sowie RED-ID-Zugänge. Abgelaufene Grants werden nicht als aktiv gezählt. Die Bewertung verändert oder verlängert keine Freigabe; `ok` bedeutet nur, dass im betrachteten Zeitfenster keine aktiven Freigaben auslaufen, nicht dass der Server allgemein sicher ist. Keine Tokens, Grant-IDs oder Daten anderer Konten. Automatisierte Prüfjobs und UI folgen separat.

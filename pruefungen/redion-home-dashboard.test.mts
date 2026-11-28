@@ -28,7 +28,7 @@ test('dashboard requires a real device session and exposes measured, non-secret 
     assert.equal(response.headers.get('Access-Control-Allow-Origin'),'capacitor://localhost');
     const data=await response.json() as any;
     assert.equal(data.version,1);assert.equal(data.devices.authorizedSessions,1);
-    assert.equal(data.redId.activeCredentials,1);assert.equal(data.services.mcp,'disabled');
+    assert.equal(data.redId.activeCredentials,1);assert.equal(data.grantReview.store.active,0);assert.equal(data.grantReview.share.active,0);assert.equal(data.services.mcp,'disabled');
     assert.ok(data.memory.totalBytes>0&&data.storage.totalBytes>0);
     assert.ok(['ok','warning','critical'].includes(data.storageReview.status));
     assert.equal(data.storageReview.totalBytes,data.storage.totalBytes);

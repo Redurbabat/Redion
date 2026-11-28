@@ -4,6 +4,7 @@ import {setTimeout as delay} from 'node:timers/promises';
 import type {DatabaseSync} from 'node:sqlite';
 import {werFragt} from '../kern.ts';
 import {reviewStorageCapacity} from './maintenance-storage.ts';
+import {reviewRedGrants} from './maintenance-grants.ts';
 import type {Ablage} from '../typen.ts';
 
 const json=(status:number,body:unknown)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
@@ -45,6 +46,6 @@ export function createHomeDashboard(db:DatabaseSync,ablage:Ablage,dataDir:string
     // Concurrent authenticated requests share the same measurement; no user data in the sample.
     if(!sample)sample=metrics().finally(()=>{sample=null;});
     const data=await sample;
-    return json(200,{...data as Record<string,unknown>,devices:{authorizedSessions:devices},redId:{activeCredentials:appCredentials},mcp:{grantRecords:mcpGrantRecords},...(monitor?{monitor:monitor()}: {})});
+    return json(200,{...data as Record<string,unknown>,devices:{authorizedSessions:devices},redId:{activeCredentials:appCredentials},grantReview:reviewRedGrants(db,owner,Date.now()),mcp:{grantRecords:mcpGrantRecords},...(monitor?{monitor:monitor()}: {})});
   };
 }
