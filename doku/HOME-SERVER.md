@@ -336,3 +336,17 @@ unveränderten Live-Fixture. Keine echten Daten, Ports oder Deployments.
 Der Rehearsal-Code verwendet nach Prüfung der Revision unveränderliche
 Docker-Image-IDs statt beweglicher Tags. Kein Nachweis eines Rollbacks
 nach neuen Live-Schreibvorgängen.
+
+### SSD-Preflight ohne Änderungen am Datenträger
+
+Auf dem Linux-Host: `bash deploy/home/storage-check.sh /pfad/zum/bestehenden/datenordner`.
+Erfordert Node 24, findmnt, lsblk und realpath. Das Skript prüft den
+aktuellen ext4-/XFS-Mount und sämtliche inverse Blockgerätepfade auf
+dm-crypt; unbekannte Topologien und verschachtelte Mounts werden abgelehnt.
+Es formatiert, mountet und entschlüsselt nichts. Ein positives Ergebnis
+belegt keine korrekte Recovery-Strategie, keine Schlüsseltrennung und
+keine vollständige Verschlüsselung von Swap oder anderen Kopien.
+Vor dem produktiven Betrieb LUKS-Datenträger separat einrichten, Recovery-Key
+separat sichern und Wiederherstellung testen; nicht auf einer bestehenden
+unverschlüsselten SSD automatisch LUKS formatieren. Kein realer Datenträger
+wurde in CI geprüft; synthetische Topologien testen die Entscheidungslogik.

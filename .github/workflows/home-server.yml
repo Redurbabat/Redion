@@ -13,6 +13,7 @@ on:
       - 'pruefungen/red-vault-migrate.test.mts'
       - 'pruefungen/red-backup.test.mts'
       - 'pruefungen/red-update-rehearsal.sh'
+      - 'pruefungen/red-storage-check.test.mts'
       - 'red-sdk/**'
       - 'pruefungen/red-connect.test.mts'
       - 'pruefungen/red-share.test.mts'
@@ -34,8 +35,8 @@ jobs:
         with:
           node-version: '24'
       - run: node --test pruefungen/redion-home-server.test.mts pruefungen/redion-home-dashboard.test.mts pruefungen/red-id-v2.test.mts pruefungen/red-login.test.mts pruefungen/red-web-browser.test.mts pruefungen/red-vault.test.mts pruefungen/red-vault-migrate.test.mts pruefungen/red-backup.test.mts
-      - run: node --test pruefungen/red-connect.test.mts pruefungen/red-share.test.mts pruefungen/red-sdk-share.test.mts pruefungen/red-key-exchange.test.mts
-      - run: bash -n deploy/home/backup.sh && bash -n deploy/home/update.sh && bash -n deploy/home/rehearse-update.sh
+      - run: node --test pruefungen/red-connect.test.mts pruefungen/red-share.test.mts pruefungen/red-sdk-share.test.mts pruefungen/red-key-exchange.test.mts pruefungen/red-storage-check.test.mts
+      - run: bash -n deploy/home/backup.sh && bash -n deploy/home/update.sh && bash -n deploy/home/rehearse-update.sh && bash -n deploy/home/storage-check.sh
       - run: npm ci --ignore-scripts
       - run: npm --prefix red-sdk run build && npm --prefix red-sdk pack --dry-run
       - run: bash pruefungen/red-update-rehearsal.sh
