@@ -64,6 +64,7 @@ const Einstellungen = (() => {
     ]],
     ['Verwaltung', [
       ['geraete',      'workspace',   'iPhone und Windows'],
+      ['home-server',  'database',    'RED Home Server'],
       ['arbeitsplatz', 'workspace',   'Arbeitsbereich'],
       ['analysen',     'chart',       'Analysen'],
       ['bereiche',     'users',       'Bereiche'],
@@ -95,7 +96,7 @@ const Einstellungen = (() => {
     konto: 'grau', allgemein: 'grau', benachricht: 'rot', daten: 'blau',
     ki: 'lila', verbindungen: 'blau', mcp: 'orange', worker: 'grau',
     verifiziert: 'gruen', oeffentlich: 'blau', emoji: 'gelb',
-    geraete: 'gruen', arbeitsplatz: 'orange', analysen: 'rosa', bereiche: 'lila',
+    geraete: 'gruen', 'home-server': 'grau', arbeitsplatz: 'orange', analysen: 'rosa', bereiche: 'lila',
     sicherheit: 'rot', schluessel: 'gelb', speicher: 'grau', abrechnung: 'gruen', ueber: 'grau'
   };
 
@@ -306,6 +307,7 @@ const Einstellungen = (() => {
       o.querySelectorAll<HTMLElement>('.einst-nav button').forEach(b =>
         b.classList.toggle('on', b.dataset.b === offenerBereich));
       binde(o);
+      if (ziel && offenerBereich === 'home-server') { bindeHomeServer(ziel); bindeRedApps(ziel); bindeRedShare(ziel); bindeRedStore(ziel); bindeRedSessions(ziel); }
       if (ziel && offenerBereich === 'mcp') RegisterAutomatisierung.montiereAnsicht(ziel);
     };
     zeichne();
@@ -563,7 +565,299 @@ const Einstellungen = (() => {
   /* ========================================================================
    * DIE EINZELNEN BEREICHE
    * ======================================================================*/
+  const bindeRedApps = (ziel: HTMLElement): void => {
+    const app = ziel.querySelector<HTMLSelectElement>('[data-red-app]');
+    const challenge = ziel.querySelector<HTMLInputElement>('[data-red-challenge]');
+    const list = ziel.querySelector<HTMLElement>('[data-red-apps]');
+    const result = ziel.querySelector<HTMLElement>('[data-red-result]');
+    const code = ziel.querySelector<HTMLElement>('[data-red-code]');
+    if (!app || !challenge || !list || !result || !code) return;
+    let busy = false;
+    let clearCode: ReturnType<typeof setTimeout> | undefined;
+    const clear = () => { if (clearCode !== undefined) clearTimeout(clearCode); code.textContent = ''; };
+    const request = async (path: string, payload?: object) => {
+      const w = typeof Wolke === 'undefined' ? null : Wolke;
+      const origin = w?.adresse(), token = w?.token();
+      if (!origin || !token || !w?.serverAdressePruefen(origin)) throw new Error('Kein angemeldeter HTTPS-Server');
+      const response = await fetch(origin + '/red-id/v2/' + path, {
+        method: payload ? 'POST' : 'GET', headers: { Authorization: 'Bearer ' + token, ...(payload ? { 'Content-Type': 'application/json' } : {}) },
+        ...(payload ? { body: JSON.stringify(payload) } : {}), credentials: 'omit', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(8000)
+      });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return response.json();
+    };
+    const run = async (action: () => Promise<void>) => {
+      if (busy) return;
+      busy = true; clear(); result.textContent = 'Anfrage läuft …';
+      try { await action(); } catch { result.textContent = 'Anfrage fehlgeschlagen. Prüfe die Anmeldung und Serverversion.'; }
+      finally { busy = false; }
+    };
+    ziel.querySelector('[data-red-list]')?.addEventListener('click', () => void run(async () => {
+      list.replaceChildren();
+      const data = await request('apps');
+      if (data.version !== 2 || !Array.isArray(data.apps)) throw new Error('Ungültige Antwort');
+      for (const entry of data.apps) {
+        if (typeof entry.app !== 'string' || !Number.isSafeInteger(entry.v1Credentials) || !Number.isSafeInteger(entry.v2Sessions)) continue;
+        const li = document.createElement('li');
+        li.textContent = entry.app.toUpperCase() + ': ' + (entry.v1Credentials + entry.v2Sessions) + ' Zugänge' + (entry.pendingPair ? ' · Kopplung offen' : '');
+        list.append(li);
+      }
+      result.textContent = 'App-Zugänge aktualisiert.';
+    }));
+    ziel.querySelector('[data-red-import]')?.addEventListener('click', () => {
+      const field = ziel.querySelector<HTMLInputElement>('[data-red-request]');
+      if (!field) return;
+      try {
+        const raw = field.value.trim();
+        if (raw.length > 256) throw new Error('Ungültige Anfrage');
+        const d = JSON.parse(raw);
+        if (d?.kind !== 'red-pair' || d.version !== 1 || !Array.from(app.options).some(o => o.value === d.app) || typeof d.challenge !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(d.challenge)) throw new Error('Ungültige Anfrage');
+        app.value = d.app; challenge.value = d.challenge; field.value = '';
+        result.textContent = 'Anfrage übernommen. Vergleiche App und Challenge mit dem Zielgerät, bevor du freigibst.';
+      } catch { result.textContent = 'Ungültige Kopplungsanfrage.'; }
+    });
+    ziel.querySelector('[data-red-approve]')?.addEventListener('click', () => {
+      const selected = app.value, proof = challenge.value.trim();
+      if (!/^[A-Za-z0-9_-]{43}$/.test(proof)) { result.textContent = 'Gültige Challenge erforderlich.'; return; }
+      if (!window.confirm('Anmeldung für ' + selected.toUpperCase() + ' mit Challenge ' + proof + ' freigeben? Nur bei Übereinstimmung mit dem eigenen Zielgerät bestätigen.')) return;
+      void run(async () => {
+        await request('approve-login', { app: selected, challenge: proof });
+        challenge.value = '';
+        result.textContent = '5 Minuten freigegeben. Anmeldung auf dem Zielgerät abschliessen.';
+      });
+    });
+    ziel.querySelector('[data-red-pair]')?.addEventListener('click', () => {
+      const selected = app.value, proof = challenge.value.trim();
+      if (!/^[A-Za-z0-9_-]{43}$/.test(proof)) { result.textContent = 'Die Ziel-App muss zuerst eine gültige SHA-256-Challenge erzeugen.'; return; }
+      void run(async () => {
+        const data = await request('pair', { app: selected, challenge: proof });
+        if (data.app !== selected || !/^redpair_[a-f0-9]{64}$/.test(data.code)) throw new Error('Ungültige Antwort');
+        if (app.value === selected && challenge.value.trim() === proof) challenge.value = '';
+        code.textContent = data.code;
+        clearCode = setTimeout(clear, 300000);
+        result.textContent = selected.toUpperCase() + ' · Einmalcode · 5 Minuten gültig. Nur in die Ziel-App übertragen; nicht teilen.';
+      });
+    });
+    ziel.querySelector('[data-red-revoke]')?.addEventListener('click', () => {
+      const selected = app.value;
+      if (!window.confirm('Alle RED-ID-Zugänge für ' + selected.toUpperCase() + ' widerrufen?')) return;
+      void run(async () => {
+        await request('revoke', { app: selected });
+        result.textContent = 'App-Zugänge widerrufen. Liste erneut abrufen.';
+        list.replaceChildren();
+      });
+    });
+  };
+
+  const bindeRedShare = (ziel: HTMLElement): void => {
+    const source = ziel.querySelector<HTMLSelectElement>('[data-share-source]');
+    const target = ziel.querySelector<HTMLSelectElement>('[data-share-target]');
+    const channel = ziel.querySelector<HTMLInputElement>('[data-share-channel]');
+    const list = ziel.querySelector<HTMLElement>('[data-share-items]');
+    const status = ziel.querySelector<HTMLElement>('[data-share-status]');
+    if (!source || !target || !channel || !list || !status) return;
+    let busy = false;
+    const request = async (path: string, payload?: object) => {
+      const w = typeof Wolke === 'undefined' ? null : Wolke;
+      const origin = w?.adresse(), token = w?.token();
+      if (!origin || !token || !w?.serverAdressePruefen(origin)) throw new Error('Kein angemeldeter HTTPS-Server');
+      const r = await fetch(origin + '/red-share/v1/' + path, {
+        method: payload ? 'POST' : 'GET', headers: { Authorization: 'Bearer ' + token, ...(payload ? { 'Content-Type': 'application/json' } : {}) },
+        ...(payload ? { body: JSON.stringify(payload) } : {}), credentials: 'omit', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(8000)
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    };
+    const refresh = async () => {
+      const data = await request('grants');
+      if (data?.version !== 1 || !Array.isArray(data.grants)) throw new Error('Ungültige Antwort');
+      list.replaceChildren();
+      for (const g of data.grants) {
+        if (typeof g.source !== 'string' || typeof g.target !== 'string' || typeof g.channel !== 'string' || !Number.isFinite(g.expires)) continue;
+        const li = document.createElement('li'), button = document.createElement('button');
+        button.className = 'ez-knopf'; button.textContent = g.source.toUpperCase() + ' → ' + g.target.toUpperCase() + ' · ' + g.channel + ' · bis ' + new Date(g.expires).toLocaleDateString('de-CH');
+        button.addEventListener('click', () => { source.value = g.source; target.value = g.target; channel.value = g.channel; });
+        li.append(button); list.append(li);
+      }
+      status.textContent = data.grants.length ? 'Freigaben aktualisiert.' : 'Keine aktiven Freigaben.';
+    };
+    const run = async (fn: () => Promise<void>) => {
+      if (busy) return; busy = true; status.textContent = 'Anfrage läuft …';
+      try { await fn(); } catch { status.textContent = 'Anfrage fehlgeschlagen. Anmeldung und Server prüfen.'; }
+      finally { busy = false; }
+    };
+    ziel.querySelector('[data-share-list]')?.addEventListener('click', () => void run(refresh));
+    const change = (revoke: boolean) => {
+      const payload = { source: source.value, target: target.value, channel: channel.value.trim() };
+      if (!payload.source || !payload.target || payload.source === payload.target || !/^[a-z][a-z0-9_-]{0,31}$/.test(payload.channel)) { status.textContent = 'Zwei verschiedene Apps und gültigen Kanal wählen.'; return; }
+      if (!window.confirm(payload.source.toUpperCase() + ' → ' + payload.target.toUpperCase() + ' · ' + payload.channel + (revoke ? ': Freigabe widerrufen und wartende Nachrichten löschen?' : ': Datenkanal 7 Tage freigeben?'))) return;
+      void run(async () => { await request(revoke ? 'revoke' : 'grant', payload); await refresh(); });
+    };
+    ziel.querySelector('[data-share-grant]')?.addEventListener('click', () => change(false));
+    ziel.querySelector('[data-share-revoke]')?.addEventListener('click', () => change(true));
+  };
+
+  const bindeRedStore = (ziel: HTMLElement): void => {
+    const app = ziel.querySelector<HTMLSelectElement>('[data-store-app]');
+    const kind = ziel.querySelector<HTMLSelectElement>('[data-store-kind]');
+    const list = ziel.querySelector<HTMLElement>('[data-store-items]');
+    const status = ziel.querySelector<HTMLElement>('[data-store-status]');
+    if (!app || !kind || !list || !status) return;
+    let busy = false;
+    const buttons = Array.from(ziel.querySelectorAll<HTMLButtonElement>('[data-store-list], [data-store-grant], [data-store-revoke]'));
+    const request = async (path: string, payload?: object) => {
+      const w = typeof Wolke === 'undefined' ? null : Wolke;
+      const origin = w?.adresse(), token = w?.token();
+      if (!origin || !token || !w?.serverAdressePruefen(origin)) throw new Error('Kein angemeldeter HTTPS-Server');
+      const response = await fetch(origin + '/red-store/v1/' + path, {
+        method: payload ? 'POST' : 'GET', headers: { Authorization: 'Bearer ' + token, ...(payload ? { 'Content-Type': 'application/json' } : {}) },
+        ...(payload ? { body: JSON.stringify(payload) } : {}), credentials: 'omit', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(8000)
+      });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return response.json();
+    };
+    const refresh = async () => {
+      const data = await request('grants');
+      if (data?.version !== 1 || !Array.isArray(data.apps)) throw new Error('Ungültige Antwort');
+      list.replaceChildren();
+      for (const entry of data.apps) {
+        if (typeof entry.app !== 'string' || !Array.from(app.options).some(o => o.value === entry.app) || !Array.isArray(entry.grants) || !Array.isArray(entry.usage)) continue;
+        const li = document.createElement('li');
+        const label = document.createElement('strong');
+        label.textContent = entry.app.toUpperCase();
+        li.append(label);
+        for (const type of ['sync', 'file']) {
+          const grant = entry.grants.find((g: any) => g.kind === type && Number.isFinite(g.expires));
+          const usage = entry.usage.find((u: any) => u.kind === type);
+          const row = document.createElement('p');
+          const records = Number.isSafeInteger(usage?.records) ? usage.records : 0;
+          const bytes = Number.isSafeInteger(usage?.encodedBytes) ? usage.encodedBytes : 0;
+          const tombstones = Number.isSafeInteger(usage?.tombstones) ? usage.tombstones : 0;
+          row.textContent = (type === 'sync' ? 'Sync' : 'Dateien') + ': ' + records + ' Objekte (' + tombstones + ' gelöscht), ' + Math.round(bytes / 1024) + ' KiB kodiert · ' + (grant ? 'Freigegeben bis ' + new Date(grant.expires).toLocaleDateString('de-CH') : 'Nicht freigegeben');
+          li.append(row);
+        }
+        list.append(li);
+      }
+      status.textContent = 'Speicherübersicht aktualisiert.';
+    };
+    const run = async (fn: () => Promise<void>) => {
+      if (busy) return;
+      busy = true; app.disabled = true; kind.disabled = true; buttons.forEach(b => b.disabled = true);
+      status.textContent = 'Anfrage läuft …';
+      try { await fn(); } catch { status.textContent = 'Anfrage fehlgeschlagen. Anmeldung und Server prüfen.'; }
+      finally { busy = false; app.disabled = false; kind.disabled = false; buttons.forEach(b => b.disabled = false); }
+    };
+    const change = (revoke: boolean) => {
+      if (busy) return;
+      const payload = { app: app.value, kind: kind.value };
+      if (payload.kind !== 'sync' && payload.kind !== 'file') return;
+      const label = payload.app.toUpperCase() + ' · ' + (payload.kind === 'sync' ? 'Sync' : 'Dateien');
+      if (!window.confirm(label + (revoke ? ': Zugriff widerrufen? Gespeicherte Objekte bleiben erhalten.' : ': Zugriff für alle angemeldeten Geräte dieser App für 7 Tage freigeben?'))) return;
+      void run(async () => { await request(revoke ? 'revoke' : 'grant', payload); await refresh(); });
+    };
+    ziel.querySelector('[data-store-list]')?.addEventListener('click', () => void run(refresh));
+    ziel.querySelector('[data-store-grant]')?.addEventListener('click', () => change(false));
+    ziel.querySelector('[data-store-revoke]')?.addEventListener('click', () => change(true));
+  };
+
+  const bindeRedSessions = (ziel: HTMLElement): void => {
+    const refreshButton = ziel.querySelector<HTMLButtonElement>('[data-red-sessions-refresh]');
+    const list = ziel.querySelector<HTMLElement>('[data-red-sessions]');
+    const status = ziel.querySelector<HTMLElement>('[data-red-sessions-status]');
+    if (!refreshButton || !list || !status) return;
+    let busy = false;
+    const request = async (path: string, payload?: object) => {
+      const w = typeof Wolke === 'undefined' ? null : Wolke;
+      const origin = w?.adresse(), token = w?.token();
+      if (!origin || !token || !w?.serverAdressePruefen(origin)) throw new Error('Kein angemeldeter HTTPS-Server');
+      const response = await fetch(origin + '/red-id/v2/' + path, {
+        method: payload ? 'POST' : 'GET', headers: { Authorization: 'Bearer ' + token, ...(payload ? { 'Content-Type': 'application/json' } : {}) },
+        ...(payload ? { body: JSON.stringify(payload) } : {}), credentials: 'omit', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(8000)
+      });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return response.json();
+    };
+    const refresh = async () => {
+      const data = await request('sessions');
+      if (data?.version !== 1 || !Array.isArray(data.sessions)) throw new Error('Ungültige Antwort');
+      list.replaceChildren();
+      for (const session of data.sessions) {
+        if (typeof session.id !== 'string' || !/^session_[a-f0-9]{64}$/.test(session.id) || typeof session.app !== 'string' || !Number.isFinite(Date.parse(session.createdAt)) || !Number.isFinite(Date.parse(session.refreshExpiresAt))) continue;
+        const li = document.createElement('li'), label = document.createElement('p'), button = document.createElement('button');
+        label.textContent = session.app.toUpperCase() + ' · ' + session.id.slice(-8) + ' · gekoppelt ' + new Date(session.createdAt).toLocaleString('de-CH') + ' · gültig bis ' + new Date(session.refreshExpiresAt).toLocaleString('de-CH');
+        button.className = 'ez-knopf'; button.textContent = 'Nur diese Sitzung widerrufen';
+        const id = session.id, app = session.app;
+        button.addEventListener('click', () => {
+          if (busy || !window.confirm(app.toUpperCase() + ' · ' + id.slice(-8) + ': Nur diese Anmeldung widerrufen? Andere App-Sitzungen und gespeicherte Daten bleiben erhalten.')) return;
+          void run(async () => { await request('revoke-session', { id }); await refresh(); });
+        });
+        li.append(label, button); list.append(li);
+      }
+      status.textContent = data.truncated ? 'Weitere Sitzungen vorhanden. Anzeige begrenzt.' : data.sessions.length + ' autorisierte App-Sitzungen. Kein Online-Status.';
+    };
+    const run = async (fn: () => Promise<void>) => {
+      if (busy) return;
+      busy = true; refreshButton.disabled = true; status.textContent = 'Anfrage läuft …';
+      list.querySelectorAll('button').forEach(b => b.disabled = true);
+      try { await fn(); } catch { status.textContent = 'Anfrage fehlgeschlagen. Anmeldung und Server prüfen.'; }
+      finally { busy = false; refreshButton.disabled = false; list.querySelectorAll('button').forEach(b => b.disabled = false); }
+    };
+    refreshButton.addEventListener('click', () => void run(refresh));
+  };
+
+  const bindeHomeServer = (ziel: HTMLElement): void => {
+    const button = ziel.querySelector<HTMLButtonElement>('[data-home-refresh]');
+    const status = ziel.querySelector<HTMLElement>('[data-home-status]');
+    const list = ziel.querySelector<HTMLElement>('[data-home-metrics]');
+    if (!button || !status || !list) return;
+    button.addEventListener('click', async () => {
+      list.replaceChildren();
+      const w = typeof Wolke === 'undefined' ? null : Wolke;
+      const origin = w?.adresse(), token = w?.token();
+      if (!origin || !token || !w?.serverAdressePruefen(origin)) {
+        status.textContent = 'Kein angemeldeter HTTPS-Server eingerichtet.';
+        return;
+      }
+      button.disabled = true;
+      status.textContent = 'Serverstatus wird abgerufen …';
+      try {
+        const response = await fetch(origin + '/home/dashboard', { headers: { Authorization: 'Bearer ' + token }, credentials: 'omit', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(8000) });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        if (data.version !== 1 || !data.cpu || !data.memory || !data.storage || !data.devices || !data.services) throw new Error('Ungültige Antwort');
+        const number = (v: unknown, unit = '') => typeof v === 'number' && Number.isFinite(v) ? Math.round(v * 10) / 10 + unit : 'Nicht verfügbar';
+        const gb = (v: unknown) => typeof v === 'number' && Number.isFinite(v) ? number(v / 1e9, ' GB') : 'Nicht verfügbar';
+        const rows: [string, string][] = [
+          ['CPU', number(data.cpu.percent, ' %')],
+          ['RAM', gb(data.memory.usedBytes) + ' / ' + gb(data.memory.totalBytes)],
+          ['SSD/Dateisystem verfügbar', gb(data.storage.availableBytes) + ' / ' + gb(data.storage.totalBytes)],
+          ['Temperatur', number(data.temperatureC, ' °C')],
+          ['Serverprozess aktiv seit', number(data.processUptimeSeconds / 60, ' min')],
+          ['Autorisierte Gerätesitzungen', number(data.devices.authorizedSessions)],
+          ['RED-ID-Zugänge', number(data.redId?.activeCredentials)],
+          ['MCP', data.services.mcp === 'enabled' ? 'Aktiviert' : 'Deaktiviert'],
+          ['MCP-Freigabeeinträge', number(data.mcp?.grantRecords)],
+          ['Anfragen (letzte 60 Minuten)', number(data.monitor?.requests)],
+          ['Clientfehler (4xx)', number(data.monitor?.clientErrors)],
+          ['Serverfehler (5xx)', number(data.monitor?.serverErrors)],
+          ['Mittlere Antwortzeit', number(data.monitor?.meanMs, ' ms')],
+          ['Maximale Antwortzeit', number(data.monitor?.maxMs, ' ms')],
+          ['Netzwerk empfangen / gesendet', gb(data.network?.receivedBytes) + ' / ' + gb(data.network?.sentBytes)]
+        ];
+        for (const [label, value] of rows) {
+          const dt = document.createElement('dt'), dd = document.createElement('dd');
+          dt.textContent = label; dd.textContent = value;
+          list.append(dt, dd);
+        }
+        status.textContent = 'Erreichbar · Sicht des Serverprozesses · ' + new Date().toLocaleTimeString('de-CH');
+      } catch {
+        status.textContent = 'Serverstatus nicht verfügbar. Anmeldung, HTTPS-Verbindung und Serverversion prüfen.';
+      } finally { button.disabled = false; }
+    });
+  };
+
   const inhalt = (b: any): string => (({
+    'home-server': () => kopf('RED Home Server', 'Private Infrastruktur und Diagnose') + '<div class="ez-karte"><button class="ez-knopf" data-home-refresh>Serverstatus abrufen</button><p data-home-status role="status">Verbinde zuerst dein Gerät mit dem privaten Server.</p><dl data-home-metrics></dl></div><div class="ez-karte"><h3>RED ID · App-Verbindungen</h3><p>Nur autorisierte Zugänge, keine Aussage über installierte oder online befindliche Apps.</p><button class="ez-knopf" data-red-list>App-Zugänge anzeigen</button><ul data-red-apps></ul><label>RED-App <select data-red-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Challenge der Ziel-App <input type="text" data-red-challenge autocomplete="off" spellcheck="false" maxlength="43"></label><label>Kopplungsanfrage (JSON aus der Ziel-App) <input data-red-request type="text" maxlength="256" autocomplete="off" spellcheck="false"></label><button class="ez-knopf" data-red-import>Anfrage übernehmen</button><button class="ez-knopf" data-red-approve>Direkte Anmeldung freigeben</button><button class="ez-knopf" data-red-pair>Kopplung freigeben</button><button class="ez-knopf" data-red-revoke>App-Zugänge widerrufen</button><p data-red-result role="status"></p><pre data-red-code style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></div><div class="ez-karte"><h3>RED Devices · App-Sitzungen</h3><p>Einzelne RED-ID-v2-Anmeldungen widerrufen. Es werden keine Gerätepositionen oder Online-Aktivitäten erfasst.</p><button class="ez-knopf" data-red-sessions-refresh>Sitzungen abrufen</button><ul data-red-sessions></ul><p data-red-sessions-status role="status"></p></div><div class="ez-karte"><h3>RED Share · Datenfreigaben</h3><p>Nur ausgewählte Apps und Kanäle. Schlüssel separat auf beiden Geräten bestätigen.</p><button class="ez-knopf" data-share-list>Freigaben abrufen</button><ul data-share-items></ul><label>Sender <select data-share-source><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Empfänger <select data-share-target><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Kanal <input data-share-channel maxlength="32" autocomplete="off" spellcheck="false" placeholder="workout"></label><button class="ez-knopf" data-share-grant>7 Tage freigeben</button><button class="ez-knopf" data-share-revoke>Freigabe widerrufen</button><p data-share-status role="status"></p></div><div class="ez-karte"><h3>RED Sync &amp; RED Files · Pilot</h3><p>Getrennte verschlüsselte App-Objekte. Keine automatische Freigabe zwischen Apps. Alle Geräte derselben App teilen die Freigabe; der Schlüssel muss separat verwaltet werden.</p><button class="ez-knopf" data-store-list>Speicher und Freigaben anzeigen</button><ul data-store-items></ul><label>RED-App <select data-store-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Bereich <select data-store-kind><option value="sync">Sync-Daten</option><option value="file">Kleine Dateiobjekte</option></select></label><button class="ez-knopf" data-store-grant>7 Tage freigeben</button><button class="ez-knopf" data-store-revoke>Zugriff widerrufen</button><p data-store-status role="status"></p></div>',
     geraete: () => kopf('iPhone und Windows', 'Geräte, Sicherungen und freiwilliger Abgleich') + DeviceIntegration.overview(),
     /* HIER STAND DAS GEGENTEIL DESSEN, WAS GEBAUT IST (E270).
        „Diese App kennt kein Konto und keinen Server", „es gibt keine

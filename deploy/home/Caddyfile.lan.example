@@ -1,0 +1,12 @@
+# Optional private LAN TLS reverse proxy. Run on the host, not inside RED ION.
+# Set REDION_LAN_HOST to your private DNS hostname, REDION_LAN_IP to its LAN IP.
+# Install and trust the local CA on each client. Do not publish router ports.
+{
+    auto_https disable_redirects
+    admin off
+}
+{$REDION_LAN_HOST} {
+    bind {$REDION_LAN_IP}
+    tls internal
+    reverse_proxy 127.0.0.1:8790
+}

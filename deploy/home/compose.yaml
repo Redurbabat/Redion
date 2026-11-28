@@ -1,0 +1,20 @@
+services:
+  redion:
+    build:
+      context: ../..
+      dockerfile: deploy/home/Dockerfile
+    environment:
+      REDION_WEB_ORIGINS: ${REDION_WEB_ORIGINS:-}
+      REDION_ENABLE_MCP: ${REDION_ENABLE_MCP:-0}
+      REDION_ORIGIN: ${REDION_ORIGIN:?Set HTTPS origin in environment}
+    ports:
+      - "127.0.0.1:8790:8790"
+    volumes:
+      - "${REDION_DATA_DIR:?Set absolute private storage path}:/data"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped

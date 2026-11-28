@@ -1,0 +1,55 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {openHomeServer} from '../server/home-server.ts';
+import {approveHomeDevice} from '../server/home/pairing.ts';
+import {issueHomeConsentCode} from '../server/home/consent.ts';
+import {resetHomeAccess} from '../server/home/recovery.ts';
+import {createHomeMonitor} from '../server/home/monitor.ts';
+import {createRedPairProof,type RedSession} from '../red-sdk/client.mts';
+test('owner revokes one RED device without affecting other sessions; offline reset preserves data',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'red-recovery-')),origin='https://home.example.test',s=await openHomeServer({dataDir:root,origin,enableMcp:true});
+ try{
+  const send=(path:string,token?:string,body?:object)=>s.handle(new Request(origin+path,{method:body?'POST':'GET',headers:{...(token?{Authorization:'Bearer '+token}:{}),...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})}));
+  const device=async()=>{const {code}=await (await send('/konto/code',undefined,{geraet:'Owner'})).json() as {code:string};approveHomeDevice(s.store.sqlite,code);return (await (await send('/konto/code-holen',undefined,{code})).json() as {token:string;konto:{id:string}});};
+  const {token,konto}=await device();
+  const pair=async()=>{const p=await createRedPairProof();await send('/red-id/v2/approve-login',token,{app:'red-fit',challenge:p.challenge});return await (await send('/red-id/v2/claim-login',undefined,{app:'red-fit',verifier:p.verifier})).json() as RedSession;};
+  const a=await pair(),b=await pair();
+  const list=await (await send('/red-id/v2/sessions',token)).json() as {sessions:{id:string;app:string}[]};
+  assert.equal(list.sessions.length,2);
+  assert.ok(!JSON.stringify(list).includes(a.accessToken));
+  assert.equal((await send('/red-id/v2/sessions',a.accessToken)).status,401);
+  const sessionId=String(s.store.sqlite.prepare('SELECT id FROM home_red_session WHERE access_digest=?').get((await import('node:crypto')).createHash('sha256').update(a.accessToken).digest('hex'))?.id);
+  assert.equal((await send('/red-id/v2/revoke-session',b.accessToken,{id:sessionId})).status,401);
+  assert.equal((await send('/red-id/v2/revoke-session',token,{id:sessionId})).status,200);
+  assert.equal((await send('/red-id/v2/me',a.accessToken)).status,401);
+  assert.equal((await send('/red-id/v2/me',b.accessToken)).status,200);
+  await send('/red-store/v1/grant',token,{app:'red-fit',kind:'sync'});
+  const payload={kind:'sync',id:'a'.repeat(32),expectedRevision:0,operationId:'b'.repeat(32),envelope:Buffer.alloc(40,1).toString('base64url')};
+  assert.equal((await send('/red-store/v1/put',b.accessToken,payload)).status,201);
+  await s.blobs.lege('private',new Uint8Array([7,8,9]));
+  const pending=await createRedPairProof();await send('/red-id/v2/approve-login',token,{app:'red-poly',challenge:pending.challenge});
+  const oldCode=issueHomeConsentCode(s.store.sqlite);
+  assert.ok(oldCode.length>0);
+  assert.throws(()=>resetHomeAccess(s.store.sqlite,'wrong'));
+  assert.equal((await send('/red-id/v2/me',b.accessToken)).status,200);
+  const reset=resetHomeAccess(s.store.sqlite,'--offline-confirmed-reset-all-access');
+  assert.equal(reset.dataPreserved,true);
+  assert.equal((await send('/red-id/v2/me',b.accessToken)).status,401);
+  assert.equal((await send('/home/dashboard',token)).status,401);
+  assert.equal((await send('/red-id/v2/claim-login',undefined,{app:'red-poly',verifier:pending.verifier})).status,401);
+  assert.equal(Number(s.store.sqlite.prepare('SELECT COUNT(*) AS n FROM home_red_store_grant').get()?.n),0);
+  assert.equal(Number(s.store.sqlite.prepare('SELECT COUNT(*) AS n FROM home_red_store_record').get()?.n),1);
+  assert.deepEqual(await s.blobs.hole('private'),new Uint8Array([7,8,9]));
+  assert.equal((await device()).konto.id,konto.id);
+ }finally{s.close();await rm(root,{recursive:true,force:true});}
+});
+test('monitor bounds time window and retains no sensitive details',()=>{
+ let now=6000000;const m=createHomeMonitor(()=>now);
+ m.record(200,20);m.record(401,40);m.record(500,60);
+ assert.equal(m.snapshot().requests,3);assert.equal(m.snapshot().clientErrors,1);assert.equal(m.snapshot().serverErrors,1);assert.equal(m.snapshot().meanMs,40);
+ now+=60*60000;assert.equal(m.snapshot().requests,0);
+ m.record(200,4);assert.equal(m.snapshot().maxMs,4);
+});

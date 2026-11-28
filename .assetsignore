@@ -152,3 +152,9 @@ wrangler.toml
 # Ausnahme: worker.ts ist der Einstiegspunkt des Workers selbst. Wrangler
 # holt ihn über `main`, nicht über die Dateiablage — der Ausschluss oben
 # ist also richtig und nimmt ihm nichts weg.
+
+# Private deployment and home data are never static assets.
+/deploy/
+/redion-home-data/
+
+/red-sdk/

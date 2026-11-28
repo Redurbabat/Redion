@@ -1,0 +1,9 @@
+**
+!server/
+!server/**
+!quell/
+!quell/**
+!package.json
+**/.env
+**/.env.*
+**/node_modules/

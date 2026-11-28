@@ -665,7 +665,8 @@ const Wolke = (() => {
             return !!v;
         return !!(Store.getMeta('wolkeMarkeHoch', '') || Store.getMeta('wolkeMarkeRunter', ''));
     };
-    const abgleichSetzen = (an) => { Store.setMeta('wolkeAbgleich', !!an); melden(); };
+    const abgleichSetzen = (an) => { Store.setMeta('wolkeAbgleich', !!an); if (!an)
+        liveStop(); melden(); };
     const abgleichen = async () => {
         if (!angemeldet() || !bereich() || zustand.laeuft || !abgleichErlaubt())
             return null;
@@ -711,12 +712,73 @@ const Wolke = (() => {
         }
     };
     let uhr = null;
-    const autoAbgleichen = () => {
-        if (document.hidden || (typeof navigator !== 'undefined' && navigator.onLine === false))
+    const liveGeeignet = () => Number(Store.getMeta('wolkeTakt', '120')) === 15 &&
+        !!adresse() && angemeldet() && !!bereich() && abgleichErlaubt() && !schluesselFehlt() &&
+        !document.hidden && (typeof navigator === 'undefined' || navigator.onLine !== false);
+    let liveAbbruch = null;
+    let livePauseBis = 0;
+    let livePauseAdresse = '';
+    const liveStop = () => { liveAbbruch?.abort(); liveAbbruch = null; };
+    const homeLive = async () => {
+        if (!liveGeeignet() || liveAbbruch || typeof AbortController === 'undefined')
             return;
+        const server = adresse(), sitzung = token(), raum = bereich();
+        if (livePauseAdresse === server && Date.now() < livePauseBis)
+            return;
+        const controller = new AbortController();
+        liveAbbruch = controller;
+        const gleich = () => !controller.signal.aborted && liveGeeignet() &&
+            adresse() === server && token() === sitzung && bereich() === raum;
+        let cursor = '';
+        try {
+            while (gleich()) {
+                const query = new URLSearchParams({ bereich: raum, wait: '10' });
+                if (cursor)
+                    query.set('cursor', cursor);
+                const a = await fetch(server + '/home/sync/wait?' + query, {
+                    headers: { Authorization: 'Bearer ' + sitzung }, signal: controller.signal,
+                    redirect: 'error', credentials: 'omit', cache: 'no-store'
+                });
+                if (!gleich())
+                    return;
+                if (!a.ok)
+                    throw new Error('Live-Sync nicht verfügbar');
+                const b = await a.json();
+                if (!gleich())
+                    return;
+                if (typeof b.cursor !== 'string' || !/^[a-f0-9-]{36}:\d+$/.test(b.cursor) ||
+                    typeof b.changed !== 'boolean')
+                    throw new Error('Ungültiges Live-Signal');
+                if (!cursor || b.changed) {
+                    if (!zustand.laeuft && await abgleichen())
+                        cursor = b.cursor;
+                }
+                else
+                    cursor = b.cursor;
+                await new Promise(resolve => setTimeout(resolve, 250));
+            }
+        }
+        catch {
+            if (!controller.signal.aborted) {
+                livePauseAdresse = server;
+                livePauseBis = Date.now() + 60000;
+            }
+        }
+        finally {
+            if (liveAbbruch === controller)
+                liveAbbruch = null;
+        }
+    };
+    const autoAbgleichen = () => {
+        if (document.hidden || (typeof navigator !== 'undefined' && navigator.onLine === false)) {
+            liveStop();
+            return;
+        }
         abgleichen().catch(() => { });
+        void homeLive();
     };
     const takt = () => {
+        liveStop();
         clearInterval(uhr);
         uhr = null;
         if (!angemeldet())
@@ -989,6 +1051,7 @@ const Wolke = (() => {
         }
         document.addEventListener('visibilitychange', autoAbgleichen);
         window.addEventListener('online', autoAbgleichen);
+        window.addEventListener('offline', liveStop);
         const ev = globalThis.Ereignisse;
         if (ev?.horche)
             ev.horche(ARTEN.einstellungGeaendert, (d) => {

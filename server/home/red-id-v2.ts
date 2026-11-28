@@ -1,0 +1,189 @@
+import {createHash,randomBytes} from 'node:crypto';
+import type {DatabaseSync} from 'node:sqlite';
+import type {Ablage} from '../typen.ts';
+import {werFragt} from '../kern.ts';
+import {RED_APPS} from './red-id.ts';
+import {revokeRedStore} from './red-store.ts';
+import {revokeRedShare} from './red-share.ts';
+
+const hash=(v:string)=>createHash('sha256').update(v).digest('hex');
+const proof=(v:string)=>createHash('sha256').update(v).digest('base64url');
+const secret=(prefix:string)=>prefix+randomBytes(32).toString('hex');
+const appValid=(v:unknown):v is string=>typeof v==='string'&&(RED_APPS as readonly string[]).includes(v);
+const is=(v:unknown,re:RegExp):v is string=>typeof v==='string'&&re.test(v);
+const reply=(status:number,data:unknown)=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
+const ACCESS=15*60*1000,REFRESH=30*86400000,PAIR=5*60*1000;
+export const RED_ID_V2_ROUTES=['/red-id/v2/pair','/red-id/v2/exchange','/red-id/v2/refresh','/red-id/v2/me','/red-id/v2/logout','/red-id/v2/revoke','/red-id/v2/apps','/red-id/v2/approve-login','/red-id/v2/claim-login','/red-id/v2/sessions','/red-id/v2/revoke-session'] as const;
+export function prepareRedIdV2(db:DatabaseSync){
+  db.exec(`CREATE TABLE IF NOT EXISTS home_red_pair (digest TEXT PRIMARY KEY, owner TEXT NOT NULL, app TEXT NOT NULL, challenge TEXT NOT NULL, expires INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS home_red_session (id TEXT PRIMARY KEY, owner TEXT NOT NULL, app TEXT NOT NULL, access_digest TEXT UNIQUE NOT NULL, refresh_digest TEXT UNIQUE NOT NULL, access_until INTEGER NOT NULL, refresh_until INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS home_red_session_owner ON home_red_session(owner,app);
+CREATE INDEX IF NOT EXISTS home_red_pair_owner ON home_red_pair(owner,app);
+CREATE TABLE IF NOT EXISTS home_red_login (challenge TEXT PRIMARY KEY,owner TEXT NOT NULL,app TEXT NOT NULL,expires INTEGER NOT NULL,used INTEGER NOT NULL DEFAULT 0);
+CREATE INDEX IF NOT EXISTS home_red_login_owner ON home_red_login(owner,app);
+CREATE TABLE IF NOT EXISTS home_red_refresh_used (digest TEXT PRIMARY KEY, session_id TEXT NOT NULL, app TEXT NOT NULL, expires INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS home_red_refresh_used_session ON home_red_refresh_used(session_id);
+CREATE TRIGGER IF NOT EXISTS home_red_refresh_cleanup AFTER DELETE ON home_red_session BEGIN DELETE FROM home_red_refresh_used WHERE session_id=OLD.id; END;`);
+}
+async function body(request:Request):Promise<Record<string,unknown>|null>{
+  if(!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type')??''))return null;
+  if(Number(request.headers.get('content-length')??0)>4096||!request.body)return null;
+  const reader=request.body.getReader();let size=0;const decoder=new TextDecoder();let value='';
+  try{while(true){const next=await reader.read();if(next.done)break;size+=next.value.byteLength;if(size>4096){await reader.cancel();return null;}value+=decoder.decode(next.value,{stream:true});}value+=decoder.decode();const parsed=JSON.parse(value);return parsed&&typeof parsed==='object'&&!Array.isArray(parsed)?parsed:null;}
+  catch{return null;}finally{reader.releaseLock();}
+}
+function transaction<T>(db:DatabaseSync,run:()=>T):T{db.exec('BEGIN IMMEDIATE');try{const v=run();db.exec('COMMIT');return v;}catch(e){db.exec('ROLLBACK');throw e;}}
+function credentials(now:number,limit=now+REFRESH){
+  const accessToken=secret('redat_'),refreshToken=secret('redrt_'),accessUntil=Math.min(now+ACCESS,limit),refreshUntil=limit;
+  return {accessToken,refreshToken,accessUntil,refreshUntil,accessDigest:hash(accessToken),refreshDigest:hash(refreshToken)};
+}
+type Cred=ReturnType<typeof credentials>;
+const responseTokens=(app:string,c:Cred)=>({version:2,app,accessToken:c.accessToken,refreshToken:c.refreshToken,expiresAt:new Date(c.accessUntil).toISOString(),refreshExpiresAt:new Date(c.refreshUntil).toISOString(),scopes:['identity:read']});
+export function createRedIdV2(db:DatabaseSync,ablage:Ablage){
+  return async(request:Request):Promise<Response>=>{
+    const path=new URL(request.url).pathname;
+    if(!(RED_ID_V2_ROUTES as readonly string[]).includes(path))return reply(404,{error:'not_found'});
+    if(request.method!==(path.endsWith('/me')||path.endsWith('/apps')||path.endsWith('/sessions')?'GET':'POST'))return reply(405,{error:'method_not_allowed'});
+    const inputBody=request.method==='POST'&&!path.endsWith('/logout')?await body(request):null;
+    const now=Date.now();
+    if(path.endsWith('/me')||path.endsWith('/logout')){
+      const m=/^Bearer (redat_[a-f0-9]{64})$/.exec(request.headers.get('authorization')??'');
+      if(!m)return reply(401,{error:'unauthorized'});
+      const row=db.prepare('SELECT s.id AS sessionId,s.owner,s.app,s.access_until,c.name FROM home_red_session s JOIN konten c ON c.id=s.owner WHERE s.access_digest=? AND s.access_until>? AND s.refresh_until>? AND c.gesperrt=0').get(hash(m[1]!),now,now);
+      if(!row||typeof row.owner!=='string'||typeof row.sessionId!=='string'||typeof row.app!=='string'||typeof row.access_until!=='number')return reply(401,{error:'unauthorized'});
+      if(path.endsWith('/logout')){db.prepare('DELETE FROM home_red_session WHERE id=?').run(row.sessionId);return reply(200,{ok:true});}
+      return reply(200,{version:2,id:row.owner,name:String(row.name??''),app:row.app,scopes:['identity:read'],expiresAt:new Date(row.access_until).toISOString()});
+    }
+    if(path.endsWith('/sessions')||path.endsWith('/revoke-session')){
+      const who=await werFragt(ablage,{authorization:request.headers.get('authorization')??''});
+      if(!who?.sitzung)return reply(401,{error:'unauthorized'});
+      const owner=String(who.konto.id);
+      if(path.endsWith('/sessions')){
+        const rows=db.prepare('SELECT id,app,access_until,refresh_until FROM home_red_session WHERE owner=? AND refresh_until>? ORDER BY app,id LIMIT 257').all(owner,now);
+        return reply(200,{version:1,sessions:rows.slice(0,256).map(r=>({id:r.id,app:r.app,createdAt:new Date(Number(r.refresh_until)-REFRESH).toISOString(),accessExpiresAt:new Date(Number(r.access_until)).toISOString(),refreshExpiresAt:new Date(Number(r.refresh_until)).toISOString()})),truncated:rows.length>256});
+      }
+      if(!inputBody||!is(inputBody.id,/^session_[a-f0-9]{64}$/)||Object.keys(inputBody).length!==1)return reply(400,{error:'invalid_session'});
+      const removed=db.prepare('DELETE FROM home_red_session WHERE owner=? AND id=?').run(owner,inputBody.id);
+      return reply(200,{revoked:Number(removed.changes)});
+    }
+    if(path.endsWith('/apps')){
+      const who=await werFragt(ablage,{authorization:request.headers.get('authorization')??''});
+      if(!who?.sitzung)return reply(401,{error:'unauthorized'});
+      const owner=String(who.konto.id);
+      const count=(sql:string,app:string)=>Number(db.prepare(sql).get(owner,app,now)?.n??0);
+      return reply(200,{version:2,apps:RED_APPS.map(app=>({app,
+        v1Credentials:count('SELECT COUNT(*) AS n FROM home_red_id WHERE owner=? AND app=? AND expires>?',app),
+        v2Sessions:count('SELECT COUNT(*) AS n FROM home_red_session WHERE owner=? AND app=? AND refresh_until>?',app),
+        pendingPair:count('SELECT COUNT(*) AS n FROM home_red_pair WHERE owner=? AND app=? AND expires>?',app)+count('SELECT COUNT(*) AS n FROM home_red_login WHERE owner=? AND app=? AND expires>? AND used=0',app)>0}))});
+    }
+    if(path.endsWith('/approve-login')){
+      const who=await werFragt(ablage,{authorization:request.headers.get('authorization')??''});
+      if(!who?.sitzung)return reply(401,{error:'unauthorized'});
+      const input=inputBody;
+      if(!input||!appValid(input.app)||!is(input.challenge,/^[A-Za-z0-9_-]{43}$/))return reply(400,{error:'invalid_request'});
+      const owner=String(who.konto.id),app=input.app,challenge=input.challenge;
+      return transaction(db,()=>{
+        db.prepare('DELETE FROM home_red_login WHERE expires<=?').run(now);
+        if(db.prepare('SELECT challenge FROM home_red_login WHERE challenge=?').get(challenge))return reply(409,{error:'challenge_already_used'});
+        if(Number(db.prepare('SELECT COUNT(*) AS n FROM home_red_login WHERE owner=?').get(owner)?.n??0)>=64)return reply(429,{error:'approval_limit'});
+        db.prepare('INSERT INTO home_red_login(challenge,owner,app,expires) VALUES(?,?,?,?)').run(challenge,owner,app,now+PAIR);
+        return reply(201,{version:2,app,expiresAt:new Date(now+PAIR).toISOString()});
+      });
+    }
+    if(path.endsWith('/claim-login')){
+      const input=inputBody;
+      if(!input||!appValid(input.app)||!is(input.verifier,/^[A-Za-z0-9._~-]{43,128}$/))return reply(400,{error:'invalid_request'});
+      const challenge=proof(input.verifier),app=input.app;
+      return transaction(db,()=>{
+        const row=db.prepare('SELECT p.owner FROM home_red_login p JOIN konten c ON c.id=p.owner WHERE p.challenge=? AND p.app=? AND p.expires>? AND p.used=0 AND c.gesperrt=0').get(challenge,app,now);
+        if(!row||typeof row.owner!=='string')return reply(401,{error:'not_approved'});
+        db.prepare('UPDATE home_red_login SET used=1 WHERE challenge=?').run(challenge);
+        db.prepare('DELETE FROM home_red_session WHERE refresh_until<=?').run(now);
+        if(Number(db.prepare('SELECT COUNT(*) AS n FROM home_red_session WHERE owner=?').get(row.owner)?.n??0)>=256)return reply(429,{error:'session_limit'});
+        const c=credentials(now);
+        db.prepare('INSERT INTO home_red_session VALUES(?,?,?,?,?,?,?)').run(secret('session_'),row.owner,app,c.accessDigest,c.refreshDigest,c.accessUntil,c.refreshUntil);
+        return reply(200,responseTokens(app,c));
+      });
+    }
+    if(path.endsWith('/pair')||path.endsWith('/revoke')){
+      const who=await werFragt(ablage,{authorization:request.headers.get('authorization')??''});
+      if(!who?.sitzung)return reply(401,{error:'unauthorized'});
+      const owner=String(who.konto.id),input=inputBody;
+      if(!input||!appValid(input.app))return reply(400,{error:'invalid_request'});
+      const app=input.app;
+      if(path.endsWith('/revoke')){
+        const revoked=transaction(db,()=>{
+          const a=db.prepare('DELETE FROM home_red_session WHERE owner=? AND app=?').run(owner,app);
+          const b=db.prepare('DELETE FROM home_red_id WHERE owner=? AND app=?').run(owner,app);
+          db.prepare('DELETE FROM home_red_pair WHERE owner=? AND app=?').run(owner,app);
+          db.prepare('UPDATE home_red_login SET used=1 WHERE owner=? AND app=?').run(owner,app);
+          revokeRedShare(db,owner,app);
+          revokeRedStore(db,owner,app);
+          return Number(a.changes)+Number(b.changes);
+        });return reply(200,{revoked});
+      }
+      if(!is(input.challenge,/^[A-Za-z0-9_-]{43}$/))return reply(400,{error:'invalid_challenge'});
+      const challenge=input.challenge,code=secret('redpair_');
+      transaction(db,()=>{
+        db.prepare('DELETE FROM home_red_pair WHERE expires<=? OR (owner=? AND app=?)').run(now,owner,app);
+        db.prepare('INSERT INTO home_red_pair(digest,owner,app,challenge,expires) VALUES(?,?,?,?,?)').run(hash(code),owner,app,challenge,now+PAIR);
+      });
+      return reply(201,{version:2,app,code,expiresAt:new Date(now+PAIR).toISOString()});
+    }
+    const input=inputBody;
+    if(!input||!appValid(input.app))return reply(400,{error:'invalid_request'});
+    const app=input.app;
+    if(path.endsWith('/exchange')){
+      if(!is(input.code,/^redpair_[a-f0-9]{64}$/)||!is(input.verifier,/^[A-Za-z0-9._~-]{43,128}$/))return reply(400,{error:'invalid_request'});
+      const digest=hash(input.code),challenge=proof(input.verifier);
+      return transaction(db,()=>{
+        const row=db.prepare('SELECT p.owner FROM home_red_pair p JOIN konten c ON c.id=p.owner WHERE p.digest=? AND p.app=? AND p.challenge=? AND p.expires>? AND c.gesperrt=0').get(digest,app,challenge,now);
+        if(!row||typeof row.owner!=='string')return reply(401,{error:'invalid_pairing'});
+        db.prepare('DELETE FROM home_red_pair WHERE digest=?').run(digest);
+        db.prepare('DELETE FROM home_red_session WHERE refresh_until<=?').run(now);
+        if(Number(db.prepare('SELECT COUNT(*) AS n FROM home_red_session WHERE owner=?').get(row.owner)?.n??0)>=256)return reply(429,{error:'session_limit'});
+        const c=credentials(now);
+        db.prepare('INSERT INTO home_red_session VALUES(?,?,?,?,?,?,?)').run(secret('session_'),row.owner,app,c.accessDigest,c.refreshDigest,c.accessUntil,c.refreshUntil);
+        return reply(200,responseTokens(app,c));
+      });
+    }
+    if(!is(input.refreshToken,/^redrt_[a-f0-9]{64}$/))return reply(400,{error:'invalid_request'});
+    const digest=hash(input.refreshToken);
+    return transaction(db,()=>{
+      const row=db.prepare('SELECT s.id,s.refresh_until FROM home_red_session s JOIN konten c ON c.id=s.owner WHERE s.refresh_digest=? AND s.app=? AND s.refresh_until>? AND c.gesperrt=0').get(digest,app,now);
+      if(!row||typeof row.id!=='string'||typeof row.refresh_until!=='number'){
+        // A previously rotated credential for this app implies replay.
+        // Revoke only its session family, never unrelated devices/apps.
+        const used=db.prepare('SELECT session_id FROM home_red_refresh_used WHERE digest=? AND app=? AND expires>?').get(digest,app,now);
+        if(typeof used?.session_id==='string')db.prepare('DELETE FROM home_red_session WHERE id=? AND app=?').run(used.session_id,app);
+        return reply(401,{error:'invalid_refresh'});
+      }
+      db.prepare('DELETE FROM home_red_refresh_used WHERE expires<=?').run(now);
+      if(Number(db.prepare('SELECT COUNT(*) AS n FROM home_red_refresh_used WHERE session_id=?').get(row.id)?.n??0)>=4096){
+        db.prepare('DELETE FROM home_red_session WHERE id=?').run(row.id);
+        return reply(401,{error:'rotation_limit'});
+      }
+      db.prepare('INSERT INTO home_red_refresh_used(digest,session_id,app,expires) VALUES(?,?,?,?)').run(digest,row.id,app,row.refresh_until);
+      // Rotation is atomic; the previous access and refresh credentials stop working immediately.
+      const c=credentials(now,row.refresh_until);
+      db.prepare('UPDATE home_red_session SET access_digest=?,refresh_digest=?,access_until=? WHERE id=?').run(c.accessDigest,c.refreshDigest,c.accessUntil,row.id);
+      return reply(200,responseTokens(app,c));
+    });
+  };
+}
+
+/** Local operator command: revoke the selected app across all local accounts,
+ * including pending direct approvals and undelivered messages. */
+export function revokeRedAppEverywhere(db:DatabaseSync,app:string):number{
+  if(!appValid(app))throw Error('Unknown RED app');
+  return transaction(db,()=>{
+    const a=db.prepare('DELETE FROM home_red_id WHERE app=?').run(app);
+    const b=db.prepare('DELETE FROM home_red_session WHERE app=?').run(app);
+    db.prepare('DELETE FROM home_red_pair WHERE app=?').run(app);
+    db.prepare('UPDATE home_red_login SET used=1 WHERE app=?').run(app);
+    db.prepare('DELETE FROM home_red_share_message WHERE source=? OR target=?').run(app,app);
+    db.prepare('DELETE FROM home_red_share_grant WHERE source=? OR target=?').run(app,app);
+    db.prepare('DELETE FROM home_red_store_grant WHERE app=?').run(app);
+    return Number(a.changes)+Number(b.changes);
+  });
+}
