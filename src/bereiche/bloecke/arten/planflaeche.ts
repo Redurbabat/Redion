@@ -841,7 +841,7 @@ const Planflaeche = (() => {
           `${esc(a.name)}</option>`).join('') + '</select>' +
         `<button type="button" class="sp-kopf-knopf" data-a="zurueck" title="Rückgängig (Strg+Z)" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>${symbol('undo', 18)}</button>` +
         `<button type="button" class="sp-kopf-knopf" data-a="vorwaerts" title="Wiederholen (Strg+Y)" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>${symbol('redo', 18)}</button>` +
-        `<button type="button" class="sp-desktop-inspector sp-kopf-knopf" data-a="elektro-studio" title="Eigenschaften und Übersicht" aria-label="Eigenschaften und Übersicht" aria-expanded="${studioOffen}">${symbol('panelL', 18)}</button>` +
+        `<button type="button" class="sp-desktop-inspector sp-kopf-knopf" data-a="desktop-inspector" title="Eigenschaften und Übersicht" aria-label="Eigenschaften und Übersicht" aria-expanded="${studioOffen}">${symbol('panelL', 18)}</button>` +
         `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" ` +
         `aria-label="Bereiche" aria-haspopup="menu">✦<span class="sp-bereiche-wort"> Bereiche</span><span class="sp-bereiche-pfeil"> ▾</span></button>` +
         `<button type="button" class="sp-kopf-knopf" data-a="mehr" title="Mehr: Planart, Ansicht, Ausgabe" aria-label="Mehr" aria-haspopup="menu">${symbol('dots', 18)}</button>` +
@@ -3975,7 +3975,7 @@ const Planflaeche = (() => {
         geistEntfernen(); kopfMalen(); ansichtAnwenden();
         return;
       }
-      if (b.dataset.a === 'elektro-studio') {
+      if (b.dataset.a === 'elektro-studio' || b.dataset.a === 'desktop-inspector') {
         studioOffen = !studioOffen; studioPanel.hidden = !studioOffen;
         if (studioOffen) { paletteOffen = false; palette.hidden = true; wurzel.classList.remove('sp-palette-offen'); studioTab = 'eigenschaften'; }
         kopfMalen(); if (studioOffen) studioMalen(); return;
