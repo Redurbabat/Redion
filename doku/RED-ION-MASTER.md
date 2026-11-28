@@ -94,3 +94,5 @@ Die Windows-Builds 46163850149 und 46163850019 scheiterten an TS7006 im DPAPI-Te
 ## P0-Fortschritt: SSD-Mount-Identität
 
 Vorbereiteter Host-Preflight pinnt optional dedizierten Mountpoint + Dateisystem-UUID, prüft Bind-Subroot, Typ und Major/Minor und wiederholt Identitätsprüfung nach dm-crypt-Topologie. Compose-Bind mit `create_host_path: false` verhindert automatisch erzeugte Host-Pfade. Regression mit synthetischem Mount-JSON. Keine physische SSD-Prüfung, kein kontinuierlicher Guard, kein Schutz gegen bereits vorhandenen Ersatzordner ohne Preflight. Neue CI noch ausstehend.
+
+SSD-Preflight: zusätzlicher Linux-Shell-Regressionstest führt das tatsächliche Skript mit kontrollierten findmnt/lsblk-Ausgaben aus (korrekt, Ersatz-Mount, unverschlüsselt, UUID-Wechsel). Synthetische Daten bleiben unverändert. Kein echtes Mounten; Testausführung ausstehend. Vorherige Bibliotheks-CI 46163850112 grün, sporadischer Fehler nicht abschliessend erklärt.
