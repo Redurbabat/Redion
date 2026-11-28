@@ -13,6 +13,7 @@ import {resetHomeAccess} from './home/recovery.ts';
 import {createHomeMonitor} from './home/monitor.ts';
 import {prepareRedReminders,createRedReminders,REMINDER_ROUTES} from './home/reminders.ts';
 import {startRedReminderScheduler} from './home/reminder-scheduler.ts';
+import {createMaintenanceReview} from './home/maintenance-reviews.ts';
 import {createRedAppCenter} from './home/app-center.ts';
 import {homeEcosystemCapabilities} from './home/ecosystem.ts';
 import {prepareRedStore,createRedStore,STORE_ROUTES} from './home/red-store.ts';
@@ -45,7 +46,8 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
   prepareRedShare(store.sqlite);
   prepareRedStore(store.sqlite);
   prepareRedReminders(store.sqlite);
-  const reminders=createRedReminders(store.sqlite,store.ablage);
+  const maintenanceReview=options.enableReminderScheduler?createMaintenanceReview(store.sqlite,options.dataDir):undefined;
+  const reminders=createRedReminders(store.sqlite,store.ablage,Date.now,maintenanceReview);
   const redStore=createRedStore(store.sqlite,store.ablage);
   const share=createRedShare(store.sqlite,store.ablage);
   const redIdV2=createRedIdV2(store.sqlite,store.ablage);
@@ -138,7 +140,7 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
     try{const response=await route(request);monitor.record(response.status,performance.now()-start);return response;}
     catch(error){monitor.record(500,performance.now()-start);throw error;}
   }
-  const reminderScheduler=options.enableReminderScheduler?startRedReminderScheduler(store.sqlite,{onError:()=>console.error('RED reminder scheduler failed')}):undefined;
+  const reminderScheduler=options.enableReminderScheduler?startRedReminderScheduler(store.sqlite,{...(maintenanceReview?{review:maintenanceReview}:{}),onError:()=>console.error('RED reminder scheduler failed')}):undefined;
   return {handle,store,blobs,close:()=>{reminderScheduler?.close();live.close();store.close();}};
 }
 

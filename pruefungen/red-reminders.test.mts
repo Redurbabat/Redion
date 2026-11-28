@@ -8,7 +8,7 @@ import {approveHomeDevice} from '../server/home/pairing.ts';
 import {createRedReminders} from '../server/home/reminders.ts';
 import {createRedPairProof,type RedSession} from '../red-sdk/client.mts';
 const DAY=86400000;
-type Rule={id:string;kind:string;period:string;firstDue:number;nextDue:number|null;pendingDue:number|null;lastAck:number|null};
+type Rule={id:string;kind:string;period:string;firstDue:number;nextDue:number|null;pendingDue:number|null;lastAck:number|null;review?:{due:number;measuredAt:number;status:string;result:unknown}|null};
 test('maintenance automation is scoped, persistent, idempotent and coalesces missed repeats',async()=>{
  const root=await mkdtemp(join(tmpdir(),'red-reminder-')),origin='https://home.example.test';
  let s=await openHomeServer({dataDir:root,origin,webOrigins:'https://web.example.test'});
@@ -73,8 +73,14 @@ test('opt-in server lifecycle catches up stored reminders without polling',async
   assert.equal((await list())?.pendingDue,null);
   s.close();s=await openHomeServer({dataDir:root,origin,enableReminderScheduler:true});
   assert.equal((await list())?.pendingDue,firstDue);
+  const review=(await list())?.review;
+  assert.equal(review?.due,firstDue);assert.ok(['ok','warning','critical'].includes(review?.status??''));
   assert.equal((await list())?.nextDue,null);
   assert.equal((await call('/home/reminders/ack',{id,due:firstDue},token)).status,200);
   assert.equal((await list())?.pendingDue,null);
+  assert.deepEqual((await list())?.review,review);
+  assert.equal((await call('/home/reminders/cancel',{id},token)).status,200);
+  assert.equal((await list()),undefined);
+  assert.equal(s.store.sqlite.prepare('SELECT count(*) AS n FROM home_red_maintenance_review').get()?.n,0);
  }finally{s.close();await rm(root,{recursive:true,force:true});}
 });

@@ -548,3 +548,7 @@ Das Owner-Dashboard liefert zusätzlich `storageReview` mit Status `ok`, `warnin
 ### RED Security – read-only grant review
 
 Das Owner-Dashboard liefert `grantReview` mit konto-isolierten Zählern für aktive und innerhalb von 24 Stunden auslaufende Sync-/Datei- und Share-Freigaben sowie RED-ID-Zugänge. Abgelaufene Grants werden nicht als aktiv gezählt. Die Bewertung verändert oder verlängert keine Freigabe; `ok` bedeutet nur, dass im betrachteten Zeitfenster keine aktiven Freigaben auslaufen, nicht dass der Server allgemein sicher ist. Keine Tokens, Grant-IDs oder Daten anderer Konten. Automatisierte Prüfjobs und UI folgen separat.
+
+### RED Automation – automatische Read-only-Prüfungen
+
+Bei aktiviertem `REDION_ENABLE_REMINDER_SCHEDULER=1` werden neue fällige Speicher- und Freigabehinweise zusammen mit einem read-only Prüfresultat atomar gespeichert. Auch manuelles Polling verwendet in diesem Modus dieselbe Logik. Pro Regel wird das letzte Ergebnis (`review` in list/poll) mit Fälligkeits- und Messzeit gespeichert; ACK erhält es, Cancel löscht es. Bereits offene Hinweise werden nicht nachträglich ausgeführt. Keine wiederholte Messung solange dieselbe offene Instanz erhalten bleibt. Speicher misst das serverseitige Dateisystem, keine LUKS-/Mount-Identität. Freigaben sind konto-isoliert. Backup/Update bleiben manuelle Hinweise. Kein Push, keine Schreiboperationen an Nutzerdaten, keine Netzaufrufe oder Befehle; nur die Ergebnisdaten werden lokal gespeichert. Vollständige Historie und Darstellung der Ergebnisse in nativen Apps bleiben offen.

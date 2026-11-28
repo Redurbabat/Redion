@@ -1,7 +1,8 @@
 import type {DatabaseSync} from 'node:sqlite';
 import type {Ablage} from '../typen.ts';
 import {werFragt} from '../kern.ts';
-import {advanceRedReminders} from './reminder-scheduler.ts';
+import {advanceRedReminders,type ReminderReview} from './reminder-scheduler.ts';
+import {prepareMaintenanceReviews} from './maintenance-reviews.ts';
 export const REMINDER_ROUTES=['/home/reminders/list','/home/reminders/create','/home/reminders/poll','/home/reminders/ack','/home/reminders/cancel'] as const;
 const DAY=86400000;
 const MAX_RULES=64;
@@ -19,13 +20,14 @@ async function read(req:Request):Promise<Record<string,unknown>|null>{
 }
 export function prepareRedReminders(db:DatabaseSync){
  db.exec('CREATE TABLE IF NOT EXISTS home_red_reminder(owner TEXT NOT NULL,id TEXT NOT NULL,kind TEXT NOT NULL,period TEXT NOT NULL,first_due INTEGER NOT NULL,next_due INTEGER,pending_due INTEGER,last_ack INTEGER,PRIMARY KEY(owner,id)); CREATE INDEX IF NOT EXISTS home_red_reminder_due ON home_red_reminder(next_due,owner,id);');
+ prepareMaintenanceReviews(db);
 }
 function transaction<T>(db:DatabaseSync,fn:()=>T):T{db.exec('BEGIN IMMEDIATE');try{const v=fn();db.exec('COMMIT');return v;}catch(e){db.exec('ROLLBACK');throw e;}}
 /** Owner-only maintenance reminders. Poll advances time rules, never runs
  * commands, opens other apps, sends network requests or touches backups.
  * One pending notification per rule; missed periods are coalesced. */
-export function createRedReminders(db:DatabaseSync,ablage:Ablage,clock=Date.now){
- const inventory=(owner:string)=>db.prepare('SELECT id,kind,period,first_due AS firstDue,next_due AS nextDue,pending_due AS pendingDue,last_ack AS lastAck FROM home_red_reminder WHERE owner=? ORDER BY first_due,id').all(owner);
+export function createRedReminders(db:DatabaseSync,ablage:Ablage,clock=Date.now,review?:ReminderReview){
+ const inventory=(owner:string)=>db.prepare('SELECT r.id,r.kind,r.period,r.first_due AS firstDue,r.next_due AS nextDue,r.pending_due AS pendingDue,r.last_ack AS lastAck,m.due AS reviewDue,m.measured_at AS reviewMeasuredAt,m.status AS reviewStatus,m.result AS reviewResult FROM home_red_reminder r LEFT JOIN home_red_maintenance_review m ON m.owner=r.owner AND m.id=r.id WHERE r.owner=? ORDER BY r.first_due,r.id').all(owner).map(({reviewDue,reviewMeasuredAt,reviewStatus,reviewResult,...rule})=>({...rule,review:reviewResult===null?null:{due:reviewDue,measuredAt:reviewMeasuredAt,status:reviewStatus,result:JSON.parse(String(reviewResult))}}));
  return async(req:Request):Promise<Response>=>{
   const path=new URL(req.url).pathname,action=path.split('/').at(-1);
   if(!(REMINDER_ROUTES as readonly string[]).includes(path))return reply(404,{error:'not_found'});
@@ -39,7 +41,7 @@ export function createRedReminders(db:DatabaseSync,ablage:Ablage,clock=Date.now)
   if(!input)return reply(400,{error:'invalid_request'});
   if(action==='poll'){
    if(!exact(input,[]))return reply(400,{error:'invalid_poll'});
-   advanceRedReminders(db,now,owner);
+   advanceRedReminders(db,now,owner,review);
    return reply(200,{version:1,asOf:now,rules:inventory(owner)});
   }
   if(!idValid(input.id))return reply(400,{error:'invalid_id'});
@@ -59,8 +61,11 @@ export function createRedReminders(db:DatabaseSync,ablage:Ablage,clock=Date.now)
   }
   if(action==='cancel'){
    if(!exact(input,['id']))return reply(400,{error:'invalid_cancel'});
-   db.prepare('DELETE FROM home_red_reminder WHERE owner=? AND id=?').run(owner,id);
-   return reply(200,{ok:true});
+   return transaction(db,()=>{
+    db.prepare('DELETE FROM home_red_maintenance_review WHERE owner=? AND id=?').run(owner,id);
+    db.prepare('DELETE FROM home_red_reminder WHERE owner=? AND id=?').run(owner,id);
+    return reply(200,{ok:true});
+   });
   }
   if(!exact(input,['id','due'])||!integer(input.due))return reply(400,{error:'invalid_ack'});
   const due=input.due;
