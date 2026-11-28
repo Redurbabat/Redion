@@ -101,6 +101,8 @@ Details und Testbefehle: [RED ION Entwicklungsphase 3](doku/RED-ION-PHASE-3.md).
 
 ## Roadmap
 
+[Gemeinsamer Master-Auftrag für alle vier offenen Issues](doku/RED-ION-MASTER.md).
+
 | Arbeitsbereich | Nächste Abnahme |
 |---|---|
 | RED Core | Messbare Startzeit, Speicherverbrauch, Fehler- und Datenintegrität |

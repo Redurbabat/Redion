@@ -5,6 +5,7 @@ name: RED ION MCP Connector Contract
 on:
   pull_request:
     paths:
+      - 'doku/RED-ION-MASTER.md'
       - 'server/mcp/**'
       - 'skripte/mcp-connector-vertrag.mts'
       - 'pruefungen/redion-mcp-connector-vertrag.mts'

@@ -19,7 +19,7 @@ Stand: 28. November 2026. Ein Entwicklungs-PR: [#263](https://github.com/Redurba
 
 ## Gemeinsames Prüfgate
 
-Diese Datei ist ein zusätzlicher Pfadtrigger für vorhandene Workflows: Home Server, Live Sync, Bibliothek, Editor, Dokument, Mobile Navigation, iOS-Regression und native Windows Preview. Zusätzlich Phase-3-Tests mit echter Chromium-Wiedergabe und Node unter Linux/Windows. Weitere native Builds, SDK und MCP-Verträge werden separat in das Gate aufgenommen. Keine Tests deaktivieren.
+Diese Datei ist ein zusätzlicher Pfadtrigger für vorhandene Workflows: Home Server, Live Sync, Bibliothek, Editor, Dokument, Mobile Navigation, iOS-Regression und native Windows Preview. Zusätzlich Phase-3-Tests mit echter Chromium-Wiedergabe und Node unter Linux/Windows. Zusätzlich Cloud MCP Runtime, MCP Connector, iOS Glass Dock, Apple-/Android-SDK, Windows-Paket und unsignierter IPA-Build. Die Windows-/IPA-Builds bleiben für diesen ausdrücklich vorgesehenen Same-Repo-Branch begrenzt. Kein Produktionsdeployment oder Signieren. Keine Tests deaktivieren.
 
 ## Abnahme
 

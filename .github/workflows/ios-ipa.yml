@@ -5,6 +5,7 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - 'doku/RED-ION-MASTER.md'
       - '.github/workflows/ios-ipa.yml'
       - '.github/workflows/affine-integration.yml'
       - '.github/workflows/windows-app.yml'
@@ -14,7 +15,7 @@ permissions:
 
 jobs:
   ios:
-    if: github.event_name != 'pull_request' || (github.event.pull_request.number == 232 || github.event.pull_request.number == 236)
+    if: github.event_name != 'pull_request' || (github.event.pull_request.number == 232 || github.event.pull_request.number == 236 || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feat/redion-phase3'))
     runs-on: macos-26
     timeout-minutes: 90
     steps:
