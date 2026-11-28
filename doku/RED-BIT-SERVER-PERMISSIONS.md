@@ -117,3 +117,17 @@ vor Ausführung prüfen. Ergebnis ist eine Client-Quittung, kein unabhängiger
 Nachweis der tatsächlichen Wiedergabe. Keine Titel, Dateien oder Tokens im
 Auftragsdatensatz. Native App, Dashboard-Steuerung und MCP noch nicht angebunden.
 Die Permission-API meldet bis zur Abnahme weiterhin remoteAvailable:false.
+
+## Dashboard-Musiksteuerung
+
+RED ION → Einstellungen → RED Home Server → RED Bit · Musiksteuerung.
+Sitzungen und Steuerungsfreigaben manuell abrufen, Zielgerät auswählen,
+separate 15-Minuten-Freigabe erteilen. Einen der vier Befehle bestätigen.
+In RED Bit → RED Home Server → Server-Musiksteuerung den Auftrag abrufen
+und den konkreten Befehl lokal bestätigen. Innerhalb der 30-Sekunden-Frist
+im Dashboard das Ergebnis abrufen. Keine automatische Wiederholung.
+Eine bestätigte App-Anforderung ist kein unabhängiger Wiedergabenachweis.
+Nach unklarem Ausgang zuerst Wiedergabe auf dem Zielgerät prüfen.
+Auftrags-IDs bleiben nur im Speicher der geöffneten Dashboard-Ansicht;
+nach Navigation ist eine alte Quittung dort nicht mehr abrufbar.
+Native Gegenstelle: RED Bit PR #63. CI und echte Geräteabnahme ausstehend.
