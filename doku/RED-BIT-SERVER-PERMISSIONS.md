@@ -131,3 +131,74 @@ Nach unklarem Ausgang zuerst Wiedergabe auf dem Zielgerät prüfen.
 Auftrags-IDs bleiben nur im Speicher der geöffneten Dashboard-Ansicht;
 nach Navigation ist eine alte Quittung dort nicht mehr abrufbar.
 Native Gegenstelle: RED Bit PR #63. CI und echte Geräteabnahme ausstehend.
+
+## MCP-Delegation und Remote-Werkzeuge
+
+Nur bei REDION_ENABLE_MCP=1 und REDION_ENABLE_RED_BIT_MCP=1 sowie den
+jeweils notwendigen Job-/Berechtigungsflags verfügbar.
+Owner-Sitzung: GET /home/red-bit/mcp-grants, POST /home/red-bit/mcp-grant
+und /home/red-bit/mcp-revoke mit exakt grantId, sessionId, mode
+(status oder transport), confirm:true. Bindung an eine aktive OAuth-Freigabe
+und deren Epoch, ein eigenes RED-Bit-Gerät und den jeweiligen Geräte-Grant.
+Maximal fünf Minuten; keine Verlängerung über die unterliegenden Rechte.
+Serverstart, OAuth-Neufreigabe, Geräte-Widerruf oder -Erneuerung entwerten
+die Delegation. Keine Tokens oder Epoch in den API-Antworten.
+Bestehende RED-ION-Dokumentenrechte allein genügen nicht.
+toolsAvailable:true kennzeichnet den aktivierten Pilot, nicht die tatsächliche Geräteverfügbarkeit.
+Die Tools werden nur am privaten Home-MCP-Endpunkt und nur bei einer gültigen
+Delegation sichtbar. Die ChatGPT-Abnahme steht noch aus.
+
+### MCP-Aufträge
+
+Nach separater Owner-Delegation zeigt redbit_list_devices die freigegebenen
+Sitzungen. redbit_read_status, redbit_play, redbit_pause, redbit_next und
+redbit_previous benötigen sessionId, requestId (32 zufällige lowercase
+Hex-Zeichen) und confirm:true. Sie erstellen einen Auftrag; sie melden
+keinen Wiedergabeerfolg. Auf dem Zielgerät ist die lokale Bestätigung
+weiter erforderlich. redbit_get_job_result benötigt sessionId und jobId,
+nur für Aufträge derselben OAuth-Verbindung. Kein automatischer Retry.
+Widerruf oder Erneuerung der Delegation, Gerätefreigabe oder OAuth-Epoch
+entwertet ausstehende Aufträge. Eine bereits erteilte Ausführungsfreigabe
+kann nicht zurückgerufen werden. Replay-Schutz ist auf 120 Sekunden begrenzt;
+keine globale Exactly-once-Garantie. Einzelne OAuth-Token-Widerrufe ohne
+Grant-Widerruf entwerten bereits angelegte Jobs nicht automatisch.
+Die öffentliche Worker-MCP-Schnittstelle erhält keine RED-Bit-Werkzeuge.
+
+### KI-Freigaben im Dashboard
+
+RED ION → Einstellungen → RED Home Server → RED Bit · KI-Freigaben.
+Zuerst RED Bit koppeln, den gewünschten Geräte-Grant erteilen und die KI
+über den privaten Home-MCP-OAuth-Flow verbinden. Dann KI-Verbindungen,
+Geräte und Freigaben abrufen. Die konkrete OAuth-Verbindung, Gerätesitzung
+und Berechtigung (Status oder Transport) auswählen und bestätigen.
+Aktive Delegationen mit Ablaufzeit werden angezeigt; dieselbe Auswahl
+kann einzeln widerrufen werden. Kein automatischer Grant, kein automatisches
+Verlängern. Der Server prüft jede Anfrage erneut; angezeigte Rechte sind
+eine Momentaufnahme. Ein MCP-Client kann nach Freigabe einen erneuten
+tools/list-Abruf benötigen. Eine Verbindung mit ChatGPT setzt einen
+erreichbaren, vertrauenswürdigen HTTPS-Endpunkt und kompatiblen Client voraus;
+dieses Dashboard veröffentlicht keinen Server und verbindet ChatGPT nicht.
+
+### Durchgängige Integration und Geräteabnahme
+
+Die automatisierte Prüfung in pruefungen/red-bit-permissions.test.mts
+verwendet den tatsächlichen Home-Router mit temporärer SQLite-Datenbank,
+OAuth-Registrierung, PKCE, einmaligem Consent-Login, Token-Austausch,
+tools/list, tools/call, RED-ID-Gerätepaarung und der Transport-API.
+Sie prüft auch das Fehlen der Werkzeuge vor Delegation, Replay-Ablehnung
+und das Abbrechen ausstehender Aufträge bei OAuth-Grant-Widerruf.
+Die simulierte Gerätequittung beweist keine hörbare Wiedergabe.
+
+Manuelle Abnahme erst nach grüner CI:
+1. Privaten Home Server mit vertrauenswürdigem HTTPS und den benötigten
+   expliziten Pilotflags starten. Keine ungeschützten Verwaltungsrouten
+   veröffentlichen. MCP-Client muss den OAuth-Endpunkt erreichen können.
+2. RED Bit aus dem passenden Apple-Branch installieren, RED ID koppeln
+   und die lokale Transport-/Statusfreigabe bewusst aktivieren.
+3. Kompatiblen MCP-Client am Home-Endpunkt /mcp/cloud anmelden.
+   Geräte- und KI-Delegation im RED ION Dashboard erteilen.
+4. Werkzeugliste neu abrufen; Statusauftrag erstellen, in RED Bit
+   bestätigen, Ergebnis abrufen. Danach genau einen Musikbefehl testen.
+5. KI-Freigabe widerrufen und prüfen, dass weitere Aufträge abgelehnt
+   werden. Keine automatische Wiederholung bei unklarem Ergebnis.
+Eine tatsächliche ChatGPT-Verbindung ist damit nicht automatisch eingerichtet.

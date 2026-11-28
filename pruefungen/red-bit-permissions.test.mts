@@ -5,14 +5,18 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {openHomeServer} from '../server/home-server.ts';
 import {approveHomeDevice} from '../server/home/pairing.ts';
+import {createRedBitMcpTools} from '../server/home/red-bit-mcp-tools.ts';
+import {redBitMcpAllowed} from '../server/home/red-bit-mcp-grants.ts';
+import {issueHomeConsentCode} from '../server/home/consent.ts';
+import {pkceChallenge} from '../server/mcp/oauth.ts';
 import {createRedPairProof} from '../red-sdk/client.mts';
 
 const origin='https://redion.example.test';
 const grant='/home/red-bit/grant',revoke='/home/red-bit/revoke',grants='/home/red-bit/grants',permission='/red-bit/v1/permission';
 
-async function fixture(enabled:boolean,run:(f:any)=>Promise<void>,jobs=false,transport=false,transportJobs=false){
+async function fixture(enabled:boolean,run:(f:any)=>Promise<void>,jobs=false,transport=false,transportJobs=false,mcp=false){
  const root=await mkdtemp(join(tmpdir(),'red-bit-permissions-'));
- const service=await openHomeServer({dataDir:root,origin,enableRedBitPermissions:enabled,enableRedBitReadJobs:jobs,enableRedBitTransportPermissions:transport,enableRedBitTransportJobs:transportJobs});
+ const service=await openHomeServer({dataDir:root,origin,enableRedBitPermissions:enabled,enableRedBitReadJobs:jobs,enableRedBitTransportPermissions:transport,enableRedBitTransportJobs:transportJobs,enableMcp:mcp,enableRedBitMcp:mcp});
  try{
   const send=(path:string,init?:RequestInit)=>service.handle(new Request(origin+path,init));
   const get=(path:string,token?:string)=>send(path,{headers:token?{Authorization:'Bearer '+token}:{}});
@@ -309,4 +313,150 @@ test('Transport cancellation, expiry and grant renewal prevent authorization',as
   service.store.sqlite.prepare('UPDATE home_red_bit_transport_job SET expires=? WHERE id=?').run(Date.now()-1,c);
   assert.equal((await post(trAuthorize,{id:c,command:'play',confirm:true},bit.accessToken)).status,409);
  },false,true,true);
+});
+
+test('MCP delegation requires separate owner confirmation, matching OAuth epoch and device permission',async()=>{
+ await fixture(true,async({service,get,post,token,pair})=>{
+  const bit=await pair('red-bit'),other=await pair('red-bit');
+  const db=service.store.sqlite;
+  const owner=String(db.prepare('SELECT owner FROM home_red_session WHERE id=?').get(bit.sessionId).owner);
+  const grantId='grant:'+'a'.repeat(64),clientId='client-fixture';
+  const oauth={userId:owner,clientId,epoch:'epoch-1',active:true,remember:false,scopes:['redion:read'],workspaceIds:[]};
+  db.prepare("INSERT INTO mcp_state(key,kind,data,expires,revision) VALUES(?,'grant',?,?,1)").run(grantId,JSON.stringify(oauth),Date.now()+600000);
+  const principal={userId:owner,clientId,grantId,scopes:['redion:read' as const],workspaceIds:[]};
+  const enabled=new Set<'status'|'transport'>(['status','transport']);
+  const body={grantId,sessionId:bit.sessionId,mode:'status',confirm:true};
+  const allow=()=>redBitMcpAllowed(db,principal,bit.sessionId,'status',enabled);
+  assert.equal(allow(),false);
+  assert.equal((await post('/home/red-bit/mcp-grant',body,token)).status,403);
+  await post(grant,{sessionId:bit.sessionId,confirm:true},token);
+  assert.equal((await post('/home/red-bit/mcp-grant',body,bit.accessToken)).status,401);
+  assert.equal((await post('/home/red-bit/mcp-grant',{...body,confirm:false},token)).status,400);
+  const created=await post('/home/red-bit/mcp-grant',body,token);
+  assert.equal(created.status,201);
+  const receipt=await created.json() as any;
+  assert.equal(receipt.toolsAvailable,true);
+  assert.ok(receipt.expiresAt<=Date.now()+300000);
+  assert.equal(allow(),true);
+  assert.equal(redBitMcpAllowed(db,principal,other.sessionId,'status',enabled),false);
+  assert.equal(redBitMcpAllowed(db,principal,bit.sessionId,'transport',enabled),false);
+  assert.equal(redBitMcpAllowed(db,{...principal,clientId:'other'},bit.sessionId,'status',enabled),false);
+  const listed=await (await get('/home/red-bit/mcp-grants',token)).json() as any;
+  assert.equal(listed.grants.length,1);assert.equal(Object.hasOwn(listed.grants[0],'epoch'),false);
+  db.prepare('UPDATE mcp_state SET data=? WHERE key=?').run(JSON.stringify({...oauth,epoch:'epoch-2'}),grantId);
+  assert.equal(allow(),false);
+  await post('/home/red-bit/mcp-grant',body,token);
+  assert.equal(allow(),true);
+  await post(grant,{sessionId:bit.sessionId,confirm:true},token);
+  assert.equal(allow(),false);
+  await post('/home/red-bit/mcp-grant',body,token);
+  assert.equal((await post('/home/red-bit/mcp-revoke',body,token)).status,200);
+  assert.equal(allow(),false);
+ },true,true,true,true);
+});
+test('MCP delegation is disabled by default despite device permissions',async()=>{
+ await fixture(true,async({get,token})=>{
+  assert.equal((await get('/home/red-bit/mcp-grants',token)).status,404);
+ },true,true,true);
+});
+
+test('Delegated MCP tools queue actual device jobs, isolate results and cancel on revocation',async()=>{
+ await fixture(true,async({service,post,token,pair})=>{
+  const bit=await pair('red-bit'),db=service.store.sqlite;
+  const owner=String(db.prepare('SELECT owner FROM home_red_session WHERE id=?').get(bit.sessionId).owner);
+  const grantId='grant:'+'c'.repeat(64),clientId='mcp-fixture',epoch='epoch-a';
+  const oauth={userId:owner,clientId,epoch,active:true,remember:false,scopes:['redion:read'],workspaceIds:[]};
+  db.prepare("INSERT INTO mcp_state(key,kind,data,expires,revision) VALUES(?,'grant',?,?,1)").run(grantId,JSON.stringify(oauth),Date.now()+600000);
+  const p={userId:owner,clientId,grantId,scopes:['redion:read' as const],workspaceIds:[]};
+  const tools=createRedBitMcpTools(db,new Set(['status','transport'] as const));
+  const sessionId=bit.sessionId,base={sessionId,confirm:true},delegation={...base,grantId,mode:'status'};
+  const args={...base,requestId:'1'.repeat(32)};
+  assert.deepEqual(tools.list(p),[]);
+  assert.throws(()=>tools.call(p,'redbit_read_status',args));
+  await post(grant,base,token);
+  await post('/home/red-bit/mcp-grant',delegation,token);
+  assert.ok(tools.list(p).some(t=>t.name==='redbit_read_status'));
+  assert.ok(!tools.list(p).some(t=>t.name==='redbit_play'));
+  const job=tools.call(p,'redbit_read_status',args) as {jobId:string};
+  assert.throws(()=>tools.call(p,'redbit_read_status',args));
+  assert.throws(()=>tools.call(p,'redbit_play',{...args,requestId:'2'.repeat(32)}));
+  const claim=await (await post(claimJob,{confirm:true},bit.accessToken)).json() as any;
+  assert.equal(claim.job.id,job.jobId);
+  await post(completeJob,{id:job.jobId,status},bit.accessToken);
+  assert.equal((tools.call(p,'redbit_get_job_result',{sessionId,jobId:job.jobId}) as {state:string}).state,'completed');
+  assert.throws(()=>tools.call({...p,grantId:'grant:'+'d'.repeat(64)},'redbit_get_job_result',{sessionId,jobId:job.jobId}));
+  await post(transportGrant,base,token);
+  await post('/home/red-bit/mcp-grant',{...delegation,mode:'transport'},token);
+  const play=tools.call(p,'redbit_play',{...args,requestId:'3'.repeat(32)}) as {jobId:string};
+  const claimed=await (await post(trClaim,{confirm:true},bit.accessToken)).json() as any;
+  assert.equal(claimed.job.id,play.jobId);
+  await post('/home/red-bit/mcp-revoke',{...delegation,mode:'transport'},token);
+  assert.equal((await post(trAuthorize,{id:play.jobId,command:'play',confirm:true},bit.accessToken)).status,409);
+  assert.throws(()=>tools.call(p,'redbit_get_job_result',{sessionId,jobId:play.jobId}));
+  const next=tools.call(p,'redbit_read_status',{...args,requestId:'4'.repeat(32)}) as {jobId:string};
+  db.prepare('UPDATE mcp_state SET data=? WHERE key=?').run(JSON.stringify({...oauth,epoch:'new'}),grantId);
+  assert.deepEqual(await (await post(claimJob,{confirm:true},bit.accessToken)).json(),{version:1,job:null});
+  assert.throws(()=>tools.call(p,'redbit_get_job_result',{sessionId,jobId:next.jobId}));
+ },true,true,true,true);
+});
+
+test('End-to-end Home MCP OAuth, separate delegation and RED Bit device command lifecycle',async()=>{
+ await fixture(true,async({service,send,get,post,token,pair})=>{
+  const bit=await pair('red-bit'),sessionId=bit.sessionId;
+  const owner=String(service.store.sqlite.prepare('SELECT owner FROM home_red_session WHERE id=?').get(sessionId).owner);
+  await service.store.ablage.setze('bereiche',{id:'redbit-e2e',name:'Fixture',besitzer:owner});
+  const redirect='https://client.example.test/callback',resource=origin+'/mcp/cloud';
+  const registration=await post('/register',{client_name:'RED Bit integration fixture',redirect_uris:[redirect],grant_types:['authorization_code'],token_endpoint_auth_method:'none'});
+  assert.equal(registration.status,201);
+  const {client_id}=await registration.json() as {client_id:string};
+  const verifier='v'.repeat(64);
+  const target='/mcp/authorize?'+new URLSearchParams({client_id,redirect_uri:redirect,response_type:'code',resource,scope:'redion:read',code_challenge:await pkceChallenge(verifier),code_challenge_method:'S256',state:'redbit-e2e'});
+  const form=(path:string,body:Record<string,string>,cookie?:string)=>send(path,{method:'POST',headers:{Origin:origin,'Content-Type':'application/x-www-form-urlencoded',...(cookie?{Cookie:cookie}:{})},body:new URLSearchParams(body)});
+  const login=await form('/home/mcp-login',{code:issueHomeConsentCode(service.store.sqlite),target});
+  assert.equal(login.status,303);
+  const cookie=login.headers.get('Set-Cookie')!.split(';')[0]!;
+  const html=await (await send(target,{headers:{Cookie:cookie}})).text();
+  const requestId=/name="requestId" value="([^"]+)"/.exec(html)?.[1],csrf=/name="csrf" value="([^"]+)"/.exec(html)?.[1];
+  assert.ok(requestId&&csrf);
+  const approved=await form('/mcp/authorize',{requestId,csrf,decision:'allow',workspace:'redbit-e2e'},cookie);
+  assert.equal(approved.status,303);
+  const code=new URL(approved.headers.get('Location')!).searchParams.get('code')!;
+  const exchanged=await form('/token',{grant_type:'authorization_code',client_id,code,redirect_uri:redirect,code_verifier:verifier,resource});
+  assert.equal(exchanged.status,200);
+  const {access_token}=await exchanged.json() as {access_token:string};
+  let seq=0;
+  const rpc=async(method:string,params:object={})=>{
+   const response=await send('/mcp/cloud',{method:'POST',headers:{Authorization:'Bearer '+access_token,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:++seq,method,params})});
+   assert.equal(response.status,200);return (await response.json() as any).result;
+  };
+  const call=(name:string,args:object)=>rpc('tools/call',{name,arguments:args});
+  const names=async()=> (await rpc('tools/list')).tools.map((tool:{name:string})=>tool.name) as string[];
+  assert.ok(!(await names()).some(n=>n.startsWith('redbit_')));
+  const args={sessionId,requestId:'f'.repeat(32),confirm:true};
+  assert.equal((await call('redbit_play',args)).isError,true);
+  const inventory=await (await get('/home/mcp-hub/connections',token)).json() as any;
+  const grantId=inventory.connections[0].id;
+  const base={sessionId,confirm:true};
+  assert.equal((await post(transportGrant,base,token)).status,201);
+  assert.equal((await post('/home/red-bit/mcp-grant',{...base,grantId,mode:'transport'},access_token)).status,401);
+  assert.equal((await post('/home/red-bit/mcp-grant',{...base,grantId,mode:'transport'},token)).status,201);
+  const available=await names();
+  for(const name of ['redbit_play','redbit_pause','redbit_next','redbit_previous','redbit_list_devices','redbit_get_job_result'])assert.ok(available.includes(name),name);
+  assert.ok(!available.includes('redbit_read_status'));
+  const job=(await call('redbit_play',args)).structuredContent;
+  assert.equal(job.state,'pending');assert.equal(job.playbackVerified,false);
+  assert.equal((await call('redbit_play',args)).isError,true);
+  const claim=await (await post(trClaim,{confirm:true},bit.accessToken)).json() as any;
+  assert.equal(claim.job.id,job.jobId);assert.equal(claim.job.command,'play');
+  assert.equal((await post(trAuthorize,{id:job.jobId,command:'play',confirm:true},bit.accessToken)).status,200);
+  assert.equal((await post(trComplete,{id:job.jobId,outcome:'executed'},bit.accessToken)).status,200);
+  const result=(await call('redbit_get_job_result',{sessionId,jobId:job.jobId})).structuredContent;
+  assert.equal(result.outcome,'executed');assert.equal(result.playbackVerified,false);
+  const pending=(await call('redbit_next',{...args,requestId:'e'.repeat(32)})).structuredContent;
+  assert.equal(pending.state,'pending');
+  assert.equal((await post('/home/mcp-hub/revoke',{id:grantId,confirm:true},token)).status,200);
+  assert.deepEqual(await (await post(trClaim,{confirm:true},bit.accessToken)).json(),{version:1,job:null});
+  const denied=await send('/mcp/cloud',{method:'POST',headers:{Authorization:'Bearer '+access_token,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:99,method:'tools/list'})});
+  assert.equal(denied.status,401);
+ },true,true,true,true);
 });

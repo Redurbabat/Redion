@@ -6,7 +6,7 @@
 import {ablageD1} from '../ablage.ts';
 import {rolleAuf,darf} from '../kern.ts';
 import {torModus,nachweisAusAnfrage,zerlegeNachweis} from '../sicherheit/tor.ts';
-import {createMcpOAuth} from './oauth.ts';
+import {createMcpOAuth,type McpPrincipal} from './oauth.ts';
 import {createMcpOAuthHttp,type CloudUser} from './oauth-http.ts';
 import {mcpStateD1,type McpDatabase} from './state.ts';
 import {CloudMcpToolError,createCloudActions,visibleCloudTools} from './cloud-tools.ts';
@@ -34,8 +34,9 @@ const rpcError=(id:string|number|null,code:number,message:string)=>json({jsonrpc
 const bodyLimit=32768;
 const homeCapabilityTool={name:'redion_get_home_ecosystem_capabilities',description:'Read the private Home Server capability catalog. No app data, credentials or administrative grants are returned.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{title:'RED Home Server capabilities',readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}};
 const protocolVersions:readonly string[]=CLOUD_MCP_PROTOCOL_VERSIONS;
+export type LocalMcpTools={list:(p:McpPrincipal)=>unknown[];has:(name:string)=>boolean;call:(p:McpPrincipal,name:string,args:Record<string,unknown>)=>unknown};
 
-export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,accessVerified=false, localIdentify?: (request:Request)=>Promise<CloudUser|null>, localCapabilities?:()=>Record<string,unknown>):Promise<Response>=>{
+export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,accessVerified=false, localIdentify?: (request:Request)=>Promise<CloudUser|null>, localCapabilities?:()=>Record<string,unknown>,localTools?:LocalMcpTools):Promise<Response>=>{
   const url=new URL(request.url);
   const path=url.pathname;
   if(!publicPaths.has(path)&&!privatePaths.has(path))return json({error:'not_found'},404);
@@ -126,7 +127,7 @@ export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,access
         capabilities:{tools:{listChanged:false}},serverInfo:CLOUD_MCP_SERVER_INFO});
     }
     if(method==='ping')return rpc(id,{});
-    if(method==='tools/list')return rpc(id,{tools:[...visibleCloudTools(principal),...(localCapabilities?[homeCapabilityTool]:[])]});
+    if(method==='tools/list')return rpc(id,{tools:[...visibleCloudTools(principal),...(localCapabilities?[homeCapabilityTool]:[]),...(localTools?.list(principal)??[])]});
     if(method==='tools/call'){
       const params=p.params;
       if(!params||typeof params!=='object'||Array.isArray(params))
@@ -139,6 +140,7 @@ export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,access
       try{
         const result=name===homeCapabilityTool.name&&localCapabilities?
           (Object.keys(args).length?(()=>{throw new CloudMcpToolError('invalid_arguments','Keine Argumente erlaubt.');})():localCapabilities()):
+          localTools?.has(name)?await localTools.call(principal,name,args as Record<string,unknown>):
           await createCloudActions(ablage,db,principal)(name,args as Record<string,unknown>);
         // Keep the classic text content for older MCP clients, and expose a
         // standard structuredContent object for adapters which consume
