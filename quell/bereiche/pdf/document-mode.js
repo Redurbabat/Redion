@@ -1031,6 +1031,19 @@ const DocumentMode = (() => {
         papierWahl.addEventListener('change', () => Store.setMeta('heft:papier', papierWahl.value));
         papierZeile.append(papierWort, papierWahl);
         seite.append(seiteTitel, knoepfe, papierZeile);
+        const inkSection = document.createElement('section');
+        inkSection.className = 'document-desktop-objects';
+        const inkTitle = document.createElement('h3');
+        inkTitle.className = 'document-section-title';
+        inkTitle.textContent = 'Zeichenobjekte';
+        const inkButton = makeAction('desktop-ink-objects', 'Ebenen und Objekte öffnen');
+        inkButton.dataset.documentInkBlock = String(documentBlock.id);
+        inkButton.disabled = !darfSeiten;
+        inkButton.title = 'Objekte dieser Seite auswählen, gruppieren, ausrichten oder sperren';
+        const inkHint = document.createElement('p');
+        inkHint.textContent = 'Die Objekte liegen auf dieser Seite. Das PDF-Original bleibt unverändert.';
+        inkSection.append(inkTitle, inkButton, inkHint);
+        seite.append(inkSection);
         const gemerkte = seiten.map((block, i) => ({ block, i })).filter(x => x.block.lesezeichen);
         if (gemerkte.length) {
             const liste = document.createElement('div');
@@ -1500,7 +1513,7 @@ const DocumentMode = (() => {
             }
             if (id === 'pdf-schnellmehr') {
                 const objects = inkToolbar()?.querySelector('[data-act="objekte"]');
-                eintrag('Ebenen, Gruppen und Ausrichten', 'grid', () => objects?.click(), !canAnnotate || !objects);
+                eintrag('Ebenen, Gruppen und Ausrichten', 'grid', () => openInkObjects(), !canAnnotate || !objects || objects.disabled);
             }
             if (id === 'vorlagen') {
                 eintrag('Textblock auf neuer Seite', 'inkText', () => pdfDockBlockOeffnen('text'), !canAnnotate);
@@ -1551,8 +1564,8 @@ const DocumentMode = (() => {
                 aufAktion: id => {
                     if (id === 'diagramme')
                         pdfDockBlockOeffnen('mindmap');
-                    if (id === 'pdf-objekte' && canAnnotate)
-                        inkToolbar()?.querySelector('[data-act="objekte"]')?.click();
+                    if (id === 'pdf-objekte')
+                        openInkObjects();
                 }
             })
             : null;
@@ -2026,6 +2039,30 @@ const DocumentMode = (() => {
             catch { }
         }
         const inkToolbar = () => staende[state.index]?.querySelector('.blatt-werk') || null;
+        const closeStaleInkObjects = () => {
+            const panel = workspace.querySelector('.gfx-inspector[data-document-ink-block]');
+            if (!panel || panel.dataset.documentInkBlock === String(jetzt()?.id))
+                return;
+            panel.querySelector('[aria-label="Objektübersicht schliessen"]')?.click();
+        };
+        const openInkObjects = (expected) => {
+            const currentPage = Store.getBlock(page.id);
+            const block = jetzt();
+            if (!canAnnotate || !currentPage || currentPage.gesperrt || !darfSeiten() ||
+                !block || (expected !== undefined && String(block.id) !== expected))
+                return;
+            zeichneStand(state.index);
+            toolsSetzen(true);
+            const source = inkToolbar()?.querySelector('[data-act="objekte"]');
+            if (!source || source.disabled) {
+                UI.toast('Zeichenobjekte dieser Seite sind nicht verfügbar.');
+                return;
+            }
+            source.click();
+            const panel = workspace.querySelector('.gfx-inspector');
+            if (panel)
+                panel.dataset.documentInkBlock = String(block.id);
+        };
         const inkFlaeche = () => inkToolbar();
         let beobachtet = null;
         const ordnungObserver = new MutationObserver(() => {
@@ -2179,7 +2216,9 @@ const DocumentMode = (() => {
                 window.removeEventListener('resize', beiGroesse);
                 return;
             }
-            if (!thumbDesktop.matches && filterActive())
+            if (filterActive() && (!thumbDesktop.matches ||
+                !document.documentElement.hasAttribute('data-windows-titelleiste') ||
+                document.body.dataset.uiShell === 'glass-wheel'))
                 thumbClear.click();
             folienbandNachziehen();
             hoeheSetzen();
@@ -2191,6 +2230,7 @@ const DocumentMode = (() => {
         let springtZu = -1;
         let standGesetzt = false;
         const aktivMarkieren = () => {
+            closeStaleInkObjects();
             previousButton.disabled = state.index === 0;
             nextButton.disabled = state.index === documents.length - 1;
             position.setAttribute('aria-label', wortEins(page) + ' ' + (state.index + 1) +
@@ -3390,6 +3430,12 @@ const DocumentMode = (() => {
                         position.disabled = false;
                     }
                 })();
+                return;
+            }
+            if (action === 'desktop-ink-objects') {
+                const expected = tatKnopf?.dataset.documentInkBlock;
+                if (expected)
+                    openInkObjects(expected);
                 return;
             }
             if (action === 'ink-ruler' && canAnnotate) {
