@@ -11,6 +11,7 @@ import {prepareRedIdV2,createRedIdV2,RED_ID_V2_ROUTES,revokeRedAppEverywhere} fr
 import {prepareRedShare,createRedShare,SHARE_ROUTES} from './home/red-share.ts';
 import {resetHomeAccess} from './home/recovery.ts';
 import {createHomeMonitor} from './home/monitor.ts';
+import {prepareRedReminders,createRedReminders,REMINDER_ROUTES} from './home/reminders.ts';
 import {createRedAppCenter} from './home/app-center.ts';
 import {homeEcosystemCapabilities} from './home/ecosystem.ts';
 import {prepareRedStore,createRedStore,STORE_ROUTES} from './home/red-store.ts';
@@ -25,7 +26,7 @@ import {zuGrossAntwort} from './sicherheit/eingaben.ts';
 import {istAbgleichWeg,mitAppUrsprung} from './sicherheit/abgleich-tor.ts';
 
 const privateRoutes=new Set(['/api/stand']);
-const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/home/dashboard','/home/apps','/red-id/v1/me','/red-id/v1/logout',...RED_ID_V2_ROUTES,...SHARE_ROUTES,...STORE_ROUTES]);
+const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/home/dashboard','/home/apps','/red-id/v1/me','/red-id/v1/logout',...RED_ID_V2_ROUTES,...SHARE_ROUTES,...STORE_ROUTES,...REMINDER_ROUTES]);
 const json=(status:number,error:string)=>Response.json({error},{status,headers:{'Cache-Control':'no-store'}});
 
 /** Initial private API: no static repository files, public registration,
@@ -42,6 +43,8 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
   prepareRedIdV2(store.sqlite);
   prepareRedShare(store.sqlite);
   prepareRedStore(store.sqlite);
+  prepareRedReminders(store.sqlite);
+  const reminders=createRedReminders(store.sqlite,store.ablage);
   const redStore=createRedStore(store.sqlite,store.ablage);
   const share=createRedShare(store.sqlite,store.ablage);
   const redIdV2=createRedIdV2(store.sqlite,store.ablage);
@@ -80,6 +83,11 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
     }
     if(path==='/home/dashboard'||path==='/home/apps'){
       const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Authorization','Cache-Control':'no-store'}}):(path==='/home/apps'?await appCenter(request):await dashboard(request));
+      if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
+      return mitAppUrsprung(request,response);
+    }
+    if((REMINDER_ROUTES as readonly string[]).includes(path)){
+      const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Cache-Control':'no-store'}}):await reminders(request);
       if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
       return mitAppUrsprung(request,response);
     }

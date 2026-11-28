@@ -509,3 +509,21 @@ Akzentnormalisierung und Mehrwortsuche, keine Serveranfrage. Keine
 automatische Indizierung privater Dokumente und keine App-übergreifende
 Suche ohne eigene spätere Freigaben. Pro Konto/App separat instanziieren,
 bei Sperre/Logout verwerfen. UI und echte App-Integration offen.
+
+### RED Notify / Automation / Calendar – Wartungspilot
+
+Owner-only `/home/reminders/list` (GET) und `create`, `poll`, `ack`,
+`cancel` (POST). Bis zu 64 explizit angelegte Regeln pro Konto; feste
+Typen Backup-, Freigabe-, Speicher- und Update-Prüfung, einmalig oder
+alle 24/168 Stunden. Zeitpunkte als Unix-Millisekunden; feste UTC-Intervalle,
+keine automatische Sommerzeitkorrektur. Create-ID und Bestätigung einer
+konkreten fälligen Instanz sind wiederholbar. Poll erzeugt fällige Hinweise,
+fasst versäumte Wiederholungen zusammen und erhält offene Hinweise bis zur
+Bestätigung. GET ändert nichts. Regeln bleiben nach Neustart erhalten.
+Kein Hintergrundtimer, Push, Zugriff anderer Apps oder MCP-Schreibrecht;
+keine automatische Ausführung von Backups, Updates, Befehlen oder Netzaufrufen.
+Cancel entfernt die Regel mit ihrem Hinweis; eine erneut gesendete alte
+Create-Anfrage kann die Regel neu anlegen. Die UI soll deshalb nach
+Cancel den zugehörigen Create-Retry verwerfen. Metadaten und Zeiten liegen
+in SQLite; keine freien Titel oder privaten Kalenderinhalte. Eine lokale
+Sitzungswiederherstellung widerruft Zugänge, nicht die gespeicherten Regeln.
