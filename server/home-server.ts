@@ -98,7 +98,7 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
     }
     if((RED_BIT_JOB_ROUTES as readonly string[]).includes(path)){
       if(!redBitReadJobs)return json(404,'not_found');
-      const response=await serial(()=>redBitReadJobs(request));
+      const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Cache-Control':'no-store'}}):await serial(()=>redBitReadJobs(request));
       if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
       return mitAppUrsprung(request,response);
     }
