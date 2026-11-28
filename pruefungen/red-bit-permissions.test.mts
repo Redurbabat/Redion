@@ -115,7 +115,7 @@ const jobId='a'.repeat(32);
 const requestBody=(sessionId:string,id=jobId)=>({sessionId,id,issuedAt:Date.now(),confirm:true});
 
 test('Read job transport needs its own opt-in',async()=>{
- await fixture(true,async({get,post,token,pair})=>{
+ await fixture(true,async({post,token,pair})=>{
   const bit=await pair('red-bit');
   await post(grant,{sessionId:bit.sessionId,confirm:true},token);
   assert.equal((await post(requestJob,requestBody(bit.sessionId),token)).status,404);
