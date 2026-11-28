@@ -46,7 +46,7 @@ export function createRedIdV2Client(origin:string,app:RedAppId,store:RedSecureSt
     return res.json();
   };
   const validate=(v:any):RedSession=>{
-    if(v?.version!==2||v.app!==app||!/^redat_[a-f0-9]{64}$/.test(v.accessToken)||!/^redrt_[a-f0-9]{64}$/.test(v.refreshToken)||!Number.isFinite(Date.parse(v.expiresAt))||!Number.isFinite(Date.parse(v.refreshExpiresAt))||!Array.isArray(v.scopes)||v.scopes.length!==1||v.scopes[0]!=='identity:read')throw new Error('Invalid RED ID session');
+    if(v?.version!==2||v.app!==app||Date.parse(v.expiresAt)>Date.parse(v.refreshExpiresAt)||!/^redat_[a-f0-9]{64}$/.test(v.accessToken)||!/^redrt_[a-f0-9]{64}$/.test(v.refreshToken)||!Number.isFinite(Date.parse(v.expiresAt))||!Number.isFinite(Date.parse(v.refreshExpiresAt))||!Array.isArray(v.scopes)||v.scopes.length!==1||v.scopes[0]!=='identity:read')throw new Error('Invalid RED ID session');
     return v as RedSession;
   };
   const rotate=async(s:RedSession)=>{try{const next=validate(await request('refresh','POST',{app,refreshToken:s.refreshToken}));await store.save(next);return next;}catch(error){if(error instanceof RedIdError&&error.status===401)await store.clear();throw error;}};
@@ -63,7 +63,7 @@ export function createRedIdV2Client(origin:string,app:RedAppId,store:RedSecureSt
   return {
     shareSend:(target:RedAppId,channel:string,id:string,envelope:string)=>serial(async()=>{await share('send',{target,channel,id,envelope});}),
     shareInbox:()=>serial(async():Promise<RedShareMessage[]>=>{
-      const data=await share('inbox');if(data?.version!==1||!Array.isArray(data.messages))throw Error('Invalid share inbox');return data.messages as RedShareMessage[];
+      const data=await share('inbox');if(data?.version!==1||!Array.isArray(data.messages)||data.messages.length>32||!data.messages.every(isShareMessage))throw Error('Invalid share inbox');return data.messages as RedShareMessage[];
     }),
     shareAck:(source:RedAppId,channel:string,id:string)=>serial(async()=>{await share('ack',{source,channel,id});}),
     claimLogin:(verifier:string)=>serial(async()=>{const s=validate(await request('claim-login','POST',{app,verifier}));await store.save(s);}),
@@ -184,4 +184,32 @@ export async function createRedShareKeyExchange(context:RedShareKeyContext,role:
       confirmed=true;return derive('red-share-aes256-v1');
     }};
   }};
+}
+
+const shareApps=new Set(['red-ion','red-fit','red-poly','red-bit','red-loop','red-efz','red-kurd','red-uhr','red-yt','stran','babat-red']);
+function isShareMessage(value:unknown):value is RedShareMessage{
+ if(!value||typeof value!=='object')return false;
+ const v=value as Record<string,unknown>;
+ return typeof v.source==='string'&&shareApps.has(v.source)&&typeof v.channel==='string'&&/^[a-z][a-z0-9_-]{0,31}$/.test(v.channel)&&typeof v.id==='string'&&/^[a-f0-9]{32}$/.test(v.id)&&typeof v.envelope==='string'&&/^[A-Za-z0-9_-]{38,60000}$/.test(v.envelope)&&Number.isSafeInteger(v.expires);
+}
+export type RedPreparedShare={address:RedShareAddress;envelope:string};
+/** Prepare exactly once and reuse the resulting ID and ciphertext on retry.
+ * The caller must persist only the encrypted envelope in a durable outbox. */
+export async function prepareRedShareJson(key:Uint8Array,source:RedAppId,target:RedAppId,channel:string,data:unknown):Promise<RedPreparedShare>{
+ if(!shareApps.has(source)||!shareApps.has(target))throw Error('Unknown RED app');
+ const id=Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,'0')).join('');
+ const address={source,target,channel,id};
+ const json=JSON.stringify({version:1,data});
+ if(json===undefined||data===undefined)throw Error('Invalid JSON payload');
+ return {address,envelope:await encryptRedShare(key,address,new TextEncoder().encode(json))};
+}
+/** Authenticate/decrypt first, then validate the app-specific schema.
+ * Persist application data and the message ID atomically BEFORE acknowledging.
+ * Multiple devices of the same app compete for the same mailbox. */
+export async function openRedShareJson<T>(key:Uint8Array,target:RedAppId,message:RedShareMessage,validate:(data:unknown)=>T):Promise<T>{
+ if(!isShareMessage(message)||!shareApps.has(target)||message.expires<=Date.now())throw Error('Invalid or expired message');
+ const bytes=await decryptRedShare(key,{source:message.source,target,channel:message.channel,id:message.id},message.envelope);
+ const decoded=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
+ if(decoded?.version!==1||!Object.hasOwn(decoded,'data'))throw Error('Invalid RED JSON payload');
+ return validate(decoded.data);
 }

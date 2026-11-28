@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createRedPairProof,encodeRedPairRequest,decodeRedPairRequest,encryptRedShare,decryptRedShare,type RedShareAddress} from '../red-sdk/client.mts';
+import {createRedPairProof,encodeRedPairRequest,decodeRedPairRequest,encryptRedShare,decryptRedShare,prepareRedShareJson,openRedShareJson,type RedShareAddress} from '../red-sdk/client.mts';
 test('pair request contains public challenge only',async()=>{
  const proof=await createRedPairProof(),payload=encodeRedPairRequest('red-fit',proof.challenge);
  assert.deepEqual(decodeRedPairRequest(payload),{app:'red-fit',challenge:proof.challenge});
@@ -14,4 +14,15 @@ test('share encryption authenticates message context and rejects wrong keys',asy
  assert.deepEqual(await decryptRedShare(key,a,envelope),data);
  await assert.rejects(decryptRedShare(key,{...a,target:'red-poly'},envelope));
  await assert.rejects(decryptRedShare(crypto.getRandomValues(new Uint8Array(32)),a,envelope));
+});
+
+test('JSON share helper encrypts and validates before application import',async()=>{
+ const key=crypto.getRandomValues(new Uint8Array(32));
+ const p=await prepareRedShareJson(key,'red-poly','red-ion','progress',{completed:5});
+ const message={source:p.address.source,channel:p.address.channel,id:p.address.id,envelope:p.envelope,expires:Date.now()+60000};
+ const validate=(v:unknown)=>{if(!v||typeof v!=='object'||typeof (v as {completed?:unknown}).completed!=='number')throw Error('Invalid progress');return v as {completed:number};};
+ assert.deepEqual(await openRedShareJson(key,'red-ion',message,validate),{completed:5});
+ await assert.rejects(openRedShareJson(key,'red-fit',message,validate));
+ await assert.rejects(openRedShareJson(key,'red-ion',{...message,expires:0},validate));
+ await assert.rejects(openRedShareJson(key,'red-ion',message,()=>{throw Error('Invalid schema');}));
 });

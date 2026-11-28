@@ -9,6 +9,9 @@ const reply=(status:number,data:unknown)=>Response.json(data,{status,headers:{'C
 const app=(v:unknown):v is string=>typeof v==='string'&&(RED_APPS as readonly string[]).includes(v);
 const channel=(v:unknown):v is string=>typeof v==='string'&&/^[a-z][a-z0-9_-]{0,31}$/.test(v);
 const hash=(v:string)=>createHash('sha256').update(v).digest('hex');
+// AES-GCM envelope: 12-byte nonce, ciphertext, 16-byte tag. Shape only;
+// the server cannot verify that the bytes are genuine ciphertext.
+const validEnvelope=(v:unknown):v is string=>{if(typeof v!=='string'||!/^[A-Za-z0-9_-]{38,60000}$/.test(v))return false;const bytes=Buffer.from(v,'base64url');return bytes.length>=28&&bytes.toString('base64url')===v;};
 async function read(req:Request):Promise<Record<string,unknown>|null>{
  if(!/^application\/json(?:\s*;|$)/i.test(req.headers.get('content-type')??'')||!req.body)return null;
  const r=req.body.getReader();let n=0,s='';const d=new TextDecoder();
@@ -16,10 +19,11 @@ async function read(req:Request):Promise<Record<string,unknown>|null>{
  catch{return null;}finally{r.releaseLock();}
 }
 export function prepareRedShare(db:DatabaseSync){
- db.exec("CREATE TABLE IF NOT EXISTS home_red_share_grant(owner TEXT NOT NULL,source TEXT NOT NULL,target TEXT NOT NULL,channel TEXT NOT NULL,expires INTEGER NOT NULL,PRIMARY KEY(owner,source,target,channel)); CREATE TABLE IF NOT EXISTS home_red_share_message(owner TEXT NOT NULL,source TEXT NOT NULL,target TEXT NOT NULL,channel TEXT NOT NULL,id TEXT NOT NULL,envelope TEXT NOT NULL,expires INTEGER NOT NULL,PRIMARY KEY(owner,source,target,channel,id)); CREATE INDEX IF NOT EXISTS home_red_share_inbox ON home_red_share_message(owner,target,expires);");
+ db.exec("CREATE TABLE IF NOT EXISTS home_red_share_grant(owner TEXT NOT NULL,source TEXT NOT NULL,target TEXT NOT NULL,channel TEXT NOT NULL,expires INTEGER NOT NULL,PRIMARY KEY(owner,source,target,channel)); CREATE TABLE IF NOT EXISTS home_red_share_message(owner TEXT NOT NULL,source TEXT NOT NULL,target TEXT NOT NULL,channel TEXT NOT NULL,id TEXT NOT NULL,envelope TEXT NOT NULL,expires INTEGER NOT NULL,PRIMARY KEY(owner,source,target,channel,id)); CREATE INDEX IF NOT EXISTS home_red_share_inbox ON home_red_share_message(owner,target,expires); CREATE TABLE IF NOT EXISTS home_red_share_receipt(owner TEXT NOT NULL,source TEXT NOT NULL,target TEXT NOT NULL,channel TEXT NOT NULL,id TEXT NOT NULL,digest TEXT NOT NULL,expires INTEGER NOT NULL,PRIMARY KEY(owner,source,target,channel,id)); CREATE INDEX IF NOT EXISTS home_red_share_receipt_expiry ON home_red_share_receipt(expires);");
 }
 function tx<T>(db:DatabaseSync,f:()=>T):T{db.exec('BEGIN IMMEDIATE');try{const v=f();db.exec('COMMIT');return v;}catch(e){db.exec('ROLLBACK');throw e;}}
 function prune(db:DatabaseSync,now:number){
+ db.prepare('DELETE FROM home_red_share_receipt WHERE expires<=?').run(now);
  db.prepare('DELETE FROM home_red_share_message WHERE expires<=? OR NOT EXISTS (SELECT 1 FROM home_red_share_grant g WHERE g.owner=home_red_share_message.owner AND g.source=home_red_share_message.source AND g.target=home_red_share_message.target AND g.channel=home_red_share_message.channel AND g.expires>?)').run(now,now);
  db.prepare('DELETE FROM home_red_share_grant WHERE expires<=?').run(now);
 }
@@ -49,7 +53,8 @@ export function createRedShare(db:DatabaseSync,ablage:Ablage){
     db.prepare('DELETE FROM home_red_share_grant WHERE owner=? AND source=? AND target=? AND channel=?').run(owner,source,target,kind);
     return reply(200,{ok:true});
    }
-   if(Number(db.prepare('SELECT COUNT(*) AS n FROM home_red_share_grant WHERE owner=?').get(owner)?.n??0)>=64)return reply(429,{error:'grant_limit'});
+   const existing=db.prepare('SELECT expires FROM home_red_share_grant WHERE owner=? AND source=? AND target=? AND channel=?').get(owner,source,target,kind);
+   if(!existing&&Number(db.prepare('SELECT COUNT(*) AS n FROM home_red_share_grant WHERE owner=?').get(owner)?.n??0)>=64)return reply(429,{error:'grant_limit'});
    const expires=now+7*86400000;
    db.prepare('INSERT INTO home_red_share_grant VALUES(?,?,?,?,?) ON CONFLICT(owner,source,target,channel) DO UPDATE SET expires=excluded.expires').run(owner,source,target,kind,expires);
    return reply(201,{source,target,channel:kind,expires});
@@ -65,15 +70,25 @@ export function createRedShare(db:DatabaseSync,ablage:Ablage){
  const kind=b.channel,messageId=b.id;
  if(path.endsWith('/ack')){
   if(!app(b.source))return reply(400,{error:'invalid_message'});
-  db.prepare('DELETE FROM home_red_share_message WHERE owner=? AND source=? AND target=? AND channel=? AND id=?').run(owner,b.source,client,kind,messageId);
-  return reply(200,{ok:true});
+  const source=b.source;
+  return tx(db,()=>{
+   prune(db,now);
+   const message=db.prepare('SELECT envelope FROM home_red_share_message WHERE owner=? AND source=? AND target=? AND channel=? AND id=?').get(owner,source,client,kind,messageId);
+   if(!message||typeof message.envelope!=='string')return reply(200,{ok:true});
+   if(Number(db.prepare('SELECT COUNT(*) AS n FROM home_red_share_receipt WHERE owner=?').get(owner)?.n??0)>=1024)return reply(429,{error:'receipt_limit'});
+   db.prepare('INSERT INTO home_red_share_receipt VALUES(?,?,?,?,?,?,?)').run(owner,source,client,kind,messageId,hash(message.envelope),now+7*86400000);
+   db.prepare('DELETE FROM home_red_share_message WHERE owner=? AND source=? AND target=? AND channel=? AND id=?').run(owner,source,client,kind,messageId);
+   return reply(200,{ok:true});
+  });
  }
- if(!app(b.target)||b.target===client||typeof b.envelope!=='string'||!/^[A-Za-z0-9_-]{1,60000}$/.test(b.envelope))return reply(400,{error:'invalid_message'});
+ if(!app(b.target)||b.target===client||!validEnvelope(b.envelope))return reply(400,{error:'invalid_message'});
  const target=b.target,envelope=b.envelope;
  return tx(db,()=>{
   prune(db,now);
   const grant=db.prepare('SELECT expires FROM home_red_share_grant WHERE owner=? AND source=? AND target=? AND channel=? AND expires>?').get(owner,client,target,kind,now);
   if(!grant||typeof grant.expires!=='number')return reply(403,{error:'grant_required'});
+  const receipt=db.prepare('SELECT digest FROM home_red_share_receipt WHERE owner=? AND source=? AND target=? AND channel=? AND id=? AND expires>?').get(owner,client,target,kind,messageId,now);
+  if(receipt){const same=receipt.digest===hash(envelope);return reply(same?200:409,{ok:same});}
   const previous=db.prepare('SELECT envelope FROM home_red_share_message WHERE owner=? AND source=? AND target=? AND channel=? AND id=?').get(owner,client,target,kind,messageId);
   if(previous)return reply(previous.envelope===envelope?200:409,{ok:previous.envelope===envelope});
   if(Number(db.prepare('SELECT COUNT(*) AS n FROM home_red_share_message WHERE owner=?').get(owner)?.n??0)>=128)return reply(429,{error:'queue_limit'});

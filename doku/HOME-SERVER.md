@@ -310,3 +310,18 @@ nicht widerrufen. Beim Löschen einer Sitzung räumt ein SQLite-Trigger die
 Historie auf. Maximal 4096 Rotationen pro Sitzung; danach neu koppeln.
 Bei einem verlorenen Refresh-Response kann ein Retry ebenfalls zur erneuten
 Kopplung führen. Keine automatische, parallele Refresh-Wiederholung.
+
+### RED Share – Zustellbestätigung und verschlüsselte JSON-Daten
+
+SDK 0.6: `prepareRedShareJson` erzeugt eine zufällige Nachrichten-ID und
+AES-GCM-Envelope. Bei Retry immer denselben Envelope/ID verwenden.
+`openRedShareJson` entschlüsselt und erzwingt eine app-spezifische
+Validierungsfunktion. Empfänger müssen Daten und Nachrichten-ID atomar
+speichern, bevor sie ACK senden. Der Server hält einen gehashten Receipt
+für 7 Tage nach ACK (maximal 1024 pro Konto), um erneute Zustellung
+identischer IDs zu verhindern; veränderte Inhalte mit derselben ID liefern
+409. Das ist keine genau-einmal-Zustellung über unbegrenzte Zeit. Bei voller
+Receipt-Quote ACK nicht als erfolgreich behandeln; keine Daten erneut importieren.
+Server prüft die kanonische Envelope-Form, kann aber Verschlüsselung nicht
+beweisen. Browser-Allowlist bleibt auf Identität beschränkt. Bestehende
+App-Clients müssen separat auf SDK 0.6 aktualisiert werden.
