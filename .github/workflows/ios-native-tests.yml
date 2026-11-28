@@ -3,6 +3,7 @@ name: iOS native regression tests
 on:
   pull_request:
     paths:
+      - 'doku/RED-ION-MASTER.md'
       - 'ios/**'
       - 'quell/schale/stil/pdf-studio.css'
       - 'src/kern/einstellung/app.ts'

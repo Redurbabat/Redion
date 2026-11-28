@@ -80,13 +80,20 @@ try {
       continue;
     }
 
+    // Chromium reported 43.999969482421875 for an actual CSS 44px target.
+    // Allow only 0.0001 CSS px of floating-point error, not a whole pixel.
     const state = await page.locator('#page > .pg-tools').evaluate(el => {
       const style = getComputedStyle(el);
       const rect = el.getBoundingClientRect();
       const caption = el.querySelector('.pg-tools-caption');
       return {
         role: el.getAttribute('role'), label: el.getAttribute('aria-label'),
-        visible: +style.opacity >= .99 && rect.height >= 44,
+        visible: +style.opacity >= .99 && style.visibility === 'visible' && style.display !== 'none' && rect.height >= 44 - 0.0001,
+        opacity: style.opacity, height: rect.height, minHeight: style.minHeight,
+        display: style.display, visibility: style.visibility, transition: style.transition,
+        buttonHeights: Array.from(el.querySelectorAll('button[data-a]'), b => b.getBoundingClientRect().height),
+        pageHeight: el.parentElement?.getBoundingClientRect().height,
+        pageTransform: el.parentElement ? getComputedStyle(el.parentElement).transform : null,
         column: style.flexWrap,
         caption: caption?.textContent,
         captionVisible: !!caption && getComputedStyle(caption).display !== 'none',
@@ -102,8 +109,9 @@ try {
       state.column === (w < 761 ? 'nowrap' : 'wrap'));
 
     const minHeight = await page.locator('#page > .pg-tools button[data-a]').first()
-      .evaluate(el => Math.round(el.getBoundingClientRect().height));
-    check(label + ': Touch-/Klickziel mindestens 44 px', minHeight >= 44);
+      .evaluate(el => el.getBoundingClientRect().height);
+    check(label + ': Touch-/Klickziel mindestens 44 px', minHeight >= 44 - 0.0001);
+    check(label + ': alle Seitenwerkzeuge mindestens 44 px', state.buttonHeights.every(height => height >= 44 - 0.0001));
 
     await page.mouse.move(0, 0);
     const opacity = await page.locator('#page > .pg-tools').evaluate(el => +getComputedStyle(el).opacity);

@@ -7,7 +7,7 @@ permissions:
   contents: read
 jobs:
   preview:
-    if: github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.head.ref == 'feat/red-studio-desktop' || github.event.pull_request.head.ref == 'integration/redion-258-261')
+    if: github.event.pull_request.head.repo.full_name == github.repository && (github.event.pull_request.head.ref == 'feat/red-studio-desktop' || github.event.pull_request.head.ref == 'integration/redion-258-261' || github.event.pull_request.head.ref == 'feat/redion-phase3')
     runs-on: windows-latest
     timeout-minutes: 30
     concurrency:
@@ -30,6 +30,12 @@ jobs:
           npm ci --prefix windows
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npm ci --prefix plugins/red-ion
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Real Windows DPAPI sync key smoke test
+        run: |
+          node windows/prepare-sync-key-smoke.mts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & .\windows\node_modules\.bin\electron.cmd windows/generated/red-sync-smoke/red-sync-keys-smoke.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Compile and stage exact renderer
         run: |

@@ -584,3 +584,11 @@ SDK 0.15 ergänzt für RED Clipboard einen authentifizierten Inbox-Empfangsvertr
 ### RED MCP Hub und AI Gateway – Einstellungen
 
 Die Home-Server-Einstellungen zeigen aktive eigene MCP-Verbindungen mit explizitem Widerruf und einen getrennten lokalen KI-Textgenerator. Beide verlangen Owner-Gerätesitzung und exakten HTTPS-Server. Keine automatischen Abrufe, keine Hintergrundgenerierung, kein automatischer Dokumentzugriff. Modellliste ist Konfiguration, keine Installationsprüfung. Vor jeder Generierung ausdrückliche Bestätigung, Abbruch per AbortController und keine automatische Speicherung; Ausgabe als Text, nicht als HTML. Bei geänderter Sitzung werden Anfragen blockiert. Native Geräteabnahme und tatsächlicher Offline-Betrieb bleiben offen.
+
+### Backup-Frische (Host)
+
+`REDION_MAX_BACKUP_AGE_HOURS` legt die maximale Frische für `verify-latest` fest (Standard 48 Stunden, ganze Zahl 1 bis 8760). Der Bericht enthält `freshness.status` und `maxAgeHours`. Exitcode 0: authentifiziert und innerhalb der Frist; 2: authentifiziert, aber veraltet; 1: Prüfung oder Konfiguration fehlgeschlagen. `verify` für eine ausdrücklich gewählte ältere Sicherung bleibt ohne Frische-Gate. Keine automatische Löschung, Wiederherstellung oder Schlüsselübertragung. Ein frisches Backup ersetzt weiterhin keine Restore-Abnahme.
+
+#### Optionale feste SSD-Identität
+
+Für einen dedizierten Linux-Datenträger den bereits vorhandenen Mountpoint und die bekannte **Dateisystem-UUID** (nicht die LUKS-Container-UUID) aus der vertrauenswürdigen Einrichtung festhalten. `bash deploy/home/storage-check.sh /srv/redion-ssd/data /srv/redion-ssd <dateisystem-uuid>` prüft zusätzlich vor/nach der dm-crypt-Prüfung die exakte Mount-Identität; kein Ersatzpfad auf dem Systemlaufwerk wird akzeptiert. Kein Formatieren, kein Mounten, keine Schlüsselabfrage. Docker Compose legt einen fehlenden Host-Datenordner nicht mehr automatisch an (`create_host_path: false`). Ein vorhandener leerer Ersatzordner kann ohne Identitätsprüfung trotzdem akzeptiert werden. Vor Start und Wartung den vollständigen Preflight ausführen; kein dauerhaftes Mount-Monitoring, kein atomarer Schutz zwischen Prüfung und Start, keine Absicherung automatischer Docker-Neustarts. Reale SSD-Abnahme und gegebenenfalls systemd-Mount-Abhängigkeit bleiben offen.

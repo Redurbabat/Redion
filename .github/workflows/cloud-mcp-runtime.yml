@@ -5,6 +5,7 @@ name: Cloud MCP Runtime
 on:
   pull_request:
     paths:
+      - 'doku/RED-ION-MASTER.md'
       - 'server/mcp/**'
       - 'server/ablage.ts'
       - 'server/kern.ts'

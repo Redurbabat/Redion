@@ -2,6 +2,7 @@ name: RED Native Android SDK
 on:
   pull_request:
     paths:
+      - 'doku/RED-ION-MASTER.md'
       - 'red-sdk/android/**'
       - '.github/workflows/red-native-android.yml'
   workflow_dispatch:

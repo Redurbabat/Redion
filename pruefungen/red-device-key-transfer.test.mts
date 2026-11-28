@@ -36,3 +36,31 @@ test('transfer rejects wrong app, wrong role, wrong transcript and tampering',as
  const wrong=await dd.confirm(cc.fingerprint);
  await assert.rejects(wrong.unwrap(packet));
 });
+
+test('device transfer cancellation applies at all stages, including in-flight crypto',async()=>{
+ const sender=await createRedDeviceKeyTransfer(scope,'sender'),receiver=await createRedDeviceKeyTransfer(scope,'receiver');
+ sender.cancel();sender.cancel();
+ await assert.rejects(sender.compare(receiver.offer),/cancelled/);
+ const next=await createRedDeviceKeyTransfer(scope,'sender');
+ const a=await next.compare(receiver.offer),b=await receiver.compare(next.offer);
+ const s=await a.confirm(b.fingerprint),r=await b.confirm(a.fingerprint);
+ const key=new Uint8Array(32).fill(7),packet=await s.wrap(key);
+ const decrypt=r.unwrap(packet);receiver.cancel();
+ await assert.rejects(decrypt,/cancelled/);
+ await assert.rejects(r.unwrap(packet),/cancelled/);
+ const c=await createRedDeviceKeyTransfer(scope,'sender'),d=await createRedDeviceKeyTransfer(scope,'receiver');
+ const x=await c.compare(d.offer),y=await d.compare(c.offer);
+ x.cancel();await assert.rejects(x.confirm(y.fingerprint),/cancelled/);
+ const z=await y.confirm(x.fingerprint);z.cancel();await assert.rejects(z.unwrap(packet),/cancelled/);
+ key.fill(0);
+});
+test('device transfer lifetime is bounded and expired offers cannot be confirmed or reused',async()=>{
+ for(const bad of [0,-1,300001,NaN,1.5])await assert.rejects(createRedDeviceKeyTransfer(scope,'sender',bad),/lifetime/);
+ const sender=await createRedDeviceKeyTransfer(scope,'sender',1000),receiver=await createRedDeviceKeyTransfer(scope,'receiver',1000);
+ const a=await sender.compare(receiver.offer),b=await receiver.compare(sender.offer);
+ const s=await a.confirm(b.fingerprint);
+ await new Promise(resolve=>setTimeout(resolve,1050));
+ await assert.rejects(b.confirm(a.fingerprint),/expired/);
+ await assert.rejects(s.wrap(new Uint8Array(32)),/expired/);
+ await assert.rejects(sender.compare(receiver.offer),/expired/);
+});

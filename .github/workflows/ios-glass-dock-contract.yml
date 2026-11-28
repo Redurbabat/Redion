@@ -3,6 +3,7 @@ name: iOS Glass Dock Contract
 on:
   pull_request:
     paths:
+      - 'doku/RED-ION-MASTER.md'
       - 'quell/schale/stil/studio.css'
       - 'quell/schale/stil/glasswheel.css'
       - 'quell/schale/stil/bausteine.css'

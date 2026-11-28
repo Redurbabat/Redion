@@ -3,6 +3,7 @@ name: Workspace Editor 2.0
 on:
   pull_request:
     paths:
+      - 'doku/RED-ION-MASTER.md'
       - 'src/schale/aufbau/kopfleiste.ts'
       - 'quell/schale/aufbau/kopfleiste.js'
       - 'quell/schale/stil/studio.css'

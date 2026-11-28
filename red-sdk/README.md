@@ -174,3 +174,17 @@ Batch pairing requests are strictly limited to the four public fields `kind`, `v
 ### SDK 0.15 – durable clipboard receive contract
 
 `receiveRedClipboard` authenticates the encrypted message and TTL, calls a native adapter's atomic `commitOnce(address,message,expiresAt)` and only then calls `shareAck`. Persist encrypted payload and receipt together in the app's scoped durable store. An ACK failure can be retried without duplicate storage while the logical message is valid. The adapter must enforce uniqueness atomically, retain receipt IDs through relay expiry, reject conflicting ciphertext for an existing ID, and expire stored payloads before explicit paste. No plaintext is handed to the adapter. No native persistence implementation or OS clipboard access is provided by this helper. For already-expired messages a separate explicit cleanup path is still needed.
+
+### Apple: device-only storage for sync keys
+
+`RedNativeSyncKeyStore` stores an explicitly obtained 32-byte key under a separate Keychain service, scoped by exact HTTPS origin, owner, app and purpose (`sync`, `file`, `localSync`). Uses `WhenUnlockedThisDeviceOnly`, no shared access group, no iCloud synchronisation. Atomic insert-only `install` accepts an identical existing key but refuses different keys. No silent creation on missing data and no destructive rotation. Calling apps still need verified key transfer, UI, lifecycle, recovery and real Keychain/device tests. Unit tests use an injected backend, not a real iPhone. Signing out of identity does not destroy the separately stored data key.
+
+### Windows: isolated sync-key pilot
+
+`tools/red-windows-sync-keys.cts` accepts Electron main-process `safeStorage` after app readiness, Windows only. Caller supplies a trusted private directory and explicitly obtained 32-byte key. Scope binds HTTPS origin, owner, app and purpose. Encrypted file is atomically published without replacing an existing key; same key is idempotent, another key is refused. Filesystem must support hard links. No renderer bridge, automatic recovery, key rotation, packaging or production integration. Windows DPAPI protects against other OS accounts, not malware running as the same user. CI smoke test uses an isolated synthetic profile.
+
+### Android: isolated sync-key pilot
+
+See Android README for `RedAndroidSyncKeys`, separate per-scope AndroidKeyStore wrapping keys and insert-only encrypted storage. Tests cover scope and data-key lifecycle with a test backend; device-specific recovery and app integration remain open.
+
+Device-key transfers now expire locally after at most five minutes from creation. Optional shorter `lifetimeMs` (1–300000) and idempotent `cancel()` at any stage allow foreground UI to terminate a transfer on lock, logout or dismissal. Both wall-clock and monotonic deadlines are checked, including after asynchronous cryptography before exposing output. Existing wire format is unchanged; this is a local session lifetime, not a signed remote timestamp or device authentication. UI must call cancel and still perform independent fingerprint verification; no automatic key installation or recovery.

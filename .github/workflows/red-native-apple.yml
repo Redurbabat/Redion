@@ -2,6 +2,7 @@ name: RED Native Apple SDK
 on:
   pull_request:
     paths:
+      - 'doku/RED-ION-MASTER.md'
       - 'red-sdk/apple/**'
       - '.github/workflows/red-native-apple.yml'
   workflow_dispatch:

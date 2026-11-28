@@ -1,0 +1,33 @@
+// Real Electron safeStorage / DPAPI regression, no renderer or personal profile.
+const {app,safeStorage}=require('electron');
+const fs=require('node:fs');
+const os=require('node:os');
+const path=require('node:path');
+const assert=require('node:assert/strict');
+const {createWindowsSyncKeyStore,account}=require('../tools/red-windows-sync-keys.cts');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'red-dpapi-test-'));
+const profile=path.join(root,'profile'),keys=path.join(root,'keys');
+fs.mkdirSync(profile);fs.mkdirSync(keys);app.setPath('userData',profile);
+app.whenReady().then(()=>{
+ const scope: {origin:string;owner:string;app:string;purpose:string}={origin:'https://home.example.test',owner:'test-owner',app:'red-ion',purpose:'sync'};
+ const key=Buffer.alloc(32,77),other=Buffer.alloc(32,88);
+ const store=createWindowsSyncKeyStore(keys,safeStorage);
+ assert.equal(store.load(scope),null);
+ store.install(scope,key);store.install(scope,key);
+ assert.throws(()=>store.install(scope,other),/Existing different key/);
+ const reopened=createWindowsSyncKeyStore(keys,safeStorage);
+ assert.deepEqual(reopened.load(scope),key);
+ assert.equal(reopened.load({...scope,purpose:'file'}),null);
+ const target=path.join(keys,account(scope)+'.enc'),encrypted=fs.readFileSync(target);
+ assert.ok(!encrypted.includes(Buffer.from(key.toString('base64url'))));
+ const substituted={...scope,owner:'different'};
+ fs.copyFileSync(target,path.join(keys,account(substituted)+'.enc'));
+ assert.throws(()=>reopened.load(substituted));
+ fs.writeFileSync(target,Buffer.alloc(encrypted.length));
+ assert.throws(()=>reopened.load(scope));
+ assert.throws(()=>reopened.install(scope,key));
+ key.fill(0);other.fill(0);
+ console.log('Real Electron Windows safeStorage: scoped insert-only keys and tamper rejection passed');
+ app.exit(0);
+}).catch((error:unknown)=>{console.error(error);app.exit(1);});
+app.on('quit',()=>{try{fs.rmSync(root,{recursive:true,force:true});}catch{}});

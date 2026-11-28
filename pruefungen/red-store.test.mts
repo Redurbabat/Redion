@@ -1,11 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,rm} from 'node:fs/promises';
+import {mkdtemp,mkdir,rm,readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
+import {DatabaseSync} from 'node:sqlite';
+import {createSqliteSyncAdapter} from '../tools/red-sync-sqlite.mts';
 import {openHomeServer} from '../server/home-server.ts';
 import {approveHomeDevice} from '../server/home/pairing.ts';
-import {createRedPairProof,createRedIdV2Client,prepareRedStoreWrite,openRedStoreRecord,newRedStoreId,type RedSession} from '../red-sdk/client.mts';
+import {createRedPairProof,createRedIdV2Client,createRedSync,prepareRedStoreWrite,openRedStoreRecord,newRedStoreId,type RedSession} from '../red-sdk/client.mts';
 test('RED store: explicit grants, device conflict, retry, tombstone and app isolation',async()=>{
  const root=await mkdtemp(join(tmpdir(),'red-store-')),origin='https://home.example.test',s=await openHomeServer({dataDir:root,origin,webOrigins:'https://web.example.test'});
  try{
@@ -80,4 +82,62 @@ test('SDK encrypted sync survives a second device and rejects context substituti
   assert.ok(!JSON.stringify(delta).includes(prepared.envelope));
   await assert.rejects(openRedStoreRecord(key,context,await a.storeGet('sync',context.id)));
  }finally{s.close();await rm(root,{recursive:true,force:true});}
+});
+
+test('Two persistent encrypted clients reconcile through actual RED Home API, including lost response and grant revocation',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'red-store-two-clients-')),origin='https://home.example.test',serverDir=join(root,'server');
+ await mkdir(serverDir);
+ const service=await openHomeServer({dataDir:serverDir,origin});
+ const fileA=join(root,'a.sqlite'),fileB=join(root,'b.sqlite');
+ let dbA=new DatabaseSync(fileA);
+ const dbB=new DatabaseSync(fileB),key=crypto.getRandomValues(new Uint8Array(32)),localA=crypto.getRandomValues(new Uint8Array(32)),localB=crypto.getRandomValues(new Uint8Array(32));
+ try{
+  const post=(path:string,body:object,token?:string)=>service.handle(new Request(origin+path,{method:'POST',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(body)}));
+  const {code}=await (await post('/konto/code',{geraet:'Synthetic owner'})).json() as {code:string};approveHomeDevice(service.store.sqlite,code);
+  const {token,konto}=await (await post('/konto/code-holen',{code})).json() as {token:string;konto:{id:string}};
+  const scope={origin,owner:konto.id,app:'red-poly',kind:'sync'} as const;
+  let loseReply=false;
+  const make=async(drop:boolean)=>{
+   let session:RedSession|null=null;
+   const store={async load(){return session;},async save(v:RedSession){session=v;},async clear(){session=null;}};
+   const client=createRedIdV2Client(origin,'red-poly',store,async(input,init)=>{
+    const request=new Request(input,init),response=await service.handle(request);
+    if(drop&&loseReply&&new URL(request.url).pathname==='/red-store/v1/put'&&response.ok){loseReply=false;throw Error('synthetic lost response');}
+    return response;
+   });
+   const proof=await createRedPairProof();
+   assert.equal((await post('/red-id/v2/approve-login',{app:'red-poly',challenge:proof.challenge},token)).status,201);
+   await client.claimLogin(proof.verifier);return client;
+  };
+  const clientA=await make(true),clientB=await make(false);
+  assert.equal((await post('/red-store/v1/grant',{app:'red-poly',kind:'sync'},token)).status,201);
+  let a=createSqliteSyncAdapter(dbA,scope,localA);
+  const b=createSqliteSyncAdapter(dbB,scope,localB),decode=(bytes:Uint8Array)=>new TextDecoder('utf-8',{fatal:true}).decode(bytes);
+  const syncB=createRedSync(clientB,scope,key,b,decode),id=newRedStoreId();
+  const original='SYNTHETIC_PRIVATE_SYNC_TEXT_972641';
+  a.putLocal(id,original);loseReply=true;
+  await assert.rejects(a.pushLocal(id,key,clientA),/synthetic lost response/);
+  assert.equal(a.pendingUploads().length,1);
+  assert.equal((await syncB.pull()).imported,1);assert.equal(b.getLocal(id)?.value,original);
+  a.putLocal(id,'Offline edit A');a.dispose();dbA.close();
+  assert.ok(!(await readFile(fileA)).includes(Buffer.from(original)));
+  dbA=new DatabaseSync(fileA);a=createSqliteSyncAdapter(dbA,scope,localA);
+  // A successful idempotent retry acknowledges the first write but not the newer edit.
+  assert.deepEqual(await a.pushLocal(id,key,clientA),{revision:1,dirty:true});
+  b.putLocal(id,'Independent edit B');assert.equal((await b.pushLocal(id,key,clientB)).revision,2);
+  const syncA=createRedSync(clientA,scope,key,a,decode);
+  assert.equal((await syncA.pull()).conflicts,1);
+  const preview=await a.previewPullConflict(id,key,clientA);
+  const before=(await a.snapshot()).cursor;
+  const resolved=await a.resolvePullKeepBoth(id,preview.token,key,clientA);
+  assert.ok(resolved.copyId);assert.equal(a.getLocal(id)?.value,'Independent edit B');assert.equal(a.getLocal(resolved.copyId)?.value,'Offline edit A');
+  assert.equal((await a.snapshot()).cursor,before);assert.equal(a.conflicts().length,0);
+  await a.pushLocal(resolved.copyId,key,clientA);
+  assert.equal((await syncB.pull()).imported,1);assert.equal(b.getLocal(resolved.copyId)?.value,'Offline edit A');
+  const oldCursor=(await a.snapshot()).cursor;
+  assert.equal((await post('/red-id/v2/revoke',{app:'red-poly'},token)).status,200);
+  await assert.rejects(syncA.pull());assert.equal((await a.snapshot()).cursor,oldCursor);
+  assert.equal(a.getLocal(id)?.value,'Independent edit B');assert.equal(a.getLocal(resolved.copyId)?.value,'Offline edit A');
+  syncA.dispose();syncB.dispose();a.dispose();b.dispose();
+ }finally{key.fill(0);localA.fill(0);localB.fill(0);if(dbA.isOpen)dbA.close();dbB.close();service.close();await rm(root,{recursive:true,force:true});}
 });
