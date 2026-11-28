@@ -75,3 +75,59 @@ ausser beim Widerruf/Erneuerung. Kein dauerhafter Replay-Schutz über neue Grant
 noch kein automatischer Client, kein Schreibwerkzeug und kein ChatGPT-MCP.
 Die App muss den Nutzer vor Abholung und Statusübermittlung separat zustimmen
 lassen. Kein Einsatz mit produktiven Daten vor echter Geräteabnahme.
+
+## Separate Transportfreigabe (dritter Pilot, keine Ausführung)
+
+Standard aus; explizit REDION_ENABLE_RED_BIT_TRANSPORT_PERMISSIONS=1.
+Unabhängig von der Lesefreigabe, eigene SQLite-Tabelle und eigener Scope
+music:transport:control, maximal 15 Minuten und höchstens bis Sitzungsende.
+Owner-Routen: GET /home/red-bit/transport-grants, POST
+/home/red-bit/transport-grant und /home/red-bit/transport-revoke (jeweils
+sessionId, confirm:true). GET /red-bit/v1/transport-permission ist nur für
+die betreffende RED-Bit-Sitzung. Session-Widerruf entfernt den Grant.
+Antworten kennzeichnen remoteAvailable:false und localConfirmationRequired:true.
+Noch kein Auftragskanal, keine Befehlsausführung und keine MCP-Werkzeuge.
+Vor Wiederaktivierung gegebenenfalls alte Grants bzw. Sitzungen widerrufen.
+Für die spätere Ausführung sind separate lokale Bestätigung, Replay-Schutz,
+begrenzte Befehle, Widerruf und Geräteabnahme erforderlich.
+
+## Transport-Auftragskanal (vierter Pilot)
+
+Zusätzlich REDION_ENABLE_RED_BIT_TRANSPORT_JOBS=1 erforderlich; beide
+Transportflags standardmässig aus. Nur play, pause, next, previous.
+Alle Routen POST mit JSON und jeweiligem Bearer-Token:
+
+- Owner /home/red-bit/transport-request: sessionId, id (32 Hex-Zeichen),
+  command, issuedAt (Millisekunden, höchstens 15 s alt), confirm:true.
+- App /red-bit/v1/transport-claim: confirm:true; liefert einmalig den Auftrag.
+- App /red-bit/v1/transport-authorize: id, command, confirm:true; erst nach
+  Anzeige und lokaler Bestätigung genau dieses Befehls. Einmaliger Permit
+  mit höchstens 5 s Gültigkeit, begrenzt durch den Auftragsablauf.
+- App /red-bit/v1/transport-complete: id, outcome (executed, failed oder
+  declined); declined nur vor Autorisierung, sonst nur nach Autorisierung.
+- Owner /home/red-bit/transport-result: sessionId, id; liest nur Zustand
+  und Ergebnis bis Auftragsablauf (max. 30 s nach issuedAt).
+
+Maximal ein offener Auftrag je Sitzung, sechs pro Minute, IDs bleiben
+120 s als Replay-Schutz auch nach Grant-Erneuerung oder Widerruf erhalten.
+Keine Wiederholung nach Claim oder Autorisierung, auch bei Netzfehlern.
+Der Server kann eine bereits erhaltene Ausführungsfreigabe nicht zurückholen;
+die native App muss den Permit-Ablauf und den lokalen Zustand unmittelbar
+vor Ausführung prüfen. Ergebnis ist eine Client-Quittung, kein unabhängiger
+Nachweis der tatsächlichen Wiedergabe. Keine Titel, Dateien oder Tokens im
+Auftragsdatensatz. Native App, Dashboard-Steuerung und MCP noch nicht angebunden.
+Die Permission-API meldet bis zur Abnahme weiterhin remoteAvailable:false.
+
+## Dashboard-Musiksteuerung
+
+RED ION → Einstellungen → RED Home Server → RED Bit · Musiksteuerung.
+Sitzungen und Steuerungsfreigaben manuell abrufen, Zielgerät auswählen,
+separate 15-Minuten-Freigabe erteilen. Einen der vier Befehle bestätigen.
+In RED Bit → RED Home Server → Server-Musiksteuerung den Auftrag abrufen
+und den konkreten Befehl lokal bestätigen. Innerhalb der 30-Sekunden-Frist
+im Dashboard das Ergebnis abrufen. Keine automatische Wiederholung.
+Eine bestätigte App-Anforderung ist kein unabhängiger Wiedergabenachweis.
+Nach unklarem Ausgang zuerst Wiedergabe auf dem Zielgerät prüfen.
+Auftrags-IDs bleiben nur im Speicher der geöffneten Dashboard-Ansicht;
+nach Navigation ist eine alte Quittung dort nicht mehr abrufbar.
+Native Gegenstelle: RED Bit PR #63. CI und echte Geräteabnahme ausstehend.

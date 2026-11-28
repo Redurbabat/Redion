@@ -7,6 +7,8 @@ import {openHomeDatabase} from './home/sqlite.ts';
 import {openHomeBlobs} from './home/blobs.ts';
 import {beantworte} from './kern.ts';
 import {prepareRedBitPermissions,createRedBitPermissions,RED_BIT_PERMISSION_ROUTES} from './home/red-bit-permissions.ts';
+import {prepareRedBitTransportPermissions,createRedBitTransportPermissions,RED_BIT_TRANSPORT_ROUTES} from './home/red-bit-transport-permissions.ts';
+import {prepareRedBitTransportJobs,createRedBitTransportJobs,RED_BIT_TRANSPORT_JOB_ROUTES} from './home/red-bit-transport-jobs.ts';
 import {prepareRedBitReadJobs,createRedBitReadJobs,RED_BIT_JOB_ROUTES} from './home/red-bit-read-jobs.ts';
 import {prepareHomeSync,createHomeSyncWait} from './home/live-sync.ts';
 import {prepareRedIdV2,createRedIdV2,RED_ID_V2_ROUTES,revokeRedAppEverywhere} from './home/red-id-v2.ts';
@@ -32,12 +34,12 @@ import {zuGrossAntwort} from './sicherheit/eingaben.ts';
 import {istAbgleichWeg,mitAppUrsprung} from './sicherheit/abgleich-tor.ts';
 
 const privateRoutes=new Set(['/api/stand']);
-const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/home/dashboard','/home/apps','/red-id/v1/me','/red-id/v1/logout',...RED_ID_V2_ROUTES,...SHARE_ROUTES,...STORE_ROUTES,...REMINDER_ROUTES,...AI_ROUTES,...MCP_HUB_ROUTES,...RED_BIT_PERMISSION_ROUTES,...RED_BIT_JOB_ROUTES]);
+const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/home/dashboard','/home/apps','/red-id/v1/me','/red-id/v1/logout',...RED_ID_V2_ROUTES,...SHARE_ROUTES,...STORE_ROUTES,...REMINDER_ROUTES,...AI_ROUTES,...MCP_HUB_ROUTES,...RED_BIT_PERMISSION_ROUTES,...RED_BIT_JOB_ROUTES,...RED_BIT_TRANSPORT_ROUTES,...RED_BIT_TRANSPORT_JOB_ROUTES]);
 const json=(status:number,error:string)=>Response.json({error},{status,headers:{'Cache-Control':'no-store'}});
 
 /** Initial private API: no static repository files, public registration,
  * public pages, or unverified Cloudflare identity headers. */
-export async function openHomeServer(options:{dataDir:string;origin:string;enableMcp?:boolean;enableRedBitPermissions?:boolean;enableRedBitReadJobs?:boolean;vaultKey?:Uint8Array;webOrigins?:string;enableReminderScheduler?:boolean;localAiModels?:string}){
+export async function openHomeServer(options:{dataDir:string;origin:string;enableMcp?:boolean;enableRedBitPermissions?:boolean;enableRedBitReadJobs?:boolean;enableRedBitTransportPermissions?:boolean;enableRedBitTransportJobs?:boolean;vaultKey?:Uint8Array;webOrigins?:string;enableReminderScheduler?:boolean;localAiModels?:string}){
   const origin=new URL(options.origin);
   if(origin.protocol!=='https:'||origin.origin!==options.origin)throw new Error('REDION_ORIGIN must be an HTTPS origin');
   const webOrigins=parseRedWebOrigins(options.webOrigins??'');
@@ -52,6 +54,11 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
   const redBitJobsEnabled=!!options.enableRedBitPermissions&&!!options.enableRedBitReadJobs;
   if(redBitJobsEnabled)prepareRedBitReadJobs(store.sqlite);
   const redBitReadJobs=redBitJobsEnabled?createRedBitReadJobs(store.sqlite,store.ablage):undefined;
+  if(options.enableRedBitTransportPermissions)prepareRedBitTransportPermissions(store.sqlite);
+  const transportJobsEnabled=!!options.enableRedBitTransportPermissions&&!!options.enableRedBitTransportJobs;
+  if(transportJobsEnabled)prepareRedBitTransportJobs(store.sqlite);
+  const transportJobs=transportJobsEnabled?createRedBitTransportJobs(store.sqlite,store.ablage):undefined;
+  const redBitTransportPermissions=options.enableRedBitTransportPermissions?createRedBitTransportPermissions(store.sqlite,store.ablage):undefined;
   const redBitPermissions=options.enableRedBitPermissions?createRedBitPermissions(store.sqlite,store.ablage):undefined;
   prepareRedShare(store.sqlite);
   prepareRedStore(store.sqlite);
@@ -99,6 +106,18 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
     if((RED_BIT_JOB_ROUTES as readonly string[]).includes(path)){
       if(!redBitReadJobs)return json(404,'not_found');
       const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Cache-Control':'no-store'}}):await serial(()=>redBitReadJobs(request));
+      if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
+      return mitAppUrsprung(request,response);
+    }
+    if((RED_BIT_TRANSPORT_JOB_ROUTES as readonly string[]).includes(path)){
+      if(!transportJobs)return json(404,'not_found');
+      const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Cache-Control':'no-store'}}):await serial(()=>transportJobs(request));
+      if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
+      return mitAppUrsprung(request,response);
+    }
+    if((RED_BIT_TRANSPORT_ROUTES as readonly string[]).includes(path)){
+      if(!redBitTransportPermissions)return json(404,'not_found');
+      const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Cache-Control':'no-store'}}):await serial(()=>redBitTransportPermissions(request));
       if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
       return mitAppUrsprung(request,response);
     }
@@ -189,7 +208,7 @@ async function main(){
   const command=process.argv[2];
   const enableReminderScheduler=(!command||command==='serve')&&process.env.REDION_ENABLE_REMINDER_SCHEDULER==='1';
   const localAiModels=(!command||command==='serve')?process.env.REDION_LOCAL_AI_MODELS??'':'';
-  const service=await openHomeServer({dataDir,origin,enableMcp,enableRedBitPermissions:process.env.REDION_ENABLE_RED_BIT_PERMISSIONS==='1',enableRedBitReadJobs:process.env.REDION_ENABLE_RED_BIT_READ_JOBS==='1',enableReminderScheduler,localAiModels,webOrigins:process.env.REDION_WEB_ORIGINS??'',...(vaultKey?{vaultKey}:{})});
+  const service=await openHomeServer({dataDir,origin,enableMcp,enableRedBitPermissions:process.env.REDION_ENABLE_RED_BIT_PERMISSIONS==='1',enableRedBitReadJobs:process.env.REDION_ENABLE_RED_BIT_READ_JOBS==='1',enableRedBitTransportPermissions:process.env.REDION_ENABLE_RED_BIT_TRANSPORT_PERMISSIONS==='1',enableRedBitTransportJobs:process.env.REDION_ENABLE_RED_BIT_TRANSPORT_JOBS==='1',enableReminderScheduler,localAiModels,webOrigins:process.env.REDION_WEB_ORIGINS??'',...(vaultKey?{vaultKey}:{})});
   if(command==='recovery-reset-access'){
     try{console.log(JSON.stringify(resetHomeAccess(service.store.sqlite,process.argv[3]||'')));}
     finally{service.close();}

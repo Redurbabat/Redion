@@ -1,9 +1,9 @@
 name: RED Bit server permission pilot
 on:
   push:
-    branches: [feat/red-bit-server-permissions-20261128]
+    branches: [feat/red-bit-server-permissions-20261128, feat/red-bit-transport-grants-20261128]
   pull_request:
-    branches: [main]
+    branches: [main, feat/red-bit-server-permissions-20261128]
     paths:
       - 'server/home/red-bit-*.ts'
       - 'server/home-server.ts'
