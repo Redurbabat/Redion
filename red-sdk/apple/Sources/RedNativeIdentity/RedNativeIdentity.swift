@@ -163,8 +163,8 @@ public actor RedNativeClient {
         try store.save(JSONEncoder().encode(value), scope: scope)
         return value
     }
-    private func request(_ path: String, method: String = "POST", body: [String:String]? = nil, token: String? = nil) async throws -> Data {
-        guard let url = URL(string: origin + "/red-id/v2/" + path) else { throw RedNativeError.invalidOrigin }
+    private func request(_ path: String, method: String = "POST", body: [String:String]? = nil, token: String? = nil, share: Bool = false) async throws -> Data {
+        guard let url = URL(string: origin + (share ? "/red-share/v1/" : "/red-id/v2/") + path) else { throw RedNativeError.invalidOrigin }
         var req = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData)
         req.httpMethod = method
         req.setValue("no-store", forHTTPHeaderField: "Cache-Control")
@@ -221,6 +221,39 @@ public actor RedNativeClient {
         else { throw RedNativeError.invalidResponse }
         return identity
     }
+    private func shareRequest(_ path: String, body: [String:String]? = nil) async throws -> Data {
+        let s = try await current()
+        let method = body == nil ? "GET" : "POST"
+        do { return try await request(path, method: method, body: body, token: s.accessToken, share: true) }
+        catch RedNativeError.http(401) {
+            let next = try await rotate(s)
+            return try await request(path, method: method, body: body, token: next.accessToken, share: true)
+        }
+    }
+    public func shareSend(_ prepared: RedNativeSharePrepared) async throws {
+        try enter(); defer { busy = false }
+        guard prepared.source == app else { throw RedNativeError.invalidApp }
+        try RedNativeShare.validate(source: prepared.source, target: prepared.target, channel: prepared.channel, id: prepared.id)
+        _ = try RedNativeShare.decodeEnvelope(prepared.envelope)
+        _ = try await shareRequest("send", body: ["target":prepared.target,"channel":prepared.channel,"id":prepared.id,"envelope":prepared.envelope])
+    }
+    public func shareInbox() async throws -> [RedNativeShareMessage] {
+        try enter(); defer { busy = false }
+        let data = try await shareRequest("inbox")
+        let result = try JSONDecoder().decode(RedNativeShareInbox.self, from: data)
+        guard result.version == 1, result.messages.count <= 32 else { throw RedNativeError.invalidResponse }
+        for m in result.messages {
+            try RedNativeShare.validate(source: m.source, target: app, channel: m.channel, id: m.id)
+            _ = try RedNativeShare.decodeEnvelope(m.envelope)
+        }
+        return result.messages
+    }
+    /// Call only after atomically saving application data and the message ID.
+    public func shareAck(_ message: RedNativeShareMessage) async throws {
+        try enter(); defer { busy = false }
+        try RedNativeShare.validate(source: message.source, target: app, channel: message.channel, id: message.id)
+        _ = try await shareRequest("ack", body: ["source":message.source,"channel":message.channel,"id":message.id])
+    }
     /// If the server cannot be reached, throws after clearing local credentials.
     /// Remote revocation must then be performed in RED ION settings.
     public func logout() async throws {
@@ -255,5 +288,59 @@ public enum RedPairQRCode {
         guard let image = CIContext(options: [.useSoftwareRenderer: true]).createCGImage(output, from: output.extent.integral)
         else { throw RedNativeError.invalidResponse }
         return image
+    }
+}
+
+public struct RedNativeSharePrepared: Codable, Equatable {
+    public let source: String, target: String, channel: String, id: String, envelope: String
+}
+public struct RedNativeShareMessage: Codable, Equatable {
+    public let source: String, channel: String, id: String, envelope: String
+    public let expires: Int64
+}
+private struct RedNativeShareInbox: Decodable {
+    let version: Int
+    let messages: [RedNativeShareMessage]
+}
+public enum RedNativeShare {
+    private static func matches(_ value: String, _ pattern: String) -> Bool {
+        value.range(of: pattern, options: .regularExpression) == value.startIndex..<value.endIndex
+    }
+    static func validate(source: String, target: String, channel: String, id: String) throws {
+        guard RedNativeClient.apps.contains(source), RedNativeClient.apps.contains(target),
+              source != target, matches(channel, "^[a-z][a-z0-9_-]{0,31}$"),
+              matches(id, "^[a-f0-9]{32}$") else { throw RedNativeError.invalidResponse }
+    }
+    private static func aad(source: String,target: String,channel: String,id: String) throws -> Data {
+        try validate(source: source,target: target,channel: channel,id: id)
+        return try JSONSerialization.data(withJSONObject: ["red-share-v1",source,target,channel,id])
+    }
+    private static func b64(_ data: Data) -> String {
+        data.base64EncodedString().replacingOccurrences(of:"+",with:"-").replacingOccurrences(of:"/",with:"_").replacingOccurrences(of:"=",with:"")
+    }
+    static func decodeEnvelope(_ envelope: String) throws -> Data {
+        guard matches(envelope, "^[A-Za-z0-9_-]{38,60000}$") else { throw RedNativeError.invalidResponse }
+        let base = envelope.replacingOccurrences(of:"-",with:"+").replacingOccurrences(of:"_",with:"/")
+        guard let data = Data(base64Encoded: base + String(repeating:"=",count:(4-base.count%4)%4)),
+              data.count >= 28, b64(data) == envelope else { throw RedNativeError.invalidResponse }
+        return data
+    }
+    /// Key must be securely exchanged and stored outside the server.
+    /// Persist only this prepared encrypted envelope; retry it unchanged.
+    public static func prepare(key: Data,source: String,target: String,channel: String,json: Data) throws -> RedNativeSharePrepared {
+        guard key.count == 32,json.count <= 44000 else { throw RedNativeError.invalidResponse }
+        let parsed = try JSONSerialization.jsonObject(with: json)
+        guard let object = parsed as? [String:Any], object["version"] as? Int == 1, object.keys.contains("data") else { throw RedNativeError.invalidResponse }
+        let id = UUID().uuidString.replacingOccurrences(of:"-",with:"").lowercased()
+        let sealed = try AES.GCM.seal(json,using:SymmetricKey(data:key),authenticating:aad(source:source,target:target,channel:channel,id:id))
+        guard let combined = sealed.combined else { throw RedNativeError.invalidResponse }
+        return RedNativeSharePrepared(source:source,target:target,channel:channel,id:id,envelope:b64(combined))
+    }
+    public static func open(key: Data,target: String,message: RedNativeShareMessage) throws -> Data {
+        guard key.count == 32,Double(message.expires) > Date().timeIntervalSince1970*1000 else { throw RedNativeError.invalidResponse }
+        let sealed = try AES.GCM.SealedBox(combined:decodeEnvelope(message.envelope))
+        let data = try AES.GCM.open(sealed,using:SymmetricKey(data:key),authenticating:aad(source:message.source,target:target,channel:message.channel,id:message.id))
+        guard let object = try JSONSerialization.jsonObject(with:data) as? [String:Any],object["version"] as? Int == 1,object.keys.contains("data") else { throw RedNativeError.invalidResponse }
+        return data
     }
 }

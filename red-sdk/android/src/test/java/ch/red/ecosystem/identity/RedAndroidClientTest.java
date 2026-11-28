@@ -5,6 +5,15 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.time.Instant;
 public class RedAndroidClientTest {
+    @Test public void shareInterop()throws Exception{
+        byte[] key=new byte[32];for(int i=0;i<32;i++)key[i]=(byte)i;
+        JSONObject message=new JSONObject().put("source","red-poly").put("channel","progress").put("id","ab".repeat(16)).put("expires",System.currentTimeMillis()+60000).put("envelope","AAECAwQFBgcICQoLPCCgfreWq3TjY626ncscDPe3pQ6LWTwTVReJ4GkMZJA7JdOBAzc9bkALwlMYEGiQhNYF2Q");
+        byte[] clear=RedAndroidShare.open(key,"red-ion",message);
+        assertEquals("{\"version\":1,\"data\":{\"completed\":5}}",new String(clear,java.nio.charset.StandardCharsets.UTF_8));
+        try{RedAndroidShare.open(key,"red-bit",message);fail("accepted wrong target");}catch(javax.crypto.AEADBadTagException expected){}
+        var p=RedAndroidShare.prepare(key,"red-poly","red-ion","progress",clear);
+        assertArrayEquals(clear,RedAndroidShare.open(key,"red-ion",message.put("id",p.id).put("envelope",p.envelope)));
+    }
     @Test public void proofAndOrigin()throws Exception{
         var p=RedAndroidClient.makeProof();
         assertEquals(43,p.verifier.length());assertEquals(43,p.challenge.length());

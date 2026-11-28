@@ -65,7 +65,11 @@ export function createRedShare(db:DatabaseSync,ablage:Ablage){
  const s=db.prepare('SELECT s.owner,s.app FROM home_red_session s JOIN konten c ON c.id=s.owner WHERE s.access_digest=? AND s.access_until>? AND s.refresh_until>? AND c.gesperrt=0').get(hash(auth[1]!),now,now);
  if(!s||typeof s.owner!=='string'||!app(s.app))return reply(401,{error:'unauthorized'});
  const owner=s.owner,client=s.app;
- if(get)return reply(200,{version:1,messages:db.prepare('SELECT m.source,m.channel,m.id,m.envelope,m.expires FROM home_red_share_message m JOIN home_red_share_grant g ON g.owner=m.owner AND g.source=m.source AND g.target=m.target AND g.channel=m.channel WHERE m.owner=? AND m.target=? AND m.expires>? AND g.expires>? ORDER BY m.expires,m.id LIMIT 32').all(owner,client,now,now)});
+ if(get){const rows=db.prepare('SELECT m.source,m.channel,m.id,m.envelope,m.expires FROM home_red_share_message m JOIN home_red_share_grant g ON g.owner=m.owner AND g.source=m.source AND g.target=m.target AND g.channel=m.channel WHERE m.owner=? AND m.target=? AND m.expires>? AND g.expires>? ORDER BY m.expires,m.id LIMIT 32').all(owner,client,now,now);
+  const messages:typeof rows=[];
+  for(const row of rows){if(Buffer.byteLength(JSON.stringify({version:1,messages:[...messages,row]}))>65536)break;messages.push(row);}
+  return reply(200,{version:1,messages});
+ }
  if(!b||!channel(b.channel)||typeof b.id!=='string'||!/^[a-f0-9]{32}$/.test(b.id))return reply(400,{error:'invalid_message'});
  const kind=b.channel,messageId=b.id;
  if(path.endsWith('/ack')){

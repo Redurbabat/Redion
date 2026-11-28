@@ -26,3 +26,10 @@ test('JSON share helper encrypts and validates before application import',async(
  await assert.rejects(openRedShareJson(key,'red-ion',{...message,expires:0},validate));
  await assert.rejects(openRedShareJson(key,'red-ion',message,()=>{throw Error('Invalid schema');}));
 });
+
+test('cross-platform AES-GCM fixture',async()=>{
+ const key=Uint8Array.from({length:32},(_,i)=>i);
+ const address:RedShareAddress={source:'red-poly',target:'red-ion',channel:'progress',id:'ab'.repeat(16)};
+ const clear=await decryptRedShare(key,address,'AAECAwQFBgcICQoLPCCgfreWq3TjY626ncscDPe3pQ6LWTwTVReJ4GkMZJA7JdOBAzc9bkALwlMYEGiQhNYF2Q');
+ assert.equal(new TextDecoder().decode(clear),'{"version":1,"data":{"completed":5}}');
+});

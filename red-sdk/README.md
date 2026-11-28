@@ -53,3 +53,10 @@ use an injected transport; physical-device Keystore tests remain open.
 Browser pilot: `@red-ecosystem/sdk/browser` provides an opt-in memory-only
 identity client. The home server must explicitly allow the exact controlled
 web origin. This client does not persist tokens or share app data.
+
+SDK 0.6 native Share: Swift `RedNativeShare` and Java `RedAndroidShare`
+produce the same AES-GCM wire format as TypeScript. The same deterministic
+fixture is tested in all three implementations. Native client send/inbox/ACK
+methods use the existing per-app credentials and explicit grants. App-level
+key storage, key confirmation UI, business schema validation and atomic
+local receipt/import remain application responsibilities.

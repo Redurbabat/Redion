@@ -38,3 +38,16 @@ final class RedNativeIdentityTests: XCTestCase {
         }
     }
 }
+
+extension RedNativeIdentityTests {
+    func testShareInteroperability() throws {
+        let key=Data((0..<32).map { UInt8($0) })
+        let vector=RedNativeShareMessage(source:"red-poly",channel:"progress",id:String(repeating:"ab",count:16),envelope:"AAECAwQFBgcICQoLPCCgfreWq3TjY626ncscDPe3pQ6LWTwTVReJ4GkMZJA7JdOBAzc9bkALwlMYEGiQhNYF2Q",expires:Int64(Date().timeIntervalSince1970*1000)+60000)
+        let clear=try RedNativeShare.open(key:key,target:"red-ion",message:vector)
+        XCTAssertEqual(String(data:clear,encoding:.utf8),"{\"version\":1,\"data\":{\"completed\":5}}")
+        XCTAssertThrowsError(try RedNativeShare.open(key:key,target:"red-bit",message:vector))
+        let prepared=try RedNativeShare.prepare(key:key,source:"red-poly",target:"red-ion",channel:"progress",json:clear)
+        let message=RedNativeShareMessage(source:prepared.source,channel:prepared.channel,id:prepared.id,envelope:prepared.envelope,expires:vector.expires)
+        XCTAssertEqual(try RedNativeShare.open(key:key,target:"red-ion",message:message),clear)
+    }
+}

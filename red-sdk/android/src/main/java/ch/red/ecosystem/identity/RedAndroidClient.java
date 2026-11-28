@@ -105,6 +105,33 @@ public final class RedAndroidClient {
         if(result.getInt("version")!=2||!app.equals(result.getString("app"))||result.getString("id").isEmpty()||result.getJSONArray("scopes").length()!=1||!"identity:read".equals(result.getJSONArray("scopes").getString(0)))throw new IOException("Invalid identity");
         result.getString("name");Instant.parse(result.getString("expiresAt"));return result;
     }
+    private JSONObject share(String path,JSONObject body)throws Exception{
+        JSONObject v=current();String method=body==null?"GET":"POST";
+        try{return transport.request(origin+"/red-share/v1/"+path,method,body,v.getString("accessToken"));}
+        catch(HttpError e){if(e.status!=401)throw e;return transport.request(origin+"/red-share/v1/"+path,method,body,rotate(v).getString("accessToken"));}
+    }
+    public synchronized void shareSend(RedAndroidShare.Prepared p)throws Exception{
+        if(!app.equals(p.source))throw new IllegalArgumentException("Incorrect sender");
+        RedAndroidShare.validate(p.source,p.target,p.channel,p.id);
+        RedAndroidShare.decode(p.envelope);
+        share("send",new JSONObject().put("target",p.target).put("channel",p.channel).put("id",p.id).put("envelope",p.envelope));
+    }
+    public synchronized org.json.JSONArray shareInbox()throws Exception{
+        JSONObject response=share("inbox",null);
+        org.json.JSONArray values=response.getJSONArray("messages");
+        if(response.getInt("version")!=1||values.length()>32)throw new IOException("Invalid inbox");
+        for(int i=0;i<values.length();i++){
+            JSONObject m=values.getJSONObject(i);
+            RedAndroidShare.validate(m.getString("source"),app,m.getString("channel"),m.getString("id"));
+            RedAndroidShare.decode(m.getString("envelope"));m.getLong("expires");
+        }
+        return values;
+    }
+    /** Only ACK after atomically persisting application data and message ID. */
+    public synchronized void shareAck(String source,String channel,String id)throws Exception{
+        RedAndroidShare.validate(source,app,channel,id);
+        share("ack",new JSONObject().put("source",source).put("channel",channel).put("id",id));
+    }
     /** Local credential deletion happens even if remote logout fails; the
      * caller must show the failure and recommend revocation in RED ION. */
     public synchronized void logout()throws Exception{
