@@ -71,6 +71,14 @@ export function createRedIdV2Client(origin:string,app:RedAppId,store:RedSecureSt
       if(data?.version!==1||!Array.isArray(data.items)||data.items.length>64||!data.items.every(isStoreMeta)||(data.next!==null&&(typeof data.next!=='string'||!storeId(data.next))))throw Error('Invalid RED store page');
       return data as RedStorePage;
     }),
+    /** A null or expired cursor returns a fresh metadata snapshot.
+     * Commit the returned cursor only after all records are applied locally. */
+    storeChanges:(kind:RedStoreKind,cursor:string|null=null)=>serial(async():Promise<RedStoreChanges>=>{
+      if(cursor!==null&&!/^[a-f0-9]{64}$/.test(cursor))throw Error('Invalid RED store cursor');
+      const data=await authenticated('red-store','changes',{kind,cursor});
+      if(data?.version!==1||typeof data.reset!=='boolean'||(data.cursor!==null&&(typeof data.cursor!=='string'||!/^[a-f0-9]{64}$/.test(data.cursor)))||!Array.isArray(data.items)||data.items.length>1024||!data.items.every(isStoreMeta)||new Set(data.items.map((item:RedStoreMeta)=>item.id)).size!==data.items.length||(!data.reset&&cursor===null)||data.cursor===null&&data.items.length!==0)throw Error('Invalid RED store changes');
+      return data as RedStoreChanges;
+    }),
     storeGet:(kind:RedStoreKind,id:string)=>serial(async():Promise<RedStoreRecord>=>{
       const data=await authenticated('red-store','get',{kind,id});
       if(data?.version!==1||data.id!==id||!isStoreRecord(data))throw Error('Invalid RED store record');
@@ -240,6 +248,7 @@ export type RedStoreResult={version:1;id:string;revision:number;deleted:0|1};
 export type RedStoreRecord=RedStoreResult&{envelope:string;updated:number};
 export type RedStoreMeta=Omit<RedStoreRecord,'version'|'envelope'>&{encodedBytes:number};
 export type RedStorePage={version:1;items:RedStoreMeta[];next:string|null};
+export type RedStoreChanges={version:1;items:RedStoreMeta[];cursor:string|null;reset:boolean};
 const storeId=(s:string)=>/^[a-f0-9]{32}$/.test(s);
 const safeNatural=(x:unknown):x is number=>typeof x==='number'&&Number.isSafeInteger(x)&&x>=0;
 const storeKind=(x:unknown):x is RedStoreKind=>x==='sync'||x==='file';

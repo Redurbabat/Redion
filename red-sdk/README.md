@@ -70,3 +70,14 @@ On HTTP 409 fetch the latest record and ask the user or perform a verified
 domain merge; never blindly rebase the local revision. Record keys remain
 outside the server. File objects are small (44,000 plaintext bytes), not a
 streaming file system. Browser-only identity clients remain identity-only.
+
+### SDK 0.8: incremental RED Sync
+
+Call `storeChanges(kind, cursor)` to retrieve metadata for only changed
+objects (including tombstones). `reset:true` requires reconciliation
+against the complete bounded metadata inventory. Fetch and authenticate
+ciphertext with `storeGet` / `openRedStoreRecord`. Fetch may return a newer
+revision; never overwrite pending local edits automatically. Apply records
+and persist the returned cursor in one local transaction. An unknown cursor
+(e.g. after restore) causes a fresh snapshot rather than silent data loss.
+No credentials, encryption keys or plaintext are included in the feed.

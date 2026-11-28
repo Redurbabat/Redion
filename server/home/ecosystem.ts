@@ -4,8 +4,8 @@ import {RED_APPS} from './red-id.ts';
 export function homeEcosystemCapabilities(vaultEnabled:boolean){
  return {version:1,mode:'private-home',apps:[...RED_APPS],services:{
   identity:{version:2,explicitApproval:true},
-  sync:{version:1,scope:'same-owner-app',explicitGrant:true,revisionConflicts:true},
-  files:{version:1,scope:'same-owner-app',explicitGrant:true,maxPlaintextBytes:44000,streaming:false},
+  sync:{version:1,scope:'same-owner-app',explicitGrant:true,revisionConflicts:true,incrementalMetadata:true},
+  files:{version:1,scope:'same-owner-app',explicitGrant:true,maxPlaintextBytes:44000,streaming:false,incrementalMetadata:true},
   share:{version:1,explicitDirectionalGrant:true,clientEncryption:true},
   vault:{blobEncryptionEnabled:vaultEnabled,sqliteEncryptionVerified:false},
   backup:{offline:true,encrypted:true},update:{stagingOnly:true},

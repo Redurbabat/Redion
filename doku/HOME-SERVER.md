@@ -426,3 +426,21 @@ Für Docker-Betrieb steht `bash deploy/home/recovery-reset.sh
 verwendet die Wartungssperre und verweigert den Reset bei laufendem bekannten
 Compose-Dienst. Andere Schreiber müssen separat gestoppt werden; der Befehl
 startet den Dienst nicht. Vorher eine verifizierte Sicherung erstellen.
+
+### RED Sync 0.8 – inkrementeller Änderungsfeed
+
+`POST /red-store/v1/changes` mit `{kind,cursor}` verwendet dieselben
+App- und Speicherfreigaben wie `get` und `list`. Der Cursor ist ein zufälliger
+und pro Konto/App/Typ isolierter Marker; SQLite-Trigger schreiben ihn atomar
+mit jeder neuen Objektversion. Maximal 512 Marker pro Bereich bleiben
+verfügbar, nur die neuesten Metadaten pro Objekt (maximal 1024) werden
+zurückgegeben. Bei null, unbekanntem oder abgelaufenem Cursor enthält
+`reset:true` die vollständige Metadatenliste. Kein alter Ciphertext im Feed,
+keine zusätzliche Freigabe für Browser oder MCP. Bei Backup-Restore kann ein
+nicht mehr vorhandener Marker erkannt werden; kein kryptografischer Schutz
+gegen einen böswilligen Server, der eine konsistente alte DB vorspielt.
+Client muss die Metadaten abgleichen, aktuelle Objekte laden und prüfen,
+lokale Konflikte behandeln und Cursor erst nach atomarem lokalem Commit
+speichern. Die Feed-Migration erfasst vorhandene Objekte ohne deren Inhalte
+zu ändern. Native App-Integration, Hintergrundsync und Schlüsselverwaltung
+bleiben separat offen.

@@ -3,8 +3,9 @@ import type {DatabaseSync} from 'node:sqlite';
 import type {Ablage} from '../typen.ts';
 import {werFragt} from '../kern.ts';
 import {RED_APPS} from './red-id.ts';
+import {prepareRedStoreChanges,readRedStoreChanges} from './red-store-changes.ts';
 
-export const STORE_ROUTES=['/red-store/v1/grants','/red-store/v1/grant','/red-store/v1/revoke','/red-store/v1/list','/red-store/v1/get','/red-store/v1/put','/red-store/v1/delete'] as const;
+export const STORE_ROUTES=['/red-store/v1/grants','/red-store/v1/grant','/red-store/v1/revoke','/red-store/v1/list','/red-store/v1/get','/red-store/v1/put','/red-store/v1/delete','/red-store/v1/changes'] as const;
 const reply=(status:number,data:unknown)=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const hash=(v:string)=>createHash('sha256').update(v).digest('hex');
 const app=(v:unknown):v is string=>typeof v==='string'&&(RED_APPS as readonly string[]).includes(v);
@@ -24,6 +25,7 @@ async function body(req:Request):Promise<Record<string,unknown>|null>{
 }
 export function prepareRedStore(db:DatabaseSync){
  db.exec('CREATE TABLE IF NOT EXISTS home_red_store_grant(owner TEXT NOT NULL,app TEXT NOT NULL,kind TEXT NOT NULL,expires INTEGER NOT NULL,PRIMARY KEY(owner,app,kind)); CREATE TABLE IF NOT EXISTS home_red_store_record(owner TEXT NOT NULL,app TEXT NOT NULL,kind TEXT NOT NULL,id TEXT NOT NULL,revision INTEGER NOT NULL,deleted INTEGER NOT NULL,envelope TEXT NOT NULL,operation TEXT NOT NULL,digest TEXT NOT NULL,updated INTEGER NOT NULL,PRIMARY KEY(owner,app,kind,id));');
+ prepareRedStoreChanges(db);
 }
 export function revokeRedStore(db:DatabaseSync,owner:string,appId:string){
  db.prepare('DELETE FROM home_red_store_grant WHERE owner=? AND app=?').run(owner,appId);
@@ -67,9 +69,14 @@ export function createRedStore(db:DatabaseSync,ablage:Ablage){
   if(!input||!kind(input.kind))return reply(400,{error:'invalid_kind'});
   const owner=auth.owner,client=auth.app,type=input.kind;
   // Ignore no supplied owner or app override; reject unexpected fields.
-  const fields=action==='list'?['kind','after']:action==='get'?['kind','id']:action==='put'?['kind','id','expectedRevision','operationId','envelope']:['kind','id','expectedRevision','operationId'];
+  const fields=action==='changes'?['kind','cursor']:action==='list'?['kind','after']:action==='get'?['kind','id']:action==='put'?['kind','id','expectedRevision','operationId','envelope']:['kind','id','expectedRevision','operationId'];
   if(Object.keys(input).some(k=>!fields.includes(k)))return reply(400,{error:'unexpected_field'});
   if(!db.prepare('SELECT 1 FROM home_red_store_grant WHERE owner=? AND app=? AND kind=? AND expires>?').get(owner,client,type,now))return reply(403,{error:'grant_required'});
+  if(action==='changes'){
+   const cursor=input.cursor??null;
+   if(cursor!==null&&(typeof cursor!=='string'||!/^[a-f0-9]{64}$/.test(cursor)))return reply(400,{error:'invalid_cursor'});
+   return reply(200,readRedStoreChanges(db,owner,client,type,cursor));
+  }
   if(action==='list'){
    const after=input.after??'';if(after!==''&&!identifier(after))return reply(400,{error:'invalid_cursor'});
    const rows=db.prepare('SELECT id,revision,deleted,updated,length(envelope) AS encodedBytes FROM home_red_store_record WHERE owner=? AND app=? AND kind=? AND id>? ORDER BY id LIMIT 65').all(owner,client,type,after);
