@@ -3,6 +3,7 @@ name: Workspace-Dokumentenkompass
 on:
   pull_request:
     paths:
+      - 'doku/RED-ION-MASTER.md'
       - 'src/bereiche/pdf/document-mode.ts'
       - 'quell/bereiche/pdf/document-mode.js'
       - 'quell/schale/stil/pdf-studio.css'

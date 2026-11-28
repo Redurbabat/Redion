@@ -2,6 +2,7 @@ name: RED ION Home Server
 on:
   pull_request:
     paths:
+      - 'doku/RED-ION-MASTER.md'
       - 'server/**'
       - 'deploy/home/**'
       - 'pruefungen/redion-home-server.test.mts'

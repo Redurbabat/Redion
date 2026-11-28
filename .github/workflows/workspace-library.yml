@@ -12,6 +12,7 @@ on:
       - 'pruefungen/workspace-library.mts'
   pull_request:
     paths:
+      - 'doku/RED-ION-MASTER.md'
       - 'src/bereiche/wissen/bibliothek.ts'
       - 'quell/schale/stil/bibliothek-studio.css'
       - 'quell/schale/stil/studio.css'

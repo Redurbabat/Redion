@@ -1,0 +1,32 @@
+# RED ION – gemeinsamer Master-Auftrag
+
+Stand: 28. November 2026. Ein Entwicklungs-PR: [#263](https://github.com/Redurbabat/Redion/pull/263), Basis Main nach #262. Alle vier offenen Issues werden hier gebündelt; sie sind nicht automatisch abgeschlossen.
+
+| Issue | Vorhandene Grundlage | Noch offen / Abnahme |
+|---|---|---|
+| [#134](https://github.com/Redurbabat/Redion/issues/134) Workspace | Bibliothek, Editor, Dokumentkompass, Mobile-Dock | aktuelle Chromium-/WebKit-Bilder, mobile Gesten, Accessibility, Web/IPA-Parität, echte iPhone-Abnahme |
+| [#164](https://github.com/Redurbabat/Redion/issues/164) Sync/Backup | Sync-Engine, private Server-API, Gerätefreigabe, Backup und Konfliktlogik | getrennte echte Backups, Schlüsselablage, reale Zwei-Wege-Sync- und Restore-Abnahme, iCloud-Signatur |
+| [#259](https://github.com/Redurbabat/Redion/issues/259) Ecosystem | SDK 0.15, Scheduler, Speicher-/Grant-Reviews, SSO, Files, AI/MCP-Pilot; Phase 3 ergänzt Disk-Sink und Video/Developer-Piloten | grosse verschlüsselte Dateien, Sync-/Vault-Integration, restliche P0–P3-Module, elf Apps und Hardware |
+| [#260](https://github.com/Redurbabat/Redion/issues/260) Studio | Werkzeuge, PDF-Navigator, Messwertinspektor, Referenzfenster, native Preview | CAD-/Simulation, Split-View, PDF/Whiteboard, MCP und physische Stift-/Monitorabnahme |
+
+## Reihenfolge
+
+1. P0: CI, Offline-Datenintegrität, Server, Restore, Rechte, Sync.
+2. P1: persistente Adapter, Files/SSD, Konflikt-UI, Schlüssel und native Integration.
+3. P1: Workspace, Desktop, Elektro, PDF und Whiteboard auf bestehenden Datenmodellen.
+4. P2: MCP, AI, Video, Developer, Workflow. Kein beliebiger Code im Server.
+5. P3: App- und Hardwareabnahme. Andere Repositories benötigen eigene PRs; dieser PR verändert sie nicht.
+
+## Gemeinsames Prüfgate
+
+Diese Datei ist ein zusätzlicher Pfadtrigger für vorhandene Workflows: Home Server, Live Sync, Bibliothek, Editor, Dokument, Mobile Navigation, iOS-Regression und native Windows Preview. Zusätzlich Phase-3-Tests mit echter Chromium-Wiedergabe und Node unter Linux/Windows. Weitere native Builds, SDK und MCP-Verträge werden separat in das Gate aufgenommen. Keine Tests deaktivieren.
+
+## Abnahme
+
+- Keine Main-Freigabe vor erfolgreicher CI auf exakt der finalen Revision. Übersprungen oder ausstehend zählt nicht als bestanden.
+- Issues erst schliessen, wenn ihre konkreten Unteraufgaben und Nachweise vollständig sind.
+- Physische SSD, eigene iPhone-/Windows-Installation, Backup/Restore und externe App-Integration bleiben separat nachzuweisen.
+- Keine Nutzerdaten löschen, keine Produktionssecrets, keine ungeprüfte Cloud-Konfiguration.
+- Graphify im vollständigen Checkout nachziehen; vorhandener Graph ist historisch.
+
+Siehe [Phase 3](RED-ION-PHASE-3.md), [Home Server](HOME-SERVER.md), [Studio](RED-STUDIO-DESKTOP.md), [MCP](RED-ION-MCP-ARCHITEKTUR.md), [iPhone/Windows](IPHONE-WINDOWS-INTEGRATION.md).

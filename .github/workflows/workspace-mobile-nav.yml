@@ -3,6 +3,7 @@ name: Workspace Mobile Navigation 2.0
 on:
   pull_request:
     paths:
+      - 'doku/RED-ION-MASTER.md'
       - 'src/schale/aufbau/tab-shelf.ts'
       - 'quell/schale/aufbau/tab-shelf.js'
       - 'quell/schale/stil/bausteine.css'
