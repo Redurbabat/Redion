@@ -80,7 +80,7 @@ export function createRedBitTransportJobs(db:DatabaseSync,ablage:Ablage,clock=Da
     const row=db.prepare("SELECT expires FROM home_red_bit_transport_job WHERE owner=? AND session_id=? AND id=? AND command=? AND expires>? AND state='claimed'").get(owner,session,body.id,body.command,now);
     if(!row)return reply(409,{error:'not_claimed_or_expired'});
     const expires=Math.min(Number(row.expires),now+5000);
-    db.prepare("UPDATE home_red_bit_transport_job SET state='authorized',expires=? WHERE owner=? AND id=?").run(expires,owner,body.id);
+    db.prepare("UPDATE home_red_bit_transport_job SET state='authorized' WHERE owner=? AND id=?").run(owner,body.id);
     return reply(200,{version:1,id:body.id,command:body.command,expiresAt:expires});
    }
    if(path==='/red-bit/v1/transport-complete'){
