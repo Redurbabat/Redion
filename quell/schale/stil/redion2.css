@@ -956,3 +956,34 @@ html[data-windows-titelleiste] body:is(.fokus, [data-dokument="an"]) #studio-bar
     }
   }
 }
+
+
+/* Desktop document navigation: compact search and bookmark view. Native
+   page rows retain their original indices; filtered rows never drag. */
+.document-desktop-filter{display:none}
+.document-thumbnails .document-thumb-zeile[hidden]{display:none}
+@media(min-width:1024px) and (hover:hover) and (pointer:fine){
+  html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .document-desktop-filter{
+    display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-1);
+    padding:var(--space-2);border-bottom:1px solid var(--line);
+    background:var(--bg-side);color:var(--text);
+  }
+  .document-desktop-filter input{
+    grid-column:1/-1;min-width:0;width:100%;box-sizing:border-box;
+    min-height:var(--touch-min);padding:var(--space-1) var(--space-2);
+    background:var(--bg-input);color:var(--text);border:1px solid var(--line);
+    border-radius:var(--radius-md);font:inherit;
+  }
+  .document-desktop-filter button{
+    min-width:0;min-height:var(--touch-min);border:1px solid var(--line);
+    border-radius:var(--radius-md);background:var(--bg-card);color:var(--text);
+    font:inherit;font-size:var(--t-small);
+  }
+  .document-desktop-filter button[aria-pressed="true"]{
+    background:var(--accent-schwach);color:var(--accent-text);
+  }
+  .document-desktop-filter :is(input,button):focus-visible{
+    outline:2px solid var(--accent-text);outline-offset:-2px;
+  }
+  .document-filter-count{grid-column:1/-1;margin:0;color:var(--text-dim);font-size:var(--t-caption)}
+}

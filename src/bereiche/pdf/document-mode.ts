@@ -1310,7 +1310,10 @@ const DocumentMode = (() => {
   /** Nur die sichtbare Handvoll Vorschaubilder aus IndexedDB holen. Ein
       geschlossenes mobiles Panel hat keinen sichtbaren Schnitt und loest
       deshalb auch bei Dokumenten mit hunderten Seiten keine Lesewelle aus. */
+  const thumbnailRefresh = new WeakMap<HTMLElement, () => void>();
   const activateVisibleThumbnails = (panel: HTMLElement): void => {
+    const existing = thumbnailRefresh.get(panel);
+    if (existing) { existing(); return; }
     let scheduled = false;
     const loadVisible = (): void => {
       scheduled = false;
@@ -1322,7 +1325,7 @@ const DocumentMode = (() => {
       const top = Math.max(0, panelRect.top) - 220;
       const bottom = Math.min(window.innerHeight, panelRect.bottom) + 220;
       panel.querySelectorAll<HTMLImageElement>('img[data-document-thumbnail-file]').forEach(image => {
-        if (image.src || image.dataset.loading === 'true') return;
+        if (image.src || image.dataset.loading === 'true' || image.closest('[hidden]')) return;
         const rect = image.getBoundingClientRect();
         if (rect.bottom < top || rect.top > bottom) return;
         const fileId = image.dataset.documentThumbnailFile;
@@ -1342,6 +1345,7 @@ const DocumentMode = (() => {
       requestAnimationFrame(loadVisible);
     };
     panel.addEventListener('scroll', schedule, { passive: true });
+    thumbnailRefresh.set(panel, schedule);
     schedule();
   };
 
@@ -2400,7 +2404,56 @@ const DocumentMode = (() => {
     const thumbTitle = document.createElement('strong'); thumbTitle.textContent = wortViele(page);
     const thumbClose = topButton('thumbnails-close', '✕', wortViele(page) + 'übersicht schließen');
     thumbHeader.append(thumbTitle, thumbClose); thumbnails.appendChild(thumbHeader);
+    const thumbFilter = document.createElement('div');
+    thumbFilter.className = 'document-desktop-filter';
+    const thumbSearch = document.createElement('input');
+    thumbSearch.type = 'search'; thumbSearch.maxLength = 100;
+    thumbSearch.placeholder = 'Seitennummer oder Titel';
+    thumbSearch.setAttribute('aria-label', 'Seitenübersicht filtern');
+    thumbSearch.autocomplete = 'off';
+    const thumbBookmarks = document.createElement('button');
+    thumbBookmarks.type = 'button'; thumbBookmarks.textContent = 'Lesezeichen';
+    thumbBookmarks.setAttribute('aria-pressed','false');
+    const thumbClear = document.createElement('button');
+    thumbClear.type = 'button'; thumbClear.textContent = 'Alle';
+    const thumbCount = document.createElement('p');
+    thumbCount.setAttribute('role','status'); thumbCount.className = 'document-filter-count';
+    thumbFilter.append(thumbSearch, thumbBookmarks, thumbClear, thumbCount);
+    thumbnails.appendChild(thumbFilter);
     documents.forEach((block, index) => thumbnails.appendChild(thumbnail(block, index, index === state.index)));
+    const thumbRows = Array.from(thumbnails.querySelectorAll<HTMLElement>('.document-thumb-zeile'));
+    let bookmarkFilter = false;
+    const filterActive = (): boolean => !!thumbSearch.value.trim() || bookmarkFilter;
+    const filterPages = (): void => {
+      const term = thumbSearch.value.trim().toLocaleLowerCase('de-CH');
+      const number = /^#?\d+$/.test(term) ? Number(term.replace(/^#/,'')) : null;
+      let count = 0;
+      thumbRows.forEach((row,index) => {
+        const block = Store.getBlock(documents[index].id) || documents[index];
+        const matches = !term || (number !== null ? index+1===number : sourceLabel(block).toLocaleLowerCase('de-CH').includes(term));
+        row.hidden = !(matches && (!bookmarkFilter || block.lesezeichen));
+        if (!row.hidden) count++;
+      });
+      thumbBookmarks.setAttribute('aria-pressed',String(bookmarkFilter));
+      thumbCount.textContent = count + ' / ' + documents.length + ' ' + wortViele(page) +
+        (filterActive() ? ' · Reihenfolge gesperrt' : '');
+      thumbnails.dataset.filtered = String(filterActive());
+      activateVisibleThumbnails(thumbnails);
+    };
+    thumbSearch.addEventListener('input', () => { zugEnde(); menueSchliessen(); filterPages(); });
+    thumbBookmarks.addEventListener('click', () => { zugEnde(); menueSchliessen(); bookmarkFilter=!bookmarkFilter; filterPages(); });
+    thumbClear.addEventListener('click', () => { zugEnde(); menueSchliessen(); thumbSearch.value=''; bookmarkFilter=false; filterPages(); });
+    thumbSearch.addEventListener('keydown',event=>{
+      if(event.key==='Enter'){
+        event.preventDefault();event.stopPropagation();
+        const first = thumbRows.find(row=>!row.hidden);
+        if(first) springe(Number(first.dataset.documentThumbZeile),false);
+      } else if(event.key==='Escape' && filterActive()){
+        event.preventDefault();event.stopPropagation();thumbClear.click();
+      }
+    });
+    thumbCount.textContent = documents.length + ' / ' + documents.length + ' ' + wortViele(page);
+    const thumbDesktop = window.matchMedia('(min-width:1024px) and (hover:hover) and (pointer:fine)');
 
     const center = document.createElement('main');
     center.className = 'document-center' + (state.einzeln ? ' ist-einzeln' : '');
@@ -3273,6 +3326,7 @@ const DocumentMode = (() => {
 
     const beiGroesse = (): void => {
       if (!workspace.isConnected) { window.removeEventListener('resize', beiGroesse); return; }
+      if (!thumbDesktop.matches && filterActive()) thumbClear.click();
       folienbandNachziehen();
       hoeheSetzen(); passen(); aktivMarkieren(); nachziehen();
     };
@@ -4346,7 +4400,7 @@ const DocumentMode = (() => {
       const ziel = event.target as HTMLElement | null;
       if (!ziel || ziel.closest('.document-thumb-menue, .document-thumb-menue-knopf')) return;
       const zeile = ziel.closest<HTMLElement>('.document-thumb-zeile');
-      if (!zeile || !darfSeiten()) return;
+      if (!zeile || !darfSeiten() || filterActive()) return;
       const index = Number(zeile.dataset.documentThumbZeile);
       const block = documents[index];
       if (!block) return;

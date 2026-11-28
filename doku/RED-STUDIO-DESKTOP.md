@@ -22,3 +22,7 @@ Windows-only wide plan container (>=850px), fine pointer and >=1024px window. Ex
 ## Gleichzeitige Desktop-Bauteilbibliothek und Inspektor
 
 Windows, feiner Zeiger, breite Planfläche ab 1180 px: Bibliothek links und Inspektor rechts können gleichzeitig geöffnet werden. Gemeinsame Panel-Logik für Kopf, Kontextmenü und Tastatur. Bei kleinerem Fenster/Fokusmodus schliesst die Bibliothek, der Inspektor bleibt. Bei zwei Spalten jeweils maximal 28 % der Breite; bestehende Zieh-/Tastatur-Griffe bleiben. Ansichtsstatus verändert keine gespeicherten Pläne. Test625 erweitert für beide Panels, Überdeckung, Resize-Tastatur, schmalen Rückfall und Modell-Unverändertheit. Abnahme noch offen.
+
+## PDF-Seitennavigator
+
+Windows-Desktop: Seitenübersicht filtern nach Dokumentposition (auch #3), vorhandener Seitenbeschriftung oder Lesezeichen. Enter springt zum ersten Treffer, Escape/Alle setzt zurück. Keine OCR-Suche; bestehende Volltextsuche bleibt unverändert. Drag-Reihenfolge während Filter gesperrt, Seitennummern und gespeicherte Inhalte bleiben unverändert. Miniatur-Lader verwendet pro Panel nur einen Scroll-Handler und überspringt versteckte Bilder. Test285 ergänzt; CI offen.

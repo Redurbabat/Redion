@@ -49,7 +49,7 @@ jobs:
           test "$(git ls-remote origin refs/heads/feat/red-studio-desktop | cut -f1)" = "$GITHUB_SHA" || { echo 'Branch advanced; skip stale build'; exit 0; }
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- quell/core/gfx/toolbar.js quell/bereiche/bloecke/arten/planflaeche.js src/dienst/sw.ts sw.js src/kern/einstellung/stand.ts quell/kern/einstellung/stand.js redion-einzeldatei.html
+          git add -- quell/core/gfx/toolbar.js quell/bereiche/bloecke/arten/planflaeche.js quell/bereiche/pdf/document-mode.js src/dienst/sw.ts sw.js src/kern/einstellung/stand.ts quell/kern/einstellung/stand.js redion-einzeldatei.html
           git diff --cached --stat
           if git diff --cached --quiet; then exit 0; fi
           git -c core.hooksPath=/dev/null commit -m 'build: regenerate offline artifacts'
