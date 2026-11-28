@@ -2,8 +2,8 @@ import type {DatabaseSync} from 'node:sqlite';
 import type {Ablage} from '../typen.ts';
 import {werFragt} from '../kern.ts';
 import {advanceRedReminders,type ReminderReview} from './reminder-scheduler.ts';
-import {prepareMaintenanceReviews} from './maintenance-reviews.ts';
-export const REMINDER_ROUTES=['/home/reminders/list','/home/reminders/create','/home/reminders/poll','/home/reminders/ack','/home/reminders/cancel'] as const;
+import {prepareMaintenanceReviews,listMaintenanceHistory} from './maintenance-reviews.ts';
+export const REMINDER_ROUTES=['/home/reminders/list','/home/reminders/history','/home/reminders/create','/home/reminders/poll','/home/reminders/ack','/home/reminders/cancel'] as const;
 const DAY=86400000;
 const MAX_RULES=64;
 const kinds=['backup-review','grant-review','storage-review','update-review'] as const;
@@ -31,13 +31,15 @@ export function createRedReminders(db:DatabaseSync,ablage:Ablage,clock=Date.now,
  return async(req:Request):Promise<Response>=>{
   const path=new URL(req.url).pathname,action=path.split('/').at(-1);
   if(!(REMINDER_ROUTES as readonly string[]).includes(path))return reply(404,{error:'not_found'});
-  if(req.method!==(action==='list'?'GET':'POST'))return reply(405,{error:'method_not_allowed'});
-  const input=action==='list'?null:await read(req);
-  if(action!=='list'&&!input)return reply(400,{error:'invalid_request'});
+  const get=action==='list'||action==='history';
+  if(req.method!==(get?'GET':'POST'))return reply(405,{error:'method_not_allowed'});
+  const input=get?null:await read(req);
+  if(!get&&!input)return reply(400,{error:'invalid_request'});
   const who=await werFragt(ablage,{authorization:req.headers.get('authorization')??''});
   if(!who?.sitzung)return reply(401,{error:'unauthorized'});
   const owner=String(who.konto.id),now=clock();
   if(action==='list')return reply(200,{version:1,asOf:now,rules:inventory(owner)});
+  if(action==='history')return reply(200,{version:1,asOf:now,...listMaintenanceHistory(db,owner)});
   if(!input)return reply(400,{error:'invalid_request'});
   if(action==='poll'){
    if(!exact(input,[]))return reply(400,{error:'invalid_poll'});
@@ -63,6 +65,7 @@ export function createRedReminders(db:DatabaseSync,ablage:Ablage,clock=Date.now,
    if(!exact(input,['id']))return reply(400,{error:'invalid_cancel'});
    return transaction(db,()=>{
     db.prepare('DELETE FROM home_red_maintenance_review WHERE owner=? AND id=?').run(owner,id);
+    db.prepare('DELETE FROM home_red_maintenance_history WHERE owner=? AND id=?').run(owner,id);
     db.prepare('DELETE FROM home_red_reminder WHERE owner=? AND id=?').run(owner,id);
     return reply(200,{ok:true});
    });

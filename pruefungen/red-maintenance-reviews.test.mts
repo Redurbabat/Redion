@@ -4,7 +4,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {prepareMaintenanceReviews,createMaintenanceReview} from '../server/home/maintenance-reviews.ts';
+import {prepareMaintenanceReviews,createMaintenanceReview,listMaintenanceHistory,MAINTENANCE_HISTORY_LIMIT} from '../server/home/maintenance-reviews.ts';
 import {advanceRedReminders} from '../server/home/reminder-scheduler.ts';
 const DAY=86_400_000;
 function setup(db:DatabaseSync){
@@ -42,5 +42,22 @@ test('measurement failures are unknown; transaction rolls back if persistence fa
   db.exec('DROP TABLE home_red_maintenance_review');
   assert.throws(()=>advanceRedReminders(db,1000,'a',review));
   assert.equal(db.prepare('SELECT pending_due FROM home_red_reminder WHERE id=?').get('y')?.pending_due,null);
+ }finally{db.close();await rm(root,{recursive:true,force:true});}
+});
+
+test('history keeps newest 256 per owner, returns at most 64 and ignores duplicate occurrences',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'red-history-'));const db=new DatabaseSync(':memory:');
+ try{
+  setup(db);const review=createMaintenanceReview(db,root);
+  review('b','same','grant-review',1000,1000);
+  for(let i=0;i<MAINTENANCE_HISTORY_LIMIT+4;i++)review('a','same','grant-review',1000+i,1000+i);
+  review('a','same','grant-review',1000+MAINTENANCE_HISTORY_LIMIT+3,9999);
+  const history=listMaintenanceHistory(db,'a');
+  assert.equal(history.entries.length,64);assert.equal(history.truncated,true);
+  assert.equal(history.entries[0]?.due,1000+MAINTENANCE_HISTORY_LIMIT+3);
+  assert.equal(history.entries[0]?.measuredAt,1000+MAINTENANCE_HISTORY_LIMIT+3);
+  assert.equal(db.prepare("SELECT count(*) AS n FROM home_red_maintenance_history WHERE owner='a'").get()?.n,MAINTENANCE_HISTORY_LIMIT);
+  assert.equal(listMaintenanceHistory(db,'b').entries.length,1);
+  assert.equal(listMaintenanceHistory(db,'other').entries.length,0);
  }finally{db.close();await rm(root,{recursive:true,force:true});}
 });

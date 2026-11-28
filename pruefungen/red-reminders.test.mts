@@ -26,6 +26,9 @@ test('maintenance automation is scoped, persistent, idempotent and coalesces mis
   const call=(action:string,body?:object)=>handler(req(prefix+action,body,token));
   const rules=async(action:'poll'|'list')=>(await (await call(action,action==='poll'?{}:undefined)).json() as {rules:Rule[]}).rules;
   assert.equal((await s.handle(req(prefix+'list'))).status,401);
+  assert.equal((await s.handle(req(prefix+'history'))).status,401);
+  assert.equal((await s.handle(req(prefix+'history',undefined,session.accessToken))).status,401);
+  assert.equal((await s.handle(req(prefix+'history',undefined,token,'https://web.example.test'))).status,403);
   assert.equal((await s.handle(req(prefix+'list',undefined,session.accessToken))).status,401);
   assert.equal((await s.handle(req(prefix+'list',undefined,token,'https://web.example.test'))).status,403);
   const payload={id,kind:'backup-review',period:'daily',firstDue:start+1000};
@@ -79,8 +82,13 @@ test('opt-in server lifecycle catches up stored reminders without polling',async
   assert.equal((await call('/home/reminders/ack',{id,due:firstDue},token)).status,200);
   assert.equal((await list())?.pendingDue,null);
   assert.deepEqual((await list())?.review,review);
+  const history=async()=>(await (await call('/home/reminders/history',undefined,token)).json() as {entries:{id:string;due:number;status:string}[]}).entries;
+  assert.equal((await history())[0]?.id,id);assert.equal((await history())[0]?.due,firstDue);
+  s.close();s=await openHomeServer({dataDir:root,origin});
+  assert.equal((await history()).length,1);
   assert.equal((await call('/home/reminders/cancel',{id},token)).status,200);
   assert.equal((await list()),undefined);
   assert.equal(s.store.sqlite.prepare('SELECT count(*) AS n FROM home_red_maintenance_review').get()?.n,0);
+  assert.equal((await history()).length,0);
  }finally{s.close();await rm(root,{recursive:true,force:true});}
 });
