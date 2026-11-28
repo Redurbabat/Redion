@@ -41,7 +41,8 @@ function conflictKey(c:RedSyncConflict){return JSON.stringify([c.id,c.localRevis
 /** Eine separate, vertrauenswürdige lokale Datenbank pro Konto/App/Kind.
  * Der Aufrufer verwaltet DB-Lebensdauer, Dateirechte und einen separaten
  * 32-Byte-Schlüssel. Keine Schlüsselablage oder automatische Konfliktauflösung. */
-export function createSqliteSyncAdapter(db:DatabaseSync,scope:RedSyncScope,localKey:Uint8Array){
+export function createSqliteSyncAdapter(db:DatabaseSync,scope:RedSyncScope,localKey:Uint8Array,mode:'auto'|'create'|'open'='auto'){
+ if(!['auto','create','open'].includes(mode))throw Error('Ungültiger Sync-Öffnungsmodus');
  if(localKey.byteLength!==32||![scope.origin,scope.owner,scope.app,scope.kind].every(v=>typeof v==='string'&&v.length>0&&v.length<=512))throw Error('Ungültiger lokaler Sync-Schlüssel oder Bereich');
  const syncScope={...scope};
  const bound=JSON.stringify(['red-local-sync-v1',syncScope.origin,syncScope.owner,syncScope.app,syncScope.kind]);
@@ -79,10 +80,16 @@ export function createSqliteSyncAdapter(db:DatabaseSync,scope:RedSyncScope,local
  }
  try{
   transaction(()=>{
-   db.exec('CREATE TABLE IF NOT EXISTS red_local_sync_v1(id INTEGER PRIMARY KEY CHECK(id=1),generation TEXT NOT NULL,payload BLOB NOT NULL)');
-   if(!db.prepare('SELECT 1 FROM red_local_sync_v1 WHERE id=1').get()){
-    const g=randomUUID();db.prepare('INSERT INTO red_local_sync_v1 VALUES(1,?,?)').run(g,encode({cursor:null,items:[],conflicts:[]},g));
-   }else read(); // Falscher Schlüssel/Bereich oder beschädigte Daten: kein Reset.
+   const existing=db.prepare("SELECT type FROM main.sqlite_schema WHERE name='red_local_sync_v1'").get();
+   if(existing){
+    if(mode==='create'||existing.type!=='table')throw Error('Lokaler Sync-Bestand bereits vorhanden oder ungültig');
+    read(); // Auch bei fehlender Zeile: nie automatisch neu initialisieren.
+    return;
+   }
+   if(mode==='open')throw Error('Lokaler Sync-Bestand fehlt; Wiederherstellung erforderlich');
+   if(db.prepare("SELECT 1 FROM main.sqlite_schema WHERE name NOT LIKE 'sqlite_%' LIMIT 1").get())throw Error('Keine leere dedizierte Sync-Datenbank');
+   db.exec('CREATE TABLE red_local_sync_v1(id INTEGER PRIMARY KEY CHECK(id=1),generation TEXT NOT NULL,payload BLOB NOT NULL)');
+   const g=randomUUID();db.prepare('INSERT INTO red_local_sync_v1 VALUES(1,?,?)').run(g,encode({cursor:null,items:[],conflicts:[]},g));
   });
  }catch(error){key.fill(0);disposed=true;throw error;}
  /** Read-only authenticated conflict preview. No network writes. */

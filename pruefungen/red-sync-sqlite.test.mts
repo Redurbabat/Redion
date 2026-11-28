@@ -186,3 +186,27 @@ test('Pull conflict resolution refuses rollback, missing remote, tombstones and 
   assert.equal(calls,0);assert.equal(a.conflicts().length,2);assert.equal(a.getLocal(id)?.value,'Local');a.dispose();
  }finally{db.close();}
 });
+
+test('Missing encrypted state never silently resets an existing database; explicit open/create modes',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'red-sync-no-reset-')),file=join(dir,'local.sqlite');
+ let db=new DatabaseSync(file);
+ try{
+  assert.throws(()=>createSqliteSyncAdapter(db,scope,localKey,'open'),/fehlt/);
+  assert.equal(db.prepare("SELECT name FROM sqlite_schema WHERE name='red_local_sync_v1'").get(),undefined);
+  const a=createSqliteSyncAdapter(db,scope,localKey,'create');
+  a.putLocal(id,'Unsynced draft');
+  const saved=db.prepare('SELECT generation,payload FROM red_local_sync_v1 WHERE id=1').get()!;
+  assert.throws(()=>createSqliteSyncAdapter(db,scope,localKey,'create'),/bereits vorhanden/);
+  a.dispose();db.exec('DELETE FROM red_local_sync_v1 WHERE id=1');db.close();
+  db=new DatabaseSync(file);
+  for(const mode of ['auto','open','create'] as const)assert.throws(()=>createSqliteSyncAdapter(db,scope,localKey,mode));
+  assert.equal(db.prepare('SELECT 1 FROM red_local_sync_v1').get(),undefined);
+  db.prepare('INSERT INTO red_local_sync_v1 VALUES(1,?,?)').run(saved.generation,saved.payload);
+  const recovered=createSqliteSyncAdapter(db,scope,localKey,'open');
+  assert.equal(recovered.getLocal(id)?.value,'Unsynced draft');recovered.dispose();
+  db.exec('DROP TABLE red_local_sync_v1; CREATE TABLE unrelated(value TEXT); INSERT INTO unrelated VALUES(\'keep\')');
+  assert.throws(()=>createSqliteSyncAdapter(db,scope,localKey),/dedizierte/);
+  assert.equal(db.prepare('SELECT value FROM unrelated').get()?.value,'keep');
+  assert.equal(db.prepare("SELECT name FROM sqlite_schema WHERE name='red_local_sync_v1'").get(),undefined);
+ }finally{if(db.isOpen)db.close();await rm(dir,{recursive:true,force:true});}
+});

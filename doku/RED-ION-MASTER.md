@@ -74,3 +74,7 @@ Ergänzt separaten Android-KeyStore-Adapter mit verschlüsseltem No-backup-Verze
 ## P1-Fortschritt: Schlüsseltransfer-Lifecycle
 
 Bestehenden SDK-Transfer um maximal fünf Minuten lokale Lebensdauer (Wallclock + monotone Zeit), explizite idempotente Abbruchfunktion über alle Stufen und Nachprüfung nach asynchroner Kryptografie erweitert. Peer-Public-Key vor await gebunden, temporäre Secret-Bytes auch bei Fehlern gelöscht. Wire-Format unverändert. Regressionen für Abbruch, laufende Entschlüsselung, Ablauf und ungültige Dauer. Kein QR-/Fingerprint-UI, kein automatischer Einbau, keine Recovery. Neue Tests noch zu prüfen.
+
+## P0-Fortschritt: fehlender lokaler Sync-Bestand
+
+Windows DPAPI-Smoke-Schritt (Run 46163139251) und Android SDK (46163139216) auf `3eaa0db3` bestanden; Phase-3-Matrix grün. Lokaler SQLite-Adapter erhält explizite Open/Create-Modi, blockiert Neuinitialisierung vorhandener leerer Zustands-Tabellen und verweigert Initialisierung in fremden Datenbanken. Regression simuliert verlorene Zeile, Neustart, Wiederherstellung synthetischer Chiffre und unveränderte Fremdtabelle. `auto` bleibt kompatibel, erkennt jedoch keine vollständig verschwundene DB; produktive Anbindung muss `open` nutzen. Kandidat noch nicht getestet.

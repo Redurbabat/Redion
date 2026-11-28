@@ -73,3 +73,7 @@ Playwright 1.56.1 benötigt einen unterstützten Linux-Runner; Ubuntu 24.04 erse
 ### Durchgängige RED Home Server-Regression
 
 `node --test pruefungen/red-store.test.mts` enthält eine vollständige synthetische Integration der SQLite-Sync-Adapter mit zwei getrennten Profilen und echten RED-ID-v2-/RED-Store-Request-Handlern. Kein vorgetäuschter Serverzustand; lediglich die Übertragung erfolgt im Prozess, mit gezielt verlorener Antwort. Reale Netzwerkverbindung, Betriebssystem-Schlüsselspeicher, App-Oberflächen und physische Geräte bleiben separat zu prüfen.
+
+### Lokalen Sync-Bestand ausdrücklich öffnen
+
+`createSqliteSyncAdapter(db, scope, key, 'open')` verlangt vorhandene authentifizierbare Daten. `'create'` verlangt eine leere dedizierte Datenbank; Standard `'auto'` ist für bestehende Pilotaufrufe kompatibel. Eine vorhandene Tabelle ohne Zustandszeile wird in keinem Modus neu initialisiert. Fremde Tabellen werden bei Erstinitialisierung nicht verändert. Native Integrationen sollen den Modus aus der expliziten Provisionierung ableiten; bei Verlust der gesamten Datei kann `auto` eine neue leere DB anlegen, daher für bestehende Profile `open` verwenden. Keine automatische Recovery oder Rollback-Erkennung.
