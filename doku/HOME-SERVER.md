@@ -477,3 +477,16 @@ Der vollständige 128-Bit-Fingerabdruck muss auf beiden vertrauenswürdigen
 Geräten unabhängig verglichen werden. Ohne diese Prüfung kein sicherer
 Geräteidentitätsnachweis. Keine serverseitige Schlüsselablage und keine
 unbeaufsichtigte Freigabe. Native QR- und Keychain-/Keystore-Integration offen.
+
+### RED Files 2.0 – Multipart-Pilot (SDK 0.11)
+
+Verschlüsselte Dateien bis 8 MiB aus maximal 40.000 Byte grossen Segmenten.
+Dateiname, Segmentreihenfolge, IDs, Längen und SHA-256-Prüfsummen liegen
+im authentifizierten verschlüsselten Manifest. Die App veröffentlicht das
+Manifest zuletzt; bei Verbindungsabbruch denselben verschlüsselten Uploadplan
+wiederverwenden. Der Server sieht einzelne opake Objekte und deren Grössen.
+Dateien sind unveränderlich, Zugriff erfolgt per Manifest-ID. Kein automatisches
+Löschen unvollständiger Uploads, keine grosse SSD-Quote, kein Streaming.
+Die Grenze 16 MiB kodierte Daten und 1024 Objekte pro Konto bleibt bestehen.
+Download und Vorbereitung sind speicherbegrenzt, aber im Arbeitsspeicher.
+Native Dateiauswahl, lokales Uploadjournal und Export fehlen noch.

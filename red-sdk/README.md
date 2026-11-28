@@ -120,3 +120,20 @@ packet is bound to the offer transcript, origin, owner, app and kind.
 No server receives the key; QR scanning, secure storage UI, key rotation
 and automated recovery remain outside this helper. Restart a failed transfer
 with new offers. The helper does not authenticate device ownership by itself.
+
+### SDK 0.11 – RED Files multipart pilot
+
+`createRedFiles(client, scope, fileStorageKey)` prepares a bounded encrypted
+upload plan for immutable files up to 8 MiB. Each 40,000-byte chunk and the
+manifest have separate per-file HKDF keys. Names, ordered chunk IDs, lengths
+and SHA-256 digests are authenticated inside the encrypted manifest. Persist
+the exact encrypted plan until `upload` returns; retry with the same plan if
+the response is lost. Upload validates the entire plan first and publishes
+the manifest last. Download by manifest ID returns bytes only after every
+chunk is authenticated and checked. This is not a streaming filesystem:
+preparation/download use bounded memory and a failed upload may leave
+orphan chunks. No automatic garbage collection or overwrite/delete API.
+The existing 16 MiB encoded-data / 1024-object per-account pilot limit still
+applies; other stored objects may prevent an 8 MiB upload. Keep explicit
+manifest references in your local app catalogue. File names are display
+metadata only; apply platform-specific path sanitization before export.

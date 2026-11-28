@@ -491,3 +491,121 @@ export async function createRedDeviceKeyTransfer(scope:RedSyncScope,role:'sender
   }};
  }};
 }
+
+
+/** RED Files 2 pilot: immutable, encrypted multipart objects. The manifest
+ * is published last. Keep the encrypted upload plan for idempotent retry.
+ * This is a bounded in-memory helper, not a filesystem or streaming API. */
+export const RED_FILE_MAX_BYTES=8*1024*1024;
+export const RED_FILE_CHUNK_BYTES=40000;
+const maxFileChunks=Math.ceil(RED_FILE_MAX_BYTES/RED_FILE_CHUNK_BYTES);
+export type RedFileScope=Omit<RedSyncScope,'kind'>;
+export type RedFileManifest={version:2;name:string;size:number;chunks:{id:string;size:number;sha256:string}[]};
+export type RedFilePlan={version:2;id:string;manifest:RedStoreWrite;chunks:RedStoreWrite[]};
+type RedFileTransport={storeGet(kind:RedStoreKind,id:string):Promise<RedStoreRecord>;storePut(write:RedStoreWrite):Promise<RedStoreResult>};
+const fileNameValid=(v:unknown):v is string=>typeof v==='string'&&v.length>0&&v.length<=200&&v!=='.'&&v!=='..'&&!/[/\\\u0000-\u001f\u007f]/.test(v);
+const digestHex=async(data:Uint8Array)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(data))),b=>b.toString(16).padStart(2,'0')).join('');
+function parseFileManifest(input:unknown,id:string):RedFileManifest{
+ if(!input||typeof input!=='object'||Array.isArray(input))throw Error('Invalid file manifest');
+ const v=input as Record<string,unknown>;
+ if(Object.keys(v).length!==4||v.version!==2||!fileNameValid(v.name)||!safeNatural(v.size)||v.size>RED_FILE_MAX_BYTES||!Array.isArray(v.chunks)||v.chunks.length!==Math.ceil(v.size/RED_FILE_CHUNK_BYTES)||v.chunks.length>maxFileChunks)throw Error('Invalid file manifest');
+ const seen=new Set([id]);const chunks:RedFileManifest['chunks']=[];
+ for(let i=0;i<v.chunks.length;i++){
+  const c=v.chunks[i],expected=Math.min(RED_FILE_CHUNK_BYTES,v.size-i*RED_FILE_CHUNK_BYTES);
+  if(!c||typeof c!=='object'||Object.keys(c).length!==3||typeof c.id!=='string'||!storeId(c.id)||seen.has(c.id)||c.size!==expected||typeof c.sha256!=='string'||!/^[a-f0-9]{64}$/.test(c.sha256))throw Error('Invalid file chunk');
+  seen.add(c.id);chunks.push({id:c.id,size:c.size,sha256:c.sha256});
+ }
+ return {version:2,name:v.name,size:v.size,chunks};
+}
+export function createRedFiles(client:RedFileTransport,scope:RedFileScope,key:Uint8Array){
+ const bound={origin:scope.origin,owner:scope.owner,app:scope.app,kind:'file' as const};
+ storeAAD({...bound,id:'0'.repeat(32),revision:1});
+ if(key.byteLength!==32)throw Error('Invalid file key');
+ const secret=new Uint8Array(key);
+ let disposed=false,busy=false;
+ const use=async<T,>(fn:()=>Promise<T>):Promise<T>=>{
+  if(disposed||busy)throw Error('File transfer unavailable');
+  busy=true;try{return await fn();}finally{busy=false;if(disposed)secret.fill(0);}
+ };
+ const assertActive=()=>{if(disposed)throw Error('File transfer disposed');};
+ const derive=async(id:string)=>{
+  const salt=storeAAD({...bound,id,revision:1});
+  const master=await crypto.subtle.importKey('raw',secret,'HKDF',false,['deriveBits']);
+  const get=async(label:string)=>new Uint8Array(await crypto.subtle.deriveBits({name:'HKDF',hash:'SHA-256',salt,info:new TextEncoder().encode(label)},master,256));
+  return {manifest:await get('red-file-manifest-v2'),chunk:await get('red-file-chunk-v2')};
+ };
+ const checkWrite=(w:RedStoreWrite,id:string)=>{
+  if(!w||w.kind!=='file'||w.id!==id||w.expectedRevision!==0||typeof w.operationId!=='string'||!storeId(w.operationId)||!validStoreEnvelope(w.envelope))throw Error('Invalid encrypted file plan');
+ };
+ const asRecord=(w:RedStoreWrite):RedStoreRecord=>({version:1,id:w.id,revision:1,deleted:0,updated:0,envelope:w.envelope});
+ const openManifest=async(id:string,record:RedStoreRecord,k:Uint8Array)=>{
+  if(record.id!==id||record.revision!==1||record.deleted!==0)throw Error('Invalid immutable file manifest');
+  const bytes=await openRedStoreRecord(k,{...bound,id},record);
+  try{return parseFileManifest(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)),id);}
+  finally{bytes.fill(0);}
+ };
+ const openChunk=async(record:RedStoreRecord,entry:RedFileManifest['chunks'][number],k:Uint8Array)=>{
+  if(record.id!==entry.id||record.revision!==1||record.deleted!==0)throw Error('Invalid immutable file chunk');
+  const bytes=await openRedStoreRecord(k,{...bound,id:entry.id},record);
+  if(bytes.length!==entry.size||await digestHex(bytes)!==entry.sha256){bytes.fill(0);throw Error('File chunk integrity mismatch');}
+  return bytes;
+ };
+ return {
+  prepare(name:string,bytes:Uint8Array):Promise<RedFilePlan>{return use(async()=>{
+   if(!fileNameValid(name)||bytes.byteLength>RED_FILE_MAX_BYTES)throw Error('File exceeds pilot limits or invalid name');
+   const input=new Uint8Array(bytes),id=newRedStoreId(),keys=await derive(id);
+   try{
+    const manifest:RedFileManifest={version:2,name,size:input.length,chunks:[]},chunks:RedStoreWrite[]=[];
+    for(let offset=0;offset<input.length;offset+=RED_FILE_CHUNK_BYTES){
+     assertActive();
+     const part=input.subarray(offset,offset+RED_FILE_CHUNK_BYTES),chunkId=newRedStoreId();
+     manifest.chunks.push({id:chunkId,size:part.length,sha256:await digestHex(part)});
+     chunks.push(await prepareRedStoreWrite(keys.chunk,{...bound,id:chunkId},0,part));
+    }
+    const manifestBytes=new TextEncoder().encode(JSON.stringify(manifest));
+    try{return {version:2,id,manifest:await prepareRedStoreWrite(keys.manifest,{...bound,id},0,manifestBytes),chunks};}
+    finally{manifestBytes.fill(0);}
+   }finally{input.fill(0);keys.manifest.fill(0);keys.chunk.fill(0);}
+  });},
+  upload(plan:RedFilePlan,onProgress?:(completed:number,total:number)=>void):Promise<string>{return use(async()=>{
+   // Clone before awaiting so the caller cannot mutate the validated plan.
+   if(!plan||plan.version!==2||typeof plan.id!=='string'||!storeId(plan.id)||!Array.isArray(plan.chunks)||plan.chunks.length>maxFileChunks)throw Error('Invalid file plan');
+   const id=plan.id,manifestWrite={...plan.manifest},chunks=plan.chunks.map(w=>({...w}));
+   checkWrite(manifestWrite,id);
+   const keys=await derive(id);
+   try{
+    const manifest=await openManifest(id,asRecord(manifestWrite),keys.manifest);
+    if(chunks.length!==manifest.chunks.length)throw Error('Incomplete file plan');
+    // Authenticate all staged objects before sending even the first chunk.
+    for(let i=0;i<chunks.length;i++){
+     assertActive();
+     const w=chunks[i]!,entry=manifest.chunks[i]!;
+     checkWrite(w,entry.id);const bytes=await openChunk(asRecord(w),entry,keys.chunk);bytes.fill(0);
+    }
+    const total=chunks.length+1;let done=0;
+    for(const w of [...chunks,manifestWrite]){
+     assertActive();
+     checkStoreResult(await client.storePut(w),w.id,1,0);
+     onProgress?.(++done,total);
+    }
+    return id;
+   }finally{keys.manifest.fill(0);keys.chunk.fill(0);}
+  });},
+  download(id:string):Promise<{name:string;bytes:Uint8Array}>{return use(async()=>{
+   if(typeof id!=='string'||!storeId(id))throw Error('Invalid file ID');
+   const keys=await derive(id);let output:Uint8Array|undefined;
+   try{
+    const manifest=await openManifest(id,await client.storeGet('file',id),keys.manifest);
+    output=new Uint8Array(manifest.size);let offset=0;
+    for(const entry of manifest.chunks){
+     assertActive();
+     const bytes=await openChunk(await client.storeGet('file',entry.id),entry,keys.chunk);
+     try{output.set(bytes,offset);offset+=bytes.length;}finally{bytes.fill(0);}
+    }
+    assertActive();return {name:manifest.name,bytes:output};
+   }catch(e){output?.fill(0);throw e;}
+   finally{keys.manifest.fill(0);keys.chunk.fill(0);}
+  });},
+  dispose(){disposed=true;if(!busy)secret.fill(0);}
+ };
+}
