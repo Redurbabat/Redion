@@ -578,6 +578,11 @@ const Planflaeche = (() => {
                     next.element.querySelector('button')?.focus({ preventScroll: true });
             }
             simulationDock.element.querySelector('[data-a="sim-pause"]')?.setAttribute('aria-pressed', String(zeitStand.pause));
+            for (const [id, selected] of [['sim-schalten', z.werkzeug !== 'stift'], ['sim-zeichnen', z.werkzeug === 'stift']]) {
+                const button = simulationDock.element.querySelector('[data-a="' + id + '"]');
+                button?.setAttribute('aria-pressed', String(selected));
+                button?.classList.toggle('on', selected);
+            }
             relayDock.setzeGesperrt('relay-original', !z.plan.relaisLegacy);
             relayDock.setzeGesperrt('relay-freigeben', !z.plan.relaisLegacy || !!z.plan.relaisLegacy.verifiziert);
             for (const action of ['pruefen', 'muster'])
@@ -623,13 +628,15 @@ const Planflaeche = (() => {
                         ? `<button type="button" class="sp-netz" data-a="netz" ` +
                             `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
                             `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
-                        : '');
+                        : '') +
+                    `<span class="sp-desktop-modus">${z.simulation ? 'Simulation' : relaisOffen ? 'Relais' : batterieOffen ? 'Batterie' : 'Zeichnen'}</span>`;
             kopfRechts.innerHTML =
                 `<select class="sp-art" aria-label="Planart" title="Planart: ${esc(Schaltplan.artVon(z.plan.art).name)}">` +
                     Schaltplan.ARTEN.map(a => `<option value="${esc(a.id)}"${a.id === z.plan.art ? ' selected' : ''}>` +
                         `${esc(a.name)}</option>`).join('') + '</select>' +
                     `<button type="button" class="sp-kopf-knopf" data-a="zurueck" title="Rückgängig (Strg+Z)" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>${symbol('undo', 18)}</button>` +
                     `<button type="button" class="sp-kopf-knopf" data-a="vorwaerts" title="Wiederholen (Strg+Y)" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>${symbol('redo', 18)}</button>` +
+                    `<button type="button" class="sp-desktop-inspector sp-kopf-knopf" data-a="desktop-inspector" title="Eigenschaften und Übersicht" aria-label="Eigenschaften und Übersicht" aria-expanded="${studioOffen}">${symbol('panelL', 18)}</button>` +
                     `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" ` +
                     `aria-label="Bereiche" aria-haspopup="menu">✦<span class="sp-bereiche-wort"> Bereiche</span><span class="sp-bereiche-pfeil"> ▾</span></button>` +
                     `<button type="button" class="sp-kopf-knopf" data-a="mehr" title="Mehr: Planart, Ansicht, Ausgabe" aria-label="Mehr" aria-haspopup="menu">${symbol('dots', 18)}</button>` +
@@ -3701,7 +3708,7 @@ const Planflaeche = (() => {
                 ansichtAnwenden();
                 return;
             }
-            if (b.dataset.a === 'elektro-studio') {
+            if (b.dataset.a === 'elektro-studio' || b.dataset.a === 'desktop-inspector') {
                 studioOffen = !studioOffen;
                 studioPanel.hidden = !studioOffen;
                 if (studioOffen) {

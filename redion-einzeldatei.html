@@ -30229,6 +30229,81 @@ html[data-windows-titelleiste] body:is(.fokus, [data-dokument="an"]) #studio-bar
   body:not([data-ui-shell="glass-wheel"]) .document-studio[data-pdf-galerie]{--pdf-dock-breite:720px}
 }
 
+
+/* RED Studio · macOS-inspired material for the actual Windows desktop shell.
+   No faux traffic lights, no changes to the native overlay's safe area.
+   Existing theme tokens, document paper and mobile UI stay authoritative. */
+.sp-wrap .sp-desktop-modus,.sp-wrap .sp-kopf .sp-desktop-inspector{display:none}
+@media (min-width:1024px) and (hover:hover) and (pointer:fine) and (forced-colors:none){
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]){
+    --red-studio-material:var(--bg-card);
+    --red-studio-sidebar:var(--bg-side);
+    --red-studio-edge:color-mix(in srgb,var(--text) 13%,transparent);
+    --red-studio-selection:var(--accent-schwach);
+    --red-studio-radius:var(--radius-xl);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) #main > #studio-bar{
+    border-bottom:1px solid var(--red-studio-edge);
+    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--windows-kopf-text) 6%,transparent);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) #studio-bar .studio-search{
+    background-color:color-mix(in srgb,var(--windows-kopf-text) 9%,var(--windows-kopf-flaeche));
+    color:var(--windows-kopf-text);border-radius:var(--radius-lg);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) #main > :is(#kante,#menueband){
+    background:var(--red-studio-sidebar);border-color:var(--red-studio-edge);
+    color:var(--text);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) #reiterleiste .reiter{
+    border-radius:var(--radius-md) var(--radius-md) 0 0;
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .gfx-tb-edgeless{
+    --gfx-dock-icon:var(--text-dim);--gfx-dock-edge:var(--red-studio-edge);
+    --gfx-dock-hover:var(--bg-hover);--gfx-galerie-aktiv:var(--accent-text);
+    --gfx-dock-breite:720px;
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .gfx-tb-edgeless .gfx-tb-haupt::before{
+    border:1px solid var(--red-studio-edge);border-image:none;
+    border-radius:var(--red-studio-radius);background:var(--red-studio-material);
+    filter:none;box-shadow:var(--e-2);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .gfx-tb-edgeless :is(.gfx-tb-neben,.gfx-tb-edgeless-zusatz,.gfx-tb-menue){
+    border:1px solid var(--red-studio-edge);border-radius:var(--red-studio-radius);
+    background:var(--red-studio-material);box-shadow:var(--e-1);
+  }
+  @supports (backdrop-filter:blur(1px)){
+    @media (prefers-reduced-transparency:no-preference){
+      html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .gfx-tb-edgeless :is(.gfx-tb-neben,.gfx-tb-edgeless-zusatz,.gfx-tb-menue){
+        background:var(--bg-schwebend,var(--red-studio-material));backdrop-filter:var(--glas-blur);
+      }
+    }
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .sp-wrap .sp-desktop-modus{
+    display:inline-flex;align-items:center;padding:var(--space-1) var(--space-2);
+    border:1px solid var(--red-studio-edge);border-radius:var(--radius-pill);
+    font-size:var(--t-caption);color:var(--text-dim);white-space:nowrap;
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .sp-wrap[data-electro-context="simulation"] .sp-desktop-modus{
+    color:var(--accent-text);background:var(--red-studio-selection);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .sp-wrap .sp-kopf .sp-desktop-inspector{
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .sp-wrap .sp-desktop-inspector[aria-expanded="true"]{
+    color:var(--accent-text);background:var(--red-studio-selection);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .document-studio .document-mode-switch{
+    border-radius:var(--radius-lg);background:var(--bg-input);
+    border-color:var(--red-studio-edge);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .document-studio .document-mode-switch button[aria-pressed="true"]{
+    box-shadow:var(--e-1);background:var(--red-studio-material);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .document-studio .document-inspector :is(.document-panel-header,.document-inspector-heading){
+    border-bottom:1px solid var(--red-studio-edge);
+  }
+}
+
 </style>
 
 <!-- =========================================================================
@@ -31715,7 +31790,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1730, inhalt: '4e9c0a95f6d38bca', gebaut: '2026-11-28T10:48:22.548Z' };
+const Stand = { fassung: 1731, inhalt: 'a8a40b0613e3d73c', gebaut: '2026-11-28T10:51:21.528Z' };
 window.Stand = Stand;
 
 </script>
@@ -77559,6 +77634,11 @@ const Planflaeche = (() => {
                     next.element.querySelector('button')?.focus({ preventScroll: true });
             }
             simulationDock.element.querySelector('[data-a="sim-pause"]')?.setAttribute('aria-pressed', String(zeitStand.pause));
+            for (const [id, selected] of [['sim-schalten', z.werkzeug !== 'stift'], ['sim-zeichnen', z.werkzeug === 'stift']]) {
+                const button = simulationDock.element.querySelector('[data-a="' + id + '"]');
+                button?.setAttribute('aria-pressed', String(selected));
+                button?.classList.toggle('on', selected);
+            }
             relayDock.setzeGesperrt('relay-original', !z.plan.relaisLegacy);
             relayDock.setzeGesperrt('relay-freigeben', !z.plan.relaisLegacy || !!z.plan.relaisLegacy.verifiziert);
             for (const action of ['pruefen', 'muster'])
@@ -77604,13 +77684,15 @@ const Planflaeche = (() => {
                         ? `<button type="button" class="sp-netz" data-a="netz" ` +
                             `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
                             `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
-                        : '');
+                        : '') +
+                    `<span class="sp-desktop-modus">${z.simulation ? 'Simulation' : relaisOffen ? 'Relais' : batterieOffen ? 'Batterie' : 'Zeichnen'}</span>`;
             kopfRechts.innerHTML =
                 `<select class="sp-art" aria-label="Planart" title="Planart: ${esc(Schaltplan.artVon(z.plan.art).name)}">` +
                     Schaltplan.ARTEN.map(a => `<option value="${esc(a.id)}"${a.id === z.plan.art ? ' selected' : ''}>` +
                         `${esc(a.name)}</option>`).join('') + '</select>' +
                     `<button type="button" class="sp-kopf-knopf" data-a="zurueck" title="Rückgängig (Strg+Z)" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>${symbol('undo', 18)}</button>` +
                     `<button type="button" class="sp-kopf-knopf" data-a="vorwaerts" title="Wiederholen (Strg+Y)" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>${symbol('redo', 18)}</button>` +
+                    `<button type="button" class="sp-desktop-inspector sp-kopf-knopf" data-a="desktop-inspector" title="Eigenschaften und Übersicht" aria-label="Eigenschaften und Übersicht" aria-expanded="${studioOffen}">${symbol('panelL', 18)}</button>` +
                     `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" ` +
                     `aria-label="Bereiche" aria-haspopup="menu">✦<span class="sp-bereiche-wort"> Bereiche</span><span class="sp-bereiche-pfeil"> ▾</span></button>` +
                     `<button type="button" class="sp-kopf-knopf" data-a="mehr" title="Mehr: Planart, Ansicht, Ausgabe" aria-label="Mehr" aria-haspopup="menu">${symbol('dots', 18)}</button>` +
@@ -80682,7 +80764,7 @@ const Planflaeche = (() => {
                 ansichtAnwenden();
                 return;
             }
-            if (b.dataset.a === 'elektro-studio') {
+            if (b.dataset.a === 'elektro-studio' || b.dataset.a === 'desktop-inspector') {
                 studioOffen = !studioOffen;
                 studioPanel.hidden = !studioOffen;
                 if (studioOffen) {
