@@ -112,8 +112,19 @@ try {
       });
       for (const item of contrast) assert.ok(item.ratio>=4.5,`${width}/${dark?'dark':'light'}: ${item.selector}: Textkontrast ${item.ratio.toFixed(2)}; color=${item.color}, Hintergrund=${item.cardBackground}, --text=${item.textToken}`);
       for (const selector of ['[data-bib-search]','[data-neu-auf]','[data-form-wahl]',`[data-bib-favorite="${ids.notes}"]`]) {
-        const r=await page.locator('.bib '+selector).first().boundingBox();
-        assert.ok(r && r.width>=44 && r.height>=44,selector+' mindestens 44 × 44');
+        const geometry=await page.locator('.bib '+selector).first().evaluate(el=>{
+          const chain=[];let parent:Element|null=el;
+          while(parent&&chain.length<12){
+            const style=getComputedStyle(parent),rect=parent.getBoundingClientRect();
+            chain.push({tag:parent.tagName,classes:parent.className,width:rect.width,height:rect.height,
+              cssWidth:style.width,cssHeight:style.height,minWidth:style.minWidth,minHeight:style.minHeight,
+              transform:style.transform,scale:style.scale,zoom:style.getPropertyValue('zoom'),animation:style.animationName});
+            parent=parent.parentElement;
+          }
+          return chain;
+        });
+        const r=geometry[0];
+        assert.ok(r && r.width>=44 && r.height>=44,`${width}/${dark?'dark':'light'}: ${selector} mindestens 44 × 44; ${JSON.stringify(geometry)}`);
       }
       const favorite=page.locator(`[data-bib-favorite="${ids.notes}"]`);
       // Gegenprobe: nur im isolierten Testbrowser die Zustandsbindung lösen.

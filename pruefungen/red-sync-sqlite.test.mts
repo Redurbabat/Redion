@@ -195,13 +195,15 @@ test('Missing encrypted state never silently resets an existing database; explic
   assert.equal(db.prepare("SELECT name FROM sqlite_schema WHERE name='red_local_sync_v1'").get(),undefined);
   const a=createSqliteSyncAdapter(db,scope,localKey,'create');
   a.putLocal(id,'Unsynced draft');
-  const saved=db.prepare('SELECT generation,payload FROM red_local_sync_v1 WHERE id=1').get()!;
+  const saved=db.prepare('SELECT generation,payload FROM red_local_sync_v1 WHERE id=1').get();
+  assert.ok(saved&&typeof saved.generation==='string'&&saved.payload instanceof Uint8Array);
+  const savedGeneration=saved.generation,savedPayload=saved.payload;
   assert.throws(()=>createSqliteSyncAdapter(db,scope,localKey,'create'),/bereits vorhanden/);
   a.dispose();db.exec('DELETE FROM red_local_sync_v1 WHERE id=1');db.close();
   db=new DatabaseSync(file);
   for(const mode of ['auto','open','create'] as const)assert.throws(()=>createSqliteSyncAdapter(db,scope,localKey,mode));
   assert.equal(db.prepare('SELECT 1 FROM red_local_sync_v1').get(),undefined);
-  db.prepare('INSERT INTO red_local_sync_v1 VALUES(1,?,?)').run(saved.generation,saved.payload);
+  db.prepare('INSERT INTO red_local_sync_v1 VALUES(1,?,?)').run(savedGeneration,savedPayload);
   const recovered=createSqliteSyncAdapter(db,scope,localKey,'open');
   assert.equal(recovered.getLocal(id)?.value,'Unsynced draft');recovered.dispose();
   db.exec('DROP TABLE red_local_sync_v1; CREATE TABLE unrelated(value TEXT); INSERT INTO unrelated VALUES(\'keep\')');

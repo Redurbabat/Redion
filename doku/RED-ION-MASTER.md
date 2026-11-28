@@ -82,3 +82,7 @@ Windows DPAPI-Smoke-Schritt (Run 46163139251) und Android SDK (46163139216) auf 
 ## CI-Korrektur: TypeScript-Quellen für DPAPI
 
 `test109` meldet auf `3eaa0db3` exakt drei neue handgeschriebene CJS-Dateien. Diese werden in CTS-Quellen überführt, ohne die JS-Bestandsprüfung zu ändern. Der Electron-Smoke-Test wird mit Node 24 in den vorhandenen ignorierten Ausgabeordner `windows/generated` transpiliert und dort ausgeführt. Node-Scope-Test läuft direkt als CTS. Neue CI nötig. Bibliotheksfehler (Favoriten-Trefffläche unter 44px) separat offen; Ursache nicht bewiesen.
+
+## CI-Korrektur: strikte Typprüfung und Bibliotheksdiagnose
+
+Run 46163679899 meldet drei Typfehler: SQLite-Spalten vor Wiederherstellung auf String/Bytes prüfen; feste Build-Dateipaare als readonly Tupel typisieren. Bibliotheks-Treffflächenprüfung protokolliert nun tatsächliche Geometrie und CSS der Elternkette inklusive Transform/Scale/Zoom. Die 44px-Anforderung bleibt unverändert; kein CSS-Umbau ohne Messbefund. Neue CI erforderlich.
