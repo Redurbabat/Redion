@@ -3,6 +3,7 @@ import {createReadStream,createWriteStream} from 'node:fs';
 import {mkdir,readFile,readdir,lstat,realpath,writeFile,rm} from 'node:fs/promises';
 import {dirname,basename,join,resolve,relative,isAbsolute,sep} from 'node:path';
 import {pipeline} from 'node:stream/promises';
+import {Writable} from 'node:stream';
 import {DatabaseSync} from 'node:sqlite';
 import {pathToFileURL} from 'node:url';
 
@@ -94,11 +95,33 @@ export async function restoreOfflineBackup(source:string,destination:string,rawK
     return {id:manifest.id,files:manifest.entries.length};
   }catch(e){await rm(target,{recursive:true,force:true});throw e;}
 }
+/** Authenticate every encrypted entry without writing plaintext to disk.
+ * This is not a SQLite integrity or full application restore test. */
+export async function verifyEncryptedBackup(source:string,rawKey:Uint8Array){
+  const key=keyBytes(rawKey),root=await realpath(source),manifestPath=join(root,'manifest.enc'),st=await regular(manifestPath);
+  if(st.size>MAX_MANIFEST+MAGIC.length+28)throw Error('Manifest too large');
+  const manifest=openManifest(await readFile(manifestPath),key);
+  let bytes=0;
+  for(const e of manifest.entries){
+    const src=join(root,e.file),before=await regular(src);
+    if(before.size!==e.size)throw Error('Backup entry size mismatch');
+    const d=createDecipheriv('aes-256-gcm',key,Buffer.from(e.nonce,'hex'));
+    d.setAAD(aad(manifest.id,e.path));d.setAuthTag(Buffer.from(e.tag,'hex'));
+    let count=0;
+    await pipeline(createReadStream(src),d,new Writable({write(chunk:Buffer,_encoding,done){count+=chunk.length;done();}}));
+    const after=await regular(src);
+    if(count!==e.size||after.size!==before.size||after.mtimeMs!==before.mtimeMs||after.ino!==before.ino)throw Error('Backup changed during verification');
+    bytes+=count;
+  }
+  return {version:1,id:manifest.id,createdAt:manifest.createdAt,files:manifest.entries.length,verifiedBytes:bytes,sqliteIntegrityVerified:false};
+}
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
   process.umask(0o077);
   const [command,source,destination,keyFile,confirmation]=process.argv.slice(2);
-  if(!source||!destination||!keyFile||confirmation!=='--offline-confirmed'||!['create','restore'].includes(command??'')){
-    console.error('Usage: backup.ts create|restore SOURCE NEW_DESTINATION KEY_FILE --offline-confirmed');process.exitCode=1;
+  if(command==='verify'&&source&&destination&&keyFile==='--verify-only'&&confirmation===undefined){
+    (async()=>console.log(JSON.stringify(await verifyEncryptedBackup(source,await readFile(destination)))))().catch(()=>{console.error('RED backup verification failed. Check key, integrity and source.');process.exitCode=1;});
+  }else if(!source||!destination||!keyFile||confirmation!=='--offline-confirmed'||!['create','restore'].includes(command??'')){
+    console.error('Usage: backup.ts create|restore SOURCE NEW_DESTINATION KEY_FILE --offline-confirmed; or verify SOURCE KEY_FILE --verify-only');process.exitCode=1;
   }else{
     (async()=>{const key=await readFile(keyFile);const result=await (command==='create'?createOfflineBackup:restoreOfflineBackup)(source,destination,key);console.log(JSON.stringify(result));})().catch(()=>{console.error('RED backup failed; source retained. Check offline status, key, free space and destination.');process.exitCode=1;});
   }

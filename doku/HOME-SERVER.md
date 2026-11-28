@@ -412,3 +412,17 @@ neu gekoppelt werden. Der Reset stellt keine verlorenen Schlüssel wieder her
 und löscht keine bereits auf anderen Geräten gespeicherten Daten. Der Befehl
 setzt die ausdrücklich bestätigte Offline-Wartung voraus und stoppt den
 Server nicht selbst. Kein Reset der realen Installation wurde durchgeführt.
+
+### Sicherungen zerstörungsfrei prüfen
+
+`node server/home/backup.ts verify BACKUP_DIRECTORY KEY_FILE --verify-only`
+prüft das authentifizierte Manifest und jeden AES-GCM-Eintrag streaming,
+ohne Klartextdateien anzulegen. Falsche Schlüssel und veränderte Einträge
+werden abgelehnt. Dies ersetzt keine Wiederherstellung mit SQLite-Integritäts-
+und Anwendungstest. Aufbewahrung und Schlüsseltrennung separat prüfen.
+
+Für Docker-Betrieb steht `bash deploy/home/recovery-reset.sh
+--offline-confirmed-reset-all-access` bereit: prüft bestehende Datenbank,
+verwendet die Wartungssperre und verweigert den Reset bei laufendem bekannten
+Compose-Dienst. Andere Schreiber müssen separat gestoppt werden; der Befehl
+startet den Dienst nicht. Vorher eine verifizierte Sicherung erstellen.

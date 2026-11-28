@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {randomBytes} from 'node:crypto';
 import {openHomeServer} from '../server/home-server.ts';
-import {createOfflineBackup,restoreOfflineBackup} from '../server/home/backup.ts';
+import {createOfflineBackup,restoreOfflineBackup,verifyEncryptedBackup} from '../server/home/backup.ts';
 
 test('Encrypted offline backup restores SQLite and blobs, rejects tampering and never overwrites',async()=>{
  const root=await mkdtemp(join(tmpdir(),'red-backup-'));
@@ -16,6 +16,8 @@ test('Encrypted offline backup restores SQLite and blobs, rejects tampering and 
   try{await original.store.ablage.setze('konten',{id:'backup-owner',gesperrt:0});await original.blobs.lege('sample',new TextEncoder().encode('private backup attachment'));}
   finally{original.close();}
   const result=await createOfflineBackup(source,dest,key);assert.equal(result.files,2);
+  const verified=await verifyEncryptedBackup(dest,key);assert.equal(verified.files,2);assert.equal(verified.sqliteIntegrityVerified,false);assert.ok(verified.verifiedBytes>0);
+  await assert.rejects(verifyEncryptedBackup(dest,randomBytes(32)));
   assert.ok(!(await readFile(join(dest,'000001.enc'))).includes(Buffer.from('private backup attachment')));
   await assert.rejects(createOfflineBackup(source,dest,key));
   await assert.rejects(restoreOfflineBackup(dest,bad,randomBytes(32)));await assert.rejects(access(bad));
@@ -25,6 +27,7 @@ test('Encrypted offline backup restores SQLite and blobs, rejects tampering and 
   finally{copy.close();}
   await assert.rejects(restoreOfflineBackup(dest,restored,key));
   const encrypted=await readFile(join(dest,'000001.enc'));encrypted[0]=encrypted[0]!^1;await writeFile(join(dest,'000001.enc'),encrypted);
+  await assert.rejects(verifyEncryptedBackup(dest,key));
   await assert.rejects(restoreOfflineBackup(dest,bad,key));await assert.rejects(access(bad));
  }finally{await rm(root,{recursive:true,force:true});}
 });
