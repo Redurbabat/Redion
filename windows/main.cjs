@@ -13,7 +13,7 @@ const { NVIDIA_CHAT_PATH, nvidiaChat } = require('./generated/nvidia.cjs');
 const { startRedionAutoUpdates } = require('./auto-update.cjs');
 const { configuredSource, saveConfiguredSource, startSourceUpdates, validateSource } =
   require('./generated/local-source.cjs');
-const { destinationFromArgs, jumpTasks, readWindowState, windowStateToSave } = require('./generated/desktop-shell.cjs');
+const { destinationFromArgs, jumpTasks, readWindowState, windowStateToSave, defaultWindowBounds } = require('./generated/desktop-shell.cjs');
 const { NativeFiles, trustedSender, safeExportName } = require('./generated/files.cjs');
 const { AutomationBridge, secureDirectory } = require('./generated/automation-bridge.cjs');
 const { VisualCapture } = require('./generated/visual-capture.cjs');
@@ -58,7 +58,7 @@ const LIVE = !app.isPackaged && process.env.REDION_WINDOWS_LIVE === '1' &&
 const LOCAL_SOURCE = app.isPackaged ? configuredSource(app.getPath('appData')) : null;
 if (LIVE || LOCAL_SOURCE)
   app.setPath('userData', path.join(app.getPath('appData'), 'Redion-Entwicklung'));
-if (process.platform === 'win32') app.setAppUserModelId(APP_ID);
+if (process.platform === 'win32') app.setAppUserModelId(STUDIO_PREVIEW ? 'ch.redurbabat.redion.studio.preview' : APP_ID);
 
 const lock = app.requestSingleInstanceLock();
 if (!lock) {
@@ -467,11 +467,10 @@ if (!lock) {
     const stateFile = path.join(app.getPath('userData'), 'fenster.json');
     const remembered = readWindowState(() => fs.readFileSync(stateFile, 'utf8'),
       screen.getAllDisplays().map(display => display.workArea));
+    const bounds = remembered ?? defaultWindowBounds(screen.getPrimaryDisplay().workArea);
     mainWindow = new BrowserWindow({
       title: STUDIO_PREVIEW ? 'RED Studio · Windows Vorschau' : TEST_PROFILE ? 'Redion · Isoliertes Testprofil' : LOCAL_SOURCE ? 'Redion · Lokaler Entwicklungsstand' : 'Redion',
-      width: remembered?.width ?? 1300,
-      height: remembered?.height ?? 860,
-      ...(remembered ? { x: remembered.x, y: remembered.y } : {}),
+      x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height,
       minWidth: 860,
       minHeight: 580,
       backgroundColor: '#211218',

@@ -795,7 +795,7 @@ html[data-windows-titelleiste] body:is(.fokus, [data-dokument="an"]) #studio-bar
 @media (min-width:1024px) and (hover:hover) and (pointer:fine){
   body:not([data-ui-shell="glass-wheel"]) .gfx-tb-edgeless .gfx-tb-karte button>.gfx-tb-desktop-name{
     display:block;position:absolute;inset:auto 3px 3px;z-index:1;
-    font-size:var(--font-xs,.6875rem);line-height:1.15;font-weight:550;
+    font-size:var(--t-caption);line-height:1.15;font-weight:550;
     text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     color:var(--text);background:var(--bg-card);border-radius:var(--radius-sm);
     padding:2px 3px;pointer-events:none;

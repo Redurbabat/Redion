@@ -143,3 +143,27 @@ test('L268: a refused unload asks instead of trapping the window', () => {
     'a system shutdown is never held up');
   assert.match(source, /'session-end', \(\) => \{ systemEnding = true;/, 'shutdown sets the flag');
 });
+
+test('window restore fits the most visible monitor and keeps the title reachable', () => {
+  const { readWindowState, defaultWindowBounds } = require('./generated/desktop-shell.cjs');
+  const primary = { x: 0, y: 40, width: 1280, height: 720 };
+  const left = { x: -1600, y: 0, width: 1600, height: 900 };
+  const restore = box => readWindowState(() => JSON.stringify(box), [primary, left]);
+  assert.deepEqual(restore({ x: -1500, y: -120, width: 1100, height: 800, maximized: true }),
+    { x: -1500, y: 0, width: 1100, height: 800, maximized: true });
+  assert.deepEqual(restore({ x: 900, y: 0, width: 1600, height: 900 }),
+    { x: 0, y: 40, width: 1280, height: 720, maximized: false });
+  assert.deepEqual(restore({ x: -900, y: 10, width: 1100, height: 700 }),
+    { x: -1100, y: 10, width: 1100, height: 700, maximized: false });
+  assert.equal(restore({ x: 3000, y: 100, width: 1000, height: 700 }), null);
+  assert.deepEqual(defaultWindowBounds(primary), primary);
+  assert.deepEqual(defaultWindowBounds({ x: 0, y: 0, width: 1920, height: 1080 }),
+    { x: 310, y: 110, width: 1300, height: 860 });
+  assert.deepEqual(defaultWindowBounds({ x: 20, y: 30, width: 700, height: 480 }),
+    { x: 20, y: 30, width: 860, height: 580 });
+});
+
+test('preview taskbar identity remains distinct from production', () => {
+  const source = fs.readFileSync(path.join(__dirname, 'main.cjs'), 'utf8');
+  assert.match(source, /app\.setAppUserModelId\(STUDIO_PREVIEW \? 'ch\.redurbabat\.redion\.studio\.preview' : APP_ID\)/);
+});

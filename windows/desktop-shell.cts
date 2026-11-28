@@ -44,15 +44,42 @@ function readWindowState(read: () => string, workAreas: readonly Area[]): Window
   if (!Number.isSafeInteger(x) || !Number.isSafeInteger(y) || !Number.isSafeInteger(width) || !Number.isSafeInteger(height)) return null;
   const box = { x: x as number, y: y as number, width: width as number, height: height as number };
   if (box.width < 860 || box.height < 580) return null;
-  const visible = workAreas.some(area =>
-    Math.min(box.x + box.width, area.x + area.width) - Math.max(box.x, area.x) >= 120 &&
-    Math.min(box.y + box.height, area.y + area.height) - Math.max(box.y, area.y) >= 80);
-  if (!visible) return null;
-  return { ...box, maximized: state.maximized === true };
+  let best: Area | undefined;
+  let overlap = 0;
+  for (const area of workAreas) {
+    const w = Math.min(box.x + box.width, area.x + area.width) - Math.max(box.x, area.x);
+    const h = Math.min(box.y + box.height, area.y + area.height) - Math.max(box.y, area.y);
+    if (w >= 120 && h >= 80 && w * h > overlap) { best = area; overlap = w * h; }
+  }
+  if (!best) return null;
+  // Auch bei geänderter Auflösung und Taskleistenlage müssen Titel und
+  // Bedienelemente erreichbar sein, nicht bloss ein Stück des Fensters.
+  return { ...fitWindowToWorkArea(box, best), maximized: state.maximized === true };
+}
+
+/** Fenster in der Arbeitsfläche halten. Die Mindestgrösse bleibt bei
+ * ungewöhnlich kleinen Anzeigen erhalten, aber der Fensterkopf ist erreichbar. */
+function fitWindowToWorkArea(box: Area, area: Area): Area {
+  const width = Math.max(860, Math.min(box.width, area.width));
+  const height = Math.max(580, Math.min(box.height, area.height));
+  return {
+    x: Math.max(area.x, Math.min(box.x, area.x + area.width - width)),
+    y: Math.max(area.y, Math.min(box.y, area.y + area.height - height)),
+    width, height
+  };
+}
+
+/** Ohne gültige gespeicherte Lage zentriert auf dem primären Bildschirm. */
+function defaultWindowBounds(area: Area): Area {
+  return fitWindowToWorkArea({
+    x: area.x + Math.round((area.width - 1300) / 2),
+    y: area.y + Math.round((area.height - 860) / 2),
+    width: 1300, height: 860
+  }, area);
 }
 
 function windowStateToSave(bounds: Area, maximized: boolean): WindowState {
   return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height, maximized: !!maximized };
 }
 
-module.exports = { DESTINATIONS, destinationFromArgs, jumpTasks, readWindowState, windowStateToSave };
+module.exports = { DESTINATIONS, destinationFromArgs, jumpTasks, readWindowState, windowStateToSave, fitWindowToWorkArea, defaultWindowBounds };
