@@ -66,6 +66,7 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
     if(transportJobsEnabled)redBitMcpModes.add('transport');
   }
   if(redBitMcpModes.size)prepareRedBitMcpGrants(store.sqlite,redBitMcpModes);
+  else if(store.sqlite.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='home_red_bit_mcp_grant'").get())store.sqlite.exec('DELETE FROM home_red_bit_mcp_grant');
   const redBitMcpTools=redBitMcpModes.size?createRedBitMcpTools(store.sqlite,redBitMcpModes):undefined;
   const redBitMcpGrants=redBitMcpModes.size?createRedBitMcpGrants(store.sqlite,store.ablage,redBitMcpModes):undefined;
   const redBitTransportPermissions=options.enableRedBitTransportPermissions?createRedBitTransportPermissions(store.sqlite,store.ablage):undefined;
