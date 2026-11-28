@@ -7,6 +7,7 @@ on:
       - 'pruefungen/redion-home-server.test.mts'
       - 'pruefungen/redion-home-dashboard.test.mts'
       - 'pruefungen/red-id-v2.test.mts'
+      - 'pruefungen/red-bit-permissions.test.mts'
       - 'pruefungen/red-login.test.mts'
       - 'pruefungen/red-web-browser.test.mts'
       - 'pruefungen/red-vault.test.mts'
@@ -50,6 +51,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - run: node --test pruefungen/red-bit-permissions.test.mts
       - run: node --test pruefungen/redion-home-server.test.mts pruefungen/redion-home-dashboard.test.mts pruefungen/red-id-v2.test.mts pruefungen/red-login.test.mts pruefungen/red-web-browser.test.mts pruefungen/red-vault.test.mts pruefungen/red-vault-migrate.test.mts pruefungen/red-backup.test.mts
       - run: node --test pruefungen/red-connect.test.mts pruefungen/red-share.test.mts pruefungen/red-sdk-share.test.mts pruefungen/red-key-exchange.test.mts pruefungen/red-storage-check.test.mts pruefungen/red-store.test.mts pruefungen/red-store-changes.test.mts pruefungen/red-sync-client.test.mts pruefungen/red-device-key-transfer.test.mts pruefungen/red-files-v2.test.mts pruefungen/red-app-center.test.mts pruefungen/red-local-search.test.mts pruefungen/red-reminders.test.mts pruefungen/red-batch-approval.test.mts pruefungen/red-recovery.test.mts
       - run: node --test pruefungen/red-reminder-scheduler.test.mts pruefungen/red-maintenance-storage.test.mts pruefungen/red-maintenance-grants.test.mts pruefungen/red-maintenance-reviews.test.mts pruefungen/red-clipboard.test.mts pruefungen/red-local-ai.test.mts

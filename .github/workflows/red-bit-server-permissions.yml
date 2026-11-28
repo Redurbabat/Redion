@@ -1,0 +1,18 @@
+name: RED Bit server permission pilot
+on:
+  push:
+    branches: [feat/red-bit-server-permissions-20261128]
+permissions:
+  contents: read
+jobs:
+  permission-fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test pruefungen/red-bit-permissions.test.mts pruefungen/red-id-v2.test.mts pruefungen/redion-home-server.test.mts pruefungen/red-recovery.test.mts

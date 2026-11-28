@@ -6,6 +6,7 @@ import {pathToFileURL} from 'node:url';
 import {openHomeDatabase} from './home/sqlite.ts';
 import {openHomeBlobs} from './home/blobs.ts';
 import {beantworte} from './kern.ts';
+import {prepareRedBitPermissions,createRedBitPermissions,RED_BIT_PERMISSION_ROUTES} from './home/red-bit-permissions.ts';
 import {prepareHomeSync,createHomeSyncWait} from './home/live-sync.ts';
 import {prepareRedIdV2,createRedIdV2,RED_ID_V2_ROUTES,revokeRedAppEverywhere} from './home/red-id-v2.ts';
 import {prepareRedShare,createRedShare,SHARE_ROUTES} from './home/red-share.ts';
@@ -30,12 +31,12 @@ import {zuGrossAntwort} from './sicherheit/eingaben.ts';
 import {istAbgleichWeg,mitAppUrsprung} from './sicherheit/abgleich-tor.ts';
 
 const privateRoutes=new Set(['/api/stand']);
-const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/home/dashboard','/home/apps','/red-id/v1/me','/red-id/v1/logout',...RED_ID_V2_ROUTES,...SHARE_ROUTES,...STORE_ROUTES,...REMINDER_ROUTES,...AI_ROUTES,...MCP_HUB_ROUTES]);
+const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/home/dashboard','/home/apps','/red-id/v1/me','/red-id/v1/logout',...RED_ID_V2_ROUTES,...SHARE_ROUTES,...STORE_ROUTES,...REMINDER_ROUTES,...AI_ROUTES,...MCP_HUB_ROUTES,...RED_BIT_PERMISSION_ROUTES]);
 const json=(status:number,error:string)=>Response.json({error},{status,headers:{'Cache-Control':'no-store'}});
 
 /** Initial private API: no static repository files, public registration,
  * public pages, or unverified Cloudflare identity headers. */
-export async function openHomeServer(options:{dataDir:string;origin:string;enableMcp?:boolean;vaultKey?:Uint8Array;webOrigins?:string;enableReminderScheduler?:boolean;localAiModels?:string}){
+export async function openHomeServer(options:{dataDir:string;origin:string;enableMcp?:boolean;enableRedBitPermissions?:boolean;vaultKey?:Uint8Array;webOrigins?:string;enableReminderScheduler?:boolean;localAiModels?:string}){
   const origin=new URL(options.origin);
   if(origin.protocol!=='https:'||origin.origin!==options.origin)throw new Error('REDION_ORIGIN must be an HTTPS origin');
   const webOrigins=parseRedWebOrigins(options.webOrigins??'');
@@ -46,6 +47,8 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
   prepareHomeSync(store.sqlite);
   prepareRedId(store.sqlite);
   prepareRedIdV2(store.sqlite);
+  if(options.enableRedBitPermissions)prepareRedBitPermissions(store.sqlite);
+  const redBitPermissions=options.enableRedBitPermissions?createRedBitPermissions(store.sqlite,store.ablage):undefined;
   prepareRedShare(store.sqlite);
   prepareRedStore(store.sqlite);
   prepareRedReminders(store.sqlite);
@@ -88,6 +91,12 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
         }
         return handleCloudMcp(request,{DB:store.db},false,identify,()=>homeEcosystemCapabilities(!!options.vaultKey,!!options.enableReminderScheduler,aiModels.length>0));
       });
+    }
+    if((RED_BIT_PERMISSION_ROUTES as readonly string[]).includes(path)){
+      if(!redBitPermissions)return json(404,'not_found');
+      const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Cache-Control':'no-store'}}):await serial(()=>redBitPermissions(request));
+      if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
+      return mitAppUrsprung(request,response);
     }
     if((MCP_HUB_ROUTES as readonly string[]).includes(path)){
       const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Cache-Control':'no-store'}}):await serial(()=>mcpHub(request));
@@ -170,7 +179,7 @@ async function main(){
   const command=process.argv[2];
   const enableReminderScheduler=(!command||command==='serve')&&process.env.REDION_ENABLE_REMINDER_SCHEDULER==='1';
   const localAiModels=(!command||command==='serve')?process.env.REDION_LOCAL_AI_MODELS??'':'';
-  const service=await openHomeServer({dataDir,origin,enableMcp,enableReminderScheduler,localAiModels,webOrigins:process.env.REDION_WEB_ORIGINS??'',...(vaultKey?{vaultKey}:{})});
+  const service=await openHomeServer({dataDir,origin,enableMcp,enableRedBitPermissions:process.env.REDION_ENABLE_RED_BIT_PERMISSIONS==='1',enableReminderScheduler,localAiModels,webOrigins:process.env.REDION_WEB_ORIGINS??'',...(vaultKey?{vaultKey}:{})});
   if(command==='recovery-reset-access'){
     try{console.log(JSON.stringify(resetHomeAccess(service.store.sqlite,process.argv[3]||'')));}
     finally{service.close();}
