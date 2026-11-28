@@ -3,6 +3,7 @@ import type {DatabaseSync} from 'node:sqlite';
 import type {Ablage} from '../typen.ts';
 import {werFragt} from '../kern.ts';
 import {RED_APPS} from './red-id.ts';
+import {revokeRedStore} from './red-store.ts';
 import {revokeRedShare} from './red-share.ts';
 
 const hash=(v:string)=>createHash('sha256').update(v).digest('hex');
@@ -104,6 +105,7 @@ export function createRedIdV2(db:DatabaseSync,ablage:Ablage){
           db.prepare('DELETE FROM home_red_pair WHERE owner=? AND app=?').run(owner,app);
           db.prepare('UPDATE home_red_login SET used=1 WHERE owner=? AND app=?').run(owner,app);
           revokeRedShare(db,owner,app);
+          revokeRedStore(db,owner,app);
           return Number(a.changes)+Number(b.changes);
         });return reply(200,{revoked});
       }
@@ -167,6 +169,7 @@ export function revokeRedAppEverywhere(db:DatabaseSync,app:string):number{
     db.prepare('UPDATE home_red_login SET used=1 WHERE app=?').run(app);
     db.prepare('DELETE FROM home_red_share_message WHERE source=? OR target=?').run(app,app);
     db.prepare('DELETE FROM home_red_share_grant WHERE source=? OR target=?').run(app,app);
+    db.prepare('DELETE FROM home_red_store_grant WHERE app=?').run(app);
     return Number(a.changes)+Number(b.changes);
   });
 }

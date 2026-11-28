@@ -360,3 +360,22 @@ Paket-Typdefinition. Für die CI-Rollbackprobe wird der alte Servercode
 unverändert aus seinem Commit archiviert, aber mit dem korrigierten
 Dockerfile gebaut. Damit wird kein zuvor defektes historisches Image als
 lauffähig ausgegeben; es handelt sich um zwei neu gebaute Codeversionen.
+
+### RED Sync / RED Files – verschlüsselte Objekte (Pilot)
+
+`/red-store/v1/grant` und `/revoke` erfordern eine RED-ION-Gerätesitzung.
+Der Besitzer gibt eine App und den Typ `sync` oder `file` für sieben Tage
+frei. `/grants` liefert nur Bestands- und Freigabemetadaten. Die App nutzt
+RED-ID-v2-Token für `/list`, `/get`, `/put`, `/delete` (POST JSON). Der Server
+leitet Konto/App ausschliesslich aus der Sitzung ab. Cross-App und externe
+Web-Origins bleiben gesperrt. Inhalte sind opake AES-GCM-Envelopes; Formprüfung
+beweist keine Verschlüsselung. `expectedRevision` verhindert verlorene Updates,
+`operationId` erlaubt die Wiederholung der letzten unveränderten Operation.
+Gelöschte IDs sind dauerhaft Tombstones und nicht wiederverwendbar.
+App-Widerruf entfernt die Freigaben, nicht die gespeicherten Daten. Neue Freigabe
+ermöglicht wieder Zugriff. Bis zu 1024 Objekte und 16 MiB kodierte Inhalte pro
+Konto als technische Pilotgrenze, kein 30-GB-Tarif. Kleine Dateiobjekte bis
+60000 Base64url-Zeichen; kein grosser Datei-Upload, keine Chunk-Manifeste.
+Schlüsselverteilung, lokaler Konfliktdialog, native UI und explizite Datenlöschung
+jenseits der Tombstones bleiben offen. Backups enthalten weiterhin verschlüsselte
+Objekte und Metadaten in SQLite; vollständige Datenträgerverschlüsselung nötig.

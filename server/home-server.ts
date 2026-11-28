@@ -9,6 +9,7 @@ import {beantworte} from './kern.ts';
 import {prepareHomeSync,createHomeSyncWait} from './home/live-sync.ts';
 import {prepareRedIdV2,createRedIdV2,RED_ID_V2_ROUTES,revokeRedAppEverywhere} from './home/red-id-v2.ts';
 import {prepareRedShare,createRedShare,SHARE_ROUTES} from './home/red-share.ts';
+import {prepareRedStore,createRedStore,STORE_ROUTES} from './home/red-store.ts';
 import {parseRedWebOrigins,isRedWebRoute} from './home/web-origins.ts';
 import {createHomeDashboard} from './home/dashboard.ts';
 import {prepareRedId,issueRedId,handleRedId} from './home/red-id.ts';
@@ -20,7 +21,7 @@ import {zuGrossAntwort} from './sicherheit/eingaben.ts';
 import {istAbgleichWeg,mitAppUrsprung} from './sicherheit/abgleich-tor.ts';
 
 const privateRoutes=new Set(['/api/stand']);
-const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/home/dashboard','/red-id/v1/me','/red-id/v1/logout',...RED_ID_V2_ROUTES,...SHARE_ROUTES]);
+const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/home/dashboard','/red-id/v1/me','/red-id/v1/logout',...RED_ID_V2_ROUTES,...SHARE_ROUTES,...STORE_ROUTES]);
 const json=(status:number,error:string)=>Response.json({error},{status,headers:{'Cache-Control':'no-store'}});
 
 /** Initial private API: no static repository files, public registration,
@@ -36,6 +37,8 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
   prepareRedId(store.sqlite);
   prepareRedIdV2(store.sqlite);
   prepareRedShare(store.sqlite);
+  prepareRedStore(store.sqlite);
+  const redStore=createRedStore(store.sqlite,store.ablage);
   const share=createRedShare(store.sqlite,store.ablage);
   const redIdV2=createRedIdV2(store.sqlite,store.ablage);
   const live=createHomeSyncWait(store.sqlite,store.ablage);
@@ -71,6 +74,11 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
     }
     if(path==='/home/dashboard'){
       const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Authorization','Cache-Control':'no-store'}}):await dashboard(request);
+      if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
+      return mitAppUrsprung(request,response);
+    }
+    if((STORE_ROUTES as readonly string[]).includes(path)){
+      const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Cache-Control':'no-store'}}):await redStore(request);
       if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
       return mitAppUrsprung(request,response);
     }
