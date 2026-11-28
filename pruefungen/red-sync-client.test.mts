@@ -20,7 +20,7 @@ test('atomic pull imports authenticated data and commits cursor only with local 
  sync.dispose();await assert.rejects(sync.pull());
 });
 test('dirty records, rollback, missing records and tombstones are journaled without overwriting local data',async()=>{
- const {record,feed}=await fixture();const tomb='c'.repeat(32),missing='d'.repeat(32),rollback='e'.repeat(32);
+ const {feed}=await fixture();const tomb='c'.repeat(32),missing='d'.repeat(32),rollback='e'.repeat(32);
  feed.items.push({id:tomb,revision:2,deleted:1,updated:2,encodedBytes:0},{id:rollback,revision:1,deleted:0,updated:2,encodedBytes:40});
  let batch:RedSyncBatch<{count:number}>|undefined;
  const sync=createRedSync({async storeChanges(){return feed;},async storeGet(){throw Error('unexpected fetch');}},scope,key,{async snapshot(){return {cursor:null,generation:'g',items:[{id,revision:0,dirty:true,deleted:0},{id:tomb,revision:1,dirty:false,deleted:0},{id:missing,revision:2,dirty:false,deleted:0},{id:rollback,revision:3,dirty:false,deleted:0}]};},async commit(_,b){batch=b;}},decode);
