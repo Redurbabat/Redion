@@ -35,7 +35,7 @@ jobs:
         run: |
           node windows/prepare-sync-key-smoke.mts
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & .\windows\node_modules\.bin\electron.cmd windows/generated/red-sync-keys-smoke.cjs
+          & .\windows\node_modules\.bin\electron.cmd windows/generated/red-sync-smoke/red-sync-keys-smoke.cjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Compile and stage exact renderer
         run: |
