@@ -70,3 +70,7 @@ Apple-SDK-Workflow 46162342676 auf `9d65bf4c` bestanden. Windows-Pilot nutzt Ele
 ## P1-Fortschritt: Android Sync-Key-Adapter
 
 Ergänzt separaten Android-KeyStore-Adapter mit verschlüsseltem No-backup-Verzeichnis, Scope-Bindung, Prozess-/Dateisperre, atomarem Insert-only und Fail-closed bei fehlender Chiffre mit vorhandenem Wrapping-Key. Zwei JVM-Tests mit injiziertem Backend. Keine Geräteabnahme, Recovery, Rotation oder App-Anbindung. Windows-/Android-Kandidaten gemeinsam abnehmen, sobald die laufende Gesamt-CI abgeschlossen ist.
+
+## P1-Fortschritt: Schlüsseltransfer-Lifecycle
+
+Bestehenden SDK-Transfer um maximal fünf Minuten lokale Lebensdauer (Wallclock + monotone Zeit), explizite idempotente Abbruchfunktion über alle Stufen und Nachprüfung nach asynchroner Kryptografie erweitert. Peer-Public-Key vor await gebunden, temporäre Secret-Bytes auch bei Fehlern gelöscht. Wire-Format unverändert. Regressionen für Abbruch, laufende Entschlüsselung, Ablauf und ungültige Dauer. Kein QR-/Fingerprint-UI, kein automatischer Einbau, keine Recovery. Neue Tests noch zu prüfen.

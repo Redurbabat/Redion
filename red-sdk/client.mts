@@ -432,60 +432,73 @@ export function createRedSyncCoordinator(run:()=>Promise<unknown>,options:{now?:
  * automatic approval, password, or token storage is provided here. */
 export type RedDeviceKeyOffer={version:1;kind:'red-device-key';role:'sender'|'receiver';scope:RedSyncScope;publicKey:string};
 export type RedDeviceKeyPacket={version:1;kind:'red-device-key-packet';envelope:string};
-export async function createRedDeviceKeyTransfer(scope:RedSyncScope,role:'sender'|'receiver'){
+export async function createRedDeviceKeyTransfer(scope:RedSyncScope,role:'sender'|'receiver',lifetimeMs=300000){
+ if(!Number.isSafeInteger(lifetimeMs)||lifetimeMs<1||lifetimeMs>300000)throw Error('Invalid transfer lifetime');
+ const wallDeadline=Date.now()+lifetimeMs,monotonicDeadline=performance.now()+lifetimeMs;
+ let cancelled=false;
+ const cancel=()=>{cancelled=true;};
+ const active=()=>{if(cancelled)throw Error('Device transfer cancelled');if(Date.now()>=wallDeadline||performance.now()>=monotonicDeadline)throw Error('Device transfer expired');};
  const bound={...scope};
  const context=Array.from(storeAAD({...bound,id:'0'.repeat(32),revision:1}));
  if(role!=='sender'&&role!=='receiver')throw Error('Invalid device transfer role');
  const pair=await crypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'},false,['deriveBits']);
  const own=base64url(new Uint8Array(await crypto.subtle.exportKey('raw',pair.publicKey)));
+ active();
  const offer:RedDeviceKeyOffer={version:1,kind:'red-device-key',role,scope:{...bound},publicKey:own};
  let used=false;
- return {offer,async compare(peer:RedDeviceKeyOffer){
+ return {offer,cancel,async compare(peer:RedDeviceKeyOffer){
+  active();
   if(used)throw Error('Device transfer already used');
   if(peer?.version!==1||peer.kind!=='red-device-key'||peer.role!==(role==='sender'?'receiver':'sender')||typeof peer.publicKey!=='string'||peer.publicKey.length!==87||peer.publicKey===own)throw Error('Invalid device transfer offer');
   const peerContext=Array.from(storeAAD({...peer.scope,id:'0'.repeat(32),revision:1}));
   if(JSON.stringify(peerContext)!==JSON.stringify(context))throw Error('Device transfer scope mismatch');
-  const raw=unbase64url(peer.publicKey);
-  if(raw.length!==65||raw[0]!==4||base64url(raw)!==peer.publicKey)throw Error('Invalid device public key');
+  const peerKey=peer.publicKey;
+  const raw=unbase64url(peerKey);
+  if(raw.length!==65||raw[0]!==4||base64url(raw)!==peerKey)throw Error('Invalid device public key');
   used=true;
   const other=await crypto.subtle.importKey('raw',raw,{name:'ECDH',namedCurve:'P-256'},false,[]);
-  const transcript=new TextEncoder().encode(JSON.stringify(['red-device-key-v1',context,role==='sender'?own:peer.publicKey,role==='receiver'?own:peer.publicKey]));
+  const transcript=new TextEncoder().encode(JSON.stringify(['red-device-key-v1',context,role==='sender'?own:peerKey,role==='receiver'?own:peerKey]));
   const salt=await crypto.subtle.digest('SHA-256',transcript);
   const shared=await crypto.subtle.deriveBits({name:'ECDH',public:other},pair.privateKey,256);
-  const master=await crypto.subtle.importKey('raw',shared,'HKDF',false,['deriveBits']);
-  new Uint8Array(shared).fill(0);
+  const master=await (async()=>{try{active();return await crypto.subtle.importKey('raw',shared,'HKDF',false,['deriveBits']);}finally{new Uint8Array(shared).fill(0);}})();
   const derive=(label:string)=>crypto.subtle.deriveBits({name:'HKDF',hash:'SHA-256',salt,info:new TextEncoder().encode(label)},master,256);
   const check=new Uint8Array(await derive('red-device-key-fingerprint-v1'));
   const fingerprint=Array.from(check.subarray(0,16),b=>b.toString(16).padStart(2,'0')).join('').match(/.{4}/g)!.join('-');
   check.fill(0);
+  active();
   let confirmed=false;
-  return {fingerprint,async confirm(expected:string){
+  return {fingerprint,cancel,async confirm(expected:string){
+   active();
    if(confirmed)throw Error('Device transfer already confirmed');
    if(typeof expected!=='string'||expected.toLowerCase()!==fingerprint)throw Error('Fingerprint mismatch');
    confirmed=true;
    const rawKey=new Uint8Array(await derive('red-device-key-wrap-v1'));
-   const wrapping=await crypto.subtle.importKey('raw',rawKey,'AES-GCM',false,[role==='sender'?'encrypt':'decrypt']);
-   rawKey.fill(0);
+   const wrapping=await (async()=>{try{active();return await crypto.subtle.importKey('raw',rawKey,'AES-GCM',false,[role==='sender'?'encrypt':'decrypt']);}finally{rawKey.fill(0);}})();
+   active();
    let consumed=false;
    return {
+    cancel,
     async wrap(storageKey:Uint8Array):Promise<RedDeviceKeyPacket>{
+     active();
      if(role!=='sender'||consumed||storageKey.byteLength!==32)throw Error('Invalid or consumed transfer');
      consumed=true;
      const nonce=crypto.getRandomValues(new Uint8Array(12)),plain=new Uint8Array(storageKey);
      try{
       const cipher=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv:nonce,additionalData:transcript},wrapping,plain));
+      active();
       const packet=new Uint8Array(nonce.length+cipher.length);packet.set(nonce);packet.set(cipher,nonce.length);
       return {version:1,kind:'red-device-key-packet',envelope:base64url(packet)};
      }finally{plain.fill(0);}
     },
     async unwrap(packet:RedDeviceKeyPacket):Promise<Uint8Array>{
+     active();
      if(role!=='receiver'||consumed||packet?.version!==1||packet.kind!=='red-device-key-packet'||typeof packet.envelope!=='string'||packet.envelope.length!==80)throw Error('Invalid or consumed transfer');
      const raw=unbase64url(packet.envelope);
      if(raw.length!==60||base64url(raw)!==packet.envelope)throw Error('Invalid transfer packet');
      consumed=true;
      const key=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:raw.slice(0,12),additionalData:transcript},wrapping,raw.slice(12)));
-     if(key.byteLength!==32){key.fill(0);throw Error('Invalid transferred key');}
-     return key;
+     try{active();if(key.byteLength!==32)throw Error('Invalid transferred key');return key;}
+     catch(error){key.fill(0);throw error;}
     }
    };
   }};

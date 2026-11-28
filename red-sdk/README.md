@@ -186,3 +186,5 @@ Batch pairing requests are strictly limited to the four public fields `kind`, `v
 ### Android: isolated sync-key pilot
 
 See Android README for `RedAndroidSyncKeys`, separate per-scope AndroidKeyStore wrapping keys and insert-only encrypted storage. Tests cover scope and data-key lifecycle with a test backend; device-specific recovery and app integration remain open.
+
+Device-key transfers now expire locally after at most five minutes from creation. Optional shorter `lifetimeMs` (1–300000) and idempotent `cancel()` at any stage allow foreground UI to terminate a transfer on lock, logout or dismissal. Both wall-clock and monotonic deadlines are checked, including after asynchronous cryptography before exposing output. Existing wire format is unchanged; this is a local session lifetime, not a signed remote timestamp or device authentication. UI must call cancel and still perform independent fingerprint verification; no automatic key installation or recovery.
