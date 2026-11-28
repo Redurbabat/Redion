@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createRedSync,createRedConfigContext,parseRedConfig,prepareRedStoreWrite,openRedStoreRecord,type RedStoreRecord,type RedStoreChanges,type RedSyncSnapshot,type RedSyncBatch} from '../red-sdk/client.mts';
+import {createRedSyncCoordinator,createRedSync,createRedConfigContext,parseRedConfig,prepareRedStoreWrite,openRedStoreRecord,type RedStoreRecord,type RedStoreChanges,type RedSyncSnapshot,type RedSyncBatch} from '../red-sdk/client.mts';
 const scope={origin:'https://home.example.test',owner:'owner',app:'red-fit',kind:'sync'} as const;
 const key=new Uint8Array(32).fill(3);
 const id='a'.repeat(32),cursor='b'.repeat(64);
@@ -46,4 +46,32 @@ test('config is validated, encrypted, deterministic and scoped per app',async()=
  await assert.rejects(openRedStoreRecord(key,{...scope,id:p.id},record));
  await assert.rejects(other.open(record));
  a.dispose();b.dispose();other.dispose();await assert.rejects(a.prepare(value,1));
+});
+
+test('config decoder and ordinary sync records share a feed without mixing keys',async()=>{
+ const {record,feed}=await fixture();
+ const config=await createRedConfigContext(key,scope);
+ const prefs=parseRedConfig({version:1,theme:'light',locale:'de-CH',reducedMotion:true});
+ const p=await config.prepare(prefs,0);
+ const cr:RedStoreRecord={version:1,id:p.id,revision:1,deleted:0,updated:1,envelope:p.envelope};
+ feed.items.push({id:p.id,revision:1,deleted:0,updated:1,encodedBytes:p.envelope.length});
+ type Value={count:number}|typeof prefs;
+ let result:RedSyncBatch<Value>|undefined;
+ const sync=createRedSync<Value>({async storeChanges(){return feed;},async storeGet(_,recordId){return recordId===p.id?cr:record;}},scope,key,{
+  async snapshot(){return {cursor:null,generation:'g',items:[]};},async commit(_,b){result=b;}
+ },decode,new Map([[p.id,config.open]]));
+ assert.equal((await sync.pull()).imported,2);
+ assert.deepEqual(result?.imports.map(x=>x.value),[{count:5},prefs]);
+ sync.dispose();config.dispose();
+});
+test('coordinator coalesces concurrent triggers, applies backoff and stops',async()=>{
+ let time=1000,calls=0,fail=true;
+ const c=createRedSyncCoordinator(async()=>{calls++;if(fail)throw Error('offline');},{now:()=>time,minIntervalMs:1000,maxBackoffMs:4000});
+ const a=c.trigger(),b=c.trigger();assert.equal(a,b);
+ await assert.rejects(a);assert.equal(calls,1);
+ assert.equal(await c.trigger(),'deferred');time+=1000;
+ await assert.rejects(c.trigger());assert.equal(c.status().failures,2);
+ time+=1999;assert.equal(await c.trigger(),'deferred');time++;fail=false;
+ assert.equal(await c.trigger(),'synced');assert.equal(c.status().failures,0);assert.equal(calls,3);
+ c.stop();time+=10000;assert.equal(await c.trigger(),'deferred');
 });

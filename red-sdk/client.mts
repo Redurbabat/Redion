@@ -310,7 +310,9 @@ export interface RedSyncAdapter<T>{
  commit(expectedGeneration:string,batch:RedSyncBatch<T>):Promise<void>;
 }
 type RedSyncTransport={storeChanges(kind:RedStoreKind,cursor:string|null):Promise<RedStoreChanges>;storeGet(kind:RedStoreKind,id:string):Promise<RedStoreRecord>};
-export function createRedSync<T>(client:RedSyncTransport,scope:RedSyncScope,key:Uint8Array,adapter:RedSyncAdapter<T>,decode:(bytes:Uint8Array)=>T){
+export function createRedSync<T>(client:RedSyncTransport,scope:RedSyncScope,key:Uint8Array,adapter:RedSyncAdapter<T>,decode:(bytes:Uint8Array)=>T,recordDecoders:ReadonlyMap<string,(record:RedStoreRecord)=>Promise<T>>=new Map()){
+ const special=new Map(recordDecoders);
+ for(const id of special.keys())if(!storeId(id))throw Error('Invalid special record ID');
  const bound={...scope};
  storeAAD({...bound,id:'0'.repeat(32),revision:1});
  if(key.byteLength!==32)throw Error('Invalid sync key');
@@ -346,9 +348,13 @@ export function createRedSync<T>(client:RedSyncTransport,scope:RedSyncScope,key:
      // on a concurrent mutation; the next pull starts from the old cursor.
      throw Error('Remote record changed during pull; retry');
     }
-    const bytes=await openRedStoreRecord(secret,{...bound,id:meta.id},record);
-    try{imports.push({id:meta.id,revision:meta.revision,deleted:0,value:decode(bytes)});}
-    finally{bytes.fill(0);}
+    const custom=special.get(meta.id);
+    if(custom)imports.push({id:meta.id,revision:meta.revision,deleted:0,value:await custom(record)});
+    else{
+     const bytes=await openRedStoreRecord(secret,{...bound,id:meta.id},record);
+     try{imports.push({id:meta.id,revision:meta.revision,deleted:0,value:decode(bytes)});}
+     finally{bytes.fill(0);}
+    }
    }
    if(feed.reset)for(const old of local.values())if(old.revision>0&&!seen.has(old.id))conflicts.push({id:old.id,localRevision:old.revision,remoteRevision:null,reason:'missing_remote'});
    if(disposed)throw Error('Sync disposed');
@@ -393,5 +399,29 @@ export async function createRedConfigContext(key:Uint8Array,scope:Omit<RedSyncSc
    try{return parseRedConfig(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)));}finally{bytes.fill(0);}
   },
   dispose(){disposed=true;configKey.fill(0);}
+ };
+}
+
+/** A foreground/app-lifecycle sync coordinator. Coalesces requests, backs
+ * off failures, never overlaps pulls, never schedules itself after stop.
+ * Callers own timers and platform lifecycle; there is no background daemon. */
+export function createRedSyncCoordinator(run:()=>Promise<unknown>,options:{now?:()=>number;minIntervalMs?:number;maxBackoffMs?:number}={}){
+ const now=options.now??Date.now,min=options.minIntervalMs??15000,max=options.maxBackoffMs??300000;
+ if(!Number.isSafeInteger(min)||min<1000||!Number.isSafeInteger(max)||max<min||max>3600000)throw Error('Invalid sync interval');
+ let pending:Promise<'synced'|'deferred'>|null=null,after=0,failures=0,stopped=false;
+ return {
+  trigger():Promise<'synced'|'deferred'>{
+   if(stopped)return Promise.resolve('deferred');
+   if(pending)return pending;
+   if(now()<after)return Promise.resolve('deferred');
+   pending=Promise.resolve().then(async()=>{
+    if(stopped)return 'deferred' as const;
+    try{await run();failures=0;after=now()+min;return 'synced' as const;}
+    catch(e){failures=Math.min(20,failures+1);after=now()+Math.min(max,min*2**(failures-1));throw e;}
+   }).finally(()=>{pending=null;});
+   return pending;
+  },
+  status(){return {running:pending!==null,stopped,failures,nextAttemptAt:after};},
+  stop(){stopped=true;}
  };
 }

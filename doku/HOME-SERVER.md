@@ -460,3 +460,10 @@ RED Config synchronisiert zunächst Theme, Sprache und reduzierte Bewegung
 je App über den bestehenden Sync-Grant. ID und Schlüssel sind unabhängig
 über HKDF abgeleitet; unbekannte Felder werden abgelehnt. Keine Passwörter,
 Token, globalen App-Einstellungen oder automatischen App-Freigaben.
+
+Der SDK-Sync-Koordinator bündelt gleichzeitige Trigger und begrenzt
+Wiederholungsversuche mit exponentiellem Backoff. Die App muss den
+Koordinator bei Start, Vordergrund oder erlaubtem Hintergrundereignis
+selbst aufrufen. RED Config wird per exakter Objekt-ID einem eigenen
+kryptografisch prüfenden Decoder zugeordnet, damit der allgemeine Sync-Key
+nicht mit dem separaten Config-Key verwechselt wird.

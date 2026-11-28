@@ -99,3 +99,11 @@ No secrets or arbitrary settings accepted. Grant Sync as before. Config is
 app-scoped, not cross-app SSO or shared global preferences. Dispose keys when
 not in use. Platform storage, native integration and actual conflict UI remain
 app responsibilities.
+
+When RED Config shares a sync feed with application records, pass a map of
+exact record IDs to authenticated decoders (e.g. `new Map([[config.id,
+config.open]])`) as the last `createRedSync` argument. Decoders must verify
+context and ciphertext; the default path uses the app record key. Use
+`createRedSyncCoordinator` for app lifecycle triggers, coalescing and bounded
+exponential backoff. It does not create timers or continue after `stop`;
+in-flight work must still be handled by the platform lifecycle.
