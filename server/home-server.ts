@@ -20,6 +20,7 @@ import {prepareRedStore,createRedStore,STORE_ROUTES} from './home/red-store.ts';
 import {parseRedWebOrigins,isRedWebRoute} from './home/web-origins.ts';
 import {createHomeDashboard} from './home/dashboard.ts';
 import {AI_ROUTES,parseLocalAiModels,createLocalAiGateway} from './home/ai-gateway.ts';
+import {MCP_HUB_ROUTES,createHomeMcpHub} from './home/mcp-hub.ts';
 import {prepareRedId,issueRedId,handleRedId} from './home/red-id.ts';
 import {approveHomeDevice,claimHomeDevice} from './home/pairing.ts';
 import {prepareHomeConsent,issueHomeConsentCode,identifyHomeConsent,homeConsentLogin,exchangeHomeConsent,logoutHomeConsent} from './home/consent.ts';
@@ -29,7 +30,7 @@ import {zuGrossAntwort} from './sicherheit/eingaben.ts';
 import {istAbgleichWeg,mitAppUrsprung} from './sicherheit/abgleich-tor.ts';
 
 const privateRoutes=new Set(['/api/stand']);
-const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/home/dashboard','/home/apps','/red-id/v1/me','/red-id/v1/logout',...RED_ID_V2_ROUTES,...SHARE_ROUTES,...STORE_ROUTES,...REMINDER_ROUTES,...AI_ROUTES]);
+const deviceRoutes=new Set(['/konto/geraete','/konto/geraete/weg','/home/sync/wait','/home/dashboard','/home/apps','/red-id/v1/me','/red-id/v1/logout',...RED_ID_V2_ROUTES,...SHARE_ROUTES,...STORE_ROUTES,...REMINDER_ROUTES,...AI_ROUTES,...MCP_HUB_ROUTES]);
 const json=(status:number,error:string)=>Response.json({error},{status,headers:{'Cache-Control':'no-store'}});
 
 /** Initial private API: no static repository files, public registration,
@@ -57,6 +58,7 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
   const monitor=createHomeMonitor();
   const appCenter=createRedAppCenter(store.sqlite,store.ablage);
   const localAi=createLocalAiGateway(store.ablage,aiModels);
+  const mcpHub=createHomeMcpHub(store.sqlite,store.db,store.ablage,origin.origin,!!options.enableMcp);
   const dashboard=createHomeDashboard(store.sqlite,store.ablage,options.dataDir,!!options.enableMcp,monitor.snapshot);
   let queue:Promise<unknown>=Promise.resolve();
   function serial<T>(execute:()=>Promise<T>):Promise<T>{
@@ -86,6 +88,11 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
         }
         return handleCloudMcp(request,{DB:store.db},false,identify,()=>homeEcosystemCapabilities(!!options.vaultKey,!!options.enableReminderScheduler,aiModels.length>0));
       });
+    }
+    if((MCP_HUB_ROUTES as readonly string[]).includes(path)){
+      const response=request.method==='OPTIONS'?new Response(null,{status:204,headers:{'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Cache-Control':'no-store'}}):await serial(()=>mcpHub(request));
+      if(clientOrigin===origin.origin){response.headers.set('Access-Control-Allow-Origin',origin.origin);response.headers.append('Vary','Origin');}
+      return mitAppUrsprung(request,response);
     }
     if((AI_ROUTES as readonly string[]).includes(path)){
       if(!aiModels.length)return json(404,'not_found');

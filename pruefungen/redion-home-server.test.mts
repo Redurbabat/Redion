@@ -48,6 +48,7 @@ test('Private home API blocks public routes, foreign origins and anonymous sync'
       assert.equal((await service.handle(new Request(origin+'/sync/runter'))).status,401);
       assert.equal((await service.handle(new Request(origin+'/konto/oauth/github'))).status,404);
       assert.equal((await service.handle(new Request(origin+'/mcp/cloud'))).status,404);
+      assert.equal((await service.handle(new Request(origin+'/home/mcp-hub/connections'))).status,401);
       assert.equal((await service.handle(new Request(origin+'/server/schema.sql'))).status,404);
       assert.equal((await service.handle(new Request(origin+'/sync/runter',{headers:{Origin:'https://evil.example.test'}}))).status,403);
     }finally{service.close();}
@@ -87,8 +88,12 @@ test('Opt-in home MCP requires a local one-time consent login and scoped OAuth',
     const origin='https://redion.example.test',resource=origin+'/mcp/cloud';
     const service=await openHomeServer({dataDir:root,origin,enableMcp:true});
     try{
-      await service.store.ablage.setze('konten',{id:'owner',gesperrt:0});
-      await service.store.ablage.setze('bereiche',{id:'workspace',name:'Test',besitzer:'owner'});
+      const pair=(path:string,body:object)=>service.handle(new Request(origin+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}));
+      const {code:deviceCode}=await (await pair('/konto/code',{geraet:'MCP owner'})).json() as {code:string};
+      approveHomeDevice(service.store.sqlite,deviceCode);
+      const {token:ownerToken}=await (await pair('/konto/code-holen',{code:deviceCode})).json() as {token:string};
+      const owner=String(service.store.sqlite.prepare('SELECT id FROM konten LIMIT 1').get()?.id);
+      await service.store.ablage.setze('bereiche',{id:'workspace',name:'Test',besitzer:owner});
       const send=(path:string,init?:RequestInit)=>service.handle(new Request(origin+path,init));
       assert.equal((await send('/.well-known/oauth-authorization-server')).status,200);
       assert.equal((await send('/mcp/cloud')).status,401);
@@ -132,6 +137,23 @@ test('Opt-in home MCP requires a local one-time consent login and scoped OAuth',
       assert.equal(caps.result.structuredContent.services.mcp.externalAppActions,false);
       assert.equal((await rpc('redion_get_home_ecosystem_capabilities',{},'invalid')).status,401);
       assert.equal((await (await rpc('redion_get_home_ecosystem_capabilities',{owner:'x'})).json() as {result:{isError:boolean}}).result.isError,true);
+      const hub='/home/mcp-hub/',ownerHeaders={Authorization:'Bearer '+ownerToken};
+      assert.equal((await send(hub+'connections')).status,401);
+      assert.equal((await send(hub+'connections',{headers:{Authorization:'Bearer '+issued.access_token}})).status,401);
+      assert.equal((await send(hub+'connections',{headers:{...ownerHeaders,Origin:'https://evil.example.test'}})).status,403);
+      const connections=await send(hub+'connections',{headers:ownerHeaders});
+      assert.equal(connections.status,200);assert.equal(connections.headers.get('Cache-Control'),'no-store');
+      const inventory=await connections.json() as {connections:{id:string;clientName:string;scopes:string[];workspaceCount:number}[]};
+      assert.equal(inventory.connections.length,1);
+      const connection=inventory.connections[0]!;
+      assert.equal(connection.clientName,'Synthetic');assert.deepEqual(connection.scopes,['redion:read']);assert.equal(connection.workspaceCount,1);
+      assert.ok(!JSON.stringify(inventory).includes(issued.access_token));assert.ok(!JSON.stringify(inventory).includes('workspaceIds'));
+      const revoke=(id:string,confirm:boolean)=>send(hub+'revoke',{method:'POST',headers:{...ownerHeaders,'Content-Type':'application/json'},body:JSON.stringify({id,confirm})});
+      assert.equal((await revoke(connection.id,false)).status,400);
+      assert.equal((await revoke('grant:'+'f'.repeat(64),true)).status,404);
+      assert.equal((await revoke(connection.id,true)).status,200);
+      assert.equal((await rpc('redion_get_home_ecosystem_capabilities',{})).status,401);
+      assert.equal((await (await send(hub+'connections',{headers:ownerHeaders})).json() as {connections:unknown[]}).connections.length,0);
       assert.equal((await send('/home/mcp-logout',{method:'POST',headers:{Origin:origin,Cookie:cookie}})).status,204);
       assert.match(await (await send('/mcp/settings',{headers:{Cookie:cookie}})).text(),/name="code"/);
     }finally{service.close();}

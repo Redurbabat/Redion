@@ -16,6 +16,6 @@ export function homeEcosystemCapabilities(vaultEnabled:boolean,backgroundRunner=
   vault:{blobEncryptionEnabled:vaultEnabled,sqliteEncryptionVerified:false},
   backup:{offline:true,encrypted:true},update:{stagingOnly:true},
   aiGateway:{version:1,enabled:localAiEnabled,ownerOnly:true,provider:'loopback-ollama',streaming:false,externalProviders:false,appTokenAccess:false},
-  mcp:{scope:'redion-workspaces',externalAppActions:false,encryptedContentAccess:false}
+  mcp:{scope:'redion-workspaces',externalAppActions:false,encryptedContentAccess:false,ownerHub:{version:1,list:true,revoke:true,externalServers:false}}
  },limits:{recordCount:1024,encodedBytes:16*1024*1024},note:'Catalog is not a live app connection or permission inventory.'};
 }
