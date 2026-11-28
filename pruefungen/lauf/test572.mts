@@ -613,11 +613,17 @@ const gallery = await pd.evaluate(async () => {
   const after = target.closest<HTMLElement>('.gfx-tb-karte')?.hidden;
   const label = target.querySelector('.gfx-tb-desktop-name')?.textContent;
   const pressed = target.getAttribute('aria-pressed');
+  document.documentElement.setAttribute('data-windows-titelleiste','');
+  const material = getComputedStyle(toolbar.element.querySelector('.gfx-tb-haupt')!, '::before').borderImageSource;
+  const caption = getComputedStyle(target.querySelector('.gfx-tb-desktop-name')!).display;
+  document.documentElement.removeAttribute('data-windows-titelleiste');
   toolbar.zerstoere();
-  return {before,after,label,pressed,actions};
+  return {before,after,label,pressed,actions,material,caption};
 });
 p('Desktop: externe Werkzeugwahl zeigt die aktive Karte und ihren Namen, ohne Doppelaktion',
   gallery.before===true && gallery.after===false && gallery.label==='Werkzeug f' && gallery.pressed==='true' && gallery.actions===0,JSON.stringify(gallery));
+p('Windows Studio: Desktop-Namen sichtbar und Dock ohne festes Rasterbild',
+  gallery.material==='none' && gallery.caption==='block',JSON.stringify(gallery));
 await pd.close();
 
 await browser.close();
