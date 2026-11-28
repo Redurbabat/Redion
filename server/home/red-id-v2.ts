@@ -13,7 +13,7 @@ const appValid=(v:unknown):v is string=>typeof v==='string'&&(RED_APPS as readon
 const is=(v:unknown,re:RegExp):v is string=>typeof v==='string'&&re.test(v);
 const reply=(status:number,data:unknown)=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const ACCESS=15*60*1000,REFRESH=30*86400000,PAIR=5*60*1000;
-export const RED_ID_V2_ROUTES=['/red-id/v2/pair','/red-id/v2/exchange','/red-id/v2/refresh','/red-id/v2/me','/red-id/v2/logout','/red-id/v2/revoke','/red-id/v2/apps','/red-id/v2/approve-login','/red-id/v2/claim-login'] as const;
+export const RED_ID_V2_ROUTES=['/red-id/v2/pair','/red-id/v2/exchange','/red-id/v2/refresh','/red-id/v2/me','/red-id/v2/logout','/red-id/v2/revoke','/red-id/v2/apps','/red-id/v2/approve-login','/red-id/v2/claim-login','/red-id/v2/sessions','/red-id/v2/revoke-session'] as const;
 export function prepareRedIdV2(db:DatabaseSync){
   db.exec(`CREATE TABLE IF NOT EXISTS home_red_pair (digest TEXT PRIMARY KEY, owner TEXT NOT NULL, app TEXT NOT NULL, challenge TEXT NOT NULL, expires INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS home_red_session (id TEXT PRIMARY KEY, owner TEXT NOT NULL, app TEXT NOT NULL, access_digest TEXT UNIQUE NOT NULL, refresh_digest TEXT UNIQUE NOT NULL, access_until INTEGER NOT NULL, refresh_until INTEGER NOT NULL);
@@ -43,7 +43,7 @@ export function createRedIdV2(db:DatabaseSync,ablage:Ablage){
   return async(request:Request):Promise<Response>=>{
     const path=new URL(request.url).pathname;
     if(!(RED_ID_V2_ROUTES as readonly string[]).includes(path))return reply(404,{error:'not_found'});
-    if(request.method!==(path.endsWith('/me')||path.endsWith('/apps')?'GET':'POST'))return reply(405,{error:'method_not_allowed'});
+    if(request.method!==(path.endsWith('/me')||path.endsWith('/apps')||path.endsWith('/sessions')?'GET':'POST'))return reply(405,{error:'method_not_allowed'});
     const inputBody=request.method==='POST'&&!path.endsWith('/logout')?await body(request):null;
     const now=Date.now();
     if(path.endsWith('/me')||path.endsWith('/logout')){
@@ -53,6 +53,18 @@ export function createRedIdV2(db:DatabaseSync,ablage:Ablage){
       if(!row||typeof row.owner!=='string'||typeof row.sessionId!=='string'||typeof row.app!=='string'||typeof row.access_until!=='number')return reply(401,{error:'unauthorized'});
       if(path.endsWith('/logout')){db.prepare('DELETE FROM home_red_session WHERE id=?').run(row.sessionId);return reply(200,{ok:true});}
       return reply(200,{version:2,id:row.owner,name:String(row.name??''),app:row.app,scopes:['identity:read'],expiresAt:new Date(row.access_until).toISOString()});
+    }
+    if(path.endsWith('/sessions')||path.endsWith('/revoke-session')){
+      const who=await werFragt(ablage,{authorization:request.headers.get('authorization')??''});
+      if(!who?.sitzung)return reply(401,{error:'unauthorized'});
+      const owner=String(who.konto.id);
+      if(path.endsWith('/sessions')){
+        const rows=db.prepare('SELECT id,app,access_until,refresh_until FROM home_red_session WHERE owner=? AND refresh_until>? ORDER BY app,id LIMIT 257').all(owner,now);
+        return reply(200,{version:1,sessions:rows.slice(0,256).map(r=>({id:r.id,app:r.app,createdAt:new Date(Number(r.refresh_until)-REFRESH).toISOString(),accessExpiresAt:new Date(Number(r.access_until)).toISOString(),refreshExpiresAt:new Date(Number(r.refresh_until)).toISOString()})),truncated:rows.length>256});
+      }
+      if(!inputBody||!is(inputBody.id,/^session_[a-f0-9]{64}$/)||Object.keys(inputBody).length!==1)return reply(400,{error:'invalid_session'});
+      const removed=db.prepare('DELETE FROM home_red_session WHERE owner=? AND id=?').run(owner,inputBody.id);
+      return reply(200,{revoked:Number(removed.changes)});
     }
     if(path.endsWith('/apps')){
       const who=await werFragt(ablage,{authorization:request.headers.get('authorization')??''});
@@ -87,6 +99,7 @@ export function createRedIdV2(db:DatabaseSync,ablage:Ablage){
         if(!row||typeof row.owner!=='string')return reply(401,{error:'not_approved'});
         db.prepare('UPDATE home_red_login SET used=1 WHERE challenge=?').run(challenge);
         db.prepare('DELETE FROM home_red_session WHERE refresh_until<=?').run(now);
+        if(Number(db.prepare('SELECT COUNT(*) AS n FROM home_red_session WHERE owner=?').get(row.owner)?.n??0)>=256)return reply(429,{error:'session_limit'});
         const c=credentials(now);
         db.prepare('INSERT INTO home_red_session VALUES(?,?,?,?,?,?,?)').run(secret('session_'),row.owner,app,c.accessDigest,c.refreshDigest,c.accessUntil,c.refreshUntil);
         return reply(200,responseTokens(app,c));
@@ -128,6 +141,7 @@ export function createRedIdV2(db:DatabaseSync,ablage:Ablage){
         if(!row||typeof row.owner!=='string')return reply(401,{error:'invalid_pairing'});
         db.prepare('DELETE FROM home_red_pair WHERE digest=?').run(digest);
         db.prepare('DELETE FROM home_red_session WHERE refresh_until<=?').run(now);
+        if(Number(db.prepare('SELECT COUNT(*) AS n FROM home_red_session WHERE owner=?').get(row.owner)?.n??0)>=256)return reply(429,{error:'session_limit'});
         const c=credentials(now);
         db.prepare('INSERT INTO home_red_session VALUES(?,?,?,?,?,?,?)').run(secret('session_'),row.owner,app,c.accessDigest,c.refreshDigest,c.accessUntil,c.refreshUntil);
         return reply(200,responseTokens(app,c));

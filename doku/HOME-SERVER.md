@@ -389,3 +389,26 @@ Dateinamen, Grant-Inventare oder Zugriff auf verschlüsselte Inhalte.
 Die öffentliche Cloud-MCP-Werkzeugliste bleibt unverändert. Externe App-Aktionen
 benötigen künftig gesonderte Freigaben und Adapter; dieses Tool ist noch kein
 universeller App-Controller.
+
+### RED Devices, Monitor und Recovery
+
+`GET /red-id/v2/sessions` listet aktive RED-ID-v2-Sitzungen des
+angemeldeten Besitzers (maximal 256, keine Token/Digests). `POST
+/red-id/v2/revoke-session` mit `id` widerruft nur diese Sitzung, nicht
+alle Geräte derselben App. Erstellung aus der festen 30-Tage-Laufzeit
+abgeleitet; keine Aussage über Gerätename oder Online-Status. Neue
+Sitzungen sind auf 256 pro Konto begrenzt. Die Dashboard-Metrik `monitor`
+aggregiert pro Prozess bis zu 60 Minuten Statusklassen und Antwortzeiten,
+ohne Pfade, IPs, Token oder Inhalte. Keine dauerhafte Telemetrie.
+
+Notfall-Reset: zuerst Server und sämtliche Schreiber stoppen, verifiziertes
+Backup erstellen, dann lokal (niemals über MCP oder HTTP) `node
+server/home-server.ts recovery-reset-access --offline-confirmed-reset-all-access`
+mit identischer Daten-/Vault-Konfiguration ausführen. Dies widerruft ALLE
+Gerätesitzungen, App-Zugänge, ausstehenden Kopplungen, Marken, MCP-Zustände
+und App-Freigaben; wartende Share-Nachrichten werden gelöscht. Dokumente,
+Konten, Dateien und RED-Store-Objekte bleiben erhalten. Alle Geräte müssen
+neu gekoppelt werden. Der Reset stellt keine verlorenen Schlüssel wieder her
+und löscht keine bereits auf anderen Geräten gespeicherten Daten. Der Befehl
+setzt die ausdrücklich bestätigte Offline-Wartung voraus und stoppt den
+Server nicht selbst. Kein Reset der realen Installation wurde durchgeführt.

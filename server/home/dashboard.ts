@@ -18,7 +18,7 @@ async function network(){
     return interfaces?{receivedBytes:received,sentBytes:sent}:null;
   }catch{return null;}
 }
-export function createHomeDashboard(db:DatabaseSync,ablage:Ablage,dataDir:string,mcpEnabled:boolean){
+export function createHomeDashboard(db:DatabaseSync,ablage:Ablage,dataDir:string,mcpEnabled:boolean,monitor?:()=>unknown){
   let sample:Promise<unknown>|null=null;
   async function metrics(){
     const first=cpuSample();await delay(100);const last=cpuSample();
@@ -44,6 +44,6 @@ export function createHomeDashboard(db:DatabaseSync,ablage:Ablage,dataDir:string
     // Concurrent authenticated requests share the same measurement; no user data in the sample.
     if(!sample)sample=metrics().finally(()=>{sample=null;});
     const data=await sample;
-    return json(200,{...data as Record<string,unknown>,devices:{authorizedSessions:devices},redId:{activeCredentials:appCredentials},mcp:{grantRecords:mcpGrantRecords}});
+    return json(200,{...data as Record<string,unknown>,devices:{authorizedSessions:devices},redId:{activeCredentials:appCredentials},mcp:{grantRecords:mcpGrantRecords},...(monitor?{monitor:monitor()}: {})});
   };
 }

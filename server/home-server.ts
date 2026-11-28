@@ -9,6 +9,8 @@ import {beantworte} from './kern.ts';
 import {prepareHomeSync,createHomeSyncWait} from './home/live-sync.ts';
 import {prepareRedIdV2,createRedIdV2,RED_ID_V2_ROUTES,revokeRedAppEverywhere} from './home/red-id-v2.ts';
 import {prepareRedShare,createRedShare,SHARE_ROUTES} from './home/red-share.ts';
+import {resetHomeAccess} from './home/recovery.ts';
+import {createHomeMonitor} from './home/monitor.ts';
 import {homeEcosystemCapabilities} from './home/ecosystem.ts';
 import {prepareRedStore,createRedStore,STORE_ROUTES} from './home/red-store.ts';
 import {parseRedWebOrigins,isRedWebRoute} from './home/web-origins.ts';
@@ -43,14 +45,15 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
   const share=createRedShare(store.sqlite,store.ablage);
   const redIdV2=createRedIdV2(store.sqlite,store.ablage);
   const live=createHomeSyncWait(store.sqlite,store.ablage);
-  const dashboard=createHomeDashboard(store.sqlite,store.ablage,options.dataDir,!!options.enableMcp);
+  const monitor=createHomeMonitor();
+  const dashboard=createHomeDashboard(store.sqlite,store.ablage,options.dataDir,!!options.enableMcp,monitor.snapshot);
   let queue:Promise<unknown>=Promise.resolve();
   function serial<T>(execute:()=>Promise<T>):Promise<T>{
     const result=queue.then(execute);
     queue=result.catch(()=>undefined);
     return result;
   }
-  async function handle(request:Request):Promise<Response>{
+  async function route(request:Request):Promise<Response>{
     const path=new URL(request.url).pathname;
     if(new URL(request.url).origin!==origin.origin)return json(400,'invalid_host');
     const mcpRoute=isCloudMcpPublicPath(path)||isCloudMcpPrivatePath(path)||['/home/mcp-login','/home/mcp-logout'].includes(path);
@@ -119,6 +122,11 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
     }
     return appRoute?mitAppUrsprung(request,response):response;
   }
+  async function handle(request:Request):Promise<Response>{
+    const start=performance.now();
+    try{const response=await route(request);monitor.record(response.status,performance.now()-start);return response;}
+    catch(error){monitor.record(500,performance.now()-start);throw error;}
+  }
   return {handle,store,blobs,close:()=>{live.close();store.close();}};
 }
 
@@ -131,6 +139,11 @@ async function main(){
   const vaultKey=process.env.REDION_VAULT_KEY_FILE?await readFile(process.env.REDION_VAULT_KEY_FILE):undefined;
   const service=await openHomeServer({dataDir,origin,enableMcp,webOrigins:process.env.REDION_WEB_ORIGINS??'',...(vaultKey?{vaultKey}:{})});
   const command=process.argv[2];
+  if(command==='recovery-reset-access'){
+    try{console.log(JSON.stringify(resetHomeAccess(service.store.sqlite,process.argv[3]||'')));}
+    finally{service.close();}
+    return;
+  }
   if(command==='red-id-issue'||command==='red-id-revoke'){
     try{
       const app=process.argv[3]||'';
