@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {randomBytes} from 'node:crypto';
-import {prepareRedClipboard,openRedClipboard,prepareRedShareJson,RED_CLIPBOARD_MAX_BYTES,RED_CLIPBOARD_TTL_MS,type RedPreparedShare,type RedShareMessage} from '../red-sdk/client.mts';
+import {prepareRedClipboard,openRedClipboard,receiveRedClipboard,prepareRedShareJson,RED_CLIPBOARD_MAX_BYTES,RED_CLIPBOARD_TTL_MS,type RedPreparedShare,type RedShareMessage} from '../red-sdk/client.mts';
 const key=()=>new Uint8Array(randomBytes(32));
 const message=(p:RedPreparedShare,expires=Date.now()+60_000):RedShareMessage=>({source:p.address.source,channel:p.address.channel,id:p.address.id,envelope:p.envelope,expires});
 test('explicit clipboard text is encrypted and bounded by sender, channel and target',async()=>{
@@ -32,4 +32,25 @@ test('clipboard rejects invalid UTF-8 byte size and invalid authenticated payloa
   const p=await prepareRedShareJson(k,'red-ion','red-fit','clipboard',data);
   await assert.rejects(openRedClipboard(k,'red-ion','red-fit',message(p)));
  }
+});
+
+test('clipboard receive authenticates before durable commit and ACK; retry is idempotent',async()=>{
+ const k=key(),p=await prepareRedClipboard(k,'red-ion','red-fit','private clipboard'),m=message(p);
+ const stored=new Map<string,RedShareMessage>();
+ let commits=0,acks=0,failCommit=true,failAck=true;
+ const inbox={async commitOnce(address:{id:string},encrypted:RedShareMessage,expiresAt:number){
+  commits++;assert.ok(expiresAt>Date.now());assert.ok(!JSON.stringify(encrypted).includes('private clipboard'));
+  if(failCommit)throw Error('disk unavailable');
+  if(stored.has(address.id))return 'duplicate' as const;
+  stored.set(address.id,encrypted);return 'stored' as const;
+ }};
+ const transport={async shareAck(source:string,channel:string,id:string){
+  acks++;assert.equal(source,'red-ion');assert.equal(channel,'clipboard');assert.equal(id,m.id);assert.ok(stored.has(id));
+  if(failAck)throw Error('network unavailable');
+ }};
+ const receive=(value=m)=>receiveRedClipboard(k,'red-ion','red-fit',value,inbox,transport);
+ await assert.rejects(receive({...m,id:'0'.repeat(32)}));assert.equal(commits,0);assert.equal(acks,0);
+ await assert.rejects(receive());assert.equal(acks,0);assert.equal(stored.size,0);
+ failCommit=false;await assert.rejects(receive());assert.equal(stored.size,1);assert.equal(acks,1);
+ failAck=false;assert.equal(await receive(),'duplicate');assert.equal(stored.size,1);assert.equal(acks,2);
 });

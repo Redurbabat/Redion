@@ -719,3 +719,22 @@ export async function openRedClipboard(key:Uint8Array,source:RedAppId,target:Red
   return parseRedClipboard(value,now);
  });
 }
+
+/** App-provided durable, atomic inbox. Scope each adapter to the trusted
+ * server, account and receiving app. Persist encrypted messages and receipt
+ * IDs together, never plaintext in ordinary preferences. */
+export interface RedClipboardInboxAdapter{
+ commitOnce(address:RedShareAddress,message:RedShareMessage,expiresAt:number):Promise<'stored'|'duplicate'>;
+}
+export type RedClipboardAckTransport={shareAck(source:RedAppId,channel:string,id:string):Promise<void>};
+/** Explicit receive only: authenticate first, atomically store the encrypted
+ * payload and receipt, then ACK. Failed ACK is safe to retry with the same
+ * adapter; no OS clipboard or automatic paste. */
+export async function receiveRedClipboard(key:Uint8Array,source:RedAppId,target:RedAppId,message:RedShareMessage,inbox:RedClipboardInboxAdapter,transport:RedClipboardAckTransport):Promise<'stored'|'duplicate'>{
+ const payload=await openRedClipboard(key,source,target,message);
+ const address:RedShareAddress={source,target,channel:'clipboard',id:message.id};
+ const result=await inbox.commitOnce(address,{...message},payload.expiresAt);
+ if(result!=='stored'&&result!=='duplicate')throw Error('Invalid clipboard inbox result');
+ await transport.shareAck(source,'clipboard',message.id);
+ return result;
+}
