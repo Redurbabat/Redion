@@ -488,6 +488,16 @@ const Planflaeche = (() => {
     labor.className = 'sp-live-labor';
     labor.setAttribute('aria-label', 'Live-Stromlabor – Strom, Relais und Zeit');
     labor.hidden = true;
+    const messwertePanel = document.createElement('details');
+    messwertePanel.className = 'sp-desktop-messwerte';
+    messwertePanel.hidden = true;
+    const messwerteTitel = document.createElement('summary');
+    messwerteTitel.textContent = 'Berechnete Bauteilwerte';
+    const messwerteInhalt = document.createElement('div');
+    messwerteInhalt.className = 'sp-desktop-messwerte-inhalt';
+    messwertePanel.append(messwerteTitel, messwerteInhalt);
+    let messwerteSignatur = '';
+    let tasterLoslassen: (()=>void) | null = null;
     const batteriePanel = document.createElement('section');
     batteriePanel.className = 'sp-batterie-fach';
     batteriePanel.setAttribute('aria-label', 'Batterieanlagen und Übungen');
@@ -662,6 +672,7 @@ const Planflaeche = (() => {
     fuss.appendChild(zoomleiste);
     wurzel.appendChild(kopf);
     wurzel.appendChild(labor);
+    wurzel.appendChild(messwertePanel);
     // Die Zeichenfläche ist das Hauptwerkzeug. Übungs- und Prüffächer
     // bleiben echte Redion-Module, verdrängen aber nicht mehr den Plan.
     wurzel.appendChild(koerper);
@@ -951,8 +962,43 @@ const Planflaeche = (() => {
      * test630 §3), und die Uhr zeigt „—". */
     const laborZeit = (): string => zeitspulen().length
       ? (zeitStand.laufzeit / 1000).toFixed(1) + ' s' : '—';
+    const messwerteAktualisieren = (): void => {
+      if (!z.simulation || !messwertePanel.open) return;
+      const e = z.ergebnis;
+      const format = (wert: unknown, einheit: string): string =>
+        typeof wert === 'number' && Number.isFinite(wert) ? Stromfluss.zeige(wert,einheit) : '—';
+      const zeilen = e?.ok ? (z.plan.teile as any[]).filter(t=>Object.hasOwn(e.werte || {},t.id))
+        .map(t=>({id:String(t.id),name:String(t.bmk||t.id),symbol:String(Register.fachzeichen.holen(t.zeichen)?.name||t.zeichen),
+          U:format(e.werte[t.id]?.U,'V'),I:format(e.werte[t.id]?.I,'A'),P:format(e.werte[t.id]?.P,'W')})) : [];
+      const begrenzt = zeilen.slice(0,64);
+      const hinweis = !e ? 'Keine Berechnung vorhanden.' : !e.ok ? 'Berechnung fehlgeschlagen: '+String(e.fehler||'Unbekannter Fehler') :
+        zeilen.length ? 'Modellwerte, keine reale Messung. Mehrteilige Bauteile können weitere Teilwerte besitzen.' : 'Keine Bauteilwerte verfügbar.';
+      const signatur = JSON.stringify([hinweis,zeilen.length,begrenzt]);
+      if(signatur===messwerteSignatur)return;
+      messwerteSignatur=signatur;
+      const text=document.createElement('p');text.textContent=hinweis;
+      const frag=document.createDocumentFragment();frag.append(text);
+      if(begrenzt.length){
+        const table=document.createElement('table');
+        const header=table.createTHead().insertRow();
+        for(const label of ['Bauteil','Spannung U','Strom I','Leistung P']){
+          const cell=document.createElement('th');cell.scope='col';cell.textContent=label;header.append(cell);
+        }
+        const body=table.createTBody();
+        for(const row of begrenzt){
+          const tr=body.insertRow();tr.dataset.messwertId=row.id;
+          const name=document.createElement('th');name.scope='row';name.textContent=row.name+' · '+row.symbol;tr.append(name);
+          for(const [key,value] of [['U',row.U],['I',row.I],['P',row.P]]){const td=tr.insertCell();td.dataset.messwert=key;td.textContent=value;}
+        }
+        frag.append(table);
+      }
+      if(zeilen.length>64){const more=document.createElement('p');more.textContent='64 von '+zeilen.length+' Bauteilen angezeigt.';frag.append(more);}
+      messwerteInhalt.replaceChildren(frag);
+    };
+    messwertePanel.addEventListener('toggle',messwerteAktualisieren);
     const laborAktualisieren = (): void => {
       if (!z.simulation) return;
+      messwerteAktualisieren();
       const daten = Labor.statistik(z.plan, z.ergebnis, z.spulenStand);
       const anzeige = labor.querySelector<HTMLElement>('[data-labor-status]');
       if (anzeige) anzeige.textContent = daten.gueltig
@@ -975,6 +1021,8 @@ const Planflaeche = (() => {
     };
     const laborMalen = (): void => {
       labor.hidden = !z.simulation;
+      messwertePanel.hidden = !z.simulation;
+      if (!z.simulation) { messwertePanel.open=false; messwerteSignatur=''; messwerteInhalt.replaceChildren(); }
       wurzel.classList.toggle('sp-labor-pause', !!(z.simulation && zeitStand.pause));
       wurzel.style.setProperty('--sp-labor-tempo', String(laborTempo));
       if (!z.simulation) { labor.replaceChildren(); return; }
@@ -1017,6 +1065,7 @@ const Planflaeche = (() => {
         zeitStand.pause = !zeitStand.pause;
         zeitLetzter = performance.now();
       } else if (knopf.dataset.laborAktion === 'reset') {
+        tasterLoslassen?.();
         z.stellungen = {}; z.spulenStand = {};
         zeitStarten();
         male(); return;
@@ -3149,13 +3198,26 @@ const Planflaeche = (() => {
         const teil = (z.plan.teile as any[]).find(t => t.id === g.dataset.id);
         if (teil && (teil.zeichen === 'taster-schliesser' || teil.zeichen === 'taster-oeffner')) {
           const id = String(teil.id);
+          // A single held pushbutton per workspace. Release only its pointer;
+          // blur/visibility cancel also cover Alt+Tab and interrupted input.
+          tasterLoslassen?.();
+          const pointer = e.pointerId;
           const los = (): void => {
-            document.removeEventListener('pointerup', los, true);
-            document.removeEventListener('pointercancel', los, true);
-            if (z.simulation) { z.stellungen[id] = 0; male(); }
+            document.removeEventListener('pointerup', amZeiger, true);
+            document.removeEventListener('pointercancel', amZeiger, true);
+            window.removeEventListener('blur',los);
+            document.removeEventListener('visibilitychange',beiSicht);
+            if(tasterLoslassen===los)tasterLoslassen=null;
+            z.stellungen[id]=0;
+            if(z.simulation && wurzel.isConnected)male();
           };
-          document.addEventListener('pointerup', los, true);
-          document.addEventListener('pointercancel', los, true);
+          const amZeiger=(event:PointerEvent):void=>{if(event.pointerId===pointer)los();};
+          const beiSicht=():void=>{if(document.hidden)los();};
+          tasterLoslassen=los;
+          document.addEventListener('pointerup', amZeiger, true);
+          document.addEventListener('pointercancel', amZeiger, true);
+          window.addEventListener('blur',los);
+          document.addEventListener('visibilitychange',beiSicht);
           z.stellungen[id] = 1; male();
           return;
         }
@@ -3987,6 +4049,7 @@ const Planflaeche = (() => {
 
       if (!z.simulation) merkwahl = { werkzeug: z.werkzeug, zeichen: z.gewaehltesZeichen };
       z.simulation = !z.simulation;
+      if(!z.simulation)tasterLoslassen?.();
 
       z.auswahl.clear();
       if (z.simulation) { z.werkzeug = 'zeigen'; z.gewaehltesZeichen = ''; }
@@ -4095,7 +4158,7 @@ const Planflaeche = (() => {
       }
       if (b.dataset.a === 'zurueck-zeichnen') { simulationUmschalten(); return; }
       if (b.dataset.a === 'ruhelage') {
-        z.stellungen = {}; z.spulenStand = {}; zeitStarten(); male(); return;
+        tasterLoslassen?.(); z.stellungen = {}; z.spulenStand = {}; zeitStarten(); male(); return;
       }
       if (b.classList.contains('annahme')) {
         const e = z.ergebnis;

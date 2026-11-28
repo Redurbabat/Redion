@@ -987,3 +987,21 @@ html[data-windows-titelleiste] body:is(.fokus, [data-dokument="an"]) #studio-bar
   }
   .document-filter-count{grid-column:1/-1;margin:0;color:var(--text-dim);font-size:var(--t-caption)}
 }
+
+
+/* A collapsible Windows measurement inspector. Never presents model values
+   as actual measurements; original paper and touch layout remain unchanged. */
+.sp-wrap .sp-desktop-messwerte{display:none}
+@media(min-width:1024px) and (hover:hover) and (pointer:fine){
+  html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-desktop-messwerte:not([hidden]){
+    display:block;flex:none;min-width:0;background:var(--bg-card);color:var(--text);
+    border:1px solid var(--line);border-radius:var(--radius-md);
+  }
+  .sp-desktop-messwerte summary{cursor:pointer;padding:var(--space-2);font-weight:600}
+  .sp-desktop-messwerte summary:focus-visible{outline:2px solid var(--accent-text);outline-offset:-2px}
+  .sp-desktop-messwerte-inhalt{max-height:clamp(96px,22vh,260px);overflow:auto;overscroll-behavior:contain;padding:var(--space-2)}
+  .sp-desktop-messwerte-inhalt p{font-size:var(--t-caption);color:var(--text-dim);margin:0 0 var(--space-2)}
+  .sp-desktop-messwerte-inhalt table{width:100%;border-collapse:collapse;font-size:var(--t-small);font-variant-numeric:tabular-nums;text-align:left}
+  .sp-desktop-messwerte-inhalt :is(td,th){padding:var(--space-1) var(--space-2);border-bottom:1px solid var(--line)}
+  .sp-desktop-messwerte-inhalt thead th{position:sticky;top:0;background:var(--bg-card)}
+}

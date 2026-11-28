@@ -26,3 +26,7 @@ Windows, feiner Zeiger, breite Planfläche ab 1180 px: Bibliothek links und Insp
 ## PDF-Seitennavigator
 
 Windows-Desktop: Seitenübersicht filtern nach Dokumentposition (auch #3), vorhandener Seitenbeschriftung oder Lesezeichen. Enter springt zum ersten Treffer, Escape/Alle setzt zurück. Keine OCR-Suche; bestehende Volltextsuche bleibt unverändert. Drag-Reihenfolge während Filter gesperrt, Seitennummern und gespeicherte Inhalte bleiben unverändert. Miniatur-Lader verwendet pro Panel nur einen Scroll-Handler und überspringt versteckte Bilder. Test285 ergänzt; CI offen.
+
+## Elektro-Messwertinspektor und Taster
+
+Windows-Desktop: ausklappbare, auf 64 Bauteile begrenzte Tabelle der tatsächlich berechneten U/I/P-Modellwerte; fehlende/nicht endliche Werte als Strich, Fehlertext ohne erfundene Messwerte. Aktualisiert auch bei Zeitrelais, unveränderte Anzeige wird nicht neu gebaut. Beim Ausschalten leeren. Taster lösen bei passendem Pointerup/-cancel, Fensterblur, verstecktem Dokument und Stop/Reset; keine neuen gespeicherten Zustände. Test630 erweitert mit realer Zeitrelais-/Tasterfolge und Messwertanzeige. CI/Windows-Abnahme offen.

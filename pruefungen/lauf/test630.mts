@@ -180,7 +180,25 @@ await seite.waitForTimeout(250);
 gleich('Losgelassen: das Licht bleibt noch an (Abfallverzögerung)', await leuchtet(), true);
 await seite.waitForTimeout(900);
 gleich('… und ist nach T = 0,8 s aus — der Taster ist zurückgefedert', await leuchtet(), false);
+/* A held pushbutton must release on window blur even if pointerup is
+   delivered later. Use the real timer/relay and original pointer path. */
+await seite.evaluate(()=>document.documentElement.setAttribute('data-windows-titelleiste',''));
+await seite.locator('.sp-desktop-messwerte summary').click();
+p('Messwertinspektor zeigt E1 und berechnete Grössen',
+  await seite.locator('.sp-desktop-messwerte [data-messwert-id="E1"] [data-messwert="U"]').count()===1);
+const held = await s1().boundingBox();
+if(held){
+  await seite.mouse.move(held.x+12,held.y+18);
+  await seite.mouse.down(); await seite.waitForTimeout(200);
+  gleich('Taster vor Fensterwechsel aktiv',await leuchtet(),true);
+  await seite.evaluate(()=>window.dispatchEvent(new Event('blur')));
+  await seite.waitForTimeout(1050);
+  gleich('Fensterwechsel: Taster löst, Zeitrelais fällt ab',await leuchtet(),false);
+  await seite.mouse.up();
+} else p('Taster für Fensterwechsel vorhanden',false);
 await strom();
+p('Messwertinspektor beim Abschalten geleert',await seite.locator('.sp-desktop-messwerte[hidden] [data-messwert-id]').count()===0);
+await seite.evaluate(()=>document.documentElement.removeAttribute('data-windows-titelleiste'));
 
 /* ══ §5 Der Teildialog ════════════════════════════════════════════════════ */
 console.log('\n§5 Der Teildialog einer Zeitspule');
