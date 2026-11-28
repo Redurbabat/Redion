@@ -18,3 +18,7 @@ Windows-only über das vorhandene `data-windows-titelleiste`, ab 1024 px mit Mau
 ## Desktop panel sizing
 
 Windows-only wide plan container (>=850px), fine pointer and >=1024px window. Existing palette/inspector become in-flow columns; drag the divider or use arrows, Shift+arrows, Home/End; double-click resets. Width is view-only, bounded 180–380 px and additionally limited by container width. Narrow/phone and focus modes retain existing layout. No electrical model mutation. Browser and native tests pending.
+
+## Gleichzeitige Desktop-Bauteilbibliothek und Inspektor
+
+Windows, feiner Zeiger, breite Planfläche ab 1180 px: Bibliothek links und Inspektor rechts können gleichzeitig geöffnet werden. Gemeinsame Panel-Logik für Kopf, Kontextmenü und Tastatur. Bei kleinerem Fenster/Fokusmodus schliesst die Bibliothek, der Inspektor bleibt. Bei zwei Spalten jeweils maximal 28 % der Breite; bestehende Zieh-/Tastatur-Griffe bleiben. Ansichtsstatus verändert keine gespeicherten Pläne. Test625 erweitert für beide Panels, Überdeckung, Resize-Tastatur, schmalen Rückfall und Modell-Unverändertheit. Abnahme noch offen.

@@ -945,3 +945,14 @@ html[data-windows-titelleiste] body:is(.fokus, [data-dokument="an"]) #studio-bar
     html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-desktop-resize:focus-visible{outline:2px solid var(--accent-text);outline-offset:-2px}
   }
 }
+
+
+/* Wide desktop: two real side columns, leaving at least 40% for the plan.
+   The narrow layout is still driven by the shared panel controller. */
+@media(min-width:1024px) and (hover:hover) and (pointer:fine){
+  @container sp (min-width:1180px){
+    html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap:not(.sp-plan-fokus) .sp-koerper:has(>.sp-palette:not([hidden])):has(>.sp-studio:not([hidden]))>:is(.sp-palette,.sp-studio){
+      flex-basis:min(var(--sp-desktop-panel-width,248px),28%);
+    }
+  }
+}

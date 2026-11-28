@@ -968,6 +968,40 @@ for (const [breite, hoehe] of [[1300, 860], [860, 700]] as Array<[number, number
   await F.ctx.close();
 }
 
+abschnitt('§11 Windows Studio: zwei Seitenleisten, schmaler Rückfall');
+const desktopStudio = await aufmachen({breite:1800,hoehe:1000});
+const ds = desktopStudio.s;
+const dsId = await oeffne(ds,'B');
+const dsPlan = await planText(ds,dsId);
+await ds.evaluate(() => {
+  document.documentElement.setAttribute('data-windows-titelleiste','');
+  const root = document.querySelector<HTMLElement>('.sp-wrap')!;
+  root.style.width = '1250px'; root.style.maxWidth = 'none';
+});
+await ds.locator('.sp-wrap [data-a="desktop-inspector"]').click();
+await ds.locator('.sp-wrap [data-a="palette-toggle"]').click();
+await ds.waitForTimeout(200);
+const dsPanels = await ds.evaluate(() => {
+  const root=document.querySelector<HTMLElement>('.sp-wrap')!;
+  const palette=root.querySelector<HTMLElement>('.sp-palette')!, inspector=root.querySelector<HTMLElement>('.sp-studio')!;
+  const stage=root.querySelector<HTMLElement>('.sp-buehne')!;
+  const l=palette.getBoundingClientRect(),r=inspector.getBoundingClientRect(),m=stage.getBoundingClientRect();
+  return {both:!palette.hidden&&!inspector.hidden,nonOverlap:l.right<=m.left+1&&m.right<=r.left+1,stage:m.width};
+});
+p('§11a Beide Panels neben der Bühne, ohne Überdeckung',dsPanels.both&&dsPanels.nonOverlap&&dsPanels.stage>=400,JSON.stringify(dsPanels));
+const dsResize = ds.locator('.sp-wrap .sp-desktop-resize[data-seite="links"]');
+await dsResize.focus(); await ds.keyboard.press('Home');
+p('§11b Tastatur-Grössenänderung',await dsResize.getAttribute('aria-valuenow')==='180');
+await ds.evaluate(()=>{document.querySelector<HTMLElement>('.sp-wrap')!.style.width='900px';});
+await ds.waitForTimeout(200);
+const narrow = await ds.evaluate(()=>{
+  const root=document.querySelector<HTMLElement>('.sp-wrap')!;
+  return {palette:root.querySelector<HTMLElement>('.sp-palette')!.hidden,inspector:root.querySelector<HTMLElement>('.sp-studio')!.hidden};
+});
+p('§11c Schmaler Rückfall behält genau den Inspektor',narrow.palette&&!narrow.inspector,JSON.stringify(narrow));
+gleich('§11d Seitenleisten verändern keinen gespeicherten Plan',await planText(ds,dsId),dsPlan);
+await desktopStudio.ctx.close();
+
 abschnitt('§9 Ruhe');
 gleich('§9 keine Seitenfehler', fehler, []);
 

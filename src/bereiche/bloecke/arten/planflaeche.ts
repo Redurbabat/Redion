@@ -369,7 +369,7 @@ const Planflaeche = (() => {
     let relais: { aktualisiere: () => void } | null = null;
     let batterie: { aktualisiere: () => void; stromAn: () => boolean;
       stromSetzen: (an: boolean) => void; ausZeichnung: () => boolean } | null = null;
-    let studioOffen = false; /* das Studio ersetzt die Palette, es verdoppelt sie nicht */
+    let studioOffen = false; /* mobile/narrow: one panel; wide Windows: two columns */
     let paletteOffen = false; // Die Zeichenfläche erhält beim Öffnen die volle Breite
     let paletteGruppe = 'alle';
     let paletteSuche = '';
@@ -632,6 +632,25 @@ const Planflaeche = (() => {
     const studioGriff = studioBreite(studioPanel, 'Inspektor', 'rechts', 288);
     // Siblings survive innerHTML rebuilds of the two existing panels.
     palette.after(paletteGriff); studioPanel.before(studioGriff);
+    const desktopDoppelspalte = (): boolean =>
+      document.documentElement.hasAttribute('data-windows-titelleiste') &&
+      document.body.dataset.uiShell !== 'glass-wheel' &&
+      !planFokus && wurzel.clientWidth >= 1180 &&
+      window.matchMedia('(min-width:1024px) and (hover:hover) and (pointer:fine)').matches;
+    const paletteSetzen = (offen: boolean): void => {
+      paletteOffen = offen; palette.hidden = !offen;
+      wurzel.classList.toggle('sp-palette-offen', offen);
+      if (offen && studioOffen && !desktopDoppelspalte()) {
+        studioOffen = false; studioPanel.hidden = true;
+      }
+    };
+    const studioSetzen = (offen: boolean): void => {
+      studioOffen = offen; studioPanel.hidden = !offen;
+      if (offen) {
+        if (!desktopDoppelspalte()) paletteSetzen(false);
+        studioTab = 'eigenschaften';
+      }
+    };
     const fussInhalt = document.createElement('div');
     fussInhalt.className = 'sp-fuss-inhalt';
     fuss.appendChild(fussInhalt);
@@ -850,6 +869,7 @@ const Planflaeche = (() => {
     }).observe(dock);
 
     const kopfMalen = (): void => {
+      if (paletteOffen && studioOffen && !desktopDoppelspalte()) paletteSetzen(false);
       fachStatus();
       dockAktualisieren();
       einstiegMalen();
@@ -2889,9 +2909,7 @@ const Planflaeche = (() => {
       const aktion = knop.dataset.kontext;
       if (aktion === 'abwahl') { z.auswahl.clear(); karteSchliessen(); male(); return; }
       if (aktion === 'eigenschaften') {
-        studioOffen = true; studioTab = 'eigenschaften'; studioPanel.hidden = false;
-        paletteOffen = false; palette.hidden = true;
-        wurzel.classList.remove('sp-palette-offen');
+        studioSetzen(true);
         studioMalen(); kopfMalen(); return;
       }
       ({ drehen, spiegeln, doppeln, loeschen } as Record<string, () => void>)
@@ -4002,10 +4020,7 @@ const Planflaeche = (() => {
         z.werkzeug = b.dataset.wz as Werkzeug; z.gewaehltesZeichen = ''; z.auswahl.clear(); male(true); return;
       }
       if (b.dataset.a === 'palette-toggle') {
-        paletteOffen = !paletteOffen;
-        if (paletteOffen && studioOffen) { studioOffen = false; studioPanel.hidden = true; }
-        wurzel.classList.toggle('sp-palette-offen', paletteOffen);
-        palette.hidden = !paletteOffen;
+        paletteSetzen(!paletteOffen);
         kopfMalen(); return;
       }
       if (b.dataset.a === 'dock-bauteile') { dock.querySelector<HTMLButtonElement>('[data-a="palette-toggle"]')?.click(); return; }
@@ -4024,8 +4039,7 @@ const Planflaeche = (() => {
         return;
       }
       if (b.dataset.a === 'elektro-studio' || b.dataset.a === 'desktop-inspector') {
-        studioOffen = !studioOffen; studioPanel.hidden = !studioOffen;
-        if (studioOffen) { paletteOffen = false; palette.hidden = true; wurzel.classList.remove('sp-palette-offen'); studioTab = 'eigenschaften'; }
+        studioSetzen(!studioOffen);
         kopfMalen(); if (studioOffen) studioMalen(); return;
       }
       if (b.dataset.a === 'pruefzentrum') {
@@ -4214,10 +4228,8 @@ const Planflaeche = (() => {
          (E746, zweite Durchsicht — die Wahl und ihr Preis stehen dort). */
       if (e.key === 'Escape' && z.zieht) return;
       if (!e.ctrlKey && !e.metaKey && e.altKey && e.shiftKey && e.key.toLowerCase() === 'e') {
-        // Alt+Umschalt+E: der Inspektor ersetzt die Bauteilpalette, statt sie zu duplizieren.
-        e.preventDefault(); studioOffen = !studioOffen; studioPanel.hidden = !studioOffen;
-        if (studioOffen) { paletteOffen = false; palette.hidden = true;
-          wurzel.classList.remove('sp-palette-offen'); studioTab = 'eigenschaften'; }
+        // Alt+Umschalt+E: Inspektor über dieselbe Panel-Logik wie der Kopf.
+        e.preventDefault(); studioSetzen(!studioOffen);
         kopfMalen(); if (studioOffen) studioMalen(); return;
       }
       /* Ansicht (E762): Leertaste halten und ziehen verschiebt; F Vollbild;
@@ -4250,8 +4262,7 @@ const Planflaeche = (() => {
         if (e.key.toLowerCase() === 'p') { e.preventDefault(); simulationUmschalten(); return; }
         if (e.key.toLowerCase() === 'b') { e.preventDefault();
           if (z.simulation) { simulationUmschalten(); return; }
-          if (!paletteOffen) { paletteOffen = true; palette.hidden = false; wurzel.classList.add('sp-palette-offen'); kopfMalen(); }
-          else { paletteOffen = false; palette.hidden = true; wurzel.classList.remove('sp-palette-offen'); kopfMalen(); }
+          paletteSetzen(!paletteOffen); kopfMalen();
           return;
         }
         if (e.key === 'f' || e.key === 'F') { e.preventDefault(); return z.voll ? vollAus() : vollAn(); }
@@ -4327,8 +4338,8 @@ const Planflaeche = (() => {
         const was = b.dataset.bereich;
         if (was === 'palette') return kopf.querySelector<HTMLElement>('[data-a="palette-toggle"]')?.click();
         if (was === 'studio') return (() => {
-          studioOffen = !studioOffen; studioPanel.hidden = !studioOffen;
-          if (studioOffen) { paletteOffen = false; palette.hidden = true; wurzel.classList.remove('sp-palette-offen'); studioTab = 'eigenschaften'; studioMalen(); }
+          studioSetzen(!studioOffen);
+          if (studioOffen) studioMalen();
           kopfMalen();
         })();
 
@@ -4526,6 +4537,17 @@ const Planflaeche = (() => {
     palette.hidden = !paletteOffen;
     paletteMalen();
     male();
+    if (typeof ResizeObserver === 'function') {
+      const panelObserver = new ResizeObserver(() => {
+        if (!wurzel.isConnected) return;
+        if (!paletteOffen || !studioOffen || desktopDoppelspalte()) return;
+        const restoreFocus = palette.contains(document.activeElement) || document.activeElement === paletteGriff;
+        paletteSetzen(false);
+        kopfMalen();
+        if (restoreFocus) kopf.querySelector<HTMLElement>('[data-a="desktop-inspector"]')?.focus({preventScroll:true});
+      });
+      panelObserver.observe(wurzel);
+    }
     if (relaisOffen) relaisZeigen();
     return wurzel;
   };
