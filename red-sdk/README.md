@@ -1,4 +1,4 @@
-# RED SDK v0.3 – private app identity
+# RED SDK – private app identity and ecosystem services
 
 Build from the RED ION repository root:
 
@@ -131,8 +131,15 @@ the exact encrypted plan until `upload` returns; retry with the same plan if
 the response is lost. Upload validates the entire plan first and publishes
 the manifest last. Download by manifest ID returns bytes only after every
 chunk is authenticated and checked. This is not a streaming filesystem:
-preparation/download use bounded memory and a failed upload may leave
-orphan chunks. No automatic garbage collection or overwrite/delete API.
+preparation and the legacy download buffer the complete file; failed uploads may
+leave orphan chunks. The optional `downloadTo(id, sink)` API authenticates one
+chunk at a time and passes it to a trusted local transactional sink. The sink
+must stage privately, publish atomically in `commit`, and discard all staging
+in `abort` (including a partially failed `begin`). Borrowed bytes are wiped
+when `write` settles. The SDK cannot verify the platform's atomic rename or
+secure staging guarantees; an abort failure is surfaced. The file size and
+account quotas remain unchanged; upload streaming and native SSD adapters
+are still open. No automatic garbage collection or overwrite/delete API.
 The existing 16 MiB encoded-data / 1024-object per-account pilot limit still
 applies; other stored objects may prevent an 8 MiB upload. Keep explicit
 manifest references in your local app catalogue. File names are display
