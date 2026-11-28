@@ -97,6 +97,8 @@ const GfxToolbar = (() => {
         const vorrat = document.createElement('div');
         vorrat.hidden = true;
         let galerieMessen;
+        let galerieAktivZeigen = () => { };
+        const desktopGalerie = () => window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches;
         if (o.galerie) {
             wurzel.classList.add('gfx-tb-galerie', 'gfx-tb-edgeless');
             if (o.galerie.beschriftet)
@@ -131,13 +133,11 @@ const GfxToolbar = (() => {
                 for (const b of karte.querySelectorAll('button')) {
                     if (!['notiz', 'formen'].includes(id) && !['stift', 'radierer'].includes(b.dataset.wz ?? ''))
                         b.classList.add('gfx-tb-symbol');
-                    if (o.galerie.beschriftet) {
-                        const label = document.createElement('span');
-                        label.className = 'gfx-tb-kartenname';
-                        label.textContent = b.getAttribute('aria-label') || '';
-                        label.setAttribute('aria-hidden', 'true');
-                        b.append(label);
-                    }
+                    const label = document.createElement('span');
+                    label.className = o.galerie.beschriftet ? 'gfx-tb-kartenname' : 'gfx-tb-desktop-name';
+                    label.textContent = b.getAttribute('aria-label') || '';
+                    label.setAttribute('aria-hidden', 'true');
+                    b.append(label);
                 }
                 if (vorschau && (id === 'notiz' || id === 'formen')) {
                     delete vorschau.dataset.sym;
@@ -202,6 +202,15 @@ const GfxToolbar = (() => {
                 }
                 zurueck.setAttribute('aria-disabled', String(kartenStart === 0));
                 weiter.setAttribute('aria-disabled', String(kartenStart === letzterStart));
+            };
+            galerieAktivZeigen = (id) => {
+                if (!desktopGalerie())
+                    return;
+                const index = galeriekarten.findIndex(karte => !!karte.querySelector('[data-wz="' + CSS.escape(id) + '"]'));
+                if (index < 0 || !galeriekarten[index]?.hidden)
+                    return;
+                kartenStart = index;
+                blattstand();
             };
             leiste.append(schnell, trenner(), zurueck, festerStreifen, weiter);
             galerieMessen = new ResizeObserver(() => {
@@ -348,7 +357,10 @@ const GfxToolbar = (() => {
         };
         document.addEventListener('pointerdown', beiAussen, true);
         const setzeWerkzeug = (id) => {
+            const gewechselt = aktiv !== id;
             aktiv = id;
+            if (gewechselt)
+                galerieAktivZeigen(id);
             wurzel.querySelectorAll('[data-wz]').forEach(b => {
                 const an = b.dataset.wz === id;
                 b.classList.toggle('on', an);
@@ -375,7 +387,7 @@ const GfxToolbar = (() => {
         };
         tabstoppSetzen();
         if (typeof requestAnimationFrame === 'function')
-            requestAnimationFrame(haltPruefen);
+            requestAnimationFrame(() => { galerieAktivZeigen(aktiv); haltPruefen(); });
         return {
             element: wurzel,
             setzeWerkzeug,

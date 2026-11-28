@@ -71,6 +71,16 @@ test('Windows installer packages two EXEs and a stable offline data profile', ()
   assert.doesNotMatch(main, /loadURL\(['"]https?:/);
 });
 
+test('Studio preview is isolated and never publishes a release', () => {
+  const main = fs.readFileSync(path.join(__dirname,'main.cjs'),'utf8');
+  const preview = fs.readFileSync(path.join(__dirname,'studio-preview-exe.mts'),'utf8');
+  assert.match(main,/app\.isPackaged && require\('\.\/package\.json'\)\.studioPreview === true/);
+  assert.match(main,/STUDIO_PREVIEW \? '[a-f0-9]{32}' : null/);
+  assert.match(preview,/extraMetadata:\{studioPreview:true\}/);
+  assert.match(preview,/'--publish','never'/);
+  assert.match(preview,/target:'portable'/);
+});
+
 test('local-first app and iOS app are never modified by Windows packager', () => {
   const script = fs.readFileSync(path.join(__dirname, 'prepare.mjs'), 'utf8');
   const pkg = require('./package.json');
@@ -132,4 +142,55 @@ test('L268: a refused unload asks instead of trapping the window', () => {
   assert.match(body, /if \(systemEnding \|\| !mainWindow\) \{ event\.preventDefault\(\); return; \}/,
     'a system shutdown is never held up');
   assert.match(source, /'session-end', \(\) => \{ systemEnding = true;/, 'shutdown sets the flag');
+});
+
+test('window restore fits the most visible monitor and keeps the title reachable', () => {
+  const { readWindowState, defaultWindowBounds } = require('./generated/desktop-shell.cjs');
+  const primary = { x: 0, y: 40, width: 1280, height: 720 };
+  const left = { x: -1600, y: 0, width: 1600, height: 900 };
+  const restore = box => readWindowState(() => JSON.stringify(box), [primary, left]);
+  assert.deepEqual(restore({ x: -1500, y: -120, width: 1100, height: 800, maximized: true }),
+    { x: -1500, y: 0, width: 1100, height: 800, maximized: true });
+  assert.deepEqual(restore({ x: 900, y: 0, width: 1600, height: 900 }),
+    { x: 0, y: 40, width: 1280, height: 720, maximized: false });
+  assert.deepEqual(restore({ x: -900, y: 10, width: 1100, height: 700 }),
+    { x: -1100, y: 10, width: 1100, height: 700, maximized: false });
+  assert.equal(restore({ x: 3000, y: 100, width: 1000, height: 700 }), null);
+  assert.deepEqual(defaultWindowBounds(primary), primary);
+  assert.deepEqual(defaultWindowBounds({ x: 0, y: 0, width: 1920, height: 1080 }),
+    { x: 310, y: 110, width: 1300, height: 860 });
+  assert.deepEqual(defaultWindowBounds({ x: 20, y: 30, width: 700, height: 480 }),
+    { x: 20, y: 30, width: 860, height: 580 });
+});
+
+test('preview taskbar identity remains distinct from production', () => {
+  const source = fs.readFileSync(path.join(__dirname, 'main.cjs'), 'utf8');
+  assert.match(source, /app\.setAppUserModelId\(STUDIO_PREVIEW \? 'ch\.redurbabat\.redion\.studio\.preview' : APP_ID\)/);
+});
+
+test('native window arrangement respects taskbars, negative coordinates and minimum size', () => {
+  const { windowLayout } = require('./generated/desktop-shell.cjs');
+  const area = { x: -1921, y: 40, width: 1921, height: 1000 };
+  const box = { x: -500, y: 200, width: 1100, height: 700 };
+  assert.deepEqual(windowLayout(area, box, 'left'), { x: -1921, y: 40, width: 960, height: 1000 });
+  assert.deepEqual(windowLayout(area, box, 'right'), { x: -961, y: 40, width: 961, height: 1000 });
+  assert.deepEqual(windowLayout(area, box, 'center'), { x: -1511, y: 190, width: 1100, height: 700 });
+  assert.equal(windowLayout({x:0,y:0,width:1600,height:900},box,'left'),null);
+  assert.equal(windowLayout({x:0,y:0,width:1920,height:500},box,'right'),null);
+  assert.equal(windowLayout(area,box,'unknown'),null);
+});
+
+test('reference is a local frozen image with no privileged renderer or persistent partition', () => {
+  const source=fs.readFileSync(path.join(__dirname,'main.cjs'),'utf8');
+  const body=source.slice(source.indexOf('async function openReference()'),source.indexOf('function appMenu()'));
+  assert.match(body,/source\.webContents\.capturePage\(\)/);
+  assert.match(body,/partition: 'redion-reference-' \+ randomUUID\(\)/);
+  assert.match(body,/nodeIntegration: false, webSecurity: true, devTools: false/);
+  assert.match(body,/sandbox: true/);
+  assert.match(body,/contextIsolation: true/);
+  assert.match(body,/will-navigate/);
+  assert.match(body,/will-download/);
+  assert.match(body,/default-src &#39;none&#39;/);
+  assert.doesNotMatch(body,/preload:|persist:|desktopCapturer|writeFile|https?:\/\//);
+  assert.match(source,/mainWindow\.on\('closed', \(\) => \{\s*closeReference\(\)/);
 });

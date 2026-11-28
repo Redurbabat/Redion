@@ -1,8 +1,10 @@
 import {cpus,totalmem,freemem,uptime,loadavg} from 'node:os';
-import {statfs,readFile} from 'node:fs/promises';
+import {readFile} from 'node:fs/promises';
 import {setTimeout as delay} from 'node:timers/promises';
 import type {DatabaseSync} from 'node:sqlite';
 import {werFragt} from '../kern.ts';
+import {reviewStorageCapacity} from './maintenance-storage.ts';
+import {reviewRedGrants} from './maintenance-grants.ts';
 import type {Ablage} from '../typen.ts';
 
 const json=(status:number,body:unknown)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
@@ -23,12 +25,12 @@ export function createHomeDashboard(db:DatabaseSync,ablage:Ablage,dataDir:string
   async function metrics(){
     const first=cpuSample();await delay(100);const last=cpuSample();
     const delta=last.total-first.total;
-    const fs=await statfs(dataDir);
+    const storageReview=await reviewStorageCapacity(dataDir);
     const total=totalmem(),free=freemem();
     return {version:1,measuredAt:new Date().toISOString(),scope:'server-visible',
       cpu:{percent:delta>0?Math.max(0,Math.min(100,100*(1-(last.idle-first.idle)/delta))):null,cores:cpus().length,load1m:loadavg()[0]??null},
       memory:{totalBytes:total,usedBytes:Math.max(0,total-free)},
-      storage:{totalBytes:fs.blocks*fs.bsize,availableBytes:fs.bavail*fs.bsize},
+      storage:{totalBytes:storageReview.totalBytes,availableBytes:storageReview.availableBytes},storageReview,
       temperatureC:await temperature(),network:await network(),uptimeSeconds:Math.floor(uptime()),processUptimeSeconds:Math.floor(process.uptime()),
       services:{sqlite:'ready',sync:'ready',redId:'ready',mcp:mcpEnabled?'enabled':'disabled'}};
   }
@@ -40,10 +42,10 @@ export function createHomeDashboard(db:DatabaseSync,ablage:Ablage,dataDir:string
     const count=(sql:string,...values:(string|number)[])=>Number(db.prepare(sql).get(...values)?.n??0);
     const devices=count("SELECT COUNT(*) AS n FROM sitzungen WHERE kontoId=? AND (bis IS NULL OR bis='' OR bis>=?)",owner,new Date().toISOString());
     const appCredentials=count('SELECT COUNT(*) AS n FROM home_red_id WHERE owner=? AND expires>?',owner,Date.now())+count('SELECT COUNT(*) AS n FROM home_red_session WHERE owner=? AND refresh_until>?',owner,Date.now());
-    const mcpGrantRecords=mcpEnabled?count("SELECT COUNT(*) AS n FROM mcp_state WHERE kind='grant' AND expires>?",Date.now()):0;
+    const mcpGrantRecords=mcpEnabled?count("SELECT COUNT(*) AS n FROM mcp_state WHERE kind='grant' AND expires>? AND json_extract(data,'$.userId')=? AND json_extract(data,'$.active')=1",Date.now(),owner):0;
     // Concurrent authenticated requests share the same measurement; no user data in the sample.
     if(!sample)sample=metrics().finally(()=>{sample=null;});
     const data=await sample;
-    return json(200,{...data as Record<string,unknown>,devices:{authorizedSessions:devices},redId:{activeCredentials:appCredentials},mcp:{grantRecords:mcpGrantRecords},...(monitor?{monitor:monitor()}: {})});
+    return json(200,{...data as Record<string,unknown>,devices:{authorizedSessions:devices},redId:{activeCredentials:appCredentials},grantReview:reviewRedGrants(db,owner,Date.now()),mcp:{grantRecords:mcpGrantRecords},...(monitor?{monitor:monitor()}: {})});
   };
 }

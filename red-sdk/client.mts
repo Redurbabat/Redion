@@ -71,6 +71,14 @@ export function createRedIdV2Client(origin:string,app:RedAppId,store:RedSecureSt
       if(data?.version!==1||!Array.isArray(data.items)||data.items.length>64||!data.items.every(isStoreMeta)||(data.next!==null&&(typeof data.next!=='string'||!storeId(data.next))))throw Error('Invalid RED store page');
       return data as RedStorePage;
     }),
+    /** A null or expired cursor returns a fresh metadata snapshot.
+     * Commit the returned cursor only after all records are applied locally. */
+    storeChanges:(kind:RedStoreKind,cursor:string|null=null)=>serial(async():Promise<RedStoreChanges>=>{
+      if(cursor!==null&&!/^[a-f0-9]{64}$/.test(cursor))throw Error('Invalid RED store cursor');
+      const data=await authenticated('red-store','changes',{kind,cursor});
+      if(data?.version!==1||typeof data.reset!=='boolean'||(data.cursor!==null&&(typeof data.cursor!=='string'||!/^[a-f0-9]{64}$/.test(data.cursor)))||!Array.isArray(data.items)||data.items.length>1024||!data.items.every(isStoreMeta)||new Set(data.items.map((item:RedStoreMeta)=>item.id)).size!==data.items.length||(!data.reset&&cursor===null)||data.cursor===null&&data.items.length!==0)throw Error('Invalid RED store changes');
+      return data as RedStoreChanges;
+    }),
     storeGet:(kind:RedStoreKind,id:string)=>serial(async():Promise<RedStoreRecord>=>{
       const data=await authenticated('red-store','get',{kind,id});
       if(data?.version!==1||data.id!==id||!isStoreRecord(data))throw Error('Invalid RED store record');
@@ -109,7 +117,7 @@ export function decodeRedPairRequest(value:string):{app:RedAppId;challenge:strin
   if(value.length>256)throw Error('Invalid pairing request');
   const data=JSON.parse(value);
   const apps:RedAppId[]=['red-ion','red-fit','red-poly','red-bit','red-loop','red-efz','red-kurd','red-uhr','red-yt','stran','babat-red'];
-  if(data?.kind!=='red-pair'||data.version!==1||!apps.includes(data.app)||typeof data.challenge!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(data.challenge))throw Error('Invalid pairing request');
+  if(!data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).length!==4||data.kind!=='red-pair'||data.version!==1||!apps.includes(data.app)||typeof data.challenge!=='string'||!/^[A-Za-z0-9_-]{43}$/.test(data.challenge))throw Error('Invalid pairing request');
   return {app:data.app,challenge:data.challenge};
 }
 export type RedShareAddress={source:RedAppId;target:RedAppId;channel:string;id:string};
@@ -240,6 +248,7 @@ export type RedStoreResult={version:1;id:string;revision:number;deleted:0|1};
 export type RedStoreRecord=RedStoreResult&{envelope:string;updated:number};
 export type RedStoreMeta=Omit<RedStoreRecord,'version'|'envelope'>&{encodedBytes:number};
 export type RedStorePage={version:1;items:RedStoreMeta[];next:string|null};
+export type RedStoreChanges={version:1;items:RedStoreMeta[];cursor:string|null;reset:boolean};
 const storeId=(s:string)=>/^[a-f0-9]{32}$/.test(s);
 const safeNatural=(x:unknown):x is number=>typeof x==='number'&&Number.isSafeInteger(x)&&x>=0;
 const storeKind=(x:unknown):x is RedStoreKind=>x==='sync'||x==='file';
@@ -283,4 +292,481 @@ export async function openRedStoreRecord(key:Uint8Array,context:Omit<RedStoreCon
  if(key.byteLength!==32||!isStoreRecord(record)||record.version!==1||record.id!==context.id||record.deleted!==0)throw Error('Invalid or deleted RED store record');
  const raw=unbase64url(record.envelope),k=await crypto.subtle.importKey('raw',new Uint8Array(key),'AES-GCM',false,['decrypt']);
  return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:raw.slice(0,12),additionalData:storeAAD({...context,revision:record.revision})},k,raw.slice(12)));
+}
+
+/** App adapters implement an atomic local commit (e.g. SQLite transaction)
+ * including the cursor, imported records, and conflict journal. The SDK
+ * does not persist plaintext or create a background service. */
+export type RedSyncScope=Omit<RedStoreContext,'id'|'revision'>;
+export type RedSyncLocalItem={id:string;revision:number;dirty:boolean;deleted:0|1};
+export type RedSyncSnapshot={cursor:string|null;generation:string;items:RedSyncLocalItem[]};
+export type RedSyncImport<T>={id:string;revision:number;deleted:0|1;value:T|null};
+export type RedSyncConflict={id:string;localRevision:number;remoteRevision:number|null;reason:'local_edit'|'remote_rollback'|'missing_remote'|'revision_changed'};
+export type RedSyncBatch<T>={cursor:string|null;imports:RedSyncImport<T>[];conflicts:RedSyncConflict[]};
+export interface RedSyncAdapter<T>{
+ snapshot():Promise<RedSyncSnapshot>;
+ /** Must reject if local generation changed; must durably journal every
+  * conflict before advancing the cursor. Never clear dirty local data. */
+ commit(expectedGeneration:string,batch:RedSyncBatch<T>):Promise<void>;
+}
+type RedSyncTransport={storeChanges(kind:RedStoreKind,cursor:string|null):Promise<RedStoreChanges>;storeGet(kind:RedStoreKind,id:string):Promise<RedStoreRecord>};
+export function createRedSync<T>(client:RedSyncTransport,scope:RedSyncScope,key:Uint8Array,adapter:RedSyncAdapter<T>,decode:(bytes:Uint8Array)=>T,recordDecoders:ReadonlyMap<string,(record:RedStoreRecord)=>Promise<T>>=new Map()){
+ const special=new Map(recordDecoders);
+ for(const id of special.keys())if(!storeId(id))throw Error('Invalid special record ID');
+ const bound={...scope};
+ storeAAD({...bound,id:'0'.repeat(32),revision:1});
+ if(key.byteLength!==32)throw Error('Invalid sync key');
+ const secret=new Uint8Array(key);
+ let running=false,disposed=false;
+ async function pull():Promise<{imported:number;conflicts:number;reset:boolean}>{
+  if(disposed||running)throw Error('Sync unavailable or already running');
+  running=true;
+  try{
+   const snapshot=await adapter.snapshot();
+   if(typeof snapshot.generation!=='string'||snapshot.generation.length===0||snapshot.items.length>4096||snapshot.cursor!==null&&!/^[a-f0-9]{64}$/.test(snapshot.cursor))throw Error('Invalid local sync snapshot');
+   const local=new Map<string,RedSyncLocalItem>();
+   for(const item of snapshot.items){
+    if(!storeId(item.id)||!safeNatural(item.revision)||typeof item.dirty!=='boolean'||(item.deleted!==0&&item.deleted!==1)||local.has(item.id))throw Error('Invalid local sync record');
+    local.set(item.id,{...item});
+   }
+   const feed=await client.storeChanges(bound.kind,snapshot.cursor);
+   const imports:RedSyncImport<T>[]=[],conflicts:RedSyncConflict[]=[];
+   const seen=new Set<string>();
+   for(const meta of feed.items){
+    if(seen.has(meta.id)||!isStoreMeta(meta))throw Error('Invalid change feed');
+    seen.add(meta.id);
+    const old=local.get(meta.id);
+    if(old&&old.revision>meta.revision){conflicts.push({id:meta.id,localRevision:old.revision,remoteRevision:meta.revision,reason:'remote_rollback'});continue;}
+    if(old&&old.revision===meta.revision&&old.deleted===meta.deleted)continue;
+    if(old?.dirty){conflicts.push({id:meta.id,localRevision:old.revision,remoteRevision:meta.revision,reason:'local_edit'});continue;}
+    // A tombstone has no authenticated payload. Never automatically delete a
+    // local record: surface the remote deletion for explicit reconciliation.
+    if(meta.deleted===1){conflicts.push({id:meta.id,localRevision:old?.revision??0,remoteRevision:meta.revision,reason:'revision_changed'});continue;}
+    const record=await client.storeGet(bound.kind,meta.id);
+    if(record.revision!==meta.revision||record.deleted!==meta.deleted){
+     // The feed cursor covers only the observed snapshot. Do not commit it
+     // on a concurrent mutation; the next pull starts from the old cursor.
+     throw Error('Remote record changed during pull; retry');
+    }
+    const custom=special.get(meta.id);
+    if(custom)imports.push({id:meta.id,revision:meta.revision,deleted:0,value:await custom(record)});
+    else{
+     const bytes=await openRedStoreRecord(secret,{...bound,id:meta.id},record);
+     try{imports.push({id:meta.id,revision:meta.revision,deleted:0,value:decode(bytes)});}
+     finally{bytes.fill(0);}
+    }
+   }
+   if(feed.reset)for(const old of local.values())if(old.revision>0&&!seen.has(old.id))conflicts.push({id:old.id,localRevision:old.revision,remoteRevision:null,reason:'missing_remote'});
+   if(disposed)throw Error('Sync disposed');
+   await adapter.commit(snapshot.generation,{cursor:feed.cursor,imports,conflicts});
+   return {imported:imports.length,conflicts:conflicts.length,reset:feed.reset};
+  }finally{running=false;}
+ }
+ return {pull,dispose(){disposed=true;secret.fill(0);}};
+}
+
+/** RED Config: deliberately non-sensitive, app-scoped preferences only.
+ * Settings are encrypted with a separate derived key. A deterministic
+ * opaque ID is scoped to origin, owner and app, not shared across apps. */
+export type RedConfig={version:1;theme:'system'|'light'|'dark';locale:string;reducedMotion:boolean};
+export function parseRedConfig(value:unknown):RedConfig{
+ if(!value||typeof value!=='object'||Array.isArray(value))throw Error('Invalid RED config');
+ const v=value as Record<string,unknown>;
+ if(Object.keys(v).length!==4||v.version!==1||(v.theme!=='system'&&v.theme!=='light'&&v.theme!=='dark')||typeof v.locale!=='string'||v.locale.length>35||typeof v.reducedMotion!=='boolean')throw Error('Invalid RED config');
+ let locale:string;
+ try{const list=Intl.getCanonicalLocales(v.locale);if(list.length!==1)throw Error('locale');locale=list[0]!;}catch{throw Error('Invalid RED config locale');}
+ return {version:1,theme:v.theme,locale,reducedMotion:v.reducedMotion};
+}
+export async function createRedConfigContext(key:Uint8Array,scope:Omit<RedSyncScope,'kind'>){
+ if(key.byteLength!==32)throw Error('Invalid config key');
+ const base={origin:scope.origin,owner:scope.owner,app:scope.app,kind:'sync' as const};
+ const salt=storeAAD({...base,id:'0'.repeat(32),revision:1});
+ const master=await crypto.subtle.importKey('raw',new Uint8Array(key),'HKDF',false,['deriveBits']);
+ const derive=(label:string)=>crypto.subtle.deriveBits({name:'HKDF',hash:'SHA-256',salt,info:new TextEncoder().encode(label)},master,256);
+ const idBytes=new Uint8Array(await derive('red-config-id-v1')),configKey=new Uint8Array(await derive('red-config-key-v1'));
+ const id=Array.from(idBytes.slice(0,16),b=>b.toString(16).padStart(2,'0')).join('');idBytes.fill(0);
+ const context={...base,id};
+ let disposed=false;
+ return {id,
+  async prepare(value:RedConfig,expectedRevision:number){
+   if(disposed)throw Error('Config disposed');
+   const bytes=new TextEncoder().encode(JSON.stringify(parseRedConfig(value)));
+   try{return await prepareRedStoreWrite(configKey,context,expectedRevision,bytes);}finally{bytes.fill(0);}
+  },
+  async open(record:RedStoreRecord){
+   if(disposed)throw Error('Config disposed');
+   const bytes=await openRedStoreRecord(configKey,context,record);
+   try{return parseRedConfig(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)));}finally{bytes.fill(0);}
+  },
+  dispose(){disposed=true;configKey.fill(0);}
+ };
+}
+
+/** A foreground/app-lifecycle sync coordinator. Coalesces requests, backs
+ * off failures, never overlaps pulls, never schedules itself after stop.
+ * Callers own timers and platform lifecycle; there is no background daemon. */
+export function createRedSyncCoordinator(run:()=>Promise<unknown>,options:{now?:()=>number;minIntervalMs?:number;maxBackoffMs?:number}={}){
+ const now=options.now??Date.now,min=options.minIntervalMs??15000,max=options.maxBackoffMs??300000;
+ if(!Number.isSafeInteger(min)||min<1000||!Number.isSafeInteger(max)||max<min||max>3600000)throw Error('Invalid sync interval');
+ let pending:Promise<'synced'|'deferred'>|null=null,after=0,failures=0,stopped=false;
+ return {
+  trigger():Promise<'synced'|'deferred'>{
+   if(stopped)return Promise.resolve('deferred');
+   if(pending)return pending;
+   if(now()<after)return Promise.resolve('deferred');
+   pending=Promise.resolve().then(async()=>{
+    if(stopped)return 'deferred' as const;
+    try{await run();failures=0;after=now()+min;return 'synced' as const;}
+    catch(e){failures=Math.min(20,failures+1);after=now()+Math.min(max,min*2**(failures-1));throw e;}
+   }).finally(()=>{pending=null;});
+   return pending;
+  },
+  status(){return {running:pending!==null,stopped,failures,nextAttemptAt:after};},
+  stop(){stopped=true;}
+ };
+}
+
+/** Offline, authenticated transfer of an existing app storage key between
+ * two trusted devices. Exchange only public offers, independently compare
+ * the entire fingerprint, then exchange the encrypted packet. No relay,
+ * automatic approval, password, or token storage is provided here. */
+export type RedDeviceKeyOffer={version:1;kind:'red-device-key';role:'sender'|'receiver';scope:RedSyncScope;publicKey:string};
+export type RedDeviceKeyPacket={version:1;kind:'red-device-key-packet';envelope:string};
+export async function createRedDeviceKeyTransfer(scope:RedSyncScope,role:'sender'|'receiver'){
+ const bound={...scope};
+ const context=Array.from(storeAAD({...bound,id:'0'.repeat(32),revision:1}));
+ if(role!=='sender'&&role!=='receiver')throw Error('Invalid device transfer role');
+ const pair=await crypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'},false,['deriveBits']);
+ const own=base64url(new Uint8Array(await crypto.subtle.exportKey('raw',pair.publicKey)));
+ const offer:RedDeviceKeyOffer={version:1,kind:'red-device-key',role,scope:{...bound},publicKey:own};
+ let used=false;
+ return {offer,async compare(peer:RedDeviceKeyOffer){
+  if(used)throw Error('Device transfer already used');
+  if(peer?.version!==1||peer.kind!=='red-device-key'||peer.role!==(role==='sender'?'receiver':'sender')||typeof peer.publicKey!=='string'||peer.publicKey.length!==87||peer.publicKey===own)throw Error('Invalid device transfer offer');
+  const peerContext=Array.from(storeAAD({...peer.scope,id:'0'.repeat(32),revision:1}));
+  if(JSON.stringify(peerContext)!==JSON.stringify(context))throw Error('Device transfer scope mismatch');
+  const raw=unbase64url(peer.publicKey);
+  if(raw.length!==65||raw[0]!==4||base64url(raw)!==peer.publicKey)throw Error('Invalid device public key');
+  used=true;
+  const other=await crypto.subtle.importKey('raw',raw,{name:'ECDH',namedCurve:'P-256'},false,[]);
+  const transcript=new TextEncoder().encode(JSON.stringify(['red-device-key-v1',context,role==='sender'?own:peer.publicKey,role==='receiver'?own:peer.publicKey]));
+  const salt=await crypto.subtle.digest('SHA-256',transcript);
+  const shared=await crypto.subtle.deriveBits({name:'ECDH',public:other},pair.privateKey,256);
+  const master=await crypto.subtle.importKey('raw',shared,'HKDF',false,['deriveBits']);
+  new Uint8Array(shared).fill(0);
+  const derive=(label:string)=>crypto.subtle.deriveBits({name:'HKDF',hash:'SHA-256',salt,info:new TextEncoder().encode(label)},master,256);
+  const check=new Uint8Array(await derive('red-device-key-fingerprint-v1'));
+  const fingerprint=Array.from(check.subarray(0,16),b=>b.toString(16).padStart(2,'0')).join('').match(/.{4}/g)!.join('-');
+  check.fill(0);
+  let confirmed=false;
+  return {fingerprint,async confirm(expected:string){
+   if(confirmed)throw Error('Device transfer already confirmed');
+   if(typeof expected!=='string'||expected.toLowerCase()!==fingerprint)throw Error('Fingerprint mismatch');
+   confirmed=true;
+   const rawKey=new Uint8Array(await derive('red-device-key-wrap-v1'));
+   const wrapping=await crypto.subtle.importKey('raw',rawKey,'AES-GCM',false,[role==='sender'?'encrypt':'decrypt']);
+   rawKey.fill(0);
+   let consumed=false;
+   return {
+    async wrap(storageKey:Uint8Array):Promise<RedDeviceKeyPacket>{
+     if(role!=='sender'||consumed||storageKey.byteLength!==32)throw Error('Invalid or consumed transfer');
+     consumed=true;
+     const nonce=crypto.getRandomValues(new Uint8Array(12)),plain=new Uint8Array(storageKey);
+     try{
+      const cipher=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv:nonce,additionalData:transcript},wrapping,plain));
+      const packet=new Uint8Array(nonce.length+cipher.length);packet.set(nonce);packet.set(cipher,nonce.length);
+      return {version:1,kind:'red-device-key-packet',envelope:base64url(packet)};
+     }finally{plain.fill(0);}
+    },
+    async unwrap(packet:RedDeviceKeyPacket):Promise<Uint8Array>{
+     if(role!=='receiver'||consumed||packet?.version!==1||packet.kind!=='red-device-key-packet'||typeof packet.envelope!=='string'||packet.envelope.length!==80)throw Error('Invalid or consumed transfer');
+     const raw=unbase64url(packet.envelope);
+     if(raw.length!==60||base64url(raw)!==packet.envelope)throw Error('Invalid transfer packet');
+     consumed=true;
+     const key=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:raw.slice(0,12),additionalData:transcript},wrapping,raw.slice(12)));
+     if(key.byteLength!==32){key.fill(0);throw Error('Invalid transferred key');}
+     return key;
+    }
+   };
+  }};
+ }};
+}
+
+
+/** RED Files 2 pilot: immutable, encrypted multipart objects. The manifest
+ * is published last. Keep the encrypted upload plan for idempotent retry.
+ * The optional transactional sink streams downloads in bounded chunks. */
+export const RED_FILE_MAX_BYTES=8*1024*1024;
+export const RED_FILE_CHUNK_BYTES=40000;
+const maxFileChunks=Math.ceil(RED_FILE_MAX_BYTES/RED_FILE_CHUNK_BYTES);
+export type RedFileScope=Omit<RedSyncScope,'kind'>;
+export type RedFileManifest={version:2;name:string;size:number;chunks:{id:string;size:number;sha256:string}[]};
+export type RedFilePlan={version:2;id:string;manifest:RedStoreWrite;chunks:RedStoreWrite[]};
+// A trusted local adapter must stage bytes privately and publish atomically
+// only on commit. abort must discard staging (even after a failed begin).
+// The borrowed chunk is wiped after write settles; copy it if needed.
+export type RedFileSink={
+ begin(file:Readonly<{name:string;size:number}>):Promise<void>;
+ write(chunk:Uint8Array,offset:number):Promise<void>;
+ commit():Promise<void>;
+ abort():Promise<void>;
+};
+type RedFileTransport={storeGet(kind:RedStoreKind,id:string):Promise<RedStoreRecord>;storePut(write:RedStoreWrite):Promise<RedStoreResult>};
+const fileNameValid=(v:unknown):v is string=>typeof v==='string'&&v.length>0&&v.length<=200&&v!=='.'&&v!=='..'&&!/[/\\\u0000-\u001f\u007f]/.test(v);
+const digestHex=async(data:Uint8Array)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array(data))),b=>b.toString(16).padStart(2,'0')).join('');
+function parseFileManifest(input:unknown,id:string):RedFileManifest{
+ if(!input||typeof input!=='object'||Array.isArray(input))throw Error('Invalid file manifest');
+ const v=input as Record<string,unknown>;
+ if(Object.keys(v).length!==4||v.version!==2||!fileNameValid(v.name)||!safeNatural(v.size)||v.size>RED_FILE_MAX_BYTES||!Array.isArray(v.chunks)||v.chunks.length!==Math.ceil(v.size/RED_FILE_CHUNK_BYTES)||v.chunks.length>maxFileChunks)throw Error('Invalid file manifest');
+ const seen=new Set([id]);const chunks:RedFileManifest['chunks']=[];
+ for(let i=0;i<v.chunks.length;i++){
+  const c=v.chunks[i],expected=Math.min(RED_FILE_CHUNK_BYTES,v.size-i*RED_FILE_CHUNK_BYTES);
+  if(!c||typeof c!=='object'||Object.keys(c).length!==3||typeof c.id!=='string'||!storeId(c.id)||seen.has(c.id)||c.size!==expected||typeof c.sha256!=='string'||!/^[a-f0-9]{64}$/.test(c.sha256))throw Error('Invalid file chunk');
+  seen.add(c.id);chunks.push({id:c.id,size:c.size,sha256:c.sha256});
+ }
+ return {version:2,name:v.name,size:v.size,chunks};
+}
+export function createRedFiles(client:RedFileTransport,scope:RedFileScope,key:Uint8Array){
+ const bound={origin:scope.origin,owner:scope.owner,app:scope.app,kind:'file' as const};
+ storeAAD({...bound,id:'0'.repeat(32),revision:1});
+ if(key.byteLength!==32)throw Error('Invalid file key');
+ const secret=new Uint8Array(key);
+ let disposed=false,busy=false;
+ const use=async<T,>(fn:()=>Promise<T>):Promise<T>=>{
+  if(disposed||busy)throw Error('File transfer unavailable');
+  busy=true;try{return await fn();}finally{busy=false;if(disposed)secret.fill(0);}
+ };
+ const assertActive=()=>{if(disposed)throw Error('File transfer disposed');};
+ const derive=async(id:string)=>{
+  const salt=storeAAD({...bound,id,revision:1});
+  const master=await crypto.subtle.importKey('raw',secret,'HKDF',false,['deriveBits']);
+  const get=async(label:string)=>new Uint8Array(await crypto.subtle.deriveBits({name:'HKDF',hash:'SHA-256',salt,info:new TextEncoder().encode(label)},master,256));
+  return {manifest:await get('red-file-manifest-v2'),chunk:await get('red-file-chunk-v2')};
+ };
+ const checkWrite=(w:RedStoreWrite,id:string)=>{
+  if(!w||w.kind!=='file'||w.id!==id||w.expectedRevision!==0||typeof w.operationId!=='string'||!storeId(w.operationId)||!validStoreEnvelope(w.envelope))throw Error('Invalid encrypted file plan');
+ };
+ const asRecord=(w:RedStoreWrite):RedStoreRecord=>({version:1,id:w.id,revision:1,deleted:0,updated:0,envelope:w.envelope});
+ const openManifest=async(id:string,record:RedStoreRecord,k:Uint8Array)=>{
+  if(record.id!==id||record.revision!==1||record.deleted!==0)throw Error('Invalid immutable file manifest');
+  const bytes=await openRedStoreRecord(k,{...bound,id},record);
+  try{return parseFileManifest(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)),id);}
+  finally{bytes.fill(0);}
+ };
+ const openChunk=async(record:RedStoreRecord,entry:RedFileManifest['chunks'][number],k:Uint8Array)=>{
+  if(record.id!==entry.id||record.revision!==1||record.deleted!==0)throw Error('Invalid immutable file chunk');
+  const bytes=await openRedStoreRecord(k,{...bound,id:entry.id},record);
+  if(bytes.length!==entry.size||await digestHex(bytes)!==entry.sha256){bytes.fill(0);throw Error('File chunk integrity mismatch');}
+  return bytes;
+ };
+ return {
+  prepare(name:string,bytes:Uint8Array):Promise<RedFilePlan>{return use(async()=>{
+   if(!fileNameValid(name)||bytes.byteLength>RED_FILE_MAX_BYTES)throw Error('File exceeds pilot limits or invalid name');
+   const input=new Uint8Array(bytes),id=newRedStoreId(),keys=await derive(id);
+   try{
+    const manifest:RedFileManifest={version:2,name,size:input.length,chunks:[]},chunks:RedStoreWrite[]=[];
+    for(let offset=0;offset<input.length;offset+=RED_FILE_CHUNK_BYTES){
+     assertActive();
+     const part=input.subarray(offset,offset+RED_FILE_CHUNK_BYTES),chunkId=newRedStoreId();
+     manifest.chunks.push({id:chunkId,size:part.length,sha256:await digestHex(part)});
+     chunks.push(await prepareRedStoreWrite(keys.chunk,{...bound,id:chunkId},0,part));
+    }
+    const manifestBytes=new TextEncoder().encode(JSON.stringify(manifest));
+    try{return {version:2,id,manifest:await prepareRedStoreWrite(keys.manifest,{...bound,id},0,manifestBytes),chunks};}
+    finally{manifestBytes.fill(0);}
+   }finally{input.fill(0);keys.manifest.fill(0);keys.chunk.fill(0);}
+  });},
+  upload(plan:RedFilePlan,onProgress?:(completed:number,total:number)=>void):Promise<string>{return use(async()=>{
+   // Clone before awaiting so the caller cannot mutate the validated plan.
+   if(!plan||plan.version!==2||typeof plan.id!=='string'||!storeId(plan.id)||!Array.isArray(plan.chunks)||plan.chunks.length>maxFileChunks)throw Error('Invalid file plan');
+   const id=plan.id,manifestWrite={...plan.manifest},chunks=plan.chunks.map(w=>({...w}));
+   checkWrite(manifestWrite,id);
+   const keys=await derive(id);
+   try{
+    const manifest=await openManifest(id,asRecord(manifestWrite),keys.manifest);
+    if(chunks.length!==manifest.chunks.length)throw Error('Incomplete file plan');
+    // Authenticate all staged objects before sending even the first chunk.
+    for(let i=0;i<chunks.length;i++){
+     assertActive();
+     const w=chunks[i]!,entry=manifest.chunks[i]!;
+     checkWrite(w,entry.id);const bytes=await openChunk(asRecord(w),entry,keys.chunk);bytes.fill(0);
+    }
+    const total=chunks.length+1;let done=0;
+    for(const w of [...chunks,manifestWrite]){
+     assertActive();
+     checkStoreResult(await client.storePut(w),w.id,1,0);
+     onProgress?.(++done,total);
+    }
+    return id;
+   }finally{keys.manifest.fill(0);keys.chunk.fill(0);}
+  });},
+  download(id:string):Promise<{name:string;bytes:Uint8Array}>{return use(async()=>{
+   if(typeof id!=='string'||!storeId(id))throw Error('Invalid file ID');
+   const keys=await derive(id);let output:Uint8Array|undefined;
+   try{
+    const manifest=await openManifest(id,await client.storeGet('file',id),keys.manifest);
+    output=new Uint8Array(manifest.size);let offset=0;
+    for(const entry of manifest.chunks){
+     assertActive();
+     const bytes=await openChunk(await client.storeGet('file',entry.id),entry,keys.chunk);
+     try{output.set(bytes,offset);offset+=bytes.length;}finally{bytes.fill(0);}
+    }
+    assertActive();return {name:manifest.name,bytes:output};
+   }catch(e){output?.fill(0);throw e;}
+   finally{keys.manifest.fill(0);keys.chunk.fill(0);}
+  });},
+  /** Bounded-memory download into a trusted transactional local sink. */
+  downloadTo(id:string,sink:RedFileSink):Promise<{name:string;size:number}>{return use(async()=>{
+   if(typeof id!=='string'||!storeId(id))throw Error('Invalid file ID');
+   const keys=await derive(id);let staging=false;
+   try{
+    const manifest=await openManifest(id,await client.storeGet('file',id),keys.manifest);
+    assertActive();
+    const info=Object.freeze({name:manifest.name,size:manifest.size});
+    staging=true;await sink.begin(info);
+    let offset=0;
+    for(const entry of manifest.chunks){
+     assertActive();
+     const bytes=await openChunk(await client.storeGet('file',entry.id),entry,keys.chunk);
+     try{assertActive();await sink.write(bytes,offset);offset+=bytes.length;}finally{bytes.fill(0);}
+    }
+    assertActive();
+    if(offset!==manifest.size)throw Error('File size mismatch');
+    await sink.commit();staging=false;return info;
+   }catch(error){
+    if(staging){try{await sink.abort();}catch(cleanup){throw new AggregateError([error,cleanup],'File transfer and staging cleanup failed');}}
+    throw error;
+   }finally{keys.manifest.fill(0);keys.chunk.fill(0);}
+  });},
+  dispose(){disposed=true;if(!busy)secret.fill(0);}
+ };
+}
+
+
+/** RED Search: an explicitly supplied, bounded, in-memory index for one
+ * authenticated app's local display metadata. No server calls, disk cache,
+ * cross-app indexing, automatic document access or full-text cloud search. */
+export type RedSearchEntry={id:string;title:string;kind:'document'|'file'|'note'|'other';tags:string[];summary:string};
+export type RedSearchHit=RedSearchEntry&{score:number};
+const normalizeSearch=(v:string)=>v.normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase().replaceAll('ı','i').replaceAll('ß','ss').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+const searchKind=(v:unknown):v is RedSearchEntry['kind']=>v==='document'||v==='file'||v==='note'||v==='other';
+function searchEntry(v:RedSearchEntry):RedSearchEntry{
+ if(!v||typeof v.id!=='string'||!storeId(v.id)||typeof v.title!=='string'||v.title.trim().length===0||v.title.length>200||!searchKind(v.kind)||typeof v.summary!=='string'||v.summary.length>512||!Array.isArray(v.tags)||v.tags.length>16||!v.tags.every(t=>typeof t==='string'&&t.length>0&&t.length<=64))throw Error('Invalid RED search entry');
+ return {id:v.id,title:v.title,kind:v.kind,tags:[...v.tags],summary:v.summary};
+}
+export function createRedLocalSearch(){
+ type Indexed={entry:RedSearchEntry;title:string;tags:string;summary:string};
+ let items=new Map<string,Indexed>(),disposed=false;
+ const active=()=>{if(disposed)throw Error('Search disposed');};
+ const index=(value:RedSearchEntry):Indexed=>{
+  const entry=searchEntry(value);
+  return {entry,title:normalizeSearch(entry.title),tags:normalizeSearch(entry.tags.join(' ')),summary:normalizeSearch(entry.summary)};
+ };
+ return {
+  /** Replace atomically: invalid snapshots leave the old index untouched. */
+  replace(entries:readonly RedSearchEntry[]){
+   active();if(entries.length>4096)throw Error('Search index limit exceeded');
+   const next=new Map<string,Indexed>();
+   for(const value of entries){
+    const item=index(value);if(next.has(item.entry.id))throw Error('Duplicate search entry');
+    next.set(item.entry.id,item);
+   }
+   items=next;
+  },
+  upsert(value:RedSearchEntry){
+   active();const item=index(value);
+   if(!items.has(item.entry.id)&&items.size>=4096)throw Error('Search index limit exceeded');
+   items.set(item.entry.id,item);
+  },
+  remove(id:string){active();if(!storeId(id))throw Error('Invalid search ID');items.delete(id);},
+  search(query:string,options:{kind?:RedSearchEntry['kind'];limit?:number}={}):RedSearchHit[]{
+   active();
+   const limit=options.limit??20;
+   if(typeof query!=='string'||query.length>128||!Number.isSafeInteger(limit)||limit<1||limit>100||options.kind!==undefined&&!searchKind(options.kind))throw Error('Invalid search query');
+   const normalized=normalizeSearch(query);if(!normalized)return [];
+   const words=[...new Set(normalized.split(' '))];if(words.length>12)throw Error('Too many search terms');
+   const hits:RedSearchHit[]=[];
+   for(const item of items.values()){
+    if(options.kind!==undefined&&item.entry.kind!==options.kind)continue;
+    let score=0,match=true;
+    for(const word of words){
+     const value=(item.title.includes(word)?6:0)+(item.tags.includes(word)?3:0)+(item.summary.includes(word)?1:0);
+     if(!value){match=false;break;}score+=value;
+    }
+    if(match){
+     if(item.title===normalized)score+=20;else if(item.title.startsWith(normalized))score+=10;
+     hits.push({...item.entry,tags:[...item.entry.tags],score});
+    }
+   }
+   return hits.sort((a,b)=>b.score-a.score||(a.id<b.id?-1:a.id>b.id?1:0)).slice(0,limit);
+  },
+  clear(){active();items.clear();},
+  dispose(){disposed=true;items.clear();}
+ };
+}
+
+
+/** Owner UI helper: validate distinct public pairing requests before
+ * presenting an explicit confirmation. Never collects app verifiers
+ * or tokens, and does not itself approve a login. */
+export function prepareRedBatchApproval(payloads:readonly string[]):{requests:{app:RedAppId;challenge:string}[]}{
+ if(payloads.length<1||payloads.length>11)throw Error('Invalid RED batch size');
+ const apps=new Set<RedAppId>(),challenges=new Set<string>();
+ const requests=payloads.map(payload=>{
+  const value=decodeRedPairRequest(payload);
+  if(apps.has(value.app)||challenges.has(value.challenge))throw Error('Duplicate RED pairing request');
+  apps.add(value.app);challenges.add(value.challenge);
+  return value;
+ });
+ return {requests};
+}
+
+/** Explicit text-only clipboard transfer over an existing directional share
+ * grant and a separately verified clipboard-channel key. No OS clipboard
+ * access, network calls, automatic copy or key distribution in this helper. */
+export const RED_CLIPBOARD_MAX_BYTES=8192;
+export const RED_CLIPBOARD_TTL_MS=300_000;
+export type RedClipboardText={version:1;text:string;createdAt:number;expiresAt:number};
+const clipboardText=(value:unknown):value is string=>typeof value==='string'&&value.length>0&&value.length<=RED_CLIPBOARD_MAX_BYTES&&new TextEncoder().encode(value).byteLength<=RED_CLIPBOARD_MAX_BYTES;
+function parseRedClipboard(value:unknown,now:number):RedClipboardText{
+ if(!value||typeof value!=='object'||Array.isArray(value))throw Error('Invalid clipboard payload');
+ const v=value as Record<string,unknown>;
+ if(Object.keys(v).length!==4||v.version!==1||!clipboardText(v.text)||!safeNatural(v.createdAt)||!safeNatural(v.expiresAt)||v.expiresAt-v.createdAt!==RED_CLIPBOARD_TTL_MS||v.createdAt>now+30_000||v.expiresAt<=now)throw Error('Invalid or expired clipboard payload');
+ return {version:1,text:v.text,createdAt:v.createdAt,expiresAt:v.expiresAt};
+}
+export async function prepareRedClipboard(key:Uint8Array,source:RedAppId,target:RedAppId,text:string):Promise<RedPreparedShare>{
+ if(!clipboardText(text))throw Error('Invalid clipboard text');
+ const createdAt=Date.now();
+ const data:RedClipboardText={version:1,text,createdAt,expiresAt:createdAt+RED_CLIPBOARD_TTL_MS};
+ return prepareRedShareJson(key,source,target,'clipboard',data);
+}
+/** The caller must explicitly request the text and persist the processed ID
+ * before ACK. Expiry is checked again after decryption; server retention
+ * is independent and can be longer than the authenticated logical TTL. */
+export async function openRedClipboard(key:Uint8Array,source:RedAppId,target:RedAppId,message:RedShareMessage):Promise<RedClipboardText>{
+ if(!message||message.channel!=='clipboard'||message.source!==source)throw Error('Unexpected clipboard sender or channel');
+ return openRedShareJson(key,target,message,value=>{
+  const now=Date.now();
+  if(message.expires<=now)throw Error('Expired clipboard message');
+  return parseRedClipboard(value,now);
+ });
+}
+
+/** App-provided durable, atomic inbox. Scope each adapter to the trusted
+ * server, account and receiving app. Persist encrypted messages and receipt
+ * IDs together, never plaintext in ordinary preferences. */
+export interface RedClipboardInboxAdapter{
+ commitOnce(address:RedShareAddress,message:RedShareMessage,expiresAt:number):Promise<'stored'|'duplicate'>;
+}
+export type RedClipboardAckTransport={shareAck(source:RedAppId,channel:string,id:string):Promise<void>};
+/** Explicit receive only: authenticate first, atomically store the encrypted
+ * payload and receipt, then ACK. Failed ACK is safe to retry with the same
+ * adapter; no OS clipboard or automatic paste. */
+export async function receiveRedClipboard(key:Uint8Array,source:RedAppId,target:RedAppId,message:RedShareMessage,inbox:RedClipboardInboxAdapter,transport:RedClipboardAckTransport):Promise<'stored'|'duplicate'>{
+ const payload=await openRedClipboard(key,source,target,message);
+ const address:RedShareAddress={source,target,channel:'clipboard',id:message.id};
+ const result=await inbox.commitOnce(address,{...message},payload.expiresAt);
+ if(result!=='stored'&&result!=='duplicate')throw Error('Invalid clipboard inbox result');
+ await transport.shareAck(source,'clipboard',message.id);
+ return result;
 }

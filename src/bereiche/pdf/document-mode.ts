@@ -1310,7 +1310,10 @@ const DocumentMode = (() => {
   /** Nur die sichtbare Handvoll Vorschaubilder aus IndexedDB holen. Ein
       geschlossenes mobiles Panel hat keinen sichtbaren Schnitt und loest
       deshalb auch bei Dokumenten mit hunderten Seiten keine Lesewelle aus. */
+  const thumbnailRefresh = new WeakMap<HTMLElement, () => void>();
   const activateVisibleThumbnails = (panel: HTMLElement): void => {
+    const existing = thumbnailRefresh.get(panel);
+    if (existing) { existing(); return; }
     let scheduled = false;
     const loadVisible = (): void => {
       scheduled = false;
@@ -1322,7 +1325,7 @@ const DocumentMode = (() => {
       const top = Math.max(0, panelRect.top) - 220;
       const bottom = Math.min(window.innerHeight, panelRect.bottom) + 220;
       panel.querySelectorAll<HTMLImageElement>('img[data-document-thumbnail-file]').forEach(image => {
-        if (image.src || image.dataset.loading === 'true') return;
+        if (image.src || image.dataset.loading === 'true' || image.closest('[hidden]')) return;
         const rect = image.getBoundingClientRect();
         if (rect.bottom < top || rect.top > bottom) return;
         const fileId = image.dataset.documentThumbnailFile;
@@ -1342,6 +1345,7 @@ const DocumentMode = (() => {
       requestAnimationFrame(loadVisible);
     };
     panel.addEventListener('scroll', schedule, { passive: true });
+    thumbnailRefresh.set(panel, schedule);
     schedule();
   };
 
@@ -1639,6 +1643,18 @@ const DocumentMode = (() => {
     papierWahl.addEventListener('change', () => Store.setMeta('heft:papier', papierWahl.value));
     papierZeile.append(papierWort, papierWahl);
     seite.append(seiteTitel, knoepfe, papierZeile);
+    const inkSection = document.createElement('section');
+    inkSection.className = 'document-desktop-objects';
+    const inkTitle = document.createElement('h3');
+    inkTitle.className = 'document-section-title'; inkTitle.textContent = 'Zeichenobjekte';
+    const inkButton = makeAction('desktop-ink-objects', 'Ebenen und Objekte öffnen');
+    inkButton.dataset.documentInkBlock = String(documentBlock.id);
+    inkButton.disabled = !darfSeiten;
+    inkButton.title = 'Objekte dieser Seite auswählen, gruppieren, ausrichten oder sperren';
+    const inkHint = document.createElement('p');
+    inkHint.textContent = 'Die Objekte liegen auf dieser Seite. Das PDF-Original bleibt unverändert.';
+    inkSection.append(inkTitle, inkButton, inkHint);
+    seite.append(inkSection);
     /* Die Liste der Lesezeichen — nur, wenn es welche gibt. Jedes ist ein
        Sprung (`data-document-index`, derselbe Weg wie die Miniaturen). */
     const gemerkte = seiten.map((block, i) => ({ block, i })).filter(x => x.block.lesezeichen);
@@ -2261,7 +2277,7 @@ const DocumentMode = (() => {
       }
       if (id === 'pdf-schnellmehr') {
         const objects = inkToolbar()?.querySelector<HTMLButtonElement>('[data-act="objekte"]');
-        eintrag('Ebenen, Gruppen und Ausrichten', 'grid', () => objects?.click(), !canAnnotate || !objects);
+        eintrag('Ebenen, Gruppen und Ausrichten', 'grid', () => openInkObjects(), !canAnnotate || !objects || objects.disabled);
       }
       if (id === 'vorlagen') {
         eintrag('Textblock auf neuer Seite', 'inkText', () => pdfDockBlockOeffnen('text'), !canAnnotate);
@@ -2310,7 +2326,7 @@ const DocumentMode = (() => {
         menue: pdfDockMenue,
         aufAktion: id => {
           if (id === 'diagramme') pdfDockBlockOeffnen('mindmap');
-          if (id === 'pdf-objekte' && canAnnotate) inkToolbar()?.querySelector<HTMLButtonElement>('[data-act="objekte"]')?.click();
+          if (id === 'pdf-objekte') openInkObjects();
         }
       })
       : null;
@@ -2400,7 +2416,56 @@ const DocumentMode = (() => {
     const thumbTitle = document.createElement('strong'); thumbTitle.textContent = wortViele(page);
     const thumbClose = topButton('thumbnails-close', '✕', wortViele(page) + 'übersicht schließen');
     thumbHeader.append(thumbTitle, thumbClose); thumbnails.appendChild(thumbHeader);
+    const thumbFilter = document.createElement('div');
+    thumbFilter.className = 'document-desktop-filter';
+    const thumbSearch = document.createElement('input');
+    thumbSearch.type = 'search'; thumbSearch.maxLength = 100;
+    thumbSearch.placeholder = 'Seitennummer oder Titel';
+    thumbSearch.setAttribute('aria-label', 'Seitenübersicht filtern');
+    thumbSearch.autocomplete = 'off';
+    const thumbBookmarks = document.createElement('button');
+    thumbBookmarks.type = 'button'; thumbBookmarks.textContent = 'Lesezeichen';
+    thumbBookmarks.setAttribute('aria-pressed','false');
+    const thumbClear = document.createElement('button');
+    thumbClear.type = 'button'; thumbClear.textContent = 'Alle';
+    const thumbCount = document.createElement('p');
+    thumbCount.setAttribute('role','status'); thumbCount.className = 'document-filter-count';
+    thumbFilter.append(thumbSearch, thumbBookmarks, thumbClear, thumbCount);
+    thumbnails.appendChild(thumbFilter);
     documents.forEach((block, index) => thumbnails.appendChild(thumbnail(block, index, index === state.index)));
+    const thumbRows = Array.from(thumbnails.querySelectorAll<HTMLElement>('.document-thumb-zeile'));
+    let bookmarkFilter = false;
+    const filterActive = (): boolean => !!thumbSearch.value.trim() || bookmarkFilter;
+    const filterPages = (): void => {
+      const term = thumbSearch.value.trim().toLocaleLowerCase('de-CH');
+      const number = /^#?\d+$/.test(term) ? Number(term.replace(/^#/,'')) : null;
+      let count = 0;
+      thumbRows.forEach((row,index) => {
+        const block = Store.getBlock(documents[index].id) || documents[index];
+        const matches = !term || (number !== null ? index+1===number : sourceLabel(block).toLocaleLowerCase('de-CH').includes(term));
+        row.hidden = !(matches && (!bookmarkFilter || block.lesezeichen));
+        if (!row.hidden) count++;
+      });
+      thumbBookmarks.setAttribute('aria-pressed',String(bookmarkFilter));
+      thumbCount.textContent = count + ' / ' + documents.length + ' ' + wortViele(page) +
+        (filterActive() ? ' · Reihenfolge gesperrt' : '');
+      thumbnails.dataset.filtered = String(filterActive());
+      activateVisibleThumbnails(thumbnails);
+    };
+    thumbSearch.addEventListener('input', () => { zugEnde(); menueSchliessen(); filterPages(); });
+    thumbBookmarks.addEventListener('click', () => { zugEnde(); menueSchliessen(); bookmarkFilter=!bookmarkFilter; filterPages(); });
+    thumbClear.addEventListener('click', () => { zugEnde(); menueSchliessen(); thumbSearch.value=''; bookmarkFilter=false; filterPages(); });
+    thumbSearch.addEventListener('keydown',event=>{
+      if(event.key==='Enter'){
+        event.preventDefault();event.stopPropagation();
+        const first = thumbRows.find(row=>!row.hidden);
+        if(first) springe(Number(first.dataset.documentThumbZeile),false);
+      } else if(event.key==='Escape' && filterActive()){
+        event.preventDefault();event.stopPropagation();thumbClear.click();
+      }
+    });
+    thumbCount.textContent = documents.length + ' / ' + documents.length + ' ' + wortViele(page);
+    const thumbDesktop = window.matchMedia('(min-width:1024px) and (hover:hover) and (pointer:fine)');
 
     const center = document.createElement('main');
     center.className = 'document-center' + (state.einzeln ? ' ist-einzeln' : '');
@@ -2970,6 +3035,24 @@ const DocumentMode = (() => {
 
     const inkToolbar = (): HTMLElement | null =>
       staende[state.index]?.querySelector<HTMLElement>('.blatt-werk') || null;
+    const closeStaleInkObjects = (): void => {
+      const panel = workspace.querySelector<HTMLElement>('.gfx-inspector[data-document-ink-block]');
+      if (!panel || panel.dataset.documentInkBlock === String(jetzt()?.id)) return;
+      panel.querySelector<HTMLButtonElement>('[aria-label="Objektübersicht schliessen"]')?.click();
+    };
+    const openInkObjects = (expected?: string): void => {
+      const currentPage = Store.getBlock(page.id);
+      const block = jetzt();
+      if (!canAnnotate || !currentPage || currentPage.gesperrt || !darfSeiten() ||
+          !block || (expected !== undefined && String(block.id) !== expected)) return;
+      zeichneStand(state.index);
+      toolsSetzen(true);
+      const source = inkToolbar()?.querySelector<HTMLButtonElement>('[data-act="objekte"]');
+      if (!source || source.disabled) { UI.toast('Zeichenobjekte dieser Seite sind nicht verfügbar.'); return; }
+      source.click();
+      const panel = workspace.querySelector<HTMLElement>('.gfx-inspector');
+      if (panel) panel.dataset.documentInkBlock = String(block.id);
+    };
     /* DIE FLÄCHE, AUF DER DIE KNÖPFE WIRKLICH LIEGEN (E614, W2).
        Seit der Tafel ist das einzige Kind von `.blatt-werk` ein `<div>`.
        Wer hier die Leiste nimmt, beobachtet ein Element, das sich nie mehr
@@ -3273,6 +3356,9 @@ const DocumentMode = (() => {
 
     const beiGroesse = (): void => {
       if (!workspace.isConnected) { window.removeEventListener('resize', beiGroesse); return; }
+      if (filterActive() && (!thumbDesktop.matches ||
+          !document.documentElement.hasAttribute('data-windows-titelleiste') ||
+          document.body.dataset.uiShell === 'glass-wheel')) thumbClear.click();
       folienbandNachziehen();
       hoeheSetzen(); passen(); aktivMarkieren(); nachziehen();
     };
@@ -3332,6 +3418,7 @@ const DocumentMode = (() => {
        nichts wissen und nichts wissen sollen (§5 Regel 1). Das CSS liest
        `[data-aktiv]` und blendet die übrigen aus. */
     const aktivMarkieren = (): void => {
+      closeStaleInkObjects();
       previousButton.disabled = state.index === 0;
       nextButton.disabled = state.index === documents.length - 1;
       /* Derselbe Zustand für Sprungknopf und Fortschrittsanzeige,
@@ -4346,7 +4433,7 @@ const DocumentMode = (() => {
       const ziel = event.target as HTMLElement | null;
       if (!ziel || ziel.closest('.document-thumb-menue, .document-thumb-menue-knopf')) return;
       const zeile = ziel.closest<HTMLElement>('.document-thumb-zeile');
-      if (!zeile || !darfSeiten()) return;
+      if (!zeile || !darfSeiten() || filterActive()) return;
       const index = Number(zeile.dataset.documentThumbZeile);
       const block = documents[index];
       if (!block) return;
@@ -4680,6 +4767,11 @@ const DocumentMode = (() => {
             position.disabled = false;
           }
         })();
+        return;
+      }
+      if (action === 'desktop-ink-objects') {
+        const expected = tatKnopf?.dataset.documentInkBlock;
+        if (expected) openInkObjects(expected);
         return;
       }
       if (action === 'ink-ruler' && canAnnotate) {

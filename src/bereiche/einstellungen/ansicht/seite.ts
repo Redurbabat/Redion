@@ -307,7 +307,7 @@ const Einstellungen = (() => {
       o.querySelectorAll<HTMLElement>('.einst-nav button').forEach(b =>
         b.classList.toggle('on', b.dataset.b === offenerBereich));
       binde(o);
-      if (ziel && offenerBereich === 'home-server') { bindeHomeServer(ziel); bindeRedApps(ziel); bindeRedShare(ziel); bindeRedStore(ziel); bindeRedSessions(ziel); }
+      if (ziel && offenerBereich === 'home-server') { bindeHomeServer(ziel); bindeRedApps(ziel); bindeRedShare(ziel); bindeRedStore(ziel); bindeRedSessions(ziel); bindeRedAppCenter(ziel); bindeRedReminders(ziel); bindeMcpHub(ziel); bindeLocalAi(ziel); }
       if (ziel && offenerBereich === 'mcp') RegisterAutomatisierung.montiereAnsicht(ziel);
     };
     zeichne();
@@ -574,6 +574,11 @@ const Einstellungen = (() => {
     if (!app || !challenge || !list || !result || !code) return;
     let busy = false;
     let clearCode: ReturnType<typeof setTimeout> | undefined;
+    const batchField = ziel.querySelector<HTMLTextAreaElement>('[data-red-batch-input]');
+    const batchPreview = ziel.querySelector<HTMLElement>('[data-red-batch-preview]');
+    const batchButton = ziel.querySelector<HTMLButtonElement>('[data-red-batch-approve]');
+    let reviewedBatch: {raw:string;origin:string;token:string;requests:{app:string;challenge:string}[]}|null = null;
+    const clearBatch = () => { reviewedBatch = null; batchPreview?.replaceChildren(); if (batchButton) batchButton.disabled = true; };
     const clear = () => { if (clearCode !== undefined) clearTimeout(clearCode); code.textContent = ''; };
     const request = async (path: string, payload?: object) => {
       const w = typeof Wolke === 'undefined' ? null : Wolke;
@@ -592,6 +597,48 @@ const Einstellungen = (() => {
       try { await action(); } catch { result.textContent = 'Anfrage fehlgeschlagen. Prüfe die Anmeldung und Serverversion.'; }
       finally { busy = false; }
     };
+    batchField?.addEventListener('input', clearBatch);
+    ziel.querySelector('[data-red-batch-review]')?.addEventListener('click', () => {
+      if (busy || !batchField || !batchPreview || !batchButton) return;
+      clearBatch();
+      try {
+        const raw = batchField.value;
+        if (raw.length > 3000) throw Error('Anfrage zu lang');
+        const lines = raw.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+        if (!lines.length || lines.length > 11) throw Error('Ungültige Anzahl');
+        const apps = new Set<string>(), challenges = new Set<string>();
+        const requests = lines.map(line => {
+          if (line.length > 256) throw Error('Ungültige Anfrage');
+          const d = JSON.parse(line);
+          if (!d || typeof d !== 'object' || Array.isArray(d) || Object.keys(d).length !== 4 || d.kind !== 'red-pair' || d.version !== 1 || !Array.from(app.options).some(o => o.value === d.app) || typeof d.challenge !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(d.challenge) || apps.has(d.app) || challenges.has(d.challenge)) throw Error('Ungültige oder doppelte Anfrage');
+          apps.add(d.app); challenges.add(d.challenge);
+          return {app: String(d.app), challenge: String(d.challenge)};
+        });
+        const w = typeof Wolke === 'undefined' ? null : Wolke;
+        const origin = w?.adresse(), token = w?.token();
+        if (!origin || !token || !w?.serverAdressePruefen(origin)) throw Error('Kein angemeldeter HTTPS-Server');
+        for (const entry of requests) {
+          const li = document.createElement('li'); li.textContent = entry.app.toUpperCase() + ' · ' + entry.challenge; batchPreview.append(li);
+        }
+        reviewedBatch = {raw,origin,token,requests}; batchButton.disabled = false;
+        result.textContent = requests.length + ' Anfragen geprüft. App und vollständige Challenge auf jedem eigenen Zielgerät vergleichen.';
+      } catch { clearBatch(); result.textContent = 'Ungültige oder doppelte Kopplungsanfragen oder fehlende Serveranmeldung.'; }
+    });
+    batchButton?.addEventListener('click', () => {
+      if (busy || !reviewedBatch || !batchField || !batchButton) return;
+      const selected = reviewedBatch;
+      const w = typeof Wolke === 'undefined' ? null : Wolke;
+      if (batchField.value !== selected.raw || w?.adresse() !== selected.origin || w?.token() !== selected.token) { clearBatch(); result.textContent = 'Anfragen oder Anmeldung geändert. Erneut prüfen.'; return; }
+      if (!window.confirm(selected.requests.map(r => r.app.toUpperCase() + ' · ' + r.challenge).join('\n') + '\n\nAlle ' + selected.requests.length + ' Anmeldungen für 5 Minuten freigeben? Nur eigene Zielgeräte bestätigen.')) return;
+      clearBatch();
+      void run(async () => {
+        if (w?.adresse() !== selected.origin || w?.token() !== selected.token) throw Error('Anmeldung geändert');
+        const data = await request('approve-batch', {requests:selected.requests});
+        if (data?.version !== 2 || !Array.isArray(data.apps) || data.apps.length !== selected.requests.length || !selected.requests.every((r,i) => data.apps[i] === r.app) || typeof data.expiresAt !== 'string' || !Number.isFinite(Date.parse(data.expiresAt))) throw Error('Ungültige Antwort');
+        if (batchField.value === selected.raw) batchField.value = '';
+        result.textContent = selected.requests.length + ' Anmeldungen freigegeben. Jede Ziel-App separat abschliessen. Keine gemeinsame Sitzung.';
+      });
+    });
     ziel.querySelector('[data-red-list]')?.addEventListener('click', () => void run(async () => {
       list.replaceChildren();
       const data = await request('apps');
@@ -805,6 +852,256 @@ const Einstellungen = (() => {
     refreshButton.addEventListener('click', () => void run(refresh));
   };
 
+  const bindeRedAppCenter = (ziel: HTMLElement): void => {
+    const button = ziel.querySelector<HTMLButtonElement>('[data-app-center-refresh]');
+    const list = ziel.querySelector<HTMLElement>('[data-app-center-list]');
+    const status = ziel.querySelector<HTMLElement>('[data-app-center-status]');
+    if (!button || !list || !status) return;
+    button.addEventListener('click', async () => {
+      const w = typeof Wolke === 'undefined' ? null : Wolke;
+      const origin = w?.adresse(), token = w?.token();
+      if (!origin || !token || !w?.serverAdressePruefen(origin)) { status.textContent = 'Kein angemeldeter HTTPS-Server.'; return; }
+      button.disabled = true; status.textContent = 'App-Übersicht wird geladen …'; list.replaceChildren();
+      try {
+        const response = await fetch(origin + '/home/apps', { headers: { Authorization: 'Bearer ' + token }, credentials: 'omit', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(8000) });
+        if (!response.ok) throw Error('HTTP ' + response.status);
+        const data = await response.json();
+        if (data?.version !== 1 || !Array.isArray(data.apps) || data.apps.length !== 11) throw Error('Ungültige App-Übersicht');
+        const fragment = document.createDocumentFragment();
+        const number = (v: unknown) => typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 ? String(v) : '–';
+        for (const app of data.apps) {
+          if (typeof app.name !== 'string' || typeof app.category !== 'string' || typeof app.integration !== 'string' || typeof app.connected !== 'boolean' || !Array.isArray(app.grants) || !app.share || !app.storage) throw Error('Ungültiger App-Eintrag');
+          const row = document.createElement('li'), name = document.createElement('strong'), detail = document.createElement('p'), access = document.createElement('p');
+          name.textContent = app.name + ' · ' + app.category;
+          detail.textContent = (app.connected ? 'Autorisierte Zugänge vorhanden' : 'Keine autorisierten Zugänge') + ' · ' + number(app.sessions) + ' Sitzungen · ' + (app.integration === 'home-server' ? 'Home Server' : 'Integrationspilot');
+          const sync = app.grants.some((g: any) => g?.kind === 'sync'), file = app.grants.some((g: any) => g?.kind === 'file');
+          access.textContent = 'Sync ' + (sync ? 'freigegeben' : 'gesperrt') + ' · Dateien ' + (file ? 'freigegeben' : 'gesperrt') + ' · Share ' + number(app.share.incoming) + ' eingehend / ' + number(app.share.outgoing) + ' ausgehend · ' + number(app.storage.objects) + ' Objekte';
+          row.append(name, detail, access); fragment.append(row);
+        }
+        list.replaceChildren(fragment);
+        status.textContent = '11 App-Kennungen · Zugänge, keine Installations- oder Online-Erkennung.';
+      } catch { status.textContent = 'App-Übersicht nicht verfügbar. Anmeldung und Serverversion prüfen.'; }
+      finally { button.disabled = false; }
+    });
+  };
+
+  const bindeRedReminders = (ziel: HTMLElement): void => {
+    const list = ziel.querySelector<HTMLElement>('[data-reminder-list]');
+    const status = ziel.querySelector<HTMLElement>('[data-reminder-status]');
+    const kind = ziel.querySelector<HTMLSelectElement>('[data-reminder-kind]');
+    const period = ziel.querySelector<HTMLSelectElement>('[data-reminder-period]');
+    const date = ziel.querySelector<HTMLInputElement>('[data-reminder-date]');
+    const refreshButton = ziel.querySelector<HTMLButtonElement>('[data-reminder-refresh]');
+    const createButton = ziel.querySelector<HTMLButtonElement>('[data-reminder-create]');
+    const historyButton = ziel.querySelector<HTMLButtonElement>('[data-reminder-history-refresh]');
+    const historyList = ziel.querySelector<HTMLElement>('[data-reminder-history-list]');
+    const historyStatus = ziel.querySelector<HTMLElement>('[data-reminder-history-status]');
+    if (!list || !status || !kind || !period || !date || !refreshButton || !createButton || !historyButton || !historyList || !historyStatus) return;
+    const labels: Record<string,string> = { 'backup-review': 'Backup prüfen', 'grant-review': 'Freigaben prüfen', 'storage-review': 'Speicher prüfen', 'update-review': 'Updates prüfen' };
+    const periods: Record<string,string> = { once: 'Einmalig', daily: 'Alle 24 Stunden', weekly: 'Alle 7 Tage' };
+    let busy = false;
+    let pendingCreate: {id:string;kind:string;period:string;firstDue:number}|null = null;
+    const request = async (action: string, payload?: object) => {
+      const w = typeof Wolke === 'undefined' ? null : Wolke;
+      const origin = w?.adresse(), token = w?.token();
+      if (!origin || !token || !w?.serverAdressePruefen(origin)) throw Error('Kein angemeldeter HTTPS-Server');
+      const response = await fetch(origin + '/home/reminders/' + action, {
+        method: payload ? 'POST' : 'GET', headers: { Authorization: 'Bearer ' + token, ...(payload ? { 'Content-Type': 'application/json' } : {}) },
+        ...(payload ? { body: JSON.stringify(payload) } : {}), credentials: 'omit', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(8000)
+      });
+      if (!response.ok) throw Error('HTTP ' + response.status);
+      return response.json();
+    };
+    const format = (v: number) => new Date(v).toLocaleString('de-CH');
+    const validTime = (v: unknown): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 && v <= 8640000000000000;
+    const resultLabels: Record<string,string> = {ok:'Normal',warning:'Warnung',critical:'Kritisch',unknown:'Unbekannt'};
+    const reviewText = (v: unknown, k: string): string => {
+      if (!v || typeof v !== 'object') return 'Noch kein Prüfergebnis';
+      const r = v as {status?:unknown; measuredAt?:unknown; result?:{availablePercent?:unknown; store?:{expiringSoon?:unknown}; share?:{expiringSoon?:unknown}; credentials?:{expiringSoon?:unknown}}};
+      if (typeof r.status !== 'string' || !Object.hasOwn(resultLabels,r.status) || !validTime(r.measuredAt)) return 'Prüfergebnis nicht verfügbar';
+      let text = resultLabels[r.status] + ' · ' + format(r.measuredAt);
+      if (k === 'storage-review' && typeof r.result?.availablePercent === 'number' && Number.isFinite(r.result.availablePercent) && r.result.availablePercent >= 0 && r.result.availablePercent <= 100) text += ' · ' + r.result.availablePercent.toFixed(1) + ' % frei';
+      if (k === 'grant-review') {
+        const counts = [r.result?.store?.expiringSoon,r.result?.share?.expiringSoon,r.result?.credentials?.expiringSoon];
+        if (counts.every(n => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0)) text += ' · ' + counts.reduce<number>((sum,n) => sum + Number(n),0) + ' laufen in 24 h aus';
+      }
+      return text;
+    };
+    const refreshHistory = async () => {
+      historyList.replaceChildren(); historyStatus.textContent = 'Historie wird abgerufen …';
+      try {
+        const data = await request('history');
+        if (data?.version !== 1 || !Array.isArray(data.entries) || data.entries.length > 64 || typeof data.truncated !== 'boolean') throw Error('Ungültige Historie');
+        const fragment = document.createDocumentFragment();
+        for (const entry of data.entries) {
+          if (!entry || !['storage-review','grant-review'].includes(entry.kind) || !validTime(entry.due) || !validTime(entry.measuredAt)) throw Error('Ungültiger Eintrag');
+          const li = document.createElement('li'); li.textContent = labels[entry.kind] + ' · ' + reviewText(entry,entry.kind); fragment.append(li);
+        }
+        historyList.replaceChildren(fragment);
+        historyStatus.textContent = data.entries.length ? data.entries.length + ' neueste Prüfungen' + (data.truncated ? ' · weitere ältere Einträge vorhanden' : '') : 'Noch keine gespeicherten Prüfungen.';
+        status.textContent = 'Historie abgerufen.';
+      } catch { historyStatus.textContent = 'Historie nicht verfügbar. Serverversion und Anmeldung prüfen.'; status.textContent = 'Historie nicht verfügbar.'; }
+    };
+    const refresh = async () => {
+      const data = await request('poll', {});
+      if (data?.version !== 1 || !Array.isArray(data.rules) || data.rules.length > 64) throw Error('Ungültige Antwort');
+      const fragment = document.createDocumentFragment();
+      let due = 0;
+      for (const rule of data.rules) {
+        if (typeof rule.id !== 'string' || !/^[a-f0-9]{32}$/.test(rule.id) || !Object.hasOwn(labels, rule.kind) || !Object.hasOwn(periods, rule.period) || ![rule.nextDue, rule.pendingDue].every(v => v === null || typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 && v <= 8640000000000000)) throw Error('Ungültige Regel');
+        const row = document.createElement('li'), title = document.createElement('strong'), detail = document.createElement('p');
+        title.textContent = labels[rule.kind] + ' · ' + periods[rule.period];
+        detail.textContent = (rule.pendingDue !== null ? 'Fällig seit ' + format(rule.pendingDue) + ' · ' : '') + (rule.nextDue !== null ? 'Nächster Termin: ' + format(rule.nextDue) : 'Keine Wiederholung');
+        row.append(title, detail);
+        if (rule.kind === 'storage-review' || rule.kind === 'grant-review') {
+          const result = document.createElement('p'); result.textContent = 'Letzte Prüfung: ' + reviewText(rule.review,rule.kind); row.append(result);
+        }
+        const id: string = rule.id;
+        if (rule.pendingDue !== null) {
+          due++;
+          const occurrence: number = rule.pendingDue, ack = document.createElement('button');
+          ack.className = 'ez-knopf'; ack.textContent = 'Hinweis bestätigen';
+          ack.addEventListener('click', () => void run(async () => { await request('ack', { id, due: occurrence }); await refresh(); }));
+          row.append(ack);
+        }
+        const cancel = document.createElement('button');
+        cancel.className = 'ez-knopf'; cancel.textContent = 'Termin entfernen';
+        cancel.addEventListener('click', () => {
+          if (busy || !window.confirm('Wartungstermin, offene Hinweise und zugehörige Prüfhistorie entfernen?')) return;
+          if (pendingCreate?.id === id) pendingCreate = null;
+          void run(async () => { await request('cancel', { id }); await refresh(); });
+        });
+        row.append(cancel); fragment.append(row);
+      }
+      list.replaceChildren(fragment);
+      historyList.replaceChildren(); historyStatus.textContent = 'Historie bei Bedarf aktualisieren.';
+      status.textContent = due + ' fällige Hinweise · ' + data.rules.length + ' Wartungstermine.';
+    };
+    const run = async (fn: () => Promise<void>) => {
+      if (busy) return;
+      busy = true; refreshButton.disabled = true; createButton.disabled = true; historyButton.disabled = true; kind.disabled = true; period.disabled = true; date.disabled = true;
+      list.querySelectorAll('button').forEach(b => b.disabled = true);
+      status.textContent = 'Anfrage läuft …';
+      try { await fn(); } catch { status.textContent = 'Anfrage fehlgeschlagen. Server und Anmeldung prüfen; bei gleichem Termin erneut versuchen.'; }
+      finally { busy = false; refreshButton.disabled = false; createButton.disabled = false; historyButton.disabled = false; kind.disabled = false; period.disabled = false; date.disabled = false; list.querySelectorAll('button').forEach(b => b.disabled = false); }
+    };
+    refreshButton.addEventListener('click', () => void run(refresh));
+    historyButton.addEventListener('click', () => void run(refreshHistory));
+    createButton.addEventListener('click', () => {
+      if (busy) return;
+      const firstDue = new Date(date.value).getTime(), k = kind.value, p = period.value;
+      if (!Number.isSafeInteger(firstDue) || firstDue < Date.now() - 60000 || firstDue > Date.now() + 366*86400000 || !Object.hasOwn(labels,k) || !Object.hasOwn(periods,p)) { status.textContent = 'Gültigen zukünftigen Termin innerhalb eines Jahres auswählen.'; return; }
+      if (!window.confirm(labels[k] + ' · ' + format(firstDue) + ' · ' + periods[p] + '? Speicher und Freigaben werden bei aktiviertem Server-Scheduler nur lesend geprüft. Backup und Updates bleiben Hinweise.')) return;
+      const same = pendingCreate && pendingCreate.kind === k && pendingCreate.period === p && pendingCreate.firstDue === firstDue;
+      const payload = same && pendingCreate ? pendingCreate : {id: Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2,'0')).join(''),kind:k,period:p,firstDue};
+      pendingCreate = payload;
+      void run(async () => { await request('create',payload); pendingCreate = null; await refresh(); });
+    });
+  };
+
+  type HomeIdentity = {origin:string;token:string};
+  const homeIdentity = (): HomeIdentity => {
+    const w = typeof Wolke === 'undefined' ? null : Wolke;
+    const origin = w?.adresse(), token = w?.token();
+    if (!origin || !token || !w?.serverAdressePruefen(origin)) throw Error('Kein angemeldeter HTTPS-Server');
+    return {origin,token};
+  };
+  const sameHomeIdentity = (identity: HomeIdentity): boolean => {
+    try { const current = homeIdentity(); return current.origin === identity.origin && current.token === identity.token; } catch { return false; }
+  };
+  const homeRequest = async (identity: HomeIdentity,path: string,payload?: object,signal: AbortSignal = AbortSignal.timeout(8000)) => {
+    if (!sameHomeIdentity(identity)) throw Error('Anmeldung geändert');
+    const response = await fetch(identity.origin + path, {
+      method: payload ? 'POST' : 'GET', headers: {Authorization:'Bearer '+identity.token,...(payload?{'Content-Type':'application/json'}:{})},
+      ...(payload?{body:JSON.stringify(payload)}:{}),credentials:'omit',redirect:'error',cache:'no-store',signal
+    });
+    if (!response.ok) throw Error('HTTP '+response.status);
+    const result = await response.json();
+    if (!sameHomeIdentity(identity) || signal.aborted) throw Error('Anfrage abgebrochen oder Anmeldung geändert');
+    return result;
+  };
+  const bindeMcpHub = (ziel: HTMLElement): void => {
+    const refresh = ziel.querySelector<HTMLButtonElement>('[data-hub-refresh]');
+    const list = ziel.querySelector<HTMLElement>('[data-hub-list]');
+    const status = ziel.querySelector<HTMLElement>('[data-hub-status]');
+    if (!refresh || !list || !status) return;
+    let busy = false;
+    const scopes: Record<string,string> = {'redion:read':'Lesen','redion:write':'Bearbeiten','redion:images':'Bilder lesen'};
+    const load = async (identity: HomeIdentity) => {
+      list.replaceChildren();
+      const data = await homeRequest(identity,'/home/mcp-hub/connections');
+      if (data?.version !== 1 || typeof data.enabled !== 'boolean' || typeof data.truncated !== 'boolean' || !Array.isArray(data.connections) || data.connections.length > 128) throw Error('Ungültige Antwort');
+      const fragment = document.createDocumentFragment();
+      for (const entry of data.connections) {
+        if (!entry || typeof entry.id !== 'string' || !/^grant:[a-f0-9]{64}$/.test(entry.id) || typeof entry.clientName !== 'string' || entry.clientName.length > 120 || !Array.isArray(entry.scopes) || entry.scopes.length > 3 || !entry.scopes.every((scope:unknown) => typeof scope === 'string' && Object.hasOwn(scopes,scope)) || !Number.isSafeInteger(entry.workspaceCount) || entry.workspaceCount < 0 || typeof entry.remember !== 'boolean') throw Error('Ungültige Verbindung');
+        const name: string = entry.clientName, id: string = entry.id;
+        const li = document.createElement('li'), title = document.createElement('strong'), details = document.createElement('p'), revoke = document.createElement('button');
+        title.textContent = name; details.textContent = entry.scopes.map((scope:string) => scopes[scope]).join(' · ') + ' · ' + entry.workspaceCount + ' Arbeitsbereiche' + (entry.remember?' · Freigabe gemerkt':'');
+        revoke.className = 'ez-knopf'; revoke.textContent = 'Verbindung widerrufen';
+        revoke.addEventListener('click', () => {
+          if (busy) return;
+          if (!sameHomeIdentity(identity)) { list.replaceChildren(); status.textContent = 'Anmeldung geändert. Verbindungen erneut abrufen.'; return; }
+          if (!window.confirm('KI-Verbindung „'+name+'“ widerrufen? Neue Anfragen mit ihren bisherigen Tokens werden gesperrt.')) return;
+          void run(async () => { const result = await homeRequest(identity,'/home/mcp-hub/revoke',{id,confirm:true}); if (result?.ok !== true) throw Error('Ungültige Antwort'); await load(identity); });
+        });
+        li.append(title,details,revoke); fragment.append(li);
+      }
+      list.replaceChildren(fragment);
+      status.textContent = (data.enabled?'MCP aktiviert':'MCP deaktiviert')+' · '+data.connections.length+' aktive Freigaben'+(data.truncated?' · weitere vorhanden':'');
+    };
+    const run = async (fn: () => Promise<void>) => {
+      if (busy) return;
+      busy = true; refresh.disabled = true; list.querySelectorAll('button').forEach(b=>b.disabled=true); status.textContent = 'Anfrage läuft …';
+      try { await fn(); } catch { list.replaceChildren(); status.textContent = 'Anfrage fehlgeschlagen. Server und Anmeldung prüfen. Nach unklarem Widerruf Liste neu abrufen.'; }
+      finally { busy=false; refresh.disabled=false; list.querySelectorAll('button').forEach(b=>b.disabled=false); }
+    };
+    refresh.addEventListener('click',()=>void run(()=>load(homeIdentity())));
+  };
+  const bindeLocalAi = (ziel: HTMLElement): void => {
+    const load = ziel.querySelector<HTMLButtonElement>('[data-ai-models]');
+    const select = ziel.querySelector<HTMLSelectElement>('[data-ai-model]');
+    const prompt = ziel.querySelector<HTMLTextAreaElement>('[data-ai-prompt]');
+    const generate = ziel.querySelector<HTMLButtonElement>('[data-ai-generate]');
+    const cancel = ziel.querySelector<HTMLButtonElement>('[data-ai-cancel]');
+    const clear = ziel.querySelector<HTMLButtonElement>('[data-ai-clear]');
+    const output = ziel.querySelector<HTMLElement>('[data-ai-output]');
+    const status = ziel.querySelector<HTMLElement>('[data-ai-status]');
+    if (!load || !select || !prompt || !generate || !cancel || !clear || !output || !status) return;
+    let identity: HomeIdentity|null=null, allowed = new Set<string>(), active: AbortController|null=null;
+    const resetModels = () => { identity=null; allowed.clear(); select.replaceChildren(); generate.disabled=true; };
+    const controls = (busy:boolean) => { load.disabled=busy; select.disabled=busy; prompt.disabled=busy; generate.disabled=busy||!identity||!allowed.size; cancel.disabled=!busy; clear.disabled=busy; };
+    const run = async (fn:(controller:AbortController)=>Promise<void>) => {
+      if(active)return;
+      const controller = new AbortController(); active=controller; controls(true);
+      try { await fn(controller); }
+      catch { output.textContent=''; status.textContent=controller.signal.aborted?'Anfrage abgebrochen.':'Lokale KI nicht verfügbar. Serverkonfiguration, Modell und Anmeldung prüfen.'; }
+      finally { if(active===controller)active=null; if(identity&&!sameHomeIdentity(identity))resetModels(); controls(false); }
+    };
+    load.addEventListener('click',()=>void run(async controller=>{
+      resetModels(); output.textContent=''; status.textContent='Konfigurierte Modelle werden abgerufen …';
+      const current=homeIdentity();
+      const data=await homeRequest(current,'/home/ai/models',undefined,AbortSignal.any([controller.signal,AbortSignal.timeout(8000)]));
+      if(data?.version!==1||data.provider!=='loopback-ollama'||data.installedStatus!==false||!Array.isArray(data.models)||data.models.length>16||!data.models.every((m:unknown)=>typeof m==='string'&&m.length>0&&m.length<=120)||new Set(data.models).size!==data.models.length)throw Error('Ungültige Modellliste');
+      for(const name of data.models){const option=document.createElement('option');option.value=name;option.textContent=name;select.append(option);}
+      identity=current;allowed=new Set<string>(data.models);status.textContent=allowed.size+' konfigurierte Modelle. Installation und Offline-Betrieb nicht geprüft.';
+    }));
+    generate.addEventListener('click',()=>{
+      if(active||!identity)return;
+      if(!sameHomeIdentity(identity)){resetModels();output.textContent='';status.textContent='Anmeldung geändert. Modelle erneut abrufen.';return;}
+      const current=identity,model=select.value,text=prompt.value;
+      if(!allowed.has(model)||!text.trim()||new TextEncoder().encode(text).byteLength>16384){status.textContent='Modell und Eingabe prüfen (max. 16 KiB UTF-8).';return;}
+      if(!window.confirm('Eingabe an das konfigurierte Ollama-Modell „'+model+'“ auf deinem Home-Server senden? Der Serverbetreiber muss den Offline-Betrieb sicherstellen.'))return;
+      void run(async controller=>{
+        output.textContent='';status.textContent='Antwort wird erzeugt …';
+        const data=await homeRequest(current,'/home/ai/generate',{model,prompt:text,confirmLocalProcessing:true},AbortSignal.any([controller.signal,AbortSignal.timeout(65000)]));
+        if(data?.version!==1||data.model!==model||typeof data.text!=='string'||data.text.length>262144)throw Error('Ungültige Antwort');
+        output.textContent=data.text;status.textContent='Antwort erhalten. Nicht automatisch gespeichert.';
+      });
+    });
+    cancel.addEventListener('click',()=>active?.abort());
+    clear.addEventListener('click',()=>{if(active)return;prompt.value='';output.textContent='';status.textContent='Eingabe und Ausgabe entfernt.';});
+  };
+
   const bindeHomeServer = (ziel: HTMLElement): void => {
     const button = ziel.querySelector<HTMLButtonElement>('[data-home-refresh]');
     const status = ziel.querySelector<HTMLElement>('[data-home-status]');
@@ -831,6 +1128,11 @@ const Einstellungen = (() => {
           ['CPU', number(data.cpu.percent, ' %')],
           ['RAM', gb(data.memory.usedBytes) + ' / ' + gb(data.memory.totalBytes)],
           ['SSD/Dateisystem verfügbar', gb(data.storage.availableBytes) + ' / ' + gb(data.storage.totalBytes)],
+          ['Speicherstatus', data.storageReview?.status === 'ok' ? 'Normal' : data.storageReview?.status === 'warning' ? 'Warnung' : data.storageReview?.status === 'critical' ? 'Kritisch' : 'Unbekannt'],
+          ['Freier Speicher', number(data.storageReview?.availablePercent, ' %')],
+          ['Sync-/Dateifreigaben laufen in 24 h aus', number(data.grantReview?.store?.expiringSoon)],
+          ['Share-Freigaben laufen in 24 h aus', number(data.grantReview?.share?.expiringSoon)],
+          ['RED-ID-Zugänge laufen in 24 h aus', number(data.grantReview?.credentials?.expiringSoon)],
           ['Temperatur', number(data.temperatureC, ' °C')],
           ['Serverprozess aktiv seit', number(data.processUptimeSeconds / 60, ' min')],
           ['Autorisierte Gerätesitzungen', number(data.devices.authorizedSessions)],
@@ -857,7 +1159,7 @@ const Einstellungen = (() => {
   };
 
   const inhalt = (b: any): string => (({
-    'home-server': () => kopf('RED Home Server', 'Private Infrastruktur und Diagnose') + '<div class="ez-karte"><button class="ez-knopf" data-home-refresh>Serverstatus abrufen</button><p data-home-status role="status">Verbinde zuerst dein Gerät mit dem privaten Server.</p><dl data-home-metrics></dl></div><div class="ez-karte"><h3>RED ID · App-Verbindungen</h3><p>Nur autorisierte Zugänge, keine Aussage über installierte oder online befindliche Apps.</p><button class="ez-knopf" data-red-list>App-Zugänge anzeigen</button><ul data-red-apps></ul><label>RED-App <select data-red-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Challenge der Ziel-App <input type="text" data-red-challenge autocomplete="off" spellcheck="false" maxlength="43"></label><label>Kopplungsanfrage (JSON aus der Ziel-App) <input data-red-request type="text" maxlength="256" autocomplete="off" spellcheck="false"></label><button class="ez-knopf" data-red-import>Anfrage übernehmen</button><button class="ez-knopf" data-red-approve>Direkte Anmeldung freigeben</button><button class="ez-knopf" data-red-pair>Kopplung freigeben</button><button class="ez-knopf" data-red-revoke>App-Zugänge widerrufen</button><p data-red-result role="status"></p><pre data-red-code style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></div><div class="ez-karte"><h3>RED Devices · App-Sitzungen</h3><p>Einzelne RED-ID-v2-Anmeldungen widerrufen. Es werden keine Gerätepositionen oder Online-Aktivitäten erfasst.</p><button class="ez-knopf" data-red-sessions-refresh>Sitzungen abrufen</button><ul data-red-sessions></ul><p data-red-sessions-status role="status"></p></div><div class="ez-karte"><h3>RED Share · Datenfreigaben</h3><p>Nur ausgewählte Apps und Kanäle. Schlüssel separat auf beiden Geräten bestätigen.</p><button class="ez-knopf" data-share-list>Freigaben abrufen</button><ul data-share-items></ul><label>Sender <select data-share-source><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Empfänger <select data-share-target><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Kanal <input data-share-channel maxlength="32" autocomplete="off" spellcheck="false" placeholder="workout"></label><button class="ez-knopf" data-share-grant>7 Tage freigeben</button><button class="ez-knopf" data-share-revoke>Freigabe widerrufen</button><p data-share-status role="status"></p></div><div class="ez-karte"><h3>RED Sync &amp; RED Files · Pilot</h3><p>Getrennte verschlüsselte App-Objekte. Keine automatische Freigabe zwischen Apps. Alle Geräte derselben App teilen die Freigabe; der Schlüssel muss separat verwaltet werden.</p><button class="ez-knopf" data-store-list>Speicher und Freigaben anzeigen</button><ul data-store-items></ul><label>RED-App <select data-store-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Bereich <select data-store-kind><option value="sync">Sync-Daten</option><option value="file">Kleine Dateiobjekte</option></select></label><button class="ez-knopf" data-store-grant>7 Tage freigeben</button><button class="ez-knopf" data-store-revoke>Zugriff widerrufen</button><p data-store-status role="status"></p></div>',
+    'home-server': () => kopf('RED Home Server', 'Private Infrastruktur und Diagnose') + '<div class="ez-karte"><button class="ez-knopf" data-home-refresh>Serverstatus abrufen</button><p data-home-status role="status">Verbinde zuerst dein Gerät mit dem privaten Server.</p><dl data-home-metrics></dl></div><div class="ez-karte"><h3>RED MCP Hub</h3><p>Eigene OAuth-Verbindungen anzeigen und widerrufen. Keine externen MCP-Server oder neuen Werkzeugrechte.</p><button class="ez-knopf" data-hub-refresh>KI-Verbindungen abrufen</button><p data-hub-status role="status"></p><ul data-hub-list style="overflow-wrap:anywhere"></ul></div><div class="ez-karte"><h3>RED AI Gateway</h3><p>Explizite Textgenerierung über konfiguriertes Ollama. Kein automatischer Dokumentzugriff, kein Gesprächsverlauf. Offline-Betrieb durch Serverbetreiber sicherstellen.</p><button class="ez-knopf" data-ai-models>Modelle abrufen</button><label>Modell <select data-ai-model></select></label><label>Eingabe <textarea data-ai-prompt rows="5" maxlength="16384" autocomplete="off" spellcheck="false"></textarea></label><button class="ez-knopf" data-ai-generate disabled>Antwort erzeugen</button><button class="ez-knopf" data-ai-cancel disabled>Abbrechen</button><button class="ez-knopf" data-ai-clear>Eingabe und Antwort leeren</button><p data-ai-status role="status"></p><pre data-ai-output style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></div><div class="ez-karte"><h3>RED App Center</h3><p>Zentrale Übersicht der autorisierten RED-App-Zugänge und Freigaben. Keine Installation oder automatische Aktualisierung.</p><button class="ez-knopf" data-app-center-refresh>Alle 11 Apps anzeigen</button><ul data-app-center-list></ul><p data-app-center-status role="status"></p></div><div class="ez-karte"><h3>RED Notify · Wartungskalender</h3><p>Wartungshinweise beim Abruf oder mit aktiviertem Server-Scheduler. Speicher und Freigaben werden dann nur lesend geprüft; Backup und Updates bleiben Hinweise. Wiederholung als feste UTC-Intervalle, ohne Sommerzeitkorrektur.</p><label>Aufgabe <select data-reminder-kind><option value="backup-review">Backup prüfen</option><option value="grant-review">Freigaben prüfen</option><option value="storage-review">Speicher prüfen</option><option value="update-review">Updates prüfen</option></select></label><label>Erster Termin (Ortszeit) <input type="datetime-local" data-reminder-date></label><label>Wiederholung <select data-reminder-period><option value="once">Einmalig</option><option value="daily">Alle 24 Stunden</option><option value="weekly">Alle 7 Tage</option></select></label><button class="ez-knopf" data-reminder-create>Termin anlegen</button><button class="ez-knopf" data-reminder-refresh>Fällige Hinweise abrufen</button><ul data-reminder-list></ul><p data-reminder-status role="status"></p><h3>Wartungshistorie</h3><button class="ez-knopf" data-reminder-history-refresh>Prüfhistorie abrufen</button><p data-reminder-history-status role="status"></p><ul data-reminder-history-list></ul></div><div class="ez-karte"><h3>RED ID · App-Verbindungen</h3><p>Nur autorisierte Zugänge, keine Aussage über installierte oder online befindliche Apps.</p><button class="ez-knopf" data-red-list>App-Zugänge anzeigen</button><ul data-red-apps></ul><label>RED-App <select data-red-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Challenge der Ziel-App <input type="text" data-red-challenge autocomplete="off" spellcheck="false" maxlength="43"></label><label>Kopplungsanfrage (JSON aus der Ziel-App) <input data-red-request type="text" maxlength="256" autocomplete="off" spellcheck="false"></label><button class="ez-knopf" data-red-import>Anfrage übernehmen</button><button class="ez-knopf" data-red-approve>Direkte Anmeldung freigeben</button><button class="ez-knopf" data-red-pair>Kopplung freigeben</button><button class="ez-knopf" data-red-revoke>App-Zugänge widerrufen</button><p data-red-result role="status"></p><pre data-red-code style="white-space:pre-wrap;overflow-wrap:anywhere"></pre><h3>RED SSO · Mehrfachfreigabe</h3><p>Bis zu 11 verschiedene Apps. Pro Zeile eine öffentliche Kopplungsanfrage aus dem eigenen Zielgerät. Keine privaten Verifier oder Tokens eingeben. Jede App erhält eine eigene Sitzung.</p><label>Kopplungsanfragen <textarea data-red-batch-input maxlength="3000" rows="5" autocomplete="off" spellcheck="false"></textarea></label><button class="ez-knopf" data-red-batch-review>Alle Anfragen prüfen</button><ul data-red-batch-preview style="overflow-wrap:anywhere"></ul><button class="ez-knopf" data-red-batch-approve disabled>Geprüfte Anmeldungen freigeben</button></div><div class="ez-karte"><h3>RED Devices · App-Sitzungen</h3><p>Einzelne RED-ID-v2-Anmeldungen widerrufen. Es werden keine Gerätepositionen oder Online-Aktivitäten erfasst.</p><button class="ez-knopf" data-red-sessions-refresh>Sitzungen abrufen</button><ul data-red-sessions></ul><p data-red-sessions-status role="status"></p></div><div class="ez-karte"><h3>RED Share · Datenfreigaben</h3><p>Nur ausgewählte Apps und Kanäle. Schlüssel separat auf beiden Geräten bestätigen.</p><button class="ez-knopf" data-share-list>Freigaben abrufen</button><ul data-share-items></ul><label>Sender <select data-share-source><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Empfänger <select data-share-target><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Kanal <input data-share-channel maxlength="32" autocomplete="off" spellcheck="false" placeholder="workout"></label><button class="ez-knopf" data-share-grant>7 Tage freigeben</button><button class="ez-knopf" data-share-revoke>Freigabe widerrufen</button><p data-share-status role="status"></p></div><div class="ez-karte"><h3>RED Sync &amp; RED Files · Pilot</h3><p>Getrennte verschlüsselte App-Objekte. Keine automatische Freigabe zwischen Apps. Alle Geräte derselben App teilen die Freigabe; der Schlüssel muss separat verwaltet werden.</p><button class="ez-knopf" data-store-list>Speicher und Freigaben anzeigen</button><ul data-store-items></ul><label>RED-App <select data-store-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Bereich <select data-store-kind><option value="sync">Sync-Daten</option><option value="file">Kleine Dateiobjekte</option></select></label><button class="ez-knopf" data-store-grant>7 Tage freigeben</button><button class="ez-knopf" data-store-revoke>Zugriff widerrufen</button><p data-store-status role="status"></p></div>',
     geraete: () => kopf('iPhone und Windows', 'Geräte, Sicherungen und freiwilliger Abgleich') + DeviceIntegration.overview(),
     /* HIER STAND DAS GEGENTEIL DESSEN, WAS GEBAUT IST (E270).
        „Diese App kennt kein Konto und keinen Server", „es gibt keine

@@ -1,0 +1,38 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createRedDeviceKeyTransfer,prepareRedStoreWrite,openRedStoreRecord,type RedDeviceKeyPacket} from '../red-sdk/client.mts';
+const scope={origin:'https://home.example.test',owner:'owner',app:'red-fit',kind:'sync'} as const;
+test('two trusted devices transfer only an authenticated encrypted storage key',async()=>{
+ const sender=await createRedDeviceKeyTransfer(scope,'sender'),receiver=await createRedDeviceKeyTransfer(scope,'receiver');
+ const a=await sender.compare(receiver.offer),b=await receiver.compare(sender.offer);
+ assert.equal(a.fingerprint,b.fingerprint);assert.equal(a.fingerprint.replaceAll('-','').length,32);
+ await assert.rejects(a.confirm('wrong'));
+ const s=await a.confirm(b.fingerprint),r=await b.confirm(a.fingerprint);
+ const key=crypto.getRandomValues(new Uint8Array(32));
+ const packet=await s.wrap(key);
+ assert.equal(packet.envelope.length,80);
+ const received=await r.unwrap(packet);
+ assert.deepEqual(received,key);
+ const context={...scope,id:'a'.repeat(32)};
+ const p=await prepareRedStoreWrite(key,context,0,new TextEncoder().encode('private'));
+ const bytes=await openRedStoreRecord(received,context,{version:1,id:p.id,revision:1,deleted:0,updated:1,envelope:p.envelope});
+ assert.equal(new TextDecoder().decode(bytes),'private');
+ await assert.rejects(s.wrap(key));await assert.rejects(r.unwrap(packet));await assert.rejects(a.confirm(b.fingerprint));
+ key.fill(0);received.fill(0);bytes.fill(0);
+});
+test('transfer rejects wrong app, wrong role, wrong transcript and tampering',async()=>{
+ const sender=await createRedDeviceKeyTransfer(scope,'sender'),other=await createRedDeviceKeyTransfer({...scope,app:'red-poly'},'receiver');
+ await assert.rejects(sender.compare(other.offer));
+ await assert.rejects(sender.compare(sender.offer));
+ const receiver=await createRedDeviceKeyTransfer(scope,'receiver'),a=await sender.compare(receiver.offer),b=await receiver.compare(sender.offer);
+ const s=await a.confirm(b.fingerprint),r=await b.confirm(a.fingerprint);
+ const packet=await s.wrap(new Uint8Array(32).fill(7));
+ const tampered:RedDeviceKeyPacket={...packet,envelope:(packet.envelope[0]==='A'?'B':'A')+packet.envelope.slice(1)};
+ await assert.rejects(r.unwrap(tampered));
+ await assert.rejects(r.unwrap(packet));
+ const c=await createRedDeviceKeyTransfer(scope,'sender'),d=await createRedDeviceKeyTransfer(scope,'receiver');
+ const cc=await c.compare(d.offer),dd=await d.compare(c.offer);
+ assert.notEqual(cc.fingerprint,a.fingerprint);
+ const wrong=await dd.confirm(cc.fingerprint);
+ await assert.rejects(wrong.unwrap(packet));
+});

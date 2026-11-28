@@ -30177,6 +30177,266 @@ html[data-windows-titelleiste] body:is(.fokus, [data-dokument="an"]) #studio-bar
   }
 }
 
+
+/* RED Studio Desktop – shared drawing surfaces, not a second design system.
+   Narrow/coarse-pointer layouts retain the existing mobile dock. Labels are
+   generated from the accessible command name and do not change tool IDs. */
+.gfx-tb-desktop-name{display:none}
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){
+  body:not([data-ui-shell="glass-wheel"]) .gfx-tb-edgeless .gfx-tb-karte button>.gfx-tb-desktop-name{
+    display:block;position:absolute;inset:auto 3px 3px;z-index:1;
+    font-size:var(--t-caption);line-height:1.15;font-weight:550;
+    text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    color:var(--text);background:var(--bg-card);border-radius:var(--radius-sm);
+    padding:2px 3px;pointer-events:none;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .gfx-tb-edgeless .gfx-tb-karte button:is(.on,[aria-pressed="true"])>.gfx-tb-desktop-name{
+    color:var(--accent-text);background:var(--accent-schwach);
+  }
+  /* The outer dock must not clip its own menus; the inner roller already
+     manages the horizontal strip. Existing touch targets are unchanged. */
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-werkzeuge.gfx-tb-edgeless{overflow:visible;isolation:isolate}
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-koerper{
+    background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-lg);
+  }
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap :is(.sp-palette,.sp-studio){
+    background:var(--bg-side);scrollbar-gutter:stable;overscroll-behavior:contain;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-palette{
+    width:clamp(190px,19vw,250px);border-inline-end:1px solid var(--line);
+  }
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-studio{
+    flex-basis:clamp(240px,23vw,320px);border-inline-start:1px solid var(--line);
+  }
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-fuss{
+    background:var(--bg-side);font-variant-numeric:tabular-nums;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-live-labor:not([hidden]){
+    background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-md);
+  }
+  body:not([data-ui-shell="glass-wheel"]) .document-studio .document-thumbnails{
+    background:var(--bg-side);border-inline-end:1px solid var(--line);scrollbar-gutter:stable;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .document-studio .document-inspector{
+    border-inline-start:1px solid var(--line);scrollbar-gutter:stable;overscroll-behavior:contain;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .document-studio .document-center{
+    background:var(--pdf-desk);overscroll-behavior:contain;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .document-studio .document-thumbnail.is-selected{
+    outline:2px solid var(--accent);outline-offset:-2px;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .document-studio[data-pdf-galerie]{--pdf-dock-breite:720px}
+}
+
+
+/* RED Studio · macOS-inspired material for the actual Windows desktop shell.
+   No faux traffic lights, no changes to the native overlay's safe area.
+   Existing theme tokens, document paper and mobile UI stay authoritative. */
+.sp-wrap .sp-desktop-modus,.sp-wrap .sp-kopf .sp-desktop-inspector{display:none}
+@media (min-width:1024px) and (hover:hover) and (pointer:fine) and (forced-colors:none){
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]){
+    --red-studio-material:var(--bg-card);
+    --red-studio-sidebar:var(--bg-side);
+    --red-studio-edge:color-mix(in srgb,var(--text) 13%,transparent);
+    --red-studio-selection:var(--accent-schwach);
+    --red-studio-radius:var(--radius-xl);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) #main > #studio-bar{
+    border-bottom:1px solid var(--red-studio-edge);
+    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--windows-kopf-text) 6%,transparent);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) #studio-bar .studio-search{
+    background-color:color-mix(in srgb,var(--windows-kopf-text) 9%,var(--windows-kopf-flaeche));
+    color:var(--windows-kopf-text);border-radius:var(--radius-lg);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) #main > :is(#kante,#menueband){
+    background:var(--red-studio-sidebar);border-color:var(--red-studio-edge);
+    color:var(--text);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) #reiterleiste .reiter{
+    border-radius:var(--radius-md) var(--radius-md) 0 0;
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .gfx-tb-edgeless{
+    --gfx-dock-icon:var(--text-dim);--gfx-dock-edge:var(--red-studio-edge);
+    --gfx-dock-hover:var(--bg-hover);--gfx-galerie-aktiv:var(--accent-text);
+    --gfx-dock-breite:720px;
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .gfx-tb-edgeless .gfx-tb-haupt::before{
+    border:1px solid var(--red-studio-edge);border-image:none;
+    border-radius:var(--red-studio-radius);background:var(--red-studio-material);
+    filter:none;box-shadow:var(--e-2);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .gfx-tb-edgeless :is(.gfx-tb-neben,.gfx-tb-edgeless-zusatz,.gfx-tb-menue){
+    border:1px solid var(--red-studio-edge);border-radius:var(--red-studio-radius);
+    background:var(--red-studio-material);box-shadow:var(--e-1);
+  }
+  @supports (backdrop-filter:blur(1px)){
+    @media (prefers-reduced-transparency:no-preference){
+      html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .gfx-tb-edgeless :is(.gfx-tb-neben,.gfx-tb-edgeless-zusatz,.gfx-tb-menue){
+        background:var(--bg-schwebend,var(--red-studio-material));backdrop-filter:var(--glas-blur);
+      }
+    }
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .sp-wrap .sp-desktop-modus{
+    display:inline-flex;align-items:center;padding:var(--space-1) var(--space-2);
+    border:1px solid var(--red-studio-edge);border-radius:var(--radius-pill);
+    font-size:var(--t-caption);color:var(--text-dim);white-space:nowrap;
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .sp-wrap[data-electro-context="simulation"] .sp-desktop-modus{
+    color:var(--accent-text);background:var(--red-studio-selection);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .sp-wrap .sp-kopf .sp-desktop-inspector{
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .sp-wrap .sp-desktop-inspector[aria-expanded="true"]{
+    color:var(--accent-text);background:var(--red-studio-selection);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .document-studio .document-mode-switch{
+    border-radius:var(--radius-lg);background:var(--bg-input);
+    border-color:var(--red-studio-edge);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .document-studio .document-mode-switch button[aria-pressed="true"]{
+    box-shadow:var(--e-1);background:var(--red-studio-material);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .document-studio .document-inspector :is(.document-panel-header,.document-inspector-heading){
+    border-bottom:1px solid var(--red-studio-edge);
+  }
+}
+
+
+/* Desktop side panels become real columns, not floating blockers of wires.
+   Keep the original overlay behavior at smaller window/container sizes.
+   Existing dock clearance remains in the body. */
+.sp-wrap .sp-desktop-resize{display:none}
+@media(min-width:1024px) and (hover:hover) and (pointer:fine){
+  @container sp (min-width:850px){
+    html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap:not(.sp-plan-fokus) .sp-koerper{
+      display:flex;align-items:stretch;gap:0;
+    }
+    html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap:not(.sp-plan-fokus) .sp-koerper>:is(.sp-palette,.sp-studio):not([hidden]){
+      position:relative;inset:auto;order:0;align-self:stretch;
+      flex:0 0 min(var(--sp-desktop-panel-width,248px),38%);width:auto;
+      min-width:0;max-width:none;height:auto;box-shadow:none;
+      border-radius:var(--radius-md);animation:none;
+    }
+    html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap:not(.sp-plan-fokus) .sp-koerper>.sp-buehne{
+      flex:1 1 0;order:0;width:0;min-width:0;
+    }
+    html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap:not(.sp-plan-fokus) .sp-koerper>:is(.sp-palette:not([hidden])+.sp-desktop-resize,.sp-desktop-resize:has(+.sp-studio:not([hidden]))){
+      display:grid;place-items:center;order:0;flex:0 0 12px;width:12px;
+      min-width:0;border:0;padding:0;align-self:stretch;
+      background:transparent;cursor:col-resize;touch-action:none;
+    }
+    html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-desktop-resize::before{
+      content:"";width:3px;height:36px;border-radius:var(--radius-pill);background:var(--text-faint);
+    }
+    html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-desktop-resize:is(:hover,:focus-visible)::before{background:var(--accent)}
+    html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-desktop-resize:focus-visible{outline:2px solid var(--accent-text);outline-offset:-2px}
+  }
+}
+
+
+/* Wide desktop: two real side columns, leaving at least 40% for the plan.
+   The narrow layout is still driven by the shared panel controller. */
+@media(min-width:1024px) and (hover:hover) and (pointer:fine){
+  @container sp (min-width:1180px){
+    html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap:not(.sp-plan-fokus) .sp-koerper:has(>.sp-palette:not([hidden])):has(>.sp-studio:not([hidden]))>:is(.sp-palette,.sp-studio){
+      flex-basis:min(var(--sp-desktop-panel-width,248px),28%);
+    }
+  }
+}
+
+
+/* Desktop document navigation: compact search and bookmark view. Native
+   page rows retain their original indices; filtered rows never drag. */
+.document-desktop-filter{display:none}
+.document-thumbnails .document-thumb-zeile[hidden]{display:none}
+@media(min-width:1024px) and (hover:hover) and (pointer:fine){
+  html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .document-desktop-filter{
+    display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-1);
+    padding:var(--space-2);border-bottom:1px solid var(--line);
+    background:var(--bg-side);color:var(--text);
+  }
+  .document-desktop-filter input{
+    grid-column:1/-1;min-width:0;width:100%;box-sizing:border-box;
+    min-height:var(--touch-min);padding:var(--space-1) var(--space-2);
+    background:var(--bg-input);color:var(--text);border:1px solid var(--line);
+    border-radius:var(--radius-md);font:inherit;
+  }
+  .document-desktop-filter button{
+    min-width:0;min-height:var(--touch-min);border:1px solid var(--line);
+    border-radius:var(--radius-md);background:var(--bg-card);color:var(--text);
+    font:inherit;font-size:var(--t-small);
+  }
+  .document-desktop-filter button[aria-pressed="true"]{
+    background:var(--accent-schwach);color:var(--accent-text);
+  }
+  .document-desktop-filter :is(input,button):focus-visible{
+    outline:2px solid var(--accent-text);outline-offset:-2px;
+  }
+  .document-filter-count{grid-column:1/-1;margin:0;color:var(--text-dim);font-size:var(--t-caption)}
+}
+
+
+/* A collapsible Windows measurement inspector. Never presents model values
+   as actual measurements; original paper and touch layout remain unchanged. */
+.sp-wrap .sp-desktop-messwerte{display:none}
+@media(min-width:1024px) and (hover:hover) and (pointer:fine){
+  html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-desktop-messwerte:not([hidden]){
+    display:block;flex:none;min-width:0;background:var(--bg-card);color:var(--text);
+    border:1px solid var(--line);border-radius:var(--radius-md);
+  }
+  .sp-desktop-messwerte summary{cursor:pointer;padding:var(--space-2);font-weight:600}
+  .sp-desktop-messwerte summary:focus-visible{outline:2px solid var(--accent-text);outline-offset:-2px}
+  .sp-desktop-messwerte-inhalt{max-height:clamp(96px,22vh,260px);overflow:auto;overscroll-behavior:contain;padding:var(--space-2)}
+  .sp-desktop-messwerte-inhalt p{font-size:var(--t-caption);color:var(--text-dim);margin:0 0 var(--space-2)}
+  .sp-desktop-messwerte-inhalt table{width:100%;border-collapse:collapse;font-size:var(--t-small);font-variant-numeric:tabular-nums;text-align:left}
+  .sp-desktop-messwerte-inhalt :is(td,th){padding:var(--space-1) var(--space-2);border-bottom:1px solid var(--line)}
+  .sp-desktop-messwerte-inhalt thead th{position:sticky;top:0;background:var(--bg-card)}
+}
+
+
+/* Desktop Whiteboard commands use the existing GfxInspector, never a
+   duplicate object store. The command row is outside the drawing canvas. */
+.wb-desktop-command{display:none}
+@media(min-width:1024px) and (hover:hover) and (pointer:fine){
+  html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .wb-desktop-command{
+    display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-1);
+    padding:var(--space-2);background:var(--bg-side);color:var(--text);
+    border-bottom:1px solid var(--line);border-radius:var(--radius-md) var(--radius-md) 0 0;
+  }
+  .wb-desktop-status{flex:1 1 120px;font-size:var(--t-caption);color:var(--text-dim);font-variant-numeric:tabular-nums}
+  .wb-desktop-command button{
+    min-height:var(--touch-min);padding:var(--space-1) var(--space-2);
+    border:1px solid var(--line);border-radius:var(--radius-md);
+    background:var(--bg-card);color:var(--text);font:inherit;font-size:var(--t-small);
+  }
+  .wb-desktop-command button:disabled{opacity:.55;cursor:default}
+  .wb-desktop-command button:not(:disabled):hover{background:var(--bg-hover)}
+  .wb-desktop-command button:focus-visible{outline:2px solid var(--accent-text);outline-offset:-2px}
+}
+
+
+/* Windows PDF object entry point: same page-specific ink controller,
+   separate from document metadata and page-management commands. */
+.document-desktop-objects{display:none}
+@media(min-width:1024px) and (hover:hover) and (pointer:fine){
+  html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .document-desktop-objects{
+    display:grid;gap:var(--space-2);padding-block:var(--space-2);
+    border-top:1px solid var(--line);
+  }
+  .document-desktop-objects button{
+    text-align:left;min-height:var(--touch-min);padding:var(--space-2);
+    font:inherit;font-size:var(--t-small);color:var(--text);background:var(--bg-card);
+    border:1px solid var(--line);border-radius:var(--radius-md);
+  }
+  .document-desktop-objects button:disabled{opacity:.55}
+  .document-desktop-objects button:not(:disabled):hover{background:var(--bg-hover)}
+  .document-desktop-objects button:focus-visible{outline:2px solid var(--accent-text);outline-offset:-2px}
+  .document-desktop-objects p{margin:0;font-size:var(--t-caption);color:var(--text-dim)}
+}
+
 </style>
 
 <!-- =========================================================================
@@ -31663,7 +31923,7 @@ window.artKennt = artKennt;
 /* ===== quell/kern/einstellung/stand.js ===== */
 "use strict";
 /*! ERZEUGT — NICHT VON HAND ÄNDERN. Quelle: src/kern/einstellung/stand.ts (npm run bauen:ts). */
-const Stand = { fassung: 1729, inhalt: 'd852d12e2e2dc30b', gebaut: '2026-11-28T09:19:51.882Z' };
+const Stand = { fassung: 1738, inhalt: '69c6a353d43ebdce', gebaut: '2026-11-28T14:31:33.449Z' };
 window.Stand = Stand;
 
 </script>
@@ -32635,6 +32895,8 @@ const GfxToolbar = (() => {
         const vorrat = document.createElement('div');
         vorrat.hidden = true;
         let galerieMessen;
+        let galerieAktivZeigen = () => { };
+        const desktopGalerie = () => window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)').matches;
         if (o.galerie) {
             wurzel.classList.add('gfx-tb-galerie', 'gfx-tb-edgeless');
             if (o.galerie.beschriftet)
@@ -32669,13 +32931,11 @@ const GfxToolbar = (() => {
                 for (const b of karte.querySelectorAll('button')) {
                     if (!['notiz', 'formen'].includes(id) && !['stift', 'radierer'].includes(b.dataset.wz ?? ''))
                         b.classList.add('gfx-tb-symbol');
-                    if (o.galerie.beschriftet) {
-                        const label = document.createElement('span');
-                        label.className = 'gfx-tb-kartenname';
-                        label.textContent = b.getAttribute('aria-label') || '';
-                        label.setAttribute('aria-hidden', 'true');
-                        b.append(label);
-                    }
+                    const label = document.createElement('span');
+                    label.className = o.galerie.beschriftet ? 'gfx-tb-kartenname' : 'gfx-tb-desktop-name';
+                    label.textContent = b.getAttribute('aria-label') || '';
+                    label.setAttribute('aria-hidden', 'true');
+                    b.append(label);
                 }
                 if (vorschau && (id === 'notiz' || id === 'formen')) {
                     delete vorschau.dataset.sym;
@@ -32740,6 +33000,15 @@ const GfxToolbar = (() => {
                 }
                 zurueck.setAttribute('aria-disabled', String(kartenStart === 0));
                 weiter.setAttribute('aria-disabled', String(kartenStart === letzterStart));
+            };
+            galerieAktivZeigen = (id) => {
+                if (!desktopGalerie())
+                    return;
+                const index = galeriekarten.findIndex(karte => !!karte.querySelector('[data-wz="' + CSS.escape(id) + '"]'));
+                if (index < 0 || !galeriekarten[index]?.hidden)
+                    return;
+                kartenStart = index;
+                blattstand();
             };
             leiste.append(schnell, trenner(), zurueck, festerStreifen, weiter);
             galerieMessen = new ResizeObserver(() => {
@@ -32886,7 +33155,10 @@ const GfxToolbar = (() => {
         };
         document.addEventListener('pointerdown', beiAussen, true);
         const setzeWerkzeug = (id) => {
+            const gewechselt = aktiv !== id;
             aktiv = id;
+            if (gewechselt)
+                galerieAktivZeigen(id);
             wurzel.querySelectorAll('[data-wz]').forEach(b => {
                 const an = b.dataset.wz === id;
                 b.classList.toggle('on', an);
@@ -32913,7 +33185,7 @@ const GfxToolbar = (() => {
         };
         tabstoppSetzen();
         if (typeof requestAnimationFrame === 'function')
-            requestAnimationFrame(haltPruefen);
+            requestAnimationFrame(() => { galerieAktivZeigen(aktiv); haltPruefen(); });
         return {
             element: wurzel,
             setzeWerkzeug,
@@ -62691,6 +62963,31 @@ const Zusatz = (() => {
         let verbindeVon = null;
         const w = document.createElement('div');
         w.className = 'wb';
+        const desktopStudio = () => document.documentElement.hasAttribute('data-windows-titelleiste') &&
+            document.body.dataset.uiShell !== 'glass-wheel' &&
+            window.matchMedia('(min-width:1024px) and (hover:hover) and (pointer:fine)').matches;
+        const desktopBar = document.createElement('div');
+        desktopBar.className = 'wb-desktop-command';
+        desktopBar.setAttribute('role', 'group');
+        desktopBar.setAttribute('aria-label', 'Whiteboard Arbeitsbereich');
+        const desktopStatus = document.createElement('span');
+        desktopStatus.className = 'wb-desktop-status';
+        desktopBar.append(desktopStatus);
+        const desktopButton = (id, name, action) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.dataset.wbDesktop = id;
+            button.textContent = name;
+            button.addEventListener('click', action);
+            desktopBar.append(button);
+            return button;
+        };
+        desktopButton('layers', 'Ebenen', () => openObjects('layers'));
+        desktopButton('frames', 'Rahmen', () => openObjects('frames'));
+        desktopButton('exchange', 'Import / Export', () => openObjects('exchange'));
+        const zoomSelectionButton = desktopButton('selection', 'Auswahl zoomen', () => auswahlInsBild());
+        zoomSelectionButton.disabled = true;
+        w.append(desktopBar);
         const massstabZeigen = document.createElement('b');
         massstabZeigen.className = 'wb-massstab';
         massstabZeigen.setAttribute('aria-live', 'polite');
@@ -62897,6 +63194,9 @@ const Zusatz = (() => {
                 }
             }
             massstabZeigen.textContent = Math.round(sicht.z * 100) + ' %';
+            const count = daten.filter((o) => o.art !== 'verbindung').length;
+            desktopStatus.textContent = count + ' Objekte · ' + objectSelection.size + ' gewählt';
+            zoomSelectionButton.disabled = !daten.some((o) => objectSelection.has(o.id) && o.art !== 'verbindung');
         };
         const bildAdressen = new Map();
         const bildHolen = (dateiId) => {
@@ -63092,6 +63392,19 @@ const Zusatz = (() => {
             (exact ? ids : GfxObjects.expand(daten, new Set(ids))).forEach(id => objectSelection.add(id));
             gewaehlt = objectSelection.size === 1 ? [...objectSelection][0] : null;
         };
+        const auswahlInsBild = () => {
+            const box = GfxObjects.bounds(daten.filter((o) => objectSelection.has(o.id) && o.art !== 'verbindung'));
+            if (!box)
+                return;
+            const r = flaeche.getBoundingClientRect();
+            if (r.width <= 48 || r.height <= 48)
+                return;
+            sicht.z = Math.max(KLEINSTER, Math.min(GROESSTER, Math.min((r.width - 48) / Math.max(1, box.w), (r.height - 48) / Math.max(1, box.h))));
+            sicht.x = box.x - (r.width / sicht.z - box.w) / 2;
+            sicht.y = box.y - (r.height / sicht.z - box.h) / 2;
+            male();
+            sichtSichern();
+        };
         const openObjects = (tab = 'layers') => {
             const previousView = { ...sicht };
             GfxInspector.open({ host: w, read: () => daten, selected: () => objectSelection, uid: () => Store.uid(),
@@ -63155,8 +63468,36 @@ const Zusatz = (() => {
                 sichern();
                 return;
             }
-            if (!strg)
+            if (!strg) {
+                if (!desktopStudio() || e.altKey || e.shiftKey || e.repeat ||
+                    (ziel !== w && !ziel?.closest('.wb-flaeche')) ||
+                    aktiv || verschiebt || schiebt || groesst || selectionDrag || stiftZeiger !== null || finger.size)
+                    return;
+                const id = { v: 'zeiger', h: 'hand', p: 'stift', e: 'radierer', r: 'rechteck', o: 'ellipse', t: 'text' }[e.key.toLowerCase()];
+                if (id) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    werkzeug = id;
+                    leiste.setzeWerkzeug(id);
+                    verbindeVon = null;
+                    if (id !== 'zeiger') {
+                        gewaehlt = null;
+                        objectSelection.clear();
+                    }
+                    w.classList.toggle('wb-schiebt', id === 'hand');
+                    male();
+                    return;
+                }
+                if (e.key === '0' || e.key === '1') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (e.key === '0')
+                        insBild();
+                    else
+                        auswahlInsBild();
+                }
                 return;
+            }
             const taste = e.key.toLowerCase();
             if (taste === 'z' && !e.shiftKey) {
                 e.preventDefault();
@@ -77224,6 +77565,16 @@ const Planflaeche = (() => {
         labor.className = 'sp-live-labor';
         labor.setAttribute('aria-label', 'Live-Stromlabor – Strom, Relais und Zeit');
         labor.hidden = true;
+        const messwertePanel = document.createElement('details');
+        messwertePanel.className = 'sp-desktop-messwerte';
+        messwertePanel.hidden = true;
+        const messwerteTitel = document.createElement('summary');
+        messwerteTitel.textContent = 'Berechnete Bauteilwerte';
+        const messwerteInhalt = document.createElement('div');
+        messwerteInhalt.className = 'sp-desktop-messwerte-inhalt';
+        messwertePanel.append(messwerteTitel, messwerteInhalt);
+        let messwerteSignatur = '';
+        let tasterLoslassen = null;
         const batteriePanel = document.createElement('section');
         batteriePanel.className = 'sp-batterie-fach';
         batteriePanel.setAttribute('aria-label', 'Batterieanlagen und Übungen');
@@ -77308,6 +77659,86 @@ const Planflaeche = (() => {
         koerper.appendChild(palette);
         koerper.appendChild(buehne);
         koerper.appendChild(studioPanel);
+        const studioBreite = (panel, name, seite, start) => {
+            const griff = document.createElement('button');
+            griff.type = 'button';
+            griff.className = 'sp-desktop-resize';
+            griff.dataset.seite = seite;
+            griff.setAttribute('role', 'separator');
+            griff.setAttribute('aria-orientation', 'vertical');
+            griff.setAttribute('aria-label', name + ' Breite');
+            griff.setAttribute('aria-valuemin', '180');
+            griff.setAttribute('aria-valuemax', '380');
+            griff.title = name + ' – Breite ziehen oder Pfeiltasten, Home/End';
+            let breite = start;
+            const aktualisieren = (wert) => {
+                breite = Math.min(380, Math.max(180, Math.round(wert)));
+                panel.style.setProperty('--sp-desktop-panel-width', breite + 'px');
+                griff.setAttribute('aria-valuenow', String(breite));
+                griff.setAttribute('aria-valuetext', breite + ' Pixel');
+            };
+            aktualisieren(start);
+            let zug = null;
+            griff.addEventListener('pointerdown', e => {
+                if (e.button !== 0 || zug || z.zieht)
+                    return;
+                e.preventDefault();
+                e.stopPropagation();
+                zug = { id: e.pointerId, x: e.clientX, breite };
+                griff.focus({ preventScroll: true });
+                griff.setPointerCapture(e.pointerId);
+            });
+            griff.addEventListener('pointermove', e => {
+                if (!zug || zug.id !== e.pointerId)
+                    return;
+                aktualisieren(zug.breite + (e.clientX - zug.x) * (seite === 'links' ? 1 : -1));
+            });
+            const ende = (e) => { if (zug?.id === e.pointerId)
+                zug = null; };
+            griff.addEventListener('pointerup', ende);
+            griff.addEventListener('pointercancel', ende);
+            griff.addEventListener('lostpointercapture', ende);
+            griff.addEventListener('dblclick', () => aktualisieren(start));
+            griff.addEventListener('keydown', e => {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key))
+                    return;
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.key === 'Home')
+                    aktualisieren(180);
+                else if (e.key === 'End')
+                    aktualisieren(380);
+                else
+                    aktualisieren(breite + (e.key === 'ArrowRight' ? 1 : -1) * (seite === 'links' ? 1 : -1) * (e.shiftKey ? 32 : 8));
+            });
+            return griff;
+        };
+        const paletteGriff = studioBreite(palette, 'Bauteilbibliothek', 'links', 248);
+        const studioGriff = studioBreite(studioPanel, 'Inspektor', 'rechts', 288);
+        palette.after(paletteGriff);
+        studioPanel.before(studioGriff);
+        const desktopDoppelspalte = () => document.documentElement.hasAttribute('data-windows-titelleiste') &&
+            document.body.dataset.uiShell !== 'glass-wheel' &&
+            !planFokus && wurzel.clientWidth >= 1180 &&
+            window.matchMedia('(min-width:1024px) and (hover:hover) and (pointer:fine)').matches;
+        const paletteSetzen = (offen) => {
+            paletteOffen = offen;
+            palette.hidden = !offen;
+            wurzel.classList.toggle('sp-palette-offen', offen);
+            if (offen && studioOffen && !desktopDoppelspalte()) {
+                studioOffen = false;
+                studioPanel.hidden = true;
+            }
+        };
+        const studioSetzen = (offen) => {
+            studioOffen = offen;
+            studioPanel.hidden = !offen;
+            if (offen) {
+                if (!desktopDoppelspalte())
+                    paletteSetzen(false);
+                studioTab = 'eigenschaften';
+            }
+        };
         const fussInhalt = document.createElement('div');
         fussInhalt.className = 'sp-fuss-inhalt';
         fuss.appendChild(fussInhalt);
@@ -77319,6 +77750,7 @@ const Planflaeche = (() => {
         fuss.appendChild(zoomleiste);
         wurzel.appendChild(kopf);
         wurzel.appendChild(labor);
+        wurzel.appendChild(messwertePanel);
         wurzel.appendChild(koerper);
         wurzel.appendChild(fuss);
         wurzel.appendChild(batteriePanel);
@@ -77361,7 +77793,7 @@ const Planflaeche = (() => {
         kopfLinks.className = 'sp-links';
         const planDock = GfxToolbar.erstelle({
             klasse: 'sp-werkzeuge', beschriftung: 'Zeichenwerkzeuge', aktiv: z.werkzeug,
-            werkzeuge: WERKZEUGE.map(w => ({ ...w, zeichen: '',
+            werkzeuge: WERKZEUGE.map(w => ({ ...w, titel: w.titel + ' (' + w.taste + ')', zeichen: '',
                 gruppe: w.id === 'zeigen' || w.id === 'leitung' ? 'quick' : 'senior' })),
             galerie: {
                 schnell: ['plan-modus'], edgeless: { zusatz: ['palette-toggle', 'zoom-alles'] },
@@ -77495,6 +77927,11 @@ const Planflaeche = (() => {
                     next.element.querySelector('button')?.focus({ preventScroll: true });
             }
             simulationDock.element.querySelector('[data-a="sim-pause"]')?.setAttribute('aria-pressed', String(zeitStand.pause));
+            for (const [id, selected] of [['sim-schalten', z.werkzeug !== 'stift'], ['sim-zeichnen', z.werkzeug === 'stift']]) {
+                const button = simulationDock.element.querySelector('[data-a="' + id + '"]');
+                button?.setAttribute('aria-pressed', String(selected));
+                button?.classList.toggle('on', selected);
+            }
             relayDock.setzeGesperrt('relay-original', !z.plan.relaisLegacy);
             relayDock.setzeGesperrt('relay-freigeben', !z.plan.relaisLegacy || !!z.plan.relaisLegacy.verifiziert);
             for (const action of ['pruefen', 'muster'])
@@ -77522,6 +77959,8 @@ const Planflaeche = (() => {
                 markeSetzen();
             }).observe(dock);
         const kopfMalen = () => {
+            if (paletteOffen && studioOffen && !desktopDoppelspalte())
+                paletteSetzen(false);
             fachStatus();
             dockAktualisieren();
             einstiegMalen();
@@ -77540,13 +77979,15 @@ const Planflaeche = (() => {
                         ? `<button type="button" class="sp-netz" data-a="netz" ` +
                             `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
                             `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
-                        : '');
+                        : '') +
+                    `<span class="sp-desktop-modus">${z.simulation ? 'Simulation' : relaisOffen ? 'Relais' : batterieOffen ? 'Batterie' : 'Zeichnen'}</span>`;
             kopfRechts.innerHTML =
                 `<select class="sp-art" aria-label="Planart" title="Planart: ${esc(Schaltplan.artVon(z.plan.art).name)}">` +
                     Schaltplan.ARTEN.map(a => `<option value="${esc(a.id)}"${a.id === z.plan.art ? ' selected' : ''}>` +
                         `${esc(a.name)}</option>`).join('') + '</select>' +
                     `<button type="button" class="sp-kopf-knopf" data-a="zurueck" title="Rückgängig (Strg+Z)" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>${symbol('undo', 18)}</button>` +
                     `<button type="button" class="sp-kopf-knopf" data-a="vorwaerts" title="Wiederholen (Strg+Y)" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>${symbol('redo', 18)}</button>` +
+                    `<button type="button" class="sp-desktop-inspector sp-kopf-knopf" data-a="desktop-inspector" title="Eigenschaften und Übersicht" aria-label="Eigenschaften und Übersicht" aria-expanded="${studioOffen}">${symbol('panelL', 18)}</button>` +
                     `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" ` +
                     `aria-label="Bereiche" aria-haspopup="menu">✦<span class="sp-bereiche-wort"> Bereiche</span><span class="sp-bereiche-pfeil"> ▾</span></button>` +
                     `<button type="button" class="sp-kopf-knopf" data-a="mehr" title="Mehr: Planart, Ansicht, Ausgabe" aria-label="Mehr" aria-haspopup="menu">${symbol('dots', 18)}</button>` +
@@ -77573,9 +78014,62 @@ const Planflaeche = (() => {
         };
         const laborZeit = () => zeitspulen().length
             ? (zeitStand.laufzeit / 1000).toFixed(1) + ' s' : '—';
+        const messwerteAktualisieren = () => {
+            if (!z.simulation || !messwertePanel.open)
+                return;
+            const e = z.ergebnis;
+            const format = (wert, einheit) => typeof wert === 'number' && Number.isFinite(wert) ? Stromfluss.zeige(wert, einheit) : '—';
+            const zeilen = e?.ok ? z.plan.teile.filter(t => Object.hasOwn(e.werte || {}, t.id))
+                .map(t => ({ id: String(t.id), name: String(t.bmk || t.id), symbol: String(Register.fachzeichen.holen(t.zeichen)?.name || t.zeichen),
+                U: format(e.werte[t.id]?.U, 'V'), I: format(e.werte[t.id]?.I, 'A'), P: format(e.werte[t.id]?.P, 'W') })) : [];
+            const begrenzt = zeilen.slice(0, 64);
+            const hinweis = !e ? 'Keine Berechnung vorhanden.' : !e.ok ? 'Berechnung fehlgeschlagen: ' + String(e.fehler || 'Unbekannter Fehler') :
+                zeilen.length ? 'Modellwerte, keine reale Messung. Mehrteilige Bauteile können weitere Teilwerte besitzen.' : 'Keine Bauteilwerte verfügbar.';
+            const signatur = JSON.stringify([hinweis, zeilen.length, begrenzt]);
+            if (signatur === messwerteSignatur)
+                return;
+            messwerteSignatur = signatur;
+            const text = document.createElement('p');
+            text.textContent = hinweis;
+            const frag = document.createDocumentFragment();
+            frag.append(text);
+            if (begrenzt.length) {
+                const table = document.createElement('table');
+                const header = table.createTHead().insertRow();
+                for (const label of ['Bauteil', 'Spannung U', 'Strom I', 'Leistung P']) {
+                    const cell = document.createElement('th');
+                    cell.scope = 'col';
+                    cell.textContent = label;
+                    header.append(cell);
+                }
+                const body = table.createTBody();
+                for (const row of begrenzt) {
+                    const tr = body.insertRow();
+                    tr.dataset.messwertId = row.id;
+                    const name = document.createElement('th');
+                    name.scope = 'row';
+                    name.textContent = row.name + ' · ' + row.symbol;
+                    tr.append(name);
+                    for (const [key, value] of [['U', row.U], ['I', row.I], ['P', row.P]]) {
+                        const td = tr.insertCell();
+                        td.dataset.messwert = key;
+                        td.textContent = value;
+                    }
+                }
+                frag.append(table);
+            }
+            if (zeilen.length > 64) {
+                const more = document.createElement('p');
+                more.textContent = '64 von ' + zeilen.length + ' Bauteilen angezeigt.';
+                frag.append(more);
+            }
+            messwerteInhalt.replaceChildren(frag);
+        };
+        messwertePanel.addEventListener('toggle', messwerteAktualisieren);
         const laborAktualisieren = () => {
             if (!z.simulation)
                 return;
+            messwerteAktualisieren();
             const daten = Labor.statistik(z.plan, z.ergebnis, z.spulenStand);
             const anzeige = labor.querySelector('[data-labor-status]');
             if (anzeige)
@@ -77604,6 +78098,12 @@ const Planflaeche = (() => {
         };
         const laborMalen = () => {
             labor.hidden = !z.simulation;
+            messwertePanel.hidden = !z.simulation;
+            if (!z.simulation) {
+                messwertePanel.open = false;
+                messwerteSignatur = '';
+                messwerteInhalt.replaceChildren();
+            }
             wurzel.classList.toggle('sp-labor-pause', !!(z.simulation && zeitStand.pause));
             wurzel.style.setProperty('--sp-labor-tempo', String(laborTempo));
             if (!z.simulation) {
@@ -77651,6 +78151,7 @@ const Planflaeche = (() => {
                 zeitLetzter = performance.now();
             }
             else if (knopf.dataset.laborAktion === 'reset') {
+                tasterLoslassen?.();
                 z.stellungen = {};
                 z.spulenStand = {};
                 zeitStarten();
@@ -79410,12 +79911,7 @@ const Planflaeche = (() => {
                 return;
             }
             if (aktion === 'eigenschaften') {
-                studioOffen = true;
-                studioTab = 'eigenschaften';
-                studioPanel.hidden = false;
-                paletteOffen = false;
-                palette.hidden = true;
-                wurzel.classList.remove('sp-palette-offen');
+                studioSetzen(true);
                 studioMalen();
                 kopfMalen();
                 return;
@@ -79709,16 +80205,28 @@ const Planflaeche = (() => {
                 const teil = z.plan.teile.find(t => t.id === g.dataset.id);
                 if (teil && (teil.zeichen === 'taster-schliesser' || teil.zeichen === 'taster-oeffner')) {
                     const id = String(teil.id);
+                    tasterLoslassen?.();
+                    const pointer = e.pointerId;
                     const los = () => {
-                        document.removeEventListener('pointerup', los, true);
-                        document.removeEventListener('pointercancel', los, true);
-                        if (z.simulation) {
-                            z.stellungen[id] = 0;
+                        document.removeEventListener('pointerup', amZeiger, true);
+                        document.removeEventListener('pointercancel', amZeiger, true);
+                        window.removeEventListener('blur', los);
+                        document.removeEventListener('visibilitychange', beiSicht);
+                        if (tasterLoslassen === los)
+                            tasterLoslassen = null;
+                        z.stellungen[id] = 0;
+                        if (z.simulation && wurzel.isConnected)
                             male();
-                        }
                     };
-                    document.addEventListener('pointerup', los, true);
-                    document.addEventListener('pointercancel', los, true);
+                    const amZeiger = (event) => { if (event.pointerId === pointer)
+                        los(); };
+                    const beiSicht = () => { if (document.hidden)
+                        los(); };
+                    tasterLoslassen = los;
+                    document.addEventListener('pointerup', amZeiger, true);
+                    document.addEventListener('pointercancel', amZeiger, true);
+                    window.addEventListener('blur', los);
+                    document.addEventListener('visibilitychange', beiSicht);
                     z.stellungen[id] = 1;
                     male();
                     return;
@@ -80516,6 +81024,8 @@ const Planflaeche = (() => {
             if (!z.simulation)
                 merkwahl = { werkzeug: z.werkzeug, zeichen: z.gewaehltesZeichen };
             z.simulation = !z.simulation;
+            if (!z.simulation)
+                tasterLoslassen?.();
             z.auswahl.clear();
             if (z.simulation) {
                 z.werkzeug = 'zeigen';
@@ -80561,13 +81071,7 @@ const Planflaeche = (() => {
                 return;
             }
             if (b.dataset.a === 'palette-toggle') {
-                paletteOffen = !paletteOffen;
-                if (paletteOffen && studioOffen) {
-                    studioOffen = false;
-                    studioPanel.hidden = true;
-                }
-                wurzel.classList.toggle('sp-palette-offen', paletteOffen);
-                palette.hidden = !paletteOffen;
+                paletteSetzen(!paletteOffen);
                 kopfMalen();
                 return;
             }
@@ -80618,15 +81122,8 @@ const Planflaeche = (() => {
                 ansichtAnwenden();
                 return;
             }
-            if (b.dataset.a === 'elektro-studio') {
-                studioOffen = !studioOffen;
-                studioPanel.hidden = !studioOffen;
-                if (studioOffen) {
-                    paletteOffen = false;
-                    palette.hidden = true;
-                    wurzel.classList.remove('sp-palette-offen');
-                    studioTab = 'eigenschaften';
-                }
+            if (b.dataset.a === 'elektro-studio' || b.dataset.a === 'desktop-inspector') {
+                studioSetzen(!studioOffen);
                 kopfMalen();
                 if (studioOffen)
                     studioMalen();
@@ -80718,6 +81215,7 @@ const Planflaeche = (() => {
                 return;
             }
             if (b.dataset.a === 'ruhelage') {
+                tasterLoslassen?.();
                 z.stellungen = {};
                 z.spulenStand = {};
                 zeitStarten();
@@ -80845,14 +81343,7 @@ const Planflaeche = (() => {
                 return;
             if (!e.ctrlKey && !e.metaKey && e.altKey && e.shiftKey && e.key.toLowerCase() === 'e') {
                 e.preventDefault();
-                studioOffen = !studioOffen;
-                studioPanel.hidden = !studioOffen;
-                if (studioOffen) {
-                    paletteOffen = false;
-                    palette.hidden = true;
-                    wurzel.classList.remove('sp-palette-offen');
-                    studioTab = 'eigenschaften';
-                }
+                studioSetzen(!studioOffen);
                 kopfMalen();
                 if (studioOffen)
                     studioMalen();
@@ -80908,18 +81399,8 @@ const Planflaeche = (() => {
                         simulationUmschalten();
                         return;
                     }
-                    if (!paletteOffen) {
-                        paletteOffen = true;
-                        palette.hidden = false;
-                        wurzel.classList.add('sp-palette-offen');
-                        kopfMalen();
-                    }
-                    else {
-                        paletteOffen = false;
-                        palette.hidden = true;
-                        wurzel.classList.remove('sp-palette-offen');
-                        kopfMalen();
-                    }
+                    paletteSetzen(!paletteOffen);
+                    kopfMalen();
                     return;
                 }
                 if (e.key === 'f' || e.key === 'F') {
@@ -81035,15 +81516,9 @@ const Planflaeche = (() => {
                     return kopf.querySelector('[data-a="palette-toggle"]')?.click();
                 if (was === 'studio')
                     return (() => {
-                        studioOffen = !studioOffen;
-                        studioPanel.hidden = !studioOffen;
-                        if (studioOffen) {
-                            paletteOffen = false;
-                            palette.hidden = true;
-                            wurzel.classList.remove('sp-palette-offen');
-                            studioTab = 'eigenschaften';
+                        studioSetzen(!studioOffen);
+                        if (studioOffen)
                             studioMalen();
-                        }
                         kopfMalen();
                     })();
                 if (was === 'fokus') {
@@ -81286,6 +81761,20 @@ const Planflaeche = (() => {
         palette.hidden = !paletteOffen;
         paletteMalen();
         male();
+        if (typeof ResizeObserver === 'function') {
+            const panelObserver = new ResizeObserver(() => {
+                if (!wurzel.isConnected)
+                    return;
+                if (!paletteOffen || !studioOffen || desktopDoppelspalte())
+                    return;
+                const restoreFocus = palette.contains(document.activeElement) || document.activeElement === paletteGriff;
+                paletteSetzen(false);
+                kopfMalen();
+                if (restoreFocus)
+                    kopf.querySelector('[data-a="desktop-inspector"]')?.focus({ preventScroll: true });
+            });
+            panelObserver.observe(wurzel);
+        }
         if (relaisOffen)
             relaisZeigen();
         return wurzel;
@@ -94090,7 +94579,13 @@ const DocumentMode = (() => {
         zeile.append(button, menue);
         return zeile;
     };
+    const thumbnailRefresh = new WeakMap();
     const activateVisibleThumbnails = (panel) => {
+        const existing = thumbnailRefresh.get(panel);
+        if (existing) {
+            existing();
+            return;
+        }
         let scheduled = false;
         const loadVisible = () => {
             scheduled = false;
@@ -94104,7 +94599,7 @@ const DocumentMode = (() => {
             const top = Math.max(0, panelRect.top) - 220;
             const bottom = Math.min(window.innerHeight, panelRect.bottom) + 220;
             panel.querySelectorAll('img[data-document-thumbnail-file]').forEach(image => {
-                if (image.src || image.dataset.loading === 'true')
+                if (image.src || image.dataset.loading === 'true' || image.closest('[hidden]'))
                     return;
                 const rect = image.getBoundingClientRect();
                 if (rect.bottom < top || rect.top > bottom)
@@ -94132,6 +94627,7 @@ const DocumentMode = (() => {
             requestAnimationFrame(loadVisible);
         };
         panel.addEventListener('scroll', schedule, { passive: true });
+        thumbnailRefresh.set(panel, schedule);
         schedule();
     };
     const originalKnopf = (page, documentBlock) => {
@@ -94328,6 +94824,19 @@ const DocumentMode = (() => {
         papierWahl.addEventListener('change', () => Store.setMeta('heft:papier', papierWahl.value));
         papierZeile.append(papierWort, papierWahl);
         seite.append(seiteTitel, knoepfe, papierZeile);
+        const inkSection = document.createElement('section');
+        inkSection.className = 'document-desktop-objects';
+        const inkTitle = document.createElement('h3');
+        inkTitle.className = 'document-section-title';
+        inkTitle.textContent = 'Zeichenobjekte';
+        const inkButton = makeAction('desktop-ink-objects', 'Ebenen und Objekte öffnen');
+        inkButton.dataset.documentInkBlock = String(documentBlock.id);
+        inkButton.disabled = !darfSeiten;
+        inkButton.title = 'Objekte dieser Seite auswählen, gruppieren, ausrichten oder sperren';
+        const inkHint = document.createElement('p');
+        inkHint.textContent = 'Die Objekte liegen auf dieser Seite. Das PDF-Original bleibt unverändert.';
+        inkSection.append(inkTitle, inkButton, inkHint);
+        seite.append(inkSection);
         const gemerkte = seiten.map((block, i) => ({ block, i })).filter(x => x.block.lesezeichen);
         if (gemerkte.length) {
             const liste = document.createElement('div');
@@ -94797,7 +95306,7 @@ const DocumentMode = (() => {
             }
             if (id === 'pdf-schnellmehr') {
                 const objects = inkToolbar()?.querySelector('[data-act="objekte"]');
-                eintrag('Ebenen, Gruppen und Ausrichten', 'grid', () => objects?.click(), !canAnnotate || !objects);
+                eintrag('Ebenen, Gruppen und Ausrichten', 'grid', () => openInkObjects(), !canAnnotate || !objects || objects.disabled);
             }
             if (id === 'vorlagen') {
                 eintrag('Textblock auf neuer Seite', 'inkText', () => pdfDockBlockOeffnen('text'), !canAnnotate);
@@ -94848,8 +95357,8 @@ const DocumentMode = (() => {
                 aufAktion: id => {
                     if (id === 'diagramme')
                         pdfDockBlockOeffnen('mindmap');
-                    if (id === 'pdf-objekte' && canAnnotate)
-                        inkToolbar()?.querySelector('[data-act="objekte"]')?.click();
+                    if (id === 'pdf-objekte')
+                        openInkObjects();
                 }
             })
             : null;
@@ -94931,7 +95440,66 @@ const DocumentMode = (() => {
         const thumbClose = topButton('thumbnails-close', '✕', wortViele(page) + 'übersicht schließen');
         thumbHeader.append(thumbTitle, thumbClose);
         thumbnails.appendChild(thumbHeader);
+        const thumbFilter = document.createElement('div');
+        thumbFilter.className = 'document-desktop-filter';
+        const thumbSearch = document.createElement('input');
+        thumbSearch.type = 'search';
+        thumbSearch.maxLength = 100;
+        thumbSearch.placeholder = 'Seitennummer oder Titel';
+        thumbSearch.setAttribute('aria-label', 'Seitenübersicht filtern');
+        thumbSearch.autocomplete = 'off';
+        const thumbBookmarks = document.createElement('button');
+        thumbBookmarks.type = 'button';
+        thumbBookmarks.textContent = 'Lesezeichen';
+        thumbBookmarks.setAttribute('aria-pressed', 'false');
+        const thumbClear = document.createElement('button');
+        thumbClear.type = 'button';
+        thumbClear.textContent = 'Alle';
+        const thumbCount = document.createElement('p');
+        thumbCount.setAttribute('role', 'status');
+        thumbCount.className = 'document-filter-count';
+        thumbFilter.append(thumbSearch, thumbBookmarks, thumbClear, thumbCount);
+        thumbnails.appendChild(thumbFilter);
         documents.forEach((block, index) => thumbnails.appendChild(thumbnail(block, index, index === state.index)));
+        const thumbRows = Array.from(thumbnails.querySelectorAll('.document-thumb-zeile'));
+        let bookmarkFilter = false;
+        const filterActive = () => !!thumbSearch.value.trim() || bookmarkFilter;
+        const filterPages = () => {
+            const term = thumbSearch.value.trim().toLocaleLowerCase('de-CH');
+            const number = /^#?\d+$/.test(term) ? Number(term.replace(/^#/, '')) : null;
+            let count = 0;
+            thumbRows.forEach((row, index) => {
+                const block = Store.getBlock(documents[index].id) || documents[index];
+                const matches = !term || (number !== null ? index + 1 === number : sourceLabel(block).toLocaleLowerCase('de-CH').includes(term));
+                row.hidden = !(matches && (!bookmarkFilter || block.lesezeichen));
+                if (!row.hidden)
+                    count++;
+            });
+            thumbBookmarks.setAttribute('aria-pressed', String(bookmarkFilter));
+            thumbCount.textContent = count + ' / ' + documents.length + ' ' + wortViele(page) +
+                (filterActive() ? ' · Reihenfolge gesperrt' : '');
+            thumbnails.dataset.filtered = String(filterActive());
+            activateVisibleThumbnails(thumbnails);
+        };
+        thumbSearch.addEventListener('input', () => { zugEnde(); menueSchliessen(); filterPages(); });
+        thumbBookmarks.addEventListener('click', () => { zugEnde(); menueSchliessen(); bookmarkFilter = !bookmarkFilter; filterPages(); });
+        thumbClear.addEventListener('click', () => { zugEnde(); menueSchliessen(); thumbSearch.value = ''; bookmarkFilter = false; filterPages(); });
+        thumbSearch.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                event.stopPropagation();
+                const first = thumbRows.find(row => !row.hidden);
+                if (first)
+                    springe(Number(first.dataset.documentThumbZeile), false);
+            }
+            else if (event.key === 'Escape' && filterActive()) {
+                event.preventDefault();
+                event.stopPropagation();
+                thumbClear.click();
+            }
+        });
+        thumbCount.textContent = documents.length + ' / ' + documents.length + ' ' + wortViele(page);
+        const thumbDesktop = window.matchMedia('(min-width:1024px) and (hover:hover) and (pointer:fine)');
         const center = document.createElement('main');
         center.className = 'document-center' + (state.einzeln ? ' ist-einzeln' : '');
         center.setAttribute('aria-label', 'Papierfläche');
@@ -95264,6 +95832,30 @@ const DocumentMode = (() => {
             catch { }
         }
         const inkToolbar = () => staende[state.index]?.querySelector('.blatt-werk') || null;
+        const closeStaleInkObjects = () => {
+            const panel = workspace.querySelector('.gfx-inspector[data-document-ink-block]');
+            if (!panel || panel.dataset.documentInkBlock === String(jetzt()?.id))
+                return;
+            panel.querySelector('[aria-label="Objektübersicht schliessen"]')?.click();
+        };
+        const openInkObjects = (expected) => {
+            const currentPage = Store.getBlock(page.id);
+            const block = jetzt();
+            if (!canAnnotate || !currentPage || currentPage.gesperrt || !darfSeiten() ||
+                !block || (expected !== undefined && String(block.id) !== expected))
+                return;
+            zeichneStand(state.index);
+            toolsSetzen(true);
+            const source = inkToolbar()?.querySelector('[data-act="objekte"]');
+            if (!source || source.disabled) {
+                UI.toast('Zeichenobjekte dieser Seite sind nicht verfügbar.');
+                return;
+            }
+            source.click();
+            const panel = workspace.querySelector('.gfx-inspector');
+            if (panel)
+                panel.dataset.documentInkBlock = String(block.id);
+        };
         const inkFlaeche = () => inkToolbar();
         let beobachtet = null;
         const ordnungObserver = new MutationObserver(() => {
@@ -95417,6 +96009,10 @@ const DocumentMode = (() => {
                 window.removeEventListener('resize', beiGroesse);
                 return;
             }
+            if (filterActive() && (!thumbDesktop.matches ||
+                !document.documentElement.hasAttribute('data-windows-titelleiste') ||
+                document.body.dataset.uiShell === 'glass-wheel'))
+                thumbClear.click();
             folienbandNachziehen();
             hoeheSetzen();
             passen();
@@ -95427,6 +96023,7 @@ const DocumentMode = (() => {
         let springtZu = -1;
         let standGesetzt = false;
         const aktivMarkieren = () => {
+            closeStaleInkObjects();
             previousButton.disabled = state.index === 0;
             nextButton.disabled = state.index === documents.length - 1;
             position.setAttribute('aria-label', wortEins(page) + ' ' + (state.index + 1) +
@@ -96259,7 +96856,7 @@ const DocumentMode = (() => {
             if (!ziel || ziel.closest('.document-thumb-menue, .document-thumb-menue-knopf'))
                 return;
             const zeile = ziel.closest('.document-thumb-zeile');
-            if (!zeile || !darfSeiten())
+            if (!zeile || !darfSeiten() || filterActive())
                 return;
             const index = Number(zeile.dataset.documentThumbZeile);
             const block = documents[index];
@@ -96626,6 +97223,12 @@ const DocumentMode = (() => {
                         position.disabled = false;
                     }
                 })();
+                return;
+            }
+            if (action === 'desktop-ink-objects') {
+                const expected = tatKnopf?.dataset.documentInkBlock;
+                if (expected)
+                    openInkObjects(expected);
                 return;
             }
             if (action === 'ink-ruler' && canAnnotate) {
@@ -119837,6 +120440,10 @@ const Einstellungen = (() => {
                 bindeRedShare(ziel);
                 bindeRedStore(ziel);
                 bindeRedSessions(ziel);
+                bindeRedAppCenter(ziel);
+                bindeRedReminders(ziel);
+                bindeMcpHub(ziel);
+                bindeLocalAi(ziel);
             }
             if (ziel && offenerBereich === 'mcp')
                 RegisterAutomatisierung.montiereAnsicht(ziel);
@@ -120027,6 +120634,12 @@ const Einstellungen = (() => {
             return;
         let busy = false;
         let clearCode;
+        const batchField = ziel.querySelector('[data-red-batch-input]');
+        const batchPreview = ziel.querySelector('[data-red-batch-preview]');
+        const batchButton = ziel.querySelector('[data-red-batch-approve]');
+        let reviewedBatch = null;
+        const clearBatch = () => { reviewedBatch = null; batchPreview?.replaceChildren(); if (batchButton)
+            batchButton.disabled = true; };
         const clear = () => { if (clearCode !== undefined)
             clearTimeout(clearCode); code.textContent = ''; };
         const request = async (path, payload) => {
@@ -120058,6 +120671,71 @@ const Einstellungen = (() => {
                 busy = false;
             }
         };
+        batchField?.addEventListener('input', clearBatch);
+        ziel.querySelector('[data-red-batch-review]')?.addEventListener('click', () => {
+            if (busy || !batchField || !batchPreview || !batchButton)
+                return;
+            clearBatch();
+            try {
+                const raw = batchField.value;
+                if (raw.length > 3000)
+                    throw Error('Anfrage zu lang');
+                const lines = raw.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+                if (!lines.length || lines.length > 11)
+                    throw Error('Ungültige Anzahl');
+                const apps = new Set(), challenges = new Set();
+                const requests = lines.map(line => {
+                    if (line.length > 256)
+                        throw Error('Ungültige Anfrage');
+                    const d = JSON.parse(line);
+                    if (!d || typeof d !== 'object' || Array.isArray(d) || Object.keys(d).length !== 4 || d.kind !== 'red-pair' || d.version !== 1 || !Array.from(app.options).some(o => o.value === d.app) || typeof d.challenge !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(d.challenge) || apps.has(d.app) || challenges.has(d.challenge))
+                        throw Error('Ungültige oder doppelte Anfrage');
+                    apps.add(d.app);
+                    challenges.add(d.challenge);
+                    return { app: String(d.app), challenge: String(d.challenge) };
+                });
+                const w = typeof Wolke === 'undefined' ? null : Wolke;
+                const origin = w?.adresse(), token = w?.token();
+                if (!origin || !token || !w?.serverAdressePruefen(origin))
+                    throw Error('Kein angemeldeter HTTPS-Server');
+                for (const entry of requests) {
+                    const li = document.createElement('li');
+                    li.textContent = entry.app.toUpperCase() + ' · ' + entry.challenge;
+                    batchPreview.append(li);
+                }
+                reviewedBatch = { raw, origin, token, requests };
+                batchButton.disabled = false;
+                result.textContent = requests.length + ' Anfragen geprüft. App und vollständige Challenge auf jedem eigenen Zielgerät vergleichen.';
+            }
+            catch {
+                clearBatch();
+                result.textContent = 'Ungültige oder doppelte Kopplungsanfragen oder fehlende Serveranmeldung.';
+            }
+        });
+        batchButton?.addEventListener('click', () => {
+            if (busy || !reviewedBatch || !batchField || !batchButton)
+                return;
+            const selected = reviewedBatch;
+            const w = typeof Wolke === 'undefined' ? null : Wolke;
+            if (batchField.value !== selected.raw || w?.adresse() !== selected.origin || w?.token() !== selected.token) {
+                clearBatch();
+                result.textContent = 'Anfragen oder Anmeldung geändert. Erneut prüfen.';
+                return;
+            }
+            if (!window.confirm(selected.requests.map(r => r.app.toUpperCase() + ' · ' + r.challenge).join('\n') + '\n\nAlle ' + selected.requests.length + ' Anmeldungen für 5 Minuten freigeben? Nur eigene Zielgeräte bestätigen.'))
+                return;
+            clearBatch();
+            void run(async () => {
+                if (w?.adresse() !== selected.origin || w?.token() !== selected.token)
+                    throw Error('Anmeldung geändert');
+                const data = await request('approve-batch', { requests: selected.requests });
+                if (data?.version !== 2 || !Array.isArray(data.apps) || data.apps.length !== selected.requests.length || !selected.requests.every((r, i) => data.apps[i] === r.app) || typeof data.expiresAt !== 'string' || !Number.isFinite(Date.parse(data.expiresAt)))
+                    throw Error('Ungültige Antwort');
+                if (batchField.value === selected.raw)
+                    batchField.value = '';
+                result.textContent = selected.requests.length + ' Anmeldungen freigegeben. Jede Ziel-App separat abschliessen. Keine gemeinsame Sitzung.';
+            });
+        });
         ziel.querySelector('[data-red-list]')?.addEventListener('click', () => void run(async () => {
             list.replaceChildren();
             const data = await request('apps');
@@ -120350,6 +121028,395 @@ const Einstellungen = (() => {
         };
         refreshButton.addEventListener('click', () => void run(refresh));
     };
+    const bindeRedAppCenter = (ziel) => {
+        const button = ziel.querySelector('[data-app-center-refresh]');
+        const list = ziel.querySelector('[data-app-center-list]');
+        const status = ziel.querySelector('[data-app-center-status]');
+        if (!button || !list || !status)
+            return;
+        button.addEventListener('click', async () => {
+            const w = typeof Wolke === 'undefined' ? null : Wolke;
+            const origin = w?.adresse(), token = w?.token();
+            if (!origin || !token || !w?.serverAdressePruefen(origin)) {
+                status.textContent = 'Kein angemeldeter HTTPS-Server.';
+                return;
+            }
+            button.disabled = true;
+            status.textContent = 'App-Übersicht wird geladen …';
+            list.replaceChildren();
+            try {
+                const response = await fetch(origin + '/home/apps', { headers: { Authorization: 'Bearer ' + token }, credentials: 'omit', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(8000) });
+                if (!response.ok)
+                    throw Error('HTTP ' + response.status);
+                const data = await response.json();
+                if (data?.version !== 1 || !Array.isArray(data.apps) || data.apps.length !== 11)
+                    throw Error('Ungültige App-Übersicht');
+                const fragment = document.createDocumentFragment();
+                const number = (v) => typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 ? String(v) : '–';
+                for (const app of data.apps) {
+                    if (typeof app.name !== 'string' || typeof app.category !== 'string' || typeof app.integration !== 'string' || typeof app.connected !== 'boolean' || !Array.isArray(app.grants) || !app.share || !app.storage)
+                        throw Error('Ungültiger App-Eintrag');
+                    const row = document.createElement('li'), name = document.createElement('strong'), detail = document.createElement('p'), access = document.createElement('p');
+                    name.textContent = app.name + ' · ' + app.category;
+                    detail.textContent = (app.connected ? 'Autorisierte Zugänge vorhanden' : 'Keine autorisierten Zugänge') + ' · ' + number(app.sessions) + ' Sitzungen · ' + (app.integration === 'home-server' ? 'Home Server' : 'Integrationspilot');
+                    const sync = app.grants.some((g) => g?.kind === 'sync'), file = app.grants.some((g) => g?.kind === 'file');
+                    access.textContent = 'Sync ' + (sync ? 'freigegeben' : 'gesperrt') + ' · Dateien ' + (file ? 'freigegeben' : 'gesperrt') + ' · Share ' + number(app.share.incoming) + ' eingehend / ' + number(app.share.outgoing) + ' ausgehend · ' + number(app.storage.objects) + ' Objekte';
+                    row.append(name, detail, access);
+                    fragment.append(row);
+                }
+                list.replaceChildren(fragment);
+                status.textContent = '11 App-Kennungen · Zugänge, keine Installations- oder Online-Erkennung.';
+            }
+            catch {
+                status.textContent = 'App-Übersicht nicht verfügbar. Anmeldung und Serverversion prüfen.';
+            }
+            finally {
+                button.disabled = false;
+            }
+        });
+    };
+    const bindeRedReminders = (ziel) => {
+        const list = ziel.querySelector('[data-reminder-list]');
+        const status = ziel.querySelector('[data-reminder-status]');
+        const kind = ziel.querySelector('[data-reminder-kind]');
+        const period = ziel.querySelector('[data-reminder-period]');
+        const date = ziel.querySelector('[data-reminder-date]');
+        const refreshButton = ziel.querySelector('[data-reminder-refresh]');
+        const createButton = ziel.querySelector('[data-reminder-create]');
+        const historyButton = ziel.querySelector('[data-reminder-history-refresh]');
+        const historyList = ziel.querySelector('[data-reminder-history-list]');
+        const historyStatus = ziel.querySelector('[data-reminder-history-status]');
+        if (!list || !status || !kind || !period || !date || !refreshButton || !createButton || !historyButton || !historyList || !historyStatus)
+            return;
+        const labels = { 'backup-review': 'Backup prüfen', 'grant-review': 'Freigaben prüfen', 'storage-review': 'Speicher prüfen', 'update-review': 'Updates prüfen' };
+        const periods = { once: 'Einmalig', daily: 'Alle 24 Stunden', weekly: 'Alle 7 Tage' };
+        let busy = false;
+        let pendingCreate = null;
+        const request = async (action, payload) => {
+            const w = typeof Wolke === 'undefined' ? null : Wolke;
+            const origin = w?.adresse(), token = w?.token();
+            if (!origin || !token || !w?.serverAdressePruefen(origin))
+                throw Error('Kein angemeldeter HTTPS-Server');
+            const response = await fetch(origin + '/home/reminders/' + action, {
+                method: payload ? 'POST' : 'GET', headers: { Authorization: 'Bearer ' + token, ...(payload ? { 'Content-Type': 'application/json' } : {}) },
+                ...(payload ? { body: JSON.stringify(payload) } : {}), credentials: 'omit', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(8000)
+            });
+            if (!response.ok)
+                throw Error('HTTP ' + response.status);
+            return response.json();
+        };
+        const format = (v) => new Date(v).toLocaleString('de-CH');
+        const validTime = (v) => typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 && v <= 8640000000000000;
+        const resultLabels = { ok: 'Normal', warning: 'Warnung', critical: 'Kritisch', unknown: 'Unbekannt' };
+        const reviewText = (v, k) => {
+            if (!v || typeof v !== 'object')
+                return 'Noch kein Prüfergebnis';
+            const r = v;
+            if (typeof r.status !== 'string' || !Object.hasOwn(resultLabels, r.status) || !validTime(r.measuredAt))
+                return 'Prüfergebnis nicht verfügbar';
+            let text = resultLabels[r.status] + ' · ' + format(r.measuredAt);
+            if (k === 'storage-review' && typeof r.result?.availablePercent === 'number' && Number.isFinite(r.result.availablePercent) && r.result.availablePercent >= 0 && r.result.availablePercent <= 100)
+                text += ' · ' + r.result.availablePercent.toFixed(1) + ' % frei';
+            if (k === 'grant-review') {
+                const counts = [r.result?.store?.expiringSoon, r.result?.share?.expiringSoon, r.result?.credentials?.expiringSoon];
+                if (counts.every(n => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0))
+                    text += ' · ' + counts.reduce((sum, n) => sum + Number(n), 0) + ' laufen in 24 h aus';
+            }
+            return text;
+        };
+        const refreshHistory = async () => {
+            historyList.replaceChildren();
+            historyStatus.textContent = 'Historie wird abgerufen …';
+            try {
+                const data = await request('history');
+                if (data?.version !== 1 || !Array.isArray(data.entries) || data.entries.length > 64 || typeof data.truncated !== 'boolean')
+                    throw Error('Ungültige Historie');
+                const fragment = document.createDocumentFragment();
+                for (const entry of data.entries) {
+                    if (!entry || !['storage-review', 'grant-review'].includes(entry.kind) || !validTime(entry.due) || !validTime(entry.measuredAt))
+                        throw Error('Ungültiger Eintrag');
+                    const li = document.createElement('li');
+                    li.textContent = labels[entry.kind] + ' · ' + reviewText(entry, entry.kind);
+                    fragment.append(li);
+                }
+                historyList.replaceChildren(fragment);
+                historyStatus.textContent = data.entries.length ? data.entries.length + ' neueste Prüfungen' + (data.truncated ? ' · weitere ältere Einträge vorhanden' : '') : 'Noch keine gespeicherten Prüfungen.';
+                status.textContent = 'Historie abgerufen.';
+            }
+            catch {
+                historyStatus.textContent = 'Historie nicht verfügbar. Serverversion und Anmeldung prüfen.';
+                status.textContent = 'Historie nicht verfügbar.';
+            }
+        };
+        const refresh = async () => {
+            const data = await request('poll', {});
+            if (data?.version !== 1 || !Array.isArray(data.rules) || data.rules.length > 64)
+                throw Error('Ungültige Antwort');
+            const fragment = document.createDocumentFragment();
+            let due = 0;
+            for (const rule of data.rules) {
+                if (typeof rule.id !== 'string' || !/^[a-f0-9]{32}$/.test(rule.id) || !Object.hasOwn(labels, rule.kind) || !Object.hasOwn(periods, rule.period) || ![rule.nextDue, rule.pendingDue].every(v => v === null || typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 && v <= 8640000000000000))
+                    throw Error('Ungültige Regel');
+                const row = document.createElement('li'), title = document.createElement('strong'), detail = document.createElement('p');
+                title.textContent = labels[rule.kind] + ' · ' + periods[rule.period];
+                detail.textContent = (rule.pendingDue !== null ? 'Fällig seit ' + format(rule.pendingDue) + ' · ' : '') + (rule.nextDue !== null ? 'Nächster Termin: ' + format(rule.nextDue) : 'Keine Wiederholung');
+                row.append(title, detail);
+                if (rule.kind === 'storage-review' || rule.kind === 'grant-review') {
+                    const result = document.createElement('p');
+                    result.textContent = 'Letzte Prüfung: ' + reviewText(rule.review, rule.kind);
+                    row.append(result);
+                }
+                const id = rule.id;
+                if (rule.pendingDue !== null) {
+                    due++;
+                    const occurrence = rule.pendingDue, ack = document.createElement('button');
+                    ack.className = 'ez-knopf';
+                    ack.textContent = 'Hinweis bestätigen';
+                    ack.addEventListener('click', () => void run(async () => { await request('ack', { id, due: occurrence }); await refresh(); }));
+                    row.append(ack);
+                }
+                const cancel = document.createElement('button');
+                cancel.className = 'ez-knopf';
+                cancel.textContent = 'Termin entfernen';
+                cancel.addEventListener('click', () => {
+                    if (busy || !window.confirm('Wartungstermin, offene Hinweise und zugehörige Prüfhistorie entfernen?'))
+                        return;
+                    if (pendingCreate?.id === id)
+                        pendingCreate = null;
+                    void run(async () => { await request('cancel', { id }); await refresh(); });
+                });
+                row.append(cancel);
+                fragment.append(row);
+            }
+            list.replaceChildren(fragment);
+            historyList.replaceChildren();
+            historyStatus.textContent = 'Historie bei Bedarf aktualisieren.';
+            status.textContent = due + ' fällige Hinweise · ' + data.rules.length + ' Wartungstermine.';
+        };
+        const run = async (fn) => {
+            if (busy)
+                return;
+            busy = true;
+            refreshButton.disabled = true;
+            createButton.disabled = true;
+            historyButton.disabled = true;
+            kind.disabled = true;
+            period.disabled = true;
+            date.disabled = true;
+            list.querySelectorAll('button').forEach(b => b.disabled = true);
+            status.textContent = 'Anfrage läuft …';
+            try {
+                await fn();
+            }
+            catch {
+                status.textContent = 'Anfrage fehlgeschlagen. Server und Anmeldung prüfen; bei gleichem Termin erneut versuchen.';
+            }
+            finally {
+                busy = false;
+                refreshButton.disabled = false;
+                createButton.disabled = false;
+                historyButton.disabled = false;
+                kind.disabled = false;
+                period.disabled = false;
+                date.disabled = false;
+                list.querySelectorAll('button').forEach(b => b.disabled = false);
+            }
+        };
+        refreshButton.addEventListener('click', () => void run(refresh));
+        historyButton.addEventListener('click', () => void run(refreshHistory));
+        createButton.addEventListener('click', () => {
+            if (busy)
+                return;
+            const firstDue = new Date(date.value).getTime(), k = kind.value, p = period.value;
+            if (!Number.isSafeInteger(firstDue) || firstDue < Date.now() - 60000 || firstDue > Date.now() + 366 * 86400000 || !Object.hasOwn(labels, k) || !Object.hasOwn(periods, p)) {
+                status.textContent = 'Gültigen zukünftigen Termin innerhalb eines Jahres auswählen.';
+                return;
+            }
+            if (!window.confirm(labels[k] + ' · ' + format(firstDue) + ' · ' + periods[p] + '? Speicher und Freigaben werden bei aktiviertem Server-Scheduler nur lesend geprüft. Backup und Updates bleiben Hinweise.'))
+                return;
+            const same = pendingCreate && pendingCreate.kind === k && pendingCreate.period === p && pendingCreate.firstDue === firstDue;
+            const payload = same && pendingCreate ? pendingCreate : { id: Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join(''), kind: k, period: p, firstDue };
+            pendingCreate = payload;
+            void run(async () => { await request('create', payload); pendingCreate = null; await refresh(); });
+        });
+    };
+    const homeIdentity = () => {
+        const w = typeof Wolke === 'undefined' ? null : Wolke;
+        const origin = w?.adresse(), token = w?.token();
+        if (!origin || !token || !w?.serverAdressePruefen(origin))
+            throw Error('Kein angemeldeter HTTPS-Server');
+        return { origin, token };
+    };
+    const sameHomeIdentity = (identity) => {
+        try {
+            const current = homeIdentity();
+            return current.origin === identity.origin && current.token === identity.token;
+        }
+        catch {
+            return false;
+        }
+    };
+    const homeRequest = async (identity, path, payload, signal = AbortSignal.timeout(8000)) => {
+        if (!sameHomeIdentity(identity))
+            throw Error('Anmeldung geändert');
+        const response = await fetch(identity.origin + path, {
+            method: payload ? 'POST' : 'GET', headers: { Authorization: 'Bearer ' + identity.token, ...(payload ? { 'Content-Type': 'application/json' } : {}) },
+            ...(payload ? { body: JSON.stringify(payload) } : {}), credentials: 'omit', redirect: 'error', cache: 'no-store', signal
+        });
+        if (!response.ok)
+            throw Error('HTTP ' + response.status);
+        const result = await response.json();
+        if (!sameHomeIdentity(identity) || signal.aborted)
+            throw Error('Anfrage abgebrochen oder Anmeldung geändert');
+        return result;
+    };
+    const bindeMcpHub = (ziel) => {
+        const refresh = ziel.querySelector('[data-hub-refresh]');
+        const list = ziel.querySelector('[data-hub-list]');
+        const status = ziel.querySelector('[data-hub-status]');
+        if (!refresh || !list || !status)
+            return;
+        let busy = false;
+        const scopes = { 'redion:read': 'Lesen', 'redion:write': 'Bearbeiten', 'redion:images': 'Bilder lesen' };
+        const load = async (identity) => {
+            list.replaceChildren();
+            const data = await homeRequest(identity, '/home/mcp-hub/connections');
+            if (data?.version !== 1 || typeof data.enabled !== 'boolean' || typeof data.truncated !== 'boolean' || !Array.isArray(data.connections) || data.connections.length > 128)
+                throw Error('Ungültige Antwort');
+            const fragment = document.createDocumentFragment();
+            for (const entry of data.connections) {
+                if (!entry || typeof entry.id !== 'string' || !/^grant:[a-f0-9]{64}$/.test(entry.id) || typeof entry.clientName !== 'string' || entry.clientName.length > 120 || !Array.isArray(entry.scopes) || entry.scopes.length > 3 || !entry.scopes.every((scope) => typeof scope === 'string' && Object.hasOwn(scopes, scope)) || !Number.isSafeInteger(entry.workspaceCount) || entry.workspaceCount < 0 || typeof entry.remember !== 'boolean')
+                    throw Error('Ungültige Verbindung');
+                const name = entry.clientName, id = entry.id;
+                const li = document.createElement('li'), title = document.createElement('strong'), details = document.createElement('p'), revoke = document.createElement('button');
+                title.textContent = name;
+                details.textContent = entry.scopes.map((scope) => scopes[scope]).join(' · ') + ' · ' + entry.workspaceCount + ' Arbeitsbereiche' + (entry.remember ? ' · Freigabe gemerkt' : '');
+                revoke.className = 'ez-knopf';
+                revoke.textContent = 'Verbindung widerrufen';
+                revoke.addEventListener('click', () => {
+                    if (busy)
+                        return;
+                    if (!sameHomeIdentity(identity)) {
+                        list.replaceChildren();
+                        status.textContent = 'Anmeldung geändert. Verbindungen erneut abrufen.';
+                        return;
+                    }
+                    if (!window.confirm('KI-Verbindung „' + name + '“ widerrufen? Neue Anfragen mit ihren bisherigen Tokens werden gesperrt.'))
+                        return;
+                    void run(async () => { const result = await homeRequest(identity, '/home/mcp-hub/revoke', { id, confirm: true }); if (result?.ok !== true)
+                        throw Error('Ungültige Antwort'); await load(identity); });
+                });
+                li.append(title, details, revoke);
+                fragment.append(li);
+            }
+            list.replaceChildren(fragment);
+            status.textContent = (data.enabled ? 'MCP aktiviert' : 'MCP deaktiviert') + ' · ' + data.connections.length + ' aktive Freigaben' + (data.truncated ? ' · weitere vorhanden' : '');
+        };
+        const run = async (fn) => {
+            if (busy)
+                return;
+            busy = true;
+            refresh.disabled = true;
+            list.querySelectorAll('button').forEach(b => b.disabled = true);
+            status.textContent = 'Anfrage läuft …';
+            try {
+                await fn();
+            }
+            catch {
+                list.replaceChildren();
+                status.textContent = 'Anfrage fehlgeschlagen. Server und Anmeldung prüfen. Nach unklarem Widerruf Liste neu abrufen.';
+            }
+            finally {
+                busy = false;
+                refresh.disabled = false;
+                list.querySelectorAll('button').forEach(b => b.disabled = false);
+            }
+        };
+        refresh.addEventListener('click', () => void run(() => load(homeIdentity())));
+    };
+    const bindeLocalAi = (ziel) => {
+        const load = ziel.querySelector('[data-ai-models]');
+        const select = ziel.querySelector('[data-ai-model]');
+        const prompt = ziel.querySelector('[data-ai-prompt]');
+        const generate = ziel.querySelector('[data-ai-generate]');
+        const cancel = ziel.querySelector('[data-ai-cancel]');
+        const clear = ziel.querySelector('[data-ai-clear]');
+        const output = ziel.querySelector('[data-ai-output]');
+        const status = ziel.querySelector('[data-ai-status]');
+        if (!load || !select || !prompt || !generate || !cancel || !clear || !output || !status)
+            return;
+        let identity = null, allowed = new Set(), active = null;
+        const resetModels = () => { identity = null; allowed.clear(); select.replaceChildren(); generate.disabled = true; };
+        const controls = (busy) => { load.disabled = busy; select.disabled = busy; prompt.disabled = busy; generate.disabled = busy || !identity || !allowed.size; cancel.disabled = !busy; clear.disabled = busy; };
+        const run = async (fn) => {
+            if (active)
+                return;
+            const controller = new AbortController();
+            active = controller;
+            controls(true);
+            try {
+                await fn(controller);
+            }
+            catch {
+                output.textContent = '';
+                status.textContent = controller.signal.aborted ? 'Anfrage abgebrochen.' : 'Lokale KI nicht verfügbar. Serverkonfiguration, Modell und Anmeldung prüfen.';
+            }
+            finally {
+                if (active === controller)
+                    active = null;
+                if (identity && !sameHomeIdentity(identity))
+                    resetModels();
+                controls(false);
+            }
+        };
+        load.addEventListener('click', () => void run(async (controller) => {
+            resetModels();
+            output.textContent = '';
+            status.textContent = 'Konfigurierte Modelle werden abgerufen …';
+            const current = homeIdentity();
+            const data = await homeRequest(current, '/home/ai/models', undefined, AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]));
+            if (data?.version !== 1 || data.provider !== 'loopback-ollama' || data.installedStatus !== false || !Array.isArray(data.models) || data.models.length > 16 || !data.models.every((m) => typeof m === 'string' && m.length > 0 && m.length <= 120) || new Set(data.models).size !== data.models.length)
+                throw Error('Ungültige Modellliste');
+            for (const name of data.models) {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.append(option);
+            }
+            identity = current;
+            allowed = new Set(data.models);
+            status.textContent = allowed.size + ' konfigurierte Modelle. Installation und Offline-Betrieb nicht geprüft.';
+        }));
+        generate.addEventListener('click', () => {
+            if (active || !identity)
+                return;
+            if (!sameHomeIdentity(identity)) {
+                resetModels();
+                output.textContent = '';
+                status.textContent = 'Anmeldung geändert. Modelle erneut abrufen.';
+                return;
+            }
+            const current = identity, model = select.value, text = prompt.value;
+            if (!allowed.has(model) || !text.trim() || new TextEncoder().encode(text).byteLength > 16384) {
+                status.textContent = 'Modell und Eingabe prüfen (max. 16 KiB UTF-8).';
+                return;
+            }
+            if (!window.confirm('Eingabe an das konfigurierte Ollama-Modell „' + model + '“ auf deinem Home-Server senden? Der Serverbetreiber muss den Offline-Betrieb sicherstellen.'))
+                return;
+            void run(async (controller) => {
+                output.textContent = '';
+                status.textContent = 'Antwort wird erzeugt …';
+                const data = await homeRequest(current, '/home/ai/generate', { model, prompt: text, confirmLocalProcessing: true }, AbortSignal.any([controller.signal, AbortSignal.timeout(65000)]));
+                if (data?.version !== 1 || data.model !== model || typeof data.text !== 'string' || data.text.length > 262144)
+                    throw Error('Ungültige Antwort');
+                output.textContent = data.text;
+                status.textContent = 'Antwort erhalten. Nicht automatisch gespeichert.';
+            });
+        });
+        cancel.addEventListener('click', () => active?.abort());
+        clear.addEventListener('click', () => { if (active)
+            return; prompt.value = ''; output.textContent = ''; status.textContent = 'Eingabe und Ausgabe entfernt.'; });
+    };
     const bindeHomeServer = (ziel) => {
         const button = ziel.querySelector('[data-home-refresh]');
         const status = ziel.querySelector('[data-home-status]');
@@ -120379,6 +121446,11 @@ const Einstellungen = (() => {
                     ['CPU', number(data.cpu.percent, ' %')],
                     ['RAM', gb(data.memory.usedBytes) + ' / ' + gb(data.memory.totalBytes)],
                     ['SSD/Dateisystem verfügbar', gb(data.storage.availableBytes) + ' / ' + gb(data.storage.totalBytes)],
+                    ['Speicherstatus', data.storageReview?.status === 'ok' ? 'Normal' : data.storageReview?.status === 'warning' ? 'Warnung' : data.storageReview?.status === 'critical' ? 'Kritisch' : 'Unbekannt'],
+                    ['Freier Speicher', number(data.storageReview?.availablePercent, ' %')],
+                    ['Sync-/Dateifreigaben laufen in 24 h aus', number(data.grantReview?.store?.expiringSoon)],
+                    ['Share-Freigaben laufen in 24 h aus', number(data.grantReview?.share?.expiringSoon)],
+                    ['RED-ID-Zugänge laufen in 24 h aus', number(data.grantReview?.credentials?.expiringSoon)],
                     ['Temperatur', number(data.temperatureC, ' °C')],
                     ['Serverprozess aktiv seit', number(data.processUptimeSeconds / 60, ' min')],
                     ['Autorisierte Gerätesitzungen', number(data.devices.authorizedSessions)],
@@ -120409,7 +121481,7 @@ const Einstellungen = (() => {
         });
     };
     const inhalt = (b) => ({
-        'home-server': () => kopf('RED Home Server', 'Private Infrastruktur und Diagnose') + '<div class="ez-karte"><button class="ez-knopf" data-home-refresh>Serverstatus abrufen</button><p data-home-status role="status">Verbinde zuerst dein Gerät mit dem privaten Server.</p><dl data-home-metrics></dl></div><div class="ez-karte"><h3>RED ID · App-Verbindungen</h3><p>Nur autorisierte Zugänge, keine Aussage über installierte oder online befindliche Apps.</p><button class="ez-knopf" data-red-list>App-Zugänge anzeigen</button><ul data-red-apps></ul><label>RED-App <select data-red-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Challenge der Ziel-App <input type="text" data-red-challenge autocomplete="off" spellcheck="false" maxlength="43"></label><label>Kopplungsanfrage (JSON aus der Ziel-App) <input data-red-request type="text" maxlength="256" autocomplete="off" spellcheck="false"></label><button class="ez-knopf" data-red-import>Anfrage übernehmen</button><button class="ez-knopf" data-red-approve>Direkte Anmeldung freigeben</button><button class="ez-knopf" data-red-pair>Kopplung freigeben</button><button class="ez-knopf" data-red-revoke>App-Zugänge widerrufen</button><p data-red-result role="status"></p><pre data-red-code style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></div><div class="ez-karte"><h3>RED Devices · App-Sitzungen</h3><p>Einzelne RED-ID-v2-Anmeldungen widerrufen. Es werden keine Gerätepositionen oder Online-Aktivitäten erfasst.</p><button class="ez-knopf" data-red-sessions-refresh>Sitzungen abrufen</button><ul data-red-sessions></ul><p data-red-sessions-status role="status"></p></div><div class="ez-karte"><h3>RED Share · Datenfreigaben</h3><p>Nur ausgewählte Apps und Kanäle. Schlüssel separat auf beiden Geräten bestätigen.</p><button class="ez-knopf" data-share-list>Freigaben abrufen</button><ul data-share-items></ul><label>Sender <select data-share-source><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Empfänger <select data-share-target><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Kanal <input data-share-channel maxlength="32" autocomplete="off" spellcheck="false" placeholder="workout"></label><button class="ez-knopf" data-share-grant>7 Tage freigeben</button><button class="ez-knopf" data-share-revoke>Freigabe widerrufen</button><p data-share-status role="status"></p></div><div class="ez-karte"><h3>RED Sync &amp; RED Files · Pilot</h3><p>Getrennte verschlüsselte App-Objekte. Keine automatische Freigabe zwischen Apps. Alle Geräte derselben App teilen die Freigabe; der Schlüssel muss separat verwaltet werden.</p><button class="ez-knopf" data-store-list>Speicher und Freigaben anzeigen</button><ul data-store-items></ul><label>RED-App <select data-store-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Bereich <select data-store-kind><option value="sync">Sync-Daten</option><option value="file">Kleine Dateiobjekte</option></select></label><button class="ez-knopf" data-store-grant>7 Tage freigeben</button><button class="ez-knopf" data-store-revoke>Zugriff widerrufen</button><p data-store-status role="status"></p></div>',
+        'home-server': () => kopf('RED Home Server', 'Private Infrastruktur und Diagnose') + '<div class="ez-karte"><button class="ez-knopf" data-home-refresh>Serverstatus abrufen</button><p data-home-status role="status">Verbinde zuerst dein Gerät mit dem privaten Server.</p><dl data-home-metrics></dl></div><div class="ez-karte"><h3>RED MCP Hub</h3><p>Eigene OAuth-Verbindungen anzeigen und widerrufen. Keine externen MCP-Server oder neuen Werkzeugrechte.</p><button class="ez-knopf" data-hub-refresh>KI-Verbindungen abrufen</button><p data-hub-status role="status"></p><ul data-hub-list style="overflow-wrap:anywhere"></ul></div><div class="ez-karte"><h3>RED AI Gateway</h3><p>Explizite Textgenerierung über konfiguriertes Ollama. Kein automatischer Dokumentzugriff, kein Gesprächsverlauf. Offline-Betrieb durch Serverbetreiber sicherstellen.</p><button class="ez-knopf" data-ai-models>Modelle abrufen</button><label>Modell <select data-ai-model></select></label><label>Eingabe <textarea data-ai-prompt rows="5" maxlength="16384" autocomplete="off" spellcheck="false"></textarea></label><button class="ez-knopf" data-ai-generate disabled>Antwort erzeugen</button><button class="ez-knopf" data-ai-cancel disabled>Abbrechen</button><button class="ez-knopf" data-ai-clear>Eingabe und Antwort leeren</button><p data-ai-status role="status"></p><pre data-ai-output style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></div><div class="ez-karte"><h3>RED App Center</h3><p>Zentrale Übersicht der autorisierten RED-App-Zugänge und Freigaben. Keine Installation oder automatische Aktualisierung.</p><button class="ez-knopf" data-app-center-refresh>Alle 11 Apps anzeigen</button><ul data-app-center-list></ul><p data-app-center-status role="status"></p></div><div class="ez-karte"><h3>RED Notify · Wartungskalender</h3><p>Wartungshinweise beim Abruf oder mit aktiviertem Server-Scheduler. Speicher und Freigaben werden dann nur lesend geprüft; Backup und Updates bleiben Hinweise. Wiederholung als feste UTC-Intervalle, ohne Sommerzeitkorrektur.</p><label>Aufgabe <select data-reminder-kind><option value="backup-review">Backup prüfen</option><option value="grant-review">Freigaben prüfen</option><option value="storage-review">Speicher prüfen</option><option value="update-review">Updates prüfen</option></select></label><label>Erster Termin (Ortszeit) <input type="datetime-local" data-reminder-date></label><label>Wiederholung <select data-reminder-period><option value="once">Einmalig</option><option value="daily">Alle 24 Stunden</option><option value="weekly">Alle 7 Tage</option></select></label><button class="ez-knopf" data-reminder-create>Termin anlegen</button><button class="ez-knopf" data-reminder-refresh>Fällige Hinweise abrufen</button><ul data-reminder-list></ul><p data-reminder-status role="status"></p><h3>Wartungshistorie</h3><button class="ez-knopf" data-reminder-history-refresh>Prüfhistorie abrufen</button><p data-reminder-history-status role="status"></p><ul data-reminder-history-list></ul></div><div class="ez-karte"><h3>RED ID · App-Verbindungen</h3><p>Nur autorisierte Zugänge, keine Aussage über installierte oder online befindliche Apps.</p><button class="ez-knopf" data-red-list>App-Zugänge anzeigen</button><ul data-red-apps></ul><label>RED-App <select data-red-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Challenge der Ziel-App <input type="text" data-red-challenge autocomplete="off" spellcheck="false" maxlength="43"></label><label>Kopplungsanfrage (JSON aus der Ziel-App) <input data-red-request type="text" maxlength="256" autocomplete="off" spellcheck="false"></label><button class="ez-knopf" data-red-import>Anfrage übernehmen</button><button class="ez-knopf" data-red-approve>Direkte Anmeldung freigeben</button><button class="ez-knopf" data-red-pair>Kopplung freigeben</button><button class="ez-knopf" data-red-revoke>App-Zugänge widerrufen</button><p data-red-result role="status"></p><pre data-red-code style="white-space:pre-wrap;overflow-wrap:anywhere"></pre><h3>RED SSO · Mehrfachfreigabe</h3><p>Bis zu 11 verschiedene Apps. Pro Zeile eine öffentliche Kopplungsanfrage aus dem eigenen Zielgerät. Keine privaten Verifier oder Tokens eingeben. Jede App erhält eine eigene Sitzung.</p><label>Kopplungsanfragen <textarea data-red-batch-input maxlength="3000" rows="5" autocomplete="off" spellcheck="false"></textarea></label><button class="ez-knopf" data-red-batch-review>Alle Anfragen prüfen</button><ul data-red-batch-preview style="overflow-wrap:anywhere"></ul><button class="ez-knopf" data-red-batch-approve disabled>Geprüfte Anmeldungen freigeben</button></div><div class="ez-karte"><h3>RED Devices · App-Sitzungen</h3><p>Einzelne RED-ID-v2-Anmeldungen widerrufen. Es werden keine Gerätepositionen oder Online-Aktivitäten erfasst.</p><button class="ez-knopf" data-red-sessions-refresh>Sitzungen abrufen</button><ul data-red-sessions></ul><p data-red-sessions-status role="status"></p></div><div class="ez-karte"><h3>RED Share · Datenfreigaben</h3><p>Nur ausgewählte Apps und Kanäle. Schlüssel separat auf beiden Geräten bestätigen.</p><button class="ez-knopf" data-share-list>Freigaben abrufen</button><ul data-share-items></ul><label>Sender <select data-share-source><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Empfänger <select data-share-target><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Kanal <input data-share-channel maxlength="32" autocomplete="off" spellcheck="false" placeholder="workout"></label><button class="ez-knopf" data-share-grant>7 Tage freigeben</button><button class="ez-knopf" data-share-revoke>Freigabe widerrufen</button><p data-share-status role="status"></p></div><div class="ez-karte"><h3>RED Sync &amp; RED Files · Pilot</h3><p>Getrennte verschlüsselte App-Objekte. Keine automatische Freigabe zwischen Apps. Alle Geräte derselben App teilen die Freigabe; der Schlüssel muss separat verwaltet werden.</p><button class="ez-knopf" data-store-list>Speicher und Freigaben anzeigen</button><ul data-store-items></ul><label>RED-App <select data-store-app><option value="red-ion">RED-ION</option><option value="red-fit">RED-FIT</option><option value="red-poly">RED-POLY</option><option value="red-bit">RED-BIT</option><option value="red-loop">RED-LOOP</option><option value="red-efz">RED-EFZ</option><option value="red-kurd">RED-KURD</option><option value="red-uhr">RED-UHR</option><option value="red-yt">RED-YT</option><option value="stran">STRAN</option><option value="babat-red">BABAT-RED</option></select></label><label>Bereich <select data-store-kind><option value="sync">Sync-Daten</option><option value="file">Kleine Dateiobjekte</option></select></label><button class="ez-knopf" data-store-grant>7 Tage freigeben</button><button class="ez-knopf" data-store-revoke>Zugriff widerrufen</button><p data-store-status role="status"></p></div>',
         geraete: () => kopf('iPhone und Windows', 'Geräte, Sicherungen und freiwilliger Abgleich') + DeviceIntegration.overview(),
         konto: () => {
             const w = globalThis.Wolke;

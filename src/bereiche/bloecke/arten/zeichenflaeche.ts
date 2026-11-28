@@ -141,6 +141,29 @@ const Zusatz = (() => {
 
     const w = document.createElement('div');
     w.className = 'wb';
+    const desktopStudio = (): boolean =>
+      document.documentElement.hasAttribute('data-windows-titelleiste') &&
+      document.body.dataset.uiShell !== 'glass-wheel' &&
+      window.matchMedia('(min-width:1024px) and (hover:hover) and (pointer:fine)').matches;
+    const desktopBar = document.createElement('div');
+    desktopBar.className = 'wb-desktop-command';
+    desktopBar.setAttribute('role','group');
+    desktopBar.setAttribute('aria-label','Whiteboard Arbeitsbereich');
+    const desktopStatus = document.createElement('span');
+    desktopStatus.className = 'wb-desktop-status';
+    desktopBar.append(desktopStatus);
+    const desktopButton = (id: string, name: string, action:()=>void): HTMLButtonElement => {
+      const button=document.createElement('button');
+      button.type='button';button.dataset.wbDesktop=id;button.textContent=name;
+      button.addEventListener('click',action);
+      desktopBar.append(button);return button;
+    };
+    desktopButton('layers','Ebenen',()=>openObjects('layers'));
+    desktopButton('frames','Rahmen',()=>openObjects('frames'));
+    desktopButton('exchange','Import / Export',()=>openObjects('exchange'));
+    const zoomSelectionButton=desktopButton('selection','Auswahl zoomen',()=>auswahlInsBild());
+    zoomSelectionButton.disabled=true;
+    w.append(desktopBar);
     /* ══ DIE LEISTE KOMMT AUS DEM KERN (E689, W6, Bogen 5a) ═══════════════
        Hier stand ein HTML-String mit 28 Knöpfen: zwölf Werkzeuge, acht Farben,
        vier Zoomknöpfe, vier Aktionen — und sieben davon trugen ein Emoji.
@@ -417,6 +440,9 @@ const Zusatz = (() => {
          Whiteboard — gesucht, fände man sie nicht, und die Zahl bliebe
          stehen, während man zoomt. */
       massstabZeigen.textContent = Math.round(sicht.z * 100) + ' %';
+      const count = daten.filter((o:any)=>o.art!=='verbindung').length;
+      desktopStatus.textContent = count+' Objekte · '+objectSelection.size+' gewählt';
+      zoomSelectionButton.disabled = !daten.some((o:any)=>objectSelection.has(o.id) && o.art!=='verbindung');
     };
 
     /* `undefined` heisst „noch nicht gefragt", `null` heisst „gibt es nicht
@@ -649,6 +675,16 @@ const Zusatz = (() => {
       objectSelection.clear(); (exact ? ids : GfxObjects.expand(daten, new Set(ids))).forEach(id => objectSelection.add(id));
       gewaehlt = objectSelection.size === 1 ? [...objectSelection][0]! : null;
     };
+    const auswahlInsBild = (): void => {
+      const box = GfxObjects.bounds(daten.filter((o:any)=>objectSelection.has(o.id)&&o.art!=='verbindung'));
+      if(!box)return;
+      const r=flaeche.getBoundingClientRect();
+      if(r.width<=48||r.height<=48)return;
+      sicht.z=Math.max(KLEINSTER,Math.min(GROESSTER,Math.min((r.width-48)/Math.max(1,box.w),(r.height-48)/Math.max(1,box.h))));
+      sicht.x=box.x-(r.width/sicht.z-box.w)/2;
+      sicht.y=box.y-(r.height/sicht.z-box.h)/2;
+      male();sichtSichern();
+    };
     const openObjects = (tab = 'layers') => {
       const previousView = { ...sicht };
       GfxInspector.open({ host: w, read: () => daten, selected: () => objectSelection, uid: () => Store.uid(),
@@ -688,7 +724,22 @@ const Zusatz = (() => {
         e.preventDefault(); merken(); const keep = daten.filter((o: any) => !objectSelection.has(o.id) && !(o.art === 'verbindung' && (objectSelection.has(o.von) || objectSelection.has(o.nach))));
         daten.splice(0, daten.length, ...keep); chooseObjects([]); male(); sichern(); return;
       }
-      if (!strg) return;
+      if (!strg) {
+        if(!desktopStudio() || e.altKey || e.shiftKey || e.repeat ||
+           (ziel!==w && !ziel?.closest('.wb-flaeche')) ||
+           aktiv || verschiebt || schiebt || groesst || selectionDrag || stiftZeiger!==null || finger.size) return;
+        const id=({v:'zeiger',h:'hand',p:'stift',e:'radierer',r:'rechteck',o:'ellipse',t:'text'} as Record<string,string>)[e.key.toLowerCase()];
+        if(id){
+          e.preventDefault();e.stopPropagation();werkzeug=id;leiste.setzeWerkzeug(id);verbindeVon=null;
+          if(id!=='zeiger'){gewaehlt=null;objectSelection.clear();}
+          w.classList.toggle('wb-schiebt',id==='hand');male();return;
+        }
+        if(e.key==='0'||e.key==='1'){
+          e.preventDefault();e.stopPropagation();
+          if(e.key==='0')insBild();else auswahlInsBild();
+        }
+        return;
+      }
       const taste = e.key.toLowerCase();
       if (taste === 'z' && !e.shiftKey) { e.preventDefault(); schrittZurueck(); }
       else if ((taste === 'z' && e.shiftKey) || (taste === 'y' && !e.shiftKey)) { e.preventDefault(); schrittVor(); }

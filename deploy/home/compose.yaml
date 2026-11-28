@@ -6,6 +6,7 @@ services:
     environment:
       REDION_WEB_ORIGINS: ${REDION_WEB_ORIGINS:-}
       REDION_ENABLE_MCP: ${REDION_ENABLE_MCP:-0}
+      REDION_ENABLE_REMINDER_SCHEDULER: ${REDION_ENABLE_REMINDER_SCHEDULER:-0}
       REDION_ORIGIN: ${REDION_ORIGIN:?Set HTTPS origin in environment}
     ports:
       - "127.0.0.1:8790:8790"

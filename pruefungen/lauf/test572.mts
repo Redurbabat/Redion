@@ -590,6 +590,56 @@ for (; runde < 60 && !angekommen; runde++) {
 p('Fläche: Tab erreicht die Leiste', angekommen, `nach ${runde} Mal Tab nicht`);
 await pt.close();
 
+/* Desktop gallery: selecting a tool from another controller must reveal its
+   real card without triggering a second command. Labels remain derived from
+   the accessible name and hidden outside desktop conditions. */
+const pd = await bauen(1400, 950);
+const gallery = await pd.evaluate(async () => {
+  const G = (window as any).GfxToolbar;
+  const ids = ['a','b','c','d','e','f'];
+  let actions = 0;
+  const toolbar = G.erstelle({
+    werkzeuge: ids.map(id => ({id,name:'Werkzeug '+id,titel:'Werkzeug '+id,sym:'cursor',zeichen:'',gruppe:'senior'})),
+    aktiv:'a',galerie:{schnell:[],karten:ids.map(id=>({id,knoepfe:[id]})),edgeless:{zusatz:[]}},
+    aufWerkzeug:()=>actions++
+  });
+  document.body.append(toolbar.element);
+  const strip = toolbar.element.querySelector('.gfx-tb-kartenfenster') as HTMLElement;
+  strip.style.flex='0 0 96px'; strip.style.width='96px';
+  await new Promise(resolve=>setTimeout(resolve,100));
+  const target = toolbar.element.querySelector('[data-wz="f"]') as HTMLButtonElement;
+  const before = target.closest<HTMLElement>('.gfx-tb-karte')?.hidden;
+  toolbar.setzeWerkzeug('f');
+  const after = target.closest<HTMLElement>('.gfx-tb-karte')?.hidden;
+  const label = target.querySelector('.gfx-tb-desktop-name')?.textContent;
+  const pressed = target.getAttribute('aria-pressed');
+  document.documentElement.setAttribute('data-windows-titelleiste','');
+  const material = getComputedStyle(toolbar.element.querySelector('.gfx-tb-haupt')!, '::before').borderImageSource;
+  const caption = getComputedStyle(target.querySelector('.gfx-tb-desktop-name')!).display;
+  document.documentElement.removeAttribute('data-windows-titelleiste');
+  toolbar.zerstoere();
+  return {before,after,label,pressed,actions,material,caption};
+});
+p('Desktop: externe Werkzeugwahl zeigt die aktive Karte und ihren Namen, ohne Doppelaktion',
+  gallery.before===true && gallery.after===false && gallery.label==='Werkzeug f' && gallery.pressed==='true' && gallery.actions===0,JSON.stringify(gallery));
+p('Windows Studio: Desktop-Namen sichtbar und Dock ohne festes Rasterbild',
+  gallery.material==='none' && gallery.caption==='block',JSON.stringify(gallery));
+await pd.evaluate(()=>document.documentElement.setAttribute('data-windows-titelleiste',''));
+const whiteboard = pd.locator('.wb').first();
+await whiteboard.focus(); await pd.keyboard.press('v');
+await pd.keyboard.press('Control+a');
+p('Windows Whiteboard: Auswahl per Tastatur und Objektanzahl',
+  (await whiteboard.locator('.wb-desktop-status').textContent())?.includes('1 gewählt')===true);
+p('Windows Whiteboard: Auswahlzoom verfügbar',await whiteboard.locator('[data-wb-desktop="selection"]').isEnabled());
+const wbBefore=await pd.evaluate(()=>JSON.stringify(Store.childrenOf((window as any).__seite572).find((b:any)=>b.type==='whiteboard').shapes));
+await whiteboard.locator('[data-wb-desktop="selection"]').click();
+p('Windows Whiteboard: Auswahlzoom ändert keine Formen',
+  (await pd.evaluate(()=>JSON.stringify(Store.childrenOf((window as any).__seite572).find((b:any)=>b.type==='whiteboard').shapes)))===wbBefore);
+await whiteboard.locator('[data-wb-desktop="layers"]').click();
+p('Windows Whiteboard: Ebenen öffnen den vorhandenen Inspektor',
+  await pd.locator('.gfx-inspector [data-tab="layers"][aria-pressed="true"]').count()===1);
+await pd.close();
+
 await browser.close();
 server.close();
 console.log(`\n${ok} ok, ${weg} rot`);

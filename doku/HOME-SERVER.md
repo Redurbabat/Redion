@@ -426,3 +426,161 @@ Für Docker-Betrieb steht `bash deploy/home/recovery-reset.sh
 verwendet die Wartungssperre und verweigert den Reset bei laufendem bekannten
 Compose-Dienst. Andere Schreiber müssen separat gestoppt werden; der Befehl
 startet den Dienst nicht. Vorher eine verifizierte Sicherung erstellen.
+
+### RED Sync 0.8 – inkrementeller Änderungsfeed
+
+`POST /red-store/v1/changes` mit `{kind,cursor}` verwendet dieselben
+App- und Speicherfreigaben wie `get` und `list`. Der Cursor ist ein zufälliger
+und pro Konto/App/Typ isolierter Marker; SQLite-Trigger schreiben ihn atomar
+mit jeder neuen Objektversion. Maximal 512 Marker pro Bereich bleiben
+verfügbar, nur die neuesten Metadaten pro Objekt (maximal 1024) werden
+zurückgegeben. Bei null, unbekanntem oder abgelaufenem Cursor enthält
+`reset:true` die vollständige Metadatenliste. Kein alter Ciphertext im Feed,
+keine zusätzliche Freigabe für Browser oder MCP. Bei Backup-Restore kann ein
+nicht mehr vorhandener Marker erkannt werden; kein kryptografischer Schutz
+gegen einen böswilligen Server, der eine konsistente alte DB vorspielt.
+Client muss die Metadaten abgleichen, aktuelle Objekte laden und prüfen,
+lokale Konflikte behandeln und Cursor erst nach atomarem lokalem Commit
+speichern. Die Feed-Migration erfasst vorhandene Objekte ohne deren Inhalte
+zu ändern. Native App-Integration, Hintergrundsync und Schlüsselverwaltung
+bleiben separat offen.
+
+### SDK 0.9 – lokale Sync-Transaktionen und RED Config
+
+Der Sync-Client lädt einen Metadatenfeed, prüft neue Ciphertext-Datensätze
+und übergibt Importe, Konflikte und Cursor an einen atomaren lokalen Adapter.
+Kein Cursor-Commit bei Entschlüsselungsfehlern oder geänderten Serverrevisionen.
+Lokale Änderungen und Rollbacks werden als Konflikte gespeichert, nicht
+automatisch überschrieben. Tombstones sind serverseitige Metadaten ohne
+kryptografisch authentifizierten Löschinhalt: daher ebenfalls Konflikt,
+keine automatische lokale Löschung. Adapter müssen Generation und Konflikte
+atomar speichern. Dies ist noch keine Integration in konkrete Apps und kein
+ständig laufender Hintergrundprozess.
+RED Config synchronisiert zunächst Theme, Sprache und reduzierte Bewegung
+je App über den bestehenden Sync-Grant. ID und Schlüssel sind unabhängig
+über HKDF abgeleitet; unbekannte Felder werden abgelehnt. Keine Passwörter,
+Token, globalen App-Einstellungen oder automatischen App-Freigaben.
+
+Der SDK-Sync-Koordinator bündelt gleichzeitige Trigger und begrenzt
+Wiederholungsversuche mit exponentiellem Backoff. Die App muss den
+Koordinator bei Start, Vordergrund oder erlaubtem Hintergrundereignis
+selbst aufrufen. RED Config wird per exakter Objekt-ID einem eigenen
+kryptografisch prüfenden Decoder zugeordnet, damit der allgemeine Sync-Key
+nicht mit dem separaten Config-Key verwechselt wird.
+
+### SDK 0.10 – manueller Geräteschlüsseltransfer
+
+Zwei bereits vertrauenswürdige Geräte können einen vorhandenen 32-Byte-
+Speicherschlüssel einmalig verschlüsselt übertragen. Öffentliche P-256-Angebote,
+HKDF und AES-GCM sind an die exakte App-/Konto-/Origin-/Typ-Kombination gebunden.
+Der vollständige 128-Bit-Fingerabdruck muss auf beiden vertrauenswürdigen
+Geräten unabhängig verglichen werden. Ohne diese Prüfung kein sicherer
+Geräteidentitätsnachweis. Keine serverseitige Schlüsselablage und keine
+unbeaufsichtigte Freigabe. Native QR- und Keychain-/Keystore-Integration offen.
+
+### RED Files 2.0 – Multipart-Pilot (SDK 0.11)
+
+Verschlüsselte Dateien bis 8 MiB aus maximal 40.000 Byte grossen Segmenten.
+Dateiname, Segmentreihenfolge, IDs, Längen und SHA-256-Prüfsummen liegen
+im authentifizierten verschlüsselten Manifest. Die App veröffentlicht das
+Manifest zuletzt; bei Verbindungsabbruch denselben verschlüsselten Uploadplan
+wiederverwenden. Der Server sieht einzelne opake Objekte und deren Grössen.
+Dateien sind unveränderlich, Zugriff erfolgt per Manifest-ID. Kein automatisches
+Löschen unvollständiger Uploads, keine grosse SSD-Quote, kein Streaming.
+Die Grenze 16 MiB kodierte Daten und 1024 Objekte pro Konto bleibt bestehen.
+Download und Vorbereitung sind speicherbegrenzt, aber im Arbeitsspeicher.
+Native Dateiauswahl, lokales Uploadjournal und Export fehlen noch.
+
+### RED App Center
+
+`GET /home/apps` und die RED-ION-Home-Server-Einstellungen zeigen alle
+elf bekannten App-Kennungen mit aktiven RED-ID-Zugängen, Sync-/Datei-Freigaben,
+Share-Richtungen und Objektverbrauch. Nur echte Owner-Gerätesitzungen sind
+berechtigt. Keine Token, Objektnamen, Inhalte oder ID-Digests werden geliefert.
+Pilotkategorien beschreiben vorhandenen Integrationscode; sie sind kein
+Installations-, Online- oder Release-Nachweis. Keine App-Installation,
+automatische Updates oder Ausführung anderer Apps.
+
+### RED Search (SDK 0.12)
+
+Lokaler, flüchtiger Index für maximal 4096 vom App-Adapter ausdrücklich
+bereitgestellte Metadaten-Einträge. Suche über Titel, Tags und Kurztext;
+Akzentnormalisierung und Mehrwortsuche, keine Serveranfrage. Keine
+automatische Indizierung privater Dokumente und keine App-übergreifende
+Suche ohne eigene spätere Freigaben. Pro Konto/App separat instanziieren,
+bei Sperre/Logout verwerfen. UI und echte App-Integration offen.
+
+### RED Notify / Automation / Calendar – Wartungspilot
+
+Owner-only `/home/reminders/list` (GET) und `create`, `poll`, `ack`,
+`cancel` (POST). Bis zu 64 explizit angelegte Regeln pro Konto; feste
+Typen Backup-, Freigabe-, Speicher- und Update-Prüfung, einmalig oder
+alle 24/168 Stunden. Zeitpunkte als Unix-Millisekunden; feste UTC-Intervalle,
+keine automatische Sommerzeitkorrektur. Create-ID und Bestätigung einer
+konkreten fälligen Instanz sind wiederholbar. Poll erzeugt fällige Hinweise,
+fasst versäumte Wiederholungen zusammen und erhält offene Hinweise bis zur
+Bestätigung. GET ändert nichts. Regeln bleiben nach Neustart erhalten.
+Optionaler Hintergrundtimer (siehe unten), kein Push, Zugriff anderer Apps oder MCP-Schreibrecht;
+keine automatische Ausführung von Backups, Updates, Befehlen oder Netzaufrufen.
+Cancel entfernt die Regel mit ihrem Hinweis; eine erneut gesendete alte
+Create-Anfrage kann die Regel neu anlegen. Die UI soll deshalb nach
+Cancel den zugehörigen Create-Retry verwerfen. Metadaten und Zeiten liegen
+in SQLite; keine freien Titel oder privaten Kalenderinhalte. Eine lokale
+Sitzungswiederherstellung widerruft Zugänge, nicht die gespeicherten Regeln.
+
+### RED SSO – gemeinsame Kopplungsfreigabe (SDK 0.13)
+
+`POST /red-id/v2/approve-batch` ist nur mit echter Owner-Gerätesitzung
+verfügbar. Eine Liste mit maximal elf unterschiedlichen App-IDs und
+öffentlichen PKCE-Challenges wird innerhalb einer Transaktion vollständig
+freigegeben oder abgelehnt. Keine Freigabe über Browser-Pilot-CORS oder
+App-Token. Jede App muss separat ihren privaten Verifier vorweisen und
+bekommt eigene, widerrufbare Zugangsdaten. Gemeinsame Identität bedeutet
+nicht gemeinsame Zugangsdaten. SDK-Validierung vorbereitet; die explizite
+Mehrfachfreigabe-Oberfläche bleibt offen. Kein vollständiges Browser-SSO.
+
+### RED Automation – Hintergrundhinweise und Kapazitätsprüfung (#259)
+
+`REDION_ENABLE_REMINDER_SCHEDULER=1` aktiviert beim Serverstart und im Docker-Compose-Dienst einen 30-Sekunden-Timer (Standard aus). CLI-Wartungsbefehle starten ihn nicht. Start und Tick materialisieren höchstens 256 fällige Regeln atomar; manuelles Polling bleibt konto-isoliert. Offene Hinweise bleiben erhalten; Shutdown stoppt den Timer. Kein Push und keine automatische Ausführung von Backup, Update oder Shell-Befehlen.
+
+Das Owner-Dashboard liefert zusätzlich `storageReview` mit Status `ok`, `warning`, `critical` oder `unknown`. Bis 5 % frei ist kritisch, bis 15 % Warnung. Fehler/ungültige Messwerte bleiben unbekannt. Die Messung betrifft nur das sichtbare Dateisystem; SSD-Identität, Mount und Verschlüsselung separat hostseitig prüfen. Keine neue App- oder MCP-Zugriffsfreigabe. Automatische Prüfjobs, Historie und UI sind noch offen.
+
+### RED Security – read-only grant review
+
+Das Owner-Dashboard liefert `grantReview` mit konto-isolierten Zählern für aktive und innerhalb von 24 Stunden auslaufende Sync-/Datei- und Share-Freigaben sowie RED-ID-Zugänge. Abgelaufene Grants werden nicht als aktiv gezählt. Die Bewertung verändert oder verlängert keine Freigabe; `ok` bedeutet nur, dass im betrachteten Zeitfenster keine aktiven Freigaben auslaufen, nicht dass der Server allgemein sicher ist. Keine Tokens, Grant-IDs oder Daten anderer Konten. Automatisierte Prüfjobs und UI folgen separat.
+
+### RED Automation – automatische Read-only-Prüfungen
+
+Bei aktiviertem `REDION_ENABLE_REMINDER_SCHEDULER=1` werden neue fällige Speicher- und Freigabehinweise zusammen mit einem read-only Prüfresultat atomar gespeichert. Auch manuelles Polling verwendet in diesem Modus dieselbe Logik. Pro Regel wird das letzte Ergebnis (`review` in list/poll) mit Fälligkeits- und Messzeit gespeichert; ACK erhält es, Cancel löscht es. Bereits offene Hinweise werden nicht nachträglich ausgeführt. Keine wiederholte Messung solange dieselbe offene Instanz erhalten bleibt. Speicher misst das serverseitige Dateisystem, keine LUKS-/Mount-Identität. Freigaben sind konto-isoliert. Backup/Update bleiben manuelle Hinweise. Kein Push, keine Schreiboperationen an Nutzerdaten, keine Netzaufrufe oder Befehle; nur die Ergebnisdaten werden lokal gespeichert. Vollständige Historie und Darstellung der Ergebnisse in nativen Apps bleiben offen.
+
+### RED Automation – Wartungshistorie
+
+Owner-only `GET /home/reminders/history` liefert bis zu 64 neueste tatsächlich ausgeführte Speicher-/Freigabeprüfungen (`entries`, `truncated`, `retentionLimit`). Je Konto bleiben maximal 256 Ereignisse erhalten, sortiert nach Messzeit, Fälligkeit und Regel-ID. Eine Instanz wird anhand Konto/Regel/Fälligkeit dedupliziert. Ergebnisse und Hinweis werden in derselben Transaktion gespeichert; ACK behält sie, Cancel löscht die zugehörige Historie. Kein nachträgliches Erfinden früherer Messungen: vor der Migration gespeicherte letzte Ergebnisse bleiben im bisherigen `review` sichtbar. Kein öffentliches API, keine App-Token-Freigabe. Anzeige in den App-Einstellungen folgt separat.
+
+Die RED-ION-Einstellungen enthalten eine Anzeige des letzten Prüfergebnisses, einen separaten Historienabruf und zusätzliche Kapazitäts-/Freigabewerte im Dashboard. Bei älteren Servern wird fehlende Historie als nicht verfügbar angezeigt. Offline-Artefakte müssen aus der Quelle neu erzeugt werden; Hardwareabnahme separat.
+
+### RED Backup – jüngste Sicherung ohne Serverunterbrechung prüfen
+
+Auf dem Host mit Node 24 und vorhandenen `REDION_BACKUP_DIR`/`REDION_BACKUP_KEY_PATH`: `bash deploy/home/verify-backup.sh`. Alternativ `node server/home/backup.ts verify-latest BACKUP_DIRECTORY KEY_FILE --verify-only`. Es wird ausschliesslich der lexikographisch neueste vom Backup-Skript benannte Ordner (`YYYYMMDDTHHMMSSZ-xxxxxxxx`) ausgewählt. Ein unvollständiger, manipulierter oder verlinkter neuester Ordner führt zum Fehler, kein stiller Rückgriff auf ältere Backups. Der JSON-Bericht enthält Erstellungs-/Verifikationszeit, Alter, Dateianzahl und authentifizierte Bytes. Die Prüfung entschlüsselt streamend ohne Klartextdatei und stoppt den laufenden Dienst nicht. Während einer laufenden Sicherung kann sie fehlschlagen; nach Abschluss erneut prüfen. Bei gleichen Zeitstempeln entscheidet der zufällige Namenssuffix, nicht eine nachgewiesene zeitliche Reihenfolge. `sqliteIntegrityVerified:false` bleibt ausdrücklich erhalten; Restore-Test separat. Keine automatische Job-Ausführung oder Schlüsselbereitstellung im Webserver. Host-Scheduling und Dashboard-Berichtsanbindung bleiben offen.
+
+### RED Clipboard – SDK-Pilot 0.14
+
+Expliziter Texttransfer zwischen zwei verschiedenen RED-Apps über die vorhandene richtungsgebundene RED-Share-Freigabe und separat bestätigten `clipboard`-Kanalschlüssel. Maximal 8192 UTF-8-Bytes, authentifizierte 5-Minuten-Gültigkeit, Empfänger-/Sender-/Kanalbindung. Keine Änderung am Servertransport; Ciphertext kann bis ACK bzw. zum bestehenden Relay-Ablauf (max. 24 Stunden) verbleiben. Keine native Zwischenablage, Geräteadressierung, automatische Übertragung oder Hintergrundlesung. Client muss Replay-ID persistent speichern und Paste explizit auslösen. Vollständige geräteübergreifende Zwischenablage bleibt offen.
+
+### RED SSO – explizite Mehrfachfreigabe in den Einstellungen
+
+Die Owner-Oberfläche kann bis zu elf öffentliche JSON-Kopplungsanfragen (eine je Zeile) prüfen und gemeinsam atomar freigeben. Doppelte Apps/Challenges, unerwartete Felder und ungültige Eingaben werden abgelehnt. Vollständige Challenges erscheinen vor der ausdrücklichen Bestätigung; Änderungen an Eingabe, Server oder Sitzung erzwingen erneute Prüfung. Die UI speichert keine Verifier und erstellt keine gemeinsame Sitzung. Jede Ziel-App muss innerhalb der Freigabefrist separat claim-login abschliessen. Bei unklarer Antwort App-Zugänge prüfen statt blind erneut freizugeben. Native Browser-SSO-Redirects und Geräteabnahme bleiben offen.
+
+### RED AI Gateway – lokaler Owner-Pilot
+
+Nur für einen bewusst konfigurierten nativen Home-Server: `REDION_LOCAL_AI_MODELS=qwen2.5-coder:7b` erlaubt genau dieses Modell. Leere Konfiguration deaktiviert die API. Owner-only `GET /home/ai/models` nennt konfigurierte (nicht auf Installation geprüfte) Modelle; `POST /home/ai/generate` erwartet exakt `model`, `prompt` und `confirmLocalProcessing:true`. Fester Provider `http://127.0.0.1:11434/api/generate`, keine URL-Eingabe, Redirects, Tools, Dateizugriffe oder externen Provider-Adapter. Maximal 16 KiB UTF-8 Prompt, 512 generierte Tokens, Kontextlimit 4096, 60 Sekunden Zeitlimit, eine parallele Generierung pro Serverprozess. Keine Prompt-/Antwortpersistenz durch REDION; Ollama kann eigene Logs führen. Der Administrator muss ausschliesslich tatsächlich lokal laufende Offline-Modelle konfigurieren und Ollama-Egress separat kontrollieren; der feste Loopback-Transport beweist nicht, dass Ollama intern keine Cloud nutzt. Die normale Docker-Bridge erreicht Host-Ollama nicht automatisch, daher keine Docker-Netzwerkänderung. Kein Zugriff mit App-Token, keine UI, kein Streaming und keine MCP-Generierungsbefugnis. Tests mit simuliertem Provider; Hardwareprüfung separat.
+
+### RED MCP Hub – Owner-Verbindungsverwaltung
+
+`GET /home/mcp-hub/connections` liefert maximal 128 aktive eigene OAuth-Freigaben mit Anzeigename, Scopes, Anzahl freigegebener Arbeitsbereiche, Remember-Flag und opaque Grant-ID. `POST /home/mcp-hub/revoke` akzeptiert genau `{id,confirm:true}` und nutzt die existierende OAuth-Widerrufslogik (Epoch-Wechsel); bereits ausgegebene Zugriffstokens verlieren ihre Berechtigung. Beide Routen benötigen eine echte Owner-Gerätesitzung; App-/MCP-Tokens und fremde Web-Origins bleiben gesperrt. Verwaltung bestehender Freigaben bleibt auch bei deaktiviertem MCP möglich. Keine Tokens, Client-Secrets, Workspace-IDs, externen MCP-Server oder Tool-Ausführung. Das Dashboard zählt nun nur aktive Grants des angemeldeten Kontos. Integrationstest mit echtem lokalem OAuth-Flow und Widerruf. Native UI, externe Serververwaltung und weitere App-Aktionen bleiben offen.
+
+SDK 0.15 ergänzt für RED Clipboard einen authentifizierten Inbox-Empfangsvertrag: verschlüsselten Payload und Empfangs-ID zuerst gemeinsam atomar im App-Adapter speichern, danach ACK. Bei ACK-Fehler ist die erneute Zustellung innerhalb der logischen Gültigkeit idempotent, sofern der Adapter den Vertrag erfüllt. Native Datenbank-/Keychain-Integration und Ablaufbereinigung bleiben offen.
+
+### RED MCP Hub und AI Gateway – Einstellungen
+
+Die Home-Server-Einstellungen zeigen aktive eigene MCP-Verbindungen mit explizitem Widerruf und einen getrennten lokalen KI-Textgenerator. Beide verlangen Owner-Gerätesitzung und exakten HTTPS-Server. Keine automatischen Abrufe, keine Hintergrundgenerierung, kein automatischer Dokumentzugriff. Modellliste ist Konfiguration, keine Installationsprüfung. Vor jeder Generierung ausdrückliche Bestätigung, Abbruch per AbortController und keine automatische Speicherung; Ausgabe als Text, nicht als HTML. Bei geänderter Sitzung werden Anfragen blockiert. Native Geräteabnahme und tatsächlicher Offline-Betrieb bleiben offen.

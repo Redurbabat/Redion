@@ -786,3 +786,263 @@ html[data-windows-titelleiste] body:is(.fokus, [data-dokument="an"]) #studio-bar
     border-color: CanvasText;
   }
 }
+
+
+/* RED Studio Desktop – shared drawing surfaces, not a second design system.
+   Narrow/coarse-pointer layouts retain the existing mobile dock. Labels are
+   generated from the accessible command name and do not change tool IDs. */
+.gfx-tb-desktop-name{display:none}
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){
+  body:not([data-ui-shell="glass-wheel"]) .gfx-tb-edgeless .gfx-tb-karte button>.gfx-tb-desktop-name{
+    display:block;position:absolute;inset:auto 3px 3px;z-index:1;
+    font-size:var(--t-caption);line-height:1.15;font-weight:550;
+    text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    color:var(--text);background:var(--bg-card);border-radius:var(--radius-sm);
+    padding:2px 3px;pointer-events:none;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .gfx-tb-edgeless .gfx-tb-karte button:is(.on,[aria-pressed="true"])>.gfx-tb-desktop-name{
+    color:var(--accent-text);background:var(--accent-schwach);
+  }
+  /* The outer dock must not clip its own menus; the inner roller already
+     manages the horizontal strip. Existing touch targets are unchanged. */
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-werkzeuge.gfx-tb-edgeless{overflow:visible;isolation:isolate}
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-koerper{
+    background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-lg);
+  }
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap :is(.sp-palette,.sp-studio){
+    background:var(--bg-side);scrollbar-gutter:stable;overscroll-behavior:contain;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-palette{
+    width:clamp(190px,19vw,250px);border-inline-end:1px solid var(--line);
+  }
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-studio{
+    flex-basis:clamp(240px,23vw,320px);border-inline-start:1px solid var(--line);
+  }
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-fuss{
+    background:var(--bg-side);font-variant-numeric:tabular-nums;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-live-labor:not([hidden]){
+    background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-md);
+  }
+  body:not([data-ui-shell="glass-wheel"]) .document-studio .document-thumbnails{
+    background:var(--bg-side);border-inline-end:1px solid var(--line);scrollbar-gutter:stable;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .document-studio .document-inspector{
+    border-inline-start:1px solid var(--line);scrollbar-gutter:stable;overscroll-behavior:contain;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .document-studio .document-center{
+    background:var(--pdf-desk);overscroll-behavior:contain;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .document-studio .document-thumbnail.is-selected{
+    outline:2px solid var(--accent);outline-offset:-2px;
+  }
+  body:not([data-ui-shell="glass-wheel"]) .document-studio[data-pdf-galerie]{--pdf-dock-breite:720px}
+}
+
+
+/* RED Studio · macOS-inspired material for the actual Windows desktop shell.
+   No faux traffic lights, no changes to the native overlay's safe area.
+   Existing theme tokens, document paper and mobile UI stay authoritative. */
+.sp-wrap .sp-desktop-modus,.sp-wrap .sp-kopf .sp-desktop-inspector{display:none}
+@media (min-width:1024px) and (hover:hover) and (pointer:fine) and (forced-colors:none){
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]){
+    --red-studio-material:var(--bg-card);
+    --red-studio-sidebar:var(--bg-side);
+    --red-studio-edge:color-mix(in srgb,var(--text) 13%,transparent);
+    --red-studio-selection:var(--accent-schwach);
+    --red-studio-radius:var(--radius-xl);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) #main > #studio-bar{
+    border-bottom:1px solid var(--red-studio-edge);
+    box-shadow:inset 0 1px 0 color-mix(in srgb,var(--windows-kopf-text) 6%,transparent);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) #studio-bar .studio-search{
+    background-color:color-mix(in srgb,var(--windows-kopf-text) 9%,var(--windows-kopf-flaeche));
+    color:var(--windows-kopf-text);border-radius:var(--radius-lg);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) #main > :is(#kante,#menueband){
+    background:var(--red-studio-sidebar);border-color:var(--red-studio-edge);
+    color:var(--text);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) #reiterleiste .reiter{
+    border-radius:var(--radius-md) var(--radius-md) 0 0;
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .gfx-tb-edgeless{
+    --gfx-dock-icon:var(--text-dim);--gfx-dock-edge:var(--red-studio-edge);
+    --gfx-dock-hover:var(--bg-hover);--gfx-galerie-aktiv:var(--accent-text);
+    --gfx-dock-breite:720px;
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .gfx-tb-edgeless .gfx-tb-haupt::before{
+    border:1px solid var(--red-studio-edge);border-image:none;
+    border-radius:var(--red-studio-radius);background:var(--red-studio-material);
+    filter:none;box-shadow:var(--e-2);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .gfx-tb-edgeless :is(.gfx-tb-neben,.gfx-tb-edgeless-zusatz,.gfx-tb-menue){
+    border:1px solid var(--red-studio-edge);border-radius:var(--red-studio-radius);
+    background:var(--red-studio-material);box-shadow:var(--e-1);
+  }
+  @supports (backdrop-filter:blur(1px)){
+    @media (prefers-reduced-transparency:no-preference){
+      html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .gfx-tb-edgeless :is(.gfx-tb-neben,.gfx-tb-edgeless-zusatz,.gfx-tb-menue){
+        background:var(--bg-schwebend,var(--red-studio-material));backdrop-filter:var(--glas-blur);
+      }
+    }
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .sp-wrap .sp-desktop-modus{
+    display:inline-flex;align-items:center;padding:var(--space-1) var(--space-2);
+    border:1px solid var(--red-studio-edge);border-radius:var(--radius-pill);
+    font-size:var(--t-caption);color:var(--text-dim);white-space:nowrap;
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .sp-wrap[data-electro-context="simulation"] .sp-desktop-modus{
+    color:var(--accent-text);background:var(--red-studio-selection);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .sp-wrap .sp-kopf .sp-desktop-inspector{
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .sp-wrap .sp-desktop-inspector[aria-expanded="true"]{
+    color:var(--accent-text);background:var(--red-studio-selection);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .document-studio .document-mode-switch{
+    border-radius:var(--radius-lg);background:var(--bg-input);
+    border-color:var(--red-studio-edge);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .document-studio .document-mode-switch button[aria-pressed="true"]{
+    box-shadow:var(--e-1);background:var(--red-studio-material);
+  }
+  html[data-windows-titelleiste]:not([data-schema="kontrast"]) body:not([data-ui-shell="glass-wheel"],[data-kontrast="hoch"]) .document-studio .document-inspector :is(.document-panel-header,.document-inspector-heading){
+    border-bottom:1px solid var(--red-studio-edge);
+  }
+}
+
+
+/* Desktop side panels become real columns, not floating blockers of wires.
+   Keep the original overlay behavior at smaller window/container sizes.
+   Existing dock clearance remains in the body. */
+.sp-wrap .sp-desktop-resize{display:none}
+@media(min-width:1024px) and (hover:hover) and (pointer:fine){
+  @container sp (min-width:850px){
+    html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap:not(.sp-plan-fokus) .sp-koerper{
+      display:flex;align-items:stretch;gap:0;
+    }
+    html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap:not(.sp-plan-fokus) .sp-koerper>:is(.sp-palette,.sp-studio):not([hidden]){
+      position:relative;inset:auto;order:0;align-self:stretch;
+      flex:0 0 min(var(--sp-desktop-panel-width,248px),38%);width:auto;
+      min-width:0;max-width:none;height:auto;box-shadow:none;
+      border-radius:var(--radius-md);animation:none;
+    }
+    html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap:not(.sp-plan-fokus) .sp-koerper>.sp-buehne{
+      flex:1 1 0;order:0;width:0;min-width:0;
+    }
+    html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap:not(.sp-plan-fokus) .sp-koerper>:is(.sp-palette:not([hidden])+.sp-desktop-resize,.sp-desktop-resize:has(+.sp-studio:not([hidden]))){
+      display:grid;place-items:center;order:0;flex:0 0 12px;width:12px;
+      min-width:0;border:0;padding:0;align-self:stretch;
+      background:transparent;cursor:col-resize;touch-action:none;
+    }
+    html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-desktop-resize::before{
+      content:"";width:3px;height:36px;border-radius:var(--radius-pill);background:var(--text-faint);
+    }
+    html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-desktop-resize:is(:hover,:focus-visible)::before{background:var(--accent)}
+    html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-desktop-resize:focus-visible{outline:2px solid var(--accent-text);outline-offset:-2px}
+  }
+}
+
+
+/* Wide desktop: two real side columns, leaving at least 40% for the plan.
+   The narrow layout is still driven by the shared panel controller. */
+@media(min-width:1024px) and (hover:hover) and (pointer:fine){
+  @container sp (min-width:1180px){
+    html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap:not(.sp-plan-fokus) .sp-koerper:has(>.sp-palette:not([hidden])):has(>.sp-studio:not([hidden]))>:is(.sp-palette,.sp-studio){
+      flex-basis:min(var(--sp-desktop-panel-width,248px),28%);
+    }
+  }
+}
+
+
+/* Desktop document navigation: compact search and bookmark view. Native
+   page rows retain their original indices; filtered rows never drag. */
+.document-desktop-filter{display:none}
+.document-thumbnails .document-thumb-zeile[hidden]{display:none}
+@media(min-width:1024px) and (hover:hover) and (pointer:fine){
+  html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .document-desktop-filter{
+    display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-1);
+    padding:var(--space-2);border-bottom:1px solid var(--line);
+    background:var(--bg-side);color:var(--text);
+  }
+  .document-desktop-filter input{
+    grid-column:1/-1;min-width:0;width:100%;box-sizing:border-box;
+    min-height:var(--touch-min);padding:var(--space-1) var(--space-2);
+    background:var(--bg-input);color:var(--text);border:1px solid var(--line);
+    border-radius:var(--radius-md);font:inherit;
+  }
+  .document-desktop-filter button{
+    min-width:0;min-height:var(--touch-min);border:1px solid var(--line);
+    border-radius:var(--radius-md);background:var(--bg-card);color:var(--text);
+    font:inherit;font-size:var(--t-small);
+  }
+  .document-desktop-filter button[aria-pressed="true"]{
+    background:var(--accent-schwach);color:var(--accent-text);
+  }
+  .document-desktop-filter :is(input,button):focus-visible{
+    outline:2px solid var(--accent-text);outline-offset:-2px;
+  }
+  .document-filter-count{grid-column:1/-1;margin:0;color:var(--text-dim);font-size:var(--t-caption)}
+}
+
+
+/* A collapsible Windows measurement inspector. Never presents model values
+   as actual measurements; original paper and touch layout remain unchanged. */
+.sp-wrap .sp-desktop-messwerte{display:none}
+@media(min-width:1024px) and (hover:hover) and (pointer:fine){
+  html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .sp-wrap .sp-desktop-messwerte:not([hidden]){
+    display:block;flex:none;min-width:0;background:var(--bg-card);color:var(--text);
+    border:1px solid var(--line);border-radius:var(--radius-md);
+  }
+  .sp-desktop-messwerte summary{cursor:pointer;padding:var(--space-2);font-weight:600}
+  .sp-desktop-messwerte summary:focus-visible{outline:2px solid var(--accent-text);outline-offset:-2px}
+  .sp-desktop-messwerte-inhalt{max-height:clamp(96px,22vh,260px);overflow:auto;overscroll-behavior:contain;padding:var(--space-2)}
+  .sp-desktop-messwerte-inhalt p{font-size:var(--t-caption);color:var(--text-dim);margin:0 0 var(--space-2)}
+  .sp-desktop-messwerte-inhalt table{width:100%;border-collapse:collapse;font-size:var(--t-small);font-variant-numeric:tabular-nums;text-align:left}
+  .sp-desktop-messwerte-inhalt :is(td,th){padding:var(--space-1) var(--space-2);border-bottom:1px solid var(--line)}
+  .sp-desktop-messwerte-inhalt thead th{position:sticky;top:0;background:var(--bg-card)}
+}
+
+
+/* Desktop Whiteboard commands use the existing GfxInspector, never a
+   duplicate object store. The command row is outside the drawing canvas. */
+.wb-desktop-command{display:none}
+@media(min-width:1024px) and (hover:hover) and (pointer:fine){
+  html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .wb-desktop-command{
+    display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-1);
+    padding:var(--space-2);background:var(--bg-side);color:var(--text);
+    border-bottom:1px solid var(--line);border-radius:var(--radius-md) var(--radius-md) 0 0;
+  }
+  .wb-desktop-status{flex:1 1 120px;font-size:var(--t-caption);color:var(--text-dim);font-variant-numeric:tabular-nums}
+  .wb-desktop-command button{
+    min-height:var(--touch-min);padding:var(--space-1) var(--space-2);
+    border:1px solid var(--line);border-radius:var(--radius-md);
+    background:var(--bg-card);color:var(--text);font:inherit;font-size:var(--t-small);
+  }
+  .wb-desktop-command button:disabled{opacity:.55;cursor:default}
+  .wb-desktop-command button:not(:disabled):hover{background:var(--bg-hover)}
+  .wb-desktop-command button:focus-visible{outline:2px solid var(--accent-text);outline-offset:-2px}
+}
+
+
+/* Windows PDF object entry point: same page-specific ink controller,
+   separate from document metadata and page-management commands. */
+.document-desktop-objects{display:none}
+@media(min-width:1024px) and (hover:hover) and (pointer:fine){
+  html[data-windows-titelleiste] body:not([data-ui-shell="glass-wheel"]) .document-desktop-objects{
+    display:grid;gap:var(--space-2);padding-block:var(--space-2);
+    border-top:1px solid var(--line);
+  }
+  .document-desktop-objects button{
+    text-align:left;min-height:var(--touch-min);padding:var(--space-2);
+    font:inherit;font-size:var(--t-small);color:var(--text);background:var(--bg-card);
+    border:1px solid var(--line);border-radius:var(--radius-md);
+  }
+  .document-desktop-objects button:disabled{opacity:.55}
+  .document-desktop-objects button:not(:disabled):hover{background:var(--bg-hover)}
+  .document-desktop-objects button:focus-visible{outline:2px solid var(--accent-text);outline-offset:-2px}
+  .document-desktop-objects p{margin:0;font-size:var(--t-caption);color:var(--text-dim)}
+}

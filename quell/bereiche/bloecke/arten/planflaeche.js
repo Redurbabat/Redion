@@ -307,6 +307,16 @@ const Planflaeche = (() => {
         labor.className = 'sp-live-labor';
         labor.setAttribute('aria-label', 'Live-Stromlabor – Strom, Relais und Zeit');
         labor.hidden = true;
+        const messwertePanel = document.createElement('details');
+        messwertePanel.className = 'sp-desktop-messwerte';
+        messwertePanel.hidden = true;
+        const messwerteTitel = document.createElement('summary');
+        messwerteTitel.textContent = 'Berechnete Bauteilwerte';
+        const messwerteInhalt = document.createElement('div');
+        messwerteInhalt.className = 'sp-desktop-messwerte-inhalt';
+        messwertePanel.append(messwerteTitel, messwerteInhalt);
+        let messwerteSignatur = '';
+        let tasterLoslassen = null;
         const batteriePanel = document.createElement('section');
         batteriePanel.className = 'sp-batterie-fach';
         batteriePanel.setAttribute('aria-label', 'Batterieanlagen und Übungen');
@@ -391,6 +401,86 @@ const Planflaeche = (() => {
         koerper.appendChild(palette);
         koerper.appendChild(buehne);
         koerper.appendChild(studioPanel);
+        const studioBreite = (panel, name, seite, start) => {
+            const griff = document.createElement('button');
+            griff.type = 'button';
+            griff.className = 'sp-desktop-resize';
+            griff.dataset.seite = seite;
+            griff.setAttribute('role', 'separator');
+            griff.setAttribute('aria-orientation', 'vertical');
+            griff.setAttribute('aria-label', name + ' Breite');
+            griff.setAttribute('aria-valuemin', '180');
+            griff.setAttribute('aria-valuemax', '380');
+            griff.title = name + ' – Breite ziehen oder Pfeiltasten, Home/End';
+            let breite = start;
+            const aktualisieren = (wert) => {
+                breite = Math.min(380, Math.max(180, Math.round(wert)));
+                panel.style.setProperty('--sp-desktop-panel-width', breite + 'px');
+                griff.setAttribute('aria-valuenow', String(breite));
+                griff.setAttribute('aria-valuetext', breite + ' Pixel');
+            };
+            aktualisieren(start);
+            let zug = null;
+            griff.addEventListener('pointerdown', e => {
+                if (e.button !== 0 || zug || z.zieht)
+                    return;
+                e.preventDefault();
+                e.stopPropagation();
+                zug = { id: e.pointerId, x: e.clientX, breite };
+                griff.focus({ preventScroll: true });
+                griff.setPointerCapture(e.pointerId);
+            });
+            griff.addEventListener('pointermove', e => {
+                if (!zug || zug.id !== e.pointerId)
+                    return;
+                aktualisieren(zug.breite + (e.clientX - zug.x) * (seite === 'links' ? 1 : -1));
+            });
+            const ende = (e) => { if (zug?.id === e.pointerId)
+                zug = null; };
+            griff.addEventListener('pointerup', ende);
+            griff.addEventListener('pointercancel', ende);
+            griff.addEventListener('lostpointercapture', ende);
+            griff.addEventListener('dblclick', () => aktualisieren(start));
+            griff.addEventListener('keydown', e => {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key))
+                    return;
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.key === 'Home')
+                    aktualisieren(180);
+                else if (e.key === 'End')
+                    aktualisieren(380);
+                else
+                    aktualisieren(breite + (e.key === 'ArrowRight' ? 1 : -1) * (seite === 'links' ? 1 : -1) * (e.shiftKey ? 32 : 8));
+            });
+            return griff;
+        };
+        const paletteGriff = studioBreite(palette, 'Bauteilbibliothek', 'links', 248);
+        const studioGriff = studioBreite(studioPanel, 'Inspektor', 'rechts', 288);
+        palette.after(paletteGriff);
+        studioPanel.before(studioGriff);
+        const desktopDoppelspalte = () => document.documentElement.hasAttribute('data-windows-titelleiste') &&
+            document.body.dataset.uiShell !== 'glass-wheel' &&
+            !planFokus && wurzel.clientWidth >= 1180 &&
+            window.matchMedia('(min-width:1024px) and (hover:hover) and (pointer:fine)').matches;
+        const paletteSetzen = (offen) => {
+            paletteOffen = offen;
+            palette.hidden = !offen;
+            wurzel.classList.toggle('sp-palette-offen', offen);
+            if (offen && studioOffen && !desktopDoppelspalte()) {
+                studioOffen = false;
+                studioPanel.hidden = true;
+            }
+        };
+        const studioSetzen = (offen) => {
+            studioOffen = offen;
+            studioPanel.hidden = !offen;
+            if (offen) {
+                if (!desktopDoppelspalte())
+                    paletteSetzen(false);
+                studioTab = 'eigenschaften';
+            }
+        };
         const fussInhalt = document.createElement('div');
         fussInhalt.className = 'sp-fuss-inhalt';
         fuss.appendChild(fussInhalt);
@@ -402,6 +492,7 @@ const Planflaeche = (() => {
         fuss.appendChild(zoomleiste);
         wurzel.appendChild(kopf);
         wurzel.appendChild(labor);
+        wurzel.appendChild(messwertePanel);
         wurzel.appendChild(koerper);
         wurzel.appendChild(fuss);
         wurzel.appendChild(batteriePanel);
@@ -444,7 +535,7 @@ const Planflaeche = (() => {
         kopfLinks.className = 'sp-links';
         const planDock = GfxToolbar.erstelle({
             klasse: 'sp-werkzeuge', beschriftung: 'Zeichenwerkzeuge', aktiv: z.werkzeug,
-            werkzeuge: WERKZEUGE.map(w => ({ ...w, zeichen: '',
+            werkzeuge: WERKZEUGE.map(w => ({ ...w, titel: w.titel + ' (' + w.taste + ')', zeichen: '',
                 gruppe: w.id === 'zeigen' || w.id === 'leitung' ? 'quick' : 'senior' })),
             galerie: {
                 schnell: ['plan-modus'], edgeless: { zusatz: ['palette-toggle', 'zoom-alles'] },
@@ -578,6 +669,11 @@ const Planflaeche = (() => {
                     next.element.querySelector('button')?.focus({ preventScroll: true });
             }
             simulationDock.element.querySelector('[data-a="sim-pause"]')?.setAttribute('aria-pressed', String(zeitStand.pause));
+            for (const [id, selected] of [['sim-schalten', z.werkzeug !== 'stift'], ['sim-zeichnen', z.werkzeug === 'stift']]) {
+                const button = simulationDock.element.querySelector('[data-a="' + id + '"]');
+                button?.setAttribute('aria-pressed', String(selected));
+                button?.classList.toggle('on', selected);
+            }
             relayDock.setzeGesperrt('relay-original', !z.plan.relaisLegacy);
             relayDock.setzeGesperrt('relay-freigeben', !z.plan.relaisLegacy || !!z.plan.relaisLegacy.verifiziert);
             for (const action of ['pruefen', 'muster'])
@@ -605,6 +701,8 @@ const Planflaeche = (() => {
                 markeSetzen();
             }).observe(dock);
         const kopfMalen = () => {
+            if (paletteOffen && studioOffen && !desktopDoppelspalte())
+                paletteSetzen(false);
             fachStatus();
             dockAktualisieren();
             einstiegMalen();
@@ -623,13 +721,15 @@ const Planflaeche = (() => {
                         ? `<button type="button" class="sp-netz" data-a="netz" ` +
                             `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
                             `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
-                        : '');
+                        : '') +
+                    `<span class="sp-desktop-modus">${z.simulation ? 'Simulation' : relaisOffen ? 'Relais' : batterieOffen ? 'Batterie' : 'Zeichnen'}</span>`;
             kopfRechts.innerHTML =
                 `<select class="sp-art" aria-label="Planart" title="Planart: ${esc(Schaltplan.artVon(z.plan.art).name)}">` +
                     Schaltplan.ARTEN.map(a => `<option value="${esc(a.id)}"${a.id === z.plan.art ? ' selected' : ''}>` +
                         `${esc(a.name)}</option>`).join('') + '</select>' +
                     `<button type="button" class="sp-kopf-knopf" data-a="zurueck" title="Rückgängig (Strg+Z)" aria-label="Rückgängig"${z.verlauf.kannZurueck() ? '' : ' disabled'}>${symbol('undo', 18)}</button>` +
                     `<button type="button" class="sp-kopf-knopf" data-a="vorwaerts" title="Wiederholen (Strg+Y)" aria-label="Wiederholen"${z.verlauf.kannVor() ? '' : ' disabled'}>${symbol('redo', 18)}</button>` +
+                    `<button type="button" class="sp-desktop-inspector sp-kopf-knopf" data-a="desktop-inspector" title="Eigenschaften und Übersicht" aria-label="Eigenschaften und Übersicht" aria-expanded="${studioOffen}">${symbol('panelL', 18)}</button>` +
                     `<button type="button" class="sp-netz sp-bereiche" data-a="bereiche" title="Relais, Batterien, Prüfzentrum, Studio, Formelheft und Vorlagen öffnen" ` +
                     `aria-label="Bereiche" aria-haspopup="menu">✦<span class="sp-bereiche-wort"> Bereiche</span><span class="sp-bereiche-pfeil"> ▾</span></button>` +
                     `<button type="button" class="sp-kopf-knopf" data-a="mehr" title="Mehr: Planart, Ansicht, Ausgabe" aria-label="Mehr" aria-haspopup="menu">${symbol('dots', 18)}</button>` +
@@ -656,9 +756,62 @@ const Planflaeche = (() => {
         };
         const laborZeit = () => zeitspulen().length
             ? (zeitStand.laufzeit / 1000).toFixed(1) + ' s' : '—';
+        const messwerteAktualisieren = () => {
+            if (!z.simulation || !messwertePanel.open)
+                return;
+            const e = z.ergebnis;
+            const format = (wert, einheit) => typeof wert === 'number' && Number.isFinite(wert) ? Stromfluss.zeige(wert, einheit) : '—';
+            const zeilen = e?.ok ? z.plan.teile.filter(t => Object.hasOwn(e.werte || {}, t.id))
+                .map(t => ({ id: String(t.id), name: String(t.bmk || t.id), symbol: String(Register.fachzeichen.holen(t.zeichen)?.name || t.zeichen),
+                U: format(e.werte[t.id]?.U, 'V'), I: format(e.werte[t.id]?.I, 'A'), P: format(e.werte[t.id]?.P, 'W') })) : [];
+            const begrenzt = zeilen.slice(0, 64);
+            const hinweis = !e ? 'Keine Berechnung vorhanden.' : !e.ok ? 'Berechnung fehlgeschlagen: ' + String(e.fehler || 'Unbekannter Fehler') :
+                zeilen.length ? 'Modellwerte, keine reale Messung. Mehrteilige Bauteile können weitere Teilwerte besitzen.' : 'Keine Bauteilwerte verfügbar.';
+            const signatur = JSON.stringify([hinweis, zeilen.length, begrenzt]);
+            if (signatur === messwerteSignatur)
+                return;
+            messwerteSignatur = signatur;
+            const text = document.createElement('p');
+            text.textContent = hinweis;
+            const frag = document.createDocumentFragment();
+            frag.append(text);
+            if (begrenzt.length) {
+                const table = document.createElement('table');
+                const header = table.createTHead().insertRow();
+                for (const label of ['Bauteil', 'Spannung U', 'Strom I', 'Leistung P']) {
+                    const cell = document.createElement('th');
+                    cell.scope = 'col';
+                    cell.textContent = label;
+                    header.append(cell);
+                }
+                const body = table.createTBody();
+                for (const row of begrenzt) {
+                    const tr = body.insertRow();
+                    tr.dataset.messwertId = row.id;
+                    const name = document.createElement('th');
+                    name.scope = 'row';
+                    name.textContent = row.name + ' · ' + row.symbol;
+                    tr.append(name);
+                    for (const [key, value] of [['U', row.U], ['I', row.I], ['P', row.P]]) {
+                        const td = tr.insertCell();
+                        td.dataset.messwert = key;
+                        td.textContent = value;
+                    }
+                }
+                frag.append(table);
+            }
+            if (zeilen.length > 64) {
+                const more = document.createElement('p');
+                more.textContent = '64 von ' + zeilen.length + ' Bauteilen angezeigt.';
+                frag.append(more);
+            }
+            messwerteInhalt.replaceChildren(frag);
+        };
+        messwertePanel.addEventListener('toggle', messwerteAktualisieren);
         const laborAktualisieren = () => {
             if (!z.simulation)
                 return;
+            messwerteAktualisieren();
             const daten = Labor.statistik(z.plan, z.ergebnis, z.spulenStand);
             const anzeige = labor.querySelector('[data-labor-status]');
             if (anzeige)
@@ -687,6 +840,12 @@ const Planflaeche = (() => {
         };
         const laborMalen = () => {
             labor.hidden = !z.simulation;
+            messwertePanel.hidden = !z.simulation;
+            if (!z.simulation) {
+                messwertePanel.open = false;
+                messwerteSignatur = '';
+                messwerteInhalt.replaceChildren();
+            }
             wurzel.classList.toggle('sp-labor-pause', !!(z.simulation && zeitStand.pause));
             wurzel.style.setProperty('--sp-labor-tempo', String(laborTempo));
             if (!z.simulation) {
@@ -734,6 +893,7 @@ const Planflaeche = (() => {
                 zeitLetzter = performance.now();
             }
             else if (knopf.dataset.laborAktion === 'reset') {
+                tasterLoslassen?.();
                 z.stellungen = {};
                 z.spulenStand = {};
                 zeitStarten();
@@ -2493,12 +2653,7 @@ const Planflaeche = (() => {
                 return;
             }
             if (aktion === 'eigenschaften') {
-                studioOffen = true;
-                studioTab = 'eigenschaften';
-                studioPanel.hidden = false;
-                paletteOffen = false;
-                palette.hidden = true;
-                wurzel.classList.remove('sp-palette-offen');
+                studioSetzen(true);
                 studioMalen();
                 kopfMalen();
                 return;
@@ -2792,16 +2947,28 @@ const Planflaeche = (() => {
                 const teil = z.plan.teile.find(t => t.id === g.dataset.id);
                 if (teil && (teil.zeichen === 'taster-schliesser' || teil.zeichen === 'taster-oeffner')) {
                     const id = String(teil.id);
+                    tasterLoslassen?.();
+                    const pointer = e.pointerId;
                     const los = () => {
-                        document.removeEventListener('pointerup', los, true);
-                        document.removeEventListener('pointercancel', los, true);
-                        if (z.simulation) {
-                            z.stellungen[id] = 0;
+                        document.removeEventListener('pointerup', amZeiger, true);
+                        document.removeEventListener('pointercancel', amZeiger, true);
+                        window.removeEventListener('blur', los);
+                        document.removeEventListener('visibilitychange', beiSicht);
+                        if (tasterLoslassen === los)
+                            tasterLoslassen = null;
+                        z.stellungen[id] = 0;
+                        if (z.simulation && wurzel.isConnected)
                             male();
-                        }
                     };
-                    document.addEventListener('pointerup', los, true);
-                    document.addEventListener('pointercancel', los, true);
+                    const amZeiger = (event) => { if (event.pointerId === pointer)
+                        los(); };
+                    const beiSicht = () => { if (document.hidden)
+                        los(); };
+                    tasterLoslassen = los;
+                    document.addEventListener('pointerup', amZeiger, true);
+                    document.addEventListener('pointercancel', amZeiger, true);
+                    window.addEventListener('blur', los);
+                    document.addEventListener('visibilitychange', beiSicht);
                     z.stellungen[id] = 1;
                     male();
                     return;
@@ -3599,6 +3766,8 @@ const Planflaeche = (() => {
             if (!z.simulation)
                 merkwahl = { werkzeug: z.werkzeug, zeichen: z.gewaehltesZeichen };
             z.simulation = !z.simulation;
+            if (!z.simulation)
+                tasterLoslassen?.();
             z.auswahl.clear();
             if (z.simulation) {
                 z.werkzeug = 'zeigen';
@@ -3644,13 +3813,7 @@ const Planflaeche = (() => {
                 return;
             }
             if (b.dataset.a === 'palette-toggle') {
-                paletteOffen = !paletteOffen;
-                if (paletteOffen && studioOffen) {
-                    studioOffen = false;
-                    studioPanel.hidden = true;
-                }
-                wurzel.classList.toggle('sp-palette-offen', paletteOffen);
-                palette.hidden = !paletteOffen;
+                paletteSetzen(!paletteOffen);
                 kopfMalen();
                 return;
             }
@@ -3701,15 +3864,8 @@ const Planflaeche = (() => {
                 ansichtAnwenden();
                 return;
             }
-            if (b.dataset.a === 'elektro-studio') {
-                studioOffen = !studioOffen;
-                studioPanel.hidden = !studioOffen;
-                if (studioOffen) {
-                    paletteOffen = false;
-                    palette.hidden = true;
-                    wurzel.classList.remove('sp-palette-offen');
-                    studioTab = 'eigenschaften';
-                }
+            if (b.dataset.a === 'elektro-studio' || b.dataset.a === 'desktop-inspector') {
+                studioSetzen(!studioOffen);
                 kopfMalen();
                 if (studioOffen)
                     studioMalen();
@@ -3801,6 +3957,7 @@ const Planflaeche = (() => {
                 return;
             }
             if (b.dataset.a === 'ruhelage') {
+                tasterLoslassen?.();
                 z.stellungen = {};
                 z.spulenStand = {};
                 zeitStarten();
@@ -3928,14 +4085,7 @@ const Planflaeche = (() => {
                 return;
             if (!e.ctrlKey && !e.metaKey && e.altKey && e.shiftKey && e.key.toLowerCase() === 'e') {
                 e.preventDefault();
-                studioOffen = !studioOffen;
-                studioPanel.hidden = !studioOffen;
-                if (studioOffen) {
-                    paletteOffen = false;
-                    palette.hidden = true;
-                    wurzel.classList.remove('sp-palette-offen');
-                    studioTab = 'eigenschaften';
-                }
+                studioSetzen(!studioOffen);
                 kopfMalen();
                 if (studioOffen)
                     studioMalen();
@@ -3991,18 +4141,8 @@ const Planflaeche = (() => {
                         simulationUmschalten();
                         return;
                     }
-                    if (!paletteOffen) {
-                        paletteOffen = true;
-                        palette.hidden = false;
-                        wurzel.classList.add('sp-palette-offen');
-                        kopfMalen();
-                    }
-                    else {
-                        paletteOffen = false;
-                        palette.hidden = true;
-                        wurzel.classList.remove('sp-palette-offen');
-                        kopfMalen();
-                    }
+                    paletteSetzen(!paletteOffen);
+                    kopfMalen();
                     return;
                 }
                 if (e.key === 'f' || e.key === 'F') {
@@ -4118,15 +4258,9 @@ const Planflaeche = (() => {
                     return kopf.querySelector('[data-a="palette-toggle"]')?.click();
                 if (was === 'studio')
                     return (() => {
-                        studioOffen = !studioOffen;
-                        studioPanel.hidden = !studioOffen;
-                        if (studioOffen) {
-                            paletteOffen = false;
-                            palette.hidden = true;
-                            wurzel.classList.remove('sp-palette-offen');
-                            studioTab = 'eigenschaften';
+                        studioSetzen(!studioOffen);
+                        if (studioOffen)
                             studioMalen();
-                        }
                         kopfMalen();
                     })();
                 if (was === 'fokus') {
@@ -4369,6 +4503,20 @@ const Planflaeche = (() => {
         palette.hidden = !paletteOffen;
         paletteMalen();
         male();
+        if (typeof ResizeObserver === 'function') {
+            const panelObserver = new ResizeObserver(() => {
+                if (!wurzel.isConnected)
+                    return;
+                if (!paletteOffen || !studioOffen || desktopDoppelspalte())
+                    return;
+                const restoreFocus = palette.contains(document.activeElement) || document.activeElement === paletteGriff;
+                paletteSetzen(false);
+                kopfMalen();
+                if (restoreFocus)
+                    kopf.querySelector('[data-a="desktop-inspector"]')?.focus({ preventScroll: true });
+            });
+            panelObserver.observe(wurzel);
+        }
         if (relaisOffen)
             relaisZeigen();
         return wurzel;

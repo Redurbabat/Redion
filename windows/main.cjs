@@ -13,7 +13,7 @@ const { NVIDIA_CHAT_PATH, nvidiaChat } = require('./generated/nvidia.cjs');
 const { startRedionAutoUpdates } = require('./auto-update.cjs');
 const { configuredSource, saveConfiguredSource, startSourceUpdates, validateSource } =
   require('./generated/local-source.cjs');
-const { destinationFromArgs, jumpTasks, readWindowState, windowStateToSave } = require('./generated/desktop-shell.cjs');
+const { destinationFromArgs, jumpTasks, readWindowState, windowStateToSave, defaultWindowBounds, windowLayout } = require('./generated/desktop-shell.cjs');
 const { NativeFiles, trustedSender, safeExportName } = require('./generated/files.cjs');
 const { AutomationBridge, secureDirectory } = require('./generated/automation-bridge.cjs');
 const { VisualCapture } = require('./generated/visual-capture.cjs');
@@ -26,7 +26,11 @@ const APP_ID = 'ch.redurbabat.redion.windows';
 // Bewusst getrennte Abnahme einer GEBAUTEN EXE. Keine freien Profilpfade,
 // keine Änderung der normalen Ablage und keine Abschwächung der MCP-Rechte.
 const testFlag = process.argv.find(value => value.startsWith('--redion-test-profile='));
-const TEST_PROFILE = testFlag ? testFlag.slice('--redion-test-profile='.length) : null;
+// Packaged Studio previews use a dedicated disposable profile even when
+// opened by double-click; the normal release retains its existing profile.
+const STUDIO_PREVIEW = app.isPackaged && require('./package.json').studioPreview === true;
+const TEST_PROFILE = testFlag ? testFlag.slice('--redion-test-profile='.length) :
+  STUDIO_PREVIEW ? '72656473747564696f70726576696577' : null;
 if (TEST_PROFILE !== null) {
   if (process.platform !== 'win32' || !/^[a-f0-9]{32}$/.test(TEST_PROFILE)) throw new Error('Ungültiges isoliertes Windows-Testprofil.');
   const base = path.join(app.getPath('temp'), 'Redion-Testprofile');
@@ -54,13 +58,21 @@ const LIVE = !app.isPackaged && process.env.REDION_WINDOWS_LIVE === '1' &&
 const LOCAL_SOURCE = app.isPackaged ? configuredSource(app.getPath('appData')) : null;
 if (LIVE || LOCAL_SOURCE)
   app.setPath('userData', path.join(app.getPath('appData'), 'Redion-Entwicklung'));
-if (process.platform === 'win32') app.setAppUserModelId(APP_ID);
+if (process.platform === 'win32') app.setAppUserModelId(STUDIO_PREVIEW ? 'ch.redurbabat.redion.studio.preview' : APP_ID);
 
 const lock = app.requestSingleInstanceLock();
 if (!lock) {
   app.quit();
 } else {
   let mainWindow = null;
+  let referenceWindow = null;
+  let referencePending = false;
+  // A reference is a local, frozen image, never another Redion editor.
+  const closeReference = () => {
+    const old = referenceWindow;
+    referenceWindow = null;
+    if (old && !old.isDestroyed()) old.destroy();
+  };
   let updateController = null;
   let liveReload = null;
   let localController = null;
@@ -373,6 +385,81 @@ if (!lock) {
     });
   }
 
+  function arrangeWindow(mode) {
+    const win = mainWindow;
+    if (!win || win.isDestroyed() || win.isFullScreen()) return;
+    const display = screen.getDisplayMatching(win.getBounds());
+    const target = windowLayout(display.workArea, win.getNormalBounds(), mode);
+    if (!target) {
+      void dialog.showMessageBox(win, { type: 'info', title: 'Fenster anordnen',
+        message: 'Dieser Bildschirm ist für ein Halbfenster zu klein.',
+        detail: 'Verwende ein grösseres Display oder zentriere das Fenster.' });
+      return;
+    }
+    if (win.isMinimized()) win.restore();
+    if (win.isMaximized()) win.unmaximize();
+    win.setBounds(target);
+  }
+
+  async function openReference() {
+    const source = mainWindow;
+    if (referencePending || !source || source.isDestroyed() || source.isMinimized() || !rendererReady) return;
+    referencePending = true;
+    let next = null;
+    try {
+      // Only the explicitly selected Redion window, not the desktop or other apps.
+      const captured = await source.webContents.capturePage();
+      if (source !== mainWindow || source.isDestroyed() || captured.isEmpty()) return;
+      const size = captured.getSize();
+      const factor = Math.min(1, 1800 / Math.max(size.width, size.height));
+      const image = factor < 1 ? captured.resize({
+        width: Math.max(1, Math.round(size.width * factor)),
+        height: Math.max(1, Math.round(size.height * factor)), quality: 'best'
+      }) : captured;
+      const bytes = image.toJPEG(88);
+      const uri = 'data:image/jpeg;base64,' + bytes.toString('base64');
+      bytes.fill(0);
+      const html = '<!doctype html><html lang="de"><meta charset="utf-8">' +
+        '<meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; img-src data:; style-src &#39;unsafe-inline&#39;">' +
+        '<title>RED Studio · Referenz</title><style>html{color-scheme:light dark}body{margin:0;font:14px system-ui;background:Canvas;color:CanvasText}' +
+        'header{padding:14px 18px;border-bottom:1px solid GrayText}h1{font-size:16px;margin:0 0 4px}p{margin:0}main{padding:12px}img{display:block;width:100%;height:auto;border-radius:6px}</style>' +
+        '<header><h1>Schreibgeschützte Referenz</h1><p>Momentaufnahme · nicht live · nur lokal</p></header>' +
+        '<main><img alt="Momentaufnahme der Redion-Arbeitsfläche" src="' + uri + '"></main></html>';
+      const area = screen.getDisplayMatching(source.getBounds()).workArea;
+      const right = windowLayout(area, source.getNormalBounds(), 'right');
+      next = new BrowserWindow({
+        title: 'RED Studio · Referenz', width: 900, height: 700,
+        ...(right || defaultWindowBounds(area)), minWidth: 420, minHeight: 300,
+        show: false, autoHideMenuBar: true,
+        webPreferences: { partition: 'redion-reference-' + randomUUID(), sandbox: true,
+          contextIsolation: true, nodeIntegration: false, webSecurity: true, devTools: false }
+      });
+      // No preload, data access, navigation, external network or downloads.
+      next.removeMenu();
+      next.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+      next.webContents.on('will-navigate', event => event.preventDefault());
+      next.webContents.session.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
+      next.webContents.session.on('will-download', event => event.preventDefault());
+      const created = next;
+      created.on('closed', () => { if (referenceWindow === created) referenceWindow = null; });
+      await created.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
+      if (source !== mainWindow || source.isDestroyed() || created.isDestroyed()) return;
+      closeReference();
+      referenceWindow = created;
+      next = null;
+      // On wide screens put the working editor next to the frozen reference.
+      if (right && !source.isFullScreen()) arrangeWindow('left');
+      created.show();
+    } catch {
+      if (source === mainWindow && !source.isDestroyed())
+        void dialog.showMessageBox(source, { type: 'info', title: 'Referenzansicht',
+          message: 'Die lokale Momentaufnahme konnte nicht geöffnet werden.' });
+    } finally {
+      if (next && !next.isDestroyed()) next.destroy();
+      referencePending = false;
+    }
+  }
+
   function appMenu() {
     const items = [
       { label: 'Datei', submenu: [
@@ -399,6 +486,16 @@ if (!lock) {
         { role: 'zoomOut', label: 'Verkleinern' },
         { role: 'togglefullscreen', label: 'Vollbild' }
       ] },
+      ...(process.platform === 'win32' ? [{ label: 'Fenster', submenu: [
+        { id: 'studio-window-left', label: 'Linke Bildschirmhälfte', click: () => arrangeWindow('left') },
+        { id: 'studio-window-right', label: 'Rechte Bildschirmhälfte', click: () => arrangeWindow('right') },
+        { id: 'studio-window-center', label: 'Fenster zentrieren', click: () => arrangeWindow('center') },
+        { type: 'separator' },
+        { id: 'studio-reference-open', label: 'Aktuelle Ansicht als Referenz öffnen', click: () => { void openReference(); } },
+        { id: 'studio-reference-close', label: 'Referenz schliessen', click: closeReference },
+        { type: 'separator' },
+        { role: 'minimize', label: 'Minimieren' }
+      ] }] : []),
       { label: 'Entwicklung', submenu: [
         { label: 'Lokalen Redion-Ordner verbinden …', click: () => { void connectLocalSource(); } },
         { label: 'Lokalen Ordner trennen', enabled: !!LOCAL_SOURCE,
@@ -463,11 +560,10 @@ if (!lock) {
     const stateFile = path.join(app.getPath('userData'), 'fenster.json');
     const remembered = readWindowState(() => fs.readFileSync(stateFile, 'utf8'),
       screen.getAllDisplays().map(display => display.workArea));
+    const bounds = remembered ?? defaultWindowBounds(screen.getPrimaryDisplay().workArea);
     mainWindow = new BrowserWindow({
-      title: TEST_PROFILE ? 'Redion · Isoliertes Testprofil' : LOCAL_SOURCE ? 'Redion · Lokaler Entwicklungsstand' : 'Redion',
-      width: remembered?.width ?? 1300,
-      height: remembered?.height ?? 860,
-      ...(remembered ? { x: remembered.x, y: remembered.y } : {}),
+      title: STUDIO_PREVIEW ? 'RED Studio · Windows Vorschau' : TEST_PROFILE ? 'Redion · Isoliertes Testprofil' : LOCAL_SOURCE ? 'Redion · Lokaler Entwicklungsstand' : 'Redion',
+      x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height,
       minWidth: 860,
       minHeight: 580,
       backgroundColor: '#211218',
@@ -535,6 +631,7 @@ if (!lock) {
       } catch { /* Fensterlage ist Komfort; sie darf das Schliessen nie aufhalten */ }
     });
     mainWindow.on('closed', () => {
+      closeReference();
       automationReady = false; cancelAutomation(); automation?.disconnect();
       liveReload?.stop(); liveReload = null;
       localController?.stop(); localController = null;

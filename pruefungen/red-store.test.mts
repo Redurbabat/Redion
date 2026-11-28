@@ -63,8 +63,11 @@ test('SDK encrypted sync survives a second device and rejects context substituti
   const a=await make(),b=await make();await post('/red-store/v1/grant',{app:'red-poly',kind:'sync'},token);
   const key=crypto.getRandomValues(new Uint8Array(32)),context={origin,owner:konto.id,app:'red-poly',kind:'sync',id:newRedStoreId()} as const,plaintext=new TextEncoder().encode('private learning progress');
   const prepared=await prepareRedStoreWrite(key,context,0,plaintext);
+  const empty=await b.storeChanges('sync');assert.equal(empty.reset,true);assert.equal(empty.cursor,null);
   assert.equal((await a.storePut(prepared)).revision,1);
+  const initial=await b.storeChanges('sync');assert.equal(initial.reset,true);assert.equal(initial.items.length,1);assert.ok(initial.cursor);
   assert.equal((await a.storePut(prepared)).revision,1);
+  const idle=await b.storeChanges('sync',initial.cursor);assert.equal(idle.reset,false);assert.deepEqual(idle.items,[]);assert.equal(idle.cursor,initial.cursor);
   const page=await b.storeList('sync');assert.equal(page.items[0]?.id,context.id);
   const result=await b.storeGet('sync',context.id);assert.equal(result.revision,1);
   assert.deepEqual(await openRedStoreRecord(key,context,result),plaintext);
@@ -72,6 +75,9 @@ test('SDK encrypted sync survives a second device and rejects context substituti
   await assert.rejects(openRedStoreRecord(key,{...context,kind:'file'},result));
   await assert.rejects(openRedStoreRecord(key,context,{...result,revision:2}));
   assert.equal((await b.storeDelete('sync',context.id,1,newRedStoreId())).deleted,1);
+  const delta=await a.storeChanges('sync',initial.cursor);assert.equal(delta.reset,false);assert.equal(delta.items.length,1);assert.equal(delta.items[0]?.deleted,1);assert.equal(delta.items[0]?.revision,2);assert.notEqual(delta.cursor,initial.cursor);
+  const reset=await a.storeChanges('sync','f'.repeat(64));assert.equal(reset.reset,true);assert.deepEqual(reset.items,delta.items);
+  assert.ok(!JSON.stringify(delta).includes(prepared.envelope));
   await assert.rejects(openRedStoreRecord(key,context,await a.storeGet('sync',context.id)));
  }finally{s.close();await rm(root,{recursive:true,force:true});}
 });

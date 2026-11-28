@@ -1,4 +1,4 @@
-# RED SDK v0.3 – private app identity
+# RED SDK – private app identity and ecosystem services
 
 Build from the RED ION repository root:
 
@@ -70,3 +70,107 @@ On HTTP 409 fetch the latest record and ask the user or perform a verified
 domain merge; never blindly rebase the local revision. Record keys remain
 outside the server. File objects are small (44,000 plaintext bytes), not a
 streaming file system. Browser-only identity clients remain identity-only.
+
+### SDK 0.8: incremental RED Sync
+
+Call `storeChanges(kind, cursor)` to retrieve metadata for only changed
+objects (including tombstones). `reset:true` requires reconciliation
+against the complete bounded metadata inventory. Fetch and authenticate
+ciphertext with `storeGet` / `openRedStoreRecord`. Fetch may return a newer
+revision; never overwrite pending local edits automatically. Apply records
+and persist the returned cursor in one local transaction. An unknown cursor
+(e.g. after restore) causes a fresh snapshot rather than silent data loss.
+No credentials, encryption keys or plaintext are included in the feed.
+
+### SDK 0.9: atomic pull and app-scoped RED Config
+
+`createRedSync(client, scope, key, adapter, decode)` provides one explicit
+pull cycle. Implement the adapter with a local transaction that compares
+the generation, imports data, durably records conflicts and commits the
+cursor together. If a fetch, validation or decryption fails, no cursor is
+committed. Dirty records, rollbacks, missing objects and unauthenticated
+tombstones are conflicts, never automatic destructive actions. The decoder
+must return owned data, not a view of the temporary plaintext buffer.
+Call pull from an app-controlled foreground/background scheduler, with
+backoff; this package does not install one. Use a dedicated key and scope
+per app and store kind. `createRedConfigContext` provides a deterministic
+opaque ID and separate HKDF-derived key for theme, locale and reduced motion.
+No secrets or arbitrary settings accepted. Grant Sync as before. Config is
+app-scoped, not cross-app SSO or shared global preferences. Dispose keys when
+not in use. Platform storage, native integration and actual conflict UI remain
+app responsibilities.
+
+When RED Config shares a sync feed with application records, pass a map of
+exact record IDs to authenticated decoders (e.g. `new Map([[config.id,
+config.open]])`) as the last `createRedSync` argument. Decoders must verify
+context and ciphertext; the default path uses the app record key. Use
+`createRedSyncCoordinator` for app lifecycle triggers, coalescing and bounded
+exponential backoff. It does not create timers or continue after `stop`;
+in-flight work must still be handled by the platform lifecycle.
+
+### SDK 0.10: manual trusted-device storage-key transfer
+
+`createRedDeviceKeyTransfer` uses ephemeral P-256 ECDH, HKDF-SHA256 and
+AES-256-GCM. Exchange the two public offers on trusted devices and compare
+the full 128-bit fingerprint independently before calling `confirm`.
+The sender wraps an existing 32-byte app/kind storage key; the recipient
+unwraps once and must save it in native secure storage. Never exchange the
+fingerprint through an untrusted relay or automatically accept it. The
+packet is bound to the offer transcript, origin, owner, app and kind.
+No server receives the key; QR scanning, secure storage UI, key rotation
+and automated recovery remain outside this helper. Restart a failed transfer
+with new offers. The helper does not authenticate device ownership by itself.
+
+### SDK 0.11 – RED Files multipart pilot
+
+`createRedFiles(client, scope, fileStorageKey)` prepares a bounded encrypted
+upload plan for immutable files up to 8 MiB. Each 40,000-byte chunk and the
+manifest have separate per-file HKDF keys. Names, ordered chunk IDs, lengths
+and SHA-256 digests are authenticated inside the encrypted manifest. Persist
+the exact encrypted plan until `upload` returns; retry with the same plan if
+the response is lost. Upload validates the entire plan first and publishes
+the manifest last. Download by manifest ID returns bytes only after every
+chunk is authenticated and checked. This is not a streaming filesystem:
+preparation and the legacy download buffer the complete file; failed uploads may
+leave orphan chunks. The optional `downloadTo(id, sink)` API authenticates one
+chunk at a time and passes it to a trusted local transactional sink. The sink
+must stage privately, publish atomically in `commit`, and discard all staging
+in `abort` (including a partially failed `begin`). Borrowed bytes are wiped
+when `write` settles. The SDK cannot verify the platform's atomic rename or
+secure staging guarantees; an abort failure is surfaced. The file size and
+account quotas remain unchanged; upload streaming and native SSD adapters
+are still open. No automatic garbage collection or overwrite/delete API.
+The existing 16 MiB encoded-data / 1024-object per-account pilot limit still
+applies; other stored objects may prevent an 8 MiB upload. Keep explicit
+manifest references in your local app catalogue. File names are display
+metadata only; apply platform-specific path sanitization before export.
+
+### SDK 0.12 – RED Search
+
+`createRedLocalSearch()` builds an in-memory index only from explicitly
+supplied app-local display metadata (title, tags, summary and type).
+It supports ranked multi-term matching, accent folding, type filters and
+bounded results. No network, persistence, remote index or cross-app access.
+Use a separate instance per authenticated app/account; clear or dispose it
+on logout and lock. It is not automatic integration with RED ION documents.
+
+### SDK 0.13 – RED SSO pairing foundation
+
+`prepareRedBatchApproval` validates an explicit list of public pairing
+requests from distinct RED apps. The owner UI must show every requested
+app and challenge, obtain confirmation, and send the exact list to
+`POST /red-id/v2/approve-batch` using a real RED ION owner-device session.
+The entire approval succeeds or fails atomically. Each target app must
+claim its own one-time proof and receives independent credentials. No
+shared session, silent SSO, automatic cross-app permission or browser
+owner access. Batch-approval UI is not yet integrated.
+
+### SDK 0.14 – RED Clipboard (explicit text share pilot)
+
+`prepareRedClipboard(key, source, target, text)` prepares a client-encrypted message on the `clipboard` channel. Require explicit directional RED Share grant and a separately fingerprint-verified channel key. Maximum 8192 UTF-8 bytes, authenticated creation/expiry timestamps, five-minute logical TTL (30 seconds future-clock tolerance), and expected sender/recipient/channel checks in `openRedClipboard(key, source, target, message)`. Use the existing share send/inbox/ACK transport. Persist processed IDs before ACK; clients decide whether to paste, never auto-copy or inspect the OS clipboard. Ciphertext may remain in the existing server mailbox until ACK or its existing expiry (up to 24 hours). No same-app device targeting, global clipboard, native UI or replay store provided. No password/secret auto-transfer. Client clocks must be reasonably synchronized.
+
+Batch pairing requests are strictly limited to the four public fields `kind`, `version`, `app`, `challenge`. Never include the private verifier in the JSON provided to the owner UI.
+
+### SDK 0.15 – durable clipboard receive contract
+
+`receiveRedClipboard` authenticates the encrypted message and TTL, calls a native adapter's atomic `commitOnce(address,message,expiresAt)` and only then calls `shareAck`. Persist encrypted payload and receipt together in the app's scoped durable store. An ACK failure can be retried without duplicate storage while the logical message is valid. The adapter must enforce uniqueness atomically, retain receipt IDs through relay expiry, reject conflicting ciphertext for an existing ID, and expire stored payloads before explicit paste. No plaintext is handed to the adapter. No native persistence implementation or OS clipboard access is provided by this helper. For already-expired messages a separate explicit cleanup path is still needed.

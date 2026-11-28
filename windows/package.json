@@ -12,6 +12,8 @@
     "dist": "npm run prepare:app && npm --prefix ../plugins/red-ion run build && electron-builder --win nsis portable --x64",
     "release:signed": "npm run prepare:app && node release-signed.mjs",
     "start:once": "npm run prepare:app && electron .",
+    "preview:check": "node studio-preview-check.mts",
+    "preview:exe": "node studio-preview-exe.mts",
     "dist:mac": "npm run prepare:app && electron-builder --mac dmg zip --arm64 --config.directories.output=../build/macos-dist --publish never",
     "test:mac": "node --test macos-desktop.test.cjs"
   },
