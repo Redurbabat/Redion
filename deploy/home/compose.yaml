@@ -11,7 +11,11 @@ services:
     ports:
       - "127.0.0.1:8790:8790"
     volumes:
-      - "${REDION_DATA_DIR:?Set absolute private storage path}:/data"
+      - type: bind
+        source: ${REDION_DATA_DIR:?Set absolute private storage path}
+        target: /data
+        bind:
+          create_host_path: false
     read_only: true
     tmpfs:
       - /tmp

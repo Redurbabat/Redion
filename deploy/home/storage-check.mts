@@ -32,11 +32,26 @@ export function noNestedMounts(tree:unknown,root:string):boolean{
  }
  return true;
 }
+/** Pin the expected filesystem UUID and mountpoint, not just any encrypted
+ * filesystem (e.g. an encrypted system disk after an SSD disappears).
+ * Linux findmnt JSON, exactly one mount, no subdirectory bind mount. */
+export function expectedStorageMount(tree:unknown,dataDir:string,mountpoint:string,uuid:string):boolean{
+ const uuidPattern=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+ if(!uuidPattern.test(uuid)||!mountpoint.startsWith('/')||!dataDir.startsWith('/'))return false;
+ const base=resolve(mountpoint),data=resolve(dataDir);
+ if(base===sep||(data!==base&&!data.startsWith(base+sep)))return false;
+ if(!tree||typeof tree!=='object')return false;
+ const list=(tree as {filesystems?:unknown}).filesystems;
+ if(!Array.isArray(list)||list.length!==1)return false;
+ const m=list[0] as {target?:unknown;uuid?:unknown;fsroot?:unknown;fstype?:unknown;'maj:min'?:unknown}|null;
+ return !!m&&m.target===base&&typeof m.uuid==='string'&&m.uuid.toLowerCase()===uuid.toLowerCase()&&m.fsroot==='/'&&
+  (m.fstype==='ext4'||m.fstype==='xfs')&&typeof m['maj:min']==='string'&&/^\d+:\d+$/.test(m['maj:min']);
+}
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
- const [mode,arg,raw]=process.argv.slice(2);
+ const [mode,arg,raw,mountpoint,uuid]=process.argv.slice(2);
  try{
   if(!arg||!raw)throw Error('Missing topology');
   const data=JSON.parse(raw);
-  if(!(mode==='device'?cryptProtected(data,arg):mode==='nested'?noNestedMounts(data,arg):false))throw Error('Encryption topology or nested mounts not verified');
+  if(!(mode==='device'?cryptProtected(data,arg):mode==='nested'?noNestedMounts(data,arg):mode==='expected'&&mountpoint&&uuid?expectedStorageMount(data,arg,mountpoint,uuid):false))throw Error('Encryption topology or nested mounts not verified');
  }catch{console.error('Storage preflight failed: encryption not verified. No changes performed.');process.exitCode=2;}
 }

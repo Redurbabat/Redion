@@ -90,3 +90,7 @@ Run 46163679899 meldet drei Typfehler: SQLite-Spalten vor Wiederherstellung auf 
 ## CI-Korrektur: Windows-Paketgrenze
 
 Die Windows-Builds 46163850149 und 46163850019 scheiterten an TS7006 im DPAPI-Test (`catch`-Parameter). Testquelle in `pruefungen/` verschoben, Fehlerparameter typisiert; der separate Smoke-Builder referenziert den neuen Pfad. `windows/tsconfig.json` und Produktions-Paketregeln bleiben unverändert. Der zuvor erfolgreiche DPAPI-Smoke bleibt verpflichtend. Neue Windows-CI erforderlich.
+
+## P0-Fortschritt: SSD-Mount-Identität
+
+Vorbereiteter Host-Preflight pinnt optional dedizierten Mountpoint + Dateisystem-UUID, prüft Bind-Subroot, Typ und Major/Minor und wiederholt Identitätsprüfung nach dm-crypt-Topologie. Compose-Bind mit `create_host_path: false` verhindert automatisch erzeugte Host-Pfade. Regression mit synthetischem Mount-JSON. Keine physische SSD-Prüfung, kein kontinuierlicher Guard, kein Schutz gegen bereits vorhandenen Ersatzordner ohne Preflight. Neue CI noch ausstehend.
