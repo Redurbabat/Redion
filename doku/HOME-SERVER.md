@@ -350,3 +350,13 @@ Vor dem produktiven Betrieb LUKS-Datenträger separat einrichten, Recovery-Key
 separat sichern und Wiederherstellung testen; nicht auf einer bestehenden
 unverschlüsselten SSD automatisch LUKS formatieren. Kein realer Datenträger
 wurde in CI geprüft; synthetische Topologien testen die Entscheidungslogik.
+
+Die erste echte Containerprobe hat einen bisherigen Paketierungsfehler
+aufgedeckt: Der Home-Server importiert den generierten Schaltplan aus
+`quell/`, das Dockerfile kopierte aber ausschliesslich `server/`. Der
+Container enthielt daher zwar Code, konnte jedoch nicht starten. Das
+Dockerfile kopiert jetzt auch die benötigten generierten Quellen und die
+Paket-Typdefinition. Für die CI-Rollbackprobe wird der alte Servercode
+unverändert aus seinem Commit archiviert, aber mit dem korrigierten
+Dockerfile gebaut. Damit wird kein zuvor defektes historisches Image als
+lauffähig ausgegeben; es handelt sich um zwei neu gebaute Codeversionen.

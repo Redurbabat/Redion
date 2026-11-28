@@ -8,7 +8,10 @@ new_sha=$(git rev-parse HEAD)
 tmp=$(mktemp -d)
 trap 'rm -rf -- "$tmp"' EXIT
 mkdir -p "$tmp/old" "$tmp/live" "$tmp/rehearsal"
-git archive "$old_sha" server deploy/home/Dockerfile | tar -x -C "$tmp/old"
+git archive "$old_sha" server quell package.json deploy/home/Dockerfile | tar -x -C "$tmp/old"
+# The original baseline Dockerfile omitted required runtime assets and could
+# not start. Rebuild only its packaging; retain its exact old server code.
+cp deploy/home/Dockerfile "$tmp/old/deploy/home/Dockerfile"
 old="redion-home:$old_sha"; new="redion-home:$new_sha"
 docker build -f "$tmp/old/deploy/home/Dockerfile" --label "org.opencontainers.image.revision=$old_sha" -t "$old" "$tmp/old"
 docker build -f deploy/home/Dockerfile --label "org.opencontainers.image.revision=$new_sha" -t "$new" .
@@ -30,4 +33,4 @@ bash deploy/home/rehearse-update.sh "$old" "$new" --approve-rehearsal
 (cd "$tmp/live" && find . -type f -print0 | sort -z | xargs -0 sha256sum) > "$tmp/after"
 cmp "$tmp/before" "$tmp/after"
 [[ -z $(find "$tmp/rehearsal" -mindepth 1 -print -quit) ]]
-echo 'Real Docker rehearsal passed; fixture live file hashes unchanged.'
+echo 'Docker rehearsal passed with corrected packaging on both revisions; fixture live file hashes unchanged.'
