@@ -120,8 +120,11 @@ try{
   assert.equal(await reference.locator('main img').getAttribute('src'),frozen,'Referenz muss beim Seitenwechsel unverändert bleiben');
   const closed=reference.waitForEvent('close');
   await app.evaluate(({BrowserWindow,Menu})=>{
-    const win=BrowserWindow.getAllWindows().find(w=>w.webContents.getURL().startsWith('redion-local:'))!;
-    Menu.getApplicationMenu()?.getMenuItemById('studio-reference-close')?.click(null as never,win,{} as never);
+    const win=BrowserWindow.getAllWindows().find((w: import('electron').BrowserWindow)=>w.webContents.getURL().startsWith('redion-local:'));
+    if(!win)throw Error('Hauptfenster fehlt.');
+    const item=Menu.getApplicationMenu()?.getMenuItemById('studio-reference-close');
+    if(!item)throw Error('Referenz-Schliessmenü fehlt.');
+    item.click(item,win,{} as never);
   });
   await closed;
   console.log('PASS: getrennte schreibgeschützte Referenz bleibt beim Seitenwechsel erhalten und schliesst.');
