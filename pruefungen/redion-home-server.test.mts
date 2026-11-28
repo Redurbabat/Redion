@@ -124,7 +124,14 @@ test('Opt-in home MCP requires a local one-time consent login and scoped OAuth',
       assert.equal(issued.scope,'redion:read');
       const list=await send('/mcp/cloud',{method:'POST',headers:{Authorization:'Bearer '+issued.access_token,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/list'})});
       assert.equal(list.status,200);
-      assert.ok((await list.json() as {result:{tools:unknown[]}}).result.tools.length>0);
+      const tools=(await list.json() as {result:{tools:{name:string}[]}}).result.tools;
+      assert.ok(tools.some(t=>t.name==='redion_get_home_ecosystem_capabilities'));
+      const rpc=(name:string,args:object,token=issued.access_token)=>send('/mcp/cloud',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:2,method:'tools/call',params:{name,arguments:args}})});
+      const caps=await (await rpc('redion_get_home_ecosystem_capabilities',{})).json() as {result:{structuredContent:{apps:string[];services:{mcp:{externalAppActions:boolean}}}}};
+      assert.equal(caps.result.structuredContent.apps.length,11);
+      assert.equal(caps.result.structuredContent.services.mcp.externalAppActions,false);
+      assert.equal((await rpc('redion_get_home_ecosystem_capabilities',{},'invalid')).status,401);
+      assert.equal((await (await rpc('redion_get_home_ecosystem_capabilities',{owner:'x'})).json() as {result:{isError:boolean}}).result.isError,true);
       assert.equal((await send('/home/mcp-logout',{method:'POST',headers:{Origin:origin,Cookie:cookie}})).status,204);
       assert.match(await (await send('/mcp/settings',{headers:{Cookie:cookie}})).text(),/name="code"/);
     }finally{service.close();}

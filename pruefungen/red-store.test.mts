@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {openHomeServer} from '../server/home-server.ts';
 import {approveHomeDevice} from '../server/home/pairing.ts';
-import {createRedPairProof} from '../red-sdk/client.mts';
+import {createRedPairProof,createRedIdV2Client,prepareRedStoreWrite,openRedStoreRecord,newRedStoreId,type RedSession} from '../red-sdk/client.mts';
 test('RED store: explicit grants, device conflict, retry, tombstone and app isolation',async()=>{
  const root=await mkdtemp(join(tmpdir(),'red-store-')),origin='https://home.example.test',s=await openHomeServer({dataDir:root,origin,webOrigins:'https://web.example.test'});
  try{
@@ -45,5 +45,33 @@ test('RED store: explicit grants, device conflict, retry, tombstone and app isol
   const newDevice=await pair('red-fit');assert.equal((await post(base+'get',{kind,id},newDevice)).status,403);
   assert.equal((await post(base+'grant',{app:'red-fit',kind},token)).status,201);
   assert.equal((await post(base+'get',{kind,id},newDevice)).status,200);
+ }finally{s.close();await rm(root,{recursive:true,force:true});}
+});
+
+test('SDK encrypted sync survives a second device and rejects context substitution',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'red-store-sdk-')),origin='https://home.example.test',s=await openHomeServer({dataDir:root,origin});
+ try{
+  const post=(path:string,body:object,token?:string)=>s.handle(new Request(origin+path,{method:'POST',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(body)}));
+  const {code}=await (await post('/konto/code',{geraet:'Owner'})).json() as {code:string};approveHomeDevice(s.store.sqlite,code);
+  const {token,konto}=await (await post('/konto/code-holen',{code})).json() as {token:string;konto:{id:string}};
+  const make=async()=>{
+   let value:RedSession|null=null;
+   const store={async load(){return value;},async save(v:RedSession){value=v;},async clear(){value=null;}};
+   const client=createRedIdV2Client(origin,'red-poly',store,(i,n)=>s.handle(new Request(i,n)));
+   const proof=await createRedPairProof();await post('/red-id/v2/approve-login',{app:'red-poly',challenge:proof.challenge},token);await client.claimLogin(proof.verifier);return client;
+  };
+  const a=await make(),b=await make();await post('/red-store/v1/grant',{app:'red-poly',kind:'sync'},token);
+  const key=crypto.getRandomValues(new Uint8Array(32)),context={origin,owner:konto.id,app:'red-poly',kind:'sync',id:newRedStoreId()} as const,plaintext=new TextEncoder().encode('private learning progress');
+  const prepared=await prepareRedStoreWrite(key,context,0,plaintext);
+  assert.equal((await a.storePut(prepared)).revision,1);
+  assert.equal((await a.storePut(prepared)).revision,1);
+  const page=await b.storeList('sync');assert.equal(page.items[0]?.id,context.id);
+  const result=await b.storeGet('sync',context.id);assert.equal(result.revision,1);
+  assert.deepEqual(await openRedStoreRecord(key,context,result),plaintext);
+  await assert.rejects(openRedStoreRecord(key,{...context,owner:'other'},result));
+  await assert.rejects(openRedStoreRecord(key,{...context,kind:'file'},result));
+  await assert.rejects(openRedStoreRecord(key,context,{...result,revision:2}));
+  assert.equal((await b.storeDelete('sync',context.id,1,newRedStoreId())).deleted,1);
+  await assert.rejects(openRedStoreRecord(key,context,await a.storeGet('sync',context.id)));
  }finally{s.close();await rm(root,{recursive:true,force:true});}
 });

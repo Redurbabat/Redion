@@ -379,3 +379,13 @@ Konto als technische Pilotgrenze, kein 30-GB-Tarif. Kleine Dateiobjekte bis
 Schlüsselverteilung, lokaler Konfliktdialog, native UI und explizite Datenlöschung
 jenseits der Tombstones bleiben offen. Backups enthalten weiterhin verschlüsselte
 Objekte und Metadaten in SQLite; vollständige Datenträgerverschlüsselung nötig.
+
+### Zentrale MCP-Funktionsübersicht
+
+Das private Home-MCP ergänzt `redion_get_home_ecosystem_capabilities`
+nach normaler OAuth-Anmeldung mit `redion:read`. Es liefert ausschliesslich
+nicht vertrauliche Funktionsmetadaten, keine App-Daten, Sitzungsschlüssel,
+Dateinamen, Grant-Inventare oder Zugriff auf verschlüsselte Inhalte.
+Die öffentliche Cloud-MCP-Werkzeugliste bleibt unverändert. Externe App-Aktionen
+benötigen künftig gesonderte Freigaben und Adapter; dieses Tool ist noch kein
+universeller App-Controller.

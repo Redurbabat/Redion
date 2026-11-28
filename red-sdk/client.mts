@@ -51,21 +51,40 @@ export function createRedIdV2Client(origin:string,app:RedAppId,store:RedSecureSt
   };
   const rotate=async(s:RedSession)=>{try{const next=validate(await request('refresh','POST',{app,refreshToken:s.refreshToken}));await store.save(next);return next;}catch(error){if(error instanceof RedIdError&&error.status===401)await store.clear();throw error;}};
   const loaded=async()=>{const s=await store.load();if(!s)throw new RedIdError(401);return validate(s);};
-  const share=async(path:string,input?:object)=>{
+  const authenticated=async(service:'red-share'|'red-store',path:string,input?:object)=>{
     let s=await loaded();
     if(Date.parse(s.expiresAt)<=Date.now()+30000)s=await rotate(s);
     const send=async(session:RedSession)=>{
-      const res=await fetcher(origin+'/red-share/v1/'+path,{method:input?'POST':'GET',headers:{Authorization:'Bearer '+session.accessToken,...(input?{'Content-Type':'application/json'}:{})},...(input?{body:JSON.stringify(input)}:{}),cache:'no-store',credentials:'omit',redirect:'error'});
+      const res=await fetcher(origin+'/'+service+'/v1/'+path,{method:input?'POST':'GET',headers:{Authorization:'Bearer '+session.accessToken,...(input?{'Content-Type':'application/json'}:{})},...(input?{body:JSON.stringify(input)}:{}),cache:'no-store',credentials:'omit',redirect:'error'});
       if(!res.ok)throw new RedIdError(res.status);return res.json();
     };
     try{return await send(s);}catch(error){if(!(error instanceof RedIdError)||error.status!==401)throw error;return send(await rotate(s));}
   };
   return {
-    shareSend:(target:RedAppId,channel:string,id:string,envelope:string)=>serial(async()=>{await share('send',{target,channel,id,envelope});}),
+    shareSend:(target:RedAppId,channel:string,id:string,envelope:string)=>serial(async()=>{await authenticated('red-share','send',{target,channel,id,envelope});}),
     shareInbox:()=>serial(async():Promise<RedShareMessage[]>=>{
-      const data=await share('inbox');if(data?.version!==1||!Array.isArray(data.messages)||data.messages.length>32||!data.messages.every(isShareMessage))throw Error('Invalid share inbox');return data.messages as RedShareMessage[];
+      const data=await authenticated('red-share','inbox');if(data?.version!==1||!Array.isArray(data.messages)||data.messages.length>32||!data.messages.every(isShareMessage))throw Error('Invalid share inbox');return data.messages as RedShareMessage[];
     }),
-    shareAck:(source:RedAppId,channel:string,id:string)=>serial(async()=>{await share('ack',{source,channel,id});}),
+    shareAck:(source:RedAppId,channel:string,id:string)=>serial(async()=>{await authenticated('red-share','ack',{source,channel,id});}),
+    storeList:(kind:RedStoreKind,after?:string)=>serial(async():Promise<RedStorePage>=>{
+      const data=await authenticated('red-store','list',{kind,...(after?{after}:{})});
+      if(data?.version!==1||!Array.isArray(data.items)||data.items.length>64||!data.items.every(isStoreMeta)||(data.next!==null&&(typeof data.next!=='string'||!storeId(data.next))))throw Error('Invalid RED store page');
+      return data as RedStorePage;
+    }),
+    storeGet:(kind:RedStoreKind,id:string)=>serial(async():Promise<RedStoreRecord>=>{
+      const data=await authenticated('red-store','get',{kind,id});
+      if(data?.version!==1||data.id!==id||!isStoreRecord(data))throw Error('Invalid RED store record');
+      return data as RedStoreRecord;
+    }),
+    storePut:(prepared:RedStoreWrite)=>serial(async():Promise<RedStoreResult>=>{
+      const {kind,id,expectedRevision,operationId,envelope}=prepared;
+      const data=await authenticated('red-store','put',{kind,id,expectedRevision,operationId,envelope});
+      return checkStoreResult(data,id,expectedRevision+1,0);
+    }),
+    storeDelete:(kind:RedStoreKind,id:string,expectedRevision:number,operationId:string)=>serial(async():Promise<RedStoreResult>=>{
+      const data=await authenticated('red-store','delete',{kind,id,expectedRevision,operationId});
+      return checkStoreResult(data,id,expectedRevision+1,1);
+    }),
     claimLogin:(verifier:string)=>serial(async()=>{const s=validate(await request('claim-login','POST',{app,verifier}));await store.save(s);}),
     pair:(code:string,verifier:string)=>serial(async()=>{const s=validate(await request('exchange','POST',{app,code,verifier}));await store.save(s);}),
     refresh:()=>serial(async()=>{await rotate(await loaded());}),
@@ -212,4 +231,56 @@ export async function openRedShareJson<T>(key:Uint8Array,target:RedAppId,message
  const decoded=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
  if(decoded?.version!==1||!Object.hasOwn(decoded,'data'))throw Error('Invalid RED JSON payload');
  return validate(decoded.data);
+}
+
+export type RedStoreKind='sync'|'file';
+export type RedStoreContext={origin:string;owner:string;app:RedAppId;kind:RedStoreKind;id:string;revision:number};
+export type RedStoreWrite={kind:RedStoreKind;id:string;expectedRevision:number;operationId:string;envelope:string};
+export type RedStoreResult={version:1;id:string;revision:number;deleted:0|1};
+export type RedStoreRecord=RedStoreResult&{envelope:string;updated:number};
+export type RedStoreMeta=Omit<RedStoreRecord,'version'|'envelope'>&{encodedBytes:number};
+export type RedStorePage={version:1;items:RedStoreMeta[];next:string|null};
+const storeId=(s:string)=>/^[a-f0-9]{32}$/.test(s);
+const safeNatural=(x:unknown)=>Number.isSafeInteger(x)&&Number(x)>=0;
+const storeKind=(x:unknown):x is RedStoreKind=>x==='sync'||x==='file';
+export function newRedStoreId(){return Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,'0')).join('');}
+function isStoreResult(v:unknown):v is RedStoreResult{
+ if(!v||typeof v!=='object')return false;
+ const r=v as Record<string,unknown>;return typeof r.id==='string'&&storeId(r.id)&&safeNatural(r.revision)&&Number(r.revision)>0&&(r.deleted===0||r.deleted===1);
+}
+function validStoreEnvelope(v:unknown):v is string{
+ if(typeof v!=='string'||!/^[A-Za-z0-9_-]{38,60000}$/.test(v))return false;
+ try{const b=unbase64url(v);return b.length>=28&&base64url(b)===v;}catch{return false;}
+}
+function isStoreMeta(v:unknown):v is RedStoreMeta{
+ if(!isStoreResult(v))return false;
+ const r=v as RedStoreMeta;return safeNatural(r.updated)&&safeNatural(r.encodedBytes)&&r.encodedBytes<=60000&&(r.deleted===1?r.encodedBytes===0:r.encodedBytes>=38);
+}
+function isStoreRecord(v:unknown):v is RedStoreRecord{
+ if(!isStoreResult(v))return false;
+ const r=v as RedStoreRecord;return safeNatural(r.updated)&&(r.deleted===1?r.envelope==='':validStoreEnvelope(r.envelope));
+}
+function checkStoreResult(v:unknown,id:string,revision:number,deleted:0|1):RedStoreResult{
+ if(!isStoreResult(v)||v.version!==1||v.id!==id||v.revision!==revision||v.deleted!==deleted)throw Error('Unexpected RED store revision');
+ return v;
+}
+function storeAAD(c:RedStoreContext){
+ const u=new URL(c.origin);
+ if(u.protocol!=='https:'||u.origin!==c.origin||typeof c.owner!=='string'||c.owner.length<1||c.owner.length>128||!shareApps.has(c.app)||!storeKind(c.kind)||!storeId(c.id)||!safeNatural(c.revision)||c.revision<1)throw Error('Invalid RED store context');
+ return new TextEncoder().encode(JSON.stringify(['red-store-v1',c.origin,c.owner,c.app,c.kind,c.id,c.revision]));
+}
+/** Key is per owner/app and must be distributed securely outside the server.
+ * The envelope binds origin, owner, app, object kind, ID and revision.
+ * Retain the prepared operation unchanged for safe retry. */
+export async function prepareRedStoreWrite(key:Uint8Array,context:Omit<RedStoreContext,'revision'>,expectedRevision:number,bytes:Uint8Array):Promise<RedStoreWrite>{
+ if(key.byteLength!==32||bytes.byteLength>44000||!safeNatural(expectedRevision)||expectedRevision>=Number.MAX_SAFE_INTEGER-1)throw Error('Invalid RED store payload');
+ const nonce=crypto.getRandomValues(new Uint8Array(12)),k=await crypto.subtle.importKey('raw',new Uint8Array(key),'AES-GCM',false,['encrypt']);
+ const ciphertext=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv:nonce,additionalData:storeAAD({...context,revision:expectedRevision+1})},k,new Uint8Array(bytes)));
+ const combined=new Uint8Array(nonce.length+ciphertext.length);combined.set(nonce);combined.set(ciphertext,nonce.length);
+ return {kind:context.kind,id:context.id,expectedRevision,operationId:newRedStoreId(),envelope:base64url(combined)};
+}
+export async function openRedStoreRecord(key:Uint8Array,context:Omit<RedStoreContext,'revision'>,record:RedStoreRecord):Promise<Uint8Array>{
+ if(key.byteLength!==32||!isStoreRecord(record)||record.version!==1||record.id!==context.id||record.deleted!==0)throw Error('Invalid or deleted RED store record');
+ const raw=unbase64url(record.envelope),k=await crypto.subtle.importKey('raw',new Uint8Array(key),'AES-GCM',false,['decrypt']);
+ return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:raw.slice(0,12),additionalData:storeAAD({...context,revision:record.revision})},k,raw.slice(12)));
 }

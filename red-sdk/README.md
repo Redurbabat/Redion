@@ -60,3 +60,13 @@ fixture is tested in all three implementations. Native client send/inbox/ACK
 methods use the existing per-app credentials and explicit grants. App-level
 key storage, key confirmation UI, business schema validation and atomic
 local receipt/import remain application responsibilities.
+
+### RED Sync / Files SDK 0.7
+
+Use `newRedStoreId`, `prepareRedStoreWrite`, `storePut`, `storeList`,
+`storeGet`, `openRedStoreRecord`, and `storeDelete`. Explicit owner grants
+are required per app/kind. Preserve the original operation on retry.
+On HTTP 409 fetch the latest record and ask the user or perform a verified
+domain merge; never blindly rebase the local revision. Record keys remain
+outside the server. File objects are small (44,000 plaintext bytes), not a
+streaming file system. Browser-only identity clients remain identity-only.

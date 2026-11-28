@@ -9,6 +9,7 @@ import {beantworte} from './kern.ts';
 import {prepareHomeSync,createHomeSyncWait} from './home/live-sync.ts';
 import {prepareRedIdV2,createRedIdV2,RED_ID_V2_ROUTES,revokeRedAppEverywhere} from './home/red-id-v2.ts';
 import {prepareRedShare,createRedShare,SHARE_ROUTES} from './home/red-share.ts';
+import {homeEcosystemCapabilities} from './home/ecosystem.ts';
 import {prepareRedStore,createRedStore,STORE_ROUTES} from './home/red-store.ts';
 import {parseRedWebOrigins,isRedWebRoute} from './home/web-origins.ts';
 import {createHomeDashboard} from './home/dashboard.ts';
@@ -69,7 +70,7 @@ export async function openHomeServer(options:{dataDir:string;origin:string;enabl
           if(request.method!=='GET')return json(401,'consent_login_required');
           return homeConsentLogin(path+new URL(request.url).search,origin.origin);
         }
-        return handleCloudMcp(request,{DB:store.db},false,identify);
+        return handleCloudMcp(request,{DB:store.db},false,identify,()=>homeEcosystemCapabilities(!!options.vaultKey));
       });
     }
     if(path==='/home/dashboard'){

@@ -32,9 +32,10 @@ const missing=()=>json({error:'cloud_mcp_unavailable',
 const rpc=(id:string|number|null,result:unknown)=>json({jsonrpc:'2.0',id,result});
 const rpcError=(id:string|number|null,code:number,message:string)=>json({jsonrpc:'2.0',id,error:{code,message}});
 const bodyLimit=32768;
+const homeCapabilityTool={name:'redion_get_home_ecosystem_capabilities',description:'Read the private Home Server capability catalog. No app data, credentials or administrative grants are returned.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{title:'RED Home Server capabilities',readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}};
 const protocolVersions:readonly string[]=CLOUD_MCP_PROTOCOL_VERSIONS;
 
-export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,accessVerified=false, localIdentify?: (request:Request)=>Promise<CloudUser|null>):Promise<Response>=>{
+export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,accessVerified=false, localIdentify?: (request:Request)=>Promise<CloudUser|null>, localCapabilities?:()=>Record<string,unknown>):Promise<Response>=>{
   const url=new URL(request.url);
   const path=url.pathname;
   if(!publicPaths.has(path)&&!privatePaths.has(path))return json({error:'not_found'},404);
@@ -125,7 +126,7 @@ export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,access
         capabilities:{tools:{listChanged:false}},serverInfo:CLOUD_MCP_SERVER_INFO});
     }
     if(method==='ping')return rpc(id,{});
-    if(method==='tools/list')return rpc(id,{tools:visibleCloudTools(principal)});
+    if(method==='tools/list')return rpc(id,{tools:[...visibleCloudTools(principal),...(localCapabilities?[homeCapabilityTool]:[])]});
     if(method==='tools/call'){
       const params=p.params;
       if(!params||typeof params!=='object'||Array.isArray(params))
@@ -136,7 +137,9 @@ export const handleCloudMcp=async(request:Request,env:CloudMcpEnvironment,access
       if(!args||typeof args!=='object'||Array.isArray(args))
         return rpcError(id,-32602,'Ungültige Argumente.');
       try{
-        const result=await createCloudActions(ablage,db,principal)(name,args as Record<string,unknown>);
+        const result=name===homeCapabilityTool.name&&localCapabilities?
+          (Object.keys(args).length?(()=>{throw new CloudMcpToolError('invalid_arguments','Keine Argumente erlaubt.');})():localCapabilities()):
+          await createCloudActions(ablage,db,principal)(name,args as Record<string,unknown>);
         // Keep the classic text content for older MCP clients, and expose a
         // standard structuredContent object for adapters which consume
         // structured tool output. Never use the tool's document payload as
