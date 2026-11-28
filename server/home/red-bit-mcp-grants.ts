@@ -27,6 +27,18 @@ export function prepareRedBitMcpGrants(db:DatabaseSync,enabled:ReadonlySet<Mode>
    db.exec("CREATE TRIGGER IF NOT EXISTS home_red_bit_mcp_"+kind+"_"+event.toLowerCase()+" AFTER "+event+" ON "+table+" BEGIN DELETE FROM home_red_bit_mcp_grant WHERE session_id=OLD.session_id AND mode='"+kind+"'; END;");
   }
  }
+ // Delegated jobs keep separate provenance and replay tombstones. A grant
+ // change cancels outstanding jobs rather than allowing a new grant to revive them.
+ db.exec("CREATE TABLE IF NOT EXISTS home_red_bit_mcp_job(owner TEXT NOT NULL,id TEXT NOT NULL,grant_id TEXT NOT NULL,epoch TEXT NOT NULL,session_id TEXT NOT NULL,mode TEXT NOT NULL,created INTEGER NOT NULL,PRIMARY KEY(owner,id));");
+ for(const kind of enabled){
+  const table=kind==='status'?'home_red_bit_read_job':'home_red_bit_transport_job';
+  const cancel=kind==='status'?"expires=0,result=NULL":"expires=0,state='cancelled',outcome=NULL";
+  const match="j.owner=OLD.owner AND j.grant_id=OLD.grant_id AND j.session_id=OLD.session_id AND j.mode='"+kind+"'";
+  for(const event of ['DELETE','UPDATE']){
+   db.exec("CREATE TRIGGER IF NOT EXISTS home_red_bit_mcp_cancel_"+kind+"_"+event.toLowerCase()+" AFTER "+event+" ON home_red_bit_mcp_grant WHEN OLD.mode='"+kind+"' BEGIN UPDATE "+table+" SET "+cancel+" WHERE EXISTS (SELECT 1 FROM home_red_bit_mcp_job j WHERE j.owner="+table+".owner AND j.id="+table+".id AND "+match+"); END;");
+  }
+ }
+ db.exec("CREATE TRIGGER IF NOT EXISTS home_red_bit_mcp_oauth_delete AFTER DELETE ON mcp_state WHEN OLD.kind='grant' BEGIN DELETE FROM home_red_bit_mcp_grant WHERE grant_id=OLD.key; END; CREATE TRIGGER IF NOT EXISTS home_red_bit_mcp_oauth_update AFTER UPDATE ON mcp_state WHEN OLD.kind='grant' AND (json_extract(NEW.data,'$.epoch') IS NOT json_extract(OLD.data,'$.epoch') OR json_extract(NEW.data,'$.active') IS NOT 1) BEGIN DELETE FROM home_red_bit_mcp_grant WHERE grant_id=OLD.key; END;");
  // A new pilot configuration must not revive old explicit authorizations.
  db.exec('DELETE FROM home_red_bit_mcp_grant');
 }
@@ -58,7 +70,7 @@ export function createRedBitMcpGrants(db:DatabaseSync,ablage:Ablage,enabled:Read
     if(!oauth||oauth.epoch!==row.epoch||!device)return [];
     return [{grantId:row.grant_id,sessionId:row.session_id,mode:row.mode,expiresAt:Math.min(Number(row.expires),Number(oauth.expires),Number(device.expires),Number(device.refresh_until))}];
    });
-   return reply(200,{version:1,grants,truncated:rows.length>LIMIT,toolsAvailable:false});
+   return reply(200,{version:1,grants,truncated:rows.length>LIMIT,toolsAvailable:true});
   }
   if(request.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase()!=='application/json')return reply(400,{error:'invalid_request'});
   let v:Record<string,unknown>;
@@ -78,6 +90,6 @@ export function createRedBitMcpGrants(db:DatabaseSync,ablage:Ablage,enabled:Read
   if(!oauth||typeof oauth.epoch!=='string'||!device)return reply(403,{error:'grant_required'});
   const expires=Math.min(now+TTL,Number(oauth.expires),Number(device.expires),Number(device.refresh_until));
   db.prepare('INSERT INTO home_red_bit_mcp_grant(owner,grant_id,epoch,session_id,mode,expires) VALUES(?,?,?,?,?,?) ON CONFLICT(owner,grant_id,session_id,mode) DO UPDATE SET epoch=excluded.epoch,expires=excluded.expires').run(owner,v.grantId,oauth.epoch,v.sessionId,v.mode,expires);
-  return reply(201,{version:1,grantId:v.grantId,sessionId:v.sessionId,mode:v.mode,expiresAt:expires,toolsAvailable:false});
+  return reply(201,{version:1,grantId:v.grantId,sessionId:v.sessionId,mode:v.mode,expiresAt:expires,toolsAvailable:true});
  };
 }
