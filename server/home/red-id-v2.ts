@@ -13,7 +13,7 @@ const appValid=(v:unknown):v is string=>typeof v==='string'&&(RED_APPS as readon
 const is=(v:unknown,re:RegExp):v is string=>typeof v==='string'&&re.test(v);
 const reply=(status:number,data:unknown)=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const ACCESS=15*60*1000,REFRESH=30*86400000,PAIR=5*60*1000;
-export const RED_ID_V2_ROUTES=['/red-id/v2/pair','/red-id/v2/exchange','/red-id/v2/refresh','/red-id/v2/me','/red-id/v2/logout','/red-id/v2/revoke','/red-id/v2/apps','/red-id/v2/approve-login','/red-id/v2/claim-login','/red-id/v2/sessions','/red-id/v2/revoke-session'] as const;
+export const RED_ID_V2_ROUTES=['/red-id/v2/pair','/red-id/v2/exchange','/red-id/v2/refresh','/red-id/v2/me','/red-id/v2/logout','/red-id/v2/revoke','/red-id/v2/apps','/red-id/v2/approve-login','/red-id/v2/claim-login','/red-id/v2/sessions','/red-id/v2/revoke-session','/red-id/v2/approve-batch'] as const;
 export function prepareRedIdV2(db:DatabaseSync){
   db.exec(`CREATE TABLE IF NOT EXISTS home_red_pair (digest TEXT PRIMARY KEY, owner TEXT NOT NULL, app TEXT NOT NULL, challenge TEXT NOT NULL, expires INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS home_red_session (id TEXT PRIMARY KEY, owner TEXT NOT NULL, app TEXT NOT NULL, access_digest TEXT UNIQUE NOT NULL, refresh_digest TEXT UNIQUE NOT NULL, access_until INTEGER NOT NULL, refresh_until INTEGER NOT NULL);
@@ -76,6 +76,28 @@ export function createRedIdV2(db:DatabaseSync,ablage:Ablage){
         v2Sessions:count('SELECT COUNT(*) AS n FROM home_red_session WHERE owner=? AND app=? AND refresh_until>?',app),
         pendingPair:count('SELECT COUNT(*) AS n FROM home_red_pair WHERE owner=? AND app=? AND expires>?',app)+count('SELECT COUNT(*) AS n FROM home_red_login WHERE owner=? AND app=? AND expires>? AND used=0',app)>0}))});
     }
+    if(path.endsWith('/approve-batch')){
+      const who=await werFragt(ablage,{authorization:request.headers.get('authorization')??''});
+      if(!who?.sitzung)return reply(401,{error:'unauthorized'});
+      const entries=inputBody?.requests;
+      if(!inputBody||Object.keys(inputBody).length!==1||!Array.isArray(entries)||entries.length<1||entries.length>RED_APPS.length)return reply(400,{error:'invalid_batch'});
+      const requests:{app:string;challenge:string}[]=[],apps=new Set<string>(),challenges=new Set<string>();
+      for(const item of entries){
+        if(!item||typeof item!=='object'||Array.isArray(item)||Object.keys(item).length!==2||!appValid(item.app)||!is(item.challenge,/^[A-Za-z0-9_-]{43}$/)||apps.has(item.app)||challenges.has(item.challenge))return reply(400,{error:'invalid_batch'});
+        apps.add(item.app);challenges.add(item.challenge);requests.push({app:item.app,challenge:item.challenge});
+      }
+      const owner=String(who.konto.id);
+      return transaction(db,()=>{
+        db.prepare('DELETE FROM home_red_login WHERE expires<=?').run(now);
+        const existing=db.prepare('SELECT challenge FROM home_red_login WHERE challenge=?');
+        if(requests.some(r=>existing.get(r.challenge)))return reply(409,{error:'challenge_already_used'});
+        const count=Number(db.prepare('SELECT COUNT(*) AS n FROM home_red_login WHERE owner=?').get(owner)?.n??0);
+        if(count+requests.length>64)return reply(429,{error:'approval_limit'});
+        const insert=db.prepare('INSERT INTO home_red_login(challenge,owner,app,expires) VALUES(?,?,?,?)');
+        for(const r of requests)insert.run(r.challenge,owner,r.app,now+PAIR);
+        return reply(201,{version:2,apps:requests.map(r=>r.app),expiresAt:new Date(now+PAIR).toISOString()});
+      });
+    }
     if(path.endsWith('/approve-login')){
       const who=await werFragt(ablage,{authorization:request.headers.get('authorization')??''});
       if(!who?.sitzung)return reply(401,{error:'unauthorized'});
@@ -97,9 +119,9 @@ export function createRedIdV2(db:DatabaseSync,ablage:Ablage){
       return transaction(db,()=>{
         const row=db.prepare('SELECT p.owner FROM home_red_login p JOIN konten c ON c.id=p.owner WHERE p.challenge=? AND p.app=? AND p.expires>? AND p.used=0 AND c.gesperrt=0').get(challenge,app,now);
         if(!row||typeof row.owner!=='string')return reply(401,{error:'not_approved'});
-        db.prepare('UPDATE home_red_login SET used=1 WHERE challenge=?').run(challenge);
         db.prepare('DELETE FROM home_red_session WHERE refresh_until<=?').run(now);
         if(Number(db.prepare('SELECT COUNT(*) AS n FROM home_red_session WHERE owner=?').get(row.owner)?.n??0)>=256)return reply(429,{error:'session_limit'});
+        db.prepare('UPDATE home_red_login SET used=1 WHERE challenge=?').run(challenge);
         const c=credentials(now);
         db.prepare('INSERT INTO home_red_session VALUES(?,?,?,?,?,?,?)').run(secret('session_'),row.owner,app,c.accessDigest,c.refreshDigest,c.accessUntil,c.refreshUntil);
         return reply(200,responseTokens(app,c));
@@ -139,9 +161,9 @@ export function createRedIdV2(db:DatabaseSync,ablage:Ablage){
       return transaction(db,()=>{
         const row=db.prepare('SELECT p.owner FROM home_red_pair p JOIN konten c ON c.id=p.owner WHERE p.digest=? AND p.app=? AND p.challenge=? AND p.expires>? AND c.gesperrt=0').get(digest,app,challenge,now);
         if(!row||typeof row.owner!=='string')return reply(401,{error:'invalid_pairing'});
-        db.prepare('DELETE FROM home_red_pair WHERE digest=?').run(digest);
         db.prepare('DELETE FROM home_red_session WHERE refresh_until<=?').run(now);
         if(Number(db.prepare('SELECT COUNT(*) AS n FROM home_red_session WHERE owner=?').get(row.owner)?.n??0)>=256)return reply(429,{error:'session_limit'});
+        db.prepare('DELETE FROM home_red_pair WHERE digest=?').run(digest);
         const c=credentials(now);
         db.prepare('INSERT INTO home_red_session VALUES(?,?,?,?,?,?,?)').run(secret('session_'),row.owner,app,c.accessDigest,c.refreshDigest,c.accessUntil,c.refreshUntil);
         return reply(200,responseTokens(app,c));

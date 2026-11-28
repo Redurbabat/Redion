@@ -3,7 +3,7 @@ import {RED_APPS} from './red-id.ts';
  * opt-in private Home MCP transport after its normal OAuth checks. */
 export function homeEcosystemCapabilities(vaultEnabled:boolean){
  return {version:1,mode:'private-home',apps:[...RED_APPS],services:{
-  identity:{version:2,explicitApproval:true},
+  identity:{version:2,explicitApproval:true,batchApproval:true,sharedSession:false},
   sync:{version:1,scope:'same-owner-app',explicitGrant:true,revisionConflicts:true,incrementalMetadata:true},
   files:{version:1,scope:'same-owner-app',explicitGrant:true,maxPlaintextBytes:44000,streaming:false,incrementalMetadata:true,multipartSdk:{version:2,maxFileBytes:8*1024*1024,chunkBytes:40000,immutable:true,manifestLast:true}},
   notify:{version:1,ownerOnly:true,delivery:'authenticated-poll',push:false},

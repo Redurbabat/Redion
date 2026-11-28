@@ -672,3 +672,19 @@ export function createRedLocalSearch(){
   dispose(){disposed=true;items.clear();}
  };
 }
+
+
+/** Owner UI helper: validate distinct public pairing requests before
+ * presenting an explicit confirmation. Never collects app verifiers
+ * or tokens, and does not itself approve a login. */
+export function prepareRedBatchApproval(payloads:readonly string[]):{requests:{app:RedAppId;challenge:string}[]}{
+ if(payloads.length<1||payloads.length>11)throw Error('Invalid RED batch size');
+ const apps=new Set<RedAppId>(),challenges=new Set<string>();
+ const requests=payloads.map(payload=>{
+  const value=decodeRedPairRequest(payload);
+  if(apps.has(value.app)||challenges.has(value.challenge))throw Error('Duplicate RED pairing request');
+  apps.add(value.app);challenges.add(value.challenge);
+  return value;
+ });
+ return {requests};
+}

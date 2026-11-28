@@ -527,3 +527,14 @@ Create-Anfrage kann die Regel neu anlegen. Die UI soll deshalb nach
 Cancel den zugehörigen Create-Retry verwerfen. Metadaten und Zeiten liegen
 in SQLite; keine freien Titel oder privaten Kalenderinhalte. Eine lokale
 Sitzungswiederherstellung widerruft Zugänge, nicht die gespeicherten Regeln.
+
+### RED SSO – gemeinsame Kopplungsfreigabe (SDK 0.13)
+
+`POST /red-id/v2/approve-batch` ist nur mit echter Owner-Gerätesitzung
+verfügbar. Eine Liste mit maximal elf unterschiedlichen App-IDs und
+öffentlichen PKCE-Challenges wird innerhalb einer Transaktion vollständig
+freigegeben oder abgelehnt. Keine Freigabe über Browser-Pilot-CORS oder
+App-Token. Jede App muss separat ihren privaten Verifier vorweisen und
+bekommt eigene, widerrufbare Zugangsdaten. Gemeinsame Identität bedeutet
+nicht gemeinsame Zugangsdaten. SDK-Validierung vorbereitet; die explizite
+Mehrfachfreigabe-Oberfläche bleibt offen. Kein vollständiges Browser-SSO.

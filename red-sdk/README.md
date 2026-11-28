@@ -146,3 +146,14 @@ It supports ranked multi-term matching, accent folding, type filters and
 bounded results. No network, persistence, remote index or cross-app access.
 Use a separate instance per authenticated app/account; clear or dispose it
 on logout and lock. It is not automatic integration with RED ION documents.
+
+### SDK 0.13 – RED SSO pairing foundation
+
+`prepareRedBatchApproval` validates an explicit list of public pairing
+requests from distinct RED apps. The owner UI must show every requested
+app and challenge, obtain confirmation, and send the exact list to
+`POST /red-id/v2/approve-batch` using a real RED ION owner-device session.
+The entire approval succeeds or fails atomically. Each target app must
+claim its own one-time proof and receives independent credentials. No
+shared session, silent SSO, automatic cross-app permission or browser
+owner access. Batch-approval UI is not yet integrated.
