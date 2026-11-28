@@ -10,9 +10,9 @@ import {createRedPairProof} from '../red-sdk/client.mts';
 const origin='https://redion.example.test';
 const grant='/home/red-bit/grant',revoke='/home/red-bit/revoke',grants='/home/red-bit/grants',permission='/red-bit/v1/permission';
 
-async function fixture(enabled:boolean,run:(f:any)=>Promise<void>,jobs=false){
+async function fixture(enabled:boolean,run:(f:any)=>Promise<void>,jobs=false,transport=false){
  const root=await mkdtemp(join(tmpdir(),'red-bit-permissions-'));
- const service=await openHomeServer({dataDir:root,origin,enableRedBitPermissions:enabled,enableRedBitReadJobs:jobs});
+ const service=await openHomeServer({dataDir:root,origin,enableRedBitPermissions:enabled,enableRedBitReadJobs:jobs,enableRedBitTransportPermissions:transport});
  try{
   const send=(path:string,init?:RequestInit)=>service.handle(new Request(origin+path,init));
   const get=(path:string,token?:string)=>send(path,{headers:token?{Authorization:'Bearer '+token}:{}});
@@ -198,4 +198,49 @@ test('Read-job preflight allows only trusted app origins and never grants execut
    }
   },enabled);
  }
+});
+
+const transportGrant='/home/red-bit/transport-grant',transportRevoke='/home/red-bit/transport-revoke',transportList='/home/red-bit/transport-grants',transportCheck='/red-bit/v1/transport-permission';
+test('Transport permission is independently disabled even with read access',async()=>{
+ await fixture(true,async({get,post,token,pair})=>{
+  const bit=await pair('red-bit');
+  await post(grant,{sessionId:bit.sessionId,confirm:true},token);
+  assert.equal((await get(transportCheck,bit.accessToken)).status,404);
+  assert.equal((await get(transportList,token)).status,404);
+  assert.equal((await post(transportGrant,{sessionId:bit.sessionId,confirm:true},token)).status,404);
+ },true);
+});
+test('Transport grant is short-lived, explicitly confirmed and isolated from read grants',async()=>{
+ await fixture(true,async({get,post,token,pair,service})=>{
+  const bit=await pair('red-bit'),other=await pair('red-bit'),fit=await pair('red-fit');
+  const body={sessionId:bit.sessionId,confirm:true};
+  assert.equal((await get(transportCheck,bit.accessToken)).status,403);
+  assert.equal((await post(transportGrant,body,bit.accessToken)).status,401);
+  assert.equal((await post(transportGrant,{...body,confirm:false},token)).status,400);
+  assert.equal((await post(transportGrant,{...body,scope:'arbitrary'},token)).status,400);
+  assert.equal((await post(transportGrant,{...body,sessionId:fit.sessionId},token)).status,404);
+  const created=await post(transportGrant,body,token);
+  assert.equal(created.status,201);
+  const g=await created.json() as any;
+  assert.equal(g.scope,'music:transport:control');
+  assert.equal(g.localConfirmationRequired,true);
+  assert.equal(g.remoteAvailable,false);
+  assert.ok(g.expiresAt>Date.now()&&g.expiresAt<=Date.now()+900000);
+  assert.equal((await get(permission,bit.accessToken)).status,403);
+  assert.equal((await get(transportCheck,other.accessToken)).status,403);
+  assert.equal((await get(transportCheck,fit.accessToken)).status,401);
+  assert.equal((await get(transportList,bit.accessToken)).status,401);
+  assert.equal((await get(transportCheck,bit.accessToken)).status,200);
+  assert.equal((await post(grant,body,token)).status,201);
+  assert.equal((await post(transportRevoke,body,token)).status,200);
+  assert.equal((await get(transportCheck,bit.accessToken)).status,403);
+  assert.equal((await get(permission,bit.accessToken)).status,200);
+  await post(transportGrant,body,token);
+  service.store.sqlite.prepare('UPDATE home_red_bit_transport_permission SET expires=? WHERE session_id=?').run(Date.now()-1,bit.sessionId);
+  assert.equal((await get(transportCheck,bit.accessToken)).status,403);
+  await post(transportGrant,body,token);
+  assert.equal((await post('/red-id/v2/revoke-session',{id:bit.sessionId},token)).status,200);
+  assert.equal(Number(service.store.sqlite.prepare('SELECT COUNT(*) AS n FROM home_red_bit_transport_permission WHERE session_id=?').get(bit.sessionId).n),0);
+  assert.equal((await post('/red-bit/v1/execute',{},other.accessToken)).status,404);
+ },false,true);
 });
