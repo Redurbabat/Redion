@@ -688,3 +688,34 @@ export function prepareRedBatchApproval(payloads:readonly string[]):{requests:{a
  });
  return {requests};
 }
+
+/** Explicit text-only clipboard transfer over an existing directional share
+ * grant and a separately verified clipboard-channel key. No OS clipboard
+ * access, network calls, automatic copy or key distribution in this helper. */
+export const RED_CLIPBOARD_MAX_BYTES=8192;
+export const RED_CLIPBOARD_TTL_MS=300_000;
+export type RedClipboardText={version:1;text:string;createdAt:number;expiresAt:number};
+const clipboardText=(value:unknown):value is string=>typeof value==='string'&&value.length>0&&value.length<=RED_CLIPBOARD_MAX_BYTES&&new TextEncoder().encode(value).byteLength<=RED_CLIPBOARD_MAX_BYTES;
+function parseRedClipboard(value:unknown,now:number):RedClipboardText{
+ if(!value||typeof value!=='object'||Array.isArray(value))throw Error('Invalid clipboard payload');
+ const v=value as Record<string,unknown>;
+ if(Object.keys(v).length!==4||v.version!==1||!clipboardText(v.text)||!safeNatural(v.createdAt)||!safeNatural(v.expiresAt)||v.expiresAt-v.createdAt!==RED_CLIPBOARD_TTL_MS||v.createdAt>now+30_000||v.expiresAt<=now)throw Error('Invalid or expired clipboard payload');
+ return {version:1,text:v.text,createdAt:v.createdAt,expiresAt:v.expiresAt};
+}
+export async function prepareRedClipboard(key:Uint8Array,source:RedAppId,target:RedAppId,text:string):Promise<RedPreparedShare>{
+ if(!clipboardText(text))throw Error('Invalid clipboard text');
+ const createdAt=Date.now();
+ const data:RedClipboardText={version:1,text,createdAt,expiresAt:createdAt+RED_CLIPBOARD_TTL_MS};
+ return prepareRedShareJson(key,source,target,'clipboard',data);
+}
+/** The caller must explicitly request the text and persist the processed ID
+ * before ACK. Expiry is checked again after decryption; server retention
+ * is independent and can be longer than the authenticated logical TTL. */
+export async function openRedClipboard(key:Uint8Array,source:RedAppId,target:RedAppId,message:RedShareMessage):Promise<RedClipboardText>{
+ if(!message||message.channel!=='clipboard'||message.source!==source)throw Error('Unexpected clipboard sender or channel');
+ return openRedShareJson(key,target,message,value=>{
+  const now=Date.now();
+  if(message.expires<=now)throw Error('Expired clipboard message');
+  return parseRedClipboard(value,now);
+ });
+}
